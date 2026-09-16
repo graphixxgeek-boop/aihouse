@@ -141,6 +141,39 @@ factuellement exact : toute affirmation qui y décrit un comportement doit corre
 réel, au même titre que `docs/referentiel/` (Article 6/13). Un changement d'architecture ou de
 règle significatif se répercute donc potentiellement dans les trois documents, pas un seul.
 
+## Plan d'origine (analyse Opus) — état d'avancement
+
+`docs/contexte-projet/analyse-opus-initiale.txt` proposait un plan en 7 chantiers, dans un ordre
+délibéré (chaque étape facilite la suivante). État vérifié dans le code le 2026-09-16, pas
+seulement dans le référentiel qui se décrit lui-même :
+
+1. Restructurer le référentiel en principes + paramètres — **fait**.
+2. Séparer les deux cerveaux (un appel Gemini par personnage) — **fait**.
+3. Rééquilibrer les besoins, rendre la relation réversible, recaler l'arc relationnel pour
+   culminer après la révélation — **partiellement fait** : la réversibilité existe (une perte de
+   confiance ou des rapprochements trop rapides font redescendre attirance et attachement, cf.
+   `parametres.md`), mais le calage précis de l'arc relationnel par rapport à la révélation n'a
+   pas été vérifié par une simulation réelle — à confirmer en jouant plusieurs sessions, pas
+   seulement en lisant le code.
+4. Remplacer le visage emoji par une forme abstraite, désaturer la palette, ajouter une lumière
+   directionnelle et une vignette — **partiellement fait** : la palette des sols est déjà
+   désaturée (`lib/perception.ts`, `scenePalette.floors`) et une lumière directionnelle chaude
+   existe (`components/house-view.tsx`). Le visage reste un **emoji** (`lib/perception.ts:14`,
+   `lib/simulation.ts`) — le point qu'Opus jugeait le plus coûteux visuellement n'est pas fait.
+   Aucune vignette sur la scène 3D.
+5. Passer en plein écran avec un mode Observation (3 jauges) par défaut et un mode Instruments
+   (toutes les jauges) en option — **non fait**.
+6. Mettre en scène la révélation finale (musique qui se coupe, caméra qui descend, panneaux qui
+   se rétractent, anneaux qui se tournent vers l'observateur) — **non fait** : le déverrouillage
+   du canal humain reste un changement de classe CSS sur le champ de saisie (`app/page.tsx`,
+   `composer ... unlocked`), exactement ce qu'Opus décrivait comme insuffisant.
+7. Mécaniques de diffusion (export de clips automatique, maison unique partagée) — **non
+   commencé**, dernier de la liste par la propre priorisation d'Opus.
+
+Ces trois derniers points (5, 6, 7) sont la couche « immersion/buzz » qu'Opus jugeait secondaire
+à la refonte moteur — volontairement reportée pendant que la priorité allait au filet de sécurité
+et à la cohérence charte/référentiel. Ils restent ouverts, pas oubliés.
+
 ## Documentation de contexte disponible
 
 Le dossier `docs/contexte-projet/` contient les archives historiques transmises par

@@ -179,3 +179,14 @@ identifiant de requête déjà traité est simplement renvoyé tel quel.
 9.3. Toute réponse de Gemini est validée contre un schéma strict avant d'être utilisée ; une
 réponse incomplète ou hors schéma annule le tour sans effet, plutôt que de publier un état
 partiellement corrompu.
+
+9.4. Plusieurs filtres de contexte (recadrage de pièce, détection d'un thème épuisé, détection
+d'une proposition de déplacement acceptée) cherchent des mots-clés dans le texte librement généré
+par le modèle. C'est une limite structurelle, pas seulement un bug ponctuel : un mot-clé qui
+ressemble à un mot du vocabulaire courant peut capturer une phrase qui n'a rien à voir (cf. le cas
+réel « feuille », qui capturait aussi les « feuilles » de la plante avant sa correction du
+2026-09-16). Le filet de sécurité ne peut pas prouver l'absence de tous les cas similaires : il ne
+teste que les scénarios qu'il encode explicitement. Tout nouveau mot-clé ajouté à un filtre de ce
+type doit être choisi en gardant cette limite à l'esprit (préférer un mot rare ou une expression
+composée à un mot isolé courant), et un comportement qui semble incohérent en jeu doit faire
+suspecter ce mécanisme avant toute autre hypothèse.
