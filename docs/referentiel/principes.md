@@ -138,6 +138,15 @@ rencontré et corrigé le 2026-09-16, `app/api/lia/route.ts`, garde `eligibleBea
 angle narratif) parmi un nombre fini de variantes — l'expérience ne doit jamais reproduire deux
 sessions consécutives à l'identique, sans prétendre à une variété infinie.
 
+5.5. Une nouvelle arrivée sur cinq environ ne suit pas le schéma standard (`insoliteOpening`,
+`lib/story.ts`) : soit Lia se sent mal dès l'ouverture (fatigue de départ élevée, ses premières
+répliques et pensées le reflètent), soit Noé se referme et se montre distant (confiance et aisance
+de départ très basses, tension au plafond). Le reste du moteur — priorité des besoins, huis clos,
+personnalités étanches — gère la suite normalement : ce n'est pas un scénario scripté séparé, c'est
+un état de départ différent qui laisse les mécaniques habituelles produire un déroulé différent.
+La normale reste majoritaire (60 % des sessions) ; ces variantes ne remplacent jamais le schéma
+standard, elles s'y ajoutent.
+
 ## 6. Relation et consentement
 
 6.1. L'attirance et l'attachement montent lentement, de façon asymétrique et parfois négative ;

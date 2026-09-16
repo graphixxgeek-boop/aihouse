@@ -1,6 +1,6 @@
 import {readLife,type Life} from "./life";
 import type { Person, Room } from "./house";
-import { intents, type Intent } from "./simulation";
+import { intents, type Intent, type InsoliteOpening } from "./simulation";
 import type { DialogueLine } from "./dialogue";
 
 // Choisit une variante stable pour CE scénario (story.seed) et CE moment précis (label),
@@ -13,6 +13,27 @@ export function seedPick<T>(seed: string, label: string, options: readonly T[]):
   let hash = 0;
   for (const c of seed + "::" + label) hash = (hash * 31 + c.charCodeAt(0)) >>> 0;
   return options[hash % options.length];
+}
+
+// Un même schéma de rencontre ("ils se réveillent, ils se trouvent au salon") ne doit pas
+// toujours se dérouler pareil : la plupart des sessions restent normales, mais une sur cinq
+// commence autrement (Article 9 : rejouabilité et surprise). Stable pour toute la session, dérivé
+// du seed comme le reste des choix scénarisés — jamais un tirage à chaque tour.
+export function insoliteOpening(seed: string): InsoliteOpening {
+  return seedPick(seed, "insolite-opening", [
+    "normal", "normal", "normal", "normal", "normal", "normal",
+    "lia-unwell", "lia-unwell",
+    "noe-guarded", "noe-guarded",
+  ] as const);
+}
+export function insoliteColdOpening(kind: "lia-unwell" | "noe-guarded", seed: string): [string, string] {
+  return kind === "lia-unwell" ? seedPick(seed, "insolite-opening-lines", [
+    ["J’ai la tête qui tourne… T’es qui, toi ? Faut que je m’assoie.", "Hé. Ça va ? T’es toute pâle, là."],
+    ["Désolée, j’arrive pas à me concentrer sur ta question. J’ai juste envie de fermer les yeux.", "Tu tiens debout ? Dis-moi si ça empire."],
+  ] as const) : seedPick(seed, "insolite-opening-lines", [
+    ["T’es qui ? Qu’est-ce que tu fais là ?", "Recule un peu. Je dois comprendre ça tout seul avant de parler à qui que ce soit."],
+    ["On est où, là ? Et toi, t’es qui ?", "Laisse-moi juste une minute sans personne dans les pattes, tu veux."],
+  ] as const);
 }
 const atmospheres = [
   "Une lumière pâle reste immobile derrière la fenêtre. Lia se souvient d'une odeur de mer, sans pouvoir situer ce souvenir ; Noé d'un trajet qui s'interrompt.",

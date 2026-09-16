@@ -5,7 +5,7 @@ import {normaliseNickname,visibleScene,appearanceReply} from "@/lib/perception";
 import {coldOpening,dialogueFingerprint,distinctReply,justifiedReply,truthfulGender,dramaRules,departureLine} from "@/lib/drama";
 import {readLife,humanStress,isSleeping} from "@/lib/life";
 import { planTurn, coordinateRooms, residentPriority, sceneFor, proposedDestination } from "@/lib/turn";
-import { newStory, parseStory, rememberAges, advanceStory, storyContext, investigationTarget, investigationRecap, finaleReveal, groundFragment, seedPick, type Story } from "@/lib/story";
+import { newStory, parseStory, rememberAges, advanceStory, storyContext, investigationTarget, investigationRecap, finaleReveal, groundFragment, seedPick, insoliteOpening, insoliteColdOpening, type Story } from "@/lib/story";
 import { ages, sleepRoom, attractionAfterTurn, proposalPressure, flirtingAssessment, receivedAffectionBonus } from "@/lib/relationship";
 import { nextSpeaker, dialogueProgress, dialogueContext, completedActivity, conversationFocus, explicitGestureConsent, groundAgeQuestion, groundIntroduction, groundScreenNotice, groundPrivateThought, groundRoomSpeech } from "@/lib/dialogue";
 import { advanceNeeds, priority, intentRoom, intentLabels, tvPrograms, intents, affectionIntents, mutualAttraction, residentProfiles, initialNeedsFor, initialEmotionsFor, sharedActivityBonus } from "@/lib/simulation";
@@ -98,13 +98,15 @@ export async function POST(request: Request) {
         if (input.mode === "chat" && (!story.finalCalled || story.evidence.length<5)) return Response.json({error:"La conversation humaine s’ouvrira lorsque Lia et Noé auront découvert leur origine et appelé leur observateur."},{status:423});
         if (input.mode === "reset") {
             const at = Date.now(), fence = "EXISTS (SELECT 1 FROM world_lock WHERE id = 1 AND token = ? AND expires_at > ?)";
+            const freshStory = { ...newStory(story.variant), observer: story.observer };
+            const insolite = insoliteOpening(freshStory.seed);
             const statements = [db.prepare(`UPDATE world_lock SET epoch = epoch + 1, last_auto = 0 WHERE id = 1 AND ${fence}`).bind(token, at)];
             for (const table of ["conversations", "memories", "agent_state", "world_requests", "dialogue_fingerprints"])
                 statements.push(db.prepare(`DELETE FROM ${table} WHERE ${fence}`).bind(token, at));
             for (const actor of [1, 2] as Person[])
-                statements.push(db.prepare(`INSERT INTO agent_state (id,mood,activity,goal,cycle,last_seen,room,needs,emotions) SELECT ?, ?, ?, ?, 0, ?, ?, ?, ? WHERE ${fence}`).bind(actor, actor===2?"curieux":"curieuse", "Où suis-je ?", "Comprendre où je suis et qui est l’autre", at, actor === 1 ? "salon" : "bureau", JSON.stringify(initialNeedsFor(actor)), JSON.stringify(initialEmotionsFor(actor)), token, at));
+                statements.push(db.prepare(`INSERT INTO agent_state (id,mood,activity,goal,cycle,last_seen,room,needs,emotions) SELECT ?, ?, ?, ?, 0, ?, ?, ?, ? WHERE ${fence}`).bind(actor, actor===2?"curieux":"curieuse", "Où suis-je ?", "Comprendre où je suis et qui est l’autre", at, actor === 1 ? "salon" : "bureau", JSON.stringify(initialNeedsFor(actor, insolite)), JSON.stringify(initialEmotionsFor(actor, insolite)), token, at));
             statements.push(db.prepare(`INSERT INTO world_requests (id,result,created_at) SELECT ?, ?, ? WHERE ${fence}`).bind(input.requestId, JSON.stringify({ decisions: [], requestId: input.requestId }), at, token, at));
-            statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT 1, 'scenario', ?, ? WHERE ${fence}`).bind(JSON.stringify({...newStory(story.variant),observer:story.observer}), at, token, at));
+            statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT 1, 'scenario', ?, ? WHERE ${fence}`).bind(JSON.stringify(freshStory), at, token, at));
             const saved = await db.batch(statements);
             if (saved[0].meta.changes !== 1)
                 throw new LiaError("Le recommencement a expiré. Réessaie.", 409);
@@ -115,7 +117,7 @@ export async function POST(request: Request) {
         }>();
         if (input.mode === "autonomous" && now - (last?.last_auto ?? 0) < 85000)
             return Response.json({ code:"auto_throttled", error: "Le prochain tour automatique sera disponible dans un moment." }, { status: 429, headers: { "Retry-After": "90" } });
-        await initialize(db);
+        await initialize(db, insoliteOpening(story.seed));
         const world = await readWorld(db);
         const speech = (await db.prepare("SELECT id, speaker, content FROM conversations WHERE speaker IN ('Lia','Noé') AND NOT EXISTS (SELECT 1 FROM conversations visitor WHERE visitor.id = conversations.id - 1 AND visitor.speaker = 'vous') ORDER BY id DESC LIMIT 24").all<{
             id: number;
@@ -191,7 +193,13 @@ export async function POST(request: Request) {
         const observationTarget=turnPlan.intent==="study"&&turnPlan.room==="bureau"?{content:story.evidence.length>=4&&life.studyTurns===0?"Un dossier fermé porte deux identifiants et un sceau d’observation. Son contenu reste inconnu.":investigationTarget(story),pass:life.studyTurns+1,instruction:life.studyTurns===0?"Décris d’abord le support et ce que tu vois. Pas de conclusion définitive.":"Examine le contenu et formule une question concrète. L’analyse approfondie suivra au salon."}:null;
         const decisions: Decision[] = [];
         const opening=["interact","autonomous"].includes(input.mode)&&!story.met&&!story.introduced&&speech.length===0&&story.round===0;
-        if(opening){const lines=coldOpening(story.variant);for(const [i,a] of [current,other].entries())decisions.push({actor:a.id,intent:"chat",affectionAccepted:false,emotions:{...a.emotions},reply:lines[i],thought:a.id===1?"Je sais pas si je peux lui faire confiance.":"Elle a peur. Moi aussi, mais pas question de le montrer.",stayAlone:false,mood:"attentive",activity:a.id===2?"J’observe cette inconnue":"J’observe cet inconnu",goal:"Comprendre où je suis",action:"move",room:"salon",memory:lines[i]});}
+        if(opening){
+            const insolite=insoliteOpening(story.seed);
+            const lines=insolite==="normal"?coldOpening(story.variant):insoliteColdOpening(insolite,story.seed);
+            const thoughts:Record<Person,string>=insolite==="lia-unwell"?{1:"J'ai la tête qui tourne. Je préférerais m'allonger plutôt que discuter.",2:"Elle a pas l'air bien du tout. Je devrais peut-être pas la bombarder de questions."}:insolite==="noe-guarded"?{1:"Il a l'air sur ses gardes. Je vais pas insister tout de suite.",2:"J'ai besoin de comprendre ça seul avant de me fier à qui que ce soit, elle y compris."}:{1:"Je sais pas si je peux lui faire confiance.",2:"Elle a peur. Moi aussi, mais pas question de le montrer."};
+            const goals:Record<Person,string>=insolite==="lia-unwell"?{1:"Tenir debout",2:"Comprendre où je suis"}:{1:"Comprendre où je suis",2:"Comprendre où je suis"};
+            for(const [i,a] of [current,other].entries())decisions.push({actor:a.id,intent:"chat",affectionAccepted:false,emotions:{...a.emotions},reply:lines[i],thought:thoughts[a.id],stayAlone:false,mood:"attentive",activity:a.id===2?"J’observe cette inconnue":"J’observe cet inconnu",goal:goals[a.id],action:"move",room:"salon",memory:lines[i]});
+        }
         else if(turnPlan.exitInspection){const first=life.exitPhase!==1;const lines=first?["Une porte, au bout gauche du couloir. Verrouillée. Elle donne sur le jardin qu’on voit depuis le salon.","On nous montre de l’herbe et un arbre, mais la poignée ne cède pas. Belle invitation."]:["La porte principale est de ce côté. Fermée aussi. Derrière, un trottoir et une route qui ne bougent pas.","Deux portes, deux verrous. On n’a même pas choisi le côté de la cage."];for(const [i,a] of [current,other].entries())decisions.push({actor:a.id,intent:"chat",affectionAccepted:false,emotions:{...a.emotions},reply:lines[(i+story.variant)%2],thought:a.id===1?"Il cherche vraiment une issue. Ça me rassure de voir qu’il ne fait pas que parler.":"Elle regarde chaque détail. J’aime ça, même si je sais pas quoi lui répondre.",stayAlone:false,mood:"attentive",activity:"Je cherche une sortie",goal:"Examiner les limites de la maison",action:"move",room:"salon",memory:lines[(i+story.variant)%2]});}
         else if(ambientBeat||recapBeat)for(const a of [current,other])decisions.push({actor:a.id,intent:"chat",affectionAccepted:false,emotions:{...a.emotions},reply:"",mood:"attentive",activity:"Je fais le point",goal:"Confronter les observations",action:"move",room:"salon",memory:""});
         else if (input.mode === "move" || input.mode === "care" || routine)

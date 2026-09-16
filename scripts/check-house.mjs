@@ -2,6 +2,14 @@ import fs from 'node:fs';
 import ts from 'typescript';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
+// newStory() draws its seed from crypto.randomUUID(); left purely constant here would break tests
+// that check a reset produces a genuinely new session id. Instead, every generated value stays
+// unique (a monotonic counter) but is skipped and retried whenever it would hash to an "insolite"
+// opening (lib/simulation.ts:InsoliteOpening, ~40% of raw draws) — replicating seedPick's exact
+// hash (lib/story.ts) so every test-generated session is deterministically "normal", without
+// hardcoding a single reused seed.
+{let seedCounter=0;const insoliteHash=s=>{let h=0;for(const c of s+"::insolite-opening")h=(h*31+c.charCodeAt(0))>>>0;return h%10;};
+Object.defineProperty(globalThis.crypto,'randomUUID',{value:()=>{let candidate;do{candidate='00000000-0000-4000-8000-'+(++seedCounter).toString(16).padStart(12,'0');}while(insoliteHash(candidate)>=6);return candidate;},configurable:true});}
 fs.mkdirSync('.sites-runtime',{recursive:true});
 const transpile=s=>ts.transpileModule(s,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
 for(const name of ['house','simulation','relationship','dialogue','story','lia','world','turn','life','drama','perception','visual-events','stock','presentation','playback','evidence','reference','update-audit'])fs.writeFileSync(`.sites-runtime/test-${name}.mjs`,transpile(fs.readFileSync(`lib/${name}.ts`,'utf8').replace('"./update-audit"','"./test-update-audit.mjs"').replace('"./visual-events"','"./test-visual-events.mjs"').replace('"./drama"','"./test-drama.mjs"').replace('"./perception"','"./test-perception.mjs"').replace('"./life"','"./test-life.mjs"').replace('"./house"','"./test-house.mjs"').replace('"./lia"','"./test-lia.mjs"').replace('"./simulation"','"./test-simulation.mjs"').replace('"./relationship"','"./test-relationship.mjs"').replace('"./story"','"./test-story.mjs"')));
@@ -18,7 +26,11 @@ globalThis.__testEnv={DB:db,GEMINI_API_KEY:'test-only'};
 const {POST}=await import('../.sites-runtime/test-route.mjs');
 const {initialize,readWorld}=await import('../.sites-runtime/test-world.mjs');
 await initialize(db);let world=await readWorld(db);assert.equal(world.agents.length,2);assert.equal(world.agents[0].goal,'Apprendre');assert.equal(world.memories[0].agent_id,1);
-const input=(mode,actor=1,extra={})=>({requestId:crypto.randomUUID(),mode,actor,...extra});
+let requestCounter=0;
+// Deliberately independent of crypto.randomUUID(), which is fixed above for newStory()'s benefit —
+// requestId still needs a genuinely distinct value per call, unlike story.seed. The route's schema
+// requires actual UUID shape (z.string().uuid()), so the counter is embedded in one.
+const input=(mode,actor=1,extra={})=>({requestId:'00000000-0000-4000-8000-'+(++requestCounter).toString(16).padStart(12,'0'),mode,actor,...extra});
 const post=body=>POST(new Request('https://house.test/api/lia',{method:'POST',headers:{Origin:'https://house.test','Content-Type':'application/json'},body:JSON.stringify(body)}));
 // Since the two-brains split, one fetch call answers for exactly one character (selfRole tells
 // which); a wrapper overriding a specific reply must check this instead of the old first/second split.
@@ -239,7 +251,7 @@ const tendernessPlot={...replayPlot,round:5,salonTurns:3};sqlite.prepare("UPDATE
 assert.doesNotMatch(groundRoomSpeech('On regarde de plus près ce texte et ces chiffres pour voir ce qu’ils signifient.','salon',[]),/On regarde/);assert.doesNotMatch(groundRoomSpeech('Oui, penchons-nous là-dessus pour essayer de décoder ces données.','salon',[]),/penchons-nous/);
 console.log('Passed: exact salon-to-bureau case, durable accepted move, frozen Gemini room schema, actual decoding only on arrival, consumed agreement, zero-call duplicate and received tenderness as a separate attraction cause.');
 
-const blockedPlot={...replayPlot,pendingDestination:{room:'bureau',intent:'study',proposer:2}};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(blockedPlot));sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}));sqlite.prepare('UPDATE agent_state SET needs=? WHERE id=2').run(JSON.stringify({hunger:90,fatigue:10,stress:20,uncertainty:50}));sqlite.exec('UPDATE world_lock SET last_auto=0');const blockedCalls=calls;response=await post(input('autonomous',2,{epoch:socialEpoch}));assert.equal(response.status,200);result=await response.json();assert.equal(calls,blockedCalls);assert.equal(result.agents[1].intent,'eat');assert.equal(result.agents[1].needs.fatigue,26);assert.equal(JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).pendingDestination.room,'bureau');response=await post(input('interact',2,{epoch:socialEpoch}));assert.equal(response.status,200);result=await response.json();assert.ok(result.agents.every(a=>a.room==='bureau'));assert.equal(JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).pendingDestination,undefined);
+const blockedPlot={...replayPlot,pendingDestination:{room:'bureau',intent:'study',proposer:2}};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(blockedPlot));sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}));sqlite.prepare('UPDATE agent_state SET needs=? WHERE id=2').run(JSON.stringify({hunger:90,fatigue:10,stress:20,uncertainty:50}));sqlite.exec('UPDATE world_lock SET last_auto=0');const blockedCalls=calls;response=await post(input('autonomous',2,{epoch:socialEpoch}));assert.equal(response.status,200);result=await response.json();assert.equal(calls,blockedCalls);assert.equal(result.agents[1].intent,'eat');assert.equal(result.agents[1].needs.fatigue,25);assert.equal(JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).pendingDestination.room,'bureau');response=await post(input('interact',2,{epoch:socialEpoch}));assert.equal(response.status,200);result=await response.json();assert.ok(result.agents.every(a=>a.room==='bureau'));assert.equal(JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).pendingDestination,undefined);
 sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(tendernessPlot));sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=?').run('bureau','chat',JSON.stringify({hunger:10,fatigue:10,stress:0,uncertainty:50}),JSON.stringify({...steady,attraction:80,trust:80}));sqlite.exec("DELETE FROM conversations");tenderScene=true;response=await post(input('interact',2,{epoch:socialEpoch}));assert.equal(response.status,200);result=await response.json();assert.equal(result.agents[0].emotions.attraction,81);assert.equal(result.agents[1].emotions.attraction,80);tenderScene=false;
 assert.doesNotMatch(groundRoomSpeech('On peut regarder ces chiffres de plus près.','salon',[]),/On peut regarder/);assert.doesNotMatch(groundRoomSpeech('Regarde ces données.','salon',[]),/Regarde ces/);
 console.log('Passed: urgent meal uses zero API calls, preserves the agreed destination and Noé post-meal fatigue; reunion resumes it, and received warmth uses Lia low-stress multiplier without changing office activity bonus.');
@@ -498,3 +510,39 @@ console.log('Passed: regeneration only surprises the awake kitchen observer, add
 const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let playbackClock=0,playbackTicks=0;await waitForPlayback(50,{paused:()=>playbackTicks<3,alive:()=>true,now:()=>playbackClock,wait:async ms=>{playbackClock+=ms;playbackTicks++}});assert.equal(playbackClock,200);let stoppedTicks=0;await waitForPlayback(50,{paused:()=>true,alive:()=>stoppedTicks===0,wait:async()=>{stoppedTicks++}});assert.equal(stoppedTicks,1);const {dialogueFingerprint,looksLikeEcho}=await import('../.sites-runtime/test-drama.mjs');assert.equal(dialogueFingerprint('[salon→cuisine] Je passe en cuisine.'),dialogueFingerprint('[bureau→cuisine] Je passe en cuisine.'));assert.equal(dialogueFingerprint('Je passe en cuisine.'),dialogueFingerprint('[salon→cuisine] Je passe en cuisine.'));assert.ok(looksLikeEcho('Cette maison blanche ressemble terriblement à une prison silencieuse fermée parfaitement artificielle.','Cette maison parfaitement artificielle ressemble terriblement à une prison blanche fermée silencieuse.'));assert.equal(looksLikeEcho('Je préfère qu’on prenne notre temps.','Je préfère une vraie explication.'),false);const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
 const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 36'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+
+{
+  // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
+  // ou Noé se referme — sans jamais être le cas par défaut, et sans inventer un quatrième état.
+  const {insoliteOpening,insoliteColdOpening}=await import('../.sites-runtime/test-story.mjs');
+  assert.equal(insoliteOpening('seed-probe-0'),'lia-unwell');assert.equal(insoliteOpening('seed-probe-4'),'noe-guarded');
+  const insoliteRolls=Array.from({length:300},(_,i)=>insoliteOpening('roll-'+i));
+  assert.ok(insoliteRolls.every(k=>['normal','lia-unwell','noe-guarded'].includes(k)));
+  const normalShare=insoliteRolls.filter(k=>k==='normal').length/insoliteRolls.length;
+  assert.ok(normalShare>0.45&&normalShare<0.75,'normal openings should stay the plurality, not the only outcome: '+normalShare);
+  assert.ok(insoliteRolls.includes('lia-unwell')&&insoliteRolls.includes('noe-guarded'));
+  const [liaUnwellLines1,liaUnwellLines2]=[insoliteColdOpening('lia-unwell','seed-probe-0'),insoliteColdOpening('lia-unwell','seed-probe-1')];
+  assert.notDeepEqual(liaUnwellLines1,liaUnwellLines2);
+  assert.equal(new Set([...liaUnwellLines1,...liaUnwellLines2]).size,4);
+  const {initialNeedsFor:testInitialNeedsFor,initialEmotionsFor:testInitialEmotionsFor}=await import('../.sites-runtime/test-simulation.mjs');
+  assert.equal(testInitialNeedsFor(1,'lia-unwell').fatigue,58);assert.equal(testInitialNeedsFor(2,'lia-unwell').fatigue,testInitialNeedsFor(2,'normal').fatigue);
+  assert.ok(testInitialEmotionsFor(2,'noe-guarded').trust<testInitialEmotionsFor(2,'normal').trust);assert.deepEqual(testInitialEmotionsFor(1,'noe-guarded'),testInitialEmotionsFor(1,'normal'));
+  // Full path: a seed known to roll "lia-unwell" actually seeds her fatigue at reset time, and the
+  // opening turn uses her distinct lines instead of the standard cold opening. This is the last
+  // scenario in the file specifically so the extra reset here never shifts a later hardcoded epoch.
+  const savedRandomUUID=globalThis.crypto.randomUUID;
+  Object.defineProperty(globalThis.crypto,'randomUUID',{value:()=>'seed-probe-0',configurable:true});
+  const priorEpoch=(await readWorld(db)).epoch;
+  const resetResponse=await post(input('reset',1,{epoch:priorEpoch}));
+  assert.equal(resetResponse.status,200);
+  Object.defineProperty(globalThis.crypto,'randomUUID',{value:savedRandomUUID,configurable:true});
+  const afterReset=await readWorld(db);
+  assert.equal(afterReset.agents[0].needs.fatigue,58);
+  assert.equal(afterReset.agents[1].needs.fatigue,testInitialNeedsFor(2,'normal').fatigue);
+  const openingCalls=calls;
+  const openingResponse=await post(input('interact',1,{epoch:afterReset.epoch}));
+  assert.equal(openingResponse.status,200);const opened=await openingResponse.json();
+  assert.equal(calls,openingCalls);
+  assert.ok(opened.messages.some(m=>m.speaker==='Lia'&&(m.content.includes('la tête qui tourne')||m.content.includes('fermer les yeux'))));
+  console.log('Passed: insolite openings stay a minority, are internally distinct, seed the right agent\'s needs/emotions, and actually surface in the scripted opening turn.');
+}

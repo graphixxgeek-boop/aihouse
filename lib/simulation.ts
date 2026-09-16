@@ -7,11 +7,24 @@ export type Needs = {
 };
 export const initialNeeds: Needs = { hunger: 26, fatigue: 20, stress: 55, uncertainty: 90 };
 export const residentProfiles = {
-    1: { description: "Lia est observatrice, plus réservée au début, sensible à la délicatesse et à la fiabilité. Elle se fatigue plus vite et a un plus petit appétit. Sa chaleur se développe à son rythme.", emotions: { curiosity: 72, tension: 90, trust: 8, comfort: 22, attraction: 12 }, needs: { hunger: 20, fatigue: 20, stress: 90, uncertainty: 90 }, hungerRate: 1, fatigueRate: 4, stressRate: 1, mealRecovery: 40, mealFatigue: 0, sharedBonus: 2 },
-    2: { description: "Noé est plus assuré, plus vite rassuré par la présence de Lia, plus à l'aise et déjà davantage attiré par Lia. Il propose volontiers une petite action concrète, avec un humour sobre. Il mange plus, se fatigue moins vite hors repas et ressent un coup de fatigue après manger. Son assurance n'exclut ni doute ni respect d'un refus.", emotions: { curiosity: 68, tension: 90, trust: 20, comfort: 48, attraction: 32 }, needs: { hunger: 30, fatigue: 20, stress: 90, uncertainty: 90 }, hungerRate: 2, fatigueRate: 2, stressRate: 1, mealRecovery: 58, mealFatigue: 14, sharedBonus: 4 }
+    1: { description: "Lia est observatrice, plus réservée au début, sensible à la délicatesse et à la fiabilité. Elle se fatigue plus vite et a un plus petit appétit. Sa chaleur se développe à son rythme.", emotions: { curiosity: 72, tension: 90, trust: 8, comfort: 22, attraction: 12 }, needs: { hunger: 20, fatigue: 20, stress: 90, uncertainty: 90 }, hungerRate: 1, fatigueRate: 2, stressRate: 1, mealRecovery: 40, mealFatigue: 0, sharedBonus: 2 },
+    2: { description: "Noé est plus assuré, plus vite rassuré par la présence de Lia, plus à l'aise et déjà davantage attiré par Lia. Il propose volontiers une petite action concrète, avec un humour sobre. Il mange plus, se fatigue moins vite hors repas et ressent un coup de fatigue après manger. Son assurance n'exclut ni doute ni respect d'un refus.", emotions: { curiosity: 68, tension: 90, trust: 20, comfort: 48, attraction: 32 }, needs: { hunger: 30, fatigue: 20, stress: 90, uncertainty: 90 }, hungerRate: 2, fatigueRate: 1, stressRate: 1, mealRecovery: 58, mealFatigue: 14, sharedBonus: 4 }
 } as const;
-export function initialNeedsFor(id: Person): Needs { return { ...residentProfiles[id].needs }; }
-export function initialEmotionsFor(id: Person) { return { ...residentProfiles[id].emotions }; }
+// Rare variations de départ (~20 % de chance chacune, cf. story.ts:insoliteOpening) : un même
+// schéma d'arrivée ("ils se rencontrent au salon") ne doit pas produire le même déroulé à chaque
+// session (Article 9 de la charte). La différence part de l'état intérieur, pas d'un scénario
+// scripté séparé : le reste du moteur (priorité des besoins, huis clos) fait le travail normalement.
+export type InsoliteOpening = "normal" | "lia-unwell" | "noe-guarded";
+export function initialNeedsFor(id: Person, insolite: InsoliteOpening = "normal"): Needs {
+    const base: Needs = { ...residentProfiles[id].needs };
+    if (insolite === "lia-unwell" && id === 1) base.fatigue = 58;
+    return base;
+}
+export function initialEmotionsFor(id: Person, insolite: InsoliteOpening = "normal") {
+    const base = { ...residentProfiles[id].emotions };
+    if (insolite === "noe-guarded" && id === 2) return { ...base, trust: 6, comfort: 18, tension: 100 };
+    return base;
+}
 export function sharedActivityBonus(a: {
     intent: Intent;
     room: Room;

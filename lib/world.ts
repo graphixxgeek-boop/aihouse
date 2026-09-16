@@ -1,6 +1,6 @@
 import {sleepRoom} from "./relationship";
 import {readLife} from "./life";
-import { mutualAttraction, parseNeeds, initialNeedsFor, initialEmotionsFor, type Needs, type Intent } from "./simulation";
+import { mutualAttraction, parseNeeds, initialNeedsFor, initialEmotionsFor, type Needs, type Intent, type InsoliteOpening } from "./simulation";
 import { emotionSchema, type Emotions } from "./lia";
 import { names, type Person, type Room } from "./house";
 export type Resident = {location?:string;attachment?:number;
@@ -16,9 +16,9 @@ export type Resident = {location?:string;attachment?:number;
     needs: Needs;
     intent: Intent;
 };
-export async function initialize(db: D1Database) {
+export async function initialize(db: D1Database, insolite: InsoliteOpening = "normal") {
     await db.batch(([1, 2] as Person[]).map(id => db.prepare("INSERT OR IGNORE INTO agent_state (id,mood,activity,goal,cycle,last_seen,room,needs,emotions) VALUES (?,?,?,?,0,?,?,?,?)")
-        .bind(id, id === 1 ? "curieuse" : "curieux", "Où suis-je ?", "Comprendre le lieu et faire connaissance", Date.now(), id === 1 ? "salon" : "bureau", JSON.stringify(initialNeedsFor(id)), JSON.stringify(initialEmotionsFor(id)))));
+        .bind(id, id === 1 ? "curieuse" : "curieux", "Où suis-je ?", "Comprendre le lieu et faire connaissance", Date.now(), id === 1 ? "salon" : "bureau", JSON.stringify(initialNeedsFor(id, insolite)), JSON.stringify(initialEmotionsFor(id, insolite)))));
 }
 export async function readWorld(db: D1Database) {
     const [state, memories, messages, clock, scenario] = await Promise.all([

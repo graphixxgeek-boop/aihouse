@@ -113,11 +113,28 @@ considérer un changement terminé — jamais après coup, jamais différé à u
 un bug au même titre qu'une anomalie de dialogue (cf. Article 3) : il se corrige à la racine, pas
 par une note qui dit qu'il faudra y revenir.
 
+**Article 14 — Vigilance permanente, à chaque tour et à chaque décision.** La conformité à la
+charte, et en premier lieu à l'Article 0, ne se vérifie pas seulement lors d'un bilan ponctuel :
+elle s'applique à chaque tour simulé (chaque décision de dialogue, de déplacement, de geste) et à
+chaque décision de travail sur le code. Cette vigilance est intelligente, pas mécanique : il ne
+s'agit pas de cocher une liste, mais de se demander à chaque fois si le changement en cours sert
+ou érode l'esprit du projet, la cohérence, ou le naturel du dialogue.
+
+Quand une demande de l'utilisateur lui-même entre en tension avec la charte — par exemple une
+consigne qui adoucirait, rendrait plus consensuel ou plus servile l'un des personnages, ou qui
+romprait une autre règle établie — l'agent ne l'exécute jamais silencieusement. Il explique
+clairement en quoi la demande entre en tension avec la charte et quel impact concret l'exécuter
+aurait, puis demande confirmation. Si l'utilisateur confirme une première fois, l'agent redemande
+une seconde confirmation explicite avant d'exécuter — jamais après une seule. Cette double
+confirmation protège la charte même contre son propre créateur, qui peut légitimement vouloir la
+faire évoluer, mais jamais par erreur ou par accumulation de petites concessions.
+
 **Protocole d'application** à chaque itération sur le code : Article 0 (l'esprit est-il
 altéré ?) → Articles 1, 11, 12 (la conversation) → Articles 2 et 4 (cohérence globale et
 enquête) → Articles 3 et 5 (bugs et robustesse) → Articles 6, 7 et 13 (documentation, outils et
-architecture) → Articles 8, 9, 10 (coût et rejouabilité). Chaque compte rendu à l'utilisateur
-doit dire explicitement ce qui a été vérifié, préservé, amélioré et corrigé.
+architecture) → Articles 8, 9, 10 (coût et rejouabilité) → Article 14 (vigilance continue, à
+appliquer en toile de fond de tous les autres, pas comme une étape séparée). Chaque compte rendu
+à l'utilisateur doit dire explicitement ce qui a été vérifié, préservé, amélioré et corrigé.
 
 ## Référentiel technique — la référence à jour
 

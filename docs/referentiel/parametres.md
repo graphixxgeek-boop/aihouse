@@ -14,7 +14,7 @@ ce document décrit les valeurs actuelles, il ne les fixe pas.
 | Stress initial | 90 | 90 |
 | Incertitude initiale | 90 | 90 |
 | Vitesse de faim (`hungerRate`/tour) | 1 | 2 |
-| Vitesse de fatigue (`fatigueRate`/tour) | 4 | 2 |
+| Vitesse de fatigue (`fatigueRate`/tour) | 2 | 1 |
 | Vitesse de stress (`stressRate`/tour) | 1 | 1 |
 | Récupération d'un repas (`mealRecovery`) | 40 | 58 |
 | Fatigue post-repas (`mealFatigue`) | 0 | 14 |
@@ -23,6 +23,15 @@ ce document décrit les valeurs actuelles, il ne les fixe pas.
 Seuils d'urgence (`priority()`) : faim ≥ 68 → manger ; fatigue ≥ 68 → dormir ; stress ≥ 75 →
 repos. Niveaux d'affichage (`needLevel()`) : urgent à 75 (stress) / 85 (incertitude) / 68 (autres) ;
 pressant à 55 (stress) / 65 (incertitude) / 50 (autres).
+
+Cadence résultante (à partir des valeurs initiales, sans repas/repos entre-temps) : Lia atteint la
+fatigue urgente en 24 tours, la faim urgente en 48 ; Noé atteint la faim urgente en 19 tours, la
+fatigue urgente en 48. Avant le 2026-09-16, la fatigue de Lia et Noé montait deux fois plus vite
+(atteinte en 12 et 24 tours) — l'audit Opus initial jugeait cette cadence trop agressive, au point
+de faire des besoins physiologiques la structure de la soirée plutôt que des interruptions
+occasionnelles ; les vitesses de fatigue ont été divisées par deux en conséquence. La faim de Noé
+reste la plus rapide des quatre courbes (19 tours) : à surveiller si elle continue de dominer le
+rythme d'une session.
 
 Effets d'une activité correctement placée (`advanceNeeds`) : manger −6 stress en plus de la
 récupération ; dormir −38 fatigue en chambre / −18 au salon, −8 stress ; se reposer −(vitesse de
@@ -94,6 +103,11 @@ et peuvent chuter plus vite qu'ils ne montent).
   même session ne retombent pas systématiquement sur le même indice.
 - Chaque moment scénarisé dispose aujourd'hui de 2 à 4 formulations distinctes — pas plus. Sur un
   grand nombre de sessions, une coïncidence reste possible (voir Article 10 de `CLAUDE.md`).
+- `insoliteOpening` (`lib/story.ts`) : tirage pondéré sur 10 (via `seedPick`) — 6/10 « normal »,
+  2/10 « Lia se sent mal » (fatigue de départ 58 au lieu de 20, contre un seuil d'urgence à 68),
+  2/10 « Noé se referme » (confiance 6 au lieu de 20, aisance 18 au lieu de 48, tension à 100).
+  2 formulations d'ouverture par variante insolite. Décidé une fois par session à la création de
+  `story.seed`, jamais retiré une fois la partie commencée.
 
 ## Anti-répétition (`lib/dialogue.ts`, `app/api/lia/route.ts`)
 
