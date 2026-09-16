@@ -83,7 +83,12 @@ différente. Même schéma d'enquête, jamais le même déroulé mot pour mot.
 
 **Article 10 — Répliques locales : l'exception encadrée.** Des répliques générées localement
 (sans appel API) restent possibles dans des cas limités, à condition de rester crédibles et
-d'exister en plusieurs variantes (pour ne pas casser les articles 9 et 11).
+d'exister en plusieurs variantes (pour ne pas casser les articles 9 et 11). Une variante n'est
+valable que si elle diffère aussi dans le fond (ce qui est dit), pas seulement dans la
+formulation : plusieurs habillages d'une seule idée recyclée ne remplissent pas cette
+obligation. Exemple concret déjà rencontré : la réplique de secours anti-écho ne doit pas
+toujours retomber sur la même idée ("on tourne en rond") avec des synonymes différents — elle
+doit proposer plusieurs réactions réellement distinctes.
 
 **Article 11 — Zéro répétition, personnalités étanches.** Un personnage ne se répète jamais mot
 pour mot dans une session ; il ne fait jamais écho aux mots de l'autre. Lia et Noé ne disent
