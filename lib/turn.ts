@@ -28,8 +28,17 @@ export function planTurn(mode:string,current:Resident,other:Resident,story:Story
  const inferred=agreedDestination(history);
  const candidate=story.pendingDestination ?? (inferred&&![current,other].every(a=>a.room===inferred.room)?inferred:undefined);
  const agreed=candidate?.room==="jardin"&&!gardenAccess(story)?undefined:candidate;
- const offer=automatic&&!(gardenAccess(story)&&!life.gardenVisited)&&current.id===2&&story.round>=12&&!life.debrief?.remaining&&!life.contact?.remaining&&story.introduced&&opportunity&&(eligible||current.emotions.attraction>=80)&&!sleeping&&["salon","chambre"].includes(current.room)&&current.emotions.attraction>=80&&(!agreed||agreed.room==="bureau"&&salonPause) ? suggested : undefined;
- const executeAgreement=automatic&&agreed&&!(agreed.room==="bureau"&&salonPause)&&!life.debrief?.remaining&&!life.contact?.remaining&&(agreed.room!=="bureau"||!["cuisine","chambre"].some(r=>!life.visited.includes(r as Room)))&&!residentPriority(current,Boolean(story.introduced))&&!partnerPriority&&!sleeping;
+ // round>=20 (était 12), aligné avec affectionOpportunity dans route.ts : le premier geste de
+ // Noé arrivait trop tôt dans la relation (retour utilisateur du 2026-09-16, point de l'audit
+ // Opus initial jamais corrigé jusqu'ici).
+ const offer=automatic&&!(gardenAccess(story)&&!life.gardenVisited)&&current.id===2&&story.round>=20&&!life.debrief?.remaining&&!life.contact?.remaining&&story.introduced&&opportunity&&(eligible||current.emotions.attraction>=80)&&!sleeping&&["salon","chambre"].includes(current.room)&&current.emotions.attraction>=80&&(!agreed||agreed.room==="bureau"&&salonPause) ? suggested : undefined;
+ // Assoupli le 2026-09-16 : une idée d'aller voir le bureau, née spontanément dans la
+ // conversation, se faisait auparavant écraser par la case à cocher "cuisine puis chambre
+ // d'abord" tant que ces deux pièces n'étaient pas visitées — ça donnait l'impression que
+ // l'enquête suivait un ordre imposé plutôt que l'initiative des personnages (retour utilisateur
+ // du 2026-09-16). Une destination réellement convenue entre eux prime désormais toujours sur la
+ // liste mécanique ; `explore` (ci-dessous) se met déjà en retrait dès qu'un accord existe.
+ const executeAgreement=automatic&&agreed&&story.introduced&&!(agreed.room==="bureau"&&salonPause)&&!life.debrief?.remaining&&!life.contact?.remaining&&!residentPriority(current,Boolean(story.introduced))&&!partnerPriority&&!sleeping;
  const explore=automatic&&!afterInvestigation&&!executeAgreement&&story.introduced&&!urgentIntent&&!partnerPriority?(["cuisine","chambre"] as Room[]).find(r=>!life.visited.includes(r)):undefined;
  const gardenFirst=automatic&&gardenAccess(story)&&!life.gardenVisited&&!sleeping&&!isSleeping(other,life)&&![current,other].some(a=>a.needs.hunger>=68||a.needs.fatigue>=68);
  const tvFirst=automatic&&!life.debrief?.remaining&&!life.contact?.remaining&&!afterInvestigation&&story.introduced&&!explore&&!life.tvSeen&&story.round>=6&&!urgentIntent&&!partnerPriority;
@@ -37,7 +46,14 @@ export function planTurn(mode:string,current:Resident,other:Resident,story:Story
  const reflection=automatic&&!urgentIntent&&!partnerPriority&&(life.debrief?.remaining??0)>0;
  const continuing=automatic&&!urgentIntent&&!partnerPriority&&(life.contact?.remaining??0)>0;
  const exitInspection=automatic&&story.introduced&&story.round>=8&&!life.exitSearched&&!life.debrief?.remaining&&!life.contact?.remaining&&!explore&&!tvFirst&&!offer&&!agreed&&!urgentIntent&&!partnerPriority&&[current,other].every(a=>a.room==="salon");
- const requiredIntent=(gardenFirst?"chat":urgentIntent) ?? (exitInspection?"chat":explore?"chat":tvFirst?"tv":studyContinuation?"study":continuing?"chat":reflection?"rest":undefined) ?? (executeAgreement?agreed!.intent:undefined) ?? (offer?undefined:(linger&&!partnerPriority?"rest":undefined) ?? (afterInvestigation&&!partnerPriority?"rest":undefined) ?? (automatic&&story.evidence.length<5&&story.round>=3&&story.round%3===0&&!residentPriority(current,Boolean(story.introduced))&&!partnerPriority?"study":undefined));
+ // Un tour d'enquête n'attend plus seulement le compteur (round%3) : si l'un des deux vient
+ // d'exprimer l'envie d'aller vérifier quelque chose, l'idée est suivie tout de suite au lieu
+ // d'attendre le prochain multiple de 3 — plus spontané, moins minuté (retour utilisateur du
+ // 2026-09-16 : l'enquête devait donner l'impression d'être menée par les personnages eux-mêmes).
+ // Le compteur reste le filet de sécurité qui garantit que les 5 preuves finissent par sortir
+ // (article 4) même si le dialogue n'emploie jamais ces tournures.
+ const investigativeCue=/\b(allons voir|aller voir|va(?:s)? voir|vérifier ça|vérifier cette|inspecter|jeter un œil|examiner|regarder de plus près|retourner voir)\b/i.test(history.slice(-2).map(l=>l.content).join(" "));
+ const requiredIntent=(gardenFirst?"chat":urgentIntent) ?? (exitInspection?"chat":explore?"chat":tvFirst?"tv":studyContinuation?"study":continuing?"chat":reflection?"rest":undefined) ?? (executeAgreement?agreed!.intent:undefined) ?? (offer?undefined:(linger&&!partnerPriority?"rest":undefined) ?? (afterInvestigation&&!partnerPriority?"rest":undefined) ?? (automatic&&story.evidence.length<5&&story.round>=3&&(story.round%3===0||investigativeCue)&&!residentPriority(current,Boolean(story.introduced))&&!partnerPriority?"study":undefined));
  const intent=requiredIntent??(automatic&&!story.introduced?"chat":automatic&&current.intent==="eat"?"rest":"chat");
  const room=(gardenFirst?"jardin":undefined)??(exitInspection?"salon":undefined)??explore??(tvFirst?"salon":studyContinuation?"bureau":undefined)??(continuing?life.contact!.room:reflection?"salon":undefined)??(executeAgreement?agreed!.room:intentRoom[offer??intent]??(automatic&&!story.introduced?"salon":current.room));
  const partnerIntent=(gardenFirst?"chat":partnerPriority)??(offer??(["study","rest","tv","hug","massage","kiss","share_sleep","intimacy"].includes(intent)?intent:intent==="eat"&&other.needs.hunger>=20?"eat":"chat"));

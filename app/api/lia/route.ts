@@ -145,7 +145,10 @@ export async function POST(request: Request) {
         const sleeper = ["interact","autonomous"].includes(input.mode) ? world.agents.find(a=>isSleeping(a,life)) : undefined;
         const noe=world.agents.find(a=>a.id===2)!;
         const humanActor:Person=input.actor;
-        const proposalCooldown=recentRequests.slice(0,3).some(r=>{try{return JSON.parse(r.result).proposalActor===2;}catch{return false;}});
+        // Fenêtre doublée (3→6 requêtes, sur les 6 disponibles) : les propositions de Noé
+        // revenaient encore trop souvent malgré le garde-fou existant (retour utilisateur du
+        // 2026-09-16, faisant suite à l'audit Opus initial jamais corrigé sur ce point précis).
+        const proposalCooldown=recentRequests.slice(0,6).some(r=>{try{return JSON.parse(r.result).proposalActor===2;}catch{return false;}});
         const proactiveNoe=["interact","autonomous"].includes(input.mode)&&story.introduced&&flirtingAssessment(noe.needs.stress,world.agents[0].emotions.attraction,input.requestId).estimatedInterest>=35&&!recentRefusal&&!overProposing&&!proposalCooldown&&!priority(world.agents[0].needs)&&!priority(world.agents[1].needs)&&["salon","chambre"].includes(noe.room)&&noe.emotions.attraction>=80;
         // Ces répliques scénarisées appartiennent à l'avant-révélation : une fois le dossier
         // appelé, revenir sur la fausse plante ou une question personnelle romprait le ton de la
@@ -176,7 +179,9 @@ export async function POST(request: Request) {
             n: number;
         }>())?.n ?? 0;
         const affectionEligible = mutualAttraction(current, other) && !recentRefusal && !overProposing && !life.dispute?.remaining;
-        const affectionOpportunity = story.round>=12&&!life.debrief?.remaining&&!life.contact?.remaining&&!life.dispute?.remaining&&current.id===2 && current.emotions.attraction>=80 && flirtingAssessment(current.needs.stress,other.emotions.attraction,input.requestId).estimatedInterest>=35 && !recentRefusal && !overProposing && !proposalCooldown && !priority(current.needs) && !priority(other.needs);
+        // round>=20 (était 12) : premier geste de Noé repoussé, cf. lib/turn.ts pour la même
+        // valeur côté "offer" — les deux doivent rester alignées.
+        const affectionOpportunity = story.round>=20&&!life.debrief?.remaining&&!life.contact?.remaining&&!life.dispute?.remaining&&current.id===2 && current.emotions.attraction>=80 && flirtingAssessment(current.needs.stress,other.emotions.attraction,input.requestId).estimatedInterest>=35 && !recentRefusal && !overProposing && !proposalCooldown && !priority(current.needs) && !priority(other.needs);
         const ageLines = (await db.prepare("SELECT id, speaker, content FROM conversations WHERE speaker IN ('Lia','Noé') AND NOT EXISTS (SELECT 1 FROM conversations visitor WHERE visitor.id = conversations.id - 1 AND visitor.speaker = 'vous') AND (content LIKE '%28%' OR content LIKE '%31%' OR content LIKE '%huit%' OR content LIKE '%trente%')").all<{id:number;speaker:string;content:string}>()).results;
         const knownAges = Array.from(new Set([...rememberAges(ageLines), ...Object.keys(story.facts).filter(name => story.facts[name].some(fact => name === "Lia" ? /\b28\b/.test(fact) : /\b31\b/.test(fact)))]));
         const humanConversation = story.finalCalled ? (await db.prepare("SELECT id,speaker,content FROM conversations WHERE speaker IN ('Lia','Noé','vous') ORDER BY id DESC LIMIT 12").all()).results.reverse() : [];
@@ -293,7 +298,11 @@ export async function POST(request: Request) {
         for (const d of decisions) {
             const previous = world.agents.find(a => a.id === d.actor)!;
             const attractionRoom=d.action === "none"?previous.room:d.room;
-            d.emotions.attraction = attractionAfterTurn(d.actor, previous.emotions.attraction, d.emotions.attraction, previous.needs.stress, (attractionRoom === "bureau") ? 0 : (common||attractionRoom==="jardin"&&decisions.every(p=>p.room==="jardin"&&p.intent==="chat") ? residentProfiles[d.actor].sharedBonus * (attractionRoom === "chambre"?2:1) : 0) + (d.actor===2 && previous.emotions.attraction<75 && world.agents[0].emotions.attraction>=5 && !recentRefusal && !overProposing && d.emotions.attraction>=previous.emotions.attraction ? Math.min(6,75-previous.emotions.attraction):0));
+            // Assoupli le 2026-09-16 : le rattrapage de Noé (6 points/tour dès que Lia dépassait 5)
+            // faisait grimper son attirance à un rythme jugé irréaliste dès la première demi-heure
+            // (audit Opus, jamais corrigé jusqu'ici sur ce point précis). Rattrapage plus lent, et
+            // qui n'attend pas seulement un frémissement de Lia mais un vrai signal de réciprocité.
+            d.emotions.attraction = attractionAfterTurn(d.actor, previous.emotions.attraction, d.emotions.attraction, previous.needs.stress, (attractionRoom === "bureau") ? 0 : (common||attractionRoom==="jardin"&&decisions.every(p=>p.room==="jardin"&&p.intent==="chat") ? residentProfiles[d.actor].sharedBonus * (attractionRoom === "chambre"?2:1) : 0) + (d.actor===2 && previous.emotions.attraction<65 && world.agents[0].emotions.attraction>=15 && !recentRefusal && !overProposing && d.emotions.attraction>=previous.emotions.attraction ? Math.min(3,65-previous.emotions.attraction):0));
             if (attractionRoom === "bureau") d.emotions.attraction=Math.min(previous.emotions.attraction,d.emotions.attraction);
             if (d.actor === 1 && excessiveProposal)
                 d.emotions.attraction = Math.max(0, Math.min(d.emotions.attraction, previous.emotions.attraction - 6));

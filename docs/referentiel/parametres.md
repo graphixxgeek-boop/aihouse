@@ -60,18 +60,26 @@ et peuvent chuter plus vite qu'ils ne montent).
   attirance > 75 et confiance ≥ 60, à 65 si attirance ≥ 60, sinon à 25.
 - `personalBoost` (question « quel genre d'homme es-tu ? » suivie d'une réponse intéressée) :
   +3 points d'attirance, une seule fois (`dramaRules.personalBoost`).
-- Bonus supplémentaire pour Noé qui rattrape Lia : jusqu'à +6 points si son attirance < 75 et
-  celle de Lia ≥ 5, sans refus ni insistance récents.
+- Bonus supplémentaire pour Noé qui rattrape Lia : jusqu'à +3 points (assoupli le 2026-09-16,
+  était +6) si son attirance < 65 (était < 75) et celle de Lia ≥ 15 (était ≥ 5), sans refus ni
+  insistance récents — l'ancien seuil laissait l'attirance de Noé grimper à un rythme jugé
+  irréaliste dès la première demi-heure (point de l'audit Opus initial resté non corrigé jusque-là,
+  signalé à nouveau par retour utilisateur direct).
 
 ## Gestes et consentement (`lib/turn.ts`, `app/api/lia/route.ts`, `lib/drama.ts`)
 
-- Noé peut proposer un geste à partir de 80 % de sa propre attirance, après au moins 12 tours,
-  hors observation/débrief/sommeil/besoin urgent.
+- Noé peut proposer un geste à partir de 80 % de sa propre attirance, après au moins 20 tours
+  (assoupli le 2026-09-16, était 12 — le premier geste arrivait trop tôt dans la relation, retour
+  utilisateur direct faisant suite au même point resté ouvert depuis l'audit Opus initial), hors
+  observation/débrief/sommeil/besoin urgent.
 - `dramaRules.proposalStress` : première proposition → +18 stress pour Noé, +14 pour Lia.
 - `dramaRules.rejection` : un refus réduit l'attirance de Noé de 3, augmente sa faim de 6 et sa
   fatigue de 5.
 - `dramaRules.pressureStress` : +16 stress pour Lia en cas d'insistance excessive.
 - Seuil d'insistance (`overProposing`) : 2 propositions de Noé sur les 6 derniers tours.
+- Anti-répétition des propositions (`proposalCooldown`) : aucune nouvelle proposition dans les 6
+  dernières requêtes (assoupli le 2026-09-16, était 3 — les propositions revenaient encore trop
+  souvent malgré ce garde-fou).
 - 3 rapprochements en moins de 18 tours → Lia : −5 attirance, −2 attachement, `life.dispute` ouvert
   pour 2 tours de réconciliation (voir ci-dessous), plus d'ancien débrief de distance.
 - `dramaRules.debriefTurns` : 2 tours de débrief après un événement marquant.
@@ -141,6 +149,13 @@ et peuvent chuter plus vite qu'ils ne montent).
 - `looksLikeEcho` : deux répliques sont jugées être un écho si elles partagent au moins 90 % de
   leurs mots significatifs (hors mots vides), à condition d'avoir chacune au moins 7 mots
   significatifs.
+- `distinctReply` (répliques de secours scriptées, `lib/drama.ts`) : une variante n'est jamais
+  reprise si l'une de ses phrases a déjà servi ailleurs dans la session, même combinée à un texte
+  différent (vérifié phrase par phrase sur tout l'historique, pas seulement au niveau du message
+  entier — correction du 2026-09-16, voir principes.md 5.1). Si les ~100 variantes disponibles sont
+  toutes déjà sorties (situation extrême, jamais rencontrée hors test très répétitif), un filet
+  ultime à 3 formulations supplémentaires (choisi par `round%3`) évite qu'`addLine` supprime
+  silencieusement le tour du personnage.
 
 ## Timing visuel (`lib/visual-events.ts`, `lib/stock.ts`)
 
@@ -148,6 +163,13 @@ et peuvent chuter plus vite qu'ils ne montent).
   changement tv 1500 ms.
 - `stockSurprise` (réaction à la régénération des provisions) : courbe dégressive de curiosité
   +9, +6, +4, +2, +1 puis 0 selon le nombre d'expositions déjà vécues par le personnage.
+- Vitesse de rotation de l'anneau (`components/house-view.tsx`, `ringSpeed`) : base
+  0,15 + (stress + tension)/200 × 2,3 rad/s (assoupli le 2026-09-16, était 0,2 + …×1,2 — l'écart
+  entre un personnage calme et stressé passait inaperçu). Deux accélérations temporaires
+  s'ajoutent, multiplicatives : ×2,4 pendant que le personnage parle (bulle de dialogue affichée,
+  effet d'« observation » en cours) et jusqu'à ×3 en décroissance linéaire sur 2600 ms après la
+  découverte d'un nouvel indice ou d'une nouvelle observation (retour utilisateur du 2026-09-16 :
+  les anneaux devaient s'accélérer plus souvent, de façon lisible).
 
 ## Réseau, verrou et limites techniques (`app/api/lia/route.ts`)
 

@@ -17,6 +17,12 @@ export function HouseView({paused=false,visualEvents=[],gardenOpen=false,agents,
   const eventRef=useRef(visualEvents);useEffect(()=>{eventRef.current=visualEvents},[visualEvents]);
   const mealStamp=useRef("");
   const humanVoice=useRef(humanSpeaking);useEffect(()=>{humanVoice.current=humanSpeaking},[humanSpeaking]);
+  // Anneau plus vif pendant qu'un personnage parle ("observation" en cours) et bref sursaut à
+  // chaque nouvel indice trouvé — le seul stress/tension de fond passait inaperçu (retour
+  // utilisateur du 2026-09-16 : les anneaux devaient "s'accélérer plus souvent", de façon lisible).
+  const speakingRef=useRef(speaking);useEffect(()=>{speakingRef.current=speaking},[speaking]);
+  const evidencePulse=useRef(0),evidenceCount=useRef(evidence.length+observations.length);
+  useEffect(()=>{const count=evidence.length+observations.length;if(count>evidenceCount.current)evidencePulse.current=performance.now();evidenceCount.current=count;},[evidence.length,observations.length]);
   const illumination=useRef<(night:boolean)=>void>(()=>{}),speakerActive=useRef(speakerOn);
   const cooking=useRef(false);useEffect(()=>{cooking.current=agents.some(a=>a.room==="cuisine"&&a.intent==="eat")},[agents]);
   const roomSelect=useRef(onRoom);useEffect(()=>{roomSelect.current=onRoom},[onRoom]);
@@ -162,7 +168,7 @@ export function HouseView({paused=false,visualEvents=[],gardenOpen=false,agents,
     let awaiting=false,lastRender=0;
     update.current=items=>{computerActive=items.some(a=>a.intent==="study"&&a.room==="bureau");computerOn=computerActive||computerVerified;dirty=true;items.forEach(agent=>{
       const r=residents.get(agent.id);if(!r)return;
-      r.eating=agent.intent==="eat"&&agent.room==="cuisine";r.sleeping=["sleep","share_sleep"].includes(agent.intent);r.inLove=!r.sleeping&&isInLove(agent.emotions.attraction);r.ringSpeed=.2+(agent.needs.stress+agent.emotions.tension)/200*1.2;
+      r.eating=agent.intent==="eat"&&agent.room==="cuisine";r.sleeping=["sleep","share_sleep"].includes(agent.intent);r.inLove=!r.sleeping&&isInLove(agent.emotions.attraction);r.ringSpeed=.15+(agent.needs.stress+agent.emotions.tension)/200*2.3;
       const glyph=smiley(agent);if(r.glyph!==glyph){r.glyph=glyph;const ctx=r.faceCanvas.getContext("2d")!;ctx.clearRect(0,0,160,160);ctx.font='112px "Segoe UI Emoji", sans-serif';ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(glyph,80,85);r.faceTexture.needsUpdate=true;}
       const destination:[number,number]=inspection.current>0?[inspection.current===1?-7:7,agent.id===1?-.25:.25]:residentDestination(agent);const [x,z]=destination;if(!r.snapshot&&agent.last_seen>0){r.snapshot=true;r.group.position.set(x,0,z);r.room=agent.room;r.target=destination;r.path=[];return;}if(r.target&&r.room===agent.room&&r.target[0]===x&&r.target[1]===z)return;
       if(r.room===agent.room&&Math.hypot(r.group.position.x-x,r.group.position.z-z)<.1)return;
@@ -200,7 +206,7 @@ export function HouseView({paused=false,visualEvents=[],gardenOpen=false,agents,
 
       const dt=Math.min((time-previous)/1000,.05);previous=time;
       if([...residents.values()].some(r=>r.path.length))dirty=true;
-      residents.forEach(r=>{const plate=plates.get(r.id);if(plate){const showPlate=r.eating&&!r.path.length;if(plate.visible!==showPlate){plate.visible=showPlate;dirty=true;}}if(!reducedMotion.matches&&dt>0){r.ring.material.rotation+=dt*r.ringSpeed;dirty=true;}const phase=Math.floor((time+r.id*2300)/250)%40;const show=r.inLove&&phase<8;
+      residents.forEach(r=>{const plate=plates.get(r.id);if(plate){const showPlate=r.eating&&!r.path.length;if(plate.visible!==showPlate){plate.visible=showPlate;dirty=true;}}if(!reducedMotion.matches&&dt>0){const speakingBoost=speakingRef.current.includes(r.id)?2.4:1;const sincePulse=time-evidencePulse.current;const pulseBoost=sincePulse>=0&&sincePulse<2600?1+2*(1-sincePulse/2600):1;r.ring.material.rotation+=dt*r.ringSpeed*speakingBoost*pulseBoost;dirty=true;}const phase=Math.floor((time+r.id*2300)/250)%40;const show=r.inLove&&phase<8;
       if(phase!==r.heartPhase&&(show||r.heart.visible)){r.heartPhase=phase;r.heart.visible=show;r.heart.position.set(r.group.position.x+(r.id===1?-.8:.8),1.5,r.group.position.z-.7-phase*.025);r.heart.material.opacity=Math.max(0,1-phase/9);dirty=true;}
       const resting=r.sleeping&&["salon","chambre"].includes(r.room)&&!r.path.length;const pose=restingPose(r.id,r.room);r.face.position.set(resting?pose.x:r.group.position.x,resting?pose.y:1.35,resting?pose.z:r.group.position.z);r.ring.position.copy(r.face.position);const b=bubbleNodes.current.get(r.id);if(b){const v=r.face.position.clone().project(camera);const w=host.clientWidth,h=host.clientHeight;b.style.left=Math.min(w-46,Math.max(6,(v.x*.5+.5)*w+(r.id===1?-48:20)))+"px";b.style.top=Math.min(h-28,Math.max(4,(-v.y*.5+.5)*h-25))+"px";}const step=r.path[0];if(step){const dx=step[0]-r.group.position.x,dz=step[1]-r.group.position.z,distance=Math.hypot(dx,dz);if(distance<.03)r.path.shift();else{const speed=Math.min(distance,dt*2.2);r.group.position.x+=dx/distance*speed;r.group.position.z+=dz/distance*speed;r.group.rotation.y=Math.atan2(dx,dz);}}});
       const pair=[...residents.values()];

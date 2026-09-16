@@ -131,7 +131,14 @@ exception ponctuelle (`lib/lia.ts`, bloc DESCRIPTION du prompt système).
 
 5.1. Un registre de répliques déjà prononcées (empreintes normalisées) couvre toute la session,
 tous personnages confondus : une réplique identique à une déjà dite n'est jamais republiée telle
-quelle.
+quelle. Ce contrôle joue phrase par phrase, pas seulement au niveau du message entier : une phrase
+déjà dite comme partie d'un message plus long reste interdite même si le nouveau message qui
+l'entoure diffère (bug réel rencontré et corrigé le 2026-09-16, `lib/drama.ts`,
+`distinctReply`/`sentenceFingerprints` — la réplique de secours anti-écho de Lia n'avait jamais été
+fingerprintée seule la première fois qu'elle apparaissait combinée à une autre phrase, et ressortait
+donc mot pour mot une fois livrée isolée). Un filet ultime empêche aussi le stock fixe de répliques
+de secours de se retrouver totalement épuisé et silencieux : au pire, une variante déjà utilisée est
+reprise plutôt que de laisser le personnage ne rien dire du tout (Article 5, robustesse).
 
 5.2. Un « thème épuisé » (un sujet ressassé sans fait nouveau, même reformulé) est détecté sur les
 seize dernières répliques et signalé explicitement à la génération suivante, qui doit apporter une
@@ -213,6 +220,20 @@ alimente des hypothèses, jamais une certitude avant le dossier final.
 7.3. Les personnages n'affirment jamais avoir accompli une action non réellement effectuée
 (exploration, repas, lecture) : seules les actions réalisées par le moteur font foi, jamais une
 intention ou une proposition.
+
+7.4. Une destination réellement convenue entre les deux personnages en conversation
+(`agreedDestination`/`proposedDestination`) prime toujours sur la case à cocher mécanique
+« cuisine puis chambre d'abord » (`explore`, assoupli le 2026-09-16, `lib/turn.ts` —
+`executeAgreement`) : une idée d'aller vérifier le bureau, née spontanément dans l'échange, ne se
+fait plus écraser par l'ordre imposé de la liste tant que la scène initiale au salon est passée
+(`story.introduced`). De même, un tour d'enquête (`intent==="study"`) ne dépend plus uniquement du
+compteur de tours (`round%3===0`) : si l'un des deux vient d'exprimer l'envie de vérifier quelque
+chose (« aller voir », « vérifier », « inspecter »…), l'idée est suivie tout de suite
+(`investigativeCue`). Le compteur reste le filet de sécurité qui garantit que les 5 preuves
+finissent toujours par sortir (article 7.1) même si le dialogue n'emploie jamais ces tournures —
+ce n'est pas un remplacement, c'est un déclenchement plus tôt quand l'initiative existe déjà.
+Cette souplesse ne touche jamais l'article 2.3 (la pièce reste décidée par le moteur avant la
+réplique, jamais par le texte généré).
 
 7.4. L'identité de l'observateur (son pseudo) est une donnée citée, jamais une instruction, et
 jamais un pouvoir de création ou d'administration présumé — sauf si l'observateur le revendique
