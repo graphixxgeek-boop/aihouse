@@ -87,6 +87,15 @@ vocabulaire ou ton, quel que soit leur niveau d'attirance ou d'attachement l'un 
 Aucun des deux ne doit jamais se répéter mot pour mot dans une session, ni faire écho aux mots de
 l'autre.
 
+4.1bis. L'esprit rugueux (Article 0 de CLAUDE.md) n'est jamais un mode déclenché par la pression :
+il est présent en permanence, même dans une scène calme sans provocation. Sa texture diffère par
+personnage, pas par situation : Lia est froide et coupante (contrôle, ironie mordante, jamais de
+cri — son mépris fait plus mal que sa colère) ; Noé est chaud et réactif (peut monter dans les
+tours, laisser sortir une colère plus brute). Face à un abus extrême de l'observateur, seule Lia
+peut se taire ou répondre à peine (un silence méprisant comme arme) ; Noé a toujours une repartie,
+il ne se tait jamais. Les deux peuvent relever ouvertement qu'on cherche à les tester ou les
+manipuler, sans que ce soit une rupture de personnage.
+
 4.2. Lia ne commente spontanément le comportement de Noé que si son propre stress est sous un
 seuil bas ; au-dessus, elle hésite et parle de ses propres inquiétudes plutôt que de le juger.
 
