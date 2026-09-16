@@ -132,6 +132,19 @@ export function HouseView({paused=false,visualEvents=[],gardenOpen=false,agents,
     const can=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,.3,12),new THREE.MeshStandardMaterial({color:0xb3c0ca,roughness:.4}));can.position.set(6.5,.85,-4.2);reserves.add(can);const band=new THREE.Mesh(new THREE.CylinderGeometry(.153,.153,.14,12),new THREE.MeshStandardMaterial({color:0xc77552}));band.position.copy(can.position);reserves.add(band);
     const bread=new THREE.Mesh(new THREE.CapsuleGeometry(.1,.42,3,8),new THREE.MeshStandardMaterial({color:0xd8a457,roughness:.9}));bread.rotation.z=Math.PI/2;bread.rotation.y=sceneObjects.bread.angle;bread.position.set(6.5,.77,-3.4);reserves.add(bread);
     for(const [x,z] of [[6.4,-2.6],[6.6,-2.75]]){const fruit=new THREE.Mesh(new THREE.SphereGeometry(.14,10,7),new THREE.MeshStandardMaterial({color:0xb96c52}));fruit.position.set(x,.8,z);reserves.add(fruit);}let mealStarted=0,lastFoodEvent="";
+    // Une assiette par habitant, posée sur la table de cuisine, visible seulement pendant le repas.
+    const plates=new Map<Person,THREE.Group>();
+    for(const id of [1,2] as Person[]){
+      const plate=new THREE.Group();
+      const disc=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.025,20),new THREE.MeshStandardMaterial({color:0xe7e2d6,roughness:.5}));
+      const food=new THREE.Mesh(new THREE.SphereGeometry(.08,10,7),new THREE.MeshStandardMaterial({color:id===1?0xb96c52:0xc9a24a,roughness:.8}));
+      food.position.y=.05;food.scale.y=.55;
+      plate.add(disc,food);
+      plate.position.set(id===1?1.55:2.45,.475,-4.05);
+      plate.visible=false;
+      scene.add(plate);
+      plates.set(id,plate);
+    }
     const voiceWaves:THREE.Mesh<THREE.RingGeometry,THREE.MeshBasicMaterial>[]=[];for(const {x,z} of sceneSpeakers){for(let i=0;i<3;i++){const wave=new THREE.Mesh(new THREE.RingGeometry(.22,.25,24),new THREE.MeshBasicMaterial({color:0xc5deed,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false}));wave.rotation.x=-Math.PI/2;wave.position.set(x,.92,z);wave.userData.phase=i/3;scene.add(wave);voiceWaves.push(wave);}}
     for(let i=0;i<3;i++){const wave=new THREE.Mesh(new THREE.RingGeometry(.22,.25,24),new THREE.MeshBasicMaterial({color:0xc5deed,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false}));wave.rotation.x=-Math.PI/2;wave.position.set(-8.7,.7,-.9);wave.userData.phase=i/3;scene.add(wave);voiceWaves.push(wave);}
     const residents=new Map<Person,{target?:[number,number];group:THREE.Group;path:[number,number][];room:Room;snapshot:boolean;sleeping:boolean;eating:boolean;id:Person;face:THREE.Sprite;faceCanvas:HTMLCanvasElement;faceTexture:THREE.CanvasTexture;glyph:string;ring:THREE.Sprite;ringSpeed:number;heart:THREE.Sprite;inLove:boolean;heartPhase:number}>();
@@ -187,7 +200,7 @@ export function HouseView({paused=false,visualEvents=[],gardenOpen=false,agents,
 
       const dt=Math.min((time-previous)/1000,.05);previous=time;
       if([...residents.values()].some(r=>r.path.length))dirty=true;
-      residents.forEach(r=>{if(!reducedMotion.matches&&dt>0){r.ring.material.rotation+=dt*r.ringSpeed;dirty=true;}const phase=Math.floor((time+r.id*2300)/250)%40;const show=r.inLove&&phase<8;
+      residents.forEach(r=>{const plate=plates.get(r.id);if(plate){const showPlate=r.eating&&!r.path.length;if(plate.visible!==showPlate){plate.visible=showPlate;dirty=true;}}if(!reducedMotion.matches&&dt>0){r.ring.material.rotation+=dt*r.ringSpeed;dirty=true;}const phase=Math.floor((time+r.id*2300)/250)%40;const show=r.inLove&&phase<8;
       if(phase!==r.heartPhase&&(show||r.heart.visible)){r.heartPhase=phase;r.heart.visible=show;r.heart.position.set(r.group.position.x+(r.id===1?-.8:.8),1.5,r.group.position.z-.7-phase*.025);r.heart.material.opacity=Math.max(0,1-phase/9);dirty=true;}
       const resting=r.sleeping&&["salon","chambre"].includes(r.room)&&!r.path.length;const pose=restingPose(r.id,r.room);r.face.position.set(resting?pose.x:r.group.position.x,resting?pose.y:1.35,resting?pose.z:r.group.position.z);r.ring.position.copy(r.face.position);const b=bubbleNodes.current.get(r.id);if(b){const v=r.face.position.clone().project(camera);const w=host.clientWidth,h=host.clientHeight;b.style.left=Math.min(w-46,Math.max(6,(v.x*.5+.5)*w+(r.id===1?-48:20)))+"px";b.style.top=Math.min(h-28,Math.max(4,(-v.y*.5+.5)*h-25))+"px";}const step=r.path[0];if(step){const dx=step[0]-r.group.position.x,dz=step[1]-r.group.position.z,distance=Math.hypot(dx,dz);if(distance<.03)r.path.shift();else{const speed=Math.min(distance,dt*2.2);r.group.position.x+=dx/distance*speed;r.group.position.z+=dz/distance*speed;r.group.rotation.y=Math.atan2(dx,dz);}}});
       const pair=[...residents.values()];

@@ -57,6 +57,13 @@ La porte principale reste verrouillée en permanence, sans exception.
 2.7. Une destination proposée et acceptée dans le dialogue doit être effectuée au tour suivant,
 jamais reproposée indéfiniment ; une urgence (faim, sommeil) peut la suspendre sans l'annuler.
 
+2.8. Après la révélation, si l'observateur demande à un personnage de se rendre dans une pièce,
+ce dernier comprend clairement la demande. Y rechigner, négocier ou refuser reste une question de
+personnalité et de circonstances, jamais un défaut de compréhension. Mais un accord réellement
+exprimé doit produire un déplacement effectif au tour suivant — la même mécanique que pour une
+destination acceptée entre les deux personnages (règle 2.7), sans exiger l'accord du partenaire
+non concerné par la demande.
+
 ## 3. Besoins et sommeil
 
 3.1. Faim, fatigue, stress et incertitude sont bornés entre 0 et 100 et évoluent selon un profil
@@ -98,6 +105,12 @@ posée par soi-même, jamais à une réplique future.
 présentations déjà faites, âges déjà connus, genre correct, localisation des objets, cohérence de
 la pièce où la réplique est prononcée. Ces recadrages corrigent après coup une sortie du modèle
 qui s'écarterait des faits établis — ils ne remplacent jamais une génération correcte.
+
+4.7. Un personnage décrit toujours ce qui est réellement affiché à l'observateur au moment où il
+parle (`scene.perception`, état courant des objets), jamais un souvenir présenté comme actuel ni
+un état supposé. Si un objet a changé depuis le tour précédent (allumé/éteint, découvert ou non,
+quelqu'un présent ou non), la description suit l'état donné maintenant. Règle fixe, jamais une
+exception ponctuelle (`lib/lia.ts`, bloc DESCRIPTION du prompt système).
 
 ## 5. Mémoire et non-répétition (Article 9/11)
 

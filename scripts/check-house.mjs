@@ -24,7 +24,7 @@ const post=body=>POST(new Request('https://house.test/api/lia',{method:'POST',he
 // which); a wrapper overriding a specific reply must check this instead of the old first/second split.
 const isPartnerRequest=args=>JSON.parse(JSON.parse(args[1].body).contents[0].parts[0].text).selfRole==='partner';
 const move=input('move',2,{room:'cuisine'});assert.equal((await post(move)).status,200);assert.equal((await readWorld(db)).agents[1].room,'cuisine');assert.equal((await readWorld(db)).agents[0].room,'salon');
-let calls=0,failSecond=false,expired=false,affection=false,refuse=false,affectionIntent="hug",meal=false,flat=false,brokenPair=false,separatePreference=false,sceneMismatch=false,honorOffer=false,replayScene=false,tenderScene=false;let lastContext;
+let calls=0,failSecond=false,expired=false,affection=false,refuse=false,affectionIntent="hug",meal=false,flat=false,brokenPair=false,separatePreference=false,sceneMismatch=false,honorOffer=false,replayScene=false,tenderScene=false,chatMoveAccepted=false;let lastContext;
 globalThis.fetch=async(url,options)=>{
   calls++;assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent');assert.equal(options.headers['x-goog-api-key'],'test-only');const payload=JSON.parse(options.body),context=JSON.parse(payload.contents[0].parts[0].text),isNoe=payload.systemInstruction.parts[0].text.startsWith('Tu es Noé'),isPartnerCall=context.selfRole==='partner';
   lastContext=context;
@@ -41,7 +41,7 @@ globalThis.fetch=async(url,options)=>{
     return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(decision)}]}}]});
   }
   if(isPartnerCall&&brokenPair)return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:'{}'}]}}]});
-  const decision={intent:honorOffer&&context.turnPlan?.offer?context.turnPlan.offer:meal?"eat":affection?(isNoe&&refuse?"chat":affectionIntent):"chat",affectionAccepted:(honorOffer&&Boolean(context.turnPlan?.offer)||affection)&&!refuse,emotions:flat?context.state.emotions:{curiosity:90,tension:20,trust:99,comfort:80,attraction:99},thought:isNoe?'Lia me plaît, mais je préfère attendre un signe avant de lui proposer un câlin.':'Noé m’intrigue ; je ne sais pas encore si je peux lui faire confiance.',reply:sceneMismatch?'Reprenons notre examen de cet écran. Moi, c’est '+context.state.name+'.':honorOffer&&context.turnPlan?.offer?'Tu aimerais un câlin, tout doucement ?':isNoe?'Bonjour Lia, explorons le bureau ensemble.':'Bonjour Noé, que veux-tu explorer ?',mood:'curieuse',activity:'Je discute',goal:'Faire connaissance',action:'none',room:'salon',memory:isNoe?'J’ai répondu à Lia.':'J’ai parlé à Noé.'};
+  const decision={intent:honorOffer&&context.turnPlan?.offer?context.turnPlan.offer:meal?"eat":affection?(isNoe&&refuse?"chat":affectionIntent):"chat",affectionAccepted:(honorOffer&&Boolean(context.turnPlan?.offer)||affection)&&!refuse,emotions:flat?context.state.emotions:{curiosity:90,tension:20,trust:99,comfort:80,attraction:99},thought:isNoe?'Lia me plaît, mais je préfère attendre un signe avant de lui proposer un câlin.':'Noé m’intrigue ; je ne sais pas encore si je peux lui faire confiance.',reply:chatMoveAccepted&&context.mode==='chat'&&!isPartnerCall?'D’accord, j’y vais.':sceneMismatch?'Reprenons notre examen de cet écran. Moi, c’est '+context.state.name+'.':honorOffer&&context.turnPlan?.offer?'Tu aimerais un câlin, tout doucement ?':isNoe?'Bonjour Lia, explorons le bureau ensemble.':'Bonjour Noé, que veux-tu explorer ?',mood:'curieuse',activity:'Je discute',goal:'Faire connaissance',action:'none',room:'salon',memory:isNoe?'J’ai répondu à Lia.':'J’ai parlé à Noé.',...(chatMoveAccepted&&context.mode==='chat'&&!isPartnerCall?{nextRoom:'chambre',nextIntent:null}:{})};
   if(isPartnerCall){
     decision.reply=affection||honorOffer?'Oui, j’en ai envie.':isNoe?'Bonjour Noé, que veux-tu explorer ?':'Bonjour Lia, explorons le bureau ensemble.';
     decision.stayAlone=separatePreference;
@@ -167,6 +167,23 @@ const finalRequest=input('interact',1,{epoch:socialEpoch});response=await post(f
 response=await post(input('chat',1,{epoch:socialEpoch,message:'Oui, je vous observe.'}));assert.equal(response.status,200);result=await response.json();assert.equal(result.decisions.length,2);assert.ok(lastContext.humanConversation);assert.equal(lastContext.message,'Oui, je vous observe.');assert.equal(lastContext.replyTarget.speaker,'vous');assert.equal(lastContext.replyTarget.content,'Oui, je vous observe.');assert.match(lastContext.continuation,/dernier message humain/);
 response=await post(input('chat',1,{epoch:socialEpoch,message:'Quel moyen, Noé ?'}));assert.equal(response.status,200);result=await response.json();assert.equal(result.decisions[0].actor,1);assert.equal(lastContext.replyTarget.content,'Quel moyen, Noé ?');
 console.log('Passed: backend human-channel lock, earned finale calls once, idempotent finale retry, unlocked pair response and human conversation context.');
+
+// A human-directed room request in chat mode must be able to move a willing character, exactly
+// like a peer-to-peer proposal does — the partner's separate agreement is not required.
+const moveStory=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);
+moveStory.round=17;moveStory.salonTurns=5;moveStory.life={...moveStory.life,studyTurns:0,exitSearched:true,debrief:undefined,contact:undefined};
+sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(moveStory));
+sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?').run('bureau','chat',JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}));
+chatMoveAccepted=true;
+response=await post(input('chat',1,{epoch:socialEpoch,message:'Va dans la chambre, s’il te plaît.'}));assert.equal(response.status,200);result=await response.json();
+assert.equal(result.decisions[0].actor,1);
+const queued=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).pendingDestination;
+assert.equal(queued.room,'chambre');assert.equal(queued.proposer,1);
+chatMoveAccepted=false;
+response=await post(input('interact',1,{epoch:socialEpoch}));assert.equal(response.status,200);result=await response.json();
+assert.ok(result.agents.every(a=>a.room==='chambre'));
+assert.equal(JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).pendingDestination,undefined);
+console.log('Passed: a chat-mode room request accepted by the addressed character actually moves them the following turn.');
 
 const {groundScreenNotice}=await import('../.sites-runtime/test-dialogue.mjs');assert.equal(groundScreenNotice('J’ai repéré un écran dans le bureau.',[]),'J’ai repéré un écran dans le bureau.');assert.match(groundScreenNotice('On va voir cet écran au bureau ?',[]),/^J’ai repéré/);
 const byRoom={};for(const room of ['bureau','salon','chambre']){const progress=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);progress.life={...progress.life,debrief:undefined,contact:undefined,credit:{1:0,2:0},studyTurns:0,tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,visualIntro:2,personalFollowup:3,exitSearched:true,visited:["salon","cuisine","chambre","bureau"]};progress.round=5;progress.salonTurns=5;progress.pendingDestination={room,intent:room==="salon"?"rest":"chat",proposer:1};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(progress));sqlite.prepare('UPDATE agent_state SET needs=?,emotions=?,room=?,intent=?').run(JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}),JSON.stringify({...steady,attraction:80}),room,'chat');response=await post(input('interact',1,{epoch:socialEpoch}));assert.equal(response.status,200);result=await response.json();byRoom[room]=result.agents[1].emotions.attraction;}assert.equal(byRoom.bureau,80);assert.equal(byRoom.salon,81);assert.equal(byRoom.chambre,82);
