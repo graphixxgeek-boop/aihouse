@@ -104,10 +104,10 @@ export function groundRoomSpeech(reply:string,room:string,history:DialogueLine[]
     // n'a pas lieu : le moteur a déjà placé la scène dans `room` avant la parole (Article 2).
     reply=reply.replace(new RegExp("\\b(on|tu veux qu[’']on)\\s+([^.!?]*?)\\s+(?:au|dans (?:le|la))\\s+"+room+"\\s*\\?","ig"),(_,prefix,middle)=>`${prefix} ${middle} ?`);
     const remote=[{room:"chambre",pattern:/(?:ce|le) miroir(?! de la chambre| dans la chambre)/gi,label:"le miroir de la chambre"},{room:"salon",pattern:/(?:cette|la) plante(?! du salon)/gi,label:"la plante du salon"},{room:"salon",pattern:/l[’']enceinte(?! du salon)/gi,label:"l’enceinte du salon"},{room:"cuisine",pattern:/les provisions(?! de la cuisine)/gi,label:"les provisions de la cuisine"}];for(const object of remote)if(room!==object.room)reply=reply.replace(object.pattern,object.label);
-    if(/télévision|télécommande|la télé|\btv\b/i.test(reply)&&!/bureau|relevé|feuille|codé|décod/i.test(reply))return reply;
+    if(/télévision|télécommande|la télé|\btv\b/i.test(reply)&&!/bureau|relevé|\bfeuille\b|codé|décod/i.test(reply))return reply;
     reply=reply.replace(new RegExp("\\b(?:allons|retournons|rejoignons)\\s+(?:dans\\s+)?(?:le|la|au)\\s+"+room,"ig"),"On y est : regardons autour de nous");
     if(room==='bureau')return reply;
-    const deskContext=/écran|chiffres|données|ces lignes|feuille|décod/i.test(reply+' '+(history.at(-1)?.content??''));
+    const deskContext=/écran|chiffres|données|ces lignes|\bfeuille\b|décod/i.test(reply+' '+(history.at(-1)?.content??''));
     if(!deskContext)return reply;
     const choices=[
         'Le document est au bureau, pas sous nos yeux. Ce qu’on en a retenu, ça suffit déjà à me travailler.',
@@ -119,7 +119,7 @@ export function groundRoomSpeech(reply:string,room:string,history:DialogueLine[]
         const future=/retourner|retourne|retournons|aller|allons|rejoind|quand nous|pourrons|plus tard/i.test(sentence);
         const memory=/je repense|ce que nous avons|ce qu’on a|nous avons lu|on a lu|nous avions|souvenir|me travaille|me trotte/i.test(sentence);
         const reading=/(?:on|nous|je)\s+(?:peut\s+|pourrait\s+|pouvons\s+)?(?:regarde|regarder|lit|lire|lis|observe|observer|examine|examiner)|regarde(?:r|z|ons)?\b|reprenons.*(?:examen|lecture)|examinons|penchons[- ]nous|décoder|restons (?:près|devant)|(?:ces|les) (?:pages|lignes|données).*(?:restent|changent|affichent)|(?:elles|ils|l’écran) (?:ne )?(?:bougent|bouge|affiche)/i.test(sentence);
-        const reserved=/écran|chiffres|données|ces lignes|feuille|décod|penchons[- ]nous là-dessus/i.test(sentence);
+        const reserved=/écran|chiffres|données|ces lignes|\bfeuille\b|décod|penchons[- ]nous là-dessus/i.test(sentence);
         return reading&&reserved&&!future&&!memory?replacement:sentence;
     }).filter((s,i,a)=>a.indexOf(s)===i).join(' ');
 }

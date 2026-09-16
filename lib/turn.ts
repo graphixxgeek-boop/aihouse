@@ -83,7 +83,7 @@ export function proposedDestination(decisions:Array<SpatialDecision&{nextRoom?:R
  if(decisions.length!==2)return undefined;
  const [first,second]=decisions;
  const future=/allons|aller|retourn|rejoign|on (?:va|peut|pourrait)|tu (?:veux|aimerais)|envie|ça te dirait|que dirais-tu/i.test(first.reply);
- const cue=first.nextRoom==="jardin"?/jardin|dehors|arbre/i:first.nextRoom==="bureau"?/bureau|écran|feuille|code/i:first.nextRoom==="cuisine"?/cuisine|manger|repas|cuisiner|thé/i:first.nextRoom==="chambre"?/chambre|dormir|sommeil|massage/i:/salon|canapé|télévision|tv|souffler|câlin|bisou/i;
+ const cue=first.nextRoom==="jardin"?/jardin|dehors|arbre/i:first.nextRoom==="bureau"?/bureau|écran|\bfeuille\b|code/i:first.nextRoom==="cuisine"?/cuisine|manger|repas|cuisiner|thé/i:first.nextRoom==="chambre"?/chambre|dormir|sommeil|massage/i:/salon|canapé|télévision|tv|souffler|câlin|bisou/i;
  if(future&&cue.test(first.reply)&&first.nextRoom&&second.acceptsNextRoom&&(!first.nextIntent||!intentRoom[first.nextIntent]||intentRoom[first.nextIntent]===first.nextRoom)) {
   const intent=first.nextIntent??(first.nextRoom==="bureau"?"study":first.nextRoom==="cuisine"?"eat":first.nextRoom==="salon"?"rest":"chat");
   if(first.nextRoom!==sceneRoom||intent!==first.intent)return {room:first.nextRoom,intent,proposer:first.actor};

@@ -51,7 +51,7 @@ export function pathBetween(start: [number, number], end: [number, number], gard
 export const roomAnchors:Record<Room,Record<string,[[number,number],[number,number]]>>={
  // La télécommande repose sur la table basse : on s'approche d'elle pour allumer la tv, pas de
  // l'écran lui-même, puis on l'observe depuis là (plus naturel qu'un nez collé à l'écran).
- salon:{sofa:[[-6.5,-3.5],[-5,-3.5]],remote:[[-6.3,-1.8],[-5.7,-1.8]],speaker:[[-2.5,-3.5],[-3,-3.5]],plant:[[-3.5,-2],[-4,-2]],window:[[-7.5,-5],[-6.5,-5.5]],entry:[[-4.5,-2],[-3.5,-2]]},
+ salon:{sofa:[[-6.5,-3.5],[-5,-3.5]],remote:[[-6.5,-2],[-6,-2]],speaker:[[-2.5,-3.5],[-3,-3.5]],plant:[[-3.5,-2],[-4,-2]],window:[[-7.5,-5],[-6.5,-5.5]],entry:[[-4.5,-2],[-3.5,-2]]},
  cuisine:{stock:[[5.5,-3.5],[5.5,-2.5]],table:[[1,-3],[2,-3]],stove:[[4.5,-4.5],[5.5,-4.5]],window:[[1,-5],[1.5,-5.5]],entry:[[3.5,-2],[4.5,-2]]},
  chambre:{bed:[[-4,3],[-4,4]],mirror:[[-2,2],[-2.5,2]],window:[[-3.5,5],[-2.5,5]],entry:[[-4.5,1.5],[-3.5,1.5]]},
  jardin:{fence:[[-12.5,5],[-11.5,5]],entry:[[-9,0],[-9,.5]],tree:[[-10.5,-2.5],[-10.5,-3.5]],grass:[[-11,1.5],[-12,1.5]]},
@@ -63,7 +63,7 @@ export function destinationAnchor(agent:LocatedResident):string{
  if(agent.room==='salon')key=/enceinte/.test(hint)?'speaker':/plante/.test(hint)?'plant':agent.intent==='tv'?'remote':/fenêtre/.test(hint)?'window':'sofa';
  if(agent.room==='cuisine')key=agent.intent==='eat'?(/cuisin|prépar/.test(hint)?'stove':'table'):/fenêtre/.test(hint)?'window':'entry';
  if(agent.room==='chambre')key=/miroir/.test(hint)?'mirror':/fenêtre/.test(hint)?'window':['sleep','share_sleep','massage','intimacy'].includes(agent.intent)?'bed':'entry';
- if(agent.room==='bureau')key=agent.intent==='study'?(/livre|biblioth/.test(hint)?'book':/mot|feuille|cod/.test(hint)?'note':'screen'):/fenêtre/.test(hint)?'window':'entry';
+ if(agent.room==='bureau')key=agent.intent==='study'?(/livre|biblioth/.test(hint)?'book':/mot|\bfeuille\b|cod/.test(hint)?'note':'screen'):/fenêtre/.test(hint)?'window':'entry';
  return key;
 }
 export function residentDestination(agent:LocatedResident):[number,number]{

@@ -128,9 +128,13 @@ et peuvent chuter plus vite qu'ils ne montent).
 - Centres de pièce (`centers`) : salon (−4,−3), cuisine (4,−3), chambre (−4,3), bureau (4,3),
   jardin (−11,0).
 - Points d'ancrage du salon (`roomAnchors.salon`) : canapé [[−6.5,−3.5],[−5,−3.5]], télécommande
-  [[−6.3,−1.8],[−5.7,−1.8]] (sur la table basse, distincte de l'écran), enceinte
+  [[−6.5,−2],[−6,−2]] (sur la table basse, distincte de l'écran), enceinte
   [[−2.5,−3.5],[−3,−3.5]], plante [[−3.5,−2],[−4,−2]], fenêtre [[−7.5,−5],[−6.5,−5.5]], entrée
   [[−4.5,−2],[−3.5,−2]].
+- Tout ancrage (`roomAnchors`) doit rester un multiple de 0,5 sur les deux axes : le graphe de
+  déplacement (`pathBetween`) travaille sur une grille de résolution 0,5 et arrondit silencieusement
+  toute coordonnée hors grille — un ancrage mal aligné reste visuellement correct mais devient
+  inatteignable par la marche calculée (bug réel rencontré et corrigé le 2026-09-16 sur `remote`).
 - Écran de tv (rendu 3D, `components/house-view.tsx`) : position fixe (−4, 0.27, −5.25), non liée
   à un ancrage de déplacement — c'est un décor qu'on regarde depuis la télécommande, pas un point
   où l'on se rend.
