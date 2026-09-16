@@ -102,9 +102,20 @@ séparation des voix), jamais par contournement local.
 avec ce qui est affiché à l'écran, avec l'avancement de l'enquête, et avec l'état émotionnel du
 personnage au moment où il parle.
 
+**Article 13 — Les outils de travail vivent avec le code.** Le filet de sécurité
+(`scripts/check-house.mjs`), le référentiel de travail (`docs/referentiel/principes.md` et
+`parametres.md`) et le référentiel affiché en jeu (`lib/reference.ts`, panneau Admin) ne sont pas
+des documents figés produits une fois : ils décrivent un code qui continue de changer. Tout
+changement de comportement (règle, paramètre, architecture, geste, décor) doit se refléter le jour
+même dans le ou les documents concernés, et le filet de sécurité doit être exécuté avant de
+considérer un changement terminé — jamais après coup, jamais différé à une session ultérieure. Un
+écart constaté entre deux de ces documents, ou entre l'un d'eux et le code réel, est traité comme
+un bug au même titre qu'une anomalie de dialogue (cf. Article 3) : il se corrige à la racine, pas
+par une note qui dit qu'il faudra y revenir.
+
 **Protocole d'application** à chaque itération sur le code : Article 0 (l'esprit est-il
 altéré ?) → Articles 1, 11, 12 (la conversation) → Articles 2 et 4 (cohérence globale et
-enquête) → Articles 3 et 5 (bugs et robustesse) → Articles 6 et 7 (documentation et
+enquête) → Articles 3 et 5 (bugs et robustesse) → Articles 6, 7 et 13 (documentation, outils et
 architecture) → Articles 8, 9, 10 (coût et rejouabilité). Chaque compte rendu à l'utilisateur
 doit dire explicitement ce qui a été vérifié, préservé, amélioré et corrigé.
 
@@ -119,7 +130,16 @@ doit dire explicitement ce qui a été vérifié, préservé, amélioré et corr
 Ces deux documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
 vérité. Ils doivent être mis à jour à chaque changement de règle ou de paramètre — un principe
 ou un chiffre qui change dans le code et pas ici est une dette à combler tout de suite, pas plus
-tard (Article 6/7).
+tard (Article 6/7/13).
+
+Un troisième document existe et a un rôle différent : `lib/reference.ts` est le référentiel
+**affiché en jeu** (panneau Admin, protégé par mot de passe), écrit en prose narrative et
+versionné section par section (« Version 36 », etc.) — c'est le journal de bord technique que
+Codex tenait à jour au fil des demandes, lisible par l'utilisateur lui-même. Il ne remplace pas
+`docs/referentiel/` (qui reste la référence de travail pour tout agent codant) mais doit rester
+factuellement exact : toute affirmation qui y décrit un comportement doit correspondre au code
+réel, au même titre que `docs/referentiel/` (Article 6/13). Un changement d'architecture ou de
+règle significatif se répercute donc potentiellement dans les trois documents, pas un seul.
 
 ## Documentation de contexte disponible
 
