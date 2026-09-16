@@ -100,6 +100,9 @@ export function groundPrivateThought(thought:string|undefined, actor:1|2, attrac
 
 export function groundRoomSpeech(reply:string,room:string,history:DialogueLine[]) {
     reply=reply.replace(new RegExp("(?:allons|retournons)\\s+(?:nous\\s+)?(?:poser|asseoir|installer)\\b[^.!?]*?au\\s+"+room,"ig"),"On se pose ici");
+    // Un « on souffle un peu au salon ? » dit alors qu'on y est déjà décrit un déplacement qui
+    // n'a pas lieu : le moteur a déjà placé la scène dans `room` avant la parole (Article 2).
+    reply=reply.replace(new RegExp("\\b(on|tu veux qu[’']on)\\s+([^.!?]*?)\\s+(?:au|dans (?:le|la))\\s+"+room+"\\s*\\?","ig"),(_,prefix,middle)=>`${prefix} ${middle} ?`);
     const remote=[{room:"chambre",pattern:/(?:ce|le) miroir(?! de la chambre| dans la chambre)/gi,label:"le miroir de la chambre"},{room:"salon",pattern:/(?:cette|la) plante(?! du salon)/gi,label:"la plante du salon"},{room:"salon",pattern:/l[’']enceinte(?! du salon)/gi,label:"l’enceinte du salon"},{room:"cuisine",pattern:/les provisions(?! de la cuisine)/gi,label:"les provisions de la cuisine"}];for(const object of remote)if(room!==object.room)reply=reply.replace(object.pattern,object.label);
     if(/télévision|télécommande|la télé|\btv\b/i.test(reply)&&!/bureau|relevé|feuille|codé|décod/i.test(reply))return reply;
     reply=reply.replace(new RegExp("\\b(?:allons|retournons|rejoignons)\\s+(?:dans\\s+)?(?:le|la|au)\\s+"+room,"ig"),"On y est : regardons autour de nous");

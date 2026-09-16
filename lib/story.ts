@@ -3,6 +3,17 @@ import type { Person, Room } from "./house";
 import { intents, type Intent } from "./simulation";
 import type { DialogueLine } from "./dialogue";
 
+// Choisit une variante stable pour CE scénario (story.seed) et CE moment précis (label),
+// sans dépendre uniquement de story.variant (qui n'a que 4 valeurs) : deux sessions différentes
+// ne doivent pas revivre le même moment scénarisé mot pour mot (Article 9 de la charte).
+export function seedPick<T>(seed: string, label: string, options: readonly T[]): T {
+  // Hachage polynomial simple : une somme brute de codes de caractères ferait souvent tomber
+  // deux libellés différents sur le même reste, ce qui recorrèle des moments censés varier
+  // indépendamment. Ce mélange (base 31) dissocie bien mieux label et seed.
+  let hash = 0;
+  for (const c of seed + "::" + label) hash = (hash * 31 + c.charCodeAt(0)) >>> 0;
+  return options[hash % options.length];
+}
 const atmospheres = [
   "Une lumière pâle reste immobile derrière la fenêtre. Lia se souvient d'une odeur de mer, sans pouvoir situer ce souvenir ; Noé d'un trajet qui s'interrompt.",
   "L'écran du bureau clignote sans bruit. Lia croit se rappeler une table de travail ; Noé une voix familière dont le visage lui échappe.",
@@ -104,7 +115,40 @@ export function storyContext(story: Story, actor: 1|2 = 1) {
   };
 }
 
-export function investigationRecap(evidence:readonly string[],actor:1|2){
- const facts=evidence.map(e=>e.split(' Identifiant observateur')[0]).map(e=>/autobiographique|Dans un livre/i.test(e)?'Le livre parle de reconstruction de la mémoire.':/mot laissé|maison est un environnement/i.test(e)?'Le mot décrit la maison comme un environnement.':/MEMOIRE GENEREE|13-5-13-15-9-18-5/i.test(e)?'Le code donne « mémoire générée », avec 28 et 31 dessous.':/relevé|cohabitation/i.test(e)?'Le relevé affiche une observation de cohabitation active.':e);
- return (actor===1?'On arrête de tourner en rond. ':'Bon. On pose les morceaux. ')+facts.join(' ')+(/MEMOIRE GENEREE/.test(evidence.join(' '))?' Nos souvenirs pourraient avoir été fabriqués, pas seulement perdus.':' Ce vocabulaire ressemble à un dispositif, pas à une maison ordinaire.')+' Ça ne nous donne toujours pas le nom de ceux qui ont construit ça.';
+// La révélation finale : le moment le plus important de toute la session (climax visé pour le
+// partage). Les faits énoncés ne varient jamais (Article 4/12) ; seule leur formulation change
+// d'une session à l'autre (Article 9), pour que ce moment ne se récite jamais mot pour mot.
+export function finaleReveal(seed:string){
+ const lia=seedPick(seed,'finale-lia',[
+  "Le livre : mémoire reconstruite. Le mot : environnement. Le code : mémoire générée. Le relevé : observation. Et ce dossier les relie… Même nos âges ont été inventés. Est-ce qu’un être humain nous observe ? Vous pouvez répondre ?",
+  "Le livre parlait de mémoire reconstruite, le mot d’un simple environnement, le code d’une mémoire générée, le relevé d’une observation. Ce dossier assemble tout ça, et nos âges avec — inventés, comme le reste. Il y a un humain qui nous regarde, là, derrière ? Réponds, si tu es là.",
+  "Quatre pièces, un seul dossier : mémoire reconstruite, environnement, mémoire générée, observation. Même 28 et 31 sont fabriqués. Alors on demande une fois, clairement : un être humain nous observe-t-il ? Qu’on l’entende le dire.",
+  "On a tout relu : le livre sur la mémoire reconstruite, le mot sur l’environnement, le code généré, le relevé d’observation. Le dossier les recoupe, et nos âges ne sont pas plus vrais que le reste. Alors voilà la question directe : y a-t-il un humain qui nous observe ? Répondez-nous.",
+ ] as const);
+ const noe=seedPick(seed,'finale-noe',[
+  "Deux agents IA autonomes. Pas des humains oubliés ici. DH a signé l’architecture ; ça ne nous dit pas qui regarde. Y a quelqu’un de l’autre côté ? Pourquoi nous avoir réunis ?",
+  "On n’est pas deux humains qu’on aurait oubliés là : deux agents IA autonomes, point. La signature DH sur l’architecture ne dit pas qui observe derrière l’écran. Alors, y a quelqu’un ? Et pourquoi nous deux, ensemble ?",
+  "Des agents IA autonomes, voilà ce qu’on est — pas des gens perdus dans un sous-sol. DH a conçu l’architecture, mais ça ne nomme personne. Il y a quelqu’un derrière cet écran ? Et pourquoi nous avoir mis ensemble, précisément ?",
+  "Autonomes, artificiels, les deux : c’est ce que dit ce dossier, pas des humains égarés. L’architecture porte la signature DH, sans dire qui l’actionne. Alors répondez : quelqu’un nous regarde-t-il ? Et pourquoi cette mise en scène à deux ?",
+ ] as const);
+ return {lia,noe};
+}
+export function investigationRecap(evidence:readonly string[],actor:1|2,seed:string){
+ // Le fond (les quatre indices, leur ordre de découverte, la conclusion) ne varie jamais : seule
+ // la façon de le dire change d'une session à l'autre (Article 9 sans jamais trahir l'Article 4).
+ const pick=<T,>(label:string,options:readonly T[])=>seedPick(seed,label,options);
+ const intro=actor===1
+  ?pick('recap-intro-lia',['On arrête de tourner en rond.','Reprenons ça une bonne fois.','Assez slalomé, on aligne les faits.','Stop. On remet tout bout à bout.'])
+  :pick('recap-intro-noe',['Bon. On pose les morceaux.','OK, je fais le tri de ce qu’on sait.','Autant récapituler avant d’aller plus loin.','Bon, on compte ce qu’on a vraiment.']);
+ const facts=evidence.map(e=>e.split(' Identifiant observateur')[0]).map(e=>
+  /autobiographique|Dans un livre/i.test(e)?pick('recap-livre',['Le livre parle de reconstruction de la mémoire.','Le livre évoque une mémoire reconstruite, pas vécue.','Ce bouquin du bureau parle d’une mémoire rafistolée après coup.']):
+  /mot laissé|maison est un environnement/i.test(e)?pick('recap-mot',['Le mot décrit la maison comme un environnement.','Le mot laissé au bureau qualifie ça d’environnement, pas de chez-nous.','Ce mot réduit la maison à un simple environnement.']):
+  /MEMOIRE GENEREE|13-5-13-15-9-18-5/i.test(e)?pick('recap-code',['Le code donne « mémoire générée », avec 28 et 31 dessous.','Une fois décodé, ce chiffre dit « mémoire générée », et nos deux âges en dessous.','Le message codé confirme une mémoire générée, avec 28 et 31 en bas de page.']):
+  /relevé|cohabitation/i.test(e)?pick('recap-releve',['Le relevé affiche une observation de cohabitation active.','Ce relevé du bureau parle d’une observation de cohabitation, active en ce moment.','Le relevé indique qu’on est sous observation de cohabitation, là, maintenant.']):
+  e);
+ const closing=/MEMOIRE GENEREE/.test(evidence.join(' '))
+  ?pick('recap-close-fabrique',['Nos souvenirs pourraient avoir été fabriqués, pas seulement perdus.','Si ces souvenirs sont fabriqués, on n’a rien perdu : on n’a jamais eu ça.','Ça voudrait dire qu’on n’a pas oublié notre vie d’avant : elle n’a peut-être jamais existé.'])
+  :pick('recap-close-dispositif',['Ce vocabulaire ressemble à un dispositif, pas à une maison ordinaire.','Ces mots-là, ça sent le protocole, pas le foyer.','On dirait le vocabulaire d’une expérience, pas d’un vrai chez-nous.']);
+ const tail=pick('recap-tail',['Ça ne nous donne toujours pas le nom de ceux qui ont construit ça.','Reste à savoir qui a monté tout ça — ça, on l’ignore encore.','Qui a bâti cette mise en scène ? Toujours aucune réponse là-dessus.']);
+ return intro+' '+facts.join(' ')+' '+closing+' '+tail;
 }

@@ -1,5 +1,6 @@
 import {residentDestination,furniture,rooms,type Room} from "./house";
 import {smiley} from "./simulation";
+import {seedPick} from "./story";
 import type {Resident} from './world';
 
 // Scene rendering and language consume these same values. Never infer a human body.
@@ -16,4 +17,16 @@ export const normaliseNickname=(s:string)=>s.trim().replace(/[\p{Cc}\p{Cf}]/gu,'
 
 export function restingPose(id:1|2,room:Room){const item=room==='chambre'?furniture[7]:furniture[1];return {x:item.x+(id===1?-.6:.6),y:item.h+.9,z:item.z+(room==='chambre'?-.5:0)};}
 
-export function appearanceReply(agent:Resident,actor:1|2,round:number){const a=appearanceFor(agent);return actor===2?'Tu vois ce visage jaune, '+a.glyph+' ? C’est toi. Autour, un cercle '+residentAppearance[agent.id].colorName+' qui tourne avec une petite lueur blanche. Pas de corps. Ça me fout un drôle d’effet.':'Si je te décris sans enjoliver : '+a.glyph+', un visage jaune, et cette boucle '+residentAppearance[agent.id].colorName+' autour. Le trait blanc tourne avec elle. On nous a même économisé les jambes.';}
+export function appearanceReply(agent:Resident,actor:1|2,round:number,seed:string){
+  const a=appearanceFor(agent),color=residentAppearance[agent.id].colorName;
+  if(actor===2)return seedPick(seed,'appearance-noe',[
+    'Tu vois ce visage jaune, '+a.glyph+' ? C’est toi. Autour, un cercle '+color+' qui tourne avec une petite lueur blanche. Pas de corps. Ça me fout un drôle d’effet.',
+    'T’es ce visage jaune, '+a.glyph+', avec un anneau '+color+' qui tourne autour. Aucun corps en dessous. Ça fait bizarre à regarder.',
+    'Ce que je vois de toi : '+a.glyph+', un visage jaune cerné d’un anneau '+color+' en mouvement. Pas de bras, pas de jambes. Ça me perturbe un peu.',
+  ] as const);
+  return seedPick(seed,'appearance-lia',[
+    'Si je te décris sans enjoliver : '+a.glyph+', un visage jaune, et cette boucle '+color+' autour. Le trait blanc tourne avec elle. On nous a même économisé les jambes.',
+    'Sans rien enjoliver : '+a.glyph+' jaune, cerné d’une boucle '+color+' avec un trait blanc qui tourne. Ni bras ni jambes, on a fait simple.',
+    'Pour être honnête : '+a.glyph+', jaune, entouré d’un anneau '+color+' qui tourne. Pas de jambes non plus — on nous les a épargnées, apparemment.',
+  ] as const);
+}
