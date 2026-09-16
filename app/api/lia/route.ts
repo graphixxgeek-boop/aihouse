@@ -149,8 +149,10 @@ export async function POST(request: Request) {
         const proactiveNoe=["interact","autonomous"].includes(input.mode)&&story.introduced&&flirtingAssessment(noe.needs.stress,world.agents[0].emotions.attraction,input.requestId).estimatedInterest>=35&&!recentRefusal&&!overProposing&&!proposalCooldown&&!priority(world.agents[0].needs)&&!priority(world.agents[1].needs)&&["salon","chambre"].includes(noe.room)&&noe.emotions.attraction>=80;
         // Ces répliques scénarisées appartiennent à l'avant-révélation : une fois le dossier
         // appelé, revenir sur la fausse plante ou une question personnelle romprait le ton de la
-        // scène qui vient de se jouer (Article 2/12 de la charte).
-        const eligibleBeat=!story.finalCalled&&!(gardenAccess(story)&&!life.gardenVisited)&&["interact","autonomous"].includes(input.mode)&&story.introduced&&world.agents.every(a=>a.room==="salon")&&!story.life?.debrief?.remaining&&!story.life?.contact?.remaining&&!story.life?.dispute?.remaining&&!story.pendingDestination&&!priority(world.agents[0].needs)&&!priority(noe.needs);
+        // scène qui vient de se jouer (Article 2/12 de la charte). Elles évitent aussi de couper
+        // court à un moment déjà chargé (refus, insistance) : changer de sujet juste après serait
+        // le changement de sujet le plus brutal possible (assoupli le 2026-09-16).
+        const eligibleBeat=!story.finalCalled&&!(gardenAccess(story)&&!life.gardenVisited)&&["interact","autonomous"].includes(input.mode)&&story.introduced&&world.agents.every(a=>a.room==="salon")&&!story.life?.debrief?.remaining&&!story.life?.contact?.remaining&&!story.life?.dispute?.remaining&&!story.pendingDestination&&!recentRefusal&&!overProposing&&!priority(world.agents[0].needs)&&!priority(noe.needs);
         const visualBeat=eligibleBeat&&story.round<=5&&(story.life?.visualIntro??0)<2;
         const followBeat=eligibleBeat&&story.life?.personalAsked&&story.round>=(story.life?.personalRound??story.round)+3&&(story.life?.personalFollowup??0)<3&&world.agents[0].needs.stress<30&&world.agents[0].emotions.attraction>=25;
         const recapBeat=eligibleBeat&&story.evidence.length>=2&&story.evidence.length<5&&(story.life?.recapCount??0)<story.evidence.length;

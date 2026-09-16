@@ -76,6 +76,17 @@ et peuvent chuter plus vite qu'ils ne montent).
   pour 2 tours de réconciliation (voir ci-dessous), plus d'ancien débrief de distance.
 - `dramaRules.debriefTurns` : 2 tours de débrief après un événement marquant.
 
+## Rythme des scènes (`lib/turn.ts`)
+
+- `salonPause` (pause initiale une fois les deux au salon) : dure tant que `story.salonTurns<3`
+  (assoupli le 2026-09-16, était `<5` — la pause paraissait trop longue, au point de donner une
+  impression de blocage).
+- `requiredTogether` (maintien forcé ensemble en début de session) : s'applique tant que
+  `story.round<4` (assoupli le 2026-09-16, était `<8`), sauf si `story.apartTurns>=2` (un besoin
+  urgent ou une envie de s'isoler peut toujours séparer les deux avant ce seuil).
+- Ces deux assouplissements ne touchent aucune règle structurelle (l'article 2.3 — la pièce est
+  décidée avant la réplique — reste inchangé) : ils ajustent uniquement des compteurs de tours.
+
 ## Colère et réconciliation (`app/api/lia/route.ts`, `lib/life.ts`, `lib/simulation.ts`)
 
 - `life.dispute` : `{topic, remaining}`, même forme que `life.debrief`. Décrémenté d'un point à

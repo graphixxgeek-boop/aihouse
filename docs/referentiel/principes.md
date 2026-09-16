@@ -148,6 +148,9 @@ personnelle, bilan d'enquête, présentation initiale) ne se déclenchent plus u
 final appelé (`story.finalCalled`) : rejouer une de ces scènes juste après que les personnages
 viennent d'affronter l'observateur casserait le ton de la scène qui vient de se jouer (bug réel
 rencontré et corrigé le 2026-09-16, `app/api/lia/route.ts`, garde `eligibleBeat`/`personalLead`).
+Ces mêmes scènes ne s'invitent pas non plus juste après un refus ou une insistance de Noé
+(`!recentRefusal&&!overProposing`, assoupli le 2026-09-16) : interrompre un moment de tension ou
+de retenue par une scène ambiante sonnait mécanique plutôt que spontané.
 
 5.4. Chaque nouvelle arrivée tire une nouvelle « couleur » de session (ouverture, souvenirs flous,
 angle narratif) parmi un nombre fini de variantes — l'expérience ne doit jamais reproduire deux

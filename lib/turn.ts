@@ -20,7 +20,9 @@ export function planTurn(mode:string,current:Resident,other:Resident,story:Story
  const urgentIntent=automatic?(sleeping?"sleep":residentPriority(current,Boolean(story.introduced))):undefined;
  const partnerPriority=isSleeping(other,life)?"sleep":residentPriority(other,Boolean(story.introduced));
  const afterInvestigation=automatic&&[current,other].some(a=>a.intent==="study");
- const salonPause=automatic&&[current,other].every(a=>a.room==="salon")&&(story.salonTurns??0)<5&&Boolean(story.introduced);
+ // Assoupli le 2026-09-16 (5→3 tours et 8→4 tours plus bas) : la pause initiale au salon et le
+ // maintien forcé ensemble restaient un peu longs, au point de donner une impression de blocage.
+ const salonPause=automatic&&[current,other].every(a=>a.room==="salon")&&(story.salonTurns??0)<3&&Boolean(story.introduced);
  const linger=salonPause;
  const warmthChain=history.slice(-6).filter(l=>/présence|fait du bien|précieux|instants|réconfort|à tes côtés|partag/i.test(l.content)).length>=3;
  const inferred=agreedDestination(history);
@@ -43,7 +45,7 @@ export function planTurn(mode:string,current:Resident,other:Resident,story:Story
  const variants:Partial<Record<Intent,string[]>>={hug:["Un câlin, ça te dirait ? Dis-moi franchement.","Je te prendrais bien dans mes bras. T’en as envie, toi ?","J’ai envie d’un câlin avec toi. Ça te va ?"],massage:["Je peux te faire un massage doux. Tu veux, ou tu préfères rester tranquille ?","Un massage, doucement ? Je te laisse choisir.","J’aimerais te masser les épaules. T’en as envie ?"],kiss:["J’ai envie de t’embrasser. Toi aussi ?","Je tente une question : je peux t’embrasser ?","J’ai envie d’un bisou. Tu veux qu’on essaie, ou non ?"],share_sleep:["Tu voudrais dormir avec moi, ou tu préfères ton espace ?","J’aimerais dormir près de toi. T’en as envie aussi ?","Dormir ensemble ce soir, ça te va ? Sinon je prends le salon."]};
  const offset=Array.from(story.seed).reduce((n,c)=>n+c.charCodeAt(0),0);const proposalLine=offer?variants[offer]?.[(story.round+offset)%3]:undefined;
  return {gardenFirst,exitInspection:!gardenFirst&&exitInspection,life,explore,reflection:!gardenFirst&&reflection,continuing:!gardenFirst&&continuing,intent,room,partnerIntent,partnerRoom,proposalLine,salonPause,executeAgreement:Boolean(executeAgreement),agreed,lockedScene:true,urgentIntent:gardenFirst?undefined:urgentIntent,requiredIntent,routine:!gardenFirst&&Boolean(urgentIntent)&&(mode==="autonomous"||mode==="interact"),offer,
-  requiredTogether:story.round<8||(story.apartTurns??0)>=2,apartTurns:story.apartTurns??0,
+  requiredTogether:story.round<4||(story.apartTurns??0)>=2,apartTurns:story.apartTurns??0,
   suggestedRoom:room,
   liaison: {liaCanTease:Boolean(story.introduced)&&[current,other].find(a=>a.id===1)!.needs.stress<30&&(story.round%4===1||warmthChain),warmthChain},
  };
