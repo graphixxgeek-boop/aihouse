@@ -1,0 +1,1 @@
+ALTER TABLE `agent_state` ADD `emotions` text DEFAULT '{"curiosity":72,"tension":58,"trust":8,"comfort":22,"attraction":12}' NOT NULL;

@@ -1,0 +1,2 @@
+/** Local presentation time never consumes inference or catches up while hidden. */
+export async function waitForPlayback(duration:number,options:{paused:()=>boolean;alive:()=>boolean;now?:()=>number;wait?:(ms:number)=>Promise<void>}){const now=options.now??Date.now,wait=options.wait??(ms=>new Promise<void>(resolve=>setTimeout(resolve,ms)));let remaining=duration;while(options.alive()&&remaining>0){const stopped=options.paused(),start=now();await wait(Math.min(50,Math.max(1,remaining)));if(!stopped&&!options.paused())remaining-=Math.min(100,Math.max(0,now()-start));}}

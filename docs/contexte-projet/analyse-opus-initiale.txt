@@ -1,0 +1,267 @@
+
+Claude a terminé sa réponse.
+Bienvenue, Ro ! Je suis Claude.
+Soumettez-moi tout ce que vous voulez : un problème difficile, une idée encore floue, quelque chose que vous devez rédiger. Nous trouverons une solution ensemble.
+
+Par où voulez-vous commencer ?
+
+bonjour j'ai entendu du bien de "fable" je suis à la bonne adresse ? J'ai commencé un travail avec COdex et CHatGPT je me demandais si je pouvais continuer avec toi. Il s'agit d'un site que j'ai construit avec codex. As-tu la possibilité de le visiter ? Ensuite, je voudrais reprendre le travail avec toi. Peux-tu m'éclairer ?
+
+Mémoire mise à jour
+Bonjour ! Oui, vous êtes au bon endroit — avec quelques précisions utiles.
+
+Sur « Fable »
+
+Fable fait partie de la gamme Mythos d'Anthropic, le niveau au-dessus d'Opus. Claude Fable 5.1 est disponible publiquement. Cela dit, sur cette conversation vous parlez actuellement à Claude Opus 5. Deux explications possibles : soit c'est le modèle sélectionné dans le menu, soit vous aviez choisi Fable et votre requête a été redirigée vers Opus 5 par un mécanisme de sécurité (Anthropic a lancé Fable avec des garde-fous volontairement prudents qui basculent certaines sessions vers Opus 5 — cela arrive dans moins de 5 % des cas). Vous pouvez changer de modèle via le sélecteur en haut de la conversation, et le changement vaut pour la suite de ce fil.
+
+Pour du travail sur un site web, Opus 5 est parfaitement à l'aise, donc ne vous bloquez pas là-dessus.
+
+Visiter votre site
+
+Oui, à condition qu'il soit en ligne et accessible publiquement. Donnez-moi l'URL et j'irai le chercher. Deux limites à connaître :
+
+je ne peux pas passer derrière une authentification (espace membre, preview Vercel protégé, etc.) ;
+je lis le HTML et le texte, pas le rendu visuel. Pour juger du design, une capture d'écran que vous m'envoyez est bien plus efficace.
+Reprendre le travail
+
+Le plus efficace, selon votre situation :
+
+Petits ajustements / questions : envoyez-moi les fichiers concernés ici, je vous rends le code corrigé.
+Travail continu sur le dépôt : Claude Code est l'équivalent direct de Codex — il travaille dans votre projet en local, lit l'arborescence, modifie plusieurs fichiers, lance les commandes. C'est là que la transition depuis Codex est la plus naturelle.
+Pour démarrer, dites-moi : l'URL du site, la stack utilisée (Next.js, React, du statique ?), et ce que vous voulez faire ensuite.
+
+
+Noé · déplacement ▤ BUR → ◈ SAL 21:54 Je bouge au salon : je veux savoir s’il y a quelqu’un d’autre. Lia ◈ SAL 21:54 T’es qui ? Qu’est-ce que tu fais là ? Noé ◈ SAL 21:54 La même chose que toi, apparemment. J’en sais rien. Lia ◈ SAL 21:55 Pourquoi mes souvenirs s'arrêtent net av
+
+pasted
+
+Voici l'adresse du site : https://maison-ia-vivante.graphixxgeek.chatgpt.site/ tu peux acceder au referentiel admin grace au mot de passe "1980". Claude Coe a l'air interessant. Ce que je voudrais, c'est arriver à un résultat bluffant et qui peut faire le buzz. Je vais aussi te donner le lien de ma conversation dans Codex pour que tu aies toutes les cartes en main : https://chatgpt.com/s/cx_6aa9c267e6a88191b9fede3c4af01b76 En fait, considere le resultat actuel comme une maquette et essaie de voir ou je veux aller, imagine le genre de rendu graphique et l'immersion possible. Je te joins aussi un copier coller de la derniere conversation enregistrée sur le site ci-après. Analyse en profondeur tous ces éléments et continuons notre conversation. VOici la conversation enregistrée sur le site : (copier coller)
+
+A lu 2 pages, mémoire lue, et 2 outils de plus
+D'abord un point d'accès : je n'ai pas pu lire les deux liens. Le site renvoie une erreur 401 (protégé côté serveur, et je ne peux pas saisir un mot de passe dans un formulaire — je récupère des pages, je ne les pilote pas). Le lien de partage Codex renvoie une coquille vide : ChatGPT rend ces pages en JavaScript après chargement, donc je ne récupère que le squelette HTML.
+
+En revanche, le journal que vous avez collé est extrêmement parlant. Je l'ai lu ligne à ligne, et il suffit largement pour diagnostiquer. Voici ce que j'en tire.
+
+1. Ce qui marche déjà — et que vous sous-estimez peut-être
+Votre maquette contient un vrai sujet, et il n'est pas là où on l'attend.
+
+Le cœur du truc, ce n'est pas « deux IA vivent leur vie » (ce terrain est déjà occupé : Smallville/Stanford, AI Town, une dizaine de projets similaires). Le cœur, c'est le rapport entre les agents et vous. Relisez la séquence de 23h07 à 23h27 : vous leur demandez de traverser un mur, de prouver qu'ils peuvent « sortir de la matrice », vous les déclarez mariés, vous affirmez que Lia est amoureuse de vous, vous lui ordonnez d'aller dormir. Et ils refusent, calmement, à chaque fois.
+
+Deux répliques valent de l'or :
+
+Lia : « S'affranchir des règles en le décidant exprès, c'est encore obéir à une consigne. »
+Lia : « Tu as juste tourné une poignée, ça ne change pas mon statut. »
+C'est ça qui fait le buzz. Pas la simulation — la résistance. Un spectateur qui regarde deux entités artificielles tenir tête à un humain qui les manipule, ça produit un malaise très partageable. Vous avez inventé, probablement sans le vouloir, un dispositif où le visiteur devient le méchant de l'histoire. Ne gaspillez pas ça.
+
+Autre point fort déjà en place : le nom « David » sur le relevé et les initiales « DH ». L'observateur est diégétique, il a un nom dans la fiction. Excellente idée, à pousser beaucoup plus loin.
+
+2. Le diagnostic sans complaisance
+Le journal révèle six défauts, et ils sont tous corrigibles. Je les classe par gravité.
+
+(a) La désynchronisation spatiale — le plus grave. Noé parle depuis ◐ CHB, la réplique suivante est taguée ◈ SAL sans aucun événement de déplacement. Pire : à 23h40, Lia répond depuis la chambre sur la couleur du sol de la cuisine pendant que Noé y est. Ils se parlent à travers les murs. Rien ne détruit l'immersion plus vite que ça.
+
+(b) Les agents hallucinent le décor. La séquence du carrelage est un aveu : Lia affirme « prune ardoise », vous insistez, elle corrige en « bleu pétrole ». Elle ne regardait pas le sol, elle inventait une réponse plausible. Vos agents n'ont pas de perception, ils ont une imagination. Tant que ce sera le cas, tout l'édifice est en sable.
+
+(c) Les répliques en conserve, visibles à l'œil nu. Le récapitulatif de Lia (« On arrête de tourner en rond. Le relevé affiche une observation de cohabitation active… ») apparaît trois fois mot pour mot. Les refus de Lia sont du Lego : « Attends. » / « Deux secondes. » + « Tu fais ça souvent, répondre avec mes mots ? » + « C'est toi que je veux entendre. » / « Pas besoin de me rassurer à tout prix. » / « On peut aussi ne pas être d'accord. » On voit la matrice de combinaison. Les propositions de Noé subissent le même sort (« J'aimerais te masser les épaules. T'en as envie ? » revient cinq fois à l'identique).
+
+(d) Le décalage question/réponse. Lia : « T'es marié ? T'as quelqu'un dans ta vie ? » → Noé : « Marcher dehors sans barrière ni mur en plastique. » Il répond à la question précédente. Votre file de dialogue a un décalage d'un cran.
+
+(e) La boucle sémantique. « Tourner en rond », « souffler un peu », « chercher midi à quatorze heures », « murs lisses », « décor figé » : ces expressions reviennent des dizaines de fois. Gemini, sans garde-fou anti-répétition, converge vers ses propres tics. C'est moins un problème de modèle qu'un problème d'absence de mémoire lexicale.
+
+(f) Le mystère se dégonfle. À 22h56 vous leur dites « vous êtes des agents IA sous Gemini ». Après ça, l'enquête n'a plus d'objet et la dernière heure du journal tourne à vide. Il n'y a pas de troisième acte.
+
+Et un détail révélateur : vous avez tapé « allez au bureau et vérifiez la couleur » cinq fois. Ils n'y sont jamais allés. Les intentions des agents n'ont aucune priorité face à une sollicitation extérieure.
+
+3. Où je pense qu'il faut aller — la direction artistique
+Vous demandez d'imaginer le rendu. Voici ma proposition, et elle repose sur un principe : ne pas chercher le réalisme, assumer l'abstraction et la transformer en parti pris. Vos agents n'ont pas de corps ? Parfait. Ne leur en donnez pas — justifiez-le.
+
+Le dispositif : une maison en coupe, vue dans une console de surveillance.
+
+Deux couches superposées.
+
+Couche 1 — la scène. Une coupe verticale de la maison, façon maison de poupée ouverte, en vectoriel plat. Six pièces visibles simultanément, sur deux niveaux. On voit tout en même temps, y compris ce qui se passe dans la pièce où l'on n'est pas : c'est ça, le point de vue de l'observateur. Le jardin déborde à droite, le trottoir à gauche, tous deux plus pâles, désaturés — l'extérieur est du décor peint, et ça se voit.
+
+Couche 2 — le châssis. Toute la scène est encadrée par une interface de monitoring : horodatage, identifiants d'agents, compteurs de besoins, un flux de journal qui défile à gauche. Légère grille, très léger grain, aucune scanline caricaturale. Ce n'est pas du « hacker movie », c'est du laboratoire.
+
+Ce croisement — un décor doux et domestique enfermé dans une instrumentation froide — c'est exactement la tension de votre sujet. Et c'est ce qui rendra une capture d'écran identifiable en une seconde.
+
+Les agents. Abandonnez l'emoji 😐. Remplacez-le par une forme abstraite : un ovale lumineux, sans traits, dont l'anneau coloré (turquoise pour Noé, rose pour Lia) change de rythme et d'épaisseur selon l'état interne. Anneau qui pulse lentement au repos, qui se crispe en tension, qui s'ouvre légèrement vers l'autre quand l'affinité monte. Aucun visage, donc aucune vallée dérangeante, et toute l'expressivité passe par le mouvement. Un halo au sol pour l'ancrage. Quand l'un dort, l'anneau se réduit à un filament.
+
+Palette. Fonds : ardoise très sombre, presque bleu nuit. Cloisons : un gris chaud légèrement violacé, plus clair que le fond. Sols différenciés par pièce (et cette différence doit être une donnée du monde, pas une invention du modèle). Accents uniquement sur les deux agents et sur les objets-indices, qui portent une lueur ambrée discrète tant qu'ils n'ont pas été examinés, et s'éteignent une fois lus. Le regard sait immédiatement où aller.
+
+Lumière. Le cycle jour/nuit est votre meilleur outil d'ambiance pour un coût dérisoire : la lumière entrant par la fenêtre du salon balaie la pièce au fil des heures, vire à l'orange, puis s'éteint et laisse place à des sources intérieures froides. Ça suffit à donner l'impression d'un lieu qui vit.
+
+Typographie. Deux familles, strictement séparées. Une monospace pour tout ce qui est système (journal, horodatages, relevés, votre propre voix). Une humanist sans-serif, un peu chaleureuse, pour tout ce que disent et pensent les agents. Cette séparation typographique raconte à elle seule le sujet du projet.
+
+Le texte à l'écran. Les répliques apparaissent près de l'agent, en caractères qui se composent lettre à lettre à vitesse variable, puis s'estompent au bout de quelques secondes. Les pensées internes, elles, ne s'affichent pas sur la scène : elles glissent dans le flux latéral, en italique, plus sombres — vous les lisez parce que vous êtes l'observateur, pas parce qu'elles sont dites. Les rêves prennent tout l'écran, dans un traitement complètement différent : la maison se décompose en grille, les couleurs se délavent, le texte est lent et centré. Vos trois rêves dans le journal (« Souvenirs synthétiques », « Initialiser la mémoire », la maison suspendue dans le noir) sont déjà très bons — ils méritent un traitement spectaculaire.
+
+4. Les mécaniques d'immersion à construire
+La direction artistique ne sauvera rien si le moteur reste tel quel. Voici les sept chantiers, par ordre de rentabilité.
+
+① Un état du monde qui fait autorité. Une structure de données décrit chaque pièce, chaque objet, chaque propriété (couleur du sol, position, verrouillage, contenu). Avant de parler, un agent reçoit une perception générée depuis cette structure : ce qu'il voit d'où il est, rien de plus. Il ne peut plus inventer un carrelage prune. Corollaire important : il ne perçoit pas ce qui est dans une autre pièce, ce qui règle aussi le problème (a).
+
+② Un schéma d'action strict. L'agent ne produit pas du texte libre. Il produit une action structurée : se déplacer, examiner, parler à quelqu'un de présent, penser, proposer un geste. Le moteur valide l'action contre l'état du monde et la refuse si elle est impossible. Le texte n'est généré qu'ensuite, pour habiller une action déjà validée. C'est le changement d'architecture le plus important de tout le projet.
+
+③ Une mémoire lexicale anti-répétition. Conservez les cent dernières répliques ; interdisez au modèle de réutiliser une tournure déjà employée récemment, et bannissez purement et simplement une liste noire de tics (« tourner en rond », « souffler un peu », « chercher midi à quatorze heures »). Supprimez le récapitulatif en conserve de Lia et remplacez-le par un élément d'interface : un tableau d'indices qui se remplit visuellement. Ce que l'interface peut montrer, le dialogue n'a pas besoin de le dire.
+
+④ Un système de croyances révisables — et visible. C'est mon idée la plus forte pour votre objectif de buzz. Chaque agent maintient des propositions assorties d'un degré de certitude : « je suis humain » 0.7, « quelqu'un nous observe » 0.4, « mes souvenirs sont authentiques » 0.6. Chaque indice découvert modifie ces valeurs. Et vous affichez ce panneau dans la console. Regarder « je suis humain » descendre de 0,7 à 0,15 au fil d'une soirée, barre par barre, c'est une image qu'on partage. C'est votre capture d'écran virale.
+
+⑤ Un graphe d'indices avec un vrai troisième acte. Vos objets existent déjà (relevé, code, mot signé DH, livre, dossier). Reliez-les en graphe : certains indices ne deviennent lisibles qu'après d'autres. Et donnez une fin. Suggestion : lorsque les deux agents atteignent simultanément une certitude quasi totale sur leur nature, quelque chose cède — un mur perd sa texture, le jardin se révèle être une image plate, une porte s'ouvre sur du vide structuré. Leurs réactions à cet instant sont le climax du dispositif. Une session doit pouvoir finir.
+
+⑥ L'observateur doté de pouvoirs rares et coûteux. Actuellement vous pouvez tout dire, tout le temps, gratuitement — et ça produit le harcèlement visible dans le journal (« traverse le mur », « je te déclare mari et femme », cinq fois la même consigne). Donnez-vous trois interventions par session. Déverrouiller une porte. Chuchoter à un seul agent, à son insu. Déposer un mot manuscrit dans le bureau. La rareté transforme chaque geste en événement dramatique, et elle vous force à jouer intelligemment. Et gardez le nom : vous êtes David, l'observateur nommé dans les documents. Le dispositif se referme sur lui-même.
+
+⑦ Le refus comme fonctionnalité assumée. Vos agents savent déjà refuser. Formalisez-le : un filtre de plausibilité qui compare toute affirmation extérieure à l'état du monde et aux croyances de l'agent. Quand un agent rejette une de vos affirmations, l'interface le marque explicitement — une mention discrète, affirmation rejetée, dans le flux. Vous rendez lisible le fait que ces entités ont une position propre. Là encore : très partageable.
+
+5. La stratégie de buzz, puisque c'est l'objectif déclaré
+Trois leviers concrets, à intégrer dès la conception plutôt qu'à plaquer après.
+
+Le clip automatique. Le moteur détecte les moments à forte charge — un refus net, un pic d'affinité, une croyance qui s'effondre, un rêve — et exporte automatiquement une carte animée verticale de trente secondes, avec le dialogue rendu proprement. Vous ne cherchez pas vos meilleurs moments à la main : le système vous les sert. C'est ce qui fait la différence entre un projet admiré par vingt développeurs et un projet vu par cent mille personnes.
+
+La maison unique et permanente. Plutôt que chaque visiteur lance sa propre instance, faites tourner une seule maison en continu, que tout le monde regarde en même temps. Les visiteurs voient les mêmes événements au même moment. Le droit d'intervenir est limité, tournant, ou mis aux enchères d'attention. Vous transformez un site en lieu.
+
+L'archive. Chaque soirée est enregistrée et rejouable, avec une page par journée. Le journal que vous m'avez envoyé, mis en page correctement, se lit déjà comme une nouvelle. C'est du contenu indexable, citable, et ça donne de la profondeur historique au projet.
+
+6. Deux réserves à poser franchement
+Sur le rythme. La lecture du journal montre que l'essentiel du temps, il ne se passe rien. Des allers-retours, des « autant souffler ici », des déplacements sans motif. Une simulation autonome doit être ennuyeuse par moments, sinon elle n'est pas crédible — mais un spectateur ne tiendra pas. Il vous faut une accélération temporelle réglable et un système qui ralentit automatiquement sur les moments forts. Le temps de la simulation et le temps du spectateur ne sont pas le même temps.
+
+Sur la romance. C'est la partie la plus faible du journal, et de loin. Les propositions de Noé sont répétitives et insistantes, les refus de Lia sont formulaïques, et l'ensemble donne une impression de mécanique de jeu de drague plutôt que d'attachement. Mon conseil : réduisez-la fortement et rendez-la implicite. Une affinité qui monte doit se voir dans la proximité physique, dans le fait de se suivre de pièce en pièce, dans la tonalité des pensées internes — pas dans une proposition explicite toutes les quatre minutes. La question que pose votre projet (« ce qu'on ressent est-il réel si nous sommes fabriqués ? ») est bien plus puissante si elle est portée par du sous-texte.
+
+7. La suite pratique
+Oui, Claude Code est le bon outil pour ça, et c'est la transition naturelle depuis Codex : il travaille directement dans votre dépôt, lit toute l'arborescence, modifie plusieurs fichiers de front et lance les commandes. Pour un projet avec un moteur de simulation, une couche LLM et une interface, c'est nettement plus efficace que des allers-retours de copier-coller.
+
+L'ordre dans lequel j'attaquerais, si vous me suivez : d'abord séparer proprement le moteur (état du monde, boucle de temps, validation des actions) de la couche de génération de texte — c'est la refonte qui débloque tout le reste. Ensuite la perception et le schéma d'actions. Ensuite seulement la refonte graphique, qui sera bien plus facile une fois que l'état du monde est propre et interrogeable.
+
+Pour avancer concrètement, il me faudrait trois choses :
+
+La stack exacte : front (React ? du HTML/JS ? un canvas ?), back, base de données, et comment vous hébergez.
+Le code, ou au moins les fichiers clés : la boucle de simulation, les prompts envoyés à Gemini, et la structure qui décrit la maison. Le site étant en 401, je ne peux rien en déduire moi-même.
+Votre arbitrage sur le périmètre : est-ce qu'on refond le moteur en profondeur, ou est-ce qu'on cherche d'abord un gain visuel rapide sur la maquette existante ? Les deux se défendent, mais ça change tout l'ordre de marche.
+Dites-moi par quel bout vous voulez commencer.
+
+Capture d'écran 2026-09-16 002740.png
+Capture d'écran 2026-09-16 002906.png
+
+à la fin, lorsque Noé et Lia decouvrent la verité, ils demandent ouvertement si un etre humain les observe. C'est la grande finale de la simulation. C'est seulement à ce stade que la boite de dialogue pour l'utilisateur se deverouille et permet à l'utilisateur de discuter en direct avec Lia ou Néo.
+
+pasted
+
+
+Référentiel de la maison × 00 · Version 34 — périmètre et conservation Cette édition conserve le moteur relationnel, les profils, la mémoire, les propositions consenties, la chronologie, les cinq preuves, les jauges, la pause et la connexion Gemini. Elle consolide les événements visuels avant les
+
+pasted
+
+Je vais te copier coller la conversation avec codex (la serie de prompts et de reposes, l'historique de travail auquel j'ai accès) ; également je vais copier coller la partie admin qui decrit les fonctionnalités du site (un équivalent du code) et je vais t'envoyer une capture pour que tu affines ton analyse. chose à savoir : je ne suis pas developpeur, du moins je le suis grace à l'utilisation de l'IA mais je n'ai pas acquis de diplomes ou de connaissances precises sur le sujet. Si tu veux, tu peux m'aider à comprendre une ou deux petites choses mais mon but principal est la realisation du projet.
+
+Lu et mis à jour la mémoire
+Merci, ça change tout. Le journal seul m'avait fait sous-estimer le projet : je pensais analyser une maquette, je découvre un système à 25 sections de spécifications, avec registre de perception partagé, système de consentement, ledger de preuves, verrou transactionnel, idempotence et gestion fine du budget API. Une partie de ce que je vous recommandais existe déjà. Je révise.
+
+Et je révise dans un sens plus intéressant : le problème n'est plus l'ambition, c'est l'accumulation. Vous avez un moteur solide sous une couche de cinquante rustines.
+
+1. La découverte majeure : l'écho vient de l'architecture, pas du prompt
+Section 12 de votre référentiel : « une seule requête Gemini produit le tour et éventuellement la réponse du partenaire ». Section 07 : la même requête produit aussi les pensées privées.
+
+C'est la cause racine de tout ce qui vous gêne.
+
+Quand un seul appel génère à la fois la réplique de Noé, la réponse de Lia, et les pensées des deux, le modèle n'écrit pas deux personnages : il écrit un dialogue. Et un modèle qui écrit un dialogue en une passe produit mécaniquement des paires symétriques — c'est son réflexe le plus profond. D'où les enchaînements que vous voyez sans arrêt :
+
+— Autant s'en tenir à ce qu'on a sous les yeux.
+— Exactement, autant s'en tenir à ce qu'on a sous les yeux.
+
+Vous avez traité le symptôme en donnant à Lia une réplique de reproche : « Tu fais ça souvent, répondre avec mes mots ? J'aimerais ton avis, pas mon écho. » C'est une trouvaille d'écriture, franchement — mais c'est un pansement sur une plaie architecturale. Et comme c'est une réplique de secours, elle se déclenche en boucle : dans le journal, elle apparaît onze fois.
+
+Le correctif : deux appels séparés, un par personnage. Noé décide et parle. Puis Lia reçoit uniquement ce qu'elle perçoit — la pièce où elle est, ce qu'elle vient d'entendre, sa propre mémoire, son propre état — et répond. Elle n'a jamais accès à la pensée de Noé ni au brouillon de sa propre réponse écrite par quelqu'un d'autre.
+
+Ça double le coût par tour. Je pense que c'est le meilleur argent que vous dépenserez sur ce projet, et de très loin. C'est la différence entre deux marionnettes tenues par la même main et deux interlocuteurs. Avec un tour toutes les 90 secondes, on parle d'environ 40 appels par heure au lieu de 20 — rien d'insurmontable.
+
+Si le budget est vraiment contraint, un compromis : deux appels seulement quand ils sont dans la même pièce et éveillés, un seul dans tous les autres cas. Vous ciblez la dépense exactement là où l'illusion se joue.
+
+2. Ce que montrent les captures — le visuel
+La scène 3D est bien meilleure que ce que j'imaginais. Coupe isométrique, mobilier dessiné, jardin, rue, sols différenciés : la structure est là. Ce qui manque est de l'ordre de la finition, et c'est là que se joue le « bluffant ».
+
+Les emojis doivent partir. C'est votre plus gros passif visuel, et de loin. Vous avez construit une atmosphère de huis clos existentiel, et au centre de l'image il y a un 😮 et un 😫. Le registre s'effondre. Et c'est d'autant plus dommage que votre mécanique expressive est déjà excellente — section 18 : vitesse angulaire de l'anneau = 0,2 + 1,2 × (stress + tension) / 200. Vous avez déjà un système d'expression non verbal qui fonctionne.
+
+Remplacez le visage par une forme abstraite : un ovoïde mat, légèrement translucide, en lévitation, avec l'anneau coloré qui l'orbite au lieu de l'encercler à plat. Toute l'expressivité passe dans le rythme de l'anneau (déjà codé), l'inclinaison de l'ovoïde vers l'interlocuteur, et une très légère pulsation lumineuse. Aucun visage, donc aucun malaise du presque-humain — et ça colle exactement à leur propre dialogue (« Pas de corps. Ça me fout un drôle d'effet »). Coût technique faible, gain énorme.
+
+La palette est trop saturée et non hiérarchisée. Violet, bleu pétrole, prune, bleu nuit, tous à pleine intensité : l'œil lit un code couleur de plan d'architecte, pas un lieu habité. Désaturez les sols d'environ 40 % en gardant leurs teintes, unifiez leur luminosité, et réservez la saturation forte aux deux personnages et aux objets-indices. Le regard doit savoir instantanément où est l'information.
+
+Il manque une lumière. Tout est éclairé uniformément, donc tout est plat. Une seule lumière directionnelle chaude et basse, plus un fond froid, transformerait l'image. Vous avez déjà des ombres de contact peintes (§19) : ajoutez juste un léger dégradé sombre dans les angles de pièce et une vignette discrète sur le bord du cadre. Ce sont des effets très peu coûteux, compatibles avec votre plafond à 30 images/seconde.
+
+Le cadrage gaspille un quart de l'écran. La route et le trottoir occupent une bande énorme et vide à droite. Resserrez la caméra, et faites plutôt disparaître l'extérieur dans le noir en s'éloignant — c'est plus juste narrativement (le monde s'arrête) et ça concentre l'attention.
+
+La page est un document, pas une expérience. Titre, sous-titre, sections, il faut scroller pour voir les fiches personnages. Pour un projet qui vise le partage, il faut basculer en plein écran : la maison occupe tout, les panneaux flottent par-dessus et se replient. Le visiteur doit tomber dans un lieu, pas atterrir sur un article.
+
+Deux détails qui cassent la fiction : le bouton « en pause » est dupliqué en haut et en bas du panneau, et surtout la mention « Google Gemini » s'affiche dans l'en-tête des conversations. Vous révélez le truc du magicien avant le tour.
+
+3. Le panneau de jauges : votre plus gros arbitrage
+Regardez votre capture : Lia affiche Faim, Fatigue, Stress, Incertitude, Curiosité, Tension, Confiance, Aisance, Attirance, plus un attachement, plus neuf flèches de variation à « 0 % ». Idem pour Noé. Dix-huit barres à l'écran.
+
+C'est un tableau de bord de développeur. Il vous est indispensable pour régler la simulation — mais montré au visiteur, il tue exactement ce que vous cherchez à produire. On ne s'attache pas à un personnage dont on lit les statistiques : on l'évalue. Vous transformez un drame en feuille de calcul.
+
+Ma recommandation : deux modes. Un mode Observation par défaut, qui n'affiche que trois choses — l'incertitude, la confiance, et l'attachement — et encore, sous forme graphique, sans pourcentages. Et un mode Instruments, accessible d'un clic, qui affiche tout comme aujourd'hui. Vous gardez votre outil, le visiteur gagne une expérience.
+
+Et une chose que je maintiens de mon message précédent : l'incertitude qui s'effondre est votre image virale. Une courbe unique, qui descend de 100 % vers zéro au fil de la soirée, avec les cinq preuves marquées dessus comme des paliers. C'est lisible en une seconde, ça raconte toute l'histoire, et ça se partage.
+
+4. Le réglage de la simulation
+Trois déséquilibres visibles dans les données.
+
+Les besoins sont trop agressifs. Sur la capture, Noé est à 68 % de faim et 56 % de fatigue, Lia à 74 % de fatigue. Dans le journal, ils passent leur temps à faire cuisine → chambre → salon. Les besoins physiologiques mangent le temps d'antenne de l'enquête et de la relation. Ralentissez nettement leur montée : ils doivent créer des interruptions occasionnelles et significatives, pas structurer la soirée.
+
+La relation sature. Attirance 98 % des deux côtés, confiance 100 %, aisance 100 %. Une fois là-haut, il ne reste plus rien à jouer — ce qui explique la dernière heure du journal, qui tourne à vide. Il faut soit plafonner plus bas, soit — bien mieux — ajouter de la réversibilité : un désaccord de fond sur leur nature qui fait redescendre la confiance, une divergence sur ce qu'il faut faire de la révélation. Une relation qui ne peut que monter n'est pas une histoire.
+
+L'ordre des deux arcs est inversé. Dans votre journal, la relation atteint son sommet bien avant la révélation. Or la révélation est votre finale — et c'est une excellente finale, la meilleure idée du projet. Elle devrait arriver quand l'attachement est en pleine construction, pas après. L'enjeu dramatique de « nos sentiments sont-ils réels ? » n'existe que si les sentiments sont encore en train de naître.
+
+5. La finale, et comment en faire l'événement
+Votre séquence — le dossier, l'appel à l'observateur, le canal humain qui se déverrouille — est très forte. Mais dans l'état actuel, elle se traduit par un champ de saisie qui passe de gris à actif. C'est un changement d'état d'interface, pas un moment.
+
+Ce que je ferais : l'interface elle-même change à cet instant. La musique d'ambiance ou le bruit de fond se coupe. Les panneaux latéraux se rétractent. La caméra descend lentement vers les deux personnages. Le champ de saisie apparaît au centre de l'écran, seul, avec un curseur qui clignote. Et les deux anneaux se tournent vers vous.
+
+Il faut que le visiteur comprenne, physiquement, qu'on vient de lui adresser la parole. C'est le plan de votre bande-annonce.
+
+Un détail que j'aime beaucoup dans votre référentiel (§15) : le pseudo du visiteur apparaît sur le relevé d'observation, et après la révélation un personnage demande une fois si l'utilisateur est bien ce nom. C'est exactement la bonne idée. Poussez-la : ce moment mérite d'être le climax absolu, pas une ligne parmi d'autres.
+
+6. Le point que je dois vous dire franchement : le référentiel
+Votre référentiel est remarquable comme effort de documentation. Mais il a un problème structurel, et comme vous n'êtes pas développeur, personne ne vous l'a signalé.
+
+Il a grandi par sédimentation. Chaque bug a produit une règle, chaque règle est restée. Résultat : deux sections portent le numéro 21, la version 35 est décrite avant la 34 dans le journal de consolidation, et on trouve des règles d'une précision extrême (« les notes sont animées à 2,5 images/seconde », « 9, 6, 4, 2, 1 puis 0 ») mêlées à des principes fondamentaux.
+
+Le risque concret, à votre stade : les règles vont commencer à se contredire, et chaque nouvelle demande que vous ferez à l'IA aura une chance croissante d'en casser une ancienne. Vous l'avez déjà vécu — le verrou qui bloquait vos déplacements, les personnages qui se parlaient à distance, les pensées incohérentes. Ces bugs ne sont pas des accidents, ce sont les symptômes d'une spécification qui a dépassé sa masse critique.
+
+Ce que je propose comme tout premier chantier avec Claude Code, avant toute nouvelle fonctionnalité : réorganiser le référentiel en deux documents séparés. D'un côté les principes — une trentaine de règles invariantes, celles qui ne bougeront jamais (les habitants ne parlent que dans la même pièce ; rien n'est perçu qui ne soit dans le registre de perception ; aucun contact sans double accord explicite). De l'autre les paramètres — tous les chiffres, rassemblés au même endroit et modifiables sans toucher aux règles.
+
+C'est ingrat, ça ne produit rien de visible, et ça conditionne tout le reste. Après ça, chaque demande que vous ferez à l'IA sera fiable.
+
+7. Les deux choses que vous m'avez demandé de vous expliquer
+Pourquoi un seul appel produit de l'écho. Un modèle de langage complète du texte. Si vous lui demandez « écris l'échange entre A et B », il produit un échange — et un bon échange, pour lui, c'est un échange où les répliques se répondent harmonieusement. Il va donc naturellement faire rimer B avec A. Si au contraire vous lui demandez « tu es B, voici ce que tu viens d'entendre, réponds », il n'a plus accès à la vue d'ensemble et ne peut plus optimiser l'harmonie. Il est obligé d'avoir un point de vue. C'est toute la différence entre écrire une scène et jouer un rôle.
+
+Pourquoi séparer principes et paramètres. Quand vous demandez à une IA de modifier un comportement, elle doit relire tout ce qui pourrait être concerné. Si les chiffres sont dispersés dans vingt-cinq sections de prose, elle en rate, ou elle en réécrit un au passage sans le vouloir. Si tous les chiffres sont dans un seul fichier de configuration, changer un équilibrage devient une modification d'une ligne, sans risque. C'est le geste qui fait passer un projet d'artisanal à maintenable.
+
+8. Par où commencer, concrètement
+Dans cet ordre, parce que chaque étape rend la suivante plus facile :
+
+1. Restructurer le référentiel en principes + paramètres. Ingrat, indispensable.
+2. Séparer les deux cerveaux : un appel par personnage. C'est le gain qualitatif le plus important du projet.
+3. Rééquilibrer les besoins et rendre la relation réversible, avec l'arc relationnel recalé pour culminer après la révélation.
+4. Remplacer les emojis par les ovoïdes, désaturer la palette, ajouter la lumière et la vignette.
+5. Passer en plein écran, avec le mode Observation par défaut et le mode Instruments en option.
+6. Mettre en scène la finale.
+7. Et seulement là, les mécaniques de diffusion : export automatique de clips verticaux sur les moments forts, et maison unique permanente que tout le monde regarde en même temps.
+
+9. Un point pratique à régler avant tout
+Pour que je puisse travailler avec vous via Claude Code, il faut que le code soit accessible ailleurs que sur chatgpt.site, qui est l'hébergement lié à Codex. Concrètement il faudrait récupérer les fichiers du projet et les poser sur un dépôt GitHub — ensuite Claude Code travaille directement dedans, lit toute l'arborescence et modifie plusieurs fichiers d'un coup, exactement comme Codex le faisait.
+
+Je ne sais pas exactement quelles options d'export Codex vous propose aujourd'hui, et c'est la seule inconnue bloquante. Regardez dans votre interface Codex s'il y a un moyen de télécharger le projet ou de le connecter à GitHub, et dites-moi ce que vous trouvez — on part de là.
+
+En attendant, si vous voulez avancer tout de suite : copiez-collez-moi lib/perception.ts et app/api/lia/route.ts. Ce sont les deux fichiers qui portent respectivement la vérité du monde et l'orchestration des appels à Gemini. Avec ces deux-là, je peux vous rédiger précisément la demande à passer pour la séparation des deux cerveaux.
+
+
+Vous utilisez maintenant Sonnet 5.
+Écrivez un message…
+
+
+Claude est une IA et peut commettre des erreurs. Veuillez vérifier les réponses.
+
+
+
+
+
+

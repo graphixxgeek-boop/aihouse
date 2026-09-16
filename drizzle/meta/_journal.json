@@ -1,0 +1,55 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1789245155764,
+      "tag": "0000_jazzy_cobalt_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1789249946671,
+      "tag": "0001_harsh_kate_bishop",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789251647039,
+      "tag": "0002_glamorous_the_enforcers",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1789252359717,
+      "tag": "0003_cooing_the_stranger",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1789265289599,
+      "tag": "0004_aspiring_blizzard",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1789340033774,
+      "tag": "0005_strange_chronomancer",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1789392388669,
+      "tag": "0006_dialogue_fingerprints",
+      "breakpoints": true
+    }
+  ]
+}
