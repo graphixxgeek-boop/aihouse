@@ -550,3 +550,38 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(opened.messages.some(m=>m.speaker==='Lia'&&(m.content.includes('la tête qui tourne')||m.content.includes('fermer les yeux'))));
   console.log('Passed: insolite openings stay a minority, are internally distinct, seed the right agent\'s needs/emotions, and actually surface in the scripted opening turn.');
 }
+
+{
+  // Colère entre les deux habitants (nouvelle mécanique) : trois rapprochements en moins de 18
+  // tours doivent maintenant produire une vraie dispute, pas seulement une gêne passagère — avec
+  // anneau/smiley fâché, gestes et scènes légères suspendus, et une réconciliation qui exige un
+  // vrai échange sur le même sujet, pas juste le temps qui passe.
+  const epoch=(await readWorld(db)).epoch;
+  const disputeRound=40;
+  let p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);
+  p.round=disputeRound;p.introduced=true;p.met=true;p.salonTurns=5;
+  p.life={...p.life,contacts:[disputeRound-2,disputeRound-6],dispute:undefined,debrief:undefined,contact:undefined,ambientSeen:true,ambientVerified:true,visualIntro:2,personalAsked:true,exitSearched:true,visited:['salon','cuisine','chambre','bureau']};
+  p.pendingDestination={room:'salon',intent:'hug',proposer:2};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,emotions=?,needs=?').run('salon','chat',warm,JSON.stringify(initialNeeds));
+  affection=true;
+  let response=await post(input('interact',1,{epoch}));assert.equal(response.status,200);let result=await response.json();
+  affection=false;
+  assert.equal(result.sharedAffection,'hug');
+  assert.ok(result.story.life.dispute?.remaining>0,'third close reconciliation in 18 turns should open a dispute');
+  const disputeTopic=result.story.life.dispute.topic;
+  assert.ok(result.agents.find(a=>a.id===1).angry);assert.ok(result.agents.find(a=>a.id===2).angry);
+  assert.equal(smiley(result.agents.find(a=>a.id===1)),'😤');assert.equal(smiley(result.agents.find(a=>a.id===2)),'😠');
+  // While disputed, a fresh gesture attempt must not go through even with every affection lever honored.
+  affection=true;
+  response=await post(input('interact',1,{epoch}));assert.equal(response.status,200);result=await response.json();
+  affection=false;
+  assert.equal(result.sharedAffection,null,'no shared gesture should be possible while a dispute is active');
+  assert.equal(result.story.life.dispute?.topic,disputeTopic,'the dispute must persist untouched by the blocked attempt');
+  // Reconciliation: staying together on the same topic decrements it, never a random passage of time.
+  response=await post(input('interact',1,{epoch}));assert.equal(response.status,200);result=await response.json();
+  assert.equal(result.story.life.dispute?.remaining,1);assert.ok(result.agents.every(a=>a.angry));
+  response=await post(input('interact',1,{epoch}));assert.equal(response.status,200);result=await response.json();
+  assert.equal(result.story.life.dispute,undefined);assert.ok(result.agents.every(a=>!a.angry));
+  console.log('Passed: three close reconciliations open a real dispute with angry smileys, suspend new gestures, and require a genuine shared reconciliation to clear.');
+}

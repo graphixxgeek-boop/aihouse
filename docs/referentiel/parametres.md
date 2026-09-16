@@ -72,9 +72,20 @@ et peuvent chuter plus vite qu'ils ne montent).
   fatigue de 5.
 - `dramaRules.pressureStress` : +16 stress pour Lia en cas d'insistance excessive.
 - Seuil d'insistance (`overProposing`) : 2 propositions de Noé sur les 6 derniers tours.
-- 3 rapprochements en moins de 18 tours → Lia : −5 attirance, −2 attachement, demande de
-  distance, +3 tours de débrief.
+- 3 rapprochements en moins de 18 tours → Lia : −5 attirance, −2 attachement, `life.dispute` ouvert
+  pour 2 tours de réconciliation (voir ci-dessous), plus d'ancien débrief de distance.
 - `dramaRules.debriefTurns` : 2 tours de débrief après un événement marquant.
+
+## Colère et réconciliation (`app/api/lia/route.ts`, `lib/life.ts`, `lib/simulation.ts`)
+
+- `life.dispute` : `{topic, remaining}`, même forme que `life.debrief`. Décrémenté d'un point à
+  chaque tour où les deux habitants sont ensemble ET où personne n'a tenté un geste affectueux ce
+  tour-là (une tentative refusée ne compte jamais comme un pas de réconciliation) ; supprimé à 0.
+- Pendant une dispute active : aucun geste affectueux possible (`affectionEligible`/
+  `affectionOpportunity`), aucune scène scénarisée d'avant-révélation (`eligibleBeat`/
+  `personalLead`).
+- Smiley/anneau : `angry` (dérivé de `life.dispute?.remaining>0`) prime sur tout le reste — 😤 pour
+  Lia, 😠 pour Noé (glyphes distincts par personnage, comme la description écran).
 
 ## Enquête (`lib/story.ts`)
 

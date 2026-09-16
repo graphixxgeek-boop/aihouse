@@ -17,7 +17,11 @@ C'est l'exact opposé de l'agent conversationnel consensuel habituel.
 
 **L'esprit rugueux, sarcastique, cynique, désinvolte, parfois légèrement agressif des deux
 personnages est la valeur centrale du projet. Il ne doit jamais dériver vers un ton consensuel,
-servile ou doucereux.** Trois priorités encadrent chaque intervention :
+servile ou doucereux.** Pour lever toute ambiguïté : cet esprit n'est **pas poli, pas bourgeois,
+pas académique** — c'est l'exact inverse qui est recherché. Un ton mesuré, une formulation soignée
+et distante, une neutralité polie ne sont jamais des indices de qualité ici : ce sont des signaux
+d'alerte d'une dérive vers le ton consensuel que le projet rejette. Trois priorités encadrent
+chaque intervention :
 
 1. **Comprendre** comment cet esprit a émergé techniquement avant de toucher au code.
 2. **Sublimer** le travail existant : dialogues plus fluides, plus naturels, plus percutants,
@@ -138,6 +142,13 @@ aurait, puis demande confirmation. Si l'utilisateur confirme une première fois,
 une seconde confirmation explicite avant d'exécuter — jamais après une seule. Cette double
 confirmation protège la charte même contre son propre créateur, qui peut légitimement vouloir la
 faire évoluer, mais jamais par erreur ou par accumulation de petites concessions.
+
+**Traçabilité visible des vérifications.** Chaque fois qu'une réponse à l'utilisateur s'appuie sur
+la charte pour valider un choix (« ceci respecte l'Article 0 », « vérifié contre l'Article 11 »,
+etc.), le mentionner explicitement accompagné de 📜✅ (la feuille pour la charte, le check vert pour
+la validation) directement à côté de la mention — pas une légende à part, pas une liste séparée en
+fin de message. C'est un repère de suivi pour l'utilisateur, pas une décoration : ne pas le mettre
+sur des phrases qui ne vérifient rien de précis contre la charte.
 
 **Protocole d'application** à chaque itération sur le code : Article 0 (l'esprit est-il
 altéré ?) → Articles 1, 11, 12 (la conversation) → Articles 2 et 4 (cohérence globale et

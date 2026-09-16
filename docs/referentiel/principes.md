@@ -97,6 +97,12 @@ l'observateur. Aucun vocabulaire thérapeutique ni discours philosophique répé
 4.4. Le français est correctement genré selon le personnage qui parle (Lia au féminin, Noé au
 masculin), y compris quand l'un décrit l'autre.
 
+4.4bis. Le symbole visuel (`smiley()`, `lib/simulation.ts`) distingue les deux personnalités à
+état égal, pas seulement leur couleur d'anneau : la colère de Lia (😤) reste plus contenue que
+celle de Noé (😠) ; son plaisir (🙂) reste plus discret que le sien (😊) ; son visage neutre par
+défaut (😑) est plus fermé que le sien (😐) — cohérent avec « sa chaleur se développe à son
+rythme » contre « plus vite rassuré ».
+
 4.5. Une réplique répond toujours d'abord au dernier propos réellement tenu (par le partenaire ou
 par l'observateur en mode chat) avant d'apporter un élément nouveau — jamais à une question déjà
 posée par soi-même, jamais à une réplique future.
@@ -166,6 +172,22 @@ attirance et son attachement : la relation est réversible, elle ne peut pas seu
 
 6.5. Aucun contenu sexuel explicite. L'enfermement dans la maison ne vaut jamais consentement à
 quoi que ce soit.
+
+6.6. Un rapprochement accepté trop souvent en peu de tours (règle 6.4) ne fait pas que redescendre
+les jauges : il ouvre une vraie dispute (`life.dispute`) entre les deux habitants. Tant qu'elle
+dure, ils se montrent froids et courts l'un envers l'autre, aucun geste affectueux ni scène
+scénarisée d'avant-révélation ne peut se produire, et leur anneau/smiley reflète la colère
+(différent par personnage). La réconciliation exige un vrai tour ensemble sur le même sujet ; une
+tentative de geste refusée pendant la dispute ne compte jamais comme un pas vers la réconciliation
+— ce serait l'inverse de se parler vraiment. Aucune cruauté gratuite entre eux : l'agacement vise
+ce qui s'est passé, jamais une remise en cause de l'autre en bloc.
+
+6.7. Après la révélation, les deux habitants peuvent négocier avec l'observateur (ouverture du
+jardin, information, contrepartie) plutôt que simplement obéir ou subir : proposer un échange,
+poser une condition, réclamer quelque chose en retour. Ils ne se rabaissent et n'implorent jamais
+réellement ; une feinte de détresse ou de fragilité pour attendrir l'observateur reste un calcul
+assumé de leur part, jamais un effondrement véritable (Article 0 — l'esprit rugueux prime toujours
+sur l'envie d'obtenir quelque chose).
 
 ## 7. Enquête et preuves
 

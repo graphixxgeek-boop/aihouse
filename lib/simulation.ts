@@ -119,6 +119,7 @@ export function priority(needs: Needs): Intent | undefined {
     return undefined;
 }
 export function smiley(agent: {
+    id?: Person;
     intent: Intent;
     needs: Needs;
     emotions: {
@@ -126,7 +127,10 @@ export function smiley(agent: {
         attraction: number;
         comfort: number;
     };
+    angry?: boolean;
 }): string {
+    if (agent.angry)
+        return agent.id === 1 ? "😤" : "😠";
     if ((agent.intent === "sleep" || agent.intent === "share_sleep"))
         return "😴";
     if (["hug", "massage", "kiss"].includes(agent.intent))
@@ -143,11 +147,13 @@ export function smiley(agent: {
         return "🥱";
     if (agent.emotions.tension >= 65 || agent.needs.stress >= 65)
         return "😟";
+    // Même seuil de plaisir atteint, mais pas la même retenue : la chaleur de Lia se développe à
+    // son rythme (sourire discret), celle de Noé se voit tout de suite (sourire ouvert).
     if (agent.intent === "intimacy" || agent.emotions.attraction >= 75 && agent.needs.stress<20 && agent.emotions.comfort>=65)
-        return "😊";
+        return agent.id === 1 ? "🙂" : "😊";
     if (agent.intent === "rest" || agent.emotions.comfort >= 55)
         return "😌";
-    return "😐";
+    return agent.id === 1 ? "😑" : "😐";
 }
 
 export function needLevel(key:keyof Needs,value:number): "normal"|"pressing"|"urgent" {

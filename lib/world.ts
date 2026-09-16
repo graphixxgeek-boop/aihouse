@@ -15,6 +15,7 @@ export type Resident = {location?:string;attachment?:number;
     emotions: Emotions;
     needs: Needs;
     intent: Intent;
+    angry?: boolean;
 };
 export async function initialize(db: D1Database, insolite: InsoliteOpening = "normal") {
     await db.batch(([1, 2] as Person[]).map(id => db.prepare("INSERT OR IGNORE INTO agent_state (id,mood,activity,goal,cycle,last_seen,room,needs,emotions) VALUES (?,?,?,?,0,?,?,?,?)")
@@ -34,7 +35,7 @@ export async function readWorld(db: D1Database) {
     const agents = state.results.map(agent => ({...agent,needs:parseNeeds(agent.needs),emotions:(()=>{try{return emotionSchema.parse(JSON.parse(String(agent.emotions)))}catch{return initialEmotionsFor(agent.id)}})()}));
     for(const agent of agents)if(agent.room==="jardin"&&!(story?.humanUnlocked&&story.life.gardenOpen)){agent.room="salon";agent.intent="none";}
     for(const agent of agents)if(["sleep","share_sleep"].includes(agent.intent)&&!["salon","chambre"].includes(agent.room)){agent.room=sleepRoom(agent,agents.find(a=>a.id!==agent.id)!,mutualAttraction(agents[0],agents[1]));}
-    return { story, epoch: clock?.epoch ?? 0, agents: agents.map(agent => ({ ...agent,location:["sleep","share_sleep"].includes(agent.intent)?(agent.room==="chambre"?"bed":"sofa"):story?.life.spatialFocus?.[agent.id],mood:agent.id===2?({curieuse:"curieux",attentive:"attentif"} as Record<string,string>)[agent.mood]??agent.mood:agent.mood,attachment:story?.life.attachment[agent.id]??0, needs: agent.needs, name: names[agent.id], emotions: (() => {
+    return { story, epoch: clock?.epoch ?? 0, agents: agents.map(agent => ({ ...agent,angry:Boolean(story?.life.dispute?.remaining),location:["sleep","share_sleep"].includes(agent.intent)?(agent.room==="chambre"?"bed":"sofa"):story?.life.spatialFocus?.[agent.id],mood:agent.id===2?({curieuse:"curieux",attentive:"attentif"} as Record<string,string>)[agent.mood]??agent.mood:agent.mood,attachment:story?.life.attachment[agent.id]??0, needs: agent.needs, name: names[agent.id], emotions: (() => {
                 try {
                     const emotions=typeof agent.emotions==="object"?agent.emotions:emotionSchema.parse(JSON.parse(String(agent.emotions)));return {...emotions,attraction:Math.max(emotions.attraction,story?.life.attachment[agent.id]??0)};
                 }
