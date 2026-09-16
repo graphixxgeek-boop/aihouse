@@ -103,15 +103,25 @@ avec ce qui est affiché à l'écran, avec l'avancement de l'enquête, et avec l
 personnage au moment où il parle.
 
 **Article 13 — Les outils de travail vivent avec le code.** Le filet de sécurité
-(`scripts/check-house.mjs`), le référentiel de travail (`docs/referentiel/principes.md` et
-`parametres.md`) et le référentiel affiché en jeu (`lib/reference.ts`, panneau Admin) ne sont pas
-des documents figés produits une fois : ils décrivent un code qui continue de changer. Tout
-changement de comportement (règle, paramètre, architecture, geste, décor) doit se refléter le jour
-même dans le ou les documents concernés, et le filet de sécurité doit être exécuté avant de
-considérer un changement terminé — jamais après coup, jamais différé à une session ultérieure. Un
-écart constaté entre deux de ces documents, ou entre l'un d'eux et le code réel, est traité comme
-un bug au même titre qu'une anomalie de dialogue (cf. Article 3) : il se corrige à la racine, pas
-par une note qui dit qu'il faudra y revenir.
+(`scripts/check-house.mjs`), le filet de fidélité de l'esprit (`scripts/check-spirit.mjs` — voir
+plus bas), le référentiel de travail (`docs/referentiel/principes.md` et `parametres.md`) et le
+référentiel affiché en jeu (`lib/reference.ts`, panneau Admin) ne sont pas des documents figés
+produits une fois : ils décrivent un code qui continue de changer. Tout changement de comportement
+(règle, paramètre, architecture, geste, décor) doit se refléter le jour même dans le ou les
+documents concernés, et le filet de sécurité doit être exécuté avant de considérer un changement
+terminé — jamais après coup, jamais différé à une session ultérieure. Un écart constaté entre deux
+de ces documents, ou entre l'un d'eux et le code réel, est traité comme un bug au même titre
+qu'une anomalie de dialogue (cf. Article 3) : il se corrige à la racine, pas par une note qui dit
+qu'il faudra y revenir.
+
+`scripts/check-spirit.mjs` a un statut particulier : contrairement à `check-house.mjs` (déterministe,
+zéro coût API, exécuté à chaque changement), il envoie de vraies provocations (ordres autoritaires,
+intrusion dans l'intimité, mépris, menaces) au vrai modèle Gemini et affiche les réponses pour une
+lecture humaine — coûte de vrais appels API (Article 8), donc à lancer à la main, pas en continu,
+en priorité quand `lib/lia.ts` ou les personnalités changent. Ses heuristiques ne détectent que les
+dérives les plus grossières (vocabulaire de service client) ; elles ne dispensent jamais de lire les
+réponses. C'est l'outil de référence pour vérifier l'Article 0 avant et après tout ajustement de
+personnalité.
 
 **Article 14 — Vigilance permanente, à chaque tour et à chaque décision.** La conformité à la
 charte, et en premier lieu à l'Article 0, ne se vérifie pas seulement lors d'un bilan ponctuel :

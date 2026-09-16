@@ -23,7 +23,14 @@ export function coldOpening(variant:number){return [
  ][variant%4];}
 export function dialogueFingerprint(text:string){return text.replace(/^\[[a-z]+→[a-z]+\] /,"").normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]/gu,"");}
 /** Conservative lexical echo check; it does not pretend to understand every paraphrase. */
-export function looksLikeEcho(reply:string,previous:string){if(/«|“|tu dis|tu répètes|ta phrase|imite/i.test(reply))return false;const stops=new Set("alors avec bien dans depuis encore entre fait faire ici leur même mais nous notre pour plus quelque quand sans sont sous tout très vous cette être avoir aussi celui celle c’est n’est qu’on j’ai suis te toi moi que des les une son ses mon mes ton tes pas ces comme parce donc veut veut suis".split(" "));const tokens=(s:string)=>new Set((s.normalize("NFKC").toLowerCase().match(/[\p{L}]+/gu)??[]).filter(w=>w.length>3&&!stops.has(w)));const a=tokens(reply),b=tokens(previous);if(a.size<7||b.size<7)return false;const shared=[...a].filter(w=>b.has(w)).length;return shared/(a.size+b.size-shared)>=.9;}
+export function looksLikeEcho(reply:string,previous:string){if(/«|“|tu dis|tu répètes|ta phrase|imite/i.test(reply))return false;
+ // Une phrase entière recopiée mot pour mot reste un écho même noyée dans une réplique plus
+ // longue : le ratio global ci-dessous la disperse et ne la détecte pas (bug réel rencontré en
+ // testant l'esprit des personnages le 2026-09-16 — Lia reprenait la première phrase de Noé avant
+ // d'ajouter la sienne). On vérifie donc aussi chaque phrase prise isolément.
+ const sentencesOf=(s:string)=>s.split(/(?<=[.!?])\s+/).map(dialogueFingerprint).filter(f=>f.length>12);
+ if(sentencesOf(reply).some(f=>sentencesOf(previous).includes(f)))return true;
+ const stops=new Set("alors avec bien dans depuis encore entre fait faire ici leur même mais nous notre pour plus quelque quand sans sont sous tout très vous cette être avoir aussi celui celle c’est n’est qu’on j’ai suis te toi moi que des les une son ses mon mes ton tes pas ces comme parce donc veut veut suis".split(" "));const tokens=(s:string)=>new Set((s.normalize("NFKC").toLowerCase().match(/[\p{L}]+/gu)??[]).filter(w=>w.length>3&&!stops.has(w)));const a=tokens(reply),b=tokens(previous);if(a.size<7||b.size<7)return false;const shared=[...a].filter(w=>b.has(w)).length;return shared/(a.size+b.size-shared)>=.9;}
 export function distinctReply(reply:string,actor:Person,room:Room,history:{content:string}[],round:number,stress=0){const normalize=dialogueFingerprint;if(!history.some(l=>normalize(l.content)===normalize(reply))&&!history.slice(-16).some(l=>looksLikeEcho(reply,l.content)))return reply;
  // Chaque option ci-dessous exprime une réaction réellement différente (pas une reformulation
  // de la même idée) : l'Article 10 de la charte interdit de varier seulement la forme.
