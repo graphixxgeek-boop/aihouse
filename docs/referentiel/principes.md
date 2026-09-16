@@ -128,6 +128,12 @@ personnelles, motifs de déplacement) doivent exister en plusieurs formulations 
 distinctes, choisies de façon stable par session via `story.seed`. Le contenu factuel qu'elles
 transmettent ne varie jamais ; seule la façon de le dire change.
 
+5.3bis. Les scènes scénarisées d'avant-révélation (découverte de la plante/enceinte, relance
+personnelle, bilan d'enquête, présentation initiale) ne se déclenchent plus une fois le dossier
+final appelé (`story.finalCalled`) : rejouer une de ces scènes juste après que les personnages
+viennent d'affronter l'observateur casserait le ton de la scène qui vient de se jouer (bug réel
+rencontré et corrigé le 2026-09-16, `app/api/lia/route.ts`, garde `eligibleBeat`/`personalLead`).
+
 5.4. Chaque nouvelle arrivée tire une nouvelle « couleur » de session (ouverture, souvenirs flous,
 angle narratif) parmi un nombre fini de variantes — l'expérience ne doit jamais reproduire deux
 sessions consécutives à l'identique, sans prétendre à une variété infinie.
