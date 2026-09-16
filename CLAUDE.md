@@ -65,8 +65,10 @@ enchaînements improbables avant de considérer un correctif terminé.
 **Article 6 — Le document de référence est un outil de travail pour l'IA, pas une vitrine.** Le
 référentiel doit refléter exactement les fonctionnalités réelles du code, sans rien oublier ni
 inventer. Il doit rester structuré, sans redondance, avec un historique clair de ce qui est
-résolu et de ce qui reste ouvert. Ce fichier CLAUDE.md et `docs/referentiel-maison.md` (à
-maintenir à jour) remplissent ce rôle.
+résolu et de ce qui reste ouvert. Ce rôle est rempli par ce fichier CLAUDE.md et par
+`docs/referentiel/principes.md` + `docs/referentiel/parametres.md` (restructuration réalisée le
+2026-09-16, comme le proposait l'analyse d'Opus — voir plus bas). Les trois documents sont à
+maintenir à jour à chaque changement de comportement ou d'équilibrage.
 
 **Article 7 — L'épreuve de la page blanche.** Périodiquement, se demander : *si je ne disposais
 que du document de référence, comment reconstruirais-je ce système aujourd'hui ?* Cet exercice
@@ -106,15 +108,29 @@ enquête) → Articles 3 et 5 (bugs et robustesse) → Articles 6 et 7 (document
 architecture) → Articles 8, 9, 10 (coût et rejouabilité). Chaque compte rendu à l'utilisateur
 doit dire explicitement ce qui a été vérifié, préservé, amélioré et corrigé.
 
+## Référentiel technique — la référence à jour
+
+- `docs/referentiel/principes.md` — les règles invariantes du comportement de la maison, telles
+  qu'elles sont réellement codées aujourd'hui. À lire avant toute intervention sur le moteur.
+- `docs/referentiel/parametres.md` — tous les chiffres réglables (besoins, émotions, attirance,
+  enquête, sommeil, rejouabilité, timing, géométrie), avec leur fichier source. Un rééquilibrage
+  ne devrait jamais toucher un fichier sans passer par ce document, et inversement.
+
+Ces deux documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
+vérité. Ils doivent être mis à jour à chaque changement de règle ou de paramètre — un principe
+ou un chiffre qui change dans le code et pas ici est une dette à combler tout de suite, pas plus
+tard (Article 6/7).
+
 ## Documentation de contexte disponible
 
 Le dossier `docs/contexte-projet/` contient les archives historiques transmises par
-l'utilisateur, à consulter en cas de doute sur une décision de conception :
+l'utilisateur, à consulter en cas de doute sur une décision de conception, jamais comme source de
+vérité sur le comportement actuel :
 
 - `referentiel-maison-v34-origine.txt` — référentiel fonctionnel d'origine (version 34, produit
-  par Codex). **Traité comme document historique de départ**, pas comme vérité absolue : il
-  contient des incohérences connues (numérotation de sections dupliquée, règles contradictoires
-  par sédimentation) à assainir, cf. Article 6/7.
+  par Codex). **Document historique uniquement**, superseded par `docs/referentiel/` ci-dessus :
+  il contient des incohérences connues (numérotation de sections dupliquée, règles contradictoires
+  par sédimentation) que la restructuration a justement corrigées.
 - `journal-dialogue-exemple.txt` — extrait réel d'une session de jeu, référence de ton et de
   qualité déjà atteinte à préserver (cf. Article fondateur et Article 1).
 - `analyse-opus-initiale.txt` — diagnostic technique et artistique produit par Claude Opus avant
