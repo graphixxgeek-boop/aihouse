@@ -2,7 +2,7 @@ import {stockSurprise,stockThought} from "@/lib/stock";
 import {visualTiming,type VisualEvent} from "@/lib/visual-events";
 import {destinationAnchor,gardenAccess} from "@/lib/house";
 import {normaliseNickname,visibleScene,appearanceReply} from "@/lib/perception";
-import {coldOpening,dialogueFingerprint,distinctReply,justifiedReply,truthfulGender,dramaRules} from "@/lib/drama";
+import {coldOpening,dialogueFingerprint,distinctReply,justifiedReply,truthfulGender,dramaRules,departureLine} from "@/lib/drama";
 import {readLife,humanStress,isSleeping} from "@/lib/life";
 import { planTurn, coordinateRooms, residentPriority, sceneFor, proposedDestination } from "@/lib/turn";
 import { newStory, parseStory, rememberAges, advanceStory, storyContext, investigationTarget, investigationRecap, finaleReveal, groundFragment, seedPick, type Story } from "@/lib/story";
@@ -391,7 +391,17 @@ export async function POST(request: Request) {
           if(speaker!=="vous"){spokenKeys.add(key);statements.push(db.prepare(`INSERT OR IGNORE INTO dialogue_fingerprints (fingerprint) SELECT ? WHERE ${fence}`).bind(key,token,at));}
           statements.push(db.prepare(`INSERT INTO conversations (speaker,content,created_at,room) SELECT ?,?,?,? WHERE ${fence}`).bind(speaker,content,at,room,token,at));return true;
         };
-        for(const d of decisions){const a=world.agents.find(a=>a.id===d.actor)!;const destination=turnPlan.exitInspection?"couloir":d.action==="none"?a.room:d.room;if(a.room!==destination&&!isSleeping(a,life)){const target=destination==="couloir"?"dans le couloir":destination==="jardin"?"au jardin":destination==="cuisine"?"en cuisine":destination==="chambre"?"dans la chambre":"au "+destination;const motive=!story.met?"je veux savoir s’il y a quelqu’un d’autre":d.intent==="sleep"?"mes yeux se ferment":d.intent==="eat"?"j’ai besoin de manger":destination==="jardin"?"la porte est enfin ouverte, je veux voir ce qu’il y a derrière":d.intent==="study"?"on a une piste à vérifier":destination==="salon"?"j’ai besoin de prendre du recul":input.mode==="move"?"je vais regarder ce qui s’y trouve":"je préfère qu’on ne reste pas chacun de notre côté";const pool=[...(["Je bouge ","Je file ","Je pars ","Je passe maintenant ","Je vais faire un tour ","Je m’en vais "].flatMap(start=>[start+target+" : "+motive+".",start+target+". "+motive.charAt(0).toUpperCase()+motive.slice(1)+"."])),"Je vais "+target+" : "+motive+".","Je passe "+target+". "+motive.charAt(0).toUpperCase()+motive.slice(1)+".","Direction "+destination+" ; "+motive+"."];const line=pool.find(l=>!spokenKeys.has(fingerprint("["+a.room+"→"+destination+"] "+l)))??"Je pars "+target+" ; "+motive+".";if(addLine(names[d.actor]+" · déplacement","["+a.room+"→"+destination+"] "+line,a.room))departures.push({actor:d.actor,from:a.room,to:destination,content:line});}}
+        for(const d of decisions){const a=world.agents.find(a=>a.id===d.actor)!;const destination=turnPlan.exitInspection?"couloir":d.action==="none"?a.room:d.room;if(a.room!==destination&&!isSleeping(a,life)){const target=destination==="couloir"?"dans le couloir":destination==="jardin"?"au jardin":destination==="cuisine"?"en cuisine":destination==="chambre"?"dans la chambre":"au "+destination;
+            const motives:readonly string[]=!story.met?["je veux savoir s’il y a quelqu’un d’autre","je veux voir si je suis vraiment seul ici","je veux vérifier qu’il n’y a personne d’autre dans cette maison"]:
+             d.intent==="sleep"?["mes yeux se ferment","je tiens plus debout","le sommeil me tombe dessus"]:
+             d.intent==="eat"?["j’ai besoin de manger","la faim me travaille trop pour attendre","je dois avaler quelque chose"]:
+             destination==="jardin"?["la porte est enfin ouverte, je veux voir ce qu’il y a derrière","cette porte ouverte, je veux enfin voir ce qu’il y a dehors","maintenant que c’est ouvert, je veux voir ce jardin de plus près"]:
+             d.intent==="study"?["on a une piste à vérifier","il faut qu’on retourne vérifier ça","cette piste me travaille, faut qu’on aille voir"]:
+             destination==="salon"?["j’ai besoin de prendre du recul","j’ai besoin de souffler un peu","ça me ferait du bien de changer d’air"]:
+             input.mode==="move"?["je vais regarder ce qui s’y trouve","je veux voir ce qu’il y a par là","autant aller jeter un œil là-bas"]:
+             ["je préfère qu’on ne reste pas chacun de notre côté","je préfère qu’on reste ensemble","j’ai pas envie qu’on se sépare comme ça","autant rester dans le même coin que toi"];
+            const line=departureLine(motives,target,destination,story.seed,candidate=>spokenKeys.has(fingerprint("["+a.room+"→"+destination+"] "+candidate)));
+            if(addLine(names[d.actor]+" · déplacement","["+a.room+"→"+destination+"] "+line,a.room))departures.push({actor:d.actor,from:a.room,to:destination,content:line});}}
         if(!life.dialogueIndexed){for(const key of pastKeys)statements.push(db.prepare(`INSERT OR IGNORE INTO dialogue_fingerprints (fingerprint) SELECT ? WHERE ${fence}`).bind(key,token,at));life.dialogueIndexed=true;}
         if (input.mode === "chat")
             addLine("vous", input.message,"haut-parleurs");

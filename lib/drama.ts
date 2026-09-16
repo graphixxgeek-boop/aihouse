@@ -1,5 +1,20 @@
 import type {Person,Room} from './house';
 export const dramaRules={openingTurns:1,proposalStress:{noe:18,lia:14},rejection:{attraction:3,hunger:6,fatigue:5},pressureStress:16,personalBoost:3,debriefTurns:2} as const;
+// Une seule formule de motif ("je préfère qu'on ne reste pas chacun de notre côté") habillée de
+// six verbes différents reste reconnaissable au bout de quelques répétitions : ce n'est pas la
+// forme qui manquait de variété, c'est le fond. Chaque condition a maintenant plusieurs motifs
+// réellement distincts ; l'ordre d'essai tourne avec story.seed pour ne pas toujours épuiser le
+// même dans le même ordre d'une session à l'autre.
+export function departureLine(motives:readonly string[],target:string,destination:string,seed:string,avoid:(candidate:string)=>boolean):string{
+ const offset=Array.from(seed).reduce((h,c)=>(h*31+c.charCodeAt(0))>>>0,0)%motives.length;
+ const ordered=[...motives.slice(offset),...motives.slice(0,offset)];
+ const prefixes=["Je bouge ","Je file ","Je pars ","Je passe maintenant ","Je vais faire un tour ","Je m’en vais "];
+ const candidates=ordered.flatMap(motive=>[
+  ...prefixes.flatMap(start=>[start+target+" : "+motive+".",start+target+". "+motive.charAt(0).toUpperCase()+motive.slice(1)+"."]),
+  "Je vais "+target+" : "+motive+".","Je passe "+target+". "+motive.charAt(0).toUpperCase()+motive.slice(1)+".","Direction "+destination+" ; "+motive+".",
+ ]);
+ return candidates.find(c=>!avoid(c))??"Je pars "+target+" ; "+ordered[0]+".";
+}
 export function coldOpening(variant:number){return [
  ["T’es qui ? Reste là une seconde.","Pourquoi je suis ici ? Je te connais pas."],
  ["T’es qui ? C’est toi qui m’as fait venir ici ?","Non. Approche pas. Je sais même pas où on est."],
