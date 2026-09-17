@@ -18,7 +18,7 @@ ce document décrit les valeurs actuelles, il ne les fixe pas.
 | Vitesse de stress (`stressRate`/tour) | 1 | 1 |
 | Récupération d'un repas (`mealRecovery`) | 40 | 58 |
 | Fatigue post-repas (`mealFatigue`) | 0 | 14 |
-| Bonus d'activité commune (`sharedBonus`) | 2 | 4 |
+| Bonus d'activité commune (`sharedBonus`) | 2 | 2 |
 
 Seuils d'urgence (`priority()`) : faim ≥ 68 → manger ; fatigue ≥ 68 → dormir ; stress ≥ 75 →
 repos. Niveaux d'affichage (`needLevel()`) : urgent à 75 (stress) / 85 (incertitude) / 68 (autres) ;
@@ -41,7 +41,10 @@ stress ; regarder la tv −5 incertitude, −8 stress ; discuter −5 stress.
 ## Émotions (`lib/lia.ts`, `lib/simulation.ts`)
 
 Émotions initiales — Lia : curiosité 72, tension 90, confiance 8, aisance 22, attirance 12.
-Noé : curiosité 68, tension 90, confiance 20, aisance 48, attirance 32.
+Noé : curiosité 68, tension 90, confiance 20, aisance 48, attirance 18 (resserré le 2026-09-17,
+était 32 — retour utilisateur direct : sa jauge décrochait de celle de Lia dès le départ, en plus
+d'un `sharedBonus` alors deux fois plus élevé ; les deux jauges doivent progresser de façon
+cohérente l'une par rapport à l'autre, pas seulement chacune à un rythme raisonnable prise isolément).
 
 `evolveEmotions` borne la variation par tour : jamais plus de −12 ni plus de +12 (curiosité,
 tension, aisance), plafonnée à +5 pour la confiance et l'attirance (des liens qui montent lentement

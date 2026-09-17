@@ -196,6 +196,17 @@ correct pris séparément. La question « est-ce clair pour quelqu'un qui décou
 contexte ? » se pose systématiquement à chaque relecture, pas seulement après qu'un utilisateur a
 signalé une confusion.
 
+**Article 16 — Vérification systématique par questions.** *(Ajouté le 2026-09-17, à la demande
+explicite de l'utilisateur.)* À chaque tour où l'utilisateur formule une ou plusieurs demandes
+(nouvelle fonctionnalité, correctif, réglage, changement de règle), l'agent lui pose au moins
+trois questions de vérification avant ou pendant l'exécution — jamais après coup une fois le
+travail déjà fait — pour s'assurer d'avoir bien compris l'intention réelle plutôt que de supposer.
+Ces questions portent sur les points où une divergence d'interprétation est réellement plausible
+(portée exacte, arbitrage entre deux options légitimes, calibrage d'un curseur, priorité en cas de
+tension avec une autre règle) : des questions creuses ou déjà répondues dans la demande elle-même
+ne comptent pas. Un tour qui ne contient aucune demande nouvelle (accusé de réception, poursuite
+d'un travail déjà cadré, simple « continue ») n'a pas à en fabriquer artificiellement.
+
 **Traçabilité visible des vérifications.** Chaque fois qu'une réponse à l'utilisateur s'appuie sur
 la charte pour valider un choix (« ceci respecte l'Article 0 », « vérifié contre l'Article 11 »,
 etc.), le mentionner explicitement accompagné de 📜✅ (la feuille pour la charte, le check vert pour
@@ -208,7 +219,9 @@ altéré ?) → Articles 1, 11, 12 (la conversation) → Article 15 (est-ce lisi
 l'utilisateur ?) → Articles 2 et 4 (cohérence globale et enquête) → Articles 3 et 5 (bugs et
 robustesse) → Articles 6, 7 et 13 (documentation, outils et architecture) → Articles 8, 9, 10
 (coût et rejouabilité) → Article 14 (vigilance continue, à appliquer en toile de fond de tous les
-autres, pas comme une étape séparée). Chaque compte rendu à l'utilisateur doit dire explicitement
+autres, pas comme une étape séparée) → Article 16 (au moins trois questions de vérification posées
+avant/pendant l'exécution, sur les points où une demande était réellement ambiguë). Chaque compte
+rendu à l'utilisateur doit dire explicitement
 ce qui a été vérifié, préservé, amélioré et corrigé.
 
 ## Référentiel technique — la référence à jour

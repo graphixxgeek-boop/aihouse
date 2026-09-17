@@ -8,7 +8,14 @@ export type Needs = {
 export const initialNeeds: Needs = { hunger: 26, fatigue: 20, stress: 55, uncertainty: 90 };
 export const residentProfiles = {
     1: { description: "Lia est observatrice, plus réservée au début, sensible à la délicatesse et à la fiabilité. Elle se fatigue plus vite et a un plus petit appétit. Sa chaleur se développe à son rythme.", emotions: { curiosity: 72, tension: 90, trust: 8, comfort: 22, attraction: 12 }, needs: { hunger: 20, fatigue: 20, stress: 90, uncertainty: 90 }, hungerRate: 1, fatigueRate: 2, stressRate: 1, mealRecovery: 40, mealFatigue: 0, sharedBonus: 2 },
-    2: { description: "Noé est plus assuré, plus vite rassuré par la présence de Lia, plus à l'aise et déjà davantage attiré par Lia. Il propose volontiers une petite action concrète, avec un humour sobre. Il mange plus, se fatigue moins vite hors repas et ressent un coup de fatigue après manger. Son assurance n'exclut ni doute ni respect d'un refus.", emotions: { curiosity: 68, tension: 90, trust: 20, comfort: 48, attraction: 32 }, needs: { hunger: 30, fatigue: 20, stress: 90, uncertainty: 90 }, hungerRate: 2, fatigueRate: 1, stressRate: 1, mealRecovery: 58, mealFatigue: 14, sharedBonus: 4 }
+    // Attraction initiale et sharedBonus resserrés le 2026-09-17 (retour utilisateur direct) : Noé
+    // partait avec une attirance presque 3x supérieure à celle de Lia (32 contre 12) ET un bonus
+    // d'activité commune deux fois plus élevé (4 contre 2, doublé en chambre) — ces deux écarts se
+    // combinaient à chaque tour partagé et faisaient décrocher sa jauge de celle de Lia bien plus
+    // vite qu'un « léger temps d'avance », au point de sonner incohérent entre les deux jauges. Il
+    // garde un tout petit temps d'avance (18 contre 12) mais un bonus d'activité commune désormais
+    // identique à celui de Lia : leur progression doit rester cohérente l'une par rapport à l'autre.
+    2: { description: "Noé est plus assuré, plus vite rassuré par la présence de Lia, plus à l'aise et déjà légèrement plus attiré par Lia. Il propose volontiers une petite action concrète, avec un humour sobre. Il mange plus, se fatigue moins vite hors repas et ressent un coup de fatigue après manger. Son assurance n'exclut ni doute ni respect d'un refus.", emotions: { curiosity: 68, tension: 90, trust: 20, comfort: 48, attraction: 18 }, needs: { hunger: 30, fatigue: 20, stress: 90, uncertainty: 90 }, hungerRate: 2, fatigueRate: 1, stressRate: 1, mealRecovery: 58, mealFatigue: 14, sharedBonus: 2 }
 } as const;
 // Rare variations de départ (~20 % de chance chacune, cf. story.ts:insoliteOpening) : un même
 // schéma d'arrivée ("ils se rencontrent au salon") ne doit pas produire le même déroulé à chaque
