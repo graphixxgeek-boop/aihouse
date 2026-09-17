@@ -364,6 +364,17 @@ découverte de la feuille codée, le personnage doit déduire à voix haute l'at
 son propre âge (« 28, c'est le mien... donc 31, ça doit être toi »), jamais l'énoncer comme un
 fait déjà su avant cette découverte (`lib/lia.ts`, bloc DESCRIPTION).
 
+7.9. Les objets de l'enquête d'origine peuvent aussi préparer, de façon fine et jamais appuyée,
+l'énigme renversée à venir (le dossier retourné sur l'observateur, en cours de conception le
+2026-09-17) — un joueur attentif à la première enquête doit pouvoir reconnaître certains indices
+au second passage, sans qu'aucune ligne ne nomme ou n'explique la mécanique à l'avance (jamais de
+gros trait). Exemple déjà en place : deux des six variantes de `discover-mirrorVerified`
+(`app/api/lia/route.ts`) glissent une remarque en passant sur un miroir qui renverrait « la vraie
+personnalité » ou qui « nous regarderait sans rien nous montrer en retour » — une pensée qui reste
+plausible pour un personnage qui vient de trouver un miroir sans reflet, jamais un indice numéroté.
+Cette règle s'applique à toute future réécriture d'un objet de la première enquête : l'ajout doit
+rester crédible en lui-même, indépendamment de la seconde partie.
+
 ## 8. Révélation et canal humain
 
 8.1. Le canal de discussion avec l'observateur ne s'ouvre qu'après la découverte des cinq preuves

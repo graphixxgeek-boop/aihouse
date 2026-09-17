@@ -159,18 +159,18 @@ le jour même (Article 13).
   sommeil partagé) dans la même pièce ; courbe de Bézier quadratique entre les deux visages,
   dégradé vertex-color entre leurs deux couleurs, durée totale 2600ms (fondu d'entrée sur les 300
   premières ms, fondu de sortie sur les 400 dernières).
+- Palette du visage (2026-09-17, reprise complète après un premier correctif insuffisant) : la
+  plaque est passée d'un rendu sombre lumineux (traits clairs sur fond translucide) à un jeton
+  clair opaque (fond `#fff3f8`→`#ffb3da` pour Lia, `#eafdfd`→`#9be9e6` pour Noé) avec des traits
+  sombres (`#7a1550` pour Lia, `#045f64` pour Noé) et un liseré de bord dans la couleur d'identité
+  du personnage — la maquette d'origine, réglée sur fond noir, ne se lisait pas contre les sols
+  saturés du vrai décor 3D, même une fois rendue opaque. Les paramètres `faceExpression()` ne
+  changent pas, seul `drawFace()` (rendu) est concerné.
 - Vitesse angulaire de l'anneau : `.15 + (stress+tension)/200 × 2.3`, plus un supplément non
   linéaire `max(0, (tension-70)/30)² × 3.5` qui reste quasi nul sous 70% de tension mais devient
   nettement visible à l'approche de 100% (2026-09-17, retour utilisateur : la différence devait
   être manifeste à l'œil, pas seulement mesurable). Multiplié en plus par 2.4 pendant la parole et
   jusqu'à ×3 juste après une découverte (`speakingBoost`/`pulseBoost`, inchangés).
-- Opacité de la plaque du visage (2026-09-17, retour utilisateur en conditions réelles) : les
-  arrêts de couleur du dégradé ne descendent plus sous ~0.9 d'opacité (centre) et 0.97/1 (bord),
-  contre ~0.14–0.4 auparavant au centre — l'ancien réglage, pensé et validé sur la maquette isolée
-  (fond neutre), donnait un effet fantôme une fois posé sur les sols saturés du vrai décor 3D ; la
-  variation confort/attirance (`glow`) reste visible dans la couleur et la lueur, plus jamais dans
-  la transparence. Correctif provisoire en attendant la refonte graphique (plein écran, mode
-  Observation/Instruments — chantiers 4/5/6 du plan d'origine, toujours ouverts).
 - Teinte de l'anneau : plus de texture recuite à la couleur du personnage ; la texture est neutre
   (dégradé de gris) et `material.color` (multiplicatif, bon marché à chaque frame) interpole entre
   la couleur du personnage et une teinte d'alerte (`0xff4d4d`) proportionnellement à `angerLevel`,

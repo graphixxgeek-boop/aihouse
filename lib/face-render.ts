@@ -44,31 +44,33 @@ export function stepExpressionSprings(springs: ExpressionSprings, target: FaceEx
 
 export function drawFace(ctx: CanvasRenderingContext2D, size: number, isLia: boolean, e: FaceExpression, mouthOpenExtra = 0) {
   const gender = isLia ? GENDER.lia : GENDER.noe;
-  const baseColor = isLia ? "#ff3294" : "#05e3ec";
+  const rimColor = isLia ? "#ff3294" : "#05e3ec";
+  const inkColor = isLia ? "#7a1550" : "#045f64";
   const R = size * .34, cx = size / 2, cy = size / 2;
   ctx.clearRect(0, 0, size, size);
   ctx.save();
   ctx.translate(cx, cy);
 
-  // Plaque opaque (2026-09-17, retour utilisateur en conditions réelles) : contre le décor 3D
-  // saturé (sols violets/bleus/prune), un centre trop translucide laissait voir le sol au travers
-  // et donnait un effet "fantôme" au lieu d'un jeton bien découpé. Le dégradé garde son rôle de
-  // lueur (couleur/saturation plus vive selon confort/attirance) mais ne descend plus jamais sous
-  // une opacité quasi totale — le disque doit toujours se détacher franchement de la pièce.
+  // Plaque claire et opaque (2026-09-17, reprise complète) : la maquette d'origine avait été
+  // réglée sur un fond entièrement noir, où des traits clairs et une lueur glissante se lisaient
+  // bien. Posée sur le vrai décor 3D (sols saturés, murs sombres), ce même choix restait illisible
+  // malgré un premier correctif d'opacité — le problème n'était pas la transparence mais tout le
+  // schéma de valeurs. Un jeton clair avec des traits sombres, façon icône plate, se détache de
+  // n'importe quel sol sans dépendre d'un fond neutre, et se rapproche du reste du décor (formes
+  // simples, couleurs franches, aucun post-traitement — cf. Article 12 de reference.ts). Les
+  // paramètres d'émotion (faceExpression) restent intégralement conservés : seul le rendu change.
   const glow = .18 + e.comfort / 100 * .22 + e.attraction / 100 * .16;
-  const plate = ctx.createRadialGradient(0, -R * .15, R * .1, 0, 0, R);
-  plate.addColorStop(0, isLia ? `rgba(255,205,225,${.92 + glow * .08})` : `rgba(210,255,250,${.9 + glow * .08})`);
-  plate.addColorStop(.55, `rgba(${isLia ? "52,22,36" : "12,38,40"},.97)`);
-  plate.addColorStop(1, "rgba(8,9,13,1)");
+  const plate = ctx.createRadialGradient(0, -R * .2, R * .1, 0, 0, R);
+  plate.addColorStop(0, isLia ? "#fff3f8" : "#eafdfd");
+  plate.addColorStop(.7, isLia ? "#ffd6ea" : "#c3f4f2");
+  plate.addColorStop(1, isLia ? "#ffb3da" : "#9be9e6");
   ctx.beginPath(); ctx.arc(0, 0, R, 0, 6.283); ctx.fillStyle = plate; ctx.fill();
-  ctx.lineWidth = 2; ctx.strokeStyle = `rgba(255,255,255,${.28 + glow * .35})`; ctx.stroke();
+  ctx.lineWidth = R * (.065 + glow * .02); ctx.strokeStyle = rimColor; ctx.stroke();
 
   if (isLia) {
-    // Chevelure suggérée : quatre mèches fluides et lumineuses, jamais une texture réaliste.
-    const hairGrad = ctx.createLinearGradient(0, -R * 1.05, 0, R * .3);
-    hairGrad.addColorStop(0, `rgba(255,170,205,${.5 + glow * .3})`);
-    hairGrad.addColorStop(1, "rgba(255,170,205,0)");
-    ctx.strokeStyle = hairGrad; ctx.lineCap = "round";
+    // Chevelure suggérée : quatre mèches fluides, en couleur pleine plutôt qu'en lueur — la
+    // transparence qui lisait comme un halo sur fond noir devenait un lavis terne sur fond clair.
+    ctx.strokeStyle = `rgba(224,54,143,${.78 + glow * .18})`; ctx.lineCap = "round";
     for (const [off, wob, lw] of [[-1, .06, .05], [-.62, .1, .04], [.62, -.1, .04], [1, -.06, .05]] as const) {
       ctx.lineWidth = R * lw;
       ctx.beginPath();
@@ -80,9 +82,8 @@ export function drawFace(ctx: CanvasRenderingContext2D, size: number, isLia: boo
 
   const jitter = () => (Math.random() - .5) * e.jitterAmp;
   const eyeDX = R * .32, eyeY = -R * .08;
-  const lineColor = `rgba(255,255,255,${.68 + glow * .32})`;
   ctx.lineCap = "round"; ctx.lineJoin = "round";
-  ctx.strokeStyle = lineColor; ctx.shadowColor = baseColor; ctx.shadowBlur = 6 + glow * 10;
+  ctx.strokeStyle = inkColor;
 
   // Sourcils : point interne/externe traités séparément, symétriques par construction — furrow
   // rapproche et abaisse toujours les points internes (jamais l'inverse), quel que soit le côté.
@@ -118,7 +119,7 @@ export function drawFace(ctx: CanvasRenderingContext2D, size: number, isLia: boo
     ctx.stroke();
     if (isLia) {
       ctx.save();
-      ctx.strokeStyle = `rgba(255,195,220,${.85 + glow * .15})`; ctx.lineWidth = R * .032;
+      ctx.strokeStyle = `rgba(224,54,143,${.75 + glow * .2})`; ctx.lineWidth = R * .032;
       ctx.beginPath(); ctx.ellipse(x, y - ry * .6, R * gender.eyeRX * 1.02, R * .026, 0, 3.3, 6.2); ctx.stroke();
       const flickX = x + side * R * gender.eyeRX * 1.0, flickY = y - ry * .8;
       ctx.beginPath(); ctx.moveTo(flickX, flickY); ctx.lineTo(flickX + side * R * .075, flickY - R * .055); ctx.stroke();
@@ -126,16 +127,14 @@ export function drawFace(ctx: CanvasRenderingContext2D, size: number, isLia: boo
     }
     if (e.eyeOpen > .14) {
       ctx.beginPath(); ctx.arc(x, y, R * .032, 0, 6.283);
-      ctx.fillStyle = lineColor; ctx.fill();
+      ctx.fillStyle = inkColor; ctx.fill();
     }
   });
 
   // Bouche : largeur fixée par le genre, courbe/ouverture par l'émotion + la parole (visèmes).
   const mouthOpenBase = clamp(e.breathOpen + mouthOpenExtra, 0, 1);
-  ctx.lineWidth = isLia ? R * .085 : R * .06;
-  ctx.strokeStyle = isLia ? `rgba(255,150,190,${.9 + glow * .1})` : lineColor;
-  ctx.shadowColor = isLia ? "#ff5fa3" : baseColor;
-  ctx.shadowBlur = isLia ? 10 + glow * 14 : 6 + glow * 10;
+  ctx.lineWidth = isLia ? R * .075 : R * .055;
+  ctx.strokeStyle = isLia ? `rgba(200,20,100,${.92 + glow * .08})` : inkColor;
   const my = R * .34, mw = R * .34 * gender.mouthWMul;
   const mouthMidY = my + e.mouthCurve * R * .32 + mouthOpenBase * R * .5;
   ctx.beginPath();
@@ -143,13 +142,12 @@ export function drawFace(ctx: CanvasRenderingContext2D, size: number, isLia: boo
   ctx.quadraticCurveTo(0, mouthMidY + jitter(), mw + jitter(), my + jitter());
   if (mouthOpenBase > .05) {
     ctx.quadraticCurveTo(0, my + e.mouthCurve * R * .32 - mouthOpenBase * R * .28 + jitter(), -mw + jitter(), my + jitter());
-    ctx.closePath(); ctx.fillStyle = "rgba(6,7,10,.85)"; ctx.fill();
+    ctx.closePath(); ctx.fillStyle = "#3d1f30"; ctx.fill();
   }
   ctx.stroke();
   if (isLia && mouthOpenBase <= .05) {
-    ctx.beginPath(); ctx.strokeStyle = `rgba(255,255,255,${.35 + glow * .2})`; ctx.lineWidth = R * .02;
+    ctx.beginPath(); ctx.strokeStyle = `rgba(122,21,80,${.3 + glow * .2})`; ctx.lineWidth = R * .02;
     ctx.moveTo(-mw * .35, mouthMidY - R * .02); ctx.quadraticCurveTo(0, mouthMidY - R * .05, mw * .35, mouthMidY - R * .02); ctx.stroke();
   }
-  ctx.shadowBlur = 0;
   ctx.restore();
 }
