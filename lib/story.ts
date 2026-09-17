@@ -47,6 +47,9 @@ const clues = [
   "Une feuille du bureau porte « 13-5-13-15-9-18-5 / 7-5-14-5-18-5-5 » et la clé A=1, B=2… Le décodage donne « MEMOIRE GENEREE ». Les nombres 28 et 31 apparaissent sous le code.",
   "Un relevé consultable sur l’écran du bureau affiche : « Observation de la cohabitation — session active ». Cela suggère un observateur, sans dire qui il est.",
 ];
+// La feuille codée (clues[2]) est le seul indice qui donne les deux âges ensemble ; son index est
+// fixe même si story.order mélange l'ordre de découverte des indices (Article 9).
+export function ageClueRevealed(story:Story){return story.evidence.includes(clues[2]);}
 export function investigationTarget(story:Story) {return story.evidence.length<4?(clues[story.order[story.evidence.length]]+(story.observer&&story.order[story.evidence.length]===3?" Identifiant observateur inscrit sur le relevé : "+JSON.stringify(story.observer)+".":"")):"Le dossier final établit : « Lia et Noé — agents IA autonomes. Souvenirs et âges construits ; environnement de cohabitation observé par des humains. Architecture : DH ». Ces initiales désignent une signature technique, pas le visiteur.";}
 const personalFragments = [
   ["Une odeur de mer, sans lieu ni date retrouvés.", "Un trajet qui s'interrompt, sans destination retrouvée."],

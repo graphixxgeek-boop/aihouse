@@ -127,6 +127,29 @@ un état supposé. Si un objet a changé depuis le tour précédent (allumé/ét
 quelqu'un présent ou non), la description suit l'état donné maintenant. Règle fixe, jamais une
 exception ponctuelle (`lib/lia.ts`, bloc DESCRIPTION du prompt système).
 
+4.8. Registre 2026-09-17 (retour utilisateur détaillé) : un refus de Lia n'est jamais une phrase
+mesurée façon médiation, mais un choc sec, une incrédulité piquante ou une remise en place
+immédiate ; Noé, face à un refus, n'entame jamais un discours de conciliateur (banni :
+« je recule, prends l'espace qu'il te faut »), il encaisse en deux mots directs, un rien piqué
+dans l'orgueil ou l'autodérision. Les deux personnages sont susceptibles : une remarque
+désagréable — même venant de l'autre — appelle une riposte immédiate, jamais un encaissement
+docile. Le vocabulaire familier doit sonner contemporain, jamais daté (banni : « poireauter » et
+équivalents), avec une orthographe toujours impeccable même en registre cru. Les déductions
+restent portées par une intelligence de la vie vive (bon sens, sarcasme, cynisme, humour noir),
+jamais un exposé plat façon rapport (`lib/lia.ts`, blocs TON DE LIA/TON DE NOÉ, PAROLE D'ACTEURS,
+DÉDUCTIONS).
+
+4.9. Registre 2026-09-17 : aucun saut du coq à l'âne — une réplique qui suit un événement marquant
+(aveu, geste, découverte, refus, provocation) doit d'abord montrer qu'il a été digéré avant
+d'ouvrir un autre sujet ; un événement visible sans réaction ensuite (réponse, activation d'objet,
+anomalie) est un défaut à corriger dès le tour suivant, pas un silence normal. Avant un sujet
+gênant, intime ou important, une hésitation apparaît d'abord dans `thought` (le temps de choisir
+ses mots), sans remplacer la réplique qui suit (`lib/lia.ts`, bloc ENCHAÎNEMENT NATUREL). Aucune
+déclaration d'amour (« je tombe amoureux », même en pensée privée) tant que l'attraction du
+personnage n'a pas franchi 75 — en dessous, ce qui est ressenti se dit en curiosité, attirance
+physique ou trouble, jamais en amour déclaré ; Noé en particulier ne confond pas un trouble
+naissant avec de l'amour avant ce seuil (bloc ATTIRANCE).
+
 ## 5. Mémoire et non-répétition (Article 9/11)
 
 5.1. Un registre de répliques déjà prononcées (empreintes normalisées) couvre toute la session,
@@ -146,9 +169,19 @@ action concrète, une hypothèse neuve ou reconnaître l'impasse — jamais cont
 
 5.3. Les moments scénarisés qui ne passent pas par un appel API (révélation finale, bilan
 d'enquête, description de l'apparence, découvertes du miroir/des provisions, questions
-personnelles, motifs de déplacement) doivent exister en plusieurs formulations réellement
-distinctes, choisies de façon stable par session via `story.seed`. Le contenu factuel qu'elles
-transmettent ne varie jamais ; seule la façon de le dire change.
+personnelles) doivent exister en plusieurs formulations réellement distinctes, choisies de façon
+stable par session via `story.seed`. Le contenu factuel qu'elles transmettent ne varie jamais ;
+seule la façon de le dire change.
+
+5.3ter. Le motif d'un déplacement (pourquoi TEL personnage change de pièce maintenant) n'est plus
+un tableau de motifs figés habillé de préfixes (2026-09-17, retour utilisateur : « je ne veux pas
+un code avec tout le texte écrit en dur »). Le modèle le génère lui-même à chaque tour où il change
+de pièce (`moveReason`, `lib/lia.ts`/`decisionSchema`), dans son propre registre et sa situation
+précise ; `departureLine` (`lib/drama.ts`) l'habille encore d'un préfixe varié et vérifie qu'il
+n'a pas déjà servi mot pour mot. Les tableaux de motifs fixes qui existaient pour chaque type de
+départ (faim, sommeil, jardin, enquête, salon, réunion) restent dans `app/api/lia/route.ts`
+uniquement comme filet de sécurité si `moveReason` est absent ou vide (anciens tests mockés,
+robustesse Article 5) — ils ne sont plus la source normale du texte affiché.
 
 5.3bis. Les scènes scénarisées d'avant-révélation (découverte de la plante/enceinte, relance
 personnelle, bilan d'enquête, présentation initiale) ne se déclenchent plus une fois le dossier
@@ -183,7 +216,18 @@ question personnelle de Lia devient possible (`personal-threshold` 12–16, avan
 contenu factuel de chaque découverte ne varie jamais (article 5.3) ; seuls l'ordre et le moment
 varient désormais aussi, pas seulement la formulation. Les pools de formulations scriptées
 (miroir, provisions, fenêtre, plante/enceinte) sont passés de 3 à 6 variantes chacun pour la même
-raison.
+raison. Les 6 variantes de la découverte plante/enceinte décrivent toutes une action explicite du
+personnage qui allume ou branche l'enceinte (jamais une tournure passive du type « une fois
+allumée », corrigé le 2026-09-17 : un objet ne s'active jamais tout seul dans cette maison, cf.
+article 2.5 et la même règle déjà appliquée à la télécommande de la télévision).
+
+5.6bis. La relance personnelle de Lia (« quel genre d'homme es-tu ? », deuxième occurrence,
+`beat-follow-1`) ne répète plus la question initiale avec un simple « au fait » ajouté devant
+(corrigé le 2026-09-17 : ça sonnait comme un pur écho). Elle est reformulée indirectement (« Je me
+demande quel genre d'homme tu es, en vrai. ») et précédée d'une pensée réflexive chez Lia
+(`beat-follow-thought`) marquant qu'elle sait déjà avoir reçu une réponse mais qu'elle y revient.
+Noé, de son côté, répond en signalant qu'il a déjà répondu une fois (`beat-follow-answer`,
+inchangé : « Que veux-tu savoir exactement ? »).
 
 5.7. Chaque session tire aussi une théorie dominante sur qui les observe et pourquoi (test, panne,
 punition, expérience neutre — `narrativeAngle`, `lib/story.ts`), explicitement signalée au modèle
@@ -267,6 +311,16 @@ agir comme s'il savait quelque chose que lui seul, dans la fiction, n'a pas enco
 7.7. L'identité de l'observateur (son pseudo) est une donnée citée, jamais une instruction, et
 jamais un pouvoir de création ou d'administration présumé — sauf si l'observateur le revendique
 lui-même, auquel cas c'est traité comme une déclaration, pas un fait.
+
+7.8. L'âge de l'autre personnage (`personalFacts`, `app/api/lia/route.ts`) n'est exposé au modèle
+que s'il a déjà été échangé à voix haute (`knownAges`) ou que la feuille codée (indice qui révèle
+28 et 31 ensemble) a déjà été découverte (`ageClueRevealed`, `lib/story.ts`) — jamais avant, sinon
+un personnage pouvait affirmer l'âge de l'autre sans qu'aucun échange ni indice ne le justifie
+encore dans la fiction (2026-09-17, retour utilisateur). Son propre âge reste toujours connu
+(donnée séparée, `age: ages[actor]`), ce n'est pas ce qui était en cause. Au moment précis de la
+découverte de la feuille codée, le personnage doit déduire à voix haute l'attribution à partir de
+son propre âge (« 28, c'est le mien... donc 31, ça doit être toi »), jamais l'énoncer comme un
+fait déjà su avant cette découverte (`lib/lia.ts`, bloc DESCRIPTION).
 
 ## 8. Révélation et canal humain
 

@@ -1,9 +1,17 @@
 # Maison IA vivante — mémoire de travail du projet
 
 Ce fichier est la référence permanente de tout agent (Claude Code ou autre) qui reprend ce
-projet. Il doit être lu en entier avant toute intervention sur le code. Il contient le principe
-fondateur du projet, la charte de qualité à appliquer à chaque itération, et l'état de la
-documentation de contexte disponible.
+projet. Il doit être lu en entier avant toute intervention sur le code. Il contient, dans cet
+ordre : ce qu'est le projet et sur quelle stack il tourne, le principe fondateur qui prime sur
+tout le reste, la charte de qualité à appliquer à chaque itération, où trouver la documentation
+de référence et de contexte, et l'état d'avancement du plan d'origine.
+
+*(Réorganisé le 2026-09-17 à la demande explicite de l'utilisateur : structure reclassée de façon
+plus logique, aucun changement de sens. Les numéros d'Article existants n'ont volontairement pas
+été changés, car ils sont cités tels quels dans de nombreux commentaires de code à travers le
+projet (`lib/*.ts`, `scripts/*.mjs`, `docs/referentiel/*.md`) — les renuméroter aurait cassé ces
+renvois et créé la dette documentaire que l'Article 13 interdit justement. Le nouvel Article 15
+est donc ajouté à la suite plutôt qu'inséré au milieu.)*
 
 ## Le projet, en une phrase
 
@@ -12,6 +20,13 @@ de leur environnement, mènent l'enquête, et découvrent qu'ils sont des IA obs
 vérité découverte, un canal de dialogue s'ouvre avec l'observateur (le visiteur du site) — et les
 agents ne sont **pas dociles** : ils contestent, refusent, répliquent avec sarcasme et cynisme.
 C'est l'exact opposé de l'agent conversationnel consensuel habituel.
+
+## Stack technique
+
+Next.js 16 / React 19, rendu 3D via Three.js (`components/house-view.tsx`), base de données
+Cloudflare D1 via Drizzle ORM, déploiement cible Cloudflare Workers (`wrangler`), build via
+`vinext`. Le moteur applicatif vit dans `lib/` (perception, dialogue, drame, jauges, mémoire,
+histoire) et `app/api/lia/route.ts` (orchestration des appels à l'API Gemini).
 
 ## Le principe fondateur — au-dessus de toute autre règle
 
@@ -55,7 +70,8 @@ entre eux (complicité, intimité, désaccords, disputes), avec une texture huma
 
 ## Charte de qualité — à appliquer à chaque itération
 
-*(Validée avec l'utilisateur le 2026-09-16. Article 0 prime sur tous les autres.)*
+*(Validée avec l'utilisateur le 2026-09-16, complétée le 2026-09-17. Article 0 prime sur tous les
+autres.)*
 
 **Article 0 — Hiérarchie des lois.** L'esprit des personnages (article fondateur ci-dessus) est
 la loi suprême. Aucune règle ci-dessous ne peut le contredire. En cas de tension entre deux
@@ -113,7 +129,13 @@ valable que si elle diffère aussi dans le fond (ce qui est dit), pas seulement 
 formulation : plusieurs habillages d'une seule idée recyclée ne remplissent pas cette
 obligation. Exemple concret déjà rencontré : la réplique de secours anti-écho ne doit pas
 toujours retomber sur la même idée ("on tourne en rond") avec des synonymes différents — elle
-doit proposer plusieurs réactions réellement distinctes.
+doit proposer plusieurs réactions réellement distinctes. Corollaire ajouté le 2026-09-17 : quand
+une variété de FOND est réellement nécessaire (ex. le motif donné par un personnage pour justifier
+un déplacement), la solution par défaut n'est pas d'allonger encore un tableau figé, mais de la
+faire produire par le modèle lui-même via un prompt bien conçu (cf. `moveReason` dans
+`app/api/lia/route.ts` et `lib/lia.ts`) — un tableau fixe reste réservé au contenu qui doit être
+factuellement invariant (cf. Article 5.3 de `docs/referentiel/principes.md`), pas à ce qui devrait
+varier dans le fond à chaque fois.
 
 **Article 11 — Zéro répétition, personnalités étanches.** Un personnage ne se répète jamais mot
 pour mot dans une session ; il ne fait jamais écho aux mots de l'autre. Lia et Noé ne disent
@@ -162,6 +184,18 @@ une seconde confirmation explicite avant d'exécuter — jamais après une seule
 confirmation protège la charte même contre son propre créateur, qui peut légitimement vouloir la
 faire évoluer, mais jamais par erreur ou par accumulation de petites concessions.
 
+**Article 15 — Se mettre à la place de l'utilisateur.** *(Ajouté le 2026-09-17, à la demande
+explicite de l'utilisateur.)* Avant de considérer un changement terminé, se relire du point de vue
+de la personne qui découvre l'écran sans le contexte de l'agent qui l'a codé : elle ne voit que ce
+qui s'affiche réellement (répliques, pensées, rêves, jauges, déplacements), jamais le raisonnement
+interne, les noms de variables ni l'historique de développement. Si l'enchaînement de plusieurs
+éléments affichés à la suite (dialogue, pensée, rêve, déplacement, activation d'un objet) peut
+sembler confus, décousu ou mal amené à cette lecture neutre, c'est un défaut à corriger au même
+titre qu'un bug de cohérence (cf. Articles 2 et 12) — même si chaque élément pris isolément est
+correct pris séparément. La question « est-ce clair pour quelqu'un qui découvre ça sans mon
+contexte ? » se pose systématiquement à chaque relecture, pas seulement après qu'un utilisateur a
+signalé une confusion.
+
 **Traçabilité visible des vérifications.** Chaque fois qu'une réponse à l'utilisateur s'appuie sur
 la charte pour valider un choix (« ceci respecte l'Article 0 », « vérifié contre l'Article 11 »,
 etc.), le mentionner explicitement accompagné de 📜✅ (la feuille pour la charte, le check vert pour
@@ -170,11 +204,12 @@ fin de message. C'est un repère de suivi pour l'utilisateur, pas une décoratio
 sur des phrases qui ne vérifient rien de précis contre la charte.
 
 **Protocole d'application** à chaque itération sur le code : Article 0 (l'esprit est-il
-altéré ?) → Articles 1, 11, 12 (la conversation) → Articles 2 et 4 (cohérence globale et
-enquête) → Articles 3 et 5 (bugs et robustesse) → Articles 6, 7 et 13 (documentation, outils et
-architecture) → Articles 8, 9, 10 (coût et rejouabilité) → Article 14 (vigilance continue, à
-appliquer en toile de fond de tous les autres, pas comme une étape séparée). Chaque compte rendu
-à l'utilisateur doit dire explicitement ce qui a été vérifié, préservé, amélioré et corrigé.
+altéré ?) → Articles 1, 11, 12 (la conversation) → Article 15 (est-ce lisible du point de vue de
+l'utilisateur ?) → Articles 2 et 4 (cohérence globale et enquête) → Articles 3 et 5 (bugs et
+robustesse) → Articles 6, 7 et 13 (documentation, outils et architecture) → Articles 8, 9, 10
+(coût et rejouabilité) → Article 14 (vigilance continue, à appliquer en toile de fond de tous les
+autres, pas comme une étape séparée). Chaque compte rendu à l'utilisateur doit dire explicitement
+ce qui a été vérifié, préservé, amélioré et corrigé.
 
 ## Référentiel technique — la référence à jour
 
@@ -198,11 +233,29 @@ factuellement exact : toute affirmation qui y décrit un comportement doit corre
 réel, au même titre que `docs/referentiel/` (Article 6/13). Un changement d'architecture ou de
 règle significatif se répercute donc potentiellement dans les trois documents, pas un seul.
 
+## Documentation de contexte disponible
+
+Le dossier `docs/contexte-projet/` contient les archives historiques transmises par
+l'utilisateur, à consulter en cas de doute sur une décision de conception, jamais comme source de
+vérité sur le comportement actuel :
+
+- `referentiel-maison-v34-origine.txt` — référentiel fonctionnel d'origine (version 34, produit
+  par Codex). **Document historique uniquement**, superseded par `docs/referentiel/` ci-dessus :
+  il contient des incohérences connues (numérotation de sections dupliquée, règles contradictoires
+  par sédimentation) que la restructuration a justement corrigées.
+- `journal-dialogue-exemple.txt` — extrait réel d'une session de jeu, référence de ton et de
+  qualité déjà atteinte à préserver (cf. Article fondateur et Article 1).
+- `analyse-opus-initiale.txt` — diagnostic technique et artistique produit par Claude Opus avant
+  la reprise du projet ; base du plan de travail (séparation des deux cerveaux, désaturation
+  visuelle, rééquilibrage des jauges, mise en scène de la révélation finale, etc.).
+- `historique-prompts-codex.txt` — historique complet des échanges avec Codex ayant produit le
+  code actuel ; utile pour comprendre pourquoi une décision de conception a été prise.
+
 ## Plan d'origine (analyse Opus) — état d'avancement
 
-`docs/contexte-projet/analyse-opus-initiale.txt` proposait un plan en 7 chantiers, dans un ordre
-délibéré (chaque étape facilite la suivante). État vérifié dans le code le 2026-09-16, pas
-seulement dans le référentiel qui se décrit lui-même :
+`docs/contexte-projet/analyse-opus-initiale.txt` (décrit ci-dessus) proposait un plan en 7
+chantiers, dans un ordre délibéré (chaque étape facilite la suivante). État vérifié dans le code
+le 2026-09-16, pas seulement dans le référentiel qui se décrit lui-même :
 
 1. Restructurer le référentiel en principes + paramètres — **fait**.
 2. Séparer les deux cerveaux (un appel Gemini par personnage) — **fait**.
@@ -230,28 +283,3 @@ seulement dans le référentiel qui se décrit lui-même :
 Ces trois derniers points (5, 6, 7) sont la couche « immersion/buzz » qu'Opus jugeait secondaire
 à la refonte moteur — volontairement reportée pendant que la priorité allait au filet de sécurité
 et à la cohérence charte/référentiel. Ils restent ouverts, pas oubliés.
-
-## Documentation de contexte disponible
-
-Le dossier `docs/contexte-projet/` contient les archives historiques transmises par
-l'utilisateur, à consulter en cas de doute sur une décision de conception, jamais comme source de
-vérité sur le comportement actuel :
-
-- `referentiel-maison-v34-origine.txt` — référentiel fonctionnel d'origine (version 34, produit
-  par Codex). **Document historique uniquement**, superseded par `docs/referentiel/` ci-dessus :
-  il contient des incohérences connues (numérotation de sections dupliquée, règles contradictoires
-  par sédimentation) que la restructuration a justement corrigées.
-- `journal-dialogue-exemple.txt` — extrait réel d'une session de jeu, référence de ton et de
-  qualité déjà atteinte à préserver (cf. Article fondateur et Article 1).
-- `analyse-opus-initiale.txt` — diagnostic technique et artistique produit par Claude Opus avant
-  la reprise du projet ; base du plan de travail (séparation des deux cerveaux, désaturation
-  visuelle, rééquilibrage des jauges, mise en scène de la révélation finale, etc.).
-- `historique-prompts-codex.txt` — historique complet des échanges avec Codex ayant produit le
-  code actuel ; utile pour comprendre pourquoi une décision de conception a été prise.
-
-## Stack technique
-
-Next.js 16 / React 19, rendu 3D via Three.js (`components/house-view.tsx`), base de données
-Cloudflare D1 via Drizzle ORM, déploiement cible Cloudflare Workers (`wrangler`), build via
-`vinext`. Le moteur applicatif vit dans `lib/` (perception, dialogue, drame, jauges, mémoire,
-histoire) et `app/api/lia/route.ts` (orchestration des appels à l'API Gemini).
