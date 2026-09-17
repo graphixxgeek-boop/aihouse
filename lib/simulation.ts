@@ -125,42 +125,55 @@ export function priority(needs: Needs): Intent | undefined {
         return "rest";
     return undefined;
 }
-export function smiley(agent: {
+function clamp(v: number, a: number, b: number) { return Math.max(a, Math.min(b, v)); }
+
+// Remplace smiley() (lookup d'emoji discret) le 2026-09-17 : un visage vectoriel à paramètres
+// continus, animé par interpolation ressort côté rendu (components/house-view.tsx). Cette fonction
+// ne dessine rien — elle calcule l'état à atteindre à partir des seules données réelles du
+// personnage, pour que tous les rendus (scène 3D, fiche latérale, description textuelle) partagent
+// exactement la même source de vérité.
+//
+// Fiabilisation de la colère (chantier resté en suspens depuis l'audit du 2026-09-16/17) :
+// l'ancien indicateur "angry" ne venait que de life.dispute (une dispute amoureuse précise), donc
+// un personnage pouvait tenir un texte cinglant face à une provocation de l'observateur sans que
+// son visage ne le montre jamais. angerLevel est désormais dérivé de deux données réellement mises
+// à jour par TOUTE hostilité reçue (tension qui monte, confort qui chute — cf. humanStress() dans
+// lib/life.ts), avec la dispute formelle comme plancher garanti plutôt que comme seule source.
+export type FaceExpression = {
+    browRaise: number; furrow: number; eyeOpen: number; mouthCurve: number;
+    breathOpen: number; jitterAmp: number; angerLevel: number;
+    comfort: number; attraction: number; sleeping: boolean;
+};
+export function faceExpression(agent: {
     id?: Person;
     intent: Intent;
     needs: Needs;
-    emotions: {
-        tension: number;
-        attraction: number;
-        comfort: number;
-    };
+    emotions: { tension: number; attraction: number; comfort: number };
     angry?: boolean;
-}): string {
-    if (agent.angry)
-        return agent.id === 1 ? "😤" : "😠";
-    if ((agent.intent === "sleep" || agent.intent === "share_sleep"))
-        return "😴";
-    if (["hug", "massage", "kiss"].includes(agent.intent))
-        return "🥰";
-    if (agent.intent === "eat")
-        return "🍽️";
-    if (agent.intent === "study")
-        return "🧐";
-    if (agent.intent === "tv")
-        return "👀";
-    if (agent.needs.hunger >= 68)
-        return "😩";
-    if (agent.needs.fatigue >= 68)
-        return "🥱";
-    if (agent.emotions.tension >= 65 || agent.needs.stress >= 65)
-        return "😟";
-    // Même seuil de plaisir atteint, mais pas la même retenue : la chaleur de Lia se développe à
-    // son rythme (sourire discret), celle de Noé se voit tout de suite (sourire ouvert).
-    if (agent.intent === "intimacy" || agent.emotions.attraction >= 75 && agent.needs.stress<20 && agent.emotions.comfort>=65)
-        return agent.id === 1 ? "🙂" : "😊";
-    if (agent.intent === "rest" || agent.emotions.comfort >= 55)
-        return "😌";
-    return agent.id === 1 ? "😑" : "😐";
+}): FaceExpression {
+    const isLia = agent.id === 1;
+    const sleeping = agent.intent === "sleep" || agent.intent === "share_sleep";
+    const t = agent.emotions.tension, c = agent.emotions.comfort, a = agent.emotions.attraction, f = agent.needs.fatigue;
+    const angerLevel = clamp(Math.max(agent.angry ? .85 : 0, clamp((t - 55) / 40, 0, 1) * clamp((35 - c) / 35, 0, 1)), 0, 1);
+    const browRaise = clamp((c - 40) / 70 - angerLevel * (isLia ? .35 : .5), -1, 1);
+    const furrow = angerLevel * (isLia ? .55 : 1) + Math.max(0, (t - 60) / 100) * .3;
+    // Paupières lourdes dès que la fatigue monte, bien avant le sommeil complet (retour
+    // utilisateur du 2026-09-17 : un naturel demandé, pas des yeux grands ouverts jusqu'à l'écroulement).
+    const eyeOpen = clamp(sleeping ? .06 : .55 + c / 100 * .3 - t / 100 * .22 - f / 100 * .4 - (isLia ? angerLevel * .18 : -angerLevel * .12), .05, 1);
+    const mouthCurve = clamp(((c - 30) / 70) * (isLia ? .35 : .6) + (a > 60 ? .18 : 0) - angerLevel * (isLia ? .3 : .55), -1, 1);
+    const breathOpen = clamp(t / 100 * .1 + a / 100 * .05, 0, .4);
+    const jitterAmp = isLia ? t / 100 * .6 : t / 100 * 1.6 + angerLevel * 1.8;
+    return { browRaise, furrow, eyeOpen, mouthCurve, breathOpen, jitterAmp, angerLevel, comfort: c, attraction: a, sleeping };
+}
+// Phrase courte pour tout contexte textuel (fiche latérale en survol, description faite au modèle,
+// répliques scriptées d'apparence) : jamais un glyphe littéral à citer, une expression à décrire.
+export function describeExpression(e: FaceExpression): string {
+    if (e.sleeping) return "les yeux fermés, endormi";
+    if (e.angerLevel > .5) return "les sourcils froncés, la mâchoire serrée";
+    if (e.eyeOpen < .35) return "les paupières lourdes, des traits fatigués";
+    if (e.mouthCurve > .25 && e.comfort > 55) return "un sourire discret";
+    if (e.attraction > 75) return "le regard soutenu, très présent";
+    return "des traits neutres et attentifs";
 }
 
 export function needLevel(key:keyof Needs,value:number): "normal"|"pressing"|"urgent" {

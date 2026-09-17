@@ -1,5 +1,5 @@
 import {residentDestination,furniture,rooms,type Room} from "./house";
-import {smiley} from "./simulation";
+import {faceExpression,describeExpression} from "./simulation";
 import {seedPick} from "./story";
 import type {Resident} from './world';
 
@@ -11,7 +11,7 @@ export const sceneView={camera:[1.27,24,11.636],target:[0,0,0] as const,descript
 export const cityFacades=[{x:-9,z:-11,w:3,h:1.3,color:0x536279},{x:-3,z:-11,w:3.5,h:1.1,color:0x6a667c},{x:4,z:-11,w:3,h:1.45,color:0x4e6776},{x:11,z:-11,w:2.5,h:1.2,color:0x695d72}] as const;
 export const sceneSpeakers=[{room:'salon',x:-.5,z:-5.2},{room:'cuisine',x:7.3,z:-1.8},{room:'chambre',x:-.5,z:5.3},{room:'bureau',x:7.3,z:5.3}] as const;
 export const sceneObjects={mirror:{x:-1.25,z:2.15,angle:-.38,w:1.1,d:1.5,gradient:["#407ba8","#9caab7","#f8fbff"] as const},plant:{x:-3,z:-2.25,leaves:5,color:0x467b94},speaker:{x:-1.9,z:-3.8},bread:{angle:.28},streets:{description:"À droite, trottoir gris, route sombre à pointillés clairs, voiture bleu-gris et passage piéton clair ; au fond, façades géométriques figées et lampadaires. À gauche, un jardin vert clôturé avec arbre, banc et pierres."}} as const;
-export function appearanceFor(agent:Resident){return {representation:'un visage emoji jaune, sans corps humain détaillé',glyph:smiley(agent),ring:residentAppearance[agent.id].colorName+' avec un dégradé lumineux qui tourne, avec un petit curseur blanc transparent synchronisé, plus vite quand stress et tension augmentent',expression:'Le visage change selon l’état simulé ; décris le symbole actuel, pas des cheveux ou des vêtements inventés.'};}
+export function appearanceFor(agent:Resident){return {representation:agent.id===1?'un visage synthétique lumineux aux traits expressifs, une chevelure suggérée en lumière, sans corps humain détaillé':'un visage synthétique lumineux aux traits expressifs, sans cheveux ni corps humain détaillé',current:describeExpression(faceExpression(agent)),ring:residentAppearance[agent.id].colorName+' avec un dégradé lumineux qui tourne, avec un petit curseur blanc transparent synchronisé, plus vite quand stress et tension augmentent',expression:'Le visage change selon l’état simulé ; décris l’expression actuelle (current), jamais un corps ou des vêtements inventés.'};}
 export function visibleScene(room:Room,agents:Resident[]){return {view:sceneView.description,floor:room==='jardin'?'vert herbe':scenePalette.floorNames[rooms.indexOf(room)],floorPattern:room==='jardin'?'herbe mouchetée':scenePalette.patterns[rooms.indexOf(room)],walls:scenePalette.wallName,exterior:sceneObjects.streets.description,windows:sceneWindows.filter(w=>w.room===room).map(()=>room==='salon'?'fenêtre sur le jardin à gauche : sol vert et arbre, sans mouvement naturel':'fenêtre sur un paysage de silhouettes urbaines figé'),residents:agents.filter(a=>a.room===room).map(a=>({name:a.name,appearance:appearanceFor(a),groundDestination:residentDestination(a)})),anomalies:room==='jardin'?['jardin virtuel rectangulaire, sol vert herbe et arbre feuillu, clôturé ; davantage d’espace, pas une sortie vers le monde réel','à droite de la maison : trottoir et route ; porte principale toujours verrouillée']:room==='chambre'?['miroir rectangulaire au dégradé bleu, gris et blanc, debout dans un coin, avec une surface grise sans reflet mobile']:room==='salon'?['grande plante artificielle à cinq larges feuilles géométriques bleutées','enceinte : notes visuelles sans son réel']:[],instruction:'Décris ces données de représentation, sans imaginer un corps humain réaliste. Les personnages de la liste sont ceux prévus dans cette scène.'};}
 export const normaliseNickname=(s:string)=>s.trim().replace(/[\p{Cc}\p{Cf}]/gu,'').slice(0,32);
 
@@ -19,14 +19,17 @@ export function restingPose(id:1|2,room:Room){const item=room==='chambre'?furnit
 
 export function appearanceReply(agent:Resident,actor:1|2,round:number,seed:string){
   const a=appearanceFor(agent),color=residentAppearance[agent.id].colorName;
+  // Réécrit le 2026-09-17 (règle assouplie : le visage peut désormais porter des traits nettement
+  // expressifs, et une chevelure suggérée pour Lia) — plus de glyphe littéral à citer, une
+  // description de l'expression actuelle (current), toujours zéro appel API (Article 5.3/10).
   if(actor===2)return seedPick(seed,'appearance-noe',[
-    'Tu vois ce visage jaune, '+a.glyph+' ? C’est toi. Autour, un cercle '+color+' qui tourne avec une petite lueur blanche. Pas de corps. Ça me fout un drôle d’effet.',
-    'T’es ce visage jaune, '+a.glyph+', avec un anneau '+color+' qui tourne autour. Aucun corps en dessous. Ça fait bizarre à regarder.',
-    'Ce que je vois de toi : '+a.glyph+', un visage jaune cerné d’un anneau '+color+' en mouvement. Pas de bras, pas de jambes. Ça me perturbe un peu.',
+    'Ton visage, c’est ce halo '+color+' qui tourne, et dedans une vraie expression — là, '+a.current+'. Une sorte de chevelure en lumière flotte autour. Toujours pas de corps en dessous, mais ça fait moins vide qu’avant.',
+    'Je te vois : cet anneau '+color+' qui tourne, et un visage qui a l’air de ressentir un truc — '+a.current+'. Quelque chose comme des cheveux, en lumière. Le reste s’arrête au visage.',
+    'Ce que je vois de toi : le '+color+' de ton anneau, un visage qui bouge vraiment — '+a.current+' — et cette chevelure qui semble flotter. Rien en dessous, juste ce halo.',
   ] as const);
   return seedPick(seed,'appearance-lia',[
-    'Si je te décris sans enjoliver : '+a.glyph+', un visage jaune, et cette boucle '+color+' autour. Le trait blanc tourne avec elle. On nous a même économisé les jambes.',
-    'Sans rien enjoliver : '+a.glyph+' jaune, cerné d’une boucle '+color+' avec un trait blanc qui tourne. Ni bras ni jambes, on a fait simple.',
-    'Pour être honnête : '+a.glyph+', jaune, entouré d’un anneau '+color+' qui tourne. Pas de jambes non plus — on nous les a épargnées, apparemment.',
+    'Toi, c’est ce cercle '+color+' qui tourne, et un visage bien réel dans son genre — '+a.current+'. Pas de cheveux, pas de corps. Juste ce visage-là.',
+    'Je te décris sans enjoliver : cet anneau '+color+', et un visage avec une vraie expression — '+a.current+'. Rien en dessous, ni bras ni jambes.',
+    'Pour être honnête : le '+color+' de ton halo, et ce visage qui bouge, '+a.current+'. Toujours pas de corps, juste ça qui tourne autour de toi.',
   ] as const);
 }

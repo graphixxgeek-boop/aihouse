@@ -106,8 +106,69 @@ et peuvent chuter plus vite qu'ils ne montent).
 - Pendant une dispute active : aucun geste affectueux possible (`affectionEligible`/
   `affectionOpportunity`), aucune scène scénarisée d'avant-révélation (`eligibleBeat`/
   `personalLead`).
-- Smiley/anneau : `angry` (dérivé de `life.dispute?.remaining>0`) prime sur tout le reste — 😤 pour
-  Lia, 😠 pour Noé (glyphes distincts par personnage, comme la description écran).
+- Visage/anneau : `angry` (dérivé de `life.dispute?.remaining>0`) garantit un plancher de colère
+  visible (`angerLevel>=.85`, cf. section suivante) même si tension/confort n'ont pas encore
+  bougé — voir 4.4ter de `principes.md` pour la fiabilisation du 2026-09-17.
+
+## Visage et représentation visuelle (`lib/simulation.ts`, `lib/face-render.ts`,
+`components/house-view.tsx`, `app/page.tsx`)
+
+Remplace le `smiley()` (lookup d'emoji discret) le 2026-09-17. Toutes les valeurs ci-dessous sont
+volontairement approximatives dans le code (`clamp` et pondérations empiriques), à ajuster au
+ressenti plutôt qu'à la formule exacte — mais tout changement de ces poids doit être répercuté ici
+le jour même (Article 13).
+
+- `faceExpression()` (`lib/simulation.ts`) calcule, à partir de `emotions.tension/comfort/
+  attraction`, `needs.fatigue`, `intent` et `angry` :
+  - `angerLevel` = max(0.85 si `angry`, sinon 0) et rampe entre tension 55–95 croisée avec confort
+    35–0 (les deux doivent être défavorables ; une tension haute avec un confort resté correct ne
+    suffit pas à elle seule).
+  - `browRaise`/`furrow`/`mouthCurve` : pondérés différemment par personnage (Lia toujours plus
+    contenue : ×.35/.55/.3 contre ×.5/1/.55 pour Noé) — c'est ce qui fait lire « une colère qui
+    fait plus mal » chez Lia contre « une colère qui déborde » chez Noé (cf. Article fondateur).
+  - `eyeOpen` : descend avec `needs.fatigue` (paupières lourdes) et avec la tension, tombe à .06
+    en sommeil (`intent` sleep/share_sleep), plancher .05 sinon (jamais totalement fermé éveillé).
+  - `jitterAmp` (tremblement du tracé) : Noé plus nerveux que Lia à tension égale (×1.6 contre
+    ×.6), et encore amplifié par `angerLevel` (+1.8) uniquement chez lui.
+  - `breathOpen` : légère ouverture de bouche au repos, proportionnelle à tension/attirance —
+    jamais figée.
+- `describeExpression()` traduit l'état en une courte phrase française (utilisée par
+  `appearanceFor().current` dans `lib/perception.ts`, donc par la description à l'écran et par le
+  contexte donné au modèle) — jamais un glyphe littéral.
+- `GENDER` (`lib/face-render.ts`) — traits fixes, indépendants de l'état émotionnel : Lia
+  `browW:.042` (sourcils fins), `browArch:.62` (arqués), `eyeRX:.10`/`eyeRYMul:1.08` (yeux plus
+  grands), `mouthWMul:.82` (bouche plus étroite) ; Noé `browW:.072` (sourcils épais),
+  `browArch:.18` (droits), `eyeRX:.085`/`eyeRYMul:.92` (yeux plus resserrés), `mouthWMul:1.08`
+  (bouche plus large). Noé n'a aucun trait de mâchoire/menton (retiré le 2026-09-17 à la demande
+  explicite : « Noé au naturel est déjà masculin par ailleurs », compensé par ce `browW` monté de
+  .062 à .072). Seule Lia a une chevelure suggérée et un fard/cil dessinés (`drawFace()`).
+- `Spring` (`lib/face-render.ts`) : ressort critique-amorti-léger, `stiff:90, damp:13` par défaut
+  pour chacun des 9 paramètres numériques de l'expression (`makeExpressionSprings`/
+  `stepExpressionSprings`) — aucune transition brusque, un léger dépassement organique est
+  acceptable, une téléportation d'état ne l'est jamais.
+- Synchronisation labiale (`components/house-view.tsx`) : le rythme du visème suit le signal réel
+  `speaking` (donc la durée réelle de `ProgressiveText`), jamais une durée recalculée à partir de
+  la longueur du texte. Vitesse de pulsation entre .45 et 2.3, modulée par `angerLevel` et le
+  tremblement courant ; amplitude d'ouverture aléatoire entre .22 et .77, majorée jusqu'à +40% en
+  colère.
+- Particules d'amour (remplacent l'ancien cœur sporadique) : pool de 4 sprites par personnage,
+  actives tant que `r.inLove` (seuil `isInLove()`, attirance > 75) ; durée de vie 1.6–2.4s,
+  prochain spawn dans 0.9–2.5s, jamais en sommeil, jamais si `prefers-reduced-motion`.
+- Onde de câlin (« hug-wave », remplace le cœur fixe partagé) : se déclenche au passage
+  false→true d'une intention affectueuse commune aux deux personnages (câlin, massage, baiser,
+  sommeil partagé) dans la même pièce ; courbe de Bézier quadratique entre les deux visages,
+  dégradé vertex-color entre leurs deux couleurs, durée totale 2600ms (fondu d'entrée sur les 300
+  premières ms, fondu de sortie sur les 400 dernières).
+- Teinte de l'anneau : plus de texture recuite à la couleur du personnage ; la texture est neutre
+  (dégradé de gris) et `material.color` (multiplicatif, bon marché à chaque frame) interpole entre
+  la couleur du personnage et une teinte d'alerte (`0xff4d4d`) proportionnellement à `angerLevel`,
+  plafonné à 85% de mélange (jamais un anneau entièrement rouge, la couleur d'identité reste
+  reconnaissable même en pleine colère).
+- Représentation visuelle assouplie (`lib/lia.ts`, `lib/perception.ts`) : la règle « jamais un
+  corps humain » reste en vigueur (toujours aucun corps, aucun vêtement, aucun membre), mais peut
+  désormais inclure un visage nettement expressif et, pour Lia seule, une chevelure suggérée en
+  lumière — assouplissement décidé explicitement par l'utilisateur le 2026-09-17, purement visuel,
+  sans effet sur le ton ou la personnalité (l'Article 14 de la charte ne s'applique donc pas ici).
 
 ## Enquête (`lib/story.ts`)
 

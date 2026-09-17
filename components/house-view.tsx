@@ -4,7 +4,8 @@ import * as THREE from "three";
 import { residentDestination, exterior, centers, furniture, walls, rooms, pathBetween, type Person, type Room } from "@/lib/house";
 import {residentAppearance,scenePalette,sceneWindows,sceneObjects,sceneView,restingPose} from "@/lib/perception";
 import { isInLove } from "@/lib/relationship";
-import { smiley } from "@/lib/simulation";
+import { faceExpression, type FaceExpression } from "@/lib/simulation";
+import { drawFace, makeExpressionSprings, stepExpressionSprings, type ExpressionSprings } from "@/lib/face-render";
 import {evidenceLedger} from "@/lib/evidence";
 import type { Resident } from "@/lib/world";
 
@@ -153,23 +154,45 @@ export function HouseView({paused=false,visualEvents=[],gardenOpen=false,agents,
     }
     const voiceWaves:THREE.Mesh<THREE.RingGeometry,THREE.MeshBasicMaterial>[]=[];for(const {x,z} of sceneSpeakers){for(let i=0;i<3;i++){const wave=new THREE.Mesh(new THREE.RingGeometry(.22,.25,24),new THREE.MeshBasicMaterial({color:0xc5deed,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false}));wave.rotation.x=-Math.PI/2;wave.position.set(x,.92,z);wave.userData.phase=i/3;scene.add(wave);voiceWaves.push(wave);}}
     for(let i=0;i<3;i++){const wave=new THREE.Mesh(new THREE.RingGeometry(.22,.25,24),new THREE.MeshBasicMaterial({color:0xc5deed,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false}));wave.rotation.x=-Math.PI/2;wave.position.set(-8.7,.7,-.9);wave.userData.phase=i/3;scene.add(wave);voiceWaves.push(wave);}
-    const residents=new Map<Person,{target?:[number,number];group:THREE.Group;path:[number,number][];room:Room;snapshot:boolean;sleeping:boolean;eating:boolean;id:Person;face:THREE.Sprite;faceCanvas:HTMLCanvasElement;faceTexture:THREE.CanvasTexture;glyph:string;ring:THREE.Sprite;ringSpeed:number;heart:THREE.Sprite;inLove:boolean;heartPhase:number}>();
+    // Texture de mote partagée par les deux habitants : un simple dégradé radial blanc, teinté au
+    // rendu par material.color — remplace le sprite "coeur" unique (2026-09-17).
+    const moteCanvas=document.createElement("canvas");moteCanvas.width=moteCanvas.height=32;const moteCtx=moteCanvas.getContext("2d")!;const moteGrad=moteCtx.createRadialGradient(16,16,0,16,16,16);moteGrad.addColorStop(0,"#ffffffff");moteGrad.addColorStop(1,"#ffffff00");moteCtx.fillStyle=moteGrad;moteCtx.fillRect(0,0,32,32);const moteTexture=new THREE.CanvasTexture(moteCanvas);
+    const warnColor=new THREE.Color(0xff4d4d);
+    const residents=new Map<Person,{target?:[number,number];group:THREE.Group;path:[number,number][];room:Room;snapshot:boolean;sleeping:boolean;eating:boolean;id:Person;face:THREE.Sprite;faceCanvas:HTMLCanvasElement;faceTexture:THREE.CanvasTexture;ring:THREE.Sprite;ringSpeed:number;ringColor:THREE.Color;inLove:boolean;exprTarget:FaceExpression;exprSprings:ExpressionSprings;mouthPulseUntil:number;mouthPulseTarget:number;speechOpen:number;particles:{sprite:THREE.Sprite;age:number;maxAge:number;angle:number;dist:number;speed:number;active:boolean}[];nextParticleAt:number}>();
     ([1,2] as Person[]).forEach(id=>{
       const color=residentAppearance[id].color,group=new THREE.Group();const [x,z]=centers[id===1?"salon":"bureau"];group.position.set(x+(id===1?-.5:.5),0,z);scene.add(group);
       const faceCanvas=document.createElement("canvas");faceCanvas.width=160;faceCanvas.height=160;
-      const faceTexture=new THREE.CanvasTexture(faceCanvas);
-      const face=new THREE.Sprite(new THREE.SpriteMaterial({map:faceTexture,depthTest:false}));face.scale.set(1.02,1.02,1);face.position.set(group.position.x,1.35,group.position.z);face.userData.actor=id;scene.add(face);targets.push(face);
-      const heartCanvas=document.createElement("canvas");heartCanvas.width=96;heartCanvas.height=96;const heartCtx=heartCanvas.getContext("2d")!;heartCtx.font='72px "Segoe UI Emoji",sans-serif';heartCtx.textAlign="center";heartCtx.textBaseline="middle";heartCtx.fillText("💕",48,48);
-      const heart=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(heartCanvas),transparent:true,depthTest:false}));heart.scale.set(.8,.8,1);heart.visible=false;scene.add(heart);
-      const rc=document.createElement("canvas");rc.width=128;rc.height=128;const rg=rc.getContext("2d")!;for(let j=0;j<64;j++){const a=j/64*Math.PI*2;rg.strokeStyle="#"+new THREE.Color(color).lerp(new THREE.Color(0xffffff),.05+.25*(.5+.5*Math.cos(a))).getHexString();rg.lineWidth=9;rg.beginPath();rg.arc(64,64,54,a,a+Math.PI*2/64+.02);rg.stroke();}rg.strokeStyle="rgba(255,255,255,.7)";rg.lineWidth=5;rg.lineCap="round";rg.beginPath();rg.arc(64,64,54,-.18,.18);rg.stroke();const rt=new THREE.CanvasTexture(rc);rt.colorSpace=THREE.SRGBColorSpace;const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:rt,transparent:true,depthTest:false,depthWrite:false,toneMapped:false}));halo.scale.set(1.25,1.25,1);halo.position.copy(face.position);halo.userData.actor=id;scene.add(halo);targets.push(halo);
+      const faceTexture=new THREE.CanvasTexture(faceCanvas);faceTexture.colorSpace=THREE.SRGBColorSpace;
+      const face=new THREE.Sprite(new THREE.SpriteMaterial({map:faceTexture,transparent:true,depthTest:false}));face.scale.set(1.02,1.02,1);face.position.set(group.position.x,1.35,group.position.z);face.userData.actor=id;scene.add(face);targets.push(face);
+      // Anneau : dégradé neutre (blanc/gris) baké une fois, teinté ensuite par material.color
+      // (couleur du personnage, virant vers l'alerte quand angerLevel monte) — plus de canevas
+      // à redessiner par image pour l'anneau, seul le visage l'est.
+      const rc=document.createElement("canvas");rc.width=128;rc.height=128;const rg=rc.getContext("2d")!;for(let j=0;j<64;j++){const a=j/64*Math.PI*2;const v=Math.round((.75+.25*(.5+.5*Math.cos(a)))*255);rg.strokeStyle=`rgb(${v},${v},${v})`;rg.lineWidth=9;rg.beginPath();rg.arc(64,64,54,a,a+Math.PI*2/64+.02);rg.stroke();}rg.strokeStyle="rgba(255,255,255,.7)";rg.lineWidth=5;rg.lineCap="round";rg.beginPath();rg.arc(64,64,54,-.18,.18);rg.stroke();const rt=new THREE.CanvasTexture(rc);rt.colorSpace=THREE.SRGBColorSpace;const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:rt,color,transparent:true,depthTest:false,depthWrite:false,toneMapped:false}));halo.scale.set(1.25,1.25,1);halo.position.copy(face.position);halo.userData.actor=id;scene.add(halo);targets.push(halo);
       group.traverse(obj=>{obj.userData.actor=id;if(obj instanceof THREE.Mesh)targets.push(obj);});
-      residents.set(id,{group,path:[],room:id===1?"salon":"bureau",snapshot:false,sleeping:false,eating:false,id,face,faceCanvas,faceTexture,glyph:"",ring:halo,ringSpeed:.25,heart,inLove:false,heartPhase:-1});
+      const particles=Array.from({length:4},()=>{const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:moteTexture,color,transparent:true,depthTest:false,depthWrite:false,opacity:0,toneMapped:false}));sprite.scale.set(.001,.001,1);scene.add(sprite);return {sprite,age:0,maxAge:0,angle:0,dist:0,speed:0,active:false};});
+      const initialExpr=faceExpression({id,intent:"chat",needs:{hunger:0,fatigue:0,stress:0,uncertainty:0},emotions:{tension:30,attraction:0,comfort:30}});
+      residents.set(id,{group,path:[],room:id===1?"salon":"bureau",snapshot:false,sleeping:false,eating:false,id,face,faceCanvas,faceTexture,ring:halo,ringSpeed:.25,ringColor:new THREE.Color(color),inLove:false,exprTarget:initialExpr,exprSprings:makeExpressionSprings(initialExpr),mouthPulseUntil:0,mouthPulseTarget:0,speechOpen:0,particles,nextParticleAt:0});
     });
-    let awaiting=false,lastRender=0;
-    update.current=items=>{computerActive=items.some(a=>a.intent==="study"&&a.room==="bureau");computerOn=computerActive||computerVerified;dirty=true;items.forEach(agent=>{
+    // Onde de câlin : une courbe entre les deux anneaux, dans un dégradé de leurs couleurs —
+    // remplace le sprite "coeur" (2026-09-17), reste dans le langage visuel déjà établi (anneaux/halos).
+    const hugWaveSegments=24;
+    const hugWaveGeometry=new THREE.BufferGeometry();
+    hugWaveGeometry.setAttribute("position",new THREE.BufferAttribute(new Float32Array((hugWaveSegments+1)*3),3));
+    hugWaveGeometry.setAttribute("color",new THREE.BufferAttribute(new Float32Array((hugWaveSegments+1)*3),3));
+    const hugWaveMaterial=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0,depthTest:false,toneMapped:false});
+    const hugWaveLine=new THREE.Line(hugWaveGeometry,hugWaveMaterial);scene.add(hugWaveLine);
+    const hugColorA=new THREE.Color(residentAppearance[1].color),hugColorB=new THREE.Color(residentAppearance[2].color);
+    let awaiting=false,lastRender=0,wasAffectionate=false,hugWaveUntil=0,hugWavePhase=0;
+    update.current=items=>{computerActive=items.some(a=>a.intent==="study"&&a.room==="bureau");computerOn=computerActive||computerVerified;dirty=true;
+      // Câlin partagé : remplace le sprite "coeur" par une onde entre les deux anneaux, déclenchée
+      // sur la transition vers un geste affectueux accepté par les deux, dans la même pièce.
+      const bothAffectionate=items.length===2&&items[0].room===items[1].room&&items[0].intent===items[1].intent&&["hug","massage","kiss"].includes(items[0].intent);
+      if(bothAffectionate&&!wasAffectionate)hugWaveUntil=performance.now()+2600;
+      wasAffectionate=bothAffectionate;
+      items.forEach(agent=>{
       const r=residents.get(agent.id);if(!r)return;
       r.eating=agent.intent==="eat"&&agent.room==="cuisine";r.sleeping=["sleep","share_sleep"].includes(agent.intent);r.inLove=!r.sleeping&&isInLove(agent.emotions.attraction);r.ringSpeed=.15+(agent.needs.stress+agent.emotions.tension)/200*2.3;
-      const glyph=smiley(agent);if(r.glyph!==glyph){r.glyph=glyph;const ctx=r.faceCanvas.getContext("2d")!;ctx.clearRect(0,0,160,160);ctx.font='112px "Segoe UI Emoji", sans-serif';ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(glyph,80,85);r.faceTexture.needsUpdate=true;}
+      r.exprTarget=faceExpression(agent);
       const destination:[number,number]=inspection.current>0?[inspection.current===1?-7:7,agent.id===1?-.25:.25]:residentDestination(agent);const [x,z]=destination;if(!r.snapshot&&agent.last_seen>0){r.snapshot=true;r.group.position.set(x,0,z);r.room=agent.room;r.target=destination;r.path=[];return;}if(r.target&&r.room===agent.room&&r.target[0]===x&&r.target[1]===z)return;
       if(r.room===agent.room&&Math.hypot(r.group.position.x-x,r.group.position.z-z)<.1)return;
       const path=pathBetween([r.group.position.x,r.group.position.z],destination,gardenState.current);
@@ -206,17 +229,42 @@ export function HouseView({paused=false,visualEvents=[],gardenOpen=false,agents,
 
       const dt=Math.min((time-previous)/1000,.05);previous=time;
       if([...residents.values()].some(r=>r.path.length))dirty=true;
-      residents.forEach(r=>{const plate=plates.get(r.id);if(plate){const showPlate=r.eating&&!r.path.length;if(plate.visible!==showPlate){plate.visible=showPlate;dirty=true;}}if(!reducedMotion.matches&&dt>0){const speakingBoost=speakingRef.current.includes(r.id)?2.4:1;const sincePulse=time-evidencePulse.current;const pulseBoost=sincePulse>=0&&sincePulse<2600?1+2*(1-sincePulse/2600):1;r.ring.material.rotation+=dt*r.ringSpeed*speakingBoost*pulseBoost;dirty=true;}const phase=Math.floor((time+r.id*2300)/250)%40;const show=r.inLove&&phase<8;
-      if(phase!==r.heartPhase&&(show||r.heart.visible)){r.heartPhase=phase;r.heart.visible=show;r.heart.position.set(r.group.position.x+(r.id===1?-.8:.8),1.5,r.group.position.z-.7-phase*.025);r.heart.material.opacity=Math.max(0,1-phase/9);dirty=true;}
+      residents.forEach(r=>{const plate=plates.get(r.id);if(plate){const showPlate=r.eating&&!r.path.length;if(plate.visible!==showPlate){plate.visible=showPlate;dirty=true;}}const isLia=r.id===1;const speaking=speakingRef.current.includes(r.id);
+      if(!reducedMotion.matches&&dt>0){const speakingBoost=speaking?2.4:1;const sincePulse=time-evidencePulse.current;const pulseBoost=sincePulse>=0&&sincePulse<2600?1+2*(1-sincePulse/2600):1;r.ring.material.rotation+=dt*r.ringSpeed*speakingBoost*pulseBoost;dirty=true;}
+      // Visage à paramètres continus (couches 0/1) : ressort vers la cible réelle, jamais un saut.
+      const expr=stepExpressionSprings(r.exprSprings,r.exprTarget,dt);
+      // Colère fiabilisée : l'anneau vire vers l'alerte avec angerLevel (tension haute + confort
+      // bas, ou dispute active), pas seulement l'ancien cas isolé — cf. lib/simulation.ts.
+      r.ringColor.set(residentAppearance[r.id].color).lerp(warnColor,Math.min(.85,expr.angerLevel));r.ring.material.color.copy(r.ringColor);
+      // Diction : tant que speakingRef le confirme (durée réelle du typewriter du fil de
+      // discussion), une file de « visèmes » anime la bouche — plus rapide et heurtée sous
+      // tension/colère, plus lente et ronde au calme (retour utilisateur du 2026-09-17).
+      if(speaking){if(time>r.mouthPulseUntil){const speed=Math.min(2.3,Math.max(.45,.55+(expr.angerLevel+r.exprSprings.jitterAmp.value/2)*1.1));const dur=(125/speed)*(.65+Math.random()*.7);r.mouthPulseUntil=time+dur;r.mouthPulseTarget=Math.min(1,(.22+Math.random()*.55)*(1+expr.angerLevel*.4));}}else r.mouthPulseTarget=0;
+      r.speechOpen+=(r.mouthPulseTarget-r.speechOpen)*Math.min(1,dt*14);
+      const fctx=r.faceCanvas.getContext("2d")!;drawFace(fctx,160,isLia,expr,r.speechOpen);r.faceTexture.needsUpdate=true;dirty=true;
+      // Motes de lumière au-delà du seuil "amoureux" (isInLove, >75) : remplacent le sprite
+      // "coeur" fixe par un signal qui reste dans le langage visuel des anneaux (2026-09-17).
+      if(r.inLove&&!r.sleeping&&!reducedMotion.matches&&time>r.nextParticleAt){const free=r.particles.find(p=>!p.active);if(free){free.active=true;free.age=0;free.maxAge=1.6+Math.random()*.8;free.angle=Math.random()*Math.PI*2;free.dist=0;free.speed=.35+Math.random()*.25;r.nextParticleAt=time+900+Math.random()*1600;}}
+      r.particles.forEach(p=>{if(!p.active)return;p.age+=dt;p.dist+=p.speed*dt;const fade=Math.max(0,1-p.age/p.maxAge);p.sprite.position.set(r.face.position.x+Math.cos(p.angle)*p.dist*.4,r.face.position.y+.1+p.dist*.5,r.face.position.z+Math.sin(p.angle)*p.dist*.4);p.sprite.scale.setScalar(.1+.08*(1-fade));p.sprite.material.opacity=fade*.8;dirty=true;if(p.age>=p.maxAge){p.active=false;p.sprite.material.opacity=0;}});
       const resting=r.sleeping&&["salon","chambre"].includes(r.room)&&!r.path.length;const pose=restingPose(r.id,r.room);r.face.position.set(resting?pose.x:r.group.position.x,resting?pose.y:1.35,resting?pose.z:r.group.position.z);r.ring.position.copy(r.face.position);const b=bubbleNodes.current.get(r.id);if(b){const v=r.face.position.clone().project(camera);const w=host.clientWidth,h=host.clientHeight;b.style.left=Math.min(w-46,Math.max(6,(v.x*.5+.5)*w+(r.id===1?-48:20)))+"px";b.style.top=Math.min(h-28,Math.max(4,(-v.y*.5+.5)*h-25))+"px";}const step=r.path[0];if(step){const dx=step[0]-r.group.position.x,dz=step[1]-r.group.position.z,distance=Math.hypot(dx,dz);if(distance<.03)r.path.shift();else{const speed=Math.min(distance,dt*2.2);r.group.position.x+=dx/distance*speed;r.group.position.z+=dz/distance*speed;r.group.rotation.y=Math.atan2(dx,dz);}}});
       const pair=[...residents.values()];
       if(pair.every(r=>!r.path.length)){
         if(pair[0].room===pair[1].room)pair.forEach((r,i)=>{const other=pair[1-i];r.group.rotation.y=Math.atan2(other.group.position.x-r.group.position.x,other.group.position.z-r.group.position.z);});
         if(awaiting){awaiting=false;settled.current?.();}
       }
+      if(time<hugWaveUntil){
+        hugWavePhase+=dt*.6;
+        const a=pair.find(r=>r.id===1)!.face.position,b=pair.find(r=>r.id===2)!.face.position;
+        const midX=(a.x+b.x)/2,midY=Math.max(a.y,b.y)+.4+Math.sin(hugWavePhase*4)*.08,midZ=(a.z+b.z)/2;
+        const positions=hugWaveGeometry.attributes.position as THREE.BufferAttribute,colors=hugWaveGeometry.attributes.color as THREE.BufferAttribute;
+        for(let i=0;i<=hugWaveSegments;i++){const t2=i/hugWaveSegments;const x=(1-t2)*(1-t2)*a.x+2*(1-t2)*t2*midX+t2*t2*b.x;const y=(1-t2)*(1-t2)*a.y+2*(1-t2)*t2*midY+t2*t2*b.y;const z=(1-t2)*(1-t2)*a.z+2*(1-t2)*t2*midZ+t2*t2*b.z;positions.setXYZ(i,x,y,z);const c=hugColorA.clone().lerp(hugColorB,t2);colors.setXYZ(i,c.r,c.g,c.b);}
+        positions.needsUpdate=true;colors.needsUpdate=true;
+        const remaining=hugWaveUntil-time;hugWaveMaterial.opacity=remaining<400?remaining/400:Math.min(1,(2600-remaining)/300);
+        dirty=true;
+      } else if(hugWaveMaterial.opacity>0){hugWaveMaterial.opacity=0;dirty=true;}
       if(document.visibilityState==="visible"&&dirty&&wallTime-lastRender>=33){renderer.render(scene,camera);dirty=false;lastRender=wallTime;}
     };frame=requestAnimationFrame(animate);
-    return()=>{cameraControl.current=()=>{};cancelAnimationFrame(frame);observer.disconnect();update.current=()=>{};renderer.domElement.removeEventListener("pointercancel",cancelDrag);renderer.domElement.removeEventListener("pointerdown",down);renderer.domElement.removeEventListener("pointermove",move);renderer.domElement.removeEventListener("wheel",wheel);renderer.domElement.removeEventListener("contextmenu",menu);renderer.domElement.removeEventListener("pointerup",click);renderer.domElement.removeEventListener("webglcontextlost",lost);scene.traverse(obj=>{if(obj instanceof THREE.Mesh){obj.geometry.dispose();const materials=Array.isArray(obj.material)?obj.material:[obj.material];materials.forEach(m=>{if("map" in m && m.map instanceof THREE.Texture)m.map.dispose();m.dispose();});}});scene.traverse(o=>{if(o instanceof THREE.LineSegments){o.geometry.dispose();(o.material as THREE.Material).dispose();}});proofUpdate.current=()=>{};residents.forEach(r=>{r.ring.material.map?.dispose();r.ring.material.dispose();r.faceTexture.dispose();r.face.material.dispose();r.heart.material.map?.dispose();r.heart.material.dispose()});nt.dispose();note.material.dispose();illumination.current=()=>{};renderer.dispose();renderer.domElement.remove();};
+    return()=>{cameraControl.current=()=>{};cancelAnimationFrame(frame);observer.disconnect();update.current=()=>{};renderer.domElement.removeEventListener("pointercancel",cancelDrag);renderer.domElement.removeEventListener("pointerdown",down);renderer.domElement.removeEventListener("pointermove",move);renderer.domElement.removeEventListener("wheel",wheel);renderer.domElement.removeEventListener("contextmenu",menu);renderer.domElement.removeEventListener("pointerup",click);renderer.domElement.removeEventListener("webglcontextlost",lost);scene.traverse(obj=>{if(obj instanceof THREE.Mesh){obj.geometry.dispose();const materials=Array.isArray(obj.material)?obj.material:[obj.material];materials.forEach(m=>{if("map" in m && m.map instanceof THREE.Texture)m.map.dispose();m.dispose();});}});scene.traverse(o=>{if(o instanceof THREE.LineSegments){o.geometry.dispose();(o.material as THREE.Material).dispose();}});proofUpdate.current=()=>{};residents.forEach(r=>{r.ring.material.map?.dispose();r.ring.material.dispose();r.faceTexture.dispose();r.face.material.dispose();r.particles.forEach(p=>{p.sprite.material.dispose();})});moteTexture.dispose();hugWaveGeometry.dispose();hugWaveMaterial.dispose();nt.dispose();note.material.dispose();illumination.current=()=>{};renderer.dispose();renderer.domElement.remove();};
   },[]);
   useEffect(()=>{mealStamp.current=agents.filter(a=>a.intent==="eat"&&a.room==="cuisine").map(a=>a.id+":"+a.cycle).join("|");inspection.current=inspectionStep;update.current(agents)},[agents,inspectionStep]);
   useEffect(()=>{illumination.current(night)},[night]);

@@ -74,7 +74,7 @@ for(const start of Object.entries(centers).filter(([room])=>room!=="jardin").map
   const path=pathBetween([start[0]+offset,start[1]],[end[0]+offset,end[1]]);assert.ok(path.length,`${start} to ${end}`);assert.ok(path.every(([x,z])=>!blocked(x,z)));for(let i=1;i<path.length;i++)assert.equal(Math.abs(path[i][0]-path[i-1][0])+Math.abs(path[i][1]-path[i-1][1]),.5);
 }
 expired=false;sqlite.exec('UPDATE world_lock SET expires_at=0');
-const {advanceNeeds,initialNeeds,initialNeedsFor,initialEmotionsFor,residentProfiles,sharedActivityBonus,smiley}=await import('../.sites-runtime/test-simulation.mjs');
+const {advanceNeeds,initialNeeds,initialNeedsFor,initialEmotionsFor,residentProfiles,sharedActivityBonus,faceExpression}=await import('../.sites-runtime/test-simulation.mjs');
 assert.ok(advanceNeeds(initialNeeds,'eat','cuisine').hunger<initialNeeds.hunger);
 assert.ok(advanceNeeds(initialNeeds,'eat','salon').hunger>initialNeeds.hunger);
 assert.ok(advanceNeeds(initialNeeds,'sleep','chambre').fatigue<initialNeeds.fatigue);
@@ -92,7 +92,7 @@ const warm=JSON.stringify({curiosity:50,tension:20,trust:40,comfort:60,attractio
 refuse=true;response=await post(input('interact',1,{epoch:1}));result=await response.json();assert.equal(result.sharedAffection,null);
 refuse=false;response=await post(input('interact',1,{epoch:1}));result=await response.json();assert.equal(result.sharedAffection,null);
 affection=false;for(let i=0;i<3;i++){sqlite.prepare('UPDATE agent_state SET needs=?').run(JSON.stringify(initialNeeds));assert.equal((await post(input('interact',1,{epoch:1}))).status,200);}
-affection=true;sqlite.exec('DELETE FROM world_requests');{const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life={...p.life,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,visualIntro:2,personalFollowup:3,exitSearched:true,studyTurns:0,contact:undefined,debrief:undefined};p.pendingDestination={room:'salon',intent:'hug',proposer:2};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}sqlite.prepare('UPDATE agent_state SET room=?,emotions=?,needs=?').run('salon',warm,JSON.stringify(initialNeeds));response=await post(input('interact',1,{epoch:1}));result=await response.json();assert.equal(result.sharedAffection,'hug');assert.ok(result.agents.every(a=>a.intent==='hug'&&a.room==='salon'));assert.equal(smiley(result.agents[0]),'🥰');
+affection=true;sqlite.exec('DELETE FROM world_requests');{const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life={...p.life,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,visualIntro:2,personalFollowup:3,exitSearched:true,studyTurns:0,contact:undefined,debrief:undefined};p.pendingDestination={room:'salon',intent:'hug',proposer:2};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}sqlite.prepare('UPDATE agent_state SET room=?,emotions=?,needs=?').run('salon',warm,JSON.stringify(initialNeeds));response=await post(input('interact',1,{epoch:1}));result=await response.json();assert.equal(result.sharedAffection,'hug');assert.ok(result.agents.every(a=>a.intent==='hug'&&a.room==='salon'));{const hugExpr=faceExpression(result.agents[0]);assert.ok(hugExpr.mouthCurve>0,'shared hug should read as a smile, not a neutral or frowning face');assert.ok(hugExpr.angerLevel<.3,'shared hug should not read as angry');}
 for(const [intent,room] of [['massage','chambre'],['kiss','salon'],['share_sleep','chambre']]){
  affectionIntent=intent;sqlite.exec('DELETE FROM world_requests');{const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life={...p.life,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,visualIntro:2,personalFollowup:3,exitSearched:true,contact:undefined,debrief:undefined};p.pendingDestination={room,intent,proposer:2};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}sqlite.prepare('UPDATE agent_state SET emotions=?,needs=?').run(warm,JSON.stringify(initialNeeds));response=await post(input('interact',1,{epoch:1}));assert.equal(response.status,200);result=await response.json();if(result.affectionOutcome==="deferred"){response=await post(input("interact",1,{epoch:1}));assert.equal(response.status,200);result=await response.json();}assert.equal(result.sharedAffection,intent);assert.ok(result.agents.every(a=>(a.intent===intent||["sleep","share_sleep"].includes(intent)&&a.intent==="none"&&a.needs.fatigue<=12)&&a.room===room));
 }
@@ -385,11 +385,11 @@ assert.equal((await post(input('identify',1,{epoch:perceptionEpoch,message:'   '
 const identify=input('identify',1,{epoch:perceptionEpoch,message:'Spectateur ◇'});response=await post(identify);assert.equal(response.status,200);result=await response.json();assert.equal(calls,nicknameCalls);assert.equal(result.story.observer,'Spectateur ◇');assert.equal((await post(identify)).status,200);assert.equal(calls,nicknameCalls);
 const {investigationTarget}=await import('../.sites-runtime/test-story.mjs');let pp={...newStory(),observer:'Spectateur ◇',order:[3,0,1,2],round:10,introduced:true,met:true};assert.equal(storyContext(pp).observerLabel,undefined);assert.ok(investigationTarget(pp).includes('Spectateur ◇'));pp=advanceStory(pp,true,[],[],'bureau',true);assert.ok(pp.evidence[0].includes('Spectateur ◇'));assert.equal(storyContext(pp).observerLabel,'Spectateur ◇');assert.ok(!evidenceLedger(['Relevé de cohabitation. Identifiant observateur inscrit sur le relevé : "agents d’intelligence artificielle".'],[],false).find(p=>p.id==='dossier').discovered);
 
-// Both appearance descriptions agree with the shared glyph/ring registry.
+// Both appearance descriptions agree with the shared expression/ring registry.
 const {appearanceFor,residentAppearance,sceneWindows,visibleScene}=await import('../.sites-runtime/test-perception.mjs');
 pp={...pp,round:2,evidence:[],sharedMeal:true,life:{...newStory().life,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true}};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(pp));sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints');sqlite.exec('DELETE FROM world_requests');flat=true;
 for(const id of [1,2])sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=?').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:70}),JSON.stringify({...steady,attraction:30,trust:60}),id);
-for(let i=0;i<2;i++){const beforePerception=await readWorld(db),a=beforePerception.agents[i];response=await post(input('interact',1,{epoch:perceptionEpoch}));result=await response.json();assert.equal(result.story.life.visualIntro,i+1);const answer=result.decisions.find(d=>d.actor!==a.id);assert.ok(answer.reply.includes(appearanceFor({...a,intent:'chat'}).glyph));assert.ok(answer.reply.includes(residentAppearance[a.id].colorName));assert.equal(lastContext.beatContext.visual,true);assert.ok(lastContext.perceivedResidents.residents.length===2);}
+for(let i=0;i<2;i++){const beforePerception=await readWorld(db),a=beforePerception.agents[i];response=await post(input('interact',1,{epoch:perceptionEpoch}));result=await response.json();assert.equal(result.story.life.visualIntro,i+1);const answer=result.decisions.find(d=>d.actor!==a.id);assert.ok(answer.reply.includes(appearanceFor({...a,intent:'chat'}).current));assert.ok(answer.reply.includes(residentAppearance[a.id].colorName));assert.equal(lastContext.beatContext.visual,true);assert.ok(lastContext.perceivedResidents.residents.length===2);}
 assert.ok(result.memories.filter(m=>m.kind==='rencontre').every(m=>/^\[salon\|\d{4}-/.test(m.content)));assert.equal(sceneWindows.filter(w=>w.room!=='couloir').length,4);for(const room of ["salon","cuisine","chambre","bureau"])assert.equal(visibleScene(room,[]).windows.length,1);
 
 // Personal follow-up is two distinct turns; curiosity itself causes a bounded boost.
@@ -584,7 +584,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 39'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 40'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -625,7 +625,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 {
   // Colère entre les deux habitants (nouvelle mécanique) : trois rapprochements en moins de 18
   // tours doivent maintenant produire une vraie dispute, pas seulement une gêne passagère — avec
-  // anneau/smiley fâché, gestes et scènes légères suspendus, et une réconciliation qui exige un
+  // anneau/visage visiblement fâchés, gestes et scènes légères suspendus, et une réconciliation qui exige un
   // vrai échange sur le même sujet, pas juste le temps qui passe.
   const epoch=(await readWorld(db)).epoch;
   const disputeRound=40;
@@ -642,7 +642,8 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(result.story.life.dispute?.remaining>0,'third close reconciliation in 18 turns should open a dispute');
   const disputeTopic=result.story.life.dispute.topic;
   assert.ok(result.agents.find(a=>a.id===1).angry);assert.ok(result.agents.find(a=>a.id===2).angry);
-  assert.equal(smiley(result.agents.find(a=>a.id===1)),'😤');assert.equal(smiley(result.agents.find(a=>a.id===2)),'😠');
+  assert.ok(faceExpression(result.agents.find(a=>a.id===1)).angerLevel>=.85,'Lia should read as visibly angry during the dispute');
+  assert.ok(faceExpression(result.agents.find(a=>a.id===2)).angerLevel>=.85,'Noé should read as visibly angry during the dispute');
   // While disputed, a fresh gesture attempt must not go through even with every affection lever honored.
   affection=true;
   response=await post(input('interact',1,{epoch}));assert.equal(response.status,200);result=await response.json();
@@ -654,5 +655,21 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(result.story.life.dispute?.remaining,1);assert.ok(result.agents.every(a=>a.angry));
   response=await post(input('interact',1,{epoch}));assert.equal(response.status,200);result=await response.json();
   assert.equal(result.story.life.dispute,undefined);assert.ok(result.agents.every(a=>!a.angry));
-  console.log('Passed: three close reconciliations open a real dispute with angry smileys, suspend new gestures, and require a genuine shared reconciliation to clear.');
+  console.log('Passed: three close reconciliations open a real dispute with a visibly angry expression on both faces, suspend new gestures, and require a genuine shared reconciliation to clear.');
+}
+
+{
+  // Fiabilisation de la colère (2026-09-17) : avant ce correctif, un visage ne pouvait paraître
+  // fâché qu'à travers life.dispute (la seule mécanique romantique de brouille) — une hostilité
+  // générale (provocations, mépris de l'observateur, tension qui grimpe) ne se voyait jamais sur
+  // le visage tant qu'aucune dispute n'était ouverte. faceExpression() doit désormais lire la
+  // colère directement dans tension/comfort réels, sans avoir besoin de life.dispute ni du drapeau
+  // angry — et rester calme quand tension/comfort ne le justifient pas.
+  const hostileNoDispute=faceExpression({id:1,intent:'chat',needs:{...initialNeeds,fatigue:20},emotions:{tension:82,comfort:8,attraction:15}});
+  assert.ok(hostileNoDispute.angerLevel>.5,'high tension + low comfort must read as visibly angry even with no dispute and no angry flag');
+  const calmNoDispute=faceExpression({id:2,intent:'chat',needs:{...initialNeeds,fatigue:20},emotions:{tension:20,comfort:70,attraction:15}});
+  assert.ok(calmNoDispute.angerLevel<.15,'calm tension/comfort must not read as angry');
+  const flaggedAngryLowTension=faceExpression({id:1,intent:'chat',needs:{...initialNeeds,fatigue:20},emotions:{tension:20,comfort:70,attraction:15},angry:true});
+  assert.ok(flaggedAngryLowTension.angerLevel>=.85,'the life.dispute angry flag must still guarantee a visibly angry floor on its own');
+  console.log('Passed: anger reliability — faceExpression() reads real hostility from tension/comfort alone, not only from life.dispute\'s angry flag.');
 }

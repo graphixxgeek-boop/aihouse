@@ -111,11 +111,47 @@ l'observateur. Aucun vocabulaire thérapeutique ni discours philosophique répé
 4.4. Le français est correctement genré selon le personnage qui parle (Lia au féminin, Noé au
 masculin), y compris quand l'un décrit l'autre.
 
-4.4bis. Le symbole visuel (`smiley()`, `lib/simulation.ts`) distingue les deux personnalités à
-état égal, pas seulement leur couleur d'anneau : la colère de Lia (😤) reste plus contenue que
-celle de Noé (😠) ; son plaisir (🙂) reste plus discret que le sien (😊) ; son visage neutre par
-défaut (😑) est plus fermé que le sien (😐) — cohérent avec « sa chaleur se développe à son
-rythme » contre « plus vite rassuré ».
+4.4bis. Le visage (`faceExpression()`/`describeExpression()` dans `lib/simulation.ts`,
+`drawFace()` dans `lib/face-render.ts`, 2026-09-17) a remplacé l'ancien symbole discret
+(`smiley()`, un lookup d'emoji) par un rendu vectoriel continu, dessiné à partir de paramètres
+(sourcils, yeux, bouche, tremblement, colère) interpolés en continu par ressort (`Spring`,
+`lib/face-render.ts`) — jamais de saut brusque d'un état à l'autre. Une seule fonction de dessin
+partagée alimente à la fois la scène 3D (`components/house-view.tsx`, texture de sprite) et la
+fiche latérale (`app/page.tsx`, composant `MiniFace`) : il ne peut jamais exister deux rendus
+divergents du même état (Article 2). Les deux personnages continuent de se distinguer à état
+égal, pas seulement par leur couleur d'anneau : la colère de Lia reste plus contenue dans le
+tracé (sourcils/bouche moins marqués) que celle de Noé, plus démonstrative ; son sourire reste
+plus discret que le sien — cohérent avec « sa chaleur se développe à son rythme » contre « plus
+vite rassuré ». Une couche de traits fixes liés au genre (`GENDER` dans `lib/face-render.ts`)
+se superpose à l'expression : Lia a des sourcils plus fins et arqués, des yeux plus grands, une
+bouche plus étroite mais plus pleine, un fard, un battement de cils et une chevelure suggérée en
+lumière ; Noé a des sourcils plus épais et droits et une bouche plus large, sans aucune suggestion
+de corps ni de mâchoire. La règle « aucun corps humain détaillé » (1.4) reste intacte : seul le
+visage peut désormais être expressif, et seule Lia porte une chevelure suggérée — assouplissement
+délibéré de la règle de représentation, décidé le 2026-09-17, qui ne touche à aucune règle de
+personnalité ou de ton (Article 14 ne s'applique donc pas à ce changement, purement visuel).
+Les paupières se ferment progressivement avec la fatigue réelle (`needs.fatigue`), jamais
+seulement lors du sommeil. La synchronisation labiale suit la durée réelle de la révélation du
+texte à l'écran (le même signal `speaking` que `ProgressiveText`), avec un rythme et une amplitude
+qui varient selon l'état émotionnel — jamais un mouvement de bouche uniforme quel que soit ce qui
+est dit. Les cœurs sporadiques de l'ancien système sont remplacés par des particules lumineuses
+émises tant qu'un personnage est en flagrant amour (`isInLove()`, attirance > 75) ; un câlin,
+massage, baiser ou sommeil partagé, quand l'intention est commune aux deux personnages, fait à la place naître une
+onde lumineuse entre leurs deux anneaux, dans un dégradé de leurs deux couleurs, plutôt qu'un
+cœur fixe.
+
+4.4ter. La colère visible sur le visage (`angerLevel` dans `faceExpression()`) a été fiabilisée le
+2026-09-17 : avant ce correctif, un visage ne pouvait paraître fâché qu'à travers la dispute
+romantique (`life.dispute`, règle 6.6) — une hostilité générale de l'observateur (mépris,
+provocation, menace) qui fait monter la tension et chuter le confort (via les réactions déjà
+existantes comme `humanStress()`) ne se voyait jamais sur le visage tant qu'aucune dispute n'était
+ouverte, alors même que les répliques, elles, étaient déjà cinglantes. `angerLevel` se lit
+désormais directement dans la tension et le confort réels du personnage (formule dépendante de
+`emotions.tension`/`emotions.comfort`), avec le drapeau `angry` de `life.dispute` conservé comme
+plancher garanti (une dispute ouverte affiche toujours une colère visible, même si tension/confort
+n'ont pas encore bougé) plutôt que comme seul déclencheur possible. La teinte de l'anneau (couleur
+de base du personnage vers un rouge d'alerte, `lib/face-render.ts`/`components/house-view.tsx`)
+suit la même valeur, en temps réel, sans reconstruire la texture de l'anneau à chaque frame.
 
 4.5. Une réplique répond toujours d'abord au dernier propos réellement tenu (par le partenaire ou
 par l'observateur en mode chat) avant d'apporter un élément nouveau — jamais à une question déjà
@@ -264,8 +300,9 @@ quoi que ce soit.
 6.6. Un rapprochement accepté trop souvent en peu de tours (règle 6.4) ne fait pas que redescendre
 les jauges : il ouvre une vraie dispute (`life.dispute`) entre les deux habitants. Tant qu'elle
 dure, ils se montrent froids et courts l'un envers l'autre, aucun geste affectueux ni scène
-scénarisée d'avant-révélation ne peut se produire, et leur anneau/smiley reflète la colère
-(différent par personnage). La réconciliation exige un vrai tour ensemble sur le même sujet ; une
+scénarisée d'avant-révélation ne peut se produire, et leur anneau/visage reflètent visiblement la
+colère (cf. 4.4ter — chacun avec sa propre texture, contenue chez Lia, plus démonstrative chez
+Noé). La réconciliation exige un vrai tour ensemble sur le même sujet ; une
 tentative de geste refusée pendant la dispute ne compte jamais comme un pas vers la réconciliation
 — ce serait l'inverse de se parler vraiment. Aucune cruauté gratuite entre eux : l'agacement vise
 ce qui s'est passé, jamais une remise en cause de l'autre en bloc.
