@@ -115,6 +115,12 @@ et peuvent chuter plus vite qu'ils ne montent).
 - Observations générales (murs trop réguliers, absence de paysage...) : une par tour éligible à
   partir du tour 2, dans un ordre fixe, jamais deux fois la même.
 - Questions d'âge : pas avant le tour 12 ET un premier repas partagé.
+- Ordre d'exploration cuisine/chambre : mélangé par session (`explore-order`, `lib/turn.ts`,
+  2026-09-17 — était toujours cuisine puis chambre).
+- Seuils mélangés par session des beats libres (2026-09-17, étaient des constantes fixes) : télé
+  entre le tour 5 et 9 (était 6), inspection des portes entre le tour 7 et 10 (était 8),
+  enceinte/plante entre le tour 9 et 12 (était 10), question personnelle de Lia entre le tour 12
+  et 16 (était 14).
 
 ## Sommeil (`lib/life.ts`, `app/api/lia/route.ts`)
 
@@ -131,8 +137,13 @@ et peuvent chuter plus vite qu'ils ne montent).
   (finale, bilan d'enquête, apparence, découvertes, motifs de déplacement, reproches du canapé) —
   hachage polynomial (base 31) de `seed + "::" + label`, pour que deux libellés différents sur la
   même session ne retombent pas systématiquement sur le même indice.
-- Chaque moment scénarisé dispose aujourd'hui de 2 à 4 formulations distinctes — pas plus. Sur un
-  grand nombre de sessions, une coïncidence reste possible (voir Article 10 de `CLAUDE.md`).
+- Chaque moment scénarisé dispose aujourd'hui de 2 à 4 formulations distinctes — pas plus, sauf les
+  quatre pools ci-dessous portés à 6 le 2026-09-17. Sur un grand nombre de sessions, une
+  coïncidence reste possible (voir Article 10 de `CLAUDE.md`).
+- Pools doublés le 2026-09-17 (3→6 formulations chacun, `app/api/lia/route.ts`) : découverte du
+  miroir (`discover-mirrorVerified`), découverte des provisions (`discover-foodVerified`), rappel
+  du miroir depuis le salon (`mirror-recall`), remarque sur la fenêtre du jardin (`window-notice`),
+  et 6 paires Lia/Noé pour la découverte plante/enceinte (`beat-ambient`, était 3 paires).
 - `insoliteOpening` (`lib/story.ts`) : tirage pondéré sur 10 (via `seedPick`) — 6/10 « normal »,
   2/10 « Lia se sent mal » (fatigue de départ 58 au lieu de 20, contre un seuil d'urgence à 68),
   2/10 « Noé se referme » (confiance 6 au lieu de 20, aisance 18 au lieu de 48, tension à 100).

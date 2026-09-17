@@ -4,7 +4,7 @@ import { priority, intentRoom, mutualAttraction, type Intent } from "./simulatio
 import { sleepRoom } from "./relationship";
 import {gardenAccess, type Person, type Room } from "./house";
 import type { Resident } from "./world";
-import type { Story } from "./story";
+import { seedPick, type Story } from "./story";
 
 export const roomObjects:Record<Room,readonly string[]> = {
  jardin:["herbe","arbre","porte vers le couloir","clôture","haut-parleur de la porte"], salon:["canapé","bibliothèque","fenêtre","télévision","télécommande","plante géométrique","enceinte"], cuisine:["table","plan de travail","provisions","fenêtre"],
@@ -39,13 +39,22 @@ export function planTurn(mode:string,current:Resident,other:Resident,story:Story
  // du 2026-09-16). Une destination réellement convenue entre eux prime désormais toujours sur la
  // liste mécanique ; `explore` (ci-dessous) se met déjà en retrait dès qu'un accord existe.
  const executeAgreement=automatic&&agreed&&story.introduced&&!(agreed.room==="bureau"&&salonPause)&&!life.debrief?.remaining&&!life.contact?.remaining&&!residentPriority(current,Boolean(story.introduced))&&!partnerPriority&&!sleeping;
- const explore=automatic&&!afterInvestigation&&!executeAgreement&&story.introduced&&!urgentIntent&&!partnerPriority?(["cuisine","chambre"] as Room[]).find(r=>!life.visited.includes(r)):undefined;
+ // Ordre de visite mélangé par session (2026-09-17) : avant, l'exploration passait toujours par
+ // la cuisine puis la chambre, dans cet ordre, à chaque partie — un des points figés qui donnait
+ // l'impression que deux sessions se ressemblaient trop (retour utilisateur direct).
+ const exploreOrder=seedPick(story.seed,"explore-order",[["cuisine","chambre"],["chambre","cuisine"]] as const);
+ const explore=automatic&&!afterInvestigation&&!executeAgreement&&story.introduced&&!urgentIntent&&!partnerPriority?(exploreOrder as readonly Room[]).find(r=>!life.visited.includes(r)):undefined;
  const gardenFirst=automatic&&gardenAccess(story)&&!life.gardenVisited&&!sleeping&&!isSleeping(other,life)&&![current,other].some(a=>a.needs.hunger>=68||a.needs.fatigue>=68);
- const tvFirst=automatic&&!life.debrief?.remaining&&!life.contact?.remaining&&!afterInvestigation&&story.introduced&&!explore&&!life.tvSeen&&story.round>=6&&!urgentIntent&&!partnerPriority;
+ // Seuil mélangé par session (2026-09-17, était fixe à 6) : sinon la télé arrivait toujours au
+ // même tour d'une partie à l'autre, un autre point trop prévisible.
+ const tvThreshold=seedPick(story.seed,"tv-threshold",[5,6,7,8,9] as const);
+ const tvFirst=automatic&&!life.debrief?.remaining&&!life.contact?.remaining&&!afterInvestigation&&story.introduced&&!explore&&!life.tvSeen&&story.round>=tvThreshold&&!urgentIntent&&!partnerPriority;
  const studyContinuation=automatic&&life.studyTurns===1&&[current,other].some(a=>a.room==="bureau")&&!urgentIntent&&!partnerPriority;
  const reflection=automatic&&!urgentIntent&&!partnerPriority&&(life.debrief?.remaining??0)>0;
  const continuing=automatic&&!urgentIntent&&!partnerPriority&&(life.contact?.remaining??0)>0;
- const exitInspection=automatic&&story.introduced&&story.round>=8&&!life.exitSearched&&!life.debrief?.remaining&&!life.contact?.remaining&&!explore&&!tvFirst&&!offer&&!agreed&&!urgentIntent&&!partnerPriority&&[current,other].every(a=>a.room==="salon");
+ // Seuil mélangé par session (2026-09-17, était fixe à 8), même logique que tvThreshold ci-dessus.
+ const exitThreshold=seedPick(story.seed,"exit-threshold",[7,8,9,10] as const);
+ const exitInspection=automatic&&story.introduced&&story.round>=exitThreshold&&!life.exitSearched&&!life.debrief?.remaining&&!life.contact?.remaining&&!explore&&!tvFirst&&!offer&&!agreed&&!urgentIntent&&!partnerPriority&&[current,other].every(a=>a.room==="salon");
  // Un tour d'enquête n'attend plus seulement le compteur (round%3) : si l'un des deux vient
  // d'exprimer l'envie d'aller vérifier quelque chose, l'idée est suivie tout de suite au lieu
  // d'attendre le prochain multiple de 3 — plus spontané, moins minuté (retour utilisateur du

@@ -172,6 +172,19 @@ un état de départ différent qui laisse les mécaniques habituelles produire u
 La normale reste majoritaire (60 % des sessions) ; ces variantes ne remplacent jamais le schéma
 standard, elles s'y ajoutent.
 
+5.6. Le squelette de l'enquête (quel objet est examiné, à quel tour approximatif) n'est plus figé
+d'une session à l'autre (assoupli le 2026-09-17, retour utilisateur direct : deux parties se
+ressemblaient trop). Trois éléments sont désormais tirés par `story.seed`, chacun indépendamment :
+l'ordre de visite cuisine/chambre pendant l'exploration libre (`explore-order`, `lib/turn.ts`,
+avant toujours cuisine puis chambre) ; le tour à partir duquel la télévision, l'inspection des
+portes et l'enceinte/plante peuvent survenir (`tv-threshold` 5–9, `exit-threshold` 7–10,
+`ambient-threshold` 9–12, avant des constantes fixes à 6/8/10) ; le tour à partir duquel la
+question personnelle de Lia devient possible (`personal-threshold` 12–16, avant fixe à 14). Le
+contenu factuel de chaque découverte ne varie jamais (article 5.3) ; seuls l'ordre et le moment
+varient désormais aussi, pas seulement la formulation. Les pools de formulations scriptées
+(miroir, provisions, fenêtre, plante/enceinte) sont passés de 3 à 6 variantes chacun pour la même
+raison.
+
 ## 6. Relation et consentement
 
 6.1. L'attirance et l'attachement montent lentement, de façon asymétrique et parfois négative ;
