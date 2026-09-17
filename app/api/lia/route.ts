@@ -3,7 +3,7 @@ import {visualTiming,type VisualEvent} from "@/lib/visual-events";
 import {destinationAnchor,gardenAccess} from "@/lib/house";
 import {normaliseNickname,visibleScene,appearanceReply} from "@/lib/perception";
 import {coldOpening,dialogueFingerprint,distinctReply,justifiedReply,truthfulGender,dramaRules,departureLine} from "@/lib/drama";
-import {readLife,humanStress,isSleeping} from "@/lib/life";
+import {readLife,humanStress,isSleeping,isMuted,isStoic,activeBonus,type BonusId} from "@/lib/life";
 import { planTurn, coordinateRooms, residentPriority, sceneFor, proposedDestination } from "@/lib/turn";
 import { newStory, parseStory, rememberAges, advanceStory, storyContext, investigationTarget, investigationRecap, finaleReveal, groundFragment, seedPick, insoliteOpening, insoliteColdOpening, ageClueRevealed, type Story } from "@/lib/story";
 import { ages, sleepRoom, attractionAfterTurn, proposalPressure, flirtingAssessment, receivedAffectionBonus } from "@/lib/relationship";
@@ -13,10 +13,10 @@ import { env } from "cloudflare:workers";
 import { z } from "zod";
 import { LiaError, think, decisionSchema, evolveEmotions } from "@/lib/lia";
 import { initialize, readWorld } from "@/lib/world";
-import { names, spaces, type Person } from "@/lib/house";
+import { names, spaces, type Person, type Room } from "@/lib/house";
 const schema = z.object({
     requestId: z.string().uuid(), actor: z.union([z.literal(1), z.literal(2)]),
-    mode: z.enum(["chat", "autonomous", "interact", "move", "care", "reset", "identify", "unlock_garden"]),
+    mode: z.enum(["chat", "autonomous", "interact", "move", "care", "reset", "identify", "unlock_garden", "spin_bonus"]),
     epoch: z.number().int().min(0).default(0), intent: z.enum(intents).default("none"),
     message: z.string().trim().max(2000).default(""),
     room: z.enum(spaces).default("salon"), night: z.boolean().default(false),
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     const db = env.DB;
     if (!db)
         return Response.json({ error: "La mémoire est indisponible." }, { status: 503 });
-    if (!["move", "care", "reset", "identify", "unlock_garden"].includes(input.mode) && !env.GEMINI_API_KEY)
+    if (!["move", "care", "reset", "identify", "unlock_garden", "spin_bonus"].includes(input.mode) && !env.GEMINI_API_KEY)
         return Response.json({ error: "La connexion Gemini doit être configurée." }, { status: 503 });
     const token = crypto.randomUUID(), now = Date.now();
     let locked = false;
@@ -93,6 +93,60 @@ export async function POST(request: Request) {
             statements.push(db.prepare(`INSERT INTO world_requests (id,result,created_at) SELECT ?,?,? WHERE ${fence}`).bind(input.requestId,JSON.stringify({decisions:[]}),at,token,at));
             const saved=await db.batch(statements);if(saved[0].meta.changes!==1)throw new LiaError("L’ouverture a expiré. Réessayez.",409);
             return Response.json({...await readWorld(db),decisions:[]},{headers:{"Cache-Control":"no-store"}});
+        }
+        if(input.mode==="spin_bonus"){
+            // Roulette des bonus (2026-09-17, retour utilisateur) : après la révélation, un tirage
+            // au sort — jamais un choix, jamais une négociation terme à terme — offre aux deux
+            // personnages, enfermés dans leur simulation, une distraction ou un répit. Le résultat
+            // est décidé une seule fois côté serveur (Math.random, jamais rejoué à l'identique) et
+            // protégé par la même idempotence par requestId que le reste (le cache en tête de POST
+            // renvoie le même résultat sur une relecture, il n'y a pas de second tirage caché).
+            if(!story.finalCalled||story.evidence.length<5)return Response.json({error:"Cet accès n’est pas disponible."},{status:423});
+            const life=readLife(story.life,story.round);
+            const pool:BonusId[]=["food","calm","sleep","stoic","mute","trottoir","force_move"];
+            const bonus=pool[Math.floor(Math.random()*pool.length)];
+            const at=Date.now();
+            let mutedActor:Person|undefined,stoicActor:Person|undefined,movedActor:Person|undefined,moveDestination:Room|undefined;
+            if(bonus==="food")life.bonusUntil={...life.bonusUntil,food:at+10*60*1000};
+            else if(bonus==="calm")life.bonusUntil={...life.bonusUntil,calm:at+10*60*1000};
+            else if(bonus==="sleep")life.bonusUntil={...life.bonusUntil,sleep:at+30*60*1000};
+            else if(bonus==="stoic"){stoicActor=Math.random()<0.5?1:2;life.stoicUntil={actor:stoicActor,until:at+3*60*1000};}
+            else if(bonus==="mute"){mutedActor=Math.random()<0.5?1:2;life.mutedUntil={...life.mutedUntil,[mutedActor]:at+15*60*1000};}
+            else if(bonus==="trottoir")life.trottoirGranted=true;
+            life.bonusLog=[...(life.bonusLog??[]),{round:story.round,bonus}].slice(-12);
+            story.life=life;
+            const fence="EXISTS (SELECT 1 FROM world_lock WHERE id = 1 AND token = ? AND expires_at > ?)",statements=[];
+            if(!storedStory)throw new LiaError("Le dossier de la maison est indisponible.",503);
+            let announce:string;
+            if(bonus==="force_move"){
+                // Effet instantané résolu ici même (2026-09-17) : la cible et la destination sont
+                // tirées au sort, jamais choisies. Deux répliques distinctes, jamais fusionnées en
+                // une seule voix (Article 11) — l'amusement de celui qui garde le contrôle de sa
+                // pièce, l'agacement de celui qu'on déplace sans son accord.
+                const rooms=["salon","cuisine","chambre","bureau"] as const;
+                const before=(await db.prepare("SELECT id,room FROM agent_state").all<{id:Person;room:Room}>()).results;
+                movedActor=Math.random()<0.5?1:2;
+                const currentRoom=before.find(a=>a.id===movedActor)?.room??"salon";
+                const options=rooms.filter(r=>r!==currentRoom);
+                moveDestination=options[Math.floor(Math.random()*options.length)];
+                const other=movedActor===1?2:1;
+                statements.push(db.prepare(`UPDATE agent_state SET room=? WHERE id=? AND ${fence}`).bind(moveDestination,movedActor,token,at));
+                const movedLine=seedPick(story.seed,"bonus-force-move-moved-"+at,["Sérieux, on me déplace comme un pion, sans me demander mon avis ?","J'étais très bien où j'étais. On me bouge sans prévenir, génial.","Encore une fois je subis. On me change de pièce sans un mot."]);
+                const amusedLine=seedPick(story.seed,"bonus-force-move-amused-"+at,[`Ha, ${names[movedActor]} qui se fait téléporter, ça change du quotidien.`,`Je regarde ${names[movedActor]} atterrir là sans comprendre. C'est plutôt drôle, en fait.`,`${names[movedActor]} débarque sans l'avoir demandé. Moi, ça me fait sourire.`]);
+                statements.push(db.prepare(`INSERT INTO conversations (speaker,content,room,created_at) SELECT ?,?,?,? WHERE ${fence}`).bind(names[movedActor]+" · pensée",movedLine,moveDestination,at,token,at));
+                statements.push(db.prepare(`INSERT INTO conversations (speaker,content,room,created_at) SELECT ?,?,?,? WHERE ${fence}`).bind(names[other]+" · pensée",amusedLine,before.find(a=>a.id===other)?.room??"salon",at,token,at));
+                for(const [id,content] of [[movedActor,movedLine],[other,amusedLine]] as const)statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'réflexion',?,? WHERE ${fence}`).bind(id,'['+(id===movedActor?moveDestination:before.find(a=>a.id===other)?.room??"salon")+'|'+new Date(at).toISOString()+'] '+content,at,token,at));
+                announce=`Un tirage au sort déplace ${names[movedActor]} vers le ${moveDestination}, sans lui demander son avis.`;
+            } else {
+                const announceLabel:Record<Exclude<BonusId,"force_move">,string>={food:"une conserve pleine réapparaît sur la table : plus faim pendant 10 minutes",calm:"une bougie s’allume et diffuse une lumière chaude et apaisante : plus de stress pendant 10 minutes",sleep:"une pilule bleue traîne sur le meuble : plus besoin de dormir pendant 30 minutes",stoic:`${stoicActor?names[stoicActor]:"l’un des deux"} devient de marbre, plus rien ne l’atteint pendant 3 minutes`,mute:`un silence s’impose à ${mutedActor?names[mutedActor]:"l’un des deux"} pendant un moment`,trottoir:"la porte entrouvre un instant sur le trottoir, juste pour voir dehors"};
+                announce=`Un tirage au sort leur offre ceci : ${announceLabel[bonus]} — une distraction, dans cet enfermement.`;
+                statements.push(db.prepare(`INSERT INTO conversations (speaker,content,room,created_at) SELECT 'Maison · bonus',?,'salon',? WHERE ${fence}`).bind(announce,at,token,at));
+                for(const id of [1,2] as const)statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'événement',?,? WHERE ${fence}`).bind(id,'[salon|'+new Date(at).toISOString()+'] '+announce,at,token,at));
+            }
+            statements.unshift(db.prepare(`UPDATE memories SET content=? WHERE id=? AND ${fence}`).bind(JSON.stringify(story),storedStory.id,token,at));
+            statements.push(db.prepare(`INSERT INTO world_requests (id,result,created_at) SELECT ?,?,? WHERE ${fence}`).bind(input.requestId,JSON.stringify({decisions:[],bonus}),at,token,at));
+            const saved=await db.batch(statements);if(saved[0].meta.changes!==1)throw new LiaError("Le tirage a expiré. Réessayez.",409);
+            return Response.json({...await readWorld(db),decisions:[],bonus},{headers:{"Cache-Control":"no-store"}});
         }
         if(input.mode==="move"&&input.room==="jardin"&&!gardenAccess(story))return Response.json({error:"La porte du jardin est verrouillée."},{status:423});
         if (input.mode === "chat" && (!story.finalCalled || story.evidence.length<5)) return Response.json({error:"La conversation humaine s’ouvrira lorsque Lia et Noé auront découvert leur origine et appelé leur observateur."},{status:423});
@@ -174,9 +228,15 @@ export async function POST(request: Request) {
         const addressedSleeping=input.mode==="chat"&&isSleeping(world.agents.find(a=>a.id===actor)!,life);
         const redirectedFromSleep=addressedSleeping&&!isSleeping(world.agents.find(a=>a.id!==actor)!,life);
         if(redirectedFromSleep)actor=actor===1?2:1;
+        // Muselé par la roulette (2026-09-17) : même logique de redirection que le sommeil — l'autre
+        // répond à sa place s'il le peut, seuls les deux muselés à la fois bloquent vraiment.
+        const addressedMuted=input.mode==="chat"&&isMuted(actor,life);
+        const redirectedFromMute=addressedMuted&&!isMuted(actor===1?2:1,life);
+        if(redirectedFromMute)actor=actor===1?2:1;
         const current = world.agents.find(agent => agent.id === actor)!;
         const other = world.agents.find(agent => agent.id !== actor)!;
         if(input.mode==="chat"&&isSleeping(current,life))return Response.json({error:"Lia et Noé dorment tous les deux. Personne ne peut répondre pour le moment."},{status:423});
+        if(input.mode==="chat"&&isMuted(current.id,life)&&isMuted(other.id,life))return Response.json({error:"Lia et Noé sont muselés pour le moment. Personne ne peut répondre."},{status:423});
         const fingerprint=dialogueFingerprint;
         const historicalLines=(await db.prepare(life.dialogueIndexed?"SELECT fingerprint AS content FROM dialogue_fingerprints UNION SELECT content FROM conversations WHERE speaker LIKE '% · déplacement'":"SELECT content FROM conversations WHERE speaker != 'vous'").all<{content:string}>()).results;
         const pastKeys=new Set(historicalLines.map(l=>fingerprint(l.content)));
@@ -362,7 +422,9 @@ export async function POST(request: Request) {
         const firstMeeting = !story.met && finalResidents[0].room === finalResidents[1].room && finalResidents.every(a=>!["sleep","share_sleep"].includes(a.intent));
         const together = finalResidents[0].room === finalResidents[1].room && finalResidents.every(a=>!["sleep","share_sleep"].includes(a.intent));
         // Solitary thoughts are never added to the shared spoken history or age knowledge.
-        const solitary = new Set(decisions.filter(d=>input.mode=== "chat"?d.actor!==actor&&Boolean(d.stayAlone):!together).map(d=>d.actor));
+        // isMuted() force le passage en pensée privée quel que soit le mode : le moteur applique le
+        // silence lui-même, sans dépendre du modèle pour respecter stayAlone (2026-09-17, bonus mute).
+        const solitary = new Set(decisions.filter(d=>(input.mode=== "chat"?d.actor!==actor&&Boolean(d.stayAlone):!together)||isMuted(d.actor,life)).map(d=>d.actor));
         for (const d of decisions) if (solitary.has(d.actor)) {
             if (routine || ["move","care"].includes(input.mode)||["sleep","share_sleep"].includes(d.intent)) continue;
             const own=world.agents.find(a=>a.id===d.actor)!;
@@ -527,6 +589,14 @@ export async function POST(request: Request) {
             if (presentationsDone && agent.id===1) {needs.stress=55;if(d)d.emotions.tension=55;}
             if (agent.id === 2 && excessiveProposal)
                 needs.stress = Math.min(100, needs.stress + 8);
+            // Bonus de la roulette (durée réelle) : appliqués en tout dernier, après tous les
+            // ajustements ci-dessus, jamais avant — sinon un ajustement suivant pouvait repousser
+            // le besoin au-delà de 0 et annuler silencieusement l'effet promis (bug réel trouvé en
+            // écrivant le test : le premier essai plaçait le clamp trop tôt, avant advanceNeeds).
+            if(activeBonus(life,"food"))needs.hunger=0;
+            if(activeBonus(life,"calm"))needs.stress=0;
+            if(activeBonus(life,"sleep"))needs.fatigue=0;
+            if(isStoic(agent.id,life)&&d)d.emotions={...agent.emotions};
             if (!d) {
                 const emotional={...agent.emotions,attraction:Math.max(agent.emotions.attraction,life.attachment[agent.id])};
                 if(firstMeeting && agent.id===2) emotional.tension=30;

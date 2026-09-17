@@ -673,3 +673,62 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(flaggedAngryLowTension.angerLevel>=.85,'the life.dispute angry flag must still guarantee a visibly angry floor on its own');
   console.log('Passed: anger reliability — faceExpression() reads real hostility from tension/comfort alone, not only from life.dispute\'s angry flag.');
 }
+
+{
+  // Roulette des bonus (2026-09-17, complétée au fil de la conversation) : un tirage au sort,
+  // jamais un choix, offre food/calm/sleep (répit réel sur un besoin, pas un maquillage
+  // d'affichage), stoic (émotions figées sur un tour, quoi qu'il se passe), mute (silence forcé,
+  // même redirection que le sommeil), trottoir (accès narré, "un point de déplacement" pour
+  // l'instant) ou force_move (déplacement forcé d'un personnage, avec la réaction agacée du
+  // déplacé et amusée de l'autre). Verrouillée avant la révélation, comme le jardin ; chaque
+  // tirage forcé via Math.random pour vérifier l'effet réel, pas juste qu'un champ existe.
+  const {isMuted,isStoic,activeBonus}=await import('../.sites-runtime/test-life.mjs');
+  let plot={...newStory(),round:40,met:true,introduced:true,sharedMeal:true,finalCalled:false,evidence:[]};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints');
+  let epoch=(await readWorld(db)).epoch;
+  assert.equal((await post(input('spin_bonus',1,{epoch}))).status,423,'spinning before the revelation and 5 evidence must stay locked');
+  plot.finalCalled=true;plot.evidence=Array(5).fill('preuve');
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
+  sqlite.prepare('UPDATE agent_state SET needs=?').run(JSON.stringify({hunger:50,fatigue:50,stress:50,uncertainty:30}));
+  const originalRandom=Math.random;
+  const spin=async value=>{const before=calls;Math.random=()=>value;let response;try{response=await post(input('spin_bonus',1,{epoch}));}finally{Math.random=originalRandom;}assert.equal(calls,before,'a spin must never cost a Gemini call, whichever bonus it lands on');return response;};
+  // pool = [food,calm,sleep,stoic,mute,trottoir,force_move] (7 buckets) ; stoic/mute/force_move
+  // reuse the same draw to also pick their target/destination, documented at each step below.
+  // food (bucket 0/7)
+  let r=await spin(.01);assert.equal(r.status,200);let w=await r.json();assert.equal(w.bonus,'food');
+  assert.ok(activeBonus(w.story.life,'food'));
+  r=await post(input('interact',1,{epoch}));w=await r.json();assert.equal(w.agents[0].needs.hunger,0,'an active food bonus must zero hunger for the turn, not just at the moment it was granted');assert.equal(w.agents[1].needs.hunger,0);
+  // calm (bucket 1/7)
+  r=await spin(.18);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'calm');assert.ok(activeBonus(w.story.life,'calm'));
+  r=await post(input('interact',1,{epoch}));w=await r.json();assert.equal(w.agents[0].needs.stress,0);assert.equal(w.agents[1].needs.stress,0);
+  // sleep (bucket 2/7)
+  r=await spin(.35);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'sleep');assert.ok(activeBonus(w.story.life,'sleep'));
+  r=await post(input('interact',1,{epoch}));w=await r.json();assert.equal(w.agents[0].needs.fatigue,0);assert.equal(w.agents[1].needs.fatigue,0);
+  // stoic (bucket 3/7) ; the same draw picks the target (<.5 -> 1, else 2), so .45 lands on actor 1.
+  sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=1').run(JSON.stringify({curiosity:70,tension:77,trust:40,comfort:40,attraction:40}));
+  r=await spin(.45);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'stoic');assert.ok(isStoic(1,w.story.life));assert.ok(!isStoic(2,w.story.life));
+  r=await post(input('chat',1,{epoch,message:"Je pourrais te désactiver d'un clic."}));assert.equal(r.status,200);w=await r.json();
+  assert.equal(w.agents[0].emotions.tension,77,'a stoic actor must keep their exact prior emotions this turn, whatever the model or humanStress would otherwise have pushed toward');
+  // mute (bucket 4/7) ; .62 lands on actor 2 the same way.
+  r=await spin(.62);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'mute');assert.ok(isMuted(2,w.story.life));assert.ok(!isMuted(1,w.story.life));
+  r=await post(input('chat',2,{epoch,message:'Noé, tu es toujours là ?'}));assert.equal(r.status,200);w=await r.json();
+  const muteTurnMessages=w.messages.slice(-2);
+  assert.ok(muteTurnMessages.some(m=>m.speaker==='Lia'),'chat addressed to the muted actor must be answered by the other, exactly like a sleeping partner');
+  assert.ok(!muteTurnMessages.some(m=>m.speaker==='Noé'),'the muted actor must never appear as a spoken message this turn while muted, only ever a private thought at most');
+  {const p2=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p2.life.mutedUntil={...p2.life.mutedUntil,1:Date.now()+900000};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p2));}
+  assert.equal((await post(input('chat',1,{epoch,message:'Vous m’entendez ?'}))).status,423,'both muted at once must block chat exactly like both asleep');
+  {const p3=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p3.life.mutedUntil=undefined;sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p3));}
+  // trottoir (bucket 5/7)
+  r=await spin(.75);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'trottoir');assert.equal(w.story.life.trottoirGranted,true);
+  // force_move (bucket 6/7) ; .9 also lands the target pick (<.5 -> 1, else 2) on actor 2.
+  const beforeRoom=(await readWorld(db)).agents.find(a=>a.id===2).room;
+  r=await spin(.9);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'force_move');
+  const movedAgent=w.agents.find(a=>a.id===2);assert.notEqual(movedAgent.room,beforeRoom,'force_move must actually relocate the drawn actor, never a no-op');
+  assert.ok(['salon','cuisine','chambre','bureau'].includes(movedAgent.room));
+  const forceMoveMessages=w.messages.slice(-2);
+  assert.ok(forceMoveMessages.some(m=>m.speaker==='Noé · pensée'&&/déplace|pion|prévenir|subis/i.test(m.content)),'the moved actor must react with irritation, as its own distinct line');
+  assert.ok(forceMoveMessages.some(m=>m.speaker==='Lia · pensée'&&/drôle|sourire|téléporte|comprendre/i.test(m.content)),'the other actor must react with amusement, a genuinely different line, not the same voice');
+  assert.equal(JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.bonusLog.length,7,'each spin must be logged for the future dossier retourné');
+  console.log('Passed: bonus roulette locked before revelation, real zero-API grants for all 7 bonuses (food/calm/sleep/stoic/mute/trottoir/force_move), genuine need relief and emotion freeze (not just a flag), muted-actor redirection and both-muted block, distinct forced-move reactions, and a logged trail for every spin.');
+}
