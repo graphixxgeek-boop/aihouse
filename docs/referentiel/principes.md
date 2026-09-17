@@ -185,6 +185,13 @@ varient désormais aussi, pas seulement la formulation. Les pools de formulation
 (miroir, provisions, fenêtre, plante/enceinte) sont passés de 3 à 6 variantes chacun pour la même
 raison.
 
+5.7. Chaque session tire aussi une théorie dominante sur qui les observe et pourquoi (test, panne,
+punition, expérience neutre — `narrativeAngle`, `lib/story.ts`), explicitement signalée au modèle
+comme devant colorer les hypothèses et le ton des réflexions à ce sujet (2026-09-17). Cette théorie
+ne change jamais les faits ni les preuves (article 4/5.3 : le dossier final dit toujours la même
+chose) et ne dilue jamais le tempérament d'un personnage (article 0) : elle nourrit sa méfiance
+habituelle, elle ne l'adoucit jamais.
+
 ## 6. Relation et consentement
 
 6.1. L'attirance et l'attachement montent lentement, de façon asymétrique et parfois négative ;

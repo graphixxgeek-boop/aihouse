@@ -131,7 +131,13 @@ et peuvent chuter plus vite qu'ils ne montent).
 ## Rejouabilité (`lib/story.ts`, `lib/drama.ts`)
 
 - 4 « atmosphères » possibles par nouvelle arrivée (`atmospheres.length`), qui pilotent aussi les
-  souvenirs flous et l'angle narratif ; le prochain variant évite de reprendre le précédent.
+  souvenirs flous ; le prochain variant évite de reprendre le précédent.
+- `narrativeAngle` (`storyContext`, `lib/story.ts`) : une théorie dominante tirée par `seedPick`
+  parmi 4 (test, panne, punition, expérience neutre), envoyée au modèle avec instruction explicite
+  de vraiment colorer les hypothèses et le ton des réflexions sur qui observe et pourquoi
+  (`lib/lia.ts`, `cinematicInstructions`) — jamais présentée comme confirmée, jamais au détriment
+  du tempérament du personnage (assoupli le 2026-09-17 : le champ existait déjà mais n'était jamais
+  mentionné dans les instructions du modèle, donc sans effet réel sur le ton d'une session).
 - `coldOpening` : 4 variantes d'ouverture, choisies par `story.variant`.
 - `seedPick` (`lib/story.ts`) : sélection stable par session pour tous les moments scénarisés
   (finale, bilan d'enquête, apparence, découvertes, motifs de déplacement, reproches du canapé) —
