@@ -54,6 +54,11 @@ suivre cette même logique (s'approcher de ce qu'on manipule, pas de ce qu'on ob
 l'observateur (`unlock_garden`) ; aucune réplique, aucune décision de personnage ne peut l'ouvrir.
 La porte principale reste verrouillée en permanence, sans exception.
 
+2.6bis. En mode chat, si le personnage adressé dort, l'autre répond à sa place s'il est éveillé
+(en le signalant naturellement), plutôt que de bloquer tout l'échange (corrigé le 2026-09-17,
+audit du ciblage des messages, `app/api/lia/route.ts`). Seuls les deux endormis à la fois
+bloquent réellement la conversation.
+
 2.7. Une destination proposée et acceptée dans le dialogue doit être effectuée au tour suivant,
 jamais reproposée indéfiniment ; une urgence (faim, sommeil) peut la suspendre sans l'annuler.
 
