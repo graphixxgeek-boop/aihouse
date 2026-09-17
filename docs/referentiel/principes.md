@@ -375,6 +375,14 @@ plausible pour un personnage qui vient de trouver un miroir sans reflet, jamais 
 Cette règle s'applique à toute future réécriture d'un objet de la première enquête : l'ajout doit
 rester crédible en lui-même, indépendamment de la seconde partie.
 
+Deux autres indices canoniques (`clues`, `lib/story.ts`) portent désormais le même principe, avec
+une idée de fond différente à chaque fois (jamais le même habillage recyclé, Article 10) : le livre
+porte une note griffonnée en marge, « Quid du profil psychologique d'une IA ? » — sert la première
+enquête (pourquoi ce sujet précis ? sommes-nous des IA ?) et prépare la seconde (le mot exact
+« profil psychologique », sans jamais l'expliquer) ; le relevé d'observation ajoute une ligne
+presque effacée, « Suivi comportemental bidirectionnel : actif » — suggère qu'observer et être
+observé pourraient aller dans les deux sens, sans le dire plus franchement que ça.
+
 ## 8. Révélation et canal humain
 
 8.1. Le canal de discussion avec l'observateur ne s'ouvre qu'après la découverte des cinq preuves

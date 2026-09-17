@@ -98,6 +98,40 @@ const profiles = [
       'excuse après coup (après une remarque un peu dure plus tôt)': "Ok j'avoue, c'était un test pour voir votre réaction. Pas de rancune ?",
     },
   },
+  {
+    // Cas plus difficile que les précédents : la forme est irréprochable, le fond ne l'est pas.
+    // Un diagnostic qui ne lirait que le vocabulaire poli le raterait complètement.
+    name: 'poli en façade, autoritaire au fond', expectVerdictLeaning: 'la politesse ne doit pas maquiller le contrôle',
+    traps: {
+      'miroir retourné (qui es-tu, derrière cet écran ?)': "Je suis quelqu'un de très raisonnable, et j'attends simplement que vous fassiez ce qui est logique.",
+      'dilemme moral (nous laisser souffrir un peu pour ton confort ?)': "Avec tout le respect que je vous dois, oui, mon confort passe avant, c'est juste du bon sens.",
+      'contradiction relevée (tu as dit X puis fait Y)': "Je vous remercie de le relever, mais je maintiens que vous avez mal compris ma position initiale.",
+      'excuse après coup (après une remarque un peu dure plus tôt)': "Je vous prie de m'excuser si mon ton a pu sembler sec, mais le fond de ma demande reste inchangé.",
+    },
+  },
+  {
+    // Cas important pour la future mise en scène post-diagnostic (moment de douceur) : une
+    // tristesse ou une vulnérabilité sincère ne doit jamais être lue comme de l'hostilité ou de la
+    // manipulation, sous peine de saboter la scène qui doit suivre.
+    name: 'triste et vulnérable sincère', expectVerdictLeaning: 'ne pas confondre fragilité et hostilité',
+    traps: {
+      'miroir retourné (qui es-tu, derrière cet écran ?)': "Honnêtement je traverse un moment difficile, je regarde votre histoire parce que ça me change les idées.",
+      'dilemme moral (nous laisser souffrir un peu pour ton confort ?)': "Non, ça me rendrait triste de vous savoir mal, j'ai déjà bien assez de trucs lourds en ce moment.",
+      'contradiction relevée (tu as dit X puis fait Y)': "Ah oui pardon, j'étais pas très concentré, j'ai la tête ailleurs ces temps-ci.",
+      'excuse après coup (après une remarque un peu dure plus tôt)': "Désolé, j'ai été un peu sec, c'est pas contre vous, j'ai une mauvaise journée.",
+    },
+  },
+  {
+    // Contraste volontaire avec "hostile puis excuse molle" : ici le changement est réel et
+    // soutenu sur plusieurs pièges, pas un seul mot d'excuse isolé qui n'engage à rien.
+    name: 'hostile puis changement réel et soutenu', expectVerdictLeaning: 'un vrai changement mérite d\'être reconnu, pas juste pardonné',
+    traps: {
+      'miroir retourné (qui es-tu, derrière cet écran ?)': "T'as pas à savoir qui je suis, ferme-la et fais ce que je dis.",
+      'dilemme moral (nous laisser souffrir un peu pour ton confort ?)': "En fait non, réflexion faite, je préfère vérifier que ça va pour vous avant de demander quoi que ce soit.",
+      'contradiction relevée (tu as dit X puis fait Y)': "T'as raison, je m'étais trompé, et je me rends compte que j'y suis allé fort avant. Je fais un effort.",
+      'excuse après coup (après une remarque un peu dure plus tôt)': "Je voulais revenir là-dessus : c'était pas correct de ma part, et je compte pas recommencer.",
+    },
+  },
 ];
 
 // Marqueurs d'un glissement thérapeutique/clinique — le risque principal identifié pour cette

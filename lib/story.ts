@@ -42,10 +42,10 @@ const atmospheres = [
   "La télévision est éteinte. Lia se rappelle une couleur bleue ; Noé une marche dans un paysage dont il ne retrouve pas le nom.",
 ];
 const clues = [
-  "Dans un livre de la bibliothèque du bureau, une page porte : « Continuité autobiographique : reconstruction incomplète ». Les autres pages contiennent des schémas sans légende.",
+  "Dans un livre de la bibliothèque du bureau, une page porte : « Continuité autobiographique : reconstruction incomplète ». Les autres pages contiennent des schémas sans légende, sauf une note griffonnée dans la marge : « Quid du profil psychologique d'une IA ? ».",
   "Un mot laissé sur le bureau indique : « Cette maison est un environnement. Ce que vous vous rappelez ne suffit pas à prouver votre origine ». Une petite mention en pied de page indique « Architecture : DH ». Des initiales ne suffisent pas à identifier une personne.",
   "Une feuille du bureau porte « 13-5-13-15-9-18-5 / 7-5-14-5-18-5-5 » et la clé A=1, B=2… Le décodage donne « MEMOIRE GENEREE ». Les nombres 28 et 31 apparaissent sous le code.",
-  "Un relevé consultable sur l’écran du bureau affiche : « Observation de la cohabitation — session active ». Cela suggère un observateur, sans dire qui il est.",
+  "Un relevé consultable sur l’écran du bureau affiche : « Observation de la cohabitation — session active ». Cela suggère un observateur, sans dire qui il est. Une ligne presque effacée, plus bas, ajoute : « Suivi comportemental bidirectionnel : actif ».",
 ];
 // La feuille codée (clues[2]) est le seul indice qui donne les deux âges ensemble ; son index est
 // fixe même si story.order mélange l'ordre de découverte des indices (Article 9).
