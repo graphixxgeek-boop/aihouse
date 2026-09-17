@@ -427,6 +427,36 @@ response=await post(input('move',1,{epoch:perceptionEpoch,room:'chambre'}));resu
 sqlite.prepare('UPDATE agent_state SET room=?,intent=?').run('chambre','chat');sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(pp));
 const priorFetch=globalThis.fetch;globalThis.fetch=async(...args)=>{const r=await priorFetch(...args),data=await r.json();const decision=JSON.parse(data.candidates[0].content.parts[0].text);decision.contribution=isPartnerRequest(args)?'Question sur notre reflet':'Constat du miroir figé';data.candidates[0].content.parts[0].text=JSON.stringify(decision);return Response.json(data);};
 response=await post(input('interact',1,{epoch:perceptionEpoch}));result=await response.json();globalThis.fetch=priorFetch;assert.equal(response.status,200);assert.equal(result.story.life.mirrorVerified,true);assert.ok(result.decisions.some(d=>["Le miroir rectangulaire fait un dégradé bleu-gris-blanc. Il est debout dans un coin ; sa surface grise ne renvoie aucun reflet quand on bouge.","Ce miroir debout dans le coin ne renvoie rien : juste un dégradé gris-bleu qui reste immobile pendant qu'on bouge.","La surface du miroir, dans son coin, fait un gris terne et froid. On a beau remuer devant, rien ne suit."].some(s=>d.reply.includes(s))));assert.ok(result.story.life.contributions.some(c=>c.includes('Constat du miroir')));
+// Solo discovery (2026-09-17): Lia alone in the bedroom, Noé kept apart (same mechanism as the
+// existing "independent non-urgent separation" test above: separatePreference + stayAlone) — the
+// mirror becomes her own private reflection, not a line spoken to an absent partner, known only
+// to her until the recall reunites them.
+flat=true;affection=false;honorOffer=false;refuse=false;
+pp={...pp,round:20,apartTurns:0,life:{...pp.life,mirrorVerified:false,mirrorKnownBy:[],debrief:undefined,dispute:undefined,contact:undefined,salonTurns:5}};
+sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(pp));
+sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=1').run('chambre','chat',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:60}),JSON.stringify({...steady,attraction:20}));
+sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=2').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:60}),JSON.stringify({...steady,attraction:20}));
+separatePreference=true;
+response=await post(input('interact',1,{epoch:perceptionEpoch}));result=await response.json();
+separatePreference=false;
+assert.equal(response.status,200);
+assert.equal(result.agents[0].room,'chambre');assert.notEqual(result.agents[1].room,'chambre');
+assert.equal(result.story.life.mirrorVerified,false);
+assert.deepEqual(result.story.life.mirrorKnownBy,[1]);
+const liaSolo=result.messages.filter(m=>m.speaker==='Lia · pensée').at(-1);
+assert.ok(liaSolo&&["Le miroir rectangulaire fait un dégradé bleu-gris-blanc. Il est debout dans un coin ; sa surface grise ne renvoie aucun reflet quand on bouge.","Ce miroir debout dans le coin ne renvoie rien : juste un dégradé gris-bleu qui reste immobile pendant qu'on bouge.","La surface du miroir, dans son coin, fait un gris terne et froid. On a beau remuer devant, rien ne suit.","Un miroir rectangulaire est planté dans le coin, dégradé bleu-gris-blanc du haut en bas. On passe la main devant : aucun reflet ne bouge avec nous.","Ce bloc de verre gris dans le coin n'a rien d'un vrai miroir. Le dégradé bleu-blanc reste fixe, quoi qu'on fasse devant.","Dans le coin, une plaque grise en dégradé qu'on appelle miroir par habitude. Elle ne renvoie ni visage ni mouvement."].some(s=>liaSolo.content.includes(s)));
+assert.ok(!result.messages.some(m=>m.speaker==='Noé'&&/miroir/.test(m.content)));
+// Reunited in the salon: the recall informs the absent partner for the first time.
+pp={...JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content),round:20,salonTurns:1};
+pp.life.debrief=undefined;pp.life.contact=undefined;pp.life.dispute=undefined;pp.life.tvSeen=true;pp.life.exitSearched=true;
+sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(pp));
+sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=?').run('salon','rest',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:60}),JSON.stringify({...steady,attraction:20}));
+response=await post(input('interact',1,{epoch:perceptionEpoch}));result=await response.json();
+assert.equal(response.status,200);
+assert.equal(result.story.life.mirrorVerified,true);
+
+assert.deepEqual(new Set(result.story.life.mirrorKnownBy),new Set([1,2]));
+assert.ok(result.decisions.some(d=>d.actor===1&&["Un truc à te dire : dans la chambre, il y a un miroir qui ne reflète rien. J'ai bougé devant, rien ne suit.","Écoute, dans la chambre il y a un miroir bizarre : dégradé gris-bleu, et aucun reflet ne bouge avec toi.","Il faut que je te parle de ce miroir dans la chambre. Un dégradé gris, sans le moindre reflet mobile.","J'ai un truc à te raconter : ce miroir dans la chambre ne renvoie rien du tout.","Tant que j'y pense : la chambre a un miroir qui ne reflète rien, juste ce dégradé gris terne.","Une chose à te signaler : dans la chambre, ce miroir ne renvoie ni visage ni mouvement, seulement du gris."].some(s=>d.reply.includes(s))));
 console.log('Passed: exhausted-theme direction, contribution memory, explicit remote object references, fixed gender identity and mirror validation only with a published observation.');
 
 {
@@ -534,7 +564,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 37'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 38'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,

@@ -121,6 +121,15 @@ et peuvent chuter plus vite qu'ils ne montent).
   entre le tour 5 et 9 (était 6), inspection des portes entre le tour 7 et 10 (était 8),
   enceinte/plante entre le tour 9 et 12 (était 10), question personnelle de Lia entre le tour 12
   et 16 (était 14).
+- Découverte solo du miroir (2026-09-17, `mirrorKnownBy`, `lib/life.ts`) : si un seul des deux est
+  dans la chambre, la description devient sa réflexion privée et seul son propre id entre dans
+  `mirrorKnownBy` ; `mirrorVerified` (le fait « partagé », qui déclenche débriefs/observations
+  communes) ne passe à vrai que quand `mirrorKnownBy` contient les deux — ensemble d'entrée de jeu,
+  après une seconde visite solo indépendante de l'autre, ou via le rattrapage (`mirror-recall`,
+  6 formulations, ne se déclenche que si exactement un des deux sait et qu'ils sont réunis au
+  salon). Les provisions restent une découverte conjointe pour cette ligne narrée spécifiquement
+  (`discover-foodVerified`) ; le cas solo y est déjà couvert autrement, par le witnesses-count du
+  débriefing de régénération (`visualEvents` kind food, indépendant de cette ligne).
 
 ## Sommeil (`lib/life.ts`, `app/api/lia/route.ts`)
 
