@@ -50,13 +50,18 @@ export function drawFace(ctx: CanvasRenderingContext2D, size: number, isLia: boo
   ctx.save();
   ctx.translate(cx, cy);
 
+  // Plaque opaque (2026-09-17, retour utilisateur en conditions réelles) : contre le décor 3D
+  // saturé (sols violets/bleus/prune), un centre trop translucide laissait voir le sol au travers
+  // et donnait un effet "fantôme" au lieu d'un jeton bien découpé. Le dégradé garde son rôle de
+  // lueur (couleur/saturation plus vive selon confort/attirance) mais ne descend plus jamais sous
+  // une opacité quasi totale — le disque doit toujours se détacher franchement de la pièce.
   const glow = .18 + e.comfort / 100 * .22 + e.attraction / 100 * .16;
   const plate = ctx.createRadialGradient(0, -R * .15, R * .1, 0, 0, R);
-  plate.addColorStop(0, isLia ? `rgba(255,205,225,${.22 + glow * .4})` : `rgba(210,255,250,${.14 + glow * .3})`);
-  plate.addColorStop(.55, `rgba(${isLia ? "52,22,36" : "12,38,40"},.85)`);
-  plate.addColorStop(1, "rgba(8,9,13,.96)");
+  plate.addColorStop(0, isLia ? `rgba(255,205,225,${.92 + glow * .08})` : `rgba(210,255,250,${.9 + glow * .08})`);
+  plate.addColorStop(.55, `rgba(${isLia ? "52,22,36" : "12,38,40"},.97)`);
+  plate.addColorStop(1, "rgba(8,9,13,1)");
   ctx.beginPath(); ctx.arc(0, 0, R, 0, 6.283); ctx.fillStyle = plate; ctx.fill();
-  ctx.lineWidth = 1.4; ctx.strokeStyle = `rgba(255,255,255,${.06 + glow * .2})`; ctx.stroke();
+  ctx.lineWidth = 2; ctx.strokeStyle = `rgba(255,255,255,${.28 + glow * .35})`; ctx.stroke();
 
   if (isLia) {
     // Chevelure suggérée : quatre mèches fluides et lumineuses, jamais une texture réaliste.

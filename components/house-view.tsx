@@ -191,7 +191,12 @@ export function HouseView({paused=false,visualEvents=[],gardenOpen=false,agents,
       wasAffectionate=bothAffectionate;
       items.forEach(agent=>{
       const r=residents.get(agent.id);if(!r)return;
-      r.eating=agent.intent==="eat"&&agent.room==="cuisine";r.sleeping=["sleep","share_sleep"].includes(agent.intent);r.inLove=!r.sleeping&&isInLove(agent.emotions.attraction);r.ringSpeed=.15+(agent.needs.stress+agent.emotions.tension)/200*2.3;
+      r.eating=agent.intent==="eat"&&agent.room==="cuisine";r.sleeping=["sleep","share_sleep"].includes(agent.intent);r.inLove=!r.sleeping&&isInLove(agent.emotions.attraction);
+      // Coup de vitesse net et visible au-delà de 70% de tension (2026-09-17, demande explicite) :
+      // au lieu d'une seule pente linéaire avec le stress, une tension qui grimpe vers 100 ajoute
+      // un supplément non linéaire, quasi nul sous 70% mais net à l'approche du maximum.
+      const tensionSurge=Math.pow(Math.max(0,agent.emotions.tension-70)/30,2)*3.5;
+      r.ringSpeed=.15+(agent.needs.stress+agent.emotions.tension)/200*2.3+tensionSurge;
       r.exprTarget=faceExpression(agent);
       const destination:[number,number]=inspection.current>0?[inspection.current===1?-7:7,agent.id===1?-.25:.25]:residentDestination(agent);const [x,z]=destination;if(!r.snapshot&&agent.last_seen>0){r.snapshot=true;r.group.position.set(x,0,z);r.room=agent.room;r.target=destination;r.path=[];return;}if(r.target&&r.room===agent.room&&r.target[0]===x&&r.target[1]===z)return;
       if(r.room===agent.room&&Math.hypot(r.group.position.x-x,r.group.position.z-z)<.1)return;
