@@ -207,6 +207,12 @@ tension avec une autre règle) : des questions creuses ou déjà répondues dans
 ne comptent pas. Un tour qui ne contient aucune demande nouvelle (accusé de réception, poursuite
 d'un travail déjà cadré, simple « continue ») n'a pas à en fabriquer artificiellement.
 
+Complément ajouté le 2026-09-17, à la demande explicite de l'utilisateur : quand un message de
+l'utilisateur contient plusieurs demandes numérotées ou distinctes, la réponse les traite
+**point par point**, dans son propre ordre, en gardant chaque point identifiable — jamais une
+synthèse globale qui noie les points individuels. Cette exigence s'ajoute aux trois questions de
+vérification, elle ne les remplace pas.
+
 **Traçabilité visible des vérifications.** Chaque fois qu'une réponse à l'utilisateur s'appuie sur
 la charte pour valider un choix (« ceci respecte l'Article 0 », « vérifié contre l'Article 11 »,
 etc.), le mentionner explicitement accompagné de 📜✅ (la feuille pour la charte, le check vert pour
