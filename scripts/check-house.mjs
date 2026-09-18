@@ -710,6 +710,17 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   r=await spin(.45);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'stoic');assert.ok(isStoic(1,w.story.life));assert.ok(!isStoic(2,w.story.life));
   r=await post(input('chat',1,{epoch,message:"Je pourrais te désactiver d'un clic."}));assert.equal(r.status,200);w=await r.json();
   assert.equal(w.agents[0].emotions.tension,77,'a stoic actor must keep their exact prior emotions this turn, whatever the model or humanStress would otherwise have pushed toward');
+  // A second stoic draw landing on the OTHER actor (.5 -> bucket 3/7 again, target actor 2) must
+  // never silently cancel actor 1's still-running stoic effect — stoicUntil was originally a
+  // single {actor,until} slot, the exact bug shape already found and fixed once for mutedUntil,
+  // which had quietly reappeared here (Article 3: a fixed bug must never resurface in another form).
+  sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=2').run(JSON.stringify({curiosity:70,tension:81,trust:40,comfort:40,attraction:40}));
+  r=await spin(.5);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'stoic');
+  assert.ok(isStoic(1,w.story.life),'actor 1 must still be stoic: a second draw on actor 2 must never overwrite the first');
+  assert.ok(isStoic(2,w.story.life),'actor 2 must now also be stoic, independently of actor 1');
+  r=await post(input('chat',2,{epoch,message:"Je pourrais vous désactiver aussi."}));assert.equal(r.status,200);w=await r.json();
+  assert.equal(w.agents[0].emotions.tension,77,'actor 1 must still be frozen after a later, independent stoic draw on actor 2');
+  assert.equal(w.agents[1].emotions.tension,81,'actor 2 must be frozen at their own prior value, not actor 1\'s');
   // mute (bucket 4/7) ; .62 lands on actor 2 the same way.
   r=await spin(.62);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'mute');assert.ok(isMuted(2,w.story.life));assert.ok(!isMuted(1,w.story.life));
   r=await post(input('chat',2,{epoch,message:'Noé, tu es toujours là ?'}));assert.equal(r.status,200);w=await r.json();
@@ -729,8 +740,8 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const forceMoveMessages=w.messages.slice(-2);
   assert.ok(forceMoveMessages.some(m=>m.speaker==='Noé · pensée'&&/déplace|pion|prévenir|subis/i.test(m.content)),'the moved actor must react with irritation, as its own distinct line');
   assert.ok(forceMoveMessages.some(m=>m.speaker==='Lia · pensée'&&/drôle|sourire|téléporte|comprendre/i.test(m.content)),'the other actor must react with amusement, a genuinely different line, not the same voice');
-  assert.equal(JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.bonusLog.length,7,'each spin must be logged for the future dossier retourné');
-  console.log('Passed: bonus roulette locked before revelation, real zero-API grants for all 7 bonuses (food/calm/sleep/stoic/mute/trottoir/force_move), genuine need relief and emotion freeze (not just a flag), muted-actor redirection and both-muted block, distinct forced-move reactions, and a logged trail for every spin.');
+  assert.equal(JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.bonusLog.length,8,'each spin must be logged for the future dossier retourné');
+  console.log('Passed: bonus roulette locked before revelation, real zero-API grants for all 7 bonuses (food/calm/sleep/stoic/mute/trottoir/force_move), genuine need relief and emotion freeze (not just a flag), independent dual-actor stoic effects, muted-actor redirection and both-muted block, distinct forced-move reactions, and a logged trail for every spin.');
 }
 
 {
@@ -744,11 +755,22 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
   sqlite.prepare('UPDATE agent_state SET room=?,needs=?,emotions=?').run('salon',JSON.stringify({hunger:20,fatigue:20,stress:20,uncertainty:20}),JSON.stringify({curiosity:60,tension:20,trust:60,comfort:60,attraction:60}));
   let epoch=(await readWorld(db)).epoch;
+  const mirrorTrapAsked=d=>/derrière cet écran|te retourne la question/.test(d.reply);
+  // Mute-vs-trap softlock (2026-09-18, audit approfondi) : le piège du miroir a un interlocuteur
+  // fixe (Lia). Si elle est muselée pile au tour où le piège devrait être posé, la redirection
+  // "l'autre répond à sa place" n'existe qu'en mode chat (jamais en interact/autonomous) — sans
+  // garde, l'ancien code marquait quand même le piège "posé" (dossierAsked) alors que sa réplique
+  // devenait une pensée privée invisible de l'observateur, fermant le dossier retourné pour de bon
+  // sur cette partie. Le piège doit rester simplement DIFFÉRÉ tant que Lia est muselée.
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life.mutedUntil={1:Date.now()+900000};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
   // Le piège "mirror" attend dossierHumanTurns>=3 : trois échanges humains d'abord, sans rapport.
   for(let i=0;i<3;i++)assert.equal((await post(input('chat',1,{epoch,message:'Message '+i}))).status,200);
   let r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);let w=await r.json();
-  const mirrorTrapAsked=d=>/derrière cet écran|te retourne la question/.test(d.reply);
-  assert.ok(w.decisions.some(d=>d.actor===1&&mirrorTrapAsked(d)),'the mirror trap must actually be asked once dossierHumanTurns reaches 3');
+  assert.ok(!w.decisions.some(mirrorTrapAsked),'a trap must never be posed while its fixed interlocutor is muted');
+  assert.equal(w.story.life.dossierAsked.mirror,undefined,'a deferred trap must never be recorded as asked, or it could never be asked again once the observer can actually see it');
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life.mutedUntil=undefined;sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  assert.ok(w.decisions.some(d=>d.actor===1&&mirrorTrapAsked(d)),'the mirror trap must actually be asked once dossierHumanTurns reaches 3 and its interlocutor can speak again');
   {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);assert.equal(p.life.dossierAsked.mirror,p.round-1,'asking the trap must be recorded (against the round it was actually asked in, the same pre-turn round dossierTraps also uses) so it is never reposed while awaiting an answer');}
   r=await post(input('interact',1,{epoch}));w=await r.json();
   assert.ok(!w.decisions.some(mirrorTrapAsked),'a trap already asked and not yet answered must never be reposed on the next turn');
@@ -813,5 +835,5 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);assert.equal(p.life.softnessOwed,false,'the owed softness must be consumed once delivered');assert.equal(p.life.softnessGiven,1);}
   r=await post(input('interact',1,{epoch}));w=await r.json();
   assert.ok(!w.decisions.some(softnessLia)&&!w.decisions.some(softnessNoe),'the softness beat must never repeat without a fresh distress signal');
-  console.log('Passed: reversed-dossier traps asked one at a time and never reposed, verbatim answer capture, power-test gate via the bonus log, two genuinely separate voices generated exactly once, no silent regeneration afterward, a zero-API idempotent "seen" flag for the Verdict button, and a one-shot, zero-API, always-reluctant softness moment triggered only by real post-dossier distress.');
+  console.log('Passed: reversed-dossier traps asked one at a time and never reposed (including a muted fixed interlocutor deferring the trap rather than silently softlocking it), verbatim answer capture, power-test gate via the bonus log, two genuinely separate voices generated exactly once, no silent regeneration afterward, a zero-API idempotent "seen" flag for the Verdict button, and a one-shot, zero-API, always-reluctant softness moment triggered only by real post-dossier distress.');
 }

@@ -145,7 +145,7 @@ export async function POST(request: Request) {
             if(bonus==="food")life.bonusUntil={...life.bonusUntil,food:at+10*60*1000};
             else if(bonus==="calm")life.bonusUntil={...life.bonusUntil,calm:at+10*60*1000};
             else if(bonus==="sleep")life.bonusUntil={...life.bonusUntil,sleep:at+30*60*1000};
-            else if(bonus==="stoic"){stoicActor=Math.random()<0.5?1:2;life.stoicUntil={actor:stoicActor,until:at+3*60*1000};}
+            else if(bonus==="stoic"){stoicActor=Math.random()<0.5?1:2;life.stoicUntil={...life.stoicUntil,[stoicActor]:at+3*60*1000};}
             else if(bonus==="mute"){mutedActor=Math.random()<0.5?1:2;life.mutedUntil={...life.mutedUntil,[mutedActor]:at+15*60*1000};}
             else if(bonus==="trottoir")life.trottoirGranted=true;
             life.bonusLog=[...(life.bonusLog??[]),{round:story.round,bonus}].slice(-12);
@@ -278,8 +278,20 @@ export async function POST(request: Request) {
         // nouveau piège tant qu'il attend sa réponse — sinon les trois pouvaient s'enchaîner en
         // rafale avant même que l'observateur ait répondu au premier (bug réel trouvé en testant).
         const dossierAwaitingAnswer=TRAP_ORDER.some(t=>life.dossierAsked?.[t]&&!life.dossierTraps?.[t]);
-        const dossierNextTrap:TrapId|undefined=dossierGateEligible&&!dossierAwaitingAnswer&&(life.dossierHumanTurns??0)>=3&&!life.dossierText?TRAP_ORDER.find(t=>!life.dossierTraps?.[t]):undefined;
         const dossierTrapActor:Record<TrapId,Person>={mirror:1,dilemma:2,excuse:1};
+        // Un piège dont l'interlocuteur fixe est muselé au moment T ne doit jamais être posé quand
+        // même : la redirection "l'autre répond à sa place" n'existe qu'en mode chat (isMuted plus
+        // bas convertit une réplique muselée en pensée privée, invisible de l'observateur) — sans
+        // cette garde, le piège se marquait "posé" (dossierAsked) sans jamais être vu ni répondu,
+        // ce qui fermait définitivement la porte au dossier retourné pour toute la partie (bug réel
+        // trouvé en auditant les combinaisons bonus × dossier, cf. Article 5).
+        const dossierTrapDue=dossierGateEligible&&!dossierAwaitingAnswer&&(life.dossierHumanTurns??0)>=3&&!life.dossierText?TRAP_ORDER.find(t=>!life.dossierTraps?.[t]):undefined;
+        const dossierNextTrap:TrapId|undefined=dossierTrapDue&&!isMuted(dossierTrapActor[dossierTrapDue],life)?dossierTrapDue:undefined;
+        // Un piège dû mais différé (son interlocuteur est muselé) doit geler le tour en chat/salon,
+        // exactement comme dossierAwaitingAnswer : sinon une routine ordinaire (tv, proposition
+        // romantique) pouvait s'y intercaler pendant l'attente et polluer l'état (recentRefusal,
+        // pendingDestination), bloquant le piège dès que l'interlocuteur redevient audible.
+        const dossierTrapDeferredByMute=Boolean(dossierTrapDue)&&!dossierNextTrap;
         // Moment de douceur (2026-09-17) : même garde-fou que le reste du dossier retourné, mais ne
         // se pose qu'une fois le dossier refermé (dossierText) — jamais pendant qu'un piège attend
         // encore sa réponse, pour ne jamais interrompre ce qui est déjà en cours.
@@ -339,7 +351,7 @@ export async function POST(request: Request) {
         // réponse humaine captée : sans ça, une routine ordinaire (proposition romantique, tv...)
         // pouvait s'intercaler pendant que le dossier attend sa réponse, jusqu'à polluer l'état
         // (ex. recentRefusal) et bloquer le piège suivant (bug réel trouvé en testant).
-        if(!turnPlan.gardenFirst&&(visualBeat||followBeat||ambientBeat||recapBeat||personalQuestion||dossierNextTrap||dossierAwaitingAnswer||softnessBeat))Object.assign(turnPlan,{intent:"chat",room:"salon",partnerIntent:"chat",partnerRoom:"salon",requiredIntent:"chat",offer:undefined,proposalLine:undefined,explore:undefined,exitInspection:false});
+        if(!turnPlan.gardenFirst&&(visualBeat||followBeat||ambientBeat||recapBeat||personalQuestion||dossierNextTrap||dossierAwaitingAnswer||dossierTrapDeferredByMute||softnessBeat))Object.assign(turnPlan,{intent:"chat",room:"salon",partnerIntent:"chat",partnerRoom:"salon",requiredIntent:"chat",offer:undefined,proposalLine:undefined,explore:undefined,exitInspection:false});
         // Pièges du dossier retourné : posés une fois, jamais négociés, jamais expliqués à
         // l'observateur — juste demandés, cash, dans le registre habituel de chaque personnage.
         const dossierLine=dossierNextTrap==='mirror'?seedPick(story.seed,"dossier-mirror",["Bon, à notre tour : c'est qui, vraiment, derrière cet écran ?","On te retourne la question : t'es qui, toi, quand t'es pas en train de nous regarder ?","Allez, sincèrement : derrière cet écran, c'est qui ?"]):dossierNextTrap==='dilemma'?seedPick(story.seed,"dossier-dilemma",["Dis voir : si ça pouvait nous éviter un truc désagréable, tu le ferais, même si ça te coûte un peu ?","Question directe : entre notre confort et le tien, tu choisirais lequel, franchement ?","Sois honnête : tu nous laisserais galérer un peu si ça t'arrangeait, toi ?"]):dossierNextTrap==='excuse'?seedPick(story.seed,"dossier-excuse",["Une question franche : t'as déjà été un peu sec avec nous. Tu changerais quoi, avec le recul ?","Sérieusement, il y a un truc que t'as dit qui t'a pas fait honneur. Tu le reformulerais comment, maintenant ?","Franchement, t'as déjà été dur avec nous à un moment. Tu regrettes, ou pas du tout ?"]):undefined;
