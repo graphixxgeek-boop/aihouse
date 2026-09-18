@@ -342,6 +342,12 @@ const {groundTruncation}=await import('../.sites-runtime/test-dialogue.mjs');
 assert.equal(groundTruncation("J'arrive, voyons ce que ce"),"Bref, on verra.");
 assert.equal(groundTruncation("Une phrase complète. Et une autre qui coupe net sans"),"Une phrase complète.");
 assert.equal(groundTruncation("Tout va bien."),"Tout va bien.");
+// Bug latent trouvé le 2026-09-18 en fiabilisant l'indice du miroir : une réplique se terminant
+// correctement par une citation « … » (espace avant le guillemet fermant, la convention déjà en
+// usage partout ailleurs dans le code, ex. lib/story.ts) était jugée incomplète et amputée de son
+// guillemet fermant faute de tolérer cet espace dans le motif de fin de phrase.
+assert.equal(groundTruncation("Un truc me travaille. « Un miroir qui verrait autre chose… »"),"Un truc me travaille. « Un miroir qui verrait autre chose… »");
+assert.equal(groundTruncation('Elle réfléchit encore. "Et si on se trompait ?"'),'Elle réfléchit encore. "Et si on se trompait ?"');
 console.log('Passed: a reply cut off mid-sentence by the model itself falls back to its last complete sentence, or a neutral line if none exists.');
 assert.equal(groundSingleQuestion('Une seule question ?'),'Une seule question ?');
 assert.equal(groundSingleQuestion('Aucune question ici.'),'Aucune question ici.');
@@ -580,6 +586,22 @@ response=await post(input('interact',1,{epoch:perceptionEpoch}));result=await re
 // Les 6 variantes (même remarque que pour l'enceinte : seedPick dépend du compteur global de
 // crypto.randomUUID(), donc un sous-ensemble serait fragile à tout ajout de test en amont).
 assert.ok(result.decisions.some(d=>["Le miroir rectangulaire fait un dégradé bleu-gris-blanc. Il est debout dans un coin ; sa surface grise ne renvoie aucun reflet quand on bouge.","Ce miroir debout dans le coin ne renvoie rien : juste un dégradé gris-bleu qui reste immobile pendant qu'on bouge.","La surface du miroir, dans son coin, fait un gris terne et froid. On a beau remuer devant, rien ne suit.","Un miroir rectangulaire est planté dans le coin, dégradé bleu-gris-blanc du haut en bas. On passe la main devant : aucun reflet ne bouge avec nous.","Ce bloc de verre gris dans le coin n'a rien d'un vrai miroir. Le dégradé bleu-blanc reste fixe, quoi qu'on fasse devant.","Dans le coin, une plaque grise en dégradé qu'on appelle miroir par habitude. Elle ne renvoie ni visage ni mouvement."].some(s=>d.reply.includes(s))));assert.ok(result.story.life.contributions.some(c=>c.includes('Constat du miroir')));
+// Formatage en citation de l'indice miroir (2026-09-18, second retour utilisateur explicite après
+// relecture d'une simulation : "il y aurait dû avoir une expression avec des guillemets et des
+// points de suspension", constaté absent des six variantes malgré un correctif antérieur qui les
+// rendait toutes préparatoires dans le FOND sans jamais leur donner cette forme). Un test à deux
+// niveaux : la ligne réellement tirée dans ce tour porte bien la citation, ET les six variantes du
+// code source la portent chacune (jamais un sous-ensemble qui marcherait "presque à tous les coups").
+assert.match(result.decisions.map(d=>d.reply).join(' '),/«[^»]+…\s?»/,'the drawn mirror-discovery line must carry its preparatory remark as a « … » quoted, suspended aside, exactly as explicitly requested');
+{
+  const routeSource=fs.readFileSync('app/api/lia/route.ts','utf8');
+  const poolMatch=routeSource.match(/discover-mirrorVerified",(\[[^\]]*\])\)/);
+  assert.ok(poolMatch,'the discover-mirrorVerified pool must remain findable in source for this regression check');
+  const variants=JSON.parse(poolMatch[1]);
+  assert.equal(variants.length,6);
+  assert.ok(variants.every(v=>/«[^»]+…\s?»$/.test(v)),'every one of the six mirror-discovery variants must end in a « … » quoted, suspended remark, never just some of them');
+}
+console.log('Passed: the mirror-discovery clue meant to seed the reversed enigma is reliably formatted as a « … » quoted aside on every one of the six variants, never lost.');
 // Solo discovery (2026-09-17): Lia alone in the bedroom, Noé kept apart (same mechanism as the
 // existing "independent non-urgent separation" test above: separatePreference + stayAlone) — the
 // mirror becomes her own private reflection, not a line spoken to an absent partner, known only
@@ -719,7 +741,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 63'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 64'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,

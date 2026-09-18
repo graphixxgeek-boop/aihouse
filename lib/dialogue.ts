@@ -46,8 +46,12 @@ export function groundRegister(reply:string):string{
 // formule neutre plutôt que de laisser une phrase inachevée à l'écran.
 export function groundTruncation(reply:string):string{
     const trimmed=reply.trim();
-    if(!trimmed||/[.!?…]["»]?$/.test(trimmed))return trimmed;
-    const lastComplete=trimmed.match(/^[\s\S]*[.!?…]["»]?/);
+    // L'espace avant le guillemet fermant est l'espacement déjà en usage dans tout le code pour les
+    // citations (« … » lib/story.ts, l'indice du miroir) — sans le tolérer ici, une réplique
+    // correctement ponctuée mais se terminant par une citation se faisait amputer de son guillemet
+    // fermant, jugée à tort incomplète (trouvé le 2026-09-18 en fiabilisant l'indice du miroir).
+    if(!trimmed||/[.!?…]\s?["»]?$/.test(trimmed))return trimmed;
+    const lastComplete=trimmed.match(/^[\s\S]*[.!?…]\s?["»]?/);
     if(lastComplete&&lastComplete[0].trim())return lastComplete[0].trim();
     return "Bref, on verra.";
 }

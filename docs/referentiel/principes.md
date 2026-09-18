@@ -452,6 +452,19 @@ six variantes également préparatoires plutôt qu'en misant sur le tirage aléa
 cas. Cette règle s'applique à toute future réécriture d'un objet de la première enquête : l'ajout
 doit rester crédible en lui-même, indépendamment de la seconde partie.
 
+La remarque préparatoire n'est pas une phrase ordinaire : depuis le 2026-09-18 (second retour
+explicite après relecture d'une simulation — « il y aurait dû avoir une expression avec des
+guillemets et des points de suspension », constaté absent malgré le correctif ci-dessus qui rendait
+déjà les six variantes préparatoires dans le fond, jamais dans la forme), elle est détachée entre
+guillemets français et une suspension (`« … »`), comme une question que le personnage se pose à
+voix haute et laisse en suspens, jamais résolue sur le moment — la même convention typographique
+que les indices canoniques déjà cités en dur (`lib/story.ts`, la note du livre et le relevé du
+bureau). C'est la régularité de cette FORME, identique sur les six variantes (seule l'idée à
+l'intérieur change, Article 10/11), qui garantit que le joueur la reconnaît « à tous les coups » —
+jamais une histoire de chance sur laquelle variante est tirée. Un test dédié (`scripts/check-house.mjs`)
+vérifie statiquement, directement dans le code source, que les six variantes portent bien cette
+citation, pas seulement celle tirée dans tel ou tel scénario de test.
+
 Deux autres indices canoniques (`clues`, `lib/story.ts`) portent désormais le même principe, avec
 une idée de fond différente à chaque fois (jamais le même habillage recyclé, Article 10) : le livre
 porte une note griffonnée en marge, « Quid du profil psychologique d'une IA ? » — sert la première
