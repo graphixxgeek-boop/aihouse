@@ -307,7 +307,15 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
 
 - `angerLevel(tension,comfort,angry?)` (extraite de `faceExpression`) : nulle sous tension 55 ou
   confort 35 ; sinon `clamp((tension-55)/40,0,1) * clamp((35-comfort)/35,0,1)`, plancher 0,85 si
-  `angry` (dispute active).
+  `angry` (dispute active). **Produit, pas simple ET** (vérifié en phase 3, 2026-09-18,
+  `principes.md` 8.12) : franchir tout juste les deux seuils (ex. tension 56, confort 34) ne donne
+  qu'un produit proche de 0 ; il faut des valeurs nettement plus extrêmes des deux côtés à la fois
+  (ex. tension≈90, confort≈10, comme dans le test de colère réellement lue de `check-house.mjs`)
+  pour dépasser 0,5. En pratique, une hostilité verbale même sévère de l'observateur plafonne autour
+  de tension~70/confort~35 (personnages écrits pour rester défiants, pas pour s'effondrer) : la
+  vraie fureur extrême reste réservée au plancher `angry` (vrai conflit Lia/Noé), pas à une joute
+  avec l'observateur — comportement voulu, pas un défaut à corriger (décision explicite de
+  l'utilisateur).
 - `liaCalmEnough`/`noeCalmEnough` = `angerLevel(...)<0,5` sur les émotions courantes du personnage,
   même définition de « en colère » (`story.life?.dispute?.remaining`) que `agent.angry` ailleurs.
 - Garde ajoutée (en plus de `needs.stress<30`, jamais à sa place) sur : `personalLead` (et donc
