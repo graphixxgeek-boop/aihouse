@@ -308,6 +308,11 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   formuler librement une négociation, sans jamais l'imposer à chaque tour.
 - `negotiationOffer:{actor,round}` : une seule offre en attente à la fois, jamais écrasée par une
   nouvelle tant que la précédente n'est pas résolue.
+- `negotiationLog:{round,outcome:'honored'|'lapsed'}[]` (2026-09-18, `principes.md` 8.8 corrigé) :
+  accumulé à chaque résolution d'offre (max 12 conservées), jamais réécrit. Résumé dans
+  `dossierEvidence` sous la clé « réaction aux négociations proposées par les personnages »
+  uniquement si non vide — comble l'écart où la négociation ne nourrissait jamais le dossier
+  retourné malgré une demande explicite en ce sens.
 - Alimente le dossier retourné (`dossierEvidence`) comme preuve supplémentaire (valeur arrondie).
 - `worstMoment:{round,excerpt,trustShift}` (2026-09-18, `principes.md` 8.13) : le message humain au
   `trustShift` le plus négatif observé sur toute la session, écrasé uniquement par un pire ensuite,

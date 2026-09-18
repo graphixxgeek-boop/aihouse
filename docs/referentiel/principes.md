@@ -502,6 +502,17 @@ seulement une fois cette base vérifiée : la pénalité de sur-générosité (�
 menaces explicites, et tout lien avec un axe de solidarité/désaccord entre Lia et Noé au sujet de
 l'observateur au-delà de la colère déjà connectée ci-dessus.
 
+**Corrigé le 2026-09-18 (audit approfondi, écart trouvé en confrontant l'historique complet de la
+session au code réel)** : la demande explicite du tour ayant lancé ce chantier — « il faut aussi
+penser à integrer le phenomene de negociation : il est aussi revelateur de la personnalité de
+l'utilisateur » — n'avait en réalité jamais été câblée jusqu'au dossier retourné. `negotiationOffer`
+étant consommé (honorée) ou effacé (expirée) sans laisser aucune trace, le diagnostic final ne
+pouvait jamais citer un comportement de négociation, même quand il y en avait eu un. Un
+`negotiationLog` (même forme que `bonusLog`, `lib/life.ts`) journalise désormais chaque issue
+(`'honored'`/`'lapsed'`) ; `dossierEvidence` (`app/api/lia/route.ts`) en reçoit un résumé, mais
+seulement si une négociation a réellement eu lieu (Article 4 : jamais en inventer une qui n'a pas
+existé).
+
 8.9. **Audit de cohérence des émotions, demandé explicitement par l'utilisateur (2026-09-18).**
 Vérification systématique des interconnexions entre besoins, émotions, colère, appréciation,
 visage et prise de décision. Confirmé cohérent : le visage (fiche latérale et scène 3D) lit

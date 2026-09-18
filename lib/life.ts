@@ -59,6 +59,13 @@ appreciation?:number;revealedRound?:number;
 // aussi grossier par nature que detectDistress). negotiationOffer retient qui a proposé et à quel
 // tour, le temps que l'observateur y réponde (en tirant la roulette, ou en laissant traîner).
 negotiationOffer?:{actor:Person;round:number};
+// Historique des issues de négociation (2026-09-18, audit approfondi : le tour 64 de la session
+// demandait explicitement que la négociation nourrisse le dossier retourné comme preuve de la
+// personnalité de l'observateur — "il faut aussi penser à integrer le phenomene de negociation :
+// il est aussi revelateur de la personnalité de l'utilisateur" — mais negotiationOffer, consommé ou
+// expiré sans laisser de trace, ne permettait aucune preuve concrète au moment du dossier). Journal
+// court (même format que bonusLog), jamais réécrit, seulement accumulé.
+negotiationLog?:{round:number;outcome:'honored'|'lapsed'}[];
 // Pire moment de l'échange, mot pour mot (2026-09-18, retour utilisateur explicite après une vraie
 // session : le dossier retourné ne citait jamais les messages réellement les plus hostiles, seulement
 // trois extraits de pièges par nature plutôt neutres — un dossier pouvait rester indulgent malgré une
@@ -86,7 +93,8 @@ export function readLife(value:unknown,round=0):Life{const v=value&&typeof value
 ,revealedRound:typeof v.revealedRound==="number"&&Number.isFinite(v.revealedRound)?Math.max(0,v.revealedRound):undefined
 ,worstMoment:v.worstMoment&&typeof v.worstMoment.excerpt==="string"&&typeof v.worstMoment.trustShift==="number"&&Number.isFinite(v.worstMoment.trustShift)?{round:Math.max(0,Number(v.worstMoment.round)||0),excerpt:v.worstMoment.excerpt.slice(0,500),trustShift:v.worstMoment.trustShift}:undefined
 ,negotiationOffer:v.negotiationOffer&&(v.negotiationOffer.actor===1||v.negotiationOffer.actor===2)&&typeof v.negotiationOffer.round==="number"&&Number.isFinite(v.negotiationOffer.round)?{actor:v.negotiationOffer.actor,round:v.negotiationOffer.round}:undefined
-,genuineRespectStreak:Math.max(0,Math.min(20,Number(v.genuineRespectStreak)||0))};}
+,genuineRespectStreak:Math.max(0,Math.min(20,Number(v.genuineRespectStreak)||0))
+,negotiationLog:Array.isArray(v.negotiationLog)?v.negotiationLog.filter((e):e is {round:number;outcome:'honored'|'lapsed'}=>Boolean(e)&&typeof e==="object"&&["honored","lapsed"].includes((e as {outcome?:string}).outcome??"")).slice(-12):[]};}
 // Détection heuristique d'une réaction de choc/tristesse/colère chez l'observateur (2026-09-17) :
 // grossière par nature (comme check-spirit.mjs pour l'esprit des persos), jamais une lecture fine
 // du ton — elle ne sert qu'à déclencher UNE fois le moment de douceur, jamais à autre chose.

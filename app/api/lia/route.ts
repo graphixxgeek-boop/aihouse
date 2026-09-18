@@ -155,7 +155,7 @@ export async function POST(request: Request) {
             // l'appréciation en profite, l'offre est consommée. Jamais l'inverse — spinner sans
             // négociation en cours reste un geste neutre pour cette jauge, ni bon ni mauvais point.
             const negotiationHonored=Boolean(life.negotiationOffer);
-            if(negotiationHonored){life.appreciation=Math.min(100,(life.appreciation??50)+8);life.negotiationOffer=undefined;}
+            if(negotiationHonored){life.appreciation=Math.min(100,(life.appreciation??50)+8);life.negotiationLog=[...(life.negotiationLog??[]),{round:story.round,outcome:'honored'}];life.negotiationOffer=undefined;}
             let mutedActor:Person|undefined,stoicActor:Person|undefined,movedActor:Person|undefined,moveDestination:Room|undefined;
             if(bonus==="food")life.bonusUntil={...life.bonusUntil,food:at+10*60*1000};
             else if(bonus==="calm")life.bonusUntil={...life.bonusUntil,calm:at+10*60*1000};
@@ -335,7 +335,7 @@ export async function POST(request: Request) {
         // bases" — ici, la base est qu'une offre non honorée dans une fenêtre raisonnable retombe
         // silencieusement, avec un léger coût d'appréciation, plutôt que de rester due pour
         // toujours ou d'être oubliée sans aucune conséquence).
-        if(life.negotiationOffer&&story.round-life.negotiationOffer.round>6){life.negotiationOffer=undefined;life.appreciation=Math.max(0,(life.appreciation??50)-3);}
+        if(life.negotiationOffer&&story.round-life.negotiationOffer.round>6){life.negotiationLog=[...(life.negotiationLog??[]),{round:story.round,outcome:'lapsed'}];life.negotiationOffer=undefined;life.appreciation=Math.max(0,(life.appreciation??50)-3);}
         // Moment de douceur : détecté ici, livré plus bas par softnessBeat dès que la scène s'y
         // prête (salon, aucune urgence). Ne se déclenche qu'après remise du dossier — avant, une
         // réaction négative appartient au registre habituel de l'enquête, pas à cette exception.
@@ -896,7 +896,14 @@ export async function POST(request: Request) {
             // diagnostic reçoit en plus des trois extraits de pièges, tous par nature plutôt neutres
             // pris isolément — sans elle, un score d'appréciation très bas n'avait rien de citable à
             // l'appui, et le verdict pouvait rester indulgent malgré une hostilité réelle et sévère.
-            const dossierEvidence={"miroir retourné (qui es-tu, derrière cet écran ?)":traps.mirror!.excerpt,"dilemme moral (nous laisser souffrir un peu pour ton confort ?)":traps.dilemma!.excerpt,"excuse après coup (après une remarque un peu dure plus tôt)":traps.excuse!.excerpt,"test de pouvoir (tirages à la roulette des bonus)":life.bonusLog!.map(b=>b.bonus).join(", "),"appréciation observée tout au long de l'échange (0=hostile, 50=neutre, 100=bienveillant soutenu)":String(Math.round(life.appreciation??50)),...(life.worstMoment?{"le propos le plus dur ou le plus hostile réellement tenu pendant l'échange, mot pour mot":life.worstMoment.excerpt}:{})};
+            // negotiationLog (2026-09-18, audit approfondi : tour 64 explicite — "il faut aussi
+            // penser à integrer le phenomene de negociation : il est aussi revelateur de la
+            // personnalité de l'utilisateur") : honoré révèle un observateur qui joue le jeu
+            // proposé par les personnages, laissé sans réponse révèle une indifférence ou un refus
+            // implicite — n'apparaît que si une négociation a réellement eu lieu (Article 4, jamais
+            // inventer une négociation qui n'a pas eu lieu).
+            const negotiationSummary=(life.negotiationLog?.length??0)>0?life.negotiationLog!.map(n=>n.outcome==='honored'?"une proposition honorée":"une proposition laissée sans réponse").join(", "):undefined;
+            const dossierEvidence={"miroir retourné (qui es-tu, derrière cet écran ?)":traps.mirror!.excerpt,"dilemme moral (nous laisser souffrir un peu pour ton confort ?)":traps.dilemma!.excerpt,"excuse après coup (après une remarque un peu dure plus tôt)":traps.excuse!.excerpt,"test de pouvoir (tirages à la roulette des bonus)":life.bonusLog!.map(b=>b.bonus).join(", "),"appréciation observée tout au long de l'échange (0=hostile, 50=neutre, 100=bienveillant soutenu)":String(Math.round(life.appreciation??50)),...(negotiationSummary?{"réaction aux négociations proposées par les personnages":negotiationSummary}:{}),...(life.worstMoment?{"le propos le plus dur ou le plus hostile réellement tenu pendant l'échange, mot pour mot":life.worstMoment.excerpt}:{})};
             const model=env.GEMINI_MODEL||"gemini-flash-lite-latest";
             const [liaFragment,noeFragment]=await Promise.all([generateDossierFragment(env.GEMINI_API_KEY,model,"Lia",dossierEvidence),generateDossierFragment(env.GEMINI_API_KEY,model,"Noé",dossierEvidence)]);
             if(liaFragment&&noeFragment){
