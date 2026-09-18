@@ -51,3 +51,4 @@ next-env.d.ts
 # l'export du projet. Stub local pour le développement uniquement, voir CLAUDE.md.
 /.openai/
 /build/
+.gemini-key-health.json

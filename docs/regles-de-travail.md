@@ -147,6 +147,54 @@ seule ne révèle pas (ex. le Point 2, retrouvé par une lecture directe du code
 requêtes, pas par une différence visible entre deux transcripts). L'agent l'essaie en priorité
 quand une version de référence existe, sans jamais s'y arrêter si elle ne suffit pas à conclure.
 
+## 7bis. Rendre compte des progrès de l'outillage interne (ex. outil quota Gemini)
+
+*(Ajouté le 2026-09-18, à la demande explicite de l'utilisateur : « précise-moi à chaque fois que
+l'outil API s'est amélioré et comment, avec une estimation du pourcentage d'efficacité gagné ».)*
+Un outil de travail interne (ex. `scripts/check-gemini-quota.mjs` / `scripts/gemini-key-health.mjs`,
+mais la règle vaut pour tout outillage comparable créé plus tard) a un statut différent d'un
+changement de contenu du jeu : l'utilisateur ne le voit jamais tourner directement, donc son seul
+moyen de suivre son évolution est le compte rendu de l'agent. À chaque amélioration réelle de ce
+type d'outil (nouvelle capacité, correction d'un biais, extension de portée) :
+
+- **Dire explicitement CE QUI a changé et COMMENT**, en langage clair (jamais juste "corrigé un
+  bug" ou "amélioré l'outil" sans détail) — cohérent avec la section 8 ci-dessous sur la
+  vulgarisation obligatoire des sujets techniques.
+- **Donner une estimation chiffrée du gain d'efficacité** (ex. "évite désormais ~2 tentatives
+  perdues sur 3 lors d'un blocage multi-modèles", "réduit le temps de diagnostic d'un blocage
+  d'environ 80 %"). C'est une ESTIMATION qualifiée comme telle, jamais présentée comme une mesure
+  exacte quand elle ne l'est pas — l'honnêteté sur la nature de l'estimation prime sur la précision
+  apparente du chiffre.
+- **Documenter la même évolution ici, dans les règles de travail**, pas seulement dans le message
+  de la conversation — pour qu'une autre IA reprenant le projet retrouve l'historique des progrès
+  de l'outil sans devoir relire tout le fil de conversation. Concrètement : une ligne d'historique
+  dans cette section, datée, à chaque évolution notable.
+
+**Historique des évolutions de l'outil quota/clé Gemini :**
+
+- *2026-09-18* — Ajout de la mémoire d'expérience (`gemini-key-health.mjs`) : les clés sondées sont
+  désormais ordonnées par fiabilité récente plutôt que testées dans un ordre fixe. Gain estimé :
+  évite de re-tester en premier une clé déjà connue épuisée à chaque exécution — sur une session
+  avec plusieurs clés, ça peut économiser la quasi-totalité des sondes inutiles sur la clé morte
+  (~50 % d'appels de diagnostic en moins quand une clé sur deux est à plat).
+- *2026-09-18* — Correction du biais `likelyStillDown` (paramètre `asKeySignal`) : une sonde
+  secondaire sur un modèle rarement utilisé (ex. `gemini-pro-latest`, presque toujours en quota
+  serré) ne fait plus passer une clé par ailleurs saine pour "encore à plat". Gain estimé : élimine
+  un faux-diagnostic qui, non corrigé, aurait fait ignorer à tort une clé pourtant viable à chaque
+  exécution de l'outil — donc un gain de fiabilité plus qu'un gain de vitesse, mais tout aussi
+  critique pour que l'outil reste digne de confiance.
+- *2026-09-18* — Support multi-fournisseurs (`api-providers.mjs`) : une clé de repli peut désormais
+  être d'un fournisseur différent de Gemini (préfixe `fournisseur:` dans `.dev.vars`), sondée avec
+  son propre format d'appel. Gain estimé : élargit le champ de diagnostic possible en cas
+  d'épuisement total de tous les projets Google Cloud disponibles, mais reste un gain de PORTÉE
+  diagnostique, pas encore un gain d'efficacité opérationnelle réel — aucun câblage en production
+  n'existe encore pour qu'un fournisseur non-Gemini serve de vrai repli de jeu (Article 0).
+- *2026-09-18* — Ajout de l'historique curaté (`describeKnownLessons()`) : les leçons empiriques
+  déjà comprises ensemble (nature du quota, piège du `retryDelay`, etc.) s'affichent désormais à
+  chaque exécution de l'outil, pas seulement dans `CLAUDE.md`. Gain estimé : réduit le risque de
+  re-découvrir la même leçon deux fois à des mois d'écart — gain de mémoire collective, pas de
+  vitesse d'exécution du script lui-même.
+
 ## 8. Profil de collaboration observé
 
 *(Champ volontairement large, à la demande explicite de l'utilisateur : « tout ce qui est utile

@@ -339,6 +339,26 @@ concernés (`lib/lia.ts::think()` et `app/api/lia/route.ts::generateDossierFragm
   suggère une ligne `GEMINI_FALLBACK_MODELS=...` mais n'écrit jamais lui-même dans `.dev.vars`
   (aucun changement de configuration sans geste explicite). Coûte quelques appels négligeables à
   chaque exécution (Article 8) : à lancer à la demande pour diagnostiquer, pas en continu.
+  **Principe fondateur de cet outil** *(formulé explicitement par l'utilisateur le 2026-09-18 :
+  « je veux que l'outil ait une connaissance fine de la clef API de façon à pouvoir la dominer :
+  c'est le principe fondateur de l'outil qui lui permet d'atteindre son objectif : contourner les
+  obstacles et blocages posés par la clef API »)* — l'outil ne réagit jamais à l'aveugle à un
+  blocage isolé : il accumule une connaissance fine de chaque clé configurée (`.gemini-key-health.json`,
+  local, jamais committé, cf. `scripts/gemini-key-health.mjs`) — par modèle, dans le temps, épisode
+  par épisode — pour choisir en connaissance de cause plutôt qu'à l'aveugle. Trois évolutions le
+  même jour, chacune détaillée avec son gain estimé dans `docs/regles-de-travail.md` (section 7bis,
+  nouvelle règle : toute évolution de cet outil se rapporte à l'utilisateur avec un pourcentage
+  d'efficacité estimé) : (1) ordonnancement des clés par fiabilité récente plutôt qu'un ordre fixe ;
+  (2) correction d'un biais où une sonde secondaire sur un modèle rarement utilisé (`gemini-pro-latest`)
+  pouvait faire passer une clé saine pour épuisée (paramètre `asKeySignal`) ; (3) support
+  multi-fournisseurs (`scripts/api-providers.mjs`) — une entrée `GEMINI_API_KEY_FALLBACKS` peut
+  porter un préfixe `fournisseur:` pour sonder une clé d'un fournisseur non-Gemini (payant ou non),
+  strictement pour le diagnostic outillage : aucun câblage n'existe pour qu'un tel fournisseur
+  serve de vrai repli en production, ce qui resterait soumis à la même validation qualité intégrale
+  que tout changement de modèle (Article 0). L'outil affiche aussi, à chaque exécution, un
+  historique curaté des leçons déjà comprises ensemble (`describeKnownLessons()`) — distinct de
+  l'expérience automatique, jamais généré par une sonde, mis à jour à la main quand un nouveau
+  blocage réel est diagnostiqué.
 - **Repli de modèle** — si `GEMINI_FALLBACK_MODELS` (liste séparée par des virgules) est configuré,
   la MÊME requête est rejouée contre le modèle suivant de la liste, uniquement sur 429 ou 503
   (le 503 a rejoint le 429 le même jour : preuve concrète en simulation réelle que Google répond
