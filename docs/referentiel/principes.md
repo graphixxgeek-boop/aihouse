@@ -544,16 +544,27 @@ l'extérieur :
   une moyenne partagée.
 
 8.6. **Négociation** (`lib/life.ts`, `app/api/lia/route.ts`). Réclamer des choses à l'observateur
-(ouvrir le jardin, une information, un délai, une contrepartie) est le réflexe PAR DÉFAUT des deux
-personnages une fois révélés, pas une simple possibilité occasionnelle : dès que l'observateur leur
-demande quelque chose, leur premier mouvement est de proposer un échange ou poser une condition — ne
-pas négocier doit être un choix assumé du personnage, jamais un oubli. Jamais en suppliant ni en se
-rabaissant : une feinte de détresse ou de fragilité pour attendrir l'observateur reste un calcul
-assumé de leur part (joué comme tel dans `thought`), jamais un effondrement réel — à l'inverse, une
-vulnérabilité RÉELLE et non feinte peut affleurer, mais rarement et brièvement, jamais sollicitée ni
-prolongée (cf. 8.8). Le modèle formule librement dans son propre registre (`negotiationContext`
-dans le contexte narratif, jamais un menu scripté) et le moteur détecte l'offre a posteriori dans la
-réplique (`detectNegotiationOffer`, grossier par nature, comme `detectDistress`).
+(ouvrir le jardin, une information, un délai, une contrepartie) est un réflexe RÉEL des deux
+personnages une fois révélés quand l'observateur leur demande concrètement un service ou une
+décision — pas une simple possibilité qui n'arrive que quand « la situation s'y prête » par hasard,
+mais pas non plus automatique à chaque message humain. Une première version (2026-09-18) en avait
+fait un « réflexe par défaut » sans condition ni garde-fou : constaté en simulation réelle, cela
+faisait dire aux deux personnages la même phrase de relance vers un tirage à quasiment chaque
+réplique post-révélation, y compris en réponse à une révélation personnelle sensible, une marque de
+gentillesse ou une simple question sur leur ressenti — un vrai recul par rapport à l'esprit du
+projet (Article 0 : des personnages avec de la texture, jamais un tic de langage en boucle) et à
+l'Article 11 (zéro répétition). Corrigé le jour même : la relance vers un tirage ne s'active plus
+que sur une vraie demande concrète, jamais si elle vient d'être faite récemment, et ne prend jamais
+le pas sur une réaction sincère à un contenu qui compte davantage sur le moment (aveu personnel,
+révélation sensible, gentillesse, provocation) — un outil parmi d'autres dans leur registre, jamais
+ce qui définit chaque réplique. Ne pas négocier reste un choix assumé du personnage, jamais un
+oubli. Jamais en suppliant ni en se rabaissant : une feinte de détresse ou de fragilité pour
+attendrir l'observateur reste un calcul assumé de leur part (joué comme tel dans `thought`), jamais
+un effondrement réel — à l'inverse, une vulnérabilité RÉELLE et non feinte peut affleurer, mais
+rarement et brièvement, jamais sollicitée ni prolongée (cf. 8.8). Le modèle formule librement dans
+son propre registre (`negotiationContext` dans le contexte narratif, jamais un menu scripté) et le
+moteur détecte l'offre a posteriori dans la réplique (`detectNegotiationOffer`, grossier par
+nature, comme `detectDistress`).
 `life.negotiationOffer` retient qui a proposé et à quel tour, une seule offre à la fois. Deux
 issues : honorée (un tirage de la roulette survient pendant qu'elle est en attente) → appréciation
 en hausse pour les deux personnages, offre consommée ; laissée sans réponse plus de 6 tours → offre
