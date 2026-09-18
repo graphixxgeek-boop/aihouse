@@ -207,6 +207,47 @@ le jour même (Article 13).
   (`discover-foodVerified`) ; le cas solo y est déjà couvert autrement, par le witnesses-count du
   débriefing de régénération (`visualEvents` kind food, indépendant de cette ligne).
 
+## Roulette des bonus (`lib/life.ts`, `app/api/lia/route.ts`, `app/page.tsx`, 2026-09-17)
+
+Après la révélation (même seuil que le jardin : `finalCalled` + 5 preuves), l'observateur peut
+déclencher un tirage au sort — jamais un choix, jamais une négociation terme à terme. Justification
+en fiction (demandée explicitement) : les deux personnages, enfermés dans leur simulation, y
+cherchent une distraction ou un répit face à leur situation, pas un cadeau de l'observateur.
+Bouton « ◈ Miroir » (nom choisi par l'utilisateur, écho volontaire au miroir de l'enquête d'origine
+et à la future énigme retournée), requête `spin_bonus`, zéro appel API, tirage décidé une seule
+fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId comme le reste.
+
+- Catalogue à parts égales (`pool`, 7 entrées) :
+  - `food` (réserve) : `needs.hunger` forcé à 0 pendant **10 minutes réelles** (pas simulées :
+    l'horodatage tourne même hors tour, comme la boucle automatique de 90s).
+  - `calm` (bougie apaisante) : `needs.stress` forcé à 0 pendant **10 minutes réelles** ; une petite
+    lumière chaude ponctuelle s'allume dans le salon pendant la durée (effet minimal assumé, la
+    refonte graphique globale reste à venir — cf. `docs/contexte-projet` chantiers 4/5/6).
+  - `sleep` (pilule bleue) : `needs.fatigue` forcé à 0 pendant **30 minutes réelles**.
+  - `stoic` (sang-froid) : cible un personnage tiré au hasard, ses émotions (`d.emotions`) restent
+    figées à leur valeur exacte d'avant le tour pendant **3 minutes réelles**, quoi qu'il se passe
+    (aucune réaction, positive ou négative).
+  - `mute` (silence forcé) : cible un personnage tiré au hasard, silence pendant **15 minutes
+    réelles** — réutilise exactement la mécanique de redirection déjà éprouvée pour le sommeil
+    (l'autre répond à sa place si possible ; les deux muselés à la fois bloquent le chat comme les
+    deux endormis).
+  - `trottoir` : accès narré (un point de déplacement, pas encore une zone 3D pathable complète
+    comme le jardin — « on verra après » selon l'utilisateur).
+  - `force_move` : déplacement instantané d'un personnage tiré au hasard vers une pièce parmi les
+    trois autres (jamais un no-op), avec deux répliques distinctes et jamais fusionnées (Article
+    11) : l'agacement de celui qu'on déplace sans son accord, l'amusement de celui qui garde le
+    contrôle de sa pièce.
+- Application des effets need-based (`food`/`calm`/`sleep`) : le clamp à 0 doit s'appliquer **après
+  tous les ajustements du tour**, jamais avant `advanceNeeds()` — un premier essai plaçait le clamp
+  trop tôt et se faisait écraser par les ajustements suivants (bug réel trouvé en écrivant le test,
+  cf. `scripts/check-house.mjs`).
+- `bonusLog` (`life.ts`, capé à 12 entrées) trace chaque tirage (tour, bonus) : matière première
+  prévue pour le futur dossier retourné (fréquence/générosité de l'observateur envers les
+  personnages, un axe de preuve à part entière — cf. `principes.md`).
+- Indication visuelle : jauge de besoin concernée en 0 % clignotant (classe `need-bonused`,
+  réutilise l'animation `need-glimmer` déjà existante, accent doré) ; badge 🤐/🗿 sur la fiche du
+  personnage concerné pour mute/stoic.
+
 ## Sommeil (`lib/life.ts`, `app/api/lia/route.ts`)
 
 - `isSleeping` reste vrai tant que la fatigue > 12 OU que moins de 2 tours de sommeil ont eu lieu

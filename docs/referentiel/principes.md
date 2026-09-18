@@ -395,6 +395,17 @@ avant toute reprise de la conversation autonome entre les deux habitants.
 8.3. La relation entre les deux personnages continue d'exister après la révélation : elle ne
 supprime ni leurs questions, ni leurs désaccords avec l'observateur.
 
+8.4. La « négociation » citée dans le bloc NÉGOCIATION de `lib/lia.ts` (les personnages peuvent
+réclamer des choses à l'observateur après la révélation) reste, au 2026-09-17, une simple
+suggestion de ton donnée au modèle — **aucun état n'est persisté**, aucune requête dédiée ne
+l'enregistre, rien ne prouve après coup qu'un échange de ce type a eu lieu. Constat fait en
+répondant à une question directe de l'utilisateur (« le système de négociation est-il bien
+fiabilisé ? ») : la réponse est non, ce n'est qu'une réplique possible parmi d'autres, jamais
+vérifiée ni exploitable. La roulette des bonus (voir `parametres.md`, section dédiée) est la
+première brique de mécanique réellement persistée et traçable dans cet espace (`life.bonusLog`) ;
+une vraie négociation à termes (l'observateur propose, le personnage accepte ou refuse un échange
+précis, l'engagement est tenu ou non) reste un chantier séparé, non commencé.
+
 ## 9. Robustesse technique
 
 9.1. Toute écriture en base de données est fondue dans une transaction unique par tour
