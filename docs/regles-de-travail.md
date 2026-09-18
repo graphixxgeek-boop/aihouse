@@ -12,6 +12,13 @@ projet doit lire ce document en plus de `CLAUDE.md`, pas à sa place.*
 réécrite silencieusement par-dessus l'ancienne version — même exigence de traçabilité que la
 charte de contenu.*
 
+*Mise à jour proactive, pas seulement sur demande explicite.* Dès qu'un changement confirmé de la
+façon de travailler ensemble est constaté (une nouvelle préférence énoncée par l'utilisateur, une
+habitude confirmée par l'usage répété, une correction sur un point déjà consigné), ce document est
+mis à jour le jour même — même logique que l'Article 13 de `CLAUDE.md` pour le contenu du jeu :
+une règle de travail réelle qui existe dans la conversation mais pas ici est une dette à combler
+tout de suite, pas plus tard.
+
 ## 0. Relecture périodique, pas seulement en début de session
 
 *(Ajouté le 2026-09-18, à la demande explicite de l'utilisateur.)* Lire `CLAUDE.md` et ce document
@@ -143,6 +150,14 @@ quand une version de référence existe, sans jamais s'y arrêter si elle ne suf
 *(Champ volontairement large, à la demande explicite de l'utilisateur : « tout ce qui est utile
 pour l'IA de comprendre à mon sujet pour travailler le plus efficacement possible ». Registre
 strictement professionnel/projet — aucune donnée personnelle hors du cadre de collaboration.)*
+
+**Jamais de mise à jour silencieuse de cette section précise.** *(Ajouté le 2026-09-18, à la
+demande explicite de l'utilisateur.)* Si un événement de la session suggère que ce profil mérite
+d'être révisé (un trait à nuancer, un point à ajouter, une observation qui ne se confirme plus),
+l'agent en informe l'utilisateur EN DÉTAIL — ce qui a été observé, ce que ça changerait dans le
+texte — avant ou en même temps que la modification, jamais après coup sans le signaler. Le reste du
+document (sections 1 à 7, section 9) suit la règle générale de mise à jour proactive ci-dessus ;
+cette section-ci, plus sensible, reçoit cette garantie supplémentaire.
 
 - **Spécification itérative, jamais figée à l'avance.** Les demandes arrivent par couches, y
   compris en cours de tâche. L'agent doit savoir fusionner un nouvel ajout dans un travail déjà en
