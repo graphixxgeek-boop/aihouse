@@ -96,6 +96,20 @@ Toute transcription intégrale de simulation (ou tout document long de même nat
 fichier joint (`SendUserFile`), jamais collée en clair dans la réponse — préférence actée le
 2026-09-18, cf. `CLAUDE.md`.
 
+**Conserver les versions précédentes pour comparaison rapide.** *(Ajouté le 2026-09-18, à la
+demande explicite de l'utilisateur, après un besoin réel : comparer deux transcripts de simulation
+pour diagnostiquer une régression sur un passage précis — Point 7 de la relecture du
+2026-09-18.)* Un transcript de simulation (ou tout autre artefact volumineux produit pour
+comparaison future — dossier retourné, journal JSON) n'est jamais écrasé ni supprimé au profit du
+suivant : chaque nouvelle version s'ajoute, la précédente reste accessible. Avant de traiter une
+demande de comparaison entre deux versions comme irréalisable faute d'archive, l'agent vérifie
+d'abord si les fichiers précédents existent encore (répertoire de travail temporaire de la session
+en cours, ou tout autre emplacement où ils auraient pu être sauvegardés) plutôt que de supposer
+qu'ils sont perdus. Le répertoire temporaire d'une session n'étant pas garanti de survivre à un
+changement d'environnement, un artefact dont la comparaison future importe réellement (ex. la
+version validée d'une scène de référence) gagne à être copié dans le dépôt lui-même plutôt que
+laissé uniquement en zone temporaire.
+
 ## 8. Profil de collaboration observé
 
 *(Champ volontairement large, à la demande explicite de l'utilisateur : « tout ce qui est utile
