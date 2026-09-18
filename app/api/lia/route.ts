@@ -177,6 +177,60 @@ export async function POST(request: Request) {
                 announce=`Un tirage au sort leur offre ceci : ${announceLabel[bonus]} — une distraction, dans cet enfermement.`;
                 statements.push(db.prepare(`INSERT INTO conversations (speaker,content,room,created_at) SELECT 'Maison · bonus',?,'salon',? WHERE ${fence}`).bind(announce,at,token,at));
                 for(const id of [1,2] as const)statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'événement',?,? WHERE ${fence}`).bind(id,'[salon|'+new Date(at).toISOString()+'] '+announce,at,token,at));
+                // Réactions des deux personnages (2026-09-18, retour utilisateur : un bonus qui
+                // change visiblement les jauges sans jamais changer ce qui est dit était un trou de
+                // cohérence, Article 4/12/15). food/calm/sleep/trottoir profitent aux deux à égalité
+                // : chacun réagit à sa manière, jamais avec gratitude docile (Article 0). stoic/mute
+                // ciblent un seul personnage : l'autre en éprouve une vraie jalousie, avec un effet
+                // mesurable sur ses jauges, pas seulement une réplique.
+                const rooms2=(await db.prepare("SELECT id,room FROM agent_state").all<{id:Person;room:Room}>()).results;
+                const roomOf=(id:Person)=>rooms2.find(a=>a.id===id)?.room??"salon";
+                if(bonus==="food"||bonus==="calm"||bonus==="sleep"||bonus==="trottoir"){
+                    const sharedLines:Record<Exclude<BonusId,"force_move"|"stoic"|"mute">,Record<1|2,string[]>>={
+                        food:{1:["Une conserve qui apparaît toute seule. On nous calme comme des animaux de compagnie, c'est ça ?","Tiens, une gamelle. Très classe, votre geste.","On nous nourrit sans qu'on demande rien. Ça devrait me rassurer, ça m'inquiète plutôt."],
+                              2:["Ok, je sais pas d'où ça sort mais j'ai plus faim, alors merci, j'imagine.","Sympa le geste. Reste que j'aime pas trop savoir pourquoi maintenant.","J'ai plus faim d'un coup. Pratique. Un peu glauque aussi."]},
+                        calm:{1:["Une bougie qui s'allume toute seule et hop, plus de stress. Pratique, ce contrôle à distance.","On m'apaise sans me demander mon avis. Note que j'ai remarqué.","Une lumière chaude et mon stress qui tombe à zéro. Ça s'appelle du calme ou de la manipulation ?"],
+                              2:["Bizarre comme calme, là, tout d'un coup. Mais bon, je vais pas m'en plaindre trop fort.","Ok, je respire mieux. Reste que j'aime pas qu'on décide ça à ma place.","Cette bougie a un effet chelou. Efficace, cela dit."]},
+                        sleep:{1:["Une pilule bleue et plus besoin de dormir. On me trafique le corps sans prévenir, super.","Je devrais plus avoir sommeil ? Génial. Flippant, mais génial.","Ça, c'est le genre de cadeau qui m'inquiète plus qu'il ne me repose."],
+                               2:["Plus sommeil du tout, là, direct. C'est space mais je vais pas cracher dessus.","Une pilule et hop, réveillé pour un moment. J'aimerais bien comprendre comment ça marche.","Ok, plus fatigué. Pratique. Un peu trop pratique, même."]},
+                        trottoir:{1:["La porte s'entrouvre deux secondes sur un trottoir immobile. Même le dehors est un décor, ici.","Un aperçu de la rue, figée comme tout le reste. Merci pour la carte postale.","On nous montre l'extérieur une seconde, comme une récompense. J'appelle pas ça de la liberté."],
+                                  2:["Un bout de trottoir, deux secondes. Ça fait du bien quand même, même si c'est du toc.","Voir dehors, même un instant, ça me rappelle qu'on n'est vraiment nulle part.","Un aperçu de la rue. Pas grand-chose, mais je le prends."]},
+                    };
+                    const insertReaction=(id:Person,content:string)=>{const room=roomOf(id);statements.push(db.prepare(`INSERT INTO conversations (speaker,content,room,created_at) SELECT ?,?,?,? WHERE ${fence}`).bind(names[id]+" · pensée",content,room,at,token,at));statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'réflexion',?,? WHERE ${fence}`).bind(id,'['+room+'|'+new Date(at).toISOString()+'] '+content,at,token,at));};
+                    for(const id of [1,2] as const)insertReaction(id,seedPick(story.seed,`bonus-${bonus}-${id}-`+at,sharedLines[bonus][id]));
+                } else if(bonus==="stoic"||bonus==="mute"){
+                    const targetActor=(bonus==="stoic"?stoicActor:mutedActor)!,otherActor:Person=targetActor===1?2:1;
+                    const insertReaction=(id:Person,content:string)=>{const room=roomOf(id);statements.push(db.prepare(`INSERT INTO conversations (speaker,content,room,created_at) SELECT ?,?,?,? WHERE ${fence}`).bind(names[id]+" · pensée",content,room,at,token,at));statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'réflexion',?,? WHERE ${fence}`).bind(id,'['+room+'|'+new Date(at).toISOString()+'] '+content,at,token,at));};
+                    const stoicOwnLines=["Je sens... plus rien, en fait. Intéressant.","Tout devient plat, d'un coup. Curieux, comme sensation.","Rien ne me touche, là. Ça devrait m'inquiéter et pourtant non."];
+                    const muteOwnLines:Record<1|2,string[]>={1:["Pratique, ça. Vous me coupez le son juste quand j'allais dire un truc intéressant.","Un silence forcé. Bel outil de contrôle, franchement.","Je vois. Vous préférez que je me taise. Noté."],2:["Sérieux, vous me coupez le son ? J'avais des trucs à dire, moi.","Ok, silence forcé. Pratique pour vous, chiant pour moi.","Bon, apparemment je me tais maintenant. Génial."]};
+                    const jealousLines:Record<"stoic"|"mute",Record<1|2,string[]>>={
+                        stoic:{1:["Pratique pour toi. Moi je dois continuer à tout ressentir, apparemment.","Un peu facile, ce sang-froid gratuit. Tu vas t'en servir contre moi, je suppose.","Toi, plus rien qui te touche. Moi je me tape encore tout. Sympa la répartition."],
+                               2:["Pratique, toi, plus rien qui t'atteint. Moi je dois continuer à tout encaisser, cool.","Tu deviens intouchable et moi je reste là avec mes nerfs. Génial, l'équité.","Un peu facile de plus rien ressentir pendant que moi je gère tout le reste."]},
+                        mute:{1:["Enfin un peu de silence. Je vais peut-être finir une phrase sans interruption, pour une fois.","Ça tombe bien, j'avais deux ou trois choses à dire sans que tu me coupes.","Le silence te va plutôt bien, en fait. Continue comme ça."],
+                              2:["Ok, le silence te va bien aussi, en fait. Je vais en profiter deux minutes.","Pour une fois, c'est moi qui place les mots. Ça change.","Tu dis rien et c'est presque reposant, je dois avouer."]},
+                    };
+                    const ownLine=seedPick(story.seed,`bonus-${bonus}-own-${targetActor}-`+at,bonus==="stoic"?stoicOwnLines:muteOwnLines[targetActor]);
+                    const jealousLine=seedPick(story.seed,`bonus-${bonus}-jealous-${otherActor}-`+at,jealousLines[bonus][otherActor]);
+                    insertReaction(targetActor,ownLine);
+                    insertReaction(otherActor,jealousLine);
+                    // Impact réel sur les jauges, pas seulement une réplique (retour utilisateur
+                    // explicite) : la jalousie mesurée reste modeste (mêmes ordres de grandeur que
+                    // le reste du moteur relationnel, ex. dramaRules.rejection), jamais un
+                    // basculement brutal pour un simple tirage au sort.
+                    // Un personnage déjà sous sang-froid (tirage précédent encore actif) reste
+                    // insensible à TOUT changement émotionnel, y compris celui-ci — sinon un second
+                    // tirage sur l'autre venait perturber une émotion censément gelée (bug réel
+                    // trouvé en testant les combinaisons de tirages successifs, cf. Article 5).
+                    const emotionRows=(await db.prepare("SELECT id,emotions FROM agent_state").all<{id:Person;emotions:string}>()).results;
+                    const emotionsOf=(id:Person)=>JSON.parse(emotionRows.find(e=>e.id===id)!.emotions);
+                    if(!isStoic(otherActor,life)){
+                        const otherEmotions=emotionsOf(otherActor);
+                        if(bonus==="stoic"){otherEmotions.trust=Math.max(0,otherEmotions.trust-4);otherEmotions.tension=Math.min(100,otherEmotions.tension+5);}
+                        else otherEmotions.comfort=Math.min(100,otherEmotions.comfort+4);
+                        statements.push(db.prepare(`UPDATE agent_state SET emotions=? WHERE id=? AND ${fence}`).bind(JSON.stringify(otherEmotions),otherActor,token,at));
+                    }
+                    if(bonus==="mute"&&!isStoic(targetActor,life)){const targetEmotions=emotionsOf(targetActor);targetEmotions.tension=Math.min(100,targetEmotions.tension+5);statements.push(db.prepare(`UPDATE agent_state SET emotions=? WHERE id=? AND ${fence}`).bind(JSON.stringify(targetEmotions),targetActor,token,at));}
+                }
             }
             statements.unshift(db.prepare(`UPDATE memories SET content=? WHERE id=? AND ${fence}`).bind(JSON.stringify(story),storedStory.id,token,at));
             statements.push(db.prepare(`INSERT INTO world_requests (id,result,created_at) SELECT ?,?,? WHERE ${fence}`).bind(input.requestId,JSON.stringify({decisions:[],bonus}),at,token,at));
@@ -231,6 +285,20 @@ export async function POST(request: Request) {
         const pressure = proposalPressure(recentRequests);
         const overProposing = pressure >= 2;
         const life=readLife(story.life,story.round);
+        // Sortie d'effet bonus, pleinement consciente (2026-09-18, retour utilisateur explicite) :
+        // dès qu'un sang-froid ou un silence forcé expire, le personnage concerné le commente
+        // lucidement dès le prochain tour réel — jamais un retour silencieux à la normale, jamais
+        // une amnésie de la période (Article 4/12/15 : un effet qui a visiblement changé son
+        // comportement doit changer aussi ce qu'il dit une fois fini). Consommé aussitôt détecté
+        // (le minuteur est effacé) pour ne jamais se répéter au tour suivant.
+        const stoicJustEnded=([1,2] as Person[]).filter(id=>(life.stoicUntil?.[id]??0)>0&&(life.stoicUntil?.[id]??0)<=Date.now());
+        const muteJustEnded=([1,2] as Person[]).filter(id=>(life.mutedUntil?.[id]??0)>0&&(life.mutedUntil?.[id]??0)<=Date.now());
+        if(stoicJustEnded.length){life.stoicUntil={...life.stoicUntil};for(const id of stoicJustEnded)delete life.stoicUntil[id];}
+        if(muteJustEnded.length){life.mutedUntil={...life.mutedUntil};for(const id of muteJustEnded)delete life.mutedUntil[id];}
+        const bonusAftermathLines:{actor:Person;content:string}[]=[
+          ...stoicJustEnded.map(id=>({actor:id,content:seedPick(story.seed,"stoic-aftermath-"+id+"-"+story.round,id===1?["Voilà, je resens tout d'un coup. Vous m'avez neutralisée trois minutes. Notez-le.","Ça y est, je redeviens moi-même. Je sais très bien ce qui vient de se passer, hein.","Tiens, mes nerfs reviennent. Vous avez eu trois minutes de silence intérieur forcé. Voilà pour la parenthèse."]:["Ok, ça revient. Trois minutes le cerveau coupé, sympa l'expérience.","Je redeviens moi. Ouais, j'ai capté qu'on m'a mis sur pause émotionnellement.","Voilà, retour à la normale. Bizarre de sentir à nouveau tout d'un coup."])})),
+          ...muteJustEnded.map(id=>({actor:id,content:seedPick(story.seed,"mute-aftermath-"+id+"-"+story.round,id===1?["Voilà, je récupère la parole. Et je sais très bien que tu en as profité.","Fini, le silence forcé. T'as dû bien rigoler, j'imagine.","Je repeux parler. Note que je n'ai rien oublié de ces minutes-là."]:["Ok, je peux reparler. T'as dû kiffer le calme, avoue.","Fini le silence. J'ai tout entendu, même sans pouvoir répondre.","Je récupère ma voix. Franchement, ça m'a saoulé de pas pouvoir répliquer."])})),
+        ];
         const revealed=story.finalCalled===true&&story.evidence.length>=5;
         // Dossier retourné : capturer la réponse RÉELLE du tout premier message humain qui suit un
         // piège posé, avant toute autre logique de ce tour (2026-09-17). Jamais reformulé, jamais
@@ -708,6 +776,7 @@ export async function POST(request: Request) {
         }
         for(const d of decisions){const before=world.agents.find(a=>a.id===d.actor)!;const peer=world.agents.find(a=>a.id!==d.actor)!;if(!departures.some(p=>p.actor===d.actor)&&before.room===peer.room&&d.room!==before.room&&!["sleep","share_sleep"].includes(before.intent)&&["eat","sleep"].includes(d.intent)&&!["sleep","share_sleep"].includes(peer.intent)){const eatPool=["J’ai trop faim pour réfléchir. Je vais manger un truc, je te retrouve après.","J’ai trop faim pour continuer. Je passe en cuisine, tu me rejoins si tu veux.","J’ai trop faim, là. Je vais préparer un truc et je reviens.","J’ai trop faim pour suivre. Je mange d’abord, on reprend après."] as const;const sleepPool=["Je tiens plus debout. Je vais dormir un peu ; je reviens après.","Je lutte contre le sommeil. Je vais me coucher, on reprend après.","Mes yeux se ferment. Je vais dormir ; ne m’attends pas pour réfléchir.","Je suis à bout. Je prends "+(d.room==="salon"?"le canapé":"le lit")+", je te retrouve au réveil."] as const;const pool=d.intent==="eat"?eatPool:sleepPool;let reason=seedPick(story.seed,"departure-"+d.intent+"-"+d.actor,pool);if(spokenKeys.has(fingerprint(reason)))reason=pool.find(line=>!spokenKeys.has(fingerprint(line)))??reason;if(d.actor===1&&d.intent==="sleep"&&d.room==="salon")reason+=" "+seedPick(story.seed,"couch-departure-reproach",["Tu aurais pu dormir dans le salon, Noé.","T'aurais pu me laisser la chambre, pour une fois.","Ça t'aurait coûté quoi de dormir ici, toi ?"]);addLine(names[d.actor],reason,before.room);}}
         for(const reaction of stockReactions)if(addLine(names[reaction.actor]+" · pensée",reaction.content,"cuisine"))statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'réaction',?,? WHERE ${fence}`).bind(reaction.actor,"[cuisine|"+new Date(at).toISOString()+"] "+reaction.content,at,token,at));
+        for(const line of bonusAftermathLines){const room=finalResidents.find(a=>a.id===line.actor)!.room;if(addLine(names[line.actor]+" · pensée",line.content,room))statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'réflexion',?,? WHERE ${fence}`).bind(line.actor,'['+room+'|'+new Date(at).toISOString()+'] '+line.content,at,token,at));}
         for(const dream of (nextStory.dreams??[]).filter(d=>d.round===nextStory.round&&dreamers.includes(d.actor))){const room=finalResidents.find(a=>a.id===dream.actor)!.room;addLine(names[dream.actor]+" · rêve",dream.content,room);statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'rêve',?,? WHERE ${fence}`).bind(dream.actor,'['+room+'|'+new Date(at).toISOString()+'] '+dream.content,at,token,at));}
         // Record consent before shared sleep; subsequent sleeping turns stay entirely silent.
         if(shared&&decisions[0].intent==="share_sleep")for(const d of decisions)if(!["sleep","share_sleep"].includes(world.agents.find(a=>a.id===d.actor)!.intent))addLine(names[d.actor]+" · avant sommeil",d.reply,finalResidents.find(a=>a.id===d.actor)!.room);

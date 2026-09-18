@@ -247,6 +247,29 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
 - Indication visuelle : jauge de besoin concernée en 0 % clignotant (classe `need-bonused`,
   réutilise l'animation `need-glimmer` déjà existante, accent doré) ; badge 🤐/🗿 sur la fiche du
   personnage concerné pour mute/stoic.
+- **Réactions et jalousie (2026-09-18, audit approfondi puis retour utilisateur explicite).**
+  Constat initial de l'audit : un bonus qui change visiblement les jauges sans jamais changer ce qui
+  est dit était un vrai trou de cohérence (Article 4/12/15) — seul `force_move` avait une vraie
+  réaction avant cette correction. Désormais, chaque tirage produit deux répliques scénarisées
+  (`· pensée`, zéro appel API, même registre que `force_move`, 3 variantes par voix par personnage,
+  Article 10/11) :
+  - `food`/`calm`/`sleep`/`trottoir` (bénéfice partagé, pas de personnage ciblé) : chacun réagit à sa
+    manière — jamais de gratitude docile (Article 0), plutôt une méfiance ou un cynisme face à un
+    geste qui les calme sans qu'ils l'aient demandé.
+  - `stoic`/`mute` (un seul personnage ciblé) : le personnage ciblé a sa propre courte réplique, et
+    **l'autre éprouve une vraie jalousie avec un effet mesurable sur ses jauges**, pas seulement une
+    ligne — retour utilisateur explicite (« impact réel sur les jauges »). `stoic` : l'autre perd
+    4 points de confiance et gagne 5 points de tension. `mute` : le musellé gagne 5 points de
+    tension (frustration d'être réduit au silence), l'autre gagne 4 points d'aisance
+    (soulagement/plaisir malicieux du silence). Un personnage déjà sous sang-froid au moment du
+    tirage reste **immunisé à tout changement émotionnel**, y compris celui-ci — sans cette garde,
+    un second tirage sur l'autre venait perturber une émotion censément gelée (bug réel trouvé en
+    testant les combinaisons de tirages successifs).
+  - **Sortie d'effet, pleinement consciente** (retour utilisateur explicite, tranché contre
+    l'amnésie/l'état second) : dès qu'un sang-froid ou un silence forcé expire (comparaison
+    d'horodatage, détectée au tout début du tour réel suivant, quel que soit le mode), le personnage
+    concerné le commente lucidement — jamais un retour muet à la normale. Consommé aussitôt détecté
+    (le minuteur expiré est effacé) pour ne jamais se répéter au tour suivant.
 
 ## Dossier retourné (`lib/life.ts`, `app/api/lia/route.ts`, `docs/referentiel/principes.md` 8.5)
 

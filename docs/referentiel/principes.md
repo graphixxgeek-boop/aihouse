@@ -445,6 +445,25 @@ l'observateur, chacun avec un interlocuteur fixe (miroir → Lia, dilemme → No
     une nouvelle détresse réelle survient (`softnessGiven` compte les occurrences pour varier le
     registre).
 
+8.6. **Audit approfondi du 2026-09-18, demandé explicitement par l'utilisateur.** Un tour de
+vérification complet de la roulette et du dossier (relecture ligne à ligne, recherche de
+combinaisons non couvertes, renforcement des tests) a trouvé deux bugs réels et une zone
+incomplète, corrigés le jour même (Article 3/5/13) :
+- `stoicUntil` était un slot unique, reproduisant exactement le bug déjà trouvé et corrigé une fois
+  pour `mutedUntil` (un second tirage sur l'autre personnage écrasait le premier avant son terme,
+  sans trace) — même correction appliquée (état indépendant par personnage).
+- Un piège du dossier dont l'interlocuteur fixe était muselé pouvait être marqué « posé » alors que
+  sa réplique devenait une pensée privée invisible de l'observateur, fermant le dossier retourné
+  pour le reste de la partie — corrigé : le piège est différé, jamais silencieusement perdu.
+- Complétude (retour utilisateur explicite après l'audit) : les six bonus qui n'avaient qu'un
+  message système obtiennent une vraie réaction jouée par chaque personnage ; `stoic`/`mute`
+  ajoutent une jalousie réelle avec effet mesurable sur les jauges de l'autre (confiance, tension,
+  aisance selon le bonus) — un personnage déjà sous sang-froid restant immunisé à tout changement
+  émotionnel, y compris celui-là (nouveau bug de combinaison trouvé et corrigé en même temps). La
+  sortie d'effet de `stoic`/`mute` est **pleinement consciente** : le personnage commente
+  lucidement avoir été neutralisé/muselé, jamais un retour muet à la normale (choix explicite de
+  l'utilisateur, à l'opposé d'un « état second » amnésique).
+
 ## 9. Robustesse technique
 
 9.1. Toute écriture en base de données est fondue dans une transaction unique par tour

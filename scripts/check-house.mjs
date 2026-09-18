@@ -584,7 +584,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 44'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 45'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -695,34 +695,64 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const spin=async value=>{const before=calls;Math.random=()=>value;let response;try{response=await post(input('spin_bonus',1,{epoch}));}finally{Math.random=originalRandom;}assert.equal(calls,before,'a spin must never cost a Gemini call, whichever bonus it lands on');return response;};
   // pool = [food,calm,sleep,stoic,mute,trottoir,force_move] (7 buckets) ; stoic/mute/force_move
   // reuse the same draw to also pick their target/destination, documented at each step below.
-  // food (bucket 0/7)
+  // food (bucket 0/7) ; retour utilisateur du 2026-09-18 : un bonus qui change les jauges sans
+  // jamais rien changer à ce qui est dit était un trou de cohérence — les deux personnages doivent
+  // désormais réagir, chacun dans son registre, jamais avec une gratitude docile (Article 0).
   let r=await spin(.01);assert.equal(r.status,200);let w=await r.json();assert.equal(w.bonus,'food');
   assert.ok(activeBonus(w.story.life,'food'));
+  assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/animaux de compagnie|une gamelle|m.inquiète plutôt/i.test(m.content)),'Lia must react to receiving food, not just have her hunger silently zeroed');
+  assert.ok(w.messages.some(m=>m.speaker==='Noé · pensée'&&/alors merci, j.imagine|j.aime pas trop savoir pourquoi|un peu glauque aussi/i.test(m.content)),'Noé must react too, in his own distinct voice');
   r=await post(input('interact',1,{epoch}));w=await r.json();assert.equal(w.agents[0].needs.hunger,0,'an active food bonus must zero hunger for the turn, not just at the moment it was granted');assert.equal(w.agents[1].needs.hunger,0);
   // calm (bucket 1/7)
   r=await spin(.18);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'calm');assert.ok(activeBonus(w.story.life,'calm'));
+  assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/contrôle à distance|j.ai remarqué|de la manipulation/i.test(m.content)));
+  assert.ok(w.messages.some(m=>m.speaker==='Noé · pensée'&&/m.en plaindre trop fort|décide ça à ma place|effet chelou/i.test(m.content)));
   r=await post(input('interact',1,{epoch}));w=await r.json();assert.equal(w.agents[0].needs.stress,0);assert.equal(w.agents[1].needs.stress,0);
   // sleep (bucket 2/7)
   r=await spin(.35);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'sleep');assert.ok(activeBonus(w.story.life,'sleep'));
+  assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/trafique le corps|mais génial|m.inquiète plus qu.il ne me repose/i.test(m.content)));
+  assert.ok(w.messages.some(m=>m.speaker==='Noé · pensée'&&/cracher dessus|comprendre comment ça marche|trop pratique, même/i.test(m.content)));
   r=await post(input('interact',1,{epoch}));w=await r.json();assert.equal(w.agents[0].needs.fatigue,0);assert.equal(w.agents[1].needs.fatigue,0);
   // stoic (bucket 3/7) ; the same draw picks the target (<.5 -> 1, else 2), so .45 lands on actor 1.
+  // Jalousie avec impact réel sur les jauges (retour utilisateur) : l'autre voit sa confiance
+  // baisser et sa tension monter, pas seulement une réplique piquante.
   sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=1').run(JSON.stringify({curiosity:70,tension:77,trust:40,comfort:40,attraction:40}));
+  sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=2').run(JSON.stringify({curiosity:70,tension:50,trust:50,comfort:50,attraction:40}));
   r=await spin(.45);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'stoic');assert.ok(isStoic(1,w.story.life));assert.ok(!isStoic(2,w.story.life));
+  assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/plus rien, en fait|devient plat|Rien ne me touche/i.test(m.content)),'the newly stoic actor must have their own brief, flat reaction');
+  assert.ok(w.messages.some(m=>m.speaker==='Noé · pensée'&&/tout encaisser|intouchable et moi|plus rien ressentir pendant que moi/i.test(m.content)),'the other actor must show real jealousy, in his own voice');
+  assert.equal(w.agents[1].emotions.trust,46,'jealousy of a stoic partner must actually cost some trust, not just a line');
+  assert.equal(w.agents[1].emotions.tension,55,'jealousy of a stoic partner must actually raise tension, not just a line');
   r=await post(input('chat',1,{epoch,message:"Je pourrais te désactiver d'un clic."}));assert.equal(r.status,200);w=await r.json();
   assert.equal(w.agents[0].emotions.tension,77,'a stoic actor must keep their exact prior emotions this turn, whatever the model or humanStress would otherwise have pushed toward');
   // A second stoic draw landing on the OTHER actor (.5 -> bucket 3/7 again, target actor 2) must
   // never silently cancel actor 1's still-running stoic effect — stoicUntil was originally a
   // single {actor,until} slot, the exact bug shape already found and fixed once for mutedUntil,
   // which had quietly reappeared here (Article 3: a fixed bug must never resurface in another form).
+  // It must also never let the NEW jealousy gauge effect perturb actor 1, who is already stoic and
+  // therefore immune to any emotional change (a real combinatorial bug found while adding this).
   sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=2').run(JSON.stringify({curiosity:70,tension:81,trust:40,comfort:40,attraction:40}));
   r=await spin(.5);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'stoic');
   assert.ok(isStoic(1,w.story.life),'actor 1 must still be stoic: a second draw on actor 2 must never overwrite the first');
   assert.ok(isStoic(2,w.story.life),'actor 2 must now also be stoic, independently of actor 1');
+  assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/tout ressentir|sang-froid gratuit|Sympa la répartition/i.test(m.content)),'actor 1 still delivers a jealous line, even though the gauge effect must be skipped');
   r=await post(input('chat',2,{epoch,message:"Je pourrais vous désactiver aussi."}));assert.equal(r.status,200);w=await r.json();
-  assert.equal(w.agents[0].emotions.tension,77,'actor 1 must still be frozen after a later, independent stoic draw on actor 2');
+  assert.equal(w.agents[0].emotions.tension,77,'actor 1 must still be frozen after a later, independent stoic draw on actor 2, and must never be perturbed by that draw\'s jealousy effect while already stoic');
+  assert.equal(w.agents[0].emotions.trust,40,'actor 1\'s trust must stay exactly as frozen, untouched by the second draw\'s jealousy effect');
   assert.equal(w.agents[1].emotions.tension,81,'actor 2 must be frozen at their own prior value, not actor 1\'s');
-  // mute (bucket 4/7) ; .62 lands on actor 2 the same way.
+  // mute (bucket 4/7) ; .62 lands on actor 2 the same way. Jalousie avec impact réel : le musellé
+  // voit sa tension monter, l'autre gagne un peu d'aisance (le silence lui profite). Le sang-froid
+  // des deux tirages précédents est levé explicitement : sinon actor 2, encore sous sang-froid en
+  // temps réel, resterait insensible à cet effet aussi, ce qui est correct mais pas ce que ce
+  // bloc-ci teste isolément.
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life.stoicUntil=undefined;sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
+  sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=1').run(JSON.stringify({curiosity:70,tension:20,trust:60,comfort:50,attraction:40}));
+  sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=2').run(JSON.stringify({curiosity:70,tension:30,trust:60,comfort:50,attraction:40}));
   r=await spin(.62);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'mute');assert.ok(isMuted(2,w.story.life));assert.ok(!isMuted(1,w.story.life));
+  assert.ok(w.messages.some(m=>m.speaker==='Noé · pensée'&&/J.avais des trucs à dire|chiant pour moi|je me tais maintenant/i.test(m.content)),'the newly muted actor gets one last parting reaction before going silent');
+  assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/sans interruption|sans que tu me coupes|Le silence te va plutôt bien/i.test(m.content)),'the other actor must show real (if amused) jealousy at the silence, in her own voice');
+  assert.equal(w.agents[1].emotions.tension,35,'being silenced must actually raise the muted actor\'s tension, not just a line');
+  assert.equal(w.agents[0].emotions.comfort,54,'the other actor must actually feel some ease from the silence, not just a line');
   r=await post(input('chat',2,{epoch,message:'Noé, tu es toujours là ?'}));assert.equal(r.status,200);w=await r.json();
   const muteTurnMessages=w.messages.slice(-2);
   assert.ok(muteTurnMessages.some(m=>m.speaker==='Lia'),'chat addressed to the muted actor must be answered by the other, exactly like a sleeping partner');
@@ -730,8 +760,25 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   {const p2=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p2.life.mutedUntil={...p2.life.mutedUntil,1:Date.now()+900000};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p2));}
   assert.equal((await post(input('chat',1,{epoch,message:'Vous m’entendez ?'}))).status,423,'both muted at once must block chat exactly like both asleep');
   {const p3=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p3.life.mutedUntil=undefined;sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p3));}
+  // Sortie d'effet, pleinement consciente (retour utilisateur explicite, 2026-09-18) : dès que le
+  // silence expire, l'ex-musellé le commente lucidement au tour suivant, jamais un retour muet à
+  // la normale. On force l'expiration dans le passé pour ne pas dépendre d'une vraie attente.
+  {const p4=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p4.life.mutedUntil={2:Date.now()-1000};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p4));}
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  assert.ok(!isMuted(2,w.story.life),'the expired mute must actually be cleared, not just ignored');
+  assert.ok(w.messages.some(m=>m.speaker==='Noé · pensée'&&/dû kiffer le calme|tout entendu, même sans pouvoir répondre|ça m.a saoulé de pas pouvoir répliquer/i.test(m.content)),'the actor must consciously and coldly comment on having just been silenced, never a silent return to normal');
+  assert.equal(w.story.life.mutedUntil?.[2]??0,0,'a delivered aftermath reaction must be consumed once, never repeated on the next turn');
+  r=await post(input('interact',1,{epoch}));w=await r.json();
+  assert.ok(!w.messages.slice(-2).some(m=>/dû kiffer le calme|tout entendu, même sans pouvoir répondre|ça m.a saoulé de pas pouvoir répliquer/i.test(m.content)),'the mute aftermath reaction must never repeat on a later turn');
+  // Même vérification pour la sortie du sang-froid : pleinement consciente, réaction à froid.
+  {const p5=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p5.life.stoicUntil={...p5.life.stoicUntil,1:Date.now()-1000};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p5));}
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  assert.ok(!isStoic(1,w.story.life),'the expired stoic effect must actually be cleared');
+  assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/neutralisée trois minutes|je sais très bien ce qui vient de se passer|silence intérieur forcé/i.test(m.content)),'Lia must consciously and coldly comment on having just been stoic, never a silent return to normal');
   // trottoir (bucket 5/7)
   r=await spin(.75);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'trottoir');assert.equal(w.story.life.trottoirGranted,true);
+  assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/est un décor|carte postale|j.appelle pas ça de la liberté/i.test(m.content)));
+  assert.ok(w.messages.some(m=>m.speaker==='Noé · pensée'&&/même si c.est du toc|vraiment nulle part|je le prends/i.test(m.content)));
   // force_move (bucket 6/7) ; .9 also lands the target pick (<.5 -> 1, else 2) on actor 2.
   const beforeRoom=(await readWorld(db)).agents.find(a=>a.id===2).room;
   r=await spin(.9);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'force_move');
@@ -741,7 +788,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(forceMoveMessages.some(m=>m.speaker==='Noé · pensée'&&/déplace|pion|prévenir|subis/i.test(m.content)),'the moved actor must react with irritation, as its own distinct line');
   assert.ok(forceMoveMessages.some(m=>m.speaker==='Lia · pensée'&&/drôle|sourire|téléporte|comprendre/i.test(m.content)),'the other actor must react with amusement, a genuinely different line, not the same voice');
   assert.equal(JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.bonusLog.length,8,'each spin must be logged for the future dossier retourné');
-  console.log('Passed: bonus roulette locked before revelation, real zero-API grants for all 7 bonuses (food/calm/sleep/stoic/mute/trottoir/force_move), genuine need relief and emotion freeze (not just a flag), independent dual-actor stoic effects, muted-actor redirection and both-muted block, distinct forced-move reactions, and a logged trail for every spin.');
+  console.log('Passed: bonus roulette locked before revelation, real zero-API grants for all 7 bonuses (food/calm/sleep/stoic/mute/trottoir/force_move) with a genuinely distinct character reaction to each, real jealousy with measurable gauge impact for stoic/mute (immune while already stoic), fully conscious "cold" aftermath reactions once stoic/mute expire (never a silent return to normal, never repeated), genuine need relief and emotion freeze (not just a flag), independent dual-actor stoic effects, muted-actor redirection and both-muted block, distinct forced-move reactions, and a logged trail for every spin.');
 }
 
 {
