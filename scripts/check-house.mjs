@@ -824,7 +824,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 71'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 72'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -1494,4 +1494,51 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   }
   flat=false;
   console.log('Passed: the two spontaneous post-revelation bonuses (observer mute, camera hide) are a genuine character decision — self-chosen timing and level, voiced out loud, journaled for the psychological profile whether activated or not, sharing one bonus budget with the classic roulette, mocking the observer throughout, and (for the mute) lifting on its own with an out-loud acknowledgement exactly when its self-chosen duration elapses.');
+}
+
+{
+  // Réplique de transition vers le sommeil, jamais silencieuse (2026-09-18, "Noé rêve éveillé",
+  // Point 2 de la relecture — retrouvé par comparaison de deux transcripts de simulation réelle,
+  // cf. docs/regles-de-travail.md). Le filtre "no dialogue during sleep" (légitime pour un sommeil
+  // qui SE POURSUIT, needs.fatigue déjà géré silencieusement) excluait aussi la toute première
+  // réplique du tour de TRANSITION, où le personnage vient tout juste de choisir intent="sleep"
+  // mais est encore parfaitement éveillé et vient de parler — un rêve apparaissait alors juste
+  // après une conversation normale, sans la moindre annonce d'endormissement (Article 2/12/17).
+  let plot={...newStory(),round:20,met:true,introduced:true,sharedMeal:true,finalCalled:false,evidence:[],life:{...newStory().life,exitSearched:true,ambientSeen:true,ambientVerified:true,tvSeen:true,remoteFound:true,personalAsked:true,personalFollowup:3}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  // Faible attirance mutuelle des deux côtés (contrairement à `steady`) : sleepRoom() alloue alors
+  // le salon à Noé plutôt que la chambre — exactement la scène réelle du bug (aucun déplacement de
+  // pièce), pour ne pas confondre ce test avec le mécanisme séparé de ligne de départ scénarisée
+  // qui s'applique déjà quand un changement de pièce a bien lieu (route.ts, l.1276-1278).
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=1').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),JSON.stringify({...initialEmotionsFor(1),attraction:15,trust:20}));
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=2').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),JSON.stringify({...initialEmotionsFor(2),attraction:15,trust:20}));
+  const epoch=(await readWorld(db)).epoch;
+  // "Je vais dormir" est la phrase-détonateur déjà codée (route.ts, l.789, Article 04) qui
+  // convertit intent en "sleep" APRÈS génération, une fois la réplique déjà là — c'est cette
+  // conversion tardive, après que le tour ait déjà coûté un vrai appel API pour les deux
+  // personnages, qui produisait le bug : le filtre d'affichage traitait ensuite ce tour comme un
+  // sommeil qui se poursuit, pas comme sa toute première réplique.
+  const transitionLine="Je vais dormir, on reprendra ça demain. Viens, on trace dans cette piaule avant que tu t'effondres.";
+  const partnerLine="D'accord, je te laisse te reposer, on en reparle demain.";
+  const priorFetch=globalThis.fetch;
+  globalThis.fetch=async(url,options)=>{
+    const payload=JSON.parse(options.body),context=JSON.parse(payload.contents[0].parts[0].text);
+    const reply=context.selfRole==='partner'?partnerLine:transitionLine;
+    return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({intent:'chat',affectionAccepted:false,emotions:context.state.emotions,reply,thought:"Elle a fini par dire son prénom, c'est déjà ça.",stayAlone:false,mood:'attentive',activity:context.selfRole==='partner'?'Je discute':'Je dors',goal:'Récupérer',action:'none',room:context.scene.room,memory:reply})}]}}]});
+  };
+  const r=await post(input('interact',2,{epoch}));
+  globalThis.fetch=priorFetch;
+  assert.equal(r.status,200);
+  const w=await r.json();
+  assert.equal(w.agents.find(a=>a.id===2).intent,'sleep','setup check: the explicit announcement must actually have converted this decision to sleep, or this test proves nothing');
+  // Peu importe qu'il finisse tagué comme réplique parlée ou pensée privée (ça dépend d'un
+  // mécanisme séparé, "ensemble ou pas" ce tour précis) : ce que ce test vérifie, c'est que le
+  // contenu réel de la transition n'est plus purement et simplement absent, comme avant ce correctif.
+  const spokenIndex=w.messages.findIndex(m=>['Noé','Noé · pensée'].includes(m.speaker)&&m.content===transitionLine);
+  assert.ok(spokenIndex>=0,'the transition turn into sleep must still surface the character\'s real line somewhere, never silently dropped like a continuing sleep turn');
+  const dreamIndex=w.messages.findIndex(m=>m.speaker==='Noé · rêve');
+  assert.ok(dreamIndex>=0,'a fresh transition into sleep must still seed a dream this same turn');
+  assert.ok(spokenIndex<dreamIndex,'the transition line must appear before the dream it precedes, never after');
+  console.log('Passed: a character choosing to sleep mid-conversation still speaks their real transition line this same turn, never a silent jump straight from live dialogue to a dream (Point 2, "Noé rêve éveillé").');
 }

@@ -92,6 +92,20 @@ intention en cours, y compris une conversation ou une enquête.
 API. Le réveil n'a lieu qu'après un nombre minimal de tours de sommeil et une fatigue redescendue
 sous un seuil (voir `parametres.md`) — jamais instantanément.
 
+3.2bis. **Le tour de TRANSITION vers le sommeil n'est jamais silencieux** (`app/api/lia/route.ts`,
+2026-09-18, Point 2 de la relecture — « Noé rêve éveillé », retrouvé par comparaison de deux
+transcripts de simulation réelle). Le filtre qui rend muet un sommeil qui SE POURSUIT (3.2
+ci-dessus) ne doit jamais s'appliquer au tour où le personnage vient tout juste de basculer vers
+`sleep`/`share_sleep` : ce tour-là a coûté un vrai appel API et le personnage est encore
+parfaitement éveillé au moment où il parle — sa réplique réelle (souvent l'annonce même de son
+endormissement) doit rester visible, jamais amputée comme si le sommeil avait déjà commencé. Bug
+réel corrigé : ce filtre excluait aussi cette réplique de transition, faisant apparaître un rêve
+juste après une conversation normale, sans la moindre annonce d'endormissement — exactement le
+même bug déjà corrigé pour `share_sleep` (l'étiquette « avant sommeil ») mais jamais reproduit ici
+pour le sommeil solo. Un rêve de la même session doit en outre toujours être narré APRÈS cette
+réplique de transition, jamais avant : l'ordre veille → endormissement → rêve doit rester
+respecté dans l'affichage, pas seulement dans la logique interne.
+
 3.3. Sans confiance et attirance mutuelles suffisantes, Noé cède le lit et dort au salon (sauf s'il
 l'occupe déjà) ; Lia contrainte au canapé exprime sa déception envers lui, jamais l'inverse.
 
