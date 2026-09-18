@@ -464,6 +464,18 @@ exactement comme pour l'analyse initiale. Les deux temps (bugs clairs → correc
 investigation ; conception ouverte → questions d'abord) peuvent cohabiter dans la même réponse,
 traités point par point (Article 16, complément du 2026-09-17).
 
+**Type de question précisé à chaque fois.** *(Ajouté le 2026-09-18, à la demande explicite de
+l'utilisateur : « tes questions peuvent être des questions de calibrage mais aussi des questions
+d'alignement de la compréhension, des questions qui t'aident à mieux comprendre, ou à mieux te
+comprendre, ou à rechercher un sujet ou à mener une enquête, [...] en précisant le type de question
+à chaque fois pour que j'aie un repère sur le contexte de réponse à apporter ».)* Les questions
+posées à l'utilisateur (Article 16, complément ci-dessus inclus) ne se limitent pas au calibrage
+d'un curseur : elles peuvent aussi viser à aligner la compréhension d'une consigne déjà donnée, à
+mener une enquête technique sur un bug pas encore élucidé, ou tout autre besoin pertinent du moment.
+Quel que soit le type, il est explicitement nommé au début de la question (par exemple
+« [Calibrage] », « [Alignement de compréhension] », « [Enquête technique] ») — jamais laissé
+implicite — pour que l'utilisateur sache d'emblée quel genre de réponse apporter.
+
 **Traçabilité visible des vérifications.** Chaque fois qu'une réponse à l'utilisateur s'appuie sur
 la charte pour valider un choix (« ceci respecte l'Article 0 », « vérifié contre l'Article 11 »,
 etc.), le mentionner explicitement accompagné de 📜✅ (la feuille pour la charte, le check vert pour

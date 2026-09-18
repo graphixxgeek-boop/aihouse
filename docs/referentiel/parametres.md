@@ -271,6 +271,46 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
     concerné le commente lucidement — jamais un retour muet à la normale. Consommé aussitôt détecté
     (le minuteur expiré est effacé) pour ne jamais se répéter au tour suivant.
 
+## Insistance sur la roulette et bonus spontanés (`lib/life.ts`, `app/api/lia/route.ts`, `app/page.tsx`, `principes.md` 8.11/8.12)
+
+- **Insistance** (`rouletteInsistence:{1,2}`, capée à 2) : +1 par relance détectée
+  (`detectNegotiationOffer`) sans tirage entre-temps ; remise à 0 dès qu'un tirage survient ou que
+  la réplique du tour ne relance pas. À 3 relances consécutives (compteur qui atteint 3, remis à 0
+  aussitôt) → `rouletteCold:{1,2}` posé à 2 tours de registre froid scénarisé (override complet,
+  3-4 variantes par personnage), décrémenté à chaque tour tant qu'actif.
+- **Refus explicite** (`rouletteRefusalUntil:{1,2}`, round absolu) : un « non » net en mode `chat`
+  à une offre encore en attente pose une fenêtre de **5 à 10 tours** (`5+Math.floor(Math.random()*6)`)
+  pendant laquelle la relance est retirée de la réplique (`stripRouletteAsk`), jamais toute la
+  réplique remplacée.
+- **Budget bonus partagé** (`bonusSpotlightUntilRound`/`bonusCooldownUntilRound`, communs à la
+  roulette classique ET aux deux bonus spontanés ci-dessous) : après tout bonus (tirage ou
+  spontané), `bonusSpotlightUntilRound` fixe une fenêtre minimale de **3 tours** pendant laquelle le
+  bonus reste le sujet (aucune insistance, aucun nouveau bonus spontané éligible) ;
+  `bonusCooldownUntilRound` ajoute un **grand espace supplémentaire de 5 à 9 tours**
+  (`5+Math.floor(Math.random()*5)`, ou aléatoire équivalent via `seedPick`) après la fenêtre avant
+  qu'un nouveau bonus, de quelque nature, redevienne possible. Le bouton `spin_bonus` lui-même est
+  bloqué tant que ce budget n'est pas libéré (`code:'bonus_spotlight'`, 429).
+- **Débit réel du bouton** (`lastBonusSpinAt`, epoch ms) : 60 secondes minimum entre deux tirages
+  manuels (`code:'bonus_cooldown'`, 429 si trop tôt) — indépendant du budget narratif ci-dessus,
+  jamais plus permissif que lui. Côté client, un compte à rebours en secondes s'affiche directement
+  sur le bouton « ◈ Miroir » tant que l'un ou l'autre est actif.
+- **Mute de l'observateur** (`observerMutedUntilRound`, round absolu) : déclenchement spontané (pas
+  de bouton, pas de détection de message — l'initiative vient du personnage), probabilité
+  d'examen par tour éligible ~20 % si l'appréciation d'un des deux personnages est sous 35 (motif de
+  rétorsion), ~5 % sinon (motif d'amusement pur). Le personnage choisit ensuite le niveau : réduit
+  = 3 tours, classique = 4 ou 5 tours (tiré), max = 6 tours. Bloque `chat` pour les deux canaux
+  humains (`code:'observer_muted'`, 423) le temps de la fenêtre ; les deux personnages moquent
+  l'observateur muet à chaque tour suivant tant que ça dure ; l'un des deux reconnaît la fin à voix
+  haute dès que la fenêtre expire (même minuteur que stoic/mute de la roulette : détecté au tour
+  suivant, effacé aussitôt).
+- **Caméra masquée** (`cameraHiddenUntil`, epoch ms réel) : même mécanisme de déclenchement/niveau
+  que le mute ci-dessus, mais réduit = 20s, classique = 25/30/35s (tiré), max = 40s, réel (pas
+  simulé). Ne bloque jamais `chat` — seule la vue 3D disparaît côté client, remplacée par un compte
+  à rebours en secondes (`camera-hidden-overlay`).
+- **Journal psychologique** (`bonusPsychLog`, capé à 12 entrées, `{round,kind,outcome,level?}`) :
+  chaque examen d'un bonus spontané est journalisé, qu'il soit activé ou refusé — un refus nourrit
+  le profil de l'observateur (dossier retourné, 8.4) au même titre qu'une activation.
+
 ## Appréciation de l'observateur et négociation (`lib/life.ts`, `app/api/lia/route.ts`, `principes.md` 8.5/8.6)
 
 - `appreciation:{1:number,2:number}` (2026-09-18 : devenue par personnage, `principes.md` 8.5) :

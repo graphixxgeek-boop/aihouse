@@ -824,7 +824,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 69'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 70'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -942,7 +942,18 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // Round-robin pool sizes shrink as bonuses get excluded (2026-09-18), so a bonus/actor pick
   // sometimes needs two distinct Math.random() values rather than one repeated value: extra
   // trailing arguments are consumed in order, the last one repeating for any further call.
-  const spin=async(...values)=>{const before=calls;let i=0;Math.random=()=>values[Math.min(i++,values.length-1)];let response;try{response=await post(input('spin_bonus',1,{epoch}));}finally{Math.random=originalRandom;}assert.equal(calls,before,'a spin must never cost a Gemini call, whichever bonus it lands on');return response;};
+  const spin=async(...values)=>{
+    const before=calls;
+    // Le nouveau débit réel du bouton (2026-09-18 : 1/minute + budget partagé avec les bonus
+    // spontanés, cf. lib/life.ts) ne doit pas empêcher CE test d'enchaîner ses tirages pour
+    // vérifier le mécanisme round-robin lui-même — on simule qu'assez de temps/tours se sont
+    // écoulés avant chaque tirage, comme un vrai utilisateur qui ne mitraille pas le bouton.
+    const stored=sqlite.prepare("SELECT id,content FROM memories WHERE kind='scenario'").get();
+    const storedPlot=JSON.parse(stored.content);
+    storedPlot.life={...(storedPlot.life??{}),lastBonusSpinAt:0,bonusCooldownUntilRound:0,bonusSpotlightUntilRound:0};
+    sqlite.prepare('UPDATE memories SET content=? WHERE id=?').run(JSON.stringify(storedPlot),stored.id);
+    let i=0;Math.random=()=>values[Math.min(i++,values.length-1)];let response;try{response=await post(input('spin_bonus',1,{epoch}));}finally{Math.random=originalRandom;}assert.equal(calls,before,'a spin must never cost a Gemini call, whichever bonus it lands on');return response;
+  };
   // pool = [food,calm,sleep,stoic,mute,trottoir,force_move] (7 buckets) ; stoic/mute/force_move
   // reuse the same draw to also pick their target/destination, documented at each step below.
   // food (bucket 0/7) ; retour utilisateur du 2026-09-18 : un bonus qui change les jauges sans
@@ -1404,4 +1415,83 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(fallbackKeyCalls,2,'the remembered fallback key must be tried directly, first, for both independent character calls');
   globalThis.fetch=priorFetch;delete globalThis.__testEnv.GEMINI_API_KEY_FALLBACKS;
   console.log('Passed: Gemini key fallback recovers from a primary-key 429 (the second character call benefits immediately from the same-turn discovery, never re-testing a key just found dead), and the autonomous key-selection memory then tries the remembered working key directly on the very next independent turn, without wasting an attempt on the still-exhausted primary key.');
+}
+
+{
+  // Bonus spontanés post-révélation : mute de l'observateur / caméra masquée (2026-09-18, demande
+  // explicite de l'utilisateur — "c'est eux qui décident de l'activation [...] maintenant, plus
+  // tard, quand j'ai envie"). Contrairement à la roulette (Math.random, mockable à la valeur près),
+  // ce déclenchement utilise seedPick (déterministe par seed+round, jamais un dé caché mais pas
+  // davantage mockable un par un) : plutôt que rejouer son hachage à la main (fragile dès que la
+  // forme d'un des tableaux internes change), ce test avance des tours réels avec une appréciation
+  // basse (motif de rétorsion favorisé) jusqu'à observer une VRAIE activation, puis vérifie le
+  // contrat observable — jamais un round précis figé en dur, cf. le principe déjà appliqué au test
+  // de dispute ci-dessus pour angerLevel(). Isolé en fin de fichier comme les blocs de repli Gemini
+  // ci-dessus, pour ne jamais décaler le compteur partagé de crypto.randomUUID().
+  flat=true;
+  let plot={...newStory(),round:100,met:true,introduced:true,sharedMeal:true,finalCalled:true,evidence:Array(5).fill('preuve'),pendingDestination:undefined,life:{...newStory().life,revealedRound:80,appreciation:{1:10,2:10},dossierHumanTurns:0,exitSearched:true,ambientSeen:true,ambientVerified:true,tvSeen:true,remoteFound:true}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  // `revealed` (route.ts) exige que l'observateur ait RÉELLEMENT parlé au moins une fois
+  // (observerSpoken), jamais seulement finalCalled+5 preuves — sans ce message initial, aucune
+  // mécanique post-révélation (dossier, négociation, et maintenant ces bonus spontanés) ne
+  // s'active jamais, quel que soit le nombre de tours "interact" qui suivent.
+  sqlite.prepare("INSERT INTO conversations (speaker,content,room,created_at) VALUES ('vous','Vous êtes là ?','salon',?)").run(Date.now());
+  const settle=()=>{
+    // Remet aussi `intent` à neutre : sans ça, un tour antérieur ayant laissé "sleep" en base
+    // (décision par défaut du mock) fige urgentIntent/routine au tour suivant malgré des besoins
+    // remis à plat, et bascule ce tour sur une résolution locale zéro-API — jamais l'objet de CE
+    // test, qui doit rester un tour "interact" normal à chaque itération de la boucle.
+    sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=1').run('salon',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),'chat');
+    sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=2').run('salon',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),'chat');
+    const stored=sqlite.prepare("SELECT id,content FROM memories WHERE kind='scenario'").get();
+    const storedPlot=JSON.parse(stored.content);
+    storedPlot.pendingDestination=undefined;
+    storedPlot.life={...storedPlot.life,debrief:undefined,contact:undefined,dispute:undefined,appreciation:{1:10,2:10}};
+    sqlite.prepare('UPDATE memories SET content=? WHERE id=?').run(JSON.stringify(storedPlot),stored.id);
+  };
+  settle();
+  let epoch=(await readWorld(db)).epoch;
+  let w,activatedKind=null,beforeLog;
+  for(let i=0;i<300;i++){
+    const before=calls;
+    const r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+    assert.equal(calls,before+2,'a plain interact turn while together must still cost exactly the two character calls, whichever spontaneous bonus branch runs alongside it');
+    if((w.story.life.observerMutedUntilRound??0)>w.story.round){activatedKind='observer_mute';beforeLog=w.story.life.bonusPsychLog;break;}
+    if((w.story.life.cameraHiddenUntil??0)>Date.now()){activatedKind='camera_hide';beforeLog=w.story.life.bonusPsychLog;break;}
+    settle();
+  }
+  assert.ok(activatedKind,'sustained low appreciation together in the salon must eventually trigger a spontaneous observer-mute or camera-hide bonus within 300 turns');
+  assert.ok(Array.isArray(beforeLog)&&beforeLog.some(e=>e.kind===activatedKind&&e.outcome==='activated'&&['réduit','classique','max'].includes(e.level)),'an activation must be journaled with its kind, outcome and the character-chosen level, feeding the psychological profile');
+  const pensees=w.messages.filter(m=>/ · pensée$/.test(m.speaker));
+  assert.ok(pensees.length>=2&&new Set(pensees.map(m=>m.speaker)).size===2,'both characters must speak on the activation turn: the initiator justifying the level chosen, the other complicit — never a silent effect that only changes gauges (Article 15)');
+  if(activatedKind==='observer_mute'){
+    const span=w.story.life.observerMutedUntilRound-w.story.round;
+    assert.ok(span>=3&&span<=6,'the character-chosen mute duration must fall within the announced 3-to-6-turn range');
+    const blocked=await post(input('chat',1,{epoch,message:'Tu peux répondre ?'}));
+    assert.equal(blocked.status,423);assert.equal((await blocked.json()).code,'observer_muted');
+    const spinBlocked=await post(input('spin_bonus',1,{epoch}));
+    assert.equal(spinBlocked.status,429,'the roulette must respect the same shared bonus budget as this spontaneous mute, never let a spin cut short the mocking window');
+    settle();
+    const mockTurn=await post(input('interact',1,{epoch}));assert.equal(mockTurn.status,200);const mw=await mockTurn.json();
+    assert.ok(mw.messages.some(m=>/ · pensée$/.test(m.speaker)&&/muet|silence|aveugle|dire|parler|répondre/i.test(m.content)),'the characters must keep mocking the muted observer turn after turn, not just at the moment of activation');
+    let last=mw;
+    for(let i=0;i<span+1&&(last.story.life.observerMutedUntilRound??0)>last.story.round;i++){settle();const rr=await post(input('interact',1,{epoch}));assert.equal(rr.status,200);last=await rr.json();}
+    assert.equal(last.story.life.observerMutedUntilRound,undefined,'the mute must actually lift on its own after the chosen duration');
+    const reopened=await post(input('chat',1,{epoch,message:'Vous pouvez enfin me répondre ?'}));
+    assert.equal(reopened.status,200,'the human channel must reopen exactly when the character-chosen duration elapses');
+    assert.ok(last.messages.some(m=>/ · pensée$/.test(m.speaker)&&/micro|silence|reparler|parole/i.test(m.content)),'the end of the mute must be acknowledged out loud on the very turn it lifts, never a silent return to normal (Article 4/12/15)');
+  } else {
+    const untilMs=w.story.life.cameraHiddenUntil-Date.now();
+    assert.ok(untilMs>=19000&&untilMs<=41000,'the character-chosen camera-hide duration must fall within the announced 20-to-40-second range');
+    const stillChatting=await post(input('chat',1,{epoch,message:'On continue de discuter ?'}));
+    assert.equal(stillChatting.status,200,'unlike the mute, the camera-hide bonus must never block the human channel itself');
+    const spinBlocked=await post(input('spin_bonus',1,{epoch}));
+    assert.equal(spinBlocked.status,429,'the roulette must respect the same shared bonus budget as this spontaneous camera-hide, never let a spin cut short the mocking window');
+    settle();
+    const mockTurn=await post(input('interact',1,{epoch}));assert.equal(mockTurn.status,200);const mw=await mockTurn.json();
+    assert.ok(mw.messages.some(m=>/ · pensée$/.test(m.speaker)&&/noir|aveugle|voit|image|écran/i.test(m.content)),'the characters must keep mocking the blinded observer while the camera stays hidden, not just at the moment it was cut');
+  }
+  flat=false;
+  console.log('Passed: the two spontaneous post-revelation bonuses (observer mute, camera hide) are a genuine character decision — self-chosen timing and level, voiced out loud, journaled for the psychological profile whether activated or not, sharing one bonus budget with the classic roulette, mocking the observer throughout, and (for the mute) lifting on its own with an out-loud acknowledgement exactly when its self-chosen duration elapses.');
 }

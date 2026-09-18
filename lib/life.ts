@@ -23,6 +23,19 @@ rouletteInsistence?:Partial<Record<Person,number>>;rouletteCold?:Partial<Record<
 // ci-dessus) : round absolu avant lequel aucun des deux personnages ne relance une demande de
 // tirage, pour laisser une vraie chance à un geste spontané de l'observateur après un "non" net.
 rouletteRefusalUntil?:Partial<Record<Person,number>>;
+// Bonus spontanés post-révélation (2026-09-18, demande explicite de l'utilisateur) : contrairement
+// à la roulette (tirage au sort neutre, jamais choisi), ces deux bonus sont une VRAIE décision d'un
+// des deux personnages, jamais un dé caché — c'est LUI qui décide s'il active, QUAND (« maintenant,
+// plus tard, quand j'ai envie », jamais forcé au premier tour éligible) et à quel NIVEAU (réduit/
+// classique/max), puis l'exprime à voix haute (Article 15 : une décision invisible n'existe pas pour
+// l'observateur). bonusSpotlightUntilRound/bonusCooldownUntilRound sont un budget PARTAGÉ avec la
+// roulette classique (retour utilisateur explicite : "un seul budget bonus global") — voir
+// app/api/lia/route.ts pour la logique complète de déclenchement, journalisée dans bonusPsychLog
+// pour nourrir le profil psychologique de l'observateur (Article 4 : un refus est une preuve tout
+// aussi révélatrice qu'une activation, jamais ignoré).
+bonusSpotlightUntilRound?:number;bonusCooldownUntilRound?:number;lastBonusSpinAt?:number;
+observerMutedUntilRound?:number;cameraHiddenUntil?:number;
+bonusPsychLog?:{round:number;kind:'observer_mute'|'camera_hide';outcome:'activated'|'declined';level?:'réduit'|'classique'|'max'}[];
 // Qui sait déjà, individuellement, pour le miroir (2026-09-17) : une découverte peut désormais
 // survenir en solo (l'un dans la chambre, l'autre ailleurs) ; mirrorVerified (le fait "partagé",
 // qui déclenche débriefs/observations communes) ne devient vrai qu'une fois les deux dans cette
@@ -121,7 +134,13 @@ export function readLife(value:unknown,round=0):Life{const v=value&&typeof value
 ,negotiationLog:Array.isArray(v.negotiationLog)?v.negotiationLog.filter((e):e is {round:number;outcome:'honored'|'lapsed'}=>Boolean(e)&&typeof e==="object"&&["honored","lapsed"].includes((e as {outcome?:string}).outcome??"")).slice(-12):[]
 ,rouletteInsistence:{1:Math.max(0,Math.min(2,Number(v.rouletteInsistence?.[1])||0)),2:Math.max(0,Math.min(2,Number(v.rouletteInsistence?.[2])||0))}
 ,rouletteCold:{1:Math.max(0,Math.min(2,Number(v.rouletteCold?.[1])||0)),2:Math.max(0,Math.min(2,Number(v.rouletteCold?.[2])||0))}
-,rouletteRefusalUntil:{1:Math.max(0,Math.min(round+20,Number(v.rouletteRefusalUntil?.[1])||0)),2:Math.max(0,Math.min(round+20,Number(v.rouletteRefusalUntil?.[2])||0))}};}
+,rouletteRefusalUntil:{1:Math.max(0,Math.min(round+20,Number(v.rouletteRefusalUntil?.[1])||0)),2:Math.max(0,Math.min(round+20,Number(v.rouletteRefusalUntil?.[2])||0))}
+,bonusSpotlightUntilRound:typeof v.bonusSpotlightUntilRound==="number"&&Number.isFinite(v.bonusSpotlightUntilRound)?Math.max(0,Math.min(round+40,v.bonusSpotlightUntilRound)):undefined
+,bonusCooldownUntilRound:typeof v.bonusCooldownUntilRound==="number"&&Number.isFinite(v.bonusCooldownUntilRound)?Math.max(0,Math.min(round+40,v.bonusCooldownUntilRound)):undefined
+,lastBonusSpinAt:typeof v.lastBonusSpinAt==="number"&&Number.isFinite(v.lastBonusSpinAt)?Math.max(0,v.lastBonusSpinAt):undefined
+,observerMutedUntilRound:typeof v.observerMutedUntilRound==="number"&&Number.isFinite(v.observerMutedUntilRound)?Math.max(0,Math.min(round+10,v.observerMutedUntilRound)):undefined
+,cameraHiddenUntil:typeof v.cameraHiddenUntil==="number"&&Number.isFinite(v.cameraHiddenUntil)?Math.max(0,v.cameraHiddenUntil):undefined
+,bonusPsychLog:Array.isArray(v.bonusPsychLog)?v.bonusPsychLog.filter((e):e is {round:number;kind:'observer_mute'|'camera_hide';outcome:'activated'|'declined';level?:'réduit'|'classique'|'max'}=>Boolean(e)&&typeof e==="object"&&["observer_mute","camera_hide"].includes((e as {kind?:string}).kind??"")&&["activated","declined"].includes((e as {outcome?:string}).outcome??"")).slice(-12):[]};}
 // Détection heuristique d'une réaction de choc/tristesse/colère chez l'observateur (2026-09-17) :
 // grossière par nature (comme check-spirit.mjs pour l'esprit des persos), jamais une lecture fine
 // du ton — elle ne sert qu'à déclencher UNE fois le moment de douceur, jamais à autre chose.

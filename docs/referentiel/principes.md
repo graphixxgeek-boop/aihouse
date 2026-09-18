@@ -730,6 +730,48 @@ aussi réclamer directement un avantage précis qu'il connaît déjà (dormir, m
 que systématiquement un tirage générique — le tirage reste seul décisionnaire, et un résultat qui
 ne correspond pas à ce qui était réclamé peut légitimement agacer le personnage, brièvement.
 
+8.11. **Insistance sur la roulette, jamais un harcèlement** (`lib/life.ts`, `app/api/lia/route.ts`,
+2026-09-18, retour utilisateur explicite). Une relance vers un tirage (`detectNegotiationOffer`)
+est comptée par personnage (`rouletteInsistence:{1,2}`) ; à la troisième relance consécutive sans
+tirage entre-temps, le personnage bascule deux tours en registre « froid » scénarisé
+(`rouletteCold`, override complet de la réplique/pensée, pas une simple consigne de prompt — la
+leçon retenue est qu'une consigne seule ne suffit jamais à garantir un invariant dur), puis retombe
+naturellement. Un **refus explicite** de l'observateur (« non », « pas question », etc.) à une offre
+encore en attente déclenche une fenêtre plus longue et plus légère (`rouletteRefusalUntil`, 5 à 10
+tours tirés au hasard) : la relance est simplement retirée de la réplique (`stripRouletteAsk`), le
+reste de la réaction au sujet réel en cours passe tel quel — pour laisser une vraie chance à
+l'observateur de déclencher le geste spontanément après son refus, jamais retenté comme si de rien
+n'était.
+
+8.12. **Bonus spontanés post-révélation : mute de l'observateur et caméra masquée**
+(`lib/life.ts`, `app/api/lia/route.ts`, 2026-09-18, retour utilisateur explicite — distincts de la
+roulette classique, qui reste un tirage au sort neutre jamais choisi). Ces deux bonus sont une VRAIE
+décision d'un personnage, jamais un dé caché déguisé : à chaque tour éligible (`interact`/
+`autonomous`, après révélation, les deux ensemble au salon, aucun autre besoin ni scène en cours),
+un personnage peut spontanément décider de couper le micro des DEUX canaux humains
+(`observerMutedUntilRound`) ou de brouiller la vue 3D (`cameraHiddenUntil`, en secondes réelles),
+par pur exercice de contrôle OU par rétorsion si l'appréciation d'un des deux personnages est basse
+(<35) — les deux motifs coexistent, jamais un seul déclencheur fixe. Le personnage choisit lui-même
+le NIVEAU (réduit/classique/max — 3, 4-5 ou 6 tours pour le mute ; 20, 25-35 ou 40 secondes pour la
+caméra) et l'exprime à voix haute en le justifiant (Article 15 : une décision invisible n'existe pas
+pour l'observateur), pendant que l'autre personnage réagit en complice, jamais en spectateur muet.
+Le canal humain refuse explicitement tout message `chat` reçu pendant le mute (code
+`observer_muted`), même si le bouton client était contourné ; la caméra masquée, elle, ne bloque
+jamais le chat — seule la vue 3D disparaît, remplacée par un compte à rebours réel. Les deux
+personnages continuent de se moquer de l'observateur muet/aveugle à chaque tour suivant tant que
+l'effet dure, et l'un des deux reconnaît la fin de l'effet à voix haute dès qu'il retombe (même
+principe que l'aftermath stoic/mute de la roulette, Article 4/12/15 : jamais un retour silencieux à
+la normale). Chaque déclenchement, activé ou refusé, est journalisé (`bonusPsychLog`) pour nourrir
+le profil psychologique de l'observateur (dossier retourné, 8.4) — un refus y est une preuve tout
+aussi révélatrice qu'une activation. Ces deux bonus partagent un **budget unique** avec la roulette
+classique (`bonusSpotlightUntilRound`/`bonusCooldownUntilRound`) : au moins 3 tours à commenter/
+utiliser tout bonus obtenu (roulette ou spontané) avant qu'un nouveau bonus, de quelque nature que
+ce soit, ne redevienne possible, suivis d'un grand espace supplémentaire (5 à 9 tours) — jamais un
+enchaînement immédiat de bonus qui viderait le procédé de son impact. Le bouton de tirage manuel de
+la roulette respecte en plus un débit réel côté serveur (60 secondes minimum entre deux tirages,
+compteur affiché sur le bouton côté client), indépendant de ce budget narratif mais jamais plus
+permissif que lui.
+
 ## 9. Robustesse technique
 
 9.1. Toute écriture en base de données est fondue dans une transaction unique par tour
