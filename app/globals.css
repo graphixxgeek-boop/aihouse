@@ -62,3 +62,20 @@ body{background:radial-gradient(ellipse at 8% 0%,#30263f 0%,transparent 55%),rad
 .loading-stage .idle-status{width:100%;text-align:center}.message.movement{border:1px dashed #adb8c9;background:linear-gradient(110deg,#eef0f7,#edf3f7);padding:10px 12px}.message.movement .message-room{font-weight:700}.update-banner{display:flex;justify-content:center;align-items:center;gap:12px;padding:10px;background:#eef0f8;color:#4d5a70;font-size:12px}.update-banner button{border:1px solid #b6c1d3;border-radius:8px;padding:7px 10px;background:white;color:inherit}
 
 .admin-document p{white-space:pre-line}
+
+/* Roulette des bonus (2026-09-17) : tirage au sort post-révélation, jamais un choix. */
+.bonus-roulette-button{background:linear-gradient(120deg,#f2a9ca,#88dbe5);color:#123833;padding:10px 16px;border:0;border-radius:12px}
+.bonus-roulette-button:disabled{opacity:.6}
+.bonus-dialog{width:min(360px,92vw);background:#edf0f6;border:1px solid #bdc9d9;border-radius:18px;padding:26px;box-shadow:0 24px 90px #070f2944;display:grid;gap:16px;justify-items:center;text-align:center}
+.bonus-dialog h2{font-size:18px}
+.bonus-wheel{display:flex;gap:16px;font-size:34px;overflow:hidden;width:100%;padding:8px 0;white-space:nowrap;animation:bonus-spin .35s linear infinite;justify-content:center}
+@keyframes bonus-spin{from{transform:translateX(0)}to{transform:translateX(-50px)}}
+.bonus-result{display:grid;justify-items:center;gap:6px}
+.bonus-result .bonus-icon{font-size:44px}
+.bonus-result p{color:#596579;font-size:13px;line-height:1.5}
+.bonus-dialog button{background:linear-gradient(110deg,#f2a9ca,#88dbe5);color:#123833;font-weight:600;border:0}
+@media(prefers-reduced-motion:reduce){.bonus-wheel{animation:none}}
+.need-meter.need-bonused{animation:need-glimmer 1.6s ease-in-out infinite;outline:1px solid #f3c344;outline-offset:2px;border-radius:4px;accent-color:#f3c344}
+.need-meter.need-bonused::-webkit-meter-optimum-value{background:#f3c344}
+.need-meter.need-bonused::-moz-meter-bar{background:#f3c344}
+.mute-badge,.stoic-badge{font-size:.85em}

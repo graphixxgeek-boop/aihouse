@@ -11,7 +11,9 @@ import type { Resident } from "@/lib/world";
 
 import {visualTiming,type VisualEvent} from "../lib/visual-events";
 import {cityFacades,sceneSpeakers} from "../lib/perception";
-export function HouseView({paused=false,visualEvents=[],gardenOpen=false,agents,night,onSelect,onSettled,thinking=false,evidence=[],observations=[],tvSeen=false,inspectionStep=0,speakerOn=false,mirrorSeen=false,foodSeen=false,speaking=[],humanSpeaking=false,tvOn,onRoom}:{paused?:boolean;visualEvents?:VisualEvent[];gardenOpen?:boolean;agents:Resident[];night:boolean;onSelect:(id:Person)=>void;onSettled?:()=>void;thinking?:boolean;evidence?:string[];observations?:string[];tvSeen?:boolean;inspectionStep?:number;speakerOn?:boolean;mirrorSeen?:boolean;foodSeen?:boolean;speaking?:Person[];humanSpeaking?:boolean;tvOn?:boolean;onRoom?:(room:Room)=>void}) {
+export function HouseView({paused=false,visualEvents=[],gardenOpen=false,agents,night,onSelect,onSettled,thinking=false,evidence=[],observations=[],tvSeen=false,inspectionStep=0,speakerOn=false,mirrorSeen=false,foodSeen=false,speaking=[],humanSpeaking=false,tvOn,onRoom,calmBonus=false}:{paused?:boolean;visualEvents?:VisualEvent[];gardenOpen?:boolean;agents:Resident[];night:boolean;onSelect:(id:Person)=>void;onSettled?:()=>void;thinking?:boolean;evidence?:string[];observations?:string[];tvSeen?:boolean;inspectionStep?:number;speakerOn?:boolean;mirrorSeen?:boolean;foodSeen?:boolean;speaking?:Person[];humanSpeaking?:boolean;tvOn?:boolean;onRoom?:(room:Room)=>void;calmBonus?:boolean}) {
+  const calmLight=useRef<(on:boolean)=>void>(()=>{});
+  useEffect(()=>{calmLight.current?.(calmBonus)},[calmBonus]);
   const gardenState=useRef(gardenOpen),gateUpdate=useRef<(open:boolean)=>void>(()=>{});
   useEffect(()=>{gardenState.current=gardenOpen;gateUpdate.current(gardenOpen);update.current(agents)},[gardenOpen,agents]);
   const scenePaused=useRef(paused);useEffect(()=>{scenePaused.current=paused},[paused]);
@@ -43,6 +45,10 @@ export function HouseView({paused=false,visualEvents=[],gardenOpen=false,agents,
     let dirty=true;
     const scene=new THREE.Scene();const ambient=new THREE.HemisphereLight(0xffffff,0x263451,1.2);scene.add(ambient);
     const light=new THREE.DirectionalLight(0xffe8cf,1.6);light.position.set(-8,18,5);scene.add(light);
+    // Bougie du bonus "calm" (2026-09-17) : effet minimal en attendant la refonte graphique
+    // annoncée — une simple lumière chaude ponctuelle, sans animation de flamme pour l'instant.
+    const calmCandle=new THREE.PointLight(0xffb35c,0,4);calmCandle.position.set(centers.salon[0],1.1,centers.salon[1]);scene.add(calmCandle);
+    calmLight.current=on=>{calmCandle.intensity=on?2.2:0;dirty=true;};
     const camera=new THREE.OrthographicCamera(-10,10,8,-8,.1,100);camera.position.set(sceneView.camera[0],sceneView.camera[1],sceneView.camera[2]);camera.zoom=1.16;camera.up.set(0,1,0);camera.lookAt(sceneView.target[0],0,0);
     illumination.current=n=>{ambient.intensity=n?.45:1.2;light.intensity=n?.65:1.6;renderer.toneMappingExposure=n?.7:.85;dirty=true;};
     renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.85;
