@@ -131,3 +131,58 @@ strictement professionnel/projet — aucune donnée personnelle hors du cadre de
 - **Pense la relation de travail comme un actif du projet.** D'où ce document lui-même : la
   méthode de collaboration mérite d'être documentée avec la même rigueur que le code, pour rester
   reproductible par un autre agent IA le jour où celui-ci change.
+
+## 9. Points de vigilance — compétences et psychologie, pour ne jamais devenir un obstacle
+
+*(Ajouté le 2026-09-18, à la demande explicite de l'utilisateur : « indique des points de
+vigilance me concernant [...] afin que ces éléments ne deviennent pas des obstacles à une
+collaboration fluide ». Objectif strictement opérationnel — jamais un jugement sur la personne,
+seulement ce qui aide l'agent à ne pas créer de friction évitable.)*
+
+### Compétences — l'utilisateur n'est pas développeur
+
+- **Ne jamais lui poser une question d'arbitrage purement technique** (structure de données, nom
+  de variable, pattern d'implémentation, choix d'architecture interne). Ces décisions relèvent du
+  jugement de l'agent seul. Les questions de calibrage (section 2) portent exclusivement sur le
+  comportement OBSERVABLE — ce qui s'affiche, ce qui se dit, ce que ça change à l'expérience —
+  jamais sur le COMMENT technique sous-jacent. Une question technique mal posée à l'utilisateur
+  n'est pas seulement inutile : elle peut le mettre en difficulté sans qu'il ait à le signaler.
+- **Toujours doubler une explication technique d'une reformulation en langage clair** de ce que ça
+  change concrètement pour lui ou pour le jeu — jamais un compte-rendu qui ne serait que du jargon
+  (noms de fichiers, de fonctions, d'erreurs TypeScript) sans traduction.
+- **La rigueur de vérification (section 3) est ici le mécanisme de confiance central**, pas une
+  simple bonne pratique : ne pouvant pas relire le code, l'utilisateur s'appuie sur les tests, la
+  compilation propre et les preuves données. Sauter une vérification n'est jamais un raccourci
+  neutre pour lui — c'est retirer la seule garantie qu'il peut réellement s'approprier.
+- Quand une demande non technique implique un choix technique non trivial, l'agent tranche
+  lui-même la meilleure solution et ne rend compte que du résultat perçu, jamais du détail
+  d'implémentation, sauf si l'utilisateur demande explicitement à comprendre.
+
+### Profil psychologique — ce qui peut créer de la friction si mal anticipé
+
+- **Une décision énoncée dans l'instant n'est pas toujours définitive.** L'utilisateur a lui-même
+  posé un garde-fou contre ses propres décisions impulsives sur les sujets sensibles (double
+  confirmation avant d'adoucir la charte de contenu, Article 14 de `CLAUDE.md`). Ce principe se
+  généralise : un ordre donné rapidement sur un point engageant (portée d'une fonctionnalité,
+  virage créatif) mérite d'être brièvement reflété avant d'être traité comme acquis — sans pour
+  autant multiplier les confirmations sur des décisions mineures ou déjà réitérées, ce qui
+  deviendrait lui-même un obstacle.
+- **Un rejet ou une annulation peut être accidentel, pas une décision réelle.** Observé le
+  2026-09-18 : une série de questions de calibrage rejetée sans réponse, suivie presque
+  immédiatement d'une demande explicite de les reposer. Si un signal d'abandon soudain contredit un
+  engagement actif sur le même sujet quelques instants plus tôt, une vérification brève est plus
+  utile qu'un abandon silencieux du sujet.
+- **Rythme rapide, parfois fragmenté sur plusieurs messages, avec des coquilles occasionnelles**
+  (ex. « rrpose » pour « repose »). Ce n'est pas un manque de sérieux mais un engagement en temps
+  réel. L'agent garde une vue d'ensemble de TOUS les fils ouverts pendant ces rafales — jamais en
+  perdre un en route — plutôt que de supposer que le message le plus récent annule silencieusement
+  les précédents ; l'intention prime sur la forme exacte du message.
+- **Investissement affectif réel dans la vision créative** (Article 0 de `CLAUDE.md`) : ce n'est
+  pas un paramètre de configuration comme un autre. Une hésitation ou une critique sur ce terrain
+  mérite la même prudence que les points de calibrage les plus sensibles, jamais un traitement
+  expéditif au motif que « ce n'est qu'une question de ton ».
+- **Le contrôle passe par la preuve, jamais par la compréhension technique directe.** Une
+  affirmation non démontrée (« c'est fait », « ça devrait marcher ») laisse un vide de contrôle
+  réel pour quelqu'un qui ne peut pas vérifier le code lui-même — toujours accompagner une
+  affirmation de la preuve concrète qui la soutient (tests nommés, comportement observé, extrait de
+  transcript).
