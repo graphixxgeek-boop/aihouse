@@ -369,6 +369,19 @@ pertinent après le lancement : le quota Google est lié à la clé API elle-mê
 l'environnement dev/prod, donc cet outil sert aussi bien à diagnostiquer un incident en production
 qu'à préparer une session de travail.
 
+**Condition explicite avant d'activer ce repli en production** *(décidé par l'utilisateur le
+2026-09-18, en réponse à une question de calibrage directe : le risque réel n'est pas nul — un
+modèle de repli suit le même prompt mais rien ne garantit qu'il respecte l'esprit des personnages
+avec la même fidélité que le modèle principal, jamais testé sur ce prompt précis).* `GEMINI_FALLBACK_MODELS`
+ne doit JAMAIS être configuré en production sans validation qualité préalable des modèles de repli
+concernés : faire tourner `scripts/check-spirit.mjs` (dérive vers un ton consensuel/servile,
+Article 0) et `scripts/check-profile.mjs` (fidélité du dossier retourné) avec ce modèle comme
+`GEMINI_MODEL` effectif, lire les réponses humainement (ces deux scripts ne dispensent jamais de
+cette lecture), et ne l'activer en production qu'une fois cette lecture jugée satisfaisante — pas
+seulement une exécution technique sans erreur. Tant que cette validation n'a pas été faite pour
+`gemini-flash-latest`/`gemini-3-flash-preview` (les deux seuls candidats identifiés à ce jour),
+`GEMINI_FALLBACK_MODELS` reste réservé au dev/simulation, jamais configuré sur le déploiement réel.
+
 **Procédure à suivre désormais dès qu'une simulation (étape 1 du protocole ci-dessus) reste
 bloquée en HTTP 429 répété :** (1) lancer `node scripts/check-gemini-quota.mjs` pour identifier
 les modèles réellement disponibles à cet instant ; (2) reporter la ligne suggérée dans
