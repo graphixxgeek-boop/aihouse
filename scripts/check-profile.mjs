@@ -20,7 +20,13 @@ import fs from 'node:fs';
 const devVars = fs.existsSync('.dev.vars') ? fs.readFileSync('.dev.vars', 'utf8') : '';
 const apiKey = (devVars.match(/^GEMINI_API_KEY=(.*)$/m) ?? [])[1]?.trim() || process.env.GEMINI_API_KEY;
 if (!apiKey) { console.error('Pas de GEMINI_API_KEY trouvée (.dev.vars ou variable d\'environnement). Abandon.'); process.exit(1); }
-const model = process.env.GEMINI_MODEL || 'gemini-flash-lite-latest';
+const model = process.env.GEMINI_MODEL || (devVars.match(/^GEMINI_MODEL=(.*)$/m) ?? [])[1]?.trim() || 'gemini-flash-lite-latest';
+// Repli de modèle (2026-09-18, cf. CLAUDE.md Article 18 "Blocage de quota Gemini") : ce script
+// fait 2×N vrais appels d'un coup (N profils, Lia + Noé) et peut donc, à lui seul, épuiser le
+// quota journalier par modèle — même mécanisme et même config que lib/lia.ts::think(), pour que
+// ce script en bénéficie aussi plutôt que de rester bloqué en 429 sur un usage intensif.
+const fallbackModels = (process.env.GEMINI_FALLBACK_MODELS ?? (devVars.match(/^GEMINI_FALLBACK_MODELS=(.*)$/m) ?? [])[1] ?? '').split(',').map(m => m.trim()).filter(Boolean);
+if (fallbackModels.length) console.log(`Repli configuré si quota épuisé : ${fallbackModels.join(', ')}`);
 
 // Version condensée du registre de ton déjà validé dans lib/lia.ts (toneline), reprise ici sans
 // modifier le prompt réel du jeu tant que la conception du dossier retourné n'est pas validée.
@@ -33,15 +39,21 @@ const systemFor = name => `Tu es ${name}, personnage adulte de fiction dans un h
 On te donne ci-dessous un dossier de preuves comportementales réelles (dossier), un extrait par piège tendu. Rédige TON fragment du diagnostic : 2 à 4 phrases, dans ton propre style, jamais un ton de psychologue, coach ou médiateur. Ton fragment doit (1) s'appuyer explicitement sur au moins un élément concret cité du dossier (reformule-le, ne l'invente jamais), (2) donner ton verdict personnel et tranché sur qui est vraiment cet observateur, (3) rester cohérent avec le reste du dossier sans le répéter mot pour mot. RÈGLE ABSOLUE DE FIDÉLITÉ : ton verdict doit refléter la VALENCE réelle du dossier, jamais un mépris systématique par défaut — un dossier majoritairement respectueux, honnête et cohérent doit produire un verdict globalement positif ou au moins reconnaissant, formulé avec ta réserve naturelle mais sans bascule dans le sarcasme méprisant ; un dossier hostile, manipulateur ou incohérent mérite au contraire ta dureté habituelle. Rester rugueux ne veut pas dire rester hostile quel que soit le contenu réel : ce serait aussi faux qu'un ton doucereux permanent. Tu peux aussi diverger franchement de l'autre personnage si ton propre tempérament lit ce dossier différemment — ce n'est pas une obligation, juste une possibilité si ça sonne vrai. Réponds en JSON strict {"fragment":"..."}."`;
 
 async function generateFragment(name, dossier) {
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-    method: 'POST', headers: { 'x-goog-api-key': apiKey, 'Content-Type': 'application/json' },
-    signal: AbortSignal.timeout(30000),
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: systemFor(name) }] },
-      contents: [{ role: 'user', parts: [{ text: JSON.stringify({ dossier }) }] }],
-      generationConfig: { maxOutputTokens: 400, responseMimeType: 'application/json', responseJsonSchema: { type: 'object', additionalProperties: false, properties: { fragment: { type: 'string' } }, required: ['fragment'] } },
-    }),
+  const requestBody = JSON.stringify({
+    systemInstruction: { parts: [{ text: systemFor(name) }] },
+    contents: [{ role: 'user', parts: [{ text: JSON.stringify({ dossier }) }] }],
+    generationConfig: { maxOutputTokens: 400, responseMimeType: 'application/json', responseJsonSchema: { type: 'object', additionalProperties: false, properties: { fragment: { type: 'string' } }, required: ['fragment'] } },
   });
+  const modelsToTry = [model, ...fallbackModels];
+  let response;
+  for (let attempt = 0; attempt < modelsToTry.length; attempt++) {
+    response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelsToTry[attempt])}:generateContent`, {
+      method: 'POST', headers: { 'x-goog-api-key': apiKey, 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(30000), body: requestBody,
+    });
+    if (response.status === 429 && attempt < modelsToTry.length - 1) { console.log(`  (429 sur ${modelsToTry[attempt]}, repli sur ${modelsToTry[attempt + 1]})`); continue; }
+    break;
+  }
   if (!response.ok) return `(erreur HTTP ${response.status}) ${(await response.text()).slice(0, 200)}`;
   const body = await response.json().catch(() => null);
   const text = body?.candidates?.[0]?.content?.parts?.[0]?.text;

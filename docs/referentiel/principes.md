@@ -759,3 +759,21 @@ récapitulatif d'enquête, une pensée récurrente — utilisant toujours la mê
 un texte identique mot pour mot à chaque occurrence). Un label appelé plusieurs fois par session
 doit être suffixé par quelque chose qui varie réellement d'un déclenchement à l'autre (un compteur,
 une longueur de liste), jamais réutilisé tel quel.
+
+9.6. **Quota Gemini et repli de modèle** (2026-09-18, premier blocage réel rencontré à ce niveau —
+cf. CLAUDE.md Article 18 pour l'horodatage, les conditions et l'analyse complètes). Le quota
+gratuit Gemini est journalier et compté PAR MODÈLE
+(`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, 500 requêtes/jour pour
+`gemini-flash-lite-latest`), jamais partagé entre modèles ni global au projet — une session de
+travail intensive (vérifications en direct + simulation intégrale) peut légitimement l'épuiser en
+une seule journée. Le champ `retryDelay: "30s"` que Google renvoie avec l'erreur 429 est trompeur
+dans ce cas précis : il ne signifie pas que le quota redevient disponible sous 30 secondes.
+`scripts/check-gemini-quota.mjs` sonde en direct une liste de modèles candidats pour savoir
+lesquels répondent réellement à l'instant présent, sans jamais modifier la configuration lui-même.
+`lib/lia.ts::think()` et `app/api/lia/route.ts::generateDossierFragment()` (les deux seuls points
+d'appel réseau direct à Gemini) acceptent une liste de modèles de repli, prise en compte
+uniquement si `GEMINI_FALLBACK_MODELS` est configuré (`.dev.vars` en développement) : sur un 429,
+et seulement sur un 429, la même requête est rejouée contre le modèle suivant de la liste. Inactif
+par défaut (liste vide) : aucun changement de comportement de production tant que ce n'est pas
+explicitement configuré — une bascule de modèle non voulue pourrait affecter la qualité ou le ton
+des réponses (Article 0), donc ce n'est jamais un choix silencieux.

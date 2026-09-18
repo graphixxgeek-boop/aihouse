@@ -21,6 +21,12 @@ import { DatabaseSync } from 'node:sqlite';
 const devVars = fs.existsSync('.dev.vars') ? fs.readFileSync('.dev.vars', 'utf8') : '';
 const apiKey = (devVars.match(/^GEMINI_API_KEY=(.*)$/m) ?? [])[1]?.trim() || process.env.GEMINI_API_KEY;
 if (!apiKey) { console.error('Pas de GEMINI_API_KEY trouvée (.dev.vars ou variable d\'environnement). Abandon.'); process.exit(1); }
+// Repli de modèle (2026-09-18, cf. CLAUDE.md Article 18 "Blocage de quota Gemini") : ce script
+// passe par le vrai app/api/lia/route.ts, donc hérite automatiquement du même mécanisme de repli
+// que le jeu réel (lib/lia.ts::think()) simplement en transmettant la même configuration que
+// .dev.vars — jamais un mécanisme dupliqué, la même config partout où Gemini est appelé.
+const geminiModel = process.env.GEMINI_MODEL || (devVars.match(/^GEMINI_MODEL=(.*)$/m) ?? [])[1]?.trim();
+const geminiFallbackModels = process.env.GEMINI_FALLBACK_MODELS || (devVars.match(/^GEMINI_FALLBACK_MODELS=(.*)$/m) ?? [])[1]?.trim();
 
 fs.mkdirSync('.sites-runtime', { recursive: true });
 const transpile = s => ts.transpileModule(s, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
@@ -35,7 +41,7 @@ sqlite.exec(fs.readFileSync('drizzle/0001_harsh_kate_bishop.sql', 'utf8'));
 for (const file of fs.readdirSync('drizzle').filter(f => f.endsWith('.sql') && !f.startsWith('0000') && !f.startsWith('0001')).sort()) sqlite.exec(fs.readFileSync('drizzle/' + file, 'utf8'));
 function prepared(sql) { let args = []; return { bind(...values) { args = values; return this }, async run() { const r = sqlite.prepare(sql).run(...args); return { meta: { changes: Number(r.changes) } } }, async first() { return sqlite.prepare(sql).get(...args) ?? null }, async all() { return { results: sqlite.prepare(sql).all(...args) } } }; }
 const db = { prepare: prepared, async batch(statements) { sqlite.exec('BEGIN'); try { const results = []; for (const statement of statements) results.push(await statement.run()); sqlite.exec('COMMIT'); return results } catch (error) { sqlite.exec('ROLLBACK'); throw error } } };
-globalThis.__testEnv = { DB: db, GEMINI_API_KEY: apiKey };
+globalThis.__testEnv = { DB: db, GEMINI_API_KEY: apiKey, ...(geminiModel ? { GEMINI_MODEL: geminiModel } : {}), ...(geminiFallbackModels ? { GEMINI_FALLBACK_MODELS: geminiFallbackModels } : {}) };
 // Real network calls go through untouched — globalThis.fetch is NOT mocked in this script.
 
 const { POST } = await import('../.sites-runtime/test-route.mjs');

@@ -2,6 +2,7 @@ declare namespace Cloudflare {
   interface Env {
     GEMINI_API_KEY?: string;
   GEMINI_MODEL?: string;
+  GEMINI_FALLBACK_MODELS?: string;
   GROQ_API_KEY?: string;
     GROQ_MODEL?: string;
     DB?: D1Database;

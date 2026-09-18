@@ -824,7 +824,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 67'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 68'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -1317,4 +1317,32 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(w.decisions.some(d=>d.actor===1&&personalQuestionAsked(d)),'once genuinely calm, the same otherwise-eligible personal question must actually fire');
   flat=false;
   console.log('Passed: real anger (tension/comfort based, not just physiological stress) correctly blocks personal-question and follow-up beats and Noé\'s proactive advance, closing a coherence gap found while auditing emotion interconnections.');
+}
+
+{
+  // Repli de modèle Gemini (2026-09-18, bug réel : quota journalier PAR MODÈLE épuisé en pleine
+  // simulation intégrale). Ce bloc est délibérément le DERNIER de la suite : il configure
+  // GEMINI_FALLBACK_MODELS, ce que ne fait aucun autre test — la stricte assert.equal(url,
+  // ...gemini-flash-lite-latest) du mock par défaut (ligne 41), respectée par les centaines
+  // d'appels de tous les tests précédents, est donc la preuve vivante que le repli reste
+  // totalement inerte tant qu'il n'est pas explicitement configuré (Article 8, zéro changement de
+  // comportement par défaut). Isolé en fin de fichier pour ne jamais décaler le compteur partagé
+  // de crypto.randomUUID() (voir commentaire ligne 5) dont dépendent des tests antérieurs.
+  const priorFetch=globalThis.fetch;
+  const epoch=(await readWorld(db)).epoch;
+  globalThis.__testEnv.GEMINI_FALLBACK_MODELS='gemini-flash-latest';
+  let primaryAttempts=0,fallbackCalls=0;
+  globalThis.fetch=async(url,options)=>{
+    if(url==='https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent'){primaryAttempts++;return Response.json({error:{code:'rate_limit_exceeded'}},{status:429});}
+    assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent');fallbackCalls++;
+    // Rejoue EXACTEMENT la même requête (payload/headers déjà validés par le mock par défaut) sur
+    // l'URL du modèle principal, pour prouver que seul le nom du modèle change, jamais le contenu.
+    return priorFetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent',options);
+  };
+  const r=await post(input('interact',1,{epoch}));
+  assert.equal(r.status,200,'a configured fallback model must let the turn succeed despite a primary-model 429');
+  assert.equal(primaryAttempts,2,'both independent character calls must hit the primary model first');
+  assert.equal(fallbackCalls,2,'both independent character calls must retry against the configured fallback model exactly once');
+  globalThis.fetch=priorFetch;delete globalThis.__testEnv.GEMINI_FALLBACK_MODELS;
+  console.log('Passed: Gemini model fallback stays completely inert (single-model URL, proven by every earlier test in this suite) unless GEMINI_FALLBACK_MODELS is explicitly configured, and once configured, both independent character calls recover from a primary-model 429 by replaying the exact same request against the fallback model.');
 }
