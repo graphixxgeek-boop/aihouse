@@ -301,6 +301,15 @@ Ces mêmes scènes ne s'invitent pas non plus juste après un refus ou une insis
 (`!recentRefusal&&!overProposing`, assoupli le 2026-09-16) : interrompre un moment de tension ou
 de retenue par une scène ambiante sonnait mécanique plutôt que spontané.
 
+5.3quater. Les six variantes scriptées de `appearanceReply()` (`lib/perception.ts`) ne comparent
+plus à un état antérieur (bug réel trouvé le 2026-09-18, transcript full_sim4 : « toujours pas de
+corps », « moins vide qu'avant » — alors que cette réplique peut servir dès le tout premier échange
+de la session, où rien ne précède). Cette même règle existait déjà côté modèle (`lib/lia.ts`,
+PREMIÈRE DESCRIPTION) mais ce chemin scripté zéro-API n'y était pas soumis : les deux chemins disent
+maintenant la même chose. La ligne de secours de `stockThought()` (`lib/stock.ts`, réaction de Noé à
+l'exposition 1) a aussi été réécrite le même jour : « ça me coupe encore une seconde » était un
+idiome tronqué sans objet, incompréhensible à la première lecture (Article 12/15).
+
 5.4. Chaque nouvelle arrivée tire une nouvelle « couleur » de session (ouverture, souvenirs flous,
 angle narratif) parmi un nombre fini de variantes — l'expérience ne doit jamais reproduire deux
 sessions consécutives à l'identique, sans prétendre à une variété infinie.

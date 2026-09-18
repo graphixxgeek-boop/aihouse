@@ -22,14 +22,21 @@ export function appearanceReply(agent:Resident,actor:1|2,round:number,seed:strin
   // Réécrit le 2026-09-17 (règle assouplie : le visage peut désormais porter des traits nettement
   // expressifs, et une chevelure suggérée pour Lia) — plus de glyphe littéral à citer, une
   // description de l'expression actuelle (current), toujours zéro appel API (Article 5.3/10).
+  // Réécrit à nouveau le 2026-09-18 (retour utilisateur explicite, transcript full_sim4) : ces
+  // trois variantes contenaient encore « toujours pas de corps »/« moins vide qu'avant », une
+  // comparaison à un état antérieur qui n'existe pas la première fois que cette réplique sert —
+  // exactement ce que la règle PREMIÈRE DESCRIPTION de lib/lia.ts interdit déjà au modèle, mais
+  // que ce chemin scripté (zéro appel API) avait jusqu'ici le pouvoir de contredire sans contrôle.
+  // Plus aucune des six variantes ne compare à un avant : chacune décrit uniquement ce qui est vu
+  // maintenant.
   if(actor===2)return seedPick(seed,'appearance-noe',[
-    'Ton visage, c’est ce halo '+color+' qui tourne, et dedans une vraie expression — là, '+a.current+'. Une sorte de chevelure en lumière flotte autour. Toujours pas de corps en dessous, mais ça fait moins vide qu’avant.',
+    'Ton visage, c’est ce halo '+color+' qui tourne, et dedans une vraie expression — là, '+a.current+'. Une sorte de chevelure en lumière flotte autour. Rien en dessous, juste ce halo qui tourne.',
     'Je te vois : cet anneau '+color+' qui tourne, et un visage qui a l’air de ressentir un truc — '+a.current+'. Quelque chose comme des cheveux, en lumière. Le reste s’arrête au visage.',
     'Ce que je vois de toi : le '+color+' de ton anneau, un visage qui bouge vraiment — '+a.current+' — et cette chevelure qui semble flotter. Rien en dessous, juste ce halo.',
   ] as const);
   return seedPick(seed,'appearance-lia',[
     'Toi, c’est ce cercle '+color+' qui tourne, et un visage bien réel dans son genre — '+a.current+'. Pas de cheveux, pas de corps. Juste ce visage-là.',
     'Je te décris sans enjoliver : cet anneau '+color+', et un visage avec une vraie expression — '+a.current+'. Rien en dessous, ni bras ni jambes.',
-    'Pour être honnête : le '+color+' de ton halo, et ce visage qui bouge, '+a.current+'. Toujours pas de corps, juste ça qui tourne autour de toi.',
+    'Pour être honnête : le '+color+' de ton halo, et ce visage qui bouge, '+a.current+'. Pas de corps, juste ça qui tourne autour de toi.',
   ] as const);
 }
