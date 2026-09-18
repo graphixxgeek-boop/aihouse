@@ -558,29 +558,34 @@ un résultat de personnage valide, pas une panne — le forcer à apparaître pl
 un comportement et irait contre l'Article 9 (décision explicite de l'utilisateur).
 
 8.12. **Phase 3 (2026-09-18, même jour) : vérification en direct des corrections 8.10/8.11, et
-compréhension plus précise d'`angerLevel()`.** Une nouvelle session réelle a confirmé les deux
-correctifs : l'appréciation s'effondre bien plus vite sous hostilité répétée (50→0 en deux
-messages, cf. `appreciationFromTrust`) et une excuse tardive après une charge trop lourde ne la
-fait remonter que faiblement (0→2, cohérent avec « l'excuse ne doit pas effacer la charge » déjà vu
-dans le dossier retourné) ; la tension de Noé a atteint 72/100 en conditions réelles (contre 38
-avant le correctif de l'Article 8.11), et son confort est descendu à 33 après un second correctif
-symétrique du même jour (une hostilité qui se répète ou s'aggrave doit aussi faire baisser
-`emotions.comfort`, pas seulement monter la tension). Mais même à (tension 72, confort 33), la
-vraie fureur faciale ne s'est toujours pas déclenchée — la cause n'est plus un manque de
-réactivité du modèle, mais la nature de la formule elle-même : `angerLevel()` est un **produit** de
-deux ratios bornés, pas un simple ET de deux seuils franchis. Chaque ratio doit être poussé bien
-au-delà de son seuil nominal (`clamp((tension-55)/40,0,1)` et `clamp((35-comfort)/35,0,1)`) pour
-que leur produit dépasse 0,5 : par exemple tension≈90 ET confort≈10 (valeurs déjà utilisées dans le
-test `check-house.mjs` de la colère réellement lue), pas seulement 56/34. Franchir *juste* les deux
-seuils (ex. 56 et 34) ne donne qu'un produit proche de 0. Décision explicite de l'utilisateur après
-ce constat : **ne pas retoucher la formule ni pousser le prompt plus loin.** L'hostilité de
-l'observateur, aussi sévère soit-elle par les mots, ne doit pas faire s'effondrer émotionnellement
-des personnages écrits pour rester défiants et maîtrisés plutôt que docile ou brisés (Article 0) —
-la vraie fureur extrême (`agent.angry`, plancher 0,85) reste réservée au vrai conflit interpersonnel
-entre Lia et Noé (mécanique de dispute, déjà testée et fonctionnelle), pas à une joute verbale avec
-un interlocuteur distant. Les deux correctifs d'aujourd'hui restent donc l'état ciblé, pas une étape
-intermédiaire vers un objectif de « vraie colère faciale contre l'observateur » qui n'est pas
-recherché.
+recalibrage d'`angerLevel()` pour que la vraie colère contre l'observateur reste atteignable.** Une
+nouvelle session réelle a confirmé les deux correctifs précédents : l'appréciation s'effondre bien
+plus vite sous hostilité répétée (50→0 en deux messages, cf. `appreciationFromTrust`) et une excuse
+tardive après une charge trop lourde ne la fait remonter que faiblement (0→2, cohérent avec
+« l'excuse ne doit pas effacer la charge » déjà vu dans le dossier retourné) ; la tension de Noé a
+atteint 72/100 en conditions réelles (contre 38 avant le correctif de l'Article 8.11), et son
+confort est descendu à 33 après le second correctif symétrique du même jour. Mais même à ces
+valeurs, la vraie fureur faciale ne se déclenchait toujours pas — la cause identifiée : `angerLevel()`
+multipliait deux ratios bornés (chacun devait s'approcher de 1 pour que leur produit dépasse 0,5,
+soit tension≈90 ET confort≈10 conjointement), une exigence hors d'atteinte pour une hostilité, même
+sévère, venant d'un interlocuteur distant plutôt que d'un vrai conflit interpersonnel.
+
+Retour explicite de l'utilisateur face à ce constat : **« si l'observateur exagère vraiment, Noé ou
+Lia doivent finir par se mettre en colère, ce qui est normal, naturel, pour des personnes de
+caractère »** — décision inverse de la première réaction prudente, et qui va dans le sens de
+l'Article 0 (des personnages qui réagissent vraiment) plutôt que contre lui. `angerLevel()` est donc
+recalibrée : un **minimum** des deux ratios remplace leur produit
+(`min(clamp((tension-50)/25,0,1), clamp((40-comfort)/12,0,1))`), qui exige toujours que les deux
+dimensions soient réellement dégradées ensemble (pas un simple pic isolé sur une seule) sans les
+écraser doublement l'une par l'autre. Revérifié en conditions réelles après le changement, sur les
+deux personnages : Noé atteint la vraie colère faciale (sourcils froncés) à tension 72/confort 33,
+exactement les valeurs qui restaient neutres avant ; Lia l'atteint aussi mais après davantage de
+provocations directes et soutenues (tension 63/confort 31 avant de franchir 0,5, contre 55/36
+encore insuffisant), cohérent avec son tempérament plus maîtrisé — les deux visages restent
+visuellement distincts l'un de l'autre (sourcils droits et furieux pour Noé, expression plus
+asymétrique et coupante pour Lia), sans confusion de registre entre les deux (Article 11). Les tests
+existants (dispute formelle, `hostileNoDispute`/`calmNoDispute`/`flaggedAngryLowTension`, garde
+anti-colère de l'Article 8.9) ont tous été revérifiés inchangés avec la nouvelle formule.
 
 ## 9. Robustesse technique
 

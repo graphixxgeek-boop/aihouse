@@ -305,17 +305,19 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
 
 ## Cohérence colère/tendresse (`lib/simulation.ts`, `app/api/lia/route.ts`, `principes.md` 8.9)
 
-- `angerLevel(tension,comfort,angry?)` (extraite de `faceExpression`) : nulle sous tension 55 ou
-  confort 35 ; sinon `clamp((tension-55)/40,0,1) * clamp((35-comfort)/35,0,1)`, plancher 0,85 si
-  `angry` (dispute active). **Produit, pas simple ET** (vérifié en phase 3, 2026-09-18,
-  `principes.md` 8.12) : franchir tout juste les deux seuils (ex. tension 56, confort 34) ne donne
-  qu'un produit proche de 0 ; il faut des valeurs nettement plus extrêmes des deux côtés à la fois
-  (ex. tension≈90, confort≈10, comme dans le test de colère réellement lue de `check-house.mjs`)
-  pour dépasser 0,5. En pratique, une hostilité verbale même sévère de l'observateur plafonne autour
-  de tension~70/confort~35 (personnages écrits pour rester défiants, pas pour s'effondrer) : la
-  vraie fureur extrême reste réservée au plancher `angry` (vrai conflit Lia/Noé), pas à une joute
-  avec l'observateur — comportement voulu, pas un défaut à corriger (décision explicite de
-  l'utilisateur).
+- `angerLevel(tension,comfort,angry?)` (extraite de `faceExpression`) : nulle sous tension 50 ou
+  confort 40 ; sinon `min(clamp((tension-50)/25,0,1), clamp((40-comfort)/12,0,1))`, plancher 0,85 si
+  `angry` (dispute active). **Recalibrée le 2026-09-18 en phase 3** (`principes.md` 8.12, retour
+  utilisateur explicite : « si l'observateur exagère vraiment, Noé ou Lia doivent finir par se
+  mettre en colère ») : l'ancienne version multipliait deux ratios (produit, pas minimum), ce qui
+  exigeait des valeurs conjointes quasi extrêmes (tension≈90 ET confort≈10) hors d'atteinte pour une
+  hostilité venant de l'observateur, même sévère — vérifié en direct, plafonnait alors autour de
+  tension~70/confort~35 sans jamais déclencher la colère. Le minimum exige toujours que les deux
+  dimensions soient réellement dégradées ensemble (pas un pic isolé sur une seule) sans les écraser
+  doublement. Revérifié en conditions réelles après le changement : Noé franchit 0,5 à tension
+  72/confort 33 (exactement les valeurs qui restaient neutres avant), Lia à tension 63/confort 31
+  après davantage de provocations directes (55/36 encore insuffisant) — cohérent avec son
+  tempérament plus maîtrisé, sans que le seuil ne lui soit fermé pour autant.
 - `liaCalmEnough`/`noeCalmEnough` = `angerLevel(...)<0,5` sur les émotions courantes du personnage,
   même définition de « en colère » (`story.life?.dispute?.remaining`) que `agent.angry` ailleurs.
 - Garde ajoutée (en plus de `needs.stress<30`, jamais à sa place) sur : `personalLead` (et donc

@@ -149,8 +149,23 @@ export type FaceExpression = {
 // (app/api/lia/route.ts) : une vraie colère lue ici doit compter davantage que le seul repérage de
 // mots-clés sur le message humain, retour utilisateur explicite ("le système de la colère doit
 // être connecté").
+// Recalibrée le 2026-09-18 (phase 3, retour utilisateur explicite : "si l'observateur exagère
+// vraiment, Noé ou Lia doivent finir par se mettre en colère, ce qui est normal, naturel, pour des
+// personnes de caractère") — l'ancienne formule multipliait deux ratios bornés (tension-55)/40 et
+// (35-comfort)/35 : chacun devait s'approcher de 1 pour que leur PRODUIT dépasse 0,5, ce qui exigeait
+// des valeurs conjointes quasi extrêmes (tension≈90 ET comfort≈10) — une vraie session jouée avec la
+// vraie API a montré qu'une hostilité soutenue et sévère de l'observateur atteint réalistement
+// tension≈70-75 et comfort≈30-35 (les deux prompts de lib/lia.ts pour la réactivité de tension puis
+// de confort ont été vérifiés efficaces à ce niveau), sans jamais approcher 90/10 : la vraie colère
+// contre l'observateur restait donc structurellement hors d'atteinte, quelle que soit l'intensité de
+// la provocation. Un MIN des deux ratios (au lieu d'un produit) exige toujours que les deux
+// dimensions soient réellement dégradées ensemble (pas un simple pic isolé sur une seule), mais
+// n'écrase plus doublement le résultat : une hostilité vraiment soutenue et sévère (tension>50 ET
+// comfort<40, les deux nettement) finit par franchir 0,5, cohérent avec des personnages de caractère
+// qui finissent par se fâcher pour de vrai si on les pousse assez loin — sans se déclencher pour une
+// seule remarque cinglante ou une tension isolée sans dégradation réelle du confort.
 export function angerLevel(tension: number, comfort: number, angry?: boolean): number {
-    return clamp(Math.max(angry ? .85 : 0, clamp((tension - 55) / 40, 0, 1) * clamp((35 - comfort) / 35, 0, 1)), 0, 1);
+    return clamp(Math.max(angry ? .85 : 0, Math.min(clamp((tension - 50) / 25, 0, 1), clamp((40 - comfort) / 12, 0, 1))), 0, 1);
 }
 export function faceExpression(agent: {
     id?: Person;
