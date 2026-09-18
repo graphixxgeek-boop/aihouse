@@ -494,6 +494,14 @@ avant/pendant l'exécution, sur les points où une demande était réellement am
 rendu à l'utilisateur doit dire explicitement
 ce qui a été vérifié, préservé, amélioré et corrigé.
 
+## Règles de travail — collaboration avec l'utilisateur
+
+`docs/regles-de-travail.md` documente, séparément de la charte de contenu ci-dessus, la façon dont
+l'utilisateur et l'agent travaillent ensemble (rythme, calibrage, vérification, git, discrétion,
+livrables) et un profil de collaboration observé. Toute IA qui reprend ce projet doit lire ce
+document en plus de celui-ci, pas à sa place — il ne contient jamais de règle sur le CONTENU du
+jeu, seulement sur la méthode de travail.
+
 ## Référentiel technique — la référence à jour
 
 - `docs/referentiel/principes.md` — les règles invariantes du comportement de la maison, telles
