@@ -10,6 +10,47 @@ export function explicitGestureConsent(reply:string) {
     const shortYes=/^oui[,.! ]/i.test(reply)&&reply.length<55&&!/répit|calme|pause|silence|énigme|mystère/i.test(reply);
     return direct||shortYes;
 }
+// Deux points d'interrogation dans une même réplique noient le premier sous le second (règle
+// "zéro ou une question", lib/lia.ts) — qu'ils viennent du modèle ou d'un ajout scripté du moteur
+// qui se greffe sur une réplique qui posait déjà sa propre question (ex. la découverte de la
+// fenêtre, 2026-09-18 : constaté en simulation réelle, Noé ne réagissait plus au jardin mentionné
+// car noyé dans une réplique à deux questions). Ne garde que la DERNIÈRE question — la plus
+// récente, donc la plus susceptible d'attendre une vraie réponse — et transforme les précédentes
+// en points, sans toucher au reste du texte.
+export function groundSingleQuestion(reply:string):string{
+    const count=(reply.match(/\?/g)??[]).length;
+    if(count<2)return reply;
+    let remaining=count-1,result="";
+    for(const ch of reply){
+        if(ch==="?"&&remaining>0){result=result.replace(/\s+$/,"")+".";remaining--;}
+        else result+=ch;
+    }
+    return result;
+}
+// Filet de sécurité ciblé, pas une liste de mots interdits dans le prompt (Article 17, corollaire
+// de CLAUDE.md) : « poireauter » avait déjà été banni littéralement dans le prompt en 2026-09-17
+// puis retiré au profit d'un test de registre auto-appliqué (SIGNAL D'ALERTE SUPPLÉMENTAIRE,
+// lib/lia.ts) — mais ce mot précis est réapparu une seconde fois le 2026-09-18 malgré ce test,
+// preuve qu'un principe auto-appliqué ne garantit jamais rien à 100 %. Cette correction déterministe
+// vit dans le CODE, pas dans le contenu envoyé au modèle : elle ne grandit jamais en une liste de
+// mots créatifs interdits, elle corrige juste après coup un mot déjà identifié deux fois comme daté,
+// exactement comme les autres fonctions ground* corrigent d'autres non-conformités du modèle.
+export function groundRegister(reply:string):string{
+    return reply.replace(/poireaut/gi,m=>m[0]==="P"?"Traîn":"traîn");
+}
+// Filet de robustesse (Article 5) contre une réplique coupée net par le modèle lui-même — constaté
+// en session réelle le 2026-09-18 : Noé répondait "J'arrive, voyons ce que ce" sans qu'aucune
+// étape du moteur n'y soit pour quelque chose, la troncature était déjà dans la sortie brute de
+// Gemini (probablement un arrêt anticipé sur la mention "DH"). Garde tout ce qui précède la
+// dernière ponctuation de fin de phrase repérée ; sans aucune phrase complète, retombe sur une
+// formule neutre plutôt que de laisser une phrase inachevée à l'écran.
+export function groundTruncation(reply:string):string{
+    const trimmed=reply.trim();
+    if(!trimmed||/[.!?…]["»]?$/.test(trimmed))return trimmed;
+    const lastComplete=trimmed.match(/^[\s\S]*[.!?…]["»]?/);
+    if(lastComplete&&lastComplete[0].trim())return lastComplete[0].trim();
+    return "Bref, on verra.";
+}
 export function groundAgeQuestion(reply:string,allowed:boolean,knownAges:string[]=[],peer="") {
     if(allowed&&!knownAges.includes(peer))return reply;
     const sentences=reply.split(/(?<=[.!?])\s+/).filter(s=>!(/âge|ans\s*\?/i.test(s)&&s.includes("?")));

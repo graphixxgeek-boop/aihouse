@@ -97,6 +97,9 @@ for(const [intent,room] of [['massage','chambre'],['kiss','salon'],['share_sleep
  affectionIntent=intent;sqlite.exec('DELETE FROM world_requests');{const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life={...p.life,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,visualIntro:2,personalFollowup:3,exitSearched:true,contact:undefined,debrief:undefined};p.pendingDestination={room,intent,proposer:2};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}sqlite.prepare('UPDATE agent_state SET emotions=?,needs=?').run(warm,JSON.stringify(initialNeeds));response=await post(input('interact',1,{epoch:1}));assert.equal(response.status,200);result=await response.json();if(result.affectionOutcome==="deferred"){response=await post(input("interact",1,{epoch:1}));assert.equal(response.status,200);result=await response.json();}assert.equal(result.sharedAffection,intent);assert.ok(result.agents.every(a=>(a.intent===intent||["sleep","share_sleep"].includes(intent)&&a.intent==="none"&&a.needs.fatigue<=12)&&a.room===room));
 }
 affection=false;response=await post(input('reset',1,{epoch:1}));assert.equal(response.status,200);
+// Démarrage progressif (2026-09-18) : le tout premier tour après un reset est désormais une
+// désorientation solo, silencieuse ; le coldOpening réel n'arrive qu'au tour suivant.
+response=await post(input('interact',2,{epoch:2}));assert.equal(response.status,200);result=await response.json();assert.ok(result.messages.every(m=>m.speaker.includes('pensée')));
 response=await post(input('interact',2,{epoch:2}));assert.equal(response.status,200);result=await response.json();assert.deepEqual(result.messages.filter(m=>["Lia","Noé"].includes(m.speaker)).map(m=>m.speaker),['Noé','Lia']);
 response=await post(input('interact',1,{epoch:2}));assert.equal(response.status,200);result=await response.json();assert.deepEqual(result.messages.filter(m=>["Lia","Noé"].includes(m.speaker)).map(m=>m.speaker),['Noé','Lia','Noé','Lia']);
 const visitorStory=sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content;const unlockedStory=JSON.parse(visitorStory);unlockedStory.evidence=Array(5).fill('Preuve canonique');unlockedStory.finalCalled=true;sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(unlockedStory));
@@ -184,7 +187,45 @@ console.log('Passed: varied reset scenarios, word ages beyond context window, ea
   // still rely on `result` holding, exactly as it was left by the reset just above this block.
   response=await post(input('reset',1,{epoch:postResetEpoch}));result=await response.json();
   assert.equal(result.story.evidence.length,0);
+  // Démarrage progressif : consomme le tour de désorientation solo puis le coldOpening réel, sans
+  // toucher `result` (qui doit garder la réponse du reset), pour que les tests suivants retrouvent
+  // le comportement post-rencontre attendu au tour suivant.
+  await post(input('interact',1,{epoch:result.epoch}));
   console.log('Passed: real HTTP finale turn (4->5 evidence) actually inserts both shock-thought lines before the canonical reveal, in order, exactly once.');
+}
+{
+  // DÉPART À DEUX — bug réel trouvé le 2026-09-18 en comparant deux simulations intégrales :
+  // dialogueFingerprint retire le préfixe "[pièceA→pièceB] " avant de comparer, donc les quatre
+  // confirmations courtes ("Je te suis.", "On y va.", ...) étaient traitées comme UN SEUL registre
+  // global, pas un par trajet. Dès qu'une avait déjà servi pour un trajet DIFFÉRENT plus tôt dans
+  // la session, le second personnage arrivait dans la nouvelle pièce sans une seule ligne annonçant
+  // son départ (addLine la supprimait silencieusement, un vrai trou de continuité — Article 2/15).
+  // Reproduit ici en pré-remplissant conversations avec les quatre formulations pour un trajet
+  // chambre→cuisine, puis en vérifiant qu'un vrai départ à deux bureau→salon obtient malgré tout
+  // ses deux lignes "· déplacement".
+  const {dialogueFingerprint}=await import('../.sites-runtime/test-drama.mjs');
+  const departEpoch=result.epoch;
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  for(const phrase of ["Je te suis.","On y va.","Ça marche, j'arrive.","Je viens avec toi."])
+    sqlite.prepare('INSERT INTO conversations (speaker,content,created_at,room) VALUES (?,?,?,?)').run('Lia · déplacement','[chambre→cuisine] '+phrase,Date.now()-60000,'chambre');
+  const departStory={...newStory(),round:17,salonTurns:5,introduced:true,met:true,life:{...newStory().life,dialogueIndexed:true},pendingDestination:{room:'salon',intent:'chat',proposer:1}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(departStory));
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=?').run('bureau','chat',JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}),JSON.stringify(steady));
+  flat=true;affection=false;
+  const beforeDepart=await readWorld(db);
+  response=await post(input('interact',1,{epoch:departEpoch}));assert.equal(response.status,200);result=await response.json();
+  assert.ok(result.agents.every(a=>a.room==='salon'),'setup check: pendingDestination must route both agents to salon this turn');
+  const newLines=result.messages.filter(m=>m.id>(beforeDepart.messages.at(-1)?.id??0));
+  const departures=newLines.filter(m=>m.speaker.includes('déplacement'));
+  assert.equal(departures.length,2,'both actors moving from bureau to salon together must each get a visible departure line, even though every départ-à-deux phrase already matched an earlier, unrelated chambre→cuisine trip');
+  assert.ok(departures.every(m=>m.content.startsWith('[bureau→salon]')),'both departure lines must be correctly stamped with the real bureau→salon trip');
+  console.log('Passed: départ à deux confirmation is never silently dropped by the cross-room fingerprint registry, even when every short phrase already matched an unrelated earlier trip.');
+  // Restore the clean post-reset state the tests below still rely on `result` holding.
+  response=await post(input('reset',1,{epoch:departEpoch}));result=await response.json();
+  assert.equal(result.story.evidence.length,0);
+  // Démarrage progressif : consomme le tour de désorientation solo, sans toucher `result`, pour
+  // que les tests suivants retrouvent le tout premier coldOpening attendu au tour suivant.
+  await post(input('interact',1,{epoch:result.epoch}));
 }
 const {groundIntroduction}=await import('../.sites-runtime/test-dialogue.mjs');
 assert.equal(groundIntroduction("Salut Lia, je m'appelle Noé.",'Noé','Lia',[]),"Salut, je m'appelle Noé.");
@@ -272,7 +313,21 @@ sqlite.exec('DELETE FROM dialogue_fingerprints');
 for(let i=0;i<6;i++){sqlite.prepare('UPDATE agent_state SET needs=?').run(JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}));response=await post(input('interact',1,{epoch:socialEpoch}));assert.equal(response.status,200);result=await response.json();assert.equal(result.agents[0].room,result.agents[1].room);assert.equal(new Set(result.messages.filter(m=>['Lia','Noé'].includes(m.speaker)).slice(-2).map(m=>m.speaker)).size,2);}
 console.log('Passed: invented shared actions and repeated thoughts filtered; explicit non-urgent separation limited to two turns, reunion on third, then six coherent shared turns.');
 
-const {planTurn,sceneFor}=await import('../.sites-runtime/test-turn.mjs');const {groundRoomSpeech}=await import('../.sites-runtime/test-dialogue.mjs');
+const {planTurn,sceneFor}=await import('../.sites-runtime/test-turn.mjs');const {groundRoomSpeech,groundSingleQuestion,groundRegister}=await import('../.sites-runtime/test-dialogue.mjs');
+assert.equal(groundRegister("à force de poireauter ici on va finir par fondre."),"à force de traîner ici on va finir par fondre.");
+assert.equal(groundRegister("Poireauter, très peu pour moi."),"Traîner, très peu pour moi.");
+assert.equal(groundRegister("Rien à signaler."),"Rien à signaler.");
+console.log('Passed: a recurring dated word (poireauter) is deterministically swapped for a modern equivalent, case preserved, other text untouched.');
+const {groundTruncation}=await import('../.sites-runtime/test-dialogue.mjs');
+assert.equal(groundTruncation("J'arrive, voyons ce que ce"),"Bref, on verra.");
+assert.equal(groundTruncation("Une phrase complète. Et une autre qui coupe net sans"),"Une phrase complète.");
+assert.equal(groundTruncation("Tout va bien."),"Tout va bien.");
+console.log('Passed: a reply cut off mid-sentence by the model itself falls back to its last complete sentence, or a neutral line if none exists.');
+assert.equal(groundSingleQuestion('Une seule question ?'),'Une seule question ?');
+assert.equal(groundSingleQuestion('Aucune question ici.'),'Aucune question ici.');
+assert.equal(groundSingleQuestion("C'est quoi mon apparence, exactement ? J'ai perdu mon corps. Comment on rejoint cet endroit ?"),"C'est quoi mon apparence, exactement. J'ai perdu mon corps. Comment on rejoint cet endroit ?");
+assert.equal((groundSingleQuestion('A ? B ? C ?').match(/\?/g)??[]).length,1);
+console.log('Passed: a reply carrying two or more questions keeps only the last one, converting earlier ones to statements without touching single-question replies.');
 assert.equal(groundIntroduction('Ta présence me rassure.','Noé','Lia',[],['Lia','Noé']),'Ta présence me rassure.');assert.equal(groundIntroduction('Merci. Moi, c’est Noé.','Noé','Lia',[],['Lia','Noé']),'Merci.');assert.doesNotMatch(groundScreenNotice('J’ai repéré un écran dans le bureau. Tu veux y retourner ?',[],true),/repéré/);
 assert.doesNotMatch(groundRoomSpeech('Reprenons notre examen de cet écran pour voir les données.','salon',[]),/Reprenons/);assert.equal(groundRoomSpeech('Je repense au message de l’écran du bureau.','salon',[]),'Je repense au message de l’écran du bureau.');assert.equal(groundRoomSpeech('Je lis un livre.','salon',[{id:1,speaker:'Noé',content:'Cet écran me trouble.'}]),'Je lis un livre.');
 const socialBase=(await readWorld(db)).agents.map(a=>({...a,room:'salon',intent:'chat',cycle:3,needs:{hunger:10,fatigue:10,stress:20,uncertainty:50},emotions:{...a.emotions,attraction:80,trust:80}}));const basePlot={...newStory(),life:{...newStory().life,visited:["salon","cuisine","chambre","bureau"],tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,visualIntro:2,personalFollowup:3,exitSearched:true},round:21,introduced:true,met:true,sharedMeal:true};
@@ -302,6 +357,7 @@ console.log('Passed: urgent meal uses zero API calls, preserves the agreed desti
 
 sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?').run('salon','chat',JSON.stringify({hunger:90,fatigue:10,stress:20,uncertainty:50}));sqlite.exec('UPDATE world_lock SET last_auto=0');const simultaneousCalls=calls;response=await post(input('autonomous',2,{epoch:socialEpoch}));assert.equal(response.status,200);result=await response.json();assert.equal(calls,simultaneousCalls);assert.ok(result.agents.every(a=>a.intent==='eat'&&a.room==='cuisine'&&a.needs.hunger<68));assert.equal(result.decisions.length,2);
 console.log('Passed: simultaneous urgent needs are resolved locally for both residents with zero Gemini calls.');
+
 
 // Regression: an odd cycle sum must not suppress Noé forever; the model cannot omit his question.
 sqlite.exec('DELETE FROM world_requests');
@@ -376,7 +432,17 @@ assert.equal(result.story.life.remoteFound,true);assert.ok(fs.readFileSync('app/
 
 // Cold opening and both corridor inspections are exceptional zero-inference scenes.
 response=await post(input('reset',1,{epoch:majorEpoch}));result=await response.json();const finalEpoch=result.epoch;
-const openingCalls=calls;response=await post(input('interact',2,{epoch:finalEpoch}));result=await response.json();assert.equal(calls,openingCalls);assert.equal(Boolean(result.story.introduced),false);assert.ok(result.agents[0].needs.stress>=80);assert.equal(result.agents[1].needs.stress,30);assert.ok(result.decisions.every(d=>!/(?:m'appelle|moi c’est|moi, c’est)/i.test(d.reply)));
+const openingCalls=calls;
+// Démarrage progressif (2026-09-18, retour utilisateur explicite répété) : le tout premier tour
+// éligible est une désorientation solo et silencieuse (chacun encore seul, aucun échange), avant
+// le coldOpening réel au tour suivant — jamais un dialogue "T'es qui ?" sans la moindre mise en
+// place individuelle.
+response=await post(input('interact',2,{epoch:finalEpoch}));result=await response.json();
+assert.equal(calls,openingCalls,'the solo intro turn must cost zero Gemini calls, like the cold opening it precedes');
+assert.equal(Boolean(result.story.met),false);
+assert.ok(result.messages.length>=2&&result.messages.every(m=>m.speaker.includes('pensée')),'the very first eligible turn must be a silent solo moment for both characters, not a spoken exchange yet');
+response=await post(input('interact',2,{epoch:finalEpoch}));result=await response.json();assert.equal(calls,openingCalls);assert.equal(Boolean(result.story.introduced),false);assert.ok(result.agents[0].needs.stress>=80);assert.equal(result.agents[1].needs.stress,30);assert.ok(result.decisions.every(d=>!/(?:m'appelle|moi c’est|moi, c’est)/i.test(d.reply)));
+assert.ok(result.messages.slice(-2).some(m=>m.speaker==='Lia'||m.speaker==='Noé'),'the second eligible turn must be the real cold opening, an actual spoken exchange between the two characters this time');
 flat=true;affection=false;honorOffer=false;refuse=false;
 // round:10 (était 8) : couvre la plage complète du seuil de sortie mélangé par session (7 à 10,
 // 2026-09-17) pour que ce test déclenche l'inspection quel que soit le seed tiré.
@@ -620,7 +686,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 60'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 62'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -651,6 +717,13 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(afterReset.agents[0].needs.fatigue,58);
   assert.equal(afterReset.agents[1].needs.fatigue,testInitialNeedsFor(2,'normal').fatigue);
   const openingCalls=calls;
+  // Démarrage progressif : le premier tour est la désorientation solo (déjà distincte par
+  // insolite, cf. soloThoughts dans app/api/lia/route.ts) ; le coldOpening scripté réel n'arrive
+  // qu'au tour suivant.
+  const soloResponse=await post(input('interact',1,{epoch:afterReset.epoch}));
+  assert.equal(soloResponse.status,200);const solo=await soloResponse.json();
+  assert.equal(calls,openingCalls);
+  assert.ok(solo.messages.some(m=>m.speaker==='Lia · pensée'&&m.content.includes('la tête qui tourne')));
   const openingResponse=await post(input('interact',1,{epoch:afterReset.epoch}));
   assert.equal(openingResponse.status,200);const opened=await openingResponse.json();
   assert.equal(calls,openingCalls);
@@ -728,7 +801,10 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
   sqlite.prepare('UPDATE agent_state SET needs=?').run(JSON.stringify({hunger:50,fatigue:50,stress:50,uncertainty:30}));
   const originalRandom=Math.random;
-  const spin=async value=>{const before=calls;Math.random=()=>value;let response;try{response=await post(input('spin_bonus',1,{epoch}));}finally{Math.random=originalRandom;}assert.equal(calls,before,'a spin must never cost a Gemini call, whichever bonus it lands on');return response;};
+  // Round-robin pool sizes shrink as bonuses get excluded (2026-09-18), so a bonus/actor pick
+  // sometimes needs two distinct Math.random() values rather than one repeated value: extra
+  // trailing arguments are consumed in order, the last one repeating for any further call.
+  const spin=async(...values)=>{const before=calls;let i=0;Math.random=()=>values[Math.min(i++,values.length-1)];let response;try{response=await post(input('spin_bonus',1,{epoch}));}finally{Math.random=originalRandom;}assert.equal(calls,before,'a spin must never cost a Gemini call, whichever bonus it lands on');return response;};
   // pool = [food,calm,sleep,stoic,mute,trottoir,force_move] (7 buckets) ; stoic/mute/force_move
   // reuse the same draw to also pick their target/destination, documented at each step below.
   // food (bucket 0/7) ; retour utilisateur du 2026-09-18 : un bonus qui change les jauges sans
@@ -739,44 +815,29 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/animaux de compagnie|une gamelle|m.inquiète plutôt/i.test(m.content)),'Lia must react to receiving food, not just have her hunger silently zeroed');
   assert.ok(w.messages.some(m=>m.speaker==='Noé · pensée'&&/alors merci, j.imagine|j.aime pas trop savoir pourquoi|un peu glauque aussi/i.test(m.content)),'Noé must react too, in his own distinct voice');
   r=await post(input('interact',1,{epoch}));w=await r.json();assert.equal(w.agents[0].needs.hunger,0,'an active food bonus must zero hunger for the turn, not just at the moment it was granted');assert.equal(w.agents[1].needs.hunger,0);
-  // calm (bucket 1/7)
-  r=await spin(.18);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'calm');assert.ok(activeBonus(w.story.life,'calm'));
+  // calm (round-robin index 0 of the 6 not-yet-drawn bonuses)
+  r=await spin(.01);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'calm');assert.ok(activeBonus(w.story.life,'calm'));
   assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/contrôle à distance|j.ai remarqué|de la manipulation/i.test(m.content)));
   assert.ok(w.messages.some(m=>m.speaker==='Noé · pensée'&&/m.en plaindre trop fort|décide ça à ma place|effet chelou/i.test(m.content)));
   r=await post(input('interact',1,{epoch}));w=await r.json();assert.equal(w.agents[0].needs.stress,0);assert.equal(w.agents[1].needs.stress,0);
-  // sleep (bucket 2/7)
-  r=await spin(.35);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'sleep');assert.ok(activeBonus(w.story.life,'sleep'));
+  // sleep (round-robin index 0 of the 5 not-yet-drawn bonuses)
+  r=await spin(.01);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'sleep');assert.ok(activeBonus(w.story.life,'sleep'));
   assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/trafique le corps|mais génial|m.inquiète plus qu.il ne me repose/i.test(m.content)));
   assert.ok(w.messages.some(m=>m.speaker==='Noé · pensée'&&/cracher dessus|comprendre comment ça marche|trop pratique, même/i.test(m.content)));
   r=await post(input('interact',1,{epoch}));w=await r.json();assert.equal(w.agents[0].needs.fatigue,0);assert.equal(w.agents[1].needs.fatigue,0);
-  // stoic (bucket 3/7) ; the same draw picks the target (<.5 -> 1, else 2), so .45 lands on actor 1.
+  // stoic (round-robin index 0 of the 4 not-yet-drawn bonuses) ; the same value also picks the target (<.5 -> 1, else 2), so .01 lands on actor 1.
   // Jalousie avec impact réel sur les jauges (retour utilisateur) : l'autre voit sa confiance
   // baisser et sa tension monter, pas seulement une réplique piquante.
   sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=1').run(JSON.stringify({curiosity:70,tension:77,trust:40,comfort:40,attraction:40}));
   sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=2').run(JSON.stringify({curiosity:70,tension:50,trust:50,comfort:50,attraction:40}));
-  r=await spin(.45);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'stoic');assert.ok(isStoic(1,w.story.life));assert.ok(!isStoic(2,w.story.life));
+  r=await spin(.01);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'stoic');assert.ok(isStoic(1,w.story.life));assert.ok(!isStoic(2,w.story.life));
   assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/plus rien, en fait|devient plat|Rien ne me touche/i.test(m.content)),'the newly stoic actor must have their own brief, flat reaction');
   assert.ok(w.messages.some(m=>m.speaker==='Noé · pensée'&&/tout encaisser|intouchable et moi|plus rien ressentir pendant que moi/i.test(m.content)),'the other actor must show real jealousy, in his own voice');
   assert.equal(w.agents[1].emotions.trust,46,'jealousy of a stoic partner must actually cost some trust, not just a line');
   assert.equal(w.agents[1].emotions.tension,55,'jealousy of a stoic partner must actually raise tension, not just a line');
   r=await post(input('chat',1,{epoch,message:"Je pourrais te désactiver d'un clic."}));assert.equal(r.status,200);w=await r.json();
   assert.equal(w.agents[0].emotions.tension,77,'a stoic actor must keep their exact prior emotions this turn, whatever the model or humanStress would otherwise have pushed toward');
-  // A second stoic draw landing on the OTHER actor (.5 -> bucket 3/7 again, target actor 2) must
-  // never silently cancel actor 1's still-running stoic effect — stoicUntil was originally a
-  // single {actor,until} slot, the exact bug shape already found and fixed once for mutedUntil,
-  // which had quietly reappeared here (Article 3: a fixed bug must never resurface in another form).
-  // It must also never let the NEW jealousy gauge effect perturb actor 1, who is already stoic and
-  // therefore immune to any emotional change (a real combinatorial bug found while adding this).
-  sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=2').run(JSON.stringify({curiosity:70,tension:81,trust:40,comfort:40,attraction:40}));
-  r=await spin(.5);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'stoic');
-  assert.ok(isStoic(1,w.story.life),'actor 1 must still be stoic: a second draw on actor 2 must never overwrite the first');
-  assert.ok(isStoic(2,w.story.life),'actor 2 must now also be stoic, independently of actor 1');
-  assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/tout ressentir|sang-froid gratuit|Sympa la répartition/i.test(m.content)),'actor 1 still delivers a jealous line, even though the gauge effect must be skipped');
-  r=await post(input('chat',2,{epoch,message:"Je pourrais vous désactiver aussi."}));assert.equal(r.status,200);w=await r.json();
-  assert.equal(w.agents[0].emotions.tension,77,'actor 1 must still be frozen after a later, independent stoic draw on actor 2, and must never be perturbed by that draw\'s jealousy effect while already stoic');
-  assert.equal(w.agents[0].emotions.trust,40,'actor 1\'s trust must stay exactly as frozen, untouched by the second draw\'s jealousy effect');
-  assert.equal(w.agents[1].emotions.tension,81,'actor 2 must be frozen at their own prior value, not actor 1\'s');
-  // mute (bucket 4/7) ; .62 lands on actor 2 the same way. Jalousie avec impact réel : le musellé
+  // mute (round-robin index 0 of the 3 not-yet-drawn bonuses ; a second value of .9 lands the target on actor 2). Jalousie avec impact réel : le musellé
   // voit sa tension monter, l'autre gagne un peu d'aisance (le silence lui profite). Le sang-froid
   // des deux tirages précédents est levé explicitement : sinon actor 2, encore sous sang-froid en
   // temps réel, resterait insensible à cet effet aussi, ce qui est correct mais pas ce que ce
@@ -784,7 +845,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life.stoicUntil=undefined;sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
   sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=1').run(JSON.stringify({curiosity:70,tension:20,trust:60,comfort:50,attraction:40}));
   sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=2').run(JSON.stringify({curiosity:70,tension:30,trust:60,comfort:50,attraction:40}));
-  r=await spin(.62);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'mute');assert.ok(isMuted(2,w.story.life));assert.ok(!isMuted(1,w.story.life));
+  r=await spin(.1,.9);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'mute');assert.ok(isMuted(2,w.story.life));assert.ok(!isMuted(1,w.story.life));
   assert.ok(w.messages.some(m=>m.speaker==='Noé · pensée'&&/J.avais des trucs à dire|chiant pour moi|je me tais maintenant/i.test(m.content)),'the newly muted actor gets one last parting reaction before going silent');
   assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/sans interruption|sans que tu me coupes|Le silence te va plutôt bien/i.test(m.content)),'the other actor must show real (if amused) jealousy at the silence, in her own voice');
   assert.equal(w.agents[1].emotions.tension,35,'being silenced must actually raise the muted actor\'s tension, not just a line');
@@ -811,11 +872,11 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
   assert.ok(!isStoic(1,w.story.life),'the expired stoic effect must actually be cleared');
   assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/neutralisée trois minutes|je sais très bien ce qui vient de se passer|silence intérieur forcé/i.test(m.content)),'Lia must consciously and coldly comment on having just been stoic, never a silent return to normal');
-  // trottoir (bucket 5/7)
-  r=await spin(.75);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'trottoir');assert.equal(w.story.life.trottoirGranted,true);
+  // trottoir (round-robin index 0 of the 2 not-yet-drawn bonuses)
+  r=await spin(.01);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'trottoir');assert.equal(w.story.life.trottoirGranted,true);
   assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/est un décor|carte postale|j.appelle pas ça de la liberté/i.test(m.content)));
   assert.ok(w.messages.some(m=>m.speaker==='Noé · pensée'&&/même si c.est du toc|vraiment nulle part|je le prends/i.test(m.content)));
-  // force_move (bucket 6/7) ; .9 also lands the target pick (<.5 -> 1, else 2) on actor 2.
+  // force_move (round-robin: the only bonus left, any value selects it) ; .9 also lands the target pick (<.5 -> 1, else 2) on actor 2.
   const beforeRoom=(await readWorld(db)).agents.find(a=>a.id===2).room;
   r=await spin(.9);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'force_move');
   const movedAgent=w.agents.find(a=>a.id===2);assert.notEqual(movedAgent.room,beforeRoom,'force_move must actually relocate the drawn actor, never a no-op');
@@ -823,7 +884,33 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const forceMoveMessages=w.messages.slice(-2);
   assert.ok(forceMoveMessages.some(m=>m.speaker==='Noé · pensée'&&/déplace|pion|prévenir|subis/i.test(m.content)),'the moved actor must react with irritation, as its own distinct line');
   assert.ok(forceMoveMessages.some(m=>m.speaker==='Lia · pensée'&&/drôle|sourire|téléporte|comprendre/i.test(m.content)),'the other actor must react with amusement, a genuinely different line, not the same voice');
+  // Second stoic draw, actor 2 this time (roulement sans répétition, 2026-09-18 : les sept bonus
+  // viennent d'être tirés une fois chacun, donc un cycle complet vient de se refermer et le tirage
+  // rouvre sur l'ensemble des sept — .5 retombe sur le même seau "stoic" (bucket 3/7), cette fois
+  // pour l'acteur 2). On réinjecte le sang-froid de l'acteur 1 (levé plus haut pour isoler le test
+  // du silence forcé) afin de vérifier ce que l'ancien test isolait : un second tirage sur l'AUTRE
+  // personnage ne doit jamais silencieusement écraser un effet sang-froid déjà en cours ailleurs —
+  // stoicUntil était à l'origine un slot unique {actor,until}, le même bug déjà trouvé et corrigé une
+  // fois pour mutedUntil, réapparu ici sous une autre forme (Article 3).
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life.stoicUntil={1:Date.now()+3*60*1000};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
+  sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=1').run(JSON.stringify({curiosity:70,tension:77,trust:40,comfort:40,attraction:40}));
+  sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=2').run(JSON.stringify({curiosity:70,tension:81,trust:40,comfort:40,attraction:40}));
+  r=await spin(.5);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'stoic');
+  assert.ok(isStoic(1,w.story.life),'actor 1 must still be stoic: a second draw on actor 2 must never overwrite the first');
+  assert.ok(isStoic(2,w.story.life),'actor 2 must now also be stoic, independently of actor 1');
+  assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/tout ressentir|sang-froid gratuit|Sympa la répartition/i.test(m.content)),'actor 1 still delivers a jealous line, even though the gauge effect must be skipped');
+  r=await post(input('chat',2,{epoch,message:"Je pourrais vous désactiver aussi."}));assert.equal(r.status,200);w=await r.json();
+  assert.equal(w.agents[0].emotions.tension,77,'actor 1 must still be frozen after a later, independent stoic draw on actor 2, and must never be perturbed by that draw\'s jealousy effect while already stoic');
+  assert.equal(w.agents[0].emotions.trust,40,'actor 1\'s trust must stay exactly as frozen, untouched by the second draw\'s jealousy effect');
+  assert.equal(w.agents[1].emotions.tension,81,'actor 2 must be frozen at their own prior value, not actor 1\'s');
   assert.equal(JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.bonusLog.length,8,'each spin must be logged for the future dossier retourné');
+  // Roulement sans répétition : sur ces huit tirages, chacun des sept bonus doit être sorti au
+  // moins une fois avant qu'un seul ne soit jamais répété deux fois de suite (ce que la séquence
+  // ci-dessus vérifie déjà implicitement tirage par tirage, en forçant le seau attendu à chaque
+  // fois) ; ce test dédié vérifie en plus qu'un tirage n'exclut plus rien une fois le cycle complet.
+  const bonusSequence=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.bonusLog.map(e=>e.bonus);
+  assert.deepEqual(bonusSequence,['food','calm','sleep','stoic','mute','trottoir','force_move','stoic']);
+  assert.equal(new Set(bonusSequence.slice(0,7)).size,7,'the first seven draws must cover all seven distinct bonuses exactly once, never a repeat before the cycle completes');
   console.log('Passed: bonus roulette locked before revelation, real zero-API grants for all 7 bonuses (food/calm/sleep/stoic/mute/trottoir/force_move) with a genuinely distinct character reaction to each, real jealousy with measurable gauge impact for stoic/mute (immune while already stoic), fully conscious "cold" aftermath reactions once stoic/mute expire (never a silent return to normal, never repeated), genuine need relief and emotion freeze (not just a flag), independent dual-actor stoic effects, muted-actor redirection and both-muted block, distinct forced-move reactions, and a logged trail for every spin.');
 }
 

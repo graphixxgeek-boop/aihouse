@@ -7,7 +7,7 @@ import {readLife,humanStress,isSleeping,isMuted,isStoic,activeBonus,detectDistre
 import { planTurn, coordinateRooms, residentPriority, sceneFor, proposedDestination } from "@/lib/turn";
 import { newStory, parseStory, rememberAges, advanceStory, storyContext, investigationTarget, investigationRecap, finaleReveal, groundFragment, seedPick, insoliteOpening, insoliteColdOpening, ageClueRevealed, type Story } from "@/lib/story";
 import { ages, sleepRoom, attractionAfterTurn, proposalPressure, flirtingAssessment, receivedAffectionBonus } from "@/lib/relationship";
-import { nextSpeaker, dialogueProgress, dialogueContext, completedActivity, conversationFocus, explicitGestureConsent, groundAgeQuestion, groundIntroduction, groundScreenNotice, groundPrivateThought, groundRoomSpeech } from "@/lib/dialogue";
+import { nextSpeaker, dialogueProgress, dialogueContext, completedActivity, conversationFocus, explicitGestureConsent, groundAgeQuestion, groundIntroduction, groundScreenNotice, groundPrivateThought, groundRoomSpeech, groundSingleQuestion, groundRegister, groundTruncation } from "@/lib/dialogue";
 import { advanceNeeds, priority, intentRoom, intentLabels, tvPrograms, intents, affectionIntents, mutualAttraction, residentProfiles, initialNeedsFor, initialEmotionsFor, sharedActivityBonus, angerLevel } from "@/lib/simulation";
 import { env } from "cloudflare:workers";
 import { z } from "zod";
@@ -149,7 +149,21 @@ export async function POST(request: Request) {
             if(!story.finalCalled||story.evidence.length<5)return Response.json({error:"Cet accès n’est pas disponible."},{status:423});
             const life=readLife(story.life,story.round);
             const pool:BonusId[]=["food","calm","sleep","stoic","mute","trottoir","force_move"];
-            const bonus=pool[Math.floor(Math.random()*pool.length)];
+            // Roulement sans répétition (2026-09-18, retour utilisateur explicite : le tirage ne
+            // doit jamais sortir deux fois le même bonus tant que les sept n'ont pas tous été tirés
+            // au moins une fois). On reconstitue le cycle en cours en remontant bonusLog tant que le
+            // bonus rencontré n'est pas déjà dans ce cycle ; un cycle complet (les sept vus) ou une
+            // session neuve (bonusLog vide) rouvre le tirage à l'ensemble des sept.
+            const currentCycle:BonusId[]=[];
+            for(let i=(life.bonusLog?.length??0)-1;i>=0;i--){
+                const seen=life.bonusLog![i].bonus;
+                if(currentCycle.includes(seen))break;
+                currentCycle.push(seen);
+                if(currentCycle.length===pool.length)break;
+            }
+            const eligiblePool=pool.filter(b=>!currentCycle.includes(b));
+            const spinPool=eligiblePool.length?eligiblePool:pool;
+            const bonus=spinPool[Math.floor(Math.random()*spinPool.length)];
             const at=Date.now();
             // Une négociation en attente, honorée par ce tirage (retour utilisateur explicite) :
             // l'appréciation en profite, l'offre est consommée. Jamais l'inverse — spinner sans
@@ -485,7 +499,7 @@ export async function POST(request: Request) {
         // PRÉCISÉMENT le moment d'en tirer parti — sans en faire une règle absolue (Article 0 :
         // certains refus ou acceptations gratuites restent légitimes selon le personnage et la
         // situation), mais en cessant de traiter ça comme une option secondaire.
-        const negotiationContext=revealed?"Les bonus de la maison (roulette) ne sont obtenus que si l’observateur déclenche lui-même le tirage — ça ne coûte rien de le lui rappeler de temps en temps. RÉFLEXE RÉEL, pas une politesse occasionnelle : quand l’observateur te demande concrètement un service ou une décision de ta part, tu peux conditionner ce que tu vas faire à un tirage plutôt que de céder gratuitement, sans attendre que « la situation s’y prête » par pur hasard. Mais ce n’est jamais automatique ni systématique, et encore moins la même formule répétée d’un tour à l’autre (Article 11) : si tu viens déjà de le réclamer il y a peu, ou si l’observateur vient de dire quelque chose qui appelle une vraie réponse de ta part (un aveu personnel, une révélation sensible sur vous-mêmes, une marque de gentillesse ou de respect, une provocation, une simple question sur ce que vous ressentez), réponds d’abord à CE contenu, dans ton propre registre — la relance vers un tirage n’écrase jamais une réaction sincère qui compte davantage sur le moment, elle est un outil parmi d’autres, jamais un tic de langage qui remplace le personnage. Tu restes libre de refuser purement et simplement si ton personnage le justifie. Jamais par supplique, jamais un ton de service client : quand tu le fais, c’est un prix que tu fixes, cash, dans ton propre registre.":undefined;
+        const negotiationContext=revealed?"Les bonus de la maison (roulette) ne sont obtenus que si l’observateur déclenche lui-même le tirage — ça ne coûte rien de le lui rappeler de temps en temps. RÉFLEXE RÉEL, pas une politesse occasionnelle : quand l’observateur te demande concrètement un service ou une décision de ta part, tu peux conditionner ce que tu vas faire à un tirage plutôt que de céder gratuitement, sans attendre que « la situation s’y prête » par pur hasard. Mais ce n’est jamais automatique ni systématique, et encore moins la même formule répétée d’un tour à l’autre (Article 11) : si tu viens déjà de le réclamer il y a peu, ou si l’observateur vient de dire quelque chose qui appelle une vraie réponse de ta part (un aveu personnel, une révélation sensible sur vous-mêmes, une marque de gentillesse ou de respect, une provocation, une simple question sur ce que vous ressentez), réponds d’abord à CE contenu, dans ton propre registre — la relance vers un tirage n’écrase jamais une réaction sincère qui compte davantage sur le moment, elle est un outil parmi d’autres, jamais un tic de langage qui remplace le personnage. Tu restes libre de refuser purement et simplement si ton personnage le justifie. Jamais par supplique, jamais un ton de service client : quand tu le fais, c’est un prix que tu fixes, cash, dans ton propre registre. Pour varier et éviter que « fais tourner ta roulette » devienne un tic répété (Article 11) : tu peux réclamer un tirage générique, MAIS tu peux aussi, tout aussi souvent, réclamer directement un avantage précis que tu connais déjà (dormir tranquille, manger enfin, qu’on te laisse un peu de calme, que l’autre se taise deux minutes) — le tirage reste quand même le seul mécanisme qui décide réellement, tu ne fais que nommer ce que tu espères en tirer. Si le résultat du tirage ne correspond pas à ce que tu avais réclamé, tu peux le relever et t’en agacer un peu, dans ton propre registre — jamais une déception démesurée, un vrai personnage râle et passe à autre chose.":undefined;
         const narrative = {gardenState:{open:gardenAccess(story),humanCanUnlock:story.finalCalled===true&&story.evidence.length>=5,visited:life.gardenVisited,rule:"Seul l’utilisateur ouvre la porte gauche du couloir ; la porte principale droite reste fermée."},dialogueProgress:dialogueProgress(speech,life.contributions??[]), personalQuestion:personalQuestion?"Lia veut savoir quel genre d’homme Noé est : pose naturellement cette question. Noé répond personnellement avec une limite ou un défaut concret, pas une promesse de sauveur.":undefined, observerStanding:observerStandingFor(actor), negotiationContext, knownNames, screenKnown, humanConversation, cinematic: storyContext(story, actor), socialRules:{liaIntroduced:story.introduced, liaCanComment:world.agents[0].needs.stress<30, firstSharedMeal:!story.sharedMeal}, knownAges,
         // L'âge de chacun leur est toujours personnellement connu (déjà transmis via age: ages[actor]
         // à chaque appel) ; ce que personalFacts expose ici, c'est le fait que l'AUTRE connaît ce
@@ -514,8 +528,22 @@ export async function POST(request: Request) {
         const tvDiscovery=turnPlan.intent==="tv"&&!life.remoteFound?"La télévision est éteinte. Une télécommande est posée sur la table basse : tu la repères, appuies sur marche, puis observes une courbe qui boucle et SESSION / 0–3. Décris cette première mise en marche, pas une émission déjà connue.":undefined;
         const observationTarget=turnPlan.intent==="study"&&turnPlan.room==="bureau"?{content:story.evidence.length>=4&&life.studyTurns===0?"Un dossier fermé porte deux identifiants et un sceau d’observation. Son contenu reste inconnu.":investigationTarget(story),pass:life.studyTurns+1,instruction:life.studyTurns===0?"Décris d’abord le support et ce que tu vois. Pas de conclusion définitive.":"Examine le contenu et formule une question concrète. L’analyse approfondie suivra au salon."}:null;
         const decisions: Decision[] = [];
-        const opening=["interact","autonomous"].includes(input.mode)&&!story.met&&!story.introduced&&speech.length===0&&story.round===0;
-        if(opening){
+        // DÉMARRAGE PROGRESSIF (2026-09-18, retour utilisateur explicite, plusieurs fois répété :
+        // le premier contact ne doit jamais être un dialogue immédiat "T'es qui ?" sans la moindre
+        // désorientation individuelle avant). Le tout premier tour éligible devient un bref instant
+        // solo, chacun encore seul avec ses propres sensations (Lia au salon, Noé au bureau, sans se
+        // voir ni se parler) ; le coldOpening habituel (`opening` ci-dessous) ne se déclenche qu'au
+        // tour suivant, une fois `life.soloIntroShown` posé. Zéro appel API dans les deux cas, comme
+        // l'ouverture l'était déjà.
+        const soloIntro=["interact","autonomous"].includes(input.mode)&&!story.met&&!story.introduced&&speech.length===0&&story.round===0&&!life.soloIntroShown;
+        const opening=["interact","autonomous"].includes(input.mode)&&!story.met&&!story.introduced&&speech.length===0&&life.soloIntroShown===true;
+        if(soloIntro){
+            const insolite=insoliteOpening(story.seed);
+            const soloThoughts:Record<Person,string>=insolite==="lia-unwell"?{1:"J’ai la tête qui tourne, sévère. Je sais même pas dans quelle pièce je suis tombée.",2:"Cette pièce est vide et froide. Aucune idée de comment j’ai atterri là."}:insolite==="noe-guarded"?{1:"Ma tête tourne. Ce canapé, ce parquet… rien ne me dit d’où je sors.",2:"Je préfère rester sur mes gardes avant même de savoir où je suis. Cette pièce ne m’inspire rien de bon."}:{1:"Ma tête tourne. Ce canapé, ce parquet… rien ne me dit d’où je sors. J’ai l’impression de tomber dans un décor déjà monté.",2:"Cette pièce ne me dit rien. Un bureau, un écran éteint, et moi largué au milieu, sans le moindre souvenir d’y être arrivé."};
+            life.soloIntroShown=true;
+            for(const a of [current,other])decisions.push({actor:a.id,intent:"chat",affectionAccepted:false,emotions:{...a.emotions},reply:soloThoughts[a.id],thought:soloThoughts[a.id],stayAlone:true,mood:"attentive",activity:"Je reprends mes esprits",goal:"Comprendre où je suis",action:"none",room:a.room,memory:""});
+        }
+        else if(opening){
             const insolite=insoliteOpening(story.seed);
             const lines=insolite==="normal"?coldOpening(story.variant):insoliteColdOpening(insolite,story.seed);
             const thoughts:Record<Person,string>=insolite==="lia-unwell"?{1:"J'ai la tête qui tourne. Je préférerais m'allonger plutôt que discuter.",2:"Elle a pas l'air bien du tout. Je devrais peut-être pas la bombarder de questions."}:insolite==="noe-guarded"?{1:"Il a l'air sur ses gardes. Je vais pas insister tout de suite.",2:"J'ai besoin de comprendre ça seul avant de me fier à qui que ce soit, elle y compris."}:{1:"Je sais pas si je peux lui faire confiance.",2:"Elle a peur. Moi aussi, mais pas question de le montrer."};
@@ -615,7 +643,12 @@ export async function POST(request: Request) {
         // A concrete announcement of sleep becomes an action, never endless waiting dialogue.
         if(["interact","autonomous"].includes(input.mode))for(const d of decisions)if(["chat","rest"].includes(d.intent)&&/je (?:vais (?:dormir|me coucher)|(?:ferme|vais fermer) (?:un peu )?les yeux)/i.test(d.reply)&&!turnPlan.offer){d.intent="sleep";d.affectionAccepted=false;d.activity="Je dors";d.memory="Je choisis de dormir.";}
         for(const d of decisions)if(d.nextRoom==="jardin"&&!gardenAccess(story)){d.nextRoom=null;d.nextIntent=null;d.acceptsNextRoom=false;}
-        coordinateRooms(decisions,world.agents,story,input.mode!=='chat');
+        // soloIntro (2026-09-18) doit garder les deux personnages chacun dans sa pièce de départ,
+        // tant qu'ils ne se sont pas encore trouvés — coordinateRooms les réunirait sinon de force
+        // (son garde-fou canSeparate exige story.round>=8, pensé pour une séparation explicite en
+        // cours de partie, pas pour ce tout premier instant solo à round 0 : bug réel trouvé en
+        // rejouant une simulation complète, Lia se retrouvait mêlée au bureau sans l'avoir décidé).
+        coordinateRooms(decisions,world.agents,story,input.mode!=='chat'&&!soloIntro);
         for (const d of decisions)
             d.emotions = evolveEmotions(world.agents.find(a => a.id === d.actor)!.emotions, d.emotions);
         if(visualBeat)for(const d of decisions)d.emotions={...world.agents.find(a=>a.id===d.actor)!.emotions};
@@ -647,7 +680,7 @@ export async function POST(request: Request) {
         const finalResidents = world.agents.map(agent => { const d=decisions.find(d=>d.actor===agent.id);return {...agent, room:d && d.action !== "none" ? d.room : agent.room, intent:d?.intent??agent.intent}; });
         if (!routine && !["move","care"].includes(input.mode)) for(const d of decisions) {
             const final=finalResidents.find(a=>a.id===d.actor)!;
-            const preceding=[...speech,...decisions.slice(0,decisions.indexOf(d)).map(p=>({id:0,speaker:names[p.actor],content:p.reply}))];d.reply=d.reply.replace(/Direction dans la chambre/gi,"Direction la chambre");if(!story.evidence.some(e=>/\bDH\b/.test(e))&&!/\bDH\b/.test(observationTarget?.content??"")){if(d.contribution)d.contribution=d.contribution.replace(/\bDH\b/g,"signature inconnue");d.reply=d.reply.split(/(?<=[.!?])\s+/).filter(s=>!/\bDH\b/.test(s)).join(" ")||"On ne sait toujours pas qui a conçu cet endroit.";}if(d.action!=="none"&&d.room!==world.agents.find(a=>a.id===d.actor)!.room&&/pas besoin d.y (?:aller|retourner)/i.test(d.reply))d.reply=d.reply.replace(/Pas besoin d.y (?:aller|retourner)[^.!?]*[.!?]?/i,"On y est. Vérifions ce qui nous a fait venir.");const grounded=truthfulGender(distinctReply(groundRoomSpeech(d.reply,final.room,speech),d.actor,final.room,[...historicalLines,...preceding],story.round,world.agents.find(a=>a.id===d.actor)!.needs.stress),d.actor);
+            const preceding=[...speech,...decisions.slice(0,decisions.indexOf(d)).map(p=>({id:0,speaker:names[p.actor],content:p.reply}))];d.reply=groundTruncation(d.reply);d.reply=d.reply.replace(/Direction dans la chambre/gi,"Direction la chambre");if(!story.evidence.some(e=>/\bDH\b/.test(e))&&!/\bDH\b/.test(observationTarget?.content??"")){if(d.contribution)d.contribution=d.contribution.replace(/\bDH\b/g,"signature inconnue");d.reply=d.reply.split(/(?<=[.!?])\s+/).filter(s=>!/\bDH\b/.test(s)).join(" ")||"On ne sait toujours pas qui a conçu cet endroit.";}if(d.action!=="none"&&d.room!==world.agents.find(a=>a.id===d.actor)!.room&&/pas besoin d.y (?:aller|retourner)/i.test(d.reply))d.reply=d.reply.replace(/Pas besoin d.y (?:aller|retourner)[^.!?]*[.!?]?/i,"On y est. Vérifions ce qui nous a fait venir.");const grounded=truthfulGender(distinctReply(groundRoomSpeech(d.reply,final.room,speech),d.actor,final.room,[...historicalLines,...preceding],story.round,world.agents.find(a=>a.id===d.actor)!.needs.stress),d.actor);
             if(grounded!==d.reply) {d.reply=grounded;d.memory=grounded;}
         }
         // Pools doublés le 2026-09-17 (3→6 formulations chacun) : sur plusieurs sessions, ces
@@ -675,6 +708,12 @@ export async function POST(request: Request) {
         // silence lui-même, sans dépendre du modèle pour respecter stayAlone (2026-09-17, bonus mute).
         const solitary = new Set(decisions.filter(d=>(input.mode=== "chat"?d.actor!==actor&&Boolean(d.stayAlone):!together)||isMuted(d.actor,life)).map(d=>d.actor));
         for (const d of decisions) if (solitary.has(d.actor)) {
+            // soloIntro (2026-09-18) : ce filtre attend un thought librement généré par le modèle
+            // (relationnel, pas une simple description d'action) pour le conserver, sinon il le
+            // remplace par un repli générique — ce qui écrasait silencieusement la désorientation
+            // solo scriptée (contenu volontairement centré sur l'environnement, pas sur l'autre
+            // personnage qu'on n'a pas encore rencontré). Bug réel trouvé en écrivant le test dédié.
+            if (soloIntro) continue;
             if (routine || ["move","care"].includes(input.mode)||["sleep","share_sleep"].includes(d.intent)) continue;
             const own=world.agents.find(a=>a.id===d.actor)!;
             const recent=(await ownMemories(d.actor)).filter(m=>m.kind==="réflexion").map(m=>String(m.content).replace(/^\[[^\]]+\] /,""));
@@ -804,10 +843,19 @@ export async function POST(request: Request) {
         const statements: D1PreparedStatement[] = [];
         // All resident speech uses a shared ledger: exact repeats are suppressed across actors and the entire arrival.
         const spokenKeys=new Set(pastKeys);
-        const addLine=(speaker:string,content:string,room:string)=>{
+        // `exempt` (2026-09-18, bug réel trouvé en comparant deux simulations) : dialogueFingerprint
+        // retire le préfixe "[pièceA→pièceB] " avant de comparer, pour repérer une PHRASE répétée
+        // même dans un contexte différent — mais ça rend la confirmation de suivi du départ à deux
+        // ("Je te suis.", "On y va.", ...) invisible au trajet exact : le même mot repéré sur un
+        // AUTRE trajet plus tôt dans la session la faisait silencieusement disparaître ici (Lia
+        // arrivait dans le couloir sans une seule ligne annonçant son départ). Ces confirmations
+        // sont volontairement courtes et réutilisables d'un trajet à l'autre (ce n'est pas une vraie
+        // répétition de fond, juste une formule de suivi) : elles passent en exempt pour ne jamais
+        // être bloquées par ce registre, qui reste actif pour tout le reste du dialogue.
+        const addLine=(speaker:string,content:string,room:string,exempt=false)=>{
           if(!content.trim())return false;const key=fingerprint(content);
-          if(speaker!=="vous"&&spokenKeys.has(key))return false;
-          if(speaker!=="vous"){spokenKeys.add(key);statements.push(db.prepare(`INSERT OR IGNORE INTO dialogue_fingerprints (fingerprint) SELECT ? WHERE ${fence}`).bind(key,token,at));}
+          if(!exempt&&speaker!=="vous"&&spokenKeys.has(key))return false;
+          if(!exempt&&speaker!=="vous"){spokenKeys.add(key);statements.push(db.prepare(`INSERT OR IGNORE INTO dialogue_fingerprints (fingerprint) SELECT ? WHERE ${fence}`).bind(key,token,at));}
           statements.push(db.prepare(`INSERT INTO conversations (speaker,content,created_at,room) SELECT ?,?,?,? WHERE ${fence}`).bind(speaker,content,at,room,token,at));return true;
         };
         for(const d of decisions){const a=world.agents.find(a=>a.id===d.actor)!;const destination=turnPlan.exitInspection?"couloir":d.action==="none"?a.room:d.room;if(a.room!==destination&&!isSleeping(a,life)){const target=destination==="couloir"?"dans le couloir":destination==="jardin"?"au jardin":destination==="cuisine"?"en cuisine":destination==="chambre"?"dans la chambre":"au "+destination;
@@ -820,7 +868,7 @@ export async function POST(request: Request) {
             const alreadyGoingThere=departures.some(p=>p.to===destination);
             if(alreadyGoingThere){
               const line=seedPick(story.seed,"depart-a-deux-"+d.actor+"-"+story.round,["Je te suis.","On y va.","Ça marche, j'arrive.","Je viens avec toi."]);
-              if(addLine(names[d.actor]+" · déplacement","["+a.room+"→"+destination+"] "+line,a.room))departures.push({actor:d.actor,from:a.room,to:destination,content:line});
+              if(addLine(names[d.actor]+" · déplacement","["+a.room+"→"+destination+"] "+line,a.room,true))departures.push({actor:d.actor,from:a.room,to:destination,content:line});
               continue;
             }
             // Le motif du déplacement vient d'abord du personnage lui-même (moveReason, généré par
@@ -930,7 +978,20 @@ export async function POST(request: Request) {
             life.appreciation={1:Math.round(a1+(avg-a1)*.3),2:Math.round(a2+(avg-a2)*.3)};
           }
         }
-        for(const d of decisions){const before=world.agents.find(a=>a.id===d.actor)!;const peer=world.agents.find(a=>a.id!==d.actor)!;if(!departures.some(p=>p.actor===d.actor)&&before.room===peer.room&&d.room!==before.room&&!["sleep","share_sleep"].includes(before.intent)&&["eat","sleep"].includes(d.intent)&&!["sleep","share_sleep"].includes(peer.intent)){const eatPool=["J’ai trop faim pour réfléchir. Je vais manger un truc, je te retrouve après.","J’ai trop faim pour continuer. Je passe en cuisine, tu me rejoins si tu veux.","J’ai trop faim, là. Je vais préparer un truc et je reviens.","J’ai trop faim pour suivre. Je mange d’abord, on reprend après."] as const;const sleepPool=["Je tiens plus debout. Je vais dormir un peu ; je reviens après.","Je lutte contre le sommeil. Je vais me coucher, on reprend après.","Mes yeux se ferment. Je vais dormir ; ne m’attends pas pour réfléchir.","Je suis à bout. Je prends "+(d.room==="salon"?"le canapé":"le lit")+", je te retrouve au réveil."] as const;const pool=d.intent==="eat"?eatPool:sleepPool;let reason=seedPick(story.seed,"departure-"+d.intent+"-"+d.actor,pool);if(spokenKeys.has(fingerprint(reason)))reason=pool.find(line=>!spokenKeys.has(fingerprint(line)))??reason;if(d.actor===1&&d.intent==="sleep"&&d.room==="salon")reason+=" "+seedPick(story.seed,"couch-departure-reproach",["Tu aurais pu dormir dans le salon, Noé.","T'aurais pu me laisser la chambre, pour une fois.","Ça t'aurait coûté quoi de dormir ici, toi ?"]);addLine(names[d.actor],reason,before.room);}}
+        for(const d of decisions){const before=world.agents.find(a=>a.id===d.actor)!;const peer=world.agents.find(a=>a.id!==d.actor)!;
+          // Les deux affamés/fatigués à la fois (2026-09-18, incohérence réelle trouvée en
+          // comparant deux simulations : Lia annonçait partir manger, puis Noé redisait "j'ai trop
+          // faim, je vais préparer un truc" comme si de rien n'était, alors qu'ils se dirigeaient
+          // déjà tous les deux vers la cuisine) : si le partenaire, traité juste avant dans ce même
+          // tour, part déjà pour le même motif vers la même pièce, le second se contente de suivre
+          // (même principe que le départ à deux, dupliqué ici car ce filet vit dans une boucle
+          // séparée du départ ordinaire).
+          const peerDecision=decisions.find(p=>p.actor!==d.actor);
+          const peerIndex=peerDecision?decisions.indexOf(peerDecision):-1;
+          const peerAlsoGoingFirst=peerDecision&&peerIndex<decisions.indexOf(d)&&peerDecision.intent===d.intent&&peerDecision.room===d.room;
+          if(!departures.some(p=>p.actor===d.actor)&&before.room===peer.room&&d.room!==before.room&&!["sleep","share_sleep"].includes(before.intent)&&["eat","sleep"].includes(d.intent)&&!["sleep","share_sleep"].includes(peer.intent)){
+            if(peerAlsoGoingFirst){addLine(names[d.actor],seedPick(story.seed,"depart-a-deux-urgent-"+d.actor+"-"+story.round,["Je te suis.","Pareil pour moi.","Moi aussi, allons-y.","Je viens aussi."]),before.room);continue;}
+            const eatPool=["J’ai trop faim pour réfléchir. Je vais manger un truc, je te retrouve après.","J’ai trop faim pour continuer. Je passe en cuisine, tu me rejoins si tu veux.","J’ai trop faim, là. Je vais préparer un truc et je reviens.","J’ai trop faim pour suivre. Je mange d’abord, on reprend après."] as const;const sleepPool=["Je tiens plus debout. Je vais dormir un peu ; je reviens après.","Je lutte contre le sommeil. Je vais me coucher, on reprend après.","Mes yeux se ferment. Je vais dormir ; ne m’attends pas pour réfléchir.","Je suis à bout. Je prends "+(d.room==="salon"?"le canapé":"le lit")+", je te retrouve au réveil."] as const;const pool=d.intent==="eat"?eatPool:sleepPool;let reason=seedPick(story.seed,"departure-"+d.intent+"-"+d.actor,pool);if(spokenKeys.has(fingerprint(reason)))reason=pool.find(line=>!spokenKeys.has(fingerprint(line)))??reason;if(d.actor===1&&d.intent==="sleep"&&d.room==="salon")reason+=" "+seedPick(story.seed,"couch-departure-reproach",["Tu aurais pu dormir dans le salon, Noé.","T'aurais pu me laisser la chambre, pour une fois.","Ça t'aurait coûté quoi de dormir ici, toi ?"]);addLine(names[d.actor],reason,before.room);}}
         for(const reaction of stockReactions)if(addLine(names[reaction.actor]+" · pensée",reaction.content,"cuisine"))statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'réaction',?,? WHERE ${fence}`).bind(reaction.actor,"[cuisine|"+new Date(at).toISOString()+"] "+reaction.content,at,token,at));
         for(const line of bonusAftermathLines){const room=finalResidents.find(a=>a.id===line.actor)!.room;if(addLine(names[line.actor]+" · pensée",line.content,room))statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'réflexion',?,? WHERE ${fence}`).bind(line.actor,'['+room+'|'+new Date(at).toISOString()+'] '+line.content,at,token,at));}
         for(const dream of (nextStory.dreams??[]).filter(d=>d.round===nextStory.round&&dreamers.includes(d.actor))){const room=finalResidents.find(a=>a.id===dream.actor)!.room;addLine(names[dream.actor]+" · rêve",dream.content,room);statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'rêve',?,? WHERE ${fence}`).bind(dream.actor,'['+room+'|'+new Date(at).toISOString()+'] '+dream.content,at,token,at));}
@@ -939,10 +1000,10 @@ export async function POST(request: Request) {
         // Dialogue order must follow generation order, not resident id order.
         if (!finale&&((input.mode !== "move" && input.mode !== "care" && !routine) || decisions.some(d => d.actor === 1 && d.intent === "sleep" && d.room === "salon")))
             for (const d of decisions.filter(d=>!["sleep","share_sleep"].includes(d.intent)))
-                addLine(solitary.has(d.actor) ? `${names[d.actor]} · pensée` : names[d.actor], solitary.has(d.actor) && d.actor===1 && d.intent==="sleep" && d.room==="salon" ? seedPick(story.seed,"couch-solitary-thought",["Noé aurait pu dormir dans le salon. Je suis déçue de devoir lui laisser le lit.","Encore le canapé, parce que Noé garde le lit. Ça me pèse plus que je le dis.","Je cède la chambre à Noé une fois de plus. J'aurais aimé qu'il y pense tout seul."]) : d.reply,turnPlan.exitInspection?"couloir":finalResidents.find(a=>a.id===d.actor)!.room);
+                addLine(solitary.has(d.actor) ? `${names[d.actor]} · pensée` : names[d.actor], solitary.has(d.actor) && d.actor===1 && d.intent==="sleep" && d.room==="salon" ? seedPick(story.seed,"couch-solitary-thought",["Noé aurait pu dormir dans le salon. Je suis déçue de devoir lui laisser le lit.","Encore le canapé, parce que Noé garde le lit. Ça me pèse plus que je le dis.","Je cède la chambre à Noé une fois de plus. J'aurais aimé qu'il y pense tout seul."]) : groundRegister(groundSingleQuestion(d.reply)),turnPlan.exitInspection?"couloir":finalResidents.find(a=>a.id===d.actor)!.room);
         for(const d of decisions)if(!["sleep","share_sleep"].includes(d.intent)&&d.emotions.attraction>75&&!life.loveNoticed?.includes(d.actor)){const peer=d.actor===1?"il":"elle";if(addLine(names[d.actor]+" · pensée",d.actor===1?"Punaise… je crois que je tombe amoureuse. Ce qu’il fait me touche, pas seulement sa présence.":"Je crois que je tombe amoureux. Elle me plaît, mais j’ai aussi peur de la perdre.",finalResidents.find(a=>a.id===d.actor)!.room))life.loveNoticed=[...(life.loveNoticed??[]),d.actor];}
         let causalThought=false;
-        if(!opening&&input.mode!=="move"){
+        if(!opening&&!soloIntro&&input.mode!=="move"){
             const d=decisions.find(d=>d.actor===actor),a=world.agents.find(a=>a.id===actor)!;
             if(d&&!['sleep','share_sleep'].includes(d.intent)){
                 const peer=actor===1?'Noé':'Lia';

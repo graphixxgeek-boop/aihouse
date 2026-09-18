@@ -31,6 +31,19 @@ aucun décor inventé, aucun objet non listé.
 
 ## 2. Présence, perception et déplacement
 
+2.0. **Démarrage progressif.** Le tout premier tour éligible (`soloIntro`, `app/api/lia/route.ts`,
+2026-09-18) n'est jamais le dialogue « T'es qui ? » lui-même : c'est un bref instant de
+désorientation solo et silencieuse pour chacun des deux personnages, chacun dans sa pièce de départ
+(Lia au salon, Noé au bureau), sans se voir ni se parler encore — demandé explicitement et
+plusieurs fois par l'utilisateur après une simulation réelle. Le coldOpening réel (`opening`)
+n'arrive qu'au tour suivant, une fois `life.soloIntroShown` posé ; zéro appel API dans les deux cas.
+Deux bugs réels trouvés en construisant ce mécanisme (Article 3) : `coordinateRooms()` réunissait de
+force les deux personnages dès ce premier tour (son garde-fou `canSeparate` visait une séparation
+explicite en cours de partie, pas ce tout premier instant à round 0) ; et le filtre
+`groundPrivateThought()` (pensé pour un thought librement généré par le modèle, jamais pour un
+contenu scripté centré sur l'environnement) écrasait silencieusement cette désorientation par un
+repli générique relationnel. Les deux sont désormais exemptés pour ce tour précis.
+
 2.1. Les habitants ne dialoguent entre eux que s'ils sont dans la même pièce. Aucune conversation
 à distance, aucune lecture des pensées de l'autre.
 
@@ -184,8 +197,17 @@ immédiate ; Noé, face à un refus, n'entame jamais un discours de conciliateur
 « je recule, prends l'espace qu'il te faut »), il encaisse en deux mots directs, un rien piqué
 dans l'orgueil ou l'autodérision. Les deux personnages sont susceptibles : une remarque
 désagréable — même venant de l'autre — appelle une riposte immédiate, jamais un encaissement
-docile. Le vocabulaire familier doit sonner contemporain, jamais daté (banni : « poireauter » et
-équivalents), avec une orthographe toujours impeccable même en registre cru. Les déductions
+docile. Le vocabulaire familier doit sonner contemporain, jamais daté — depuis le 2026-09-18, ceci
+n'est plus une liste de mots interdits (« poireauter » avait été banni littéralement en 2026-09-17,
+puis retiré : cf. Article 17, corollaire) mais un TEST DE REGISTRE que le modèle s'applique
+lui-même à chaque réplique (`lib/lia.ts`, bloc PAROLE D'ACTEURS/SIGNAL D'ALERTE SUPPLÉMENTAIRE) :
+une comparaison imagée ou une expression toute faite est presque toujours le signe d'un registre
+daté, quel que soit le mot exact. Ce test reste un jugement du modèle, pas un filtre garanti — un
+mot daté isolé peut encore passer une fois sur une session entière (constaté le 2026-09-18 :
+« poireauter » lui-même, pourtant l'exemple d'origine, est réapparu une fois) ; ce n'est pas traité
+comme un échec à corriger en le rajoutant à une liste (ce serait revenir en arrière sur l'Article
+17), mais comme la marge d'erreur normale d'un principe auto-appliqué plutôt qu'un filtre figé,
+avec une orthographe toujours impeccable même en registre cru. Les déductions
 restent portées par une intelligence de la vie vive (bon sens, sarcasme, cynisme, humour noir),
 jamais un exposé plat façon rapport (`lib/lia.ts`, blocs TON DE LIA/TON DE NOÉ, PAROLE D'ACTEURS,
 DÉDUCTIONS).
@@ -602,6 +624,18 @@ gardes `liaCalmEnough`/`noeCalmEnough` (qui ferment `personalLead`/`followBeat`/
 utilisent tous la même définition de « en colère » (`angerLevel()`) — jamais un état de stress
 physiologique bas (`needs.stress<30`) pris à tort pour l'absence de colère relationnelle : ce sont
 deux jauges distinctes, un personnage au stress bas peut rester réellement furieux.
+
+8.10. **Roulement sans répétition de la roulette des bonus.** Depuis le 2026-09-18 (retour
+utilisateur explicite), un tirage ne peut jamais retomber sur un bonus déjà sorti tant que les sept
+n'ont pas tous été tirés au moins une fois : le cycle en cours se reconstitue en remontant
+`bonusLog` (`app/api/lia/route.ts`) jusqu'à un doublon ou jusqu'à ce que les sept aient été vus, et
+seuls les bonus absents de ce cycle restent éligibles au tirage suivant — un cycle complet ou une
+session neuve rouvre l'ensemble des sept. Avant ce correctif, un tirage purement aléatoire pouvait
+retomber deux fois de suite sur le même bonus sans qu'aucune règle ne l'exclue. Pour éviter que
+« fais tourner ta roulette » devienne un tic de langage répété (Article 11), un personnage peut
+aussi réclamer directement un avantage précis qu'il connaît déjà (dormir, manger, du calme) plutôt
+que systématiquement un tirage générique — le tirage reste seul décisionnaire, et un résultat qui
+ne correspond pas à ce qui était réclamé peut légitimement agacer le personnage, brièvement.
 
 ## 9. Robustesse technique
 
