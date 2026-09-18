@@ -316,6 +316,19 @@ enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redem
    même rigueur que le reste de la charte (tests créés si besoin, suite complète revérifiée verte,
    documentation mise à jour le jour même — Articles 3, 5, 13).
 
+**Double lecture en parallèle** *(Ajouté le 2026-09-18, à la demande explicite de l'utilisateur,
+pour rester synchronisé sur ce déroulé à chaque nouvelle simulation).* Dès que le transcript est
+livré (étape 3), l'utilisateur le lit et rédige ses propres commentaires de son côté, en parallèle
+du travail de l'agent (étapes 4 à 7) — les deux lectures avancent en même temps, chacune de son
+côté, pas l'une après l'autre. Une fois son propre travail de mise à jour terminé (étape 7 close),
+l'agent le signale clairement, et le prochain message de l'utilisateur sera typiquement
+« voici mes commentaires » : l'agent doit s'y attendre et reconnaître ce signal comme l'ouverture
+d'un second passage de retours sur le MÊME transcript (déjà lu et déjà en partie corrigé), à traiter
+point par point comme tout retour annoté (cf. Article 16, complément du 2026-09-17). Pour rester
+synchronisé à chaque fois, l'agent rappelle explicitement ce déroulé (livraison → double lecture en
+parallèle → signal de fin de son côté → « voici mes commentaires » attendu de l'utilisateur) au
+moment où il livre le transcript d'une nouvelle simulation, pas seulement la première fois.
+
 **Traçabilité visible des vérifications.** Chaque fois qu'une réponse à l'utilisateur s'appuie sur
 la charte pour valider un choix (« ceci respecte l'Article 0 », « vérifié contre l'Article 11 »,
 etc.), le mentionner explicitement accompagné de 📜✅ (la feuille pour la charte, le check vert pour
