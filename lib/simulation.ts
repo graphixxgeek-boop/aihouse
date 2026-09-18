@@ -144,6 +144,14 @@ export type FaceExpression = {
     breathOpen: number; jitterAmp: number; angerLevel: number;
     comfort: number; attraction: number; sleeping: boolean;
 };
+// Extraite de faceExpression (2026-09-18) pour être réutilisée ailleurs sans dupliquer la formule
+// (Article 7) — la jauge d'appréciation de l'observateur s'y connecte désormais aussi
+// (app/api/lia/route.ts) : une vraie colère lue ici doit compter davantage que le seul repérage de
+// mots-clés sur le message humain, retour utilisateur explicite ("le système de la colère doit
+// être connecté").
+export function angerLevel(tension: number, comfort: number, angry?: boolean): number {
+    return clamp(Math.max(angry ? .85 : 0, clamp((tension - 55) / 40, 0, 1) * clamp((35 - comfort) / 35, 0, 1)), 0, 1);
+}
 export function faceExpression(agent: {
     id?: Person;
     intent: Intent;
@@ -154,16 +162,16 @@ export function faceExpression(agent: {
     const isLia = agent.id === 1;
     const sleeping = agent.intent === "sleep" || agent.intent === "share_sleep";
     const t = agent.emotions.tension, c = agent.emotions.comfort, a = agent.emotions.attraction, f = agent.needs.fatigue;
-    const angerLevel = clamp(Math.max(agent.angry ? .85 : 0, clamp((t - 55) / 40, 0, 1) * clamp((35 - c) / 35, 0, 1)), 0, 1);
-    const browRaise = clamp((c - 40) / 70 - angerLevel * (isLia ? .35 : .5), -1, 1);
-    const furrow = angerLevel * (isLia ? .55 : 1) + Math.max(0, (t - 60) / 100) * .3;
+    const angerLevel_ = angerLevel(t, c, agent.angry);
+    const browRaise = clamp((c - 40) / 70 - angerLevel_ * (isLia ? .35 : .5), -1, 1);
+    const furrow = angerLevel_ * (isLia ? .55 : 1) + Math.max(0, (t - 60) / 100) * .3;
     // Paupières lourdes dès que la fatigue monte, bien avant le sommeil complet (retour
     // utilisateur du 2026-09-17 : un naturel demandé, pas des yeux grands ouverts jusqu'à l'écroulement).
-    const eyeOpen = clamp(sleeping ? .06 : .55 + c / 100 * .3 - t / 100 * .22 - f / 100 * .4 - (isLia ? angerLevel * .18 : -angerLevel * .12), .05, 1);
-    const mouthCurve = clamp(((c - 30) / 70) * (isLia ? .35 : .6) + (a > 60 ? .18 : 0) - angerLevel * (isLia ? .3 : .55), -1, 1);
+    const eyeOpen = clamp(sleeping ? .06 : .55 + c / 100 * .3 - t / 100 * .22 - f / 100 * .4 - (isLia ? angerLevel_ * .18 : -angerLevel_ * .12), .05, 1);
+    const mouthCurve = clamp(((c - 30) / 70) * (isLia ? .35 : .6) + (a > 60 ? .18 : 0) - angerLevel_ * (isLia ? .3 : .55), -1, 1);
     const breathOpen = clamp(t / 100 * .1 + a / 100 * .05, 0, .4);
-    const jitterAmp = isLia ? t / 100 * .6 : t / 100 * 1.6 + angerLevel * 1.8;
-    return { browRaise, furrow, eyeOpen, mouthCurve, breathOpen, jitterAmp, angerLevel, comfort: c, attraction: a, sleeping };
+    const jitterAmp = isLia ? t / 100 * .6 : t / 100 * 1.6 + angerLevel_ * 1.8;
+    return { browRaise, furrow, eyeOpen, mouthCurve, breathOpen, jitterAmp, angerLevel: angerLevel_, comfort: c, attraction: a, sleeping };
 }
 // Phrase courte pour tout contexte textuel (fiche latérale en survol, description faite au modèle,
 // répliques scriptées d'apparence) : jamais un glyphe littéral à citer, une expression à décrire.

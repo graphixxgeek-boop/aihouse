@@ -51,7 +51,7 @@ softnessOwed?:boolean;softnessGiven?:number;
 // par conception (retour utilisateur explicite) : elle descend plus qu'elle ne monte pour un même
 // degré de comportement, et les tout premiers messages humains pèsent plus lourd que les suivants
 // (rateAppreciation ci-dessous). Alimente aussi le dossier retourné comme preuve supplémentaire.
-appreciation?:number;
+appreciation?:number;revealedRound?:number;
 // Négociation (2026-09-18, retour utilisateur explicite) : base volontairement simple avant toute
 // complexification — un personnage conditionne une action à un tirage de la roulette, ou en
 // propose un spontanément, dans son propre registre (jamais un menu scripté, jamais une demande
@@ -66,6 +66,7 @@ export function readLife(value:unknown,round=0):Life{const v=value&&typeof value
 ,dossierHumanTurns:Math.max(0,Number(v.dossierHumanTurns)||0),dossierAsked:Object.fromEntries(TRAP_ORDER.flatMap(t=>typeof v.dossierAsked?.[t]==="number"&&Number.isFinite(v.dossierAsked[t])?[[t,v.dossierAsked[t]]]:[])),dossierTraps:Object.fromEntries(TRAP_ORDER.flatMap(t=>v.dossierTraps?.[t]&&typeof v.dossierTraps[t]?.excerpt==="string"?[[t,{round:Math.max(0,Number(v.dossierTraps[t]?.round)||0),excerpt:v.dossierTraps[t]!.excerpt.slice(0,500)}]]:[])),dossierText:v.dossierText&&typeof v.dossierText.lia==="string"&&typeof v.dossierText.noe==="string"&&typeof v.dossierText.synthesis==="string"?{lia:v.dossierText.lia.slice(0,2000),noe:v.dossierText.noe.slice(0,2000),synthesis:v.dossierText.synthesis.slice(0,600)}:undefined,dossierShown:v.dossierShown===true
 ,softnessOwed:v.softnessOwed===true,softnessGiven:Math.max(0,Math.min(20,Number(v.softnessGiven)||0))
 ,appreciation:typeof v.appreciation==="number"&&Number.isFinite(v.appreciation)?Math.max(0,Math.min(100,v.appreciation)):50
+,revealedRound:typeof v.revealedRound==="number"&&Number.isFinite(v.revealedRound)?Math.max(0,v.revealedRound):undefined
 ,negotiationOffer:v.negotiationOffer&&(v.negotiationOffer.actor===1||v.negotiationOffer.actor===2)&&typeof v.negotiationOffer.round==="number"&&Number.isFinite(v.negotiationOffer.round)?{actor:v.negotiationOffer.actor,round:v.negotiationOffer.round}:undefined};}
 // Détection heuristique d'une réaction de choc/tristesse/colère chez l'observateur (2026-09-17) :
 // grossière par nature (comme check-spirit.mjs pour l'esprit des persos), jamais une lecture fine

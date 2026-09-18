@@ -584,7 +584,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 45'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 46'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -834,7 +834,31 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
   assert.equal(w.story.life.negotiationOffer,undefined,'a negotiation offer left unresolved for too long must eventually be cleared, not stay pending forever');
   assert.equal(w.story.life.appreciation,Math.max(0,appreciationBeforeStale-3),'letting a negotiation lapse must cost a little appreciation, distinct from honoring it');
-  console.log('Passed: the observer-appreciation gauge reacts to tone with the required early-impression amplification and down-more-than-up asymmetry, and a character-proposed negotiation is detected, honored (real appreciation gain) or left to lapse (real appreciation cost) exactly once.');
+  // Avarice (retour utilisateur : "un utilisateur qui ne donne aucun bonus ne fait pas bonne
+  // impression") : indépendante de toute négociation, une longue période sans le moindre tirage
+  // coûte un peu d'appréciation, une seule fois par tranche de 15 tours.
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.round=75;p.life.revealedRound=60;p.life.bonusLog=[];sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
+  const appreciationBeforeStingy=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.appreciation;
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  assert.equal(w.story.life.appreciation,Math.max(0,appreciationBeforeStingy-4),'never spinning the roulette for a long stretch must cost some appreciation, independent of any negotiation');
+  r=await post(input('interact',1,{epoch}));w=await r.json();
+  assert.equal(w.story.life.appreciation,Math.max(0,appreciationBeforeStingy-4),'the stinginess penalty must not repeat on the very next turn, only once per fresh 15-round stretch');
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life.bonusLog=[{round:70,bonus:'food'}];sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.round=90;sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
+  const appreciationWithASpin=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.appreciation;
+  r=await post(input('interact',1,{epoch}));w=await r.json();
+  assert.equal(w.story.life.appreciation,appreciationWithASpin,'a single logged spin must fully spare the observer from the stinginess penalty, however long ago it happened');
+  // Colère réellement lue (retour utilisateur : "le système de la colère doit être connecté") :
+  // une vraie fureur (tension haute, confort bas) chez le personnage qui répond doit coûter DE
+  // L'APPRÉCIATION EN PLUS du simple repérage lexical du message humain, jamais à sa place.
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life.negotiationOffer=undefined;p.life.stoicUntil=undefined;p.life.mutedUntil=undefined;sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
+  sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=1').run(JSON.stringify({curiosity:70,tension:90,trust:40,comfort:10,attraction:40}));
+  flat=true;
+  const appreciationBeforeAnger=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.appreciation;
+  r=await post(input('chat',1,{epoch,message:"Il fait beau aujourd'hui."}));assert.equal(r.status,200);w=await r.json();
+  flat=false;
+  assert.equal(w.story.life.appreciation,appreciationBeforeAnger-5,'a genuinely furious responder (real tension/comfort reading) must cost appreciation even for an entirely neutral human message');
+  console.log('Passed: the observer-appreciation gauge reacts to tone with the required early-impression amplification and down-more-than-up asymmetry, to real (not just lexical) anger in the responding character, and to prolonged stinginess independent of negotiation; a character-proposed negotiation is detected, honored (real appreciation gain) or left to lapse (real appreciation cost) exactly once.');
 }
 
 {

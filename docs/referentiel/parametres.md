@@ -271,6 +271,29 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
     concerné le commente lucidement — jamais un retour muet à la normale. Consommé aussitôt détecté
     (le minuteur expiré est effacé) pour ne jamais se répéter au tour suivant.
 
+## Appréciation de l'observateur et négociation (`lib/life.ts`, `app/api/lia/route.ts`, `principes.md` 8.7/8.8)
+
+- `appreciation` : 0-100, neutre à 50, borné.
+- Ton du message humain (`rateAppreciation`, tôt = 3 premiers messages humains post-révélation
+  via `dossierHumanTurns`) : mots agressifs/déshumanisants -18 (tôt) / -10 (ensuite) ; mots
+  respectueux/bienveillants +10 (tôt) / +4 (ensuite) ; message neutre : 0 (jamais de mouvement par
+  défaut).
+- Colère réellement lue (`angerLevel(tension,comfort,dispute actif)` > 0,5 chez le personnage qui
+  vient de répondre) : -5 supplémentaires, en plus du repérage lexical ci-dessus, jamais à sa place.
+- Avarice : `bonusLog` vide ET au moins 15 tours écoulés depuis la révélation (`revealedRound`) ET
+  tour courant multiple de 15 → -4, une fois par tranche (jamais répété tant qu'un multiple de 15
+  n'est pas de nouveau atteint sans tirage entretemps).
+- Négociation honorée (tirage pendant qu'une offre est en attente) : +8, offre consommée.
+  Négociation caduque (offre en attente depuis plus de 6 tours) : -3, offre effacée.
+- Colore le contexte narratif donné au modèle (`observerStanding`) : ≤25 → garde haute assumée
+  explicitement ; ≥75 → coopération ponctuelle « à contrecœur » autorisée, jamais un mode stable ;
+  entre les deux, aucune consigne particulière (registre habituel).
+- `negotiationContext` (texte de contexte, toujours présent une fois révélé) autorise le modèle à
+  formuler librement une négociation, sans jamais l'imposer à chaque tour.
+- `negotiationOffer:{actor,round}` : une seule offre en attente à la fois, jamais écrasée par une
+  nouvelle tant que la précédente n'est pas résolue.
+- Alimente le dossier retourné (`dossierEvidence`) comme preuve supplémentaire (valeur arrondie).
+
 ## Dossier retourné (`lib/life.ts`, `app/api/lia/route.ts`, `docs/referentiel/principes.md` 8.5)
 
 - `TRAP_ORDER=['mirror','dilemma','excuse']`, interlocuteur fixe par piège : `dossierTrapActor=

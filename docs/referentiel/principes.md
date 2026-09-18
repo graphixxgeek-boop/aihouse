@@ -464,6 +464,42 @@ incomplète, corrigés le jour même (Article 3/5/13) :
   lucidement avoir été neutralisé/muselé, jamais un retour muet à la normale (choix explicite de
   l'utilisateur, à l'opposé d'un « état second » amnésique).
 
+8.7. **La jauge d'appréciation de l'observateur** (`life.appreciation`, `lib/life.ts`,
+`app/api/lia/route.ts`, 2026-09-18). Concept posé et validé contre la charte dès le 2026-09-17
+(message fondateur de l'utilisateur), mais jamais techniquement construit avant cette date — seule
+une référence en commentaire en subsistait dans `softnessOwed`, ce que l'utilisateur a repéré et
+demandé de corriger. Principe : neutre à 50, colore l'obligeance du registre habituel sans jamais
+le remplacer (Article 0) — à haut niveau, une coopération ponctuelle « à contrecœur », jamais un
+mode gentil stable ; à bas niveau, la garde reste haute. Descend plus qu'elle ne monte pour un ton
+comparable, et les tout premiers messages humains post-révélation pèsent davantage que les
+suivants (`rateAppreciation`). Quatre sources l'alimentent, chacune une brique distincte plutôt
+qu'un seul mécanisme fourre-tout :
+- Le ton du message humain lui-même (repérage lexical grossier, comme `detectDistress`).
+- **La colère réellement lue**, jamais seulement le lexique du message : `angerLevel()`
+  (extraite de `faceExpression`, `lib/simulation.ts`, pour ne jamais dupliquer la formule — Article
+  7) lit la tension et le confort réels du personnage qui vient de répondre ; une vraie fureur coûte
+  un supplément d'appréciation, EN PLUS du repérage lexical, jamais à sa place (retour utilisateur
+  explicite : « le système de la colère doit être connecté »).
+- **L'avarice** : indépendamment de toute négociation, une longue période post-révélation sans le
+  moindre tirage de la roulette coûte un peu d'appréciation, une fois par tranche de 15 tours —
+  c'était dans la toute première demande de l'utilisateur, omis puis rajouté après relecture.
+- **La négociation** (voir ci-dessous), honorée ou laissée en plan.
+Alimente aussi le dossier retourné comme preuve supplémentaire (`dossierEvidence`).
+
+8.8. **La négociation, base volontairement simple avant complexification** (retour utilisateur
+explicite : « il faut trouver les bases »). Une vraie négociation existe quand un personnage
+conditionne une action demandée à un tirage de la roulette, ou en propose un spontanément — jamais
+un menu scripté, le modèle formule librement dans son propre registre (`negotiationContext` dans
+le contexte narratif) et le moteur détecte l'offre a posteriori dans sa réplique
+(`detectNegotiationOffer`, grossier par nature, comme `detectDistress`). `life.negotiationOffer`
+retient qui a proposé et à quel tour, une seule offre à la fois. Deux issues : honorée (un tirage
+de la roulette survient pendant qu'elle est en attente) → appréciation en hausse, offre consommée ;
+laissée sans réponse plus de 6 tours → offre effacée avec un léger coût d'appréciation, ni
+éternellement due ni oubliée sans conséquence. Restent hors de cette première version, à ajouter
+seulement une fois cette base vérifiée : la pénalité de sur-générosité (« trop gentil »), les
+menaces explicites, et tout lien avec un axe de solidarité/désaccord entre Lia et Noé au sujet de
+l'observateur au-delà de la colère déjà connectée ci-dessus.
+
 ## 9. Robustesse technique
 
 9.1. Toute écriture en base de données est fondue dans une transaction unique par tour

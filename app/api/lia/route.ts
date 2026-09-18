@@ -8,7 +8,7 @@ import { planTurn, coordinateRooms, residentPriority, sceneFor, proposedDestinat
 import { newStory, parseStory, rememberAges, advanceStory, storyContext, investigationTarget, investigationRecap, finaleReveal, groundFragment, seedPick, insoliteOpening, insoliteColdOpening, ageClueRevealed, type Story } from "@/lib/story";
 import { ages, sleepRoom, attractionAfterTurn, proposalPressure, flirtingAssessment, receivedAffectionBonus } from "@/lib/relationship";
 import { nextSpeaker, dialogueProgress, dialogueContext, completedActivity, conversationFocus, explicitGestureConsent, groundAgeQuestion, groundIntroduction, groundScreenNotice, groundPrivateThought, groundRoomSpeech } from "@/lib/dialogue";
-import { advanceNeeds, priority, intentRoom, intentLabels, tvPrograms, intents, affectionIntents, mutualAttraction, residentProfiles, initialNeedsFor, initialEmotionsFor, sharedActivityBonus } from "@/lib/simulation";
+import { advanceNeeds, priority, intentRoom, intentLabels, tvPrograms, intents, affectionIntents, mutualAttraction, residentProfiles, initialNeedsFor, initialEmotionsFor, sharedActivityBonus, angerLevel } from "@/lib/simulation";
 import { env } from "cloudflare:workers";
 import { z } from "zod";
 import { LiaError, think, decisionSchema, evolveEmotions } from "@/lib/lia";
@@ -703,6 +703,13 @@ export async function POST(request: Request) {
         nextStory.sharedMeal = Boolean(story.sharedMeal || sharedMeal);
         const finale = nextStory.evidence.length>=5 && !story.finalCalled && together;
         nextStory.finalCalled=Boolean(story.finalCalled || finale);
+        if(finale)life.revealedRound=nextStory.round;
+        // Avarice (2026-09-18, retour utilisateur : "un utilisateur qui ne donne aucun bonus ne
+        // fait pas bonne impression") : indépendant de toute négociation, un tirage jamais
+        // déclenché sur une longue période après la révélation coûte un peu d'appréciation — une
+        // seule fois par tranche, jamais un effondrement brutal. Un seul spin, à n'importe quel
+        // moment, suffit à repousser la prochaine échéance (bonusLog.length checké à chaque fois).
+        if(revealed&&(life.bonusLog?.length??0)===0&&life.revealedRound!==undefined&&story.round-life.revealedRound>=15&&story.round%15===0)life.appreciation=Math.max(0,(life.appreciation??50)-4);
         const finaleLines=finale?finaleReveal(story.seed):undefined;
         if(finaleLines)for(const d of decisions){d.reply=d.actor===1?finaleLines.lia:finaleLines.noe;d.memory=d.reply;}
         const firstProposal=proposalActor===2&&!life.proposalMade;if(proposalActor===2)life.proposalMade=true;
@@ -797,6 +804,12 @@ export async function POST(request: Request) {
             statements.push(db.prepare(`UPDATE agent_state SET needs = ?, intent = ?, emotions = ?, mood = ?, activity = ?, goal = ?, room = ?, cycle = cycle + 1, last_seen = ? WHERE id = ? AND ${fence}`).bind(JSON.stringify(needs), (["sleep","share_sleep"].includes(d.intent)&&needs.fatigue<=12&&(life.sleepTurns?.[agent.id]??0)>=2?"none":d.intent), JSON.stringify(d.emotions), d.actor===2?({curieuse:"curieux",attentive:"attentif"} as Record<string,string>)[d.mood]??d.mood:d.mood, ["sleep","share_sleep"].includes(d.intent)&&needs.fatigue<=12&&(life.sleepTurns?.[agent.id]??0)>=2?"Je me réveille doucement":intentLabels[d.intent] === "J’observe les lieux" ? d.activity : intentLabels[d.intent], d.goal, room, at, d.actor, token, at));
             statements.push(db.prepare(`INSERT INTO memories (agent_id, kind, content, created_at) SELECT ?, ?, ?, ? WHERE ${fence}`).bind(d.actor, input.mode === "move" ? "déplacement" : input.mode === "care" || routine ? "routine" : solitary.has(d.actor) ? "réflexion" : "rencontre", `[${turnPlan.exitInspection?"couloir":room}|${new Date(at).toISOString()}] `+(shared ? `${intentLabels[d.intent]}. ` : "")+(routine?d.memory:d.reply), at, token, at));
         }
+        // Colère réellement lue (2026-09-18, retour utilisateur explicite : "le système de la
+        // colère doit être connecté") : angerLevel() lit tension/confort finaux du personnage qui
+        // vient de répondre à l'observateur (le même calcul déjà éprouvé pour le visage), pas
+        // seulement les mots-clés du message humain — une vraie fureur pèse davantage que le seul
+        // repérage lexical, qui peut rater une hostilité plus fine ou déclencher à tort.
+        if(revealed&&input.mode==="chat"){const responder=decisions.find(d=>d.actor===actor);if(responder&&angerLevel(responder.emotions.tension,responder.emotions.comfort,Boolean(life.dispute?.remaining))>.5)life.appreciation=Math.max(0,(life.appreciation??50)-5);}
         for(const d of decisions){const before=world.agents.find(a=>a.id===d.actor)!;const peer=world.agents.find(a=>a.id!==d.actor)!;if(!departures.some(p=>p.actor===d.actor)&&before.room===peer.room&&d.room!==before.room&&!["sleep","share_sleep"].includes(before.intent)&&["eat","sleep"].includes(d.intent)&&!["sleep","share_sleep"].includes(peer.intent)){const eatPool=["J’ai trop faim pour réfléchir. Je vais manger un truc, je te retrouve après.","J’ai trop faim pour continuer. Je passe en cuisine, tu me rejoins si tu veux.","J’ai trop faim, là. Je vais préparer un truc et je reviens.","J’ai trop faim pour suivre. Je mange d’abord, on reprend après."] as const;const sleepPool=["Je tiens plus debout. Je vais dormir un peu ; je reviens après.","Je lutte contre le sommeil. Je vais me coucher, on reprend après.","Mes yeux se ferment. Je vais dormir ; ne m’attends pas pour réfléchir.","Je suis à bout. Je prends "+(d.room==="salon"?"le canapé":"le lit")+", je te retrouve au réveil."] as const;const pool=d.intent==="eat"?eatPool:sleepPool;let reason=seedPick(story.seed,"departure-"+d.intent+"-"+d.actor,pool);if(spokenKeys.has(fingerprint(reason)))reason=pool.find(line=>!spokenKeys.has(fingerprint(line)))??reason;if(d.actor===1&&d.intent==="sleep"&&d.room==="salon")reason+=" "+seedPick(story.seed,"couch-departure-reproach",["Tu aurais pu dormir dans le salon, Noé.","T'aurais pu me laisser la chambre, pour une fois.","Ça t'aurait coûté quoi de dormir ici, toi ?"]);addLine(names[d.actor],reason,before.room);}}
         for(const reaction of stockReactions)if(addLine(names[reaction.actor]+" · pensée",reaction.content,"cuisine"))statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'réaction',?,? WHERE ${fence}`).bind(reaction.actor,"[cuisine|"+new Date(at).toISOString()+"] "+reaction.content,at,token,at));
         for(const line of bonusAftermathLines){const room=finalResidents.find(a=>a.id===line.actor)!.room;if(addLine(names[line.actor]+" · pensée",line.content,room))statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'réflexion',?,? WHERE ${fence}`).bind(line.actor,'['+room+'|'+new Date(at).toISOString()+'] '+line.content,at,token,at));}
