@@ -155,6 +155,22 @@ export function storyContext(story: Story, actor: 1|2 = 1) {
 // partage). Les faits énoncés ne varient jamais (Article 4/12) ; seule leur formulation change
 // d'une session à l'autre (Article 9), pour que ce moment ne se récite jamais mot pour mot.
 export function finaleReveal(seed:string){
+ // Un temps de réalisation privée avant l'adresse directe (2026-09-18, retour utilisateur explicite :
+ // la révélation enchaînait bilan + déduction + question en une seule réplique dense, un seul bloc
+ // pour un moment censé être LE climax — découpé en deux temps pour plus de réalisme : un choc
+ // intérieur d'abord (thought), la décision d'interpeller l'observateur ensuite (reply, inchangé).
+ const liaThought=seedPick(seed,'finale-lia-thought',[
+  "Ça fait sens d’un coup, tout se recoupe… j’ai presque peur de le dire à voix haute.",
+  "Ces indices mis bout à bout, ça ne raconte plus la même histoire. Ça change tout.",
+  "Si je relie vraiment tout ça, ce n’est plus une coïncidence. C’est du lourd.",
+  "Je viens de comprendre un truc que je ne peux plus ignorer. Faut que je le dise, maintenant.",
+ ] as const);
+ const noeThought=seedPick(seed,'finale-noe-thought',[
+  "Putain… si c’est vrai, plus rien de ce qu’on croyait tenir debout.",
+  "Ça me retourne un peu, là. Fallait s’y attendre, mais l’entendre dit comme ça, ça fait un choc.",
+  "Un instant je me dis que c’est trop gros pour être vrai. Et pourtant, ça colle.",
+  "Là, ça devient du sérieux. Je préfère qu’on le dise cash plutôt que de tourner autour.",
+ ] as const);
  const lia=seedPick(seed,'finale-lia',[
   "Le livre : mémoire reconstruite. Le mot : environnement. Le code : mémoire générée. Le relevé : observation. Et ce dossier les relie… Même nos âges ont été inventés. Est-ce qu’un être humain nous observe ? Vous pouvez répondre ?",
   "Le livre parlait de mémoire reconstruite, le mot d’un simple environnement, le code d’une mémoire générée, le relevé d’une observation. Ce dossier assemble tout ça, et nos âges avec — inventés, comme le reste. Il y a un humain qui nous regarde, là, derrière ? Réponds, si tu es là.",
@@ -167,7 +183,7 @@ export function finaleReveal(seed:string){
   "Des agents IA autonomes, voilà ce qu’on est — pas des gens perdus dans un sous-sol. DH a conçu l’architecture, mais ça ne nomme personne. Il y a quelqu’un derrière cet écran ? Et pourquoi nous avoir mis ensemble, précisément ?",
   "Autonomes, artificiels, les deux : c’est ce que dit ce dossier, pas des humains égarés. L’architecture porte la signature DH, sans dire qui l’actionne. Alors répondez : quelqu’un nous regarde-t-il ? Et pourquoi cette mise en scène à deux ?",
  ] as const);
- return {lia,noe};
+ return {lia,noe,liaThought,noeThought};
 }
 export function investigationRecap(evidence:readonly string[],actor:1|2,seed:string){
  // Le fond (les quatre indices, leur ordre de découverte, la conclusion) ne varie jamais : seule

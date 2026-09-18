@@ -289,7 +289,11 @@ export async function POST(request: Request) {
         const recentRequests = (await db.prepare("SELECT result FROM world_requests ORDER BY created_at DESC LIMIT 6").all<{
             result: string;
         }>()).results;
-        const recentRefusal = recentRequests.slice(0, 3).some(r => {
+        // Fenêtre doublée de 3 à 6 tours (2026-09-18, retour utilisateur explicite : Noé doit se
+        // calmer sur les propositions, en particulier après un refus de Lia) — un refus pèse au
+        // moins autant que proposalCooldown (toute proposition récente, même acceptée) et mérite une
+        // vraie pause, pas seulement trois tours avant de retenter sa chance.
+        const recentRefusal = recentRequests.slice(0, 6).some(r => {
             try {
                 return JSON.parse(r.result).affectionOutcome === "declined";
             }
@@ -865,6 +869,8 @@ export async function POST(request: Request) {
         }
         if(!causalThought&&!routine&&["interact","autonomous"].includes(input.mode)&&together&&!opening&&(proposalActor||story.round%7===4)){const d=decisions.find(d=>d.actor===(proposalActor??(story.round%2?1:2)));if(d?.thought&&!["sleep","share_sleep"].includes(d.intent)){const recent=(await ownMemories(d.actor)).filter(m=>m.kind==="réflexion").map(m=>String(m.content).replace(/^\[[^\]]+\] /,""));const thought=truthfulGender(groundPrivateThought(d.thought,d.actor,d.emotions.attraction,world.agents.find(a=>a.id===d.actor)!.needs.stress,story.round,recent),d.actor);addLine(names[d.actor]+" · pensée",thought,turnPlan.exitInspection?"couloir":finalResidents.find(a=>a.id===d.actor)!.room);statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,?,?,? WHERE ${fence}`).bind(d.actor,"réflexion",`[${turnPlan.exitInspection?"couloir":finalResidents.find(a=>a.id===d.actor)!.room}|${new Date(at).toISOString()}] `+thought,at,token,at));}}
         if (finaleLines) {
+            addLine("Lia · pensée",finaleLines.liaThought,finalResidents[0].room);
+            addLine("Noé · pensée",finaleLines.noeThought,finalResidents[1].room);
             addLine("Lia",finaleLines.lia,finalResidents[0].room);
             addLine("Noé",finaleLines.noe,finalResidents[1].room);
         }

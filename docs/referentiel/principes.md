@@ -629,6 +629,33 @@ précises sur une vraie session jouée de bout en bout, corrigées à la racine 
 - Voir aussi CLAUDE.md, Article 17 (« se mettre à la place des personnages ») et son corollaire
   (jamais de liste de mots figée), ajoutés le même jour à la demande explicite de l'utilisateur.
 
+8.14. **Deuxième vague de corrections sur le même audit (2026-09-18, retour utilisateur explicite
+après relecture des réponses point par point).**
+- **Comparaison à un état antérieur inexistant** : la toute première description de l'apparence de
+  l'autre pouvait dire « toujours pas de corps », « moins vide qu'avant » — rien ne précède pourtant
+  une première fois. Règle PREMIÈRE DESCRIPTION ajoutée (`lib/lia.ts`).
+- **Besoin urgent trop abrupt** : ajout d'une consigne (pas un tour supplémentaire) pour refermer
+  brièvement le sujet en cours avant de citer le besoin qui force le départ.
+- **Révélation en un seul bloc dense** : `finaleReveal()` (`lib/story.ts`) retourne désormais aussi
+  une pensée de réalisation (choc intérieur, seed-variée, 4 variantes par personnage) affichée juste
+  avant la réplique d'adresse à l'observateur, elle-même inchangée (Article 4 : les faits canoniques
+  ne bougent pas, seul le découpage en deux temps change).
+- **Consentement trop mécanique** (« Toi aussi ? » systématique) : la consigne GESTES n'exige plus
+  une question fermée récitée mot pour mot — l'invitation peut rester implicite et variée tant que
+  l'accord réel (affectionAccepted) reste toujours vérifié mécaniquement, jamais supposé.
+- **Propositions de Noé trop fréquentes, surtout après un refus** : fenêtre de `recentRefusal`
+  doublée de 3 à 6 tours (`app/api/lia/route.ts`) — un refus mérite au moins la même pause que
+  `proposalCooldown` (toute proposition récente, même acceptée).
+- **Observateur pris pour le créateur** : bug racine trouvé — la règle JARDIN disait « ne reproche
+  pas au visiteur d'avoir créé le décor », qui présuppose grammaticalement qu'il l'a créé, à
+  l'inverse exact de OBSERVATEUR ≠ CRÉATEUR juste au-dessus. Reformulée sans cette présupposition ;
+  la règle OBSERVATEUR ≠ CRÉATEUR elle-même renforcée (un geste positif de l'observateur — ouvrir une
+  porte, s'excuser — n'est jamais la preuve qu'il a construit quoi que ce soit).
+- **Animation de l'assiette** : vérifiée dans le code — c'est un accessoire purement décoratif
+  (`components/house-view.tsx`), visible seulement pendant un repas, distinct des réserves (le vrai
+  indice de l'enquête) : rien d'anormal à ce qu'il ne soit jamais commenté, faute d'anomalie à
+  signaler dessus. À reconfirmer si le comportement observé était différent.
+
 ## 9. Robustesse technique
 
 9.1. Toute écriture en base de données est fondue dans une transaction unique par tour
