@@ -150,6 +150,42 @@ const priorStory=sqlite.prepare("SELECT content FROM memories WHERE kind='scenar
 sqlite.prepare('UPDATE agent_state SET needs=?').run(JSON.stringify({hunger:90,fatigue:10,stress:20,uncertainty:80}));sqlite.exec('UPDATE world_lock SET last_auto=0');const callsBeforeRoutine=calls;response=await post(input('autonomous',1,{epoch:2}));assert.equal(response.status,200);result=await response.json();assert.equal(calls,callsBeforeRoutine);assert.equal(result.decisions[0].intent,'eat');assert.equal(result.decisions[0].room,'cuisine');
 const oldSeed=result.story.session;response=await post(input('reset',1,{epoch:2}));result=await response.json();assert.notEqual(result.story.session,oldSeed);assert.equal(result.story.evidence.length,0);
 console.log('Passed: varied reset scenarios, word ages beyond context window, earned progressive revelation, no premature spoilers, attraction governed by room with flat model output, invalid partner atomic rollback and zero-call urgent routines.');
+{
+  // La révélation finale (finaleLines, app/api/lia/route.ts) n'avait jamais été exercée par un
+  // vrai tour de route complet (2026-09-18, écart trouvé après un retour utilisateur : les deux
+  // "· pensée" de choc intérieur, ajoutées pour découper la révélation en deux temps, étaient
+  // absentes d'une vraie simulation jouée). Réutilise exactement le même montage que le test
+  // "earned progressive revelation" ci-dessus (studyTurns 1->2 gagne la preuve suivante), mais en
+  // partant de 4 preuves déjà acquises pour que CETTE preuve soit la cinquième et déclenche
+  // réellement `finale` dans une vraie requête HTTP, pas seulement dans les fonctions pures de
+  // lib/story.ts déjà testées séparément.
+  const postResetEpoch=result.epoch;
+  sqlite.exec('DELETE FROM world_requests');
+  affection=false;flat=true;
+  const steadyFinale={...initialEmotionsFor(2),attraction:76,trust:60};
+  sqlite.prepare('UPDATE agent_state SET emotions=?,needs=?,intent=?,room=?').run(JSON.stringify(steadyFinale),JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:80}),'chat','salon');
+  const finaleStory=newStory();
+  finaleStory.round=3;finaleStory.salonTurns=5;finaleStory.evidence=Array(4).fill('preuve');finaleStory.finalCalled=false;
+  finaleStory.life.visited=['salon','cuisine','chambre'];finaleStory.life.tvSeen=true;finaleStory.life.studyTurns=1;
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(finaleStory));
+  response=await post(input('interact',1,{epoch:postResetEpoch}));assert.equal(response.status,200);result=await response.json();
+  assert.equal(result.story.evidence.length,5,'this exact studyTurns 1->2 setup must earn the fifth and final evidence, exactly like it earned the first evidence above');
+  assert.equal(result.story.humanUnlocked,true,'reaching 5 evidence while together must trigger the finale on this same turn');
+  const liaThoughtLine=result.messages.find(m=>m.speaker==='Lia · pensée');
+  const noeThoughtLine=result.messages.find(m=>m.speaker==='Noé · pensée');
+  const liaReplyLine=result.messages.find(m=>m.speaker==='Lia'&&/agents IA autonomes|un être humain nous observe|un humain qui nous observe/i.test(m.content));
+  const noeReplyLine=result.messages.find(m=>m.speaker==='Noé'&&/agents IA autonomes|DH/i.test(m.content));
+  assert.ok(liaThoughtLine,'the finale must show Lia\'s private shock thought BEFORE her canonical address to the observer, not skip straight to the dense reply');
+  assert.ok(noeThoughtLine,'the finale must show Noé\'s private shock thought BEFORE his canonical address to the observer');
+  assert.ok(liaReplyLine&&noeReplyLine,'the canonical finale reply text itself must still be present unchanged (Article 4)');
+  assert.ok(liaThoughtLine.id<liaReplyLine.id,'Lia\'s thought must be recorded before her reply, so the two-step pacing actually reaches the transcript in order');
+  assert.ok(noeThoughtLine.id<noeReplyLine.id,'Noé\'s thought must be recorded before his reply');
+  // Restore the clean post-reset state (stress 90, evidence 0, fresh epoch) that the tests below
+  // still rely on `result` holding, exactly as it was left by the reset just above this block.
+  response=await post(input('reset',1,{epoch:postResetEpoch}));result=await response.json();
+  assert.equal(result.story.evidence.length,0);
+  console.log('Passed: real HTTP finale turn (4->5 evidence) actually inserts both shock-thought lines before the canonical reveal, in order, exactly once.');
+}
 const {groundIntroduction}=await import('../.sites-runtime/test-dialogue.mjs');
 assert.equal(groundIntroduction("Salut Lia, je m'appelle Noé.",'Noé','Lia',[]),"Salut, je m'appelle Noé.");
 assert.match(groundIntroduction("Je ne sais pas.",'Lia','Noé',[{id:1,speaker:'Noé',content:"Je m'appelle Noé."}]),/Moi, c’est Lia/);
@@ -584,7 +620,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 58'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 59'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,

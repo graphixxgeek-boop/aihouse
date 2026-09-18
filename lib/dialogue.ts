@@ -124,11 +124,26 @@ export function groundRoomSpeech(reply:string,room:string,history:DialogueLine[]
     }).filter((s,i,a)=>a.indexOf(s)===i).join(' ');
 }
 
+// Mots/expressions qui reviennent (2026-09-18, retour utilisateur explicite après une vraie
+// session : « souffler » et « pour autant »/« autant » sont ressortis plusieurs fois malgré la
+// consigne de non-répétition d'image). Ce détecteur ne cherche jamais un mot précis en dur
+// (Article 17 corollaire de CLAUDE.md) : il repère, sur des critères purement statistiques (longueur
+// du mot, nombre de répliques distinctes où il apparaît), n'importe quel mot qui revient plusieurs
+// fois chez Lia/Noé récemment, quel qu'il soit — jamais une liste figée à mémoriser.
+function recentEchoWords(recent:DialogueLine[]):string[]{
+  const counts=new Map<string,number>();
+  for(const line of recent){
+    const words=new Set((line.content.toLowerCase().match(/[a-zàâäéèêëïîôöùûüÿœæç]{6,}/g))??[]);
+    for(const w of words)counts.set(w,(counts.get(w)??0)+1);
+  }
+  return [...counts.entries()].filter(([,n])=>n>=2).map(([w])=>w).slice(0,8);
+}
 export function dialogueProgress(history:DialogueLine[],contributions:readonly string[]){
  const recent=history.slice(-16);
  // Chaque motif détecte un THÈME qui tourne à vide, pas seulement une phrase répétée mot pour
  // mot (déjà géré ailleurs par le registre anti-écho) : ici, la même idée ressassée avec des
  // mots différents à chaque fois compte aussi comme un thème épuisé (Article 9/11 de la charte).
  const motifs=[['repos et confort du salon',/canapé|calme|souffl|repos|tranquill/i],['silence et absence de monde extérieur',/silence|\bvide\b|dehors|\bair\b|\broute\b|sortir/i],['réconfort mutuel',/présence|ensemble|rassur|à tes côtés|avec toi/i],['ressasser un indice sans preuve neuve',/tourne(?:nt)? en (?:rond|boucle)|qui tient les ficelles|manipul[ée]?s?|ça ne (?:nous )?(?:avance|dit|explique) (?:pas|rien)|boucle sans fin|prouve (?:au moins |juste )?(?:que|rien)|ça (?:ne )?prouve (?:pas|rien)/i]] as const;
- return {recentContributions:contributions.slice(-12),overusedThemes:motifs.filter(([,pattern])=>recent.filter(l=>pattern.test(l.content)).length>=4).map(([name])=>name),rule:'Répondre à la dernière intervention avec un apport concret : une objection, un détail personnel ou une déduction prudente. Ne pas reformuler simplement l’accord du partenaire. Garder Lia incisive et Noé concret ; éviter la même tournure pour les deux. Si overusedThemes n’est pas vide, ne l’alimentez plus avec une nouvelle variante, même reformulée : proposez une action concrète (se déplacer, vérifier un autre objet), une hypothèse vraiment neuve, une question personnelle, ou reconnaissez l’impasse en une phrase puis changez réellement de sujet. Aucun faux indice pour renouveler le sujet.'};
+ const echoWords=recentEchoWords(history.slice(-30));
+ return {recentContributions:contributions.slice(-12),overusedThemes:motifs.filter(([,pattern])=>recent.filter(l=>pattern.test(l.content)).length>=4).map(([name])=>name),echoWords,rule:'Répondre à la dernière intervention avec un apport concret : une objection, un détail personnel ou une déduction prudente. Ne pas reformuler simplement l’accord du partenaire. Garder Lia incisive et Noé concret ; éviter la même tournure pour les deux. Si overusedThemes n’est pas vide, ne l’alimentez plus avec une nouvelle variante, même reformulée : proposez une action concrète (se déplacer, vérifier un autre objet), une hypothèse vraiment neuve, une question personnelle, ou reconnaissez l’impasse en une phrase puis changez réellement de sujet. Aucun faux indice pour renouveler le sujet. Si echoWords n’est pas vide, ces mots précis reviennent déjà plusieurs fois récemment (détection automatique, pas une interdiction définitive) : évite de les réutiliser dans cette réplique, cherche une formulation qui n’en a besoin d’aucun.'};
 }

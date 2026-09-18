@@ -437,6 +437,11 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   changement tv 1500 ms.
 - `stockSurprise` (réaction à la régénération des provisions) : courbe dégressive de curiosité
   +9, +6, +4, +2, +1 puis 0 selon le nombre d'expositions déjà vécues par le personnage.
+  `stockThought()` fournit une ligne « pensée » distincte pour chacune des 5 premières expositions
+  (`stockExposures`), puis reste silencieuse (le personnage s'y est habitué) — c'est la seule
+  réaction jouée à l'apparition des provisions/de l'assiette de repas ; depuis le 2026-09-18,
+  chaque ligne nomme explicitement « la provision » plutôt qu'un « ça » implicite, pour rester
+  compréhensible même lue hors du tour exact qui la précède (Article 15/17).
 - Vitesse de rotation de l'anneau (`components/house-view.tsx`, `ringSpeed`) : base
   0,15 + (stress + tension)/200 × 2,3 rad/s (assoupli le 2026-09-16, était 0,2 + …×1,2 — l'écart
   entre un personnage calme et stressé passait inaperçu). Deux accélérations temporaires

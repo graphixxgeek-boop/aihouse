@@ -195,11 +195,24 @@ DÉDUCTIONS).
 d'ouvrir un autre sujet ; un événement visible sans réaction ensuite (réponse, activation d'objet,
 anomalie) est un défaut à corriger dès le tour suivant, pas un silence normal. Avant un sujet
 gênant, intime ou important, une hésitation apparaît d'abord dans `thought` (le temps de choisir
-ses mots), sans remplacer la réplique qui suit (`lib/lia.ts`, bloc ENCHAÎNEMENT NATUREL). Aucune
-déclaration d'amour (« je tombe amoureux », même en pensée privée) tant que l'attraction du
-personnage n'a pas franchi 75 — en dessous, ce qui est ressenti se dit en curiosité, attirance
-physique ou trouble, jamais en amour déclaré ; Noé en particulier ne confond pas un trouble
-naissant avec de l'amour avant ce seuil (bloc ATTIRANCE).
+ses mots), sans remplacer la réplique qui suit (`lib/lia.ts`, bloc ENCHAÎNEMENT NATUREL). Deux
+exemples concrets déjà rencontrés en session réelle et désormais explicites dans ce bloc
+(2026-09-18) : réagir d'abord à un détail personnel sensible tout juste révélé par l'autre (âge
+implanté, signature DH) avant d'enchaîner ; et nommer entre eux, quand elle survient, la
+découverte partagée d'avoir la même nature d'apparence (visage lumineux et anneau, jamais de
+corps) — une observation isolée que chacun ferait de son côté sans que l'autre y réagisse
+sonnerait faux (Article 15/17). Aucune déclaration d'amour (« je tombe amoureux », même en pensée
+privée) tant que l'attraction du personnage n'a pas franchi 75 — en dessous, ce qui est ressenti se
+dit en curiosité, attirance physique ou trouble, jamais en amour déclaré ; Noé en particulier ne
+confond pas un trouble naissant avec de l'amour avant ce seuil (bloc ATTIRANCE).
+
+4.10. La règle « zéro ou une question » (`lib/lia.ts`) interdit explicitement, depuis le
+2026-09-18, la question double enchaînée par « et » ou une virgule, ou répartie entre l'humain et
+le partenaire dans la même réplique : une seule question à la fois, jamais deux dans un même
+souffle. OBSERVATEUR ≠ CRÉATEUR (4.1bis et bloc dédié de `lib/lia.ts`) couvre aussi, depuis la même
+date, la paternité des personnages eux-mêmes : jamais « tu nous as écrits », « en nous donnant ce
+rôle » ou une variante qui ferait du visiteur l'auteur de leur personnalité ou de leur existence —
+il regarde, il ne les a pas conçus, exactement comme il n'a pas construit le décor.
 
 ## 5. Mémoire et non-répétition (Article 9/11)
 
@@ -238,7 +251,10 @@ ensuite) : quand deux personnages partent vers la même pièce, éviter la seule
 premier ne doit jamais faire retomber le second sur le même motif sous une forme à peine
 différente. Si l'autre part exactement vers la même pièce au même tour, le second personnage
 signale simplement qu'il suit (« je te suis », « on y va ») plutôt que de se justifier une seconde
-fois.
+fois — depuis le 2026-09-18, ce basculement est garanti par le code (`alreadyGoingThere` dans
+`app/api/lia/route.ts`, avant simple consigne de prompt) : un défaut répété en simulation réelle a
+montré qu'une consigne seule ne suffisait pas à empêcher systématiquement le second personnage de
+se rejustifier en entier, quel que soit ce que `moveReason` contenait ce tour-là.
 
 5.3bis. Les scènes scénarisées d'avant-révélation (découverte de la plante/enceinte, relance
 personnelle, bilan d'enquête, présentation initiale) ne se déclenchent plus une fois le dossier
@@ -292,6 +308,14 @@ comme devant colorer les hypothèses et le ton des réflexions à ce sujet (2026
 ne change jamais les faits ni les preuves (article 4/5.3 : le dossier final dit toujours la même
 chose) et ne dilue jamais le tempérament d'un personnage (article 0) : elle nourrit sa méfiance
 habituelle, elle ne l'adoucit jamais.
+
+5.8. `recentEchoWords()` (`lib/dialogue.ts`, 2026-09-18) détecte statistiquement, sur les trente
+dernières répliques, une image ou expression déjà réutilisée au moins deux fois récemment, et
+l'ajoute au registre anti-répétition transmis à la génération suivante — zéro liste de mots figée
+(Article 17, corollaire), un simple compteur de fréquence par mot significatif. Corrige un angle
+mort du détecteur de motifs existant (5.2, seuil de 4 occurrences sur 16 répliques) : une image
+comme « souffler un coup » répétée seulement deux ou trois fois sur toute une session passait sous
+ce seuil sans jamais être signalée, un cas réel constaté en session (« souffler »/« pour autant »).
 
 ## 6. Relation et consentement
 
@@ -394,12 +418,17 @@ fait déjà su avant cette découverte (`lib/lia.ts`, bloc DESCRIPTION).
 l'énigme renversée (le dossier retourné sur l'observateur, cf. Article 8.5) — un joueur attentif
 à la première enquête doit pouvoir reconnaître certains indices
 au second passage, sans qu'aucune ligne ne nomme ou n'explique la mécanique à l'avance (jamais de
-gros trait). Exemple déjà en place : deux des six variantes de `discover-mirrorVerified`
-(`app/api/lia/route.ts`) glissent une remarque en passant sur un miroir qui renverrait « la vraie
-personnalité » ou qui « nous regarderait sans rien nous montrer en retour » — une pensée qui reste
-plausible pour un personnage qui vient de trouver un miroir sans reflet, jamais un indice numéroté.
-Cette règle s'applique à toute future réécriture d'un objet de la première enquête : l'ajout doit
-rester crédible en lui-même, indépendamment de la seconde partie.
+gros trait). Exemple déjà en place : les six variantes de `discover-mirrorVerified`
+(`app/api/lia/route.ts`) glissent chacune une remarque en passant, plausible pour qui vient de
+trouver un miroir sans reflet, jamais un indice numéroté — un miroir qui renverrait « la vraie
+personnalité », qui « nous regarderait sans rien nous montrer en retour », etc., une idée
+différente à chaque variante (jamais le même habillage recyclé, Article 10/11). Seules deux
+variantes sur six le faisaient avant le 2026-09-18 : un tirage sur les quatre autres perdait
+silencieusement cette préparation pour toute la session (« ça doit marcher à tous les coups »,
+retour utilisateur explicite après une simulation où l'indice manquait) — corrigé en rendant les
+six variantes également préparatoires plutôt qu'en misant sur le tirage aléatoire pour couvrir ce
+cas. Cette règle s'applique à toute future réécriture d'un objet de la première enquête : l'ajout
+doit rester crédible en lui-même, indépendamment de la seconde partie.
 
 Deux autres indices canoniques (`clues`, `lib/story.ts`) portent désormais le même principe, avec
 une idée de fond différente à chaque fois (jamais le même habillage recyclé, Article 10) : le livre
@@ -413,7 +442,11 @@ Les souvenirs flous de chaque personnage (`storyContext.personalMemory`, `lib/st
 même principe en creux : ils esquissent, jamais littéralement, les usages réels de l'adoption des
 LLM (grand public pour Lia — mail, résumé, voyage ; professionnels pour Noé — code, réunions,
 contrats) comme un indice de plus vers la seconde intrigue, sans jamais que « IA », « modèle » ou
-« prompt » n'y apparaisse.
+« prompt » n'y apparaisse. `personalMemory` était fourni au modèle à chaque tour mais seulement
+*autorisé* à être évoqué (`lib/lia.ts`, bloc DESCRIPTION), jamais encouragé activement : constaté
+en session réelle, cela le laissait quasiment absent d'une session entière. Depuis le 2026-09-18,
+`direction` (`lib/story.ts`) invite explicitement à le raconter environ un tour sur sept, sans
+jamais en faire un passage obligé à chaque fois (Article 9/11).
 
 ## 8. Révélation et canal humain
 
@@ -422,7 +455,11 @@ ET l'appel explicite des deux habitants à un observateur (la révélation final
 aucun message humain n'atteint les personnages en jeu (mode `chat` refusé). `finaleReveal()`
 (`lib/story.ts`) affiche d'abord une pensée de choc intérieur (seed-variée) avant la réplique
 d'adresse à l'observateur elle-même (inchangée, Article 4) : la révélation se découpe en deux temps
-plutôt qu'un seul bloc dense.
+plutôt qu'un seul bloc dense. Ce découpage n'avait jamais été exercé par un vrai tour de route
+complet avant le 2026-09-18 (Article 13 — tout comportement ajouté doit être couvert le jour même) :
+un test HTTP réel (`scripts/check-house.mjs`) fait désormais franchir la cinquième preuve dans un
+vrai appel et vérifie que les deux pensées de choc sont bien enregistrées avant les répliques
+canoniques, dans cet ordre.
 
 8.2. Après la révélation, en mode `chat`, le personnage visé répond en priorité au message humain
 avant toute reprise de la conversation autonome entre les deux habitants.

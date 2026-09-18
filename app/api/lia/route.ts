@@ -702,7 +702,12 @@ export async function POST(request: Request) {
             // pour la seconde partie à venir, cf. CLAUDE.md : les objets de l'enquête d'origine
             // doivent aussi pouvoir nourrir l'énigme renversée, mais de façon subtile — jamais un gros
             // trait qui trahirait la mécanique avant l'heure).
-            const description=seedPick(story.seed,"discover-mirrorVerified",["Le miroir rectangulaire fait un dégradé bleu-gris-blanc. Il est debout dans un coin ; sa surface grise ne renvoie aucun reflet quand on bouge.","Ce miroir debout dans le coin ne renvoie rien : juste un dégradé gris-bleu qui reste immobile pendant qu'on bouge.","La surface du miroir, dans son coin, fait un gris terne et froid. On a beau remuer devant, rien ne suit. Tu imagines, un miroir qui te renverrait ta vraie personnalité plutôt que ta gueule ?","Un miroir rectangulaire est planté dans le coin, dégradé bleu-gris-blanc du haut en bas. On passe la main devant : aucun reflet ne bouge avec nous.","Ce bloc de verre gris dans le coin n'a rien d'un vrai miroir. Le dégradé bleu-blanc reste fixe, quoi qu'on fasse devant.","Dans le coin, une plaque grise en dégradé qu'on appelle miroir par habitude. Elle ne renvoie ni visage ni mouvement. Flippant, un miroir qui nous regarderait sans jamais rien nous montrer en retour."]);
+            // Chaque variante glisse désormais une remarque en passant qui prépare l'énigme
+            // renversée (Article 7.9), pas seulement 2 sur 6 comme avant (2026-09-18, retour
+            // utilisateur explicite : « fiabilise cette partie stp, pour que ça marche à tous les
+            // coups ») — le fait canonique (dégradé gris-bleu-blanc, aucun reflet) reste identique,
+            // seule l'idée de fond de la remarque varie vraiment à chaque fois (Article 10/11).
+            const description=seedPick(story.seed,"discover-mirrorVerified",["Le miroir rectangulaire fait un dégradé bleu-gris-blanc. Il est debout dans un coin ; sa surface grise ne renvoie aucun reflet quand on bouge. Ça ferait quoi, un miroir qui capterait ce qu'on est vraiment plutôt qu'une image ?","Ce miroir debout dans le coin ne renvoie rien : juste un dégradé gris-bleu qui reste immobile pendant qu'on bouge. Un miroir qui ne reflèterait rien de la surface, mais tout du fond, ça existerait ?","La surface du miroir, dans son coin, fait un gris terne et froid. On a beau remuer devant, rien ne suit. Tu imagines, un miroir qui te renverrait ta vraie personnalité plutôt que ta gueule ?","Un miroir rectangulaire est planté dans le coin, dégradé bleu-gris-blanc du haut en bas. On passe la main devant : aucun reflet ne bouge avec nous. Comme s'il attendait autre chose à renvoyer que nos visages.","Ce bloc de verre gris dans le coin n'a rien d'un vrai miroir. Le dégradé bleu-blanc reste fixe, quoi qu'on fasse devant. On dirait un miroir réglé pour lire autre chose que des traits.","Dans le coin, une plaque grise en dégradé qu'on appelle miroir par habitude. Elle ne renvoie ni visage ni mouvement. Flippant, un miroir qui nous regarderait sans jamais rien nous montrer en retour."]);
             if(together){witness.reply+=" "+description;witness.memory=witness.reply;}
             else {witness.reply=description;witness.memory=description;}
             const partner=finalResidents.find(a=>a.id!==witness.actor)!;
@@ -806,6 +811,18 @@ export async function POST(request: Request) {
           statements.push(db.prepare(`INSERT INTO conversations (speaker,content,created_at,room) SELECT ?,?,?,? WHERE ${fence}`).bind(speaker,content,at,room,token,at));return true;
         };
         for(const d of decisions){const a=world.agents.find(a=>a.id===d.actor)!;const destination=turnPlan.exitInspection?"couloir":d.action==="none"?a.room:d.room;if(a.room!==destination&&!isSleeping(a,life)){const target=destination==="couloir"?"dans le couloir":destination==="jardin"?"au jardin":destination==="cuisine"?"en cuisine":destination==="chambre"?"dans la chambre":"au "+destination;
+            // DÉPART À DEUX (2026-09-18, fiabilisé au code après un défaut répété en simulation
+            // réelle : la seule consigne de prompt ne suffisait pas à empêcher systématiquement le
+            // second personnage de se rejustifier en entier). Si l'autre part déjà vers cette même
+            // destination CE tour (donc déjà présent dans `departures`), la ligne devient une simple
+            // confirmation de suivi, quel que soit ce que moveReason contenait — jamais laissé au
+            // hasard de la conformité du modèle.
+            const alreadyGoingThere=departures.some(p=>p.to===destination);
+            if(alreadyGoingThere){
+              const line=seedPick(story.seed,"depart-a-deux-"+d.actor+"-"+story.round,["Je te suis.","On y va.","Ça marche, j'arrive.","Je viens avec toi."]);
+              if(addLine(names[d.actor]+" · déplacement","["+a.room+"→"+destination+"] "+line,a.room))departures.push({actor:d.actor,from:a.room,to:destination,content:line});
+              continue;
+            }
             // Le motif du déplacement vient d'abord du personnage lui-même (moveReason, généré par
             // le modèle dans son propre registre, cf. Article 19 du retour utilisateur du
             // 2026-09-17 : plus de motif figé en dur) ; les tableaux fixes ci-dessous ne servent
@@ -816,9 +833,9 @@ export async function POST(request: Request) {
              d.intent==="eat"?["j’ai besoin de manger","la faim me travaille trop pour attendre","je dois avaler quelque chose"]:
              destination==="jardin"?["la porte est enfin ouverte, je veux voir ce qu’il y a derrière","cette porte ouverte, je veux enfin voir ce qu’il y a dehors","maintenant que c’est ouvert, je veux voir ce jardin de plus près"]:
              d.intent==="study"?["on a une piste à vérifier","il faut qu’on retourne vérifier ça","cette piste me travaille, faut qu’on aille voir"]:
-             destination==="salon"?["j’ai besoin de prendre du recul","j’ai besoin de souffler un peu","ça me ferait du bien de changer d’air"]:
-             input.mode==="move"?["je vais regarder ce qui s’y trouve","je veux voir ce qu’il y a par là","autant aller jeter un œil là-bas"]:
-             ["je préfère qu’on ne reste pas chacun de notre côté","je préfère qu’on reste ensemble","j’ai pas envie qu’on se sépare comme ça","autant rester dans le même coin que toi"];
+             destination==="salon"?["j’ai besoin de prendre du recul","j’ai besoin de m’éloigner deux minutes","ça me ferait du bien de changer d’air"]:
+             input.mode==="move"?["je vais regarder ce qui s’y trouve","je veux voir ce qu’il y a par là","je vais jeter un œil là-bas"]:
+             ["je préfère qu’on ne reste pas chacun de notre côté","je préfère qu’on reste ensemble","j’ai pas envie qu’on se sépare comme ça","je reste dans le même coin que toi"];
             const line=departureLine(motives,target,destination,story.seed,candidate=>spokenKeys.has(fingerprint("["+a.room+"→"+destination+"] "+candidate)));
             if(addLine(names[d.actor]+" · déplacement","["+a.room+"→"+destination+"] "+line,a.room))departures.push({actor:d.actor,from:a.room,to:destination,content:line});}}
         if(!life.dialogueIndexed){for(const key of pastKeys)statements.push(db.prepare(`INSERT OR IGNORE INTO dialogue_fingerprints (fingerprint) SELECT ? WHERE ${fence}`).bind(key,token,at));life.dialogueIndexed=true;}
