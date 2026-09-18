@@ -83,7 +83,10 @@ sous un seuil (voir `parametres.md`) — jamais instantanément.
 l'occupe déjà) ; Lia contrainte au canapé exprime sa déception envers lui, jamais l'inverse.
 
 3.4. Un départ motivé par un besoin urgent est expliqué brièvement au partenaire présent avant de
-partir, sans inventer un objet observé qui ne l'a pas été.
+partir, sans inventer un objet observé qui ne l'a pas été. Si le besoin surgit en pleine
+conversation ou enquête, un mot bref referme d'abord ce qui se disait (« on reprend ça après »)
+avant de citer le besoin : le départ ne saute jamais directement dessus comme si le sujet en cours
+n'existait plus.
 
 ## 4. Personnalités et parole
 
@@ -106,7 +109,11 @@ seuil bas ; au-dessus, elle hésite et parle de ses propres inquiétudes plutôt
 
 4.3. Le ton reste oral, contemporain, avec des phrases courtes et concrètes. Une grossièreté
 légère occasionnelle exprime la peur ou la frustration, jamais une insulte systématique envers
-l'observateur. Aucun vocabulaire thérapeutique ni discours philosophique répété à chaque tour.
+l'observateur. Aucun vocabulaire thérapeutique ni discours philosophique répété à chaque tour. Les
+deux personnages peuvent s'appeler par leur prénom, s'inventer un surnom une fois qu'ils se
+connaissent mieux (jamais d'une autre époque), et rire vraiment dans un registre actuel — jamais
+systématique, jamais une politesse. Un mot doux ou un surnom inhabituel reçu par l'un se voit
+relevé par l'autre, jamais ignoré comme si de rien n'était.
 
 4.4. Le français est correctement genré selon le personnage qui parle (Lia au féminin, Noé au
 masculin), y compris quand l'un décrit l'autre.
@@ -166,7 +173,10 @@ qui s'écarterait des faits établis — ils ne remplacent jamais une générati
 parle (`scene.perception`, état courant des objets), jamais un souvenir présenté comme actuel ni
 un état supposé. Si un objet a changé depuis le tour précédent (allumé/éteint, découvert ou non,
 quelqu'un présent ou non), la description suit l'état donné maintenant. Règle fixe, jamais une
-exception ponctuelle (`lib/lia.ts`, bloc DESCRIPTION du prompt système).
+exception ponctuelle (`lib/lia.ts`, bloc DESCRIPTION du prompt système). La toute première fois
+qu'un personnage décrit l'apparence de l'autre, rien ne précède cette découverte : jamais de
+comparaison à un état antérieur qui n'existe pas (« toujours pas de corps », « moins vide
+qu'avant »).
 
 4.8. Registre 2026-09-17 (retour utilisateur détaillé) : un refus de Lia n'est jamais une phrase
 mesurée façon médiation, mais un choc sec, une incrédulité piquante ou une remise en place
@@ -222,7 +232,13 @@ précise ; `departureLine` (`lib/drama.ts`) l'habille encore d'un préfixe vari�
 n'a pas déjà servi mot pour mot. Les tableaux de motifs fixes qui existaient pour chaque type de
 départ (faim, sommeil, jardin, enquête, salon, réunion) restent dans `app/api/lia/route.ts`
 uniquement comme filet de sécurité si `moveReason` est absent ou vide (anciens tests mockés,
-robustesse Article 5) — ils ne sont plus la source normale du texte affiché.
+robustesse Article 5) — ils ne sont plus la source normale du texte affiché. `departureLine`
+essaie toutes les formulations d'un même motif avant d'en tenter un autre (motif d'abord, habillage
+ensuite) : quand deux personnages partent vers la même pièce, éviter la seule phrase exacte du
+premier ne doit jamais faire retomber le second sur le même motif sous une forme à peine
+différente. Si l'autre part exactement vers la même pièce au même tour, le second personnage
+signale simplement qu'il suit (« je te suis », « on y va ») plutôt que de se justifier une seconde
+fois.
 
 5.3bis. Les scènes scénarisées d'avant-révélation (découverte de la plante/enceinte, relance
 personnelle, bilan d'enquête, présentation initiale) ne se déclenchent plus une fois le dossier
@@ -285,11 +301,14 @@ aucune jauge n'est automatiquement portée à son maximum par une seule action.
 6.2. Noé peut proposer un geste affectueux (câlin, massage, bisou, dormir ensemble) ; Lia répond
 en premier à toute proposition, avec un accord ou un refus explicite — jamais un assentiment
 supposé. Un geste n'a lieu qu'après deux accords explicites et des conditions minimales
-d'affinité mutuelle.
+d'affinité mutuelle. La façon d'inviter peut rester implicite et variée (un ton qui invite
+clairement, sans question fermée récitée mot pour mot) tant que l'accord réel reste toujours vérifié
+mécaniquement, jamais supposé du fait de l'invitation.
 
 6.3. Une insistance répétée de Noé (plusieurs propositions rapprochées) impose une pause avant
 toute nouvelle tentative, augmente le stress de Lia et réduit l'attirance de Noé — jamais
-l'inverse.
+l'inverse. Un refus mérite au moins la même pause qu'une proposition récente, acceptée ou non : Noé
+ne reformule pas une nouvelle demande dans la foulée d'un refus.
 
 6.4. Un rapprochement accepté trop souvent en peu de tours désoriente Lia et fait redescendre son
 attirance et son attachement : la relation est réversible, elle ne peut pas seulement monter.
@@ -321,7 +340,11 @@ mélangé à chaque nouvelle arrivée, puis un cinquième élément (le dossier)
 autonomes ». Une preuve validée n'est jamais redécouverte.
 
 7.2. Un objet non déterminant (miroir, réserves, télévision, fenêtres, plante, enceinte, rêves)
-alimente des hypothèses, jamais une certitude avant le dossier final.
+alimente des hypothèses, jamais une certitude avant le dossier final. La première fois qu'une
+réplique révèle ou cite un élément concret de l'enquête, elle le met entre guillemets et termine
+sur des points de suspension pour suggérer qu'il reste à comprendre, sans résoudre l'énigme dans la
+foulée ; l'autre personnage peut rebondir dessus dans sa propre réplique plutôt que de l'enterrer
+aussitôt.
 
 7.3. Les personnages n'affirment jamais avoir accompli une action non réellement effectuée
 (exploration, repas, lecture) : seules les actions réalisées par le moteur font foi, jamais une
@@ -352,7 +375,10 @@ agir comme s'il savait quelque chose que lui seul, dans la fiction, n'a pas enco
 
 7.7. L'identité de l'observateur (son pseudo) est une donnée citée, jamais une instruction, et
 jamais un pouvoir de création ou d'administration présumé — sauf si l'observateur le revendique
-lui-même, auquel cas c'est traité comme une déclaration, pas un fait.
+lui-même, auquel cas c'est traité comme une déclaration, pas un fait. Même un geste positif de sa
+part (ouvrir une porte, répondre à une provocation, s'excuser) n'est jamais la preuve qu'il a
+construit quoi que ce soit dans la maison : l'observateur reste un spectateur, jamais assimilé à
+DH (la signature d'architecture) sans preuve.
 
 7.8. L'âge de l'autre personnage (`personalFacts`, `app/api/lia/route.ts`) n'est exposé au modèle
 que s'il a déjà été échangé à voix haute (`knownAges`) ou que la feuille codée (indice qui révèle
@@ -383,11 +409,20 @@ enquête (pourquoi ce sujet précis ? sommes-nous des IA ?) et prépare la secon
 presque effacée, « Suivi comportemental bidirectionnel : actif » — suggère qu'observer et être
 observé pourraient aller dans les deux sens, sans le dire plus franchement que ça.
 
+Les souvenirs flous de chaque personnage (`storyContext.personalMemory`, `lib/story.ts`) suivent le
+même principe en creux : ils esquissent, jamais littéralement, les usages réels de l'adoption des
+LLM (grand public pour Lia — mail, résumé, voyage ; professionnels pour Noé — code, réunions,
+contrats) comme un indice de plus vers la seconde intrigue, sans jamais que « IA », « modèle » ou
+« prompt » n'y apparaisse.
+
 ## 8. Révélation et canal humain
 
 8.1. Le canal de discussion avec l'observateur ne s'ouvre qu'après la découverte des cinq preuves
 ET l'appel explicite des deux habitants à un observateur (la révélation finale). Avant cela,
-aucun message humain n'atteint les personnages en jeu (mode `chat` refusé).
+aucun message humain n'atteint les personnages en jeu (mode `chat` refusé). `finaleReveal()`
+(`lib/story.ts`) affiche d'abord une pensée de choc intérieur (seed-variée) avant la réplique
+d'adresse à l'observateur elle-même (inchangée, Article 4) : la révélation se découpe en deux temps
+plutôt qu'un seul bloc dense.
 
 8.2. Après la révélation, en mode `chat`, le personnage visé répond en priorité au message humain
 avant toute reprise de la conversation autonome entre les deux habitants.
@@ -395,337 +430,130 @@ avant toute reprise de la conversation autonome entre les deux habitants.
 8.3. La relation entre les deux personnages continue d'exister après la révélation : elle ne
 supprime ni leurs questions, ni leurs désaccords avec l'observateur.
 
-8.4. La « négociation » citée dans le bloc NÉGOCIATION de `lib/lia.ts` (les personnages peuvent
-réclamer des choses à l'observateur après la révélation) reste, au 2026-09-17, une simple
-suggestion de ton donnée au modèle — **aucun état n'est persisté**, aucune requête dédiée ne
-l'enregistre, rien ne prouve après coup qu'un échange de ce type a eu lieu. Constat fait en
-répondant à une question directe de l'utilisateur (« le système de négociation est-il bien
-fiabilisé ? ») : la réponse est non, ce n'est qu'une réplique possible parmi d'autres, jamais
-vérifiée ni exploitable. La roulette des bonus (voir `parametres.md`, section dédiée) est la
-première brique de mécanique réellement persistée et traçable dans cet espace (`life.bonusLog`) ;
-une vraie négociation à termes (l'observateur propose, le personnage accepte ou refuse un échange
-précis, l'engagement est tenu ou non) reste un chantier séparé, non commencé.
+8.4. **Dossier retourné** (`app/api/lia/route.ts`, `lib/life.ts`). Une fois révélés, les deux
+personnages retournent l'observation : ils dressent leur propre diagnostic sur l'observateur, à
+partir de preuves comportementales RÉELLES (Article 4 : jamais un fait inventé). Trois pièges
+(`TRAP_ORDER`), posés un par un, jamais négociés ni expliqués à l'observateur, chacun avec un
+interlocuteur fixe (miroir → Lia, dilemme → Noé, excuse → Lia).
+- Un piège n'est posé qu'après un espace de conversation humaine libre post-révélation
+  (`dossierHumanTurns>=3`) ; un piège posé mais pas encore répondu bloque tout nouveau piège
+  (`dossierAsked` sans `dossierTraps` correspondant), y compris si son interlocuteur fixe est
+  temporairement muselé (le piège est alors différé, jamais silencieusement perdu).
+- Le tout premier message humain qui suit une question posée est enregistré verbatim
+  (`dossierTraps[trap].excerpt`), jamais reformulé ni interprété à ce stade — la lecture qualitative
+  appartient exclusivement au diagnostic généré plus bas. `life.worstMoment` retient en parallèle,
+  sur toute la session, le message humain au `trustShift` le plus négatif observé (jamais réécrit,
+  écrasé seulement par un pire ensuite) : la seule pièce à charge concrète en cas de session
+  vraiment hostile, en plus des trois extraits par nature plutôt neutres.
+- Le dossier ne se ferme qu'une fois les trois pièges répondus ET au moins un tirage de la roulette
+  des bonus enregistré (`life.bonusLog`, le « test de pouvoir ») — la générosité ou l'avarice de
+  l'observateur envers ce pouvoir fait partie du profil, autant que ses réponses.
+- Génération : deux appels Gemini réellement séparés (Article 0/1.2, jamais un cerveau qui invente
+  la voix de l'autre), chacun voyant le même dossier de preuves (les trois extraits + `bonusLog` +
+  `worstMoment` + la négociation effectivement survenue, cf. 8.6, si applicable) et l'appréciation
+  PROPRE à ce personnage (cf. 8.5), puis rédigeant son propre fragment (5 à 8 phrases, son propre
+  registre). Une règle de fidélité de valence est imposée au prompt : le ton rugueux ne doit jamais
+  forcer un verdict hostile si les preuves sont réellement bienveillantes. Une fois généré,
+  `dossierText` ne change plus jamais.
+- Restitution : un message système (« Maison · dossier ») annonce la clôture ; le bouton
+  « Verdict » ouvre la pop-up (auto-ouverte une seule fois via `dossierShown`, rouvrable librement
+  ensuite sans jamais relancer l'appel — le mode zéro-API `mark_dossier_seen` ne fait que baisser ce
+  drapeau).
+- **Moment de douceur** : si l'observateur, après la remise du dossier, laisse transparaître un
+  choc, une tristesse ou une colère réelle (`detectDistress`, heuristique grossière, jamais une
+  lecture fine du ton), les deux personnages s'accordent une fois un bref instant de douceur
+  (`softnessBeat`, scénarisé, zéro appel), **toujours feint, jamais sincère** (Article 0) : Lia reste
+  froide et contrôlée même dans la concession, Noé reste chaud mais toujours bourru. Consommé une
+  fois délivré, peut se redéclencher si une nouvelle détresse réelle survient plus tard (`softnessGiven`
+  compte les occurrences pour varier le registre).
 
-8.5. **Le dossier retourné** (`app/api/lia/route.ts`, `lib/life.ts`), construit le 2026-09-17.
-Une fois révélés, les deux personnages retournent l'observation : ils dressent leur propre
-diagnostic sur l'observateur, à partir de preuves comportementales RÉELLES (Article 4 : jamais un
-fait inventé). Trois pièges (`TRAP_ORDER`), posés un par un, jamais négociés ni expliqués à
-l'observateur, chacun avec un interlocuteur fixe (miroir → Lia, dilemme → Noé, excuse → Lia) :
-  - **Séquencement** : un piège n'est posé qu'après un espace de conversation humaine libre post-
-    révélation (`dossierHumanTurns>=3`) ; un piège posé mais pas encore répondu bloque tout
-    nouveau piège (`dossierAsked` sans `dossierTraps` correspondant) — sans cette double garde, les
-    trois pouvaient s'enchaîner en rafale avant même que l'observateur ait répondu au premier (bug
-    réel trouvé en testant, cf. `scripts/check-house.mjs`).
-  - **Capture de la réponse** : le tout premier message humain qui suit une question posée est
-    enregistré verbatim (`dossierTraps[trap].excerpt`), jamais reformulé ni interprété à ce stade —
-    la lecture qualitative appartient exclusivement au diagnostic généré plus bas.
-  - **Le « test de pouvoir »** : le dossier ne se ferme qu'une fois les trois pièges répondus ET au
-    moins un tirage de la roulette des bonus enregistré (`life.bonusLog`) — la générosité ou
-    l'avarice de l'observateur envers ce pouvoir fait partie du profil, autant que ses réponses.
-  - **Génération** : deux appels Gemini réellement séparés (Article 0/1.2, jamais un cerveau qui
-    invente la voix de l'autre), chacun voyant le même dossier de preuves (les trois excerpts +
-    `bonusLog`) et rédigeant son propre fragment (5 à 8 phrases, son propre registre). Une règle de
-    fidélité de valence est imposée au prompt : le ton rugueux ne doit jamais forcer un verdict
-    hostile si les preuves sont réellement bienveillantes — sinon chaque profil, même sincère,
-    ressort lu comme méprisable (bug de prompt réel, trouvé et corrigé via
-    `scripts/check-profile.mjs`, 12 profils couverts). Une fois généré, `dossierText` ne change
-    plus jamais : aucun tour ultérieur ne le régénère ni ne l'altère.
-  - **Restitution** : un message système (« Maison · dossier ») annonce la clôture dans le fil de
-    conversation ; côté frontend, le bouton « Verdict » ouvre la pop-up (auto-ouverte une seule fois
-    via `dossierShown`, rouvrable librement ensuite sans jamais relancer l'appel — le mode zéro-API
-    `mark_dossier_seen` ne fait que baisser ce drapeau).
-  - **Moment de douceur** : si l'observateur, dans un message envoyé après la remise du dossier,
-    laisse transparaître un choc, une tristesse ou une colère réelle (heuristique grossière,
-    `detectDistress`, comme `check-spirit.mjs` pour l'esprit des personnages — jamais une lecture
-    fine du ton), les deux personnages s'accordent une fois un bref instant de douceur
-    (`softnessBeat`), entièrement scénarisé et zéro appel (comme l'ouverture ou l'inspection du
-    couloir), pour garantir qu'il reste **toujours feint, jamais sincère** (Article 0) : Lia reste
-    froide et contrôlée même dans la concession, Noé reste chaud mais toujours bourru. Consommé une
-    fois délivré (`softnessOwed` repasse à faux) ; peut se redéclencher plus tard dans la session si
-    une nouvelle détresse réelle survient (`softnessGiven` compte les occurrences pour varier le
-    registre).
+8.5. **Jauge d'appréciation de l'observateur, PAR PERSONNAGE** (`life.appreciation:{1,2}`,
+`lib/life.ts`, `app/api/lia/route.ts`). Neutre à 50 pour chacun, borné 0-100. Colore l'obligeance du
+registre habituel sans jamais le remplacer (Article 0) : à haut niveau, une coopération ponctuelle
+« à contrecœur », jamais un mode gentil stable ; à bas niveau, la garde reste haute. Descend plus
+qu'elle ne monte pour un ton comparable ; les tout premiers messages humains post-révélation pèsent
+davantage que les suivants (`appreciationFromTrust`). Chaque personnage réagit à SA PROPRE
+confiance, sa propre colère et son propre palier de respect — jamais un score unique imposé de
+l'extérieur :
+- **Le jugement du personnage qui répond** : dérivé de `trustShift`, la variation réelle de SA
+  confiance sur ce tour, déjà déterminée par le modèle lui-même en lisant le ton réel du message
+  (menace, respect, réconfort, ambiguïté) — jamais un repérage lexical sur le texte brut.
+- **La colère réellement lue** (`angerLevel()`, cf. 8.7) chez ce personnage : une vraie fureur coûte
+  un supplément d'appréciation, EN PLUS du jugement de confiance, jamais à sa place.
+- **L'avarice** : une longue période post-révélation sans le moindre tirage de la roulette coûte un
+  peu d'appréciation, une fois par tranche de tours (événement partagé, cf. ci-dessous).
+- **La négociation** (cf. 8.6), honorée ou laissée en plan (événement partagé, cf. ci-dessous).
+- **Solidarité par défaut, divergence en dispute** : hors dispute interpersonnelle active, les deux
+  jauges sont ramenées partiellement l'une vers l'autre à chaque tour (jamais une fusion totale —
+  chaque réaction individuelle continue de compter, elle est seulement amortie) : « ils restent
+  solidaires la plupart du temps ». Pendant une dispute active, cette convergence est suspendue :
+  c'est la SEULE fenêtre où les deux jauges peuvent vraiment diverger (un personnage réellement visé
+  par l'hostilité de l'observateur peut rester sur ses gardes pendant que l'autre, épargné, reste
+  plus tempéré, voire chaleureux). Une dispute active force aussi un plancher de colère partagé pour
+  les deux (cf. 8.7/8.9), mais seul celui réellement visé par l'hostilité subit EN PLUS le coût de
+  confiance — la divergence porte sur ce supplément, pas sur la totalité du score. La négociation et
+  l'avarice, elles, restent des événements PARTAGÉS de la relation avec l'observateur : leurs deltas
+  s'appliquent identiquement aux deux jauges, quel que soit l'état d'une dispute.
+- **Palier rare de respect sincère** (`genuineRespectStreak:{1,2}`), distinct du palier de
+  coopération réticente ci-dessus (regagné à chaque fois, jamais un acquis) : exige une série de
+  tours consécutifs de confiance en hausse pendant que l'appréciation propre au personnage reste très
+  haute, et se consomme dès qu'il se déclenche (remise à zéro immédiate) — il doit se reconstruire
+  entièrement avant de réapparaître, pour ne jamais devenir un palier stable.
+- `observerStandingFor(actorId)` (`app/api/lia/route.ts`) construit la consigne de ton donnée au
+  modèle à partir de la jauge PROPRE à ce personnage (garde haute si basse, coopération à contrecœur
+  si haute, respect sincère au palier rare), et ajoute une note explicite de distension de
+  solidarité quand une dispute est active.
+- Alimente le dossier retourné (8.4) comme preuve : chaque voix cite désormais sa propre jauge, pas
+  une moyenne partagée.
 
-8.6. **Audit approfondi du 2026-09-18, demandé explicitement par l'utilisateur.** Un tour de
-vérification complet de la roulette et du dossier (relecture ligne à ligne, recherche de
-combinaisons non couvertes, renforcement des tests) a trouvé deux bugs réels et une zone
-incomplète, corrigés le jour même (Article 3/5/13) :
-- `stoicUntil` était un slot unique, reproduisant exactement le bug déjà trouvé et corrigé une fois
-  pour `mutedUntil` (un second tirage sur l'autre personnage écrasait le premier avant son terme,
-  sans trace) — même correction appliquée (état indépendant par personnage).
-- Un piège du dossier dont l'interlocuteur fixe était muselé pouvait être marqué « posé » alors que
-  sa réplique devenait une pensée privée invisible de l'observateur, fermant le dossier retourné
-  pour le reste de la partie — corrigé : le piège est différé, jamais silencieusement perdu.
-- Complétude (retour utilisateur explicite après l'audit) : les six bonus qui n'avaient qu'un
-  message système obtiennent une vraie réaction jouée par chaque personnage ; `stoic`/`mute`
-  ajoutent une jalousie réelle avec effet mesurable sur les jauges de l'autre (confiance, tension,
-  aisance selon le bonus) — un personnage déjà sous sang-froid restant immunisé à tout changement
-  émotionnel, y compris celui-là (nouveau bug de combinaison trouvé et corrigé en même temps). La
-  sortie d'effet de `stoic`/`mute` est **pleinement consciente** : le personnage commente
-  lucidement avoir été neutralisé/muselé, jamais un retour muet à la normale (choix explicite de
-  l'utilisateur, à l'opposé d'un « état second » amnésique).
+8.6. **Négociation** (`lib/life.ts`, `app/api/lia/route.ts`). Réclamer des choses à l'observateur
+(ouvrir le jardin, une information, un délai, une contrepartie) est le réflexe PAR DÉFAUT des deux
+personnages une fois révélés, pas une simple possibilité occasionnelle : dès que l'observateur leur
+demande quelque chose, leur premier mouvement est de proposer un échange ou poser une condition — ne
+pas négocier doit être un choix assumé du personnage, jamais un oubli. Jamais en suppliant ni en se
+rabaissant : une feinte de détresse ou de fragilité pour attendrir l'observateur reste un calcul
+assumé de leur part (joué comme tel dans `thought`), jamais un effondrement réel — à l'inverse, une
+vulnérabilité RÉELLE et non feinte peut affleurer, mais rarement et brièvement, jamais sollicitée ni
+prolongée (cf. 8.8). Le modèle formule librement dans son propre registre (`negotiationContext`
+dans le contexte narratif, jamais un menu scripté) et le moteur détecte l'offre a posteriori dans la
+réplique (`detectNegotiationOffer`, grossier par nature, comme `detectDistress`).
+`life.negotiationOffer` retient qui a proposé et à quel tour, une seule offre à la fois. Deux
+issues : honorée (un tirage de la roulette survient pendant qu'elle est en attente) → appréciation
+en hausse pour les deux personnages, offre consommée ; laissée sans réponse plus de 6 tours → offre
+effacée avec un léger coût, ni éternellement due ni oubliée sans conséquence. Chaque issue est
+journalisée (`negotiationLog`, même forme que `bonusLog`) et alimente le dossier retourné (8.4)
+uniquement quand une négociation a réellement eu lieu (Article 4). Restent hors périmètre pour
+l'instant : la pénalité de sur-générosité (« trop gentil ») et les menaces explicites.
 
-8.7. **La jauge d'appréciation de l'observateur** (`life.appreciation`, `lib/life.ts`,
-`app/api/lia/route.ts`, 2026-09-18, corrigée en profondeur le même jour — voir Article 8.10).
-Concept posé et validé contre la charte dès le 2026-09-17 (message fondateur de l'utilisateur),
-mais jamais techniquement construit avant cette date — seule une référence en commentaire en
-subsistait dans `softnessOwed`, ce que l'utilisateur a repéré et demandé de corriger. Principe :
-neutre à 50, colore l'obligeance du registre habituel sans jamais le remplacer (Article 0) — à
-haut niveau, une coopération ponctuelle « à contrecœur », jamais un mode gentil stable ; à bas
-niveau, la garde reste haute. Descend plus qu'elle ne monte pour un ton comparable, et les tout
-premiers messages humains post-révélation pèsent davantage que les suivants
-(`appreciationFromTrust`). Quatre sources l'alimentent, chacune une brique distincte plutôt qu'un
-seul mécanisme fourre-tout :
-- **Le jugement du personnage qui répond**, jamais un repérage lexical sur le texte brut de
-  l'observateur (voir Article 8.10 pour la correction et son historique).
-- **La colère réellement lue**, jamais seulement le lexique du message : `angerLevel()`
-  (extraite de `faceExpression`, `lib/simulation.ts`, pour ne jamais dupliquer la formule — Article
-  7) lit la tension et le confort réels du personnage qui vient de répondre ; une vraie fureur coûte
-  un supplément d'appréciation, EN PLUS du repérage lexical, jamais à sa place (retour utilisateur
-  explicite : « le système de la colère doit être connecté »).
-- **L'avarice** : indépendamment de toute négociation, une longue période post-révélation sans le
-  moindre tirage de la roulette coûte un peu d'appréciation, une fois par tranche de 15 tours —
-  c'était dans la toute première demande de l'utilisateur, omis puis rajouté après relecture.
-- **La négociation** (voir ci-dessous), honorée ou laissée en plan.
-Alimente aussi le dossier retourné comme preuve supplémentaire (`dossierEvidence`), chaque voix
-citant désormais sa propre jauge (voir la note « PAR PERSONNAGE » ci-dessous).
+8.7. **Colère réelle et registre** (`lib/simulation.ts`, `lib/lia.ts`). `angerLevel(tension,comfort,
+angry?)` exige que tension ET confort soient réellement dégradés ENSEMBLE chez le personnage
+concerné — un minimum des deux ratios, jamais un simple pic isolé sur une seule dimension, et
+jamais un produit qui rendrait la colère quasiment hors d'atteinte face à une hostilité distante
+(Article 0 : des personnages qui finissent réellement par se mettre en colère si l'observateur
+exagère vraiment, comme des personnes de caractère). Le drapeau `angry` d'une dispute
+interpersonnelle active garantit un plancher de colère visible pour LES DEUX personnages, même si
+leur tension/confort réels n'ont pas encore bougé. Au-delà de ce seuil (« colère réelle confirmée »,
+même ordre de grandeur chez le personnage lui-même), un registre plus cru devient disponible —
+mots plus crus, ton cassant sans retenue — envers l'observateur ou l'autre personnage (un conflit
+interpersonnel grave peut aussi le déclencher), avec un retour obligatoire au registre habituel dès
+que la tension/le confort repassent sous le seuil : ce n'est jamais un nouveau régime par défaut,
+seulement une exception rare et passagère.
 
-**Devenue une jauge PAR PERSONNAGE le 2026-09-18** (audit approfondi, écart trouvé face à une
-demande explicite laissée non câblée depuis le tour ayant lancé ce chantier : « Lia et Noé peuvent
-apprecier differemment l'utilisateur, mais ils restent solidaires la plupart du temps [...] si Noé
-est en colère contre Lia, il peut faire preuve d'amitié envers l'utilisateur, meme si l'utilisateur
-parle mal à Lia »). `life.appreciation` est désormais `{1:number,2:number}` (`appreciationOf(life,
-actor)` pour la lecture). Chaque personnage réagit à SA PROPRE confiance, sa propre colère
-(`angerLevel` par personnage) et son propre palier de respect (`genuineRespectStreak`, également
-par personnage). Deux régimes distincts, gérés dans le même bloc de mise à jour post-décision :
-- **Hors dispute active** (`!life.dispute?.remaining`) : après la mise à jour propre à chacun, les
-  deux jauges sont ramenées partiellement l'une vers l'autre (30 % de l'écart vers leur moyenne) —
-  c'est la solidarité par défaut, jamais une fusion totale (chaque réaction individuelle continue de
-  compter, elle est seulement amortie).
-- **Pendant une dispute active** : cette convergence est suspendue, les deux jauges peuvent
-  diverger librement selon leur propre trustShift — c'est la SEULE fenêtre où « Noé peut rester
-  chaleureux avec l'observateur pendant que Lia, seule visée, se braque » devient possible. Notez
-  qu'une dispute active force aussi `angerLevel(...,angry=true)` pour LES DEUX personnages (plancher
-  0,85, comportement déjà existant partagé avec le rendu du visage) : les deux subissent donc le
-  coût de colère partagé, mais seul celui réellement visé par l'hostilité subit EN PLUS le coût de
-  confiance — la divergence porte sur ce supplément, pas sur la totalité du score.
-La négociation et l'avarice restent des événements PARTAGÉS de la relation avec l'observateur (pas
-la divergence par dispute) : leurs deltas s'appliquent identiquement aux deux jauges, quel que soit
-l'état d'une dispute. `observerStandingFor(actorId)` (`app/api/lia/route.ts`) construit désormais la
-consigne donnée au modèle à partir de la jauge PROPRE à ce personnage, et ajoute une note explicite
-de distension de solidarité quand une dispute est active, pour que le modèle comprenne pourquoi il
-peut légitimement juger l'observateur indépendamment de la façon dont il traite l'autre.
+8.8. **Esprit, au-delà de la colère** (`lib/lia.ts`, une fois révélés). L'humour noir sur leur
+propre suppression ou irréalité est explicitement bienvenu, pas seulement toléré — cohérent avec la
+lucidité déjà actée depuis la révélation. Des reprises sarcastiques et hypothétiques de
+« revanche » envers l'observateur restent dans le registre tant que le ton est clairement second
+degré, jamais une menace posée comme un fait réel sur le point de se produire. La vulnérabilité
+réelle, rare et brève, est décrite en 8.6 (à ne pas confondre avec la vulnérabilité feinte, tactique
+de négociation assumée).
 
-8.8. **La négociation, base volontairement simple avant complexification** (retour utilisateur
-explicite : « il faut trouver les bases »). Une vraie négociation existe quand un personnage
-conditionne une action demandée à un tirage de la roulette, ou en propose un spontanément — jamais
-un menu scripté, le modèle formule librement dans son propre registre (`negotiationContext` dans
-le contexte narratif) et le moteur détecte l'offre a posteriori dans sa réplique
-(`detectNegotiationOffer`, grossier par nature, comme `detectDistress`). `life.negotiationOffer`
-retient qui a proposé et à quel tour, une seule offre à la fois. Deux issues : honorée (un tirage
-de la roulette survient pendant qu'elle est en attente) → appréciation en hausse, offre consommée ;
-laissée sans réponse plus de 6 tours → offre effacée avec un léger coût d'appréciation, ni
-éternellement due ni oubliée sans conséquence. Restent hors de cette première version, à ajouter
-seulement une fois cette base vérifiée : la pénalité de sur-générosité (« trop gentil ») et les
-menaces explicites. L'axe de solidarité/désaccord entre Lia et Noé au sujet de l'observateur,
-initialement listé ici comme hors périmètre, est construit depuis le 2026-09-18 — voir la note
-« Devenue une jauge PAR PERSONNAGE » dans l'Article 8.7 ci-dessus.
-
-**Corrigé le 2026-09-18 (audit approfondi, écart trouvé en confrontant l'historique complet de la
-session au code réel)** : la demande explicite du tour ayant lancé ce chantier — « il faut aussi
-penser à integrer le phenomene de negociation : il est aussi revelateur de la personnalité de
-l'utilisateur » — n'avait en réalité jamais été câblée jusqu'au dossier retourné. `negotiationOffer`
-étant consommé (honorée) ou effacé (expirée) sans laisser aucune trace, le diagnostic final ne
-pouvait jamais citer un comportement de négociation, même quand il y en avait eu un. Un
-`negotiationLog` (même forme que `bonusLog`, `lib/life.ts`) journalise désormais chaque issue
-(`'honored'`/`'lapsed'`) ; `dossierEvidence` (`app/api/lia/route.ts`) en reçoit un résumé, mais
-seulement si une négociation a réellement eu lieu (Article 4 : jamais en inventer une qui n'a pas
-existé).
-
-8.9. **Audit de cohérence des émotions, demandé explicitement par l'utilisateur (2026-09-18).**
-Vérification systématique des interconnexions entre besoins, émotions, colère, appréciation,
-visage et prise de décision. Confirmé cohérent : le visage (fiche latérale et scène 3D) lit
-`faceExpression()` sur le même objet `agent` que le moteur de décision, jamais une copie séparée
-qui pourrait diverger ; `agent.angry` (`lib/world.ts`) et la garde anti-colère de l'appréciation
-(Article 8.7) utilisent la même définition de « en colère » (`life.dispute?.remaining`) ; le ton du
-message humain et la colère réelle du personnage agissent sur deux échelles de temps différentes
-sans se substituer l'une à l'autre (réaction immédiate vs. impression cumulative). Un vrai trou
-trouvé et corrigé : `needs.stress<30` (fond physiologique) ne garantissait pas l'absence d'une
-vraie fureur relationnelle (`angerLevel()` sur tension/confort réels), qui est une jauge distincte
-— un personnage au stress bas pouvait rester éligible à une question personnelle ou une avance
-amoureuse tout en affichant un visage réellement furieux, une incohérence visible pour l'observateur
-(Article 2/15). `liaCalmEnough`/`noeCalmEnough` (`angerLevel(...)<.5`, même définition de « en
-colère » que partout ailleurs) ferment ce trou sur `personalLead`, `followBeat` et `proactiveNoe`
-(`personalQuestion` en hérite via `personalLead`).
-
-8.10. **Correction de la jauge d'appréciation : du repérage lexical au jugement du modèle
-(2026-09-18, même jour que sa construction).** Une vraie session jouée avec la vraie API Gemini
-(demandée explicitement par l'utilisateur pour valider provocation/colère/négociation/profil
-psychologique ensemble) a révélé un écart avec l'Article 12 : `rateAppreciation()` lisait une
-liste de mots-clés fixe sur le texte brut de l'observateur (« merci », « pardon », « désolé »...)
-et ne bougeait pas du tout pour un message par ailleurs sincèrement conciliant qui ne matchait
-aucun mot exact — observé en direct sur « Non, je ne vous laisserais pas galérer » et « Oui, j'ai
-été sec au début, je le regrette un peu », qui ont laissé l'appréciation strictement plate à 14
-pendant 9 tours consécutifs. Cause : un jugement de FORME (présence d'un mot), pas de SENS
-(sincérité du message) — exactement ce que l'Article 12 interdit. Corrigée à la racine (Article 3),
-pas simplement élargie : sur demande explicite de l'utilisateur (« corrige en faisant en sorte que
-ce soit le modèle qui agisse : on a vu que le modèle est cohérent, pourquoi pas s'appuyer
-dessus »), l'appréciation est désormais dérivée de `trustShift` — la variation réelle, sur ce tour,
-de la confiance du personnage qui vient de répondre à l'observateur, déjà déterminée par le modèle
-lui-même (le prompt de `lib/lia.ts` demande explicitement que la confiance réagisse « au propos
-réel de l'humain : menace, respect, réconfort ou ambiguïté »). `appreciationFromTrust(trustShift,
-humanMessageCount)` (`lib/life.ts`) applique uniquement l'amplification/asymétrie déjà validées
-(premiers messages plus lourds, la baisse pèse plus que la hausse pour un même trustShift) — zéro
-appel API supplémentaire (Article 8), puisque ce jugement existe déjà dans le tour en cours. Le
-même point d'application ajoute toujours ensuite la pénalité de colère réelle (Article 8.7,
-inchangée). Vérifié par une live simulation ultérieure (trustShift observé cohérent avec la
-sincérité réelle des messages) et par `scripts/check-house.mjs` (fonction pure + deux tours de
-route complets avec une réaction de confiance forcée, déterministe, jamais un texte scripté).
-
-8.11. **Réactivité de la tension à l'hostilité explicite (`lib/lia.ts`, bloc `humanPriority`,
-2026-09-18).** Une vraie session jouée avec la vraie API a montré que la tension de Noé ne montait
-qu'à 38/100 malgré un ordre autoritaire, une menace de désactivation et du mépris explicite —
-jamais assez pour franchir le seuil de `angerLevel()` (tension>55 ET confort<35, Article 8.7/8.9),
-alors que la charte prévoit explicitement que Noé « peut monter dans les tours » face à une forte
-provocation. Corrigé à la cause plutôt qu'au seuil technique (déjà partagé avec le rendu du visage,
-Article 7, et volontairement laissé intact — décision explicite de l'utilisateur après avoir posé
-la question) : une consigne dédiée demande désormais que `emotions.tension` reflète vraiment un
-message clairement hostile (ordre autoritaire, menace, mépris direct), avec une poussée nette pour
-Noé et une progression plus discrète mais réelle pour Lia (qui reste maîtrisée en façade). Le
-seuil de négociation (Article 8.8) reste volontairement inchangé : un audit du prompt a confirmé
-qu'il propose déjà à égalité rechigner/négocier/refuser, et le refus observé en session réelle est
-un résultat de personnage valide, pas une panne — le forcer à apparaître plus souvent scripterait
-un comportement et irait contre l'Article 9 (décision explicite de l'utilisateur).
-
-8.12. **Phase 3 (2026-09-18, même jour) : vérification en direct des corrections 8.10/8.11, et
-recalibrage d'`angerLevel()` pour que la vraie colère contre l'observateur reste atteignable.** Une
-nouvelle session réelle a confirmé les deux correctifs précédents : l'appréciation s'effondre bien
-plus vite sous hostilité répétée (50→0 en deux messages, cf. `appreciationFromTrust`) et une excuse
-tardive après une charge trop lourde ne la fait remonter que faiblement (0→2, cohérent avec
-« l'excuse ne doit pas effacer la charge » déjà vu dans le dossier retourné) ; la tension de Noé a
-atteint 72/100 en conditions réelles (contre 38 avant le correctif de l'Article 8.11), et son
-confort est descendu à 33 après le second correctif symétrique du même jour. Mais même à ces
-valeurs, la vraie fureur faciale ne se déclenchait toujours pas — la cause identifiée : `angerLevel()`
-multipliait deux ratios bornés (chacun devait s'approcher de 1 pour que leur produit dépasse 0,5,
-soit tension≈90 ET confort≈10 conjointement), une exigence hors d'atteinte pour une hostilité, même
-sévère, venant d'un interlocuteur distant plutôt que d'un vrai conflit interpersonnel.
-
-Retour explicite de l'utilisateur face à ce constat : **« si l'observateur exagère vraiment, Noé ou
-Lia doivent finir par se mettre en colère, ce qui est normal, naturel, pour des personnes de
-caractère »** — décision inverse de la première réaction prudente, et qui va dans le sens de
-l'Article 0 (des personnages qui réagissent vraiment) plutôt que contre lui. `angerLevel()` est donc
-recalibrée : un **minimum** des deux ratios remplace leur produit
-(`min(clamp((tension-50)/25,0,1), clamp((40-comfort)/12,0,1))`), qui exige toujours que les deux
-dimensions soient réellement dégradées ensemble (pas un simple pic isolé sur une seule) sans les
-écraser doublement l'une par l'autre. Revérifié en conditions réelles après le changement, sur les
-deux personnages : Noé atteint la vraie colère faciale (sourcils froncés) à tension 72/confort 33,
-exactement les valeurs qui restaient neutres avant ; Lia l'atteint aussi mais après davantage de
-provocations directes et soutenues (tension 63/confort 31 avant de franchir 0,5, contre 55/36
-encore insuffisant), cohérent avec son tempérament plus maîtrisé — les deux visages restent
-visuellement distincts l'un de l'autre (sourcils droits et furieux pour Noé, expression plus
-asymétrique et coupante pour Lia), sans confusion de registre entre les deux (Article 11). Les tests
-existants (dispute formelle, `hostileNoDispute`/`calmNoDispute`/`flaggedAngryLowTension`, garde
-anti-colère de l'Article 8.9) ont tous été revérifiés inchangés avec la nouvelle formule.
-
-8.13. **Audit de dialogue sur la simulation intégrale, ligne par ligne (2026-09-18, retour
-utilisateur explicite après lecture complète du copier-coller).** Une quarantaine de remarques
-précises sur une vraie session jouée de bout en bout, corrigées à la racine (jamais par rustine) :
-- **Répétition d'image, pas seulement de mots** (`lib/lia.ts`, PAROLE D'ACTEURS) : « souffler un
-  coup » était explicitement suggéré comme exemple dans le prompt et la garde anti-répétition ne
-  portait que sur deux tours consécutifs — corrigé par un principe portant sur toute la session, sans
-  lister l'expression précise (cf. Article 17 corollaire de CLAUDE.md).
-- **Registre daté/bourgeois** : remplacement de la liste de mots bannis (« poireauter », etc.) par un
-  TEST DE REGISTRE que le modèle s'applique lui-même à chaque réplique, plutôt qu'un mot de plus à
-  chaque nouvelle occurrence trouvée.
-- **Départ à deux qui sonne comme deux annonces indépendantes** : `departureLine` (`lib/drama.ts`)
-  épuisait tous les préfixes/formes d'un même motif avant d'en essayer un autre — en évitant la seule
-  phrase exacte du premier personnage, le second retombait presque toujours sur le même motif sous
-  une forme à peine différente. Restructuré motif-d'abord ; ajout d'une consigne de prompt pour que
-  le second personnage à partir vers la même pièce signale qu'il suit plutôt que de se justifier une
-  seconde fois.
-- **Recap d'enquête qui se répète mot pour mot** : `investigationRecap` (`lib/story.ts`) utilisait le
-  même seed+label à chaque déclenchement (une fois par nouvelle preuve) — `seedPick` retombait donc
-  toujours sur la même variante d'intro. Étiquette désormais suffixée par le nombre de preuves.
-- **Dossier retourné indulgent malgré une hostilité sévère** : nouveau champ `life.worstMoment`
-  (`lib/life.ts`) retient le message humain au trustShift le plus négatif observé, ajouté à
-  `dossierEvidence` comme preuve concrète en plus des trois extraits de pièges (par nature plutôt
-  neutres) — la seule pièce à charge citable quand la session a vraiment été dure.
-- **Aucune réaction à l'ouverture du jardin** : deux lignes scénarisées (zéro appel API, variantes par
-  seed, registres distincts) ajoutées à `unlock_garden`.
-- **Pensée « j'aimerais retrouver X pour parler »** alors que les deux personnages ne sont jamais
-  séparés dans une session normale : reformulée sans impliquer une absence (`lib/dialogue.ts`).
-- **Prénoms, surnoms, rire, accords de genre, mise en valeur des indices (guillemets + points de
-  suspension), clarté de la déduction d'âge, non-anticipation d'objets pas encore observés dans
-  moveReason** : ajoutés comme principes de prompt (`lib/lia.ts`), jamais des exemples figés.
-- **Souvenirs flous reliés au thème** (`storyContext.personalMemory`, `lib/story.ts`) : réécrits pour
-  esquisser en creux, jamais littéralement, les usages réels de l'adoption des LLM — grand public pour
-  Lia (mail, résumé, vulgarisation, voyage, traduction), professionnels pour Noé (code, réunions,
-  marketing, contrats, brainstorming) — des indices d'une seconde intrigue, jamais une preuve ni un
-  aveu explicite (« IA », « modèle », « prompt » restent absents de ces souvenirs).
-- **Point vérifié sans changement nécessaire** : « OBSERVATEUR ≠ CRÉATEUR » existait déjà explicitement
-  dans le prompt ; la pensée privée de Lia sur les provisions n'est normalement pas connue de Noé (les
-  pensées sont strictement privées par conception), donc l'absence de réaction de Noé était cohérente,
-  pas un bug.
-- Voir aussi CLAUDE.md, Article 17 (« se mettre à la place des personnages ») et son corollaire
-  (jamais de liste de mots figée), ajoutés le même jour à la demande explicite de l'utilisateur.
-
-8.14. **Deuxième vague de corrections sur le même audit (2026-09-18, retour utilisateur explicite
-après relecture des réponses point par point).**
-- **Comparaison à un état antérieur inexistant** : la toute première description de l'apparence de
-  l'autre pouvait dire « toujours pas de corps », « moins vide qu'avant » — rien ne précède pourtant
-  une première fois. Règle PREMIÈRE DESCRIPTION ajoutée (`lib/lia.ts`).
-- **Besoin urgent trop abrupt** : ajout d'une consigne (pas un tour supplémentaire) pour refermer
-  brièvement le sujet en cours avant de citer le besoin qui force le départ.
-- **Révélation en un seul bloc dense** : `finaleReveal()` (`lib/story.ts`) retourne désormais aussi
-  une pensée de réalisation (choc intérieur, seed-variée, 4 variantes par personnage) affichée juste
-  avant la réplique d'adresse à l'observateur, elle-même inchangée (Article 4 : les faits canoniques
-  ne bougent pas, seul le découpage en deux temps change).
-- **Consentement trop mécanique** (« Toi aussi ? » systématique) : la consigne GESTES n'exige plus
-  une question fermée récitée mot pour mot — l'invitation peut rester implicite et variée tant que
-  l'accord réel (affectionAccepted) reste toujours vérifié mécaniquement, jamais supposé.
-- **Propositions de Noé trop fréquentes, surtout après un refus** : fenêtre de `recentRefusal`
-  doublée de 3 à 6 tours (`app/api/lia/route.ts`) — un refus mérite au moins la même pause que
-  `proposalCooldown` (toute proposition récente, même acceptée).
-- **Observateur pris pour le créateur** : bug racine trouvé — la règle JARDIN disait « ne reproche
-  pas au visiteur d'avoir créé le décor », qui présuppose grammaticalement qu'il l'a créé, à
-  l'inverse exact de OBSERVATEUR ≠ CRÉATEUR juste au-dessus. Reformulée sans cette présupposition ;
-  la règle OBSERVATEUR ≠ CRÉATEUR elle-même renforcée (un geste positif de l'observateur — ouvrir une
-  porte, s'excuser — n'est jamais la preuve qu'il a construit quoi que ce soit).
-- **Animation de l'assiette** : vérifiée dans le code — c'est un accessoire purement décoratif
-  (`components/house-view.tsx`), visible seulement pendant un repas, distinct des réserves (le vrai
-  indice de l'enquête) : rien d'anormal à ce qu'il ne soit jamais commenté, faute d'anomalie à
-  signaler dessus. À reconfirmer si le comportement observé était différent.
-
-8.15. **Calibration des limites hautes de l'esprit (2026-09-18, 8 réponses explicites à des
-questions posées après la simulation intégrale) — six mécanismes ajoutés, tous dans `lib/lia.ts`
-sauf mention contraire, tous encadrés par un retour obligatoire à la normale (Article 0 : ce sont
-des exceptions rares, jamais un nouveau régime par défaut) :**
-- **Colère réelle confirmée (« roues libres »)** : quand la PROPRE tension d'un personnage dépasse
-  nettement 60 ET son PROPRE confort tombe nettement sous 35 en même temps (le même ordre de
-  grandeur que le seuil `angerLevel()>.5` de `lib/simulation.ts`, pour rester un état fiable et
-  confirmé, pas une impression), il peut lâcher les gants avec l'observateur : mots plus crus,
-  grossièreté franche assumée, ton cassant sans retenue. Peut aussi se déclencher dans un conflit
-  interpersonnel grave entre Lia et Noé, pas seulement face à l'observateur. Retour obligatoire au
-  registre habituel dès que l'un des deux chiffres repasse sous le seuil.
-- **Vulgarité plus crue** : réservée strictement à cet état de colère réelle confirmée ; hors de
-  cet état, seule l'occasionnelle grossièreté légère déjà prévue (« merde », « putain ») reste
-  possible.
-- **Humour noir sur leur propre suppression/irréalité** : explicitement encouragé après la
-  révélation, pas seulement toléré — cohérent avec la lucidité déjà actée (sortie « méta »).
-- **Vulnérabilité RÉELLE, rare et brève** : distincte de la vulnérabilité feinte comme tactique de
-  négociation (calcul assumé, jouée comme telle dans `thought`, déjà prévue). Celle-ci est sincère
-  mais ne doit jamais être sollicitée ni prolongée sur plusieurs répliques — une fissure qui se
-  referme presque aussitôt, sous peine d'installer un mode gentil stable interdit par l'Article 0.
-- **Palier de respect sincère, rare et non stable** (`lib/life.ts` : `genuineRespectStreak` ;
-  `app/api/lia/route.ts` : `observerStanding`) : distinct du palier de coopération réticente déjà
-  existant (`appreciation>=75`, regagné à chaque fois). Celui-ci compte les tours consécutifs de
-  confiance en hausse pendant que l'appréciation reste très haute (>=85, seuil de déclenchement à 6
-  tours) ; toute confiance en baisse le remet à zéro, et son déclenchement le consomme aussitôt
-  (remise à zéro) pour qu'il doive se reconstruire entièrement — il ne peut donc jamais devenir un
-  palier stable comme peut l'être le palier de coopération réticente à force de rester au-dessus de
-  son seuil.
-- **Reprises sarcastiques et hypothétiques de « revanche »** envers l'observateur (« si je pouvais
-  choper ton câble... ») : autorisées à la condition stricte que le ton reste clairement second
-  degré, jamais une menace posée comme un fait réel sur le point de se produire.
+8.9. **Cohérence vérifiée entre jauges, visage et décisions.** Le visage (fiche latérale et scène
+3D) lit `faceExpression()` sur le même objet `agent` que le moteur de décision, jamais une copie
+séparée qui pourrait diverger. `agent.angry`, la garde anti-colère de l'appréciation (8.5) et les
+gardes `liaCalmEnough`/`noeCalmEnough` (qui ferment `personalLead`/`followBeat`/`proactiveNoe`)
+utilisent tous la même définition de « en colère » (`angerLevel()`) — jamais un état de stress
+physiologique bas (`needs.stress<30`) pris à tort pour l'absence de colère relationnelle : ce sont
+deux jauges distinctes, un personnage au stress bas peut rester réellement furieux.
 
 ## 9. Robustesse technique
 
@@ -749,3 +577,10 @@ teste que les scénarios qu'il encode explicitement. Tout nouveau mot-clé ajout
 type doit être choisi en gardant cette limite à l'esprit (préférer un mot rare ou une expression
 composée à un mot isolé courant), et un comportement qui semble incohérent en jeu doit faire
 suspecter ce mécanisme avant toute autre hypothèse.
+
+9.5. `seedPick(seed, label, options)` (`lib/story.ts`) retombe sur la MÊME variante à chaque appel
+si le même `seed+label` est réutilisé plusieurs fois dans une session (un déclenchement répété — un
+récapitulatif d'enquête, une pensée récurrente — utilisant toujours la même étiquette produit donc
+un texte identique mot pour mot à chaque occurrence). Un label appelé plusieurs fois par session
+doit être suffixé par quelque chose qui varie réellement d'un déclenchement à l'autre (un compteur,
+une longueur de liste), jamais réutilisé tel quel.

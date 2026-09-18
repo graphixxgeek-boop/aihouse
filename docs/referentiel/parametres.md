@@ -243,7 +243,7 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   cf. `scripts/check-house.mjs`).
 - `bonusLog` (`life.ts`, capé à 12 entrées) trace chaque tirage (tour, bonus) : matière première du
   dossier retourné (fréquence/générosité de l'observateur envers les personnages, un axe de preuve
-  à part entière — cf. `principes.md`, Article 8.5, le « test de pouvoir »).
+  à part entière — cf. `principes.md`, Article 8.4, le « test de pouvoir »).
 - Indication visuelle : jauge de besoin concernée en 0 % clignotant (classe `need-bonused`,
   réutilise l'animation `need-glimmer` déjà existante, accent doré) ; badge 🤐/🗿 sur la fiche du
   personnage concerné pour mute/stoic.
@@ -271,15 +271,15 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
     concerné le commente lucidement — jamais un retour muet à la normale. Consommé aussitôt détecté
     (le minuteur expiré est effacé) pour ne jamais se répéter au tour suivant.
 
-## Appréciation de l'observateur et négociation (`lib/life.ts`, `app/api/lia/route.ts`, `principes.md` 8.7/8.8/8.10)
+## Appréciation de l'observateur et négociation (`lib/life.ts`, `app/api/lia/route.ts`, `principes.md` 8.5/8.6)
 
-- `appreciation:{1:number,2:number}` (2026-09-18 : devenue par personnage, `principes.md` 8.7) :
+- `appreciation:{1:number,2:number}` (2026-09-18 : devenue par personnage, `principes.md` 8.5) :
   0-100 chacune, neutre à 50, bornées. Hors dispute (`!life.dispute?.remaining`), les deux valeurs
   sont ramenées à chaque tour de 30 % de leur écart vers leur moyenne (solidarité par défaut) ;
   pendant une dispute, ce pull est suspendu (divergence possible). Négociation et avarice
   s'appliquent identiquement aux deux (événements partagés, pas la source de divergence).
 - Jugement du personnage qui répond (`appreciationFromTrust(trustShift,humanMessageCount)`,
-  corrigée le 2026-09-18 — voir `principes.md` 8.10 pour l'historique et la cause du remplacement) :
+  corrigée le 2026-09-18 — voir `principes.md` 8.5 pour le principe actuel) :
   `trustShift` = variation réelle de la confiance de ce personnage sur ce tour (`d.emotions.trust`
   après tour moins avant tour, déjà déterminée par le modèle via `evolveEmotions`/`humanStress`,
   jamais recalculée depuis le texte). Poids appliqué à `trustShift` selon son signe et l'ancienneté
@@ -303,9 +303,9 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   haute assumée explicitement ; ≥75 → coopération ponctuelle « à contrecœur » autorisée, jamais un
   mode stable ; entre les deux, aucune consigne particulière (registre habituel). Ajoute une note
   explicite de distension de solidarité quand `life.dispute?.remaining` est actif, quel que soit le
-  palier — voir `principes.md` 8.7.
+  palier — voir `principes.md` 8.5.
 - `genuineRespectStreak:{1:number,2:number}` (2026-09-18, devenu par personnage le même jour que
-  `appreciation`, `principes.md` 8.7/8.15, `lib/life.ts`) : compteur 0-20 par acteur, incrémenté de
+  `appreciation`, `principes.md` 8.5, `lib/life.ts`) : compteur 0-20 par acteur, incrémenté de
   1 à chaque tour où le trustShift PROPRE à cet acteur est `>0` ET son `appreciation` `>=85` ; remis
   à 0 dès que ce trustShift est `<=0` ou son appreciation `<85`. À `genuineRespectStreak[id]>=6`,
   déclenche une fois le palier rare « respect sincère » dans `observerStandingFor(id)` (texte
@@ -316,22 +316,22 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   formuler librement une négociation, sans jamais l'imposer à chaque tour.
 - `negotiationOffer:{actor,round}` : une seule offre en attente à la fois, jamais écrasée par une
   nouvelle tant que la précédente n'est pas résolue.
-- `negotiationLog:{round,outcome:'honored'|'lapsed'}[]` (2026-09-18, `principes.md` 8.8 corrigé) :
+- `negotiationLog:{round,outcome:'honored'|'lapsed'}[]` (2026-09-18, `principes.md` 8.6) :
   accumulé à chaque résolution d'offre (max 12 conservées), jamais réécrit. Résumé dans
   `dossierEvidence` sous la clé « réaction aux négociations proposées par les personnages »
   uniquement si non vide — comble l'écart où la négociation ne nourrissait jamais le dossier
   retourné malgré une demande explicite en ce sens.
 - Alimente le dossier retourné (`dossierEvidence`) comme preuve supplémentaire (valeur arrondie).
-- `worstMoment:{round,excerpt,trustShift}` (2026-09-18, `principes.md` 8.13) : le message humain au
+- `worstMoment:{round,excerpt,trustShift}` (2026-09-18, `principes.md` 8.4) : le message humain au
   `trustShift` le plus négatif observé sur toute la session, écrasé uniquement par un pire ensuite,
   jamais réinitialisé ; vide si l'échange n'a jamais été franchement négatif. Ajouté à
   `dossierEvidence` comme seule preuve concrète d'hostilité en plus des trois extraits de pièges.
 
-## Cohérence colère/tendresse (`lib/simulation.ts`, `app/api/lia/route.ts`, `principes.md` 8.9)
+## Cohérence colère/tendresse (`lib/simulation.ts`, `app/api/lia/route.ts`, `principes.md` 8.7/8.9)
 
 - `angerLevel(tension,comfort,angry?)` (extraite de `faceExpression`) : nulle sous tension 50 ou
   confort 40 ; sinon `min(clamp((tension-50)/25,0,1), clamp((40-comfort)/12,0,1))`, plancher 0,85 si
-  `angry` (dispute active). **Recalibrée le 2026-09-18 en phase 3** (`principes.md` 8.12, retour
+  `angry` (dispute active). **Recalibrée le 2026-09-18 en phase 3** (`principes.md` 8.7, retour
   utilisateur explicite : « si l'observateur exagère vraiment, Noé ou Lia doivent finir par se
   mettre en colère ») : l'ancienne version multipliait deux ratios (produit, pas minimum), ce qui
   exigeait des valeurs conjointes quasi extrêmes (tension≈90 ET confort≈10) hors d'atteinte pour une
@@ -344,7 +344,7 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   tempérament plus maîtrisé, sans que le seuil ne lui soit fermé pour autant.
 - `liaCalmEnough`/`noeCalmEnough` = `angerLevel(...)<0,5` sur les émotions courantes du personnage,
   même définition de « en colère » (`story.life?.dispute?.remaining`) que `agent.angry` ailleurs.
-- « COLÈRE RÉELLE CONFIRMÉE » (2026-09-18, `principes.md` 8.15, `lib/lia.ts`, consigne de prompt,
+- « COLÈRE RÉELLE CONFIRMÉE » (2026-09-18, `principes.md` 8.7, `lib/lia.ts`, consigne de prompt,
   pas un calcul côté serveur) : mêmes ordres de grandeur que le seuil `angerLevel()>.5` ci-dessus
   (tension nettement >60 ET confort nettement <35 chez le personnage lui-même), pour rester un état
   fiable/confirmé plutôt qu'une impression — déclenche l'autorisation « roues libres » (vulgarité
@@ -353,7 +353,7 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
 - Garde ajoutée (en plus de `needs.stress<30`, jamais à sa place) sur : `personalLead` (et donc
   `personalQuestion`, qui en hérite), `followBeat`, `proactiveNoe`.
 
-## Dossier retourné (`lib/life.ts`, `app/api/lia/route.ts`, `docs/referentiel/principes.md` 8.5)
+## Dossier retourné (`lib/life.ts`, `app/api/lia/route.ts`, `docs/referentiel/principes.md` 8.4)
 
 - `TRAP_ORDER=['mirror','dilemma','excuse']`, interlocuteur fixe par piège : `dossierTrapActor=
   {mirror:1,dilemma:2,excuse:1}`.
