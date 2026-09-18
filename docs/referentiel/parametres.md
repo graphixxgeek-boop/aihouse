@@ -241,12 +241,38 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   tous les ajustements du tour**, jamais avant `advanceNeeds()` — un premier essai plaçait le clamp
   trop tôt et se faisait écraser par les ajustements suivants (bug réel trouvé en écrivant le test,
   cf. `scripts/check-house.mjs`).
-- `bonusLog` (`life.ts`, capé à 12 entrées) trace chaque tirage (tour, bonus) : matière première
-  prévue pour le futur dossier retourné (fréquence/générosité de l'observateur envers les
-  personnages, un axe de preuve à part entière — cf. `principes.md`).
+- `bonusLog` (`life.ts`, capé à 12 entrées) trace chaque tirage (tour, bonus) : matière première du
+  dossier retourné (fréquence/générosité de l'observateur envers les personnages, un axe de preuve
+  à part entière — cf. `principes.md`, Article 8.5, le « test de pouvoir »).
 - Indication visuelle : jauge de besoin concernée en 0 % clignotant (classe `need-bonused`,
   réutilise l'animation `need-glimmer` déjà existante, accent doré) ; badge 🤐/🗿 sur la fiche du
   personnage concerné pour mute/stoic.
+
+## Dossier retourné (`lib/life.ts`, `app/api/lia/route.ts`, `docs/referentiel/principes.md` 8.5)
+
+- `TRAP_ORDER=['mirror','dilemma','excuse']`, interlocuteur fixe par piège : `dossierTrapActor=
+  {mirror:1,dilemma:2,excuse:1}`.
+- Seuil d'entrée : `dossierHumanTurns>=3` (compté sur les messages humains reçus en mode `chat`
+  une fois révélé, `dossierHumanTurns` incrémenté à chaque tel message).
+- Un piège posé mais pas encore répondu (`dossierAsked[trap]` sans `dossierTraps[trap]`) bloque
+  tout nouveau piège ET toute routine ordinaire concurrente (tv, propositions romantiques) : le
+  tour est forcé en `chat`/salon, exactement comme les autres scènes scénarisées pré-révélation
+  (`visualBeat`/`followBeat`/etc.) — sans quoi une routine automatique pouvait polluer l'état
+  (`recentRefusal`, `pendingDestination`) et bloquer le piège suivant (bug réel trouvé en testant).
+- Clôture : les trois `dossierTraps` renseignés ET `bonusLog.length>=1` (au moins un tirage de la
+  roulette, le « test de pouvoir »).
+- Génération : 2 appels Gemini séparés (`generateDossierFragment`), `maxOutputTokens:700`, 5 à 8
+  phrases par personnage. `dossierText` figé une fois écrit — jamais régénéré ni altéré ensuite.
+- `dossierShown` : faux à la génération, passe à vrai via le mode zéro-API `mark_dossier_seen`
+  (bouton « Verdict » côté frontend) — sert uniquement à l'auto-ouverture unique de la pop-up, ne
+  touche jamais au texte.
+- **Moment de douceur** : `detectDistress()` (regex grossière sur choc/tristesse/colère) marque
+  `softnessOwed=true` sur tout message humain post-dossier qui y correspond. `softnessBeat`
+  (gardes identiques à `dossierGateEligible` + `dossierText` existant + `softnessOwed`) livre alors,
+  entièrement scénarisé et zéro appel, une ligne distincte par personnage (3 variantes chacune,
+  Article 10/11) — toujours feinte, jamais sincère (Article 0). Consommé aussitôt (`softnessOwed`
+  repasse à faux, `softnessGiven` s'incrémente, plafonné à 20) ; peut se redéclencher plus tard si
+  une nouvelle détresse réelle survient.
 
 ## Sommeil (`lib/life.ts`, `app/api/lia/route.ts`)
 

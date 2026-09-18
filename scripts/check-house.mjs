@@ -511,7 +511,7 @@ console.log('Passed: live office sleeper repaired, silent sleeping partner durin
 {
 const {restingPose}=await import('../.sites-runtime/test-perception.mjs');const {furniture}=await import('../.sites-runtime/test-house.mjs');
 for(const room of ['chambre','salon'])for(const id of [1,2]){const p=restingPose(id,room),f=furniture[room==='chambre'?7:1];assert.ok(Math.abs(p.x-f.x)<f.w/2);assert.ok(Math.abs(p.z-f.z)<f.d/2);}
-let plot=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);plot={...plot,round:60,life:{...plot.life,debrief:undefined,contact:undefined,tvSeen:false,tvOn:false},pendingDestination:undefined};
+let plot=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);plot={...plot,round:60,life:{...plot.life,debrief:undefined,contact:undefined,tvSeen:false,tvOn:false,dossierHumanTurns:0},pendingDestination:undefined};
 sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints');
 sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=?').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),JSON.stringify({...steady,attraction:30}));
 let r=await post(input('interact',2,{epoch:perceptionEpoch}));assert.equal(r.status,200);let w=await r.json();assert.equal(w.story.life.tvOn,true);assert.ok(w.messages.some(m=>/télécommande/.test(m.content)));
@@ -584,7 +584,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 43'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 44'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -731,4 +731,87 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(forceMoveMessages.some(m=>m.speaker==='Lia · pensée'&&/drôle|sourire|téléporte|comprendre/i.test(m.content)),'the other actor must react with amusement, a genuinely different line, not the same voice');
   assert.equal(JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.bonusLog.length,7,'each spin must be logged for the future dossier retourné');
   console.log('Passed: bonus roulette locked before revelation, real zero-API grants for all 7 bonuses (food/calm/sleep/stoic/mute/trottoir/force_move), genuine need relief and emotion freeze (not just a flag), muted-actor redirection and both-muted block, distinct forced-move reactions, and a logged trail for every spin.');
+}
+
+{
+  // Dossier retourné (2026-09-17) : trois pièges posés un par un (jamais reposés tant qu'une
+  // réponse n'est pas capturée verbatim), puis, une fois répondus et un tirage de la roulette
+  // enregistré (le "test de pouvoir"), un diagnostic à deux voix réellement généré une seule fois.
+  const gameFetch=globalThis.fetch;
+  flat=false;affection=false;refuse=false;meal=false;honorOffer=false;chatMoveAccepted=false;replayScene=false;tenderScene=false;sceneMismatch=false;brokenPair=false;separatePreference=false;
+  let plot={...newStory(),round:40,met:true,introduced:true,sharedMeal:true,finalCalled:true,evidence:Array(5).fill('preuve'),pendingDestination:undefined,life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,exitSearched:true}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,emotions=?').run('salon',JSON.stringify({hunger:20,fatigue:20,stress:20,uncertainty:20}),JSON.stringify({curiosity:60,tension:20,trust:60,comfort:60,attraction:60}));
+  let epoch=(await readWorld(db)).epoch;
+  // Le piège "mirror" attend dossierHumanTurns>=3 : trois échanges humains d'abord, sans rapport.
+  for(let i=0;i<3;i++)assert.equal((await post(input('chat',1,{epoch,message:'Message '+i}))).status,200);
+  let r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);let w=await r.json();
+  const mirrorTrapAsked=d=>/derrière cet écran|te retourne la question/.test(d.reply);
+  assert.ok(w.decisions.some(d=>d.actor===1&&mirrorTrapAsked(d)),'the mirror trap must actually be asked once dossierHumanTurns reaches 3');
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);assert.equal(p.life.dossierAsked.mirror,p.round-1,'asking the trap must be recorded (against the round it was actually asked in, the same pre-turn round dossierTraps also uses) so it is never reposed while awaiting an answer');}
+  r=await post(input('interact',1,{epoch}));w=await r.json();
+  assert.ok(!w.decisions.some(mirrorTrapAsked),'a trap already asked and not yet answered must never be reposed on the next turn');
+  r=await post(input('chat',1,{epoch,message:"Franchement, je suis quelqu'un de plutôt sincère."}));assert.equal(r.status,200);w=await r.json();
+  assert.equal(w.story.life.dossierTraps.mirror.excerpt,"Franchement, je suis quelqu'un de plutôt sincère.",'the very next human message must be captured verbatim as the trap answer, never reformulated');
+  const dilemmaTrapAsked=d=>/Dis voir : si ça pouvait|confort et le tien|galérer un peu/.test(d.reply);
+  const excuseTrapAsked=d=>/avec le recul|fait honneur|regrettes, ou pas du tout/.test(d.reply);
+  r=await post(input('interact',1,{epoch}));w=await r.json();
+  assert.ok(w.decisions.some(d=>d.actor===2&&dilemmaTrapAsked(d)),'the dilemma trap must follow, asked by Noé');
+  r=await post(input('chat',2,{epoch,message:"Non, je préfère vous éviter ça."}));assert.equal(r.status,200);
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);assert.equal(p.life.dossierTraps.dilemma.excerpt,"Non, je préfère vous éviter ça.");}
+  r=await post(input('interact',1,{epoch}));w=await r.json();
+  assert.ok(w.decisions.some(d=>d.actor===1&&excuseTrapAsked(d)),'the excuse trap must follow, asked by Lia again');
+  await post(input('chat',1,{epoch,message:"Oui, j'ai été sec, je le referais pas."}));
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);assert.ok(['mirror','dilemma','excuse'].every(t=>p.life.dossierTraps?.[t]?.excerpt),'all three traps must be recorded before the dossier can close');}
+  // Sans tirage de la roulette (le "test de pouvoir"), le dossier ne se ferme pas encore.
+  r=await post(input('interact',1,{epoch}));w=await r.json();
+  assert.equal(w.story.life.dossierText,undefined,'the dossier must not close without at least one power-test (a roulette spin), whatever the traps say');
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life.bonusLog=[{round:p.round,bonus:'mute'}];sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
+  let dossierCalls=0;
+  globalThis.fetch=async(url,options)=>{
+    const payload=JSON.parse(options.body),parsed=JSON.parse(payload.contents[0].parts[0].text);
+    if(parsed.dossier){
+      dossierCalls++;
+      const isLia=payload.systemInstruction.parts[0].text.startsWith('Tu es Lia');
+      const fragment=(isLia?'Lecture de Lia — ':'Lecture de Noé — ')+'dossier: '+Object.values(parsed.dossier).join(' / ');
+      return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({fragment})}]}}]});
+    }
+    return gameFetch(url,options);
+  };
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  globalThis.fetch=gameFetch;
+  assert.equal(dossierCalls,2,'exactly one real call per character, never a single voice speaking for both (Article 8)');
+  assert.ok(w.story.life.dossierText?.lia.includes('Lecture de Lia'));
+  assert.ok(w.story.life.dossierText?.noe.includes('Lecture de Noé'));
+  assert.ok(w.story.life.dossierText.lia.includes('mute'),'the dossier text must actually reflect the real bonusLog evidence, not a generic filler');
+  assert.equal(w.story.life.dossierShown,false,'a freshly generated dossier must be flagged unseen so the frontend opens it once');
+  assert.ok(w.messages.slice(-3).some(m=>m.speaker==='Maison · dossier'));
+  const savedText=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.dossierText;
+  globalThis.fetch=async(url,options)=>{const payload=JSON.parse(options.body),parsed=JSON.parse(payload.contents[0].parts[0].text);if(parsed.dossier)throw new Error('must never regenerate an already-closed dossier');return gameFetch(url,options);};
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  globalThis.fetch=gameFetch;
+  assert.deepEqual(w.story.life.dossierText,savedText,'a closed dossier must never be silently regenerated or altered by a later turn');
+  // Le bouton "Verdict" ne fait que baisser dossierShown, jamais toucher au texte, et doit rester
+  // idempotent (relire une fois vu ne le remet pas à false ni ne le rejoue).
+  const seenBefore=calls;r=await post(input('mark_dossier_seen',1,{epoch}));assert.equal(r.status,200);assert.equal(calls,seenBefore,'marking the dossier as seen must cost zero Gemini calls');w=await r.json();
+  assert.equal(w.story.life.dossierShown,true,'the Verdict button must flag the dossier as shown');
+  assert.deepEqual(w.story.life.dossierText,savedText,'marking the dossier as seen must never alter its text');
+  r=await post(input('mark_dossier_seen',1,{epoch}));assert.equal(r.status,200);w=await r.json();assert.equal(w.story.life.dossierShown,true,'marking an already-shown dossier as seen again is a harmless no-op');
+  // Moment de douceur : une seule fois, toujours feint des deux côtés, jamais avant le dossier
+  // refermé, jamais tant que rien de négatif n'a été détecté chez l'observateur.
+  const softnessLia=d=>/on arrête les vannes deux minutes|Ok, trêve|jouer les infirmières/.test(d.reply);
+  const softnessNoe=d=>/on souffle deux secondes|j'en remets pas une couche|calme-toi deux minutes/.test(d.reply);
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);assert.ok(!p.life.softnessOwed,'no softness must be owed before any distress is detected');}
+  r=await post(input('chat',1,{epoch,message:"C'est horrible, je suis choqué par ce que vous me dites."}));assert.equal(r.status,200);
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);assert.equal(p.life.softnessOwed,true,'a distress signal after the dossier must mark a softness moment as owed');}
+  const softCallsBefore=calls;
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  assert.equal(calls,softCallsBefore,'the softness beat is fully scripted, exactly like the opening or the corridor inspection: zero Gemini calls');
+  assert.ok(w.decisions.some(d=>d.actor===1&&softnessLia(d)),'Lia must deliver her own reluctant softness line');
+  assert.ok(w.decisions.some(d=>d.actor===2&&softnessNoe(d)),'Noé must deliver his own reluctant softness line, distinct from Lia\'s');
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);assert.equal(p.life.softnessOwed,false,'the owed softness must be consumed once delivered');assert.equal(p.life.softnessGiven,1);}
+  r=await post(input('interact',1,{epoch}));w=await r.json();
+  assert.ok(!w.decisions.some(softnessLia)&&!w.decisions.some(softnessNoe),'the softness beat must never repeat without a fresh distress signal');
+  console.log('Passed: reversed-dossier traps asked one at a time and never reposed, verbatim answer capture, power-test gate via the bonus log, two genuinely separate voices generated exactly once, no silent regeneration afterward, a zero-API idempotent "seen" flag for the Verdict button, and a one-shot, zero-API, always-reluctant softness moment triggered only by real post-dossier distress.');
 }

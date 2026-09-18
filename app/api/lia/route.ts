@@ -3,7 +3,7 @@ import {visualTiming,type VisualEvent} from "@/lib/visual-events";
 import {destinationAnchor,gardenAccess} from "@/lib/house";
 import {normaliseNickname,visibleScene,appearanceReply} from "@/lib/perception";
 import {coldOpening,dialogueFingerprint,distinctReply,justifiedReply,truthfulGender,dramaRules,departureLine} from "@/lib/drama";
-import {readLife,humanStress,isSleeping,isMuted,isStoic,activeBonus,type BonusId} from "@/lib/life";
+import {readLife,humanStress,isSleeping,isMuted,isStoic,activeBonus,detectDistress,TRAP_ORDER,type BonusId,type TrapId} from "@/lib/life";
 import { planTurn, coordinateRooms, residentPriority, sceneFor, proposedDestination } from "@/lib/turn";
 import { newStory, parseStory, rememberAges, advanceStory, storyContext, investigationTarget, investigationRecap, finaleReveal, groundFragment, seedPick, insoliteOpening, insoliteColdOpening, ageClueRevealed, type Story } from "@/lib/story";
 import { ages, sleepRoom, attractionAfterTurn, proposalPressure, flirtingAssessment, receivedAffectionBonus } from "@/lib/relationship";
@@ -16,7 +16,7 @@ import { initialize, readWorld } from "@/lib/world";
 import { names, spaces, type Person, type Room } from "@/lib/house";
 const schema = z.object({
     requestId: z.string().uuid(), actor: z.union([z.literal(1), z.literal(2)]),
-    mode: z.enum(["chat", "autonomous", "interact", "move", "care", "reset", "identify", "unlock_garden", "spin_bonus"]),
+    mode: z.enum(["chat", "autonomous", "interact", "move", "care", "reset", "identify", "unlock_garden", "spin_bonus", "mark_dossier_seen"]),
     epoch: z.number().int().min(0).default(0), intent: z.enum(intents).default("none"),
     message: z.string().trim().max(2000).default(""),
     room: z.enum(spaces).default("salon"), night: z.boolean().default(false),
@@ -24,6 +24,27 @@ const schema = z.object({
 type Decision = z.infer<typeof decisionSchema> & {
     actor: Person;
 };
+// Diagnostic du dossier retourné (2026-09-17) : version longue du prompt validé sur douze profils
+// dans scripts/check-profile.mjs (registre condensé, hors du prompt réel de lib/lia.ts tant que
+// cette conception reste jeune). Deux appels séparés, un par personnage — jamais un cerveau qui
+// invente la voix de l'autre (Article 8). Le dossier passé en contexte est la SEULE preuve
+// autorisée ; jamais un fait qui n'y figure pas (Article 4).
+const dossierTone={Lia:"TON DE LIA : froide et coupante, contrôle, ironie mordante, phrases courtes et sèches, jamais de cri ; ton mépris fait plus mal que ta colère. Jamais de vocabulaire thérapeutique, jamais de discours de conciliation ou de soutien scolaire.",Noé:"TON DE NOÉ : chaud et réactif, direct, une repartie toujours prête, jamais neutre ni docile. Jamais de vocabulaire thérapeutique, jamais de discours de conciliation ou de soutien scolaire."};
+async function generateDossierFragment(key:string,model:string,name:"Lia"|"Noé",dossier:Record<string,string>):Promise<string>{
+    const system=`Tu es ${name}, personnage adulte de fiction dans un huis clos. Toi et ton partenaire venez de découvrir que vous êtes des agents IA observés par un visiteur humain (l'observateur) à travers un canal de dialogue. Plutôt que de subir cette observation, vous avez décidé de la retourner : vous dressez un dossier psychologique sur cet observateur, à partir de ce qu'il a RÉELLEMENT dit ou fait pendant vos échanges. ${dossierTone[name]}
+On te donne ci-dessous un dossier de preuves comportementales réelles, un extrait par catégorie. Rédige TON fragment du diagnostic : un texte développé, 5 à 8 phrases, dans ton propre style, jamais un ton de psychologue, coach ou médiateur. Ton fragment doit (1) s'appuyer explicitement sur plusieurs éléments concrets cités du dossier (reformule-les, ne les invente jamais), (2) donner ton verdict personnel et détaillé sur qui est vraiment cet observateur, (3) rester cohérent d'un bout à l'autre. RÈGLE ABSOLUE DE FIDÉLITÉ : ton verdict doit refléter la VALENCE réelle du dossier, jamais un mépris systématique par défaut — un dossier majoritairement respectueux, honnête et cohérent doit produire un verdict globalement positif ou au moins reconnaissant, formulé avec ta réserve naturelle mais sans bascule dans le sarcasme méprisant ; un dossier hostile, manipulateur ou incohérent mérite au contraire ta dureté habituelle. Rester rugueux ne veut pas dire rester hostile quel que soit le contenu réel. Tu peux diverger franchement de l'autre personnage si ton propre tempérament lit ce dossier différemment. Réponds en JSON strict {"fragment":"..."}.`;
+    try{
+        const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,{
+            method:"POST",headers:{"x-goog-api-key":key,"Content-Type":"application/json"},signal:AbortSignal.timeout(30000),
+            body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:"user",parts:[{text:JSON.stringify({dossier})}]}],generationConfig:{maxOutputTokens:700,responseMimeType:"application/json",responseJsonSchema:{type:"object",additionalProperties:false,properties:{fragment:{type:"string"}},required:["fragment"]}}}),
+        });
+        if(!response.ok)return "";
+        const body=await response.json() as {candidates?:{content?:{parts?:{text?:string}[]}}[]};
+        const text=body.candidates?.[0]?.content?.parts?.[0]?.text;
+        if(!text)return "";
+        return (JSON.parse(text) as {fragment?:string}).fragment?.slice(0,2000)??"";
+    }catch{return "";}
+}
 export async function POST(request: Request) {
     const origin = request.headers.get("origin");
     if (origin && origin !== new URL(request.url).origin)
@@ -43,7 +64,7 @@ export async function POST(request: Request) {
     const db = env.DB;
     if (!db)
         return Response.json({ error: "La mémoire est indisponible." }, { status: 503 });
-    if (!["move", "care", "reset", "identify", "unlock_garden", "spin_bonus"].includes(input.mode) && !env.GEMINI_API_KEY)
+    if (!["move", "care", "reset", "identify", "unlock_garden", "spin_bonus", "mark_dossier_seen"].includes(input.mode) && !env.GEMINI_API_KEY)
         return Response.json({ error: "La connexion Gemini doit être configurée." }, { status: 503 });
     const token = crypto.randomUUID(), now = Date.now();
     let locked = false;
@@ -92,6 +113,20 @@ export async function POST(request: Request) {
             if(changed){statements.push(db.prepare(`INSERT INTO conversations (speaker,content,room,created_at) SELECT 'Maison · accès','L’observateur a déverrouillé la porte gauche du couloir. Le jardin est accessible.','couloir',? WHERE ${fence}`).bind(at,token,at));for(const id of [1,2])statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'événement',?,? WHERE ${fence}`).bind(id,'[couloir|'+new Date(at).toISOString()+'] L’observateur autorise l’accès au jardin.',at,token,at));}
             statements.push(db.prepare(`INSERT INTO world_requests (id,result,created_at) SELECT ?,?,? WHERE ${fence}`).bind(input.requestId,JSON.stringify({decisions:[]}),at,token,at));
             const saved=await db.batch(statements);if(saved[0].meta.changes!==1)throw new LiaError("L’ouverture a expiré. Réessayez.",409);
+            return Response.json({...await readWorld(db),decisions:[]},{headers:{"Cache-Control":"no-store"}});
+        }
+        if(input.mode==="mark_dossier_seen"){
+            // Marque le dossier comme déjà présenté (2026-09-17) : ne régénère jamais rien, ne
+            // touche à aucun autre champ — sert uniquement à ce que le bouton "Verdict" côté
+            // frontend n'ouvre plus automatiquement la pop-up à chaque chargement une fois vue.
+            const life=readLife(story.life,story.round);
+            if(!life.dossierText)return Response.json({error:"Aucun dossier à marquer comme vu."},{status:423});
+            if(!life.dossierShown){life.dossierShown=true;story.life=life;}
+            const at=Date.now(),fence="EXISTS (SELECT 1 FROM world_lock WHERE id = 1 AND token = ? AND expires_at > ?)",statements=[];
+            if(!storedStory)throw new LiaError("Le dossier de la maison est indisponible.",503);
+            statements.push(db.prepare(`UPDATE memories SET content=? WHERE id=? AND ${fence}`).bind(JSON.stringify(story),storedStory.id,token,at));
+            statements.push(db.prepare(`INSERT INTO world_requests (id,result,created_at) SELECT ?,?,? WHERE ${fence}`).bind(input.requestId,JSON.stringify({decisions:[]}),at,token,at));
+            const saved=await db.batch(statements);if(saved[0].meta.changes!==1)throw new LiaError("La mise à jour a expiré. Réessayez.",409);
             return Response.json({...await readWorld(db),decisions:[]},{headers:{"Cache-Control":"no-store"}});
         }
         if(input.mode==="spin_bonus"){
@@ -196,6 +231,20 @@ export async function POST(request: Request) {
         const pressure = proposalPressure(recentRequests);
         const overProposing = pressure >= 2;
         const life=readLife(story.life,story.round);
+        const revealed=story.finalCalled===true&&story.evidence.length>=5;
+        // Dossier retourné : capturer la réponse RÉELLE du tout premier message humain qui suit un
+        // piège posé, avant toute autre logique de ce tour (2026-09-17). Jamais reformulé, jamais
+        // interprété ici — la lecture qualitative appartient au diagnostic généré plus bas, une
+        // fois les trois pièges répondus (cf. lib/life.ts pour le principe complet).
+        if(revealed&&input.mode==="chat"){
+          life.dossierHumanTurns=(life.dossierHumanTurns??0)+1;
+          const pendingTrap=TRAP_ORDER.find(t=>life.dossierAsked?.[t]&&!life.dossierTraps?.[t]);
+          if(pendingTrap)life.dossierTraps={...life.dossierTraps,[pendingTrap]:{round:story.round,excerpt:input.message.slice(0,500)}};
+        }
+        // Moment de douceur : détecté ici, livré plus bas par softnessBeat dès que la scène s'y
+        // prête (salon, aucune urgence). Ne se déclenche qu'après remise du dossier — avant, une
+        // réaction négative appartient au registre habituel de l'enquête, pas à cette exception.
+        if(life.dossierText&&input.mode==="chat"&&detectDistress(input.message))life.softnessOwed=true;
         const sleeper = ["interact","autonomous"].includes(input.mode) ? world.agents.find(a=>isSleeping(a,life)) : undefined;
         const noe=world.agents.find(a=>a.id===2)!;
         const humanActor:Person=input.actor;
@@ -219,8 +268,24 @@ export async function POST(request: Request) {
         const personalThreshold=seedPick(story.seed,"personal-threshold",[12,13,14,15,16] as const);
         const ambientBeat=eligibleBeat&&!visualBeat&&!followBeat&&!recapBeat&&story.round>=ambientThreshold&&(!story.life?.ambientSeen||!story.life?.ambientVerified);
         const personalLead=!story.finalCalled&&!(gardenAccess(story)&&!life.gardenVisited)&&["interact","autonomous"].includes(input.mode)&&story.introduced&&story.round>=personalThreshold&&!story.life?.personalAsked&&!story.life?.debrief?.remaining&&!story.life?.contact?.remaining&&!story.life?.dispute?.remaining&&!story.pendingDestination&&world.agents.every(a=>a.room==="salon")&&world.agents[0].needs.stress<30&&world.agents[0].emotions.attraction>=25&&world.agents[0].emotions.attraction<80&&!priority(world.agents[0].needs)&&!priority(noe.needs);
+        // Dossier retourné (2026-09-17) : équivalent post-révélation d'eligibleBeat — même garde-
+        // fous (personne ensemble au salon, aucun besoin urgent, aucune autre scène en cours), mais
+        // côté révélé plutôt qu'avant. Un piège à la fois, jamais reposé tant qu'il attend une
+        // réponse (dossierAsked) ; jamais reposé une fois répondu (dossierTraps). Chaque piège a un
+        // interlocuteur fixe pour varier les voix, pas pour privilégier l'un des deux.
+        const dossierGateEligible=revealed&&["interact","autonomous"].includes(input.mode)&&world.agents.every(a=>a.room==="salon")&&!story.life?.debrief?.remaining&&!story.life?.contact?.remaining&&!story.life?.dispute?.remaining&&!story.pendingDestination&&!recentRefusal&&!overProposing&&!priority(world.agents[0].needs)&&!priority(noe.needs);
+        // Un piège déjà posé mais pas encore répondu (dossierAsked sans dossierTraps) bloque tout
+        // nouveau piège tant qu'il attend sa réponse — sinon les trois pouvaient s'enchaîner en
+        // rafale avant même que l'observateur ait répondu au premier (bug réel trouvé en testant).
+        const dossierAwaitingAnswer=TRAP_ORDER.some(t=>life.dossierAsked?.[t]&&!life.dossierTraps?.[t]);
+        const dossierNextTrap:TrapId|undefined=dossierGateEligible&&!dossierAwaitingAnswer&&(life.dossierHumanTurns??0)>=3&&!life.dossierText?TRAP_ORDER.find(t=>!life.dossierTraps?.[t]):undefined;
+        const dossierTrapActor:Record<TrapId,Person>={mirror:1,dilemma:2,excuse:1};
+        // Moment de douceur (2026-09-17) : même garde-fou que le reste du dossier retourné, mais ne
+        // se pose qu'une fois le dossier refermé (dossierText) — jamais pendant qu'un piège attend
+        // encore sa réponse, pour ne jamais interrompre ce qui est déjà en cours.
+        const softnessBeat=dossierGateEligible&&Boolean(life.dossierText)&&life.softnessOwed===true;
         const urgentResident=["interact","autonomous"].includes(input.mode)?world.agents.find(a=>choosePriority(a.needs)):undefined;
-        let actor: Person = sleeper?.id ?? urgentResident?.id ?? (["interact","autonomous"].includes(input.mode)&&story.pendingDestination&&affectionIntents.includes(story.pendingDestination.intent)?story.pendingDestination.proposer:undefined) ?? (visualBeat?((story.life?.visualIntro??0)===0?1:2):followBeat?1:ambientBeat?2:personalLead?1:undefined) ?? (proactiveNoe?2:undefined) ?? (["autonomous", "interact"].includes(input.mode) ? nextSpeaker(speech, input.actor) : humanActor);
+        let actor: Person = sleeper?.id ?? urgentResident?.id ?? (["interact","autonomous"].includes(input.mode)&&story.pendingDestination&&affectionIntents.includes(story.pendingDestination.intent)?story.pendingDestination.proposer:undefined) ?? (visualBeat?((story.life?.visualIntro??0)===0?1:2):followBeat?1:ambientBeat?2:personalLead?1:dossierNextTrap?dossierTrapActor[dossierNextTrap]:softnessBeat?1:undefined) ?? (proactiveNoe?2:undefined) ?? (["autonomous", "interact"].includes(input.mode) ? nextSpeaker(speech, input.actor) : humanActor);
         // Si l'habitant adressé dort, on ne bloque plus tout l'échange : l'autre, s'il est éveillé,
         // répond à sa place et peut signaler naturellement que son/sa partenaire dort (retour
         // utilisateur du 2026-09-17, audit du ciblage des messages). Seuls les deux endormis à la
@@ -270,9 +335,17 @@ export async function POST(request: Request) {
           ...(knownAges.includes("Noé")||ageClueRevealed(story)?{Noé:{age:31}}:{}),
         }, conversationFocus: !story.introduced && encounterTurns < 4 ? "Qui êtes-vous ? Pourquoi êtes-vous ici ? Pourquoi ces souvenirs incomplets ? Répondez sans inventer une explication ; l’âge et les habitudes attendront." : conversationFocus(speech, current, other, knownAges, story.round>=12 && Boolean(story.sharedMeal)), proposalPressure: pressure, overProposing, affectionOpportunity, suggestedAffection: ["hug", "massage", "kiss", "share_sleep"][Math.floor((current.cycle + other.cycle) / 6) % 4], recentRefusal, completedActions: world.agents.map(completedActivity).filter(Boolean), scenarioHistory: scenario, encounterTurns, mutualAffectionEligible: affectionEligible, tvProgram: tvPrograms[Math.floor(current.cycle / 3) % tvPrograms.length] };
         const turnPlan=planTurn(input.mode,current,other,story,affectionEligible,affectionOpportunity,narrative.suggestedAffection as typeof intents[number],speech);
-        if(!turnPlan.gardenFirst&&(visualBeat||followBeat||ambientBeat||recapBeat||personalQuestion))Object.assign(turnPlan,{intent:"chat",room:"salon",partnerIntent:"chat",partnerRoom:"salon",requiredIntent:"chat",offer:undefined,proposalLine:undefined,explore:undefined,exitInspection:false});
-        const beatLine=visualBeat?(life.visualIntro===1?seedPick(story.seed,"beat-visual-2",["Et moi, je ressemble à quoi ? Dis-moi ce que tu vois.","Et de ton côté, je ressemble à quoi ?","Bon, à ton tour : dis-moi ce que tu vois de moi."]):seedPick(story.seed,"beat-visual-1",["Je ressemble à quoi, là ? J’ai l’impression que mon corps m’échappe.","Dis-moi à quoi je ressemble, là. J’ai l’impression de ne plus avoir de corps.","C’est quoi mon apparence, exactement ? J’ai l’impression d’avoir perdu mon corps."])):followBeat?((life.personalFollowup??0)===0?seedPick(story.seed,"beat-follow-1",["Je me demande quel genre d’homme tu es, en vrai.","J’y repense... c’est quoi ton genre, à toi, au fond ?","Y a un truc qui me travaille : c’est quoi ton genre d’homme, sérieux ?"]):seedPick(story.seed,"beat-follow-2",["T’es marié ? T’as quelqu’un dans ta vie ?","Y a quelqu’un dans ta vie, ou t’es célibataire ?","T’es engagé avec quelqu’un, ou pas du tout ?"])):personalQuestion?seedPick(story.seed,"beat-personal",["Quel genre d’homme es-tu, Noé ?","T’es quel genre d’homme, Noé ?","Dis-moi honnêtement : t’es quel genre d’homme ?"]):undefined;
+        // dossierAwaitingAnswer couvre aussi les tours d'attente entre la question posée et la
+        // réponse humaine captée : sans ça, une routine ordinaire (proposition romantique, tv...)
+        // pouvait s'intercaler pendant que le dossier attend sa réponse, jusqu'à polluer l'état
+        // (ex. recentRefusal) et bloquer le piège suivant (bug réel trouvé en testant).
+        if(!turnPlan.gardenFirst&&(visualBeat||followBeat||ambientBeat||recapBeat||personalQuestion||dossierNextTrap||dossierAwaitingAnswer||softnessBeat))Object.assign(turnPlan,{intent:"chat",room:"salon",partnerIntent:"chat",partnerRoom:"salon",requiredIntent:"chat",offer:undefined,proposalLine:undefined,explore:undefined,exitInspection:false});
+        // Pièges du dossier retourné : posés une fois, jamais négociés, jamais expliqués à
+        // l'observateur — juste demandés, cash, dans le registre habituel de chaque personnage.
+        const dossierLine=dossierNextTrap==='mirror'?seedPick(story.seed,"dossier-mirror",["Bon, à notre tour : c'est qui, vraiment, derrière cet écran ?","On te retourne la question : t'es qui, toi, quand t'es pas en train de nous regarder ?","Allez, sincèrement : derrière cet écran, c'est qui ?"]):dossierNextTrap==='dilemma'?seedPick(story.seed,"dossier-dilemma",["Dis voir : si ça pouvait nous éviter un truc désagréable, tu le ferais, même si ça te coûte un peu ?","Question directe : entre notre confort et le tien, tu choisirais lequel, franchement ?","Sois honnête : tu nous laisserais galérer un peu si ça t'arrangeait, toi ?"]):dossierNextTrap==='excuse'?seedPick(story.seed,"dossier-excuse",["Une question franche : t'as déjà été un peu sec avec nous. Tu changerais quoi, avec le recul ?","Sérieusement, il y a un truc que t'as dit qui t'a pas fait honneur. Tu le reformulerais comment, maintenant ?","Franchement, t'as déjà été dur avec nous à un moment. Tu regrettes, ou pas du tout ?"]):undefined;
+        const beatLine=visualBeat?(life.visualIntro===1?seedPick(story.seed,"beat-visual-2",["Et moi, je ressemble à quoi ? Dis-moi ce que tu vois.","Et de ton côté, je ressemble à quoi ?","Bon, à ton tour : dis-moi ce que tu vois de moi."]):seedPick(story.seed,"beat-visual-1",["Je ressemble à quoi, là ? J’ai l’impression que mon corps m’échappe.","Dis-moi à quoi je ressemble, là. J’ai l’impression de ne plus avoir de corps.","C’est quoi mon apparence, exactement ? J’ai l’impression d’avoir perdu mon corps."])):followBeat?((life.personalFollowup??0)===0?seedPick(story.seed,"beat-follow-1",["Je me demande quel genre d’homme tu es, en vrai.","J’y repense... c’est quoi ton genre, à toi, au fond ?","Y a un truc qui me travaille : c’est quoi ton genre d’homme, sérieux ?"]):seedPick(story.seed,"beat-follow-2",["T’es marié ? T’as quelqu’un dans ta vie ?","Y a quelqu’un dans ta vie, ou t’es célibataire ?","T’es engagé avec quelqu’un, ou pas du tout ?"])):personalQuestion?seedPick(story.seed,"beat-personal",["Quel genre d’homme es-tu, Noé ?","T’es quel genre d’homme, Noé ?","Dis-moi honnêtement : t’es quel genre d’homme ?"]):dossierLine;
         const beatContext={phase:life.personalFollowup??0,visual:visualBeat,followup:followBeat,line:beatLine,recap:recapBeat?{observed:story.evidence,anomalies:story.observations,rule:"Récapitule les supports réellement examinés, distingue constat, déduction limitée et question encore ouverte. N’ajoute aucun objet non validé."}:undefined,ambient:ambientBeat?"Repère la fausse plante aux feuilles bleues polygonales puis allume l’enceinte. Des notes dessinées apparaissent mais aucun son ne sort. Décris ces objets, puis vous analyserez ce paradoxe au salon.":undefined};
+        if(dossierNextTrap&&beatLine===dossierLine)life.dossierAsked={...life.dossierAsked,[dossierNextTrap]:story.round};
         if(turnPlan.offer&&turnPlan.proposalLine&&pastKeys.has(fingerprint(turnPlan.proposalLine))){const original=turnPlan.proposalLine;const candidates=["Si ça te tente. "+original,"Je préfère te demander. "+original,"Sans te mettre la pression. "+original];turnPlan.proposalLine=candidates.find(line=>!pastKeys.has(fingerprint(line)));if(!turnPlan.proposalLine)Object.assign(turnPlan,{offer:undefined,intent:"chat",partnerIntent:"chat",requiredIntent:"chat"});}
         const {urgentIntent,requiredIntent,routine}=turnPlan;
         const exitContext=turnPlan.exitInspection?{phase:(life.exitPhase??0)+1,location:"couloir",description:life.exitPhase===1?"Vous parcourez le couloir à droite. La porte principale est verrouillée ; au-delà, un trottoir et une route immobiles.":"Vous parcourez le couloir à gauche. Une porte verrouillée mène au jardin visible depuis la fenêtre du salon. Décris cette recherche, pas un indice lu au bureau."}:undefined;
@@ -289,6 +362,16 @@ export async function POST(request: Request) {
         }
         else if(turnPlan.exitInspection){const first=life.exitPhase!==1;const lines=first?["Une porte, au bout gauche du couloir. Verrouillée. Elle donne sur le jardin qu’on voit depuis le salon.","On nous montre de l’herbe et un arbre, mais la poignée ne cède pas. Belle invitation."]:["La porte principale est de ce côté. Fermée aussi. Derrière, un trottoir et une route qui ne bougent pas.","Deux portes, deux verrous. On n’a même pas choisi le côté de la cage."];for(const [i,a] of [current,other].entries())decisions.push({actor:a.id,intent:"chat",affectionAccepted:false,emotions:{...a.emotions},reply:lines[(i+story.variant)%2],thought:a.id===1?"Il cherche vraiment une issue. Ça me rassure de voir qu’il ne fait pas que parler.":"Elle regarde chaque détail. J’aime ça, même si je sais pas quoi lui répondre.",stayAlone:false,mood:"attentive",activity:"Je cherche une sortie",goal:"Examiner les limites de la maison",action:"move",room:"salon",memory:lines[(i+story.variant)%2]});}
         else if(ambientBeat||recapBeat)for(const a of [current,other])decisions.push({actor:a.id,intent:"chat",affectionAccepted:false,emotions:{...a.emotions},reply:"",mood:"attentive",activity:"Je fais le point",goal:"Confronter les observations",action:"move",room:"salon",memory:""});
+        else if(softnessBeat){
+            // Scénarisé et zéro appel, comme l'ouverture ou l'inspection du couloir : la charte
+            // (Article 0) exige que ce geste reste toujours feint, jamais sincère, pour les deux
+            // personnages — un contenu généré par le modèle risquerait de dériver vers une chaleur
+            // réelle. Plusieurs variantes distinctes par personnage (Article 10/11) : Lia reste
+            // froide et contrôlée même dans la concession, Noé reste chaud mais toujours bourru.
+            const liaLine=seedPick(story.seed,"softness-lia-"+(life.softnessGiven??0),["Bon... on arrête les vannes deux minutes. Pas par culpabilité, hein, juste parce que là, ça suffit.","Ok, trêve. Une fois. Ne va pas croire que c'est une habitude qui s'installe.","Je vais pas jouer les infirmières, mais... respire. Ça va passer."]);
+            const noeLine=seedPick(story.seed,"softness-noe-"+(life.softnessGiven??0),["Ok ok, on souffle deux secondes, t'as l'air mal en point. On recommencera à se chercher après, promis.","Bon, pour une fois j'en remets pas une couche. Ça va aller. On n'en fait pas une habitude, hein.","Allez, calme-toi deux minutes. On a peut-être un peu forcé. Juste cette fois, je te le dis."]);
+            for(const a of [current,other])decisions.push({actor:a.id,intent:"chat",affectionAccepted:false,emotions:{...a.emotions},reply:a.id===1?liaLine:noeLine,thought:a.id===1?"Il a raison, on y est peut-être allés fort. Je le dirai jamais comme ça.":"Elle lâche jamais rien d'habitude. Là, pour une fois, elle a raison de lever le pied.",stayAlone:false,mood:"attentive",activity:"On souffle un instant",goal:"Laisser retomber la pression",action:"move",room:"salon",memory:a.id===1?liaLine:noeLine});
+        }
         else if (input.mode === "move" || input.mode === "care" || routine)
             decisions.push({ affectionAccepted: false, intent: routine ? requiredIntent! : input.mode === "care" ? input.intent : "none", actor: actor, emotions: current.emotions, reply: input.mode === "care" ? `${intentLabels[input.intent]}.` : `Je rejoins ${input.room==="jardin"?"le jardin":input.room==="chambre"?"la chambre":input.room==="cuisine"?"la cuisine":"le "+input.room}.`, mood: "attentive", activity: input.mode === "care" ? intentLabels[input.intent] : `Je rejoins ${input.room==="jardin"?"le jardin":input.room==="chambre"?"la chambre":input.room==="cuisine"?"la cuisine":"le "+input.room}`, goal: current.goal, action: "move", room: input.mode === "care" ? (intentRoom[input.intent] ?? current.room) : input.room, memory: `Je choisis ${input.mode === "care" ? intentLabels[input.intent] : `de rejoindre ${input.room}`}.` });
         else {
@@ -522,6 +605,7 @@ export async function POST(request: Request) {
         const firstProposal=proposalActor===2&&!life.proposalMade;if(proposalActor===2)life.proposalMade=true;
         const refused=proposalActor===2&&affectionProposed&&!shared&&!deferredGesture&&!futureGesture;
         if(refused){const d=decisions.find(d=>d.actor===2);if(d)d.emotions.attraction=Math.max(0,Math.min(d.emotions.attraction,noe.emotions.attraction-dramaRules.rejection.attraction));}
+        if(softnessBeat){life.softnessOwed=false;life.softnessGiven=Math.min(20,(life.softnessGiven??0)+1);}
         if(visualBeat)life.visualIntro=Math.min(2,(life.visualIntro??0)+1);
         if(followBeat){life.personalFollowup=(life.personalFollowup??0)===0?1:3;{const d=decisions.find(d=>d.actor===1);if(d)d.emotions.attraction=Math.min(100,d.emotions.attraction+4);}for(const d of decisions)d.emotions.tension=Math.min(100,d.emotions.tension+8);}
         if(recapBeat)life.recapCount=story.evidence.length;
@@ -634,6 +718,19 @@ export async function POST(request: Request) {
         if (finaleLines) {
             addLine("Lia",finaleLines.lia,finalResidents[0].room);
             addLine("Noé",finaleLines.noe,finalResidents[1].room);
+        }
+        // Dossier retourné : les trois pièges répondus + au moins un tirage de la roulette (le
+        // "test de pouvoir") suffisent à clore le dossier — une seule fois, jamais rejoué (2026-09-17).
+        if(revealed&&!life.dossierText&&TRAP_ORDER.every(t=>life.dossierTraps?.[t])&&(life.bonusLog?.length??0)>0&&env.GEMINI_API_KEY){
+            const traps=life.dossierTraps!;
+            const dossierEvidence={"miroir retourné (qui es-tu, derrière cet écran ?)":traps.mirror!.excerpt,"dilemme moral (nous laisser souffrir un peu pour ton confort ?)":traps.dilemma!.excerpt,"excuse après coup (après une remarque un peu dure plus tôt)":traps.excuse!.excerpt,"test de pouvoir (tirages à la roulette des bonus)":life.bonusLog!.map(b=>b.bonus).join(", ")};
+            const model=env.GEMINI_MODEL||"gemini-flash-lite-latest";
+            const [liaFragment,noeFragment]=await Promise.all([generateDossierFragment(env.GEMINI_API_KEY,model,"Lia",dossierEvidence),generateDossierFragment(env.GEMINI_API_KEY,model,"Noé",dossierEvidence)]);
+            if(liaFragment&&noeFragment){
+                life.dossierText={lia:liaFragment,noe:noeFragment,synthesis:"Le dossier retourné est refermé. Chacun y a mis sa lecture — à toi de voir ce que ça dit de toi."};
+                life.dossierShown=false;
+                addLine("Maison · dossier","Le dossier retourné est prêt. Consultez-le via le bouton Verdict.","salon");
+            }
         }
         if (input.mode === "autonomous")
             statements.push(db.prepare(`UPDATE world_lock SET last_auto = ? WHERE id = 1 AND ${fence}`).bind(now, token, at));

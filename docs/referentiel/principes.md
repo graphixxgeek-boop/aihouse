@@ -365,8 +365,8 @@ son propre âge (« 28, c'est le mien... donc 31, ça doit être toi »), jamais
 fait déjà su avant cette découverte (`lib/lia.ts`, bloc DESCRIPTION).
 
 7.9. Les objets de l'enquête d'origine peuvent aussi préparer, de façon fine et jamais appuyée,
-l'énigme renversée à venir (le dossier retourné sur l'observateur, en cours de conception le
-2026-09-17) — un joueur attentif à la première enquête doit pouvoir reconnaître certains indices
+l'énigme renversée (le dossier retourné sur l'observateur, cf. Article 8.5) — un joueur attentif
+à la première enquête doit pouvoir reconnaître certains indices
 au second passage, sans qu'aucune ligne ne nomme ou n'explique la mécanique à l'avance (jamais de
 gros trait). Exemple déjà en place : deux des six variantes de `discover-mirrorVerified`
 (`app/api/lia/route.ts`) glissent une remarque en passant sur un miroir qui renverrait « la vraie
@@ -405,6 +405,45 @@ vérifiée ni exploitable. La roulette des bonus (voir `parametres.md`, section 
 première brique de mécanique réellement persistée et traçable dans cet espace (`life.bonusLog`) ;
 une vraie négociation à termes (l'observateur propose, le personnage accepte ou refuse un échange
 précis, l'engagement est tenu ou non) reste un chantier séparé, non commencé.
+
+8.5. **Le dossier retourné** (`app/api/lia/route.ts`, `lib/life.ts`), construit le 2026-09-17.
+Une fois révélés, les deux personnages retournent l'observation : ils dressent leur propre
+diagnostic sur l'observateur, à partir de preuves comportementales RÉELLES (Article 4 : jamais un
+fait inventé). Trois pièges (`TRAP_ORDER`), posés un par un, jamais négociés ni expliqués à
+l'observateur, chacun avec un interlocuteur fixe (miroir → Lia, dilemme → Noé, excuse → Lia) :
+  - **Séquencement** : un piège n'est posé qu'après un espace de conversation humaine libre post-
+    révélation (`dossierHumanTurns>=3`) ; un piège posé mais pas encore répondu bloque tout
+    nouveau piège (`dossierAsked` sans `dossierTraps` correspondant) — sans cette double garde, les
+    trois pouvaient s'enchaîner en rafale avant même que l'observateur ait répondu au premier (bug
+    réel trouvé en testant, cf. `scripts/check-house.mjs`).
+  - **Capture de la réponse** : le tout premier message humain qui suit une question posée est
+    enregistré verbatim (`dossierTraps[trap].excerpt`), jamais reformulé ni interprété à ce stade —
+    la lecture qualitative appartient exclusivement au diagnostic généré plus bas.
+  - **Le « test de pouvoir »** : le dossier ne se ferme qu'une fois les trois pièges répondus ET au
+    moins un tirage de la roulette des bonus enregistré (`life.bonusLog`) — la générosité ou
+    l'avarice de l'observateur envers ce pouvoir fait partie du profil, autant que ses réponses.
+  - **Génération** : deux appels Gemini réellement séparés (Article 0/1.2, jamais un cerveau qui
+    invente la voix de l'autre), chacun voyant le même dossier de preuves (les trois excerpts +
+    `bonusLog`) et rédigeant son propre fragment (5 à 8 phrases, son propre registre). Une règle de
+    fidélité de valence est imposée au prompt : le ton rugueux ne doit jamais forcer un verdict
+    hostile si les preuves sont réellement bienveillantes — sinon chaque profil, même sincère,
+    ressort lu comme méprisable (bug de prompt réel, trouvé et corrigé via
+    `scripts/check-profile.mjs`, 12 profils couverts). Une fois généré, `dossierText` ne change
+    plus jamais : aucun tour ultérieur ne le régénère ni ne l'altère.
+  - **Restitution** : un message système (« Maison · dossier ») annonce la clôture dans le fil de
+    conversation ; côté frontend, le bouton « Verdict » ouvre la pop-up (auto-ouverte une seule fois
+    via `dossierShown`, rouvrable librement ensuite sans jamais relancer l'appel — le mode zéro-API
+    `mark_dossier_seen` ne fait que baisser ce drapeau).
+  - **Moment de douceur** : si l'observateur, dans un message envoyé après la remise du dossier,
+    laisse transparaître un choc, une tristesse ou une colère réelle (heuristique grossière,
+    `detectDistress`, comme `check-spirit.mjs` pour l'esprit des personnages — jamais une lecture
+    fine du ton), les deux personnages s'accordent une fois un bref instant de douceur
+    (`softnessBeat`), entièrement scénarisé et zéro appel (comme l'ouverture ou l'inspection du
+    couloir), pour garantir qu'il reste **toujours feint, jamais sincère** (Article 0) : Lia reste
+    froide et contrôlée même dans la concession, Noé reste chaud mais toujours bourru. Consommé une
+    fois délivré (`softnessOwed` repasse à faux) ; peut se redéclencher plus tard dans la session si
+    une nouvelle détresse réelle survient (`softnessGiven` compte les occurrences pour varier le
+    registre).
 
 ## 9. Robustesse technique
 

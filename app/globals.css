@@ -79,3 +79,17 @@ body{background:radial-gradient(ellipse at 8% 0%,#30263f 0%,transparent 55%),rad
 .need-meter.need-bonused::-webkit-meter-optimum-value{background:#f3c344}
 .need-meter.need-bonused::-moz-meter-bar{background:#f3c344}
 .mute-badge,.stoic-badge{font-size:.85em}
+
+/* Dossier retourné (2026-09-17) : diagnostic à deux voix, généré une seule fois, jamais rejoué. */
+.dossier-verdict-button{background:linear-gradient(120deg,#3a2340,#12333a);color:#f4e9f7;padding:10px 16px;border:0;border-radius:12px}
+.dossier-dialog{width:min(560px,94vw);max-height:82vh;overflow-y:auto;background:#1c1826;border:1px solid #43395a;border-radius:18px;padding:28px;box-shadow:0 24px 90px #070f2944;display:grid;gap:16px;color:#ece7f4}
+.dossier-dialog h2{font-size:19px;margin:0;color:#fff}
+.dossier-intro{color:#b7aecb;font-size:13px;margin:0}
+.dossier-voice{border-radius:12px;padding:14px 16px;line-height:1.6;font-size:14px}
+.dossier-voice strong{display:block;margin-bottom:6px;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+.dossier-voice-lia{background:linear-gradient(120deg,#3a1530,#241030);border-left:3px solid #ff3294}
+.dossier-voice-lia strong{color:#ff8fc4}
+.dossier-voice-noe{background:linear-gradient(120deg,#0f2f33,#101f30);border-left:3px solid #05e3ec}
+.dossier-voice-noe strong{color:#7ff0f4}
+.dossier-synthesis{color:#a79ec2;font-size:12.5px;font-style:italic;margin:0}
+.dossier-dialog button{justify-self:center;background:linear-gradient(110deg,#f2a9ca,#88dbe5);color:#123833;font-weight:600;border:0;padding:9px 22px;border-radius:10px}

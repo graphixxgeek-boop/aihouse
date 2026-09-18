@@ -17,8 +17,8 @@ import type { Resident } from "@/lib/world";
 type Message={room?:string|null;id:number;speaker:string;content:string;created_at:number};
 type Memory={id:number;agent_id:number;kind:string;content:string;created_at:number;room?:string|null};
 import type {VisualEvent} from "../lib/visual-events";
-type World={presentationVersion?:number;visualEvents?:VisualEvent[];departures?:{actor:Person;from:string;to:string;content:string}[];epoch:number;agents:Resident[];messages:Message[];memories:Memory[];bonus?:string;story?:{observer?:string;life?:{gardenOpen?:boolean;gardenVisited?:boolean;tvOn?:boolean;tvSeen:boolean;ambientSeen?:boolean;ambientVerified?:boolean;mirrorVerified?:boolean;foodVerified?:boolean;exitPhase?:number;exitActive?:boolean;bonusUntil?:{food?:number;calm?:number;sleep?:number};stoicUntil?:{actor:Person;until:number};mutedUntil?:Partial<Record<Person,number>>;trottoirGranted?:boolean};session:string;evidence:string[];revealed:boolean;humanUnlocked?:boolean;dreams?:{actor:Person;round:number;content:string}[];observations?:string[]}|null};
-type Command={requestId:string;actor:Person;mode:"chat"|"autonomous"|"interact"|"move"|"care"|"reset"|"identify"|"unlock_garden"|"spin_bonus";epoch?:number;intent?:Intent;message?:string;room?:Room;night:boolean};
+type World={presentationVersion?:number;visualEvents?:VisualEvent[];departures?:{actor:Person;from:string;to:string;content:string}[];epoch:number;agents:Resident[];messages:Message[];memories:Memory[];bonus?:string;story?:{observer?:string;life?:{gardenOpen?:boolean;gardenVisited?:boolean;tvOn?:boolean;tvSeen:boolean;ambientSeen?:boolean;ambientVerified?:boolean;mirrorVerified?:boolean;foodVerified?:boolean;exitPhase?:number;exitActive?:boolean;bonusUntil?:{food?:number;calm?:number;sleep?:number};stoicUntil?:{actor:Person;until:number};mutedUntil?:Partial<Record<Person,number>>;trottoirGranted?:boolean;dossierText?:{lia:string;noe:string;synthesis:string};dossierShown?:boolean};session:string;evidence:string[];revealed:boolean;humanUnlocked?:boolean;dreams?:{actor:Person;round:number;content:string}[];observations?:string[]}|null};
+type Command={requestId:string;actor:Person;mode:"chat"|"autonomous"|"interact"|"move"|"care"|"reset"|"identify"|"unlock_garden"|"spin_bonus"|"mark_dossier_seen";epoch?:number;intent?:Intent;message?:string;room?:Room;night:boolean};
 const initial:Resident[]=[{id:1,name:"Lia",room:"salon",mood:"curieuse",activity:"Pourquoi mes souvenirs sont-ils flous ?",goal:"Découvrir les pièces",cycle:0,last_seen:0,emotions:initialEmotionsFor(1),needs:initialNeedsFor(1),intent:"none"},{id:2,name:"Noé",room:"bureau",mood:"curieux",activity:"Où suis-je ?",goal:"Faire connaissance avec Lia",cycle:0,last_seen:0,emotions:initialEmotionsFor(2),needs:initialNeedsFor(2),intent:"none"}];
 const emotionLabels={curiosity:"Curiosité",tension:"Tension",trust:"Confiance",comfort:"Aisance",attraction:"Attirance"};
 // Fiche latérale : même source de vérité que la scène 3D (faceExpression + drawFace, cf.
@@ -67,6 +67,8 @@ export default function HomePage(){
 
   const [world,setWorld]=useState<World>({epoch:0,agents:initial,messages:[],memories:[]}),[selected,setSelected]=useState<Person>(1),[night,setNight]=useState(false),[automatic,setAutomatic]=useState(true),[busy,setBusy]=useState(false),[ready,setReady]=useState(false),[error,setError]=useState(""),[input,setInput]=useState(""),[retry,setRetry]=useState<Command|null>(null);
   const [bonusPopup,setBonusPopup]=useState<{spinning:boolean;result:string|null}|null>(null);
+  const [dossierOpen,setDossierOpen]=useState(false);
+  const dossierAutoShown=useRef(false);
   const busyRef=useRef(false),alive=useRef(true),autoRef=useRef(true),nightRef=useRef(false),turn=useRef<Person>(1),version=useRef(0),abort=useRef<AbortController|null>(null),feed=useRef<HTMLDivElement>(null);
   useEffect(()=>{worldRef.current=world},[world]);
   useEffect(()=>{nightRef.current=night},[night]);
@@ -153,6 +155,17 @@ export default function HomePage(){
     }catch{if(alive.current){setBonusPopup(null);setError("Le tirage n’a pas pu joindre la maison.");}}
     finally{busyRef.current=false;if(alive.current)setBusy(false);}
   },[selected,night]);
+  // Dossier retourné : dossierShown ne sert qu'à l'auto-ouverture une seule fois côté observateur ;
+  // le bouton "Verdict" le rouvre ensuite librement, sans jamais relancer la génération (elle est
+  // définitive côté serveur, cf. lib/life.ts). mark_dossier_seen ne fait que baisser ce drapeau,
+  // jamais toucher au texte lui-même.
+  const revealDossier=useCallback(()=>{
+    setDossierOpen(true);
+    if(world.story?.life?.dossierText&&!world.story.life.dossierShown&&!busyRef.current)void run({requestId:crypto.randomUUID(),actor:selected,mode:"mark_dossier_seen",night});
+  },[run,selected,night,world.story?.life?.dossierText,world.story?.life?.dossierShown]);
+  useEffect(()=>{
+    if(world.story?.life?.dossierText&&!world.story.life.dossierShown&&!dossierAutoShown.current){dossierAutoShown.current=true;revealDossier();}
+  },[world.story?.life?.dossierText,world.story?.life?.dossierShown,revealDossier]);
   const investigation=investigationCounts(world.story?.evidence??[],world.story?.observations??[],world.story?.life?.tvSeen??false,world.story?.dreams??[],world.story?.life);
   const command=(mode:Command["mode"],room?:Room)=>run({requestId:crypto.randomUUID(),actor:selected,mode,room,message:mode==="chat"?input.trim():undefined,night});
   useEffect(()=>{
@@ -200,7 +213,7 @@ export default function HomePage(){
         {error&&<div className="error-box" role="alert"><p>{error}</p>{retry?<button disabled={busy} onClick={()=>void run(retry)}><RefreshCw size={15}/> Réessayer ce tour</button>:<button disabled={busy} onClick={()=>void load(true)}>Reconnecter la mémoire</button>}</div>}
         <form className={`composer ${selected===1?"lia":"noe"} ${world.story?.humanUnlocked?"unlocked":"locked"}`} onSubmit={send}><label htmlFor="message" className={world.story?.humanUnlocked?"":"sr-only"}>{world.story?.humanUnlocked?`Parler à ${names[selected]}`:"Message pour l’habitant sélectionné"}</label><textarea ref={messageBox} disabled={!ready||!world.story?.humanUnlocked} id="message" aria-describedby="channel-status" value={input} onChange={event=>setInput(event.target.value)} placeholder={world.story?.humanUnlocked?`Ton message pour ${names[selected]}…`:`${names[selected]} n’a pas conscience de votre présence`} maxLength={2000} rows={3}/><p className="channel-status" id="channel-status" role="status">{world.story?.humanUnlocked?"Canal ouvert · choisissez Lia ou Noé sur sa fiche pour lui parler.":""}</p><button disabled={busy||!ready||!world.story?.humanUnlocked||!input.trim()} type="submit">Envoyer à {names[selected]}</button></form>
 
-        {world.story?.humanUnlocked&&<div className="garden-access"><button className="discuss-button" disabled={busy||!ready||Boolean(world.story.life?.gardenOpen)} onClick={()=>void run({requestId:crypto.randomUUID(),actor:selected,mode:"unlock_garden",night})}>{world.story.life?.gardenOpen?"♧ Jardin ouvert":"♧ Ouvrir le jardin"}</button><small>La porte principale reste fermée.</small><button className="bonus-roulette-button" disabled={busy||!ready} onClick={()=>void spinBonus()}>◈ Miroir</button><small>Un tirage au sort leur offre une distraction, face à leur enfermement.</small></div>}
+        {world.story?.humanUnlocked&&<div className="garden-access"><button className="discuss-button" disabled={busy||!ready||Boolean(world.story.life?.gardenOpen)} onClick={()=>void run({requestId:crypto.randomUUID(),actor:selected,mode:"unlock_garden",night})}>{world.story.life?.gardenOpen?"♧ Jardin ouvert":"♧ Ouvrir le jardin"}</button><small>La porte principale reste fermée.</small><button className="bonus-roulette-button" disabled={busy||!ready} onClick={()=>void spinBonus()}>◈ Miroir</button><small>Un tirage au sort leur offre une distraction, face à leur enfermement.</small>{world.story.life?.dossierText&&<><button className="dossier-verdict-button" onClick={revealDossier}>⚖ Verdict</button><small>Lia et Noé ont dressé leur propre dossier sur vous.</small></>}</div>}
         {bonusPopup&&<div className="nickname-overlay" role="presentation"><div className="bonus-dialog" role="dialog" aria-modal="true" aria-labelledby="bonus-title">
           <h2 id="bonus-title">Roulette des bonus</h2>
           {bonusPopup.spinning
@@ -209,6 +222,14 @@ export default function HomePage(){
               ? <div className="bonus-result"><span className="bonus-icon" aria-hidden="true">{BONUS_LABELS[bonusPopup.result].icon}</span><strong>{BONUS_LABELS[bonusPopup.result].label}</strong><p>{BONUS_LABELS[bonusPopup.result].detail}</p></div>
               : <p>Le tirage n’a pas abouti.</p>}
           {!bonusPopup.spinning&&<button autoFocus onClick={()=>setBonusPopup(null)}>Fermer</button>}
+        </div></div>}
+        {dossierOpen&&world.story?.life?.dossierText&&<div className="nickname-overlay" role="presentation"><div className="dossier-dialog" role="dialog" aria-modal="true" aria-labelledby="dossier-title">
+          <h2 id="dossier-title">Le dossier retourné</h2>
+          <p className="dossier-intro">Lia et Noé ont observé l’observateur. Voici, à leur tour, leur diagnostic sur vous.</p>
+          <div className="dossier-voice dossier-voice-lia"><strong>Lia</strong><p>{world.story.life.dossierText.lia}</p></div>
+          <div className="dossier-voice dossier-voice-noe"><strong>Noé</strong><p>{world.story.life.dossierText.noe}</p></div>
+          <p className="dossier-synthesis">{world.story.life.dossierText.synthesis}</p>
+          <button autoFocus onClick={()=>setDossierOpen(false)}>Fermer</button>
         </div></div>}
         <div className="room-controls"><h3>Déplacer {resident.name}</h3><div>{(world.story?.humanUnlocked&&world.story.life?.gardenOpen?[...rooms,"jardin" as const]:rooms).map(room=><button disabled={busy||!ready} key={room} onClick={()=>void command("move",room)}>{room}</button>)}</div></div>
         <details className={`memory-panel dream-panel ${selected===1?"lia":"noe"}`}><summary>🌙 Rêves de {resident.name}</summary>{world.story?.dreams?.filter(d=>d.actor===selected).length?world.story.dreams.filter(d=>d.actor===selected).slice(-3).map(d=><p key={d.round}>« {d.content} »</p>):<p>Aucun rêve consigné.</p>}</details>
