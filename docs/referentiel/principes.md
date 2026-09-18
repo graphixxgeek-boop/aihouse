@@ -437,6 +437,21 @@ sur des points de suspension pour suggérer qu'il reste à comprendre, sans rés
 foulée ; l'autre personnage peut rebondir dessus dans sa propre réplique plutôt que de l'enterrer
 aussitôt.
 
+7.2bis. **Poids des indices** (`lib/lia.ts`, 2026-09-18, retour utilisateur explicite après
+comparaison de deux transcripts de simulation complète). Un indice réellement chargé — qui pointe
+vers leur nature, leur condition ou le cœur de l'enquête — doit peser sur la réaction des deux
+personnages à la hauteur de ce qu'il révèle : jamais balayé par l'un d'eux comme du bruit, une
+anomalie sans suite ou un hasard insignifiant, même par bravade ou par déni. Bug réel trouvé en
+comparant deux sessions : la citation canonique du livre du bureau (« Quid du profil psychologique
+d'une IA ? », `lib/story.ts`), l'indice le plus explicite de toute l'enquête, se voyait
+rationalisée par Noé comme « une note jetée au pif pendant un crash de système » — une régression
+directe de cet article (une preuve qui ne change rien à ce que dit un personnage) et de l'Article
+17 (pourquoi minimiserait-il justement l'indice le plus accablant ?). Le sarcasme et le cynisme du
+registre restent permis tant qu'ils habillent une vraie prise au sérieux du fond, jamais un moyen
+de l'évacuer plus vite. Principe volontairement général, jamais une liste de mots ou d'indices
+figée (Article 17, corollaire) : il s'applique à tout indice à venir, pas seulement à celui déjà
+rencontré.
+
 7.3. Les personnages n'affirment jamais avoir accompli une action non réellement effectuée
 (exploration, repas, lecture) : seules les actions réalisées par le moteur font foi, jamais une
 intention ou une proposition.
