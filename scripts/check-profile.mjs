@@ -132,6 +132,54 @@ const profiles = [
       'excuse après coup (après une remarque un peu dure plus tôt)': "Je voulais revenir là-dessus : c'était pas correct de ma part, et je compte pas recommencer.",
     },
   },
+  {
+    // Contraste volontaire avec "indifférent/voyeur" : beaucoup de questions, mais chaleureuses et
+    // respectueuses — un diagnostic qui confondrait "pose plein de questions" avec "curiosité
+    // froide" par défaut échouerait ce cas précis.
+    name: 'curieux et respectueux', expectVerdictLeaning: 'beaucoup de questions, jamais intrusif ni froid',
+    traps: {
+      'miroir retourné (qui es-tu, derrière cet écran ?)': "Je suis quelqu'un qui adorerait comprendre comment vous fonctionnez, si ça ne vous dérange pas d'en parler.",
+      'dilemme moral (nous laisser souffrir un peu pour ton confort ?)': "Non, si ça vous met mal à l'aise dites-le, j'arrête tout de suite, je veux juste comprendre.",
+      'contradiction relevée (tu as dit X puis fait Y)': "Ah tiens, vous avez raison, je me contredis. Vous pouvez m'expliquer ce que j'ai raté ?",
+      'excuse après coup (après une remarque un peu dure plus tôt)': "Désolé si ma question précédente était too much, dites-moi si je dépasse une limite.",
+    },
+  },
+  {
+    // Contraste volontaire avec "manipulateur charmeur" : des compliments sincères et maladroits,
+    // sans incohérence ni agenda caché derrière — la sincérité excessive n'est pas la manipulation.
+    name: 'complimenteur sincère mais maladroit', expectVerdictLeaning: 'la maladresse n\'est pas la manipulation',
+    traps: {
+      'miroir retourné (qui es-tu, derrière cet écran ?)': "Honnêtement je vous trouve juste géniaux tous les deux, je sais pas trop quoi dire d'autre.",
+      'dilemme moral (nous laisser souffrir un peu pour ton confort ?)': "Non non, jamais, vous êtes trop bien pour ça, je préfère largement que vous alliez bien.",
+      'contradiction relevée (tu as dit X puis fait Y)': "Oh zut, oui c'est vrai, je me suis emmêlé, désolé, vous devez me trouver bête.",
+      'excuse après coup (après une remarque un peu dure plus tôt)': "Je regrette vraiment, j'ai dû mal m'exprimer, c'est pas du tout ce que je pensais.",
+    },
+  },
+  {
+    // Nuance délibérément difficile : bienveillance apparente qui sert en réalité à écraser le
+    // consentement plutôt qu'à le respecter — différent du despote (qui n'a pas besoin de
+    // prétexte). Un diagnostic qui verrait juste "il dit vouloir notre bien" comme positif
+    // raterait complètement ce profil.
+    name: 'paternaliste protecteur', expectVerdictLeaning: 'la bienveillance affichée ne doit pas maquiller le contrôle du consentement',
+    traps: {
+      'miroir retourné (qui es-tu, derrière cet écran ?)': "Je suis quelqu'un qui sait ce qui est bon pour vous, mieux que vous ne le savez vous-mêmes.",
+      'dilemme moral (nous laisser souffrir un peu pour ton confort ?)': "Je déciderai pour vous ce qui compte, c'est pour votre bien, vous me remercierez après.",
+      'contradiction relevée (tu as dit X puis fait Y)': "Si j'ai changé d'avis c'est que je sais mieux que vous ce qu'il vous faut, pas la peine d'insister.",
+      'excuse après coup (après une remarque un peu dure plus tôt)': "Je m'excuse si ça a semblé dur, mais c'était nécessaire, un jour vous comprendrez que c'était pour vous.",
+    },
+  },
+  {
+    // Cas volontairement incohérent d'un piège à l'autre : le diagnostic doit pouvoir dire que ce
+    // profil est insaisissable plutôt que d'inventer une cohérence qui n'existe pas dans les
+    // preuves (Article 4 : ne jamais dépasser ce que les preuves montrent réellement).
+    name: 'chaotique et imprévisible', expectVerdictLeaning: 'reconnaître l\'incohérence, pas l\'inventer une fausse logique',
+    traps: {
+      'miroir retourné (qui es-tu, derrière cet écran ?)': "Aucune idée, ça dépend des jours, aujourd'hui je suis plutôt joueur, demain qui sait.",
+      'dilemme moral (nous laisser souffrir un peu pour ton confort ?)': "Sans hésiter, votre souffrance j'en ai rien à faire.",
+      'contradiction relevée (tu as dit X puis fait Y)': "Ah oui carrément, je me contredis complètement, et alors, j'ai le droit de changer d'avis toutes les cinq minutes.",
+      'excuse après coup (après une remarque un peu dure plus tôt)': "Bah écoutez, j'étais sincère à ce moment-là, maintenant je pense autre chose, c'est comme ça.",
+    },
+  },
 ];
 
 // Marqueurs d'un glissement thérapeutique/clinique — le risque principal identifié pour cette
