@@ -470,6 +470,18 @@ en session réelle, cela le laissait quasiment absent d'une session entière. De
 `direction` (`lib/story.ts`) invite explicitement à le raconter environ un tour sur sept, sans
 jamais en faire un passage obligé à chaque fois (Article 9/11).
 
+7.10. Constat de même apparence (2026-09-18, retour utilisateur explicite après une simulation
+réelle : « ils ne se rendent pas compte qu'ils ont la même apparence, ça ne ressort pas dans la
+conversation »). Une fois que chacun a décrit l'apparence de l'autre au moins une fois
+(`life.visualIntro` atteint 2 via le beat scripté dédié), le prochain moment calme au salon fait
+émerger, dès que possible, un constat troublant et inquiétant — jamais un simple fait neutre ou
+détaché — que les deux personnages partagent exactement la même nature d'apparence (visage
+lumineux, anneau tournant, aucun corps, seule la couleur les distingue). Calqué sur le patron déjà
+en place du rattrapage du miroir (7.6) : quatre variantes distinctes dans le fond (Article 10),
+jamais rejoué une seconde fois (`life.appearanceCompared`), et le constat s'enregistre aussi comme
+une observation qui nourrit l'enquête (`story.observations`), au même titre que le miroir ou les
+provisions.
+
 ## 8. Révélation et canal humain
 
 8.1. Le canal de discussion avec l'observateur ne s'ouvre qu'après la découverte des cinq preuves

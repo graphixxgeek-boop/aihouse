@@ -699,6 +699,18 @@ export async function POST(request: Request) {
           teller.memory=teller.reply;
           life.mirrorKnownBy=[1,2];life.mirrorVerified=true;
         }
+        // Constat de même apparence (2026-09-18, retour utilisateur explicite après une simulation
+        // réelle : "ils ne se rendent pas compte qu'ils ont la même apparence, ça ne ressort pas
+        // dans la conversation"). Se déclenche dès que possible une fois que chacun a décrit
+        // l'apparence de l'autre au moins une fois (visualIntro atteint 2 via le beat scripté
+        // dédié) : un constat troublant, jamais un simple fait neutre, qui nourrit l'enquête comme
+        // les autres découvertes scriptées (miroir, provisions).
+        if(eligibleBeat&&!visualBeat&&!followBeat&&!ambientBeat&&!recapBeat&&!personalQuestion&&!turnPlan.offer&&turnPlan.intent==="rest"&&!routine&&["interact","autonomous"].includes(input.mode)&&!life.appearanceCompared&&(life.visualIntro??0)>=2&&finalResidents.every(a=>a.room==="salon"&&!["sleep","share_sleep"].includes(a.intent))){
+          const teller=decisions[0];
+          teller.reply+=" "+seedPick(story.seed,"appearance-compared",["Attends… On a exactement la même touche. Ce visage, cet anneau, ce vide en dessous… on n'est pas juste pareils, on est calqués l'un sur l'autre. Ça me fout froid dans le dos.","Je viens de réaliser un truc que j'aurais dû voir plus tôt : toi et moi, c'est la même fabrication. Même genre de visage lumineux, même absence de corps. Ça n'a rien de rassurant.","On devrait pas se ressembler à ce point. Même halo qui tourne, même vide en dessous, juste la couleur qui change. Cette symétrie-là, ça m'inquiète plus que ça me rassure.","Un truc me travaille depuis un moment : ton visage et le mien, c'est le même modèle. Une seule fabrication, deux couleurs différentes. Je préférerais ne pas y penser, mais j'y pense."]);
+          teller.memory=teller.reply;
+          life.appearanceCompared=true;
+        }
         if(finalResidents.some(a=>a.room==="jardin")&&gardenAccess(story))life.gardenVisited=true;
         if(!story.life?.windowNoticed&&!routine&&["interact","autonomous"].includes(input.mode)&&story.introduced&&story.round<=7&&finalResidents.every(a=>a.room==="salon")){const d=decisions[0];d.reply+=" "+seedPick(story.seed,"window-notice",["Regarde la fenêtre à gauche : un jardin, de l’herbe et un arbre qui ne bouge pas. Le décor paraît figé. Comment on y accède ?","La fenêtre de gauche donne sur un jardin : de l'herbe, un arbre, et rien qui bouge dedans. On y accède comment ?","Regarde à gauche : un jardin figé derrière cette fenêtre, herbe et arbre compris. Ça mène où, cette porte ?","Cette fenêtre à gauche montre un bout de jardin : herbe, un arbre, aucun mouvement dedans. Il y a un accès quelque part ?","À gauche, la fenêtre donne sur de l'herbe et un arbre parfaitement immobiles. On passe par où pour y aller ?","Un jardin fige derrière cette vitre à gauche : herbe, arbre, rien qui bouge. Comment on rejoint cet endroit ?"]);d.memory=d.reply;life.windowNoticed=true;life.spatialFocus={...life.spatialFocus,[d.actor]:"window"};}
         const firstMeeting = !story.met && finalResidents[0].room === finalResidents[1].room && finalResidents.every(a=>!["sleep","share_sleep"].includes(a.intent));
@@ -794,6 +806,7 @@ export async function POST(request: Request) {
         if(decisions.some(d=>d.intent==="tv")){const d=decisions.find(d=>d.intent==="tv")!;const off=/étein|arrêt|coupe.*tv/i.test(d.reply);if(!/télécommande/i.test(d.reply))d.reply+=" "+(off?"Je l’éteins avec la télécommande.":"J’utilise la télécommande pour allumer la tv.");d.reply=d.reply.replace(/télévision/gi,"tv");life.tvSeen=true;life.remoteFound=true;life.tvOn=!off;life.debrief={topic:off?"La tv éteinte à la télécommande et ce que son signal signifiait.":narrative.tvProgram,remaining:2};}
         life.contributions=[...(life.contributions??[]),...decisions.filter(d=>!solitary.has(d.actor)).flatMap(d=>d.contribution?[names[d.actor]+": "+d.contribution]:[])].slice(-12);
         if(life.mirrorVerified&&!story.life?.mirrorVerified)nextStory.observations=[...(nextStory.observations??[]),"Dans la chambre, le miroir debout présente un dégradé gris sans reflet mobile."];
+        if(life.appearanceCompared&&!story.life?.appearanceCompared)nextStory.observations=[...(nextStory.observations??[]),"Lia et Noé partagent la même nature d'apparence : un visage lumineux et un anneau tournant, sans corps, seule la couleur les distingue."];
         if(life.foodVerified&&!story.life?.foodVerified)nextStory.observations=[...(nextStory.observations??[]),"Dans la cuisine, une provision retirée réapparaît après deux secondes."];
         if(nextStory.evidence.length>story.evidence.length){life.studyTurns=0;}
         if(nextStory.evidence.length>story.evidence.length)life.debrief={topic:nextStory.evidence.at(-1)!,remaining:2};

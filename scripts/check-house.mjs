@@ -220,8 +220,28 @@ console.log('Passed: varied reset scenarios, word ages beyond context window, ea
   assert.equal(departures.length,2,'both actors moving from bureau to salon together must each get a visible departure line, even though every départ-à-deux phrase already matched an earlier, unrelated chambre→cuisine trip');
   assert.ok(departures.every(m=>m.content.startsWith('[bureau→salon]')),'both departure lines must be correctly stamped with the real bureau→salon trip');
   console.log('Passed: départ à deux confirmation is never silently dropped by the cross-room fingerprint registry, even when every short phrase already matched an unrelated earlier trip.');
+}
+{
+  // Constat de même apparence (2026-09-18, retour utilisateur explicite après une simulation
+  // réelle : "ils ne se rendent pas compte qu'ils ont la même apparence, ça ne ressort pas dans la
+  // conversation"). Une fois visualIntro à 2 (chacun a décrit l'apparence de l'autre au moins une
+  // fois), le prochain moment calme doit faire émerger ce constat, troublant, et l'enregistrer
+  // comme une observation qui nourrit l'enquête, au même titre que le miroir ou les provisions.
+  const appearanceEpoch=result.epoch;
+  const appearancePlot={...newStory(),round:10,introduced:true,met:true,sharedMeal:true,life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,personalFollowup:3,exitSearched:true,visualIntro:2}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(appearancePlot));
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=?').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}),JSON.stringify(steady));
+  const beforeAppearance=await readWorld(db);
+  response=await post(input('interact',1,{epoch:appearanceEpoch}));assert.equal(response.status,200);result=await response.json();
+  const newAppearanceLines=result.messages.filter(m=>m.id>(beforeAppearance.messages.at(-1)?.id??0));
+  assert.ok(newAppearanceLines.some(m=>/même fabrication|calqués l.un sur l.autre|halo qui tourne|même modèle/i.test(m.content)),'once both have described each other\'s appearance, they must explicitly realize out loud that they share the exact same nature of appearance');
+  assert.ok(result.story.observations.some(o=>/partagent la même nature d.apparence/.test(o)),'the realization must also register as an observation feeding the investigation, like the mirror/food discoveries');
+  assert.equal(result.story.life.appearanceCompared,true);
+  const replayAppearance=await post(input('interact',1,{epoch:appearanceEpoch}));const replayed=await replayAppearance.json();
+  assert.ok(!replayed.messages.slice(-2).some(m=>/même fabrication|calqués l.un sur l.autre|halo qui tourne|même modèle/i.test(m.content)),'the realization must fire exactly once, never repeated on a later turn');
+  console.log('Passed: once both characters have described each other\'s appearance, they explicitly and unsettlingly realize they share the exact same nature of appearance exactly once, and it feeds the investigation as a new observation.');
   // Restore the clean post-reset state the tests below still rely on `result` holding.
-  response=await post(input('reset',1,{epoch:departEpoch}));result=await response.json();
+  response=await post(input('reset',1,{epoch:appearanceEpoch}));result=await response.json();
   assert.equal(result.story.evidence.length,0);
   // Démarrage progressif : consomme le tour de désorientation solo, sans toucher `result`, pour
   // que les tests suivants retrouvent le tout premier coldOpening attendu au tour suivant.
@@ -402,7 +422,20 @@ const tvThreshold=seedPick(majorPlot.seed,"tv-threshold",[5,6,7,8,9]);
 // les personnages restent au salon mais en discussion normale, pas nécessairement "rest" — seule
 // la présence au salon est un invariant garanti ici, pas l'intent exact de chaque tour transitoire.
 for(let i=0;i<Math.max(0,tvThreshold-4);i++){response=await post(input('interact',1,{epoch:majorEpoch}));result=await response.json();assert.ok(result.agents.every(a=>a.room==='salon'));}
-response=await post(input('interact',1,{epoch:majorEpoch}));result=await response.json();assert.ok(result.agents.every(a=>a.intent==='tv'));assert.equal(result.story.life.tvSeen,true);
+// Bug latent trouvé le 2026-09-18 en creusant une collision de seed ailleurs dans ce fichier (sans
+// aucun rapport avec la fonctionnalité qui a révélé le problème) : quand tvThreshold tombe pile à
+// 5, le débrief ouvert par la double découverte miroir+provisions n'a droit qu'à UN tour de
+// décompte avant l'échéance télé, contre deux nécessaires pour retomber à zéro — la télé est alors
+// repoussée d'exactement un tour, le temps que la discussion sur ces indices se termine (logique
+// et voulu : tvFirst exige `!life.debrief?.remaining`, Article 1 — finir de discuter une preuve
+// avant d'allumer la télé est plus naturel qu'une bascule mécanique au tour pile). Le débrief se
+// consomme ET s'efface (remaining atteint 0) PENDANT ce tour même, donc on vérifie son existence
+// juste AVANT l'appel, jamais après (après, il est déjà retombé à zéro par construction). Toléré
+// ici jusqu'à un tour de retard, jamais plus : au-delà, ce serait un vrai blocage à corriger au fond.
+const preTvDebrief=parseStory(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life?.debrief;
+response=await post(input('interact',1,{epoch:majorEpoch}));result=await response.json();
+if(!result.agents.every(a=>a.intent==='tv')){assert.ok(preTvDebrief?.remaining,'if tv does not fire exactly at threshold, it must be because a legitimate still-open debrief was consuming this turn, never a silent block');response=await post(input('interact',1,{epoch:majorEpoch}));result=await response.json();}
+assert.ok(result.agents.every(a=>a.intent==='tv'));assert.equal(result.story.life.tvSeen,true);
 const officePlot={...parseStory(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content),round:17,salonTurns:5,pendingDestination:{room:'bureau',intent:'study',proposer:2}};officePlot.life.debrief=undefined;officePlot.life.studyTurns=0;sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(officePlot));sqlite.prepare('UPDATE agent_state SET intent=?,needs=?').run('chat',JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:70}));
 response=await post(input('interact',2,{epoch:majorEpoch}));result=await response.json();assert.ok(result.agents.every(a=>a.room==='bureau'));assert.equal(result.story.evidence.length,0);
 response=await post(input('interact',2,{epoch:majorEpoch}));result=await response.json();assert.equal(result.story.evidence.length,1);assert.equal(result.story.life.debrief.remaining,2);
@@ -686,7 +719,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 62'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 63'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
