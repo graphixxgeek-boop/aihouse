@@ -284,6 +284,38 @@ PRINCIPE que le modèle peut s'appliquer à lui-même à n'importe quelle répli
 registre, une règle de non-répétition portant sur le fond et sur toute la session, jamais seulement
 sur les deux derniers tours) — jamais un exemple de plus dans une énumération.
 
+**Article 18 — Protocole de simulation complète.** *(Ajouté le 2026-09-18, à la demande explicite
+de l'utilisateur juste après une simulation lancée en arrière-plan pendant cette même session.)*
+Quand l'utilisateur demande de « lancer une simulation » (ou toute formulation équivalente —
+simulation complète, intégrale, de bout en bout), l'agent reproduit systématiquement le même
+enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redemande à chaque fois :
+
+1. Relancer un serveur de développement à jour (redémarré si besoin pour garantir que c'est bien
+   le code réel, pas une instance périmée, qui est testé) et lancer le script de simulation
+   intégrale contre lui — reset complet, phase 1 autonome jusqu'à la révélation, phase 2 (dossier
+   retourné, négociation, plusieurs tirages de bonus distincts, hostilité sévère, humour noir,
+   désescalade, bienveillance soutenue, divergence par dispute) — produisant un nouveau transcript
+   horodaté par pièce, le dossier retourné complet et un journal JSON des requêtes/réponses.
+2. **Donner régulièrement à l'utilisateur l'avancement réel pendant que ça tourne** (round atteint,
+   preuves découvertes, révélation atteinte ou non, étape de la phase 2 en cours) — jamais un
+   silence total le temps que la simulation s'exécute, pour qu'il puisse suivre en même temps que
+   l'agent, pas seulement découvrir un résultat figé à la fin.
+3. Une fois terminé, livrer le copier-coller intégral du transcript en fichier joint uniquement
+   (cf. préférence déjà actée plus haut, jamais collé en clair dans la réponse), accompagné du
+   dossier retourné complet.
+4. Passer directement à une analyse détaillée de ce qui fonctionne et de ce qui ne fonctionne pas
+   dans ce nouveau transcript — jamais une simple confirmation que « ça tourne ».
+5. Comparer systématiquement avec la dernière version de simulation complète disponible pour
+   mesurer l'évolution réelle et la réussite des derniers travaux engagés, jamais une lecture
+   isolée sans mise en perspective avec l'historique.
+6. Poser au moins une dizaine de questions de calibrage à l'utilisateur avant d'entamer la moindre
+   correction ou optimisation identifiée par cette analyse — jamais corriger silencieusement sur la
+   base d'une seule lecture personnelle du transcript (cf. Article 16, dont c'est ici une exigence
+   renforcée, pas une exception).
+7. Organiser ensuite le correctif/l'optimisation de manière sûre, robuste et fiabilisée, avec la
+   même rigueur que le reste de la charte (tests créés si besoin, suite complète revérifiée verte,
+   documentation mise à jour le jour même — Articles 3, 5, 13).
+
 **Traçabilité visible des vérifications.** Chaque fois qu'une réponse à l'utilisateur s'appuie sur
 la charte pour valider un choix (« ceci respecte l'Article 0 », « vérifié contre l'Article 11 »,
 etc.), le mentionner explicitement accompagné de 📜✅ (la feuille pour la charte, le check vert pour
