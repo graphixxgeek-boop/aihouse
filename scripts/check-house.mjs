@@ -593,6 +593,34 @@ assert.equal(result.story.life.personalConcluded,true,'the conclusion must be re
   const newGuardLines=result.messages.filter(m=>m.id>(beforeGuard.messages.at(-1)?.id??0));
   assert.ok(!newGuardLines.some(m=>m.speaker.includes('· pensée')&&/plaît|intrigue/.test(m.content)),'once personalConcluded is set, no further conclusion pair must ever be added, even if followBeat were somehow eligible again');
 }
+{
+  // Cohérence de traitement (vérification en profondeur demandée par l'utilisateur, 2026-09-18) :
+  // ces deux pensées sont un contenu généré par le modèle au même titre qu'une réplique parlée —
+  // elles doivent donc traverser le MÊME filet (groundTruncation, groundRegister), jamais un
+  // traitement à part qui laisserait passer une phrase coupée net ou un mot déjà daté juste parce
+  // qu'il atterrit dans une pensée plutôt que dans reply.
+  const concludeEpoch=(await readWorld(db)).epoch;
+  const concludePlot={...newStory(),round:24,introduced:true,met:true,sharedMeal:true,life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,exitSearched:true,visualIntro:2,personalAsked:true,personalRound:20,personalFollowup:1,personalConcluded:false}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(concludePlot));
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=?').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:40}),JSON.stringify({...steady,attraction:40}));
+  const beforeConclude=await readWorld(db);
+  const gameFetchConclude=globalThis.fetch;
+  const injectBrokenThoughts=async(...args)=>{
+    const response=await gameFetchConclude(...args),body=await response.json(),decision=JSON.parse(body.candidates[0].content.parts[0].text);
+    decision.thought=isPartnerRequest(args)?"Je crois qu'on va finir par poireauter ici encore un moment.":"C'est marquant, je le note. Et je me demande si je devrais";
+    body.candidates[0].content.parts[0].text=JSON.stringify(decision);return Response.json(body);
+  };
+  globalThis.fetch=injectBrokenThoughts;
+  response=await post(input('interact',2,{epoch:concludeEpoch}));assert.equal(response.status,200);result=await response.json();
+  globalThis.fetch=gameFetchConclude;
+  const newConcludeLines=result.messages.filter(m=>m.id>(beforeConclude.messages.at(-1)?.id??0)&&m.speaker.includes('· pensée'));
+  assert.equal(newConcludeLines.length,2,'both conclusion thoughts must still be added even when the raw model output needs grounding');
+  assert.equal(newConcludeLines[0].speaker,'Noé · pensée');
+  assert.equal(newConcludeLines[0].content,"Je crois qu'on va finir par traîner ici encore un moment.",'the dated-word register fix must apply to a private thought exactly as it does to spoken dialogue');
+  assert.equal(newConcludeLines[1].speaker,'Lia · pensée');
+  assert.equal(newConcludeLines[1].content,"C'est marquant, je le note.",'a thought truncated mid-sentence by the model must fall back to its last complete sentence, exactly as a spoken reply does');
+  console.log('Passed: the two conclusion thoughts are grounded through the exact same truncation/register safety net as any spoken reply, never a separate weaker treatment.');
+}
 
 pp={...pp,round:30,life:{...pp.life,personalFollowup:3,ambientSeen:false}};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(pp));response=await post(input('interact',2,{epoch:perceptionEpoch}));result=await response.json();assert.equal(result.story.life.ambientSeen,true);assert.equal(result.story.life.debrief.remaining,2);assert.ok(evidenceLedger([],result.story.observations).find(p=>p.id==='plant').discovered);assert.ok(evidenceLedger([],result.story.observations).find(p=>p.id==='speaker').discovered);
 pp={...pp,evidence:['Relevé de cohabitation. Identifiant observateur inscrit sur le relevé : "Spectateur ◇".',...Array(4).fill('Preuve')],finalCalled:true,life:{...pp.life,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true}};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(pp));sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints');
@@ -796,7 +824,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 66'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 67'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,

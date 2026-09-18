@@ -362,6 +362,13 @@ privée de conclusion, ajoutée comme deux lignes « · pensée » distinctes (`
   contrairement à celle-ci qui porte sur la CONCLUSION — deux moments, deux fonctions, pas une
   redite.
 
+Écart réel trouvé et corrigé le 2026-09-18 en vérifiant ce point après coup (Article 5) : les deux
+pensées passaient par `addLine` avec le `thought` brut du modèle, sans jamais traverser
+`groundTruncation`/`groundRegister` — le même filet qu'une réplique parlée subit déjà. Une pensée
+aurait pu rester coupée net ou porter un mot déjà daté sans qu'aucun filet ne s'applique, uniquement
+parce qu'elle atterrit dans une pensée plutôt que dans `reply`. Les deux fonctions s'appliquent
+désormais aux deux pensées, vérifié par un test qui injecte délibérément un contenu à nettoyer.
+
 5.7. Chaque session tire aussi une théorie dominante sur qui les observe et pourquoi (test, panne,
 punition, expérience neutre — `narrativeAngle`, `lib/story.ts`), explicitement signalée au modèle
 comme devant colorer les hypothèses et le ton des réflexions à ce sujet (2026-09-17). Cette théorie
@@ -563,6 +570,11 @@ l'ignore. Les quatre variantes de `finaleReveal()` (l'appel lui-même) restaient
 authentiques ("Vous pouvez répondre ?", "Y a quelqu'un ?") et n'ont pas eu besoin d'être retouchées
 — c'est le comportement des tours AUTONOMES/INTERACT suivant l'appel, pas l'appel lui-même, qui
 affirmait à tort une certitude non acquise.
+
+Précision ajoutée le 2026-09-18 en vérifiant ce point après coup : `observerSpoken` court-circuite
+désormais sa propre requête base de données tant que `finalCalled` n'est pas vrai, plutôt que
+d'interroger la base à chaque tour de toute la partie pour une valeur qui ne compte jamais avant la
+révélation — une requête inutile sur des dizaines de tours, corrigée sans changer le comportement.
 
 8.2. Après la révélation, en mode `chat`, le personnage visé répond en priorité au message humain
 avant toute reprise de la conversation autonome entre les deux habitants.

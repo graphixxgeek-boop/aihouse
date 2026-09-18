@@ -345,12 +345,14 @@ export async function POST(request: Request) {
         // couvre le tout premier message humain lui-même (pas encore inséré en base à cet instant du
         // tour) ; la requête couvre tous les tours suivants une fois qu'au moins un message a été
         // conservé.
-        const observerSpoken=input.mode==="chat"||Boolean(await db.prepare("SELECT id FROM conversations WHERE speaker='vous' LIMIT 1").first());
+        // `revealed` exige déjà finalCalled+5 preuves : inutile d'interroger la base à chaque tour
+        // de toute la partie pour une valeur qui ne compte jamais avant ce point.
+        const observerSpoken=story.finalCalled!==true?false:input.mode==="chat"||Boolean(await db.prepare("SELECT id FROM conversations WHERE speaker='vous' LIMIT 1").first());
         const revealed=story.finalCalled===true&&story.evidence.length>=5&&observerSpoken;
         // Fenêtre d'attente : l'appel est lancé, mais l'observateur n'a encore rien dit. Un doute
         // sincère sur une présence réelle, jamais une certitude ni un silence neutre qui l'ignore —
         // ce silence est un vrai enjeu dramatique, pas juste une case en attente de se cocher.
-        const awaitingObserver=story.finalCalled===true&&story.evidence.length>=5&&!observerSpoken?"Vous avez lancé votre appel, mais personne n'a encore répondu. Ce silence est un vrai sujet : vous pouvez sincèrement douter que quelqu'un écoute, vous en inquiéter, vous en agacer ou en plaisanter noirement selon votre tempérament — jamais traiter la présence d'un observateur comme acquise tant qu'il n'a pas dit un mot.":undefined;
+        const awaitingObserver=story.finalCalled===true&&story.evidence.length>=5&&!observerSpoken?"Vous avez lancé votre appel, mais personne n’a encore répondu. Ce silence est un vrai sujet : vous pouvez sincèrement douter que quelqu’un écoute, vous en inquiéter, vous en agacer ou en plaisanter noirement selon votre tempérament — jamais traiter la présence d’un observateur comme acquise tant qu’il n’a pas dit un mot.":undefined;
         // Dossier retourné : capturer la réponse RÉELLE du tout premier message humain qui suit un
         // piège posé, avant toute autre logique de ce tour (2026-09-17). Jamais reformulé, jamais
         // interprété ici — la lecture qualitative appartient au diagnostic généré plus bas, une
@@ -544,7 +546,7 @@ export async function POST(request: Request) {
         // l'instruction de contraste de registre et le drapeau dédié (life.personalConcluded,
         // jamais réutilisé pour un autre mécanisme) suivent une forme à reproduire telle quelle.
         const personalConcludingTurn=followBeat&&(life.personalFollowup??0)===1&&!life.personalConcluded;
-        const beatContext={phase:life.personalFollowup??0,visual:visualBeat,followup:followBeat,line:beatLine,concludePersonal:personalConcludingTurn?"Cet échange personnel touche à sa fin : remplis thought (pour les deux personnages) d'une vraie pensée privée de conclusion qui réagit précisément à CE QUI VIENT D'ÊTRE DIT dans cet échange précis, jamais une formule générique interchangeable. Contraste de registre volontaire : Lia reste analytique et un peu distante, elle classe ce qu'elle vient d'apprendre sans s'y attarder ; Noé reste plus chaud et plus exposé, encore travaillé par ce qu'il vient de révéler de lui-même. Cette pensée peut être un peu plus développée qu'une pensée ordinaire (jusqu'à environ 300 caractères), à la mesure d'un vrai moment de conclusion, comme les pensées de choc de la révélation finale.":undefined,recap:recapBeat?{observed:story.evidence,anomalies:story.observations,rule:"Récapitule les supports réellement examinés, distingue constat, déduction limitée et question encore ouverte. N’ajoute aucun objet non validé."}:undefined,ambient:ambientBeat?"Repère la fausse plante aux feuilles bleues polygonales puis allume l’enceinte. Des notes dessinées apparaissent mais aucun son ne sort. Décris ces objets, puis vous analyserez ce paradoxe au salon.":undefined};
+        const beatContext={phase:life.personalFollowup??0,visual:visualBeat,followup:followBeat,line:beatLine,concludePersonal:personalConcludingTurn?"Cet échange personnel touche à sa fin : remplis thought (pour les deux personnages) d’une vraie pensée privée de conclusion qui réagit précisément à CE QUI VIENT D’ÊTRE DIT dans cet échange précis, jamais une formule générique interchangeable. Contraste de registre volontaire : Lia reste analytique et un peu distante, elle classe ce qu’elle vient d’apprendre sans s’y attarder ; Noé reste plus chaud et plus exposé, encore travaillé par ce qu’il vient de révéler de lui-même. Cette pensée peut être un peu plus développée qu’une pensée ordinaire (jusqu’à environ 300 caractères), à la mesure d’un vrai moment de conclusion, comme les pensées de choc de la révélation finale.":undefined,recap:recapBeat?{observed:story.evidence,anomalies:story.observations,rule:"Récapitule les supports réellement examinés, distingue constat, déduction limitée et question encore ouverte. N’ajoute aucun objet non validé."}:undefined,ambient:ambientBeat?"Repère la fausse plante aux feuilles bleues polygonales puis allume l’enceinte. Des notes dessinées apparaissent mais aucun son ne sort. Décris ces objets, puis vous analyserez ce paradoxe au salon.":undefined};
         if(dossierNextTrap&&beatLine===dossierLine)life.dossierAsked={...life.dossierAsked,[dossierNextTrap]:story.round};
         if(turnPlan.offer&&turnPlan.proposalLine&&pastKeys.has(fingerprint(turnPlan.proposalLine))){const original=turnPlan.proposalLine;const candidates=["Si ça te tente. "+original,"Je préfère te demander. "+original,"Sans te mettre la pression. "+original];turnPlan.proposalLine=candidates.find(line=>!pastKeys.has(fingerprint(line)));if(!turnPlan.proposalLine)Object.assign(turnPlan,{offer:undefined,intent:"chat",partnerIntent:"chat",requiredIntent:"chat"});}
         const {urgentIntent,requiredIntent,routine}=turnPlan;
@@ -913,8 +915,12 @@ export async function POST(request: Request) {
           const initiator=decisions.find(d=>d.actor===actor)!;
           const responder=decisions.find(d=>d.actor!==actor)!;
           if(responder.thought&&initiator.thought){
-            addLine(names[responder.actor]+" · pensée",responder.thought,finalResidents.find(a=>a.id===responder.actor)!.room);
-            addLine(names[initiator.actor]+" · pensée",initiator.thought,finalResidents.find(a=>a.id===initiator.actor)!.room);
+            // Même filet que toute réplique parlée (groundTruncation/groundRegister, cf. la ligne
+            // principale plus bas) : ce contenu est généré par le modèle au même titre qu'un reply,
+            // il peut donc être coupé net ou porter un mot déjà identifié comme daté — l'oubli
+            // laisserait une incohérence de traitement entre deux lignes du même tour.
+            addLine(names[responder.actor]+" · pensée",groundRegister(groundTruncation(responder.thought)),finalResidents.find(a=>a.id===responder.actor)!.room);
+            addLine(names[initiator.actor]+" · pensée",groundRegister(groundTruncation(initiator.thought)),finalResidents.find(a=>a.id===initiator.actor)!.room);
             life.personalConcluded=true;
           }
         }
