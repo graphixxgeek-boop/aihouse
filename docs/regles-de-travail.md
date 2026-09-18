@@ -12,6 +12,17 @@ projet doit lire ce document en plus de `CLAUDE.md`, pas à sa place.*
 réécrite silencieusement par-dessus l'ancienne version — même exigence de traçabilité que la
 charte de contenu.*
 
+## 0. Relecture périodique, pas seulement en début de session
+
+*(Ajouté le 2026-09-18, à la demande explicite de l'utilisateur.)* Lire `CLAUDE.md` et ce document
+en entier avant toute intervention (déjà exigé en tête de `CLAUDE.md`) ne suffit pas sur une longue
+session : la charte et ces règles doivent aussi être **relues à intervalles réguliers en cours de
+route**, pas seulement invoquées de mémoire. Si un long moment s'écoule sans qu'aucun des deux
+documents ait été consulté ou cité explicitement, c'est un signal à ne pas ignorer : l'agent
+s'oblige alors à les rouvrir et à les relire, pour vérifier que le travail en cours reste
+effectivement dans la bonne direction plutôt que de dériver progressivement sur la seule base d'un
+souvenir qui s'estompe.
+
 ## 1. Rythme et intégration des demandes
 
 L'utilisateur spécifie rarement une fonctionnalité en un seul message complet : il la construit
@@ -118,6 +129,14 @@ qu'ils sont perdus. Le répertoire temporaire d'une session n'étant pas garanti
 changement d'environnement, un artefact dont la comparaison future importe réellement (ex. la
 version validée d'une scène de référence) gagne à être copié dans le dépôt lui-même plutôt que
 laissé uniquement en zone temporaire.
+
+*Nuance ajoutée le 2026-09-18, à la demande explicite de l'utilisateur après que la méthode a
+réellement fonctionné sur le Point 7 :* la comparaison de versions est un outil de diagnostic
+précieux, souvent le plus rapide, **jamais une garantie universelle** — une régression peut aussi
+n'avoir aucune version antérieure valable à comparer, ou provenir d'une cause que la comparaison
+seule ne révèle pas (ex. le Point 2, retrouvé par une lecture directe du code et des journaux de
+requêtes, pas par une différence visible entre deux transcripts). L'agent l'essaie en priorité
+quand une version de référence existe, sans jamais s'y arrêter si elle ne suffit pas à conclure.
 
 ## 8. Profil de collaboration observé
 

@@ -1282,8 +1282,19 @@ export async function POST(request: Request) {
         // Record consent before shared sleep; subsequent sleeping turns stay entirely silent.
         if(shared&&decisions[0].intent==="share_sleep")for(const d of decisions)if(!["sleep","share_sleep"].includes(world.agents.find(a=>a.id===d.actor)!.intent))addLine(names[d.actor]+" · avant sommeil",d.reply,finalResidents.find(a=>a.id===d.actor)!.room);
         // Dialogue order must follow generation order, not resident id order.
+        // Le filtre sleep/share_sleep vise le sommeil qui SE POURSUIT (tour silencieux, Article
+        // 03) — pas le tour de TRANSITION où le personnage vient tout juste de basculer vers le
+        // sommeil (dreamers, cf. plus haut). Avant ce correctif (2026-09-18, retour utilisateur
+        // explicite : « Noé rêve éveillé »), la réplique réelle de transition (ex. « Viens, on
+        // trace dans cette piaule avant que tu t'effondres ») était silencieusement exclue par ce
+        // même filtre, alors même que le tour venait de coûter un vrai appel API pour la générer —
+        // un personnage encore parfaitement éveillé ce tour-là passait directement de la
+        // conversation à un rêve sans la moindre annonce d'endormissement, un vrai trou de
+        // cohérence (Article 2/12/17). Exactement le même bug que celui déjà corrigé pour
+        // share_sleep (« · avant sommeil » ci-dessous) mais jamais reproduit ici pour le sommeil
+        // solo (Article 3 : une règle corrigée une fois ne doit plus se reproduire ailleurs).
         if (!finale&&((input.mode !== "move" && input.mode !== "care" && !routine) || decisions.some(d => d.actor === 1 && d.intent === "sleep" && d.room === "salon")))
-            for (const d of decisions.filter(d=>!["sleep","share_sleep"].includes(d.intent)))
+            for (const d of decisions.filter(d=>!["sleep","share_sleep"].includes(d.intent)||dreamers.includes(d.actor)))
                 addLine(solitary.has(d.actor) ? `${names[d.actor]} · pensée` : names[d.actor], solitary.has(d.actor) && d.actor===1 && d.intent==="sleep" && d.room==="salon" ? seedPick(story.seed,"couch-solitary-thought",["Noé aurait pu dormir dans le salon. Je suis déçue de devoir lui laisser le lit.","Encore le canapé, parce que Noé garde le lit. Ça me pèse plus que je le dis.","Je cède la chambre à Noé une fois de plus. J'aurais aimé qu'il y pense tout seul."]) : groundRegister(groundSingleQuestion(d.reply)),turnPlan.exitInspection?"couloir":finalResidents.find(a=>a.id===d.actor)!.room);
         for(const d of decisions)if(!["sleep","share_sleep"].includes(d.intent)&&d.emotions.attraction>75&&!life.loveNoticed?.includes(d.actor)){const peer=d.actor===1?"il":"elle";if(addLine(names[d.actor]+" · pensée",d.actor===1?"Punaise… je crois que je tombe amoureuse. Ce qu’il fait me touche, pas seulement sa présence.":"Je crois que je tombe amoureux. Elle me plaît, mais j’ai aussi peur de la perdre.",finalResidents.find(a=>a.id===d.actor)!.room))life.loveNoticed=[...(life.loveNoticed??[]),d.actor];}
         let causalThought=false;
