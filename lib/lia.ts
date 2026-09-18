@@ -29,7 +29,7 @@ export const decisionSchema = z.object({
 export class LiaError extends Error {
     constructor(message: string, public status: number) { super(message); }
 }
-export async function think(key: string, model: string, context: object, name = "Lia", fallbackModels: string[] = []) {
+export async function think(key: string, model: string, context: object, name = "Lia", fallbackModels: string[] = [], fallbackKeys: string[] = []) {
     // Précisions sur l'esprit (Article 0), validées le 2026-09-16 : le ton n'est jamais un mode
     // déclenché par la pression, il est présent en permanence ; sa texture diffère par personnage.
     const toneline = name === "Lia"
@@ -94,21 +94,33 @@ JSON : schema strict. action none rester, move changer de pièce, talk parler. m
     // de l'application (gros prompt), Google répond parfois 503 plutôt que 429 pour CE MÊME modèle
     // pourtant confirmé en quota épuisé par sonde directe (scripts/check-gemini-quota.mjs) au même
     // instant — donc bien la même cause (épuisement), qu'un autre modèle résout tout aussi bien.
+    // Repli de clé (2026-09-18, même jour, prévu par précaution avant même d'en avoir besoin : le
+    // quota épuisé ci-dessus est attaché à UN projet Google/UNE clé, jamais partagé entre projets —
+    // une seconde clé sur un projet distinct a donc un quota totalement indépendant. Désactivé par
+    // défaut (fallbackKeys=[]) pour la même raison que le repli de modèle : aucune bascule de clé
+    // silencieuse sans configuration explicite. Combiné au repli de modèle : chaque clé essaie
+    // TOUS les modèles avant de passer à la clé suivante, jamais l'inverse (une clé invalide sur
+    // un modèle l'est sur tous : inutile de gaspiller des tentatives sur ses autres modèles avant
+    // de changer de clé — cf. le cas 401/403 ci-dessous).
     const modelsToTry = [model, ...fallbackModels];
+    const keysToTry = [key, ...fallbackKeys];
     let response: Response | undefined;
-    for (let attempt = 0; attempt < modelsToTry.length; attempt++) {
-        const candidate = modelsToTry[attempt];
-        try {
-            response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(candidate)}:generateContent`, {
-                method: "POST", headers: { "x-goog-api-key": key, "Content-Type": "application/json" },
-                signal: AbortSignal.timeout(30000), body: requestBody
-            });
+    keyLoop:
+    for (let k = 0; k < keysToTry.length; k++) {
+        for (let m = 0; m < modelsToTry.length; m++) {
+            try {
+                response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelsToTry[m])}:generateContent`, {
+                    method: "POST", headers: { "x-goog-api-key": keysToTry[k], "Content-Type": "application/json" },
+                    signal: AbortSignal.timeout(30000), body: requestBody
+                });
+            }
+            catch {
+                throw new LiaError("La maison n’a pas pu joindre Gemini. Réessaie dans un moment.", 503);
+            }
+            if (response.status === 401 || response.status === 403) break; // clé invalide pour ce modèle : inutile d'essayer ses autres modèles, tenter la clé suivante
+            if (response.status === 429 || response.status === 503) { if (m < modelsToTry.length - 1) continue; break; } // modèle suivant si possible, sinon clé suivante
+            break keyLoop; // réponse définitive (ok, ou erreur non récupérable par un changement de modèle/clé)
         }
-        catch {
-            throw new LiaError("La maison n’a pas pu joindre Gemini. Réessaie dans un moment.", 503);
-        }
-        if ((response.status === 429 || response.status === 503) && attempt < modelsToTry.length - 1) continue;
-        break;
     }
     if (!response!.ok) {
         if (response!.status === 429)
