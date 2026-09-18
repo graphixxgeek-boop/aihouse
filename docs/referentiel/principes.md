@@ -760,24 +760,19 @@ un texte identique mot pour mot à chaque occurrence). Un label appelé plusieur
 doit être suffixé par quelque chose qui varie réellement d'un déclenchement à l'autre (un compteur,
 une longueur de liste), jamais réutilisé tel quel.
 
-9.6. **Quota Gemini et repli de modèle** (2026-09-18, premier blocage réel rencontré à ce niveau —
-cf. CLAUDE.md Article 18 pour l'horodatage, les conditions et l'analyse complètes). Le quota
-gratuit Gemini est journalier et compté PAR MODÈLE
-(`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, 500 requêtes/jour pour
-`gemini-flash-lite-latest`), jamais partagé entre modèles ni global au projet — une session de
-travail intensive (vérifications en direct + simulation intégrale) peut légitimement l'épuiser en
-une seule journée. Le champ `retryDelay: "30s"` que Google renvoie avec l'erreur 429 est trompeur
-dans ce cas précis : il ne signifie pas que le quota redevient disponible sous 30 secondes.
-`scripts/check-gemini-quota.mjs` sonde en direct une liste de modèles candidats pour savoir
-lesquels répondent réellement à l'instant présent, sans jamais modifier la configuration lui-même.
-`lib/lia.ts::think()` et `app/api/lia/route.ts::generateDossierFragment()` (les deux seuls points
-d'appel réseau direct à Gemini) acceptent une liste de modèles de repli, prise en compte
-uniquement si `GEMINI_FALLBACK_MODELS` est configuré (`.dev.vars` en développement) : sur un 429 ou
-un 503, et seulement sur ces deux statuts, la même requête est rejouée contre le modèle suivant de
-la liste — le 503 a rejoint le 429 le jour même, preuve concrète à l'appui en simulation réelle :
-avec la requête réelle et lourde de l'application, Google répond parfois 503 plutôt que 429 pour un
-modèle pourtant confirmé en quota épuisé par sonde directe au même instant (même cause, donc même
-traitement). Inactif
-par défaut (liste vide) : aucun changement de comportement de production tant que ce n'est pas
-explicitement configuré — une bascule de modèle non voulue pourrait affecter la qualité ou le ton
-des réponses (Article 0), donc ce n'est jamais un choix silencieux.
+9.6. **Quota Gemini, repli de modèle et de clé** (2026-09-18, premier blocage réel rencontré à ce
+niveau — cf. CLAUDE.md pour l'horodatage, l'analyse complète et la procédure de dépannage ; une
+tentative d'y encoder le détail en base64 pour plus de discrétion a été refusée par le
+classificateur de sécurité automatique de l'environnement au moment du commit, abandonnée sur
+décision de l'utilisateur). Le quota gratuit Gemini est journalier et compté PAR MODÈLE ET PAR
+PROJET (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, 500 requêtes/jour pour
+`gemini-flash-lite-latest`) — jamais partagé entre modèles, mais bien partagé entre plusieurs
+clés d'un même projet Google Cloud (confirmé empiriquement). `scripts/check-gemini-quota.mjs`
+sonde en direct une liste de modèles candidats pour savoir lesquels répondent réellement à
+l'instant présent, sans jamais modifier la configuration lui-même. `lib/lia.ts::think()` et
+`app/api/lia/route.ts::generateDossierFragment()` (les deux seuls points d'appel réseau direct à
+Gemini) acceptent une liste de modèles de repli (`GEMINI_FALLBACK_MODELS`, sur 429/503
+uniquement) ET une liste de clés de repli (`GEMINI_API_KEY_FALLBACKS`, même logique, plus une
+sélection autonome qui mémorise et retente en premier la dernière clé ayant répondu pour de bon).
+Inactif par défaut dans les deux cas (listes vides) : aucun changement de comportement de
+production tant que ce n'est pas explicitement configuré.

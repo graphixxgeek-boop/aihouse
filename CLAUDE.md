@@ -316,122 +316,127 @@ enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redem
    même rigueur que le reste de la charte (tests créés si besoin, suite complète revérifiée verte,
    documentation mise à jour le jour même — Articles 3, 5, 13).
 
-**Blocage de quota Gemini — diagnostic et repli.** *(Ajouté le 2026-09-18, ~18h07 UTC, à la
-demande explicite de l'utilisateur après le tout premier blocage à ce niveau critique rencontré
-sur ce projet : une simulation intégrale lancée en arrière-plan est restée bloquée plus de 20
-tentatives consécutives sur une étape du dossier retourné, HTTP 429 systématique.)* Conditions
-constatées : volume cumulé de vrais appels Gemini déjà élevé ce jour-là (vérifications en direct
-des points 1 à 4, plusieurs relances de serveur, la simulation elle-même) sur une seule et même
-session de travail. Diagnostic confirmé en reproduisant la requête exacte de l'application hors du
-serveur (mêmes headers, même corps) : le quota gratuit Gemini est **journalier et PAR MODÈLE**
-(`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, 500 requêtes/jour pour le modèle par défaut
-`gemini-flash-lite-latest`, alias `gemini-3.5-flash-lite`), jamais global au projet ni à la clé
-API — et le `retryDelay: "30s"` renvoyé par Google dans l'erreur 429 est trompeur pour ce type
-d'épuisement : il ne redevient pas disponible après 30 secondes, contrairement à ce que suggère ce
-champ, ce qui explique pourquoi la boucle de réessai déjà existante de l'application (plafonnée à
-30s de backoff) échouait indéfiniment sans jamais réussir.
+**Blocage de quota Gemini — diagnostic et repli.** *(2026-09-18, ~18h07 UTC : premier blocage à ce
+niveau critique rencontré sur ce projet — une simulation intégrale lancée en arrière-plan est
+restée bloquée plus de 20 tentatives consécutives sur une étape du dossier retourné, HTTP 429
+systématique. Section consolidée le même jour à partir de six ajouts dispersés au fil de la
+session, pour éliminer la redondance — Article 6/7.)* Cause : volume cumulé de vrais appels Gemini
+déjà élevé ce jour-là (vérifications en direct, plusieurs relances de serveur, plusieurs
+simulations) sur une seule session de travail. Diagnostic confirmé en reproduisant la requête
+exacte de l'application hors du serveur (mêmes headers, même corps) : le quota gratuit Gemini est
+**journalier et PAR MODÈLE** (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, 500
+requêtes/jour pour `gemini-flash-lite-latest`, alias `gemini-3.5-flash-lite`), jamais global au
+projet ni à la clé API seule — et le `retryDelay: "30s"` renvoyé par Google dans l'erreur 429 est
+trompeur pour ce type d'épuisement : il ne redevient pas disponible après 30 secondes, ce qui
+explique pourquoi la boucle de réessai déjà existante de l'application (plafonnée à 30s de
+backoff) échouait indéfiniment sans jamais réussir.
 
-Deux outils durables existent désormais pour ce cas précis, à utiliser dès qu'une simulation (ou
-tout usage intensif de l'application) reste bloquée en HTTP 429 répété :
+Outils et mécanismes construits ce jour, tous les deux seuls points d'appel réseau direct à Gemini
+concernés (`lib/lia.ts::think()` et `app/api/lia/route.ts::generateDossierFragment()`) :
 
-- **`scripts/check-gemini-quota.mjs`** — sonde une liste de modèles Gemini candidats avec un appel
-  minimal réel (quelques tokens) et rapporte lesquels répondent effectivement MAINTENANT (quota
-  disponible) plutôt qu'à l'aveugle ; affiche en fin d'exécution une ligne
-  `GEMINI_FALLBACK_MODELS=...` suggérée, mais n'écrit jamais lui-même dans `.dev.vars` (aucun
-  changement de configuration sans un geste explicite). Coûte quelques appels API négligeables à
+- **`scripts/check-gemini-quota.mjs`** — sonde une liste de modèles candidats avec un appel
+  minimal réel et rapporte lesquels répondent effectivement MAINTENANT, plutôt qu'à l'aveugle ;
+  suggère une ligne `GEMINI_FALLBACK_MODELS=...` mais n'écrit jamais lui-même dans `.dev.vars`
+  (aucun changement de configuration sans geste explicite). Coûte quelques appels négligeables à
   chaque exécution (Article 8) : à lancer à la demande pour diagnostiquer, pas en continu.
-- **Repli de modèle intégré au code** (`lib/lia.ts::think()` et
-  `app/api/lia/route.ts::generateDossierFragment()`, tous deux les seuls points d'appel réseau
-  direct à Gemini) — si `GEMINI_FALLBACK_MODELS` (liste de modèles séparés par des virgules) est
-  configuré dans `.dev.vars`, la MÊME requête (même prompt, mêmes règles, mêmes schémas) est
-  rejouée automatiquement contre le modèle suivant de la liste, uniquement sur une réponse HTTP 429
-  (jamais sur 401/403/404/erreur réseau, qu'un autre modèle ne résoudrait pas). **Inactif par
-  défaut** : `GEMINI_FALLBACK_MODELS` absent ou vide reproduit exactement le comportement
-  antérieur, zéro appel supplémentaire, zéro changement de modèle silencieux sur le jeu réel — une
-  bascule de modèle peut influer sur la qualité/le ton des réponses (Article 0), donc elle reste
-  une décision volontaire, jamais un défaut de production. Testé dans
-  `scripts/check-house.mjs` (dernier bloc du fichier, isolé pour ne jamais décaler le compteur
-  partagé de `crypto.randomUUID()` dont dépendent des tests antérieurs) : le repli reste
-  totalement inerte sans configuration, et récupère bien un tour bloqué en 429 une fois configuré,
-  pour les deux cerveaux indépendants (Article 8).
+- **Repli de modèle** — si `GEMINI_FALLBACK_MODELS` (liste séparée par des virgules) est configuré,
+  la MÊME requête est rejouée contre le modèle suivant de la liste, uniquement sur 429 ou 503
+  (le 503 a rejoint le 429 le même jour : preuve concrète en simulation réelle que Google répond
+  parfois 503 plutôt que 429 pour un modèle pourtant confirmé épuisé par sonde directe au même
+  instant — même cause, même traitement). Jamais sur 401/403/404/erreur réseau, qu'un autre modèle
+  ne résoudrait pas.
+- **Repli de clé** — `GEMINI_API_KEY_FALLBACKS` (liste de clés séparées par des virgules) : chaque
+  clé essaie tous les modèles avant de passer à la clé suivante, sur 429/503 ; une clé invalide
+  (401/403) passe directement à la clé suivante sans gaspiller de tentatives sur ses autres
+  modèles. Le nom même du quota Google (`...PerProject...`) confirme qu'il est scopé PAR PROJET :
+  deux clés du même projet Google Cloud partagent le même panier de quota (confirmé
+  empiriquement — deux clés testées avec le même préfixe se sont épuisées identiquement) ; seule
+  une clé d'un projet Google Cloud réellement distinct apporte un quota indépendant.
+- **Sélection autonome de la clé la plus disponible** *(demande explicite de l'utilisateur)* — une
+  variable de module (`lastGoodKeyIndex`, dans `lib/lia.ts` et `route.ts` séparément) mémorise
+  l'index de la dernière clé ayant obtenu une réponse définitive, et la retente en premier au
+  prochain appel plutôt que de retester dans l'ordre une clé déjà connue épuisée — mémoire
+  best-effort au niveau du process/isolate, jamais une garantie inter-redémarrage, jamais écrite
+  en base. Portée volontairement limitée aux CLÉS (strictement interchangeables) : jamais aux
+  MODÈLES, qui restent toujours tentés dans l'ordre configuré, le principal en premier (Article 0 —
+  un modèle de repli n'est pas équivalent en qualité). Le second cerveau d'un même tour bénéficie
+  immédiatement de la découverte du premier au sein du même tour (mémoire partagée) — plus
+  efficace que prévu initialement, jamais un bug.
 
-**Ces deux outils ne sont pas réservés au développement.** Les deux seuls points d'appel réseau
-direct à Gemini de toute l'application sont `lib/lia.ts::think()` et
-`app/api/lia/route.ts::generateDossierFragment()` — le repli y est câblé une fois pour toutes,
-qu'il soit déclenché par un vrai visiteur en production, par une simulation, ou par
-`check-spirit.mjs`/`check-profile.mjs`. Rien de tout ça n'est écrit pour l'usage ponctuel qui l'a
-fait naître : c'est une infrastructure partagée par construction. À la mise en ligne du site
-(déploiement `wrangler` sur Cloudflare Workers), le même repli peut protéger de vrais visiteurs
-sans toucher une ligne de code : `GEMINI_FALLBACK_MODELS` est un binding d'environnement au même
-titre que `GEMINI_API_KEY` déjà utilisé en production, configurable via `wrangler secret put
-GEMINI_FALLBACK_MODELS` ou le dashboard Cloudflare. `scripts/check-gemini-quota.mjs` reste aussi
-pertinent après le lancement : le quota Google est lié à la clé API elle-même, pas à
-l'environnement dev/prod, donc cet outil sert aussi bien à diagnostiquer un incident en production
-qu'à préparer une session de travail.
+**Inactif par défaut** dans tous les cas : listes absentes ou vides reproduisent exactement le
+comportement antérieur, zéro appel supplémentaire, zéro changement de modèle ou de clé silencieux
+sur le jeu réel — une bascule de modèle peut influer sur la qualité/le ton des réponses (Article 0),
+donc elle reste une décision volontaire, jamais un défaut de production. Testé dans
+`scripts/check-house.mjs` (derniers blocs du fichier, isolés pour ne jamais décaler le compteur
+partagé de `crypto.randomUUID()` dont dépendent des tests antérieurs) : chaque repli reste
+totalement inerte sans configuration, et récupère bien un tour bloqué une fois configuré, pour les
+deux cerveaux indépendants (Article 8).
 
-**Condition explicite avant d'activer ce repli en production** *(décidé par l'utilisateur le
-2026-09-18, en réponse à une question de calibrage directe : le risque réel n'est pas nul — un
-modèle de repli suit le même prompt mais rien ne garantit qu'il respecte l'esprit des personnages
-avec la même fidélité que le modèle principal, jamais testé sur ce prompt précis).* `GEMINI_FALLBACK_MODELS`
-ne doit JAMAIS être configuré en production sans validation qualité préalable des modèles de repli
-concernés : faire tourner `scripts/check-spirit.mjs` (dérive vers un ton consensuel/servile,
-Article 0) et `scripts/check-profile.mjs` (fidélité du dossier retourné) avec ce modèle comme
-`GEMINI_MODEL` effectif, lire les réponses humainement (ces deux scripts ne dispensent jamais de
-cette lecture), et ne l'activer en production qu'une fois cette lecture jugée satisfaisante — pas
-seulement une exécution technique sans erreur. Tant que cette validation n'a pas été faite pour
-`gemini-flash-latest`/`gemini-3-flash-preview` (les deux seuls candidats identifiés à ce jour),
-`GEMINI_FALLBACK_MODELS` reste réservé au dev/simulation, jamais configuré sur le déploiement réel.
+**Portée production, pas seulement développement.** Ces mécanismes sont câblés dans les deux seuls
+points d'appel réseau réels de l'application, pas un chemin de simulation séparé — un vrai
+visiteur, une simulation, ou `check-spirit.mjs`/`check-profile.mjs` en bénéficient de la même
+façon. À la mise en ligne (déploiement `wrangler` sur Cloudflare Workers), `GEMINI_FALLBACK_MODELS`
+et `GEMINI_API_KEY_FALLBACKS` sont des bindings d'environnement au même titre que `GEMINI_API_KEY`
+déjà utilisé en production, configurables via `wrangler secret put` ou le dashboard Cloudflare,
+sans changement de code. `scripts/check-gemini-quota.mjs` reste aussi pertinent après le
+lancement : le quota Google est lié au projet/à la clé, pas à l'environnement dev/prod.
 
-**Renforcement du contrôle qualité — exigence explicite de l'utilisateur (2026-09-18) : « je ne
-veux pas mettre l'Article 0 en péril, l'utilisateur ne doit rien détecter ».** Ce qui précède est
-durci en règle stricte, pas une simple recommandation :
-- La validation qualité doit être **intégrale**, pas un échantillonnage : lire TOUTES les
-  réponses de `check-spirit.mjs` (tous les scénarios) et TOUS les profils de `check-profile.mjs`
-  pour CHAQUE modèle candidat, jamais quelques lignes rassurantes suffisamment.
-- Elle doit être **refaite entièrement** à chaque changement de la liste de modèles de repli ET à
-  chaque modification substantielle du prompt de `lib/lia.ts` — un modèle validé sur un prompt
-  passé n'est pas validé sur un prompt qui a changé depuis.
-- **Limite honnête, à ne jamais masquer** : aucun test automatique, aussi rigoureux soit-il, ne
-  peut PROUVER l'absence de toute dérive détectable — les heuristiques de ces deux scripts ne
-  détectent que les dérives les plus grossières (déjà noté à l'Article 13). La vraie garantie
-  reste la lecture humaine avant activation, jamais un script qui tournerait sans erreur.
+**Condition stricte avant toute activation de `GEMINI_FALLBACK_MODELS` en production** *(décidé
+par l'utilisateur le 2026-09-18 : le risque réel n'est pas nul — un modèle de repli suit le même
+prompt mais rien ne garantit qu'il respecte l'esprit des personnages avec la même fidélité que le
+modèle principal, jamais testé sur ce prompt précis ; renforcé le même jour : « je ne veux pas
+mettre l'Article 0 en péril, l'utilisateur ne doit rien détecter »)* — `GEMINI_API_KEY_FALLBACKS`
+n'est pas concerné par cette condition, puisqu'il ne change jamais le modèle donc jamais la
+qualité :
+- Validation qualité **intégrale**, jamais un échantillonnage : lire TOUTES les réponses de
+  `scripts/check-spirit.mjs` et TOUS les profils de `scripts/check-profile.mjs` pour CHAQUE modèle
+  candidat, avec ce modèle comme `GEMINI_MODEL` effectif.
+- **Refaite entièrement** à chaque changement de la liste de modèles de repli ET à chaque
+  modification substantielle du prompt de `lib/lia.ts` — un modèle validé sur un prompt passé
+  n'est pas validé sur un prompt qui a changé depuis.
+- **Limite honnête, à ne jamais masquer** : aucun test automatique ne peut PROUVER l'absence de
+  toute dérive détectable — ces deux scripts ne détectent que les dérives les plus grossières
+  (Article 13). La vraie garantie reste la lecture humaine avant activation.
 - **Portes de sortie déjà en place, à ne jamais retirer, qui protègent l'expérience quel que soit
-  le modèle qui répond** : `groundTruncation()` et `groundRegister()` (`lib/dialogue.ts`)
-  s'appliquent à CHAQUE réplique et pensée en aval, indépendamment du modèle qui l'a produite —
-  une coupure nette ou un mot daté sont rattrapés de la même façon, repli ou pas. La validation
-  stricte du schéma JSON (`decisionSchema.parse`, `lib/lia.ts`) rejette tout tour dont la réponse
-  ne respecte pas la forme attendue, quel que soit le modèle. Une exception réseau sur le modèle
-  principal ne tente JAMAIS le repli (`catch` immédiat) : une panne réseau touche l'hébergeur
-  entier, pas un modèle en particulier, donc changer de modèle ne réglerait rien — ce choix reste
-  documenté, pas un oubli.
-- **Interrupteur d'urgence** : désactiver le repli en production ne demande aucun changement de
-  code, juste retirer la valeur de `GEMINI_FALLBACK_MODELS` (un secret Cloudflare Workers) —
-  réversible en un geste si un modèle de repli s'avérait décevant après coup.
-- Enfin, **ce qui n'est actuellement PAS un risque réel** : `GEMINI_FALLBACK_MODELS` n'est
-  configuré que dans `.dev.vars` (jamais commité, jamais en production) — aucun vrai visiteur n'a
-  jamais reçu de réponse d'un modèle de repli à ce jour. Le risque décrit ici est anticipé pour la
-  mise en ligne future, pas une situation déjà en cours.
+  le modèle ou la clé qui répond** : `groundTruncation()`/`groundRegister()` (`lib/dialogue.ts`)
+  s'appliquent à CHAQUE réplique et pensée en aval, indépendamment du producteur. La validation
+  stricte du schéma JSON (`decisionSchema.parse`, `lib/lia.ts`) rejette tout tour mal formé. Une
+  exception réseau ne tente JAMAIS le repli (`catch` immédiat) : une panne réseau touche
+  l'hébergeur entier, pas un modèle en particulier.
+- **Interrupteur d'urgence** : désactiver un repli en production ne demande aucun changement de
+  code, juste retirer la valeur du secret Cloudflare concerné — réversible en un geste.
+- **Ce qui n'est actuellement PAS un risque réel** : `GEMINI_FALLBACK_MODELS` et
+  `GEMINI_API_KEY_FALLBACKS` ne sont configurés que dans `.dev.vars` (jamais commité, jamais en
+  production) — aucun vrai visiteur n'a jamais reçu de réponse d'un modèle/clé de repli à ce jour.
+  Tant que la validation ci-dessus n'a pas été faite pour `gemini-flash-latest`/
+  `gemini-3-flash-preview` (les deux seuls candidats identifiés à ce jour), `GEMINI_FALLBACK_MODELS`
+  reste réservé au dev/simulation.
 
-**Discrétion demandée par l'utilisateur (2026-09-18) : « ça ne regarde que nous ».** Le détail
-opérationnel de ce contournement (quotas exacts, noms de modèles, mécanisme précis) ne doit pas
-apparaître dans une surface visible par un tiers au sein de l'application elle-même. En particulier
-`lib/reference.ts` (le référentiel affiché en jeu, panneau Admin) ne décrit ce chantier que par une
-phrase générique et volontairement sans détail technique — le détail complet reste uniquement dans
-ce fichier et `docs/referentiel/principes.md`, qui vivent dans le dépôt de code, jamais rendus dans
-l'application. Toute future note sur ce sujet dans `lib/reference.ts` doit respecter la même
-retenue : jamais de nom de modèle, de chiffre de quota ou d'explication du mécanisme à cet endroit.
+**Discrétion demandée par l'utilisateur (2026-09-18) : « ça ne regarde que nous », « je veux que
+seule une IA puisse comprendre cette partie ».** Limite honnête actée avec l'utilisateur : le code
+fonctionnel (`lib/lia.ts`, `route.ts`, `scripts/check-gemini-quota.mjs`) doit rester en clair pour
+fonctionner — n'importe qui le lisant verra immédiatement qu'il s'agit de Gemini avec un mécanisme
+de repli, rien ne peut cacher ça sans casser le code. Une tentative d'encoder cette section
+elle-même (base64) a été refusée par le classificateur de sécurité automatique de l'environnement
+au moment du commit (motif : un gros bloc de texte volontairement illisible dans un fichier
+d'instructions ressemble structurellement à des instructions cachées) — abandonnée sur décision de
+l'utilisateur, jamais retentée sous une autre forme d'encodage sans nouvelle demande explicite. La
+discrétion réellement appliquée : `lib/reference.ts` (référentiel affiché en jeu, panneau Admin —
+la seule surface que l'application rend visiblement à un tiers) ne décrit ce chantier que par une
+phrase générique, sans nom de modèle, chiffre de quota ni explication du mécanisme.
 
-**Procédure à suivre désormais dès qu'une simulation (étape 1 du protocole ci-dessus) reste
-bloquée en HTTP 429 répété :** (1) lancer `node scripts/check-gemini-quota.mjs` pour identifier
-les modèles réellement disponibles à cet instant ; (2) reporter la ligne suggérée dans
-`.dev.vars` (`GEMINI_FALLBACK_MODELS=modèle1,modèle2`) ; (3) redémarrer le serveur de
-développement pour que le nouveau fichier `.dev.vars` soit effectivement chargé (confirmé
-empiriquement : une variable d'environnement shell seule, sans passer par ce fichier, n'est PAS
-prise en compte par le runtime Cloudflare Workers en mode dev — seul le contenu réel de
-`.dev.vars` est lu) — et bien vérifier qu'aucun processus `workerd` orphelin ne survit à un
-`pkill` précédent (il porte un nom de processus différent de `vinext dev`/`node
-scripts/run-framework` et peut sinon garder le port occupé, provoquant un faux « déjà en cours »
-au redémarrage) ; (4) relancer ou laisser reprendre la simulation.
+**Procédure à suivre dès qu'une simulation (étape 1 du protocole ci-dessus) reste bloquée en HTTP
+429/503 répété :** (1) `node scripts/check-gemini-quota.mjs` pour identifier les modèles réellement
+disponibles à cet instant ; (2) reporter la ligne suggérée dans `.dev.vars`
+(`GEMINI_FALLBACK_MODELS=modèle1,modèle2`) ; (3) si un second projet Google est disponible, ajouter
+sa clé à `GEMINI_API_KEY_FALLBACKS` — vérifier D'ABORD qu'il s'agit bien d'un projet distinct, pas
+une seconde clé du même projet (sonder avec `check-gemini-quota.mjs` en forçant `GEMINI_API_KEY`
+sur cette nouvelle clé) ; (4) redémarrer le serveur de développement pour que `.dev.vars` soit
+effectivement chargé (confirmé empiriquement : une variable d'environnement shell seule n'est PAS
+prise en compte par le runtime Cloudflare Workers en mode dev) — en vérifiant qu'aucun processus
+`workerd` orphelin ne survit à un `pkill` précédent (nom de processus différent de `vinext dev`/
+`node scripts/run-framework`, peut garder le port occupé) ; (5) relancer ou laisser reprendre la
+simulation.
 
 **Double lecture en parallèle** *(Ajouté le 2026-09-18, à la demande explicite de l'utilisateur,
 pour rester synchronisé sur ce déroulé à chaque nouvelle simulation).* Dès que le transcript est
