@@ -810,6 +810,46 @@ la roulette respecte en plus un débit réel côté serveur (60 secondes minimum
 compteur affiché sur le bouton côté client), indépendant de ce budget narratif mais jamais plus
 permissif que lui.
 
+8.13. **La description d'apparence n'est plus écrasée par un texte scripté** (`app/api/lia/route.ts`,
+2026-09-18, retour utilisateur explicite après lecture de full_sim4 : le partenaire ignorait
+systématiquement le jardin/la question posée juste avant, car sa réplique entière était remplacée
+par `appearanceReply()`). Le modèle reste déjà instruit par `beatContext.visual`/la règle
+DESCRIPTION (article 5.3) pour décrire précisément l'apparence de l'autre ; supprimer ce
+remplacement post-hoc ne coûte aucun appel API supplémentaire (les deux appels avaient déjà lieu)
+et laisse enfin le personnage réagir à ce qui vient d'être dit avant de décrire l'autre. La fonction
+`appearanceReply()` (`lib/perception.ts`) reste disponible et testée unitairement, simplement
+débranchée de ce chemin.
+
+8.14. **Bougie/attirance implicite** (`app/api/lia/route.ts`, `lib/lia.ts`, 2026-09-18, retour
+utilisateur explicite : « en plus de restaurer le calme, la bougie augmente l'attirance de ceux qui
+se trouvent dans la même pièce »). Effet CONTINU tant que le bonus `calm` dure et que les deux
+partagent la même pièce (`candleTogether`, dérivé de `activeBonus(life,"calm")` et
+`turnPlan.room===turnPlan.partnerRoom`) : comme tout le reste de l'attirance dans ce moteur (la
+règle « le salon et surtout la chambre la favorisent »), ce n'est jamais un incrément codé en dur —
+un simple signal (`ambiance:"bougie"`) transmis au modèle, seul maître de faire monter l'attirance
+et de la formuler implicitement (« je te trouve belle », jamais « mon attirance a augmenté »).
+
+8.15. **Pensée de validation après une décision affectueuse** (`app/api/lia/route.ts`, `lib/lia.ts`,
+2026-09-18, retour utilisateur explicite : « après chaque proposition, celui qui décide doit avoir
+une pensée qui juge la pertinence de sa réponse » — étendue symétriquement à qui décide, quel que
+soit son id). Dès qu'une proposition affectueuse est résolue avec `affectionEligible` vrai, la
+pensée du personnage qui vient d'accepter ou de refuser (déjà générée par le modèle ce même tour,
+zéro appel API de plus) devient une ligne « · pensée » visible, passée par le même filet
+`groundRegister`/`groundTruncation` que toute réplique parlée. Volontairement absente quand
+`!affectionEligible` a forcé un refus scénarisé : le thought du modèle, généré avant cette
+correction, pourrait ne pas correspondre à l'issue imposée — mieux vaut l'omettre que montrer une
+pensée incohérente avec la réplique (article 0/17).
+
+8.16. **Doute d'humanité au tout premier réveil** (`app/api/lia/route.ts`, 2026-09-18, retour
+utilisateur explicite : « une des premières questions que se posent les persos [...] est-ce que je
+suis humain, je me souviens de mon prénom mais un truc cloche »). La branche normale de `soloIntro`
+(le tout premier tour, avant toute rencontre) tire désormais parmi quatre formulations par
+personnage (`humanityDoubt`, `seedPick`) plutôt qu'une seule phrase fixe — chacune réordonne
+différemment les trois mêmes idées (trouble ressenti, prénom retrouvé, doute d'humanité) au lieu de
+garder la même charpente habillée de synonymes : la technique de réordonnancement des clauses,
+demandée explicitement comme principe général de lutte contre la répétition pour tout texte écrit
+en dur, pas seulement ce cas précis.
+
 ## 9. Robustesse technique
 
 9.1. Toute écriture en base de données est fondue dans une transaction unique par tour
