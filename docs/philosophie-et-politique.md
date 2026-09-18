@@ -223,6 +223,28 @@ dans la documentation plutôt que simplement oublié à la clôture de la tâche
 *Portée générale* : tout problème identifié mérite une trace écrite de son état — résolu, ou
 ouvertement laissé ouvert — jamais une disparition silencieuse.
 
+### 2.7 La cohérence se vérifie de bout en bout, de la philosophie au code **[Synthèse]**
+
+Un projet structuré en couches (valeurs → politique → référentiel de travail → référentiel figé
+affiché → code) n'est vraiment sain que si les couches restent alignées entre elles. La cohérence
+constatée entre ces couches n'est pas qu'un confort de lecture : c'est la preuve concrète que le
+système tient debout globalement, pas seulement localement. Un référentiel figé, écrit et
+versionné à chaque changement (jamais réécrit rétroactivement), sert de point de comparaison stable
+pour détecter tout décalage — avec le code réel, ou avec les couches plus abstraites au-dessus de
+lui.
+
+*Exemple* : `lib/reference.ts` (le référentiel affiché en jeu, versionné section par section, «
+Version 72 », etc.) sert justement de repère figé : toute affirmation qui s'y trouve doit
+correspondre au code réel, et tout principe qui change dans le code doit s'y répercuter. Vérifier
+que ce référentiel, `docs/referentiel/` (les règles de travail précises) et le code s'accordent
+entre eux, jusqu'à remonter à la philosophie qui les justifie, est la preuve la plus fiable que le
+projet reste cohérent dans son ensemble — pas une simple case à cocher.
+
+*Portée générale* : dans tout projet à plusieurs couches de documentation, maintenir un référentiel
+figé et daté à chaque changement (jamais réécrit après coup) donne un point de comparaison stable ;
+vérifier périodiquement l'alignement entre ce référentiel, les règles plus abstraites au-dessus et
+le code en dessous est le test le plus direct de la santé globale du système.
+
 ---
 
 ## Partie 3 — Ce que ce projet refuse (anti-modèles explicites)

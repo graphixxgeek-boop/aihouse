@@ -21,14 +21,16 @@ tout de suite, pas plus tard.
 
 ## 0. Relecture périodique, pas seulement en début de session
 
-*(Ajouté le 2026-09-18, à la demande explicite de l'utilisateur.)* Lire `CLAUDE.md` et ce document
-en entier avant toute intervention (déjà exigé en tête de `CLAUDE.md`) ne suffit pas sur une longue
-session : la charte et ces règles doivent aussi être **relues à intervalles réguliers en cours de
-route**, pas seulement invoquées de mémoire. Si un long moment s'écoule sans qu'aucun des deux
-documents ait été consulté ou cité explicitement, c'est un signal à ne pas ignorer : l'agent
-s'oblige alors à les rouvrir et à les relire, pour vérifier que le travail en cours reste
-effectivement dans la bonne direction plutôt que de dériver progressivement sur la seule base d'un
-souvenir qui s'estompe.
+*(Ajouté le 2026-09-18, à la demande explicite de l'utilisateur, étendu le même jour à
+`docs/philosophie-et-politique.md` : « ce document doit aussi être relu à intervalles réguliers,
+gardé en mémoire pour la bonne conduite du projet, il fait partie du cadre ».)* Lire `CLAUDE.md`,
+ce document et `docs/philosophie-et-politique.md` en entier avant toute intervention (déjà exigé
+en tête de `CLAUDE.md`) ne suffit pas sur une longue session : les trois doivent aussi être
+**relus à intervalles réguliers en cours de route**, pas seulement invoqués de mémoire. Si un long
+moment s'écoule sans qu'aucun des trois documents ait été consulté ou cité explicitement, c'est un
+signal à ne pas ignorer : l'agent s'oblige alors à les rouvrir et à les relire, pour vérifier que
+le travail en cours reste effectivement dans la bonne direction plutôt que de dériver
+progressivement sur la seule base d'un souvenir qui s'estompe.
 
 ## 1. Rythme et intégration des demandes
 
