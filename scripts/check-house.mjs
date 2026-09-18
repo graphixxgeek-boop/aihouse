@@ -1369,3 +1369,39 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   globalThis.fetch=priorFetch;delete globalThis.__testEnv.GEMINI_FALLBACK_MODELS;
   console.log('Passed: Gemini model fallback also recovers from a primary-model 503 (proven in real simulation to signal the same underlying quota exhaustion as a 429 on a heavy real request), not only a 429.');
 }
+
+{
+  // Repli de clé + sélection autonome de la clé la plus disponible (2026-09-18, demande explicite
+  // de l'utilisateur : pouvoir basculer vers une autre clé API, identique ou différente, et que ça
+  // se fasse tout seul plutôt que de retester une clé déjà connue épuisée à chaque appel).
+  const priorFetch=globalThis.fetch;
+  globalThis.__testEnv.GEMINI_API_KEY_FALLBACKS='test-fallback-key';
+  let primaryKeyAttempts=0,fallbackKeyCalls=0;
+  globalThis.fetch=async(url,options)=>{
+    if(options.headers['x-goog-api-key']==='test-only'){primaryKeyAttempts++;return Response.json({error:{code:'rate_limit_exceeded'}},{status:429});}
+    assert.equal(options.headers['x-goog-api-key'],'test-fallback-key');fallbackKeyCalls++;
+    // Rejoue la même requête avec la clé principale substituée dans l'en-tête, pour réutiliser
+    // telle quelle la validation déjà faite par le mock par défaut (payload, headers restants).
+    return priorFetch(url,{...options,headers:{...options.headers,'x-goog-api-key':'test-only'}});
+  };
+  let epoch=(await readWorld(db)).epoch;
+  let r=await post(input('interact',1,{epoch}));
+  assert.equal(r.status,200,'a configured fallback key must let the turn succeed despite a primary-key 429');
+  // La mémoire de sélection est partagée entre les deux cerveaux d'un même tour (module-level) :
+  // dès que le premier appel découvre la clé principale morte, le second en profite aussitôt et
+  // saute directement à la clé de repli, sans revalider une clé déjà connue épuisée — plus
+  // efficace qu'un essai systématique des deux clés à chaque cerveau, jamais un bug.
+  assert.equal(primaryKeyAttempts,1,'only the first of the two character calls needs to discover the primary key is dead; the second benefits immediately from that same-turn memory');
+  assert.equal(fallbackKeyCalls,2,'both independent character calls must retry against the configured fallback key');
+  // Sélection autonome : un second tour indépendant doit maintenant essayer directement la clé de
+  // repli en premier (mémorisée comme la dernière à avoir répondu pour de bon), sans regaspiller
+  // une tentative sur la clé principale toujours épuisée.
+  primaryKeyAttempts=0;fallbackKeyCalls=0;
+  epoch=(await readWorld(db)).epoch;
+  r=await post(input('interact',1,{epoch}));
+  assert.equal(r.status,200);
+  assert.equal(primaryKeyAttempts,0,'the primary key must not be retried once the fallback key is remembered as the last one that worked');
+  assert.equal(fallbackKeyCalls,2,'the remembered fallback key must be tried directly, first, for both independent character calls');
+  globalThis.fetch=priorFetch;delete globalThis.__testEnv.GEMINI_API_KEY_FALLBACKS;
+  console.log('Passed: Gemini key fallback recovers from a primary-key 429 (the second character call benefits immediately from the same-turn discovery, never re-testing a key just found dead), and the autonomous key-selection memory then tries the remembered working key directly on the very next independent turn, without wasting an attempt on the still-exhausted primary key.');
+}

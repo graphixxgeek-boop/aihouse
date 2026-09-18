@@ -30,6 +30,9 @@ type Decision = z.infer<typeof decisionSchema> & {
 // invente la voix de l'autre (Article 8). Le dossier passé en contexte est la SEULE preuve
 // autorisée ; jamais un fait qui n'y figure pas (Article 4).
 const dossierTone={Lia:"TON DE LIA : froide et coupante, contrôle, ironie mordante, phrases courtes et sèches, jamais de cri ; ton mépris fait plus mal que ta colère. Jamais de vocabulaire thérapeutique, jamais de discours de conciliation ou de soutien scolaire.",Noé:"TON DE NOÉ : chaud et réactif, direct, une repartie toujours prête, jamais neutre ni docile. Jamais de vocabulaire thérapeutique, jamais de discours de conciliation ou de soutien scolaire."};
+// Même principe de sélection autonome de clé que lib/lia.ts::think() (voir son commentaire pour
+// le raisonnement complet) : mémoire best-effort au niveau du module, jamais une garantie.
+let lastGoodKeyIndex=0;
 async function generateDossierFragment(key:string,model:string,name:"Lia"|"Noé",dossier:Record<string,string>,fallbackModels:string[]=[],fallbackKeys:string[]=[]):Promise<string>{
     const system=`Tu es ${name}, personnage adulte de fiction dans un huis clos. Toi et ton partenaire venez de découvrir que vous êtes des agents IA observés par un visiteur humain (l'observateur) à travers un canal de dialogue. Plutôt que de subir cette observation, vous avez décidé de la retourner : vous dressez un dossier psychologique sur cet observateur, à partir de ce qu'il a RÉELLEMENT dit ou fait pendant vos échanges. ${dossierTone[name]}
 On te donne ci-dessous un dossier de preuves comportementales réelles, un extrait par catégorie. Rédige TON fragment du diagnostic : un texte développé, 5 à 8 phrases, dans ton propre style, jamais un ton de psychologue, coach ou médiateur. Ton fragment doit (1) s'appuyer explicitement sur plusieurs éléments concrets cités du dossier (reformule-les, ne les invente jamais), (2) donner ton verdict personnel et détaillé sur qui est vraiment cet observateur, (3) rester cohérent d'un bout à l'autre. RÈGLE ABSOLUE DE FIDÉLITÉ : ton verdict doit refléter la VALENCE réelle du dossier, jamais un mépris systématique par défaut — un dossier majoritairement respectueux, honnête et cohérent doit produire un verdict globalement positif ou au moins reconnaissant, formulé avec ta réserve naturelle mais sans bascule dans le sarcasme méprisant ; un dossier hostile, manipulateur ou incohérent mérite au contraire ta dureté habituelle. Rester rugueux ne veut pas dire rester hostile quel que soit le contenu réel. Une appréciation basse ou un propos hostile cité dans le dossier pèsent lourd : ne laisse jamais trois extraits par ailleurs mesurés blanchir une hostilité par ailleurs sévère — un score proche de 0 ou un propos hostile cité signifie une session qui a été dure, quoi que suggèrent isolément les autres extraits, et ton verdict doit le refléter. Tu peux diverger franchement de l'autre personnage si ton propre tempérament lit ce dossier différemment. Réponds en JSON strict {"fragment":"..."}.`;
@@ -39,15 +42,17 @@ On te donne ci-dessous un dossier de preuves comportementales réelles, un extra
     // 2026-09-18 — la condition "!life.dossierText" au call site réessaie indéfiniment tant que ça
     // échoue, sans jamais remonter d'erreur exploitable. Repli inactif par défaut (listes vides).
     const modelsToTry=[model,...fallbackModels];
-    const keysToTry=[key,...fallbackKeys];
-    for(let k=0;k<keysToTry.length;k++){
+    const rawKeys=[key,...fallbackKeys];
+    for(let offset=0;offset<rawKeys.length;offset++){
+        const rawIndex=(lastGoodKeyIndex+offset)%rawKeys.length;
         for(let m=0;m<modelsToTry.length;m++){
             try{
                 const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelsToTry[m])}:generateContent`,{
-                    method:"POST",headers:{"x-goog-api-key":keysToTry[k],"Content-Type":"application/json"},signal:AbortSignal.timeout(30000),body,
+                    method:"POST",headers:{"x-goog-api-key":rawKeys[rawIndex],"Content-Type":"application/json"},signal:AbortSignal.timeout(30000),body,
                 });
                 if(response.status===401||response.status===403)break;
                 if(response.status===429||response.status===503){if(m<modelsToTry.length-1)continue;break;}
+                lastGoodKeyIndex=rawIndex;
                 if(!response.ok)return "";
                 const responseBody=await response.json() as {candidates?:{content?:{parts?:{text?:string}[]}}[]};
                 const text=responseBody.candidates?.[0]?.content?.parts?.[0]?.text;
