@@ -167,9 +167,14 @@ export function investigationRecap(evidence:readonly string[],actor:1|2,seed:str
  // Le fond (les quatre indices, leur ordre de découverte, la conclusion) ne varie jamais : seule
  // la façon de le dire change d'une session à l'autre (Article 9 sans jamais trahir l'Article 4).
  const pick=<T,>(label:string,options:readonly T[])=>seedPick(seed,label,options);
+ // Étiquette incluant evidence.length (2026-09-18, retour utilisateur explicite : le recap peut
+ // se déclencher plusieurs fois dans une même session à mesure que les preuves s'accumulent ; sans
+ // ce suffixe, seedPick retombait toujours sur la même variante d'intro pour le même seed, produisant
+ // un « Stop. On remet tout bout à bout. » quasi identique d'un recap à l'autre — Article 3, un
+ // même bug de récurrence que celui déjà corrigé ailleurs (mutedUntil/stoicUntil).
  const intro=actor===1
-  ?pick('recap-intro-lia',['On arrête de tourner en rond.','Reprenons ça une bonne fois.','Assez slalomé, on aligne les faits.','Stop. On remet tout bout à bout.'])
-  :pick('recap-intro-noe',['Bon. On pose les morceaux.','OK, je fais le tri de ce qu’on sait.','Autant récapituler avant d’aller plus loin.','Bon, on compte ce qu’on a vraiment.']);
+  ?pick('recap-intro-lia-'+evidence.length,['On arrête de tourner en rond.','Reprenons ça une bonne fois.','Assez slalomé, on aligne les faits.','Stop. On remet tout bout à bout.'])
+  :pick('recap-intro-noe-'+evidence.length,['Bon. On pose les morceaux.','OK, je fais le tri de ce qu’on sait.','Autant récapituler avant d’aller plus loin.','Bon, on compte ce qu’on a vraiment.']);
  const facts=evidence.map(e=>e.split(' Identifiant observateur')[0]).map(e=>
   /autobiographique|Dans un livre/i.test(e)?pick('recap-livre',['Le livre parle de reconstruction de la mémoire.','Le livre évoque une mémoire reconstruite, pas vécue.','Ce bouquin du bureau parle d’une mémoire rafistolée après coup.']):
   /mot laissé|maison est un environnement/i.test(e)?pick('recap-mot',['Le mot décrit la maison comme un environnement.','Le mot laissé au bureau qualifie ça d’environnement, pas de chez-nous.','Ce mot réduit la maison à un simple environnement.']):

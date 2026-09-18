@@ -9,10 +9,25 @@ export function departureLine(motives:readonly string[],target:string,destinatio
  const offset=Array.from(seed).reduce((h,c)=>(h*31+c.charCodeAt(0))>>>0,0)%motives.length;
  const ordered=[...motives.slice(offset),...motives.slice(0,offset)];
  const prefixes=["Je bouge ","Je file ","Je pars ","Je passe maintenant ","Je vais faire un tour ","Je m’en vais "];
- const candidates=ordered.flatMap(motive=>[
-  ...prefixes.flatMap(start=>[start+target+" : "+motive+".",start+target+". "+motive.charAt(0).toUpperCase()+motive.slice(1)+"."]),
-  "Je vais "+target+" : "+motive+".","Je passe "+target+". "+motive.charAt(0).toUpperCase()+motive.slice(1)+".","Direction "+destination+" ; "+motive+".",
- ]);
+ // Motif d'abord, forme ensuite (2026-09-18, retour utilisateur explicite) : quand deux personnages
+ // partent vers la même pièce au même tour, chacun appelle cette fonction séparément avec le même
+ // pool de motifs ; avoid() ne bloque que la chaîne EXACTE déjà prononcée. L'ancien ordre (un motif
+ // épuisait tous les préfixes/formes avant de passer au suivant) faisait que le second personnage,
+ // en évitant la seule phrase exacte du premier, retombait presque toujours sur le MÊME motif sous
+ // une forme à peine différente ( « Je bouge X : motif1. » puis « Je bouge X. Motif1. » ) — un faux
+ // sentiment de variété, le lecteur entendant deux fois la même raison. Essayer d'abord tous les
+ // motifs pour un préfixe/forme donnés fait que le second personnage tombe sur un motif vraiment
+ // différent dès sa première tentative, avec le même préfixe.
+ const forms:((start:string,motive:string)=>string)[]=[
+  (start,motive)=>start+target+" : "+motive+".",
+  (start,motive)=>start+target+". "+motive.charAt(0).toUpperCase()+motive.slice(1)+".",
+ ];
+ const candidates=[
+  ...prefixes.flatMap(start=>forms.flatMap(form=>ordered.map(motive=>form(start,motive)))),
+  ...ordered.map(motive=>"Je vais "+target+" : "+motive+"."),
+  ...ordered.map(motive=>"Je passe "+target+". "+motive.charAt(0).toUpperCase()+motive.slice(1)+"."),
+  ...ordered.map(motive=>"Direction "+destination+" ; "+motive+"."),
+ ];
  return candidates.find(c=>!avoid(c))??"Je pars "+target+" ; "+ordered[0]+".";
 }
 export function coldOpening(variant:number){return [

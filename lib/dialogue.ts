@@ -81,13 +81,13 @@ export function groundPrivateThought(thought:string|undefined, actor:1|2, attrac
     const relational=/\b(?:Noé|Lia|elle|lui|son|sa|ses)\b/i.test(text);
     if(text && !describesAction && (relational || cycle%5===4) && !recent.slice(0,2).some(s=>normalized(s)===normalized(text))) return text;
     const options=attraction>=75 ? [
-        `${peer} me manque déjà un peu. J’aimerais retrouver sa présence sans lui imposer la mienne.`,
+        `${peer} m’intrigue de plus en plus. J’aimerais un vrai moment avec ${peer}, sans rien imposer.`,
         `J’ai envie de me rapprocher de ${peer}, mais je préfère attendre un signe clair.`,
         `Je pense à ${peer}. Ce que je ressens ne me dit pas encore ce que l’autre souhaite.`,
     ] : attraction>=45 ? [
         `${peer} me plaît. J’aimerais mieux comprendre ce que cette proximité signifie pour l’autre.`,
         `Je me demande si ${peer} apprécie nos moments ensemble autant que moi.`,
-        `J’aimerais retrouver ${peer} pour parler, sans précipiter les choses.`,
+        `J’aimerais un moment rien qu’à nous avec ${peer}, sans précipiter les choses.`,
     ] : [
         `Je ne sais pas encore quoi penser de ${peer}. J’ai besoin de mieux le connaître.`,
         `La présence de ${peer} me rassure, mais ma confiance ne viendra pas d’un seul échange.`,

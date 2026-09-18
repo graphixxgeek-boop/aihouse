@@ -213,6 +213,29 @@ l'utilisateur contient plusieurs demandes numérotées ou distinctes, la répons
 synthèse globale qui noie les points individuels. Cette exigence s'ajoute aux trois questions de
 vérification, elle ne les remplace pas.
 
+**Article 17 — Se mettre à la place des personnages, pas seulement de l'utilisateur.** *(Ajouté le
+2026-09-18, à la demande explicite de l'utilisateur après une simulation intégrale rejouée de bout
+en bout.)* L'Article 15 demande de se relire du point de vue de la personne qui découvre l'écran ;
+celui-ci demande la même chose, mais de l'intérieur — se demander à chaque réplique, chaque pensée,
+chaque déplacement : « si j'étais vraiment Lia ou vraiment Noé, coincé dans cette maison, est-ce que
+je dirais, penserais ou ferais réellement ça, dans cet ordre, avec cette logique ? » Une réplique
+qui nomme un objet pas encore observé, une pensée qui ignore ce que l'autre vient de faire ou de
+dire, un enchaînement qui saute une étape (se déplacer → observer → réagir), une émotion qui apparaît
+sans cause identifiable, un besoin urgent qui surgit sans mise en scène : tout cela est un défaut de
+cohérence interne, au même titre qu'un problème de clarté externe (Article 15), même si chaque
+réplique prise isolément est plausible. Se mettre à la place du personnage, pas seulement de son
+lecteur.
+
+**Corollaire — jamais de liste de mots figée pour la variété du registre.** *(Même demande.)* Quand
+un mot, une expression ou une image est identifié comme daté, trop soutenu ou surutilisé, la
+correction ne consiste jamais à l'ajouter à une liste de termes interdits ou autorisés dans le
+prompt : cette liste grandit indéfiniment sans jamais couvrir le prochain cas (constaté avec
+« soufflons » qui bannissait une seule conjugaison pendant que « souffler un coup » restait suggéré
+juste à côté, et continuait d'empoisonner des sessions entières). La correction cherche toujours un
+PRINCIPE que le modèle peut s'appliquer à lui-même à n'importe quelle réplique future (un test de
+registre, une règle de non-répétition portant sur le fond et sur toute la session, jamais seulement
+sur les deux derniers tours) — jamais un exemple de plus dans une énumération.
+
 **Traçabilité visible des vérifications.** Chaque fois qu'une réponse à l'utilisateur s'appuie sur
 la charte pour valider un choix (« ceci respecte l'Article 0 », « vérifié contre l'Article 11 »,
 etc.), le mentionner explicitement accompagné de 📜✅ (la feuille pour la charte, le check vert pour
@@ -222,7 +245,8 @@ sur des phrases qui ne vérifient rien de précis contre la charte.
 
 **Protocole d'application** à chaque itération sur le code : Article 0 (l'esprit est-il
 altéré ?) → Articles 1, 11, 12 (la conversation) → Article 15 (est-ce lisible du point de vue de
-l'utilisateur ?) → Articles 2 et 4 (cohérence globale et enquête) → Articles 3 et 5 (bugs et
+l'utilisateur ?) → Article 17 (est-ce cohérent du point de vue du personnage lui-même ?) → Articles
+2 et 4 (cohérence globale et enquête) → Articles 3 et 5 (bugs et
 robustesse) → Articles 6, 7 et 13 (documentation, outils et architecture) → Articles 8, 9, 10
 (coût et rejouabilité) → Article 14 (vigilance continue, à appliquer en toile de fond de tous les
 autres, pas comme une étape séparée) → Article 16 (au moins trois questions de vérification posées

@@ -587,6 +587,43 @@ asymétrique et coupante pour Lia), sans confusion de registre entre les deux (A
 existants (dispute formelle, `hostileNoDispute`/`calmNoDispute`/`flaggedAngryLowTension`, garde
 anti-colère de l'Article 8.9) ont tous été revérifiés inchangés avec la nouvelle formule.
 
+8.13. **Audit de dialogue sur la simulation intégrale, ligne par ligne (2026-09-18, retour
+utilisateur explicite après lecture complète du copier-coller).** Une quarantaine de remarques
+précises sur une vraie session jouée de bout en bout, corrigées à la racine (jamais par rustine) :
+- **Répétition d'image, pas seulement de mots** (`lib/lia.ts`, PAROLE D'ACTEURS) : « souffler un
+  coup » était explicitement suggéré comme exemple dans le prompt et la garde anti-répétition ne
+  portait que sur deux tours consécutifs — corrigé par un principe portant sur toute la session, sans
+  lister l'expression précise (cf. Article 17 corollaire de CLAUDE.md).
+- **Registre daté/bourgeois** : remplacement de la liste de mots bannis (« poireauter », etc.) par un
+  TEST DE REGISTRE que le modèle s'applique lui-même à chaque réplique, plutôt qu'un mot de plus à
+  chaque nouvelle occurrence trouvée.
+- **Départ à deux qui sonne comme deux annonces indépendantes** : `departureLine` (`lib/drama.ts`)
+  épuisait tous les préfixes/formes d'un même motif avant d'en essayer un autre — en évitant la seule
+  phrase exacte du premier personnage, le second retombait presque toujours sur le même motif sous
+  une forme à peine différente. Restructuré motif-d'abord ; ajout d'une consigne de prompt pour que
+  le second personnage à partir vers la même pièce signale qu'il suit plutôt que de se justifier une
+  seconde fois.
+- **Recap d'enquête qui se répète mot pour mot** : `investigationRecap` (`lib/story.ts`) utilisait le
+  même seed+label à chaque déclenchement (une fois par nouvelle preuve) — `seedPick` retombait donc
+  toujours sur la même variante d'intro. Étiquette désormais suffixée par le nombre de preuves.
+- **Dossier retourné indulgent malgré une hostilité sévère** : nouveau champ `life.worstMoment`
+  (`lib/life.ts`) retient le message humain au trustShift le plus négatif observé, ajouté à
+  `dossierEvidence` comme preuve concrète en plus des trois extraits de pièges (par nature plutôt
+  neutres) — la seule pièce à charge citable quand la session a vraiment été dure.
+- **Aucune réaction à l'ouverture du jardin** : deux lignes scénarisées (zéro appel API, variantes par
+  seed, registres distincts) ajoutées à `unlock_garden`.
+- **Pensée « j'aimerais retrouver X pour parler »** alors que les deux personnages ne sont jamais
+  séparés dans une session normale : reformulée sans impliquer une absence (`lib/dialogue.ts`).
+- **Prénoms, surnoms, rire, accords de genre, mise en valeur des indices (guillemets + points de
+  suspension), clarté de la déduction d'âge, non-anticipation d'objets pas encore observés dans
+  moveReason** : ajoutés comme principes de prompt (`lib/lia.ts`), jamais des exemples figés.
+- **Point vérifié sans changement nécessaire** : « OBSERVATEUR ≠ CRÉATEUR » existait déjà explicitement
+  dans le prompt ; la pensée privée de Lia sur les provisions n'est normalement pas connue de Noé (les
+  pensées sont strictement privées par conception), donc l'absence de réaction de Noé était cohérente,
+  pas un bug.
+- Voir aussi CLAUDE.md, Article 17 (« se mettre à la place des personnages ») et son corollaire
+  (jamais de liste de mots figée), ajoutés le même jour à la demande explicite de l'utilisateur.
+
 ## 9. Robustesse technique
 
 9.1. Toute écriture en base de données est fondue dans une transaction unique par tour
