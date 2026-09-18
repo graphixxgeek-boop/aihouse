@@ -382,6 +382,45 @@ seulement une exécution technique sans erreur. Tant que cette validation n'a pa
 `gemini-flash-latest`/`gemini-3-flash-preview` (les deux seuls candidats identifiés à ce jour),
 `GEMINI_FALLBACK_MODELS` reste réservé au dev/simulation, jamais configuré sur le déploiement réel.
 
+**Renforcement du contrôle qualité — exigence explicite de l'utilisateur (2026-09-18) : « je ne
+veux pas mettre l'Article 0 en péril, l'utilisateur ne doit rien détecter ».** Ce qui précède est
+durci en règle stricte, pas une simple recommandation :
+- La validation qualité doit être **intégrale**, pas un échantillonnage : lire TOUTES les
+  réponses de `check-spirit.mjs` (tous les scénarios) et TOUS les profils de `check-profile.mjs`
+  pour CHAQUE modèle candidat, jamais quelques lignes rassurantes suffisamment.
+- Elle doit être **refaite entièrement** à chaque changement de la liste de modèles de repli ET à
+  chaque modification substantielle du prompt de `lib/lia.ts` — un modèle validé sur un prompt
+  passé n'est pas validé sur un prompt qui a changé depuis.
+- **Limite honnête, à ne jamais masquer** : aucun test automatique, aussi rigoureux soit-il, ne
+  peut PROUVER l'absence de toute dérive détectable — les heuristiques de ces deux scripts ne
+  détectent que les dérives les plus grossières (déjà noté à l'Article 13). La vraie garantie
+  reste la lecture humaine avant activation, jamais un script qui tournerait sans erreur.
+- **Portes de sortie déjà en place, à ne jamais retirer, qui protègent l'expérience quel que soit
+  le modèle qui répond** : `groundTruncation()` et `groundRegister()` (`lib/dialogue.ts`)
+  s'appliquent à CHAQUE réplique et pensée en aval, indépendamment du modèle qui l'a produite —
+  une coupure nette ou un mot daté sont rattrapés de la même façon, repli ou pas. La validation
+  stricte du schéma JSON (`decisionSchema.parse`, `lib/lia.ts`) rejette tout tour dont la réponse
+  ne respecte pas la forme attendue, quel que soit le modèle. Une exception réseau sur le modèle
+  principal ne tente JAMAIS le repli (`catch` immédiat) : une panne réseau touche l'hébergeur
+  entier, pas un modèle en particulier, donc changer de modèle ne réglerait rien — ce choix reste
+  documenté, pas un oubli.
+- **Interrupteur d'urgence** : désactiver le repli en production ne demande aucun changement de
+  code, juste retirer la valeur de `GEMINI_FALLBACK_MODELS` (un secret Cloudflare Workers) —
+  réversible en un geste si un modèle de repli s'avérait décevant après coup.
+- Enfin, **ce qui n'est actuellement PAS un risque réel** : `GEMINI_FALLBACK_MODELS` n'est
+  configuré que dans `.dev.vars` (jamais commité, jamais en production) — aucun vrai visiteur n'a
+  jamais reçu de réponse d'un modèle de repli à ce jour. Le risque décrit ici est anticipé pour la
+  mise en ligne future, pas une situation déjà en cours.
+
+**Discrétion demandée par l'utilisateur (2026-09-18) : « ça ne regarde que nous ».** Le détail
+opérationnel de ce contournement (quotas exacts, noms de modèles, mécanisme précis) ne doit pas
+apparaître dans une surface visible par un tiers au sein de l'application elle-même. En particulier
+`lib/reference.ts` (le référentiel affiché en jeu, panneau Admin) ne décrit ce chantier que par une
+phrase générique et volontairement sans détail technique — le détail complet reste uniquement dans
+ce fichier et `docs/referentiel/principes.md`, qui vivent dans le dépôt de code, jamais rendus dans
+l'application. Toute future note sur ce sujet dans `lib/reference.ts` doit respecter la même
+retenue : jamais de nom de modèle, de chiffre de quota ou d'explication du mécanisme à cet endroit.
+
 **Procédure à suivre désormais dès qu'une simulation (étape 1 du protocole ci-dessus) reste
 bloquée en HTTP 429 répété :** (1) lancer `node scripts/check-gemini-quota.mjs` pour identifier
 les modèles réellement disponibles à cet instant ; (2) reporter la ligne suggérée dans

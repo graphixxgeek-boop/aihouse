@@ -44,7 +44,7 @@ On te donne ci-dessous un dossier de preuves comportementales réelles, un extra
             const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelsToTry[attempt])}:generateContent`,{
                 method:"POST",headers:{"x-goog-api-key":key,"Content-Type":"application/json"},signal:AbortSignal.timeout(30000),body,
             });
-            if(response.status===429&&attempt<modelsToTry.length-1)continue;
+            if((response.status===429||response.status===503)&&attempt<modelsToTry.length-1)continue;
             if(!response.ok)return "";
             const responseBody=await response.json() as {candidates?:{content?:{parts?:{text?:string}[]}}[]};
             const text=responseBody.candidates?.[0]?.content?.parts?.[0]?.text;

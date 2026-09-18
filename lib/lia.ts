@@ -86,9 +86,14 @@ JSON : schema strict. action none rester, move changer de pièce, talk parler. m
     // simulation intégrale peut légitimement épuiser celui du modèle par défaut en une seule
     // session). Désactivé par défaut (fallbackModels=[]), donc aucun changement de comportement en
     // production tant que GEMINI_FALLBACK_MODELS n'est pas explicitement configuré (jamais une
-    // bascule de modèle silencieuse sur le jeu réel sans décision volontaire). N'essaie le modèle
-    // suivant QUE sur un 429 (quota épuisé) — jamais sur une autre erreur (401/403/404/réseau), qui
-    // ne serait pas résolue par un autre modèle et mérite son message d'erreur habituel.
+    // bascule de modèle silencieuse sur le jeu réel sans décision volontaire).
+    // N'essaie le modèle suivant QUE sur 429 (quota épuisé) ou 503 (modèle temporairement
+    // indisponible) — jamais sur 401/403/404/réseau, qui ne seraient pas résolus par un autre
+    // modèle et méritent leur message d'erreur habituel. Le 503 a rejoint le 429 le même jour,
+    // preuve concrète à l'appui (2026-09-18, simulation réelle) : avec la requête réelle et lourde
+    // de l'application (gros prompt), Google répond parfois 503 plutôt que 429 pour CE MÊME modèle
+    // pourtant confirmé en quota épuisé par sonde directe (scripts/check-gemini-quota.mjs) au même
+    // instant — donc bien la même cause (épuisement), qu'un autre modèle résout tout aussi bien.
     const modelsToTry = [model, ...fallbackModels];
     let response: Response | undefined;
     for (let attempt = 0; attempt < modelsToTry.length; attempt++) {
@@ -102,7 +107,7 @@ JSON : schema strict. action none rester, move changer de pièce, talk parler. m
         catch {
             throw new LiaError("La maison n’a pas pu joindre Gemini. Réessaie dans un moment.", 503);
         }
-        if (response.status === 429 && attempt < modelsToTry.length - 1) continue;
+        if ((response.status === 429 || response.status === 503) && attempt < modelsToTry.length - 1) continue;
         break;
     }
     if (!response!.ok) {

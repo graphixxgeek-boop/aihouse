@@ -772,8 +772,12 @@ dans ce cas précis : il ne signifie pas que le quota redevient disponible sous 
 lesquels répondent réellement à l'instant présent, sans jamais modifier la configuration lui-même.
 `lib/lia.ts::think()` et `app/api/lia/route.ts::generateDossierFragment()` (les deux seuls points
 d'appel réseau direct à Gemini) acceptent une liste de modèles de repli, prise en compte
-uniquement si `GEMINI_FALLBACK_MODELS` est configuré (`.dev.vars` en développement) : sur un 429,
-et seulement sur un 429, la même requête est rejouée contre le modèle suivant de la liste. Inactif
+uniquement si `GEMINI_FALLBACK_MODELS` est configuré (`.dev.vars` en développement) : sur un 429 ou
+un 503, et seulement sur ces deux statuts, la même requête est rejouée contre le modèle suivant de
+la liste — le 503 a rejoint le 429 le jour même, preuve concrète à l'appui en simulation réelle :
+avec la requête réelle et lourde de l'application, Google répond parfois 503 plutôt que 429 pour un
+modèle pourtant confirmé en quota épuisé par sonde directe au même instant (même cause, donc même
+traitement). Inactif
 par défaut (liste vide) : aucun changement de comportement de production tant que ce n'est pas
 explicitement configuré — une bascule de modèle non voulue pourrait affecter la qualité ou le ton
 des réponses (Article 0), donc ce n'est jamais un choix silencieux.
