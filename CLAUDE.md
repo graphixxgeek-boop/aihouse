@@ -530,6 +530,15 @@ contrairement à la charte de contenu ci-dessus (propre à ce projet) et à `reg
 (mécanique de collaboration), ce document est formulé pour rester utilisable sur un futur projet
 créatif/narratif piloté par IA. Texte fondateur, révisé exceptionnellement, pas au fil de l'eau.
 
+## Outil de résilience API — blueprint exportable
+
+`docs/outil-resilience-api.md` documente l'ARCHITECTURE de l'outil de contournement de blocages de
+clé/quota API (`scripts/gemini-key-health.mjs`, `scripts/api-providers.mjs`,
+`scripts/check-gemini-quota.mjs`) sous une forme générique, réutilisable dans un autre projet
+appelant une API tierce à quota limité — jamais l'historique d'apprentissage propre à ce projet
+(`.gemini-key-health.json`, local, jamais committé), qui reste spécifique à ce déploiement. À
+mettre à jour quand la STRUCTURE de l'outil évolue, pas à chaque ajustement propre à Gemini.
+
 ## Référentiel technique — la référence à jour
 
 - `docs/referentiel/principes.md` — les règles invariantes du comportement de la maison, telles
