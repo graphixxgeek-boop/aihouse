@@ -502,6 +502,14 @@ livrables) et un profil de collaboration observé. Toute IA qui reprend ce proje
 document en plus de celui-ci, pas à sa place — il ne contient jamais de règle sur le CONTENU du
 jeu, seulement sur la méthode de travail.
 
+## Philosophie et politique — la boussole du projet
+
+`docs/philosophie-et-politique.md` extrait et généralise les valeurs et les principes d'arbitrage
+qui gouvernent ce projet (le pourquoi, et comment on tranche en cas de conflit de valeurs) —
+contrairement à la charte de contenu ci-dessus (propre à ce projet) et à `regles-de-travail.md`
+(mécanique de collaboration), ce document est formulé pour rester utilisable sur un futur projet
+créatif/narratif piloté par IA. Texte fondateur, révisé exceptionnellement, pas au fil de l'eau.
+
 ## Référentiel technique — la référence à jour
 
 - `docs/referentiel/principes.md` — les règles invariantes du comportement de la maison, telles
