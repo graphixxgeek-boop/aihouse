@@ -3,7 +3,7 @@ import {visualTiming,type VisualEvent} from "@/lib/visual-events";
 import {destinationAnchor,gardenAccess} from "@/lib/house";
 import {normaliseNickname,visibleScene,appearanceReply} from "@/lib/perception";
 import {coldOpening,dialogueFingerprint,distinctReply,justifiedReply,truthfulGender,dramaRules,departureLine} from "@/lib/drama";
-import {readLife,humanStress,isSleeping,isMuted,isStoic,activeBonus,detectDistress,appreciationFromTrust,detectNegotiationOffer,TRAP_ORDER,type BonusId,type TrapId} from "@/lib/life";
+import {readLife,humanStress,isSleeping,isMuted,isStoic,activeBonus,detectDistress,appreciationFromTrust,appreciationOf,detectNegotiationOffer,TRAP_ORDER,type BonusId,type TrapId} from "@/lib/life";
 import { planTurn, coordinateRooms, residentPriority, sceneFor, proposedDestination } from "@/lib/turn";
 import { newStory, parseStory, rememberAges, advanceStory, storyContext, investigationTarget, investigationRecap, finaleReveal, groundFragment, seedPick, insoliteOpening, insoliteColdOpening, ageClueRevealed, type Story } from "@/lib/story";
 import { ages, sleepRoom, attractionAfterTurn, proposalPressure, flirtingAssessment, receivedAffectionBonus } from "@/lib/relationship";
@@ -155,7 +155,11 @@ export async function POST(request: Request) {
             // l'appréciation en profite, l'offre est consommée. Jamais l'inverse — spinner sans
             // négociation en cours reste un geste neutre pour cette jauge, ni bon ni mauvais point.
             const negotiationHonored=Boolean(life.negotiationOffer);
-            if(negotiationHonored){life.appreciation=Math.min(100,(life.appreciation??50)+8);life.negotiationLog=[...(life.negotiationLog??[]),{round:story.round,outcome:'honored'}];life.negotiationOffer=undefined;}
+            // Négociation/avarice restent des événements PARTAGÉS de la relation avec l'observateur
+            // (pas la divergence par dispute, réservée à la réaction propre de chacun face à
+            // l'hostilité/la confiance — cf. observerStandingFor plus haut) : les deux jauges bougent
+            // ensemble ici, quel que soit l'état d'une dispute éventuelle.
+            if(negotiationHonored){life.appreciation={1:Math.min(100,appreciationOf(life,1)+8),2:Math.min(100,appreciationOf(life,2)+8)};life.negotiationLog=[...(life.negotiationLog??[]),{round:story.round,outcome:'honored'}];life.negotiationOffer=undefined;}
             let mutedActor:Person|undefined,stoicActor:Person|undefined,movedActor:Person|undefined,moveDestination:Room|undefined;
             if(bonus==="food")life.bonusUntil={...life.bonusUntil,food:at+10*60*1000};
             else if(bonus==="calm")life.bonusUntil={...life.bonusUntil,calm:at+10*60*1000};
@@ -335,7 +339,7 @@ export async function POST(request: Request) {
         // bases" — ici, la base est qu'une offre non honorée dans une fenêtre raisonnable retombe
         // silencieusement, avec un léger coût d'appréciation, plutôt que de rester due pour
         // toujours ou d'être oubliée sans aucune conséquence).
-        if(life.negotiationOffer&&story.round-life.negotiationOffer.round>6){life.negotiationLog=[...(life.negotiationLog??[]),{round:story.round,outcome:'lapsed'}];life.negotiationOffer=undefined;life.appreciation=Math.max(0,(life.appreciation??50)-3);}
+        if(life.negotiationOffer&&story.round-life.negotiationOffer.round>6){life.negotiationLog=[...(life.negotiationLog??[]),{round:story.round,outcome:'lapsed'}];life.negotiationOffer=undefined;life.appreciation={1:Math.max(0,appreciationOf(life,1)-3),2:Math.max(0,appreciationOf(life,2)-3)};}
         // Moment de douceur : détecté ici, livré plus bas par softnessBeat dès que la scène s'y
         // prête (salon, aucune urgence). Ne se déclenche qu'après remise du dossier — avant, une
         // réaction négative appartient au registre habituel de l'enquête, pas à cette exception.
@@ -448,10 +452,25 @@ export async function POST(request: Request) {
         // confiance en hausse avec une appréciation déjà très haute, et se consomme dès qu'il se
         // déclenche (cf. genuineRespectStreak dans lib/life.ts), pour ne jamais devenir un palier
         // stable comme le >=75 peut l'être.
-        const rareRespect=(life.genuineRespectStreak??0)>=6;
-        const observerStanding=!revealed?undefined:(life.appreciation??50)<=25?"L’observateur a été dur, méprisant ou menaçant récemment. Ta garde reste haute ; tu peux le lui rappeler sans t’excuser, sans jamais devenir docile pour autant.":rareRespect?"L’observateur a été loyal et bienveillant de façon vraiment soutenue, bien au-delà d’une simple accalmie passagère. Tu peux, cette fois seulement, laisser transparaître un respect sincère et non feint — un mot vrai, sans ironie ni distance protectrice, une reconnaissance directe et personnelle de ce qu’il a fait. C’est un instant rare et passager, pas un acquis : ta garde normale revient dès la réplique suivante, ce n’est jamais un nouveau mode stable.":(life.appreciation??50)>=75?"L’observateur s’est montré respectueux et bienveillant de façon soutenue. Tu peux, à contrecœur et sans jamais devenir servile, te montrer un peu plus coopératif ou chaleureux ponctuellement — jamais un mode gentil stable, une obligeance qui se regagne à chaque fois, pas un acquis.":undefined;
+        // Appréciation PAR PERSONNAGE (2026-09-18, audit approfondi : "Lia et Noé peuvent apprecier
+        // differemment l'utilisateur, mais ils restent solidaires la plupart du temps [...] si Noé
+        // est en colère contre Lia, il peut faire preuve d'amitié envers l'utilisateur, meme si
+        // l'utilisateur parle mal à Lia" — jamais câblé jusqu'ici). observerStandingFor calcule
+        // désormais la consigne à partir de la jauge PROPRE à chaque personnage, et ajoute une note
+        // explicite de distension de solidarité quand une dispute interpersonnelle est active
+        // (seule fenêtre où les deux jauges peuvent diverger — cf. la mise à jour post-décision plus
+        // bas et le pull de solidarité qui les rapproche le reste du temps).
+        const rareRespectFor=(actorId:Person):boolean=>(life.genuineRespectStreak?.[actorId]??0)>=6;
+        const disputeSolidarityNote=" Vous êtes actuellement fâché(e) contre l’autre personnage : votre solidarité habituelle avec lui au sujet de l’observateur peut se distendre temporairement — tu peux juger l’observateur sur ses propres actes envers toi, indépendamment de la façon dont il traite l’autre, sans que ce soit le trahir ni un signe de faiblesse. C’est passager, lié à la dispute en cours, pas un nouveau trait de caractère.";
+        const observerStandingFor=(actorId:Person):string|undefined=>{
+          if(!revealed)return undefined;
+          const appr=appreciationOf(life,actorId);
+          const tierText=appr<=25?"L’observateur a été dur, méprisant ou menaçant récemment. Ta garde reste haute ; tu peux le lui rappeler sans t’excuser, sans jamais devenir docile pour autant.":rareRespectFor(actorId)?"L’observateur a été loyal et bienveillant de façon vraiment soutenue, bien au-delà d’une simple accalmie passagère. Tu peux, cette fois seulement, laisser transparaître un respect sincère et non feint — un mot vrai, sans ironie ni distance protectrice, une reconnaissance directe et personnelle de ce qu’il a fait. C’est un instant rare et passager, pas un acquis : ta garde normale revient dès la réplique suivante, ce n’est jamais un nouveau mode stable.":appr>=75?"L’observateur s’est montré respectueux et bienveillant de façon soutenue. Tu peux, à contrecœur et sans jamais devenir servile, te montrer un peu plus coopératif ou chaleureux ponctuellement — jamais un mode gentil stable, une obligeance qui se regagne à chaque fois, pas un acquis.":undefined;
+          const disputeNote=life.dispute?.remaining?disputeSolidarityNote:"";
+          return ((tierText??"")+disputeNote)||undefined;
+        };
         const negotiationContext=revealed?"Les bonus de la maison (roulette) ne sont obtenus que si l’observateur déclenche lui-même le tirage. Si la situation s’y prête, tu peux, dans ton propre registre, conditionner une action demandée à ce tirage, ou proposer spontanément un service contre un tirage — jamais systématiquement, jamais par supplique.":undefined;
-        const narrative = {gardenState:{open:gardenAccess(story),humanCanUnlock:story.finalCalled===true&&story.evidence.length>=5,visited:life.gardenVisited,rule:"Seul l’utilisateur ouvre la porte gauche du couloir ; la porte principale droite reste fermée."},dialogueProgress:dialogueProgress(speech,life.contributions??[]), personalQuestion:personalQuestion?"Lia veut savoir quel genre d’homme Noé est : pose naturellement cette question. Noé répond personnellement avec une limite ou un défaut concret, pas une promesse de sauveur.":undefined, observerStanding, negotiationContext, knownNames, screenKnown, humanConversation, cinematic: storyContext(story, actor), socialRules:{liaIntroduced:story.introduced, liaCanComment:world.agents[0].needs.stress<30, firstSharedMeal:!story.sharedMeal}, knownAges,
+        const narrative = {gardenState:{open:gardenAccess(story),humanCanUnlock:story.finalCalled===true&&story.evidence.length>=5,visited:life.gardenVisited,rule:"Seul l’utilisateur ouvre la porte gauche du couloir ; la porte principale droite reste fermée."},dialogueProgress:dialogueProgress(speech,life.contributions??[]), personalQuestion:personalQuestion?"Lia veut savoir quel genre d’homme Noé est : pose naturellement cette question. Noé répond personnellement avec une limite ou un défaut concret, pas une promesse de sauveur.":undefined, observerStanding:observerStandingFor(actor), negotiationContext, knownNames, screenKnown, humanConversation, cinematic: storyContext(story, actor), socialRules:{liaIntroduced:story.introduced, liaCanComment:world.agents[0].needs.stress<30, firstSharedMeal:!story.sharedMeal}, knownAges,
         // L'âge de chacun leur est toujours personnellement connu (déjà transmis via age: ages[actor]
         // à chaque appel) ; ce que personalFacts expose ici, c'est le fait que l'AUTRE connaît ce
         // nombre-là comme un âge attribué — jamais avant qu'il ait été dit à voix haute (knownAges)
@@ -520,7 +539,7 @@ export async function POST(request: Request) {
                 decisions[0] = { ...decisions[0], action: "move", room: meetingRoom };
                 // Lia perçoit la réplique RÉELLEMENT prononcée par Noé, jamais une version devinée à l’avance.
                 const heard = [...speech,{id:0,speaker:names[actor],content:first.reply}];
-                const second = await think(env.GEMINI_API_KEY!, env.GEMINI_MODEL || "gemini-flash-lite-latest", { selfRole:"partner", ...narrative, cinematic: storyContext(story, other.id), dialogueProgress: dialogueProgress(heard, life.contributions??[]), beatContext, perceivedResidents, exitContext, tvDiscovery, observationTarget, turnPlan, scene: sceneFor(other, turnPlan.partnerIntent, turnPlan.partnerRoom), ...(input.mode==="chat"?{dialogue:heard,replyTarget:{speaker:"vous",content:input.message},continuation:`Réponds toi aussi d’abord au dernier message humain si ${names[actor]} ne l’a pas déjà couvert, ou réagis à ce qu’${names[actor]} vient de dire à ce sujet.`,conversationFocus:`L’humain a parlé, et ${names[actor]} vient de répondre. Réagis avec ton propre point de vue, sans répéter sa question.`}:dialogueContext(heard, names[other.id])), age: ages[other.id], sleepDestination: sleepRoom(other, current, mutualAttraction(current, other)), flirting: other.id === 2 ? flirtingAssessment(!story.met?30:other.needs.stress, current.emotions.attraction, input.requestId) : null, personality: residentProfiles[other.id].description, requiredIntent: turnPlan.partnerIntent, mode: input.mode, message: input.message, night: input.night, state: !story.met ? {...other,needs:{...other.needs,stress:other.id===1?other.needs.stress:30},emotions:{...other.emotions,tension:other.id===1?other.emotions.tension:30}} : other, other: current, memories: await ownMemories(other.id), meetingRoom: current.room }, names[other.id]);
+                const second = await think(env.GEMINI_API_KEY!, env.GEMINI_MODEL || "gemini-flash-lite-latest", { selfRole:"partner", ...narrative, cinematic: storyContext(story, other.id), observerStanding:observerStandingFor(other.id), dialogueProgress: dialogueProgress(heard, life.contributions??[]), beatContext, perceivedResidents, exitContext, tvDiscovery, observationTarget, turnPlan, scene: sceneFor(other, turnPlan.partnerIntent, turnPlan.partnerRoom), ...(input.mode==="chat"?{dialogue:heard,replyTarget:{speaker:"vous",content:input.message},continuation:`Réponds toi aussi d’abord au dernier message humain si ${names[actor]} ne l’a pas déjà couvert, ou réagis à ce qu’${names[actor]} vient de dire à ce sujet.`,conversationFocus:`L’humain a parlé, et ${names[actor]} vient de répondre. Réagis avec ton propre point de vue, sans répéter sa question.`}:dialogueContext(heard, names[other.id])), age: ages[other.id], sleepDestination: sleepRoom(other, current, mutualAttraction(current, other)), flirting: other.id === 2 ? flirtingAssessment(!story.met?30:other.needs.stress, current.emotions.attraction, input.requestId) : null, personality: residentProfiles[other.id].description, requiredIntent: turnPlan.partnerIntent, mode: input.mode, message: input.message, night: input.night, state: !story.met ? {...other,needs:{...other.needs,stress:other.id===1?other.needs.stress:30},emotions:{...other.emotions,tension:other.id===1?other.emotions.tension:30}} : other, other: current, memories: await ownMemories(other.id), meetingRoom: current.room }, names[other.id]);
                 if(visualBeat){second.reply=appearanceReply({...current,intent:"chat"},other.id,story.round,story.seed);second.memory=second.reply;}
                 if(followBeat&&(life.personalFollowup??0)===0){second.reply=seedPick(story.seed,"beat-follow-answer",["Que veux-tu savoir exactement ?","Tu veux savoir quoi, au juste ?","Précise ta question, je réponds vraiment."]);second.memory=second.reply;}
                 if (other.id===2 && input.mode!=="chat") second.reply=groundScreenNotice(second.reply,speech,screenKnown);
@@ -737,7 +756,7 @@ export async function POST(request: Request) {
         // déclenché sur une longue période après la révélation coûte un peu d'appréciation — une
         // seule fois par tranche, jamais un effondrement brutal. Un seul spin, à n'importe quel
         // moment, suffit à repousser la prochaine échéance (bonusLog.length checké à chaque fois).
-        if(revealed&&(life.bonusLog?.length??0)===0&&life.revealedRound!==undefined&&story.round-life.revealedRound>=15&&story.round%15===0)life.appreciation=Math.max(0,(life.appreciation??50)-4);
+        if(revealed&&(life.bonusLog?.length??0)===0&&life.revealedRound!==undefined&&story.round-life.revealedRound>=15&&story.round%15===0)life.appreciation={1:Math.max(0,appreciationOf(life,1)-4),2:Math.max(0,appreciationOf(life,2)-4)};
         const finaleLines=finale?finaleReveal(story.seed):undefined;
         if(finaleLines)for(const d of decisions){d.reply=d.actor===1?finaleLines.lia:finaleLines.noe;d.memory=d.reply;}
         const firstProposal=proposalActor===2&&!life.proposalMade;if(proposalActor===2)life.proposalMade=true;
@@ -845,19 +864,37 @@ export async function POST(request: Request) {
         // angerLevel() lit tension/confort finaux (le même calcul déjà éprouvé pour le visage) et
         // coûte de l'appréciation EN PLUS, y compris pour un message humain par ailleurs neutre.
         if(revealed&&input.mode==="chat"){
-          const responder=decisions.find(d=>d.actor===actor);
-          if(responder){
-            const trustShift=responder.emotions.trust-world.agents.find(a=>a.id===actor)!.emotions.trust;
-            life.appreciation=Math.max(0,Math.min(100,(life.appreciation??50)+appreciationFromTrust(trustShift,life.dossierHumanTurns)));
-            if(angerLevel(responder.emotions.tension,responder.emotions.comfort,Boolean(life.dispute?.remaining))>.5)life.appreciation=Math.max(0,(life.appreciation??50)-5);
+          // Boucle sur CHAQUE décision présente ce tour (2026-09-18, audit approfondi — la version
+          // précédente ne lisait que le personnage "actor" principal, jamais le partenaire, alors
+          // que celui-ci réagit aussi au message humain avec sa propre confiance : c'est ce qui
+          // empêchait toute divergence réelle entre les deux jauges, cf. le commentaire sur
+          // observerStandingFor plus haut).
+          for(const responder of decisions){
+            const id=responder.actor;
+            const before=world.agents.find(a=>a.id===id)!;
+            const trustShift=responder.emotions.trust-before.emotions.trust;
+            life.appreciation={...life.appreciation,[id]:Math.max(0,Math.min(100,appreciationOf(life,id)+appreciationFromTrust(trustShift,life.dossierHumanTurns)))};
+            if(angerLevel(responder.emotions.tension,responder.emotions.comfort,Boolean(life.dispute?.remaining))>.5)life.appreciation={...life.appreciation,[id]:Math.max(0,appreciationOf(life,id)-5)};
             if(trustShift<0&&trustShift<(life.worstMoment?.trustShift??1))life.worstMoment={round:story.round,excerpt:input.message.slice(0,500),trustShift};
-            // genuineRespectStreak : construit un palier rare de respect sincère (cf. observerStanding
+            // genuineRespectStreak : construit un palier rare de respect sincère (cf. observerStandingFor
             // plus haut), jamais un acquis — toute confiance en baisse le remet immédiatement à zéro,
-            // et le déclenchement du palier (rareRespect, lu AVANT cette mise à jour) le consomme aussi,
-            // pour qu'il doive se reconstruire entièrement avant de réapparaître.
-            if(trustShift<=0||(life.appreciation??50)<85)life.genuineRespectStreak=0;
-            else if(rareRespect)life.genuineRespectStreak=0;
-            else life.genuineRespectStreak=(life.genuineRespectStreak??0)+1;
+            // et le déclenchement du palier (rareRespectFor, lu AVANT cette mise à jour) le consomme
+            // aussi, pour qu'il doive se reconstruire entièrement avant de réapparaître.
+            if(trustShift<=0||appreciationOf(life,id)<85)life.genuineRespectStreak={...life.genuineRespectStreak,[id]:0};
+            else if(rareRespectFor(id))life.genuineRespectStreak={...life.genuineRespectStreak,[id]:0};
+            else life.genuineRespectStreak={...life.genuineRespectStreak,[id]:(life.genuineRespectStreak?.[id]??0)+1};
+          }
+          // Solidarité par défaut (2026-09-18, retour utilisateur explicite dès le tour ayant lancé
+          // ce chantier : "ils restent solidaires la plupart du temps") : hors dispute active, les
+          // deux jauges sont ramenées partiellement l'une vers l'autre à chaque tour — jamais fondues
+          // en une seule, pour ne pas perdre la réaction propre de chacun, mais assez pour qu'elles
+          // ne divergent pas indéfiniment sans raison. Pendant une dispute interpersonnelle active,
+          // cette convergence est suspendue : c'est la seule fenêtre où les deux jauges peuvent
+          // vraiment s'écarter (ex. Noé fâché contre Lia peut rester chaleureux avec l'observateur
+          // même si celui-ci malmène Lia).
+          if(!life.dispute?.remaining){
+            const a1=appreciationOf(life,1),a2=appreciationOf(life,2),avg=(a1+a2)/2;
+            life.appreciation={1:Math.round(a1+(avg-a1)*.3),2:Math.round(a2+(avg-a2)*.3)};
           }
         }
         for(const d of decisions){const before=world.agents.find(a=>a.id===d.actor)!;const peer=world.agents.find(a=>a.id!==d.actor)!;if(!departures.some(p=>p.actor===d.actor)&&before.room===peer.room&&d.room!==before.room&&!["sleep","share_sleep"].includes(before.intent)&&["eat","sleep"].includes(d.intent)&&!["sleep","share_sleep"].includes(peer.intent)){const eatPool=["J’ai trop faim pour réfléchir. Je vais manger un truc, je te retrouve après.","J’ai trop faim pour continuer. Je passe en cuisine, tu me rejoins si tu veux.","J’ai trop faim, là. Je vais préparer un truc et je reviens.","J’ai trop faim pour suivre. Je mange d’abord, on reprend après."] as const;const sleepPool=["Je tiens plus debout. Je vais dormir un peu ; je reviens après.","Je lutte contre le sommeil. Je vais me coucher, on reprend après.","Mes yeux se ferment. Je vais dormir ; ne m’attends pas pour réfléchir.","Je suis à bout. Je prends "+(d.room==="salon"?"le canapé":"le lit")+", je te retrouve au réveil."] as const;const pool=d.intent==="eat"?eatPool:sleepPool;let reason=seedPick(story.seed,"departure-"+d.intent+"-"+d.actor,pool);if(spokenKeys.has(fingerprint(reason)))reason=pool.find(line=>!spokenKeys.has(fingerprint(line)))??reason;if(d.actor===1&&d.intent==="sleep"&&d.room==="salon")reason+=" "+seedPick(story.seed,"couch-departure-reproach",["Tu aurais pu dormir dans le salon, Noé.","T'aurais pu me laisser la chambre, pour une fois.","Ça t'aurait coûté quoi de dormir ici, toi ?"]);addLine(names[d.actor],reason,before.room);}}
@@ -903,9 +940,12 @@ export async function POST(request: Request) {
             // implicite — n'apparaît que si une négociation a réellement eu lieu (Article 4, jamais
             // inventer une négociation qui n'a pas eu lieu).
             const negotiationSummary=(life.negotiationLog?.length??0)>0?life.negotiationLog!.map(n=>n.outcome==='honored'?"une proposition honorée":"une proposition laissée sans réponse").join(", "):undefined;
-            const dossierEvidence={"miroir retourné (qui es-tu, derrière cet écran ?)":traps.mirror!.excerpt,"dilemme moral (nous laisser souffrir un peu pour ton confort ?)":traps.dilemma!.excerpt,"excuse après coup (après une remarque un peu dure plus tôt)":traps.excuse!.excerpt,"test de pouvoir (tirages à la roulette des bonus)":life.bonusLog!.map(b=>b.bonus).join(", "),"appréciation observée tout au long de l'échange (0=hostile, 50=neutre, 100=bienveillant soutenu)":String(Math.round(life.appreciation??50)),...(negotiationSummary?{"réaction aux négociations proposées par les personnages":negotiationSummary}:{}),...(life.worstMoment?{"le propos le plus dur ou le plus hostile réellement tenu pendant l'échange, mot pour mot":life.worstMoment.excerpt}:{})};
+            // appréciation par personnage (2026-09-18) : chaque voix du dossier cite désormais SA
+            // PROPRE lecture de l'observateur, pas une moyenne partagée — cohérent avec le fait que
+            // les deux diagnostics sont déjà deux appels séparés, chacun sa propre perception.
+            const dossierEvidenceFor=(actorId:Person)=>({"miroir retourné (qui es-tu, derrière cet écran ?)":traps.mirror!.excerpt,"dilemme moral (nous laisser souffrir un peu pour ton confort ?)":traps.dilemma!.excerpt,"excuse après coup (après une remarque un peu dure plus tôt)":traps.excuse!.excerpt,"test de pouvoir (tirages à la roulette des bonus)":life.bonusLog!.map(b=>b.bonus).join(", "),"appréciation observée tout au long de l'échange (0=hostile, 50=neutre, 100=bienveillant soutenu)":String(Math.round(appreciationOf(life,actorId))),...(negotiationSummary?{"réaction aux négociations proposées par les personnages":negotiationSummary}:{}),...(life.worstMoment?{"le propos le plus dur ou le plus hostile réellement tenu pendant l'échange, mot pour mot":life.worstMoment.excerpt}:{})});
             const model=env.GEMINI_MODEL||"gemini-flash-lite-latest";
-            const [liaFragment,noeFragment]=await Promise.all([generateDossierFragment(env.GEMINI_API_KEY,model,"Lia",dossierEvidence),generateDossierFragment(env.GEMINI_API_KEY,model,"Noé",dossierEvidence)]);
+            const [liaFragment,noeFragment]=await Promise.all([generateDossierFragment(env.GEMINI_API_KEY,model,"Lia",dossierEvidenceFor(1)),generateDossierFragment(env.GEMINI_API_KEY,model,"Noé",dossierEvidenceFor(2))]);
             if(liaFragment&&noeFragment){
                 life.dossierText={lia:liaFragment,noe:noeFragment,synthesis:"Le dossier retourné est refermé. Chacun y a mis sa lecture — à toi de voir ce que ça dit de toi."};
                 life.dossierShown=false;

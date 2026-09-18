@@ -584,7 +584,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 56'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 57'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -818,17 +818,21 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
   sqlite.prepare('UPDATE agent_state SET room=?,needs=?,emotions=?').run('salon',JSON.stringify({hunger:20,fatigue:20,stress:20,uncertainty:20}),JSON.stringify({curiosity:60,tension:20,trust:60,comfort:60,attraction:60}));
   let epoch=(await readWorld(db)).epoch;
-  // On force la réaction de confiance du SEUL personnage qui répond à l'observateur (Lia, actor 1),
-  // exactement comme le ferait le vrai modèle lisant un ton hostile puis conciliant — jamais un
-  // script figé, seule cette valeur de test est substituée pour rendre l'assertion déterministe.
+  // On force la réaction de confiance des DEUX personnages de façon identique (chacun sa propre
+  // lecture du même message, symétrique ici pour garder les valeurs numériques prévisibles — la
+  // divergence par dispute est testée séparément plus bas), exactement comme le ferait le vrai
+  // modèle lisant un ton hostile puis conciliant — jamais un script figé, seule cette valeur de
+  // test est substituée pour rendre l'assertion déterministe.
   const gameFetch1=globalThis.fetch;
-  const forceOwnTrustDelta=delta=>async(url,options)=>{const response=await gameFetch1(url,options),body=await response.json(),decision=JSON.parse(body.candidates[0].content.parts[0].text);if(!isPartnerRequest([url,options])){const ctx=JSON.parse(JSON.parse(options.body).contents[0].parts[0].text);decision.emotions={...decision.emotions,trust:ctx.state.emotions.trust+delta};}body.candidates[0].content.parts[0].text=JSON.stringify(decision);return Response.json(body);};
+  const forceOwnTrustDelta=delta=>async(url,options)=>{const response=await gameFetch1(url,options),body=await response.json(),decision=JSON.parse(body.candidates[0].content.parts[0].text);const ctx=JSON.parse(JSON.parse(options.body).contents[0].parts[0].text);decision.emotions={...decision.emotions,trust:ctx.state.emotions.trust+delta};body.candidates[0].content.parts[0].text=JSON.stringify(decision);return Response.json(body);};
   globalThis.fetch=forceOwnTrustDelta(-3);
   let r=await post(input('chat',1,{epoch,message:"Vous êtes complètement inutiles, débiles."}));assert.equal(r.status,200);let w=await r.json();
-  assert.equal(w.story.life.appreciation,32,'a hostile message genuinely read as a trust drop by the responding character must cost the amplified early-impression penalty (50-18)');
+  assert.equal(w.story.life.appreciation[1],32,'a hostile message genuinely read as a trust drop by the responding character must cost the amplified early-impression penalty (50-18)');
+  assert.equal(w.story.life.appreciation[2],32,'the partner, reacting to the same message with the same trust drop, must see their own appreciation move identically (solidarity by default, outside any dispute)');
   globalThis.fetch=forceOwnTrustDelta(2);
   r=await post(input('chat',1,{epoch,message:"Merci beaucoup, prenez votre temps."}));assert.equal(r.status,200);w=await r.json();
-  assert.equal(w.story.life.appreciation,40,'a kind message genuinely read as a trust rise by the responding character must still earn the early-impression bonus (32+8)');
+  assert.equal(w.story.life.appreciation[1],40,'a kind message genuinely read as a trust rise by the responding character must still earn the early-impression bonus (32+8)');
+  assert.equal(w.story.life.appreciation[2],40,'the partner must again move identically outside a dispute');
   globalThis.fetch=gameFetch1;
   // Négociation : on force la réponse d'un personnage à contenir une offre reconnaissable, sans
   // jamais lui dicter un script figé — seule cette réponse-là est substituée pour le test.
@@ -838,45 +842,93 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   globalThis.fetch=gameFetch2;
   assert.ok(w.story.life.negotiationOffer,'a character conditioning an action on a bonus must be recorded as a pending negotiation offer');
   const offeringActor=w.story.life.negotiationOffer.actor;
-  const appreciationBeforeHonor=w.story.life.appreciation;
+  const appreciationBeforeHonor=w.story.life.appreciation[1];
   r=await post(input('spin_bonus',1,{epoch}));assert.equal(r.status,200);w=await r.json();
-  assert.equal(w.story.life.appreciation,appreciationBeforeHonor+8,'honoring a pending negotiation by spinning must actually raise appreciation, not just clear a flag');
+  assert.equal(w.story.life.appreciation[1],appreciationBeforeHonor+8,'honoring a pending negotiation by spinning must actually raise appreciation, not just clear a flag');
+  assert.equal(w.story.life.appreciation[2],appreciationBeforeHonor+8,'negotiation is a shared observer-relationship event, not the per-actor divergence source: both gauges must move together when a negotiation is honored');
   assert.equal(w.story.life.negotiationOffer,undefined,'an honored negotiation offer must be consumed, never left pending');
   assert.deepEqual(w.story.life.negotiationLog,[{round:w.story.life.negotiationLog[0].round,outcome:'honored'}],'an honored negotiation must leave a trace in negotiationLog so it can later reach the dossier as evidence');
   // Une seconde offre, jamais honorée, doit finir par retomber d'elle-même avec un léger coût —
   // ni éternellement due, ni oubliée sans aucune conséquence.
   {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life.negotiationOffer={actor:offeringActor,round:p.round-7};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
-  const appreciationBeforeStale=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.appreciation;
+  const appreciationBeforeStale=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.appreciation[1];
   r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
   assert.equal(w.story.life.negotiationOffer,undefined,'a negotiation offer left unresolved for too long must eventually be cleared, not stay pending forever');
-  assert.equal(w.story.life.appreciation,Math.max(0,appreciationBeforeStale-3),'letting a negotiation lapse must cost a little appreciation, distinct from honoring it');
+  assert.equal(w.story.life.appreciation[1],Math.max(0,appreciationBeforeStale-3),'letting a negotiation lapse must cost a little appreciation, distinct from honoring it');
   assert.equal(w.story.life.negotiationLog.length,2,'a lapsed negotiation must also be logged, alongside the earlier honored one');
   assert.equal(w.story.life.negotiationLog[1].outcome,'lapsed');
   // Avarice (retour utilisateur : "un utilisateur qui ne donne aucun bonus ne fait pas bonne
   // impression") : indépendante de toute négociation, une longue période sans le moindre tirage
   // coûte un peu d'appréciation, une seule fois par tranche de 15 tours.
   {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.round=75;p.life.revealedRound=60;p.life.bonusLog=[];sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
-  const appreciationBeforeStingy=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.appreciation;
+  const appreciationBeforeStingy=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.appreciation[1];
   r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
-  assert.equal(w.story.life.appreciation,Math.max(0,appreciationBeforeStingy-4),'never spinning the roulette for a long stretch must cost some appreciation, independent of any negotiation');
+  assert.equal(w.story.life.appreciation[1],Math.max(0,appreciationBeforeStingy-4),'never spinning the roulette for a long stretch must cost some appreciation, independent of any negotiation');
   r=await post(input('interact',1,{epoch}));w=await r.json();
-  assert.equal(w.story.life.appreciation,Math.max(0,appreciationBeforeStingy-4),'the stinginess penalty must not repeat on the very next turn, only once per fresh 15-round stretch');
+  assert.equal(w.story.life.appreciation[1],Math.max(0,appreciationBeforeStingy-4),'the stinginess penalty must not repeat on the very next turn, only once per fresh 15-round stretch');
   {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life.bonusLog=[{round:70,bonus:'food'}];sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
   {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.round=90;sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
-  const appreciationWithASpin=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.appreciation;
+  const appreciationWithASpin=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.appreciation[1];
   r=await post(input('interact',1,{epoch}));w=await r.json();
-  assert.equal(w.story.life.appreciation,appreciationWithASpin,'a single logged spin must fully spare the observer from the stinginess penalty, however long ago it happened');
+  assert.equal(w.story.life.appreciation[1],appreciationWithASpin,'a single logged spin must fully spare the observer from the stinginess penalty, however long ago it happened');
   // Colère réellement lue (retour utilisateur : "le système de la colère doit être connecté") :
   // une vraie fureur (tension haute, confort bas) chez le personnage qui répond doit coûter DE
-  // L'APPRÉCIATION EN PLUS du simple repérage lexical du message humain, jamais à sa place.
+  // L'APPRÉCIATION EN PLUS du simple repérage lexical du message humain, jamais à sa place. Les
+  // deux personnages sont mis en colère de façon identique ici (hors dispute, la solidarité les
+  // ramènerait de toute façon l'un vers l'autre) : la vraie divergence par dispute est testée
+  // séparément juste après.
   {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life.negotiationOffer=undefined;p.life.stoicUntil=undefined;p.life.mutedUntil=undefined;sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
-  sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=1').run(JSON.stringify({curiosity:70,tension:90,trust:40,comfort:10,attraction:40}));
+  sqlite.prepare('UPDATE agent_state SET emotions=?').run(JSON.stringify({curiosity:70,tension:90,trust:40,comfort:10,attraction:40}));
   flat=true;
-  const appreciationBeforeAnger=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.appreciation;
+  const appreciationBeforeAnger=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.appreciation[1];
   r=await post(input('chat',1,{epoch,message:"Il fait beau aujourd'hui."}));assert.equal(r.status,200);w=await r.json();
   flat=false;
-  assert.equal(w.story.life.appreciation,appreciationBeforeAnger-5,'a genuinely furious responder (real tension/comfort reading) must cost appreciation even for an entirely neutral human message');
+  assert.equal(w.story.life.appreciation[1],appreciationBeforeAnger-5,'a genuinely furious responder (real tension/comfort reading) must cost appreciation even for an entirely neutral human message');
+  assert.equal(w.story.life.appreciation[2],appreciationBeforeAnger-5,'both characters genuinely furious in the same way, outside any dispute, must be penalized identically');
   console.log('Passed: the observer-appreciation gauge reacts to the responding character\'s own genuine trust reaction (not a lexical keyword list) with the required early-impression amplification and down-more-than-up asymmetry, to real anger in the responding character as a distinct additional signal, and to prolonged stinginess independent of negotiation; a character-proposed negotiation is detected, honored (real appreciation gain) or left to lapse (real appreciation cost) exactly once.');
+}
+
+{
+  // Appréciation PAR PERSONNAGE : solidarité par défaut vs. divergence pendant une dispute
+  // (2026-09-18, audit approfondi — retour utilisateur explicite dès le tour ayant lancé ce
+  // chantier : "Lia et Noé peuvent apprecier differemment l'utilisateur, mais ils restent
+  // solidaires la plupart du temps [...] si Noé est en colère contre Lia, il peut faire preuve
+  // d'amitié envers l'utilisateur, meme si l'utilisateur parle mal à Lia").
+  flat=false;affection=false;refuse=false;meal=false;honorOffer=false;chatMoveAccepted=false;replayScene=false;tenderScene=false;sceneMismatch=false;brokenPair=false;separatePreference=false;
+  const plot={...newStory(),round:60,met:true,introduced:true,sharedMeal:true,finalCalled:true,evidence:Array(5).fill('preuve'),pendingDestination:undefined,life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,exitSearched:true,dossierHumanTurns:10,appreciation:{1:50,2:50}}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,emotions=?').run('salon',JSON.stringify({hunger:20,fatigue:20,stress:20,uncertainty:20}),JSON.stringify({curiosity:60,tension:20,trust:60,comfort:60,attraction:60}));
+  const epoch2=(await readWorld(db)).epoch;
+  // Un seul personnage (actor 1, Lia) réagit avec une confiance en baisse ; l'autre (Noé) garde
+  // exactement sa confiance de départ (trustShift=0, échoué explicitement pour ne pas dépendre du
+  // comportement par défaut du mock) — exactement le scénario "l'observateur parle mal à Lia" du
+  // tour source.
+  const gameFetch3=globalThis.fetch;
+  const forceAsymmetricTrust=async(url,options)=>{const response=await gameFetch3(url,options),body=await response.json(),decision=JSON.parse(body.candidates[0].content.parts[0].text);const ctx=JSON.parse(JSON.parse(options.body).contents[0].parts[0].text);decision.emotions={...decision.emotions,trust:isPartnerRequest([url,options])?ctx.state.emotions.trust:ctx.state.emotions.trust-3};body.candidates[0].content.parts[0].text=JSON.stringify(decision);return Response.json(body);};
+  globalThis.fetch=forceAsymmetricTrust;
+  let r2=await post(input('chat',1,{epoch:epoch2,message:"Toi Lia t'es vraiment inutile."}));assert.equal(r2.status,200);let w2=await r2.json();
+  globalThis.fetch=gameFetch3;
+  // Sans pull : Lia 50+appreciationFromTrust(-3,10)=50-9=41, Noé 50+0=50 (écart brut 9). Avec le
+  // pull de solidarité (30% vers la moyenne 45,5) : Lia≈42, Noé≈49 (écart réduit à 7) — la valeur
+  // exacte, pas une simple borne, pour prouver que le pull agit vraiment, pas seulement que
+  // l'écart brut serait de toute façon resté sous un seuil large.
+  assert.equal(w2.story.life.appreciation[1],42,'outside any dispute, the character actually addressed with hostility must be pulled back up toward their partner by the default solidarity mechanic');
+  assert.equal(w2.story.life.appreciation[2],49,'outside any dispute, the unaffected partner must also be pulled slightly down toward the other — solidarity moves both, not just the one who moved on their own');
+  // Même scénario, mais avec une dispute interpersonnelle active : la convergence doit être
+  // suspendue (pas de pull), la divergence doit rester entière. Une dispute active force aussi
+  // angerLevel(...,angry=true) pour LES DEUX personnages (plancher à 0,85, comportement déjà
+  // existant partagé avec le rendu du visage) : Noé prend donc lui aussi le coût de colère (-5),
+  // mais SEULE Lia, réellement visée par l'hostilité, prend EN PLUS le coût de confiance (-9) —
+  // Lia 50-9-5=36, Noé 50-5=45, sans aucun pull entre les deux.
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life.appreciation={1:50,2:50};p.life.dispute={topic:'test',remaining:2};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
+  globalThis.fetch=forceAsymmetricTrust;
+  r2=await post(input('chat',1,{epoch:epoch2,message:"Toi Lia t'es vraiment inutile."}));assert.equal(r2.status,200);w2=await r2.json();
+  globalThis.fetch=gameFetch3;
+  assert.equal(w2.story.life.appreciation[2],45,'an active dispute costs both characters the shared anger penalty (angry floor), but the untouched partner must not additionally be pulled toward the other — no solidarity smoothing during a dispute');
+  assert.equal(w2.story.life.appreciation[1],36,'the character actually addressed with hostility keeps the full, un-smoothed trust penalty on top of the shared anger penalty');
+  assert.ok(w2.story.life.appreciation[1]<w2.story.life.appreciation[2],'the character actually addressed with hostility must end up with a lower appreciation than their unaffected partner while the dispute lasts — real divergence, not solidarity, and a wider gap than the no-dispute case above (36 vs 45, versus the smoothed 42 vs 49)');
+  console.log('Passed: appreciation is tracked per character; outside a dispute the two gauges are pulled back toward each other (solidarity by default), but an active interpersonal dispute suspends that pull so one character can genuinely diverge from the other, per the user\'s own example (Noé staying friendly with the observer while Lia alone is mistreated).');
 }
 
 {

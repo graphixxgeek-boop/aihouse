@@ -273,7 +273,11 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
 
 ## Appréciation de l'observateur et négociation (`lib/life.ts`, `app/api/lia/route.ts`, `principes.md` 8.7/8.8/8.10)
 
-- `appreciation` : 0-100, neutre à 50, borné.
+- `appreciation:{1:number,2:number}` (2026-09-18 : devenue par personnage, `principes.md` 8.7) :
+  0-100 chacune, neutre à 50, bornées. Hors dispute (`!life.dispute?.remaining`), les deux valeurs
+  sont ramenées à chaque tour de 30 % de leur écart vers leur moyenne (solidarité par défaut) ;
+  pendant une dispute, ce pull est suspendu (divergence possible). Négociation et avarice
+  s'appliquent identiquement aux deux (événements partagés, pas la source de divergence).
 - Jugement du personnage qui répond (`appreciationFromTrust(trustShift,humanMessageCount)`,
   corrigée le 2026-09-18 — voir `principes.md` 8.10 pour l'historique et la cause du remplacement) :
   `trustShift` = variation réelle de la confiance de ce personnage sur ce tour (`d.emotions.trust`
@@ -294,16 +298,20 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   n'est pas de nouveau atteint sans tirage entretemps).
 - Négociation honorée (tirage pendant qu'une offre est en attente) : +8, offre consommée.
   Négociation caduque (offre en attente depuis plus de 6 tours) : -3, offre effacée.
-- Colore le contexte narratif donné au modèle (`observerStanding`) : ≤25 → garde haute assumée
-  explicitement ; ≥75 → coopération ponctuelle « à contrecœur » autorisée, jamais un mode stable ;
-  entre les deux, aucune consigne particulière (registre habituel).
-- `genuineRespectStreak` (2026-09-18, `principes.md` 8.15, `lib/life.ts`) : compteur 0-20, incrémenté
-  de 1 à chaque tour où `trustShift>0` ET `appreciation>=85` ; remis à 0 dès que `trustShift<=0` ou
-  `appreciation<85`. À `genuineRespectStreak>=6`, déclenche une fois le palier rare « respect
-  sincère » dans `observerStanding` (texte distinct du palier `>=75`, autorisant un mot de
-  reconnaissance directe et non feint) puis se remet immédiatement à 0 (consommé), devant se
-  reconstruire entièrement avant de pouvoir se redéclencher — jamais un palier stable comme le
-  `>=75` peut l'être en restant simplement au-dessus du seuil.
+- Colore le contexte narratif donné au modèle via `observerStandingFor(actorId)` (2026-09-18 : une
+  fonction par personnage, plus un champ unique partagé) : ≤25 (jauge PROPRE à cet acteur) → garde
+  haute assumée explicitement ; ≥75 → coopération ponctuelle « à contrecœur » autorisée, jamais un
+  mode stable ; entre les deux, aucune consigne particulière (registre habituel). Ajoute une note
+  explicite de distension de solidarité quand `life.dispute?.remaining` est actif, quel que soit le
+  palier — voir `principes.md` 8.7.
+- `genuineRespectStreak:{1:number,2:number}` (2026-09-18, devenu par personnage le même jour que
+  `appreciation`, `principes.md` 8.7/8.15, `lib/life.ts`) : compteur 0-20 par acteur, incrémenté de
+  1 à chaque tour où le trustShift PROPRE à cet acteur est `>0` ET son `appreciation` `>=85` ; remis
+  à 0 dès que ce trustShift est `<=0` ou son appreciation `<85`. À `genuineRespectStreak[id]>=6`,
+  déclenche une fois le palier rare « respect sincère » dans `observerStandingFor(id)` (texte
+  distinct du palier `>=75`, autorisant un mot de reconnaissance directe et non feint) puis se remet
+  immédiatement à 0 (consommé), devant se reconstruire entièrement avant de pouvoir se redéclencher
+  — jamais un palier stable comme le `>=75` peut l'être en restant simplement au-dessus du seuil.
 - `negotiationContext` (texte de contexte, toujours présent une fois révélé) autorise le modèle à
   formuler librement une négociation, sans jamais l'imposer à chaque tour.
 - `negotiationOffer:{actor,round}` : une seule offre en attente à la fois, jamais écrasée par une

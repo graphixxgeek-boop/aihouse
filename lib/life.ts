@@ -51,7 +51,17 @@ softnessOwed?:boolean;softnessGiven?:number;
 // par conception (retour utilisateur explicite) : elle descend plus qu'elle ne monte pour un même
 // degré de comportement, et les tout premiers messages humains pèsent plus lourd que les suivants
 // (appreciationFromTrust ci-dessous). Alimente aussi le dossier retourné comme preuve supplémentaire.
-appreciation?:number;revealedRound?:number;
+// Devenue une jauge PAR PERSONNAGE le 2026-09-18 (retour utilisateur explicite dès le tour ayant
+// lancé ce chantier : "Lia et Noé peuvent apprecier differemment l'utilisateur, mais ils restent
+// solidaires la plupart du temps [...] si Noé est en colère contre Lia, il peut faire preuve
+// d'amitié envers l'utilisateur, meme si l'utilisateur parle mal à Lia" — resté non câblé jusqu'à
+// l'audit approfondi de ce jour). Chaque personnage réagit désormais à SA PROPRE lecture de la
+// confiance et de sa propre colère ; hors dispute active, les deux valeurs sont ramenées partiellement
+// l'une vers l'autre à chaque tour (solidarité par défaut) ; pendant une dispute active
+// (`dispute?.remaining`), cette convergence est suspendue et les deux jauges peuvent diverger
+// librement — c'est précisément le mécanisme qui permet à Noé de se montrer amical avec l'observateur
+// alors que Lia, elle, reste sur ses gardes après un message hostile qui ne visait qu'elle.
+appreciation?:Partial<Record<Person,number>>;revealedRound?:number;
 // Négociation (2026-09-18, retour utilisateur explicite) : base volontairement simple avant toute
 // complexification — un personnage conditionne une action à un tirage de la roulette, ou en
 // propose un spontanément, dans son propre registre (jamais un menu scripté, jamais une demande
@@ -81,19 +91,26 @@ worstMoment?:{round:number;excerpt:string;trustShift:number};
 // retombe à zéro (Article 3 : la même logique de retour à zéro que dispute/dossier, jamais un acquis
 // permanent). Une fois le seuil atteint, la fenêtre de respect sincère est consommée puis remise à
 // zéro : elle doit se reconstruire entièrement avant de réapparaître, ce qui garantit qu'elle reste
-// un instant rare et non un palier stable.
-genuineRespectStreak?:number};
+// un instant rare et non un palier stable. Devenu un compteur PAR PERSONNAGE le 2026-09-18, en
+// même temps que appreciation ci-dessus, pour la même raison (deux jauges qui peuvent diverger ne
+// peuvent pas partager un seul palier de respect).
+genuineRespectStreak?:Partial<Record<Person,number>>};
 export type TrapId='mirror'|'dilemma'|'excuse';
 export const TRAP_ORDER:TrapId[]=['mirror','dilemma','excuse'];
+// appreciation/genuineRespectStreak sont devenues des jauges par personnage le 2026-09-18 (voir le
+// commentaire sur `appreciation` dans le type Life ci-dessus) ; une valeur stockée avant ce
+// changement (un simple nombre partagé) reste lisible en servant de valeur de départ aux deux
+// personnages, plutôt que de faire disparaître silencieusement une session en cours (Article 5).
+const legacyOrPerActor=(stored:unknown,actor:Person):unknown=>typeof stored==='number'?stored:(stored as Partial<Record<Person,unknown>>|undefined)?.[actor];
 export function readLife(value:unknown,round=0):Life{const v=value&&typeof value==='object'?value as Partial<Life>:{};const score=(x:unknown)=>typeof x==='number'&&Number.isFinite(x)?Math.max(0,Math.min(100,x)):0;return {stockExposures:{1:Math.min(100,Math.max(0,Number(v.stockExposures?.[1])||0)),2:Math.min(100,Math.max(0,Number(v.stockExposures?.[2])||0))},windowNoticed:v.windowNoticed===true,sleepTurns:{1:Math.min(2,Math.max(0,Number(v.sleepTurns?.[1])||0)),2:Math.min(2,Math.max(0,Number(v.sleepTurns?.[2])||0))},gardenOpen:v.gardenOpen===true,gardenVisited:v.gardenVisited===true,tvOn:typeof v.tvOn==="boolean"?v.tvOn:v.tvSeen===true,dialogueIndexed:v.dialogueIndexed===true,loveNoticed:Array.isArray(v.loveNoticed)?v.loveNoticed.filter(id=>id===1||id===2):[],spatialFocus:Object.fromEntries([1,2].flatMap(id=>typeof v.spatialFocus?.[id]==="string"&&["sofa","remote","speaker","plant","window","entry","table","stove","stock","grass","tree","fence","bed","mirror","screen","book","note"].includes(v.spatialFocus[id])?[[id,v.spatialFocus[id]]]:[])),mirrorKnownBy:Array.isArray(v.mirrorKnownBy)?[...new Set(v.mirrorKnownBy.filter((id):id is Person=>id===1||id===2))]:[],mirrorVerified:v.mirrorVerified===true||(Array.isArray(v.mirrorKnownBy)?new Set(v.mirrorKnownBy).size:0)>=2,foodVerified:v.foodVerified===true,contributions:Array.isArray(v.contributions)?v.contributions.filter(x=>typeof x==="string").map(x=>x.slice(0,180)).slice(-12):[],ambientVerified:v.ambientVerified===true,recapCount:Math.max(0,Math.min(5,Number(v.recapCount)||0)),causeByActor:Object.fromEntries([1,2].flatMap(id=>typeof v.causeByActor?.[id]==="string"?[[id,v.causeByActor[id].slice(0,300)]]:[])),lastCause:typeof v.lastCause==="string"?v.lastCause.slice(0,300):undefined,visualIntro:Math.min(2,Math.max(0,Number(v.visualIntro)||0)),ambientSeen:v.ambientSeen===true,personalFollowup:Math.min(3,Math.max(0,Number(v.personalFollowup)||0)),observerNamed:v.observerNamed===true,exitSearched:v.exitSearched===true,exitPhase:Math.min(2,Math.max(0,Number(v.exitPhase)||0)),exitActive:v.exitActive===true,discussedObjects:Array.isArray(v.discussedObjects)?v.discussedObjects.filter(x=>typeof x==="string").slice(-12):[],proposalMade:v.proposalMade===true,proposalHistoryChecked:v.proposalHistoryChecked===true,personalAsked:v.personalAsked===true,personalRound:typeof v.personalRound==="number"&&Number.isFinite(v.personalRound)?Math.max(0,v.personalRound):undefined,personalBoosted:v.personalBoosted===true,remoteFound:v.remoteFound===true||v.tvSeen===true,tvSeen:v.tvSeen===true||(v.tvSeen===undefined&&round>10),visited:Array.isArray(v.visited)?v.visited.filter(r=>['salon','cuisine','chambre','bureau','jardin'].includes(r)):round>10?['salon','cuisine','chambre','bureau']:['salon'],attachment:{1:score(v.attachment?.[1]),2:score(v.attachment?.[2])},credit:{1:score(v.credit?.[1]),2:score(v.credit?.[2])},debrief:v.debrief&&typeof v.debrief.topic==='string'?{topic:v.debrief.topic.slice(0,900),remaining:Math.min(3,Math.max(0,Number(v.debrief.remaining)||0))}:undefined,contact:v.contact&&['salon','chambre'].includes(v.contact.room)?{room:v.contact.room,remaining:Math.min(3,Math.max(0,Number(v.contact.remaining)||0))}:undefined,dispute:v.dispute&&typeof v.dispute.topic==='string'?{topic:v.dispute.topic.slice(0,900),remaining:Math.min(3,Math.max(0,Number(v.dispute.remaining)||0))}:undefined,studyTurns:Math.max(0,Math.min(2,Number(v.studyTurns)||0)),contacts:Array.isArray(v.contacts)?v.contacts.filter(n=>Number.isInteger(n)).slice(-6):[]
 ,bonusUntil:{...(typeof v.bonusUntil?.food==="number"&&Number.isFinite(v.bonusUntil.food)?{food:v.bonusUntil.food}:{}),...(typeof v.bonusUntil?.calm==="number"&&Number.isFinite(v.bonusUntil.calm)?{calm:v.bonusUntil.calm}:{}),...(typeof v.bonusUntil?.sleep==="number"&&Number.isFinite(v.bonusUntil.sleep)?{sleep:v.bonusUntil.sleep}:{})},stoicUntil:{...(typeof v.stoicUntil?.[1]==="number"&&Number.isFinite(v.stoicUntil[1])?{1:v.stoicUntil[1]}:{}),...(typeof v.stoicUntil?.[2]==="number"&&Number.isFinite(v.stoicUntil[2])?{2:v.stoicUntil[2]}:{})},mutedUntil:{...(typeof v.mutedUntil?.[1]==="number"&&Number.isFinite(v.mutedUntil[1])?{1:v.mutedUntil[1]}:{}),...(typeof v.mutedUntil?.[2]==="number"&&Number.isFinite(v.mutedUntil[2])?{2:v.mutedUntil[2]}:{})},trottoirGranted:v.trottoirGranted===true,bonusLog:Array.isArray(v.bonusLog)?v.bonusLog.filter((e):e is {round:number;bonus:BonusId}=>Boolean(e)&&typeof e==="object"&&["food","calm","sleep","stoic","mute","trottoir","force_move"].includes((e as {bonus?:string}).bonus??"")).slice(-12):[]
 ,dossierHumanTurns:Math.max(0,Number(v.dossierHumanTurns)||0),dossierAsked:Object.fromEntries(TRAP_ORDER.flatMap(t=>typeof v.dossierAsked?.[t]==="number"&&Number.isFinite(v.dossierAsked[t])?[[t,v.dossierAsked[t]]]:[])),dossierTraps:Object.fromEntries(TRAP_ORDER.flatMap(t=>v.dossierTraps?.[t]&&typeof v.dossierTraps[t]?.excerpt==="string"?[[t,{round:Math.max(0,Number(v.dossierTraps[t]?.round)||0),excerpt:v.dossierTraps[t]!.excerpt.slice(0,500)}]]:[])),dossierText:v.dossierText&&typeof v.dossierText.lia==="string"&&typeof v.dossierText.noe==="string"&&typeof v.dossierText.synthesis==="string"?{lia:v.dossierText.lia.slice(0,2000),noe:v.dossierText.noe.slice(0,2000),synthesis:v.dossierText.synthesis.slice(0,600)}:undefined,dossierShown:v.dossierShown===true
 ,softnessOwed:v.softnessOwed===true,softnessGiven:Math.max(0,Math.min(20,Number(v.softnessGiven)||0))
-,appreciation:typeof v.appreciation==="number"&&Number.isFinite(v.appreciation)?Math.max(0,Math.min(100,v.appreciation)):50
+,appreciation:{1:(()=>{const x=legacyOrPerActor(v.appreciation,1);return typeof x==="number"&&Number.isFinite(x)?Math.max(0,Math.min(100,x)):50;})(),2:(()=>{const x=legacyOrPerActor(v.appreciation,2);return typeof x==="number"&&Number.isFinite(x)?Math.max(0,Math.min(100,x)):50;})()}
 ,revealedRound:typeof v.revealedRound==="number"&&Number.isFinite(v.revealedRound)?Math.max(0,v.revealedRound):undefined
 ,worstMoment:v.worstMoment&&typeof v.worstMoment.excerpt==="string"&&typeof v.worstMoment.trustShift==="number"&&Number.isFinite(v.worstMoment.trustShift)?{round:Math.max(0,Number(v.worstMoment.round)||0),excerpt:v.worstMoment.excerpt.slice(0,500),trustShift:v.worstMoment.trustShift}:undefined
 ,negotiationOffer:v.negotiationOffer&&(v.negotiationOffer.actor===1||v.negotiationOffer.actor===2)&&typeof v.negotiationOffer.round==="number"&&Number.isFinite(v.negotiationOffer.round)?{actor:v.negotiationOffer.actor,round:v.negotiationOffer.round}:undefined
-,genuineRespectStreak:Math.max(0,Math.min(20,Number(v.genuineRespectStreak)||0))
+,genuineRespectStreak:{1:Math.max(0,Math.min(20,Number(legacyOrPerActor(v.genuineRespectStreak,1))||0)),2:Math.max(0,Math.min(20,Number(legacyOrPerActor(v.genuineRespectStreak,2))||0))}
 ,negotiationLog:Array.isArray(v.negotiationLog)?v.negotiationLog.filter((e):e is {round:number;outcome:'honored'|'lapsed'}=>Boolean(e)&&typeof e==="object"&&["honored","lapsed"].includes((e as {outcome?:string}).outcome??"")).slice(-12):[]};}
 // Détection heuristique d'une réaction de choc/tristesse/colère chez l'observateur (2026-09-17) :
 // grossière par nature (comme check-spirit.mjs pour l'esprit des persos), jamais une lecture fine
@@ -118,6 +135,9 @@ export function appreciationFromTrust(trustShift:number,humanMessageCount:number
   const weight=trustShift<0?(early?6:3):(early?4:2);
   return Math.round(trustShift*weight);
 }
+// Lecture pratique de la jauge par personnage (2026-09-18) : neutre à 50 si jamais initialisée,
+// jamais un accès direct à life.appreciation?.[actor] dispersé partout dans route.ts.
+export function appreciationOf(life:Life,actor:Person):number{return life.appreciation?.[actor]??50;}
 // Détection d'une négociation proposée par un personnage (2026-09-18, retour utilisateur explicite :
 // "il y a vraie nego quand l'utilisateur demande une action à un perso et que celui-ci veut un
 // bonus en échange, ou que le perso propose une action en échange de l'obtention d'un bonus").

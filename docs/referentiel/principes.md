@@ -486,7 +486,34 @@ seul mécanisme fourre-tout :
   moindre tirage de la roulette coûte un peu d'appréciation, une fois par tranche de 15 tours —
   c'était dans la toute première demande de l'utilisateur, omis puis rajouté après relecture.
 - **La négociation** (voir ci-dessous), honorée ou laissée en plan.
-Alimente aussi le dossier retourné comme preuve supplémentaire (`dossierEvidence`).
+Alimente aussi le dossier retourné comme preuve supplémentaire (`dossierEvidence`), chaque voix
+citant désormais sa propre jauge (voir la note « PAR PERSONNAGE » ci-dessous).
+
+**Devenue une jauge PAR PERSONNAGE le 2026-09-18** (audit approfondi, écart trouvé face à une
+demande explicite laissée non câblée depuis le tour ayant lancé ce chantier : « Lia et Noé peuvent
+apprecier differemment l'utilisateur, mais ils restent solidaires la plupart du temps [...] si Noé
+est en colère contre Lia, il peut faire preuve d'amitié envers l'utilisateur, meme si l'utilisateur
+parle mal à Lia »). `life.appreciation` est désormais `{1:number,2:number}` (`appreciationOf(life,
+actor)` pour la lecture). Chaque personnage réagit à SA PROPRE confiance, sa propre colère
+(`angerLevel` par personnage) et son propre palier de respect (`genuineRespectStreak`, également
+par personnage). Deux régimes distincts, gérés dans le même bloc de mise à jour post-décision :
+- **Hors dispute active** (`!life.dispute?.remaining`) : après la mise à jour propre à chacun, les
+  deux jauges sont ramenées partiellement l'une vers l'autre (30 % de l'écart vers leur moyenne) —
+  c'est la solidarité par défaut, jamais une fusion totale (chaque réaction individuelle continue de
+  compter, elle est seulement amortie).
+- **Pendant une dispute active** : cette convergence est suspendue, les deux jauges peuvent
+  diverger librement selon leur propre trustShift — c'est la SEULE fenêtre où « Noé peut rester
+  chaleureux avec l'observateur pendant que Lia, seule visée, se braque » devient possible. Notez
+  qu'une dispute active force aussi `angerLevel(...,angry=true)` pour LES DEUX personnages (plancher
+  0,85, comportement déjà existant partagé avec le rendu du visage) : les deux subissent donc le
+  coût de colère partagé, mais seul celui réellement visé par l'hostilité subit EN PLUS le coût de
+  confiance — la divergence porte sur ce supplément, pas sur la totalité du score.
+La négociation et l'avarice restent des événements PARTAGÉS de la relation avec l'observateur (pas
+la divergence par dispute) : leurs deltas s'appliquent identiquement aux deux jauges, quel que soit
+l'état d'une dispute. `observerStandingFor(actorId)` (`app/api/lia/route.ts`) construit désormais la
+consigne donnée au modèle à partir de la jauge PROPRE à ce personnage, et ajoute une note explicite
+de distension de solidarité quand une dispute est active, pour que le modèle comprenne pourquoi il
+peut légitimement juger l'observateur indépendamment de la façon dont il traite l'autre.
 
 8.8. **La négociation, base volontairement simple avant complexification** (retour utilisateur
 explicite : « il faut trouver les bases »). Une vraie négociation existe quand un personnage
@@ -498,9 +525,10 @@ retient qui a proposé et à quel tour, une seule offre à la fois. Deux issues 
 de la roulette survient pendant qu'elle est en attente) → appréciation en hausse, offre consommée ;
 laissée sans réponse plus de 6 tours → offre effacée avec un léger coût d'appréciation, ni
 éternellement due ni oubliée sans conséquence. Restent hors de cette première version, à ajouter
-seulement une fois cette base vérifiée : la pénalité de sur-générosité (« trop gentil »), les
-menaces explicites, et tout lien avec un axe de solidarité/désaccord entre Lia et Noé au sujet de
-l'observateur au-delà de la colère déjà connectée ci-dessus.
+seulement une fois cette base vérifiée : la pénalité de sur-générosité (« trop gentil ») et les
+menaces explicites. L'axe de solidarité/désaccord entre Lia et Noé au sujet de l'observateur,
+initialement listé ici comme hors périmètre, est construit depuis le 2026-09-18 — voir la note
+« Devenue une jauge PAR PERSONNAGE » dans l'Article 8.7 ci-dessus.
 
 **Corrigé le 2026-09-18 (audit approfondi, écart trouvé en confrontant l'historique complet de la
 session au code réel)** : la demande explicite du tour ayant lancé ce chantier — « il faut aussi
