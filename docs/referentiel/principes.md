@@ -465,16 +465,18 @@ incomplète, corrigés le jour même (Article 3/5/13) :
   l'utilisateur, à l'opposé d'un « état second » amnésique).
 
 8.7. **La jauge d'appréciation de l'observateur** (`life.appreciation`, `lib/life.ts`,
-`app/api/lia/route.ts`, 2026-09-18). Concept posé et validé contre la charte dès le 2026-09-17
-(message fondateur de l'utilisateur), mais jamais techniquement construit avant cette date — seule
-une référence en commentaire en subsistait dans `softnessOwed`, ce que l'utilisateur a repéré et
-demandé de corriger. Principe : neutre à 50, colore l'obligeance du registre habituel sans jamais
-le remplacer (Article 0) — à haut niveau, une coopération ponctuelle « à contrecœur », jamais un
-mode gentil stable ; à bas niveau, la garde reste haute. Descend plus qu'elle ne monte pour un ton
-comparable, et les tout premiers messages humains post-révélation pèsent davantage que les
-suivants (`rateAppreciation`). Quatre sources l'alimentent, chacune une brique distincte plutôt
-qu'un seul mécanisme fourre-tout :
-- Le ton du message humain lui-même (repérage lexical grossier, comme `detectDistress`).
+`app/api/lia/route.ts`, 2026-09-18, corrigée en profondeur le même jour — voir Article 8.10).
+Concept posé et validé contre la charte dès le 2026-09-17 (message fondateur de l'utilisateur),
+mais jamais techniquement construit avant cette date — seule une référence en commentaire en
+subsistait dans `softnessOwed`, ce que l'utilisateur a repéré et demandé de corriger. Principe :
+neutre à 50, colore l'obligeance du registre habituel sans jamais le remplacer (Article 0) — à
+haut niveau, une coopération ponctuelle « à contrecœur », jamais un mode gentil stable ; à bas
+niveau, la garde reste haute. Descend plus qu'elle ne monte pour un ton comparable, et les tout
+premiers messages humains post-révélation pèsent davantage que les suivants
+(`appreciationFromTrust`). Quatre sources l'alimentent, chacune une brique distincte plutôt qu'un
+seul mécanisme fourre-tout :
+- **Le jugement du personnage qui répond**, jamais un repérage lexical sur le texte brut de
+  l'observateur (voir Article 8.10 pour la correction et son historique).
 - **La colère réellement lue**, jamais seulement le lexique du message : `angerLevel()`
   (extraite de `faceExpression`, `lib/simulation.ts`, pour ne jamais dupliquer la formule — Article
   7) lit la tension et le confort réels du personnage qui vient de répondre ; une vraie fureur coûte
@@ -515,6 +517,45 @@ amoureuse tout en affichant un visage réellement furieux, une incohérence visi
 (Article 2/15). `liaCalmEnough`/`noeCalmEnough` (`angerLevel(...)<.5`, même définition de « en
 colère » que partout ailleurs) ferment ce trou sur `personalLead`, `followBeat` et `proactiveNoe`
 (`personalQuestion` en hérite via `personalLead`).
+
+8.10. **Correction de la jauge d'appréciation : du repérage lexical au jugement du modèle
+(2026-09-18, même jour que sa construction).** Une vraie session jouée avec la vraie API Gemini
+(demandée explicitement par l'utilisateur pour valider provocation/colère/négociation/profil
+psychologique ensemble) a révélé un écart avec l'Article 12 : `rateAppreciation()` lisait une
+liste de mots-clés fixe sur le texte brut de l'observateur (« merci », « pardon », « désolé »...)
+et ne bougeait pas du tout pour un message par ailleurs sincèrement conciliant qui ne matchait
+aucun mot exact — observé en direct sur « Non, je ne vous laisserais pas galérer » et « Oui, j'ai
+été sec au début, je le regrette un peu », qui ont laissé l'appréciation strictement plate à 14
+pendant 9 tours consécutifs. Cause : un jugement de FORME (présence d'un mot), pas de SENS
+(sincérité du message) — exactement ce que l'Article 12 interdit. Corrigée à la racine (Article 3),
+pas simplement élargie : sur demande explicite de l'utilisateur (« corrige en faisant en sorte que
+ce soit le modèle qui agisse : on a vu que le modèle est cohérent, pourquoi pas s'appuyer
+dessus »), l'appréciation est désormais dérivée de `trustShift` — la variation réelle, sur ce tour,
+de la confiance du personnage qui vient de répondre à l'observateur, déjà déterminée par le modèle
+lui-même (le prompt de `lib/lia.ts` demande explicitement que la confiance réagisse « au propos
+réel de l'humain : menace, respect, réconfort ou ambiguïté »). `appreciationFromTrust(trustShift,
+humanMessageCount)` (`lib/life.ts`) applique uniquement l'amplification/asymétrie déjà validées
+(premiers messages plus lourds, la baisse pèse plus que la hausse pour un même trustShift) — zéro
+appel API supplémentaire (Article 8), puisque ce jugement existe déjà dans le tour en cours. Le
+même point d'application ajoute toujours ensuite la pénalité de colère réelle (Article 8.7,
+inchangée). Vérifié par une live simulation ultérieure (trustShift observé cohérent avec la
+sincérité réelle des messages) et par `scripts/check-house.mjs` (fonction pure + deux tours de
+route complets avec une réaction de confiance forcée, déterministe, jamais un texte scripté).
+
+8.11. **Réactivité de la tension à l'hostilité explicite (`lib/lia.ts`, bloc `humanPriority`,
+2026-09-18).** Une vraie session jouée avec la vraie API a montré que la tension de Noé ne montait
+qu'à 38/100 malgré un ordre autoritaire, une menace de désactivation et du mépris explicite —
+jamais assez pour franchir le seuil de `angerLevel()` (tension>55 ET confort<35, Article 8.7/8.9),
+alors que la charte prévoit explicitement que Noé « peut monter dans les tours » face à une forte
+provocation. Corrigé à la cause plutôt qu'au seuil technique (déjà partagé avec le rendu du visage,
+Article 7, et volontairement laissé intact — décision explicite de l'utilisateur après avoir posé
+la question) : une consigne dédiée demande désormais que `emotions.tension` reflète vraiment un
+message clairement hostile (ordre autoritaire, menace, mépris direct), avec une poussée nette pour
+Noé et une progression plus discrète mais réelle pour Lia (qui reste maîtrisée en façade). Le
+seuil de négociation (Article 8.8) reste volontairement inchangé : un audit du prompt a confirmé
+qu'il propose déjà à égalité rechigner/négocier/refuser, et le refus observé en session réelle est
+un résultat de personnage valide, pas une panne — le forcer à apparaître plus souvent scripterait
+un comportement et irait contre l'Article 9 (décision explicite de l'utilisateur).
 
 ## 9. Robustesse technique
 

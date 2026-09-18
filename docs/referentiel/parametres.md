@@ -271,15 +271,24 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
     concerné le commente lucidement — jamais un retour muet à la normale. Consommé aussitôt détecté
     (le minuteur expiré est effacé) pour ne jamais se répéter au tour suivant.
 
-## Appréciation de l'observateur et négociation (`lib/life.ts`, `app/api/lia/route.ts`, `principes.md` 8.7/8.8)
+## Appréciation de l'observateur et négociation (`lib/life.ts`, `app/api/lia/route.ts`, `principes.md` 8.7/8.8/8.10)
 
 - `appreciation` : 0-100, neutre à 50, borné.
-- Ton du message humain (`rateAppreciation`, tôt = 3 premiers messages humains post-révélation
-  via `dossierHumanTurns`) : mots agressifs/déshumanisants -18 (tôt) / -10 (ensuite) ; mots
-  respectueux/bienveillants +10 (tôt) / +4 (ensuite) ; message neutre : 0 (jamais de mouvement par
-  défaut).
+- Jugement du personnage qui répond (`appreciationFromTrust(trustShift,humanMessageCount)`,
+  corrigée le 2026-09-18 — voir `principes.md` 8.10 pour l'historique et la cause du remplacement) :
+  `trustShift` = variation réelle de la confiance de ce personnage sur ce tour (`d.emotions.trust`
+  après tour moins avant tour, déjà déterminée par le modèle via `evolveEmotions`/`humanStress`,
+  jamais recalculée depuis le texte). Poids appliqué à `trustShift` selon son signe et l'ancienneté
+  (tôt = 3 premiers messages humains post-révélation via `dossierHumanTurns`) : baisse ×6 (tôt) /
+  ×3 (ensuite) ; hausse ×4 (tôt) / ×2 (ensuite) — asymétrie toujours présente (baisse pèse plus
+  qu'une hausse égale). `trustShift` lui-même est borné par `evolveEmotions` à [-12,+5] par tour
+  (cap existant, commun à toute émotion) ; en pratique, sur une vraie session, les variations
+  observées restent bien plus fines (de l'ordre de ±1 à ±3), le cap ne s'atteignant que pour une
+  réaction de confiance véritablement extrême. Message neutre (`trustShift`=0) : 0, jamais de
+  mouvement par défaut.
 - Colère réellement lue (`angerLevel(tension,comfort,dispute actif)` > 0,5 chez le personnage qui
-  vient de répondre) : -5 supplémentaires, en plus du repérage lexical ci-dessus, jamais à sa place.
+  vient de répondre) : -5 supplémentaires, en plus du jugement de confiance ci-dessus, jamais à sa
+  place — un signal distinct (tension/confort) plutôt qu'une redite de la confiance.
 - Avarice : `bonusLog` vide ET au moins 15 tours écoulés depuis la révélation (`revealedRound`) ET
   tour courant multiple de 15 → -4, une fois par tranche (jamais répété tant qu'un multiple de 15
   n'est pas de nouveau atteint sans tirage entretemps).

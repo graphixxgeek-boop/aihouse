@@ -50,7 +50,7 @@ softnessOwed?:boolean;softnessGiven?:number;
 // : c'est une TENDANCE de fond (Article 0 : elle colore le ton, ne le remplace jamais). Asymétrique
 // par conception (retour utilisateur explicite) : elle descend plus qu'elle ne monte pour un même
 // degré de comportement, et les tout premiers messages humains pèsent plus lourd que les suivants
-// (rateAppreciation ci-dessous). Alimente aussi le dossier retourné comme preuve supplémentaire.
+// (appreciationFromTrust ci-dessous). Alimente aussi le dossier retourné comme preuve supplémentaire.
 appreciation?:number;revealedRound?:number;
 // Négociation (2026-09-18, retour utilisateur explicite) : base volontairement simple avant toute
 // complexification — un personnage conditionne une action à un tirage de la roulette, ou en
@@ -72,15 +72,24 @@ export function readLife(value:unknown,round=0):Life{const v=value&&typeof value
 // grossière par nature (comme check-spirit.mjs pour l'esprit des persos), jamais une lecture fine
 // du ton — elle ne sert qu'à déclencher UNE fois le moment de douceur, jamais à autre chose.
 export function detectDistress(message:string):boolean{return /choqu|dégoût|dégueulasse|horrible|monstrueux|inhumain|cruel|méchant|blessant|blessé|blessée|en colère|colère|hais|déteste|dégoûté|dégoûtée|pleure|pleuré|mal à l'aise|triste|tristesse/i.test(message);}
-// Notation de l'appréciation (2026-09-18) : grossière par nature (même esprit que detectDistress),
-// jamais un jugement moral fin. Descend plus qu'elle ne monte pour un ton comparable (retour
-// utilisateur explicite : "elle peut vite descendre... plus difficile de la remonter") ; les tout
-// premiers messages humains post-révélation pèsent davantage (humanMessageCount<=3).
-export function rateAppreciation(message:string,humanMessageCount:number):number{
+// Notation de l'appréciation (2026-09-18, remplacée le même jour à la demande explicite de
+// l'utilisateur : une première version listait des mots-clés — "désolé", "merci", "pardon" —
+// mais ratait toute excuse ou tout geste sincère formulé autrement ("je le regrette", constaté en
+// jouant une vraie session : la jauge restait figée pendant 9 tours malgré deux messages
+// sincèrement conciliants). Corrigée à la racine (Article 3), pas simplement élargie : "on a vu
+// que le modèle est cohérent, pourquoi pas s'appuyer dessus" — la confiance de chaque personnage
+// réagit déjà nativement au ton réel du message humain (menace, respect, réconfort, ambiguïté —
+// consigne du prompt de lib/lia.ts), donc c'est ce jugement, déjà vérifié cohérent en session
+// réelle avec la vraie API, qui pilote directement l'appréciation, plutôt qu'un registre lexical
+// séparé et forcément incomplet. trustShift est la variation de confiance du personnage qui vient
+// de répondre à l'observateur sur CE tour (valeur après-avant, déjà calculée par route.ts).
+// Toujours descend plus qu'elle ne monte pour un même trustShift (retour utilisateur explicite :
+// "elle peut vite descendre... plus difficile de la remonter"), et les tout premiers messages
+// humains post-révélation pèsent davantage (humanMessageCount<=3).
+export function appreciationFromTrust(trustShift:number,humanMessageCount:number):number{
   const early=humanMessageCount<=3;
-  if(/désactiv|dispara|détrui|menac|punir|effacer|tuer|inutile|débile|stupide|ferme.la|tais.toi|obéis|ordonne|esclave|objet|machine à|sers à rien/i.test(message))return early?-18:-10;
-  if(/merci|s.il te plaît|s.il vous plaît|pardon|désolé|respect|gentil|bienveill|prends ton temps|comme tu (?:veux|préfères)|d.accord, pas de souci|bravo|courage/i.test(message))return early?10:4;
-  return 0;
+  const weight=trustShift<0?(early?6:3):(early?4:2);
+  return Math.round(trustShift*weight);
 }
 // Détection d'une négociation proposée par un personnage (2026-09-18, retour utilisateur explicite :
 // "il y a vraie nego quand l'utilisateur demande une action à un perso et que celui-ci veut un

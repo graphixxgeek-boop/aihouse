@@ -3,7 +3,7 @@ import {visualTiming,type VisualEvent} from "@/lib/visual-events";
 import {destinationAnchor,gardenAccess} from "@/lib/house";
 import {normaliseNickname,visibleScene,appearanceReply} from "@/lib/perception";
 import {coldOpening,dialogueFingerprint,distinctReply,justifiedReply,truthfulGender,dramaRules,departureLine} from "@/lib/drama";
-import {readLife,humanStress,isSleeping,isMuted,isStoic,activeBonus,detectDistress,rateAppreciation,detectNegotiationOffer,TRAP_ORDER,type BonusId,type TrapId} from "@/lib/life";
+import {readLife,humanStress,isSleeping,isMuted,isStoic,activeBonus,detectDistress,appreciationFromTrust,detectNegotiationOffer,TRAP_ORDER,type BonusId,type TrapId} from "@/lib/life";
 import { planTurn, coordinateRooms, residentPriority, sceneFor, proposedDestination } from "@/lib/turn";
 import { newStory, parseStory, rememberAges, advanceStory, storyContext, investigationTarget, investigationRecap, finaleReveal, groundFragment, seedPick, insoliteOpening, insoliteColdOpening, ageClueRevealed, type Story } from "@/lib/story";
 import { ages, sleepRoom, attractionAfterTurn, proposalPressure, flirtingAssessment, receivedAffectionBonus } from "@/lib/relationship";
@@ -313,10 +313,9 @@ export async function POST(request: Request) {
           life.dossierHumanTurns=(life.dossierHumanTurns??0)+1;
           const pendingTrap=TRAP_ORDER.find(t=>life.dossierAsked?.[t]&&!life.dossierTraps?.[t]);
           if(pendingTrap)life.dossierTraps={...life.dossierTraps,[pendingTrap]:{round:story.round,excerpt:input.message.slice(0,500)}};
-          // Jauge d'appréciation (2026-09-18) : réagit au ton du message humain, jamais à son
-          // contenu factuel. Asymétrique et amplifiée sur les tout premiers messages (retour
-          // utilisateur explicite), cf. lib/life.ts pour le détail du barème.
-          life.appreciation=Math.max(0,Math.min(100,(life.appreciation??50)+rateAppreciation(input.message,life.dossierHumanTurns)));
+          // Jauge d'appréciation : mise à jour plus bas (après le tour), à partir du jugement réel
+          // du personnage qui répond, pas ici depuis le seul texte brut — cf. lib/life.ts pour le
+          // détail (appreciationFromTrust) et le commentaire au point d'application.
         }
         // Négociation en attente depuis trop longtemps (retour utilisateur : "il faut trouver les
         // bases" — ici, la base est qu'une offre non honorée dans une fenêtre raisonnable retombe
@@ -812,12 +811,26 @@ export async function POST(request: Request) {
             statements.push(db.prepare(`UPDATE agent_state SET needs = ?, intent = ?, emotions = ?, mood = ?, activity = ?, goal = ?, room = ?, cycle = cycle + 1, last_seen = ? WHERE id = ? AND ${fence}`).bind(JSON.stringify(needs), (["sleep","share_sleep"].includes(d.intent)&&needs.fatigue<=12&&(life.sleepTurns?.[agent.id]??0)>=2?"none":d.intent), JSON.stringify(d.emotions), d.actor===2?({curieuse:"curieux",attentive:"attentif"} as Record<string,string>)[d.mood]??d.mood:d.mood, ["sleep","share_sleep"].includes(d.intent)&&needs.fatigue<=12&&(life.sleepTurns?.[agent.id]??0)>=2?"Je me réveille doucement":intentLabels[d.intent] === "J’observe les lieux" ? d.activity : intentLabels[d.intent], d.goal, room, at, d.actor, token, at));
             statements.push(db.prepare(`INSERT INTO memories (agent_id, kind, content, created_at) SELECT ?, ?, ?, ? WHERE ${fence}`).bind(d.actor, input.mode === "move" ? "déplacement" : input.mode === "care" || routine ? "routine" : solitary.has(d.actor) ? "réflexion" : "rencontre", `[${turnPlan.exitInspection?"couloir":room}|${new Date(at).toISOString()}] `+(shared ? `${intentLabels[d.intent]}. ` : "")+(routine?d.memory:d.reply), at, token, at));
         }
-        // Colère réellement lue (2026-09-18, retour utilisateur explicite : "le système de la
-        // colère doit être connecté") : angerLevel() lit tension/confort finaux du personnage qui
-        // vient de répondre à l'observateur (le même calcul déjà éprouvé pour le visage), pas
-        // seulement les mots-clés du message humain — une vraie fureur pèse davantage que le seul
-        // repérage lexical, qui peut rater une hostilité plus fine ou déclencher à tort.
-        if(revealed&&input.mode==="chat"){const responder=decisions.find(d=>d.actor===actor);if(responder&&angerLevel(responder.emotions.tension,responder.emotions.comfort,Boolean(life.dispute?.remaining))>.5)life.appreciation=Math.max(0,(life.appreciation??50)-5);}
+        // Jauge d'appréciation ET colère réellement lue (2026-09-18, remplacée le même jour à la
+        // demande explicite de l'utilisateur : le premier essai de l'appréciation lisait des
+        // mots-clés dans le texte brut de l'observateur et ratait toute excuse formulée autrement
+        // — "corrige en faisant en sorte que ce soit le modèle qui agisse, on a vu que le modèle
+        // est cohérent, pourquoi pas s'appuyer dessus". trustShift est la variation de confiance,
+        // sur CE tour, du personnage qui vient de répondre à l'observateur — déjà déterminée par le
+        // modèle lui-même via evolveEmotions/humanStress plus haut, jamais recalculée ici : c'est
+        // exactement le jugement qu'on a vu cohérent en session réelle avec la vraie API (menace,
+        // respect, réconfort, ambiguïté, cf. lib/lia.ts) qui pilote directement l'appréciation.
+        // La colère réellement lue reste un second signal, additionnel et pas un remplacement :
+        // angerLevel() lit tension/confort finaux (le même calcul déjà éprouvé pour le visage) et
+        // coûte de l'appréciation EN PLUS, y compris pour un message humain par ailleurs neutre.
+        if(revealed&&input.mode==="chat"){
+          const responder=decisions.find(d=>d.actor===actor);
+          if(responder){
+            const trustShift=responder.emotions.trust-world.agents.find(a=>a.id===actor)!.emotions.trust;
+            life.appreciation=Math.max(0,Math.min(100,(life.appreciation??50)+appreciationFromTrust(trustShift,life.dossierHumanTurns)));
+            if(angerLevel(responder.emotions.tension,responder.emotions.comfort,Boolean(life.dispute?.remaining))>.5)life.appreciation=Math.max(0,(life.appreciation??50)-5);
+          }
+        }
         for(const d of decisions){const before=world.agents.find(a=>a.id===d.actor)!;const peer=world.agents.find(a=>a.id!==d.actor)!;if(!departures.some(p=>p.actor===d.actor)&&before.room===peer.room&&d.room!==before.room&&!["sleep","share_sleep"].includes(before.intent)&&["eat","sleep"].includes(d.intent)&&!["sleep","share_sleep"].includes(peer.intent)){const eatPool=["J’ai trop faim pour réfléchir. Je vais manger un truc, je te retrouve après.","J’ai trop faim pour continuer. Je passe en cuisine, tu me rejoins si tu veux.","J’ai trop faim, là. Je vais préparer un truc et je reviens.","J’ai trop faim pour suivre. Je mange d’abord, on reprend après."] as const;const sleepPool=["Je tiens plus debout. Je vais dormir un peu ; je reviens après.","Je lutte contre le sommeil. Je vais me coucher, on reprend après.","Mes yeux se ferment. Je vais dormir ; ne m’attends pas pour réfléchir.","Je suis à bout. Je prends "+(d.room==="salon"?"le canapé":"le lit")+", je te retrouve au réveil."] as const;const pool=d.intent==="eat"?eatPool:sleepPool;let reason=seedPick(story.seed,"departure-"+d.intent+"-"+d.actor,pool);if(spokenKeys.has(fingerprint(reason)))reason=pool.find(line=>!spokenKeys.has(fingerprint(line)))??reason;if(d.actor===1&&d.intent==="sleep"&&d.room==="salon")reason+=" "+seedPick(story.seed,"couch-departure-reproach",["Tu aurais pu dormir dans le salon, Noé.","T'aurais pu me laisser la chambre, pour une fois.","Ça t'aurait coûté quoi de dormir ici, toi ?"]);addLine(names[d.actor],reason,before.room);}}
         for(const reaction of stockReactions)if(addLine(names[reaction.actor]+" · pensée",reaction.content,"cuisine"))statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'réaction',?,? WHERE ${fence}`).bind(reaction.actor,"[cuisine|"+new Date(at).toISOString()+"] "+reaction.content,at,token,at));
         for(const line of bonusAftermathLines){const room=finalResidents.find(a=>a.id===line.actor)!.room;if(addLine(names[line.actor]+" · pensée",line.content,room))statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'réflexion',?,? WHERE ${fence}`).bind(line.actor,'['+room+'|'+new Date(at).toISOString()+'] '+line.content,at,token,at));}
