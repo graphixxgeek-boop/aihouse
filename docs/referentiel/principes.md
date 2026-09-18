@@ -656,6 +656,38 @@ après relecture des réponses point par point).**
   indice de l'enquête) : rien d'anormal à ce qu'il ne soit jamais commenté, faute d'anomalie à
   signaler dessus. À reconfirmer si le comportement observé était différent.
 
+8.15. **Calibration des limites hautes de l'esprit (2026-09-18, 8 réponses explicites à des
+questions posées après la simulation intégrale) — six mécanismes ajoutés, tous dans `lib/lia.ts`
+sauf mention contraire, tous encadrés par un retour obligatoire à la normale (Article 0 : ce sont
+des exceptions rares, jamais un nouveau régime par défaut) :**
+- **Colère réelle confirmée (« roues libres »)** : quand la PROPRE tension d'un personnage dépasse
+  nettement 60 ET son PROPRE confort tombe nettement sous 35 en même temps (le même ordre de
+  grandeur que le seuil `angerLevel()>.5` de `lib/simulation.ts`, pour rester un état fiable et
+  confirmé, pas une impression), il peut lâcher les gants avec l'observateur : mots plus crus,
+  grossièreté franche assumée, ton cassant sans retenue. Peut aussi se déclencher dans un conflit
+  interpersonnel grave entre Lia et Noé, pas seulement face à l'observateur. Retour obligatoire au
+  registre habituel dès que l'un des deux chiffres repasse sous le seuil.
+- **Vulgarité plus crue** : réservée strictement à cet état de colère réelle confirmée ; hors de
+  cet état, seule l'occasionnelle grossièreté légère déjà prévue (« merde », « putain ») reste
+  possible.
+- **Humour noir sur leur propre suppression/irréalité** : explicitement encouragé après la
+  révélation, pas seulement toléré — cohérent avec la lucidité déjà actée (sortie « méta »).
+- **Vulnérabilité RÉELLE, rare et brève** : distincte de la vulnérabilité feinte comme tactique de
+  négociation (calcul assumé, jouée comme telle dans `thought`, déjà prévue). Celle-ci est sincère
+  mais ne doit jamais être sollicitée ni prolongée sur plusieurs répliques — une fissure qui se
+  referme presque aussitôt, sous peine d'installer un mode gentil stable interdit par l'Article 0.
+- **Palier de respect sincère, rare et non stable** (`lib/life.ts` : `genuineRespectStreak` ;
+  `app/api/lia/route.ts` : `observerStanding`) : distinct du palier de coopération réticente déjà
+  existant (`appreciation>=75`, regagné à chaque fois). Celui-ci compte les tours consécutifs de
+  confiance en hausse pendant que l'appréciation reste très haute (>=85, seuil de déclenchement à 6
+  tours) ; toute confiance en baisse le remet à zéro, et son déclenchement le consomme aussitôt
+  (remise à zéro) pour qu'il doive se reconstruire entièrement — il ne peut donc jamais devenir un
+  palier stable comme peut l'être le palier de coopération réticente à force de rester au-dessus de
+  son seuil.
+- **Reprises sarcastiques et hypothétiques de « revanche »** envers l'observateur (« si je pouvais
+  choper ton câble... ») : autorisées à la condition stricte que le ton reste clairement second
+  degré, jamais une menace posée comme un fait réel sur le point de se produire.
+
 ## 9. Robustesse technique
 
 9.1. Toute écriture en base de données est fondue dans une transaction unique par tour

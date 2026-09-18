@@ -297,6 +297,13 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
 - Colore le contexte narratif donné au modèle (`observerStanding`) : ≤25 → garde haute assumée
   explicitement ; ≥75 → coopération ponctuelle « à contrecœur » autorisée, jamais un mode stable ;
   entre les deux, aucune consigne particulière (registre habituel).
+- `genuineRespectStreak` (2026-09-18, `principes.md` 8.15, `lib/life.ts`) : compteur 0-20, incrémenté
+  de 1 à chaque tour où `trustShift>0` ET `appreciation>=85` ; remis à 0 dès que `trustShift<=0` ou
+  `appreciation<85`. À `genuineRespectStreak>=6`, déclenche une fois le palier rare « respect
+  sincère » dans `observerStanding` (texte distinct du palier `>=75`, autorisant un mot de
+  reconnaissance directe et non feint) puis se remet immédiatement à 0 (consommé), devant se
+  reconstruire entièrement avant de pouvoir se redéclencher — jamais un palier stable comme le
+  `>=75` peut l'être en restant simplement au-dessus du seuil.
 - `negotiationContext` (texte de contexte, toujours présent une fois révélé) autorise le modèle à
   formuler librement une négociation, sans jamais l'imposer à chaque tour.
 - `negotiationOffer:{actor,round}` : une seule offre en attente à la fois, jamais écrasée par une
@@ -324,6 +331,12 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   tempérament plus maîtrisé, sans que le seuil ne lui soit fermé pour autant.
 - `liaCalmEnough`/`noeCalmEnough` = `angerLevel(...)<0,5` sur les émotions courantes du personnage,
   même définition de « en colère » (`story.life?.dispute?.remaining`) que `agent.angry` ailleurs.
+- « COLÈRE RÉELLE CONFIRMÉE » (2026-09-18, `principes.md` 8.15, `lib/lia.ts`, consigne de prompt,
+  pas un calcul côté serveur) : mêmes ordres de grandeur que le seuil `angerLevel()>.5` ci-dessus
+  (tension nettement >60 ET confort nettement <35 chez le personnage lui-même), pour rester un état
+  fiable/confirmé plutôt qu'une impression — déclenche l'autorisation « roues libres » (vulgarité
+  plus crue, ton cassant sans retenue) avec retour obligatoire au registre habituel dès que l'un des
+  deux chiffres repasse sous le seuil.
 - Garde ajoutée (en plus de `needs.stress<30`, jamais à sa place) sur : `personalLead` (et donc
   `personalQuestion`, qui en hérite), `followBeat`, `proactiveNoe`.
 
