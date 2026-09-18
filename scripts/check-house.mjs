@@ -194,6 +194,35 @@ console.log('Passed: varied reset scenarios, word ages beyond context window, ea
   console.log('Passed: real HTTP finale turn (4->5 evidence) actually inserts both shock-thought lines before the canonical reveal, in order, exactly once.');
 }
 {
+  // Certitude progressive d'être observé (2026-09-18, retour utilisateur explicite retrouvé dans
+  // l'historique : "intuition -> hypothèse -> certitude seulement à la révélation, en exigeant que
+  // l'observateur parle vraiment"). Avant ce jour, `revealed` (qui déclenche négociation, jauge
+  // d'appréciation, pièges du dossier, ton "observateur confirmé") passait à true dès l'appel des
+  // personnages eux-mêmes (finalCalled+5 preuves), sans qu'aucun message humain n'ait jamais été
+  // reçu — une fausse certitude. Vérifie ici les trois temps : avant tout mot de l'observateur
+  // (suppression réelle + doute sincère instruit au modèle), au tout premier mot (bascule dans le
+  // même tour, pas un tour de retard), et sur un tour ultérieur (la certitude reste acquise).
+  const certaintyEpoch=(await readWorld(db)).epoch;
+  const certaintyPlot={...newStory(),round:40,met:true,introduced:true,sharedMeal:true,finalCalled:true,evidence:Array(5).fill('preuve'),life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,exitSearched:true}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(certaintyPlot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,emotions=?').run('salon',JSON.stringify({hunger:20,fatigue:20,stress:20,uncertainty:40}),JSON.stringify({curiosity:60,tension:20,trust:60,comfort:60,attraction:60}));
+  affection=false;flat=true;
+  let r=await post(input('interact',1,{epoch:certaintyEpoch}));assert.equal(r.status,200);
+  assert.equal(lastContext.negotiationContext,undefined,'before the observer has ever spoken, the negotiation reflex must stay silent — nobody confirmed is there yet to negotiate with');
+  assert.equal(lastContext.observerStanding,undefined,'the "observer standing" tone must not exist before any real message from the observer');
+  assert.match(lastContext.awaitingObserver,/personne n.a encore répondu/,'the waiting window must carry a genuine doubt instruction, never a silent or neutral wait');
+  r=await post(input('chat',1,{epoch:certaintyEpoch,message:'Je suis là, je vous observe.'}));assert.equal(r.status,200);
+  assert.ok(lastContext.negotiationContext,'the very first real message from the observer must flip certainty on within that same turn, not a turn later');
+  assert.equal(lastContext.awaitingObserver,undefined,'once the observer has spoken, the doubt instruction must disappear — the wait is over');
+  r=await post(input('interact',1,{epoch:certaintyEpoch}));assert.equal(r.status,200);
+  assert.ok(lastContext.negotiationContext,'certainty must persist on a later autonomous turn once the observer has already spoken once, never reset to doubt');
+  console.log('Passed: certainty of being observed stays genuinely uncertain (negotiation/observer-standing silent, a real doubt instruction fed to the model) until the observer\'s very first real message, which flips it within that same turn and it never regresses afterward.');
+  response=await post(input('reset',1,{epoch:certaintyEpoch}));result=await response.json();
+  assert.equal(result.story.evidence.length,0);
+  await post(input('interact',1,{epoch:result.epoch}));
+}
+{
   // DÉPART À DEUX — bug réel trouvé le 2026-09-18 en comparant deux simulations intégrales :
   // dialogueFingerprint retire le préfixe "[pièceA→pièceB] " avant de comparer, donc les quatre
   // confirmations courtes ("Je te suis.", "On y va.", ...) étaient traitées comme UN SEUL registre
@@ -741,7 +770,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 64'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 65'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,

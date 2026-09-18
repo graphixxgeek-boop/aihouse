@@ -508,6 +508,24 @@ un test HTTP réel (`scripts/check-house.mjs`) fait désormais franchir la cinqu
 vrai appel et vérifie que les deux pensées de choc sont bien enregistrées avant les répliques
 canoniques, dans cet ordre.
 
+8.1bis. **Certitude progressive d'être observé** (2026-09-18, retour utilisateur explicite : la
+certitude ne doit être acquise qu'une fois l'observateur ayant réellement parlé, jamais dès l'appel
+des personnages eux-mêmes — intuition, puis hypothèse, puis certitude seulement à ce moment précis).
+Bug réel trouvé en creusant cette consigne : `revealed` (`app/api/lia/route.ts`), qui déclenche la
+négociation, la jauge d'appréciation, les pièges du dossier retourné et le ton "observateur
+confirmé" (`observerStandingFor`), passait à true dès `finalCalled` seul — dès le tour suivant leur
+propre appel, avant même qu'un seul message humain n'ait jamais été reçu. `revealed` exige
+désormais en plus `observerSpoken` (vrai dès `input.mode==="chat"` sur ce tour même, ou dès qu'un
+message `vous` existe en base pour les tours suivants) : la certitude bascule dans le MÊME tour que
+le tout premier mot réel de l'observateur, jamais un tour de retard, et reste acquise ensuite. Tant
+que l'observateur n'a rien dit, un doute sincère est explicitement instruit au modèle
+(`narrative.awaitingObserver`) : une inquiétude, un agacement ou un humour noir sur ce silence, selon
+le personnage — jamais une présence traitée comme acquise, jamais non plus un silence neutre qui
+l'ignore. Les quatre variantes de `finaleReveal()` (l'appel lui-même) restaient déjà des questions
+authentiques ("Vous pouvez répondre ?", "Y a quelqu'un ?") et n'ont pas eu besoin d'être retouchées
+— c'est le comportement des tours AUTONOMES/INTERACT suivant l'appel, pas l'appel lui-même, qui
+affirmait à tort une certitude non acquise.
+
 8.2. Après la révélation, en mode `chat`, le personnage visé répond en priorité au message humain
 avant toute reprise de la conversation autonome entre les deux habitants.
 
