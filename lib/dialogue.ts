@@ -65,6 +65,15 @@ export function groundScreenNotice(reply:string, history:DialogueLine[], already
     if(alreadyKnown) return reply.replace(/J[’']ai repéré un écran dans le bureau[.,]?\s*/i,"").trim() || "Qu’est-ce que tu penses de cet écran du bureau ?";
     return reply;
 }
+// Filet de robustesse (Article 5.3, 2026-09-18, cas réel trouvé en simulation : « voir si l'écran
+// de la télé crache autre chose que des vagues en boucle » dit AVANT toute première mise en
+// marche) — aucune réplique ne peut prétendre connaître le contenu réel de la tv avant que
+// life.remoteFound soit vrai. Retire la prétention de contenu déjà connu, garde l'intention de
+// vérifier, dans le même registre que la phrase d'origine plutôt qu'un remplacement générique.
+export function groundTvNotice(reply:string, tvKnown:boolean){
+    if(tvKnown)return reply;
+    return reply.split(/(?<=[.!?])\s+/).map(sentence=>(/\btv\b|télévision|télé\b/i.test(sentence)&&/crache|diffuse|affiche|montre|balance|passe|projette/i.test(sentence))?sentence.replace(/(?:crache|diffuse|affiche|montre|balance|passe|projette)[^.!?]*/i,"affiche vraiment quelque chose"):sentence).join(" ");
+}
 export function groundIntroduction(reply: string, name: string, otherName: string, history: DialogueLine[], knownNames: string[] = []) {
     const introduced = (person: string) => knownNames.includes(person) || history.some(line => line.speaker === person && line.content.includes(person));
     let result = name === "Lia" ? reply.replace(/(tu (?:as|avais) quel âge|quel âge as-tu)[^?]*Lia[^?]*\?/i,"Tu as quel âge ?") : reply.replace(/(tu (?:as|avais) quel âge|quel âge as-tu)[^?]*Noé[^?]*\?/i,"Tu as quel âge ?");
@@ -145,6 +154,16 @@ export function groundPrivateThought(thought:string|undefined, actor:1|2, attrac
 
 export function groundRoomSpeech(reply:string,room:string,history:DialogueLine[]) {
     reply=reply.replace(new RegExp("(?:allons|retournons)\\s+(?:nous\\s+)?(?:poser|asseoir|installer)\\b[^.!?]*?au\\s+"+room,"ig"),"On se pose ici");
+    // Redite déplacement/réplique (2026-09-18, cas réel : la ligne "· déplacement" annonce déjà
+    // "je retourne au salon me poser", puis reply redit la même idée — "on retourne dans le salon
+    // se poser un peu" — alors que la scène est déjà dans `room` (Article 2). Indépendant de
+    // l'ordre des mots (contrairement au motif ci-dessus, qui ne couvrait que "verbe puis pièce") :
+    // toute phrase qui mentionne à la fois un verbe de mouvement vers CETTE pièce et un verbe
+    // d'installation est déjà un fait accompli, jamais à reformuler une seconde fois.
+    const movementVerb=/\b(?:allons|retournons|rejoignons|on retourne|on va|on rejoint|on revient|revenons|revient)\b/i;
+    const settleVerb=/\b(?:pos(?:er|ons)|assoir|asseoir|installer)\b/i;
+    const roomMention=new RegExp("\\b(?:au|dans (?:le|la)|à la)\\s+"+room+"\\b","i");
+    reply=reply.split(/(?<=[.!?])\s+/).map(sentence=>movementVerb.test(sentence)&&settleVerb.test(sentence)&&roomMention.test(sentence)?"On se pose ici.":sentence).join(" ");
     // Un « on souffle un peu au salon ? » dit alors qu'on y est déjà décrit un déplacement qui
     // n'a pas lieu : le moteur a déjà placé la scène dans `room` avant la parole (Article 2).
     reply=reply.replace(new RegExp("\\b(on|tu veux qu[’']on)\\s+([^.!?]*?)\\s+(?:au|dans (?:le|la))\\s+"+room+"\\s*\\?","ig"),(_,prefix,middle)=>`${prefix} ${middle} ?`);

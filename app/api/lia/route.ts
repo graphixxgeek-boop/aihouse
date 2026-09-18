@@ -7,7 +7,7 @@ import {readLife,humanStress,isSleeping,isMuted,isStoic,activeBonus,detectDistre
 import { planTurn, coordinateRooms, residentPriority, sceneFor, proposedDestination } from "@/lib/turn";
 import { newStory, parseStory, rememberAges, advanceStory, storyContext, investigationTarget, investigationRecap, finaleReveal, groundFragment, seedPick, insoliteOpening, insoliteColdOpening, ageClueRevealed, type Story } from "@/lib/story";
 import { ages, sleepRoom, attractionAfterTurn, proposalPressure, flirtingAssessment, receivedAffectionBonus } from "@/lib/relationship";
-import { nextSpeaker, dialogueProgress, dialogueContext, completedActivity, conversationFocus, explicitGestureConsent, groundAgeQuestion, groundIntroduction, groundScreenNotice, groundPrivateThought, groundRoomSpeech, groundSingleQuestion, groundRegister, groundTruncation } from "@/lib/dialogue";
+import { nextSpeaker, dialogueProgress, dialogueContext, completedActivity, conversationFocus, explicitGestureConsent, groundAgeQuestion, groundIntroduction, groundScreenNotice, groundPrivateThought, groundRoomSpeech, groundSingleQuestion, groundRegister, groundTruncation, groundTvNotice } from "@/lib/dialogue";
 import { advanceNeeds, priority, intentRoom, intentLabels, tvPrograms, intents, affectionIntents, mutualAttraction, residentProfiles, initialNeedsFor, initialEmotionsFor, sharedActivityBonus, angerLevel } from "@/lib/simulation";
 import { env } from "cloudflare:workers";
 import { z } from "zod";
@@ -204,6 +204,10 @@ export async function POST(request: Request) {
             else if(bonus==="mute"){mutedActor=Math.random()<0.5?1:2;life.mutedUntil={...life.mutedUntil,[mutedActor]:at+15*60*1000};}
             else if(bonus==="trottoir")life.trottoirGranted=true;
             life.bonusLog=[...(life.bonusLog??[]),{round:story.round,bonus}].slice(-12);
+            // L'observateur vient enfin d'actionner la roulette : l'insistance retombe pour les
+            // deux, qu'un tirage résolve une négociation formelle ou non — c'est le geste concret
+            // qu'ils réclamaient, jamais un mode froid/en colère qui resterait mécaniquement actif.
+            life.rouletteInsistence={1:0,2:0};life.rouletteCold={1:0,2:0};
             story.life=life;
             const fence="EXISTS (SELECT 1 FROM world_lock WHERE id = 1 AND token = ? AND expires_at > ?)",statements=[];
             if(!storedStory)throw new LiaError("Le dossier de la maison est indisponible.",503);
@@ -392,6 +396,14 @@ export async function POST(request: Request) {
         // silencieusement, avec un léger coût d'appréciation, plutôt que de rester due pour
         // toujours ou d'être oubliée sans aucune conséquence).
         if(life.negotiationOffer&&story.round-life.negotiationOffer.round>6){life.negotiationLog=[...(life.negotiationLog??[]),{round:story.round,outcome:'lapsed'}];life.negotiationOffer=undefined;life.appreciation={1:Math.max(0,appreciationOf(life,1)-3),2:Math.max(0,appreciationOf(life,2)-3)};}
+        // Refus explicite de la roulette (2026-09-18, demande explicite de l'utilisateur) : un
+        // "non" franc de l'observateur à une demande de tirage encore en attente n'est pas ignoré
+        // comme une simple absence de réponse (cf. lapse ci-dessus, 6 tours puis oubli silencieux) —
+        // il mérite une vraie pause de 5 à 10 tours avant de redemander, pour laisser une réelle
+        // chance à l'observateur de le déclencher spontanément, jamais retenté trop tôt comme si de
+        // rien n'était. Les deux personnages entendent ce refus, pas seulement celui qui a demandé.
+        const rouletteRefused=input.mode==="chat"&&Boolean(life.negotiationOffer)&&/\bnon\b|\bnan\b|je refuse|refus[eé]|pas question|hors de question|j.ai pas envie|certainement pas|jamais de la vie|tu peux toujours courir|pas moyen/i.test(input.message);
+        if(rouletteRefused){life.negotiationOffer=undefined;const until=story.round+5+Math.floor(Math.random()*6);life.rouletteRefusalUntil={1:until,2:until};}
         // Moment de douceur : détecté ici, livré plus bas par softnessBeat dès que la scène s'y
         // prête (salon, aucune urgence). Ne se déclenche qu'après remise du dossier — avant, une
         // réaction négative appartient au registre habituel de l'enquête, pas à cette exception.
@@ -596,7 +608,14 @@ export async function POST(request: Request) {
             const lines=insolite==="normal"?coldOpening(story.variant):insoliteColdOpening(insolite,story.seed);
             const thoughts:Record<Person,string>=insolite==="lia-unwell"?{1:"J'ai la tête qui tourne. Je préférerais m'allonger plutôt que discuter.",2:"Elle a pas l'air bien du tout. Je devrais peut-être pas la bombarder de questions."}:insolite==="noe-guarded"?{1:"Il a l'air sur ses gardes. Je vais pas insister tout de suite.",2:"J'ai besoin de comprendre ça seul avant de me fier à qui que ce soit, elle y compris."}:{1:"Je sais pas si je peux lui faire confiance.",2:"Elle a peur. Moi aussi, mais pas question de le montrer."};
             const goals:Record<Person,string>=insolite==="lia-unwell"?{1:"Tenir debout",2:"Comprendre où je suis"}:{1:"Comprendre où je suis",2:"Comprendre où je suis"};
-            for(const [i,a] of [current,other].entries())decisions.push({actor:a.id,intent:"chat",affectionAccepted:false,emotions:{...a.emotions},reply:lines[i],thought:thoughts[a.id],stayAlone:false,mood:"attentive",activity:a.id===2?"J’observe cette inconnue":"J’observe cet inconnu",goal:goals[a.id],action:"move",room:"salon",memory:lines[i]});
+            // lines[0]/lines[1] sont fixées par identité (Lia/Noé), jamais par ordre d'itération —
+            // bug réel trouvé le 2026-09-18 : indexer par `i` (position dans [current,other]) au
+            // lieu de l'id de l'acteur donnait la réplique de Lia à Noé (et vice versa) dès que
+            // Noé était `current` plutôt que Lia, un cas visible sur les variantes insolites dont
+            // le contenu est spécifique à un personnage (« Désolée » ne peut jamais être dit par
+            // Noé). coldOpening()/insoliteColdOpening() garantissent toutes deux lines[0]=Lia,
+            // lines[1]=Noé, quel que soit l'acteur qui a déclenché ce tour.
+            for(const a of [current,other])decisions.push({actor:a.id,intent:"chat",affectionAccepted:false,emotions:{...a.emotions},reply:lines[a.id-1],thought:thoughts[a.id],stayAlone:false,mood:"attentive",activity:a.id===2?"J’observe cette inconnue":"J’observe cet inconnu",goal:goals[a.id],action:"move",room:"salon",memory:lines[a.id-1]});
         }
         else if(turnPlan.exitInspection){const first=life.exitPhase!==1;const lines=first?["Une porte, au bout gauche du couloir. Verrouillée. Elle donne sur le jardin qu’on voit depuis le salon.","On nous montre de l’herbe et un arbre, mais la poignée ne cède pas. Belle invitation."]:["La porte principale est de ce côté. Fermée aussi. Derrière, un trottoir et une route qui ne bougent pas.","Deux portes, deux verrous. On n’a même pas choisi le côté de la cage."];for(const [i,a] of [current,other].entries())decisions.push({actor:a.id,intent:"chat",affectionAccepted:false,emotions:{...a.emotions},reply:lines[(i+story.variant)%2],thought:a.id===1?"Il cherche vraiment une issue. Ça me rassure de voir qu’il ne fait pas que parler.":"Elle regarde chaque détail. J’aime ça, même si je sais pas quoi lui répondre.",stayAlone:false,mood:"attentive",activity:"Je cherche une sortie",goal:"Examiner les limites de la maison",action:"move",room:"salon",memory:lines[(i+story.variant)%2]});}
         else if(ambientBeat||recapBeat)for(const a of [current,other])decisions.push({actor:a.id,intent:"chat",affectionAccepted:false,emotions:{...a.emotions},reply:"",mood:"attentive",activity:"Je fais le point",goal:"Confronter les observations",action:"move",room:"salon",memory:""});
@@ -615,6 +634,37 @@ export async function POST(request: Request) {
         else {
             const canPair = ["interact", "autonomous", "chat"].includes(input.mode) && !isSleeping(other,life);
             const perceivedResidents=visibleScene(turnPlan.room,world.agents.map(a=>({...a,room:turnPlan.room})));
+            // Insistance sur la roulette (2026-09-18, demande explicite de l'utilisateur : Lia et
+            // Noé ne doivent jamais devenir des harceleurs qui répètent "fais tourner la roulette"
+            // quoi que dise l'observateur). Compteur dédié par personnage, jamais rattaché aux
+            // jauges d'appréciation/colère existantes (choix explicite : plus simple à borner
+            // précisément, Article 5). Override scripté (comme softnessBeat/stoic/mute), pas une
+            // simple consigne de prompt : la leçon du "départ à deux" cette même session est
+            // qu'une consigne seule ne suffit pas à garantir un invariant dur.
+            const rouletteCold=(id:Person)=>(life.rouletteCold?.[id]??0)>0;
+            // Fenêtre de refus explicite (2026-09-18, demande explicite de l'utilisateur, distincte
+            // de l'escalade ci-dessus) : plus légère qu'un froid/colère scripté — on retire juste
+            // la relance de la réplique, le reste (réaction au vrai sujet en cours) passe tel quel,
+            // pour vraiment laisser la place à un geste spontané de l'observateur.
+            const rouletteRefusalActive=(id:Person)=>story.round<(life.rouletteRefusalUntil?.[id]??0);
+            const stripRouletteAsk=(reply:string):string=>{
+                const kept=reply.split(/(?<=[.!?])\s+/).filter(s=>!detectNegotiationOffer(s));
+                return kept.join(" ")||"On verra si ça te vient tout seul, de ton côté.";
+            };
+            const applyRouletteCooldown=(d:{reply:string;memory:string;thought?:string},id:Person)=>{
+                if(rouletteCold(id)){
+                    const remaining=life.rouletteCold?.[id]??0;
+                    const line=id===1
+                        ?seedPick(story.seed,"roulette-cold-lia-"+remaining+"-"+story.round,["Je crois que j'ai plus rien à dire pour l'instant.","Laisse tomber, j'ai pas envie de reparler de ça maintenant.","Pas maintenant. Vraiment pas.","Je préfère me taire plutôt que répéter ça une fois de plus."])
+                        :seedPick(story.seed,"roulette-cold-noe-"+remaining+"-"+story.round,["Bon, on change de sujet, ça me gonfle de répéter la même chose.","Laisse tomber ta roulette deux minutes, j'ai autre chose en tête.","J'arrête d'insister, tu m'soûles là. On parle d'autre chose.","Ras-le-bol de cette roulette, on cause d'un truc qui compte vraiment."]);
+                    d.reply=line;d.memory=line;
+                    d.thought=id===1
+                        ?seedPick(story.seed,"roulette-cold-lia-thought-"+remaining+"-"+story.round,["Je n'ai pas envie de parler.","J'ai plus la force de batailler pour cette roulette.","Laisse-moi respirer deux minutes, je dirai rien de plus."])
+                        :seedPick(story.seed,"roulette-cold-noe-thought-"+remaining+"-"+story.round,["Ça m'saoule de quémander sans arrêt.","J'ai besoin de penser à autre chose, là.","Insister encore, à quoi bon."]);
+                    return;
+                }
+                if(rouletteRefusalActive(id)&&detectNegotiationOffer(d.reply)){const stripped=stripRouletteAsk(d.reply);d.reply=stripped;d.memory=stripped;}
+            };
             // Un cerveau par personnage : Noé décide et parle en premier, sans jamais voir ni deviner
             // la réplique de Lia à l’avance ; elle ne reçoit ensuite que ce qu’elle perçoit réellement.
             const first = await think(env.GEMINI_API_KEY!, env.GEMINI_MODEL || "gemini-flash-lite-latest", { selfRole:"primary", ...narrative, beatContext,perceivedResidents, exitContext, tvDiscovery, observationTarget,turnPlan, scene:sceneFor(current,turnPlan.offer??turnPlan.intent,turnPlan.room), ...(input.mode==="chat"?{dialogue:humanConversation,replyTarget:{speaker:"vous",content:input.message},continuation:redirectedFromSleep?`Réponds d’abord au dernier message humain. ${names[other.id]} dort et ne peut pas répondre : tu peux le signaler naturellement (agacé, amusé ou protecteur selon ton caractère), sans prétendre parler en son nom.`:"Réponds d’abord au dernier message humain, pas à l’autre habitant.",conversationFocus:redirectedFromSleep?`L’humain s’adressait à ${names[other.id]}, mais ${names[other.id]} dort. Réponds à sa place avec ton propre point de vue.`:"L’humain vient de parler. Réponds directement à son message avant de discuter entre vous.",...(partnerJustAsleep?{partnerSleepNote:`${names[other.id]} vient tout juste de s’endormir pendant que tu répondais à l’humain. Tu peux le remarquer brièvement, une seule fois, dans ton propre registre (agacé, amusé, protecteur ou indifférent selon ton caractère) avant de continuer à répondre à l’humain — ce n’est pas obligatoire à cette réplique précise, mais ignorer complètement son départ sur plusieurs tours d’affilée sonnerait faux (Article 15/17) : profite de cette fenêtre pour le noter si l’occasion se présente naturellement, sans revenir dessus ensuite.`}:{})}:dialogueContext(speech, names[actor])), age: ages[actor], sleepDestination: sleepRoom(current, other, mutualAttraction(current, other)), flirting: actor === 2 ? flirtingAssessment(canPair&&!story.met?30:current.needs.stress, other.emotions.attraction, input.requestId) : null, personality: residentProfiles[actor].description, requiredIntent, mode: input.mode, message: input.message, night: input.night, state: canPair && !story.met ? {...current,needs:{...current.needs,stress:actor===1?current.needs.stress:30},emotions:{...current.emotions,tension:actor===1?current.emotions.tension:30}} : current, other, memories: await ownMemories(actor), meetingRoom: current.room }, names[actor], geminiFallbackModels, geminiFallbackKeys);
@@ -625,6 +675,7 @@ export async function POST(request: Request) {
             if(turnPlan.offer&&turnPlan.proposalLine){first.reply=turnPlan.proposalLine;first.intent=turnPlan.offer;first.affectionAccepted=true;first.memory=first.reply;}
             if (!affectionIntents.includes(first.intent)) first.intent=turnPlan.intent;
             first.room=turnPlan.room;first.action="move";
+            if(!beatLine&&!(turnPlan.offer&&turnPlan.proposalLine))applyRouletteCooldown(first,actor);
             decisions.push({ ...first, actor });
             if ((input.mode === "chat" || input.mode === "interact" || (input.mode === "autonomous" && ["chat", "study", "eat", "rest", "tv"].includes(first.intent)) || affectionIntents.includes(first.intent)) && first.intent !== "sleep" && !isSleeping(other,life)) {
                 const meetingRoom = turnPlan.room;
@@ -639,12 +690,27 @@ export async function POST(request: Request) {
                 if(input.mode!=="chat")second.reply=groundAgeQuestion(second.reply,story.round>=12&&Boolean(story.sharedMeal),knownAges,names[actor]);
                 if(turnPlan.offer)second.stayAlone=false;
                 if(turnPlan.offer&&!affectionEligible){second.intent="chat";second.affectionAccepted=false;second.reply=justifiedReply(other.id,false,story.round);second.memory=second.reply;}
+                if(!visualBeat&&!(followBeat&&(life.personalFollowup??0)===0)&&!(turnPlan.offer&&!affectionEligible))applyRouletteCooldown(second,other.id);
                 const urgent=choosePriority(other.needs);
                 const alone=second.stayAlone&&story.round>=8&&(story.apartTurns??0)<2&&!urgent;
                 if(urgent)second.intent=urgent;
                 else if(!affectionIntents.includes(second.intent)&&!(turnPlan.offer&&second.intent==="chat")&&!alone)second.intent=turnPlan.partnerIntent;
                 const destination=alone?(intentRoom[second.intent]??other.room):turnPlan.partnerRoom;
                 decisions.push({...second,actor:other.id,action:"move",room:destination});
+            }
+            // Compteur d'insistance : décrémente le froid/la colère en cours, sinon incrémente sur
+            // une nouvelle demande de tirage, sinon remet à zéro (répondre au vrai contenu efface
+            // l'ardoise, cohérent avec negotiationContext qui le demande déjà explicitement).
+            for(const id of [1,2] as Person[]){
+                const d=decisions.find(dec=>dec.actor===id);
+                if(!d)continue;
+                if((life.rouletteCold?.[id]??0)>0)life.rouletteCold={...life.rouletteCold,[id]:(life.rouletteCold?.[id]??0)-1};
+                else if(detectNegotiationOffer(d.reply)){
+                    const count=(life.rouletteInsistence?.[id]??0)+1;
+                    if(count>=3){life.rouletteCold={...life.rouletteCold,[id]:2};life.rouletteInsistence={...life.rouletteInsistence,[id]:0};}
+                    else life.rouletteInsistence={...life.rouletteInsistence,[id]:count};
+                }
+                else if((life.rouletteInsistence?.[id]??0)>0)life.rouletteInsistence={...life.rouletteInsistence,[id]:0};
             }
         }
         if (routine) { const d = decisions[0]; d.room = d.intent === "sleep" ? sleepRoom(current, other, mutualAttraction(current, other)) : intentRoom[d.intent] ?? current.room; d.activity = intentLabels[d.intent]; d.reply = `${intentLabels[d.intent]}.`; d.memory = `Je prends soin de mon besoin : ${intentLabels[d.intent]}.`; }
@@ -728,7 +794,7 @@ export async function POST(request: Request) {
         const finalResidents = world.agents.map(agent => { const d=decisions.find(d=>d.actor===agent.id);return {...agent, room:d && d.action !== "none" ? d.room : agent.room, intent:d?.intent??agent.intent}; });
         if (!routine && !["move","care"].includes(input.mode)) for(const d of decisions) {
             const final=finalResidents.find(a=>a.id===d.actor)!;
-            const preceding=[...speech,...decisions.slice(0,decisions.indexOf(d)).map(p=>({id:0,speaker:names[p.actor],content:p.reply}))];d.reply=groundTruncation(d.reply);d.reply=d.reply.replace(/Direction dans la chambre/gi,"Direction la chambre");if(!story.evidence.some(e=>/\bDH\b/.test(e))&&!/\bDH\b/.test(observationTarget?.content??"")){if(d.contribution)d.contribution=d.contribution.replace(/\bDH\b/g,"signature inconnue");d.reply=d.reply.split(/(?<=[.!?])\s+/).filter(s=>!/\bDH\b/.test(s)).join(" ")||"On ne sait toujours pas qui a conçu cet endroit.";}if(d.action!=="none"&&d.room!==world.agents.find(a=>a.id===d.actor)!.room&&/pas besoin d.y (?:aller|retourner)/i.test(d.reply))d.reply=d.reply.replace(/Pas besoin d.y (?:aller|retourner)[^.!?]*[.!?]?/i,"On y est. Vérifions ce qui nous a fait venir.");const grounded=truthfulGender(distinctReply(groundRoomSpeech(d.reply,final.room,speech),d.actor,final.room,[...historicalLines,...preceding],story.round,world.agents.find(a=>a.id===d.actor)!.needs.stress),d.actor);
+            const preceding=[...speech,...decisions.slice(0,decisions.indexOf(d)).map(p=>({id:0,speaker:names[p.actor],content:p.reply}))];d.reply=groundTruncation(d.reply);d.reply=groundTvNotice(d.reply,life.remoteFound===true);d.reply=d.reply.replace(/Direction dans la chambre/gi,"Direction la chambre");if(!story.evidence.some(e=>/\bDH\b/.test(e))&&!/\bDH\b/.test(observationTarget?.content??"")){if(d.contribution)d.contribution=d.contribution.replace(/\bDH\b/g,"signature inconnue");d.reply=d.reply.split(/(?<=[.!?])\s+/).filter(s=>!/\bDH\b/.test(s)).join(" ")||"On ne sait toujours pas qui a conçu cet endroit.";}if(d.action!=="none"&&d.room!==world.agents.find(a=>a.id===d.actor)!.room&&/pas besoin d.y (?:aller|retourner)/i.test(d.reply))d.reply=d.reply.replace(/Pas besoin d.y (?:aller|retourner)[^.!?]*[.!?]?/i,"On y est. Vérifions ce qui nous a fait venir.");const grounded=truthfulGender(distinctReply(groundRoomSpeech(d.reply,final.room,speech),d.actor,final.room,[...historicalLines,...preceding],story.round,world.agents.find(a=>a.id===d.actor)!.needs.stress),d.actor);
             if(grounded!==d.reply) {d.reply=grounded;d.memory=grounded;}
         }
         // Pools doublés le 2026-09-17 (3→6 formulations chacun) : sur plusieurs sessions, ces
@@ -736,7 +802,7 @@ export async function POST(request: Request) {
         // Provisions : découverte encore conjointe (les deux dans la cuisine), symétrique à la
         // détection déjà existante côté repas (visualEvents kind food, plus bas), qui elle gère
         // déjà le cas d'un seul témoin.
-        if(!routine&&!["move","care","chat"].includes(input.mode)){const d=decisions.find(d=>d.room==="cuisine"&&finalResidents.every(a=>a.room==="cuisine"&&!["sleep","share_sleep"].includes(a.intent))&&!["sleep","share_sleep"].includes(d.intent));if(d&&!life.foodVerified){const description=seedPick(story.seed,"discover-foodVerified",["Je retire une provision de sa place… Elle réapparaît après deux secondes. C’est pas un stock normal.","Je prends une provision sur l'étagère… et elle est de retour deux secondes plus tard. Un stock normal ne fait pas ça.","J'enlève une provision de son emplacement. Elle revient toute seule, deux secondes après. Ça n'a rien de naturel.","Je fais glisser une provision hors de l'étagère… et une identique est déjà là deux secondes plus tard. Aucun stock ne se comporte comme ça.","J'attrape une provision, je la pose ailleurs. L'étagère se remplit toute seule en un clin d'œil. Ça défie toute logique de garde-manger.","Une provision disparaît de ma main pour réapparaître à sa place d'origine presque aussitôt. On dirait un tour de passe-passe, pas une cuisine."]);d.reply+=" "+description;d.memory=d.reply;life.foodVerified=true;}}
+        if(!routine&&!["move","care","chat"].includes(input.mode)){const d=decisions.find(d=>d.room==="cuisine"&&finalResidents.every(a=>a.room==="cuisine"&&!["sleep","share_sleep"].includes(a.intent))&&!["sleep","share_sleep"].includes(d.intent));if(d&&!life.foodVerified){const description=seedPick(story.seed,"discover-foodVerified",["Je retire une provision de sa place… Elle réapparaît après deux secondes. C’est pas un stock normal.","Je prends une provision sur le plan de travail… et elle est de retour deux secondes plus tard. Un stock normal ne fait pas ça.","J'enlève une provision de son emplacement. Elle revient toute seule, deux secondes après. Ça n'a rien de naturel.","Je fais glisser une provision hors de la table… et une identique est déjà là deux secondes plus tard. Aucun stock ne se comporte comme ça.","J'attrape une provision, je la pose ailleurs. Le plan de travail se remplit tout seul en un clin d'œil. Ça défie toute logique de garde-manger.","Une provision disparaît de ma main pour réapparaître à sa place d'origine presque aussitôt. On dirait un tour de passe-passe, pas une cuisine."]);d.reply+=" "+description;d.memory=d.reply;life.foodVerified=true;}}
         // Rattrapage : exactement l'un des deux sait, ils sont réunis au salon — le rattrapage
         // n'est plus un souvenir partagé mal déclenché (ancien cas, devenu impossible : une
         // rencontre conjointe déclenche désormais la découverte conjointe ci-dessus) mais une vraie

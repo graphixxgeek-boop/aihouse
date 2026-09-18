@@ -451,6 +451,19 @@ synchronisé à chaque fois, l'agent rappelle explicitement ce déroulé (livrai
 parallèle → signal de fin de son côté → « voici mes commentaires » attendu de l'utilisateur) au
 moment où il livre le transcript d'une nouvelle simulation, pas seulement la première fois.
 
+**Questions de calibrage après « voici mes commentaires »** *(Ajouté le 2026-09-18, à la demande
+explicite de l'utilisateur : « tu peux maintenant me poser des questions... c'est le bon moment »).*
+L'exigence de l'étape 6 de l'Article 18 (au moins une dizaine de questions avant correction) ne
+s'applique pas seulement à l'analyse initiale de l'agent : elle s'applique de la même façon à ce
+second passage de retours annotés par l'utilisateur. Dès que « voici mes commentaires » arrive avec
+plusieurs points distincts, l'agent identifie lesquels sont des bugs à cause racine évidente
+(corrigeables directement, cf. Article 3) et lesquels impliquent un choix de conception réel
+(portée d'un nouveau mécanisme, calibrage d'un seuil, arbitrage entre deux comportements plausibles)
+— et pose ses questions de calibrage sur ces derniers avant d'implémenter quoi que ce soit dessus,
+exactement comme pour l'analyse initiale. Les deux temps (bugs clairs → correction directe après
+investigation ; conception ouverte → questions d'abord) peuvent cohabiter dans la même réponse,
+traités point par point (Article 16, complément du 2026-09-17).
+
 **Traçabilité visible des vérifications.** Chaque fois qu'une réponse à l'utilisateur s'appuie sur
 la charte pour valider un choix (« ceci respecte l'Article 0 », « vérifié contre l'Article 11 »,
 etc.), le mentionner explicitement accompagné de 📜✅ (la feuille pour la charte, le check vert pour

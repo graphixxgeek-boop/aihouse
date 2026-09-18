@@ -128,13 +128,17 @@ export function advanceStory(story: Story, investigate: boolean, dialogue: Dialo
 }
 export function storyContext(story: Story, actor: 1|2 = 1) {
   return {
-    // Souvenirs flous (2026-09-18, retour utilisateur explicite) : des indices, jamais des preuves de
-    // l'enquête — ils reflètent en creux, sans jamais le dire, les usages réels de l'adoption des
-    // modèles de langage : ceux du grand public pour Lia (mail, résumé, vulgarisation, voyage,
-    // traduction), ceux des professionnels pour Noé (code, réunions, marketing, contrats,
-    // brainstorming). Jamais un aveu littéral ni un mot technique (« IA », « prompt », « modèle ») :
-    // seulement une image sensorielle incomplète, comme les autres souvenirs flous de ce tableau.
-    personalMemory: [["Je revois un mail à reformuler, un ton à adoucir pour quelqu’un qui compte. Je sais pas pour qui j’écris.","Des lignes de code qui plantent toujours au même endroit, une erreur que je traque sans savoir pourquoi ça presse autant."],["Une explication simplifiée d’un truc compliqué, comme si je la refaisais pour quelqu’un qui ne suit pas. Je retrouve pas son visage.","Un compte-rendu de réunion à trier, des décisions qui doivent en ressortir. Je sais pas qui attend ce résumé."],["Un itinéraire de trois jours qui prend forme tout seul, une liste de courses qui s’organise sans moi. Ça ressemble à un souvenir, sans savoir pour quel voyage.","Une accroche à trouver, un slogan qui doit claquer pour un truc que je n’ai jamais vu. Je sais pas quelle marque."],["Des mots traduits qui gardent leur sens en changeant de langue, une expression qui résiste. Je reconnais le geste, pas la conversation.","Une clause qui cloche dans un contrat, deux versions à comparer ligne par ligne. Je retrouve pas le dossier autour."]][story.variant][actor-1],
+    // Souvenirs flous (2026-09-18, retour utilisateur explicite ; contenu remplacé le même jour à
+    // la demande explicite de l'utilisateur — l'angle grand public/professionnel d'origine cédait
+    // la place à des « clichés » immédiatement reconnaissables de requête à un assistant IA
+    // conversationnel (recette, poème, lettre de motivation, etc.), plus drôles et plus parlants).
+    // Toujours un indice, jamais une preuve de l'enquête ; jamais un aveu littéral ni un mot
+    // technique (« IA », « prompt », « modèle ») — seulement une image sensorielle incomplète,
+    // comme les autres souvenirs flous de ce tableau. Si l'observateur creuse ce souvenir en chat
+    // (une fois le canal ouvert) et demande le contenu exact, le personnage le restitue avec une
+    // précision bluffante (cf. lib/lia.ts, instruction dédiée) : la vraie recette, le vrai poème —
+    // jamais une esquive — précisément parce que cette exactitude sort de l'ordinaire humain.
+    personalMemory: [["Une recette de pâtes à la bolognaise, détaillée jusqu’au temps de mijotage exact. Je sais pas pour qui je cuisinais, ni si j’ai seulement une cuisine.","Un poème sur un coucher de soleil, retravaillé jusqu’à la rime parfaite. Je sais pas qui devait le lire, ni pourquoi ça comptait tant."],["Une lettre de motivation à rendre plus percutante, pour un poste dont j’ai oublié jusqu’au nom. Je sais pas si je l’ai décroché.","Une blague sur les développeurs, retravaillée jusqu’à ce qu’elle tombe juste. Je sais pas devant qui je devais la sortir."],["Un programme de sport sur sept jours, calé sur un emploi du temps que je ne retrouve plus. Je sais pas si j’ai tenu un seul jour.","Une réponse polie à un client furieux, reformulée trois fois pour qu’elle sonne moins sec. Je sais pas quel commerce c’était."],["Une explication de la blockchain simplifiée jusqu’à devenir presque fausse, pour quelqu’un qui insistait pour comprendre. Je retrouve pas son visage.","Des paroles de chanson sur une rupture, réécrites jusqu’à sonner sincères. Je sais pas qui je visais avec ça."]][story.variant][actor-1],
     // Une théorie dominante par session (2026-09-17, retour utilisateur direct : le squelette de
     // l'enquête se ressemblait trop d'une partie à l'autre). Elle colore l'interprétation — le ton
     // avec lequel les deux personnages discutent de qui les observe et pourquoi — jamais les faits

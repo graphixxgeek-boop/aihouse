@@ -16,6 +16,13 @@ export type Life={stockExposures?:Record<string,number>;windowNoticed?:boolean;s
 // tirage. bonusLog trace chaque tirage pour le dossier retourné (fréquence/générosité de
 // l'observateur, pas seulement le résultat).
 bonusUntil?:{food?:number;calm?:number;sleep?:number};stoicUntil?:Partial<Record<Person,number>>;mutedUntil?:Partial<Record<Person,number>>;trottoirGranted?:boolean;bonusLog?:{round:number;bonus:BonusId}[];
+// Insistance sur la roulette (2026-09-18) : compteur dédié par personnage, séparé de toute autre
+// jauge, jamais un mode stable (Article 0) — voir app/api/lia/route.ts pour la logique complète.
+rouletteInsistence?:Partial<Record<Person,number>>;rouletteCold?:Partial<Record<Person,number>>;
+// Refus explicite (2026-09-18, demande explicite de l'utilisateur, distinct de l'escalade
+// ci-dessus) : round absolu avant lequel aucun des deux personnages ne relance une demande de
+// tirage, pour laisser une vraie chance à un geste spontané de l'observateur après un "non" net.
+rouletteRefusalUntil?:Partial<Record<Person,number>>;
 // Qui sait déjà, individuellement, pour le miroir (2026-09-17) : une découverte peut désormais
 // survenir en solo (l'un dans la chambre, l'autre ailleurs) ; mirrorVerified (le fait "partagé",
 // qui déclenche débriefs/observations communes) ne devient vrai qu'une fois les deux dans cette
@@ -111,7 +118,10 @@ export function readLife(value:unknown,round=0):Life{const v=value&&typeof value
 ,worstMoment:v.worstMoment&&typeof v.worstMoment.excerpt==="string"&&typeof v.worstMoment.trustShift==="number"&&Number.isFinite(v.worstMoment.trustShift)?{round:Math.max(0,Number(v.worstMoment.round)||0),excerpt:v.worstMoment.excerpt.slice(0,500),trustShift:v.worstMoment.trustShift}:undefined
 ,negotiationOffer:v.negotiationOffer&&(v.negotiationOffer.actor===1||v.negotiationOffer.actor===2)&&typeof v.negotiationOffer.round==="number"&&Number.isFinite(v.negotiationOffer.round)?{actor:v.negotiationOffer.actor,round:v.negotiationOffer.round}:undefined
 ,genuineRespectStreak:{1:Math.max(0,Math.min(20,Number(legacyOrPerActor(v.genuineRespectStreak,1))||0)),2:Math.max(0,Math.min(20,Number(legacyOrPerActor(v.genuineRespectStreak,2))||0))}
-,negotiationLog:Array.isArray(v.negotiationLog)?v.negotiationLog.filter((e):e is {round:number;outcome:'honored'|'lapsed'}=>Boolean(e)&&typeof e==="object"&&["honored","lapsed"].includes((e as {outcome?:string}).outcome??"")).slice(-12):[]};}
+,negotiationLog:Array.isArray(v.negotiationLog)?v.negotiationLog.filter((e):e is {round:number;outcome:'honored'|'lapsed'}=>Boolean(e)&&typeof e==="object"&&["honored","lapsed"].includes((e as {outcome?:string}).outcome??"")).slice(-12):[]
+,rouletteInsistence:{1:Math.max(0,Math.min(2,Number(v.rouletteInsistence?.[1])||0)),2:Math.max(0,Math.min(2,Number(v.rouletteInsistence?.[2])||0))}
+,rouletteCold:{1:Math.max(0,Math.min(2,Number(v.rouletteCold?.[1])||0)),2:Math.max(0,Math.min(2,Number(v.rouletteCold?.[2])||0))}
+,rouletteRefusalUntil:{1:Math.max(0,Math.min(round+20,Number(v.rouletteRefusalUntil?.[1])||0)),2:Math.max(0,Math.min(round+20,Number(v.rouletteRefusalUntil?.[2])||0))}};}
 // Détection heuristique d'une réaction de choc/tristesse/colère chez l'observateur (2026-09-17) :
 // grossière par nature (comme check-spirit.mjs pour l'esprit des persos), jamais une lecture fine
 // du ton — elle ne sert qu'à déclencher UNE fois le moment de douceur, jamais à autre chose.
