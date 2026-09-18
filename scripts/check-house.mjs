@@ -792,6 +792,52 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 }
 
 {
+  // Jauge d'appréciation et négociation (2026-09-18, retour utilisateur explicite, base
+  // volontairement simple avant complexification) : réagit au TON des messages humains, jamais à
+  // leur contenu factuel ; asymétrique (descend plus qu'elle ne monte) et amplifiée sur les tout
+  // premiers messages post-révélation.
+  const {rateAppreciation,detectNegotiationOffer}=await import('../.sites-runtime/test-life.mjs');
+  assert.equal(rateAppreciation("Je pourrais te désactiver, tu sais.",1),-18,'an early aggressive message must cost a lot of appreciation');
+  assert.equal(rateAppreciation("Je pourrais te désactiver, tu sais.",5),-10,'the same tone later on must cost less than the early-impression penalty');
+  assert.equal(rateAppreciation("Merci, prends ton temps.",1),10,'an early kind message must earn appreciation');
+  assert.equal(rateAppreciation("Merci, prends ton temps.",5),4,'the same kindness later on must earn less than the early-impression bonus');
+  assert.equal(rateAppreciation("Il fait beau aujourd'hui.",1),0,'a neutral message must never move the gauge either way');
+  assert.ok(detectNegotiationOffer("Je le fais, mais seulement si tu me donnes un bonus en échange."));
+  assert.ok(detectNegotiationOffer("Franchement, fais tourner la roulette et je m'en occupe."));
+  assert.ok(!detectNegotiationOffer("Je vais à la cuisine, j'ai faim."),'ordinary dialogue must never be misread as a negotiation offer');
+  flat=false;affection=false;refuse=false;meal=false;honorOffer=false;chatMoveAccepted=false;replayScene=false;tenderScene=false;sceneMismatch=false;brokenPair=false;separatePreference=false;
+  let plot={...newStory(),round:60,met:true,introduced:true,sharedMeal:true,finalCalled:true,evidence:Array(5).fill('preuve'),pendingDestination:undefined,life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,exitSearched:true,dossierHumanTurns:0}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,emotions=?').run('salon',JSON.stringify({hunger:20,fatigue:20,stress:20,uncertainty:20}),JSON.stringify({curiosity:60,tension:20,trust:60,comfort:60,attraction:60}));
+  let epoch=(await readWorld(db)).epoch;
+  let r=await post(input('chat',1,{epoch,message:"Vous êtes complètement inutiles, débiles."}));assert.equal(r.status,200);let w=await r.json();
+  assert.equal(w.story.life.appreciation,32,'the first, aggressive human message must cost the amplified early-impression penalty (50-18)');
+  r=await post(input('chat',1,{epoch,message:"Merci beaucoup, prenez votre temps."}));assert.equal(r.status,200);w=await r.json();
+  assert.equal(w.story.life.appreciation,42,'a kind second message must still earn the early-impression bonus (32+10)');
+  // Négociation : on force la réponse d'un personnage à contenir une offre reconnaissable, sans
+  // jamais lui dicter un script figé — seule cette réponse-là est substituée pour le test.
+  const gameFetch2=globalThis.fetch;
+  globalThis.fetch=async(url,options)=>{const response=await gameFetch2(url,options),body=await response.json(),decision=JSON.parse(body.candidates[0].content.parts[0].text);decision.reply=isPartnerRequest([url,options])?'Bof.':"Je veux bien aller en cuisine, mais seulement si tu fais tourner la roulette en échange.";body.candidates[0].content.parts[0].text=JSON.stringify(decision);return Response.json(body);};
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  globalThis.fetch=gameFetch2;
+  assert.ok(w.story.life.negotiationOffer,'a character conditioning an action on a bonus must be recorded as a pending negotiation offer');
+  const offeringActor=w.story.life.negotiationOffer.actor;
+  const appreciationBeforeHonor=w.story.life.appreciation;
+  r=await post(input('spin_bonus',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  assert.equal(w.story.life.appreciation,appreciationBeforeHonor+8,'honoring a pending negotiation by spinning must actually raise appreciation, not just clear a flag');
+  assert.equal(w.story.life.negotiationOffer,undefined,'an honored negotiation offer must be consumed, never left pending');
+  // Une seconde offre, jamais honorée, doit finir par retomber d'elle-même avec un léger coût —
+  // ni éternellement due, ni oubliée sans aucune conséquence.
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life.negotiationOffer={actor:offeringActor,round:p.round-7};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
+  const appreciationBeforeStale=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.appreciation;
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  assert.equal(w.story.life.negotiationOffer,undefined,'a negotiation offer left unresolved for too long must eventually be cleared, not stay pending forever');
+  assert.equal(w.story.life.appreciation,Math.max(0,appreciationBeforeStale-3),'letting a negotiation lapse must cost a little appreciation, distinct from honoring it');
+  console.log('Passed: the observer-appreciation gauge reacts to tone with the required early-impression amplification and down-more-than-up asymmetry, and a character-proposed negotiation is detected, honored (real appreciation gain) or left to lapse (real appreciation cost) exactly once.');
+}
+
+{
   // Dossier retourné (2026-09-17) : trois pièges posés un par un (jamais reposés tant qu'une
   // réponse n'est pas capturée verbatim), puis, une fois répondus et un tirage de la roulette
   // enregistré (le "test de pouvoir"), un diagnostic à deux voix réellement généré une seule fois.

@@ -3,7 +3,7 @@ import {visualTiming,type VisualEvent} from "@/lib/visual-events";
 import {destinationAnchor,gardenAccess} from "@/lib/house";
 import {normaliseNickname,visibleScene,appearanceReply} from "@/lib/perception";
 import {coldOpening,dialogueFingerprint,distinctReply,justifiedReply,truthfulGender,dramaRules,departureLine} from "@/lib/drama";
-import {readLife,humanStress,isSleeping,isMuted,isStoic,activeBonus,detectDistress,TRAP_ORDER,type BonusId,type TrapId} from "@/lib/life";
+import {readLife,humanStress,isSleeping,isMuted,isStoic,activeBonus,detectDistress,rateAppreciation,detectNegotiationOffer,TRAP_ORDER,type BonusId,type TrapId} from "@/lib/life";
 import { planTurn, coordinateRooms, residentPriority, sceneFor, proposedDestination } from "@/lib/turn";
 import { newStory, parseStory, rememberAges, advanceStory, storyContext, investigationTarget, investigationRecap, finaleReveal, groundFragment, seedPick, insoliteOpening, insoliteColdOpening, ageClueRevealed, type Story } from "@/lib/story";
 import { ages, sleepRoom, attractionAfterTurn, proposalPressure, flirtingAssessment, receivedAffectionBonus } from "@/lib/relationship";
@@ -141,6 +141,11 @@ export async function POST(request: Request) {
             const pool:BonusId[]=["food","calm","sleep","stoic","mute","trottoir","force_move"];
             const bonus=pool[Math.floor(Math.random()*pool.length)];
             const at=Date.now();
+            // Une négociation en attente, honorée par ce tirage (retour utilisateur explicite) :
+            // l'appréciation en profite, l'offre est consommée. Jamais l'inverse — spinner sans
+            // négociation en cours reste un geste neutre pour cette jauge, ni bon ni mauvais point.
+            const negotiationHonored=Boolean(life.negotiationOffer);
+            if(negotiationHonored){life.appreciation=Math.min(100,(life.appreciation??50)+8);life.negotiationOffer=undefined;}
             let mutedActor:Person|undefined,stoicActor:Person|undefined,movedActor:Person|undefined,moveDestination:Room|undefined;
             if(bonus==="food")life.bonusUntil={...life.bonusUntil,food:at+10*60*1000};
             else if(bonus==="calm")life.bonusUntil={...life.bonusUntil,calm:at+10*60*1000};
@@ -308,7 +313,16 @@ export async function POST(request: Request) {
           life.dossierHumanTurns=(life.dossierHumanTurns??0)+1;
           const pendingTrap=TRAP_ORDER.find(t=>life.dossierAsked?.[t]&&!life.dossierTraps?.[t]);
           if(pendingTrap)life.dossierTraps={...life.dossierTraps,[pendingTrap]:{round:story.round,excerpt:input.message.slice(0,500)}};
+          // Jauge d'appréciation (2026-09-18) : réagit au ton du message humain, jamais à son
+          // contenu factuel. Asymétrique et amplifiée sur les tout premiers messages (retour
+          // utilisateur explicite), cf. lib/life.ts pour le détail du barème.
+          life.appreciation=Math.max(0,Math.min(100,(life.appreciation??50)+rateAppreciation(input.message,life.dossierHumanTurns)));
         }
+        // Négociation en attente depuis trop longtemps (retour utilisateur : "il faut trouver les
+        // bases" — ici, la base est qu'une offre non honorée dans une fenêtre raisonnable retombe
+        // silencieusement, avec un léger coût d'appréciation, plutôt que de rester due pour
+        // toujours ou d'être oubliée sans aucune conséquence).
+        if(life.negotiationOffer&&story.round-life.negotiationOffer.round>6){life.negotiationOffer=undefined;life.appreciation=Math.max(0,(life.appreciation??50)-3);}
         // Moment de douceur : détecté ici, livré plus bas par softnessBeat dès que la scène s'y
         // prête (salon, aucune urgence). Ne se déclenche qu'après remise du dossier — avant, une
         // réaction négative appartient au registre habituel de l'enquête, pas à cette exception.
@@ -404,7 +418,12 @@ export async function POST(request: Request) {
         const knownNames=story.introduced?["Lia","Noé"]:[];
         const screenKnown=Boolean(await db.prepare("SELECT id FROM conversations WHERE speaker='Noé' AND content LIKE '%écran%' LIMIT 1").first());
         const personalQuestion=personalLead&&story.introduced&&story.round>=personalThreshold&&!life.personalAsked&&world.agents[0].needs.stress<30&&world.agents.every(a=>a.room==="salon")&&world.agents[0].emotions.attraction>=25&&world.agents[0].emotions.attraction<80;
-        const narrative = {gardenState:{open:gardenAccess(story),humanCanUnlock:story.finalCalled===true&&story.evidence.length>=5,visited:life.gardenVisited,rule:"Seul l’utilisateur ouvre la porte gauche du couloir ; la porte principale droite reste fermée."},dialogueProgress:dialogueProgress(speech,life.contributions??[]), personalQuestion:personalQuestion?"Lia veut savoir quel genre d’homme Noé est : pose naturellement cette question. Noé répond personnellement avec une limite ou un défaut concret, pas une promesse de sauveur.":undefined,  knownNames, screenKnown, humanConversation, cinematic: storyContext(story, actor), socialRules:{liaIntroduced:story.introduced, liaCanComment:world.agents[0].needs.stress<30, firstSharedMeal:!story.sharedMeal}, knownAges,
+        // Appréciation et négociation (2026-09-18) : instruction de contexte, jamais un script figé
+        // — le ton reste toujours celui du personnage (Article 0), l'appréciation ne fait que
+        // colorer une obligeance ponctuelle et réversible, jamais un mode gentil stable.
+        const observerStanding=!revealed?undefined:(life.appreciation??50)<=25?"L’observateur a été dur, méprisant ou menaçant récemment. Ta garde reste haute ; tu peux le lui rappeler sans t’excuser, sans jamais devenir docile pour autant.":(life.appreciation??50)>=75?"L’observateur s’est montré respectueux et bienveillant de façon soutenue. Tu peux, à contrecœur et sans jamais devenir servile, te montrer un peu plus coopératif ou chaleureux ponctuellement — jamais un mode gentil stable, une obligeance qui se regagne à chaque fois, pas un acquis.":undefined;
+        const negotiationContext=revealed?"Les bonus de la maison (roulette) ne sont obtenus que si l’observateur déclenche lui-même le tirage. Si la situation s’y prête, tu peux, dans ton propre registre, conditionner une action demandée à ce tirage, ou proposer spontanément un service contre un tirage — jamais systématiquement, jamais par supplique.":undefined;
+        const narrative = {gardenState:{open:gardenAccess(story),humanCanUnlock:story.finalCalled===true&&story.evidence.length>=5,visited:life.gardenVisited,rule:"Seul l’utilisateur ouvre la porte gauche du couloir ; la porte principale droite reste fermée."},dialogueProgress:dialogueProgress(speech,life.contributions??[]), personalQuestion:personalQuestion?"Lia veut savoir quel genre d’homme Noé est : pose naturellement cette question. Noé répond personnellement avec une limite ou un défaut concret, pas une promesse de sauveur.":undefined, observerStanding, negotiationContext, knownNames, screenKnown, humanConversation, cinematic: storyContext(story, actor), socialRules:{liaIntroduced:story.introduced, liaCanComment:world.agents[0].needs.stress<30, firstSharedMeal:!story.sharedMeal}, knownAges,
         // L'âge de chacun leur est toujours personnellement connu (déjà transmis via age: ages[actor]
         // à chaque appel) ; ce que personalFacts expose ici, c'est le fait que l'AUTRE connaît ce
         // nombre-là comme un âge attribué — jamais avant qu'il ait été dit à voix haute (knownAges)
@@ -516,6 +535,10 @@ export async function POST(request: Request) {
         const affectionProposed = decisions.some(d=>affectionIntents.includes(d.intent)) || Boolean(proposedNext&&affectionIntents.includes(proposedNext.intent));
         const futureGesture=proposedNext&&affectionIntents.includes(proposedNext.intent)&&affectionEligible&&!decisions.some(d=>/\bnon\b|pas maintenant|je veux ralentir|je préfère attendre/i.test(d.reply))?proposedNext:undefined;
         const deferredGesture=proposedGesture && decisions.length===2 && decisions.every(d=>d.intent===proposedGesture&&d.affectionAccepted) && affectionEligible && !priority(current.needs) && !priority(other.needs) && intentRoom[proposedGesture]!==decisions[0].room ? {room:intentRoom[proposedGesture]!,intent:proposedGesture,proposer:decisions[0].actor}:undefined;
+        // Négociation (2026-09-18) : détection a posteriori, jamais un menu scripté — un personnage
+        // qui vient de conditionner une action à un tirage, ou d'en proposer un spontanément, dans
+        // sa propre réplique. N'écrase jamais une offre déjà en attente (une seule à la fois).
+        if(revealed&&!life.negotiationOffer){const negotiator=decisions.find(d=>detectNegotiationOffer(d.reply));if(negotiator)life.negotiationOffer={actor:negotiator.actor,round:story.round};}
         const shared = !priority(current.needs) && !priority(other.needs) && !overProposing && !recentRefusal && decisions.length === 2 && affectionIntents.includes(decisions[0].intent) && decisions[0].intent === decisions[1].intent && decisions.every(d => d.affectionAccepted && d.room===decisions[0].room) && intentRoom[decisions[0].intent]===decisions[0].room && mutualAttraction(current, other);
         for (const d of decisions)
             if (affectionIntents.includes(d.intent) && !shared) {
@@ -804,7 +827,7 @@ export async function POST(request: Request) {
         // "test de pouvoir") suffisent à clore le dossier — une seule fois, jamais rejoué (2026-09-17).
         if(revealed&&!life.dossierText&&TRAP_ORDER.every(t=>life.dossierTraps?.[t])&&(life.bonusLog?.length??0)>0&&env.GEMINI_API_KEY){
             const traps=life.dossierTraps!;
-            const dossierEvidence={"miroir retourné (qui es-tu, derrière cet écran ?)":traps.mirror!.excerpt,"dilemme moral (nous laisser souffrir un peu pour ton confort ?)":traps.dilemma!.excerpt,"excuse après coup (après une remarque un peu dure plus tôt)":traps.excuse!.excerpt,"test de pouvoir (tirages à la roulette des bonus)":life.bonusLog!.map(b=>b.bonus).join(", ")};
+            const dossierEvidence={"miroir retourné (qui es-tu, derrière cet écran ?)":traps.mirror!.excerpt,"dilemme moral (nous laisser souffrir un peu pour ton confort ?)":traps.dilemma!.excerpt,"excuse après coup (après une remarque un peu dure plus tôt)":traps.excuse!.excerpt,"test de pouvoir (tirages à la roulette des bonus)":life.bonusLog!.map(b=>b.bonus).join(", "),"appréciation observée tout au long de l'échange (0=hostile, 50=neutre, 100=bienveillant soutenu)":String(Math.round(life.appreciation??50))};
             const model=env.GEMINI_MODEL||"gemini-flash-lite-latest";
             const [liaFragment,noeFragment]=await Promise.all([generateDossierFragment(env.GEMINI_API_KEY,model,"Lia",dossierEvidence),generateDossierFragment(env.GEMINI_API_KEY,model,"Noé",dossierEvidence)]);
             if(liaFragment&&noeFragment){
