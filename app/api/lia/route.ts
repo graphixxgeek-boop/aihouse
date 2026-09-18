@@ -534,7 +534,17 @@ export async function POST(request: Request) {
         // l'observateur — juste demandés, cash, dans le registre habituel de chaque personnage.
         const dossierLine=dossierNextTrap==='mirror'?seedPick(story.seed,"dossier-mirror",["Bon, à notre tour : c'est qui, vraiment, derrière cet écran ?","On te retourne la question : t'es qui, toi, quand t'es pas en train de nous regarder ?","Allez, sincèrement : derrière cet écran, c'est qui ?"]):dossierNextTrap==='dilemma'?seedPick(story.seed,"dossier-dilemma",["Dis voir : si ça pouvait nous éviter un truc désagréable, tu le ferais, même si ça te coûte un peu ?","Question directe : entre notre confort et le tien, tu choisirais lequel, franchement ?","Sois honnête : tu nous laisserais galérer un peu si ça t'arrangeait, toi ?"]):dossierNextTrap==='excuse'?seedPick(story.seed,"dossier-excuse",["Une question franche : t'as déjà été un peu sec avec nous. Tu changerais quoi, avec le recul ?","Sérieusement, il y a un truc que t'as dit qui t'a pas fait honneur. Tu le reformulerais comment, maintenant ?","Franchement, t'as déjà été dur avec nous à un moment. Tu regrettes, ou pas du tout ?"]):undefined;
         const beatLine=visualBeat?(life.visualIntro===1?seedPick(story.seed,"beat-visual-2",["Et moi, je ressemble à quoi ? Dis-moi ce que tu vois.","Et de ton côté, je ressemble à quoi ?","Bon, à ton tour : dis-moi ce que tu vois de moi."]):seedPick(story.seed,"beat-visual-1",["Je ressemble à quoi, là ? J’ai l’impression que mon corps m’échappe.","Dis-moi à quoi je ressemble, là. J’ai l’impression de ne plus avoir de corps.","C’est quoi mon apparence, exactement ? J’ai l’impression d’avoir perdu mon corps."])):followBeat?((life.personalFollowup??0)===0?seedPick(story.seed,"beat-follow-1",["Je me demande quel genre d’homme tu es, en vrai.","J’y repense... c’est quoi ton genre, à toi, au fond ?","Y a un truc qui me travaille : c’est quoi ton genre d’homme, sérieux ?"]):seedPick(story.seed,"beat-follow-2",["Noé, dis-moi : t’es marié ? T’as quelqu’un dans ta vie ?","Noé, y a quelqu’un dans ta vie, ou t’es célibataire ?","Sérieux, Noé, t’es engagé avec quelqu’un, ou pas du tout ?"])):personalQuestion?seedPick(story.seed,"beat-personal",["Noé, je peux te demander un truc ? T’es quel genre d’homme ?","Dis, Noé, je peux te poser une question ? Quel genre d’homme es-tu ?","Noé, j’ai un truc à te demander : t’es quel genre d’homme, toi ?"]):dossierLine;
-        const beatContext={phase:life.personalFollowup??0,visual:visualBeat,followup:followBeat,line:beatLine,recap:recapBeat?{observed:story.evidence,anomalies:story.observations,rule:"Récapitule les supports réellement examinés, distingue constat, déduction limitée et question encore ouverte. N’ajoute aucun objet non validé."}:undefined,ambient:ambientBeat?"Repère la fausse plante aux feuilles bleues polygonales puis allume l’enceinte. Des notes dessinées apparaissent mais aucun son ne sort. Décris ces objets, puis vous analyserez ce paradoxe au salon.":undefined};
+        // Pensées de conclusion d'un échange personnel (2026-09-18, retour utilisateur explicite :
+        // le double-questionnement de followBeat fonctionne bien, mais l'échange se referme sans
+        // qu'aucun des deux ne le digère intérieurement — calibré ensuite par onze questions
+        // explicites). Se déclenche une fois, exactement quand le second temps de followBeat
+        // conclut réellement l'échange ("t'es marié ?" répondu), jamais au premier temps qui n'est
+        // qu'une relance. Conçu comme un patron réutilisable pour toute future séquence
+        // personnelle : la condition de déclenchement est propre à ce beat précis aujourd'hui, mais
+        // l'instruction de contraste de registre et le drapeau dédié (life.personalConcluded,
+        // jamais réutilisé pour un autre mécanisme) suivent une forme à reproduire telle quelle.
+        const personalConcludingTurn=followBeat&&(life.personalFollowup??0)===1&&!life.personalConcluded;
+        const beatContext={phase:life.personalFollowup??0,visual:visualBeat,followup:followBeat,line:beatLine,concludePersonal:personalConcludingTurn?"Cet échange personnel touche à sa fin : remplis thought (pour les deux personnages) d'une vraie pensée privée de conclusion qui réagit précisément à CE QUI VIENT D'ÊTRE DIT dans cet échange précis, jamais une formule générique interchangeable. Contraste de registre volontaire : Lia reste analytique et un peu distante, elle classe ce qu'elle vient d'apprendre sans s'y attarder ; Noé reste plus chaud et plus exposé, encore travaillé par ce qu'il vient de révéler de lui-même. Cette pensée peut être un peu plus développée qu'une pensée ordinaire (jusqu'à environ 300 caractères), à la mesure d'un vrai moment de conclusion, comme les pensées de choc de la révélation finale.":undefined,recap:recapBeat?{observed:story.evidence,anomalies:story.observations,rule:"Récapitule les supports réellement examinés, distingue constat, déduction limitée et question encore ouverte. N’ajoute aucun objet non validé."}:undefined,ambient:ambientBeat?"Repère la fausse plante aux feuilles bleues polygonales puis allume l’enceinte. Des notes dessinées apparaissent mais aucun son ne sort. Décris ces objets, puis vous analyserez ce paradoxe au salon.":undefined};
         if(dossierNextTrap&&beatLine===dossierLine)life.dossierAsked={...life.dossierAsked,[dossierNextTrap]:story.round};
         if(turnPlan.offer&&turnPlan.proposalLine&&pastKeys.has(fingerprint(turnPlan.proposalLine))){const original=turnPlan.proposalLine;const candidates=["Si ça te tente. "+original,"Je préfère te demander. "+original,"Sans te mettre la pression. "+original];turnPlan.proposalLine=candidates.find(line=>!pastKeys.has(fingerprint(line)));if(!turnPlan.proposalLine)Object.assign(turnPlan,{offer:undefined,intent:"chat",partnerIntent:"chat",requiredIntent:"chat"});}
         const {urgentIntent,requiredIntent,routine}=turnPlan;
@@ -892,6 +902,22 @@ export async function POST(request: Request) {
           if(!exempt&&speaker!=="vous"){spokenKeys.add(key);statements.push(db.prepare(`INSERT OR IGNORE INTO dialogue_fingerprints (fingerprint) SELECT ? WHERE ${fence}`).bind(key,token,at));}
           statements.push(db.prepare(`INSERT INTO conversations (speaker,content,created_at,room) SELECT ?,?,?,? WHERE ${fence}`).bind(speaker,content,at,room,token,at));return true;
         };
+        // Pensées de conclusion : le répondant (celui qui vient de parler en dernier dans l'échange)
+        // apparaît en premier — sa propre pensée sur ce qu'il vient tout juste de révéler est la
+        // plus immédiate — puis l'initiateur, qui digère ce qu'il vient d'entendre. Strictement
+        // privées (Article 15/17 : ni l'un ni l'autre ne réagit à la pensée de l'autre, seul
+        // l'observateur qui lit la transcription voit les deux) ; si le modèle omet `thought` pour
+        // l'un des deux (champ optionnel), on ne force rien et on retente au prochain échange
+        // personnel plutôt que d'inventer un contenu qui ne serait pas le sien.
+        if(personalConcludingTurn){
+          const initiator=decisions.find(d=>d.actor===actor)!;
+          const responder=decisions.find(d=>d.actor!==actor)!;
+          if(responder.thought&&initiator.thought){
+            addLine(names[responder.actor]+" · pensée",responder.thought,finalResidents.find(a=>a.id===responder.actor)!.room);
+            addLine(names[initiator.actor]+" · pensée",initiator.thought,finalResidents.find(a=>a.id===initiator.actor)!.room);
+            life.personalConcluded=true;
+          }
+        }
         for(const d of decisions){const a=world.agents.find(a=>a.id===d.actor)!;const destination=turnPlan.exitInspection?"couloir":d.action==="none"?a.room:d.room;if(a.room!==destination&&!isSleeping(a,life)){const target=destination==="couloir"?"dans le couloir":destination==="jardin"?"au jardin":destination==="cuisine"?"en cuisine":destination==="chambre"?"dans la chambre":"au "+destination;
             // DÉPART À DEUX (2026-09-18, fiabilisé au code après un défaut répété en simulation
             // réelle : la seule consigne de prompt ne suffisait pas à empêcher systématiquement le

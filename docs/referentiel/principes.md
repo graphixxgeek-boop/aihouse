@@ -324,6 +324,44 @@ demande quel genre d'homme tu es, en vrai. ») et précédée d'une pensée réf
 Noé, de son côté, répond en signalant qu'il a déjà répondu une fois (`beat-follow-answer`,
 inchangé : « Que veux-tu savoir exactement ? »).
 
+5.6ter. **Pensées de conclusion d'un échange personnel** (2026-09-18, retour utilisateur explicite,
+calibré ensuite par onze questions de calibrage) : l'échange lancé par 5.6bis se refermait sans
+qu'aucun des deux personnages ne le digère intérieurement — un manque une fois le double
+questionnement lui-même jugé réussi. Exactement au tour où le second temps de `followBeat` conclut
+réellement l'échange (« t'es marié ? » répondu, `personalFollowup` passant de 1 à 3, jamais au
+premier temps qui n'est qu'une relance), les deux personnages reçoivent chacun une vraie pensée
+privée de conclusion, ajoutée comme deux lignes « · pensée » distinctes (`app/api/lia/route.ts`,
+`personalConcludingTurn`) — jamais une case interne invisible. Choix de calibrage retenus :
+- **Génération** : par le modèle lui-même (`thought`, déjà rempli mais jusqu'ici silencieusement
+  jeté quand les personnages sont ensemble), pas des variantes scriptées — permet une vraie réaction
+  au contenu RÉEL de l'échange (la réponse précise de Noé, la question précise de Lia), jamais une
+  formule générique recyclée (Article 10/17).
+- **Contraste de registre imposé** (Article 0) : Lia reste analytique et un peu distante (elle
+  classe ce qu'elle vient d'apprendre), Noé reste plus chaud et exposé (encore travaillé par ce
+  qu'il vient de révéler de lui-même) — une consigne de prompt explicite pour ce moment précis,
+  pas laissé au hasard du modèle.
+- **Longueur** : volontairement plus développée qu'une pensée privée ordinaire (jusqu'à environ 300
+  caractères), à la mesure d'un vrai jalon relationnel, comme les pensées de choc de la révélation
+  finale (8.1) — pas la contrainte habituelle de ~180 caractères.
+- **Confidentialité stricte** (Article 15/17) : les deux pensées restent invisibles l'une à l'autre,
+  seul l'observateur qui lit la transcription voit les deux ; aucune ne déclenche de réaction chez
+  l'autre personnage.
+- **Ordre** : le répondant (celui qui vient de parler en dernier dans l'échange, Noé dans ce cas
+  précis) apparaît en premier — sa pensée sur ce qu'il vient de révéler est la plus immédiate —
+  puis l'initiateur, qui digère ce qu'il vient d'entendre.
+- **Drapeau dédié** (`life.personalConcluded`, jamais réutilisé pour un autre mécanisme) plutôt que
+  de s'appuyer uniquement sur `personalFollowup` atteignant 3 : garantit l'unicité même si un futur
+  mécanisme réutilisant ce patron introduisait un bug de remise à zéro du compteur.
+- **Portée** : la condition de déclenchement reste propre à cette séquence précise aujourd'hui, mais
+  l'ensemble (génération par le modèle, contraste de registre, confidentialité stricte, ordre
+  répondant-puis-initiateur, drapeau dédié) constitue un patron explicitement conçu pour être
+  reproduit tel quel par toute future séquence personnelle, plutôt que d'être redécouvert à chaque
+  fois (Article 7).
+- La pensée réflexive de mi-parcours (`beat-follow-thought`, 5.6bis) reste inchangée en parallèle :
+  elle porte sur l'ATTENTE (« ça me trotte encore »), jamais rendue visible en ligne « · pensée »
+  contrairement à celle-ci qui porte sur la CONCLUSION — deux moments, deux fonctions, pas une
+  redite.
+
 5.7. Chaque session tire aussi une théorie dominante sur qui les observe et pourquoi (test, panne,
 punition, expérience neutre — `narrativeAngle`, `lib/story.ts`), explicitement signalée au modèle
 comme devant colorer les hypothèses et le ton des réflexions à ce sujet (2026-09-17). Cette théorie

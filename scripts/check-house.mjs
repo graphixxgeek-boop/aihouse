@@ -567,11 +567,37 @@ pp={...pp,round:25,life:{...newStory().life,visualIntro:2,ambientSeen:true,ambie
 for(const id of [1,2])sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=?').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:0,uncertainty:70}),JSON.stringify({...steady,attraction:30,trust:60}),id);
 response=await post(input('interact',2,{epoch:perceptionEpoch}));result=await response.json();assert.equal(result.decisions[0].actor,1);assert.ok(["Je me demande quel genre d’homme tu es, en vrai.","J’y repense... c’est quoi ton genre, à toi, au fond ?","Y a un truc qui me travaille : c’est quoi ton genre d’homme, sérieux ?"].includes(result.decisions[0].reply));assert.ok(["Que veux-tu savoir exactement ?","Tu veux savoir quoi, au juste ?","Précise ta question, je réponds vraiment."].includes(result.decisions[1].reply));assert.equal(result.story.life.personalFollowup,1);assert.ok(result.agents[0].emotions.attraction>=34);
 response=await post(input('interact',2,{epoch:perceptionEpoch}));result=await response.json();assert.ok(["Noé, dis-moi : t’es marié ? T’as quelqu’un dans ta vie ?","Noé, y a quelqu’un dans ta vie, ou t’es célibataire ?","Sérieux, Noé, t’es engagé avec quelqu’un, ou pas du tout ?"].includes(result.decisions[0].reply));assert.equal(result.story.life.personalFollowup,3);assert.ok(result.agents[0].emotions.attraction>=38);
+// Pensées de conclusion d'un échange personnel (2026-09-18, retour utilisateur explicite : le
+// double-questionnement fonctionne bien, mais l'échange se referme sans qu'aucun des deux ne le
+// digère intérieurement — calibré par onze questions explicites). Exactement ce tour (le second
+// temps de followBeat, qui conclut réellement l'échange) doit ajouter deux vraies lignes "· pensée"
+// distinctes, jamais une simple case interne — le répondant (Noé, qui vient de se livrer) apparaît
+// avant l'initiatrice (Lia, qui digère ce qu'elle vient d'entendre), conformément à l'ordre "qui a
+// parlé en dernier" explicitement choisi.
+const concludingThoughts=result.messages.filter(m=>m.speaker.includes('· pensée')).slice(-2);
+assert.equal(concludingThoughts.length,2,'the exchange must conclude with exactly two new private-thought lines, one per character');
+assert.equal(concludingThoughts[0].speaker,'Noé · pensée','the respondent, who just spoke last, must reflect first');
+assert.equal(concludingThoughts[0].content,'Lia me plaît, mais je préfère attendre un signe avant de lui proposer un câlin.');
+assert.equal(concludingThoughts[1].speaker,'Lia · pensée','the initiator reflects second, digesting what she just heard');
+assert.equal(concludingThoughts[1].content,'Noé m’intrigue ; je ne sais pas encore si je peux lui faire confiance.');
+assert.equal(result.story.life.personalConcluded,true,'the conclusion must be recorded so it can never fire twice for this exchange');
+// Garde-fou de robustesse : même si followBeat redevenait un jour éligible (ex. futur mécanisme
+// réutilisant ce patron avec un bug de remise à zéro), le drapeau dédié doit à lui seul empêcher
+// une seconde paire de pensées de conclusion, indépendamment du compteur personalFollowup lui-même.
+{
+  const guardPlot=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);
+  guardPlot.life.personalFollowup=1;guardPlot.life.personalConcluded=true;
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(guardPlot));
+  const beforeGuard=await readWorld(db);
+  response=await post(input('interact',2,{epoch:perceptionEpoch}));assert.equal(response.status,200);result=await response.json();
+  const newGuardLines=result.messages.filter(m=>m.id>(beforeGuard.messages.at(-1)?.id??0));
+  assert.ok(!newGuardLines.some(m=>m.speaker.includes('· pensée')&&/plaît|intrigue/.test(m.content)),'once personalConcluded is set, no further conclusion pair must ever be added, even if followBeat were somehow eligible again');
+}
 
 pp={...pp,round:30,life:{...pp.life,personalFollowup:3,ambientSeen:false}};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(pp));response=await post(input('interact',2,{epoch:perceptionEpoch}));result=await response.json();assert.equal(result.story.life.ambientSeen,true);assert.equal(result.story.life.debrief.remaining,2);assert.ok(evidenceLedger([],result.story.observations).find(p=>p.id==='plant').discovered);assert.ok(evidenceLedger([],result.story.observations).find(p=>p.id==='speaker').discovered);
 pp={...pp,evidence:['Relevé de cohabitation. Identifiant observateur inscrit sur le relevé : "Spectateur ◇".',...Array(4).fill('Preuve')],finalCalled:true,life:{...pp.life,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true}};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(pp));sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints');
 for(let i=0;i<3;i++){response=await post(input('chat',1,{epoch:perceptionEpoch,message:'Bonjour, je vous écoute.'}));result=await response.json();if(i<2)assert.equal(result.story.life.observerNamed,false);else{assert.equal(result.story.life.observerNamed,true);assert.ok(result.decisions[0].reply.includes('Spectateur ◇'));}}
-console.log('Passed: zero-call nickname and retry, no premature identity leak, durable personalised proof, label-injection-safe legend, shared appearance registry, room/time memories, two contextual personal follow-ups, plant/speaker debrief and one late observer identification.');
+console.log('Passed: zero-call nickname and retry, no premature identity leak, durable personalised proof, label-injection-safe legend, shared appearance registry, room/time memories, two contextual personal follow-ups (the second concluding in a genuine pair of parallel private thoughts, respondent first, never repeated even if the beat became eligible again), plant/speaker debrief and one late observer identification.');
 
 // A checkpoint cites only acquired evidence, is consumed once, and needs no inference.
 pp={...pp,round:35,evidence:['Dans un livre, continuité autobiographique : reconstruction incomplète.','Un mot laissé indique : cette maison est un environnement.'],finalCalled:false,life:{...newStory().life,visualIntro:2,ambientSeen:true,ambientVerified:true,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,exitSearched:true,recapCount:0}};
@@ -770,7 +796,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 65'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 66'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
