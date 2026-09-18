@@ -617,6 +617,11 @@ précises sur une vraie session jouée de bout en bout, corrigées à la racine 
 - **Prénoms, surnoms, rire, accords de genre, mise en valeur des indices (guillemets + points de
   suspension), clarté de la déduction d'âge, non-anticipation d'objets pas encore observés dans
   moveReason** : ajoutés comme principes de prompt (`lib/lia.ts`), jamais des exemples figés.
+- **Souvenirs flous reliés au thème** (`storyContext.personalMemory`, `lib/story.ts`) : réécrits pour
+  esquisser en creux, jamais littéralement, les usages réels de l'adoption des LLM — grand public pour
+  Lia (mail, résumé, vulgarisation, voyage, traduction), professionnels pour Noé (code, réunions,
+  marketing, contrats, brainstorming) — des indices d'une seconde intrigue, jamais une preuve ni un
+  aveu explicite (« IA », « modèle », « prompt » restent absents de ces souvenirs).
 - **Point vérifié sans changement nécessaire** : « OBSERVATEUR ≠ CRÉATEUR » existait déjà explicitement
   dans le prompt ; la pensée privée de Lia sur les provisions n'est normalement pas connue de Noé (les
   pensées sont strictement privées par conception), donc l'absence de réaction de Noé était cohérente,
