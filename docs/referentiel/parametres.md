@@ -294,6 +294,16 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   nouvelle tant que la précédente n'est pas résolue.
 - Alimente le dossier retourné (`dossierEvidence`) comme preuve supplémentaire (valeur arrondie).
 
+## Cohérence colère/tendresse (`lib/simulation.ts`, `app/api/lia/route.ts`, `principes.md` 8.9)
+
+- `angerLevel(tension,comfort,angry?)` (extraite de `faceExpression`) : nulle sous tension 55 ou
+  confort 35 ; sinon `clamp((tension-55)/40,0,1) * clamp((35-comfort)/35,0,1)`, plancher 0,85 si
+  `angry` (dispute active).
+- `liaCalmEnough`/`noeCalmEnough` = `angerLevel(...)<0,5` sur les émotions courantes du personnage,
+  même définition de « en colère » (`story.life?.dispute?.remaining`) que `agent.angry` ailleurs.
+- Garde ajoutée (en plus de `needs.stress<30`, jamais à sa place) sur : `personalLead` (et donc
+  `personalQuestion`, qui en hérite), `followBeat`, `proactiveNoe`.
+
 ## Dossier retourné (`lib/life.ts`, `app/api/lia/route.ts`, `docs/referentiel/principes.md` 8.5)
 
 - `TRAP_ORDER=['mirror','dilemma','excuse']`, interlocuteur fixe par piège : `dossierTrapActor=

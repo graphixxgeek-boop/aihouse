@@ -500,6 +500,22 @@ seulement une fois cette base vérifiée : la pénalité de sur-générosité (�
 menaces explicites, et tout lien avec un axe de solidarité/désaccord entre Lia et Noé au sujet de
 l'observateur au-delà de la colère déjà connectée ci-dessus.
 
+8.9. **Audit de cohérence des émotions, demandé explicitement par l'utilisateur (2026-09-18).**
+Vérification systématique des interconnexions entre besoins, émotions, colère, appréciation,
+visage et prise de décision. Confirmé cohérent : le visage (fiche latérale et scène 3D) lit
+`faceExpression()` sur le même objet `agent` que le moteur de décision, jamais une copie séparée
+qui pourrait diverger ; `agent.angry` (`lib/world.ts`) et la garde anti-colère de l'appréciation
+(Article 8.7) utilisent la même définition de « en colère » (`life.dispute?.remaining`) ; le ton du
+message humain et la colère réelle du personnage agissent sur deux échelles de temps différentes
+sans se substituer l'une à l'autre (réaction immédiate vs. impression cumulative). Un vrai trou
+trouvé et corrigé : `needs.stress<30` (fond physiologique) ne garantissait pas l'absence d'une
+vraie fureur relationnelle (`angerLevel()` sur tension/confort réels), qui est une jauge distincte
+— un personnage au stress bas pouvait rester éligible à une question personnelle ou une avance
+amoureuse tout en affichant un visage réellement furieux, une incohérence visible pour l'observateur
+(Article 2/15). `liaCalmEnough`/`noeCalmEnough` (`angerLevel(...)<.5`, même définition de « en
+colère » que partout ailleurs) ferment ce trou sur `personalLead`, `followBeat` et `proactiveNoe`
+(`personalQuestion` en hérite via `personalLead`).
+
 ## 9. Robustesse technique
 
 9.1. Toute écriture en base de données est fondue dans une transaction unique par tour

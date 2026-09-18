@@ -330,11 +330,19 @@ export async function POST(request: Request) {
         const sleeper = ["interact","autonomous"].includes(input.mode) ? world.agents.find(a=>isSleeping(a,life)) : undefined;
         const noe=world.agents.find(a=>a.id===2)!;
         const humanActor:Person=input.actor;
+        // Colère réellement lue, pas seulement needs.stress<30 (2026-09-18, audit de cohérence
+        // demandé par l'utilisateur) : needs.stress est un fond physiologique qui peut rester bas
+        // pendant qu'une vraie fureur relationnelle (tension haute, confort bas) est en cours —
+        // sans cette garde, une question personnelle ou une avance de Noé pouvait rester éligible
+        // pendant qu'un visage affichait une vraie colère, une incohérence visible pour l'observateur
+        // (Article 2/15). Le drapeau de dispute formelle reste le plancher déjà géré séparément.
+        const liaCalmEnough=angerLevel(world.agents[0].emotions.tension,world.agents[0].emotions.comfort,Boolean(story.life?.dispute?.remaining))<.5;
+        const noeCalmEnough=angerLevel(noe.emotions.tension,noe.emotions.comfort,Boolean(story.life?.dispute?.remaining))<.5;
         // Fenêtre doublée (3→6 requêtes, sur les 6 disponibles) : les propositions de Noé
         // revenaient encore trop souvent malgré le garde-fou existant (retour utilisateur du
         // 2026-09-16, faisant suite à l'audit Opus initial jamais corrigé sur ce point précis).
         const proposalCooldown=recentRequests.slice(0,6).some(r=>{try{return JSON.parse(r.result).proposalActor===2;}catch{return false;}});
-        const proactiveNoe=["interact","autonomous"].includes(input.mode)&&story.introduced&&flirtingAssessment(noe.needs.stress,world.agents[0].emotions.attraction,input.requestId).estimatedInterest>=35&&!recentRefusal&&!overProposing&&!proposalCooldown&&!priority(world.agents[0].needs)&&!priority(world.agents[1].needs)&&["salon","chambre"].includes(noe.room)&&noe.emotions.attraction>=80;
+        const proactiveNoe=["interact","autonomous"].includes(input.mode)&&story.introduced&&flirtingAssessment(noe.needs.stress,world.agents[0].emotions.attraction,input.requestId).estimatedInterest>=35&&!recentRefusal&&!overProposing&&!proposalCooldown&&!priority(world.agents[0].needs)&&!priority(world.agents[1].needs)&&["salon","chambre"].includes(noe.room)&&noe.emotions.attraction>=80&&noeCalmEnough;
         // Ces répliques scénarisées appartiennent à l'avant-révélation : une fois le dossier
         // appelé, revenir sur la fausse plante ou une question personnelle romprait le ton de la
         // scène qui vient de se jouer (Article 2/12 de la charte). Elles évitent aussi de couper
@@ -342,14 +350,14 @@ export async function POST(request: Request) {
         // le changement de sujet le plus brutal possible (assoupli le 2026-09-16).
         const eligibleBeat=!story.finalCalled&&!(gardenAccess(story)&&!life.gardenVisited)&&["interact","autonomous"].includes(input.mode)&&story.introduced&&world.agents.every(a=>a.room==="salon")&&!story.life?.debrief?.remaining&&!story.life?.contact?.remaining&&!story.life?.dispute?.remaining&&!story.pendingDestination&&!recentRefusal&&!overProposing&&!priority(world.agents[0].needs)&&!priority(noe.needs);
         const visualBeat=eligibleBeat&&story.round<=5&&(story.life?.visualIntro??0)<2;
-        const followBeat=eligibleBeat&&story.life?.personalAsked&&story.round>=(story.life?.personalRound??story.round)+3&&(story.life?.personalFollowup??0)<3&&world.agents[0].needs.stress<30&&world.agents[0].emotions.attraction>=25;
+        const followBeat=eligibleBeat&&story.life?.personalAsked&&story.round>=(story.life?.personalRound??story.round)+3&&(story.life?.personalFollowup??0)<3&&world.agents[0].needs.stress<30&&world.agents[0].emotions.attraction>=25&&liaCalmEnough;
         const recapBeat=eligibleBeat&&story.evidence.length>=2&&story.evidence.length<5&&(story.life?.recapCount??0)<story.evidence.length;
         // Seuils mélangés par session (2026-09-17, étaient fixes à 10 et 14) : sinon l'enceinte et
         // la question personnelle arrivaient toujours au même tour d'une partie à l'autre.
         const ambientThreshold=seedPick(story.seed,"ambient-threshold",[9,10,11,12] as const);
         const personalThreshold=seedPick(story.seed,"personal-threshold",[12,13,14,15,16] as const);
         const ambientBeat=eligibleBeat&&!visualBeat&&!followBeat&&!recapBeat&&story.round>=ambientThreshold&&(!story.life?.ambientSeen||!story.life?.ambientVerified);
-        const personalLead=!story.finalCalled&&!(gardenAccess(story)&&!life.gardenVisited)&&["interact","autonomous"].includes(input.mode)&&story.introduced&&story.round>=personalThreshold&&!story.life?.personalAsked&&!story.life?.debrief?.remaining&&!story.life?.contact?.remaining&&!story.life?.dispute?.remaining&&!story.pendingDestination&&world.agents.every(a=>a.room==="salon")&&world.agents[0].needs.stress<30&&world.agents[0].emotions.attraction>=25&&world.agents[0].emotions.attraction<80&&!priority(world.agents[0].needs)&&!priority(noe.needs);
+        const personalLead=!story.finalCalled&&!(gardenAccess(story)&&!life.gardenVisited)&&["interact","autonomous"].includes(input.mode)&&story.introduced&&story.round>=personalThreshold&&!story.life?.personalAsked&&!story.life?.debrief?.remaining&&!story.life?.contact?.remaining&&!story.life?.dispute?.remaining&&!story.pendingDestination&&world.agents.every(a=>a.room==="salon")&&world.agents[0].needs.stress<30&&world.agents[0].emotions.attraction>=25&&world.agents[0].emotions.attraction<80&&!priority(world.agents[0].needs)&&!priority(noe.needs)&&liaCalmEnough;
         // Dossier retourné (2026-09-17) : équivalent post-révélation d'eligibleBeat — même garde-
         // fous (personne ensemble au salon, aucun besoin urgent, aucune autre scène en cours), mais
         // côté révélé plutôt qu'avant. Un piège à la fois, jamais reposé tant qu'il attend une

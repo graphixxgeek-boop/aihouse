@@ -584,7 +584,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 46'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 47'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -953,4 +953,32 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   r=await post(input('interact',1,{epoch}));w=await r.json();
   assert.ok(!w.decisions.some(softnessLia)&&!w.decisions.some(softnessNoe),'the softness beat must never repeat without a fresh distress signal');
   console.log('Passed: reversed-dossier traps asked one at a time and never reposed (including a muted fixed interlocutor deferring the trap rather than silently softlocking it), verbatim answer capture, power-test gate via the bonus log, two genuinely separate voices generated exactly once, no silent regeneration afterward, a zero-API idempotent "seen" flag for the Verdict button, and a one-shot, zero-API, always-reluctant softness moment triggered only by real post-dossier distress.');
+}
+
+{
+  // Cohérence colère/tendresse (2026-09-18, audit demandé par l'utilisateur) : needs.stress<30 ne
+  // suffit pas à garantir qu'un personnage est vraiment calme — une vraie fureur relationnelle
+  // (tension haute, confort bas) peut coexister avec un fond physiologique bas. Sans angerLevel()
+  // en garde supplémentaire, une question personnelle pouvait rester éligible pendant qu'un visage
+  // affichait une colère réelle, une incohérence visible pour l'observateur (Article 2/15).
+  const {angerLevel}=await import('../.sites-runtime/test-simulation.mjs');
+  assert.ok(angerLevel(90,5)>.5,'the test fixture itself must read as real anger, or this test proves nothing');
+  flat=true;
+  let plot={...newStory(),round:30,met:true,introduced:true,sharedMeal:true,finalCalled:false,evidence:[],pendingDestination:undefined,life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],ambientSeen:true,ambientVerified:true,recapCount:0,personalAsked:false,exitSearched:true,tvSeen:true,remoteFound:true}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=? WHERE id=1').run('salon',JSON.stringify({hunger:20,fatigue:20,stress:20,uncertainty:20}));
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=? WHERE id=2').run('salon',JSON.stringify({hunger:20,fatigue:20,stress:20,uncertainty:20}));
+  sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=1').run(JSON.stringify({curiosity:60,tension:90,trust:50,comfort:5,attraction:50}));
+  sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=2').run(JSON.stringify({curiosity:60,tension:30,trust:50,comfort:60,attraction:50}));
+  let epoch=(await readWorld(db)).epoch;
+  const personalQuestionAsked=d=>/quel genre d.homme/i.test(d.reply);
+  let r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);let w=await r.json();
+  assert.ok(!w.decisions.some(personalQuestionAsked),'a personal question must never be eligible while Lia genuinely reads as angry (high tension, low comfort), even with a low physiological stress');
+  assert.equal(w.story.life.personalAsked,false,'a blocked personal question must never be recorded as asked');
+  sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=1').run(JSON.stringify({curiosity:60,tension:20,trust:50,comfort:60,attraction:50}));
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  assert.ok(w.decisions.some(d=>d.actor===1&&personalQuestionAsked(d)),'once genuinely calm, the same otherwise-eligible personal question must actually fire');
+  flat=false;
+  console.log('Passed: real anger (tension/comfort based, not just physiological stress) correctly blocks personal-question and follow-up beats and Noé\'s proactive advance, closing a coherence gap found while auditing emotion interconnections.');
 }
