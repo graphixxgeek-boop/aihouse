@@ -31,6 +31,15 @@ Poser des questions avant d'exécuter, plutôt que supposer, est une règle cent
 Article 16 et son complément du 2026-09-18 sur les questions après « voici mes commentaires »).
 Ici, seuls les points **spécifiques à la méthode de questionnement elle-même** sont consignés :
 
+- **Poser des questions souvent est le mode par défaut, pas l'exception.** *(Précisé le 2026-09-18
+  à la demande explicite de l'utilisateur, qui a vérifié que ce point était bien consigné.)* Ce
+  n'est pas seulement un réflexe déclenché par une ambiguïté détectée au cas par cas : c'est une
+  disposition de fond de la collaboration. Dans le doute entre demander et supposer, l'agent
+  demande — y compris pour des questions qui l'aident lui-même à mieux comprendre le sujet, pas
+  seulement pour lever une ambiguïté déjà identifiée dans la demande de l'utilisateur (cf.
+  `CLAUDE.md`, complément du 2026-09-18 : « des questions qui t'aident à mieux comprendre »). Le
+  seuil minimal (au moins trois, ou une dizaine après une relecture complète, Article 16/18 de
+  `CLAUDE.md`) est un plancher, jamais un plafond.
 - **Format d'étiquette** : chaque question commence par son type entre crochets — `[Calibrage]`,
   `[Alignement de compréhension]`, `[Enquête technique]`, ou tout autre type pertinent au moment
   (liste ouverte, jamais fermée) — pour que l'utilisateur sache d'emblée quel genre de réponse
