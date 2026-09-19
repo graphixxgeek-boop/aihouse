@@ -258,10 +258,12 @@ signalé pour plus tard.
 zéro coût API, exécuté à chaque changement), il envoie de vraies provocations (ordres autoritaires,
 intrusion dans l'intimité, mépris, menaces) au vrai modèle Gemini et affiche les réponses pour une
 lecture humaine — coûte de vrais appels API (Article 8), donc à lancer à la main, pas en continu,
-en priorité quand `lib/lia.ts` ou les personnalités changent. Ses heuristiques ne détectent que les
-dérives les plus grossières (vocabulaire de service client) ; elles ne dispensent jamais de lire les
-réponses. C'est l'outil de référence pour vérifier l'Article 0 avant et après tout ajustement de
-personnalité.
+en priorité quand `lib/lia.ts` ou les personnalités changent. **Avant de le lancer, toujours
+consulter Smart Conso API** (`node scripts/smart-conso-api.mjs check-spirit --confirm`, cf.
+Article 22) — même règle que pour une simulation, jamais une exception parce que c'est "juste" un
+diagnostic. Ses heuristiques ne détectent que les dérives les plus grossières (vocabulaire de
+service client) ; elles ne dispensent jamais de lire les réponses. C'est l'outil de référence pour
+vérifier l'Article 0 avant et après tout ajustement de personnalité.
 
 **Article 14 — Vigilance permanente, à chaque tour et à chaque décision.** La conformité à la
 charte, et en premier lieu à l'Article 0, ne se vérifie pas seulement lors d'un bilan ponctuel :
@@ -337,6 +339,14 @@ Quand l'utilisateur demande de « lancer une simulation » (ou toute formulation
 simulation complète, intégrale, de bout en bout), l'agent reproduit systématiquement le même
 enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redemande à chaque fois :
 
+0. **Avant toute chose, consulter Smart Conso API** (`node scripts/smart-conso-api.mjs simulation
+   --confirm`, cf. Article 22) — jamais après, jamais sauté. *(Ajouté le 2026-09-19, après un vrai
+   manquement constaté : l'Article 22 exigeait déjà cette consultation, mais restait invisible au
+   moment d'exécuter CE protocole précis, puisqu'il vivait dans un autre article jamais cité ici —
+   exactement le genre de lien manquant entre deux parties de la charte qu'HARMONIA existe pour
+   repérer. La règle qui compte est celle qui est écrite DANS l'étape qu'on exécute, jamais une
+   règle séparée qu'il faut se souvenir de recroiser.)* Un verdict "seuil dur" exige une validation
+   explicite de l'utilisateur avant de continuer à l'étape 1.
 1. Relancer un serveur de développement à jour (redémarré si besoin pour garantir que c'est bien
    le code réel, pas une instance périmée, qui est testé) et lancer le script de simulation
    intégrale contre lui — reset complet, phase 1 autonome jusqu'à la révélation, phase 2 (dossier
@@ -543,6 +553,9 @@ modèle principal, jamais testé sur ce prompt précis ; renforcé le même jour
 mettre l'Article 0 en péril, l'utilisateur ne doit rien détecter »)* — `GEMINI_API_KEY_FALLBACKS`
 n'est pas concerné par cette condition, puisqu'il ne change jamais le modèle donc jamais la
 qualité :
+- **Consulter Smart Conso API avant de lancer cette validation** (`node scripts/smart-conso-api.mjs
+  check-spirit --confirm`, cf. Article 22) — cette validation multiplie le coût réel par le nombre de
+  modèles candidats, jamais une exception au principe général.
 - Validation qualité **intégrale**, jamais un échantillonnage : lire TOUTES les réponses de
   `scripts/check-spirit.mjs` et TOUS les profils de `scripts/check-profile.mjs` pour CHAQUE modèle
   candidat, avec ce modèle comme `GEMINI_MODEL` effectif.
@@ -581,8 +594,12 @@ la seule surface que l'application rend visiblement à un tiers) ne décrit ce c
 phrase générique, sans nom de modèle, chiffre de quota ni explication du mécanisme.
 
 **Procédure à suivre dès qu'une simulation (étape 1 du protocole ci-dessus) reste bloquée en HTTP
-429/503 répété :** (1) `node scripts/check-gemini-quota.mjs` pour identifier les modèles réellement
-disponibles à cet instant ; (2) reporter la ligne suggérée dans `.dev.vars`
+429/503 répété :** (0) consulter Smart Conso API (`node scripts/smart-conso-api.mjs diagnostic
+--confirm`, cf. Article 22) — `check-gemini-quota.mjs` sonde plusieurs modèles × plusieurs clés en
+quelques secondes, c'est bien une action coûteuse au sens de cet Article, jamais une exception parce
+que c'est un diagnostic plutôt qu'une simulation ; (1) `node scripts/check-gemini-quota.mjs` pour
+identifier les modèles réellement disponibles à cet instant ; (2) reporter la ligne suggérée dans
+`.dev.vars`
 (`GEMINI_FALLBACK_MODELS=modèle1,modèle2`) ; (3) si un second projet Google est disponible, ajouter
 sa clé à `GEMINI_API_KEY_FALLBACKS` — vérifier D'ABORD qu'il s'agit bien d'un projet distinct, pas
 une seconde clé du même projet (sonder avec `check-gemini-quota.mjs` en forçant `GEMINI_API_KEY`

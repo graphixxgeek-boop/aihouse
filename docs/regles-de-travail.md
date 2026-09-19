@@ -387,6 +387,33 @@ principe qui se reproduira sur d'autres outils/décisions à l'avenir), il le si
 l'utilisateur plutôt que d'attendre une demande — cette règle-ci en est elle-même un exemple
 d'application immédiate.
 
+### Une règle transversale ne compte que si elle est câblée DANS chaque checklist concrète qu'elle gouverne
+
+*(Ajoutée le 2026-09-19, après un vrai manquement constaté : l'utilisateur a demandé « pense à
+consulter smart conso api pour la prochaine fois, fiabilise stp », et « je ne sais pas si le rappel
+doit être en relation avec le timing [...] fais en sorte que ce rappel soit clair pour toi » — signe
+qu'un rappel programmé n'était pas la bonne réponse à un problème qui n'a rien à voir avec une
+horloge.)* Diagnostic réel : l'Article 22 de `CLAUDE.md` (consulter Smart Conso API avant toute
+action coûteuse) existait déjà et avait été lu en entier au début de la session — et pourtant
+l'agent a lancé une simulation fraîche sans jamais l'exécuter. La cause n'était pas l'oubli d'une
+règle inconnue, mais l'absence de lien entre deux endroits de la charte : l'Article 18 (le protocole
+concret de simulation, suivi pas à pas) ne citait nulle part l'Article 22, qui vivait dans un article
+séparé. Au moment d'exécuter une checklist numérotée précise, une règle transversale qui n'y est pas
+directement écrite est invisible dans les faits, même si elle est parfaitement connue en théorie.
+
+**Conséquence pratique, généralisable à toute future règle transversale (coût, sécurité, discrétion,
+etc.) :** une règle qui doit s'appliquer à plusieurs actions concrètes ne se contente jamais d'exister
+dans SON PROPRE article — elle doit aussi être répétée, en une ligne, DANS chaque checklist ou
+procédure existante qu'elle concerne (ex. Article 22 maintenant cité littéralement en étape 0 de
+l'Article 18, et dans le paragraphe `check-spirit.mjs`). Une référence croisée ("cf. Article 22") ne
+suffit pas si l'action concrète à prendre n'est pas aussi écrite en clair à l'endroit où elle doit se
+produire. Ce n'est jamais un problème de mémoire qu'un rappel programmé (horaire, quotidien)
+résoudrait — le déclencheur est un TYPE D'ACTION, pas un moment dans le temps, donc la solution
+fiable est structurelle (la règle vit littéralement dans le texte qu'on exécute), jamais temporelle.
+Le garde-fou mécanique rétroactif (`findUnconfirmedBursts()`, cf. `docs/referentiel/smart-conso-api.md`)
+reste le filet de sécurité si, malgré tout, l'étape est sautée — mais il détecte après coup, il ne
+remplace jamais ce câblage direct dans la checklist elle-même.
+
 ### Veille hebdomadaire automatique du réseau
 
 *(Ajoutée le 2026-09-19, à la demande explicite de l'utilisateur, en réponse à la question « est-ce

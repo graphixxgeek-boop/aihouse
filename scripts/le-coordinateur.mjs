@@ -49,6 +49,7 @@ import { summarizeArgusOutput, summarizeHarmoniaOutput } from "./hyper-scan-chec
 import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
 import { classifyCheckLevel } from "./check-level-target.mjs";
 import { lastTouchDays, relativeStaleness } from "./clean-dirty-old.mjs";
+import { findUnconfirmedBursts } from "./smart-conso-api.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 // Best-effort, local, jamais committé — même statut que .gemini-key-health.json (mémoire de
@@ -131,6 +132,16 @@ export function runNetworkCheck({ shImpl = sh } = {}) {
   const staleness = relativeStaleness(lastTouchByFile);
   const staleCount = Object.values(staleness).filter((s) => s.stale).length;
   rows.push({ name: "CLEAN-DIRTY-OLD (repérage seul)", result: staleCount > 0 ? `à regarder (${staleCount} zone(s) stagnante(s))` : "ok", when: now });
+
+  // Trouvaille réelle du 2026-09-19 : l'agent n'avait jamais consulté Smart Conso API avec
+  // --confirm avant une action coûteuse. Ce garde-fou compare l'activité réelle déjà enregistrée
+  // (.gemini-key-health.json) au carnet de session — sans dépendre de l'agent qui pense à le lancer.
+  const healthPath = join(ROOT, ".gemini-key-health.json");
+  const sessionPath = join(ROOT, ".smart-conso-session.json");
+  const healthData = existsSync(healthPath) ? JSON.parse(readFileSync(healthPath, "utf8")) : { keys: {} };
+  const sessionLog = existsSync(sessionPath) ? JSON.parse(readFileSync(sessionPath, "utf8")) : { actions: [] };
+  const unconfirmedBursts = findUnconfirmedBursts(healthData, sessionLog);
+  rows.push({ name: "Smart Conso API (salves jamais confirmées)", result: unconfirmedBursts.length > 0 ? `à regarder (${unconfirmedBursts.length} salve(s))` : "ok", when: now });
 
   saveState({ lastHead: head, lastWhen: now });
   return { duplicate, previousRun: state, rows };

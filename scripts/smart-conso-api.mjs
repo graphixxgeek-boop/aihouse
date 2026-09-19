@@ -90,16 +90,74 @@ export function recordAction(actionType, now, confirmed = true) {
   return log;
 }
 
+// --- Garde-fou de fiabilité (2026-09-19, demande explicite de l'utilisateur : « pense à consulter
+// smart conso api pour la prochaine fois, fiabilise stp »). Trouvaille réelle qui a motivé cette
+// fonction : le carnet de session (.smart-conso-session.json) n'avait jamais été créé — l'agent
+// n'a jamais réellement consulté cet outil avec --confirm avant une action coûteuse, y compris
+// avant le lancement d'une simulation fraîche ce jour-là. Se souvenir de le faire n'est pas fiable
+// (même discipline manquée que pour docs/suivi/) : ce garde-fou compare l'activité RÉELLE déjà
+// enregistrée dans la source partagée à ce que le carnet de session dit avoir été confirmé, et
+// signale tout écart — jamais un jugement sur le contenu de l'action, seulement sur l'absence de
+// consultation avant une vraie salve d'appels.
+//
+// Limite honnête, comme le reste de ce paysage : ce garde-fou ne sait pas distinguer une salve de
+// simulation d'une salve de diagnostic (les deux produisent beaucoup d'épisodes rapprochés) — il
+// signale seulement qu'AUCUNE action, de quelque type que ce soit, n'a été confirmée avant une
+// vraie salve d'activité. Une lecture humaine reste nécessaire pour juger si c'était le bon type
+// d'action ou un oubli pur et simple.
+export function findUnconfirmedBursts(healthData, sessionLog, { burstWindowMinutes = 15, burstThreshold = 4, lookbackMinutes = 30 } = {}) {
+  const episodes = [];
+  for (const key of Object.values(healthData?.keys ?? {})) {
+    for (const ep of key?.episodes ?? []) {
+      if (typeof ep?.at === "number") episodes.push(ep.at);
+    }
+  }
+  episodes.sort((a, b) => a - b);
+  const burstWindowMs = burstWindowMinutes * 60000;
+  const lookbackMs = lookbackMinutes * 60000;
+  const confirmedTimes = (sessionLog?.actions ?? []).filter((a) => a?.confirmed && typeof a?.at === "number").map((a) => a.at);
+
+  const bursts = [];
+  let i = 0;
+  while (i < episodes.length) {
+    let j = i;
+    while (j < episodes.length && episodes[j] - episodes[i] <= burstWindowMs) j++;
+    const count = j - i;
+    if (count >= burstThreshold) {
+      const burstStart = episodes[i];
+      const hasConfirmation = confirmedTimes.some((t) => t <= burstStart && burstStart - t <= lookbackMs);
+      if (!hasConfirmation) bursts.push({ start: burstStart, count });
+      i = j;
+    } else {
+      i++;
+    }
+  }
+  return bursts;
+}
+
+function reportUnconfirmedBursts(healthData, sessionLog) {
+  const bursts = findUnconfirmedBursts(healthData, sessionLog);
+  console.log("\n=== Garde-fou fiabilité — salves d'activité jamais confirmées ===\n");
+  if (!bursts.length) {
+    console.log("Aucune salve d'activité récente sans consultation préalable — discipline respectée.");
+    return;
+  }
+  for (const b of bursts) console.log(`⚠️ ${new Date(b.start).toISOString()} : ${b.count} appel(s) rapprochés sans aucune action confirmée dans les 30 min précédentes.`);
+  console.log("\n→ Limite honnête : ce garde-fou ne sait pas si c'était une simulation ou un diagnostic — seulement qu'aucune consultation n'a précédé cette activité.");
+}
+
 function main() {
   const actionType = process.argv[2];
-  if (!actionType) {
-    console.log("Usage: node scripts/smart-conso-api.mjs <type-d'action> [--confirm]");
-    console.log("Types connus : simulation, check-spirit, diagnostic");
-    process.exit(1);
-  }
   const now = Date.now();
   const healthData = loadJson(HEALTH_PATH, { keys: {} });
   const sessionLog = loadJson(SESSION_PATH, { actions: [] });
+
+  if (!actionType) {
+    console.log("Usage: node scripts/smart-conso-api.mjs <type-d'action> [--confirm]");
+    console.log("Types connus : simulation, check-spirit, diagnostic");
+    reportUnconfirmedBursts(healthData, sessionLog);
+    process.exit(1);
+  }
   const advice = assess(healthData, sessionLog, actionType, now);
   console.log("=== SMART CONSO API — avis avant action ===\n");
   console.log(`Action envisagée : ${actionType}`);
@@ -111,6 +169,7 @@ function main() {
   } else {
     console.log("\n(Avis seul — relancer avec --confirm une fois la décision prise, pour que le carnet de session reste exact.)");
   }
+  reportUnconfirmedBursts(healthData, sessionLog);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();
