@@ -888,7 +888,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 81'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 82'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -1991,4 +1991,70 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(w.story.life.wordFrequency.distinctement,4,'the counter must keep accumulating across independent turns, never reset mid-session');
   globalThis.fetch=priorFetch;
   console.log('Passed: life.wordFrequency genuinely persists and accumulates across real HTTP turns (not just in the pure-function unit test), the mechanism behind the session-wide echo-word detection that closes the real "autant" repetition bug.');
+}
+
+{
+  // Bouton "passer à la révélation" (2026-09-19, entièrement spécifié par l'utilisateur avant
+  // implémentation, cf. CLAUDE.md) : (1) reste verrouillé tant qu'une session n'a pas atteint la
+  // révélation une première fois normalement ; (2) une fois débloqué, produit un saut cohérent —
+  // les cinq preuves dans leur vrai ordre de tirage, un nombre de tours plausible, deux vraies voix
+  // séparées pour le résumé (Article 8) — et laisse le vrai moment d'adresse à l'observateur se
+  // jouer, jamais seulement un résumé (Article 2/15) ; (3) ne peut pas être rejoué une fois la
+  // révélation atteinte dans la session ; (4) le déverrouillage lui-même survit à un reset.
+  const {fullEvidenceSet,skipRound,finaleReveal}=await import('../.sites-runtime/test-story.mjs');
+  const lockedPlot={...newStory(),round:8,met:true,introduced:true,everReachedRevelation:false};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(lockedPlot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  let epoch=(await readWorld(db)).epoch;
+  let r=await post(input('skip_to_revelation',1,{epoch}));
+  assert.equal(r.status,423,'the skip button must stay locked before a first genuine completion of the investigation');
+  assert.equal(JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).finalCalled,false,'a rejected skip attempt must never mutate the story');
+
+  const unlockedPlot={...lockedPlot,everReachedRevelation:true,order:[2,0,3,1]};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(unlockedPlot));
+  epoch=(await readWorld(db)).epoch;
+  const priorFetch=globalThis.fetch;
+  let skipCalls=0;
+  globalThis.fetch=async(url,options)=>{
+    const payload=JSON.parse(options.body),parsed=JSON.parse(payload.contents[0].parts[0].text);
+    if(parsed['repères']){
+      skipCalls++;
+      const isLia=payload.systemInstruction.parts[0].text.startsWith('Tu es Lia');
+      const fragment=(isLia?'Souvenir de Lia — ':'Souvenir de Noé — ')+'repères: '+Object.values(parsed['repères']).join(' / ');
+      return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({fragment})}]}}]});
+    }
+    return priorFetch(url,options);
+  };
+  r=await post(input('skip_to_revelation',1,{epoch}));
+  assert.equal(r.status,200,'the skip must succeed once genuinely unlocked and the investigation not already concluded');
+  let w=await r.json();
+  globalThis.fetch=priorFetch;
+  assert.equal(skipCalls,2,'exactly one real recap call per character, never a single voice speaking for both (Article 8)');
+  assert.equal(w.story.evidence.length,5,'a skip must produce the full five-piece evidence set, never a partial or empty one');
+  assert.deepEqual(w.story.evidence,fullEvidenceSet(unlockedPlot),'the skipped evidence must match exactly what a genuine session would have discovered, in its real draw order — never an invented substitute');
+  assert.equal(w.story.round,skipRound(unlockedPlot.seed),'the round reached by a skip must be the same deterministic, seed-varied value the pure function computes');
+  assert.equal(w.story.humanUnlocked,true,'a completed skip must unlock the revelation exactly like a genuine completion (finalCalled + 5 evidence)');
+  assert.ok(w.story.life.skipSummary?.lia.includes('Souvenir de Lia'),'the recap must actually be Lia’s own generated voice, not a generic filler');
+  assert.ok(w.story.life.skipSummary?.noe.includes('Souvenir de Noé'),'the recap must actually be Noé’s own generated voice, not a generic filler');
+  assert.ok(w.messages.some(m=>m.speaker==='Maison'&&/raccourci/.test(m.content)),'a skip must leave a visible marker in the displayed history, never a silent jump (Article 15)');
+  const finale=finaleReveal(unlockedPlot.seed);
+  assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&m.content===finale.liaThought),'the actual revelation moment (private shock, then address to the observer) must still play out after a skip, never only the recap');
+  assert.ok(w.messages.some(m=>m.speaker==='Noé · pensée'&&m.content===finale.noeThought));
+  assert.ok(w.messages.some(m=>m.speaker==='Lia'&&m.content===finale.lia));
+  assert.ok(w.messages.some(m=>m.speaker==='Noé'&&m.content===finale.noe));
+  const stored=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);
+  assert.equal(stored.everReachedRevelation,true,'the unlock flag itself must never be consumed by using it, unlike finalCalled');
+
+  epoch=(await readWorld(db)).epoch;
+  r=await post(input('skip_to_revelation',1,{epoch}));
+  assert.equal(r.status,423,'the skip must refuse to run again once the revelation has already happened in this session');
+
+  // Le déverrouillage doit survivre à un reset (2026-09-19, spécifié explicitement) : jamais
+  // seulement la toute première session, aussi les suivantes après une nouvelle arrivée.
+  epoch=(await readWorld(db)).epoch;
+  r=await post(input('reset',1,{epoch}));assert.equal(r.status,200);
+  const afterReset=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);
+  assert.equal(afterReset.everReachedRevelation,true,'everReachedRevelation must survive a reset, exactly like observer, so the button stays available on later sessions');
+  assert.equal(afterReset.finalCalled,false,'a reset must still start the new session before the revelation, even though skipping is available again');
+  console.log('Passed: the "skip to revelation" button stays locked before a first genuine completion, produces a plausible and internally coherent investigation plus a real two-voice recap when used, still plays the real revelation address to the observer, cannot be replayed once the revelation has happened, and survives a reset for later sessions.');
 }

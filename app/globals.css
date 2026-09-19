@@ -80,6 +80,11 @@ body{background:radial-gradient(ellipse at 8% 0%,#30263f 0%,transparent 55%),rad
 .need-meter.need-bonused::-moz-meter-bar{background:#f3c344}
 .mute-badge,.stoic-badge{font-size:.85em}
 
+/* Bouton "passer à la révélation" (2026-09-19) : discret par conception (jamais mis en avant comme
+   la roulette ou le dossier) — un simple bouton texte, pas un dégradé voyant, puisqu'il ne se
+   débloque qu'après une première traversée normale de l'enquête. */
+.skip-revelation-button{background:none;border:1px dashed #8a93a8;color:#5a6272;padding:8px 14px;border-radius:10px;font-size:13px}
+.skip-revelation-button:hover:not(:disabled){background:#eef0f4;color:#2c3140}
 /* Dossier retourné (2026-09-17) : diagnostic à deux voix, généré une seule fois, jamais rejoué. */
 .dossier-verdict-button{background:linear-gradient(120deg,#3a2340,#12333a);color:#f4e9f7;padding:10px 16px;border:0;border-radius:12px}
 .dossier-dialog{width:min(560px,94vw);max-height:82vh;overflow-y:auto;background:#1c1826;border:1px solid #43395a;border-radius:18px;padding:28px;box-shadow:0 24px 90px #070f2944;display:grid;gap:16px;color:#ece7f4}

@@ -122,7 +122,13 @@ worstMoment?:{round:number;excerpt:string;trustShift:number};
 // un instant rare et non un palier stable. Devenu un compteur PAR PERSONNAGE le 2026-09-18, en
 // même temps que appreciation ci-dessus, pour la même raison (deux jauges qui peuvent diverger ne
 // peuvent pas partager un seul palier de respect).
-genuineRespectStreak?:Partial<Record<Person,number>>};
+genuineRespectStreak?:Partial<Record<Person,number>>;
+// Bouton "passer à la révélation" (2026-09-19) : même schéma que dossierText ci-dessus (deux voix
+// séparées, jamais une synthèse générée par un seul cerveau qui invente le ton de l'autre — Article
+// 8), mais pour le court récit rétrospectif affiché au moment du saut, pas pour le diagnostic de
+// l'observateur. Régénéré à chaque utilisation du bouton (contrairement à dossierText, jamais
+// figé une fois pour toutes) : écrasé sans ménagement par le prochain saut, jamais accumulé.
+skipSummary?:{lia:string;noe:string}};
 export type TrapId='mirror'|'dilemma'|'excuse';
 export const TRAP_ORDER:TrapId[]=['mirror','dilemma','excuse'];
 // appreciation/genuineRespectStreak sont devenues des jauges par personnage le 2026-09-18 (voir le
@@ -139,6 +145,7 @@ export function readLife(value:unknown,round=0):Life{const v=value&&typeof value
 ,worstMoment:v.worstMoment&&typeof v.worstMoment.excerpt==="string"&&typeof v.worstMoment.trustShift==="number"&&Number.isFinite(v.worstMoment.trustShift)?{round:Math.max(0,Number(v.worstMoment.round)||0),excerpt:v.worstMoment.excerpt.slice(0,500),trustShift:v.worstMoment.trustShift}:undefined
 ,negotiationOffer:v.negotiationOffer&&(v.negotiationOffer.actor===1||v.negotiationOffer.actor===2)&&typeof v.negotiationOffer.round==="number"&&Number.isFinite(v.negotiationOffer.round)?{actor:v.negotiationOffer.actor,round:v.negotiationOffer.round}:undefined
 ,genuineRespectStreak:{1:Math.max(0,Math.min(20,Number(legacyOrPerActor(v.genuineRespectStreak,1))||0)),2:Math.max(0,Math.min(20,Number(legacyOrPerActor(v.genuineRespectStreak,2))||0))}
+,skipSummary:v.skipSummary&&typeof v.skipSummary.lia==="string"&&typeof v.skipSummary.noe==="string"?{lia:v.skipSummary.lia.slice(0,2000),noe:v.skipSummary.noe.slice(0,2000)}:undefined
 ,negotiationLog:Array.isArray(v.negotiationLog)?v.negotiationLog.filter((e):e is {round:number;outcome:'honored'|'lapsed'}=>Boolean(e)&&typeof e==="object"&&["honored","lapsed"].includes((e as {outcome?:string}).outcome??"")).slice(-12):[]
 ,rouletteInsistence:{1:Math.max(0,Math.min(2,Number(v.rouletteInsistence?.[1])||0)),2:Math.max(0,Math.min(2,Number(v.rouletteInsistence?.[2])||0))}
 ,rouletteCold:{1:Math.max(0,Math.min(2,Number(v.rouletteCold?.[1])||0)),2:Math.max(0,Math.min(2,Number(v.rouletteCold?.[2])||0))}

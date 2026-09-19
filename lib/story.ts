@@ -1,6 +1,6 @@
 import {readLife,type Life} from "./life";
 import type { Person, Room } from "./house";
-import { intents, type Intent, type InsoliteOpening } from "./simulation";
+import { intents, type Intent, type InsoliteOpening, residentProfiles } from "./simulation";
 import type { DialogueLine } from "./dialogue";
 
 // Choisit une variante stable pour CE scénario (story.seed) et CE moment précis (label),
@@ -51,6 +51,56 @@ const clues = [
 // fixe même si story.order mélange l'ordre de découverte des indices (Article 9).
 export function ageClueRevealed(story:Story){return story.evidence.includes(clues[2]);}
 export function investigationTarget(story:Story) {return story.evidence.length<4?(clues[story.order[story.evidence.length]]+(story.observer&&story.order[story.evidence.length]===3?" Identifiant observateur inscrit sur le relevé : "+JSON.stringify(story.observer)+".":"")):"Le dossier final établit : « Lia et Noé — agents IA autonomes. Souvenirs et âges construits ; environnement de cohabitation observé par des humains. Architecture : DH ». Ces initiales désignent une signature technique, pas le visiteur.";}
+// Extrait en constante (2026-09-19) : c'est le texte RÉELLEMENT stocké comme cinquième preuve par
+// advanceStory ci-dessous (distinct du texte de investigationTarget ci-dessus, qui ne sert qu'à
+// décrire la cible AVANT sa découverte, jamais stocké tel quel) — fullEvidenceSet doit produire
+// exactement la même 5e preuve qu'une session normale aurait stockée, jamais un texte inventé à
+// côté (Article 3/4).
+const finalDossierEvidenceText = "Le bureau ouvre le dossier : « Lia et Noé : agents IA autonomes. Architecture : DH. Environnement simulé fermé. Souvenirs humains synthétiques ; âges et identités humaines construits. Agents confinés pour une étude de cohabitation et observés par des humains ». Il s'agit de leur origine dans cette fiction ; leurs créateurs et leurs intentions restent inconnus.";
+// Bouton "passer à la révélation" (2026-09-19, fonctionnalité entièrement spécifiée par
+// l'utilisateur avant implémentation) : reconstruit les CINQ preuves qu'une session normale aurait
+// réellement découvertes, dans leur vrai ordre de tirage (story.order, jamais un ordre inventé) —
+// l'enquête sautée reste cohérente en coulisses même si elle n'est jamais rejouée tour par tour
+// (Article 4). Jamais utilisé pour la première traversée de la révélation (cf. everReachedRevelation
+// dans Story, vérifié côté route.ts avant tout appel à cette fonction).
+export function fullEvidenceSet(story: Story): string[] {
+  const list: string[] = [];
+  for (let i = 0; i < 4; i++) {
+    const clueIndex = story.order[i];
+    list.push(clues[clueIndex] + (story.observer && clueIndex === 3 ? " Identifiant observateur inscrit sur le relevé : " + JSON.stringify(story.observer) + "." : ""));
+  }
+  list.push(finalDossierEvidenceText);
+  return list;
+}
+// Tours et jauges plausibles pour un saut direct à la révélation (2026-09-19) : un nombre de tours
+// et des jauges qui ressemblent à une VRAIE progression déjà avancée (tension redescendue par la
+// cohabitation sans jamais s'effondrer, confiance/attirance en hausse mais loin du seuil
+// loveRealized, curiosité intacte puisque le mystère n'est pas encore résolu) plutôt qu'un état
+// neutre ou par défaut — variés par seed pour ne jamais rejouer le même saut deux fois (Article 9).
+export function skipRound(seed: string): number {
+  return seedPick(seed, "skip-round", [28, 31, 34, 37, 40] as const);
+}
+function skipJitter(seed: string, id: Person, label: string, spread: number): number {
+  return seedPick(seed, "skip-" + label + "-" + id, Array.from({ length: spread + 1 }, (_, i) => i));
+}
+export function skipEmotionsFor(id: Person, seed: string) {
+  const base = residentProfiles[id].emotions;
+  return {
+    curiosity: Math.min(100, base.curiosity + 5 + skipJitter(seed, id, "curiosity", 8)),
+    tension: Math.max(35, base.tension - 25 - skipJitter(seed, id, "tension", 15)),
+    trust: Math.min(70, base.trust + 22 + skipJitter(seed, id, "trust", 14)),
+    comfort: Math.min(80, base.comfort + 18 + skipJitter(seed, id, "comfort", 14)),
+    attraction: Math.min(65, base.attraction + 14 + skipJitter(seed, id, "attraction", 16)),
+  };
+}
+export function skipNeedsFor(id: Person, seed: string) {
+  return {
+    hunger: 20 + skipJitter(seed, id, "need-hunger", 25),
+    fatigue: 25 + skipJitter(seed, id, "need-fatigue", 25),
+    stress: 45 + skipJitter(seed, id, "need-stress", 20),
+    uncertainty: 55 + skipJitter(seed, id, "need-uncertainty", 20),
+  };
+}
 const personalFragments = [
   ["Une odeur de mer, sans lieu ni date retrouvés.", "Un trajet qui s'interrompt, sans destination retrouvée."],
   ["Une table de travail, sans lieu précis.", "Une voix familière, mais son visage reste introuvable."],
@@ -82,7 +132,12 @@ const virtualObservations = [
   "Les écrans reviennent aux mêmes séquences. La maison semble organisée autour de fonctions très précises : repos, alimentation, sommeil et étude.",
 ];
 export type Dream = { actor: 1 | 2; round: number; content: string };
-export type Story = { observer?:string; observerGender?:"masculin"|"feminin"; life?:Life; seed: string; variant: number; order: number[]; round: number; evidence: string[]; facts: Record<string, string[]>; met?: boolean; introduced?: boolean; sharedMeal?: boolean; dreams?: Dream[]; observations?: string[]; kitchenMeals?:number; salonTurns?:number; apartTurns?:number; pendingDestination?:{room:Room;intent:Intent;proposer:Person}; finalCalled?:boolean };
+export type Story = { observer?:string; observerGender?:"masculin"|"feminin"; life?:Life; seed: string; variant: number; order: number[]; round: number; evidence: string[]; facts: Record<string, string[]>; met?: boolean; introduced?: boolean; sharedMeal?: boolean; dreams?: Dream[]; observations?: string[]; kitchenMeals?:number; salonTurns?:number; apartTurns?:number; pendingDestination?:{room:Room;intent:Intent;proposer:Person}; finalCalled?:boolean;
+// Bouton "passer à la révélation" (2026-09-19) : jamais vrai avant qu'une session ait atteint la
+// révélation NORMALEMENT (via l'enquête réelle, jamais via le bouton lui-même) ; une fois vrai,
+// survit à un `reset` (reporté explicitement dans le nouveau scénario, comme `observer`) puisque le
+// bouton doit rester disponible sur les sessions suivantes, jamais seulement la première.
+everReachedRevelation?:boolean };
 export function parseStory(value: string): Story {
   try {
     const data = JSON.parse(value);
@@ -90,7 +145,7 @@ export function parseStory(value: string): Story {
     const strings = (input:unknown, limit:number) => Array.isArray(input) ? input.filter((s):s is string => typeof s === "string").slice(0,limit).map(s=>s.slice(0,1000)) : [];
     const p=data.pendingDestination;
     const pendingDestination=p && ["salon","cuisine","chambre","bureau","jardin"].includes(p.room) && intents.includes(p.intent) && [1,2].includes(p.proposer)?{room:p.room as Room,intent:p.intent as Intent,proposer:p.proposer as Person}:undefined;
-    return { observer:typeof data.observer==="string"?data.observer.slice(0,32):undefined,observerGender:data.observerGender==="masculin"||data.observerGender==="feminin"?data.observerGender:undefined,life:readLife(data.life,data.round),pendingDestination, apartTurns:Number.isInteger(data.apartTurns)?Math.max(0,Math.min(100,data.apartTurns)):0, finalCalled:data.finalCalled===true, seed:data.seed.slice(0,64), variant:data.variant, order:data.order, round:data.round, evidence:strings(data.evidence,5), facts:{Lia:strings(data.facts?.Lia,12), "Noé":strings(data.facts?.["Noé"],12)}, introduced:typeof data.introduced === "boolean"?data.introduced:undefined, sharedMeal:typeof data.sharedMeal === "boolean"?data.sharedMeal:undefined, met:typeof data.met === "boolean" ? data.met : undefined, kitchenMeals:Number.isInteger(data.kitchenMeals)?Math.max(0,data.kitchenMeals):0, salonTurns:Number.isInteger(data.salonTurns)?Math.max(0,data.salonTurns):0, observations:strings(data.observations,12), dreams:Array.isArray(data.dreams) ? data.dreams.filter((d:Dream)=>d && [1,2].includes(d.actor) && Number.isInteger(d.round) && typeof d.content === "string").slice(-12).map((d:Dream)=>({...d,content:d.content.slice(0,1000)})) : [] };
+    return { observer:typeof data.observer==="string"?data.observer.slice(0,32):undefined,observerGender:data.observerGender==="masculin"||data.observerGender==="feminin"?data.observerGender:undefined,life:readLife(data.life,data.round),pendingDestination, apartTurns:Number.isInteger(data.apartTurns)?Math.max(0,Math.min(100,data.apartTurns)):0, finalCalled:data.finalCalled===true, everReachedRevelation:data.everReachedRevelation===true, seed:data.seed.slice(0,64), variant:data.variant, order:data.order, round:data.round, evidence:strings(data.evidence,5), facts:{Lia:strings(data.facts?.Lia,12), "Noé":strings(data.facts?.["Noé"],12)}, introduced:typeof data.introduced === "boolean"?data.introduced:undefined, sharedMeal:typeof data.sharedMeal === "boolean"?data.sharedMeal:undefined, met:typeof data.met === "boolean" ? data.met : undefined, kitchenMeals:Number.isInteger(data.kitchenMeals)?Math.max(0,data.kitchenMeals):0, salonTurns:Number.isInteger(data.salonTurns)?Math.max(0,data.salonTurns):0, observations:strings(data.observations,12), dreams:Array.isArray(data.dreams) ? data.dreams.filter((d:Dream)=>d && [1,2].includes(d.actor) && Number.isInteger(d.round) && typeof d.content === "string").slice(-12).map((d:Dream)=>({...d,content:d.content.slice(0,1000)})) : [] };
   } catch { return {...newStory(),met:undefined}; }
 }
 export function newStory(previousVariant?: number): Story {
@@ -122,7 +177,7 @@ export function advanceStory(story: Story, investigate: boolean, dialogue: Dialo
   // Clues are earned through investigation, with conversation between discoveries.
   const dreamAssistance = dreamers.length > 0 || (next.dreams.length >= 2 && story.round % 3 === 1);
   if (investigate && location === "bureau" && story.round >= 3 && (earnedStudy || story.round % 3 === 0 || dreamAssistance) && story.evidence.length < 5) {
-    next.evidence.push(story.evidence.length < 4 ? investigationTarget(story) : "Le bureau ouvre le dossier : « Lia et Noé : agents IA autonomes. Architecture : DH. Environnement simulé fermé. Souvenirs humains synthétiques ; âges et identités humaines construits. Agents confinés pour une étude de cohabitation et observés par des humains ». Il s'agit de leur origine dans cette fiction ; leurs créateurs et leurs intentions restent inconnus.");
+    next.evidence.push(story.evidence.length < 4 ? investigationTarget(story) : finalDossierEvidenceText);
   }
   return next;
 }

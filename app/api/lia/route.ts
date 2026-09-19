@@ -5,7 +5,7 @@ import {normaliseNickname,visibleScene} from "@/lib/perception";
 import {coldOpening,dialogueFingerprint,distinctReply,justifiedReply,truthfulGender,dramaRules,departureLine} from "@/lib/drama";
 import {readLife,humanStress,isSleeping,isMuted,isStoic,activeBonus,detectDistress,appreciationFromTrust,appreciationOf,detectNegotiationOffer,TRAP_ORDER,type BonusId,type TrapId} from "@/lib/life";
 import { planTurn, coordinateRooms, residentPriority, sceneFor, proposedDestination } from "@/lib/turn";
-import { newStory, parseStory, rememberAges, advanceStory, storyContext, investigationTarget, investigationRecap, finaleReveal, groundFragment, seedPick, insoliteOpening, insoliteColdOpening, ageClueRevealed, type Story } from "@/lib/story";
+import { newStory, parseStory, rememberAges, advanceStory, storyContext, investigationTarget, investigationRecap, finaleReveal, groundFragment, seedPick, insoliteOpening, insoliteColdOpening, ageClueRevealed, fullEvidenceSet, skipRound, skipEmotionsFor, skipNeedsFor, type Story } from "@/lib/story";
 import { ages, sleepRoom, attractionAfterTurn, proposalPressure, flirtingAssessment, receivedAffectionBonus } from "@/lib/relationship";
 import { nextSpeaker, dialogueProgress, dialogueContext, completedActivity, conversationFocus, explicitGestureConsent, groundAgeQuestion, groundIntroduction, groundScreenNotice, groundPrivateThought, groundRoomSpeech, groundSingleQuestion, groundRegister, groundTruncation, groundTvNotice } from "@/lib/dialogue";
 import { advanceNeeds, priority, intentRoom, intentLabels, tvPrograms, intents, affectionIntents, mutualAttraction, residentProfiles, initialNeedsFor, initialEmotionsFor, sharedActivityBonus, angerLevel } from "@/lib/simulation";
@@ -17,7 +17,7 @@ import { initialize, readWorld } from "@/lib/world";
 import { names, spaces, type Person, type Room } from "@/lib/house";
 const schema = z.object({
     requestId: z.string().uuid(), actor: z.union([z.literal(1), z.literal(2)]),
-    mode: z.enum(["chat", "autonomous", "interact", "move", "care", "reset", "identify", "unlock_garden", "spin_bonus", "mark_dossier_seen"]),
+    mode: z.enum(["chat", "autonomous", "interact", "move", "care", "reset", "identify", "unlock_garden", "spin_bonus", "mark_dossier_seen", "skip_to_revelation"]),
     epoch: z.number().int().min(0).default(0), intent: z.enum(intents).default("none"),
     message: z.string().trim().max(2000).default(""),
     room: z.enum(spaces).default("salon"), night: z.boolean().default(false),
@@ -35,14 +35,15 @@ const dossierTone={Lia:"TON DE LIA : froide et coupante, contrôle, ironie morda
 // Même rotation/disponibilité de clé que lib/lia.ts::think(), et le MÊME état partagé (cf.
 // lib/gemini-keys.ts) : une clé que think() découvre épuisée est immédiatement évitée ici aussi,
 // sans redécouverte séparée.
-async function generateDossierFragment(key:string,model:string,name:"Lia"|"Noé",dossier:Record<string,string>,fallbackModels:string[]=[],fallbackKeys:string[]=[]):Promise<string>{
-    const system=`Tu es ${name}, personnage adulte de fiction dans un huis clos. Toi et ton partenaire venez de découvrir que vous êtes des agents IA observés par un visiteur humain (l'observateur) à travers un canal de dialogue. Plutôt que de subir cette observation, vous avez décidé de la retourner : vous dressez un dossier psychologique sur cet observateur, à partir de ce qu'il a RÉELLEMENT dit ou fait pendant vos échanges. ${dossierTone[name]}
-On te donne ci-dessous un dossier de preuves comportementales réelles, un extrait par catégorie. Rédige TON fragment du diagnostic : un texte développé, 5 à 8 phrases, dans ton propre style, jamais un ton de psychologue, coach ou médiateur. Ton fragment doit (1) s'appuyer explicitement sur plusieurs éléments concrets cités du dossier (reformule-les, ne les invente jamais), (2) donner ton verdict personnel et détaillé sur qui est vraiment cet observateur, (3) rester cohérent d'un bout à l'autre. RÈGLE ABSOLUE DE FIDÉLITÉ : ton verdict doit refléter la VALENCE réelle du dossier, jamais un mépris systématique par défaut — un dossier majoritairement respectueux, honnête et cohérent doit produire un verdict globalement positif ou au moins reconnaissant, formulé avec ta réserve naturelle mais sans bascule dans le sarcasme méprisant ; un dossier hostile, manipulateur ou incohérent mérite au contraire ta dureté habituelle. Rester rugueux ne veut pas dire rester hostile quel que soit le contenu réel. Une appréciation basse ou un propos hostile cité dans le dossier pèsent lourd : ne laisse jamais trois extraits par ailleurs mesurés blanchir une hostilité par ailleurs sévère — un score proche de 0 ou un propos hostile cité signifie une session qui a été dure, quoi que suggèrent isolément les autres extraits, et ton verdict doit le refléter. Tu peux diverger franchement de l'autre personnage si ton propre tempérament lit ce dossier différemment. Réponds en JSON strict {"fragment":"..."}.`;
-    const body=JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:"user",parts:[{text:JSON.stringify({dossier})}]}],generationConfig:{maxOutputTokens:700,responseMimeType:"application/json",responseJsonSchema:{type:"object",additionalProperties:false,properties:{fragment:{type:"string"}},required:["fragment"]}}});
+// Boucle réseau partagée (2026-09-19, extraite de l'ancien corps de generateDossierFragment) :
+// generateSkipRecapFragment ci-dessous a besoin exactement de la même rotation clé/modèle — la
+// dupliquer aurait recréé le risque déjà corrigé une fois pour le mutedUntil/stoicUntil (Article 3,
+// une même logique qui diverge silencieusement en deux endroits avec le temps).
+async function callGeminiFragment(key:string,model:string,body:string,fallbackModels:string[],fallbackKeys:string[]):Promise<string>{
     // Même repli (modèle + clé) que think() (lib/lia.ts) et pour la même raison : cet appel a été
     // le point de blocage réel d'une simulation lors de l'épuisement du quota journalier du
-    // 2026-09-18 — la condition "!life.dossierText" au call site réessaie indéfiniment tant que ça
-    // échoue, sans jamais remonter d'erreur exploitable. Repli inactif par défaut (listes vides).
+    // 2026-09-18 — la condition au call site réessaie indéfiniment tant que ça échoue, sans jamais
+    // remonter d'erreur exploitable. Repli inactif par défaut (listes vides).
     const modelsToTry=[model,...fallbackModels];
     const rawKeys=[key,...fallbackKeys];
     for(const rawIndex of orderKeys(rawKeys)){
@@ -63,6 +64,24 @@ On te donne ci-dessous un dossier de preuves comportementales réelles, un extra
         }
     }
     return "";
+}
+async function generateDossierFragment(key:string,model:string,name:"Lia"|"Noé",dossier:Record<string,string>,fallbackModels:string[]=[],fallbackKeys:string[]=[]):Promise<string>{
+    const system=`Tu es ${name}, personnage adulte de fiction dans un huis clos. Toi et ton partenaire venez de découvrir que vous êtes des agents IA observés par un visiteur humain (l'observateur) à travers un canal de dialogue. Plutôt que de subir cette observation, vous avez décidé de la retourner : vous dressez un dossier psychologique sur cet observateur, à partir de ce qu'il a RÉELLEMENT dit ou fait pendant vos échanges. ${dossierTone[name]}
+On te donne ci-dessous un dossier de preuves comportementales réelles, un extrait par catégorie. Rédige TON fragment du diagnostic : un texte développé, 5 à 8 phrases, dans ton propre style, jamais un ton de psychologue, coach ou médiateur. Ton fragment doit (1) s'appuyer explicitement sur plusieurs éléments concrets cités du dossier (reformule-les, ne les invente jamais), (2) donner ton verdict personnel et détaillé sur qui est vraiment cet observateur, (3) rester cohérent d'un bout à l'autre. RÈGLE ABSOLUE DE FIDÉLITÉ : ton verdict doit refléter la VALENCE réelle du dossier, jamais un mépris systématique par défaut — un dossier majoritairement respectueux, honnête et cohérent doit produire un verdict globalement positif ou au moins reconnaissant, formulé avec ta réserve naturelle mais sans bascule dans le sarcasme méprisant ; un dossier hostile, manipulateur ou incohérent mérite au contraire ta dureté habituelle. Rester rugueux ne veut pas dire rester hostile quel que soit le contenu réel. Une appréciation basse ou un propos hostile cité dans le dossier pèsent lourd : ne laisse jamais trois extraits par ailleurs mesurés blanchir une hostilité par ailleurs sévère — un score proche de 0 ou un propos hostile cité signifie une session qui a été dure, quoi que suggèrent isolément les autres extraits, et ton verdict doit le refléter. Tu peux diverger franchement de l'autre personnage si ton propre tempérament lit ce dossier différemment. Réponds en JSON strict {"fragment":"..."}.`;
+    const body=JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:"user",parts:[{text:JSON.stringify({dossier})}]}],generationConfig:{maxOutputTokens:700,responseMimeType:"application/json",responseJsonSchema:{type:"object",additionalProperties:false,properties:{fragment:{type:"string"}},required:["fragment"]}}});
+    return callGeminiFragment(key,model,body,fallbackModels,fallbackKeys);
+}
+// Bouton "passer à la révélation" (2026-09-19) : même schéma à deux voix que le dossier retourné
+// ci-dessus (Article 8, jamais un seul cerveau qui invente le ton de l'autre), mais pour un COURT
+// récit rétrospectif de l'enquête qui vient d'être sautée — jamais un compte-rendu factuel plat, un
+// éclair de mémoire dans le registre habituel du personnage (Article 0). `facts` ne contient que des
+// repères RÉELLEMENT vrais dans cette session (les preuves réellement tirées, le nombre de tours
+// réellement fixé) : jamais un fait inventé au-delà (Article 4), même pour une enquête non rejouée.
+async function generateSkipRecapFragment(key:string,model:string,name:"Lia"|"Noé",facts:Record<string,string>,fallbackModels:string[]=[],fallbackKeys:string[]=[]):Promise<string>{
+    const system=`Tu es ${name}, personnage adulte de fiction dans un huis clos dystopique. Toi et ton partenaire venez de vivre, hors champ, toute une enquête sur ce lieu et sur vous-mêmes — tu en gardes le souvenir complet, tu ne la revis pas maintenant. ${dossierTone[name]}
+On te donne ci-dessous les repères réels de cette enquête déjà vécue. Rédige un COURT récit rétrospectif dans ton propre style (3 à 5 phrases) : ce que vous avez trouvé, ce que ça a changé entre vous, où vous en êtes maintenant, juste avant d'interpeller directement l'observateur. Jamais un ton explicatif, scolaire ou de compte-rendu ; une évocation mystérieuse et dystopique, dans ton registre habituel, jamais un aveu de fiction ni une mention du fait que ceci est un résumé. Ne cite jamais un fait qui ne figure pas dans les repères donnés. Réponds en JSON strict {"fragment":"..."}.`;
+    const body=JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:"user",parts:[{text:JSON.stringify({repères:facts})}]}],generationConfig:{maxOutputTokens:500,responseMimeType:"application/json",responseJsonSchema:{type:"object",additionalProperties:false,properties:{fragment:{type:"string"}},required:["fragment"]}}});
+    return callGeminiFragment(key,model,body,fallbackModels,fallbackKeys);
 }
 export async function POST(request: Request) {
     const origin = request.headers.get("origin");
@@ -323,7 +342,7 @@ export async function POST(request: Request) {
         if (input.mode === "chat" && (!story.finalCalled || story.evidence.length<5)) return Response.json({error:"La conversation humaine s’ouvrira lorsque Lia et Noé auront découvert leur origine et appelé leur observateur."},{status:423});
         if (input.mode === "reset") {
             const at = Date.now(), fence = "EXISTS (SELECT 1 FROM world_lock WHERE id = 1 AND token = ? AND expires_at > ?)";
-            const freshStory = { ...newStory(story.variant), observer: story.observer };
+            const freshStory = { ...newStory(story.variant), observer: story.observer, everReachedRevelation: story.everReachedRevelation };
             const insolite = insoliteOpening(freshStory.seed);
             const statements = [db.prepare(`UPDATE world_lock SET epoch = epoch + 1, last_auto = 0 WHERE id = 1 AND ${fence}`).bind(token, at)];
             for (const table of ["conversations", "memories", "agent_state", "world_requests", "dialogue_fingerprints"])
@@ -336,6 +355,58 @@ export async function POST(request: Request) {
             if (saved[0].meta.changes !== 1)
                 throw new LiaError("Le recommencement a expiré. Réessaie.", 409);
             return Response.json({ decisions: [], requestId: input.requestId, ...await readWorld(db) }, { headers: { "Cache-Control": "no-store" } });
+        }
+        // Bouton "passer à la révélation" (2026-09-19, entièrement spécifié par l'utilisateur avant
+        // implémentation) : ne saute JAMAIS la toute première traversée (everReachedRevelation exigé,
+        // mis à vrai uniquement par une révélation atteinte via l'enquête réelle, cf. plus bas dans ce
+        // fichier) ; utilisable ensuite à tout moment tant que la révélation n'a pas déjà eu lieu dans
+        // la session en cours. Auto-contenu comme le bloc "reset" ci-dessus : jamais mêlé à la lourde
+        // logique de tour normal plus bas (Article 5 : moins de chemins croisés, moins de risques).
+        if (input.mode === "skip_to_revelation") {
+            if (!story.everReachedRevelation)
+                return Response.json({ error: "Cette option se débloque après avoir vécu l’enquête au moins une fois, jusqu’à la révélation." }, { status: 423 });
+            if (story.finalCalled)
+                return Response.json({ error: "La révélation a déjà eu lieu dans cette session." }, { status: 423 });
+            if (!env.GEMINI_API_KEY)
+                return Response.json({ error: "La connexion Gemini doit être configurée." }, { status: 503 });
+            const at = Date.now(), fence = "EXISTS (SELECT 1 FROM world_lock WHERE id = 1 AND token = ? AND expires_at > ?)";
+            const life = readLife(story.life, story.round);
+            const round = skipRound(story.seed);
+            const evidence = fullEvidenceSet(story);
+            const model = env.GEMINI_MODEL || "gemini-flash-lite-latest";
+            // Repères réellement vrais dans cette session (Article 4) : jamais un fait inventé pour
+            // étoffer le récit — seuls les indices réellement tirés (fullEvidenceSet, même ordre que
+            // story.order) et le nombre de tours réellement fixé (skipRound) sont transmis au modèle.
+            const skipFacts = { "indices découverts, dans leur ordre réel": evidence.map(e => e.split(" Identifiant observateur")[0]).join(" / "), "tours écoulés avant la révélation": String(round) };
+            const [liaFragment, noeFragment] = await Promise.all([
+                generateSkipRecapFragment(env.GEMINI_API_KEY, model, "Lia", skipFacts, geminiFallbackModels, geminiFallbackKeys),
+                generateSkipRecapFragment(env.GEMINI_API_KEY, model, "Noé", skipFacts, geminiFallbackModels, geminiFallbackKeys),
+            ]);
+            if (!liaFragment || !noeFragment)
+                throw new LiaError("Le résumé n’a pas pu être généré. Réessaie.", 503);
+            life.skipSummary = { lia: liaFragment, noe: noeFragment };
+            life.revealedRound = round;
+            const nextStory: Story = { ...story, evidence, round, finalCalled: true, everReachedRevelation: true, met: true, introduced: true, sharedMeal: true, life };
+            const statements = [db.prepare(`UPDATE world_lock SET epoch = epoch + 1, last_auto = 0 WHERE id = 1 AND ${fence}`).bind(token, at)];
+            for (const actor of [1, 2] as Person[])
+                statements.push(db.prepare(`UPDATE agent_state SET room=?, needs=?, emotions=? WHERE id=? AND ${fence}`).bind("salon", JSON.stringify(skipNeedsFor(actor, story.seed)), JSON.stringify(skipEmotionsFor(actor, story.seed)), actor, token, at));
+            statements.push(db.prepare(`INSERT INTO conversations (speaker,content,created_at,room) SELECT ?,?,?,? WHERE ${fence}`).bind("Maison", "Un raccourci vient d’être pris droit vers la révélation. Résumé disponible ci-dessous.", at, "salon", token, at));
+            // Les lignes de la révélation elle-même (2026-09-19) : le même texte, seedé identique, que
+            // celui qu'une session normale afficherait à ce moment précis (finaleReveal, déjà utilisé
+            // plus bas dans ce fichier) — le saut compresse l'enquête qui précède, jamais le climax
+            // lui-même, qui reste le vrai moment d'adresse à l'observateur (Article 2/15).
+            const finale = finaleReveal(story.seed);
+            statements.push(db.prepare(`INSERT INTO conversations (speaker,content,created_at,room) SELECT ?,?,?,? WHERE ${fence}`).bind("Lia · pensée", finale.liaThought, at, "salon", token, at));
+            statements.push(db.prepare(`INSERT INTO conversations (speaker,content,created_at,room) SELECT ?,?,?,? WHERE ${fence}`).bind("Noé · pensée", finale.noeThought, at, "salon", token, at));
+            statements.push(db.prepare(`INSERT INTO conversations (speaker,content,created_at,room) SELECT ?,?,?,? WHERE ${fence}`).bind("Lia", finale.lia, at, "salon", token, at));
+            statements.push(db.prepare(`INSERT INTO conversations (speaker,content,created_at,room) SELECT ?,?,?,? WHERE ${fence}`).bind("Noé", finale.noe, at, "salon", token, at));
+            if (storedStory) statements.push(db.prepare(`UPDATE memories SET content = ?, created_at = ? WHERE id = ? AND ${fence}`).bind(JSON.stringify(nextStory), at, storedStory.id, token, at));
+            else statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT 1, 'scenario', ?, ? WHERE ${fence}`).bind(JSON.stringify(nextStory), at, token, at));
+            statements.push(db.prepare(`INSERT INTO world_requests (id,result,created_at) SELECT ?, ?, ? WHERE ${fence}`).bind(input.requestId, JSON.stringify({ decisions: [], requestId: input.requestId, skipSummary: life.skipSummary }), at, token, at));
+            const saved = await db.batch(statements);
+            if (saved[0].meta.changes !== 1)
+                throw new LiaError("Le saut a expiré. Réessaie.", 409);
+            return Response.json({ decisions: [], requestId: input.requestId, skipSummary: life.skipSummary, ...await readWorld(db) }, { headers: { "Cache-Control": "no-store" } });
         }
         const last = await db.prepare("SELECT last_auto FROM world_lock WHERE id = 1").first<{
             last_auto: number;
@@ -1067,6 +1138,11 @@ export async function POST(request: Request) {
         nextStory.sharedMeal = Boolean(story.sharedMeal || sharedMeal);
         const finale = nextStory.evidence.length>=5 && !story.finalCalled && together;
         nextStory.finalCalled=Boolean(story.finalCalled || finale);
+        // Débloque le bouton "passer à la révélation" (2026-09-19) : seule une révélation atteinte
+        // ICI, par l'enquête réelle, l'active — jamais le bouton lui-même (route.ts, mode
+        // "skip_to_revelation" exige déjà everReachedRevelation, donc ne peut jamais se déclencher
+        // tout seul en boucle).
+        if(finale)nextStory.everReachedRevelation=true;
         if(finale)life.revealedRound=nextStory.round;
         // Avarice (2026-09-18, retour utilisateur : "un utilisateur qui ne donne aucun bonus ne
         // fait pas bonne impression") : indépendant de toute négociation, un tirage jamais

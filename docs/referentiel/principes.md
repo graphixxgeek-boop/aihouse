@@ -965,6 +965,49 @@ round abaissé sous le seuil pour les scénarios qui exigent au contraire `final
 qui aurait rouvert la révélation elle-même (`finale` se redéclenche dès `evidence≥5 && !finalCalled`
 et deux personnages réunis) à la place du scénario voulu.
 
+8.21. **Bouton « passer à la révélation »** (`mode:"skip_to_revelation"`, `app/api/lia/route.ts`,
+`lib/story.ts`, 2026-09-19, fonctionnalité entièrement spécifiée par l'utilisateur via dix
+questions de calibrage avant implémentation). Jamais disponible dès la toute première arrivée :
+`story.everReachedRevelation` ne devient vrai que lorsqu'une session atteint réellement la
+révélation par l'enquête normale (même endroit que `finale`, jamais déclenché par le bouton
+lui-même), et survit à un `reset` exactement comme `story.observer` — le bouton reste donc
+disponible sur toutes les sessions suivantes, jamais seulement la première traversée. Une fois
+débloqué, utilisable à tout moment de la partie tant que la révélation n'a pas déjà eu lieu dans la
+session en cours (bloqué par `story.finalCalled`, jamais un usage unique consommé par le drapeau
+lui-même).
+
+Le saut reconstruit un état plausible plutôt qu'un raccourci neutre :
+
+- Les cinq preuves sont celles qu'une vraie session aurait réellement découvertes, dans leur vrai
+  ordre de tirage (`fullEvidenceSet(story)`, réutilise `story.order` et l'éventuel identifiant
+  observateur exactement comme `investigationTarget`/`advanceStory` — jamais un texte inventé à
+  côté, Article 4).
+- Le nombre de tours (`skipRound`) et les jauges de besoins/émotions de chaque personnage
+  (`skipNeedsFor`/`skipEmotionsFor`) sont tirés d'une plage bornée et variée par seed : une
+  progression qui ressemble à une enquête déjà bien avancée mais encore incomplète (tension
+  redescendue sans s'effondrer, confiance/attirance en hausse mais loin du seuil `loveRealized`),
+  jamais des valeurs neutres par défaut (Article 9 pour la variété, cf. `parametres.md` pour les
+  plages exactes).
+- Un court récit rétrospectif est généré à la volée par deux vrais appels Gemini séparés, un par
+  personnage (`generateSkipRecapFragment`, même schéma à deux voix que le dossier retourné —
+  Article 8, jamais un seul cerveau qui invente le ton de l'autre), affiché dans une pop-up dédiée
+  au moment du saut (`life.skipSummary`, régénéré à chaque usage, jamais accumulé d'un saut à
+  l'autre). Les repères transmis au modèle ne contiennent que des faits réellement vrais de cette
+  session (les preuves réellement tirées, le tour réellement fixé) — jamais un fait inventé pour
+  étoffer le récit (Article 4).
+- Le vrai moment de la révélation (les deux pensées de choc puis l'adresse directe à l'observateur,
+  `finaleReveal(story.seed)`) est ensuite rejoué avec exactement le même texte qu'une session
+  normale afficherait à ce round précis : le saut compresse l'enquête qui précède, jamais le climax
+  lui-même, pour que l'enchaînement reste lisible et cohérent de l'extérieur comme de l'intérieur
+  des personnages (Article 2/15/17). Une ligne « Maison » marque aussi explicitement qu'un
+  raccourci vient d'être pris, jamais un silence qui laisserait deviner un saut invisible.
+
+La boucle réseau de rotation clé/modèle (déjà partagée par `think()` et `generateDossierFragment`)
+est désormais factorisée dans `callGeminiFragment`, réutilisée telle quelle par
+`generateSkipRecapFragment` plutôt que dupliquée une troisième fois (Article 3). Auto-contenu comme
+le bloc `reset` : jamais mêlé à la lourde logique de tour normal, pour limiter les chemins croisés
+(Article 5).
+
 ## 9. Robustesse technique
 
 9.1. Toute écriture en base de données est fondue dans une transaction unique par tour

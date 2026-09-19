@@ -232,6 +232,26 @@ le jour même (Article 13).
   (`discover-foodVerified`) ; le cas solo y est déjà couvert autrement, par le witnesses-count du
   débriefing de régénération (`visualEvents` kind food, indépendant de cette ligne).
 
+## Bouton « passer à la révélation » (`lib/story.ts`, `app/api/lia/route.ts`, `app/page.tsx`, 2026-09-19)
+
+- Verrou : `story.everReachedRevelation` (jamais vrai avant une révélation atteinte par l'enquête
+  réelle ; survit à un `reset`) ET `!story.finalCalled` (jamais rejouable une fois la révélation
+  atteinte dans la session en cours).
+- Tour atteint (`skipRound(seed)`) : tiré parmi `[28, 31, 34, 37, 40]` — plage centrée sur le
+  plafond garanti réel de l'enquête (~tour 35, cf. section Enquête ci-dessus), variée par seed
+  (Article 9).
+- Émotions par personnage (`skipEmotionsFor(id, seed)`), décalage borné depuis les valeurs
+  initiales de `residentProfiles` (`lib/simulation.ts`), variées par seed :
+  curiosité +5 à +13 (plafond 100), tension −25 à −40 (plancher 35), confiance +22 à +36
+  (plafond 70), aisance +18 à +32 (plafond 80), attirance +14 à +30 (plafond 65 — nettement sous le
+  seuil `loveRealized`/75, l'histoire d'amour reste à vivre après le saut, jamais pré-acquise).
+- Besoins par personnage (`skipNeedsFor(id, seed)`), variés par seed : faim 20-45, fatigue 25-50,
+  stress 45-65, incertitude 55-75 — une enquête déjà bien avancée, jamais des valeurs neutres par
+  défaut ni des besoins à zéro.
+- Résumé rétrospectif (`life.skipSummary`) : deux appels Gemini séparés (`generateSkipRecapFragment`),
+  jamais plus, jamais moins — même coût que le dossier retourné (Article 8) ; régénéré à chaque
+  usage, jamais accumulé d'un saut à l'autre.
+
 ## Roulette des bonus (`lib/life.ts`, `app/api/lia/route.ts`, `app/page.tsx`, 2026-09-17)
 
 Après la révélation (même seuil que le jardin : `finalCalled` + 5 preuves), l'observateur peut

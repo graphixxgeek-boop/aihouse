@@ -672,7 +672,13 @@ ensemble « la refonte graphique », un seul chantier visuel à mener groupé. O
    en garde légale renforcée + popup de bienvenue, les trois affichées une fois par navigateur
    (`app/page.tsx`) ; correction du vrai bug de répétition du mot « autant » (persisté sur toute la
    session via `life.wordFrequency`, cf. `lib/dialogue.ts` — l'écart n'était PAS déjà couvert,
-   contrairement à ce qui était supposé ici avant investigation).
+   contrairement à ce qui était supposé ici avant investigation) ; rotation adaptative des clés
+   Gemini (recul exponentiel automatique) ; **bouton « passer à la révélation »** — jamais mentionné
+   dans les chantiers en suspens jusqu'à ce que l'utilisateur le signale explicitement le 2026-09-19,
+   retrouvé nulle part dans l'historique malgré une recherche exhaustive de la session, donc
+   entièrement respécifié via dix questions de calibrage puis implémenté et testé le même jour
+   (`mode:"skip_to_revelation"`, cf. `docs/referentiel/principes.md` 8.21 et `parametres.md` pour le
+   détail complet).
 3. **La refonte graphique** (points 4/5/6 groupés).
 4. **Après la refonte graphique** — chantier n°7 (mécaniques de diffusion), dernier de la liste par
    la propre priorisation d'Opus, confirmée par l'utilisateur.
