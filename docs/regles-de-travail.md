@@ -406,6 +406,42 @@ nouvelle entrée par précision. Le suivi doit refléter l'état actuel et compl
 l'historique de sa formulation — l'historique complet reste de toute façon consultable dans la
 conversation elle-même si besoin d'y revenir.
 
+**Fiabilisation ajoutée le 2026-09-19, à la demande explicite de l'utilisateur** (« assure-toi que
+le système mis en place booste réellement le tracking [...] mémoire, organisation, adaptabilité,
+performance, résultats »). Quatre points faibles identifiés en relisant la première version de
+cette section, corrigés ici plutôt que laissés comme une déclaration d'intention non vérifiée
+(cf. section 9 : « le contrôle passe par la preuve ») :
+
+- **Mémoire réellement durable, pas supposée.** La liste de tâches technique de l'agent n'a
+  jamais été confirmée comme survivant au-delà d'UNE session de travail — rien ne garantit qu'une
+  toute nouvelle session sur ce projet la retrouve. La règle de sync ci-dessus (« et dans
+  `CLAUDE.md`/`points-fragiles.md` si... ») était donc trop permissive : reformulée en **règle
+  stricte** — tout ce qui doit survivre à la fin de la session en cours (une décision non
+  tranchée, une idée pas encore traitée, un chantier commencé mais pas fini) reçoit une trace dans
+  un fichier versionné (`CLAUDE.md`, `points-fragiles.md`, ou le document `docs/referentiel/`
+  concerné) **au moment même où elle est notée**, jamais différée à « si j'y pense en fin de
+  session ». La liste de tâches technique reste utile comme vue de travail RAPIDE pendant la
+  session, mais n'est jamais la seule trace d'un élément qui compte.
+- **Organisation qui ne se dégrade pas avec le volume.** Une liste qui grossit indéfiniment
+  (79 entrées à ce jour) sans jamais être reconsidérée devient elle-même un obstacle à s'y
+  retrouver — l'inverse de l'objectif. À chaque revue de fond (même déclencheur que la relecture
+  périodique de l'Article 13 de `CLAUDE.md`), l'agent profite de l'occasion pour clore comme
+  « terminé » ou « dépassé » toute tâche technique dont l'objet a été atteint autrement ou n'est
+  plus pertinent (déjà fait une fois cette session pour une tâche devenue obsolète après plusieurs
+  simulations) — jamais une purge systématique en dehors de ces revues, qui risquerait de faire
+  disparaître un fil encore utile.
+- **Frontière de synchronisation testable, pas floue.** Plutôt que « si elle concerne le contenu
+  du projet » (difficile à trancher dans le feu de l'action), la question à se poser est concrète :
+  *si la session s'arrêtait maintenant, est-ce que cette information manquerait à qui reprend le
+  projet ?* Si oui, elle va dans un fichier versionné, immédiatement, pas seulement dans la liste de
+  tâches technique.
+- **Auto-vérification, pas une confiance aveugle dans la procédure.** Quand l'arborescence complète
+  est demandée (section suivante), l'agent ne se contente pas de la lister : il vérifie qu'aucune
+  des trois sources (liste de tâches, feuille de route, points-fragiles.md) ne contredit les deux
+  autres (un point classé « fait » d'un côté et encore « ouvert » de l'autre serait lui-même un bug
+  de suivi, traité comme tel, cf. Article 3 de `CLAUDE.md`) — la preuve que le système fonctionne
+  réellement est cette absence de contradiction constatée, pas la simple existence de la procédure.
+
 **L'arborescence complète (tout ce qui est fait/en cours/à venir) se montre sur demande
 explicite uniquement**, jamais spontanément à chaque chantier terminé — décidé explicitement pour
 ne pas alourdir systématiquement les réponses. Quand elle est demandée, elle rassemble les trois
