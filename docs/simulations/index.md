@@ -31,6 +31,8 @@ consultable "en cas de doute" seulement.)*
 | full_sim9 | 153 | oui | 73 | — |
 | full_sim10 | 164 | oui | 69 | Sujet du chantier 2 du tableau de bord (cf. `docs/referentiel/tableau-de-bord.md`). |
 | full_sim11 | 174 | oui | 90 | Session bloquée par l'épuisement de quota Gemini le 2026-09-18, reprise ensuite. |
+| full_sim12 | ~65 déplacements | oui (dossier annoncé, non capturé) | — | Déposé le 2026-09-19 par l'utilisateur depuis une sauvegarde texte personnelle (copier-coller, pas le journal JSON original) — seul le transcript a survécu, jamais de dossier ni d'`_actions.txt` pour cette entrée. Ordre chronologique exact du 2026-09-18 par rapport à full_sim13 non reconstituable (numérotation arbitraire à l'archivage). |
+| full_sim13 | ~39 déplacements | oui (dossier annoncé, non capturé) | — | Idem full_sim12 : déposé le 2026-09-19 depuis une sauvegarde texte personnelle, transcript seul, sans dossier ni journal JSON. |
 
 ## Limite honnête
 
@@ -43,3 +45,11 @@ jugement sur le naturel du dialogue, le respect de l'esprit des personnages, etc
 
 Cf. `CLAUDE.md`, Article 18, étape 3bis — l'archivage n'est pas un rattrapage ponctuel, il se répète
 à chaque simulation complète.
+
+## Notation EL-PROFESSOR
+
+Chaque entrée de ce registre est aussi notée par EL-PROFESSOR (note de fidélité à la charte /100 +
+détail par thème) — cf. `docs/referentiel/el-professor.md` pour la méthode et
+`docs/el-professor/index.md` pour la table de comparaison des notes entre versions. Un `?` dans
+cette colonne, si elle apparaît un jour vide dans un audit futur, signale une note manquante à
+produire, jamais une entrée à ignorer.
