@@ -350,6 +350,19 @@ l'Article 7 pour l'architecture d'ensemble (l'épreuve de la page blanche) — l
 explicite et générale, applicable à TOUT changement de code, aussi petit ou isolé paraisse-t-il, pas
 seulement ceux qui touchent la personnalité des personnages ou la structure globale du moteur.
 
+**Précision apportée le 2026-09-19, en réponse à une clarification explicite de l'utilisateur sur
+ce que « comprendre » recouvre concrètement ici :** ce n'est pas seulement lire le code qui va être
+modifié — c'est comprendre **le sens** de son fonctionnement, **le pourquoi du comment** (pas
+seulement ce que fait une ligne, mais pourquoi elle a été écrite précisément ainsi), **l'esprit
+dans lequel cette partie a été codée** (quelle intention, quel équilibre elle sert), et rassembler
+les **éléments de contexte et de motivation** qui l'expliquent (retour utilisateur à l'origine,
+bug corrigé, arbitrage déjà tranché) avant d'agir. Concrètement, cela veut dire **se référer à la
+charte (ce fichier) et au référentiel (`docs/referentiel/`) avant toute action sur le code** — pas
+après coup pour vérifier, pas seulement si un doute survient en cours de route. L'ordre est
+strict et non négociable : **d'abord on comprend le sens des choses, ensuite seulement on peut
+toucher au code** — jamais l'inverse (coder puis chercher a posteriori une justification à ce qui
+vient d'être fait).
+
 **Blocage de quota Gemini — diagnostic et repli.** *(2026-09-18, ~18h07 UTC : premier blocage à ce
 niveau critique rencontré sur ce projet — une simulation intégrale lancée en arrière-plan est
 restée bloquée plus de 20 tentatives consécutives sur une étape du dossier retourné, HTTP 429
