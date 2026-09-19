@@ -415,14 +415,26 @@ précis présenté à tort comme une mesure :
   valeurs à afficher : très bas à très haut ») : une ligne unique, discrète (texte en italique,
   la seule façon d'obtenir un rendu visuellement plus petit dans ce terminal en Markdown —
   CommonMark n'a pas de véritable taille de police réduite, limite honnête à ne pas déguiser),
-  avec seulement les deux icônes déjà choisies et une valeur sur une échelle à 5 niveaux, jamais
-  de texte explicatif à côté :
-  `*⏱️ très bas·bas·moyen·haut·très haut · 🔢 très bas·bas·moyen·haut·très haut*` (un seul niveau
-  retenu par icône à chaque réponse, les autres ne sont pas affichés — l'échelle complète n'est
-  listée ici que pour fixer le vocabulaire des 5 crans possibles).
+  avec seulement les deux icônes déjà choisies et une valeur sur une échelle, jamais de texte
+  explicatif à côté.
   - **⏱️** = temps de réponse estimé.
   - **🔢** = consommation de tokens estimée.
-  - Échelle commune aux deux : très bas, bas, moyen, haut, très haut.
+  - **Échelle élargie à 9 crans le 2026-09-19**, à la demande explicite de l'utilisateur (« est-il
+    possible d'améliorer un peu ce système, avec une échelle plus fine... et de s'assurer que
+    tout est bien mis en place à ce niveau, avec une évaluation la plus juste possible ») —
+    remplace l'ancienne échelle à 5 crans, jugée trop grossière : minimum, très bas, bas, assez
+    bas, moyen, assez haut, haut, très haut, maximal. Un seul niveau retenu par icône à chaque
+    réponse (les 8 autres ne sont pas affichés) : `*⏱️ [niveau] · 🔢 [niveau]*`.
+  - **Repères de calibrage** (pour rester cohérent d'une réponse à l'autre, même sans mesure
+    réelle — cf. limite honnête ci-dessus) : *minimum* = une ligne de texte, zéro outil ;
+    *très bas* = une poignée de lectures/recherches ciblées, pas d'édition ; *bas* = une ou deux
+    éditions simples sur un fichier déjà connu ; *assez bas* = plusieurs éditions ou une
+    investigation de code courte ; *moyen* = lecture + édition sur plusieurs fichiers, ou une
+    suite de tests standard ; *assez haut* = plusieurs fichiers modifiés avec vérification
+    (tsc/tests) ; *haut* = chantier multi-fichiers avec documentation à jour et tests complets ;
+    *très haut* = plusieurs séries de questions/réponses structurées, gros volume de texte à
+    produire, ou plusieurs commandes lourdes ; *maximal* = simulation complète de bout en bout
+    (Article 18) ou refonte touchant à la fois code, tests et plusieurs documents de référence.
 - Cette estimation est basée sur la NATURE de la tâche qui s'annonce (nombre d'outils prévus,
   taille des fichiers à lire, présence ou non d'une commande longue comme une simulation ou une
   compilation), pas sur une mesure réelle — elle peut donc se révéler fausse après coup, ce qui
