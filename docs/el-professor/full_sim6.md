@@ -1,6 +1,6 @@
 # EL-PROFESSOR — full_sim6
 
-Note globale : 62/100 (pas de plafonnement : le thème Esprit est à 13/20, donc ≥ 10/20, la somme normale des 5 thèmes s'applique)
+Note globale : 61/100 (pas de plafonnement : le thème Esprit est à 13/20, donc ≥ 10/20, la somme normale des 5 thèmes s'applique — 13+12+9+14+13=61 ; corrigé le 2026-09-19, une erreur d'addition dans la première rédaction du rapport donnait 62)
 
 Confiance de la lecture : partielle sur plusieurs thèmes. Cette simulation s'arrête au round 34, en pleine phase 1 autonome, bien avant la révélation — il n'y a donc ni dossier retourné, ni canal humain, ni observateur, ni provocation, ni la moindre occasion de tester la colère réellement débridée, la sortie méta, le silence de Lia ou la vulnérabilité rare prévus par la charte. **Thème 1 (Esprit)** : partielle, jugée uniquement sur le registre "calme/habituel" (aucune situation extrême n'est présente dans ce texte pour tester les paliers hauts). **Thème 4 (enquête)** : partielle par construction, comme demandé — jugée sur la seule progression en cours (indices, déductions provisoires), sans dossier à comparer. Confiante sur les thèmes 2, 3 et 5.
 
