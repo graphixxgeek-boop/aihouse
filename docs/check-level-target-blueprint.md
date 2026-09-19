@@ -60,6 +60,16 @@ niveau le plus probable. Si cette marge est large, l'outil choisit et EXPLIQUE t
 significativement — l'outil le signale explicitement et demande confirmation avant d'agir, plutôt
 que de trancher arbitrairement un cas ambigu.
 
+## Un même niveau peut recouvrir plusieurs registres d'outils
+
+*(Affiné le 2026-09-19, à l'ajout d'un second outil coûteux/rare dans ce projet — ALWAYS-NEW-CODE,
+aux côtés d'HYPER-SCAN-CHECKPOINT, tous deux au niveau le plus élevé.)* Un même niveau discret peut
+correspondre à plusieurs outils qui répondent à des besoins différents (ex. : chercher des bugs
+cachés contre remettre en cause la structure) sans que ça justifie un niveau séparé — plutôt que de
+mélanger tous les signaux dans un seul sac, chaque registre d'outil garde ses propres signaux,
+vérifiés indépendamment, pour recommander précisément le ou les bons outils, jamais un choix
+arbitraire entre plusieurs candidats plausibles.
+
 ## Toujours expliquer, jamais une boîte noire
 
 Chaque verdict de cet outil doit s'accompagner d'une explication lisible : quels signaux ont fait

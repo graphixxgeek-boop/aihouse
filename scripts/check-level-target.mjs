@@ -22,12 +22,27 @@ const SIGNALS = {
     /\bpouss[ée]e?\b/i, /v[ée]rifie (tout|bien tout)/i, /identifie les [ée]carts/i,
     /bugs? potentiels?/i, /bugs? latents?/i,
   ],
-  exceptionnel: [
-    /hyper[- ]scan/i, /machine de guerre/i, /v[ée]rification exceptionnelle/i,
-    /depuis le d[ée]but/i, /r[ée]cris tout l'historique/i, /double perspective/i,
-    /audit complet du (code|projet)/i,
-  ],
+  exceptionnel: [], // rempli juste après : bugs + structure, pour permettre un "flavor" par signal
 };
+
+// Niveau "exceptionnel" : deux registres bien distincts, ajoutés le même jour mais jamais
+// fusionnés (2026-09-19, ALWAYS-NEW-CODE) — la recherche de bugs cachés (HYPER-SCAN-CHECKPOINT)
+// et la remise en cause de la structure (ALWAYS-NEW-CODE) sont deux besoins différents, même si
+// tous deux sont rares/coûteux et restent au même niveau (décision explicite de l'utilisateur :
+// pas de 5e niveau séparé). Chaque registre est vérifié indépendamment pour recommander le bon
+// outil — voire les deux si les deux registres sont détectés dans la même demande.
+const EXCEPTIONNEL_BUG_SIGNALS = [
+  /hyper[- ]scan/i, /machine de guerre/i, /v[ée]rification exceptionnelle/i,
+  /depuis le d[ée]but/i, /r[ée]cris tout l'historique/i, /double perspective/i,
+  /audit complet du (code|projet)/i,
+];
+const EXCEPTIONNEL_STRUCTURE_SIGNALS = [
+  /reconstruire.{0,40}(z[ée]ro|scratch)/i, /(re)?partir de z[ée]ro/i, /grands axes/i,
+  /codé?e?s? (de fa[çc]on )?empil[ée]e?s?|empilement/i, /restructur/i,
+  /r[ée]organiser (le |la |tout(e)? )?(le |la )?(code|projet|structure)/i,
+  /always[- ]new[- ]code|toujours[- ]new[- ]code|code (comme neuf|"?comme neuf"?)/i,
+];
+SIGNALS.exceptionnel = [...EXCEPTIONNEL_BUG_SIGNALS, ...EXCEPTIONNEL_STRUCTURE_SIGNALS];
 
 const WEIGHTS = { leger: 1, standard: 1, approfondi: 2, exceptionnel: 3 };
 
@@ -35,7 +50,7 @@ const TOOLS_BY_LEVEL = {
   leger: { tools: ["check-house.mjs"], cost: "gratuit" },
   standard: { tools: ["check-house.mjs", "ARGUS (mécanique)", "HARMONIA (mécanique)"], cost: "gratuit" },
   approfondi: { tools: ["check-house.mjs", "ARGUS", "HARMONIA", "check-spirit.mjs", "check-profile.mjs"], cost: "réel — consulter Smart Conso API avant de lancer" },
-  exceptionnel: { tools: ["HYPER-SCAN-CHECKPOINT (version complète)"], cost: "réel — consulter Smart Conso API avant de lancer" },
+  exceptionnel: { tools: ["HYPER-SCAN-CHECKPOINT (version complète)", "ALWAYS-NEW-CODE (zoom profond)"], cost: "réel — consulter Smart Conso API avant de lancer" },
 };
 
 const LEVEL_ORDER = ["leger", "standard", "approfondi", "exceptionnel"];
@@ -68,14 +83,32 @@ export function classifyCheckLevel(text) {
   const margin = (topScore - secondScore) / topScore;
   const needsConfirmation = margin < CONFIRMATION_MARGIN && LEVEL_ORDER.indexOf(top) !== LEVEL_ORDER.indexOf(second);
 
+  let toolsInfo = TOOLS_BY_LEVEL[top];
+  let flavorNote = "";
+  if (top === "exceptionnel") {
+    const bugMatch = EXCEPTIONNEL_BUG_SIGNALS.some((re) => re.test(text));
+    const structureMatch = EXCEPTIONNEL_STRUCTURE_SIGNALS.some((re) => re.test(text));
+    const tools = [];
+    if (bugMatch) tools.push("HYPER-SCAN-CHECKPOINT (version complète)");
+    if (structureMatch) tools.push("ALWAYS-NEW-CODE (zoom profond)");
+    if (tools.length) {
+      toolsInfo = { tools, cost: TOOLS_BY_LEVEL.exceptionnel.cost };
+      flavorNote = bugMatch && structureMatch
+        ? " Signaux des deux registres détectés (bugs cachés ET restructuration) — les deux outils sont recommandés."
+        : bugMatch
+        ? " Registre \"bugs cachés\" détecté."
+        : " Registre \"restructuration\" détecté (cf. ALWAYS-NEW-CODE, Article 23).";
+    }
+  }
+
   return {
     level: top,
     confidence: needsConfirmation ? "doute réel" : "claire",
     needsConfirmation,
-    reasoning: needsConfirmation
+    reasoning: (needsConfirmation
       ? `Signaux comparables entre "${top}" et "${second}" (marge ${Math.round(margin * 100)}%) — les deux niveaux impliquent des outils/coûts différents, confirmation nécessaire avant d'agir.`
-      : `Signaux les plus forts pour le niveau "${top}".`,
-    ...TOOLS_BY_LEVEL[top],
+      : `Signaux les plus forts pour le niveau "${top}".`) + flavorNote,
+    ...toolsInfo,
   };
 }
 

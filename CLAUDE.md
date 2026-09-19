@@ -793,6 +793,35 @@ l'Article 8, jamais la court-circuiter ni la remplacer. Architecture détaillée
 `docs/smart-conso-api-blueprint.md` (principe générique) et `docs/referentiel/smart-conso-api.md`
 (instanciation propre à ce projet).
 
+**Article 23 — ALWAYS-NEW-CODE : l'épreuve de la page blanche, rendue concrète.** *(Ajouté le
+2026-09-19, à la demande explicite de l'utilisateur, juste après CHECK-LEVEL-TARGET : « imagine que
+le code n'existe pas et que tu dois le reconstruire depuis zéro, en partant de rien, mais en ayant
+une idée claire de là où tu veux en arriver [...] l'ennemi à abattre pour cette machine de guerre :
+tout ce qui a été codé de façon "empilée" [...] la vocation ultime de cet outil : avoir toujours un
+code "comme neuf" ». Nommé par l'utilisateur lui-même.)* L'Article 7 demandait déjà, périodiquement,
+de se poser la question de la page blanche — cet Article lui donne un vrai outil. Sur UNE zone à la
+fois (jamais tout le projet d'un coup — les 8 mêmes grands thèmes que la carte de dépendances
+d'HARMONIA), toujours en deux temps (un survol léger des grands axes, puis un zoom profond
+seulement sur la zone repérée), ALWAYS-NEW-CODE imagine comment cette zone serait construite
+aujourd'hui avec toute la connaissance actuelle du projet, puis compare point par point à la
+structure réelle pour repérer la dette d'organisation — un troisième axe, distinct des absences
+(ARGUS) et des frictions (HARMONIA). Une mémoire de couverture (`docs/always-new-code/index.md`)
+fait tourner une rotation intelligente entre les zones, jamais une liste à cocher à la main.
+Déclenché via CHECK-LEVEL-TARGET au niveau "Exceptionnel" (aux côtés d'HYPER-SCAN-CHECKPOINT, dont
+il rejoint aussi la boîte à outils) — jamais automatique. **Garde-fou non négociable, trouvé le
+jour même en dogfoodant l'outil sur `trottoirGranted`** : avant de qualifier quoi que ce soit
+d'"empilé, à corriger", toujours vérifier d'abord que ce n'est pas déjà une décision assumée et
+documentée ailleurs dans le projet (Article 19). **Jamais un résultat "exact à 100 %"** — une
+proposition de restructuration reste un jugement architectural, toujours rendu avec un palier de
+confiance (confirmé / probable / à surveiller, même vocabulaire qu'ARGUS), jamais une certitude
+absolue, même à budget illimité (confirmé explicitement avec l'utilisateur). **Jamais une
+application automatique** : l'agent précise toujours la portée exacte et le temps estimé, et
+interroge toujours l'utilisateur avant tout changement réel — plus strict que le blueprint
+générique par défaut, décision explicite de l'utilisateur. KPI suivi dès la création (nombre de
+trouvailles confirmées par passage), contrairement aux autres outils qui ont attendu plusieurs
+passages réels. Architecture détaillée : `docs/always-new-code-blueprint.md` (principe générique)
+et `docs/referentiel/always-new-code.md` (instanciation propre à ce projet).
+
 ## Règles de travail — collaboration avec l'utilisateur
 
 `docs/regles-de-travail.md` documente, séparément de la charte de contenu ci-dessus, la façon dont
@@ -876,6 +905,16 @@ fichiers propres à ce projet, qui vivent dans `docs/referentiel/check-level-tar
 de l'échelle qualitative d'effort général ⏱️/🔢 (`docs/regles-de-travail.md` §B.2bis), jamais
 fusionnés.
 
+## ALWAYS-NEW-CODE — blueprint exportable
+
+`docs/always-new-code-blueprint.md` documente l'ARCHITECTURE de l'outil qui rend concrète
+l'épreuve de la page blanche (Article 7, formalisée en Article 23) : imaginer, zone par zone, la
+structure idéale d'un projet en repartant de zéro avec toute la connaissance actuelle, pour
+détecter la dette d'organisation — sous une forme générique, réutilisable sur un autre projet
+piloté par IA. Jamais les 8 zones exactes ni les fichiers propres à ce projet, qui vivent dans
+`docs/referentiel/always-new-code.md` (instanciation, réutilise les thèmes d'HARMONIA) et
+`docs/always-new-code/` (dossier + index, mémoire de couverture pour la rotation).
+
 ## Référentiel technique — la référence à jour
 
 - `docs/referentiel/principes.md` — les règles invariantes du comportement de la maison, telles
@@ -925,6 +964,11 @@ fusionnés.
   ce projet : les 4 niveaux et leurs outils associés, `scripts/check-level-target.mjs`, validé
   contre les vrais prompts historiques d'HYPER-SCAN-CHECKPOINT. Cf.
   `docs/check-level-target-blueprint.md` pour le principe générique.
+- `docs/referentiel/always-new-code.md` (2026-09-19) — instanciation d'ALWAYS-NEW-CODE (Article 23)
+  pour ce projet : les 8 zones (réutilisées d'HARMONIA), la rotation intelligente
+  (`scripts/always-new-code.mjs`), le déclenchement via CHECK-LEVEL-TARGET niveau Exceptionnel, le
+  registre des passages (`docs/always-new-code/`). Cf. `docs/always-new-code-blueprint.md` pour le
+  principe générique.
 
 Ces documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
 vérité (leur nombre exact a varié au fil des chantiers — se référer à la liste ci-dessus plutôt

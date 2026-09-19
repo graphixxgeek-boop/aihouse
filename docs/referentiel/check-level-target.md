@@ -10,7 +10,7 @@ par l'utilisateur lui-même après avoir rejeté une première proposition ("TRI
 | **Léger** | `check-house.mjs` | gratuit |
 | **Standard** (défaut si aucun signal détecté) | `check-house.mjs` + ARGUS + HARMONIA (partie mécanique) | gratuit |
 | **Approfondi** | + `check-spirit.mjs`, `check-profile.mjs` | réel — consulter Smart Conso API avant de lancer |
-| **Exceptionnel** | HYPER-SCAN-CHECKPOINT (version complète) | réel — consulter Smart Conso API avant de lancer |
+| **Exceptionnel** | HYPER-SCAN-CHECKPOINT (bugs cachés) et/ou ALWAYS-NEW-CODE (restructuration), selon le registre détecté | réel — consulter Smart Conso API avant de lancer |
 
 ## Ce qui existe aujourd'hui
 
@@ -20,6 +20,15 @@ par l'utilisateur lui-même après avoir rejeté une première proposition ("TRI
   directement contre les vrais prompts historiques qui ont motivé la création d'HYPER-SCAN-
   CHECKPOINT (Article 21) : le prompt du 2026-09-19 classe bien en "approfondi", un simple correctif
   classe bien en "léger".
+- **Deux registres au sein du niveau "Exceptionnel" (2026-09-19, ajouté à la création d'ALWAYS-
+  NEW-CODE)** : `EXCEPTIONNEL_BUG_SIGNALS` (hyper-scan, machine de guerre, audit complet...) et
+  `EXCEPTIONNEL_STRUCTURE_SIGNALS` (reconstruire depuis zéro, grands axes, code empilé,
+  restructurer...) sont vérifiés indépendamment pour recommander le bon outil, ou les deux si les
+  deux registres sont détectés dans la même demande. **Vrai gap trouvé en dogfoodant l'outil sur sa
+  propre demande de création** : la formulation "reconstruire ce système en partant de zéro,
+  imaginer les grands axes idéaux..." retombait à tort en "standard" (gratuit) faute de mot-clé
+  reconnu — fermé le même jour, avant toute mise en production de ce gap (cf.
+  `scripts/check-house.mjs` pour le test de non-régression).
 - **Absence de signal → "standard" par défaut**, jamais "léger" : sous-évaluer silencieusement le
   niveau serait plus risqué que le sur-évaluer légèrement (cohérent avec Article 20 : ARGUS/HARMONIA
   tournent de toute façon à chaque changement de code).

@@ -905,7 +905,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 105'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 106'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2522,5 +2522,55 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(exceptionnel.tools,['HYPER-SCAN-CHECKPOINT (version complète)']);
   const doubt=classifyCheckLevel('verifie ça en profondeur et corrige le bug');
   assert.ok(typeof doubt.needsConfirmation==='boolean');
-  console.log('Passed: CHECK-LEVEL-TARGET correctly classifies the real historical prompts that motivated its own creation (a trivial fix stays léger, the exact 2026-09-19 "vérification approfondie" prompt classifies as approfondi with its real costly tools recommended, an explicit "machine de guerre"/hyper-scan mention reaches exceptionnel), falls back to the safe standard default on zero signal rather than under-checking silently, and always returns an explicit boolean on whether real doubt warrants confirmation.');
+  // ALWAYS-NEW-CODE (2026-09-19) : gap réel trouvé en dogfoodant l'outil sur sa propre demande de
+  // création — une formulation de restructuration sans le mot "machine de guerre" retombait à tort
+  // en standard/gratuit. Fermé par un second registre de signaux au sein du niveau exceptionnel.
+  const structural=classifyCheckLevel("reconstruire ce système en partant de zéro, imaginer les grands axes idéaux et comparer à la structure actuelle du code, repérer ce qui a été codé de façon empilée");
+  assert.equal(structural.level,'exceptionnel','a structural-rebuild request must reach exceptionnel just like a bug-hunting one, closing the real gap found the day ALWAYS-NEW-CODE was designed');
+  assert.deepEqual(structural.tools,['ALWAYS-NEW-CODE (zoom profond)'],'a purely structural request must recommend ALWAYS-NEW-CODE, never HYPER-SCAN-CHECKPOINT alone');
+  const both=classifyCheckLevel("il faut un hyper-scan complet pour reconstruire ce système en partant de zéro");
+  assert.deepEqual(both.tools,['HYPER-SCAN-CHECKPOINT (version complète)','ALWAYS-NEW-CODE (zoom profond)'],'a request mixing both registers must recommend both tools, never silently pick one');
+  console.log('Passed: CHECK-LEVEL-TARGET correctly classifies the real historical prompts that motivated its own creation (a trivial fix stays léger, the exact 2026-09-19 "vérification approfondie" prompt classifies as approfondi with its real costly tools recommended, an explicit "machine de guerre"/hyper-scan mention reaches exceptionnel), falls back to the safe standard default on zero signal rather than under-checking silently, always returns an explicit boolean on whether real doubt warrants confirmation, and — closing a real gap found the day ALWAYS-NEW-CODE was designed — distinguishes the "bugs cachés" and "restructuration" registers within the exceptionnel tier so a structural-rebuild request recommends ALWAYS-NEW-CODE rather than silently under-classifying or defaulting to HYPER-SCAN-CHECKPOINT alone.');
+}
+
+{
+  // ALWAYS-NEW-CODE (2026-09-19, cf. docs/always-new-code-blueprint.md et
+  // docs/referentiel/always-new-code.md). Rend concret l'Article 7 (page blanche) : dette
+  // d'organisation, distincte des absences (ARGUS) et frictions (HARMONIA).
+  const {THEMES,parseCoverage,recommendZone,countDatedAddenda,addendaSignal,parseNumstat,churnSignal,alwaysNewCodePerformance}=await import('../scripts/always-new-code.mjs');
+  assert.equal(THEMES.length,8,'must reuse the exact 8 HARMONIA grand-theme zones, never a second invented split of the project');
+  const idx=[
+    '| Date | Zone examinée | Trouvailles confirmées | Rapport | Notes |',
+    '|---|---|---|---|---|',
+    '| 2026-09-10 | Fatigue | 2 | x.txt | - |',
+    '| 2026-09-15 | Fatigue | 1 | y.txt | - |',
+  ].join('\n');
+  assert.equal(parseCoverage(idx).Fatigue,'2026-09-15','coverage must keep the MOST RECENT pass date per zone, never the first row found');
+  assert.equal(parseCoverage(idx)['Cycle jour/nuit'],undefined,'a zone never examined must be an honest absence, never a fabricated date');
+  const neverSeen=recommendZone(THEMES,{},undefined,new Date('2026-09-19'));
+  assert.equal(neverSeen.source,'rotation');
+  assert.equal(neverSeen.daysSinceLastPass,undefined,'a zone with zero history must report an honest absence of age, never a fake Infinity-derived number');
+  const neverSeenBeatsOld=recommendZone(THEMES,Object.fromEntries(THEMES.filter(t=>t!=='Enquête').map(t=>[t,'2026-01-01'])),undefined,new Date('2026-09-19'));
+  assert.equal(neverSeenBeatsOld.zone,'Enquête','a never-examined zone must always outrank every already-dated zone, however old that date is');
+  const fullyCovered=Object.fromEntries(THEMES.map((t,i)=>[t,`2026-09-${String(10+i).padStart(2,'0')}`]));
+  const rotated=recommendZone(THEMES,fullyCovered,undefined,new Date('2026-09-19'));
+  assert.equal(rotated.zone,'Fatigue','once every zone has a date, rotation must propose the OLDEST one first, never an arbitrary or alphabetical one');
+  const explicit=recommendZone(THEMES,{},'fatigue');
+  assert.equal(explicit.zone,'Fatigue');
+  assert.equal(explicit.source,'demande explicite','an explicit request for a known zone must always override the rotation, case-insensitively');
+  const ambiguous=recommendZone(THEMES,{},'un thème qui n\'existe pas');
+  assert.equal(ambiguous.ambiguous,true,'a requested zone matching no known theme must be flagged ambiguous for the agent to ask back, never silently accepted or silently ignored');
+  assert.equal(addendaSignal(countDatedAddenda('Rien de spécial ici.')),undefined,'below-threshold addenda count must never be promoted to a stacking signal');
+  assert.equal(addendaSignal(countDatedAddenda('Ajouté le 2026-09-16. Ajouté le 2026-09-16. Ajouté le 2026-09-17. Ajouté le 2026-09-17. Ajouté le 2026-09-18. Ajouté le 2026-09-19.')),'probable','six or more dated addenda on the same rule must be flagged as a probable stacking indicator');
+  assert.equal(parseNumstat(''),undefined,'a file with zero git history must be an honest absence, never a fake zero-growth signal');
+  const pureGrowth=parseNumstat('5\t0\tlib/x.ts\n3\t0\tlib/x.ts\n10\t0\tlib/x.ts\n2\t0\tlib/x.ts\n1\t0\tlib/x.ts\n');
+  assert.equal(churnSignal(pureGrowth),'probable','a file with 5+ commits and literally zero deletions ever must be flagged as probable pure accretion');
+  assert.equal(churnSignal(undefined),undefined,'missing stats must never be silently treated as a zero-signal verdict');
+  assert.equal(alwaysNewCodePerformance('| Date | Zone examinée | Trouvailles confirmées | Rapport | Notes |\n|---|---|---|---|---|'),undefined,'zero recorded passes must report an honest absence, never a fake 0%, same discipline as the HYPER-SCAN-CHECKPOINT KPI');
+  const perfIdx=[
+    '| Date | Zone examinée | Trouvailles confirmées | Rapport | Notes |','|---|---|---|---|---|',
+    '| 2026-09-19 | Fatigue | 3 | a.txt | - |','| 2026-09-19 | Enquête | 1 | b.txt | - |',
+  ].join('\n');
+  assert.deepEqual(alwaysNewCodePerformance(perfIdx),{passages:2,totalFindings:4,findingsPerPassage:2},'the KPI must compute the exact real average of confirmed findings per pass, tracked from day one per the explicit user decision');
+  console.log('Passed: ALWAYS-NEW-CODE reuses the exact 8 HARMONIA zones, its coverage memory keeps the most recent pass per zone and reports an honest absence for a never-seen zone, its rotation always proposes the most-neglected zone first while an explicit valid request always overrides it and an unknown requested zone is flagged ambiguous for the agent to ask back rather than silently accepted or ignored, its mechanical stacking signals (dated-addenda count, git-history pure-growth pattern) only ever reach "probable" and report an honest absence rather than a fake zero-signal on missing data, and its from-day-one KPI computes the exact real findings-per-pass average.');
 }

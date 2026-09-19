@@ -1,0 +1,98 @@
+# ALWAYS-NEW-CODE — instanciation pour Maison IA vivante
+
+*(Cf. `docs/always-new-code-blueprint.md` pour le principe générique. Créé le 2026-09-19, nommé par
+l'utilisateur lui-même — rend concret l'Article 7 de `CLAUDE.md` ("l'épreuve de la page blanche"),
+formalisé en Article 23.)*
+
+## Ce qui existe aujourd'hui
+
+- **`scripts/always-new-code.mjs`** — la préparation, gratuite, zéro appel réseau : `THEMES`
+  (les 8 zones), `recommendZone()` (rotation intelligente ou demande explicite), les indices
+  mécaniques d'empilement (`countDatedAddenda`/`addendaSignal`, `parseNumstat`/`churnSignal`), et
+  le suivi KPI (`alwaysNewCodePerformance`). La couche "zoom profond" elle-même (imaginer la
+  structure idéale, comparer, classer les trouvailles) est un raisonnement que seul l'agent
+  appelant peut faire — jamais réimplémentée dans ce script, même logique que la checklist
+  qualitative d'HYPER-SCAN-CHECKPOINT.
+- **`docs/always-new-code/`** — dossier des passages archivés + `index.md` (mémoire de couverture
+  pour la rotation, et suivi KPI).
+
+## Les 8 zones — réutilisées d'HARMONIA, jamais un second découpage
+
+Décision explicite de l'utilisateur (2026-09-19) : les zones d'ALWAYS-NEW-CODE sont exactement les
+8 "grands thèmes" de la carte de dépendances d'HARMONIA (`docs/referentiel/harmonia.md`) — Fatigue,
+Cycle jour/nuit, Enquête, Bonus roulette, Appréciation de l'observateur, Dossier retourné,
+Déplacements/espace, Relation Lia/Noé. Toute évolution de cette liste doit rester synchronisée
+entre les deux documents (Article 13). `THEME_PRIMARY_FILE` associe à chaque zone un fichier
+principal pour l'indice git — approximatif et honnêtement incomplet (plusieurs fichiers touchent
+souvent le même thème), à affiner avec l'usage réel comme les signaux de CHECK-LEVEL-TARGET.
+
+## Toujours deux temps : survol puis zoom
+
+Décision explicite de l'utilisateur : jamais un zoom direct sur une zone choisie à l'avance sans
+survol préalable. Le survol léger (vue d'ensemble des grands axes) sert de boussole pour savoir où
+creuser ; le zoom profond (le vrai travail "page blanche") ne porte que sur la zone ainsi
+repérée — ou sur une zone explicitement demandée, ou sur la zone la plus négligée par la rotation.
+
+## Déclenchement — via CHECK-LEVEL-TARGET, niveau Exceptionnel
+
+Décision explicite de l'utilisateur : « l'outil check-level-target trouve ici sa vocation
+profonde ». ALWAYS-NEW-CODE reste au niveau "Exceptionnel" de CHECK-LEVEL-TARGET, aux côtés
+d'HYPER-SCAN-CHECKPOINT (jamais un 5ᵉ niveau séparé) — `scripts/check-level-target.mjs` reconnaît
+désormais des signaux dédiés à la restructuration ("reconstruire depuis zéro", "grands axes",
+"code empilé", "restructurer"...), distincts des signaux de vérification de bugs déjà en place, et
+recommande le tool adapté selon lequel des deux registres est détecté (ou les deux). En cas de
+doute réel (marge étroite, ou signaux mêlés), l'agent interroge l'utilisateur avant de lancer quoi
+que ce soit — jamais un choix silencieux.
+
+## Rejoint la boîte à outils d'HYPER-SCAN-CHECKPOINT
+
+Décision explicite de l'utilisateur : quand une vérification exceptionnelle complète est demandée,
+elle peut désormais inclure un passage ALWAYS-NEW-CODE sur les zones les plus concernées, en plus
+d'ARGUS/HARMONIA/check-house.mjs déjà orchestrés.
+
+## Jamais une application automatique — toujours portée + temps + confirmation
+
+Décision explicite de l'utilisateur, plus stricte que le blueprint générique par défaut : à chaque
+proposition de restructuration, l'agent précise TOUJOURS l'étendue exacte du travail et le temps
+estimé, et interroge TOUJOURS l'utilisateur avant d'exécuter quoi que ce soit — jamais de seuil
+"petit changement sans risque" appliqué sans confirmation, même pour un renommage.
+
+## Jamais un résultat "exact à 100 %"
+
+Précisé explicitement le jour de la conception (question directe de l'utilisateur, réponse
+négociée) : même avec un budget de temps/raisonnement illimité, ALWAYS-NEW-CODE ne peut pas
+promettre l'exactitude absolue — une proposition de restructuration reste un jugement architectural.
+Les trouvailles sont donc toujours rendues avec un palier de confiance (confirmé / probable / à
+surveiller, même vocabulaire qu'ARGUS), jamais une certitude absolue. Le découpage en zones sert
+autant la fiabilité que le budget : une analyse superficielle de tout le projet vaudrait moins
+qu'une analyse profonde d'une zone.
+
+## Le garde-fou trottoirGranted — vérifier avant de qualifier d'"empilé"
+
+Leçon retenue le jour même de la conception de cet outil (cf. `docs/argus/index.md`) : avant de
+qualifier quoi que ce soit d'"empilé, à corriger", toujours vérifier d'abord que ce n'est pas déjà
+une décision assumée et documentée ailleurs dans le projet (Article 19). Exemple réel déjà présent
+dans ce projet : `CLAUDE.md` lui-même assume explicitement de ne jamais renuméroter ses Articles
+malgré l'empilement visible de dates, pour ne pas casser les renvois qui les citent — ce n'est pas
+de la dette, c'est un choix pesé.
+
+## Format de restitution
+
+Décision explicite de l'utilisateur : résumé court dans la conversation + détail complet
+(comparaison imaginée/réelle) en fichier joint via `SendUserFile` — même format que les
+simulations et le rapport KPI (Article 18).
+
+## KPI — suivi dès la création
+
+Décision explicite de l'utilisateur, contrairement aux autres outils de ce projet (dont le suivi a
+été repoussé "trop tôt" à leur création) : `alwaysNewCodePerformance()` suit, dès le premier
+passage, le nombre de trouvailles confirmées par passage — colonne "Trouvailles confirmées" de
+`docs/always-new-code/index.md`.
+
+## Limite honnête
+
+Reconnaissance de motifs + jugement architectural, jamais une preuve formelle — de la même nature
+que les autres outils de raisonnement de ce projet. Le mapping zone→fichier principal
+(`THEME_PRIMARY_FILE`) est approximatif ; les seuils de la couche mécanique (`addendaSignal`,
+`churnSignal`) sont calibrés sur ce projet à un instant donné, à recalibrer si l'expérience montre
+qu'ils sont trop ou trop peu sensibles.

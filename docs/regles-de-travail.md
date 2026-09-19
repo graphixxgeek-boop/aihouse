@@ -278,6 +278,76 @@ l'évolution de l'outil dans le temps ; l'Article 18 documente QUAND le consulte
   logique reste une intervention délibérée et documentée, exactement comme pour l'outil de
   diagnostic (cf. `docs/outil-resilience-api.md`, section 4).
 
+## 7ter. Le paysage des outils de vigilance, et la consultation bidirectionnelle
+
+*(Ajouté le 2026-09-19, après la construction dans la même session d'ARGUS, HARMONIA, Smart Conso
+API, HYPER-SCAN-CHECKPOINT, CHECK-LEVEL-TARGET et ALWAYS-NEW-CODE (en cours) — demande explicite de
+l'utilisateur : « mets à jour tes façons de travailler avec l'arrivée de tous ces outils [...] les
+outils doivent toujours t'interroger aussi, il y a une communication entre vous destinée à
+maximiser leurs performances ».)*
+
+### La carte des outils, pour ne plus se perdre
+
+| Outil | Ce qu'il détecte/régule | Coût | Déclenchement |
+|---|---|---|---|
+| `check-house.mjs` | régressions de comportement (filet de sécurité) | gratuit | à chaque changement de code |
+| `check-spirit.mjs` / `check-profile.mjs` | fidélité de l'esprit des personnages (Article 0) | réel (API) | à la main, si `lib/lia.ts`/personnalités changent |
+| ARGUS | absences — ce qui devrait exister et n'existe pas (Article 20) | gratuit (partie mécanique) | toujours déployé |
+| HARMONIA | frictions — deux choses qui existent et se contredisent (Article 20) | gratuit (partie mécanique) | toujours déployé |
+| Smart Conso API | rythme de consommation API de l'AGENT pendant le travail (Article 22) | gratuit à consulter | avant toute action coûteuse de l'agent |
+| CHECK-LEVEL-TARGET | quel niveau de vérification une demande appelle, quels outils déployer | gratuit | avant de décider comment traiter une demande |
+| HYPER-SCAN-CHECKPOINT | orchestrateur exceptionnel, fidélité aux consignes passées (Article 21) | réel (API, en version complète) | sur demande explicite seulement |
+| ALWAYS-NEW-CODE | dette d'organisation — code empilé plutôt que pensé (Article 23) | réel (raisonnement) | niveau « Exceptionnel » de CHECK-LEVEL-TARGET |
+| Smart Breaker (`check-gemini-quota.mjs` + `gemini-key-health.mjs` + `api-providers.mjs` + `lib/gemini-keys.ts`) | blocages de quota/clé Gemini, portée PRODUCTION | gratuit à diagnostiquer | à la demande, ou automatique en production (repli) |
+
+Cette table remplace toute énumération informelle éparpillée dans la conversation : à jour à
+chaque nouvel outil créé (même discipline que la liste des documents de référence, Article 13).
+
+### La consultation n'est jamais à sens unique
+
+Avant cette session, le modèle implicite était : l'agent appelle un outil, l'outil répond un
+verdict, fin de l'échange. Ce n'est pas assez pour un outil qui doit vraiment aider à travailler.
+**Chaque outil de ce paysage, quand sa propre confiance est insuffisante pour trancher seul, doit
+pouvoir interroger l'agent en retour plutôt que deviner silencieusement** — et l'agent doit
+transmettre cette interrogation à l'utilisateur quand elle le concerne, jamais l'absorber en
+silence. Ce n'est pas une politesse : un outil qui tranche à l'aveugle sur une hypothèse fragile
+produit un résultat moins fiable qu'un outil qui sait dire "je ne suis pas sûr, précise-moi X".
+Exemples déjà en place, chacun une instance du même principe :
+
+- **Smart Conso API** ne se contente jamais d'un oui/non : elle guide, conseille, coache l'agent
+  sur le rythme de sa consommation (cf. Article 22 de `CLAUDE.md`).
+- **CHECK-LEVEL-TARGET** demande confirmation quand la marge entre les deux niveaux les plus
+  probables est étroite, plutôt que de trancher un cas ambigu tout seul.
+- **ALWAYS-NEW-CODE** interroge systématiquement l'agent sur l'étendue du
+  travail et le temps disponible quand la taille d'une zone est difficile à estimer, et
+  redemande confirmation avant d'appliquer quoi que ce soit — jamais une simple case à cocher.
+- **ARGUS/HARMONIA** restent des scripts mécaniques qui ne peuvent pas littéralement poser une
+  question en direct — leur équivalent de ce principe est que leurs verdicts "probable"/"à
+  surveiller" sont une invitation implicite à vérifier avant d'agir, jamais un verdict à traiter
+  comme acquis (leçon apprise à ses dépens le 2026-09-19 avec `trottoirGranted`, faussement
+  qualifié de bug avant d'avoir vérifié `docs/referentiel/parametres.md` — cf. `docs/argus/index.md`
+  pour le détail complet de cette leçon).
+
+**Corollaire pour tout nouvel outil de ce type à construire à l'avenir** : prévoir dès la
+conception un mécanisme explicite de retour vers l'agent en cas de doute réel fait partie du
+cahier des charges de départ, au même titre qu'un blueprint séparé ou qu'un registre local —
+jamais un ajout après coup "si besoin". Les questions de calibrage posées à l'utilisateur avant de
+construire un nouvel outil (Article 16) doivent donc systématiquement couvrir ce point : comment
+CET outil interroge-t-il l'agent quand il n'est pas sûr ?
+
+### Aucun de ces outils n'est autonome — l'agent reste toujours celui qui finalise
+
+*(Précisé le 2026-09-19, en réponse à une question directe de l'utilisateur.)* Ce paysage
+d'outils réduit le travail mécanique et force des vérifications qu'on pourrait oublier sur le
+moment — il ne remplace jamais le jugement de l'agent. Aucun outil ci-dessus ne lit la charte à sa
+place, ne décide à sa place, ni n'exécute un changement réel de sa propre initiative : ARGUS/
+HARMONIA remontent des candidats "probable"/"à surveiller", jamais des faits établis, à vérifier
+avant d'agir (cf. leçon `trottoirGranted` ci-dessus) ; HYPER-SCAN-CHECKPOINT dit lui-même que sa
+checklist qualitative est "jamais mécanisable" ; ALWAYS-NEW-CODE ne prépare que la zone et les
+indices, le vrai travail d'imagination "page blanche" restant un raisonnement que seul l'agent
+appelant peut faire. Un outil qui semblerait un jour trancher tout seul une question de fond serait
+un signal d'alerte à traiter comme une dérive, pas un progrès.
+
 ## 8. Profil de collaboration observé
 
 *(Champ volontairement large, à la demande explicite de l'utilisateur : « tout ce qui est utile
