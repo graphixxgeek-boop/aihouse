@@ -905,7 +905,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 100'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 101'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2434,4 +2434,27 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   fs.writeFileSync('.sites-runtime/argus-fixture-mention.ts','// Ce commentaire parle de TODO et de FIXME sans en être un lui-même\nconst y=1;');
   assert.equal(findTodoMarkers(['.sites-runtime/argus-fixture-mention.ts']).length,0,'a comment that merely MENTIONS "TODO"/"FIXME" mid-sentence must never be mistaken for a real marker — only one that opens the comment counts');
   console.log("Passed: ARGUS's mechanical layer correctly flags a Life-type field that is genuinely never read elsewhere as a confirmed dead field, never flags a field with real, plentiful usage, reliably catches every real TODO/FIXME marker, and never mistakes a comment merely mentioning those words for an actual marker — two self-referential false-positive bugs found and fixed while building this exact test.");
+}
+
+{
+  // HARMONIA — partie mécanique (2026-09-19, cf. docs/harmonia-blueprint.md et
+  // docs/referentiel/harmonia.md). checkLinks() prend un readFile injectable : les fixtures
+  // vivent en mémoire, jamais sur disque, pour un test isolé et déterministe.
+  const {checkLinks}=await import('../scripts/check-harmonia.mjs');
+  const fixtures={
+    '/code-ok.ts':'export const THRESHOLD=42;',
+    '/doc-ok.md':'Le seuil a été fixé à 42 après calibrage.',
+    '/doc-mismatch.md':'Le seuil a été fixé à 99 après calibrage.',
+    '/doc-missing.md':'Ce document ne mentionne aucun seuil.',
+  };
+  const readFile=(f)=>{const key=Object.keys(fixtures).find(k=>f.endsWith(k));if(!key)throw new Error('fixture introuvable: '+f);return fixtures[key];};
+  const linkOk=[{theme:'lien sain',code:{file:'/code-ok.ts',pattern:/THRESHOLD=(\d+)/},docs:[{file:'/doc-ok.md',pattern:/fixé à (\d+) après/}]}];
+  const linkMismatch=[{theme:'lien en friction',code:{file:'/code-ok.ts',pattern:/THRESHOLD=(\d+)/},docs:[{file:'/doc-mismatch.md',pattern:/fixé à (\d+) après/}]}];
+  const linkMissing=[{theme:'affirmation absente',code:{file:'/code-ok.ts',pattern:/THRESHOLD=(\d+)/},docs:[{file:'/doc-missing.md',pattern:/fixé à (\d+) après/}]}];
+  const linkNoCode=[{theme:'constante introuvable',code:{file:'/code-ok.ts',pattern:/INTROUVABLE=(\d+)/},docs:[{file:'/doc-ok.md',pattern:/fixé à (\d+) après/}]}];
+  assert.equal(checkLinks(linkOk,readFile)[0].confidence,'ok','a code constant and its documentation stating the exact same number must be reported as consistent, never flagged');
+  assert.equal(checkLinks(linkMismatch,readFile)[0].confidence,'confirmé','a documented number that genuinely differs from the real code constant must be a confirmed friction, the whole point of this drift detector');
+  assert.equal(checkLinks(linkMissing,readFile)[0].confidence,'probable','a document that never states the expected claim at all is a weaker signal than a genuine numeric mismatch — probable, not confirmed, since the claim may simply live elsewhere');
+  assert.equal(checkLinks(linkNoCode,readFile)[0].confidence,'confirmé','a code pattern that cannot even be found in its own source file must always be reported, never silently skipped');
+  console.log('Passed: HARMONIA\'s mechanical layer correctly reconfirms a documented numeric claim against its real code constant — consistent numbers pass silently, a genuine mismatch is a confirmed friction, and a missing documentation claim or an unfindable code constant are both reported rather than silently ignored.');
 }

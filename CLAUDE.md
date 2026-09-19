@@ -167,6 +167,28 @@ strict nécessaire, jamais au prix du naturel. La séparation "un cerveau par pe
 appels Gemini distincts, chacun ne voyant que sa propre perception) est maintenue malgré son
 coût : elle sert directement la qualité de l'esprit des personnages.
 
+**Frontière avec Smart Conso API** *(ajoutée le 2026-09-19, à la demande explicite de
+l'utilisateur : « est-ce que smart-conso-api est sollicitée pour le principe de toujours coder en
+économisant les API [...] est-ce que c'est nécessaire de les relier ou pas ? »)* — liés en esprit
+(les deux visent à ne pas gaspiller les appels API), mais à deux niveaux différents, jamais
+fusionnés en un seul mécanisme : cet Article 8 gouverne l'ARCHITECTURE du jeu en production (ce que
+le code fait pour un vrai visiteur), tranché une fois pour toutes et protégé par l'Article 0, qui
+prime toujours. Smart Conso API (cf. section dédiée plus bas) régule un terrain différent : le
+rythme des actions de l'agent PENDANT le travail de développement (simulations lancées,
+diagnostics) — jamais l'architecture de production elle-même. Smart Conso API ne peut donc jamais
+suggérer de modifier un choix déjà tranché par cet article (comme la séparation des deux cerveaux)
+au nom de l'économie : ce serait exactement la dérive que l'Article 0 interdit.
+
+**Dans l'autre sens, en revanche, un bénéfice réel et légitime existe** *(précisé le 2026-09-19,
+question explicite de l'utilisateur : « est-ce que les conseils, l'expérience accumulée par Smart
+Conso API bénéficie à l'Article 8 et à sa mise en œuvre ? »)* : l'expérience accumulée par Smart
+Conso API (combien coûte réellement une simulation, un diagnostic, à quel rythme le quota se tend)
+peut ÉCLAIRER une décision future sous cet article — par exemple juger si une nouvelle
+fonctionnalité doit appeler l'API en direct ou générer une réplique localement (Article 10), en
+connaissance de cause plutôt qu'à l'aveugle. Sens unique, strictement : Smart Conso API informe,
+elle ne tranche jamais — la décision reste toujours gouvernée par l'Article 0, quoi que ses données
+suggèrent.
+
 **Article 9 — Rejouabilité et surprise.** Chaque session doit pouvoir raconter une histoire
 différente. Même schéma d'enquête, jamais le même déroulé mot pour mot.
 
@@ -676,13 +698,24 @@ s'applique aussi bien à une idée neuve proposée en cours de conversation qu'�
 déjà écrit. Architecture détaillée : `docs/argus-blueprint.md` (principe générique, réutilisable
 sur un autre projet) et `docs/referentiel/argus.md` (instanciation propre à ce projet — registre
 des trous trouvés, dans un dossier dédié avec fichiers + index, même schéma que
-`docs/referentiel/kpi-rapports/`+`kpi-index.md`), une fois ces documents créés.
+`docs/referentiel/kpi-rapports/`+`kpi-index.md`).
 
-**Toujours déployé, jamais laissé à la seule initiative de qui pourrait l'oublier.** Sa partie
-mécanique et gratuite (symétrie Lia/Noé, données calculées mais jamais lues, combinaisons de
-mécanismes non envisagées ensemble) tourne automatiquement, comme `check-house.mjs`, à chaque
-changement de code. Sa partie avec un vrai raisonnement plus poussé (donc un coût réel, Article 8)
-se déclenche à l'initiative de l'agent OU de l'utilisateur, sur un sujet précis. Dans les deux cas,
+**HARMONIA rejoint la même règle** *(ajouté le 2026-09-19, confirmé explicitement par
+l'utilisateur : « argus et harmonia font partie des tests systématiques/obligatoires quand on crée
+une nouvelle idée »)* : le cousin d'ARGUS, dédié cette fois à la cohérence des liens déjà existants
+(interdépendances entre jauges, affichage, narratif, enquête, objets, déplacements, temps,
+interface — jamais les absences, qui restent le terrain d'ARGUS). Architecture détaillée :
+`docs/harmonia-blueprint.md` (principe générique) et `docs/referentiel/harmonia.md` (instanciation
+propre à ce projet — carte des dépendances par grand thème, registre des frictions dans
+`docs/harmonia/`).
+
+**Toujours déployés, jamais laissés à la seule initiative de qui pourrait l'oublier.** Pour ARGUS
+ET HARMONIA : leur partie mécanique et gratuite (symétrie Lia/Noé, données calculées mais jamais
+lues, combinaisons de mécanismes non envisagées ensemble pour ARGUS ; cohérence chiffrée entre le
+code et sa documentation pour HARMONIA) tourne automatiquement, comme `check-house.mjs`, à chaque
+changement de code. Leur partie avec un vrai raisonnement plus poussé (donc un coût réel,
+Article 8) se déclenche à l'initiative de l'agent OU de l'utilisateur, sur un sujet précis — en
+particulier avant toute idée nouvelle, jamais seulement sur le code déjà écrit. Dans les deux cas,
 un rappel explicite fait partie du protocole de travail (cf. `docs/regles-de-travail.md`) pour ne
 jamais laisser cette vérification retomber dans l'oubli si, sur le moment, ni l'utilisateur ni
 l'agent n'y pense spontanément — exactement le risque que cette règle a été créée pour éliminer.
@@ -692,8 +725,9 @@ et la raison d'être du code existant avant d'y toucher ?) → Article 0 (l'espr
 altéré ?) → Articles 1, 11, 12 (la conversation) → Article 15 (est-ce lisible du point de vue de
 l'utilisateur ?) → Article 17 (est-ce cohérent du point de vue du personnage lui-même ?) → Articles
 2 et 4 (cohérence globale et enquête) → Articles 3 et 5 (bugs et
-robustesse) → Article 20 (ARGUS : un trou logique, une combinaison oubliée, un lien discret non vu
-subsiste-t-il malgré tout ce qui précède ?) → Articles 6, 7 et 13 (documentation, outils et
+robustesse) → Article 20 (ARGUS : un trou logique, une combinaison oubliée subsiste-t-il ? HARMONIA :
+un lien devenu incohérent, une friction entre deux parties du projet subsiste-t-elle malgré tout ce
+qui précède ?) → Articles 6, 7 et 13 (documentation, outils et
 architecture) → Articles 8, 9, 10
 (coût et rejouabilité) → Article 14 (vigilance continue, à appliquer en toile de fond de tous les
 autres, pas comme une étape séparée) → Article 16 (au moins trois questions de vérification posées
@@ -749,6 +783,13 @@ trouvailles propre à ce projet, qui vit dans `docs/argus/` (dossier + index) et
 `docs/referentiel/argus.md` (instanciation). Même séparation architecture/instanciation que pour
 l'outil de résilience API et le tableau de bord ci-dessus.
 
+## HARMONIA — blueprint exportable
+
+`docs/harmonia-blueprint.md` documente l'ARCHITECTURE du cousin d'ARGUS dédié à la cohérence des
+liens déjà existants (cf. Article 20) sous une forme générique — jamais la carte des dépendances
+propre à ce projet ni son registre de frictions, qui vivent dans `docs/referentiel/harmonia.md`
+(instanciation, carte par grand thème) et `docs/harmonia/` (dossier + index).
+
 ## Référentiel technique — la référence à jour
 
 - `docs/referentiel/principes.md` — les règles invariantes du comportement de la maison, telles
@@ -780,6 +821,10 @@ l'outil de résilience API et le tableau de bord ci-dessus.
 - `docs/referentiel/argus.md` (2026-09-19) — instanciation d'ARGUS (Article 20) pour ce projet :
   ce qui existe (`scripts/check-argus.mjs`), le registre des trous trouvés (`docs/argus/`), l'état
   du premier balayage complet. Cf. `docs/argus-blueprint.md` pour le principe générique.
+- `docs/referentiel/harmonia.md` (2026-09-19) — instanciation d'HARMONIA (Article 20) pour ce
+  projet : la carte des dépendances par grand thème (fatigue, cycle jour/nuit, enquête, bonus,
+  appréciation, dossier, espace, relation Lia/Noé), les nœuds sensibles identifiés, le registre des
+  frictions (`docs/harmonia/`). Cf. `docs/harmonia-blueprint.md` pour le principe générique.
 
 Ces documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
 vérité (leur nombre exact a varié au fil des chantiers — se référer à la liste ci-dessus plutôt
