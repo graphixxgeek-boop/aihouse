@@ -1,11 +1,16 @@
-# Blueprint exportable — outil de résilience face aux blocages de clé API
+# Smart Breaker — blueprint exportable de l'outil de résilience face aux blocages de clé API
 
 *(Créé le 2026-09-18, à la demande explicite de l'utilisateur : « je veux que cet outil soit
-exportable et utilisable dans un autre projet ». Distinct des trois autres documents-cadre du
-projet : `CLAUDE.md` (charte de contenu du jeu), `docs/regles-de-travail.md` (process de
-collaboration), `docs/philosophie-et-politique.md` (valeurs et arbitrages) — celui-ci est un
-blueprint TECHNIQUE, portable vers n'importe quel projet qui appelle une API tierce à quota/clé
-limités, indépendant du contenu narratif de "Maison IA vivante".)*
+exportable et utilisable dans un autre projet ». Baptisé **Smart Breaker** le 2026-09-19, à la
+demande explicite de l'utilisateur, purement pour le plaisir de lui donner un nom — un nom
+d'usage donné à l'ensemble `scripts/check-gemini-quota.mjs` + `scripts/gemini-key-health.mjs` +
+`scripts/api-providers.mjs` + `lib/gemini-keys.ts`, jamais un renommage des fichiers eux-mêmes
+(inchangés, pour ne courir aucun risque de casser les références croisées entre eux). Distinct
+des trois autres documents-cadre du projet : `CLAUDE.md` (charte de contenu du jeu),
+`docs/regles-de-travail.md` (process de collaboration), `docs/philosophie-et-politique.md`
+(valeurs et arbitrages) — celui-ci est un blueprint TECHNIQUE, portable vers n'importe quel
+projet qui appelle une API tierce à quota/clé limités, indépendant du contenu narratif de
+"Maison IA vivante".)*
 
 **Ce que ce document N'EST PAS.** Il ne contient jamais l'historique d'apprentissage accumulé par
 CE projet (le contenu de `.gemini-key-health.json`, jamais committé, propre à ce projet et à ses

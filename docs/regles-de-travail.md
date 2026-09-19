@@ -159,7 +159,11 @@ seule ne révèle pas (ex. le Point 2, retrouvé par une lecture directe du code
 requêtes, pas par une différence visible entre deux transcripts). L'agent l'essaie en priorité
 quand une version de référence existe, sans jamais s'y arrêter si elle ne suffit pas à conclure.
 
-## 7bis. Rendre compte des progrès de l'outillage interne (ex. outil quota Gemini)
+## 7bis. Rendre compte des progrès de l'outillage interne (ex. « Smart Breaker », l'outil quota Gemini)
+
+*(Nom d'usage « Smart Breaker » donné le 2026-09-19 à la demande explicite de l'utilisateur, pour
+le plaisir de lui donner un nom — désigne uniquement la façon dont on en parle, jamais les
+fichiers eux-mêmes, cf. `docs/outil-resilience-api.md`.)*
 
 *(Ajouté le 2026-09-18, à la demande explicite de l'utilisateur : « précise-moi à chaque fois que
 l'outil API s'est amélioré et comment, avec une estimation du pourcentage d'efficacité gagné ».)*

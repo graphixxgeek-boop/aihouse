@@ -35,6 +35,11 @@ const fallbackKeysRaw = (devVars.match(/^GEMINI_API_KEY_FALLBACKS=(.*)$/m)?.[1] 
 // `fournisseur:` explicite bascule sur un fournisseur différent, sonde uniquement.
 const allKeys = orderKeysByExperience([{ provider: "gemini", key }, ...fallbackKeysRaw.map(parseKeyEntry)]);
 
+// Nom d'usage "Smart Breaker" donné le 2026-09-19 à la demande explicite de l'utilisateur, pour le
+// plaisir — désigne cet outil et ses compagnons (gemini-key-health.mjs, api-providers.mjs,
+// lib/gemini-keys.ts), jamais un renommage des fichiers eux-mêmes (cf. docs/outil-resilience-api.md).
+console.log("=== Smart Breaker — diagnostic quota/clé Gemini ===\n");
+
 const primary = process.env.GEMINI_MODEL ?? devVars.match(/^GEMINI_MODEL=(.*)$/m)?.[1]?.trim() ?? "gemini-flash-lite-latest";
 // Ordre délibéré : d'abord les alias "latest" (suivent automatiquement la dernière version stable
 // du même palier de coût, jamais un modèle preview) puis quelques generations explicites en repli,

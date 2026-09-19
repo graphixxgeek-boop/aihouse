@@ -363,7 +363,12 @@ strict et non négociable : **d'abord on comprend le sens des choses, ensuite se
 toucher au code** — jamais l'inverse (coder puis chercher a posteriori une justification à ce qui
 vient d'être fait).
 
-**Blocage de quota Gemini — diagnostic et repli.** *(2026-09-18, ~18h07 UTC : premier blocage à ce
+**Blocage de quota Gemini — diagnostic et repli, outil surnommé « Smart Breaker ».** *(Nom d'usage
+donné le 2026-09-19 à la demande explicite de l'utilisateur, pour le plaisir — désigne l'ensemble
+`scripts/check-gemini-quota.mjs` + `scripts/gemini-key-health.mjs` + `scripts/api-providers.mjs` +
+`lib/gemini-keys.ts` décrits ci-dessous ; les fichiers gardent leurs noms techniques actuels,
+inchangés pour ne courir aucun risque de casser leurs références croisées — cf.
+`docs/outil-resilience-api.md` pour le blueprint complet sous ce nom.)* *(2026-09-18, ~18h07 UTC : premier blocage à ce
 niveau critique rencontré sur ce projet — une simulation intégrale lancée en arrière-plan est
 restée bloquée plus de 20 tentatives consécutives sur une étape du dossier retourné, HTTP 429
 systématique. Section consolidée le même jour à partir de six ajouts dispersés au fil de la
