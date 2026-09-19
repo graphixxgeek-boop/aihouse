@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { execSync } from "node:child_process";
+import { sh } from "./lib-shell.mjs";
 
 // CHECK-LEVEL-TARGET (2026-09-19, cf. docs/check-level-target-blueprint.md et
 // docs/referentiel/check-level-target.md). Calcule le niveau de vérification qu'une demande
@@ -194,7 +194,6 @@ function main() {
   if (result.needsConfirmation) console.log("\n⚠️  Confirmation recommandée avant de lancer quoi que ce soit.");
 
   try {
-    const sh = (cmd) => { try { return execSync(cmd, { encoding: "utf8" }); } catch { return ""; } };
     const changed = new Set([
       ...sh("git diff --name-only HEAD").split("\n"),
       ...sh("git diff --name-only HEAD~1 HEAD 2>/dev/null").split("\n"),

@@ -20,18 +20,14 @@
 // choses que seul l'agent appelant (pas un script isolé) peut réellement faire.
 
 import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { execSync } from "node:child_process";
 import { join } from "node:path";
+import { sh as shBase } from "./lib-shell.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const INDEX_PATH = join(ROOT, "docs/hyper-scan-checkpoint/index.md");
 
 function sh(cmd) {
-  try {
-    return execSync(cmd, { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-  } catch (e) {
-    return (e.stdout || "") + "\n[erreur: " + e.message + "]";
-  }
+  return shBase(cmd, { cwd: ROOT, verbose: true });
 }
 
 // Lit le dernier commit couvert par un passage précédent, directement depuis l'index archivé —

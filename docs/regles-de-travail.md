@@ -360,41 +360,71 @@ trouvaille jamais traitée, une zone jamais revue, une pression de points fragil
 un rapport complet à chaque fois si rien de notable n'a changé. Reste, comme tout le reste de ce
 paysage, un conseiller : elle ne corrige jamais rien elle-même.
 
-### Avant de créer un journal, vérifier la mutualisation — jamais un doublon
+### Avant de créer quoi que ce soit de nouveau, vérifier la mutualisation — jamais un doublon
 
 *(Ajoutée le 2026-09-19, à la demande explicite de l'utilisateur, juste après un vrai doublon
 créé par erreur dans la même session : `full_sim4` archivé une seconde fois dans
 `docs/simulations/` alors qu'il existait déjà dans `docs/contexte-projet/simulations/` — repéré
 par l'utilisateur, pas par l'agent, corrigé après coup plutôt qu'évité en amont. « Crée une règle
 qui permet de t'assurer de ne jamais créer de doublons : avant la création d'un journal, tu
-vérifies s'il ne va pas y avoir une possibilité de mutualisation ».)*
+vérifies s'il ne va pas y avoir une possibilité de mutualisation ». Étendue le même jour, à la
+demande explicite de l'utilisateur : « tu étends cette règle intelligemment aux autres cas où tu
+pourrais créer des doublons par inadvertance » — le principe ne se limite pas aux journaux, il
+vaut pour toute création de quelque nature que ce soit.)*
 
-Avant de créer tout nouveau fichier destiné à journaliser, archiver ou tenir un registre de
-quoi que ce soit (un log, un index, une archive de session, un dossier de résultats — pas les
-fichiers de code ou de contenu du jeu eux-mêmes, qui suivent leurs propres règles), l'agent
+Avant de créer quoi que ce soit de nouveau qui pourrait dupliquer une chose déjà existante, l'agent
 vérifie explicitement, DANS CET ORDRE, avant d'écrire le premier octet :
 
 1. **Chercher activement une mutualisation possible**, jamais se fier à la seule mémoire de la
    conversation en cours (c'est exactement ce qui a manqué pour `full_sim4`) : `grep`/recherche de
    fichiers sur le sujet précis, relecture de la table des outils et de leurs registres
-   (§7ter ci-dessus), et un coup d'œil aux dossiers voisins déjà existants qui pourraient déjà
-   couvrir ce rôle sous un autre nom.
-2. **Si un fichier existant sert déjà exactement ce rôle** : l'utiliser, jamais en créer un
-   second à côté — même si le nouvel emplacement semble plus logique après coup ; dans ce cas,
-   migrer/consolider l'existant plutôt que d'empiler une deuxième source pour la même donnée.
-3. **Si un fichier existant sert un rôle proche mais pas identique** : décider explicitement si la
-   nouvelle donnée doit y être AJOUTÉE (nouvelle colonne, nouvelle section, nouvelle ligne) plutôt
-   que de justifier un fichier séparé par la seule commodité du moment.
-4. **Un nouveau fichier n'est créé que si aucun existant ne convient réellement**, avec une raison
-   explicite de pourquoi les fichiers déjà là ne suffisent pas — même charge de la preuve que pour
+   (§7ter ci-dessus), et un coup d'œil aux dossiers/fichiers voisins déjà existants qui pourraient
+   déjà couvrir ce rôle sous un autre nom.
+2. **Si une chose existante sert déjà exactement ce rôle** : l'utiliser, jamais en créer une
+   seconde à côté — même si le nouvel emplacement semble plus logique après coup ; dans ce cas,
+   migrer/consolider l'existant plutôt que d'empiler une deuxième source pour la même chose.
+3. **Si une chose existante sert un rôle proche mais pas identique** : décider explicitement si la
+   nouveauté doit y être AJOUTÉE (nouvelle colonne, nouvelle section, nouveau paramètre, nouvelle
+   ligne) plutôt que de justifier une création séparée par la seule commodité du moment.
+4. **Une création séparée n'a lieu que si rien d'existant ne convient réellement**, avec une raison
+   explicite de pourquoi ce qui existe déjà ne suffit pas — même charge de la preuve que pour
    proposer un nouvel outil ou un nouvel Article de charte (Article 16).
-5. **Documenter le nouveau fichier dans la table de §7ter** dès sa création (pas différé), pour
-   qu'il soit trouvable la prochaine fois par ce même réflexe — c'est ce qui rend la règle
-   auto-renforçante plutôt que dépendante de la mémoire à chaque nouvelle occasion.
+5. **Documenter la nouveauté dans le registre qui lui correspond** (la table de §7ter pour un
+   outil/journal, le fichier de référence concerné pour une règle) dès sa création, pas différé —
+   c'est ce qui rend la règle auto-renforçante plutôt que dépendante de la mémoire à chaque
+   nouvelle occasion.
 
-Si un doublon est malgré tout découvert après coup (comme pour `full_sim4`), il se corrige
-immédiatement par consolidation vers un seul endroit — jamais laissé "pour plus tard", même
-type de discipline qu'un écart de documentation (Article 3/13 de `CLAUDE.md`).
+**Le principe déborde largement des journaux — quatre autres catégories où le même risque existe,
+chacune avec son propre réflexe :**
+
+- **Code (fonctions utilitaires, scripts)** : avant d'écrire une nouvelle fonction, vérifier qu'un
+  script existant ne fait pas déjà la même chose. Exemple réel trouvé en écrivant CETTE règle,
+  corrigé dans la foulée : un petit assistant shell (`sh(cmd)`, qui lance une commande sans jamais
+  planter sur un code de sortie non nul) existait réécrit à l'identique dans trois scripts
+  (`always-new-code.mjs`, `check-level-target.mjs`, `hyper-scan-checkpoint.mjs`) — jamais mutualisé
+  jusqu'ici. Extrait dans `scripts/lib-shell.mjs`, les trois scripts l'importent désormais au lieu
+  de le redéfinir, comportement exact préservé (testé dans `scripts/check-house.mjs`).
+- **Documentation** : une explication ne vit qu'à UN SEUL endroit, référencée ailleurs, jamais
+  recopiée — déjà le principe explicite derrière la séparation blueprint/instanciation de chaque
+  outil (ARGUS, HARMONIA, Smart Conso API, HYPER-SCAN-CHECKPOINT, CHECK-LEVEL-TARGET,
+  ALWAYS-NEW-CODE) ; cette règle-ci généralise ce réflexe à toute nouvelle page de documentation,
+  pas seulement aux blueprints.
+- **Tâches de suivi** (liste technique de l'agent et `docs/suivi/`) : déjà une règle explicite
+  ailleurs (§10 — « une idée précisée plusieurs fois met à jour la même entrée, jamais une nouvelle
+  par précision ») ; cette règle-ci en est la généralisation, pas un concept différent.
+- **Règles/Articles de charte** (`CLAUDE.md`) : avant de proposer un nouvel Article, vérifier
+  explicitement qu'un Article existant ne couvre pas déjà le même terrain (question posée à
+  l'utilisateur avant chaque création d'Article cette session — ex. « faut-il un nouvel Article ou
+  rattacher à l'Article 7 déjà existant ? » pour ALWAYS-NEW-CODE) — jamais deux Articles qui
+  finissent par dire la même chose sous deux numéros différents.
+- **État partagé entre outils** (fichiers de données comme `.gemini-key-health.json`) : le cas
+  fondateur qui a motivé cette réflexion dès le début de la session (« existe-t-il des journaux à
+  mutualiser ? ») — Smart Breaker et Smart Conso API partagent déjà la même source brute plutôt que
+  deux historiques séparés, cf. Article 22 de `CLAUDE.md`.
+
+Si un doublon est malgré tout découvert après coup (comme pour `full_sim4`, ou le `sh(cmd)`
+triplé), il se corrige immédiatement par consolidation vers un seul endroit — jamais laissé "pour
+plus tard", même type de discipline qu'un écart de documentation (Article 3/13 de `CLAUDE.md`).
 
 ## 8. Profil de collaboration observé
 

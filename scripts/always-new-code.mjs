@@ -18,8 +18,8 @@
 // explicitement avec l'utilisateur le 2026-09-19).
 
 import { readFileSync, existsSync } from "node:fs";
-import { execSync } from "node:child_process";
 import { join } from "node:path";
+import { sh } from "./lib-shell.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const INDEX_PATH = join(ROOT, "docs/always-new-code/index.md");
@@ -158,14 +158,6 @@ export function alwaysNewCodePerformance(indexText) {
   return { passages, totalFindings, findingsPerPassage: totalFindings / passages };
 }
 
-function sh(cmd) {
-  try {
-    return execSync(cmd, { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-  } catch (e) {
-    return e.stdout || "";
-  }
-}
-
 function main() {
   console.log("=== ALWAYS-NEW-CODE — préparation (zéro coût, la couche raisonnement suit) ===\n");
   const requested = process.argv[2];
@@ -184,7 +176,7 @@ function main() {
 
     const file = THEME_PRIMARY_FILE[rec.zone];
     if (file) {
-      const numstat = sh(`git log --numstat --pretty=format:"" -- ${file}`);
+      const numstat = sh(`git log --numstat --pretty=format:"" -- ${file}`, { cwd: ROOT });
       const stats = parseNumstat(numstat);
       const signal = churnSignal(stats);
       console.log(`\nIndice git (${file}) : ${stats ? `${stats.commits} commit(s), +${stats.insertions}/-${stats.deletions}` : "aucun historique"} — signal : ${signal ?? "aucun"}.`);

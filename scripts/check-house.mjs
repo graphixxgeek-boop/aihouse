@@ -2608,6 +2608,17 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 }
 
 {
+  // Mutualisation d'un utilitaire (2026-09-19, cf. docs/regles-de-travail.md §7ter) : le même petit
+  // assistant shell était réécrit à l'identique dans trois scripts, extrait ici dans lib-shell.mjs.
+  const {sh}=await import('../scripts/lib-shell.mjs');
+  assert.equal(sh('echo bonjour').trim(),'bonjour','a successful command must return its real stdout');
+  assert.equal(sh('exit 1'),'','a failing command must never throw, and defaults to empty output rather than a fake success');
+  assert.ok(sh('node -e "process.stderr.write(1); process.exit(1)"',{verbose:true}).includes('[erreur:'),'verbose mode must surface the real error detail for tools that report it (HYPER-SCAN-CHECKPOINT), never silently swallow it');
+  assert.ok(!sh('exit 1',{verbose:false}).includes('[erreur:'),'non-verbose mode (the default, used by ALWAYS-NEW-CODE/CHECK-LEVEL-TARGET) must stay exactly as quiet as their original local copies were, never suddenly noisier');
+  console.log('Passed: the shared shell helper (extracted from three duplicated copies) returns real stdout on success, never throws on a failing command, and only surfaces the verbose error detail when explicitly asked — preserving each of its three original call sites\' exact prior behavior.');
+}
+
+{
   // ALWAYS-NEW-CODE (2026-09-19, cf. docs/always-new-code-blueprint.md et
   // docs/referentiel/always-new-code.md). Rend concret l'Article 7 (page blanche) : dette
   // d'organisation, distincte des absences (ARGUS) et frictions (HARMONIA).
