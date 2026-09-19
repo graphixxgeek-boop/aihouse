@@ -194,20 +194,37 @@ export function groundRoomSpeech(reply:string,room:string,history:DialogueLine[]
 // (Article 17 corollaire de CLAUDE.md) : il repère, sur des critères purement statistiques (longueur
 // du mot, nombre de répliques distinctes où il apparaît), n'importe quel mot qui revient plusieurs
 // fois chez Lia/Noé récemment, quel qu'il soit — jamais une liste figée à mémoriser.
-function recentEchoWords(recent:DialogueLine[]):string[]{
+//
+// Trou trouvé le 2026-09-19 (audit d'une simulation fraîche : « autant » employé seul revenait 11
+// fois sur ~150 répliques, un vrai tic actif, pas un cas isolé). Cause racine : `recent` ne contient
+// JAMAIS plus que les 24 dernières lignes Lia/Noé (limite de la requête SQL au point d'appel,
+// `app/api/lia/route.ts`) — la fenêtre de 30 lignes ci-dessus était donc déjà, en pratique, la
+// totalité de ce qui est visible, jamais une vraie coupe d'un historique plus large. Un mot qui
+// revient toutes les 15-20 répliques ne se voit donc jamais deux fois dans cette fenêtre, quelle
+// que soit sa taille — exactement ce qu'Article 17/corollaire demande d'éviter (« une règle de
+// non-répétition portant sur le fond et sur toute la session, jamais seulement sur les deux
+// derniers tours »). Corrigé en croisant ce signal court terme avec `wordFrequency`, un compteur
+// PERSISTÉ (`life.wordFrequency`, incrémenté à chaque tour dans route.ts, jamais recalculé depuis
+// un historique tronqué) qui couvre réellement toute la session — jamais un mot précis en dur,
+// seulement une fréquence, avec un seuil plus haut (4) puisqu'il porte sur une fenêtre bien plus
+// longue : un mot qui revient 2 fois de suite OU 4 fois ou plus sur toute la session est un tic.
+function recentEchoWords(recent:DialogueLine[],wordFrequency:Record<string,number>):string[]{
   const counts=new Map<string,number>();
   for(const line of recent){
     const words=new Set((line.content.toLowerCase().match(/[a-zàâäéèêëïîôöùûüÿœæç]{6,}/g))??[]);
     for(const w of words)counts.set(w,(counts.get(w)??0)+1);
   }
-  return [...counts.entries()].filter(([,n])=>n>=2).map(([w])=>w).slice(0,8);
+  const flagged=new Set<string>();
+  for(const [w,n] of counts)if(n>=2)flagged.add(w);
+  for(const [w,n] of Object.entries(wordFrequency))if(n>=4)flagged.add(w);
+  return [...flagged].slice(0,8);
 }
-export function dialogueProgress(history:DialogueLine[],contributions:readonly string[]){
+export function dialogueProgress(history:DialogueLine[],contributions:readonly string[],wordFrequency:Record<string,number> = {}){
  const recent=history.slice(-16);
  // Chaque motif détecte un THÈME qui tourne à vide, pas seulement une phrase répétée mot pour
  // mot (déjà géré ailleurs par le registre anti-écho) : ici, la même idée ressassée avec des
  // mots différents à chaque fois compte aussi comme un thème épuisé (Article 9/11 de la charte).
  const motifs=[['repos et confort du salon',/canapé|calme|souffl|repos|tranquill/i],['silence et absence de monde extérieur',/silence|\bvide\b|dehors|\bair\b|\broute\b|sortir/i],['réconfort mutuel',/présence|ensemble|rassur|à tes côtés|avec toi/i],['ressasser un indice sans preuve neuve',/tourne(?:nt)? en (?:rond|boucle)|qui tient les ficelles|manipul[ée]?s?|ça ne (?:nous )?(?:avance|dit|explique) (?:pas|rien)|boucle sans fin|prouve (?:au moins |juste )?(?:que|rien)|ça (?:ne )?prouve (?:pas|rien)/i]] as const;
- const echoWords=recentEchoWords(history.slice(-30));
+ const echoWords=recentEchoWords(history.slice(-30),wordFrequency);
  return {recentContributions:contributions.slice(-12),overusedThemes:motifs.filter(([,pattern])=>recent.filter(l=>pattern.test(l.content)).length>=4).map(([name])=>name),echoWords,rule:'Répondre à la dernière intervention avec un apport concret : une objection, un détail personnel ou une déduction prudente. Ne pas reformuler simplement l’accord du partenaire. Garder Lia incisive et Noé concret ; éviter la même tournure pour les deux. Si overusedThemes n’est pas vide, ne l’alimentez plus avec une nouvelle variante, même reformulée : proposez une action concrète (se déplacer, vérifier un autre objet), une hypothèse vraiment neuve, une question personnelle, ou reconnaissez l’impasse en une phrase puis changez réellement de sujet. Aucun faux indice pour renouveler le sujet. Si echoWords n’est pas vide, ces mots précis reviennent déjà plusieurs fois récemment (détection automatique, pas une interdiction définitive) : évite de les réutiliser dans cette réplique, cherche une formulation qui n’en a besoin d’aucun.'};
 }

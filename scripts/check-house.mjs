@@ -701,6 +701,18 @@ console.log('Passed: acquired-evidence-only checkpoint, zero-call local recap, t
 const {dialogueProgress:progressOf,groundRoomSpeech:locatedSpeech}=await import('../.sites-runtime/test-dialogue.mjs');
 assert.ok(progressOf(Array.from({length:5},(_,i)=>({id:i,speaker:'Lia',content:'Ce canapé et ce calme nous reposent.'})),['Lia : peur du silence']).overusedThemes.includes('repos et confort du salon'));
 assert.ok(locatedSpeech('Ce miroir est bizarre.','salon',[]).includes('miroir de la chambre'));assert.ok(locatedSpeech('La plante et l’enceinte sont fausses.','bureau',[]).includes('plante du salon'));assert.ok(locatedSpeech('Je regarde la télévision.','salon',[]).includes('télévision'));
+{
+  // Trou trouvé le 2026-09-19 en auditant une simulation fraîche : « autant » employé seul revenait
+  // 11 fois sur ~150 répliques sans jamais être capté, parce que la fenêtre récente (limitée à 24
+  // lignes par la requête SQL du point d'appel) ne voit jamais deux occurrences espacées de plus de
+  // douze tours. Corrigé par un second signal, un compteur PERSISTÉ sur toute la session
+  // (life.wordFrequency), avec un seuil plus haut (4) puisqu'il ne dépend plus d'une fenêtre courte.
+  const wordFrequency={autant:5,rarement:3};
+  const progress=progressOf([{id:1,speaker:'Lia',content:'On verra bien ce que ça donne.'}],[],wordFrequency);
+  assert.ok(progress.echoWords.includes('autant'),'a word repeated 4+ times across the whole session must be flagged even if it never appears twice within the short recent window — the exact real "autant" repetition bug found in a fresh simulation');
+  assert.ok(!progress.echoWords.includes('rarement'),'a word under the session-wide threshold and not repeated in the recent window must not be flagged, to avoid over-flagging incidental reuse of structurally common words');
+  console.log('Passed: the echo-word detector now also catches a word that recurs regularly across the whole session without ever repeating twice within the short recent window, closing the root cause of the real "autant" repetition bug.');
+}
 assert.ok(truthfulGender('Je suis un homme.',1).includes('une femme'));assert.ok(truthfulGender('Je suis une femme.',2).includes('un homme'));
 // Manual entry does not discover a mirror; published observation does, with the scene colors.
 pp={...pp,round:6,met:true,introduced:true,evidence:[],life:{...newStory().life,visualIntro:2,ambientSeen:true,ambientVerified:true,visited:['salon','cuisine'],mirrorVerified:false,foodVerified:true,personalAsked:true}};
@@ -1921,4 +1933,38 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(keysUsed,new Set(['test-only','test-rotation-b','test-rotation-c']),'with 3 simultaneously healthy keys, 4 independent brain calls across 2 turns must use all 3 keys, never just one absorbing all the traffic');
   globalThis.fetch=priorFetch;delete globalThis.__testEnv.GEMINI_API_KEY_FALLBACKS;
   console.log("Passed: with several simultaneously healthy Gemini keys configured, traffic rotates across all of them instead of always landing on the same one, satisfying the explicit \"ne pas saturer une clef\" request — proven independently of the rotation counter's exact starting point.");
+}
+
+{
+  // Persistance réelle du compteur de mots (2026-09-19, cf. lib/dialogue.ts::recentEchoWords) :
+  // vérifie qu'un mot employé par les deux personnages incrémente bien life.wordFrequency à travers
+  // de vrais tours HTTP, et que ce compteur continue d'accumuler d'un tour indépendant à l'autre —
+  // pas seulement dans le test unitaire de la fonction pure dialogueProgress() plus haut.
+  const plot={...newStory(),round:13,met:true,introduced:true,finalCalled:true,evidence:Array(5).fill('preuve'),life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,exitSearched:true}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  for(const id of [1,2])sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=?').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:60}),JSON.stringify({...steady,attraction:30}),id);
+  const priorFetch=globalThis.fetch;
+  // Deux formulations distinctes par tour (jamais la même phrase deux fois, sinon le registre
+  // anti-doublon existant du moteur la remplacerait par un repli sans le mot cible, faussant le
+  // test) — seul le mot « distinctement » est volontairement partagé entre les deux.
+  const wordFrequencyReplies=[['Franchement, on devrait vérifier distinctement chaque indice trouvé.','Oui, il faut regarder ça distinctement, sans se précipiter.'],['On doit trancher ça distinctement, une bonne fois pour toutes.','D’accord, séparons distinctement le vrai du faux ici.']];
+  let wordFrequencyTurn=0;
+  globalThis.fetch=async(url,options)=>{
+    const payload=JSON.parse(options.body);
+    const context=JSON.parse(payload.contents[0].parts[0].text);
+    const reply=context.selfRole==='partner'?wordFrequencyReplies[wordFrequencyTurn][1]:wordFrequencyReplies[wordFrequencyTurn][0];
+    return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({intent:'chat',affectionAccepted:false,emotions:{curiosity:60,tension:30,trust:40,comfort:50,attraction:30},reply,thought:'Je réfléchis.',stayAlone:false,mood:'attentive',activity:'On discute',goal:'Comprendre',action:'move',room:'salon',memory:reply})}]}}]});
+  };
+  let epoch=(await readWorld(db)).epoch;
+  let r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);let w=await r.json();
+  assert.equal(w.story.life.wordFrequency.distinctement,2,'both character replies containing the same word this turn must each increment the persisted session-wide counter');
+  wordFrequencyTurn=1;
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=1').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:60}),JSON.stringify({...steady,attraction:30}));
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=2').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:60}),JSON.stringify({...steady,attraction:30}));
+  epoch=(await readWorld(db)).epoch;
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  assert.equal(w.story.life.wordFrequency.distinctement,4,'the counter must keep accumulating across independent turns, never reset mid-session');
+  globalThis.fetch=priorFetch;
+  console.log('Passed: life.wordFrequency genuinely persists and accumulates across real HTTP turns (not just in the pure-function unit test), the mechanism behind the session-wide echo-word detection that closes the real "autant" repetition bug.');
 }
