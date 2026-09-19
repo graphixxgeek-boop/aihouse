@@ -370,13 +370,20 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   `trustShift` = variation réelle de la confiance de ce personnage sur ce tour (`d.emotions.trust`
   après tour moins avant tour, déjà déterminée par le modèle via `evolveEmotions`/`humanStress`,
   jamais recalculée depuis le texte). Poids appliqué à `trustShift` selon son signe et l'ancienneté
-  (tôt = 3 premiers messages humains post-révélation via `dossierHumanTurns`) : baisse ×6 (tôt) /
-  ×3 (ensuite) ; hausse ×4 (tôt) / ×2 (ensuite) — asymétrie toujours présente (baisse pèse plus
-  qu'une hausse égale). `trustShift` lui-même est borné par `evolveEmotions` à [-12,+5] par tour
-  (cap existant, commun à toute émotion) ; en pratique, sur une vraie session, les variations
+  (tôt = 3 premiers messages humains post-révélation via `dossierHumanTurns`) : baisse ×8 (tôt) /
+  ×4 (ensuite) ; hausse ×6 (tôt) / ×3 (ensuite) — asymétrie toujours présente (baisse pèse plus
+  qu'une hausse égale), mais resserrée par rapport aux poids d'origine (2026-09-19, retour
+  utilisateur explicite après trois simulations où l'appréciation plafonnait vers 36-41 malgré une
+  bienveillance soutenue dédiée, rendant `genuineRespectStreak` — qui exige `appreciation>=85` —
+  hors d'atteinte en pratique). `trustShift` lui-même est borné par `evolveEmotions` à [-12,+5] par
+  tour (cap existant, commun à toute émotion) ; en pratique, sur une vraie session, les variations
   observées restent bien plus fines (de l'ordre de ±1 à ±3), le cap ne s'atteignant que pour une
-  réaction de confiance véritablement extrême. Message neutre (`trustShift`=0) : 0, jamais de
-  mouvement par défaut.
+  réaction de confiance véritablement extrême. Sur cette plage réaliste (±1 à ±3), les nouveaux
+  poids permettent à une bienveillance vraiment soutenue (plusieurs tours consécutifs à trustShift
+  positif) d'approcher ou d'atteindre 85 sur une session réaliste, sans le rendre trivial ni rapide
+  — à revalider empiriquement par une nouvelle simulation dédiée avant de considérer ce calibrage
+  définitif (cf. CLAUDE.md, feuille de route du 2026-09-19). Message neutre (`trustShift`=0) : 0,
+  jamais de mouvement par défaut.
 - Colère réellement lue (`angerLevel(tension,comfort,dispute actif)` > 0,5 chez le personnage qui
   vient de répondre) : -5 supplémentaires, en plus du jugement de confiance ci-dessus, jamais à sa
   place — un signal distinct (tension/confort) plutôt qu'une redite de la confiance.

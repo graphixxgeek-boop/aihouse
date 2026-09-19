@@ -888,7 +888,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 82'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 83'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -1144,10 +1144,10 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // lexical séparé. Toujours asymétrique (descend plus qu'elle ne monte) et amplifiée sur les tout
   // premiers messages post-révélation.
   const {appreciationFromTrust,detectNegotiationOffer}=await import('../.sites-runtime/test-life.mjs');
-  assert.equal(appreciationFromTrust(-3,1),-18,'an early, meaningfully negative trust reaction must cost a lot of appreciation');
-  assert.equal(appreciationFromTrust(-3,5),-9,'the same trust drop later on must cost less than the early-impression penalty');
-  assert.equal(appreciationFromTrust(2,1),8,'an early, meaningfully positive trust reaction must earn appreciation');
-  assert.equal(appreciationFromTrust(2,5),4,'the same trust rise later on must earn less than the early-impression bonus');
+  assert.equal(appreciationFromTrust(-3,1),-24,'an early, meaningfully negative trust reaction must cost a lot of appreciation');
+  assert.equal(appreciationFromTrust(-3,5),-12,'the same trust drop later on must cost less than the early-impression penalty');
+  assert.equal(appreciationFromTrust(2,1),12,'an early, meaningfully positive trust reaction must earn appreciation');
+  assert.equal(appreciationFromTrust(2,5),6,'the same trust rise later on must earn less than the early-impression bonus');
   assert.equal(appreciationFromTrust(0,1),0,'no trust reaction at all must never move the gauge either way');
   assert.ok(appreciationFromTrust(-3,1)+appreciationFromTrust(3,1)<0,'a drop must always weigh more than an equivalent rise (down-more-than-up asymmetry)');
   assert.ok(detectNegotiationOffer("Je le fais, mais seulement si tu me donnes un bonus en échange."));
@@ -1168,12 +1168,12 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const forceOwnTrustDelta=delta=>async(url,options)=>{const response=await gameFetch1(url,options),body=await response.json(),decision=JSON.parse(body.candidates[0].content.parts[0].text);const ctx=JSON.parse(JSON.parse(options.body).contents[0].parts[0].text);decision.emotions={...decision.emotions,trust:ctx.state.emotions.trust+delta};body.candidates[0].content.parts[0].text=JSON.stringify(decision);return Response.json(body);};
   globalThis.fetch=forceOwnTrustDelta(-3);
   let r=await post(input('chat',1,{epoch,message:"Vous êtes complètement inutiles, débiles."}));assert.equal(r.status,200);let w=await r.json();
-  assert.equal(w.story.life.appreciation[1],32,'a hostile message genuinely read as a trust drop by the responding character must cost the amplified early-impression penalty (50-18)');
-  assert.equal(w.story.life.appreciation[2],32,'the partner, reacting to the same message with the same trust drop, must see their own appreciation move identically (solidarity by default, outside any dispute)');
+  assert.equal(w.story.life.appreciation[1],26,'a hostile message genuinely read as a trust drop by the responding character must cost the amplified early-impression penalty (50-24)');
+  assert.equal(w.story.life.appreciation[2],26,'the partner, reacting to the same message with the same trust drop, must see their own appreciation move identically (solidarity by default, outside any dispute)');
   globalThis.fetch=forceOwnTrustDelta(2);
   r=await post(input('chat',1,{epoch,message:"Merci beaucoup, prenez votre temps."}));assert.equal(r.status,200);w=await r.json();
-  assert.equal(w.story.life.appreciation[1],40,'a kind message genuinely read as a trust rise by the responding character must still earn the early-impression bonus (32+8)');
-  assert.equal(w.story.life.appreciation[2],40,'the partner must again move identically outside a dispute');
+  assert.equal(w.story.life.appreciation[1],38,'a kind message genuinely read as a trust rise by the responding character must still earn the early-impression bonus (26+12)');
+  assert.equal(w.story.life.appreciation[2],38,'the partner must again move identically outside a dispute');
   globalThis.fetch=gameFetch1;
   // Négociation : on force la réponse d'un personnage à contenir une offre reconnaissable, sans
   // jamais lui dicter un script figé — seule cette réponse-là est substituée pour le test.
@@ -1250,25 +1250,25 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   globalThis.fetch=forceAsymmetricTrust;
   let r2=await post(input('chat',1,{epoch:epoch2,message:"Toi Lia t'es vraiment inutile."}));assert.equal(r2.status,200);let w2=await r2.json();
   globalThis.fetch=gameFetch3;
-  // Sans pull : Lia 50+appreciationFromTrust(-3,10)=50-9=41, Noé 50+0=50 (écart brut 9). Avec le
-  // pull de solidarité (30% vers la moyenne 45,5) : Lia≈42, Noé≈49 (écart réduit à 7) — la valeur
+  // Sans pull : Lia 50+appreciationFromTrust(-3,10)=50-12=38, Noé 50+0=50 (écart brut 12). Avec le
+  // pull de solidarité (30% vers la moyenne 44) : Lia≈40, Noé≈48 (écart réduit à 8) — la valeur
   // exacte, pas une simple borne, pour prouver que le pull agit vraiment, pas seulement que
   // l'écart brut serait de toute façon resté sous un seuil large.
-  assert.equal(w2.story.life.appreciation[1],42,'outside any dispute, the character actually addressed with hostility must be pulled back up toward their partner by the default solidarity mechanic');
-  assert.equal(w2.story.life.appreciation[2],49,'outside any dispute, the unaffected partner must also be pulled slightly down toward the other — solidarity moves both, not just the one who moved on their own');
+  assert.equal(w2.story.life.appreciation[1],40,'outside any dispute, the character actually addressed with hostility must be pulled back up toward their partner by the default solidarity mechanic');
+  assert.equal(w2.story.life.appreciation[2],48,'outside any dispute, the unaffected partner must also be pulled slightly down toward the other — solidarity moves both, not just the one who moved on their own');
   // Même scénario, mais avec une dispute interpersonnelle active : la convergence doit être
   // suspendue (pas de pull), la divergence doit rester entière. Une dispute active force aussi
   // angerLevel(...,angry=true) pour LES DEUX personnages (plancher à 0,85, comportement déjà
   // existant partagé avec le rendu du visage) : Noé prend donc lui aussi le coût de colère (-5),
-  // mais SEULE Lia, réellement visée par l'hostilité, prend EN PLUS le coût de confiance (-9) —
-  // Lia 50-9-5=36, Noé 50-5=45, sans aucun pull entre les deux.
+  // mais SEULE Lia, réellement visée par l'hostilité, prend EN PLUS le coût de confiance (-12) —
+  // Lia 50-12-5=33, Noé 50-5=45, sans aucun pull entre les deux.
   {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life.appreciation={1:50,2:50};p.life.dispute={topic:'test',remaining:2};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
   globalThis.fetch=forceAsymmetricTrust;
   r2=await post(input('chat',1,{epoch:epoch2,message:"Toi Lia t'es vraiment inutile."}));assert.equal(r2.status,200);w2=await r2.json();
   globalThis.fetch=gameFetch3;
   assert.equal(w2.story.life.appreciation[2],45,'an active dispute costs both characters the shared anger penalty (angry floor), but the untouched partner must not additionally be pulled toward the other — no solidarity smoothing during a dispute');
-  assert.equal(w2.story.life.appreciation[1],36,'the character actually addressed with hostility keeps the full, un-smoothed trust penalty on top of the shared anger penalty');
-  assert.ok(w2.story.life.appreciation[1]<w2.story.life.appreciation[2],'the character actually addressed with hostility must end up with a lower appreciation than their unaffected partner while the dispute lasts — real divergence, not solidarity, and a wider gap than the no-dispute case above (36 vs 45, versus the smoothed 42 vs 49)');
+  assert.equal(w2.story.life.appreciation[1],33,'the character actually addressed with hostility keeps the full, un-smoothed trust penalty on top of the shared anger penalty');
+  assert.ok(w2.story.life.appreciation[1]<w2.story.life.appreciation[2],'the character actually addressed with hostility must end up with a lower appreciation than their unaffected partner while the dispute lasts — real divergence, not solidarity, and a wider gap than the no-dispute case above (33 vs 45, versus the smoothed 40 vs 48)');
   console.log('Passed: appreciation is tracked per character; outside a dispute the two gauges are pulled back toward each other (solidarity by default), but an active interpersonal dispute suspends that pull so one character can genuinely diverge from the other, per the user\'s own example (Noé staying friendly with the observer while Lia alone is mistreated).');
 }
 

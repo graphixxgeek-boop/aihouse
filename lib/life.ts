@@ -175,9 +175,22 @@ export function detectDistress(message:string):boolean{return /choqu|dégoût|d�
 // Toujours descend plus qu'elle ne monte pour un même trustShift (retour utilisateur explicite :
 // "elle peut vite descendre... plus difficile de la remonter"), et les tout premiers messages
 // humains post-révélation pèsent davantage (humanMessageCount<=3).
+// Poids de hausse relevés le 2026-09-19 (retour utilisateur explicite, après trois simulations
+// indépendantes où l'appréciation plafonnait vers 36-41 même sur une séquence dédiée de
+// bienveillance soutenue, rendant `genuineRespectStreak` — qui exige appreciation>=85 — hors
+// d'atteinte en pratique malgré son intention documentée de rester "rare mais possible"). Le
+// principe descend-plus-qu'elle-ne-monte reste strictement respecté (poids de hausse toujours
+// inférieur au poids de baisse, Article 0 déjà validé) : seule l'AMPLITUDE de la hausse augmente
+// nettement plus vite que celle de la baisse (hausse : early 4→6, hors-early 2→3, +50% ; baisse :
+// early 6→8, hors-early 3→4, +33% seulement — l'écart entre les deux progressions RÉTRÉCIT
+// volontairement, sans jamais s'inverser). Objectif : qu'une bienveillance réellement soutenue
+// puisse plausiblement atteindre le palier haut sur
+// une session réaliste — jamais en la rendant facile ou rapide (Article 0 : ce palier doit rester
+// rare, pas devenir un mode par défaut). Confirmé par un test dédié que l'asymétrie reste vraie
+// (une baisse pèse toujours plus qu'une hausse équivalente) à ces nouvelles valeurs.
 export function appreciationFromTrust(trustShift:number,humanMessageCount:number):number{
   const early=humanMessageCount<=3;
-  const weight=trustShift<0?(early?6:3):(early?4:2);
+  const weight=trustShift<0?(early?8:4):(early?6:3);
   return Math.round(trustShift*weight);
 }
 // Lecture pratique de la jauge par personnage (2026-09-18) : neutre à 50 si jamais initialisée,

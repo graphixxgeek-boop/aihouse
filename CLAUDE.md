@@ -333,6 +333,23 @@ enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redem
    même rigueur que le reste de la charte (tests créés si besoin, suite complète revérifiée verte,
    documentation mise à jour le jour même — Articles 3, 5, 13).
 
+**Article 19 — Comprendre avant de toucher.** *(Ajouté le 2026-09-19, à la demande explicite de
+l'utilisateur.)* Avant de modifier une ligne de code existante, comprendre la logique en place et
+la raison pour laquelle elle a été écrite ainsi — jamais un changement à l'aveugle sur la seule foi
+d'une hypothèse ou d'une intuition non vérifiée. Ceci sert notamment à **respecter le travail déjà
+fait** : un mécanisme qui semble redondant, verbeux, trop prudent ou étrange a le plus souvent une
+raison précise (un retour utilisateur explicite, un bug déjà rencontré et corrigé, un cas limite
+déjà couvert) — documentée en commentaire, dans `docs/referentiel/` ou dans l'historique de
+conversation. Le retirer ou le simplifier sans avoir d'abord compris cette raison risque de
+réintroduire un bug déjà résolu une fois (cf. Article 3 : « une règle corrigée une fois ne doit
+plus jamais se reproduire ailleurs sous une autre forme » — cela vaut aussi en sens inverse, ne pas
+la faire réapparaître en défaisant sans le savoir le correctif qui l'empêchait). Cette exigence
+n'est pas entièrement nouvelle : l'Article 0 l'imposait déjà spécifiquement pour l'esprit des
+personnages (« comprendre comment cet esprit a émergé techniquement avant de toucher au code ») et
+l'Article 7 pour l'architecture d'ensemble (l'épreuve de la page blanche) — l'Article 19 la rend
+explicite et générale, applicable à TOUT changement de code, aussi petit ou isolé paraisse-t-il, pas
+seulement ceux qui touchent la personnalité des personnages ou la structure globale du moteur.
+
 **Blocage de quota Gemini — diagnostic et repli.** *(2026-09-18, ~18h07 UTC : premier blocage à ce
 niveau critique rencontré sur ce projet — une simulation intégrale lancée en arrière-plan est
 restée bloquée plus de 20 tentatives consécutives sur une étape du dossier retourné, HTTP 429
@@ -539,7 +556,8 @@ la validation) directement à côté de la mention — pas une légende à part,
 fin de message. C'est un repère de suivi pour l'utilisateur, pas une décoration : ne pas le mettre
 sur des phrases qui ne vérifient rien de précis contre la charte.
 
-**Protocole d'application** à chaque itération sur le code : Article 0 (l'esprit est-il
+**Protocole d'application** à chaque itération sur le code : Article 19 (a-t-on compris la logique
+et la raison d'être du code existant avant d'y toucher ?) → Article 0 (l'esprit est-il
 altéré ?) → Articles 1, 11, 12 (la conversation) → Article 15 (est-ce lisible du point de vue de
 l'utilisateur ?) → Article 17 (est-ce cohérent du point de vue du personnage lui-même ?) → Articles
 2 et 4 (cohérence globale et enquête) → Articles 3 et 5 (bugs et
