@@ -74,6 +74,58 @@ modèle générateur lui-même.
    lecture isolée sans mise en perspective (même exigence déjà en place pour le protocole de
    simulation complète de ce projet).
 
+## Deux modes de lecture : conversation entière et extrait isolé
+
+*(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur : « est-ce que el professor
+intervient uniquement dans la lecture de simu complètes ou est-ce qu'il peut être sollicité dans
+le cadre de tests plus isolés ? [...] il rentre dans un "mode" adapté [...] il s'adapte à la
+longueur de l'extrait à juger, avec des paliers qui lui permettent de savoir les critères qu'il
+peut juger [...] el professor sait s'adapter à la demande, il a différents modes, il est
+intelligent ».)* Le squelette ci-dessus suppose implicitement une sortie complète (une session du
+début à la fin). Un projet produit aussi des sorties **partielles** à faire lire : un test isolé sur
+un seul personnage, un seul échange, une scène courte extraite d'ailleurs. Ce patron définit donc
+deux modes, jamais mélangés dans un même rapport :
+
+- **Mode conversation entière** — le squelette ci-dessus, sans changement : tous les thèmes sont
+  notés, sur l'échelle commune complète.
+- **Mode extrait isolé** — un texte plus court ou plus ciblé (un test isolé, un scénario unique,
+  une scène extraite, un run d'un script de diagnostic). Chaque thème du squelette porte un
+  **palier minimal de matière nécessaire pour être jugé honnêtement** — jamais un seuil brut de
+  longueur (nombre de mots/caractères), toujours une question de nature de contenu : y a-t-il assez
+  de LA BONNE SORTE de matière pour juger CE thème précis, indépendamment de la longueur totale.
+  Exemples de paliers génériques : un thème sur le ton d'un personnage peut être jugeable dès une
+  seule réplique isolée (si la charte exige un ton permanent, pas déclenché par la pression) ; un
+  thème sur la cohérence d'une réaction a besoin que le stimulus qui l'a produite soit aussi présent
+  dans l'extrait ; un thème sur l'absence de répétition entre deux voix a besoin soit de plusieurs
+  répliques du même locuteur, soit des deux locuteurs représentés — un extrait à un seul locuteur
+  sur un seul échange ne permet de juger ni l'un ni l'autre.
+
+**Avant de noter, EL-PROFESSOR annonce explicitement, thème par thème, si son palier est atteint ou
+non, et pourquoi** (jamais un chiffre en dessous du palier, jamais une estimation approximative
+faute de mieux) : un thème sous son palier est marqué « non jugeable sur cet extrait », clairement
+distinct d'une note basse méritée. C'est cette annonce qui rend l'outil « intelligent » plutôt que
+mécanique sur ce point précis : il ne suit pas une règle de longueur fixe, il évalue à chaque fois
+si la matière disponible permet un jugement honnête de ce thème-là.
+
+**Le score en mode extrait isolé n'est jamais ramené à l'échelle complète.** Il se calcule sur la
+somme des seuls thèmes réellement jugés (ex. 2 thèmes jugés sur 5 thèmes à 20 points chacun → note
+affichée sur 40, jamais recalculée sur 100), et s'affiche toujours accompagné du nombre de thèmes
+jugés et de leur identité — jamais présenté comme directement comparable à une note en mode
+conversation entière, qui reste la seule échelle utilisée pour suivre l'évolution dans le temps
+(cf. Registre des notes). La hiérarchie de la charte (un thème suprême qui plafonne le score)
+continue de s'appliquer normalement, mais seulement si ce thème précis fait partie de ceux
+réellement jugés sur cet extrait — un thème suprême non jugeable ne peut ni plafonner ni valider le
+score partiel.
+
+**Granularité de l'extrait : au choix de qui sollicite la lecture, jamais imposée par l'outil.** Un
+extrait peut être une seule réplique, un seul scénario, ou la concaténation de plusieurs échanges
+courts déjà produits ensemble (par exemple tous les scénarios d'un même script de diagnostic) — plus
+l'extrait rassemble d'échanges homogènes (même personnage(s), même session), plus de thèmes
+franchissent leur palier (l'auto-répétition, par exemple, n'est jugeable qu'en rassemblant plusieurs
+répliques du même locuteur). Ce patron ne prescrit pas une seule granularité : il prescrit seulement
+que la granularité choisie soit clairement indiquée dans le rapport, et que les paliers soient
+réévalués honnêtement pour elle.
+
 ## Portée : rétroactif ET prospectif
 
 Ce patron s'applique aux sorties déjà produites (pour établir une base de comparaison de départ)

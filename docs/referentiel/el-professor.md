@@ -93,6 +93,54 @@ transcripts/dossiers/rapports KPI déjà livrés, **toujours en fichier joint, j
 dans la conversation** (préférence de livraison actée le 2026-09-18, confirmée pour ce nouveau
 rapport le 2026-09-19).
 
+## Mode extrait isolé — les paliers concrets pour ce projet
+
+*(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur, formalisant le principe générique
+de `docs/el-professor-blueprint.md`.)* En plus du mode conversation entière ci-dessus (une
+simulation ou une session réelle complète), EL-PROFESSOR peut lire un **extrait isolé** : un run de
+`scripts/check-spirit.mjs`, un scénario unique, une scène courte copiée depuis le site en ligne. Pour
+CE projet, les 5 thèmes ont chacun un palier concret :
+
+| Thème | Palier pour être jugeable |
+|---|---|
+| 1. Esprit des personnages | Toujours jugeable, dès une seule réplique ou pensée — l'Article 0 exige un ton permanent, pas déclenché par la pression, donc même la plus petite unité en porte la trace ou son absence. |
+| 2. Naturel et crédibilité | Le stimulus qui a produit la réplique (la provocation, la question, l'événement) doit être présent dans l'extrait — une réplique seule sans ce qui l'a précédée ne permet pas de juger si la réaction est cohérente (Article 17). |
+| 3. Voix distinctes, zéro répétition | Il faut soit plusieurs répliques du MÊME personnage (auto-répétition), soit des répliques des DEUX personnages (mélange de styles). Un extrait à un seul personnage sur un seul échange isolé ne permet de juger ni l'un ni l'autre — non jugeable. |
+| 4. Cohérence de l'enquête | L'extrait doit référencer un élément d'enquête concret (indice, hypothèse, dossier) — sans ce contenu, non jugeable quelle que soit la longueur (ex. les scénarios de provocation pure de `check-spirit.mjs` n'en contiennent jamais). |
+| 5. Clarté pour un lecteur neutre | L'extrait doit enchaîner au moins deux éléments hétérogènes (réplique + pensée, réplique + déplacement, etc.). Une réplique isolée seule permet seulement de juger sa clarté intrinsèque, jamais un enchaînement — à noter distinctement comme non jugeable pour ce thème précis si rien d'autre n'est enchaîné avec elle. |
+
+**Cas concret déjà identifié : `scripts/check-spirit.mjs` (16 scénarios).** La bonne granularité
+n'est jamais un scénario isolé (une seule provocation + une seule réponse d'un seul personnage), qui
+ne franchit que les paliers 1 et 2 — mais **le run complet des 16 scénarios pris ensemble**, qui
+rassemble plusieurs répliques de Lia et plusieurs répliques de Noé : cette granularité franchit aussi
+le palier 3 (auto-répétition à l'intérieur d'un même personnage sur les 16 réponses, et mélange de
+styles entre les deux). Le palier 4 (enquête) n'est jamais franchi par ce script, quelle que soit la
+granularité choisie, puisqu'aucun scénario n'y introduit de contenu d'enquête par construction. Le
+palier 5 (clarté d'un enchaînement) dépend de la présence ou non d'un champ `thought` dans les
+réponses du run — à vérifier au cas par cas.
+
+**Score affiché : jamais ramené à /100.** Sur un run `check-spirit.mjs` typique (thèmes 1, 2, 3
+jugés ; 4 jamais jugeable pour ce script ; 5 selon disponibilité de `thought`), la note s'affiche par
+exemple « 42/60 (3 thèmes jugés sur 5 : Esprit, Naturel, Voix) » — jamais recalculée sur l'échelle
+/100 des simulations complètes, qui resterait trompeuse (cf. principe générique). La hiérarchie de
+l'Article 0 (thème 1 < 10/20 → plafond) continue de s'appliquer sur le score partiel quand le thème 1
+fait partie des thèmes jugés — ce qui est toujours le cas ici, palier 1 étant systématiquement
+franchi.
+
+**Sollicitation : jamais obligatoire, jamais couverte par la partie mécanique de couverture.**
+Contrairement au mode conversation entière (une note attendue pour CHAQUE simulation archivée,
+signalée par `scripts/el-professor.mjs`), le mode extrait isolé se déclenche sur demande explicite
+de l'utilisateur ou à l'initiative de l'agent quand c'est utile (typiquement : juste après un run de
+`check-spirit.mjs`, pour obtenir une lecture chiffrée et comparable dans le temps sans attendre une
+simulation complète, à coût zéro puisqu'aucun appel API supplémentaire n'est nécessaire — le texte
+est déjà produit). Aucune alerte de couverture manquante ne s'applique à ce mode.
+
+**Registre séparé.** Les notations en mode extrait isolé vivent dans `docs/el-professor/isole-*.md`
+(ex. `isole-check-spirit-2026-09-19.md`), jamais mélangées aux fichiers `<sim>.md` du mode
+conversation entière, et listées dans une section dédiée de `docs/el-professor/index.md` — jamais
+dans la table de comparaison des simulations complètes, pour ne jamais laisser croire à une
+comparabilité directe entre les deux échelles.
+
 ## Confiance de la lecture
 
 Comme ARGUS/ALWAYS-NEW-CODE, jamais une certitude plate. Une simulation interrompue avant la

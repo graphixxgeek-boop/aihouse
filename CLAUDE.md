@@ -1029,12 +1029,16 @@ projet piloté par IA. Jamais les seuils exacts ni le registre propre à ce proj
 ## EL-PROFESSOR — blueprint exportable
 
 `docs/el-professor-blueprint.md` documente l'ARCHITECTURE de l'outil de notation de fidélité à la
-charte (Article 18, étape 4bis) — une vraie lecture qualitative d'une simulation, jamais un calcul
-mécanique, notée par thème et plafonnée par la hiérarchie de la charte (un article suprême comme
-l'Article 0 ne peut jamais être compensé par une bonne moyenne sur les autres thèmes) — sous une
-forme générique, réutilisable sur un autre projet gouverné par une charte de contenu. Jamais les 5
-thèmes exacts ni le registre propre à ce projet, qui vivent dans `docs/referentiel/el-professor.md`
-(instanciation) et `docs/el-professor/` (dossier + index). Distinct du carnet
+charte (Article 18, étape 4bis) — une vraie lecture qualitative, jamais un calcul mécanique, notée
+par thème et plafonnée par la hiérarchie de la charte (un article suprême comme l'Article 0 ne peut
+jamais être compensé par une bonne moyenne sur les autres thèmes) — sous une forme générique,
+réutilisable sur un autre projet gouverné par une charte de contenu. Deux modes (2026-09-19,
+extension explicitement demandée) : **conversation entière** (une simulation ou session complète,
+comme ci-dessus) et **extrait isolé** (un test isolé, un scénario unique — chaque thème porte un
+palier de matière minimale pour être jugé honnêtement, un score jamais ramené à l'échelle /100 des
+simulations complètes). Jamais les 5 thèmes exacts, les paliers précis ni le registre propre à ce
+projet, qui vivent dans `docs/referentiel/el-professor.md` (instanciation) et `docs/el-professor/`
+(dossier + index). Distinct du carnet
 `docs/simulations/correctifs-a-revalider.md` (suivi de correctifs de CODE précis, jamais consulté
 par EL-PROFESSOR — cf. Article 18, étape 6, et `docs/referentiel/el-professor.md` pour
 l'articulation exacte entre les deux).
@@ -1122,10 +1126,11 @@ explicite de l'utilisateur de garder les deux séparés.
   (`docs/clean-dirty-old/`). Cf. `docs/clean-dirty-old-blueprint.md` pour le principe générique.
 - `docs/referentiel/el-professor.md` (2026-09-19) — instanciation d'EL-PROFESSOR (Article 18, étape
   4bis) pour ce projet : les 5 thèmes exacts (esprit, naturel, voix, enquête + fidélité du dossier,
-  clarté), le calcul plafonné par l'Article 0, le format de livraison en fichier, le registre
-  (`docs/el-professor/`). Cf. `docs/el-professor-blueprint.md` pour le principe générique, et
-  `docs/simulations/correctifs-a-revalider.md` pour le carnet distinct de suivi des correctifs de
-  code (jamais consulté par EL-PROFESSOR lui-même).
+  clarté), le calcul plafonné par l'Article 0, le format de livraison en fichier, les paliers
+  concrets du mode extrait isolé (ex. `check-spirit.mjs`, jamais couvert par la partie mécanique de
+  couverture), le registre (`docs/el-professor/`). Cf. `docs/el-professor-blueprint.md` pour le
+  principe générique, et `docs/simulations/correctifs-a-revalider.md` pour le carnet distinct de
+  suivi des correctifs de code (jamais consulté par EL-PROFESSOR lui-même).
 - `docs/referentiel/the-screener.md` (2026-09-19) — instanciation de THE-SCREENER (Article 18,
   étape 4bis) pour ce projet : base de jugement (`regles-des-graphismes.md`), mécanisme de capture
   Playwright (`scripts/the-screener-capture.mjs`, testé et fonctionnel), les 2 déclencheurs de

@@ -39,6 +39,17 @@ Aucune note plafonnée par l'Article 0 (le thème Esprit ne descend jamais sous 
 la charge de faiblesse porte presque entièrement sur le thème 3, jamais sur l'esprit des
 personnages lui-même.
 
+## Notations en mode extrait isolé
+
+*(Ajouté le 2026-09-19 — cf. `docs/referentiel/el-professor.md`, section « Mode extrait isolé »,
+pour les paliers exacts par thème. Table séparée de la comparaison ci-dessus : les scores ici ne
+sont JAMAIS ramenés à /100 et ne se comparent jamais directement à une note de simulation complète —
+chaque ligne précise sur combien de points sur combien de thèmes elle porte.)*
+
+| Extrait | Source | Thèmes jugés | Note | Rapport |
+|---|---|---|---|---|
+| *(aucune notation en mode extrait isolé pour l'instant)* | | | | |
+
 ## Lecture des colonnes
 
 - **Esprit** = thème 1 (Article 0). **Naturel** = thème 2 (Articles 1, 12, 17). **Voix** = thème 3
