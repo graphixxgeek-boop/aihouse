@@ -905,7 +905,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 108'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 109'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2377,6 +2377,11 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // Chemin sain : chaque fonction renvoie un vrai nombre fini à partir de données bien formées.
   assert.deepEqual(codeHealthScore(0,79,79),{tscScore:100,testScore:100,overall:100});
   assert.equal(codeHealthScore(2,79,79).tscScore,0,'any tsc error must zero the tsc sub-score, never a partial credit');
+  // coverageScore (2026-09-19, AXA-CHECK) : un 4e paramètre optionnel, jamais une régression du
+  // calcul historique quand il est omis ou invalide.
+  assert.deepEqual(codeHealthScore(0,79,79,undefined),{tscScore:100,testScore:100,overall:100},'an omitted coverage score must reproduce the exact historical two-term average, never a silent regression');
+  assert.deepEqual(codeHealthScore(0,79,79,'x'),{tscScore:100,testScore:100,overall:100},'a malformed coverage score must be ignored, never coerced into a fake third term');
+  assert.deepEqual(codeHealthScore(0,79,79,90),{tscScore:100,testScore:100,coverageScore:90,overall:(100+100+90)/3},'a valid coverage score must join as a real third term in the average, never just displayed on the side');
   assert.equal(smartBreakerPerformanceScore({successes:299,attempts:304}),(299/304)*100);
   assert.deepEqual(smartBreakerImprovementScore([{done:true},{done:true},{done:false}]),{score:(2/3)*100,done:2,total:3});
   assert.equal(qualityScore({turns:10,antiEchoInterventions:1}),90);
@@ -2658,4 +2663,82 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   ].join('\n');
   assert.deepEqual(alwaysNewCodePerformance(perfIdx),{passages:2,totalFindings:4,findingsPerPassage:2},'the KPI must compute the exact real average of confirmed findings per pass, tracked from day one per the explicit user decision');
   console.log('Passed: ALWAYS-NEW-CODE reuses the exact 8 HARMONIA zones, its coverage memory keeps the most recent pass per zone and reports an honest absence for a never-seen zone, its rotation always proposes the most-neglected zone first while an explicit valid request always overrides it and an unknown requested zone is flagged ambiguous for the agent to ask back rather than silently accepted or ignored, its mechanical stacking signals (dated-addenda count, git-history pure-growth pattern) only ever reach "probable" and report an honest absence rather than a fake zero-signal on missing data, and its from-day-one KPI computes the exact real findings-per-pass average.');
+}
+
+{
+  // AXA-CHECK (2026-09-19, cf. docs/axa-check-blueprint.md et docs/referentiel/axa-check.md). Né
+  // d'une question directe de l'utilisateur : « comment sait-on si une zone du code est couverte
+  // ou pas par un test ? ». Toutes les fixtures sont des relevés V8 miniatures écrits à la main,
+  // jamais une vraie exécution de check-house.mjs dans ce test (qui varierait dans le temps).
+  const {functionCoverageFromV8,robustnessScore,fragileFunctions,corroboratedByArchivedSimulations,collectCoverage,LIB_MAP}=await import('../scripts/axa-check.mjs');
+  const src='function a(){}\nfunction b(){}\n';
+  const covEntry={functions:[
+    {functionName:'',ranges:[{startOffset:0,count:5}]}, // pseudo-appel "script entier" V8, toujours exclu
+    {functionName:'a',ranges:[{startOffset:0,count:1}]},
+    {functionName:'b',ranges:[{startOffset:src.indexOf('function b'),count:0}]},
+  ]};
+  const functions=functionCoverageFromV8(covEntry,src);
+  assert.equal(functions.length,2,'the empty-name pseudo-entry (V8\'s whole-script pseudo-function) must never be reported as a real function');
+  assert.deepEqual(functions.map(f=>f.name),['a','b']);
+  assert.equal(functions.find(f=>f.name==='a').covered,true,'a function with a non-zero execution count must be reported covered');
+  assert.equal(functions.find(f=>f.name==='b').covered,false,'a function with a zero execution count must be reported uncovered, never a false positive');
+  assert.equal(functions.find(f=>f.name==='b').line,2,'the byte offset must map back to the real 1-indexed source line, not the raw offset');
+  assert.equal(robustnessScore(functions),50,'exactly one of two functions covered must report 50%, not a rounded or fudged number');
+  assert.equal(robustnessScore([]),undefined,'a file with zero real functions must report an honest N/A, never a fake 0% or 100%');
+  assert.equal(robustnessScore(undefined),undefined);
+  // Fragilité enrichie (décision explicite : jamais un simple miroir de la robustesse) : une
+  // fonction non couverte gagne en confiance quand elle est proche d'un nœud sensible HARMONIA
+  // et/ou porte un signal de churn — jamais les deux mêmes raisons pour deux fichiers différents.
+  const plainFragile=fragileFunctions(functions,'lib/nowhere-sensitive.ts',[],undefined);
+  assert.equal(plainFragile.length,1,'only the uncovered function must be reported, never the covered one');
+  assert.equal(plainFragile[0].confidence,'à surveiller','with no sensitive-node match and no churn signal, confidence must stay the lowest tier, never inflated');
+  const sensitiveNodes=[{node:'Sommeil',files:['lib/sensitive.ts']}];
+  const nearSensitive=fragileFunctions(functions,'lib/sensitive.ts',sensitiveNodes,undefined);
+  assert.equal(nearSensitive[0].confidence,'probable','proximity to a real HARMONIA sensitive node must raise confidence, the whole point of the enrichment over a plain coverage mirror');
+  assert.ok(nearSensitive[0].reasons.some(r=>r.includes('Sommeil')),'the specific matched sensitive node must be named in the reasons, never a generic flag');
+  const churnedFile=fragileFunctions(functions,'lib/nowhere-sensitive.ts',[],{commits:5,insertions:12,deletions:0});
+  assert.equal(churnedFile[0].confidence,'probable','a genuine pure-accretion churn signal must also raise confidence on its own, independent of any sensitive-node match');
+  // Corroboration par simulation archivée (niveau ZONE, jamais fonction — limite honnête assumée).
+  const bonusSim='  [round 3] bonus — food\n  [round 4] move\n';
+  const noBonusSim='  [round 1] evidence — indice A\n';
+  assert.equal(corroboratedByArchivedSimulations('Bonus roulette',[bonusSim,noBonusSim]),1,'only the archived simulation whose real event log actually shows this zone\'s marker must be counted, never both just because two files exist');
+  assert.equal(corroboratedByArchivedSimulations('Bonus roulette',[]),undefined,'zero archived simulations must be an honest absence, never a fake zero-confidence verdict');
+  assert.equal(corroboratedByArchivedSimulations('Zone inconnue',[bonusSim]),undefined,'a zone with no configured event hint must never silently report zero — it must say it cannot corroborate at all');
+  // collectCoverage() : lit un dossier NODE_V8_COVERAGE déjà produit (par AXA-CHECK ou par
+  // kpi-report.mjs réutilisant son propre lancement de check-house.mjs, jamais un second) et mappe
+  // vers le vrai fichier source via LIB_MAP — testé avec un readDir/readFile injectés, jamais un
+  // vrai relevé V8 réel (non déterministe), mais contre le vrai fichier lib/house.ts pour prouver
+  // que le mapping et la lecture de la vraie source fonctionnent de bout en bout.
+  assert.ok(LIB_MAP['test-house.mjs']==='lib/house.ts'&&LIB_MAP['test-route.mjs']==='app/api/lia/route.ts','the file map must cover both a plain lib/*.ts module and the special-cased app/api/lia/route.ts entry');
+  const fixtureCovDir='.sites-runtime/axa-check-fixture-cov';
+  fs.mkdirSync(fixtureCovDir,{recursive:true});
+  const fakeCovJson=JSON.stringify({result:[{url:'file:///whatever/.sites-runtime/test-house.mjs',functions:[{functionName:'fixtureFn',ranges:[{startOffset:0,count:1}]}]}]});
+  const perFile=collectCoverage(fixtureCovDir,{readDir:()=>['proc-1.json','proc-2.json'],readFile:()=>fakeCovJson});
+  assert.ok(Array.isArray(perFile['lib/house.ts']),'a coverage entry whose URL matches a known LIB_MAP key must be mapped to its real source file, read from the real project source');
+  assert.equal(perFile['lib/house.ts'].length,1,'the second process\'s identical coverage entry for the same file must be deduped, never double-counted');
+  assert.deepEqual(collectCoverage('.sites-runtime/axa-check-nonexistent-dir'),{},'a coverage directory that was never produced must report an honest empty result, never crash the caller');
+  fs.rmSync(fixtureCovDir,{recursive:true,force:true});
+  console.log("Passed: AXA-CHECK's function-level V8 coverage extraction correctly excludes the whole-script pseudo-entry, maps byte offsets back to real 1-indexed source lines, and tells a covered function from an uncovered one exactly; its robustness score is an honest percentage or an honest N/A on zero functions, never a fake number; its fragility enrichment only raises confidence above the baseline tier when a real HARMONIA sensitive-node match or a real churn signal is present, always naming the specific reason rather than a generic flag; its archived-simulation corroboration counts only genuine zone-marker matches and reports an honest absence rather than a fake zero when no simulations or no configured hint exist; and its coverage collector correctly maps a V8 URL to the real project source via LIB_MAP, dedupes repeated entries across multiple process coverage files, and reports an honest empty result for a directory that was never produced.");
+}
+
+{
+  // LE-COORDINATEUR (2026-09-19, nommé et calibré par l'utilisateur). Volontairement mince : les
+  // fonctions pures testées ici sont ses seules responsabilités propres (détection de doublon,
+  // mise en forme du tableau, lecture d'état injectable) — tout le reste est de l'import direct de
+  // fonctions déjà testées ailleurs (ARGUS, HARMONIA, AXA-CHECK, ALWAYS-NEW-CODE, CHECK-LEVEL-TARGET),
+  // jamais retesté ici en double (règle anti-doublon, §7ter).
+  const {isDuplicateRun,formatTable,loadState,classifyRequest}=await import('../scripts/le-coordinateur.mjs');
+  assert.equal(isDuplicateRun({lastHead:'abc123'},'abc123'),true,'the exact same commit as the last recorded run must be reported as a real duplicate');
+  assert.equal(isDuplicateRun({lastHead:'abc123'},'def456'),false,'a genuinely different HEAD commit must never be flagged as a duplicate, however recently the last run happened');
+  assert.equal(isDuplicateRun({},'abc123'),false,'a never-before-recorded state must never be treated as a duplicate of nothing');
+  assert.equal(isDuplicateRun({lastHead:'abc123'},undefined),false,'an unreadable current commit must never be silently treated as matching a past one');
+  const table=formatTable([{name:'Outil A',result:'ok',when:'2026-09-19T00:00:00.000Z'},{name:'Outil B',result:'à regarder (1)',when:'2026-09-19T00:00:00.000Z'}]);
+  assert.ok(table.includes('| Outil A | ok |')&&table.includes('| Outil B | à regarder (1) |'),'every row passed in must appear in the rendered table with its real name and result, never dropped or reordered');
+  assert.deepEqual(loadState(()=>{throw new Error('no state file yet')}),{},'a missing or unreadable state file must report an honest empty state, never crash the caller — this is the tool\'s very first run on a fresh checkout');
+  assert.deepEqual(loadState(()=>'{"lastHead":"abc123","lastWhen":"x"}'),{lastHead:'abc123',lastWhen:'x'},'a well-formed state file must be parsed and returned exactly as stored');
+  // classifyRequest() est un pur passthrough vers check-level-target.mjs — un seul appel suffit à
+  // prouver le câblage réel (accès "privilégié" direct demandé explicitement), jamais un doublon de
+  // la suite de tests déjà dédiée à CHECK-LEVEL-TARGET lui-même.
+  assert.equal(classifyRequest('corrige cette faute de frappe').level,'leger','the passthrough must genuinely reach the real classifyCheckLevel logic, not a stub — a trivial fix must classify exactly as CHECK-LEVEL-TARGET\'s own test suite already proves it does directly');
+  console.log('Passed: LE-COORDINATEUR flags a duplicate run only when the current commit exactly matches the last recorded one (never a stale time-window guess), renders every real row of its summary table without dropping or reordering any, reports an honest empty state rather than crashing on a missing or malformed state file, and its CHECK-LEVEL-TARGET passthrough genuinely reaches the real classification logic rather than a disconnected stub.');
 }

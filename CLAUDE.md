@@ -735,15 +735,30 @@ interface — jamais les absences, qui restent le terrain d'ARGUS). Architecture
 propre à ce projet — carte des dépendances par grand thème, registre des frictions dans
 `docs/harmonia/`).
 
-**Toujours déployés, jamais laissés à la seule initiative de qui pourrait l'oublier.** Pour ARGUS
-ET HARMONIA : leur partie mécanique et gratuite (symétrie Lia/Noé, données calculées mais jamais
-lues, combinaisons de mécanismes non envisagées ensemble pour ARGUS ; cohérence chiffrée entre le
-code et sa documentation pour HARMONIA) tourne automatiquement, comme `check-house.mjs`, à chaque
-changement de code. Leur partie avec un vrai raisonnement plus poussé (donc un coût réel,
-Article 8) se déclenche à l'initiative de l'agent OU de l'utilisateur, sur un sujet précis — en
-particulier avant toute idée nouvelle, jamais seulement sur le code déjà écrit. Dans les deux cas,
-un rappel explicite fait partie du protocole de travail (cf. `docs/regles-de-travail.md`) pour ne
-jamais laisser cette vérification retomber dans l'oubli si, sur le moment, ni l'utilisateur ni
+**AXA-CHECK rejoint la même règle en troisième membre** *(ajouté le 2026-09-19, à la demande
+explicite de l'utilisateur, née d'une question directe pendant le calibrage de CLEAN-DIRTY-OLD :
+« comment sait-on si une zone du code est couverte ou pas par un test ? »)* : dédié à la robustesse
+et à la fragilité RÉELLES du code, mesurées par vraie couverture de test (par fonction, via
+`NODE_V8_COVERAGE`, zéro nouvelle dépendance) — jamais les absences (ARGUS) ni les frictions
+(HARMONIA), un troisième axe complémentaire. La fragilité qu'il rapporte n'est jamais un simple
+miroir de la robustesse : elle s'enrichit de la proximité avec un nœud sensible HARMONIA et d'un
+signal de churn (réutilisés depuis CHECK-LEVEL-TARGET et ALWAYS-NEW-CODE, jamais dupliqués), et se
+corrobore, au niveau zone, par les simulations archivées (`docs/simulations/`). Architecture
+détaillée : `docs/axa-check-blueprint.md` (principe générique) et `docs/referentiel/axa-check.md`
+(instanciation propre à ce projet — registre des trouvailles dans `docs/axa-check/`).
+
+**Toujours déployés, jamais laissés à la seule initiative de qui pourrait l'oublier.** Pour ARGUS,
+HARMONIA ET AXA-CHECK : leur partie mécanique et gratuite (symétrie Lia/Noé, données calculées mais
+jamais lues, combinaisons de mécanismes non envisagées ensemble pour ARGUS ; cohérence chiffrée
+entre le code et sa documentation pour HARMONIA ; couverture réelle par fonction pour AXA-CHECK)
+tourne automatiquement, comme `check-house.mjs`, à chaque changement de code — pour AXA-CHECK, dont
+la fragilité enrichie reste entièrement mécanique (aucune couche de raisonnement séparée, contrairement
+aux deux autres), c'est la totalité de l'outil qui tourne ainsi. Pour ARGUS ET HARMONIA
+spécifiquement, une seconde partie avec un vrai raisonnement plus poussé (donc un coût réel,
+Article 8) se déclenche en plus, à l'initiative de l'agent OU de l'utilisateur, sur un sujet précis
+— en particulier avant toute idée nouvelle, jamais seulement sur le code déjà écrit. Dans tous les
+cas, un rappel explicite fait partie du protocole de travail (cf. `docs/regles-de-travail.md`) pour
+ne jamais laisser cette vérification retomber dans l'oubli si, sur le moment, ni l'utilisateur ni
 l'agent n'y pense spontanément — exactement le risque que cette règle a été créée pour éliminer.
 
 **Protocole d'application** à chaque itération sur le code : Article 19 (a-t-on compris la logique
@@ -753,7 +768,8 @@ l'utilisateur ?) → Article 17 (est-ce cohérent du point de vue du personnage 
 2 et 4 (cohérence globale et enquête) → Articles 3 et 5 (bugs et
 robustesse) → Article 20 (ARGUS : un trou logique, une combinaison oubliée subsiste-t-il ? HARMONIA :
 un lien devenu incohérent, une friction entre deux parties du projet subsiste-t-elle malgré tout ce
-qui précède ?) → Articles 6, 7 et 13 (documentation, outils et
+qui précède ? AXA-CHECK : le code touché reste-t-il réellement couvert par un test, ou une fonction
+non testée traîne-t-elle dans une zone sensible sans que personne ne le sache ?) → Articles 6, 7 et 13 (documentation, outils et
 architecture) → Articles 8, 9, 10
 (coût et rejouabilité) → Article 14 (vigilance continue, à appliquer en toile de fond de tous les
 autres, pas comme une étape séparée) → Article 16 (au moins trois questions de vérification posées
@@ -929,6 +945,24 @@ piloté par IA. Jamais les 8 zones exactes ni les fichiers propres à ce projet,
 `docs/referentiel/always-new-code.md` (instanciation, réutilise les thèmes d'HARMONIA) et
 `docs/always-new-code/` (dossier + index, mémoire de couverture pour la rotation).
 
+## AXA-CHECK — blueprint exportable
+
+`docs/axa-check-blueprint.md` documente l'ARCHITECTURE de l'outil de robustesse/fragilité RÉELLES
+par fonction (cf. Article 20, troisième membre "toujours déployé" aux côtés d'ARGUS et HARMONIA) —
+mesure de couverture de test via `NODE_V8_COVERAGE` (zéro nouvelle dépendance), granularité par
+fonction, fragilité enrichie (jamais un simple miroir de la robustesse) — sous une forme générique,
+réutilisable sur un autre projet qui a déjà un filet de sécurité mécanique. Jamais le mapping de
+fichiers exact ni le registre propre à ce projet, qui vivent dans `docs/referentiel/axa-check.md`
+(instanciation) et `docs/axa-check/` (dossier + index).
+
+**LE-COORDINATEUR — l'exception sans blueprint.** Contrairement à tous les autres outils ci-dessus,
+le petit orchestrateur `scripts/le-coordinateur.mjs` (nommé et calibré le 2026-09-19, à la demande
+explicite de l'utilisateur : « un coordinateur de fonctions existantes... juste là pour fiabiliser
+et fluidifier l'existant ») n'a volontairement ni blueprint ni instanciation ni registre séparés —
+il n'a aucune connaissance propre au projet à documenter à part, sa seule valeur étant de savoir
+appeler et agréger ce que les autres outils gratuits de ce paysage disent déjà. Entièrement
+documenté dans `docs/regles-de-travail.md` §7ter.
+
 ## Référentiel technique — la référence à jour
 
 - `docs/referentiel/principes.md` — les règles invariantes du comportement de la maison, telles
@@ -983,6 +1017,11 @@ piloté par IA. Jamais les 8 zones exactes ni les fichiers propres à ce projet,
   (`scripts/always-new-code.mjs`), le déclenchement via CHECK-LEVEL-TARGET niveau Exceptionnel, le
   registre des passages (`docs/always-new-code/`). Cf. `docs/always-new-code-blueprint.md` pour le
   principe générique.
+- `docs/referentiel/axa-check.md` (2026-09-19) — instanciation d'AXA-CHECK (Article 20) pour ce
+  projet : la mécanique de couverture V8 par fonction (`scripts/axa-check.mjs`), la fragilité
+  enrichie (nœuds sensibles HARMONIA + churn ALWAYS-NEW-CODE), la corroboration par les simulations
+  archivées, le registre des trouvailles (`docs/axa-check/`). Cf. `docs/axa-check-blueprint.md`
+  pour le principe générique.
 
 Ces documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
 vérité (leur nombre exact a varié au fil des chantiers — se référer à la liste ci-dessus plutôt

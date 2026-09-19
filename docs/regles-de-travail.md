@@ -298,6 +298,8 @@ maximiser leurs performances ».)*
 | CHECK-LEVEL-TARGET | quel niveau de vérification une demande appelle, quels outils déployer | gratuit | avant de décider comment traiter une demande |
 | HYPER-SCAN-CHECKPOINT | orchestrateur exceptionnel, fidélité aux consignes passées (Article 21) | réel (API, en version complète) | sur demande explicite seulement |
 | ALWAYS-NEW-CODE | dette d'organisation — code empilé plutôt que pensé (Article 23) | réel (raisonnement) | niveau « Exceptionnel » de CHECK-LEVEL-TARGET |
+| AXA-CHECK | robustesse/fragilité RÉELLE par fonction (couverture de test V8, zéro nouvelle dépendance) (Article 20) | gratuit | toujours déployé |
+| LE-COORDINATEUR | agrège en un tableau très court ce que les outils gratuits ci-dessus disent déjà, repère un doublon de vérification récent | gratuit | automatique à chaque changement de code |
 | Smart Breaker (`check-gemini-quota.mjs` + `gemini-key-health.mjs` + `api-providers.mjs` + `lib/gemini-keys.ts`) | blocages de quota/clé Gemini, portée PRODUCTION | gratuit à diagnostiquer | à la demande, ou automatique en production (repli) |
 
 Cette table remplace toute énumération informelle éparpillée dans la conversation : à jour à
@@ -347,6 +349,35 @@ checklist qualitative est "jamais mécanisable" ; ALWAYS-NEW-CODE ne prépare qu
 indices, le vrai travail d'imagination "page blanche" restant un raisonnement que seul l'agent
 appelant peut faire. Un outil qui semblerait un jour trancher tout seul une question de fond serait
 un signal d'alerte à traiter comme une dérive, pas un progrès.
+
+### Un outil n'est jamais « fini » tant que ses points d'intégration décidés ne sont pas câblés et testés
+
+*(Ajoutée le 2026-09-19, à la demande explicite de l'utilisateur, en plein milieu de la
+construction d'AXA-CHECK : le calibrage avait déjà tranché plusieurs points d'intégration
+(rejoindre Article 20 comme "toujours déployé", rejoindre la boîte à outils d'HYPER-SCAN-
+CHECKPOINT, nourrir la famille "robustesse du code" de `kpi-report.mjs`) avant que ces trois
+raccordements soient réellement câblés — un risque concret de déclarer l'outil "fini" en ne
+gardant que le fichier `axa-check.mjs` lui-même, alors que sa valeur promise dépendait justement
+de ces raccordements.)*
+
+Un outil de ce paysage (ou toute nouvelle fonctionnalité qui promet explicitement de se brancher sur
+autre chose) n'est considéré **terminé** que lorsque TOUS les points d'intégration déjà décidés
+avec l'utilisateur — pendant le calibrage ou en cours de route — sont réellement câblés dans le
+code ET couverts par un test, pas seulement listés comme une intention ou un "à faire" dans une
+réponse précédente. Une intégration décidée mais pas encore câblée reste un chantier ouvert, à
+nommer explicitement comme tel (jamais glissée sous silence dans un « c'est fait »). Concrètement,
+avant d'annoncer un outil terminé : relire la liste des décisions de calibrage prises pour lui,
+vérifier une par une qu'elles ont un point de code réel qui leur correspond, et qu'un test
+(`check-house.mjs` ou équivalent) échouerait si ce câblage disparaissait — sinon, ce n'est pas fini,
+c'est en cours.
+
+**Fixer une règle quand elle en a besoin, sans attendre qu'on le demande.** *(Même échange,
+demande explicite : « n'hésite pas à me dire quand tu sens qu'une règle doit être fixée, pour le
+bien du projet ».)* Quand l'agent repère, en travaillant, un vrai point de méthode qui mériterait
+d'être figé dans la charte ou dans ce document (pas une simple préférence ponctuelle, mais un
+principe qui se reproduira sur d'autres outils/décisions à l'avenir), il le signale explicitement à
+l'utilisateur plutôt que d'attendre une demande — cette règle-ci en est elle-même un exemple
+d'application immédiate.
 
 ### Veille hebdomadaire automatique du réseau
 
@@ -425,6 +456,51 @@ chacune avec son propre réflexe :**
 Si un doublon est malgré tout découvert après coup (comme pour `full_sim4`, ou le `sh(cmd)`
 triplé), il se corrige immédiatement par consolidation vers un seul endroit — jamais laissé "pour
 plus tard", même type de discipline qu'un écart de documentation (Article 3/13 de `CLAUDE.md`).
+
+### LE-COORDINATEUR — l'exception volontairement mince, sans blueprint ni instanciation
+
+*(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur : « est-il possible de le créer à
+moindre coût, simplement comme un coordinateur de fonctions existantes ? juste là pour fiabiliser
+et fluidifier l'existant [...] assure-toi que le coordinateur est spécialement bien câblé avec tous
+les autres outils, qu'il a un accès facile et privilégié pour communiquer avec les autres outils,
+puisque son but est de fluidifier le processus. » Nommé « le-coordinateur » par l'utilisateur.)*
+
+`scripts/le-coordinateur.mjs` lance en une seule commande tout ce qui est déjà gratuit et
+mécanique dans le paysage (`check-house.mjs` — une seule fois, sa couverture V8 nourrissant
+directement AXA-CHECK, jamais un second lancement — ARGUS, HARMONIA, ALWAYS-NEW-CODE en
+préparation) et affiche un tableau très court : un outil, son résultat en un mot, la date du
+dernier passage. Rien de plus — jamais un verdict qui dispenserait de relire la sortie complète
+d'un outil signalé "à regarder".
+
+**Accès "privilégié" = import direct des fonctions pures déjà exportées, jamais une seconde
+lecture de texte à l'aveugle.** Plutôt que de relancer chaque outil et reparser sa sortie avec ses
+propres regex (risque de divergence avec les résumés déjà utilisés ailleurs), LE-COORDINATEUR
+importe directement `summarizeArgusOutput`/`summarizeHarmoniaOutput` (déjà utilisés par
+HYPER-SCAN-CHECKPOINT), `collectCoverage`/`robustnessScore` (AXA-CHECK), `THEMES`/`parseCoverage`/
+`recommendZone` (ALWAYS-NEW-CODE) et `classifyCheckLevel` (CHECK-LEVEL-TARGET, exposé en
+passthrough `classifyRequest()` pour classer une demande précise à la volée). Une seule vraie
+source pour chaque résumé, jamais deux qui pourraient un jour diverger.
+
+**Détection de doublon, jamais une fenêtre de temps.** Une petite mémoire locale
+(`.le-coordinateur-last-run.json`, best-effort, jamais committé — même statut que
+`.gemini-key-health.json`) retient le commit HEAD du dernier passage complet. Si HEAD n'a pas
+bougé, LE-COORDINATEUR le signale avant de relancer pour rien — jamais un délai fixe, qui pourrait
+à tort couvrir un vrai changement fait vite ou rater un vrai doublon après une longue pause sans
+toucher au code.
+
+**Pourquoi cet outil n'a ni blueprint ni instanciation ni registre dédié, contrairement à tous les
+autres de ce paysage** : il n'a strictement aucune connaissance propre au projet qui mériterait
+d'être documentée à part — sa seule valeur est de savoir appeler les autres. Lui construire un
+blueprint générique + une instanciation + un dossier de registre serait exactement l'inverse de sa
+raison d'être ("à moindre coût, sans alourdir") : cette section-ci EST sa documentation complète.
+
+**Ce qu'il ne fait jamais** (même hiérarchie que le reste du paysage, cf. "Aucun de ces outils
+n'est autonome" ci-dessus) : il ne déclenche jamais, de sa propre initiative, HYPER-SCAN-CHECKPOINT
+en version complète, Smart Conso API, ou une simulation — tout ce qui coûte un vrai appel API reste
+une décision explicite séparée de l'agent ou de l'utilisateur, jamais une initiative du
+coordinateur. Il ne décide rien sur le fond : il agrège ce qui existe déjà et affiche un tableau,
+rien de plus — l'agent (moi) reste celui qui lit, décide et agit, exactement comme pour chaque
+autre outil de ce paysage.
 
 ## 8. Profil de collaboration observé
 

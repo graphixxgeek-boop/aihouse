@@ -117,6 +117,10 @@ function main() {
   const alwaysNewCodeOut = sh("node scripts/always-new-code.mjs");
   console.log(alwaysNewCodeOut.trim());
 
+  console.log("\n--- AXA-CHECK (robustesse/fragilité par fonction) ---");
+  const axaCheckOut = sh("node scripts/axa-check.mjs");
+  console.log(axaCheckOut.trim());
+
   console.log("\n--- Suite de tests (check-house.mjs) ---");
   const testOut = sh("node scripts/check-house.mjs 2>&1");
   const testsOk = !/AssertionError|Error:/.test(testOut) || /ExperimentalWarning/.test(testOut.split("AssertionError")[0] || "");
@@ -132,6 +136,7 @@ function main() {
     ["Smart Conso API (index)", "docs/smart-conso-api/index.md"],
     ["ALWAYS-NEW-CODE (index)", "docs/always-new-code/index.md"],
     ["CHECK-LEVEL-TARGET (index)", "docs/check-level-target/index.md"],
+    ["AXA-CHECK (index)", "docs/axa-check/index.md"],
   ];
   const registrySummary = [];
   for (const [label, relPath] of registries) {
@@ -187,6 +192,9 @@ function main() {
     "",
     "=== ALWAYS-NEW-CODE (préparation) ===",
     alwaysNewCodeOut,
+    "",
+    "=== AXA-CHECK (robustesse/fragilité par fonction) ===",
+    axaCheckOut,
     "",
     "=== Suite de tests ===",
     realFailure ? "ÉCHEC — voir sortie complète ci-dessous." : "Verte.",

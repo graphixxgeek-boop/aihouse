@@ -1,2 +1,4 @@
 run,horodatage,smart_breaker_performance_pct,smart_breaker_amelioration_pct,robustesse_code_pct,qualite_pct,coherence_pct,rejouabilite_pct,couverture_tdb_pct,tsc_erreurs,points_fragiles,sb_tours,sb_tentatives,sb_succes,sb_429,sb_503,sb_401_403,anti_echo_interventions,truncation_lia,truncation_noe,bonus_distincts,bonus_total
 chantier2-2026-09-19,2026-09-19T15:37:16.679Z,98.36,87.5,100,,,88.89,60,0,8,299,304,299,3,2,0,0,0,0,8,9
+manuel-2026-09-19T20:02,2026-09-19T20:02:43.073Z,,87.5,99.77,,,,20,0,3,,,,,,,,,,,
+manuel-2026-09-19T20:04,2026-09-19T20:04:48.846Z,,87.5,99.77,,,,20,0,3,,,,,,,,,,,

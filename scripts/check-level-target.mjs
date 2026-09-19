@@ -51,7 +51,7 @@ const WEIGHTS = { leger: 1, standard: 1, approfondi: 2, exceptionnel: 3 };
 
 const TOOLS_BY_LEVEL = {
   leger: { tools: ["check-house.mjs"], cost: "gratuit" },
-  standard: { tools: ["check-house.mjs", "ARGUS (mécanique)", "HARMONIA (mécanique)"], cost: "gratuit" },
+  standard: { tools: ["check-house.mjs", "ARGUS (mécanique)", "HARMONIA (mécanique)", "AXA-CHECK"], cost: "gratuit" },
   approfondi: { tools: ["check-house.mjs", "ARGUS", "HARMONIA", "check-spirit.mjs", "check-profile.mjs"], cost: "réel — consulter Smart Conso API avant de lancer" },
   exceptionnel: { tools: ["HYPER-SCAN-CHECKPOINT (version complète)", "ALWAYS-NEW-CODE (zoom profond)"], cost: "réel — consulter Smart Conso API avant de lancer" },
 };

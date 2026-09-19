@@ -27,8 +27,10 @@
 // fin de chantier, cf. "Quand les valeurs se mettent à jour" dans le document de référence, et
 // désormais une étape explicite de l'Article 18 après chaque simulation complète).
 import {execSync} from 'node:child_process';
-import {readFileSync, readdirSync, statSync, existsSync, appendFileSync, writeFileSync} from 'node:fs';
+import {readFileSync, readdirSync, statSync, existsSync, appendFileSync, writeFileSync, mkdtempSync, rmSync} from 'node:fs';
 import {join} from 'node:path';
+import {tmpdir} from 'node:os';
+import {collectCoverage, robustnessScore} from './axa-check.mjs';
 
 const root = new URL('..', import.meta.url).pathname;
 const path = (...parts) => join(root, ...parts);
@@ -48,11 +50,16 @@ const isFiniteNumber = n => typeof n === 'number' && Number.isFinite(n);
 // des décisions réelles (cf. l'en-tête du fichier), donc une donnée douteuse doit être visiblement
 // absente plutôt que silencieusement fausse.
 
-export function codeHealthScore(tscErrors, passed, expected) {
+// `coverageScore` (2026-09-19, cf. AXA-CHECK) est optionnel — jamais un paramètre obligatoire qui
+// casserait les appels existants. Omis ou invalide, le calcul reste EXACTEMENT celui d'avant
+// (moyenne à deux termes) : aucune régression silencieuse du KPI historique. Fourni et valide, il
+// rejoint la moyenne comme un troisième terme à poids égal, jamais un simple affichage à côté.
+export function codeHealthScore(tscErrors, passed, expected, coverageScore) {
     if (!isFiniteNumber(tscErrors) || !isFiniteNumber(passed) || !isFiniteNumber(expected) || expected <= 0) return undefined;
     const tscScore = tscErrors === 0 ? 100 : 0;
     const testScore = Math.min(100, (passed / expected) * 100);
-    return { tscScore, testScore, overall: (tscScore + testScore) / 2 };
+    if (!isFiniteNumber(coverageScore)) return { tscScore, testScore, overall: (tscScore + testScore) / 2 };
+    return { tscScore, testScore, coverageScore, overall: (tscScore + testScore + coverageScore) / 3 };
 }
 
 export function smartBreakerPerformanceScore(m) {
@@ -172,20 +179,37 @@ function runTypeCheck() {
     }
 }
 
+// Réutilise CE MÊME lancement de check-house.mjs pour obtenir la couverture réelle par fonction
+// (AXA-CHECK), au lieu d'en payer un second — règle anti-doublon, docs/regles-de-travail.md §7ter.
+// NODE_V8_COVERAGE sur ce process ne change rien à son comportement ni sa sortie, seulement le
+// relevé écrit sur disque en parallèle, lu ensuite par collectCoverage().
 function runTestSuite() {
     section('Robustesse du code : check-house.mjs');
     const expected = expectedTestBlockCount(readFileSync(path('scripts', 'check-house.mjs'), 'utf8'));
+    const covDir = mkdtempSync(join(tmpdir(), 'kpi-axa-check-'));
+    const env = { ...process.env, NODE_V8_COVERAGE: covDir };
+    let result;
     try {
-        const out = execSync('node scripts/check-house.mjs', { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+        const out = execSync('node scripts/check-house.mjs', { cwd: root, env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
         const passed = out.split('\n').filter(l => l.startsWith('Passed:')).length;
         console.log(`OK — ${passed}/${expected} bloc(s) de test passés, suite verte.`);
-        return { passed, expected, green: true };
+        result = { passed, expected, green: true };
     } catch (e) {
         const out = String(e.stdout ?? '') + String(e.stderr ?? '');
         const passed = out.split('\n').filter(l => l.startsWith('Passed:')).length;
         console.log(`⚠️ SUITE ROUGE — ${passed}/${expected} bloc(s) passés avant l'échec. Sortie :\n${out.slice(-1500)}`);
-        return { passed, expected, green: false };
+        result = { passed, expected, green: false };
     }
+    try {
+        const perFile = collectCoverage(covDir);
+        const allFunctions = Object.values(perFile).flat();
+        result.coverageScore = robustnessScore(allFunctions);
+    } catch {
+        result.coverageScore = undefined;
+    } finally {
+        rmSync(covDir, { recursive: true, force: true });
+    }
+    return result;
 }
 
 function countFragilePoints() {
@@ -285,11 +309,12 @@ async function main() {
     const tests = runTestSuite();
     const fragilePoints = countFragilePoints();
     const stats = repoStats();
-    const health = codeHealthScore(tscErrors, tests.passed, tests.expected);
+    const health = codeHealthScore(tscErrors, tests.passed, tests.expected, tests.coverageScore);
     section('KPI global — Robustesse du code');
     if (health === undefined) console.log('N/A (impossible de calculer le score — vérifier scripts/check-house.mjs, son décompte de blocs attendu semble invalide).');
     else {
-        console.log(`${pct(health.overall)} (moyenne : propreté tsc ${pct(health.tscScore)}, suite de tests ${pct(health.testScore)}). Points fragiles et taille de code restent affichés en compteurs bruts ci-dessus (pas de plafond naturel pour un %).`);
+        const coverageLabel = health.coverageScore === undefined ? '' : `, couverture réelle par fonction (AXA-CHECK) ${pct(health.coverageScore)}`;
+        console.log(`${pct(health.overall)} (moyenne : propreté tsc ${pct(health.tscScore)}, suite de tests ${pct(health.testScore)}${coverageLabel}). Points fragiles et taille de code restent affichés en compteurs bruts ci-dessus (pas de plafond naturel pour un %).`);
         if (tscErrors > 0) console.log('→ Action : corriger les erreurs tsc avant tout autre travail — un type cassé peut cacher un vrai bug de comportement (Article 5).');
         else if (!tests.green) console.log('→ Action : la suite est rouge — corriger la cause avant de considérer un changement terminé (Article 3), jamais contourner un test qui gêne.');
         else console.log('→ Lecture : code sain, rien à faire ici pour l’instant.');

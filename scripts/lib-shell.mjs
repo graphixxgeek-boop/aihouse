@@ -6,9 +6,9 @@
 
 import { execSync } from "node:child_process";
 
-export function sh(cmd, { cwd, verbose = false } = {}) {
+export function sh(cmd, { cwd, verbose = false, env } = {}) {
   try {
-    return execSync(cmd, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    return execSync(cmd, { cwd, env, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
   } catch (e) {
     return verbose ? (e.stdout || "") + "\n[erreur: " + e.message + "]" : e.stdout || "";
   }
