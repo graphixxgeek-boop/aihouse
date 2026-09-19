@@ -249,6 +249,21 @@ dans la durée, y compris ses paliers, pas seulement ses sauts.
   jour : sur les 3 clés configurées, 2 étaient en quota épuisé et 1 saine ; la sonde lourde sur
   cette dernière a confirmé "OK" (pas d'écart détecté cette fois, mais le garde-fou est maintenant
   en place pour la prochaine fois où il y en aura un).
+- *2026-09-19* — Recul adaptatif (`lib/gemini-keys.ts`), demande explicite de l'utilisateur : « fais
+  en sorte que la rotation [...] soit intelligente [...] ce systeme doit pouvoir s'ameliorer de
+  facon autonome dans le temps ». Chaque échec consécutif (429/503) sur une même clé double son
+  cooldown (plafonné à 4h pour 429, 20 min pour 503) sans intervention humaine ; un seul succès
+  remet le compteur à zéro. Parmi plusieurs clés en cooldown, la plus proche de se libérer est
+  désormais tentée en premier plutôt qu'un ordre arbitraire. Gain estimé : élimine les tentatives
+  répétées, toutes les 15 minutes, sur une clé réellement épuisée pour le reste de la journée (dans
+  un cas extrême de 20 tentatives/jour sur une clé morte, ça peut retomber à 3-4 tentatives grâce à
+  l'escalade) — jamais un blocage définitif, la clé reste toujours retentée avant la fin de la
+  journée. Testé (`scripts/check-house.mjs`) : le cooldown double bien à chaque échec consécutif et
+  retombe instantanément à sa valeur de base après un seul succès. Limite explicite, actée avec
+  l'utilisateur : seuls les PARAMÈTRES (cooldown, ordre) s'ajustent tout seuls à l'expérience réelle
+  — la logique elle-même (ce fichier) ne se réécrit jamais à l'exécution, toute évolution de la
+  logique reste une intervention délibérée et documentée, exactement comme pour l'outil de
+  diagnostic (cf. `docs/outil-resilience-api.md`, section 4).
 
 ## 8. Profil de collaboration observé
 

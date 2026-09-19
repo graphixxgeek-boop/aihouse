@@ -25,7 +25,7 @@ const db={prepare:prepared,async batch(statements){sqlite.exec('BEGIN');try{cons
 globalThis.__testEnv={DB:db,GEMINI_API_KEY:'test-only'};
 const {POST}=await import('../.sites-runtime/test-route.mjs');
 const {initialize,readWorld}=await import('../.sites-runtime/test-world.mjs');
-const {__resetGeminiKeyRotationForTests}=await import('../.sites-runtime/test-gemini-keys.mjs');
+const {__resetGeminiKeyRotationForTests,__cooldownRemainingForTests}=await import('../.sites-runtime/test-gemini-keys.mjs');
 await initialize(db);let world=await readWorld(db);assert.equal(world.agents.length,2);assert.equal(world.agents[0].goal,'Apprendre');assert.equal(world.memories[0].agent_id,1);
 let requestCounter=0;
 // Deliberately independent of crypto.randomUUID(), which is fixed above for newStory()'s benefit —
@@ -1933,6 +1933,30 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(keysUsed,new Set(['test-only','test-rotation-b','test-rotation-c']),'with 3 simultaneously healthy keys, 4 independent brain calls across 2 turns must use all 3 keys, never just one absorbing all the traffic');
   globalThis.fetch=priorFetch;delete globalThis.__testEnv.GEMINI_API_KEY_FALLBACKS;
   console.log("Passed: with several simultaneously healthy Gemini keys configured, traffic rotates across all of them instead of always landing on the same one, satisfying the explicit \"ne pas saturer une clef\" request — proven independently of the rotation counter's exact starting point.");
+}
+
+{
+  // Recul adaptatif (2026-09-19, demande explicite : « fais en sorte que la rotation [...] soit
+  // intelligente [...] ce systeme doit pouvoir s'ameliorer de facon autonome dans le temps »). Une
+  // clé qui échoue plusieurs fois de suite doit voir son cooldown DOUBLER à chaque fois (jusqu'à un
+  // plafond), sans qu'aucune intervention humaine ne soit nécessaire — puis revenir instantanément
+  // à son délai de base dès qu'elle répond à nouveau normalement. Vérifié directement sur les
+  // millisecondes de cooldown restantes, jamais en attendant réellement l'horloge.
+  __resetGeminiKeyRotationForTests();
+  const {recordKeyStatus:recordStatusForTests}=await import('../.sites-runtime/test-gemini-keys.mjs');
+  recordStatusForTests('test-backoff-key',429);
+  const first=__cooldownRemainingForTests('test-backoff-key');
+  recordStatusForTests('test-backoff-key',429);
+  const second=__cooldownRemainingForTests('test-backoff-key');
+  recordStatusForTests('test-backoff-key',429);
+  const third=__cooldownRemainingForTests('test-backoff-key');
+  assert.ok(second>first*1.9&&second<first*2.1,'a second consecutive 429 must roughly double the cooldown compared to the first');
+  assert.ok(third>second*1.9&&third<second*2.1,'a third consecutive 429 must roughly double it again');
+  recordStatusForTests('test-backoff-key',200);
+  recordStatusForTests('test-backoff-key',429);
+  const afterSuccess=__cooldownRemainingForTests('test-backoff-key');
+  assert.ok(afterSuccess<first*1.1,'a single success must reset the streak, so the very next failure gets the base cooldown again, not a continuation of the escalation');
+  console.log('Passed: a key failing repeatedly gets an automatically escalating cooldown with no human tuning needed, and a single success instantly resets it back to the base delay.');
 }
 
 {
