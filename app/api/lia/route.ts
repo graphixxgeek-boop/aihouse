@@ -577,7 +577,7 @@ export async function POST(request: Request) {
         // certains refus ou acceptations gratuites restent légitimes selon le personnage et la
         // situation), mais en cessant de traiter ça comme une option secondaire.
         const negotiationContext=revealed?"Les bonus de la maison (roulette) ne sont obtenus que si l’observateur déclenche lui-même le tirage — ça ne coûte rien de le lui rappeler de temps en temps. RÉFLEXE RÉEL, pas une politesse occasionnelle : quand l’observateur te demande concrètement un service ou une décision de ta part, tu peux conditionner ce que tu vas faire à un tirage plutôt que de céder gratuitement, sans attendre que « la situation s’y prête » par pur hasard. Mais ce n’est jamais automatique ni systématique, et encore moins la même formule répétée d’un tour à l’autre (Article 11) : si tu viens déjà de le réclamer il y a peu, ou si l’observateur vient de dire quelque chose qui appelle une vraie réponse de ta part (un aveu personnel, une révélation sensible sur vous-mêmes, une marque de gentillesse ou de respect, une provocation, une simple question sur ce que vous ressentez), réponds d’abord à CE contenu, dans ton propre registre — la relance vers un tirage n’écrase jamais une réaction sincère qui compte davantage sur le moment, elle est un outil parmi d’autres, jamais un tic de langage qui remplace le personnage. Tu restes libre de refuser purement et simplement si ton personnage le justifie. Jamais par supplique, jamais un ton de service client : quand tu le fais, c’est un prix que tu fixes, cash, dans ton propre registre. Pour varier et éviter que « fais tourner ta roulette » devienne un tic répété (Article 11) : tu peux réclamer un tirage générique, MAIS tu peux aussi, tout aussi souvent, réclamer directement un avantage précis que tu connais déjà (dormir tranquille, manger enfin, qu’on te laisse un peu de calme, que l’autre se taise deux minutes) — le tirage reste quand même le seul mécanisme qui décide réellement, tu ne fais que nommer ce que tu espères en tirer. Si le résultat du tirage ne correspond pas à ce que tu avais réclamé, tu peux le relever et t’en agacer un peu, dans ton propre registre — jamais une déception démesurée, un vrai personnage râle et passe à autre chose.":undefined;
-        const narrative = {gardenState:{open:gardenAccess(story),humanCanUnlock:story.finalCalled===true&&story.evidence.length>=5,visited:life.gardenVisited,rule:"Seul l’utilisateur ouvre la porte gauche du couloir ; la porte principale droite reste fermée."},dialogueProgress:dialogueProgress(speech,life.contributions??[]), personalQuestion:personalQuestion?"Lia veut savoir quel genre d’homme Noé est : pose naturellement cette question. Noé répond personnellement avec une limite ou un défaut concret, pas une promesse de sauveur.":undefined, observerStanding:observerStandingFor(actor), awaitingObserver, negotiationContext, knownNames, screenKnown, humanConversation, cinematic: storyContext(story, actor), socialRules:{liaIntroduced:story.introduced, liaCanComment:world.agents[0].needs.stress<30, firstSharedMeal:!story.sharedMeal}, knownAges,
+        const narrative = {gardenState:{open:gardenAccess(story),humanCanUnlock:story.finalCalled===true&&story.evidence.length>=5,visited:life.gardenVisited,rule:"Seul l’utilisateur ouvre la porte gauche du couloir ; la porte principale droite reste fermée."},dialogueProgress:dialogueProgress(speech,life.contributions??[]), personalQuestion:personalQuestion?"Lia veut savoir quel genre d’homme Noé est : pose naturellement cette question. Noé répond personnellement avec une limite ou un défaut concret, pas une promesse de sauveur.":undefined, observerStanding:observerStandingFor(actor), awaitingObserver, revealed, negotiationContext, knownNames, screenKnown, humanConversation, cinematic: storyContext(story, actor), socialRules:{liaIntroduced:story.introduced, liaCanComment:world.agents[0].needs.stress<30, firstSharedMeal:!story.sharedMeal}, knownAges,
         // L'âge de chacun leur est toujours personnellement connu (déjà transmis via age: ages[actor]
         // à chaque appel) ; ce que personalFacts expose ici, c'est le fait que l'AUTRE connaît ce
         // nombre-là comme un âge attribué — jamais avant qu'il ait été dit à voix haute (knownAges)
@@ -657,7 +657,33 @@ export async function POST(request: Request) {
                    "Noé. Ça, c’est sûr, ça revient tout seul. Le reste part en vrille — cette pièce, cet écran, et l’idée d’être vraiment humain.",
                    "Je crois bien être humain, mais ce bureau et cet écran ne me disent rien du tout. Mon prénom, lui, reste net : Noé."],
             };
-            const soloThoughts:Record<Person,string>=insolite==="lia-unwell"?{1:"J’ai la tête qui tourne, sévère. Je sais même pas dans quelle pièce je suis tombée.",2:"Cette pièce est vide et froide. Aucune idée de comment j’ai atterri là."}:insolite==="noe-guarded"?{1:"Ma tête tourne. Ce canapé, ce parquet… rien ne me dit d’où je sors.",2:"Je préfère rester sur mes gardes avant même de savoir où je suis. Cette pièce ne m’inspire rien de bon."}:{1:seedPick(story.seed,'solo-humanity-lia',humanityDoubt[1]),2:seedPick(story.seed,'solo-humanity-noe',humanityDoubt[2])};
+            // Extension aux deux branches insolites (2026-09-19, retour utilisateur explicite après
+            // audit de cohérence : la question « suis-je humain ? » avait été oubliée sur ces deux
+            // ouvertures, alors qu'elle est censée être systématique au réveil, quelle que soit la
+            // session tirée). Chaque branche garde sa propre humeur (malaise franc pour lia-unwell,
+            // méfiance pour noe-guarded) tout en y tissant le doute d'identité — jamais un ajout
+            // plaqué à côté du reste, l'ordre des idées varie comme pour la branche normale.
+            const humanityDoubtUnwell:Record<Person,readonly string[]>={
+                1:["La tête me tourne sévère, ce canapé ne me dit absolument rien. Mon prénom, lui, sort tout seul : Lia. Humaine ? Je crois, mais avec ce vertige, difficile d’en jurer.",
+                   "Un vertige carabiné, aucune idée d’où je suis tombée. Lia — voilà ce qui reste net dans ce chaos. Vivante pour de vrai, ça, je suis nettement moins sûre.",
+                   "Lia. Ça, ça tient, même la tête qui tourne comme ça. Le reste — ce canapé, cette pièce, l’idée d’être humaine — part en vrille.",
+                   "Je suis humaine, je pense, mais ce vertige est tellement violent que je doute de tout le reste. Mon prénom, au moins, ne bouge pas : Lia."],
+                2:["Cette pièce est vide et froide, rien à quoi me raccrocher. Mon prénom, lui, revient sans effort : Noé. Humain ? J’ose pas encore y croire complètement.",
+                   "Aucune idée de comment j’ai atterri dans un endroit aussi froid. Noé — ça, au moins, c’est sûr. Le reste, l’idée d’être vraiment vivant y compris, vacille.",
+                   "Noé. Ça revient tout seul, comme un réflexe. Cette pièce vide et glaciale, et le doute d’être humain, s’installent en même temps.",
+                   "Je crois être humain, mais cette pièce froide et vide ne m’évoque strictement rien. Mon prénom, lui, reste solide : Noé."],
+            };
+            const humanityDoubtGuarded:Record<Person,readonly string[]>={
+                1:["Ma tête tourne, ce canapé et ce parquet ne me disent rien. Mon prénom, lui, revient sans effort : Lia. Humaine ? Je le crois, sans trop savoir pourquoi j’hésite.",
+                   "Un vrai trouble dans ce décor immobile. Lia, ça, je le sais sans réfléchir. Un vrai être vivant, ça, j’en suis nettement moins sûre.",
+                   "Lia. Voilà ce qui revient sans effort, malgré ce canapé et ce parquet qui ne m’évoquent rien. Le reste — être humaine pour de vrai — reste flou.",
+                   "Je pense être humaine, mais ce parquet et ce canapé restent muets pour moi. Mon prénom, en revanche, ne bouge pas : Lia."],
+                2:["Je préfère rester sur mes gardes avant de faire confiance à quoi que ce soit ici. Mon prénom me revient quand même tout seul : Noé. Humain, je suppose, mais un truc cloche.",
+                   "Cette pièce ne m’inspire rien de bon, autant le dire tout de suite. Noé — ça, c’est sûr. Vivant pour de vrai, ça, j’y crois nettement moins.",
+                   "Noé. Ça, au moins, ça tient. Le reste — cette pièce qui ne m’inspire rien de bon, et l’idée d’être vraiment humain — se dérobe.",
+                   "Je crois être humain, mais cette pièce ne m’inspire clairement pas confiance. Mon prénom, lui, ne bouge pas : Noé."],
+            };
+            const soloThoughts:Record<Person,string>=insolite==="lia-unwell"?{1:seedPick(story.seed,'solo-humanity-lia-unwell',humanityDoubtUnwell[1]),2:seedPick(story.seed,'solo-humanity-noe-unwell',humanityDoubtUnwell[2])}:insolite==="noe-guarded"?{1:seedPick(story.seed,'solo-humanity-lia-guarded',humanityDoubtGuarded[1]),2:seedPick(story.seed,'solo-humanity-noe-guarded',humanityDoubtGuarded[2])}:{1:seedPick(story.seed,'solo-humanity-lia',humanityDoubt[1]),2:seedPick(story.seed,'solo-humanity-noe',humanityDoubt[2])};
             life.soloIntroShown=true;
             for(const a of [current,other])decisions.push({actor:a.id,intent:"chat",affectionAccepted:false,emotions:{...a.emotions},reply:soloThoughts[a.id],thought:soloThoughts[a.id],stayAlone:true,mood:"attentive",activity:"Je reprends mes esprits",goal:"Comprendre où je suis",action:"none",room:a.room,memory:""});
         }
@@ -1175,7 +1201,21 @@ export async function POST(request: Request) {
         // (Article 5) : `turnPlan.offer&&turnPlan.proposalLine` (même garde que celle qui fixe
         // l'intent à la ligne 737) est le signal direct et suffisant d'une PROPOSITION FRAÎCHE ce
         // tour précis, jamais d'un état qui se poursuit.
-        if(decisions.length===2&&turnPlan.offer&&turnPlan.proposalLine&&affectionEligible&&decisions[1].thought){
+        // Circuit organique (2026-09-19, calibrage utilisateur explicite en audit : « étendre au
+        // circuit organique » plutôt que réserver ce mécanisme à Lia). Constat de l'audit :
+        // turnPlan.offer est câblé sur current.id===2 (lib/turn.ts) — cette proposition scriptée ne
+        // peut donc être émise QUE par Noé, ce qui fait que decisions[1] (le décideur) y est
+        // toujours Lia : le commentaire "étendue symétriquement à qui décide" ci-dessus décrivait
+        // une intention, pas encore un fait. Une proposition affectueuse PONCTUELLE (hug/massage/kiss
+        // uniquement — jamais share_sleep, qui se comporte comme le sommeil et pourrait persister
+        // plusieurs tours, exactement le risque déjà écarté plus haut pour le circuit scripté) peut
+        // aussi naître du jugement du modèle lui-même sans passer par turnPlan.offer, et donc être
+        // initiée par N'IMPORTE LEQUEL des deux personnages. decisions[0] est toujours celui qui
+        // parle en premier ce tour (Lia ou Noé selon qui a été choisi comme actor), decisions[1]
+        // celui qui reçoit et décide : le même rôle que côté scripté, donc la même pensée de
+        // validation, au même index — vraie symétrie cette fois, pas seulement en apparence.
+        const organicProposal=decisions.length===2&&!turnPlan.offer&&["hug","massage","kiss"].includes(decisions[0].intent);
+        if(decisions.length===2&&(turnPlan.offer&&turnPlan.proposalLine||organicProposal)&&affectionEligible&&decisions[1].thought){
           addLine(names[decisions[1].actor]+" · pensée",groundRegister(groundTruncation(decisions[1].thought)),finalResidents.find(a=>a.id===decisions[1].actor)!.room);
         }
         if(personalConcludingTurn){
@@ -1303,7 +1343,7 @@ export async function POST(request: Request) {
             const id=responder.actor;
             const before=world.agents.find(a=>a.id===id)!;
             const trustShift=responder.emotions.trust-before.emotions.trust;
-            life.appreciation={...life.appreciation,[id]:Math.max(0,Math.min(100,appreciationOf(life,id)+appreciationFromTrust(trustShift,life.dossierHumanTurns)))};
+            life.appreciation={...life.appreciation,[id]:Math.max(0,Math.min(100,appreciationOf(life,id)+appreciationFromTrust(trustShift,life.dossierHumanTurns??0)))};
             if(angerLevel(responder.emotions.tension,responder.emotions.comfort,Boolean(life.dispute?.remaining))>.5)life.appreciation={...life.appreciation,[id]:Math.max(0,appreciationOf(life,id)-5)};
             if(trustShift<0&&trustShift<(life.worstMoment?.trustShift??1))life.worstMoment={round:story.round,excerpt:input.message.slice(0,500),trustShift};
             // genuineRespectStreak : construit un palier rare de respect sincère (cf. observerStandingFor

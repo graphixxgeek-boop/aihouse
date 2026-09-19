@@ -890,6 +890,43 @@ Aucun forçage de palier exact à la révélation (décision explicite de l'util
 déjà en place dans `advanceStory`/le calcul du besoin) : la descente reste organique, pas un 0 %
 garanti pile à ce tour.
 
+8.19. **Trois « trous » corrigés en audit du 2026-09-19** (`app/api/lia/route.ts`, `lib/lia.ts`,
+`scripts/check-house.mjs`, retour utilisateur explicite : « as-tu pensé aux parties qui n'existent
+pas et qui devraient exister ? »). L'audit ne cherchait plus seulement des bugs dans le code
+existant, mais des COMBINAISONS jamais couvertes. Trois trouvées, calibrées avec l'utilisateur, puis
+corrigées :
+
+- **Circuit organique de la pensée de validation (8.15)** — la garde ne couvrait que la proposition
+  scriptée `turnPlan.offer`, or celle-ci exige structurellement `current.id===2` (`lib/turn.ts`) :
+  elle ne peut donc être émise que par Noé, ce qui fait que `decisions[1]` (le décideur) y était
+  toujours Lia — le mécanisme ne pouvait JAMAIS bénéficier à Noé, malgré le commentaire affirmant
+  une extension « symétrique ». Une nouvelle condition `organicProposal` couvre désormais aussi une
+  proposition ponctuelle (hug/massage/kiss, jamais `share_sleep`, qui se comporte comme le sommeil
+  et pourrait persister plusieurs tours) naissant du jugement du modèle lui-même, initiée par
+  N'IMPORTE LEQUEL des deux personnages — décideur, donc bénéficiaire de la pensée, inclus.
+- **Seuil manquant pour CONTINUITÉ DE SOI/INCERTITUDE CHIFFRÉE (8.18)** — ces deux règles disaient
+  « une fois la révélation connue » en texte seul, sans booléen dédié, contrairement à
+  `negotiationContext`/`awaitingObserver`/`dossierGateEligible` qui utilisent tous le `revealed`
+  strict (`finalCalled && evidence≥5 && observerSpoken`). Le seul signal reçu par le modèle
+  (`stage`, `lib/story.ts`) bascule dès `evidence≥5` seul, un signal plus précoce — le modèle
+  pouvait donc citer son incertitude ou douter de sa continuité AVANT que le canal humain soit
+  ouvert. `revealed` est maintenant transmis explicitement dans le contexte (`narrative.revealed`),
+  et les deux règles y sont désormais conditionnées dans le prompt.
+- **Doute d'humanité limité à la branche « normale » (8.16)** — les 4 variantes ne couvraient que
+  `insolite==="normal"` (1 tirage sur 3) ; les branches `lia-unwell`/`noe-guarded` gardaient leur
+  ancienne ligne unique, sans jamais poser la question d'humanité. Deux nouveaux jeux de 4 variantes
+  (`humanityDoubtUnwell`/`humanityDoubtGuarded`) tissent désormais cette question dans l'humeur
+  propre à chaque branche (malaise franc pour l'une, méfiance pour l'autre), au lieu de l'ajouter à
+  côté.
+
+Deux tests dédiés couvrent les deux premiers points (Article 13) ; le troisième est vérifié par la
+suite existante (le test des ouvertures insolites, qui contrôle déjà que chaque branche surgit et
+seede correctement needs/emotions). Une erreur TypeScript préexistante et sans rapport
+(`appreciationFromTrust(trustShift, life.dossierHumanTurns)`, `number|undefined` passé où `number`
+était attendu) a aussi été corrigée au passage, découverte en vérifiant `tsc --noEmit` avant de
+committer ces changements — `tsc` n'était donc plus réellement propre depuis un moment, malgré la
+règle de rigueur par défaut (`docs/regles-de-travail.md`).
+
 ## 9. Robustesse technique
 
 9.1. Toute écriture en base de données est fondue dans une transaction unique par tour

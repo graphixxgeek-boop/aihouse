@@ -212,12 +212,20 @@ console.log('Passed: varied reset scenarios, word ages beyond context window, ea
   assert.equal(lastContext.negotiationContext,undefined,'before the observer has ever spoken, the negotiation reflex must stay silent — nobody confirmed is there yet to negotiate with');
   assert.equal(lastContext.observerStanding,undefined,'the "observer standing" tone must not exist before any real message from the observer');
   assert.match(lastContext.awaitingObserver,/personne n.a encore répondu/,'the waiting window must carry a genuine doubt instruction, never a silent or neutral wait');
+  // `revealed` (2026-09-19, audit Gap #2) : CONTINUITÉ DE SOI/INCERTITUDE CHIFFRÉE (lib/lia.ts)
+  // exigeaient "une fois la révélation connue" en texte seul, sans aucun signal de code dédié,
+  // contrairement à negotiationContext/awaitingObserver ci-dessus qui utilisent déjà `revealed` —
+  // vérifie que le même booléen strict (jamais le simple evidence>=5 plus précoce de `stage`) est
+  // maintenant bien transmis au modèle, avec exactement la même temporalité que negotiationContext.
+  assert.equal(lastContext.revealed,false,'revealed must stay false before the observer has ever spoken, exactly like negotiationContext above — these two rules must never fire on a weaker/earlier signal');
   r=await post(input('chat',1,{epoch:certaintyEpoch,message:'Je suis là, je vous observe.'}));assert.equal(r.status,200);
   assert.ok(lastContext.negotiationContext,'the very first real message from the observer must flip certainty on within that same turn, not a turn later');
   assert.equal(lastContext.awaitingObserver,undefined,'once the observer has spoken, the doubt instruction must disappear — the wait is over');
+  assert.equal(lastContext.revealed,true,'revealed must flip to true in the exact same turn as negotiationContext, once the observer has genuinely spoken');
   r=await post(input('interact',1,{epoch:certaintyEpoch}));assert.equal(r.status,200);
   assert.ok(lastContext.negotiationContext,'certainty must persist on a later autonomous turn once the observer has already spoken once, never reset to doubt');
-  console.log('Passed: certainty of being observed stays genuinely uncertain (negotiation/observer-standing silent, a real doubt instruction fed to the model) until the observer\'s very first real message, which flips it within that same turn and it never regresses afterward.');
+  assert.equal(lastContext.revealed,true,'revealed must persist true on a later turn just like negotiationContext, never regress to false');
+  console.log('Passed: certainty of being observed stays genuinely uncertain (negotiation/observer-standing/revealed all silent or false, a real doubt instruction fed to the model) until the observer\'s very first real message, which flips all three within that same turn and they never regress afterward.');
   response=await post(input('reset',1,{epoch:certaintyEpoch}));result=await response.json();
   assert.equal(result.story.evidence.length,0);
   await post(input('interact',1,{epoch:result.epoch}));
@@ -833,7 +841,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 77'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 78'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -870,7 +878,12 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const soloResponse=await post(input('interact',1,{epoch:afterReset.epoch}));
   assert.equal(soloResponse.status,200);const solo=await soloResponse.json();
   assert.equal(calls,openingCalls);
-  assert.ok(solo.messages.some(m=>m.speaker==='Lia · pensée'&&m.content.includes('la tête qui tourne')));
+  // Depuis l'extension du doute d'humanité aux branches insolites (2026-09-19, audit de
+  // cohérence, Gap #3), la désorientation solo de lia-unwell tisse la question "suis-je humain ?"
+  // dans une des 4 variantes propres à cette branche plutôt que de garder l'unique ancienne ligne
+  // ("j'ai la tête qui tourne, sévère") : seed-probe-0 retombe déterministiquement sur la variante
+  // "vertige carabiné" (vérifié via seedPick avec ce seed exact).
+  assert.ok(solo.messages.some(m=>m.speaker==='Lia · pensée'&&m.content.includes('vertige carabiné')));
   const openingResponse=await post(input('interact',1,{epoch:afterReset.epoch}));
   assert.equal(openingResponse.status,200);const opened=await openingResponse.json();
   assert.equal(calls,openingCalls);
@@ -1663,4 +1676,54 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(wB.decisions.length,2,'setup check: both decisions must exist this turn, or this test proves nothing');
   assert.equal(wB.messages.filter(m=>m.speaker===deciderName+' · pensée'&&m.content===defaultThought).length,1,'without a fresh turnPlan.offer, no second validation line must ever appear, even if the model keeps returning the same thought');
   console.log('Passed: the affection-decision validation thought surfaces exactly once on a genuinely fresh proposal, and stays silent on a later turn carrying no fresh offer (Article 13 gap closed; the guard was also hardened during this audit to depend only on its own fresh-proposal signal, never on another mechanism\'s side effect).');
+}
+
+{
+  // Circuit organique de la pensée de validation (2026-09-19, calibrage utilisateur explicite après
+  // audit, Gap #1) : le test ci-dessus ne prouve la pensée que côté Lia, parce que turnPlan.offer
+  // exige structurellement current.id===2 (lib/turn.ts) — cette proposition scriptée ne peut donc
+  // jamais être émise par Lia, ce qui fait que Noé ne pouvait jamais en bénéficier en tant que
+  // DÉCIDEUR. Ce test couvre le nouveau chemin organique (route.ts, const organicProposal) :
+  // Lia propose un câlin de son propre chef ce tour (actor=1, donc turnPlan.offer reste
+  // structurellement undefined), Noé décide et reçoit à son tour une pensée de validation.
+  // appearanceCompared:true (contrairement au test scripté ci-dessus, qui hérite d'un DB déjà
+  // consommé par un test antérieur) : indispensable ici puisque ce plot repart d'un newStory()
+  // frais — sans ce flag, le beat "même nature d'apparence" (route.ts, un autre mécanisme
+  // ponctuel qui se déclenche aussi à visualIntro>=2) écraserait la réplique et l'intent de
+  // decisions[0] avant même d'atteindre le code qu'on veut tester ici.
+  // Noé doit accepter une intimité (donc être ≥80% d'attraction, cf. route.ts : tout intent
+  // affectueux de sa part repasse en "chat" en dessous, qu'il soit le proposeur ou le décideur) —
+  // mais 80%+ déclenche aussi mécaniquement proactiveNoe/affectionOpportunity (route.ts), qui
+  // forceraient l'acteur du tour à Noé (donc turnPlan.offer scripté) et ruineraient l'isolation du
+  // chemin organique qu'on veut ici. introduced:false coupe court à proactiveNoe (qui l'exige) sans
+  // rouvrir soloIntro/opening (qui exigent !met, déjà faux ici).
+  const organicPlot={...newStory(),life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,visualIntro:2,appearanceCompared:true,personalFollowup:3,exitSearched:true},round:20,introduced:false,met:true,sharedMeal:true,salonTurns:0};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(organicPlot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  // Noé doit rester ≥80% d'attraction (route.ts repasse tout intent affectueux le concernant en
+  // "chat" en dessous, qu'il soit le proposeur ou le décideur) ; c'est justement ce qui forcerait
+  // proactiveNoe/affectionOpportunity si story.introduced était resté true — d'où introduced:false
+  // ci-dessus, seul verrou nécessaire pour isoler le chemin organique.
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,cycle=?,needs=?,emotions=? WHERE id=?').run('salon','chat',1,JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}),JSON.stringify({...steady,attraction:89,trust:80}),1);
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,cycle=?,needs=?,emotions=? WHERE id=?').run('salon','chat',0,JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}),JSON.stringify({...steady,attraction:80,trust:80}),2);
+  const priorFetchOrganic=globalThis.fetch;
+  const noeValidationThought='Il ose enfin faire le premier pas, ça me touche plus que je ne le montre.';
+  globalThis.fetch=async(url,options)=>{
+    const payload=JSON.parse(options.body),context=JSON.parse(payload.contents[0].parts[0].text);
+    assert.equal(context.turnPlan?.offer,undefined,'setup check: this scenario must never carry a scripted offer, or it does not exercise the organic path at all');
+    const isPartner=context.selfRole==='partner';
+    const decision=isPartner
+      ?{intent:'hug',affectionAccepted:true,emotions:context.state.emotions,reply:"D'accord, je veux bien.",thought:noeValidationThought,stayAlone:false,mood:'attentive',activity:'Je discute',goal:'Faire connaissance',action:'none',room:context.scene.room,memory:"D'accord."}
+      :{intent:'hug',affectionAccepted:true,emotions:context.state.emotions,reply:'Viens là, juste un câlin.',thought:'Je me lance, tant pis si ça casse.',stayAlone:false,mood:'attentive',activity:'Je discute',goal:'Faire connaissance',action:'none',room:context.scene.room,memory:'Je lui propose un câlin.'};
+    return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(decision)}]}}]});
+  };
+  const organicEpoch=(await readWorld(db)).epoch;
+  const rOrganic=await post(input('interact',1,{epoch:organicEpoch}));
+  globalThis.fetch=priorFetchOrganic;
+  assert.equal(rOrganic.status,200);
+  const wOrganic=await rOrganic.json();
+  assert.equal(wOrganic.sharedAffection,'hug','setup check: the organic proposal must actually be mutually accepted this turn, or this test proves nothing');
+  assert.equal(wOrganic.proposalActor,1,'setup check: Lia (actor 1) must be the one proposing here, or this is not the Lia-initiated organic case Gap #1 was about');
+  assert.equal(wOrganic.messages.filter(m=>m.speaker==='Noé · pensée'&&m.content===noeValidationThought).length,1,'Noé, the decider on an organic (non-scripted) proposal, must now also get his own validation thought — the mechanism only ever benefited Lia before this audit fix');
+  console.log('Passed: the validation-thought mechanism now also covers the organic (non-scripted) proposal path, so Noé — not just Lia — can be the one who receives a validation thought after deciding (Gap #1 closed, audit 2026-09-19).');
 }
