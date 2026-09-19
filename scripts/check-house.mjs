@@ -905,7 +905,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 89'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 90'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2177,4 +2177,49 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(w.story.dayNight.isNight,false);assert.equal(w.story.dayNight.phase,'aube');assert.equal(w.story.dayNight.day,2,'day 38 belongs to the second cycle');
   flat=false;
   console.log('Passed: midnight (round 35, synchronized with the investigation ceiling) reacts with genuine urgency while the investigation is open and switches to sarcastic ghost jokes once it is already resolved, nightfall (round 29) and dawn (round 38) get their own modest ambiance reactions, and the displayed day/night indicator (readWorld) reflects the right phase/day.');
+}
+
+{
+  // Refus explicite de la roulette (2026-09-19, test dédié demandé explicitement par
+  // l'utilisateur après full_sim7, cf. docs/referentiel/points-fragiles.md). Précision actée avec
+  // l'utilisateur : "ils" qui proposent la roulette désigne Lia/Noé, qui relancent l'OBSERVATEUR
+  // pour la lui demander — seul l'observateur (via spin_bonus) peut réellement la déclencher ; un
+  // refus est donc l'observateur qui décline LEUR demande, jamais l'inverse. Aucun "bonus rare" :
+  // les 9 bonus partagent les mêmes chances (cf. tests de la roulette plus haut), non concerné ici.
+  flat=true;affection=false;refuse=false;
+  const plot={...newStory(),round:60,met:true,introduced:true,sharedMeal:true,finalCalled:true,evidence:Array(5).fill('preuve'),pendingDestination:undefined,life:{...newStory().life}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,emotions=?').run('salon',JSON.stringify({hunger:20,fatigue:20,stress:20,uncertainty:20}),JSON.stringify({curiosity:60,tension:20,trust:60,comfort:60,attraction:60}));
+  let epoch=(await readWorld(db)).epoch;
+  // "revealed" (route.ts) exige aussi observerSpoken (un "vous" déjà en base, ou le mode "chat" en
+  // cours) — sans un premier message de l'observateur, une offre ne serait jamais enregistrée.
+  let r0=await post(input('chat',1,{epoch,message:"On continue l'enquête."}));assert.equal(r0.status,200);let w0=await r0.json();epoch=w0.epoch;
+  // Une réplique contient une offre reconnaissable ("...si tu fais tourner la roulette...").
+  const priorFetchRefusal=globalThis.fetch;
+  globalThis.fetch=async(url,options)=>{const response=await priorFetchRefusal(url,options),body=await response.json(),decision=JSON.parse(body.candidates[0].content.parts[0].text);decision.reply=isPartnerRequest([url,options])?'Bof.':"Je veux bien t'aider, mais seulement si tu fais tourner la roulette en échange.";body.candidates[0].content.parts[0].text=JSON.stringify(decision);return Response.json(body);};
+  let r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);let w=await r.json();
+  globalThis.fetch=priorFetchRefusal;
+  assert.ok(w.story.life.negotiationOffer,'test setup sanity: a recognizable roulette request must be recorded as a pending negotiation offer');
+  // Refus explicite de l'observateur : le "non" efface l'offre et pose une vraie pause partagée
+  // (les deux personnages entendent ce refus, pas seulement celui qui a demandé).
+  epoch=w.epoch;
+  const roundAtRefusal=w.story.round;
+  r=await post(input('chat',1,{epoch,message:"Non, certainement pas."}));assert.equal(r.status,200);w=await r.json();
+  assert.equal(w.story.life.negotiationOffer,undefined,'an explicit refusal must clear the pending negotiation offer, never leave it dangling');
+  assert.ok(w.story.life.rouletteRefusalUntil[1]>roundAtRefusal+4&&w.story.life.rouletteRefusalUntil[1]<=roundAtRefusal+11,'an explicit refusal must set a real 5-to-10-round pause before either character can be re-recorded asking again');
+  assert.equal(w.story.life.rouletteRefusalUntil[1],w.story.life.rouletteRefusalUntil[2],'both characters must hear the same refusal — the pause is shared, not per-actor');
+  // Pendant cette fenêtre, une réplique qui relancerait la roulette doit être amputée de sa
+  // relance, sans jamais toucher au reste du message (le vrai sujet en cours doit survivre).
+  epoch=w.epoch;
+  const priorFetchStrip=globalThis.fetch;
+  globalThis.fetch=async(url,options)=>{const response=await priorFetchStrip(url,options),body=await response.json(),decision=JSON.parse(body.candidates[0].content.parts[0].text);decision.reply=isPartnerRequest([url,options])?'Bof.':"Je pense qu'on devrait fouiller la cuisine. Allez, fais tourner la roulette, ça nous aiderait bien.";body.candidates[0].content.parts[0].text=JSON.stringify(decision);return Response.json(body);};
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  globalThis.fetch=priorFetchStrip;
+  const strippedMessage=w.messages.find(m=>/fouiller la cuisine/i.test(m.content));
+  assert.ok(strippedMessage,'the rest of the reply (the real topic in progress) must survive the roulette-ask removal');
+  assert.ok(!/roulette/i.test(strippedMessage.content),'the roulette relaunch itself must be stripped from the reply while the refusal window is active');
+  assert.equal(w.story.life.negotiationOffer,undefined,'a stripped relaunch must never be re-recorded as a fresh pending negotiation offer while the refusal window is active');
+  flat=false;
+  console.log('Passed: an explicit "non" to a pending roulette request (from Lia/Noé asking the observer, never the reverse) clears the offer and sets a real shared 5-to-10-round refusal window for both characters, during which any further roulette relaunch is stripped from replies while the rest of the message survives intact, and no new negotiation offer gets re-recorded until the window lapses.');
 }

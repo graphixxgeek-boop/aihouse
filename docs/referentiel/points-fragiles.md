@@ -29,11 +29,17 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   les fusionner en un seul système cohérent — décision de conception à trancher explicitement avant
   d'y toucher (cf. Article 14 : ne jamais exécuter silencieusement un changement qui contredit un
   choix déjà documenté sans repasser par une confirmation).
-- Un refus de l'observateur de faire tourner la roulette de bonus devrait, selon l'utilisateur,
-  avoir une vraie conséquence sur l'humeur des personnages — pas encore vérifié si c'est déjà le
-  cas dans le code ou si c'est un manque réel à combler.
+- **Confirmé le 2026-09-19, en écrivant le test dédié** : un refus explicite ("non") n'a
+  actuellement AUCUN coût sur l'humeur des personnages — seule une offre laissée sans réponse
+  pendant plus de 6 tours (`lapsed`) coûte -3 d'appréciation ; le refus, lui, se contente
+  d'effacer l'offre et de poser la pause de 5-10 tours (`rouletteRefusalUntil`), sans jamais
+  toucher `appreciation`, `stress` ni aucune autre jauge. C'est donc un vrai manque à combler, pas
+  une simple hypothèse à vérifier — mais l'implémenter (quel coût, sur qui, à quel point) est un
+  choix de calibrage qui reste à trancher avec l'utilisateur avant d'y toucher.
 - Idée non implémentée : une nuit trop courte devrait laisser une vraie dette de sommeil (sieste
   dans la journée suivante, coucher plus tôt le lendemain soir) — évoquée par l'utilisateur le
   2026-09-19, pas encore conçue ni chiffrée.
-- Test dédié du mécanisme de refus de roulette (`rouletteRefusalUntil`) — construction validée par
-  l'utilisateur ("Fabriquer un test séparé maintenant"), pas encore écrit.
+- Faut-il généraliser à TOUS les documents de référentiel la séparation blueprint
+  générique/instanciation projet, déjà appliquée à l'outil de résilience API et au tableau de bord
+  (2026-09-19) ? Question posée explicitement par l'utilisateur, à préciser ensemble avant
+  d'agir — pas une décision prise, juste notée pour ne pas la perdre.
