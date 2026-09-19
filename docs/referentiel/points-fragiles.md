@@ -35,3 +35,12 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   générique/instanciation projet, déjà appliquée à l'outil de résilience API et au tableau de bord
   (2026-09-19) ? Question posée explicitement par l'utilisateur, à préciser ensemble avant
   d'agir — pas une décision prise, juste notée pour ne pas la perdre.
+- `scripts/check-spirit.mjs` (16 scénarios) n'a pas été relancé depuis les derniers changements de
+  `lib/lia.ts` (registre de fatigue jour/nuit, ajouté le 2026-09-19) — l'Article 13 de CLAUDE.md
+  demande explicitement de le lancer en priorité après un changement de ce fichier, jamais fait
+  depuis. Coûte de vrais appels API (Article 8), à lancer à la main, pas en continu.
+- Avant la compaction de cette session, une inquiétude avait été notée sur le recul adaptatif de
+  rotation des clés Gemini (`lib/gemini-keys.ts`) : risque de sur-pénaliser un 429 transitoire
+  comme s'il s'agissait d'un vrai épuisement de quota journalier. Le recul exponentiel avec reset
+  au premier succès (déjà implémenté) semble répondre à cette inquiétude, mais ce lien n'a jamais
+  été explicitement reconfirmé avec l'utilisateur — à vérifier avec lui plutôt que supposer réglé.
