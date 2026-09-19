@@ -39,9 +39,14 @@ Créé le 2026-09-19, Article 20 de CLAUDE.md : ARGUS doit toujours être déplo
 
 Lancé le jour même de la création de l'outil, comme convenu explicitement avec l'utilisateur
 ("Bien sûr, on lance un scan de l'existant une fois cet outil prêt"). Résultat détaillé :
-`docs/argus/scan-2026-09-19-17-05.txt`, résumé dans `docs/argus/index.md`. Une trouvaille confirmée
-(`trottoirGranted`, jamais lu), cinq à vérifier, une déjà écartée comme faux positif après
-vérification manuelle.
+`docs/argus/scan-2026-09-19-17-05.txt`, résumé dans `docs/argus/index.md`. Une trouvaille initiale
+(`trottoirGranted`, jamais lu) finalement écartée à son tour comme faux positif — c'était en fait
+un choix de conception déjà assumé par l'utilisateur (« on verra après »), pas un trou — cinq
+candidats restent à vérifier, un déjà écarté comme faux positif après vérification manuelle
+(`exitSearched`). **Leçon retenue** : toujours consulter `docs/referentiel/parametres.md` avant de
+qualifier une trouvaille ARGUS de bug réel, pas seulement grep le code — un flag "jamais relu" peut
+très bien être un effet déjà entièrement résolu au moment où il est posé (cf. `docs/argus/index.md`
+pour le détail complet de ce cas).
 
 ## KPI
 

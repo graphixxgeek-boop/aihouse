@@ -1036,7 +1036,13 @@ ensemble « la refonte graphique », un seul chantier visuel à mener groupé. O
    la description suive automatiquement tout changement de décor. Règle générale à vérifier en même
    temps, demandée explicitement : les personnages décrivent toujours le monde TEL QU'IL EST
    AFFICHÉ au moment présent, jamais une référence à un ancien décor ni à l'historique du code —
-   condition de base de l'immersion, à re-vérifier après chaque changement visuel.
+   condition de base de l'immersion, à re-vérifier après chaque changement visuel. **Ajouté le
+   2026-09-19, trouvé par ARGUS puis confirmé avec l'utilisateur** : le bonus `trottoir` reste
+   aujourd'hui un instant narré (la porte s'entrouvre deux secondes, résolu entièrement par une
+   réplique instantanée, cf. `docs/referentiel/parametres.md`) — jamais une zone 3D pathable comme
+   le jardin, décision déjà assumée par l'utilisateur (« on verra après »). À faire pendant ce
+   chantier, pas avant : donner au trottoir une vraie géométrie marchable, cohérente avec le reste
+   de la refonte plutôt que codée en dur avant que le décor final soit connu.
 5. **Après la refonte graphique** — chantier n°7 (mécaniques de diffusion), dernier de la liste par
    la propre priorisation d'Opus, confirmée par l'utilisateur.
 6. **Après la refonte graphique également** *(ajouté le 2026-09-19, demande explicite de
