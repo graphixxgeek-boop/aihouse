@@ -17,12 +17,11 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   tous les scénarios `check-spirit.mjs` et `check-profile.mjs` avec ce modèle comme `GEMINI_MODEL`
   effectif) — reste donc réservé au dev/simulation, jamais activé en production (cf. CLAUDE.md,
   section Smart Breaker).
-- Seuil de `genuineRespectStreak` jugé possiblement trop strict par l'utilisateur (choix "Assouplir
-  le seuil" lors du calibrage du 2026-09-19) — pas encore investigué ni modifié.
-- Écart d'appréciation observé entre deux simulations complètes (21/18 dans full_sim7 contre 42/44
-  dans full_sim5, après une séquence d'hostilité comparable) — cause exacte non confirmée entre
-  deux hypothèses (dossier incomplet dans full_sim7 vs recalibrage antérieur des poids
-  d'appréciation) ; investigation validée par l'utilisateur, pas encore menée.
+- Le recalibrage des poids `appreciationFromTrust` du 2026-09-19 (baisse ×8/×4, hausse ×6/×3,
+  resserrés depuis les poids d'origine) reste marqué "à revalider empiriquement par une nouvelle
+  simulation dédiée avant de considérer ce calibrage définitif" dans `parametres.md` — jamais
+  encore confirmé par une simulation complète postérieure à ce changement. Candidat naturel pour
+  full_sim8 (point 4 de la file en cours).
 - Le bouton/toggle manuel jour/nuit (éclairage 3D cosmétique) et le cycle jour/nuit automatique
   (fatigue, comportement) sont deux mécanismes volontairement séparés dans le code actuel ;
   l'utilisateur, en répondant au test de compréhension du 2026-09-19, a exprimé une préférence pour
