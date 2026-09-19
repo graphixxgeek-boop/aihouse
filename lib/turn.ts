@@ -10,15 +10,29 @@ export const roomObjects:Record<Room,readonly string[]> = {
  jardin:["herbe","arbre","porte vers le couloir","clôture","haut-parleur de la porte"], salon:["canapé","bibliothèque","fenêtre","télévision","télécommande","plante géométrique","enceinte"], cuisine:["table","plan de travail","provisions","fenêtre"],
  chambre:["lit","miroir sans reflet","haut-parleur","fenêtre"], bureau:["table","écran","bibliothèque","livre","mot","feuille codée","fenêtre"],
 };
-export function residentPriority(agent:Resident, introduced:boolean) {
- const need=priority(agent.needs);return need==="rest"&&!introduced?undefined:need;
+// investigationCritical (2026-09-19, demande explicite de l'utilisateur : « l'enquête l'emporte
+// toujours » sur la fatigue nocturne) : une fois l'enquête réellement en retard (round>=20 et
+// evidence<5, même seuil qu'investigationOverdue ci-dessous), la fatigue seule ne force plus
+// l'endormissement — les personnages se forcent à continuer plutôt que de s'endormir pile au
+// pire moment. Ne touche jamais faim/stress (hors du périmètre de la question posée), et ne
+// réveille jamais un personnage déjà endormi (isSleeping() reste prioritaire à l'appel, cf.
+// planTurn ci-dessous) — seul un NOUVEL endormissement déclenché par la fatigue est empêché.
+export function residentPriority(agent:Resident, introduced:boolean, investigationCritical:boolean=false) {
+ const need=priority(agent.needs);
+ if(need==="rest"&&!introduced)return undefined;
+ if(need==="sleep"&&investigationCritical)return undefined;
+ return need;
 }
 export function planTurn(mode:string,current:Resident,other:Resident,story:Story,eligible:boolean,opportunity:boolean,suggested:Intent,history:{content:string}[]) {
  const life=readLife(story.life,story.round);
  const automatic=["interact","autonomous"].includes(mode);
  const sleeping=isSleeping(current,life);
- const urgentIntent=automatic?(sleeping?"sleep":residentPriority(current,Boolean(story.introduced))):undefined;
- const partnerPriority=isSleeping(other,life)?"sleep":residentPriority(other,Boolean(story.introduced));
+ // Même seuil qu'investigationOverdue plus bas (round>=20 && evidence<5) : calculé ici en amont
+ // pour être appliqué de façon cohérente à tous les points de ce fichier qui lisent la priorité
+ // sommeil (Article 3 : une seule source de vérité, jamais deux seuils qui pourraient diverger).
+ const investigationCritical=automatic&&story.evidence.length<5&&story.round>=20;
+ const urgentIntent=automatic?(sleeping?"sleep":residentPriority(current,Boolean(story.introduced),investigationCritical)):undefined;
+ const partnerPriority=isSleeping(other,life)?"sleep":residentPriority(other,Boolean(story.introduced),investigationCritical);
  const afterInvestigation=automatic&&[current,other].some(a=>a.intent==="study");
  // Assoupli le 2026-09-16 (5→3 tours et 8→4 tours plus bas) : la pause initiale au salon et le
  // maintien forcé ensemble restaient un peu longs, au point de donner une impression de blocage.
@@ -41,7 +55,7 @@ export function planTurn(mode:string,current:Resident,other:Resident,story:Story
  // l'enquête suivait un ordre imposé plutôt que l'initiative des personnages (retour utilisateur
  // du 2026-09-16). Une destination réellement convenue entre eux prime désormais toujours sur la
  // liste mécanique ; `explore` (ci-dessous) se met déjà en retrait dès qu'un accord existe.
- const executeAgreement=automatic&&agreed&&story.introduced&&!(agreed.room==="bureau"&&salonPause)&&!life.debrief?.remaining&&!life.contact?.remaining&&!residentPriority(current,Boolean(story.introduced))&&!partnerPriority&&!sleeping;
+ const executeAgreement=automatic&&agreed&&story.introduced&&!(agreed.room==="bureau"&&salonPause)&&!life.debrief?.remaining&&!life.contact?.remaining&&!residentPriority(current,Boolean(story.introduced),investigationCritical)&&!partnerPriority&&!sleeping;
  // Ordre de visite mélangé par session (2026-09-17) : avant, l'exploration passait toujours par
  // la cuisine puis la chambre, dans cet ordre, à chaque partie — un des points figés qui donnait
  // l'impression que deux sessions se ressemblaient trop (retour utilisateur direct).
@@ -85,8 +99,8 @@ export function planTurn(mode:string,current:Resident,other:Resident,story:Story
  // rythme réel du jeu (20-21s/tour, cf. docs/referentiel/regles-du-temps.md) — sous la barre des 12
  // minutes maximum, avec une marge de sécurité réelle plutôt que pile au bord.
  const investigationEscalated=automatic&&story.evidence.length<5&&story.round>=10;
- const investigationOverdue=automatic&&story.evidence.length<5&&story.round>=20&&!residentPriority(current,Boolean(story.introduced))&&!partnerPriority;
- const requiredIntent=(gardenFirst?"chat":urgentIntent) ?? (exitInspection?"chat":explore?"chat":tvFirst?"tv":studyContinuation?"study":continuing?"chat":reflection?"rest":undefined) ?? (investigationOverdue?"study":undefined) ?? (executeAgreement?agreed!.intent:undefined) ?? (offer?undefined:(linger&&!partnerPriority?"rest":undefined) ?? (afterInvestigation&&!partnerPriority?"rest":undefined) ?? (automatic&&story.evidence.length<5&&story.round>=3&&(story.round%3===0||(investigationEscalated&&story.round%2===0)||investigativeCue)&&!residentPriority(current,Boolean(story.introduced))&&!partnerPriority?"study":undefined));
+ const investigationOverdue=automatic&&story.evidence.length<5&&story.round>=20&&!residentPriority(current,Boolean(story.introduced),investigationCritical)&&!partnerPriority;
+ const requiredIntent=(gardenFirst?"chat":urgentIntent) ?? (exitInspection?"chat":explore?"chat":tvFirst?"tv":studyContinuation?"study":continuing?"chat":reflection?"rest":undefined) ?? (investigationOverdue?"study":undefined) ?? (executeAgreement?agreed!.intent:undefined) ?? (offer?undefined:(linger&&!partnerPriority?"rest":undefined) ?? (afterInvestigation&&!partnerPriority?"rest":undefined) ?? (automatic&&story.evidence.length<5&&story.round>=3&&(story.round%3===0||(investigationEscalated&&story.round%2===0)||investigativeCue)&&!residentPriority(current,Boolean(story.introduced),investigationCritical)&&!partnerPriority?"study":undefined));
  const intent=requiredIntent??(automatic&&!story.introduced?"chat":automatic&&current.intent==="eat"?"rest":"chat");
  // investigationOverdue avant executeAgreement (2026-09-19, cohérence trouvée en relecture) :
  // sans ce rang, un accord de destination déjà en place aurait pu river la pièce à autre chose que

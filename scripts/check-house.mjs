@@ -12,8 +12,8 @@ import {DatabaseSync} from 'node:sqlite';
 Object.defineProperty(globalThis.crypto,'randomUUID',{value:()=>{let candidate;do{candidate='00000000-0000-4000-8000-'+(++seedCounter).toString(16).padStart(12,'0');}while(insoliteHash(candidate)>=6);return candidate;},configurable:true});}
 fs.mkdirSync('.sites-runtime',{recursive:true});
 const transpile=s=>ts.transpileModule(s,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
-for(const name of ['house','simulation','relationship','dialogue','story','lia','world','turn','life','drama','perception','visual-events','stock','presentation','playback','evidence','reference','update-audit','gemini-keys'])fs.writeFileSync(`.sites-runtime/test-${name}.mjs`,transpile(fs.readFileSync(`lib/${name}.ts`,'utf8').replace('"./update-audit"','"./test-update-audit.mjs"').replace('"./visual-events"','"./test-visual-events.mjs"').replace('"./drama"','"./test-drama.mjs"').replace('"./perception"','"./test-perception.mjs"').replace('"./life"','"./test-life.mjs"').replace('"./house"','"./test-house.mjs"').replace('"./lia"','"./test-lia.mjs"').replace('"./gemini-keys"','"./test-gemini-keys.mjs"').replace('"./simulation"','"./test-simulation.mjs"').replace('"./relationship"','"./test-relationship.mjs"').replace('"./story"','"./test-story.mjs"')));
-const raw=fs.readFileSync('app/api/lia/route.ts','utf8').replace('import { env } from "cloudflare:workers";','const env=globalThis.__testEnv;').replaceAll('"@/lib/stock"','"./test-stock.mjs"').replaceAll('"@/lib/visual-events"','"./test-visual-events.mjs"').replaceAll('"@/lib/perception"','"./test-perception.mjs"').replaceAll('"@/lib/lia"','"./test-lia.mjs"').replaceAll('"@/lib/gemini-keys"','"./test-gemini-keys.mjs"').replaceAll('"@/lib/world"','"./test-world.mjs"').replaceAll('"@/lib/house"','"./test-house.mjs"').replaceAll('"@/lib/simulation"','"./test-simulation.mjs"').replaceAll('"@/lib/dialogue"','"./test-dialogue.mjs"').replaceAll('"@/lib/relationship"','"./test-relationship.mjs"').replaceAll('"@/lib/story"','"./test-story.mjs"').replaceAll('"@/lib/life"','"./test-life.mjs"').replaceAll('"@/lib/drama"','"./test-drama.mjs"').replaceAll('"@/lib/turn"','"./test-turn.mjs"');
+for(const name of ['house','simulation','relationship','dialogue','story','lia','world','turn','life','drama','perception','visual-events','stock','presentation','playback','evidence','reference','update-audit','gemini-keys','daynight'])fs.writeFileSync(`.sites-runtime/test-${name}.mjs`,transpile(fs.readFileSync(`lib/${name}.ts`,'utf8').replace('"./update-audit"','"./test-update-audit.mjs"').replace('"./visual-events"','"./test-visual-events.mjs"').replace('"./drama"','"./test-drama.mjs"').replace('"./perception"','"./test-perception.mjs"').replace('"./life"','"./test-life.mjs"').replace('"./house"','"./test-house.mjs"').replace('"./lia"','"./test-lia.mjs"').replace('"./gemini-keys"','"./test-gemini-keys.mjs"').replace('"./simulation"','"./test-simulation.mjs"').replace('"./relationship"','"./test-relationship.mjs"').replace('"./story"','"./test-story.mjs"').replace('"./daynight"','"./test-daynight.mjs"')));
+const raw=fs.readFileSync('app/api/lia/route.ts','utf8').replace('import { env } from "cloudflare:workers";','const env=globalThis.__testEnv;').replaceAll('"@/lib/stock"','"./test-stock.mjs"').replaceAll('"@/lib/visual-events"','"./test-visual-events.mjs"').replaceAll('"@/lib/perception"','"./test-perception.mjs"').replaceAll('"@/lib/lia"','"./test-lia.mjs"').replaceAll('"@/lib/gemini-keys"','"./test-gemini-keys.mjs"').replaceAll('"@/lib/world"','"./test-world.mjs"').replaceAll('"@/lib/house"','"./test-house.mjs"').replaceAll('"@/lib/simulation"','"./test-simulation.mjs"').replaceAll('"@/lib/dialogue"','"./test-dialogue.mjs"').replaceAll('"@/lib/relationship"','"./test-relationship.mjs"').replaceAll('"@/lib/story"','"./test-story.mjs"').replaceAll('"@/lib/life"','"./test-life.mjs"').replaceAll('"@/lib/drama"','"./test-drama.mjs"').replaceAll('"@/lib/turn"','"./test-turn.mjs"').replaceAll('"@/lib/daynight"','"./test-daynight.mjs"');
 fs.writeFileSync('.sites-runtime/test-route.mjs',transpile(raw));
 const sqlite=new DatabaseSync(':memory:');sqlite.exec(fs.readFileSync('drizzle/0000_jazzy_cobalt_man.sql','utf8'));
 sqlite.prepare('INSERT INTO agent_state VALUES (1,?,?,?,?,?)').run('attentive','Je lis','Apprendre',3,1000);
@@ -26,6 +26,7 @@ globalThis.__testEnv={DB:db,GEMINI_API_KEY:'test-only'};
 const {POST}=await import('../.sites-runtime/test-route.mjs');
 const {initialize,readWorld}=await import('../.sites-runtime/test-world.mjs');
 const {__resetGeminiKeyRotationForTests,__cooldownRemainingForTests}=await import('../.sites-runtime/test-gemini-keys.mjs');
+const {cyclePosition,isNight,isMidnight,phaseOf,fatigueRateMultiplier,DAY_ROUNDS:TEST_DAY_ROUNDS,CYCLE_ROUNDS:TEST_CYCLE_ROUNDS}=await import('../.sites-runtime/test-daynight.mjs');
 await initialize(db);let world=await readWorld(db);assert.equal(world.agents.length,2);assert.equal(world.agents[0].goal,'Apprendre');assert.equal(world.memories[0].agent_id,1);
 let requestCounter=0;
 // Deliberately independent of crypto.randomUUID(), which is fixed above for newStory()'s benefit —
@@ -111,6 +112,22 @@ assert.ok(advanceNeeds(baseline,'none','salon',1).fatigue>advanceNeeds(baseline,
 assert.ok(advanceNeeds(baseline,'none','salon',2).hunger>advanceNeeds(baseline,'none','salon',1).hunger);
 assert.equal(advanceNeeds(baseline,'eat','cuisine',1).fatigue-advanceNeeds(baseline,'none','cuisine',1).fatigue,0);
 assert.equal(advanceNeeds(baseline,'eat','cuisine',2).fatigue-advanceNeeds(baseline,'none','cuisine',2).fatigue,14);
+// Cycle jour/nuit (2026-09-19, lib/daynight.ts) : horloge dérivée du round, jamais de Date.now(),
+// calée pour que minuit (round 35) coïncide exactement avec le plafond garanti de l'enquête déjà
+// documenté (~35 tours) — cf. docs/referentiel/regles-du-temps.md section 8.
+assert.equal(TEST_DAY_ROUNDS,29);assert.equal(TEST_CYCLE_ROUNDS,38);
+assert.equal(cyclePosition(0),0);assert.equal(cyclePosition(37),37);assert.equal(cyclePosition(38),0);assert.equal(cyclePosition(73),35);
+assert.equal(isNight(0),false);assert.equal(isNight(28),false);assert.equal(isNight(29),true);assert.equal(isNight(37),true);
+assert.equal(isMidnight(35),true);assert.equal(isMidnight(73),true,'minuit doit revenir à chaque cycle suivant, pas une seule fois');assert.equal(isMidnight(34),false);assert.equal(isMidnight(33),false,'minuit est fixé au round 35, pas au centre géométrique de la nuit (33) — décision assumée pour coïncider avec le plafond de l\'enquête');
+assert.equal(phaseOf(0),'aube');assert.equal(phaseOf(14),'milieu-jour');assert.equal(phaseOf(28),'crepuscule');assert.equal(phaseOf(29),'tombee-nuit');assert.equal(phaseOf(35),'minuit');assert.equal(phaseOf(37),'fin-nuit');
+// fatigueRateMultiplier : le jour DOIT rester ×1 (taux déjà calibré, jamais ×0) — régression réelle
+// trouvée en lançant cette suite juste après une première version qui gelait le jour à 0, cassant
+// des dizaines d'assertions de fatigue existantes sans lien apparent avec ce chantier (Article 19).
+assert.equal(fatigueRateMultiplier(0),1);assert.equal(fatigueRateMultiplier(28),1);assert.equal(fatigueRateMultiplier(29),3);assert.equal(fatigueRateMultiplier(37),3);
+assert.equal(advanceNeeds(baseline,'none','salon',1,fatigueRateMultiplier(0)).fatigue,advanceNeeds(baseline,'none','salon',1).fatigue,'day multiplier must reproduce the exact pre-existing fatigue rate, zero regression');
+assert.equal(advanceNeeds(baseline,'none','salon',1,fatigueRateMultiplier(35)).fatigue-baseline.fatigue,residentProfiles[1].fatigueRate*3,'night must triple the passive fatigue rate');
+assert.equal(advanceNeeds(baseline,'sleep','chambre',1,fatigueRateMultiplier(35)).fatigue,advanceNeeds(baseline,'sleep','chambre',1,fatigueRateMultiplier(0)).fatigue,'recovery (sleep/rest) must stay identical day or night — only the passive rate is modulated');
+console.log('Passed: day/night cycle math (round-based, midnight synchronized with the investigation ceiling) and the fatigue multiplier (night triples the passive rate, day reproduces the exact pre-existing rate, recovery untouched either way).');
 assert.ok(initialNeedsFor(2).hunger>initialNeedsFor(1).hunger);assert.equal(initialNeedsFor(2).stress,90);assert.equal(initialNeedsFor(1).stress,90);
 for(const key of ['attraction','trust','comfort'])assert.ok(initialEmotionsFor(2)[key]>initialEmotionsFor(1)[key]);assert.equal(initialEmotionsFor(2).tension,90);assert.equal(initialEmotionsFor(1).tension,90);
 const common={intent:'eat',room:'cuisine',emotions:{attraction:40,trust:30}};assert.equal(sharedActivityBonus(common,common,common,common),true);assert.equal(sharedActivityBonus(common,{...common,room:'salon'},common,common),false);assert.equal(sharedActivityBonus(common,{...common,emotions:{attraction:39,trust:30}},common,common),false);
@@ -888,7 +905,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 86'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 87'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2092,3 +2109,72 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 // jamais une initiative spontanée d'un personnage. Rien à retester ici en éligibilité/probabilité
 // puisqu'il n'y a plus de condition d'éligibilité séparée à vérifier — le tirage suit exactement
 // les mêmes règles que les 7 bonus déjà existants.
+
+{
+  // investigationCritical (2026-09-19, cycle jour/nuit) : une fois l'enquête réellement en retard
+  // (round>=20 && evidence<5), la fatigue seule ne doit plus forcer un NOUVEL endormissement —
+  // décision actée explicitement avec l'utilisateur ("l'enquête l'emporte toujours sur le sommeil
+  // nocturne"). Round choisi en-dessous de 20 pour la ligne de base (comportement d'avant ce
+  // chantier, doit rester identique), puis exactement à 20 pour la fenêtre critique.
+  flat=true;affection=false;
+  const settleFatigueScenario=(round,evidence=[])=>{
+    const plot={...newStory(),round,met:true,introduced:true,sharedMeal:true,finalCalled:false,evidence,pendingDestination:undefined,life:{...newStory().life}};
+    sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
+    sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+    sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=1').run('salon',JSON.stringify({hunger:10,fatigue:90,stress:10,uncertainty:10}),'chat');
+    sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=2').run('salon',JSON.stringify({hunger:10,fatigue:20,stress:10,uncertainty:10}),'chat');
+  };
+  settleFatigueScenario(5);
+  let epoch=(await readWorld(db)).epoch;
+  let r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);let w=await r.json();
+  assert.equal(w.agents.find(a=>a.id===1).intent,'sleep','baseline preserved: high fatigue below round 20 must still force sleep exactly as before this chantier (zero regression)');
+  settleFatigueScenario(20);
+  epoch=(await readWorld(db)).epoch;
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  assert.notEqual(w.agents.find(a=>a.id===1).intent,'sleep','once the investigation is critically overdue (round>=20, evidence<5), fatigue alone must never force a new sleep episode — the investigation always wins over nighttime fatigue');
+  console.log('Passed: fatigue alone still forces sleep below round 20 (zero regression), but never once the investigation is critically overdue (round>=20, evidence<5) — the investigation always wins over sleep, per the day/night chantier.');
+}
+
+{
+  // Minuit, tombée de la nuit, aube (2026-09-19, cycle jour/nuit — lib/daynight.ts) : réactions
+  // scriptées zéro-API synchronisées sur le round, jamais sur l'heure réelle. Round de départ posé
+  // à round-1 (le round AVANT le marqueur visé), puisque le marqueur est lu sur nextStory.round
+  // (après l'incrément normal de fin de tour).
+  flat=true;affection=false;
+  const settleDayNight=(round,evidence=[])=>{
+    const plot={...newStory(),round,met:true,introduced:true,sharedMeal:true,finalCalled:evidence.length>=5,evidence,pendingDestination:undefined,life:{...newStory().life}};
+    sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
+    sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+    sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=1').run('salon',JSON.stringify({hunger:10,fatigue:20,stress:10,uncertainty:10}),'chat');
+    sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=2').run('salon',JSON.stringify({hunger:10,fatigue:20,stress:10,uncertainty:10}),'chat');
+  };
+  const pensees=w=>w.messages.filter(m=>/ · pensée$/.test(m.speaker));
+  // Minuit, enquête encore incomplète : réaction d'urgence, jamais le sarcasme fantôme.
+  settleDayNight(34,[]);
+  let epoch=(await readWorld(db)).epoch;
+  let r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);let w=await r.json();
+  assert.equal(w.story.round,35,'test setup sanity: round must actually reach the midnight marker (35) this turn');
+  assert.ok(pensees(w).some(m=>/minuit|douze coups/i.test(m.content)),'midnight must trigger a scripted reaction while the investigation is still incomplete');
+  assert.ok(!pensees(w).some(m=>/fantôme|spectre|manoir hant|épouvante|théâtral/i.test(m.content)),'the ghost/sarcasm variant must never fire while the investigation is genuinely still open');
+  // Minuit, enquête déjà résolue : sarcasme méta sur les fantômes, jamais une confirmation neutre.
+  settleDayNight(34,Array(5).fill('preuve'));
+  epoch=(await readWorld(db)).epoch;
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  assert.ok(pensees(w).some(m=>/fantôme|spectre|manoir hant|épouvante|théâtral/i.test(m.content)),'once the investigation is already resolved, midnight must switch to the sarcastic ghost-joke variant');
+  // Tombée de la nuit (round 29) : habillage plus modeste, sans branche urgence/résolu.
+  settleDayNight(28,[]);
+  epoch=(await readWorld(db)).epoch;
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  assert.equal(w.story.round,29);
+  assert.ok(pensees(w).some(m=>/baisse|lumière change|s'assombrit|nuit arrive|décline|nuit approche/i.test(m.content)),'nightfall (round 29) must trigger its own modest ambiance reaction');
+  // Aube du second cycle (round 38, jamais le tout premier round 0 qui chevaucherait soloIntro).
+  settleDayNight(37,[]);
+  epoch=(await readWorld(db)).epoch;
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  assert.equal(w.story.round,38);
+  assert.ok(pensees(w).some(m=>/jour revient|éclairer dehors|jour se lève|jour est là|se relève dehors/i.test(m.content)),'dawn of the second cycle (round 38) must trigger its own modest ambiance reaction');
+  // L'indicateur jour/nuit affiché côté client est calculé à chaque lecture de readWorld().
+  assert.equal(w.story.dayNight.isNight,false);assert.equal(w.story.dayNight.phase,'aube');assert.equal(w.story.dayNight.day,2,'day 38 belongs to the second cycle');
+  flat=false;
+  console.log('Passed: midnight (round 35, synchronized with the investigation ceiling) reacts with genuine urgency while the investigation is open and switches to sarcastic ghost jokes once it is already resolved, nightfall (round 29) and dawn (round 38) get their own modest ambiance reactions, and the displayed day/night indicator (readWorld) reflects the right phase/day.');
+}

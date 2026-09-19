@@ -37,6 +37,12 @@ lisait un seuil temporel pensé pour l'une en utilisant l'autre).
 commentaire de code ou une entrée de `parametres.md` qui dit juste « 10 minutes » sans préciser
 « réelles » est une source d'ambiguïté à corriger sur-le-champ.
 
+**Une troisième horloge dérivée existe depuis le 2026-09-19 : le cycle jour/nuit** (`lib/daynight.ts`).
+Ce n'est jamais une horloge INDÉPENDANTE au sens des deux ci-dessus — elle est entièrement calculée
+à partir de l'horloge de tour (`story.round % 38`), jamais de `Date.now()`, précisément pour rester
+verrouillée sur la logique narrative existante quelle que soit la vitesse de jeu. Voir la section 8
+dédiée pour le détail complet (durées, marqueurs, effets sur la fatigue, minuit).
+
 ## 2. Combien de temps réel représente un tour
 
 Il n'existe pas de durée fixe unique — elle dépend du mode :
@@ -117,7 +123,7 @@ indiquée — c'est voulu (Article 9, rejouabilité), jamais une imprécision de
 | 12-16 (mélangé) | Question personnelle de Lia (« quel genre d'homme es-tu ? ») | `personalThreshold`, `route.ts` |
 | **20** | **Priorité absolue de l'enquête si elle est encore incomplète** (`investigationOverdue`) — la relance vers l'étude l'emporte désormais sur toute romance scriptée, toute pause salon, tout repos post-étude ; le debrief post-preuve se raccourcit à 1 tour (au lieu de 2) et `recapBeat` (récap salon) est suspendu, cf. ligne ≤35 | `story.round>=20 && evidence<5`, `lib/turn.ts` + `route.ts` |
 | **24** | Premier geste romantique possible pour Noé (`offer`/`affectionOpportunity`) — sans effet si l'enquête est encore en retard, cf. ligne round 20 | `story.round>=24 && attraction Noé>=80`, `lib/turn.ts` + `route.ts` |
-| **≤35** | **Conclusion garantie de l'enquête, pire cas, recalculé le 2026-09-19** — les 5 preuves (4 indices + le dossier final) sont acquises au plus tard à ce stade même si aucune n'était encore trouvée au round 20. **Historique du calcul, à ne jamais reproduire sans compter le cycle complet** : un premier calcul (round ~33) ne comptait qu'un forfait "jusqu'à 3 tours de recap" en oubliant le cycle entier par preuve manquante (2 tours d'étude + 2 tours de debrief + parfois 1 recap) — une simulation fraîche a atteint la révélation au round 46 réel, révélant l'erreur. Corrigé par une intervention légère (choisie parmi plusieurs options proposées à l'utilisateur) : une fois `investigationOverdue` actif, le debrief passe à 1 tour (au lieu de 2, les 2 passes d'étude restent intactes) et `recapBeat` est entièrement suspendu (`story.round<20` ajouté à sa condition). Pire cas recalculé : 5 preuves × (2 tours d'étude + 1 tour de debrief) = 15 tours après le round 20, plafond réel ≈ round 35, ~12 min — PILE à la limite fixée par l'utilisateur, jamais confortablement en dessous comme le calcul précédent le prétendait à tort. Un besoin urgent (faim, sommeil) peut encore ajouter quelques tours (`residentPriority`/`partnerPriority` suspendent `investigationOverdue` le temps de sa résolution, jamais indéfiniment, cf. section 6) | `lib/turn.ts`, `investigationOverdue` ; `route.ts`, `life.debrief`+`recapBeat` |
+| **≤35** | **Conclusion garantie de l'enquête, pire cas, recalculé le 2026-09-19** — les 5 preuves (4 indices + le dossier final) sont acquises au plus tard à ce stade même si aucune n'était encore trouvée au round 20. **Historique du calcul, à ne jamais reproduire sans compter le cycle complet** : un premier calcul (round ~33) ne comptait qu'un forfait "jusqu'à 3 tours de recap" en oubliant le cycle entier par preuve manquante (2 tours d'étude + 2 tours de debrief + parfois 1 recap) — une simulation fraîche a atteint la révélation au round 46 réel, révélant l'erreur. Corrigé par une intervention légère (choisie parmi plusieurs options proposées à l'utilisateur) : une fois `investigationOverdue` actif, le debrief passe à 1 tour (au lieu de 2, les 2 passes d'étude restent intactes) et `recapBeat` est entièrement suspendu (`story.round<20` ajouté à sa condition). Pire cas recalculé : 5 preuves × (2 tours d'étude + 1 tour de debrief) = 15 tours après le round 20, plafond réel ≈ round 35, ~12 min — PILE à la limite fixée par l'utilisateur, jamais confortablement en dessous comme le calcul précédent le prétendait à tort. Un besoin urgent de faim ou de stress peut encore ajouter quelques tours (`residentPriority`/`partnerPriority` suspendent `investigationOverdue` le temps de sa résolution, jamais indéfiniment, cf. section 6). **Le sommeil n'en fait plus partie depuis le 2026-09-19** (cycle jour/nuit, section 8) : une fois `round>=20 && evidence<5` (`investigationCritical`), la fatigue seule ne force plus l'endormissement d'un personnage — l'enquête l'emporte toujours sur la fatigue nocturne, décision actée explicitement avec l'utilisateur pour ne jamais risquer qu'une session reste bloquée sur un endormissement au pire moment | `lib/turn.ts`, `investigationOverdue`/`investigationCritical` ; `route.ts`, `life.debrief`+`recapBeat` |
 | variable, dès que `evidence>=5` ET les deux personnages réunis dans la même pièce | **`finale` se déclenche** : `story.finalCalled` passe à vrai, `life.revealedRound` s'enregistre | `route.ts`, `const finale` |
 | dès `finalCalled` | Le jardin et la roulette des bonus deviennent accessibles CÔTÉ MÉCANIQUE (mais le chat humain reste verrouillé, voir section 4) — volontairement pas gaté sur `revealed` (l'observateur peut découvrir les bonus avant même d'avoir parlé) | `gardenAccess`, roulette |
 | dès le premier message humain réel après `finalCalled` | `observerSpoken` passe à vrai, `revealed` (le canal humain réellement ouvert) passe à vrai dans le MÊME tour | `route.ts`, `const revealed` |
@@ -181,11 +187,15 @@ Décision actée avec l'utilisateur : garder la durée en TOURS inchangée plut�
 en temps réel pour retrouver la même durée perçue qu'avant — l'effet est simplement plus court en
 minutes qu'auparavant, un choix délibéré, jamais un oubli.
 
-**Interaction bonus réels × enquête en retard (2026-09-19)** : un besoin urgent (faim, sommeil —
-`residentPriority`/`partnerPriority`) ou un bonus de confort actif peuvent retarder de quelques
-tours le déclenchement d'`investigationOverdue` (section 3), puisque ce mécanisme exige
-explicitement l'absence de priorité urgente pour s'activer. Ce n'est jamais un blocage permanent :
-un besoin se résout toujours en 1-2 tours (manger, dormir), après quoi `investigationOverdue`
+**Interaction bonus réels × enquête en retard (2026-09-19, corrigé le même jour par le cycle
+jour/nuit, section 8)** : un besoin urgent de faim ou de stress (`residentPriority`/
+`partnerPriority`) ou un bonus de confort actif peuvent retarder de quelques tours le déclenchement
+d'`investigationOverdue` (section 3), puisque ce mécanisme exige explicitement l'absence de
+priorité urgente pour s'activer. Le sommeil n'en fait plus partie une fois `investigationCritical`
+actif (round>=20, evidence<5) : la fatigue, même nocturne et accélérée, ne force plus
+l'endormissement pendant cette fenêtre — seuls faim et stress peuvent encore retarder de quelques
+tours. Ce n'est jamais un blocage permanent : un besoin se résout toujours en 1-2 tours (manger, se
+calmer), après quoi `investigationOverdue`
 reprend la main normalement — analyse de code confirmée (pas encore un test automatisé dédié) :
 aucune combinaison ne peut repousser le plafond garanti de façon durable, seulement de quelques
 tours en plus à chaque besoin résolu, une marge que le calcul de la section 3 n'absorbe pas
@@ -247,3 +257,112 @@ appliqué au temps) :
 5. **Ce nouveau seuil a-t-il été traduit en temps réel approximatif (section 2)** pour vérifier
    qu'il reste cohérent avec l'expérience visée, pas seulement avec la logique interne du code ?
 6. **Ce document, `parametres.md` et `principes.md` sont-ils mis à jour le jour même ?**
+
+## 8. Cycle jour/nuit (`lib/daynight.ts`, 2026-09-19)
+
+*(Ajouté à la demande explicite de l'utilisateur : « je veux que ce principe soit déjà installé
+silencieusement, avec des effets concrets sur la fatigue ». L'habillage graphique réel — lumière
+extérieure le jour, lampes/bougies chaudes la nuit — est volontairement reporté à la refonte
+graphique groupée (cf. CLAUDE.md, Plan d'origine, chantiers 4/5/6) : ce chantier-ci installe le
+SYSTÈME et ses effets mécaniques/narratifs, invisible graphiquement pour l'instant.)*
+
+**Horloge utilisée : le round, jamais `Date.now()`** — décision actée avec l'utilisateur après une
+question de calibrage explicite. Un cycle jour/nuit dure **38 tours** : 29 tours de jour (`day`,
+`round%38` de 0 à 28) puis 9 tours de nuit (`night`, `round%38` de 29 à 37), avant de reboucler.
+Traduits en temps réel au rythme de référence de la section 2 (~20,5 s/tour) : jour ≈ 10 minutes,
+nuit ≈ 3 minutes, cycle complet ≈ 13 minutes — les durées demandées explicitement par l'utilisateur.
+
+**Marqueurs explicites, un par phase** (demande explicite : « des marqueurs sur le début, le milieu
+exact et la fin ») :
+
+| Marqueur | Position dans le cycle (`round%38`) | Label |
+|---|---|---|
+| Aube (début du jour) | 0 | `aube` |
+| Milieu du jour | 14 | `milieu-jour` |
+| Crépuscule (fin du jour) | 28 | `crepuscule` |
+| Tombée de la nuit (début) | 29 | `tombee-nuit` |
+| Minuit (milieu de la nuit) | 35 | `minuit` |
+| Fin de nuit | 37 | `fin-nuit` |
+
+**Minuit n'est pas exactement le centre géométrique de la nuit** (qui serait le round 33, à
+mi-chemin entre 29 et 37) : il est fixé au round 35 très précisément parce que ce nombre est
+**exactement** le plafond garanti de l'enquête déjà documenté en section 3 (≈35 tours, ≈12 minutes
+réelles). Ce n'est pas une coïncidence choisie a posteriori : l'utilisateur a explicitement demandé
+que minuit et ce plafond soient **le même événement, toujours synchronisé**, quelle que soit la
+vitesse de jeu (question de calibrage posée et tranchée explicitement) — la seule façon de garantir
+ça dans TOUS les cas (mode `autonomous`, rythme fixe ; mode `interact`, rythme variable selon la
+vitesse de lecture) est de dériver minuit du ROUND, jamais du temps réel écoulé, qui aurait pu
+diverger du plafond mécanique sur une session jouée très vite ou très lentement.
+
+**Effet sur la fatigue (`fatigueRateMultiplier`, branché dans `lib/simulation.ts::advanceNeeds`)** :
+- **Nuit : ×3** sur le taux passif de fatigue de chaque personnage (2 pour Lia, 1 pour Noé avant
+  multiplication) — « les personnages sont plus vite fatigués et ont tendance à s'endormir »,
+  demande explicite. Lia (déjà plus encline à se fatiguer, cf. `residentProfiles`) atteint le seuil
+  urgent (fatigue≥68, `priority()`) en quelques tours de nuit ; Noé y reste plus résistant,
+  cohérent avec leurs profils déjà distincts.
+- **Jour : ×1 (taux normal, inchangé)** — pas un gel à ×0 comme une première version de ce fichier
+  le proposait avant d'être corrigée le même jour : `fatigueRate` (lib/simulation.ts) est LE taux
+  déjà calibré et testé pour tout le jeu existant, jamais pensé comme un taux « de nuit exceptionnel
+  » — le geler à 0 le jour aurait silencieusement changé le rythme de fatigue de toutes les sessions
+  passées, la quasi-totalité d'une partie se déroulant de toute façon dans les 29 premiers tours du
+  premier cycle (donc « le jour ») ; trouvé en LANÇANT `scripts/check-house.mjs` juste après avoir
+  écrit ce chantier, pas seulement en le relisant (Article 5/19 : la preuve par le test prime sur
+  l'intuition, même bien intentionnée). C'est donc la NUIT qui est l'exception qui accélère, jamais
+  l'inverse — « pas spécialement fatigués le jour » se lit comme un rythme normal et lent, en
+  contraste avec la nette accélération nocturne, pas comme littéralement aucune fatigue possible.
+  - **Exception 1 — dette de sommeil, obtenue gratuitement** : puisque la jauge n'est jamais reset
+    au lever du jour, un personnage qui n'a pas assez récupéré pendant la nuit (interrompu, sommeil
+    trop court) continue simplement d'accumuler à son rythme normal à partir de ce reliquat plus
+    élevé, au lieu de redescendre par magie — aucun mécanisme de dette séparé n'a été nécessaire.
+  - **Exception 2 — choc émotionnel fort** (`dramaRules.emotionalShockFatigue`, +10, `lib/drama.ts`) :
+    une dispute qui éclate (le mécanisme existant des « 3 rapprochements rapprochés », `route.ts`)
+    fatigue Lia (la personne concernée par ce conflit précis) ; une hostilité humaine vraiment sévère
+    (même seuil `reaction>=8` déjà utilisé pour la perte de confiance, jamais un nouveau seuil
+    inventé) fatigue l'agent qui l'a reçue. Toujours additif et ponctuel, jamais modulé par le
+    multiplicateur jour/nuit, jamais répété tant que le choc dure.
+  - **Ce que cette exception ne couvre PAS, volontairement** : les mécanismes déjà existants et déjà
+    testés qui touchent la fatigue indépendamment de l'heure (une ouverture insolite qui démarre Lia
+    à 58 de fatigue dès le round 0, cf. `initialNeedsFor`/`insolite==="lia-unwell"` ; le coup de
+    fatigue de Noé après un repas, `mealFatigue` ; le sommeil de l'un qui redirige les questions vers
+    l'autre) restent entièrement inchangés — le cycle jour/nuit vient s'ajouter par-dessus, jamais
+    par-dessous, ces comportements déjà tunés (Article 19).
+
+**L'enquête l'emporte toujours sur le sommeil nocturne (`investigationCritical`, `lib/turn.ts`)** :
+décision actée avec l'utilisateur après une question de calibrage dédiée. Une fois
+`round>=20 && evidence<5` (même seuil qu'`investigationOverdue`, section 3), la fatigue seule ne
+force plus l'endormissement d'un personnage (`residentPriority` ignore alors un besoin "sleep") —
+même épuisés, ils se forcent à continuer l'enquête plutôt que de s'endormir pile au pire moment.
+Portée volontairement étroite : ne touche jamais faim/stress (hors du périmètre de la question
+posée), et ne réveille jamais un personnage DÉJÀ endormi (un sommeil en cours continue jusqu'à son
+terme naturel, `isSleeping()` reste prioritaire) — seul un NOUVEL endormissement déclenché par la
+fatigue est empêché pendant cette fenêtre.
+
+**Minuit sonne, une réaction distincte selon l'état de l'enquête** (`route.ts`, `dayNightLines`) :
+à chaque passage par le round 35 du cycle (35, 73, 111...), les deux personnages réagissent à
+l'horloge du salon, en pensée (« · pensée »), jamais en dialogue humain — le mécanisme est
+indépendant du canal `chat` (section 4). Si `evidence.length<5` à ce moment précis : réaction
+d'urgence panique-mais-lucide (« on accélère, on boucle ça »), jamais du désespoir. Si
+l'enquête est déjà résolue à ce moment : réaction sarcastique méta sur les fantômes/l'aspect
+théâtral de la mise en scène (jamais une confirmation neutre, Article 0/15) — trois variantes par
+personnage et par cas (Article 10/11), aucune répétée verbatim d'un cycle à l'autre grâce au round
+dans la clé `seedPick`. Un personnage déjà endormi ne reçoit pas cette ligne (pas de réveil forcé).
+Habillage plus modeste, sans branche urgence/résolu, aux deux autres marqueurs majeurs : tombée de
+la nuit (round 29) et aube (round 0, sauf le tout premier cycle qui chevaucherait `soloIntro`).
+
+**Indicateur jour/nuit affiché** (`app/page.tsx`, `.daynight-indicator`) : un badge dans l'en-tête,
+distinct du bouton manuel jour/nuit déjà existant (`night`, purement cosmétique/lumière 3D, contrôlé
+par l'observateur) — l'ambiguïté entre les deux a été identifiée en lisant le code existant avant
+d'écrire ce chantier (Article 19) et réglée en donnant à chacun un rôle clairement distinct et un
+libellé qui ne se recouvre pas : le bouton manuel reste un réglage d'éclairage à la discrétion de
+l'observateur, l'indicateur montre l'horloge RÉELLE de la simulation (`story.dayNight`, calculée par
+`readWorld()`, disponible sur toute réponse de l'API).
+
+**Idées considérées, volontairement non implémentées ce jour (Article 6, honnêteté sur le
+périmètre)** : ralentir mécaniquement le rythme de découverte des preuves la nuit (risque réel de
+contredire le plafond garanti de la section 3, jamais touché) ; faire varier le contenu des rêves
+selon la profondeur de la nuit (système `dreamFragments` existant non audité pour ce chantier) ;
+augmenter la fréquence des disputes la nuit (mécanisme de dispute existant trop fragile pour un
+changement non testé en conditions réelles) ; faire varier le texte des bonus roulette selon
+l'heure (casserait les assertions exactes déjà testées dans `check-house.mjs` sans bénéfice
+demandé explicitement). Aucune de ces idées n'est un besoin exprimé par l'utilisateur — seulement
+des pistes explorées puis écartées pour rester dans un périmètre sûr et testable en une session.

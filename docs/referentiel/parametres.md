@@ -24,6 +24,12 @@ Seuils d'urgence (`priority()`) : faim ≥ 68 → manger ; fatigue ≥ 68 → do
 repos. Niveaux d'affichage (`needLevel()`) : urgent à 75 (stress) / 85 (incertitude) / 68 (autres) ;
 pressant à 55 (stress) / 65 (incertitude) / 50 (autres).
 
+**`fatigueRate`/tour ci-dessus est le taux normal, appliqué tel quel le jour** (2026-09-19, cf.
+section « Cycle jour/nuit » plus bas) : ×1 le jour (inchangé, zéro régression sur l'existant), ×3 la
+nuit (hors récupération/effets ponctuels, jamais modulés). Les valeurs et la cadence ci-dessous
+restent donc valables telles quelles pour toute la partie « diurne » d'une session (la grande
+majorité d'une partie typique) ; seule la nuit accélère par rapport à cette référence.
+
 Cadence résultante (à partir des valeurs initiales, sans repas/repos entre-temps) : Lia atteint la
 fatigue urgente en 24 tours, la faim urgente en 48 ; Noé atteint la faim urgente en 19 tours, la
 fatigue urgente en 48. Avant le 2026-09-16, la fatigue de Lia et Noé montait deux fois plus vite
@@ -498,6 +504,34 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
 - `isSleeping` reste vrai tant que la fatigue > 12 OU que moins de 2 tours de sommeil ont eu lieu
   (`sleepTurns`, plafonné à 2).
 - Un tour de sommeil pur ne consomme aucun appel API.
+
+## Cycle jour/nuit (`lib/daynight.ts`, `lib/simulation.ts`, `lib/turn.ts`, `app/api/lia/route.ts`, `docs/referentiel/regles-du-temps.md` section 8)
+
+- Horloge : `story.round % 38`, jamais `Date.now()` (choix explicite pour rester synchronisé avec
+  le plafond garanti de l'enquête quelle que soit la vitesse de jeu).
+- Jour = rounds 0-28 (29 tours, ≈10 minutes réelles). Nuit = rounds 29-37 (9 tours, ≈3 minutes
+  réelles). Cycle complet = 38 tours (≈13 minutes réelles).
+- Marqueurs : aube=0, milieu-jour=14, crépuscule=28, tombée de la nuit=29, **minuit=35** (pas le
+  centre géométrique de la nuit qui serait 33 — fixé à 35 pour coïncider exactement avec le plafond
+  garanti de l'enquête déjà documenté), fin de nuit=37.
+- `fatigueRateMultiplier(round)` : nuit ×3, jour ×1 (inchangé — voir plus haut pourquoi ×0 a été
+  essayé puis corrigé le même jour) — appliqué uniquement au taux PASSIF
+  (`advanceNeeds`, 5e paramètre `fatigueMultiplier`), jamais aux effets de récupération (sommeil,
+  repos) ni aux effets ponctuels déjà existants (repas, refus, bonus).
+- `dramaRules.emotionalShockFatigue` = 10 (`lib/drama.ts`) : bonus de fatigue ponctuel et additif à
+  une dispute qui éclate (Lia) ou une hostilité humaine sévère (`reaction>=8`, seuil déjà existant
+  réutilisé) — jamais modulé par le multiplicateur jour/nuit.
+- `investigationCritical` (`lib/turn.ts::residentPriority`, 3e paramètre) : `round>=20 &&
+  evidence<5`, même seuil qu'`investigationOverdue`. Empêche uniquement le résultat "sleep" de
+  `priority()` de devenir une priorité forcée pendant cette fenêtre — faim/stress inchangés, aucun
+  personnage déjà endormi n'est réveillé de force.
+- Réactions scriptées zéro-API (`app/api/lia/route.ts`, `dayNightLines`) : minuit (round%38===35,
+  3 variantes par personnage × urgence/résolu = 12 lignes), tombée de la nuit (round%38===29, 3
+  variantes × 2), aube (round%38===0 et round>0, 3 variantes × 2) — toutes en « · pensée », jamais
+  en dialogue humain, jamais adressées à un personnage déjà endormi.
+- Indicateur client (`app/page.tsx`, `.daynight-indicator`, `world.story.dayNight`) : distinct du
+  bouton manuel `night` déjà existant (réglage d'éclairage 3D à la discrétion de l'observateur,
+  sans aucun effet mécanique, présent avant ce chantier).
 
 ## Rejouabilité (`lib/story.ts`, `lib/drama.ts`)
 

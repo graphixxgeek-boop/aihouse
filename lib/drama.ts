@@ -1,5 +1,11 @@
 import type {Person,Room} from './house';
-export const dramaRules={openingTurns:1,proposalStress:{noe:18,lia:14},rejection:{attraction:3,hunger:6,fatigue:5},pressureStress:16,personalBoost:3,debriefTurns:2} as const;
+// emotionalShockFatigue (2026-09-19, cycle jour/nuit, cf. lib/daynight.ts) : exception explicitement
+// demandée par l'utilisateur au principe « pas de fatigue le jour » — une dispute qui éclate ou une
+// hostilité vraiment sévère de l'observateur peuvent fatiguer un personnage même en plein jour,
+// indépendamment de l'heure. Toujours additif et ponctuel (une seule fois au moment du choc, jamais
+// répété tant qu'il dure), jamais modulé par le multiplicateur jour/nuit qui ne régit que le taux
+// PASSIF de fatigue (lib/simulation.ts::advanceNeeds).
+export const dramaRules={openingTurns:1,proposalStress:{noe:18,lia:14},rejection:{attraction:3,hunger:6,fatigue:5},pressureStress:16,personalBoost:3,debriefTurns:2,emotionalShockFatigue:10} as const;
 // Une seule formule de motif ("je préfère qu'on ne reste pas chacun de notre côté") habillée de
 // six verbes différents reste reconnaissable au bout de quelques répétitions : ce n'est pas la
 // forme qui manquait de variété, c'est le fond. Chaque condition a maintenant plusieurs motifs

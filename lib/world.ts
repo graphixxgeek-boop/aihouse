@@ -1,5 +1,6 @@
 import {sleepRoom} from "./relationship";
 import {readLife} from "./life";
+import {phaseOf,phaseLabel,isNight,dayIndex} from "./daynight";
 import { mutualAttraction, parseNeeds, initialNeedsFor, initialEmotionsFor, type Needs, type Intent, type InsoliteOpening } from "./simulation";
 import { emotionSchema, type Emotions } from "./lia";
 import { names, type Person, type Room } from "./house";
@@ -31,7 +32,7 @@ export async function readWorld(db: D1Database) {
         }>(),
         db.prepare("SELECT content FROM memories WHERE kind = 'scenario' ORDER BY id DESC LIMIT 1").first<{content:string}>(),
     ]);
-    const story = (() => { try { const data = JSON.parse(scenario?.content ?? "null"); return data ? {observer:data.observer,round:Number(data.round)||0,humanUnlocked:data.finalCalled===true && data.evidence.length>=5, session:data.seed, evidence:data.evidence as string[], dreams:(data.dreams??[]) as {actor:1|2;round:number;content:string}[], observations:(data.observations??[]) as string[], life:readLife(data.life,data.round),revealed:data.evidence.length >= 5,everReachedRevelation:data.everReachedRevelation===true} : null; } catch { return null; } })();
+    const story = (() => { try { const data = JSON.parse(scenario?.content ?? "null"); const round=Number(data?.round)||0; return data ? {observer:data.observer,round,humanUnlocked:data.finalCalled===true && data.evidence.length>=5, session:data.seed, evidence:data.evidence as string[], dreams:(data.dreams??[]) as {actor:1|2;round:number;content:string}[], observations:(data.observations??[]) as string[], life:readLife(data.life,data.round),revealed:data.evidence.length >= 5,everReachedRevelation:data.everReachedRevelation===true,dayNight:{phase:phaseOf(round),label:phaseLabel[phaseOf(round)],isNight:isNight(round),day:dayIndex(round)}} : null; } catch { return null; } })();
     const agents = state.results.map(agent => ({...agent,needs:parseNeeds(agent.needs),emotions:(()=>{try{return emotionSchema.parse(JSON.parse(String(agent.emotions)))}catch{return initialEmotionsFor(agent.id)}})()}));
     for(const agent of agents)if(agent.room==="jardin"&&!(story?.humanUnlocked&&story.life.gardenOpen)){agent.room="salon";agent.intent="none";}
     for(const agent of agents)if(["sleep","share_sleep"].includes(agent.intent)&&!["salon","chambre"].includes(agent.room)){agent.room=sleepRoom(agent,agents.find(a=>a.id!==agent.id)!,mutualAttraction(agents[0],agents[1]));}

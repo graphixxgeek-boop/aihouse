@@ -15,6 +15,7 @@ import { LiaError, think, decisionSchema, evolveEmotions } from "@/lib/lia";
 import { orderKeys, recordKeyStatus } from "@/lib/gemini-keys";
 import { initialize, readWorld } from "@/lib/world";
 import { names, spaces, type Person, type Room } from "@/lib/house";
+import { fatigueRateMultiplier, isMidnight, isNight, phaseOf, phaseLabel, dayIndex, cyclePosition, DAY_ROUNDS } from "@/lib/daynight";
 const schema = z.object({
     requestId: z.string().uuid(), actor: z.union([z.literal(1), z.literal(2)]),
     mode: z.enum(["chat", "autonomous", "interact", "move", "care", "reset", "identify", "unlock_garden", "spin_bonus", "mark_dossier_seen", "skip_to_revelation"]),
@@ -1206,7 +1207,8 @@ export async function POST(request: Request) {
         if(nextStory.evidence.length>story.evidence.length)life.debrief={topic:nextStory.evidence.at(-1)!,remaining:story.round>=20?1:2};
         if(proposalActor)life.debrief={topic:shared?"Le rapprochement accepté et ce qu’il a changé entre eux.":"La proposition, sa réponse et ce qu’ils souhaitent pour la suite, sans insister.",remaining:2};
         if(shared){life.contacts.push(story.round);life.contacts=life.contacts.slice(-6);life.contact={room:decisions[0].room,remaining:2};}
-        if(life.contacts.filter(r=>story.round-r<18).length>=3&&shared){const lia=decisions.find(d=>d.actor===1),noe=decisions.find(d=>d.actor===2);if(lia){lia.emotions.attraction=Math.max(0,lia.emotions.attraction-5);lia.reply+=" Non, là ça va trop vite. Laisse-moi respirer deux minutes.";}if(noe)noe.emotions.tension=Math.min(100,noe.emotions.tension+10);life.attachment[1]=Math.max(0,(life.attachment[1]??0)-2);life.dispute={topic:"Lia s’est sentie bousculée par l’enchaînement des rapprochements et l’a mal pris.",remaining:2};life.debrief=undefined;life.contact=undefined;}
+        const justDisputed=life.contacts.filter(r=>story.round-r<18).length>=3&&shared;
+        if(justDisputed){const lia=decisions.find(d=>d.actor===1),noe=decisions.find(d=>d.actor===2);if(lia){lia.emotions.attraction=Math.max(0,lia.emotions.attraction-5);lia.reply+=" Non, là ça va trop vite. Laisse-moi respirer deux minutes.";}if(noe)noe.emotions.tension=Math.min(100,noe.emotions.tension+10);life.attachment[1]=Math.max(0,(life.attachment[1]??0)-2);life.dispute={topic:"Lia s’est sentie bousculée par l’enchaînement des rapprochements et l’a mal pris.",remaining:2};life.debrief=undefined;life.contact=undefined;}
         if(together&&!routine&&["autonomous","interact"].includes(input.mode)&&story.introduced&&story.round>0&&story.round%4===0){for(const a of finalResidents){const cap=a.emotions.attraction>75&&a.emotions.trust>=60?100:a.emotions.attraction>=60?65:25;life.attachment[a.id]=Math.min(100,(life.attachment[a.id]??0)+((life.attachment[a.id]??0)<cap?1:0));}}
         nextStory.kitchenMeals=(story.kitchenMeals??0)+(decisions.some(d=>d.intent === "eat" && d.room === "cuisine")?1:0);
         if (nextStory.kitchenMeals>=2 && !(nextStory.observations??[]).some(o=>/réapparu|réapparaît/.test(o))) nextStory.observations=[...(nextStory.observations??[]),"Après avoir utilisé des provisions, ils constatent lors d'un nouveau repas que le stock consommé a réapparu, sans livraison ni intervention visible. La nourriture semble se régénérer automatiquement. Ce n'est pas normal dans une maison humaine."];
@@ -1261,6 +1263,52 @@ export async function POST(request: Request) {
             const activeKind:"observer_mute"|"camera_hide"=observerCurrentlyMuted?"observer_mute":"camera_hide";
             const mocker=seedPick(story.seed,"spontane-mock-actor-"+story.round,[1,2] as const);
             spontaneousBonusLines.push({actor:mocker,content:seedPick(story.seed,"spontane-mock-"+story.round,mockLines[activeKind][mocker])});
+          }
+        }
+        // Minuit (2026-09-19, cycle jour/nuit — lib/daynight.ts) : synchronisé sur le MÊME seuil
+        // qu'investigationOverdue (round>=20, evidence<5, lib/turn.ts) pour ne jamais pouvoir
+        // diverger de la vraie pression narrative déjà en place, quelle que soit la vitesse de jeu
+        // (Article 3/19, décision actée explicitement avec l'utilisateur après une question de
+        // calibrage dédiée — jamais une horloge en temps réel séparée). Se répète à chaque cycle
+        // suivant (round 35, 73, 111...), avec une réaction différente une fois l'enquête déjà
+        // bouclée à ce moment-là (sarcasme méta sur les fantômes, jamais une confirmation neutre).
+        const dayNightLines:{actor:Person;content:string}[]=[];
+        if(!routine&&["interact","autonomous"].includes(input.mode)){
+          if(isMidnight(nextStory.round)){
+            const urgent=nextStory.evidence.length<5;
+            const urgencyPool:Record<Person,string[]>={
+              1:["Minuit. Douze coups, et on n'a toujours pas compris ce qu'on est. On accélère, maintenant.","L'horloge du salon vient de sonner minuit. On arrête de tourner en rond et on boucle ça, vite.","Douze coups qui viennent de sonner, et toujours pas de réponse. Ça suffit, on se concentre."],
+              2:["Minuit pile. Ça craint qu'on soit encore là-dessus à cette heure — on se bouge.","Douze coups de minuit, et zéro certitude. On règle ça tout de suite, pas demain.","L'horloge sonne minuit, là. Bon, cette fois on arrête de traîner, on avance."]
+            };
+            const ghostPool:Record<Person,string[]>={
+              1:["Minuit sonne encore. Si un fantôme rôdait ici, il serait sacrément déçu par le programme.","Douze coups de plus. À ce rythme, je vais finir par croire qu'on nous joue une bande-son de manoir hanté.","L'horloge recommence son numéro de minuit. Toujours aussi théâtral pour rien du tout."],
+              2:["Minuit, encore. S'il y a un fantôme dans les murs, il doit sacrément s'ennuyer avec nous.","Douze coups de plus, toujours aucun spectre à l'horizon. Dommage, ça aurait au moins été original.","L'horloge remet ça à minuit. On dirait un mauvais film d'épouvante en boucle."]
+            };
+            const pool=urgent?urgencyPool:ghostPool;
+            for(const id of [1,2] as const){
+              const agent=finalResidents.find(a=>a.id===id)!;
+              if(isSleeping(agent,life))continue;
+              dayNightLines.push({actor:id,content:seedPick(story.seed,"minuit-"+(urgent?"urgence":"fantome")+"-"+id+"-"+nextStory.round,pool[id])});
+            }
+          }
+          // Tombée de la nuit / aube (2026-09-19, même système) : simple habillage d'ambiance, sans
+          // branche urgence/résolu (contrairement à minuit) — volontairement plus modeste, laissé en
+          // extension possible plutôt que dupliquer la même complexité pour un moment secondaire.
+          // L'aube du tout premier cycle (round 0) est exclue : elle chevaucherait soloIntro/opening,
+          // déjà une mise en scène scriptée dédiée au réveil initial (Article 2, jamais deux mises en
+          // scène pour le même instant).
+          else if(cyclePosition(nextStory.round)===DAY_ROUNDS){
+            const duskPool:Record<Person,string[]>={
+              1:["Le jour baisse. On sent que la nuit va encore être longue.","La lumière change, on approche de la nuit. J'aime pas trop ce moment.","Ça s'assombrit dehors. Ou ce qui joue le rôle du dehors, ici."],
+              2:["Ça tombe, la nuit arrive. Encore une à passer dans cette baraque.","Le jour décline. On va vite être dans le noir, comme d'habitude.","Tiens, la lumière change déjà. La nuit approche, ici aussi."]
+            };
+            for(const id of [1,2] as const){const agent=finalResidents.find(a=>a.id===id)!;if(isSleeping(agent,life))continue;dayNightLines.push({actor:id,content:seedPick(story.seed,"tombee-nuit-"+id+"-"+nextStory.round,duskPool[id])});}
+          } else if(cyclePosition(nextStory.round)===0&&nextStory.round>0){
+            const dawnPool:Record<Person,string[]>={
+              1:["Le jour revient. Encore une nuit de passée dans cet endroit.","Ça se remet à éclairer dehors. Une nuit de plus derrière nous.","Le jour se lève. On a survécu à une nuit de plus ici, formidable."],
+              2:["Le jour est là. Une nuit de plus, toujours dans cette maison.","Ça se relève dehors. On enchaîne, une nuit après l'autre.","Le jour revient. Franchement, j'ai hâte que ça change, un jour."]
+            };
+            for(const id of [1,2] as const){const agent=finalResidents.find(a=>a.id===id)!;if(isSleeping(agent,life))continue;dayNightLines.push({actor:id,content:seedPick(story.seed,"aube-"+id+"-"+nextStory.round,dawnPool[id])});}
           }
         }
         const finaleLines=finale?finaleReveal(story.seed):undefined;
@@ -1391,7 +1439,7 @@ export async function POST(request: Request) {
         for (const agent of world.agents) {
             const d = decisions.find(d => d.actor === agent.id);
             const room = d ? d.action === "none" ? agent.room : d.room : agent.room;
-            const needs = advanceNeeds(agent.needs, d?.intent === "chat" && solitary.has(agent.id) ? "none" : d?.intent ?? ((agent.intent === "sleep" || agent.intent === "share_sleep") ? agent.intent : "none"), room, agent.id);
+            const needs = advanceNeeds(agent.needs, d?.intent === "chat" && solitary.has(agent.id) ? "none" : d?.intent ?? ((agent.intent === "sleep" || agent.intent === "share_sleep") ? agent.intent : "none"), room, agent.id, fatigueRateMultiplier(nextStory.round));
             if (agent.id === 2 && world.agents.find(a => a.id === 1)!.emotions.attraction < 5) {
                 needs.stress = Math.min(100, needs.stress + 8);
                 if (d)
@@ -1400,7 +1448,12 @@ export async function POST(request: Request) {
             if(firstProposal){needs.stress=Math.min(100,needs.stress+(agent.id===2?dramaRules.proposalStress.noe:dramaRules.proposalStress.lia));if(d)d.emotions.tension=Math.min(100,d.emotions.tension+22);}
             if(refused&&agent.id===2){needs.hunger=Math.min(100,needs.hunger+dramaRules.rejection.hunger);needs.fatigue=Math.min(100,needs.fatigue+dramaRules.rejection.fatigue);}
             if(excessiveProposal&&agent.id===1){needs.stress=Math.min(100,needs.stress+dramaRules.pressureStress);if(d){d.reply+=" Là, tu insistes. Lâche-moi un peu.";d.memory=d.reply;}}
-            if(input.mode==="chat"&&d){const reaction=humanStress(input.message??"",d.emotions.tension-agent.emotions.tension);needs.stress=Math.max(0,Math.min(100,needs.stress+reaction));if(reaction>=8)d.emotions.trust=Math.max(0,Math.min(d.emotions.trust,agent.emotions.trust-2));else if(reaction<=-4)d.emotions.trust=Math.min(100,Math.max(d.emotions.trust,agent.emotions.trust+1));}
+            // Choc émotionnel fatigue même le jour (2026-09-19, cycle jour/nuit) : une dispute qui
+            // éclate touche Lia (la personne concernée par CE conflit précis) ; une hostilité humaine
+            // vraiment sévère (même seuil que la perte de confiance ci-dessous, reaction>=8, jamais un
+            // nouveau seuil inventé) fatigue l'agent qui l'a reçue, quel que soit le moment du cycle.
+            if(justDisputed&&agent.id===1)needs.fatigue=Math.min(100,needs.fatigue+dramaRules.emotionalShockFatigue);
+            if(input.mode==="chat"&&d){const reaction=humanStress(input.message??"",d.emotions.tension-agent.emotions.tension);needs.stress=Math.max(0,Math.min(100,needs.stress+reaction));if(reaction>=8){d.emotions.trust=Math.max(0,Math.min(d.emotions.trust,agent.emotions.trust-2));needs.fatigue=Math.min(100,needs.fatigue+dramaRules.emotionalShockFatigue);}else if(reaction<=-4)d.emotions.trust=Math.min(100,Math.max(d.emotions.trust,agent.emotions.trust+1));}
             if(room==="jardin"&&!["sleep","share_sleep"].includes(d?.intent??agent.intent))needs.stress=Math.max(0,needs.stress-7);
             if (dreamers.includes(agent.id)) needs.uncertainty = Math.max(0,needs.uncertainty-8);
             if(!nextStory.finalCalled)needs.uncertainty=Math.max(Math.max(20,80-nextStory.evidence.length*15),needs.uncertainty);
@@ -1508,7 +1561,7 @@ export async function POST(request: Request) {
             if(peerAlsoGoingFirst){addLine(names[d.actor],seedPick(story.seed,"depart-a-deux-urgent-"+d.actor+"-"+story.round,["Je te suis.","Pareil pour moi.","Moi aussi, allons-y.","Je viens aussi."]),before.room);continue;}
             const eatPool=["J’ai trop faim pour réfléchir. Je vais manger un truc, je te retrouve après.","J’ai trop faim pour continuer. Je passe en cuisine, tu me rejoins si tu veux.","J’ai trop faim, là. Je vais préparer un truc et je reviens.","J’ai trop faim pour suivre. Je mange d’abord, on reprend après."] as const;const sleepPool=["Je tiens plus debout. Je vais dormir un peu ; je reviens après.","Je lutte contre le sommeil. Je vais me coucher, on reprend après.","Mes yeux se ferment. Je vais dormir ; ne m’attends pas pour réfléchir.","Je suis à bout. Je prends "+(d.room==="salon"?"le canapé":"le lit")+", je te retrouve au réveil."] as const;const pool=d.intent==="eat"?eatPool:sleepPool;let reason=seedPick(story.seed,"departure-"+d.intent+"-"+d.actor,pool);if(spokenKeys.has(fingerprint(reason)))reason=pool.find(line=>!spokenKeys.has(fingerprint(line)))??reason;if(d.actor===1&&d.intent==="sleep"&&d.room==="salon")reason+=" "+seedPick(story.seed,"couch-departure-reproach",["Tu aurais pu dormir dans le salon, Noé.","T'aurais pu me laisser la chambre, pour une fois.","Ça t'aurait coûté quoi de dormir ici, toi ?"]);addLine(names[d.actor],reason,before.room);}}
         for(const reaction of stockReactions)if(addLine(names[reaction.actor]+" · pensée",reaction.content,"cuisine"))statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'réaction',?,? WHERE ${fence}`).bind(reaction.actor,"[cuisine|"+new Date(at).toISOString()+"] "+reaction.content,at,token,at));
-        for(const line of [...bonusAftermathLines,...spontaneousBonusLines]){const room=finalResidents.find(a=>a.id===line.actor)!.room;if(addLine(names[line.actor]+" · pensée",line.content,room))statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'réflexion',?,? WHERE ${fence}`).bind(line.actor,'['+room+'|'+new Date(at).toISOString()+'] '+line.content,at,token,at));}
+        for(const line of [...bonusAftermathLines,...spontaneousBonusLines,...dayNightLines]){const room=finalResidents.find(a=>a.id===line.actor)!.room;if(addLine(names[line.actor]+" · pensée",line.content,room))statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'réflexion',?,? WHERE ${fence}`).bind(line.actor,'['+room+'|'+new Date(at).toISOString()+'] '+line.content,at,token,at));}
         // Record consent before shared sleep; subsequent sleeping turns stay entirely silent.
         if(shared&&decisions[0].intent==="share_sleep")for(const d of decisions)if(!["sleep","share_sleep"].includes(world.agents.find(a=>a.id===d.actor)!.intent))addLine(names[d.actor]+" · avant sommeil",d.reply,finalResidents.find(a=>a.id===d.actor)!.room);
         // Dialogue order must follow generation order, not resident id order.

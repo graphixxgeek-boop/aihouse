@@ -1036,6 +1036,41 @@ est désormais factorisée dans `callGeminiFragment`, réutilisée telle quelle 
 le bloc `reset` : jamais mêlé à la lourde logique de tour normal, pour limiter les chemins croisés
 (Article 5).
 
+8.22. **Cycle jour/nuit** (`lib/daynight.ts`, `lib/simulation.ts`, `lib/turn.ts`, `app/api/lia/route.ts`,
+2026-09-19, demande explicite de l'utilisateur : « je veux que ce principe soit déjà installé
+silencieusement, avec des effets concrets sur la fatigue »). Détail complet — durées, marqueurs,
+calcul exact, mécanismes câblés — dans `docs/referentiel/regles-du-temps.md` section 8 (l'axe
+temporel est le bon endroit pour ce chantier, cf. Article 6/7 : jamais dupliqué ici). Résumé des
+principes qui comptent pour comprendre le comportement :
+
+- Une horloge dérivée du ROUND (jamais du temps réel), calée pour que minuit tombe exactement au
+  même moment que le plafond garanti de l'enquête déjà existant (round~35, section 8.20/8.21) —
+  synchronisation choisie explicitement par l'utilisateur plutôt qu'une horloge indépendante qui
+  aurait pu diverger selon la vitesse de jeu.
+- La nuit accélère la fatigue passive (×3) ; le jour garde le taux NORMAL déjà existant (×1,
+  inchangé) — geler le jour à ×0 aurait silencieusement changé le rythme de toutes les sessions
+  passées (la quasi-totalité d'une partie se joue dans le premier cycle, donc « le jour »),
+  régression trouvée en lançant `check-house.mjs` et corrigée le jour même (Article 5/19). Jamais
+  un reset de la jauge elle-même au lever du jour, ce qui donne gratuitement l'effet « dette de
+  sommeil » demandé (un manque de sommeil nocturne continue de peser au rythme normal du jour
+  suivant). Une dispute ou une hostilité humaine sévère peuvent encore fatiguer davantage en plein
+  jour (exception explicitement demandée), en réutilisant des seuils déjà existants, jamais un
+  nouveau seuil inventé.
+- Une fois l'enquête réellement en retard (round>=20, evidence<5), la fatigue seule ne force plus
+  l'endormissement (`investigationCritical`, `lib/turn.ts`) — l'enquête l'emporte toujours sur le
+  sommeil nocturne, décision actée explicitement, jamais un blocage de session sur un personnage
+  qui s'endort au pire moment. Un personnage déjà endormi n'est jamais réveillé de force par ce
+  mécanisme (portée volontairement étroite).
+- Minuit sonne à chaque cycle (round 35, 73, 111...) : réaction d'urgence si l'enquête traîne
+  encore, réaction sarcastique méta sur les fantômes une fois l'enquête résolue — jamais une
+  confirmation neutre (Article 0/15), plusieurs variantes par personnage et par cas (Article 10/11).
+  Tombée de la nuit et aube reçoivent un habillage plus modeste, sans cette double branche.
+- Un indicateur dans l'en-tête (`app/page.tsx`) affiche cette horloge réelle de simulation, distinct
+  et clairement séparé du bouton manuel jour/nuit déjà existant (réglage d'éclairage 3D à la
+  discrétion de l'observateur, sans effet mécanique) — une ambiguïté identifiée en lisant le code
+  existant avant d'écrire ce chantier (Article 19), réglée en donnant un rôle et un libellé distincts
+  à chacun plutôt que de les fusionner ou de les laisser se chevaucher silencieusement.
+
 ## 9. Robustesse technique
 
 9.1. Toute écriture en base de données est fondue dans une transaction unique par tour

@@ -87,9 +87,14 @@ export function parseNeeds(value: unknown): Needs {
     }
 }
 // One completed turn is a half-hour of simulated life; absence does not starve residents.
-export function advanceNeeds(previous: Needs, intent: Intent, room: Room, id: Person = 1): Needs {
+// fatigueMultiplier (2026-09-19, cycle jour/nuit, cf. lib/daynight.ts) : ne module QUE le taux
+// passif de fatigue (ce paramètre), jamais les effets de récupération ou de repas ci-dessous
+// (sommeil/repos doivent rester pleinement efficaces à toute heure, seule la MONTÉE naturelle de
+// la fatigue dépend du jour/de la nuit). Défaut à 1 : tous les appels existants (tests compris)
+// gardent exactement le comportement d'avant ce changement.
+export function advanceNeeds(previous: Needs, intent: Intent, room: Room, id: Person = 1, fatigueMultiplier: number = 1): Needs {
     const profile = residentProfiles[id];
-    const n = { hunger: previous.hunger + ((intent === "sleep" || intent === "share_sleep") ? 0 : profile.hungerRate), fatigue: previous.fatigue + profile.fatigueRate, stress: previous.stress + profile.stressRate, uncertainty: previous.uncertainty };
+    const n = { hunger: previous.hunger + ((intent === "sleep" || intent === "share_sleep") ? 0 : profile.hungerRate), fatigue: previous.fatigue + profile.fatigueRate * fatigueMultiplier, stress: previous.stress + profile.stressRate, uncertainty: previous.uncertainty };
     if (intentRoom[intent] === room || (intent === "sleep" && room === "salon")) {
         if (intent === "eat") {
             n.hunger -= profile.mealRecovery;
