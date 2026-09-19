@@ -267,6 +267,22 @@ reprise plutôt que de laisser le personnage ne rien dire du tout (Article 5, ro
 seize dernières répliques et signalé explicitement à la génération suivante, qui doit apporter une
 action concrète, une hypothèse neuve ou reconnaître l'impasse — jamais continuer à tourner autour.
 
+5.2bis. **Ancrage concret contre la convergence inter-sessions** (`lib/lia.ts`, 2026-09-19, retour
+utilisateur explicite après comparaison de 7 sessions passées : une dizaine de pensées privées
+libres — jamais issues d'un tableau scripté, censées être générées librement par le modèle à
+chaque tour — revenaient presque mot pour mot sur 5 à 6 sessions à seeds différentes, pour des
+battements narratifs très universels (douter d'être humain, tomber amoureux, réagir à un indice).
+Contrairement aux répétitions couvertes par 5.1 (dans une même session), ce phénomène traverse les
+sessions : le registre anti-doublon (fingerprints, `dialogue_fingerprints`) est vidé à chaque reset
+et ne peut donc rien contre lui. Corrigé par un PRINCIPE transmis au modèle, jamais une liste de
+phrases interdites (Article 17, corollaire) : un sentiment universel doit toujours s'exprimer à
+travers un détail concret et propre AU MOMENT PRÉSENT de CETTE session (ce que l'autre vient de
+dire ou faire, un indice ou objet précis qui vient d'apparaître) — si la pensée pourrait être
+recopiée telle quelle dans une autre session sans rien y changer, elle n'est pas assez ancrée.
+Aucune garantie mathématique que Gemini suive cette consigne à chaque tour (comme pour tout le
+reste du registre de prompt) ; à revalider par une nouvelle comparaison inter-sessions une fois
+plusieurs simulations rejouées avec ce correctif actif.
+
 5.3. Les moments scénarisés qui ne passent pas par un appel API (révélation finale, bilan
 d'enquête, description de l'apparence, découvertes du miroir/des provisions, questions
 personnelles) doivent exister en plusieurs formulations réellement distinctes, choisies de façon
