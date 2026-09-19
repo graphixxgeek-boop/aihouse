@@ -682,6 +682,12 @@ mettre à jour quand la STRUCTURE de l'outil évolue, pas à chaque ajustement p
   checklist de cohérence temporelle pour tout nouveau seuil. À consulter avant d'ajouter ou modifier
   tout mécanisme sensible au temps, et à utiliser pour vérifier qu'un nouveau seuil ne chevauche pas
   imprévisiblement un mécanisme voisin.
+- `docs/referentiel/tableau-de-bord.md` (2026-09-19) — règles du tableau de bord/KPI interne
+  (5 familles, accès, alertes, cadence de mise à jour) : un outil d'observation à destination de
+  l'utilisateur et de l'agent, strictement réservé à l'admin/créateur, jamais un mécanisme de jeu.
+- `docs/referentiel/points-fragiles.md` (2026-09-19) — registre vivant des points identifiés comme
+  fragiles ou en attente d'une décision de conception (pas des bugs actifs, ceux-là se corrigent
+  directement) ; compté par `scripts/kpi-report.mjs` comme un des indicateurs de robustesse du code.
 
 Ces trois documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
 vérité. Ils doivent être mis à jour à chaque changement de règle ou de paramètre — un principe
