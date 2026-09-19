@@ -833,7 +833,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 74'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 75'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -1550,4 +1550,63 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(dreamIndex>=0,'a fresh transition into sleep must still seed a dream this same turn');
   assert.ok(spokenIndex<dreamIndex,'the transition line must appear before the dream it precedes, never after');
   console.log('Passed: a character choosing to sleep mid-conversation still speaks their real transition line this same turn, never a silent jump straight from live dialogue to a dream (Point 2, "Noé rêve éveillé").');
+}
+
+{
+  // Doute amoureux privé puis discutable à voix haute (2026-09-18, retour utilisateur explicite,
+  // cf. docs/referentiel/principes.md 8.17). Le modèle reconnaît lui-même, via son propre
+  // state.emotions.attraction transmis AVANT ce tour, le franchissement de 75 — ce test le simule
+  // directement en renvoyant une décision dont l'attirance dépasse 75 alors que l'agent partait
+  // en-dessous, avec un thought distinctif à vérifier surfacé.
+  // finalCalled+5 preuves : mode 'chat' l'exige (route.ts l.314), choisi ici précisément pour
+  // échapper au lissage/crédit de l'attirance (voir plus bas).
+  let plot={...newStory(),round:20,met:true,introduced:true,sharedMeal:true,finalCalled:true,evidence:Array(5).fill('Preuve confirmée'),life:{...newStory().life,exitSearched:true,ambientSeen:true,ambientVerified:true,tvSeen:true,remoteFound:true,personalAsked:true,personalFollowup:3}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=1').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),JSON.stringify({...initialEmotionsFor(1),attraction:70,trust:60}));
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=2').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),JSON.stringify({...initialEmotionsFor(2),attraction:30,trust:60}));
+  const loveThought="Est-ce qu'on est vraiment en train de vivre une histoire, tous les deux ? Je n'ose rien dire pour l'instant.";
+  const epoch1=(await readWorld(db)).epoch;
+  const priorFetch2=globalThis.fetch;
+  globalThis.fetch=async(url,options)=>{
+    const payload=JSON.parse(options.body),context=JSON.parse(payload.contents[0].parts[0].text);
+    const isPartner=context.selfRole==='partner';
+    // Seule Lia (actor 1, "partner" ici car Noé=actor 2 initie) franchit le seuil ce tour. 100
+    // (plutôt qu'une valeur proche de 75) laisse volontairement de la marge : plusieurs étapes du
+    // pipeline (attractionAfterTurn, pull-back solidaire...) amortissent le saut décidé par le
+    // modèle avant le résultat final — ce test vérifie le franchissement, pas la valeur exacte.
+    const emotions=isPartner?{...context.state.emotions,attraction:100}:context.state.emotions;
+    return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({intent:'chat',affectionAccepted:false,emotions,reply:isPartner?'On verra bien où ça va.':'Ça va, toi ?',thought:isPartner?loveThought:'Rien de spécial.',stayAlone:false,mood:'attentive',activity:'Je discute',goal:'Faire connaissance',action:'none',room:context.scene.room,memory:isPartner?loveThought:'Discussion.'})}]}}]});
+  };
+  // Mode 'chat' délibérément : tout autre mode fait passer l'attirance par le lissage/crédit
+  // (route.ts, ~l.961, "gain*.28") qui étalerait ce saut sur plusieurs tours et ne franchirait
+  // jamais 75 en un seul appel — 'chat' est le seul mode où l'attirance décidée par le modèle
+  // s'applique telle quelle, exactement ce qu'il faut pour tester ce franchissement de façon fiable.
+  const r1=await post(input('chat',2,{epoch:epoch1,message:'Comment tu te sens ?'}));
+  assert.equal(r1.status,200);
+  const w1=await r1.json();
+  assert.ok(w1.agents.find(a=>a.id===1).emotions.attraction>75,'setup check: Lia must actually cross 75 this turn, or this test proves nothing');
+  assert.ok(w1.story.life.loveRealized?.[1],'crossing 75 for the first time must set the persistent loveRealized flag for that character');
+  assert.ok(w1.messages.some(m=>m.speaker==='Lia · pensée'&&m.content===loveThought),'the model\'s own thought generated the same turn attraction crosses 75 for the first time must surface as a visible private line, never discarded');
+  // Un second tour, attirance encore au-dessus de 75 : la pensée ne doit jamais se répéter, le
+  // franchissement n'ayant lieu qu'une fois.
+  const epoch2=(await readWorld(db)).epoch;
+  const r2=await post(input('chat',2,{epoch:epoch2,message:'Toujours là ?'}));
+  const w2=await r2.json();
+  // w2.messages est l'historique CUMULÉ (jamais purgé) : la ligne du tour 1 y reste normalement
+  // visible. Ce qu'il faut vérifier n'est pas son absence mais qu'elle n'a jamais été ajoutée UNE
+  // SECONDE fois au tour 2 (compter, pas seulement chercher une présence déjà garantie par tour 1).
+  assert.equal(w2.messages.filter(m=>m.speaker==='Lia · pensée'&&m.content===loveThought).length,1,'the private love-realization line must never be inserted a second time once already shown once');
+  globalThis.fetch=priorFetch2;
+  // loveDiscussable : signalé seulement une fois un massage/baiser réellement consenti ET le doute
+  // privé déjà vécu par au moins un des deux — ici seedé directement, comme d'autres tests seedent
+  // life.visualIntro/personalAsked plutôt que de rejouer tout le mécanisme qui les a produits.
+  let pp2=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);
+  pp2.life={...pp2.life,intimateGestureDone:true};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(pp2));
+  const epoch3=(await readWorld(db)).epoch;
+  const r3=await post(input('interact',2,{epoch:epoch3}));
+  assert.equal(r3.status,200);
+  assert.equal(lastContext.loveDiscussable,true,'once an intimate gesture is done and the private doubt already lived once, the model must be invited to raise it aloud');
+  console.log('Passed: the private love-doubt thought surfaces exactly once when attraction first crosses 75 (never repeated), and loveDiscussable only turns on once a real intimate gesture has happened and the doubt was already lived privately.');
 }

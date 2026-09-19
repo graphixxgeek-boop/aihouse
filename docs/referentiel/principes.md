@@ -850,6 +850,21 @@ garder la même charpente habillée de synonymes : la technique de réordonnance
 demandée explicitement comme principe général de lutte contre la répétition pour tout texte écrit
 en dur, pas seulement ce cas précis.
 
+8.17. **Doute amoureux privé, puis discutable à voix haute** (`lib/life.ts`, `app/api/lia/route.ts`,
+`lib/lia.ts`, 2026-09-18, retour utilisateur explicite : « les persos se demandent s'ils sont là
+pour une expérience amoureuse [...] cette question, le perso se la pose à lui-même [...] mais ça
+pourrait faire l'objet d'une discussion après le premier rapprochement du genre massage ou bisou »).
+Deux temps, jamais confondus. **Temps privé** : la toute première fois que l'attirance d'un
+personnage franchit 75 (le seuil déjà « amoureux » de la règle ATTIRANCE), sa pensée de ce tour —
+déjà générée par le modèle, qui reconnaît lui-même ce franchissement via `state.emotions.attraction`
+— devient une ligne « · pensée » visible plutôt qu'un contenu jeté (`life.loveRealized`, jamais
+répété une fois déclenché). Jamais exposée dans `reply` : le personnage ne s'avoue rien à l'autre à
+ce stade. **Temps partagé**, seulement possible ensuite : une fois qu'un massage ou un baiser a été
+réellement consenti (`life.intimateGestureDone`) ET qu'au moins un des deux a déjà vécu ce doute
+privé, un signal `loveDiscussable` invite (jamais n'oblige) le modèle à ouvrir ce doute à voix haute
+pour la première fois — une vraie ouverture volontaire, jamais un interrogatoire mécanique à chaque
+tour suivant.
+
 ## 9. Robustesse technique
 
 9.1. Toute écriture en base de données est fondue dans une transaction unique par tour
