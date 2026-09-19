@@ -322,6 +322,32 @@ cette section-ci, plus sensible, reçoit cette garantie supplémentaire.
   méthode de collaboration mérite d'être documentée avec la même rigueur que le code, pour rester
   reproductible par un autre agent IA le jour où celui-ci change.
 
+**Ajouts du 2026-09-19** (relecture approfondie de l'historique, à l'occasion du chantier KPI et de
+« règles de suivi » — demande explicite : « le profil établi doit s'appuyer en profondeur sur
+l'historique de conversation ») :
+
+- **Un sujet "méta" (outillage, process, tableau de bord) n'est presque jamais considéré clos après
+  une première livraison.** Contrairement au contenu créatif du jeu, les sujets de méthode reçoivent
+  systématiquement plusieurs passes successives de renforcement (« fiabilise », « refais une
+  dernière passe », « assure-toi que... ») après une livraison déjà jugée correcte par l'agent — à
+  anticiper comme un second temps normal sur ce type de sujet, jamais une remise en cause de la
+  qualité du premier travail.
+- **Exigence systématique d'actionnabilité.** Chaque donnée, chaque KPI doit se rattacher
+  explicitement à une décision ou une action concrète — un chiffre qui existerait pour lui-même,
+  aussi exact soit-il, est jugé insuffisant.
+- **Utilité à double sens explicitement exigée.** Un outil de travail doit servir l'agent autant que
+  l'utilisateur ; ce n'est jamais une évidence sous-entendue, mais un critère de conception nommé.
+- **L'intégrité de l'information est cadrée en termes de conséquences systémiques**, pas de détail
+  technique isolé — une remarque du type « une donnée fausse peut égarer tout le projet » vaut
+  demande de fiabilisation complète, pas d'un simple correctif ponctuel.
+- **Sobriété de ressources comme contrainte de conception active**, pas un encouragement vague :
+  invite explicitement à comparer plusieurs formats/approches avant de choisir, et reste ouvert à ce
+  que l'agent renverse sa propre suggestion initiale si une autre s'avère plus économe.
+- **Séparation stricte conversation/référence.** Le détail volumineux (rapport complet, transcript,
+  historique chiffré) va systématiquement dans un fichier séparé ; seule une synthèse ciblée reste
+  dans le fil de discussion — une règle déjà appliquée aux transcripts de simulation, désormais
+  généralisée à tout rapport volumineux.
+
 ## 9. Points de vigilance — compétences et psychologie, pour ne jamais devenir un obstacle
 
 *(Ajouté le 2026-09-18, à la demande explicite de l'utilisateur : « indique des points de

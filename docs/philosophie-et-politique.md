@@ -134,6 +134,26 @@ cas particulier de plus, mais à redéfinir précisément ce que le filtre doit 
 *Portée générale* : face à un symptôme, remonter systématiquement à la règle ou au mécanisme qui le
 produit, jamais se contenter d'un correctif local qui laisse la cause intacte ailleurs.
 
+### 1.9 Une mesure n'a de valeur que si elle peut se tromper visiblement **[Synthèse, 2026-09-19]**
+
+Un chiffre affiché avec assurance mais construit sur une donnée absente, malformée, ou une division
+par zéro déguisée en résultat plausible, est pire qu'une absence de mesure : il inspire une
+confiance que rien ne justifie, et peut orienter tout un projet dans la mauvaise direction. Chaque
+mesure doit donc être capable d'afficher honnêtement son propre doute — l'absence explicite plutôt
+qu'un faux résultat — et doit toujours se rattacher à une décision ou une action concrète : une
+mesure qui n'existerait que pour elle-même, aussi exacte soit-elle, ne mérite pas sa place dans un
+tableau de bord.
+
+*Exemple* : chaque fonction de calcul du tableau de bord de ce projet renvoie une absence explicite
+de résultat — jamais un `NaN` ni un faux zéro — dès qu'une donnée d'entrée est manquante ou
+malformée ; et chaque pourcentage affiché est accompagné de la lecture concrète qu'il implique,
+jamais un nombre nu.
+
+*Portée générale* : dans tout système qui mesure sa propre santé, traiter une mesure douteuse
+affichée comme valide comme un défaut plus grave qu'une mesure manquante clairement signalée comme
+telle ; et ne jamais construire d'indicateur sans avoir d'abord identifié la décision qu'il est
+censé éclairer.
+
 ---
 
 ## Partie 2 — Politique (comment on arbitre, qui décide quoi)
