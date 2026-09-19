@@ -844,6 +844,17 @@ historiques exacts ni les fichiers propres à ce projet, qui vivent dans
 `docs/referentiel/hyper-scan-checkpoint.md` (instanciation) et `docs/hyper-scan-checkpoint/`
 (dossier + index, y compris la mémoire du dernier passage).
 
+## CHECK-LEVEL-TARGET — blueprint exportable
+
+`docs/check-level-target-blueprint.md` documente l'ARCHITECTURE de l'outil qui calcule, avant toute
+vérification, le niveau attendu et la combinaison d'outils à déployer (Léger/Standard/Approfondi/
+Exceptionnel pour ce projet) — remplace la façon informelle, au cas par cas, de choisir les outils.
+Nommé par l'utilisateur lui-même. Sous une forme générique — jamais les niveaux exacts ni les
+fichiers propres à ce projet, qui vivent dans `docs/referentiel/check-level-target.md`
+(instanciation) et `docs/check-level-target/` (dossier + index des évolutions de la règle). Distinct
+de l'échelle qualitative d'effort général ⏱️/🔢 (`docs/regles-de-travail.md` §B.2bis), jamais
+fusionnés.
+
 ## Référentiel technique — la référence à jour
 
 - `docs/referentiel/principes.md` — les règles invariantes du comportement de la maison, telles
@@ -889,6 +900,10 @@ historiques exacts ni les fichiers propres à ce projet, qui vivent dans
   central (taux de passages ayant trouvé une chose réelle), le registre des passages
   (`docs/hyper-scan-checkpoint/`). Cf. `docs/hyper-scan-checkpoint-blueprint.md` pour le principe
   générique.
+- `docs/referentiel/check-level-target.md` (2026-09-19) — instanciation de CHECK-LEVEL-TARGET pour
+  ce projet : les 4 niveaux et leurs outils associés, `scripts/check-level-target.mjs`, validé
+  contre les vrais prompts historiques d'HYPER-SCAN-CHECKPOINT. Cf.
+  `docs/check-level-target-blueprint.md` pour le principe générique.
 
 Ces documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
 vérité (leur nombre exact a varié au fil des chantiers — se référer à la liste ci-dessus plutôt

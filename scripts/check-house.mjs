@@ -905,7 +905,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 103'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 104'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2504,4 +2504,23 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(summarizeHarmoniaOutput('2 friction(s) confirmée(s) sur 5 lien(s) vérifié(s).'),{frictions:2,liensVerifies:5});
   assert.deepEqual(summarizeHarmoniaOutput('rien à voir ici'),{frictions:undefined,liensVerifies:undefined},'unparseable HARMONIA output must never be silently miscounted as zero');
   console.log("Passed: HYPER-SCAN-CHECKPOINT correctly reads the last recorded commit from its own index (never confusing the date column with the commit column, always the most recent row), reports an honest absence rather than a fake 0% when no passage has been recorded yet, and computes its own central performance KPI — the real hit rate of passages that surfaced a genuine confirmed finding, the tool's whole stated vocation — exactly rather than as a averaged-away percentage.");
+}
+
+{
+  // CHECK-LEVEL-TARGET (2026-09-19, cf. docs/check-level-target-blueprint.md et
+  // docs/referentiel/check-level-target.md). Validé directement contre les vrais prompts
+  // historiques de l'utilisateur qui ont motivé sa création (cf. Article 21) — la meilleure preuve
+  // que l'heuristique reconnaît ce qu'elle est censée reconnaître, pas une fixture inventée seule.
+  const {classifyCheckLevel}=await import('../scripts/check-level-target.mjs');
+  assert.equal(classifyCheckLevel("corrige ce bug d'affichage stp").level,'leger','a trivial fix request must never over-trigger the expensive tiers');
+  assert.equal(classifyCheckLevel('').level,'standard','no signal at all must fall back to the safe default (standard), never a silent leger that could under-check real work');
+  const approfondi=classifyCheckLevel("verifie que toutes les consignes ont bien été traitées : beaucoup de choses ont evolué. verifie que tout est bien conecté, identifie les eventuelles erereurs ou bugs latents. verifie toutes les combinaisons possibles");
+  assert.equal(approfondi.level,'approfondi','the real 2026-09-19 historical prompt that motivated this whole tool must classify as approfondi, not just standard');
+  assert.ok(approfondi.tools.includes('check-spirit.mjs')&&approfondi.tools.includes('ARGUS'),'approfondi must recommend the real costly tools plus the free mechanical ones, never just a subset');
+  const exceptionnel=classifyCheckLevel('il faut en faire une vraie machine de guerre, un hyper-scan complet depuis le début');
+  assert.equal(exceptionnel.level,'exceptionnel');
+  assert.deepEqual(exceptionnel.tools,['HYPER-SCAN-CHECKPOINT (version complète)']);
+  const doubt=classifyCheckLevel('verifie ça en profondeur et corrige le bug');
+  assert.ok(typeof doubt.needsConfirmation==='boolean');
+  console.log('Passed: CHECK-LEVEL-TARGET correctly classifies the real historical prompts that motivated its own creation (a trivial fix stays léger, the exact 2026-09-19 "vérification approfondie" prompt classifies as approfondi with its real costly tools recommended, an explicit "machine de guerre"/hyper-scan mention reaches exceptionnel), falls back to the safe standard default on zero signal rather than under-checking silently, and always returns an explicit boolean on whether real doubt warrants confirmation.');
 }
