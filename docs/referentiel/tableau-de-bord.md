@@ -14,7 +14,12 @@ même, consultables via `scripts/kpi-report.mjs`.)*
    bascules de clé/modèle de secours via le Smart Breaker), économie d'appels (tours traités
    localement sans appel payant, Article 8), santé des clés de secours. Compteurs cumulés en base
    de données (`kpi_counters`), incrémentés aux deux points d'appel réseau réels
-   (`lib/lia.ts::think()`, `app/api/lia/route.ts::generateDossierFragment()`).
+   (`lib/lia.ts::think()`, `app/api/lia/route.ts::generateDossierFragment()`). **Idée notée le
+   2026-09-19** (utilisateur, pendant full_sim8) : inclure une mesure spécifique de l'EFFICACITÉ du
+   Smart Breaker lui-même — le nombre de blocages qu'il a réellement rattrapés vs le coût de le
+   faire tourner, et si son comportement s'améliore vraiment dans le temps (fiabilité croissante des
+   clés, recul adaptatif qui converge) — mesurée après chaque simulation complète plutôt qu'en
+   continu, pour rester dans l'esprit "à la demande" de l'Article 8. Pas encore conçu.
 2. **Robustesse du code** (Article 5, Article 7). Propreté de `tsc --noEmit`, santé de la suite
    `check-house.mjs`, nombre de points fragiles ouverts (`docs/referentiel/points-fragiles.md`),
    taille des fichiers les plus denses (`lib/lia.ts`, `lib/dialogue.ts`). **Livrée le 2026-09-19**
