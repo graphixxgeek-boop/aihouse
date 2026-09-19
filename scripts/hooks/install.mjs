@@ -10,12 +10,19 @@ import { join } from "node:path";
 import { sh } from "../lib-shell.mjs";
 
 const ROOT = new URL("../..", import.meta.url).pathname;
-const HOOK = join(ROOT, "scripts/hooks/post-commit");
+// pre-commit (2026-09-19, demande explicite : « est-ce que le réseau d'outils tourne pendant qu'on
+// crée la suite du projet ? ») bloque le commit si check-house.mjs/tsc échouent ; post-commit
+// (suivi) avertit sans jamais bloquer — les deux crochets tracés ici, jamais un seul fichier qui
+// mélangerait deux politiques différentes (bloquant vs avertissant).
+const HOOKS = ["pre-commit", "post-commit"];
 
 try {
   sh("git config core.hooksPath scripts/hooks", { cwd: ROOT });
-  if (existsSync(HOOK)) chmodSync(HOOK, 0o755);
-  console.log("Crochet git de suivi installé (core.hooksPath=scripts/hooks).");
+  for (const name of HOOKS) {
+    const hook = join(ROOT, "scripts/hooks", name);
+    if (existsSync(hook)) chmodSync(hook, 0o755);
+  }
+  console.log("Crochets git installés (core.hooksPath=scripts/hooks) : " + HOOKS.join(", ") + ".");
 } catch (err) {
   // Ne jamais faire échouer `pnpm install` pour ça — un dépôt qui ne serait pas un vrai clone git
   // (rare : archive .zip, certains environnements CI) doit continuer à s'installer normalement.

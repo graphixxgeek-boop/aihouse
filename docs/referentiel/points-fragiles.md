@@ -26,3 +26,25 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   comme s'il s'agissait d'un vrai épuisement de quota journalier. Le recul exponentiel avec reset
   au premier succès (déjà implémenté) semble répondre à cette inquiétude, mais ce lien n'a jamais
   été explicitement reconfirmé avec l'utilisateur — à vérifier avec lui plutôt que supposer réglé.
+- Le motif "on tourne en rond"/"en boucle"/"disque rayé" apparaît dans 8 des 13 premières notations
+  EL-PROFESSOR (`docs/el-professor/synthese-2026-09-19.md`), malgré un principe déjà écrit à
+  l'Article 17 censé le couvrir — le registre anti-doublon en place ne semble pas suffire pour cette
+  famille précise d'expressions ; à investiguer avant tout nouveau correctif (Article 3/19).
+- Répétitions verbatim de motifs de déplacement (`moveReason`) entre Lia et Noé, relevées sur la
+  quasi-totalité des 13 premières notations EL-PROFESSOR, un cas extrême dans `full_sim14` (60 %
+  des déplacements recyclant l'une de 6 phrases identiques) — le pool de motifs semble trop
+  restreint ou insuffisamment cloisonné par personnage malgré le principe de l'Article 10.
+- Biais possible dans `generateDossierFragment()` qui sous-évalue l'hostilité réellement vécue par
+  rapport au transcript (relevé dans 3 des 13 premières notations EL-PROFESSOR : `full_sim4`,
+  `full_sim9`, `full_sim10`) — à vérifier comme un sujet à part, distinct d'un cas isolé.
+- Bug potentiel à revérifier dans le code actuel : accord de genre de Noé pris en défaut une fois
+  ("Désolée") dans `full_sim3` — à confirmer si le code d'aujourd'hui reproduit encore ce cas.
+- Bug potentiel à revérifier dans le code actuel : un motif de déplacement annonçant une
+  destination différente de la pièce réellement rejointe, relevé dans `full_sim9`.
+- Bug potentiel à revérifier dans le code actuel : le dossier de `full_sim8` contenait deux valeurs
+  différentes ("dix-neuf sur cent" / "treize sur cent") pour ce qui est censé être la même note
+  globale — à vérifier si `generateDossierFragment()` peut encore produire cette incohérence.
+- Les paliers rares de la charte (colère réellement débridée, silence méprisant de Lia, vulnérabilité
+  ou respect sincères, dispute grave Lia/Noé) restent quasiment jamais sollicités dans les 13
+  premières simulations notées par EL-PROFESSOR — une future simulation Article 18 devrait les
+  pousser délibérément pour vérifier qu'ils fonctionnent, pas seulement le registre habituel.

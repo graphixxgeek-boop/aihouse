@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Crochet git tracké (2026-09-19, demande explicite de l'utilisateur : « est-ce que le réseau
+# d'outils tourne pendant qu'on crée la suite du projet ? afin de garantir la qualité du travail »).
+# Réponse honnête trouvée en vérifiant plutôt qu'en supposant : non, rien ne le garantissait avant ce
+# crochet — check-house.mjs (qui embarque la partie mécanique d'ARGUS/HARMONIA/AXA-CHECK/
+# CLEAN-DIRTY-OLD) ne tournait que quand on pensait à l'invoquer, une discipline jamais une garantie
+# structurelle, exactement la même catégorie de fragilité déjà trouvée et corrigée pour le suivi.
+#
+# Contrairement au crochet post-commit du suivi (avertit sans bloquer), celui-ci BLOQUE le commit
+# si un test échoue — décision explicite de l'utilisateur : un test cassé est plus grave qu'une
+# ligne de suivi manquante.
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+echo "🔎 check-house.mjs (ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD + reste de la suite)..."
+if ! node scripts/check-house.mjs > /tmp/check-house-precommit.log 2>&1; then
+  echo ""
+  echo "🚨 COMMIT BLOQUÉ : check-house.mjs a échoué. Détail :"
+  cat /tmp/check-house-precommit.log
+  exit 1
+fi
+
+echo "🔎 tsc --noEmit (hors l'erreur préexistante et déjà connue de vite.config.ts)..."
+# Même filtre que scripts/kpi-report.mjs::runTypeCheck() — jamais une seconde logique divergente
+# pour la même exclusion déjà assumée (Article 3 : une même cause, un seul traitement).
+TSC_OUT=$(npx tsc --noEmit 2>&1 || true)
+TSC_ERRORS=$(echo "$TSC_OUT" | grep -v 'vite.config.ts' | grep -c 'error TS' || true)
+if [ "$TSC_ERRORS" -gt 0 ]; then
+  echo ""
+  echo "🚨 COMMIT BLOQUÉ : tsc --noEmit a trouvé $TSC_ERRORS erreur(s) réelle(s) :"
+  echo "$TSC_OUT" | grep -v 'vite.config.ts'
+  exit 1
+fi
+
+echo "✅ Suite de tests et typage propres."

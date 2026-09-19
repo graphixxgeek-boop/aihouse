@@ -4,6 +4,12 @@
 de vérité pour lire l'évolution de la note dans le temps — jamais dupliqué ailleurs. Une entrée par
 simulation notée, dans l'ordre où les simulations ont été archivées.)*
 
+## Synthèse transversale
+
+`synthese-2026-09-19.md` croise les 13 rapports individuels ci-dessous pour en tirer les motifs
+récurrents (ce qu'aucune lecture isolée ne montre) et les points reportés dans
+`docs/referentiel/points-fragiles.md`. À consulter avant de relire chaque rapport un par un.
+
 ## Table de comparaison
 
 *(Première notation rétroactive complète, 2026-09-19 — 13 simulations, 13 agents indépendants,
