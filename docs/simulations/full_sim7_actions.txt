@@ -1,0 +1,85 @@
+Round final observé : 215
+Dossier retourné rempli : non
+82 événement(s) extrait(s) :
+  [round 2] move — acteur 2 : bureau → salon
+  [round 6] move — acteur 2 : salon → cuisine
+  [round 6] move — acteur 1 : salon → cuisine
+  [round 7] move — acteur 2 : cuisine → chambre
+  [round 7] move — acteur 1 : cuisine → chambre
+  [round 8] move — acteur 2 : chambre → salon
+  [round 8] move — acteur 1 : chambre → salon
+  [round 20] move — acteur 2 : salon → cuisine
+  [round 21] move — acteur 2 : cuisine → bureau
+  [round 21] move — acteur 1 : salon → bureau
+  [round 22] evidence — 1
+  [round 23] move — acteur 2 : bureau → salon
+  [round 23] move — acteur 1 : bureau → salon
+  [round 24] move — acteur 2 : salon → bureau
+  [round 24] move — acteur 1 : salon → bureau
+  [round 25] evidence — 2
+  [round 26] move — acteur 2 : bureau → salon
+  [round 26] move — acteur 1 : bureau → salon
+  [round 27] move — acteur 2 : salon → bureau
+  [round 27] move — acteur 1 : salon → bureau
+  [round 28] evidence — 3
+  [round 29] move — acteur 2 : bureau → salon
+  [round 29] move — acteur 1 : bureau → salon
+  [round 31] move — acteur 1 : salon → bureau
+  [round 31] move — acteur 2 : salon → bureau
+  [round 32] evidence — 4
+  [round 33] move — acteur 1 : bureau → salon
+  [round 33] move — acteur 2 : bureau → salon
+  [round 36] move — acteur 1 : salon → bureau
+  [round 36] move — acteur 2 : salon → bureau
+  [round 37] revelation
+  [round 37] evidence — 5
+  [round 41] move — acteur 1 : bureau → chambre
+  [round 45] move — acteur 1 : chambre → salon
+  [round 45] move — acteur 2 : bureau → salon
+  [round 49] move — acteur 2 : salon → cuisine
+  [round 50] move — acteur 2 : cuisine → chambre
+  [round 53] move — acteur 1 : salon → cuisine
+  [round 55] move — acteur 2 : chambre → cuisine
+  [round 59] move — acteur 1 : cuisine → bureau
+  [round 59] move — acteur 2 : cuisine → bureau
+  [round 73] move — acteur 1 : bureau → chambre
+  [round 77] move — acteur 2 : bureau → chambre
+  [round 79] move — acteur 1 : chambre → bureau
+  [round 79] move — acteur 2 : chambre → bureau
+  [round 82] move — acteur 2 : bureau → cuisine
+  [round 83] move — acteur 2 : cuisine → bureau
+  [round 90] move — acteur 2 : bureau → chambre
+  [round 92] bonus — trottoir
+  [round 95] move — acteur 1 : bureau → cuisine
+  [round 96] move — acteur 1 : cuisine → salon
+  [round 96] move — acteur 2 : chambre → salon
+  [round 105] bonus — sleep
+  [round 117] bonus — calm
+  [round 135] move — acteur 2 : salon → cuisine
+  [round 145] bonus — mute
+  [round 146] move — acteur 1 : salon → cuisine
+  [round 147] move — acteur 1 : cuisine → salon
+  [round 147] move — acteur 2 : cuisine → salon
+  [round 148] move — acteur 2 : salon → cuisine
+  [round 149] move — acteur 2 : cuisine → salon
+  [round 157] bonus — camera_hide
+  [round 168] bonus — force_move
+  [round 173] move — acteur 2 : salon → bureau
+  [round 173] move — acteur 1 : salon → bureau
+  [round 174] move — acteur 1 : bureau → salon
+  [round 174] move — acteur 2 : bureau → salon
+  [round 175] move — acteur 1 : salon → cuisine
+  [round 176] move — acteur 2 : salon → chambre
+  [round 176] move — acteur 1 : cuisine → chambre
+  [round 177] move — acteur 2 : chambre → cuisine
+  [round 178] move — acteur 2 : cuisine → salon
+  [round 178] move — acteur 1 : chambre → salon
+  [round 180] move — acteur 2 : salon → chambre
+  [round 180] move — acteur 1 : salon → chambre
+  [round 180] bonus — stoic
+  [round 186] move — acteur 2 : chambre → salon
+  [round 186] move — acteur 1 : chambre → salon
+  [round 192] bonus — observer_mute
+  [round 208] move — acteur 2 : salon → cuisine
+  [round 209] move — acteur 2 : cuisine → salon
+  [round 215] move — acteur 1 : salon → cuisine

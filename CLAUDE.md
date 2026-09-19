@@ -350,6 +350,20 @@ enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redem
 3. Une fois terminé, livrer le copier-coller intégral du transcript en fichier joint uniquement
    (cf. préférence déjà actée plus haut, jamais collé en clair dans la réponse), accompagné du
    dossier retourné complet.
+3bis. **Archiver durablement transcript + dossier, et extraire un résumé compact du journal JSON
+   avant de le laisser disparaître** (2026-09-19, ajouté après un vrai risque de perte constaté :
+   onze simulations passées ne vivaient que dans le scratchpad éphémère, jamais dans le dépôt, à
+   l'exception d'une seule rangée par erreur dans `docs/contexte-projet/` — un dossier documenté
+   comme "jamais une source de vérité", donc le mauvais endroit). Copier transcript + dossier dans
+   `docs/simulations/` (jamais le journal JSON brut lui-même — plusieurs Mo par simulation, coût
+   disproportionné pour sa valeur de vérification, décision explicite de l'utilisateur), lancer
+   `node scripts/summarize-simulation-log.mjs <chemin du journal>` et garder son résultat compact
+   (tirages de bonus, déplacements, révélation, jardin, progression de l'enquête) à la place du
+   fichier brut, puis ajouter une ligne à `docs/simulations/index.md`. Ce n'est pas un geste
+   ponctuel : cette archive nourrit le reste du réseau d'outils (HARMONIA peut vérifier qu'une règle
+   documentée s'est vraiment produite en jeu, pas seulement que le code et la doc s'accordent entre
+   eux ; ARGUS peut corroborer un champ "jamais lu" par une absence d'effet observé en session
+   réelle) — à répéter à CHAQUE simulation, jamais seulement pour rattraper un retard une fois.
 4. **Lancer `node scripts/kpi-report.mjs` avant de redémarrer le serveur** (2026-09-19, ajouté après
    un oubli réel constaté par l'utilisateur : la livraison d'une simulation n'incluait ni le rapport
    ni les KPI du Smart Breaker, alors que `docs/referentiel/tableau-de-bord.md` prévoyait déjà cette
@@ -987,11 +1001,28 @@ factuellement exact : toute affirmation qui y décrit un comportement doit corre
 réel, au même titre que `docs/referentiel/` (Article 6/13). Un changement d'architecture ou de
 règle significatif se répercute donc potentiellement dans les trois documents, pas un seul.
 
+## Simulations archivées — une source de vérification, pas un historique
+
+`docs/simulations/` (créé le 2026-09-19, en urgence — onze simulations n'existaient plus que dans
+un scratchpad éphémère, à un pas de disparaître) archive, pour chaque simulation Article 18 :
+transcript complet, dossier retourné, et un résumé compact des actions
+(`scripts/summarize-simulation-log.mjs`) extrait du journal JSON brut avant de le jeter (trop
+volumineux pour être archivé lui-même — 0,6 à 5 Mo par simulation, décision explicite de
+l'utilisateur). Registre complet : `docs/simulations/index.md`. Contrairement à
+`docs/contexte-projet/` ci-dessous (consultable "en cas de doute", jamais une source de vérité), ce
+dossier-ci EST une source de vérification active pour le réseau d'outils (Articles 20/23) : HARMONIA
+peut confirmer qu'une règle documentée s'est vraiment produite en jeu, pas seulement que le code et
+la doc s'accordent entre eux. Cf. Article 18, étape 3bis, pour la procédure répétée à chaque
+nouvelle simulation.
+
 ## Documentation de contexte disponible
 
 Le dossier `docs/contexte-projet/` contient les archives historiques transmises par
 l'utilisateur, à consulter en cas de doute sur une décision de conception, jamais comme source de
-vérité sur le comportement actuel :
+vérité sur le comportement actuel. **Précision du 2026-09-19** : ce dossier contenait par erreur un
+sous-dossier `simulations/` (full_sim4, dupliqué au moment d'archiver les autres simulations) —
+retiré et consolidé dans `docs/simulations/` ci-dessus, le seul endroit désormais pour ce type de
+contenu :
 
 - `referentiel-maison-v34-origine.txt` — référentiel fonctionnel d'origine (version 34, produit
   par Codex). **Document historique uniquement**, superseded par `docs/referentiel/` ci-dessus :

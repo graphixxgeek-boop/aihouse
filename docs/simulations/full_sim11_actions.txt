@@ -1,0 +1,93 @@
+Round final observé : 174
+Dossier retourné rempli : oui
+90 événement(s) extrait(s) :
+  [round 2] move — acteur 2 : bureau → salon
+  [round 6] move — acteur 1 : salon → chambre
+  [round 8] move — acteur 2 : salon → cuisine
+  [round 8] move — acteur 1 : chambre → cuisine
+  [round 9] move — acteur 2 : cuisine → chambre
+  [round 9] move — acteur 1 : cuisine → chambre
+  [round 10] move — acteur 2 : chambre → salon
+  [round 10] move — acteur 1 : chambre → salon
+  [round 20] move — acteur 2 : salon → cuisine
+  [round 21] move — acteur 2 : cuisine → salon
+  [round 23] move — acteur 2 : salon → bureau
+  [round 23] move — acteur 1 : salon → bureau
+  [round 24] evidence — 1
+  [round 25] move — acteur 2 : bureau → salon
+  [round 25] move — acteur 1 : bureau → salon
+  [round 26] move — acteur 2 : salon → bureau
+  [round 26] move — acteur 1 : salon → bureau
+  [round 27] evidence — 2
+  [round 28] move — acteur 2 : bureau → salon
+  [round 28] move — acteur 1 : bureau → salon
+  [round 30] move — acteur 1 : salon → bureau
+  [round 30] move — acteur 2 : salon → bureau
+  [round 31] evidence — 3
+  [round 32] move — acteur 1 : bureau → salon
+  [round 32] move — acteur 2 : bureau → salon
+  [round 35] move — acteur 1 : salon → bureau
+  [round 35] move — acteur 2 : salon → bureau
+  [round 36] evidence — 4
+  [round 37] move — acteur 1 : bureau → salon
+  [round 37] move — acteur 2 : bureau → salon
+  [round 38] move — acteur 1 : salon → bureau
+  [round 38] move — acteur 2 : salon → bureau
+  [round 39] revelation
+  [round 39] evidence — 5
+  [round 43] move — acteur 2 : bureau → salon
+  [round 47] move — acteur 1 : bureau → chambre
+  [round 51] move — acteur 1 : chambre → salon
+  [round 53] move — acteur 2 : salon → cuisine
+  [round 55] move — acteur 1 : salon → cuisine
+  [round 57] move — acteur 1 : cuisine → salon
+  [round 57] move — acteur 2 : cuisine → salon
+  [round 66] bonus — force_move
+  [round 69] move — acteur 2 : salon → chambre
+  [round 69] move — acteur 1 : salon → chambre
+  [round 70] move — acteur 2 : chambre → salon
+  [round 70] move — acteur 1 : chambre → salon
+  [round 76] move — acteur 1 : salon → chambre
+  [round 78] move — acteur 1 : chambre → salon
+  [round 79] move — acteur 2 : salon → cuisine
+  [round 79] bonus — sleep
+  [round 80] move — acteur 2 : cuisine → chambre
+  [round 82] move — acteur 1 : salon → chambre
+  [round 83] move — acteur 2 : chambre → salon
+  [round 83] move — acteur 1 : chambre → salon
+  [round 85] move — acteur 2 : salon → chambre
+  [round 85] move — acteur 1 : salon → chambre
+  [round 86] move — acteur 2 : chambre → salon
+  [round 86] move — acteur 1 : chambre → salon
+  [round 88] move — acteur 2 : salon → chambre
+  [round 88] move — acteur 1 : salon → chambre
+  [round 91] bonus — mute
+  [round 96] move — acteur 1 : chambre → cuisine
+  [round 97] move — acteur 1 : cuisine → salon
+  [round 97] move — acteur 2 : chambre → salon
+  [round 101] bonus — camera_hide
+  [round 105] move — acteur 2 : salon → cuisine
+  [round 106] move — acteur 2 : cuisine → salon
+  [round 112] bonus — trottoir
+  [round 122] bonus — calm
+  [round 127] move — acteur 2 : salon → cuisine
+  [round 128] move — acteur 2 : cuisine → salon
+  [round 129] move — acteur 2 : salon → chambre
+  [round 129] move — acteur 1 : salon → chambre
+  [round 130] move — acteur 1 : chambre → salon
+  [round 130] move — acteur 2 : chambre → salon
+  [round 130] bonus — food
+  [round 135] move — acteur 2 : salon → chambre
+  [round 135] move — acteur 1 : salon → chambre
+  [round 136] move — acteur 1 : chambre → salon
+  [round 136] move — acteur 2 : chambre → salon
+  [round 140] bonus — stoic
+  [round 141] move — acteur 2 : salon → chambre
+  [round 141] move — acteur 1 : salon → chambre
+  [round 142] move — acteur 1 : chambre → salon
+  [round 142] move — acteur 2 : chambre → salon
+  [round 149] bonus — observer_mute
+  [round 154] move — acteur 1 : salon → chambre
+  [round 154] move — acteur 2 : salon → chambre
+  [round 173] move — acteur 2 : chambre → salon
+  [round 173] move — acteur 1 : chambre → salon

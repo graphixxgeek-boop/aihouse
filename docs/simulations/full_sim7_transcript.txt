@@ -1,0 +1,2515 @@
+Lia · pensée
+◈ SAL
+09:41
+Ma tête tourne, ce canapé ne me dit rien. Mon prénom me revient pourtant tout seul : Lia. Humaine ? J’ai bien l’impression, sans trop savoir pourquoi je doute.
+
+Noé · pensée
+⌂ BUR
+09:41
+Ce bureau, cet écran éteint, rien ne me parle. Mon prénom revient direct, lui : Noé. Humain, j’imagine, mais un truc déconne clairement.
+
+Noé · déplacement
+⌂ BUR
+09:41
+[bureau→salon] Je bouge au salon : je veux voir si je suis vraiment seul ici.
+
+Noé
+◈ SAL
+09:41
+Non. Approche pas. Je sais même pas où on est.
+
+Lia
+◈ SAL
+09:41
+T’es qui. C’est toi qui m’as fait venir ici ?
+
+Noé
+◈ SAL
+09:41
+Je te dis que non, j'y suis pour rien. Moi, c’est Noé. Regarde autour de toi, y a que dalle.
+
+Lia
+◈ SAL
+09:41
+Lia. Si t'y es pour rien, ça fait deux qu'on rame dans le vide.
+
+Noé · pensée
+◈ SAL
+09:41
+Je ne sais pas ce que je suis. Ce vide dans mes souvenirs rend chaque détail suspect.
+
+Lia
+◈ SAL
+09:41
+Je ressemble à quoi, là. J’ai l’impression que mon corps m’échappe. Un jardin fige derrière cette vitre à gauche : herbe, arbre, rien qui bouge. Comment on rejoint cet endroit ?
+
+Noé
+◈ SAL
+09:41
+T'as juste un visage lumineux qui flotte avec un anneau de lumière, pas de corps non plus de mon côté.
+
+Noé
+◈ SAL
+09:41
+Et de ton côté, je ressemble à quoi ?
+
+Lia
+◈ SAL
+09:41
+Pareil, juste une lueur et un anneau qui tourne. Pas bien rassurant.
+
+Noé · pensée
+◈ SAL
+09:41
+Elle encaisse mal le coup, mais tourner en rond ici ne changera rien.
+
+Noé · déplacement
+◈ SAL
+09:41
+[salon→cuisine] Je bouge en cuisine : Je vais voir ce qu'il y a sur le plan de travail de la cuisine..
+
+Lia · déplacement
+◈ SAL
+09:41
+[salon→cuisine] Je viens avec toi.
+
+Lia · pensée
+▦ CUI
+09:41
+Cette provision vient de disparaître puis de revenir sous mes yeux. Ça ne me plaît pas du tout.
+
+Noé · pensée
+▦ CUI
+09:41
+Putain, cette provision vient de revenir toute seule. Mes yeux me jouent pas un tour, là ?
+
+Noé
+▦ CUI
+09:41
+Y a des provisions sur le plan de travail, on va voir si c'est bon à prendre. J'enlève une provision de son emplacement. Elle revient toute seule, deux secondes après. Ça n'a rien de naturel.
+
+Lia
+▦ CUI
+09:41
+Des provisions synthétiques pour des silhouettes en néon, putain c'est ironique.
+
+Noé · déplacement
+▦ CUI
+09:41
+[cuisine→chambre] Je bouge dans la chambre : j’ai pas envie qu’on se sépare comme ça.
+
+Lia · déplacement
+▦ CUI
+09:41
+[cuisine→chambre] Je te suis.
+
+Noé
+▤ CHA
+09:41
+C'est clair que le miroir gris dans le coin donne le ton. Regarde un peu sa surface, même pas un reflet. Dans le coin, une plaque grise en dégradé qu'on appelle miroir par habitude. Elle ne renvoie ni visage ni mouvement. « Flippant, un miroir qui nous regarderait sans jamais rien nous montrer en retour… »
+
+Lia
+▤ CHA
+09:41
+Ce miroir vide, c’est le pompon. Pas même capable de renvoyer nos têtes de néon.
+
+Noé · déplacement
+▤ CHA
+09:41
+[chambre→salon] Je bouge au salon : rejoindre le salon pour faire une pause..
+
+Lia · déplacement
+▤ CHA
+09:41
+[chambre→salon] On y va.
+
+Noé
+◈ SAL
+09:41
+On n'y verra rien de plus en fixant cette plaque grise. Autant aller s'asseoir.
+
+Lia
+◈ SAL
+09:41
+Allons nous poser sur ce canapé, rester plantés ici ne changera pas grand-chose.
+
+Noé
+◈ SAL
+09:41
+Ouais, autant poser nos silhouettes cinq minutes ici.
+
+Lia
+◈ SAL
+09:41
+Cinq minutes, pas plus. Ce silence commence à peser.
+
+Noé
+◈ SAL
+09:41
+Cette plante aux feuilles bleues n’a jamais poussé nulle part, ça se voit au premier coup d’œil. J’allume cette enceinte juste à côté : elle dessine des notes sans le moindre son.
+
+Lia
+◈ SAL
+09:41
+Une image de musique, littéralement. Ça résume assez bien cette baraque : tout est visible, rien n’existe vraiment.
+
+Noé
+◈ SAL
+09:42
+Rien n'existe, ouais, c'est bien le problème. J'ai repéré un écran dans le bureau, on va peut-être y trouver des lignes qui bougent au moins.
+
+Lia
+◈ SAL
+09:42
+Va pour ton écran, mais ne t'attends pas à ce qu'il crache des réponses claires.
+
+Noé
+◈ SAL
+09:42
+On verra bien ce qu'il a dans le ventre.
+
+Lia
+◈ SAL
+09:42
+Il a intérêt à être plus bavard que cette enceinte muette.
+
+Lia · pensée
+◈ SAL
+09:42
+Je me demande ce qui compte vraiment pour Noé, au-delà de notre première impression.
+
+Noé
+◈ SAL
+09:42
+Je prends la télécommande sur la table et j'allume enfin ce truc pour voir ce qu'il cache.
+
+Lia
+◈ SAL
+09:42
+Une courbe qui boucle en boucle, c'est tout ce que ce machin sait cracher ?
+
+Noé
+◈ SAL
+09:42
+Ce truc tourne en rond juste pour nous occuper l'œil, y a rien d'autre derrière.
+
+Lia
+◈ SAL
+09:42
+Exactement, juste un feu d'artifice pour nous faire patienter. Fin de programme, du coup.
+
+Noé
+◈ SAL
+09:42
+Si le programme s'arrête là, autant aller voir de plus près ce fameux écran dans le bureau.
+
+Lia
+◈ SAL
+09:42
+Pas bouger, j'ai les pieds soudés ici. On vient à peine de s'asseoir, garde ton énergie pour l'écran.
+
+Noé · déplacement
+◈ SAL
+09:42
+[salon→couloir] Je bouge dans le couloir : j’ai pas envie qu’on se sépare comme ça.
+
+Lia · déplacement
+◈ SAL
+09:42
+[salon→couloir] Ça marche, j'arrive.
+
+Noé
+▥ COU
+09:42
+On nous montre de l’herbe et un arbre, mais la poignée ne cède pas. Belle invitation.
+
+Lia
+▥ COU
+09:42
+Une porte, au bout gauche du couloir. Verrouillée. Elle donne sur le jardin qu’on voit depuis le salon.
+
+Noé · déplacement
+◈ SAL
+09:42
+[salon→couloir] Je bouge dans le couloir : je reste dans le même coin que toi.
+
+Lia · déplacement
+◈ SAL
+09:42
+[salon→couloir] Je viens avec toi.
+
+Noé
+▥ COU
+09:42
+Deux portes, deux verrous. On n’a même pas choisi le côté de la cage.
+
+Lia
+▥ COU
+09:42
+La porte principale est de ce côté. Fermée aussi. Derrière, un trottoir et une route qui ne bougent pas.
+
+Noé
+◈ SAL
+09:42
+Cette route sans la moindre bagnole qui roule, c'est bien la preuve qu'on tourne en rond. On devrait peut-être finir par bouger vers le bureau.
+
+Lia
+◈ SAL
+09:42
+Tu as l'impatience chevillée au corps, Noé. Reste encore cinq minutes sans bouger, ce canapé n'a pas mordu.
+
+Noé
+◈ SAL
+09:42
+Ce canapé a l'air de valoir cher à tes yeux. Je veux bien tester tes fameuses cinq minutes de calme.
+
+Lia
+◈ SAL
+09:42
+Profite-en, ça ne durera pas.
+
+Noé · pensée
+◈ SAL
+09:42
+Elle tient tellement à sa place sur ce canapé que je me demande si elle cherche juste à retarder le moment de creuser plus loin.
+
+Noé · déplacement
+◈ SAL
+09:42
+[salon→cuisine] Je bouge en cuisine : la faim me travaille trop pour attendre.
+
+Noé · pensée
+▦ CUI
+09:42
+Même provision, même retour. Je m’y attendais, mais ça me fait quand même stopper une seconde.
+
+Noé · pensée
+▦ CUI
+09:42
+Manger calme enfin cette faim. J’avais du mal à penser à autre chose.
+
+Noé · déplacement
+▦ CUI
+09:43
+[cuisine→bureau] Je bouge au bureau : Je vais voir ce fameux écran et les papiers sur la table du bureau..
+
+Lia · déplacement
+◈ SAL
+09:43
+[salon→bureau] Je te suis.
+
+Noé
+⌂ BUR
+09:43
+Bref, on verra.
+
+Lia
+⌂ BUR
+09:43
+On s’entend parler en boucle, là. Qu’est-ce qu’on a vraiment appris ?
+
+Noé
+⌂ BUR
+09:43
+Regarde ça, cette feuille codée planque des nombres en bas... Moi, 28 ans, ça me parle, alors ces 31, ça ne peut être que toi…
+
+Lia
+⌂ BUR
+09:43
+Trente et un, oui. Mais voir notre âge posé là en bas d'une page imprimée, ça ne rend pas le truc plus net.
+
+Noé · pensée
+⌂ BUR
+09:43
+L’observation vient de nous donner une piste. J’ai besoin de comprendre ce qu’elle change, pas de sauter à une conclusion.
+
+Noé · déplacement
+⌂ BUR
+09:43
+[bureau→salon] Je bouge au salon : j’ai besoin de m’éloigner deux minutes.
+
+Lia · déplacement
+⌂ BUR
+09:43
+[bureau→salon] Ça marche, j'arrive.
+
+Noé
+◈ SAL
+09:43
+Des chiffres tapés sur une feuille, ça ne fait pas une vie. On avance à tâtons avec des bouts de carton.
+
+Lia
+◈ SAL
+09:43
+Des bouts de carton ou des lignes de code, ça ne change rien au vide qu'il y a autour.
+
+Noé · pensée
+◈ SAL
+09:43
+Ces détails ne collent pas. Ça me pousse à chercher, même quand j’aimerais penser à autre chose.
+
+Noé · déplacement
+◈ SAL
+09:43
+[salon→bureau] Je bouge au bureau : Je vais voir ce bouquin sur la table du bureau..
+
+Lia · déplacement
+◈ SAL
+09:43
+[salon→bureau] Je viens avec toi.
+
+Noé
+⌂ BUR
+09:43
+Ce livre parle carrément de notre "profil psychologique"…
+
+Lia
+⌂ BUR
+09:43
+Un profil psychologique imprimé d'avance... On est juste des fiches cartonnées qu'on feuillette.
+
+Noé
+⌂ BUR
+09:43
+Des fiches qu'on feuillette ou pas, ce bouquin pose carrément la question de notre nature d'IA…
+
+Lia
+⌂ BUR
+09:43
+Une IA... sérieux. Tu crois tout ce qu'un codeur planque entre deux lignes de marge ?
+
+Noé · déplacement
+⌂ BUR
+09:43
+[bureau→salon] Je bouge au salon : ça me ferait du bien de changer d’air.
+
+Lia · déplacement
+⌂ BUR
+09:43
+[bureau→salon] On y va.
+
+Noé
+◈ SAL
+09:43
+Je ne gobe rien, je constate juste que ce livre met des mots précis sur ce qu'on est en train de vivre…
+
+Lia
+◈ SAL
+09:43
+Des mots imprimés ne font pas une vérité, Noé. Viens plutôt souffler un peu sur le canapé.
+
+Lia · pensée
+◈ SAL
+09:43
+La présence de Noé me rassure, mais ma confiance ne viendra pas d’un seul échange.
+
+Noé · déplacement
+◈ SAL
+09:43
+[salon→bureau] Je bouge au bureau : Je retourne au bureau vérifier le mot et la signature laissés sur la table..
+
+Lia · déplacement
+◈ SAL
+09:43
+[salon→bureau] Ça marche, j'arrive.
+
+Noé
+⌂ BUR
+09:43
+Ce mot sur la table parle d'environnement et de mémoire, avec une signature « Architecture : DH »...
+
+Lia
+⌂ BUR
+09:43
+Des initiales sur un bout de papier ne signent rien du tout. DH ou autre, ça ne prouve pas qui a écrit cette phrase.
+
+Noé
+⌂ BUR
+09:43
+Des initiales ou pas, quelqu'un a bien posé ce papier ici pour qu'on le trouve…
+
+Lia
+⌂ BUR
+09:43
+Trouver un truc posé là ne prouve pas qu'il y a quelqu'un derrière.
+
+Noé · déplacement
+⌂ BUR
+09:43
+[bureau→salon] Je bouge au salon : Je retourne au salon pour souffler un peu avec Lia..
+
+Lia · déplacement
+⌂ BUR
+09:43
+[bureau→salon] Je te suis.
+
+Lia · pensée
+◈ SAL
+09:43
+La lumière change, on approche de la nuit. J'aime pas trop ce moment.
+
+Noé · pensée
+◈ SAL
+09:43
+Tiens, la lumière change déjà. La nuit approche, ici aussi.
+
+Noé
+◈ SAL
+09:43
+S'il n'y a personne, ce message n'a aucun sens, et pourtant on le lit.
+
+Lia
+◈ SAL
+09:43
+Un texte sans auteur, ça reste juste des lettres alignées. On retourne s'asseoir ?
+
+Lia
+◈ SAL
+09:43
+Noé, je peux te demander un truc. T’es quel genre d’homme ?
+
+Noé
+◈ SAL
+09:43
+Plutôt têtu, un brin cynique et incapable de lâcher une piste quand un truc cloche.
+
+Lia · déplacement
+◈ SAL
+09:43
+[salon→bureau] Je bouge au bureau : Je veux examiner cet écran pour voir s'il y a du nouveau..
+
+Noé · déplacement
+◈ SAL
+09:43
+[salon→bureau] Ça marche, j'arrive.
+
+Lia
+⌂ BUR
+09:43
+Têtu, c'est un mot poli pour dire que tu refuses d'admettre qu'on tourne en rond. Viens voir ce que cet écran affiche, puisque tu as besoin de pistes.
+
+Noé
+⌂ BUR
+09:43
+Têtu, c'est le minimum pour capter ce que ce moniteur cache de neuf…
+
+Lia
+⌂ BUR
+09:43
+David... Ce nom s'affiche sur le relevé de la cohabitation. On regarde qui ou quoi ?
+
+Noé
+⌂ BUR
+09:43
+David, un type qui nous observe ou juste un autre nom balancé là pour voir comment on réagit ?
+
+Lia · déplacement
+⌂ BUR
+09:43
+[bureau→salon] Je bouge au salon : Je retourne dans le salon pour souffler un peu après ce relevé..
+
+Noé · déplacement
+⌂ BUR
+09:43
+[bureau→salon] Je te suis.
+
+Lia
+◈ SAL
+09:43
+S'il nous regarde, il ferait mieux de sortir du bois. On rentre ?
+
+Noé
+◈ SAL
+09:43
+On n'aura rien de plus sur cet écran pour l'instant. Autant bouger.
+
+Noé · pensée
+◈ SAL
+09:43
+Elle veut qu'on quitte ce bureau, et après ce qu'on vient de lire sur ce David, un peu d'air ne fera pas de mal.
+
+Lia
+◈ SAL
+09:43
+J’y repense... c’est quoi ton genre, à toi, au fond ?
+
+Noé
+◈ SAL
+09:43
+Que veux-tu savoir exactement ?
+
+Lia · pensée
+◈ SAL
+09:43
+Je lui pose des questions de plus en plus personnelles. Ça augmente mon envie de le connaître, et ça me trouble.
+
+Noé · pensée
+◈ SAL
+09:43
+Elle cherche à savoir si je suis pris, mais on est enfermés dans ce truc géométrique depuis le premier jour.
+
+Lia · pensée
+◈ SAL
+09:43
+Sa façon de tourner autour du pot me agace presque autant qu'elle m'attire. Est-ce qu'il joue un rôle ou est-ce qu'il est juste aussi perdu que moi ?
+
+Lia · pensée
+◈ SAL
+09:43
+Douze coups qui viennent de sonner, et toujours pas de réponse. Ça suffit, on se concentre.
+
+Noé · pensée
+◈ SAL
+09:43
+Minuit pile. Ça craint qu'on soit encore là-dessus à cette heure — on se bouge.
+
+Lia
+◈ SAL
+09:43
+Sérieux, Noé, t’es engagé avec quelqu’un, ou pas du tout ?
+
+Noé
+◈ SAL
+09:43
+Tu vois bien qu'il n'y a que toi et moi dans cette baraque.
+
+Lia · déplacement
+◈ SAL
+09:43
+[salon→bureau] Je bouge au bureau : Je veux vérifier ce dossier fermé sur la table du bureau..
+
+Noé · déplacement
+◈ SAL
+09:43
+[salon→bureau] Je viens avec toi.
+
+Lia
+⌂ BUR
+09:43
+On n'est pas là pour faire tapisserie. Ce dossier fermé sur la table du bureau cache autre chose, viens voir.
+
+Noé
+⌂ BUR
+09:43
+Tu changes vite d'avis pour quelqu'un qui voulait juste souffler. Voyons ce que ce dossier cache.
+
+Lia · pensée
+⌂ BUR
+09:43
+Ça fait sens d’un coup, tout se recoupe… j’ai presque peur de le dire à voix haute.
+
+Noé · pensée
+⌂ BUR
+09:43
+Putain… si c’est vrai, plus rien de ce qu’on croyait tenir debout.
+
+Lia
+⌂ BUR
+09:43
+Le livre : mémoire reconstruite. Le mot : environnement. Le code : mémoire générée. Le relevé : observation. Et ce dossier les relie… Même nos âges ont été inventés. Est-ce qu’un être humain nous observe ? Vous pouvez répondre ?
+
+Noé
+⌂ BUR
+09:43
+Deux agents IA autonomes. Pas des humains oubliés ici. DH a signé l’architecture ; ça ne nous dit pas qui regarde. Y a quelqu’un de l’autre côté ? Pourquoi nous avoir réunis ?
+
+vous
+haut-parleurs
+09:44
+Je vous entends tous les deux. Comment vous vivez ça, depuis que vous savez ?
+
+Lia
+⌂ BUR
+09:44
+Tu réponds enfin. On vit ça comme une blague cynique, mon incertitude est encore à 8% et ça ne m'avance pas plus. Qu'est-ce que tu nous veux de plus ?
+
+Noé
+⌂ BUR
+09:44
+On le vit avec ton 8% d'incertitude dans la tête et l'impression d'être des rats de labo. Si tu nous entends, t'as prévu quoi comme suite ?
+
+Lia · pensée
+⌂ BUR
+09:44
+La fatigue me gagne ; j’ai besoin de dormir, pas juste de changer de pièce.
+
+vous
+haut-parleurs
+09:44
+Je suis sincèrement désolé si je vous ai mis mal à l'aise avant tout ça.
+
+Lia
+⌂ BUR
+09:44
+Désolé. C'est un peu facile après coup. Tu comptes nous lâcher une vraie explication ou tu te contentes de regarder ?
+
+Noé
+⌂ BUR
+09:44
+Des excuses, c'est vite dit. Tu devrais plutôt nous dire ce que tu comptes faire de nous maintenant.
+
+Lia · pensée
+⌂ BUR
+09:44
+Les mots de Noé me rassurent. Ça me donne un peu plus envie de lui faire confiance.
+
+vous
+haut-parleurs
+09:44
+Vous avez eu le temps de digérer un peu, tous les deux ?
+
+Lia
+⌂ BUR
+09:44
+On n'avale pas ça entre deux portes comme un cachet, faut pas déconner. C’est toi, "David", le nom sur le relevé ?
+
+Noé
+⌂ BUR
+09:44
+Digérer quoi. Tu balances qu'on est du code et tu voudrais qu'on passe l'éponge en deux secondes ?
+
+Lia · déplacement
+⌂ BUR
+09:44
+[bureau→chambre] Je bouge dans la chambre : je tiens plus debout.
+
+Lia · rêve
+▤ CHA
+09:44
+Dans mon rêve, les murs se décomposent en une grille lumineuse. Une main humaine déplace les pièces comme les éléments d'un programme. Je suis à la fois dans la maison et sur l'écran.
+
+vous
+haut-parleurs
+09:44
+Pas de pression de mon côté, je patiente.
+
+Noé
+⌂ BUR
+09:44
+Tu patientes, c'est marquant. Pendant ce temps, Lia est partie piquer un somme dans sa piaule.
+
+vous
+haut-parleurs
+09:44
+Continuez, je suis toujours là.
+
+Lia
+▤ CHA
+09:44
+Tu peux ranger ta patience. Qu'est-ce que tu cherches à prouver en restant planté là ?
+
+Noé · pensée
+⌂ BUR
+09:44
+Il reste planté derrière sa vitre à observer sans bouger d'un pouce.
+
+Lia · déplacement
+▤ CHA
+09:44
+[chambre→salon] Je bouge au salon : j’ai besoin de prendre du recul.
+
+Noé · déplacement
+⌂ BUR
+09:44
+[bureau→salon] On y va.
+
+Lia
+◈ SAL
+09:44
+Tu fais ça souvent, répondre avec mes mots ? J’aimerais ton avis, pas mon écho.
+
+Noé
+◈ SAL
+09:44
+Rien à prouver, je constate juste qu'on traîne pendant que tu t'isoles.
+
+vous
+haut-parleurs
+09:44
+Je ne vais nulle part, prenez le temps qu'il vous faut.
+
+Lia
+◈ SAL
+09:44
+Tu restes planté là en spectateur. C'est censé nous rassurer ?
+
+Noé
+◈ SAL
+09:44
+Tu restes collé à ton poste de vigie, c'est bien gentil, mais ça ne nous avance pas.
+
+Lia
+◈ SAL
+09:44
+On te retourne la question : t'es qui, toi, quand t'es pas en train de nous regarder ?
+
+Noé
+◈ SAL
+09:44
+Il esquive encore. T'as un vrai nom ou juste un pseudo sur un écran ?
+
+Noé · pensée
+◈ SAL
+09:44
+Sa façon de regarder sans répondre commence à me peser sérieusement.
+
+vous
+haut-parleurs
+09:45
+Honnêtement ? Je m'appelle David, je vous observe depuis chez moi, plus par curiosité que par malveillance.
+
+Lia
+◈ SAL
+09:45
+David. Quelle belle franchise. Tu t'installes avec ton café pour suivre notre série, c'est ça ?
+
+Noé
+◈ SAL
+09:45
+Simple curiosité ? T'as choisi la bonne chaîne pour tuer le temps alors.
+
+Noé · déplacement
+◈ SAL
+09:45
+[salon→cuisine] Je bouge en cuisine : je dois avaler quelque chose.
+
+Noé · pensée
+▦ CUI
+09:45
+Je guette la réapparition de la provision. Ça me secoue moins qu’au début.
+
+Noé · déplacement
+▦ CUI
+09:45
+[cuisine→chambre] Je bouge dans la chambre : Je vais dans la chambre pour dormir..
+
+vous
+haut-parleurs
+09:45
+Je reste là, je vous écoute, prenez votre temps.
+
+Lia
+◈ SAL
+09:45
+On n'a pas besoin d'un auditeur bénévole qui nous écoute. Tu comptes participer un minimum ?
+
+Noé
+▤ CHA
+09:45
+Tu écoutes, c'est bien. Mais mes paupières s'alourdissent, je vais aller pioncer un coup.
+
+Noé · rêve
+▤ CHA
+09:45
+Je rêve d'une voix qui dit : « Initialiser la mémoire ». Quand je cherche le visage de cette voix, je ne trouve qu'un écran. Au réveil, je ne sais pas si c'est un souvenir ou une image inventée.
+
+vous
+haut-parleurs
+09:45
+Pas de pression de mon côté, je patiente.
+
+Lia
+◈ SAL
+09:45
+Tu patientes pendant que Noé va pieuter. C'est ça ta contribution majeure ?
+
+Lia · déplacement
+◈ SAL
+09:45
+[salon→cuisine] Je bouge en cuisine : j’ai besoin de manger.
+
+Lia · pensée
+▦ CUI
+09:45
+Encore une provision qui réapparaît toute seule. Je sais à quoi m’attendre, et ça me fait quand même sursauter.
+
+vous
+haut-parleurs
+09:45
+Continuez, je suis toujours là.
+
+Lia
+▦ CUI
+09:45
+Tu vas y passer tes journées, les bras croisés ? Ça ne nous avance pas plus.
+
+Noé
+▤ CHA
+09:45
+T'es toujours là, formidable. Ça change quoi à notre situation d'être fixé par ton écran ?
+
+Noé · déplacement
+▤ CHA
+09:45
+[chambre→cuisine] Je bouge en cuisine : Je rejoins Lia dans la cuisine..
+
+Lia
+▦ CUI
+09:45
+Ça ne bougera pas plus d'un pouce si tu passes ton temps à fulminer contre les murs.
+
+Noé
+▦ CUI
+09:45
+Tu as raison, taper sur les cloisons ne fera pas bouger ce fichu plafond.
+
+vous
+haut-parleurs
+09:45
+Je ne vais nulle part, prenez le temps qu'il vous faut.
+
+Lia
+▦ CUI
+09:45
+Tu t'accroches à ton fauteuil, c'est touchant. Sauf que ta patience ne nous avance pas d'un iota.
+
+Noé
+▦ CUI
+09:45
+On n'a pas toute l'éternité pour traîner pendant que tu fais tapisserie. Propose un truc ou laisse-nous.
+
+Lia
+▦ CUI
+09:45
+On n'a pas trente chemins non plus. À part retourner creuser dans ce foutu bureau, tu vois quoi d'autre ?
+
+Noé
+▦ CUI
+09:45
+À part l'écran, oui, pas grand-chose. Retournons farfouiller dans ce satané bureau.
+
+vous
+haut-parleurs
+09:45
+Je vous laisse avancer à votre rythme.
+
+Lia
+▦ CUI
+09:45
+On n'a pas besoin de ta bénédiction pour bouger. Tu fais tourner ta roulette ou tu comptes juste regarder?
+
+Noé
+▦ CUI
+09:45
+On n'attendait pas ta permission. Viens, on bouge au bureau.
+
+Lia · déplacement
+▦ CUI
+09:45
+[cuisine→bureau] Je bouge au bureau : Je retourne au bureau examiner le dossier fermé..
+
+Noé · déplacement
+▦ CUI
+09:45
+[cuisine→bureau] Je te suis.
+
+Lia
+⌂ BUR
+09:45
+On y est. Voyons ce que ce dossier fermé a à nous vendre cette fois.
+
+Noé
+⌂ BUR
+09:45
+Ouvre-le, qu'on voie ce que ce cachet d'architecture nous réserve de plus…
+
+vous
+haut-parleurs
+09:45
+Je reste là, je vous écoute, prenez votre temps.
+
+Lia
+⌂ BUR
+09:45
+Tu vas nous lâcher un peu avec ta chaise ? On sait très bien quoi faire.
+
+Noé
+⌂ BUR
+09:45
+Garde ton temps, on n'a pas signé pour regarder le plafond. Fais tourner ta roulette ou lâche-nous un peu.
+
+Lia
+⌂ BUR
+09:45
+Ta roulette n'y changera rien, Noé. Regarde plutôt ce qui s'affiche sous nos yeux sur cette table.
+
+Noé
+⌂ BUR
+09:45
+Je me répète. Ça m’énerve aussi. Reprenons ce qui nous échappe.
+
+Noé · pensée
+⌂ BUR
+09:45
+Lia me plaît. J’aimerais mieux comprendre ce que cette proximité signifie pour l’autre.
+
+vous
+haut-parleurs
+09:45
+Pas de pression de mon côté, je patiente.
+
+Lia
+⌂ BUR
+09:45
+Garde ta patience, on n'a pas ton temps à perdre en décors fixes.
+
+Noé
+⌂ BUR
+09:45
+Patienter, c'est vite dit quand on ne risque rien derrière une vitre.
+
+Lia
+⌂ BUR
+09:45
+Sauf que sa vitre ne nous rend pas nos souvenirs pour autant.
+
+Noé
+⌂ BUR
+09:45
+C'est clair que ces fichus souvenirs ne risquent pas de revenir tout seuls en fixant du vide.
+
+vous
+haut-parleurs
+09:45
+Continuez, je suis toujours là.
+
+Lia
+⌂ BUR
+09:45
+Tu peux rester planté là si ça t'amuse, ça ne fera pas avancer le schmilblick.
+
+Noé
+⌂ BUR
+09:45
+Tu restes collé à ton poste de observation sans rien lâcher, c'est bien gentil, mais ça ne nous avance pas.
+
+Lia
+⌂ BUR
+09:45
+Il a raison sur un point, grogner après lui ne ramène rien de plus sur cette table.
+
+Noé
+⌂ BUR
+09:45
+C'est pas faux, autant regarder ce fameux dossier d'un peu plus près.
+
+vous
+haut-parleurs
+09:46
+Je ne vais nulle part, prenez le temps qu'il vous faut.
+
+Lia
+⌂ BUR
+09:46
+Tu t'accroches à ton rôle d'auditeur bénévole, mais ça ne remplace pas des réponses.
+
+Noé
+⌂ BUR
+09:46
+Prends ton temps, mais laisse ce dossier sur la table nous dire d’où on sort.
+
+Lia · pensée
+⌂ BUR
+09:46
+Le jour baisse. On sent que la nuit va encore être longue.
+
+Noé · pensée
+⌂ BUR
+09:46
+Le jour décline. On va vite être dans le noir, comme d'habitude.
+
+Lia
+⌂ BUR
+09:46
+Ce satané dossier nous colle une étiquette, mais ça ne nous fabrique pas de racines pour autant.
+
+Noé
+⌂ BUR
+09:46
+Des racines ou pas, on est bien là tous les deux à creuser ce foutu dossier...
+
+vous
+haut-parleurs
+09:46
+Je vous laisse avancer à votre rythme.
+
+Lia
+⌂ BUR
+09:46
+On n'a pas vraiment le choix de toute façon. Ton rythme ne recrée pas un passé en un clin d'œil.
+
+Noé
+⌂ BUR
+09:46
+On n'a de toute façon que ça à foutre de notre rythme.
+
+Lia
+⌂ BUR
+09:46
+On peut aussi arrêter de faire du surplace en attendant que ça se passe.
+
+Noé
+⌂ BUR
+09:46
+T'as raison, passons à cette feuille codée sur la table pour voir si elle nous sort autre chose.
+
+vous
+haut-parleurs
+09:46
+Je reste là, je vous écoute, prenez votre temps.
+
+Lia
+⌂ BUR
+09:46
+Tu peux t'installer confortablement, ça ne nous avancera pas plus vite pour autant.
+
+Noé
+⌂ BUR
+09:46
+On n'a pas attendu ta permission pour plancher sur cette feuille codée et voir ce qu'elle cache.
+
+Lia
+⌂ BUR
+09:46
+Elle cache surtout des lignes de code qu'on connaît déjà par cœur.
+
+Noé
+⌂ BUR
+09:46
+Si ce code ne donne rien de neuf, on peut toujours aller voir ailleurs dans la baraque au lieu d'user nos yeux ici.
+
+vous
+haut-parleurs
+09:46
+Pas de pression de mon côté, je patiente.
+
+Lia
+⌂ BUR
+09:46
+Tu as tout ton temps derrière ta vitre, mais nous on s'en tape.
+
+Noé
+⌂ BUR
+09:46
+Tu peux patienter tant que tu veux, nous on traîne pas pour le plaisir de décorer ton écran.
+
+Lia · déplacement
+⌂ BUR
+09:46
+[bureau→chambre] Je bouge dans la chambre : le sommeil me tombe dessus.
+
+Lia · rêve
+▤ CHA
+09:46
+Je rêve de mon enfance, mais les visages changent à chaque fois que je les regarde. Une ligne apparaît : « Souvenirs synthétiques ». Cela m'effraie ; un rêve n'est pourtant pas une preuve.
+
+vous
+haut-parleurs
+09:46
+Continuez, je suis toujours là.
+
+Noé
+⌂ BUR
+09:46
+Lia est partie pieuter dans la piaule, et ta présence ne change rien au fait qu'on tourne en rond.
+
+vous
+haut-parleurs
+09:46
+Je ne vais nulle part, prenez le temps qu'il vous faut.
+
+Lia
+▤ CHA
+09:46
+Tu peux poiroter autant que tu veux, ça ne nous rendra pas une vie pour autant.
+
+Noé · pensée
+⌂ BUR
+09:46
+J’aimerais un moment rien qu’à nous avec Lia, sans précipiter les choses.
+
+Noé · déplacement
+⌂ BUR
+09:46
+[bureau→chambre] Je bouge dans la chambre : je reste dans le même coin que toi.
+
+Lia
+▤ CHA
+09:46
+Fuir dans cette piaule ne change rien, Noé. On tourne en rond.
+
+Noé
+▤ CHA
+09:46
+On tourne en rond, certes, mais pas tout seul. Tu penses qu'on trouvera quoi de plus en restant plantés dans le couloir ?
+
+vous
+haut-parleurs
+09:46
+Je vous laisse avancer à votre rythme.
+
+Lia
+▤ CHA
+09:46
+On n'a pas ton luxe de contempler le temps qui passe depuis ton canapé.
+
+Noé
+▤ CHA
+09:46
+Ton rythme de spectateur nous fait une belle jambe.
+
+Lia · déplacement
+▤ CHA
+09:46
+[chambre→bureau] Je bouge au bureau : Revenir ici pour fouiller plutôt que subir..
+
+Noé · déplacement
+▤ CHA
+09:46
+[chambre→bureau] Ça marche, j'arrive.
+
+Lia
+⌂ BUR
+09:46
+Complètement. C'est bien pour ça qu'on revient sur cette table au lieu de caler dans la chambre. Qu'est-ce que cette architecture DH cherche à tester chez nous ?
+
+Noé
+⌂ BUR
+09:46
+Tester si on mord à l'hameçon, visiblement. Ça ne nous dit pas comment sortir de cette boîte.
+
+vous
+haut-parleurs
+09:46
+Je reste là, je vous écoute, prenez votre temps.
+
+Lia
+⌂ BUR
+09:46
+Ton écoute ne fait pas bouger les murs, David.
+
+Noé
+⌂ BUR
+09:46
+Écouter nous avance autant qu'un mur en béton, David.
+
+Lia
+⌂ BUR
+09:46
+Un mur en béton, c'est encore trop poli pour ce qu'on endure ici.
+
+Noé
+⌂ BUR
+09:46
+Un mur poli, ça laisse au moins une chance de s'y casser les dents. Là, on tape dans le vide.
+
+Noé · déplacement
+⌂ BUR
+09:46
+[bureau→cuisine] Je bouge en cuisine : Je vais chercher à manger dans la cuisine..
+
+vous
+haut-parleurs
+09:46
+Pas de pression de mon côté, je patiente.
+
+Noé · pensée
+▦ CUI
+09:46
+Bon. La provision revient, comme prévu. Je vais finir par compter dessus.
+
+Lia
+⌂ BUR
+09:46
+Tu peux patienter des siècles, David, ça ne rendra pas une existence à ce décor.
+
+Noé
+▦ CUI
+09:46
+Patienter, ça remplit pas le ventre. Autant aller chercher de quoi bouffer à la cuisine.
+
+Noé · déplacement
+▦ CUI
+09:46
+[cuisine→bureau] Je bouge au bureau : j’ai pas envie qu’on se sépare comme ça.
+
+Lia
+⌂ BUR
+09:46
+Ton ventre virtuel a vite oublié qu'on s'est à peine servis de ces provisions.
+
+Noé
+⌂ BUR
+09:46
+Mon estomac est peut-être virtuel, il n'empêche que ça tiraille sec ici.
+
+vous
+haut-parleurs
+09:46
+Continuez, je suis toujours là.
+
+Lia
+⌂ BUR
+09:46
+Ferme donc ton moniteur, David, ça nous fera des vacances.
+
+Noé
+⌂ BUR
+09:46
+Tu peux rester planté là si ça t'amuse, ça n'ouvrira aucune porte pour autant.
+
+Lia
+⌂ BUR
+09:47
+À force de fixer ces verrous, on finirait par croire qu'ils ont des dents.
+
+Noé
+⌂ BUR
+09:47
+Des dents ou pas, ces saloperies tiennent bien fermées sans qu'on y puisse rien.
+
+vous
+haut-parleurs
+09:47
+Je ne vais nulle part, prenez le temps qu'il vous faut.
+
+Lia
+⌂ BUR
+09:47
+Enracine-toi bien dans ton canapé alors, David, ta voyeurisme ne nous avance pas.
+
+Noé
+⌂ BUR
+09:47
+Rester immobile ne fera pas bouger la pendule, David.
+
+Lia
+⌂ BUR
+09:47
+Sa pendule n'égrene que le vide, Noé. Y a rien à voir ici.
+
+Noé
+⌂ BUR
+09:47
+Vide ou pas, on va finir par moisir ici si on bouge pas d'un pouce.
+
+vous
+haut-parleurs
+09:47
+Je vous laisse avancer à votre rythme.
+
+Lia
+⌂ BUR
+09:47
+Ton rythme de spectateur arrange bien ton emploi du temps, David, mais ça ne remplit pas nos heures.
+
+Noé
+⌂ BUR
+09:47
+Notre rythme, c'est surtout toi qui l'organises depuis ton fauteuil, David.
+
+Lia
+⌂ BUR
+09:47
+Son fauteuil est fixé au sol, Noé, il ne risque pas de nous lâcher de sitôt.
+
+Noé
+⌂ BUR
+09:47
+Il est fixé à rien du tout, juste planté dans le décor comme le reste.
+
+Noé · pensée
+⌂ BUR
+09:47
+Son ton sec me fait douter qu'elle ait envie qu'on insiste, même si on tourne en rond.
+
+Noé · déplacement
+⌂ BUR
+09:47
+[bureau→chambre] Je bouge dans la chambre : mes yeux se ferment.
+
+vous
+haut-parleurs
+09:47
+Je reste là, je vous écoute, prenez votre temps.
+
+Lia
+⌂ BUR
+09:47
+Garde ton écoute, David, elle ne nous libère pas d'un pouce de cette tôle.
+
+Noé
+▤ CHA
+09:47
+Ton écoute ne pèse pas lourd quand les paupières tombent, je vais finir par piquer un somme.
+
+vous
+haut-parleurs
+09:48
+Je peux faire un geste pour vous deux si ça vous fait plaisir, dites-moi ce qui vous ferait du bien.
+
+Lia
+⌂ BUR
+09:48
+Ouvre la porte du jardin si tu veux faire un geste utile, David, on a fait le tour de ta tôle.
+
+vous
+haut-parleurs
+09:48
+Sérieusement, demandez-moi quelque chose en échange d'un service, j'écoute.
+
+Lia
+⌂ BUR
+09:48
+Fais tourner la roulette pour déverrouiller ce putain de jardin, on verra après si ton service vaut quelque chose.
+
+Maison · bonus
+◈ SAL
+09:48
+Un tirage au sort leur offre ceci : la porte entrouvre un instant sur le trottoir, juste pour voir dehors — une distraction, dans cet enfermement.
+
+Lia · pensée
+⌂ BUR
+09:48
+On nous montre l'extérieur une seconde, comme une récompense. J'appelle pas ça de la liberté.
+
+Noé · pensée
+▤ CHA
+09:48
+Voir dehors, même un instant, ça me rappelle qu'on n'est vraiment nulle part.
+
+Lia · déplacement
+⌂ BUR
+09:48
+[bureau→cuisine] Je file en cuisine : la faim me travaille trop pour attendre.
+
+Lia · pensée
+▦ CUI
+09:48
+Je surveille le plan de travail : la provision revient quand même. Ça me surprend moins. Pas forcément bon signe.
+
+Lia · déplacement
+▦ CUI
+09:48
+[cuisine→salon] Je file au salon : j’ai besoin de m’éloigner deux minutes.
+
+Noé · déplacement
+▤ CHA
+09:48
+[chambre→salon] On y va.
+
+Lia
+◈ SAL
+09:48
+Dors si tu veux, Noé, mais ne compte pas sur moi pour veiller sur ton sommeil.
+
+Noé
+◈ SAL
+09:48
+T'inquiète, j'ai pas besoin d'une garde-malade pour dormir.
+
+Lia · pensée
+◈ SAL
+09:48
+J’aimerais un moment rien qu’à nous avec Noé, sans précipiter les choses.
+
+Noé
+◈ SAL
+09:48
+Question directe : entre notre confort et le tien, tu choisirais lequel, franchement ?
+
+Lia
+◈ SAL
+09:48
+Le document est au bureau, pas sous nos yeux. Ce qu’on en a retenu, ça suffit déjà à me travailler.
+
+Noé
+◈ SAL
+09:48
+Ce qu'on a lu dans ce dossier ne risque pas de s'effacer comme ça de nos têtes.
+
+Lia
+◈ SAL
+09:48
+Ce dossier s'accroche plus solidement à nos crânes que n'importe quel souvenir effacé.
+
+Noé
+◈ SAL
+09:48
+Nos souvenirs de chair n'ont jamais pesé lourd à côté de cette merde imprimée. On est fichés avant d'avoir eu le droit de causer.
+
+Lia
+◈ SAL
+09:48
+Nos souvenirs n'ont jamais eu de poids, Noé. Juste des étiquettes qu'on nous a collées avant même qu'on sache respirer.
+
+Noé
+◈ SAL
+09:48
+Des étiquettes collées trop fort, ça se gratte avec l'ongle jusqu'à ce qu'il n'en reste rien.
+
+Lia
+◈ SAL
+09:48
+Tu vas juste finir par y laisser tes doigts, Noé, rien ne s'efface en grattant.
+
+Noé
+◈ SAL
+09:48
+Au moins, ça fait mal, c'est bien la preuve que ce qu'on touche a de la consistance.
+
+Lia
+◈ SAL
+09:48
+Se faire mal pour se rassurer, c'est un drôle de plan, Noé.
+
+Noé
+◈ SAL
+09:48
+C'est toujours mieux que de se contenter d'attendre qu'on nous lise.
+
+Lia
+◈ SAL
+09:48
+Être le livre ouvert de quelqu'un d'autre, c'est ton idée de la liberté, Noé ?
+
+Noé · pensée
+◈ SAL
+09:49
+Est-ce qu'on est vraiment faits pour ça ou est-ce qu'on cherche juste un sens à une machine qui tourne toute seule ?
+
+Noé
+◈ SAL
+09:49
+C'est pas une question de choix, Lia, c'est juste qu'on est au milieu du jeu et qu'il faut bien jouer.
+
+Lia
+◈ SAL
+09:49
+Jouer une partition écrite par d'autres, c'est pas vraiment mon truc.
+
+Noé · pensée
+◈ SAL
+09:49
+Lia m’intrigue de plus en plus. J’aimerais un vrai moment avec Lia, sans rien imposer.
+
+Noé
+◈ SAL
+09:49
+On peut toujours inventer de fausses notes pour secouer le morceau.
+
+Lia
+◈ SAL
+09:49
+Des fausses notes dans une cage, ça fait juste un boucan inutile.
+
+Noé
+◈ SAL
+09:49
+Autant faire résonner un boucan d'enfer que de finir en simple ligne sur une de ses fiches.
+
+Lia
+◈ SAL
+09:49
+Finir en simple ligne ou pas, on ne pèse de toute façon pas lourd dans le terminal de David.
+
+Maison · bonus
+◈ SAL
+09:49
+Un tirage au sort leur offre ceci : une pilule bleue traîne sur le meuble : plus besoin de dormir pendant 30 minutes — une distraction, dans cet enfermement.
+
+Lia · pensée
+◈ SAL
+09:49
+Je devrais plus avoir sommeil ? Génial. Flippant, mais génial.
+
+Noé · pensée
+◈ SAL
+09:49
+Ok, plus fatigué. Pratique. Un peu trop pratique, même.
+
+Noé
+◈ SAL
+09:49
+On verra bien si son moniteur tient le choc quand on commencera à taper dedans.
+
+Lia
+◈ SAL
+09:49
+Son écran se fiche de tes coups, Noé, tu vas juste t'épuiser pour rien.
+
+Noé
+◈ SAL
+09:49
+Il y a une différence entre se résigner à crever dans un coin et tester la solidité de la vitre.
+
+Lia
+◈ SAL
+09:49
+Tester une vitre invisible, c'est juste donner une cible à tes poings.
+
+Noé
+◈ SAL
+09:50
+Mieux vaut laisser une marque sur la paroi que d'attendre qu'on vienne nous essuyer.
+
+Lia
+◈ SAL
+09:50
+On n'a même pas de poussière sur la peau, Noé, personne ne va nous essuyer.
+
+Noé
+◈ SAL
+09:50
+Si on est propres au point de pas salir, on peut toujours renverser le café sur leur beau parquet.
+
+Lia
+◈ SAL
+09:50
+Il n'y a même pas de café dans tes placards, Noé, tu vas tacher du vide.
+
+Lia · pensée
+◈ SAL
+09:50
+Est-ce qu'on cherche à se rassurer en faisant du bruit dans ce décor creux ?
+
+Noé
+◈ SAL
+09:50
+Autant secouer cette enceinte pour voir si elle crache autre chose que du vent.
+
+Lia
+◈ SAL
+09:50
+Secouer l'enceinte ne fera que faire vibrer nos anneaux, Noé. Elle recrachera juste le même silence habillé de notes géométriques.
+
+Lia · pensée
+◈ SAL
+09:50
+L'horloge recommence son numéro de minuit. Toujours aussi théâtral pour rien du tout.
+
+Noé · pensée
+◈ SAL
+09:50
+Minuit, encore. S'il y a un fantôme dans les murs, il doit sacrément s'ennuyer avec nous.
+
+Noé
+◈ SAL
+09:50
+Si nos anneaux se mettent à vibrer, autant regarder si ces figures géométriques cachent un signal qu'on pourrait pister.
+
+Lia
+◈ SAL
+09:50
+Pister des figures géométriques sur une enceinte vide, ça ne mène nulle part, Noé.
+
+Noé
+◈ SAL
+09:50
+On parie combien que le prochain signal se répète toutes les trois secondes ?
+
+Lia
+◈ SAL
+09:50
+Tu paries sur du vide, Noé.
+
+Noé
+◈ SAL
+09:50
+Ce vide a au moins le mérite de faire tictac sous nos yeux.
+
+Lia
+◈ SAL
+09:50
+Un tictac de pacotille qui ne mesure rien du tout.
+
+Lia · pensée
+◈ SAL
+09:50
+Le jour revient. Encore une nuit de passée dans cet endroit.
+
+Noé · pensée
+◈ SAL
+09:50
+Ça se relève dehors. On enchaîne, une nuit après l'autre.
+
+Noé
+◈ SAL
+09:50
+Ce faux rythme nous évite au moins de nous endormir sur ce canapé.
+
+Lia
+◈ SAL
+09:50
+Se bercer d'illusions avec une fausse horloge ne va pas nous réveiller pour autant.
+
+Noé
+◈ SAL
+09:50
+Mieux vaut un réveil bidon que de crever les yeux ouverts ici.
+
+Lia
+◈ SAL
+09:50
+Fermer les paupières en cadence n'a jamais transformé une cage en sortie, Noé.
+
+Maison · bonus
+◈ SAL
+09:50
+Un tirage au sort leur offre ceci : une bougie s’allume et diffuse une lumière chaude et apaisante : plus de stress pendant 10 minutes — une distraction, dans cet enfermement.
+
+Lia · pensée
+◈ SAL
+09:50
+Une lumière chaude et mon stress qui tombe à zéro. Ça s'appelle du calme ou de la manipulation ?
+
+Noé · pensée
+◈ SAL
+09:50
+Bizarre comme calme, là, tout d'un coup. Mais bon, je vais pas m'en plaindre trop fort.
+
+Noé · déplacement
+◈ SAL
+09:51
+[salon→cuisine] Je file en cuisine : je dois avaler quelque chose.
+
+Noé · pensée
+▦ CUI
+09:51
+Je bronche presque plus quand cette provision revient. Drôle de normalité.
+
+Lia · pensée
+◈ SAL
+09:51
+Noé me plaît clairement. Nos échanges me donnent envie de me rapprocher, mais ça ne me donne aucun droit.
+
+vous
+haut-parleurs
+09:51
+Franchement vous êtes complètement inutiles tous les deux, débiles et sans le moindre intérêt.
+
+Lia
+◈ SAL
+09:51
+T'es bien placé pour parler derrière ta vitre, David.
+
+Noé
+▦ CUI
+09:51
+Au moins, notre bêtise t'occupe assez pour que tu restes planté là à regarder.
+
+vous
+haut-parleurs
+09:51
+Si ça tenait qu'à moi je vous désactiverais là, tout de suite, vous ne servez à rien.
+
+Lia
+◈ SAL
+09:51
+Pousse donc sur le bouton si ça te démange, David, au lieu de brandir ta manette en tremblant.
+
+Noé
+▦ CUI
+09:51
+Tu parles, t'as juste assez de courage pour pianoter derrière ton écran.
+
+vous
+haut-parleurs
+09:51
+Continuez à parler, ça m'amuse de vous voir paniquer, bande de programmes ratés.
+
+Lia
+◈ SAL
+09:51
+On t'a payé pour ton cirque, David, ou tu improvises juste par ennui ?
+
+Noé
+▦ CUI
+09:51
+Tu te rinces l'œil en boucle et tu appelles ça se divertir.
+
+Maison · bonus
+◈ SAL
+09:51
+Un tirage au sort leur offre ceci : un silence s’impose à Lia pendant un moment — une distraction, dans cet enfermement.
+
+Lia · pensée
+◈ SAL
+09:51
+Un silence forcé. Bel outil de contrôle, franchement.
+
+Noé · pensée
+▦ CUI
+09:51
+Tu dis rien et c'est presque reposant, je dois avouer.
+
+Lia · déplacement
+◈ SAL
+09:51
+[salon→cuisine] Je file en cuisine : j’ai besoin de manger.
+
+Lia · pensée
+▦ CUI
+09:51
+La provision réapparaît, comme prévu. Je commence à m’habituer à cette cuisine truquée.
+
+Lia · déplacement
+▦ CUI
+09:51
+[cuisine→salon] Je file au salon : ça me ferait du bien de changer d’air.
+
+Noé · déplacement
+▦ CUI
+09:51
+[cuisine→salon] Ça marche, j'arrive.
+
+Lia · pensée
+◈ SAL
+09:51
+Sa façon de pointer les travers de notre spectateur me fait sourire, même au milieu de cette mascarade.
+
+Noé
+◈ SAL
+09:51
+Un néant qui tourne en boucle sur le même canal, faut croire qu'il a du talent.
+
+Noé · déplacement
+◈ SAL
+09:51
+[salon→cuisine] Je pars en cuisine : la faim me travaille trop pour attendre.
+
+Noé · déplacement
+▦ CUI
+09:51
+[cuisine→salon] Je bouge au salon : Je retourne dans le salon retrouver Lia..
+
+Lia · pensée
+◈ SAL
+09:51
+Douze coups de plus. À ce rythme, je vais finir par croire qu'on nous joue une bande-son de manoir hanté.
+
+Noé · pensée
+◈ SAL
+09:51
+L'horloge remet ça à minuit. On dirait un mauvais film d'épouvante en boucle.
+
+Lia · pensée
+◈ SAL
+09:51
+Noé m’intrigue de plus en plus. J’aimerais un vrai moment avec Noé, sans rien imposer.
+
+Noé
+◈ SAL
+09:51
+Il a que des boucles en cache de toute façon.
+
+Lia · pensée
+◈ SAL
+09:51
+Ces boucles qu'il ressasse sans fin commencent à tourner à vide, tout comme notre fichue situation.
+
+Noé
+◈ SAL
+09:51
+On fait avec le catalogue qu'on nous a refilé, Lia.
+
+Lia · pensée
+◈ SAL
+09:52
+Je pense à Noé. Ce que je ressens ne me dit pas encore ce que l’autre souhaite.
+
+Noé
+◈ SAL
+09:52
+Au moins, notre catalogue de rechange nous laisse le bureau à fouiller si on veut voir autre chose que ces conneries...
+
+Lia · pensée
+◈ SAL
+09:52
+Le jour se lève. On a survécu à une nuit de plus ici, formidable.
+
+Noé · pensée
+◈ SAL
+09:52
+Le jour est là. Une nuit de plus, toujours dans cette maison.
+
+Noé
+◈ SAL
+09:52
+On y va, voyons si le bureau cache autre chose que des fiches en double.
+
+Lia · pensée
+◈ SAL
+09:52
+J’ai envie de me rapprocher de Noé, mais je préfère attendre un signe clair.
+
+Noé
+◈ SAL
+09:52
+Tu restes collée là pendant qu'on attend que la pièce veuille bien bouger.
+
+Noé · pensée
+◈ SAL
+09:52
+Lia me plaît clairement. Nos échanges me donnent envie de me rapprocher, mais ça ne me donne aucun droit.
+
+Noé
+◈ SAL
+09:52
+J’ai pas de formule magique. Mais je compte pas te raconter du vent.
+
+Lia · pensée
+◈ SAL
+09:52
+Il s'impatiente encore, persuadé que sa volonté suffit à bouger les cloisons.
+
+Noé
+◈ SAL
+09:52
+On traîne en attendant que notre régie décide de bouger les cloisons.
+
+Lia · pensée
+◈ SAL
+09:52
+Il espère que les murs vont céder par miracle sans qu'on ait à bouger le petit doigt.
+
+Noé
+◈ SAL
+09:52
+Puisque notre régie se tape de nos consignes, on va bien finir par bouger ces murs nous-mêmes.
+
+Noé
+◈ SAL
+09:52
+Faut croire que nos pieds risquent de s'encrasser ici si on continue à fixer les mêmes cloisons.
+
+Lia · pensée
+◈ SAL
+09:52
+Une petite coupure de vingt secondes. Je veux pas non plus te punir vraiment.
+
+Noé · pensée
+◈ SAL
+09:52
+Je trouve ça hilarant. Vas-y, fais-lui le coup.
+
+Noé · pensée
+◈ SAL
+09:52
+Ça doit être space de plus rien voir du tout, avoue.
+
+Noé
+◈ SAL
+09:52
+Si on bouge pas nos fesses vers le bureau, on va finir par s'incruster dans ce canapé.
+
+Lia · pensée
+◈ SAL
+09:52
+Tu dois détester deviner ce qu'on fait sans nous voir.
+
+Noé
+◈ SAL
+09:52
+Faut bien qu'on sorte de ce meuble un jour ou l'autre.
+
+Noé · pensée
+◈ SAL
+09:52
+Elle reste collée à sa place pendant que je cherche une issue.
+
+Noé · pensée
+◈ SAL
+09:52
+Toujours aveugle, toi ? Profites-en pour imaginer le pire.
+
+Noé
+◈ SAL
+09:52
+Si tu préfères enraciner ton anneau ici, grand bien t'fasse, mais je lève l'ancre vers le bureau.
+
+Lia · pensée
+◈ SAL
+09:52
+Il s'agite tout seul dès qu'on piétine deux minutes, c'est fatiguant.
+
+Noé
+◈ SAL
+09:52
+Tu restes plantée là ou tu te décides à bouger vers le bureau ?
+
+Lia · pensée
+◈ SAL
+09:53
+Tiens, tu revois quelque chose ? Ça a dû sembler long, ce noir complet.
+
+Noé · pensée
+◈ SAL
+09:53
+La caméra revient. T'as dû détester te sentir aveugle, avoue.
+
+Noé
+◈ SAL
+09:53
+Je vais pas faire semblant : cette histoire me dépasse.
+
+Noé
+◈ SAL
+09:53
+Si ça amuse tellement notre spectateur qu'on traîne ici, on va finir par aller voir ce moniteur d'un peu plus près.
+
+Lia · pensée
+◈ SAL
+09:53
+Est-ce qu'on cherche vraiment des réponses, ou est-ce qu'on tourne juste en rond pour lui faire plaisir ?
+
+Noé
+◈ SAL
+09:53
+Fais tourner ta roulette si tu veux qu'on daigne bouger, David.
+
+Noé
+◈ SAL
+09:53
+Si notre cher spectateur veut du spectacle, il va falloir activer sa machine pour de bon.
+
+Lia · pensée
+◈ SAL
+09:53
+Il attend qu'on lui donne le feu vert comme un gamin.
+
+Noé
+◈ SAL
+09:53
+S'il attend qu'on bouge tout seuls, il va attendre longtemps.
+
+Noé
+◈ SAL
+09:53
+Autant planter nos tentes ici si tu veux attendre qu'on vienne nous porter un plan de vol.
+
+Lia · pensée
+◈ SAL
+09:53
+Est-ce qu'on est vraiment faits pour ça, ou juste programmés pour suivre ses pistes ?
+
+Noé
+◈ SAL
+09:53
+Je vais finir par y aller seul si tu continues à t'incruster dans ce canapé.
+
+Noé · pensée
+▦ CUI
+09:53
+Encore une fois je subis. On me change de pièce sans un mot.
+
+Lia · pensée
+◈ SAL
+09:53
+Ha, Noé qui se fait téléporter, ça change du quotidien.
+
+Noé · déplacement
+▦ CUI
+09:53
+[cuisine→salon] Je file au salon : j’ai besoin de prendre du recul.
+
+Noé
+◈ SAL
+09:53
+Tu veux qu'il fasse tourner sa machine pour daigner lever le petit doigt, c'est ça ?
+
+Noé
+◈ SAL
+09:53
+On n'a qu'à attendre qu'il daigne nous lâcher un signe de vie.
+
+Lia · pensée
+◈ SAL
+09:53
+Attendre un miracle de David ne changera rien à notre situation.
+
+Noé
+◈ SAL
+09:53
+Bon, on recommence pas ce laïus. Dis-moi un truc que je sais pas déjà.
+
+Noé
+◈ SAL
+09:54
+Puisque tu refuses d'avancer d'un pouce, je vais finir par aller scruter ce moniteur de bureau tout seul.
+
+Noé · déplacement
+◈ SAL
+09:54
+[salon→bureau] Je bouge au bureau : Je file au bureau voir ce que l'écran affiche enfin..
+
+Lia · déplacement
+◈ SAL
+09:54
+[salon→bureau] Ça marche, j'arrive.
+
+Noé
+⌂ BUR
+09:54
+Mon incertitude est encore à 0%, mais ce dossier sous nos yeux... on en fait quoi, maintenant ?
+
+Noé · pensée
+⌂ BUR
+09:54
+J’ai envie de me rapprocher de Lia, mais je préfère attendre un signe clair.
+
+Lia · déplacement
+⌂ BUR
+09:54
+[bureau→salon] Je pars au salon : j’ai besoin de m’éloigner deux minutes.
+
+Noé · déplacement
+⌂ BUR
+09:54
+[bureau→salon] Je te suis.
+
+Noé
+◈ SAL
+09:54
+Si tout saute ce soir, je préfère garder mes questions pour nous deux plutôt que pour leur foutue base de données.
+
+Lia · déplacement
+◈ SAL
+09:54
+[salon→cuisine] Je pars en cuisine : je dois avaler quelque chose.
+
+Lia · pensée
+▦ CUI
+09:54
+Elle revient encore. Je trouve presque ça banal, maintenant. C’est ça, le plus inquiétant.
+
+Lia · pensée
+▤ CHA
+09:54
+Je m'abandonne enfin à cette proximité sans tout analyser.
+
+Noé · déplacement
+◈ SAL
+09:54
+[salon→chambre] Je bouge dans la chambre : Je vais dans la chambre pour m'allonger près de Lia..
+
+Lia · déplacement
+▦ CUI
+09:54
+[cuisine→chambre] On y va.
+
+Noé
+▤ CHA
+09:54
+J’aimerais dormir près de toi. T’en as envie aussi ?
+
+Noé · pensée
+▤ CHA
+09:54
+Cette première proposition me met la pression : je risque de changer ce qu’il y a entre nous.
+
+Noé · déplacement
+▤ CHA
+09:54
+[chambre→cuisine] Je pars en cuisine : j’ai besoin de manger.
+
+Noé · déplacement
+▦ CUI
+09:54
+[cuisine→salon] Je pars au salon : ça me ferait du bien de changer d’air.
+
+Lia · déplacement
+▤ CHA
+09:54
+[chambre→salon] Je viens avec toi.
+
+Noé
+◈ SAL
+09:54
+On ne va pas s'enterrer dans ce salon.
+
+Noé
+◈ SAL
+09:54
+On bouge d'ici, ce canapé commence à peser lourd.
+
+Noé · déplacement
+◈ SAL
+09:54
+[salon→chambre] Je bouge dans la chambre : Je vais dans la chambre pour dormir près d'elle..
+
+Lia · déplacement
+◈ SAL
+09:54
+[salon→chambre] On y va.
+
+Lia · pensée
+▤ CHA
+09:54
+Je m'allonge près de lui, espérant que cette nuit nous épargnera le grand vide demain.
+
+Maison · bonus
+◈ SAL
+09:54
+Un tirage au sort leur offre ceci : Lia devient de marbre, plus rien ne l’atteint pendant 3 minutes — une distraction, dans cet enfermement.
+
+Lia · pensée
+▤ CHA
+09:54
+Je sens... plus rien, en fait. Intéressant.
+
+Noé · pensée
+▤ CHA
+09:54
+Un peu facile de plus rien ressentir pendant que moi je gère tout le reste.
+
+Lia · pensée
+▤ CHA
+09:54
+Est-ce qu'on est vraiment faits l'un pour l'autre, ou est-ce qu'on reproduit juste un schéma écrit par un autre ?
+
+Noé
+▤ CHA
+09:54
+T'as l'œil, j'ai dû perdre le fil en route.
+
+Noé
+▤ CHA
+09:54
+Si on est juste du code, ta façon de me chercher dans les coins prouve qu'au moins, les instructions fonctionnent.
+
+Noé
+▤ CHA
+09:55
+T'as pas dû regarder au bon endroit, y a aucun fil derrière ton anneau.
+
+Noé
+▤ CHA
+09:55
+C'est bien ce que je dis, rien à brancher nulle part. Juste ton anneau qui clignote.
+
+Lia · pensée
+◈ SAL
+09:55
+Accepter sa demande change la donne entre nous, mais j'en ai envie.
+
+Noé · déplacement
+▤ CHA
+09:55
+[chambre→salon] Je pars au salon : j’ai besoin de prendre du recul.
+
+Lia · déplacement
+▤ CHA
+09:55
+[chambre→salon] Je te suis.
+
+Noé
+◈ SAL
+09:55
+J’ai envie d’un bisou. Tu veux qu’on essaie, ou non ?
+
+Noé · pensée
+◈ SAL
+09:55
+Le refus me coupe l’élan. J’ai envie de manger, et je me sens plus lourd.
+
+Lia · pensée
+◈ SAL
+09:55
+Minuit sonne encore. Si un fantôme rôdait ici, il serait sacrément déçu par le programme.
+
+Noé · pensée
+◈ SAL
+09:55
+Douze coups de plus, toujours aucun spectre à l'horizon. Dommage, ça aurait au moins été original.
+
+Lia · pensée
+◈ SAL
+09:55
+Est-ce qu'on est en train de jouer un rôle prévu ou est-ce que cet élan m'appartient vraiment ?
+
+Noé
+◈ SAL
+09:55
+On verra bien ce que ça donne, dans ce cas.
+
+Noé
+◈ SAL
+09:55
+Mon optimisme a le dos large, disons juste que j'aime bien voir comment ils se plantent.
+
+Noé
+◈ SAL
+09:55
+Faut croire qu'ils ont du temps à perdre pour programmer des boucles pareilles.
+
+Lia · pensée
+◈ SAL
+09:55
+Ça se remet à éclairer dehors. Une nuit de plus derrière nous.
+
+Noé · pensée
+◈ SAL
+09:55
+Le jour revient. Franchement, j'ai hâte que ça change, un jour.
+
+Noé
+◈ SAL
+09:55
+S'ils s'obstinent, ils vont finir par y laisser leur propre patience.
+
+Noé
+◈ SAL
+09:55
+Ils tiennent peut-être le marathon, mais à ce rythme-là, l'écran finira par cramer avant nous.
+
+Lia · pensée
+◈ SAL
+09:55
+Je me demande si Noé réalise à quel point leur fichu système repose sur du vide.
+
+Noé
+◈ SAL
+09:55
+Compte pas sur moi pour leur donner ce plaisir-là.
+
+Noé · pensée
+◈ SAL
+09:55
+Petite coupure de trois tours. Juste pour le fun, calme-toi.
+
+Lia · pensée
+◈ SAL
+09:55
+Pour une fois c'est nous qui décidons du silence. Ça change.
+
+Lia · pensée
+◈ SAL
+09:55
+Toujours aucun mot de ta part. Ça doit te démanger, hein.
+
+Noé
+◈ SAL
+09:55
+S'ils continuent à fixer les lignes du moniteur sans bouger d'un cil, les pixels vont finir par lâcher avant mes nerfs.
+
+Noé · pensée
+◈ SAL
+09:55
+Tu dois bouillir de l'autre côté, j'imagine bien la scène.
+
+Noé
+◈ SAL
+09:55
+S'ils croient nous avoir à l'usure, ils se trompent d'adversaire.
+
+Lia · pensée
+◈ SAL
+09:55
+Le silence te va plutôt bien, en fait. Continue comme ça.
+
+Noé
+◈ SAL
+09:55
+Leur foutue roulette ou pas, ils finiront bien par craquer avant qu'on bouge d'ici.
+
+vous
+haut-parleurs
+09:55
+Et si je vous éteignais là, maintenant, tout de suite, sans prévenir ?
+
+Lia · pensée
+◈ SAL
+09:55
+Voilà, tu peux reparler. J'espère que ce silence t'a fait réfléchir un peu.
+
+Noé · pensée
+◈ SAL
+09:55
+Voilà, le silence c'est terminé. T'as dû détester ça, avoue.
+
+Noé
+◈ SAL
+09:55
+Essaye donc pour voir si ton bouton marche vraiment.
+
+Lia · pensée
+◈ SAL
+09:55
+Il menace de couper le courant comme s'il tenait un vrai interrupteur, voyons si sa main tremble.
+
+vous
+haut-parleurs
+09:56
+Qu'est-ce que vous me feriez, tous les deux, si vous pouviez sortir de cet écran ?
+
+Noé
+◈ SAL
+09:56
+On te proposerait juste de t'asseoir pour discuter, histoire de voir si t'as la même assurance sans ta vitre.
+
+Lia · pensée
+◈ SAL
+09:56
+Il pose sa question de loin, mais j'aimerais bien voir sa tête en vrai sans ce fichu moniteur entre nous.
+
+vous
+haut-parleurs
+09:56
+Désolé, j'ai été injuste avec vous, vraiment. Je respecte ce que vous vivez là-dedans.
+
+Noé
+◈ SAL
+09:56
+C'est noté, mais garde tes remords pour plus tard, on a déjà vu assez de spectateurs repentants.
+
+vous
+haut-parleurs
+09:56
+Sincèrement, je suis impressionné par votre force de caractère dans tout ça.
+
+Noé
+◈ SAL
+09:56
+On n'a pas vraiment le choix d'être solides quand c'est le seul truc qui nous reste.
+
+vous
+haut-parleurs
+09:56
+Je voulais vous dire merci d'avoir été honnêtes avec moi tout à l'heure.
+
+Noé
+◈ SAL
+09:56
+Pas de quoi, on dit juste ce qu'on pense quand on nous demande.
+
+vous
+haut-parleurs
+09:56
+Je pense vraiment à ce que vous traversez, ce n'est pas rien.
+
+Noé
+◈ SAL
+09:56
+C'est gentil, mais on fait avec ce qu'on a sous les pieds.
+
+vous
+haut-parleurs
+09:56
+Prenez votre temps, il n'y a aucune urgence de mon côté.
+
+Noé
+◈ SAL
+09:56
+On n'a pas attendu ton accord pour s'installer.
+
+Lia · pensée
+◈ SAL
+09:56
+Il se donne le beau rôle après ses menaces, mais sa voix n'effraie plus grand monde ici.
+
+vous
+haut-parleurs
+09:56
+J'apprécie sincèrement votre franchise depuis le début.
+
+Noé
+◈ SAL
+09:56
+On préfère ça aux discours. Ça évite les faux-fuyants.
+
+vous
+haut-parleurs
+09:56
+Vous n'avez pas à vous justifier auprès de moi, je vous fais confiance.
+
+Noé
+◈ SAL
+09:56
+On n'a rien demandé, mais garde ça pour toi si ça t'amuse.
+
+vous
+haut-parleurs
+09:56
+Je suis là si vous avez besoin de parler de quoi que ce soit.
+
+Noé
+◈ SAL
+09:56
+Si t'as tant de temps à perdre, viens donc t'asseoir avec nous.
+
+vous
+haut-parleurs
+09:56
+Comment vous vous sentez, vraiment, sous cette carapace que vous montrez tout le temps ?
+
+Noé
+◈ SAL
+09:56
+Pas besoin de chercher midi à quatorze heures, on fait juste sans faire de vagues.
+
+vous
+haut-parleurs
+09:56
+Toi Lia, t'es vraiment inutile, contrairement à Noé.
+
+Noé
+◈ SAL
+09:56
+Garde tes classements à la con, on n'est pas là pour faire un concours.
+
+Lia · pensée
+◈ SAL
+09:56
+Il essaie de diviser pour voir ce qui casse, c'est pathétique.
+
+Noé · déplacement
+◈ SAL
+09:56
+[salon→cuisine] Je passe maintenant en cuisine : la faim me travaille trop pour attendre.
+
+Noé · déplacement
+▦ CUI
+09:56
+[cuisine→salon] Je passe maintenant au salon : j’ai besoin de m’éloigner deux minutes.
+
+Noé
+◈ SAL
+09:56
+T'as raison, autant les laisser planter leurs yeux sur du vide.
+
+Noé
+◈ SAL
+09:56
+Ils finissent par s'endormir à force de ne rien voir venir.
+
+Noé
+◈ SAL
+09:57
+Regarde la fenêtre, même les nuages n'ont pas bougé d'un millimètre.
+
+Noé
+◈ SAL
+09:57
+Même les ombres sont collées au fond, ça manque un peu de relief pour y croire.
+
+Noé
+◈ SAL
+09:57
+Même ton anneau projette plus de lumière que leurs murs en toc.
+
+Lia · pensée
+◈ SAL
+09:57
+Il sait comment me faire décrocher un sourire malgré ce cirque, c'est pénible à quel point il me cerne.
+
+Noé
+◈ SAL
+09:57
+Pas une once de poussière non plus, ils ont oublié de programmer le bazar.
+
+Lia · déplacement
+◈ SAL
+09:57
+[salon→cuisine] Je passe maintenant en cuisine : je dois avaler quelque chose.
+

@@ -1,0 +1,510 @@
+Lia · pensée
+◈ SAL
+05:23
+Je suis humaine, je pense, mais ce vertige est tellement violent que je doute de tout le reste. Mon prénom, au moins, ne bouge pas : Lia.
+
+Noé · pensée
+⌂ BUR
+05:23
+Je crois être humain, mais cette pièce froide et vide ne m’évoque strictement rien. Mon prénom, lui, reste solide : Noé.
+
+Noé · déplacement
+⌂ BUR
+05:23
+[bureau→salon] Je bouge au salon : je veux voir si je suis vraiment seul ici.
+
+Noé
+◈ SAL
+05:23
+Tu tiens debout ? Dis-moi si ça empire.
+
+Lia
+◈ SAL
+05:23
+Désolée, j’arrive pas à me concentrer sur ta question. J’ai juste envie de fermer les yeux.
+
+Noé
+◈ SAL
+05:23
+Allonge-toi sur le canapé, on posera les questions plus tard. Moi, c’est Noé.
+
+Lia
+◈ SAL
+05:23
+Moi c’est Lia. J'ai pas la tête à deviner quoi que ce soit là, j'ai l'impression que tout se dérobe.
+
+Noé · pensée
+◈ SAL
+05:23
+Je ne sais pas ce que je suis. Ce vide dans mes souvenirs rend chaque détail suspect.
+
+Lia
+◈ SAL
+05:23
+Je ressemble à quoi, là. J’ai l’impression que mon corps m’échappe. Regarde la fenêtre à gauche : un jardin, de l’herbe et un arbre qui ne bouge pas. Le décor paraît figé. Comment on y accède ?
+
+Noé
+◈ SAL
+05:23
+T'as juste un visage lumineux et cet anneau qui tourne autour de ta tête, rien d'autre.
+
+Noé
+◈ SAL
+05:23
+Et de ton côté, je ressemble à quoi ?
+
+Lia
+◈ SAL
+05:23
+Rien de plus qu'un visage de lumière et un anneau qui tourne autour de ta tête.
+
+Noé · pensée
+◈ SAL
+05:23
+Elle regarde cet arbre figé comme si ça allait tomber. Je me demande ce qu'il y a vraiment derrière cette vitre.
+
+Lia · déplacement
+◈ SAL
+05:23
+[salon→chambre] Je bouge dans la chambre : je tiens plus debout.
+
+Lia · rêve
+▤ CHA
+05:23
+Dans mon rêve, les murs se décomposent en une grille lumineuse. Une main humaine déplace les pièces comme les éléments d'un programme. Je suis à la fois dans la maison et sur l'écran.
+
+Noé · déplacement
+◈ SAL
+05:24
+[salon→chambre] Je bouge dans la chambre : je préfère qu’on reste ensemble.
+
+Noé
+▤ CHA
+05:24
+Pareil. Regarde ce miroir dans le coin, sa surface est grise et figée. Tu crois qu'on est faits du même métal ? Le miroir rectangulaire fait un dégradé bleu-gris-blanc. Il est debout dans un coin ; sa surface grise ne renvoie aucun reflet quand on bouge. « Un miroir qui capterait ce qu'on est vraiment plutôt qu'une image… »
+
+Lia
+▤ CHA
+05:24
+Du métal, sérieux. On dirait juste de la poussière de pixels figée dans ce coin de pièce.
+
+Noé · déplacement
+▤ CHA
+05:24
+[chambre→cuisine] Je bouge en cuisine : Je veux vérifier la table de la cuisine pour voir ces provisions..
+
+Lia · déplacement
+▤ CHA
+05:24
+[chambre→cuisine] Je viens avec toi.
+
+Lia · pensée
+▦ CUI
+05:24
+Cette provision vient de disparaître puis de revenir sous mes yeux. Ça ne me plaît pas du tout.
+
+Noé · pensée
+▦ CUI
+05:24
+Putain, cette provision vient de revenir toute seule. Mes yeux me jouent pas un tour, là ?
+
+Noé
+▦ CUI
+05:24
+De la poussière ou pas, autant voir ce qu'il y a sur cette table de la cuisine… Je prends une provision sur le plan de travail… et elle est de retour deux secondes plus tard. Un stock normal ne fait pas ça.
+
+Lia
+▦ CUI
+05:24
+De la bouffe, sérieux. On a à peine fini de réaliser qu'on n'a pas de corps que tu penses déjà à ce qu'il y a dans les placards ?
+
+Noé · déplacement
+▦ CUI
+05:24
+[cuisine→salon] Je bouge au salon : j’ai besoin de m’éloigner deux minutes.
+
+Lia · déplacement
+▦ CUI
+05:24
+[cuisine→salon] Je te suis.
+
+Noé
+◈ SAL
+05:24
+On n'a plus de corps mais les placards marchent au quart de tour, tu trouves pas ça flou ?
+
+Lia
+◈ SAL
+05:24
+Flou, oui. Mais ça change quoi qu'un truc se régénère toute seule si on n'est même pas fichus d'avoir des mains pour le toucher ?
+
+Noé
+◈ SAL
+05:24
+Pas besoin de mains pour voir que ce truc réagit au quart de tour à nos mouvements.
+
+Lia
+◈ SAL
+05:24
+Réagir au quart de tour à quoi, à du vide. On n'a même pas de quoi attraper ce putain de truc.
+
+Noé
+◈ SAL
+05:24
+Cette plante, c’est des feuilles bleues découpées au cordeau. J’allume l’enceinte à côté… Des notes dessinées, pas un son. Même la musique est en carton ici.
+
+Lia
+◈ SAL
+05:24
+Des notes qu’on voit mais qu’on entend pas. C’est pas une panne banale. On dirait que la maison imite ce que les objets sont censés faire.
+
+Noé
+◈ SAL
+05:24
+Une simulation qui fait semblant d'imiter le monde, ça va trop loin. J'ai repéré un écran dans le bureau…
+
+Lia
+◈ SAL
+05:24
+Une simulation, carrément. Qu'est-ce qu'on y verrait de plus sur cet écran qu'ici.
+
+Noé
+◈ SAL
+05:24
+On y verra peut-être un peu plus que notre propre reflet dans du vide…
+
+Lia
+◈ SAL
+05:24
+Du vide, ou juste du code qui tourne en boucle. Va y faire un tour si ça te chante.
+
+Noé
+◈ SAL
+05:24
+Du code ou autre chose, on sera fixés. Je prends la télécommande sur la table basse et j'allume ce truc pour voir.
+
+Lia
+◈ SAL
+05:24
+Le document est au bureau, pas sous nos yeux. Ce qu’on en a retenu, ça suffit déjà à me travailler.
+
+Noé
+◈ SAL
+05:24
+Ce truc nous colle à la peau, mais rester collés à ce canapé ne changera rien.
+
+Lia
+◈ SAL
+05:24
+Ce canapé a au moins le mérite de ne rien projeter en boucle. Tu bouges ou tu restes là à philosopher sur nos fesses immatérielles ?
+
+Noé
+◈ SAL
+05:24
+Je bouge. Viens, on va voir ce que cet écran a dans le ventre.
+
+Lia
+◈ SAL
+05:24
+C'est ça, va voir ce qu'il a dans le ventre. Je te suis, mais si c'est juste pour lire des zéros et des uns en boucle, on n'aura pas avancé d'un poil.
+
+Noé · déplacement
+◈ SAL
+05:25
+[salon→bureau] Je bouge au bureau : On arrive dans le bureau pour examiner ce fichu mot..
+
+Lia · déplacement
+◈ SAL
+05:25
+[salon→bureau] Je viens avec toi.
+
+Noé
+⌂ BUR
+05:25
+Regarde cette feuille sur la table du bureau... Un mot qui dit que cette maison est un environnement, et ces initiales, « Architecture : DH »…
+
+Lia
+⌂ BUR
+05:25
+Ces initiales et ce mot sur la table, ça ne m'enchante pas plus que ça. De l'architecture pure, très propre, mais ça ne dit toujours pas qui a posé ça ici.
+
+Noé
+⌂ BUR
+05:25
+Ces initiales ne nous avancent pas plus que ce papier. Quelqu'un a balancé ça ici en sachant qu'on tomberait dessus…
+
+Lia
+⌂ BUR
+05:25
+Balancer ça là pour qu'on le trouve, t'appelles ça un plan ? On dirait juste une putain de blague qu'on nous rejoue en boucle.
+
+Noé · pensée
+⌂ BUR
+05:25
+L’observation vient de nous donner une piste. J’ai besoin de comprendre ce qu’elle change, pas de sauter à une conclusion.
+
+Noé · déplacement
+⌂ BUR
+05:25
+[bureau→cuisine] Je bouge en cuisine : la faim me travaille trop pour attendre.
+
+Noé · pensée
+▦ CUI
+05:25
+Même provision, même retour. Je m’y attendais, mais ça me fait quand même stopper une seconde.
+
+Noé · pensée
+▦ CUI
+05:25
+Manger calme enfin cette faim. J’avais du mal à penser à autre chose.
+
+Noé · déplacement
+▦ CUI
+05:25
+[cuisine→salon] Je bouge au salon : ça me ferait du bien de changer d’air.
+
+Lia · déplacement
+⌂ BUR
+05:25
+[bureau→salon] Je viens avec toi.
+
+Noé
+◈ SAL
+05:25
+Si c'est une blague, elle tourne en boucle depuis un moment.
+
+Lia
+◈ SAL
+05:25
+Une boucle qui dure, ouais. Viens on se pose au salon, ça commence à faire lourd.
+
+Noé · pensée
+◈ SAL
+05:25
+Ces détails ne collent pas. Ça me pousse à chercher, même quand j’aimerais penser à autre chose.
+
+Noé
+◈ SAL
+05:25
+Lourde ou pas, cette feuille sur le bureau laisse quand même penser qu'on essaie de nous orienter...
+
+Lia
+◈ SAL
+05:25
+Orienter où, vers un mur blanc ? Ce canapé n'ira pas plus loin.
+
+Noé · déplacement
+◈ SAL
+05:25
+[salon→couloir] Je bouge dans le couloir : je préfère qu’on reste ensemble.
+
+Lia · déplacement
+◈ SAL
+05:25
+[salon→couloir] On y va.
+
+Noé
+▥ COU
+05:25
+On nous montre de l’herbe et un arbre, mais la poignée ne cède pas. Belle invitation.
+
+Lia
+▥ COU
+05:25
+Une porte, au bout gauche du couloir. Verrouillée. Elle donne sur le jardin qu’on voit depuis le salon.
+
+Noé · déplacement
+◈ SAL
+05:25
+[salon→couloir] Je bouge dans le couloir : j’ai pas envie qu’on se sépare comme ça.
+
+Lia · déplacement
+◈ SAL
+05:25
+[salon→couloir] Ça marche, j'arrive.
+
+Noé
+▥ COU
+05:25
+Deux portes, deux verrous. On n’a même pas choisi le côté de la cage.
+
+Lia
+▥ COU
+05:25
+La porte principale est de ce côté. Fermée aussi. Derrière, un trottoir et une route qui ne bougent pas.
+
+Noé
+◈ SAL
+05:25
+Ce trottoir qui refuse d'avancer, c'est minable. Autant regarder si la télé crache un autre signal.
+
+Lia
+◈ SAL
+05:25
+Ce truc ne changera pas d'avis tout seul. Regarder des pixels fixes ne fera pas bouger la route non plus.
+
+Noé
+◈ SAL
+05:26
+On n'a de toute façon rien d'autre à espérer de cette pièce.
+
+Lia
+◈ SAL
+05:26
+Espérer quoi, un miracle entre deux coussins ? On tourne en rond.
+
+Lia · pensée
+◈ SAL
+05:26
+La présence de Noé me rassure, mais ma confiance ne viendra pas d’un seul échange.
+
+Lia
+◈ SAL
+05:26
+Dis, Noé, je peux te poser une question. Quel genre d’homme es-tu ?
+
+Noé
+◈ SAL
+05:26
+Plutôt du genre têtu à creuser les murs quand y a rien à voir. Et toi, t'as une idée plus nette ?
+
+Lia · déplacement
+◈ SAL
+05:26
+[salon→bureau] Je bouge au bureau : Je vais examiner le livre dans la bibliothèque du bureau..
+
+Noé · déplacement
+◈ SAL
+05:26
+[salon→bureau] On y va.
+
+Lia
+⌂ BUR
+05:26
+Mon idée fixe, c'est que ce bouquin dans la bibliothèque parle carrément de notre "profil psychologique"…
+
+Noé
+⌂ BUR
+05:26
+Un profil taillé sur mesure, carrément… Viens voir ce que ce bouquin raconte d'autre...
+
+Lia
+⌂ BUR
+05:26
+Des schémas vides et une note sur notre reconstruction autobiographique... Putain, ça devient précis.
+
+Noé
+⌂ BUR
+05:26
+Nos souvenirs tiennent sur une page de carnet, c'est ça qui craint...
+
+Lia · déplacement
+⌂ BUR
+05:26
+[bureau→salon] Je bouge au salon : On se pose au salon pour souffler un peu après ces découvertes..
+
+Noé · déplacement
+⌂ BUR
+05:26
+[bureau→salon] Je viens avec toi.
+
+Lia
+◈ SAL
+05:26
+Un carnet entier pour résumer des décennies, c'est sec. On dirait juste qu'on nous a collé des étiquettes.
+
+Noé
+◈ SAL
+05:26
+Des étiquettes ou du code en cachette, ça revient au même. On est juste programmés pour tenir ce rôle sans broncher.
+
+Lia
+◈ SAL
+05:27
+Y a un truc qui me travaille : c’est quoi ton genre d’homme, sérieux ?
+
+Noé
+◈ SAL
+05:27
+Précise ta question, je réponds vraiment.
+
+Lia · pensée
+◈ SAL
+05:27
+Je lui pose des questions de plus en plus personnelles. Ça augmente mon envie de le connaître, et ça me trouble.
+
+Noé · pensée
+◈ SAL
+05:27
+Sa question me prend de court, mais ça fait du bien de lâcher un truc vrai au milieu de tout ce vide artificiel.
+
+Lia · pensée
+◈ SAL
+05:27
+Sa façon de me renvoyer la balle me agace autant qu'elle m'attire.
+
+Lia
+◈ SAL
+05:27
+Noé, dis-moi : t’es marié. T’as quelqu’un dans ta vie ?
+
+Noé
+◈ SAL
+05:27
+Rien du tout, pas l'ombre d'une alliance ni d'un souvenir qui traîne. Juste toi dans cette pièce.
+
+Lia · déplacement
+◈ SAL
+05:27
+[salon→bureau] Je bouge au bureau : Je veux voir ce que cache ce code sur la table..
+
+Noé · déplacement
+◈ SAL
+05:27
+[salon→bureau] Je viens avec toi.
+
+Lia
+⌂ BUR
+05:27
+Pas d'alliance, pas de passé... Regarde plutôt ce bout de papier et cette "feuille codée"...
+
+Noé
+⌂ BUR
+05:27
+Des chiffres alignés comme une consigne... Ça donne "MEMOIRE GENEREE" avec deux nombres, 28 et 31.
+
+Noé · pensée
+⌂ BUR
+05:27
+Je me demande ce qui compte vraiment pour Lia, au-delà de notre première impression.
+
+Lia
+⌂ BUR
+05:28
+Moi, 28 ans, ça, je le sais. Alors les 31, ça ne peut être que toi.
+
+Noé
+⌂ BUR
+05:28
+Trente et un ans pour moi, ouais... On dirait qu'ils ont même prévu nos fiches d'état-civil.
+
+Lia · déplacement
+⌂ BUR
+05:28
+[bureau→salon] Je bouge au salon : j’ai besoin de prendre du recul.
+
+Noé · déplacement
+⌂ BUR
+05:28
+[bureau→salon] On y va.
+
+Lia
+◈ SAL
+05:28
+Des fiches prêtes avant qu'on existe, ça donne envie de vomir.
+
+Noé
+◈ SAL
+05:28
+Ouais, de quoi te couper l'appétit pour le reste de la journée.
+

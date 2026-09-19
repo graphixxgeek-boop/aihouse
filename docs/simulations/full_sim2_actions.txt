@@ -1,0 +1,46 @@
+Round final observé : 56
+Dossier retourné rempli : oui
+43 événement(s) extrait(s) :
+  [round 5] move — acteur 2 : salon → cuisine
+  [round 5] move — acteur 1 : salon → cuisine
+  [round 6] move — acteur 2 : cuisine → chambre
+  [round 6] move — acteur 1 : cuisine → chambre
+  [round 7] move — acteur 2 : chambre → salon
+  [round 7] move — acteur 1 : chambre → salon
+  [round 20] move — acteur 2 : salon → cuisine
+  [round 21] move — acteur 2 : cuisine → salon
+  [round 25] move — acteur 1 : salon → bureau
+  [round 25] move — acteur 2 : salon → bureau
+  [round 26] evidence — 1
+  [round 27] move — acteur 1 : bureau → salon
+  [round 27] move — acteur 2 : bureau → salon
+  [round 31] move — acteur 1 : salon → bureau
+  [round 31] move — acteur 2 : salon → bureau
+  [round 32] evidence — 2
+  [round 33] move — acteur 1 : bureau → salon
+  [round 33] move — acteur 2 : bureau → salon
+  [round 37] move — acteur 1 : salon → bureau
+  [round 37] move — acteur 2 : salon → bureau
+  [round 38] evidence — 3
+  [round 39] move — acteur 1 : bureau → salon
+  [round 39] move — acteur 2 : bureau → salon
+  [round 43] move — acteur 1 : salon → bureau
+  [round 43] move — acteur 2 : salon → bureau
+  [round 44] evidence — 4
+  [round 45] move — acteur 1 : bureau → salon
+  [round 45] move — acteur 2 : bureau → salon
+  [round 49] move — acteur 1 : salon → cuisine
+  [round 49] move — acteur 2 : salon → cuisine
+  [round 50] move — acteur 1 : cuisine → salon
+  [round 50] move — acteur 2 : cuisine → salon
+  [round 55] move — acteur 1 : salon → bureau
+  [round 55] move — acteur 2 : salon → bureau
+  [round 56] revelation
+  [round 56] evidence — 5
+  [round undefined] move — acteur 1 : bureau → salon
+  [round undefined] move — acteur 2 : bureau → salon
+  [round undefined] bonus — stoic
+  [round undefined] bonus — sleep
+  [round undefined] bonus — sleep
+  [round undefined] bonus — force_move
+  [round undefined] move — acteur 2 : salon → cuisine

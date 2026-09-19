@@ -905,7 +905,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 107'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 108'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2580,6 +2580,31 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(audit.reduce((n,r)=>n+r.hits.length,0),2,'the total real count across all session files must be exact, one from each fixture file here');
   assert.deepEqual(auditAllSessions('/definitely-not-a-real-path'),[],'a missing sessions directory must report an honest empty result, never throw or crash the weekly network checkup that depends on it');
   console.log('Passed: the tracking-system fidelity guard flags only a bare "terminée" closure (never a fidèle/écart closure nor an open/in-progress task), reports zero on an empty or missing sessions directory rather than crashing, and audits every session file rather than stopping at the first one found.');
+}
+
+{
+  // Extraction compacte des simulations archivées (2026-09-19, demande explicite de l'utilisateur,
+  // pendant que les journaux bruts existaient encore). Un vrai bug trouvé et corrigé en construisant
+  // cet outil : les journaux les plus anciens (full_sim/2/3) n'ont jamais eu de story.round, le
+  // numéro de round n'existant qu'encodé dans le label de la requête (ex. "phase1-round11-actor1").
+  const {summarizeActions,formatSummary,parseRoundFromLabel}=await import('../scripts/summarize-simulation-log.mjs');
+  assert.equal(parseRoundFromLabel('phase1-round11-actor1'),11,'the label fallback must correctly extract the round number from a real historical label format');
+  assert.equal(parseRoundFromLabel('reset'),undefined,'a label carrying no round number must report an honest absence, never a fake 0');
+  assert.equal(parseRoundFromLabel(undefined),undefined,'a missing label must never throw');
+  const entries=[
+    {label:'reset',response:{story:{round:0,life:{bonusLog:[],gardenOpen:false},evidence:[]},decisions:[]}},
+    {label:'r1',response:{story:{round:1,humanUnlocked:false,life:{bonusLog:[{bonus:'food'}],gardenOpen:false},evidence:['x']},decisions:[{actor:1,room:'salon'},{actor:2,room:'bureau'}]}},
+    {label:'r2',response:{story:{round:2,humanUnlocked:true,life:{bonusLog:[{bonus:'food'}],gardenOpen:true},evidence:['x','y']},decisions:[{actor:1,room:'cuisine'},{actor:2,room:'bureau'}]}},
+  ];
+  const events=summarizeActions(entries);
+  assert.deepEqual(events.map(e=>e.type),['bonus','evidence','revelation','garden_open','evidence','move'],'every real transition (a new bonus draw, growing evidence, the exact revelation turn, the garden opening, and a real room change) must be reported exactly once, in the order it actually happened, never duplicated or missed');
+  assert.equal(events.find(e=>e.type==='move').detail,'acteur 1 : salon → cuisine','a room change must report the real previous and new room for the real actor, never a generic or wrong one');
+  assert.deepEqual(summarizeActions([{label:'r1',response:{story:{round:1,life:{bonusLog:[{bonus:'food'}]},evidence:[]}}}]).map(e=>e.type),['bonus'],'an entry with no decisions array must never crash the extraction');
+  assert.deepEqual(summarizeActions([]),[],'an empty log must report zero events, never throw');
+  const summary=formatSummary(events,{lastRound:2,dossierFound:true});
+  assert.ok(summary.includes('Round final observé : 2')&&summary.includes('Dossier retourné rempli : oui'),'the formatted summary must state the real last round and real dossier status, never a placeholder');
+  assert.ok(formatSummary([],{}).includes('Round final observé : ?'),'a genuinely unknown round must be shown as an honest "?", never a fabricated number');
+  console.log('Passed: the simulation-log summarizer correctly falls back to parsing the round number from the request label for the oldest logs (a real bug found and fixed while archiving full_sim/2/3), reports every real bonus draw/evidence growth/revelation turn/garden opening/room change exactly once in order with the real actors and rooms involved, never crashes on a missing decisions array or an empty log, and always states an honest "?" rather than a fabricated round or status when the data genuinely does not say.');
 }
 
 {
