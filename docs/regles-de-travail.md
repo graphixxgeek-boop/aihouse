@@ -627,6 +627,47 @@ seulement ce qui aide l'agent à ne pas créer de friction évitable.)*
   affirmation de la preuve concrète qui la soutient (tests nommés, comportement observé, extrait de
   transcript).
 
+### Historisation du profil — pourquoi et comment, plus fiable que la mise à jour directe
+
+*(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur : « alimente la section qui traite
+de mon profil psychologique [...] à chaque début de session, à chaque fois que la session redémarre
+après avoir été compactée [...] va chercher les informations dans la dernière session compactée et
+extrait les éléments de mon profil psychologique qui méritent d'être mis à jour [...] crée un
+dossier local qui historise les différents profils observés [...] avec un index [...] le but : lors
+de la mise à jour de mon profil psychologique, tout l'historique est pris en compte pour refléter
+plus justement mon vrai profil psychologique, et être capable de décrire ses variations possibles.
+[...] trouve une solution intelligente et beaucoup plus fiable que celle existante. »)*
+
+Avant ce jour, les sous-sections ci-dessus (§8 « Profil de collaboration observé » et ce §9) étaient
+mises à jour directement, par réécriture, à chaque observation jugée pertinente sur le moment —
+sans jamais garder de trace séparée de ce qui avait été vu, ni permettre de vérifier après coup si
+un trait donné s'était confirmé une fois ou dix fois. `docs/profil-utilisateur/` (dossier +
+`index.md`) corrige ce point précis : chaque observation est désormais datée, sourcée avec un
+extrait proche du texte original (décision explicite : la précision prime sur la légèreté pour ce
+système), et classée par rapport à l'état déjà connu du profil (nouveau / confirmation / nuance /
+contradiction) — le résumé officiel ci-dessus n'est réécrit qu'une fois qu'un motif réel se dégage
+de PLUSIEURS observations distinctes, jamais sur la foi d'une seule (calibrage explicite du
+2026-09-19). Cf. `docs/profil-utilisateur/index.md` pour le détail complet de la procédure et la
+table de toutes les observations enregistrées à ce jour.
+
+**Déclenchement.** Cette extraction se fait au début de toute session qui reprend après une
+compaction (reconnaissable au résumé de conversation fourni en tête de session, exactement le
+mécanisme qui a permis d'écrire ce paragraphe) — jamais en continu, jamais pendant le travail actif.
+L'agent lit ce résumé (déjà présent dans son contexte, aucun appel supplémentaire nécessaire),
+compare les signaux de collaboration qui s'y trouvent à l'état déjà écrit dans §8/§9 et dans la
+dernière fiche de `docs/profil-utilisateur/`, écrit une nouvelle fiche datée dans
+`docs/profil-utilisateur/observations/`, ajoute une ligne à `docs/profil-utilisateur/index.md`, et
+ne touche à §8/§9 que si la règle de corroboration ci-dessus est déjà remplie — jamais avant.
+Zéro coût API (lecture + écriture de texte), jamais mécanisable (comme la checklist qualitative
+d'HYPER-SCAN-CHECKPOINT) : un vrai raisonnement à chaque fois, jamais une routine automatique.
+
+**Ce qui compte comme signal, ce qui n'en est jamais un.** Seule la FAÇON dont l'utilisateur
+collabore, décide et réagit est un signal de profil (rythme, calibrage, réaction à un imprévu,
+rapport à la preuve, ton) — jamais le CONTENU sur lequel porte la collaboration (un choix créatif
+pour Lia/Noé, une décision d'architecture d'un outil) : confondre les deux romprait la promesse même
+de ce document (§0 : registre strictement professionnel/projet, jamais une donnée personnelle hors
+de ce cadre).
+
 ## 10. Règles de suivi — ne jamais rien perdre
 
 *(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur : « il faut penser à gérer mes

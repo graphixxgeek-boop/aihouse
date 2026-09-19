@@ -905,7 +905,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 109'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 110'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2741,4 +2741,21 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // la suite de tests déjà dédiée à CHECK-LEVEL-TARGET lui-même.
   assert.equal(classifyRequest('corrige cette faute de frappe').level,'leger','the passthrough must genuinely reach the real classifyCheckLevel logic, not a stub — a trivial fix must classify exactly as CHECK-LEVEL-TARGET\'s own test suite already proves it does directly');
   console.log('Passed: LE-COORDINATEUR flags a duplicate run only when the current commit exactly matches the last recorded one (never a stale time-window guess), renders every real row of its summary table without dropping or reordering any, reports an honest empty state rather than crashing on a missing or malformed state file, and its CHECK-LEVEL-TARGET passthrough genuinely reaches the real classification logic rather than a disconnected stub.');
+}
+
+{
+  // Garde-fou du système de profil utilisateur (2026-09-19, cf. docs/profil-utilisateur/index.md).
+  // Une fiche jamais indexée serait invisible pour un futur agent qui ne lirait que l'index ; un
+  // lien mort pointerait vers une preuve disparue — les deux écarts doivent être signalés séparément.
+  const {extractLinkedFiles,findOrphanedObservations}=await import('../scripts/check-profil-utilisateur.mjs');
+  const idx='| Horodatage | Fiche |\n|---|---|\n| x | [x](observations/2026-09-19-2019.md) |\n| y | [y](observations/2026-09-20-0900.md) |';
+  assert.deepEqual(extractLinkedFiles(idx),['2026-09-19-2019.md','2026-09-20-0900.md'],'every markdown link to an observation file must be extracted, in the order the table lists them');
+  assert.deepEqual(extractLinkedFiles('| Horodatage | Fiche |\n|---|---|'),[],'an index with no rows yet must report zero links, never crash');
+  const onDiskOnly=findOrphanedObservations(idx,['2026-09-19-2019.md','2026-09-20-0900.md','2026-09-21-1000.md']);
+  assert.deepEqual(onDiskOnly.missingFromIndex,['2026-09-21-1000.md'],'a real file on disk with no matching link in the index must be flagged as never indexed, closing the exact blind spot this guard exists to catch');
+  assert.deepEqual(onDiskOnly.missingFromDisk,[],'files that are both on disk and linked must never be flagged');
+  const deadLinkOnly=findOrphanedObservations(idx,['2026-09-19-2019.md']);
+  assert.deepEqual(deadLinkOnly.missingFromDisk,['2026-09-20-0900.md'],'a link in the index pointing at a file that no longer exists on disk must be flagged as a dead link, a different problem from an unindexed file');
+  assert.deepEqual(deadLinkOnly.missingFromIndex,[],'a file correctly indexed must never also be flagged as unindexed');
+  console.log('Passed: the user-profile system\'s mechanical guard extracts every real observation link from the index in order, and correctly tells apart the two distinct failure modes it exists to catch — a real observation file never referenced by the index, and an index link pointing at a file that no longer exists — never confusing or merging the two.');
 }
