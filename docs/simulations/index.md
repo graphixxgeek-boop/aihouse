@@ -31,8 +31,8 @@ consultable "en cas de doute" seulement.)*
 | full_sim9 | 153 | oui | 73 | — |
 | full_sim10 | 164 | oui | 69 | Sujet du chantier 2 du tableau de bord (cf. `docs/referentiel/tableau-de-bord.md`). |
 | full_sim11 | 174 | oui | 90 | Session bloquée par l'épuisement de quota Gemini le 2026-09-18, reprise ensuite. |
-| full_sim12 | ~65 déplacements | oui (dossier annoncé, non capturé) | — | Déposé le 2026-09-19 par l'utilisateur depuis une sauvegarde texte personnelle (copier-coller, pas le journal JSON original) — seul le transcript a survécu, jamais de dossier ni d'`_actions.txt` pour cette entrée. Ordre chronologique exact du 2026-09-18 par rapport à full_sim13 non reconstituable (numérotation arbitraire à l'archivage). |
-| full_sim13 | ~39 déplacements | oui (dossier annoncé, non capturé) | — | Idem full_sim12 : déposé le 2026-09-19 depuis une sauvegarde texte personnelle, transcript seul, sans dossier ni journal JSON. |
+| full_sim14 | ~65 déplacements | oui (dossier annoncé, non capturé) | — | Déposé le 2026-09-19 par l'utilisateur depuis une sauvegarde texte personnelle (copier-coller, pas le journal JSON original) — seul le transcript a survécu, jamais de dossier ni d'`_actions.txt` pour cette entrée. Ordre chronologique exact du 2026-09-18 par rapport à full_sim15 non reconstituable (numérotation arbitraire à l'archivage). **Numérotée à partir de 14, pas 12** : les identifiants `full_sim12`/`full_sim13` désignent déjà, ailleurs dans le dépôt (`scripts/check-house.mjs`, `docs/suivi/sessions/`), deux tentatives réelles mais avortées de CETTE session (2026-09-19, épuisement de quota aux rounds 11 et 7, jamais archivées faute de contenu suffisant) — les réutiliser ici aurait créé une collision de numérotation entre deux simulations totalement différentes. |
+| full_sim15 | ~39 déplacements | oui (dossier annoncé, non capturé) | — | Idem full_sim14 : déposé le 2026-09-19 depuis une sauvegarde texte personnelle, transcript seul, sans dossier ni journal JSON. |
 
 ## Limite honnête
 

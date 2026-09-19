@@ -390,11 +390,27 @@ enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redem
    points d'attention) accompagnée de `docs/referentiel/kpi-historique.csv` en fichier joint —
    jamais le rapport complet collé en clair (demande explicite de l'utilisateur : « dans la
    conversation, tu ne fais que la synthèse globale »).
+4bis. **Faire lire la simulation par EL-PROFESSOR avant de commencer l'analyse** (2026-09-19, à la
+   demande explicite de l'utilisateur : « je voudrais un agent qui donne une note de reussite sur
+   100 à chaque version, en fonction du respect de la charte »). Une vraie lecture (jamais un calcul
+   mécanique) du transcript ET du dossier retourné (obligatoire dès qu'il existe) contre les 5 thèmes
+   de la charte, plafonnée par l'Article 0 si l'esprit dérive — cf.
+   `docs/referentiel/el-professor.md` pour la méthode complète. Livrée en fichier joint, dans la
+   même livraison que le transcript/dossier/rapport KPI, jamais collée en clair. Archivée dans
+   `docs/el-professor/<sim>.md` + une ligne dans `docs/el-professor/index.md`. Jamais sauté, même
+   sous pression de temps : c'est le point de départ de l'étape 5, pas un supplément optionnel.
 5. Passer directement à une analyse détaillée de ce qui fonctionne et de ce qui ne fonctionne pas
-   dans ce nouveau transcript — jamais une simple confirmation que « ça tourne ».
+   dans ce nouveau transcript, **en partant du rapport EL-PROFESSOR déjà produit à l'étape 4bis**
+   plutôt que de tout redécouvrir à la main — jamais une simple confirmation que « ça tourne ».
 6. Comparer systématiquement avec la dernière version de simulation complète disponible pour
    mesurer l'évolution réelle et la réussite des derniers travaux engagés, jamais une lecture
-   isolée sans mise en perspective avec l'historique.
+   isolée sans mise en perspective avec l'historique. Deux appuis concrets pour cette comparaison,
+   jamais seulement une impression de lecture : (a) la tendance des notes EL-PROFESSOR dans
+   `docs/el-professor/index.md`, thème par thème ; (b) `docs/simulations/correctifs-a-revalider.md`
+   — le carnet, **distinct d'EL-PROFESSOR et jamais consulté par lui**, qui liste les correctifs de
+   code récents encore « en observation » et ce qu'il faut chercher dans le nouveau texte pour
+   confirmer qu'ils tiennent (un correctif sort du carnet après 2 simulations propres consécutives,
+   jamais une seule).
 7. Poser au moins une dizaine de questions de calibrage à l'utilisateur avant d'entamer la moindre
    correction ou optimisation identifiée par cette analyse — jamais corriger silencieusement sur la
    base d'une seule lecture personnelle du transcript (cf. Article 16, dont c'est ici une exigence
@@ -1003,6 +1019,19 @@ refonte ?) à ARGUS/HARMONIA/ALWAYS-NEW-CODE — sous une forme générique, ré
 projet piloté par IA. Jamais les seuils exacts ni le registre propre à ce projet, qui vivent dans
 `docs/referentiel/clean-dirty-old.md` (instanciation) et `docs/clean-dirty-old/` (dossier + index).
 
+## EL-PROFESSOR — blueprint exportable
+
+`docs/el-professor-blueprint.md` documente l'ARCHITECTURE de l'outil de notation de fidélité à la
+charte (Article 18, étape 4bis) — une vraie lecture qualitative d'une simulation, jamais un calcul
+mécanique, notée par thème et plafonnée par la hiérarchie de la charte (un article suprême comme
+l'Article 0 ne peut jamais être compensé par une bonne moyenne sur les autres thèmes) — sous une
+forme générique, réutilisable sur un autre projet gouverné par une charte de contenu. Jamais les 5
+thèmes exacts ni le registre propre à ce projet, qui vivent dans `docs/referentiel/el-professor.md`
+(instanciation) et `docs/el-professor/` (dossier + index). Distinct du carnet
+`docs/simulations/correctifs-a-revalider.md` (suivi de correctifs de CODE précis, jamais consulté
+par EL-PROFESSOR — cf. Article 18, étape 6, et `docs/referentiel/el-professor.md` pour
+l'articulation exacte entre les deux).
+
 ## Référentiel technique — la référence à jour
 
 - `docs/referentiel/principes.md` — les règles invariantes du comportement de la maison, telles
@@ -1066,6 +1095,12 @@ projet piloté par IA. Jamais les seuils exacts ni le registre propre à ce proj
   (Article 20) pour ce projet : les seuils de stagnation relative, la priorisation par nœud
   sensible, les trois questions déléguées à ARGUS/HARMONIA/ALWAYS-NEW-CODE, le registre
   (`docs/clean-dirty-old/`). Cf. `docs/clean-dirty-old-blueprint.md` pour le principe générique.
+- `docs/referentiel/el-professor.md` (2026-09-19) — instanciation d'EL-PROFESSOR (Article 18, étape
+  4bis) pour ce projet : les 5 thèmes exacts (esprit, naturel, voix, enquête + fidélité du dossier,
+  clarté), le calcul plafonné par l'Article 0, le format de livraison en fichier, le registre
+  (`docs/el-professor/`). Cf. `docs/el-professor-blueprint.md` pour le principe générique, et
+  `docs/simulations/correctifs-a-revalider.md` pour le carnet distinct de suivi des correctifs de
+  code (jamais consulté par EL-PROFESSOR lui-même).
 
 Ces documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
 vérité (leur nombre exact a varié au fil des chantiers — se référer à la liste ci-dessus plutôt

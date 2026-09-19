@@ -2883,3 +2883,22 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(findUnconfirmedBursts({keys:{}},{actions:[]}),[],'a genuinely empty health history must report zero bursts, never crash or fabricate one');
   console.log("Passed: findUnconfirmedBursts() flags a real burst of closely-spaced API activity only when no action was genuinely confirmed (confirmed:true, never a mere advice-only log) within the lookback window beforehand, never flags an isolated one-or-two-call ping as a burst, and reports zero on empty history rather than crashing — closing the exact real gap found on 2026-09-19 where a simulation was launched without ever consulting Smart Conso API first.");
 }
+
+{
+  // EL-PROFESSOR (2026-09-19, cf. docs/el-professor-blueprint.md et
+  // docs/referentiel/el-professor.md). La notation qualitative elle-même ne peut pas être testée
+  // mécaniquement (c'est une vraie lecture, jamais un calcul) — seule sa partie mécanique de
+  // couverture (aucune simulation archivée sans note, aucune note orpheline) est testée ici.
+  const {extractSimIds,findMissingNotes,findOrphanNotes}=await import('../scripts/el-professor.mjs');
+  const simIdx='| Simulation | Round |\n|---|---|\n| full_sim (sim1) | 44 |\n| full_sim2 | 56 |\n| full_sim9 | 153 |';
+  assert.deepEqual(extractSimIds(simIdx),['full_sim','full_sim2','full_sim9'],'every simulation identifier in the first column of a markdown table must be extracted in order, dropping whatever trails after it on the same line (e.g. "(sim1)")');
+  assert.deepEqual(extractSimIds('| Simulation | Round |\n|---|---|'),[],'a table with no data rows yet must report zero ids, never crash');
+  const elIdxPartial='| Simulation | Note |\n|---|---|\n| full_sim | 82 |';
+  assert.deepEqual(findMissingNotes(simIdx,elIdxPartial),['full_sim2','full_sim9'],'every archived simulation without a matching row in the EL-PROFESSOR index must be flagged as missing a note — the exact blind spot this guard exists to catch');
+  const elIdxComplete='| Simulation | Note |\n|---|---|\n| full_sim | 82 |\n| full_sim2 | 75 |\n| full_sim9 | 90 |';
+  assert.deepEqual(findMissingNotes(simIdx,elIdxComplete),[],'once every archived simulation has a matching note, nothing must be flagged');
+  const elIdxOrphan='| Simulation | Note |\n|---|---|\n| full_sim | 82 |\n| full_sim99 | 60 |';
+  assert.deepEqual(findOrphanNotes(simIdx,elIdxOrphan),['full_sim99'],'a note referencing a simulation id absent from the archive index (typo, stale rename) must be flagged as orphaned, the symmetric failure mode to a missing note — never silently ignored');
+  assert.deepEqual(findOrphanNotes(simIdx,elIdxComplete),[],'when every note matches a real archived simulation, nothing must be flagged as orphaned');
+  console.log('Passed: EL-PROFESSOR\'s mechanical coverage guard extracts every simulation identifier from a markdown index table in order, flags every archived simulation still missing its charter-fidelity note, and — symmetrically — flags any note referencing a simulation id that no longer exists in the archive, never confusing or silently dropping either failure mode.');
+}
