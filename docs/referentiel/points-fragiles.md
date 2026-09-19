@@ -49,8 +49,11 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   comme s'il s'agissait d'un vrai épuisement de quota journalier. Le recul exponentiel avec reset
   au premier succès (déjà implémenté) semble répondre à cette inquiétude, mais ce lien n'a jamais
   été explicitement reconfirmé avec l'utilisateur — à vérifier avec lui plutôt que supposer réglé.
-- `docs/referentiel/regles-de-l-espace.md` (créé le 2026-09-19) n'a pas encore été mis à
-  l'épreuve d'une vraie simulation complète pour vérifier les déplacements/la gestion de l'espace
-  (déplacements, ancres, cas du couloir) — à faire lors de la prochaine simulation, cf. feuille de
-  route de CLAUDE.md. La construction du document elle-même est terminée, cette entrée ne porte
-  que sur sa vérification pratique restante.
+- Le patron générique du tableau de bord (`docs/tableau-de-bord-blueprint.md`) n'a pas encore été
+  mis à jour avec les nouveaux principes ajoutés le 2026-09-19 lors du chantier 2 (KPI en % avec
+  garde-fous anti-NaN systématiques, KPI de couverture du tableau de bord lui-même, archivage du
+  rapport complet + document d'index séparé pour le jugement humain sur les évolutions) — ces
+  principes sont réellement génériques (réutilisables sur un autre projet), mais restent pour
+  l'instant seulement documentés dans l'instanciation propre à ce projet
+  (`docs/referentiel/tableau-de-bord.md`). À généraliser dans le blueprint quand l'occasion se
+  présente, pas urgent.

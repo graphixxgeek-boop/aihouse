@@ -13,6 +13,7 @@ import { env } from "cloudflare:workers";
 import { z } from "zod";
 import { LiaError, think, decisionSchema, evolveEmotions } from "@/lib/lia";
 import { orderKeys, recordKeyStatus } from "@/lib/gemini-keys";
+import { recordTurn, recordAntiEchoIntervention, recordTruncation } from "@/lib/quality-metrics";
 import { initialize, readWorld } from "@/lib/world";
 import { names, spaces, type Person, type Room } from "@/lib/house";
 import { fatigueRateMultiplier, isMidnight, isNight, phaseOf, phaseLabel, dayIndex, cyclePosition, DAY_ROUNDS } from "@/lib/daynight";
@@ -103,6 +104,11 @@ export async function POST(request: Request) {
     const db = env.DB;
     if (!db)
         return Response.json({ error: "La mémoire est indisponible." }, { status: 503 });
+    // Cohérence logique (famille 4 du tableau de bord, 2026-09-19) : groundTruncation est un pur
+    // filet de sécurité (Article 5) déjà en place — ce wrapper ne fait qu'observer s'il a dû
+    // intervenir, jamais changer son comportement ni celui du tour (principe du patron : jamais un
+    // mécanisme actif, cf. docs/tableau-de-bord-blueprint.md).
+    const trackedGroundTruncation=(text:string,actor:Person):string=>{const out=groundTruncation(text);recordTruncation(actor,out!==text);return out;};
     if (!["move", "care", "reset", "identify", "unlock_garden", "spin_bonus", "mark_dossier_seen"].includes(input.mode) && !env.GEMINI_API_KEY)
         return Response.json({ error: "La connexion Gemini doit être configurée." }, { status: 503 });
     // Repli modèle/clé Gemini (2026-09-18) : inactif tant que ces variables ne sont pas
@@ -802,7 +808,7 @@ export async function POST(request: Request) {
         const personalConcludingTurn=followBeat&&(life.personalFollowup??0)===1&&!life.personalConcluded;
         const beatContext={phase:life.personalFollowup??0,visual:visualBeat,followup:followBeat,line:beatLine,concludePersonal:personalConcludingTurn?"Cet échange personnel touche à sa fin : remplis thought (pour les deux personnages) d’une vraie pensée privée de conclusion qui réagit précisément à CE QUI VIENT D’ÊTRE DIT dans cet échange précis, jamais une formule générique interchangeable. Contraste de registre volontaire : Lia reste analytique et un peu distante, elle classe ce qu’elle vient d’apprendre sans s’y attarder ; Noé reste plus chaud et plus exposé, encore travaillé par ce qu’il vient de révéler de lui-même. Cette pensée peut être un peu plus développée qu’une pensée ordinaire (jusqu’à environ 300 caractères), à la mesure d’un vrai moment de conclusion, comme les pensées de choc de la révélation finale.":undefined,recap:recapBeat?{observed:story.evidence,anomalies:story.observations,rule:"Récapitule les supports réellement examinés, distingue constat, déduction limitée et question encore ouverte. N’ajoute aucun objet non validé."}:undefined,ambient:ambientBeat?"Repère la fausse plante aux feuilles bleues polygonales puis allume l’enceinte. Des notes dessinées apparaissent mais aucun son ne sort. Décris ces objets, puis vous analyserez ce paradoxe au salon.":undefined};
         if(dossierNextTrap&&beatLine===dossierLine)life.dossierAsked={...life.dossierAsked,[dossierNextTrap]:story.round};
-        if(turnPlan.offer&&turnPlan.proposalLine&&pastKeys.has(fingerprint(turnPlan.proposalLine))){const original=turnPlan.proposalLine;const candidates=["Si ça te tente. "+original,"Je préfère te demander. "+original,"Sans te mettre la pression. "+original];turnPlan.proposalLine=candidates.find(line=>!pastKeys.has(fingerprint(line)));if(!turnPlan.proposalLine)Object.assign(turnPlan,{offer:undefined,intent:"chat",partnerIntent:"chat",requiredIntent:"chat"});}
+        if(turnPlan.offer&&turnPlan.proposalLine&&pastKeys.has(fingerprint(turnPlan.proposalLine))){recordAntiEchoIntervention();const original=turnPlan.proposalLine;const candidates=["Si ça te tente. "+original,"Je préfère te demander. "+original,"Sans te mettre la pression. "+original];turnPlan.proposalLine=candidates.find(line=>!pastKeys.has(fingerprint(line)));if(!turnPlan.proposalLine)Object.assign(turnPlan,{offer:undefined,intent:"chat",partnerIntent:"chat",requiredIntent:"chat"});}
         const {urgentIntent,requiredIntent,routine}=turnPlan;
         const exitContext=turnPlan.exitInspection?{phase:(life.exitPhase??0)+1,location:"couloir",description:life.exitPhase===1?"Vous parcourez le couloir à droite. La porte principale est verrouillée ; au-delà, un trottoir et une route immobiles.":"Vous parcourez le couloir à gauche. Une porte verrouillée mène au jardin visible depuis la fenêtre du salon. Décris cette recherche, pas un indice lu au bureau."}:undefined;
         const tvDiscovery=turnPlan.intent==="tv"&&!life.remoteFound?"La télévision est éteinte. Une télécommande est posée sur la table basse : tu la repères, appuies sur marche, puis observes une courbe qui boucle et SESSION / 0–3. Décris cette première mise en marche, pas une émission déjà connue.":undefined;
@@ -1061,7 +1067,7 @@ export async function POST(request: Request) {
         const finalResidents = world.agents.map(agent => { const d=decisions.find(d=>d.actor===agent.id);return {...agent, room:d && d.action !== "none" ? d.room : agent.room, intent:d?.intent??agent.intent}; });
         if (!routine && !["move","care"].includes(input.mode)) for(const d of decisions) {
             const final=finalResidents.find(a=>a.id===d.actor)!;
-            const preceding=[...speech,...decisions.slice(0,decisions.indexOf(d)).map(p=>({id:0,speaker:names[p.actor],content:p.reply}))];d.reply=groundTruncation(d.reply);d.reply=groundTvNotice(d.reply,life.remoteFound===true);d.reply=d.reply.replace(/Direction dans la chambre/gi,"Direction la chambre");if(!story.evidence.some(e=>/\bDH\b/.test(e))&&!/\bDH\b/.test(observationTarget?.content??"")){if(d.contribution)d.contribution=d.contribution.replace(/\bDH\b/g,"signature inconnue");d.reply=d.reply.split(/(?<=[.!?])\s+/).filter(s=>!/\bDH\b/.test(s)).join(" ")||"On ne sait toujours pas qui a conçu cet endroit.";}if(d.action!=="none"&&d.room!==world.agents.find(a=>a.id===d.actor)!.room&&/pas besoin d.y (?:aller|retourner)/i.test(d.reply))d.reply=d.reply.replace(/Pas besoin d.y (?:aller|retourner)[^.!?]*[.!?]?/i,"On y est. Vérifions ce qui nous a fait venir.");const grounded=truthfulGender(distinctReply(groundRoomSpeech(d.reply,final.room,speech),d.actor,final.room,[...historicalLines,...preceding],story.round,world.agents.find(a=>a.id===d.actor)!.needs.stress),d.actor);
+            const preceding=[...speech,...decisions.slice(0,decisions.indexOf(d)).map(p=>({id:0,speaker:names[p.actor],content:p.reply}))];d.reply=trackedGroundTruncation(d.reply,d.actor);d.reply=groundTvNotice(d.reply,life.remoteFound===true);d.reply=d.reply.replace(/Direction dans la chambre/gi,"Direction la chambre");if(!story.evidence.some(e=>/\bDH\b/.test(e))&&!/\bDH\b/.test(observationTarget?.content??"")){if(d.contribution)d.contribution=d.contribution.replace(/\bDH\b/g,"signature inconnue");d.reply=d.reply.split(/(?<=[.!?])\s+/).filter(s=>!/\bDH\b/.test(s)).join(" ")||"On ne sait toujours pas qui a conçu cet endroit.";}if(d.action!=="none"&&d.room!==world.agents.find(a=>a.id===d.actor)!.room&&/pas besoin d.y (?:aller|retourner)/i.test(d.reply))d.reply=d.reply.replace(/Pas besoin d.y (?:aller|retourner)[^.!?]*[.!?]?/i,"On y est. Vérifions ce qui nous a fait venir.");const grounded=truthfulGender(distinctReply(groundRoomSpeech(d.reply,final.room,speech),d.actor,final.room,[...historicalLines,...preceding],story.round,world.agents.find(a=>a.id===d.actor)!.needs.stress),d.actor);
             if(grounded!==d.reply) {d.reply=grounded;d.memory=grounded;}
         }
         // Pools doublés le 2026-09-17 (3→6 formulations chacun) : sur plusieurs sessions, ces
@@ -1343,6 +1349,7 @@ export async function POST(request: Request) {
         if(visualEvents.some(e=>e.kind==="food")&&!life.foodVerified){const witnesses=finalResidents.filter(a=>a.room==="cuisine"&&!isSleeping(a,life));if(witnesses.length){life.foodVerified=true;nextStory.observations=[...(nextStory.observations??[]),witnesses.map(a=>a.name).join(" et ")+(witnesses.length>1?" ont vu":" a vu")+" les provisions de la cuisine disparaître puis réapparaître après deux secondes."];if(witnesses.length===2&&!nextStory.finalCalled&&!life.debrief)life.debrief={topic:"Les provisions de cuisine reviennent après utilisation. Comment un stock pourrait-il se régénérer ?",remaining:2};}}
         const stockReactions:Array<{actor:Person;content:string}>=[];if(visualEvents.some(e=>e.kind==="food")){life.stockExposures={...life.stockExposures};for(const a of finalResidents.filter(a=>a.room==="cuisine"&&!isSleeping(a,life))){const n=life.stockExposures[a.id]??0,boost=stockSurprise(n),d=decisions.find(d=>d.actor===a.id);if(d&&boost){d.emotions.curiosity=Math.min(100,d.emotions.curiosity+boost);d.emotions.tension=Math.min(100,d.emotions.tension+Math.ceil(boost/3));}const content=stockThought(a.id,n);if(content)stockReactions.push({actor:a.id,content});life.stockExposures[a.id]=Math.min(100,n+1);}}
         const departures:Array<{actor:Person;from:string;to:string;content:string}>=[];
+        recordTurn();
         const result = { departures, visualEvents, decisions, proposalActor, affectionOutcome: affectionProposed ? (deferredGesture||futureGesture?"deferred":shared ? "accepted" : "declined") : null, sharedAffection: shared ? decisions[0].intent : null, requestId: input.requestId };
         // Fence every write with the lease, so an expired turn cannot overwrite a newer one.
         const fence = "EXISTS (SELECT 1 FROM world_lock WHERE id = 1 AND token = ? AND expires_at > ?)";
@@ -1402,7 +1409,7 @@ export async function POST(request: Request) {
         // validation, au même index — vraie symétrie cette fois, pas seulement en apparence.
         const organicProposal=decisions.length===2&&!turnPlan.offer&&["hug","massage","kiss"].includes(decisions[0].intent);
         if(decisions.length===2&&(turnPlan.offer&&turnPlan.proposalLine||organicProposal)&&affectionEligible&&decisions[1].thought){
-          addLine(names[decisions[1].actor]+" · pensée",groundRegister(groundTruncation(decisions[1].thought)),finalResidents.find(a=>a.id===decisions[1].actor)!.room);
+          addLine(names[decisions[1].actor]+" · pensée",groundRegister(trackedGroundTruncation(decisions[1].thought,decisions[1].actor)),finalResidents.find(a=>a.id===decisions[1].actor)!.room);
         }
         if(personalConcludingTurn){
           const initiator=decisions.find(d=>d.actor===actor)!;
@@ -1412,8 +1419,8 @@ export async function POST(request: Request) {
             // principale plus bas) : ce contenu est généré par le modèle au même titre qu'un reply,
             // il peut donc être coupé net ou porter un mot déjà identifié comme daté — l'oubli
             // laisserait une incohérence de traitement entre deux lignes du même tour.
-            addLine(names[responder.actor]+" · pensée",groundRegister(groundTruncation(responder.thought)),finalResidents.find(a=>a.id===responder.actor)!.room);
-            addLine(names[initiator.actor]+" · pensée",groundRegister(groundTruncation(initiator.thought)),finalResidents.find(a=>a.id===initiator.actor)!.room);
+            addLine(names[responder.actor]+" · pensée",groundRegister(trackedGroundTruncation(responder.thought,responder.actor)),finalResidents.find(a=>a.id===responder.actor)!.room);
+            addLine(names[initiator.actor]+" · pensée",groundRegister(trackedGroundTruncation(initiator.thought,initiator.actor)),finalResidents.find(a=>a.id===initiator.actor)!.room);
             life.personalConcluded=true;
           }
         }
@@ -1505,7 +1512,7 @@ export async function POST(request: Request) {
             // porter le doute existentiel demandé (Article 3/7 : une seule cause, pas deux
             // mécanismes concurrents sur le même déclencheur).
             if(agent.emotions.attraction<=75&&d.emotions.attraction>75&&!life.loveRealized?.[agent.id]&&d.thought){
-                addLine(names[agent.id]+" · pensée",groundRegister(groundTruncation(d.thought)),room);
+                addLine(names[agent.id]+" · pensée",groundRegister(trackedGroundTruncation(d.thought,agent.id)),room);
                 life.loveRealized={...life.loveRealized,[agent.id]:true};
             }
             if(!life.intimateGestureDone&&(d.intent==="massage"||d.intent==="kiss")&&d.affectionAccepted)life.intimateGestureDone=true;

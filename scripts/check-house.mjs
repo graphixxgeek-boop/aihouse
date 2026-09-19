@@ -12,8 +12,8 @@ import {DatabaseSync} from 'node:sqlite';
 Object.defineProperty(globalThis.crypto,'randomUUID',{value:()=>{let candidate;do{candidate='00000000-0000-4000-8000-'+(++seedCounter).toString(16).padStart(12,'0');}while(insoliteHash(candidate)>=6);return candidate;},configurable:true});}
 fs.mkdirSync('.sites-runtime',{recursive:true});
 const transpile=s=>ts.transpileModule(s,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
-for(const name of ['house','simulation','relationship','dialogue','story','lia','world','turn','life','drama','perception','visual-events','stock','presentation','playback','evidence','reference','update-audit','gemini-keys','daynight'])fs.writeFileSync(`.sites-runtime/test-${name}.mjs`,transpile(fs.readFileSync(`lib/${name}.ts`,'utf8').replace('"./update-audit"','"./test-update-audit.mjs"').replace('"./visual-events"','"./test-visual-events.mjs"').replace('"./drama"','"./test-drama.mjs"').replace('"./perception"','"./test-perception.mjs"').replace('"./life"','"./test-life.mjs"').replace('"./house"','"./test-house.mjs"').replace('"./lia"','"./test-lia.mjs"').replace('"./gemini-keys"','"./test-gemini-keys.mjs"').replace('"./simulation"','"./test-simulation.mjs"').replace('"./relationship"','"./test-relationship.mjs"').replace('"./story"','"./test-story.mjs"').replace('"./daynight"','"./test-daynight.mjs"')));
-const raw=fs.readFileSync('app/api/lia/route.ts','utf8').replace('import { env } from "cloudflare:workers";','const env=globalThis.__testEnv;').replaceAll('"@/lib/stock"','"./test-stock.mjs"').replaceAll('"@/lib/visual-events"','"./test-visual-events.mjs"').replaceAll('"@/lib/perception"','"./test-perception.mjs"').replaceAll('"@/lib/lia"','"./test-lia.mjs"').replaceAll('"@/lib/gemini-keys"','"./test-gemini-keys.mjs"').replaceAll('"@/lib/world"','"./test-world.mjs"').replaceAll('"@/lib/house"','"./test-house.mjs"').replaceAll('"@/lib/simulation"','"./test-simulation.mjs"').replaceAll('"@/lib/dialogue"','"./test-dialogue.mjs"').replaceAll('"@/lib/relationship"','"./test-relationship.mjs"').replaceAll('"@/lib/story"','"./test-story.mjs"').replaceAll('"@/lib/life"','"./test-life.mjs"').replaceAll('"@/lib/drama"','"./test-drama.mjs"').replaceAll('"@/lib/turn"','"./test-turn.mjs"').replaceAll('"@/lib/daynight"','"./test-daynight.mjs"');
+for(const name of ['house','simulation','relationship','dialogue','story','lia','world','turn','life','drama','perception','visual-events','stock','presentation','playback','evidence','reference','update-audit','gemini-keys','daynight','quality-metrics'])fs.writeFileSync(`.sites-runtime/test-${name}.mjs`,transpile(fs.readFileSync(`lib/${name}.ts`,'utf8').replace('"./update-audit"','"./test-update-audit.mjs"').replace('"./visual-events"','"./test-visual-events.mjs"').replace('"./drama"','"./test-drama.mjs"').replace('"./perception"','"./test-perception.mjs"').replace('"./life"','"./test-life.mjs"').replace('"./house"','"./test-house.mjs"').replace('"./lia"','"./test-lia.mjs"').replace('"./gemini-keys"','"./test-gemini-keys.mjs"').replace('"./simulation"','"./test-simulation.mjs"').replace('"./relationship"','"./test-relationship.mjs"').replace('"./story"','"./test-story.mjs"').replace('"./daynight"','"./test-daynight.mjs"')));
+const raw=fs.readFileSync('app/api/lia/route.ts','utf8').replace('import { env } from "cloudflare:workers";','const env=globalThis.__testEnv;').replaceAll('"@/lib/stock"','"./test-stock.mjs"').replaceAll('"@/lib/visual-events"','"./test-visual-events.mjs"').replaceAll('"@/lib/perception"','"./test-perception.mjs"').replaceAll('"@/lib/lia"','"./test-lia.mjs"').replaceAll('"@/lib/gemini-keys"','"./test-gemini-keys.mjs"').replaceAll('"@/lib/world"','"./test-world.mjs"').replaceAll('"@/lib/house"','"./test-house.mjs"').replaceAll('"@/lib/simulation"','"./test-simulation.mjs"').replaceAll('"@/lib/dialogue"','"./test-dialogue.mjs"').replaceAll('"@/lib/relationship"','"./test-relationship.mjs"').replaceAll('"@/lib/story"','"./test-story.mjs"').replaceAll('"@/lib/life"','"./test-life.mjs"').replaceAll('"@/lib/drama"','"./test-drama.mjs"').replaceAll('"@/lib/turn"','"./test-turn.mjs"').replaceAll('"@/lib/daynight"','"./test-daynight.mjs"').replaceAll('"@/lib/quality-metrics"','"./test-quality-metrics.mjs"');
 fs.writeFileSync('.sites-runtime/test-route.mjs',transpile(raw));
 const sqlite=new DatabaseSync(':memory:');sqlite.exec(fs.readFileSync('drizzle/0000_jazzy_cobalt_man.sql','utf8'));
 sqlite.prepare('INSERT INTO agent_state VALUES (1,?,?,?,?,?)').run('attentive','Je lis','Apprendre',3,1000);
@@ -905,7 +905,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 97'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 98'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2299,4 +2299,59 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   resetForMetrics();
   assert.deepEqual(getGeminiKeyMetrics(),{turns:0,primaryKeyUnavailableAtStart:0,attempts:0,successes:0,quotaFailures:0,transientFailures:0,invalidFailures:0},'the test reset must also clear the metrics, never leave a stale count bleeding into the next test');
   console.log('Passed: the Smart Breaker efficiency counters (turns, primary-key availability at the start of a turn, attempts by outcome) track a scripted sequence of real key/status events exactly, and the test reset clears them alongside the rotation/cooldown state they already reset.');
+}
+{
+  const {recordTurn,recordAntiEchoIntervention,recordTruncation,getQualityMetrics,__resetQualityMetricsForTests}=await import('../.sites-runtime/test-quality-metrics.mjs');
+  __resetQualityMetricsForTests();
+  assert.deepEqual(getQualityMetrics(),{turns:0,antiEchoInterventions:0,truncationInterventions:{1:0,2:0}},'quality/cohérence metrics must start at zero right after a reset');
+  recordTurn();recordTurn();recordTurn();
+  recordAntiEchoIntervention();
+  recordTruncation(1,true);
+  recordTruncation(2,false);
+  recordTruncation(1,true);
+  const m=getQualityMetrics();
+  assert.equal(m.turns,3,'three recordTurn() calls must count as three turns');
+  assert.equal(m.antiEchoInterventions,1,'exactly one anti-echo fallback substitution must be counted');
+  assert.deepEqual(m.truncationInterventions,{1:2,2:0},'truncation is only counted when it actually changed the text, per actor — a no-op call (changed=false) must never increment its actor');
+  __resetQualityMetricsForTests();
+  assert.deepEqual(getQualityMetrics(),{turns:0,antiEchoInterventions:0,truncationInterventions:{1:0,2:0}},'the test reset must clear the quality/cohérence metrics, never leave a stale count bleeding into the next test');
+  console.log('Passed: the Qualité (anti-echo fallback) and Cohérence logique (per-actor groundTruncation interventions) KPI counters track a scripted sequence of real events exactly, only count a truncation when it actually changed the text, and the test reset clears them.');
+}
+{
+  // Test dédié au tableau de bord lui-même (2026-09-19, demande explicite de l'utilisateur : « un
+  // test est-il prévu dédié au tableau de bord ? il pourrait alimenter l'indicateur "performances
+  // du tableau de bord" [...] assure-toi que cette partie est parfaitement robuste, sécurisé »).
+  // scripts/kpi-report.mjs est un simple script .mjs (pas un module "@/lib" transpilé) : ses
+  // fonctions pures s'importent directement, et main() est gardé par un test d'entrypoint pour ne
+  // JAMAIS déclencher d'appel réseau/exec réel pendant ce test.
+  const {codeHealthScore,smartBreakerPerformanceScore,smartBreakerImprovementScore,qualityScore,coherenceScore,replayabilityScore,dashboardCoverageScore,expectedTestBlockCount}=await import('../scripts/kpi-report.mjs');
+  // Chemin sain : chaque fonction renvoie un vrai nombre fini à partir de données bien formées.
+  assert.deepEqual(codeHealthScore(0,79,79),{tscScore:100,testScore:100,overall:100});
+  assert.equal(codeHealthScore(2,79,79).tscScore,0,'any tsc error must zero the tsc sub-score, never a partial credit');
+  assert.equal(smartBreakerPerformanceScore({successes:299,attempts:304}),(299/304)*100);
+  assert.deepEqual(smartBreakerImprovementScore([{done:true},{done:true},{done:false}]),{score:(2/3)*100,done:2,total:3});
+  assert.equal(qualityScore({turns:10,antiEchoInterventions:1}),90);
+  assert.equal(coherenceScore({turns:10,truncationInterventions:{1:1,2:0}}),90);
+  assert.equal(replayabilityScore({distinctBonuses:8,totalBonusTypes:9}),(8/9)*100);
+  assert.deepEqual(dashboardCoverageScore([100,undefined,90,80,undefined]),{score:60,measured:3,total:5});
+  // Fixture construite par concaténation (jamais le motif "console.log(<guillemet>Passed:" écrit
+  // tel quel dans CE fichier) : sinon expectedTestBlockCount(), en lisant plus tard le vrai contenu
+  // de check-house.mjs, compterait aussi cette ligne de test elle-même — un bug auto-référentiel
+  // réel rencontré en écrivant ce test précis le 2026-09-19, corrigé ainsi plutôt qu'ignoré.
+  const fixtureCallSq="console.log('"+"Passed: a');", fixtureCallDq='console.log("'+'Passed: b");', fixtureCallNo="console.log('"+"nope');";
+  assert.equal(expectedTestBlockCount(fixtureCallSq+fixtureCallDq+fixtureCallNo),2,'the regex must catch both single- and double-quoted console.log(quote-Passed:...) calls — the exact bug found and fixed on 2026-09-19');
+  // Chemin de robustesse : donnée manquante/malformée/division par zéro doit renvoyer undefined,
+  // JAMAIS NaN ni un faux 0% qui se ferait passer pour une vraie mesure (Article 5, retour
+  // utilisateur explicite sur ce point précis).
+  assert.equal(codeHealthScore(0,5,0),undefined,'zero expected test blocks must never produce a division by zero disguised as a score');
+  assert.equal(codeHealthScore(0,'x',10),undefined,'a non-numeric input must never be coerced into a fake score');
+  assert.equal(smartBreakerPerformanceScore(undefined),undefined,'a missing Smart Breaker metrics object must never crash or produce NaN');
+  assert.equal(smartBreakerPerformanceScore({successes:0,attempts:0}),undefined,'zero attempts must never divide by zero');
+  assert.equal(smartBreakerImprovementScore([]),undefined,'an empty capability list must never divide by zero');
+  assert.equal(qualityScore({turns:0,antiEchoInterventions:0}),undefined,'zero turns must never divide by zero');
+  assert.equal(qualityScore(undefined),undefined);
+  assert.equal(coherenceScore({turns:5}),undefined,'a missing truncationInterventions object must never crash or produce NaN');
+  assert.equal(replayabilityScore({distinctBonuses:3,totalBonusTypes:0}),undefined,'zero total bonus types must never divide by zero');
+  for(const bad of [NaN,Infinity,-Infinity,undefined])assert.equal(dashboardCoverageScore([bad,100,100,100,100]).measured,4,'a non-finite family score must count as unmeasured, never as a valid measurement');
+  console.log('Passed: every kpi-report.mjs scoring function returns a correct percentage on well-formed data, and returns undefined — never NaN, Infinity, or a disguised 0% — on missing, malformed, or zero-denominator input, closing the exact class of bug (a silent miscount) found while building the dashboard.');
 }

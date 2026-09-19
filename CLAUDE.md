@@ -327,7 +327,15 @@ enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redem
    traité comme un bug, cf. Article 13) et inclure ses résultats dans la même livraison que le
    transcript/dossier — jamais un rapport à part, oublié ou différé. Les compteurs du Smart Breaker
    étant en mémoire process, ce rapport doit être pris AVANT de relancer le serveur pour la
-   simulation suivante, sous peine de perdre les chiffres de cette session précise.
+   simulation suivante, sous peine de perdre les chiffres de cette session précise. **Complément
+   ajouté le 2026-09-19, même jour** : archiver le texte complet de cette exécution dans
+   `docs/referentiel/kpi-rapports/<run>.txt` et ajouter une ligne à
+   `docs/referentiel/kpi-index.md` (comparaison explicite avec le run précédent, jamais une lecture
+   isolée) — procédure complète documentée dans `kpi-index.md` lui-même. Dans la conversation,
+   livrer uniquement la section "SYNTHÈSE COMPACTE" du rapport (petit tableau `Famille → %` +
+   points d'attention) accompagnée de `docs/referentiel/kpi-historique.csv` en fichier joint —
+   jamais le rapport complet collé en clair (demande explicite de l'utilisateur : « dans la
+   conversation, tu ne fais que la synthèse globale »).
 5. Passer directement à une analyse détaillée de ce qui fonctionne et de ce qui ne fonctionne pas
    dans ce nouveau transcript — jamais une simple confirmation que « ça tourne ».
 6. Comparer systématiquement avec la dernière version de simulation complète disponible pour
