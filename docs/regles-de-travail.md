@@ -19,6 +19,17 @@ mis à jour le jour même — même logique que l'Article 13 de `CLAUDE.md` pour
 une règle de travail réelle qui existe dans la conversation mais pas ici est une dette à combler
 tout de suite, pas plus tard.
 
+**Deux parties, à bien distinguer.** *(Séparation ajoutée le 2026-09-19, à la demande explicite de
+l'utilisateur : « pense à séparer les règles uniquement applicables avec toi en tant que Claude de
+ce qui est applicable par n'importe quelle IA [...] au cas où le projet serait repris, que tout
+soit bien clair ».)* Les sections 0 à 9 (**Partie A**) décrivent une méthode de collaboration
+indépendante de l'outil IA utilisé : n'importe quel agent conversationnel capable de lire du code,
+d'exécuter des commandes et de tenir une conversation longue peut les suivre telles quelles. La
+**Partie B**, à la fin de ce document, recense au contraire ce qui dépend spécifiquement de Claude
+Code (noms d'outils, capacités et limites propres à ce harnais) — une IA reprenant le projet avec
+un autre outil doit lire la Partie A intégralement, puis chercher dans sa propre documentation
+l'équivalent de chaque mécanisme cité en Partie B plutôt que de supposer qu'il existe tel quel.
+
 ## 0. Relecture périodique, pas seulement en début de session
 
 *(Ajouté le 2026-09-18, à la demande explicite de l'utilisateur, étendu le même jour à
@@ -122,8 +133,9 @@ sauf si la recherche de solution elle-même prend un temps déraisonnable.
 ## 7. Livrables
 
 Toute transcription intégrale de simulation (ou tout document long de même nature) est livrée en
-fichier joint (`SendUserFile`), jamais collée en clair dans la réponse — préférence actée le
-2026-09-18, cf. `CLAUDE.md`.
+pièce jointe véritable, jamais collée en clair dans la réponse — préférence actée le 2026-09-18,
+cf. `CLAUDE.md`. Le mécanisme concret utilisé pour ça avec Claude Code (`SendUserFile`) est propre
+à l'outil : voir Partie B.1.
 
 **Conserver les versions précédentes pour comparaison rapide.** *(Ajouté le 2026-09-18, à la
 demande explicite de l'utilisateur, après un besoin réel : comparer deux transcripts de simulation
@@ -293,3 +305,55 @@ seulement ce qui aide l'agent à ne pas créer de friction évitable.)*
   réel pour quelqu'un qui ne peut pas vérifier le code lui-même — toujours accompagner une
   affirmation de la preuve concrète qui la soutient (tests nommés, comportement observé, extrait de
   transcript).
+
+---
+
+# Partie B — Spécificités propres à Claude Code
+
+*(Ajoutée le 2026-09-19, à la demande explicite de l'utilisateur — cf. note en tête de document.
+Tout ce qui suit dépend du harnais Claude Code précis utilisé pour ce projet, pas d'un principe de
+collaboration général. Une IA reprenant le projet avec un autre outil doit relire cette partie
+comme une LISTE DE QUESTIONS à se poser sur son propre outil, pas comme des instructions à copier
+telles quelles.*
+
+## B.1. Outils concrets derrière les règles universelles de la Partie A
+
+- **Livraison de fichiers (règle universelle : section 7)** : Claude Code dispose d'un outil dédié,
+  `SendUserFile`, qui envoie un vrai fichier (transcript, dossier retourné, journal JSON) comme
+  pièce jointe distincte de la réponse textuelle. Une IA sans équivalent direct doit au minimum
+  écrire le contenu dans un fichier du dépôt ou de son espace de travail et donner son chemin
+  exact, plutôt que de coller un document long en clair dans la conversation (l'esprit de la règle
+  — ne jamais noyer une transcription longue dans le texte de la réponse — prime sur l'outil
+  précis).
+- **Questions de calibrage (règle universelle : section 2)** : Claude Code dispose d'un outil dédié
+  (`AskUserQuestion`) qui structure les questions en options cliquables. Le format `[Calibrage]`
+  etc. décrit en section 2 fonctionne aussi bien en texte libre pour une IA qui n'aurait pas
+  d'équivalent structuré.
+- **Suivi de tâches (mentionné implicitement dans tout ce document)** : Claude Code propose un
+  gestionnaire de tâches interne (`TaskCreate`/`TaskUpdate`) qui n'est qu'un aide-mémoire pour
+  l'agent lui-même, jamais une source de vérité pour l'utilisateur — ne remplace aucune des
+  vérifications de la section 3.
+
+## B.2. Compactage de session — pas de barre de progression possible
+
+*(Ajouté le 2026-09-19, en réponse à une question explicite de l'utilisateur : « as-tu la
+possibilité d'afficher une barre de chargement qui indique où le compactage en est ? ».)* Réponse
+vérifiée, pas supposée : **non, cette capacité n'existe pas**, et ce n'est pas un choix de l'agent
+mais une limite structurelle du harnais tel qu'il se présente à l'agent aujourd'hui —
+- Le compactage (résumé automatique des tours anciens quand la conversation approche la limite de
+  contexte) est déclenché et exécuté par le runtime Claude Code **entre deux tours**, jamais par un
+  appel d'outil que l'agent effectue lui-même : il n'existe donc aucun moment où l'agent pourrait
+  émettre un signal de progression, puisqu'il n'a lui-même connaissance de l'opération qu'une fois
+  celle-ci terminée (le résumé apparaît directement dans le tour suivant, sans étape intermédiaire
+  observable).
+- Aucun outil de la liste actuellement disponible à l'agent (`Agent`, `Artifact`, `Bash`, etc., ni
+  les outils différés listés en système) n'expose de mécanisme de notification de progression pour
+  ce processus interne.
+- Si un futur harnais Claude Code exposait un tel mécanisme (outil ou signal dédié), cette section
+  serait à corriger le jour même (même exigence de mise à jour proactive qu'ailleurs dans ce
+  document) plutôt que de laisser cette limite affichée comme définitive après qu'elle a cessé
+  d'être vraie.
+- Ce que l'agent peut faire à la place, déjà en pratique dans ce projet : donner de courtes mises à
+  jour d'avancement PENDANT un travail long et surveillable par lui (ex. une simulation en arrière-
+  plan, cf. section 1) — mais ceci ne couvre pas le compactage lui-même, qui reste invisible à
+  l'agent avant coup.
