@@ -67,14 +67,29 @@ côté client qui in fine transforment ça en un point réel.
 **Cas particulier — le couloir (`exitInspection`).** L'exploration de sortie (les deux passages
 qui révèlent la porte du jardin puis la porte principale, toutes deux verrouillées) se déroule
 dans un lieu narratif appelé "couloir" qui **n'existe pas** dans `rooms`/`spaces` : ce n'est pas
-une vraie pièce du modèle de données. Le champ `room` du personnage reste une vraie pièce
-(salon) pendant toute la scène ; seul le texte (`exitContext.description`) raconte le couloir,
-et c'est un signal séparé côté client (`inspectionStep`, transmis en dehors du champ `room`) qui
-bascule temporairement l'affichage sur deux positions fixes hors grille normale (gauche/droite
+une vraie pièce du modèle de données, et le `Room` de l'agent dans l'état de jeu vivant
+(`world.agents[].room`, celui que lisent `residentDestination()`/`pathBetween()` pour la marche
+et les ancres) reste une vraie pièce (salon) pendant toute la scène — jamais "couloir". **Précision
+apportée le 2026-09-19, en vérifiant un transcript réel de simulation (full_sim10)** : ceci ne veut
+PAS dire que "couloir" est introuvable ailleurs que dans le texte des répliques, contrairement à ce
+qu'une première rédaction de ce document affirmait à tort. La colonne `room` de la table
+`conversations` (celle qu'affiche le journal/transcript, distincte de l'état de jeu ci-dessus) reçoit
+explicitement la valeur littérale `"couloir"` pour la plupart des lignes générées pendant cette scène
+(réplique principale, pensée causale, pensée privée — chaque site d'insertion applique
+`turnPlan.exitInspection?"couloir":room`) : le tag affiché dans le transcript ("▥ COU") est donc un
+signal structuré fiable, pas seulement une déduction à partir de la prose. Quelques sites
+d'insertion plus périphériques (ligne de départ, confirmation "je te suis", pensée de bascule
+amoureuse) n'appliquent pas cette substitution et restent tagués avec la vraie pièce — une
+incohérence mineure d'affichage entre lignes d'un même tour, pas un problème de données (l'état de
+jeu réel n'est jamais affecté), à garder à l'œil plutôt qu'à corriger d'urgence. C'est un signal
+séparé côté client (`inspectionStep`, transmis en dehors du champ `room`) qui
+bascule temporairement l'affichage 3D sur deux positions fixes hors grille normale (gauche/droite
 du couloir), en cour-circuitant `residentDestination()` le temps de la scène. **Point de
-vigilance pour toute vérification de transcript** : chercher "couloir" dans le champ `room` des
-agents ne donnera jamais de résultat — c'est normal, pas un bug, il faut regarder le texte de la
-réplique/pensée et `exitContext` pour repérer cette scène.
+vigilance pour toute vérification** : chercher "couloir" dans l'état de jeu vivant
+(`world.agents[].room`) ne donnera jamais de résultat — c'est normal, pas un bug, cet état ne
+connaît que de vraies pièces. En revanche, le tag de pièce affiché dans un transcript/journal EST un
+bon moyen de repérer cette scène (cf. précision ci-dessus) : pas besoin de se limiter à une
+déduction depuis la prose de la réplique/pensée ou `exitContext`.
 
 ## 4. Le rôle du client 3D : le trajet et la vitesse
 
@@ -161,9 +176,9 @@ Avant de considérer terminé un changement touchant à l'espace ou aux déplace
 Objectif explicite de ce document (cf. en-tête) : aider à vérifier, à la lecture d'un transcript
 de simulation, ce que l'utilisateur ne voit pas lui-même en se concentrant sur la conversation.
 **Observable directement dans un transcript/journal** : la pièce affichée pour chaque personnage
-à chaque tour (cohérente avec son intention et ce qu'il vient de dire), le motif de déplacement
-donné, les entrées `mémoire` de type "déplacement", et toute mention du couloir dans le texte
-(jamais dans le champ pièce, cf. section 3). **Non observable depuis le seul texte** : la
+à chaque tour (cohérente avec son intention et ce qu'il vient de dire, y compris le tag "couloir"
+pendant l'exploration de sortie, cf. section 3), le motif de déplacement donné, les entrées
+`mémoire` de type "déplacement". **Non observable depuis le seul texte** : la
 position (x, z) exacte, le chemin BFS réellement emprunté, la vitesse de marche, une éventuelle
 collision visuelle ou un chevauchement de personnages — ces points demandent soit une relecture
 du code (`lib/house.ts`, `components/house-view.tsx`), soit une observation directe de la scène
