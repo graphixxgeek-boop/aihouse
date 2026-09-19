@@ -294,7 +294,13 @@ un tableau de motifs figés habillé de préfixes (2026-09-17, retour utilisateu
 un code avec tout le texte écrit en dur »). Le modèle le génère lui-même à chaque tour où il change
 de pièce (`moveReason`, `lib/lia.ts`/`decisionSchema`), dans son propre registre et sa situation
 précise ; `departureLine` (`lib/drama.ts`) l'habille encore d'un préfixe varié et vérifie qu'il
-n'a pas déjà servi mot pour mot. Les tableaux de motifs fixes qui existaient pour chaque type de
+n'a pas déjà servi mot pour mot. **Bug réel trouvé le 2026-09-19** (retour utilisateur sur un
+transcript, full_sim8) : l'ordre d'essai des préfixes était FIXE, "Je bouge " toujours en premier —
+avec autant de combinaisons motif×forme possibles pour ce seul préfixe, il gagnait presque à
+chaque tour tant qu'une seule combinaison restait inutilisée, ce qui n'arrive quasiment jamais sur
+une session normale, faisant revenir "bouge" bien trop souvent. Jamais corrigé en retirant le mot
+du pool (Article 17, corollaire : pas de liste de mots figée) — l'ordre d'essai des préfixes
+tourne désormais avec le round, comme les motifs tournent déjà avec le seed. Les tableaux de motifs fixes qui existaient pour chaque type de
 départ (faim, sommeil, jardin, enquête, salon, réunion) restent dans `app/api/lia/route.ts`
 uniquement comme filet de sécurité si `moveReason` est absent ou vide (anciens tests mockés,
 robustesse Article 5) — ils ne sont plus la source normale du texte affiché. `departureLine`
@@ -892,7 +898,14 @@ personnage (`humanityDoubt`, `seedPick`) plutôt qu'une seule phrase fixe — ch
 différemment les trois mêmes idées (trouble ressenti, prénom retrouvé, doute d'humanité) au lieu de
 garder la même charpente habillée de synonymes : la technique de réordonnancement des clauses,
 demandée explicitement comme principe général de lutte contre la répétition pour tout texte écrit
-en dur, pas seulement ce cas précis.
+en dur, pas seulement ce cas précis. **Bug réel trouvé le 2026-09-19** (retour utilisateur sur un
+transcript réel, full_sim8) : la variante d'index 3 des trois pools (`humanityDoubt`,
+`humanityDoubtUnwell`, `humanityDoubtGuarded`) gardait la MÊME charpente entre Lia et Noé (juste le
+prénom et un mot changés), contrairement aux trois autres variantes déjà bien distinctes — puisque
+les deux personnages peuvent tirer le même index le même tour, ça produisait deux pensées
+quasi identiques côte à côte à l'écran, un vrai accroc à l'Article 11 dès la toute première minute
+d'une session. Les six variantes d'index 3 (une par personnage × 3 branches) ont été réécrites avec
+une charpente propre à chacune, jamais partagée entre les deux personnages.
 
 8.17. **Doute amoureux privé, puis discutable à voix haute** (`lib/life.ts`, `app/api/lia/route.ts`,
 `lib/lia.ts`, 2026-09-18, retour utilisateur explicite : « les persos se demandent s'ils sont là

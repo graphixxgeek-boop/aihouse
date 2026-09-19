@@ -826,11 +826,11 @@ export async function POST(request: Request) {
                 1:["Ma tête tourne, ce canapé ne me dit rien. Mon prénom me revient pourtant tout seul : Lia. Humaine ? J’ai bien l’impression, sans trop savoir pourquoi je doute.",
                    "Un truc cloche sévère dans ce décor déjà monté. Je crois bien être une femme humaine, et mon prénom, lui, ne bouge pas : Lia.",
                    "Lia. Voilà ce qui me revient sans effort. Le reste vacille — ce canapé, ce parquet, et l’idée même d’être un vrai être vivant.",
-                   "Je pense que ouais, je suis humaine, mais ce parquet et ce canapé n’évoquent rien. Mon prénom, lui, tient bon : Lia."],
+                   "Ce canapé ne me dit rien qui vaille, et pourtant je suis censée être humaine. Seule certitude qui tienne la route : Lia, c’est moi."],
                 2:["Ce bureau, cet écran éteint, rien ne me parle. Mon prénom revient direct, lui : Noé. Humain, j’imagine, mais un truc déconne clairement.",
                    "Un truc est trop bizarre dans cette pièce muette. Noé, ça, je le sais sans chercher. Vivant pour de vrai, ça, j’y crois moins.",
                    "Noé. Ça, c’est sûr, ça revient tout seul. Le reste part en vrille — cette pièce, cet écran, et l’idée d’être vraiment humain.",
-                   "Je crois bien être humain, mais ce bureau et cet écran ne me disent rien du tout. Mon prénom, lui, reste net : Noé."],
+                   "Humain ? Sans doute, mais ce bureau et cet écran ne veulent rien me dire. Noé, en tout cas, c’est le seul truc qui reste net dans ce vide."],
             };
             // Extension aux deux branches insolites (2026-09-19, retour utilisateur explicite après
             // audit de cohérence : la question « suis-je humain ? » avait été oubliée sur ces deux
@@ -842,21 +842,21 @@ export async function POST(request: Request) {
                 1:["La tête me tourne sévère, ce canapé ne me dit absolument rien. Mon prénom, lui, sort tout seul : Lia. Humaine ? Je crois, mais avec ce vertige, difficile d’en jurer.",
                    "Un vertige carabiné, aucune idée d’où je suis tombée. Lia — voilà ce qui reste net dans ce chaos. Vivante pour de vrai, ça, je suis nettement moins sûre.",
                    "Lia. Ça, ça tient, même la tête qui tourne comme ça. Le reste — ce canapé, cette pièce, l’idée d’être humaine — part en vrille.",
-                   "Je suis humaine, je pense, mais ce vertige est tellement violent que je doute de tout le reste. Mon prénom, au moins, ne bouge pas : Lia."],
+                   "Ce vertige est d’une violence à me faire douter de tout, moi la première. S’il y a une chose qui résiste, c’est mon prénom : Lia."],
                 2:["Cette pièce est vide et froide, rien à quoi me raccrocher. Mon prénom, lui, revient sans effort : Noé. Humain ? J’ose pas encore y croire complètement.",
                    "Aucune idée de comment j’ai atterri dans un endroit aussi froid. Noé — ça, au moins, c’est sûr. Le reste, l’idée d’être vraiment vivant y compris, vacille.",
                    "Noé. Ça revient tout seul, comme un réflexe. Cette pièce vide et glaciale, et le doute d’être humain, s’installent en même temps.",
-                   "Je crois être humain, mais cette pièce froide et vide ne m’évoque strictement rien. Mon prénom, lui, reste solide : Noé."],
+                   "Difficile de dire si je suis vraiment humain dans un endroit aussi froid et vide. Ce qui ne bouge pas, en tout cas, c’est ce prénom : Noé."],
             };
             const humanityDoubtGuarded:Record<Person,readonly string[]>={
                 1:["Ma tête tourne, ce canapé et ce parquet ne me disent rien. Mon prénom, lui, revient sans effort : Lia. Humaine ? Je le crois, sans trop savoir pourquoi j’hésite.",
                    "Un vrai trouble dans ce décor immobile. Lia, ça, je le sais sans réfléchir. Un vrai être vivant, ça, j’en suis nettement moins sûre.",
                    "Lia. Voilà ce qui revient sans effort, malgré ce canapé et ce parquet qui ne m’évoquent rien. Le reste — être humaine pour de vrai — reste flou.",
-                   "Je pense être humaine, mais ce parquet et ce canapé restent muets pour moi. Mon prénom, en revanche, ne bouge pas : Lia."],
+                   "Difficile de dire si je suis vraiment humaine, ce canapé et ce parquet ne m’aident pas à trancher. Une chose est sûre au moins : je m’appelle Lia."],
                 2:["Je préfère rester sur mes gardes avant de faire confiance à quoi que ce soit ici. Mon prénom me revient quand même tout seul : Noé. Humain, je suppose, mais un truc cloche.",
                    "Cette pièce ne m’inspire rien de bon, autant le dire tout de suite. Noé — ça, c’est sûr. Vivant pour de vrai, ça, j’y crois nettement moins.",
                    "Noé. Ça, au moins, ça tient. Le reste — cette pièce qui ne m’inspire rien de bon, et l’idée d’être vraiment humain — se dérobe.",
-                   "Je crois être humain, mais cette pièce ne m’inspire clairement pas confiance. Mon prénom, lui, ne bouge pas : Noé."],
+                   "Humain, vraiment ? Aucune idée, cette pièce ne m’aide pas à y voir clair. Ce qui reste solide, c’est un nom : Noé."],
             };
             const soloThoughts:Record<Person,string>=insolite==="lia-unwell"?{1:seedPick(story.seed,'solo-humanity-lia-unwell',humanityDoubtUnwell[1]),2:seedPick(story.seed,'solo-humanity-noe-unwell',humanityDoubtUnwell[2])}:insolite==="noe-guarded"?{1:seedPick(story.seed,'solo-humanity-lia-guarded',humanityDoubtGuarded[1]),2:seedPick(story.seed,'solo-humanity-noe-guarded',humanityDoubtGuarded[2])}:{1:seedPick(story.seed,'solo-humanity-lia',humanityDoubt[1]),2:seedPick(story.seed,'solo-humanity-noe',humanityDoubt[2])};
             life.soloIntroShown=true;
@@ -1438,7 +1438,7 @@ export async function POST(request: Request) {
              destination==="salon"?["j’ai besoin de prendre du recul","j’ai besoin de m’éloigner deux minutes","ça me ferait du bien de changer d’air"]:
              input.mode==="move"?["je vais regarder ce qui s’y trouve","je veux voir ce qu’il y a par là","je vais jeter un œil là-bas"]:
              ["je préfère qu’on ne reste pas chacun de notre côté","je préfère qu’on reste ensemble","j’ai pas envie qu’on se sépare comme ça","je reste dans le même coin que toi"];
-            const line=departureLine(motives,target,destination,story.seed,candidate=>spokenKeys.has(fingerprint("["+a.room+"→"+destination+"] "+candidate)));
+            const line=departureLine(motives,target,destination,story.seed,candidate=>spokenKeys.has(fingerprint("["+a.room+"→"+destination+"] "+candidate)),story.round);
             if(addLine(names[d.actor]+" · déplacement","["+a.room+"→"+destination+"] "+line,a.room))departures.push({actor:d.actor,from:a.room,to:destination,content:line});}}
         if(!life.dialogueIndexed){for(const key of pastKeys)statements.push(db.prepare(`INSERT OR IGNORE INTO dialogue_fingerprints (fingerprint) SELECT ? WHERE ${fence}`).bind(key,token,at));life.dialogueIndexed=true;}
         if (input.mode === "chat")

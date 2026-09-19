@@ -11,10 +11,21 @@ export const dramaRules={openingTurns:1,proposalStress:{noe:18,lia:14},rejection
 // forme qui manquait de variété, c'est le fond. Chaque condition a maintenant plusieurs motifs
 // réellement distincts ; l'ordre d'essai tourne avec story.seed pour ne pas toujours épuiser le
 // même dans le même ordre d'une session à l'autre.
-export function departureLine(motives:readonly string[],target:string,destination:string,seed:string,avoid:(candidate:string)=>boolean):string{
+export function departureLine(motives:readonly string[],target:string,destination:string,seed:string,avoid:(candidate:string)=>boolean,round=0):string{
  const offset=Array.from(seed).reduce((h,c)=>(h*31+c.charCodeAt(0))>>>0,0)%motives.length;
  const ordered=[...motives.slice(offset),...motives.slice(0,offset)];
- const prefixes=["Je bouge ","Je file ","Je pars ","Je passe maintenant ","Je vais faire un tour ","Je m’en vais "];
+ // Rotation par round (2026-09-19, retour utilisateur explicite après une simulation complète : le
+ // verbe "bouge" revenait bien trop souvent dès le début d'une session). Cause racine : `candidates`
+ // essaie TOUS les motifs/formes du premier préfixe avant de passer au suivant, et ce premier
+ // préfixe était toujours "Je bouge" — avec autant de combinaisons motif×forme possibles pour un
+ // seul préfixe, il gagnait presque à chaque tour tant qu'une seule combinaison restait inutilisée,
+ // ce qui n'arrive quasiment jamais sur une session normale. Jamais corrigé en retirant "bouge" du
+ // pool (Article 17, corollaire : pas de liste de mots figée) — corrigé en faisant tourner l'ordre
+ // d'essai des préfixes eux-mêmes avec le round, comme `ordered` le fait déjà pour les motifs avec
+ // le seed, pour qu'aucun préfixe ne monopolise plus une session entière.
+ const basePrefixes=["Je bouge ","Je file ","Je pars ","Je passe maintenant ","Je vais faire un tour ","Je m’en vais "];
+ const prefixOffset=((round%basePrefixes.length)+basePrefixes.length)%basePrefixes.length;
+ const prefixes=[...basePrefixes.slice(prefixOffset),...basePrefixes.slice(0,prefixOffset)];
  // Motif d'abord, forme ensuite (2026-09-18, retour utilisateur explicite) : quand deux personnages
  // partent vers la même pièce au même tour, chacun appelle cette fonction séparément avec le même
  // pool de motifs ; avoid() ne bloque que la chaîne EXACTE déjà prononcée. L'ancien ordre (un motif
