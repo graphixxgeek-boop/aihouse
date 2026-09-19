@@ -1,4 +1,5 @@
 import { intents } from "./simulation";
+import { orderKeys, recordKeyStatus } from "./gemini-keys";
 import { z } from "zod";
 export const emotionKeys = ["curiosity", "tension", "trust", "comfort", "attraction"] as const;
 export const initialEmotions = { curiosity: 72, tension: 58, trust: 8, comfort: 22, attraction: 12 };
@@ -29,17 +30,14 @@ export const decisionSchema = z.object({
 export class LiaError extends Error {
     constructor(message: string, public status: number) { super(message); }
 }
-// Sélection autonome de la clé la plus disponible (2026-09-18, demande explicite de
-// l'utilisateur) : mémorise l'INDEX (jamais la valeur) de la dernière clé ayant obtenu une
-// réponse définitive, pour la retenter en premier au tour suivant plutôt que de retester une
-// clé déjà connue épuisée à chaque appel. Mémoire "best effort" au niveau du module JS — persiste
-// tant que l'instance Workers/Node reste la même (vrai en pratique le temps d'une session), sans
-// aucune garantie ni écriture en base : un redémarrage repart simplement de l'ordre configuré,
-// jamais une perte de clé ni un comportement incorrect. Portée volontairement limitée aux CLÉS,
-// jamais aux modèles : contrairement aux clés (strictement interchangeables, même modèle, même
-// prompt, même qualité), les modèles de repli ne sont pas équivalents en qualité (Article 0) —
-// le modèle principal doit toujours rester tenté en premier, jamais mémorisé comme secondaire.
-let lastGoodKeyIndex = 0;
+// Rotation + disponibilité des clés (2026-09-18, remplacé le 2026-09-19 par une vraie rotation
+// partagée avec app/api/lia/route.ts::generateDossierFragment() — demande explicite de
+// l'utilisateur à l'ajout d'une 3e clé : « rotation des clefs pour ne pas saturer une clef »).
+// Voir lib/gemini-keys.ts pour le mécanisme complet et son raisonnement. Portée volontairement
+// limitée aux CLÉS, jamais aux modèles : contrairement aux clés (strictement interchangeables,
+// même modèle, même prompt, même qualité), les modèles de repli ne sont pas équivalents en
+// qualité (Article 0) — le modèle principal doit toujours rester tenté en premier, jamais
+// mémorisé comme secondaire ni soumis à une rotation.
 export async function think(key: string, model: string, context: object, name = "Lia", fallbackModels: string[] = [], fallbackKeys: string[] = []) {
     // Précisions sur l'esprit (Article 0), validées le 2026-09-16 : le ton n'est jamais un mode
     // déclenché par la pression, il est présent en permanence ; sa texture diffère par personnage.
@@ -118,8 +116,7 @@ JSON : schema strict. action none rester, move changer de pièce, talk parler. m
     const rawKeys = [key, ...fallbackKeys];
     let response: Response | undefined;
     keyLoop:
-    for (let offset = 0; offset < rawKeys.length; offset++) {
-        const rawIndex = (lastGoodKeyIndex + offset) % rawKeys.length; // part de la dernière clé connue bonne, boucle sur les autres sans en sauter aucune
+    for (const rawIndex of orderKeys(rawKeys)) { // rotation + disponibilité partagées, cf. lib/gemini-keys.ts
         for (let m = 0; m < modelsToTry.length; m++) {
             try {
                 response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelsToTry[m])}:generateContent`, {
@@ -130,9 +127,9 @@ JSON : schema strict. action none rester, move changer de pièce, talk parler. m
             catch {
                 throw new LiaError("La maison n’a pas pu joindre Gemini. Réessaie dans un moment.", 503);
             }
-            if (response.status === 401 || response.status === 403) break; // clé invalide pour ce modèle : inutile d'essayer ses autres modèles, tenter la clé suivante
-            if (response.status === 429 || response.status === 503) { if (m < modelsToTry.length - 1) continue; break; } // modèle suivant si possible, sinon clé suivante
-            lastGoodKeyIndex = rawIndex; // cette clé vient de répondre pour de bon (succès ou erreur définitive) : la retenter en premier au prochain appel
+            if (response.status === 401 || response.status === 403) { recordKeyStatus(rawKeys[rawIndex], response.status); break; } // clé invalide pour ce modèle : inutile d'essayer ses autres modèles, tenter la clé suivante
+            if (response.status === 429 || response.status === 503) { recordKeyStatus(rawKeys[rawIndex], response.status); if (m < modelsToTry.length - 1) continue; break; } // modèle suivant si possible, sinon clé suivante
+            recordKeyStatus(rawKeys[rawIndex], response.status); // réponse définitive et saine : efface un éventuel cooldown périmé
             break keyLoop; // réponse définitive (ok, ou erreur non récupérable par un changement de modèle/clé)
         }
     }

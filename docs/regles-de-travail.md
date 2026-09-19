@@ -182,6 +182,18 @@ type d'outil (nouvelle capacité, correction d'un biais, extension de portée) :
   de l'outil sans devoir relire tout le fil de conversation. Concrètement : une ligne d'historique
   dans cette section, datée, à chaque évolution notable.
 
+**Complément ajouté le 2026-09-19, à la demande explicite de l'utilisateur** (« lorsque l'outil API
+fonctionne, indique-moi s'il a eu l'occasion de s'améliorer, ou de se modifier pour s'améliorer, ou
+pas, à chaque utilisation pertinente sur le sujet ») : la règle ci-dessus ne couvrait que le cas où
+une amélioration avait effectivement eu lieu. Désormais, à CHAQUE utilisation ou modification
+pertinente de cet outillage (une exécution réelle du diagnostic, une demande de l'utilisateur qui
+aurait pu en être l'occasion, une évolution de la production qui le touche), l'agent dit
+explicitement l'un des deux : soit ce qui a changé et le gain estimé (comme ci-dessus), soit qu'il
+n'y a PAS eu d'amélioration cette fois et pourquoi (ex. « exécution de diagnostic pure, aucune
+modification de l'outil cette fois »). Le silence sur ce point n'est jamais une option quand le
+sujet a été abordé — c'est ce qui permet à l'utilisateur de suivre l'évolution réelle de l'outil
+dans la durée, y compris ses paliers, pas seulement ses sauts.
+
 **Historique des évolutions de l'outil quota/clé Gemini :**
 
 - *2026-09-18* — Ajout de la mémoire d'expérience (`gemini-key-health.mjs`) : les clés sondées sont
@@ -206,6 +218,37 @@ type d'outil (nouvelle capacité, correction d'un biais, extension de portée) :
   chaque exécution de l'outil, pas seulement dans `CLAUDE.md`. Gain estimé : réduit le risque de
   re-découvrir la même leçon deux fois à des mois d'écart — gain de mémoire collective, pas de
   vitesse d'exécution du script lui-même.
+- *2026-09-19* — Rotation des clés en PRODUCTION (`lib/gemini-keys.ts`, partagé par
+  `lib/lia.ts::think()` et `route.ts::generateDossierFragment()`), demande explicite de
+  l'utilisateur à l'ajout d'une 3e clé : remplace l'ancienne mémoire "collante" (`lastGoodKeyIndex`,
+  une clé encaissait tout le trafic tant qu'elle répondait) par un vrai round-robin parmi les clés
+  actuellement saines, plus un cooldown par clé dérivé du trafic réel (429→15 min, 503→60 s,
+  401/403→définitif), jamais un appel de sonde séparé. Gain estimé : avec 3 clés à 500 requêtes/jour
+  chacune, répartit la charge au lieu de vider une seule clé en premier — dans le pire cas (trafic
+  soutenu sur une seule clé auparavant), ça peut tripler la capacité journalière effective avant le
+  premier blocage, puisque les 3 paniers de quota (un par projet Google Cloud) se vident maintenant
+  en parallèle plutôt qu'en série. Testé (`scripts/check-house.mjs`) : preuve que 3 clés
+  simultanément saines sont TOUTES utilisées sur 4 appels indépendants, jamais une seule qui
+  absorbe tout le trafic ; les garanties déjà vérifiées (repli immédiat sur 429/503, mémoire
+  partagée entre les deux cerveaux d'un même tour) restent intactes.
+- *2026-09-19* — Diagnostic qualité poussé au maximum (`scripts/api-providers.mjs`,
+  `scripts/check-gemini-quota.mjs`), demande explicite de l'utilisateur : (1) une sonde "lourde"
+  supplémentaire, de taille comparable à un vrai tour de jeu (systemInstruction + sortie JSON
+  structurée), s'exécute désormais sur le modèle principal en plus de la sonde légère existante —
+  raison documentée dans CLAUDE.md : Google peut répondre différemment (OK vs 429/503) selon le
+  POIDS de la requête pour la même clé/modèle au même instant, donc une sonde uniquement légère
+  pouvait donner un faux "OK" ; l'outil signale maintenant explicitement cet écart quand il se
+  produit. (2) Une réponse HTTP 200 sans contenu exploitable (filtre de sécurité, coupure
+  prématurée) est désormais détectée et distinguée ("OK_VIDE") d'un vrai succès, au lieu d'être
+  comptée à tort comme "OK". (3) Le `retryDelay` renvoyé par Google sur un 429 est maintenant
+  affiché avec le rappel qu'il est trompeur pour un épuisement journalier. Gain estimé : referme
+  l'angle mort le plus concret déjà rencontré en simulation réelle (sonde légère "OK", vraie
+  requête en échec) — sans cette sonde lourde, l'outil pouvait donner un faux sentiment de sécurité
+  sur le modèle réellement utilisé par l'application ; gain de FIABILITÉ du diagnostic, pas de
+  vitesse (un appel de plus, coût négligeable, Article 8). Vérifié en conditions réelles le même
+  jour : sur les 3 clés configurées, 2 étaient en quota épuisé et 1 saine ; la sonde lourde sur
+  cette dernière a confirmé "OK" (pas d'écart détecté cette fois, mais le garde-fou est maintenant
+  en place pour la prochaine fois où il y en aura un).
 
 ## 8. Profil de collaboration observé
 

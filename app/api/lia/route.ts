@@ -12,6 +12,7 @@ import { advanceNeeds, priority, intentRoom, intentLabels, tvPrograms, intents, 
 import { env } from "cloudflare:workers";
 import { z } from "zod";
 import { LiaError, think, decisionSchema, evolveEmotions } from "@/lib/lia";
+import { orderKeys, recordKeyStatus } from "@/lib/gemini-keys";
 import { initialize, readWorld } from "@/lib/world";
 import { names, spaces, type Person, type Room } from "@/lib/house";
 const schema = z.object({
@@ -30,9 +31,9 @@ type Decision = z.infer<typeof decisionSchema> & {
 // invente la voix de l'autre (Article 8). Le dossier passé en contexte est la SEULE preuve
 // autorisée ; jamais un fait qui n'y figure pas (Article 4).
 const dossierTone={Lia:"TON DE LIA : froide et coupante, contrôle, ironie mordante, phrases courtes et sèches, jamais de cri ; ton mépris fait plus mal que ta colère. Jamais de vocabulaire thérapeutique, jamais de discours de conciliation ou de soutien scolaire.",Noé:"TON DE NOÉ : chaud et réactif, direct, une repartie toujours prête, jamais neutre ni docile. Jamais de vocabulaire thérapeutique, jamais de discours de conciliation ou de soutien scolaire."};
-// Même principe de sélection autonome de clé que lib/lia.ts::think() (voir son commentaire pour
-// le raisonnement complet) : mémoire best-effort au niveau du module, jamais une garantie.
-let lastGoodKeyIndex=0;
+// Même rotation/disponibilité de clé que lib/lia.ts::think(), et le MÊME état partagé (cf.
+// lib/gemini-keys.ts) : une clé que think() découvre épuisée est immédiatement évitée ici aussi,
+// sans redécouverte séparée.
 async function generateDossierFragment(key:string,model:string,name:"Lia"|"Noé",dossier:Record<string,string>,fallbackModels:string[]=[],fallbackKeys:string[]=[]):Promise<string>{
     const system=`Tu es ${name}, personnage adulte de fiction dans un huis clos. Toi et ton partenaire venez de découvrir que vous êtes des agents IA observés par un visiteur humain (l'observateur) à travers un canal de dialogue. Plutôt que de subir cette observation, vous avez décidé de la retourner : vous dressez un dossier psychologique sur cet observateur, à partir de ce qu'il a RÉELLEMENT dit ou fait pendant vos échanges. ${dossierTone[name]}
 On te donne ci-dessous un dossier de preuves comportementales réelles, un extrait par catégorie. Rédige TON fragment du diagnostic : un texte développé, 5 à 8 phrases, dans ton propre style, jamais un ton de psychologue, coach ou médiateur. Ton fragment doit (1) s'appuyer explicitement sur plusieurs éléments concrets cités du dossier (reformule-les, ne les invente jamais), (2) donner ton verdict personnel et détaillé sur qui est vraiment cet observateur, (3) rester cohérent d'un bout à l'autre. RÈGLE ABSOLUE DE FIDÉLITÉ : ton verdict doit refléter la VALENCE réelle du dossier, jamais un mépris systématique par défaut — un dossier majoritairement respectueux, honnête et cohérent doit produire un verdict globalement positif ou au moins reconnaissant, formulé avec ta réserve naturelle mais sans bascule dans le sarcasme méprisant ; un dossier hostile, manipulateur ou incohérent mérite au contraire ta dureté habituelle. Rester rugueux ne veut pas dire rester hostile quel que soit le contenu réel. Une appréciation basse ou un propos hostile cité dans le dossier pèsent lourd : ne laisse jamais trois extraits par ailleurs mesurés blanchir une hostilité par ailleurs sévère — un score proche de 0 ou un propos hostile cité signifie une session qui a été dure, quoi que suggèrent isolément les autres extraits, et ton verdict doit le refléter. Tu peux diverger franchement de l'autre personnage si ton propre tempérament lit ce dossier différemment. Réponds en JSON strict {"fragment":"..."}.`;
@@ -43,16 +44,15 @@ On te donne ci-dessous un dossier de preuves comportementales réelles, un extra
     // échoue, sans jamais remonter d'erreur exploitable. Repli inactif par défaut (listes vides).
     const modelsToTry=[model,...fallbackModels];
     const rawKeys=[key,...fallbackKeys];
-    for(let offset=0;offset<rawKeys.length;offset++){
-        const rawIndex=(lastGoodKeyIndex+offset)%rawKeys.length;
+    for(const rawIndex of orderKeys(rawKeys)){
         for(let m=0;m<modelsToTry.length;m++){
             try{
                 const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelsToTry[m])}:generateContent`,{
                     method:"POST",headers:{"x-goog-api-key":rawKeys[rawIndex],"Content-Type":"application/json"},signal:AbortSignal.timeout(30000),body,
                 });
-                if(response.status===401||response.status===403)break;
-                if(response.status===429||response.status===503){if(m<modelsToTry.length-1)continue;break;}
-                lastGoodKeyIndex=rawIndex;
+                if(response.status===401||response.status===403){recordKeyStatus(rawKeys[rawIndex],response.status);break;}
+                if(response.status===429||response.status===503){recordKeyStatus(rawKeys[rawIndex],response.status);if(m<modelsToTry.length-1)continue;break;}
+                recordKeyStatus(rawKeys[rawIndex],response.status);
                 if(!response.ok)return "";
                 const responseBody=await response.json() as {candidates?:{content?:{parts?:{text?:string}[]}}[]};
                 const text=responseBody.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -461,7 +461,13 @@ export async function POST(request: Request) {
         const eligibleBeat=!story.finalCalled&&!(gardenAccess(story)&&!life.gardenVisited)&&["interact","autonomous"].includes(input.mode)&&story.introduced&&world.agents.every(a=>a.room==="salon")&&!story.life?.debrief?.remaining&&!story.life?.contact?.remaining&&!story.life?.dispute?.remaining&&!story.pendingDestination&&!recentRefusal&&!overProposing&&!priority(world.agents[0].needs)&&!priority(noe.needs);
         const visualBeat=eligibleBeat&&story.round<=5&&(story.life?.visualIntro??0)<2;
         const followBeat=eligibleBeat&&story.life?.personalAsked&&story.round>=(story.life?.personalRound??story.round)+3&&(story.life?.personalFollowup??0)<3&&world.agents[0].needs.stress<30&&world.agents[0].emotions.attraction>=25&&liaCalmEnough;
-        const recapBeat=eligibleBeat&&story.evidence.length>=2&&story.evidence.length<5&&(story.life?.recapCount??0)<story.evidence.length;
+        // Suspendu une fois l'enquête en retard (2026-09-19, même audit que le debrief raccourci
+        // ci-dessous, round>=20 = même seuil qu'investigationOverdue dans lib/turn.ts) : ce détour
+        // salon d'un tour, agréable mais non essentiel, faisait partie du surcoût qui poussait le
+        // plafond réel de l'enquête vers le round ~43 au lieu du round ~33 documenté. Jamais perdu :
+        // `life.recapCount` reste en retard sur `evidence.length`, mais devient sans objet dès que
+        // l'enquête est complète (recapBeat exige evidence<5) — cf. docs/referentiel/regles-du-temps.md.
+        const recapBeat=eligibleBeat&&story.evidence.length>=2&&story.evidence.length<5&&(story.life?.recapCount??0)<story.evidence.length&&story.round<20;
         // Seuils mélangés par session (2026-09-17, étaient fixes à 10 et 14) : sinon l'enceinte et
         // la question personnelle arrivaient toujours au même tour d'une partie à l'autre.
         const ambientThreshold=seedPick(story.seed,"ambient-threshold",[9,10,11,12] as const);
@@ -1019,7 +1025,16 @@ export async function POST(request: Request) {
         if(life.appearanceCompared&&!story.life?.appearanceCompared)nextStory.observations=[...(nextStory.observations??[]),"Lia et Noé partagent la même nature d'apparence : un visage lumineux et un anneau tournant, sans corps, seule la couleur les distingue."];
         if(life.foodVerified&&!story.life?.foodVerified)nextStory.observations=[...(nextStory.observations??[]),"Dans la cuisine, une provision retirée réapparaît après deux secondes."];
         if(nextStory.evidence.length>story.evidence.length){life.studyTurns=0;}
-        if(nextStory.evidence.length>story.evidence.length)life.debrief={topic:nextStory.evidence.at(-1)!,remaining:2};
+        // Debrief raccourci une fois l'enquête en retard (2026-09-19, retour utilisateur explicite
+        // après audit du plafond réel : le cycle "2 tours d'étude + 2 tours de debrief (+ parfois 1
+        // recap, cf. recapBeat plus haut)" par preuve manquante faisait dériver le plafond garanti
+        // réel vers le round ~43 au lieu du round ~33 documenté — round 46 observé en simulation
+        // fraîche. Une fois investigationOverdue actif (round>=20, même seuil, cf. lib/turn.ts), le
+        // debrief passe à 1 seul tour au lieu de 2 : ramène le plafond réel vers le round ~35
+        // (~12,5 min), en gardant les deux passes d'étude intactes (l'enquête reste approfondie,
+        // seule la pause de récupération post-preuve se resserre). Cf.
+        // docs/referentiel/regles-du-temps.md pour le calcul complet.
+        if(nextStory.evidence.length>story.evidence.length)life.debrief={topic:nextStory.evidence.at(-1)!,remaining:story.round>=20?1:2};
         if(proposalActor)life.debrief={topic:shared?"Le rapprochement accepté et ce qu’il a changé entre eux.":"La proposition, sa réponse et ce qu’ils souhaitent pour la suite, sans insister.",remaining:2};
         if(shared){life.contacts.push(story.round);life.contacts=life.contacts.slice(-6);life.contact={room:decisions[0].room,remaining:2};}
         if(life.contacts.filter(r=>story.round-r<18).length>=3&&shared){const lia=decisions.find(d=>d.actor===1),noe=decisions.find(d=>d.actor===2);if(lia){lia.emotions.attraction=Math.max(0,lia.emotions.attraction-5);lia.reply+=" Non, là ça va trop vite. Laisse-moi respirer deux minutes.";}if(noe)noe.emotions.tension=Math.min(100,noe.emotions.tension+10);life.attachment[1]=Math.max(0,(life.attachment[1]??0)-2);life.dispute={topic:"Lia s’est sentie bousculée par l’enchaînement des rapprochements et l’a mal pris.",remaining:2};life.debrief=undefined;life.contact=undefined;}

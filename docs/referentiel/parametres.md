@@ -190,19 +190,29 @@ le jour même (Article 13).
 - Ordre de découverte mélangé par nouvelle arrivée (`story.order`, permutation de [0,1,2,3]).
 - Un indice n'est gagné qu'à partir du tour 3, et seulement au tour multiple de 3 (ou après une
   étude complète de 2 tours, ou avec l'aide d'un rêve à partir du 2ᵉ rêve un tour sur trois).
-- **Plafond garanti de l'enquête** (`lib/turn.ts`, 2026-09-19, retour utilisateur explicite après
-  audit — plafond fixé à 12 minutes réelles pour la révélation, et surtout ne jamais rester bloquée
-  indéfiniment comme observé en simulation réelle, round 98 toujours pas révélé). Détail complet,
-  chronologie et pièges de cohérence trouvés en vérifiant ce mécanisme contre les deux couches de
-  priorité du moteur : `docs/referentiel/regles-du-temps.md`. Le tour%3 ci-dessus reste la cadence
-  de base, mais s'intensifie en tour%2 dès le tour 10 (`investigationEscalated`) si l'enquête n'est
-  pas encore bouclée, puis devient PRIORITAIRE sur toute romance scriptée (`offer`, la pause salon,
-  le repos après étude) dès le tour 20 si elle est encore incomplète (`investigationOverdue`) — les
-  personnages justifient ce choix dans leur propre registre plutôt qu'un silence mécanique. Pire cas
-  garanti (aucune preuve avant le tour 20, plus jusqu'à 3 tours de récapitulatif d'indice qui reste
-  une priorité encore supérieure mais se consomme aussitôt) : les 5 preuves à 2 passages chacun se
-  terminent au plus tard vers le tour 33, soit ~11,5 minutes au rythme réel du jeu (20-21s/tour, cf.
-  section Réseau plus bas), sous la barre des 12 minutes maximum.
+- **Plafond garanti de l'enquête** (`lib/turn.ts` + `route.ts`, 2026-09-19, retour utilisateur
+  explicite après audit — plafond fixé à 12 minutes réelles pour la révélation, et surtout ne
+  jamais rester bloquée indéfiniment comme observé en simulation réelle, round 98 toujours pas
+  révélé). Détail complet, chronologie et pièges de cohérence trouvés en vérifiant ce mécanisme
+  contre les deux couches de priorité du moteur : `docs/referentiel/regles-du-temps.md`. Le tour%3
+  ci-dessus reste la cadence de base, mais s'intensifie en tour%2 dès le tour 10
+  (`investigationEscalated`) si l'enquête n'est pas encore bouclée, puis devient PRIORITAIRE sur
+  toute romance scriptée (`offer`, la pause salon, le repos après étude) dès le tour 20 si elle est
+  encore incomplète (`investigationOverdue`) — les personnages justifient ce choix dans leur propre
+  registre plutôt qu'un silence mécanique.
+  **Calcul corrigé le même jour** après qu'une simulation fraîche a atteint la révélation au round
+  46 (~15-16 min), bien au-delà du premier calcul (round ~33) qui ne comptait qu'un forfait "jusqu'à
+  3 tours de recap" sans compter le cycle complet par preuve manquante : 2 tours d'étude + 2 tours
+  de debrief post-preuve (`life.debrief`) + parfois 1 tour de recap salon (`recapBeat`, pour les
+  preuves n°2 à 4). Sur 5 preuves potentiellement toutes manquantes au tour 20, ça faisait jusqu'à
+  ~23 tours de plus — cohérent avec le round 46 observé. Corrigé par une intervention légère choisie
+  par l'utilisateur (jamais en réduisant les 2 passes d'étude, qui gardent l'enquête approfondie) :
+  une fois `investigationOverdue` actif, le debrief post-preuve passe à 1 seul tour (au lieu de 2) et
+  `recapBeat` est suspendu. Pire cas garanti recalculé : 5 preuves × (2 tours d'étude + 1 tour de
+  debrief) = 15 tours après le tour 20, soit un plafond réel vers le tour ~35 — environ 12 minutes
+  au rythme réel du jeu (20-21s/tour, cf. section Réseau plus bas), PILE à la limite fixée par
+  l'utilisateur plutôt que confortablement en dessous comme le calcul précédent le prétendait à
+  tort.
 - Observations générales (murs trop réguliers, absence de paysage...) : une par tour éligible à
   partir du tour 2, dans un ordre fixe, jamais deux fois la même.
 - Questions d'âge : pas avant le tour 12 ET un premier repas partagé.

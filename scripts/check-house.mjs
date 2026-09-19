@@ -12,8 +12,8 @@ import {DatabaseSync} from 'node:sqlite';
 Object.defineProperty(globalThis.crypto,'randomUUID',{value:()=>{let candidate;do{candidate='00000000-0000-4000-8000-'+(++seedCounter).toString(16).padStart(12,'0');}while(insoliteHash(candidate)>=6);return candidate;},configurable:true});}
 fs.mkdirSync('.sites-runtime',{recursive:true});
 const transpile=s=>ts.transpileModule(s,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
-for(const name of ['house','simulation','relationship','dialogue','story','lia','world','turn','life','drama','perception','visual-events','stock','presentation','playback','evidence','reference','update-audit'])fs.writeFileSync(`.sites-runtime/test-${name}.mjs`,transpile(fs.readFileSync(`lib/${name}.ts`,'utf8').replace('"./update-audit"','"./test-update-audit.mjs"').replace('"./visual-events"','"./test-visual-events.mjs"').replace('"./drama"','"./test-drama.mjs"').replace('"./perception"','"./test-perception.mjs"').replace('"./life"','"./test-life.mjs"').replace('"./house"','"./test-house.mjs"').replace('"./lia"','"./test-lia.mjs"').replace('"./simulation"','"./test-simulation.mjs"').replace('"./relationship"','"./test-relationship.mjs"').replace('"./story"','"./test-story.mjs"')));
-const raw=fs.readFileSync('app/api/lia/route.ts','utf8').replace('import { env } from "cloudflare:workers";','const env=globalThis.__testEnv;').replaceAll('"@/lib/stock"','"./test-stock.mjs"').replaceAll('"@/lib/visual-events"','"./test-visual-events.mjs"').replaceAll('"@/lib/perception"','"./test-perception.mjs"').replaceAll('"@/lib/lia"','"./test-lia.mjs"').replaceAll('"@/lib/world"','"./test-world.mjs"').replaceAll('"@/lib/house"','"./test-house.mjs"').replaceAll('"@/lib/simulation"','"./test-simulation.mjs"').replaceAll('"@/lib/dialogue"','"./test-dialogue.mjs"').replaceAll('"@/lib/relationship"','"./test-relationship.mjs"').replaceAll('"@/lib/story"','"./test-story.mjs"').replaceAll('"@/lib/life"','"./test-life.mjs"').replaceAll('"@/lib/drama"','"./test-drama.mjs"').replaceAll('"@/lib/turn"','"./test-turn.mjs"');
+for(const name of ['house','simulation','relationship','dialogue','story','lia','world','turn','life','drama','perception','visual-events','stock','presentation','playback','evidence','reference','update-audit','gemini-keys'])fs.writeFileSync(`.sites-runtime/test-${name}.mjs`,transpile(fs.readFileSync(`lib/${name}.ts`,'utf8').replace('"./update-audit"','"./test-update-audit.mjs"').replace('"./visual-events"','"./test-visual-events.mjs"').replace('"./drama"','"./test-drama.mjs"').replace('"./perception"','"./test-perception.mjs"').replace('"./life"','"./test-life.mjs"').replace('"./house"','"./test-house.mjs"').replace('"./lia"','"./test-lia.mjs"').replace('"./gemini-keys"','"./test-gemini-keys.mjs"').replace('"./simulation"','"./test-simulation.mjs"').replace('"./relationship"','"./test-relationship.mjs"').replace('"./story"','"./test-story.mjs"')));
+const raw=fs.readFileSync('app/api/lia/route.ts','utf8').replace('import { env } from "cloudflare:workers";','const env=globalThis.__testEnv;').replaceAll('"@/lib/stock"','"./test-stock.mjs"').replaceAll('"@/lib/visual-events"','"./test-visual-events.mjs"').replaceAll('"@/lib/perception"','"./test-perception.mjs"').replaceAll('"@/lib/lia"','"./test-lia.mjs"').replaceAll('"@/lib/gemini-keys"','"./test-gemini-keys.mjs"').replaceAll('"@/lib/world"','"./test-world.mjs"').replaceAll('"@/lib/house"','"./test-house.mjs"').replaceAll('"@/lib/simulation"','"./test-simulation.mjs"').replaceAll('"@/lib/dialogue"','"./test-dialogue.mjs"').replaceAll('"@/lib/relationship"','"./test-relationship.mjs"').replaceAll('"@/lib/story"','"./test-story.mjs"').replaceAll('"@/lib/life"','"./test-life.mjs"').replaceAll('"@/lib/drama"','"./test-drama.mjs"').replaceAll('"@/lib/turn"','"./test-turn.mjs"');
 fs.writeFileSync('.sites-runtime/test-route.mjs',transpile(raw));
 const sqlite=new DatabaseSync(':memory:');sqlite.exec(fs.readFileSync('drizzle/0000_jazzy_cobalt_man.sql','utf8'));
 sqlite.prepare('INSERT INTO agent_state VALUES (1,?,?,?,?,?)').run('attentive','Je lis','Apprendre',3,1000);
@@ -25,6 +25,7 @@ const db={prepare:prepared,async batch(statements){sqlite.exec('BEGIN');try{cons
 globalThis.__testEnv={DB:db,GEMINI_API_KEY:'test-only'};
 const {POST}=await import('../.sites-runtime/test-route.mjs');
 const {initialize,readWorld}=await import('../.sites-runtime/test-world.mjs');
+const {__resetGeminiKeyRotationForTests}=await import('../.sites-runtime/test-gemini-keys.mjs');
 await initialize(db);let world=await readWorld(db);assert.equal(world.agents.length,2);assert.equal(world.agents[0].goal,'Apprendre');assert.equal(world.memories[0].agent_id,1);
 let requestCounter=0;
 // Deliberately independent of crypto.randomUUID(), which is fixed above for newStory()'s benefit —
@@ -666,7 +667,12 @@ for(let i=0;i<3;i++){response=await post(input('chat',1,{epoch:perceptionEpoch,m
 console.log('Passed: zero-call nickname and retry, no premature identity leak, durable personalised proof, label-injection-safe legend, shared appearance registry, room/time memories, two contextual personal follow-ups (the second concluding in a genuine pair of parallel private thoughts, respondent first, never repeated even if the beat became eligible again), plant/speaker debrief and one late observer identification.');
 
 // A checkpoint cites only acquired evidence, is consumed once, and needs no inference.
-pp={...pp,round:35,evidence:['Dans un livre, continuité autobiographique : reconstruction incomplète.','Un mot laissé indique : cette maison est un environnement.'],finalCalled:false,life:{...newStory().life,visualIntro:2,ambientSeen:true,ambientVerified:true,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,exitSearched:true,recapCount:0}};
+// round:15 (auparavant 35) : le recap suspendu une fois l'enquête en retard (2026-09-19,
+// round>=20, cf. route.ts recapBeat) exige un round encore sous ce seuil pour que ce test continue
+// de vérifier le mécanisme de recap lui-même (contenu, zéro appel API, recapCount), pas la nouvelle
+// priorité de l'enquête en retard qui a sa propre couverture dédiée (cf. tests investigationOverdue
+// plus bas dans ce fichier).
+pp={...pp,round:15,evidence:['Dans un livre, continuité autobiographique : reconstruction incomplète.','Un mot laissé indique : cette maison est un environnement.'],finalCalled:false,life:{...newStory().life,visualIntro:2,ambientSeen:true,ambientVerified:true,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,exitSearched:true,recapCount:0}};
 sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(pp));sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints');
 for(const id of [1,2])sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=?').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:60}),JSON.stringify({...steady,attraction:30}),id);
 const recapCalls=calls;response=await post(input('interact',2,{epoch:perceptionEpoch}));result=await response.json();assert.equal(response.status,200);assert.equal(calls,recapCalls);assert.equal(result.story.life.recapCount,2);assert.ok(['Le livre parle de reconstruction de la mémoire.','Le livre évoque une mémoire reconstruite, pas vécue.','Ce bouquin du bureau parle d’une mémoire rafistolée après coup.'].some(s=>result.decisions[0].reply.includes(s)));assert.ok(['Le mot décrit la maison comme un environnement.','Le mot laissé au bureau qualifie ça d’environnement, pas de chez-nous.','Ce mot réduit la maison à un simple environnement.'].some(s=>result.decisions[0].reply.includes(s)));assert.ok(!result.decisions[0].reply.includes('MEMOIRE GENEREE'));assert.ok(result.memories.filter(m=>m.kind==='rencontre').every(m=>!m.content.includes('Je discute avec Noé')));
@@ -870,7 +876,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 80'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 81'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -1437,9 +1443,13 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 }
 
 {
-  // Repli de clé + sélection autonome de la clé la plus disponible (2026-09-18, demande explicite
-  // de l'utilisateur : pouvoir basculer vers une autre clé API, identique ou différente, et que ça
-  // se fasse tout seul plutôt que de retester une clé déjà connue épuisée à chaque appel).
+  // Repli de clé + disponibilité partagée (2026-09-18, demande explicite de l'utilisateur : pouvoir
+  // basculer vers une autre clé API, identique ou différente, et que ça se fasse tout seul plutôt
+  // que de retester une clé déjà connue épuisée à chaque appel). Mécanisme remplacé le 2026-09-19
+  // par lib/gemini-keys.ts (rotation + cooldown, cf. ce fichier) sans changer les garanties
+  // vérifiées ici : reset explicite pour un ordre de départ déterministe (rotation=0 → la clé
+  // principale, à l'index 0, reste tentée en premier tant qu'aucune clé n'est en cooldown).
+  __resetGeminiKeyRotationForTests();
   const priorFetch=globalThis.fetch;
   globalThis.__testEnv.GEMINI_API_KEY_FALLBACKS='test-fallback-key';
   let primaryKeyAttempts=0,fallbackKeyCalls=0;
@@ -1453,23 +1463,23 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   let epoch=(await readWorld(db)).epoch;
   let r=await post(input('interact',1,{epoch}));
   assert.equal(r.status,200,'a configured fallback key must let the turn succeed despite a primary-key 429');
-  // La mémoire de sélection est partagée entre les deux cerveaux d'un même tour (module-level) :
-  // dès que le premier appel découvre la clé principale morte, le second en profite aussitôt et
-  // saute directement à la clé de repli, sans revalider une clé déjà connue épuisée — plus
-  // efficace qu'un essai systématique des deux clés à chaque cerveau, jamais un bug.
+  // Le cooldown est partagé entre les deux cerveaux d'un même tour (état module-level) : dès que le
+  // premier appel découvre la clé principale morte (429), le second en profite aussitôt et saute
+  // directement à la clé de repli, sans revalider une clé déjà connue épuisée — plus efficace
+  // qu'un essai systématique des deux clés à chaque cerveau, jamais un bug.
   assert.equal(primaryKeyAttempts,1,'only the first of the two character calls needs to discover the primary key is dead; the second benefits immediately from that same-turn memory');
   assert.equal(fallbackKeyCalls,2,'both independent character calls must retry against the configured fallback key');
-  // Sélection autonome : un second tour indépendant doit maintenant essayer directement la clé de
-  // repli en premier (mémorisée comme la dernière à avoir répondu pour de bon), sans regaspiller
-  // une tentative sur la clé principale toujours épuisée.
+  // Disponibilité mémorisée : un second tour indépendant doit maintenant essayer directement la
+  // clé de repli en premier (la clé principale reste en cooldown), sans regaspiller une tentative
+  // sur la clé principale toujours épuisée.
   primaryKeyAttempts=0;fallbackKeyCalls=0;
   epoch=(await readWorld(db)).epoch;
   r=await post(input('interact',1,{epoch}));
   assert.equal(r.status,200);
-  assert.equal(primaryKeyAttempts,0,'the primary key must not be retried once the fallback key is remembered as the last one that worked');
-  assert.equal(fallbackKeyCalls,2,'the remembered fallback key must be tried directly, first, for both independent character calls');
+  assert.equal(primaryKeyAttempts,0,'the primary key must not be retried while it is still in cooldown from the earlier 429');
+  assert.equal(fallbackKeyCalls,2,'the only key not in cooldown must be tried directly, first, for both independent character calls');
   globalThis.fetch=priorFetch;delete globalThis.__testEnv.GEMINI_API_KEY_FALLBACKS;
-  console.log('Passed: Gemini key fallback recovers from a primary-key 429 (the second character call benefits immediately from the same-turn discovery, never re-testing a key just found dead), and the autonomous key-selection memory then tries the remembered working key directly on the very next independent turn, without wasting an attempt on the still-exhausted primary key.');
+  console.log('Passed: Gemini key fallback recovers from a primary-key 429 (the second character call benefits immediately from the same-turn discovery, never re-testing a key just found dead), and the shared cooldown then keeps the still-exhausted primary key out of rotation on the very next independent turn, tried directly against the healthy fallback key.');
 }
 
 {
@@ -1824,4 +1834,91 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(agreedPlan.intent,'study','an overdue investigation must still win over an already-agreed destination elsewhere');
   assert.equal(agreedPlan.room,'bureau','the room must follow the overdue investigation\'s intent, never leave it mismatched with an unrelated agreed destination');
   console.log('Passed: the investigation\'s guaranteed ceiling escalates in two honest steps (round 10 intensifies, round 20 becomes absolute priority over any scripted romance) rather than a single arbitrary cutoff, never fires once evidence is already complete, and keeps room/intent consistent even against an already-agreed destination elsewhere.');
+}
+
+{
+  // Plafond de l'enquête, partie 2 (2026-09-19, retour utilisateur explicite après audit du
+  // plafond réel observé en simulation fraîche — round 46 au lieu du round ~33 documenté, cause
+  // racine : le cycle "2 tours d'étude + 2 tours de debrief (+ parfois 1 recap)" par preuve
+  // manquante). Intervention légère choisie par l'utilisateur : une fois investigationOverdue actif
+  // (round>=20, même seuil que lib/turn.ts), le debrief post-preuve se raccourcit à 1 tour au lieu
+  // de 2 — comparaison directe avant/après le seuil, fixture minimale (studyTurns déjà à 1, un tour
+  // de plus complète la preuve).
+  const freshEvidencePlot=(round)=>({...newStory(),round,met:true,introduced:true,salonTurns:5,evidence:['Preuve A','Preuve B'],life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,exitSearched:true,studyTurns:1,recapCount:0}});
+  // Avant le seuil (round 9, multiple de 3 : force la relance vers l'étude sans passer par
+  // investigationOverdue, qui n'existe qu'à partir du round 20).
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(freshEvidencePlot(9)));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=1').run('bureau',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),'study');
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=2').run('bureau',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),'study');
+  let epoch=(await readWorld(db)).epoch;
+  let r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);let w=await r.json();
+  assert.equal(w.story.evidence.length,3,'setup sanity check: the fixture must actually earn a new evidence this turn');
+  assert.equal(w.story.life.debrief.remaining,2,'below round 20, a freshly earned evidence must still grant the original 2-turn debrief');
+  // Après le seuil (round 25 : investigationOverdue force déjà study/bureau tout seul, sans qu'un
+  // multiple de 3 ou de 2 ne soit nécessaire).
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(freshEvidencePlot(25)));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=1').run('bureau',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),'study');
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=2').run('bureau',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),'study');
+  epoch=(await readWorld(db)).epoch;
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  assert.equal(w.story.evidence.length,3,'setup sanity check: the fixture must actually earn a new evidence this turn, overdue regime');
+  assert.equal(w.story.life.debrief.remaining,1,'once the investigation is overdue (round>=20), a freshly earned evidence must grant only 1 turn of debrief instead of 2, tightening the guaranteed ceiling');
+  console.log('Passed: once the investigation is overdue (round>=20), the post-evidence debrief shortens from 2 turns to 1, closing part of the gap between the documented ~33-round ceiling and the ~46-round ceiling actually observed.');
+}
+
+{
+  // Plafond de l'enquête, partie 3 (même audit) : le recap salon (recapBeat) ne doit plus
+  // s'interposer une fois l'enquête en retard (round>=20) — contrairement à avant round 20, où il
+  // reste actif (cf. le test du recap zéro-API plus haut dans ce fichier, round 15).
+  const recapOverduePlot={...newStory(),round:22,evidence:['Preuve A','Preuve B'],finalCalled:false,life:{...newStory().life,visualIntro:2,ambientSeen:true,ambientVerified:true,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,exitSearched:true,recapCount:0}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(recapOverduePlot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  for(const id of [1,2])sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=?').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:60}),JSON.stringify({...steady,attraction:30}),id);
+  const beforeCalls=calls;
+  const epoch=(await readWorld(db)).epoch;
+  const r=await post(input('interact',2,{epoch}));assert.equal(r.status,200);
+  assert.equal(calls,beforeCalls+2,'once round>=20, the recap beat must no longer intercept the turn with a zero-API local recap — a real two-brain call must happen instead, letting the overdue investigation take priority');
+  console.log('Passed: once the investigation is overdue (round>=20), the salon recap detour no longer intercepts the turn, so the overdue investigation\'s absolute priority actually takes effect instead of being delayed by one more turn.');
+}
+
+{
+  // Rotation des clés (2026-09-19, demande explicite de l'utilisateur à l'ajout d'une 3e clé API :
+  // « pense à solliciter une rotation des clefs pour ne pas saturer une clef de demande [...]
+  // systeme de rotation des clefs [...] fais quelque chose d'intelligent »). Avec plusieurs clés
+  // SIMULTANÉMENT saines (aucune en cooldown), le trafic doit se répartir entre elles au lieu de
+  // toujours retomber sur la même — contrairement à l'ancien mécanisme "collant" qui aurait gardé
+  // la même clé indéfiniment tant qu'elle répondait. Le raisonnement tient quel que soit le point
+  // de départ exact de la rotation (mod 3, les 3 index sont visités sur 3 appels consécutifs quel
+  // que soit l'offset de départ) : sur 2 tours indépendants (4 appels de cerveau au total, avec 3
+  // clés configurées), les 3 clés doivent TOUTES avoir été utilisées au moins une fois — la preuve
+  // directe qu'aucune clé n'absorbe seule tout le trafic. Placé en toute fin de fichier comme les
+  // autres blocs HTTP réels ci-dessus, pour ne jamais décaler le compteur partagé de
+  // crypto.randomUUID() dont dépend le test de mute/caméra plus haut dans le fichier. Fixture
+  // explicite et autonome (jamais l'état ambiant laissé par le test précédent, purement
+  // planTurn() sans écriture DB) : enquête déjà complète, les deux dans le salon, aucun besoin
+  // urgent, pour garantir exactement les deux appels de cerveau normaux à chaque tour.
+  __resetGeminiKeyRotationForTests();
+  let plot={...newStory(),round:13,met:true,introduced:true,sharedMeal:true,finalCalled:true,evidence:Array(5).fill('preuve'),pendingDestination:undefined,life:{...newStory().life,exitSearched:true,ambientSeen:true,ambientVerified:true,tvSeen:true,remoteFound:true}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=1').run('salon',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),'chat');
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=2').run('salon',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),'chat');
+  const priorFetch=globalThis.fetch;
+  globalThis.__testEnv.GEMINI_API_KEY_FALLBACKS='test-rotation-b,test-rotation-c';
+  const keysUsed=new Set();
+  globalThis.fetch=async(url,options)=>{
+    keysUsed.add(options.headers['x-goog-api-key']);
+    return priorFetch(url,{...options,headers:{...options.headers,'x-goog-api-key':'test-only'}});
+  };
+  let epoch=(await readWorld(db)).epoch;
+  assert.equal((await post(input('interact',1,{epoch}))).status,200);
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=1').run('salon',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),'chat');
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=2').run('salon',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),'chat');
+  epoch=(await readWorld(db)).epoch;
+  assert.equal((await post(input('interact',1,{epoch}))).status,200);
+  assert.deepEqual(keysUsed,new Set(['test-only','test-rotation-b','test-rotation-c']),'with 3 simultaneously healthy keys, 4 independent brain calls across 2 turns must use all 3 keys, never just one absorbing all the traffic');
+  globalThis.fetch=priorFetch;delete globalThis.__testEnv.GEMINI_API_KEY_FALLBACKS;
+  console.log("Passed: with several simultaneously healthy Gemini keys configured, traffic rotates across all of them instead of always landing on the same one, satisfying the explicit \"ne pas saturer une clef\" request — proven independently of the rotation counter's exact starting point.");
 }

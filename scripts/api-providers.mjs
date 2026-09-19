@@ -19,21 +19,53 @@
 // `defaultCandidates` (modèles à sonder par défaut pour ce fournisseur, du moins cher au plus
 // cher — Article 8, même si ce fournisseur n'est pas la production actuelle).
 
-async function probeGemini(key, model) {
+// Corps "léger" (défaut) : un ping minimal, quelques tokens, coût négligeable même répété sur
+// tous les modèles candidats (Article 8). Corps "lourd" (heavy:true, cf. plus bas) : reproduit la
+// TAILLE approximative d'un vrai tour de jeu (systemInstruction conséquente + sortie JSON
+// structurée), jamais le prompt réel — juste un ordre de grandeur comparable. Raison documentée
+// (CLAUDE.md, blocage du 2026-09-18) : Google peut répondre différemment (429 vs 503, ou même OK
+// vs épuisé) selon le POIDS de la requête pour la MÊME clé/modèle au même instant — une sonde
+// uniquement légère peut donc donner un faux "OK" qui ne se vérifie pas avec la vraie charge de
+// l'application. Ne sonder ainsi que le modèle principal, jamais toute la liste de candidats :
+// plus coûteux qu'un ping, à ne pas multiplier sans raison (Article 8).
+const heavyFiller = "Contexte de scène fictif, uniquement pour approcher la taille réelle d'une requête de production sans en reproduire le contenu propriétaire. ".repeat(24);
+function requestBody(model, heavy) {
+  if (!heavy) return { contents: [{ role: "user", parts: [{ text: "ok" }] }], generationConfig: { maxOutputTokens: 5 } };
+  return {
+    systemInstruction: { parts: [{ text: heavyFiller }] },
+    contents: [{ role: "user", parts: [{ text: JSON.stringify({ probe: true, note: "sonde de diagnostic, taille comparable à un vrai tour" }) }] }],
+    generationConfig: { maxOutputTokens: 200, responseMimeType: "application/json", responseJsonSchema: { type: "object", additionalProperties: false, properties: { ok: { type: "boolean" } }, required: ["ok"] } },
+  };
+}
+// Une réponse HTTP 200 ne garantit pas un contenu exploitable : un filtre de sécurité ou une
+// coupure prématurée peut renvoyer 200 sans le moindre texte utilisable (candidates vide, ou
+// content.parts absent) — l'application plante alors au moment de lire cette réponse malgré le
+// statut 200. Distinguer ce cas ("OK_VIDE") d'un vrai succès évite de rapporter un faux positif.
+function inspectBody(body) {
+  const candidate = body?.candidates?.[0];
+  const text = candidate?.content?.parts?.[0]?.text;
+  if (typeof text === "string" && text.length > 0) return { status: "OK" };
+  return { status: "OK_VIDE", detail: candidate?.finishReason ? `finishReason=${candidate.finishReason}` : "réponse 200 sans contenu exploitable" };
+}
+async function probeGemini(key, model, { heavy = false } = {}) {
   const started = Date.now();
   try {
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
       method: "POST",
       headers: { "x-goog-api-key": key, "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "ok" }] }], generationConfig: { maxOutputTokens: 5 } }),
+      body: JSON.stringify(requestBody(model, heavy)),
     });
     const ms = Date.now() - started;
-    if (r.status === 200) return { status: "OK", ms };
     const body = await r.json().catch(() => ({}));
+    if (r.status === 200) { const inspected = inspectBody(body); return { ...inspected, ms }; }
     const message = body?.error?.message ?? "";
     if (r.status === 429) {
       const quotaId = body?.error?.details?.find(d => d.violations)?.violations?.[0]?.quotaId;
-      return { status: "QUOTA_ÉPUISÉ", ms, detail: quotaId ?? message.slice(0, 80) };
+      // retryDelay est trompeur pour un épuisement de quota JOURNALIER (leçon du 2026-09-18,
+      // CLAUDE.md) : affiché tel quel, mais jamais interprété comme "redevient disponible après
+      // ce délai" par l'outil lui-même.
+      const retryDelay = body?.error?.details?.find(d => d.retryDelay)?.retryDelay;
+      return { status: "QUOTA_ÉPUISÉ", ms, detail: (quotaId ?? message.slice(0, 80)) + (retryDelay ? ` (retryDelay Google: ${retryDelay}, souvent trompeur pour un quota journalier)` : "") };
     }
     return { status: `HTTP ${r.status}`, ms, detail: message.slice(0, 100) };
   } catch (e) {

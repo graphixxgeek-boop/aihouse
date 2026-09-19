@@ -41,8 +41,8 @@ const primary = process.env.GEMINI_MODEL ?? devVars.match(/^GEMINI_MODEL=(.*)$/m
 // du moins cher au plus cher — jamais un modèle plus lourd que nécessaire par défaut (Article 8).
 const candidates = [...new Set([primary, ...PROVIDERS.gemini.defaultCandidates])];
 
-async function probe(entry, model) {
-  const r = await PROVIDERS[entry.provider].probe(entry.key, model);
+async function probe(entry, model, options) {
+  const r = await PROVIDERS[entry.provider].probe(entry.key, model, options);
   return { model, ...r };
 }
 
@@ -82,6 +82,24 @@ for (const model of sweepCandidates) {
   recordOutcome(bestKey, model, r.status === "OK" ? "OK" : r.status, false);
   results.push(r);
   console.log(`${r.status.padEnd(14)} ${model.padEnd(28)} ${r.ms}ms${r.detail ? "  — " + r.detail : ""}`);
+}
+
+// Sonde "lourde" (2026-09-19, demande explicite : « veille à ce que le diagnostic qualité soit
+// bien poussé au maximum ») : reproduit la TAILLE approximative d'une vraie requête de production
+// (systemInstruction + sortie JSON structurée), jamais le contenu réel — uniquement sur le modèle
+// PRINCIPAL avec la clé la plus prometteuse, jamais sur toute la liste de candidats (coût
+// négligeable mais non nul, Article 8). Raison documentée (CLAUDE.md, blocage du 2026-09-18) :
+// une sonde légère peut répondre "OK" alors que la vraie charge de l'application, plus lourde,
+// obtient un 429/503 pour la même clé/modèle au même instant — cette seconde sonde referme cet
+// angle mort du diagnostic léger ci-dessus.
+let heavyResult = null;
+if (bestKey.provider === "gemini") {
+  heavyResult = await probe(bestKey, primary, { heavy: true });
+  recordOutcome(bestKey, primary, heavyResult.status === "OK" ? "OK" : heavyResult.status, false);
+  console.log(`\nSonde lourde (taille comparable à un vrai tour) sur le modèle principal (${primary}, clé ${keyLabel(bestKey)}) :`);
+  console.log(`${heavyResult.status.padEnd(14)} ${heavyResult.ms}ms${heavyResult.detail ? "  — " + heavyResult.detail : ""}`);
+  const lightResult = results.find(r => r.model === primary);
+  if (lightResult && lightResult.status === "OK" && heavyResult.status !== "OK") console.log("⚠️  Écart réel détecté : la sonde légère dit OK mais la sonde lourde (taille proche d'un vrai tour) échoue sur ce même modèle/clé — c'est exactement le cas déjà rencontré en simulation réelle (CLAUDE.md, 2026-09-18) ; ne pas se fier à la seule sonde légère pour ce modèle.");
 }
 
 console.log("\n" + "-".repeat(60));

@@ -339,6 +339,15 @@ concernés (`lib/lia.ts::think()` et `app/api/lia/route.ts::generateDossierFragm
   suggère une ligne `GEMINI_FALLBACK_MODELS=...` mais n'écrit jamais lui-même dans `.dev.vars`
   (aucun changement de configuration sans geste explicite). Coûte quelques appels négligeables à
   chaque exécution (Article 8) : à lancer à la demande pour diagnostiquer, pas en continu.
+  **Diagnostic renforcé (2026-09-19, demande explicite : « veille à ce que le diagnostic qualité
+  soit bien poussé au maximum »)** : en plus de la sonde légère ci-dessus, une sonde "lourde" (taille
+  comparable à un vrai tour de jeu — `systemInstruction` + sortie JSON structurée, jamais le
+  contenu réel) s'exécute sur le modèle principal, pour détecter l'écart déjà rencontré en
+  simulation réelle où une sonde légère répond "OK" alors que la vraie charge de l'application
+  échoue sur la même clé/modèle au même instant. Une réponse HTTP 200 sans contenu exploitable
+  (filtre de sécurité, coupure prématurée) est signalée distinctement ("OK_VIDE"), jamais confondue
+  avec un vrai succès. Le `retryDelay` de Google sur un 429 est affiché avec son rappel de piège
+  (voir plus bas).
   **Principe fondateur de cet outil** *(formulé explicitement par l'utilisateur le 2026-09-18 :
   « je veux que l'outil ait une connaissance fine de la clef API de façon à pouvoir la dominer :
   c'est le principe fondateur de l'outil qui lui permet d'atteindre son objectif : contourner les
@@ -372,16 +381,26 @@ concernés (`lib/lia.ts::think()` et `app/api/lia/route.ts::generateDossierFragm
   deux clés du même projet Google Cloud partagent le même panier de quota (confirmé
   empiriquement — deux clés testées avec le même préfixe se sont épuisées identiquement) ; seule
   une clé d'un projet Google Cloud réellement distinct apporte un quota indépendant.
-- **Sélection autonome de la clé la plus disponible** *(demande explicite de l'utilisateur)* — une
-  variable de module (`lastGoodKeyIndex`, dans `lib/lia.ts` et `route.ts` séparément) mémorise
-  l'index de la dernière clé ayant obtenu une réponse définitive, et la retente en premier au
-  prochain appel plutôt que de retester dans l'ordre une clé déjà connue épuisée — mémoire
-  best-effort au niveau du process/isolate, jamais une garantie inter-redémarrage, jamais écrite
-  en base. Portée volontairement limitée aux CLÉS (strictement interchangeables) : jamais aux
-  MODÈLES, qui restent toujours tentés dans l'ordre configuré, le principal en premier (Article 0 —
-  un modèle de repli n'est pas équivalent en qualité). Le second cerveau d'un même tour bénéficie
-  immédiatement de la découverte du premier au sein du même tour (mémoire partagée) — plus
-  efficace que prévu initialement, jamais un bug.
+- **Rotation + disponibilité des clés** *(2026-09-18, remplacé le 2026-09-19 par une vraie rotation
+  à l'ajout d'une 3e clé — demande explicite de l'utilisateur : « rotation des clefs pour ne pas
+  saturer une clef de demande [...] systeme de rotation, de test de disponibilité »)* — un module
+  partagé (`lib/gemini-keys.ts`, utilisé par `lib/lia.ts::think()` ET
+  `route.ts::generateDossierFragment()`, jamais deux états séparés) fait tourner un round-robin
+  parmi les clés actuellement saines à chaque appel, au lieu de l'ancienne mémoire "collante"
+  (`lastGoodKeyIndex`) qui laissait UNE SEULE clé encaisser tout le trafic tant qu'elle répondait.
+  Une clé qui vient d'échouer est mise en cooldown (429 → 15 min, probablement un quota épuisé pour
+  un moment ; 503 → 60 s, souvent transitoire ; 401/403 → définitif pour la durée du process) et
+  sautée par la rotation tant que ce délai n'est pas écoulé, jamais un appel de sonde séparé (zéro
+  coût API additionnel, Article 8) — ce suivi est tiré directement du trafic réel. Une clé en
+  cooldown n'est jamais RETIRÉE de la rotation, seulement reléguée en dernier recours si toutes le
+  sont. Mémoire "best-effort" au niveau du process/isolate, comme avant : jamais une garantie
+  inter-redémarrage, jamais écrite en base. Portée volontairement limitée aux CLÉS (strictement
+  interchangeables) : jamais aux MODÈLES, qui restent toujours tentés dans l'ordre configuré, le
+  principal en premier (Article 0 — un modèle de repli n'est pas équivalent en qualité). Le second
+  cerveau d'un même tour bénéficie immédiatement de la découverte du premier au sein du même tour
+  (cooldown partagé) — plus efficace que prévu initialement, jamais un bug. Testé
+  (`scripts/check-house.mjs`) : avec 3 clés simultanément saines, 4 appels indépendants utilisent
+  bien les 3, jamais une seule qui absorbe tout le trafic.
 
 **Inactif par défaut** dans tous les cas : listes absentes ou vides reproduisent exactement le
 comportement antérieur, zéro appel supplémentaire, zéro changement de modèle ou de clé silencieux
