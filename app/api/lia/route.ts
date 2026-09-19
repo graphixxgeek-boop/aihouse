@@ -21,6 +21,7 @@ const schema = z.object({
     epoch: z.number().int().min(0).default(0), intent: z.enum(intents).default("none"),
     message: z.string().trim().max(2000).default(""),
     room: z.enum(spaces).default("salon"), night: z.boolean().default(false),
+    gender: z.enum(["masculin", "feminin"]).default("masculin"),
 }).refine(input => input.mode !== "chat" || input.message.length > 0).refine(input => input.mode !== "care" || ["eat", "sleep", "rest", "study", "tv"].includes(input.intent));
 type Decision = z.infer<typeof decisionSchema> & {
     actor: Person;
@@ -118,8 +119,16 @@ export async function POST(request: Request) {
         const storedStory = await db.prepare("SELECT id, content FROM memories WHERE kind = 'scenario' ORDER BY id DESC LIMIT 1").first<{id:number;content:string}>();
         const story: Story = storedStory ? parseStory(storedStory.content) : newStory();
         if(input.mode==="identify"){
+            // Validation stricte (2-20, lettres/chiffres/tirets) appliquée côté CLIENT uniquement
+            // (app/page.tsx, guidage d'un vrai pseudo saisi par un humain) : le serveur reste
+            // volontairement permissif comme avant (normaliseNickname), un pseudo stylisé ou
+            // symbolique (ex. "Spectateur ◇", déjà utilisé ailleurs dans le moteur narratif) reste
+            // valide — jamais une double validation divergente entre client et serveur.
             const nickname=normaliseNickname(input.message);if(!nickname)return Response.json({error:"Choisissez un pseudo."},{status:400});
             if(!story.observer)story.observer=nickname;
+            // Genre de l'observateur (2026-09-19, retour utilisateur explicite) : choisi une fois à
+            // l'identification, jamais redemandé ni réévalué ensuite — masculin par défaut si absent.
+            if(!story.observerGender)story.observerGender=input.gender;
             const at=Date.now(),fence="EXISTS (SELECT 1 FROM world_lock WHERE id = 1 AND token = ? AND expires_at > ?)";
             const save=storedStory?db.prepare(`UPDATE memories SET content = ? WHERE id = ? AND ${fence}`).bind(JSON.stringify(story),storedStory.id,token,at):db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT 1,'scenario',?,? WHERE ${fence}`).bind(JSON.stringify(story),at,token,at);
             const saved=await db.batch([save,db.prepare(`INSERT INTO world_requests (id,result,created_at) SELECT ?,?,? WHERE ${fence}`).bind(input.requestId,JSON.stringify({decisions:[]}),at,token,at)]);
