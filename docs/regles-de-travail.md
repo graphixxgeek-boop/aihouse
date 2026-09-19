@@ -348,6 +348,18 @@ indices, le vrai travail d'imagination "page blanche" restant un raisonnement qu
 appelant peut faire. Un outil qui semblerait un jour trancher tout seul une question de fond serait
 un signal d'alerte à traiter comme une dérive, pas un progrès.
 
+### Veille hebdomadaire automatique du réseau
+
+*(Ajoutée le 2026-09-19, à la demande explicite de l'utilisateur, en réponse à la question « est-ce
+qu'il manque un agent manager de tous les outils ? ».)* Tous les outils de ce paysage restent
+réactifs — aucun ne se déclenche de lui-même dans la durée. Une routine planifiée (hebdomadaire,
+gratuite, zéro appel API) comble ce manque : elle relance `check-argus.mjs`, `check-harmonia.mjs`,
+`always-new-code.mjs` et `check-level-target.mjs` sur cette session, compare à l'état de la semaine
+précédente, et ne signale à l'utilisateur que ce qui traîne réellement depuis longtemps (une
+trouvaille jamais traitée, une zone jamais revue, une pression de points fragiles élevée) — jamais
+un rapport complet à chaque fois si rien de notable n'a changé. Reste, comme tout le reste de ce
+paysage, un conseiller : elle ne corrige jamais rien elle-même.
+
 ## 8. Profil de collaboration observé
 
 *(Champ volontairement large, à la demande explicite de l'utilisateur : « tout ce qui est utile
