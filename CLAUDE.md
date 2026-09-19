@@ -555,6 +555,23 @@ exactement comme pour l'analyse initiale. Les deux temps (bugs clairs → correc
 investigation ; conception ouverte → questions d'abord) peuvent cohabiter dans la même réponse,
 traités point par point (Article 16, complément du 2026-09-17).
 
+**Sondage rapide juste après la livraison des documents d'une simulation.** *(Ajouté le
+2026-09-19, à la demande explicite de l'utilisateur : « il n'est pas sûr que j'aie lu la
+conversation en entier [...] mets en place cette méthode de travail maintenant ».)* Dès que le
+transcript et le dossier d'une nouvelle simulation sont livrés (étape 3 de l'Article 18), avant de
+se lancer dans l'analyse détaillée (étape 4), l'agent pose un petit questionnaire de calibrage en
+trois questions, via l'outil de questions dédié (format ci-dessus) :
+1. Est-ce que l'utilisateur va lire la conversation livrée entièrement, en diagonale, ou pas du
+   tout — pour savoir si l'analyse peut supposer une lecture déjà faite ou doit tout réexpliquer.
+2. Est-ce que l'utilisateur a besoin que l'agent cite des extraits précis de la conversation pour
+   illustrer chaque point remonté dans l'analyse, plutôt qu'une description sans citation.
+3. Une troisième question, construite par l'agent selon le contexte du moment (chantiers en cours,
+   urgence, autres demandes en attente), portant sur la façon d'enchaîner les tâches qui suivent.
+Les réponses obtenues doivent concrètement changer la façon dont l'agent répond ensuite (niveau de
+détail, présence ou non de citations, ordre des tâches) — jamais notées puis ignorées. Cette
+exigence est nouvelle : elle s'applique à partir de la simulation suivant son adoption, pas
+rétroactivement à une livraison déjà faite avant qu'elle n'existe.
+
 **Type de question précisé à chaque fois.** *(Ajouté le 2026-09-18, à la demande explicite de
 l'utilisateur : « tes questions peuvent être des questions de calibrage mais aussi des questions
 d'alignement de la compréhension, des questions qui t'aident à mieux comprendre, ou à mieux te
@@ -796,7 +813,14 @@ ensemble « la refonte graphique », un seul chantier visuel à mener groupé. O
    entièrement respécifié via dix questions de calibrage puis implémenté et testé le même jour
    (`mode:"skip_to_revelation"`, cf. `docs/referentiel/principes.md` 8.21 et `parametres.md` pour le
    détail complet).
-3. **La refonte graphique** (points 4/5/6 groupés). **Exigence ajoutée le 2026-09-19** (retour
+3. **Juste avant la refonte graphique** *(ajouté le 2026-09-19, demande explicite de
+   l'utilisateur)* — créer `docs/referentiel/regles-des-graphismes.md`, sur le modèle de
+   `regles-du-temps.md`/`regles-de-l-espace.md` : un document intelligent qui rassemble tout ce qui
+   entre en jeu dans cette refonte (qualité graphique, mise en page, textures, apparence, affichage)
+   pour la préparer et l'accueillir efficacement dans le code, pas seulement la décrire après coup.
+   Explicitement gardé pour plus tard par l'utilisateur — à faire au moment de démarrer ce chantier,
+   pas avant.
+4. **La refonte graphique** (points 4/5/6 groupés). **Exigence ajoutée le 2026-09-19** (retour
    utilisateur explicite sur un transcript réel, full_sim8) : `scenePalette` (`lib/perception.ts` —
    couleurs des sols, murs, motifs) existe déjà en données mais n'est actuellement JAMAIS transmise
    au modèle qui génère le dialogue — seul le rendu 3D (`components/house-view.tsx`) l'utilise. Les
@@ -808,9 +832,9 @@ ensemble « la refonte graphique », un seul chantier visuel à mener groupé. O
    temps, demandée explicitement : les personnages décrivent toujours le monde TEL QU'IL EST
    AFFICHÉ au moment présent, jamais une référence à un ancien décor ni à l'historique du code —
    condition de base de l'immersion, à re-vérifier après chaque changement visuel.
-4. **Après la refonte graphique** — chantier n°7 (mécaniques de diffusion), dernier de la liste par
+5. **Après la refonte graphique** — chantier n°7 (mécaniques de diffusion), dernier de la liste par
    la propre priorisation d'Opus, confirmée par l'utilisateur.
-5. **Après la refonte graphique également** *(ajouté le 2026-09-19, demande explicite de
+6. **Après la refonte graphique également** *(ajouté le 2026-09-19, demande explicite de
    l'utilisateur)* — revoir le texte de la popup de bienvenue (`app/page.tsx`, section
    `welcomeOpen`) : version actuelle volontairement provisoire, à retravailler une fois l'habillage
    visuel du jeu stabilisé plutôt que de la peaufiner avant un changement de decor qui pourrait la
