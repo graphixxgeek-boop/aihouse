@@ -408,16 +408,21 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   ×4 (ensuite) ; hausse ×6 (tôt) / ×3 (ensuite) — asymétrie toujours présente (baisse pèse plus
   qu'une hausse égale), mais resserrée par rapport aux poids d'origine (2026-09-19, retour
   utilisateur explicite après trois simulations où l'appréciation plafonnait vers 36-41 malgré une
-  bienveillance soutenue dédiée, rendant `genuineRespectStreak` — qui exige `appreciation>=85` —
-  hors d'atteinte en pratique). `trustShift` lui-même est borné par `evolveEmotions` à [-12,+5] par
-  tour (cap existant, commun à toute émotion) ; en pratique, sur une vraie session, les variations
-  observées restent bien plus fines (de l'ordre de ±1 à ±3), le cap ne s'atteignant que pour une
-  réaction de confiance véritablement extrême. Sur cette plage réaliste (±1 à ±3), les nouveaux
-  poids permettent à une bienveillance vraiment soutenue (plusieurs tours consécutifs à trustShift
-  positif) d'approcher ou d'atteindre 85 sur une session réaliste, sans le rendre trivial ni rapide
-  — à revalider empiriquement par une nouvelle simulation dédiée avant de considérer ce calibrage
-  définitif (cf. CLAUDE.md, feuille de route du 2026-09-19). Message neutre (`trustShift`=0) : 0,
-  jamais de mouvement par défaut.
+  bienveillance soutenue dédiée, rendant `genuineRespectStreak` — qui exigeait alors
+  `appreciation>=85` — hors d'atteinte en pratique). `trustShift` lui-même est borné par
+  `evolveEmotions` à [-12,+5] par tour (cap existant, commun à toute émotion) ; en pratique, sur une
+  vraie session, les variations observées restent bien plus fines (de l'ordre de ±1 à ±3), le cap ne
+  s'atteignant que pour une réaction de confiance véritablement extrême. **Validation empirique
+  faite, résultat négatif** (full_sim9 et full_sim10, 2026-09-19) : sur les deux sessions dédiées qui
+  devaient revalider ce calibrage, l'appréciation a de nouveau plafonné à 30-45 pendant tout le test
+  de bienveillance soutenue — le rééquilibrage des poids seul ne suffisait pas, parce que le vrai
+  facteur bloquant est ailleurs : `trustShift` restait lui-même à 0 pendant ces tests (Lia et Noé
+  lisent la gentillesse soudaine avec scepticisme plutôt que d'y croire aveuglément — jugé conforme
+  au personnage, cf. principes.md 8.5). Le seuil de `genuineRespectStreak` a donc été abaissé de 85 à
+  78 le même jour (ci-dessous) plutôt que de continuer à pousser les poids : le vrai verrou n'était
+  pas la conversion trustShift→appréciation mais le seuil lui-même, réglé trop haut par rapport à ce
+  qu'une session réaliste peut atteindre. Message neutre (`trustShift`=0) : 0, jamais de mouvement
+  par défaut.
 - Colère réellement lue (`angerLevel(tension,comfort,dispute actif)` > 0,5 chez le personnage qui
   vient de répondre) : -5 supplémentaires, en plus du jugement de confiance ci-dessus, jamais à sa
   place — un signal distinct (tension/confort) plutôt qu'une redite de la confiance.
@@ -439,8 +444,11 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   `appreciation`, `principes.md` 8.5, `lib/life.ts`) : compteur 0-20 par acteur, incrémenté de
   1 à chaque tour où le trustShift PROPRE à cet acteur est `>=0` (assoupli le 2026-09-19 depuis
   `>0` — un tour qui reste simplement très positif sans continuer à monter compte désormais aussi,
-  cf. principes.md 8.5 pour la justification complète) ET son `appreciation` `>=85` ; remis à 0 dès
-  que ce trustShift est `<0` ou son appreciation `<85`. À `genuineRespectStreak[id]>=6`,
+  cf. principes.md 8.5 pour la justification complète) ET son `appreciation` `>=78` (abaissé de 85
+  le 2026-09-19, même jour, après que full_sim9 ET full_sim10 ont confirmé empiriquement que 85
+  restait hors d'atteinte même pendant un test dédié de bienveillance soutenue — cf. le paragraphe
+  ci-dessus) ; remis à 0 dès que ce trustShift est `<0` ou son appreciation `<78`. À
+  `genuineRespectStreak[id]>=6`,
   déclenche une fois le palier rare « respect sincère » dans `observerStandingFor(id)` (texte
   distinct du palier `>=75`, autorisant un mot de reconnaissance directe et non feint) puis se remet
   immédiatement à 0 (consommé), devant se reconstruire entièrement avant de pouvoir se redéclencher

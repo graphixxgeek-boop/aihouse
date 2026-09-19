@@ -77,11 +77,18 @@ qu'une première rédaction de ce document affirmait à tort. La colonne `room` 
 explicitement la valeur littérale `"couloir"` pour la plupart des lignes générées pendant cette scène
 (réplique principale, pensée causale, pensée privée — chaque site d'insertion applique
 `turnPlan.exitInspection?"couloir":room`) : le tag affiché dans le transcript ("▥ COU") est donc un
-signal structuré fiable, pas seulement une déduction à partir de la prose. Quelques sites
-d'insertion plus périphériques (ligne de départ, confirmation "je te suis", pensée de bascule
-amoureuse) n'appliquent pas cette substitution et restent tagués avec la vraie pièce — une
-incohérence mineure d'affichage entre lignes d'un même tour, pas un problème de données (l'état de
-jeu réel n'est jamais affecté), à garder à l'œil plutôt qu'à corriger d'urgence. C'est un signal
+signal structuré fiable, pas seulement une déduction à partir de la prose. **Précision corrigée le
+2026-09-19, quelques minutes après la précédente** : la ligne de départ elle-même (et sa
+confirmation "je te suis"/"on y va") reste tagué avec la VRAIE pièce d'origine (ex. "salon"), jamais
+"couloir" — ce n'est PAS une incohérence à corriger, contrairement à ce que cette section affirmait
+juste avant vérification complémentaire. C'est la convention utilisée pour CHAQUE départ du jeu,
+couloir ou non (vérifié sur la toute première ligne de la session : "[bureau→salon] Je file au
+salon..." reste tagué "bureau", la pièce quittée, jamais la destination) : une ligne de départ
+raconte le moment où l'on est encore dans l'ancienne pièce en annonçant qu'on s'en va, donc le tag
+"pièce quittée" y est le bon, tandis que la réplique/pensée qui suit raconte ce qu'on vit une fois
+"arrivé" et prend donc le tag de la destination. Deux règles différentes pour deux types de lignes
+différents, toutes deux cohérentes avec elles-mêmes — harmoniser en forçant "couloir" sur la ligne de
+départ casserait au contraire cette convention générale. C'est un signal
 séparé côté client (`inspectionStep`, transmis en dehors du champ `room`) qui
 bascule temporairement l'affichage 3D sur deux positions fixes hors grille normale (gauche/droite
 du couloir), en cour-circuitant `residentDestination()` le temps de la scène. **Point de

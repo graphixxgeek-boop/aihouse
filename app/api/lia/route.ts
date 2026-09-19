@@ -725,7 +725,12 @@ export async function POST(request: Request) {
         // (coopération réticente, régulière) — celui-ci exige une série de tours consécutifs de
         // confiance en hausse avec une appréciation déjà très haute, et se consomme dès qu'il se
         // déclenche (cf. genuineRespectStreak dans lib/life.ts), pour ne jamais devenir un palier
-        // stable comme le >=75 peut l'être.
+        // stable comme le >=75 peut l'être. Seuil abaissé de 85 à 78 (2026-09-19, retour utilisateur
+        // explicite sur deux simulations réelles consécutives — full_sim9 et full_sim10 : même un
+        // test dédié de bienveillance soutenue plafonnait l'appréciation à 30-45, jamais assez près
+        // de 85 pour que ce palier ait la moindre chance de s'amorcer) : reste nettement au-dessus du
+        // palier de coopération (75, distinction préservée), mais redevient atteignable dans une
+        // session où l'appréciation grimpe franchement sans crever le plafond.
         // Appréciation PAR PERSONNAGE (2026-09-18, audit approfondi : "Lia et Noé peuvent apprecier
         // differemment l'utilisateur, mais ils restent solidaires la plupart du temps [...] si Noé
         // est en colère contre Lia, il peut faire preuve d'amitié envers l'utilisateur, meme si
@@ -1543,7 +1548,7 @@ export async function POST(request: Request) {
             // qui rendait la série quasi impossible à tenir sur 6 tours. Un tour qui reste simplement
             // très positif (confiance stable ou en hausse, jamais en baisse) compte désormais aussi
             // dans la série ; seule une vraie baisse de confiance (trustShift<0) la casse.
-            if(trustShift<0||appreciationOf(life,id)<85)life.genuineRespectStreak={...life.genuineRespectStreak,[id]:0};
+            if(trustShift<0||appreciationOf(life,id)<78)life.genuineRespectStreak={...life.genuineRespectStreak,[id]:0};
             else if(rareRespectFor(id))life.genuineRespectStreak={...life.genuineRespectStreak,[id]:0};
             else life.genuineRespectStreak={...life.genuineRespectStreak,[id]:(life.genuineRespectStreak?.[id]??0)+1};
           }
