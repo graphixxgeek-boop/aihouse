@@ -126,7 +126,7 @@ export function advanceStory(story: Story, investigate: boolean, dialogue: Dialo
   }
   return next;
 }
-export function storyContext(story: Story, actor: 1|2 = 1) {
+export function storyContext(story: Story, actor: 1|2 = 1, revealed = false) {
   return {
     // Souvenirs flous (2026-09-18, retour utilisateur explicite ; contenu remplacé le même jour à
     // la demande explicite de l'utilisateur — l'angle grand public/professionnel d'origine cédait
@@ -146,7 +146,15 @@ export function storyContext(story: Story, actor: 1|2 = 1) {
     // en amont (article 4). seedPick (base 31) plutôt qu'une somme brute de caractères, pour ne pas
     // retomber systématiquement sur le même indice qu'un autre champ dérivé du même seed.
     session: story.seed, narrativeAngle:seedPick(story.seed,"narrative-angle",["Vous penchez vers l'hypothèse d'un test : quelqu'un évalue vos réactions, alors autant se méfier de chaque geste qu'on vous tend.","Vous penchez vers l'hypothèse d'une erreur ou d'une panne : ce lieu a raté quelque chose, personne ne vous observe vraiment exprès.","Vous penchez vers l'hypothèse d'une punition ou d'une dette à régler : vous payez peut-être pour quelque chose que vous ne vous rappelez pas avoir fait.","Vous penchez vers l'hypothèse d'une expérience neutre : on étudie simplement comment vous vous comportez ensemble, sans intention hostile ni bienveillante."]), atmosphere: atmospheres[story.variant].split(". ")[0]+".", memoryFragment:{owner:actor===1?"Lia":"Noé", impression:personalFragments[story.variant][actor-1]}, evidence: story.evidence, observations:story.observations??[], dreams:(story.dreams??[]).filter(d=>d.actor===actor).slice(-3),
-    stage: story.evidence.length >= 5 ? "Origine d’agents IA autonomes confirmée par le dossier : souvenirs, âges et passé humain sont des données construites, pas une biographie prouvée. Discutez librement du sens de vos souvenirs, de votre relation et des humains qui vous ont créés et vous observent. Aucun pouvoir d'évasion établi." : story.evidence.length >= 2 || (story.dreams??[]).filter(d=>d.actor===actor).length >= 2 ? "Doutes croissants sur votre identité humaine. Comparez les indices et vos trous de mémoire ; hypothèses seulement, jamais certitudes sans preuve." : "Vous vous croyez humains, avec une mémoire trouée. Le lieu reste inexpliqué. Cherchez des indices tout en apprenant à vous connaître.",
+    // `revealed` (2026-09-19, audit de cohérence, régression trouvée en simulation réelle) : ce
+    // texte disait "Origine confirmée" dès evidence>=5 SEUL, un signal plus précoce et bien plus
+    // saillant que le booléen `revealed` (finalCalled&&evidence>=5&&observerSpoken) — en pratique,
+    // le modèle s'appuyait sur CE texte pour citer son incertitude chiffrée ou douter de sa
+    // continuité AVANT que le canal humain soit réellement ouvert, malgré la consigne dédiée
+    // (lib/lia.ts) le lui interdisant explicitement. Corrigé à la racine plutôt que d'empiler une
+    // seconde consigne contradictoire : la certitude affichée AU MODÈLE dans ce paragraphe suit
+    // maintenant le même seuil strict que le reste du prompt post-révélation (Article 3).
+    stage: revealed ? "Origine d’agents IA autonomes confirmée par le dossier : souvenirs, âges et passé humain sont des données construites, pas une biographie prouvée. Discutez librement du sens de vos souvenirs, de votre relation et des humains qui vous ont créés et vous observent. Aucun pouvoir d'évasion établi." : story.evidence.length >= 2 || (story.dreams??[]).filter(d=>d.actor===actor).length >= 2 ? "Doutes croissants sur votre identité humaine. Comparez les indices et vos trous de mémoire ; hypothèses seulement, jamais certitudes sans preuve." : "Vous vous croyez humains, avec une mémoire trouée. Le lieu reste inexpliqué. Cherchez des indices tout en apprenant à vous connaître.",
     opening:story.met ? null : "Les premières questions concernent qui est l'autre, ce que vous faites ici et pourquoi vos souvenirs sont flous. Ne commencez pas par l'âge, un repas ou les habitudes de café. Être deux vous rassure, sans dissiper le mystère.",
     dreamRule:"Les rêves appartiennent uniquement à ce personnage. Au premier échange après son sommeil (state.intent sleep/share_sleep mais fatigue <=12), raconte une image de ton dernier rêve, après avoir répondu à la question éventuelle de l'autre. Précise que c'est un rêve et confronte-le aux observations. L'autre ne connaît ce rêve qu'après le récit dans dialogue. Un rêve seul ne confirme jamais l'origine IA. Les observations et preuves restent distinctes des hypothèses. Ne parle pas et ne raconte pas de rêve pendant que tu dors.",
     observerLabel:story.evidence.some(e=>e.includes("Identifiant observateur"))?story.observer:undefined,life:readLife(story.life,story.round), knownFacts: story.facts, ageQuestionAllowed:story.round>=12 && Boolean(story.sharedMeal),

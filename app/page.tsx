@@ -207,7 +207,9 @@ export default function HomePage(){
   },[load,run]);
   useEffect(()=>{
     if(resumePrompt||!automatic||ready&&!world.story?.observer&&!nicknameDone)return;
-    const timer=window.setInterval(()=>{if(document.visibilityState==="visible"&&autoRef.current&&!resumeGate.current&&!busyRef.current){void run({requestId:crypto.randomUUID(),actor:turn.current,mode:"autonomous",night:nightRef.current});turn.current=turn.current===1?2:1;}},90000);
+    // 21s (2026-09-19, était 90s) : reste juste au-dessus du seuil serveur de 20s (route.ts) pour
+    // ne jamais déclencher inutilement le 429 auto_throttled tout en profitant du nouveau rythme.
+    const timer=window.setInterval(()=>{if(document.visibilityState==="visible"&&autoRef.current&&!resumeGate.current&&!busyRef.current){void run({requestId:crypto.randomUUID(),actor:turn.current,mode:"autonomous",night:nightRef.current});turn.current=turn.current===1?2:1;}},21000);
     return()=>clearInterval(timer);
   },[resumePrompt,automatic,run,ready,world.story?.observer,nicknameDone]);
   useEffect(()=>{if(document.activeElement!==messageBox.current)feed.current?.scrollTo({top:feed.current.scrollHeight,behavior:"smooth"})},[world.messages]);

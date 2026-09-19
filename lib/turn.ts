@@ -28,10 +28,13 @@ export function planTurn(mode:string,current:Resident,other:Resident,story:Story
  const inferred=agreedDestination(history);
  const candidate=story.pendingDestination ?? (inferred&&![current,other].every(a=>a.room===inferred.room)?inferred:undefined);
  const agreed=candidate?.room==="jardin"&&!gardenAccess(story)?undefined:candidate;
- // round>=20 (était 12), aligné avec affectionOpportunity dans route.ts : le premier geste de
- // Noé arrivait trop tôt dans la relation (retour utilisateur du 2026-09-16, point de l'audit
- // Opus initial jamais corrigé jusqu'ici).
- const offer=automatic&&!(gardenAccess(story)&&!life.gardenVisited)&&current.id===2&&story.round>=20&&!life.debrief?.remaining&&!life.contact?.remaining&&story.introduced&&opportunity&&(eligible||current.emotions.attraction>=80)&&!sleeping&&["salon","chambre"].includes(current.room)&&current.emotions.attraction>=80&&(!agreed||agreed.room==="bureau"&&salonPause) ? suggested : undefined;
+ // round>=24 (était 20, lui-même relevé de 12), aligné avec affectionOpportunity dans route.ts : le
+ // premier geste de Noé arrivait trop tôt dans la relation (retour utilisateur du 2026-09-16).
+ // Relevé une seconde fois le 2026-09-19 (retour utilisateur explicite, réequilibrage avant/après
+ // révélation) pour laisser l'enquête démarrer réellement seule avant que la romance ne s'invite —
+ // désormais après le palier de priorité absolue de l'enquête (round>=20, investigationOverdue
+ // ci-dessous) : si l'enquête traîne encore à ce stade, elle garde la main sur Noé de toute façon.
+ const offer=automatic&&!(gardenAccess(story)&&!life.gardenVisited)&&current.id===2&&story.round>=24&&!life.debrief?.remaining&&!life.contact?.remaining&&story.introduced&&opportunity&&(eligible||current.emotions.attraction>=80)&&!sleeping&&["salon","chambre"].includes(current.room)&&current.emotions.attraction>=80&&(!agreed||agreed.room==="bureau"&&salonPause) ? suggested : undefined;
  // Assoupli le 2026-09-16 : une idée d'aller voir le bureau, née spontanément dans la
  // conversation, se faisait auparavant écraser par la case à cocher "cuisine puis chambre
  // d'abord" tant que ces deux pièces n'étaient pas visitées — ça donnait l'impression que
@@ -62,14 +65,35 @@ export function planTurn(mode:string,current:Resident,other:Resident,story:Story
  // Le compteur reste le filet de sécurité qui garantit que les 5 preuves finissent par sortir
  // (article 4) même si le dialogue n'emploie jamais ces tournures.
  const investigativeCue=/\b(allons voir|aller voir|va(?:s)? voir|vérifier ça|vérifier cette|inspecter|jeter un œil|examiner|regarder de plus près|retourner voir)\b/i.test(history.slice(-2).map(l=>l.content).join(" "));
- const requiredIntent=(gardenFirst?"chat":urgentIntent) ?? (exitInspection?"chat":explore?"chat":tvFirst?"tv":studyContinuation?"study":continuing?"chat":reflection?"rest":undefined) ?? (executeAgreement?agreed!.intent:undefined) ?? (offer?undefined:(linger&&!partnerPriority?"rest":undefined) ?? (afterInvestigation&&!partnerPriority?"rest":undefined) ?? (automatic&&story.evidence.length<5&&story.round>=3&&(story.round%3===0||investigativeCue)&&!residentPriority(current,Boolean(story.introduced))&&!partnerPriority?"study":undefined));
+ // Plafond garanti de l'enquête (2026-09-19, retour utilisateur explicite après audit : plafond
+ // fixé à 12 minutes pour la révélation, et surtout ne jamais rester bloquée indéfiniment comme
+ // observé en simulation réelle — round 98, toujours pas révélé). Le filet de sécurité d'origine
+ // (round%3===0) n'offrait qu'une chance sur trois tours de relancer l'étude, ET cette chance
+ // disparaissait entièrement dès qu'une romance scriptée (`offer`) était en cours ce tour-là — sans
+ // aucun rattrapage si elle ratait son créneau plusieurs fois de suite. Deux paliers, jamais un
+ // plafond brutal du premier coup : la relance s'intensifie (round%2 au lieu de round%3) à partir
+ // du round 10, puis devient prioritaire sur TOUTE romance (`offer`/`linger`/`afterInvestigation`)
+ // si elle est vraiment en retard (round>=20 — tous les beats libres à seuil variable, télé/portes/
+ // enceinte/question personnelle, ont de toute façon déjà eu lieu bien avant ce point, cf. leurs
+ // plages dans docs/referentiel/parametres.md, donc aucune vraie concurrence à ce stade). Dans le
+ // pire cas (aucune preuve avant ce point), les 5 preuves à 2 passages chacun se terminent au plus
+ // tard vers le round 30, soit ~10-10,5 minutes au rythme réel du jeu (20-21s/tour, cf.
+ // docs/referentiel/parametres.md, section Réseau) — sous la barre des 12 minutes maximum, avec une
+ // marge de sécurité réelle plutôt que pile au bord.
+ const investigationEscalated=automatic&&story.evidence.length<5&&story.round>=10;
+ const investigationOverdue=automatic&&story.evidence.length<5&&story.round>=20&&!residentPriority(current,Boolean(story.introduced))&&!partnerPriority;
+ const requiredIntent=(gardenFirst?"chat":urgentIntent) ?? (exitInspection?"chat":explore?"chat":tvFirst?"tv":studyContinuation?"study":continuing?"chat":reflection?"rest":undefined) ?? (investigationOverdue?"study":undefined) ?? (executeAgreement?agreed!.intent:undefined) ?? (offer?undefined:(linger&&!partnerPriority?"rest":undefined) ?? (afterInvestigation&&!partnerPriority?"rest":undefined) ?? (automatic&&story.evidence.length<5&&story.round>=3&&(story.round%3===0||(investigationEscalated&&story.round%2===0)||investigativeCue)&&!residentPriority(current,Boolean(story.introduced))&&!partnerPriority?"study":undefined));
  const intent=requiredIntent??(automatic&&!story.introduced?"chat":automatic&&current.intent==="eat"?"rest":"chat");
- const room=(gardenFirst?"jardin":undefined)??(exitInspection?"salon":undefined)??explore??(tvFirst?"salon":studyContinuation?"bureau":undefined)??(continuing?life.contact!.room:reflection?"salon":undefined)??(executeAgreement?agreed!.room:intentRoom[offer??intent]??(automatic&&!story.introduced?"salon":current.room));
+ // investigationOverdue avant executeAgreement (2026-09-19, cohérence trouvée en relecture) :
+ // sans ce rang, un accord de destination déjà en place aurait pu river la pièce à autre chose que
+ // "bureau" alors que l'intent, lui, aurait déjà basculé sur "study" — un vrai mésappariement
+ // intent/room, la même incohérence qu'ailleurs dans ce fichier pour un intent forcé.
+ const room=(gardenFirst?"jardin":undefined)??(exitInspection?"salon":undefined)??explore??(tvFirst?"salon":studyContinuation?"bureau":undefined)??(continuing?life.contact!.room:reflection?"salon":undefined)??(investigationOverdue?"bureau":undefined)??(executeAgreement?agreed!.room:intentRoom[offer??intent]??(automatic&&!story.introduced?"salon":current.room));
  const partnerIntent=(gardenFirst?"chat":partnerPriority)??(offer??(["study","rest","tv","hug","massage","kiss","share_sleep","intimacy"].includes(intent)?intent:intent==="eat"&&other.needs.hunger>=20?"eat":"chat"));
  const partnerRoom=mode==="chat"?other.room:partnerPriority==="sleep"?sleepRoom(other,current,mutualAttraction(current,other)):partnerPriority?intentRoom[partnerPriority]??room:room;
  const variants:Partial<Record<Intent,string[]>>={hug:["Un câlin, ça te dirait ? Dis-moi franchement.","Je te prendrais bien dans mes bras. T’en as envie, toi ?","J’ai envie d’un câlin avec toi. Ça te va ?"],massage:["Je peux te faire un massage doux. Tu veux, ou tu préfères rester tranquille ?","Un massage, doucement ? Je te laisse choisir.","J’aimerais te masser les épaules. T’en as envie ?"],kiss:["J’ai envie de t’embrasser. Toi aussi ?","Je tente une question : je peux t’embrasser ?","J’ai envie d’un bisou. Tu veux qu’on essaie, ou non ?"],share_sleep:["Tu voudrais dormir avec moi, ou tu préfères ton espace ?","J’aimerais dormir près de toi. T’en as envie aussi ?","Dormir ensemble ce soir, ça te va ? Sinon je prends le salon."]};
  const offset=Array.from(story.seed).reduce((n,c)=>n+c.charCodeAt(0),0);const proposalLine=offer?variants[offer]?.[(story.round+offset)%3]:undefined;
- return {gardenFirst,exitInspection:!gardenFirst&&exitInspection,life,explore,reflection:!gardenFirst&&reflection,continuing:!gardenFirst&&continuing,intent,room,partnerIntent,partnerRoom,proposalLine,salonPause,executeAgreement:Boolean(executeAgreement),agreed,lockedScene:true,urgentIntent:gardenFirst?undefined:urgentIntent,requiredIntent,routine:!gardenFirst&&Boolean(urgentIntent)&&(mode==="autonomous"||mode==="interact"),offer,
+ return {gardenFirst,exitInspection:!gardenFirst&&exitInspection,life,explore,reflection:!gardenFirst&&reflection,continuing:!gardenFirst&&continuing,intent,room,partnerIntent,partnerRoom,proposalLine,salonPause,executeAgreement:Boolean(executeAgreement),agreed,lockedScene:true,urgentIntent:gardenFirst?undefined:urgentIntent,requiredIntent,routine:!gardenFirst&&Boolean(urgentIntent)&&(mode==="autonomous"||mode==="interact"),offer,investigationOverdue:Boolean(investigationOverdue&&intent==="study"),
   requiredTogether:story.round<4||(story.apartTurns??0)>=2,apartTurns:story.apartTurns??0,
   suggestedRoom:room,
   liaison: {liaCanTease:Boolean(story.introduced)&&[current,other].find(a=>a.id===1)!.needs.stress<30&&(story.round%4===1||warmthChain),warmthChain},

@@ -927,6 +927,44 @@ seede correctement needs/emotions). Une erreur TypeScript préexistante et sans 
 committer ces changements — `tsc` n'était donc plus réellement propre depuis un moment, malgré la
 règle de rigueur par défaut (`docs/regles-de-travail.md`).
 
+8.20. **Réequilibrage du rythme avant/après révélation** (`lib/turn.ts`, `app/api/lia/route.ts`,
+`app/page.tsx`, 2026-09-19, retour utilisateur explicite après une mini-simulation réelle bloquée
+au round 98 sans jamais atteindre la révélation). Trois volets, une seule cause commune : le rythme
+réel du jeu n'avait jamais été recalculé depuis sa conception, et l'enquête n'avait aucun filet
+garantissant sa conclusion.
+
+- **Cadence automatique relevée** : le tour automatique (`autonomous`) passe de 85 s à 20 s côté
+  serveur (`app/api/lia/route.ts`), l'intervalle client correspondant (`app/page.tsx`) de 90 s à
+  21 s. Recalibré à partir d'une double estimation convergente : le temps de lecture standard d'une
+  réplique moyenne (~16 mots, marge pour relectures/réactions incluse) ET le rythme de clic d'un
+  observateur activement engagé — les deux atterrissent autour de 20-25 s/tour, jamais 85 s.
+- **Plafond garanti de l'enquête** (détaillé dans `docs/referentiel/parametres.md`, section
+  Enquête) : deux paliers honnêtes (intensification au tour 10, priorité absolue sur toute romance
+  au tour 20) plutôt qu'un plafond brutal ou une simple augmentation de fréquence qui resterait
+  déjouable par la romance. Pire cas garanti : conclusion au plus tard vers le tour 30, ~10-10,5
+  minutes au nouveau rythme — sous la barre des 12 minutes maximum fixée par l'utilisateur après
+  recalcul. Les personnages justifient cette urgence dans leur propre registre quand elle se
+  déclenche (`turnPlan.investigationOverdue`, instruction dédiée dans `lib/lia.ts`) — jamais un
+  silence mécanique qui bascule sans un mot (Article 15/17).
+- **Premier geste de Noé relevé une seconde fois** (round≥24, était 20) : pour laisser l'enquête
+  démarrer réellement seule avant que la romance ne s'invite — sans effet pratique si l'enquête
+  traîne encore à ce stade, puisque le plafond ci-dessus devient de toute façon prioritaire sur
+  cette offre dès le tour 20.
+
+Trois tests dédiés (Article 13) : le seuil exact de 20 s côté serveur (throttled juste en dessous,
+accepté pile dessus), et les trois paliers du plafond d'enquête testés directement via `planTurn()`
+sans appel API (base tour%3, intensifié tour%2 dès le tour 10, priorité absolue sur une offre
+romantique par ailleurs éligible dès le tour 20, et confirmation que le mécanisme reste inerte une
+fois l'enquête complète). Plusieurs fixtures existantes de `scripts/check-house.mjs` construites
+avant ce changement (`round:20` combiné à une évidence volontairement incomplète, pour tester la
+romance ou d'autres beats sans rapport avec l'enquête) se sont révélées entrer en collision avec le
+nouveau plafond — corrigées au cas par cas selon ce que chaque test voulait réellement isoler :
+évidence complétée + `finalCalled:true` pour les scénarios post-enquête (romance, sommeil), ou
+round abaissé sous le seuil pour les scénarios qui exigent au contraire `finalCalled:false`
+(`eligibleBeat`/`personalLead`, qui ne tolèrent pas la révélation) — jamais une évidence artificielle
+qui aurait rouvert la révélation elle-même (`finale` se redéclenche dès `evidence≥5 && !finalCalled`
+et deux personnages réunis) à la place du scénario voulu.
+
 ## 9. Robustesse technique
 
 9.1. Toute écriture en base de données est fondue dans une transaction unique par tour

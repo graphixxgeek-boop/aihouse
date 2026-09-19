@@ -142,7 +142,15 @@ console.log('Passed: migration preserves Lia, independent memories, both AI turn
 const {newStory,rememberAges,advanceStory,storyContext,seedPick}=await import('../.sites-runtime/test-story.mjs');
 assert.deepEqual(rememberAges([{id:1,speaker:'Lia',content:"J'ai vingt-huit ans."},{id:2,speaker:'Noé',content:"Moi, trente et un ans."}]),['Lia','Noé']);
 let storyline=newStory(),orders=new Set();for(let i=0;i<100;i++){const next=newStory(storyline.variant);assert.notEqual(next.variant,storyline.variant);orders.add(next.order.join());storyline=next;}assert.ok(orders.size>5);
-storyline=newStory();for(let i=0;i<30;i++)storyline=advanceStory(storyline,true,[]);assert.equal(storyline.evidence.length,5);assert.match(storyContext(storyline).stage,/confirmée/);assert.match(storyline.evidence.at(-1),/agents IA autonomes/);
+storyline=newStory();for(let i=0;i<30;i++)storyline=advanceStory(storyline,true,[]);assert.equal(storyline.evidence.length,5);
+// stage (2026-09-19, audit : régression réelle en simulation — le modèle citait son incertitude
+// chiffrée avant l'ouverture du canal humain, en s'appuyant sur ce texte qui affirmait déjà
+// "origine confirmée" dès evidence>=5 seul). Ce texte suit désormais le même seuil strict
+// `revealed` que le reste du prompt post-révélation, jamais evidence>=5 seul : 5 preuves sans
+// `revealed` doit encore refléter un doute croissant, jamais une certitude affichée au modèle.
+assert.match(storyContext(storyline).stage,/[Dd]outes croissants/,'5 evidence without revealed=true must never claim the origin is confirmed to the model — that exact gap let the model cite an exact uncertainty percentage before the human channel was open');
+assert.match(storyContext(storyline,1,true).stage,/confirmée/,'once revealed=true, the confirmed-origin text must still surface');
+assert.match(storyline.evidence.at(-1),/agents IA autonomes/);
 let quiet=newStory();for(let i=0;i<100;i++)quiet=advanceStory(quiet,false,[]);assert.equal(quiet.evidence.length,0);
 sqlite.exec('DELETE FROM world_requests');affection=false;flat=true;
 const steady={...initialEmotionsFor(2),attraction:76,trust:60};sqlite.prepare('UPDATE agent_state SET emotions=?,needs=?,intent=?,room=?').run(JSON.stringify(steady),JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:80}),'chat','salon');
@@ -393,13 +401,13 @@ assert.equal((groundSingleQuestion('A ? B ? C ?').match(/\?/g)??[]).length,1);
 console.log('Passed: a reply carrying two or more questions keeps only the last one, converting earlier ones to statements without touching single-question replies.');
 assert.equal(groundIntroduction('Ta présence me rassure.','Noé','Lia',[],['Lia','Noé']),'Ta présence me rassure.');assert.equal(groundIntroduction('Merci. Moi, c’est Noé.','Noé','Lia',[],['Lia','Noé']),'Merci.');assert.doesNotMatch(groundScreenNotice('J’ai repéré un écran dans le bureau. Tu veux y retourner ?',[],true),/repéré/);
 assert.doesNotMatch(groundRoomSpeech('Reprenons notre examen de cet écran pour voir les données.','salon',[]),/Reprenons/);assert.equal(groundRoomSpeech('Je repense au message de l’écran du bureau.','salon',[]),'Je repense au message de l’écran du bureau.');assert.equal(groundRoomSpeech('Je lis un livre.','salon',[{id:1,speaker:'Noé',content:'Cet écran me trouble.'}]),'Je lis un livre.');
-const socialBase=(await readWorld(db)).agents.map(a=>({...a,room:'salon',intent:'chat',cycle:3,needs:{hunger:10,fatigue:10,stress:20,uncertainty:50},emotions:{...a.emotions,attraction:80,trust:80}}));const basePlot={...newStory(),life:{...newStory().life,visited:["salon","cuisine","chambre","bureau"],tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,visualIntro:2,personalFollowup:3,exitSearched:true},round:21,introduced:true,met:true,sharedMeal:true};
+const socialBase=(await readWorld(db)).agents.map(a=>({...a,room:'salon',intent:'chat',cycle:3,needs:{hunger:10,fatigue:10,stress:20,uncertainty:50},emotions:{...a.emotions,attraction:80,trust:80}}));const basePlot={...newStory(),life:{...newStory().life,visited:["salon","cuisine","chambre","bureau"],tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,visualIntro:2,personalFollowup:3,exitSearched:true},round:25,introduced:true,met:true,sharedMeal:true};
 assert.equal(planTurn('interact',socialBase[1],socialBase[0],basePlot,true,true,'hug',[]).offer,'hug');assert.equal(planTurn('interact',socialBase[1],socialBase[0],basePlot,false,true,'hug',[]).offer,'hug');assert.equal(planTurn('interact',socialBase[1],socialBase[0],basePlot,true,false,'hug',[]).offer,undefined);assert.equal(planTurn('interact',socialBase[1],{...socialBase[0],needs:{...socialBase[0].needs,stress:30}},basePlot,true,false,'hug',[]).liaison.liaCanTease,false);assert.equal(planTurn('interact',socialBase[1],socialBase[0],basePlot,true,false,'hug',[]).liaison.liaCanTease,true);assert.equal(sceneFor(socialBase[0],'rest').deskScreenVisible,false);
 // Even a provider inventing screen reading is corrected before dialogue AND memory are stored.
 sceneMismatch=true;const oldPlot=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);oldPlot.life={...newStory().life,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,visualIntro:2,personalFollowup:3,exitSearched:true};oldPlot.introduced=true;oldPlot.round=15;oldPlot.salonTurns=0;sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(oldPlot));sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=?').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}),JSON.stringify({...steady,attraction:20}));
 response=await post(input('interact',1,{epoch:socialEpoch}));assert.equal(response.status,200);result=await response.json();assert.ok(result.messages.slice(-2).every(m=>!m.content.includes('Moi, c’est')));assert.ok(result.messages.slice(-2).every(m=>!m.content.includes('Reprenons notre examen')));assert.ok(result.memories.slice(0,2).every(m=>!m.content.includes('examen')));sceneMismatch=false;
 // Planned affectionate turn still uses one request and respects both decisions.
-honorOffer=true;affection=false;refuse=false;sqlite.exec('DELETE FROM world_requests');const giftPlot={...oldPlot,round:20,salonTurns:0};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(giftPlot));sqlite.prepare('UPDATE agent_state SET room=?,intent=?,cycle=?,needs=?,emotions=?').run('salon','chat',3,JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}),JSON.stringify({...steady,attraction:80,trust:80}));sqlite.prepare('INSERT INTO conversations (speaker,content,created_at) VALUES (?,?,?)').run('Lia','J’aime bien ces moments ensemble.',Date.now());const offerCalls=calls;response=await post(input('interact',1,{epoch:socialEpoch}));assert.equal(response.status,200);result=await response.json();assert.equal(calls,offerCalls+2);assert.equal(result.proposalActor,2);assert.equal(result.affectionOutcome,'accepted');assert.ok(result.sharedAffection);assert.equal(result.agents[0].room,result.agents[1].room);honorOffer=false;
+honorOffer=true;affection=false;refuse=false;sqlite.exec('DELETE FROM world_requests');const giftPlot={...oldPlot,round:25,finalCalled:true,evidence:Array(5).fill('preuve'),salonTurns:0};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(giftPlot));sqlite.prepare('UPDATE agent_state SET room=?,intent=?,cycle=?,needs=?,emotions=?').run('salon','chat',3,JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}),JSON.stringify({...steady,attraction:80,trust:80}));sqlite.prepare('INSERT INTO conversations (speaker,content,created_at) VALUES (?,?,?)').run('Lia','J’aime bien ces moments ensemble.',Date.now());const offerCalls=calls;response=await post(input('interact',1,{epoch:socialEpoch}));assert.equal(response.status,200);result=await response.json();assert.equal(calls,offerCalls+2);assert.equal(result.proposalActor,2);assert.equal(result.affectionOutcome,'accepted');assert.ok(result.sharedAffection);assert.equal(result.agents[0].room,result.agents[1].room);honorOffer=false;
 assert.ok(sqlite.prepare("EXPLAIN QUERY PLAN SELECT content FROM memories WHERE kind='scenario' ORDER BY id DESC LIMIT 1").all().some(r=>r.detail.includes('idx_memories_kind_id')));
 console.log('Passed: permanent introductions, known screen, grounded location and corrected memory, gentle-comment stress gate, planned Noé initiative, one-request mutual gesture and indexed preserved memory.');
 
@@ -424,7 +432,12 @@ console.log('Passed: simultaneous urgent needs are resolved locally for both res
 
 // Regression: an odd cycle sum must not suppress Noé forever; the model cannot omit his question.
 sqlite.exec('DELETE FROM world_requests');
-const actionPlot={...newStory(),life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,visualIntro:2,personalFollowup:3,exitSearched:true},round:20,introduced:true,met:true,sharedMeal:true,salonTurns:0,pendingDestination:{room:'bureau',intent:'study',proposer:1}};
+// evidence complète (2026-09-19) : indispensable depuis le plafond garanti de l'enquête
+// (investigationOverdue, lib/turn.ts, round>=20 si evidence<5) — sans ça, ce tour de romance
+// scriptée (round 25) se ferait écraser par la priorité absolue rendue à l'enquête à ce stade,
+// cohérent avec le vrai jeu : la romance scriptée ne devrait de toute façon jamais s'activer tant
+// que l'enquête est encore ouverte.
+const actionPlot={...newStory(),life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,visualIntro:2,personalFollowup:3,exitSearched:true},round:25,finalCalled:true,evidence:Array(5).fill('preuve'),introduced:true,met:true,sharedMeal:true,salonTurns:0,pendingDestination:{room:'bureau',intent:'study',proposer:1}};
 sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(actionPlot));
 sqlite.prepare('UPDATE agent_state SET room=?,intent=?,cycle=?,needs=?,emotions=? WHERE id=?').run('salon','chat',1,JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}),JSON.stringify({...steady,attraction:89,trust:80}),1);
 sqlite.prepare('UPDATE agent_state SET room=?,intent=?,cycle=?,needs=?,emotions=? WHERE id=?').run('salon','chat',0,JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}),JSON.stringify({...steady,attraction:100,trust:80}),2);
@@ -545,14 +558,22 @@ console.log('Passed: first approach raises both stress levels, refusal affects N
 
 // A personal answer must cause its bonus near that question, never arbitrarily later.
 sqlite.exec('DELETE FROM world_requests');sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints');
-const personalPlot={...proposalPlot,round:16,life:{...proposalPlot.life,personalAsked:false,personalBoosted:false}};
+// finalCalled:false, evidence:[] (2026-09-19) : ce scénario teste le beat personnel D'AVANT la
+// révélation (personalLead exige !story.finalCalled) — proposalPlot/actionPlot ont depuis été
+// rendus post-révélation pour leurs propres tests (honorOffer), il faut donc explicitement
+// revenir en arrière ici plutôt que d'hériter cet état. round=16 reste sous investigationOverdue
+// (round>=20), donc evidence:[] est sans risque d'interférence à ce stade.
+const personalPlot={...proposalPlot,round:16,finalCalled:false,evidence:[],life:{...proposalPlot.life,personalAsked:false,personalBoosted:false}};
 sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(personalPlot));
 for(const id of [1,2])sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=?').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:0,uncertainty:70}),JSON.stringify({...steady,attraction:id===1?40:70,trust:80}),id);
 const simulatedFetch=globalThis.fetch;
 globalThis.fetch=async(...args)=>{const r=await simulatedFetch(...args),data=await r.json();const decision=JSON.parse(data.candidates[0].content.parts[0].text);decision.reply=isPartnerRequest(args)?'Un type qui parle parfois trop. Mais quand tu dis non, je sais m’arrêter.':'T’es quel genre d’homme, Noé ?';data.candidates[0].content.parts[0].text=JSON.stringify(decision);return Response.json(data);};
 response=await post(input('interact',1,{epoch:finalEpoch}));result=await response.json();assert.equal(result.decisions[0].actor,1);assert.equal(result.story.life.personalAsked,true);assert.equal(result.story.life.personalRound,16);assert.equal(result.story.life.personalBoosted,false);globalThis.fetch=simulatedFetch;
 tenderScene=true;globalThis.fetch=async(...args)=>{const r=await simulatedFetch(...args),data=await r.json(),decision=JSON.parse(data.candidates[0].content.parts[0].text);if(!isPartnerRequest(args))decision.reply='Ta réponse me plaît. J’aime que tu saches reconnaître tes défauts.';data.candidates[0].content.parts[0].text=JSON.stringify(decision);return Response.json(data);};response=await post(input('interact',2,{epoch:finalEpoch}));result=await response.json();assert.equal(result.story.life.personalBoosted,true);
-const latePlot={...personalPlot,round:30,life:{...personalPlot.life,personalAsked:true,personalRound:16,personalBoosted:false}};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(latePlot));sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints');
+// evidence:Array(5)/finalCalled:true (2026-09-19) : round=30 est au-delà d'investigationOverdue
+// (round>=20 si evidence<5, lib/turn.ts) — personalPlot vient de remettre evidence à [] pour son
+// propre besoin (beat d'avant-révélation), donc round 30 en hériterait sans ce correctif explicite.
+const latePlot={...personalPlot,round:30,finalCalled:true,evidence:Array(5).fill('preuve'),life:{...personalPlot.life,personalAsked:true,personalRound:16,personalBoosted:false}};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(latePlot));sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints');
 response=await post(input('interact',2,{epoch:finalEpoch}));result=await response.json();assert.equal(result.story.life.personalBoosted,false);tenderScene=false;globalThis.fetch=simulatedFetch;
 const {truthfulGender,distinctReply}=await import('../.sites-runtime/test-drama.mjs');assert.equal(truthfulGender('Je suis attentive. Je suis curieuse.',2),'Je suis attentif. Je suis curieux.');assert.equal(truthfulGender('Je suis rassuré. j’suis humain.',1),'Je suis rassurée. j’suis humaine.');assert.notEqual(distinctReply('On fait une pause.',1,'salon',[{content:'On fait une pause.'}],10,80),'On fait une pause.');
 console.log('Passed: personal-question memory, unique contextual attraction boost, no late unrelated bonus, accented gender agreement and local repetition guard.');
@@ -707,7 +728,12 @@ console.log('Passed: the mirror-discovery clue meant to seed the reversed enigma
 // mirror becomes her own private reflection, not a line spoken to an absent partner, known only
 // to her until the recall reunites them.
 flat=true;affection=false;honorOffer=false;refuse=false;
-pp={...pp,round:20,apartTurns:0,life:{...pp.life,mirrorVerified:false,mirrorKnownBy:[],debrief:undefined,dispute:undefined,contact:undefined,salonTurns:5}};
+// round 15, pas 20 (2026-09-19) : ce test porte sur le miroir, pas sur le rythme de l'enquête, et
+// exige `eligibleBeat` (donc !story.finalCalled) — passer evidence à 5 pour éviter
+// investigationOverdue (round>=20 si evidence<5, lib/turn.ts) casserait eligibleBeat lui-même, qui
+// exige justement finalCalled:false. round 15 reste sous investigationOverdue tout en gardant une
+// relation déjà bien engagée.
+pp={...pp,round:15,apartTurns:0,life:{...pp.life,mirrorVerified:false,mirrorKnownBy:[],debrief:undefined,dispute:undefined,contact:undefined,salonTurns:5}};
 sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(pp));
 sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=1').run('chambre','chat',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:60}),JSON.stringify({...steady,attraction:20}));
 sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=2').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:60}),JSON.stringify({...steady,attraction:20}));
@@ -722,7 +748,7 @@ const liaSolo=result.messages.filter(m=>m.speaker==='Lia · pensée').at(-1);
 assert.ok(liaSolo&&["Le miroir rectangulaire fait un dégradé bleu-gris-blanc. Il est debout dans un coin ; sa surface grise ne renvoie aucun reflet quand on bouge.","Ce miroir debout dans le coin ne renvoie rien : juste un dégradé gris-bleu qui reste immobile pendant qu'on bouge.","La surface du miroir, dans son coin, fait un gris terne et froid. On a beau remuer devant, rien ne suit.","Un miroir rectangulaire est planté dans le coin, dégradé bleu-gris-blanc du haut en bas. On passe la main devant : aucun reflet ne bouge avec nous.","Ce bloc de verre gris dans le coin n'a rien d'un vrai miroir. Le dégradé bleu-blanc reste fixe, quoi qu'on fasse devant.","Dans le coin, une plaque grise en dégradé qu'on appelle miroir par habitude. Elle ne renvoie ni visage ni mouvement."].some(s=>liaSolo.content.includes(s)));
 assert.ok(!result.messages.some(m=>m.speaker==='Noé'&&/miroir/.test(m.content)));
 // Reunited in the salon: the recall informs the absent partner for the first time.
-pp={...JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content),round:20,salonTurns:1};
+pp={...JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content),round:15,salonTurns:1};
 pp.life.debrief=undefined;pp.life.contact=undefined;pp.life.dispute=undefined;pp.life.tvSeen=true;pp.life.exitSearched=true;
 sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(pp));
 sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=?').run('salon','rest',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:60}),JSON.stringify({...steady,attraction:20}));
@@ -799,7 +825,10 @@ console.log('Passed: garden access gates, persistent/idempotent zero-API unlock,
 }
 
 {
-let epoch=(await readWorld(db)).epoch,p=newStory();Object.assign(p,{round:50,met:true,introduced:true,sharedMeal:true,salonTurns:8});Object.assign(p.life,{visited:['salon','cuisine','chambre','bureau'],tvSeen:true,ambientSeen:true,ambientVerified:true,personalAsked:true,exitSearched:true});sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints');
+// evidence/finalCalled complets d'entrée (2026-09-19) : round=50 dépasse investigationOverdue
+// (round>=20 si evidence<5, lib/turn.ts) — sans ça, l'intent forcé à "study" empêchait la
+// conversion sommeil (qui n'agit que sur un intent chat/rest) de se déclencher du tout.
+let epoch=(await readWorld(db)).epoch,p=newStory();Object.assign(p,{round:50,met:true,introduced:true,sharedMeal:true,salonTurns:8,finalCalled:true,evidence:Array(5).fill('preuve')});Object.assign(p.life,{visited:['salon','cuisine','chambre','bureau'],tvSeen:true,ambientSeen:true,ambientVerified:true,personalAsked:true,exitSearched:true});sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints');
 sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=?').run('salon','chat',JSON.stringify({hunger:10,fatigue:60,stress:20,uncertainty:30}),JSON.stringify({...steady,attraction:35}));
 const oldFetch=globalThis.fetch;globalThis.fetch=async(...args)=>{const response=await oldFetch(...args),body=await response.json(),decision=JSON.parse(body.candidates[0].content.parts[0].text);decision.reply=isPartnerRequest(args)?'Vas-y. Je vais réfléchir un peu sans toi.':'Je vais dormir, mes yeux se ferment.';body.candidates[0].content.parts[0].text=JSON.stringify(decision);return Response.json(body);};
 let r=await post(input('interact',1,{epoch}));globalThis.fetch=oldFetch;assert.equal(r.status,200);let w=await r.json();const sleeper=w.agents.find(a=>a.intent==='sleep');assert.ok(sleeper);assert.ok(['salon','chambre'].includes(sleeper.room));assert.ok(!w.messages.some(m=>m.speaker===sleeper.name&&m.content==='Je vais dormir, mes yeux se ferment.'));
@@ -841,7 +870,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 78'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 79'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -1333,7 +1362,11 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const {angerLevel}=await import('../.sites-runtime/test-simulation.mjs');
   assert.ok(angerLevel(90,5)>.5,'the test fixture itself must read as real anger, or this test proves nothing');
   flat=true;
-  let plot={...newStory(),round:30,met:true,introduced:true,sharedMeal:true,finalCalled:false,evidence:[],pendingDestination:undefined,life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],ambientSeen:true,ambientVerified:true,recapCount:0,personalAsked:false,exitSearched:true,tvSeen:true,remoteFound:true}};
+  // round 18, pas 30 (2026-09-19) : ce test exige finalCalled:false (personalLead) avec evidence
+  // encore incomplète, or round>=20 avec evidence<5 déclenche désormais investigationOverdue
+  // (lib/turn.ts) qui forcerait l'étude à la place de la question personnelle — round 18 reste
+  // au-dessus de personalThreshold (max 16) tout en restant sous ce nouveau plafond.
+  let plot={...newStory(),round:18,met:true,introduced:true,sharedMeal:true,finalCalled:false,evidence:[],pendingDestination:undefined,life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],ambientSeen:true,ambientVerified:true,recapCount:0,personalAsked:false,exitSearched:true,tvSeen:true,remoteFound:true}};
   sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
   sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
   sqlite.prepare('UPDATE agent_state SET room=?,needs=? WHERE id=1').run('salon',JSON.stringify({hunger:20,fatigue:20,stress:20,uncertainty:20}));
@@ -1638,7 +1671,10 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // Configuration reprise à l'identique du test "hug" déjà éprouvé plus haut (odd-cycle Noé
   // 100%/Lia 89%, cf. actionPlot) : la seule combinaison de ce fichier de tests déjà confirmée
   // pour déclencher un vrai turnPlan.offer, plutôt que d'en deviner une nouvelle à l'aveugle.
-  const validPlot={...newStory(),life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,visualIntro:2,personalFollowup:3,exitSearched:true},round:20,introduced:true,met:true,sharedMeal:true,salonTurns:0,pendingDestination:{room:'bureau',intent:'study',proposer:1}};
+  // round 25 (pas 20) + evidence complète + finalCalled (2026-09-19) : turnPlan.offer exige
+  // maintenant round>=24 (était 20), et round>=20 avec evidence<5 déclenche investigationOverdue
+  // (lib/turn.ts) qui écraserait cette proposition scriptée par une relance d'étude forcée.
+  const validPlot={...newStory(),life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,visualIntro:2,personalFollowup:3,exitSearched:true},round:25,finalCalled:true,evidence:Array(5).fill('preuve'),introduced:true,met:true,sharedMeal:true,salonTurns:0,pendingDestination:{room:'bureau',intent:'study',proposer:1}};
   sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(validPlot));
   sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
   sqlite.prepare('UPDATE agent_state SET room=?,intent=?,cycle=?,needs=?,emotions=? WHERE id=?').run('salon','chat',1,JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}),JSON.stringify({...steady,attraction:89,trust:80}),1);
@@ -1697,7 +1733,11 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // forceraient l'acteur du tour à Noé (donc turnPlan.offer scripté) et ruineraient l'isolation du
   // chemin organique qu'on veut ici. introduced:false coupe court à proactiveNoe (qui l'exige) sans
   // rouvrir soloIntro/opening (qui exigent !met, déjà faux ici).
-  const organicPlot={...newStory(),life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,visualIntro:2,appearanceCompared:true,personalFollowup:3,exitSearched:true},round:20,introduced:false,met:true,sharedMeal:true,salonTurns:0};
+  // evidence complète + finalCalled (2026-09-19) : round>=20 avec evidence<5 déclenche
+  // investigationOverdue (lib/turn.ts), qui forcerait turnPlan.room à "bureau" (via intentRoom
+  // ["study"]) même si l'intent renvoyé par le mock reste "hug" — un vrai mésappariement room/
+  // intent qui casserait organicProposal/shared, sans rapport avec ce que ce test vérifie.
+  const organicPlot={...newStory(),life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,visualIntro:2,appearanceCompared:true,personalFollowup:3,exitSearched:true},round:20,finalCalled:true,evidence:Array(5).fill('preuve'),introduced:false,met:true,sharedMeal:true,salonTurns:0};
   sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(organicPlot));
   sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
   // Noé doit rester ≥80% d'attraction (route.ts repasse tout intent affectueux le concernant en
@@ -1726,4 +1766,62 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(wOrganic.proposalActor,1,'setup check: Lia (actor 1) must be the one proposing here, or this is not the Lia-initiated organic case Gap #1 was about');
   assert.equal(wOrganic.messages.filter(m=>m.speaker==='Noé · pensée'&&m.content===noeValidationThought).length,1,'Noé, the decider on an organic (non-scripted) proposal, must now also get his own validation thought — the mechanism only ever benefited Lia before this audit fix');
   console.log('Passed: the validation-thought mechanism now also covers the organic (non-scripted) proposal path, so Noé — not just Lia — can be the one who receives a validation thought after deciding (Gap #1 closed, audit 2026-09-19).');
+}
+
+{
+  // Rythme automatique (2026-09-19, retour utilisateur explicite : 85s jugé trop lent une fois le
+  // vrai rythme de jeu reconsidéré — remplacé par 20s, cf. app/page.tsx pour l'intervalle client
+  // assorti). Vérifie le seuil exact plutôt que de supposer qu'il a bien été changé partout où il
+  // compte. Placé en dernier dans ce fichier (comme le test des ouvertures insolites plus haut)
+  // pour ne jamais décaler l'epoch ou le compteur de seed partagé dont dépendent des tests antérieurs.
+  const resetResp=await post(input('reset',1,{epoch:(await readWorld(db)).epoch}));assert.equal(resetResp.status,200);
+  const autoEpoch=(await readWorld(db)).epoch;
+  sqlite.prepare('UPDATE world_lock SET last_auto=?').run(Date.now()-19000);
+  const throttled=await post(input('autonomous',1,{epoch:autoEpoch}));
+  assert.equal(throttled.status,429,'a call 19s after the last autonomous tick must still be throttled — 20s is the real floor, not a looser approximation');
+  assert.equal((await throttled.json()).code,'auto_throttled');
+  sqlite.prepare('UPDATE world_lock SET last_auto=?').run(Date.now()-20000);
+  const allowed=await post(input('autonomous',1,{epoch:autoEpoch}));
+  assert.equal(allowed.status,200,'a call at least 20s after the last autonomous tick must be accepted — the new faster rhythm must actually take effect, not silently keep the old 85s floor');
+  console.log('Passed: the autonomous auto-tick floor is genuinely 20 seconds (not the former 85s) — throttled just under it, accepted right at it.');
+}
+
+{
+  // Plafond garanti de l'enquête (2026-09-19, retour utilisateur explicite après audit : 12
+  // minutes maximum pour la révélation, et surtout ne jamais rester bloquée indéfiniment comme
+  // observé en simulation réelle — round 98, toujours pas révélé, cf. lib/turn.ts
+  // investigationEscalated/investigationOverdue). Test direct de planTurn(), zéro appel API : les
+  // trois paliers (base, intensifié, prioritaire) plutôt qu'un seul comportement supposé.
+  const w0=await readWorld(db);
+  const lia={...w0.agents[0],room:'salon',intent:'chat',needs:{hunger:10,fatigue:10,stress:10,uncertainty:50},emotions:{...w0.agents[0].emotions,attraction:50,trust:50}};
+  const noe={...w0.agents[1],room:'salon',intent:'chat',needs:{hunger:10,fatigue:10,stress:10,uncertainty:50},emotions:{...w0.agents[1].emotions,attraction:90,trust:80}};
+  const incompleteStory=(round)=>({...newStory(),round,introduced:true,met:true,salonTurns:5,evidence:[],life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,exitSearched:true}});
+  // Palier de base (round<10) : seul round%3===0 (ou investigativeCue) relance l'étude — round 8
+  // n'est pas un multiple de 3, donc aucune relance forcée ce tour précis.
+  assert.equal(planTurn('autonomous',noe,lia,incompleteStory(8),true,false,'hug',[]).requiredIntent,undefined,'below round 10, a non-multiple-of-3 round must never force study on its own');
+  assert.equal(planTurn('autonomous',noe,lia,incompleteStory(9),true,false,'hug',[]).requiredIntent,'study','round%3===0 must still force study below round 10, exactly as before this audit');
+  // Palier intensifié (round 10-19) : round%2===0 relance aussi, même hors multiple de 3.
+  assert.equal(planTurn('autonomous',noe,lia,incompleteStory(10),true,false,'hug',[]).requiredIntent,'study','from round 10, an even round must also force study, even though 10 is not a multiple of 3');
+  assert.equal(planTurn('autonomous',noe,lia,incompleteStory(11),true,false,'hug',[]).requiredIntent,undefined,'an odd, non-multiple-of-3 round in the escalated window must still stay free (11 is neither)');
+  // Palier prioritaire (round>=20) : la relance l'emporte désormais sur TOUTE romance scriptée,
+  // même quand Noé remplirait par ailleurs toutes les conditions de son offre (attraction>=80,
+  // opportunity/eligible vrais, round>=24 pour offer lui-même).
+  const overdueStory=incompleteStory(25);
+  const overduePlan=planTurn('autonomous',noe,lia,overdueStory,true,true,'hug',[]);
+  assert.equal(overduePlan.requiredIntent,'study','an overdue investigation (round>=20, evidence<5) must force study even on an odd, non-multiple-of-3, non-multiple-of-2 round (25)');
+  assert.equal(overduePlan.intent,'study','the overdue investigation must win over Noé\'s own scripted romantic offer, not just requiredIntent in isolation');
+  // Une fois l'enquête complète (evidence>=5), plus aucune relance forcée : la romance retrouve
+  // sa liberté normale, confirmant que ce plafond ne s'applique bien qu'à une enquête réellement
+  // incomplète, jamais après coup.
+  const completeStory={...overdueStory,evidence:Array(5).fill('preuve')};
+  assert.notEqual(planTurn('autonomous',noe,lia,completeStory,true,true,'hug',[]).requiredIntent,'study','once evidence is complete, the guaranteed-ceiling mechanism must never keep forcing study');
+  // Cohérence intent/room (2026-09-19, trouvée en relecture, jamais atteinte par un scénario réel
+  // avant ce test) : un accord de destination déjà en place (executeAgreement) ne doit pas river la
+  // pièce à autre chose que "bureau" alors que l'enquête en retard vient de river l'intent à
+  // "study" — le même genre de mésappariement intent/room que ce fichier corrige déjà ailleurs.
+  const agreedElsewhereStory={...overdueStory,pendingDestination:{room:'cuisine',intent:'eat',proposer:1}};
+  const agreedPlan=planTurn('autonomous',noe,lia,agreedElsewhereStory,true,true,'hug',[]);
+  assert.equal(agreedPlan.intent,'study','an overdue investigation must still win over an already-agreed destination elsewhere');
+  assert.equal(agreedPlan.room,'bureau','the room must follow the overdue investigation\'s intent, never leave it mismatched with an unrelated agreed destination');
+  console.log('Passed: the investigation\'s guaranteed ceiling escalates in two honest steps (round 10 intensifies, round 20 becomes absolute priority over any scripted romance) rather than a single arbitrary cutoff, never fires once evidence is already complete, and keeps room/intent consistent even against an already-agreed destination elsewhere.');
 }

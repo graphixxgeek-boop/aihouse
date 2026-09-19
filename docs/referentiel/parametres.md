@@ -71,10 +71,12 @@ et peuvent chuter plus vite qu'ils ne montent).
 
 ## Gestes et consentement (`lib/turn.ts`, `app/api/lia/route.ts`, `lib/drama.ts`)
 
-- Noé peut proposer un geste à partir de 80 % de sa propre attirance, après au moins 20 tours
-  (assoupli le 2026-09-16, était 12 — le premier geste arrivait trop tôt dans la relation, retour
-  utilisateur direct faisant suite au même point resté ouvert depuis l'audit Opus initial), hors
-  observation/débrief/sommeil/besoin urgent.
+- Noé peut proposer un geste à partir de 80 % de sa propre attirance, après au moins 24 tours
+  (2026-09-19, était 20 depuis le 2026-09-16, lui-même assoupli depuis 12 — le premier geste
+  arrivait trop tôt dans la relation). Relevé une seconde fois pour laisser l'enquête démarrer
+  réellement seule avant que la romance ne s'invite ; sans effet pratique si l'enquête traîne
+  encore à ce stade, puisque le plafond garanti de l'enquête (section Enquête) devient de toute
+  façon prioritaire sur cette offre dès le tour 20. Hors observation/débrief/sommeil/besoin urgent.
 - `dramaRules.proposalStress` : première proposition → +18 stress pour Noé, +14 pour Lia.
 - `dramaRules.rejection` : un refus réduit l'attirance de Noé de 3, augmente sa faim de 6 et sa
   fatigue de 5.
@@ -188,6 +190,16 @@ le jour même (Article 13).
 - Ordre de découverte mélangé par nouvelle arrivée (`story.order`, permutation de [0,1,2,3]).
 - Un indice n'est gagné qu'à partir du tour 3, et seulement au tour multiple de 3 (ou après une
   étude complète de 2 tours, ou avec l'aide d'un rêve à partir du 2ᵉ rêve un tour sur trois).
+- **Plafond garanti de l'enquête** (`lib/turn.ts`, 2026-09-19, retour utilisateur explicite après
+  audit — plafond fixé à 12 minutes réelles pour la révélation, et surtout ne jamais rester bloquée
+  indéfiniment comme observé en simulation réelle, round 98 toujours pas révélé). Le tour%3 ci-dessus
+  reste la cadence de base, mais s'intensifie en tour%2 dès le tour 10 (`investigationEscalated`) si
+  l'enquête n'est pas encore bouclée, puis devient PRIORITAIRE sur toute romance scriptée (`offer`,
+  la pause salon, le repos après étude) dès le tour 20 si elle est encore incomplète
+  (`investigationOverdue`) — les personnages justifient ce choix dans leur propre registre plutôt
+  qu'un silence mécanique. Pire cas garanti (aucune preuve avant le tour 20) : les 5 preuves à 2
+  passages chacun se terminent au plus tard vers le tour 30, soit ~10-10,5 minutes au rythme réel du
+  jeu (20-21s/tour, cf. section Réseau plus bas), sous la barre des 12 minutes maximum.
 - Observations générales (murs trop réguliers, absence de paysage...) : une par tour éligible à
   partir du tour 2, dans un ordre fixe, jamais deux fois la même.
 - Questions d'âge : pas avant le tour 12 ET un premier repas partagé.
@@ -219,7 +231,9 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
 
 - Catalogue à parts égales (`pool`, 7 entrées) :
   - `food` (réserve) : `needs.hunger` forcé à 0 pendant **10 minutes réelles** (pas simulées :
-    l'horodatage tourne même hors tour, comme la boucle automatique de 90s).
+    l'horodatage tourne même hors tour, comme la boucle automatique — 21s côté client, calée juste
+    au-dessus du plancher serveur de 20s, cf. section rythme automatique ci-dessous ; était 90s/85s
+    jusqu'au 2026-09-19).
   - `calm` (bougie apaisante) : `needs.stress` forcé à 0 pendant **10 minutes réelles** ; une petite
     lumière chaude ponctuelle s'allume dans le salon pendant la durée (effet minimal assumé, la
     refonte graphique globale reste à venir — cf. `docs/contexte-projet` chantiers 4/5/6).
@@ -493,8 +507,14 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
 ## Réseau, verrou et limites techniques (`app/api/lia/route.ts`)
 
 - Requête entrante limitée à 12 000 octets, message humain à 2 000 caractères.
-- Verrou mondial (`world_lock`) : bail de 90 000 ms (90 s) par tour engagé.
-- Tour automatique (`autonomous`) : limité à un déclenchement toutes les 85 000 ms (85 s).
+- Verrou mondial (`world_lock`) : bail de 90 000 ms (90 s) par tour engagé (durée du bail technique,
+  sans rapport avec le rythme des tours automatiques ci-dessous).
+- Tour automatique (`autonomous`) : limité à un déclenchement toutes les 20 000 ms (20 s), côté
+  serveur (`app/api/lia/route.ts`) — était 85 000 ms (85 s) jusqu'au 2026-09-19, retour utilisateur
+  explicite jugeant l'ancien rythme trop lent pour l'expérience visée. L'intervalle client
+  correspondant (`app/page.tsx`, la boucle qui déclenche réellement ces tours) est calé à 21 000 ms
+  (21 s, juste au-dessus du plancher serveur pour ne jamais déclencher inutilement le 429
+  `auto_throttled`) — était 90 000 ms.
 - Délai de rafraîchissement automatique du client (page.tsx) : 30 000 ms (30 s), seulement si
   l'onglet est visible.
 - Appel Gemini : délai d'expiration 30 000 ms (30 s) ; jetons de sortie max 1 800 (un seul
