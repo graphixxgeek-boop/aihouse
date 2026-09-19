@@ -25,21 +25,23 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   choix déjà documenté sans repasser par une confirmation).
 - Idée non implémentée : une nuit trop courte devrait laisser une vraie dette de sommeil (sieste
   dans la journée suivante, coucher plus tôt le lendemain soir) — évoquée par l'utilisateur le
-  2026-09-19, pas encore conçue ni chiffrée. **Renforcé le même jour par une observation directe**
-  (lecture de `lib/simulation.ts`) : la récupération de fatigue en dormant est si rapide (−38/tour
-  en chambre) qu'un épisode de sommeil dépasse rarement le plancher minimum garanti de 2 tours,
-  bien en-deçà des 9 tours d'une nuit complète — un personnage peut donc se réveiller en pleine nuit
-  et rester éveillé (en se refatiguant à ×3) le reste de la nuit, sans qu'aucune règle ne relie
-  explicitement durée du sommeil et durée de la nuit. Question posée par l'utilisateur, à trancher
-  avec lui avant d'implémenter la dette de sommeil ci-dessus, dont c'est le même sujet.
-- Question posée par l'utilisateur, pas encore vérifiée : est-il possible qu'un personnage fasse
-  une vraie "nuit blanche" (rester éveillé toute la nuit), et si oui, les conséquences du lendemain
-  sont-elles bien calculées (besoin de sieste, etc.) ? Même famille que le point ci-dessus sur la
-  dette de sommeil — à investiguer et concevoir ensemble.
+  2026-09-19, pas encore conçue ni chiffrée. **"Nuit blanche" vérifiée le 2026-09-19** (lecture de
+  `lib/daynight.ts`/`route.ts`, aucun appel API nécessaire) : une nuit blanche complète est bien
+  TECHNIQUEMENT POSSIBLE aujourd'hui (rien n'empêche un personnage de ne jamais entrer en
+  `isSleeping()` pendant les 9 tours de nuit, surtout si l'enquête en retard force l'éveil), mais
+  `dayIndex` — la seule trace du changement de jour — n'est utilisé QUE pour l'affichage
+  cosmétique (indicateur jour/nuit de l'interface) : aucune conséquence mécanique n'existe
+  aujourd'hui pour une nuit blanche (pas de malus de fatigue supplémentaire, pas de dialogue dédié,
+  pas de besoin de sieste). Même famille que la dette de sommeil ci-dessus : les deux se
+  résoudraient par le même mécanisme, à concevoir ensemble.
 - Faut-il généraliser à TOUS les documents de référentiel la séparation blueprint
-  générique/instanciation projet, déjà appliquée à l'outil de résilience API et au tableau de bord
-  (2026-09-19) ? Question posée explicitement par l'utilisateur, à préciser ensemble avant
-  d'agir — pas une décision prise, juste notée pour ne pas la perdre.
+  générique/instanciation projet ? **Précision le 2026-09-19** : déjà appliquée à l'outil de
+  résilience API, au tableau de bord, ET refusée explicitement pour "règles de suivi"/le système de
+  suivi des tâches (jugés être des sujets de méthode de travail, pas des systèmes techniques —
+  `philosophie-et-politique.md` joue déjà ce rôle générique pour eux). La question résiduelle porte
+  donc seulement sur les AUTRES documents de référentiel (`principes.md`, `parametres.md`,
+  `regles-du-temps.md`, `regles-de-l-espace.md`) — question posée explicitement par l'utilisateur,
+  à préciser ensemble avant d'agir, pas une décision prise.
 - `scripts/check-spirit.mjs` (16 scénarios) n'a pas été relancé depuis les derniers changements de
   `lib/lia.ts` (registre de fatigue jour/nuit, ajouté le 2026-09-19) — l'Article 13 de CLAUDE.md
   demande explicitement de le lancer en priorité après un changement de ce fichier, jamais fait
@@ -49,11 +51,3 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   comme s'il s'agissait d'un vrai épuisement de quota journalier. Le recul exponentiel avec reset
   au premier succès (déjà implémenté) semble répondre à cette inquiétude, mais ce lien n'a jamais
   été explicitement reconfirmé avec l'utilisateur — à vérifier avec lui plutôt que supposer réglé.
-- Le patron générique du tableau de bord (`docs/tableau-de-bord-blueprint.md`) n'a pas encore été
-  mis à jour avec les nouveaux principes ajoutés le 2026-09-19 lors du chantier 2 (KPI en % avec
-  garde-fous anti-NaN systématiques, KPI de couverture du tableau de bord lui-même, archivage du
-  rapport complet + document d'index séparé pour le jugement humain sur les évolutions) — ces
-  principes sont réellement génériques (réutilisables sur un autre projet), mais restent pour
-  l'instant seulement documentés dans l'instanciation propre à ce projet
-  (`docs/referentiel/tableau-de-bord.md`). À généraliser dans le blueprint quand l'occasion se
-  présente, pas urgent.
