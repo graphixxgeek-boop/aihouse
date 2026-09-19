@@ -2531,6 +2531,23 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const both=classifyCheckLevel("il faut un hyper-scan complet pour reconstruire ce système en partant de zéro");
   assert.deepEqual(both.tools,['HYPER-SCAN-CHECKPOINT (version complète)','ALWAYS-NEW-CODE (zoom profond)'],'a request mixing both registers must recommend both tools, never silently pick one');
   console.log('Passed: CHECK-LEVEL-TARGET correctly classifies the real historical prompts that motivated its own creation (a trivial fix stays léger, the exact 2026-09-19 "vérification approfondie" prompt classifies as approfondi with its real costly tools recommended, an explicit "machine de guerre"/hyper-scan mention reaches exceptionnel), falls back to the safe standard default on zero signal rather than under-checking silently, always returns an explicit boolean on whether real doubt warrants confirmation, and — closing a real gap found the day ALWAYS-NEW-CODE was designed — distinguishes the "bugs cachés" and "restructuration" registers within the exceptionnel tier so a structural-rebuild request recommends ALWAYS-NEW-CODE rather than silently under-classifying or defaulting to HYPER-SCAN-CHECKPOINT alone.');
+  // Vue d'ensemble du réseau (2026-09-19, demande explicite de l'utilisateur : « centraliser le
+  // réseau des outils de vérification ») — un conseiller mieux informé, jamais un chef d'orchestre.
+  const {countOpenFragilePoints,combineWithRegistryPressure}=await import('../scripts/check-level-target.mjs');
+  const fragileFixture=[
+    '# Points fragiles ouverts','','## Points ouverts','',
+    '- point un','- point deux','- point trois','','## Une autre section','','- pas compté ici',
+  ].join('\n');
+  assert.equal(countOpenFragilePoints(fragileFixture),3,'must count only bullets under "## Points ouverts", never bullets from an unrelated later section');
+  assert.equal(countOpenFragilePoints('rien de pertinent ici'),0,'a document with no such section must report zero, never throw or miscount');
+  const below=combineWithRegistryPressure({level:'standard',reasoning:'r',needsConfirmation:false},2);
+  assert.equal(below.needsConfirmation,false,'a low open-concerns count must never force a confirmation the text itself did not warrant');
+  const above=combineWithRegistryPressure({level:'standard',reasoning:'r',needsConfirmation:false},6);
+  assert.equal(above.needsConfirmation,true,'a high open-concerns count must ask for confirmation rather than silently ignoring known unresolved project-wide context');
+  assert.ok(above.reasoning.includes('6'),'the reasoning must always explain the real count driving the question, never a silent black-box confirmation request');
+  const alreadyExceptionnel=combineWithRegistryPressure({level:'exceptionnel',reasoning:'r',needsConfirmation:false},99);
+  assert.equal(alreadyExceptionnel.needsConfirmation,false,'a level already at the maximum must never be pushed further by registry pressure, nothing to escalate to');
+  console.log('Passed: the CHECK-LEVEL-TARGET registry-pressure awareness counts only the bullets under the real "Points ouverts" heading, reports zero rather than crashing on an unrelated document, and only ever turns a high count into a confirmation request (never a silent level bump) with the real number always stated in the reasoning — staying an informed adviser, never an orchestrator, per the explicit user decision.');
 }
 
 {

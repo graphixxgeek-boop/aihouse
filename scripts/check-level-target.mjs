@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 // CHECK-LEVEL-TARGET (2026-09-19, cf. docs/check-level-target-blueprint.md et
 // docs/referentiel/check-level-target.md). Calcule le niveau de vérification qu'une demande
 // appelle réellement, et la combinaison d'outils à déployer — remplace la façon informelle,
@@ -112,13 +114,52 @@ export function classifyCheckLevel(text) {
   };
 }
 
+// --- Vue d'ensemble du réseau (2026-09-19, demande explicite de l'utilisateur : « je voudrais que
+// cet outil serve à centraliser le réseau des outils de vérification ») ---------------------
+//
+// Décision actée avec l'utilisateur : CHECK-LEVEL-TARGET reste un conseiller, jamais un chef
+// d'orchestre (ce rôle appartient déjà à HYPER-SCAN-CHECKPOINT, qui appelle réellement ARGUS et
+// HARMONIA). Mais un conseiller peut être mieux informé : au lieu de juger SEULEMENT le texte de
+// la demande du jour, il regarde aussi ce que le reste du réseau sait déjà être en suspens
+// (docs/referentiel/points-fragiles.md, le registre le plus structuré et déjà compté ailleurs par
+// scripts/kpi-report.mjs — ARGUS/HARMONIA restent volontairement hors de ce calcul pour l'instant,
+// leurs registres en prose ne permettent pas encore de distinguer de façon fiable un point encore
+// ouvert d'un point déjà refermé, cf. limite honnête ci-dessous).
+//
+// Jamais un niveau relevé en silence : une pression de registre élevée déclenche seulement une
+// DEMANDE DE CONFIRMATION (même principe que la marge de confiance étroite ci-dessus), jamais un
+// niveau imposé sans que l'agent/l'utilisateur en soit informé.
+const REGISTRY_PRESSURE_THRESHOLD = 5; // calibré arbitrairement à la création, à ajuster à l'usage
+
+export function countOpenFragilePoints(pointsFragilesText) {
+  const start = pointsFragilesText.indexOf("## Points ouverts");
+  if (start === -1) return 0;
+  const rest = pointsFragilesText.slice(start + "## Points ouverts".length);
+  const nextHeading = rest.search(/\n##\s/);
+  const section = nextHeading === -1 ? rest : rest.slice(0, nextHeading);
+  return (section.match(/^- /gm) || []).length;
+}
+
+export function combineWithRegistryPressure(result, openCount) {
+  if (!openCount || openCount < REGISTRY_PRESSURE_THRESHOLD || result.level === "exceptionnel") return result;
+  return {
+    ...result,
+    needsConfirmation: true,
+    reasoning: result.reasoning + ` Par ailleurs, ${openCount} points fragiles restent ouverts dans le registre (docs/referentiel/points-fragiles.md), indépendamment du texte de cette demande précise — veux-tu qu'ils soient pris en compte dans le niveau de vérification à déployer ?`,
+  };
+}
+
 function main() {
   const text = process.argv.slice(2).join(" ");
   if (!text) {
     console.log("Usage: node scripts/check-level-target.mjs <texte de la demande>");
     process.exit(1);
   }
-  const result = classifyCheckLevel(text);
+  let result = classifyCheckLevel(text);
+  try {
+    const pointsFragilesText = readFileSync(new URL("../docs/referentiel/points-fragiles.md", import.meta.url), "utf8");
+    result = combineWithRegistryPressure(result, countOpenFragilePoints(pointsFragilesText));
+  } catch {}
   console.log("=== CHECK-LEVEL-TARGET ===\n");
   console.log(`Niveau retenu : ${result.level.toUpperCase()} (confiance : ${result.confidence})`);
   console.log(`Raison : ${result.reasoning}`);

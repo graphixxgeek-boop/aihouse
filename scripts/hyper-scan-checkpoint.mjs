@@ -4,12 +4,14 @@
 // retrouvés dans l'historique complet de la session à sa demande explicite.
 //
 // Rôle : ORCHESTRATEUR, jamais un réimplémenteur. Version LÉGÈRE (celle-ci, zéro appel réseau) :
-// agrège tout ce qu'ARGUS, HARMONIA, check-house.mjs, kpi-report.mjs et tous les registres/
-// historiques déjà accumulés savent dire MÉCANIQUEMENT, détermine ce qui a changé depuis le
-// dernier passage (mémoire automatique via docs/hyper-scan-checkpoint/index.md, jamais un fichier
-// d'état séparé), puis produit une CHECKLIST explicite des vérifications qui restent du ressort
-// du raisonnement (fidélité aux consignes passées, combinaisons non pensées, comparaison humaine
-// de deux transcripts) — jamais prétendre que ces dernières sont automatisées alors qu'elles ne le
+// agrège tout ce qu'ARGUS, HARMONIA, ALWAYS-NEW-CODE (préparation — zone recommandée + indices
+// mécaniques, jamais le vrai zoom profond, un raisonnement que seul l'agent peut faire),
+// check-house.mjs, kpi-report.mjs et tous les registres/historiques déjà accumulés savent dire
+// MÉCANIQUEMENT, détermine ce qui a changé depuis le dernier passage (mémoire automatique via
+// docs/hyper-scan-checkpoint/index.md, jamais un fichier d'état séparé), puis produit une
+// CHECKLIST explicite des vérifications qui restent du ressort du raisonnement (fidélité aux
+// consignes passées, combinaisons non pensées, comparaison humaine de deux transcripts, le zoom
+// ALWAYS-NEW-CODE) — jamais prétendre que ces dernières sont automatisées alors qu'elles ne le
 // sont pas (cf. blueprint, "Ce que ce patron n'est pas").
 //
 // La version COMPLÈTE (check-spirit.mjs, check-profile.mjs, mini-simulations plafonnées, double
@@ -115,6 +117,10 @@ function main() {
   const harmoniaSummary = summarizeHarmoniaOutput(harmoniaOut);
   console.log(`${harmoniaSummary.frictions ?? "?"} friction(s) confirmée(s) sur ${harmoniaSummary.liensVerifies ?? "?"} lien(s) vérifié(s).`);
 
+  console.log("\n--- ALWAYS-NEW-CODE (préparation) ---");
+  const alwaysNewCodeOut = sh("node scripts/always-new-code.mjs");
+  console.log(alwaysNewCodeOut.trim());
+
   console.log("\n--- Suite de tests (check-house.mjs) ---");
   const testOut = sh("node scripts/check-house.mjs 2>&1");
   const testsOk = !/AssertionError|Error:/.test(testOut) || /ExperimentalWarning/.test(testOut.split("AssertionError")[0] || "");
@@ -128,6 +134,8 @@ function main() {
     ["ARGUS (index)", "docs/argus/index.md"],
     ["HARMONIA (index)", "docs/harmonia/index.md"],
     ["Smart Conso API (index)", "docs/smart-conso-api/index.md"],
+    ["ALWAYS-NEW-CODE (index)", "docs/always-new-code/index.md"],
+    ["CHECK-LEVEL-TARGET (index)", "docs/check-level-target/index.md"],
   ];
   const registrySummary = [];
   for (const [label, relPath] of registries) {
@@ -159,6 +167,7 @@ function main() {
     "4. Identifier le code sensible/central touché récemment et resté sans test dédié — en écrire un si c'est le cas.",
     "5. Si une simulation complète existe depuis le dernier passage, comparer sa transcription à la précédente réplique par réplique, comme le ferait un humain — repérer les régressions de naturel, pas seulement les bugs.",
     "6. Distinguer explicitement, dans le rapport final : vrai oubli corrigé / déjà connu et sciemment reporté / question ouverte pour l'utilisateur.",
+    "7. Sur la zone recommandée par ALWAYS-NEW-CODE ci-dessus (ou une autre zone explicitement demandée) : faire le vrai zoom profond \"page blanche\" — jamais mécanisable, cf. docs/referentiel/always-new-code.md.",
   ];
   console.log("\n--- Checklist qualitative restant à exécuter (raisonnement, jamais mécanisable) ---");
   for (const item of checklist) console.log(item);
@@ -179,6 +188,9 @@ function main() {
     "",
     "=== HARMONIA ===",
     harmoniaOut,
+    "",
+    "=== ALWAYS-NEW-CODE (préparation) ===",
+    alwaysNewCodeOut,
     "",
     "=== Suite de tests ===",
     realFailure ? "ÉCHEC — voir sortie complète ci-dessous." : "Verte.",
