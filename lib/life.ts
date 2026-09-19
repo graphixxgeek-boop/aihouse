@@ -115,7 +115,7 @@ negotiationOffer?:{actor:Person;round:number};
 // il est aussi revelateur de la personnalité de l'utilisateur" — mais negotiationOffer, consommé ou
 // expiré sans laisser de trace, ne permettait aucune preuve concrète au moment du dossier). Journal
 // court (même format que bonusLog), jamais réécrit, seulement accumulé.
-negotiationLog?:{round:number;outcome:'honored'|'lapsed'}[];
+negotiationLog?:{round:number;outcome:'honored'|'lapsed'|'refused'}[];
 // Pire moment de l'échange, mot pour mot (2026-09-18, retour utilisateur explicite après une vraie
 // session : le dossier retourné ne citait jamais les messages réellement les plus hostiles, seulement
 // trois extraits de pièges par nature plutôt neutres — un dossier pouvait rester indulgent malgré une
@@ -158,7 +158,7 @@ export function readLife(value:unknown,round=0):Life{const v=value&&typeof value
 ,negotiationOffer:v.negotiationOffer&&(v.negotiationOffer.actor===1||v.negotiationOffer.actor===2)&&typeof v.negotiationOffer.round==="number"&&Number.isFinite(v.negotiationOffer.round)?{actor:v.negotiationOffer.actor,round:v.negotiationOffer.round}:undefined
 ,genuineRespectStreak:{1:Math.max(0,Math.min(20,Number(legacyOrPerActor(v.genuineRespectStreak,1))||0)),2:Math.max(0,Math.min(20,Number(legacyOrPerActor(v.genuineRespectStreak,2))||0))}
 ,skipSummary:v.skipSummary&&typeof v.skipSummary.lia==="string"&&typeof v.skipSummary.noe==="string"?{lia:v.skipSummary.lia.slice(0,2000),noe:v.skipSummary.noe.slice(0,2000)}:undefined
-,negotiationLog:Array.isArray(v.negotiationLog)?v.negotiationLog.filter((e):e is {round:number;outcome:'honored'|'lapsed'}=>Boolean(e)&&typeof e==="object"&&["honored","lapsed"].includes((e as {outcome?:string}).outcome??"")).slice(-12):[]
+,negotiationLog:Array.isArray(v.negotiationLog)?v.negotiationLog.filter((e):e is {round:number;outcome:'honored'|'lapsed'|'refused'}=>Boolean(e)&&typeof e==="object"&&["honored","lapsed","refused"].includes((e as {outcome?:string}).outcome??"")).slice(-12):[]
 ,rouletteInsistence:{1:Math.max(0,Math.min(2,Number(v.rouletteInsistence?.[1])||0)),2:Math.max(0,Math.min(2,Number(v.rouletteInsistence?.[2])||0))}
 ,rouletteCold:{1:Math.max(0,Math.min(2,Number(v.rouletteCold?.[1])||0)),2:Math.max(0,Math.min(2,Number(v.rouletteCold?.[2])||0))}
 ,rouletteRefusalUntil:{1:Math.max(0,Math.min(round+20,Number(v.rouletteRefusalUntil?.[1])||0)),2:Math.max(0,Math.min(round+20,Number(v.rouletteRefusalUntil?.[2])||0))}

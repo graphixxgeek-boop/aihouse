@@ -734,12 +734,18 @@ rarement et brièvement, jamais sollicitée ni prolongée (cf. 8.8). Le modèle 
 son propre registre (`negotiationContext` dans le contexte narratif, jamais un menu scripté) et le
 moteur détecte l'offre a posteriori dans la réplique (`detectNegotiationOffer`, grossier par
 nature, comme `detectDistress`).
-`life.negotiationOffer` retient qui a proposé et à quel tour, une seule offre à la fois. Deux
+`life.negotiationOffer` retient qui a proposé et à quel tour, une seule offre à la fois. Trois
 issues : honorée (un tirage de la roulette survient pendant qu'elle est en attente) → appréciation
 en hausse pour les deux personnages, offre consommée ; laissée sans réponse plus de 6 tours → offre
-effacée avec un léger coût, ni éternellement due ni oubliée sans conséquence. Chaque issue est
-journalisée (`negotiationLog`, même forme que `bonusLog`) et alimente le dossier retourné (8.4)
-uniquement quand une négociation a réellement eu lieu (Article 4). Restent hors périmètre pour
+effacée avec un léger coût, ni éternellement due ni oubliée sans conséquence ; refusée explicitement
+(un « non » détecté pendant qu'elle est en attente) → offre effacée avec le même léger coût que la
+caducité (2026-09-19, manque confirmé en écrivant le test dédié du refus de roulette : un refus
+assumé ne doit jamais coûter MOINS qu'un silence), et pose en plus une vraie pause partagée de 5 à
+10 tours avant qu'une relance ne redevienne possible pour l'un ou l'autre personnage
+(`rouletteRefusalUntil`, cf. 8.21/roulette). Chaque issue est journalisée (`negotiationLog`, même
+forme que `bonusLog`, trois valeurs possibles) et alimente le dossier retourné (8.4) uniquement
+quand une négociation a réellement eu lieu (Article 4), avec une formulation distincte pour
+chacune — jamais un refus assumé présenté comme une simple négligence. Restent hors périmètre pour
 l'instant : la pénalité de sur-générosité (« trop gentil ») et les menaces explicites.
 
 8.7. **Colère réelle et registre** (`lib/simulation.ts`, `lib/lia.ts`). `angerLevel(tension,comfort,

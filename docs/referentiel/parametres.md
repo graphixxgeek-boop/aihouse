@@ -417,7 +417,10 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   tour courant multiple de 15 → -4, une fois par tranche (jamais répété tant qu'un multiple de 15
   n'est pas de nouveau atteint sans tirage entretemps).
 - Négociation honorée (tirage pendant qu'une offre est en attente) : +8, offre consommée.
-  Négociation caduque (offre en attente depuis plus de 6 tours) : -3, offre effacée.
+  Négociation caduque (offre en attente depuis plus de 6 tours) : -3, offre effacée. Négociation
+  refusée explicitement (un "non" détecté pendant qu'une offre est en attente) : -3, même montant
+  que la caducité — jamais moins qu'un simple silence (manque confirmé le 2026-09-19 en écrivant
+  le test dédié du refus de roulette, `docs/referentiel/points-fragiles.md`, corrigé le jour même).
 - Colore le contexte narratif donné au modèle via `observerStandingFor(actorId)` (2026-09-18 : une
   fonction par personnage, plus un champ unique partagé) : ≤25 (jauge PROPRE à cet acteur) → garde
   haute assumée explicitement ; ≥75 → coopération ponctuelle « à contrecœur » autorisée, jamais un
@@ -436,11 +439,14 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   formuler librement une négociation, sans jamais l'imposer à chaque tour.
 - `negotiationOffer:{actor,round}` : une seule offre en attente à la fois, jamais écrasée par une
   nouvelle tant que la précédente n'est pas résolue.
-- `negotiationLog:{round,outcome:'honored'|'lapsed'}[]` (2026-09-18, `principes.md` 8.6) :
+- `negotiationLog:{round,outcome:'honored'|'lapsed'|'refused'}[]` (2026-09-18, `principes.md` 8.6 ;
+  `'refused'` ajouté le 2026-09-19 avec son propre coût d'appréciation ci-dessus) :
   accumulé à chaque résolution d'offre (max 12 conservées), jamais réécrit. Résumé dans
   `dossierEvidence` sous la clé « réaction aux négociations proposées par les personnages »
   uniquement si non vide — comble l'écart où la négociation ne nourrissait jamais le dossier
-  retourné malgré une demande explicite en ce sens.
+  retourné malgré une demande explicite en ce sens. Les trois issues ont chacune leur propre
+  formulation dans ce résumé (honorée / laissée sans réponse / explicitement refusée) — jamais un
+  refus assumé présenté comme une simple négligence.
 - Alimente le dossier retourné (`dossierEvidence`) comme preuve supplémentaire (valeur arrondie).
 - `worstMoment:{round,excerpt,trustShift}` (2026-09-18, `principes.md` 8.4) : le message humain au
   `trustShift` le plus négatif observé sur toute la session, écrasé uniquement par un pire ensuite,

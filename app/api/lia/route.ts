@@ -592,7 +592,14 @@ export async function POST(request: Request) {
         // chance à l'observateur de le déclencher spontanément, jamais retenté trop tôt comme si de
         // rien n'était. Les deux personnages entendent ce refus, pas seulement celui qui a demandé.
         const rouletteRefused=input.mode==="chat"&&Boolean(life.negotiationOffer)&&/\bnon\b|\bnan\b|je refuse|refus[eé]|pas question|hors de question|j.ai pas envie|certainement pas|jamais de la vie|tu peux toujours courir|pas moyen/i.test(input.message);
-        if(rouletteRefused){life.negotiationOffer=undefined;const until=story.round+5+Math.floor(Math.random()*6);life.rouletteRefusalUntil={1:until,2:until};}
+        // Coût d'appréciation (2026-09-19, manque confirmé en écrivant le test dédié — un refus
+        // explicite ne coûtait jusque-là RIEN, contrairement à une offre simplement oubliée
+        // ci-dessus qui coûte -3). Même montant que le lapse : un refus n'est pas nécessairement
+        // pire qu'un oubli silencieux (l'observateur a au moins pris la peine de répondre), mais ne
+        // doit certainement pas coûter MOINS qu'une absence de réponse — même trace au dossier
+        // (negotiationLog), distincte de 'lapsed' pour ne jamais présenter un refus assumé comme
+        // une simple négligence (Article 4 : l'enquête doit rester factuellement juste).
+        if(rouletteRefused){life.negotiationOffer=undefined;const until=story.round+5+Math.floor(Math.random()*6);life.rouletteRefusalUntil={1:until,2:until};life.negotiationLog=[...(life.negotiationLog??[]),{round:story.round,outcome:'refused'}];life.appreciation={1:Math.max(0,appreciationOf(life,1)-3),2:Math.max(0,appreciationOf(life,2)-3)};}
         // Moment de douceur : détecté ici, livré plus bas par softnessBeat dès que la scène s'y
         // prête (salon, aucune urgence). Ne se déclenche qu'après remise du dossier — avant, une
         // réaction négative appartient au registre habituel de l'enquête, pas à cette exception.
@@ -1613,10 +1620,12 @@ export async function POST(request: Request) {
             // negotiationLog (2026-09-18, audit approfondi : tour 64 explicite — "il faut aussi
             // penser à integrer le phenomene de negociation : il est aussi revelateur de la
             // personnalité de l'utilisateur") : honoré révèle un observateur qui joue le jeu
-            // proposé par les personnages, laissé sans réponse révèle une indifférence ou un refus
-            // implicite — n'apparaît que si une négociation a réellement eu lieu (Article 4, jamais
-            // inventer une négociation qui n'a pas eu lieu).
-            const negotiationSummary=(life.negotiationLog?.length??0)>0?life.negotiationLog!.map(n=>n.outcome==='honored'?"une proposition honorée":"une proposition laissée sans réponse").join(", "):undefined;
+            // proposé par les personnages, laissé sans réponse révèle une indifférence, et refusé
+            // explicitement (2026-09-19, distinct du simple oubli depuis que ce cas a aussi un coût
+            // d'appréciation propre) révèle un refus assumé, pas une négligence — n'apparaît que si
+            // une négociation a réellement eu lieu (Article 4, jamais inventer une négociation qui
+            // n'a pas eu lieu).
+            const negotiationSummary=(life.negotiationLog?.length??0)>0?life.negotiationLog!.map(n=>n.outcome==='honored'?"une proposition honorée":n.outcome==='refused'?"une proposition explicitement refusée":"une proposition laissée sans réponse").join(", "):undefined;
             // appréciation par personnage (2026-09-18) : chaque voix du dossier cite désormais SA
             // PROPRE lecture de l'observateur, pas une moyenne partagée — cohérent avec le fait que
             // les deux diagnostics sont déjà deux appels séparés, chacun sa propre perception.
