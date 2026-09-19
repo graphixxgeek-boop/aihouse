@@ -21,7 +21,10 @@ même d'un vrai épisode d'épuisement total du quota Gemini pendant cette sessi
 
 ## Toujours consultée avant une action coûteuse (mécanisme central)
 
-Exigence explicite de l'utilisateur, pas une option : avant de lancer une simulation complète, un
+Formalisé le 2026-09-19 dans **l'Article 22 de `CLAUDE.md`** (cette exigence existait déjà ici dans
+l'instanciation, mais n'était pas encore élevée au rang d'Article de la charte — écart corrigé le
+jour même, cf. Article 13). Exigence explicite de l'utilisateur, pas une option : avant de lancer
+une simulation complète, un
 `check-spirit`, ou tout diagnostic lourd, l'agent exécute `smart-conso-api.mjs` pour l'action
 concernée et LIT l'avis avant de décider — jamais une action lancée sans consultation préalable, et
 jamais un avis lu puis ignoré silencieusement. Une fois la décision prise, l'action réellement

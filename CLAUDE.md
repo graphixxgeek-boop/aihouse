@@ -772,6 +772,27 @@ demande explicite, jamais détecté par aucun test avant ce passage). Architectu
 `docs/referentiel/hyper-scan-checkpoint.md` (instanciation, registre dans
 `docs/hyper-scan-checkpoint/`).
 
+**Article 22 — Smart Conso API : consultation systématique avant toute action coûteuse.**
+*(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur, formalisant un mécanisme déjà
+construit le même jour mais resté seulement dans son instanciation : « il y a un vrai canal de
+communication établi avec toi quand tu as besoin de lancer une requête API. [...] Tu lui fais
+systématiquement appel avant tes demandes, pour t'assurer que ta conso est bien régulée. Je ne
+sais pas si c'était déjà en place comme ça, mais fiabilise ».)* Avant tout appel réel à l'API
+Gemini déclenché par l'agent lui-même pendant une session de travail — jamais le jeu réel, qui
+reste hors du périmètre de cet Article et sous la seule autorité de l'Article 8 — l'agent consulte
+Smart Conso API (`scripts/smart-conso-api.mjs::assess()`), pas après coup pour justifier une
+dépense déjà faite. Ce n'est pas une simple case à cocher : Smart Conso API guide, conseille,
+coache l'agent sur le rythme de sa consommation, à partir de l'historique réel accumulé
+(`.gemini-key-health.json`, partagé avec le Smart Breaker, cf. section dédiée plus haut). Un
+verdict "seuil souple" reste négociable (l'agent explique son choix s'il décide malgré tout de
+poursuivre) ; un verdict "seuil dur" est non négociable et exige une validation humaine explicite
+avant de continuer. Frontière stricte avec l'Article 8, déjà actée avec l'utilisateur le même
+jour : Smart Conso API ne modifie jamais l'architecture de production, ne bascule jamais un
+modèle ou une clé de son propre chef — son expérience peut seulement INFORMER la mise en œuvre de
+l'Article 8, jamais la court-circuiter ni la remplacer. Architecture détaillée :
+`docs/smart-conso-api-blueprint.md` (principe générique) et `docs/referentiel/smart-conso-api.md`
+(instanciation propre à ce projet).
+
 ## Règles de travail — collaboration avec l'utilisateur
 
 `docs/regles-de-travail.md` documente, séparément de la charte de contenu ci-dessus, la façon dont
