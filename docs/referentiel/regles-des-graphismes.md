@@ -1,0 +1,113 @@
+# Règles des graphismes
+
+*(Créé le 2026-09-19, en préparation directe de la refonte graphique — calibré avec l'utilisateur
+via trois séries de questions successives, à sa demande explicite (« pose moi plein de questions
+pour bien préparer tous les aspects »). Remplace un tout premier jet rédigé sans calibrage préalable
+le même jour, jugé insuffisant par l'utilisateur avant même d'être committé. Donne à THE-SCREENER
+(cf. `docs/referentiel/the-screener.md`) sa vraie base de jugement — même relation qu'EL-PROFESSOR
+avec CLAUDE.md. Comme `regles-du-temps.md`/`regles-de-l-espace.md`, ce document s'enrichit au fil
+du chantier plutôt que d'être figé une fois pour toutes.)*
+
+## Ce qui existe déjà, factuellement (2026-09-19)
+
+- **Rendu** : Three.js (`components/house-view.tsx`), personnages représentés par un visage
+  vectoriel paramétrique dessiné en temps réel depuis l'état émotionnel réel (`faceExpression()`,
+  `lib/simulation.ts`).
+- **Palette** : `scenePalette` (`lib/perception.ts`), désaturée par choix, consommée aujourd'hui
+  UNIQUEMENT par le rendu 3D (jamais transmise au modèle de dialogue — trou déjà identifié, cf.
+  Plan d'origine dans `CLAUDE.md`, à corriger pendant cette refonte).
+- **Éclairage** : une seule lumière directionnelle chaude (`0xffe8cf`, intensité 1.6) — aucune
+  différence visible entre jour et nuit dans la scène, alors que le cycle jour/nuit existe déjà
+  pleinement côté logique (fatigue, personnalité, cf. `docs/referentiel/regles-du-temps.md`).
+- **Caméra** : fixe.
+- **Trottoir** : pas une zone 3D pathable (reste un instant narré, choix assumé jusqu'ici, cf.
+  `docs/referentiel/parametres.md`).
+- **Manquants nommés dans le Plan d'origine** : vignette, mode plein écran Observation/Instruments,
+  mise en scène de la révélation.
+
+## Périmètre de cette refonte — décidé le 2026-09-19
+
+**La scène 3D ET toute l'interface web autour** (boutons, typographie, couleurs des panneaux,
+fenêtres popup) — pas seulement la maison elle-même. Décision explicite de l'utilisateur,
+consciente d'élargir le chantier au-delà du seul rendu 3D.
+
+**Hors périmètre pour l'instant** : l'identité de marque du site (nom, nom de domaine, logo) —
+sujet reconnu comme important et même urgent (un nom de domaine se réserve à l'avance, la mise en
+ligne approche), mais volontairement traité à part, plus tard, pour ne pas diluer ce chantier-ci.
+**Ne pas perdre ce point de vue : à reprendre explicitement avant la mise en ligne.**
+
+## Principe directeur
+
+**Le monde affiché doit toujours être celui qui existe RÉELLEMENT au moment présent** — jamais un
+décor figé par défaut du code, jamais une référence visuelle à un état antérieur. Prolonge
+directement l'Article 12 de la charte côté image.
+
+## Décisions calibrées — à appliquer pendant la refonte
+
+1. **Style général** : garder l'esprit épuré/abstrait actuel (formes simples, visages lumineux) et
+   le peaufiner — pas d'évolution vers un rendu riche/réaliste.
+2. **Vignette** : discrète et fixe, jamais variable selon la tension du moment (pas de logique à
+   relier aux jauges d'émotion/hostilité pour l'instant).
+3. **Intensité dramatique dans le temps** : reste stable du début à la fin de l'enquête — pas
+   d'assombrissement progressif à mesure qu'on approche de la révélation.
+4. **Son** : aucun son n'existe dans le jeu aujourd'hui. La mise en scène de la révélation (ci-
+   dessous) reste donc 100% visuelle pour cette refonte — pas de chantier audio ouvert ici.
+5. **Mise en scène de la révélation** : séquence purement visuelle (caméra qui descend, panneaux
+   qui se rétractent, anneaux qui se tournent vers l'observateur), rythme d'environ **5 secondes**,
+   **toute l'interface (jauges comprises) disparaît complètement** pendant la séquence et revient
+   normalement une fois terminée.
+6. **Mode plein écran Observation/Instruments** :
+   - Mode Observation (par défaut) : exactement 3 jauges visibles — **Faim, Fatigue, Incertitude
+     d'humanité**. Les autres (stress, attirance, attachement) ne sont visibles qu'en mode
+     Instruments.
+   - Bascule : **barre espace**, active UNIQUEMENT quand le focus n'est PAS dans le champ de
+     saisie du message (pour ne jamais interférer avec la frappe d'un espace dans un message —
+     conflit identifié et résolu explicitement le 2026-09-19, avant toute implémentation).
+7. **Trottoir** : identité visuelle propre et distincte du jardin — pas une simple extension du
+   même décor, marque une vraie frontière avec l'extérieur/le "réel".
+8. **Mobile/tablette** : le jeu doit rester pleinement jouable après la refonte — toute ambition
+   visuelle (caméra, transitions, éclairage) doit être testée/adaptée pour ne pas dégrader
+   l'expérience sur un téléphone standard.
+9. **Accessibilité daltonisme** : explicitement non prioritaire pour cette refonte (décision
+   assumée, pas un oubli — à reconsidérer si besoin plus tard).
+10. **Caméra** : gagne des mouvements pendant le jeu normal (pas seulement à la révélation) — par
+    exemple suivre le personnage qui parle ou se rapprocher dans un moment intense. Reste à
+    concevoir en détail (déclencheurs exacts, vitesse, limites) au moment de l'implémentation.
+11. **Transitions entre pièces** : un vrai traitement visuel (fondu et/ou mouvement de caméra qui
+    accompagne le déplacement) remplace la marche animée simple actuelle.
+12. **Éclairage jour/nuit** : un vrai contraste visible doit apparaître dans la scène 3D elle-même
+    (plus sombre/teinté la nuit), pour que ce que montre l'écran corresponde enfin à ce que dit
+    déjà le texte (fatigue, personnalité) — actuellement un décalage réel entre logique et rendu.
+13. **Bonus roulette (mute/caméra cachée)** : reste texte/interface simple, jamais de
+    représentation visuelle animée dans la scène 3D.
+14. **Détail des objets/meubles** : formes géométriques simples partout, MAIS rendu plus soigné
+    (lumière, matières, ombres) sur l'ensemble des objets ; un vrai supplément de détail formel
+    est réservé aux objets clés de l'enquête (livre, dossier, indices observés de près) — jamais
+    généralisé à tout le mobilier ordinaire.
+
+## Trois critères pour juger un rendu (base de THE-SCREENER)
+
+1. **Lisibilité** — comprend-on où sont les personnages, ce qu'ils font, l'état de la scène, sans
+   connaître le code (prolongement de l'Article 15 côté image) ?
+2. **Cohérence avec l'ambiance dystopique** — palette désaturée, éclairage jour/nuit contrasté,
+   absence de décor chaleureux/générique, restent perceptibles à l'écran.
+3. **Absence de défaut technique visible** — chevauchements, textures qui clignotent, géométrie
+   cassée, personnage hors-cadre, HUD qui masque une information utile.
+
+## Ordre de grandeur du chantier (organisation, pas encore un planning tranché)
+
+Ce périmètre couvre en réalité plusieurs sous-chantiers de complexité très inégale — à séquencer
+au moment de l'implémentation, jamais tout d'un bloc :
+- **Léger** : vignette fixe, éclairage nuit renforcé, mode Observation/Instruments (3 jauges +
+  bascule clavier), trottoir en zone distincte.
+- **Moyen** : mise en scène de la révélation (5 secondes, disparition d'interface), rendu plus
+  soigné des objets existants (lumière/matières/ombres sans changer les formes).
+- **Lourd, à concevoir en détail avant de coder** : système de caméra dynamique (mouvements pendant
+  le jeu normal), transitions animées entre pièces, refonte de toute l'interface web autour de la
+  scène 3D (boutons, typographie, popups) — et vérifier que tout ça reste fluide sur mobile.
+
+## À enrichir au fil de la refonte
+
+Chaque décision visuelle prise pendant l'implémentation (détails de la caméra, palette définitive,
+règles précises des transitions) doit être ajoutée ici au moment où elle est tranchée — jamais
+après coup (Article 13 de `CLAUDE.md`).

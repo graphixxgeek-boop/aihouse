@@ -1054,6 +1054,13 @@ l'articulation exacte entre les deux).
   modèle de pièces), et une checklist de cohérence spatiale. Créé pour vérifier, lors de l'analyse
   d'une simulation, ce que l'utilisateur ne voit pas lui-même (déplacements, gestion de l'espace) et
   pour préparer silencieusement la refonte graphique à venir.
+- `docs/referentiel/regles-des-graphismes.md` (2026-09-19) — traverse le même ensemble par l'axe du
+  graphisme, en préparation directe de la refonte : ce qui existe déjà factuellement (rendu,
+  palette, éclairage, caméra fixe), le périmètre décidé (scène 3D ET interface web autour, hors
+  identité de marque du site), et les décisions calibrées (vignette fixe, mode Observation/
+  Instruments à la barre espace, caméra dynamique, transitions animées, contraste jour/nuit,
+  trottoir à l'identité propre, détail réservé aux objets d'enquête). Base de jugement de
+  THE-SCREENER une fois cet outil construit.
 - `docs/referentiel/tableau-de-bord.md` (2026-09-19) — règles du tableau de bord/KPI interne
   (5 familles, accès, alertes, cadence de mise à jour) : un outil d'observation à destination de
   l'utilisateur et de l'agent, strictement réservé à l'admin/créateur, jamais un mécanisme de jeu.
@@ -1211,13 +1218,21 @@ ensemble « la refonte graphique », un seul chantier visuel à mener groupé. O
    entièrement respécifié via dix questions de calibrage puis implémenté et testé le même jour
    (`mode:"skip_to_revelation"`, cf. `docs/referentiel/principes.md` 8.21 et `parametres.md` pour le
    détail complet).
-3. **Juste avant la refonte graphique** *(ajouté le 2026-09-19, demande explicite de
-   l'utilisateur)* — créer `docs/referentiel/regles-des-graphismes.md`, sur le modèle de
-   `regles-du-temps.md`/`regles-de-l-espace.md` : un document intelligent qui rassemble tout ce qui
-   entre en jeu dans cette refonte (qualité graphique, mise en page, textures, apparence, affichage)
-   pour la préparer et l'accueillir efficacement dans le code, pas seulement la décrire après coup.
-   Explicitement gardé pour plus tard par l'utilisateur — à faire au moment de démarrer ce chantier,
-   pas avant.
+3. **Fait le 2026-09-19** — `docs/referentiel/regles-des-graphismes.md` créé, sur le modèle de
+   `regles-du-temps.md`/`regles-de-l-espace.md`, en préparation directe de la refonte graphique.
+   Calibré via trois séries de questions successives à la demande explicite de l'utilisateur
+   (« pose moi plein de questions pour bien préparer tous les aspects »), après qu'un tout premier
+   jet rédigé sans calibrage a été jugé insuffisant — jamais recommencé silencieusement à l'identique
+   depuis. Décisions actées qui élargissent le périmètre au-delà des points 4/5/6 ci-dessous :
+   caméra dynamique pendant le jeu normal (pas seulement fixe), transitions animées entre pièces,
+   refonte de toute l'interface web autour de la scène 3D (pas seulement la maison), contraste
+   jour/nuit visible dans l'éclairage, mode Observation (Faim/Fatigue/Incertitude d'humanité) et
+   Instruments basculés à la barre espace (hors du champ de saisie, conflit de frappe déjà résolu),
+   trottoir à l'identité visuelle propre, rendu des objets plus soigné (lumière/matières/ombres)
+   avec un supplément de détail réservé aux seuls objets clés de l'enquête. **Hors périmètre,
+   explicitement reporté mais signalé important et urgent vu la mise en ligne prochaine** :
+   l'identité de marque du site (nom, nom de domaine, logo) — à reprendre avant la mise en ligne,
+   pas oublié. Détail complet et à jour dans le document lui-même (Article 13).
 4. **La refonte graphique** (points 4/5/6 groupés). **Exigence ajoutée le 2026-09-19** (retour
    utilisateur explicite sur un transcript réel, full_sim8) : `scenePalette` (`lib/perception.ts` —
    couleurs des sols, murs, motifs) existe déjà en données mais n'est actuellement JAMAIS transmise
