@@ -21,9 +21,22 @@ travail de l'agent qui pilote le projet, à l'étape 6 du protocole de simulatio
 `CLAUDE.md`), appuyé sur `docs/simulations/correctifs-a-revalider.md` — cf. section dédiée
 ci-dessous pour l'articulation exacte entre les deux.
 
+## Une simulation de dev OU une vraie session du site en ligne — les deux sources sont valides
+
+*(Précisé le 2026-09-19, question explicite de l'utilisateur, une fois le site en passe d'être
+publié : « est-ce que tu peux transmettre le copier coller à el professor ? »)* EL-PROFESSOR lit un
+TEXTE, jamais la façon dont il a été produit — une vraie session copiée depuis le site en ligne
+(conversation + dossier, si l'observateur l'a obtenu) se note exactement comme un `full_simN`
+archivé, sans aucune adaptation de méthode. **Limite honnête, pas contournable** : le résumé
+mécanique des actions (`scripts/summarize-simulation-log.mjs`) et la cadence actuelle du tableau de
+bord KPI dépendent tous deux d'artefacts propres au mode dev (le journal JSON des requêtes/réponses,
+des frontières nettes de redémarrage serveur) qu'une session réelle copiée ne fournit jamais — seule
+la lecture qualitative d'EL-PROFESSOR reste utilisable telle quelle dans les deux cas.
+
 ## Entrées lues
 
-- **Le transcript complet** de la simulation (`docs/simulations/<sim>_transcript.txt`) — toujours.
+- **Le transcript complet** de la simulation OU d'une vraie session réelle copiée depuis le site en
+  ligne (`docs/simulations/<sim>_transcript.txt` pour une simulation archivée) — toujours.
 - **Le dossier retourné** (`docs/simulations/<sim>_dossier.txt`), **obligatoire dès qu'il existe**
   (jamais un bonus optionnel) : c'est lui-même un texte généré par l'API, donc soumis à la même
   exigence d'esprit/voix distincte que la conversation, et il permet un contrôle que le transcript

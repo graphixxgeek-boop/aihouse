@@ -34,6 +34,21 @@ consultable "en cas de doute" seulement.)*
 | full_sim14 | ~65 déplacements | oui (dossier annoncé, non capturé) | — | Déposé le 2026-09-19 par l'utilisateur depuis une sauvegarde texte personnelle (copier-coller, pas le journal JSON original) — seul le transcript a survécu, jamais de dossier ni d'`_actions.txt` pour cette entrée. Ordre chronologique exact du 2026-09-18 par rapport à full_sim15 non reconstituable (numérotation arbitraire à l'archivage). **Numérotée à partir de 14, pas 12** : les identifiants `full_sim12`/`full_sim13` désignent déjà, ailleurs dans le dépôt (`scripts/check-house.mjs`, `docs/suivi/sessions/`), deux tentatives réelles mais avortées de CETTE session (2026-09-19, épuisement de quota aux rounds 11 et 7, jamais archivées faute de contenu suffisant) — les réutiliser ici aurait créé une collision de numérotation entre deux simulations totalement différentes. |
 | full_sim15 | ~39 déplacements | oui (dossier annoncé, non capturé) | — | Idem full_sim14 : déposé le 2026-09-19 depuis une sauvegarde texte personnelle, transcript seul, sans dossier ni journal JSON. |
 
+## Les simulations de dev restent utiles après la mise en ligne du site
+
+*(Ajouté le 2026-09-19, question explicite de l'utilisateur inquiet qu'elles deviennent obsolètes
+une fois de vrais visiteurs disponibles.)* Une fois le site publié, EL-PROFESSOR et THE-SCREENER
+peuvent tout aussi bien noter une VRAIE session copiée depuis le site en ligne qu'une simulation
+archivée ici — les deux sources coexistent, elles ne se remplacent pas :
+- Une simulation de dev reste le seul moyen de **tester un correctif avant qu'un vrai visiteur ne
+  rencontre un éventuel bug résiduel** (cf. `correctifs-a-revalider.md`).
+- Une simulation scriptée peut **provoquer volontairement les paliers rares de la charte**
+  (colère débridée, silence de Lia, dispute grave) qu'un vrai visiteur ordinaire ne déclenche
+  presque jamais — déjà constaté sur les 13 premières notations EL-PROFESSOR, où ces paliers restent
+  quasiment jamais testés faute d'avoir été sollicités.
+- Une vraie session apporte en retour un signal qu'aucune simulation scriptée ne peut égaler
+  (réaction humaine authentique) — complémentaire, jamais substituable.
+
 ## Limite honnête
 
 Les `_actions.txt` sont une extraction MÉCANIQUE (rounds, tirages de bonus, déplacements,

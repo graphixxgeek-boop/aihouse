@@ -399,6 +399,13 @@ enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redem
    même livraison que le transcript/dossier/rapport KPI, jamais collée en clair. Archivée dans
    `docs/el-professor/<sim>.md` + une ligne dans `docs/el-professor/index.md`. Jamais sauté, même
    sous pression de temps : c'est le point de départ de l'étape 5, pas un supplément optionnel.
+   **THE-SCREENER rejoint cette même étape** (2026-09-19, pendant du précédent pour le graphisme :
+   2 captures d'écran maximum, jugées contre `docs/referentiel/regles-des-graphismes.md`, note
+   strictement indicative qui ne prime jamais sur l'appréciation de l'utilisateur — cf.
+   `docs/referentiel/the-screener.md`). Contrairement à EL-PROFESSOR, son statut reste secondaire :
+   un échec technique de capture ne bloque jamais le protocole. **Les deux outils acceptent aussi
+   bien une simulation de dev qu'une vraie session copiée depuis le site en ligne** une fois publié
+   — les deux sources coexistent, cf. `docs/simulations/index.md`.
 5. Passer directement à une analyse détaillée de ce qui fonctionne et de ce qui ne fonctionne pas
    dans ce nouveau transcript, **en partant du rapport EL-PROFESSOR déjà produit à l'étape 4bis**
    plutôt que de tout redécouvrir à la main — jamais une simple confirmation que « ça tourne ».
@@ -1032,6 +1039,17 @@ thèmes exacts ni le registre propre à ce projet, qui vivent dans `docs/referen
 par EL-PROFESSOR — cf. Article 18, étape 6, et `docs/referentiel/el-professor.md` pour
 l'articulation exacte entre les deux).
 
+## THE-SCREENER — blueprint exportable
+
+`docs/the-screener-blueprint.md` documente l'ARCHITECTURE du pendant graphique d'EL-PROFESSOR
+(Article 18, étape 4bis) — une note indicative de qualité visuelle, jamais un verdict qui prime sur
+l'appréciation de l'utilisateur, fondée sur 2 captures d'écran maximum (Playwright) et une charte
+graphique déjà écrite — sous une forme générique, réutilisable sur un autre projet visuel piloté
+par IA. Jamais les critères exacts ni le registre propres à ce projet, qui vivent dans
+`docs/referentiel/the-screener.md` (instanciation) et `docs/the-screener/` (dossier de rapports).
+Distinct d'un éventuel futur outil de gestion de la refonte graphique elle-même — décision
+explicite de l'utilisateur de garder les deux séparés.
+
 ## Référentiel technique — la référence à jour
 
 - `docs/referentiel/principes.md` — les règles invariantes du comportement de la maison, telles
@@ -1108,6 +1126,11 @@ l'articulation exacte entre les deux).
   (`docs/el-professor/`). Cf. `docs/el-professor-blueprint.md` pour le principe générique, et
   `docs/simulations/correctifs-a-revalider.md` pour le carnet distinct de suivi des correctifs de
   code (jamais consulté par EL-PROFESSOR lui-même).
+- `docs/referentiel/the-screener.md` (2026-09-19) — instanciation de THE-SCREENER (Article 18,
+  étape 4bis) pour ce projet : base de jugement (`regles-des-graphismes.md`), mécanisme de capture
+  Playwright (`scripts/the-screener-capture.mjs`, testé et fonctionnel), les 2 déclencheurs de
+  capture, le registre (`docs/the-screener/`). Cf. `docs/the-screener-blueprint.md` pour le principe
+  générique.
 
 Ces documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
 vérité (leur nombre exact a varié au fil des chantiers — se référer à la liste ci-dessus plutôt
