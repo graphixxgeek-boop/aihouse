@@ -133,7 +133,16 @@ export function groundPrivateThought(thought:string|undefined, actor:1|2, attrac
     const text=thought?.trim()??"";
     const describesAction=/\b(?:je|nous)\s+(?:m[’']approche|rejoins|regardons|examinons|lis|vois)|(?:avec\s+(?:Noé|Lia)|ensemble)\s+(?:devant|dans|au|à)|\b(?:écran|chiffres|code|ces chiffres)\b/i.test(text);
     const relational=/\b(?:Noé|Lia|elle|lui|son|sa|ses)\b/i.test(text);
-    if(text && !describesAction && (relational || cycle%5===4) && !recent.slice(0,2).some(s=>normalized(s)===normalized(text))) return text;
+    // Fenêtre anti-répétition élargie (2026-09-19, bug réel trouvé en analysant full_sim7 : « Je
+    // pense à Noé... »/« J'ai envie de me rapprocher de Noé... »/« Noé m'intrigue... » revenaient
+    // mot pour mot toutes les 2-3 occurrences pendant une longue plage de pensées solitaires en
+    // pleine conversation humaine — le filtre ne regardait que les 2 pensées les plus récentes,
+    // largement trop court pour un pool de secours de seulement 3 phrases sur une session de
+    // centaines de tours). Même principe déjà acté pour l'écho de mots (Article 17, corollaire :
+    // une règle de non-répétition doit porter sur toute la session, jamais seulement les derniers
+    // tours) — `recent` contient déjà tout l'historique disponible (jusqu'à 8 réflexions), inutile
+    // de le tronquer nous-mêmes à 2 avant de vérifier.
+    if(text && !describesAction && (relational || cycle%5===4) && !recent.some(s=>normalized(s)===normalized(text))) return text;
     const options=attraction>=75 ? [
         `${peer} m’intrigue de plus en plus. J’aimerais un vrai moment avec ${peer}, sans rien imposer.`,
         `J’ai envie de me rapprocher de ${peer}, mais je préfère attendre un signe clair.`,
@@ -149,7 +158,9 @@ export function groundPrivateThought(thought:string|undefined, actor:1|2, attrac
     ];
     if(actor===2) options[0]=options[0].replace("le connaître","la connaître");
     if(stress>=75) options.unshift(`J’aimerais faire confiance à ${peer}, mais je suis encore trop tendu${actor===1?"e":""} pour savoir quoi dire.`);
-    return Array.from({length:options.length},(_,i)=>options[(cycle+i)%options.length]).find(s=>!recent.slice(0,2).includes(s))??options[cycle%options.length];
+    // Même élargissement que ci-dessus (2026-09-19) : la sélection du pool de secours ne doit pas
+    // non plus se limiter aux 2 dernières réflexions pour éviter la répétition.
+    return Array.from({length:options.length},(_,i)=>options[(cycle+i)%options.length]).find(s=>!recent.includes(s))??options[cycle%options.length];
 }
 
 export function groundRoomSpeech(reply:string,room:string,history:DialogueLine[]) {
