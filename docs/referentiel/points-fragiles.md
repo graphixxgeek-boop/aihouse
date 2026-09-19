@@ -49,3 +49,21 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   comme s'il s'agissait d'un vrai épuisement de quota journalier. Le recul exponentiel avec reset
   au premier succès (déjà implémenté) semble répondre à cette inquiétude, mais ce lien n'a jamais
   été explicitement reconfirmé avec l'utilisateur — à vérifier avec lui plutôt que supposer réglé.
+- **Nouveau chantier convenu le 2026-09-19, à faire lors de la prochaine simulation complète**
+  (demande explicite de l'utilisateur) : créer `docs/referentiel/regles-de-l-espace.md`, miroir de
+  `regles-du-temps.md`, rassemblant pour la première fois dans un seul document les mécanismes
+  d'espace déjà existants mais jamais documentés ensemble (`lib/house.ts` : coordonnées des pièces,
+  murs/meubles, `blocked()`, calcul d'itinéraire `pathBetween`, points d'ancrage par pièce
+  `roomAnchors`, sélection de destination `destinationAnchor`). Décisions déjà actées : un seul
+  document, pas de séparation blueprint/instanciation (ce système est propre à cette maison, pas un
+  moteur générique séparable, même raisonnement que pour "règles du temps") ; portée limitée à la
+  LOGIQUE (où sont les pièces, comment une destination est choisie, comment l'itinéraire est
+  calculé) — jamais le rendu visuel actuel (vitesse d'animation, caméra), qui attend la refonte
+  graphique pour ne pas documenter quelque chose qui va bientôt changer. Objectif silencieux :
+  anticiper la refonte graphique à venir. Une fois ce document construit, l'utiliser pour vérifier
+  dans le prochain transcript ce que l'utilisateur ne peut pas voir lui-même en se concentrant sur
+  la conversation (déplacements, gestion de l'espace) — vérification générale, aucun souci précis
+  identifié pour l'instant. Voir aussi `docs/referentiel/tableau-de-bord.md` : un signal "espace"
+  (répartition des pièces visitées, échecs/redirections de déplacement) est candidat pour le
+  chantier 2 du tableau de bord ; un KPI "temps" séparé a été jugé redondant avec la famille
+  "Rejouabilité/rythme" déjà prévue.

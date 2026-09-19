@@ -62,7 +62,10 @@ session ou après un chantier).
   script `kpi-report.mjs`, et le présent découpage architecture/instanciation.
 - **Chantier 2 — à venir** : tables `kpi_counters` / `kpi_session_snapshots`, familles
   "Performance runtime", "Qualité", "Cohérence logique", "Rejouabilité/rythme", bouton dédié dans
-  l'interface, lien avec `check-spirit.mjs`.
+  l'interface, lien avec `check-spirit.mjs`. **Candidat ajouté le 2026-09-19** (à discuter à ce
+  chantier, pas encore conçu) : un signal "espace" (répartition des pièces visitées, échecs ou
+  redirections de déplacement) — un KPI "temps" séparé a en revanche été jugé redondant avec la
+  famille "Rejouabilité/rythme" déjà prévue ci-dessus.
 - **Chantier 3 (piste ouverte, pas planifiée)** : creuser en priorité l'un des points listés dans
   `docs/referentiel/points-fragiles.md`, si l'un d'eux devient plus urgent que l'enchaînement
   normal des chantiers.
