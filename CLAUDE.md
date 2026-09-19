@@ -747,12 +747,23 @@ corrobore, au niveau zone, par les simulations archivées (`docs/simulations/`).
 détaillée : `docs/axa-check-blueprint.md` (principe générique) et `docs/referentiel/axa-check.md`
 (instanciation propre à ce projet — registre des trouvailles dans `docs/axa-check/`).
 
+**CLEAN-DIRTY-OLD rejoint la même règle en quatrième membre** *(ajouté le 2026-09-19, calibré au
+fil de plusieurs échanges avec l'utilisateur)* : dédié à la stagnation — du code ancien, peu
+retouché, RELATIVEMENT au reste du projet (jamais un seuil de date fixe). Ne juge jamais lui-même
+si une zone stagnante pose un vrai problème : il pose trois questions explicites, chacune déléguée
+au bon outil déjà existant (encore utile ? → ARGUS ; encore à jour ? → HARMONIA ; profiterait d'une
+refonte ? → ALWAYS-NEW-CODE) — jamais une réponse fabriquée. Priorise les zones proches d'un nœud
+sensible HARMONIA avant la pure ancienneté (calibrage explicite). Architecture détaillée :
+`docs/clean-dirty-old-blueprint.md` (principe générique) et `docs/referentiel/clean-dirty-old.md`
+(instanciation propre à ce projet — registre dans `docs/clean-dirty-old/`).
+
 **Toujours déployés, jamais laissés à la seule initiative de qui pourrait l'oublier.** Pour ARGUS,
-HARMONIA ET AXA-CHECK : leur partie mécanique et gratuite (symétrie Lia/Noé, données calculées mais
-jamais lues, combinaisons de mécanismes non envisagées ensemble pour ARGUS ; cohérence chiffrée
-entre le code et sa documentation pour HARMONIA ; couverture réelle par fonction pour AXA-CHECK)
-tourne automatiquement, comme `check-house.mjs`, à chaque changement de code — pour AXA-CHECK, dont
-la fragilité enrichie reste entièrement mécanique (aucune couche de raisonnement séparée, contrairement
+HARMONIA, AXA-CHECK ET CLEAN-DIRTY-OLD : leur partie mécanique et gratuite (symétrie Lia/Noé, données
+calculées mais jamais lues, combinaisons de mécanismes non envisagées ensemble pour ARGUS ; cohérence
+chiffrée entre le code et sa documentation pour HARMONIA ; couverture réelle par fonction pour
+AXA-CHECK ; stagnation relative pour CLEAN-DIRTY-OLD) tourne automatiquement, comme
+`check-house.mjs`, à chaque changement de code — pour AXA-CHECK et CLEAN-DIRTY-OLD, dont le
+jugement reste entièrement mécanique ou délégué (aucune couche de raisonnement séparée, contrairement
 aux deux autres), c'est la totalité de l'outil qui tourne ainsi. Pour ARGUS ET HARMONIA
 spécifiquement, une seconde partie avec un vrai raisonnement plus poussé (donc un coût réel,
 Article 8) se déclenche en plus, à l'initiative de l'agent OU de l'utilisateur, sur un sujet précis
@@ -769,7 +780,9 @@ l'utilisateur ?) → Article 17 (est-ce cohérent du point de vue du personnage 
 robustesse) → Article 20 (ARGUS : un trou logique, une combinaison oubliée subsiste-t-il ? HARMONIA :
 un lien devenu incohérent, une friction entre deux parties du projet subsiste-t-elle malgré tout ce
 qui précède ? AXA-CHECK : le code touché reste-t-il réellement couvert par un test, ou une fonction
-non testée traîne-t-elle dans une zone sensible sans que personne ne le sache ?) → Articles 6, 7 et 13 (documentation, outils et
+non testée traîne-t-elle dans une zone sensible sans que personne ne le sache ? CLEAN-DIRTY-OLD :
+le code touché est-il resté trop longtemps sans qu'on se pose les trois vraies questions — encore
+utile, encore à jour, profiterait-il d'une refonte ?) → Articles 6, 7 et 13 (documentation, outils et
 architecture) → Articles 8, 9, 10
 (coût et rejouabilité) → Article 14 (vigilance continue, à appliquer en toile de fond de tous les
 autres, pas comme une étape séparée) → Article 16 (au moins trois questions de vérification posées
@@ -963,6 +976,16 @@ il n'a aucune connaissance propre au projet à documenter à part, sa seule vale
 appeler et agréger ce que les autres outils gratuits de ce paysage disent déjà. Entièrement
 documenté dans `docs/regles-de-travail.md` §7ter.
 
+## CLEAN-DIRTY-OLD — blueprint exportable
+
+`docs/clean-dirty-old-blueprint.md` documente l'ARCHITECTURE du détecteur de stagnation (cf.
+Article 20, quatrième membre "toujours déployé" aux côtés d'ARGUS, HARMONIA et AXA-CHECK) — code
+ancien et peu retouché RELATIVEMENT au reste du projet (jamais un seuil de date fixe), qui repère
+seul et délègue toujours le vrai jugement (encore utile ? encore à jour ? profiterait d'une
+refonte ?) à ARGUS/HARMONIA/ALWAYS-NEW-CODE — sous une forme générique, réutilisable sur un autre
+projet piloté par IA. Jamais les seuils exacts ni le registre propre à ce projet, qui vivent dans
+`docs/referentiel/clean-dirty-old.md` (instanciation) et `docs/clean-dirty-old/` (dossier + index).
+
 ## Référentiel technique — la référence à jour
 
 - `docs/referentiel/principes.md` — les règles invariantes du comportement de la maison, telles
@@ -1022,6 +1045,10 @@ documenté dans `docs/regles-de-travail.md` §7ter.
   enrichie (nœuds sensibles HARMONIA + churn ALWAYS-NEW-CODE), la corroboration par les simulations
   archivées, le registre des trouvailles (`docs/axa-check/`). Cf. `docs/axa-check-blueprint.md`
   pour le principe générique.
+- `docs/referentiel/clean-dirty-old.md` (2026-09-19) — instanciation de CLEAN-DIRTY-OLD
+  (Article 20) pour ce projet : les seuils de stagnation relative, la priorisation par nœud
+  sensible, les trois questions déléguées à ARGUS/HARMONIA/ALWAYS-NEW-CODE, le registre
+  (`docs/clean-dirty-old/`). Cf. `docs/clean-dirty-old-blueprint.md` pour le principe générique.
 
 Ces documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
 vérité (leur nombre exact a varié au fil des chantiers — se référer à la liste ci-dessus plutôt

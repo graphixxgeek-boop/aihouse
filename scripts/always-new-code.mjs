@@ -18,6 +18,7 @@
 // explicitement avec l'utilisateur le 2026-09-19).
 
 import { readFileSync, existsSync } from "node:fs";
+import { dataRows, numericColumn } from "./lib-markdown-table.mjs";
 import { join } from "node:path";
 import { sh } from "./lib-shell.mjs";
 
@@ -145,13 +146,7 @@ export function churnSignal(stats) {
 // l'utilisateur, contrairement aux autres outils qui ont attendu plusieurs passages réels).
 // Absence honnête (undefined) tant qu'aucun passage n'a été enregistré — jamais un 0 % déguisé.
 export function alwaysNewCodePerformance(indexText) {
-  const dataRows = indexText
-    .split("\n")
-    .filter((l) => l.startsWith("|") && !/^\|\s*-+\s*\|/.test(l) && !l.includes("Zone examinée"));
-  const counts = dataRows
-    .map((row) => row.split("|").map((c) => c.trim()))
-    .filter((cols) => cols.length >= 5 && /^\d+$/.test(cols[3]))
-    .map((cols) => Number(cols[3]));
+  const counts = numericColumn(dataRows(indexText, "Zone examinée"), 3);
   if (!counts.length) return undefined;
   const passages = counts.length;
   const totalFindings = counts.reduce((a, b) => a + b, 0);

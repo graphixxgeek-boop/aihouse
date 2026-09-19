@@ -121,6 +121,10 @@ function main() {
   const axaCheckOut = sh("node scripts/axa-check.mjs");
   console.log(axaCheckOut.trim());
 
+  console.log("\n--- CLEAN-DIRTY-OLD (code ancien et peu retouché, repérage seul) ---");
+  const cleanDirtyOldOut = sh("node scripts/clean-dirty-old.mjs");
+  console.log(cleanDirtyOldOut.trim());
+
   console.log("\n--- Suite de tests (check-house.mjs) ---");
   const testOut = sh("node scripts/check-house.mjs 2>&1");
   const testsOk = !/AssertionError|Error:/.test(testOut) || /ExperimentalWarning/.test(testOut.split("AssertionError")[0] || "");
@@ -137,6 +141,7 @@ function main() {
     ["ALWAYS-NEW-CODE (index)", "docs/always-new-code/index.md"],
     ["CHECK-LEVEL-TARGET (index)", "docs/check-level-target/index.md"],
     ["AXA-CHECK (index)", "docs/axa-check/index.md"],
+    ["CLEAN-DIRTY-OLD (index)", "docs/clean-dirty-old/index.md"],
   ];
   const registrySummary = [];
   for (const [label, relPath] of registries) {
@@ -195,6 +200,9 @@ function main() {
     "",
     "=== AXA-CHECK (robustesse/fragilité par fonction) ===",
     axaCheckOut,
+    "",
+    "=== CLEAN-DIRTY-OLD (code ancien et peu retouché, repérage seul) ===",
+    cleanDirtyOldOut,
     "",
     "=== Suite de tests ===",
     realFailure ? "ÉCHEC — voir sortie complète ci-dessous." : "Verte.",

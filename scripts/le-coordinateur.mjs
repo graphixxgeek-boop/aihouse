@@ -17,6 +17,8 @@
 //     check-house.mjs pour la couverture par fonction, jamais un second (règle anti-doublon).
 //   - always-new-code.mjs::THEMES / parseCoverage / recommendZone → la même mémoire de rotation,
 //     jamais une deuxième zone recommandée qui pourrait diverger de celle d'ALWAYS-NEW-CODE.
+//   - clean-dirty-old.mjs::lastTouchDays / relativeStaleness → même calcul de stagnation relative,
+//     jamais un second calcul divergent, et sans reshell check-house.mjs pour ce seul signal.
 //   - check-level-target.mjs::classifyCheckLevel → exposé en passthrough (classifyRequest
 //     ci-dessous) pour qu'un appelant puisse classer une demande sans réimporter le module lui-même,
 //     jamais appelé automatiquement dans le passage périodique (il a besoin d'un texte de demande).
@@ -42,10 +44,11 @@ import { existsSync, mkdtempSync, rmSync, readFileSync, writeFileSync } from "no
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { sh } from "./lib-shell.mjs";
-import { collectCoverage, robustnessScore } from "./axa-check.mjs";
+import { collectCoverage, robustnessScore, LIB_MAP } from "./axa-check.mjs";
 import { summarizeArgusOutput, summarizeHarmoniaOutput } from "./hyper-scan-checkpoint.mjs";
 import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
 import { classifyCheckLevel } from "./check-level-target.mjs";
+import { lastTouchDays, relativeStaleness } from "./clean-dirty-old.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 // Best-effort, local, jamais committé — même statut que .gemini-key-health.json (mémoire de
@@ -123,6 +126,11 @@ export function runNetworkCheck({ shImpl = sh } = {}) {
   const alwaysNewCodeIndexText = existsSync(ALWAYS_NEW_CODE_INDEX) ? readFileSync(ALWAYS_NEW_CODE_INDEX, "utf8") : "";
   const zone = recommendZone(THEMES, parseCoverage(alwaysNewCodeIndexText));
   rows.push({ name: "ALWAYS-NEW-CODE (préparation)", result: `zone recommandée : ${zone.zone}`, when: now });
+
+  const lastTouchByFile = Object.fromEntries(Object.values(LIB_MAP).map((f) => [f, lastTouchDays(f)]));
+  const staleness = relativeStaleness(lastTouchByFile);
+  const staleCount = Object.values(staleness).filter((s) => s.stale).length;
+  rows.push({ name: "CLEAN-DIRTY-OLD (repérage seul)", result: staleCount > 0 ? `à regarder (${staleCount} zone(s) stagnante(s))` : "ok", when: now });
 
   saveState({ lastHead: head, lastWhen: now });
   return { duplicate, previousRun: state, rows };

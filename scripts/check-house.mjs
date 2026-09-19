@@ -905,7 +905,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 110'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 111'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2586,6 +2586,19 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(auditAllSessions('/definitely-not-a-real-path'),[],'a missing sessions directory must report an honest empty result, never throw or crash the weekly network checkup that depends on it');
   console.log('Passed: the tracking-system fidelity guard flags only a bare "terminée" closure (never a fidèle/écart closure nor an open/in-progress task), reports zero on an empty or missing sessions directory rather than crashing, and audits every session file rather than stopping at the first one found.');
 }
+{
+  // findOpenTasks()/auditOpenTasks() (2026-09-19) : le complément direct de findUnverifiedClosures
+  // ci-dessus — répond à "qu'est-ce qui reste ouvert ?" plutôt qu'à "une clôture a-t-elle sauté une
+  // étape ?". Né d'un vrai constat le jour même : une session affichait encore "en cours" pour deux
+  // tâches terminées depuis des heures, invisible sans relire tout le fichier à la main.
+  const {findOpenTasks}=await import('../scripts/check-suivi-fidelity.mjs');
+  const session='| Horodatage | Sujet | Sous-sujet | Sensibilité | Description | Statut |\n|---|---|---|---|---|---|\n| t1 | S | s | normal | d1 | ouverte |\n| t2 | S | s | normal | d2 | en cours |\n| t3 | S | s | normal | d3 | terminée — fidèle |\n| t4 | S | s | normal | d4 | terminée |';
+  const open=findOpenTasks(session);
+  assert.equal(open.length,2,'exactly the two non-"terminée" rows must be flagged, never the ones already closed regardless of their fidelity wording');
+  assert.deepEqual(open.map(o=>o.statut),['ouverte','en cours'],'each open row must report its real, distinct status verbatim, never a generic "open" label that would hide whether it is brand new or already in progress');
+  assert.equal(findOpenTasks('| Horodatage | Sujet | Sous-sujet | Sensibilité | Description | Statut |\n|---|---|---|---|---|---|').length,0,'a session with zero task rows must report zero open tasks, never crash');
+  console.log('Passed: findOpenTasks() flags exactly the rows whose status is not "terminée" (an "ouverte" and an "en cours" row alike), reports each one\'s real distinct status rather than a generic open label, never flags an already-closed row regardless of its fidelity wording, and reports zero rather than crashing on a session with no task rows at all — the exact blind spot found live when a session file kept showing two long-finished tasks as still "en cours".');
+}
 
 {
   // Extraction compacte des simulations archivées (2026-09-19, demande explicite de l'utilisateur,
@@ -2758,4 +2771,31 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(deadLinkOnly.missingFromDisk,['2026-09-20-0900.md'],'a link in the index pointing at a file that no longer exists on disk must be flagged as a dead link, a different problem from an unindexed file');
   assert.deepEqual(deadLinkOnly.missingFromIndex,[],'a file correctly indexed must never also be flagged as unindexed');
   console.log('Passed: the user-profile system\'s mechanical guard extracts every real observation link from the index in order, and correctly tells apart the two distinct failure modes it exists to catch — a real observation file never referenced by the index, and an index link pointing at a file that no longer exists — never confusing or merging the two.');
+}
+
+{
+  // CLEAN-DIRTY-OLD (2026-09-19, cf. docs/clean-dirty-old-blueprint.md et
+  // docs/referentiel/clean-dirty-old.md). Repère seul, ne juge jamais — les trois vraies questions
+  // (encore utile ? à jour ? profiterait d'une refonte ?) restent déléguées à ARGUS/HARMONIA/
+  // ALWAYS-NEW-CODE, jamais réimplémentées ici.
+  const {relativeStaleness,prioritizeStaleFiles,delegationQuestions,cleanDirtyOldPerformance}=await import('../scripts/clean-dirty-old.mjs');
+  const staleness=relativeStaleness({'lib/a.ts':10,'lib/b.ts':12,'lib/c.ts':400,'lib/d.ts':undefined});
+  assert.equal(staleness['lib/c.ts'].stale,true,'a file untouched for 400 days while its peers sit around 10-12 must be flagged stale — both far above the absolute floor and far above the relative median');
+  assert.equal(staleness['lib/a.ts'].stale,false,'a file close to the median must never be flagged, however the absolute threshold alone might suggest otherwise');
+  assert.equal(staleness['lib/d.ts'].stale,false,'a file with no git history at all (never committed alone, or history unavailable) must report an honest non-stale rather than guessing');
+  assert.deepEqual(relativeStaleness({'lib/x.ts':500}),{'lib/x.ts':{days:500,stale:false,ratioToMedian:undefined}},'a single file with no peer to compare against must never compute a fabricated relative signal, even if it looks old in isolation');
+  assert.deepEqual(relativeStaleness({'lib/x.ts':5,'lib/y.ts':6}),{'lib/x.ts':{days:5,stale:false,ratioToMedian:5/5.5,medianDays:5.5},'lib/y.ts':{days:6,stale:false,ratioToMedian:6/5.5,medianDays:5.5}},'two young, close-in-age files must never be flagged just because a ratio exists — the absolute floor (30 days) still applies');
+  const entries=[{file:'lib/normal.ts',days:200},{file:'lib/sensitive.ts',days:100}];
+  const sensitiveNodes=[{node:'Sommeil',files:['lib/sensitive.ts']}];
+  const prioritized=prioritizeStaleFiles(entries,sensitiveNodes);
+  assert.equal(prioritized[0].file,'lib/sensitive.ts','proximity to a real sensitive node must outrank pure age, per the explicit 2026-09-19 calibration — a younger but sensitive file goes first');
+  const tiePrioritized=prioritizeStaleFiles([{file:'lib/older.ts',days:300},{file:'lib/younger.ts',days:100}],[]);
+  assert.equal(tiePrioritized[0].file,'lib/older.ts','with no sensitive-node match on either side, the older file must still come first, never an arbitrary or input order');
+  const questions=delegationQuestions('lib/nowhere.ts');
+  assert.equal(questions.length,3,'exactly the three delegated questions (still useful/ARGUS, still in sync/HARMONIA, would benefit from a rebuild/ALWAYS-NEW-CODE) must be produced, CLEAN-DIRTY-OLD never answering any of them itself');
+  assert.ok(questions.every(q=>/ARGUS|HARMONIA|ALWAYS-NEW-CODE/.test(q)),'every delegated question must explicitly name the real tool that owns the answer, never a vague pointer');
+  assert.equal(cleanDirtyOldPerformance('| Date | Zone signalée | Trouvailles confirmées | Rapport | Notes |\n|---|---|---|---|---|'),undefined,'zero recorded passes must report an honest absence, never a fake 0%, same discipline as ALWAYS-NEW-CODE/HYPER-SCAN-CHECKPOINT');
+  const perfIdx='| Date | Zone signalée | Trouvailles confirmées | Rapport | Notes |\n|---|---|---|---|---|\n| 2026-09-19 | lib/x.ts | 2 | a.txt | - |\n| 2026-09-19 | lib/y.ts | 0 | b.txt | - |';
+  assert.deepEqual(cleanDirtyOldPerformance(perfIdx),{passages:2,totalFindings:2,findingsPerPassage:1},'the from-day-one KPI must compute the exact real average of confirmed findings per pass, reusing the same shared table-parsing logic as ALWAYS-NEW-CODE rather than a second reimplementation');
+  console.log('Passed: CLEAN-DIRTY-OLD flags a file as stale only when it is both far above the absolute floor and far above the relative median of its real peers (never a fixed date threshold, never a fabricated signal from a single file with no peer to compare against), always prioritizes proximity to a real HARMONIA sensitive node over pure age per the explicit calibration, produces exactly its three delegated questions each naming the real tool that owns the answer without ever answering any of them itself, and its from-day-one KPI reports an honest absence on zero passes and the exact real average otherwise, reusing the shared markdown-table helper rather than reimplementing ALWAYS-NEW-CODE\'s parsing a second time.');
 }

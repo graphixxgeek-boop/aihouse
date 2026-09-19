@@ -661,6 +661,13 @@ ne touche à §8/§9 que si la règle de corroboration ci-dessus est déjà remp
 Zéro coût API (lecture + écriture de texte), jamais mécanisable (comme la checklist qualitative
 d'HYPER-SCAN-CHECKPOINT) : un vrai raisonnement à chaque fois, jamais une routine automatique.
 
+**Pas de hook global forcé — décision explicite.** L'idée d'un vrai déclenchement obligatoire, via
+un hook Claude Code au niveau global (`~/.claude/`, comme le hook existant qui bloque sur des
+changements non commités), a été explicitement envisagée puis écartée par l'utilisateur le même
+jour : rester sur la même base que le reste de la charte (une lecture complète de `CLAUDE.md`/ce
+document à chaque reprise de session, déjà exigée ailleurs) plutôt que d'ajouter un réglage global
+qui dépasserait ce seul projet.
+
 **Ce qui compte comme signal, ce qui n'en est jamais un.** Seule la FAÇON dont l'utilisateur
 collabore, décide et réagit est un signal de profil (rythme, calibrage, réaction à un imprévu,
 rapport à la preuve, ton) — jamais le CONTENU sur lequel porte la collaboration (un choix créatif

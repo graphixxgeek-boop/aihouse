@@ -128,7 +128,9 @@ export function collectCoverage(covDir, { readDir = readdirSync, readFile = (f) 
 
 // Inversion de THEME_PRIMARY_FILE (zone → fichier) en fichier → zone, pour ne jamais tenir une
 // seconde carte séparée (règle anti-doublon, §7ter) — un fichier peut appartenir à plusieurs zones.
-const FILE_TO_ZONES = {};
+// Exportée pour que CLEAN-DIRTY-OLD la réutilise telle quelle plutôt que de la reconstruire une
+// seconde fois (même règle).
+export const FILE_TO_ZONES = {};
 for (const [zone, file] of Object.entries(THEME_PRIMARY_FILE)) {
   (FILE_TO_ZONES[file] ??= []).push(zone);
 }

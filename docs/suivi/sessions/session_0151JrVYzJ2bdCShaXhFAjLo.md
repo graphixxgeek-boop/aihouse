@@ -2,7 +2,11 @@
 
 *(Première session du système de suivi — cf. `docs/systeme-de-suivi.md` pour le format et la
 portée rétroactive décidée avec l'utilisateur : démarre à partir de la création du système, sans
-reconstruire les tâches déjà terminées avant son existence dans cette même session.)*
+reconstruire les tâches déjà terminées avant son existence dans cette même session.
+**Mise à jour du 2026-09-19T20:35Z** : ce fichier n'avait pas été retouché depuis 16h45 — trouvaille
+réelle de `findOpenTasks()` fraîchement construit, qui montrait encore ARGUS/HARMONIA "en cours"
+alors que terminés depuis des heures, et rien du travail effectué depuis. Statuts corrigés et
+tâches manquantes ajoutées ci-dessous.)*
 
 ## Tâches
 
@@ -15,9 +19,21 @@ reconstruire les tâches déjà terminées avant son existence dans cette même 
 | 2026-09-19T16:29Z | Smart Breaker | Article 20 de CLAUDE.md : ARGUS toujours déployé | important | Nouvelle règle de charte demandée explicitement par l'utilisateur — le futur détecteur de trous logiques (ARGUS) doit toujours être sollicité, jamais laissé à la seule initiative de qui pourrait l'oublier ; câblé dans le protocole d'application | terminée |
 | 2026-09-19T16:29Z | Documentation/Référentiel | Principe générique de structure documentaire (1.10) | normal | Réexamen de la question "blueprint séparé pour principes.md/parametres.md/regles-du-temps.md/regles-de-l-espace.md" — conclusion : un principe générique dans `philosophie-et-politique.md` suffit, pas quatre fichiers d'architecture séparés | terminée |
 | 2026-09-19T16:44Z | Temps/Jour-nuit | Nuit blanche / dette de sommeil | important | Malus de fatigue fixe (+28, non cumulable) à l'aube si un personnage n'a jamais dormi pendant la nuit, avec reconnaissance explicite ; conception issue directement des "questions de compréhension" retrouvées ci-dessus ; test dédié, doc à jour, commit poussé | terminée |
-| 2026-09-19T16:35Z | Smart Breaker | Blocage total du quota Gemini pendant full_sim11 | critique | Diagnostic confirmé (3 clés × 6 modèles, tous `QUOTA_ÉPUISÉ`) — simulation stoppée proprement (jamais réinitialisée), script de reprise écrit (`full_sim11_resume.mjs`), check-in programmé (`send_later`, 4h) pour reprendre dès que possible | en cours |
-| 2026-09-19T16:20Z | Smart Breaker | Conception d'ARGUS (détecteur de trous logiques) | important | Nom choisi, principe hybride (mécanique gratuit + raisonnement IA à la demande) confirmé, toujours déployé, balayage complet de l'existant dès que prêt, registre en dossier+index, blueprint séparé confirmé | en cours |
-| 2026-09-19T16:41Z | Smart Breaker | Conception d'HARMONIA (cousin d'ARGUS, cohérence des liens) | important | Nom choisi (déesse grecque de l'harmonie), outil séparé d'ARGUS avec son propre blueprint, approche hybride, cartographie par grand thème, carte vivante tenue à jour, toujours revérifiée contre le code réel (jamais la doc seule) | en cours |
+| 2026-09-19T16:35Z | Smart Breaker | Blocage total du quota Gemini pendant full_sim11 | critique | Diagnostic confirmé (3 clés × 6 modèles, tous `QUOTA_ÉPUISÉ`) — simulation stoppée proprement (jamais réinitialisée), script de reprise écrit (`full_sim11_resume.mjs`) | en cours — **mise à jour 20:22Z** : quota principal toujours épuisé, mais `gemini-3.5-flash`/`gemini-3-flash-preview` répondent désormais ; décision en attente avec l'utilisateur : reprendre `full_sim11` telle quelle ou lancer une simulation fraîche avec repli de modèle |
+| 2026-09-19T16:20Z | Smart Breaker | Conception d'ARGUS (détecteur de trous logiques) | important | Nom choisi, principe hybride (mécanique gratuit + raisonnement IA à la demande) confirmé, toujours déployé, balayage complet de l'existant, registre en dossier+index, blueprint séparé | terminée — fidèle |
+| 2026-09-19T16:41Z | Smart Breaker | Conception d'HARMONIA (cousin d'ARGUS, cohérence des liens) | important | Nom choisi (déesse grecque de l'harmonie), outil séparé d'ARGUS avec son propre blueprint, approche hybride, cartographie par grand thème, carte vivante tenue à jour | terminée — fidèle |
+| 2026-09-19T~17h | Smart Breaker | Conception et construction de Smart Conso API | important | Canal de consultation avant toute action coûteuse de l'agent (Article 22), seuils souple/dur, registre des décisions | terminée — fidèle |
+| 2026-09-19T~18h | Méthode de travail / Suivi | Conception et construction d'HYPER-SCAN-CHECKPOINT | important | Orchestrateur de vérification approfondie exceptionnelle, reconstruit à partir de 5 prompts historiques, version légère (ARGUS/HARMONIA/ALWAYS-NEW-CODE/AXA-CHECK/CLEAN-DIRTY-OLD + suite de tests + registres), KPI central (taux de passages ayant trouvé une chose réelle) | terminée — fidèle |
+| 2026-09-19T~18h | Méthode de travail / Suivi | Conception et construction de CHECK-LEVEL-TARGET | important | Calcule le niveau de vérification attendu (Léger/Standard/Approfondi/Exceptionnel) et les outils à déployer, validé contre les prompts historiques d'HYPER-SCAN-CHECKPOINT | terminée — fidèle |
+| 2026-09-19T~19h | Infrastructure / Outillage | Conception et construction d'ALWAYS-NEW-CODE | important | Rend concrète l'épreuve de la page blanche (Article 7/23), 8 zones réutilisées d'HARMONIA, rotation intelligente, jamais d'application automatique, KPI dès le premier passage | terminée — fidèle |
+| 2026-09-19T~19h30 | Simulation / Article 18 | Archivage des 11 simulations complètes | important | `docs/simulations/` (transcript + dossier + résumé compact des actions), `scripts/summarize-simulation-log.mjs`, câblé dans l'Article 18 étape 3bis pour se répéter à chaque simulation future | terminée — fidèle |
+| 2026-09-19T~19h45 | Infrastructure / Outillage | Règle anti-doublon (mutualisation avant toute création) | important | `docs/regles-de-travail.md` §7ter étendu, généralisée à 5 catégories (journaux, code, doc, tâches, état partagé) ; `scripts/lib-shell.mjs` extrait après avoir trouvé `sh()` triplé | terminée — fidèle |
+| 2026-09-19T~20h00 | Infrastructure / Outillage | Conception et construction d'AXA-CHECK | important | Robustesse/fragilité réelle par fonction via `NODE_V8_COVERAGE`, fragilité enrichie (nœud sensible + churn), corroboration par simulations archivées, intégré à kpi-report.mjs/HYPER-SCAN-CHECKPOINT/CHECK-LEVEL-TARGET | terminée — fidèle |
+| 2026-09-19T~20h10 | Infrastructure / Outillage | Conception et construction de LE-COORDINATEUR | important | Agrégateur léger des outils gratuits déjà existants, accès privilégié (import direct des fonctions pures), aucune décision autonome, sans blueprint dédié (documenté dans regles-de-travail.md §7ter) | terminée — fidèle |
+| 2026-09-19T20:19Z | Méthode de travail / Suivi | Système d'historisation du profil de collaboration | important | `docs/profil-utilisateur/` (dossier + index + fiches datées), résumé officiel (regles-de-travail.md §8/§9) réécrit seulement après corroboration par plusieurs observations distinctes, garde-fou mécanique dédié | terminée — fidèle |
+| 2026-09-19T~20h25 | Infrastructure / Outillage | Conception et construction de CLEAN-DIRTY-OLD | important | Repère la stagnation relative (jamais un seuil de date fixe), délègue le jugement à ARGUS/HARMONIA/ALWAYS-NEW-CODE, priorise par nœud sensible HARMONIA, KPI dès le premier passage, quatrième membre "toujours déployé" de l'Article 20 | terminée — fidèle |
+| 2026-09-19T20:33Z | Méthode de travail / Suivi | `findOpenTasks()`/`auditOpenTasks()` dans le garde-fou du système de suivi | important | Répond au constat réel du jour : lister en un coup d'œil toutes les tâches non fermées de toutes les sessions, sans relire chaque fichier à la main ; a immédiatement permis de trouver ce fichier lui-même périmé | terminée — fidèle |
+| 2026-09-19T20:35Z | Enquête / Récit | Investiguer l'arc relationnel Lia/Noé avant la refonte graphique | important | Chantier n°3 du plan d'origine (`CLAUDE.md`) : vérifier le calage de l'arc relationnel par rapport à la révélation, et diagnostiquer pourquoi `loveRealized` ne s'est jamais déclenché dans une simulation passée pourtant au-delà du seuil théorique — nécessite une simulation fraîche pour investiguer, retrouvé manquant du système de suivi lors de l'audit du 20:33Z | ouverte |
 
 ## Notes
 
@@ -26,3 +42,6 @@ reconstruire les tâches déjà terminées avant son existence dans cette même 
   tranchée explicitement avec l'utilisateur (cf. `docs/systeme-de-suivi.md`). Elles restent
   consultables dans l'historique de conversation et dans les documents qu'elles ont produits
   (`docs/referentiel/tableau-de-bord.md`, `docs/referentiel/kpi-index.md`, etc.).
+- Les horodatages approximatifs (`~17h`, `~18h`, etc.) reflètent l'absence d'horodatage exact
+  enregistré au moment de la clôture initiale de ces tâches, avant que ce fichier ne soit remis à
+  jour le 2026-09-19T20:35Z — jamais reconstruits avec une fausse précision.
