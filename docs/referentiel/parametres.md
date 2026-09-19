@@ -192,14 +192,17 @@ le jour même (Article 13).
   étude complète de 2 tours, ou avec l'aide d'un rêve à partir du 2ᵉ rêve un tour sur trois).
 - **Plafond garanti de l'enquête** (`lib/turn.ts`, 2026-09-19, retour utilisateur explicite après
   audit — plafond fixé à 12 minutes réelles pour la révélation, et surtout ne jamais rester bloquée
-  indéfiniment comme observé en simulation réelle, round 98 toujours pas révélé). Le tour%3 ci-dessus
-  reste la cadence de base, mais s'intensifie en tour%2 dès le tour 10 (`investigationEscalated`) si
-  l'enquête n'est pas encore bouclée, puis devient PRIORITAIRE sur toute romance scriptée (`offer`,
-  la pause salon, le repos après étude) dès le tour 20 si elle est encore incomplète
-  (`investigationOverdue`) — les personnages justifient ce choix dans leur propre registre plutôt
-  qu'un silence mécanique. Pire cas garanti (aucune preuve avant le tour 20) : les 5 preuves à 2
-  passages chacun se terminent au plus tard vers le tour 30, soit ~10-10,5 minutes au rythme réel du
-  jeu (20-21s/tour, cf. section Réseau plus bas), sous la barre des 12 minutes maximum.
+  indéfiniment comme observé en simulation réelle, round 98 toujours pas révélé). Détail complet,
+  chronologie et pièges de cohérence trouvés en vérifiant ce mécanisme contre les deux couches de
+  priorité du moteur : `docs/referentiel/regles-du-temps.md`. Le tour%3 ci-dessus reste la cadence
+  de base, mais s'intensifie en tour%2 dès le tour 10 (`investigationEscalated`) si l'enquête n'est
+  pas encore bouclée, puis devient PRIORITAIRE sur toute romance scriptée (`offer`, la pause salon,
+  le repos après étude) dès le tour 20 si elle est encore incomplète (`investigationOverdue`) — les
+  personnages justifient ce choix dans leur propre registre plutôt qu'un silence mécanique. Pire cas
+  garanti (aucune preuve avant le tour 20, plus jusqu'à 3 tours de récapitulatif d'indice qui reste
+  une priorité encore supérieure mais se consomme aussitôt) : les 5 preuves à 2 passages chacun se
+  terminent au plus tard vers le tour 33, soit ~11,5 minutes au rythme réel du jeu (20-21s/tour, cf.
+  section Réseau plus bas), sous la barre des 12 minutes maximum.
 - Observations générales (murs trop réguliers, absence de paysage...) : une par tour éligible à
   partir du tour 2, dans un ordre fixe, jamais deux fois la même.
 - Questions d'âge : pas avant le tour 12 ET un premier repas partagé.

@@ -75,11 +75,15 @@ export function planTurn(mode:string,current:Resident,other:Resident,story:Story
  // du round 10, puis devient prioritaire sur TOUTE romance (`offer`/`linger`/`afterInvestigation`)
  // si elle est vraiment en retard (round>=20 — tous les beats libres à seuil variable, télé/portes/
  // enceinte/question personnelle, ont de toute façon déjà eu lieu bien avant ce point, cf. leurs
- // plages dans docs/referentiel/parametres.md, donc aucune vraie concurrence à ce stade). Dans le
- // pire cas (aucune preuve avant ce point), les 5 preuves à 2 passages chacun se terminent au plus
- // tard vers le round 30, soit ~10-10,5 minutes au rythme réel du jeu (20-21s/tour, cf.
- // docs/referentiel/parametres.md, section Réseau) — sous la barre des 12 minutes maximum, avec une
- // marge de sécurité réelle plutôt que pile au bord.
+ // plages dans docs/referentiel/parametres.md, donc aucune vraie concurrence à ce stade). Exception
+ // volontaire et bornée : `recapBeat` (route.ts, récapitulatif d'un indice fraîchement trouvé, dès
+ // 2 preuves) reste une SECONDE couche de priorité au-dessus de tout ce que ce fichier décide
+ // (cf. docs/referentiel/regles-du-temps.md, section 6) et peut donc encore s'interposer un tour
+ // même ici — mais il se consomme aussitôt (`life.recapCount` rattrape `evidence.length`), jamais un
+ // blocage. Dans le pire cas (aucune preuve avant round 20, plus jusqu'à 3 tours de recap), les 5
+ // preuves à 2 passages chacun se terminent au plus tard vers le round 33, soit ~11,5 minutes au
+ // rythme réel du jeu (20-21s/tour, cf. docs/referentiel/regles-du-temps.md) — sous la barre des 12
+ // minutes maximum, avec une marge de sécurité réelle plutôt que pile au bord.
  const investigationEscalated=automatic&&story.evidence.length<5&&story.round>=10;
  const investigationOverdue=automatic&&story.evidence.length<5&&story.round>=20&&!residentPriority(current,Boolean(story.introduced))&&!partnerPriority;
  const requiredIntent=(gardenFirst?"chat":urgentIntent) ?? (exitInspection?"chat":explore?"chat":tvFirst?"tv":studyContinuation?"study":continuing?"chat":reflection?"rest":undefined) ?? (investigationOverdue?"study":undefined) ?? (executeAgreement?agreed!.intent:undefined) ?? (offer?undefined:(linger&&!partnerPriority?"rest":undefined) ?? (afterInvestigation&&!partnerPriority?"rest":undefined) ?? (automatic&&story.evidence.length<5&&story.round>=3&&(story.round%3===0||(investigationEscalated&&story.round%2===0)||investigativeCue)&&!residentPriority(current,Boolean(story.introduced))&&!partnerPriority?"study":undefined));

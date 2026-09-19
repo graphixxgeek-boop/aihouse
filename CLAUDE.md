@@ -546,8 +546,15 @@ mettre à jour quand la STRUCTURE de l'outil évolue, pas à chaque ajustement p
 - `docs/referentiel/parametres.md` — tous les chiffres réglables (besoins, émotions, attirance,
   enquête, sommeil, rejouabilité, timing, géométrie), avec leur fichier source. Un rééquilibrage
   ne devrait jamais toucher un fichier sans passer par ce document, et inversement.
+- `docs/referentiel/regles-du-temps.md` (2026-09-19) — traverse les deux documents ci-dessus par
+  l'axe du temps plutôt que par sous-système : les deux horloges du jeu (tour narratif contre temps
+  réel, jamais interchangeables), la chronologie théorique complète tour par tour, les trois états
+  distincts du canal humain (preuves trouvées, appel lancé, canal réellement ouvert), et une
+  checklist de cohérence temporelle pour tout nouveau seuil. À consulter avant d'ajouter ou modifier
+  tout mécanisme sensible au temps, et à utiliser pour vérifier qu'un nouveau seuil ne chevauche pas
+  imprévisiblement un mécanisme voisin.
 
-Ces deux documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
+Ces trois documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
 vérité. Ils doivent être mis à jour à chaque changement de règle ou de paramètre — un principe
 ou un chiffre qui change dans le code et pas ici est une dette à combler tout de suite, pas plus
 tard (Article 6/7/13).
