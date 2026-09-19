@@ -788,7 +788,18 @@ ensemble « la refonte graphique », un seul chantier visuel à mener groupé. O
    entièrement respécifié via dix questions de calibrage puis implémenté et testé le même jour
    (`mode:"skip_to_revelation"`, cf. `docs/referentiel/principes.md` 8.21 et `parametres.md` pour le
    détail complet).
-3. **La refonte graphique** (points 4/5/6 groupés).
+3. **La refonte graphique** (points 4/5/6 groupés). **Exigence ajoutée le 2026-09-19** (retour
+   utilisateur explicite sur un transcript réel, full_sim8) : `scenePalette` (`lib/perception.ts` —
+   couleurs des sols, murs, motifs) existe déjà en données mais n'est actuellement JAMAIS transmise
+   au modèle qui génère le dialogue — seul le rendu 3D (`components/house-view.tsx`) l'utilise. Les
+   personnages ne décrivent donc presque jamais les couleurs réelles qui les entourent. À corriger
+   dans le cadre de ce chantier (pas avant, car coder une description figée des couleurs ACTUELLES
+   deviendrait fausse dès que la palette change avec la refonte) : le prompt doit lire
+   dynamiquement `scenePalette` au moment de la génération, jamais une valeur codée en dur, pour que
+   la description suive automatiquement tout changement de décor. Règle générale à vérifier en même
+   temps, demandée explicitement : les personnages décrivent toujours le monde TEL QU'IL EST
+   AFFICHÉ au moment présent, jamais une référence à un ancien décor ni à l'historique du code —
+   condition de base de l'immersion, à re-vérifier après chaque changement visuel.
 4. **Après la refonte graphique** — chantier n°7 (mécaniques de diffusion), dernier de la liste par
    la propre priorisation d'Opus, confirmée par l'utilisateur.
 5. **Après la refonte graphique également** *(ajouté le 2026-09-19, demande explicite de

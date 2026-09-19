@@ -17,11 +17,6 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   tous les scénarios `check-spirit.mjs` et `check-profile.mjs` avec ce modèle comme `GEMINI_MODEL`
   effectif) — reste donc réservé au dev/simulation, jamais activé en production (cf. CLAUDE.md,
   section Smart Breaker).
-- Le recalibrage des poids `appreciationFromTrust` du 2026-09-19 (baisse ×8/×4, hausse ×6/×3,
-  resserrés depuis les poids d'origine) reste marqué "à revalider empiriquement par une nouvelle
-  simulation dédiée avant de considérer ce calibrage définitif" dans `parametres.md` — jamais
-  encore confirmé par une simulation complète postérieure à ce changement. Candidat naturel pour
-  full_sim8 (point 4 de la file en cours).
 - Le bouton/toggle manuel jour/nuit (éclairage 3D cosmétique) et le cycle jour/nuit automatique
   (fatigue, comportement) sont deux mécanismes volontairement séparés dans le code actuel ;
   l'utilisateur, en répondant au test de compréhension du 2026-09-19, a exprimé une préférence pour
@@ -30,7 +25,17 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   choix déjà documenté sans repasser par une confirmation).
 - Idée non implémentée : une nuit trop courte devrait laisser une vraie dette de sommeil (sieste
   dans la journée suivante, coucher plus tôt le lendemain soir) — évoquée par l'utilisateur le
-  2026-09-19, pas encore conçue ni chiffrée.
+  2026-09-19, pas encore conçue ni chiffrée. **Renforcé le même jour par une observation directe**
+  (lecture de `lib/simulation.ts`) : la récupération de fatigue en dormant est si rapide (−38/tour
+  en chambre) qu'un épisode de sommeil dépasse rarement le plancher minimum garanti de 2 tours,
+  bien en-deçà des 9 tours d'une nuit complète — un personnage peut donc se réveiller en pleine nuit
+  et rester éveillé (en se refatiguant à ×3) le reste de la nuit, sans qu'aucune règle ne relie
+  explicitement durée du sommeil et durée de la nuit. Question posée par l'utilisateur, à trancher
+  avec lui avant d'implémenter la dette de sommeil ci-dessus, dont c'est le même sujet.
+- Question posée par l'utilisateur, pas encore vérifiée : est-il possible qu'un personnage fasse
+  une vraie "nuit blanche" (rester éveillé toute la nuit), et si oui, les conséquences du lendemain
+  sont-elles bien calculées (besoin de sieste, etc.) ? Même famille que le point ci-dessus sur la
+  dette de sommeil — à investiguer et concevoir ensemble.
 - Faut-il généraliser à TOUS les documents de référentiel la séparation blueprint
   générique/instanciation projet, déjà appliquée à l'outil de résilience API et au tableau de bord
   (2026-09-19) ? Question posée explicitement par l'utilisateur, à préciser ensemble avant
