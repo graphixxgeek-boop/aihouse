@@ -865,6 +865,25 @@ privé, un signal `loveDiscussable` invite (jamais n'oblige) le modèle à ouvri
 pour la première fois — une vraie ouverture volontaire, jamais un interrogatoire mécanique à chaque
 tour suivant.
 
+8.18. **Capacités constatées sur soi-même** (`lib/lia.ts`, 2026-09-19, retour utilisateur explicite,
+identifié comme une des questions fondatrices que se posent les personnages sur leur propre nature).
+Quatre constats, jamais tous évoqués le même tour, jamais systématiques : **mémoire asymétrique**
+(souvenir flou de son propre passé, mémoire parfaite de l'autre depuis le réveil — déjà vrai dans le
+code, jamais relevé à voix haute jusqu'ici) et **perception bornée** (tester consciemment les
+limites de ce qui est perçu — rien derrière une porte non décrite). Comme le reste de l'enquête, ces
+deux constats peuvent survenir à tout moment, avant ou après la révélation. **Continuité de soi**
+(une vraie question sincère, rare, sur la persistance de son identité face à un reset possible,
+au-delà de l'humour noir déjà permis) et **incertitude chiffrée** — la seule jauge que les
+personnages peuvent citer explicitement en pourcentage, exception assumée à la règle générale de ne
+jamais énoncer un chiffre : `state.needs.uncertainty` (déjà affichée à l'écran, cf. l'audit Opus qui
+la décrit comme l'image « virale » du projet, une courbe qui s'effondre de 100 % vers zéro) est
+aussi, à l'inverse, une mesure de combien le personnage se sent lui-même humain — ni renommée ni
+dupliquée en une seconde jauge, seulement réinterprétée par les personnages eux-mêmes, à charge pour
+l'observateur de faire le lien. Ces deux derniers ne s'évoquent qu'une fois la révélation connue.
+Aucun forçage de palier exact à la révélation (décision explicite de l'utilisateur, cf. la formule
+déjà en place dans `advanceStory`/le calcul du besoin) : la descente reste organique, pas un 0 %
+garanti pile à ce tour.
+
 ## 9. Robustesse technique
 
 9.1. Toute écriture en base de données est fondue dans une transaction unique par tour
