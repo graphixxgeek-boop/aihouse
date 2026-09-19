@@ -582,6 +582,27 @@ Si le nombre de questions dépasse la capacité d'une seule fenêtre (par exempl
 questions de calibrage de l'étape 6 de l'Article 18), elles sont réparties sur plusieurs fenêtres
 successives plutôt que compressées en texte libre pour tenir dans une seule.
 
+**Clarté pour un non-développeur — l'enjeu de chaque réponse doit être compréhensible sans
+jargon.** *(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur : « assure-toi que
+chaque question est posée clairement, de façon simple à comprendre pour moi qui ne suis pas
+développeur [...] les questions doivent toujours être posées de manière à comprendre clairement
+et simplement l'enjeu de la réponse ».)* L'utilisateur n'est pas développeur : une question qui
+suppose de comprendre un nom de variable, une fonction ou un mécanisme interne pour choisir entre
+les options n'est pas une question claire, même si elle respecte le format ci-dessus. Pour chaque
+question posée :
+- l'intitulé et les descriptions d'options se lisent sans connaissance du code — jamais un nom de
+  fonction, de fichier ou de variable comme seule explication d'un choix (« active X » ne suffit
+  pas ; il faut dire ce que ça change concrètement pour l'utilisateur ou pour ce qu'il voit/vit
+  dans la maison) ;
+- chaque option explique sa CONSÉQUENCE réelle et concrète (ce qui va effectivement changer, se
+  passer, ou rester pareil) plutôt qu'une description technique de la solution envisagée ;
+- si un terme technique est réellement nécessaire (parce que l'utilisateur l'a lui-même employé,
+  ou qu'aucune reformulation ne le remplace sans perdre en précision), il est immédiatement
+  expliqué en une incise simple, jamais laissé sans traduction.
+Le but est d'éviter toute erreur de compréhension qui mènerait l'utilisateur à choisir une option
+sans en avoir vraiment saisi la portée — la responsabilité de rendre l'enjeu clair revient
+entièrement à l'agent qui pose la question, jamais à l'utilisateur de deviner ou de se renseigner.
+
 **Traçabilité visible des vérifications.** Chaque fois qu'une réponse à l'utilisateur s'appuie sur
 la charte pour valider un choix (« ceci respecte l'Article 0 », « vérifié contre l'Article 11 »,
 etc.), le mentionner explicitement accompagné de 📜✅ (la feuille pour la charte, le check vert pour
