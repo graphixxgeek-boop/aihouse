@@ -668,6 +668,16 @@ appelant une API tierce à quota limité — jamais l'historique d'apprentissage
 (`.gemini-key-health.json`, local, jamais committé), qui reste spécifique à ce déploiement. À
 mettre à jour quand la STRUCTURE de l'outil évolue, pas à chaque ajustement propre à Gemini.
 
+## Tableau de bord interne (KPI) — blueprint exportable
+
+`docs/tableau-de-bord-blueprint.md` documente l'ARCHITECTURE du tableau de bord interne (5
+familles génériques : performance runtime, robustesse du code, qualité de sortie, cohérence
+logique, variété/rejouabilité) sous une forme générique, réutilisable sur un autre projet
+équivalent — jamais les familles exactes ni les fichiers propres à ce projet, qui vivent dans
+`docs/referentiel/tableau-de-bord.md` (instanciation) et `docs/referentiel/points-fragiles.md`
+(registre vivant). Même séparation architecture/instanciation que pour l'outil de résilience API
+ci-dessus, à la demande explicite de l'utilisateur le 2026-09-19.
+
 ## Référentiel technique — la référence à jour
 
 - `docs/referentiel/principes.md` — les règles invariantes du comportement de la maison, telles
