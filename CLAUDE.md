@@ -747,6 +747,31 @@ avant/pendant l'exécution, sur les points où une demande était réellement am
 rendu à l'utilisateur doit dire explicitement
 ce qui a été vérifié, préservé, amélioré et corrigé.
 
+**Article 21 — HYPER-SCAN-CHECKPOINT : la vérification approfondie exceptionnelle.** *(Ajouté le
+2026-09-19, reconstruit à partir de cinq vrais prompts de l'utilisateur retrouvés dans l'historique
+complet de la session (16 au 19 septembre) : « j'ai dû te demander ça quelque fois, à des moments
+stratégiques [...] je me souviens que tu m'avais remercié car ça fait ressurgir parfois des bugs
+latents [...] je veux créer avec toi un outil d'analyse approfondie qui fonctionne sur le modèle de
+ces prompts ». Confirmé comme un vrai outil technique, pas un simple protocole : « il faut en faire
+une vraie machine de guerre [...] si un blueprint n'est pas nécessaire, c'est le signe que l'outil
+n'est pas assez abouti ».)* Contrairement à ARGUS et HARMONIA (Article 20, toujours déployés),
+HYPER-SCAN-CHECKPOINT est un outil EXCEPTIONNEL : il ne se déclenche jamais automatiquement, jamais
+en continu — seulement sur demande explicite de l'utilisateur, ou proposé par l'agent après avoir
+remarqué une grosse vague de changements (jamais lancé sans confirmation). Il orchestre TOUT ce que
+le projet sait déjà faire mécaniquement (ARGUS, HARMONIA, `check-house.mjs`, le tableau de bord,
+tous les registres et historiques accumulés) et y ajoute une couche de raisonnement qu'aucun outil
+mécanique ne peut produire : la fidélité à chaque consigne passée reprise une par une, la recherche
+de combinaisons jamais pensées, une comparaison humaine de deux transcripts consécutifs, et — en
+version complète, avec de vrais appels API et après consultation de Smart Conso API — une DOUBLE
+PERSPECTIVE confiée à un second agent réellement indépendant. Sa vocation, et son seul vrai critère
+de succès, n'est jamais "a-t-il tourné sans erreur" mais combien de bugs ou d'oublis réellement
+inconnus il a fait remonter — la preuve vivante de cette vocation est un vrai bug trouvé le
+2026-09-18 grâce à ce rituel avant qu'il n'ait de nom (`negotiationLog` jamais câblé malgré une
+demande explicite, jamais détecté par aucun test avant ce passage). Architecture détaillée :
+`docs/hyper-scan-checkpoint-blueprint.md` (principe générique) et
+`docs/referentiel/hyper-scan-checkpoint.md` (instanciation, registre dans
+`docs/hyper-scan-checkpoint/`).
+
 ## Règles de travail — collaboration avec l'utilisateur
 
 `docs/regles-de-travail.md` documente, séparément de la charte de contenu ci-dessus, la façon dont
@@ -811,6 +836,14 @@ générique — jamais les seuils exacts ni les fichiers propres à ce projet, q
 `docs/referentiel/smart-conso-api.md` (instanciation) et `docs/smart-conso-api/` (dossier + index).
 Frontière stricte avec l'Article 8 : cf. section Article 8 ci-dessus.
 
+## HYPER-SCAN-CHECKPOINT — blueprint exportable
+
+`docs/hyper-scan-checkpoint-blueprint.md` documente l'ARCHITECTURE de l'outil de vérification
+approfondie exceptionnelle (cf. Article 21) sous une forme générique — jamais les cinq prompts
+historiques exacts ni les fichiers propres à ce projet, qui vivent dans
+`docs/referentiel/hyper-scan-checkpoint.md` (instanciation) et `docs/hyper-scan-checkpoint/`
+(dossier + index, y compris la mémoire du dernier passage).
+
 ## Référentiel technique — la référence à jour
 
 - `docs/referentiel/principes.md` — les règles invariantes du comportement de la maison, telles
@@ -850,6 +883,11 @@ Frontière stricte avec l'Article 8 : cf. section Article 8 ci-dessus.
   projet : le canal de consultation (`scripts/smart-conso-api.mjs`), le seuil dur actuel (2
   simulations confirmées par fenêtre de 6h, en attente de validation explicite), le registre des
   décisions (`docs/smart-conso-api/`). Cf. `docs/smart-conso-api-blueprint.md` pour le principe
+  générique.
+- `docs/referentiel/hyper-scan-checkpoint.md` (2026-09-19) — instanciation d'HYPER-SCAN-CHECKPOINT
+  (Article 21) pour ce projet : l'orchestrateur (`scripts/hyper-scan-checkpoint.mjs`), son KPI
+  central (taux de passages ayant trouvé une chose réelle), le registre des passages
+  (`docs/hyper-scan-checkpoint/`). Cf. `docs/hyper-scan-checkpoint-blueprint.md` pour le principe
   générique.
 
 Ces documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de

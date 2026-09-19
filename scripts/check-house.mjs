@@ -905,7 +905,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 102'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 103'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2484,4 +2484,24 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(HARD_THRESHOLDS.simulation.count===2&&HARD_THRESHOLDS.simulation.windowHours===6,'the documented starting hard threshold (2 simulations per 6h window) must match what the code actually enforces');
   assert.ok(typeof recordAction==='function','recordAction must be exported for the CLI entrypoint to persist a confirmed action to the local session ledger');
   console.log("Passed: Smart Conso API's pure advisory logic reports an honest absence when there is no recent data, computes the exact real exhaustion ratio otherwise, counts only confirmed actions of the matching type within the sliding window, and correctly distinguishes the hard-threshold verdict from the soft-quota-pressure warning as two independent signals.");
+}
+
+{
+  // HYPER-SCAN-CHECKPOINT (2026-09-19, cf. docs/hyper-scan-checkpoint-blueprint.md et
+  // docs/referentiel/hyper-scan-checkpoint.md). Fonctions pures testées contre des fixtures en
+  // mémoire, jamais contre le vrai docs/hyper-scan-checkpoint/index.md (qui grossit dans le temps).
+  const {lastCheckpointCommit,summarizeArgusOutput,summarizeHarmoniaOutput,checkpointPerformance}=await import('../scripts/hyper-scan-checkpoint.mjs');
+  const emptyIndex='# titre\n\n| Date | Commit couvert jusqu\'à | Version | Trouvailles | Rapport | Notes |\n|---|---|---|---|---|---|\n';
+  const oneRowIndex=emptyIndex+'| 2026-09-19 | `abc1234` | légère | 2 | [scan.txt](scan.txt) | premier passage |\n';
+  const twoRowIndex=oneRowIndex+'| 2026-09-20 | `def5678` | complète | 0 | [scan2.txt](scan2.txt) | rien trouvé cette fois |\n';
+  assert.equal(lastCheckpointCommit(emptyIndex),undefined,'an index with no data row yet must report an honest absence, never a fake commit');
+  assert.equal(lastCheckpointCommit(oneRowIndex),'abc1234','the commit hash must be read from the data row, not confused with the date column that comes first');
+  assert.equal(lastCheckpointCommit(twoRowIndex),'def5678','the LAST row must win when several passages are already recorded, never the first');
+  assert.equal(checkpointPerformance(emptyIndex),undefined,'zero recorded passages must report an absence, never a disguised 0%');
+  const perf=checkpointPerformance(twoRowIndex);
+  assert.equal(perf.passages,2);assert.equal(perf.totalFindings,2);assert.equal(perf.findingsPerPassage,1);assert.equal(perf.hitRate,50,'exactly one of the two recorded passages found something real, so the hit rate — the tool\'s actual vocation per the user\'s explicit framing — must read 50%, not an average that would hide it');
+  assert.deepEqual(summarizeArgusOutput('[confirmé] a\n[probable] b\nMarqueurs TODO/FIXME trouvés (3) :'),{candidatsDetectes:2,todos:3});
+  assert.deepEqual(summarizeHarmoniaOutput('2 friction(s) confirmée(s) sur 5 lien(s) vérifié(s).'),{frictions:2,liensVerifies:5});
+  assert.deepEqual(summarizeHarmoniaOutput('rien à voir ici'),{frictions:undefined,liensVerifies:undefined},'unparseable HARMONIA output must never be silently miscounted as zero');
+  console.log("Passed: HYPER-SCAN-CHECKPOINT correctly reads the last recorded commit from its own index (never confusing the date column with the commit column, always the most recent row), reports an honest absence rather than a fake 0% when no passage has been recorded yet, and computes its own central performance KPI — the real hit rate of passages that surfaced a genuine confirmed finding, the tool's whole stated vocation — exactly rather than as a averaged-away percentage.");
 }
