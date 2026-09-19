@@ -26,7 +26,7 @@ consultable "en cas de doute" seulement.)*
 | full_sim4 | 136 | oui | 75 | Anciennement dupliqué dans `docs/contexte-projet/simulations/` — consolidé ici, ancien emplacement retiré. |
 | full_sim5 | 122 | oui | 46 | — |
 | full_sim6 | 34 | non | 21 | Révélation non atteinte dans cette session. |
-| full_sim7 | 215 | non | 82 | Round le plus élevé du lot, révélation pourtant non atteinte — à examiner si un futur passage HARMONIA/ALWAYS-NEW-CODE porte sur l'enquête. |
+| full_sim7 | 215 | oui | 82 | **Corrigé le 2026-09-19 (construction d'EL-PROFESSOR) : `full_sim7_dossier.txt` existe bel et bien et contient un vrai verdict** — cette ligne affirmait à tort "non" depuis sa création, écart entre ce registre et le fichier réel sur disque (Article 13). Round le plus élevé du lot ; à examiner si un futur passage HARMONIA/ALWAYS-NEW-CODE porte sur l'enquête. |
 | full_sim8 | 144 | oui | 65 | — |
 | full_sim9 | 153 | oui | 73 | — |
 | full_sim10 | 164 | oui | 69 | Sujet du chantier 2 du tableau de bord (cf. `docs/referentiel/tableau-de-bord.md`). |

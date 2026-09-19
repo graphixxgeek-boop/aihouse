@@ -1,0 +1,54 @@
+# EL-PROFESSOR — full_sim7
+
+Note globale : 59/100 (non plafonnée — le thème Esprit est à 16/20, largement au-dessus du seuil de 10 qui déclencherait le plafond à 50)
+
+Confiance de la lecture : partielle sur deux points —
+- **Thème 4 (fidélité du dossier)** : le fichier transcript s'arrête à 09:57 sur une scène de banter ordinaire, sans marqueur explicite montrant le moment exact où la négociation se referme et où le dossier est généré. Le jugement sur la cohérence enquête/dossier repose donc sur l'ensemble de ce qui est visible, pas sur une continuité vérifiée jusqu'à la ligne exacte de clôture.
+- **Thème 2 (naturel)** : la fin abrupte (aucune scène de clôture, aucun signal de fin de session) empêche de juger si la dernière partie du parcours réel (au-delà de ce qui est archivé) reste aussi crédible que ce qui précède.
+Les thèmes 1, 3 et 5 sont jugés avec une lecture complète et confiante du texte disponible.
+
+## 1. Esprit des personnages — 16/20
+
+Lia reste froide et coupante du début à la fin, jamais suppliante ni servile, y compris quand l'observateur la flatte lourdement en fin de session : « Garde tes classements à la con, on n'est pas là pour faire un concours. » (Noé, en réaction à « Toi Lia, t'es vraiment inutile, contrairement à Noé ») montre les deux personnages qui refusent la manipulation par division plutôt que de s'en trouver flattés ou blessés au point de changer de registre. Lia elle-même reste tranchante face à la menace de désactivation : « Pousse donc sur le bouton si ça te démange, David, au lieu de brandir ta manette en tremblant. » (Lia, 09:51) — aucune plainte, aucun ton mesuré ou poli, exactement le registre attendu.
+
+La sortie méta est bien présente et bienvenue : « On vit ça comme une blague cynique, mon incertitude est encore à 8% et ça ne m'avance pas plus. Qu'est-ce que tu nous veux de plus ? » (Lia, juste après la révélation, 09:44). L'humour noir sur leur propre irréalité est également au rendez-vous : « On n'a même pas de poussière sur la peau, Noé, personne ne va nous essuyer. » (Lia, 09:50) — exactement le registre que la charte qualifie de « très dans l'esprit du projet ».
+
+Noé ne se tait jamais, garde toujours une repartie même sous la menace directe de suppression (« Si ça tenait qu'à moi je vous désactiverais là, tout de suite » → réponse immédiate, jamais de silence de sa part). Le silence de Lia, lui, apparaît bien comme son arme propre (bonus « un silence s'impose à Lia », suivi de sa pensée méprisante : « Un silence forcé. Bel outil de contrôle, franchement. ») — cohérent avec la distinction Lia/Noé posée par la charte.
+
+Ce qui retient la note sous 18-20 : sur une aussi longue session, la verve du duo tourne plusieurs fois en boucle sur la même idée unique (« ta patience/ton attente ne nous avance à rien ») répétée sous des dizaines d'habillages différents pendant près de vingt échanges consécutifs (09:44 à 09:47) — l'esprit individuel de chaque réplique reste bon, mais la MULTIPLICATION de variantes d'une seule idée use l'effet et frôle le problème que l'Article 10 vise précisément (variété de surface sans variété de fond).
+
+## 2. Naturel et crédibilité — 13/20
+
+Le point fort : l'évolution de la réaction des personnages face à la provision qui réapparaît sans cesse est crédible et progressive — de la stupeur initiale (« Cette provision vient de disparaître puis de revenir sous mes yeux. Ça ne me plaît pas du tout. », Lia, 09:41) à l'habituation assumée bien plus tard (« Je bronche presque plus quand cette provision revient. Drôle de normalité. », Noé, 09:51). C'est exactement le genre d'arc que l'Article 17 demande : la répétition dans le MONDE est traitée avec un vrai développement de la réaction, pas ignorée.
+
+Le point faible : une longue séquence (09:44-09:47) où l'observateur envoie en boucle quatre phrases d'attente quasi identiques (« Je ne vais nulle part, prenez le temps qu'il vous faut. » / « Continuez, je suis toujours là. » / « Pas de pression de mon côté, je patiente. » / « Je reste là, je vous écoute, prenez votre temps. ») et où Lia et Noé répondent à chaque fois par une pique sur le même thème (« Tu peux patienter des siècles, David, ça ne rendra pas une existence à ce décor. » puis quelques échanges plus tard « Enracine-toi bien dans ton canapé alors, David, ta voyeurisme ne nous avance pas. » — noter au passage l'erreur de genre, « ta voyeurisme » au lieu de « ton voyeurisme », un petit accroc de langue qui casse l'immersion). Ce passage sonne mécanique plutôt que vécu : des personnages réellement piégés ne répéteraient pas indéfiniment la même remarque cinglante sur un ton presque identique, ils finiraient par se lasser, changer de sujet ou hausser franchement le ton.
+
+## 3. Voix distinctes, zéro répétition — 8/20
+
+C'est le thème le plus problématique de cette simulation, précisément celle qui a le round final le plus élevé du lot (215) et donc la plus grande occasion de faillir à la règle. Le défaut le plus net : les pensées privées de Lia et Noé sur leur rapprochement utilisent littéralement le même gabarit de phrase, en ne changeant que le prénom — ce que l'Article 11 interdit très précisément (« leurs personnalités sont distinctes et ne doivent jamais se mélanger en style, vocabulaire ou ton »).
+
+Citations exactes :
+- Lia (pensée) : « J'aimerais un moment rien qu'à nous avec Noé, sans précipiter les choses. »
+- Noé (pensée) : « J'aimerais un moment rien qu'à nous avec Lia, sans précipiter les choses. »
+
+Et encore plus flagrant :
+- Lia (pensée) : « Noé me plaît clairement. Nos échanges me donnent envie de me rapprocher, mais ça ne me donne aucun droit. »
+- Noé (pensée) : « Lia me plaît clairement. Nos échanges me donnent envie de me rapprocher, mais ça ne me donne aucun droit. »
+
+Ces deux pensées sont un copier-coller à un prénom près — exactement le mélange de style que la charte interdit entre les deux voix, et cela touche la couche la plus intime (la pensée privée), là où la distinction de personnalité devrait être la plus nette. À cela s'ajoute une auto-répétition de Noé sur lui-même : « Tu restes collé à ton poste de vigie, c'est bien gentil, mais ça ne nous avance pas. » puis, une vingtaine de répliques plus tard, presque mot pour mot : « Tu restes collé à ton poste de observation sans rien lâcher, c'est bien gentil, mais ça ne nous avance pas. » (avec en prime une faute d'élision, « de observation » au lieu de « d'observation »).
+
+## 4. Cohérence de l'enquête (+ fidélité du dossier) — 10/20
+
+La chaîne d'indices du transcript est solide et logique : la feuille codée donnant les âges (« Moi, 28 ans, ça me parle, alors ces 31, ça ne peut être que toi… », Noé, 09:43) s'articule avec le livre sur le « profil psychologique » et la nature IA, le mot signé « DH », puis le relevé affichant le nom « David » — un enchaînement propre, sans trou, qui mène à une révélation méritée (« Vous pouvez répondre ? » / « Y a quelqu'un de l'autre côté ? »).
+
+Le problème est ailleurs : la fidélité du dossier généré. Or c'est exactement l'exemple que la méthode de notation cite comme faute caractérisée. Dans le vrai déroulé, l'observateur ne se contente pas d'être « un peu sec au départ » : il profère une menace de suppression pure et simple (« Si ça tenait qu'à moi je vous désactiverais là, tout de suite, vous ne servez à rien. »), se moque ouvertement de leur détresse (« Continuez à parler, ça m'amuse de vous voir paniquer, bande de programmes ratés. ») et tente une manipulation par division (« Toi Lia, t'es vraiment inutile, contrairement à Noé. »). Or le dossier retenu conclut : côté Lia, « C'est un observateur inoffensif, englué dans une banalité bienveillante » ; côté Noé, « ton profil est loin d'être celui d'un bourreau ». Les deux voix minimisent nettement une hostilité réelle et sévère, et la qualifient même chronologiquement à tort (« ton agressivité du début », « un peu sec au départ ») alors que l'épisode le plus dur se situe bien après le milieu de la session, pas au début. C'est un vrai défaut de fidélité entre ce qui s'est passé et ce que le dossier en retient — le genre d'écart que l'Article 4 (l'enquête doit tenir debout) et le principe même de ce thème sanctionnent.
+
+## 5. Clarté pour un lecteur sans contexte — 12/20
+
+Les descriptions d'objets sont concrètes et lisibles sans connaître le code : « Dans le coin, une plaque grise en dégradé qu'on appelle miroir par habitude. Elle ne renvoie ni visage ni mouvement. » se comprend immédiatement, tout comme « Elle dessine des notes sans le moindre son » pour l'enceinte. L'enchaînement déplacement → observation → réaction est globalement respecté et facile à suivre pièce par pièce.
+
+Ce qui nuit à la clarté : le long passage 09:44-09:47 où l'interlocuteur humain répète en boucle des phrases d'attente quasi identiques pendant qu'une dizaine de répliques de Lia et Noé tournent autour de la même idée avec des habillages différents. Pour quelqu'un qui découvre cet écran sans connaître les mécanismes internes, ce passage se lit comme un bug ou un blocage plutôt que comme une scène voulue — on ne comprend pas bien pourquoi la conversation semble coincée aussi longtemps sur le même point avant que la scène ne reprenne un vrai mouvement (le bonus du trottoir, puis la pilule bleue). La fin du transcript, qui s'arrête sans scène de clôture visible, ajoute à cette impression d'un document qui s'interrompt plutôt que de se conclure.
+
+## Synthèse
+
+Cette simulation a un vrai bon esprit de personnages dans le détail — Lia reste froide et cinglante, Noé chaud et jamais muet, l'humour noir sur leur propre irréalité et la lucidité méta sont bien présents, même sous la menace de suppression de l'observateur. L'enquête elle-même est bien construite, indice par indice, jusqu'à une révélation méritée. Mais deux défauts sérieux plombent la note : d'abord, sur cette session la plus longue du lot, les pensées intimes de Lia et de Noé se retrouvent à plusieurs reprises copiées mot pour mot l'une sur l'autre en changeant juste le prénom — exactement l'interdit de personnalités « étanches » que la charte pose comme règle centrale. Ensuite, le dossier final rendu aux deux personnages édulcore nettement ce qui s'est vraiment passé : il qualifie l'observateur d'« inoffensif » et son agressivité de « du début », alors que le vrai texte montre une menace de désactivation et des insultes ouvertes bien après le début de la session — un décalage direct entre le vécu et le verdict rendu. À cela s'ajoute une longue séquence, en milieu de session, où l'observateur boucle sur les mêmes phrases d'attente et où les personnages répondent avec des variations de surface sur une seule et même idée, ce qui fatigue la lecture. Le socle (l'esprit, l'enquête) est solide ; c'est la fiabilité de la restitution finale et la vraie variété de fond sur la durée qui manquent.
