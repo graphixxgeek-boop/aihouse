@@ -368,6 +368,47 @@ seulement ce qui aide l'agent à ne pas créer de friction évitable.)*
   affirmation de la preuve concrète qui la soutient (tests nommés, comportement observé, extrait de
   transcript).
 
+## 10. Règles de suivi — ne jamais rien perdre
+
+*(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur : « il faut penser à gérer mes
+interventions quand je t'interromps ou que je construis mes idées en plusieurs prompts [...] un
+système qui nous sert à savoir toujours où on en est, ce qu'il nous reste à faire, les idées bien
+stockées pour plus tard, rien ne passe à la trappe ». Rattaché ici plutôt qu'à un document séparé
+(question posée et tranchée explicitement le même jour) : c'est une méthode de travail, pas un
+outil technique nouveau à construire — elle s'appuie sur ce qui existe déjà (liste de tâches de
+l'agent, feuille de route de `CLAUDE.md`, `docs/referentiel/points-fragiles.md`) plutôt que
+d'ajouter un document de plus à maintenir en double. Opérationnalise les observations déjà faites
+aux sections 8 et 9 ci-dessus (spécification itérative, rafales de messages fragmentés) en une
+procédure concrète, pas seulement un trait de profil à connaître.)*
+
+**Trois cas face à un message reçu pendant que l'agent travaille déjà sur autre chose**, à
+distinguer systématiquement (confirmé explicitement par l'utilisateur) :
+1. **Une idée ou une demande pour plus tard** → l'agent l'enregistre immédiatement (tâche créée
+   dans sa liste de suivi technique, et dans `CLAUDE.md`/`points-fragiles.md` si elle concerne le
+   contenu du projet ou une décision de conception) puis continue ce qu'il était en train de faire,
+   sans dévier. Un accusé de réception bref confirme que c'est noté (jamais un silence).
+2. **Une question à laquelle l'utilisateur attend une réponse** → l'agent répond tout de suite, dans
+   le fil de sa réponse en cours, puis reprend le travail interrompu.
+3. **Un changement de cap sur ce que l'agent est en train de faire** → l'agent s'adapte
+   immédiatement, sans attendre d'avoir fini l'étape en cours si le changement la rend caduque.
+
+**Une idée précisée en plusieurs messages successifs met à jour la MÊME entrée**, jamais une
+nouvelle entrée par précision. Le suivi doit refléter l'état actuel et complet de l'idée, pas
+l'historique de sa formulation — l'historique complet reste de toute façon consultable dans la
+conversation elle-même si besoin d'y revenir.
+
+**L'arborescence complète (tout ce qui est fait/en cours/à venir) se montre sur demande
+explicite uniquement**, jamais spontanément à chaque chantier terminé — décidé explicitement pour
+ne pas alourdir systématiquement les réponses. Quand elle est demandée, elle rassemble les trois
+sources à jour (liste de tâches technique de l'agent, feuille de route de `CLAUDE.md`, registre
+`points-fragiles.md`), jamais une seule vue partielle présentée comme complète.
+
+**Le profil observé aux sections 8 et 9 est la référence à consulter en cas de doute** sur la
+façon d'interpréter un message ambigu (rafale de messages, coquille, revirement apparent) — cette
+section-ci dit COMMENT suivre le travail dans la durée, ces sections-là disent COMMENT interpréter
+l'utilisateur au moment où le message arrive ; les deux se complètent, jamais l'une à la place de
+l'autre.
+
 ---
 
 # Partie B — Spécificités propres à Claude Code

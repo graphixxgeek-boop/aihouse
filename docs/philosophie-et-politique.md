@@ -245,6 +245,26 @@ figé et daté à chaque changement (jamais réécrit après coup) donne un poin
 vérifier périodiquement l'alignement entre ce référentiel, les règles plus abstraites au-dessus et
 le code en dessous est le test le plus direct de la santé globale du système.
 
+### 2.8 Une interruption ne doit jamais coûter une idée **[Explicite, généralisation Synthèse]**
+
+Un travail créatif suivi en direct par son commanditaire produit naturellement des messages qui
+arrivent pendant qu'une tâche est déjà en cours — une idée pour plus tard, une question qui attend
+réponse, ou un changement de cap sur ce qui se fait à l'instant. Confondre ces trois cas (par
+exemple répondre à une question comme si c'était une idée à mettre de côté, ou continuer un travail
+qu'un changement de cap vient pourtant de rendre caduc) coûte soit une réponse hors sujet, soit une
+idée perdue faute d'avoir été notée avant de reprendre le fil.
+
+*Exemple* : sur ce projet, une idée affinée en plusieurs messages successifs met à jour une seule
+entrée de suivi plutôt que d'en créer une par précision — le suivi reflète l'état actuel de l'idée,
+jamais l'historique de sa formulation.
+
+*Portée générale* : dans toute collaboration suivie en temps réel, distinguer explicitement ces
+trois traitements (noter et poursuivre / répondre puis poursuivre / s'adapter immédiatement) protège
+à la fois la continuité du travail en cours et la mémoire des idées qui arrivent en chemin — les deux
+sont perdants si on les traite comme un seul et même cas. Une vue d'ensemble complète de ce qui est
+fait, en cours et en attente doit rester disponible sur simple demande, sans jamais dépendre de la
+mémoire de la conversation elle-même pour exister.
+
 ---
 
 ## Partie 3 — Ce que ce projet refuse (anti-modèles explicites)
