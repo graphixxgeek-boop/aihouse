@@ -905,7 +905,16 @@ prénom et un mot changés), contrairement aux trois autres variantes déjà bie
 les deux personnages peuvent tirer le même index le même tour, ça produisait deux pensées
 quasi identiques côte à côte à l'écran, un vrai accroc à l'Article 11 dès la toute première minute
 d'une session. Les six variantes d'index 3 (une par personnage × 3 branches) ont été réécrites avec
-une charpente propre à chacune, jamais partagée entre les deux personnages.
+une charpente propre à chacune, jamais partagée entre les deux personnages. **Correctif complété le
+2026-09-19** (retour utilisateur sur un second transcript réel, full_sim9) : le premier correctif ne
+portait que sur l'index 3, alors que le même défaut existait aussi aux index 0 et 2 des trois pools
+— confirmé en creusant ce nouveau transcript, où Lia et Noé avaient tous les deux tiré l'index 2
+(« [Prénom]. [connecteur]... Le reste — [choses] — [verbe d'instabilité]. », même charpente des deux
+côtés). Corrigé à la racine sur les six lignes restantes (index 0 et 2 des deux premiers pools, index
+2 du troisième — l'index 0 de `humanityDoubtGuarded` était déjà suffisamment distinct) : chaque
+variante d'index 0/2 réordonne désormais les trois idées différemment selon le personnage, plutôt que
+de partager un même squelette. L'index 1 des trois pools, où le chevauchement est plus faible, reste
+inchangé pour l'instant.
 
 8.17. **Doute amoureux privé, puis discutable à voix haute** (`lib/life.ts`, `app/api/lia/route.ts`,
 `lib/lia.ts`, 2026-09-18, retour utilisateur explicite : « les persos se demandent s'ils sont là

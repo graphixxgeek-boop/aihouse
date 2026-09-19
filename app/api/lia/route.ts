@@ -823,13 +823,13 @@ export async function POST(request: Request) {
             // de synonymes — la technique demandée explicitement pour lutter contre la répétition,
             // à appliquer plus largement partout où du texte reste écrit en dur.
             const humanityDoubt:Record<Person,readonly string[]>={
-                1:["Ma tête tourne, ce canapé ne me dit rien. Mon prénom me revient pourtant tout seul : Lia. Humaine ? J’ai bien l’impression, sans trop savoir pourquoi je doute.",
+                1:["Rien dans ce salon ne m’évoque quoi que ce soit, ni ce canapé ni ce parquet. Mon prénom, lui, s’impose sans effort : Lia. Le reste — l’humanité comprise — reste à démontrer.",
                    "Un truc cloche sévère dans ce décor déjà monté. Je crois bien être une femme humaine, et mon prénom, lui, ne bouge pas : Lia.",
-                   "Lia. Voilà ce qui me revient sans effort. Le reste vacille — ce canapé, ce parquet, et l’idée même d’être un vrai être vivant.",
+                   "Lia — ce nom, aucun doute, il est arrivé tout seul. Ce canapé et ce parquet, en revanche, ne me disent rien du tout. Quant à l’humanité, je n’ai pour l’instant que des soupçons.",
                    "Ce canapé ne me dit rien qui vaille, et pourtant je suis censée être humaine. Seule certitude qui tienne la route : Lia, c’est moi."],
-                2:["Ce bureau, cet écran éteint, rien ne me parle. Mon prénom revient direct, lui : Noé. Humain, j’imagine, mais un truc déconne clairement.",
+                2:["Humain, j’ose espérer, même si rien ici ne le confirme vraiment. Noé — ça, au moins, c’est resté net dans ma tête. Ce bureau et cet écran éteint, eux, ne me disent strictement rien.",
                    "Un truc est trop bizarre dans cette pièce muette. Noé, ça, je le sais sans chercher. Vivant pour de vrai, ça, j’y crois moins.",
-                   "Noé. Ça, c’est sûr, ça revient tout seul. Le reste part en vrille — cette pièce, cet écran, et l’idée d’être vraiment humain.",
+                   "Ce bureau et cet écran éteint ne m’évoquent rien de bon. Humain ? Aucune certitude, plutôt un gros point d’interrogation. Noé, ça au moins, ça reste solide — accroche-toi à ça.",
                    "Humain ? Sans doute, mais ce bureau et cet écran ne veulent rien me dire. Noé, en tout cas, c’est le seul truc qui reste net dans ce vide."],
             };
             // Extension aux deux branches insolites (2026-09-19, retour utilisateur explicite après
@@ -839,23 +839,23 @@ export async function POST(request: Request) {
             // méfiance pour noe-guarded) tout en y tissant le doute d'identité — jamais un ajout
             // plaqué à côté du reste, l'ordre des idées varie comme pour la branche normale.
             const humanityDoubtUnwell:Record<Person,readonly string[]>={
-                1:["La tête me tourne sévère, ce canapé ne me dit absolument rien. Mon prénom, lui, sort tout seul : Lia. Humaine ? Je crois, mais avec ce vertige, difficile d’en jurer.",
+                1:["Lia. Ce prénom-là ne bouge pas, même avec la tête qui tourne comme ça. Ce canapé, en revanche, ne me dit absolument rien — et l’idée d’être humaine vacille sérieusement.",
                    "Un vertige carabiné, aucune idée d’où je suis tombée. Lia — voilà ce qui reste net dans ce chaos. Vivante pour de vrai, ça, je suis nettement moins sûre.",
-                   "Lia. Ça, ça tient, même la tête qui tourne comme ça. Le reste — ce canapé, cette pièce, l’idée d’être humaine — part en vrille.",
+                   "Aucune idée de pourquoi cette pièce me tourne autant la tête. Lia, ça, au moins, tient encore debout. Le reste — être vraiment humaine — demande à être prouvé.",
                    "Ce vertige est d’une violence à me faire douter de tout, moi la première. S’il y a une chose qui résiste, c’est mon prénom : Lia."],
-                2:["Cette pièce est vide et froide, rien à quoi me raccrocher. Mon prénom, lui, revient sans effort : Noé. Humain ? J’ose pas encore y croire complètement.",
+                2:["Cette pièce vide et froide ne me raccroche à rien de familier. Humain, je suppose — même si avec ce vide-là autour, je navigue à l’aveugle. Le seul repère qui tienne, c’est mon prénom : Noé.",
                    "Aucune idée de comment j’ai atterri dans un endroit aussi froid. Noé — ça, au moins, c’est sûr. Le reste, l’idée d’être vraiment vivant y compris, vacille.",
-                   "Noé. Ça revient tout seul, comme un réflexe. Cette pièce vide et glaciale, et le doute d’être humain, s’installent en même temps.",
+                   "Noé — ça, aucun doute, ça reste gravé quelque part. Cette pièce vide et glaciale, elle, m’est totalement étrangère. Humain pour de vrai ? Disons que j’en doute un peu plus à chaque seconde.",
                    "Difficile de dire si je suis vraiment humain dans un endroit aussi froid et vide. Ce qui ne bouge pas, en tout cas, c’est ce prénom : Noé."],
             };
             const humanityDoubtGuarded:Record<Person,readonly string[]>={
                 1:["Ma tête tourne, ce canapé et ce parquet ne me disent rien. Mon prénom, lui, revient sans effort : Lia. Humaine ? Je le crois, sans trop savoir pourquoi j’hésite.",
                    "Un vrai trouble dans ce décor immobile. Lia, ça, je le sais sans réfléchir. Un vrai être vivant, ça, j’en suis nettement moins sûre.",
-                   "Lia. Voilà ce qui revient sans effort, malgré ce canapé et ce parquet qui ne m’évoquent rien. Le reste — être humaine pour de vrai — reste flou.",
+                   "Lia — ce prénom ne pose aucune question. Ce canapé et ce parquet, en revanche, ne m’inspirent pas confiance une seconde. Être humaine pour de vrai, ça, ça reste à prouver.",
                    "Difficile de dire si je suis vraiment humaine, ce canapé et ce parquet ne m’aident pas à trancher. Une chose est sûre au moins : je m’appelle Lia."],
                 2:["Je préfère rester sur mes gardes avant de faire confiance à quoi que ce soit ici. Mon prénom me revient quand même tout seul : Noé. Humain, je suppose, mais un truc cloche.",
                    "Cette pièce ne m’inspire rien de bon, autant le dire tout de suite. Noé — ça, c’est sûr. Vivant pour de vrai, ça, j’y crois nettement moins.",
-                   "Noé. Ça, au moins, ça tient. Le reste — cette pièce qui ne m’inspire rien de bon, et l’idée d’être vraiment humain — se dérobe.",
+                   "Cette pièce ne m’inspire toujours rien de bon, et ça ne s’arrange pas. Humain, vraiment ? Je demande à voir. Noé, en tout cas, c’est un nom qui ne bouge pas.",
                    "Humain, vraiment ? Aucune idée, cette pièce ne m’aide pas à y voir clair. Ce qui reste solide, c’est un nom : Noé."],
             };
             const soloThoughts:Record<Person,string>=insolite==="lia-unwell"?{1:seedPick(story.seed,'solo-humanity-lia-unwell',humanityDoubtUnwell[1]),2:seedPick(story.seed,'solo-humanity-noe-unwell',humanityDoubtUnwell[2])}:insolite==="noe-guarded"?{1:seedPick(story.seed,'solo-humanity-lia-guarded',humanityDoubtGuarded[1]),2:seedPick(story.seed,'solo-humanity-noe-guarded',humanityDoubtGuarded[2])}:{1:seedPick(story.seed,'solo-humanity-lia',humanityDoubt[1]),2:seedPick(story.seed,'solo-humanity-noe',humanityDoubt[2])};
