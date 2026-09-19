@@ -905,7 +905,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 113'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 114'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2750,6 +2750,52 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(collectCoverage('.sites-runtime/axa-check-nonexistent-dir'),{},'a coverage directory that was never produced must report an honest empty result, never crash the caller');
   fs.rmSync(fixtureCovDir,{recursive:true,force:true});
   console.log("Passed: AXA-CHECK's function-level V8 coverage extraction correctly excludes the whole-script pseudo-entry, maps byte offsets back to real 1-indexed source lines, and tells a covered function from an uncovered one exactly; its robustness score is an honest percentage or an honest N/A on zero functions, never a fake number; its fragility enrichment only raises confidence above the baseline tier when a real HARMONIA sensitive-node match or a real churn signal is present, always naming the specific reason rather than a generic flag; its archived-simulation corroboration counts only genuine zone-marker matches and reports an honest absence rather than a fake zero when no simulations or no configured hint exist; and its coverage collector correctly maps a V8 URL to the real project source via LIB_MAP, dedupes repeated entries across multiple process coverage files, and reports an honest empty result for a directory that was never produced.");
+}
+
+{
+  // AXA-CHECK — profondeur de vérification par les outils (2026-09-19, demande explicite de
+  // l'utilisateur : combiner couverture de test réelle ET profondeur d'audit humain/agent pour
+  // produire une note honnête). Jamais un vrai appel git ni une vraie écriture disque ici : shImpl
+  // et le ledger sont toujours injectés, exactement comme collectCoverage ci-dessus est testé avec
+  // readDir/readFile injectés plutôt qu'un vrai dossier de couverture.
+  const {chooseCheckScope,isRecordStillValid,currentDepthFor,safetyRating,DEPTH_ORDER}=await import('../scripts/axa-check.mjs');
+  assert.deepEqual(DEPTH_ORDER,['aucun','leger','standard','approfondi','exceptionnel'],'the depth scale must extend CHECK-LEVEL-TARGET\'s own four levels with exactly one new floor tier, never a second independently-invented scale (anti-duplication rule)');
+  // Arbitrage fichier/portion : l'agent déclare, le garde-fou ne corrige qu'une incohérence flagrante.
+  assert.deepEqual(chooseCheckScope('file',undefined,undefined),{granularity:'file'},'a plain file-wide declaration with no function list and no known total must be trusted as-is, never blocked for lack of information');
+  assert.deepEqual(chooseCheckScope('functions',['a','b'],undefined),{granularity:'functions',functions:['a','b']},'an explicit functions-only declaration must always be honored exactly as scoped, regardless of any file-wide guard');
+  const consistentWhole=chooseCheckScope('file',['a','b','c'],['a','b','c','d']);
+  assert.deepEqual(consistentWhole,{granularity:'file'},'a file-wide declaration whose cited functions cover the large majority of the real total must be trusted, never downgraded for an honest partial listing');
+  const flagrantMismatch=chooseCheckScope('file',['a'],['a','b','c','d','e','f']);
+  assert.equal(flagrantMismatch.granularity,'functions','a file-wide declaration naming barely a sixth of the file\'s real functions must be caught by the safety net, never left to silently inflate confidence over the whole file');
+  assert.equal(flagrantMismatch.corrected,true,'a corrected record must say so explicitly, never silently downgrade without a trace');
+  assert.deepEqual(flagrantMismatch.functions,['a'],'the corrected record must keep exactly the functions actually cited, never invent or drop any');
+  // Péremption : comparée au commit RÉEL le plus récent du fichier précis, jamais HEAD global.
+  assert.equal(isRecordStillValid({file:'lib/x.ts',commit:'abc'},()=>'abc'),true,'a record whose file has had no new commit since must still be valid');
+  assert.equal(isRecordStillValid({file:'lib/x.ts',commit:'abc'},()=>'def'),false,'a record whose file has a newer commit since must be invalidated, per the explicit user decision that a check expires on the next modification');
+  assert.equal(isRecordStillValid({file:'lib/x.ts',commit:undefined},()=>{throw new Error('must not be called')}),true,'a record with no commit info (e.g. a test fixture) must be trusted rather than falsely invalidated, and must never even attempt a shell call');
+  // Profondeur courante : le plus haut niveau valide, fichier entier ou fonction nommée.
+  const ledger=[
+    {file:'lib/x.ts',depth:'approfondi',granularity:'file',commit:'c1'},
+    {file:'lib/x.ts',depth:'exceptionnel',granularity:'functions',functions:['onlyFn'],commit:'c1'},
+    {file:'lib/y.ts',depth:'exceptionnel',granularity:'file',commit:'stale'},
+  ];
+  const shSame=()=>'c1';
+  assert.equal(currentDepthFor('lib/x.ts','anyOtherFn',ledger,shSame),'approfondi','a file-wide record must cover every function in that file, not just the ones explicitly named elsewhere in the ledger');
+  assert.equal(currentDepthFor('lib/x.ts','onlyFn',ledger,shSame),'exceptionnel','the highest still-valid depth among all matching records (file-wide and function-specific) must win, never the lowest or the first found');
+  assert.equal(currentDepthFor('lib/y.ts','anyFn',ledger,()=>'fresh'),'aucun','a record invalidated by a newer commit on its file must never still grant its depth to any function');
+  assert.equal(currentDepthFor('lib/never-checked.ts','fn',ledger,shSame),'aucun','a file with zero ledger entries must honestly report the floor tier, never a fake default');
+  // Note combinée : jamais "100% safe" littéral (réserve explicite conservée), la note maximale
+  // exige les DEUX axes réunis (test réel + profondeur "exceptionnel"), "approfondi" restant un
+  // palier immédiatement inférieur mais toujours au-dessus d'un simple test sans profondeur.
+  assert.equal(safetyRating(true,'exceptionnel').tier,'confiance-maximale','both axes at their peak (real test coverage AND the deepest tool check) must reach the top tier, never a lower one');
+  assert.ok(!/100\s*%\s*safe/i.test(safetyRating(true,'exceptionnel').label),'the top-tier label must never literally read "100% safe", per the explicit user decision to keep an honest reservation visible, consistent with this tool\'s own documented limits');
+  assert.equal(safetyRating(true,'approfondi').tier,'fiable','a real test plus an "approfondi" (but not "exceptionnel") check must land one tier below the maximum, never conflated with it');
+  assert.equal(safetyRating(true,'aucun').tier,'testé','real test coverage alone, with no recorded depth check at all, must keep the plain pre-existing baseline tier, never inflated by a check that never happened');
+  assert.equal(safetyRating(false,'exceptionnel').tier,'à-surveiller','a deep tool check without any real test proof must never reach the top tier, since only automated execution proves the code truly ran');
+  assert.equal(safetyRating(false,'aucun',{sensitiveNode:true}).tier,'à-risque','a function with neither a test nor any tool check, sitting near a known HARMONIA sensitive node, must be flagged at the worse of the two new tiers, exactly the distinction the user asked for');
+  assert.equal(safetyRating(false,'aucun',{churnFlag:true}).tier,'à-risque','the same worse tier must also trigger on a genuine churn signal alone, independent of any sensitive-node match');
+  assert.equal(safetyRating(false,'aucun').tier,'à-surveiller','a function with neither a test nor any tool check, but with no aggravating signal either, must stay at the ordinary tier, never escalated without a real reason');
+  console.log('Passed: AXA-CHECK\'s new depth-of-verification system lets the agent\'s own file-vs-functions declaration stand except for a flagrant mismatch that the safety net corrects and marks as corrected; a depth record expires the moment its exact file receives a newer commit, compared against that file\'s own history rather than global HEAD; the current depth for a function is the highest still-valid record covering it, whether file-wide or function-specific, and an unrecorded file honestly reports the floor tier; and the combined safety rating never reaches the top tier without both real test coverage and the deepest tool-check level, never literally claims "100% safe", and only escalates the untested-and-unchecked case to the worse "à risque" tier when a genuine sensitive-node or churn signal is present.');
 }
 
 {

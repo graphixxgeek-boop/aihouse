@@ -90,6 +90,48 @@ Comme tout autre patron de ce paysage : ce patron identifie et rapporte, il ne m
 code lui-même, il ne décide jamais qu'un test doit être écrit — c'est toujours une décision de la
 personne ou de l'agent qui pilote le projet.
 
+## Profondeur de vérification par les outils — combiner test réel et audit humain/agent
+
+*(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur : « les zones du code qui ont été
+couvertes par les outils + sont couvertes par des tests sont flaggées 100% safe [...] le degré de
+check des outils influence l'évaluation [...] l'évaluation safe maximale étant réservée aux zones
+qui ont été couvertes par des checks approfondis (machine de guerre, ligne par ligne, maximal,
+etc.) ».)* La couverture de test seule (ci-dessus) ne dit qu'une chose : le code a-t-il été
+EXÉCUTÉ par un test. Elle ne dit rien de si un humain ou un agent l'a un jour relu et compris. Ce
+patron ajoute un second axe, orthogonal au premier : un registre append-only de vérifications
+RÉELLEMENT effectuées, chacune avec une profondeur (reprise telle quelle de l'échelle déjà utilisée
+ailleurs dans le paysage d'outils du projet — jamais une seconde échelle inventée à côté, règle
+anti-doublon). Les deux axes croisés donnent une note honnête :
+- **testé ET vérifié à la profondeur maximale** → note la plus haute possible.
+- **testé ET vérifié à un niveau intermédiaire** → palier juste en dessous, jamais confondu.
+- **testé seul, jamais vérifié en profondeur** → le palier de base déjà existant (couverture seule).
+- **ni testé ni jamais vérifié par rien** → le palier le plus bas, lui-même scindé en deux (un
+  niveau ordinaire et un niveau aggravé quand un signal de risque indépendant existe déjà —
+  proximité d'une zone sensible, accumulation historique).
+
+**Qui déclare la portée d'une vérification (fichier entier ou partie précise) ?** Décision de
+calibrage explicite : jamais un calcul automatique seul (un simple ratio de portions citées se
+tromperait sur des cas limites), toujours une déclaration de l'agent/la personne qui vient de
+vérifier — complétée d'un garde-fou automatique qui ne corrige qu'une déclaration "fichier entier"
+manifestement incohérente avec ce qui a réellement été cité, jamais une correction silencieuse
+(l'enregistrement corrigé le dit explicitement).
+
+**Péremption, jamais un acquis permanent.** Une vérification enregistrée n'est valable que tant que
+le fichier concerné n'a reçu aucune modification depuis — comparée au véritable historique de CE
+fichier précis, jamais à un état global du dépôt qui avancerait pour des raisons sans rapport. Un
+fichier vérifié en profondeur puis modifié redescend automatiquement au palier de base dès la
+modification suivante ; il doit être revérifié pour retrouver la note maximale.
+
+**Jamais une garantie absolue, même à la note la plus haute.** Le libellé de la note maximale
+garde toujours une réserve explicite (jamais une formule du type "100% sûr" prise au pied de la
+lettre) — cohérent avec la limite honnête déjà documentée plus haut : ni un test ni une relecture,
+même la plus rigoureuse, ne prouvent l'absence de tout bug.
+
+**Jamais alimenté automatiquement par un autre outil.** Seul un vrai passage de vérification,
+explicitement déclaré par la personne ou l'agent qui vient de le faire, peut écrire dans ce
+registre — jamais déduit, jamais inféré depuis un autre signal (Article 3 : une trace de vérification
+inventée serait pire qu'une absence de trace).
+
 ## Ce que ce patron n'est pas
 
 - Un outil de couverture de ligne générique façon `nyc`/`istanbul` : la granularité par fonction et

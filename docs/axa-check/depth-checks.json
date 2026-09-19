@@ -1,0 +1,233 @@
+[
+  {
+    "file": "lib/utils.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "3c496834a55db0ef9361032d30077e7b401a0472",
+    "date": "2026-09-19T21:34:07.682Z"
+  },
+  {
+    "file": "lib/presentation-version.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "3c496834a55db0ef9361032d30077e7b401a0472",
+    "date": "2026-09-19T21:34:07.747Z"
+  },
+  {
+    "file": "lib/playback.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "3c496834a55db0ef9361032d30077e7b401a0472",
+    "date": "2026-09-19T21:34:07.810Z"
+  },
+  {
+    "file": "lib/presentation.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "3c496834a55db0ef9361032d30077e7b401a0472",
+    "date": "2026-09-19T21:34:07.873Z"
+  },
+  {
+    "file": "lib/visual-events.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "3c496834a55db0ef9361032d30077e7b401a0472",
+    "date": "2026-09-19T21:34:07.933Z"
+  },
+  {
+    "file": "lib/stock.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "ead8a2c2e5b9a7c7d911d81a2b1a61425becd773",
+    "date": "2026-09-19T21:34:07.989Z"
+  },
+  {
+    "file": "lib/evidence.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "3c496834a55db0ef9361032d30077e7b401a0472",
+    "date": "2026-09-19T21:34:08.052Z"
+  },
+  {
+    "file": "lib/quality-metrics.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "cc0014dddad92f5a799d9b0eb70cdd5bbae0b65d",
+    "date": "2026-09-19T21:34:08.101Z"
+  },
+  {
+    "file": "lib/perception.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "ead8a2c2e5b9a7c7d911d81a2b1a61425becd773",
+    "date": "2026-09-19T21:34:08.156Z"
+  },
+  {
+    "file": "lib/relationship.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "3c496834a55db0ef9361032d30077e7b401a0472",
+    "date": "2026-09-19T21:34:08.218Z"
+  },
+  {
+    "file": "lib/world.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "e0c2f892e9dc84d8dd4c86aad3169b363841fb30",
+    "date": "2026-09-19T21:34:08.274Z"
+  },
+  {
+    "file": "lib/house.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "daf95ad9b9260e85cc4fb58f39662ac46958fb51",
+    "date": "2026-09-19T21:34:08.344Z"
+  },
+  {
+    "file": "lib/daynight.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "e0c2f892e9dc84d8dd4c86aad3169b363841fb30",
+    "date": "2026-09-19T21:34:08.398Z"
+  },
+  {
+    "file": "lib/drama.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "d7787f671fc3f9d16128cf716780237393331875",
+    "date": "2026-09-19T21:34:08.453Z"
+  },
+  {
+    "file": "lib/gemini-keys.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "ae9df4c042302e34492ef09b6e3084820fbfe2d5",
+    "date": "2026-09-19T21:34:08.507Z"
+  },
+  {
+    "file": "lib/update-audit.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "3c496834a55db0ef9361032d30077e7b401a0472",
+    "date": "2026-09-19T21:34:08.567Z"
+  },
+  {
+    "file": "lib/face-render.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "25fe4a613a6eee55b021219a6801f5eaa08204f9",
+    "date": "2026-09-19T21:34:08.624Z"
+  },
+  {
+    "file": "lib/turn.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "e0c2f892e9dc84d8dd4c86aad3169b363841fb30",
+    "date": "2026-09-19T21:34:08.679Z"
+  },
+  {
+    "file": "lib/lia.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "e0c2f892e9dc84d8dd4c86aad3169b363841fb30",
+    "date": "2026-09-19T21:34:08.733Z"
+  },
+  {
+    "file": "lib/simulation.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "667348422db65d2396aaecac4eed91ee483c10f4",
+    "date": "2026-09-19T21:34:08.783Z"
+  },
+  {
+    "file": "lib/life.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "500d1992dc34adf1ddd215e1612e1cc909180595",
+    "date": "2026-09-19T21:34:08.835Z"
+  },
+  {
+    "file": "lib/dialogue.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "72f0b50d41ab26ecef8daea7ddb655e7bd79216e",
+    "date": "2026-09-19T21:34:08.884Z"
+  },
+  {
+    "file": "lib/story.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "1601d67d931630c8116f0bd205c9bbe83b955a8e",
+    "date": "2026-09-19T21:34:08.938Z"
+  },
+  {
+    "file": "lib/reference.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "5ae9a215c8176b25b0082cff2f8e109e55937a61",
+    "date": "2026-09-19T21:34:08.987Z"
+  },
+  {
+    "file": "app/api/lia/route.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "500d1992dc34adf1ddd215e1612e1cc909180595",
+    "date": "2026-09-19T21:34:09.037Z"
+  },
+  {
+    "file": "app/page.tsx",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "a892643804a9d04d420d2503dbd7ca87d4968623",
+    "date": "2026-09-19T21:34:09.088Z"
+  },
+  {
+    "file": "components/house-view.tsx",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "26dce52a78eb9bda97b36bd3169887eedfdbd297",
+    "date": "2026-09-19T21:34:09.147Z"
+  },
+  {
+    "file": "app/api/world/route.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "3c496834a55db0ef9361032d30077e7b401a0472",
+    "date": "2026-09-19T21:34:09.212Z"
+  },
+  {
+    "file": "app/api/admin/route.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "cc0014dddad92f5a799d9b0eb70cdd5bbae0b65d",
+    "date": "2026-09-19T21:34:09.265Z"
+  },
+  {
+    "file": "app/layout.tsx",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "3c496834a55db0ef9361032d30077e7b401a0472",
+    "date": "2026-09-19T21:34:09.330Z"
+  },
+  {
+    "file": "app/chatgpt-auth.ts",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "3c496834a55db0ef9361032d30077e7b401a0472",
+    "date": "2026-09-19T21:34:09.395Z"
+  },
+  {
+    "file": "components/admin-reference.tsx",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "3c496834a55db0ef9361032d30077e7b401a0472",
+    "date": "2026-09-19T21:34:09.457Z"
+  },
+  {
+    "file": "components/progressive-text.tsx",
+    "depth": "exceptionnel",
+    "granularity": "file",
+    "commit": "3c496834a55db0ef9361032d30077e7b401a0472",
+    "date": "2026-09-19T21:34:09.516Z"
+  }
+]

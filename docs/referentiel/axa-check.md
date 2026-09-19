@@ -91,3 +91,43 @@ d'exécution, jamais une garantie de correction. La corroboration par simulation
 zone, jamais fonction (le journal archivé ne trace que des événements discrets). Le mapping
 zone→fichier (`FILE_TO_ZONES`, hérité de `THEME_PRIMARY_FILE`) hérite de l'approximation déjà
 documentée pour ALWAYS-NEW-CODE.
+
+## Profondeur de vérification par les outils (2026-09-19)
+
+*(Cf. `docs/axa-check-blueprint.md` pour le principe générique. Demande explicite de l'utilisateur
+pendant l'audit ligne-par-ligne du 2026-09-19 : « les zones du code qui ont été couvertes par les
+outils + sont couvertes par des tests sont flaggées 100% safe [...] le degré de check des outils
+influence l'évaluation ». Calibré via trois questions explicites : granularité fichier/portion
+laissée à l'arbitrage de l'agent avec garde-fou automatique, péremption à la prochaine modification,
+réserve explicite conservée dans le libellé maximal plutôt que "100% safe" littéral.)*
+
+- **Échelle réutilisée telle quelle** : `DEPTH_ORDER = ["aucun", ...LEVEL_ORDER]`, où `LEVEL_ORDER`
+  (léger/standard/approfondi/exceptionnel) est désormais exporté par `check-level-target.mjs` et
+  importé ici — jamais une seconde échelle redéfinie (règle anti-doublon, §7ter). "Machine de
+  guerre"/"ligne par ligne"/"maximal" (les exemples donnés par l'utilisateur) correspondent au
+  palier `exceptionnel`, seul à donner la note la plus haute quand il est combiné à une vraie
+  couverture de test ; `approfondi` seul donne un palier juste en dessous.
+- **Registre** : `docs/axa-check/depth-checks.json` (append-only, une entrée par vérification
+  déclarée : fichier, profondeur, portée, commit du fichier au moment du check, date). Jamais écrit
+  par un autre outil, jamais déduit automatiquement — seule une commande explicite
+  (`node scripts/axa-check.mjs record-check <fichier> <profondeur> [fonctions...]`) l'alimente.
+- **Arbitrage fichier/portion** (`chooseCheckScope()`) : l'agent déclare (absence de noms de
+  fonctions = fichier entier ; noms fournis = portée précise). Garde-fou automatique
+  (`corrected: true` dans l'enregistrement) : une déclaration "fichier entier" citant moins de la
+  moitié des fonctions réelles du fichier est ramenée à "fonctions listées" plutôt que de gonfler
+  artificiellement la confiance sur tout le fichier.
+- **Péremption** (`isRecordStillValid()`) : comparaison au commit RÉEL le plus récent touchant ce
+  fichier précis (`git log -1 -- <fichier>`), jamais HEAD global. Un enregistrement dont le fichier
+  a été modifié depuis n'est plus jamais compté par `currentDepthFor()`.
+- **Note combinée** (`safetyRating()`) : `confiance-maximale` (testé + exceptionnel), `fiable`
+  (testé + approfondi), `testé` (couverture seule, comme avant), `à-surveiller` (vérifié en
+  profondeur mais non testé, OU ni l'un ni l'autre sans signal aggravant), `à-risque` (ni test ni
+  vérification, ET proximité d'un nœud sensible HARMONIA ou signal de churn — les deux mêmes
+  signaux que la fragilité enrichie existante, jamais une troisième source inventée). Le libellé du
+  palier maximal garde une réserve explicite ("vérifié en profondeur et testé"), jamais "100% safe"
+  littéral.
+- **Premier usage réel** : les 33 fichiers custom du projet (`lib/*.ts`, `app/api/lia/route.ts`,
+  `app/page.tsx`, `components/house-view.tsx` et les petits fichiers `app/`/`components/` restants)
+  ont reçu un enregistrement `exceptionnel` le jour même, à l'issue de l'audit ligne-par-ligne
+  exhaustif demandé par l'utilisateur (mega-prompt "PAUSE") — premier vrai passage de ce registre,
+  pas un exemple fabriqué pour la documentation.

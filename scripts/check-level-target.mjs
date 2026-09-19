@@ -56,7 +56,10 @@ const TOOLS_BY_LEVEL = {
   exceptionnel: { tools: ["HYPER-SCAN-CHECKPOINT (version complète)", "ALWAYS-NEW-CODE (zoom profond)"], cost: "réel — consulter Smart Conso API avant de lancer" },
 };
 
-const LEVEL_ORDER = ["leger", "standard", "approfondi", "exceptionnel"];
+// Exporté (2026-09-19) pour qu'AXA-CHECK réutilise la même échelle de profondeur pour son nouveau
+// système de "vérification par les outils", jamais une seconde liste de niveaux redéfinie à côté
+// (règle anti-doublon, docs/regles-de-travail.md §7ter).
+export const LEVEL_ORDER = ["leger", "standard", "approfondi", "exceptionnel"];
 
 // Marge de confiance sous laquelle on considère qu'il y a un vrai doute entre les deux niveaux les
 // plus probables — pas juste le meilleur score en absolu, mais l'ÉCART avec le second (blueprint,

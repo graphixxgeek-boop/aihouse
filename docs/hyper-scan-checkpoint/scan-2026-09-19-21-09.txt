@@ -1,0 +1,126 @@
+HYPER-SCAN-CHECKPOINT — version légère — 2026-09-19T21:09:50.466Z
+Dernier passage : (aucun)  |  HEAD actuel : 5ae9a215c8176b25b0082cff2f8e109e55937a61
+
+=== Commits depuis le dernier passage ===
+premier passage — aucune référence antérieure, portée = tout l'historique récent visible.
+
+=== ARGUS ===
+=== ARGUS — partie mécanique (zéro coût API) ===
+
+Champs de life.ts potentiellement jamais lus ailleurs (7) :
+  [probable] trottoirGranted (3 occurrence(s) trouvée(s) au total, déclaration + lecture éventuelle incluses)
+  [probable] ambientSeen (4 occurrence(s) trouvée(s) au total, déclaration + lecture éventuelle incluses)
+  [probable] observerNamed (4 occurrence(s) trouvée(s) au total, déclaration + lecture éventuelle incluses)
+  [probable] lastCause (4 occurrence(s) trouvée(s) au total, déclaration + lecture éventuelle incluses)
+  [probable] exitSearched (4 occurrence(s) trouvée(s) au total, déclaration + lecture éventuelle incluses)
+  [probable] proposalHistoryChecked (4 occurrence(s) trouvée(s) au total, déclaration + lecture éventuelle incluses)
+  [probable] personalBoosted (4 occurrence(s) trouvée(s) au total, déclaration + lecture éventuelle incluses)
+
+Marqueurs TODO/FIXME trouvés (0) :
+  Aucun.
+
+Rapport archivé : docs/argus/scan-2026-09-19-21-09.txt (voir docs/argus/index.md pour l'historique)
+
+
+=== HARMONIA ===
+=== HARMONIA — partie mécanique (cohérence chiffrée doc/code, zéro coût API) ===
+
+[✓] Cycle jour/nuit — durée du jour (DAY_ROUNDS) — cohérent (code=29)
+[✓] Cycle jour/nuit — durée de la nuit (NIGHT_ROUNDS) — cohérent (code=9)
+[✓] Cycle jour/nuit — décalage de minuit (MIDNIGHT_OFFSET) — cohérent (code=35)
+[✓] Nuit blanche — malus de fatigue fixe — cohérent (code=28)
+[✓] Palier de respect sincère — seuil d'appréciation — cohérent (code=78)
+
+0 friction(s) confirmée(s) sur 5 lien(s) vérifié(s).
+
+
+=== ALWAYS-NEW-CODE (préparation) ===
+=== ALWAYS-NEW-CODE — préparation (zéro coût, la couche raisonnement suit) ===
+
+Zone recommandée : Fatigue (rotation, jamais examinée)
+
+Indice git (lib/simulation.ts) : 9 commit(s), +272/-53 — signal : à surveiller.
+
+--- Ce qui reste du ressort du raisonnement (jamais mécanisable) ---
+1. Décrire les GRANDS AXES d'une structure idéale pour cette zone, en repartant de zéro avec toute la connaissance actuelle du projet.
+2. Comparer point par point cette structure imaginée à la structure réelle de la zone.
+3. Vérifier, pour chaque écart trouvé, qu'il ne s'agit pas déjà d'une décision assumée et documentée (Article 19 — leçon trottoirGranted, 2026-09-19).
+4. Vérifier qu'aucune fonctionnalité déjà couverte par check-house.mjs ne serait perdue par le changement proposé.
+5. Classer chaque trouvaille par palier de confiance (confirmé / probable / à surveiller) — jamais une certitude absolue.
+6. Proposer, jamais appliquer seul : préciser la portée exacte et le temps estimé, puis demander confirmation avant tout changement réel.
+
+--- Performance de l'outil (KPI) ---
+Absence de donnée (aucun passage encore consigné dans l'index) — jamais un faux 0 %.
+
+
+=== AXA-CHECK (robustesse/fragilité par fonction) ===
+=== AXA-CHECK — robustesse et fragilité par fonction (zéro coût additionnel) ===
+
+app/api/lia/route.ts : 100% (20 fonction(s))
+lib/stock.ts : 100% (2 fonction(s))
+lib/visual-events.ts : N/A (0 fonction(s))
+lib/house.ts : 100% (6 fonction(s))
+lib/perception.ts : 100% (5 fonction(s))
+lib/drama.ts : 100% (11 fonction(s))
+lib/life.ts : 100% (12 fonction(s))
+lib/turn.ts : 100% (6 fonction(s))
+lib/story.ts : 100% (20 fonction(s))
+lib/relationship.ts : 100% (6 fonction(s))
+lib/dialogue.ts : 100% (18 fonction(s))
+lib/simulation.ts : 100% (12 fonction(s))
+lib/lia.ts : 100% (4 fonction(s))
+lib/gemini-keys.ts : 100% (5 fonction(s))
+lib/quality-metrics.ts : 100% (5 fonction(s))
+lib/world.ts : 100% (2 fonction(s))
+lib/daynight.ts : 100% (6 fonction(s))
+lib/evidence.ts : 100% (2 fonction(s))
+lib/presentation.ts : 100% (2 fonction(s))
+lib/playback.ts : 50% (2 fonction(s))
+   [à surveiller] wait (ligne 2) — jamais exécutée par un test
+lib/reference.ts : N/A (0 fonction(s))
+lib/update-audit.ts : N/A (0 fonction(s))
+
+Robustesse globale (fonctions couvertes) : 99% sur 146 fonction(s) analysée(s).
+
+
+=== CLEAN-DIRTY-OLD (code ancien et peu retouché, repérage seul) ===
+=== CLEAN-DIRTY-OLD — code ancien et peu retouché (repérage seul, jamais un jugement) ===
+
+Aucune zone signalée cette fois — rien n'est nettement plus ancien que le reste du projet en ce moment.
+
+
+=== Suite de tests ===
+Verte.
+the shared shell helper (extracted from three duplicated copies) returns real stdout on success, never throws on a failing command, and only surfaces the verbose error detail when explicitly asked — preserving each of its three original call sites' exact prior behavior.
+Passed: ALWAYS-NEW-CODE reuses the exact 8 HARMONIA zones, its coverage memory keeps the most recent pass per zone and reports an honest absence for a never-seen zone, its rotation always proposes the most-neglected zone first while an explicit valid request always overrides it and an unknown requested zone is flagged ambiguous for the agent to ask back rather than silently accepted or ignored, its mechanical stacking signals (dated-addenda count, git-history pure-growth pattern) only ever reach "probable" and report an honest absence rather than a fake zero-signal on missing data, and its from-day-one KPI computes the exact real findings-per-pass average.
+Passed: AXA-CHECK's function-level V8 coverage extraction correctly excludes the whole-script pseudo-entry, maps byte offsets back to real 1-indexed source lines, and tells a covered function from an uncovered one exactly; its robustness score is an honest percentage or an honest N/A on zero functions, never a fake number; its fragility enrichment only raises confidence above the baseline tier when a real HARMONIA sensitive-node match or a real churn signal is present, always naming the specific reason rather than a generic flag; its archived-simulation corroboration counts only genuine zone-marker matches and reports an honest absence rather than a fake zero when no simulations or no configured hint exist; and its coverage collector correctly maps a V8 URL to the real project source via LIB_MAP, dedupes repeated entries across multiple process coverage files, and reports an honest empty result for a directory that was never produced.
+Passed: LE-COORDINATEUR flags a duplicate run only when the current commit exactly matches the last recorded one (never a stale time-window guess), renders every real row of its summary table without dropping or reordering any, reports an honest empty state rather than crashing on a missing or malformed state file, and its CHECK-LEVEL-TARGET passthrough genuinely reaches the real classification logic rather than a disconnected stub.
+Passed: the user-profile system's mechanical guard extracts every real observation link from the index in order, and correctly tells apart the two distinct failure modes it exists to catch — a real observation file never referenced by the index, and an index link pointing at a file that no longer exists — never confusing or merging the two.
+Passed: CLEAN-DIRTY-OLD flags a file as stale only when it is both far above the absolute floor and far above the relative median of its real peers (never a fixed date threshold, never a fabricated signal from a single file with no peer to compare against), always prioritizes proximity to a real HARMONIA sensitive node over pure age per the explicit calibration, produces exactly its three delegated questions each naming the real tool that owns the answer without ever answering any of them itself, and its from-day-one KPI reports an honest absence on zero passes and the exact real average otherwise, reusing the shared markdown-table helper rather than reimplementing ALWAYS-NEW-CODE's parsing a second time.
+Passed: findUnconfirmedBursts() flags a real burst of closely-spaced API activity only when no action was genuinely confirmed (confirmed:true, never a mere advice-only log) within the lookback window beforehand, never flags an isolated one-or-two-call ping as a burst, and reports zero on empty history rather than crashing — closing the exact real gap found on 2026-09-19 where a simulation was launched without ever consulting Smart Conso API first.
+(node:3371) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+=== Registres et historiques ===
+Points fragiles ouverts : 3 puce(s), 0 ligne(s) de tableau — docs/referentiel/points-fragiles.md
+Suivi des tâches (index) : 0 puce(s), 3 ligne(s) de tableau — docs/suivi/index.md
+ARGUS (index) : 0 puce(s), 3 ligne(s) de tableau — docs/argus/index.md
+HARMONIA (index) : 0 puce(s), 3 ligne(s) de tableau — docs/harmonia/index.md
+Smart Conso API (index) : 0 puce(s), 3 ligne(s) de tableau — docs/smart-conso-api/index.md
+ALWAYS-NEW-CODE (index) : 0 puce(s), 2 ligne(s) de tableau — docs/always-new-code/index.md
+CHECK-LEVEL-TARGET (index) : 0 puce(s), 3 ligne(s) de tableau — docs/check-level-target/index.md
+AXA-CHECK (index) : 0 puce(s), 3 ligne(s) de tableau — docs/axa-check/index.md
+CLEAN-DIRTY-OLD (index) : 0 puce(s), 3 ligne(s) de tableau — docs/clean-dirty-old/index.md
+
+=== Performance de l'outil lui-même (KPI central) ===
+Absence de donnée (aucun passage complet encore consigné dans l'index) — jamais un faux 0%.
+
+=== Checklist qualitative restant à exécuter ===
+1. Relire CLAUDE.md EN ENTIER (le fichier vient d'être chargé ci-dessus ; cette étape reste un vrai raisonnement, jamais automatisable) — chaque Article est-il toujours respecté par le code actuel ?
+2. Reprendre CHAQUE consigne explicite formulée par l'utilisateur depuis le dernier passage (cf. commits ci-dessus) et confirmer, une par une, qu'elle a été précisément et entièrement honorée — pas seulement dans l'esprit.
+3. Balayer les COMBINAISONS de mécanismes récents entre eux et avec l'existant (ex. un mécanisme nouveau actif en même temps qu'un mécanisme ancien) — jamais couvert par un outil mécanique, une vraie réflexion à chaque fois.
+4. Identifier le code sensible/central touché récemment et resté sans test dédié — en écrire un si c'est le cas.
+5. Si une simulation complète existe depuis le dernier passage, comparer sa transcription à la précédente réplique par réplique, comme le ferait un humain — repérer les régressions de naturel, pas seulement les bugs.
+6. Distinguer explicitement, dans le rapport final : vrai oubli corrigé / déjà connu et sciemment reporté / question ouverte pour l'utilisateur.
+7. Sur la zone recommandée par ALWAYS-NEW-CODE ci-dessus (ou une autre zone explicitement demandée) : faire le vrai zoom profond "page blanche" — jamais mécanisable, cf. docs/referentiel/always-new-code.md.
