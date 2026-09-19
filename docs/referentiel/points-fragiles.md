@@ -17,31 +17,12 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   tous les scénarios `check-spirit.mjs` et `check-profile.mjs` avec ce modèle comme `GEMINI_MODEL`
   effectif) — reste donc réservé au dev/simulation, jamais activé en production (cf. CLAUDE.md,
   section Smart Breaker).
-- Le bouton/toggle manuel jour/nuit (éclairage 3D cosmétique) et le cycle jour/nuit automatique
-  (fatigue, comportement) sont deux mécanismes volontairement séparés dans le code actuel ;
-  l'utilisateur, en répondant au test de compréhension du 2026-09-19, a exprimé une préférence pour
-  les fusionner en un seul système cohérent — décision de conception à trancher explicitement avant
-  d'y toucher (cf. Article 14 : ne jamais exécuter silencieusement un changement qui contredit un
-  choix déjà documenté sans repasser par une confirmation).
-- Idée non implémentée : une nuit trop courte devrait laisser une vraie dette de sommeil (sieste
-  dans la journée suivante, coucher plus tôt le lendemain soir) — évoquée par l'utilisateur le
-  2026-09-19, pas encore conçue ni chiffrée. **"Nuit blanche" vérifiée le 2026-09-19** (lecture de
-  `lib/daynight.ts`/`route.ts`, aucun appel API nécessaire) : une nuit blanche complète est bien
-  TECHNIQUEMENT POSSIBLE aujourd'hui (rien n'empêche un personnage de ne jamais entrer en
-  `isSleeping()` pendant les 9 tours de nuit, surtout si l'enquête en retard force l'éveil), mais
-  `dayIndex` — la seule trace du changement de jour — n'est utilisé QUE pour l'affichage
-  cosmétique (indicateur jour/nuit de l'interface) : aucune conséquence mécanique n'existe
-  aujourd'hui pour une nuit blanche (pas de malus de fatigue supplémentaire, pas de dialogue dédié,
-  pas de besoin de sieste). Même famille que la dette de sommeil ci-dessus : les deux se
-  résoudraient par le même mécanisme, à concevoir ensemble.
-- Faut-il généraliser à TOUS les documents de référentiel la séparation blueprint
-  générique/instanciation projet ? **Précision le 2026-09-19** : déjà appliquée à l'outil de
-  résilience API, au tableau de bord, ET refusée explicitement pour "règles de suivi"/le système de
-  suivi des tâches (jugés être des sujets de méthode de travail, pas des systèmes techniques —
-  `philosophie-et-politique.md` joue déjà ce rôle générique pour eux). La question résiduelle porte
-  donc seulement sur les AUTRES documents de référentiel (`principes.md`, `parametres.md`,
-  `regles-du-temps.md`, `regles-de-l-espace.md`) — question posée explicitement par l'utilisateur,
-  à préciser ensemble avant d'agir, pas une décision prise.
+- Dette de sommeil / nuit blanche — **conception calibrée avec l'utilisateur le 2026-09-19**, pas
+  encore implémentée : malus de fatigue fixe (+28 points) appliqué à l'aube si le personnage n'a
+  jamais dormi pendant la nuit précédente (9 tours), jamais cumulable d'une nuit blanche à l'autre,
+  accompagné d'une reconnaissance explicite (pensée/réplique dédiée, jamais silencieuse), sans
+  sieste forcée. Reste à coder (flag "a dormi cette nuit" par personnage, reset au début de chaque
+  nuit, vérification à l'aube) puis à documenter dans `principes.md`/`parametres.md`.
 - `scripts/check-spirit.mjs` (16 scénarios) n'a pas été relancé depuis les derniers changements de
   `lib/lia.ts` (registre de fatigue jour/nuit, ajouté le 2026-09-19) — l'Article 13 de CLAUDE.md
   demande explicitement de le lancer en priorité après un changement de ce fichier, jamais fait

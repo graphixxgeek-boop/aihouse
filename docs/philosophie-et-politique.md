@@ -154,6 +154,31 @@ affichée comme valide comme un défaut plus grave qu'une mesure manquante clair
 telle ; et ne jamais construire d'indicateur sans avoir d'abord identifié la décision qu'il est
 censé éclairer.
 
+### 1.10 Organiser la documentation par nature du contenu, pas seulement par sous-système **[Synthèse, 2026-09-19]**
+
+Deux mêmes plaies rongent la documentation d'un projet qui grossit organiquement : mélanger, dans
+un seul document, une règle qui ne doit presque jamais changer avec un chiffre qu'on rééquilibre
+sans arrêt (on finit par toucher l'un en cherchant l'autre, ou par oublier l'un en modifiant
+l'autre) ; et disperser un même sujet transversal (le temps, l'espace, tout ce qui traverse
+plusieurs sous-systèmes à la fois) dans chacun des documents qu'il concerne, si bien que personne
+ne voit plus l'ensemble d'un coup d'œil ni ne peut vérifier qu'un nouveau seuil ne chevauche pas
+imprévisiblement un mécanisme voisin déjà en place.
+
+*Exemple* : ce projet sépare les règles invariantes (`docs/referentiel/principes.md`) des chiffres
+réglables (`docs/referentiel/parametres.md`), pour qu'un rééquilibrage ne touche jamais l'un sans
+passer par l'autre ; et donne un document dédié à chaque axe transversal repéré après coup — le
+temps (`regles-du-temps.md`) et l'espace (`regles-de-l-espace.md`) — plutôt que de laisser leurs
+règles se répéter, diverger ou se contredire silencieusement à travers plusieurs fichiers.
+
+*Portée générale* : dans tout projet dont la documentation grossit au fil de l'eau, se demander
+régulièrement si un document mélange deux natures de contenu qui changent à des rythmes différents,
+ou si un sujet a fini par traverser plusieurs documents sans qu'aucun ne le traite en entier — et
+scinder ou regrouper en conséquence, plutôt que de laisser la structure de la documentation dériver
+loin de la structure réelle du sujet qu'elle décrit. Cette réorganisation reste un geste de
+documentation ordinaire : elle ne justifie un document d'architecture séparé (blueprint) que si le
+sujet est aussi un véritable système technique avec un comportement propre à documenter, pas une
+simple bonne habitude d'écriture.
+
 ---
 
 ## Partie 2 — Politique (comment on arbitre, qui décide quoi)

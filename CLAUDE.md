@@ -664,12 +664,37 @@ la validation) directement à côté de la mention — pas une légende à part,
 fin de message. C'est un repère de suivi pour l'utilisateur, pas une décoration : ne pas le mettre
 sur des phrases qui ne vérifient rien de précis contre la charte.
 
+**Article 20 — ARGUS : aucun travail ne se termine sans passer par le détecteur de trous
+logiques.** *(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur : « argus doit
+toujours être déployé pour vérifier que le travail ne génère pas de trou, règle de cohérence +
+logique, je te laisse faire au mieux ».)* ARGUS est le nom du système dédié à repérer les trous
+logiques qu'aucun autre garde-fou de cette charte ne couvre explicitement : une combinaison de
+mécanismes jamais envisagée ensemble, un cas limite ou une possibilité inattendue non pensée, une
+conséquence que la logique impose mais qu'on a oubliée, un élément qui devrait être impacté par un
+changement mais ne l'est pas, un lien discret entre deux parties du projet qui n'a pas été vu. Il
+s'applique aussi bien à une idée neuve proposée en cours de conversation qu'à l'ensemble du code
+déjà écrit. Architecture détaillée : `docs/argus-blueprint.md` (principe générique, réutilisable
+sur un autre projet) et `docs/referentiel/argus.md` (instanciation propre à ce projet — registre
+des trous trouvés, dans un dossier dédié avec fichiers + index, même schéma que
+`docs/referentiel/kpi-rapports/`+`kpi-index.md`), une fois ces documents créés.
+
+**Toujours déployé, jamais laissé à la seule initiative de qui pourrait l'oublier.** Sa partie
+mécanique et gratuite (symétrie Lia/Noé, données calculées mais jamais lues, combinaisons de
+mécanismes non envisagées ensemble) tourne automatiquement, comme `check-house.mjs`, à chaque
+changement de code. Sa partie avec un vrai raisonnement plus poussé (donc un coût réel, Article 8)
+se déclenche à l'initiative de l'agent OU de l'utilisateur, sur un sujet précis. Dans les deux cas,
+un rappel explicite fait partie du protocole de travail (cf. `docs/regles-de-travail.md`) pour ne
+jamais laisser cette vérification retomber dans l'oubli si, sur le moment, ni l'utilisateur ni
+l'agent n'y pense spontanément — exactement le risque que cette règle a été créée pour éliminer.
+
 **Protocole d'application** à chaque itération sur le code : Article 19 (a-t-on compris la logique
 et la raison d'être du code existant avant d'y toucher ?) → Article 0 (l'esprit est-il
 altéré ?) → Articles 1, 11, 12 (la conversation) → Article 15 (est-ce lisible du point de vue de
 l'utilisateur ?) → Article 17 (est-ce cohérent du point de vue du personnage lui-même ?) → Articles
 2 et 4 (cohérence globale et enquête) → Articles 3 et 5 (bugs et
-robustesse) → Articles 6, 7 et 13 (documentation, outils et architecture) → Articles 8, 9, 10
+robustesse) → Article 20 (ARGUS : un trou logique, une combinaison oubliée, un lien discret non vu
+subsiste-t-il malgré tout ce qui précède ?) → Articles 6, 7 et 13 (documentation, outils et
+architecture) → Articles 8, 9, 10
 (coût et rejouabilité) → Article 14 (vigilance continue, à appliquer en toile de fond de tous les
 autres, pas comme une étape séparée) → Article 16 (au moins trois questions de vérification posées
 avant/pendant l'exécution, sur les points où une demande était réellement ambiguë). Chaque compte
