@@ -658,3 +658,19 @@ le 2026-09-16, pas seulement dans le référentiel qui se décrit lui-même :
 Ces trois derniers points (5, 6, 7) sont la couche « immersion/buzz » qu'Opus jugeait secondaire
 à la refonte moteur — volontairement reportée pendant que la priorité allait au filet de sécurité
 et à la cohérence charte/référentiel. Ils restent ouverts, pas oubliés.
+
+**Feuille de route actée avec l'utilisateur le 2026-09-19** (audit complet des chantiers ouverts,
+questions de calibrage explicites) : les points 4 (vignette restante), 5 et 6 ci-dessus forment
+ensemble « la refonte graphique », un seul chantier visuel à mener groupé. Ordre convenu :
+1. **Avant la refonte graphique** — chantier n°3 ci-dessus (arc relationnel Lia/Noé), y compris
+   investiguer une anomalie repérée le même jour : `loveRealized` (doute amoureux privé, seuil 75 %
+   d'attirance) est resté vide des deux côtés sur toute une simulation fraîche ayant pourtant
+   dépassé la révélation (round 46) jusqu'au round 59 — l'attirance n'a peut-être jamais franchi ce
+   seuil, à diagnostiquer avant de considérer le calage de l'arc confirmé.
+2. **Tout de suite, indépendamment du planning** — la tâche en attente (popup de saisie du pseudo
+   avec validation de format + popup de mise en garde légale renforcée) et la revalidation de
+   l'écart mineur « autant » employé seul (probablement déjà couvert par `recentEchoWords`,
+   `lib/dialogue.ts`, mais jamais explicitement reconfirmé comme refermé).
+3. **La refonte graphique** (points 4/5/6 groupés).
+4. **Après la refonte graphique** — chantier n°7 (mécaniques de diffusion), dernier de la liste par
+   la propre priorisation d'Opus, confirmée par l'utilisateur.
