@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Crochet git tracké dans le dépôt (2026-09-19) — jamais posé seulement dans .git/hooks/ (local,
+# jamais commité, disparaîtrait au prochain clone). Installé automatiquement par le script
+# "prepare" de package.json (node scripts/hooks/install.mjs), qui pointe git dessus via
+# `core.hooksPath` à chaque `pnpm install` — donc actif sur tout clone frais, jamais une
+# configuration à refaire à la main. N'échoue jamais le commit lui-même (avertit sans bloquer,
+# décision explicite de l'utilisateur) : un post-commit ne le pourrait de toute façon pas, ce qui
+# correspond exactement à ce choix.
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+node scripts/hooks/check-last-commit.mjs || true

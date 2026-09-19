@@ -19,6 +19,23 @@ import { sh } from "./lib-shell.mjs";
 const ROOT = new URL("..", import.meta.url).pathname;
 const SESSIONS_DIR = join(ROOT, "docs/suivi/sessions");
 
+// Découpe une ligne de tableau markdown sur "|", en respectant un "\|" échappé comme un caractère
+// littéral plutôt qu'un séparateur de colonne (2026-09-19, même relecture de fiabilité — aucune
+// ligne réelle n'a encore ce cas, mais une description citant une commande shell avec un tube, ou
+// un exemple de tableau, romprait silencieusement le découpage sans cette précaution).
+//
+// Ne retire QUE les deux artefacts vides créés par les "|" d'ouverture/fermeture d'une ligne bien
+// formée ("| a | b |" donne ["", "a", "b", ""]) — jamais un filtre général sur toute chaîne vide,
+// qui avalerait aussi une vraie colonne Statut vide au milieu ou à la fin (bug trouvé en écrivant
+// le test dédié : un tel filtre rendait la détection de statut vide ci-dessous totalement inerte,
+// exactement le trou qu'elle est censée fermer).
+export function splitTableRow(row) {
+  const cells = row.split(/(?<!\\)\|/).map((c) => c.replace(/\\\|/g, "|").trim());
+  if (cells.length && cells[0] === "") cells.shift();
+  if (cells.length && cells[cells.length - 1] === "") cells.pop();
+  return cells;
+}
+
 // Une ligne du tableau "| Horodatage | Sujet | Sous-sujet | Sensibilité | Description | Statut |"
 // est une clôture non vérifiée si son dernier champ (Statut) commence par "terminée" sans jamais
 // contenir "fidèle" ni "écart". Une tâche encore "ouverte"/"en cours" n'est jamais concernée — le
@@ -29,7 +46,7 @@ export function findUnverifiedClosures(sessionText) {
     .filter((l) => l.startsWith("|") && !/^\|\s*-+\s*\|/.test(l) && !l.includes("Horodatage"));
   const hits = [];
   for (const row of rows) {
-    const cells = row.split("|").map((c) => c.trim()).filter((c) => c.length > 0);
+    const cells = splitTableRow(row);
     const statut = cells[cells.length - 1] ?? "";
     if (/^termin[ée]e/i.test(statut) && !/fid[èe]le/i.test(statut) && !/[ée]cart/i.test(statut)) {
       hits.push({ row: row.trim(), statut });
@@ -47,9 +64,12 @@ export function findOpenTasks(sessionText) {
     .filter((l) => l.startsWith("|") && !/^\|\s*-+\s*\|/.test(l) && !l.includes("Horodatage"));
   const hits = [];
   for (const row of rows) {
-    const cells = row.split("|").map((c) => c.trim()).filter((c) => c.length > 0);
+    const cells = splitTableRow(row);
     const statut = cells[cells.length - 1] ?? "";
-    if (statut && !/^termin[ée]e/i.test(statut)) hits.push({ row: row.trim(), statut, cells });
+    // Un statut VIDE est une ligne mal formée (tableau markdown cassé) — un trou à signaler, jamais
+    // un silence qui la laisserait invisible au garde-fou (trouvé le 2026-09-19 en relisant le
+    // script à la demande explicite de l'utilisateur : « assure-toi encore de la fiabilité »).
+    if (!statut || !/^termin[ée]e/i.test(statut)) hits.push({ row: row.trim(), statut, cells });
   }
   return hits;
 }
@@ -73,11 +93,21 @@ export function auditOpenTasks(sessionsDir = SESSIONS_DIR, readDir = readdirSync
 // ou la charte/les règles de méthode) qui ne touche JAMAIS docs/suivi/ dans le même commit est
 // exactement cette dérive — jamais un jugement sur le contenu, seulement sur la co-occurrence des
 // fichiers changés.
+// Élargi le 2026-09-19 (même relecture de fiabilité) : `docs/referentiel/*.md` et les blueprints
+// racine (`docs/*-blueprint.md`) manquaient — un gros chantier qui ne toucherait QUE
+// `principes.md`/`parametres.md`/un blueprint, sans jamais toucher CLAUDE.md ni de code, ne
+// déclenchait jamais l'alerte alors qu'il s'agit exactement du genre de travail que le suivi doit
+// capturer. Les registres de sorties routinières (docs/simulations/, docs/el-professor/,
+// docs/the-screener/, docs/argus/, docs/harmonia/, docs/axa-check/, docs/kpi-rapports/, etc.)
+// restent volontairement hors de ce périmètre : leur création initiale passe déjà par un blueprint
+// (donc déjà détectée), mais chaque fichier de sortie individuel qu'ils produisent ensuite est un
+// résultat routinier, pas un nouveau chantier à journaliser à chaque fois.
 const SUBSTANTIVE_PATTERN = /\.(mjs|ts|tsx)$/;
 const SUBSTANTIVE_EXTRA = new Set(["CLAUDE.md", "docs/regles-de-travail.md"]);
+const SUBSTANTIVE_DOC_PATTERN = /^docs\/(referentiel\/[^/]+\.md|[^/]+-blueprint\.md)$/;
 
 export function findCommitsMissingSuiviUpdate(commits) {
-  const isSubstantive = (f) => SUBSTANTIVE_PATTERN.test(f) || SUBSTANTIVE_EXTRA.has(f);
+  const isSubstantive = (f) => SUBSTANTIVE_PATTERN.test(f) || SUBSTANTIVE_EXTRA.has(f) || SUBSTANTIVE_DOC_PATTERN.test(f);
   const touchesSuivi = (f) => f.startsWith("docs/suivi/");
   return commits.filter((c) => c.filesChanged.some(isSubstantive) && !c.filesChanged.some(touchesSuivi));
 }

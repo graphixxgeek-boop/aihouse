@@ -2597,7 +2597,26 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(open.length,2,'exactly the two non-"terminée" rows must be flagged, never the ones already closed regardless of their fidelity wording');
   assert.deepEqual(open.map(o=>o.statut),['ouverte','en cours'],'each open row must report its real, distinct status verbatim, never a generic "open" label that would hide whether it is brand new or already in progress');
   assert.equal(findOpenTasks('| Horodatage | Sujet | Sous-sujet | Sensibilité | Description | Statut |\n|---|---|---|---|---|---|').length,0,'a session with zero task rows must report zero open tasks, never crash');
-  console.log('Passed: findOpenTasks() flags exactly the rows whose status is not "terminée" (an "ouverte" and an "en cours" row alike), reports each one\'s real distinct status rather than a generic open label, never flags an already-closed row regardless of its fidelity wording, and reports zero rather than crashing on a session with no task rows at all — the exact blind spot found live when a session file kept showing two long-finished tasks as still "en cours".');
+  // Statut vide (2026-09-19, même relecture de fiabilité demandée par l'utilisateur : « assure-toi
+  // encore de la fiabilité ») : une ligne au tableau markdown cassé (colonne Statut manquante) doit
+  // être signalée comme un trou, jamais silencieusement invisible au garde-fou.
+  const brokenRow='| Horodatage | Sujet | Sous-sujet | Sensibilité | Description | Statut |\n|---|---|---|---|---|---|\n| t1 | S | s | normal | d1 ||';
+  const broken=findOpenTasks(brokenRow);
+  assert.equal(broken.length,1,'a row whose Statut column is empty (a broken markdown table) must be flagged, never silently skipped for lack of a status string to test');
+  assert.equal(broken[0].statut,'','the reported statut for a broken row must be the real empty string, never a fabricated placeholder');
+  console.log('Passed: findOpenTasks() flags exactly the rows whose status is not "terminée" (an "ouverte" and an "en cours" row alike), reports each one\'s real distinct status rather than a generic open label, never flags an already-closed row regardless of its fidelity wording, reports zero rather than crashing on a session with no task rows at all, and — closing a real blind spot found on 2026-09-19 — also flags a row whose Statut column is empty instead of silently ignoring it.');
+}
+{
+  // splitTableRow() (2026-09-19, même relecture de fiabilité) : le découpage partagé par
+  // findOpenTasks()/findUnverifiedClosures() doit survivre à un "|" littéral échappé dans une
+  // description (une commande shell avec un tube, un exemple de tableau cité) sans décaler la
+  // colonne Statut.
+  const {splitTableRow}=await import('../scripts/check-suivi-fidelity.mjs');
+  const escaped=splitTableRow('| t1 | S | s | normal | commande : `git log \\| grep x` | terminée — fidèle |');
+  assert.equal(escaped.length,6,'a literal escaped pipe inside a cell must never be treated as an extra column separator');
+  assert.ok(escaped[4].includes('git log | grep x'),'the escaped pipe must be restored as a literal character in the cell text, not left as a stray backslash');
+  assert.equal(escaped[escaped.length-1],'terminée — fidèle','the real Statut column must still be the last cell, never shifted by the escaped pipe earlier in the row');
+  console.log('Passed: splitTableRow() treats an escaped "\\|" as a literal pipe character inside a cell rather than an extra column separator, restoring it correctly in the cell text while keeping the real Statut column exactly last — closing a real parsing fragility found on 2026-09-19.');
 }
 {
   // findCommitsMissingSuiviUpdate() (2026-09-19, demande explicite : « comment nous assurer que le
