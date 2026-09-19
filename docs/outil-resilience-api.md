@@ -41,16 +41,17 @@ Chaque fournisseur d'API (Gemini, OpenAI, Anthropic, un service interne, etc.) e
 interface, quel que soit son format d'endpoint/auth/réponse réel :
 
 ```js
-// probe(key, model) → { status, ms, detail? }
-// status ∈ "OK" | "QUOTA_ÉPUISÉ" | "HTTP xxx" | "ERREUR_RÉSEAU" — vocabulaire commun à tous les
-// fournisseurs, pour que le reste de l'outil n'ait jamais à connaître le format propre à l'un
-// d'eux.
-async function probeExampleProvider(key, model) {
+// probe(key, model, options?) → { status, ms, detail? }
+// status ∈ "OK" | "OK_VIDE" | "QUOTA_ÉPUISÉ" | "HTTP xxx" | "ERREUR_RÉSEAU" — vocabulaire commun à
+// tous les fournisseurs, pour que le reste de l'outil n'ait jamais à connaître le format propre à
+// l'un d'eux.
+async function probeExampleProvider(key, model, { heavy = false } = {}) {
   const started = Date.now();
   try {
-    const r = await fetch(ENDPOINT_FOR(model), { headers: authHeaderFor(key), ... });
+    const r = await fetch(ENDPOINT_FOR(model), { headers: authHeaderFor(key), body: bodyFor(model, heavy), ... });
     const ms = Date.now() - started;
-    if (r.status === 200) return { status: "OK", ms };
+    const body = await r.json().catch(() => ({}));
+    if (r.status === 200) return { ...inspectBody(body), ms }; // cf. ci-dessous : 200 ≠ contenu exploitable
     if (r.status === 429) return { status: "QUOTA_ÉPUISÉ", ms, detail: /* motif si dispo */ };
     return { status: `HTTP ${r.status}`, ms };
   } catch (e) {
@@ -66,6 +67,23 @@ export const PROVIDERS = {
 
 Ajouter un nouveau fournisseur ne touche jamais l'algorithme d'ordonnancement ni le format de
 mémoire — c'est tout le point de cette couche.
+
+**Deux principes ajoutés le 2026-09-19, après un cas réel rencontré sur ce projet, généralisables à
+toute API tierce à quota limité :**
+
+- **Une réponse techniquement réussie n'est pas toujours un vrai succès.** Un fournisseur peut
+  renvoyer un statut "OK" sans le moindre contenu exploitable (filtre de sécurité, coupure
+  prématurée, réponse vide) — un `inspectBody()` dédié distingue ce cas (`OK_VIDE`) d'un vrai
+  succès, pour ne jamais le compter comme une preuve de disponibilité.
+- **Le POIDS d'une requête peut influencer la réponse du fournisseur, indépendamment du quota
+  restant.** Un fournisseur peut répondre différemment (OK vs erreur, ou un code d'erreur différent)
+  pour la MÊME clé/modèle au même instant selon que la requête est minimale ou proche de la charge
+  réelle de production. Une sonde purement minimale (rapide, quasi gratuite) peut donc donner un
+  faux sentiment de disponibilité. Solution : un paramètre `heavy` sur `probe()`, utilisé
+  parcimonieusement (seulement sur le modèle réellement utilisé par l'application, jamais sur toute
+  la liste de candidats — Article 8/sobriété), qui reproduit la TAILLE approximative d'une vraie
+  requête de production (jamais son contenu réel) pour vérifier que le diagnostic léger n'est pas
+  trompeur.
 
 ### 2.2 Mémoire d'expérience locale, jamais committée
 

@@ -207,6 +207,23 @@ de ces documents, ou entre l'un d'eux et le code réel, est traité comme un bug
 qu'une anomalie de dialogue (cf. Article 3) : il se corrige à la racine, pas par une note qui dit
 qu'il faudra y revenir.
 
+**Vérification périodique de TOUS les documents de référence, pas seulement au fil des changements**
+*(ajouté le 2026-09-19, à la demande explicite de l'utilisateur, marqué important)*. Le paragraphe
+ci-dessus impose une mise à jour « le jour même » d'un changement — nécessaire mais pas suffisant :
+un document peut aussi devenir faux sans qu'aucun changement récent ne l'ait directement touché
+(exemple réel trouvé ce jour-là : le plan d'origine ci-dessous affirmait que le visage restait un
+emoji, alors qu'il avait été remplacé onze versions plus tôt — personne n'avait pensé à revenir sur
+cette phrase après coup). L'ensemble des documents de référence de ce projet — ce fichier
+(`CLAUDE.md`, y compris sa propre section « Plan d'origine » ci-dessous), `docs/referentiel/
+principes.md`, `docs/referentiel/parametres.md`, `docs/referentiel/regles-du-temps.md`,
+`docs/regles-de-travail.md`, `docs/philosophie-et-politique.md`, `docs/outil-resilience-api.md` et
+le référentiel affiché en jeu `lib/reference.ts` — doit donc aussi être relu PÉRIODIQUEMENT dans son
+ensemble, pas seulement document par document au moment d'un changement qui le concerne. Cette
+relecture périodique se fait à l'occasion de toute revue de fond demandée par l'utilisateur
+(bilan, audit, planification de chantiers), jamais comme une tâche qu'on renvoie indéfiniment à
+plus tard faute d'occasion dédiée. Un écart trouvé lors de cette relecture se corrige immédiatement
+(Article 3), jamais seulement signalé pour plus tard.
+
 `scripts/check-spirit.mjs` a un statut particulier : contrairement à `check-house.mjs` (déterministe,
 zéro coût API, exécuté à chaque changement), il envoie de vraies provocations (ordres autoritaires,
 intrusion dans l'intimité, mépris, menaces) au vrai modèle Gemini et affiche les réponses pour une
@@ -620,11 +637,15 @@ le 2026-09-16, pas seulement dans le référentiel qui se décrit lui-même :
    pas été vérifié par une simulation réelle — à confirmer en jouant plusieurs sessions, pas
    seulement en lisant le code.
 4. Remplacer le visage emoji par une forme abstraite, désaturer la palette, ajouter une lumière
-   directionnelle et une vignette — **partiellement fait** : la palette des sols est déjà
-   désaturée (`lib/perception.ts`, `scenePalette.floors`) et une lumière directionnelle chaude
-   existe (`components/house-view.tsx`). Le visage reste un **emoji** (`lib/perception.ts:14`,
-   `lib/simulation.ts`) — le point qu'Opus jugeait le plus coûteux visuellement n'est pas fait.
-   Aucune vignette sur la scène 3D.
+   directionnelle et une vignette — **largement fait, corrigé le 2026-09-19** (ce point affirmait
+   à tort depuis sa rédaction que le visage restait un emoji — trouvé faux en vérifiant directement
+   le code lors d'un audit de l'état des chantiers, exactement le genre d'écart doc/code que
+   l'Article 13 est censé empêcher). Le visage emoji a en réalité été remplacé dès la **Version 40**
+   (2026-09-17, cf. `lib/reference.ts`) par un visage vectoriel à paramètres, dessiné en temps réel
+   depuis l'état émotionnel réel (`faceExpression()`, `lib/simulation.ts`) — le point qu'Opus jugeait
+   le plus coûteux visuellement EST fait. La palette des sols est désaturée (`lib/perception.ts`,
+   `scenePalette.floors`) et une lumière directionnelle chaude existe (`components/house-view.tsx`).
+   Seule reste manquante : **aucune vignette sur la scène 3D**.
 5. Passer en plein écran avec un mode Observation (3 jauges) par défaut et un mode Instruments
    (toutes les jauges) en option — **non fait**.
 6. Mettre en scène la révélation finale (musique qui se coupe, caméra qui descend, panneaux qui
