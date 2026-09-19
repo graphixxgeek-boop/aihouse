@@ -58,6 +58,14 @@ session ou après un chantier).
 - **Chantier 2 — à venir** : tables `kpi_counters` / `kpi_session_snapshots`, familles
   "Performance runtime", "Qualité", "Cohérence logique", "Rejouabilité/rythme", bouton dédié dans
   l'interface, lien avec `check-spirit.mjs`.
-- **Chantier 3 (piste ouverte, pas planifiée)** : creuser en priorité l'un des 7 points listés dans
+- **Chantier 3 (piste ouverte, pas planifiée)** : creuser en priorité l'un des points listés dans
   `docs/referentiel/points-fragiles.md`, si l'un d'eux devient plus urgent que l'enchaînement
   normal des chantiers.
+- **Idée notée le 2026-09-19, à mettre de côté jusqu'au retour sur ce chantier** (demande explicite
+  de l'utilisateur) : un indicateur d'efficacité de la COLLABORATION elle-même — est-ce que l'agent
+  comprend bien où en est le travail, comprend bien les demandes et les réponses de l'utilisateur,
+  reste bien sur la même longueur d'onde — à consulter par l'agent lui-même régulièrement pour
+  vérifier la qualité et la pertinence de son propre travail. Distinct des 5 familles déjà définies
+  ci-dessus (qui mesurent le CODE et la PARTIE, pas la conversation de travail) — famille candidate
+  à ajouter, ou son propre sujet séparé, à discuter quand le chantier 2 reprend ; pas encore de
+  conception à ce stade.
