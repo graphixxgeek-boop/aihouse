@@ -562,6 +562,26 @@ Quel que soit le type, il est explicitement nommé au début de la question (par
 « [Calibrage] », « [Alignement de compréhension] », « [Enquête technique] ») — jamais laissé
 implicite — pour que l'utilisateur sache d'emblée quel genre de réponse apporter.
 
+**Format de présentation des questions — toujours une fenêtre dédiée.** *(Ajouté le 2026-09-19, à
+la demande explicite de l'utilisateur : « les questions doivent toujours être posées dans une
+fenêtre au format habituel ».)* Toute question relevant de l'Article 16 (et de ses compléments
+ci-dessus, y compris l'étape 6 de l'Article 18 et le second passage après « voici mes
+commentaires ») est posée via l'outil dédié de questions à choix (fenêtre structurée avec options
+sélectionnables), **jamais** comme une simple phrase interrogative noyée dans le corps d'une
+réponse en texte libre — même quand une seule question suffit. Format attendu de chaque question
+dans cette fenêtre :
+- le type explicitement nommé en préfixe (cf. paragraphe ci-dessus) ;
+- un intitulé complet et autonome, compréhensible sans relire tout l'historique de conversation ;
+- entre deux et quatre options concrètes, chacune avec un libellé court et une description qui
+  explique ce que ce choix implique réellement (pas de simple « oui »/« non » sans contexte) ;
+  l'utilisateur garde toujours la possibilité de répondre autre chose que les options proposées ;
+- plusieurs questions distinctes peuvent être groupées dans une même fenêtre (jusqu'à la limite
+  technique de l'outil) plutôt que d'ouvrir une fenêtre par question quand elles portent sur le
+  même sujet.
+Si le nombre de questions dépasse la capacité d'une seule fenêtre (par exemple la dizaine de
+questions de calibrage de l'étape 6 de l'Article 18), elles sont réparties sur plusieurs fenêtres
+successives plutôt que compressées en texte libre pour tenir dans une seule.
+
 **Traçabilité visible des vérifications.** Chaque fois qu'une réponse à l'utilisateur s'appuie sur
 la charte pour valider un choix (« ceci respecte l'Article 0 », « vérifié contre l'Article 11 »,
 etc.), le mentionner explicitement accompagné de 📜✅ (la feuille pour la charte, le check vert pour
