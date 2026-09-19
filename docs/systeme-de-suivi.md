@@ -74,6 +74,15 @@ dédié de CLAUDE.md.)*
      cause l'ensemble.
    - `normal` — un ajustement mineur, une erreur ici serait sans grande conséquence.
 
+## Fidélité au prompt — portée non rétroactive elle aussi
+
+Les clôtures faites AVANT le 2026-09-19 (date d'introduction de cette exigence) gardent leur simple
+`terminée` — jamais réécrites après coup avec un jugement de fidélité reconstruit de mémoire, même
+si l'agent qui a fait le travail original s'en souvient encore : même principe que la portée
+rétroactive générale ci-dessous, pour la même raison (`philosophie-et-politique.md` §1.9). Le
+garde-fou mécanique (`scripts/check-suivi-fidelity.mjs`) les signale donc mais ce ne sont pas des
+anomalies à corriger — seules les clôtures faites À PARTIR de cette date doivent respecter la règle.
+
 ## Portée rétroactive — décidée explicitement
 
 *(Question posée et tranchée le 2026-09-19.)* Ce système démarre à partir de sa création, sans
@@ -90,10 +99,29 @@ système au risque d'un détail approximatif présenté comme fiable (cf. philos
    cours (`docs/suivi/sessions/<session>.md`), avec ses quatre attributs.
 2. À la clôture d'une tâche, sa ligne est mise à jour (statut, pas une nouvelle ligne) — même
    principe que la liste de tâches technique : une idée précisée plusieurs fois met à jour la même
-   entrée, jamais une nouvelle par précision.
+   entrée, jamais une nouvelle par précision. **Fidélité au prompt, obligatoire sans exception
+   (2026-09-19, demande explicite de l'utilisateur : « est-ce que le système de suivi se pose la
+   question : est-ce que les tâches ont bien été réalisées selon le prompt ? »)** : le statut d'une
+   tâche fermée ne peut jamais rester un simple `terminée` — il doit toujours préciser
+   `terminée — fidèle` (le résultat correspond exactement à ce qui avait été demandé) ou
+   `terminée — écart : <description brève>` (un écart réel existe, même mineur, entre la demande et
+   le résultat — jamais caché derrière un `terminée` silencieux). Ce n'est pas une nouveauté isolée :
+   c'est la même exigence que le point 2 de la checklist qualitative d'HYPER-SCAN-CHECKPOINT
+   (« reprendre chaque consigne explicite... confirmer qu'elle a été précisément et entièrement
+   honorée »), rendue systématique pour CHAQUE tâche fermée, pas seulement lors d'un passage
+   exceptionnel.
 3. À la fin d'une session (ou à un point d'étape marquant), `docs/suivi/index.md` reçoit une ligne
    résumant la session (grandes étapes, pas chaque tâche individuelle) avec un lien vers le fichier
    complet.
 4. Comme pour la liste de tâches technique (§10 de `regles-de-travail.md`), ce système reste un
    outil de travail interne consulté à la demande — jamais imposé en pièce jointe systématique,
    jamais affiché spontanément sans qu'on le demande.
+
+## Garde-fou mécanique — ne jamais compter sur le seul réflexe
+
+*(Ajouté le 2026-09-19, demande explicite de l'utilisateur.)* Une règle de procédure peut s'oublier
+avec le temps — `scripts/check-suivi-fidelity.mjs::findUnverifiedClosures()` relit chaque fichier de
+session et signale toute ligne dont le statut commence par `terminée` sans jamais contenir `fidèle`
+ni `écart` — une clôture qui a sauté l'étape ci-dessus. Gratuit, zéro appel API, intégré à la veille
+hebdomadaire du réseau d'outils (`docs/regles-de-travail.md` §7ter) plutôt qu'un rappel séparé de
+plus à retenir.

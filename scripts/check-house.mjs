@@ -905,7 +905,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 106'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 107'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2533,7 +2533,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   console.log('Passed: CHECK-LEVEL-TARGET correctly classifies the real historical prompts that motivated its own creation (a trivial fix stays léger, the exact 2026-09-19 "vérification approfondie" prompt classifies as approfondi with its real costly tools recommended, an explicit "machine de guerre"/hyper-scan mention reaches exceptionnel), falls back to the safe standard default on zero signal rather than under-checking silently, always returns an explicit boolean on whether real doubt warrants confirmation, and — closing a real gap found the day ALWAYS-NEW-CODE was designed — distinguishes the "bugs cachés" and "restructuration" registers within the exceptionnel tier so a structural-rebuild request recommends ALWAYS-NEW-CODE rather than silently under-classifying or defaulting to HYPER-SCAN-CHECKPOINT alone.');
   // Vue d'ensemble du réseau (2026-09-19, demande explicite de l'utilisateur : « centraliser le
   // réseau des outils de vérification ») — un conseiller mieux informé, jamais un chef d'orchestre.
-  const {countOpenFragilePoints,combineWithRegistryPressure}=await import('../scripts/check-level-target.mjs');
+  const {countOpenFragilePoints,combineWithRegistryPressure,recentlyChangedSensitiveNodes,SENSITIVE_NODES}=await import('../scripts/check-level-target.mjs');
   const fragileFixture=[
     '# Points fragiles ouverts','','## Points ouverts','',
     '- point un','- point deux','- point trois','','## Une autre section','','- pas compté ici',
@@ -2548,6 +2548,38 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const alreadyExceptionnel=combineWithRegistryPressure({level:'exceptionnel',reasoning:'r',needsConfirmation:false},99);
   assert.equal(alreadyExceptionnel.needsConfirmation,false,'a level already at the maximum must never be pushed further by registry pressure, nothing to escalate to');
   console.log('Passed: the CHECK-LEVEL-TARGET registry-pressure awareness counts only the bullets under the real "Points ouverts" heading, reports zero rather than crashing on an unrelated document, and only ever turns a high count into a confirmation request (never a silent level bump) with the real number always stated in the reasoning — staying an informed adviser, never an orchestrator, per the explicit user decision.');
+  // Rappel de test approfondi sur les nœuds sensibles (2026-09-19, demande explicite de
+  // l'utilisateur), réutilise la carte d'HARMONIA, jamais bloquant.
+  assert.ok(SENSITIVE_NODES.length>0,'the sensitive-node map must never be empty, otherwise the reminder can never fire');
+  assert.deepEqual(recentlyChangedSensitiveNodes(['lib/simulation.ts','app/page.tsx']),[{node:'needs.fatigue',files:['lib/simulation.ts']}],'a changed file matching a sensitive node must be reported with exactly that node and the real matched file, never the unrelated changed file alongside it');
+  assert.deepEqual(recentlyChangedSensitiveNodes([]),[],'no changed files must report zero hits, never a false positive');
+  assert.deepEqual(recentlyChangedSensitiveNodes(undefined),[],'a missing changed-files list must be handled gracefully, never throw');
+  const multi=recentlyChangedSensitiveNodes(['lib/turn.ts','lib/life.ts','app/page.tsx']);
+  assert.equal(multi.length,2,'multiple genuinely distinct sensitive nodes touched at once must each be reported, never collapsed into one or silently dropped');
+  console.log('Passed: the CHECK-LEVEL-TARGET sensitive-node reminder reuses the real HARMONIA sensitive-node map, reports exactly the matched node and files for a real hit, reports zero for no changes or a missing list rather than a false positive or a crash, and reports every distinct node touched when several are hit at once.');
+}
+
+{
+  // Garde-fou fidélité au prompt (2026-09-19, cf. docs/systeme-de-suivi.md), demande explicite de
+  // l'utilisateur : une clôture de tâche ne peut jamais rester un "terminée" nu.
+  const {findUnverifiedClosures,auditAllSessions}=await import('../scripts/check-suivi-fidelity.mjs');
+  const header='| Horodatage | Sujet | Sous-sujet | Sensibilité | Description | Statut |\n|---|---|---|---|---|---|\n';
+  const mixed=header
+    +'| t1 | s1 | ss1 | normal | d1 | terminée |\n'
+    +'| t2 | s2 | ss2 | normal | d2 | terminée — fidèle |\n'
+    +'| t3 | s3 | ss3 | normal | d3 | terminée — écart : détail |\n'
+    +'| t4 | s4 | ss4 | normal | d4 | ouverte |\n'
+    +'| t5 | s5 | ss5 | normal | d5 | en cours |\n';
+  const hits=findUnverifiedClosures(mixed);
+  assert.equal(hits.length,1,'only the bare "terminée" row must be flagged, never a fidèle/écart closure nor an open/in-progress task');
+  assert.ok(hits[0].row.includes('t1'),'the flagged row must be the real offending one, never a wrong row');
+  assert.deepEqual(findUnverifiedClosures(header),[],'a session file with zero task rows must report zero, never throw');
+  const fakeDir=[{name:'a.md',text:mixed},{name:'b.md',text:header+'| t6 | s6 | ss6 | normal | d6 | terminée |\n'}];
+  const audit=auditAllSessions('/fake',()=>fakeDir.map(f=>f.name),(p)=>fakeDir.find(f=>p.endsWith(f.name)).text,()=>true);
+  assert.equal(audit.length,2,'every session file with at least one unverified closure must be reported, never only the first one found');
+  assert.equal(audit.reduce((n,r)=>n+r.hits.length,0),2,'the total real count across all session files must be exact, one from each fixture file here');
+  assert.deepEqual(auditAllSessions('/definitely-not-a-real-path'),[],'a missing sessions directory must report an honest empty result, never throw or crash the weekly network checkup that depends on it');
+  console.log('Passed: the tracking-system fidelity guard flags only a bare "terminée" closure (never a fidèle/écart closure nor an open/in-progress task), reports zero on an empty or missing sessions directory rather than crashing, and audits every session file rather than stopping at the first one found.');
 }
 
 {

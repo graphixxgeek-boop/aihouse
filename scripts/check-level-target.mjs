@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { execSync } from "node:child_process";
 
 // CHECK-LEVEL-TARGET (2026-09-19, cf. docs/check-level-target-blueprint.md et
 // docs/referentiel/check-level-target.md). Calcule le niveau de vérification qu'une demande
@@ -149,6 +150,31 @@ export function combineWithRegistryPressure(result, openCount) {
   };
 }
 
+// --- Rappel de test approfondi sur les nœuds sensibles (2026-09-19, demande explicite de
+// l'utilisateur : « un des outils nous rappelle quand des tests approfondis sont nécessaires, même
+// si pas obligatoires ») ------------------------------------------------------------------------
+//
+// Reprend tel quel la carte des « nœuds sensibles » déjà identifiée par HARMONIA
+// (docs/referentiel/harmonia.md — beaucoup de dépendants, risqués à toucher sans vérification
+// complète), jamais une seconde carte inventée à part (Article 13). Tourne à chaque changement de
+// code, comme ARGUS/HARMONIA (décision explicite de l'utilisateur) — jamais bloquant, jamais
+// obligatoire en soi : un rappel, pas une porte fermée.
+export const SENSITIVE_NODES = [
+  { node: "needs.fatigue", files: ["lib/simulation.ts"] },
+  { node: "story.round", files: ["lib/story.ts", "lib/turn.ts", "lib/daynight.ts"] },
+  { node: "life.appreciation", files: ["app/api/lia/route.ts", "lib/life.ts"] },
+];
+
+export function recentlyChangedSensitiveNodes(changedFiles, nodes = SENSITIVE_NODES) {
+  if (!changedFiles || !changedFiles.length) return [];
+  const hits = [];
+  for (const { node, files } of nodes) {
+    const matched = files.filter((f) => changedFiles.includes(f));
+    if (matched.length) hits.push({ node, files: matched });
+  }
+  return hits;
+}
+
 function main() {
   const text = process.argv.slice(2).join(" ");
   if (!text) {
@@ -166,6 +192,19 @@ function main() {
   console.log(`Outils recommandés : ${result.tools.join(", ")}`);
   console.log(`Coût : ${result.cost}`);
   if (result.needsConfirmation) console.log("\n⚠️  Confirmation recommandée avant de lancer quoi que ce soit.");
+
+  try {
+    const sh = (cmd) => { try { return execSync(cmd, { encoding: "utf8" }); } catch { return ""; } };
+    const changed = new Set([
+      ...sh("git diff --name-only HEAD").split("\n"),
+      ...sh("git diff --name-only HEAD~1 HEAD 2>/dev/null").split("\n"),
+    ].map((f) => f.trim()).filter(Boolean));
+    const hits = recentlyChangedSensitiveNodes([...changed]);
+    if (hits.length) {
+      console.log("\n📎 Rappel (jamais bloquant) : des changements récents touchent un nœud sensible d'HARMONIA :");
+      for (const h of hits) console.log(`   - ${h.node} via ${h.files.join(", ")} — un test approfondi de ce nœud est recommandé, même si le niveau ci-dessus suffit sur le texte seul.`);
+    }
+  } catch {}
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

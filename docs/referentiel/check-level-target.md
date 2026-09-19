@@ -36,6 +36,17 @@ par l'utilisateur lui-même après avoir rejeté une première proposition ("TRI
   étroite** (`CONFIRMATION_MARGIN = 0.25` dans le script) — décision explicite de l'utilisateur :
   jamais interrompre sur un cas clair.
 
+## Rappel de test approfondi sur les nœuds sensibles (2026-09-19)
+
+Demande explicite de l'utilisateur : « un des outils nous rappelle quand des tests approfondis sont
+nécessaires, même si pas obligatoires ». `SENSITIVE_NODES` réutilise tel quel la carte des « nœuds
+sensibles » déjà identifiée par HARMONIA (`docs/referentiel/harmonia.md`) — jamais une seconde carte
+inventée à part. À chaque exécution, `recentlyChangedSensitiveNodes()` croise les fichiers changés
+récemment (travail non commité + dernier commit) avec cette carte, et affiche un rappel — jamais
+bloquant, jamais un niveau relevé de force — si un changement touche un nœud à fort impact. Tourne
+automatiquement à chaque exécution de l'outil, comme ARGUS/HARMONIA (décision explicite de
+l'utilisateur).
+
 ## Distinct de l'échelle ⏱️/🔢
 
 Confirmé explicitement par l'utilisateur : CHECK-LEVEL-TARGET remplace la façon informelle de
