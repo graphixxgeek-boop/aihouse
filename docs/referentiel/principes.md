@@ -702,9 +702,13 @@ l'extérieur :
   s'appliquent identiquement aux deux jauges, quel que soit l'état d'une dispute.
 - **Palier rare de respect sincère** (`genuineRespectStreak:{1,2}`), distinct du palier de
   coopération réticente ci-dessus (regagné à chaque fois, jamais un acquis) : exige une série de
-  tours consécutifs de confiance en hausse pendant que l'appréciation propre au personnage reste très
-  haute, et se consomme dès qu'il se déclenche (remise à zéro immédiate) — il doit se reconstruire
-  entièrement avant de réapparaître, pour ne jamais devenir un palier stable.
+  tours consécutifs où l'appréciation propre au personnage reste très haute (≥85) ET où la
+  confiance ne baisse jamais (assoupli le 2026-09-19, demande explicite de l'utilisateur : exigeait
+  auparavant que la confiance CONTINUE à monter à CHAQUE tour, ce qui devenait quasi impossible à
+  tenir sur 6 tours près du plafond d'appréciation, faute de marge pour continuer à « monter »
+  encore — un tour qui reste simplement très positif, sans forcément progresser davantage, compte
+  désormais aussi dans la série). Se consomme dès qu'il se déclenche (remise à zéro immédiate) — il
+  doit se reconstruire entièrement avant de réapparaître, pour ne jamais devenir un palier stable.
 - `observerStandingFor(actorId)` (`app/api/lia/route.ts`) construit la consigne de ton donnée au
   modèle à partir de la jauge PROPRE à ce personnage (garde haute si basse, coopération à contrecœur
   si haute, respect sincère au palier rare), et ajoute une note explicite de distension de

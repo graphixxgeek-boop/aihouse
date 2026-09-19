@@ -1536,7 +1536,14 @@ export async function POST(request: Request) {
             // plus haut), jamais un acquis — toute confiance en baisse le remet immédiatement à zéro,
             // et le déclenchement du palier (rareRespectFor, lu AVANT cette mise à jour) le consomme
             // aussi, pour qu'il doive se reconstruire entièrement avant de réapparaître.
-            if(trustShift<=0||appreciationOf(life,id)<85)life.genuineRespectStreak={...life.genuineRespectStreak,[id]:0};
+            // Assoupli le 2026-09-19 (demande explicite de l'utilisateur, seuil jugé trop strict en
+            // pratique) : exigeait auparavant que la confiance CONTINUE à monter à CHAQUE tour de la
+            // série (trustShift<=0 cassait déjà la série) — près du plafond d'appréciation (85+), il y
+            // a naturellement de moins en moins de marge pour continuer à "monter" à chaque tour, ce
+            // qui rendait la série quasi impossible à tenir sur 6 tours. Un tour qui reste simplement
+            // très positif (confiance stable ou en hausse, jamais en baisse) compte désormais aussi
+            // dans la série ; seule une vraie baisse de confiance (trustShift<0) la casse.
+            if(trustShift<0||appreciationOf(life,id)<85)life.genuineRespectStreak={...life.genuineRespectStreak,[id]:0};
             else if(rareRespectFor(id))life.genuineRespectStreak={...life.genuineRespectStreak,[id]:0};
             else life.genuineRespectStreak={...life.genuineRespectStreak,[id]:(life.genuineRespectStreak?.[id]??0)+1};
           }

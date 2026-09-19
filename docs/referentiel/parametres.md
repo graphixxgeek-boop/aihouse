@@ -429,8 +429,10 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   palier — voir `principes.md` 8.5.
 - `genuineRespectStreak:{1:number,2:number}` (2026-09-18, devenu par personnage le même jour que
   `appreciation`, `principes.md` 8.5, `lib/life.ts`) : compteur 0-20 par acteur, incrémenté de
-  1 à chaque tour où le trustShift PROPRE à cet acteur est `>0` ET son `appreciation` `>=85` ; remis
-  à 0 dès que ce trustShift est `<=0` ou son appreciation `<85`. À `genuineRespectStreak[id]>=6`,
+  1 à chaque tour où le trustShift PROPRE à cet acteur est `>=0` (assoupli le 2026-09-19 depuis
+  `>0` — un tour qui reste simplement très positif sans continuer à monter compte désormais aussi,
+  cf. principes.md 8.5 pour la justification complète) ET son `appreciation` `>=85` ; remis à 0 dès
+  que ce trustShift est `<0` ou son appreciation `<85`. À `genuineRespectStreak[id]>=6`,
   déclenche une fois le palier rare « respect sincère » dans `observerStandingFor(id)` (texte
   distinct du palier `>=75`, autorisant un mot de reconnaissance directe et non feint) puis se remet
   immédiatement à 0 (consommé), devant se reconstruire entièrement avant de pouvoir se redéclencher
