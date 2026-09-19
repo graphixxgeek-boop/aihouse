@@ -360,6 +360,42 @@ trouvaille jamais traitée, une zone jamais revue, une pression de points fragil
 un rapport complet à chaque fois si rien de notable n'a changé. Reste, comme tout le reste de ce
 paysage, un conseiller : elle ne corrige jamais rien elle-même.
 
+### Avant de créer un journal, vérifier la mutualisation — jamais un doublon
+
+*(Ajoutée le 2026-09-19, à la demande explicite de l'utilisateur, juste après un vrai doublon
+créé par erreur dans la même session : `full_sim4` archivé une seconde fois dans
+`docs/simulations/` alors qu'il existait déjà dans `docs/contexte-projet/simulations/` — repéré
+par l'utilisateur, pas par l'agent, corrigé après coup plutôt qu'évité en amont. « Crée une règle
+qui permet de t'assurer de ne jamais créer de doublons : avant la création d'un journal, tu
+vérifies s'il ne va pas y avoir une possibilité de mutualisation ».)*
+
+Avant de créer tout nouveau fichier destiné à journaliser, archiver ou tenir un registre de
+quoi que ce soit (un log, un index, une archive de session, un dossier de résultats — pas les
+fichiers de code ou de contenu du jeu eux-mêmes, qui suivent leurs propres règles), l'agent
+vérifie explicitement, DANS CET ORDRE, avant d'écrire le premier octet :
+
+1. **Chercher activement une mutualisation possible**, jamais se fier à la seule mémoire de la
+   conversation en cours (c'est exactement ce qui a manqué pour `full_sim4`) : `grep`/recherche de
+   fichiers sur le sujet précis, relecture de la table des outils et de leurs registres
+   (§7ter ci-dessus), et un coup d'œil aux dossiers voisins déjà existants qui pourraient déjà
+   couvrir ce rôle sous un autre nom.
+2. **Si un fichier existant sert déjà exactement ce rôle** : l'utiliser, jamais en créer un
+   second à côté — même si le nouvel emplacement semble plus logique après coup ; dans ce cas,
+   migrer/consolider l'existant plutôt que d'empiler une deuxième source pour la même donnée.
+3. **Si un fichier existant sert un rôle proche mais pas identique** : décider explicitement si la
+   nouvelle donnée doit y être AJOUTÉE (nouvelle colonne, nouvelle section, nouvelle ligne) plutôt
+   que de justifier un fichier séparé par la seule commodité du moment.
+4. **Un nouveau fichier n'est créé que si aucun existant ne convient réellement**, avec une raison
+   explicite de pourquoi les fichiers déjà là ne suffisent pas — même charge de la preuve que pour
+   proposer un nouvel outil ou un nouvel Article de charte (Article 16).
+5. **Documenter le nouveau fichier dans la table de §7ter** dès sa création (pas différé), pour
+   qu'il soit trouvable la prochaine fois par ce même réflexe — c'est ce qui rend la règle
+   auto-renforçante plutôt que dépendante de la mémoire à chaque nouvelle occasion.
+
+Si un doublon est malgré tout découvert après coup (comme pour `full_sim4`), il se corrige
+immédiatement par consolidation vers un seul endroit — jamais laissé "pour plus tard", même
+type de discipline qu'un écart de documentation (Article 3/13 de `CLAUDE.md`).
+
 ## 8. Profil de collaboration observé
 
 *(Champ volontairement large, à la demande explicite de l'utilisateur : « tout ce qui est utile
