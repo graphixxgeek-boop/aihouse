@@ -44,6 +44,14 @@ récupération ; dormir −38 fatigue en chambre / −18 au salon, −8 stress ;
 fatigue + 2) fatigue, −20 stress ; étudier −12 incertitude, −3 stress ; câlin/massage/bisou −15
 stress ; regarder la tv −5 incertitude, −8 stress ; discuter −5 stress.
 
+**Rythme d'incertitude différencié par personnage** (`uncertaintyRate`, `residentProfiles`,
+2026-09-19, retour utilisateur explicite sur un transcript réel : Lia et Noé annonçaient une baisse
+d'incertitude identique au même tour, un accroc à l'Article 11 malgré des personnalités censées
+être distinctes). Les deux baisses ci-dessus (étudier, regarder la tv) sont désormais multipliées
+par `uncertaintyRate` : Lia ×0,8 (plus observatrice, se laisse convaincre un peu plus lentement),
+Noé ×1,2 ("plus vite rassuré" par nature, déjà établi dans sa description). Même stimulus, même
+ampleur de base, lecture propre à chaque personnage — pas une nouvelle jauge séparée.
+
 ## Émotions (`lib/lia.ts`, `lib/simulation.ts`)
 
 Émotions initiales — Lia : curiosité 72, tension 90, confiance 8, aisance 22, attirance 12.
