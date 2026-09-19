@@ -797,46 +797,46 @@ reste de la réaction au sujet réel en cours passe tel quel — pour laisser un
 l'observateur de déclencher le geste spontanément après son refus, jamais retenté comme si de rien
 n'était.
 
-8.12. **Bonus spontanés post-révélation : mute de l'observateur et caméra masquée**
-(`lib/life.ts`, `app/api/lia/route.ts`, 2026-09-18, retour utilisateur explicite — distincts de la
-roulette classique, qui reste un tirage au sort neutre jamais choisi). Ces deux bonus sont une VRAIE
-décision d'un personnage, jamais un dé caché déguisé : à chaque tour éligible (`interact`/
-`autonomous`, après révélation, les deux ensemble au salon, aucun autre besoin ni scène en cours),
-un personnage peut spontanément décider de couper le micro des DEUX canaux humains
-(`observerMutedUntilRound`) ou de brouiller la vue 3D (`cameraHiddenUntil`, en secondes réelles),
-par pur exercice de contrôle OU par rétorsion si l'appréciation d'un des deux personnages est basse
-(<35) — les deux motifs coexistent, jamais un seul déclencheur fixe. Le personnage choisit lui-même
-le NIVEAU (réduit/classique/max — 3, 4-5 ou 6 tours pour le mute ; 20, 25-35 ou 40 secondes pour la
-caméra) et l'exprime à voix haute en le justifiant (Article 15 : une décision invisible n'existe pas
-pour l'observateur), pendant que l'autre personnage réagit en complice, jamais en spectateur muet.
-Le canal humain refuse explicitement tout message `chat` reçu pendant le mute (code
-`observer_muted`), même si le bouton client était contourné ; la caméra masquée, elle, ne bloque
-jamais le chat — seule la vue 3D disparaît, remplacée par un compte à rebours réel. Les deux
-personnages continuent de se moquer de l'observateur muet/aveugle à chaque tour suivant tant que
-l'effet dure, et l'un des deux reconnaît la fin de l'effet à voix haute dès qu'il retombe (même
-principe que l'aftermath stoic/mute de la roulette, Article 4/12/15 : jamais un retour silencieux à
-la normale). Chaque déclenchement, activé ou refusé, est journalisé (`bonusPsychLog`) pour nourrir
-le profil psychologique de l'observateur (dossier retourné, 8.4) — un refus y est une preuve tout
-aussi révélatrice qu'une activation. Ces deux bonus partagent un **budget unique** avec la roulette
-classique (`bonusSpotlightUntilRound`/`bonusCooldownUntilRound`) : au moins 3 tours à commenter/
-utiliser tout bonus obtenu (roulette ou spontané) avant qu'un nouveau bonus, de quelque nature que
-ce soit, ne redevienne possible, suivis d'un grand espace supplémentaire (5 à 9 tours) — jamais un
-enchaînement immédiat de bonus qui viderait le procédé de son impact. Le bouton de tirage manuel de
-la roulette respecte en plus un débit réel côté serveur (60 secondes minimum entre deux tirages,
-compteur affiché sur le bouton côté client), indépendant de ce budget narratif mais jamais plus
-permissif que lui.
+8.12. **Bonus « pouvoir » de la roulette : mute de l'observateur et caméra masquée**
+(`lib/life.ts`, `app/api/lia/route.ts`). **Corrigé le 2026-09-19** suite à une incompréhension
+identifiée par l'utilisateur : la version précédente de cette section (ci-dessous, conservée dans
+l'historique de ce fichier pour traçabilité) décrivait ces deux bonus comme une décision spontanée
+du personnage prise à chaque tour, hors roulette — ce n'est PAS ce qui était demandé. Le
+déclenchement de `observer_mute` et `camera_hide` vient **exclusivement du tirage de la roulette**
+(`spin_bonus`), exactement comme les 7 autres bonus (food/calm/sleep/stoic/mute/trottoir/
+force_move) : neuf visages possibles, mêmes chances de tomber pour chacun, jamais une initiative
+que le personnage prendrait seul en dehors d'un tirage. Ce qui reste vrai, INCHANGÉ par cette
+correction : une fois le bonus tiré, c'est bien le personnage désigné par le tirage (`deciderActor`,
+50/50) qui choisit lui-même le NIVEAU (réduit/classique/max — 3, 4-5 ou 6 tours pour le mute ; 20,
+25-35 ou 40 secondes pour la caméra) et l'exprime à voix haute en le justifiant (Article 15 : une
+décision invisible n'existe pas pour l'observateur), pendant que l'autre personnage réagit en
+complice, jamais en spectateur muet. Le canal humain refuse explicitement tout message `chat` reçu
+pendant le mute (code `observer_muted`), même si le bouton client était contourné ; la caméra
+masquée, elle, ne bloque jamais le chat — seule la vue 3D disparaît, remplacée par un compte à
+rebours réel. Les deux personnages continuent de se moquer de l'observateur muet/aveugle à chaque
+tour suivant tant que l'effet dure (indépendamment de la source du déclenchement — cette réaction
+d'ambiance n'a jamais été retirée par la correction), et l'un des deux reconnaît la fin de l'effet
+à voix haute dès qu'il retombe (même principe que l'aftermath stoic/mute de la roulette, Article
+4/12/15 : jamais un retour silencieux à la normale). Chaque tirage est journalisé dans `bonusLog`
+au même titre que les 7 autres bonus (avec son niveau choisi) — l'ancien journal séparé
+`bonusPsychLog` (activé/refusé) a disparu avec le mécanisme de décision spontanée qui le remplissait
+(Article 3 : une seule trace, jamais deux journaux qui pourraient diverger). Ces deux bonus partagent
+le **budget unique** de la roulette (`bonusSpotlightUntilRound`/`bonusCooldownUntilRound`, commun
+aux 9 bonus) : au moins 3 tours à commenter/utiliser tout bonus obtenu avant qu'un nouveau bonus, de
+quelque nature que ce soit, ne redevienne possible, suivis d'un grand espace supplémentaire (5 à 9
+tours). Le bouton de tirage manuel respecte en plus un débit réel côté serveur (60 secondes minimum
+entre deux tirages, compteur affiché côté client), indépendant de ce budget narratif mais jamais
+plus permissif que lui.
 
-**Recalibrage du 2026-09-19** (retour utilisateur explicite après l'analyse détaillée de full_sim5 :
-zéro déclenchement observé sur deux simulations dédiées de ~18 tours chacune, un rythme réel très
-en-deçà de l'intention documentée). Deux ajustements distincts, jamais un seul : (1) l'éligibilité
-ne vérifie plus le besoin urgent des DEUX personnages, seulement celui de l'INITIATEUR réellement
-tiré par `seedPick` — un partenaire affamé ne devrait pas logiquement empêcher l'AUTRE de décider
-(Article 17) ; les autres conditions (budget partagé, les deux réunis, aucune scène concurrente en
-cours) restent inchangées, chacune protégeant une cohérence narrative précise, jamais une
-restriction accidentelle. (2) La probabilité d'examen elle-même est relevée (~5 %→~15 % en session
-calme, ~20 %→~40 % en session hostile, cf. `parametres.md`) : reste une exception rare, jamais un
-tirage à chaque tour, mais assez fréquente pour devenir réellement visible sur une session de
-longueur normale.
+*(Historique conservé pour traçabilité — Article 6/7 : la section ci-dessus corrige un
+malentendu, elle ne décrit jamais une évolution successive du même mécanisme. La version du
+2026-09-18 pensait à tort les deux bonus comme une décision spontanée prise par un personnage
+à chaque tour éligible, avec sa propre condition d'éligibilité et sa propre probabilité
+d'examen — un mécanisme entièrement distinct de la roulette. Le recalibrage du 2026-09-19 qui
+assouplissait cette éligibilité et relevait cette probabilité (retour sur full_sim5) a donc été
+retiré en même temps que le mécanisme qu'il ajustait, plutôt que corrigé en place : il n'y a plus
+d'éligibilité ni de probabilité séparées à calibrer, le tirage suit exactement les mêmes règles que
+les 7 bonus déjà existants.)*
 
 8.13. **La description d'apparence n'est plus écrasée par un texte scripté** (`app/api/lia/route.ts`,
 2026-09-18, retour utilisateur explicite après lecture de full_sim4 : le partenaire ignorait

@@ -888,7 +888,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 85'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 86'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -1094,26 +1094,64 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   r=await spin(.01);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'trottoir');assert.equal(w.story.life.trottoirGranted,true);
   assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/est un décor|carte postale|j.appelle pas ça de la liberté/i.test(m.content)));
   assert.ok(w.messages.some(m=>m.speaker==='Noé · pensée'&&/même si c.est du toc|vraiment nulle part|je le prends/i.test(m.content)));
-  // force_move (round-robin: the only bonus left, any value selects it) ; .9 also lands the target pick (<.5 -> 1, else 2) on actor 2.
+  // force_move (round-robin: 3 buckets left [force_move,observer_mute,camera_hide] since the pool
+  // grew to 9 on 2026-09-19 — .01 lands index 0 = force_move ; .9 lands the target pick (<.5 -> 1,
+  // else 2) on actor 2.
   const beforeRoom=(await readWorld(db)).agents.find(a=>a.id===2).room;
-  r=await spin(.9);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'force_move');
+  r=await spin(.01,.9);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'force_move');
   const movedAgent=w.agents.find(a=>a.id===2);assert.notEqual(movedAgent.room,beforeRoom,'force_move must actually relocate the drawn actor, never a no-op');
   assert.ok(['salon','cuisine','chambre','bureau'].includes(movedAgent.room));
   const forceMoveMessages=w.messages.slice(-2);
   assert.ok(forceMoveMessages.some(m=>m.speaker==='Noé · pensée'&&/déplace|pion|prévenir|subis/i.test(m.content)),'the moved actor must react with irritation, as its own distinct line');
   assert.ok(forceMoveMessages.some(m=>m.speaker==='Lia · pensée'&&/drôle|sourire|téléporte|comprendre/i.test(m.content)),'the other actor must react with amusement, a genuinely different line, not the same voice');
-  // Second stoic draw, actor 2 this time (roulement sans répétition, 2026-09-18 : les sept bonus
-  // viennent d'être tirés une fois chacun, donc un cycle complet vient de se refermer et le tirage
-  // rouvre sur l'ensemble des sept — .5 retombe sur le même seau "stoic" (bucket 3/7), cette fois
-  // pour l'acteur 2). On réinjecte le sang-froid de l'acteur 1 (levé plus haut pour isoler le test
-  // du silence forcé) afin de vérifier ce que l'ancien test isolait : un second tirage sur l'AUTRE
-  // personnage ne doit jamais silencieusement écraser un effet sang-froid déjà en cours ailleurs —
-  // stoicUntil était à l'origine un slot unique {actor,until}, le même bug déjà trouvé et corrigé une
-  // fois pour mutedUntil, réapparu ici sous une autre forme (Article 3).
-  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life.stoicUntil={1:Date.now()+3*60*1000};sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
+  // Réveil forcé par force_move (2026-09-19, retour utilisateur explicite : "ce pouvoir inclut la
+  // capacité de reveiller l'autre perso s'il dort, en restaurant immediatement sa jauge") : on
+  // endort l'acteur 1 puis on force un nouveau force_move dessus pour vérifier le réveil immédiat.
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life.bonusLog=[];sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
+  sqlite.prepare('UPDATE agent_state SET intent=?,needs=?,room=? WHERE id=1').run('sleep',JSON.stringify({hunger:20,fatigue:80,stress:20,uncertainty:20}),'chambre');
+  r=await spin(.7,.01);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'force_move');
+  const wokenAgent=w.agents.find(a=>a.id===1);
+  assert.notEqual(wokenAgent.room,'chambre','a sleeping target must actually be relocated too, never left in place because it was asleep');
+  assert.ok(wokenAgent.needs.fatigue<=12,'a sleeping target forced awake must have its fatigue immediately restored, not silently teleported while still asleep');
+  assert.equal(wokenAgent.intent,'none','a sleeping target forced awake must actually wake up (intent cleared), not remain flagged as sleeping in a new room');
+  const wakeMessages=w.messages.slice(-2);
+  assert.ok(wakeMessages.some(m=>m.speaker==='Lia · pensée'&&/réveillée en sursaut|hop, je me retrouve ailleurs|tirée du sommeil/i.test(m.content)),'the woken actor must react to being startled awake, a distinct line from the ordinary force_move reaction');
+  assert.ok(wakeMessages.some(m=>m.speaker==='Noé · pensée'&&/réveille d.un coup ailleurs|émerger complètement paumé|réveil le plus brutal/i.test(m.content)),'the other actor comments on witnessing the abrupt wake-up specifically');
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life.bonusLog=[{round:p.round,bonus:'food'},{round:p.round,bonus:'calm'},{round:p.round,bonus:'sleep'},{round:p.round,bonus:'stoic'},{round:p.round,bonus:'mute'},{round:p.round,bonus:'trottoir'},{round:p.round,bonus:'force_move'}];sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
+  // observer_mute / camera_hide (2026-09-19, clarification explicite de l'utilisateur : ces deux
+  // "pouvoirs" rejoignent le pool de la roulette, avec les mêmes chances que les sept autres —
+  // jamais une décision spontanée des personnages, jamais obtenus directement par eux. Une fois
+  // tiré, le personnage désigné (deciderActor) choisit encore le niveau (réduit/classique/max) et
+  // le justifie à voix haute, exactement comme avant — seule la source du déclenchement a changé.
+  // 2 buckets left [observer_mute,camera_hide] : .01 lands index 0 = observer_mute ; second value
+  // .01 picks the decider (<.5 -> actor 1) ; third value .01 picks level index 0 = "réduit".
+  r=await spin(.01,.01,.01);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'observer_mute');
+  assert.equal(w.story.life.bonusLog.at(-1).level,'réduit','the decided level must be logged alongside the drawn bonus');
+  assert.equal(w.story.round+3,w.story.life.observerMutedUntilRound,'a "réduit" level must mute the observer for exactly 3 rounds, chosen by the designated character, not the roulette');
+  const observerMuteMessages=w.messages.slice(-2);
+  assert.ok(observerMuteMessages.some(m=>m.speaker==='Lia · pensée'&&/Trois tours de silence|Je coupe court, trois tours|Un petit silence de trois tours/i.test(m.content)),'the character drawn as decider must justify the chosen level out loud, in their own voice');
+  assert.ok(observerMuteMessages.some(m=>m.speaker==='Noé · pensée'&&/je valide à cent pour cent|Enfin tranquilles|plutôt marrant, cette idée/i.test(m.content)),'the partner must react as an accomplice, never a silent bystander');
+  assert.ok((await post(input('chat',1,{epoch,message:'Vous êtes là ?'}))).status===423,'the observer_mute drawn by the roulette must actually lock the chat channel, exactly like the old spontaneous mechanism did');
+  // .9 lands the only remaining bucket (camera_hide) ; decider .9 -> actor 2 ; level floor(.9*3)=2 -> "max" (40s).
+  r=await spin(.9,.9,.9);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'camera_hide');
+  assert.equal(w.story.life.bonusLog.at(-1).level,'max','a "max" level must be logged for camera_hide too');
+  assert.ok(w.story.life.cameraHiddenUntil>Date.now()+35000,'a "max" level must hide the camera for roughly 40 seconds, chosen by the designated character');
+  const cameraHideMessages=w.messages.slice(-2);
+  assert.ok(cameraHideMessages.some(m=>m.speaker==='Noé · pensée'&&/Le maximum : quarante secondes|quarante secondes sans une image|Je pousse au max/i.test(m.content)),'actor 2, drawn as decider this time, must justify the max level in his own voice');
+  assert.ok(cameraHideMessages.some(m=>m.speaker==='Lia · pensée'&&/Bonne idée. Qu.il devine|va le rendre dingue|nous qui choisissons ce qu.il voit/i.test(m.content)),'the partner reacts as an accomplice here too');
+  // Second stoic draw, actor 2 this time (roulement sans répétition : les neuf bonus viennent
+  // d'être tirés une fois chacun, donc un cycle complet vient de se refermer et le tirage rouvre sur
+  // l'ensemble des neuf — 0.35 retombe sur le seau "stoic" (bucket 3/9) sur le pool complet rouvert,
+  // cette fois pour l'acteur 2 via une seconde valeur distincte). On réinjecte le sang-froid de
+  // l'acteur 1 (levé plus haut pour isoler le test du silence forcé) afin de vérifier ce que
+  // l'ancien test isolait : un second tirage sur l'AUTRE personnage ne doit jamais silencieusement
+  // écraser un effet sang-froid déjà en cours ailleurs — stoicUntil était à l'origine un slot unique
+  // {actor,until}, le même bug déjà trouvé et corrigé une fois pour mutedUntil, réapparu ici sous
+  // une autre forme (Article 3).
+  {const p=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);p.life.stoicUntil={1:Date.now()+3*60*1000};p.life.observerMutedUntilRound=undefined;p.life.cameraHiddenUntil=undefined;sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(p));}
   sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=1').run(JSON.stringify({curiosity:70,tension:77,trust:40,comfort:40,attraction:40}));
   sqlite.prepare('UPDATE agent_state SET emotions=? WHERE id=2').run(JSON.stringify({curiosity:70,tension:81,trust:40,comfort:40,attraction:40}));
-  r=await spin(.5);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'stoic');
+  r=await spin(.35,.9);assert.equal(r.status,200);w=await r.json();assert.equal(w.bonus,'stoic');
   assert.ok(isStoic(1,w.story.life),'actor 1 must still be stoic: a second draw on actor 2 must never overwrite the first');
   assert.ok(isStoic(2,w.story.life),'actor 2 must now also be stoic, independently of actor 1');
   assert.ok(w.messages.some(m=>m.speaker==='Lia · pensée'&&/tout ressentir|sang-froid gratuit|Sympa la répartition/i.test(m.content)),'actor 1 still delivers a jealous line, even though the gauge effect must be skipped');
@@ -1121,15 +1159,15 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(w.agents[0].emotions.tension,77,'actor 1 must still be frozen after a later, independent stoic draw on actor 2, and must never be perturbed by that draw\'s jealousy effect while already stoic');
   assert.equal(w.agents[0].emotions.trust,40,'actor 1\'s trust must stay exactly as frozen, untouched by the second draw\'s jealousy effect');
   assert.equal(w.agents[1].emotions.tension,81,'actor 2 must be frozen at their own prior value, not actor 1\'s');
-  assert.equal(JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.bonusLog.length,8,'each spin must be logged for the future dossier retourné');
-  // Roulement sans répétition : sur ces huit tirages, chacun des sept bonus doit être sorti au
+  assert.equal(JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.bonusLog.length,10,'each spin must be logged for the future dossier retourné');
+  // Roulement sans répétition : sur ces dix tirages, chacun des neuf bonus doit être sorti au
   // moins une fois avant qu'un seul ne soit jamais répété deux fois de suite (ce que la séquence
   // ci-dessus vérifie déjà implicitement tirage par tirage, en forçant le seau attendu à chaque
   // fois) ; ce test dédié vérifie en plus qu'un tirage n'exclut plus rien une fois le cycle complet.
   const bonusSequence=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life.bonusLog.map(e=>e.bonus);
-  assert.deepEqual(bonusSequence,['food','calm','sleep','stoic','mute','trottoir','force_move','stoic']);
-  assert.equal(new Set(bonusSequence.slice(0,7)).size,7,'the first seven draws must cover all seven distinct bonuses exactly once, never a repeat before the cycle completes');
-  console.log('Passed: bonus roulette locked before revelation, real zero-API grants for all 7 bonuses (food/calm/sleep/stoic/mute/trottoir/force_move) with a genuinely distinct character reaction to each, real jealousy with measurable gauge impact for stoic/mute (immune while already stoic), fully conscious "cold" aftermath reactions once stoic/mute expire (never a silent return to normal, never repeated), genuine need relief and emotion freeze (not just a flag), independent dual-actor stoic effects, muted-actor redirection and both-muted block, distinct forced-move reactions, and a logged trail for every spin.');
+  assert.deepEqual(bonusSequence,['food','calm','sleep','stoic','mute','trottoir','force_move','observer_mute','camera_hide','stoic']);
+  assert.equal(new Set(bonusSequence.slice(0,9)).size,9,'the first nine draws must cover all nine distinct bonuses exactly once, never a repeat before the cycle completes');
+  console.log('Passed: bonus roulette locked before revelation, real zero-API grants for all 9 bonuses (food/calm/sleep/stoic/mute/trottoir/force_move/observer_mute/camera_hide) with a genuinely distinct character reaction to each, real jealousy with measurable gauge impact for stoic/mute (immune while already stoic), fully conscious "cold" aftermath reactions once stoic/mute expire (never a silent return to normal, never repeated), genuine need relief and emotion freeze (not just a flag), independent dual-actor stoic effects, muted-actor redirection and both-muted block, distinct forced-move reactions including waking a sleeping target with restored fatigue, the observer_mute/camera_hide "power" bonuses drawn by the roulette (never spontaneously by the characters) with the designated character still choosing and voicing the penalty level, and a logged trail for every spin.');
 }
 
 {
@@ -1495,82 +1533,68 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 }
 
 {
-  // Bonus spontanés post-révélation : mute de l'observateur / caméra masquée (2026-09-18, demande
-  // explicite de l'utilisateur — "c'est eux qui décident de l'activation [...] maintenant, plus
-  // tard, quand j'ai envie"). Contrairement à la roulette (Math.random, mockable à la valeur près),
-  // ce déclenchement utilise seedPick (déterministe par seed+round, jamais un dé caché mais pas
-  // davantage mockable un par un) : plutôt que rejouer son hachage à la main (fragile dès que la
-  // forme d'un des tableaux internes change), ce test avance des tours réels avec une appréciation
-  // basse (motif de rétorsion favorisé) jusqu'à observer une VRAIE activation, puis vérifie le
-  // contrat observable — jamais un round précis figé en dur, cf. le principe déjà appliqué au test
-  // de dispute ci-dessus pour angerLevel(). Isolé en fin de fichier comme les blocs de repli Gemini
-  // ci-dessus, pour ne jamais décaler le compteur partagé de crypto.randomUUID().
+  // Mute de l'observateur / caméra masquée UNE FOIS TIRÉS (2026-09-19 : ces deux effets ne sont
+  // plus qu'une conséquence d'un tirage de la roulette, cf. le test dédié plus haut — jamais une
+  // décision spontanée des personnages prise pendant un tour normal). Ce test-ci part directement
+  // d'un état "vient d'être tiré" (comme si spin_bonus venait de s'exécuter) pour vérifier les
+  // comportements qui restent identiques quelle que soit la source du déclenchement : blocage/non-
+  // blocage du chat, respect du budget partagé par la roulette elle-même, moquerie pendant l'effet,
+  // et acquittement conscient à l'expiration — jamais une boucle de 300 tours à espérer un tirage
+  // spontané qui n'existe plus.
   flat=true;
-  let plot={...newStory(),round:100,met:true,introduced:true,sharedMeal:true,finalCalled:true,evidence:Array(5).fill('preuve'),pendingDestination:undefined,life:{...newStory().life,revealedRound:80,appreciation:{1:10,2:10},dossierHumanTurns:0,exitSearched:true,ambientSeen:true,ambientVerified:true,tvSeen:true,remoteFound:true}};
-  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
-  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
-  // `revealed` (route.ts) exige que l'observateur ait RÉELLEMENT parlé au moins une fois
-  // (observerSpoken), jamais seulement finalCalled+5 preuves — sans ce message initial, aucune
-  // mécanique post-révélation (dossier, négociation, et maintenant ces bonus spontanés) ne
-  // s'active jamais, quel que soit le nombre de tours "interact" qui suivent.
-  sqlite.prepare("INSERT INTO conversations (speaker,content,room,created_at) VALUES ('vous','Vous êtes là ?','salon',?)").run(Date.now());
   const settle=()=>{
-    // Remet aussi `intent` à neutre : sans ça, un tour antérieur ayant laissé "sleep" en base
-    // (décision par défaut du mock) fige urgentIntent/routine au tour suivant malgré des besoins
-    // remis à plat, et bascule ce tour sur une résolution locale zéro-API — jamais l'objet de CE
-    // test, qui doit rester un tour "interact" normal à chaque itération de la boucle.
     sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=1').run('salon',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),'chat');
     sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=2').run('salon',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),'chat');
     const stored=sqlite.prepare("SELECT id,content FROM memories WHERE kind='scenario'").get();
     const storedPlot=JSON.parse(stored.content);
     storedPlot.pendingDestination=undefined;
-    storedPlot.life={...storedPlot.life,debrief:undefined,contact:undefined,dispute:undefined,appreciation:{1:10,2:10}};
+    storedPlot.life={...storedPlot.life,debrief:undefined,contact:undefined,dispute:undefined};
     sqlite.prepare('UPDATE memories SET content=? WHERE id=?').run(JSON.stringify(storedPlot),stored.id);
   };
+  // --- observer_mute, juste tiré, niveau "classique" (durée 4 tours) ---
+  let plot={...newStory(),round:100,met:true,introduced:true,sharedMeal:true,finalCalled:true,evidence:Array(5).fill('preuve'),pendingDestination:undefined,life:{...newStory().life,revealedRound:80,dossierHumanTurns:0,exitSearched:true,ambientSeen:true,ambientVerified:true,tvSeen:true,remoteFound:true,observerMutedUntilRound:104,bonusSpotlightUntilRound:104,bonusCooldownUntilRound:112,bonusLog:[{round:100,bonus:'observer_mute',level:'classique'}]}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  sqlite.prepare("INSERT INTO conversations (speaker,content,room,created_at) VALUES ('vous','Vous êtes là ?','salon',?)").run(Date.now());
   settle();
   let epoch=(await readWorld(db)).epoch;
-  let w,activatedKind=null,beforeLog;
-  for(let i=0;i<300;i++){
-    const before=calls;
-    const r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
-    assert.equal(calls,before+2,'a plain interact turn while together must still cost exactly the two character calls, whichever spontaneous bonus branch runs alongside it');
-    if((w.story.life.observerMutedUntilRound??0)>w.story.round){activatedKind='observer_mute';beforeLog=w.story.life.bonusPsychLog;break;}
-    if((w.story.life.cameraHiddenUntil??0)>Date.now()){activatedKind='camera_hide';beforeLog=w.story.life.bonusPsychLog;break;}
-    settle();
-  }
-  assert.ok(activatedKind,'sustained low appreciation together in the salon must eventually trigger a spontaneous observer-mute or camera-hide bonus within 300 turns');
-  assert.ok(Array.isArray(beforeLog)&&beforeLog.some(e=>e.kind===activatedKind&&e.outcome==='activated'&&['réduit','classique','max'].includes(e.level)),'an activation must be journaled with its kind, outcome and the character-chosen level, feeding the psychological profile');
-  const pensees=w.messages.filter(m=>/ · pensée$/.test(m.speaker));
-  assert.ok(pensees.length>=2&&new Set(pensees.map(m=>m.speaker)).size===2,'both characters must speak on the activation turn: the initiator justifying the level chosen, the other complicit — never a silent effect that only changes gauges (Article 15)');
-  if(activatedKind==='observer_mute'){
-    const span=w.story.life.observerMutedUntilRound-w.story.round;
-    assert.ok(span>=3&&span<=6,'the character-chosen mute duration must fall within the announced 3-to-6-turn range');
-    const blocked=await post(input('chat',1,{epoch,message:'Tu peux répondre ?'}));
-    assert.equal(blocked.status,423);assert.equal((await blocked.json()).code,'observer_muted');
-    const spinBlocked=await post(input('spin_bonus',1,{epoch}));
-    assert.equal(spinBlocked.status,429,'the roulette must respect the same shared bonus budget as this spontaneous mute, never let a spin cut short the mocking window');
-    settle();
-    const mockTurn=await post(input('interact',1,{epoch}));assert.equal(mockTurn.status,200);const mw=await mockTurn.json();
-    assert.ok(mw.messages.some(m=>/ · pensée$/.test(m.speaker)&&/muet|silence|aveugle|dire|parler|répondre/i.test(m.content)),'the characters must keep mocking the muted observer turn after turn, not just at the moment of activation');
-    let last=mw;
-    for(let i=0;i<span+1&&(last.story.life.observerMutedUntilRound??0)>last.story.round;i++){settle();const rr=await post(input('interact',1,{epoch}));assert.equal(rr.status,200);last=await rr.json();}
-    assert.equal(last.story.life.observerMutedUntilRound,undefined,'the mute must actually lift on its own after the chosen duration');
-    const reopened=await post(input('chat',1,{epoch,message:'Vous pouvez enfin me répondre ?'}));
-    assert.equal(reopened.status,200,'the human channel must reopen exactly when the character-chosen duration elapses');
-    assert.ok(last.messages.some(m=>/ · pensée$/.test(m.speaker)&&/micro|silence|reparler|parole/i.test(m.content)),'the end of the mute must be acknowledged out loud on the very turn it lifts, never a silent return to normal (Article 4/12/15)');
-  } else {
-    const untilMs=w.story.life.cameraHiddenUntil-Date.now();
-    assert.ok(untilMs>=19000&&untilMs<=41000,'the character-chosen camera-hide duration must fall within the announced 20-to-40-second range');
-    const stillChatting=await post(input('chat',1,{epoch,message:'On continue de discuter ?'}));
-    assert.equal(stillChatting.status,200,'unlike the mute, the camera-hide bonus must never block the human channel itself');
-    const spinBlocked=await post(input('spin_bonus',1,{epoch}));
-    assert.equal(spinBlocked.status,429,'the roulette must respect the same shared bonus budget as this spontaneous camera-hide, never let a spin cut short the mocking window');
-    settle();
-    const mockTurn=await post(input('interact',1,{epoch}));assert.equal(mockTurn.status,200);const mw=await mockTurn.json();
-    assert.ok(mw.messages.some(m=>/ · pensée$/.test(m.speaker)&&/noir|aveugle|voit|image|écran/i.test(m.content)),'the characters must keep mocking the blinded observer while the camera stays hidden, not just at the moment it was cut');
-  }
+  const blocked=await post(input('chat',1,{epoch,message:'Tu peux répondre ?'}));
+  assert.equal(blocked.status,423);assert.equal((await blocked.json()).code,'observer_muted');
+  const spinBlocked=await post(input('spin_bonus',1,{epoch}));
+  assert.equal(spinBlocked.status,429,'the roulette must respect its own shared bonus budget while a mute it just granted is still active, never let a new spin cut short the mocking window');
+  const mockTurn=await post(input('interact',1,{epoch}));assert.equal(mockTurn.status,200);const mw=await mockTurn.json();
+  // Regex couvrant les 6 variantes possibles (3 par personnage) de la moquerie observer_mute,
+  // pas seulement celles qui contiennent littéralement "muet"/"silence" (bug réel trouvé en
+  // lançant ce test : le tirage peut choisir "Toujours aucun mot de ta part..." ou "Je t'imagine
+  // en train de taper dans le vide...", qu'aucun des deux mots ne couvrait).
+  assert.ok(mw.messages.some(m=>/ · pensée$/.test(m.speaker)&&/aucun mot|taper dans le vide|silence|muet|bouillir|frustrant|dire/i.test(m.content)),'the characters must keep mocking the muted observer turn after turn, not just at the moment of the draw');
+  // La levée se décide en comparant le round de DÉBUT de tour (avant incrémentation) à
+  // observerMutedUntilRound (route.ts, l.543) : elle n'apparaît donc que sur le tour dont le
+  // round de fin affiché ici est round+1 par rapport au seuil, jamais avant — d'où la condition
+  // sur la présence du champ lui-même plutôt qu'une comparaison de round bornée trop tôt (bug
+  // réel trouvé en lançant ce test : la boucle s'arrêtait un tour trop tôt).
+  let last=mw;
+  for(let i=0;i<6&&last.story.life.observerMutedUntilRound!==undefined;i++){settle();const rr=await post(input('interact',1,{epoch}));assert.equal(rr.status,200);last=await rr.json();}
+  assert.equal(last.story.life.observerMutedUntilRound,undefined,'the mute must actually lift on its own after the drawn duration, whichever character was designated to choose it');
+  const reopened=await post(input('chat',1,{epoch,message:'Vous pouvez enfin me répondre ?'}));
+  assert.equal(reopened.status,200,'the human channel must reopen exactly when the drawn duration elapses');
+  assert.ok(last.messages.some(m=>/ · pensée$/.test(m.speaker)&&/micro|silence|reparler|parole|coupure/i.test(m.content)),'the end of the mute must be acknowledged out loud on the very turn it lifts, never a silent return to normal (Article 4/12/15)');
+  // --- camera_hide, juste tiré, niveau "classique" (25-35s) ---
+  const camPlot={...newStory(),round:150,met:true,introduced:true,sharedMeal:true,finalCalled:true,evidence:Array(5).fill('preuve'),pendingDestination:undefined,life:{...newStory().life,revealedRound:80,dossierHumanTurns:0,exitSearched:true,ambientSeen:true,ambientVerified:true,tvSeen:true,remoteFound:true,cameraHiddenUntil:Date.now()+30000,bonusSpotlightUntilRound:153,bonusCooldownUntilRound:161,bonusLog:[{round:150,bonus:'camera_hide',level:'classique'}]}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(camPlot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  sqlite.prepare("INSERT INTO conversations (speaker,content,room,created_at) VALUES ('vous','Vous êtes là ?','salon',?)").run(Date.now());
+  settle();
+  epoch=(await readWorld(db)).epoch;
+  const stillChatting=await post(input('chat',1,{epoch,message:'On continue de discuter ?'}));
+  assert.equal(stillChatting.status,200,'unlike the mute, the camera-hide bonus must never block the human channel itself');
+  const camSpinBlocked=await post(input('spin_bonus',1,{epoch}));
+  assert.equal(camSpinBlocked.status,429,'the roulette must respect its own shared bonus budget while a camera-hide it just granted is still active');
+  settle();
+  const camMockTurn=await post(input('interact',1,{epoch}));assert.equal(camMockTurn.status,200);const cmw=await camMockTurn.json();
+  assert.ok(cmw.messages.some(m=>/ · pensée$/.test(m.speaker)&&/noir|aveugle|voit|image|écran/i.test(m.content)),'the characters must keep mocking the blinded observer while the camera stays hidden, not just at the moment it was cut');
   flat=false;
-  console.log('Passed: the two spontaneous post-revelation bonuses (observer mute, camera hide) are a genuine character decision — self-chosen timing and level, voiced out loud, journaled for the psychological profile whether activated or not, sharing one bonus budget with the classic roulette, mocking the observer throughout, and (for the mute) lifting on its own with an out-loud acknowledgement exactly when its self-chosen duration elapses.');
+  console.log('Passed: once observer-mute/camera-hide are drawn by the roulette, the surrounding behaviour stays intact — chat blocked only for the mute, the roulette itself respects the shared bonus budget while either is active, both characters keep mocking the observer turn after turn, and the mute lifts on its own with a fully conscious out-loud acknowledgement.');
 }
 
 {
@@ -2059,49 +2083,12 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   console.log('Passed: the "skip to revelation" button stays locked before a first genuine completion, produces a plausible and internally coherent investigation plus a real two-voice recap when used, still plays the real revelation address to the observer, cannot be replayed once the revelation has happened, and survives a reset for later sessions.');
 }
 
-{
-  // Éligibilité des bonus spontanés assouplie (2026-09-19, retour utilisateur explicite après
-  // l'analyse détaillée de full_sim5 : ces deux bonus, voulus comme "une vraie décision visible",
-  // ne se sont JAMAIS déclenchés sur deux simulations dédiées de ~18 tours chacune) : seul le
-  // besoin de l'initiateur RÉELLEMENT TIRÉ doit désormais bloquer l'éligibilité, jamais celui de
-  // son partenaire (Article 17) — round trouvé déterministiquement (même seedPick que le serveur
-  // réel) où le motif "amusement" est retenu et l'initiateur tiré est la résidente 1, avec le
-  // résident 2 volontairement laissé à un besoin élevé mais SOUS le seuil "urgent" (65, sous 68) :
-  // haut exprès pour prouver que ce n'est plus la lecture des DEUX personnages qui compte, sans
-  // pour autant déclencher le mécanisme de relocalisation totalement indépendant qui redirigerait
-  // le résident affamé ailleurs et casserait `together` par un autre chemin.
-  let targetRound=-1;
-  const seed=newStory().seed;
-  // Le serveur évalue "consider"/l'initiateur avec story.round PRE-tour (avant l'incrément normal
-  // de fin de tour) — la recherche doit donc porter sur cette même valeur, jamais round+1.
-  for(let round=0;round<2000;round++){
-    const consider=seedPick(seed,"spontane-consider-"+round,[true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]);
-    if(!consider)continue;
-    const initiator=seedPick(seed,"spontane-actor-"+round,[1,2]);
-    if(initiator===1){targetRound=round;break;}
-  }
-  assert.ok(targetRound>=0,'test setup: must find a round where the calm resident is the drawn initiator');
-  const plot={...newStory(),seed,round:targetRound,met:true,introduced:true,sharedMeal:true,finalCalled:true,evidence:Array(5).fill('preuve'),pendingDestination:undefined,life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,exitSearched:true,appreciation:{1:50,2:50}}};
-  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
-  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
-  // `revealed` exige que l'observateur ait RÉELLEMENT parlé au moins une fois (observerSpoken),
-  // jamais seulement finalCalled+5 preuves (cf. le test dédié plus haut sur ce mécanisme).
-  sqlite.prepare("INSERT INTO conversations (speaker,content,room,created_at) VALUES ('vous','Vous êtes là ?','salon',?)").run(Date.now());
-  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,emotions=? WHERE id=1').run('salon',JSON.stringify({hunger:15,fatigue:15,stress:15,uncertainty:15}),JSON.stringify({curiosity:60,tension:20,trust:60,comfort:60,attraction:60}));
-  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,emotions=? WHERE id=2').run('salon',JSON.stringify({hunger:65,fatigue:15,stress:15,uncertainty:15}),JSON.stringify({curiosity:60,tension:20,trust:60,comfort:60,attraction:60}));
-  const spontEpoch=(await readWorld(db)).epoch;
-  const spontResponse=await post(input('interact',1,{epoch:spontEpoch}));assert.equal(spontResponse.status,200);const spontResult=await spontResponse.json();
-  assert.ok(spontResult.story.life.bonusPsychLog?.some(e=>e.round===targetRound),'a spontaneous bonus consideration must still happen this round even though the OTHER character has an elevated need — only the drawn initiator (the calm one here) must be checked, never both');
-  // Probabilité relevée (2026-09-19) : compte statistiquement, sur 300 tours consécutifs déjà
-  // évalués par la boucle ci-dessus, combien de fois "consider" tombe vrai, en session calme comme
-  // en session hostile — preuve que le taux a bien été augmenté (~15%/~40% attendus), pas seulement
-  // documenté en commentaire.
-  let calmHits=0,hostileHits=0;
-  for(let round=1;round<=300;round++){
-    if(seedPick(seed,"spontane-consider-"+round,[true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]))calmHits++;
-    if(seedPick(seed,"spontane-consider-"+round,[true,true,true,true,false,false,false,false,false,false]))hostileHits++;
-  }
-  assert.ok(calmHits>=30&&calmHits<=60,`the calm-session consider rate must land near the new ~15% target over 300 rounds (got ${calmHits}), neither the old ~5% nor an unreasonably high rate`);
-  assert.ok(hostileHits>=90&&hostileHits<=150,`the hostile-session consider rate must land near the new ~40% target over 300 rounds (got ${hostileHits})`);
-  console.log('Passed: spontaneous observer-mute/camera-hide eligibility no longer requires BOTH characters to be need-free (only the character who actually ends up deciding), and the base consideration probability was genuinely raised (~5%→~15% calm, ~20%→~40% hostile) — closing the near-total lockout found across full_sim4/full_sim5.');
-}
+// L'ancien test d'éligibilité/probabilité des bonus spontanés (assoupli le 2026-09-19 après
+// l'analyse de full_sim5) a été retiré le même jour : le mécanisme qu'il vérifiait — les
+// personnages décidant eux-mêmes, par tour, de couper le micro/la caméra — n'existe plus.
+// Correction d'incompréhension actée avec l'utilisateur : ces deux effets ne sont que deux
+// visages de plus du tirage de la roulette, à chances égales avec les 7 autres (cf. le test
+// "bonus roulette locked before revelation..." plus haut, qui couvre désormais les 9 tirages),
+// jamais une initiative spontanée d'un personnage. Rien à retester ici en éligibilité/probabilité
+// puisqu'il n'y a plus de condition d'éligibilité séparée à vérifier — le tirage suit exactement
+// les mêmes règles que les 7 bonus déjà existants.

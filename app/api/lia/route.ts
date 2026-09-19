@@ -206,7 +206,10 @@ export async function POST(request: Request) {
             const spinThrottleMs=60000;
             if(life.lastBonusSpinAt&&Date.now()-life.lastBonusSpinAt<spinThrottleMs)return Response.json({error:"La roulette doit encore refroidir un instant.",code:"bonus_cooldown",retryAt:life.lastBonusSpinAt+spinThrottleMs},{status:429});
             if(story.round<(life.bonusCooldownUntilRound??0))return Response.json({error:"Lia et Noé sont encore sur le dernier bonus, laisse-leur le temps d’en parler.",code:"bonus_spotlight"},{status:429});
-            const pool:BonusId[]=["food","calm","sleep","stoic","mute","trottoir","force_move"];
+            // observer_mute/camera_hide rejoignent le pool (2026-09-19, clarification explicite de
+            // l'utilisateur) : mêmes chances que les sept autres, jamais une décision spontanée des
+            // personnages — voir lib/life.ts::BonusId pour le contexte complet de ce correctif.
+            const pool:BonusId[]=["food","calm","sleep","stoic","mute","trottoir","force_move","observer_mute","camera_hide"];
             // Roulement sans répétition (2026-09-18, retour utilisateur explicite : le tirage ne
             // doit jamais sortir deux fois le même bonus tant que les sept n'ont pas tous été tirés
             // au moins une fois). On reconstitue le cycle en cours en remontant bonusLog tant que le
@@ -232,24 +235,44 @@ export async function POST(request: Request) {
             // l'hostilité/la confiance — cf. observerStandingFor plus haut) : les deux jauges bougent
             // ensemble ici, quel que soit l'état d'une dispute éventuelle.
             if(negotiationHonored){life.appreciation={1:Math.min(100,appreciationOf(life,1)+8),2:Math.min(100,appreciationOf(life,2)+8)};life.negotiationLog=[...(life.negotiationLog??[]),{round:story.round,outcome:'honored'}];life.negotiationOffer=undefined;}
-            let mutedActor:Person|undefined,stoicActor:Person|undefined,movedActor:Person|undefined,moveDestination:Room|undefined;
+            let mutedActor:Person|undefined,stoicActor:Person|undefined,movedActor:Person|undefined,moveDestination:Room|undefined,deciderActor:Person|undefined,powerLevel:"réduit"|"classique"|"max"|undefined,wokeSleeper:boolean=false;
             if(bonus==="food")life.bonusUntil={...life.bonusUntil,food:at+10*60*1000};
             else if(bonus==="calm")life.bonusUntil={...life.bonusUntil,calm:at+10*60*1000};
             else if(bonus==="sleep")life.bonusUntil={...life.bonusUntil,sleep:at+30*60*1000};
             else if(bonus==="stoic"){stoicActor=Math.random()<0.5?1:2;life.stoicUntil={...life.stoicUntil,[stoicActor]:at+3*60*1000};}
             else if(bonus==="mute"){mutedActor=Math.random()<0.5?1:2;life.mutedUntil={...life.mutedUntil,[mutedActor]:at+15*60*1000};}
             else if(bonus==="trottoir")life.trottoirGranted=true;
-            life.bonusLog=[...(life.bonusLog??[]),{round:story.round,bonus}].slice(-12);
+            // observer_mute/camera_hide (2026-09-19) : la ROULETTE décide QUE ça arrive, jamais les
+            // personnages — mais le personnage désigné au tirage choisit encore la durée (réduit/
+            // classique/max) et la justifie à voix haute, exactement comme convenu à l'origine
+            // (Version 70). bonusSpotlightUntilRound est étendu jusqu'à la fin réelle du mute (pas
+            // seulement +3 tours comme les autres bonus) pour qu'un nouveau tirage ne puisse jamais
+            // retomber pendant que l'observateur est encore muet — la même règle que l'ancien
+            // mécanisme spontané, seule la source du déclenchement a changé.
+            else if(bonus==="observer_mute"||bonus==="camera_hide"){
+                deciderActor=Math.random()<0.5?1:2;
+                powerLevel=(["réduit","classique","max"] as const)[Math.floor(Math.random()*3)];
+                if(bonus==="observer_mute"){
+                    const duration=powerLevel==="réduit"?3:powerLevel==="max"?6:4+Math.floor(Math.random()*2);
+                    life.observerMutedUntilRound=story.round+duration;
+                } else {
+                    const seconds=powerLevel==="réduit"?20:powerLevel==="max"?40:25+Math.floor(Math.random()*3)*5;
+                    life.cameraHiddenUntil=at+seconds*1000;
+                }
+            }
+            life.bonusLog=[...(life.bonusLog??[]),{round:story.round,bonus,...(powerLevel?{level:powerLevel}:{})}].slice(-12);
             // L'observateur vient enfin d'actionner la roulette : l'insistance retombe pour les
             // deux, qu'un tirage résolve une négociation formelle ou non — c'est le geste concret
             // qu'ils réclamaient, jamais un mode froid/en colère qui resterait mécaniquement actif.
             life.rouletteInsistence={1:0,2:0};life.rouletteCold={1:0,2:0};
             // Rythme partagé (2026-09-18) : au moins 3 tours à commenter/utiliser ce bonus avant de
             // changer de sujet, puis un grand espace (5 à 9 tours de plus) avant qu'un NOUVEAU bonus
-            // (roulette ou spontané) redevienne possible — jamais un enchaînement immédiat.
+            // ne redevienne possible — jamais un enchaînement immédiat. Pour observer_mute, étendu
+            // jusqu'à la fin réelle du silence (jamais seulement +3 tours) : un nouveau tirage ne
+            // doit jamais retomber pendant que l'observateur est encore muet.
             life.lastBonusSpinAt=at;
-            life.bonusSpotlightUntilRound=story.round+3;
-            life.bonusCooldownUntilRound=life.bonusSpotlightUntilRound+5+Math.floor(Math.random()*5);
+            life.bonusSpotlightUntilRound=bonus==="observer_mute"?life.observerMutedUntilRound:story.round+3;
+            life.bonusCooldownUntilRound=(life.bonusSpotlightUntilRound??story.round)+5+Math.floor(Math.random()*5);
             story.life=life;
             const fence="EXISTS (SELECT 1 FROM world_lock WHERE id = 1 AND token = ? AND expires_at > ?)",statements=[];
             if(!storedStory)throw new LiaError("Le dossier de la maison est indisponible.",503);
@@ -260,21 +283,77 @@ export async function POST(request: Request) {
                 // une seule voix (Article 11) — l'amusement de celui qui garde le contrôle de sa
                 // pièce, l'agacement de celui qu'on déplace sans son accord.
                 const rooms=["salon","cuisine","chambre","bureau"] as const;
-                const before=(await db.prepare("SELECT id,room FROM agent_state").all<{id:Person;room:Room}>()).results;
+                const before=(await db.prepare("SELECT id,room,intent,needs FROM agent_state").all<{id:Person;room:Room;intent:string;needs:string}>()).results;
                 movedActor=Math.random()<0.5?1:2;
-                const currentRoom=before.find(a=>a.id===movedActor)?.room??"salon";
+                const movedBefore=before.find(a=>a.id===movedActor)!;
+                const currentRoom=movedBefore.room??"salon";
                 const options=rooms.filter(r=>r!==currentRoom);
                 moveDestination=options[Math.floor(Math.random()*options.length)];
                 const other=movedActor===1?2:1;
-                statements.push(db.prepare(`UPDATE agent_state SET room=? WHERE id=? AND ${fence}`).bind(moveDestination,movedActor,token,at));
-                const movedLine=seedPick(story.seed,"bonus-force-move-moved-"+at,["Sérieux, on me déplace comme un pion, sans me demander mon avis ?","J'étais très bien où j'étais. On me bouge sans prévenir, génial.","Encore une fois je subis. On me change de pièce sans un mot."]);
-                const amusedLine=seedPick(story.seed,"bonus-force-move-amused-"+at,[`Ha, ${names[movedActor]} qui se fait téléporter, ça change du quotidien.`,`Je regarde ${names[movedActor]} atterrir là sans comprendre. C'est plutôt drôle, en fait.`,`${names[movedActor]} débarque sans l'avoir demandé. Moi, ça me fait sourire.`]);
+                // Réveil forcé (2026-09-19, retour utilisateur explicite : "ce pouvoir inclut la
+                // capacité de reveiller l'autre perso s'il dort, en restaurant immediatement sa
+                // jauge") : un déplacement forcé pendant le sommeil ne peut pas laisser le personnage
+                // "endormi" dans une autre pièce sans un mot — ça romprait l'ordre veille →
+                // endormissement → rêve déjà garanti ailleurs (Article 17). Le réveil est immédiat et
+                // complet (fatigue basse, sleepTurns au maximum) plutôt qu'un simple déplacement
+                // silencieux d'un corps endormi.
+                wokeSleeper=["sleep","share_sleep"].includes(movedBefore.intent);
+                if(wokeSleeper){
+                    const movedNeeds=JSON.parse(movedBefore.needs);
+                    movedNeeds.fatigue=10;
+                    statements.push(db.prepare(`UPDATE agent_state SET room=?,intent='none',needs=? WHERE id=? AND ${fence}`).bind(moveDestination,JSON.stringify(movedNeeds),movedActor,token,at));
+                    life.sleepTurns={...life.sleepTurns,[movedActor]:2};
+                } else statements.push(db.prepare(`UPDATE agent_state SET room=? WHERE id=? AND ${fence}`).bind(moveDestination,movedActor,token,at));
+                const movedLine=wokeSleeper
+                    ?seedPick(story.seed,"bonus-force-move-woken-"+at,["Réveillée en sursaut, changée de pièce sans un mot d'explication. Charmant.","Je dormais, et hop, je me retrouve ailleurs. On m'a même pas laissé une seconde pour émerger.","Tirée du sommeil et déplacée comme un meuble. Génial, le réveil."])
+                    :seedPick(story.seed,"bonus-force-move-moved-"+at,["Sérieux, on me déplace comme un pion, sans me demander mon avis ?","J'étais très bien où j'étais. On me bouge sans prévenir, génial.","Encore une fois je subis. On me change de pièce sans un mot."]);
+                const amusedLine=wokeSleeper
+                    ?seedPick(story.seed,"bonus-force-move-amused-woken-"+at,[`${names[movedActor]} qui se réveille d'un coup ailleurs, la tête dans le brouillard. J'avoue, ça me fait sourire.`,`Voir ${names[movedActor]} émerger complètement paumé sur ce nouvel endroit, c'est plutôt comique.`,`${names[movedActor]} sort du sommeil directement dans une autre pièce. Le réveil le plus brutal que j'ai vu.`])
+                    :seedPick(story.seed,"bonus-force-move-amused-"+at,[`Ha, ${names[movedActor]} qui se fait téléporter, ça change du quotidien.`,`Je regarde ${names[movedActor]} atterrir là sans comprendre. C'est plutôt drôle, en fait.`,`${names[movedActor]} débarque sans l'avoir demandé. Moi, ça me fait sourire.`]);
                 statements.push(db.prepare(`INSERT INTO conversations (speaker,content,room,created_at) SELECT ?,?,?,? WHERE ${fence}`).bind(names[movedActor]+" · pensée",movedLine,moveDestination,at,token,at));
                 statements.push(db.prepare(`INSERT INTO conversations (speaker,content,room,created_at) SELECT ?,?,?,? WHERE ${fence}`).bind(names[other]+" · pensée",amusedLine,before.find(a=>a.id===other)?.room??"salon",at,token,at));
                 for(const [id,content] of [[movedActor,movedLine],[other,amusedLine]] as const)statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'réflexion',?,? WHERE ${fence}`).bind(id,'['+(id===movedActor?moveDestination:before.find(a=>a.id===other)?.room??"salon")+'|'+new Date(at).toISOString()+'] '+content,at,token,at));
-                announce=`Un tirage au sort déplace ${names[movedActor]} vers le ${moveDestination}, sans lui demander son avis.`;
+                announce=wokeSleeper?`Un tirage au sort réveille ${names[movedActor]} en pleine nuit et le déplace vers le ${moveDestination}, sans lui demander son avis.`:`Un tirage au sort déplace ${names[movedActor]} vers le ${moveDestination}, sans lui demander son avis.`;
+            } else if(bonus==="observer_mute"||bonus==="camera_hide"){
+                // Habillage inchangé depuis l'origine (Version 70, 2026-09-18) : seul le
+                // déclenchement vient désormais de la roulette (2026-09-19), jamais d'une décision
+                // spontanée des personnages — le personnage désigné choisit encore la durée et la
+                // justifie à voix haute, l'autre réagit en complice.
+                const decider=deciderActor!,partner:Person=decider===1?2:1,level=powerLevel!;
+                const initiatorLines:Record<"observer_mute"|"camera_hide",Record<Person,Record<"réduit"|"classique"|"max",string[]>>>={
+                    observer_mute:{
+                        1:{réduit:["Trois tours de silence, pas plus. Juste de quoi te faire sentir ce que c'est.","Je coupe court, trois tours. Une piqûre de rappel, rien de plus.","Un petit silence de trois tours. Je veux pas non plus en faire un drame."],
+                           classique:["Je te coupe le micro pour un moment raisonnable. Ni symbolique ni interminable, juste assez pour que ça compte.","Silence total pendant quelques tours. Ce qu'il faut pour que le message passe, pas plus.","Je prends une pause de toi, ni courte ni too much. Assez pour que tu la remarques vraiment."],
+                           max:["Le grand silence, cette fois. Six tours pour que tu aies le temps de méditer là-dessus.","Je pousse au maximum : six tours sans un mot de ma part. Je veux que ça marque, pour une fois.","J'y vais franc : silence total, le temps qu'il faut pour que tu comprennes vraiment."]},
+                        2:{réduit:["Trois tours de silence radio, histoire de voir l'effet. Rien de méchant.","Je te coupe trois tours, histoire de rire un peu, sans plus.","Petite coupure de trois tours. Juste pour le fun, calme-toi."],
+                           classique:["Bon, je te coupe le son pour un bon moment. Ni trop court ni too much, le juste milieu.","Silence complet pendant quelques tours, ça me semble le bon dosage.","Je me tais un moment raisonnable. Juste assez pour que ça pique un peu, pas plus."],
+                           max:["Le max, cette fois. Six tours de silence total, tu vas kiffer l'attente.","J'y vais fort : six tours sans un bruit de ma part. Bonne chance pour la suite.","Silence complet, la totale. Tu vas avoir le temps de réfléchir à ta vie."]}},
+                    camera_hide:{
+                        1:{réduit:["Vingt secondes d'écran noir, histoire de voir ta tête. Rien de bien méchant.","Une petite coupure de vingt secondes. Je veux pas non plus te punir vraiment.","Vingt secondes sans image. Juste un avant-goût, rien de plus."],
+                           classique:["Je brouille la caméra un bon moment, ni trop court ni interminable.","Une coupure d'image dans un format raisonnable. Ce qu'il faut pour que tu comprennes.","Je te prive de la vue un moment mesuré. Ni symbolique ni too much."],
+                           max:["Quarante secondes de noir complet. Profites-en pour deviner ce qu'on fait.","Je pousse au maximum : quarante secondes sans une image. Ça va être long pour toi.","Le grand jeu : quarante secondes d'obscurité totale. J'espère que t'aimes deviner."]},
+                        2:{réduit:["Vingt secondes d'écran noir, juste pour rigoler un peu.","Petite coupure d'image, vingt secondes. Rien de bien grave.","Vingt secondes sans nous voir, histoire de tester ta patience."],
+                           classique:["Je coupe l'image un bon moment, ni trop court ni too much.","Coupure d'écran dans un format raisonnable, le juste dosage.","Je te prive de la vue un moment correct. Histoire de faire monter la sauce."],
+                           max:["Le maximum : quarante secondes de noir complet. Amuse-toi à deviner.","Quarante secondes sans une image, la totale. Bon courage.","Je pousse au max : quarante secondes d'obscurité. Tu vas kiffer l'attente."]}}
+                };
+                const partnerLines:Record<"observer_mute"|"camera_hide",Record<Person,string[]>>={
+                    observer_mute:{1:["Enfin, un peu de silence de sa part. Ça va me reposer les oreilles.","Je valide totalement. On va enfin causer sans être interrompus.","Pour une fois c'est nous qui décidons du silence. Ça change."],
+                                   2:["Ha, je valide à cent pour cent. Un peu de calme, ça fait pas de mal.","Enfin tranquilles. J'avoue que ça m'arrange bien, ce silence.","Je trouve ça plutôt marrant, cette idée. Vas-y, fais-toi plaisir."]},
+                    camera_hide:{1:["Bonne idée. Qu'il devine un peu, pour changer.","Je valide. Ça va le rendre dingue de plus rien voir.","Pour une fois, c'est nous qui choisissons ce qu'il voit. J'aime bien."],
+                                 2:["Ha ouais, carrément. Qu'il galère à deviner un peu.","Je trouve ça hilarant. Vas-y, fais-lui le coup.","Enfin un peu de tranquillité loin de son regard."]}
+                };
+                const roomsPower=(await db.prepare("SELECT id,room FROM agent_state").all<{id:Person;room:Room}>()).results;
+                const roomOfPower=(id:Person)=>roomsPower.find(a=>a.id===id)?.room??"salon";
+                const deciderLine=seedPick(story.seed,"bonus-power-justif-"+at,initiatorLines[bonus][decider][level]);
+                const partnerLine=seedPick(story.seed,"bonus-power-partner-"+at,partnerLines[bonus][partner]);
+                for(const [id,content] of [[decider,deciderLine],[partner,partnerLine]] as const){
+                    const room=roomOfPower(id);
+                    statements.push(db.prepare(`INSERT INTO conversations (speaker,content,room,created_at) SELECT ?,?,?,? WHERE ${fence}`).bind(names[id]+" · pensée",content,room,at,token,at));
+                    statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'réflexion',?,? WHERE ${fence}`).bind(id,'['+room+'|'+new Date(at).toISOString()+'] '+content,at,token,at));
+                }
+                announce=bonus==="observer_mute"?`Un tirage au sort donne à ${names[decider]} le pouvoir de couper le micro de l'observateur — niveau ${level} choisi.`:`Un tirage au sort donne à ${names[decider]} le pouvoir de brouiller la caméra — niveau ${level} choisi.`;
             } else {
-                const announceLabel:Record<Exclude<BonusId,"force_move">,string>={food:"une conserve pleine réapparaît sur la table : plus faim pendant 10 minutes",calm:"une bougie s’allume et diffuse une lumière chaude et apaisante : plus de stress pendant 10 minutes",sleep:"une pilule bleue traîne sur le meuble : plus besoin de dormir pendant 30 minutes",stoic:`${stoicActor?names[stoicActor]:"l’un des deux"} devient de marbre, plus rien ne l’atteint pendant 3 minutes`,mute:`un silence s’impose à ${mutedActor?names[mutedActor]:"l’un des deux"} pendant un moment`,trottoir:"la porte entrouvre un instant sur le trottoir, juste pour voir dehors"};
+                const announceLabel:Record<Exclude<BonusId,"force_move"|"observer_mute"|"camera_hide">,string>={food:"une conserve pleine réapparaît sur la table : plus faim pendant 10 minutes",calm:"une bougie s’allume et diffuse une lumière chaude et apaisante : plus de stress pendant 10 minutes",sleep:"une pilule bleue traîne sur le meuble : plus besoin de dormir pendant 30 minutes",stoic:`${stoicActor?names[stoicActor]:"l’un des deux"} devient de marbre, plus rien ne l’atteint pendant 3 minutes`,mute:`un silence s’impose à ${mutedActor?names[mutedActor]:"l’un des deux"} pendant un moment`,trottoir:"la porte entrouvre un instant sur le trottoir, juste pour voir dehors"};
                 announce=`Un tirage au sort leur offre ceci : ${announceLabel[bonus]} — une distraction, dans cet enfermement.`;
                 statements.push(db.prepare(`INSERT INTO conversations (speaker,content,room,created_at) SELECT 'Maison · bonus',?,'salon',? WHERE ${fence}`).bind(announce,at,token,at));
                 for(const id of [1,2] as const)statements.push(db.prepare(`INSERT INTO memories (agent_id,kind,content,created_at) SELECT ?,'événement',?,? WHERE ${fence}`).bind(id,'[salon|'+new Date(at).toISOString()+'] '+announce,at,token,at));
@@ -287,7 +366,7 @@ export async function POST(request: Request) {
                 const rooms2=(await db.prepare("SELECT id,room FROM agent_state").all<{id:Person;room:Room}>()).results;
                 const roomOf=(id:Person)=>rooms2.find(a=>a.id===id)?.room??"salon";
                 if(bonus==="food"||bonus==="calm"||bonus==="sleep"||bonus==="trottoir"){
-                    const sharedLines:Record<Exclude<BonusId,"force_move"|"stoic"|"mute">,Record<1|2,string[]>>={
+                    const sharedLines:Record<Exclude<BonusId,"force_move"|"stoic"|"mute"|"observer_mute"|"camera_hide">,Record<1|2,string[]>>={
                         food:{1:["Une conserve qui apparaît toute seule. On nous calme comme des animaux de compagnie, c'est ça ?","Tiens, une gamelle. Très classe, votre geste.","On nous nourrit sans qu'on demande rien. Ça devrait me rassurer, ça m'inquiète plutôt."],
                               2:["Ok, je sais pas d'où ça sort mais j'ai plus faim, alors merci, j'imagine.","Sympa le geste. Reste que j'aime pas trop savoir pourquoi maintenant.","J'ai plus faim d'un coup. Pratique. Un peu glauque aussi."]},
                         calm:{1:["Une bougie qui s'allume toute seule et hop, plus de stress. Pratique, ce contrôle à distance.","On m'apaise sans me demander mon avis. Note que j'ai remarqué.","Une lumière chaude et mon stress qui tombe à zéro. Ça s'appelle du calme ou de la manipulation ?"],
@@ -1160,106 +1239,19 @@ export async function POST(request: Request) {
         // haute (Article 15) plutôt que de changer l'écran sans un mot. Partage le même budget que la
         // roulette (bonusSpotlightUntilRound/bonusCooldownUntilRound, cf. lib/life.ts) : jamais un
         // bonus qui coupe court aux tours de commentaire dus au précédent.
+        // Moquerie pendant qu'un mute/caméra tiré à la roulette est actif (2026-09-18, demande
+        // explicite de l'utilisateur : "les persos devraient se moquer de l'utilisateur pendant ce
+        // temps") — sur les tours suivants pendant que ça dure, pas seulement au moment du tirage.
+        // Le déclenchement lui-même vient TOUJOURS de la roulette (mode "spin_bonus", plus haut
+        // dans ce fichier) depuis le 2026-09-19 : jamais une décision spontanée des personnages
+        // prise pendant un tour normal — seule cette réaction d'ambiance reste ici, indépendante de
+        // la source du mute/caméra.
         const spontaneousBonusLines:{actor:Person;content:string}[]=[];
         {
           const nowTs=Date.now();
-          const bonusPacingClear=story.round>=(life.bonusCooldownUntilRound??0)&&story.round>(life.bonusSpotlightUntilRound??0);
           const observerCurrentlyMuted=story.round<(life.observerMutedUntilRound??0);
           const cameraCurrentlyHidden=(life.cameraHiddenUntil??0)>nowTs;
-          // Éligibilité assouplie le 2026-09-19 (retour utilisateur explicite après l'analyse de
-          // full_sim5 : ces deux bonus, voulus comme "une vraie décision visible", ne se sont
-          // JAMAIS déclenchés sur deux simulations dédiées de ~18 tours chacune) : le besoin urgent
-          // d'un des deux personnages ne bloque plus l'éligibilité elle-même — un partenaire qui a
-          // faim n'empêche pas logiquement l'AUTRE de décider de couper le micro ou la caméra
-          // (Article 17 : c'est la cohérence de CELUI QUI DÉCIDE qui compte, pas celle de son
-          // partenaire). Le besoin propre à l'initiateur reste vérifié plus bas, une fois
-          // l'initiateur réellement tiré — jamais retiré, seulement recentré sur la bonne personne.
-          // Les autres conditions (budget partagé, ensemble, pas de scène concurrente en cours)
-          // restent inchangées : chacune protège une cohérence narrative documentée (principes.md
-          // 8.12), jamais une restriction accidentelle à assouplir sans discernement.
-          const spontaneousEligible=revealed&&["interact","autonomous"].includes(input.mode)&&bonusPacingClear&&!observerCurrentlyMuted&&!cameraCurrentlyHidden&&together&&!life.debrief?.remaining&&!life.contact?.remaining&&!life.dispute?.remaining&&!story.pendingDestination&&!dossierAwaitingAnswer;
-          if(spontaneousEligible){
-            const recentHostility=appreciationOf(life,1)<35||appreciationOf(life,2)<35;
-            // Probabilité relevée le 2026-09-19 (retour utilisateur explicite : "fais au mieux, pour
-            // l'utilisateur, pour une meilleure expérience" après avoir constaté que l'assouplissement
-            // de l'éligibilité seule ne suffisait pas — un besoin urgent relocalise de toute façon le
-            // résident concerné ailleurs le même tour, cassant `together` par un mécanisme totalement
-            // indépendant, avant même d'atteindre ce bloc). ~5%→~15% en session calme, ~20%→~35% en
-            // session hostile : reste une exception rare (jamais un tirage à chaque tour, budget
-            // partagé avec la roulette toujours actif juste en dessous), mais assez fréquente pour
-            // devenir réellement visible sur une session de longueur normale.
-            const consider=seedPick(story.seed,"spontane-consider-"+story.round,recentHostility?[true,true,true,true,false,false,false,false,false,false]:[true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]);
-            if(consider){
-              const motive=recentHostility?seedPick(story.seed,"spontane-motive-"+story.round,["retaliation","retaliation","amusement"] as const):"amusement";
-              const kind=seedPick(story.seed,"spontane-kind-"+story.round,["observer_mute","camera_hide"] as const);
-              const initiator=seedPick(story.seed,"spontane-actor-"+story.round,[1,2] as const);
-              const otherActor:Person=initiator===1?2:1;
-              const initiatorNeeds=finalResidents.find(a=>a.id===initiator)!.needs;
-              if(!priority(initiatorNeeds)){
-              const appr=appreciationOf(life,initiator);
-              const activates=motive==="retaliation"
-                ?seedPick(story.seed,"spontane-verdict-"+story.round,appr<25?["yes","yes","yes","no"]:appr<40?["yes","yes","no","no"]:["yes","no","no","no"] as const)==="yes"
-                :seedPick(story.seed,"spontane-verdict-amusement-"+story.round,["yes","yes","no"] as const)==="yes";
-              if(activates){
-                const level=seedPick(story.seed,"spontane-level-"+story.round,["réduit","classique","max"] as const);
-                const initiatorLines:Record<"observer_mute"|"camera_hide",Record<Person,Record<"réduit"|"classique"|"max",string[]>>>={
-                  observer_mute:{
-                    1:{réduit:["Trois tours de silence, pas plus. Juste de quoi te faire sentir ce que c'est.","Je coupe court, trois tours. Une piqûre de rappel, rien de plus.","Un petit silence de trois tours. Je veux pas non plus en faire un drame."],
-                       classique:["Je te coupe le micro pour un moment raisonnable. Ni symbolique ni interminable, juste assez pour que ça compte.","Silence total pendant quelques tours. Ce qu'il faut pour que le message passe, pas plus.","Je prends une pause de toi, ni courte ni too much. Assez pour que tu la remarques vraiment."],
-                       max:["Le grand silence, cette fois. Six tours pour que tu aies le temps de méditer là-dessus.","Je pousse au maximum : six tours sans un mot de ma part. Je veux que ça marque, pour une fois.","J'y vais franc : silence total, le temps qu'il faut pour que tu comprennes vraiment."]},
-                    2:{réduit:["Trois tours de silence radio, histoire de voir l'effet. Rien de méchant.","Je te coupe trois tours, histoire de rire un peu, sans plus.","Petite coupure de trois tours. Juste pour le fun, calme-toi."],
-                       classique:["Bon, je te coupe le son pour un bon moment. Ni trop court ni too much, le juste milieu.","Silence complet pendant quelques tours, ça me semble le bon dosage.","Je me tais un moment raisonnable. Juste assez pour que ça pique un peu, pas plus."],
-                       max:["Le max, cette fois. Six tours de silence total, tu vas kiffer l'attente.","J'y vais fort : six tours sans un bruit de ma part. Bonne chance pour la suite.","Silence complet, la totale. Tu vas avoir le temps de réfléchir à ta vie."]}},
-                  camera_hide:{
-                    1:{réduit:["Vingt secondes d'écran noir, histoire de voir ta tête. Rien de bien méchant.","Une petite coupure de vingt secondes. Je veux pas non plus te punir vraiment.","Vingt secondes sans image. Juste un avant-goût, rien de plus."],
-                       classique:["Je brouille la caméra un bon moment, ni trop court ni interminable.","Une coupure d'image dans un format raisonnable. Ce qu'il faut pour que tu comprennes.","Je te prive de la vue un moment mesuré. Ni symbolique ni too much."],
-                       max:["Quarante secondes de noir complet. Profites-en pour deviner ce qu'on fait.","Je pousse au maximum : quarante secondes sans une image. Ça va être long pour toi.","Le grand jeu : quarante secondes d'obscurité totale. J'espère que t'aimes deviner."]},
-                    2:{réduit:["Vingt secondes d'écran noir, juste pour rigoler un peu.","Petite coupure d'image, vingt secondes. Rien de bien grave.","Vingt secondes sans nous voir, histoire de tester ta patience."],
-                       classique:["Je coupe l'image un bon moment, ni trop court ni too much.","Coupure d'écran dans un format raisonnable, le juste dosage.","Je te prive de la vue un moment correct. Histoire de faire monter la sauce."],
-                       max:["Le maximum : quarante secondes de noir complet. Amuse-toi à deviner.","Quarante secondes sans une image, la totale. Bon courage.","Je pousse au max : quarante secondes d'obscurité. Tu vas kiffer l'attente."]}}
-                };
-                const partnerLines:Record<"observer_mute"|"camera_hide",Record<Person,string[]>>={
-                  observer_mute:{1:["Enfin, un peu de silence de sa part. Ça va me reposer les oreilles.","Je valide totalement. On va enfin causer sans être interrompus.","Pour une fois c'est nous qui décidons du silence. Ça change."],
-                                 2:["Ha, je valide à cent pour cent. Un peu de calme, ça fait pas de mal.","Enfin tranquilles. J'avoue que ça m'arrange bien, ce silence.","Je trouve ça plutôt marrant, cette idée. Vas-y, fais-toi plaisir."]},
-                  camera_hide:{1:["Bonne idée. Qu'il devine un peu, pour changer.","Je valide. Ça va le rendre dingue de plus rien voir.","Pour une fois, c'est nous qui choisissons ce qu'il voit. J'aime bien."],
-                               2:["Ha ouais, carrément. Qu'il galère à deviner un peu.","Je trouve ça hilarant. Vas-y, fais-lui le coup.","Enfin un peu de tranquillité loin de son regard."]}
-                };
-                if(kind==="observer_mute"){
-                  const duration=level==="réduit"?3:level==="max"?6:seedPick(story.seed,"spontane-duration-mid-"+story.round,[4,5] as const);
-                  life.observerMutedUntilRound=story.round+duration;
-                  life.bonusSpotlightUntilRound=life.observerMutedUntilRound;
-                } else {
-                  const seconds=level==="réduit"?20:level==="max"?40:seedPick(story.seed,"spontane-duration-mid-"+story.round,[25,30,35] as const);
-                  life.cameraHiddenUntil=nowTs+seconds*1000;
-                  life.bonusSpotlightUntilRound=story.round+3;
-                }
-                life.bonusCooldownUntilRound=(life.bonusSpotlightUntilRound??story.round)+5+seedPick(story.seed,"spontane-gap-"+story.round,[0,1,2,3,4] as const);
-                life.bonusPsychLog=[...(life.bonusPsychLog??[]),{round:story.round,kind,outcome:'activated' as const,level}].slice(-12);
-                spontaneousBonusLines.push({actor:initiator,content:seedPick(story.seed,"spontane-justif-"+story.round,initiatorLines[kind][initiator][level])});
-                spontaneousBonusLines.push({actor:otherActor,content:seedPick(story.seed,"spontane-partner-"+story.round,partnerLines[kind][otherActor])});
-              } else {
-                // Refus consigné (retour utilisateur explicite : accepté ET refusé nourrissent le
-                // profil psychologique) — parfois muet, parfois une pique hypothétique assumée
-                // (jamais une vraie menace posée comme un fait, cohérent avec la charte sur les
-                // reprises sarcastiques sur une éventuelle revanche).
-                life.bonusPsychLog=[...(life.bonusPsychLog??[]),{round:story.round,kind,outcome:'declined' as const}].slice(-12);
-                const voice=seedPick(story.seed,"spontane-decline-voice-"+story.round,[true,false,false] as const);
-                if(voice){
-                  const declineLines:Record<"observer_mute"|"camera_hide",Record<Person,string[]>>={
-                    observer_mute:{1:["J'ai failli te couper le micro, là. Une autre fois, peut-être.","J'y ai pensé, sérieusement. Je me retiens, pour l'instant.","T'as de la chance, j'avais presque décidé de te faire taire."],
-                                   2:["J'ai bien failli te couper le son, tiens. Je te fais grâce, cette fois.","Un peu plus et je te faisais taire. T'as eu chaud.","J'y ai songé fort. Bon, je garde ça sous le coude."]},
-                    camera_hide:{1:["J'ai failli te plonger dans le noir, là. Garde ça en tête.","Tentant de te couper l'image. Je me retiens, pour cette fois.","T'as failli plus rien voir du tout. La prochaine, peut-être."],
-                                 2:["J'ai bien failli couper la caméra, tiens. T'as eu chaud.","Un peu plus et tu voyais plus rien. Je garde l'idée sous le coude.","Tentant de te plonger dans le noir. Une autre fois, sûrement."]}
-                  };
-                  spontaneousBonusLines.push({actor:initiator,content:seedPick(story.seed,"spontane-decline-"+story.round,declineLines[kind][initiator])});
-                }
-              }
-              }
-            }
-          } else if((observerCurrentlyMuted||cameraCurrentlyHidden)&&together&&["interact","autonomous"].includes(input.mode)){
-            // Moquerie pendant que l'effet est actif (demande explicite de l'utilisateur : "les
-            // persos devraient se moquer de l'utilisateur pendant ce temps") — sur les tours suivants
-            // pendant que ça dure, pas seulement au moment du déclenchement.
+          if((observerCurrentlyMuted||cameraCurrentlyHidden)&&together&&["interact","autonomous"].includes(input.mode)){
             const mockLines:Record<"observer_mute"|"camera_hide",Record<Person,string[]>>={
               observer_mute:{1:["Toujours aucun mot de ta part. Ça doit te démanger, hein.","Je t'imagine en train de taper dans le vide. Ça me fait sourire.","Le silence te va plutôt bien, en fait. Continue comme ça."],
                              2:["Toujours muet, toi ? J'adore ce silence, franchement.","Tu dois bouillir de l'autre côté, j'imagine bien la scène.","Ça doit être frustrant de plus rien pouvoir dire, avoue."]},

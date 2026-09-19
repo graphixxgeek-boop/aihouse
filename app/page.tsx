@@ -46,6 +46,8 @@ const BONUS_LABELS:Record<string,{icon:string;label:string;detail:string}>={
   mute:{icon:"🤐",label:"Silence forcé",detail:"L’un des deux ne parle plus pendant un moment."},
   trottoir:{icon:"🚶",label:"Trottoir",detail:"Un aperçu du dehors, brièvement."},
   force_move:{icon:"🌀",label:"Déplacement forcé",detail:"L’un des deux est déplacé sans son accord."},
+  observer_mute:{icon:"🔇",label:"Micro coupé",detail:"L’un des deux vous coupe le micro pour un moment."},
+  camera_hide:{icon:"🙈",label:"Caméra brouillée",detail:"La vue est masquée pendant un moment."},
 };
 export default function HomePage(){
   const [nickname,setNickname]=useState(""),[nicknameDone,setNicknameDone]=useState(false);

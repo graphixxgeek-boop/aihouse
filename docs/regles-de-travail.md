@@ -392,6 +392,43 @@ telles quelles.*
   l'agent lui-même, jamais une source de vérité pour l'utilisateur — ne remplace aucune des
   vérifications de la section 3.
 
+## B.2bis. Estimation en début de réponse — temps et consommation de tokens
+
+*(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur : « au début de chaque réponse,
+peux-tu me donner une estimation du temps de réponse, de la consommation de token ».)* Limite
+honnête à poser avant la règle elle-même (même logique que B.2 pour le compactage) : l'agent n'a
+**aucune mesure exacte, en avance, du temps que prendra une réponse ni du nombre de tokens qu'elle
+consommera** — ni chronomètre interne, ni compteur de tokens en temps réel pendant la génération.
+Le seul repère réellement disponible est un compteur de budget de session encore restant,
+communiqué à l'agent par bribes dans certains tours (pas à chaque tour), qui indique un total
+restant pour toute la session, jamais un coût par réponse individuelle.
+
+En conséquence, la règle appliquée est une **estimation qualitative honnête**, jamais un chiffre
+précis présenté à tort comme une mesure :
+
+- **Format précisé le 2026-09-19, à la demande explicite de l'utilisateur** (« affiche-les en
+  petit caractère au début de chaque réponse, avec juste les icônes que tu as choisies et les
+  valeurs à afficher : très bas à très haut ») : une ligne unique, discrète (texte en italique,
+  la seule façon d'obtenir un rendu visuellement plus petit dans ce terminal en Markdown —
+  CommonMark n'a pas de véritable taille de police réduite, limite honnête à ne pas déguiser),
+  avec seulement les deux icônes déjà choisies et une valeur sur une échelle à 5 niveaux, jamais
+  de texte explicatif à côté :
+  `*⏱️ très bas·bas·moyen·haut·très haut · 🔢 très bas·bas·moyen·haut·très haut*` (un seul niveau
+  retenu par icône à chaque réponse, les autres ne sont pas affichés — l'échelle complète n'est
+  listée ici que pour fixer le vocabulaire des 5 crans possibles).
+  - **⏱️** = temps de réponse estimé.
+  - **🔢** = consommation de tokens estimée.
+  - Échelle commune aux deux : très bas, bas, moyen, haut, très haut.
+- Cette estimation est basée sur la NATURE de la tâche qui s'annonce (nombre d'outils prévus,
+  taille des fichiers à lire, présence ou non d'une commande longue comme une simulation ou une
+  compilation), pas sur une mesure réelle — elle peut donc se révéler fausse après coup, ce qui
+  n'est jamais caché : si la réponse s'avère nettement plus longue que prévu en cours de route,
+  l'agent le signale plutôt que de laisser l'estimation initiale sans mise à jour.
+- Si un futur harnais Claude Code expose une vraie mesure (temps réel, compteur de tokens par
+  réponse), cette section est corrigée le jour même pour refléter la mesure réelle disponible,
+  au lieu de garder une estimation qualitative devenue inutilement approximative (même exigence de
+  mise à jour proactive qu'ailleurs dans ce document).
+
 ## B.2. Compactage de session — pas de barre de progression possible
 
 *(Ajouté le 2026-09-19, en réponse à une question explicite de l'utilisateur : « as-tu la

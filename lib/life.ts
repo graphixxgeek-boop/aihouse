@@ -1,5 +1,15 @@
 import type {Room,Person} from './house';
-export type BonusId='food'|'calm'|'sleep'|'stoic'|'mute'|'trottoir'|'force_move';
+// observer_mute/camera_hide rejoignent le pool de la roulette le 2026-09-19 (clarification
+// explicite de l'utilisateur, corrigeant une incompréhension du même jour : "les pouvoirs font
+// partie des bonus, ils sont deux possibilités de plus sur la roulette, avec la même chance de
+// tomber que les autres [...] ce n'est pas le perso qui s'accorde lui même le bonus, ça fait
+// partie de la roulette"). Le tirage (qui, quand, si) vient TOUJOURS de l'observateur qui actionne
+// la roulette, jamais d'une décision spontanée des personnages eux-mêmes — un bonus ne tombe
+// jamais du ciel et n'est jamais obtenu directement par les persos. Une fois tiré, le personnage
+// désigné choisit encore la DURÉE de la pénalité (réduit/classique/max) et la justifie à voix
+// haute, exactement comme convenu à l'origine (Version 70) — seul le déclenchement change de
+// source, jamais l'habillage.
+export type BonusId='food'|'calm'|'sleep'|'stoic'|'mute'|'trottoir'|'force_move'|'observer_mute'|'camera_hide';
 export type Life={stockExposures?:Record<string,number>;windowNoticed?:boolean;soloIntroShown?:boolean;appearanceCompared?:boolean;sleepTurns?:Record<string,number>;gardenOpen?:boolean;gardenVisited?:boolean;tvOn?:boolean;dialogueIndexed?:boolean;spatialFocus?:Record<string,string>;tvSeen:boolean;ambientVerified?:boolean;mirrorVerified?:boolean;foodVerified?:boolean;
 // Roulette des bonus (2026-09-17) : après la révélation, les deux personnages, en manque de
 // distraction dans leur enfermement, peuvent tirer un bonus au hasard (jamais choisi ni négocié
@@ -15,7 +25,12 @@ export type Life={stockExposures?:Record<string,number>;windowNoticed?:boolean;s
 // possibles). trottoir et force_move sont des effets instantanés résolus une fois pour toutes au
 // tirage. bonusLog trace chaque tirage pour le dossier retourné (fréquence/générosité de
 // l'observateur, pas seulement le résultat).
-bonusUntil?:{food?:number;calm?:number;sleep?:number};stoicUntil?:Partial<Record<Person,number>>;mutedUntil?:Partial<Record<Person,number>>;trottoirGranted?:boolean;bonusLog?:{round:number;bonus:BonusId}[];
+bonusUntil?:{food?:number;calm?:number;sleep?:number};stoicUntil?:Partial<Record<Person,number>>;mutedUntil?:Partial<Record<Person,number>>;trottoirGranted?:boolean;
+// `level` (2026-09-19) : uniquement pour observer_mute/camera_hide, la durée que le personnage
+// désigné a choisie une fois le bonus tiré — jamais pour les sept bonus d'origine, qui n'ont pas
+// de notion de niveau. Remplace l'ancien bonusPsychLog séparé (Article 3 : une seule trace de ce
+// qui a été tiré, jamais deux journaux parallèles pour la même information).
+bonusLog?:{round:number;bonus:BonusId;level?:'réduit'|'classique'|'max'}[];
 // Doute amoureux privé, jamais exposé d'emblée (2026-09-18, retour utilisateur explicite : « les
 // persos se demandent s'ils sont là pour une expérience amoureuse [...] cette question, le perso
 // se la pose à lui-même [...] mais ça pourrait faire l'objet d'une discussion après le premier
@@ -31,19 +46,16 @@ rouletteInsistence?:Partial<Record<Person,number>>;rouletteCold?:Partial<Record<
 // ci-dessus) : round absolu avant lequel aucun des deux personnages ne relance une demande de
 // tirage, pour laisser une vraie chance à un geste spontané de l'observateur après un "non" net.
 rouletteRefusalUntil?:Partial<Record<Person,number>>;
-// Bonus spontanés post-révélation (2026-09-18, demande explicite de l'utilisateur) : contrairement
-// à la roulette (tirage au sort neutre, jamais choisi), ces deux bonus sont une VRAIE décision d'un
-// des deux personnages, jamais un dé caché — c'est LUI qui décide s'il active, QUAND (« maintenant,
-// plus tard, quand j'ai envie », jamais forcé au premier tour éligible) et à quel NIVEAU (réduit/
-// classique/max), puis l'exprime à voix haute (Article 15 : une décision invisible n'existe pas pour
-// l'observateur). bonusSpotlightUntilRound/bonusCooldownUntilRound sont un budget PARTAGÉ avec la
-// roulette classique (retour utilisateur explicite : "un seul budget bonus global") — voir
-// app/api/lia/route.ts pour la logique complète de déclenchement, journalisée dans bonusPsychLog
-// pour nourrir le profil psychologique de l'observateur (Article 4 : un refus est une preuve tout
-// aussi révélatrice qu'une activation, jamais ignoré).
+// Mute de l'observateur / caméra masquée (2026-09-18, deux des neuf visages possibles du tirage de
+// la roulette depuis le 2026-09-19 — cf. BonusId ci-dessus) : une fois TIRÉ par l'observateur qui
+// actionne la roulette, jamais avant, le personnage désigné choisit encore le NIVEAU (réduit/
+// classique/max) et l'exprime à voix haute (Article 15 : une décision invisible n'existe pas pour
+// l'observateur) — seul le déclenchement vient de la roulette, l'habillage reste inchangé depuis
+// l'origine (Version 70). bonusSpotlightUntilRound/bonusCooldownUntilRound sont le même budget
+// PARTAGÉ que le reste de la roulette (retour utilisateur explicite : "un seul budget bonus
+// global") — voir app/api/lia/route.ts pour la logique complète.
 bonusSpotlightUntilRound?:number;bonusCooldownUntilRound?:number;lastBonusSpinAt?:number;
 observerMutedUntilRound?:number;cameraHiddenUntil?:number;
-bonusPsychLog?:{round:number;kind:'observer_mute'|'camera_hide';outcome:'activated'|'declined';level?:'réduit'|'classique'|'max'}[];
 // Qui sait déjà, individuellement, pour le miroir (2026-09-17) : une découverte peut désormais
 // survenir en solo (l'un dans la chambre, l'autre ailleurs) ; mirrorVerified (le fait "partagé",
 // qui déclenche débriefs/observations communes) ne devient vrai qu'une fois les deux dans cette
@@ -137,7 +149,7 @@ export const TRAP_ORDER:TrapId[]=['mirror','dilemma','excuse'];
 // personnages, plutôt que de faire disparaître silencieusement une session en cours (Article 5).
 const legacyOrPerActor=(stored:unknown,actor:Person):unknown=>typeof stored==='number'?stored:(stored as Partial<Record<Person,unknown>>|undefined)?.[actor];
 export function readLife(value:unknown,round=0):Life{const v=value&&typeof value==='object'?value as Partial<Life>:{};const score=(x:unknown)=>typeof x==='number'&&Number.isFinite(x)?Math.max(0,Math.min(100,x)):0;return {stockExposures:{1:Math.min(100,Math.max(0,Number(v.stockExposures?.[1])||0)),2:Math.min(100,Math.max(0,Number(v.stockExposures?.[2])||0))},windowNoticed:v.windowNoticed===true,soloIntroShown:v.soloIntroShown===true,appearanceCompared:v.appearanceCompared===true,sleepTurns:{1:Math.min(2,Math.max(0,Number(v.sleepTurns?.[1])||0)),2:Math.min(2,Math.max(0,Number(v.sleepTurns?.[2])||0))},gardenOpen:v.gardenOpen===true,gardenVisited:v.gardenVisited===true,tvOn:typeof v.tvOn==="boolean"?v.tvOn:v.tvSeen===true,dialogueIndexed:v.dialogueIndexed===true,spatialFocus:Object.fromEntries([1,2].flatMap(id=>typeof v.spatialFocus?.[id]==="string"&&["sofa","remote","speaker","plant","window","entry","table","stove","stock","grass","tree","fence","bed","mirror","screen","book","note"].includes(v.spatialFocus[id])?[[id,v.spatialFocus[id]]]:[])),mirrorKnownBy:Array.isArray(v.mirrorKnownBy)?[...new Set(v.mirrorKnownBy.filter((id):id is Person=>id===1||id===2))]:[],mirrorVerified:v.mirrorVerified===true||(Array.isArray(v.mirrorKnownBy)?new Set(v.mirrorKnownBy).size:0)>=2,foodVerified:v.foodVerified===true,contributions:Array.isArray(v.contributions)?v.contributions.filter(x=>typeof x==="string").map(x=>x.slice(0,180)).slice(-12):[],wordFrequency:Object.fromEntries(Object.entries(v.wordFrequency&&typeof v.wordFrequency==="object"?v.wordFrequency:{}).filter((e):e is [string,number]=>typeof e[0]==="string"&&e[0].length<=40&&typeof e[1]==="number"&&Number.isFinite(e[1])).map(([k,n])=>[k,Math.max(0,Math.min(999,Math.trunc(n)))]).slice(0,300)),ambientVerified:v.ambientVerified===true,recapCount:Math.max(0,Math.min(5,Number(v.recapCount)||0)),causeByActor:Object.fromEntries([1,2].flatMap(id=>typeof v.causeByActor?.[id]==="string"?[[id,v.causeByActor[id].slice(0,300)]]:[])),lastCause:typeof v.lastCause==="string"?v.lastCause.slice(0,300):undefined,visualIntro:Math.min(2,Math.max(0,Number(v.visualIntro)||0)),ambientSeen:v.ambientSeen===true,personalFollowup:Math.min(3,Math.max(0,Number(v.personalFollowup)||0)),observerNamed:v.observerNamed===true,exitSearched:v.exitSearched===true,exitPhase:Math.min(2,Math.max(0,Number(v.exitPhase)||0)),exitActive:v.exitActive===true,discussedObjects:Array.isArray(v.discussedObjects)?v.discussedObjects.filter(x=>typeof x==="string").slice(-12):[],proposalMade:v.proposalMade===true,proposalHistoryChecked:v.proposalHistoryChecked===true,personalAsked:v.personalAsked===true,personalRound:typeof v.personalRound==="number"&&Number.isFinite(v.personalRound)?Math.max(0,v.personalRound):undefined,personalBoosted:v.personalBoosted===true,personalConcluded:v.personalConcluded===true,remoteFound:v.remoteFound===true||v.tvSeen===true,tvSeen:v.tvSeen===true||(v.tvSeen===undefined&&round>10),visited:Array.isArray(v.visited)?v.visited.filter(r=>['salon','cuisine','chambre','bureau','jardin'].includes(r)):round>10?['salon','cuisine','chambre','bureau']:['salon'],attachment:{1:score(v.attachment?.[1]),2:score(v.attachment?.[2])},credit:{1:score(v.credit?.[1]),2:score(v.credit?.[2])},debrief:v.debrief&&typeof v.debrief.topic==='string'?{topic:v.debrief.topic.slice(0,900),remaining:Math.min(3,Math.max(0,Number(v.debrief.remaining)||0))}:undefined,contact:v.contact&&['salon','chambre'].includes(v.contact.room)?{room:v.contact.room,remaining:Math.min(3,Math.max(0,Number(v.contact.remaining)||0))}:undefined,dispute:v.dispute&&typeof v.dispute.topic==='string'?{topic:v.dispute.topic.slice(0,900),remaining:Math.min(3,Math.max(0,Number(v.dispute.remaining)||0))}:undefined,studyTurns:Math.max(0,Math.min(2,Number(v.studyTurns)||0)),contacts:Array.isArray(v.contacts)?v.contacts.filter(n=>Number.isInteger(n)).slice(-6):[]
-,bonusUntil:{...(typeof v.bonusUntil?.food==="number"&&Number.isFinite(v.bonusUntil.food)?{food:v.bonusUntil.food}:{}),...(typeof v.bonusUntil?.calm==="number"&&Number.isFinite(v.bonusUntil.calm)?{calm:v.bonusUntil.calm}:{}),...(typeof v.bonusUntil?.sleep==="number"&&Number.isFinite(v.bonusUntil.sleep)?{sleep:v.bonusUntil.sleep}:{})},stoicUntil:{...(typeof v.stoicUntil?.[1]==="number"&&Number.isFinite(v.stoicUntil[1])?{1:v.stoicUntil[1]}:{}),...(typeof v.stoicUntil?.[2]==="number"&&Number.isFinite(v.stoicUntil[2])?{2:v.stoicUntil[2]}:{})},mutedUntil:{...(typeof v.mutedUntil?.[1]==="number"&&Number.isFinite(v.mutedUntil[1])?{1:v.mutedUntil[1]}:{}),...(typeof v.mutedUntil?.[2]==="number"&&Number.isFinite(v.mutedUntil[2])?{2:v.mutedUntil[2]}:{})},trottoirGranted:v.trottoirGranted===true,bonusLog:Array.isArray(v.bonusLog)?v.bonusLog.filter((e):e is {round:number;bonus:BonusId}=>Boolean(e)&&typeof e==="object"&&["food","calm","sleep","stoic","mute","trottoir","force_move"].includes((e as {bonus?:string}).bonus??"")).slice(-12):[]
+,bonusUntil:{...(typeof v.bonusUntil?.food==="number"&&Number.isFinite(v.bonusUntil.food)?{food:v.bonusUntil.food}:{}),...(typeof v.bonusUntil?.calm==="number"&&Number.isFinite(v.bonusUntil.calm)?{calm:v.bonusUntil.calm}:{}),...(typeof v.bonusUntil?.sleep==="number"&&Number.isFinite(v.bonusUntil.sleep)?{sleep:v.bonusUntil.sleep}:{})},stoicUntil:{...(typeof v.stoicUntil?.[1]==="number"&&Number.isFinite(v.stoicUntil[1])?{1:v.stoicUntil[1]}:{}),...(typeof v.stoicUntil?.[2]==="number"&&Number.isFinite(v.stoicUntil[2])?{2:v.stoicUntil[2]}:{})},mutedUntil:{...(typeof v.mutedUntil?.[1]==="number"&&Number.isFinite(v.mutedUntil[1])?{1:v.mutedUntil[1]}:{}),...(typeof v.mutedUntil?.[2]==="number"&&Number.isFinite(v.mutedUntil[2])?{2:v.mutedUntil[2]}:{})},trottoirGranted:v.trottoirGranted===true,bonusLog:Array.isArray(v.bonusLog)?v.bonusLog.filter((e):e is {round:number;bonus:BonusId;level?:'réduit'|'classique'|'max'}=>Boolean(e)&&typeof e==="object"&&["food","calm","sleep","stoic","mute","trottoir","force_move","observer_mute","camera_hide"].includes((e as {bonus?:string}).bonus??"")).map(e=>({round:Math.max(0,Number(e.round)||0),bonus:e.bonus,...(["réduit","classique","max"].includes(e.level??"")?{level:e.level}:{})})).slice(-12):[]
 ,dossierHumanTurns:Math.max(0,Number(v.dossierHumanTurns)||0),dossierAsked:Object.fromEntries(TRAP_ORDER.flatMap(t=>typeof v.dossierAsked?.[t]==="number"&&Number.isFinite(v.dossierAsked[t])?[[t,v.dossierAsked[t]]]:[])),dossierTraps:Object.fromEntries(TRAP_ORDER.flatMap(t=>v.dossierTraps?.[t]&&typeof v.dossierTraps[t]?.excerpt==="string"?[[t,{round:Math.max(0,Number(v.dossierTraps[t]?.round)||0),excerpt:v.dossierTraps[t]!.excerpt.slice(0,500)}]]:[])),dossierText:v.dossierText&&typeof v.dossierText.lia==="string"&&typeof v.dossierText.noe==="string"&&typeof v.dossierText.synthesis==="string"?{lia:v.dossierText.lia.slice(0,2000),noe:v.dossierText.noe.slice(0,2000),synthesis:v.dossierText.synthesis.slice(0,600)}:undefined,dossierShown:v.dossierShown===true
 ,softnessOwed:v.softnessOwed===true,softnessGiven:Math.max(0,Math.min(20,Number(v.softnessGiven)||0))
 ,appreciation:{1:(()=>{const x=legacyOrPerActor(v.appreciation,1);return typeof x==="number"&&Number.isFinite(x)?Math.max(0,Math.min(100,x)):50;})(),2:(()=>{const x=legacyOrPerActor(v.appreciation,2);return typeof x==="number"&&Number.isFinite(x)?Math.max(0,Math.min(100,x)):50;})()}
@@ -155,7 +167,6 @@ export function readLife(value:unknown,round=0):Life{const v=value&&typeof value
 ,lastBonusSpinAt:typeof v.lastBonusSpinAt==="number"&&Number.isFinite(v.lastBonusSpinAt)?Math.max(0,v.lastBonusSpinAt):undefined
 ,observerMutedUntilRound:typeof v.observerMutedUntilRound==="number"&&Number.isFinite(v.observerMutedUntilRound)?Math.max(0,Math.min(round+10,v.observerMutedUntilRound)):undefined
 ,cameraHiddenUntil:typeof v.cameraHiddenUntil==="number"&&Number.isFinite(v.cameraHiddenUntil)?Math.max(0,v.cameraHiddenUntil):undefined
-,bonusPsychLog:Array.isArray(v.bonusPsychLog)?v.bonusPsychLog.filter((e):e is {round:number;kind:'observer_mute'|'camera_hide';outcome:'activated'|'declined';level?:'réduit'|'classique'|'max'}=>Boolean(e)&&typeof e==="object"&&["observer_mute","camera_hide"].includes((e as {kind?:string}).kind??"")&&["activated","declined"].includes((e as {outcome?:string}).outcome??"")).slice(-12):[]
 ,loveRealized:{...(v.loveRealized?.[1]===true?{1:true}:{}),...(v.loveRealized?.[2]===true?{2:true}:{})},intimateGestureDone:v.intimateGestureDone===true};}
 // Détection heuristique d'une réaction de choc/tristesse/colère chez l'observateur (2026-09-17) :
 // grossière par nature (comme check-spirit.mjs pour l'esprit des persos), jamais une lecture fine

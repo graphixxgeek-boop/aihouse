@@ -262,7 +262,9 @@ Bouton « ◈ Miroir » (nom choisi par l'utilisateur, écho volontaire au miroi
 et à la future énigme retournée), requête `spin_bonus`, zéro appel API, tirage décidé une seule
 fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId comme le reste.
 
-- Catalogue à parts égales (`pool`, 7 entrées) :
+- Catalogue à parts égales (`pool`, **9 entrées depuis le 2026-09-19** — `observer_mute` et
+  `camera_hide` ont rejoint le pool ce jour-là, cf. plus bas, corrigeant une incompréhension où ces
+  deux bonus avaient été codés comme une décision spontanée des personnages hors roulette) :
   - `food` (réserve) : `needs.hunger` forcé à 0 pendant **10 minutes réelles** (pas simulées :
     l'horodatage tourne même hors tour, comme la boucle automatique — 21s côté client, calée juste
     au-dessus du plancher serveur de 20s, cf. section rythme automatique ci-dessous ; était 90s/85s
@@ -283,7 +285,18 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   - `force_move` : déplacement instantané d'un personnage tiré au hasard vers une pièce parmi les
     trois autres (jamais un no-op), avec deux répliques distinctes et jamais fusionnées (Article
     11) : l'agacement de celui qu'on déplace sans son accord, l'amusement de celui qui garde le
-    contrôle de sa pièce.
+    contrôle de sa pièce. **Réveil forcé (2026-09-19, demande explicite de l'utilisateur, ajouté en
+    même temps que le passage d'observer_mute/camera_hide dans la roulette) :** si le personnage
+    tiré au hasard était endormi (`isSleeping()`), le déplacement le réveille immédiatement en
+    restaurant sa jauge de fatigue au même niveau qu'un réveil naturel (`needs.fatigue=10`,
+    `intent` repassé à `none`, compteur `sleepTurns` remis à 2 comme un réveil ordinaire) —
+    jamais un déplacement silencieux d'un corps endormi qui resterait fatigué. Les deux répliques
+    changent alors de registre : celui qu'on déplace exprime la brutalité d'un réveil en sursaut
+    dans un lieu inconnu, l'autre commente le fait d'assister à ce réveil brutal plutôt que
+    simplement à un déplacement — trois variantes chacune, distinctes du cas éveillé (Article
+    10/11).
+  - `observer_mute`/`camera_hide` (« bonus pouvoir ») : cf. section dédiée plus bas — deux des neuf
+    visages possibles du tirage, jamais une initiative spontanée du personnage.
 - Application des effets need-based (`food`/`calm`/`sleep`) : le clamp à 0 doit s'appliquer **après
   tous les ajustements du tour**, jamais avant `advanceNeeds()` — un premier essai plaçait le clamp
   trop tôt et se faisait écraser par les ajustements suivants (bug réel trouvé en écrivant le test,
@@ -318,7 +331,7 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
     concerné le commente lucidement — jamais un retour muet à la normale. Consommé aussitôt détecté
     (le minuteur expiré est effacé) pour ne jamais se répéter au tour suivant.
 
-## Insistance sur la roulette et bonus spontanés (`lib/life.ts`, `app/api/lia/route.ts`, `app/page.tsx`, `principes.md` 8.11/8.12)
+## Insistance sur la roulette et bonus « pouvoir » (`lib/life.ts`, `app/api/lia/route.ts`, `app/page.tsx`, `principes.md` 8.11/8.12)
 
 - **Insistance** (`rouletteInsistence:{1,2}`, capée à 2) : +1 par relance détectée
   (`detectNegotiationOffer`) sans tirage entre-temps ; remise à 0 dès qu'un tirage survient ou que
@@ -329,10 +342,10 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   à une offre encore en attente pose une fenêtre de **5 à 10 tours** (`5+Math.floor(Math.random()*6)`)
   pendant laquelle la relance est retirée de la réplique (`stripRouletteAsk`), jamais toute la
   réplique remplacée.
-- **Budget bonus partagé** (`bonusSpotlightUntilRound`/`bonusCooldownUntilRound`, communs à la
-  roulette classique ET aux deux bonus spontanés ci-dessous) : après tout bonus (tirage ou
-  spontané), `bonusSpotlightUntilRound` fixe une fenêtre minimale de **3 tours** pendant laquelle le
-  bonus reste le sujet (aucune insistance, aucun nouveau bonus spontané éligible) ;
+- **Budget bonus partagé** (`bonusSpotlightUntilRound`/`bonusCooldownUntilRound`, communs aux 9
+  bonus de la roulette, `observer_mute`/`camera_hide` inclus) : après tout tirage,
+  `bonusSpotlightUntilRound` fixe une fenêtre minimale de **3 tours** pendant laquelle le
+  bonus reste le sujet (aucune insistance, aucun nouveau tirage possible) ;
   `bonusCooldownUntilRound` ajoute un **grand espace supplémentaire de 5 à 9 tours**
   (`5+Math.floor(Math.random()*5)`, ou aléatoire équivalent via `seedPick`) après la fenêtre avant
   qu'un nouveau bonus, de quelque nature, redevienne possible. Le bouton `spin_bonus` lui-même est
@@ -341,30 +354,29 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   manuels (`code:'bonus_cooldown'`, 429 si trop tôt) — indépendant du budget narratif ci-dessus,
   jamais plus permissif que lui. Côté client, un compte à rebours en secondes s'affiche directement
   sur le bouton « ◈ Miroir » tant que l'un ou l'autre est actif.
-- **Mute de l'observateur** (`observerMutedUntilRound`, round absolu) : déclenchement spontané (pas
-  de bouton, pas de détection de message — l'initiative vient du personnage), probabilité
-  d'examen par tour éligible ~40 % si l'appréciation d'un des deux personnages est sous 35 (motif de
-  rétorsion), ~15 % sinon (motif d'amusement pur) — relevée le 2026-09-19 (retour utilisateur
-  explicite après l'analyse de full_sim5 : zéro déclenchement sur deux simulations dédiées de ~18
-  tours, un taux réel bien plus bas que les ~20 % supposés au moment de la conception). L'éligibilité
-  elle-même est assouplie le même jour : seul le besoin urgent de l'INITIATEUR réellement tiré
-  bloque désormais (`priority(initiatorNeeds)`, vérifié après le tirage), jamais celui des deux
-  personnages à la fois — un partenaire affamé n'empêchait plus l'autre de décider (Article 17).
-  Les autres conditions (budget partagé avec la roulette, les deux réunis, aucune scène concurrente
-  en cours) restent inchangées, chacune protégeant une cohérence narrative documentée. Le personnage
-  choisit ensuite le niveau : réduit
-  = 3 tours, classique = 4 ou 5 tours (tiré), max = 6 tours. Bloque `chat` pour les deux canaux
-  humains (`code:'observer_muted'`, 423) le temps de la fenêtre ; les deux personnages moquent
-  l'observateur muet à chaque tour suivant tant que ça dure ; l'un des deux reconnaît la fin à voix
-  haute dès que la fenêtre expire (même minuteur que stoic/mute de la roulette : détecté au tour
-  suivant, effacé aussitôt).
-- **Caméra masquée** (`cameraHiddenUntil`, epoch ms réel) : même mécanisme de déclenchement/niveau
-  que le mute ci-dessus, mais réduit = 20s, classique = 25/30/35s (tiré), max = 40s, réel (pas
-  simulé). Ne bloque jamais `chat` — seule la vue 3D disparaît côté client, remplacée par un compte
-  à rebours en secondes (`camera-hidden-overlay`).
-- **Journal psychologique** (`bonusPsychLog`, capé à 12 entrées, `{round,kind,outcome,level?}`) :
-  chaque examen d'un bonus spontané est journalisé, qu'il soit activé ou refusé — un refus nourrit
-  le profil de l'observateur (dossier retourné, 8.4) au même titre qu'une activation.
+- **Mute de l'observateur** (`observerMutedUntilRound`, round absolu). **Corrigé le 2026-09-19** :
+  ce bonus n'a plus de déclenchement ni de probabilité qui lui soient propres — c'est un tirage de
+  la roulette comme les 8 autres (1 chance sur 9 par tirage, cf. plus haut), jamais une initiative
+  spontanée du personnage. Une fois tiré, le personnage désigné (`deciderActor`, 50/50) choisit le
+  niveau : réduit = 3 tours, classique = 4 ou 5 tours (tiré), max = 6 tours. Bloque `chat` pour les
+  deux canaux humains (`code:'observer_muted'`, 423) le temps de la fenêtre ; les deux personnages
+  moquent l'observateur muet à chaque tour suivant tant que ça dure ; l'un des deux reconnaît la fin
+  à voix haute dès que la fenêtre expire (même minuteur que stoic/mute de la roulette : détecté au
+  tour suivant, effacé aussitôt). *(Avant cette correction, cette section documentait un
+  déclenchement spontané avec sa propre probabilité d'examen ~15-40 % et sa propre éligibilité —
+  un mécanisme qui n'a en réalité jamais dû exister sous cette forme, retiré entièrement plutôt que
+  recalibré ; voir `principes.md` 8.12 pour la traçabilité complète du malentendu.)*
+- **Caméra masquée** (`cameraHiddenUntil`, epoch ms réel) : même correction, même mécanisme de
+  déclenchement (tirage) et de niveau que le mute ci-dessus, mais réduit = 20s, classique =
+  25/30/35s (tiré), max = 40s, réel (pas simulé). Ne bloque jamais `chat` — seule la vue 3D
+  disparaît côté client, remplacée par un compte à rebours en secondes (`camera-hidden-overlay`).
+- **Journal unifié** (`bonusLog`, capé à 12 entrées, `{round,bonus,level?}`) : le tirage
+  `observer_mute`/`camera_hide` s'y journalise exactement comme les 7 autres bonus, avec son niveau
+  choisi — nourrit le profil de l'observateur (dossier retourné, 8.4) au même titre. L'ancien
+  journal séparé `bonusPsychLog` (`{round,kind,outcome:'activated'|'declined'}`) a disparu avec le
+  mécanisme de décision spontanée qui le remplissait : un bonus tiré par la roulette n'a pas d'état
+  « refusé », il se produit toujours une fois tiré (Article 3, une seule trace, jamais deux journaux
+  qui pourraient diverger).
 
 ## Appréciation de l'observateur et négociation (`lib/life.ts`, `app/api/lia/route.ts`, `principes.md` 8.5/8.6)
 
