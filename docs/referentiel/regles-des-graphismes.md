@@ -106,6 +106,40 @@ au moment de l'implémentation, jamais tout d'un bloc :
   le jeu normal), transitions animées entre pièces, refonte de toute l'interface web autour de la
   scène 3D (boutons, typographie, popups) — et vérifier que tout ça reste fluide sur mobile.
 
+## To-do : outils à installer juste avant de démarrer le chantier
+
+*(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur, après une discussion sur les
+bibliothèques utiles. Deux catégories : celles qui servent directement la refonte graphique, et
+celles qui servent la qualité générale du site — pertinentes vu la mise en ligne prochaine, jamais
+mélangées avec le graphisme lui-même dans le raisonnement, même si elles atterrissent dans la même
+to-do pratique.)*
+
+**Pour la refonte graphique elle-même :**
+- [ ] **GSAP** (`pnpm add gsap`) — anime la caméra dynamique, les transitions entre pièces, la
+  séquence de révélation. Confirmé par l'utilisateur.
+- [ ] **Aucun paquet supplémentaire pour la vignette** — Three.js (déjà présent) embarque son propre
+  module de post-traitement (`EffectComposer`), suffisant. Vérifier au moment de coder plutôt que
+  d'ajouter une dépendance de plus par réflexe.
+- [ ] **Ne pas migrer vers `@react-three/fiber`** — décision assumée, pas un oubli : réécrire tout le
+  rendu Three.js actuel (écrit à la main) en composants React serait un chantier disproportionné
+  pour la seule valeur d'avoir des animations plus déclaratives ; GSAP seul suffit à piloter la
+  caméra directement sur le code existant.
+
+**Pour la qualité générale du site, hors refonte graphique — pertinent vu la mise en ligne
+approchante (sujet nom/domaine/logo distinct, cf. section "Périmètre de cette refonte") :**
+- [ ] **Suivi d'erreurs en production** (ex. `@sentry/cloudflare`) — sans ça, un bug réel une fois en
+  ligne reste invisible jusqu'à ce qu'un visiteur le signale lui-même.
+- [ ] **Balises de partage social (Open Graph/Twitter Card)** — pas un paquet, quelques balises à
+  ajouter dans le code ; sert directement l'objectif de partage/buzz déjà exprimé par l'utilisateur.
+- [ ] **Cloudflare Web Analytics** — gratuit, déjà inclus avec l'hébergement, zéro dépendance à
+  ajouter ; active à la mise en ligne pour mesurer le trafic réel.
+
+**Explicitement écarté pour l'instant, pas oublié :**
+- Système audio (`howler.js` ou équivalent) — la mise en scène de la révélation reste 100% visuelle
+  pour cette refonte (décision déjà actée), donc pas de besoin audio à ce stade.
+- Toute nouvelle bibliothèque de composants d'interface — le projet a déjà `base-ui`/`shadcn`/
+  `lucide-react`, suffisants pour la refonte de l'interface web décidée.
+
 ## À enrichir au fil de la refonte
 
 Chaque décision visuelle prise pendant l'implémentation (détails de la caméra, palette définitive,
