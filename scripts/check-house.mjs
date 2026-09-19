@@ -905,7 +905,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 101'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 102'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2457,4 +2457,31 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(checkLinks(linkMissing,readFile)[0].confidence,'probable','a document that never states the expected claim at all is a weaker signal than a genuine numeric mismatch — probable, not confirmed, since the claim may simply live elsewhere');
   assert.equal(checkLinks(linkNoCode,readFile)[0].confidence,'confirmé','a code pattern that cannot even be found in its own source file must always be reported, never silently skipped');
   console.log('Passed: HARMONIA\'s mechanical layer correctly reconfirms a documented numeric claim against its real code constant — consistent numbers pass silently, a genuine mismatch is a confirmed friction, and a missing documentation claim or an unfindable code constant are both reported rather than silently ignored.');
+}
+
+{
+  // SMART CONSO API (2026-09-19, cf. docs/smart-conso-api-blueprint.md et
+  // docs/referentiel/smart-conso-api.md). Fonctions pures testées directement contre des données
+  // fabriquées en mémoire, jamais contre le vrai .gemini-key-health.json/.smart-conso-session.json
+  // (qui varient dans le temps et casseraient des assertions figées).
+  const {assess,recentExhaustionRate,countRecentActions,recordAction,HARD_THRESHOLDS}=await import('../scripts/smart-conso-api.mjs');
+  const now=Date.now();
+  const healthCalm={keys:{a:{episodes:[{at:now-1000,model:'m',outcome:'OK'},{at:now-2000,model:'m',outcome:'OK'}]}}};
+  const healthStrained={keys:{a:{episodes:[{at:now-1000,model:'m',outcome:'QUOTA_ÉPUISÉ'},{at:now-2000,model:'m',outcome:'QUOTA_ÉPUISÉ'},{at:now-3000,model:'m',outcome:'OK'}]}}};
+  const healthEmpty={keys:{}};
+  const healthOld={keys:{a:{episodes:[{at:now-10*60*60*1000,model:'m',outcome:'QUOTA_ÉPUISÉ'}]}}};
+  assert.equal(recentExhaustionRate(healthEmpty,now),undefined,'no episodes at all must report an absence, never a fake 0% or 100%');
+  assert.equal(recentExhaustionRate(healthOld,now),undefined,'an episode outside the observation window must never count, even if it was a real exhaustion');
+  assert.equal(recentExhaustionRate(healthCalm,now),0,'all-OK recent episodes must report a genuine 0% exhaustion rate');
+  assert.equal(recentExhaustionRate(healthStrained,now),2/3,'a real mix of outcomes must compute the exact honest ratio');
+  const emptySession={actions:[]};
+  assert.equal(countRecentActions(emptySession,'simulation',now,6),0);
+  const busySession={actions:[{type:'simulation',at:now-1000,confirmed:true},{type:'simulation',at:now-2000,confirmed:true},{type:'simulation',at:now-3000,confirmed:false},{type:'check-spirit',at:now-1000,confirmed:true}]};
+  assert.equal(countRecentActions(busySession,'simulation',now,6),2,'only confirmed actions of the matching type within the window must be counted — an unconfirmed advisory-only check must never count as a real launch');
+  assert.equal(assess(healthCalm,emptySession,'simulation',now).verdict,'ok','calm quota and an empty session log must never produce a warning');
+  assert.equal(assess(healthStrained,emptySession,'simulation',now).verdict,'avertissement_souple','a genuinely strained recent quota must trigger the soft, negotiable warning');
+  assert.equal(assess(healthCalm,busySession,'simulation',now).verdict,'seuil_dur','reaching the hard threshold (2 simulations within its window) must trigger the hard verdict even when the quota itself looks calm right now — the two signals are independent');
+  assert.ok(HARD_THRESHOLDS.simulation.count===2&&HARD_THRESHOLDS.simulation.windowHours===6,'the documented starting hard threshold (2 simulations per 6h window) must match what the code actually enforces');
+  assert.ok(typeof recordAction==='function','recordAction must be exported for the CLI entrypoint to persist a confirmed action to the local session ledger');
+  console.log("Passed: Smart Conso API's pure advisory logic reports an honest absence when there is no recent data, computes the exact real exhaustion ratio otherwise, counts only confirmed actions of the matching type within the sliding window, and correctly distinguishes the hard-threshold verdict from the soft-quota-pressure warning as two independent signals.");
 }

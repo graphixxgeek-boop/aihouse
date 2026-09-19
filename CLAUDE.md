@@ -235,16 +235,24 @@ ci-dessus impose une mise à jour « le jour même » d'un changement — néces
 un document peut aussi devenir faux sans qu'aucun changement récent ne l'ait directement touché
 (exemple réel trouvé ce jour-là : le plan d'origine ci-dessous affirmait que le visage restait un
 emoji, alors qu'il avait été remplacé onze versions plus tôt — personne n'avait pensé à revenir sur
-cette phrase après coup). L'ensemble des documents de référence de ce projet — ce fichier
-(`CLAUDE.md`, y compris sa propre section « Plan d'origine » ci-dessous), `docs/referentiel/
-principes.md`, `docs/referentiel/parametres.md`, `docs/referentiel/regles-du-temps.md`,
-`docs/regles-de-travail.md`, `docs/philosophie-et-politique.md`, `docs/outil-resilience-api.md` et
-le référentiel affiché en jeu `lib/reference.ts` — doit donc aussi être relu PÉRIODIQUEMENT dans son
-ensemble, pas seulement document par document au moment d'un changement qui le concerne. Cette
-relecture périodique se fait à l'occasion de toute revue de fond demandée par l'utilisateur
-(bilan, audit, planification de chantiers), jamais comme une tâche qu'on renvoie indéfiniment à
-plus tard faute d'occasion dédiée. Un écart trouvé lors de cette relecture se corrige immédiatement
-(Article 3), jamais seulement signalé pour plus tard.
+cette phrase après coup). L'ensemble des documents de référence de ce projet ET DE SES OUTILS —
+ce fichier (`CLAUDE.md`, y compris sa propre section « Plan d'origine » ci-dessous), tout le
+contenu de `docs/referentiel/` (`principes.md`, `parametres.md`, `regles-du-temps.md`,
+`regles-de-l-espace.md`, `tableau-de-bord.md`, `points-fragiles.md`, `argus.md`, `harmonia.md`,
+`smart-conso-api.md`), tous les blueprints exportables (`docs/outil-resilience-api.md`,
+`docs/tableau-de-bord-blueprint.md`, `docs/argus-blueprint.md`, `docs/harmonia-blueprint.md`,
+`docs/smart-conso-api-blueprint.md`), `docs/regles-de-travail.md`, `docs/systeme-de-suivi.md`,
+`docs/philosophie-et-politique.md` et le référentiel affiché en jeu `lib/reference.ts` — doit donc
+aussi être relu PÉRIODIQUEMENT dans son ensemble, pas seulement document par document au moment
+d'un changement qui le concerne (corrigé le 2026-09-19 : cette liste elle-même était devenue
+incomplète, exactement l'écart que ce paragraphe interdit — nouvelle discipline à partir de
+maintenant : plutôt qu'une liste figée qui se périme à chaque nouvel outil créé, la vérifier contre
+la table des matières réelle de `docs/referentiel/` et la racine de `docs/` à chaque relecture
+périodique, jamais recopier cette liste de mémoire). Cette relecture périodique se fait à
+l'occasion de toute revue de fond demandée par l'utilisateur (bilan, audit, planification de
+chantiers), jamais comme une tâche qu'on renvoie indéfiniment à plus tard faute d'occasion dédiée.
+Un écart trouvé lors de cette relecture se corrige immédiatement (Article 3), jamais seulement
+signalé pour plus tard.
 
 `scripts/check-spirit.mjs` a un statut particulier : contrairement à `check-house.mjs` (déterministe,
 zéro coût API, exécuté à chaque changement), il envoie de vraies provocations (ordres autoritaires,
@@ -790,6 +798,15 @@ liens déjà existants (cf. Article 20) sous une forme générique — jamais la
 propre à ce projet ni son registre de frictions, qui vivent dans `docs/referentiel/harmonia.md`
 (instanciation, carte par grand thème) et `docs/harmonia/` (dossier + index).
 
+## Smart Conso API — blueprint exportable
+
+`docs/smart-conso-api-blueprint.md` documente l'ARCHITECTURE de la petite sœur de Smart Breaker,
+dédiée à réguler le rythme de consommation d'une API tierce à quota limité (seuils souple/dur,
+apprentissage progressif, validation humaine explicite de chaque durcissement) sous une forme
+générique — jamais les seuils exacts ni les fichiers propres à ce projet, qui vivent dans
+`docs/referentiel/smart-conso-api.md` (instanciation) et `docs/smart-conso-api/` (dossier + index).
+Frontière stricte avec l'Article 8 : cf. section Article 8 ci-dessus.
+
 ## Référentiel technique — la référence à jour
 
 - `docs/referentiel/principes.md` — les règles invariantes du comportement de la maison, telles
@@ -825,6 +842,11 @@ propre à ce projet ni son registre de frictions, qui vivent dans `docs/referent
   projet : la carte des dépendances par grand thème (fatigue, cycle jour/nuit, enquête, bonus,
   appréciation, dossier, espace, relation Lia/Noé), les nœuds sensibles identifiés, le registre des
   frictions (`docs/harmonia/`). Cf. `docs/harmonia-blueprint.md` pour le principe générique.
+- `docs/referentiel/smart-conso-api.md` (2026-09-19) — instanciation de Smart Conso API pour ce
+  projet : le canal de consultation (`scripts/smart-conso-api.mjs`), le seuil dur actuel (2
+  simulations confirmées par fenêtre de 6h, en attente de validation explicite), le registre des
+  décisions (`docs/smart-conso-api/`). Cf. `docs/smart-conso-api-blueprint.md` pour le principe
+  générique.
 
 Ces documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
 vérité (leur nombre exact a varié au fil des chantiers — se référer à la liste ci-dessus plutôt
