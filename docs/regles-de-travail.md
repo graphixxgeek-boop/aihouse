@@ -551,6 +551,12 @@ texte — avant ou en même temps que la modification, jamais après coup sans l
 document (sections 1 à 7, section 9) suit la règle générale de mise à jour proactive ci-dessus ;
 cette section-ci, plus sensible, reçoit cette garantie supplémentaire.
 
+- **Localisation et décalage horaire** *(ajouté le 2026-09-19, information factuelle donnée
+  spontanément par l'utilisateur, pas un trait psychologique — notée ici car « on sait jamais »
+  utile).* L'utilisateur est en France (fuseau Europe, UTC+1 ou +2 selon la saison — confirmé le
+  2026-09-19 à 21:37 UTC pendant qu'il était 23:37 chez lui, donc UTC+2/heure d'été à cette date).
+  Utile pour interpréter une référence à l'heure qu'il fait chez lui, ou pour ne pas supposer à tort
+  qu'il partage le fuseau UTC utilisé par l'horodatage système de l'agent.
 - **Spécification itérative, jamais figée à l'avance.** Les demandes arrivent par couches, y
   compris en cours de tâche. L'agent doit savoir fusionner un nouvel ajout dans un travail déjà en
   cours sans perdre le fil ni redemander de reformuler l'ensemble.
