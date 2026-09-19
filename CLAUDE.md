@@ -692,6 +692,14 @@ ci-dessus, à la demande explicite de l'utilisateur le 2026-09-19.
   checklist de cohérence temporelle pour tout nouveau seuil. À consulter avant d'ajouter ou modifier
   tout mécanisme sensible au temps, et à utiliser pour vérifier qu'un nouveau seuil ne chevauche pas
   imprévisiblement un mécanisme voisin.
+- `docs/referentiel/regles-de-l-espace.md` (2026-09-19) — traverse les mêmes documents par l'axe de
+  l'espace/des déplacements plutôt que par sous-système, sur le modèle de `regles-du-temps.md` :
+  comment un personnage passe d'une intention narrative à une destination physique (ancres,
+  `destinationAnchor`/`residentDestination`), le partage serveur (décide la pièce)/client (calcule
+  le chemin BFS et anime la marche), le cas particulier du couloir (`exitInspection`, une scène hors
+  modèle de pièces), et une checklist de cohérence spatiale. Créé pour vérifier, lors de l'analyse
+  d'une simulation, ce que l'utilisateur ne voit pas lui-même (déplacements, gestion de l'espace) et
+  pour préparer silencieusement la refonte graphique à venir.
 - `docs/referentiel/tableau-de-bord.md` (2026-09-19) — règles du tableau de bord/KPI interne
   (5 familles, accès, alertes, cadence de mise à jour) : un outil d'observation à destination de
   l'utilisateur et de l'agent, strictement réservé à l'admin/créateur, jamais un mécanisme de jeu.
@@ -699,7 +707,7 @@ ci-dessus, à la demande explicite de l'utilisateur le 2026-09-19.
   fragiles ou en attente d'une décision de conception (pas des bugs actifs, ceux-là se corrigent
   directement) ; compté par `scripts/kpi-report.mjs` comme un des indicateurs de robustesse du code.
 
-Ces trois documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
+Ces quatre documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
 vérité. Ils doivent être mis à jour à chaque changement de règle ou de paramètre — un principe
 ou un chiffre qui change dans le code et pas ici est une dette à combler tout de suite, pas plus
 tard (Article 6/7/13).
