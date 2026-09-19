@@ -29,6 +29,17 @@
 // l'ordre configuré, jamais une perte de clé ni un comportement incorrect).
 let rotation = 0;
 const cooldownUntil = new Map<string, number>();
+// Compteurs d'efficacité du Smart Breaker (2026-09-19, demande explicite de l'utilisateur : « un
+// petit KPI qui mesure l'efficacité du smart-breaker [...] pour s'assurer que l'utilisation de cet
+// outil est rentable »). Même mémoire "best effort" au niveau du module que le reste de ce fichier
+// (jamais écrite en base, remise à zéro à chaque redémarrage) — exactement ce qu'il faut pour un
+// rapport par simulation, puisqu'une simulation complète tourne sur un process fraîchement
+// redémarré (cf. Article 18 de CLAUDE.md). Volontairement limité à des compteurs bruts, sûrs sous
+// concurrence (deux "cerveaux" peuvent appeler ce module en parallèle) : pas de tentative de
+// calculer précisément "combien de fois le repli a sauvé un tour" (demanderait de suivre une
+// frontière de tour partagée entre deux appels concurrents, un vrai risque de résultat faussé) —
+// honnêteté à assumer plutôt qu'un chiffre séduisant mais peu fiable.
+const metrics = { turns: 0, primaryKeyUnavailableAtStart: 0, attempts: 0, successes: 0, quotaFailures: 0, transientFailures: 0, invalidFailures: 0 };
 // Recul adaptatif (2026-09-19, demande explicite de l'utilisateur : « fais en sorte que la
 // rotation des clefs [...] soit intelligente, et permette d'optimiser la consommation de l'API au
 // global, sans blocage, toujours »). Un compteur d'échecs CONSÉCUTIFS par clé (429 et 503 comptent
@@ -72,25 +83,33 @@ export function orderKeys(rawKeys: readonly string[]): number[] {
         return ((a - rotation + n) % n) - ((b - rotation + n) % n);
     });
     if (n > 0) rotation = (rotation + 1) % n;
+    metrics.turns++;
+    if (order[0] !== 0) metrics.primaryKeyUnavailableAtStart++; // la clé principale (index 0) n'était déjà plus en tête : un repli a dû prendre le relais dès le départ de ce tour
     return order;
 }
 
 /** Met à jour la disponibilité connue d'une clé d'après le statut HTTP obtenu avec elle. */
 export function recordKeyStatus(rawKey: string, status: number): void {
-    if (status === 401 || status === 403) { cooldownUntil.set(rawKey, Infinity); return; }
+    metrics.attempts++;
+    if (status === 401 || status === 403) { metrics.invalidFailures++; cooldownUntil.set(rawKey, Infinity); return; }
     if (status === 429 || status === 503) {
+        if (status === 429) metrics.quotaFailures++; else metrics.transientFailures++;
         const streak = (consecutiveFailures.get(rawKey) ?? 0) + 1;
         consecutiveFailures.set(rawKey, streak);
         const [base, max] = status === 429 ? [QUOTA_COOLDOWN_BASE_MS, QUOTA_COOLDOWN_MAX_MS] : [TRANSIENT_COOLDOWN_BASE_MS, TRANSIENT_COOLDOWN_MAX_MS];
         cooldownUntil.set(rawKey, Date.now() + Math.min(max, base * 2 ** (streak - 1)));
         return;
     }
+    metrics.successes++;
     consecutiveFailures.delete(rawKey);
     cooldownUntil.delete(rawKey); // réponse définitive et saine : efface un éventuel cooldown périmé
 }
 
+/** Lecture des compteurs d'efficacité — jamais mutée depuis l'extérieur, une copie à chaque appel. */
+export function getGeminiKeyMetrics() { return { ...metrics }; }
+
 /** Réservé aux tests (`scripts/check-house.mjs`) : repart d'un état neuf, déterministe. */
-export function __resetGeminiKeyRotationForTests(): void { rotation = 0; cooldownUntil.clear(); consecutiveFailures.clear(); }
+export function __resetGeminiKeyRotationForTests(): void { rotation = 0; cooldownUntil.clear(); consecutiveFailures.clear(); metrics.turns = 0; metrics.primaryKeyUnavailableAtStart = 0; metrics.attempts = 0; metrics.successes = 0; metrics.quotaFailures = 0; metrics.transientFailures = 0; metrics.invalidFailures = 0; }
 
 /** Réservé aux tests : millisecondes restantes avant la fin du cooldown d'une clé (0 si saine). */
 export function __cooldownRemainingForTests(rawKey: string): number { return Math.max(0, (cooldownUntil.get(rawKey) ?? 0) - Date.now()); }

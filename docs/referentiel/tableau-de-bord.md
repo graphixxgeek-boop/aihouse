@@ -12,18 +12,21 @@ même, consultables via `scripts/kpi-report.mjs`.)*
 
 1. **Performance runtime.** Fiabilité de la connexion à Gemini (fréquence des blocages 429/503,
    bascules de clé/modèle de secours via le Smart Breaker), économie d'appels (tours traités
-   localement sans appel payant, Article 8), santé des clés de secours. Compteurs cumulés en base
-   de données (`kpi_counters`), incrémentés aux deux points d'appel réseau réels
-   (`lib/lia.ts::think()`, `app/api/lia/route.ts::generateDossierFragment()`). **Idée notée le
-   2026-09-19** (utilisateur, pendant full_sim8) : inclure une mesure spécifique de l'EFFICACITÉ du
-   Smart Breaker lui-même — le nombre de blocages qu'il a réellement rattrapés vs le coût de le
-   faire tourner, et si son comportement s'améliore vraiment dans le temps (fiabilité croissante des
-   clés, recul adaptatif qui converge) — mesurée après chaque simulation complète plutôt qu'en
-   continu, pour rester dans l'esprit "à la demande" de l'Article 8. Pas encore conçu.
+   localement sans appel payant, Article 8), santé des clés de secours. **Efficacité du Smart
+   Breaker livrée le 2026-09-19** (idée notée pendant full_sim8, implémentée le jour même, prête
+   pour la simulation suivante) : `lib/gemini-keys.ts` tient désormais des compteurs bruts en
+   mémoire process (tours, disponibilité de la clé principale au départ d'un tour, tentatives par
+   issue — succès/429/503/401-403), exposés par le panneau Admin déjà existant
+   (`app/api/admin/route.ts`, champ `geminiKeyMetrics`) et lus par `scripts/kpi-report.mjs`. Jamais
+   en base de données : une mémoire process, remise à zéro à chaque redémarrage du serveur, qui
+   correspond exactement à "un rapport par simulation" (une simulation complète tourne toujours sur
+   un serveur fraîchement relancé, Article 18). Reste à construire pour compléter cette famille :
+   l'économie d'appels et un historique inter-sessions, qui nécessiteraient cette fois une vraie
+   persistance en base (`kpi_counters`) — chantier 2 ci-dessous.
 2. **Robustesse du code** (Article 5, Article 7). Propreté de `tsc --noEmit`, santé de la suite
    `check-house.mjs`, nombre de points fragiles ouverts (`docs/referentiel/points-fragiles.md`),
    taille des fichiers les plus denses (`lib/lia.ts`, `lib/dialogue.ts`). **Livrée le 2026-09-19**
-   via `scripts/kpi-report.mjs` — la seule famille déjà construite à ce jour.
+   via `scripts/kpi-report.mjs`.
 3. **Qualité** (Article 0, Article 11). Proportion de répliques générées par le modèle vs de
    répliques de secours (`groundPrivateThought` et équivalents), nombre de fois où un garde-fou
    anti-répétition a dû intervenir, et référence à la dernière vérification approfondie par
@@ -60,12 +63,15 @@ session ou après un chantier).
 
 - **Chantier 1 (2026-09-19) — fait** : famille "Robustesse du code", registre des points fragiles,
   script `kpi-report.mjs`, et le présent découpage architecture/instanciation.
-- **Chantier 2 — à venir** : tables `kpi_counters` / `kpi_session_snapshots`, familles
-  "Performance runtime", "Qualité", "Cohérence logique", "Rejouabilité/rythme", bouton dédié dans
-  l'interface, lien avec `check-spirit.mjs`. **Candidat ajouté le 2026-09-19** (à discuter à ce
-  chantier, pas encore conçu) : un signal "espace" (répartition des pièces visitées, échecs ou
-  redirections de déplacement) — un KPI "temps" séparé a en revanche été jugé redondant avec la
-  famille "Rejouabilité/rythme" déjà prévue ci-dessus.
+- **Chantier 1bis (2026-09-19) — fait** : efficacité du Smart Breaker, en mémoire process (pas de
+  base de données), exposée par le panneau Admin et lue par `kpi-report.mjs` — cf. famille
+  "Performance runtime" ci-dessus pour le détail complet.
+- **Chantier 2 — à venir** : tables `kpi_counters` / `kpi_session_snapshots` (économie d'appels,
+  historique inter-sessions), familles "Qualité", "Cohérence logique", "Rejouabilité/rythme",
+  bouton dédié dans l'interface, lien avec `check-spirit.mjs`. **Candidat ajouté le 2026-09-19**
+  (à discuter à ce chantier, pas encore conçu) : un signal "espace" (répartition des pièces
+  visitées, échecs ou redirections de déplacement) — un KPI "temps" séparé a en revanche été jugé
+  redondant avec la famille "Rejouabilité/rythme" déjà prévue.
 - **Chantier 3 (piste ouverte, pas planifiée)** : creuser en priorité l'un des points listés dans
   `docs/referentiel/points-fragiles.md`, si l'un d'eux devient plus urgent que l'enchaînement
   normal des chantiers.

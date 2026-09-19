@@ -69,17 +69,46 @@ function repoStats() {
     return { liaLines, dialogueLines, libFileCount: libFiles.length };
 }
 
-function main() {
-    console.log('Tableau de bord — rapport KPI (famille "Performance/robustesse — code" seulement, cf. docs/referentiel/tableau-de-bord.md pour les 4 autres familles à venir).');
+// Performance runtime — efficacité du Smart Breaker (2026-09-19, demande explicite de
+// l'utilisateur, prête pour la prochaine simulation). Best-effort : le serveur de dev n'est pas
+// toujours en train de tourner quand on lance ce rapport (analyse statique seule) — dans ce cas on
+// l'indique simplement, jamais une erreur qui ferait échouer le reste du rapport. Compteurs remis
+// à zéro à chaque redémarrage du serveur (lib/gemini-keys.ts) : lire ce rapport juste après une
+// simulation complète, avant de relancer le serveur pour la suivante, donne exactement les
+// chiffres de CETTE session-là.
+async function fetchGeminiKeyMetrics() {
+    section('Performance runtime — efficacité du Smart Breaker');
+    try {
+        const res = await fetch('http://localhost:5173/api/admin', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: '1980' }),
+            signal: AbortSignal.timeout(3000),
+        });
+        if (!res.ok) { console.log(`Serveur de dev joint mais code refusé (${res.status}) — pas de mesure cette fois.`); return undefined; }
+        const { geminiKeyMetrics: m } = await res.json();
+        if (!m) { console.log('Serveur de dev joint, mais aucune métrique renvoyée (version du code trop ancienne ?).'); return undefined; }
+        console.log(`Tours réels (appels Gemini nécessaires) : ${m.turns}.`);
+        console.log(`Clé principale déjà indisponible au départ du tour : ${m.primaryKeyUnavailableAtStart} fois sur ${m.turns} (${m.turns ? Math.round(100 * m.primaryKeyUnavailableAtStart / m.turns) : 0}%).`);
+        console.log(`Tentatives individuelles (clé × modèle) : ${m.attempts} — ${m.successes} réussies, ${m.quotaFailures} bloquées par quota (429), ${m.transientFailures} erreurs transitoires (503), ${m.invalidFailures} clés invalides (401/403).`);
+        return m;
+    } catch {
+        console.log('Serveur de dev non joignable (normal si aucune simulation n’est en cours) — pas de mesure cette fois.');
+        return undefined;
+    }
+}
+
+async function main() {
+    console.log('Tableau de bord — rapport KPI (famille "Performance/robustesse — code" complète, "Performance runtime" partielle via le Smart Breaker ; cf. docs/referentiel/tableau-de-bord.md pour les familles restantes).');
     const tscErrors = runTypeCheck();
     const tests = runTestSuite();
     const fragilePoints = countFragilePoints();
     const stats = repoStats();
+    const geminiMetrics = await fetchGeminiKeyMetrics();
 
     section('Synthèse');
     const alerts = [];
     if (tscErrors > 0) alerts.push(`${tscErrors} erreur(s) tsc`);
     if (!tests.green) alerts.push('suite check-house.mjs rouge');
+    if (geminiMetrics?.invalidFailures) alerts.push(`${geminiMetrics.invalidFailures} clé(s) Gemini invalide(s) détectée(s)`);
     if (alerts.length) {
         console.log(`🚨 ALERTE TABLEAU DE BORD — ${alerts.join(', ')}.`);
     } else {

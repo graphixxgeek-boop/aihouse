@@ -905,7 +905,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 94'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 95'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2263,4 +2263,40 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(w.story.life.genuineRespectStreak[1],0,'a genuine trust drop must still reset the streak to zero, exactly as before this loosening');
   flat=false;
   console.log('Passed: genuineRespectStreak now tolerates a turn that merely stays flat/positive (no longer requires trust to keep climbing every single turn), while a genuine drop still resets it, and the rare respect tier still consumes itself immediately once triggered — closing the too-strict gap the user flagged.');
+}
+
+{
+  // KPI d'efficacité du Smart Breaker (2026-09-19, demande explicite de l'utilisateur : « un petit
+  // KPI qui mesure l'efficacité du smart-breaker [...] pour s'assurer que l'utilisation de cet
+  // outil est rentable », prêt pour la prochaine simulation). Test pur, déterministe, zéro appel
+  // réseau — vérifie que les compteurs bruts (lib/gemini-keys.ts) reflètent fidèlement une séquence
+  // scriptée d'appels, sans essayer de calculer un taux de "sauvetage" précis (ambigu sous
+  // concurrence entre les deux cerveaux, cf. le commentaire du code).
+  const {orderKeys:orderKeysForTest,recordKeyStatus:recordStatusForMetrics,getGeminiKeyMetrics,__resetGeminiKeyRotationForTests:resetForMetrics}=await import('../.sites-runtime/test-gemini-keys.mjs');
+  resetForMetrics();
+  assert.deepEqual(getGeminiKeyMetrics(),{turns:0,primaryKeyUnavailableAtStart:0,attempts:0,successes:0,quotaFailures:0,transientFailures:0,invalidFailures:0},'metrics must start at zero right after a reset');
+  const keys=['alpha','beta'];
+  let order=orderKeysForTest(keys);
+  assert.equal(order[0],0,'test setup sanity: with both keys healthy, the primary key (index 0) leads the very first turn');
+  recordStatusForMetrics(keys[order[0]],200);
+  assert.deepEqual(getGeminiKeyMetrics(),{turns:1,primaryKeyUnavailableAtStart:0,attempts:1,successes:1,quotaFailures:0,transientFailures:0,invalidFailures:0},'a clean first-try success must count exactly one turn, one attempt, one success, nothing else');
+  recordStatusForMetrics(keys[0],429);
+  order=orderKeysForTest(keys);
+  assert.equal(order[0],1,'test setup sanity: after a 429 on the primary key, the fallback key must now lead the next turn');
+  recordStatusForMetrics(keys[order[0]],200);
+  const afterFallback=getGeminiKeyMetrics();
+  assert.equal(afterFallback.turns,2,'two orderKeys() calls so far must count as two turns');
+  assert.equal(afterFallback.primaryKeyUnavailableAtStart,1,'exactly one of those turns started with the primary key already unavailable');
+  assert.equal(afterFallback.attempts,3,'three recordKeyStatus() calls so far must count as three individual attempts');
+  assert.equal(afterFallback.quotaFailures,1,'the one 429 must be counted as a quota failure, distinct from transient/invalid');
+  assert.equal(afterFallback.successes,2,'the two clean 200s must both count as successes');
+  recordStatusForMetrics(keys[0],503);
+  recordStatusForMetrics(keys[0],401);
+  const finalMetrics=getGeminiKeyMetrics();
+  assert.equal(finalMetrics.transientFailures,1,'a 503 must be counted as a transient failure, never conflated with a 429 quota failure');
+  assert.equal(finalMetrics.invalidFailures,1,'a 401 must be counted as an invalid-key failure, its own distinct bucket');
+  assert.equal(finalMetrics.attempts,5,'every recordKeyStatus() call must be counted as an attempt, regardless of outcome');
+  resetForMetrics();
+  assert.deepEqual(getGeminiKeyMetrics(),{turns:0,primaryKeyUnavailableAtStart:0,attempts:0,successes:0,quotaFailures:0,transientFailures:0,invalidFailures:0},'the test reset must also clear the metrics, never leave a stale count bleeding into the next test');
+  console.log('Passed: the Smart Breaker efficiency counters (turns, primary-key availability at the start of a turn, attempts by outcome) track a scripted sequence of real key/status events exactly, and the test reset clears them alongside the rotation/cooldown state they already reset.');
 }
