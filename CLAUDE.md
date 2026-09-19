@@ -486,10 +486,14 @@ concernés (`lib/lia.ts::think()` et `app/api/lia/route.ts::generateDossierFragm
   `route.ts::generateDossierFragment()`, jamais deux états séparés) fait tourner un round-robin
   parmi les clés actuellement saines à chaque appel, au lieu de l'ancienne mémoire "collante"
   (`lastGoodKeyIndex`) qui laissait UNE SEULE clé encaisser tout le trafic tant qu'elle répondait.
-  Une clé qui vient d'échouer est mise en cooldown (429 → 15 min, probablement un quota épuisé pour
-  un moment ; 503 → 60 s, souvent transitoire ; 401/403 → définitif pour la durée du process) et
-  sautée par la rotation tant que ce délai n'est pas écoulé, jamais un appel de sonde séparé (zéro
-  coût API additionnel, Article 8) — ce suivi est tiré directement du trafic réel. Une clé en
+  Une clé qui vient d'échouer est mise en cooldown (429 → base 15 min, probablement un quota épuisé
+  pour un moment ; 503 → base 60 s, souvent transitoire ; 401/403 → définitif pour la durée du
+  process) et sautée par la rotation tant que ce délai n'est pas écoulé, jamais un appel de sonde
+  séparé (zéro coût API additionnel, Article 8) — ce suivi est tiré directement du trafic réel.
+  **Recul exponentiel (2026-09-19, précisé lors d'un audit documentaire)** : un échec répété sur la
+  même clé double le délai à chaque fois plutôt que de rester fixe (plafond 4h pour 429, 20 min pour
+  503), remis instantanément à la base au premier succès suivant — jamais besoin de réglage manuel
+  pour distinguer un blocage bref d'un vrai épuisement journalier qui s'entête. Une clé en
   cooldown n'est jamais RETIRÉE de la rotation, seulement reléguée en dernier recours si toutes le
   sont. Mémoire "best-effort" au niveau du process/isolate, comme avant : jamais une garantie
   inter-redémarrage, jamais écrite en base. Portée volontairement limitée aux CLÉS (strictement

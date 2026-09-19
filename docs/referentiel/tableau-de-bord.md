@@ -138,25 +138,36 @@ construisant cette version (cf. section "Fiabilité des calculs" ci-dessus).
 
 ## État d'avancement
 
+*(Corrigé le 2026-09-19 lors d'un audit complet des docs de référentiel demandé explicitement par
+l'utilisateur : cette section affirmait encore "Chantier 2 — à venir" alors que le chantier 2 avait
+déjà été livré le même jour, en totale contradiction avec le reste de ce document — Article 3/13,
+traité comme le bug documentaire qu'il est, pas laissé pour plus tard.)*
+
 - **Chantier 1 (2026-09-19) — fait** : famille "Robustesse du code", registre des points fragiles,
   script `kpi-report.mjs`, et le présent découpage architecture/instanciation.
 - **Chantier 1bis (2026-09-19) — fait** : efficacité du Smart Breaker, en mémoire process (pas de
   base de données), exposée par le panneau Admin et lue par `kpi-report.mjs` — cf. famille
   "Performance runtime" ci-dessus pour le détail complet.
-- **Chantier 2 — à venir** : tables `kpi_counters` / `kpi_session_snapshots` (économie d'appels,
-  historique inter-sessions), familles "Qualité", "Cohérence logique", "Rejouabilité/rythme",
-  bouton dédié dans l'interface, lien avec `check-spirit.mjs`. **Candidat ajouté le 2026-09-19**
-  (à discuter à ce chantier, pas encore conçu) : un signal "espace" (répartition des pièces
-  visitées, échecs ou redirections de déplacement) — un KPI "temps" séparé a en revanche été jugé
-  redondant avec la famille "Rejouabilité/rythme" déjà prévue.
+- **Chantier 2 (2026-09-19) — fait** : KPI global en % pour les 4 familles restantes (Qualité,
+  Cohérence logique, Rejouabilité/rythme, Robustesse déjà faite au chantier 1), KPI de couverture
+  du tableau de bord lui-même, historique CSV, archive+index des rapports complets, synthèse
+  compacte livrée en conversation. Restent hors de ce chantier (pas encore faits, faute d'une vraie
+  persistance en base) : l'historique inter-sessions réel (`kpi_session_snapshots`) et un bouton
+  dédié dans l'interface — la lecture reste pour l'instant uniquement via `kpi-report.mjs` en ligne
+  de commande.
 - **Chantier 3 (piste ouverte, pas planifiée)** : creuser en priorité l'un des points listés dans
-  `docs/referentiel/points-fragiles.md`, si l'un d'eux devient plus urgent que l'enchaînement
-  normal des chantiers.
+  `docs/referentiel/points-fragiles.md` (validation qualité de `GEMINI_FALLBACK_MODELS`, relance de
+  `check-spirit.mjs`, confirmation du recul adaptatif des clés), si l'un d'eux devient plus urgent
+  que l'enchaînement normal des chantiers. Le signal "espace" (répartition des pièces visitées,
+  échecs de déplacement) reste une piste non conçue.
 - **Idée notée le 2026-09-19, à mettre de côté jusqu'au retour sur ce chantier** (demande explicite
   de l'utilisateur) : un indicateur d'efficacité de la COLLABORATION elle-même — est-ce que l'agent
   comprend bien où en est le travail, comprend bien les demandes et les réponses de l'utilisateur,
   reste bien sur la même longueur d'onde — à consulter par l'agent lui-même régulièrement pour
   vérifier la qualité et la pertinence de son propre travail. Distinct des 5 familles déjà définies
   ci-dessus (qui mesurent le CODE et la PARTIE, pas la conversation de travail) — famille candidate
-  à ajouter, ou son propre sujet séparé, à discuter quand le chantier 2 reprend ; pas encore de
-  conception à ce stade.
+  à ajouter, ou son propre sujet séparé ; pas encore de conception à ce stade.
+- **Note de distinction (2026-09-19)** : ce tableau de bord mesure le CODE et la PARTIE jouée ; il
+  est distinct des trois outils de vigilance créés le même jour (ARGUS, HARMONIA, Smart Conso API,
+  cf. sections dédiées de CLAUDE.md) qui ont chacun leur propre registre, pas encore raccordés à ce
+  tableau de bord général — prématuré tant que chacun n'a tourné qu'une poignée de fois.
