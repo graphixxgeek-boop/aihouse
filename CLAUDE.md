@@ -603,6 +603,22 @@ Le but est d'éviter toute erreur de compréhension qui mènerait l'utilisateur 
 sans en avoir vraiment saisi la portée — la responsabilité de rendre l'enjeu clair revient
 entièrement à l'agent qui pose la question, jamais à l'utilisateur de deviner ou de se renseigner.
 
+**Une question = une seule idée simple ; décortiquer les sujets complexes en plusieurs
+questions.** *(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur : « les questions
+doivent être simples, et si besoin, poser plusieurs questions [...] il vaut mieux 3 questions
+séparées qu'une question complexe [...] pour un sujet complexe, il vaut mieux décortiquer en
+plusieurs questions ».)* Jamais empiler plusieurs décisions ou plusieurs sous-sujets dans une seule
+question sous prétexte d'aller plus vite : une question qui demande de trancher deux choses à la
+fois (par exemple « on fait X, et pour la durée on prend Y ou Z ? ») doit être scindée en deux
+questions distinctes, chacune portant sur une seule idée simple à comprendre d'un coup. Pour un
+sujet complexe, l'agent le décompose lui-même en plusieurs questions successives ou groupées dans
+une même fenêtre (cf. format ci-dessus) plutôt que de faire porter cette décomposition à
+l'utilisateur. Les réponses obtenues au fil de ces questions peuvent, selon les cas, s'agréger et
+influencer la formulation des questions suivantes sur le même sujet (une réponse à la question 1
+peut éclairer ou simplifier la question 2) — ou rester indépendantes quand les sous-sujets n'ont
+pas de lien logique entre eux ; c'est à l'agent de juger au cas par cas, jamais un enchaînement
+mécanique obligatoire.
+
 **Traçabilité visible des vérifications.** Chaque fois qu'une réponse à l'utilisateur s'appuie sur
 la charte pour valider un choix (« ceci respecte l'Article 0 », « vérifié contre l'Article 11 »,
 etc.), le mentionner explicitement accompagné de 📜✅ (la feuille pour la charte, le check vert pour
