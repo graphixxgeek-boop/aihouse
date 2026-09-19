@@ -667,10 +667,17 @@ ensemble « la refonte graphique », un seul chantier visuel à mener groupé. O
    d'attirance) est resté vide des deux côtés sur toute une simulation fraîche ayant pourtant
    dépassé la révélation (round 46) jusqu'au round 59 — l'attirance n'a peut-être jamais franchi ce
    seuil, à diagnostiquer avant de considérer le calage de l'arc confirmé.
-2. **Tout de suite, indépendamment du planning** — la tâche en attente (popup de saisie du pseudo
-   avec validation de format + popup de mise en garde légale renforcée) et la revalidation de
-   l'écart mineur « autant » employé seul (probablement déjà couvert par `recentEchoWords`,
-   `lib/dialogue.ts`, mais jamais explicitement reconfirmé comme refermé).
+2. **Tout de suite, indépendamment du planning** — **fait le 2026-09-19** : popup de saisie du
+   pseudo avec validation de format + choix d'identité de genre (masculin/féminin) + popup de mise
+   en garde légale renforcée + popup de bienvenue, les trois affichées une fois par navigateur
+   (`app/page.tsx`) ; correction du vrai bug de répétition du mot « autant » (persisté sur toute la
+   session via `life.wordFrequency`, cf. `lib/dialogue.ts` — l'écart n'était PAS déjà couvert,
+   contrairement à ce qui était supposé ici avant investigation).
 3. **La refonte graphique** (points 4/5/6 groupés).
 4. **Après la refonte graphique** — chantier n°7 (mécaniques de diffusion), dernier de la liste par
    la propre priorisation d'Opus, confirmée par l'utilisateur.
+5. **Après la refonte graphique également** *(ajouté le 2026-09-19, demande explicite de
+   l'utilisateur)* — revoir le texte de la popup de bienvenue (`app/page.tsx`, section
+   `welcomeOpen`) : version actuelle volontairement provisoire, à retravailler une fois l'habillage
+   visuel du jeu stabilisé plutôt que de la peaufiner avant un changement de decor qui pourrait la
+   rendre obsolète.
