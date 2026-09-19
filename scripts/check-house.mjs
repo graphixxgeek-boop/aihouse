@@ -2619,6 +2619,42 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   console.log('Passed: splitTableRow() treats an escaped "\\|" as a literal pipe character inside a cell rather than an extra column separator, restoring it correctly in the cell text while keeping the real Statut column exactly last — closing a real parsing fragility found on 2026-09-19.');
 }
 {
+  // categorizeTasks()/categorizeAllSessions() (2026-09-19, demande explicite de l'utilisateur : « je
+  // veux un suivi en temps réel des tâches réalisées, en cours, à faire [...] je veux que le système
+  // puisse produire ces infos ») — la vue à trois colonnes que le système doit pouvoir produire en
+  // sortie, pas seulement un garde-fou qui ne parle qu'en cas d'anomalie.
+  const {categorizeTasks,categorizeAllSessions}=await import('../scripts/check-suivi-fidelity.mjs');
+  const session='| h | S1 | s1 | normal | d1 | terminée — fidèle |\n| h | S2 | s2 | normal | d2 | en cours — detail |\n| h | S3 | s3 | normal | d3 | ouverte |\n| h | S4 | s4 | normal | d4 | statut-inconnu |';
+  const cats=categorizeTasks(session);
+  assert.equal(cats.terminee.length,1,'exactly the one terminée row must land in the terminee bucket');
+  assert.equal(cats.enCours.length,1,'exactly the one en cours row must land in the enCours bucket, regardless of trailing detail after the status word');
+  assert.equal(cats.ouverte.length,1,'exactly the one ouverte row must land in the ouverte bucket');
+  assert.equal(cats.autre.length,1,'a status matching none of the three known words must land in autre, never silently dropped or miscategorized into one of the three');
+  assert.deepEqual(categorizeTasks('| Horodatage | Sujet | Sous-sujet | Sensibilité | Description | Statut |\n|---|---|---|---|---|---|'),{terminee:[],enCours:[],ouverte:[],autre:[]},'a session with zero task rows must report all four buckets empty, never crash');
+  const fakeDir=[{name:'a.md',text:session},{name:'b.md',text:'| h | S5 | s5 | normal | d5 | terminée |'}];
+  const totals=categorizeAllSessions('/fake',()=>fakeDir.map(f=>f.name),(p)=>fakeDir.find(f=>p.endsWith(f.name)).text,()=>true);
+  assert.equal(totals.terminee.length,2,'terminée rows from every session file must be aggregated together, never only the first file found');
+  assert.equal(totals.terminee[1].file,'b.md','each aggregated entry must remember which real session file it came from, never lose that provenance');
+  assert.deepEqual(categorizeAllSessions('/definitely-not-a-real-path'),{terminee:[],enCours:[],ouverte:[],autre:[]},'a missing sessions directory must report all four buckets empty, never throw');
+  console.log('Passed: categorizeTasks() sorts every task row into exactly one of terminée/en cours/ouverte/autre with no row lost or double-counted, categorizeAllSessions() aggregates this across every real session file while remembering each entry\'s source file, and both report an honest all-empty result rather than crashing on missing or empty input — the real-time done/in-progress/to-do view the user asked the system to be able to produce.');
+}
+{
+  // findClaimedFilesMissing() (2026-09-19, demande explicite de l'utilisateur : « fiabiliser [...]
+  // la validation des tâches terminées »). Vérifie qu'un fichier cité entre backticks dans une
+  // ligne "terminée" existe RÉELLEMENT sur disque, plutôt que de faire confiance au seul texte.
+  const {findClaimedFilesMissing}=await import('../scripts/check-suivi-fidelity.mjs');
+  const session='| h | S | s | normal | Créé `docs/referentiel/vrai.md` et `scripts/reel.mjs` | terminée — fidèle |\n'
+    +'| h | S | s | normal | A retirer `docs/referentiel/jamais-cree.md` | terminée — fidèle |\n'
+    +'| h | S | s | normal | Encore ouvert, cite `docs/referentiel/pas-encore.md` | ouverte |\n'
+    +'| h | S | s | normal | Commande `node script.mjs --confirm`, pas un vrai chemin de fichier | terminée — fidèle |';
+  const fakeFs=new Set(['docs/referentiel/vrai.md','scripts/reel.mjs']);
+  const hits=findClaimedFilesMissing(session,(p)=>[...fakeFs].some(f=>p.endsWith(f)));
+  assert.equal(hits.length,1,'only the terminée row citing a genuinely missing file must be flagged — real files pass, an open/non-terminée row is never checked, and a command-line snippet without a real directory prefix is never mistaken for a file path');
+  assert.equal(hits[0].path,'docs/referentiel/jamais-cree.md','the flagged entry must name the exact missing path, never a vague pointer');
+  assert.deepEqual(findClaimedFilesMissing('| Horodatage | Sujet | Sous-sujet | Sensibilité | Description | Statut |\n|---|---|---|---|---|---|'),[],'a session with zero task rows must report zero missing files, never crash');
+  console.log('Passed: findClaimedFilesMissing() flags exactly a "terminée" row whose backtick-quoted repo file path does not really exist on disk, never a still-open row nor a command-line snippet without a real directory prefix, and reports zero rather than crashing on an empty session — closing the "validation des tâches terminées" gap the user asked for.');
+}
+{
   // findCommitsMissingSuiviUpdate() (2026-09-19, demande explicite : « comment nous assurer que le
   // suivi est correctement fait et historisé ? peux-tu fiabiliser ? »). Trouvaille réelle qui a
   // motivé cette fonction : 7 des 8 derniers commits d'une vraie session avaient changé du code réel

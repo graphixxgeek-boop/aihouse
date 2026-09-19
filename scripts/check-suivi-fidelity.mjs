@@ -55,6 +55,32 @@ export function findUnverifiedClosures(sessionText) {
   return hits;
 }
 
+// findClaimedFilesMissing() (2026-09-19, demande explicite de l'utilisateur : « fiabiliser [...] la
+// validation des tâches terminées »). Une tâche "terminée" cite presque toujours, entre backticks,
+// les fichiers réellement créés/modifiés — cette fonction vérifie qu'ils existent VRAIMENT sur
+// disque, plutôt que de faire confiance à la seule déclaration textuelle. Portée volontairement
+// étroite (chemins commençant par un des dossiers réels du projet) pour ne jamais confondre un
+// extrait de code ou une commande (`--confirm`, `node script.mjs`) avec un vrai chemin de fichier.
+const REPO_PATH_PATTERN = /`((?:docs|lib|app|scripts|components)\/[A-Za-z0-9_.\-/]+\.[A-Za-z0-9]+)`/g;
+
+export function findClaimedFilesMissing(sessionText, existsFn = existsSync, root = ROOT) {
+  const rows = sessionText
+    .split("\n")
+    .filter((l) => l.startsWith("|") && !/^\|\s*-+\s*\|/.test(l) && !l.includes("Horodatage"));
+  const hits = [];
+  for (const row of rows) {
+    const cells = splitTableRow(row);
+    const statut = cells[cells.length - 1] ?? "";
+    if (!/^termin[ée]e/i.test(statut)) continue;
+    const description = cells[4] ?? "";
+    const claimed = new Set([...description.matchAll(REPO_PATH_PATTERN)].map((m) => m[1]));
+    for (const path of claimed) {
+      if (!existsFn(join(root, path))) hits.push({ row: row.trim(), path });
+    }
+  }
+  return hits;
+}
+
 // Une ligne est "ouverte" si son Statut ne commence PAS par "terminée" (couvre "ouverte", "en
 // cours", ou toute autre valeur future) — jamais un motif positif qui devrait deviner tous les
 // libellés possibles d'un statut non fermé.
@@ -72,6 +98,40 @@ export function findOpenTasks(sessionText) {
     if (!statut || !/^termin[ée]e/i.test(statut)) hits.push({ row: row.trim(), statut, cells });
   }
   return hits;
+}
+
+// categorizeTasks()/categorizeAllSessions() (2026-09-19, demande explicite de l'utilisateur : « je
+// veux un suivi en temps réel des tâches réalisées, en cours, à faire [...] je veux que le système
+// puisse produire ces infos »). Jusqu'ici, findOpenTasks()/findUnverifiedClosures() répondent
+// chacun à une question de garde-fou précise ("un trou existe-t-il ?") mais aucune fonction ne
+// produit la vue d'ensemble à trois colonnes (terminé/en cours/à faire) que l'utilisateur demande
+// littéralement à obtenir en sortie du système, pas seulement en cas d'anomalie.
+export function categorizeTasks(sessionText) {
+  const rows = sessionText
+    .split("\n")
+    .filter((l) => l.startsWith("|") && !/^\|\s*-+\s*\|/.test(l) && !l.includes("Horodatage"));
+  const buckets = { terminee: [], enCours: [], ouverte: [], autre: [] };
+  for (const row of rows) {
+    const cells = splitTableRow(row);
+    const statut = cells[cells.length - 1] ?? "";
+    const entry = { row: row.trim(), statut, cells };
+    if (/^termin[ée]e/i.test(statut)) buckets.terminee.push(entry);
+    else if (/^en cours/i.test(statut)) buckets.enCours.push(entry);
+    else if (/^ouverte/i.test(statut)) buckets.ouverte.push(entry);
+    else buckets.autre.push(entry);
+  }
+  return buckets;
+}
+
+export function categorizeAllSessions(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+  if (!exists(sessionsDir)) return { terminee: [], enCours: [], ouverte: [], autre: [] };
+  const files = readDir(sessionsDir).filter((f) => f.endsWith(".md"));
+  const total = { terminee: [], enCours: [], ouverte: [], autre: [] };
+  for (const file of files) {
+    const cats = categorizeTasks(readFile(join(sessionsDir, file)));
+    for (const key of Object.keys(total)) for (const entry of cats[key]) total[key].push({ ...entry, file });
+  }
+  return total;
 }
 
 export function auditOpenTasks(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
@@ -136,8 +196,27 @@ export function auditAllSessions(sessionsDir = SESSIONS_DIR, readDir = readdirSy
   return results;
 }
 
+// Description courte d'une entrée de tableau pour l'affichage — Sujet + Sous-sujet (colonnes 2 et
+// 3), jamais la ligne brute entière (illisible) ni seulement l'horodatage (pas assez parlant).
+function describe(entry) {
+  const [, sujet, sousSujet] = entry.cells;
+  return `${sujet ?? "?"} — ${sousSujet ?? "?"}`;
+}
+
 function main() {
-  console.log("=== Tâches encore ouvertes (docs/suivi/) ===\n");
+  console.log("=== État des tâches, en temps réel (docs/suivi/) ===\n");
+  const all = categorizeAllSessions();
+  console.log(`✅ Terminées : ${all.terminee.length}`);
+  console.log(`🔧 En cours : ${all.enCours.length}`);
+  for (const e of all.enCours) console.log(`   - ${describe(e)}`);
+  console.log(`📋 Ouvertes / à faire : ${all.ouverte.length}`);
+  for (const e of all.ouverte) console.log(`   - ${describe(e)}`);
+  if (all.autre.length) {
+    console.log(`⚠️ Statut non reconnu (ni terminée/en cours/ouverte) : ${all.autre.length}`);
+    for (const e of all.autre) console.log(`   - [${e.statut}] ${describe(e)}`);
+  }
+
+  console.log("\n=== Détail des tâches encore ouvertes (docs/suivi/) ===\n");
   const open = auditOpenTasks();
   if (!open.length) {
     console.log("Aucune tâche ouverte/en cours trouvée dans les fichiers de session.");
@@ -158,6 +237,19 @@ function main() {
       for (const h of hits) console.log(`   - ${h.row}`);
     }
   }
+
+  console.log("\n=== Garde-fou validation des tâches terminées (fichiers cités réellement présents) ===\n");
+  const allSessions = readdirSync(SESSIONS_DIR).filter((f) => f.endsWith(".md"));
+  let anyMissingFile = false;
+  for (const file of allSessions) {
+    const missingFiles = findClaimedFilesMissing(readFileSync(join(SESSIONS_DIR, file), "utf8"));
+    if (missingFiles.length) {
+      anyMissingFile = true;
+      console.log(`${file} : ${missingFiles.length} fichier(s) cité(s) comme fait mais introuvable(s) sur disque`);
+      for (const h of missingFiles) console.log(`   - ${h.path}`);
+    }
+  }
+  if (!anyMissingFile) console.log("Aucun fichier cité dans une tâche terminée ne manque sur disque.");
 
   console.log("\n=== Garde-fou fraîcheur du suivi (commits récents sans mise à jour docs/suivi/) ===\n");
   const missing = findCommitsMissingSuiviUpdate(recentCommits());
