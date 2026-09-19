@@ -343,8 +343,16 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   sur le bouton « ◈ Miroir » tant que l'un ou l'autre est actif.
 - **Mute de l'observateur** (`observerMutedUntilRound`, round absolu) : déclenchement spontané (pas
   de bouton, pas de détection de message — l'initiative vient du personnage), probabilité
-  d'examen par tour éligible ~20 % si l'appréciation d'un des deux personnages est sous 35 (motif de
-  rétorsion), ~5 % sinon (motif d'amusement pur). Le personnage choisit ensuite le niveau : réduit
+  d'examen par tour éligible ~40 % si l'appréciation d'un des deux personnages est sous 35 (motif de
+  rétorsion), ~15 % sinon (motif d'amusement pur) — relevée le 2026-09-19 (retour utilisateur
+  explicite après l'analyse de full_sim5 : zéro déclenchement sur deux simulations dédiées de ~18
+  tours, un taux réel bien plus bas que les ~20 % supposés au moment de la conception). L'éligibilité
+  elle-même est assouplie le même jour : seul le besoin urgent de l'INITIATEUR réellement tiré
+  bloque désormais (`priority(initiatorNeeds)`, vérifié après le tirage), jamais celui des deux
+  personnages à la fois — un partenaire affamé n'empêchait plus l'autre de décider (Article 17).
+  Les autres conditions (budget partagé avec la roulette, les deux réunis, aucune scène concurrente
+  en cours) restent inchangées, chacune protégeant une cohérence narrative documentée. Le personnage
+  choisit ensuite le niveau : réduit
   = 3 tours, classique = 4 ou 5 tours (tiré), max = 6 tours. Bloque `chat` pour les deux canaux
   humains (`code:'observer_muted'`, 423) le temps de la fenêtre ; les deux personnages moquent
   l'observateur muet à chaque tour suivant tant que ça dure ; l'un des deux reconnaît la fin à voix

@@ -888,7 +888,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 83'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 84'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2057,4 +2057,51 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(afterReset.everReachedRevelation,true,'everReachedRevelation must survive a reset, exactly like observer, so the button stays available on later sessions');
   assert.equal(afterReset.finalCalled,false,'a reset must still start the new session before the revelation, even though skipping is available again');
   console.log('Passed: the "skip to revelation" button stays locked before a first genuine completion, produces a plausible and internally coherent investigation plus a real two-voice recap when used, still plays the real revelation address to the observer, cannot be replayed once the revelation has happened, and survives a reset for later sessions.');
+}
+
+{
+  // Éligibilité des bonus spontanés assouplie (2026-09-19, retour utilisateur explicite après
+  // l'analyse détaillée de full_sim5 : ces deux bonus, voulus comme "une vraie décision visible",
+  // ne se sont JAMAIS déclenchés sur deux simulations dédiées de ~18 tours chacune) : seul le
+  // besoin de l'initiateur RÉELLEMENT TIRÉ doit désormais bloquer l'éligibilité, jamais celui de
+  // son partenaire (Article 17) — round trouvé déterministiquement (même seedPick que le serveur
+  // réel) où le motif "amusement" est retenu et l'initiateur tiré est la résidente 1, avec le
+  // résident 2 volontairement laissé à un besoin élevé mais SOUS le seuil "urgent" (65, sous 68) :
+  // haut exprès pour prouver que ce n'est plus la lecture des DEUX personnages qui compte, sans
+  // pour autant déclencher le mécanisme de relocalisation totalement indépendant qui redirigerait
+  // le résident affamé ailleurs et casserait `together` par un autre chemin.
+  let targetRound=-1;
+  const seed=newStory().seed;
+  // Le serveur évalue "consider"/l'initiateur avec story.round PRE-tour (avant l'incrément normal
+  // de fin de tour) — la recherche doit donc porter sur cette même valeur, jamais round+1.
+  for(let round=0;round<2000;round++){
+    const consider=seedPick(seed,"spontane-consider-"+round,[true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]);
+    if(!consider)continue;
+    const initiator=seedPick(seed,"spontane-actor-"+round,[1,2]);
+    if(initiator===1){targetRound=round;break;}
+  }
+  assert.ok(targetRound>=0,'test setup: must find a round where the calm resident is the drawn initiator');
+  const plot={...newStory(),seed,round:targetRound,met:true,introduced:true,sharedMeal:true,finalCalled:true,evidence:Array(5).fill('preuve'),pendingDestination:undefined,life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,exitSearched:true,appreciation:{1:50,2:50}}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  // `revealed` exige que l'observateur ait RÉELLEMENT parlé au moins une fois (observerSpoken),
+  // jamais seulement finalCalled+5 preuves (cf. le test dédié plus haut sur ce mécanisme).
+  sqlite.prepare("INSERT INTO conversations (speaker,content,room,created_at) VALUES ('vous','Vous êtes là ?','salon',?)").run(Date.now());
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,emotions=? WHERE id=1').run('salon',JSON.stringify({hunger:15,fatigue:15,stress:15,uncertainty:15}),JSON.stringify({curiosity:60,tension:20,trust:60,comfort:60,attraction:60}));
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,emotions=? WHERE id=2').run('salon',JSON.stringify({hunger:65,fatigue:15,stress:15,uncertainty:15}),JSON.stringify({curiosity:60,tension:20,trust:60,comfort:60,attraction:60}));
+  const spontEpoch=(await readWorld(db)).epoch;
+  const spontResponse=await post(input('interact',1,{epoch:spontEpoch}));assert.equal(spontResponse.status,200);const spontResult=await spontResponse.json();
+  assert.ok(spontResult.story.life.bonusPsychLog?.some(e=>e.round===targetRound),'a spontaneous bonus consideration must still happen this round even though the OTHER character has an elevated need — only the drawn initiator (the calm one here) must be checked, never both');
+  // Probabilité relevée (2026-09-19) : compte statistiquement, sur 300 tours consécutifs déjà
+  // évalués par la boucle ci-dessus, combien de fois "consider" tombe vrai, en session calme comme
+  // en session hostile — preuve que le taux a bien été augmenté (~15%/~40% attendus), pas seulement
+  // documenté en commentaire.
+  let calmHits=0,hostileHits=0;
+  for(let round=1;round<=300;round++){
+    if(seedPick(seed,"spontane-consider-"+round,[true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]))calmHits++;
+    if(seedPick(seed,"spontane-consider-"+round,[true,true,true,true,false,false,false,false,false,false]))hostileHits++;
+  }
+  assert.ok(calmHits>=30&&calmHits<=60,`the calm-session consider rate must land near the new ~15% target over 300 rounds (got ${calmHits}), neither the old ~5% nor an unreasonably high rate`);
+  assert.ok(hostileHits>=90&&hostileHits<=150,`the hostile-session consider rate must land near the new ~40% target over 300 rounds (got ${hostileHits})`);
+  console.log('Passed: spontaneous observer-mute/camera-hide eligibility no longer requires BOTH characters to be need-free (only the character who actually ends up deciding), and the base consideration probability was genuinely raised (~5%→~15% calm, ~20%→~40% hostile) — closing the near-total lockout found across full_sim4/full_sim5.');
 }

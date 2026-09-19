@@ -810,6 +810,18 @@ la roulette respecte en plus un débit réel côté serveur (60 secondes minimum
 compteur affiché sur le bouton côté client), indépendant de ce budget narratif mais jamais plus
 permissif que lui.
 
+**Recalibrage du 2026-09-19** (retour utilisateur explicite après l'analyse détaillée de full_sim5 :
+zéro déclenchement observé sur deux simulations dédiées de ~18 tours chacune, un rythme réel très
+en-deçà de l'intention documentée). Deux ajustements distincts, jamais un seul : (1) l'éligibilité
+ne vérifie plus le besoin urgent des DEUX personnages, seulement celui de l'INITIATEUR réellement
+tiré par `seedPick` — un partenaire affamé ne devrait pas logiquement empêcher l'AUTRE de décider
+(Article 17) ; les autres conditions (budget partagé, les deux réunis, aucune scène concurrente en
+cours) restent inchangées, chacune protégeant une cohérence narrative précise, jamais une
+restriction accidentelle. (2) La probabilité d'examen elle-même est relevée (~5 %→~15 % en session
+calme, ~20 %→~40 % en session hostile, cf. `parametres.md`) : reste une exception rare, jamais un
+tirage à chaque tour, mais assez fréquente pour devenir réellement visible sur une session de
+longueur normale.
+
 8.13. **La description d'apparence n'est plus écrasée par un texte scripté** (`app/api/lia/route.ts`,
 2026-09-18, retour utilisateur explicite après lecture de full_sim4 : le partenaire ignorait
 systématiquement le jardin/la question posée juste avant, car sa réplique entière était remplacée

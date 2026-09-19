@@ -1166,15 +1166,36 @@ export async function POST(request: Request) {
           const bonusPacingClear=story.round>=(life.bonusCooldownUntilRound??0)&&story.round>(life.bonusSpotlightUntilRound??0);
           const observerCurrentlyMuted=story.round<(life.observerMutedUntilRound??0);
           const cameraCurrentlyHidden=(life.cameraHiddenUntil??0)>nowTs;
-          const spontaneousEligible=revealed&&["interact","autonomous"].includes(input.mode)&&bonusPacingClear&&!observerCurrentlyMuted&&!cameraCurrentlyHidden&&together&&!life.debrief?.remaining&&!life.contact?.remaining&&!life.dispute?.remaining&&!story.pendingDestination&&!dossierAwaitingAnswer&&!priority(finalResidents[0].needs)&&!priority(noe.needs);
+          // Éligibilité assouplie le 2026-09-19 (retour utilisateur explicite après l'analyse de
+          // full_sim5 : ces deux bonus, voulus comme "une vraie décision visible", ne se sont
+          // JAMAIS déclenchés sur deux simulations dédiées de ~18 tours chacune) : le besoin urgent
+          // d'un des deux personnages ne bloque plus l'éligibilité elle-même — un partenaire qui a
+          // faim n'empêche pas logiquement l'AUTRE de décider de couper le micro ou la caméra
+          // (Article 17 : c'est la cohérence de CELUI QUI DÉCIDE qui compte, pas celle de son
+          // partenaire). Le besoin propre à l'initiateur reste vérifié plus bas, une fois
+          // l'initiateur réellement tiré — jamais retiré, seulement recentré sur la bonne personne.
+          // Les autres conditions (budget partagé, ensemble, pas de scène concurrente en cours)
+          // restent inchangées : chacune protège une cohérence narrative documentée (principes.md
+          // 8.12), jamais une restriction accidentelle à assouplir sans discernement.
+          const spontaneousEligible=revealed&&["interact","autonomous"].includes(input.mode)&&bonusPacingClear&&!observerCurrentlyMuted&&!cameraCurrentlyHidden&&together&&!life.debrief?.remaining&&!life.contact?.remaining&&!life.dispute?.remaining&&!story.pendingDestination&&!dossierAwaitingAnswer;
           if(spontaneousEligible){
             const recentHostility=appreciationOf(life,1)<35||appreciationOf(life,2)<35;
-            const consider=seedPick(story.seed,"spontane-consider-"+story.round,recentHostility?[true,true,false,false,false,false,false,false,false,false]:[true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]);
+            // Probabilité relevée le 2026-09-19 (retour utilisateur explicite : "fais au mieux, pour
+            // l'utilisateur, pour une meilleure expérience" après avoir constaté que l'assouplissement
+            // de l'éligibilité seule ne suffisait pas — un besoin urgent relocalise de toute façon le
+            // résident concerné ailleurs le même tour, cassant `together` par un mécanisme totalement
+            // indépendant, avant même d'atteindre ce bloc). ~5%→~15% en session calme, ~20%→~35% en
+            // session hostile : reste une exception rare (jamais un tirage à chaque tour, budget
+            // partagé avec la roulette toujours actif juste en dessous), mais assez fréquente pour
+            // devenir réellement visible sur une session de longueur normale.
+            const consider=seedPick(story.seed,"spontane-consider-"+story.round,recentHostility?[true,true,true,true,false,false,false,false,false,false]:[true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]);
             if(consider){
               const motive=recentHostility?seedPick(story.seed,"spontane-motive-"+story.round,["retaliation","retaliation","amusement"] as const):"amusement";
               const kind=seedPick(story.seed,"spontane-kind-"+story.round,["observer_mute","camera_hide"] as const);
               const initiator=seedPick(story.seed,"spontane-actor-"+story.round,[1,2] as const);
               const otherActor:Person=initiator===1?2:1;
+              const initiatorNeeds=finalResidents.find(a=>a.id===initiator)!.needs;
+              if(!priority(initiatorNeeds)){
               const appr=appreciationOf(life,initiator);
               const activates=motive==="retaliation"
                 ?seedPick(story.seed,"spontane-verdict-"+story.round,appr<25?["yes","yes","yes","no"]:appr<40?["yes","yes","no","no"]:["yes","no","no","no"] as const)==="yes"
@@ -1232,6 +1253,7 @@ export async function POST(request: Request) {
                   };
                   spontaneousBonusLines.push({actor:initiator,content:seedPick(story.seed,"spontane-decline-"+story.round,declineLines[kind][initiator])});
                 }
+              }
               }
             }
           } else if((observerCurrentlyMuted||cameraCurrentlyHidden)&&together&&["interact","autonomous"].includes(input.mode)){
