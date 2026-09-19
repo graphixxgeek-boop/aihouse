@@ -838,7 +838,13 @@ zéro appel API de plus) devient une ligne « · pensée » visible, passée par
 `groundRegister`/`groundTruncation` que toute réplique parlée. Volontairement absente quand
 `!affectionEligible` a forcé un refus scénarisé : le thought du modèle, généré avant cette
 correction, pourrait ne pas correspondre à l'issue imposée — mieux vaut l'omettre que montrer une
-pensée incohérente avec la réplique (article 0/17).
+pensée incohérente avec la réplique (article 0/17). Durcie le 2026-09-19 (audit de cohérence, aucun
+test dédié n'existait jusque-là — Article 13) : la garde d'origine (`affectionIntents.includes(
+decisions[0].intent)`) ne dépendait que du type d'intent, qui resterait vrai plusieurs tours de
+suite pour un intent qui se poursuit (share_sleep) sans qu'une AUTRE protection du moteur ne
+neutralise déjà ce cas ailleurs. Remplacée par `turnPlan.offer&&turnPlan.proposalLine`, le signal
+direct d'une proposition fraîche ce tour précis — jamais dépendante d'un effet de bord d'un
+mécanisme distinct pour rester correcte (Article 5).
 
 8.16. **Doute d'humanité au tout premier réveil** (`app/api/lia/route.ts`, 2026-09-18, retour
 utilisateur explicite : « une des premières questions que se posent les persos [...] est-ce que je

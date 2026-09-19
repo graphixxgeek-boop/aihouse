@@ -833,7 +833,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 76'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 77'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -1609,4 +1609,58 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(r3.status,200);
   assert.equal(lastContext.loveDiscussable,true,'once an intimate gesture is done and the private doubt already lived once, the model must be invited to raise it aloud');
   console.log('Passed: the private love-doubt thought surfaces exactly once when attraction first crosses 75 (never repeated), and loveDiscussable only turns on once a real intimate gesture has happened and the doubt was already lived privately.');
+}
+
+{
+  // Pensée de validation après une décision affectueuse (2026-09-18/19, cf. docs/referentiel
+  // principes.md 8.15) — jamais testée dédiée jusqu'ici (écart trouvé en audit, Article 13).
+  // Durcie le même jour lors de cet audit : la garde initiale se contentait de
+  // `affectionIntents.includes(decisions[0].intent)`, qui resterait vraie plusieurs tours de suite
+  // si un intent affectueux venait à persister sans proposition fraîche. En creusant pour écrire
+  // ce test, la trace réelle a montré qu'un autre garde-fou du moteur (la conversion "chat" de tout
+  // intent affectueux non structurellement agréé) empêche déjà ce cas précis d'être atteint en
+  // pratique pour hug/massage/kiss — mais la garde exigeant en plus `turnPlan.offer&&
+  // turnPlan.proposalLine` (le signal exact d'une proposition FRAÎCHE) reste une précision utile,
+  // jamais dépendante d'un effet de bord d'un mécanisme distinct pour rester correcte (Article 5).
+  // Configuration reprise à l'identique du test "hug" déjà éprouvé plus haut (odd-cycle Noé
+  // 100%/Lia 89%, cf. actionPlot) : la seule combinaison de ce fichier de tests déjà confirmée
+  // pour déclencher un vrai turnPlan.offer, plutôt que d'en deviner une nouvelle à l'aveugle.
+  const validPlot={...newStory(),life:{...newStory().life,visited:['salon','cuisine','chambre','bureau'],tvSeen:true,ambientSeen:true,ambientVerified:true,recapCount:5,personalAsked:true,visualIntro:2,personalFollowup:3,exitSearched:true},round:20,introduced:true,met:true,sharedMeal:true,salonTurns:0,pendingDestination:{room:'bureau',intent:'study',proposer:1}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(validPlot));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,cycle=?,needs=?,emotions=? WHERE id=?').run('salon','chat',1,JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}),JSON.stringify({...steady,attraction:89,trust:80}),1);
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,cycle=?,needs=?,emotions=? WHERE id=?').run('salon','chat',0,JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}),JSON.stringify({...steady,attraction:100,trust:80}),2);
+  sqlite.prepare('INSERT INTO conversations (speaker,content,created_at) VALUES (?,?,?)').run('Lia','Ces moments avec toi me plaisent.',Date.now());
+  const validEpoch=(await readWorld(db)).epoch;
+  honorOffer=true;
+  const rA=await post(input('interact',1,{epoch:validEpoch}));
+  honorOffer=false;
+  assert.equal(rA.status,200);
+  const wA=await rA.json();
+  assert.equal(wA.sharedAffection,'hug','setup check: a fresh hug proposal must actually have been accepted this turn, or this test proves nothing');
+  const decider=wA.proposalActor===1?2:1;
+  const deciderName=decider===1?'Lia':'Noé';
+  // Le mock par défaut (honorOffer, hors branches spéciales) donne à l'appel "partner" une pensée
+  // fixe et distincte par personnage — reprise ici telle quelle, jamais réinventée à l'aveugle.
+  const defaultThought=decider===1?'Noé m’intrigue ; je ne sais pas encore si je peux lui faire confiance.':'Lia me plaît, mais je préfère attendre un signe avant de lui proposer un câlin.';
+  assert.equal(wA.messages.filter(m=>m.speaker===deciderName+' · pensée'&&m.content===defaultThought).length,1,'a fresh affectionate proposal that gets decided must surface the decider\'s own thought as a validation line exactly once');
+  // Tour suivant, sans repli sur honorOffer : AUCUNE proposition fraîche n'est en cours
+  // (turnPlan.offer redevient undefined, confirmé ci-dessous). Le modèle tente de renvoyer un
+  // intent affectueux avec le MÊME thought qu'avant ; le moteur le neutralise déjà de son côté
+  // (converti en "chat" faute d'accord structurel), et la garde renforcée n'a de toute façon plus
+  // aucune raison de se déclencher — les deux protections restent cohérentes l'une avec l'autre.
+  const priorFetch3=globalThis.fetch;
+  globalThis.fetch=async(url,options)=>{
+    const payload=JSON.parse(options.body),context=JSON.parse(payload.contents[0].parts[0].text);
+    assert.equal(context.turnPlan?.offer,undefined,'setup check: this second turn must carry no fresh offer, or it does not exercise the persisting-state case at all');
+    return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({intent:'hug',affectionAccepted:true,emotions:context.state.emotions,reply:'On continue comme ça, tranquille.',thought:defaultThought,stayAlone:false,mood:'attentive',activity:'Je discute',goal:'Faire connaissance',action:'none',room:context.scene.room,memory:'On continue.'})}]}}]});
+  };
+  const epochB=(await readWorld(db)).epoch;
+  const rB=await post(input('interact',1,{epoch:epochB}));
+  globalThis.fetch=priorFetch3;
+  assert.equal(rB.status,200);
+  const wB=await rB.json();
+  assert.equal(wB.decisions.length,2,'setup check: both decisions must exist this turn, or this test proves nothing');
+  assert.equal(wB.messages.filter(m=>m.speaker===deciderName+' · pensée'&&m.content===defaultThought).length,1,'without a fresh turnPlan.offer, no second validation line must ever appear, even if the model keeps returning the same thought');
+  console.log('Passed: the affection-decision validation thought surfaces exactly once on a genuinely fresh proposal, and stays silent on a later turn carrying no fresh offer (Article 13 gap closed; the guard was also hardened during this audit to depend only on its own fresh-proposal signal, never on another mechanism\'s side effect).');
 }

@@ -1166,7 +1166,16 @@ export async function POST(request: Request) {
         // contraire (turnPlan.offer&&!affectionEligible, plus haut), le refus est scénarisé de
         // force et le thought du modèle peut ne pas correspondre à cette issue imposée — mieux
         // vaut ne rien montrer que montrer une pensée incohérente avec la réplique (Article 17).
-        if(decisions.length===2&&affectionIntents.includes(decisions[0].intent)&&affectionEligible&&decisions[1].thought){
+        // Précision renforcée en audit (2026-09-19) : `affectionIntents.includes(decisions[0].intent)`
+        // resterait vraie plusieurs tours de suite si un intent affectueux persistait sans
+        // proposition fraîche (share_sleep, par ex., se comporte comme le sommeil, pas un geste
+        // ponctuel). Un autre garde-fou du moteur neutralise déjà ce cas en pratique pour
+        // hug/massage/kiss (conversion en "chat" faute d'accord structurel) — mais cette pensée ne
+        // doit jamais dépendre de l'effet de bord d'un mécanisme distinct pour rester correcte
+        // (Article 5) : `turnPlan.offer&&turnPlan.proposalLine` (même garde que celle qui fixe
+        // l'intent à la ligne 737) est le signal direct et suffisant d'une PROPOSITION FRAÎCHE ce
+        // tour précis, jamais d'un état qui se poursuit.
+        if(decisions.length===2&&turnPlan.offer&&turnPlan.proposalLine&&affectionEligible&&decisions[1].thought){
           addLine(names[decisions[1].actor]+" · pensée",groundRegister(groundTruncation(decisions[1].thought)),finalResidents.find(a=>a.id===decisions[1].actor)!.room);
         }
         if(personalConcludingTurn){
