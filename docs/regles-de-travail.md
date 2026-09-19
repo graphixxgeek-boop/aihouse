@@ -198,6 +198,15 @@ modification de l'outil cette fois »). Le silence sur ce point n'est jamais une
 sujet a été abordé — c'est ce qui permet à l'utilisateur de suivre l'évolution réelle de l'outil
 dans la durée, y compris ses paliers, pas seulement ses sauts.
 
+**Le rapport KPI (`kpi-report.mjs`) fait partie intégrante de chaque livraison de simulation,
+jamais un à-côté optionnel.** *(Ajouté le 2026-09-19, après un oubli réel signalé par
+l'utilisateur : une livraison de simulation complète n'incluait ni le rapport ni les KPI du Smart
+Breaker.)* L'étape correspondante est désormais explicite dans le protocole de simulation
+(Article 18 de `CLAUDE.md`, étape 4) : `node scripts/kpi-report.mjs` se lance avant tout
+redémarrage du serveur, et ses résultats accompagnent le transcript/dossier dans la même livraison
+— jamais un rapport pensé comme secondaire ou fait "si on y pense". Cette section-ci documente
+l'évolution de l'outil dans le temps ; l'Article 18 documente QUAND le consulter à chaque cycle.
+
 **Historique des évolutions de l'outil quota/clé Gemini :**
 
 - *2026-09-18* — Ajout de la mémoire d'expérience (`gemini-key-health.mjs`) : les clés sondées sont

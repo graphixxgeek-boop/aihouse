@@ -320,16 +320,24 @@ enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redem
 3. Une fois terminé, livrer le copier-coller intégral du transcript en fichier joint uniquement
    (cf. préférence déjà actée plus haut, jamais collé en clair dans la réponse), accompagné du
    dossier retourné complet.
-4. Passer directement à une analyse détaillée de ce qui fonctionne et de ce qui ne fonctionne pas
+4. **Lancer `node scripts/kpi-report.mjs` avant de redémarrer le serveur** (2026-09-19, ajouté après
+   un oubli réel constaté par l'utilisateur : la livraison d'une simulation n'incluait ni le rapport
+   ni les KPI du Smart Breaker, alors que `docs/referentiel/tableau-de-bord.md` prévoyait déjà cette
+   cadence sans qu'elle soit explicitement une étape d'Article 18 — un écart entre deux documents,
+   traité comme un bug, cf. Article 13) et inclure ses résultats dans la même livraison que le
+   transcript/dossier — jamais un rapport à part, oublié ou différé. Les compteurs du Smart Breaker
+   étant en mémoire process, ce rapport doit être pris AVANT de relancer le serveur pour la
+   simulation suivante, sous peine de perdre les chiffres de cette session précise.
+5. Passer directement à une analyse détaillée de ce qui fonctionne et de ce qui ne fonctionne pas
    dans ce nouveau transcript — jamais une simple confirmation que « ça tourne ».
-5. Comparer systématiquement avec la dernière version de simulation complète disponible pour
+6. Comparer systématiquement avec la dernière version de simulation complète disponible pour
    mesurer l'évolution réelle et la réussite des derniers travaux engagés, jamais une lecture
    isolée sans mise en perspective avec l'historique.
-6. Poser au moins une dizaine de questions de calibrage à l'utilisateur avant d'entamer la moindre
+7. Poser au moins une dizaine de questions de calibrage à l'utilisateur avant d'entamer la moindre
    correction ou optimisation identifiée par cette analyse — jamais corriger silencieusement sur la
    base d'une seule lecture personnelle du transcript (cf. Article 16, dont c'est ici une exigence
    renforcée, pas une exception).
-7. Organiser ensuite le correctif/l'optimisation de manière sûre, robuste et fiabilisée, avec la
+8. Organiser ensuite le correctif/l'optimisation de manière sûre, robuste et fiabilisée, avec la
    même rigueur que le reste de la charte (tests créés si besoin, suite complète revérifiée verte,
    documentation mise à jour le jour même — Articles 3, 5, 13).
 
@@ -544,7 +552,7 @@ moment où il livre le transcript d'une nouvelle simulation, pas seulement la pr
 
 **Questions de calibrage après « voici mes commentaires »** *(Ajouté le 2026-09-18, à la demande
 explicite de l'utilisateur : « tu peux maintenant me poser des questions... c'est le bon moment »).*
-L'exigence de l'étape 6 de l'Article 18 (au moins une dizaine de questions avant correction) ne
+L'exigence de l'étape 7 de l'Article 18 (au moins une dizaine de questions avant correction) ne
 s'applique pas seulement à l'analyse initiale de l'agent : elle s'applique de la même façon à ce
 second passage de retours annotés par l'utilisateur. Dès que « voici mes commentaires » arrive avec
 plusieurs points distincts, l'agent identifie lesquels sont des bugs à cause racine évidente
@@ -558,9 +566,9 @@ traités point par point (Article 16, complément du 2026-09-17).
 **Sondage rapide juste après la livraison des documents d'une simulation.** *(Ajouté le
 2026-09-19, à la demande explicite de l'utilisateur : « il n'est pas sûr que j'aie lu la
 conversation en entier [...] mets en place cette méthode de travail maintenant ».)* Dès que le
-transcript et le dossier d'une nouvelle simulation sont livrés (étape 3 de l'Article 18), avant de
-se lancer dans l'analyse détaillée (étape 4), l'agent pose un petit questionnaire de calibrage en
-trois questions, via l'outil de questions dédié (format ci-dessus) :
+transcript, le dossier et le rapport KPI d'une nouvelle simulation sont livrés (étapes 3 et 4 de
+l'Article 18), avant de se lancer dans l'analyse détaillée (étape 5), l'agent pose un petit
+questionnaire de calibrage en trois questions, via l'outil de questions dédié (format ci-dessus) :
 1. Est-ce que l'utilisateur va lire la conversation livrée entièrement, en diagonale, ou pas du
    tout — pour savoir si l'analyse peut supposer une lecture déjà faite ou doit tout réexpliquer.
 2. Est-ce que l'utilisateur a besoin que l'agent cite des extraits précis de la conversation pour
@@ -587,7 +595,7 @@ implicite — pour que l'utilisateur sache d'emblée quel genre de réponse appo
 **Format de présentation des questions — toujours une fenêtre dédiée.** *(Ajouté le 2026-09-19, à
 la demande explicite de l'utilisateur : « les questions doivent toujours être posées dans une
 fenêtre au format habituel ».)* Toute question relevant de l'Article 16 (et de ses compléments
-ci-dessus, y compris l'étape 6 de l'Article 18 et le second passage après « voici mes
+ci-dessus, y compris l'étape 7 de l'Article 18 et le second passage après « voici mes
 commentaires ») est posée via l'outil dédié de questions à choix (fenêtre structurée avec options
 sélectionnables), **jamais** comme une simple phrase interrogative noyée dans le corps d'une
 réponse en texte libre — même quand une seule question suffit. Format attendu de chaque question
@@ -601,7 +609,7 @@ dans cette fenêtre :
   technique de l'outil) plutôt que d'ouvrir une fenêtre par question quand elles portent sur le
   même sujet.
 Si le nombre de questions dépasse la capacité d'une seule fenêtre (par exemple la dizaine de
-questions de calibrage de l'étape 6 de l'Article 18), elles sont réparties sur plusieurs fenêtres
+questions de calibrage de l'étape 7 de l'Article 18), elles sont réparties sur plusieurs fenêtres
 successives plutôt que compressées en texte libre pour tenir dans une seule.
 
 **Clarté pour un non-développeur — l'enjeu de chaque réponse doit être compréhensible sans
