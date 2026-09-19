@@ -741,6 +741,14 @@ logique, variété/rejouabilité) sous une forme générique, réutilisable sur 
 (registre vivant). Même séparation architecture/instanciation que pour l'outil de résilience API
 ci-dessus, à la demande explicite de l'utilisateur le 2026-09-19.
 
+## ARGUS — blueprint exportable
+
+`docs/argus-blueprint.md` documente l'ARCHITECTURE du détecteur de trous logiques (cf. Article 20)
+sous une forme générique, réutilisable sur un autre projet piloté par IA — jamais le registre des
+trouvailles propre à ce projet, qui vit dans `docs/argus/` (dossier + index) et
+`docs/referentiel/argus.md` (instanciation). Même séparation architecture/instanciation que pour
+l'outil de résilience API et le tableau de bord ci-dessus.
+
 ## Référentiel technique — la référence à jour
 
 - `docs/referentiel/principes.md` — les règles invariantes du comportement de la maison, telles
@@ -769,9 +777,15 @@ ci-dessus, à la demande explicite de l'utilisateur le 2026-09-19.
 - `docs/referentiel/points-fragiles.md` (2026-09-19) — registre vivant des points identifiés comme
   fragiles ou en attente d'une décision de conception (pas des bugs actifs, ceux-là se corrigent
   directement) ; compté par `scripts/kpi-report.mjs` comme un des indicateurs de robustesse du code.
+- `docs/referentiel/argus.md` (2026-09-19) — instanciation d'ARGUS (Article 20) pour ce projet :
+  ce qui existe (`scripts/check-argus.mjs`), le registre des trous trouvés (`docs/argus/`), l'état
+  du premier balayage complet. Cf. `docs/argus-blueprint.md` pour le principe générique.
 
-Ces quatre documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
-vérité. Ils doivent être mis à jour à chaque changement de règle ou de paramètre — un principe
+Ces documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
+vérité (leur nombre exact a varié au fil des chantiers — se référer à la liste ci-dessus plutôt
+qu'à un chiffre fixe, corrigé le 2026-09-19 après avoir constaté qu'il était resté à "quatre" alors
+que la liste en comptait déjà six, exactement le genre d'écart que l'Article 13 est censé
+empêcher). Ils doivent être mis à jour à chaque changement de règle ou de paramètre — un principe
 ou un chiffre qui change dans le code et pas ici est une dette à combler tout de suite, pas plus
 tard (Article 6/7/13).
 

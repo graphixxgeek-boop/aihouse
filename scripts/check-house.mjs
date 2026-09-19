@@ -905,7 +905,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 99'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 100'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2403,4 +2403,35 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(replayabilityScore({distinctBonuses:3,totalBonusTypes:0}),undefined,'zero total bonus types must never divide by zero');
   for(const bad of [NaN,Infinity,-Infinity,undefined])assert.equal(dashboardCoverageScore([bad,100,100,100,100]).measured,4,'a non-finite family score must count as unmeasured, never as a valid measurement');
   console.log('Passed: every kpi-report.mjs scoring function returns a correct percentage on well-formed data, and returns undefined — never NaN, Infinity, or a disguised 0% — on missing, malformed, or zero-denominator input, closing the exact class of bug (a silent miscount) found while building the dashboard.');
+}
+
+{
+  // ARGUS — partie mécanique (2026-09-19, cf. docs/argus-blueprint.md et docs/referentiel/argus.md).
+  // check-argus.mjs est un simple script .mjs (même patron que kpi-report.mjs) : ses fonctions
+  // pures s'importent directement contre de petites fixtures écrites sur disque, jamais contre le
+  // vrai code du projet dans ce test (qui varie dans le temps et casserait des assertions figées).
+  const {findDeadLifeFields,findTodoMarkers}=await import('../scripts/check-argus.mjs');
+  const fixtureLifeSource='export type Life={usedField?:boolean;deadField?:boolean;barelyUsedField?:boolean};';
+  fs.writeFileSync('.sites-runtime/argus-fixture-usage.ts','life.usedField=true;if(life.usedField){}console.log(life.usedField);life.usedField=false;a.usedField=b.usedField;');
+  // Construit par concaténation (jamais le motif "// TODO"/"// FIXME" écrit tel quel dans CE
+  // fichier) : sinon check-argus.mjs, en balayant plus tard le vrai contenu de check-house.mjs,
+  // compterait aussi cette fixture comme un vrai marqueur — le même bug auto-référentiel déjà
+  // trouvé et corrigé une fois pour kpi-report.mjs (2026-09-19), reproduit ici avec ARGUS,
+  // corrigé de la même façon plutôt qu'en excluant ce fichier du balayage (Article 3).
+  fs.writeFileSync('.sites-runtime/argus-fixture-todo.ts','//'+' TODO: brancher la vraie logique ici\nconst x=1;\n//'+' FIXME later\nfunction ok(){return 1;}');
+  const dead=findDeadLifeFields(['.sites-runtime/argus-fixture-usage.ts'],fixtureLifeSource);
+  assert.ok(dead.some(d=>d.field==='deadField'&&d.confidence==='confirmé'),'a field declared in the Life type but never referenced anywhere else in the project must be flagged as a confirmed dead field');
+  assert.ok(!dead.some(d=>d.field==='usedField'),'a field referenced well beyond the threshold (declaration + several real uses) must never be flagged, zero false positive on a genuinely used field');
+  assert.ok(dead.some(d=>d.field==='barelyUsedField'),'a field referenced only in the type declaration and nowhere else must still be flagged (probable, since the fixture never uses it at all)');
+  const todos=findTodoMarkers(['.sites-runtime/argus-fixture-todo.ts']);
+  assert.equal(todos.length,2,'both a TODO and a FIXME marker must be caught, one entry per marker line');
+  assert.ok(todos.every(t=>t.file.includes('argus-fixture-todo')&&typeof t.line==='number'));
+  assert.equal(findTodoMarkers(['.sites-runtime/argus-fixture-usage.ts']).length,0,'a file with no TODO/FIXME marker must never produce a false positive');
+  // Second bug auto-référentiel réel trouvé en construisant ce test précis (2026-09-19) : une
+  // ligne qui PARLE de TODO/FIXME au milieu d'une phrase de commentaire (comme celle-ci) déclenchait
+  // aussi un faux positif avant l'ancrage en début de ligne — vérifié explicitement ici pour ne
+  // jamais le laisser revenir sous une autre forme (Article 3).
+  fs.writeFileSync('.sites-runtime/argus-fixture-mention.ts','// Ce commentaire parle de TODO et de FIXME sans en être un lui-même\nconst y=1;');
+  assert.equal(findTodoMarkers(['.sites-runtime/argus-fixture-mention.ts']).length,0,'a comment that merely MENTIONS "TODO"/"FIXME" mid-sentence must never be mistaken for a real marker — only one that opens the comment counts');
+  console.log("Passed: ARGUS's mechanical layer correctly flags a Life-type field that is genuinely never read elsewhere as a confirmed dead field, never flags a field with real, plentiful usage, reliably catches every real TODO/FIXME marker, and never mistakes a comment merely mentioning those words for an actual marker — two self-referential false-positive bugs found and fixed while building this exact test.");
 }
