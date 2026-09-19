@@ -553,9 +553,19 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   3 variantes par personnage × urgence/résolu = 12 lignes), tombée de la nuit (round%38===29, 3
   variantes × 2), aube (round%38===0 et round>0, 3 variantes × 2) — toutes en « · pensée », jamais
   en dialogue humain, jamais adressées à un personnage déjà endormi.
-- Indicateur client (`app/page.tsx`, `.daynight-indicator`, `world.story.dayNight`) : distinct du
-  bouton manuel `night` déjà existant (réglage d'éclairage 3D à la discrétion de l'observateur,
-  sans aucun effet mécanique, présent avant ce chantier).
+- Indicateur client (`app/page.tsx`, `.daynight-indicator`, `world.story.dayNight`) : depuis le
+  2026-09-19, `night` (éclairage 3D, `<HouseView>`) est DÉRIVÉ de cette même horloge automatique
+  (`world.story.dayNight.isNight`), plus un état séparé cliquable — l'ancien bouton manuel a été
+  retiré (préférence explicite de l'utilisateur, exprimée lors du test de compréhension du même
+  jour) car il n'avait jamais d'effet mécanique et pouvait diverger de l'horloge réelle.
+- **Nuit blanche / dette de sommeil** (`life.sleptThisNight`, `app/api/lia/route.ts`, 2026-09-19,
+  conception calibrée avec l'utilisateur) : `+28` fatigue, FIXE et non cumulable, appliqué à chaque
+  aube (`cyclePosition(round)===0`) si le personnage n'a jamais eu `isSleeping()` vrai pendant les 9
+  tours de la nuit qui vient de s'écouler. Le flag est remis à zéro à chaque aube (pas un compteur
+  qui s'additionnerait d'une nuit blanche à l'autre). Toujours accompagné d'une reconnaissance
+  explicite (3 variantes distinctes dans le fond par personnage, `dayNightLines`, jamais silencieux)
+  qui REMPLACE la ligne d'aube ordinaire ce tour-là, jamais les deux à la fois. Aucune sieste forcée
+  dans la journée qui suit (décision explicite : pénalité + reconnaissance seulement).
 
 ## Rejouabilité (`lib/story.ts`, `lib/drama.ts`)
 

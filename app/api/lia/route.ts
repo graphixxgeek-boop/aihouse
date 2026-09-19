@@ -1326,7 +1326,17 @@ export async function POST(request: Request) {
               1:["Le jour revient. Encore une nuit de passée dans cet endroit.","Ça se remet à éclairer dehors. Une nuit de plus derrière nous.","Le jour se lève. On a survécu à une nuit de plus ici, formidable."],
               2:["Le jour est là. Une nuit de plus, toujours dans cette maison.","Ça se relève dehors. On enchaîne, une nuit après l'autre.","Le jour revient. Franchement, j'ai hâte que ça change, un jour."]
             };
-            for(const id of [1,2] as const){const agent=finalResidents.find(a=>a.id===id)!;if(isSleeping(agent,life))continue;dayNightLines.push({actor:id,content:seedPick(story.seed,"aube-"+id+"-"+nextStory.round,dawnPool[id])});}
+            // Nuit blanche (2026-09-19) : reconnaissance explicite, jamais silencieuse (Article 15/17),
+            // quand le personnage n'a dormi à aucun moment pendant les 9 tours de nuit qui viennent de
+            // s'écouler (life.sleptThisNight, lu ICI avant que la boucle de besoins ci-dessous ne le
+            // remette à zéro pour la nuit suivante). Variantes distinctes dans le FOND (pas de simples
+            // synonymes, Article 10) : conséquence pratique, doute sur sa propre nature, sarcasme sur
+            // la simulation — jamais la même idée recyclée trois fois.
+            const nuitBlanchePool:Record<Person,string[]>={
+              1:["Nuit blanche. Mon corps ne pardonne rien, même si je ne suis même pas sûre d'avoir un vrai corps.","Zéro sommeil cette nuit. Ça va se voir toute la journée, tant pis pour vous deux.","Je n'ai pas dormi une minute. Pratique, pour un programme censé simuler un humain fatigable."],
+              2:["Nuit blanche complète, encore. Mon organisme, ou ce qui en tient lieu, va me le faire payer aujourd'hui.","J'ai veillé toute la nuit. Génial, un jour de plus à traîner ma fatigue comme un boulet.","Zéro sommeil. Même une IA censée gérer la fatigue frôle le bug, apparemment."]
+            };
+            for(const id of [1,2] as const){const agent=finalResidents.find(a=>a.id===id)!;if(isSleeping(agent,life))continue;const missedNight=life.sleptThisNight?.[id]!==true;dayNightLines.push({actor:id,content:seedPick(story.seed,(missedNight?"nuit-blanche-":"aube-")+id+"-"+nextStory.round,missedNight?nuitBlanchePool[id]:dawnPool[id])});}
           }
         }
         const finaleLines=finale?finaleReveal(story.seed):undefined;
@@ -1459,6 +1469,19 @@ export async function POST(request: Request) {
             const d = decisions.find(d => d.actor === agent.id);
             const room = d ? d.action === "none" ? agent.room : d.room : agent.room;
             const needs = advanceNeeds(agent.needs, d?.intent === "chat" && solitary.has(agent.id) ? "none" : d?.intent ?? ((agent.intent === "sleep" || agent.intent === "share_sleep") ? agent.intent : "none"), room, agent.id, fatigueRateMultiplier(nextStory.round));
+            // Nuit blanche / dette de sommeil (2026-09-19, conception calibrée avec l'utilisateur) :
+            // vérifié puis remis à zéro exactement à l'aube (round où le cycle revient à 0, même seuil
+            // que la ligne de reconnaissance ci-dessus), AVANT toute autre mutation de fatigue de ce
+            // tour — les malus suivants (choc émotionnel, etc.) s'additionnent par-dessus, jamais
+            // l'inverse. Malus fixe (+28), jamais cumulable d'une nuit blanche à l'autre : un simple
+            // flag remis à zéro chaque nuit, pas un compteur qui s'additionnerait (décision explicite
+            // de l'utilisateur — pas de dette qui s'aggrave, pas de sieste forcée).
+            if(cyclePosition(nextStory.round)===0&&nextStory.round>0){
+              if(life.sleptThisNight?.[agent.id]!==true)needs.fatigue=Math.min(100,needs.fatigue+28);
+              life.sleptThisNight={...life.sleptThisNight,[agent.id]:false};
+            } else if(isNight(nextStory.round)&&isSleeping({id:agent.id,intent:d?.intent??agent.intent,needs},life)){
+              life.sleptThisNight={...life.sleptThisNight,[agent.id]:true};
+            }
             if (agent.id === 2 && world.agents.find(a => a.id === 1)!.emotions.attraction < 5) {
                 needs.stress = Math.min(100, needs.stress + 8);
                 if (d)

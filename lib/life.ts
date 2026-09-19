@@ -135,6 +135,15 @@ worstMoment?:{round:number;excerpt:string;trustShift:number};
 // même temps que appreciation ci-dessus, pour la même raison (deux jauges qui peuvent diverger ne
 // peuvent pas partager un seul palier de respect).
 genuineRespectStreak?:Partial<Record<Person,number>>;
+// Nuit blanche / dette de sommeil (2026-09-19, conception calibrée avec l'utilisateur après le
+// "test de compréhension" du même jour — cf. CLAUDE.md, points-fragiles.md). sleptThisNight retient,
+// par personnage, qu'il a réellement dormi (isSleeping() vrai) au moins une fois pendant la nuit en
+// cours (lib/daynight.ts, 9 tours) ; vérifié puis remis à zéro à chaque aube (route.ts). Si jamais
+// vrai à l'aube, un malus de fatigue fixe (+28, jamais cumulable d'une nuit blanche à l'autre — un
+// simple flag, pas un compteur qui s'additionnerait) s'applique, accompagné d'une reconnaissance
+// explicite (jamais silencieuse, Article 15/17) — sans sieste forcée, décision explicite de
+// l'utilisateur (pénalité + reconnaissance seulement, pas de mécanique de sieste imposée).
+sleptThisNight?:Partial<Record<Person,boolean>>;
 // Bouton "passer à la révélation" (2026-09-19) : même schéma que dossierText ci-dessus (deux voix
 // séparées, jamais une synthèse générée par un seul cerveau qui invente le ton de l'autre — Article
 // 8), mais pour le court récit rétrospectif affiché au moment du saut, pas pour le diagnostic de
@@ -167,7 +176,8 @@ export function readLife(value:unknown,round=0):Life{const v=value&&typeof value
 ,lastBonusSpinAt:typeof v.lastBonusSpinAt==="number"&&Number.isFinite(v.lastBonusSpinAt)?Math.max(0,v.lastBonusSpinAt):undefined
 ,observerMutedUntilRound:typeof v.observerMutedUntilRound==="number"&&Number.isFinite(v.observerMutedUntilRound)?Math.max(0,Math.min(round+10,v.observerMutedUntilRound)):undefined
 ,cameraHiddenUntil:typeof v.cameraHiddenUntil==="number"&&Number.isFinite(v.cameraHiddenUntil)?Math.max(0,v.cameraHiddenUntil):undefined
-,loveRealized:{...(v.loveRealized?.[1]===true?{1:true}:{}),...(v.loveRealized?.[2]===true?{2:true}:{})},intimateGestureDone:v.intimateGestureDone===true};}
+,loveRealized:{...(v.loveRealized?.[1]===true?{1:true}:{}),...(v.loveRealized?.[2]===true?{2:true}:{})},intimateGestureDone:v.intimateGestureDone===true
+,sleptThisNight:{...(v.sleptThisNight?.[1]===true?{1:true}:{}),...(v.sleptThisNight?.[2]===true?{2:true}:{})}};}
 // Détection heuristique d'une réaction de choc/tristesse/colère chez l'observateur (2026-09-17) :
 // grossière par nature (comme check-spirit.mjs pour l'esprit des persos), jamais une lecture fine
 // du ton — elle ne sert qu'à déclencher UNE fois le moment de douceur, jamais à autre chose.

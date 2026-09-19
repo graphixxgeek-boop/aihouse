@@ -17,12 +17,6 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   tous les scénarios `check-spirit.mjs` et `check-profile.mjs` avec ce modèle comme `GEMINI_MODEL`
   effectif) — reste donc réservé au dev/simulation, jamais activé en production (cf. CLAUDE.md,
   section Smart Breaker).
-- Dette de sommeil / nuit blanche — **conception calibrée avec l'utilisateur le 2026-09-19**, pas
-  encore implémentée : malus de fatigue fixe (+28 points) appliqué à l'aube si le personnage n'a
-  jamais dormi pendant la nuit précédente (9 tours), jamais cumulable d'une nuit blanche à l'autre,
-  accompagné d'une reconnaissance explicite (pensée/réplique dédiée, jamais silencieuse), sans
-  sieste forcée. Reste à coder (flag "a dormi cette nuit" par personnage, reset au début de chaque
-  nuit, vérification à l'aube) puis à documenter dans `principes.md`/`parametres.md`.
 - `scripts/check-spirit.mjs` (16 scénarios) n'a pas été relancé depuis les derniers changements de
   `lib/lia.ts` (registre de fatigue jour/nuit, ajouté le 2026-09-19) — l'Article 13 de CLAUDE.md
   demande explicitement de le lancer en priorité après un changement de ce fichier, jamais fait

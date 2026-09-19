@@ -1097,11 +1097,21 @@ principes qui comptent pour comprendre le comportement :
   encore, réaction sarcastique méta sur les fantômes une fois l'enquête résolue — jamais une
   confirmation neutre (Article 0/15), plusieurs variantes par personnage et par cas (Article 10/11).
   Tombée de la nuit et aube reçoivent un habillage plus modeste, sans cette double branche.
-- Un indicateur dans l'en-tête (`app/page.tsx`) affiche cette horloge réelle de simulation, distinct
-  et clairement séparé du bouton manuel jour/nuit déjà existant (réglage d'éclairage 3D à la
-  discrétion de l'observateur, sans effet mécanique) — une ambiguïté identifiée en lisant le code
-  existant avant d'écrire ce chantier (Article 19), réglée en donnant un rôle et un libellé distincts
-  à chacun plutôt que de les fusionner ou de les laisser se chevaucher silencieusement.
+- **Nuit blanche / dette de sommeil réelle** (2026-09-19, conception calibrée avec l'utilisateur
+  après le "test de compréhension" du même jour). `life.sleptThisNight` retient, par personnage,
+  qu'il a réellement dormi (`isSleeping()` vrai) au moins une fois pendant les 9 tours de la nuit en
+  cours ; vérifié puis remis à zéro à chaque aube. Si jamais vrai à l'aube : un malus de fatigue
+  FIXE (+28), jamais cumulable d'une nuit blanche à l'autre (un simple flag, pas un compteur qui
+  s'additionnerait), accompagné d'une reconnaissance explicite et non silencieuse (Article 15/17,
+  plusieurs variantes distinctes dans le fond — conséquence pratique, doute sur sa propre nature,
+  sarcasme sur la simulation — jamais un recyclage de la même idée, Article 10). Décision explicite
+  de l'utilisateur : pénalité + reconnaissance seulement, aucune sieste forcée dans la journée.
+- Un indicateur dans l'en-tête (`app/page.tsx`) affiche cette horloge réelle de simulation.
+  L'ancien bouton manuel jour/nuit (réglage d'éclairage 3D séparé, sans effet mécanique) a été
+  retiré le 2026-09-19 (préférence exprimée par l'utilisateur lors du test de compréhension) : la
+  variable `night` côté client est désormais dérivée directement de cette même horloge automatique
+  (`world.story.dayNight.isNight`), plus aucune désynchronisation possible entre l'éclairage affiché
+  et le comportement réel des personnages.
 
 ## 9. Robustesse technique
 

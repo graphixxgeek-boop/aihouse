@@ -349,13 +349,24 @@ dans la clé `seedPick`. Un personnage déjà endormi ne reçoit pas cette ligne
 Habillage plus modeste, sans branche urgence/résolu, aux deux autres marqueurs majeurs : tombée de
 la nuit (round 29) et aube (round 0, sauf le tout premier cycle qui chevaucherait `soloIntro`).
 
+**Nuit blanche / dette de sommeil réelle** (2026-09-19, conception calibrée avec l'utilisateur après
+le "test de compréhension" du même jour, `life.sleptThisNight`, `route.ts`) : à l'aube exactement
+(même marqueur que ci-dessus, round%38===0), si un personnage n'a jamais eu `isSleeping()` vrai
+pendant les 9 tours de la nuit qui vient de finir, il reçoit un malus de fatigue FIXE (+28, jamais
+cumulable d'une nuit blanche à l'autre — le flag est un simple booléen remis à zéro chaque aube, pas
+un compteur) et une ligne d'acquittement explicite (trois variantes distinctes dans le fond par
+personnage) qui REMPLACE la ligne d'aube ordinaire ce tour-là, jamais silencieux. Aucune sieste
+forcée dans la journée qui suit — décision explicite de l'utilisateur : pénalité + reconnaissance
+seulement.
+
 **Indicateur jour/nuit affiché** (`app/page.tsx`, `.daynight-indicator`) : un badge dans l'en-tête,
-distinct du bouton manuel jour/nuit déjà existant (`night`, purement cosmétique/lumière 3D, contrôlé
-par l'observateur) — l'ambiguïté entre les deux a été identifiée en lisant le code existant avant
-d'écrire ce chantier (Article 19) et réglée en donnant à chacun un rôle clairement distinct et un
-libellé qui ne se recouvre pas : le bouton manuel reste un réglage d'éclairage à la discrétion de
-l'observateur, l'indicateur montre l'horloge RÉELLE de la simulation (`story.dayNight`, calculée par
-`readWorld()`, disponible sur toute réponse de l'API).
+qui montre l'horloge RÉELLE de la simulation (`story.dayNight`, calculée par `readWorld()`,
+disponible sur toute réponse de l'API). L'ancien bouton manuel jour/nuit (`night`, purement
+cosmétique/lumière 3D, contrôlé par l'observateur, sans aucun effet mécanique) a été RETIRÉ le
+2026-09-19 : préférence exprimée explicitement par l'utilisateur lors du test de compréhension du
+même jour, qui avait relevé cette ambiguïté (deux mécanismes séparés qui pouvaient diverger). `night`
+côté client est désormais dérivé directement de cette même horloge automatique — un seul système
+jour/nuit cohérent, plus deux mécanismes qui pouvaient se désynchroniser.
 
 **Idées considérées, volontairement non implémentées ce jour (Article 6, honnêteté sur le
 périmètre)** : ralentir mécaniquement le rythme de découverte des preuves la nuit (risque réel de

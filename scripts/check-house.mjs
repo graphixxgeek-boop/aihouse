@@ -905,7 +905,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 98'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 99'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2142,7 +2142,11 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // (après l'incrément normal de fin de tour).
   flat=true;affection=false;
   const settleDayNight=(round,evidence=[])=>{
-    const plot={...newStory(),round,met:true,introduced:true,sharedMeal:true,finalCalled:evidence.length>=5,evidence,pendingDestination:undefined,life:{...newStory().life}};
+    // sleptThisNight:{1:true,2:true} (2026-09-19, nuit blanche) : ce test couvre l'habillage
+    // d'ambiance jour/nuit pur, pas la dette de sommeil (testée séparément juste après) — sans ce
+    // réglage, l'aube par défaut basculerait sur la variante nuit-blanche puisque personne n'aurait
+    // explicitement "dormi" dans ce scénario minimal.
+    const plot={...newStory(),round,met:true,introduced:true,sharedMeal:true,finalCalled:evidence.length>=5,evidence,pendingDestination:undefined,life:{...newStory().life,sleptThisNight:{1:true,2:true}}};
     sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
     sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
     sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=1').run('salon',JSON.stringify({hunger:10,fatigue:20,stress:10,uncertainty:10}),'chat');
@@ -2177,6 +2181,51 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(w.story.dayNight.isNight,false);assert.equal(w.story.dayNight.phase,'aube');assert.equal(w.story.dayNight.day,2,'day 38 belongs to the second cycle');
   flat=false;
   console.log('Passed: midnight (round 35, synchronized with the investigation ceiling) reacts with genuine urgency while the investigation is open and switches to sarcastic ghost jokes once it is already resolved, nightfall (round 29) and dawn (round 38) get their own modest ambiance reactions, and the displayed day/night indicator (readWorld) reflects the right phase/day.');
+}
+
+{
+  // Nuit blanche / dette de sommeil (2026-09-19, conception calibrée avec l'utilisateur après le
+  // "test de compréhension" du même jour — cf. CLAUDE.md, points-fragiles.md). Deux scénarios
+  // identiques en tout point sauf life.sleptThisNight pour l'acteur 1, comparés round 37 -> 38
+  // (l'aube) pour isoler le seul effet du malus : le delta entre les deux doit être exactement +28,
+  // jamais plus (pas de cumul), jamais moins (le malus doit vraiment s'appliquer).
+  flat=true;affection=false;
+  const settleSleepDebt=(slept1)=>{
+    const plot={...newStory(),round:37,met:true,introduced:true,sharedMeal:true,finalCalled:false,evidence:[],pendingDestination:undefined,life:{...newStory().life,sleptThisNight:slept1?{1:true,2:true}:{2:true}}};
+    sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
+    sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+    sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=1').run('salon',JSON.stringify({hunger:10,fatigue:40,stress:10,uncertainty:10}),'chat');
+    sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=2').run('salon',JSON.stringify({hunger:10,fatigue:40,stress:10,uncertainty:10}),'chat');
+  };
+  const penseesOf=(w,name)=>w.messages.filter(m=>m.speaker===name+' · pensée');
+  settleSleepDebt(true);
+  let epoch=(await readWorld(db)).epoch;
+  let r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);let w=await r.json();
+  assert.equal(w.story.round,38,'test setup sanity: round must reach dawn (38) this turn');
+  const fatigueSlept=w.agents.find(a=>a.id===1).needs.fatigue;
+  assert.ok(!penseesOf(w,'Lia').some(m=>/nuit blanche|zéro sommeil|pas dormi|n.ai pas dormi/i.test(m.content)),'a character who genuinely slept during the night must never get the nuit-blanche acknowledgment at dawn');
+  settleSleepDebt(false);
+  epoch=(await readWorld(db)).epoch;
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  assert.equal(w.story.round,38);
+  const fatigueMissed=w.agents.find(a=>a.id===1).needs.fatigue;
+  assert.equal(fatigueMissed-fatigueSlept,28,'a genuinely sleepless night must add exactly the flat +28 fatigue penalty on top of the normal dawn increment, isolated by comparing two otherwise identical scenarios that differ only on sleptThisNight');
+  assert.ok(penseesOf(w,'Lia').some(m=>/nuit blanche|zéro sommeil|pas dormi une minute/i.test(m.content)),'the character who missed the whole night must get an explicit, non-silent acknowledgment at dawn, never a silent penalty (Article 15/17)');
+  // Non-cumulable : une seconde nuit blanche consécutive doit réappliquer le même malus fixe, jamais
+  // un montant plus élevé (life.sleptThisNight est un simple flag remis à zéro, pas un compteur).
+  epoch=(await readWorld(db)).epoch;
+  const plotSecondCycle={...newStory(),round:75,met:true,introduced:true,sharedMeal:true,finalCalled:false,evidence:[],pendingDestination:undefined,life:{...newStory().life,sleptThisNight:{2:true}}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plotSecondCycle));
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=1').run('salon',JSON.stringify({hunger:10,fatigue:40,stress:10,uncertainty:10}),'chat');
+  sqlite.prepare('UPDATE agent_state SET room=?,needs=?,intent=? WHERE id=2').run('salon',JSON.stringify({hunger:10,fatigue:40,stress:10,uncertainty:10}),'chat');
+  epoch=(await readWorld(db)).epoch;
+  r=await post(input('interact',1,{epoch}));assert.equal(r.status,200);w=await r.json();
+  assert.equal(w.story.round,76,'second-cycle dawn marker (round 76 = 38+38) sanity check');
+  const fatigueSecondMissed=w.agents.find(a=>a.id===1).needs.fatigue;
+  assert.equal(fatigueSecondMissed-fatigueSlept,28,'a second consecutive sleepless night applies the exact same flat +28, never an escalated amount — no stacking across nights');
+  flat=false;
+  console.log('Passed: a genuinely sleepless night (never once isSleeping() during the 9 night rounds) adds an exact, non-stacking +28 fatigue penalty at the next dawn, paired with an explicit non-silent acknowledgment line — while a character who slept at least once gets neither, closing the "nuit blanche" gap found via the 2026-09-19 comprehension test.');
 }
 
 {
