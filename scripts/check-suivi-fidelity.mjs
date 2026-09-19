@@ -14,6 +14,7 @@
 
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { sh } from "./lib-shell.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const SESSIONS_DIR = join(ROOT, "docs/suivi/sessions");
@@ -64,6 +65,35 @@ export function auditOpenTasks(sessionsDir = SESSIONS_DIR, readDir = readdirSync
   return results;
 }
 
+// findCommitsMissingSuiviUpdate() (2026-09-19, à la demande explicite de l'utilisateur : « comment
+// nous assurer que le suivi est correctement fait et historisé ? peux-tu fiabiliser ? »). Trouvaille
+// réelle qui a motivé cette fonction : 7 des 8 derniers commits d'une même session avaient changé du
+// code ou de la charte réelle sans jamais toucher docs/suivi/, laissant une fiche de session périmée
+// de plus de 3h30 avant d'être découverte par hasard. Un commit "substantiel" (touche du vrai code
+// ou la charte/les règles de méthode) qui ne touche JAMAIS docs/suivi/ dans le même commit est
+// exactement cette dérive — jamais un jugement sur le contenu, seulement sur la co-occurrence des
+// fichiers changés.
+const SUBSTANTIVE_PATTERN = /\.(mjs|ts|tsx)$/;
+const SUBSTANTIVE_EXTRA = new Set(["CLAUDE.md", "docs/regles-de-travail.md"]);
+
+export function findCommitsMissingSuiviUpdate(commits) {
+  const isSubstantive = (f) => SUBSTANTIVE_PATTERN.test(f) || SUBSTANTIVE_EXTRA.has(f);
+  const touchesSuivi = (f) => f.startsWith("docs/suivi/");
+  return commits.filter((c) => c.filesChanged.some(isSubstantive) && !c.filesChanged.some(touchesSuivi));
+}
+
+// Lit les N derniers commits réels du dépôt — jamais tout l'historique (le système de suivi est né
+// le 2026-09-19, une fenêtre glissante récente évite de signaler à tort des commits antérieurs à son
+// existence, sans jamais avoir besoin de connaître sa date de création exacte).
+export function recentCommits(limit = 20, shImpl = sh, root = ROOT) {
+  const hashes = shImpl(`git log -${limit} --format=%H`, { cwd: root }).trim().split("\n").filter(Boolean);
+  return hashes.map((hash) => ({
+    hash,
+    subject: shImpl(`git log -1 --format=%s ${hash}`, { cwd: root }).trim(),
+    filesChanged: shImpl(`git diff-tree --no-commit-id --name-only -r ${hash}`, { cwd: root }).trim().split("\n").filter(Boolean),
+  }));
+}
+
 export function auditAllSessions(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
   if (!exists(sessionsDir)) return [];
   const files = readDir(sessionsDir).filter((f) => f.endsWith(".md"));
@@ -92,11 +122,20 @@ function main() {
   const results = auditAllSessions();
   if (!results.length) {
     console.log("Aucune clôture non vérifiée trouvée — chaque tâche fermée précise bien fidèle/écart.");
-    return;
+  } else {
+    for (const { file, hits } of results) {
+      console.log(`${file} : ${hits.length} clôture(s) sans vérification de fidélité`);
+      for (const h of hits) console.log(`   - ${h.row}`);
+    }
   }
-  for (const { file, hits } of results) {
-    console.log(`${file} : ${hits.length} clôture(s) sans vérification de fidélité`);
-    for (const h of hits) console.log(`   - ${h.row}`);
+
+  console.log("\n=== Garde-fou fraîcheur du suivi (commits récents sans mise à jour docs/suivi/) ===\n");
+  const missing = findCommitsMissingSuiviUpdate(recentCommits());
+  if (!missing.length) {
+    console.log("Aucun commit récent substantiel n'a sauté la mise à jour du suivi — discipline respectée.");
+  } else {
+    for (const c of missing) console.log(`   - ${c.hash.slice(0, 8)} : ${c.subject}`);
+    console.log(`\n→ ${missing.length} commit(s) récent(s) ont changé du code/de la charte réelle sans jamais toucher docs/suivi/ — signe de la dérive réelle trouvée le 2026-09-19 (règle ajoutée à docs/regles-de-travail.md §4 : le suivi se met à jour DANS LE MÊME commit).`);
   }
 }
 

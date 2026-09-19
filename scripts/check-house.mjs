@@ -905,7 +905,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 111'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 112'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2598,6 +2598,24 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(open.map(o=>o.statut),['ouverte','en cours'],'each open row must report its real, distinct status verbatim, never a generic "open" label that would hide whether it is brand new or already in progress');
   assert.equal(findOpenTasks('| Horodatage | Sujet | Sous-sujet | Sensibilité | Description | Statut |\n|---|---|---|---|---|---|').length,0,'a session with zero task rows must report zero open tasks, never crash');
   console.log('Passed: findOpenTasks() flags exactly the rows whose status is not "terminée" (an "ouverte" and an "en cours" row alike), reports each one\'s real distinct status rather than a generic open label, never flags an already-closed row regardless of its fidelity wording, and reports zero rather than crashing on a session with no task rows at all — the exact blind spot found live when a session file kept showing two long-finished tasks as still "en cours".');
+}
+{
+  // findCommitsMissingSuiviUpdate() (2026-09-19, demande explicite : « comment nous assurer que le
+  // suivi est correctement fait et historisé ? peux-tu fiabiliser ? »). Trouvaille réelle qui a
+  // motivé cette fonction : 7 des 8 derniers commits d'une vraie session avaient changé du code réel
+  // sans jamais toucher docs/suivi/ — reproduite ici avec des fixtures, jamais le vrai historique git
+  // (qui varie dans le temps et casserait une assertion figée).
+  const {findCommitsMissingSuiviUpdate}=await import('../scripts/check-suivi-fidelity.mjs');
+  const commits=[
+    {hash:'a1',subject:'Ajoute un outil',filesChanged:['scripts/axa-check.mjs','docs/referentiel/axa-check.md']},
+    {hash:'a2',subject:'Met à jour le suivi et le code',filesChanged:['scripts/le-coordinateur.mjs','docs/suivi/sessions/x.md']},
+    {hash:'a3',subject:'Corrige une typo dans un fichier joint',filesChanged:['docs/simulations/index.md']},
+    {hash:'a4',subject:'Modifie la charte',filesChanged:['CLAUDE.md']},
+  ];
+  const missing=findCommitsMissingSuiviUpdate(commits);
+  assert.deepEqual(missing.map(c=>c.hash),['a1','a4'],'only commits that touch real code/.mjs/.ts or the charter/method docs AND never touch docs/suivi/ must be flagged — a2 is exempt because it did update the suivi in the same commit, a3 is exempt because it never touched anything substantive to begin with');
+  assert.deepEqual(findCommitsMissingSuiviUpdate([{hash:'b1',subject:'x',filesChanged:['docs/argus/scan.txt']}]),[],'a commit touching only a generated registry file (never real code or the charter) must never be flagged — this guard is about real work, not every commit whatsoever');
+  console.log('Passed: findCommitsMissingSuiviUpdate() flags exactly the commits that touched real code, TypeScript, or the charter/method docs while never touching docs/suivi/ in the same commit — a commit that already included a suivi update is correctly exempt, and a commit touching only generated registry output is never flagged as if it were substantive work, closing the exact real drift found on 2026-09-19 (7 of the last 8 commits in one session never touched docs/suivi/ once).');
 }
 
 {

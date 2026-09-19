@@ -108,6 +108,14 @@ de fixer lui-même le curseur.
   fichiers touchés.
 - Push vers la branche de travail une fois qu'un morceau cohérent est committé, sans attendre la
   toute fin d'une longue session.
+- **Le suivi (`docs/suivi/`) se met à jour DANS LE MÊME COMMIT que le travail qu'il décrit, jamais
+  après coup.** *(Ajouté le 2026-09-19, après une vraie dérive mesurée : 7 des 8 derniers commits
+  d'une même session avaient changé du code ou de la charte réelle sans toucher `docs/suivi/` une
+  seule fois, laissant la fiche de session périmée de plus de 3h30 — trouvaille de
+  `findCommitsMissingSuiviUpdate()`, cf. `docs/systeme-de-suivi.md`.)* Avant de committer un
+  chantier qui clôt ou fait avancer une tâche, mettre à jour sa ligne dans
+  `docs/suivi/sessions/<session>.md` (et `docs/suivi/index.md` si une grande étape est franchie) et
+  l'inclure dans le MÊME commit — jamais un commit de code isolé suivi d'un rattrapage différé.
 
 ## 5. Sécurité et discrétion
 
