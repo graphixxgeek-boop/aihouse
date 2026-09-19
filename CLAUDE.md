@@ -684,6 +684,11 @@ livrables) et un profil de collaboration observé. Toute IA qui reprend ce proje
 document en plus de celui-ci, pas à sa place — il ne contient jamais de règle sur le CONTENU du
 jeu, seulement sur la méthode de travail.
 
+`docs/systeme-de-suivi.md` (2026-09-19) complète ce document : la structure de stockage complète du
+suivi des tâches (dossier `docs/suivi/`, un fichier par session, un fichier d'index
+`docs/suivi/index.md`, quatre attributs par tâche — horodatage, sujet, sous-sujet, degré de
+sensibilité). Démarre à la création du système, sans reconstruire l'historique antérieur.
+
 ## Philosophie et politique — la boussole du projet
 
 `docs/philosophie-et-politique.md` extrait et généralise les valeurs et les principes d'arbitrage

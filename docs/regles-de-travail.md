@@ -416,6 +416,17 @@ d'ajouter un document de plus à maintenir en double. Opérationnalise les obser
 aux sections 8 et 9 ci-dessus (spécification itérative, rafales de messages fragmentés) en une
 procédure concrète, pas seulement un trait de profil à connaître.)*
 
+**Extraction partielle vers un document dédié, le même jour** (demande explicite de l'utilisateur,
+une fois le sujet devenu plus large qu'une méthode : « je veux aussi que toutes les tâches soient
+historisées dans un dossier local, avec un fichier par session [...] on exporte cette partie dans un
+nouveau document ? »). Cette section garde la MÉTHODE (les trois cas ci-dessous, la règle de mise à
+jour d'une même entrée, l'arborescence sur demande) — c'est `docs/systeme-de-suivi.md` qui porte
+désormais la STRUCTURE DE STOCKAGE complète (dossier `docs/suivi/`, un fichier par session, un
+fichier d'index, la taxonomie à quatre attributs par tâche — horodatage, sujet, sous-sujet, degré de
+sensibilité). Même raisonnement que pour le tableau de bord KPI : une fois qu'un sujet de méthode
+prend la forme d'un vrai sous-système avec ses propres fichiers, il mérite son propre document
+plutôt que de continuer à grossir ici.
+
 **Trois cas face à un message reçu pendant que l'agent travaille déjà sur autre chose**, à
 distinguer systématiquement (confirmé explicitement par l'utilisateur) :
 1. **Une idée ou une demande pour plus tard** → l'agent l'enregistre immédiatement (tâche créée
