@@ -1054,6 +1054,22 @@ Portée explicitement limitée à CIRCLE-TASKS (calibrage du 2026-09-20) : les a
 "recommandées" du projet (ex. `recommendNextTasks()` de check-tasks-details) gardent leur
 fonctionnement actuel, jamais généralisé sans nouvelle demande explicite.
 
+**Garde-fou de fraîcheur du catalogue (2026-09-21, trou trouvé par l'utilisateur : « est-ce que la
+ronde a bien dans son catalogue tous les outils pertinents ? incluant tous les nouveaux
+outils/scripts ? »).** LE-COORDINATEUR a déjà `findToolsMissingFromMenu()` pour vérifier que son
+menu PRESTATIONS reste à jour — rien d'équivalent n'existait pour `CIRCLE_ITEMS`. Contrairement à
+PRESTATIONS (un seul critère mécanique, `isMenuWorthy()`), il n'existe aucun prédicat unique pour
+« doit rejoindre la Ronde » — chaque inclusion/exclusion est une vraie décision documentée
+individuellement. `findRegistriesMissingFromCircle()` (`scripts/circle-tasks.mjs`) compare donc
+chaque registre réel (`docs/<slug>/index.md`, réellement présent sur disque, via `walkDocsPaths()`
+partagée avec check-tasks-details.mjs — extraite dans `lib-shell.mjs` pour éviter un cycle
+d'import) à `CIRCLE_ITEMS` ET à `CIRCLE_EXCLUDED_REGISTRIES`, une liste d'exclusions portant chacune
+sa propre raison (ARGUS/HARMONIA/AXA-CHECK déjà relancés à chaque commit, EL-PROFESSOR déjà
+obligatoire à chaque simulation via l'Article 18, etc.) — jamais un silence. `main()` affiche une
+alerte ⚠️🔴 si un registre orphelin apparaît, vérifié en direct : zéro trouvaille sur l'état actuel
+du dépôt, garantie qui casse le jour où un nouvel outil obtient un registre sans rejoindre l'un ou
+l'autre.
+
 **Catalogue distinct de celui de LE-COORDINATEUR, précision explicite de l'utilisateur (2026-09-20) :
 « on sépare bien le catalogue des rondes CIRCLE-TASKS et le catalogue des prestations du
 coordinateur ».** Les deux catalogues à venir (la sélection "recommandé" ci-dessus, tâche #155 ; et

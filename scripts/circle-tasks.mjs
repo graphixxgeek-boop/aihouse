@@ -28,6 +28,7 @@ import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { scanDocumentWeight, listDatedNarrativeMarkers, extractRuleUnits, findRedundantRulePairs } from "./smart-conso-token.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
+import { walkDocsPaths } from "./lib-shell.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -259,6 +260,44 @@ export function checkHtmlWiring(sources) {
   return Object.entries(sources || {}).map(([script, content]) => ({ script, wired: /html-report\.mjs/.test(content || "") }));
 }
 
+// findRegistriesMissingFromCircle() (2026-09-21, trou trouvé par l'utilisateur : « est-ce que la
+// ronde a bien dans son catalogue tous les outils pertinents ? incluant tous les nouveaux
+// outils/scripts ? »). Vérifié : LE-COORDINATEUR a déjà findToolsMissingFromMenu() pour PRESTATIONS,
+// CIRCLE_ITEMS n'avait rien d'équivalent. Contrairement à PRESTATIONS (un seul critère mécanique,
+// isMenuWorthy()), il n'existe aucun prédicat unique pour "doit rejoindre la Ronde" — chaque
+// inclusion/exclusion actuelle est une vraie décision individuelle documentée en tête de ce fichier
+// (ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD/CHECK-LEVEL-TARGET tournent déjà à chaque commit,
+// EL-PROFESSOR est déjà obligatoire à chaque simulation via l'Article 18, etc.). Le garde-fou
+// honnête ici n'est donc pas "recalculer la règle", mais repérer tout outil ayant un vrai registre
+// périodique (`docs/<slug>/index.md`, réellement présent sur disque) qui n'apparaît NULLE PART —
+// ni dans CIRCLE_ITEMS, ni dans la liste d'exclusions ci-dessous, chaque exclusion portant sa
+// propre raison plutôt qu'un silence. `existingPaths` : même Set que buildRealOnboardingContext()
+// (check-tasks-details.mjs), jamais un second parcours de disque réinventé (walkDocsPaths(),
+// extraite dans lib-shell.mjs pour éviter un cycle d'import entre les deux fichiers).
+export const CIRCLE_EXCLUDED_REGISTRIES = {
+  argus: "tourne déjà à chaque commit (Article 20), jamais une routine manuelle en plus",
+  harmonia: "tourne déjà à chaque commit (Article 20), jamais une routine manuelle en plus",
+  "axa-check": "tourne déjà à chaque commit (Article 20), jamais une routine manuelle en plus",
+  "clean-dirty-old": "sa partie mécanique tourne déjà à chaque commit (Article 20) — seul son SIGNAL de fraîcheur rejoint la Ronde (clean-dirty-old-signal), jamais un second passage complet",
+  "check-level-target": "outil de classification interne, jamais une routine à cocher soi-même",
+  "hyper-scan-checkpoint": "outil exceptionnel (Article 21), jamais coché par défaut ni régulier",
+  "check-tasks-details": "état des lieux à la demande, pas une routine périodique mal automatisée",
+  "el-professor": "déjà obligatoire à chaque simulation (Article 18, étape 4bis), une seconde routine ferait doublon",
+  simulations: "l'archive elle-même, pas un outil à relancer périodiquement",
+};
+export function findRegistriesMissingFromCircle(existingPaths, items = CIRCLE_ITEMS) {
+  const registrySlugs = [...new Set(
+    [...(existingPaths || [])]
+      .map((p) => p.match(/^docs\/([a-z0-9-]+)\/index\.md$/))
+      .filter(Boolean)
+      .map((m) => m[1]),
+  )];
+  // Comparaison bidirectionnelle par id (jamais un texte joint) : un registre plus court que son
+  // item ("profil" ⊂ "profil-utilisateur") ou plus long ("always-new-code" ⊂
+  // "always-new-code-signal") doit matcher dans les deux sens, jamais un seul.
+  return registrySlugs.filter((slug) => !(slug in CIRCLE_EXCLUDED_REGISTRIES) && !items.some((i) => slug.includes(i.id) || i.id.includes(slug)));
+}
+
 // oldestOpenTaskDate() (2026-09-20) : lit directement le résultat déjà calculé par
 // categorizeAllSessions() (check-suivi-fidelity.mjs, jamais un second parseur de docs/suivi/) et
 // retient la date la plus ancienne parmi les tâches "ouverte"/"en cours" — la colonne horodatage
@@ -426,6 +465,9 @@ function main() {
   console.log("\nJamais exécuté seul : l'agent qui pilote ouvre une fenêtre à cocher pour choisir précisément quoi lancer.");
   console.log(red(`${ALERT_ICON} THE-FINAL-JUDGE reste visible ci-dessus mais n'est JAMAIS coché par défaut — vérifie Smart Conso API ET SMART-CONSO-TOKEN avant de le sélectionner.`));
   console.log("Rappel : les autres items coûteux du paysage (check-spirit.mjs, HYPER-SCAN-CHECKPOINT complet) restent hors de cette ronde pour l'instant, jamais des cases à cocher ici.");
+  const rootNoSlash = ROOT.replace(/\/$/, "");
+  const missingRegistries = findRegistriesMissingFromCircle(walkDocsPaths(`${rootNoSlash}/docs`, rootNoSlash));
+  if (missingRegistries.length) console.log(red(`${ALERT_ICON} Registre(s) sans item ni exclusion documentée dans la Ronde : ${missingRegistries.join(", ")} — à ajouter à CIRCLE_ITEMS ou à CIRCLE_EXCLUDED_REGISTRIES avec sa raison.`));
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

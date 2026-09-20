@@ -35,6 +35,7 @@ import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { PRESTATIONS, suggestPrestationsForTask, significantWords } from "./le-coordinateur.mjs";
 import { daysSince } from "./circle-tasks.mjs";
+import { walkDocsPaths } from "./lib-shell.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 export const OUT_DIR = join(ROOT, "docs/check-tasks-details");
@@ -464,15 +465,8 @@ function appendIndexRow({ file, zoom, format, count, total, regressions, stagnan
 // par "/" — un simple `slice(root.length + 1)` grignotait la première lettre de "docs/", faussant
 // silencieusement TOUTE vérification de registre/instanciation en aval, découvert en voyant
 // check-tasks-details lui-même signalé "sans badge" alors que ses trois fichiers existent bien).
-function walkDocsPaths(dir, root, out = new Set()) {
-  if (!existsSync(dir)) return out;
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const full = join(dir, entry.name);
-    out.add(full.slice(root.length).replace(/^[\\/]/, "").replace(/\\/g, "/"));
-    if (entry.isDirectory()) walkDocsPaths(full, root, out);
-  }
-  return out;
-}
+// Extraite le 2026-09-21 vers lib-shell.mjs (circle-tasks.mjs en a aussi besoin pour son propre
+// garde-fou de fraîcheur ; l'importer directement d'ici créerait un cycle, cf. lib-shell.mjs).
 export function buildRealOnboardingContext(root = ROOT.replace(/\/$/, "")) {
   const docsDir = join(root, "docs");
   const existingPaths = walkDocsPaths(docsDir, root);
