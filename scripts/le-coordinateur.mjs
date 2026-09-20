@@ -157,6 +157,7 @@ export function parseToolsTable(markdown) {
   const headerCells = lines[0].split("|").slice(1, -1).map((c) => c.trim());
   const coutIdx = headerCells.indexOf("Coût");
   const declenchementIdx = headerCells.indexOf("Déclenchement");
+  const statutIdx = headerCells.indexOf("Statut");
   if (coutIdx === -1 || declenchementIdx === -1) return [];
   const rows = [];
   for (const line of lines.slice(1)) {
@@ -164,7 +165,8 @@ export function parseToolsTable(markdown) {
     if (cells.length <= Math.max(coutIdx, declenchementIdx)) continue;
     const tool = cells[0];
     if (!tool || tool === "Outil" || /^-+$/.test(tool)) continue;
-    rows.push({ tool: tool.replace(/`/g, ""), cout: cells[coutIdx], declenchement: cells[declenchementIdx] });
+    const statut = statutIdx !== -1 ? cells[statutIdx] : null;
+    rows.push({ tool: tool.replace(/`/g, ""), cout: cells[coutIdx], declenchement: cells[declenchementIdx], statut });
   }
   return rows;
 }
@@ -202,13 +204,37 @@ function significantWords(text) {
 
 // Seuil de 2 mots-clés partagés (pas 1) — un seul mot commun (souvent un mot très général du
 // domaine, ex. "tâche", "outil") produirait trop de faux positifs pour rester un signal honnête.
-export function suggestPrestationsForTask(taskLabel, prestations = PRESTATIONS) {
+// badgeCheck (2026-09-20, demande explicite de l'utilisateur : « si un membre de l'équipe est
+// sollicité alors qu'il n'a pas de badge, une alerte doit nous être remontée »). Portée calibrée
+// explicitement avec l'utilisateur : PAS un nouveau passage obligé pour tout appel (aucun n'existe
+// aujourd'hui, ça resterait un chantier lourd hors de propos) — seulement le point de passage déjà
+// construit, celui par lequel un autre outil demande "quel membre utiliser pour cette tâche".
+// `onboardingContext` est optionnel et rétrocompatible : sans lui, `suggestPrestationsForTask()` se
+// comporte exactement comme avant (aucun appelant existant ne casse). Seules les lignes de statut
+// "Agent" peuvent porter un badge (cf. docs/regles-de-travail.md, section badge) — un outil
+// Utilitaire nommé ou Infrastructure référencé dans `outils` ne déclenche jamais cette vérification.
+function badgeWarningsForOutils(outils, onboardingContext) {
+  if (!onboardingContext?.toolsTableMarkdown) return [];
+  const rows = parseToolsTable(onboardingContext.toolsTableMarkdown);
+  const warnings = [];
+  for (const outil of outils) {
+    const primaryName = outil.split(/[/(]/)[0].trim();
+    const row = rows.find((r) => r.tool.toLowerCase().includes(primaryName.toLowerCase()) || primaryName.toLowerCase().includes(r.tool.toLowerCase()));
+    if (!row || row.statut !== "Agent") continue;
+    const overrides = onboardingContext.agentOverrides?.[row.tool] ?? {};
+    const result = checkAgentOnboarding(row.tool, { ...onboardingContext, ...overrides });
+    if (!result.complet) warnings.push(`${row.tool} n'a pas son badge (${result.gaps.join(" ; ")})`);
+  }
+  return warnings;
+}
+
+export function suggestPrestationsForTask(taskLabel, prestations = PRESTATIONS, onboardingContext = null) {
   const taskWords = new Set(significantWords(taskLabel));
   if (!taskWords.size) return [];
   return prestations
     .map((p) => {
       const matched = [...new Set(significantWords(p.demande).filter((w) => taskWords.has(w)))];
-      return { ...p, score: matched.length, matched };
+      return { ...p, score: matched.length, matched, badgeWarnings: badgeWarningsForOutils(p.outils, onboardingContext) };
     })
     .filter((p) => p.score >= 2)
     .sort((a, b) => b.score - a.score);
@@ -247,16 +273,22 @@ export function checkAgentOnboarding(agentName, {
   existingPaths = new Set(),
   cousinOf = null,
   registryPathPrefix = null,
+  claudeMdText = null,
+  suiviText = null,
 } = {}) {
   const gaps = [];
   const slug = slugifyAgentName(agentName);
   const nameLower = agentName.toLowerCase();
 
-  const inTable = parseToolsTable(toolsTableMarkdown).some((row) => row.tool.toLowerCase().includes(nameLower));
-  if (!inTable) gaps.push("absent de la table maîtresse (docs/regles-de-travail.md, carte des outils)");
+  const tableRow = parseToolsTable(toolsTableMarkdown).find((row) => row.tool.toLowerCase().includes(nameLower));
+  if (!tableRow) gaps.push("absent de la table maîtresse (docs/regles-de-travail.md, carte des outils)");
 
+  // PRESTATIONS n'est requis QUE pour un outil "menu-worthy" (cf. isMenuWorthy(), même exemption que
+  // findToolsMissingFromMenu()) — sans cette exemption, un outil de régulation interne à l'agent
+  // (Smart Conso API, CHECK-LEVEL-TARGET) ressortait à tort comme un vrai manque, un faux positif
+  // réel trouvé le 2026-09-20 en calibrant le badge ci-dessous contre les Agents existants.
   const inMenu = prestations.some((p) => p.outils.some((o) => o.toLowerCase().includes(nameLower)));
-  if (!inMenu) gaps.push("absent du menu PRESTATIONS (scripts/le-coordinateur.mjs)");
+  if (!inMenu && (!tableRow || isMenuWorthy(tableRow))) gaps.push("absent du menu PRESTATIONS (scripts/le-coordinateur.mjs)");
 
   if (!existingPaths.has(`docs/referentiel/${slug}.md`)) gaps.push(`instanciation manquante (docs/referentiel/${slug}.md)`);
 
@@ -270,7 +302,47 @@ export function checkAgentOnboarding(agentName, {
     gaps.push(`blueprint manquant (docs/${slug}-blueprint.md) — si c'est volontaire (cousin d'un autre Agent), le déclarer via l'option cousinOf plutôt que de laisser ce point sans réponse`);
   }
 
-  return { agentName, slug, gaps, complet: gaps.length === 0 };
+  // CLAUDE.md lui-même (2026-09-20, demande explicite de l'utilisateur : « fiabilise/enrichis ce
+  // process [...] pour en tirer de vrais bénéfices ») — angle mort réel du premier jet : la table
+  // maîtresse et PRESTATIONS étaient vérifiées, jamais CLAUDE.md, alors que c'est le document TOUJOURS
+  // relu (Article 13) et que j'ai dû l'éditer à la main pour chaque nouvel Agent cette session.
+  if (claudeMdText != null) {
+    if (!claudeMdText.includes(`docs/referentiel/${slug}.md`)) {
+      gaps.push("absent de la section « Référentiel technique » de CLAUDE.md (bullet docs/referentiel/<slug>.md)");
+    }
+    if (!cousinOf && !new RegExp(`^## .*${slug.replace(/-/g, "[- ]")}.*blueprint exportable`, "im").test(claudeMdText)) {
+      gaps.push(`absent de CLAUDE.md comme section "## ... — blueprint exportable" (attendu puisqu'il a un blueprint propre)`);
+    }
+  }
+
+  // docs/suivi/ (réel si le texte est fourni, jamais un chemin deviné en son absence) — un Agent
+  // construit sans une seule ligne de suivi violerait la règle "toute tâche substantielle DOIT être
+  // documentée dans docs/suivi/" (docs/systeme-de-suivi.md), au même titre qu'un test manquant.
+  if (suiviText != null && !suiviText.toLowerCase().includes(nameLower)) {
+    gaps.push("aucune mention trouvée dans docs/suivi/ — sa construction ne serait pas tracée dans le système de suivi durable");
+  }
+
+  // Rappels : jamais vérifiables mécaniquement avec une confiance suffisante pour compter comme un
+  // vrai "gap" (un faux positif serait pire qu'un oubli réel), mais des points RÉELLEMENT oubliés au
+  // moins une fois cette session (THE-DEEP-READER) — toujours rendus, jamais un blocage.
+  const rappels = [
+    "Canaux de consultation documentés (qui peut déclencher cet Agent : moi, l'utilisateur, un autre outil ?) — cf. le modèle « Trois canaux de consultation » de THE-DEEP-READER dans docs/regles-de-travail.md.",
+    "CASSANDRA-RH a-t-elle consigné ce nouvel Agent dans la liste de l'équipe (une fois CASSANDRA-RH construite) ?",
+  ];
+
+  // Badge (2026-09-20, demande explicite de l'utilisateur : « la remise de son badge [...] c'est
+  // cassandra qui supervise ces opérations, le coordinateur vérifie que tous les membres de
+  // l'équipe ont bien leur badge »). Jamais un fait persisté à part : le badge N'EST QUE le résumé
+  // lisible de `complet`, recalculé à chaque appel — décision explicite de l'utilisateur (« photo
+  // instantanée », jamais un acquis qui pourrait rester vrai après coup alors que l'état réel a
+  // changé). Un Agent SANS ce badge est un signal d'anomalie à investiguer (cf. `rappels`
+  // ci-dessus), jamais un verrou qui empêcherait l'Agent de fonctionner (Article 0 : rien ne doit
+  // jamais bloquer le jeu réel pour une question d'outillage de travail). LE-COORDINATEUR est
+  // aujourd'hui celui qui délivre ce badge de fait (CASSANDRA-RH n'existe pas encore) ; une fois
+  // construite, elle affichera/consultera ce même résultat, jamais un second calcul indépendant.
+  const badge = gaps.length === 0 ? "🎖️ Membre certifié" : "⚠️ Pas encore certifié";
+
+  return { agentName, slug, gaps, rappels, badge, complet: gaps.length === 0 };
 }
 
 // Passthrough vers CHECK-LEVEL-TARGET (accès "privilégié" direct, jamais une réimplémentation) —

@@ -946,6 +946,16 @@ exacts ni les fichiers propres à ce projet, qui vivent dans `docs/referentiel/s
 (instanciation) et `docs/smart-conso-api/` (dossier + index).
 Frontière stricte avec l'Article 8 : cf. section Article 8 ci-dessus.
 
+## SMART-CONSO-TOKEN — blueprint exportable
+
+`docs/smart-conso-token-blueprint.md` documente l'ARCHITECTURE du pendant de Smart Conso API pour
+les TOKENS de l'agent lui-même (schémas connus coûteux plutôt qu'un quota sondable en direct,
+capacité de scan réutilisant l'échelle de portée de THE-FINAL-JUDGE) — jamais les seuils exacts ni
+les fichiers propres à ce projet, qui vivent dans `docs/referentiel/smart-conso-token.md`
+(instanciation) et `docs/smart-conso-token/` (dossier + index). Règle d'usage complète et
+obligation écrite : cf. section Article 22 ci-dessus, dont ce document reste le pendant plutôt
+qu'un Article séparé.
+
 ## HYPER-SCAN-CHECKPOINT — blueprint exportable
 
 `docs/hyper-scan-checkpoint-blueprint.md` documente l'ARCHITECTURE de l'outil de vérification

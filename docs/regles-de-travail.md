@@ -358,29 +358,29 @@ IDENTITÉ, jamais un contrôle d'accès. `runNetworkCheck()` appelle déjà dire
 ALWAYS-NEW-CODE/CLEAN-DIRTY-OLD/CHECK-LEVEL-TARGET/Smart Conso API/SMART-CONSO-TOKEN — jamais
 bloqué par un statut, seulement par l'existence réelle d'une fonction ou d'un CLI à appeler.
 
-| Outil | Statut | Ce qu'il détecte/régule | Coût | Déclenchement |
-|---|---|---|---|---|
-| `check-house.mjs` | Infrastructure | régressions de comportement (filet de sécurité) | gratuit | à chaque changement de code |
-| `check-spirit.mjs` / `check-profile.mjs` | Infrastructure | fidélité de l'esprit des personnages (Article 0) | réel (API) | à la main, si `lib/lia.ts`/personnalités changent |
-| ARGUS | Agent | absences — ce qui devrait exister et n'existe pas (Article 20) | gratuit (partie mécanique) | toujours déployé — logique testée à chaque commit (`check-house.mjs`, pre-commit) ET balayage réel du code courant à chaque commit (`scripts/hooks/check-last-commit.mjs`, post-commit, warn-only, 2026-09-20) |
-| HARMONIA | Agent | frictions — deux choses qui existent et se contredisent (Article 20) | gratuit (partie mécanique) | idem ARGUS ci-dessus |
-| Smart Conso API | Agent | rythme de consommation API de l'AGENT pendant le travail (Article 22) ; peut aussi scanner l'historique réel pour repérer des schémas coûteux | gratuit à consulter | avant toute action coûteuse de l'agent |
-| CHECK-LEVEL-TARGET | Agent | quel niveau de vérification une demande appelle, quels outils déployer | gratuit | avant de décider comment traiter une demande |
-| HYPER-SCAN-CHECKPOINT | Agent | orchestrateur exceptionnel, fidélité aux consignes passées (Article 21) | réel (API, en version complète) | sur demande explicite seulement |
-| ALWAYS-NEW-CODE | Agent | dette d'organisation — code empilé plutôt que pensé (Article 23) | réel (raisonnement) | niveau « Exceptionnel » de CHECK-LEVEL-TARGET |
-| AXA-CHECK | Agent | robustesse/fragilité RÉELLE par fonction (couverture de test V8, zéro nouvelle dépendance) (Article 20) | gratuit | toujours déployé |
-| CLEAN-DIRTY-OLD | Agent | stagnation relative du code, délègue le jugement à ARGUS/HARMONIA/ALWAYS-NEW-CODE (Article 20) | gratuit | toujours déployé |
-| EL-PROFESSOR | Agent | note qualitative de fidélité à la charte (esprit, naturel, voix, enquête, clarté) d'une simulation ou d'un extrait isolé (Article 18, étape 4bis) | gratuit (relit un texte déjà produit) | après chaque simulation Article 18, ou sur demande pour un extrait isolé |
-| THE-SCREENER | Agent | note indicative de qualité graphique (2 captures d'écran max) (Article 18, étape 4bis) | réel (Playwright, léger) | après chaque simulation Article 18, jamais bloquant |
-| THE-FINAL-JUDGE | Agent | audit indépendant du code et du produit par un agent réellement séparé, verdict opiniâtre + recommandations | réel (agent séparé, 6 paliers d'intensité × 4 paliers de périmètre) | sur demande explicite (moi, l'utilisateur, ou un autre outil), niveaux « Approfondi »/« Exceptionnel » de CHECK-LEVEL-TARGET (tendance, jamais un verrou) |
-| THE-DEEP-READER | Agent | cousin de THE-FINAL-JUDGE (même mécanique d'agent séparé, personas et règles d'entrée opposées) dédié à la relecture lourde du suivi (`docs/suivi/`) contre l'historique complet de la conversation | réel (agent séparé, coût variable — plancher fixe + volume réel de conversation à relire) | sur demande explicite (moi, l'utilisateur, ou `check-suivi-fidelity.mjs` en cas de faiblesse répétée), ou proposé périodiquement via CIRCLE-TASKS (jamais coché par défaut) |
-| LE-COORDINATEUR | Utilitaire nommé | agrège en un tableau très court ce que les outils gratuits ci-dessus disent déjà, repère un doublon de vérification récent ; son menu de prestations rappelle ce qui peut être commandé | gratuit | synthèse complète (`runNetworkCheck()`) = routine agent, jamais un crochet git (reshellerait `check-house.mjs`, redondant à chaque commit) ; menu des prestations seul = affiché automatiquement à chaque commit (`scripts/hooks/check-last-commit.mjs`, post-commit, 2026-09-20) |
-| Smart Breaker (`check-gemini-quota.mjs` + `gemini-key-health.mjs` + `api-providers.mjs` + `lib/gemini-keys.ts`) | Agent (structure particulière : pas de dossier `docs/` dédié, son « registre » est le fichier local `.gemini-key-health.json`, jamais committé) | blocages de quota/clé Gemini, portée PRODUCTION | gratuit à diagnostiquer | à la demande, ou automatique en production (repli) |
-| SMART-CONSO-TOKEN | Agent | rythme de consommation de TOKENS de l'agent (Agent séparé, lecture exhaustive, poids d'un document toujours chargé) ; peut aussi scanner et proposer des réductions | gratuit à consulter | avant tout appel à un agent séparé ou tout raisonnement coûteux — obligation écrite dans la charte, jamais un garde-fou vérifiable après coup |
-| CIRCLE-TASKS (« Ronde périodique ») | Utilitaire nommé | 13 tâches périodiques gratuites mal automatisées, regroupées par thème (profil utilisateur, relecture des référentiels, KPI, tâche ouverte la plus ancienne — Suivi & référentiels ; rapport KPI, scans Smart Conso API/SMART-CONSO-TOKEN — KPI & scans ; zone ALWAYS-NEW-CODE la plus négligée, dernier passage CLEAN-DIRTY-OLD, câblage HTML des rapports, poids en tokens de CLAUDE.md — Qualité du code ; photo de la dream team, THE-SCREENER — Qualité & fun) — regroupées dans une seule fenêtre à cocher ; THE-FINAL-JUDGE reste visible dans la même fenêtre (thème Audit lourd) mais toujours marqué ⚠️🔴 coûteux (37k tokens), jamais coché par défaut | gratuit (sauf si THE-FINAL-JUDGE est explicitement coché) | à la demande de l'utilisateur ou de l'agent ; rappel proactif automatique dans le crochet post-commit après 10 commits sans passage |
-| Gabarit HTML de remise de rapports (`scripts/html-report.mjs`) | Utilitaire nommé | mise en page soignée d'un rapport déjà produit (KPI, EL-PROFESSOR, THE-SCREENER, simulations, THE-FINAL-JUDGE...) — jamais le contenu métier lui-même | gratuit | importé et appelé par les autres outils au moment de produire une copie de présentation — jamais un outil qu'on invoque seul |
-| check-tasks-details | Agent | état des lieux des tâches à la demande (zoom en cours/élargi/projet entier × forme liste/arborescence), rapport HTML, lecture seule de `docs/suivi/`, vérification croisée automatique (régression/stagnation) contre son propre historique | gratuit | sur demande explicite (moi ou l'utilisateur), gabarit de questions dédié (cf. `docs/referentiel/check-tasks-details.md`) |
-| CLAUDE.MD.SPY (extension de SMART-CONSO-TOKEN) | Utilitaire nommé | classe chaque Article de CLAUDE.md par sensibilité/importance, détecte les redondances possibles entre Articles | gratuit | sur demande, avant/pendant une passe d'allègement de CLAUDE.md (étape 2 de la procédure formalisée) |
+| Outil | Statut | 🎖️ Badge | Ce qu'il détecte/régule | Coût | Déclenchement |
+|---|---|---|---|---|---|
+| `check-house.mjs` | Infrastructure | — | régressions de comportement (filet de sécurité) | gratuit | à chaque changement de code |
+| `check-spirit.mjs` / `check-profile.mjs` | Infrastructure | — | fidélité de l'esprit des personnages (Article 0) | réel (API) | à la main, si `lib/lia.ts`/personnalités changent |
+| ARGUS | Agent | 🎖️ | absences — ce qui devrait exister et n'existe pas (Article 20) | gratuit (partie mécanique) | toujours déployé — logique testée à chaque commit (`check-house.mjs`, pre-commit) ET balayage réel du code courant à chaque commit (`scripts/hooks/check-last-commit.mjs`, post-commit, warn-only, 2026-09-20) |
+| HARMONIA | Agent | 🎖️ | frictions — deux choses qui existent et se contredisent (Article 20) | gratuit (partie mécanique) | idem ARGUS ci-dessus |
+| Smart Conso API | Agent | 🎖️ | rythme de consommation API de l'AGENT pendant le travail (Article 22) ; peut aussi scanner l'historique réel pour repérer des schémas coûteux | gratuit à consulter | avant toute action coûteuse de l'agent |
+| CHECK-LEVEL-TARGET | Agent | 🎖️ | quel niveau de vérification une demande appelle, quels outils déployer | gratuit | avant de décider comment traiter une demande |
+| HYPER-SCAN-CHECKPOINT | Agent | 🎖️ | orchestrateur exceptionnel, fidélité aux consignes passées (Article 21) | réel (API, en version complète) | sur demande explicite seulement |
+| ALWAYS-NEW-CODE | Agent | 🎖️ | dette d'organisation — code empilé plutôt que pensé (Article 23) | réel (raisonnement) | niveau « Exceptionnel » de CHECK-LEVEL-TARGET |
+| AXA-CHECK | Agent | 🎖️ | robustesse/fragilité RÉELLE par fonction (couverture de test V8, zéro nouvelle dépendance) (Article 20) | gratuit | toujours déployé |
+| CLEAN-DIRTY-OLD | Agent | 🎖️ | stagnation relative du code, délègue le jugement à ARGUS/HARMONIA/ALWAYS-NEW-CODE (Article 20) | gratuit | toujours déployé |
+| EL-PROFESSOR | Agent | 🎖️ | note qualitative de fidélité à la charte (esprit, naturel, voix, enquête, clarté) d'une simulation ou d'un extrait isolé (Article 18, étape 4bis) | gratuit (relit un texte déjà produit) | après chaque simulation Article 18, ou sur demande pour un extrait isolé |
+| THE-SCREENER | Agent | 🎖️ | note indicative de qualité graphique (2 captures d'écran max) (Article 18, étape 4bis) | réel (Playwright, léger) | après chaque simulation Article 18, jamais bloquant |
+| THE-FINAL-JUDGE | Agent | 🎖️ | audit indépendant du code et du produit par un agent réellement séparé, verdict opiniâtre + recommandations | réel (agent séparé, 6 paliers d'intensité × 4 paliers de périmètre) | sur demande explicite (moi, l'utilisateur, ou un autre outil), niveaux « Approfondi »/« Exceptionnel » de CHECK-LEVEL-TARGET (tendance, jamais un verrou) |
+| THE-DEEP-READER | Agent | 🎖️ | cousin de THE-FINAL-JUDGE (même mécanique d'agent séparé, personas et règles d'entrée opposées) dédié à la relecture lourde du suivi (`docs/suivi/`) contre l'historique complet de la conversation | réel (agent séparé, coût variable — plancher fixe + volume réel de conversation à relire) | sur demande explicite (moi, l'utilisateur, ou `check-suivi-fidelity.mjs` en cas de faiblesse répétée), ou proposé périodiquement via CIRCLE-TASKS (jamais coché par défaut) |
+| LE-COORDINATEUR | Utilitaire nommé | — | agrège en un tableau très court ce que les outils gratuits ci-dessus disent déjà, repère un doublon de vérification récent ; son menu de prestations rappelle ce qui peut être commandé | gratuit | synthèse complète (`runNetworkCheck()`) = routine agent, jamais un crochet git (reshellerait `check-house.mjs`, redondant à chaque commit) ; menu des prestations seul = affiché automatiquement à chaque commit (`scripts/hooks/check-last-commit.mjs`, post-commit, 2026-09-20) |
+| Smart Breaker (`check-gemini-quota.mjs` + `gemini-key-health.mjs` + `api-providers.mjs` + `lib/gemini-keys.ts`) | Agent (structure particulière : pas de dossier `docs/` dédié, son « registre » est le fichier local `.gemini-key-health.json`, jamais committé) | — (jamais vérifié mécaniquement, sa structure hors norme n'a pas de chemin standard à contrôler) | blocages de quota/clé Gemini, portée PRODUCTION | gratuit à diagnostiquer | à la demande, ou automatique en production (repli) |
+| SMART-CONSO-TOKEN | Agent | 🎖️ | rythme de consommation de TOKENS de l'agent (Agent séparé, lecture exhaustive, poids d'un document toujours chargé) ; peut aussi scanner et proposer des réductions | gratuit à consulter | avant tout appel à un agent séparé ou tout raisonnement coûteux — obligation écrite dans la charte, jamais un garde-fou vérifiable après coup |
+| CIRCLE-TASKS (« Ronde périodique ») | Utilitaire nommé | — | 13 tâches périodiques gratuites mal automatisées, regroupées par thème (profil utilisateur, relecture des référentiels, KPI, tâche ouverte la plus ancienne — Suivi & référentiels ; rapport KPI, scans Smart Conso API/SMART-CONSO-TOKEN — KPI & scans ; zone ALWAYS-NEW-CODE la plus négligée, dernier passage CLEAN-DIRTY-OLD, câblage HTML des rapports, poids en tokens de CLAUDE.md — Qualité du code ; photo de la dream team, THE-SCREENER — Qualité & fun) — regroupées dans une seule fenêtre à cocher ; THE-FINAL-JUDGE reste visible dans la même fenêtre (thème Audit lourd) mais toujours marqué ⚠️🔴 coûteux (37k tokens), jamais coché par défaut | gratuit (sauf si THE-FINAL-JUDGE est explicitement coché) | à la demande de l'utilisateur ou de l'agent ; rappel proactif automatique dans le crochet post-commit après 10 commits sans passage |
+| Gabarit HTML de remise de rapports (`scripts/html-report.mjs`) | Utilitaire nommé | — | mise en page soignée d'un rapport déjà produit (KPI, EL-PROFESSOR, THE-SCREENER, simulations, THE-FINAL-JUDGE...) — jamais le contenu métier lui-même | gratuit | importé et appelé par les autres outils au moment de produire une copie de présentation — jamais un outil qu'on invoque seul |
+| check-tasks-details | Agent | 🎖️ | état des lieux des tâches à la demande (zoom en cours/élargi/projet entier × forme liste/arborescence), rapport HTML, lecture seule de `docs/suivi/`, vérification croisée automatique (régression/stagnation) contre son propre historique | gratuit | sur demande explicite (moi ou l'utilisateur), gabarit de questions dédié (cf. `docs/referentiel/check-tasks-details.md`) |
+| CLAUDE.MD.SPY (extension de SMART-CONSO-TOKEN) | Utilitaire nommé | — | classe chaque Article de CLAUDE.md par sensibilité/importance, détecte les redondances possibles entre Articles | gratuit | sur demande, avant/pendant une passe d'allègement de CLAUDE.md (étape 2 de la procédure formalisée) |
 
 Cette table remplace toute énumération informelle éparpillée dans la conversation : à jour à
 chaque nouvel outil créé (même discipline que la liste des documents de référence, Article 13).
@@ -757,6 +757,26 @@ plus tard", même type de discipline qu'un écart de documentation (Article 3/13
 
 ### LE-COORDINATEUR — l'exception volontairement mince, sans blueprint ni instanciation
 
+**Jamais confondu avec LE-PLANIFICATEUR — règle de vérification (2026-09-20, demande explicite de
+l'utilisateur : « il n'y a pas de confusion entre le coordinateur et le planificateur ? personne, ni
+moi, ne devons confondre »).** Vérifié à la demande : aucune confusion réelle trouvée dans les
+documents existants entre les deux (recherche faite sur toutes les occurrences de « LE-PLANIFICATEUR »
+dans le dépôt) — mais les deux noms se ressemblent assez pour justifier une règle explicite plutôt
+que de compter sur la vigilance seule :
+- **LE-COORDINATEUR** = `scripts/le-coordinateur.mjs`, un SCRIPT qui orchestre le RÉSEAU D'OUTILS
+  (ARGUS, HARMONIA, AXA-CHECK...) — il ne sait rien des tâches ni de l'historique du projet, sa
+  seule mémoire est `.le-coordinateur-last-run.json` (détection de doublon de passage).
+- **LE-PLANIFICATEUR** = le surnom de `docs/suivi/` + `docs/systeme-de-suivi.md`, le SYSTÈME DE
+  SUIVI DES TÂCHES durable — ce n'est PAS un script exécutable, c'est l'ensemble suivi/documentation
+  qui garde la mémoire de ce qui est fait/en cours/à faire à travers les sessions.
+- **Moyen mnémotechnique** : COORDINATEUR → outils ; PLANIFICATEUR → tâches. Un doute sur lequel des
+  deux est concerné se résout en se demandant "est-ce que ça parle du câblage d'un outil, ou de
+  l'avancement d'une tâche ?".
+- **Vérification à refaire si un doute survient** : `grep -rn "LE-PLANIFICATEUR" docs/ scripts/
+  CLAUDE.md` et relire chaque occurrence — si l'une d'elles attribue une capacité de LE-COORDINATEUR
+  (câblage d'outils) à LE-PLANIFICATEUR ou inversement, c'est un vrai écart à corriger immédiatement
+  (Article 3), jamais laissé pour plus tard.
+
 *(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur : « est-il possible de le créer à
 moindre coût, simplement comme un coordinateur de fonctions existantes ? juste là pour fiabiliser
 et fluidifier l'existant [...] assure-toi que le coordinateur est spécialement bien câblé avec tous
@@ -815,6 +835,79 @@ commit. **Déclenchement sur demande explicite uniquement** (choix explicite de 
 jamais automatique dans le crochet post-commit) : je le lance moi-même juste après avoir fini de
 construire un nouvel Agent, comme dernière étape avant de le considérer terminé — un nouvel Agent
 n'arrive pas assez souvent pour justifier une vérification à chaque commit.
+
+**Enrichissement 2026-09-20 (demande explicite de l'utilisateur : « fiabilise ce process, enrichis-
+le [...] pour en tirer de vrais bénéfices »).** Le premier jet ne vérifiait que la table maîtresse,
+PRESTATIONS, l'instanciation, le registre et le blueprint — jamais CLAUDE.md lui-même, alors que
+c'est le document TOUJOURS relu (Article 13) et qu'il a fallu l'éditer à la main pour CHAQUE
+nouvel Agent cette session. `checkAgentOnboarding()` vérifie maintenant en plus (quand le texte est
+fourni, jamais un chemin deviné en son absence) : la présence de la section « ## NomAgent —
+blueprint exportable » dans CLAUDE.md (sauf `cousinOf` déclaré) et du bullet référentiel technique
+correspondant, ainsi qu'une vraie mention de l'Agent dans `docs/suivi/` (sans quoi sa construction
+échapperait à la règle « toute tâche substantielle DOIT être documentée dans docs/suivi/ »). Deux
+points supplémentaires, réellement oubliés au moins une fois cette session mais pas assez fiables
+mécaniquement pour compter comme un vrai blocage, sont toujours rendus comme **rappels non
+bloquants** (jamais dans `gaps`, jamais dans `complet`) : les canaux de consultation documentés, et
+la consignation par CASSANDRA-RH (cf. ci-dessous).
+
+**En quoi ce process garantit un vrai bénéfice, pas une formalité.** *(Réponse directe à la
+question explicite de l'utilisateur : « en quoi ce process garantit que c'est utile pour toi ? pour
+le projet ? »)*
+- **Pour l'agent (moi) qui pilote** : un Agent mal câblé est un Agent que je risque d'oublier ou de
+  reconstruire en double une session future — exactement le risque que la discipline manuelle de
+  l'Article 19 (jamais un garde-fou mécanique aujourd'hui, cf. précision ci-dessus sur les doublons
+  de fonctions) ne suffit pas toujours à éviter seule. Passer par `checkAgentOnboarding()` avant de
+  déclarer un Agent terminé transforme une intention ("je crois que j'ai bien tout câblé") en un
+  fait vérifié.
+- **Pour le projet** : chaque Agent oublié quelque part (table, menu, CLAUDE.md, suivi) est un coût
+  de construction qui ne se rentabilise jamais, puisque personne ne saurait le retrouver au moment
+  d'en avoir besoin — la valeur d'un Agent ne vient pas d'exister, mais d'être RÉELLEMENT
+  sollicité (cf. la règle "Recevoir une sortie d'outil n'est pas la même chose que la traiter" et
+  son complément sur l'utilisation réelle des outils).
+
+**Ce que ce process ne garantit toujours PAS** (limite honnête, jamais masquée) : il vérifie la
+PRÉSENCE des raccordements, jamais leur QUALITÉ — un Agent peut être "complet" au sens de
+`checkAgentOnboarding()` tout en ayant un blueprint mal écrit ou une instanciation incomplète. Ça
+reste un jugement humain/agent, jamais mécanisable (même honnêteté que HYPER-SCAN-CHECKPOINT).
+
+**Le badge (2026-09-20, demande explicite de l'utilisateur : « la remise de son badge [...] c'est
+cassandra qui supervise ces opérations. le coordinateur vérifie que tous les membres de l'équipe
+ont bien leur badge »).** Le résultat de `checkAgentOnboarding()` porte désormais un champ `badge`
+(« 🎖️ Membre certifié » quand `complet` est vrai, « ⚠️ Pas encore certifié » sinon) — trois
+décisions calibrées explicitement avec l'utilisateur :
+- **Jamais un verrou bloquant pour le code** : un Agent sans badge continue de fonctionner
+  normalement ; le badge n'est qu'un signal, jamais une condition d'exécution (cohérent avec
+  l'esprit des `rappels` déjà non bloquants ci-dessus, et avec l'Article 0 — rien dans cet
+  outillage de travail ne doit jamais pouvoir bloquer le jeu réel).
+- **Recalculé à chaque fois, jamais persisté** : le badge n'est qu'un résumé lisible de `complet`
+  au moment précis où `checkAgentOnboarding()` tourne — il ne peut donc jamais mentir sur l'état
+  réel. Si un raccordement casse après coup (ex. un fichier de registre supprimé par erreur), le
+  badge disparaît tout seul au prochain contrôle, sans qu'il faille penser à le retirer à la main.
+  Un Agent listé comme certifié dans la colonne « 🎖️ Badge » de la table maîtresse ci-dessus est
+  donc une PHOTO de la dernière vérification, pas un acquis garanti pour toujours — une colonne
+  devenue fausse après un changement de code est un écart doc/code ordinaire (Article 13), à
+  corriger en relançant `checkAgentOnboarding()`, jamais un bug du mécanisme du badge lui-même.
+- **LE-COORDINATEUR délivre le badge de fait dès aujourd'hui** : CASSANDRA-RH n'existe encore que
+  sur le papier (cf. ci-dessus) ; une fois construite, son rôle sera de CONSULTER/AFFICHER ce même
+  résultat (elle « supervise » la remise, dans l'image de l'utilisateur), jamais de le recalculer
+  indépendamment — une seule source de vérité pour ce jugement, jamais deux mécanismes qui
+  pourraient un jour se contredire.
+
+Un membre de l'équipe (ligne « Agent » de la table maîtresse) durablement sans badge est donc bien,
+comme le suggérait l'utilisateur, le signe d'une anomalie à investiguer en priorité dans le process
+d'intégration ci-dessus — jamais un détail cosmétique. La colonne « 🎖️ Badge » de la table
+maîtresse ci-dessus reflète l'état constaté lors de la dernière vérification réelle (2026-09-20) ;
+seules les lignes de statut **Agent** en portent un — un Utilitaire nommé ou un script
+d'Infrastructure n'est pas un membre de l'équipe au sens de ce process, donc n'a jamais de badge à
+détenir ou à perdre.
+
+**Frontière de portée, jamais à confondre (2026-09-20, précision explicite de l'utilisateur : « toi
+et moi avons notre badge ! mais nos 2 mascottes Noé et Lia n'ont pas de badge ! »)** : ce système de
+badge appartient entièrement à l'outillage de travail META (les Agents ci-dessus, moi qui pilote,
+l'utilisateur) — jamais aux personnages Lia et Noé, qui sont le PRODUIT du jeu, pas des membres de
+l'équipe qui le construit. `checkAgentOnboarding()` n'a et n'aura jamais vocation à s'appliquer à
+un personnage ; la charte de contenu (Article 0 et suivants de `CLAUDE.md`) reste l'unique
+référence pour tout ce qui concerne Lia et Noé.
 
 ### CIRCLE-TASKS — la « Ronde périodique », même exception volontairement mince
 

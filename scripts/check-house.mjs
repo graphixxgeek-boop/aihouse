@@ -921,7 +921,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 156'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 157'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3105,7 +3105,16 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   ].join('\n');
   const parsed=parseToolsTable(sampleTable);
   assert.equal(parsed.length,4,'parseToolsTable() must read exactly the four real tool rows, never the header row nor the separator row');
-  assert.deepEqual(parsed[0],{tool:'check-house.mjs',cout:'gratuit',declenchement:'à chaque changement de code'},'a backtick-quoted tool name must be read with the backticks stripped, and its real cost/trigger columns kept exactly as written');
+  assert.deepEqual(parsed[0],{tool:'check-house.mjs',cout:'gratuit',declenchement:'à chaque changement de code',statut:null},'a backtick-quoted tool name must be read with the backticks stripped, and its real cost/trigger columns kept exactly as written; without a Statut column in the source table, statut must be null rather than a guessed value');
+  const tableWithStatut=[
+    '| Outil | Statut | Ce qu\'il détecte/régule | Coût | Déclenchement |',
+    '|---|---|---|---|---|',
+    '| ARGUS | Agent | absences | gratuit (partie mécanique) | toujours déployé |',
+    '| LE-COORDINATEUR | Utilitaire nommé | agrège | gratuit | routine |',
+  ].join('\n');
+  const parsedWithStatut=parseToolsTable(tableWithStatut);
+  assert.equal(parsedWithStatut[0].statut,'Agent','once the real table carries a Statut column, parseToolsTable() must read it by header name (same discipline as Coût/Déclenchement) rather than leaving it null');
+  assert.equal(parsedWithStatut[1].statut,'Utilitaire nommé','a non-Agent row must report its own real statut, never defaulting to Agent');
   assert.equal(isMenuWorthy({cout:'gratuit',declenchement:'toujours déployé'}),false,'a free, always-deployed tool (ARGUS-style) is never required in the menu — it is baseline infrastructure, not a commandable prestation');
   assert.equal(isMenuWorthy({cout:'réel (Playwright, léger)',declenchement:'après chaque simulation'}),true,'a tool with a real cost must always be considered menu-worthy, whatever its trigger wording');
   assert.equal(isMenuWorthy({cout:'gratuit',declenchement:'sur demande explicite seulement'}),true,'an on-demand tool must always be considered menu-worthy even when it costs nothing to run, since it is still something one would deliberately \"commander\"');
@@ -3145,7 +3154,23 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(suggestPrestationsForTask('la tâche', fakePrestations), [], 'a single shared word (even a real one) must never be enough on its own — the threshold of at least two shared keywords exists precisely to avoid this kind of noisy false positive');
   const realMatches = suggestPrestationsForTask('Vérifier qu\'aucune tâche du suivi n\'a été oubliée');
   assert.ok(realMatches.some((m) => m.outils.includes('THE-DEEP-READER')), 'run against the project\'s own real PRESTATIONS menu, a task label closely echoing THE-DEEP-READER\'s own real "demande" wording must actually surface it — the integration this function exists for, not just its isolated logic');
-  console.log('Passed: suggestPrestationsForTask() turns the PRESTATIONS menu into a callable service for other scripts — matching on a real, honest keyword overlap (never a single-word false positive, thanks to its ≥2 threshold), returning the full real prestation data with the matched keywords named, an honest empty list when nothing overlaps, and a real match when checked against the project\'s own live menu.');
+  assert.deepEqual(matches[0].badgeWarnings, [], 'without an onboardingContext argument, badgeWarnings must default to an honest empty array rather than throwing or fabricating a warning — full backward compatibility for every pre-existing caller');
+
+  // badgeWarnings (2026-09-20, demande explicite de l'utilisateur : « si un membre de l'équipe est
+  // sollicité alors qu'il n'a pas de badge, une alerte doit nous être remontée ») — calibré avec
+  // l'utilisateur pour ne couvrir QUE ce point de passage déjà construit, jamais un nouveau
+  // dispatcher central pour tout appel (chantier hors de propos, décision explicite).
+  const badgeTable = '| Outil | Statut | Ce qu\'il détecte/régule | Coût | Déclenchement |\n|---|---|---|---|---|\n| THE-DEEP-READER | Agent | relecture lourde | réel | sur demande |\n| THE-SCREENER | Agent | qualité graphique | réel | sur demande |';
+  const uncertifiedContext = { toolsTableMarkdown: badgeTable, existingPaths: new Set() };
+  const uncertifiedMatches = suggestPrestationsForTask('Vérifier que la tâche du suivi n\'a pas été oubliée', fakePrestations, uncertifiedContext);
+  assert.ok(uncertifiedMatches[0].badgeWarnings.length === 1 && uncertifiedMatches[0].badgeWarnings[0].includes('THE-DEEP-READER'), 'when an onboardingContext is supplied and the matched prestation\'s Agent has zero real wiring, suggestPrestationsForTask() must surface exactly one badge warning naming that Agent — the real alert the user asked for at the one point of passage that already exists');
+  const certifiedContext = { toolsTableMarkdown: badgeTable, existingPaths: new Set(['docs/the-deep-reader-blueprint.md', 'docs/referentiel/the-deep-reader.md', 'docs/the-deep-reader/index.md']) };
+  const certifiedMatches = suggestPrestationsForTask('Vérifier que la tâche du suivi n\'a pas été oubliée', fakePrestations, certifiedContext);
+  assert.deepEqual(certifiedMatches[0].badgeWarnings, [], 'once the same Agent is fully wired, badgeWarnings must go back to an honest empty array — the badge is recomputed live, never a stale grudge');
+  const utilitaireContext = { toolsTableMarkdown: '| Outil | Statut | Ce qu\'il détecte/régule | Coût | Déclenchement |\n|---|---|---|---|---|\n| THE-SCREENER | Utilitaire nommé | x | réel | sur demande |', existingPaths: new Set() };
+  const utilitaireMatches = suggestPrestationsForTask('Qualité visuelle du rendu', fakePrestations, utilitaireContext);
+  assert.deepEqual(utilitaireMatches[0].badgeWarnings, [], 'a row whose Statut is not "Agent" (Utilitaire nommé/Infrastructure) never carries a badge at all, cf. docs/regles-de-travail.md — it must never be flagged as "uncertified", since it was never eligible for certification in the first place');
+  console.log('Passed: suggestPrestationsForTask() turns the PRESTATIONS menu into a callable service for other scripts — matching on a real, honest keyword overlap (never a single-word false positive, thanks to its ≥2 threshold), returning the full real prestation data with the matched keywords named, an honest empty list when nothing overlaps, a real match when checked against the project\'s own live menu, and — the 2026-09-20 badge alert — an honest badgeWarnings field (empty by default, one real warning per uncertified Agent when an onboardingContext is supplied, never flagging a non-Agent row that was never eligible for a badge) at the one point of passage the user asked to wire this into.');
 }
 {
   // checkAgentOnboarding() — la "séance d'accueil du nouveau collaborateur" (2026-09-20, demande
@@ -3162,11 +3187,25 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const fakePrestations = [{ demande: 'Faire des choses', outils: ['FAKE-AGENT-COMPLET'], cout: 'gratuit' }];
   const completePaths = new Set(['docs/fake-agent-complet-blueprint.md', 'docs/referentiel/fake-agent-complet.md', 'docs/fake-agent-complet/index.md']);
   const complete = checkAgentOnboarding('FAKE-AGENT-COMPLET', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: completePaths });
-  assert.deepEqual(complete, { agentName: 'FAKE-AGENT-COMPLET', slug: 'fake-agent-complet', gaps: [], complet: true }, 'an agent with every real wiring point present (table row, PRESTATIONS entry, blueprint, instanciation, registry) must report zero gaps and complet:true');
+  assert.deepEqual(complete.gaps, [], 'an agent with every real wiring point present (table row, PRESTATIONS entry, blueprint, instanciation, registry) must report zero gaps');
+  assert.equal(complete.complet, true, 'complet must be true once every real gap is resolved');
+  assert.ok(complete.rappels.length >= 2, 'the result must always carry non-blocking reminders (consultation channels, CASSANDRA-RH) alongside the mechanical gaps, even when complet is true — real blind spots found at least once this session (THE-DEEP-READER), never mechanically verifiable enough to count as a hard gap');
+  assert.equal(complete.badge, '🎖️ Membre certifié', 'the badge (2026-09-20, demande explicite de l\'utilisateur) must read "🎖️ Membre certifié" once every gap is resolved — a live-recomputed summary of complet, never a persisted fact');
 
   const missingEverything = checkAgentOnboarding('AGENT-FANTOME', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: new Set() });
   assert.equal(missingEverything.gaps.length, 5, 'an agent present nowhere at all must report exactly the five real gaps (table, menu, instanciation, registry, blueprint), never silently passing on any of them');
   assert.equal(missingEverything.complet, false, 'complet must be false the moment even one real gap exists');
+  assert.equal(missingEverything.badge, '⚠️ Pas encore certifié', 'the badge must read "⚠️ Pas encore certifié" the moment even one gap remains, never a false positive certification');
+
+  // Faux positif réel trouvé le 2026-09-20 en calibrant le badge contre les vrais Agents du
+  // projet (Smart Conso API, CHECK-LEVEL-TARGET) : un Agent présent dans la table mais dont la
+  // ligne n'est pas "menu-worthy" (isMenuWorthy() — jamais "réel" ni "sur demande") ne doit jamais
+  // être exigé dans PRESTATIONS, exactement la même exemption que findToolsMissingFromMenu().
+  const regulationTable = '| Outil | Statut | Ce qu\'il détecte/régule | Coût | Déclenchement |\n|---|---|---|---|---|\n| AGENT-REGULATION-INTERNE | Agent | régule le rythme | gratuit à consulter | avant toute action coûteuse |';
+  const regulationCase = checkAgentOnboarding('AGENT-REGULATION-INTERNE', { toolsTableMarkdown: regulationTable, prestations: [], existingPaths: new Set(['docs/agent-regulation-interne-blueprint.md', 'docs/referentiel/agent-regulation-interne.md', 'docs/agent-regulation-interne/index.md']) });
+  assert.ok(!regulationCase.gaps.some((g) => g.includes('PRESTATIONS')), 'an internal-regulation Agent (free to consult, triggered "before any costly action" — never "réel" nor "sur demande") must never be flagged for a missing PRESTATIONS entry, mirroring findToolsMissingFromMenu()\'s own isMenuWorthy() exemption — the real false positive found while calibrating the badge against Smart Conso API/CHECK-LEVEL-TARGET');
+  const menuWorthyMissing = checkAgentOnboarding('FAKE-AGENT-COMPLET', { toolsTableMarkdown: fakeTable, prestations: [], existingPaths: completePaths });
+  assert.ok(menuWorthyMissing.gaps.some((g) => g.includes('PRESTATIONS')), 'a genuinely menu-worthy Agent (real cost or on-demand trigger, like FAKE-AGENT-COMPLET\'s "sur demande" in fakeTable) missing from PRESTATIONS must still be flagged — the exemption above must never become a blanket bypass');
 
   const cousinCase = checkAgentOnboarding('FAKE-AGENT-COMPLET', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: new Set(['docs/referentiel/fake-agent-complet.md', 'docs/fake-agent-complet/index.md']), cousinOf: 'UN-AUTRE-AGENT' });
   assert.deepEqual(cousinCase.gaps, [], 'an agent missing its own blueprint but explicitly declared cousinOf another agent must never be flagged for that specific gap — the declared exception, not a silently guessed one');
@@ -3176,7 +3215,30 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const registryOverridePresent = checkAgentOnboarding('FAKE-AGENT-COMPLET', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: new Set(['docs/fake-agent-complet-blueprint.md', 'docs/referentiel/fake-agent-complet.md', 'docs/ailleurs/registre.md']), registryPathPrefix: 'docs/ailleurs/' });
   assert.deepEqual(registryOverridePresent.gaps, [], 'a real, legitimate registry-location deviation (like THE-DEEP-READER\'s registry actually living under docs/suivi/relectures-lourdes/, not docs/the-deep-reader/) must be accepted once explicitly declared via registryPathPrefix, never guessed and never left as a permanent false gap');
 
-  console.log('Passed: checkAgentOnboarding() correctly slugifies a real agent name into its real file-naming convention, reports zero gaps and complet:true for a fully-wired fake agent, reports every one of the five real gap types for a completely unwired one, respects an explicitly declared cousinOf exception for a missing blueprint, and defaults the registry check to the standard docs/<slug>/ location while honoring an explicit registryPathPrefix override for a real documented deviation — the mechanical "onboarding session" the user asked for, replacing the manual, incomplete check that missed three real wiring points for THE-DEEP-READER earlier this session.');
+  // Enrichissement 2026-09-20 (demande explicite de l'utilisateur : « fiabilise/enrichis ce process
+  // [...] pour en tirer de vrais bénéfices ») — angle mort réel du premier jet : CLAUDE.md
+  // lui-même (le document TOUJOURS relu, Article 13) n'était jamais vérifié, alors qu'il a fallu
+  // l'éditer à la main pour chaque nouvel Agent cette session.
+  const claudeMdWithBoth = '## FAKE-AGENT-COMPLET — blueprint exportable\n\ntexte...\n\n- `docs/referentiel/fake-agent-complet.md` (instanciation)';
+  const withClaudeMd = checkAgentOnboarding('FAKE-AGENT-COMPLET', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: completePaths, claudeMdText: claudeMdWithBoth });
+  assert.deepEqual(withClaudeMd.gaps, [], 'an agent whose CLAUDE.md already carries both its own "## ... — blueprint exportable" section and its référentiel technique bullet must report zero CLAUDE.md-related gaps');
+
+  const claudeMdMissingBoth = 'CLAUDE.md sans aucune mention de cet agent.';
+  const withoutClaudeMd = checkAgentOnboarding('FAKE-AGENT-COMPLET', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: completePaths, claudeMdText: claudeMdMissingBoth });
+  assert.equal(withoutClaudeMd.gaps.length, 2, 'an agent entirely absent from CLAUDE.md must be flagged for both real gaps (the référentiel technique bullet AND its own blueprint section) — the exact real blind spot this enrichment closes');
+
+  const claudeMdCousinNoBlueprintSection = '- `docs/referentiel/fake-agent-complet.md` (instanciation)';
+  const cousinClaudeMd = checkAgentOnboarding('FAKE-AGENT-COMPLET', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: new Set(['docs/referentiel/fake-agent-complet.md', 'docs/fake-agent-complet/index.md']), cousinOf: 'UN-AUTRE-AGENT', claudeMdText: claudeMdCousinNoBlueprintSection });
+  assert.deepEqual(cousinClaudeMd.gaps, [], 'an agent declared cousinOf another must never be required to have its own "## ... — blueprint exportable" section in CLAUDE.md — only its référentiel technique bullet, exactly like THE-DEEP-READER in the real file');
+
+  const suiviWithMention = checkAgentOnboarding('FAKE-AGENT-COMPLET', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: completePaths, suiviText: 'Construction de FAKE-AGENT-COMPLET terminée aujourd\'hui.' });
+  assert.deepEqual(suiviWithMention.gaps, [], 'an agent genuinely mentioned in docs/suivi/ must never be flagged for the suivi check');
+  const suiviWithoutMention = checkAgentOnboarding('FAKE-AGENT-COMPLET', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: completePaths, suiviText: 'Rien à voir avec un quelconque agent ici.' });
+  assert.equal(suiviWithoutMention.gaps.length, 1, 'an agent built with zero trace in docs/suivi/ must be flagged — building something substantial without a suivi entry violates docs/systeme-de-suivi.md just as much as a missing test would');
+  const suiviOmitted = checkAgentOnboarding('FAKE-AGENT-COMPLET', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: completePaths });
+  assert.deepEqual(suiviOmitted.gaps, [], 'when suiviText is simply not provided (omitted, not empty), the check must be skipped silently rather than fabricating a gap with no real data to back it');
+
+  console.log('Passed: checkAgentOnboarding() correctly slugifies a real agent name into its real file-naming convention, reports zero gaps for a fully-wired fake agent while always still carrying its non-blocking reminders, reports every one of the five base gap types for a completely unwired one, respects an explicitly declared cousinOf exception for a missing blueprint, defaults the registry check to the standard docs/<slug>/ location while honoring an explicit registryPathPrefix override for a real documented deviation, checks CLAUDE.md itself for both its référentiel technique bullet and its own "## ... — blueprint exportable" section (waived for a declared cousin) and docs/suivi/ for a real trace of its construction when that text is supplied, never fabricating a gap when it is simply omitted, exempts an internal-regulation Agent from the PRESTATIONS check exactly like findToolsMissingFromMenu()\'s own isMenuWorthy() rule (a real false positive caught while building the badge) while still flagging a genuinely menu-worthy Agent that is actually missing, and — the 2026-09-20 badge enrichment — reports a live "🎖️ Membre certifié"/"⚠️ Pas encore certifié" badge that is nothing but a readable summary of complet, recomputed fresh every call, never a persisted fact — the mechanical "onboarding session" the user asked for, replacing the manual, incomplete check that missed three real wiring points for THE-DEEP-READER earlier this session.');
 }
 
 {
