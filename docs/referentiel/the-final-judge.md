@@ -103,3 +103,17 @@ Ajouté à la table des niveaux (`docs/referentiel/check-level-target.md`) : mod
 `docs/the-final-judge/` — un fichier par passage (`<date>-<mode>.md`), plus `index.md` : verdict
 global en une phrase, nombre de points retenus après réconciliation, lien vers le rapport complet.
 Permet de suivre si le verdict s'améliore réellement d'un passage à l'autre.
+
+## Partie mécanique minimale (2026-09-20)
+
+`scripts/the-final-judge.mjs` — zéro appel réseau, zéro coût API (le jugement lui-même reste un vrai
+raisonnement, jamais mécanisable) :
+- `extractPersonaBlock(texte)` — extrait le personnage FIXE directement de ce document (le bloc de
+  citation ci-dessus), pour garantir que le texte donné à l'agent séparé à chaque appel provient
+  toujours de cette seule source, jamais retapé ou reformulé à la main.
+- `detectGenericReport(texte)` — après un passage réel, détecte les signaux structurels d'une dérive
+  vers un rapport générique/consensuel : aucune référence concrète à un fichier réel du dépôt,
+  structure en 4 parties incomplète, ou rapport anormalement court. Jamais une liste de formulations
+  interdites (corollaire Article 17) — un signal sur l'ABSENCE de ce que le personnage exige de
+  lui-même, jamais un jugement de contenu. Comme pour `check-spirit.mjs`, ces heuristiques ne
+  détectent que les dérives les plus grossières et ne dispensent jamais de lire le rapport.

@@ -918,9 +918,13 @@ suivi des tâches (dossier `docs/suivi/`, un fichier par session, un fichier d'i
 `docs/suivi/index.md`, quatre attributs par tâche — horodatage, sujet, sous-sujet, degré de
 sensibilité). Démarre à la création du système, sans reconstruire l'historique antérieur.
 
-**La mise à jour en temps réel de ce suivi est un point central de l'organisation du travail sur ce
-projet, pas un outil secondaire parmi d'autres** *(ajouté le 2026-09-20, à la demande explicite de
-l'utilisateur)*. Concrètement : chaque tâche substantielle se documente dans `docs/suivi/` DANS LE
+**La mise à jour en temps réel de ce suivi est OBLIGATOIRE et est un point central de l'organisation
+du travail sur ce projet, pas un outil secondaire parmi d'autres** *(ajouté le 2026-09-20, à la
+demande explicite de l'utilisateur, renforcé le même jour : « fiabilise tout ce que tu fais avec le
+suivi, c'est obligatoire maintenant »)*. Aucune exception : toute tâche substantielle (code, charte,
+documentation de référence, nouvel outil) DOIT être documentée dans `docs/suivi/`, sans quoi elle
+n'est pas considérée terminée au sens de cette charte, au même titre qu'un test qui ne passerait pas.
+Concrètement : chaque tâche substantielle se documente dans `docs/suivi/` DANS LE
 MÊME commit que le travail qu'elle décrit (jamais après coup, cf. `docs/regles-de-travail.md` §4) ;
 un crochet git tracké (`scripts/hooks/post-commit`, auto-installé à chaque `pnpm install` via le
 script `prepare` de `package.json`) avertit en temps réel — pas au bout de plusieurs heures — dès

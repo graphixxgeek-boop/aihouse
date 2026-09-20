@@ -3007,3 +3007,19 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(moveReasonMismatchesDestination('Direction le jardin, enfin.','jardin'),false,'a reason that correctly names the real destination must never be flagged');
   console.log('Passed: moveReasonMismatchesDestination() flags a movement reason that names a different room than the real destination and never names the destination itself, but never a reason naming no room, naming the destination alongside another room in passing, or correctly naming the real destination — closing the exact real full_sim9 bug.');
 }
+{
+  // THE-FINAL-JUDGE (2026-09-20, cf. scripts/the-final-judge.mjs et docs/referentiel/the-final-judge.md).
+  // THE-FINAL-JUDGE lui-même est un vrai agent séparé, jamais testable ici — seuls ses deux
+  // garde-fous mécaniques le sont : le personnage fixe est bien extrait tel quel du document de
+  // référence (jamais reformulé), et un rapport générique/sans preuve concrète est bien détecté.
+  const { extractPersonaBlock, detectGenericReport } = await import('../scripts/the-final-judge.mjs');
+  const fakeDoc = 'Intro.\n\n## Personnage donné à l\'agent séparé\n\n> Première phrase du personnage.\n> Deuxième phrase du personnage.\n\nLa suite du document, hors du bloc.';
+  assert.equal(extractPersonaBlock(fakeDoc), 'Première phrase du personnage.\nDeuxième phrase du personnage.', 'extractPersonaBlock() must pull exactly the blockquoted lines, stripping the leading "> " marker, and nothing from outside the quote block — this is what guarantees the fixed persona is reused verbatim rather than retyped by hand each time');
+  assert.deepEqual(extractPersonaBlock('Rien ici, aucun bloc de citation.'), '', 'a document with no blockquote must report an empty persona, never crash or return unrelated text');
+  const genericReport = 'Verdict global : le projet est globalement solide, dans l\'ensemble bien construit. Points positifs : de bonnes bases. À améliorer : quelques détails. Pistes de développement : continuer ainsi.';
+  assert.ok(detectGenericReport(genericReport).length > 0, 'a report with zero concrete file references must be flagged as a genericness signal — closing exactly the drift risk the fixed persona is meant to prevent');
+  const concreteReport = 'Verdict global : ce projet a un vrai souci de séparation des responsabilités dans `app/api/lia/route.ts`, un fichier de plus de mille lignes qui mélange orchestration réseau et logique métier. Points positifs : `lib/dialogue.ts` reste propre et bien testé. À améliorer : extraire la logique du dossier retourné dans son propre module. Pistes de développement : envisager un découpage par domaine plutôt que par type technique.';
+  assert.deepEqual(detectGenericReport(concreteReport), [], 'a real, concrete, properly structured report citing actual files must never be flagged — the detector targets genuine genericness, not every report');
+  assert.ok(detectGenericReport('Trop court.').some((s) => s.includes('court')), 'an abnormally short report must be flagged regardless of its other properties');
+  console.log('Passed: THE-FINAL-JUDGE\'s two mechanical guards work correctly — extractPersonaBlock() pulls the exact fixed persona text from its single source of truth with nothing added or lost, and detectGenericReport() flags a report with no concrete file citations, missing required sections, or abnormal brevity, while never flagging a real, specific, properly structured report — the mechanical protection against the persona drifting toward a generic, standard tone.');
+}
