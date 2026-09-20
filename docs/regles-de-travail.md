@@ -924,6 +924,20 @@ seulement ce qui aide l'agent à ne pas créer de friction évitable.)*
 - Quand une demande non technique implique un choix technique non trivial, l'agent tranche
   lui-même la meilleure solution et ne rend compte que du résultat perçu, jamais du détail
   d'implémentation, sauf si l'utilisateur demande explicitement à comprendre.
+- **« Agent » veut souvent dire « script »** *(précisé le 2026-09-20, à la demande explicite de
+  l'utilisateur, après avoir remarqué lui-même la confusion : « je parle d'un script. souvent, quand
+  je parle d'un agent, je fais la confusion avec un script [...] c'est une deformation parce que je
+  suis humain et que je ne suis pas dev »)*. Quand l'utilisateur emploie le mot "agent" (ex. "créer
+  un agent RH", "un sous-agent dédié à cette tâche"), il désigne le plus souvent un **script/outil**
+  du paysage existant (comme ARGUS, CIRCLE-TASKS, SMART-CONSO-TOKEN) — jamais nécessairement un vrai
+  agent séparé au sens technique (l'outil `Agent`, qui démarre un contexte à froid et coûte un
+  forfait fixe, cf. `agent_subagent_spawn` dans `docs/referentiel/smart-conso-token.md`). Toujours
+  vérifier depuis le contexte lequel des deux est réellement voulu avant de répondre ou de chiffrer
+  un coût — ne jamais répondre comme si le mot "agent" impliquait forcément l'outil technique du
+  même nom. Une confusion inverse (traiter un vrai besoin de script comme s'il fallait un agent
+  séparé) gonflerait un coût pour rien ; l'inverse (traiter un vrai besoin d'agent séparé comme un
+  simple script) priverait d'un regard réellement indépendant quand il est nécessaire — les deux
+  erreurs sont à éviter, d'où la vérification systématique plutôt qu'une supposition par défaut.
 
 ### Profil psychologique — ce qui peut créer de la friction si mal anticipé
 
