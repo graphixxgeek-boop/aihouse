@@ -11,3 +11,4 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 | 2026-09-20T12:43:37.479Z | elargi | arborescence | 30 | 128 | 0 | 0 | /home/user/aihouse/docs/check-tasks-details/1789908217479-elargi-arborescence.html |
 | 2026-09-20T12:44:29.164Z | en_cours | liste | 15 | 128 | 0 | 15 | /home/user/aihouse/docs/check-tasks-details/1789908269163-en_cours-liste.html |
 | 2026-09-20T13:33:20.155Z | en_cours | liste | 16 | 137 | 0 | 15 | /home/user/aihouse/docs/check-tasks-details/1789911200155-en_cours-liste.html |
+| 2026-09-20T14:07:10.863Z | en_cours | liste | 16 | 142 | 0 | 15 | /home/user/aihouse/docs/check-tasks-details/1789913230863-en_cours-liste.html |

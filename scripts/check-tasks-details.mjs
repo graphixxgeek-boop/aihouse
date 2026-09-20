@@ -29,7 +29,7 @@
 // au moins 3 instantanés consécutifs (signal de stagnation possible, à vérifier, jamais une
 // certitude d'oubli).
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
@@ -140,12 +140,19 @@ export function buildListBlocks(rows) {
 
 // Pour chaque tâche encore ouverte, un signal de correspondance possible avec une prestation du
 // coordinateur — jamais forcé : seules les tâches avec au moins une correspondance apparaissent.
-export function suggestToolsForOpenTasks(rows, prestations = PRESTATIONS) {
+// `onboardingContext` (2026-09-20, trouvaille réelle : c'était l'unique appelant réel de
+// suggestPrestationsForTask() en production, et il ne passait jamais ce paramètre — le badge
+// n'était donc jamais réellement vérifié nulle part, malgré son propre chokepoint déjà construit)
+// est optionnel et rétrocompatible ; passé ici, tout outil suggéré sans son badge est signalé dans
+// la même ligne, jamais un second rapport séparé.
+export function suggestToolsForOpenTasks(rows, prestations = PRESTATIONS, onboardingContext = null) {
   const openRows = rows.filter((r) => OPEN_KEYS.has(r.statusKey));
   const items = [];
   for (const row of openRows) {
-    const matches = suggestPrestationsForTask(`${row.sujet} ${row.sousSujet}`, prestations);
-    if (matches.length) items.push(`#${row.n ?? "—"} « ${row.sousSujet} » → ${matches[0].outils.join(" + ")} (mots-clés : ${matches[0].matched.join(", ")})`);
+    const matches = suggestPrestationsForTask(`${row.sujet} ${row.sousSujet}`, prestations, onboardingContext);
+    if (!matches.length) continue;
+    const warning = matches[0].badgeWarnings?.length ? ` — ⚠️ ${matches[0].badgeWarnings.join(" ; ")}` : "";
+    items.push(`#${row.n ?? "—"} « ${row.sousSujet} » → ${matches[0].outils.join(" + ")} (mots-clés : ${matches[0].matched.join(", ")})${warning}`);
   }
   return items;
 }
@@ -191,7 +198,7 @@ export function appendSnapshot(rows, { file = SNAPSHOTS_FILE, dir = OUT_DIR, now
 
 // Construit le contenu du rapport (pure, testable) — la génération HTML et l'écriture d'instantané
 // restent dans main(), jamais mélangées ici.
-export function buildReport({ zoom = "en_cours", format = "liste", allRows, history = [] } = {}) {
+export function buildReport({ zoom = "en_cours", format = "liste", allRows, history = [], onboardingContext = null } = {}) {
   if (!ZOOM_LEVELS.includes(zoom)) throw new Error(`zoom inconnu : ${zoom}`);
   if (!FORMATS.includes(format)) throw new Error(`format inconnu : ${format}`);
   const rows = allRows ?? loadAllTaskRows();
@@ -211,7 +218,7 @@ export function buildReport({ zoom = "en_cours", format = "liste", allRows, hist
   blocks.push(format === "arborescence" ? { type: "tree", nodes: buildTree(scoped) } : { type: "noop" });
   if (format === "liste") blocks.push(...buildListBlocks(scoped));
 
-  const suggestions = suggestToolsForOpenTasks(scoped);
+  const suggestions = suggestToolsForOpenTasks(scoped, PRESTATIONS, onboardingContext);
   if (suggestions.length) {
     blocks.push({ type: "heading", text: "Outils du coordinateur pouvant aider (correspondance de mots-clés, à vérifier)" });
     blocks.push({ type: "list", items: suggestions });
@@ -233,6 +240,44 @@ function appendIndexRow({ file, zoom, format, count, total, regressions, stagnan
   writeFileSync(INDEX_FILE, prior + row, "utf8");
 }
 
+// Construit le contexte de badge réel — zéro coût API, aucun appel réseau : uniquement des
+// lectures de fichiers locaux déjà présents sur disque (CLAUDE.md, docs/regles-de-travail.md,
+// l'arborescence de docs/, les sessions de docs/suivi/ déjà relues par catégorizeAllSessions() pour
+// le reste de ce rapport). Fonction dédiée plutôt qu'inlinée dans main() pour rester testable sans
+// dépendre du système de fichiers réel.
+// `root` doit être fourni SANS séparateur final (rappel trouvé le 2026-09-20 : ROOT se termine déjà
+// par "/" — un simple `slice(root.length + 1)` grignotait la première lettre de "docs/", faussant
+// silencieusement TOUTE vérification de registre/instanciation en aval, découvert en voyant
+// check-tasks-details lui-même signalé "sans badge" alors que ses trois fichiers existent bien).
+function walkDocsPaths(dir, root, out = new Set()) {
+  if (!existsSync(dir)) return out;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    out.add(full.slice(root.length).replace(/^[\\/]/, "").replace(/\\/g, "/"));
+    if (entry.isDirectory()) walkDocsPaths(full, root, out);
+  }
+  return out;
+}
+export function buildRealOnboardingContext(root = ROOT.replace(/\/$/, "")) {
+  const docsDir = join(root, "docs");
+  const existingPaths = walkDocsPaths(docsDir, root);
+  const sessionsDir = join(root, "docs/suivi/sessions");
+  let suiviText = "";
+  if (existsSync(sessionsDir)) {
+    for (const f of readdirSync(sessionsDir)) suiviText += readFileSync(join(sessionsDir, f), "utf8");
+  }
+  return {
+    toolsTableMarkdown: existsSync(join(root, "docs/regles-de-travail.md")) ? readFileSync(join(root, "docs/regles-de-travail.md"), "utf8") : "",
+    claudeMdText: existsSync(join(root, "CLAUDE.md")) ? readFileSync(join(root, "CLAUDE.md"), "utf8") : "",
+    existingPaths,
+    suiviText,
+    // Seule déviation Agent réelle et documentée à ce jour (docs/regles-de-travail.md) — sans ça,
+    // THE-DEEP-READER ressortirait à tort "sans badge" ici, alors qu'il est complet une fois ses
+    // deux déviations assumées prises en compte (cf. checkAgentOnboarding(), le-coordinateur.mjs).
+    agentOverrides: { "THE-DEEP-READER": { cousinOf: "THE-FINAL-JUDGE", registryPathPrefix: "docs/suivi/relectures-lourdes/" } },
+  };
+}
+
 function main() {
   const [, , zoomArg = "en_cours", formatArg = "liste"] = process.argv;
   const zoom = ZOOM_LEVELS.includes(zoomArg) ? zoomArg : "en_cours";
@@ -240,7 +285,8 @@ function main() {
 
   const allRows = loadAllTaskRows();
   const history = loadSnapshotHistory();
-  const report = buildReport({ zoom, format, allRows, history });
+  const onboardingContext = buildRealOnboardingContext();
+  const report = buildReport({ zoom, format, allRows, history, onboardingContext });
 
   const html = renderHtmlReport({
     title: report.title,

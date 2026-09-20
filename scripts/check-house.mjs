@@ -921,7 +921,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 157'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 158'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3246,7 +3246,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // ses demandes « état des tâches », zoom × forme, lecture seule sur docs/suivi/, vérification
   // croisée automatique contre son propre historique). cf. docs/referentiel/check-tasks-details.md.
   const ctd = await import('../scripts/check-tasks-details.mjs');
-  const { loadAllTaskRows, splitSujet, filterByZoom, buildTree, buildListBlocks, suggestToolsForOpenTasks, compareSnapshots, buildReport, appendSnapshot, loadSnapshotHistory } = ctd;
+  const { loadAllTaskRows, splitSujet, filterByZoom, buildTree, buildListBlocks, suggestToolsForOpenTasks, compareSnapshots, buildReport, appendSnapshot, loadSnapshotHistory, buildRealOnboardingContext } = ctd;
 
   assert.deepEqual(splitSujet('Thème A / Sous-thème A'), { theme: 'Thème A', sousTheme: 'Sous-thème A' }, 'a real "Thème / Sous-thème" Sujet must split cleanly on the existing convention, never a new taxonomy invented on top');
   assert.deepEqual(splitSujet('Thème B'), { theme: 'Thème B', sousTheme: 'Général' }, 'a Sujet with no " / " separator must fall back to a named "Général" bucket, never crash or leave sousTheme empty');
@@ -3295,6 +3295,35 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(suggestions[0].includes('#42') && suggestions[0].includes('THE-DEEP-READER'), 'the suggestion line must name both the real task number and the real matched tool, never a vague pointer');
   assert.deepEqual(suggestToolsForOpenTasks([{ n: 1, sujet: 'X', sousSujet: 'sans rapport du tout', statusKey: 'ouverte' }], [{ demande: 'Qualité visuelle du rendu', outils: ['THE-SCREENER'], cout: 'réel' }]), [], 'an open task with no real keyword overlap with any prestation must produce zero suggestions, never a forced guess');
 
+  // Câblage du badge (2026-09-20, trouvaille réelle : check-tasks-details.mjs était l'UNIQUE
+  // appelant réel de suggestPrestationsForTask() en production, et il ne passait jamais
+  // onboardingContext — le badge n'était donc jamais réellement vérifié nulle part malgré son
+  // propre chokepoint déjà construit. Question directe de l'utilisateur : « est-ce que le check de
+  // badge pour les agents est fait systématiquement à chaque de leur utilisation ? »).
+  const fakeBadgeTable = '| Outil | Statut | Ce qu\'il détecte/régule | Coût | Déclenchement |\n|---|---|---|---|---|\n| THE-DEEP-READER | Agent | relecture lourde | réel | sur demande |';
+  const uncertifiedCtx = { toolsTableMarkdown: fakeBadgeTable, existingPaths: new Set() };
+  const withWarning = suggestToolsForOpenTasks(
+    [{ n: 42, sujet: 'Charte / Outillage', sousSujet: 'Vérifier qu\'aucune tâche du suivi n\'a été oubliée', statusKey: 'ouverte' }],
+    [{ demande: 'Vérifier qu\'aucune idée/tâche n\'a été oubliée dans le suivi', outils: ['THE-DEEP-READER'], cout: 'réel' }],
+    uncertifiedCtx,
+  );
+  assert.ok(withWarning[0].includes('⚠️') && withWarning[0].includes('THE-DEEP-READER'), 'when an onboardingContext is supplied and the matched tool has zero real wiring, the suggestion line must carry a visible badge warning naming that tool — the real alert wired into check-tasks-details.mjs\'s own real production call');
+  const noContextSuggestions = suggestToolsForOpenTasks(
+    [{ n: 42, sujet: 'Charte / Outillage', sousSujet: 'Vérifier qu\'aucune tâche du suivi n\'a été oubliée', statusKey: 'ouverte' }],
+    [{ demande: 'Vérifier qu\'aucune idée/tâche n\'a été oubliée dans le suivi', outils: ['THE-DEEP-READER'], cout: 'réel' }],
+  );
+  assert.ok(!noContextSuggestions[0].includes('⚠️'), 'without an onboardingContext (the default, backward-compatible call), the suggestion line must never carry a badge warning — full compatibility with every pre-existing caller');
+
+  // buildRealOnboardingContext() — le contexte réel construit par main() avant chaque génération de
+  // rapport (2026-09-20). Bug réel trouvé et corrigé en calibrant ce test : ROOT se termine déjà par
+  // un séparateur, donc l'ancien `slice(root.length + 1)` grignotait la première lettre de "docs/",
+  // faussant silencieusement TOUTE vérification de registre/instanciation en aval (check-tasks-
+  // details lui-même ressortait à tort "sans badge" alors que ses trois fichiers existent bien).
+  const realCtx = buildRealOnboardingContext();
+  assert.ok(realCtx.existingPaths.has('docs/check-tasks-details/index.md'), 'buildRealOnboardingContext() must produce paths with the correct leading "docs/" prefix, never a truncated one — the exact real bug found while wiring this context into production');
+  assert.ok(realCtx.claudeMdText.includes('Article 0'), 'the real CLAUDE.md text must be genuinely loaded, not an empty fallback, when the file exists');
+  assert.ok(realCtx.agentOverrides['THE-DEEP-READER']?.cousinOf === 'THE-FINAL-JUDGE', 'the one known, documented Agent deviation (THE-DEEP-READER, cousinOf THE-FINAL-JUDGE + its own registry path) must be declared here, otherwise the real badge check would wrongly flag it as uncertified in every real report');
+
   const snap1 = { at: 't1', rows: [{ n: 10, statusKey: 'ouverte' }, { n: 11, statusKey: 'terminee' }] };
   const snap2 = { at: 't2', rows: [{ n: 10, statusKey: 'ouverte' }, { n: 11, statusKey: 'terminee' }] };
   const regressed = compareSnapshots([snap1], [{ n: 10, sousSujet: 'X', statusKey: 'ouverte' }, { n: 11, sousSujet: 'Y', statusKey: 'ouverte' }]);
@@ -3329,7 +3358,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(loadSnapshotHistory(tmpFile).length, 2, 'a second appendSnapshot() call must append a new line rather than overwrite the file, building a real growing history');
   fs.rmSync(tmpDir, { recursive: true, force: true });
 
-  console.log('Passed: check-tasks-details.mjs stays strictly read-only on docs/suivi/ while flattening every real session row (loadAllTaskRows), splits Sujet on the existing Thème/Sous-thème convention rather than inventing a new taxonomy (splitSujet), filters correctly by all three zoom levels including a real task-number-based "elargi" window (filterByZoom), builds an honest theme>sous-thème>tâche tree with real counts and leaf details (buildTree), a status-grouped list that never shows an empty group (buildListBlocks), a real coordinator-consultation signal per open task with no forced guesses (suggestToolsForOpenTasks), an honest regression/stagnation cross-check against its own snapshot history including the very first run with no history at all (compareSnapshots), a full report assembly that genuinely differs by format and applies the same zoom filtering as the standalone function (buildReport), and a real, append-only, on-disk snapshot history (appendSnapshot/loadSnapshotHistory) tested in an isolated temp directory, never touching the project\'s real registry.');
+  console.log('Passed: check-tasks-details.mjs stays strictly read-only on docs/suivi/ while flattening every real session row (loadAllTaskRows), splits Sujet on the existing Thème/Sous-thème convention rather than inventing a new taxonomy (splitSujet), filters correctly by all three zoom levels including a real task-number-based "elargi" window (filterByZoom), builds an honest theme>sous-thème>tâche tree with real counts and leaf details (buildTree), a status-grouped list that never shows an empty group (buildListBlocks), a real coordinator-consultation signal per open task with no forced guesses (suggestToolsForOpenTasks) — now also carrying a visible badge warning when an onboardingContext is supplied and the matched tool is uncertified, and staying silent without one (full backward compatibility) — an honest regression/stagnation cross-check against its own snapshot history including the very first run with no history at all (compareSnapshots), a full report assembly that genuinely differs by format and applies the same zoom filtering as the standalone function (buildReport), a real, append-only, on-disk snapshot history (appendSnapshot/loadSnapshotHistory) tested in an isolated temp directory, never touching the project\'s real registry, and — the 2026-09-20 badge wiring — buildRealOnboardingContext() correctly builds the real badge context (CLAUDE.md, the tools table, docs/ paths, docs/suivi/ text, THE-DEEP-READER\'s declared deviation) with the right "docs/"-prefixed paths, closing a real path-slicing bug found while wiring this into check-tasks-details.mjs\'s own real production call — the one and only place this whole badge system was ever actually invoked before this fix.');
 }
 
 {
