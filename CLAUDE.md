@@ -118,9 +118,6 @@ entre eux (complicité, intimité, désaccords, disputes), avec une texture huma
 
 ## Charte de qualité — à appliquer à chaque itération
 
-*(Validée avec l'utilisateur le 2026-09-16, complétée le 2026-09-17. Article 0 prime sur tous les
-autres.)*
-
 **Article 0 — Hiérarchie des lois.** L'esprit des personnages (article fondateur ci-dessus) est
 la loi suprême. Aucune règle ci-dessous ne peut le contredire. En cas de tension entre deux
 règles (ex. économiser les appels API *contre* garantir le naturel), le naturel et la crédibilité
@@ -167,9 +164,7 @@ strict nécessaire, jamais au prix du naturel. La séparation "un cerveau par pe
 appels Gemini distincts, chacun ne voyant que sa propre perception) est maintenue malgré son
 coût : elle sert directement la qualité de l'esprit des personnages.
 
-**Frontière avec Smart Conso API** *(ajoutée le 2026-09-19, à la demande explicite de
-l'utilisateur : « est-ce que smart-conso-api est sollicitée pour le principe de toujours coder en
-économisant les API [...] est-ce que c'est nécessaire de les relier ou pas ? »)* — liés en esprit
+**Frontière avec Smart Conso API** — liés en esprit
 (les deux visent à ne pas gaspiller les appels API), mais à deux niveaux différents, jamais
 fusionnés en un seul mécanisme : cet Article 8 gouverne l'ARCHITECTURE du jeu en production (ce que
 le code fait pour un vrai visiteur), tranché une fois pour toutes et protégé par l'Article 0, qui
@@ -179,9 +174,7 @@ diagnostics) — jamais l'architecture de production elle-même. Smart Conso API
 suggérer de modifier un choix déjà tranché par cet article (comme la séparation des deux cerveaux)
 au nom de l'économie : ce serait exactement la dérive que l'Article 0 interdit.
 
-**Dans l'autre sens, en revanche, un bénéfice réel et légitime existe** *(précisé le 2026-09-19,
-question explicite de l'utilisateur : « est-ce que les conseils, l'expérience accumulée par Smart
-Conso API bénéficie à l'Article 8 et à sa mise en œuvre ? »)* : l'expérience accumulée par Smart
+**Dans l'autre sens, en revanche, un bénéfice réel et légitime existe** : l'expérience accumulée par Smart
 Conso API (combien coûte réellement une simulation, un diagnostic, à quel rythme le quota se tend)
 peut ÉCLAIRER une décision future sous cet article — par exemple juger si une nouvelle
 fonctionnalité doit appeler l'API en direct ou générer une réplique localement (Article 10), en
@@ -227,10 +220,14 @@ documents concernés, et le filet de sécurité doit être exécuté avant de co
 terminé — jamais après coup, jamais différé à une session ultérieure. Un écart constaté entre deux
 de ces documents, ou entre l'un d'eux et le code réel, est traité comme un bug au même titre
 qu'une anomalie de dialogue (cf. Article 3) : il se corrige à la racine, pas par une note qui dit
-qu'il faudra y revenir.
+qu'il faudra y revenir. Ce fichier lui-même applique ce principe à sa propre écriture : la
+justification narrative de QUAND et POURQUOI une règle a été ajoutée (date, citation de la demande)
+vit dans `docs/referentiel/smart-breaker-historique.md` et `docs/referentiel/claude-md-asides-historique.md`
+plutôt que mêlée à la règle elle-même — jamais l'information perdue, seulement déplacée là où elle
+coûte moins cher (lu à la demande, pas à chaque message).
 
-**Vérification périodique de TOUS les documents de référence, pas seulement au fil des changements**
-*(ajouté le 2026-09-19, à la demande explicite de l'utilisateur, marqué important)*. Le paragraphe
+**Vérification périodique de TOUS les documents de référence, pas seulement au fil des changements.**
+Le paragraphe
 ci-dessus impose une mise à jour « le jour même » d'un changement — nécessaire mais pas suffisant :
 un document peut aussi devenir faux sans qu'aucun changement récent ne l'ait directement touché
 (exemple réel trouvé ce jour-là : le plan d'origine ci-dessous affirmait que le visage restait un
@@ -281,8 +278,7 @@ une seconde confirmation explicite avant d'exécuter — jamais après une seule
 confirmation protège la charte même contre son propre créateur, qui peut légitimement vouloir la
 faire évoluer, mais jamais par erreur ou par accumulation de petites concessions.
 
-**Article 15 — Se mettre à la place de l'utilisateur.** *(Ajouté le 2026-09-17, à la demande
-explicite de l'utilisateur.)* Avant de considérer un changement terminé, se relire du point de vue
+**Article 15 — Se mettre à la place de l'utilisateur.** Avant de considérer un changement terminé, se relire du point de vue
 de la personne qui découvre l'écran sans le contexte de l'agent qui l'a codé : elle ne voit que ce
 qui s'affiche réellement (répliques, pensées, rêves, jauges, déplacements), jamais le raisonnement
 interne, les noms de variables ni l'historique de développement. Si l'enchaînement de plusieurs
@@ -293,8 +289,7 @@ correct pris séparément. La question « est-ce clair pour quelqu'un qui décou
 contexte ? » se pose systématiquement à chaque relecture, pas seulement après qu'un utilisateur a
 signalé une confusion.
 
-**Article 16 — Vérification systématique par questions.** *(Ajouté le 2026-09-17, à la demande
-explicite de l'utilisateur.)* À chaque tour où l'utilisateur formule une ou plusieurs demandes
+**Article 16 — Vérification systématique par questions.** À chaque tour où l'utilisateur formule une ou plusieurs demandes
 (nouvelle fonctionnalité, correctif, réglage, changement de règle), l'agent lui pose au moins
 trois questions de vérification avant ou pendant l'exécution — jamais après coup une fois le
 travail déjà fait — pour s'assurer d'avoir bien compris l'intention réelle plutôt que de supposer.
@@ -310,9 +305,7 @@ l'utilisateur contient plusieurs demandes numérotées ou distinctes, la répons
 synthèse globale qui noie les points individuels. Cette exigence s'ajoute aux trois questions de
 vérification, elle ne les remplace pas.
 
-**Article 17 — Se mettre à la place des personnages, pas seulement de l'utilisateur.** *(Ajouté le
-2026-09-18, à la demande explicite de l'utilisateur après une simulation intégrale rejouée de bout
-en bout.)* L'Article 15 demande de se relire du point de vue de la personne qui découvre l'écran ;
+**Article 17 — Se mettre à la place des personnages, pas seulement de l'utilisateur.** L'Article 15 demande de se relire du point de vue de la personne qui découvre l'écran ;
 celui-ci demande la même chose, mais de l'intérieur — se demander à chaque réplique, chaque pensée,
 chaque déplacement : « si j'étais vraiment Lia ou vraiment Noé, coincé dans cette maison, est-ce que
 je dirais, penserais ou ferais réellement ça, dans cet ordre, avec cette logique ? » Une réplique
@@ -333,20 +326,15 @@ PRINCIPE que le modèle peut s'appliquer à lui-même à n'importe quelle répli
 registre, une règle de non-répétition portant sur le fond et sur toute la session, jamais seulement
 sur les deux derniers tours) — jamais un exemple de plus dans une énumération.
 
-**Article 18 — Protocole de simulation complète.** *(Ajouté le 2026-09-18, à la demande explicite
-de l'utilisateur juste après une simulation lancée en arrière-plan pendant cette même session.)*
-Quand l'utilisateur demande de « lancer une simulation » (ou toute formulation équivalente —
+**Article 18 — Protocole de simulation complète.** Quand l'utilisateur demande de « lancer une simulation » (ou toute formulation équivalente —
 simulation complète, intégrale, de bout en bout), l'agent reproduit systématiquement le même
 enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redemande à chaque fois :
 
 0. **Avant toute chose, consulter Smart Conso API** (`node scripts/smart-conso-api.mjs simulation
-   --confirm`, cf. Article 22) — jamais après, jamais sauté. *(Ajouté le 2026-09-19, après un vrai
-   manquement constaté : l'Article 22 exigeait déjà cette consultation, mais restait invisible au
-   moment d'exécuter CE protocole précis, puisqu'il vivait dans un autre article jamais cité ici —
-   exactement le genre de lien manquant entre deux parties de la charte qu'HARMONIA existe pour
-   repérer. La règle qui compte est celle qui est écrite DANS l'étape qu'on exécute, jamais une
-   règle séparée qu'il faut se souvenir de recroiser.)* Un verdict "seuil dur" exige une validation
-   explicite de l'utilisateur avant de continuer à l'étape 1.
+   --confirm`, cf. Article 22) — jamais après, jamais sauté ; la règle qui compte est toujours celle
+   écrite DANS l'étape qu'on exécute, jamais une règle séparée qu'il faut se souvenir de recroiser.
+   Un verdict "seuil dur" exige une validation explicite de l'utilisateur avant de continuer à
+   l'étape 1.
 1. Relancer un serveur de développement à jour (redémarré si besoin pour garantir que c'est bien
    le code réel, pas une instance périmée, qui est testé) et lancer le script de simulation
    intégrale contre lui — reset complet, phase 1 autonome jusqu'à la révélation, phase 2 (dossier
@@ -426,8 +414,7 @@ enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redem
    même rigueur que le reste de la charte (tests créés si besoin, suite complète revérifiée verte,
    documentation mise à jour le jour même — Articles 3, 5, 13).
 
-**Article 19 — Comprendre avant de toucher.** *(Ajouté le 2026-09-19, à la demande explicite de
-l'utilisateur.)* Avant de modifier une ligne de code existante, comprendre la logique en place et
+**Article 19 — Comprendre avant de toucher.** Avant de modifier une ligne de code existante, comprendre la logique en place et
 la raison pour laquelle elle a été écrite ainsi — jamais un changement à l'aveugle sur la seule foi
 d'une hypothèse ou d'une intuition non vérifiée. Ceci sert notamment à **respecter le travail déjà
 fait** : un mécanisme qui semble redondant, verbeux, trop prudent ou étrange a le plus souvent une
@@ -616,9 +603,7 @@ exactement comme pour l'analyse initiale. Les deux temps (bugs clairs → correc
 investigation ; conception ouverte → questions d'abord) peuvent cohabiter dans la même réponse,
 traités point par point (Article 16, complément du 2026-09-17).
 
-**Sondage rapide juste après la livraison des documents d'une simulation.** *(Ajouté le
-2026-09-19, à la demande explicite de l'utilisateur : « il n'est pas sûr que j'aie lu la
-conversation en entier [...] mets en place cette méthode de travail maintenant ».)* Dès que le
+**Sondage rapide juste après la livraison des documents d'une simulation.** Dès que le
 transcript, le dossier et le rapport KPI d'une nouvelle simulation sont livrés (étapes 3 et 4 de
 l'Article 18), avant de se lancer dans l'analyse détaillée (étape 5), l'agent pose un petit
 questionnaire de calibrage en trois questions, via l'outil de questions dédié (format ci-dessus) :
@@ -633,11 +618,7 @@ détail, présence ou non de citations, ordre des tâches) — jamais notées pu
 exigence est nouvelle : elle s'applique à partir de la simulation suivant son adoption, pas
 rétroactivement à une livraison déjà faite avant qu'elle n'existe.
 
-**Type de question précisé à chaque fois.** *(Ajouté le 2026-09-18, à la demande explicite de
-l'utilisateur : « tes questions peuvent être des questions de calibrage mais aussi des questions
-d'alignement de la compréhension, des questions qui t'aident à mieux comprendre, ou à mieux te
-comprendre, ou à rechercher un sujet ou à mener une enquête, [...] en précisant le type de question
-à chaque fois pour que j'aie un repère sur le contexte de réponse à apporter ».)* Les questions
+**Type de question précisé à chaque fois.** Les questions
 posées à l'utilisateur (Article 16, complément ci-dessus inclus) ne se limitent pas au calibrage
 d'un curseur : elles peuvent aussi viser à aligner la compréhension d'une consigne déjà donnée, à
 mener une enquête technique sur un bug pas encore élucidé, ou tout autre besoin pertinent du moment.
@@ -645,9 +626,7 @@ Quel que soit le type, il est explicitement nommé au début de la question (par
 « [Calibrage] », « [Alignement de compréhension] », « [Enquête technique] ») — jamais laissé
 implicite — pour que l'utilisateur sache d'emblée quel genre de réponse apporter.
 
-**Format de présentation des questions — toujours une fenêtre dédiée.** *(Ajouté le 2026-09-19, à
-la demande explicite de l'utilisateur : « les questions doivent toujours être posées dans une
-fenêtre au format habituel ».)* Toute question relevant de l'Article 16 (et de ses compléments
+**Format de présentation des questions — toujours une fenêtre dédiée.** Toute question relevant de l'Article 16 (et de ses compléments
 ci-dessus, y compris l'étape 7 de l'Article 18 et le second passage après « voici mes
 commentaires ») est posée via l'outil dédié de questions à choix (fenêtre structurée avec options
 sélectionnables), **jamais** comme une simple phrase interrogative noyée dans le corps d'une
@@ -666,10 +645,7 @@ questions de calibrage de l'étape 7 de l'Article 18), elles sont réparties sur
 successives plutôt que compressées en texte libre pour tenir dans une seule.
 
 **Clarté pour un non-développeur — l'enjeu de chaque réponse doit être compréhensible sans
-jargon.** *(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur : « assure-toi que
-chaque question est posée clairement, de façon simple à comprendre pour moi qui ne suis pas
-développeur [...] les questions doivent toujours être posées de manière à comprendre clairement
-et simplement l'enjeu de la réponse ».)* L'utilisateur n'est pas développeur : une question qui
+jargon.** L'utilisateur n'est pas développeur : une question qui
 suppose de comprendre un nom de variable, une fonction ou un mécanisme interne pour choisir entre
 les options n'est pas une question claire, même si elle respecte le format ci-dessus. Pour chaque
 question posée :
@@ -687,10 +663,7 @@ sans en avoir vraiment saisi la portée — la responsabilité de rendre l'enjeu
 entièrement à l'agent qui pose la question, jamais à l'utilisateur de deviner ou de se renseigner.
 
 **Une question = une seule idée simple ; décortiquer les sujets complexes en plusieurs
-questions.** *(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur : « les questions
-doivent être simples, et si besoin, poser plusieurs questions [...] il vaut mieux 3 questions
-séparées qu'une question complexe [...] pour un sujet complexe, il vaut mieux décortiquer en
-plusieurs questions ».)* Jamais empiler plusieurs décisions ou plusieurs sous-sujets dans une seule
+questions.** Jamais empiler plusieurs décisions ou plusieurs sous-sujets dans une seule
 question sous prétexte d'aller plus vite : une question qui demande de trancher deux choses à la
 fois (par exemple « on fait X, et pour la durée on prend Y ou Z ? ») doit être scindée en deux
 questions distinctes, chacune portant sur une seule idée simple à comprendre d'un coup. Pour un
@@ -710,9 +683,7 @@ fin de message. C'est un repère de suivi pour l'utilisateur, pas une décoratio
 sur des phrases qui ne vérifient rien de précis contre la charte.
 
 **Article 20 — ARGUS : aucun travail ne se termine sans passer par le détecteur de trous
-logiques.** *(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur : « argus doit
-toujours être déployé pour vérifier que le travail ne génère pas de trou, règle de cohérence +
-logique, je te laisse faire au mieux ».)* ARGUS est le nom du système dédié à repérer les trous
+logiques.** ARGUS est le nom du système dédié à repérer les trous
 logiques qu'aucun autre garde-fou de cette charte ne couvre explicitement : une combinaison de
 mécanismes jamais envisagée ensemble, un cas limite ou une possibilité inattendue non pensée, une
 conséquence que la logique impose mais qu'on a oubliée, un élément qui devrait être impacté par un
@@ -723,18 +694,14 @@ sur un autre projet) et `docs/referentiel/argus.md` (instanciation propre à ce 
 des trous trouvés, dans un dossier dédié avec fichiers + index, même schéma que
 `docs/referentiel/kpi-rapports/`+`kpi-index.md`).
 
-**HARMONIA rejoint la même règle** *(ajouté le 2026-09-19, confirmé explicitement par
-l'utilisateur : « argus et harmonia font partie des tests systématiques/obligatoires quand on crée
-une nouvelle idée »)* : le cousin d'ARGUS, dédié cette fois à la cohérence des liens déjà existants
+**HARMONIA rejoint la même règle** : le cousin d'ARGUS, dédié cette fois à la cohérence des liens déjà existants
 (interdépendances entre jauges, affichage, narratif, enquête, objets, déplacements, temps,
 interface — jamais les absences, qui restent le terrain d'ARGUS). Architecture détaillée :
 `docs/harmonia-blueprint.md` (principe générique) et `docs/referentiel/harmonia.md` (instanciation
 propre à ce projet — carte des dépendances par grand thème, registre des frictions dans
 `docs/harmonia/`).
 
-**AXA-CHECK rejoint la même règle en troisième membre** *(ajouté le 2026-09-19, à la demande
-explicite de l'utilisateur, née d'une question directe pendant le calibrage de CLEAN-DIRTY-OLD :
-« comment sait-on si une zone du code est couverte ou pas par un test ? »)* : dédié à la robustesse
+**AXA-CHECK rejoint la même règle en troisième membre** : dédié à la robustesse
 et à la fragilité RÉELLES du code, mesurées par vraie couverture de test (par fonction, via
 `NODE_V8_COVERAGE`, zéro nouvelle dépendance) — jamais les absences (ARGUS) ni les frictions
 (HARMONIA), un troisième axe complémentaire. La fragilité qu'il rapporte n'est jamais un simple
@@ -744,8 +711,7 @@ corrobore, au niveau zone, par les simulations archivées (`docs/simulations/`).
 détaillée : `docs/axa-check-blueprint.md` (principe générique) et `docs/referentiel/axa-check.md`
 (instanciation propre à ce projet — registre des trouvailles dans `docs/axa-check/`).
 
-**CLEAN-DIRTY-OLD rejoint la même règle en quatrième membre** *(ajouté le 2026-09-19, calibré au
-fil de plusieurs échanges avec l'utilisateur)* : dédié à la stagnation — du code ancien, peu
+**CLEAN-DIRTY-OLD rejoint la même règle en quatrième membre** : dédié à la stagnation — du code ancien, peu
 retouché, RELATIVEMENT au reste du projet (jamais un seuil de date fixe). Ne juge jamais lui-même
 si une zone stagnante pose un vrai problème : il pose trois questions explicites, chacune déléguée
 au bon outil déjà existant (encore utile ? → ARGUS ; encore à jour ? → HARMONIA ; profiterait d'une
@@ -827,11 +793,7 @@ demande explicite, jamais détecté par aucun test avant ce passage). Architectu
 `docs/hyper-scan-checkpoint/`).
 
 **Article 22 — Smart Conso API : consultation systématique avant toute action coûteuse.**
-*(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur, formalisant un mécanisme déjà
-construit le même jour mais resté seulement dans son instanciation : « il y a un vrai canal de
-communication établi avec toi quand tu as besoin de lancer une requête API. [...] Tu lui fais
-systématiquement appel avant tes demandes, pour t'assurer que ta conso est bien régulée. Je ne
-sais pas si c'était déjà en place comme ça, mais fiabilise ».)* Avant tout appel réel à l'API
+Avant tout appel réel à l'API
 Gemini déclenché par l'agent lui-même pendant une session de travail — jamais le jeu réel, qui
 reste hors du périmètre de cet Article et sous la seule autorité de l'Article 8 — l'agent consulte
 Smart Conso API (`scripts/smart-conso-api.mjs::assess()`), pas après coup pour justifier une
@@ -848,10 +810,7 @@ l'Article 8, jamais la court-circuiter ni la remplacer. Architecture détaillée
 (instanciation propre à ce projet).
 
 **SMART-CONSO-TOKEN — le pendant de Smart Conso API, mais pour les TOKENS de l'agent lui-même.**
-*(Ajouté le 2026-09-20, à la demande explicite de l'utilisateur, juste après Smart Conso API : « le
-pendant de smart-conso-API : son rôle est de réguler la consommation des tokens par les outils et
-par toi-même, et par moi aussi [...] à l'image d'un conseiller en réduction de conso électrique
-[...] on ne chauffe pas une pièce en été ».)* Différence structurelle assumée avec l'Article
+Différence structurelle assumée avec l'Article
 ci-dessus : le quota Gemini est sondable en direct (Smart Conso API peut vérifier un vrai état
 MAINTENANT) ; il n'existe AUCUN compteur externe des tokens de l'agent — SMART-CONSO-TOKEN reconnaît
 donc des SCHÉMAS CONNUS coûteux (recherche réelle du 2026-09-20 : un agent séparé coûte ~37 000
@@ -885,12 +844,7 @@ ALWAYS-NEW-CODE) : nombre de propositions réellement appliquées et leur réduc
 (principe générique) et `docs/referentiel/smart-conso-token.md` (instanciation propre à ce projet,
 sources de la recherche incluses).
 
-**Article 23 — ALWAYS-NEW-CODE : l'épreuve de la page blanche, rendue concrète.** *(Ajouté le
-2026-09-19, à la demande explicite de l'utilisateur, juste après CHECK-LEVEL-TARGET : « imagine que
-le code n'existe pas et que tu dois le reconstruire depuis zéro, en partant de rien, mais en ayant
-une idée claire de là où tu veux en arriver [...] l'ennemi à abattre pour cette machine de guerre :
-tout ce qui a été codé de façon "empilée" [...] la vocation ultime de cet outil : avoir toujours un
-code "comme neuf" ». Nommé par l'utilisateur lui-même.)* L'Article 7 demandait déjà, périodiquement,
+**Article 23 — ALWAYS-NEW-CODE : l'épreuve de la page blanche, rendue concrète.** L'Article 7 demandait déjà, périodiquement,
 de se poser la question de la page blanche — cet Article lui donne un vrai outil. Sur UNE zone à la
 fois (jamais tout le projet d'un coup — les 8 mêmes grands thèmes que la carte de dépendances
 d'HARMONIA), toujours en deux temps (un survol léger des grands axes, puis un zoom profond
@@ -928,9 +882,7 @@ suivi des tâches (dossier `docs/suivi/`, un fichier par session, un fichier d'i
 sensibilité). Démarre à la création du système, sans reconstruire l'historique antérieur.
 
 **La mise à jour en temps réel de ce suivi est OBLIGATOIRE et est un point central de l'organisation
-du travail sur ce projet, pas un outil secondaire parmi d'autres** *(ajouté le 2026-09-20, à la
-demande explicite de l'utilisateur, renforcé le même jour : « fiabilise tout ce que tu fais avec le
-suivi, c'est obligatoire maintenant »)*. Aucune exception : toute tâche substantielle (code, charte,
+du travail sur ce projet, pas un outil secondaire parmi d'autres.** Aucune exception : toute tâche substantielle (code, charte,
 documentation de référence, nouvel outil) DOIT être documentée dans `docs/suivi/`, sans quoi elle
 n'est pas considérée terminée au sens de cette charte, au même titre qu'un test qui ne passerait pas.
 Concrètement : chaque tâche substantielle se documente dans `docs/suivi/` DANS LE
@@ -1052,9 +1004,7 @@ il n'a aucune connaissance propre au projet à documenter à part, sa seule vale
 appeler et agréger ce que les autres outils gratuits de ce paysage disent déjà. Entièrement
 documenté dans `docs/regles-de-travail.md` §7ter.
 
-**CIRCLE-TASKS — même exception, pour les tâches périodiques mal automatisées.** *(2026-09-20, nommé
-par l'utilisateur : « je voudrais creer un mini agent qui appelle l'execution de ce process : l'agent
-s'appelle circle-tasks ».)* `scripts/circle-tasks.mjs` regroupe dans un seul menu à cocher les tâches
+**CIRCLE-TASKS — même exception, pour les tâches périodiques mal automatisées.** `scripts/circle-tasks.mjs` regroupe dans un seul menu à cocher les tâches
 périodiques gratuites facilement oubliées (mise à jour du profil utilisateur, relecture des
 référentiels, rapport KPI, signal ALWAYS-NEW-CODE, carnets de correctifs, scans Smart Conso
 API/SMART-CONSO-TOKEN, photo de la dream team, THE-SCREENER) — jamais un tout-en-un silencieux,
@@ -1063,9 +1013,7 @@ fenêtre mais toujours marqué ⚠️🔴 coûteux, jamais coché par défaut. N
 séparés, même principe que LE-COORDINATEUR ci-dessus — entièrement documenté dans
 `docs/regles-de-travail.md` §7ter.
 
-**Le gabarit HTML de remise de rapports — pas un outil de vigilance, un simple rendu.** *(2026-09-20,
-demande explicite après avoir reçu un premier rapport HTML soigné : « tu vas transformer tous les
-rapports en fichiers HTML avec une mise en page améliorée ».)* `scripts/html-report.mjs` rend
+**Le gabarit HTML de remise de rapports — pas un outil de vigilance, un simple rendu.** `scripts/html-report.mjs` rend
 n'importe quel rapport déjà produit (KPI, EL-PROFESSOR, THE-SCREENER, simulations, THE-FINAL-JUDGE,
 CIRCLE-TASKS...) en page HTML autonome, cohérente visuellement d'un rapport à l'autre — jamais le
 fichier de référence gardé dans `docs/` (qui reste texte/markdown, relu par les outils), seulement
@@ -1376,8 +1324,7 @@ ensemble « la refonte graphique », un seul chantier visuel à mener groupé. O
    de la refonte plutôt que codée en dur avant que le décor final soit connu.
 5. **Après la refonte graphique** — chantier n°7 (mécaniques de diffusion), dernier de la liste par
    la propre priorisation d'Opus, confirmée par l'utilisateur.
-6. **Après la refonte graphique également** *(ajouté le 2026-09-19, demande explicite de
-   l'utilisateur)* — revoir le texte de la popup de bienvenue (`app/page.tsx`, section
+6. **Après la refonte graphique également** — revoir le texte de la popup de bienvenue (`app/page.tsx`, section
    `welcomeOpen`) : version actuelle volontairement provisoire, à retravailler une fois l'habillage
    visuel du jeu stabilisé plutôt que de la peaufiner avant un changement de decor qui pourrait la
    rendre obsolète.
