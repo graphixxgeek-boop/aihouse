@@ -161,6 +161,15 @@ système au risque d'un détail approximatif présenté comme fiable (cf. philos
    (« reprendre chaque consigne explicite... confirmer qu'elle a été précisément et entièrement
    honorée »), rendue systématique pour CHAQUE tâche fermée, pas seulement lors d'un passage
    exceptionnel.
+   **Une DÉCISION n'est jamais une EXÉCUTION (2026-09-20, écart réel trouvé : deux vraies décisions
+   de calibrage prises au réveil de l'utilisateur — renforcer l'anti-répétition, vérifier la règle
+   du jeu pour l'absence de dossier — ont été closes mentalement dès que l'approche a été choisie,
+   jamais vérifié que le code correspondant avait réellement été écrit, noyées dans la cascade
+   d'outillage qui a suivi).** Une ligne qui capture une réponse de calibrage (« quelle approche
+   prendre ») ne peut être `terminée` que si le TRAVAIL RÉEL qu'elle décrit existe et est vérifiable
+   (fichier modifié, test ajouté, commit identifiable) — jamais seulement parce qu'un choix a été
+   fait entre plusieurs options proposées. Tant que ce travail n'existe pas, la ligne reste
+   `ouverte`, même si la décision elle-même est ancienne et non ambiguë.
 3. À la fin d'une session (ou à un point d'étape marquant), `docs/suivi/index.md` reçoit une ligne
    résumant la session (grandes étapes, pas chaque tâche individuelle) avec un lien vers le fichier
    complet.
