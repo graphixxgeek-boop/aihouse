@@ -11,6 +11,8 @@ import { walk, findDeadLifeFields, findTodoMarkers } from "../check-argus.mjs";
 import { checkLinks, LINKS } from "../check-harmonia.mjs";
 import { PRESTATIONS, formatMenu } from "../le-coordinateur.mjs";
 import { summarizeHistory, computeInvestmentRatio, diagnoseAdviceAccuracy } from "../smart-conso-token.mjs";
+import { sh } from "../lib-shell.mjs";
+import { loadLastRun, shouldRemindCircleTasks } from "../circle-tasks.mjs";
 
 const [last] = recentCommits(1);
 if (last && findCommitsMissingSuiviUpdate([last]).length) {
@@ -109,3 +111,16 @@ try {
 } catch {
   console.log("🪙 Rythme SMART-CONSO-TOKEN : aucun historique local pour l'instant.\n");
 }
+
+// Rappel proactif de CIRCLE-TASKS (2026-09-20, demande explicite de l'utilisateur : « rappelle-moi
+// à des moments naturels »). Seuil de COMMITS, jamais une fenêtre de temps (cf. commentaire de
+// shouldRemindCircleTasks) — best-effort, jamais bloquant : un rappel manqué une fois n'empêche
+// jamais un commit, cohérent avec le reste de ce crochet.
+try {
+  const totalCommitCount = Number(sh("git rev-list --count HEAD", { cwd: new URL("../..", import.meta.url).pathname }).trim());
+  const lastRun = loadLastRun();
+  const commitsSinceLastRun = Number.isFinite(totalCommitCount) ? totalCommitCount - (lastRun.lastRunCommitCount ?? 0) : NaN;
+  if (shouldRemindCircleTasks(commitsSinceLastRun)) {
+    console.log(`🔄 Ça fait ${commitsSinceLastRun} commits sans Ronde périodique (CIRCLE-TASKS, node scripts/circle-tasks.mjs) — envisage de la relancer.\n`);
+  }
+} catch { /* best-effort, jamais bloquant */ }

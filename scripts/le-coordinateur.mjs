@@ -117,6 +117,7 @@ export const PRESTATIONS = [
   { demande: "Sécurité et préparation à la mise en production", outils: ["THE-FINAL-JUDGE (mandat sécurité inclus)"], cout: "réel — ~37k tokens fixes (agent séparé) — consulter Smart Conso API ET SMART-CONSO-TOKEN avant" },
   { demande: "Diagnostiquer un blocage/quota Gemini épuisé (429/503 répétés)", outils: ["Smart Breaker (check-gemini-quota.mjs)"], cout: "gratuit à diagnostiquer — quelques appels Gemini minimaux, coût token négligeable" },
   { demande: "Réguler ma propre consommation de tokens avant une action coûteuse", outils: ["SMART-CONSO-TOKEN"], cout: "gratuit à consulter — 0 token, 0 appel API" },
+  { demande: "Lancer la ronde périodique des tâches gratuites mal automatisées (profil, référentiels, KPI, ALWAYS-NEW-CODE, correctifs)", outils: ["CIRCLE-TASKS"], cout: "gratuit — sauf si THE-FINAL-JUDGE (visible dans la même fenêtre, ⚠️🔴) est explicitement coché : alors ~37k tokens fixes" },
 ];
 
 export function formatMenu(prestations = PRESTATIONS) {

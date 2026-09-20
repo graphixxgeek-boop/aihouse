@@ -314,6 +314,7 @@ maximiser leurs performances ».)*
 | LE-COORDINATEUR | agrège en un tableau très court ce que les outils gratuits ci-dessus disent déjà, repère un doublon de vérification récent ; son menu de prestations rappelle ce qui peut être commandé | gratuit | synthèse complète (`runNetworkCheck()`) = routine agent, jamais un crochet git (reshellerait `check-house.mjs`, redondant à chaque commit) ; menu des prestations seul = affiché automatiquement à chaque commit (`scripts/hooks/check-last-commit.mjs`, post-commit, 2026-09-20) |
 | Smart Breaker (`check-gemini-quota.mjs` + `gemini-key-health.mjs` + `api-providers.mjs` + `lib/gemini-keys.ts`) | blocages de quota/clé Gemini, portée PRODUCTION | gratuit à diagnostiquer | à la demande, ou automatique en production (repli) |
 | SMART-CONSO-TOKEN | rythme de consommation de TOKENS de l'agent (Agent séparé, lecture exhaustive, poids d'un document toujours chargé) ; peut aussi scanner et proposer des réductions | gratuit à consulter | avant tout appel à un agent séparé ou tout raisonnement coûteux — obligation écrite dans la charte, jamais un garde-fou vérifiable après coup |
+| CIRCLE-TASKS (« Ronde périodique ») | tâches périodiques gratuites mal automatisées (profil utilisateur, relecture des référentiels, KPI, zone ALWAYS-NEW-CODE la plus négligée, carnets de correctifs) — regroupées dans une seule fenêtre à cocher ; THE-FINAL-JUDGE reste visible dans la même fenêtre mais toujours marqué ⚠️🔴 coûteux (37k tokens), jamais coché par défaut | gratuit (sauf si THE-FINAL-JUDGE est explicitement coché) | à la demande de l'utilisateur ou de l'agent ; rappel proactif automatique dans le crochet post-commit après 10 commits sans passage |
 
 Cette table remplace toute énumération informelle éparpillée dans la conversation : à jour à
 chaque nouvel outil créé (même discipline que la liste des documents de référence, Article 13).
@@ -605,6 +606,41 @@ coordinateur. Il ne décide rien sur le fond : il agrège ce qui existe déjà e
 rien de plus — l'agent (moi) reste celui qui lit, décide et agit, exactement comme pour chaque
 autre outil de ce paysage.
 
+### CIRCLE-TASKS — la « Ronde périodique », même exception volontairement mince
+
+*(Ajouté le 2026-09-20, nommé par l'utilisateur : « je voudrais creer un mini agent qui appelle
+l'execution de ce process : l'agent s'appelle circle-tasks ». Né d'un constat gênant : le système
+d'historisation du profil utilisateur — documenté, gratuit — était en retard pour la DEUXIÈME fois
+de la session, retrouvé seulement parce que l'utilisateur a posé la question.)*
+
+`scripts/circle-tasks.mjs` regroupe les tâches périodiques **gratuites** mal automatisées (mise à
+jour du profil utilisateur, relecture de tous les documents de référence — Article 13, rapport KPI
+famille Robustesse, signal mécanique de la zone ALWAYS-NEW-CODE la plus négligée, relecture des
+carnets de correctifs/points fragiles) dans un seul menu affiché avec un signal de fraîcheur
+honnête (jours depuis la dernière fois, jamais inventé s'il n'existe aucune date de référence).
+Même principe que LE-COORDINATEUR : aucun blueprint, aucune instanciation séparée — cette section
+EST sa documentation complète, il n'a aucune connaissance propre au projet qui mériterait d'être
+documentée ailleurs.
+
+**Jamais un tout-en-un silencieux** (demande explicite de l'utilisateur : « tu ouvres une fenêtre
+question me demandant de cocher ce que je veux précisément exécuter ») : le script affiche
+seulement le menu, l'agent qui pilote ouvre TOUJOURS une vraie fenêtre à cocher (multi-sélection)
+avant d'exécuter quoi que ce soit — jamais une exécution groupée automatique, même pour des items
+gratuits.
+
+**THE-FINAL-JUDGE reste visible dans la même fenêtre, mais jamais traité comme un item ordinaire**
+(revirement demandé explicitement le même jour, après un premier jet qui l'excluait entièrement) :
+panneau d'alerte ⚠️🔴, coût en tokens fixe affiché en toutes lettres (~37 000), jamais coché par
+défaut — l'utilisateur préfère l'avoir sous les yeux à chaque ronde plutôt que d'avoir à s'en
+souvenir séparément. Les autres items coûteux du paysage (`check-spirit.mjs`, HYPER-SCAN-CHECKPOINT
+version complète) restent hors de cette fenêtre pour l'instant.
+
+**Rappel proactif, pas seulement sur demande** (demande explicite : « rappelle-moi à des moments
+naturels ») : un seuil de COMMITS (10, `REMINDER_COMMIT_THRESHOLD`), jamais une fenêtre de temps —
+même principe que la détection de doublon de LE-COORDINATEUR — déclenche une ligne de rappel dans
+le crochet post-commit dès que ce nombre de commits s'est écoulé sans passage confirmé
+(`recordCircleTasksRun()`, mémoire locale `.circle-tasks-last-run.json`, jamais committée).
+
 #### Le menu des prestations — traduire les outils en demandes, jamais en noms internes
 
 *(Ajouté le 2026-09-20, à la demande explicite de l'utilisateur : « le coordinateur est capable de
@@ -715,6 +751,17 @@ cette section-ci, plus sensible, reçoit cette garantie supplémentaire.
   décisions à chaud.
 - **Valorise la preuve plus que l'affirmation.** Tests réels, transcripts, comparaisons chiffrées
   avant/après priment sur une simple déclaration que « c'est fait » ou « ça devrait marcher ».
+- **Vérifie activement qu'un mécanisme déjà construit tourne vraiment, sans attendre qu'un incident
+  ne le révèle.** *(Ajouté le 2026-09-20, motif confirmé sur deux observations distinctes — cf.
+  `docs/profil-utilisateur/`.)* Preuve 1 (2026-09-19T21:37:26Z) : « est-ce que lors du redémarrage
+  de la session après compactage, il y a eu mise à jour de mon profil psy ou pas ? » — teste
+  directement si le système d'historisation du profil, conçu pour ce moment précis, a réellement
+  tourné. Preuve 2 (2026-09-20T03:21:22Z) : « j'imagine que tu fais toutes ces validations
+  silencieusement avec les outils quand tu opères... je me trompe ? » — interroge la robustesse
+  réelle d'un mécanisme déjà en place (consultation Smart Conso API/SMART-CONSO-TOKEN), sans
+  incident déclencheur. Implication pratique pour l'agent : ne jamais présumer qu'un mécanisme
+  documenté fonctionne réellement sans preuve récente — l'utilisateur le vérifiera probablement
+  lui-même tôt ou tard.
 - **Pragmatique face aux limites techniques dures.** Accepte un quota API épuisé ou un
   classificateur de sécurité qui refuse un encodage sans s'acharner à forcer un contournement,
   tant qu'une explication honnête de la limite est donnée.

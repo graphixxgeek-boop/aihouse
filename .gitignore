@@ -55,3 +55,4 @@ next-env.d.ts
 .smart-conso-session.json
 .smart-conso-token-history.json
 .le-coordinateur-last-run.json
+.circle-tasks-last-run.json

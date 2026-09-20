@@ -919,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 132'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 133'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3043,6 +3043,53 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(deadLinkOnly.missingFromDisk,['2026-09-20-0900.md'],'a link in the index pointing at a file that no longer exists on disk must be flagged as a dead link, a different problem from an unindexed file');
   assert.deepEqual(deadLinkOnly.missingFromIndex,[],'a file correctly indexed must never also be flagged as unindexed');
   console.log('Passed: the user-profile system\'s mechanical guard extracts every real observation link from the index in order, and correctly tells apart the two distinct failure modes it exists to catch — a real observation file never referenced by the index, and an index link pointing at a file that no longer exists — never confusing or merging the two.');
+}
+
+{
+  // CIRCLE-TASKS — « Ronde périodique » (2026-09-20, nommé par l'utilisateur : « je voudrais creer
+  // un mini agent qui appelle l'execution de ce process : l'agent s'appelle circle-tasks »). Né
+  // d'un vrai retard constaté deux fois de suite sur la mise à jour du profil utilisateur.
+  const {
+    CIRCLE_ITEMS, mostRecentDate, daysSince, buildCircleReport, formatCircleMenu,
+    shouldRemindCircleTasks, REMINDER_COMMIT_THRESHOLD, ALERT_ICON, FINAL_JUDGE_TOKEN_COST,
+  } = await import('../scripts/circle-tasks.mjs');
+
+  assert.equal(CIRCLE_ITEMS.length, 6, 'CIRCLE_ITEMS must list exactly the 5 free periodic items plus THE-FINAL-JUDGE, never silently gaining or losing an entry');
+  const judgeItem = CIRCLE_ITEMS.find((i) => i.id === 'the-final-judge');
+  assert.ok(judgeItem && judgeItem.costly === true, 'THE-FINAL-JUDGE must be present in the same checklist (explicit 2026-09-20 reversal of the initial "keep it out entirely" design) but flagged costly, never treated as an ordinary free item');
+  assert.ok(judgeItem.cout.includes(String(FINAL_JUDGE_TOKEN_COST / 1000) + ' 000') || judgeItem.cout.includes('37'), 'THE-FINAL-JUDGE\'s cost label must state the real fixed token cost in plain text, never a vague "expensive" with no number');
+  assert.ok(CIRCLE_ITEMS.filter((i) => i.costly).length === 1, 'exactly one item (THE-FINAL-JUDGE) must be marked costly — every other item in this ronde stays genuinely free, per the explicit split the user asked to preserve');
+
+  assert.equal(mostRecentDate('rien ici'), undefined, 'a text with no date at all must report an honest absence, never a fabricated date');
+  assert.equal(mostRecentDate('vu le 2026-09-18 puis confirmé le 2026-09-20T03:21:22Z et enfin le 2026-09-19'), '2026-09-20T03:21:22Z', 'mostRecentDate() must pick the genuinely most recent date among several mixed plain-date and full-ISO mentions, never the first or the last one found in reading order');
+
+  assert.equal(daysSince(undefined), undefined, 'daysSince() with no date at all must report an honest absence, never a fabricated zero');
+  const now = new Date('2026-09-20T12:00:00Z').getTime();
+  assert.equal(daysSince('2026-09-18T12:00:00Z', now), 2, 'daysSince() must compute the exact real day gap for a genuinely past date');
+  assert.equal(daysSince('2026-09-25T00:00:00Z', now), undefined, 'a date in the future relative to "now" must never produce a fabricated negative day count — the exact real bug caught while building this tool tonight (a manually-guessed observation timestamp landed ahead of the real system clock)');
+
+  const profilIndexText = '| Horodatage | Fiche |\n|---|---|\n| 2026-09-18T00:00:00Z | x |';
+  const kpiIndexText = '| Run | Date |\n|---|---|\n| r1 | 2026-09-19 |';
+  const emptyAlwaysNewCode = '| Date | Zone examinée | Trouvailles confirmées | Rapport | Notes |\n|---|---|---|---|---|';
+  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText: emptyAlwaysNewCode }, now);
+  assert.equal(report.length, 6, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one');
+  assert.equal(report.find((r) => r.id === 'profil').staleness, '2 jour(s) depuis la dernière fiche', 'the profil item\'s staleness must be computed from the real most-recent date found in the real index text passed in');
+  assert.equal(report.find((r) => r.id === 'kpi').staleness, '1 jour(s) depuis le dernier rapport archivé', 'the kpi item\'s staleness must likewise be computed from the real kpi index text, a genuinely distinct source from the profil index');
+  assert.ok(/jamais examinée/.test(report.find((r) => r.id === 'always-new-code-signal').staleness), 'with a genuinely empty ALWAYS-NEW-CODE coverage memory, the signal must honestly report that every zone (the one recommended first) has never been examined, never a fabricated date');
+  assert.equal(report.find((r) => r.id === 'referentiel').staleness, 'pas de signal de fraîcheur mécanique disponible', 'an item with no real mechanical freshness source (periodic reference-doc reread) must say so honestly, never fabricate a fake signal');
+  assert.equal(report.find((r) => r.id === 'the-final-judge').staleness, 'jamais une routine — décision au cas par cas, à chaque fois', 'the costly item must get its own distinct honest message, never a fabricated freshness figure that would frame it as just another routine item');
+
+  const menuColored = formatCircleMenu(report);
+  const menuPlain = formatCircleMenu(report, { colorize: false });
+  assert.ok(menuColored.includes('\x1b[31m') && menuColored.includes(ALERT_ICON), 'formatCircleMenu() must wrap the costly row in real ANSI red escape codes for genuine terminal output, with the alert icon prefixed — the exact "red warning characters" the user asked for');
+  assert.ok(!menuPlain.includes('\x1b[31m'), 'formatCircleMenu() with colorize:false must never leak raw ANSI codes into output meant to be read as plain text');
+  assert.ok(menuPlain.includes(judgeItem.label), 'the plain, uncolored rendering must still name THE-FINAL-JUDGE by name — colorize only strips the ANSI styling, never the row itself');
+
+  assert.equal(shouldRemindCircleTasks(NaN), false, 'an unknown/uncountable commit delta must never trigger a fabricated reminder');
+  assert.equal(shouldRemindCircleTasks(REMINDER_COMMIT_THRESHOLD - 1), false, 'one commit short of the real threshold must stay silent, never an off-by-one early reminder');
+  assert.equal(shouldRemindCircleTasks(REMINDER_COMMIT_THRESHOLD), true, 'reaching the exact threshold must trigger the reminder, never require overshooting it');
+
+  console.log('Passed: CIRCLE-TASKS lists exactly its 5 free periodic items plus THE-FINAL-JUDGE (the sole exception, explicitly reversed into the same checklist but always flagged costly with its real fixed token price, never a vague warning), computes an honest mechanical freshness signal from real index files for the items that have one (profil, KPI, the most-neglected ALWAYS-NEW-CODE zone) and an honest absence for those that don\'t, correctly refuses to fabricate a negative day count from a future-dated entry (the exact real bug found tonight), renders the costly item in real ANSI red for genuine terminal output while never leaking escape codes into a plain-text rendering, and its post-commit reminder threshold fires at exactly the configured commit count, never early nor only after overshooting it.');
 }
 
 {
