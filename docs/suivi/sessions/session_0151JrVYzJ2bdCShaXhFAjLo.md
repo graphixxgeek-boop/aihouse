@@ -146,6 +146,8 @@ tâches manquantes ajoutées ci-dessous.)*
 
 | 158 | 2026-09-20T11:15Z | Méthode de travail / Suivi | Précision de vocabulaire : « agent » veut souvent dire « script » chez l'utilisateur | mineur | Auto-observation explicite de l'utilisateur, après la question sur un "sous-agent dédié" à SMART-CONSO-TOKEN (tâche #155/#156) : « je parle d'un script. souvent, quand je parle d'un agent, je fais la confusion avec un script [...] c'est une deformation parce que je suis humain et que je ne suis pas dev ». Ajouté à `docs/regles-de-travail.md` §9 (points de vigilance compétences) : toujours vérifier depuis le contexte si "agent" désigne un vrai agent séparé (outil `Agent`, coût fixe) ou un script/outil du paysage existant, jamais supposer par défaut. Point positif noté : la réponse déjà donnée (pas de sous-agent séparé, un script suffit) reste valide sous cette lecture corrigée — aucune reprise de travail nécessaire, juste une clarification d'interprétation pour l'avenir. Pas de changement de comportement de jeu : aucun bump `lib/reference.ts`, cohérent avec la rigueur proportionnée (Article 3) | terminée — fidèle |
 
+| 159 | 2026-09-20T11:25Z | Méthode de travail / Suivi | Préférence : nommer les outils utilisés au fil de la réponse | mineur | Demande explicite de l'utilisateur : « quand tu utilise un outil : n'hesite pas à me le faire savoir, ca me fait toujours plaisir de le savoir (regles de travail) ». Ajoutée à `docs/regles-de-travail.md` section 1 — préférence de plaisir de lecture, jamais une exigence de justification technique. Appliquée à partir de maintenant dans les réponses de cette session | terminée — fidèle |
+
 ## Notes
 
 - Les tâches terminées avant la création de ce système (chantier 2 du tableau de bord, full_sim10,

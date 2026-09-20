@@ -56,6 +56,13 @@ Quand un message contient plusieurs demandes numérotées ou distinctes, la rép
 par point, dans leur propre ordre, jamais noyées dans une synthèse globale (cf. `CLAUDE.md`,
 complément à l'Article 16 du 2026-09-17).
 
+**Nommer les outils utilisés, en clair, au fil de la réponse** *(ajouté le 2026-09-20, à la
+demande explicite de l'utilisateur : « quand tu utilises un outil, n'hésite pas à me le faire
+savoir, ça me fait toujours plaisir de le savoir »)* — l'agent dit explicitement quel outil il
+vient d'utiliser et pourquoi (ex. « je lance `check-house.mjs` pour vérifier... », « je consulte
+SMART-CONSO-TOKEN avant... »), pas seulement le résultat obtenu. Une préférence de plaisir de
+lecture, pas une exigence de justification technique.
+
 ## 2. Calibrage et questions
 
 Poser des questions avant d'exécuter, plutôt que supposer, est une règle centrale (cf. `CLAUDE.md`
