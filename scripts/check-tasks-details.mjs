@@ -93,6 +93,12 @@ export function filterByZoom(rows, zoom, { latestTaskNumber } = {}) {
 
 // Arborescence thème > sous-thème > tâche — chaque feuille porte son N°, sa sensibilité et son
 // statut, pour rester lisible sans avoir à rouvrir docs/suivi/.
+// Icône de statut (2026-09-20, retour direct de l'utilisateur sur le tout premier rapport livré :
+// « la distinction être fait/en cours/à faire n'est pas assez claire, pas assez visible »). Le
+// texte du statut réel (`t.statut`, verbatim depuis docs/suivi/) reste affiché intégralement à côté
+// — l'icône ne le remplace jamais, elle attire juste l'œil avant la lecture du détail.
+const STATUS_ICONS = { enCours: "🔄", ouverte: "📋", terminee: "✅", autre: "❓" };
+
 export function buildTree(rows) {
   const themes = new Map();
   for (const row of rows) {
@@ -110,7 +116,10 @@ export function buildTree(rows) {
       total += tasks.length;
       children.push({
         label: `${sousTheme} (${tasks.length})`,
-        children: tasks.map((t) => ({ label: `#${t.n ?? "—"} · [${t.sensibilite}] ${t.sousSujet} — ${t.statut}` })),
+        children: tasks.map((t) => ({
+          label: `${STATUS_ICONS[t.statusKey] ?? "❓"} #${t.n ?? "—"} · [${t.sensibilite}] ${t.sousSujet} — ${t.statut}`,
+          statusKey: t.statusKey,
+        })),
       });
     }
     nodes.push({ label: `${theme} (${total})`, children });
@@ -120,10 +129,10 @@ export function buildTree(rows) {
 
 export function buildListBlocks(rows) {
   const groups = [
-    ["En cours", rows.filter((r) => r.statusKey === "enCours")],
-    ["Ouvertes", rows.filter((r) => r.statusKey === "ouverte")],
-    ["Autre statut (à vérifier)", rows.filter((r) => r.statusKey === "autre")],
-    ["Terminées", rows.filter((r) => r.statusKey === "terminee")],
+    [`${STATUS_ICONS.enCours} En cours`, rows.filter((r) => r.statusKey === "enCours")],
+    [`${STATUS_ICONS.ouverte} Ouvertes`, rows.filter((r) => r.statusKey === "ouverte")],
+    [`${STATUS_ICONS.autre} Autre statut (à vérifier)`, rows.filter((r) => r.statusKey === "autre")],
+    [`${STATUS_ICONS.terminee} Terminées`, rows.filter((r) => r.statusKey === "terminee")],
   ];
   const blocks = [];
   for (const [label, tasks] of groups) {
@@ -188,10 +197,32 @@ export function loadSnapshotHistory(file = SNAPSHOTS_FILE, readFile = (f) => rea
   return readFile(file).trim().split("\n").filter(Boolean).map((line) => JSON.parse(line));
 }
 
+// Signature stable d'un jeu de lignes (n + statutKey, dans l'ordre) — jamais l'horodatage, qui
+// varie toujours et rendrait toute comparaison inutile.
+function rowsSignature(rows) {
+  return JSON.stringify(rows.map((r) => [r.n, r.statusKey]));
+}
+
+// Dé-doublonnage des instantanés consécutifs identiques (2026-09-20, bug réel trouvé en analysant
+// le tout premier rapport livré à l'utilisateur : plusieurs relances rapprochées du script pendant
+// une session de débogage — quelques minutes d'écart — avaient chacune ajouté leur propre
+// instantané, alors que rien n'avait réellement changé entre elles. `compareSnapshots()` comptait
+// ensuite ces doublons comme des observations RÉELLEMENT séparées dans le temps, gonflant
+// artificiellement le signal de stagnation ("16 tâches ouvertes identiques depuis 3 rapports" alors
+// que 2 des 3 rapports comptés dataient de 90 secondes d'écart, sans aucun travail entre les deux).
+// Jamais un jugement de contenu — seulement refuser d'enregistrer une observation qui ne dit rien
+// de plus que la précédente. Un instantané réellement différent (même un seul statut changé) est
+// toujours écrit normalement.
 export function appendSnapshot(rows, { file = SNAPSHOTS_FILE, dir = OUT_DIR, now = () => new Date().toISOString() } = {}) {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  const snapshot = { at: now(), rows: rows.map((r) => ({ n: r.n, statusKey: r.statusKey })) };
   const prior = existsSync(file) ? readFileSync(file, "utf8") : "";
+  const priorLines = prior.trim().split("\n").filter(Boolean);
+  const lastSnapshot = priorLines.length ? JSON.parse(priorLines[priorLines.length - 1]) : null;
+  const newSignature = rowsSignature(rows);
+  if (lastSnapshot && rowsSignature(lastSnapshot.rows) === newSignature) {
+    return { ...lastSnapshot, skipped: true };
+  }
+  const snapshot = { at: now(), rows: rows.map((r) => ({ n: r.n, statusKey: r.statusKey })) };
   writeFileSync(file, prior + JSON.stringify(snapshot) + "\n", "utf8");
   return snapshot;
 }

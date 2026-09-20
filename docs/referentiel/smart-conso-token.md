@@ -242,6 +242,46 @@ Le bilan investissement (`computeInvestmentRatio`) rejoint le rythme comme premi
 concret de l'utilité réelle de l'outil — pas encore raccordé au tableau de bord général, même
 raisonnement que Smart Conso API à sa naissance.
 
+## CLAUDE.MD.SPY — classification par Article, réutilisée à l'étape 2 ci-dessous
+
+*(Extension de SMART-CONSO-TOKEN, jamais un membre de l'équipe à part — un script utilitaire de
+plus dans `scripts/smart-conso-token.mjs`, cf. `docs/regles-de-travail.md` §7ter pour la
+distinction Agent/Utilitaire nommé/Infrastructure. Conçu le 2026-09-20 à la demande explicite de
+l'utilisateur : classer chaque règle de CLAUDE.md par sensibilité/importance, détecter les
+redondances possibles, pour accélérer l'étape 2 de la procédure formalisée ci-dessous.)*
+
+`extractRuleUnits(claudeMdText)` découpe CLAUDE.md en une unité par « Article N », bornée soit par
+l'Article suivant, soit par le prochain titre de niveau 2 (`## `) — jamais par la seule présence
+d'un autre Article, un vrai bug trouvé en calibrant contre le fichier réel (le dernier Article
+avalait sinon les 510 lignes du « Plan d'origine » qui suit). `classifyRuleSensitivity()` donne à
+l'Article 0 une étiquette FIXE « très sensible », jamais recalculée (décision explicite) ; les
+autres Articles ne sont marqués « sensible » que sur un marqueur auto-déclaré explicite (« non
+négociable », etc.), jamais deviné. `classifyRuleImportance()` compte les citations croisées
+(« Article N ») dans le reste du dépôt via `countArticleCrossReferences()`, avec des seuils
+calibrés empiriquement sur la vraie distribution de ce projet (3 à 81 citations), pas des seuils
+ronds arbitraires. `findRedundantRulePairs()` signale deux Articles au vocabulaire significatif très
+proche (indice de Jaccard ≥ 0.22, seuil strict — peu de faux positifs plutôt que beaucoup de bruit,
+calibrage explicite) — un signal à vérifier, jamais une certitude de doublon.
+
+**Fichier de référence unique.** `buildClaudeMdRuleTable()`/`renderClaudeMdRuleTable()` assemblent
+et rendent le tout dans **`docs/referentiel/claude-md-regles.md`** — un seul fichier tenu à jour
+(décision explicite : jamais un dossier + index séparé comme le reste du paysage, cette
+classification n'a pas de valeur historique à conserver dans le temps, seulement un état courant).
+Régénéré à la demande, typiquement juste avant l'étape 2 ci-dessous, via :
+
+```
+node -e "import('./scripts/smart-conso-token.mjs').then(async (m) => { /* cf. l'implémentation du
+script pour le balayage complet de scripts/, lib/, docs/ */ })"
+```
+
+(le balayage complet de `otherFilesText`, nécessaire pour `countArticleCrossReferences()`, vit
+directement dans la commande de génération plutôt que comme une fonction exportée séparée — un
+utilitaire ponctuel, pas un mécanisme continu).
+
+**Câblé dans CIRCLE-TASKS** (`claude-md-weight-signal`, cf. section dédiée plus bas) : le signal de
+poids affiche désormais aussi, quand `findRedundantRulePairs()` en trouve un, le meilleur candidat
+de redondance détecté — jamais un second calcul séparé, la même fonction pure réutilisée.
+
 ## Procédure formalisée : allègement périodique de CLAUDE.md (`charter_size_tax`)
 
 *(Ajoutée le 2026-09-20, à la demande explicite de l'utilisateur, juste après le premier exercice

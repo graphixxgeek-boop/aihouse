@@ -26,7 +26,7 @@ import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
-import { scanDocumentWeight, listDatedNarrativeMarkers } from "./smart-conso-token.mjs";
+import { scanDocumentWeight, listDatedNarrativeMarkers, extractRuleUnits, findRedundantRulePairs } from "./smart-conso-token.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -301,7 +301,12 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCode
       if (!claudeMdText) return { ...item, staleness: "pas de signal disponible (CLAUDE.md non fourni)" };
       const weight = scanDocumentWeight(claudeMdText, "CLAUDE.md", { alwaysLoaded: true });
       const markers = listDatedNarrativeMarkers(claudeMdText);
-      return { ...item, staleness: `${weight.tokens} tokens estimés, niveau "${weight.niveau}"${markers.length ? ` — ${markers.length} aside(s) narrative(s) datée(s) encore réductible(s)` : ""}` };
+      // CLAUDE.MD.SPY (2026-09-20, reste-à-faire de la tâche #199) : signale le meilleur candidat de
+      // redondance détecté, jamais un calcul dupliqué — réutilise directement extractRuleUnits()/
+      // findRedundantRulePairs() de smart-conso-token.mjs (§7ter, anti-duplication).
+      const redundant = findRedundantRulePairs(extractRuleUnits(claudeMdText));
+      const redundancyNote = redundant.length ? ` — candidat de redondance : ${redundant[0].a} / ${redundant[0].b} (indice ${redundant[0].jaccard.toFixed(2)})` : "";
+      return { ...item, staleness: `${weight.tokens} tokens estimés, niveau "${weight.niveau}"${markers.length ? ` — ${markers.length} aside(s) narrative(s) datée(s) encore réductible(s)` : ""}${redundancyNote}` };
     }
     if (item.id === "always-new-code-signal") {
       if (!zoneRec) return { ...item, staleness: "aucun thème connu" };

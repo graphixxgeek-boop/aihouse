@@ -77,9 +77,14 @@ export function renderBlock(block) {
     // représentable par le type 'list' existant, à plat, sans imbrication). Même règle que les
     // trois types précédents : enrichir le vocabulaire commun plutôt que forker une page à part.
     case "tree": {
+      // statusKey (2026-09-20, retour direct de l'utilisateur sur le tout premier rapport livré :
+      // « la distinction être fait/en cours/à faire n'est pas assez claire, pas assez visible ») —
+      // une classe CSS par statut sur chaque feuille, en plus de l'icône déjà ajoutée dans le
+      // libellé lui-même (buildTree()) — jamais un second texte de statut dupliqué, seulement un
+      // habillage visuel de ce qui est déjà écrit.
       const renderNodes = (nodes) =>
         `<ul>${(nodes || [])
-          .map((n) => `<li>${escapeHtml(n.label)}${n.children?.length ? renderNodes(n.children) : ""}</li>`)
+          .map((n) => `<li${n.statusKey ? ` class="tree-status-${escapeHtml(n.statusKey)}"` : ""}>${escapeHtml(n.label)}${n.children?.length ? renderNodes(n.children) : ""}</li>`)
           .join("")}</ul>`;
       return renderNodes(block.nodes);
     }
@@ -94,6 +99,7 @@ export const THEME_CSS = `
   :root {
     --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
     --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
   }
   * { box-sizing: border-box; }
   body {
@@ -119,6 +125,10 @@ export const THEME_CSS = `
   }
   main ul { padding-left: 22px; }
   main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
   table {
     width: 100%; border-collapse: collapse; background: var(--panel);
     border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
