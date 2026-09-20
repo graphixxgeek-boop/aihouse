@@ -36,7 +36,7 @@ import {recordOutcomeByLabel} from './gemini-key-health.mjs';
 import {renderHtmlReport} from './html-report.mjs';
 import {burstComplianceScore} from './smart-conso-api.mjs';
 import {computeAdoptionKpi, checkKnowledgeFreshness} from './smart-conso-token.mjs';
-import {persistContextWeightSamples, averageContextWeightByActor} from './memento-weight.mjs';
+import {persistContextWeightSamples, averageContextWeightByActor, loadHistory as loadMementoWeightHistory} from './memento-weight.mjs';
 
 const root = new URL('..', import.meta.url).pathname;
 const path = (...parts) => join(root, ...parts);
@@ -444,11 +444,25 @@ function persistGeminiKeyEpisodes(episodes) {
 // (lib/memento-weight.ts::getContextWeightSamples()). Aucun seuil de jugement fourni ici (bon/
 // mauvais) : ce territoire n'a jamais été mesuré avant ce soir, un seuil inventé serait un chiffre
 // fabriqué — la lecture humaine décide, exactement la même retenue que le reste du réseau d'outils.
+// Tendance multi-sessions (2026-09-21, tâche #174) : jusqu'ici cette fonction ne lisait jamais
+// .memento-history.json, alors que persistContextWeightSamples() (appelée juste avant, dans
+// main()) l'écrit à chaque rapport — un journal rempli mais jamais consulté. loadMementoWeightHistory()
+// tourne APRÈS cette écriture, donc l'historique lu ici inclut déjà les échantillons de la session
+// en cours, fusionnés avec ceux des sessions passées (plafond 500, cf. memento-weight.mjs). Jamais
+// un verdict fabriqué (hausse/baisse) à partir de ce chiffre seul — le nombre d'échantillons varie
+// trop d'une session à l'autre pour ça — seulement le chiffre honnête, à côté de celui de la
+// session en cours, pour que la lecture humaine juge elle-même s'il y a une vraie dérive.
 function reportMementoWeight(samples) {
     section('KPI — Mémoire des personnages (memento weight)');
     if (!samples || !samples.length) { console.log('Pas de mesure disponible cette fois (serveur non joignable, ou aucun tour joué).'); return; }
     const byActor = averageContextWeightByActor(samples);
     for (const [actor, avg] of Object.entries(byActor)) console.log(`${actor} : ~${avg} tokens estimés en moyenne par tour (${samples.filter(s => s.actor === actor).length} échantillon(s) cette session).`);
+    const history = loadMementoWeightHistory();
+    const byActorHistory = averageContextWeightByActor(history?.samples);
+    if (Object.keys(byActorHistory).length) {
+        console.log('Sur l\'historique accumulé (toutes sessions confondues, plafonné à 500 échantillons) :');
+        for (const [actor, avg] of Object.entries(byActorHistory)) console.log(`  ${actor} : ~${avg} tokens estimés en moyenne (${history.samples.filter(s => s.actor === actor).length} échantillon(s) accumulé(s)) — à comparer à la moyenne de cette session ci-dessus pour repérer une vraie dérive dans le temps.`);
+    }
     console.log('Lecture : aucun seuil bon/mauvais fixé — territoire jamais mesuré avant ce soir (Article 8/0), à calibrer par la lecture humaine sur plusieurs sessions avant tout jugement.');
 }
 

@@ -41,8 +41,15 @@ capture.
   2026-09-21 pour que les deux rôles ne restent plus mélangés dans un même fichier (demande
   explicite de l'utilisateur). `persistContextWeightSamples()` écrit dans `.memento-history.json`
   (local, gitignored, cap 500) ; `averageContextWeightByActor()` calcule la moyenne honnête par
-  acteur — jamais une moyenne globale qui masquerait un déséquilibre Lia/Noé. Les deux sont appelées
-  par `scripts/kpi-report.mjs::reportMementoWeight()`.
+  acteur — jamais une moyenne globale qui masquerait un déséquilibre Lia/Noé. `loadHistory()`
+  (exportée le 2026-09-21, tâche #174, en réponse à « est-ce que l'équipe suivi conso récupère bien
+  les données de memento weight ? ») lit ce même fichier — écart réel trouvé en vérifiant le code
+  avant de coder (Article 19) : ce journal était déjà écrit à chaque rapport KPI mais jamais relu,
+  donc jamais de vraie tendance multi-sessions affichée, seulement la moyenne de la session en
+  cours. Les trois sont appelées par `scripts/kpi-report.mjs::reportMementoWeight()`, qui affiche
+  désormais la moyenne de la session en cours ET la moyenne accumulée sur l'historique (toutes
+  sessions confondues, plafonné à 500 échantillons) côte à côte — jamais un verdict de hausse/baisse
+  fabriqué à partir de ce seul chiffre, la lecture humaine reste seule juge d'une vraie dérive.
 
 **Jamais utilisée pour modifier le prompt** : cette mesure est strictement observationnelle,
 frontière Article 0/8 non négociable, confirmée explicitement par calibrage (« Oui, uniquement pour

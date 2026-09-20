@@ -36,7 +36,13 @@ export function estimateContextWeight(context) {
 // — jamais un second mécanisme d'écriture pour un concept déjà couvert par un autre fichier.
 const HISTORY_PATH = fileURLToPath(new URL("../.memento-history.json", import.meta.url));
 
-function loadHistory() {
+// Exportée (2026-09-21, tâche #174 — demande explicite de l'utilisateur : « est-ce que l'équipe
+// suivi conso récupère bien les données de memento weight ? ») : jusqu'ici ce fichier était écrit
+// à chaque rapport KPI (persistContextWeightSamples()) mais jamais relu — un vrai journal
+// « write-only », l'exact type d'écart que Doc-Report signale ailleurs pour d'autres outils.
+// kpi-report.mjs l'utilise pour afficher une vraie moyenne multi-sessions à côté de la moyenne de
+// la session en cours, jamais un second mécanisme de lecture divergent.
+export function loadHistory() {
   try {
     return JSON.parse(readFileSync(HISTORY_PATH, "utf8"));
   } catch {

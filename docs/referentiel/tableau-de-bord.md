@@ -97,7 +97,11 @@ du contexte envoyé à Gemini par tour et par personnage (`reportMementoWeight()
 de `dashboardCoverageScore` — même précédent déjà établi pour ARGUS/HARMONIA/Smart Conso API avant
 leur intégration (cf. "État d'avancement" ci-dessous) : une section trop récente pour être comptée
 comme une famille à part entière tant qu'elle n'a tourné qu'une poignée de fois. À réévaluer une
-fois une vraie donnée obtenue après une simulation réelle.
+fois une vraie donnée obtenue après une simulation réelle. **Tendance multi-sessions ajoutée le même
+soir (tâche #174)** : `.memento-history.json`, écrit à chaque rapport, restait jamais relu jusqu'ici
+(`loadHistory()`, `scripts/memento-weight.mjs`) — la section affiche désormais aussi la moyenne
+accumulée sur l'historique complet (toutes sessions confondues), à côté de celle de la session en
+cours, jamais un verdict de hausse/baisse fabriqué à partir de ce seul chiffre.
 
 ## Fiabilité des calculs (2026-09-19)
 

@@ -942,7 +942,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 199'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 200'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4711,7 +4711,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // le 2026-09-21 pour séparer les deux rôles — cf. docs/referentiel/memento-weight.md) — testées
   // avec un vrai fichier local sauvegardé/restauré, même discipline que tool-usage.mjs/recordAction()
   // plus haut ce soir.
-  const {persistContextWeightSamples,averageContextWeightByActor}=await import('../scripts/memento-weight.mjs');
+  const {persistContextWeightSamples,averageContextWeightByActor,loadHistory:loadMementoWeightHistory}=await import('../scripts/memento-weight.mjs');
   assert.deepEqual(averageContextWeightByActor([{actor:'Lia',tokens:100},{actor:'Lia',tokens:200},{actor:'Noé',tokens:50}]),{Lia:150,'Noé':50},'the average must be computed honestly per actor, never a single pooled average that would hide a real imbalance between Lia and Noé');
   assert.deepEqual(averageContextWeightByActor([]),{},'an empty sample list must report an honest empty breakdown, never a crash or a fabricated entry');
   assert.deepEqual(averageContextWeightByActor([{actor:'Lia',tokens:'x'},{},null,{actor:'Noé',tokens:10}]),{'Noé':10},'a malformed entry (non-numeric tokens, missing actor, or a genuinely null sample) must be skipped honestly, never crash the whole aggregation or pollute a real actor\'s average');
@@ -4727,11 +4727,16 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
       assert.deepEqual(saved.samples,[{actor:'Lia',tokens:120,at:1000}],'the first real persist must write exactly the samples given, verbatim');
       persistContextWeightSamples([{actor:'Noé',tokens:90,at:2000}]);
       assert.deepEqual(JSON.parse(rdM(historyPath,'utf8')).samples,[{actor:'Lia',tokens:120,at:1000},{actor:'Noé',tokens:90,at:2000}],'a second real persist must APPEND to the existing history, never overwrite what a previous kpi-report.mjs run already saved');
+      // loadHistory() exportée (2026-09-21, tâche #174) : ferme le vrai trou trouvé en vérifiant le
+      // code avant de coder (Article 19) — ce journal était déjà écrit à chaque rapport KPI mais
+      // jamais relu nulle part, un journal "write-only" jamais consulté pour une vraie tendance.
+      assert.deepEqual(loadMementoWeightHistory().samples,[{actor:'Lia',tokens:120,at:1000},{actor:'Noé',tokens:90,at:2000}],'loadHistory() must read back exactly what persistContextWeightSamples() already wrote, the missing read half of a write-only journal until tonight');
     }finally{
       if(hadFile)wrM(historyPath,backup);else if(exM(historyPath))unM(historyPath);
     }
+    if(!hadFile)assert.equal(loadMementoWeightHistory().samples.length,0,'once the real file is restored/removed, loadHistory() must fall back to an honest empty history, never a crash or a stale in-memory cache');
   }
-  console.log('Passed: lib/memento-weight.ts is the real observation point wired into lib/lia.ts::think() (a real token estimate returned and recorded per real call, capped at the same 200-entry hard limit as lib/gemini-keys.ts::episodes, reset cleanly between tests), and scripts/memento-weight.mjs persists real samples append-only into .memento-history.json (verified with the real local file, backed up and restored) while averageContextWeightByActor() reports an honest per-actor breakdown that never pools Lia and Noé into one misleading average and never crashes on a malformed entry.');
+  console.log('Passed: lib/memento-weight.ts is the real observation point wired into lib/lia.ts::think() (a real token estimate returned and recorded per real call, capped at the same 200-entry hard limit as lib/gemini-keys.ts::episodes, reset cleanly between tests), and scripts/memento-weight.mjs persists real samples append-only into .memento-history.json (verified with the real local file, backed up and restored) while averageContextWeightByActor() reports an honest per-actor breakdown that never pools Lia and Noé into one misleading average and never crashes on a malformed entry — and, task #174, loadHistory() is now exported so kpi-report.mjs can finally read back what it already writes on every run, closing the exact write-only-journal gap the user asked about tonight.');
 }
 
 {
