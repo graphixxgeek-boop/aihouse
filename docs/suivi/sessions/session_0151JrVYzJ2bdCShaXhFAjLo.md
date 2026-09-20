@@ -193,6 +193,8 @@ tâches manquantes ajoutées ci-dessous.)*
 
 | 185 | 2026-09-20T15:50Z | Charte / Outillage de travail | Numérotation rétroactive de la dette DRY THE-DEEP-READER/THE-FINAL-JUDGE (tâche #152) | normal | Demande explicite de l'utilisateur : « quelle est la to do générée par le rapport [...] et pour l'améliorer suite à son premier passage : quelle est la to do ? ». En vérifiant l'application de la nouvelle règle de rentabilisation (ligne #184), trouvé un oubli réel : la dette structurelle (extractPersonaBlock/detectGenericReport dupliqués avec the-final-judge.mjs) était documentée en prose mais n'avait jamais reçu son propre numéro de tâche. Corrigé (tâche #152, `pending`) | terminée — fidèle |
 
+| 186 | 2026-09-20T16:00Z | Méthode de travail / Suivi | Règle : ne jamais perdre le fil d'une tâche interrompue par un prompt intempestif | important | Demande explicite de l'utilisateur : « je pense aussi que mes prompts intempestifs perturbent la planification : trouve une solution fiable pour ça [...] mets à jour le planificateur, le suivi, les outils dédiés ». Règle ajoutée à `docs/systeme-de-suivi.md` : après une interruption (ou une salve empilée), dire explicitement quelle tâche était en cours et si elle reprend maintenant. Jamais un nouveau mécanisme (anti-duplication) : `oldestOpenTaskDate()`/l'item CIRCLE-TASKS "tâche ouverte la plus ancienne" sert désormais explicitement de filet de rattrapage pour ce risque précis, en plus de son rôle initial — commentaire de `circle-tasks.mjs` mis à jour en conséquence | terminée — fidèle |
+
 ## Notes
 
 - Les tâches terminées avant la création de ce système (chantier 2 du tableau de bord, full_sim10,

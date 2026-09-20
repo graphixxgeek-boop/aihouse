@@ -199,6 +199,32 @@ loin — un vrai travail a été fait, mais sous une forme qui ne correspond pas
 explicitement demandé. Les deux se vérifient ensemble à la clôture d'une tâche, jamais l'une sans
 l'autre.
 
+## Interruptions mid-turn empilées — ne jamais perdre le fil de la tâche en cours
+
+*(Ajouté le 2026-09-20, demande explicite de l'utilisateur : « je pense aussi que mes prompts
+intempestifs perturbent la planification : trouve une solution fiable pour ça [...] mets à jour le
+planificateur, le suivi, les outils dédiés ». Observation fondée sur cette session même : plusieurs
+messages mid-turn empilés d'affilée pendant un travail déjà en cours — chacun a bien été loggé au
+moment où il arrivait (point 0 ci-dessus), mais rien ne garantissait explicitement que la tâche
+interrompue serait bien reprise ensuite, plutôt que silencieusement diluée dans la suite des
+interruptions.)*
+
+**Règle** : le point 0 ci-dessus (logger chaque intervention avant de reprendre le travail
+interrompu) reste la première ligne de défense — elle ne change pas. S'y ajoute désormais une
+étape explicite après avoir traité une interruption (ou une salve d'interruptions empilées) : dire
+clairement quelle tâche était en cours avant l'interruption et si elle reprend maintenant ou reste
+volontairement en attente — jamais laisser la reprise implicite, au risque qu'elle se perde dans le
+flot des sujets suivants.
+
+**Jamais un nouveau mécanisme construit pour ça** (anti-duplication, §7ter) : le garde-fou mécanique
+existe déjà et suffit comme filet de rattrapage — `oldestOpenTaskDate()`
+(`scripts/check-suivi-fidelity.mjs`, exposé par l'item CIRCLE-TASKS « tâche ouverte la plus
+ancienne ») signale déjà depuis combien de temps la plus vieille ligne `en cours`/`ouverte` traîne.
+Ce signal sert maintenant EXPLICITEMENT une deuxième fonction, jamais formalisée avant : détecter
+une tâche interrompue par un prompt intempestif et jamais reprise, pas seulement du travail oublié
+par manque de temps. Une CIRCLE-TASKS relancée régulièrement (déjà recommandé, cf. rappel
+post-commit après 10 commits) reste donc le vrai filet de sécurité contre ce risque précis.
+
 ## Garde-fou mécanique — ne jamais compter sur le seul réflexe
 
 *(Ajouté le 2026-09-19, demande explicite de l'utilisateur.)* Une règle de procédure peut s'oublier

@@ -146,13 +146,17 @@ export const CIRCLE_ITEMS = [
   // categorizeAllSessions() de check-suivi-fidelity.mjs (jamais un second parseur de docs/suivi/) —
   // signale honnêtement la tâche "ouverte"/"en cours" la plus ancienne, jamais une liste complète
   // (ça, c'est le travail de la relecture des référentiels ci-dessus).
+  // Double fonction formalisée le 2026-09-20 (demande explicite : « mes prompts intempestifs
+  // perturbent la planification [...] mets à jour [...] les outils dédiés ») : ce signal ne
+  // détecte pas seulement du travail oublié faute de temps, mais aussi une tâche interrompue par un
+  // message mid-turn et jamais reprise ensuite — cf. docs/systeme-de-suivi.md, section dédiée.
   {
     id: "suivi-open-tasks-signal",
     theme: "Suivi & référentiels",
     label: "Signaler la tâche ouverte la plus ancienne (docs/suivi)",
     cout: "gratuit — lecture des fichiers de session déjà écrits, aucun appel API",
     tokensEstimes: "faible — parcours mécanique de fichiers déjà en mémoire de travail",
-    execute: "Lire docs/suivi/sessions/*.md via categorizeAllSessions() et reporter la tâche ouverte/en cours la plus ancienne — jamais juger seul si elle doit être close, juste signaler qu'elle traîne.",
+    execute: "Lire docs/suivi/sessions/*.md via categorizeAllSessions() et reporter la tâche ouverte/en cours la plus ancienne — jamais juger seul si elle doit être close, juste signaler qu'elle traîne (ou qu'elle a été interrompue par un prompt intempestif et jamais reprise).",
   },
   {
     id: "smart-conso-api-scan",
