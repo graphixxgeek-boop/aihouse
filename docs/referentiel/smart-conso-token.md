@@ -7,6 +7,26 @@ actions coûteuses de façon autonome sans besoin réel, que l'utilisateur ne se
 pic de consommation récent, et que les outils du réseau consomment plus que ce que le besoin exprimé
 justifie.)*
 
+## Fiche d'identité (membre de l'équipe)
+
+*(Ajoutée le 2026-09-20, à la demande explicite de l'utilisateur — même statut que Smart
+Breaker/ARGUS/HARMONIA/LE-PLANIFICATEUR : un membre de l'équipe nommé, pas seulement un script
+technique parmi d'autres.)*
+
+- **Nom** : SMART-CONSO-TOKEN.
+- **Rôle en une phrase** : conseillère en sobriété de contexte — repère les schémas connus coûteux
+  en tokens Claude (agent séparé, lecture exhaustive, document toujours chargé) et propose des
+  réductions concrètes, jamais une application automatique.
+- **Catégorie CASSANDRA-RH (future)** : `scripts` — au même titre que Smart Breaker/ARGUS/HARMONIA,
+  notée sur la pertinence de son poste et la qualité de son occupation, jamais un statut à part.
+- **Domaine strict** : les TOKENS de l'agent lui-même (moi), jamais le texte envoyé à Gemini pour
+  Lia/Noé (territoire exclusif de l'Article 8/0) ni les appels API réels (territoire de Smart
+  Conso API, sa cousine directe).
+- **Arrivée dans l'équipe** : 2026-09-20.
+- **Ce qu'elle ne fait jamais** : s'auto-ajuster (validation humaine/agent systématique avant tout
+  changement, cf. `classifyConsumption`), décourager un investissement sain de tokens, inventer un
+  chiffre exact là où seule une estimation honnête est possible.
+
 ## Ce qui existe aujourd'hui
 
 - **`scripts/smart-conso-token.mjs`** — le canal de consultation. Usage :

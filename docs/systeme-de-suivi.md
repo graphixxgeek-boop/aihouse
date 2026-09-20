@@ -1,4 +1,10 @@
-# Système de suivi des tâches
+# Système de suivi des tâches — surnommé « LE-PLANIFICATEUR »
+
+*(Surnom donné le 2026-09-20, à la demande explicite de l'utilisateur, même convention que
+LE-COORDINATEUR — plutôt que la piste mythologique MNÉMOSYNE proposée puis écartée. Ce système
+rejoint ainsi Smart Breaker/ARGUS/HARMONIA/etc. comme "membre de l'équipe" nommé. Aucun changement
+de fonctionnement : le nom technique des fichiers et des fonctions reste inchangé, comme pour tous
+les autres outils déjà nommés de ce projet.)*
 
 *(Créé le 2026-09-19, à la demande explicite de l'utilisateur : « je veux aussi que toutes les
 tâches (toutes) soient historisées dans un dossier local, avec un fichier par session, et aussi un

@@ -4,6 +4,23 @@
 même d'un vrai épisode d'épuisement total du quota Gemini pendant cette session — cf.
 `docs/suivi/` pour le récit complet de cette session.)*
 
+## Fiche d'identité (membre de l'équipe)
+
+*(Ajoutée le 2026-09-20, à la demande explicite de l'utilisateur — même statut que Smart
+Breaker/ARGUS/HARMONIA/LE-PLANIFICATEUR : un membre de l'équipe nommé, pas seulement un script
+technique parmi d'autres.)*
+
+- **Nom** : Smart Conso API.
+- **Rôle en une phrase** : conseillère de rythme — surveille combien de vrais appels API l'agent
+  s'apprête à faire et dit si le rythme est sain, tendu, ou déjà trop poussé.
+- **Catégorie CASSANDRA-RH (future)** : `scripts` — au même titre que Smart Breaker/ARGUS/HARMONIA,
+  notée sur la pertinence de son poste et la qualité de son occupation, jamais un statut à part.
+- **Domaine strict** : le rythme des appels Gemini que l'AGENT déclenche pendant le travail (jamais
+  le jeu réel, gouverné par l'Article 8 seul — frontière explicite, cf. CLAUDE.md Article 22).
+- **Arrivée dans l'équipe** : 2026-09-19.
+- **Ce qu'elle ne fait jamais** : décider à la place de l'agent ou de l'utilisateur, modifier
+  l'architecture de production, court-circuiter l'Article 8.
+
 ## Ce qui existe aujourd'hui
 
 - **`scripts/smart-conso-api.mjs`** — le canal de consultation. Usage :

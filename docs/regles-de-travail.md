@@ -99,6 +99,30 @@ elle-même change) et une revue du diff avant commit restent la pratique par dé
 mais quand l'importance d'un sujet n'est pas évidente, l'agent DEMANDE (cf. section 2) plutôt que
 de fixer lui-même le curseur.
 
+## 3bis. Test d'utilité réelle à 4 destinataires
+
+*(Ajouté le 2026-09-20, à la demande explicite de l'utilisateur : « assure-toi que tout ce qui est
+fait est utile : pour toi, pour moi, pour la team, pour le projet, ajoute une valeur ajoutée si
+besoin à toute opération, dans ce sens ».)* Avant de considérer une opération terminée (un
+correctif, un nouvel outil, une réponse à une question, une extension de charte), se demander
+explicitement à qui elle profite réellement, parmi ces quatre destinataires — jamais seulement
+« est-ce que ça marche ? » :
+
+1. **L'agent lui-même** — l'opération économise-t-elle du temps/des tokens à une future session, ou
+   évite-t-elle de refaire un diagnostic déjà fait (cf. SMART-CONSO-TOKEN, `classifyConsumption`) ?
+2. **L'utilisateur** — répond-elle réellement à ce qu'il a demandé, ou seulement à une lecture
+   littérale qui manque l'intention (cf. Article 16 de CLAUDE.md) ?
+3. **La team (les autres outils)** — l'opération leur évite-t-elle un travail redondant, ou casse-t-
+   elle une intégration existante (cf. section 7ter, anti-doublon) ?
+4. **Le projet** — sert-elle l'esprit des personnages, la cohérence, ou la charte elle-même (cf.
+   Article 0/1/2 de CLAUDE.md), ou n'est-elle qu'une agitation sans effet observable ?
+
+Si une opération ne profite clairement à AUCUN des quatre, c'est un signal à traiter comme un vrai
+doute (Article 16) plutôt qu'à exécuter par réflexe — proposer une version qui ajoute une valeur
+réelle plutôt que de livrer un geste creux. Ce test n'ajoute aucune bureaucratie visible (pas de
+case à cocher par tâche) : c'est une question de jugement à se poser à chaque décision, comme les
+autres principes de vigilance continue (cf. Article 14 de CLAUDE.md).
+
 ## 4. Git et livraison
 
 - **Commit dès qu'un morceau de travail cohérent passe les tests**, sans attendre une demande

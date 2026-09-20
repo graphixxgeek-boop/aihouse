@@ -190,11 +190,14 @@ export function scanDocumentWeight(text, filename = "document", { alwaysLoaded =
 // Portée d'une analyse SMART-CONSO-TOKEN — réutilise EXACTEMENT le vocabulaire déjà créé pour
 // THE-FINAL-JUDGE (Global/Partiel/Zoomé/Focus, cf. docs/referentiel/the-final-judge.md), jamais un
 // second vocabulaire inventé (Article 19, harmonie de taxonomie demandée explicitement le
-// 2026-09-20). "documents" est une Map<nomFichier, texte> — l'appelant choisit quels fichiers
-// correspondent à la portée demandée (Global = tous les documents toujours chargés/fréquemment
-// relus ; Partiel = plusieurs ; Zoomé = un seul ; Focus = un extrait précis d'un seul document).
-// `alwaysLoadedSet` : Set<nomFichier> des documents réellement toujours chargés (dans ce projet,
-// CLAUDE.md seul) — tout document absent du set est traité comme lu à la demande.
+// 2026-09-20). "documents" est un objet simple { nomFichier: texte } (jamais un Map — corrigé le
+// 2026-09-20 : ce commentaire annonçait un Map alors que l'implémentation et son propre test
+// utilisent `Object.entries()` depuis l'origine ; trouvaille réelle faite en auditant CLAUDE.md
+// avec cet outil, cf. Article 6/13) — l'appelant choisit quels fichiers correspondent à la portée
+// demandée (Global = tous les documents toujours chargés/fréquemment relus ; Partiel = plusieurs ;
+// Zoomé = un seul ; Focus = un extrait précis d'un seul document). `alwaysLoadedSet` :
+// Set<nomFichier> des documents réellement toujours chargés (dans ce projet, CLAUDE.md seul) —
+// tout document absent du set est traité comme lu à la demande.
 export const SCOPE_LEVELS = ["global", "partiel", "zoome", "focus"];
 
 export function scanScope(portee, documents, alwaysLoadedSet = new Set()) {
