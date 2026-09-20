@@ -1089,10 +1089,15 @@ mémoire de l'historique du projet, qui incarne un professionnel senior au regar
 sérieusement de reprendre le projet, et rend un verdict opiniâtre (positifs, points à améliorer,
 pistes de développement) — jamais une vérification de fidélité aux décisions déjà prises (l'inverse
 exact de la double perspective d'HYPER-SCAN-CHECKPOINT), jamais un score calibré (l'inverse d'EL-
-PROFESSOR), jamais un exécutant (conseiller uniquement, aucun code écrit par lui-même). Deux modes
-(léger/lourd), la même dualité dev/production que THE-SCREENER, un mandat explicite incluant les
-risques de sécurité/production. Intégré à CHECK-LEVEL-TARGET (léger = "Approfondi", lourd =
-"Exceptionnel"). Jamais les critères exacts ni le registre propres à ce projet, qui vivent dans
+PROFESSOR), jamais un exécutant (conseiller uniquement, aucun code écrit par lui-même). Deux axes
+indépendants et croisables librement : 6 paliers d'intensité (quantité lue, très léger à très lourd)
+et 4 paliers de périmètre (ce qui est audité, global à un sujet précis), toujours choisis par l'agent
+qui pilote au moment du déclenchement — jamais un palier par défaut figé par outil. Même dualité
+dev/production que THE-SCREENER, un mandat explicite incluant les risques de sécurité/production.
+Intégré à CHECK-LEVEL-TARGET en tendance générale (Approfondi → intensité basse à modérée,
+Exceptionnel → intensité approfondie à très lourde), jamais un verrou, et jamais à confondre avec les
+4 niveaux propres de CHECK-LEVEL-TARGET malgré deux mots partagés. Jamais les paliers exacts ni le
+registre propres à ce projet, qui vivent dans
 `docs/referentiel/the-final-judge.md` (instanciation) et `docs/the-final-judge/` (dossier de
 rapports) — ses conclusions retenues après réconciliation rejoignent les registres existants
 (`points-fragiles.md`, `correctifs-a-revalider.md`, la feuille de route), jamais un rapport isolé.

@@ -9,8 +9,21 @@ par l'utilisateur lui-même après avoir rejeté une première proposition ("TRI
 |---|---|---|
 | **Léger** | `check-house.mjs` | gratuit |
 | **Standard** (défaut si aucun signal détecté) | `check-house.mjs` + ARGUS + HARMONIA (partie mécanique) | gratuit |
-| **Approfondi** | + `check-spirit.mjs`, `check-profile.mjs`, THE-FINAL-JUDGE (mode léger) | réel — consulter Smart Conso API avant de lancer |
-| **Exceptionnel** | HYPER-SCAN-CHECKPOINT (bugs cachés) et/ou ALWAYS-NEW-CODE (restructuration), selon le registre détecté ; THE-FINAL-JUDGE (mode lourd) pour un avis produit/architecture indépendant | réel — consulter Smart Conso API avant de lancer |
+| **Approfondi** | + `check-spirit.mjs`, `check-profile.mjs`, THE-FINAL-JUDGE (intensité basse à modérée, périmètre choisi selon le doute réel) | réel — consulter Smart Conso API avant de lancer |
+| **Exceptionnel** | HYPER-SCAN-CHECKPOINT (bugs cachés) et/ou ALWAYS-NEW-CODE (restructuration), selon le registre détecté ; THE-FINAL-JUDGE (intensité approfondie à très lourde) pour un avis produit/architecture indépendant | réel — consulter Smart Conso API avant de lancer |
+
+**Ne pas confondre ces 4 niveaux avec l'échelle interne de THE-FINAL-JUDGE.** *(Précisé le
+2026-09-20, à la demande explicite de l'utilisateur de vérifier l'harmonie entre les taxonomies du
+paysage.)* THE-FINAL-JUDGE a sa PROPRE échelle d'intensité à 6 paliers (très léger → très lourd, cf.
+`docs/referentiel/the-final-judge.md`), qui partage deux mots ("léger", "approfondi") avec la table
+ci-dessus sans en être un sous-ensemble ni un synonyme : les 4 niveaux ci-dessus décident QUELS OUTILS
+déployer dans le paysage entier, tandis que les 6 paliers de THE-FINAL-JUDGE décident uniquement DE
+QUELLE PROFONDEUR CE SEUL OUTIL lit le projet une fois qu'on a déjà décidé de le déclencher — une
+granularité plus fine, propre à un outil coûteux qu'on veut pouvoir doser précisément, jamais un
+raffinement de cette table à 4 niveaux. La correspondance ci-dessus (Approfondi → intensité basse à
+modérée, Exceptionnel → intensité approfondie à très lourde) reste une tendance générale, jamais un
+verrou : c'est toujours l'agent qui pilote le projet qui choisit le palier exact au moment de
+déclencher THE-FINAL-JUDGE, quel que soit le niveau CHECK-LEVEL-TARGET en cours.
 
 ## Ce qui existe aujourd'hui
 

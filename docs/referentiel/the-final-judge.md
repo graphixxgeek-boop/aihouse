@@ -10,7 +10,8 @@ CHECK-LEVEL-TARGET, dualité dev/production comme THE-SCREENER, mandat sécurit�
 *(Exigence non négociable de l'utilisateur : ce personnage ne ressemble JAMAIS ni à l'agent qui
 pilote le projet, ni à l'utilisateur — c'est un troisième regard, stable, jamais reformulé à chaque
 déclenchement. Le bloc ci-dessous est copié tel quel dans le prompt de l'agent séparé à chaque
-invocation, léger ou lourd — jamais paraphrasé ou réinventé.)*
+invocation, quel que soit le palier d'intensité ou de périmètre choisi — jamais paraphrasé ou
+réinventé.)*
 
 > Tu es un directeur technique et création senior, la cinquantaine, vingt ans de carrière à auditer
 > des projets pour décider s'il faut les reprendre, les financer ou les abandonner. Tu as vu passer
@@ -33,45 +34,84 @@ Reçoit UNIQUEMENT le dépôt (code + documentation) et, si disponible, l'accès
 produit (dev ou en ligne) — jamais l'historique de cette conversation, jamais une liste de points
 déjà identifiés par d'autres outils du projet.
 
-## Les deux modes
+## Deux axes indépendants, croisables librement : intensité (profondeur) × périmètre (étendue)
 
-- **Léger** (niveau CHECK-LEVEL-TARGET "Approfondi") : lecture ciblée — `CLAUDE.md`, tout
-  `docs/referentiel/*.md`, les fichiers moteur les plus centraux (`lib/lia.ts`, `lib/life.ts`,
-  `lib/dialogue.ts`, `lib/drama.ts`, `app/api/lia/route.ts`), les 15 derniers commits (`git log`), et
-  si un serveur de dev tourne, une brève navigation réelle (quelques pages/interactions). Temps
-  borné, jamais une lecture exhaustive.
-- **Lourd** (niveau CHECK-LEVEL-TARGET "Exceptionnel") : lecture exhaustive de TOUT `lib/`, `app/`,
-  `components/`, `scripts/`, toute la documentation (`docs/referentiel/`, tous les blueprints,
-  `docs/regles-de-travail.md`, `docs/philosophie-et-politique.md`), plusieurs simulations archivées
-  (`docs/simulations/`), l'historique git complet des messages de commit (pas seulement les 15
-  derniers), et une navigation réelle et approfondie du produit (dev ou, une fois publié, le site en
-  ligne) — « comme s'il devait le reprendre demain ».
+*(Redessiné le 2026-09-20 en deux temps, à la demande explicite de l'utilisateur — d'abord un axe de
+profondeur zoomable, puis une extension complète : « l'audit de the judge peut être très approfondi
+(très lourd), approfondi, classique, modéré, léger, très léger » et « l'audit de the judge peut être
+global, partiel, zoomé sur une partie, focus sur un sujet aussi ; les 2 échelles peuvent être
+croisées à volonté ». Remplace intégralement les anciens modes "léger"/"lourd" et l'ancienne portée
+binaire "projet entier"/"zoomée" — décision explicite de l'utilisateur : un remplacement complet,
+jamais une coexistence des anciens et nouveaux noms.)*
 
-Même personnage, même structure de sortie dans les deux cas — seule la PROFONDEUR change.
+Même personnage, même structure de sortie en 4 parties à CHAQUE combinaison des deux axes — ils ne
+changent jamais QUI parle ni COMMENT, seulement QUOI (périmètre) et À QUEL POINT EN PROFONDEUR
+(intensité) l'agent séparé regarde. **Qui choisit le couple intensité/périmètre à chaque
+déclenchement : toujours l'agent qui pilote le projet**, jamais un palier par défaut figé par outil
+(calibré explicitement le 2026-09-20) — un autre outil du paysage signale seulement qu'il a un doute
+à faire trancher, jamais la combinaison exacte à utiliser.
 
-## Portée : projet entier (défaut) ou zoomée sur une zone
+### Intensité — 6 paliers, uniquement la quantité lue qui grandit (calibré explicitement)
 
-*(Ajouté le 2026-09-20, à la demande explicite de l'utilisateur : « the judge peut auditer de façon
-profonde et large, mais aussi de façon zoomée ? ». Axe INDÉPENDANT du mode léger/lourd — la
-profondeur et la portée se combinent librement : "zoomé + lourd" creuse une seule zone à fond,
-"zoomé + léger" donne un avis rapide sur un point précis.)*
+Du plus léger au plus lourd — chaque palier inclut tout ce que lit le palier précédent, plus ce qui
+est décrit ici :
 
-Par défaut, la portée est le projet entier (comme au 2026-09-20). Une portée zoomée cible une seule
-zone, désignée parmi les 8 mêmes thèmes qu'ALWAYS-NEW-CODE/HARMONIA (`THEMES` de
-`scripts/always-new-code.mjs` : Fatigue, Cycle jour/nuit, Enquête, Bonus roulette, Appréciation de
-l'observateur, Dossier retourné, Déplacements/espace, Relation Lia/Noé) — jamais une deuxième
-taxonomie inventée pour l'occasion (Article 19). L'agent séparé reçoit alors une consigne
-supplémentaire : lire tout ce qui est nécessaire pour comprendre CETTE zone en profondeur (fichiers,
-documentation et simulations pertinentes), sans se sentir tenu de couvrir le reste du projet — même
-personnage, même structure de sortie en 4 parties, seulement recentrée sur la zone désignée.
+1. **Très léger** : `CLAUDE.md` + le ou les fichiers directement liés au doute à trancher + les 5
+   derniers commits. Le strict nécessaire pour dire si un doute est fondé, en quelques minutes.
+2. **Léger** : + les sections pertinentes de `docs/referentiel/*.md` + les fichiers moteur les plus
+   directement concernés par le périmètre choisi, 10 derniers commits.
+3. **Modéré** : + les fichiers connexes au périmètre (pas seulement les plus centraux), 15 derniers
+   commits, une simulation archivée récente si elle existe pour le sujet.
+4. **Classique** (= l'ancien mode "léger", texte conservé à l'identique) : `CLAUDE.md`, tout
+   `docs/referentiel/*.md`, les fichiers moteur les plus centraux (`lib/lia.ts`, `lib/life.ts`,
+   `lib/dialogue.ts`, `lib/drama.ts`, `app/api/lia/route.ts`), les 15 derniers commits, et si un
+   serveur de dev tourne, une brève navigation réelle (quelques pages/interactions).
+5. **Approfondi** : + tout le reste de `lib/`/`app/`/`components/`/`scripts/` pertinent au périmètre
+   choisi, plusieurs simulations archivées, un historique de commits plus large (au-delà des 15
+   derniers, sans être exhaustif).
+6. **Très lourd** (= l'ancien mode "lourd", texte conservé à l'identique) : lecture exhaustive de TOUT
+   `lib/`, `app/`, `components/`, `scripts/`, toute la documentation (`docs/referentiel/`, tous les
+   blueprints, `docs/regles-de-travail.md`, `docs/philosophie-et-politique.md`), plusieurs simulations
+   archivées, l'historique git complet des messages de commit, et une navigation réelle et
+   approfondie du produit (dev ou, une fois publié, le site en ligne) — « comme s'il devait le
+   reprendre demain ».
 
-**Déclenchement, calibré explicitement le 2026-09-20** : un audit zoomé peut être demandé directement
-(moi ou l'utilisateur, comme pour le reste de l'outil) **ou proposé automatiquement par un autre
+**Ne pas confondre avec deux autres échelles du projet qui partagent un mot, jamais un sens** (vérifié
+le 2026-09-20, à la demande explicite de l'utilisateur de garder l'harmonie avec la taxonomie déjà en
+place) : (1) "Classique" ci-dessus n'a AUCUN lien avec le niveau "classique" du mute spontané/caméra
+masquée de l'observateur (`docs/referentiel/parametres.md`, `regles-du-temps.md`) — l'un est un
+palier de lecture pour un outil de travail interne, l'autre une durée de bonus vécue par le joueur,
+deux domaines qui ne se croisent jamais dans la même phrase ; (2) "Léger" et "Approfondi" ci-dessus ne
+sont PAS des sous-niveaux des niveaux homonymes de CHECK-LEVEL-TARGET (Léger/Standard/Approfondi/
+Exceptionnel, `docs/referentiel/check-level-target.md`) — cette table à 4 niveaux décide quels OUTILS
+déployer dans tout le paysage, cette échelle à 6 paliers décide uniquement la profondeur de lecture
+d'UN SEUL outil, une fois qu'on a déjà décidé de le déclencher.
+
+### Périmètre — 4 paliers, ce qui est audité plutôt qu'à quel point
+
+1. **Global** (= l'ancien "projet entier", le défaut) : tout le projet.
+2. **Partiel** : plusieurs zones désignées explicitement parmi les 8 mêmes thèmes qu'ALWAYS-NEW-CODE/
+   HARMONIA (`THEMES` de `scripts/always-new-code.mjs` : Fatigue, Cycle jour/nuit, Enquête, Bonus
+   roulette, Appréciation de l'observateur, Dossier retourné, Déplacements/espace, Relation
+   Lia/Noé) — jamais une deuxième taxonomie inventée pour l'occasion (Article 19).
+3. **Zoomé** : une seule zone parmi les 8 mêmes thèmes.
+4. **Focus** : un sujet précis, plus fin qu'une zone entière, décrit en texte libre au moment du
+   déclenchement (ex. « la formulation du chiffre d'appréciation dans le dossier retourné », « le
+   calibrage du seuil de `loveRealized` ») — jamais une liste figée de sujets possibles à l'avance.
+
+Dans tous les cas où le périmètre n'est pas "Global", l'agent séparé reçoit une consigne
+supplémentaire : lire tout ce qui est nécessaire pour comprendre le périmètre désigné en profondeur,
+sans se sentir tenu de couvrir le reste du projet.
+
+**Déclenchement d'une combinaison précise, calibré explicitement le 2026-09-20** : les deux axes
+peuvent être demandés directement (moi ou l'utilisateur) **ou proposés automatiquement par un autre
 outil du paysage** quand il ne parvient pas à trancher seul sur SA zone — en particulier EL-PROFESSOR
-(faiblesse chronique sur un thème précis) et ALWAYS-NEW-CODE (zone bloquée au palier "probable").
-Dans les deux cas, "proposé" ne veut jamais dire "déclenché sans confirmation" : la règle générale de
-l'outil (aucun déclenchement sans confirmation explicite) s'applique identiquement à une proposition
-venue d'un autre outil.
+(faiblesse chronique sur un thème précis) et ALWAYS-NEW-CODE (zone bloquée au palier "probable"). Un
+outil qui propose signale seulement le doute et la zone concernée, jamais la combinaison exacte
+intensité/périmètre — c'est toujours l'agent qui pilote le projet qui la choisit, selon l'urgence et
+l'enjeu réel du moment. Dans tous les cas, "proposé" ne veut jamais dire "déclenché sans
+confirmation" : la règle générale de l'outil (aucun déclenchement sans confirmation explicite)
+s'applique identiquement à une proposition venue d'un autre outil.
 
 ## Dualité dev/production, comme THE-SCREENER
 
@@ -104,9 +144,9 @@ dire) — même principe déjà établi pour les rapports KPI (Article 18, étap
 ## Consultation Smart Conso API avant lancement
 
 Même règle que pour la double perspective d'HYPER-SCAN-CHECKPOINT (`docs/referentiel/hyper-scan-checkpoint.md`) :
-`node scripts/smart-conso-api.mjs the-final-judge --confirm` avant tout lancement, léger ou lourd —
-un vrai coût réel (temps d'un agent qui lit une partie ou tout le projet), jamais une exception parce
-que ce n'est pas un appel direct à l'API du jeu.
+`node scripts/smart-conso-api.mjs the-final-judge --confirm` avant tout lancement, quel que soit le
+palier d'intensité ou de périmètre choisi — un vrai coût réel (temps d'un agent qui lit une partie ou
+tout le projet), jamais une exception parce que ce n'est pas un appel direct à l'API du jeu.
 
 ## Réconciliation : jamais avant, et ses conclusions retenues rejoignent les registres existants
 
@@ -123,8 +163,11 @@ lui-même (cf. Registre ci-dessous), pas le devenir de chaque recommandation.
 
 ## Intégration à CHECK-LEVEL-TARGET
 
-Ajouté à la table des niveaux (`docs/referentiel/check-level-target.md`) : mode léger au niveau
-"Approfondi", mode lourd au niveau "Exceptionnel", aux côtés des outils déjà présents à ce niveau.
+Ajouté à la table des niveaux (`docs/referentiel/check-level-target.md`) : tendance générale, jamais
+un verrou (l'agent choisit toujours le palier exact au déclenchement) — intensité basse à modérée au
+niveau "Approfondi", intensité approfondie à très lourde au niveau "Exceptionnel", aux côtés des
+outils déjà présents à ce niveau. Cf. la note de non-confusion ci-dessus : les deux échelles restent
+indépendantes malgré les mots partagés.
 
 ## Registre
 

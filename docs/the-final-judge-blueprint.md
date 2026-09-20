@@ -40,7 +40,7 @@ professionnel senior, et qui rend un verdict opiniâtre — jamais un simple con
 - **Pas l'agent qui pilote le projet qui change de casquette.** Un agent qui se relit en prétendant
   adopter un regard neuf reste biaisé par tout ce qu'il sait déjà du projet. Ce patron exige un AGENT
   RÉELLEMENT SÉPARÉ, sans mémoire de l'historique du projet — la fraîcheur du regard n'est pas
-  négociable, quel que soit le mode (léger ou complet).
+  négociable, quel que soit le palier de profondeur ou de périmètre choisi pour ce passage.
 - **Pas un exécutant.** Il conseille, il ne code jamais lui-même — la personne ou l'agent qui pilote
   le projet reste seul décisionnaire de ce qui est mis en œuvre, et seul à écrire le code.
 
@@ -82,35 +82,46 @@ plus. Deux exigences en découlent, à traiter comme des garde-fous permanents, 
 
 ## Squelette, réutilisable
 
-1. **Toujours un agent réellement séparé.** Aucune exception, même pour le mode léger — la fraîcheur
-   du regard est la valeur centrale du patron, jamais négociée pour économiser un appel.
+1. **Toujours un agent réellement séparé.** Aucune exception, même pour le palier le plus léger — la
+   fraîcheur du regard est la valeur centrale du patron, jamais négociée pour économiser un appel.
 2. **Accès complet au projet (code ET documentation), zéro information sur les audits ou décisions
    déjà pris.** L'agent séparé lit le dépôt comme un nouvel arrivant le découvrirait — jamais une
    liste de « problèmes déjà connus » qui orienterait son jugement, jamais l'historique de
    conversation qui a produit le code.
-3. **Deux profondeurs, jamais deux personnalités différentes.** Un mode léger (un passage ciblé —
-   les fichiers les plus significatifs, la documentation de référence, les changements récents) et
-   un mode complet (lecture exhaustive du code et de toute la documentation, « comme s'il devait
-   reprendre le projet demain ») — la même posture critique et la même personnalité dans les deux
-   cas, seule la PROFONDEUR de lecture change.
-4. **Le code ne suffit jamais : il doit aussi VIVRE le produit, pas seulement le lire.** Un vrai
+3. **Un axe de profondeur graduable, jamais deux personnalités différentes.** De « un passage ciblé »
+   (les fichiers les plus significatifs, la documentation de référence, les changements récents) à
+   « lecture exhaustive du code et de toute la documentation, comme s'il devait reprendre le projet
+   demain » — le nombre de paliers intermédiaires (deux, six, ou tout autre découpage) se calibre par
+   projet, mais toujours la MÊME posture critique et la MÊME personnalité à chaque palier, seule la
+   quantité lue change. Un projet peut commencer avec deux paliers et en affiner davantage plus tard
+   dès qu'un besoin réel de granularité apparaît (ex. d'autres outils du paysage qui ne veulent
+   solliciter que le niveau de lecture strictement nécessaire à leur doute) — jamais l'inverse, une
+   granularité choisie à l'avance sans besoin réel encore observé.
+4. **Un axe de périmètre orthogonal à la profondeur, tout aussi graduable.** Indépendamment de la
+   quantité lue, le périmètre décrit CE QUI est audité : tout le projet, un sous-ensemble de zones,
+   une seule zone désignée (en réutilisant une taxonomie de zones déjà existante dans le projet plutôt
+   que d'en inventer une nouvelle), ou un sujet précis décrit en texte libre au moment du
+   déclenchement — jamais une liste figée de sujets possibles. Les deux axes se croisent librement :
+   un appel précis sur une intensité légère et un appel exhaustif sur un périmètre large restent deux
+   commandes distinctes, choisies au cas par cas selon le besoin réel du moment.
+5. **Le code ne suffit jamais : il doit aussi VIVRE le produit, pas seulement le lire.** Un vrai
    professionnel senior qui évalue un projet ne se contente jamais du code source — il l'utilise.
    Cet agent doit donc pouvoir naviguer réellement dans le produit (une instance de développement, ou
    une fois publié, le site réel), pas seulement lire ses fichiers — même dualité dev/production déjà
    établie par un patron voisin de vérification graphique dans ce paysage d'outils (cf. sa propre
    documentation) : le mécanisme ne change jamais selon que le produit jugé tourne en développement
    ou en ligne.
-5. **Le mandat inclut explicitement les risques de sécurité et de préparation à la mise en
+6. **Le mandat inclut explicitement les risques de sécurité et de préparation à la mise en
    production**, pas seulement l'architecture et l'expérience — un professionnel senior qui envisage
    de reprendre un projet regarde toujours cet angle en premier (identifiants faibles, données
    sensibles mal protégées, absence de limitation de débit, secrets mal isolés). Jamais un audit de
    sécurité formel et exhaustif (hors de portée d'un jugement d'ensemble), mais un signalement de ce
    qui saute aux yeux d'un regard expérimenté.
-6. **Sortie toujours structurée en quatre parties** : un verdict global, des points positifs
+7. **Sortie toujours structurée en quatre parties** : un verdict global, des points positifs
    concrets (jamais un compliment vague), des points à améliorer classés par importance (jamais une
    liste plate), des pistes de développement futur. Jamais de code : uniquement des recommandations
    en langage clair.
-7. **Réconciliation après coup, jamais avant — et ses conclusions retenues rejoignent les registres
+8. **Réconciliation après coup, jamais avant — et ses conclusions retenues rejoignent les registres
    déjà existants du projet, jamais un rapport isolé qu'on ne relit qu'une fois.** Le rapport brut de
    cet agent contiendra nécessairement des remarques sur des points déjà sciemment tranchés ailleurs
    dans le projet (il n'a aucun moyen de le savoir) — c'est un effet attendu du regard neuf, pas un
@@ -121,7 +132,7 @@ plus. Deux exigences en découlent, à traiter comme des garde-fous permanents, 
    projet qui lui correspond déjà (une question de conception ouverte, un correctif de code concret,
    une piste de refonte) — jamais laissé à vivre uniquement dans le registre propre à cet outil, qui
    n'archive que la trace du passage lui-même, pas le devenir de chaque recommandation.
-8. **Autres outils du paysage peuvent le solliciter pour un second avis**, ponctuellement, sur un
+9. **Autres outils du paysage peuvent le solliciter pour un second avis**, ponctuellement, sur un
    point précis (une question de conception ouverte, un choix d'architecture qui divise) — jamais
    comme un remplacement de leur propre jugement, un avis DE PLUS à mettre en balance.
 
