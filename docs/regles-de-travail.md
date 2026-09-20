@@ -1032,6 +1032,28 @@ moment de cette règle) : une fonction dédiée qui transforme les signaux de fr
 dans `buildCircleReport()` en une sélection par défaut, plutôt qu'un jugement refait à la main à
 chaque fois — cf. le carnet de tâches pour son suivi.
 
+**Garde-fou en 2 temps, non négociable (2026-09-20, trouvé nécessaire après un vrai manquement :
+une Ronde entière exécutée sans jamais montrer de fenêtre à cocher — l'agent avait substitué son
+propre jugement de « Ronde sur mesure » ci-dessus à la confirmation, dérivant silencieusement vers
+le « tout-en-un » explicitement interdit plus haut).** Avant toute Ronde, l'agent ouvre TOUJOURS une
+première question, jamais la fenêtre à cocher directement :
+1. *« Voulez-vous paramétrer la Ronde ? »* avec 2 réponses : **NON, lancer avec les paramètres
+   recommandés** (recommandé) — l'agent lance directement sa sélection calibrée sans autre fenêtre ;
+   **OUI, je veux paramétrer finement** — l'agent ouvre alors la série de fenêtres à cocher par
+   thème (`groupCircleReportByTheme()`), items « recommandé » réaffichés normalement avec leur
+   étiquette, à re-cocher comme les autres (limite technique actée : aucune case ne peut être
+   pré-cochée dans l'outil de questions utilisé ici, l'utilisateur doit toujours cliquer lui-même
+   sur ce qu'il veut garder).
+2. Une fois la Ronde effectivement exécutée, l'agent appelle lui-même `buildCircleRunSummaryHtml()`
+   (jamais un `main()` automatique, qui ne connaît pas la sélection réelle faite en conversation) et
+   livre ce récapitulatif en fichier — le rapport de fin de Ronde qui manquait jusqu'ici (même écart
+   Article 13 constaté le même jour : la doc annonçait déjà CIRCLE-TASKS parmi les rapports rendus
+   par html-report.mjs, jamais câblé dans le vrai `main()`).
+
+Portée explicitement limitée à CIRCLE-TASKS (calibrage du 2026-09-20) : les autres listes
+"recommandées" du projet (ex. `recommendNextTasks()` de check-tasks-details) gardent leur
+fonctionnement actuel, jamais généralisé sans nouvelle demande explicite.
+
 **Catalogue distinct de celui de LE-COORDINATEUR, précision explicite de l'utilisateur (2026-09-20) :
 « on sépare bien le catalogue des rondes CIRCLE-TASKS et le catalogue des prestations du
 coordinateur ».** Les deux catalogues à venir (la sélection "recommandé" ci-dessus, tâche #155 ; et

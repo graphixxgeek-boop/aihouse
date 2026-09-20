@@ -27,6 +27,7 @@ import { fileURLToPath } from "node:url";
 import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { scanDocumentWeight, listDatedNarrativeMarkers, extractRuleUnits, findRedundantRulePairs } from "./smart-conso-token.mjs";
+import { renderHtmlReport } from "./html-report.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -376,6 +377,32 @@ export function recordCircleTasksRun(totalCommitCount, now = Date.now()) {
   const state = { lastRunCommitCount: totalCommitCount, lastRunAt: now };
   writeFileSync(LAST_RUN_PATH, JSON.stringify(state, null, 1));
   return state;
+}
+
+// Rapport de fin de Ronde (2026-09-20, trou trouvé par l'utilisateur : « je n'ai pas eu de rapport
+// à la fin de la ronde, c'est voulu ? » — non, ce n'était qu'un oubli : main() n'a jamais affiché
+// que le menu AVANT exécution, jamais un récapitulatif APRÈS). Même principe que
+// buildFinalJudgeReportHtml() (the-final-judge.mjs) : ce script n'a aucun main() qui sait, après
+// coup, quels items ont réellement été cochés puis exécutés dans la conversation — c'est donc
+// l'agent qui pilote qui appelle cette fonction lui-même, une fois la Ronde terminée, jamais un
+// second mécanisme d'exécution automatique. Index LÉGER, jamais un doublon (calibrage explicite du
+// 2026-09-20) : chaque item coché produit déjà sa propre sortie de référence (fiche profil, CSV
+// KPI, entrée de registre...) — ce rapport se contente de lister quoi a tourné, un résultat en une
+// phrase, et un lien vers cette sortie déjà produite, jamais son contenu recopié.
+// `entries`: Array<{ id: string, label: string, outcome: string, link?: string }>.
+export const CIRCLE_RUN_SUMMARY_HTML_PATH = ".circle-tasks-run-summary-latest.html";
+export function buildCircleRunSummaryHtml(entries, { dateLabel } = {}) {
+  const rows = (entries || []).map((e) => [e.label ?? e.id ?? "—", e.outcome ?? "—", e.link ?? "—"]);
+  const blocks = rows.length
+    ? [{ type: "table", headers: ["Item exécuté", "Résultat", "Lien"], rows }]
+    : [{ type: "note", text: "Aucun item n'a été coché pour cette Ronde." }];
+  return renderHtmlReport({
+    title: "CIRCLE-TASKS — récapitulatif de la Ronde",
+    subtitle: "Index léger : ce qui a tourné et un pointeur vers la sortie déjà produite par chaque item, jamais son contenu dupliqué ici.",
+    dateLabel: dateLabel ?? new Date().toISOString(),
+    blocks,
+    footer: "CIRCLE-TASKS — la sélection des items reste toujours confirmée par une fenêtre à cocher avant exécution, jamais un tout-en-un silencieux.",
+  });
 }
 
 function main() {
