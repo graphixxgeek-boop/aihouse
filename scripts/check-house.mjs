@@ -3569,6 +3569,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     formatScanReport, countDatedNarrativeMarkers, findJudgeSpawnsWithoutConsultation, AUTOMATION_TOKEN_NUANCE,
     listDatedNarrativeMarkers, checkToolConnections, EXPECTED_CONNECTIONS, trackWeightTrend,
     classifyConsumption, computeInvestmentRatio, diagnoseAdviceAccuracy, parseOutcomeArgs,
+    extractNormativeMarkers, diffNormativeMarkers,
   } = await import('../scripts/smart-conso-token.mjs');
 
   assert.equal(estimateTokens('abcd'), 1, 'the ~4-characters-per-token heuristic must round to the nearest whole token, never a fractional or wildly inaccurate estimate');
@@ -3756,5 +3757,24 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const realOutcomeArgv = ['/usr/bin/node', '/home/user/aihouse/scripts/smart-conso-token.mjs', 'outcome', 'agent_subagent_spawn', '1789904646767', 'confirme_utile'];
   assert.deepEqual(parseOutcomeArgs(realOutcomeArgv), { type: 'agent_subagent_spawn', atArg: '1789904646767', outcome: 'confirme_utile' }, 'parseOutcomeArgs() must read the real type/timestamp/outcome triplet from a genuine process.argv shape, never a shifted-by-one triplet that would silently record the wrong data or reject valid input as missing');
 
-  console.log('Passed: diagnoseAdviceAccuracy() mechanically flags a hard threshold likely unrespected (a same-type confirmed action mere seconds after a "seuil_dur" verdict) and surfaces every genuinely recorded outcome that contradicts or confirms a past verdict, restricts its scan to the agent and tools only (the user\'s own compliance is never mechanically inferred, per the explicit 2026-09-20 calibration after the tension with the never-self-adjust rule was flagged), reports zero findings on empty history, and — the whole point of this safer design — never itself changes any threshold or classification, only ever surfacing a proposal for a human/agent to read.');
+  // extractNormativeMarkers()/diffNormativeMarkers() (2026-09-20, safety net for the real CLAUDE.md
+  // prose-tightening pass — a new mechanical guard, consulted-and-confirmed-necessary via
+  // le-coordinateur.mjs::suggestPrestationsForTask() first, since nothing existing covers this).
+  const oldClaude = 'Ceci est une phrase neutre sans rien de spécial.\n\nOn ne doit jamais couper une règle réelle sans vérifier. Le seuil est fixé à 300 lignes pour ce document. Voir Article 7 pour le détail.';
+  const normativeMarkers = extractNormativeMarkers(oldClaude);
+  assert.equal(normativeMarkers.length, 3, 'extractNormativeMarkers() must flag exactly the sentences carrying a normative keyword, a numeric threshold, or an Article/file reference — never the plain neutral sentence with none of the three');
+  assert.ok(normativeMarkers.some((m) => m.includes('jamais')) && normativeMarkers.some((m) => m.includes('300 lignes')) && normativeMarkers.some((m) => m.includes('Article 7')), 'each of the three real marker categories (normative keyword, numeric threshold, Article reference) must actually be represented among the flagged sentences');
+
+  const tightenedSafe = 'On ne doit jamais couper une règle réelle sans vérification. Le seuil reste fixé à 300 lignes pour ce document. Voir Article 7 pour le détail complet.';
+  const safeDiff = diffNormativeMarkers(oldClaude, tightenedSafe);
+  assert.deepEqual(safeDiff.lost, [], 'a genuine prose-tightening pass that only rewords each normative sentence while keeping its real substance (same threshold, same rule, same reference) must report zero lost markers, never a false alarm over mere rephrasing');
+
+  const tightenedUnsafe = 'Ce document reste raisonnablement court. Voir la documentation pour plus de détails.';
+  const unsafeDiff = diffNormativeMarkers(oldClaude, tightenedUnsafe);
+  assert.equal(unsafeDiff.lost.length, 3, 'a pass that silently drops the real "jamais" rule, the real 300-line threshold, and the real Article 7 reference must be caught as exactly three lost markers — the regression this safety net exists to prevent');
+  assert.ok(unsafeDiff.lost.some((m) => m.includes('300 lignes')), 'the lost-marker list must name the actual dropped sentence, never just a bare count with no way to locate what disappeared');
+
+  assert.deepEqual(diffNormativeMarkers('', ''), { oldCount: 0, newCount: 0, lost: [] }, 'a genuinely empty before/after (or a section with no normative content at all) must report an honest all-zero result, never crash or fabricate a finding');
+
+  console.log('Passed: diagnoseAdviceAccuracy() mechanically flags a hard threshold likely unrespected (a same-type confirmed action mere seconds after a "seuil_dur" verdict) and surfaces every genuinely recorded outcome that contradicts or confirms a past verdict, restricts its scan to the agent and tools only (the user\'s own compliance is never mechanically inferred, per the explicit 2026-09-20 calibration after the tension with the never-self-adjust rule was flagged), reports zero findings on empty history, and — the whole point of this safer design — never itself changes any threshold or classification, only ever surfacing a proposal for a human/agent to read; and extractNormativeMarkers()/diffNormativeMarkers() correctly isolate sentences carrying a real normative keyword, numeric threshold, or Article/file reference, tolerate genuine rewording that preserves substance, and catch — by name, not just by count — every real rule silently dropped during a prose-tightening pass, the exact safety net the user asked for before the CLAUDE.md lightening pass.');
 }

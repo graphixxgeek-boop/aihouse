@@ -83,6 +83,74 @@ export const CLAUDE_MD_INCLUDE_EXCLUDE = {
   consequenceQualite: "Un fichier d'instructions trop long fait que l'agent ignore une partie de son contenu — les vraies règles se noient dans le volume. Le garde-fou « jamais entamer la qualité » ne s'oppose donc pas à l'allègement en soi : un fichier correctement allégé sert MIEUX la qualité qu'un fichier bloated, à condition de ne retirer que ce que ce test qualifie réellement.",
 };
 
+// extractNormativeMarkers()/diffNormativeMarkers() (2026-09-20, demande explicite de l'utilisateur,
+// juste avant la 4e passe d'allègement réelle de CLAUDE.md : « vigilance maximale pour ne pas
+// entamer le sens des règles [...] fais intervenir un outil de check si besoin [...] vois avec le
+// coordinateur des outils »). Consultation réelle de LE-COORDINATEUR faite avant d'écrire cette
+// fonction (`suggestPrestationsForTask()`) : aucune prestation existante ne couvre ce besoin précis
+// — la seule correspondance trouvée (THE-DEEP-READER, sur un chevauchement de mots-clés générique
+// "vérifier"/"aucune") ne convient pas : son domaine réel est la conversation/le suivi, jamais un
+// diff de prose d'un document. Un nouveau garde-fou MÉCANIQUE et gratuit est donc justifié (règle
+// anti-duplication respectée : rien d'existant à réutiliser), plutôt qu'un outil agent coûteux
+// (HYPER-SCAN-CHECKPOINT/THE-FINAL-JUDGE) disproportionné pour une vérification ligne à ligne.
+//
+// Principe : repérer, dans le texte AVANT une passe de resserrement, chaque phrase qui porte un
+// contenu normatif (jamais/toujours/obligatoire/interdit/doit, un nombre ou seuil explicite, une
+// référence d'Article ou un chemin de fichier) — puis vérifier qu'une phrase du texte APRÈS
+// partage encore un vrai chevauchement de mots avec elle (jamais une simple présence du marqueur
+// seul, qui laisserait passer un sens complètement changé). Jamais une preuve formelle d'équivalence
+// totale (Article 19 : un vrai jugement humain reste nécessaire) — un filet mécanique qui attrape la
+// régression la plus grave : une règle normative qui disparaît silencieusement pendant un
+// resserrement de prose.
+const NORMATIVE_MARKER_PATTERN = /\b(jamais|toujours|obligatoire|non[- ]négociable|interdit|doit|ne doit)\b/i;
+const NUMERIC_MARKER_PATTERN = /\d+([.,]\d+)?\s?(%|tokens?|lignes?|ms|s|heures?|jours?|minutes?)\b/i;
+const REFERENCE_MARKER_PATTERN = /\b(Article \d+|`[^`]+`)/;
+
+function splitIntoSentences(text) {
+  return String(text ?? "")
+    .split(/\n{2,}/)
+    .flatMap((para) => para.split(/(?<=[.!?])\s+(?=[A-ZÀ-Ý«])/))
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+export function extractNormativeMarkers(text) {
+  return splitIntoSentences(text).filter(
+    (s) => NORMATIVE_MARKER_PATTERN.test(s) || NUMERIC_MARKER_PATTERN.test(s) || REFERENCE_MARKER_PATTERN.test(s),
+  );
+}
+
+function significantWordsOf(sentence) {
+  return new Set(
+    sentence
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .split(/[^a-z0-9]+/)
+      .filter((w) => w.length > 3),
+  );
+}
+
+// Une phrase "survit" si une phrase du nouveau texte partage au moins 60% de ses mots
+// significatifs avec elle — jamais une égalité stricte (le but même du resserrement est de
+// reformuler), jamais un seuil trop bas qui laisserait passer une vraie perte de sens.
+export function diffNormativeMarkers(oldText, newText, { threshold = 0.6 } = {}) {
+  const oldMarkers = extractNormativeMarkers(oldText);
+  const newMarkers = extractNormativeMarkers(newText);
+  const newWordSets = newMarkers.map((s) => significantWordsOf(s));
+  const lost = [];
+  for (const marker of oldMarkers) {
+    const markerWords = significantWordsOf(marker);
+    if (!markerWords.size) continue;
+    const survives = newWordSets.some((wordSet) => {
+      const overlap = [...markerWords].filter((w) => wordSet.has(w)).length;
+      return overlap / markerWords.size >= threshold;
+    });
+    if (!survives) lost.push(marker);
+  }
+  return { oldCount: oldMarkers.length, newCount: newMarkers.length, lost };
+}
+
 // Repère concret et sourcé (enrichissement du 2026-09-20, demande explicite de l'utilisateur :
 // « enrichis encore les connaissances [...] pour les rendre hyperperformant ») : un fichier
 // d'instructions toujours chargé devrait rester sous ~300 lignes, idéalement moins de 100 —
