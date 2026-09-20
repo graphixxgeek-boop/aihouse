@@ -9,8 +9,8 @@ par l'utilisateur lui-même après avoir rejeté une première proposition ("TRI
 |---|---|---|
 | **Léger** | `check-house.mjs` | gratuit |
 | **Standard** (défaut si aucun signal détecté) | `check-house.mjs` + ARGUS + HARMONIA (partie mécanique) | gratuit |
-| **Approfondi** | + `check-spirit.mjs`, `check-profile.mjs` | réel — consulter Smart Conso API avant de lancer |
-| **Exceptionnel** | HYPER-SCAN-CHECKPOINT (bugs cachés) et/ou ALWAYS-NEW-CODE (restructuration), selon le registre détecté | réel — consulter Smart Conso API avant de lancer |
+| **Approfondi** | + `check-spirit.mjs`, `check-profile.mjs`, THE-FINAL-JUDGE (mode léger) | réel — consulter Smart Conso API avant de lancer |
+| **Exceptionnel** | HYPER-SCAN-CHECKPOINT (bugs cachés) et/ou ALWAYS-NEW-CODE (restructuration), selon le registre détecté ; THE-FINAL-JUDGE (mode lourd) pour un avis produit/architecture indépendant | réel — consulter Smart Conso API avant de lancer |
 
 ## Ce qui existe aujourd'hui
 

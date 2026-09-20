@@ -307,11 +307,18 @@ maximiser leurs performances ».)*
 | HYPER-SCAN-CHECKPOINT | orchestrateur exceptionnel, fidélité aux consignes passées (Article 21) | réel (API, en version complète) | sur demande explicite seulement |
 | ALWAYS-NEW-CODE | dette d'organisation — code empilé plutôt que pensé (Article 23) | réel (raisonnement) | niveau « Exceptionnel » de CHECK-LEVEL-TARGET |
 | AXA-CHECK | robustesse/fragilité RÉELLE par fonction (couverture de test V8, zéro nouvelle dépendance) (Article 20) | gratuit | toujours déployé |
+| CLEAN-DIRTY-OLD | stagnation relative du code, délègue le jugement à ARGUS/HARMONIA/ALWAYS-NEW-CODE (Article 20) | gratuit | toujours déployé |
+| EL-PROFESSOR | note qualitative de fidélité à la charte (esprit, naturel, voix, enquête, clarté) d'une simulation ou d'un extrait isolé (Article 18, étape 4bis) | gratuit (relit un texte déjà produit) | après chaque simulation Article 18, ou sur demande pour un extrait isolé |
+| THE-SCREENER | note indicative de qualité graphique (2 captures d'écran max) (Article 18, étape 4bis) | réel (Playwright, léger) | après chaque simulation Article 18, jamais bloquant |
+| THE-FINAL-JUDGE | audit indépendant du code et du produit par un agent réellement séparé, verdict opiniâtre + recommandations | réel (agent séparé, léger ou lourd) | sur demande explicite (moi, l'utilisateur, ou un autre outil), niveaux « Approfondi »/« Exceptionnel » de CHECK-LEVEL-TARGET |
 | LE-COORDINATEUR | agrège en un tableau très court ce que les outils gratuits ci-dessus disent déjà, repère un doublon de vérification récent | gratuit | automatique à chaque changement de code |
 | Smart Breaker (`check-gemini-quota.mjs` + `gemini-key-health.mjs` + `api-providers.mjs` + `lib/gemini-keys.ts`) | blocages de quota/clé Gemini, portée PRODUCTION | gratuit à diagnostiquer | à la demande, ou automatique en production (repli) |
 
 Cette table remplace toute énumération informelle éparpillée dans la conversation : à jour à
 chaque nouvel outil créé (même discipline que la liste des documents de référence, Article 13).
+**Écart trouvé et corrigé le 2026-09-20** : EL-PROFESSOR, THE-SCREENER et CLEAN-DIRTY-OLD manquaient
+de cette table depuis leur création, exactement le genre de dérive doc/doc que l'Article 13 interdit
+— trouvé en ajoutant THE-FINAL-JUDGE, jamais signalé avant.
 
 ### La consultation n'est jamais à sens unique
 
@@ -344,6 +351,60 @@ cahier des charges de départ, au même titre qu'un blueprint séparé ou qu'un 
 jamais un ajout après coup "si besoin". Les questions de calibrage posées à l'utilisateur avant de
 construire un nouvel outil (Article 16) doivent donc systématiquement couvrir ce point : comment
 CET outil interroge-t-il l'agent quand il n'est pas sûr ?
+
+### Trois canaux de consultation pour THE-FINAL-JUDGE (et modèle pour tout futur outil-agent)
+
+*(Ajouté le 2026-09-20, à la demande explicite de l'utilisateur au moment de calibrer THE-FINAL-
+JUDGE : « el professor et the judge peuvent se connecter pour discuter si besoin [...] imagine
+comment les outils peuvent exploiter the final judge [...] je voudrais que the judge puisse etre
+consultable par toi, moi, les outils ». Jamais un bus de messages ou un mécanisme technique
+nouveau — cohérent avec la sobriété déjà en place pour LE-COORDINATEUR — mais trois façons
+distinctes et documentées de le déclencher, pour ne pas laisser un outil coûteux sous-exploité une
+fois construit.)*
+
+- **Moi (l'agent) → THE-FINAL-JUDGE.** Je peux proposer de le déclencher quand je fais face à un
+  vrai fork de conception (pas un bug, un choix réellement ouvert) où un second avis, réellement
+  indépendant du mien, aiderait — jamais de mon initiative seule, toujours en demandant confirmation
+  d'abord (même règle que tout déclenchement de cet outil, cf. `docs/referentiel/the-final-judge.md`).
+- **L'utilisateur → THE-FINAL-JUDGE.** Une demande directe (« lance the-judge sur X ») déclenche
+  l'outil sans détour par une proposition de ma part — l'utilisateur n'a jamais besoin d'attendre que
+  je le suggère.
+- **Les autres outils du paysage → THE-FINAL-JUDGE**, sur des points précis où un second regard
+  vraiment indépendant apporte quelque chose qu'ils ne peuvent pas produire eux-mêmes :
+  - **EL-PROFESSOR → THE-FINAL-JUDGE** : quand l'index d'EL-PROFESSOR montre un thème CHRONIQUEMENT
+    faible sur plusieurs sessions (ex. Voix distinctes, moyenne 7,8/20 sur les 13 premières
+    notations) — EL-PROFESSOR note le SYMPTÔME session par session, jamais la cause structurelle ;
+    un passage THE-FINAL-JUDGE (lourd) peut diagnostiquer si la cause est un défaut de prompt, une
+    architecture insuffisante, ou autre chose, et proposer une vraie direction plutôt qu'un énième
+    correctif ponctuel. THE-FINAL-JUDGE peut lire l'index d'EL-PROFESSOR comme CONTEXTE (où porter
+    l'attention), jamais comme instruction sur le verdict à rendre — sa lecture du texte reste
+    toujours la sienne, indépendante.
+  - **ALWAYS-NEW-CODE → THE-FINAL-JUDGE** : quand une zone de dette d'organisation reste au palier de
+    confiance "probable" (jamais "confirmé"), un second avis réellement indépendant sur la MÊME zone
+    aide à trancher avant de proposer une restructuration à l'utilisateur.
+  - **THE-FINAL-JUDGE → THE-SCREENER** (sens inverse) : pour l'angle visuel, THE-FINAL-JUDGE
+    s'appuie sur les rapports déjà archivés de THE-SCREENER (ou en demande un nouveau s'il n'y en a
+    pas de récent) plutôt que de former son propre avis graphique en double.
+  - **HYPER-SCAN-CHECKPOINT + THE-FINAL-JUDGE, complémentaires, jamais fusionnés** : la double
+    perspective d'HYPER-SCAN-CHECKPOINT vérifie la fidélité à ce qui a déjà été décidé (jamais de
+    nouvelle direction) ; THE-FINAL-JUDGE propose de nouvelles directions (jamais une vérification de
+    fidélité). Un passage exceptionnel complet peut mobiliser les deux, chacun sur son propre mandat,
+    jamais l'un à la place de l'autre.
+  - **CLEAN-DIRTY-OLD → THE-FINAL-JUDGE** (escalade optionnelle, jamais systématique) : quand ses
+    trois questions déléguées (ARGUS/HARMONIA/ALWAYS-NEW-CODE) ne tranchent pas clairement une zone
+    stagnante proche d'un nœud sensible, un avis THE-FINAL-JUDGE peut servir de dernier recours —
+    jamais un lien obligatoire, seulement une option de plus quand les trois premières restent
+    ambiguës.
+- **Le retour d'incertitude vers l'agent (corollaire déjà exigé ci-dessus pour tout nouvel outil)**
+  prend une forme naturelle pour THE-FINAL-JUDGE, qui est lui-même un agent de raisonnement plutôt
+  qu'un script : il signale directement, dans son propre rapport, les points où le contexte du projet
+  lui manque pour trancher — jamais une question posée en direct (il ne tourne pas en session
+  interactive), mais un signalement explicite intégré au livrable.
+- **Rentabilité de l'outil : jamais un one-shot.** Sa valeur ne vient pas d'un seul audit isolé mais
+  de la RÉPÉTITION dans le temps (comparabilité via son registre) et de la MULTIPLICITÉ des points
+  d'entrée ci-dessus — un outil coûteux à chaque déclenchement individuel qui ne serait sollicité
+  qu'une fois n'aurait jamais amorti son intérêt. C'est pour ça que les trois canaux ci-dessus
+  existent dès sa conception, pas ajoutés après coup.
 
 ### Aucun de ces outils n'est autonome — l'agent reste toujours celui qui finalise
 

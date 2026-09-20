@@ -1077,6 +1077,22 @@ par IA. Jamais les critères exacts ni le registre propres à ce projet, qui viv
 Distinct d'un éventuel futur outil de gestion de la refonte graphique elle-même — décision
 explicite de l'utilisateur de garder les deux séparés.
 
+## THE-FINAL-JUDGE — blueprint exportable
+
+`docs/the-final-judge-blueprint.md` documente l'ARCHITECTURE d'un audit indépendant de code et de
+produit (2026-09-20, demandé explicitement par l'utilisateur) — un AGENT RÉELLEMENT SÉPARÉ, sans
+mémoire de l'historique du projet, qui incarne un professionnel senior au regard critique envisageant
+sérieusement de reprendre le projet, et rend un verdict opiniâtre (positifs, points à améliorer,
+pistes de développement) — jamais une vérification de fidélité aux décisions déjà prises (l'inverse
+exact de la double perspective d'HYPER-SCAN-CHECKPOINT), jamais un score calibré (l'inverse d'EL-
+PROFESSOR), jamais un exécutant (conseiller uniquement, aucun code écrit par lui-même). Deux modes
+(léger/lourd), la même dualité dev/production que THE-SCREENER, un mandat explicite incluant les
+risques de sécurité/production. Intégré à CHECK-LEVEL-TARGET (léger = "Approfondi", lourd =
+"Exceptionnel"). Jamais les critères exacts ni le registre propres à ce projet, qui vivent dans
+`docs/referentiel/the-final-judge.md` (instanciation) et `docs/the-final-judge/` (dossier de
+rapports) — ses conclusions retenues après réconciliation rejoignent les registres existants
+(`points-fragiles.md`, `correctifs-a-revalider.md`, la feuille de route), jamais un rapport isolé.
+
 ## Référentiel technique — la référence à jour
 
 - `docs/referentiel/principes.md` — les règles invariantes du comportement de la maison, telles
@@ -1159,6 +1175,13 @@ explicite de l'utilisateur de garder les deux séparés.
   Playwright (`scripts/the-screener-capture.mjs`, testé et fonctionnel), les 2 déclencheurs de
   capture, le registre (`docs/the-screener/`). Cf. `docs/the-screener-blueprint.md` pour le principe
   générique.
+- `docs/referentiel/the-final-judge.md` (2026-09-20) — instanciation de THE-FINAL-JUDGE pour ce
+  projet : le personnage FIXE donné à l'agent séparé (texte reproduit mot pour mot à chaque appel,
+  jamais reformulé — garde-fou non négociable contre toute dérive vers un ton neutre), les deux
+  modes (léger/lourd), la dualité dev/production, le mandat sécurité/production explicite, les trois
+  canaux de consultation (moi, l'utilisateur, les autres outils — détaillés dans
+  `docs/regles-de-travail.md` §7ter), le registre (`docs/the-final-judge/`). Cf.
+  `docs/the-final-judge-blueprint.md` pour le principe générique.
 
 Ces documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
 vérité (leur nombre exact a varié au fil des chantiers — se référer à la liste ci-dessus plutôt
