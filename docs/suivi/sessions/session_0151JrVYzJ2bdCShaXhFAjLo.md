@@ -171,6 +171,8 @@ tâches manquantes ajoutées ci-dessous.)*
 
 | 173 | 2026-09-20T13:55Z | Charte / Outillage de travail | THE-DEEP-READER complété : script mécanique dédié + KPI (2 manques comblés) | important | Suite à la question de l'utilisateur « the-deep-redaer a son propre blueprint, son propre dossier local avec index, ses propres kpi et son propre test ? » : audit honnête point par point, 2 vrais manques trouvés (KPI absent, pas de garde-fou mécanique dédié comme the-final-judge.mjs). Réponse « Compléter maintenant » choisie. `scripts/the-deep-reader.mjs` créé (extractPersonaBlock/detectGenericReport/rereadPerformance, même patron qu'HYPER-SCAN-CHECKPOINT pour le KPI), testé (127/127), `lib/reference.ts` Version 148 | terminée — fidèle |
 
+| 174 | 2026-09-20T14:00Z | Méthode de travail / Suivi | État des lieux des tâches demandé — signalé comme jamais répondu malgré plusieurs demandes antérieures | important | Demande explicite de l'utilisateur : « fais moi un etat des lieux des taches (cette demande a ete formulée plusieurs fois et n'a jamais été répondu : est-ce que la tache est bien repertoriée ?) ». Vrai écart de méthode : aucune trace d'une réponse formelle à un état des lieux avant cette ligne — traité immédiatement dans cette même réponse en utilisant l'outil mécanique déjà existant (`node scripts/check-suivi-fidelity.mjs`, sortie temps réel terminé/en cours/ouvert), plutôt qu'une reconstruction manuelle. Trouvaille annexe remontée par le même outil : `scripts/_hook-selftest.mjs`, cité comme fichier créé dans une tâche fermée, introuvable sur disque | terminée — fidèle |
+
 ## Notes
 
 - Les tâches terminées avant la création de ce système (chantier 2 du tableau de bord, full_sim10,
