@@ -185,3 +185,51 @@ session et signale toute ligne dont le statut commence par `terminée` sans jama
 ni `écart` — une clôture qui a sauté l'étape ci-dessus. Gratuit, zéro appel API, intégré à la veille
 hebdomadaire du réseau d'outils (`docs/regles-de-travail.md` §7ter) plutôt qu'un rappel séparé de
 plus à retenir.
+
+## Relecture intégrale de conversation — procédure exceptionnelle de rattrapage
+
+*(Ajoutée le 2026-09-20, à la demande explicite de l'utilisateur, après que deux relectures
+manuelles ponctuelles ce soir aient chacune trouvé de vrais écarts (interventions jamais tracées, ou
+tracées comme une simple décision jamais suivie d'exécution) : « j'ai l'impression que des choses
+sont encore oubliées. Mets en place un process pour ça [...] doit se déclencher sur demande ». Ce
+garde-fou-ci ne remplace jamais la discipline "au fil de l'eau" du point 0 ci-dessus — il existe
+justement parce que cette discipline peut échouer, et qu'il faut un filet de rattrapage.)*
+
+**Déclencheurs, jamais automatique** (ce serait un coût réel à chaque tour, disproportionné — cf.
+Article 3bis de CLAUDE.md, test d'utilité) :
+1. L'utilisateur le demande explicitement (« relis toute la conversation », « vérifie que rien n'est
+   oublié », ou tout équivalent).
+2. L'agent lui-même remarque un signe concret d'un suivi probablement incomplet en travaillant sur
+   autre chose (ex. une décision de calibrage ancienne sans ligne `terminée — fidèle` correspondante,
+   un écart trouvé sur un sujet qui en révèle un autre voisin non traité) — proposé à l'utilisateur,
+   jamais lancé sans un signal réel qui le justifie.
+
+**Procédure, en 5 étapes :**
+1. **Fixer la portée réelle de relecture** : toute la conversation en cours depuis son tout début —
+   y compris, si la session a été compactée entre-temps, le résumé de compaction fourni dans le
+   contexte (en particulier sa section qui liste les messages utilisateur verbatim, quand elle
+   existe). Jamais seulement depuis le dernier point de contrôle ou la dernière tâche fermée.
+2. **Extraire CHAQUE intervention utilisateur** qui porte une idée — une demande, une question, une
+   remarque, même secondaire dans un message qui en contient plusieurs (cf. la précision du point 0
+   ci-dessus sur les réponses groupées) — jamais seulement les messages qui ressemblent à une
+   consigne formelle.
+3. **Chercher la trace de chacune** dans `docs/suivi/sessions/<session>.md` (par mot-clé/sujet,
+   jamais une simple impression de mémoire). Pour chaque trace trouvée, vérifier qu'elle reflète un
+   TRAVAIL RÉEL vérifiable (fichier modifié, test ajouté, commit identifiable) — pas seulement
+   qu'une décision a été prise (cf. le point 2 ci-dessus).
+4. **Toute intervention sans trace, ou dont la trace ne couvre qu'une décision jamais exécutée**,
+   reçoit une nouvelle tâche complète (liste de tâches technique + ligne `docs/suivi/`), avec tout
+   le contexte nécessaire retrouvé dans la conversation — jamais une simple mention sans détail
+   exploitable plus tard.
+5. **Rapporter clairement le résultat à l'utilisateur** : combien d'interventions ont été relues,
+   combien de vrais écarts ont été trouvés (avec leur détail), et confirmer explicitement ce qui
+   était déjà bien tracé (pour ne jamais laisser croire que tout était perdu quand ce n'est pas le
+   cas — cf. l'audit du 2026-09-20 où la plupart des chantiers en cours étaient correctement en
+   file, pas oubliés).
+
+**Limite honnête, à ne jamais masquer** : cette procédure dépend de ce qui est encore lisible dans le
+contexte de la conversation (le résumé de compaction ne garde qu'un extrait, jamais l'intégralité
+verbatim de tout ce qui a précédé) — une relecture ne peut donc jamais garantir à 100% qu'aucune
+intervention plus ancienne n'a été perdue avant la première compaction. Dit honnêtement à
+l'utilisateur si une portion de l'historique n'est plus accessible, jamais présenté comme un
+rattrapage complet quand ce n'en est qu'un partiel.

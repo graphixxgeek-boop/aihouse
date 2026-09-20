@@ -17,8 +17,9 @@
 // du même jour : « un test est-il prévu dédié au tableau de bord ? ») — sans ce test, un bug de
 // formule (constaté deux fois pendant la construction de cette version : une regex qui ratait deux
 // blocs de test, une suite de tests qui dépassait 100% de robustesse) ne serait détecté qu'à la
-// lecture humaine du rapport, jamais avant. Le KPI de couverture lui-même compte combien des 5
-// familles ont produit une vraie mesure cette fois (jamais une estimation) ET si ce test dédié est
+// lecture humaine du rapport, jamais avant. Le KPI de couverture lui-même compte combien des 6
+// familles (Smart Conso ajoutée le 2026-09-20, écart réel comblé) ont produit une vraie mesure
+// cette fois (jamais une estimation) ET si ce test dédié est
 // vert — les deux ensemble disent si ce tableau de bord est digne de confiance MAINTENANT, pas
 // seulement s'il existe.
 //
@@ -33,6 +34,8 @@ import {tmpdir} from 'node:os';
 import {collectCoverage, robustnessScore} from './axa-check.mjs';
 import {recordOutcomeByLabel} from './gemini-key-health.mjs';
 import {renderHtmlReport} from './html-report.mjs';
+import {burstComplianceScore} from './smart-conso-api.mjs';
+import {computeAdoptionKpi, checkKnowledgeFreshness} from './smart-conso-token.mjs';
 
 const root = new URL('..', import.meta.url).pathname;
 const path = (...parts) => join(root, ...parts);
@@ -91,9 +94,33 @@ export function replayabilityScore(m) {
     return (m.distinctBonuses / m.totalBonusTypes) * 100;
 }
 
-// dashboardCoverageScore : combien des 5 familles ont produit une vraie mesure CETTE exécution
-// (jamais un chiffre par défaut ni une estimation) — un tableau de bord qui n'affiche que 2/5
-// familles réelles n'est pas "en panne", mais son utilisateur doit le savoir avant de faire
+// Famille KPI "Smart Conso" (2026-09-20, écart réel trouvé et comblé : une réponse de calibrage
+// déjà donnée par l'utilisateur — « taux de respect de leur consigne : par moi, par toi, par les
+// outils. KPI des tokens/API économisées grâce à l'outil + efficacité des process actuels + un
+// indice de fraîcheur aussi » — n'avait jamais été construite, confondue à tort avec un correctif
+// voisin mais distinct (rendre le détail KPI déjà calculé visible en HTML). Même patron que
+// codeHealthScore ci-dessus : moyenne des composantes RÉELLEMENT mesurables cette fois, une
+// composante absente est exclue plutôt que de faire chuter la moyenne à zéro.
+// - complianceScore (Smart Conso API, `burstComplianceScore`) : la SEULE composante de ce paysage
+//   backée par une preuve indépendante du vrai trafic API — jamais un biais de survivance, contrairement
+//   à l'historique de SMART-CONSO-TOKEN qui ne voit que les consultations réellement faites.
+// - adoptionReductionPct (SMART-CONSO-TOKEN, `computeAdoptionKpi`) : la réduction moyenne réelle des
+//   propositions déjà appliquées — l'efficacité réelle des process actuels, jamais un nombre de scans.
+// - freshnessOk (SMART-CONSO-TOKEN, `checkKnowledgeFreshness`) : la connaissance des schémas coûteux
+//   est-elle encore valide pour le modèle courant.
+export function smartConsoScore(m) {
+    const parts = [];
+    if (isFiniteNumber(m?.complianceScore)) parts.push(m.complianceScore);
+    if (isFiniteNumber(m?.adoptionReductionPct)) parts.push(Math.min(100, Math.max(0, m.adoptionReductionPct)));
+    if (typeof m?.freshnessOk === 'boolean') parts.push(m.freshnessOk ? 100 : 0);
+    if (!parts.length) return undefined;
+    return parts.reduce((a, b) => a + b, 0) / parts.length;
+}
+
+// dashboardCoverageScore : combien des familles (6 pour ce projet, cf. tableau-de-bord.md) ont
+// produit une vraie mesure CETTE exécution (jamais un chiffre par défaut ni une estimation) — un
+// tableau de bord qui n'affiche que 2 familles réelles sur le total n'est pas "en panne", mais son
+// utilisateur doit le savoir avant de faire
 // confiance à la synthèse globale. Un score de famille invalide (NaN/Infinity, ne devrait jamais
 // arriver vu les gardes ci-dessus, mais vérifié quand même) compte comme NON mesuré, jamais comme
 // une mesure douteuse acceptée telle quelle.
@@ -129,6 +156,7 @@ export const KPI_HISTORY_COLUMNS = [
     'robustesse_code_pct', 'qualite_pct', 'coherence_pct', 'rejouabilite_pct', 'couverture_tdb_pct',
     'tsc_erreurs', 'points_fragiles', 'sb_tours', 'sb_tentatives', 'sb_succes', 'sb_429', 'sb_503', 'sb_401_403',
     'anti_echo_interventions', 'truncation_lia', 'truncation_noe', 'bonus_distincts', 'bonus_total',
+    'smart_conso_pct',
 ];
 // csvRowFor : fonction pure (testée) qui construit une ligne à partir des données du rapport —
 // une valeur absente (famille non mesurée cette fois) reste une cellule VIDE, jamais "undefined"
@@ -141,6 +169,7 @@ export function csvRowFor(run, d) {
         cell(d.tscErrors), cell(d.fragilePoints), cell(d.sbTurns), cell(d.sbAttempts), cell(d.sbSuccesses),
         cell(d.sb429), cell(d.sb503), cell(d.sb401403), cell(d.antiEchoInterventions),
         cell(d.truncationLia), cell(d.truncationNoe), cell(d.bonusDistinct), cell(d.bonusTotal),
+        cell(d.smartConso),
     ].join(',');
 }
 export function appendHistoryRow(csvRow) {
@@ -168,6 +197,7 @@ function synthesisRows(d) {
         ['Qualité de sortie', cellPct(d.quality)],
         ['Cohérence logique', cellPct(d.coherence)],
         ['Rejouabilité (partiel)', cellPct(d.replay)],
+        ['Smart Conso', cellPct(d.smartConso)],
         ['Couverture du tableau de bord', pct(d.coverage.score)],
     ];
 }
@@ -231,6 +261,13 @@ export function buildKpiFullReportHtml(run, full) {
         ['Bonus distincts vus (12 derniers tirages)', `${full.replayDetail.distinctBonuses} / ${full.replayDetail.totalBonusTypes}`],
     ] : undefined;
 
+    const smartConsoRows = full.smartConsoDetail ? [
+        ['Conformité API (salves confirmées avant d\'agir)', full.smartConsoDetail.complianceDetail ? `${pct(full.smartConsoDetail.complianceDetail.score)} (${full.smartConsoDetail.complianceDetail.confirmed}/${full.smartConsoDetail.complianceDetail.total} salve(s))` : 'N/A (aucune salve détectée)'],
+        ['Propositions SMART-CONSO-TOKEN appliquées', String(full.smartConsoDetail.adoptionDetail?.propositionsAppliquees ?? 0)],
+        ['Réduction moyenne mesurée', full.smartConsoDetail.adoptionDetail?.reductionMoyennePct !== undefined ? pct(full.smartConsoDetail.adoptionDetail.reductionMoyennePct) : 'N/A'],
+        ['Fraîcheur des schémas connus', full.smartConsoDetail.freshnessMessage ?? 'N/A'],
+    ] : undefined;
+
     return renderHtmlReport({
         title: 'Rapport KPI complet — Maison IA vivante',
         subtitle: 'Tableau de bord interne, détail complet (cf. docs/referentiel/tableau-de-bord.md) — chaque chiffre déjà calculé par kpi-report.mjs, jamais un second calcul ni une estimation pour l’occasion.',
@@ -250,6 +287,9 @@ export function buildKpiFullReportHtml(run, full) {
             { type: 'heading', text: 'Rejouabilité — détail' },
             ...(replayRows ? [{ type: 'table', headers: ['Mesure', 'Valeur'], rows: replayRows }] : [{ type: 'paragraph', text: 'Pas de mesure disponible cette fois.' }]),
             { type: 'note', text: 'Limite honnête (rejouabilité) : bonusLog ne garde que les 12 derniers tirages — ce chiffre reflète la diversité RÉCENTE, pas garantie sur toute la session si plus de 12 tirages ont eu lieu.' },
+            { type: 'heading', text: 'Smart Conso — détail' },
+            ...(smartConsoRows ? [{ type: 'table', headers: ['Mesure', 'Valeur'], rows: smartConsoRows }] : [{ type: 'paragraph', text: 'Pas de mesure disponible cette fois.' }]),
+            { type: 'note', text: 'Limite honnête (Smart Conso) : la conformité API se mesure sur un vrai trafic indépendant (.gemini-key-health.json), mais l\'adoption SMART-CONSO-TOKEN ne peut refléter que les consultations RÉELLEMENT faites — une non-consultation ne laisse aucune trace de son propre côté.' },
         ],
         footer: `Historique complet (toutes les exécutions, tous les chiffres) : ${KPI_HISTORY_PATH}.`,
     });
@@ -428,6 +468,36 @@ function reportReplayability(m) {
     return score;
 }
 
+// Charge les 3 fichiers locaux du paysage Smart Conso (2026-09-20, écart réel comblé : famille KPI
+// "Smart Conso" jamais construite malgré une réponse de calibrage déjà donnée) — jamais un second
+// mécanisme de lecture/écriture, ces fichiers restent la propriété exclusive de
+// smart-conso-api.mjs/smart-conso-token.mjs/gemini-key-health.mjs (règle anti-doublon, §7ter) ;
+// kpi-report.mjs se contente de les LIRE, en I/O pure comme le reste de ce fichier, puis appelle
+// les fonctions déjà exportées et déjà testées ailleurs. Absence de fichier = valeurs par défaut
+// honnêtes (jamais une erreur qui ferait planter tout le rapport pour un outil pas encore utilisé).
+function loadSmartConsoMetrics(identity = 'claude-sonnet-5') {
+    const healthData = existsSync(path('.gemini-key-health.json')) ? JSON.parse(readFileSync(path('.gemini-key-health.json'), 'utf8')) : { keys: {} };
+    const sessionLog = existsSync(path('.smart-conso-session.json')) ? JSON.parse(readFileSync(path('.smart-conso-session.json'), 'utf8')) : { actions: [] };
+    const tokenHistory = existsSync(path('.smart-conso-token-history.json')) ? JSON.parse(readFileSync(path('.smart-conso-token-history.json'), 'utf8')) : { actions: [] };
+    const compliance = burstComplianceScore(healthData, sessionLog);
+    const adoption = computeAdoptionKpi(tokenHistory);
+    const freshness = checkKnowledgeFreshness(identity);
+    return {
+        complianceScore: compliance?.score, complianceDetail: compliance,
+        adoptionReductionPct: adoption.reductionMoyennePct, adoptionDetail: adoption,
+        freshnessOk: freshness.fraiche, freshnessMessage: freshness.message,
+    };
+}
+
+function reportSmartConso(m) {
+    section('Smart Conso — détail (Smart Conso API + SMART-CONSO-TOKEN)');
+    console.log(`Conformité API (salves confirmées avant d'agir) : ${m.complianceDetail ? `${pct(m.complianceDetail.score)} (${m.complianceDetail.confirmed}/${m.complianceDetail.total} salve(s))` : 'N/A (aucune salve détectée dans .gemini-key-health.json cette fois).'}`);
+    console.log(`Adoption SMART-CONSO-TOKEN : ${m.adoptionDetail.propositionsAppliquees} proposition(s) réellement appliquée(s)${m.adoptionDetail.reductionMoyennePct !== undefined ? `, réduction moyenne mesurée ${pct(m.adoptionDetail.reductionMoyennePct)}` : ''}.`);
+    console.log(`Fraîcheur des schémas connus : ${m.freshnessMessage}`);
+    if (m.complianceDetail && m.complianceDetail.score < 100) console.log('→ Action : au moins une salve d\'appels réels n\'a pas été précédée d\'une consultation confirmée — relire .gemini-key-health.json/.smart-conso-session.json pour identifier le moment exact avant de conclure à un oubli.');
+    if (m.freshnessOk === false) console.log('→ Action : le registre de schémas coûteux n\'a jamais été validé pour l\'identité de modèle actuelle — une nouvelle recherche est nécessaire avant de lui faire confiance.');
+}
+
 async function main() {
     console.log('Tableau de bord — rapport KPI complet (cf. docs/referentiel/tableau-de-bord.md pour les règles).');
 
@@ -462,11 +532,17 @@ async function main() {
     section('KPI global — Performance runtime');
     console.log(performance === undefined ? 'N/A cette fois.' : `${pct(performance)} (identique au KPI en tête de rapport — cette famille EST le Smart Breaker aujourd’hui).`);
 
-    const coverage = dashboardCoverageScore([performance, health?.overall, quality, coherence, replay]);
+    const smartConsoMetrics = loadSmartConsoMetrics();
+    reportSmartConso(smartConsoMetrics);
+    const smartConso = smartConsoScore(smartConsoMetrics);
+    section('KPI global — Smart Conso');
+    console.log(smartConso === undefined ? 'N/A cette fois (aucune composante mesurable).' : `${pct(smartConso)} (moyenne des composantes réellement mesurées cette fois — jamais un chiffre fabriqué pour une composante absente).`);
+
+    const coverage = dashboardCoverageScore([performance, health?.overall, quality, coherence, replay, smartConso]);
     section('KPI général — Couverture du tableau de bord lui-même (à surveiller en priorité)');
-    console.log(`${pct(coverage.score)} des 5 familles ont produit une vraie mesure cette exécution (${coverage.measured}/${coverage.total}).`);
-    if (coverage.score < 100) console.log('→ Action : une ou plusieurs familles n’ont renvoyé aucune mesure — vérifier si c’est normal (serveur non lancé, aucun tour joué cette session) ou si un branchement du tableau de bord lui-même est cassé, avant de faire confiance à la synthèse ci-dessous.');
-    else console.log('→ Lecture : les 5 familles répondent — la synthèse ci-dessous reflète bien l’état réel du projet, pas un tableau de bord partiellement éteint.');
+    console.log(`${pct(coverage.score)} des 6 familles ont produit une vraie mesure cette exécution (${coverage.measured}/${coverage.total}).`);
+    if (coverage.score < 100) console.log('→ Action : une ou plusieurs familles n’ont renvoyé aucune mesure — vérifier si c’est normal (serveur non lancé, aucun tour joué cette session, aucun historique Smart Conso encore accumulé) ou si un branchement du tableau de bord lui-même est cassé, avant de faire confiance à la synthèse ci-dessous.');
+    else console.log('→ Lecture : les 6 familles répondent — la synthèse ci-dessous reflète bien l’état réel du projet, pas un tableau de bord partiellement éteint.');
 
     section('Synthèse');
     const alerts = [];
@@ -475,6 +551,8 @@ async function main() {
     if (live?.geminiKeyMetrics?.invalidFailures) alerts.push(`${live.geminiKeyMetrics.invalidFailures} clé(s) Gemini invalide(s) détectée(s)`);
     if (quality !== undefined && quality < 90) alerts.push(`Qualité à ${pct(quality)}`);
     if (coherence !== undefined && coherence < 90) alerts.push(`Cohérence logique à ${pct(coherence)}`);
+    if (smartConsoMetrics.complianceDetail && smartConsoMetrics.complianceDetail.score < 100) alerts.push(`${smartConsoMetrics.complianceDetail.total - smartConsoMetrics.complianceDetail.confirmed} salve(s) API non confirmée(s)`);
+    if (smartConsoMetrics.freshnessOk === false) alerts.push('registre Smart Conso non validé pour ce modèle');
     if (coverage.score < 100) alerts.push(`couverture du tableau de bord à ${pct(coverage.score)} (${coverage.measured}/${coverage.total} familles mesurées)`);
     if (alerts.length) {
         console.log(`🚨 ALERTE TABLEAU DE BORD — ${alerts.join(', ')}.`);
@@ -500,6 +578,7 @@ async function main() {
         truncationLia: live?.qualityMetrics?.truncationInterventions?.[1],
         truncationNoe: live?.qualityMetrics?.truncationInterventions?.[2],
         bonusDistinct: live?.replayabilityMetrics?.distinctBonuses, bonusTotal: live?.replayabilityMetrics?.totalBonusTypes,
+        smartConso,
     });
     appendHistoryRow(row);
 
@@ -513,14 +592,16 @@ async function main() {
     console.log(`| Qualité de sortie | ${quality === undefined ? 'N/A' : pct(quality)} |`);
     console.log(`| Cohérence logique | ${coherence === undefined ? 'N/A' : pct(coherence)} |`);
     console.log(`| Rejouabilité (partiel) | ${replay === undefined ? 'N/A' : pct(replay)} |`);
+    console.log(`| Smart Conso | ${smartConso === undefined ? 'N/A' : pct(smartConso)} |`);
     console.log(`| Couverture du tableau de bord | ${pct(coverage.score)} |`);
     console.log(alerts.length ? `\n🚨 Points d'attention : ${alerts.join(', ')}.` : '\nAucun point d’attention — tout est vert.');
     console.log(`\nHistorique complet (toutes les exécutions, tous les chiffres) : ${KPI_HISTORY_PATH} — à envoyer en pièce jointe, jamais collé dans la conversation.`);
 
     writeKpiHtml(run, {
-        performance, improvement, health, quality, coherence, replay, coverage, alerts,
+        performance, improvement, health, quality, coherence, replay, smartConso, coverage, alerts,
         tscErrors, tests, fragilePoints, stats, capabilities: SMART_BREAKER_CAPABILITIES,
         smartBreakerDetail: live?.geminiKeyMetrics, qualityDetail: live?.qualityMetrics, replayDetail: live?.replayabilityMetrics,
+        smartConsoDetail: smartConsoMetrics,
     });
     console.log(`Copie de présentation HTML régénérée : ${KPI_HTML_PATH} (jamais committée — cf. .gitignore).`);
 }
