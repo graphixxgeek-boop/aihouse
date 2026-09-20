@@ -32,6 +32,7 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {collectCoverage, robustnessScore} from './axa-check.mjs';
 import {recordOutcomeByLabel} from './gemini-key-health.mjs';
+import {renderHtmlReport} from './html-report.mjs';
 
 const root = new URL('..', import.meta.url).pathname;
 const path = (...parts) => join(root, ...parts);
@@ -146,6 +147,45 @@ export function appendHistoryRow(csvRow) {
     const full = path(KPI_HISTORY_PATH);
     if (!existsSync(full)) writeFileSync(full, KPI_HISTORY_COLUMNS.join(',') + '\n');
     appendFileSync(full, csvRow + '\n');
+}
+
+// Gabarit HTML de remise (2026-09-19, scripts/html-report.mjs, cf. docs/regles-de-travail.md pour
+// la décision de calibrage) : rend la MÊME synthèse compacte que celle déjà loggée ci-dessus, pour
+// une remise à l'utilisateur plus agréable qu'un tableau markdown collé en texte — jamais un
+// second calcul, jamais une donnée supplémentaire par rapport à la synthèse déjà existante.
+// L'historique CSV (`KPI_HISTORY_PATH`, committé) reste la seule version de travail relue par
+// d'autres outils ; ce fichier HTML (`KPI_HTML_PATH`, jamais committé, cf. .gitignore) est
+// entièrement régénéré à chaque exécution, une simple copie de présentation jetable.
+export const KPI_HTML_PATH = '.kpi-report-latest.html';
+export function buildKpiSynthesisHtml(run, d) {
+    const cellPct = v => (v === undefined ? 'N/A' : pct(v));
+    return renderHtmlReport({
+        title: 'Rapport KPI — Maison IA vivante',
+        subtitle: 'Synthèse compacte du tableau de bord interne (cf. docs/referentiel/tableau-de-bord.md).',
+        dateLabel: `Run : ${run}`,
+        blocks: [
+            {
+                type: 'table',
+                headers: ['Famille', 'KPI global'],
+                rows: [
+                    ['🔧 Smart Breaker — performance', cellPct(d.performance)],
+                    ['📈 Smart Breaker — améliorations', d.improvement === undefined ? 'N/A' : pct(d.improvement.score)],
+                    ['Robustesse du code', d.health === undefined ? 'N/A' : pct(d.health.overall)],
+                    ['Qualité de sortie', cellPct(d.quality)],
+                    ['Cohérence logique', cellPct(d.coherence)],
+                    ['Rejouabilité (partiel)', cellPct(d.replay)],
+                    ['Couverture du tableau de bord', pct(d.coverage.score)],
+                ],
+            },
+            d.alerts.length
+                ? { type: 'note', text: `🚨 Points d'attention : ${d.alerts.join(', ')}.` }
+                : { type: 'paragraph', text: 'Aucun point d’attention — tout est vert.' },
+        ],
+        footer: `Historique complet (toutes les exécutions, tous les chiffres) : ${KPI_HISTORY_PATH}.`,
+    });
+}
+export function writeKpiHtml(run, d) {
+    writeFileSync(path(KPI_HTML_PATH), buildKpiSynthesisHtml(run, d));
 }
 
 // --- Liste de référence des capacités du Smart Breaker ------------------------------------------
@@ -398,6 +438,9 @@ async function main() {
     console.log(`| Couverture du tableau de bord | ${pct(coverage.score)} |`);
     console.log(alerts.length ? `\n🚨 Points d'attention : ${alerts.join(', ')}.` : '\nAucun point d’attention — tout est vert.');
     console.log(`\nHistorique complet (toutes les exécutions, tous les chiffres) : ${KPI_HISTORY_PATH} — à envoyer en pièce jointe, jamais collé dans la conversation.`);
+
+    writeKpiHtml(run, { performance, improvement, health, quality, coherence, replay, coverage, alerts });
+    console.log(`Copie de présentation HTML régénérée : ${KPI_HTML_PATH} (jamais committée — cf. .gitignore).`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

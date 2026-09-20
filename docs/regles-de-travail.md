@@ -755,7 +755,10 @@ registre — cette section est sa documentation complète.
   produit JAMAIS le fichier de référence, seulement une copie de présentation générée au moment de
   la remise. Zéro risque pour les parseurs existants.
 - **Point de départ** : construire ce modèle réutilisable D'ABORD, avant de l'appliquer à un
-  rapport précis — pas encore fait à ce jour, une décision volontairement laissée pour la suite.
+  rapport précis. **Première application réelle (2026-09-20, la nuit même)** : `kpi-report.mjs`
+  exporte désormais `buildKpiSynthesisHtml()`/`writeKpiHtml()`, qui rendent la synthèse compacte
+  déjà loggée en HTML dans `.kpi-report-latest.html` (jamais committé) — zéro second calcul, zéro
+  donnée nouvelle, juste une présentation.
 
 **Vocabulaire de blocs, jamais un document HTML réinventé à chaque fois** : `heading`, `paragraph`,
 `note` (encadré discret), `list`, `table` — puis trois types ajoutés le même jour en réponse à une
