@@ -25,6 +25,7 @@
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
+import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -84,11 +85,38 @@ export const CIRCLE_ITEMS = [
   },
   {
     id: "always-new-code-signal",
-    theme: "KPI & scans",
+    theme: "Qualité du code",
     label: "Signaler la zone la plus négligée (ALWAYS-NEW-CODE)",
     cout: "gratuit — lecture de la mémoire de couverture déjà accumulée, jamais le vrai zoom (ça, c'est un raisonnement coûteux à part, cf. Article 23)",
     tokensEstimes: "faible — lecture d'un seul fichier d'index compact",
     execute: "Lire docs/always-new-code/index.md et reporter honnêtement la zone la plus négligée (ou jamais examinée) — proposer, jamais lancer, le vrai zoom profond correspondant, qui reste un raisonnement coûteux nécessitant sa propre consultation SMART-CONSO-TOKEN.",
+  },
+  // clean-dirty-old-signal (2026-09-20, idée proposée par l'agent, validée par l'utilisateur : « ajoute
+  // les nouvelles idées au catalogue »). Même patron que le signal ALWAYS-NEW-CODE ci-dessus, mais
+  // CLEAN-DIRTY-OLD n'a pas d'équivalent "mémoire de couverture par zone" à lire — son propre index
+  // (docs/clean-dirty-old/index.md) journalise seulement les PASSAGES déjà effectués. Le signal ici
+  // est donc honnêtement plus modeste : depuis quand ce carnet n'a-t-il pas été relu, jamais une
+  // fausse "zone la plus négligée" inventée sans le vrai balayage (git log par fichier) que
+  // CLEAN-DIRTY-OLD effectue réellement une fois lancé.
+  {
+    id: "clean-dirty-old-signal",
+    theme: "Qualité du code",
+    label: "Vérifier depuis quand CLEAN-DIRTY-OLD n'a pas été consulté",
+    cout: "gratuit — lecture du registre de passages déjà accumulé, jamais le vrai balayage (ça, c'est le travail réel de CLEAN-DIRTY-OLD une fois lancé)",
+    tokensEstimes: "faible — lecture d'un seul fichier d'index compact",
+    execute: "Lire docs/clean-dirty-old/index.md et reporter honnêtement depuis quand aucun passage n'a été journalisé — proposer, jamais lancer seul, un vrai passage CLEAN-DIRTY-OLD si le carnet est resté silencieux trop longtemps.",
+  },
+  // html-wiring-check (2026-09-20, même origine). Vérifie mécaniquement (grep de import, jamais une
+  // exécution) que les outils censés produire une copie HTML (Article 13, gabarit html-report.mjs)
+  // le font bien réellement — trouvaille concrète cette nuit : seul kpi-report.mjs l'utilisait,
+  // el-professor.mjs/the-final-judge.mjs/the-screener-capture.mjs pas encore câblés.
+  {
+    id: "html-wiring-check",
+    theme: "Qualité du code",
+    label: "Vérifier que tous les rapports produisent bien leur copie HTML",
+    cout: "gratuit — lecture du code source de chaque script, aucun appel API",
+    tokensEstimes: "faible — quelques fichiers courts à relire",
+    execute: "Vérifier que el-professor.mjs, the-final-judge.mjs et the-screener-capture.mjs importent bien html-report.mjs (cf. checkHtmlWiring()) — câbler ceux qui manquent encore, jamais laisser un rapport sortir en texte brut alors que la règle demande du HTML.",
   },
   {
     id: "correctifs",
@@ -97,6 +125,18 @@ export const CIRCLE_ITEMS = [
     cout: "gratuit — lecture, aucun appel API",
     tokensEstimes: "modéré — lecture de deux carnets (points-fragiles.md, correctifs-a-revalider.md)",
     execute: "Relire docs/simulations/correctifs-a-revalider.md et docs/referentiel/points-fragiles.md — retirer ce qui est confirmé stable (2 simulations propres consécutives), signaler ce qui traîne sans jamais avancer.",
+  },
+  // suivi-open-tasks-signal (2026-09-20, même origine que les deux items ci-dessus). Réutilise
+  // categorizeAllSessions() de check-suivi-fidelity.mjs (jamais un second parseur de docs/suivi/) —
+  // signale honnêtement la tâche "ouverte"/"en cours" la plus ancienne, jamais une liste complète
+  // (ça, c'est le travail de la relecture des référentiels ci-dessus).
+  {
+    id: "suivi-open-tasks-signal",
+    theme: "Suivi & référentiels",
+    label: "Signaler la tâche ouverte la plus ancienne (docs/suivi)",
+    cout: "gratuit — lecture des fichiers de session déjà écrits, aucun appel API",
+    tokensEstimes: "faible — parcours mécanique de fichiers déjà en mémoire de travail",
+    execute: "Lire docs/suivi/sessions/*.md via categorizeAllSessions() et reporter la tâche ouverte/en cours la plus ancienne — jamais juger seul si elle doit être close, juste signaler qu'elle traîne.",
   },
   {
     id: "smart-conso-api-scan",
@@ -175,15 +215,38 @@ export function daysSince(dateStr, now = Date.now()) {
   return days >= 0 ? days : undefined;
 }
 
+// checkHtmlWiring() (2026-09-20) : vérifie mécaniquement, par une simple recherche de texte dans
+// le CODE SOURCE déjà en mémoire (jamais une exécution, jamais un appel réseau), qu'un script cite
+// bien html-report.mjs — le seul signal fiable qu'il produit réellement sa copie HTML plutôt que du
+// texte brut. `sources` : { "nom-du-script.mjs": "contenu source" }.
+export function checkHtmlWiring(sources) {
+  return Object.entries(sources || {}).map(([script, content]) => ({ script, wired: /html-report\.mjs/.test(content || "") }));
+}
+
+// oldestOpenTaskDate() (2026-09-20) : lit directement le résultat déjà calculé par
+// categorizeAllSessions() (check-suivi-fidelity.mjs, jamais un second parseur de docs/suivi/) et
+// retient la date la plus ancienne parmi les tâches "ouverte"/"en cours" — la colonne horodatage
+// est la 2e cellule de chaque ligne (cells[1]), cf. le format réel de docs/suivi/sessions/*.md.
+export function oldestOpenTaskDate(categorized) {
+  const dates = [...(categorized?.ouverte ?? []), ...(categorized?.enCours ?? [])]
+    .map((e) => e.cells?.[1])
+    .filter(Boolean);
+  if (!dates.length) return undefined;
+  return dates.reduce((min, d) => (d < min ? d : min));
+}
+
 // Agrège un signal de fraîcheur honnête pour les items qui en ont un (profil, KPI, zone
 // ALWAYS-NEW-CODE la plus négligée) — jamais pour "relecture référentiel" ou "correctifs", qui
 // n'ont aucune date de référence mécanique fiable (Article 13 elle-même n'impose aucune cadence
 // fixe, cf. CLAUDE.md — un signal inventé ici serait moins honnête que son absence).
-export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText } = {}, now = Date.now()) {
+export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized } = {}, now = Date.now()) {
   const profilLast = mostRecentDate(profilIndexText);
   const kpiLast = mostRecentDate(kpiIndexText);
   const smartConsoApiLast = mostRecentDate(smartConsoApiIndexText);
   const smartConsoTokenLast = mostRecentDate(smartConsoTokenIndexText);
+  const cleanDirtyOldLast = mostRecentDate(cleanDirtyOldIndexText);
+  const wiring = htmlWiringSources ? checkHtmlWiring(htmlWiringSources) : undefined;
+  const oldestOpen = suiviCategorized ? oldestOpenTaskDate(suiviCategorized) : undefined;
   const coverage = parseCoverage(alwaysNewCodeIndexText || "");
   const zoneRec = recommendZone(THEMES, coverage, undefined, new Date(now));
 
@@ -192,6 +255,13 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCode
     if (item.id === "kpi") return { ...item, staleness: kpiLast ? `${daysSince(kpiLast, now)} jour(s) depuis le dernier rapport archivé` : "jamais fait" };
     if (item.id === "smart-conso-api-scan") return { ...item, staleness: smartConsoApiLast ? `${daysSince(smartConsoApiLast, now)} jour(s) depuis la dernière décision archivée` : "jamais fait" };
     if (item.id === "smart-conso-token-scan") return { ...item, staleness: smartConsoTokenLast ? `${daysSince(smartConsoTokenLast, now)} jour(s) depuis le dernier scan archivé` : "jamais fait" };
+    if (item.id === "clean-dirty-old-signal") return { ...item, staleness: cleanDirtyOldLast ? `${daysSince(cleanDirtyOldLast, now)} jour(s) depuis le dernier passage journalisé` : "jamais fait" };
+    if (item.id === "html-wiring-check") {
+      if (!wiring) return { ...item, staleness: "pas de signal de fraîcheur mécanique disponible" };
+      const missing = wiring.filter((w) => !w.wired).map((w) => w.script);
+      return { ...item, staleness: missing.length ? `${missing.length} script(s) pas encore câblé(s) : ${missing.join(", ")}` : "tous câblés" };
+    }
+    if (item.id === "suivi-open-tasks-signal") return { ...item, staleness: oldestOpen ? `tâche ouverte depuis ${daysSince(oldestOpen, now)} jour(s)` : "aucune tâche ouverte connue" };
     if (item.id === "always-new-code-signal") {
       if (!zoneRec) return { ...item, staleness: "aucun thème connu" };
       const zoneDate = coverage[zoneRec.zone];
@@ -208,7 +278,7 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCode
 // serait plus déroutant qu'utile) — THE-FINAL-JUDGE reste dans son propre thème "Audit lourd",
 // systématiquement en dernier, cohérent avec la convention déjà actée (toujours en dernière
 // position de la fenêtre). Chaque thème tient dans un seul bloc de question (≤4 options).
-export const THEME_ORDER = ["Suivi & référentiels", "KPI & scans", "Qualité & fun", "Audit lourd"];
+export const THEME_ORDER = ["Suivi & référentiels", "KPI & scans", "Qualité du code", "Qualité & fun", "Audit lourd"];
 export function groupCircleReportByTheme(report) {
   const groups = THEME_ORDER.map((theme) => ({ theme, items: report.filter((r) => r.theme === theme) }));
   const untagged = report.filter((r) => !THEME_ORDER.includes(r.theme));
@@ -269,7 +339,14 @@ function main() {
   const alwaysNewCodeIndexText = read("docs/always-new-code/index.md");
   const smartConsoApiIndexText = read("docs/smart-conso-api/index.md");
   const smartConsoTokenIndexText = read("docs/smart-conso-token/index.md");
-  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText });
+  const cleanDirtyOldIndexText = read("docs/clean-dirty-old/index.md");
+  const htmlWiringSources = {
+    "el-professor.mjs": read("scripts/el-professor.mjs"),
+    "the-final-judge.mjs": read("scripts/the-final-judge.mjs"),
+    "the-screener-capture.mjs": read("scripts/the-screener-capture.mjs"),
+  };
+  const suiviCategorized = categorizeAllSessions();
+  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized });
   console.log("=== CIRCLE-TASKS — Ronde périodique ===\n");
   console.log(formatCircleMenu(report));
   console.log("\nJamais exécuté seul : l'agent qui pilote ouvre une fenêtre à cocher pour choisir précisément quoi lancer.");
