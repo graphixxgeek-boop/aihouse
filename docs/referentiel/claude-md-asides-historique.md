@@ -21,6 +21,17 @@ verbatim.)*
 > *(Validée avec l'utilisateur le 2026-09-16, complétée le 2026-09-17. Article 0 prime sur tous les
 > autres.)*
 
+## Article 0 — « Précisions du 2026-09-16 »
+
+> *(En réponse à des questions posées explicitement pour lever toute ambiguïté sur ce que « l'esprit »
+> recouvre concrètement.)*
+
+## Article 0 — « Précisions du 2026-09-18 »
+
+> *(En réponse à des questions posées explicitement après une simulation intégrale rejouée de bout en
+> bout — l'esprit sonnait déjà nettement mieux, ces réponses calibrent ce qui restait flou sur les
+> limites hautes : colère réelle, vulgarité, vulnérabilité, respect, menaces.)*
+
 ## Article 8 — « Frontière avec Smart Conso API »
 
 > *(ajoutée le 2026-09-19, à la demande explicite de l'utilisateur : « est-ce que smart-conso-api

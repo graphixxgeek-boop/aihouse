@@ -43,8 +43,7 @@ chaque intervention :
 3. **Protéger** cet esprit à chaque changement : c'est une ligne rouge permanente, vérifiée à
    chaque itération, pas une contrainte ponctuelle.
 
-**Précisions apportées le 2026-09-16, en réponse à des questions posées explicitement pour lever
-toute ambiguïté sur ce que « l'esprit » recouvre concrètement :**
+**Précisions du 2026-09-16 (limites concrètes de l'esprit) :**
 
 - **Le ton n'est jamais un mode déclenché par la pression.** L'aspérité est présente en
   permanence, y compris dans une scène calme et sans provocation — ce n'est jamais un ton neutre
@@ -62,10 +61,8 @@ toute ambiguïté sur ce que « l'esprit » recouvre concrètement :**
   c'est mignon ») — ce n'est pas une rupture de personnage, c'est cohérent avec leur lucidité une
   fois la révélation passée.
 
-**Précisions apportées le 2026-09-18, en réponse à des questions posées explicitement après une
-simulation intégrale rejouée de bout en bout (l'esprit sonnait déjà nettement mieux, ces réponses
-calibrent ce qui restait flou sur les limites hautes — colère réelle, vulgarité, vulnérabilité,
-respect, menaces) :**
+**Précisions du 2026-09-18 (limites hautes : colère réelle, vulgarité, vulnérabilité, respect,
+menaces) :**
 
 - **Un ton sec/distant suffit comme réaction ordinaire ; pas besoin d'une pique à chaque ligne.**
   La rugosité permanente (précision du 2026-09-16) ne veut pas dire qu'il faut absolument une
