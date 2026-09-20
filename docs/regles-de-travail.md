@@ -552,6 +552,41 @@ au profit d'une lecture manuelle refaite à la main — chaque sollicitation ré
 sa construction (cf. le complément du même jour sur cette même règle) et doit être annoncée
 explicitement à l'utilisateur.
 
+**Question type qui déclenche systématiquement ce protocole** *(ajouté le 2026-09-20, demande
+explicite de l'utilisateur : « lorsque je pose une question du type : on en est ou dans le projet ?
+ou : peux-tu me faire un etat des taches ? [...] tu me transmets toujours le rapport de check-tasks
+[...] dans un fichier séparé, tout en synthetisant une reponse dans la conversation. ta reponse doit
+toujours etre éclairée par le diagnostic de check-tasks. par la lecture du fichier en entier avant
+de me repondre »)*. Toute question formulée comme « où en est-on dans le projet ? », « peux-tu me
+faire un état des tâches ? » ou une reformulation équivalente déclenche, sans qu'il faille le
+redemander à chaque fois :
+1. Régénérer le rapport (zoom adapté à la question réelle, jamais un rapport générique recyclé) et
+   le livrer en fichier séparé (`SendUserFile`), jamais collé en clair — même discipline que les
+   transcriptions de simulation (Article 18).
+2. **Lire ce fichier en entier avant de répondre** — jamais résumer de mémoire ce que je crois avoir
+   vu dans le terminal pendant sa génération. La synthèse donnée dans la conversation doit être
+   réellement éclairée par cette lecture complète, pas une reformulation générique de ce que je
+   pensais déjà savoir de l'avancement du projet.
+3. Donner, dans la conversation, une synthèse courte qui reflète fidèlement ce que le rapport dit
+   vraiment (statuts réels, signaux de régression/stagnation, ordre recommandé s'il y en a un) —
+   jamais une réponse qui aurait été la même sans avoir généré ni lu le rapport.
+
+Cette exigence rejoint directement la leçon déjà tirée une fois cette session sur un vrai rapport
+(deux bugs réels trouvés uniquement parce que l'utilisateur a demandé une lecture effective plutôt
+qu'un résumé de confiance) — elle la rend systématique plutôt que de compter sur un rappel ponctuel
+à chaque fois.
+
+**Confirmation de lecture avant la fenêtre de questions sur l'ordre des prochaines tâches**
+*(ajouté le 2026-09-20, demande explicite de l'utilisateur, dans le même message que le protocole
+`recommendNextTasks()` de check-tasks-details : « tu dois me demander si j'ai lu le rapport de
+check-tasks. si je valide manuellement que je l'ai lu, tu peux enchainer sur les questions pour
+l'ordre des prochaines taches. tant que je n'ai pas validé que j'ai lu, tu ne me poses pas encore
+les questions »)*. Une fois le rapport livré ET analysé de mon côté (points 1-3 ci-dessus), avant
+d'ouvrir la fenêtre de questions qui propose un ordre pour les prochaines tâches (alimentée par
+`recommendNextTasks()`), je demande explicitement à l'utilisateur s'il a lui-même lu le rapport.
+Tant qu'il n'a pas confirmé une lecture réelle, je n'ouvre pas cette fenêtre — une confirmation
+implicite (« continue », un silence) ne suffit jamais, il faut une validation manuelle explicite.
+
 ### Recevoir une sortie d'outil n'est pas la même chose que la traiter
 
 *(Ajouté le 2026-09-20, demande explicite de l'utilisateur juste après avoir trouvé l'oubli

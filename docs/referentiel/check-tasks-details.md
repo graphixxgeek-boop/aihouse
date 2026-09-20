@@ -22,8 +22,10 @@ question dédiée (Article 16) :
 
 Lit `docs/suivi/sessions/*.md` via `categorizeAllSessions()` (déjà exporté par
 `check-suivi-fidelity.mjs` — aucun second parseur de tableau markdown). Colonnes utilisées :
-N°, Sujet, Sous-sujet, Sensibilité, Statut — toutes déjà présentes dans chaque ligne, cf.
-`docs/systeme-de-suivi.md`.
+N°, Horodatage, Sujet, Sous-sujet, Sensibilité, Détail, Statut — toutes déjà présentes dans chaque
+ligne, cf. `docs/systeme-de-suivi.md`. Le champ Détail (2026-09-20) sert notamment à
+`recommendNextTasks()` ci-dessous pour repérer une priorité explicitement exprimée par
+l'utilisateur.
 
 **Lecture seule, non négociable** (choix explicite de l'utilisateur, Article 16 : « le suivi des
 tâches [...] est sa mère »). `docs/suivi/` reste l'unique source de vérité, modifiée uniquement par
@@ -47,6 +49,60 @@ instantané archivé :
 - **Stagnation** : une tâche ouverte identique dans les 2 derniers instantanés consécutifs (donc
   présente dans au moins 3 générations de suite en comptant la courante) — signal d'oubli possible,
   jamais une certitude, à vérifier comme toute trouvaille ARGUS/ALWAYS-NEW-CODE.
+
+## Contexte d'onboarding et badge (`buildRealOnboardingContext()`)
+
+Avant chaque génération, `main()` construit un contexte réel (CLAUDE.md, la table des outils de
+`docs/regles-de-travail.md`, l'arborescence de `docs/`, le texte de `docs/suivi/sessions/`, les
+déviations connues comme celle de THE-DEEP-READER) et le passe à `suggestToolsForOpenTasks()` —
+zéro coût API, uniquement des lectures de fichiers déjà sur disque. Trouvaille réelle du
+2026-09-20 : check-tasks-details.mjs était l'UNIQUE appelant réel de `suggestPrestationsForTask()`
+en production et ne passait jamais ce contexte — le badge « 🎖️ Membre certifié »/« ⚠️ Pas encore
+certifié » (`checkAgentOnboarding()`, `le-coordinateur.mjs`) n'était donc jamais réellement vérifié
+nulle part malgré son propre chokepoint déjà construit. Corrigé le même jour : quand une prestation
+suggérée pointe vers un Agent sans badge, la ligne du rapport porte désormais un avertissement
+visible (`⚠️ ...`).
+
+## Recommandation de l'ordre des prochaines tâches (`recommendNextTasks()`)
+
+Ajouté le 2026-09-20, demande explicite de l'utilisateur : « check tasks recommande en fin de
+rapport l'ordre des 4 prochaines tâches [...] d'après des critères pertinents et bien définis ».
+Toujours calculé sur TOUTES les tâches ouvertes du projet, jamais seulement celles du zoom affiché
+— un jugement de priorité project-wide. Cinq critères combinés en un score, chaque tâche portant
+ses raisons en clair (`reasons`) plutôt qu'un chiffre opaque :
+1. **Sensibilité déclarée** dans le suivi (`critique`/`important`/`normal`).
+2. **Stagnation** — calculée en amont par `compareSnapshots()`/`consecutiveOpenStreak()`, un vrai
+   décompte de rapports consécutifs, jamais un simple booléen.
+3. **Ancienneté** de la tâche (`daysSince()`, réutilisé de `circle-tasks.mjs`).
+4. **Priorité explicite** exprimée par l'utilisateur dans le texte du suivi (keyword-match, jamais
+   une compréhension d'intention).
+5. **Corroboration par les autres vigies** — ajoutée en cours de construction, le même jour,
+   question explicite de l'utilisateur sur la vraie compréhension de l'outil (« comment bien
+   cabler cet outil avec toi pour que tu en profites quand tu en as besoin ? ») : lecture SEULE des
+   registres déjà existants (`docs/argus/index.md`, `docs/harmonia/index.md`,
+   `docs/axa-check/index.md`, `docs/clean-dirty-old/index.md`, via `loadRegistryFindings()`/
+   `parseRegistryTable()`) et rapprochement de mots-clés (`corroborateWithRegistries()`, même seuil
+   et même tokenizer que `suggestPrestationsForTask()`, réutilisé tel quel).
+
+**Affiné le même jour** (« l'echelle dvrait s'affiner [...] permettre une meilleure comparaisone
+netre les taches ») : trois de ces cinq critères passent d'un forfait fixe à un calcul progressif —
+stagnation (score selon le streak réel, plafonné à 6), corroboration (score selon le nombre de
+vigies + la force du rapprochement), priorité explicite (deux paliers : « priorité absolue » pèse
+plus qu'un simple « en priorité »/« priorité explicite »). La sensibilité déclarée et l'ancienneté
+restent inchangées — décision explicite de l'utilisateur de ne PAS toucher aux 4 cases de
+sensibilité elles-mêmes : des centaines de tâches déjà loguées dans `docs/suivi/` portent déjà l'un
+des 3 mots réels (`autre` n'est qu'un panier de secours en code, jamais un 4e niveau voulu), et la
+doctrine déjà actée du projet (« Fidélité au prompt — portée non rétroactive »,
+`docs/systeme-de-suivi.md`) interdit de réécrire une classification passée de mémoire — un
+affinage produirait un suivi à deux résolutions pour toujours, jamais un gain qui justifie ce coût
+tant que les trois autres affinages suffisent à départager les tâches.
+
+**Jamais une décision automatique.** Une tâche fermée ou sans aucun signal réel sur les 5 critères
+est exclue plutôt que forcée dans la liste. Le protocole de lecture (`docs/regles-de-travail.md`,
+section « Moi (l'agent) → check-tasks-details ») exige que le rapport soit toujours livré en
+fichier séparé ET lu en entier avant toute réponse, et que l'utilisateur confirme explicitement
+avoir lu le rapport avant que l'agent n'ouvre la fenêtre de questions qui propose cet ordre — la
+décision finale sur l'ordre réel des prochaines tâches reste toujours celle de l'utilisateur.
 
 ## Rendu et registre
 

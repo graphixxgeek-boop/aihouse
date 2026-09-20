@@ -921,7 +921,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 162'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 163'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3333,7 +3333,104 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const stagnated = compareSnapshots([snap1, snap2], [{ n: 10, sousSujet: 'X', statusKey: 'ouverte' }, { n: 11, sousSujet: 'Y', statusKey: 'terminee' }]);
   assert.equal(stagnated.stagnant.length, 1, 'a task open and identical across the two most recent snapshots plus the current one must be flagged as stagnant exactly once, never for a task that has since closed');
   assert.equal(stagnated.stagnant[0].n, 10, 'the stagnation signal must name the real still-open task, never a task that has already progressed');
+  assert.equal(stagnated.stagnant[0].streak, 3, 'a task open in exactly the last 2 archived snapshots plus the current report must carry a real streak of 3, never a bare boolean flag (2026-09-20, user request: a finer scale for comparing tasks)');
+  // Une série plus longue (4 instantanés archivés + le rapport courant = 5) doit produire un
+  // streak réellement plus grand, jamais plafonné en amont à 2/3 comme avant ce changement.
+  const snap0 = { at: 't0', rows: [{ n: 10, statusKey: 'ouverte' }] };
+  const snap3 = { at: 't3', rows: [{ n: 10, statusKey: 'ouverte' }] };
+  const longStagnation = compareSnapshots([snap0, snap1, snap2, snap3], [{ n: 10, sousSujet: 'X', statusKey: 'ouverte' }]);
+  assert.equal(longStagnation.stagnant[0].streak, 5, 'consecutiveOpenStreak() must count the real full run of consecutive open appearances (here 4 archived + the current report), never stop early at the minimum-3 threshold used only to decide whether to flag stagnation at all');
   assert.deepEqual(compareSnapshots([], rows), { regressions: [], stagnant: [] }, 'with no prior snapshot history at all (the very first run), both checks must report an honest empty result, never crash for lack of history to compare against');
+
+  // Corroboration par les autres vigies (2026-09-20, demande explicite de l'utilisateur : « je veux
+  // m'assurer que check-tasks a une vraie comprehension de ou on en est dans le projet [...]
+  // comment bien cabler cet outil avec toi ? »). parseRegistryTable() doit repérer la colonne "X
+  // confirmée(s)" par son intitulé, quel que soit sa position (les 4 registres n'ont pas le même
+  // nombre de colonnes), et ignorer une ligne qui ne confirme rien de réel.
+  const { parseRegistryTable, loadRegistryFindings, corroborateWithRegistries, recommendNextTasks } = ctd;
+  const argusTable = [
+    '| Date | Rapport | Trouvailles confirmées | Notes |',
+    '|---|---|---|---|',
+    '| 2026-09-19 | scan.txt | trottoir pathable jamais implémenté | Premier balayage |',
+  ].join('\n');
+  const parsedArgus = parseRegistryTable(argusTable);
+  assert.equal(parsedArgus.length, 1, 'parseRegistryTable() must extract exactly one real finding row from a genuine ARGUS-shaped table, locating the "confirmée" column by its header rather than a fixed index');
+  assert.equal(parsedArgus[0].date, '2026-09-19', 'the extracted row must carry the real date from the "Date" column, located the same header-driven way');
+  assert.ok(parsedArgus[0].text.includes('trottoir'), 'the extracted row must carry the real confirmed-finding text verbatim, never truncated or paraphrased');
+  const axaCheckTable = [
+    '| Date | Fonctions analysées | Robustesse globale | Trouvailles confirmées | Notes |',
+    '|---|---|---|---|---|',
+    '| 2026-09-19 | 146 | 99% | `wait` jamais exécutée | Premier passage |',
+  ].join('\n');
+  assert.equal(parseRegistryTable(axaCheckTable)[0].text, '`wait` jamais exécutée', 'parseRegistryTable() must locate the "confirmée" column correctly even when it sits at a different position than in the ARGUS table (5 columns instead of 4), never assume a fixed column index shared by every registry');
+  const emptyRegistryTable = [
+    '| Date | Zone signalée | Trouvailles confirmées | Rapport | Notes |',
+    '|---|---|---|---|---|',
+    '| 2026-09-19 | (aucune) | 0 | — | rien signalé |',
+  ].join('\n');
+  assert.deepEqual(parseRegistryTable(emptyRegistryTable), [], 'a row whose "confirmée" column reads "0" must never be treated as a real finding — matching it against a task would be a pure false positive, not a real corroboration');
+  assert.deepEqual(parseRegistryTable('pas une table du tout'), [], 'text with no real markdown table must return an honest empty list, never crash trying to find a header row that does not exist');
+
+  const fakeRegistryFiles = { 'docs/argus/index.md': argusTable, 'docs/harmonia/index.md': axaCheckTable };
+  const findings = loadRegistryFindings('/fake-root', (p) => fakeRegistryFiles[p.replace('/fake-root/', '')], (p) => p.replace('/fake-root/', '') in fakeRegistryFiles);
+  assert.equal(findings.length, 2, 'loadRegistryFindings() must aggregate real findings across every registry file that actually exists on disk, skipping the two that do not in this fake root, never crashing on a missing file');
+  assert.ok(findings.some((f) => f.source === 'ARGUS') && findings.some((f) => f.source === 'HARMONIA'), 'each aggregated finding must carry the real registry it came from, so a task can be told WHICH vigie corroborates it, never an anonymous match');
+
+  const corroborated = corroborateWithRegistries({ sujet: 'Refonte graphique', sousSujet: 'Donner un vrai trottoir 3D pathable', detail: '' }, findings);
+  assert.equal(corroborated.length, 1, 'corroborateWithRegistries() must match a task against a real registry finding only when at least 2 significant words genuinely overlap (here "trottoir"), the same honest threshold as suggestPrestationsForTask(), never a single-word coincidence');
+  assert.equal(corroborated[0].source, 'ARGUS', 'the corroboration must name the real vigie that actually confirmed something related, never a generic "some tool agrees"');
+  assert.deepEqual(corroborateWithRegistries({ sujet: 'Cuisine', sousSujet: 'Rien à voir', detail: '' }, findings), [], 'a task with no genuine keyword overlap with any registry finding must produce zero corroborations, never a forced or vague match');
+  assert.deepEqual(corroborateWithRegistries({ sujet: 'X', sousSujet: 'Y', detail: '' }, []), [], 'with an empty findings list (e.g. no registry file exists yet), corroboration must return an honest empty result rather than crash');
+
+  // recommendNextTasks() (2026-09-20, demande explicite de l'utilisateur : « check tasks recommande
+  // en fin de rapport l'ordre des 4 prochaines tâches [...] d'après des critères pertinents et bien
+  // définis »), affiné le même jour sur trois des cinq critères (« l'echelle dvrait s'affiner
+  // [...] permettre une meilleure comparaisone netre les taches ») : chaque critère est vérifié
+  // séparément, puis leur combinaison, jamais un seul test fourre-tout qui masquerait un critère
+  // cassé derrière un score global qui semble plausible.
+  const now = new Date('2026-09-20T12:00:00Z').getTime();
+  const critiqueOld = { n: 1, sousSujet: 'Tâche critique ancienne', sensibilite: 'critique', detail: '', statusKey: 'ouverte', horodatage: '2026-09-01-1200' };
+  const normalFresh = { n: 2, sousSujet: 'Tâche normale récente', sensibilite: 'normal', detail: '', statusKey: 'ouverte', horodatage: '2026-09-20-1100' };
+  const closedRow = { n: 3, sousSujet: 'Tâche déjà fermée', sensibilite: 'critique', detail: '', statusKey: 'terminee', horodatage: '2026-09-01-1200' };
+  const noSignalRow = { n: 4, sousSujet: 'Tâche sans aucun signal', sensibilite: 'autre', detail: '', statusKey: 'ouverte', horodatage: undefined };
+  const basic = recommendNextTasks([critiqueOld, normalFresh, closedRow, noSignalRow], { now });
+  assert.ok(!basic.some((r) => r.n === 3), 'recommendNextTasks() must never propose an already-closed task, whatever its sensitivity or age — only genuinely open tasks are real candidates');
+  assert.ok(!basic.some((r) => r.n === 4), 'a task with zero real signal on any of the 5 criteria must be excluded entirely, never padded into the list with an empty or fabricated reason');
+  assert.ok(basic[0].n === 1, 'a critical, weeks-old task must outrank a normal, same-day task — the combination of sensitivity + age must genuinely drive the ranking, not just list order');
+  assert.ok(basic[0].reasons.some((r) => r.includes('sensibilité déclarée : critique')), 'the top recommendation must carry an honest, readable reason naming its real declared sensitivity, never a bare opaque number');
+
+  // Stagnation progressive : une tâche stagnante depuis 8 rapports doit dépasser une stagnante
+  // depuis 3, jamais le même forfait fixe pour les deux (2026-09-20, l'affinage demandé).
+  const rowA = { n: 5, sousSujet: 'Stagnante depuis longtemps', sensibilite: 'normal', detail: '', statusKey: 'ouverte', horodatage: undefined };
+  const rowB = { n: 6, sousSujet: 'Stagnante depuis peu', sensibilite: 'normal', detail: '', statusKey: 'ouverte', horodatage: undefined };
+  const stagnationRanked = recommendNextTasks([rowA, rowB], { now, stagnant: [{ n: 5, sousSujet: rowA.sousSujet, streak: 8 }, { n: 6, sousSujet: rowB.sousSujet, streak: 3 }] });
+  assert.ok(stagnationRanked[0].n === 5, 'a task stagnant for 8 consecutive reports must score higher than one stagnant for only 3 — the streak must genuinely drive the score, never a flat bonus regardless of how long the stagnation has lasted');
+  assert.ok(stagnationRanked[0].reasons.some((r) => r.includes('8 rapports')), 'the reason must state the real streak count, never a vague "stagnante depuis plusieurs rapports" that hides the actual number');
+  const cappedStagnation = recommendNextTasks([{ ...rowA, n: 7 }], { now, stagnant: [{ n: 7, sousSujet: rowA.sousSujet, streak: 500 }] });
+  assert.ok(cappedStagnation[0].score <= 6 + 3, 'an absurdly large streak (e.g. a data anomaly) must still be capped, never let a single criterion alone dwarf every other real signal in the score');
+
+  // Priorité explicite à deux paliers : "priorité absolue" doit peser plus lourd qu'un simple "en
+  // priorité" (2026-09-20, affinage demandé, calibré explicitement par l'utilisateur).
+  const absolutePriorityRow = { n: 8, sousSujet: 'Urgence vraie', sensibilite: 'normal', detail: 'priorité absolue pour la suite', statusKey: 'ouverte', horodatage: undefined };
+  const explicitPriorityRow = { n: 9, sousSujet: 'Demande notée en priorité', sensibilite: 'normal', detail: 'à faire en priorité la prochaine fois', statusKey: 'ouverte', horodatage: undefined };
+  const priorityRanked = recommendNextTasks([absolutePriorityRow, explicitPriorityRow], { now });
+  assert.ok(priorityRanked[0].n === 8, 'a task marked "priorité absolue" must outrank one merely marked "en priorité" — the two formulations must never score identically now that they are meant to express different urgency');
+  assert.ok(priorityRanked[0].reasons.some((r) => r.includes('absolue')), 'the top reason must name the real "priorité absolue" wording actually found in the suivi, never a generic priority label that hides which tier matched');
+
+  // Corroboration progressive : une tâche confirmée par 2 vigies distinctes doit dépasser une
+  // confirmée par une seule (2026-09-20, affinage demandé).
+  const doubleCorroborated = { n: 10, sousSujet: 'Trottoir 3D pathable jardin chemin', sensibilite: 'normal', detail: '', statusKey: 'ouverte', horodatage: undefined };
+  const singleCorroborated = { n: 11, sousSujet: 'Trottoir 3D pathable', sensibilite: 'normal', detail: '', statusKey: 'ouverte', horodatage: undefined };
+  const twoRegistryFindings = [
+    { source: 'ARGUS', date: '2026-09-19', text: 'trottoir pathable jamais implémenté' },
+    { source: 'HARMONIA', date: '2026-09-19', text: 'trottoir jardin incohérent chemin' },
+  ];
+  const corroborationRanked = recommendNextTasks([doubleCorroborated, singleCorroborated], { now, findings: twoRegistryFindings });
+  assert.ok(corroborationRanked.find((r) => r.n === 10).score > corroborationRanked.find((r) => r.n === 11).score, 'a task genuinely matching findings from 2 distinct vigies must outscore one matching only 1, never the same flat bonus regardless of how many independent tools actually corroborate it');
+  assert.ok(corroborationRanked[0].reasons.some((r) => r.includes('2 vigie')), 'the reason must state the real number of corroborating vigies, never hide that count behind a vague "corroborée" with no real number');
+
+  const limited = recommendNextTasks([critiqueOld, normalFresh, { ...critiqueOld, n: 20 }, { ...critiqueOld, n: 21 }, { ...critiqueOld, n: 22 }], { now, limit: 2 });
+  assert.equal(limited.length, 2, 'recommendNextTasks() must honor a real limit parameter, never returning more candidates than explicitly requested even when more genuinely qualify');
 
   const report = buildReport({ zoom: 'projet_entier', format: 'arborescence', allRows: rows, history: [] });
   assert.ok(report.blocks.some((b) => b.type === 'tree'), 'format "arborescence" must include a real tree block in the report, never silently fall back to the flat list');
@@ -3343,6 +3440,16 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(listReport.meta.count, 2, 'zoom "en_cours" inside buildReport() must apply the same real filtering as filterByZoom() directly, never a second diverging implementation');
   assert.throws(() => buildReport({ zoom: 'nope', allRows: rows }), /zoom inconnu/, 'buildReport() must reject an unknown zoom rather than silently defaulting');
   assert.throws(() => buildReport({ format: 'nope', allRows: rows }), /format inconnu/, 'buildReport() must equally reject an unknown format rather than silently defaulting');
+
+  // recommendNextTasks() intégré dans buildReport() (2026-09-20) : calculé sur TOUTES les tâches
+  // ouvertes du projet (project-wide), jamais seulement celles du zoom affiché, et injecté à la
+  // fois dans les blocs affichés et dans meta pour que l'agent puisse le lire mécaniquement.
+  const reportWithRecommendation = buildReport({ zoom: 'en_cours', format: 'liste', allRows: rows, history: [], registryFindings: [] });
+  assert.ok(reportWithRecommendation.meta.recommended.length > 0, 'buildReport() must surface a real recommended-order list in meta whenever at least one open task carries a genuine signal — here #10 (sensibilité "important") and #11 (sensibilité "normal") both genuinely qualify');
+  assert.ok(reportWithRecommendation.meta.recommended.every((r) => r.reasons.length > 0), 'every task surfaced through buildReport() must carry its own real reasons, never an entry justified only by having made the cut');
+  assert.ok(reportWithRecommendation.blocks.some((b) => b.type === 'heading' && /Ordre recommandé/.test(b.text)), 'when a real recommendation exists, buildReport() must include its own visible heading in the report, never a silent meta-only field the reader would never see');
+  const reportWithoutSignal = buildReport({ zoom: 'en_cours', format: 'liste', allRows: [{ n: 99, sousSujet: 'Rien de signalé', sensibilite: 'autre', detail: '', statusKey: 'ouverte', horodatage: undefined }], history: [], registryFindings: [] });
+  assert.ok(!reportWithoutSignal.blocks.some((b) => b.type === 'heading' && /Ordre recommandé/.test(b.text)), 'when zero open task carries any real signal, the recommendation heading must never appear — an honest empty report, never a heading over an empty or fabricated list');
 
   // appendSnapshot()/loadSnapshotHistory() — instantané réel sur disque, dans un dossier temporaire
   // jamais le vrai docs/check-tasks-details/ du projet, pour ne jamais polluer son historique réel
@@ -3368,7 +3475,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(loadSnapshotHistory(tmpFile).length, 2, 'a genuinely different row-set (even a single status change) must still append a real new line — the dedup guard must never swallow a real change');
   fs.rmSync(tmpDir, { recursive: true, force: true });
 
-  console.log('Passed: check-tasks-details.mjs stays strictly read-only on docs/suivi/ while flattening every real session row (loadAllTaskRows), splits Sujet on the existing Thème/Sous-thème convention rather than inventing a new taxonomy (splitSujet), filters correctly by all three zoom levels including a real task-number-based "elargi" window (filterByZoom), builds an honest theme>sous-thème>tâche tree with real counts and leaf details (buildTree), a status-grouped list that never shows an empty group (buildListBlocks), a real coordinator-consultation signal per open task with no forced guesses (suggestToolsForOpenTasks) — now also carrying a visible badge warning when an onboardingContext is supplied and the matched tool is uncertified, and staying silent without one (full backward compatibility) — an honest regression/stagnation cross-check against its own snapshot history including the very first run with no history at all (compareSnapshots), a full report assembly that genuinely differs by format and applies the same zoom filtering as the standalone function (buildReport), a real, append-only, on-disk snapshot history (appendSnapshot/loadSnapshotHistory) tested in an isolated temp directory, never touching the project\'s real registry, and — the 2026-09-20 badge wiring — buildRealOnboardingContext() correctly builds the real badge context (CLAUDE.md, the tools table, docs/ paths, docs/suivi/ text, THE-DEEP-READER\'s declared deviation) with the right "docs/"-prefixed paths, closing a real path-slicing bug found while wiring this into check-tasks-details.mjs\'s own real production call — the one and only place this whole badge system was ever actually invoked before this fix.');
+  console.log('Passed: check-tasks-details.mjs stays strictly read-only on docs/suivi/ while flattening every real session row (loadAllTaskRows), splits Sujet on the existing Thème/Sous-thème convention rather than inventing a new taxonomy (splitSujet), filters correctly by all three zoom levels including a real task-number-based "elargi" window (filterByZoom), builds an honest theme>sous-thème>tâche tree with real counts and leaf details (buildTree), a status-grouped list that never shows an empty group (buildListBlocks), a real coordinator-consultation signal per open task with no forced guesses (suggestToolsForOpenTasks) — now also carrying a visible badge warning when an onboardingContext is supplied and the matched tool is uncertified, and staying silent without one (full backward compatibility) — an honest regression/stagnation cross-check against its own snapshot history including the very first run with no history at all (compareSnapshots), a full report assembly that genuinely differs by format and applies the same zoom filtering as the standalone function (buildReport), a real, append-only, on-disk snapshot history (appendSnapshot/loadSnapshotHistory) tested in an isolated temp directory, never touching the project\'s real registry, and — the 2026-09-20 badge wiring — buildRealOnboardingContext() correctly builds the real badge context (CLAUDE.md, the tools table, docs/ paths, docs/suivi/ text, THE-DEEP-READER\'s declared deviation) with the right "docs/"-prefixed paths, closing a real path-slicing bug found while wiring this into check-tasks-details.mjs\'s own real production call — the one and only place this whole badge system was ever actually invoked before this fix, and — the 2026-09-20 recommendNextTasks() feature — compareSnapshots() now carries a real consecutive-open streak count (consecutiveOpenStreak()) rather than a bare stagnation flag, parseRegistryTable()/loadRegistryFindings() correctly extract only genuinely confirmed findings from any of the 4 vigie registries by locating their "confirmée" column by header rather than a fixed index, corroborateWithRegistries() reuses le-coordinateur.mjs\'s own keyword-overlap threshold to match a task against those findings honestly, and recommendNextTasks() combines all 5 now-progressive criteria (declared sensitivity, streak-scaled stagnation, age, two-tier explicit-priority wording, and multi-vigie corroboration strength) into a capped, fully-explained ranking — excluding closed tasks and signal-free tasks alike, and wired into buildReport()\'s own meta and a visible heading that only ever appears when a real recommendation exists.');
 }
 
 {

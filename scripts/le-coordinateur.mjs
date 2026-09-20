@@ -193,7 +193,10 @@ const STOPWORDS_FR = new Set([
   "ses", "tout", "toute", "tous", "toutes", "plus", "déjà", "jamais", "cet", "cette",
 ]);
 
-function significantWords(text) {
+// Exportée (2026-09-20) pour que check-tasks-details.mjs réutilise EXACTEMENT le même tokenizer
+// pour corroborer une tâche avec les registres ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD — jamais un
+// second jeu de mots-vides réinventé (anti-duplication, docs/regles-de-travail.md §7ter).
+export function significantWords(text) {
   return String(text ?? "")
     .toLowerCase()
     .normalize("NFD")
