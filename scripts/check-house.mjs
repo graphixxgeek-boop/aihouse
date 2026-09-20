@@ -940,7 +940,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 181'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 182'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3993,7 +3993,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     extractNormativeMarkers, diffNormativeMarkers,
     extractRuleUnits, countArticleCrossReferences, classifyRuleSensitivity, classifyRuleImportance,
     findRedundantRulePairs, buildClaudeMdRuleTable, renderClaudeMdRuleTable,
-    ARCHIVE_FIRST_REMINDER, compareChantiers, formatChantierComparison,
+    ARCHIVE_FIRST_REMINDER, compareChantiers, formatChantierComparison, recordAction,
   } = await import('../scripts/smart-conso-token.mjs');
 
   assert.equal(estimateTokens('abcd'), 1, 'the ~4-characters-per-token heuristic must round to the nearest whole token, never a fractional or wildly inaccurate estimate');
@@ -4076,6 +4076,31 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const kpi = computeAdoptionKpi({ actions: [{ type: 'proposition_appliquee', reductionPct: 20 }, { type: 'proposition_appliquee', reductionPct: 40 }, { type: 'autre_action' }] });
   assert.deepEqual(kpi, { propositionsAppliquees: 2, reductionMoyennePct: 30 }, 'the KPI must count and average only genuinely applied proposals with a real measured reduction, ignoring unrelated recorded actions — the tool\'s real vocation per the user\'s explicit request, never a count of scans merely run');
   assert.ok(KNOWLEDGE_PROVENANCE.validatedFor === 'claude' && KNOWLEDGE_PROVENANCE.sources.length > 0, 'the knowledge provenance must always declare which model it was validated for and cite real sources, never an unsourced or unattributed registry');
+
+  // recordAction()/reductionPct (2026-09-21, écart réel trouvé en voulant nourrir computeAdoptionKpi()
+  // avec le travail de ce soir) : computeAdoptionKpi() attend un champ `reductionPct` au premier
+  // niveau de l'action, mais recordAction() ne le faisait jamais passer depuis ses `options` — le
+  // commentaire du code annonçait déjà "Alimenté par recordAction(..., { reductionPct })" comme si
+  // c'était déjà le cas, alors qu'aucun appel réel en production ne l'avait jamais fait. Testé contre
+  // le vrai fichier (backup/restore, même discipline que les autres tests à état réel de ce fichier)
+  // puisque recordAction()/loadJson() n'ont pas de fs injectable (contrairement aux outils plus
+  // récents comme recordCatalog()).
+  {
+    const histPath = new URL('../.smart-conso-token-history.json', import.meta.url);
+    const { existsSync: exX, readFileSync: rdX, writeFileSync: wrX, unlinkSync: unX } = await import('node:fs');
+    const hadFile = exX(histPath);
+    const backup = hadFile ? rdX(histPath, 'utf8') : undefined;
+    try {
+      const before = Date.now();
+      recordAction('proposition_appliquee', { chantier: 'test unitaire' }, before, { reductionPct: 42 });
+      const written = JSON.parse(rdX(histPath, 'utf8'));
+      const found = written.actions.find((a) => a.type === 'proposition_appliquee' && a.at === before);
+      assert.ok(found && found.reductionPct === 42, 'recordAction() must now actually persist reductionPct when passed in options, closing the exact real gap where computeAdoptionKpi() could never find a single real entry because no call site ever attached this field — the KPI existed since the tool\'s creation but was never genuinely fed');
+    } finally {
+      if (hadFile) wrX(histPath, backup); else if (exX(histPath)) unX(histPath);
+    }
+  }
+  console.log('Passed: recordAction() now genuinely persists reductionPct through to the real history file when supplied, the exact missing wire computeAdoptionKpi() needed since SMART-CONSO-TOKEN\'s creation — verified against the real file with a full backup/restore, never left in a dirty state.');
   assert.ok(AUTOMATION_TOKEN_NUANCE.mecanique && AUTOMATION_TOKEN_NUANCE.agentSepare, 'the tool must explicitly know the two-sided truth about automation: mechanical scripts genuinely save tokens (zero context cost) while separate-agent spawns never do (fixed cost added on top) — the exact real distinction the user asked it to master for resource allocation');
 
   const report = formatScanReport(scopeResult, now);

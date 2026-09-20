@@ -310,6 +310,32 @@ sont perdants si on les traite comme un seul et même cas. Une vue d'ensemble co
 fait, en cours et en attente doit rester disponible sur simple demande, sans jamais dépendre de la
 mémoire de la conversation elle-même pour exister.
 
+### 2.9 Un outil fiable allège une règle, mais ne la remplace jamais par association **[Synthèse]**
+
+Quand une règle documentée dispose d'un mécanisme automatisé qui l'applique ou en vérifie le
+respect, il est tentant de conclure que la règle elle-même devient superflue dans le document
+toujours consulté — puisque « l'outil s'en charge ». Ce raisonnement n'est vrai que si TOUT ce que
+dit la règle est aussi couvert par l'outil ; il devient une fausse économie dès que la règle protège
+autre chose en plus (une décision à ne jamais défaire, un réflexe utile même sans lancer l'outil, un
+contenu qui n'a simplement rien à voir avec un mécanisme). La seule vérification fiable consiste à
+comparer le texte de la règle, phrase par phrase, à ce que l'outil couvre réellement — jamais à
+juger sur la seule présence du nom de l'outil dans la règle.
+
+*Exemple* : sur ce projet, cinq règles décrivant un protocole ou un outil (simulation, détecteurs de
+trous logiques, vérification exceptionnelle, régulation de consommation, épreuve de la page blanche)
+ont pu être réduites à un simple aiguillage une fois vérifié que leur contenu détaillé vivait déjà,
+en totalité, dans la fiche technique de l'outil correspondant. Quatre autres règles citaient elles
+aussi un outil en passant, mais ont été explicitement conservées intactes après vérification :
+l'une protégeait une décision d'architecture CONTRE ce même outil, une autre décrivait un réflexe à
+avoir pendant qu'on écrit le code (que l'outil ne mesure qu'après coup), une autre gardait la
+version informelle et gratuite d'un outil volontairement rare et coûteux, la dernière n'avait tout
+simplement aucun rapport mécanique avec quoi que ce soit.
+
+*Portée générale* : avant de réduire une règle au nom d'un outil qui semble la couvrir, vérifier
+explicitement, contenu par contenu, que rien d'autre ne s'y trouve — une protection, un réflexe, une
+nuance propre au moment où la règle s'applique. En cas de doute réel sur ce qui serait perdu, la
+règle reste en l'état ; le gain de légèreté ne justifie jamais de trancher par supposition.
+
 ---
 
 ## Partie 3 — Ce que ce projet refuse (anti-modèles explicites)

@@ -718,10 +718,10 @@ export function assess({ actionType, context, history, now, agentIdentity, inves
 // verdict rendu par assess() pour CETTE action précise, conservé pour pouvoir plus tard vérifier si
 // l'interlocuteur s'y est conformé (cf. diagnoseAdviceAccuracy ci-dessous).
 export function recordAction(actionType, context, now, options = {}) {
-  const { classification, recipient = "agent", verdict } = options;
+  const { classification, recipient = "agent", verdict, reductionPct } = options;
   const history = loadJson(HISTORY_PATH, { actions: [] });
   history.actions = (history.actions ?? []).slice(-300);
-  history.actions.push({ type: actionType, context: context || null, at: now, recipient, ...(classification ? { classification } : {}), ...(verdict ? { verdict } : {}) });
+  history.actions.push({ type: actionType, context: context || null, at: now, recipient, ...(classification ? { classification } : {}), ...(verdict ? { verdict } : {}), ...(typeof reductionPct === "number" ? { reductionPct } : {}) });
   writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 1));
   return history;
 }
