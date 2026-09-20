@@ -5,10 +5,14 @@
 // qui ont déjà reçu une note (docs/el-professor/index.md), et signaler toute simulation archivée
 // sans note — jamais une omission silencieuse (même logique que la partie mécanique d'ARGUS).
 
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { renderHtmlReport } from "./html-report.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
+// Copie de présentation jetable, jamais committée (même patron que KPI_HTML_PATH de
+// kpi-report.mjs) — le registre `docs/el-professor/index.md` reste la seule version de travail.
+export const EL_PROFESSOR_HTML_PATH = ".el-professor-coverage-latest.html";
 
 // Extrait les identifiants de simulation (première colonne d'un tableau markdown, ex.
 // "full_sim (sim1)" → "full_sim", "full_sim9" → "full_sim9") depuis un registre au format
@@ -40,6 +44,30 @@ export function findOrphanNotes(simIndexContent, elProfessorIndexContent) {
   return noted.filter((id) => !archived.has(id));
 }
 
+// Rapport HTML (2026-09-20, tâche #144 — checkHtmlWiring() signalait cet outil comme jamais câblé
+// malgré la règle « tous les rapports en HTML », cf. docs/regles-de-travail.md) : reprend la MÊME
+// donnée déjà calculée par main() (missing/orphans), jamais un second calcul.
+export function buildElProfessorCoverageHtml(missing, orphans) {
+  const blocks = [];
+  blocks.push(
+    missing.length
+      ? { type: "note", text: `${missing.length} simulation(s) archivée(s) sans note EL-PROFESSOR — à noter avant de considérer la couverture complète.` }
+      : { type: "paragraph", text: "Toutes les simulations archivées ont une note EL-PROFESSOR à jour." },
+  );
+  if (missing.length) blocks.push({ type: "list", items: missing });
+  if (orphans.length) {
+    blocks.push({ type: "note", text: `${orphans.length} note(s) EL-PROFESSOR sans simulation archivée correspondante (identifiant orphelin).` });
+    blocks.push({ type: "list", items: orphans });
+  }
+  return renderHtmlReport({
+    title: "EL-PROFESSOR — couverture des notes",
+    subtitle: "Partie mécanique et gratuite : compare docs/simulations/index.md à docs/el-professor/index.md, cf. docs/referentiel/el-professor.md.",
+    dateLabel: new Date().toISOString(),
+    blocks,
+    footer: "EL-PROFESSOR — la notation qualitative elle-même reste une vraie lecture, jamais un calcul mécanique.",
+  });
+}
+
 function main() {
   const simIndex = readFileSync(join(ROOT, "docs/simulations/index.md"), "utf8");
   const elProfessorIndex = readFileSync(join(ROOT, "docs/el-professor/index.md"), "utf8");
@@ -58,6 +86,8 @@ function main() {
     console.log(`\n${orphans.length} note(s) EL-PROFESSOR sans simulation archivée correspondante (identifiant orphelin) :`);
     for (const id of orphans) console.log(`  - ${id}`);
   }
+  writeFileSync(join(ROOT, EL_PROFESSOR_HTML_PATH), buildElProfessorCoverageHtml(missing, orphans));
+  console.log(`\nCopie HTML : ${EL_PROFESSOR_HTML_PATH}`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

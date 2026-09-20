@@ -940,7 +940,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 167'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 168'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3736,7 +3736,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // docs/referentiel/el-professor.md). La notation qualitative elle-même ne peut pas être testée
   // mécaniquement (c'est une vraie lecture, jamais un calcul) — seule sa partie mécanique de
   // couverture (aucune simulation archivée sans note, aucune note orpheline) est testée ici.
-  const {extractSimIds,findMissingNotes,findOrphanNotes}=await import('../scripts/el-professor.mjs');
+  const {extractSimIds,findMissingNotes,findOrphanNotes,buildElProfessorCoverageHtml}=await import('../scripts/el-professor.mjs');
   const simIdx='| Simulation | Round |\n|---|---|\n| full_sim (sim1) | 44 |\n| full_sim2 | 56 |\n| full_sim9 | 153 |';
   assert.deepEqual(extractSimIds(simIdx),['full_sim','full_sim2','full_sim9'],'every simulation identifier in the first column of a markdown table must be extracted in order, dropping whatever trails after it on the same line (e.g. "(sim1)")');
   assert.deepEqual(extractSimIds('| Simulation | Round |\n|---|---|'),[],'a table with no data rows yet must report zero ids, never crash');
@@ -3747,7 +3747,14 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const elIdxOrphan='| Simulation | Note |\n|---|---|\n| full_sim | 82 |\n| full_sim99 | 60 |';
   assert.deepEqual(findOrphanNotes(simIdx,elIdxOrphan),['full_sim99'],'a note referencing a simulation id absent from the archive index (typo, stale rename) must be flagged as orphaned, the symmetric failure mode to a missing note — never silently ignored');
   assert.deepEqual(findOrphanNotes(simIdx,elIdxComplete),[],'when every note matches a real archived simulation, nothing must be flagged as orphaned');
-  console.log('Passed: EL-PROFESSOR\'s mechanical coverage guard extracts every simulation identifier from a markdown index table in order, flags every archived simulation still missing its charter-fidelity note, and — symmetrically — flags any note referencing a simulation id that no longer exists in the archive, never confusing or silently dropping either failure mode.');
+  // buildElProfessorCoverageHtml() (2026-09-20, tâche #144 — checkHtmlWiring() signalait cet outil
+  // comme jamais câblé malgré la règle "tous les rapports en HTML").
+  const missingHtml = buildElProfessorCoverageHtml(['full_sim2', 'full_sim9'], []);
+  assert.ok(missingHtml.includes('full_sim2') && missingHtml.includes('full_sim9'), 'buildElProfessorCoverageHtml() must list every real missing simulation id by name in the rendered HTML, never a bare count');
+  assert.ok(!buildElProfessorCoverageHtml([], []).includes('sans note'), 'with zero missing notes, the HTML must report the honest "à jour" message, never a leftover mention of missing coverage');
+  const orphanHtml = buildElProfessorCoverageHtml([], ['full_sim99']);
+  assert.ok(orphanHtml.includes('full_sim99') && orphanHtml.includes('orphelin'), 'an orphan note must be named explicitly in the HTML output too, the same symmetric failure mode as the terminal output');
+  console.log('Passed: EL-PROFESSOR\'s mechanical coverage guard extracts every simulation identifier from a markdown index table in order, flags every archived simulation still missing its charter-fidelity note, and — symmetrically — flags any note referencing a simulation id that no longer exists in the archive, never confusing or silently dropping either failure mode; buildElProfessorCoverageHtml() (2026-09-20, tâche #144) renders the exact same data as a real HTML report, naming every missing/orphan id explicitly, never a bare count.');
 }
 {
   // moveReasonMismatchesDestination (2026-09-20, cf. lib/drama.ts) — root-cause fix for a real bug
@@ -3767,7 +3774,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // THE-FINAL-JUDGE lui-même est un vrai agent séparé, jamais testable ici — seuls ses deux
   // garde-fous mécaniques le sont : le personnage fixe est bien extrait tel quel du document de
   // référence (jamais reformulé), et un rapport générique/sans preuve concrète est bien détecté.
-  const { extractPersonaBlock, detectGenericReport } = await import('../scripts/the-final-judge.mjs');
+  const { extractPersonaBlock, detectGenericReport, buildFinalJudgeReportHtml } = await import('../scripts/the-final-judge.mjs');
   const fakeDoc = 'Intro.\n\n## Personnage donné à l\'agent séparé\n\n> Première phrase du personnage.\n> Deuxième phrase du personnage.\n\nLa suite du document, hors du bloc.';
   assert.equal(extractPersonaBlock(fakeDoc), 'Première phrase du personnage.\nDeuxième phrase du personnage.', 'extractPersonaBlock() must pull exactly the blockquoted lines, stripping the leading "> " marker, and nothing from outside the quote block — this is what guarantees the fixed persona is reused verbatim rather than retyped by hand each time');
   assert.deepEqual(extractPersonaBlock('Rien ici, aucun bloc de citation.'), '', 'a document with no blockquote must report an empty persona, never crash or return unrelated text');
@@ -3776,7 +3783,16 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const concreteReport = 'Verdict global : ce projet a un vrai souci de séparation des responsabilités dans `app/api/lia/route.ts`, un fichier de plus de mille lignes qui mélange orchestration réseau et logique métier. Points positifs : `lib/dialogue.ts` reste propre et bien testé. À améliorer : extraire la logique du dossier retourné dans son propre module. Pistes de développement : envisager un découpage par domaine plutôt que par type technique.';
   assert.deepEqual(detectGenericReport(concreteReport), [], 'a real, concrete, properly structured report citing actual files must never be flagged — the detector targets genuine genericness, not every report');
   assert.ok(detectGenericReport('Trop court.').some((s) => s.includes('court')), 'an abnormally short report must be flagged regardless of its other properties');
-  console.log('Passed: THE-FINAL-JUDGE\'s two mechanical guards work correctly — extractPersonaBlock() pulls the exact fixed persona text from its single source of truth with nothing added or lost, and detectGenericReport() flags a report with no concrete file citations, missing required sections, or abnormal brevity, while never flagging a real, specific, properly structured report — the mechanical protection against the persona drifting toward a generic, standard tone.');
+  // buildFinalJudgeReportHtml() (2026-09-20, tâche #144) : contrairement à EL-PROFESSOR/THE-SCREENER,
+  // ce script n'a pas de main() — le vrai rapport est écrit en prose par l'agent séparé, cette
+  // fonction est le point d'intégration réel appelé à la main par l'agent orchestrateur au moment
+  // de livrer un rapport. Un bloc "code" (jamais "paragraph") préserve les sauts de ligne du texte
+  // libre, sans quoi une longue prose deviendrait un unique mur de texte illisible en HTML.
+  const multilineReport = 'VERDICT\nligne 1\n\nligne 2 avec `lib/dialogue.ts`';
+  const finalJudgeHtml = buildFinalJudgeReportHtml(multilineReport, { title: 'Audit test' });
+  assert.ok(finalJudgeHtml.includes('<pre><code>') && finalJudgeHtml.includes('Audit test'), 'buildFinalJudgeReportHtml() must wrap the free-form prose report in a "code" block (preserving line breaks) under the given title, never reformat or summarize it');
+  assert.ok(finalJudgeHtml.includes('ligne 1') && finalJudgeHtml.includes('ligne 2'), 'the full report text must appear verbatim in the HTML, never truncated or paraphrased');
+  console.log('Passed: THE-FINAL-JUDGE\'s two mechanical guards work correctly — extractPersonaBlock() pulls the exact fixed persona text from its single source of truth with nothing added or lost, and detectGenericReport() flags a report with no concrete file citations, missing required sections, or abnormal brevity, while never flagging a real, specific, properly structured report — the mechanical protection against the persona drifting toward a generic, standard tone; and — the 2026-09-20 task #144 fix — buildFinalJudgeReportHtml() wraps the free-form prose report verbatim in a "code" block (never "paragraph", which would collapse every line break into one wall of text) under the real point of integration this script always lacked, since it has no main() of its own.');
 }
 {
   // THE-DEEP-READER (2026-09-20, cf. scripts/the-deep-reader.mjs et docs/referentiel/the-deep-reader.md).
@@ -3824,6 +3840,15 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const checkHouseReal = fs.readFileSync('scripts/check-house.mjs', 'utf8');
   assert.deepEqual(findMissingAliasReplacements(realAliases, checkHouseReal), [], 'check-house.mjs\'s own copy of this same replacement chain must likewise never drift behind the real route.ts imports — checked live, not just in check-spirit.mjs');
   console.log('Passed: findMissingAliasReplacements() correctly flags a real route.ts "@/lib/X" import with no matching replaceAll target in a given script\'s transpile chain, and — checked live against the real files tonight — check-spirit.mjs and check-house.mjs both now genuinely cover every real alias import, closing the exact ERR_MODULE_NOT_FOUND drift found while relaunching check-spirit.mjs after the quality-metrics module was added.');
+
+  // Vérification live (2026-09-20, tâche #144) : les 3 scripts que checkHtmlWiring() signalait
+  // encore non câblés (el-professor.mjs, the-final-judge.mjs, the-screener-capture.mjs) importent
+  // désormais tous réellement html-report.mjs — checké contre leur VRAI contenu sur disque, jamais
+  // seulement contre une fixture synthétique (déjà testée séparément dans le bloc CIRCLE-TASKS).
+  for (const script of ['el-professor.mjs', 'the-final-judge.mjs', 'the-screener-capture.mjs']) {
+    const realSource = fs.readFileSync(`scripts/${script}`, 'utf8');
+    assert.ok(/html-report\.mjs/.test(realSource), `scripts/${script} must genuinely import html-report.mjs on disk now — closing the exact real gap task #144 was opened for, checked live rather than trusting the fix without rereading the file`);
+  }
 }
 
 {

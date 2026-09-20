@@ -14,8 +14,9 @@
 // intervalle fixe aveugle — cf. "Principe de sobriété" du blueprint.
 
 import { chromium } from "playwright";
-import { mkdirSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { mkdirSync, existsSync, writeFileSync } from "node:fs";
+import { join, basename } from "node:path";
+import { renderHtmlReport } from "./html-report.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -36,6 +37,24 @@ export async function captureOnce(url, outPath) {
   }
 }
 
+// Rapport HTML (2026-09-20, tâche #144) : montre la capture elle-même (bloc "image", chemin relatif
+// puisque le HTML est écrit dans le même dossier que le PNG) — jamais une seconde tentative de
+// capture, jamais un jugement de qualité ici (ça reste le rôle de THE-SCREENER lui-même une fois
+// une note posée, cf. docs/referentiel/the-screener.md). Un échec de capture reste honnêtement
+// affiché comme un échec, jamais masqué par une image absente sans explication.
+export function buildScreenerCaptureHtml(result, { url } = {}) {
+  const blocks = result.ok
+    ? [{ type: "image", src: basename(result.path), caption: `Capture de ${url ?? "?"}` }]
+    : [{ type: "note", text: `Échec de la capture : ${result.error ?? "raison inconnue"}.` }];
+  return renderHtmlReport({
+    title: "THE-SCREENER — capture",
+    subtitle: "Mécanisme de capture (Playwright) — cf. docs/referentiel/the-screener.md pour la notation elle-même.",
+    dateLabel: new Date().toISOString(),
+    blocks,
+    footer: "THE-SCREENER — note indicative, ne prime jamais sur l’appréciation de l’utilisateur.",
+  });
+}
+
 async function main() {
   const url = process.argv[2] || "http://127.0.0.1:5173/";
   const outDir = process.argv[3] || join(ROOT, "docs/the-screener");
@@ -50,6 +69,9 @@ async function main() {
     console.log(`Échec de la capture : ${result.error}`);
     process.exitCode = 1;
   }
+  const htmlPath = join(outDir, `test-capture-${Date.now()}.html`);
+  writeFileSync(htmlPath, buildScreenerCaptureHtml(result, { url }));
+  console.log(`Copie HTML : ${htmlPath}`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

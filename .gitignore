@@ -57,3 +57,4 @@ next-env.d.ts
 .le-coordinateur-last-run.json
 .circle-tasks-last-run.json
 .kpi-report-latest.html
+.el-professor-coverage-latest.html

@@ -16,6 +16,8 @@
 // Ses heuristiques ne détectent que les dérives les plus grossières, comme pour check-spirit.mjs :
 // elles ne dispensent jamais de lire le rapport.
 
+import { renderHtmlReport } from "./html-report.mjs";
+
 const REPO_PATH_PATTERN = /`((?:docs|lib|app|scripts|components)\/[A-Za-z0-9_.\-/]+\.[A-Za-z0-9]+)`/g;
 
 // Le personnage fixe vit dans un bloc de citation markdown ("> ...") sous le titre "Personnage
@@ -40,4 +42,21 @@ export function detectGenericReport(reportText) {
   if (missingSections.length) signals.push("structure attendue en 4 parties incomplète (manque : " + missingSections.join(", ") + ")");
   if (reportText.trim().length < 400) signals.push("rapport anormalement court pour un audit réel (moins de 400 caractères)");
   return signals;
+}
+
+// Rapport HTML (2026-09-20, tâche #144) : contrairement à el-professor.mjs/the-screener-capture.mjs,
+// THE-FINAL-JUDGE n'a pas de main()/CLI — le vrai rapport est écrit en prose par l'agent séparé
+// (outil `Agent`) puis réconcilié par l'agent orchestrateur. Ce fichier n'a donc aucun point
+// d'appel automatique à câbler ; cette fonction est le point d'intégration réel, appelée à la main
+// par l'agent orchestrateur au moment de LIVRER un rapport, jamais un second calcul du verdict —
+// un bloc "code" (pas "paragraph") pour préserver la mise en page du texte libre (sauts de ligne,
+// sections), jamais reformaté ni résumé.
+export function buildFinalJudgeReportHtml(reportText, { title = "THE-FINAL-JUDGE — rapport", subtitle, dateLabel } = {}) {
+  return renderHtmlReport({
+    title,
+    subtitle: subtitle ?? "Audit indépendant de code et de produit, agent séparé — cf. docs/referentiel/the-final-judge.md.",
+    dateLabel: dateLabel ?? new Date().toISOString(),
+    blocks: [{ type: "code", text: reportText }],
+    footer: "THE-FINAL-JUDGE — conseiller uniquement, jamais un exécutant ni une décision automatique.",
+  });
 }
