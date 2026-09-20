@@ -85,6 +85,34 @@ directement l'Article 12 de la charte côté image.
     est réservé aux objets clés de l'enquête (livre, dossier, indices observés de près) — jamais
     généralisé à tout le mobilier ordinaire.
 
+## Plan d'interface plein écran — décisions calibrées (2026-09-19)
+
+*(Distinct des décisions ci-dessus, qui portent sur le RENDU visuel — celles-ci portent sur la
+DISPOSITION de l'interface web autour de la scène 3D, calibrées via trois séries de questions
+successives à la demande explicite de l'utilisateur. Reprises ici depuis `docs/suivi/` où elles
+étaient restées « en cours » — décidées mais jamais transcrites dans le document de référence, un
+écart trouvé en reprenant systématiquement toutes les tâches en cours le 2026-09-20, cf. Article 13.)*
+
+1. **Un seul bouton play en bas de l'écran** remplace les trois boutons actuels (pause / générer
+   des actions) — un point d'entrée unique pour faire avancer le temps du jeu.
+2. **Le fil de conversation reste une bande latérale permanente**, jamais un élément qu'il faut
+   ouvrir/fermer.
+3. **Sélection de personnage et déplacement par clic direct dans la scène 3D** — plus de
+   cartes/boutons texte pour choisir Lia/Noé ou une destination.
+4. **Le composer (champ de saisie) reste toujours visible**, jamais masqué par un autre mode
+   d'affichage.
+5. **Badges de personnage flottants directement sur le modèle 3D** (nom, état) plutôt que dans un
+   panneau latéral séparé.
+6. **Rêves/souvenirs réservés au mode Instruments** — jamais affichés par défaut en mode
+   Observation (cf. décision 6 ci-dessus sur les jauges).
+7. **Jardin/roulette/verdict/enquête regroupés dans un seul tiroir d'actions** — un point d'accès
+   unique pour les mécaniques secondaires, plutôt que des boutons épars.
+8. **Le panneau Admin rejoint un menu réglages** — jamais un bouton dédié visible en permanence.
+9. **L'indicateur jour/nuit reste visible en permanence à l'écran**, jamais relégué dans un menu.
+10. **« Nouvelle arrivée » et « passer à la révélation » restent des boutons visibles directement à
+    l'écran**, jamais enfouis dans un menu — ce sont des actions rares mais importantes, qui
+    doivent rester découvrables sans chercher.
+
 ## Trois critères pour juger un rendu (base de THE-SCREENER)
 
 1. **Lisibilité** — comprend-on où sont les personnages, ce qu'ils font, l'état de la scène, sans
