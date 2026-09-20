@@ -94,6 +94,7 @@ export const REGISTRIES = [
   { slug: "check-tasks-details", label: "check-tasks-details", family: "Coordination", path: "docs/check-tasks-details/", decision: "archived_html", scriptPath: "scripts/check-tasks-details.mjs" },
   { slug: "le-coordinateur-catalogue", label: "Catalogue LE-COORDINATEUR", family: "Coordination", path: "docs/le-coordinateur-catalogue/", decision: "delivery_html", scriptPath: "scripts/le-coordinateur.mjs" },
   { slug: "dream-team-photo", label: "Photo de la dream team", family: "Coordination", path: "docs/profil-utilisateur/", decision: "delivery_html", scriptPath: "scripts/le-coordinateur.mjs" },
+  { slug: "find-booster", label: "find-booster", family: "Outillage de navigation", path: "docs/find-booster/", decision: "texte", scriptPath: "scripts/find-booster.mjs" },
 ];
 
 // findEngineCodeInRegistries() (2026-09-21, demande explicite de l'utilisateur après avoir repéré

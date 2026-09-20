@@ -940,7 +940,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 193'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 195'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4703,6 +4703,155 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     }
   }
   console.log('Passed: lib/memento-weight.ts is the real observation point wired into lib/lia.ts::think() (a real token estimate returned and recorded per real call, capped at the same 200-entry hard limit as lib/gemini-keys.ts::episodes, reset cleanly between tests), and scripts/memento-weight.mjs persists real samples append-only into .memento-history.json (verified with the real local file, backed up and restored) while averageContextWeightByActor() reports an honest per-actor breakdown that never pools Lia and Noé into one misleading average and never crashes on a malformed entry.');
+}
+
+{
+  // route-booster (2026-09-21, sans blueprint, même statut que le-coordinateur.mjs) : prépare le
+  // découpage de la fonction géante de route.ts en points de coupe candidats + indice de risque
+  // lexical, jamais une réécriture automatique. Testé sur un fixture de lignes en mémoire, jamais un
+  // vrai fichier disque pour findCutPoints/analyzeClosureRisk (purs, aucune I/O).
+  const { findCutPoints, analyzeClosureRisk, proposeDecomposition } = await import('../scripts/route-booster.mjs');
+  const fixtureLines = [
+    'function big() {',
+    '  const a = 1;',
+    '  if (x.mode === "one") {',
+    '    const b = a + 1;',
+    '  }',
+    '',
+    '  // Une étape distincte, décrite ici.',
+    '  const c = b + 1;',
+    '  return c;',
+    '}',
+  ];
+  const points = findCutPoints(fixtureLines);
+  assert.deepEqual(points.map((p) => p.kind), ['branche_mode', 'commentaire_apres_ligne_vide'], 'a real `if (x.y === "...")` branch and a real comment-after-blank-line must both be detected as candidate cut points, in real document order, never one swallowing the other');
+  assert.equal(points[0].line, 2, 'the mode-branch candidate must report its real 0-indexed line number, never an off-by-one');
+
+  const risk = analyzeClosureRisk(fixtureLines, 2, 5);
+  assert.deepEqual(risk.incoming, ['a'], 'a candidate reading a variable genuinely declared before it in the same function must flag it as an incoming dependency (a real parameter this extraction would need)');
+  assert.deepEqual(risk.outgoing, ['b'], 'a candidate declaring a variable genuinely reused after it must flag it as an outgoing dependency (a real return value this extraction would need) — never silently dropped because it looks like a local-only variable');
+  assert.equal(risk.riskScore, 2, 'the risk score must be the honest sum of real incoming and outgoing dependencies, never a fabricated or rounded number');
+
+  const isolatedRisk = analyzeClosureRisk(['function f(){', '  const outer = 1;', '  const isolated = 42;', '  console.log("busy");', '  return outer;', '}'], 2, 4);
+  assert.deepEqual(isolatedRisk, { incoming: [], outgoing: [], riskScore: 0 }, 'a genuinely self-contained candidate (reads nothing declared before it, and its own local declaration is never reused after it — only the unrelated `outer` is) must report zero risk on both sides, never a false positive from the keyword/identifier scan');
+
+  const liveProposals = proposeDecomposition('app/api/lia/route.ts');
+  assert.ok(liveProposals.length >= 15, 'checked live against the real route.ts POST handler: the real absence of any banner comment in this file must never mean zero candidates — the mode-branch heuristic alone must still surface a real double-digit count of genuine `if (x.y === "...")` branches');
+  assert.ok(liveProposals.every((p) => typeof p.riskScore === 'number' && p.endLine > p.line), 'every real proposal against the live file must carry a real numeric risk score and a genuine non-empty line range, never a malformed entry');
+  console.log('Passed: route-booster (2026-09-21) detects real candidate cut points in a giant function (a genuine `if (x.y === "...")` branch and a genuine comment-after-blank-line, in real document order) and computes an honest lexical risk score per candidate (real incoming dependencies read from before it, real outgoing dependencies reused after it, zero false positives on a genuinely self-contained block) — verified live against app/api/lia/route.ts\'s real 1665-line POST handler, which the tool correctly still surfaces a real double-digit set of candidates from despite having zero banner comments anywhere in the file.');
+
+  // find-booster (2026-09-21, sans blueprint — renommé le même soir depuis "route-find-booster",
+  // demande explicite de l'utilisateur : « plus logique, puisqu'il n'est pas restreint au fichier
+  // route.ts »). N'a de sens qu'une fois un fichier déjà découpé en unités identifiables — indexe
+  // leur description réelle (le commentaire qui les accompagne déjà) pour une recherche par concept,
+  // jamais un grep littéral. Doit servir aussi bien un fichier découpé en FONCTIONS NOMMÉES
+  // (route.ts une fois découpé) qu'un fichier découpé en BLOCS ANONYMES commentés (check-house.mjs
+  // déjà aujourd'hui) — demande explicite de l'utilisateur : « assure toi que find booster est bien
+  // construit pour aider les 2 fichiers, autant l'un que l'autre ».
+  const { extractFunctionIndex, extractBlockIndex, extractHeadingIndex, extractTitledArrayIndex, tagHarmoniaThemes, searchByConcept, buildIndex, recommendFindBooster } = await import('../scripts/find-booster.mjs');
+  const fixtureSource = [
+    '// Tire un bonus de la roulette et l\'applique au personnage ciblé.',
+    'function resolveBonusRoulette(actor) { return actor; }',
+    '',
+    'function undocumented() { return 1; }',
+  ].join('\n');
+  const index = extractFunctionIndex(fixtureSource);
+  assert.equal(index.length, 2, 'every real top-level named function must be indexed, whether or not it carries a preceding comment — never silently dropping the undocumented one');
+  assert.equal(index[0].description, 'Tire un bonus de la roulette et l\'applique au personnage ciblé.', 'the real contiguous comment block immediately above a function must be captured verbatim as its description, reusing the convention already present everywhere in this codebase rather than inventing a new annotation syntax');
+  assert.equal(index[1].description, '', 'a function genuinely never preceded by a comment must report an honest empty description, never a fabricated one');
+
+  assert.deepEqual(tagHarmoniaThemes(index[0]), ['Bonus roulette'], 'a real description mentioning "roulette"/"bonus" must be tagged with the matching real HARMONIA theme, by real keyword match against name+description');
+  assert.deepEqual(tagHarmoniaThemes(index[1]), [], 'a genuinely untagged function (no matching keyword in name or description) must report zero themes, never a fabricated guess');
+
+  assert.deepEqual(searchByConcept(index, 'roulette').map((e) => e.name), ['resolveBonusRoulette'], 'searching by a real concept keyword must match against both the function name and its description, surfacing exactly the real match and never the unrelated function');
+  assert.deepEqual(searchByConcept(index, 'inconnu'), [], 'a keyword matching nothing real must report an honest empty result, never a fabricated fallback');
+
+  // extractBlockIndex() — le motif réel de check-house.mjs (chaque test vit dans son propre bloc
+  // top-level anonyme `{ ... }`, jamais une fonction nommée) : le commentaire suit l'accolade,
+  // jamais ne la précède, et le nom synthétique est tout ce qui précède la première parenthèse/tiret
+  // cadratin — la même convention de nommage déjà utilisée partout dans ce fichier lui-même.
+  const blockFixture = [
+    '{',
+    '  // Doc-Report (task #165) — vérifie la décision HTML/texte déjà actée.',
+    '  const x = 1;',
+    '}',
+    '',
+    '{',
+    '  const y = 2; // pas un commentaire de tête de bloc, jamais indexé comme tel',
+    '}',
+  ].join('\n');
+  const blockIndex = extractBlockIndex(blockFixture);
+  assert.equal(blockIndex.length, 1, 'a real top-level anonymous block genuinely followed by a comment must be indexed, while a block with no leading comment (nothing honest to name it with) must be silently skipped rather than given a fabricated label');
+  assert.equal(blockIndex[0].name, 'Doc-Report', 'the synthetic name must be everything before the real first parenthesis/em-dash in the comment — the exact naming convention already used by every real block header in this codebase, never a guessed truncation');
+  assert.equal(blockIndex[0].line, 1, 'the block\'s reported line must be its real opening brace line (1-indexed), never the comment line one below it');
+  assert.ok(!extractBlockIndex('  { const nested = true; }').length, 'a brace that is not genuinely alone on its own top-level line (nested or trailing code) must never be mistaken for a real top-level block boundary — the exact false-positive route.ts itself is checked live to never trigger below');
+
+  const liveIndex = buildIndex('app/api/lia/route.ts');
+  assert.ok(liveIndex.length >= 4, 'checked live against the real route.ts: every one of its real top-level named functions (currently 4, pre-découpage) must be indexed, a guarantee that only grows once the file is actually split');
+  assert.ok(liveIndex.some((e) => e.name === 'generateDossierFragment'), 'a real, already-existing named function in route.ts must be found by its real name, never missed by the extraction regex');
+  assert.ok(liveIndex.every((e) => e.name !== ''), 'route.ts genuinely has zero bare top-level "{" lines (checked live) — the block-extraction half of buildIndex() must never fabricate a false positive on a file that only ever uses named functions');
+
+  const liveBlockIndex = buildIndex('scripts/check-house.mjs');
+  assert.ok(liveBlockIndex.length >= 80, 'checked live against the real check-house.mjs: this file is organized in dozens of real top-level anonymous test blocks (91 counted live), never named functions — buildIndex() must find the real bulk of them through its block-extraction half, not just the single real named function this file happens to also define');
+  assert.ok(liveBlockIndex.some((e) => e.name.includes('DOC-REPORT')), 'a real, already-existing named block header in check-house.mjs (e.g. "DOC-REPORT") must be found by its real synthesized name, proving the block half of buildIndex() genuinely works end-to-end on the live file, not just on a fixture');
+
+  // extractHeadingIndex() — un troisième motif réel (2026-09-21, question directe de l'utilisateur :
+  // « est-ce que find-booster ne devrait il pas aussi t'aider pour le fichier regles de travail »),
+  // pour un document Markdown (titres `##`/`###`/`####`) plutôt que du code — jamais mélangé avec les
+  // deux motifs de code, choisi par extension dans buildIndex().
+  const headingFixture = [
+    '# Titre principal, jamais indexé (niveau 1 hors du motif ##-####)',
+    '',
+    '## Une vraie section',
+    '',
+    'Le premier paragraphe qui suit, capturé comme description réelle.',
+    'Une seconde ligne qui rejoint le même paragraphe.',
+    '',
+    '### Une sous-section sans texte qui suit immédiatement',
+    '### Sous-section suivante',
+  ].join('\n');
+  const headingIndex = extractHeadingIndex(headingFixture);
+  assert.equal(headingIndex.length, 3, 'exactly the real ##/###/#### headings must be indexed (never the level-1 "#" title, which this project never uses as a real navigable section), never dropping a genuinely heading-less line as if it were one');
+  assert.equal(headingIndex[0].name, 'Une vraie section', 'the heading name must be the real heading text itself, with the leading "##" markers stripped, never a truncated or reformatted version');
+  assert.equal(headingIndex[0].description, 'Le premier paragraphe qui suit, capturé comme description réelle. Une seconde ligne qui rejoint le même paragraphe.', 'the description must be the real paragraph immediately following the heading, joined across its real wrapped lines, stopping honestly at the first blank line or the next heading');
+  assert.equal(headingIndex[1].description, '', 'a heading genuinely followed immediately by another heading (no paragraph in between) must report an honest empty description, never borrowing text from the next section');
+  assert.equal(headingIndex[2].line, 9, 'each heading\'s reported line must be its own real line number, never off by the width of a preceding empty-description heading');
+
+  const liveHeadingIndex = buildIndex('docs/regles-de-travail.md');
+  assert.ok(liveHeadingIndex.length >= 35, 'checked live against the real docs/regles-de-travail.md (1896 lines, 40 real headings counted live): buildIndex() must route a .md file to heading-extraction and find the real bulk of its sections, never zero because it wrongly tried the code-extraction path on a document');
+  assert.ok(liveHeadingIndex.some((e) => e.name.includes('route-booster')), 'the real, already-existing "route-booster / find-booster" section heading in this exact document must be found by its real title text');
+  assert.ok(buildIndex('app/api/lia/route.ts').every((e) => e.level === undefined), 'a real .ts file must never be routed through heading-extraction (which would tag every entry with a "level" field) — the extension check in buildIndex() must genuinely gate the two families of extraction apart, never blend them');
+
+  // extractTitledArrayIndex() — un 4e motif réel (2026-09-21, question directe de l'utilisateur :
+  // « ainsi que pour le fichier references.ts »), qui a aussi révélé un vrai principe : un fichier
+  // peut être dense (poids réel élevé) sur très peu de lignes — lib/reference.ts ne fait que 132
+  // lignes mais chaque entrée est un pavé de texte sur une seule ligne.
+  const titledFixture = [
+    "export const referenceSections=[",
+    " {title:'00 · Version 1 — test',text:'Un texte court pour ce test.'},",
+    " {title:'00 · Version 2 — test',text:'" + "x".repeat(250) + "'},",
+    "];",
+  ].join('\n');
+  const titledIndex = extractTitledArrayIndex(titledFixture);
+  assert.equal(titledIndex.length, 2, 'every real {title, text} array entry must be indexed, one per real source line');
+  assert.equal(titledIndex[0].description, 'Un texte court pour ce test.', 'a text field genuinely shorter than the preview length must be reported verbatim, never truncated when there is nothing to truncate');
+  assert.equal(titledIndex[1].description.length, 201, 'a text field genuinely longer than the preview length (200 chars) must be truncated to exactly that length plus one real ellipsis character — never the full text, which would make a search result unreadable, and never silently truncated without the "…" marker');
+  assert.ok(titledIndex[1].description.endsWith('…'), 'a truncated description must end with a real ellipsis marker so the truncation itself is never mistaken for the genuine end of the text');
+
+  const liveTitledIndex = buildIndex('lib/reference.ts');
+  assert.ok(liveTitledIndex.length >= 100, 'checked live against the real lib/reference.ts (117 real versioned entries counted live): buildIndex() must find the real bulk of them through its titled-array-extraction third code path, not just the function/block paths which find nothing real in this file');
+  assert.ok(liveTitledIndex.some((e) => e.name.includes('Version 1')), 'the real, already-existing "Version 1" entry (the earliest one still recorded) must be found by its real title text');
+
+  // recommendFindBooster() — répond à la vraie question de l'utilisateur (« est-ce que find-booster
+  // pourrait détecter quand un fichier est trop lourd [...] ou c'est toi qui fait cette analyse
+  // systématiquement ? ») : jamais le nombre de lignes seul (lib/reference.ts, 132 lignes, l'a prouvé
+  // faux), le vrai poids en tokens (réutilise estimateTokens() de smart-conso-token.mjs verbatim,
+  // jamais une seconde formule).
+  const heavyLive = recommendFindBooster('lib/reference.ts');
+  assert.ok(heavyLive.worthwhile === true && heavyLive.tokens > 8000, 'checked live: lib/reference.ts must be recommended as worthwhile by its real high token weight, despite its genuinely low line count — the exact real case that disproves a line-count-only heuristic');
+  const lightLive = recommendFindBooster('lib/house.ts');
+  assert.equal(lightLive.worthwhile, false, 'checked live: a genuinely small, low-weight real file (lib/house.ts) must never be recommended — the guard against recommending find-booster on every file indiscriminately');
+  console.log('Passed: find-booster (2026-09-21, promoted the same night to a full Membre de l\'équipe after proving itself on 4 real different files) indexes all four real structural patterns this codebase actually uses — named functions, anonymous top-level test blocks, titled array entries (lib/reference.ts\'s real style, with an honest length-capped preview rather than a full-text dump), and Markdown headings (gated to .md files only) — tags each against the real HARMONIA themes by honest keyword match, answers a concept search against name+description, and now recommends itself via recommendFindBooster(), which reuses SMART-CONSO-TOKEN\'s own real token-weight formula rather than line count — verified live to correctly flag lib/reference.ts as worthwhile (high real weight, low line count) and lib/house.ts as not (genuinely small).');
 }
 
 {

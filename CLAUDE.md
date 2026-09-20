@@ -853,6 +853,27 @@ un membre, jamais un badge — exactement la même catégorie que `lib/gemini-ke
 conservé tel quel (jamais rattaché à l'ombrelle retirée, qui ne le désignait déjà que par ce nom).
 Détail complet : `docs/referentiel/memento-weight.md`.
 
+## find-booster — blueprint exportable
+
+*(2026-09-21, conçu sous le nom "route-find-booster" pour `app/api/lia/route.ts`, renommé
+"find-booster" le même soir une fois confirmé générique, puis promu Membre de l'équipe complet
+après un usage réel concluant sur 4 fichiers de nature différente en une seule soirée.)*
+
+`docs/find-booster-blueprint.md` documente l'ARCHITECTURE de l'outil de navigation par concept dans
+un gros fichier — quatre motifs d'extraction réels reconnus (fonctions nommées, blocs anonymes
+commentés, entrées de tableau titrées, titres Markdown, routés par extension/contexte, jamais
+mélangés), un tag thématique optionnel (indice de rapprochement vers les 8 thèmes HARMONIA, jamais
+une classification certaine), et une recommandation d'usage (`recommendFindBooster()`, poids réel
+en tokens plutôt que nombre de lignes seul — `lib/reference.ts`, 132 lignes mais ~55 500 tokens, en
+est la preuve vivante) — jamais une application automatique. **Obligation écrite d'usage réel**
+(même limite honnête que SMART-CONSO-TOKEN) : avant toute lecture intégrale ou tout grep répété sur
+un fichier potentiellement volumineux, consulter d'abord `recommendFindBooster()`. Son voisin
+`scripts/route-booster.mjs` (préparation d'un découpage réel : points de coupe candidats + indice
+de risque lexical) reste lui un outil sans blueprint, documenté dans `docs/regles-de-travail.md` —
+il ne sert que rarement, contrairement à find-booster. Jamais les motifs exacts ni les fichiers
+propres à ce projet, qui vivent dans `docs/referentiel/find-booster.md` (instanciation) et
+`docs/find-booster/` (dossier + index).
+
 ## AXA-CHECK — blueprint exportable
 
 `docs/axa-check-blueprint.md` documente l'ARCHITECTURE de l'outil de robustesse/fragilité RÉELLES
@@ -1074,6 +1095,10 @@ conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs se
   enrichie (nœuds sensibles HARMONIA + churn ALWAYS-NEW-CODE), la corroboration par les simulations
   archivées, le registre des trouvailles (`docs/axa-check/`). Cf. `docs/axa-check-blueprint.md`
   pour le principe générique.
+- `docs/referentiel/find-booster.md` (2026-09-21) — instanciation de find-booster pour ce projet :
+  les 4 motifs d'extraction réels, `recommendFindBooster()` et sa preuve vivante (`lib/reference.ts`),
+  l'obligation écrite d'usage réel, le statut sans blueprint de son voisin route-booster, le registre
+  (`docs/find-booster/`). Cf. `docs/find-booster-blueprint.md` pour le principe générique.
 - `docs/referentiel/clean-dirty-old.md` (2026-09-19) — instanciation de CLEAN-DIRTY-OLD
   (Article 20) pour ce projet : les seuils de stagnation relative, la priorisation par nœud
   sensible, les trois questions déléguées à ARGUS/HARMONIA/ALWAYS-NEW-CODE, le registre

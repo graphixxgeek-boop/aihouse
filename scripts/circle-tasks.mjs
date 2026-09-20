@@ -364,6 +364,7 @@ export const CIRCLE_EXCLUDED_REGISTRIES = {
   "hyper-scan-checkpoint": "outil exceptionnel (Article 21), jamais coché par défaut ni régulier",
   "memory-audit": "cible la mémoire narrative de Lia/Noé en jeu, jamais un scan de repo — vérifiable seulement sur des instantanés réels de partie (pendant/après une simulation) ; son voisin memento weight est déjà rapporté via kpi-report.mjs (reportMementoWeight), jamais une routine CIRCLE-TASKS séparée",
   "check-tasks-details": "état des lieux à la demande, pas une routine périodique mal automatisée",
+  "find-booster": "outil de navigation à la demande sur un fichier précis, jamais un scan périodique de tout le dépôt",
   "el-professor": "déjà obligatoire à chaque simulation (Article 18, étape 4bis), une seconde routine ferait doublon",
   simulations: "l'archive elle-même, pas un outil à relancer périodiquement",
 };

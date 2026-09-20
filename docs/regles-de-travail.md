@@ -504,6 +504,8 @@ bloqué par un statut, seulement par l'existence réelle d'une fonction ou d'un 
 | THE-KING | Agent | 🎖️ | rappelle de consulter `docs/philosophie-et-politique.md` avant une décision à haut niveau (6 catégories), fraîcheur du document, digest de son évolution, tension possible entre deux principes | gratuit | avant une décision touchant l'une des 6 catégories (moi, l'utilisateur, ou un autre outil) |
 | INES-official | Agent | 🎖️ | aplatit le dépôt en une édition consolidée et annotée (code seul ou code + docs), table des matières, datage/versionnage — jamais une réécriture réelle du code | gratuit | proposé périodiquement via CIRCLE-TASKS, ou sur demande explicite |
 | memory-audit (anciennement "MEMENTO", nom d'ensemble retiré le 2026-09-21) | Agent | 🎖️ | seul outil ciblant en SUJET un Personnage (Lia/Noé) tout en restant un vrai Membre de l'équipe, catégorie "audit de simulation" aux côtés d'EL-PROFESSOR : cohérence mécanique de la mémoire persistée (ordre chronologique, remise à zéro suspecte, régression de gravité). Son voisin "memento weight" (Moteur du jeu, `lib/memento-weight.ts` + `scripts/memento-weight.mjs`, jamais un Membre de l'équipe) mesure séparément le poids réel du contexte envoyé à Gemini par tour (observation pure, jamais un changement de prompt) | gratuit — mécanique, jamais un second appel Gemini | sur demande explicite après une simulation ; hors CIRCLE-TASKS (exclusion documentée, cette vérification n'a de sens que sur une partie réelle) |
+| route-booster (`scripts/route-booster.mjs`) | Utilitaire nommé | — | points de coupe candidats + indice de risque lexical pour découper une fonction géante (conçu pour `app/api/lia/route.ts`, 24 candidats réels détectés) — jamais une réécriture automatique, guide une extraction manuelle testée à chaque étape | gratuit | à la demande, avant/pendant un chantier de découpage de fichier |
+| find-booster (`scripts/find-booster.mjs`, anciennement "route-find-booster") | Agent | 🎖️ | index par concept de 4 motifs réels (fonctions nommées, blocs anonymes commentés, entrées de tableau titrées, titres Markdown) — sert route.ts, check-house.mjs, lib/reference.ts et regles-de-travail.md, vérifié live sur les 4 ; `recommendFindBooster()` détecte le poids réel d'un fichier (réutilise SMART-CONSO-TOKEN, jamais le nombre de lignes seul) | gratuit | à la demande, sur (presque) tout fichier du dépôt — promu Membre de l'équipe complet le 2026-09-21 après usage réel concluant, cf. `docs/referentiel/find-booster.md` |
 
 Cette table remplace toute énumération informelle éparpillée dans la conversation : à jour à
 chaque nouvel outil créé (même discipline que la liste des documents de référence, Article 13).
@@ -1451,6 +1453,33 @@ existant n'a eu besoin de sortir du gabarit commun** — chaque besoin réel s'e
 le vocabulaire de blocs, jamais en forkant une page à part. Tout le texte passe par `escapeHtml()`
 (échappement systématique) — un rapport peut légitimement contenir des caractères qui casseraient du
 HTML brut, jamais une raison d'injecter du HTML non échappé.
+
+### route-booster — outil sans blueprint (find-booster, son voisin, est promu Membre de l'équipe)
+
+*(2026-09-21, demande explicite de l'utilisateur pour app/api/lia/route.ts, un fichier « fourre-tout »
+vérifié à 1753 lignes dont ~1665 dans la seule fonction `POST` : « le script route-find-booster est
+la solution de navigation [...] le script route-booster est destiné a assurer l'operation de
+decoupage [...] ce sont deux scripts trés liés ». Nés ensemble, mais leur usage réel a rapidement
+divergé le même soir : route-booster ne sert que rarement (uniquement quand un fichier doit vraiment
+être découpé) — il reste un outil sans blueprint, comme LE-COORDINATEUR/CIRCLE-TASKS, cette section
+est sa documentation complète. find-booster, lui, a servi 4 fichiers de nature différente en une
+seule soirée et est devenu un vrai compagnon du quotidien — promu Membre de l'équipe complet
+(badge, blueprint, instanciation, registre) : cf. `docs/find-booster-blueprint.md` et
+`docs/referentiel/find-booster.md`, jamais dupliqué ici.)*
+
+`scripts/route-booster.mjs` — l'opération de découpage. `findCutPoints()` détecte des points de
+coupe candidats par heuristique texte (bannière de commentaire `// ---`, branche `if (x.y ===
+"...")`, commentaire descriptif après une ligne vide) — zéro nouvelle dépendance, jamais un vrai
+parseur AST. `analyzeClosureRisk()` calcule un indice de risque lexical par candidat : les noms
+utilisés dans le candidat déjà déclarés AVANT lui (dépendance entrante, à passer en paramètre) et
+les noms qu'il déclare réutilisés APRÈS lui (dépendance sortante, à faire remonter en valeur de
+retour) — une approximation assumée, jamais une résolution de portée réelle. `proposeDecomposition()`
+assemble les deux sur un fichier réel. **Jamais une réécriture automatique** : l'extraction reste
+manuelle, une fonction à la fois, avec `check-house.mjs`/`tsc` après chaque étape (Article 5/19 —
+le cœur du jeu ne tolère aucune régression silencieuse). Vérifié live contre le vrai `route.ts` :
+0 bannière de commentaire dans tout le fichier (confirme le diagnostic « fourre-tout »), mais 24
+branches `if (x.y === "...")` réelles détectées avec un risque calculé pour chacune. Reste dans
+l'équipe après le découpage initial : le relancer re-signale un futur fichier qui regonflerait.
 
 **Distinct, jamais confondu, avec `docs/referentiel/regles-des-graphismes.md`** : ce document-là
 gouverne la scène 3D et l'interface web du SITE PUBLIC (le jeu que l'observateur voit) — ce
