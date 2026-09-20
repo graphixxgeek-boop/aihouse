@@ -61,3 +61,10 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   - `app/chatgpt-auth.ts` (77 lignes, jamais importé nulle part) et `package.json` (`"name":
     "site-creator-vinext-starter"`, jamais renommé) — code mort et reste de gabarit de démarrage,
     mineur, pas encore traité.
+- **Premier scan SMART-CONSO-TOKEN (2026-09-20, `docs/smart-conso-token/scans/scan-2026-09-20-02-08.md`)** —
+  `CLAUDE.md` fait ~28 800 tokens estimés (1407 lignes), très au-delà du repère "progressive
+  disclosure" (300 lignes) — et c'est le SEUL document du projet réellement relu à chaque message de
+  la session (les autres, `docs/referentiel/*`/`docs/regles-de-travail.md`, sont lus à la demande,
+  taille normale pour de la documentation de référence). Restructuration accordée par l'utilisateur
+  comme un chantier à part, jamais une retouche en passant (Article 0 y vit) — reste à planifier.
+  Le scan lui-même doit d'abord apprendre à distinguer ces deux natures de document (accordé aussi).
