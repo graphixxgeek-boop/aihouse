@@ -1106,6 +1106,26 @@ il n'a aucune connaissance propre au projet à documenter à part, sa seule vale
 appeler et agréger ce que les autres outils gratuits de ce paysage disent déjà. Entièrement
 documenté dans `docs/regles-de-travail.md` §7ter.
 
+**CIRCLE-TASKS — même exception, pour les tâches périodiques mal automatisées.** *(2026-09-20, nommé
+par l'utilisateur : « je voudrais creer un mini agent qui appelle l'execution de ce process : l'agent
+s'appelle circle-tasks ».)* `scripts/circle-tasks.mjs` regroupe dans un seul menu à cocher les tâches
+périodiques gratuites facilement oubliées (mise à jour du profil utilisateur, relecture des
+référentiels, rapport KPI, signal ALWAYS-NEW-CODE, carnets de correctifs, scans Smart Conso
+API/SMART-CONSO-TOKEN, photo de la dream team, THE-SCREENER) — jamais un tout-en-un silencieux,
+toujours une vraie fenêtre à cocher ouverte par l'agent. THE-FINAL-JUDGE reste visible dans la même
+fenêtre mais toujours marqué ⚠️🔴 coûteux, jamais coché par défaut. Ni blueprint ni instanciation
+séparés, même principe que LE-COORDINATEUR ci-dessus — entièrement documenté dans
+`docs/regles-de-travail.md` §7ter.
+
+**Le gabarit HTML de remise de rapports — pas un outil de vigilance, un simple rendu.** *(2026-09-20,
+demande explicite après avoir reçu un premier rapport HTML soigné : « tu vas transformer tous les
+rapports en fichiers HTML avec une mise en page améliorée ».)* `scripts/html-report.mjs` rend
+n'importe quel rapport déjà produit (KPI, EL-PROFESSOR, THE-SCREENER, simulations, THE-FINAL-JUDGE,
+CIRCLE-TASKS...) en page HTML autonome, cohérente visuellement d'un rapport à l'autre — jamais le
+fichier de référence gardé dans `docs/` (qui reste texte/markdown, relu par les outils), seulement
+une copie de présentation générée à la remise. Encore plus mince que LE-COORDINATEUR/CIRCLE-TASKS,
+entièrement documenté dans `docs/regles-de-travail.md` §7ter.
+
 ## CLEAN-DIRTY-OLD — blueprint exportable
 
 `docs/clean-dirty-old-blueprint.md` documente l'ARCHITECTURE du détecteur de stagnation (cf.
