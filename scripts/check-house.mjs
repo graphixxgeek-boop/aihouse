@@ -919,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 138'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 139'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2427,7 +2427,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // scripts/kpi-report.mjs est un simple script .mjs (pas un module "@/lib" transpilé) : ses
   // fonctions pures s'importent directement, et main() est gardé par un test d'entrypoint pour ne
   // JAMAIS déclencher d'appel réseau/exec réel pendant ce test.
-  const {codeHealthScore,smartBreakerPerformanceScore,smartBreakerImprovementScore,qualityScore,coherenceScore,replayabilityScore,dashboardCoverageScore,expectedTestBlockCount,buildKpiSynthesisHtml}=await import('../scripts/kpi-report.mjs');
+  const {codeHealthScore,smartBreakerPerformanceScore,smartBreakerImprovementScore,qualityScore,coherenceScore,replayabilityScore,dashboardCoverageScore,expectedTestBlockCount,buildKpiSynthesisHtml,fetchLiveMetrics,DEV_PORTS}=await import('../scripts/kpi-report.mjs');
   // Chemin sain : chaque fonction renvoie un vrai nombre fini à partir de données bien formées.
   assert.deepEqual(codeHealthScore(0,79,79),{tscScore:100,testScore:100,overall:100});
   assert.equal(codeHealthScore(2,79,79).tscScore,0,'any tsc error must zero the tsc sub-score, never a partial credit');
@@ -2479,6 +2479,24 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(kpiHtmlNA.includes('N/A'), 'a family with no real measurement this run must render as an honest N/A in the HTML report too, never a fabricated percentage');
   assert.ok(kpiHtmlNA.includes('🚨 Points d\'attention'), 'a non-empty alerts list must render as a visible warning note in the HTML report, not silently dropped');
   console.log('Passed: buildKpiSynthesisHtml() renders the exact same compact synthesis already logged by main() as a complete self-contained HTML document, carrying the real run id and real computed percentages, an honest N/A for any unmeasured family, and a visible warning note whenever the alerts list is non-empty.');
+
+  // fetchLiveMetrics() port fallback (2026-09-20, real bug found while running full_sim16: vinext
+  // served on port 3000 with nothing occupying 5173, so the old single-port fetch silently reported
+  // "unreachable" against a server that was actually up). Stub global.fetch to prove the function
+  // tries every DEV_PORTS entry in order and returns the first real success, never stopping at the
+  // first connection failure.
+  assert.deepEqual(DEV_PORTS,[5173,3000],'the known-ports list must still start with the conventional vite default, 3000 only as a real fallback');
+  const realFetch=globalThis.fetch;
+  try{
+    const attempted=[];
+    globalThis.fetch=async(url)=>{attempted.push(url);if(url.includes(':5173'))throw new Error('connect ECONNREFUSED');return{ok:true,json:async()=>({geminiKeyMetrics:{tours:1}})};};
+    const okOnFallback=await fetchLiveMetrics();
+    assert.deepEqual(attempted,['http://localhost:5173/api/admin','http://localhost:3000/api/admin'],'a connection failure on the first port must fall through to the next one, never stop silently');
+    assert.deepEqual(okOnFallback,{geminiKeyMetrics:{tours:1}},'a real success on the fallback port must be returned exactly, not discarded because an earlier port failed');
+    globalThis.fetch=async()=>{throw new Error('connect ECONNREFUSED');};
+    assert.equal(await fetchLiveMetrics(),undefined,'every known port failing must report an honest absence, never a crash or a fabricated metrics object');
+  }finally{globalThis.fetch=realFetch;}
+  console.log('Passed: fetchLiveMetrics() tries every known dev-server port in order and returns the first real success rather than stopping at the first connection failure, closing the exact real full_sim16 bug where the dev server ran on port 3000 while the check only ever tried 5173 — and still reports an honest absence, never a crash, when every known port fails.');
 }
 
 {

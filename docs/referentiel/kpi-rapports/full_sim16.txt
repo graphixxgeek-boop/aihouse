@@ -1,0 +1,69 @@
+Tableau de bord — rapport KPI complet (cf. docs/referentiel/tableau-de-bord.md pour les règles).
+
+**🔧 Performance globale du Smart Breaker : 96%**
+**📈 Améliorations réalisées sur l’outil : 88%** (7/8 capacités prévues, implémentées et testées)
+→ Action : Validation qualité intégrale de GEMINI_FALLBACK_MODELS avant activation en production
+
+== Robustesse du code : tsc --noEmit ==
+OK — 0 erreur.
+
+== Robustesse du code : check-house.mjs ==
+OK — 122/122 bloc(s) de test passés, suite verte.
+
+== Robustesse du code : points fragiles ouverts ==
+7 point(s) fragile(s) ouvert(s) — détail dans docs/referentiel/points-fragiles.md.
+
+== Robustesse du code : taille et densité ==
+lib/lia.ts : 185 lignes (prompt géant, à surveiller — pas un défaut en soi).
+lib/dialogue.ts : 259 lignes.
+lib/ : 24 fichiers.
+
+== KPI global — Robustesse du code ==
+100% (moyenne : propreté tsc 100%, suite de tests 100%, couverture réelle par fonction (AXA-CHECK) 99%). Points fragiles et taille de code restent affichés en compteurs bruts ci-dessus (pas de plafond naturel pour un %).
+→ Lecture : code sain, rien à faire ici pour l’instant.
+
+== Performance runtime — Smart Breaker (détail) ==
+Tours réels (appels Gemini nécessaires) : 454.
+Clé principale déjà indisponible au départ du tour : 302 fois sur 454 (67%).
+Tentatives individuelles (clé × modèle) : 475 — 454 réussies, 12 bloquées par quota (429), 9 erreurs transitoires (503), 0 clés invalides (401/403).
+Trafic réel persisté dans .gemini-key-health.json : 200 épisode(s) (par empreinte de clé × modèle).
+
+== Qualité de sortie ==
+KPI global Qualité : 100% des tours n’ont eu besoin d’aucune réplique de repli anti-écho (0 intervention(s) sur 268 tour(s)).
+→ Lecture : le modèle varie déjà suffisamment sans avoir besoin du filet de secours la plupart du temps — rien à faire ici pour l’instant.
+
+== Cohérence logique ==
+KPI global Cohérence logique : 100% des tours n’ont nécessité aucune troncature de sécurité (1 intervention(s) sur 268 tour(s) — Lia : 0, Noé : 1).
+→ Action : le déséquilibre entre Lia et Noé est net — vérifier si le prompt d’un des deux personnages (lib/lia.ts) encourage des répliques trop longues ou mal ponctuées de son côté spécifiquement, plutôt qu’un problème général.
+
+== Rejouabilité (signal partiel — diversité récente des bonus) ==
+KPI global Rejouabilité (partiel) : 100% des 9 bonus possibles vus parmi les 12 derniers tirages (9/9).
+Limite honnête : bonusLog ne garde que les 12 derniers tirages (app/api/lia/route.ts) — ce chiffre reflète la diversité RÉCENTE, pas garantie sur toute la session si plus de 12 tirages ont eu lieu. Un historique inter-sessions réel (tours jusqu’à révélation, nombre de disputes, variété des ouvertures) reste à construire (chantier 2, cf. docs/referentiel/tableau-de-bord.md).
+→ Lecture : bonne diversité récente — rien à faire ici pour l’instant.
+
+== KPI global — Performance runtime ==
+96% (identique au KPI en tête de rapport — cette famille EST le Smart Breaker aujourd’hui).
+
+== KPI général — Couverture du tableau de bord lui-même (à surveiller en priorité) ==
+100% des 5 familles ont produit une vraie mesure cette exécution (5/5).
+→ Lecture : les 5 familles répondent — la synthèse ci-dessous reflète bien l’état réel du projet, pas un tableau de bord partiellement éteint.
+
+== Synthèse ==
+Tout est vert : 100% robustesse du code, 7 point(s) fragile(s) ouvert(s) déjà identifié(s) et suivis.
+
+== SYNTHÈSE COMPACTE (à relayer telle quelle dans la conversation) ==
+Run : full_sim16
+| Famille | KPI global |
+|---|---|
+| 🔧 Smart Breaker — performance | 96% |
+| 📈 Smart Breaker — améliorations | 88% |
+| Robustesse du code | 100% |
+| Qualité de sortie | 100% |
+| Cohérence logique | 100% |
+| Rejouabilité (partiel) | 100% |
+| Couverture du tableau de bord | 100% |
+
+Aucun point d’attention — tout est vert.
+
+Historique complet (toutes les exécutions, tous les chiffres) : docs/referentiel/kpi-historique.csv — à envoyer en pièce jointe, jamais collé dans la conversation.
+Copie de présentation HTML régénérée : .kpi-report-latest.html (jamais committée — cf. .gitignore).

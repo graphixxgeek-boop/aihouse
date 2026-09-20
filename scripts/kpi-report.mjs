@@ -279,20 +279,27 @@ function repoStats() {
 // Compteurs remis à zéro à chaque redémarrage du serveur (lib/gemini-keys.ts, lib/quality-metrics.ts) :
 // lire ce rapport juste après une simulation complète, avant de relancer le serveur pour la
 // suivante (étape 4 de l'Article 18), donne exactement les chiffres de CETTE session-là.
-async function fetchLiveMetrics() {
-    try {
-        const res = await fetch('http://localhost:5173/api/admin', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: '1980' }),
-            signal: AbortSignal.timeout(3000),
-        });
-        if (!res.ok) { console.log(`Serveur de dev joint mais code refusé (${res.status}) — pas de mesure cette fois.`); return undefined; }
-        const data = await res.json();
-        if (!data.geminiKeyMetrics) { console.log('Serveur de dev joint, mais aucune métrique renvoyée (version du code trop ancienne ?).'); return undefined; }
-        return data;
-    } catch {
-        console.log('Serveur de dev non joignable (normal si aucune simulation n’est en cours) — pas de mesure cette fois.');
-        return undefined;
+// Port trouvé le 2026-09-20 : vinext/vite ne choisit pas toujours 5173 (observé sur ce port de
+// développement précis : port 3000 sans rien d'autre occupant 5173) — jamais documenté nulle part
+// comme garanti, donc on essaie les deux plutôt que d'échouer silencieusement sur un port supposé.
+export const DEV_PORTS = [5173, 3000];
+export async function fetchLiveMetrics() {
+    for (const port of DEV_PORTS) {
+        try {
+            const res = await fetch(`http://localhost:${port}/api/admin`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: '1980' }),
+                signal: AbortSignal.timeout(3000),
+            });
+            if (!res.ok) { console.log(`Serveur de dev joint (port ${port}) mais code refusé (${res.status}) — pas de mesure cette fois.`); return undefined; }
+            const data = await res.json();
+            if (!data.geminiKeyMetrics) { console.log(`Serveur de dev joint (port ${port}), mais aucune métrique renvoyée (version du code trop ancienne ?).`); return undefined; }
+            return data;
+        } catch {
+            continue;
+        }
     }
+    console.log(`Serveur de dev non joignable sur les ports connus (${DEV_PORTS.join(', ')}) — normal si aucune simulation n’est en cours, pas de mesure cette fois.`);
+    return undefined;
 }
 
 function reportSmartBreaker(m) {
