@@ -133,7 +133,15 @@ outils ? ». Trois relations de nature différente, jamais un seul mécanisme :
   en lui-même la preuve externe et indépendante qu'un agent séparé a réellement été appelé, exactement
   le type de preuve qui manquait pour un appel d'agent ad hoc. Premier audit réel : le passage du
   2026-09-20 (antérieur à la création de cet outil) n'a logiquement aucune consultation associée —
-  constat honnête, pas une anomalie à corriger.
+  constat honnête, pas une anomalie à corriger. **Écart réel trouvé et corrigé le 2026-09-21**
+  (tâche #137, question directe de l'utilisateur sur les priorités de scan de l'équipe noyau, qui a
+  aussi fait remonter ce point) : cette fonction, entièrement écrite et testée par fixtures, n'était
+  jamais appelée nulle part en production — exactement le même angle mort que
+  `check-profil-utilisateur.mjs`/`runNetworkCheck()` lui-même, corrigé le même soir. Câblée dans
+  `runNetworkCheck()` (`le-coordinateur.mjs`), pour THE-FINAL-JUDGE (`docs/the-final-judge/index.md`)
+  ET son cousin THE-DEEP-READER (`docs/suivi/relectures-lourdes/index.md`), jamais l'un sans l'autre —
+  deux nouvelles lignes dans la synthèse gratuite, réellement exercées à chaque passage
+  `runNetworkCheck()` (donc à chaque Ronde CIRCLE-TASKS qui coche l'item `network-check-run`).
 
 ## Nuance sur l'automatisation elle-même (2026-09-20)
 
@@ -359,6 +367,48 @@ indépendant). Un sous-agent ici ajouterait un coût fixe sans aucun bénéfice 
 indépendante — l'exact anti-patron que SMART-CONSO-TOKEN existe pour repérer. La bonne unité de
 travail reste l'agent principal suivant cette procédure, déclenché par le signal CIRCLE-TASKS
 ci-dessus.
+
+## Arbitrage entre chantiers concurrents — `compareChantiers()` (2026-09-21)
+
+Tâche #135, demandée explicitement pendant la conception de CASSANDRA-RH : « SMART-CONSO-TOKEN doit
+aussi pouvoir arbitrer entre plusieurs chantiers concurrents, pas seulement juger une action isolée ».
+`compareChantiers(candidates)` prend une liste de candidats déjà munis de leur propre coût estimé
+(calculé ailleurs — `estimateTokens()`, un chiffre déjà connu — jamais un second calcul ici) et de
+leurs propres signaux déjà connus (staleness CLEAN-DIRTY-OLD, priorité explicite du suivi, etc.,
+fournis tels quels par l'appelant) : elle AGRÈGE et PRÉSENTE côte à côte (total, table via
+`formatChantierComparison()`), jamais ne choisit lequel traiter en premier — même discipline
+"informe, jamais ne décide" que `classifyConsumption()`/`assess()`. Volontairement minimal : aucune
+tentative de calculer une "valeur" par chantier (un chantier bon marché mais peu utile ne doit jamais
+être présenté comme automatiquement préférable à un chantier coûteux mais important) — ce jugement
+reste toujours humain/agent, jamais un score fabriqué qui prétendrait le remplacer.
+
+## Rendre SMART-CONSO-TOKEN proactif — `ARCHIVE_FIRST_REMINDER` (2026-09-21)
+
+Tâche #136. Généralisation actée d'une précision réelle trouvée pendant le chantier 3 (loveRealized) :
+l'agent avait répondu à une question par calcul et lecture des simulations déjà archivées, sans
+jamais relancer quoi que ce soit — l'utilisateur a demandé que ce réflexe devienne systématique
+plutôt que redécouvert au cas par cas (« avant de recommander/lancer une simulation coûteuse, vérifier
+d'abord si les données déjà archivées répondent à la question »). Jamais une détection automatique
+(aucun moyen mécanique de savoir si une archive répond VRAIMENT à une question précise) : un rappel
+textuel fixe, `ARCHIVE_FIRST_REMINDER`, appended par `assess()` à tout verdict `avertissement_souple`
+ou `seuil_dur` (jamais à un verdict `ok`, qui ne pèse rien de coûteux). Portée volontairement limitée
+à ce rappel simple — la reformulation plus ambitieuse du #136 ("suggérer une priorité" entre
+plusieurs actions à venir) rejoint plutôt `compareChantiers()` ci-dessus une fois plusieurs candidats
+réellement en concurrence, jamais un second mécanisme séparé pour la même idée.
+
+## Audit de fiabilité — tâche #137 (2026-09-21)
+
+« Auditer et fiabiliser l'exploitation de Smart Conso API/SMART-CONSO-TOKEN partout où la charte
+l'exige. » Vérifié point par point plutôt que supposé : `checkToolConnections()`/`EXPECTED_CONNECTIONS`
+(le test de connexion documentaire) est déjà réellement fiable — vérifié EN DIRECT et BLOQUANT
+(pre-commit, `check-house.mjs`) contre les vrais fichiers du dépôt, aucun écart trouvé. Smart Conso
+API a son équivalent (`findUnconfirmedBursts()`) déjà réellement câblé dans `runNetworkCheck()`.
+Le seul vrai trou trouvé : `findJudgeSpawnsWithoutConsultation()` (SMART-CONSO-TOKEN, autorité réelle
+sur THE-FINAL-JUDGE/THE-DEEP-READER) n'était jamais appelée en production — corrigé, cf. section
+"Autorité réelle" plus haut. **Non traité, laissé explicitement en file** : `#138` (accompagnement en
+temps réel d'une tâche longue) reste trop ouvert pour être implémenté sans calibrage — quel signal
+déclencherait une relance en cours de tâche, sous quelle forme, à quelle fréquence, sont des choix
+réels qui appartiennent à l'utilisateur, jamais devinés (Article 16).
 
 **Rattaché à CIRCLE-TASKS.** `claude-md-weight-signal` (thème "Qualité du code") relit CLAUDE.md et
 appelle en direct `scanDocumentWeight()`/`listDatedNarrativeMarkers()` — jamais un second calcul,

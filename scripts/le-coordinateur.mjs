@@ -50,7 +50,7 @@ import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
 import { classifyCheckLevel } from "./check-level-target.mjs";
 import { lastTouchDays, relativeStaleness } from "./clean-dirty-old.mjs";
 import { findUnconfirmedBursts } from "./smart-conso-api.mjs";
-import { summarizeHistory } from "./smart-conso-token.mjs";
+import { summarizeHistory, findJudgeSpawnsWithoutConsultation } from "./smart-conso-token.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 // Best-effort, local, jamais committé — même statut que .gemini-key-health.json (mémoire de
@@ -416,6 +416,22 @@ export function runNetworkCheck({ shImpl = sh } = {}) {
   const tokenHistory = existsSync(tokenHistoryPath) ? JSON.parse(readFileSync(tokenHistoryPath, "utf8")) : { actions: [] };
   const tokenSummary = summarizeHistory(tokenHistory, Date.now());
   rows.push({ name: "SMART-CONSO-TOKEN (rythme 7 derniers jours)", result: `${tokenSummary.totalRecent} action(s) — ${JSON.stringify(tokenSummary.byType)}`, when: now });
+
+  // Autorité réelle sur THE-FINAL-JUDGE/THE-DEEP-READER (tâche #137, 2026-09-21 : « auditer et
+  // fiabiliser l'exploitation de Smart Conso API/SMART-CONSO-TOKEN partout où la charte l'exige »).
+  // findJudgeSpawnsWithoutConsultation() existait déjà, entièrement testé par fixtures, mais n'était
+  // jamais appelé nulle part en production — exactement le même angle mort que les deux items
+  // "Passages réels" ajoutés à CIRCLE-TASKS plus tôt ce soir. Compare chaque passage RÉELLEMENT
+  // archivé (preuve externe et vérifiable) à l'historique local de consultation SMART-CONSO-TOKEN.
+  const judgeIndexPath = join(ROOT, "docs/the-final-judge/index.md");
+  const judgeIndex = existsSync(judgeIndexPath) ? readFileSync(judgeIndexPath, "utf8") : "";
+  const judgeMissing = findJudgeSpawnsWithoutConsultation(judgeIndex, tokenHistory);
+  rows.push({ name: "SMART-CONSO-TOKEN (spawns THE-FINAL-JUDGE sans consultation confirmée)", result: judgeMissing.length ? `à regarder (${judgeMissing.length} : ${judgeMissing.join(", ")})` : "ok", when: now });
+
+  const deepReaderIndexPath = join(ROOT, "docs/suivi/relectures-lourdes/index.md");
+  const deepReaderIndex = existsSync(deepReaderIndexPath) ? readFileSync(deepReaderIndexPath, "utf8") : "";
+  const deepReaderMissing = findJudgeSpawnsWithoutConsultation(deepReaderIndex, tokenHistory);
+  rows.push({ name: "SMART-CONSO-TOKEN (spawns THE-DEEP-READER sans consultation confirmée)", result: deepReaderMissing.length ? `à regarder (${deepReaderMissing.length} : ${deepReaderMissing.join(", ")})` : "ok", when: now });
 
   saveState({ lastHead: head, lastWhen: now });
   return { duplicate, previousRun: state, rows };

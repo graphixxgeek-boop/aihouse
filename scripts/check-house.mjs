@@ -940,7 +940,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 174'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 175'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3093,10 +3093,18 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // de portée de la suite de tests.
   const fakeShImpl = (cmd) => (cmd.includes('check-house') ? 'OK — suite verte.' : '');
   const networkResult = runNetworkCheck({ shImpl: fakeShImpl });
-  assert.equal(networkResult.rows.length, 8, 'runNetworkCheck() must genuinely produce all 8 rows of the real network synthesis, never crash partway through (the exact real bug found tonight) nor silently drop one');
+  assert.equal(networkResult.rows.length, 10, 'runNetworkCheck() must genuinely produce all 10 rows of the real network synthesis (8 original + the 2026-09-21 findJudgeSpawnsWithoutConsultation() rows for THE-FINAL-JUDGE/THE-DEEP-READER), never crash partway through nor silently drop one');
   assert.ok(networkResult.rows.every((r) => typeof r.name === 'string' && typeof r.result === 'string' && r.result.length > 0), 'every row must carry a real name and a real, non-empty result string — never an undefined value leaking from a broken sub-computation');
   assert.ok(networkResult.rows.some((r) => r.name.includes('SMART-CONSO-TOKEN')), 'the SMART-CONSO-TOKEN rhythm row specifically (the exact one that crashed tonight) must be genuinely present and computed, not skipped');
-  console.log('Passed: runNetworkCheck() runs end-to-end against the real repository state (with only the two subprocess calls stubbed) and produces all 8 expected rows with real, non-empty results — closing the exact real gap (a ReferenceError in the SMART-CONSO-TOKEN row, never caught because this integration point had no test at all) found by manually running node scripts/le-coordinateur.mjs tonight.');
+  // Tâche #137 (2026-09-21, question directe de l'utilisateur sur les priorités de scan de l'équipe
+  // noyau, qui a aussi fait remonter cet écart) : findJudgeSpawnsWithoutConsultation() existait déjà,
+  // testé par fixtures, mais n'était jamais appelé nulle part en production — le même angle mort que
+  // check-profil-utilisateur.mjs/runNetworkCheck() lui-même, corrigé plus tôt ce soir. Vérifié en
+  // direct contre les vrais registres du dépôt (docs/the-final-judge/index.md,
+  // docs/suivi/relectures-lourdes/index.md), jamais une fixture synthétique.
+  assert.ok(networkResult.rows.some((r) => r.name.includes('THE-FINAL-JUDGE') && r.name.includes('SMART-CONSO-TOKEN')), 'a real row must now check real THE-FINAL-JUDGE spawns (docs/the-final-judge/index.md) against confirmed SMART-CONSO-TOKEN consultations, closing the exact real gap found while answering the "core team priority" question tonight');
+  assert.ok(networkResult.rows.some((r) => r.name.includes('THE-DEEP-READER') && r.name.includes('SMART-CONSO-TOKEN')), 'the same real check must also run for THE-DEEP-READER (docs/suivi/relectures-lourdes/index.md), its cousin, never checked in isolation only');
+  console.log('Passed: runNetworkCheck() runs end-to-end against the real repository state (with only the two subprocess calls stubbed) and produces all 10 expected rows with real, non-empty results — closing the exact real gap (a ReferenceError in the SMART-CONSO-TOKEN row, never caught because this integration point had no test at all) found by manually running node scripts/le-coordinateur.mjs tonight, plus (2026-09-21) the newly-wired real THE-FINAL-JUDGE/THE-DEEP-READER spawn-without-consultation checks.');
   // Menu des prestations (2026-09-20, demande explicite de l'utilisateur : « le coordinateur est
   // capable de proposer de nouvelles prestations [...] ce menu est très utile pour toi »). Vérifie
   // que le menu réel (celui affiché à chaque passage automatique) est bien formé et que chaque
@@ -3908,6 +3916,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     extractNormativeMarkers, diffNormativeMarkers,
     extractRuleUnits, countArticleCrossReferences, classifyRuleSensitivity, classifyRuleImportance,
     findRedundantRulePairs, buildClaudeMdRuleTable, renderClaudeMdRuleTable,
+    ARCHIVE_FIRST_REMINDER, compareChantiers, formatChantierComparison,
   } = await import('../scripts/smart-conso-token.mjs');
 
   assert.equal(estimateTokens('abcd'), 1, 'the ~4-characters-per-token heuristic must round to the nearest whole token, never a fractional or wildly inaccurate estimate');
@@ -3938,6 +3947,14 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const unknownVerdict = assess({ actionType: 'un_schema_jamais_vu', history: { actions: [] }, now, agentIdentity: 'claude-sonnet-5' });
   assert.equal(unknownVerdict.verdict, 'ok', 'an action type absent from the known costly-pattern registry must report a genuinely neutral verdict, never a fabricated warning about a pattern the tool has no real basis to judge');
   assert.ok(KNOWN_COSTLY_PATTERNS.agent_subagent_spawn.raison.includes('37'), 'the agent-spawn pattern must cite the real ~37k-token cold-start finding from the 2026-09-20 research, not a vague unsourced claim');
+
+  // ARCHIVE_FIRST_REMINDER (tâche #136, 2026-09-21, généralisation actée d'une précision réelle
+  // trouvée pendant le chantier 3 : « avant de recommander/lancer une simulation coûteuse, vérifier
+  // d'abord si les données déjà archivées répondent à la question »). Appended aux verdicts non
+  // anodins seulement — jamais sur un verdict "ok", qui n'a rien de coûteux à peser.
+  assert.ok(okVerdict.message.includes(ARCHIVE_FIRST_REMINDER), 'a soft-warning verdict (a real costly pattern below its hard threshold) must carry the proactive archive-first reminder, the whole point of making SMART-CONSO-TOKEN proactive rather than purely reactive');
+  assert.ok(hardVerdict.message.includes(ARCHIVE_FIRST_REMINDER), 'a hard-threshold verdict must likewise carry the reminder — the question window it opens is exactly the moment to ask whether an archive already answers the need');
+  assert.ok(!unknownVerdict.message.includes(ARCHIVE_FIRST_REMINDER), 'a genuinely neutral "ok" verdict must never carry the reminder — nothing costly is being weighed, so nudging toward archives would be noise');
 
   const claudeMdText = 'ligne\n'.repeat(400);
   const scanResultAlways = scanDocumentWeight(claudeMdText, 'CLAUDE.md', { alwaysLoaded: true });
@@ -4172,6 +4189,24 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(rendered.includes('Aucune redondance forte détectée') || rendered.includes('Redondances possibles'), 'the rendered output must always say explicitly whether a redundancy was found or not, never silently omit that section');
 
   console.log('Passed: CLAUDE.MD.SPY (extractRuleUnits/countArticleCrossReferences/classifyRuleSensitivity/classifyRuleImportance/findRedundantRulePairs/buildClaudeMdRuleTable/renderClaudeMdRuleTable) correctly splits CLAUDE.md into one unit per real "Article N" heading bounded by either the next Article or the next top-level "## " heading — closing a real regression found while calibrating live against the actual file, where the last Article silently swallowed 510 unrelated lines — counts real cross-file "Article N" citations, gives Article 0 a fixed maximal sensitivity label untouched by any calculation while flagging other articles only on a genuine self-declared "non négociable" marker, classifies importance against thresholds empirically calibrated on this project\'s real citation distribution rather than arbitrary round numbers, flags strong vocabulary overlap between two rules at a strict threshold while never dragging in an unrelated third rule or crashing on an empty list, and assembles/renders the full reference table faithfully.');
+
+  // compareChantiers() (tâche #135, 2026-09-21) : compare des candidats déjà estimés côte à côte,
+  // en pur mode "informe, jamais ne décide" — jamais un second calcul de coût, jamais un tri qui
+  // choisirait un ordre de traitement à la place de l'utilisateur/l'agent.
+  const emptyComparison = compareChantiers([]);
+  assert.deepEqual(emptyComparison.comparaison, [], 'an empty candidate list must report an honest empty comparison, never a fabricated entry');
+  assert.ok(/rien à comparer/.test(emptyComparison.message), 'an empty candidate list must say so explicitly rather than silently returning nothing');
+  const realComparison = compareChantiers([
+    { nom: 'CASSANDRA-RH round 2', tokensEstimes: 15000, signaux: ['tâche la plus ancienne ouverte'] },
+    { nom: 'SMART-CONSO-TOKEN proactif', tokensEstimes: 3000 },
+  ]);
+  assert.equal(realComparison.comparaison.length, 2, 'compareChantiers() must return exactly one entry per real candidate given, in the same order, never dropping or reordering one');
+  assert.equal(realComparison.total, 18000, 'the total must be the real honest sum of each candidate\'s own already-estimated cost, never a second independent calculation');
+  assert.deepEqual(realComparison.comparaison[1].signaux, [], 'a candidate given with no signals must report an honest empty array, never a fabricated one');
+  assert.ok(/informe seulement, ne décide jamais/.test(realComparison.message), 'the message must explicitly state this tool never decides which chantier to treat first — the whole point of the "informs, never decides" doctrine already established for classifyConsumption()/assess()');
+  const renderedComparison = formatChantierComparison(realComparison);
+  assert.ok(renderedComparison.includes('CASSANDRA-RH round 2') && renderedComparison.includes('tâche la plus ancienne ouverte'), 'formatChantierComparison() must render each real candidate by name with its own real signals, never a generic placeholder row');
+  assert.equal(formatChantierComparison(emptyComparison), emptyComparison.message, 'rendering an empty comparison must just surface the honest absence message, never an empty markdown table with only headers');
 }
 
 {

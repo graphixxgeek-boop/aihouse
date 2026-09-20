@@ -586,6 +586,47 @@ export function recommendRereadBoundary(deepReaderIndexText, sessionsDir, readDi
   };
 }
 
+// compareChantiers() — tâche #135 (2026-09-20, demande explicite pendant la conception de
+// CASSANDRA-RH : « SMART-CONSO-TOKEN doit aussi pouvoir arbitrer entre plusieurs chantiers
+// concurrents [...] une fonction qui compare le poids estimé de plusieurs candidats côte à côte, en
+// pur mode "informe, jamais ne décide" »). Chaque candidat porte déjà son propre coût estimé
+// (calculé ailleurs — estimateTokens()/measureClaudeMdWeight()/un chiffre déjà connu, jamais un
+// second calcul ici) et ses propres signaux déjà connus (staleness CLEAN-DIRTY-OLD, priorité
+// explicite du suivi, etc., fournis tels quels par l'appelant) — cette fonction ne fait qu'AGRÉGER
+// et PRÉSENTER côte à côte, jamais choisir un ordre de traitement à la place de l'utilisateur ou de
+// l'agent (même discipline que classifyConsumption()/assess() ci-dessus : informe, ne tranche
+// jamais). `candidates`: Array<{ nom: string, tokensEstimes: number, signaux?: string[] }>.
+export function compareChantiers(candidates) {
+  if (!candidates || !candidates.length) {
+    return { comparaison: [], total: 0, message: "Aucun chantier candidat fourni — rien à comparer." };
+  }
+  const comparaison = candidates.map((c) => ({
+    nom: c.nom,
+    tokensEstimes: Number.isFinite(c.tokensEstimes) ? c.tokensEstimes : undefined,
+    signaux: c.signaux ?? [],
+  }));
+  const total = comparaison.reduce((sum, c) => sum + (c.tokensEstimes ?? 0), 0);
+  return {
+    comparaison,
+    total,
+    message: `${comparaison.length} chantier(s) comparé(s) côte à côte (~${total} tokens estimés au total) — informe seulement, ne décide jamais lequel traiter en premier : le choix reste toujours à l'utilisateur ou à l'agent qui pilote.`,
+  };
+}
+
+// Rendu texte, même convention que formatScanReport()/renderClaudeMdRuleTable() ci-dessus : une
+// table markdown, jamais une écriture disque ici.
+export function formatChantierComparison(result) {
+  if (!result.comparaison.length) return result.message;
+  const lines = [
+    "| Chantier | Tokens estimés | Signaux |",
+    "|---|---|---|",
+    ...result.comparaison.map((c) => `| ${c.nom} | ${c.tokensEstimes !== undefined ? `~${c.tokensEstimes}` : "—"} | ${c.signaux.length ? c.signaux.join(", ") : "—"} |`),
+    "",
+    result.message,
+  ];
+  return lines.join("\n");
+}
+
 function loadJson(path, fallback) {
   if (!existsSync(path)) return fallback;
   try {
@@ -604,6 +645,16 @@ export function countRecentActions(history, actionType, now, windowHours) {
 // statut d'honnêteté que le seuil de Smart Conso API à sa création) : un nombre d'agents séparés
 // lancés dans une fenêtre de 2h, le schéma le plus coûteux du registre ci-dessus.
 export const HARD_THRESHOLDS = { agent_subagent_spawn: { count: 3, windowHours: 2 } };
+
+// Rappel proactif "vérifier les archives d'abord" — tâche #136 (rendre SMART-CONSO-TOKEN proactif
+// plutôt que purement réactif), généralisation actée le 2026-09-21 d'une précision réelle trouvée
+// pendant le chantier 3 : l'agent avait alors répondu à une question purement par calcul/lecture des
+// simulations déjà archivées, sans jamais en lancer une nouvelle — l'utilisateur a demandé
+// explicitement que ce réflexe devienne systématique plutôt que découvert au cas par cas. Jamais une
+// détection automatique (aucun moyen mécanique de savoir si une archive répond VRAIMENT à une
+// question donnée) — un rappel systématique, appended à tout avis non anodin, jamais une case qu'on
+// oublierait de relire.
+export const ARCHIVE_FIRST_REMINDER = "Avant de foncer : les données déjà archivées (docs/simulations/, docs/el-professor/, docs/referentiel/kpi-rapports/, les registres ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD...) répondent-elles déjà à la question, sans avoir besoin de relancer quoi que ce soit de coûteux ?";
 
 // Fonction pure centrale : combine un schéma connu (registre ci-dessus) + l'historique mesurable de
 // la session (jamais un chiffre exact de tokens) pour un verdict fiabilisé — jamais un blocage
@@ -624,7 +675,7 @@ export function assess({ actionType, context, history, now, agentIdentity, inves
       // contourne jamais (même principe que Smart Conso API : informe, ne tranche jamais).
       return {
         verdict: "seuil_dur",
-        message: `Seuil dur atteint : ${recentCount} action(s) "${actionType}" déjà confirmée(s) dans les ${threshold.windowHours} dernières heures (limite : ${threshold.count}). ${pattern ? pattern.raison : ""} Une fenêtre de question doit s'ouvrir avant de continuer.${investNote}`,
+        message: `Seuil dur atteint : ${recentCount} action(s) "${actionType}" déjà confirmée(s) dans les ${threshold.windowHours} dernières heures (limite : ${threshold.count}). ${pattern ? pattern.raison : ""} Une fenêtre de question doit s'ouvrir avant de continuer.${investNote} 💡 ${ARCHIVE_FIRST_REMINDER}`,
         freshness, investment: invest,
       };
     }
@@ -643,7 +694,7 @@ export function assess({ actionType, context, history, now, agentIdentity, inves
     }
     return {
       verdict: "avertissement_souple",
-      message: `Schéma connu coûteux ("${actionType}") : ${pattern.raison} Contexte donné : ${context || "non précisé"}. Négociable avec un besoin réel clair, mais à peser avant de foncer ("on ne chauffe pas une pièce en été").${investNote}`,
+      message: `Schéma connu coûteux ("${actionType}") : ${pattern.raison} Contexte donné : ${context || "non précisé"}. Négociable avec un besoin réel clair, mais à peser avant de foncer ("on ne chauffe pas une pièce en été").${investNote} 💡 ${ARCHIVE_FIRST_REMINDER}`,
       freshness, investment: invest,
     };
   }
