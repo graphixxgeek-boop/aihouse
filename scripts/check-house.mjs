@@ -919,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 129'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 130'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3133,6 +3133,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     scanDocumentWeight, scanScope, SCOPE_LEVELS, computeAdoptionKpi, KNOWN_COSTLY_PATTERNS, KNOWLEDGE_PROVENANCE,
     formatScanReport, countDatedNarrativeMarkers, findJudgeSpawnsWithoutConsultation, AUTOMATION_TOKEN_NUANCE,
     listDatedNarrativeMarkers, checkToolConnections, EXPECTED_CONNECTIONS, trackWeightTrend,
+    classifyConsumption, computeInvestmentRatio,
   } = await import('../scripts/smart-conso-token.mjs');
 
   assert.equal(estimateTokens('abcd'), 1, 'the ~4-characters-per-token heuristic must round to the nearest whole token, never a fractional or wildly inaccurate estimate');
@@ -3240,4 +3241,35 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(trackWeightTrend(multiPast, 3000, t1).direction, 'stable', 'with multiple past scans recorded, the comparison must always use the MOST RECENT one, never an older or averaged figure');
 
   console.log('Passed: SMART-CONSO-TOKEN correctly estimates token weight from raw text length, classifies a document into low/moderate/high relative to the cited research benchmarks, never silently assumes its costly-pattern knowledge stays valid across a real model/platform change, escalates a recognized costly pattern from soft to hard exactly at its configured threshold while never fabricating a verdict for an unknown pattern, reuses THE-FINAL-JUDGE\'s exact scope vocabulary rather than inventing a second one, now correctly distinguishes an always-loaded document (real actionable cost) from an on-demand one (informative only) with a genuinely differentiated concrete action for each, mechanically counts real dated narrative markers as a safe starting point for a future restructuring, computes its adoption KPI from real applied proposals only, explicitly knows the two-sided truth about automation\'s real token cost, can retroactively verify — using THE-FINAL-JUDGE\'s own archived reports as independent proof — whether a real agent spawn was ever actually preceded by a confirmed consultation, mechanically confirms (checked live against the project\'s own real files) that every document meant to reference it genuinely does, and exploits its own accumulated scan history to report a real improvement or degradation trend rather than a bare current number.');
+
+  // Distinction investissement / consommation sans retour (2026-09-20, demande explicite : « il ne
+  // faut pas qu'il décourage un investissement sain, qu'il vienne de moi, toi ou les outils »).
+  assert.equal(classifyConsumption({ buildsReusableTool: true }).classification, 'investissement', 'a spend that builds a mechanism reused at zero future cost must be classified as a genuine investment');
+  assert.equal(classifyConsumption({ preventsFutureDebugging: true }).classification, 'investissement', 'a verification performed before a risky change, cheaper than debugging the same issue later, must also be classified as a genuine investment');
+  assert.equal(classifyConsumption({ isDuplicateOfRecent: true, buildsReusableTool: true }).classification, 'sans_retour', 'a duplicate of recent work can never be an investment, even when it also claims to build a reusable tool — the anti-duplicate rule always wins');
+  assert.equal(classifyConsumption({ scopeMatchesNeed: false, buildsReusableTool: true }).classification, 'sans_retour', 'a spend whose scope overshoots the real expressed need is classified as no-return even with an otherwise sound intent, since the excess cost itself pays for nothing');
+  assert.equal(classifyConsumption({}).classification, 'a_evaluer', 'with no recognized investment signal at all, the verdict is an honest "to evaluate", never a presumed waste by default');
+
+  const investAssess = assess({ actionType: 'agent_subagent_spawn', history: { actions: [] }, now: Date.now(), agentIdentity: 'claude-sonnet-5', investment: { buildsReusableTool: true } });
+  assert.equal(investAssess.verdict, 'investissement_reconnu', 'a costly pattern recognized as a genuine investment must never be phrased as a discouraging warning — the verdict itself must reflect that recognition');
+  const wasteAssess = assess({ actionType: 'agent_subagent_spawn', history: { actions: [] }, now: Date.now(), agentIdentity: 'claude-sonnet-5', investment: { isDuplicateOfRecent: true } });
+  assert.equal(wasteAssess.verdict, 'avertissement_souple', 'a costly pattern explicitly identified as a duplicate with no return must keep the normal soft-warning verdict, never be upgraded to a false investment recommendation');
+  const hardWithInvestment = assess({ actionType: 'agent_subagent_spawn', history: { actions: [{ type: 'agent_subagent_spawn', at: Date.now() }, { type: 'agent_subagent_spawn', at: Date.now() }, { type: 'agent_subagent_spawn', at: Date.now() }] }, now: Date.now(), agentIdentity: 'claude-sonnet-5', investment: { buildsReusableTool: true } });
+  assert.equal(hardWithInvestment.verdict, 'seuil_dur', 'a hard threshold already reached must stay non-negotiable (Article 22) even facing a recognized investment — the classification informs the mandatory question, it never bypasses it');
+  assert.ok(hardWithInvestment.message.includes('Investissement'), 'the hard-threshold message must still surface the investment context, so the mandatory question to the user is well-informed rather than needlessly alarmist');
+
+  assert.deepEqual(computeInvestmentRatio({ actions: [] }, Date.now()).total, 0, 'with no classified actions at all, the investment ratio must report an honest zero, never a fabricated percentage');
+  const ratioNow = Date.now();
+  const ratioHistory = { actions: [
+    { type: 'a', at: ratioNow - 1000, classification: 'investissement' },
+    { type: 'b', at: ratioNow - 2000, classification: 'investissement' },
+    { type: 'c', at: ratioNow - 3000, classification: 'sans_retour' },
+    { type: 'd', at: ratioNow - 4000, classification: 'a_evaluer' },
+    { type: 'e', at: ratioNow - 4000 },
+  ] };
+  const ratio = computeInvestmentRatio(ratioHistory, ratioNow);
+  assert.deepEqual({ total: ratio.total, investissement: ratio.investissement, sansRetour: ratio.sansRetour, aEvaluer: ratio.aEvaluer }, { total: 4, investissement: 2, sansRetour: 1, aEvaluer: 1 }, 'computeInvestmentRatio() must count only genuinely classified actions within the window, correctly splitting investment/no-return/to-evaluate and ignoring an unclassified action entirely rather than miscounting it');
+  assert.equal(ratio.pctInvestissement, 50, 'the investment percentage must be computed from the real classified total, never from all recorded actions including unclassified ones');
+
+  console.log('Passed: classifyConsumption() correctly recognizes a genuine token investment (a reusable mechanical tool built, or a check that prevents costlier future debugging) versus a no-return spend (a duplicate of recent work, or a scope that overshoots the real need), assess() reflects a recognized investment as a distinct non-discouraging verdict while a hard hourly threshold stays non-negotiable regardless (informed, never bypassed), and computeInvestmentRatio() reports an honest, correctly-split investment/waste breakdown from real classified history only — the exact real gap the user asked to close: never discouraging a healthy investment, whether it comes from them, the agent, or the tools.');
 }

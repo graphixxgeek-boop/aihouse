@@ -153,7 +153,43 @@ Prématuré à ce stade (outil créé le jour même, zéro historique réel). Re
 consultations accumulées pour observer si le rythme enregistré éclaire effectivement une décision
 future (jamais un ajustement automatique des seuils, cf. blueprint).
 
+## Investissement vs consommation sans retour (2026-09-20)
+
+Demandé explicitement par l'utilisateur : « il peut y avoir des "investissements" en token [...] il
+ne faut pas qu'il décourage un investissement sain, qu'il vienne de moi, toi ou les outils [...] il
+y a une mesure précise de la pertinence du besoin de conso de tokens ». `classifyConsumption()`
+applique quatre critères vérifiables AU MOMENT de la dépense, jamais une prédiction littérale de
+l'avenir :
+- **`buildsReusableTool`** → `investissement` : construit un mécanisme qui tournera ensuite à coût
+  nul pour le contexte de l'agent (automatisation mécanique, cf. `AUTOMATION_TOKEN_NUANCE`) — chaque
+  réutilisation future rembourse le coût de construction.
+- **`preventsFutureDebugging`** → `investissement` : une vérification/un audit avant un changement
+  risqué, moins cher que de découvrir et corriger le même problème plus tard, potentiellement sur
+  plusieurs sessions.
+- **`isDuplicateOfRecent`** → toujours `sans_retour`, prioritaire sur les deux signaux positifs
+  ci-dessus (principe anti-doublon déjà établi ailleurs dans ce projet).
+- **`scopeMatchesNeed`** (faux) → `sans_retour` : le palier choisi dépasse la taille réelle du
+  besoin exprimé — le SURPLUS de coût ne rapporte rien, même avec une intention par ailleurs saine.
+
+La "mesure précise de la pertinence" demandée est ce verdict catégorique (`investissement` /
+`sans_retour` / `a_evaluer`) accompagné de sa raison explicite — jamais un faux score numérique
+inventé sans base réelle pour le mesurer, même honnêteté que le reste de l'outil.
+
+`assess()` reflète cette classification sans jamais la laisser court-circuiter l'autorité déjà
+posée : un investissement reconnu transforme un `avertissement_souple` en `investissement_reconnu`
+(poursuite recommandée, jamais découragée à tort) ; mais un `seuil_dur` déjà atteint reste TOUJOURS
+non négociable (Article 22) — la classification informe la question obligatoire à l'utilisateur
+ouverte à ce seuil, elle ne la remplace ni ne la contourne jamais (même principe que Smart Conso
+API : informe, ne tranche jamais).
+
+`computeInvestmentRatio()` rapporte, sur l'historique réellement classifié (`recordAction(...,
+classification)`), la part réelle d'investissement vs sans-retour sur une fenêtre glissante —
+affiché au même endroit que le rythme (`summarizeHistory`), dans le crochet post-commit, pour que
+l'utilisateur et l'agent voient les deux ensemble. Jamais une estimation rétroactive sur des actions
+passées sans classification.
+
 ## KPI
 
-Pas encore raccordé au tableau de bord général — même raisonnement que Smart Conso API à sa
-naissance.
+Le bilan investissement (`computeInvestmentRatio`) rejoint le rythme comme premier indicateur
+concret de l'utilité réelle de l'outil — pas encore raccordé au tableau de bord général, même
+raisonnement que Smart Conso API à sa naissance.

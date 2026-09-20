@@ -218,6 +218,44 @@ export function computeAdoptionKpi(history) {
   return { propositionsAppliquees: applied.length, reductionMoyennePct: Math.round((total / applied.length) * 10) / 10 };
 }
 
+// Distinction investissement / consommation sans retour (2026-09-20, demande explicite de
+// l'utilisateur : « il peut y avoir des "investissements" en token [...] il ne faut pas qu'il
+// décourage un investissement sain, qu'il vienne de moi, toi ou les outils »). Ne prédit JAMAIS
+// littéralement l'avenir (aucune boule de cristal) — applique des critères vérifiables AU MOMENT de
+// la dépense. La "mesure précise de la pertinence" demandée est ce verdict catégorique + sa raison
+// explicite, jamais un faux score numérique inventé sans base réelle pour le mesurer (même honnêteté
+// que le reste de cet outil, cf. estimateTokens).
+// - buildsReusableTool : la dépense construit un mécanisme qui tournera ENSUITE à coût nul pour le
+//   contexte de l'agent (AUTOMATISATION MÉCANIQUE, cf. AUTOMATION_TOKEN_NUANCE ci-dessus) — chaque
+//   réutilisation future rembourse le coût de construction, un investissement par construction même.
+// - preventsFutureDebugging : une vérification/un test/un audit AVANT un changement risqué ou
+//   complexe — moins cher que de découvrir et corriger le même problème plus tard, potentiellement
+//   sur plusieurs sessions futures (rend mesurable le principe déjà derrière l'Article 5).
+// - isDuplicateOfRecent : la même action (ou une équivalente) vient déjà d'être faite récemment —
+//   ne peut JAMAIS être un investissement, quoi qu'elle prétende construire ou prévenir (principe
+//   anti-doublon déjà établi ailleurs dans ce projet) — toujours classée sans retour, prioritaire
+//   sur les deux signaux positifs ci-dessus.
+// - scopeMatchesNeed : le palier d'intensité/portée choisi correspond à la taille réelle du besoin
+//   exprimé (ex. un audit "très lourd" pour une question triviale) — un décalage rend la dépense
+//   sans retour même si l'intention de départ était saine, car c'est le SURPLUS de coût qui ne
+//   rapporte rien, pas l'action elle-même.
+export function classifyConsumption(context = {}) {
+  const { buildsReusableTool = false, preventsFutureDebugging = false, isDuplicateOfRecent = false, scopeMatchesNeed = true } = context;
+  if (isDuplicateOfRecent) {
+    return { classification: "sans_retour", raison: "Doublon d'une action déjà faite récemment — un investissement ne se paie jamais deux fois pour le même travail (principe anti-doublon)." };
+  }
+  if (!scopeMatchesNeed) {
+    return { classification: "sans_retour", raison: "Le palier choisi dépasse la taille réelle du besoin exprimé — le surplus de coût ne rapporte rien, même quand l'intention de départ était saine." };
+  }
+  if (buildsReusableTool) {
+    return { classification: "investissement", raison: "Construit un mécanisme qui tournera ensuite à coût nul (automatisation mécanique) — chaque réutilisation future rembourse ce coût de construction." };
+  }
+  if (preventsFutureDebugging) {
+    return { classification: "investissement", raison: "Vérification/audit avant un changement risqué ou complexe — moins cher que de découvrir et corriger le même problème plus tard, potentiellement sur plusieurs sessions." };
+  }
+  return { classification: "a_evaluer", raison: "Aucun signal d'investissement reconnu (ni outil réutilisable construit, ni prévention de débogage futur) — à juger au cas par cas selon le besoin réel exprimé, jamais présumé superflu par défaut." };
+}
+
 // Un changement de modèle/plateforme rend la connaissance ci-dessus potentiellement obsolète —
 // jamais supposée valable en silence (demande explicite de l'utilisateur). Comparaison tolérante
 // (sous-chaîne, insensible à la casse) : "claude-sonnet-5" valide bien "claude".
@@ -258,32 +296,48 @@ export const HARD_THRESHOLDS = { agent_subagent_spawn: { count: 3, windowHours: 
 // la session (jamais un chiffre exact de tokens) pour un verdict fiabilisé — jamais un blocage
 // silencieux, toujours une raison explicite (demande explicite de l'utilisateur : « il combine
 // données connues et données observables, et rend un verdict fiabilisé »).
-export function assess({ actionType, context, history, now, agentIdentity }) {
+export function assess({ actionType, context, history, now, agentIdentity, investment }) {
   const pattern = KNOWN_COSTLY_PATTERNS[actionType];
   const freshness = checkKnowledgeFreshness(agentIdentity);
   const threshold = HARD_THRESHOLDS[actionType];
+  const invest = investment ? classifyConsumption(investment) : undefined;
+  const investNote = invest ? ` [Investissement : ${invest.classification === "investissement" ? "reconnu" : invest.classification === "sans_retour" ? "SANS RETOUR" : "à évaluer"} — ${invest.raison}]` : "";
 
   if (threshold) {
     const recentCount = countRecentActions(history, actionType, now, threshold.windowHours);
     if (recentCount >= threshold.count) {
+      // Un seuil dur reste non négociable (Article 22) même face à un investissement reconnu — la
+      // classification INFORME la question obligatoire à l'utilisateur, elle ne la remplace ni ne la
+      // contourne jamais (même principe que Smart Conso API : informe, ne tranche jamais).
       return {
         verdict: "seuil_dur",
-        message: `Seuil dur atteint : ${recentCount} action(s) "${actionType}" déjà confirmée(s) dans les ${threshold.windowHours} dernières heures (limite : ${threshold.count}). ${pattern ? pattern.raison : ""} Une fenêtre de question doit s'ouvrir avant de continuer.`,
-        freshness,
+        message: `Seuil dur atteint : ${recentCount} action(s) "${actionType}" déjà confirmée(s) dans les ${threshold.windowHours} dernières heures (limite : ${threshold.count}). ${pattern ? pattern.raison : ""} Une fenêtre de question doit s'ouvrir avant de continuer.${investNote}`,
+        freshness, investment: invest,
       };
     }
   }
   if (pattern && pattern.poids === "élevé") {
+    // Un investissement reconnu ne doit jamais être découragé à tort (demande explicite de
+    // l'utilisateur) : la dépense reste réelle et signalée, mais le verdict change de nature — une
+    // recommandation de poursuite plutôt qu'un avertissement, dès lors qu'un vrai critère
+    // d'investissement est rempli (jamais sur la seule prétention non vérifiée de l'appelant).
+    if (invest?.classification === "investissement") {
+      return {
+        verdict: "investissement_reconnu",
+        message: `Schéma connu coûteux ("${actionType}") mais reconnu comme un investissement sain : ${invest.raison} Poursuite recommandée malgré le coût réel — ne pas décourager à tort.`,
+        freshness, investment: invest,
+      };
+    }
     return {
       verdict: "avertissement_souple",
-      message: `Schéma connu coûteux ("${actionType}") : ${pattern.raison} Contexte donné : ${context || "non précisé"}. Négociable avec un besoin réel clair, mais à peser avant de foncer ("on ne chauffe pas une pièce en été").`,
-      freshness,
+      message: `Schéma connu coûteux ("${actionType}") : ${pattern.raison} Contexte donné : ${context || "non précisé"}. Négociable avec un besoin réel clair, mais à peser avant de foncer ("on ne chauffe pas une pièce en été").${investNote}`,
+      freshness, investment: invest,
     };
   }
   if (pattern) {
-    return { verdict: "ok", message: `Schéma reconnu ("${actionType}", poids ${pattern.poids}) : ${pattern.raison} Pas de seuil franchi.`, freshness };
+    return { verdict: "ok", message: `Schéma reconnu ("${actionType}", poids ${pattern.poids}) : ${pattern.raison} Pas de seuil franchi.${investNote}`, freshness, investment: invest };
   }
-  return { verdict: "ok", message: `Schéma "${actionType}" non répertorié dans le registre connu — rien à signaler de spécifique.`, freshness };
+  return { verdict: "ok", message: `Schéma "${actionType}" non répertorié dans le registre connu — rien à signaler de spécifique.${investNote}`, freshness, investment: invest };
 }
 
 // Enregistre le rythme/contexte/conditions de chaque action confirmée (demande explicite de
@@ -292,12 +346,35 @@ export function assess({ actionType, context, history, now, agentIdentity }) {
 // historique (jamais un apprentissage automatique silencieux) — sert uniquement de matière pour une
 // vraie relecture humaine/agent périodique, même principe que `describeKnownLessons()` du Smart
 // Breaker.
-export function recordAction(actionType, context, now) {
+export function recordAction(actionType, context, now, classification) {
   const history = loadJson(HISTORY_PATH, { actions: [] });
   history.actions = (history.actions ?? []).slice(-300);
-  history.actions.push({ type: actionType, context: context || null, at: now });
+  history.actions.push({ type: actionType, context: context || null, at: now, ...(classification ? { classification } : {}) });
   writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 1));
   return history;
+}
+
+// Bilan investissement/sans-retour sur une fenêtre glissante (2026-09-20, demande explicite : « une
+// mesure precise de la pertinence du besoin de conso de tokens [...] faire de notre suivi-conso-token
+// un vrai heros des economies »). Alimenté uniquement par les actions confirmées avec une
+// classification réelle (recordAction(..., classification)) — jamais une estimation rétroactive sur
+// des actions passées qui n'en portaient pas encore. Rapporte un fait mesuré, jamais un jugement
+// moral : un fort taux de "sans_retour" est un signal à regarder, pas une faute automatiquement
+// reprochée (même honnêteté que le reste de cet outil).
+export function computeInvestmentRatio(history, now, windowDays = 7) {
+  const windowMs = windowDays * 24 * 60 * 60 * 1000;
+  const recent = (history?.actions ?? []).filter((a) => a.classification && now - a.at <= windowMs && now - a.at >= 0);
+  if (!recent.length) {
+    return { total: 0, investissement: 0, sansRetour: 0, aEvaluer: 0, message: "Aucune action classifiée récemment — rien à mesurer pour l'instant." };
+  }
+  const investissement = recent.filter((a) => a.classification === "investissement").length;
+  const sansRetour = recent.filter((a) => a.classification === "sans_retour").length;
+  const aEvaluer = recent.filter((a) => a.classification === "a_evaluer").length;
+  return {
+    total: recent.length, investissement, sansRetour, aEvaluer,
+    pctInvestissement: Math.round((investissement / recent.length) * 1000) / 10,
+    message: `${investissement}/${recent.length} action(s) coûteuse(s) classifiée(s) comme investissement réel sur ${windowDays} jours (${sansRetour} sans retour, ${aEvaluer} à évaluer).`,
+  };
 }
 
 export function summarizeHistory(history, now, windowDays = 7) {
@@ -431,12 +508,23 @@ function main() {
   const history = loadJson(HISTORY_PATH, { actions: [] });
 
   if (!actionType) {
-    console.log("Usage: node scripts/smart-conso-token.mjs <type-d'action> [--confirm] [--identity=claude-sonnet-5] [--context=\"...\"]");
+    console.log("Usage: node scripts/smart-conso-token.mjs <type-d'action> [--confirm] [--identity=claude-sonnet-5] [--context=\"...\"] [--builds-tool] [--prevents-debugging] [--duplicate] [--scope-mismatch]");
     console.log("Types connus :", Object.keys(KNOWN_COSTLY_PATTERNS).join(", "));
     process.exit(1);
   }
 
-  const advice = assess({ actionType, context, history, now, agentIdentity });
+  // Flags investissement (2026-09-20) : déclarés explicitement par l'appelant, jamais devinés —
+  // classifyConsumption() reste honnête sur ses propres critères, jamais une lecture automatique de
+  // l'intention réelle de l'appelant (qui resterait invérifiable ici).
+  const hasInvestmentFlag = ["--builds-tool", "--prevents-debugging", "--duplicate", "--scope-mismatch"].some((f) => process.argv.includes(f));
+  const investment = hasInvestmentFlag ? {
+    buildsReusableTool: process.argv.includes("--builds-tool"),
+    preventsFutureDebugging: process.argv.includes("--prevents-debugging"),
+    isDuplicateOfRecent: process.argv.includes("--duplicate"),
+    scopeMatchesNeed: !process.argv.includes("--scope-mismatch"),
+  } : undefined;
+
+  const advice = assess({ actionType, context, history, now, agentIdentity, investment });
   console.log("=== SMART-CONSO-TOKEN — avis avant action coûteuse en tokens ===\n");
   console.log(`Action envisagée : ${actionType}`);
   if (context) console.log(`Contexte : ${context}`);
@@ -445,7 +533,7 @@ function main() {
   else if (advice.freshness) console.log(`(${advice.freshness.message})`);
 
   if (process.argv.includes("--confirm")) {
-    recordAction(actionType, context, now);
+    recordAction(actionType, context, now, advice.investment?.classification);
     console.log("\nAction confirmée et enregistrée dans l'historique local.");
   } else {
     console.log("\n(Avis seul — relancer avec --confirm une fois la décision prise.)");
@@ -453,6 +541,8 @@ function main() {
 
   const summary = summarizeHistory(history, now);
   console.log(`\nRythme observé (${summary.windowDays} derniers jours) : ${summary.totalRecent} action(s) au total — ${JSON.stringify(summary.byType)}`);
+  const ratio = computeInvestmentRatio(history, now);
+  console.log(`Bilan investissement (${7} derniers jours) : ${ratio.message}`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

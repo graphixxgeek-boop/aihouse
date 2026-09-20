@@ -73,6 +73,29 @@ si le rythme réel dérive dans le temps. Ce patron n'ajuste JAMAIS ses propres 
 partir de cet historique : il fournit la matière, une vraie relecture reste toujours nécessaire pour
 en tirer une décision (même principe que les leçons curatées du Smart Breaker).
 
+## Distinguer un investissement d'une consommation sans retour, sans jamais décourager le premier
+
+Demandé explicitement (2026-09-20) : une dépense de tokens n'est pas homogène — construire un
+mécanisme réutilisable ou vérifier avant un changement risqué peut se rembourser largement plus tard,
+alors qu'une même dépense dupliquée ou disproportionnée par rapport au besoin réel ne rapporte rien.
+**Ce patron ne prédit jamais littéralement l'avenir** : il applique des critères vérifiables AU
+MOMENT de la dépense (le mécanisme construit sera-t-il réellement réutilisé à coût nul ? la
+vérification a-t-elle lieu avant un changement risqué ? cette action duplique-t-elle un travail
+récent ? le palier choisi correspond-il à la taille réelle du besoin ?) plutôt qu'une estimation
+chiffrée du gain futur, qui n'aurait aucune base réelle pour se mesurer.
+
+Une classification "investissement" reconnue doit changer la NATURE du verdict rendu (une
+recommandation de poursuite, jamais un avertissement qui découragerait à tort une dépense saine) —
+mais ne doit JAMAIS court-circuiter un seuil déjà dur : la classification informe la décision (de
+l'agent ou de la question posée à l'utilisateur), elle ne la remplace ni ne la contourne jamais. Un
+doublon d'un travail récent, ou un palier disproportionné par rapport au besoin exprimé, restent
+toujours classés sans retour, même quand l'intention de départ était par ailleurs saine — le
+principe anti-doublon et la proportionnalité au besoin priment toujours sur la bonne intention.
+
+Ce jugement doit s'appliquer de façon UNIFORME, quel que soit qui déclenche la dépense — l'agent, la
+personne qui pilote le projet, ou un autre outil du paysage — jamais un critère à géométrie variable
+selon la source.
+
 ## Câblage attendu avec le reste du paysage d'outils
 
 - **Tout outil qui déclenche un agent séparé ou un vrai raisonnement coûteux** doit consulter ce

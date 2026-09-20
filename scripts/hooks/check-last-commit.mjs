@@ -10,7 +10,7 @@ import { recentCommits, findCommitsMissingSuiviUpdate, findTaskNumberIssues, nex
 import { walk, findDeadLifeFields, findTodoMarkers } from "../check-argus.mjs";
 import { checkLinks, LINKS } from "../check-harmonia.mjs";
 import { PRESTATIONS, formatMenu } from "../le-coordinateur.mjs";
-import { summarizeHistory } from "../smart-conso-token.mjs";
+import { summarizeHistory, computeInvestmentRatio } from "../smart-conso-token.mjs";
 
 const [last] = recentCommits(1);
 if (last && findCommitsMissingSuiviUpdate([last]).length) {
@@ -77,6 +77,12 @@ try {
 // avec instrumentation de couverture, juste pour le score AXA-CHECK — un vrai coût redondant à
 // chaque commit, contraire à la règle anti-doublon) : ce hook n'affiche que la liste de données,
 // gratuite et instantanée.
+// Réflexe attendu de l'agent à CE moment précis (précisé le 2026-09-20, correction explicite de
+// l'utilisateur — l'enchaînement exact, pas seulement "relire avant de répondre") : dès que ce
+// catalogue s'affiche en auto, se demander IMMÉDIATEMENT « une de ces prestations correspond-elle au
+// besoin actuellement en cours ? ». Un second réflexe, distinct et CUMULABLE avec celui-ci (jamais un
+// remplaçant) : relire aussi ce catalogue avant de répondre à toute future demande qui pourrait y
+// correspondre, même en dehors d'un commit.
 console.log("\n📋 Prestations disponibles via le réseau d'outils (rappel automatique) :\n");
 console.log(formatMenu(PRESTATIONS));
 console.log("");
@@ -87,8 +93,13 @@ console.log("");
 // sans l'autre. Limite honnête assumée : un pic qui survient pendant une longue plage de travail
 // sans commit entre-temps ne sera vu qu'au prochain commit, pas en temps réel.
 try {
-  const summary = summarizeHistory(JSON.parse(readFileSync(new URL("../../.smart-conso-token-history.json", import.meta.url), "utf8")), Date.now());
-  console.log(`🪙 Rythme SMART-CONSO-TOKEN (7 derniers jours) : ${summary.totalRecent} action(s) coûteuse(s) confirmée(s) — ${JSON.stringify(summary.byType)}\n`);
+  const tokenHistory = JSON.parse(readFileSync(new URL("../../.smart-conso-token-history.json", import.meta.url), "utf8"));
+  const summary = summarizeHistory(tokenHistory, Date.now());
+  console.log(`🪙 Rythme SMART-CONSO-TOKEN (7 derniers jours) : ${summary.totalRecent} action(s) coûteuse(s) confirmée(s) — ${JSON.stringify(summary.byType)}`);
+  // Bilan investissement/sans-retour (2026-09-20, demande explicite de l'utilisateur : « faire de
+  // notre suivi-conso-token un vrai héros des économies ») — vu au même moment que le rythme
+  // ci-dessus, jamais séparément, pour ne jamais décourager à tort un investissement sain.
+  console.log(`💡 ${computeInvestmentRatio(tokenHistory, Date.now()).message}\n`);
 } catch {
   console.log("🪙 Rythme SMART-CONSO-TOKEN : aucun historique local pour l'instant.\n");
 }
