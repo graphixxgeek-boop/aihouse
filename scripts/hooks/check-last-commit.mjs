@@ -5,10 +5,12 @@
 // déclenchement exact sur l'événement qui compte. N'écrit jamais rien lui-même : signale seulement
 // (cf. docs/regles-de-travail.md §4), la rédaction reste toujours faite avec le vrai contexte de la
 // conversation, jamais reconstituée depuis le seul message de commit.
-import { readFileSync } from "node:fs";
+import { readFileSync, rmSync } from "node:fs";
 import { recentCommits, findCommitsMissingSuiviUpdate, findTaskNumberIssues, nextTaskNumber } from "../check-suivi-fidelity.mjs";
 import { walk, findDeadLifeFields, findTodoMarkers } from "../check-argus.mjs";
 import { checkLinks, LINKS } from "../check-harmonia.mjs";
+import { collectCoverage, robustnessScore, LIB_MAP } from "../axa-check.mjs";
+import { lastTouchDays, relativeStaleness } from "../clean-dirty-old.mjs";
 import { PRESTATIONS, formatMenu } from "../le-coordinateur.mjs";
 import { summarizeHistory, computeInvestmentRatio, diagnoseAdviceAccuracy } from "../smart-conso-token.mjs";
 import { sh } from "../lib-shell.mjs";
@@ -70,6 +72,45 @@ try {
     );
   }
 } catch { /* best-effort, jamais bloquant — un balayage raté ne doit jamais empêcher un commit */ }
+
+// AXA-CHECK/CLEAN-DIRTY-OLD — vrai passage à chaque commit, pas seulement leur logique testée sur
+// des fixtures (2026-09-21, écart trouvé en répondant à une question directe de l'utilisateur :
+// « est-ce qu'il y a bien les scans harmonia et argus en priorité ? ainsi que les autres membres de
+// l'équipe noyau ? »). Vérifié à cette occasion : ARGUS/HARMONIA ci-dessus tournent bien réellement à
+// chaque commit, mais AXA-CHECK/CLEAN-DIRTY-OLD ne tournaient jusqu'ici que via check-house.mjs
+// (fixtures synthétiques, jamais un vrai passage sur le projet réel) — en tension directe avec
+// l'Article 20 (« c'est la totalité de l'outil qui tourne ainsi »). AXA-CHECK réutilise LA MÊME
+// couverture V8 que scripts/hooks/pre-commit vient de produire dans ce même lancement de
+// check-house.mjs (NODE_V8_COVERAGE pointé sur .sites-runtime/axa-check-postcommit-cov) — jamais un
+// second lancement rien que pour ce signal (règle anti-doublon, §7ter). Le dossier est consommé puis
+// nettoyé ici, jamais laissé traîner d'un commit à l'autre.
+try {
+  const covDir = ".sites-runtime/axa-check-postcommit-cov";
+  const perFile = collectCoverage(covDir);
+  const score = robustnessScore(Object.values(perFile).flat());
+  if (score !== undefined) {
+    console.log(`🔎 AXA-CHECK (balayage réel post-commit) : couverture globale par fonction ${Math.round(score)}% sur ${Object.keys(perFile).length} fichier(s) mesuré(s) — jamais une preuve de correction, un signal de robustesse seulement (cf. docs/axa-check/index.md).\n`);
+  }
+  rmSync(covDir, { recursive: true, force: true });
+} catch { /* best-effort, jamais bloquant */ }
+
+// CLEAN-DIRTY-OLD — coût minime (un seul `git log -1` par fichier de LIB_MAP, aucune instrumentation
+// lourde), jamais un frein réel à un commit contrairement à AXA-CHECK ci-dessus. Seul son SIGNAL de
+// fraîcheur (depuis quand son carnet n'a pas été relu, clean-dirty-old-signal) rejoignait la Ronde
+// CIRCLE-TASKS ; son vrai calcul de stagnation relative n'avait jamais tourné qu'à la main via
+// runNetworkCheck().
+try {
+  const lastTouchByFile = Object.fromEntries(Object.values(LIB_MAP).map((f) => [f, lastTouchDays(f)]));
+  const staleness = relativeStaleness(lastTouchByFile);
+  const staleFiles = Object.entries(staleness).filter(([, s]) => s.stale).map(([f]) => f);
+  if (staleFiles.length) {
+    console.error(
+      "\n🔎 CLEAN-DIRTY-OLD (balayage réel post-commit) : " + staleFiles.length +
+      ` fichier(s) stagnant(s) relativement au reste du projet — ${staleFiles.join(", ")} ` +
+      "(à vérifier via ARGUS/HARMONIA/ALWAYS-NEW-CODE, jamais un jugement seul, cf. docs/clean-dirty-old/index.md).\n",
+    );
+  }
+} catch { /* best-effort, jamais bloquant */ }
 
 // Rappel du catalogue LE-COORDINATEUR (2026-09-20, demande explicite de l'utilisateur : « je
 // voudrais que tu exploites ce catalogue et que tu en bénéficies, c'est pour ça que je cherche une

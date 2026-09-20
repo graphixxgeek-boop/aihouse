@@ -377,7 +377,7 @@ bloqué par un statut, seulement par l'existence réelle d'une fonction ou d'un 
 | LE-COORDINATEUR | Utilitaire nommé | — | agrège en un tableau très court ce que les outils gratuits ci-dessus disent déjà, repère un doublon de vérification récent ; son menu de prestations rappelle ce qui peut être commandé | gratuit | synthèse complète (`runNetworkCheck()`) = routine agent, jamais un crochet git (reshellerait `check-house.mjs`, redondant à chaque commit) ; menu des prestations seul = affiché automatiquement à chaque commit (`scripts/hooks/check-last-commit.mjs`, post-commit, 2026-09-20) |
 | Smart Breaker (`check-gemini-quota.mjs` + `gemini-key-health.mjs` + `api-providers.mjs` + `lib/gemini-keys.ts`) | Agent (structure particulière : pas de dossier `docs/` dédié, son « registre » est le fichier local `.gemini-key-health.json`, jamais committé) | — (jamais vérifié mécaniquement, sa structure hors norme n'a pas de chemin standard à contrôler) | blocages de quota/clé Gemini, portée PRODUCTION | gratuit à diagnostiquer | à la demande, ou automatique en production (repli) |
 | SMART-CONSO-TOKEN | Agent | 🎖️ | rythme de consommation de TOKENS de l'agent (Agent séparé, lecture exhaustive, poids d'un document toujours chargé) ; peut aussi scanner et proposer des réductions | gratuit à consulter | avant tout appel à un agent séparé ou tout raisonnement coûteux — obligation écrite dans la charte, jamais un garde-fou vérifiable après coup |
-| CIRCLE-TASKS (« Ronde périodique ») | Utilitaire nommé | — | 13 tâches périodiques gratuites mal automatisées, regroupées par thème (profil utilisateur, relecture des référentiels, KPI, tâche ouverte la plus ancienne — Suivi & référentiels ; rapport KPI, scans Smart Conso API/SMART-CONSO-TOKEN — KPI & scans ; zone ALWAYS-NEW-CODE la plus négligée, dernier passage CLEAN-DIRTY-OLD, câblage HTML des rapports, poids en tokens de CLAUDE.md — Qualité du code ; photo de la dream team, THE-SCREENER — Qualité & fun) — regroupées dans une seule fenêtre à cocher ; THE-FINAL-JUDGE reste visible dans la même fenêtre (thème Audit lourd) mais toujours marqué ⚠️🔴 coûteux (37k tokens), jamais coché par défaut | gratuit (sauf si THE-FINAL-JUDGE est explicitement coché) | à la demande de l'utilisateur ou de l'agent ; rappel proactif automatique dans le crochet post-commit après 10 commits sans passage |
+| CIRCLE-TASKS (« Ronde périodique ») | Utilitaire nommé | — | 15 tâches périodiques gratuites mal automatisées, regroupées par thème (profil utilisateur, relecture des référentiels, KPI, tâche ouverte la plus ancienne — Suivi & référentiels ; rapport KPI, scans Smart Conso API/SMART-CONSO-TOKEN — KPI & scans ; zone ALWAYS-NEW-CODE la plus négligée, dernier passage CLEAN-DIRTY-OLD, câblage HTML des rapports, poids en tokens de CLAUDE.md — Qualité du code ; garde-fou profil-utilisateur réellement exécuté, synthèse LE-COORDINATEUR réellement exécutée — Passages réels (smoke run), ajouté le 2026-09-21 ; photo de la dream team, THE-SCREENER — Qualité & fun) — regroupées dans une seule fenêtre à cocher ; THE-FINAL-JUDGE et THE-DEEP-READER restent visibles dans la même fenêtre (thème Audit lourd) mais toujours marqués ⚠️🔴 coûteux, jamais cochés par défaut | gratuit (sauf si THE-FINAL-JUDGE/THE-DEEP-READER est explicitement coché) | à la demande de l'utilisateur ou de l'agent ; rappel proactif automatique dans le crochet post-commit après 10 commits sans passage |
 | Gabarit HTML de remise de rapports (`scripts/html-report.mjs`) | Utilitaire nommé | — | mise en page soignée d'un rapport déjà produit (KPI, EL-PROFESSOR, THE-SCREENER, simulations, THE-FINAL-JUDGE...) — jamais le contenu métier lui-même | gratuit | importé et appelé par les autres outils au moment de produire une copie de présentation — jamais un outil qu'on invoque seul |
 | check-tasks-details | Agent | 🎖️ | état des lieux des tâches à la demande (zoom en cours/élargi/projet entier × forme liste/arborescence), rapport HTML, lecture seule de `docs/suivi/`, vérification croisée automatique (régression/stagnation) contre son propre historique | gratuit | sur demande explicite (moi ou l'utilisateur), gabarit de questions dédié (cf. `docs/referentiel/check-tasks-details.md`) |
 | CLAUDE.MD.SPY (extension de SMART-CONSO-TOKEN) | Utilitaire nommé | — | classe chaque Article de CLAUDE.md par sensibilité/importance, détecte les redondances possibles entre Articles | gratuit | sur demande, avant/pendant une passe d'allègement de CLAUDE.md (étape 2 de la procédure formalisée) |
@@ -983,11 +983,43 @@ option.
 
 **Répartition des blocs PAR THÈME, pas arbitraire (2026-09-20, idée explicite de l'utilisateur : « je
 voudrais proposer les coches/les prestations par thème »)** — `groupCircleReportByTheme()` range les
-items en 4 thèmes fixes (jamais recalculés dynamiquement) : Suivi & référentiels (profil,
-référentiel, correctifs), KPI & scans (KPI, signal ALWAYS-NEW-CODE, scan Smart Conso API, scan
-SMART-CONSO-TOKEN), Qualité & fun (THE-SCREENER, photo dream team), Audit lourd (THE-FINAL-JUDGE,
-seul dans son thème, toujours dernier). Chaque groupe tient dans la limite de 4 options — remplace le
-découpage précédent ("les 4 premiers, puis les 4 suivants"), qui ne portait aucun sens propre.
+items en thèmes fixes (`THEME_ORDER`, jamais recalculés dynamiquement — se référer à ce tableau plutôt
+qu'à un nombre recopié ici, corrigé le 2026-09-21 après avoir trouvé ce paragraphe resté à "4 thèmes"
+en oubliant complètement "Qualité du code", exactement l'écart que l'Article 13 interdit) : Suivi &
+référentiels (profil, référentiel, correctifs, tâche ouverte la plus ancienne), KPI & scans (KPI,
+signal ALWAYS-NEW-CODE, scan Smart Conso API, scan SMART-CONSO-TOKEN), Qualité du code (signal
+CLEAN-DIRTY-OLD, câblage HTML des rapports, poids en tokens de CLAUDE.md), **Passages réels (smoke
+run) — ajouté le 2026-09-21** (garde-fou profil-utilisateur réellement exécuté, synthèse
+LE-COORDINATEUR réellement exécutée — deux scripts déjà écrits et déjà testés par fixtures, mais
+jamais lancés pour de vrai avant cette date, cf. trouvaille ci-dessous), Qualité & fun (THE-SCREENER,
+photo dream team), Audit lourd (THE-FINAL-JUDGE et THE-DEEP-READER, les deux seuls items `costly`,
+toujours dernier). Chaque groupe tient dans la limite de 4 options — remplace le découpage précédent
+("les 4 premiers, puis les 4 suivants"), qui ne portait aucun sens propre.
+
+**Thème « Passages réels (smoke run) » — pourquoi un thème séparé plutôt qu'un ajout aux thèmes
+existants (2026-09-21, demande explicite de l'utilisateur : « il y a certainement de petits scripts
+peu coûteux [...] qui peuvent être exécutés, simplement parce qu'ils sont très peu coûteux et que ça
+garantit la fraîcheur du code »)** : les thèmes "Suivi & référentiels" et "Qualité du code" étaient
+déjà pleins (4 items chacun, la limite UI réelle) au moment de cet ajout — les y forcer aurait cassé
+la contrainte technique (`AskUserQuestion` plafonne à 4 options), pas seulement une convention. Ce
+thème regroupe une catégorie réellement distincte des "signaux" (lecture d'un index déjà écrit,
+thèmes KPI & scans/Qualité du code) : un vrai passage d'exécution d'un script déjà écrit et déjà
+couvert par des fixtures synthétiques dans `check-house.mjs`, mais jamais exercé contre l'état réel
+du projet — `check-profil-utilisateur.mjs` (jamais lancé une seule fois avant ce jour, confirmé en le
+lançant : « OK — 7 fiche(s) sur disque, toutes référencées dans l'index, aucun lien mort. ») et
+`runNetworkCheck()` de LE-COORDINATEUR (délibérément exclu du crochet post-commit car jugé "routine
+agent", mais ayant déjà attrapé un vrai bug caché cette session — `summarizeTokenHistory is not
+defined`, tâches #140/#148 — qu'aucun test unitaire n'avait détecté). `network-check-run` reste plus
+coûteux que les autres items gratuits (relance `check-house.mjs` avec instrumentation de couverture
+V8) mais n'invoque jamais d'agent séparé — jamais confondu avec le coût fixe de THE-FINAL-JUDGE/
+THE-DEEP-READER, donc jamais bundlé dans leur thème "Audit lourd" qui leur reste strictement réservé.
+Recherche faite le même jour pour d'autres candidats équivalents dans `scripts/` : aucun autre trouvé
+— tout le reste est soit déjà câblé ailleurs (ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD/
+CHECK-LEVEL-TARGET à chaque commit, EL-PROFESSOR à chaque simulation), soit coûte de vrais appels
+Gemini (`check-spirit.mjs`, `check-profile.mjs`, `check-gemini-quota.mjs`), soit est un outil à la
+demande par nature (`check-tasks-details.mjs`, HYPER-SCAN-CHECKPOINT), soit un simple module
+utilitaire sans `main()` de contenu à exécuter (`lib-shell.mjs`, `html-report.mjs`,
+`execution-profile.mjs`, etc.).
 
 **Jamais un tout-en-un silencieux** (demande explicite de l'utilisateur : « tu ouvres une fenêtre
 question me demandant de cocher ce que je veux précisément exécuter ») : le script affiche
@@ -1044,11 +1076,17 @@ première question, jamais la fenêtre à cocher directement :
    étiquette, à re-cocher comme les autres (limite technique actée : aucune case ne peut être
    pré-cochée dans l'outil de questions utilisé ici, l'utilisateur doit toujours cliquer lui-même
    sur ce qu'il veut garder).
-2. Une fois la Ronde effectivement exécutée, l'agent appelle lui-même `buildCircleRunSummaryHtml()`
+2. Une fois la Ronde effectivement exécutée, l'agent appelle lui-même `buildCircleRunSummaryText()`
    (jamais un `main()` automatique, qui ne connaît pas la sélection réelle faite en conversation) et
-   livre ce récapitulatif en fichier — le rapport de fin de Ronde qui manquait jusqu'ici (même écart
-   Article 13 constaté le même jour : la doc annonçait déjà CIRCLE-TASKS parmi les rapports rendus
-   par html-report.mjs, jamais câblé dans le vrai `main()`).
+   livre ce récapitulatif en fichier **texte, jamais HTML** — le rapport de fin de Ronde qui manquait
+   jusqu'ici (même écart Article 13 constaté le même jour : la doc annonçait déjà CIRCLE-TASKS parmi
+   les rapports rendus par html-report.mjs, jamais câblé dans le vrai `main()`). Corrigé le
+   2026-09-21 (trouvaille directe de l'utilisateur : « le rapport de circle devrait etre en txt et
+   non html ») : cette fonction avait initialement été construite en HTML, AVANT la décision
+   explicite du partage HTML/texte des rapports du projet (capturée dans docs/suivi, pas encore
+   construite en outil — Doc-Report — mais dont la règle range déjà le récap CIRCLE-TASKS du côté
+   texte) — jamais revisitée contre cette décision une fois prise, exactement l'écart que
+   l'Article 13 interdit.
 
 Portée explicitement limitée à CIRCLE-TASKS (calibrage du 2026-09-20) : les autres listes
 "recommandées" du projet (ex. `recommendNextTasks()` de check-tasks-details) gardent leur

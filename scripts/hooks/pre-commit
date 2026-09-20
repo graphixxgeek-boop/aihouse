@@ -12,8 +12,21 @@
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
+# Dossier de couverture V8 fixe et gitignoré (.sites-runtime/ déjà ignoré) — réutilisé tel quel par
+# le crochet post-commit pour un vrai passage AXA-CHECK/CLEAN-DIRTY-OLD (2026-09-21, écart trouvé en
+# répondant à une question directe de l'utilisateur : « est-ce qu'il y a bien les scans harmonia et
+# argus en priorité ? ainsi que les autres membres de l'équipe noyau ? » — ARGUS/HARMONIA avaient déjà
+# leur vrai passage post-commit, AXA-CHECK/CLEAN-DIRTY-OLD non, en tension directe avec l'Article 20).
+# La couverture est capturée DANS ce même lancement de check-house.mjs, déjà obligatoire — jamais un
+# second lancement rien que pour elle (règle anti-doublon, §7ter, déjà appliquée par runNetworkCheck()
+# et documentée en tête de le-coordinateur.mjs). Recréé à chaque commit pour ne jamais lire des
+# données périmées d'un commit précédent.
+COV_DIR=".sites-runtime/axa-check-postcommit-cov"
+rm -rf "$COV_DIR"
+mkdir -p "$COV_DIR"
+
 echo "🔎 check-house.mjs (ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD + reste de la suite)..."
-if ! node scripts/check-house.mjs > /tmp/check-house-precommit.log 2>&1; then
+if ! NODE_V8_COVERAGE="$COV_DIR" node scripts/check-house.mjs > /tmp/check-house-precommit.log 2>&1; then
   echo ""
   echo "🚨 COMMIT BLOQUÉ : check-house.mjs a échoué. Détail :"
   cat /tmp/check-house-precommit.log

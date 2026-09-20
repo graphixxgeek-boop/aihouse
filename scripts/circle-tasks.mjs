@@ -27,7 +27,6 @@ import { fileURLToPath } from "node:url";
 import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { scanDocumentWeight, listDatedNarrativeMarkers, extractRuleUnits, findRedundantRulePairs } from "./smart-conso-token.mjs";
-import { renderHtmlReport } from "./html-report.mjs";
 import { walkDocsPaths } from "./lib-shell.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -43,7 +42,10 @@ export const ALERT_ICON = "⚠️🔴";
 export const FINAL_JUDGE_TOKEN_COST = 37000;
 export function red(text) { return `\x1b[31m${text}\x1b[0m`; }
 
-// Les 9 items gratuits (2026-09-20, complétés en plusieurs passes le même jour : « il n'y a pas
+// Les items gratuits (nombre exact toujours vérifiable via CIRCLE_ITEMS.length dans
+// check-house.mjs, jamais recopié en dur ici — corrigé le 2026-09-21 après avoir trouvé ce
+// commentaire resté à "9" alors que le catalogue en comptait déjà 13, exactement l'écart que
+// l'Article 13 interdit) — complétés en plusieurs passes depuis le 2026-09-20 : « il n'y a pas
 // aussi les smart scans de api et token ? » — écart réel trouvé en refaisant le tour complet du
 // paysage ; « la photo de la dream team », ajoutée comme seul item purement récréatif ; puis « la
 // possibilité de demander une capture d'écran de la simulation » — THE-SCREENER, dernier oubli
@@ -202,6 +204,41 @@ export const CIRCLE_ITEMS = [
     cout: "zéro appel à l'API Gemini pour le mécanisme lui-même (capture Playwright locale) — CONDITIONNEL : n'a de sens que si une session/un serveur avec un vrai état est déjà en cours ; ne jamais lancer une nouvelle simulation juste pour cet item",
     tokensEstimes: "modéré — lecture vision de 2 images par l'agent + rédaction de la notation",
     execute: "Lancer node scripts/the-screener-capture.mjs contre un serveur DÉJÀ actif (dev ou site en ligne) avec une vraie session en cours, lire les 2 captures et noter contre docs/referentiel/regles-des-graphismes.md — jamais déclencher une nouvelle simulation juste pour cet item.",
+  },
+  // profil-utilisateur-guard (2026-09-21, trouvaille : « il y a certainement de petits scripts peu
+  // coûteux [...] qui peuvent être exécutés, simplement parce qu'ils sont très peu coûteux et que
+  // ça garantit la fraîcheur du code » — scripts/check-profil-utilisateur.mjs existait déjà,
+  // entièrement écrit et testé par des fixtures SYNTHÉTIQUES dans check-house.mjs, mais son vrai
+  // main() n'avait JAMAIS été exécuté contre le projet réel avant ce jour (vérifié en le lançant :
+  // « OK — 7 fiche(s) sur disque, toutes référencées dans l'index, aucun lien mort. »). Contrairement
+  // à l'item "profil" ci-dessus (qui ÉCRIT une nouvelle observation), celui-ci VÉRIFIE l'intégrité du
+  // système déjà écrit (fiches orphelines, liens morts entre l'index et le disque) — un vrai passage
+  // réel, jamais un remplacement des fixtures synthétiques qui le couvrent déjà par ailleurs.
+  {
+    id: "profil-utilisateur-guard",
+    theme: "Passages réels (smoke run)",
+    label: "Lancer le vrai garde-fou du dossier profil-utilisateur (fiches orphelines, liens morts)",
+    cout: "gratuit — node scripts/check-profil-utilisateur.mjs, lecture de fichiers déjà sur disque, zéro appel API",
+    tokensEstimes: "faible — sortie compacte du script",
+    execute: "Lancer `node scripts/check-profil-utilisateur.mjs` et lire le verdict (fiches sur disque non référencées dans l'index, liens de l'index vers un fichier disparu) — jamais un remplacement des fixtures synthétiques de check-house.mjs, un vrai passage contre l'état réel du dossier.",
+  },
+  // network-check-run (2026-09-21, même trouvaille). runNetworkCheck() (le-coordinateur.mjs) est
+  // délibérément exclu du crochet post-commit (docs/regles-de-travail.md : « synthèse complète =
+  // routine agent, jamais un crochet git [...] redondant à chaque commit ») — mais reste une vraie
+  // synthèse utile de temps en temps, pas seulement couverte par ses fonctions mécaniques testées
+  // isolément : elle a déjà attrapé un vrai bug caché cette session (`summarizeTokenHistory is not
+  // defined`, docs/suivi tâches #140/#148) qu'aucun test unitaire n'avait détecté. Plus coûteux que
+  // les autres items gratuits de cette liste (relance check-house.mjs avec instrumentation de
+  // couverture V8) — jamais confondu avec le coût AGENT SÉPARÉ fixe de THE-FINAL-JUDGE/
+  // THE-DEEP-READER : `costly` reste absent ici, aucun agent séparé n'est jamais invoqué, donc jamais
+  // bundlé dans le thème "Audit lourd" qui leur est réservé.
+  {
+    id: "network-check-run",
+    theme: "Passages réels (smoke run)",
+    label: "Lancer une vraie synthèse LE-COORDINATEUR (runNetworkCheck)",
+    cout: "gratuit — zéro appel API, mais plus lourd que les autres items de cette liste : relance check-house.mjs avec instrumentation de couverture V8",
+    tokensEstimes: "modéré à élevé — sortie complète de la synthèse (tableau agrégeant check-house.mjs, AXA-CHECK, ARGUS, HARMONIA, ALWAYS-NEW-CODE, CLEAN-DIRTY-OLD)",
+    execute: "Lancer `node scripts/le-coordinateur.mjs` (ou appeler runNetworkCheck() directement) et lire la synthèse complète — plus cher que les autres items de cette Ronde, à réserver aux passages où une vraie vérification croisée de tout le paysage est utile, pas à chaque Ronde mécaniquement.",
   },
   // THE-FINAL-JUDGE (2026-09-20, demande explicite de l'utilisateur : « integre le dans la liste à
   // cocher malgré tout [...] avec un panneau d'avertissement [...] caractères couleur rouge [...]
@@ -364,7 +401,7 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCode
 // serait plus déroutant qu'utile) — THE-FINAL-JUDGE reste dans son propre thème "Audit lourd",
 // systématiquement en dernier, cohérent avec la convention déjà actée (toujours en dernière
 // position de la fenêtre). Chaque thème tient dans un seul bloc de question (≤4 options).
-export const THEME_ORDER = ["Suivi & référentiels", "KPI & scans", "Qualité du code", "Qualité & fun", "Audit lourd"];
+export const THEME_ORDER = ["Suivi & référentiels", "KPI & scans", "Qualité du code", "Passages réels (smoke run)", "Qualité & fun", "Audit lourd"];
 export function groupCircleReportByTheme(report) {
   const groups = THEME_ORDER.map((theme) => ({ theme, items: report.filter((r) => r.theme === theme) }));
   const untagged = report.filter((r) => !THEME_ORDER.includes(r.theme));
@@ -428,20 +465,29 @@ export function recordCircleTasksRun(totalCommitCount, now = Date.now()) {
 // 2026-09-20) : chaque item coché produit déjà sa propre sortie de référence (fiche profil, CSV
 // KPI, entrée de registre...) — ce rapport se contente de lister quoi a tourné, un résultat en une
 // phrase, et un lien vers cette sortie déjà produite, jamais son contenu recopié.
+// TEXTE, pas HTML (corrigé le 2026-09-21, trouvaille directe de l'utilisateur — « le rapport de
+// circle devrait etre en txt et non html ») : cette fonction avait été construite le 2026-09-20,
+// AVANT la décision explicite du partage HTML/texte des rapports du projet (docs/suivi #230, réponse
+// de l'utilisateur : seuls les transcripts de simulation méritent le HTML, le récap de fin de Ronde
+// CIRCLE-TASKS reste texte) — jamais revisitée contre cette décision une fois prise, exactement
+// l'écart qu'Article 13 interdit. `renderHtmlReport()` n'a donc plus sa place ici.
 // `entries`: Array<{ id: string, label: string, outcome: string, link?: string }>.
-export const CIRCLE_RUN_SUMMARY_HTML_PATH = ".circle-tasks-run-summary-latest.html";
-export function buildCircleRunSummaryHtml(entries, { dateLabel } = {}) {
-  const rows = (entries || []).map((e) => [e.label ?? e.id ?? "—", e.outcome ?? "—", e.link ?? "—"]);
-  const blocks = rows.length
-    ? [{ type: "table", headers: ["Item exécuté", "Résultat", "Lien"], rows }]
-    : [{ type: "note", text: "Aucun item n'a été coché pour cette Ronde." }];
-  return renderHtmlReport({
-    title: "CIRCLE-TASKS — récapitulatif de la Ronde",
-    subtitle: "Index léger : ce qui a tourné et un pointeur vers la sortie déjà produite par chaque item, jamais son contenu dupliqué ici.",
-    dateLabel: dateLabel ?? new Date().toISOString(),
-    blocks,
-    footer: "CIRCLE-TASKS — la sélection des items reste toujours confirmée par une fenêtre à cocher avant exécution, jamais un tout-en-un silencieux.",
-  });
+export const CIRCLE_RUN_SUMMARY_PATH = ".circle-tasks-run-summary-latest.txt";
+export function buildCircleRunSummaryText(entries, { dateLabel } = {}) {
+  const lines = [
+    "=== CIRCLE-TASKS — récapitulatif de la Ronde ===",
+    `Date : ${dateLabel ?? new Date().toISOString()}`,
+    "Index léger : ce qui a tourné et un pointeur vers la sortie déjà produite par chaque item, jamais son contenu dupliqué ici.",
+    "",
+  ];
+  if (!entries || !entries.length) {
+    lines.push("Aucun item n'a été coché pour cette Ronde.");
+  } else {
+    lines.push("| Item exécuté | Résultat | Lien |", "|---|---|---|");
+    for (const e of entries) lines.push(`| ${e.label ?? e.id ?? "—"} | ${e.outcome ?? "—"} | ${e.link ?? "—"} |`);
+  }
+  lines.push("", "CIRCLE-TASKS — la sélection des items reste toujours confirmée par une fenêtre à cocher avant exécution, jamais un tout-en-un silencieux.");
+  return lines.join("\n");
 }
 
 function main() {

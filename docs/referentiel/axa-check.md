@@ -62,6 +62,18 @@ Confirmé par calibrage explicite : AXA-CHECK rejoint ARGUS et HARMONIA comme tr
 "toujours déployé" de l'Article 20 de `CLAUDE.md` — jamais un nouvel Article dédié, sa partie
 mécanique tourne à chaque changement de code comme les deux autres.
 
+**Écart réel trouvé et corrigé le 2026-09-21** (question directe de l'utilisateur : « est-ce qu'il y
+a bien les scans harmonia et argus en priorité ? ainsi que les autres membres de l'équipe noyau ? ») :
+jusqu'à ce jour, ce paragraphe était vrai en intention mais faux en pratique — seule la LOGIQUE
+d'AXA-CHECK était testée à chaque commit (fixtures synthétiques dans `check-house.mjs`, crochet
+`pre-commit`), jamais un vrai passage contre le projet réel, contrairement à ARGUS/HARMONIA qui, eux,
+avaient déjà leur vrai balayage post-commit depuis le 2026-09-20 (`scripts/hooks/check-last-commit.mjs`).
+Corrigé sans jamais relancer `check-house.mjs` une seconde fois (règle anti-doublon, §7ter) :
+`scripts/hooks/pre-commit` pointe désormais `NODE_V8_COVERAGE` sur un dossier fixe et gitignoré
+(`.sites-runtime/axa-check-postcommit-cov`) pendant le lancement de `check-house.mjs` déjà obligatoire ;
+`check-last-commit.mjs` (post-commit, non bloquant) lit ce même dossier via `collectCoverage()` +
+`robustnessScore()`, affiche la couverture globale réelle, puis nettoie le dossier.
+
 ## KPI — intégré à la famille existante, jamais un nouveau tableau
 
 Confirmé par calibrage explicite : la couverture réelle par fonction rejoint la famille

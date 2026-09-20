@@ -53,6 +53,15 @@ niveau "Exceptionnel"), CLEAN-DIRTY-OLD tourne automatiquement à chaque changem
 ARGUS/HARMONIA/AXA-CHECK — sa partie de calcul étant entièrement gratuite (quelques appels git +
 réutilisation d'une couverture déjà produite ailleurs).
 
+**Écart réel trouvé et corrigé le 2026-09-21** (même trouvaille que pour AXA-CHECK ci-dessus,
+question directe de l'utilisateur sur les priorités de scan de l'équipe noyau) : jusqu'à ce jour, ce
+paragraphe était également faux en pratique — seule sa logique était testée par `check-house.mjs`
+(fixtures), son vrai calcul de stagnation relative (`git log -1` par fichier de `LIB_MAP` +
+`relativeStaleness()`) n'avait jamais tourné qu'à la main via `runNetworkCheck()`. Corrigé : le même
+crochet `check-last-commit.mjs` (post-commit) appelle désormais réellement `lastTouchDays()` +
+`relativeStaleness()` sur les vrais fichiers du projet à chaque commit, coût minime (un seul appel
+git par fichier, aucune instrumentation lourde contrairement à AXA-CHECK).
+
 ## Rejoint la boîte à outils d'HYPER-SCAN-CHECKPOINT et LE-COORDINATEUR
 
 Un passage HYPER-SCAN-CHECKPOINT (même en version légère) inclut désormais un passage CLEAN-DIRTY-
