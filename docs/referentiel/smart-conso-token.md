@@ -147,11 +147,39 @@ récent au scan précédent et rapporte une amélioration/dégradation/stabilit�
 archivé — jamais un ajustement silencieux de ses propres seuils (cf. blueprint), seulement un fait
 observé qui nourrit la lecture humaine/agent du résultat.
 
-## Apprentissage et auto-évaluation — pas encore en place
+## Apprentissage et auto-évaluation — version sécurisée (2026-09-20)
 
-Prématuré à ce stade (outil créé le jour même, zéro historique réel). Revenir ici une fois plusieurs
-consultations accumulées pour observer si le rythme enregistré éclaire effectivement une décision
-future (jamais un ajustement automatique des seuils, cf. blueprint).
+Demandé explicitement par l'utilisateur : « il enregistre la réponse effective de l'interlocuteur :
+il agit conformément au conseil ou pas [...] il se rend compte s'il a fait des erreurs d'appréciation
+[...] mécanisme d'apprentissage ». **Tension réelle signalée avant d'implémenter (Article 14)** :
+la demande littérale (« se corrige de façon autonome ») romprait la règle déjà établie plusieurs
+fois dans ce document et le blueprint (« jamais un ajustement automatique de ses propres seuils »).
+Calibrée avec l'utilisateur en trois questions, résolue en **version sécurisée** :
+
+- `recordAction()` conserve désormais **qui a reçu ce conseil** (`recipient` : `agent` par défaut,
+  `outil`, ou `utilisateur`) et **le verdict rendu** par `assess()` pour cette action précise.
+- `recordOutcome(actionType, at, outcome)` attache, une fois connu, le résultat RÉELLEMENT observé
+  d'une action déjà confirmée (`sans_consequence` / `probleme_reel` / `confirme_utile`) — jamais
+  deviné ni inféré automatiquement, seulement lu si quelqu'un l'a explicitement fourni.
+- `diagnoseAdviceAccuracy(history, now)` repère mécaniquement deux familles de constats, jamais une
+  correction : (1) un **seuil dur probablement non respecté** — une action confirmée du même type
+  survenue trop vite (moins de 10 minutes par défaut) après un verdict `seuil_dur`, entièrement
+  automatique, aucune saisie manuelle nécessaire ; (2) un **résultat enregistré qui contredit ou
+  confirme un verdict passé** (un avertissement souple suivi d'un vrai problème confirme le
+  classement "élevé" ; suivi d'aucune conséquence questionne, sans jamais trancher seul, ce
+  classement ; un investissement reconnu qui s'avère non rentable pointe vers le contexte donné à
+  `classifyConsumption()` à ce moment précis, jamais vers le critère lui-même).
+
+**Portée volontairement limitée à l'agent et aux outils, jamais à l'utilisateur** (calibrage
+explicite du 2026-09-20) : aucune trace mécanique fiable n'existe de ce que l'utilisateur décide de
+son côté — les entrées `recipient:"utilisateur"` sont donc entièrement exclues du diagnostic, par
+honnêteté plutôt que par une fausse précision.
+
+**Ce qui NE change JAMAIS, même avec cette extension** : `diagnoseAdviceAccuracy()` ne modifie
+aucun seuil, aucun classement, aucune logique de `assess()`/`classifyConsumption()` — chaque
+constat reste une proposition à lire et à valider humainement/par l'agent, affichée aux moments
+déjà existants (crochet post-commit, à côté du rythme et du bilan investissement), jamais une
+nouvelle habitude à prendre ni un mécanisme d'ajustement autonome.
 
 ## Investissement vs consommation sans retour (2026-09-20)
 

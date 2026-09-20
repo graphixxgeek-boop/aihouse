@@ -106,6 +106,27 @@ selon la source.
   que la vue d'ensemble et le rythme de consommation soient toujours vus ensemble, jamais l'un sans
   l'autre.
 
+## Apprentissage sécurisé : repérer ses propres erreurs d'appréciation sans jamais s'auto-corriger
+
+Demandé explicitement (2026-09-20) : ce patron doit pouvoir se rendre compte de ses erreurs
+d'appréciation passées — mais **jamais** en ajustant lui-même ses seuils ou sa logique (cf. limite
+déjà posée plus haut). La conciliation tient en trois pièces, jamais confondues :
+1. **Enregistrer le destinataire et le verdict** de chaque conseil confirmé (agent / outil /
+   personne qui pilote le projet), pas seulement le type d'action.
+2. **Permettre d'attacher, après coup, un résultat réellement observé** à une action déjà
+   enregistrée — jamais deviné ni inféré automatiquement, seulement fourni explicitement une fois
+   connu.
+3. **Un diagnostic qui recroise verdict et résultat** pour surfacer des constats (un seuil dur
+   probablement ignoré, un avertissement confirmé par un vrai problème, un investissement qui s'est
+   avéré ne pas être rentable) — mais qui reste, comme le reste de ce patron, un rapport à lire,
+   jamais une correction appliquée seule.
+
+**Portée réaliste, jamais feinte** : ce mécanisme d'apprentissage ne peut mécaniquement suivre la
+conformité au conseil que pour les destinataires qui laissent une trace vérifiable (l'agent
+lui-même, via ses propres actions confirmées ; les outils, via leur registre archivé). Pour la
+personne qui pilote le projet, aucune trace fiable n'existe de ce qu'elle décide de son côté — ce
+patron doit l'assumer honnêtement plutôt que fabriquer une fausse précision.
+
 ## Ce que ce patron n'est pas
 
 - Un vrai compteur de tokens — cf. la limite honnête ci-dessus, assumée en permanence.

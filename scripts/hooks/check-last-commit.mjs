@@ -10,7 +10,7 @@ import { recentCommits, findCommitsMissingSuiviUpdate, findTaskNumberIssues, nex
 import { walk, findDeadLifeFields, findTodoMarkers } from "../check-argus.mjs";
 import { checkLinks, LINKS } from "../check-harmonia.mjs";
 import { PRESTATIONS, formatMenu } from "../le-coordinateur.mjs";
-import { summarizeHistory, computeInvestmentRatio } from "../smart-conso-token.mjs";
+import { summarizeHistory, computeInvestmentRatio, diagnoseAdviceAccuracy } from "../smart-conso-token.mjs";
 
 const [last] = recentCommits(1);
 if (last && findCommitsMissingSuiviUpdate([last]).length) {
@@ -99,7 +99,13 @@ try {
   // Bilan investissement/sans-retour (2026-09-20, demande explicite de l'utilisateur : « faire de
   // notre suivi-conso-token un vrai héros des économies ») — vu au même moment que le rythme
   // ci-dessus, jamais séparément, pour ne jamais décourager à tort un investissement sain.
-  console.log(`💡 ${computeInvestmentRatio(tokenHistory, Date.now()).message}\n`);
+  console.log(`💡 ${computeInvestmentRatio(tokenHistory, Date.now()).message}`);
+  // Auto-diagnostic (2026-09-20, demande explicite : « il se rend compte s'il a fait des erreurs
+  // d'appréciation [...] mécanisme d'apprentissage »). VERSION SÉCURISÉE (tension avec la charte
+  // signalée puis calibrée avec l'utilisateur, Article 14) : un simple COMPTE de constats, jamais
+  // un ajustement — le détail complet reste dans l'historique local, à relire à la demande.
+  const findings = diagnoseAdviceAccuracy(tokenHistory, Date.now());
+  console.log(`🩺 Auto-diagnostic SMART-CONSO-TOKEN : ${findings.length ? findings.length + " constat(s) à relire (jamais appliqués seuls)" : "aucun constat pour l'instant"}.\n`);
 } catch {
   console.log("🪙 Rythme SMART-CONSO-TOKEN : aucun historique local pour l'instant.\n");
 }

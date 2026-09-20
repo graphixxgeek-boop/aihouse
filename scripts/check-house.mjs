@@ -919,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 130'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 131'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3133,7 +3133,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     scanDocumentWeight, scanScope, SCOPE_LEVELS, computeAdoptionKpi, KNOWN_COSTLY_PATTERNS, KNOWLEDGE_PROVENANCE,
     formatScanReport, countDatedNarrativeMarkers, findJudgeSpawnsWithoutConsultation, AUTOMATION_TOKEN_NUANCE,
     listDatedNarrativeMarkers, checkToolConnections, EXPECTED_CONNECTIONS, trackWeightTrend,
-    classifyConsumption, computeInvestmentRatio,
+    classifyConsumption, computeInvestmentRatio, diagnoseAdviceAccuracy,
   } = await import('../scripts/smart-conso-token.mjs');
 
   assert.equal(estimateTokens('abcd'), 1, 'the ~4-characters-per-token heuristic must round to the nearest whole token, never a fractional or wildly inaccurate estimate');
@@ -3272,4 +3272,36 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(ratio.pctInvestissement, 50, 'the investment percentage must be computed from the real classified total, never from all recorded actions including unclassified ones');
 
   console.log('Passed: classifyConsumption() correctly recognizes a genuine token investment (a reusable mechanical tool built, or a check that prevents costlier future debugging) versus a no-return spend (a duplicate of recent work, or a scope that overshoots the real need), assess() reflects a recognized investment as a distinct non-discouraging verdict while a hard hourly threshold stays non-negotiable regardless (informed, never bypassed), and computeInvestmentRatio() reports an honest, correctly-split investment/waste breakdown from real classified history only — the exact real gap the user asked to close: never discouraging a healthy investment, whether it comes from them, the agent, or the tools.');
+
+  // Auto-diagnostic sécurisé (2026-09-20, demande explicite : « il se rend compte s'il a fait des
+  // erreurs d'appréciation [...] mécanisme d'apprentissage » — calibré avec l'utilisateur en version
+  // sécurisée après signalement d'une tension avec la charte : jamais un ajustement automatique,
+  // seulement des constats à lire). Portée agent+outils, jamais l'utilisateur.
+  const dNow = Date.now();
+  const compliantHard = diagnoseAdviceAccuracy({ actions: [
+    { type: 'x', at: dNow - 800_000, verdict: 'seuil_dur', recipient: 'agent' },
+    { type: 'x', at: dNow - 100_000, verdict: 'ok', recipient: 'agent' },
+  ] }, dNow);
+  assert.equal(compliantHard.length, 0, 'a hard-threshold verdict followed by the next same-type action only after a long, plausible gap (well beyond the reaction window) must never be flagged as a compliance issue');
+  const ignoredHard = diagnoseAdviceAccuracy({ actions: [
+    { type: 'agent_subagent_spawn', at: dNow - 100_000, verdict: 'seuil_dur', recipient: 'agent' },
+    { type: 'agent_subagent_spawn', at: dNow - 99_500, verdict: 'ok', recipient: 'agent' },
+  ] }, dNow);
+  assert.equal(ignoredHard.length, 1, 'a hard-threshold verdict followed by a same-type confirmed action mere seconds later must be flagged as a likely unrespected hard threshold — the exact real compliance question the user asked SMART-CONSO-TOKEN to track for the agent');
+  const userIgnored = diagnoseAdviceAccuracy({ actions: [
+    { type: 'x', at: dNow - 100_000, verdict: 'seuil_dur', recipient: 'utilisateur' },
+    { type: 'x', at: dNow - 99_500, verdict: 'ok', recipient: 'utilisateur' },
+  ] }, dNow);
+  assert.equal(userIgnored.length, 0, 'entries recorded for the user must never be scanned for compliance at all — no mechanical trace exists for what the user decides, honesty over false precision per the explicit 2026-09-20 calibration');
+
+  const outcomeFindings = diagnoseAdviceAccuracy({ actions: [
+    { type: 'y', at: dNow - 1000, verdict: 'avertissement_souple', recipient: 'agent', outcome: 'probleme_reel' },
+    { type: 'z', at: dNow - 2000, verdict: 'avertissement_souple', recipient: 'agent', outcome: 'sans_consequence' },
+    { type: 'w', at: dNow - 3000, verdict: 'investissement_reconnu', recipient: 'agent', outcome: 'probleme_reel' },
+    { type: 'v', at: dNow - 4000, verdict: 'ok', recipient: 'agent', outcome: 'sans_consequence' },
+  ] }, dNow);
+  assert.equal(outcomeFindings.length, 3, 'diagnoseAdviceAccuracy() must surface a finding for every recorded outcome that is genuinely informative about a past verdict (soft-warning-confirmed-real-problem, soft-warning-with-no-consequence, investment-that-turned-out-wasteful), while silently ignoring an outcome recorded against a plain "ok" verdict that carries no such signal');
+  assert.deepEqual(diagnoseAdviceAccuracy({ actions: [] }, dNow), [], 'with a genuinely empty history, the diagnostic must report zero findings, never fabricate one from no data');
+
+  console.log('Passed: diagnoseAdviceAccuracy() mechanically flags a hard threshold likely unrespected (a same-type confirmed action mere seconds after a "seuil_dur" verdict) and surfaces every genuinely recorded outcome that contradicts or confirms a past verdict, restricts its scan to the agent and tools only (the user\'s own compliance is never mechanically inferred, per the explicit 2026-09-20 calibration after the tension with the never-self-adjust rule was flagged), reports zero findings on empty history, and — the whole point of this safer design — never itself changes any threshold or classification, only ever surfacing a proposal for a human/agent to read.');
 }

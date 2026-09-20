@@ -346,12 +346,91 @@ export function assess({ actionType, context, history, now, agentIdentity, inves
 // historique (jamais un apprentissage automatique silencieux) — sert uniquement de matière pour une
 // vraie relecture humaine/agent périodique, même principe que `describeKnownLessons()` du Smart
 // Breaker.
-export function recordAction(actionType, context, now, classification) {
+// `options.recipient` (2026-09-20, demande explicite : « il consigne en historique chaque fois
+// qu'il produit un conseil/autorité sur un membre de l'équipe [...] enregistre la réponse effective
+// de l'interlocuteur ») — qui a reçu ce conseil : "agent" (par défaut, l'agent lui-même avant sa
+// propre action coûteuse), "outil" (une consultation faite pour le compte d'un outil du paysage),
+// ou "utilisateur" (l'agent signale une demande lourde de l'utilisateur). `options.verdict` : le
+// verdict rendu par assess() pour CETTE action précise, conservé pour pouvoir plus tard vérifier si
+// l'interlocuteur s'y est conformé (cf. diagnoseAdviceAccuracy ci-dessous).
+export function recordAction(actionType, context, now, options = {}) {
+  const { classification, recipient = "agent", verdict } = options;
   const history = loadJson(HISTORY_PATH, { actions: [] });
   history.actions = (history.actions ?? []).slice(-300);
-  history.actions.push({ type: actionType, context: context || null, at: now, ...(classification ? { classification } : {}) });
+  history.actions.push({ type: actionType, context: context || null, at: now, recipient, ...(classification ? { classification } : {}), ...(verdict ? { verdict } : {}) });
   writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 1));
   return history;
+}
+
+// Enregistre le résultat RÉELLEMENT observé d'une action déjà confirmée (2026-09-20, demande
+// explicite : « il enregistre les résultats et le contexte »). Jamais deviné ni inféré tout seul —
+// une donnée honnête n'existe que si quelqu'un (l'agent, un outil) la fournit explicitement une fois
+// le résultat réellement connu. `outcome` : "sans_consequence" (rien de notable ne s'est produit),
+// "probleme_reel" (un vrai problème est survenu malgré/à cause de cette action), ou
+// "confirme_utile" (l'action a eu l'effet positif attendu). Retrouve l'action par son couple exact
+// (type, horodatage) — jamais une correspondance approximative qui risquerait d'attacher un résultat
+// à la mauvaise action.
+export function recordOutcome(actionType, at, outcome, now = Date.now()) {
+  const history = loadJson(HISTORY_PATH, { actions: [] });
+  const match = (history.actions ?? []).find((a) => a.type === actionType && a.at === at);
+  if (match) match.outcome = outcome;
+  writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 1));
+  return { history, found: Boolean(match), recordedAt: now };
+}
+
+// Auto-diagnostic (2026-09-20, demande explicite : « il se rend compte s'il a fait des erreurs
+// d'appréciation ou de conseils [...] mécanisme d'apprentissage »). VERSION SÉCURISÉE, calibrée
+// explicitement avec l'utilisateur après avoir signalé une tension réelle avec une règle déjà
+// établie plusieurs fois (jamais d'ajustement automatique de ses propres seuils, cf. blueprint et
+// la section "Base de données exploitée de façon autonome" ci-dessus, Article 14) : ce diagnostic
+// REPÈRE des erreurs d'appréciation probables dans l'historique déjà accumulé, mais ne change
+// JAMAIS lui-même aucun seuil, aucun classement ni aucune logique — chaque constat reste une
+// PROPOSITION à lire et à valider humainement/par l'agent, exactement le même principe que
+// trackWeightTrend()/scanConsumptionPatterns() (Smart Conso API). Portée volontairement limitée à
+// l'AGENT et aux OUTILS (jamais l'utilisateur, calibrage explicite du 2026-09-20) : aucune trace
+// mécanique fiable n'existe de ce que l'utilisateur décide de son côté — honnêteté plutôt qu'une
+// fausse précision.
+export function diagnoseAdviceAccuracy(history, now, { hardThresholdReactionWindowMs = 10 * 60 * 1000 } = {}) {
+  const actions = (history?.actions ?? []).filter((a) => (a.recipient ?? "agent") !== "utilisateur").sort((a, b) => a.at - b.at);
+  const findings = [];
+
+  // 1) Seuil dur potentiellement non respecté : une action confirmée du même type survient très
+  // vite après un verdict "seuil_dur" — trop rapide pour une vraie pause/question obligatoire.
+  // Entièrement mécanique, aucune saisie manuelle nécessaire.
+  for (let i = 0; i < actions.length; i++) {
+    if (actions[i].verdict !== "seuil_dur") continue;
+    const next = actions.slice(i + 1).find((a) => a.type === actions[i].type);
+    if (next && next.at - actions[i].at < hardThresholdReactionWindowMs) {
+      findings.push({
+        constat: `Un verdict "seuil_dur" pour "${actions[i].type}" (${new Date(actions[i].at).toISOString()}) a été suivi d'une nouvelle action confirmée du même type ${Math.round((next.at - actions[i].at) / 1000)}s plus tard — trop rapide pour une vraie pause/question.`,
+        piste: "Vérifier si la fenêtre de question obligatoire (Article 22) a réellement eu lieu à ce moment ; sinon, renforcer le rappel au moment même du seuil dur.",
+      });
+    }
+  }
+
+  // 2) Verdict contredit par un résultat réellement observé et enregistré (recordOutcome) — jamais
+  // inféré, seulement lu si quelqu'un l'a explicitement fourni.
+  for (const a of actions) {
+    if (!a.outcome) continue;
+    if (a.verdict === "avertissement_souple" && a.outcome === "probleme_reel") {
+      findings.push({
+        constat: `Un avertissement souple pour "${a.type}" (${new Date(a.at).toISOString()}) a malgré tout été suivi d'un vrai problème signalé.`,
+        piste: "Le poids \"élevé\" attribué à ce schéma semble justifié par ce cas précis, pas exagéré — aucune raison de l'assouplir.",
+      });
+    } else if (a.verdict === "avertissement_souple" && a.outcome === "sans_consequence") {
+      findings.push({
+        constat: `Un avertissement souple pour "${a.type}" (${new Date(a.at).toISOString()}) n'a entraîné aucune conséquence négative signalée.`,
+        piste: "Un cas isolé ne prouve rien seul — à recroiser avec d'autres occurrences avant d'envisager un déclassement, jamais un ajustement automatique.",
+      });
+    } else if (a.verdict === "investissement_reconnu" && a.outcome === "probleme_reel") {
+      findings.push({
+        constat: `Un investissement reconnu pour "${a.type}" (${new Date(a.at).toISOString()}) s'est révélé, avec le recul, ne pas avoir été rentable.`,
+        piste: "Relire le contexte donné à classifyConsumption() à ce moment précis : un des quatre critères a peut-être été mal évalué par l'appelant — jamais une raison de retirer le critère lui-même.",
+      });
+    }
+  }
+
+  return findings;
 }
 
 // Bilan investissement/sans-retour sur une fenêtre glissante (2026-09-20, demande explicite : « une
@@ -500,16 +579,34 @@ export function trackWeightTrend(history, currentTotal, now) {
 
 function main() {
   const actionType = process.argv[2];
+
+  // Sous-commande dédiée à l'enregistrement d'un résultat réellement observé (2026-09-20) — jamais
+  // mélangée avec le flux normal d'avis, pour ne jamais confondre "je consulte avant d'agir" et
+  // "je rapporte après coup ce qui s'est réellement passé".
+  if (actionType === "outcome") {
+    const [, , type, atArg, outcome] = process.argv;
+    if (!type || !atArg || !outcome) {
+      console.log('Usage: node scripts/smart-conso-token.mjs outcome <type-d\'action> <horodatage-ms> <sans_consequence|probleme_reel|confirme_utile>');
+      process.exit(1);
+    }
+    const result = recordOutcome(type, Number(atArg), outcome);
+    console.log(result.found ? "Résultat enregistré." : "⚠️ Aucune action correspondante trouvée à cet horodatage — rien n'a été modifié.");
+    return;
+  }
+
   const identityArg = process.argv.find((a) => a.startsWith("--identity="));
   const contextArg = process.argv.find((a) => a.startsWith("--context="));
+  const recipientArg = process.argv.find((a) => a.startsWith("--recipient="));
   const agentIdentity = identityArg ? identityArg.slice("--identity=".length) : undefined;
   const context = contextArg ? contextArg.slice("--context=".length) : undefined;
+  const recipient = recipientArg ? recipientArg.slice("--recipient=".length) : "agent";
   const now = Date.now();
   const history = loadJson(HISTORY_PATH, { actions: [] });
 
   if (!actionType) {
-    console.log("Usage: node scripts/smart-conso-token.mjs <type-d'action> [--confirm] [--identity=claude-sonnet-5] [--context=\"...\"] [--builds-tool] [--prevents-debugging] [--duplicate] [--scope-mismatch]");
+    console.log("Usage: node scripts/smart-conso-token.mjs <type-d'action> [--confirm] [--identity=claude-sonnet-5] [--context=\"...\"] [--recipient=agent|outil|utilisateur] [--builds-tool] [--prevents-debugging] [--duplicate] [--scope-mismatch]");
     console.log("Types connus :", Object.keys(KNOWN_COSTLY_PATTERNS).join(", "));
+    console.log("Autre usage : node scripts/smart-conso-token.mjs outcome <type> <horodatage-ms> <résultat>");
     process.exit(1);
   }
 
@@ -526,15 +623,15 @@ function main() {
 
   const advice = assess({ actionType, context, history, now, agentIdentity, investment });
   console.log("=== SMART-CONSO-TOKEN — avis avant action coûteuse en tokens ===\n");
-  console.log(`Action envisagée : ${actionType}`);
+  console.log(`Action envisagée : ${actionType} (destinataire : ${recipient})`);
   if (context) console.log(`Contexte : ${context}`);
   console.log(`Avis : [${advice.verdict}] ${advice.message}`);
   if (advice.freshness?.fraiche === false) console.log(`\n⚠️ FRAÎCHEUR DE CONNAISSANCE : ${advice.freshness.message}`);
   else if (advice.freshness) console.log(`(${advice.freshness.message})`);
 
   if (process.argv.includes("--confirm")) {
-    recordAction(actionType, context, now, advice.investment?.classification);
-    console.log("\nAction confirmée et enregistrée dans l'historique local.");
+    recordAction(actionType, context, now, { classification: advice.investment?.classification, recipient, verdict: advice.verdict });
+    console.log(`\nAction confirmée et enregistrée dans l'historique local (horodatage ${now}, à réutiliser pour "outcome" une fois le résultat connu).`);
   } else {
     console.log("\n(Avis seul — relancer avec --confirm une fois la décision prise.)");
   }
@@ -543,6 +640,8 @@ function main() {
   console.log(`\nRythme observé (${summary.windowDays} derniers jours) : ${summary.totalRecent} action(s) au total — ${JSON.stringify(summary.byType)}`);
   const ratio = computeInvestmentRatio(history, now);
   console.log(`Bilan investissement (${7} derniers jours) : ${ratio.message}`);
+  const findings = diagnoseAdviceAccuracy(history, now);
+  console.log(`Auto-diagnostic (agent + outils) : ${findings.length ? findings.length + " constat(s) — voir le rapport détaillé si besoin" : "aucun constat pour l'instant"}.`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();
