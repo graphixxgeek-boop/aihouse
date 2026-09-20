@@ -35,6 +35,29 @@ donc :
 4. Demander explicitement une nouvelle recherche (jamais une simple mise à jour de date sans
    contenu nouveau) quand ce désaccord est détecté.
 
+## Procédure récurrente : allègement périodique d'un fichier d'instructions toujours chargé
+
+*(Généralisée le 2026-09-20 à partir d'un premier exercice réel sur ce projet — cf. l'instanciation
+pour la méthode complète en 6 étapes.)* Le schéma `charter_size_tax` n'est pas seulement un constat
+statique : ce patron doit prévoir que l'allègement d'un fichier d'instructions permanent devient une
+tâche RÉCURRENTE, pas un événement ponctuel, et la traiter comme telle :
+1. Un signal mécanique et gratuit (poids estimé + comptage des passages narratifs datés encore
+   présents) doit exister et être consultable à la demande, jamais seulement quand quelqu'un pense à
+   relancer un scan manuel.
+2. Toute reformulation retire la justification narrative (date, citation de la demande d'origine),
+   jamais une règle opérationnelle — un principe réutilisable trouvé dans une justification doit être
+   préservé et reformulé, jamais supprimé avec son emballage narratif.
+3. Rien n'est perdu : tout contenu retiré rejoint un document compagnon lu à la demande, avec un
+   pointeur explicite depuis le fichier allégé.
+4. Une décision consciente doit trancher si cette tâche justifie un agent séparé — la réponse par
+   défaut est NON quand l'agent principal a déjà tout le contexte nécessaire (le coût fixe d'un
+   agent séparé ne s'justifie que par un besoin réel de regard indépendant, jamais par la nature
+   récurrente de la tâche elle-même).
+5. La mesure du gain reste toujours une estimation honnête (jamais un compte exact de tokens tant
+   qu'aucun tokenizer réel n'est disponible à l'outil) — un écart avec une mesure observée ailleurs
+   (l'indicateur natif de l'environnement d'exécution, par exemple) est normal, jamais un signe
+   d'erreur à corriger silencieusement.
+
 ## Trois destinataires, pas un seul
 
 Demandé explicitement : ce patron régule la consommation de trois acteurs différents, jamais

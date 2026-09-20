@@ -26,6 +26,7 @@ import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
+import { scanDocumentWeight, listDatedNarrativeMarkers } from "./smart-conso-token.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -117,6 +118,21 @@ export const CIRCLE_ITEMS = [
     cout: "gratuit — lecture du code source de chaque script, aucun appel API",
     tokensEstimes: "faible — quelques fichiers courts à relire",
     execute: "Vérifier que el-professor.mjs, the-final-judge.mjs et the-screener-capture.mjs importent bien html-report.mjs (cf. checkHtmlWiring()) — câbler ceux qui manquent encore, jamais laisser un rapport sortir en texte brut alors que la règle demande du HTML.",
+  },
+  // claude-md-weight-signal (2026-09-20, demande explicite de l'utilisateur après la tâche #122 :
+  // « prevois que l'allegement de claude.md peut devenir une tache recurrente [...] peut etre à
+  // ajouter au menu des taches periodiques »). Contrairement aux autres signaux de ce thème, celui-ci
+  // ne lit pas un index de passages passés : il relance le VRAI calcul (scanDocumentWeight,
+  // listDatedNarrativeMarkers), déjà gratuit et déjà exporté par SMART-CONSO-TOKEN — jamais un second
+  // calcul, jamais une estimation périmée. cf. docs/referentiel/smart-conso-token.md pour la
+  // procédure formalisée complète (objectifs + méthode) à suivre si ce signal recommande une passe.
+  {
+    id: "claude-md-weight-signal",
+    theme: "Qualité du code",
+    label: "Vérifier le poids en tokens de CLAUDE.md (allègement périodique)",
+    cout: "gratuit — relit CLAUDE.md et applique les fonctions déjà exportées par SMART-CONSO-TOKEN, aucun appel API",
+    tokensEstimes: "faible — un seul fichier local relu par le script, pas par l'agent",
+    execute: "Lire CLAUDE.md et appeler scanDocumentWeight()/listDatedNarrativeMarkers() (docs/referentiel/smart-conso-token.md) — si le niveau remonte à \"élevé\" ou que de nouvelles asides datées apparaissent, proposer une passe d'allègement selon la procédure formalisée, jamais l'exécuter seul.",
   },
   {
     id: "correctifs",
@@ -239,7 +255,7 @@ export function oldestOpenTaskDate(categorized) {
 // ALWAYS-NEW-CODE la plus négligée) — jamais pour "relecture référentiel" ou "correctifs", qui
 // n'ont aucune date de référence mécanique fiable (Article 13 elle-même n'impose aucune cadence
 // fixe, cf. CLAUDE.md — un signal inventé ici serait moins honnête que son absence).
-export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized } = {}, now = Date.now()) {
+export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText } = {}, now = Date.now()) {
   const profilLast = mostRecentDate(profilIndexText);
   const kpiLast = mostRecentDate(kpiIndexText);
   const smartConsoApiLast = mostRecentDate(smartConsoApiIndexText);
@@ -262,6 +278,12 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCode
       return { ...item, staleness: missing.length ? `${missing.length} script(s) pas encore câblé(s) : ${missing.join(", ")}` : "tous câblés" };
     }
     if (item.id === "suivi-open-tasks-signal") return { ...item, staleness: oldestOpen ? `tâche ouverte depuis ${daysSince(oldestOpen, now)} jour(s)` : "aucune tâche ouverte connue" };
+    if (item.id === "claude-md-weight-signal") {
+      if (!claudeMdText) return { ...item, staleness: "pas de signal disponible (CLAUDE.md non fourni)" };
+      const weight = scanDocumentWeight(claudeMdText, "CLAUDE.md", { alwaysLoaded: true });
+      const markers = listDatedNarrativeMarkers(claudeMdText);
+      return { ...item, staleness: `${weight.tokens} tokens estimés, niveau "${weight.niveau}"${markers.length ? ` — ${markers.length} aside(s) narrative(s) datée(s) encore réductible(s)` : ""}` };
+    }
     if (item.id === "always-new-code-signal") {
       if (!zoneRec) return { ...item, staleness: "aucun thème connu" };
       const zoneDate = coverage[zoneRec.zone];
@@ -346,7 +368,8 @@ function main() {
     "the-screener-capture.mjs": read("scripts/the-screener-capture.mjs"),
   };
   const suiviCategorized = categorizeAllSessions();
-  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized });
+  const claudeMdText = read("CLAUDE.md");
+  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText });
   console.log("=== CIRCLE-TASKS — Ronde périodique ===\n");
   console.log(formatCircleMenu(report));
   console.log("\nJamais exécuté seul : l'agent qui pilote ouvre une fenêtre à cocher pour choisir précisément quoi lancer.");

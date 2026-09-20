@@ -241,3 +241,74 @@ passées sans classification.
 Le bilan investissement (`computeInvestmentRatio`) rejoint le rythme comme premier indicateur
 concret de l'utilité réelle de l'outil — pas encore raccordé au tableau de bord général, même
 raisonnement que Smart Conso API à sa naissance.
+
+## Procédure formalisée : allègement périodique de CLAUDE.md (`charter_size_tax`)
+
+*(Ajoutée le 2026-09-20, à la demande explicite de l'utilisateur, juste après le premier exercice
+réel d'allègement de CLAUDE.md (tâches #122 et Part A) : « prevois que l'allegement de claude.md
+peut devenir une tache recurrente [...] fais en sorte que cette tache soit formalisée pour la
+prochaine fois avec les objectifs et la methode ».)*
+
+**Objectif.** Réduire le poids en tokens de CLAUDE.md (fichier toujours chargé, payé à CHAQUE
+message de session) SANS jamais perdre une règle opérationnelle — seule la justification narrative
+("ajouté le X, demande explicite : citation Y") est déplacée vers un document lu à la demande,
+jamais la règle elle-même. Déclenché quand `claude-md-weight-signal` (CIRCLE-TASKS, cf.
+`scripts/circle-tasks.mjs`) rapporte un niveau "élevé" (≥5000 tokens estimés) ou un nombre
+significatif de nouvelles asides datées détectées.
+
+**Méthode, en 6 étapes, reproduites du premier exercice réel :**
+
+1. **Scanner** : `scanScope('zoome', { 'CLAUDE.md': texte }, new Set(['CLAUDE.md']))` — jamais un
+   `Map`, l'implémentation attend un objet simple (cf. commentaire corrigé dans le code le
+   2026-09-20). Note le nombre de tokens estimés (heuristique 4 caractères/token, JAMAIS présentée
+   comme un compte exact) et la liste des asides datées via `listDatedNarrativeMarkers()`.
+2. **Identifier les candidats, jamais à l'aveugle** : deux familles distinctes. (a) Les gros blocs
+   narratifs identifiés par lecture humaine/agent (comme le bloc « Smart Breaker » — récit de
+   diagnostic, historique d'évolutions) : toujours les plus gros gisements, mais nécessitent une
+   vraie lecture pour juger ce qui est règle vs récit. (b) Les asides datées courtes, détectées
+   mécaniquement par `listDatedNarrativeMarkers()` : plus nombreuses, plus sûres (regex déjà
+   éprouvé), mais chacune doit être relue individuellement — **au moins une aside sur 26, dans le
+   premier exercice réel, contenait un vrai principe opérationnel** (pas seulement de la couleur) :
+   ne jamais retirer en bloc sans relire chaque cas.
+3. **Trier, jamais tout couper pareil** : pour chaque candidat, décider si l'aside est (i) pure
+   couleur narrative (date + citation, aucune règle nouvelle) → retirer entièrement ; (ii) contient
+   un principe réutilisable → le reformuler et le garder dans CLAUDE.md, déplacer seulement la
+   genèse narrative.
+4. **Archiver, jamais perdre l'information** : tout contenu retiré rejoint un fichier compagnon dans
+   `docs/referentiel/` (ex. `smart-breaker-historique.md` pour un gros bloc, un fichier dédié type
+   `claude-md-asides-historique.md` pour un lot d'asides courtes) — jamais supprimé sans trace
+   (Article 6/13). Un pointeur d'une ligne dans CLAUDE.md indique où retrouver le récit complet.
+5. **Vérifier, jamais supposer** : `node scripts/check-house.mjs` (123/123 attendu) et
+   `npx tsc --noEmit` (propre, hors l'erreur préexistante connue de `vite.config.ts`) après CHAQUE
+   lot de retraits, jamais seulement à la fin. Re-scanner avec `scanScope`/`estimateTokens` pour
+   mesurer le gain RÉEL, jamais une estimation a priori.
+6. **Documenter et livrer** : nouvelle entrée `lib/reference.ts` (Version N), ligne `docs/suivi/`
+   avec les chiffres avant/après honnêtes, mise à jour de l'assertion `Version N` dans
+   `check-house.mjs`, commit + push. Rapporter à l'utilisateur le vrai delta mesuré (tokens estimés
+   et lignes), jamais un chiffre annoncé avant d'avoir mesuré.
+
+**Limite honnête sur la mesure elle-même** (trouvée en pratique le 2026-09-20) : l'estimation
+`estimateTokens()` (4 caractères/token) est une heuristique généraliste, pas le tokenizer réel de
+Claude — un écart entre cette estimation et un chiffre observé ailleurs (ex. l'indicateur de poids
+de fichier de l'interface Claude Code elle-même) est normal et attendu, jamais un signe d'erreur de
+calcul à corriger. Ne jamais présenter le nombre de `estimateTokens()` comme une mesure exacte.
+
+**Limite mécanique connue** : `listDatedNarrativeMarkers()` ne détecte pas les asides contenant une
+parenthèse imbriquée (ex. « (16 au 19 septembre) » à l'intérieur de l'aside) — deux cas identifiés à
+l'œil lors du premier exercice, non traités, documentés dans
+`docs/referentiel/claude-md-asides-historique.md`. Une future évolution du regex pourrait combler
+ce point, jamais appliquée sans une nouvelle demande explicite.
+
+**Sous-agent dédié ? Non — décision motivée.** Cette tâche ne justifie PAS un sous-agent séparé : le
+coût fixe d'un agent séparé (~37 000 tokens, `agent_subagent_spawn`) s'ajouterait à un travail que
+l'agent principal effectue déjà à coût nul (il a déjà tout le contexte du fichier et de son
+historique, contrairement à THE-FINAL-JUDGE qui a explicitement BESOIN d'un regard neuf et
+indépendant). Un sous-agent ici ajouterait un coût fixe sans aucun bénéfice de perspective
+indépendante — l'exact anti-patron que SMART-CONSO-TOKEN existe pour repérer. La bonne unité de
+travail reste l'agent principal suivant cette procédure, déclenché par le signal CIRCLE-TASKS
+ci-dessus.
+
+**Rattaché à CIRCLE-TASKS.** `claude-md-weight-signal` (thème "Qualité du code") relit CLAUDE.md et
+appelle en direct `scanDocumentWeight()`/`listDatedNarrativeMarkers()` — jamais un second calcul,
+jamais une estimation périmée issue d'un index séparé. Voir `scripts/circle-tasks.mjs` pour
+l'implémentation.
