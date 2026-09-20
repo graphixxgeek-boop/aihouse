@@ -795,7 +795,48 @@ actée pour elle, cf. tâche de calibrage dédiée — **volet en attente, CASSA
 construite**, jamais présenté comme fait tant que ce n'est pas vrai). Volet opérationnel :
 `checkAgentOnboarding()` (LE-COORDINATEUR, ci-dessus) rapporte `complet: true`. Jamais un troisième
 script pour orchestrer les deux (anti-duplication) — une règle explicite suffit, appliquée par
-l'agent qui pilote juste après avoir fini de construire un nouvel Agent.
+l'agent qui pilote juste après avoir fini de construire un nouvel Agent. **Troisième vérification
+obligatoire dès que le nouvel outil touche de près ou de loin Lia/Noé** (cf. règle dédiée
+« Personnages hors de l'équipe » ci-dessous) : confirmer qu'aucun mécanisme d'équipe (badge,
+PRESTATIONS évaluant un personnage, registre) ne leur est appliqué, et réciproquement.
+
+### Personnages (Lia, Noé) : hors de l'équipe, jamais une catégorie de l'organigramme
+
+*(Fixée le 2026-09-21, après un motif récurrent identifié explicitement par l'utilisateur — trois
+quasi-recouvrements en une seule soirée : le badge de MEMENTO conditionné par erreur au verdict d'un
+outil pensé pour Lia/Noé (docs/suivi #245), la toute première note de conception de CASSANDRA-RH
+(2026-09-20T09:40Z) qui prévoyait de « noter les mascottes Lia/Noé » comme des membres, et un doute
+sur le menu PRESTATIONS de MEMENTO. La correction de #245 avait ajouté « Personnages » comme une 5e
+catégorie DE L'ORGANIGRAMME lui-même, à côté de Direction/Équipe noyau/Membre de l'équipe/VIP —
+gardant Lia/Noé DANS le même tableau que l'équipe, ce qui permettait à la même confusion de revenir.
+Root-cause plus profonde, exactement le manquement que la règle voisine ci-dessus décrit pour un
+autre cas : cette règle n'a jamais vécu ailleurs qu'en narration éparse (docs/suivi) et un
+commentaire de code (`scripts/lib-shell.mjs`) — jamais comme une règle canonique d'un document de
+travail vivant, donc invisible au moment d'agir malgré son existence théorique.)*
+
+**Règle durable, non négociable** : Lia et Noé n'ont AUCUNE existence dans l'organigramme de travail
+(Direction/Équipe noyau/Membre de l'équipe/VIP). Ce sont des personnages de la simulation, gouvernés
+exclusivement par la charte de contenu (CLAUDE.md), jamais une case de plus à côté des autres.
+`PERSONNAGES`/`assertNotAPersonnage()` (`scripts/lib-shell.mjs`) est une liste d'EXCLUSION au bord du
+domaine équipe, jamais une catégorie interne à ce domaine.
+
+**Conséquences concrètes, à vérifier explicitement chaque fois qu'elles s'appliquent :**
+- Aucun mécanisme pensé pour l'équipe (badge/certification `checkAgentOnboarding()`, blueprint,
+  registre, couverture AXA-CHECK, entrée PRESTATIONS qui ÉVALUERAIT un personnage) ne s'applique
+  jamais à Lia/Noé eux-mêmes.
+- Réciproquement, aucun mécanisme pensé pour la mémoire/cohérence narrative des personnages
+  (MEMENTO) ne s'applique jamais à un script.
+- Un outil DE l'équipe (un script comme MEMENTO) peut légitimement avoir pour SUJET la mémoire des
+  personnages sans que cela les fasse rejoindre l'équipe pour autant — exactement comme
+  ALWAYS-NEW-CODE a pour sujet une zone de code sans que le code lui-même devienne « un membre ».
+  Le critère d'éligibilité de PRESTATIONS a toujours été « déclenche un outil membre de l'équipe »,
+  jamais « cible un membre » — vérifié explicitement le 2026-09-21 (Pack Mémoire confirmé légitime
+  sur cette base, aucune entrée existante ne cible non plus littéralement « un membre »).
+- **Correction explicite de la note fondatrice de CASSANDRA-RH (docs/suivi 2026-09-20T09:40Z)** :
+  la phrase « noter TOUS les membres de l'équipe [...] les mascottes Lia/Noé » est corrigée dès
+  aujourd'hui, avant même la construction réelle de CASSANDRA-RH (round de calibrage, tâche #134) —
+  elle pourra un jour AGRÉGER les verdicts narratifs déjà produits ailleurs (MEMENTO, EL-PROFESSOR,
+  check-spirit.mjs) sur Lia/Noé, jamais les noter/scorer comme des membres de l'équipe.
 
 **Précision honnête, en réponse à une question directe de l'utilisateur sur la détection de
 doublons de FONCTIONS entre outils (2026-09-20)** : contrairement à ce qu'on pourrait supposer,

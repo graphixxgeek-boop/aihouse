@@ -824,9 +824,10 @@ détecter la dette d'organisation. Jamais les 8 zones exactes ni les fichiers pr
 ## MEMENTO — blueprint exportable, l'exception qui cible les Personnages
 
 `docs/memento-blueprint.md` documente l'ARCHITECTURE de MEMENTO (2026-09-21, tâche #169) — le seul
-outil du réseau dont le domaine EST un personnage narratif (Lia/Noé, catégorie « Personnages »
-actée le même soir, cf. `PERSONNAGES`/`assertNotAPersonnage()` de `scripts/lib-shell.mjs`) plutôt
-qu'un script membre de l'équipe. Couvre deux dettes distinctes, chacune hors du domaine des outils
+outil du réseau dont le domaine EST un personnage narratif (Lia/Noé, qui n'ont AUCUNE existence
+dans l'équipe de travail — jamais une catégorie de l'organigramme, cf. `PERSONNAGES`/
+`assertNotAPersonnage()` de `scripts/lib-shell.mjs`, un garde-fou d'exclusion, pas une case de plus)
+plutôt qu'un script membre de l'équipe. Couvre deux dettes distinctes, chacune hors du domaine des outils
 de gouvernance de tokens existants (frontière écrite des deux côtés) : (a) cohérence mécanique de
 la mémoire persistée d'un personnage dans le temps (ordre chronologique, remise à zéro suspecte
 d'un compteur, régression d'un indicateur à sens unique) — jamais un second appel au modèle de

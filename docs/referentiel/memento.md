@@ -6,9 +6,13 @@
 
 ## Rôle exact
 
-MEMENTO est le seul outil du réseau à cibler la catégorie **Personnages** (Lia/Noé, cf. `PERSONNAGES`
-de `scripts/lib-shell.mjs` et la correction #245) plutôt qu'un membre de l'équipe (script de travail).
-Il couvre deux dettes distinctes, jamais adressées ailleurs :
+MEMENTO est le seul outil du réseau à cibler les **Personnages** (Lia/Noé) plutôt qu'un membre de
+l'équipe (script de travail). Décision durable (2026-09-21, corrigeant #245 une seconde fois après
+un nouveau quasi-recouvrement) : les Personnages n'ont AUCUNE existence dans l'équipe — jamais une
+case de l'organigramme, un domaine entièrement séparé (charte de contenu). `PERSONNAGES`/
+`assertNotAPersonnage()` de `scripts/lib-shell.mjs` n'est donc pas une catégorie interne au même
+tableau que Direction/Équipe noyau/Membre/VIP, mais une liste d'exclusion au bord du domaine équipe.
+MEMENTO couvre deux dettes distinctes, jamais adressées ailleurs :
 
 1. **Cohérence mécanique de la mémoire persistée** (`lib/life.ts`) — jamais un second appel Gemini.
 2. **Dette de taille mémoire** — le poids réel envoyé à Gemini par tour, un territoire explicitement
@@ -83,9 +87,9 @@ séparé dupliquerait un rapport déjà couvert.
 
 ## Doc-Report
 
-Entrée `REGISTRIES` dédiée (`scripts/doc-report.mjs`), famille **Personnages (mémoire narrative)** —
-la seule entrée de cette famille à ce jour, décision "texte" (aucun rapport HTML prévu, MEMENTO ne
-produit que des signaux lus par l'agent et par `kpi-report.mjs`).
+Entrée `REGISTRIES` dédiée (`scripts/doc-report.mjs`), famille **Hors équipe (mémoire narrative des
+Personnages)** — la seule entrée de cette famille à ce jour, décision "texte" (aucun rapport HTML
+prévu, MEMENTO ne produit que des signaux lus par l'agent et par `kpi-report.mjs`).
 
 ## Statut d'intégration
 

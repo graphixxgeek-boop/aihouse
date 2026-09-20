@@ -84,7 +84,7 @@ export const REGISTRIES = [
   { slug: "ines-official", label: "INES-official", family: "Exceptionnel (page blanche / audit lourd)", path: "docs/ines-official/", decision: "texte", scriptPath: "scripts/ines-official.mjs" },
   { slug: "smart-conso-api", label: "Smart Conso API", family: "Gouvernance interne", path: "docs/smart-conso-api/", decision: "texte", scriptPath: "scripts/smart-conso-api.mjs" },
   { slug: "smart-conso-token", label: "SMART-CONSO-TOKEN", family: "Gouvernance interne", path: "docs/smart-conso-token/", decision: "texte", scriptPath: "scripts/smart-conso-token.mjs" },
-  { slug: "memento", label: "MEMENTO", family: "Personnages (mémoire narrative)", path: "docs/memento/", decision: "texte", scriptPath: "scripts/memento.mjs" },
+  { slug: "memento", label: "MEMENTO", family: "Hors équipe (mémoire narrative des Personnages)", path: "docs/memento/", decision: "texte", scriptPath: "scripts/memento.mjs" },
   { slug: "kpi", label: "Tableau de bord / KPI", family: "Simulation & qualité narrative", path: "docs/referentiel/kpi-rapports/", decision: "delivery_html", scriptPath: "scripts/kpi-report.mjs" },
   { slug: "el-professor", label: "EL-PROFESSOR", family: "Simulation & qualité narrative", path: "docs/el-professor/", decision: "delivery_html", scriptPath: "scripts/el-professor.mjs" },
   { slug: "the-screener", label: "THE-SCREENER", family: "Simulation & qualité narrative", path: "docs/the-screener/", decision: "delivery_html", scriptPath: "scripts/the-screener-capture.mjs" },

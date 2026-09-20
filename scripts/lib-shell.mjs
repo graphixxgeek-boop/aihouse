@@ -8,20 +8,33 @@ import { execSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-// PERSONNAGES vs MEMBRE DE L'ÉQUIPE (2026-09-21, tâche #245) — garde-fou mécanique contre une vraie
-// erreur commise ce soir : proposer d'appliquer MEMENTO (pensé pour la mémoire narrative de Lia/Noé)
-// comme condition du badge des membres de l'équipe (scripts comme ARGUS/HARMONIA). Root-cause :
-// l'organigramme (Direction/Équipe noyau/Membre de l'équipe/VIP, docs/suivi #222) ne mentionnait
-// nulle part Lia et Noé, laissant la case vide qui a permis la confusion. Constante partagée ici
-// (jamais dans le-coordinateur.mjs, pour que MEMENTO — futur — puisse l'importer aussi sans créer de
-// cycle) : les Personnages ne sont JAMAIS des membres de l'équipe, et réciproquement — aucun outil
-// pensé pour l'un ne doit jamais s'appliquer à l'autre (badge/blueprint/couverture AXA-CHECK pour les
-// membres de l'équipe ; cohérence narrative/mémoire pour les Personnages, jamais l'inverse).
+// PERSONNAGES — HORS DE L'ÉQUIPE, JAMAIS UNE CATÉGORIE DE L'ORGANIGRAMME (2026-09-21, tâche #245,
+// corrigé le même soir après un second quasi-recouvrement). Root-cause réelle, en deux temps :
+// (1) une confusion commise ce soir-là — proposer d'appliquer MEMENTO (pensé pour la mémoire
+// narrative de Lia/Noé) comme condition du badge des membres de l'équipe (scripts comme
+// ARGUS/HARMONIA) ; corrigée sur le moment en ajoutant "Personnages" comme une 5e catégorie DE
+// L'ORGANIGRAMME lui-même (à côté de Direction/Équipe noyau/Membre de l'équipe/VIP). (2) Cette
+// correction était elle-même la mauvaise forme de réparation : en gardant Lia/Noé DANS le même
+// tableau que l'équipe (juste une case de plus), elle laissait la porte ouverte à ce que le même
+// type de confusion revienne (constaté une seconde fois en construisant le menu PRESTATIONS de
+// MEMENTO). Root-cause plus profonde encore, antérieure à #245 : la toute première note de
+// conception de CASSANDRA-RH (docs/suivi 2026-09-20T09:40Z) prévoyait déjà qu'elle "noterait TOUS
+// les membres de l'équipe [...] les mascottes Lia/Noé" — l'idée fondatrice mélangeait les deux
+// avant même qu'une séparation existe. Décision finale (demande explicite de l'utilisateur,
+// 2026-09-21) : Lia et Noé n'ont AUCUNE existence dans l'équipe — ce sont des personnages de la
+// simulation, un domaine entièrement séparé (charte de contenu CLAUDE.md), jamais une case de
+// l'organigramme de travail (docs/regles-de-travail.md). Cette constante n'est donc pas une
+// catégorie interne à ranger à côté des autres : c'est une LISTE D'EXCLUSION, un pare-feu au bord
+// du domaine équipe. Partagée ici (jamais dans le-coordinateur.mjs, pour que MEMENTO puisse
+// l'importer aussi sans créer de cycle) : aucun mécanisme pensé pour l'équipe (badge, PRESTATIONS,
+// blueprint, couverture AXA-CHECK) ne doit jamais s'appliquer à Lia/Noé, et réciproquement aucun
+// mécanisme de mémoire/cohérence narrative pensée pour eux (MEMENTO) ne doit jamais s'appliquer à
+// un script.
 export const PERSONNAGES = new Set(["Lia", "Noé", "Noe"]);
 
 export function assertNotAPersonnage(name, callerLabel) {
   if (PERSONNAGES.has(name)) {
-    throw new Error(`${callerLabel} ne s'applique jamais à un Personnage ("${name}") — Lia et Noé sont une catégorie structurellement distincte des membres de l'équipe (cf. docs/suivi tâche #245). Un outil pensé pour la mémoire/cohérence narrative des personnages (ex. MEMENTO) ne doit jamais recouper un outil de badge/blueprint/couverture de code.`);
+    throw new Error(`${callerLabel} ne s'applique jamais à un Personnage ("${name}") — Lia et Noé n'ont aucune existence dans l'équipe de travail, ce sont des personnages de la simulation (cf. docs/suivi tâche #245 et sa correction du 2026-09-21). Un outil pensé pour la mémoire/cohérence narrative des personnages (ex. MEMENTO) ne doit jamais recouper un outil de badge/blueprint/couverture de code.`);
   }
 }
 
