@@ -191,6 +191,8 @@ tâches manquantes ajoutées ci-dessous.)*
 
 | 184 | 2026-09-20T15:40Z | Charte / Outillage de travail | THE-DEEP-READER : rentabilisation non négociable — chaque écart retenu reçoit systématiquement son propre numéro de tâche | important | Demande explicite de l'utilisateur : « après la production du rapport de the deep reader tu dois systématiquement mettre en place la to do dédiée [...] l'utilisation de the deep reader doit être rentabilisée au max [...] que tu ne perds pas la valeur de son travail en cours de route ». Règle ajoutée à `docs/referentiel/the-deep-reader.md` (section Réconciliation) : chaque écart retenu reçoit son propre numéro de tâche technique, même résolu dans le même tour, jamais seulement une ligne de prose. Démontré rétroactivement pour ce premier passage : tâches #149/#150/#151 créées et fermées, une par écart réel (l'écart #142/#143 avait déjà ses propres tâches, confirmé) | terminée — fidèle |
 
+| 185 | 2026-09-20T15:50Z | Charte / Outillage de travail | Numérotation rétroactive de la dette DRY THE-DEEP-READER/THE-FINAL-JUDGE (tâche #152) | normal | Demande explicite de l'utilisateur : « quelle est la to do générée par le rapport [...] et pour l'améliorer suite à son premier passage : quelle est la to do ? ». En vérifiant l'application de la nouvelle règle de rentabilisation (ligne #184), trouvé un oubli réel : la dette structurelle (extractPersonaBlock/detectGenericReport dupliqués avec the-final-judge.mjs) était documentée en prose mais n'avait jamais reçu son propre numéro de tâche. Corrigé (tâche #152, `pending`) | terminée — fidèle |
+
 ## Notes
 
 - Les tâches terminées avant la création de ce système (chantier 2 du tableau de bord, full_sim10,
