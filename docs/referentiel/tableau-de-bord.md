@@ -75,16 +75,28 @@ mener [...] je veux un tableau de bord avec des données SMART »). Un élément
 ## KPI général — couverture du tableau de bord lui-même
 
 *(Ajouté le 2026-09-19, demande explicite de l'utilisateur : « crée un KPI général qui juge des
-performances du tableau de bord lui-même, indicateur à surveiller en priorité ».)* Combien des 5
-familles ci-dessus ont produit une vraie mesure à CETTE exécution précise du rapport (jamais une
-estimation ni un défaut silencieux) : `dashboardCoverageScore` dans `scripts/kpi-report.mjs`.
-Affiché juste avant la synthèse, et déclenche sa propre alerte si sous 100% — parce qu'un tableau
-de bord qui n'affiche que 3 familles sur 5 sans le signaler clairement inspirerait une confiance
-non méritée à la synthèse globale (risque explicitement nommé par l'utilisateur : « des
-informations erronées pourrait conduire tout le projet dans une mauvaise direction »). Ce
-raisonnement — jamais confondre "la mesure est basse" avec "la mesure n'existe pas" — est le même
-principe que la distinction `undefined` (donnée absente) vs `0` (vraie mesure nulle) appliquée à
-chaque fonction de calcul du rapport, cf. section "Fiabilité" ci-dessous.
+performances du tableau de bord lui-même, indicateur à surveiller en priorité ».)* Combien des 6
+familles ci-dessus (corrigé le 2026-09-21, tâche #145 : cette section disait encore "5", resté faux
+depuis que Smart Conso est devenue la 6e famille le 2026-09-20 — écart doc/code réel, corrigé le
+jour de sa découverte, jamais laissé pour plus tard, Article 13) ont produit une vraie mesure à
+CETTE exécution précise du rapport (jamais une estimation ni un défaut silencieux) :
+`dashboardCoverageScore` dans `scripts/kpi-report.mjs`. Affiché juste avant la synthèse, et
+déclenche sa propre alerte si sous 100% — parce qu'un tableau de bord qui n'affiche que 3 familles
+sur 6 sans le signaler clairement inspirerait une confiance non méritée à la synthèse globale
+(risque explicitement nommé par l'utilisateur : « des informations erronées pourrait conduire tout
+le projet dans une mauvaise direction »). Ce raisonnement — jamais confondre "la mesure est basse"
+avec "la mesure n'existe pas" — est le même principe que la distinction `undefined` (donnée
+absente) vs `0` (vraie mesure nulle) appliquée à chaque fonction de calcul du rapport, cf. section
+"Fiabilité" ci-dessous.
+
+**Section observationnelle non comptée dans les 6 familles (2026-09-21, ajoutée le jour de MEMENTO,
+tâche #169) : « KPI — Mémoire des personnages (MEMENTO, rôle b) ».** Rapporte le poids moyen réel
+du contexte envoyé à Gemini par tour et par personnage (`reportMementoWeight()`, alimenté par
+`averageContextWeightByActor()`), affichée dans chaque rapport mais délibérément EXCLUE du calcul
+de `dashboardCoverageScore` — même précédent déjà établi pour ARGUS/HARMONIA/Smart Conso API avant
+leur intégration (cf. "État d'avancement" ci-dessous) : une section trop récente pour être comptée
+comme une famille à part entière tant qu'elle n'a tourné qu'une poignée de fois. À réévaluer une
+fois une vraie donnée obtenue après une simulation réelle.
 
 ## Fiabilité des calculs (2026-09-19)
 
