@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>État des tâches — Tâches en cours actuellement</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--accent2); }
+  main p.dialogue.speaker-lia strong { color: var(--accent2); }
+  main p.dialogue.speaker-noe { border-left-color: var(--accent); }
+  main p.dialogue.speaker-noe strong { color: var(--accent); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-20T22:18:08.476Z</div>
+    <h1>État des tâches — Tâches en cours actuellement</h1>
+    <p class="sub">Forme : liste rapide · 7 tâche(s) affichée(s) sur 205 au total</p>
+  </header>
+  <div class="divider"></div>
+  <main><p class="note">7 tâche(s) ouverte(s) identiques depuis au moins 3 rapports consécutifs — possible oubli, à vérifier (jamais une certitude).</p>
+<ul><li>#undefined « Design en cours, à haute densité, d'un nouvel agent &quot;RH&quot; (CASSANDRA-RH) — décisions déjà actées à conserver avant compaction ou interruption »</li><li>#147 « Extension proposée : objectifs de résultat / score cible par membre d'équipe »</li><li>#148 « SMART-CONSO-TOKEN devrait accompagner en temps réel le traitement d'une tâche en cours (pas seulement avant un déclencheur ponctuel) »</li><li>#165 « Nouvelle tâche récurrente demandée : audit périodique complet du système tableau de bord/KPI »</li><li>#171 « Décision : CASSANDRA-RH doit tenir la liste de l'équipe à jour »</li><li>#172 « Deux nouvelles tâches : liste de tous les employés, puis organigramme de l'équipe »</li><li>#179 « Décision : CASSANDRA-RH doit avoir une connaissance parfaite de chaque membre de l'équipe pour servir de point de consultation sur les fonctions/description d'un agent ou script »</li></ul>
+<h2>🔄 En cours (1)</h2>
+<table><thead><tr><th>N°</th><th>Sensibilité</th><th>Sujet</th><th>Sous-sujet</th><th>Statut</th></tr></thead><tbody><tr><td>—</td><td>important</td><td>Conception / Nouvel outil (CASSANDRA-RH)</td><td>Design en cours, à haute densité, d'un nouvel agent &quot;RH&quot; (CASSANDRA-RH) — décisions déjà actées à conserver avant compaction ou interruption</td><td>en cours</td></tr></tbody></table>
+<h2>📋 Ouvertes (6)</h2>
+<table><thead><tr><th>N°</th><th>Sensibilité</th><th>Sujet</th><th>Sous-sujet</th><th>Statut</th></tr></thead><tbody><tr><td>147</td><td>normal</td><td>Conception / Nouvel outil (CASSANDRA-RH)</td><td>Extension proposée : objectifs de résultat / score cible par membre d'équipe</td><td>ouverte</td></tr><tr><td>148</td><td>normal</td><td>Méthode de travail / Suivi</td><td>SMART-CONSO-TOKEN devrait accompagner en temps réel le traitement d'une tâche en cours (pas seulement avant un déclencheur ponctuel)</td><td>ouverte</td></tr><tr><td>165</td><td>normal</td><td>Charte / Outillage de travail</td><td>Nouvelle tâche récurrente demandée : audit périodique complet du système tableau de bord/KPI</td><td>ouverte</td></tr><tr><td>171</td><td>normal</td><td>Conception / Nouvel outil (CASSANDRA-RH)</td><td>Décision : CASSANDRA-RH doit tenir la liste de l'équipe à jour</td><td>ouverte</td></tr><tr><td>172</td><td>normal</td><td>Conception / Nouvel outil (CASSANDRA-RH)</td><td>Deux nouvelles tâches : liste de tous les employés, puis organigramme de l'équipe</td><td>ouverte</td></tr><tr><td>179</td><td>normal</td><td>Conception / Nouvel outil (CASSANDRA-RH)</td><td>Décision : CASSANDRA-RH doit avoir une connaissance parfaite de chaque membre de l'équipe pour servir de point de consultation sur les fonctions/description d'un agent ou script</td><td>ouverte</td></tr></tbody></table>
+<h2>Outils du coordinateur pouvant aider (correspondance de mots-clés, à vérifier)</h2>
+<ul><li>#148 « SMART-CONSO-TOKEN devrait accompagner en temps réel le traitement d'une tâche en cours (pas seulement avant un déclencheur ponctuel) » → THE-DEEP-READER (mots-clés : tache, suivi)</li><li>#171 « Décision : CASSANDRA-RH doit tenir la liste de l'équipe à jour » → Doc-Report (mots-clés : outil, decision)</li><li>#179 « Décision : CASSANDRA-RH doit avoir une connaissance parfaite de chaque membre de l'équipe pour servir de point de consultation sur les fonctions/description d'un agent ou script » → Doc-Report (mots-clés : chaque, outil, decision)</li></ul>
+<h2>Ordre recommandé des prochaines tâches (signal, jamais une décision)</h2>
+<ul><li>1. #— « Design en cours, à haute densité, d'un nouvel agent &quot;RH&quot; (CASSANDRA-RH) — décisions déjà actées à conserver avant compaction ou interruption » — sensibilité déclarée : important ; signalée stagnante depuis 1 rapports consécutifs ; priorité explicitement exprimée par l'utilisateur dans le suivi</li><li>2. #147 « Extension proposée : objectifs de résultat / score cible par membre d'équipe » — sensibilité déclarée : normal ; signalée stagnante depuis 12 rapports consécutifs</li><li>3. #148 « SMART-CONSO-TOKEN devrait accompagner en temps réel le traitement d'une tâche en cours (pas seulement avant un déclencheur ponctuel) » — sensibilité déclarée : normal ; signalée stagnante depuis 12 rapports consécutifs</li><li>4. #165 « Nouvelle tâche récurrente demandée : audit périodique complet du système tableau de bord/KPI » — sensibilité déclarée : normal ; signalée stagnante depuis 12 rapports consécutifs</li></ul></main>
+  <div class="divider"></div><footer><p>check-tasks-details — lecture seule, docs/suivi/ reste l'unique source de vérité du projet.</p></footer>
+</div>
+</body>
+</html>
