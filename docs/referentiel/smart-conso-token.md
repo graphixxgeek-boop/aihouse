@@ -27,6 +27,23 @@ technique parmi d'autres.)*
   changement, cf. `classifyConsumption`), décourager un investissement sain de tokens, inventer un
   chiffre exact là où seule une estimation honnête est possible.
 
+## Capacité de scan — les 4 paliers de portée, jamais un second vocabulaire
+
+*(Contenu déplacé ici le 2026-09-21 depuis CLAUDE.md — Article 22 — lors d'une passe d'allègement :
+c'était la seule partie de l'Article 22 qui n'était encore documentée nulle part ailleurs qu'en
+commentaire de code, cf. `scanScope()` dans `scripts/smart-conso-token.mjs`.)*
+
+SMART-CONSO-TOKEN peut analyser une action isolée, un enchaînement, une partie des documents de
+travail, ou tous à la fois — **Global** (tous les documents toujours chargés/fréquemment relus),
+**Partiel** (plusieurs documents), **Zoomé** (un seul), **Focus** (un extrait précis d'un seul
+document). Réutilise volontairement l'échelle de portée déjà définie par THE-FINAL-JUDGE (jamais un
+second vocabulaire, harmonie de taxonomie demandée explicitement), et propose des pistes concrètes
+de réduction. Domaine strictement limité aux documents de travail de l'agent (`CLAUDE.md`, `docs/`,
+`scripts/`) — **jamais le texte envoyé à Gemini pour Lia et Noé** (`lib/lia.ts` reste le territoire
+exclusif de l'Article 8/0 de CLAUDE.md, décision explicite de l'utilisateur). Jamais une application
+automatique d'une proposition : une vraie lecture humaine/agent tranche toujours ce qui est
+universel de ce qui peut rejoindre un document lu à la demande.
+
 ## Ce qui existe aujourd'hui
 
 - **`scripts/smart-conso-token.mjs`** — le canal de consultation. Usage :
@@ -333,7 +350,15 @@ jamais considéré terminé, quel que soit le nombre de tokens économisés.
 3. **Trier, jamais tout couper pareil** : pour chaque candidat, décider si l'aside est (i) pure
    couleur narrative (date + citation, aucune règle nouvelle) → retirer entièrement ; (ii) contient
    un principe réutilisable → le reformuler et le garder dans CLAUDE.md, déplacer seulement la
-   genèse narrative.
+   genèse narrative ; (iii) — **cas trouvé le 2026-09-21, distinct des deux précédents** — la règle
+   est déjà servie par un outil fiable et déjà construit (un script qui l'orchestre mécaniquement,
+   comme LE-RÉGISSEUR pour l'Article 18, ou un outil déjà existant dont la fiche technique dédiée
+   répète déjà le même contenu, comme ARGUS/HYPER-SCAN-CHECKPOINT/Smart Conso API/ALWAYS-NEW-CODE
+   pour les Articles 20 à 23) → réduire à un aiguillage court (le déclencheur + un pointeur), le
+   détail complet vivant dans la fiche de l'outil, jamais dans les deux endroits à la fois. Principe
+   général qui en découle : **une règle peut se réduire à un stub dans CLAUDE.md dès qu'elle a un
+   outil fiable qui la sert — un outil neuf comme un outil déjà existant jamais revisité depuis sa
+   construction ; une règle sans outil derrière doit rester en toutes lettres.**
 4. **Archiver, jamais perdre l'information** : tout contenu retiré rejoint un fichier compagnon dans
    `docs/referentiel/` (ex. `smart-breaker-historique.md` pour un gros bloc, un fichier dédié type
    `claude-md-asides-historique.md` pour un lot d'asides courtes) — jamais supprimé sans trace

@@ -940,7 +940,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 180'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 181'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4341,4 +4341,45 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=1').run(soloAgent1Backup.room,soloAgent1Backup.intent,soloAgent1Backup.needs,soloAgent1Backup.emotions);
   sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=2').run(soloAgent2Backup.room,soloAgent2Backup.intent,soloAgent2Backup.needs,soloAgent2Backup.emotions);
   console.log('Passed: a solitary turn now lets roughly half of a genuine attraction increase survive (still throttled by the existing 0.28 credit system, never a full pass-through) instead of erasing it outright — the real fix behind the loveRealized threshold being unreachable in every one of the 14 archived simulations — while a solitary decrease still resets fully to the pre-turn value, unchanged.');
+}
+{
+  // LE-RÉGISSEUR (2026-09-21, demande explicite de l'utilisateur pendant l'allègement de CLAUDE.md :
+  // « un script au statut membre de l'équipe », jamais l'outil Agent) — orchestre les parties
+  // mécaniques, sans jugement, du protocole de simulation complète (Article 18). Frontière trouvée
+  // en lisant docs/referentiel/kpi-index.md avant de coder (Article 19) : les DEUX index de
+  // jugement (docs/simulations/index.md, docs/referentiel/kpi-index.md) restent hors périmètre —
+  // vérifié ici en s'assurant qu'aucune fonction n'écrit dedans.
+  const {archiveSimulationFiles,summarizeAndArchiveJournal,extractSyntheseCompacte,runAndArchiveKpiReport,preSimulationChecklist,postSimulationChecklist,SIMULATIONS_DIR,KPI_RAPPORTS_DIR}=await import('../scripts/le-regisseur.mjs');
+  const fakeFs={
+    files:{sources:{'/tmp/fake_transcript.txt':'contenu transcript','/tmp/fake_dossier.txt':'contenu dossier'}},
+    existsSync(p){return p in this.files||Object.keys(this.files).some(f=>f.startsWith(p+'/'));},
+    mkdirSync(){},
+    readFileSync(p){return this.files[p];},
+    writeFileSync(p,content){this.files[p]=content;},
+    copyFileSync(src,dest){this.files[dest]=this.files.sources[src];},
+  };
+  const archived=archiveSimulationFiles({simName:'fake_sim',transcriptPath:'/tmp/fake_transcript.txt',dossierPath:'/tmp/fake_dossier.txt'},fakeFs);
+  assert.equal(archived.written.length,2,'both a real transcript and a real dossier path must produce exactly two archived files, never silently dropping the dossier when one is genuinely provided');
+  assert.equal(fakeFs.files[`${SIMULATIONS_DIR}/fake_sim_transcript.txt`],'contenu transcript','the transcript must be copied to the exact flat naming convention already used by all 16 real archived simulations (<sim>_transcript.txt), never a new per-simulation subfolder that would break that convention');
+  assert.equal(fakeFs.files[`${SIMULATIONS_DIR}/fake_sim_dossier.txt`],'contenu dossier','the dossier must be archived the same way, under <sim>_dossier.txt');
+  const archivedNoDossier=archiveSimulationFiles({simName:'fake_sim2',transcriptPath:'/tmp/fake_transcript.txt'},fakeFs);
+  assert.equal(archivedNoDossier.written.length,1,'a simulation that never reached phase 2 (no dossier, exactly like the real full_sim6/full_sim16 cases already in the registry) must archive only the transcript, never fabricate an empty dossier file');
+  assert.throws(()=>archiveSimulationFiles({transcriptPath:'/tmp/fake_transcript.txt'},fakeFs),/simName/,'a missing simName must fail loudly with a clear message, never silently write to a malformed path');
+
+  const fakeSh=(cmd)=>cmd.includes('summarize-simulation-log')?'RÉSUMÉ FAKE':'== SYNTHÈSE COMPACTE (à relayer telle quelle dans la conversation) ==\nRun : fake-run\n| Famille | KPI global |\n|---|---|\n| Robustesse du code | 99% |\n\nHistorique complet : docs/referentiel/kpi-historique.csv\n== Autre section jamais imprimée par kpi-report.mjs mais utile pour vérifier la borne ==\nignoré';
+  const summarized=summarizeAndArchiveJournal('fake_sim','/tmp/fake_journal.json',fakeFs,fakeSh);
+  assert.equal(summarized.content,'RÉSUMÉ FAKE','summarizeAndArchiveJournal() must reuse summarize-simulation-log.mjs\'s real output verbatim, never a second summarization logic reinvented here');
+  assert.equal(fakeFs.files[`${SIMULATIONS_DIR}/fake_sim_actions.txt`],'RÉSUMÉ FAKE','the summary must be archived under the exact same flat naming convention as the transcript/dossier');
+
+  const kpiResult=runAndArchiveKpiReport('fake-run',fakeFs,fakeSh);
+  assert.equal(fakeFs.files[`${KPI_RAPPORTS_DIR}/fake-run.txt`],fakeSh('kpi'),'the full raw kpi-report.mjs output must be archived verbatim to docs/referentiel/kpi-rapports/<run>.txt, never truncated or reformatted');
+  assert.ok(kpiResult.syntheseCompacte.includes('Robustesse du code')&&!kpiResult.syntheseCompacte.includes('ignoré'),'extractSyntheseCompacte() must isolate exactly the SYNTHÈSE COMPACTE section already printed by kpi-report.mjs\'s own section() helper (bounded by the next "== " header), never the sections before or after it');
+  assert.equal(extractSyntheseCompacte('sortie sans aucune section reconnaissable'),undefined,'a kpi-report.mjs output with no recognizable SYNTHÈSE COMPACTE header must report an honest absence, never fabricate a fake synthesis or crash');
+  assert.throws(()=>runAndArchiveKpiReport(undefined,fakeFs,fakeSh),/runLabel/,'a missing runLabel must fail loudly rather than silently writing a report under a meaningless filename');
+
+  const pre=preSimulationChecklist();
+  const post=postSimulationChecklist();
+  assert.ok(pre.length===2&&pre[0].startsWith('0.')&&pre[1].startsWith('1.'),'the pre-simulation checklist must list exactly the two real judgment steps (Smart Conso API consultation, dev server + launch) in their real Article 18 order, never renumbered or reordered');
+  assert.ok(post.length>=8&&post[0].startsWith('2.')&&post.some(s=>s.includes('index.md')&&s.includes('jamais'))&&post.some(s=>s.includes('kpi-index.md')&&s.includes('jamais')),'the post-simulation checklist must explicitly warn, for BOTH judgment indexes (docs/simulations/index.md and docs/referentiel/kpi-index.md), that LE-RÉGISSEUR never writes their judgment row itself — the exact boundary found by reading kpi-index.md before coding (Article 19), never silently lost in a future refactor');
+  console.log('Passed: LE-RÉGISSEUR (2026-09-21) mechanically archives a simulation\'s transcript/dossier/action-summary under the real flat naming convention (dossier omitted honestly when a simulation never reached phase 2), reuses summarize-simulation-log.mjs and kpi-report.mjs\'s own real output verbatim rather than reinventing either, isolates the exact real SYNTHÈSE COMPACTE section kpi-report.mjs already prints, and its own checklists make explicit — never silently — that both judgment indexes (docs/simulations/index.md, docs/referentiel/kpi-index.md) stay the agent\'s to write, exactly the boundary found by reading kpi-index.md\'s own stated rule before writing a single line of code.');
 }

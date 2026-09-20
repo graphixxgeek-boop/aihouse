@@ -169,6 +169,110 @@ mécanisme de repli déjà en place, nouvelle tentative raisonnable) avant de no
 et rapporte alors avec le résultat obtenu — jamais un simple statut d'alerte sans avoir essayé,
 sauf si la recherche de solution elle-même prend un temps déraisonnable.
 
+## 6bis. Protocole de simulation complète (Article 18 de CLAUDE.md)
+
+*(Déplacé ici le 2026-09-21, à la demande explicite de l'utilisateur pendant une passe d'allègement
+de CLAUDE.md — cf. `docs/referentiel/smart-conso-token.md` : CLAUDE.md est rechargé à CHAQUE tour,
+ce protocole n'est consulté que quand une simulation est réellement demandée. CLAUDE.md ne garde
+qu'un stub de 3 phrases sous l'Article 18, pointant ici — les nombreux renvois internes à « Article
+18, étape N » ailleurs dans CLAUDE.md restent valides puisque la numérotation ci-dessous n'a pas
+changé.)*
+
+Quand l'utilisateur demande de « lancer une simulation » (ou toute formulation équivalente —
+simulation complète, intégrale, de bout en bout), l'agent reproduit systématiquement le même
+enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redemande à chaque fois :
+
+0. **Avant toute chose, consulter Smart Conso API** (`node scripts/smart-conso-api.mjs simulation
+   --confirm`, cf. Article 22 de CLAUDE.md) — jamais après, jamais sauté ; la règle qui compte est
+   toujours celle écrite DANS l'étape qu'on exécute, jamais une règle séparée qu'il faut se
+   souvenir de recroiser. Un verdict "seuil dur" exige une validation explicite de l'utilisateur
+   avant de continuer à l'étape 1. Pense-bête mécanique : `node scripts/le-regisseur.mjs checklist
+   pre`.
+1. Relancer un serveur de développement à jour (redémarré si besoin pour garantir que c'est bien
+   le code réel, pas une instance périmée, qui est testé) et lancer le script de simulation
+   intégrale contre lui — reset complet, phase 1 autonome jusqu'à la révélation, phase 2 (dossier
+   retourné, négociation, plusieurs tirages de bonus distincts, hostilité sévère, humour noir,
+   désescalade, bienveillance soutenue, divergence par dispute) — produisant un nouveau transcript
+   horodaté par pièce, le dossier retourné complet et un journal JSON des requêtes/réponses.
+2. **Donner régulièrement à l'utilisateur l'avancement réel pendant que ça tourne** (round atteint,
+   preuves découvertes, révélation atteinte ou non, étape de la phase 2 en cours) — jamais un
+   silence total le temps que la simulation s'exécute, pour qu'il puisse suivre en même temps que
+   l'agent, pas seulement découvrir un résultat figé à la fin.
+3. Une fois terminé, livrer le copier-coller intégral du transcript en fichier joint uniquement
+   (cf. préférence déjà actée plus haut, jamais collé en clair dans la réponse), accompagné du
+   dossier retourné complet.
+3bis. **Archiver durablement transcript + dossier, et extraire un résumé compact du journal JSON
+   avant de le laisser disparaître.** Copier transcript + dossier dans
+   `docs/simulations/` (jamais le journal JSON brut lui-même — plusieurs Mo par simulation, coût
+   disproportionné pour sa valeur de vérification, décision explicite de l'utilisateur), lancer
+   `node scripts/summarize-simulation-log.mjs <chemin du journal>` et garder son résultat compact
+   (tirages de bonus, déplacements, révélation, jardin, progression de l'enquête) à la place du
+   fichier brut, puis ajouter une ligne à `docs/simulations/index.md`. Ce n'est pas un geste
+   ponctuel : cette archive nourrit le reste du réseau d'outils (HARMONIA peut vérifier qu'une règle
+   documentée s'est vraiment produite en jeu, pas seulement que le code et la doc s'accordent entre
+   eux ; ARGUS peut corroborer un champ "jamais lu" par une absence d'effet observé en session
+   réelle) — à répéter à CHAQUE simulation, jamais seulement pour rattraper un retard une fois.
+   **Mécanisé le 2026-09-21 par LE-RÉGISSEUR** (`node scripts/le-regisseur.mjs archive <simName>
+   <journalPath> <transcriptPath> [dossierPath]`) pour la copie des fichiers et le résumé du journal
+   — jamais la ligne de `docs/simulations/index.md` elle-même, qui reste un vrai travail de lecture
+   (root-cause, liens vers d'autres tours) que le script ne peut pas écrire à la place de l'agent.
+4. **Lancer `node scripts/kpi-report.mjs` avant de redémarrer le serveur** et inclure ses résultats
+   dans la même livraison que le transcript/dossier — jamais un rapport à part, oublié ou différé.
+   Les compteurs du Smart Breaker étant en mémoire process, ce rapport doit être pris AVANT de
+   relancer le serveur pour la simulation suivante, sous peine de perdre les chiffres de cette
+   session précise. En complément, archiver le texte complet de cette exécution dans
+   `docs/referentiel/kpi-rapports/<run>.txt` et ajouter une ligne à
+   `docs/referentiel/kpi-index.md` (comparaison explicite avec le run précédent, jamais une lecture
+   isolée) — procédure complète documentée dans `kpi-index.md` lui-même. Dans la conversation,
+   livrer uniquement la section "SYNTHÈSE COMPACTE" du rapport (petit tableau `Famille → %` +
+   points d'attention) accompagnée de `docs/referentiel/kpi-historique.csv` en fichier joint —
+   jamais le rapport complet collé en clair (demande explicite de l'utilisateur : « dans la
+   conversation, tu ne fais que la synthèse globale »). **Mécanisé le 2026-09-21 par LE-RÉGISSEUR**
+   (`node scripts/le-regisseur.mjs kpi <runLabel>`) pour le lancement, l'archivage du texte complet
+   et l'extraction de la synthèse compacte — jamais la ligne de comparaison de `kpi-index.md`, qui
+   reste, comme ci-dessus, la plume de l'agent (cf. la règle déjà écrite dans `kpi-index.md`
+   lui-même : « comparer deux runs et en tirer ce qui compte est un travail de lecture, pas un
+   calcul »).
+4bis. **Faire lire la simulation par EL-PROFESSOR avant de commencer l'analyse.** Une vraie lecture (jamais un calcul
+   mécanique) du transcript ET du dossier retourné (obligatoire dès qu'il existe) contre les 5 thèmes
+   de la charte, plafonnée par l'Article 0 si l'esprit dérive — cf.
+   `docs/referentiel/el-professor.md` pour la méthode complète. Livrée en fichier joint, dans la
+   même livraison que le transcript/dossier/rapport KPI, jamais collée en clair. Archivée dans
+   `docs/el-professor/<sim>.md` + une ligne dans `docs/el-professor/index.md`. Jamais sauté, même
+   sous pression de temps : c'est le point de départ de l'étape 5, pas un supplément optionnel.
+   **THE-SCREENER rejoint cette même étape** (2026-09-19, pendant du précédent pour le graphisme :
+   2 captures d'écran maximum, jugées contre `docs/referentiel/regles-des-graphismes.md`, note
+   strictement indicative qui ne prime jamais sur l'appréciation de l'utilisateur — cf.
+   `docs/referentiel/the-screener.md`). Contrairement à EL-PROFESSOR, son statut reste secondaire :
+   un échec technique de capture ne bloque jamais le protocole. **Les deux outils acceptent aussi
+   bien une simulation de dev qu'une vraie session copiée depuis le site en ligne** une fois publié
+   — les deux sources coexistent, cf. `docs/simulations/index.md`.
+5. Passer directement à une analyse détaillée de ce qui fonctionne et de ce qui ne fonctionne pas
+   dans ce nouveau transcript, **en partant du rapport EL-PROFESSOR déjà produit à l'étape 4bis**
+   plutôt que de tout redécouvrir à la main — jamais une simple confirmation que « ça tourne ».
+6. Comparer systématiquement avec la dernière version de simulation complète disponible pour
+   mesurer l'évolution réelle et la réussite des derniers travaux engagés, jamais une lecture
+   isolée sans mise en perspective avec l'historique. Deux appuis concrets pour cette comparaison,
+   jamais seulement une impression de lecture : (a) la tendance des notes EL-PROFESSOR dans
+   `docs/el-professor/index.md`, thème par thème ; (b) `docs/simulations/correctifs-a-revalider.md`
+   — le carnet, **distinct d'EL-PROFESSOR et jamais consulté par lui**, qui liste les correctifs de
+   code récents encore « en observation » et ce qu'il faut chercher dans le nouveau texte pour
+   confirmer qu'ils tiennent (un correctif sort du carnet après 2 simulations propres consécutives,
+   jamais une seule).
+7. Poser au moins une dizaine de questions de calibrage à l'utilisateur avant d'entamer la moindre
+   correction ou optimisation identifiée par cette analyse — jamais corriger silencieusement sur la
+   base d'une seule lecture personnelle du transcript (cf. Article 16 de CLAUDE.md, dont c'est ici
+   une exigence renforcée, pas une exception).
+8. Organiser ensuite le correctif/l'optimisation de manière sûre, robuste et fiabilisée, avec la
+   même rigueur que le reste de la charte (tests créés si besoin, suite complète revérifiée verte,
+   documentation mise à jour le jour même — Articles 3, 5, 13 de CLAUDE.md).
+
+**Double lecture en parallèle, questions de calibrage après « voici mes commentaires », sondage
+rapide après livraison, type de question précisé, format de présentation, clarté pour un
+non-développeur, une question = une seule idée simple** : ces règles complémentaires, plus
+générales (elles s'appliquent aussi hors simulation), restent documentées dans CLAUDE.md à la suite
+de l'Article 19 — jamais dupliquées ici.
+
 ## 7. Livrables
 
 Toute transcription intégrale de simulation (ou tout document long de même nature) est livrée en

@@ -330,83 +330,16 @@ registre, une règle de non-répétition portant sur le fond et sur toute la ses
 sur les deux derniers tours) — jamais un exemple de plus dans une énumération.
 
 **Article 18 — Protocole de simulation complète.** Quand l'utilisateur demande de « lancer une simulation » (ou toute formulation équivalente —
-simulation complète, intégrale, de bout en bout), l'agent reproduit systématiquement le même
-enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redemande à chaque fois :
-
-0. **Avant toute chose, consulter Smart Conso API** (`node scripts/smart-conso-api.mjs simulation
-   --confirm`, cf. Article 22) — jamais après, jamais sauté ; la règle qui compte est toujours celle
-   écrite DANS l'étape qu'on exécute, jamais une règle séparée qu'il faut se souvenir de recroiser.
-   Un verdict "seuil dur" exige une validation explicite de l'utilisateur avant de continuer à
-   l'étape 1.
-1. Relancer un serveur de développement à jour (redémarré si besoin pour garantir que c'est bien
-   le code réel, pas une instance périmée, qui est testé) et lancer le script de simulation
-   intégrale contre lui — reset complet, phase 1 autonome jusqu'à la révélation, phase 2 (dossier
-   retourné, négociation, plusieurs tirages de bonus distincts, hostilité sévère, humour noir,
-   désescalade, bienveillance soutenue, divergence par dispute) — produisant un nouveau transcript
-   horodaté par pièce, le dossier retourné complet et un journal JSON des requêtes/réponses.
-2. **Donner régulièrement à l'utilisateur l'avancement réel pendant que ça tourne** (round atteint,
-   preuves découvertes, révélation atteinte ou non, étape de la phase 2 en cours) — jamais un
-   silence total le temps que la simulation s'exécute, pour qu'il puisse suivre en même temps que
-   l'agent, pas seulement découvrir un résultat figé à la fin.
-3. Une fois terminé, livrer le copier-coller intégral du transcript en fichier joint uniquement
-   (cf. préférence déjà actée plus haut, jamais collé en clair dans la réponse), accompagné du
-   dossier retourné complet.
-3bis. **Archiver durablement transcript + dossier, et extraire un résumé compact du journal JSON
-   avant de le laisser disparaître.** Copier transcript + dossier dans
-   `docs/simulations/` (jamais le journal JSON brut lui-même — plusieurs Mo par simulation, coût
-   disproportionné pour sa valeur de vérification, décision explicite de l'utilisateur), lancer
-   `node scripts/summarize-simulation-log.mjs <chemin du journal>` et garder son résultat compact
-   (tirages de bonus, déplacements, révélation, jardin, progression de l'enquête) à la place du
-   fichier brut, puis ajouter une ligne à `docs/simulations/index.md`. Ce n'est pas un geste
-   ponctuel : cette archive nourrit le reste du réseau d'outils (HARMONIA peut vérifier qu'une règle
-   documentée s'est vraiment produite en jeu, pas seulement que le code et la doc s'accordent entre
-   eux ; ARGUS peut corroborer un champ "jamais lu" par une absence d'effet observé en session
-   réelle) — à répéter à CHAQUE simulation, jamais seulement pour rattraper un retard une fois.
-4. **Lancer `node scripts/kpi-report.mjs` avant de redémarrer le serveur** et inclure ses résultats
-   dans la même livraison que le transcript/dossier — jamais un rapport à part, oublié ou différé.
-   Les compteurs du Smart Breaker étant en mémoire process, ce rapport doit être pris AVANT de
-   relancer le serveur pour la simulation suivante, sous peine de perdre les chiffres de cette
-   session précise. En complément, archiver le texte complet de cette exécution dans
-   `docs/referentiel/kpi-rapports/<run>.txt` et ajouter une ligne à
-   `docs/referentiel/kpi-index.md` (comparaison explicite avec le run précédent, jamais une lecture
-   isolée) — procédure complète documentée dans `kpi-index.md` lui-même. Dans la conversation,
-   livrer uniquement la section "SYNTHÈSE COMPACTE" du rapport (petit tableau `Famille → %` +
-   points d'attention) accompagnée de `docs/referentiel/kpi-historique.csv` en fichier joint —
-   jamais le rapport complet collé en clair (demande explicite de l'utilisateur : « dans la
-   conversation, tu ne fais que la synthèse globale »).
-4bis. **Faire lire la simulation par EL-PROFESSOR avant de commencer l'analyse.** Une vraie lecture (jamais un calcul
-   mécanique) du transcript ET du dossier retourné (obligatoire dès qu'il existe) contre les 5 thèmes
-   de la charte, plafonnée par l'Article 0 si l'esprit dérive — cf.
-   `docs/referentiel/el-professor.md` pour la méthode complète. Livrée en fichier joint, dans la
-   même livraison que le transcript/dossier/rapport KPI, jamais collée en clair. Archivée dans
-   `docs/el-professor/<sim>.md` + une ligne dans `docs/el-professor/index.md`. Jamais sauté, même
-   sous pression de temps : c'est le point de départ de l'étape 5, pas un supplément optionnel.
-   **THE-SCREENER rejoint cette même étape** (2026-09-19, pendant du précédent pour le graphisme :
-   2 captures d'écran maximum, jugées contre `docs/referentiel/regles-des-graphismes.md`, note
-   strictement indicative qui ne prime jamais sur l'appréciation de l'utilisateur — cf.
-   `docs/referentiel/the-screener.md`). Contrairement à EL-PROFESSOR, son statut reste secondaire :
-   un échec technique de capture ne bloque jamais le protocole. **Les deux outils acceptent aussi
-   bien une simulation de dev qu'une vraie session copiée depuis le site en ligne** une fois publié
-   — les deux sources coexistent, cf. `docs/simulations/index.md`.
-5. Passer directement à une analyse détaillée de ce qui fonctionne et de ce qui ne fonctionne pas
-   dans ce nouveau transcript, **en partant du rapport EL-PROFESSOR déjà produit à l'étape 4bis**
-   plutôt que de tout redécouvrir à la main — jamais une simple confirmation que « ça tourne ».
-6. Comparer systématiquement avec la dernière version de simulation complète disponible pour
-   mesurer l'évolution réelle et la réussite des derniers travaux engagés, jamais une lecture
-   isolée sans mise en perspective avec l'historique. Deux appuis concrets pour cette comparaison,
-   jamais seulement une impression de lecture : (a) la tendance des notes EL-PROFESSOR dans
-   `docs/el-professor/index.md`, thème par thème ; (b) `docs/simulations/correctifs-a-revalider.md`
-   — le carnet, **distinct d'EL-PROFESSOR et jamais consulté par lui**, qui liste les correctifs de
-   code récents encore « en observation » et ce qu'il faut chercher dans le nouveau texte pour
-   confirmer qu'ils tiennent (un correctif sort du carnet après 2 simulations propres consécutives,
-   jamais une seule).
-7. Poser au moins une dizaine de questions de calibrage à l'utilisateur avant d'entamer la moindre
-   correction ou optimisation identifiée par cette analyse — jamais corriger silencieusement sur la
-   base d'une seule lecture personnelle du transcript (cf. Article 16, dont c'est ici une exigence
-   renforcée, pas une exception).
-8. Organiser ensuite le correctif/l'optimisation de manière sûre, robuste et fiabilisée, avec la
-   même rigueur que le reste de la charte (tests créés si besoin, suite complète revérifiée verte,
-   documentation mise à jour le jour même — Articles 3, 5, 13).
+simulation complète, intégrale, de bout en bout), l'agent suit systématiquement, sans en sauter une
+étape et sans avoir besoin qu'on le lui redemande à chaque fois, le protocole complet et détaillé
+(consultation Smart Conso API, lancement contre un serveur à jour, avancement donné en direct,
+livraison du transcript/dossier en fichier joint, archivage durable, rapport KPI, lecture
+EL-PROFESSOR/THE-SCREENER avant analyse, comparaison avec l'historique, au moins une dizaine de
+questions de calibrage avant toute correction) documenté dans `docs/regles-de-travail.md` — jamais
+improvisé, jamais raccourci de sa propre initiative. **LE-RÉGISSEUR** (`scripts/le-regisseur.mjs`,
+2026-09-21) orchestre mécaniquement les étapes qui ne demandent aucun jugement (archivage des
+fichiers, extraction du résumé compact, rapport KPI) — jamais les deux index de jugement
+(`docs/simulations/index.md`, `docs/referentiel/kpi-index.md`), qui restent la plume de l'agent.
 
 **Article 19 — Comprendre avant de toucher.** Avant de modifier une ligne de code existante, comprendre la logique en place et
 la raison pour laquelle elle a été écrite ainsi — jamais un changement à l'aveugle sur la seule foi
@@ -661,64 +594,19 @@ légende à part ni une liste séparée en fin de message, et jamais sur une phr
 de précis contre la charte.
 
 **Article 20 — ARGUS : aucun travail ne se termine sans passer par le détecteur de trous
-logiques.** ARGUS est le nom du système dédié à repérer les trous
-logiques qu'aucun autre garde-fou de cette charte ne couvre explicitement : une combinaison de
-mécanismes jamais envisagée ensemble, un cas limite ou une possibilité inattendue non pensée, une
-conséquence que la logique impose mais qu'on a oubliée, un élément qui devrait être impacté par un
-changement mais ne l'est pas, un lien discret entre deux parties du projet qui n'a pas été vu. Il
-s'applique aussi bien à une idée neuve proposée en cours de conversation qu'à l'ensemble du code
-déjà écrit. Architecture détaillée : `docs/argus-blueprint.md` (principe générique, réutilisable
-sur un autre projet) et `docs/referentiel/argus.md` (instanciation propre à ce projet — registre
-des trous trouvés, dans un dossier dédié avec fichiers + index, même schéma que
-`docs/referentiel/kpi-rapports/`+`kpi-index.md`).
-
-**HARMONIA rejoint la même règle** : le cousin d'ARGUS, dédié cette fois à la cohérence des liens déjà existants
-(interdépendances entre jauges, affichage, narratif, enquête, objets, déplacements, temps,
-interface — jamais les absences, qui restent le terrain d'ARGUS). Architecture détaillée :
-`docs/harmonia-blueprint.md` (principe générique) et `docs/referentiel/harmonia.md` (instanciation
-propre à ce projet — carte des dépendances par grand thème, registre des frictions dans
-`docs/harmonia/`).
-
-**AXA-CHECK rejoint la même règle en troisième membre** : dédié à la robustesse
-et à la fragilité RÉELLES du code, mesurées par vraie couverture de test (par fonction, via
-`NODE_V8_COVERAGE`, zéro nouvelle dépendance) — jamais les absences (ARGUS) ni les frictions
-(HARMONIA), un troisième axe complémentaire. La fragilité qu'il rapporte n'est jamais un simple
-miroir de la robustesse : elle s'enrichit de la proximité avec un nœud sensible HARMONIA et d'un
-signal de churn (réutilisés depuis CHECK-LEVEL-TARGET et ALWAYS-NEW-CODE, jamais dupliqués), et se
-corrobore, au niveau zone, par les simulations archivées (`docs/simulations/`). Architecture
-détaillée : `docs/axa-check-blueprint.md` (principe générique) et `docs/referentiel/axa-check.md`
-(instanciation propre à ce projet — registre des trouvailles dans `docs/axa-check/`).
-
-**CLEAN-DIRTY-OLD rejoint la même règle en quatrième membre** : dédié à la stagnation — du code ancien, peu
-retouché, RELATIVEMENT au reste du projet (jamais un seuil de date fixe). Ne juge jamais lui-même
-si une zone stagnante pose un vrai problème : il pose trois questions explicites, chacune déléguée
-au bon outil déjà existant (encore utile ? → ARGUS ; encore à jour ? → HARMONIA ; profiterait d'une
-refonte ? → ALWAYS-NEW-CODE) — jamais une réponse fabriquée. Priorise les zones proches d'un nœud
-sensible HARMONIA avant la pure ancienneté (calibrage explicite). Architecture détaillée :
-`docs/clean-dirty-old-blueprint.md` (principe générique) et `docs/referentiel/clean-dirty-old.md`
-(instanciation propre à ce projet — registre dans `docs/clean-dirty-old/`).
-
-**Toujours déployés, jamais laissés à la seule initiative de qui pourrait l'oublier.** Pour ARGUS,
-HARMONIA, AXA-CHECK ET CLEAN-DIRTY-OLD : leur partie mécanique et gratuite (symétrie Lia/Noé, données
-calculées mais jamais lues, combinaisons de mécanismes non envisagées ensemble pour ARGUS ; cohérence
-chiffrée entre le code et sa documentation pour HARMONIA ; couverture réelle par fonction pour
-AXA-CHECK ; stagnation relative pour CLEAN-DIRTY-OLD) tourne automatiquement, comme
-`check-house.mjs`, à chaque changement de code — pour AXA-CHECK et CLEAN-DIRTY-OLD, dont le
-jugement reste entièrement mécanique ou délégué (aucune couche de raisonnement séparée, contrairement
-aux deux autres), c'est la totalité de l'outil qui tourne ainsi. Pour ARGUS ET HARMONIA
-spécifiquement, une seconde partie avec un vrai raisonnement plus poussé (donc un coût réel,
-Article 8) se déclenche en plus, à l'initiative de l'agent OU de l'utilisateur, sur un sujet précis
-— en particulier avant toute idée nouvelle, jamais seulement sur le code déjà écrit.
-
-**ARGUS et HARMONIA tournent réellement à chaque commit**, pas seulement testés par
-`check-house.mjs` contre des cas synthétiques : un balayage réel (fonctions pures réutilisées, zéro
-second lancement de `check-house.mjs`, zéro écriture de fichier dans `docs/argus/`/`docs/harmonia/`)
-est intégré dans le crochet `post-commit` (`scripts/hooks/check-last-commit.mjs`), warn-only comme
-le reste de ce crochet. Le même crochet affiche aussi, à chaque commit, le menu des prestations de
-LE-COORDINATEUR (jamais la synthèse complète `runNetworkCheck()`, coûteuse et redondante à chaque
-commit) — pour que ce rappel soit vraiment vu, pas seulement quand quelqu'un pense à relancer
-l'outil. Un rappel explicite fait partie du protocole de travail (cf. `docs/regles-de-travail.md`)
-pour ne jamais laisser cette vérification retomber dans l'oubli.
+logiques.** ARGUS repère les trous logiques qu'aucun autre garde-fou de cette charte ne couvre
+explicitement (combinaison de mécanismes jamais envisagée, cas limite oublié, conséquence
+logique manquée, lien discret non vu) — sur une idée neuve comme sur le code déjà écrit. **HARMONIA**
+(cousin d'ARGUS, cohérence des liens déjà existants), **AXA-CHECK** (troisième membre, robustesse/
+fragilité RÉELLES par couverture de test) et **CLEAN-DIRTY-OLD** (quatrième membre, stagnation
+relative — délègue toujours son jugement aux trois autres, jamais une réponse fabriquée) rejoignent
+la même règle. Les quatre tournent automatiquement, comme `check-house.mjs`, à chaque commit
+(partie mécanique gratuite, câblée dans le crochet `post-commit`) ; ARGUS et HARMONIA ajoutent en
+plus, sur demande, une seconde partie à vrai raisonnement (coût réel, Article 8), en particulier
+avant toute idée nouvelle. Détail complet de chaque outil (mécanique exacte, carte de dépendances,
+registres) : `docs/regles-de-travail.md` §7ter (tableau des outils) et la fiche dédiée de chacun
+(`docs/referentiel/argus.md`, `harmonia.md`, `axa-check.md`, `clean-dirty-old.md`, chacune avec son
+propre blueprint générique) — jamais répété ici.
 
 **Protocole d'application** à chaque itération sur le code : Article 19 (a-t-on compris la logique
 et la raison d'être du code existant avant d'y toucher ?) → Article 0 (l'esprit est-il
@@ -738,99 +626,45 @@ avant/pendant l'exécution, sur les points où une demande était réellement am
 rendu à l'utilisateur doit dire explicitement
 ce qui a été vérifié, préservé, amélioré et corrigé.
 
-**Article 21 — HYPER-SCAN-CHECKPOINT : la vérification approfondie exceptionnelle.** Contrairement à ARGUS et HARMONIA (Article 20, toujours déployés),
-HYPER-SCAN-CHECKPOINT est un outil EXCEPTIONNEL : il ne se déclenche jamais automatiquement, jamais
-en continu — seulement sur demande explicite de l'utilisateur, ou proposé par l'agent après avoir
-remarqué une grosse vague de changements (jamais lancé sans confirmation). Il orchestre TOUT ce que
-le projet sait déjà faire mécaniquement (ARGUS, HARMONIA, `check-house.mjs`, le tableau de bord,
-tous les registres et historiques accumulés) et y ajoute une couche de raisonnement qu'aucun outil
-mécanique ne peut produire : la fidélité à chaque consigne passée reprise une par une, la recherche
-de combinaisons jamais pensées, une comparaison humaine de deux transcripts consécutifs, et — en
-version complète, avec de vrais appels API et après consultation de Smart Conso API — une DOUBLE
-PERSPECTIVE confiée à un second agent réellement indépendant. Sa vocation, et son seul vrai critère
-de succès, n'est jamais "a-t-il tourné sans erreur" mais combien de bugs ou d'oublis réellement
-inconnus il a fait remonter — la preuve vivante de cette vocation est un vrai bug trouvé le
-2026-09-18 grâce à ce rituel avant qu'il n'ait de nom (`negotiationLog` jamais câblé malgré une
-demande explicite, jamais détecté par aucun test avant ce passage). Architecture détaillée :
-`docs/hyper-scan-checkpoint-blueprint.md` (principe générique) et
-`docs/referentiel/hyper-scan-checkpoint.md` (instanciation, registre dans
-`docs/hyper-scan-checkpoint/`).
+**Article 21 — HYPER-SCAN-CHECKPOINT : la vérification approfondie exceptionnelle.** Contrairement
+à ARGUS et HARMONIA (Article 20, toujours déployés), HYPER-SCAN-CHECKPOINT ne se déclenche jamais
+automatiquement, jamais en continu — seulement sur demande explicite de l'utilisateur, ou proposé
+par l'agent après une grosse vague de changements (jamais lancé sans confirmation). Son seul vrai
+critère de succès n'est jamais "a-t-il tourné sans erreur" mais combien de bugs ou d'oublis
+réellement inconnus il a fait remonter. Détail complet (ce qu'il orchestre, la double perspective en
+version complète, la preuve vivante de sa vocation) : `docs/hyper-scan-checkpoint-blueprint.md` et
+`docs/referentiel/hyper-scan-checkpoint.md`.
 
-**Article 22 — Smart Conso API : consultation systématique avant toute action coûteuse.**
-Avant tout appel réel à l'API
-Gemini déclenché par l'agent lui-même pendant une session de travail — jamais le jeu réel, qui
-reste hors du périmètre de cet Article et sous la seule autorité de l'Article 8 — l'agent consulte
-Smart Conso API (`scripts/smart-conso-api.mjs::assess()`), pas après coup pour justifier une
-dépense déjà faite. Ce n'est pas une simple case à cocher : Smart Conso API guide, conseille,
-coache l'agent sur le rythme de sa consommation, à partir de l'historique réel accumulé
-(`.gemini-key-health.json`, partagé avec le Smart Breaker, cf. section dédiée plus haut). Un
-verdict "seuil souple" reste négociable (l'agent explique son choix s'il décide malgré tout de
-poursuivre) ; un verdict "seuil dur" est non négociable et exige une validation humaine explicite
-avant de continuer. Frontière stricte avec l'Article 8, déjà actée avec l'utilisateur le même
-jour : Smart Conso API ne modifie jamais l'architecture de production, ne bascule jamais un
-modèle ou une clé de son propre chef — son expérience peut seulement INFORMER la mise en œuvre de
-l'Article 8, jamais la court-circuiter ni la remplacer. Architecture détaillée :
-`docs/smart-conso-api-blueprint.md` (principe générique) et `docs/referentiel/smart-conso-api.md`
-(instanciation propre à ce projet).
+**Article 22 — Smart Conso API : consultation systématique avant toute action coûteuse.** Avant tout
+appel réel à l'API Gemini déclenché par l'agent lui-même pendant une session de travail — jamais le
+jeu réel, sous la seule autorité de l'Article 8 — l'agent consulte Smart Conso API
+(`scripts/smart-conso-api.mjs::assess()`), jamais après coup. Un verdict "seuil souple" reste
+négociable ; un verdict "seuil dur" est non négociable et exige une validation humaine explicite.
+Frontière stricte avec l'Article 8 : Smart Conso API ne modifie jamais l'architecture de production
+ni ne bascule un modèle/une clé de son propre chef — son expérience INFORME l'Article 8, jamais ne
+le court-circuite. Détail complet : `docs/smart-conso-api-blueprint.md` et
+`docs/referentiel/smart-conso-api.md`.
 
-**SMART-CONSO-TOKEN — le pendant de Smart Conso API, mais pour les TOKENS de l'agent lui-même.**
-Différence structurelle assumée avec l'Article
-ci-dessus : le quota Gemini est sondable en direct (Smart Conso API peut vérifier un vrai état
-MAINTENANT) ; il n'existe AUCUN compteur externe des tokens de l'agent — SMART-CONSO-TOKEN reconnaît
-donc des SCHÉMAS CONNUS coûteux (recherche réelle du 2026-09-20 : un agent séparé coûte ~37 000
-tokens de contexte à froid, dont ~3% seulement utile à la tâche ; un fichier d'instructions toujours
-chargé au-delà d'environ 300 lignes paie ce poids à chaque session) combinés à des valeurs mesurables
-(taille réelle de documents, nombre d'actions confirmées récemment) — jamais un chiffre exact
-présenté comme tel.
+**SMART-CONSO-TOKEN — le pendant de Smart Conso API pour les TOKENS de l'agent lui-même.** Aucun
+compteur externe des tokens de l'agent n'existe (contrairement au quota Gemini, sondable en
+direct) : la seule protection possible est une **obligation écrite, non négociable**. L'agent
+consulte SMART-CONSO-TOKEN (`scripts/smart-conso-token.mjs`) avant tout appel à un agent séparé
+(outil Agent — THE-FINAL-JUDGE, la double perspective d'HYPER-SCAN-CHECKPOINT, toute recherche
+déléguée), toute lecture exhaustive du dépôt, et tout passage de raisonnement coûteux
+(ALWAYS-NEW-CODE). Même distinction souple/dur que l'Article 22. Détail complet (schémas connus
+coûteux, capacité de scan Global/Partiel/Zoomé/Focus, KPI) : `docs/smart-conso-token-blueprint.md`
+et `docs/referentiel/smart-conso-token.md`.
 
-**Obligation écrite, non négociable, jamais un garde-fou vérifiable après coup** : contrairement au
-quota Gemini, aucune trace externe indépendante ne prouve qu'un agent séparé a été appelé ou qu'un
-contexte a été consommé — la seule protection possible est une règle explicite. L'agent consulte
-SMART-CONSO-TOKEN (`scripts/smart-conso-token.mjs`) avant : tout appel à un agent séparé (outil
-Agent — THE-FINAL-JUDGE, la double perspective d'HYPER-SCAN-CHECKPOINT, ou toute recherche déléguée
-ad hoc), toute lecture exhaustive du dépôt, et tout passage de raisonnement coûteux (ALWAYS-NEW-CODE
-— jamais CLEAN-DIRTY-OLD lui-même, qui délègue toujours son jugement sans jamais raisonner à sa
-propre charge). Trois destinataires régulés, jamais un seul : l'agent (avant sa propre action
-coûteuse), l'utilisateur (l'agent signale quand SA demande implique naturellement une action lourde,
-avant de foncer), et les autres outils du paysage ci-dessus. Même distinction souple/dur que
-l'Article 22 : un seuil dur ouvre une vraie fenêtre de question, jamais un blocage silencieux.
-
-**Capacité de scan, réutilisant l'échelle de portée de THE-FINAL-JUDGE** (jamais un second
-vocabulaire, harmonie de taxonomie demandée explicitement) : peut analyser une action isolée, un
-enchaînement, une partie des documents de travail, ou tous à la fois (Global/Partiel/Zoomé/Focus),
-et proposer des pistes concrètes de réduction — **jamais le texte envoyé à Gemini pour Lia et Noé**
-(`lib/lia.ts` reste le territoire exclusif de l'Article 8/0, décision explicite de l'utilisateur),
-**uniquement les documents de travail de l'agent** (`CLAUDE.md`, `docs/`, `scripts/`). Jamais une
-application automatique d'une proposition — une vraie lecture humaine/agent tranche toujours ce qui
-est universel de ce qui peut rejoindre un document lu à la demande. KPI dès la création (comme
-ALWAYS-NEW-CODE) : nombre de propositions réellement appliquées et leur réduction mesurée avant/après
-— jamais un nombre de scans lancés. Architecture détaillée : `docs/smart-conso-token-blueprint.md`
-(principe générique) et `docs/referentiel/smart-conso-token.md` (instanciation propre à ce projet,
-sources de la recherche incluses).
-
-**Article 23 — ALWAYS-NEW-CODE : l'épreuve de la page blanche, rendue concrète.** L'Article 7 demandait déjà, périodiquement,
-de se poser la question de la page blanche — cet Article lui donne un vrai outil. Sur UNE zone à la
-fois (jamais tout le projet d'un coup — les 8 mêmes grands thèmes que la carte de dépendances
-d'HARMONIA), toujours en deux temps (un survol léger des grands axes, puis un zoom profond
-seulement sur la zone repérée), ALWAYS-NEW-CODE imagine comment cette zone serait construite
-aujourd'hui avec toute la connaissance actuelle du projet, puis compare point par point à la
-structure réelle pour repérer la dette d'organisation — un troisième axe, distinct des absences
-(ARGUS) et des frictions (HARMONIA). Une mémoire de couverture (`docs/always-new-code/index.md`)
-fait tourner une rotation intelligente entre les zones, jamais une liste à cocher à la main.
-Déclenché via CHECK-LEVEL-TARGET au niveau "Exceptionnel" (aux côtés d'HYPER-SCAN-CHECKPOINT, dont
-il rejoint aussi la boîte à outils) — jamais automatique. **Garde-fou non négociable, trouvé le
-jour même en dogfoodant l'outil sur `trottoirGranted`** : avant de qualifier quoi que ce soit
-d'"empilé, à corriger", toujours vérifier d'abord que ce n'est pas déjà une décision assumée et
-documentée ailleurs dans le projet (Article 19). **Jamais un résultat "exact à 100 %"** — une
-proposition de restructuration reste un jugement architectural, toujours rendu avec un palier de
-confiance (confirmé / probable / à surveiller, même vocabulaire qu'ARGUS), jamais une certitude
-absolue, même à budget illimité (confirmé explicitement avec l'utilisateur). **Jamais une
-application automatique** : l'agent précise toujours la portée exacte et le temps estimé, et
-interroge toujours l'utilisateur avant tout changement réel — plus strict que le blueprint
-générique par défaut, décision explicite de l'utilisateur. KPI suivi dès la création (nombre de
-trouvailles confirmées par passage), contrairement aux autres outils qui ont attendu plusieurs
-passages réels. Architecture détaillée : `docs/always-new-code-blueprint.md` (principe générique)
-et `docs/referentiel/always-new-code.md` (instanciation propre à ce projet).
+**Article 23 — ALWAYS-NEW-CODE : l'épreuve de la page blanche, rendue concrète.** L'Article 7
+demandait déjà, périodiquement, de se poser la question de la page blanche — cet Article lui donne
+un vrai outil. Sur UNE zone à la fois, ALWAYS-NEW-CODE imagine comment cette zone serait construite
+aujourd'hui avec toute la connaissance actuelle du projet, puis compare à la structure réelle pour
+repérer la dette d'organisation — jamais automatique (déclenché via CHECK-LEVEL-TARGET niveau
+"Exceptionnel"), jamais un résultat "exact à 100 %" (toujours un palier de confiance), jamais une
+application automatique (l'agent interroge toujours l'utilisateur avant tout changement réel).
+**Garde-fou non négociable** : avant de qualifier quoi que ce soit d'"empilé, à corriger", toujours
+vérifier d'abord que ce n'est pas déjà une décision assumée et documentée ailleurs (Article 19).
+Détail complet : `docs/always-new-code-blueprint.md` et `docs/referentiel/always-new-code.md`.
 
 ## Règles de travail — collaboration avec l'utilisateur
 
