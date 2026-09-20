@@ -1,0 +1,32 @@
+// Rôle (b) de MEMENTO (tâche #169, 2026-09-21) — mesure OBSERVATIONNELLE du poids réel du contexte
+// envoyé à Gemini par tour (JSON.stringify(context) dans lib/lia.ts::think()), jamais utilisée pour
+// modifier ce contexte : territoire exclusif de l'Article 8/0 de CLAUDE.md, cette mesure ne fait
+// qu'observer de l'extérieur, exactement la limite posée à l'investigation préalable (Article 19).
+//
+// Même patron que lib/gemini-keys.ts::episodes (mémoire best-effort au niveau du module JS, jamais
+// écrite en base — Cloudflare Workers n'a pas de disque persistant —, cap dur à 200 entrées,
+// exposée en lecture seule via l'API admin déjà protégée, persistée après coup par
+// scripts/kpi-report.mjs, même chemin déjà validé pour le trafic réel des clés Gemini).
+//
+// Formule 4 caractères ≈ 1 token dupliquée volontairement depuis scripts/smart-conso-token.mjs::
+// estimateTokens() plutôt qu'importée : lib/ est le code d'exécution du jeu, scripts/ l'outillage
+// de développement, les deux mondes ne s'importent jamais l'un l'autre — même duplication
+// délibérée déjà en place entre fingerprint() (ici, gemini-keys.ts) et keyLabel()
+// (scripts/gemini-key-health.mjs), pour la même raison.
+type ContextWeightSample = { actor: string; tokens: number; at: number };
+const samples: ContextWeightSample[] = [];
+
+export function recordContextWeightSample(actor: string, context: object): number {
+    const tokens = Math.round(JSON.stringify(context ?? {}).length / 4);
+    samples.push({ actor, tokens, at: Date.now() });
+    if (samples.length > 200) samples.shift();
+    return tokens;
+}
+
+export function getContextWeightSamples() {
+    return [...samples];
+}
+
+export function __resetContextWeightSamplesForTests(): void {
+    samples.length = 0;
+}

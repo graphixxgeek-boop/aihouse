@@ -57,6 +57,7 @@ next-env.d.ts
 .tool-usage-history.json
 .ines-official-latest-code.txt
 .ines-official-latest-code_et_docs.txt
+.memento-history.json
 .le-coordinateur-last-run.json
 .circle-tasks-last-run.json
 .kpi-report-latest.html

@@ -362,6 +362,7 @@ export const CIRCLE_EXCLUDED_REGISTRIES = {
   "clean-dirty-old": "sa partie mécanique tourne déjà à chaque commit (Article 20) — seul son SIGNAL de fraîcheur rejoint la Ronde (clean-dirty-old-signal), jamais un second passage complet",
   "check-level-target": "outil de classification interne, jamais une routine à cocher soi-même",
   "hyper-scan-checkpoint": "outil exceptionnel (Article 21), jamais coché par défaut ni régulier",
+  memento: "cible la mémoire narrative de Lia/Noé en jeu, jamais un scan de repo — rôle (a) vérifiable seulement sur des instantanés réels de partie (pendant/après une simulation) ; rôle (b) déjà rapporté via kpi-report.mjs (reportMementoWeight), jamais une routine CIRCLE-TASKS séparée",
   "check-tasks-details": "état des lieux à la demande, pas une routine périodique mal automatisée",
   "el-professor": "déjà obligatoire à chaque simulation (Article 18, étape 4bis), une seconde routine ferait doublon",
   simulations: "l'archive elle-même, pas un outil à relancer périodiquement",

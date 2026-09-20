@@ -14,7 +14,7 @@ import {DatabaseSync} from 'node:sqlite';
 Object.defineProperty(globalThis.crypto,'randomUUID',{value:()=>{let candidate;do{candidate='00000000-0000-4000-8000-'+(++seedCounter).toString(16).padStart(12,'0');}while(insoliteHash(candidate)>=6);return candidate;},configurable:true});}
 fs.mkdirSync('.sites-runtime',{recursive:true});
 const transpile=s=>ts.transpileModule(s,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
-for(const name of ['house','simulation','relationship','dialogue','story','lia','world','turn','life','drama','perception','visual-events','stock','presentation','playback','evidence','reference','update-audit','gemini-keys','daynight','quality-metrics'])fs.writeFileSync(`.sites-runtime/test-${name}.mjs`,transpile(fs.readFileSync(`lib/${name}.ts`,'utf8').replace('"./update-audit"','"./test-update-audit.mjs"').replace('"./visual-events"','"./test-visual-events.mjs"').replace('"./drama"','"./test-drama.mjs"').replace('"./perception"','"./test-perception.mjs"').replace('"./life"','"./test-life.mjs"').replace('"./house"','"./test-house.mjs"').replace('"./lia"','"./test-lia.mjs"').replace('"./gemini-keys"','"./test-gemini-keys.mjs"').replace('"./simulation"','"./test-simulation.mjs"').replace('"./relationship"','"./test-relationship.mjs"').replace('"./story"','"./test-story.mjs"').replace('"./daynight"','"./test-daynight.mjs"')));
+for(const name of ['house','simulation','relationship','dialogue','story','lia','world','turn','life','drama','perception','visual-events','stock','presentation','playback','evidence','reference','update-audit','gemini-keys','daynight','quality-metrics','memento-weight'])fs.writeFileSync(`.sites-runtime/test-${name}.mjs`,transpile(fs.readFileSync(`lib/${name}.ts`,'utf8').replace('"./update-audit"','"./test-update-audit.mjs"').replace('"./visual-events"','"./test-visual-events.mjs"').replace('"./drama"','"./test-drama.mjs"').replace('"./perception"','"./test-perception.mjs"').replace('"./life"','"./test-life.mjs"').replace('"./house"','"./test-house.mjs"').replace('"./lia"','"./test-lia.mjs"').replace('"./gemini-keys"','"./test-gemini-keys.mjs"').replace('"./memento-weight"','"./test-memento-weight.mjs"').replace('"./simulation"','"./test-simulation.mjs"').replace('"./relationship"','"./test-relationship.mjs"').replace('"./story"','"./test-story.mjs"').replace('"./daynight"','"./test-daynight.mjs"')));
 const raw=fs.readFileSync('app/api/lia/route.ts','utf8').replace('import { env } from "cloudflare:workers";','const env=globalThis.__testEnv;').replaceAll('"@/lib/stock"','"./test-stock.mjs"').replaceAll('"@/lib/visual-events"','"./test-visual-events.mjs"').replaceAll('"@/lib/perception"','"./test-perception.mjs"').replaceAll('"@/lib/lia"','"./test-lia.mjs"').replaceAll('"@/lib/gemini-keys"','"./test-gemini-keys.mjs"').replaceAll('"@/lib/world"','"./test-world.mjs"').replaceAll('"@/lib/house"','"./test-house.mjs"').replaceAll('"@/lib/simulation"','"./test-simulation.mjs"').replaceAll('"@/lib/dialogue"','"./test-dialogue.mjs"').replaceAll('"@/lib/relationship"','"./test-relationship.mjs"').replaceAll('"@/lib/story"','"./test-story.mjs"').replaceAll('"@/lib/life"','"./test-life.mjs"').replaceAll('"@/lib/drama"','"./test-drama.mjs"').replaceAll('"@/lib/turn"','"./test-turn.mjs"').replaceAll('"@/lib/daynight"','"./test-daynight.mjs"').replaceAll('"@/lib/quality-metrics"','"./test-quality-metrics.mjs"');
 fs.writeFileSync('.sites-runtime/test-route.mjs',transpile(raw));
 const sqlite=new DatabaseSync(':memory:');sqlite.exec(fs.readFileSync('drizzle/0000_jazzy_cobalt_man.sql','utf8'));
@@ -940,7 +940,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 188'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 189'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4616,6 +4616,77 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 
   assert.ok(typeof philosophyFreshnessDays() === 'number', 'philosophyFreshnessDays() must report a real number of days for the actual committed docs/philosophie-et-politique.md file — reusing lastTouchDays() from CLEAN-DIRTY-OLD rather than a second divergent calculation');
   console.log('Passed: THE-KING (task #167) reminds to consult docs/philosophie-et-politique.md before a high-stakes decision across exactly its 6 confirmed trigger categories (never a false positive on a low-stakes request), parses the real document into dated/undated principles without ever fabricating a date, builds an honest chronological evolution digest, and flags a possible tension between two principles only when BOTH real shared vocabulary AND a genuine "jamais"/"toujours" polarity clash are present — never a bare keyword or polarity scan alone.');
+}
+
+{
+  // MEMENTO (tâche #169, 2026-09-21) — cible EXCLUSIVEMENT les Personnages (Lia/Noé), jamais les
+  // membres de l'équipe. Testé contre les VRAIES formes de lib/life.ts trouvées par l'investigation
+  // Article 19 (bonusLog/negotiationLog/contacts/wordFrequency/themeFrequency/worstMoment).
+  const { checkChronologicalOrder, detectSuspiciousCounterReset, detectWorstMomentRegression, checkMemoryCoherence, estimateContextWeight } = await import('../scripts/memento.mjs');
+
+  assert.deepEqual(checkChronologicalOrder([{ round: 3 }, { round: 5 }, { round: 4 }, { round: 8 }]), [{ index: 2, previousRound: 5, currentRound: 4 }], 'a real bonusLog/negotiationLog-shaped array must flag exactly the one genuine out-of-order entry, by its real index and real round numbers, never a false positive on the two entries that stay correctly ordered');
+  assert.deepEqual(checkChronologicalOrder([1, 4, 9]), [], 'a genuinely non-decreasing array (contacts\' real shape — bare round numbers) must report zero violations');
+  assert.deepEqual(checkChronologicalOrder([9, 2]), [{ index: 1, previousRound: 9, currentRound: 2 }], 'contacts\' bare-number shape must be checked with the exact same function as the object-shaped logs, never a second parser for what is the same rule');
+
+  assert.deepEqual(detectSuspiciousCounterReset({ tourne: 5, autant: 2 }, { tourne: 0 }), [{ key: 'tourne', previousValue: 5, currentValue: 0 }], 'a real word-counter that was significant (5, above the default threshold of 3) and vanished entirely must be flagged, while a counter that never crossed the significance threshold (autant: 2) must never be flagged as a false positive');
+  assert.deepEqual(detectSuspiciousCounterReset({ tourne: 5 }, { tourne: 5 }), [], 'a counter that genuinely held steady must never be flagged');
+  assert.deepEqual(detectSuspiciousCounterReset({ tourne: 5 }, { tourne: 6 }), [], 'a counter that genuinely grew must never be flagged as a reset');
+  assert.deepEqual(detectSuspiciousCounterReset({ x: 2 }, { x: 0 }), [], 'a counter that never reached the significance threshold before dropping must never be flagged — a drop from 2 to 0 carries no real signal value');
+
+  assert.deepEqual(detectWorstMomentRegression({ round: 10, excerpt: 'x', severity: 7 }, { round: 20, excerpt: 'y', severity: 4 }), { previousSeverity: 7, currentSeverity: 4, previousRound: 10, currentRound: 20 }, 'a real severity drop between two snapshots must be flagged by its real previous/current severity and round — the exact invariant the game\'s own write logic is supposed to enforce (worstMoment is only ever overwritten by a MORE severe moment)');
+  assert.equal(detectWorstMomentRegression({ round: 10, excerpt: 'x', severity: 4 }, { round: 20, excerpt: 'y', severity: 7 }), null, 'a genuine escalation (or an equal severity) must never be flagged as a regression');
+  assert.equal(detectWorstMomentRegression(undefined, { round: 1, excerpt: 'x', severity: 3 }), null, 'a first-ever worstMoment (no prior snapshot to compare against) must never be flagged — there is nothing to regress from');
+
+  const life1 = { bonusLog: [{ round: 1, bonus: 'food' }, { round: 3, bonus: 'calm' }], wordFrequency: { tourne: 5 }, worstMoment: { round: 5, excerpt: 'x', severity: 6 } };
+  const life2 = { bonusLog: [{ round: 1, bonus: 'food' }, { round: 3, bonus: 'calm' }, { round: 2, bonus: 'sleep' }], wordFrequency: { tourne: 0 }, worstMoment: { round: 10, excerpt: 'y', severity: 3 } };
+  const findings = checkMemoryCoherence(life2, life1);
+  assert.equal(findings.length, 3, 'checkMemoryCoherence() must surface all three real findings at once from one realistic pair of Life snapshots (a chronological break, a suspicious counter reset, and a severity regression), never silently dropping one because another was already found');
+  assert.ok(findings.some((f) => f.type === 'ordre_chronologique' && f.champ === 'bonusLog'));
+  assert.ok(findings.some((f) => f.type === 'remise_a_zero_suspecte' && f.champ === 'wordFrequency'));
+  assert.ok(findings.some((f) => f.type === 'regression_gravite' && f.champ === 'worstMoment'));
+  assert.deepEqual(checkMemoryCoherence({ bonusLog: [{ round: 1 }, { round: 2 }] }), [], 'a genuinely healthy single snapshot (no prior snapshot supplied, real chronological order respected) must report zero findings, never a fabricated one');
+  assert.deepEqual(checkMemoryCoherence({}), [], 'an empty or minimal Life object (fields genuinely absent) must never crash and must report zero findings, never a fabricated one from missing data');
+
+  assert.equal(estimateContextWeight({ a: 'x'.repeat(400) }), Math.round(JSON.stringify({ a: 'x'.repeat(400) }).length / 4), 'estimateContextWeight() must reuse SMART-CONSO-TOKEN\'s own estimateTokens() heuristic verbatim (4 chars ≈ 1 token) applied to the real JSON.stringify(context) payload — the same object shape lib/lia.ts actually sends to Gemini — never a second, divergent estimation formula');
+  assert.equal(estimateContextWeight(undefined), 1, 'a missing/undefined context must fall back to measuring an empty object ("{}", 2 chars) rather than crashing on JSON.stringify(undefined) — never a fabricated zero unrelated to what would actually be measured');
+  console.log('Passed: MEMENTO (task #169) — role (a) mechanically detects a real chronological break in any round-numbered memory log (object-shaped like bonusLog/negotiationLog or bare-number like contacts, same function for both), a suspicious silent reset of a persisted word/theme counter above a real significance threshold (never flagging noise below it), and a real severity regression of worstMoment (the exact invariant the game\'s own write logic is supposed to enforce) — surfacing all three at once from a realistic pair of Life snapshots, and staying silent on a genuinely healthy one; role (b) reuses SMART-CONSO-TOKEN\'s own token-estimation heuristic verbatim on the real Gemini payload shape, never a second divergent formula.');
+
+  // lib/memento-weight.ts — le point d'observation réel câblé dans lib/lia.ts::think() (jamais
+  // utilisé pour modifier le contexte envoyé, Article 8/0). Même patron de test que
+  // lib/gemini-keys.ts::episodes (reset explicite entre tests, jamais une fuite d'un test à l'autre).
+  const {recordContextWeightSample,getContextWeightSamples,__resetContextWeightSamplesForTests}=await import('../.sites-runtime/test-memento-weight.mjs');
+  __resetContextWeightSamplesForTests();
+  assert.deepEqual(getContextWeightSamples(),[],'right after a reset, the sample log must be genuinely empty, never a stale entry from a previous test');
+  const tokens=recordContextWeightSample('Lia',{a:'x'.repeat(100)});
+  assert.equal(tokens,Math.round(JSON.stringify({a:'x'.repeat(100)}).length/4),'recordContextWeightSample() must return the real estimated token count for the exact context object it was given, never a placeholder');
+  assert.deepEqual(getContextWeightSamples().map(s=>({actor:s.actor,tokens:s.tokens})),[{actor:'Lia',tokens}],'the sample must be recorded with its real actor name and real token count, immediately readable back');
+  for(let i=0;i<205;i++)recordContextWeightSample('Noé',{});
+  assert.equal(getContextWeightSamples().length,200,'the sample log must respect the same real hard cap (200) as lib/gemini-keys.ts::episodes, dropping the oldest first — never grow without bound in a long-running process');
+  __resetContextWeightSamplesForTests();
+
+  // Persistance + agrégation par acteur (scripts/memento.mjs) — testées avec un vrai fichier local
+  // sauvegardé/restauré, même discipline que tool-usage.mjs/recordAction() plus haut ce soir.
+  const {persistContextWeightSamples,averageContextWeightByActor}=await import('../scripts/memento.mjs');
+  assert.deepEqual(averageContextWeightByActor([{actor:'Lia',tokens:100},{actor:'Lia',tokens:200},{actor:'Noé',tokens:50}]),{Lia:150,'Noé':50},'the average must be computed honestly per actor, never a single pooled average that would hide a real imbalance between Lia and Noé');
+  assert.deepEqual(averageContextWeightByActor([]),{},'an empty sample list must report an honest empty breakdown, never a crash or a fabricated entry');
+  assert.deepEqual(averageContextWeightByActor([{actor:'Lia',tokens:'x'},{},null,{actor:'Noé',tokens:10}]),{'Noé':10},'a malformed entry (non-numeric tokens, missing actor, or a genuinely null sample) must be skipped honestly, never crash the whole aggregation or pollute a real actor\'s average');
+  {
+    const historyPath=new URL('../.memento-history.json',import.meta.url);
+    const {existsSync:exM,readFileSync:rdM,writeFileSync:wrM,unlinkSync:unM}=await import('node:fs');
+    const hadFile=exM(historyPath);
+    const backup=hadFile?rdM(historyPath,'utf8'):undefined;
+    try{
+      assert.equal(persistContextWeightSamples([]),undefined,'persisting an empty sample list must be a genuine no-op — never write a file just to record "nothing happened"');
+      persistContextWeightSamples([{actor:'Lia',tokens:120,at:1000}]);
+      const saved=JSON.parse(rdM(historyPath,'utf8'));
+      assert.deepEqual(saved.samples,[{actor:'Lia',tokens:120,at:1000}],'the first real persist must write exactly the samples given, verbatim');
+      persistContextWeightSamples([{actor:'Noé',tokens:90,at:2000}]);
+      assert.deepEqual(JSON.parse(rdM(historyPath,'utf8')).samples,[{actor:'Lia',tokens:120,at:1000},{actor:'Noé',tokens:90,at:2000}],'a second real persist must APPEND to the existing history, never overwrite what a previous kpi-report.mjs run already saved');
+    }finally{
+      if(hadFile)wrM(historyPath,backup);else if(exM(historyPath))unM(historyPath);
+    }
+  }
+  console.log('Passed: lib/memento-weight.ts is the real observation point wired into lib/lia.ts::think() (a real token estimate returned and recorded per real call, capped at the same 200-entry hard limit as lib/gemini-keys.ts::episodes, reset cleanly between tests), and scripts/memento.mjs persists real samples append-only into .memento-history.json (verified with the real local file, backed up and restored) while averageContextWeightByActor() reports an honest per-actor breakdown that never pools Lia and Noé into one misleading average and never crashes on a malformed entry.');
 }
 
 {

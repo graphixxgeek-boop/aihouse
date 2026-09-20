@@ -1,5 +1,6 @@
 import { intents } from "./simulation";
 import { orderKeys, recordKeyStatus } from "./gemini-keys";
+import { recordContextWeightSample } from "./memento-weight";
 import { z } from "zod";
 export const emotionKeys = ["curiosity", "tension", "trust", "comfort", "attraction"] as const;
 export const initialEmotions = { curiosity: 72, tension: 58, trust: 8, comfort: 22, attraction: 12 };
@@ -105,6 +106,10 @@ JSON : schema strict. action none rester, move changer de pièce, talk parler. m
                 contents: [{ role: "user", parts: [{ text: JSON.stringify(context) }] }],
                 generationConfig: { maxOutputTokens: 1800, responseMimeType: "application/json", responseJsonSchema: responseSchema }
     });
+    // MEMENTO rôle (b), 2026-09-21 : observation pure du poids du contexte réellement envoyé,
+    // jamais utilisée pour le modifier (Article 8/0) — la ligne ci-dessus n'est jamais lue avant
+    // celle-ci, aucun risque de fuite d'information dans le prompt lui-même.
+    recordContextWeightSample(name, context);
     // Repli de modèle (2026-09-18, bug réel rencontré : le quota gratuit journalier de Gemini est
     // PAR MODÈLE — GenerateRequestsPerDayPerProjectPerModel-FreeTier — jamais global au projet ; une
     // simulation intégrale peut légitimement épuiser celui du modèle par défaut en une seule

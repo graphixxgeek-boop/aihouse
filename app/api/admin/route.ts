@@ -1,6 +1,7 @@
 import {referenceSections} from '@/lib/reference';
 import {getGeminiKeyMetrics,getGeminiKeyEpisodes} from '@/lib/gemini-keys';
 import {getQualityMetrics} from '@/lib/quality-metrics';
+import {getContextWeightSamples} from '@/lib/memento-weight';
 import {readWorld} from '@/lib/world';
 import {env} from 'cloudflare:workers';
 // geminiKeyMetrics/qualityMetrics (2026-09-19, demande explicite de l'utilisateur : KPI du
@@ -19,4 +20,4 @@ import {env} from 'cloudflare:workers';
 // l'occasion. Signal de diversité RÉCENTE, pas garanti sur toute la session si plus de 12 tirages
 // ont eu lieu — limite honnête documentée dans docs/referentiel/tableau-de-bord.md plutôt que
 // masquée.
-export async function POST(request:Request){if(request.headers.get('origin')&&request.headers.get('origin')!==new URL(request.url).origin)return Response.json({error:'Origine non autorisée'},{status:403});try{const body=await request.text();if(body.length>100)throw new Error();if(JSON.parse(body).code!=='1980')return Response.json({error:'Code incorrect'},{status:403});let replayabilityMetrics:{distinctBonuses:number;totalBonusTypes:number}|undefined;try{if(env.DB){const {story}=await readWorld(env.DB);const bonusLog=story?.life.bonusLog;if(bonusLog)replayabilityMetrics={distinctBonuses:new Set(bonusLog.map(b=>b.bonus)).size,totalBonusTypes:9};}}catch{}return Response.json({sections:referenceSections,geminiKeyMetrics:getGeminiKeyMetrics(),geminiKeyEpisodes:getGeminiKeyEpisodes(),qualityMetrics:getQualityMetrics(),replayabilityMetrics},{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Code invalide'},{status:400});}}
+export async function POST(request:Request){if(request.headers.get('origin')&&request.headers.get('origin')!==new URL(request.url).origin)return Response.json({error:'Origine non autorisée'},{status:403});try{const body=await request.text();if(body.length>100)throw new Error();if(JSON.parse(body).code!=='1980')return Response.json({error:'Code incorrect'},{status:403});let replayabilityMetrics:{distinctBonuses:number;totalBonusTypes:number}|undefined;try{if(env.DB){const {story}=await readWorld(env.DB);const bonusLog=story?.life.bonusLog;if(bonusLog)replayabilityMetrics={distinctBonuses:new Set(bonusLog.map(b=>b.bonus)).size,totalBonusTypes:9};}}catch{}return Response.json({sections:referenceSections,geminiKeyMetrics:getGeminiKeyMetrics(),geminiKeyEpisodes:getGeminiKeyEpisodes(),qualityMetrics:getQualityMetrics(),contextWeightSamples:getContextWeightSamples(),replayabilityMetrics},{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Code invalide'},{status:400});}}

@@ -821,6 +821,22 @@ détecter la dette d'organisation. Jamais les 8 zones exactes ni les fichiers pr
 `docs/referentiel/always-new-code.md` (instanciation, réutilise les thèmes d'HARMONIA) et
 `docs/always-new-code/` (dossier + index, mémoire de couverture pour la rotation).
 
+## MEMENTO — blueprint exportable, l'exception qui cible les Personnages
+
+`docs/memento-blueprint.md` documente l'ARCHITECTURE de MEMENTO (2026-09-21, tâche #169) — le seul
+outil du réseau dont le domaine EST un personnage narratif (Lia/Noé, catégorie « Personnages »
+actée le même soir, cf. `PERSONNAGES`/`assertNotAPersonnage()` de `scripts/lib-shell.mjs`) plutôt
+qu'un script membre de l'équipe. Couvre deux dettes distinctes, chacune hors du domaine des outils
+de gouvernance de tokens existants (frontière écrite des deux côtés) : (a) cohérence mécanique de
+la mémoire persistée d'un personnage dans le temps (ordre chronologique, remise à zéro suspecte
+d'un compteur, régression d'un indicateur à sens unique) — jamais un second appel au modèle de
+langage ; (b) poids réel du contexte envoyé au modèle par tour — une observation pure, ajoutée au
+point d'appel réseau réel, qui ne modifie jamais ce qui est envoyé (Article 0/8). Une investigation
+préalable dédiée (Article 19) est un prérequis non négociable avant toute conception, pour éviter
+de dupliquer un plafonnage de stockage déjà résolu ou de heurter une frontière déjà actée pour de
+bonnes raisons. Jamais les champs exacts ni les fichiers propres à ce projet, qui vivent dans
+`docs/referentiel/memento.md` (instanciation) et `docs/memento/` (dossier + index).
+
 ## AXA-CHECK — blueprint exportable
 
 `docs/axa-check-blueprint.md` documente l'ARCHITECTURE de l'outil de robustesse/fragilité RÉELLES
@@ -1029,6 +1045,11 @@ conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs se
   (`scripts/always-new-code.mjs`), le déclenchement via CHECK-LEVEL-TARGET niveau Exceptionnel, le
   registre des passages (`docs/always-new-code/`). Cf. `docs/always-new-code-blueprint.md` pour le
   principe générique.
+- `docs/referentiel/memento.md` (2026-09-21) — instanciation de MEMENTO pour ce projet : les deux
+  rôles (cohérence mécanique de `lib/life.ts`, poids réel du contexte envoyé à Gemini par tour), les
+  deux investigations préalables (Article 19) qui l'ont précédé, le patron de persistance réutilisé
+  de `lib/gemini-keys.ts`, l'exclusion documentée de CIRCLE-TASKS, le registre (`docs/memento/`).
+  Cf. `docs/memento-blueprint.md` pour le principe générique.
 - `docs/referentiel/axa-check.md` (2026-09-19) — instanciation d'AXA-CHECK (Article 20) pour ce
   projet : la mécanique de couverture V8 par fonction (`scripts/axa-check.mjs`), la fragilité
   enrichie (nœuds sensibles HARMONIA + churn ALWAYS-NEW-CODE), la corroboration par les simulations
