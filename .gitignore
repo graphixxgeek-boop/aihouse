@@ -54,6 +54,7 @@ next-env.d.ts
 .gemini-key-health.json
 .smart-conso-session.json
 .smart-conso-token-history.json
+.tool-usage-history.json
 .le-coordinateur-last-run.json
 .circle-tasks-last-run.json
 .kpi-report-latest.html

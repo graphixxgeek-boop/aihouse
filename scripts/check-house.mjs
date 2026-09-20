@@ -940,7 +940,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 183'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 184'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4461,4 +4461,37 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(pre.length===2&&pre[0].startsWith('0.')&&pre[1].startsWith('1.'),'the pre-simulation checklist must list exactly the two real judgment steps (Smart Conso API consultation, dev server + launch) in their real Article 18 order, never renumbered or reordered');
   assert.ok(post.length>=8&&post[0].startsWith('2.')&&post.some(s=>s.includes('index.md')&&s.includes('jamais'))&&post.some(s=>s.includes('kpi-index.md')&&s.includes('jamais')),'the post-simulation checklist must explicitly warn, for BOTH judgment indexes (docs/simulations/index.md and docs/referentiel/kpi-index.md), that LE-RÉGISSEUR never writes their judgment row itself — the exact boundary found by reading kpi-index.md before coding (Article 19), never silently lost in a future refactor');
   console.log('Passed: LE-RÉGISSEUR (2026-09-21) mechanically archives a simulation\'s transcript/dossier/action-summary under the real flat naming convention (dossier omitted honestly when a simulation never reached phase 2), reuses summarize-simulation-log.mjs and kpi-report.mjs\'s own real output verbatim rather than reinventing either, isolates the exact real SYNTHÈSE COMPACTE section kpi-report.mjs already prints, and its own checklists make explicit — never silently — that both judgment indexes (docs/simulations/index.md, docs/referentiel/kpi-index.md) stay the agent\'s to write, exactly the boundary found by reading kpi-index.md\'s own stated rule before writing a single line of code.');
+}
+{
+  // COMPTEUR D'USAGE DES OUTILS (tâche #166, 2026-09-21, capturé en conception #230 puis calibré :
+  // cumul permanent, jamais remis à zéro ; origine de chaque sollicitation ; croisement avec les
+  // vraies trouvailles produites). Testé contre le vrai fichier local avec sauvegarde/restauration
+  // complète (même discipline que recordAction()/computeAdoptionKpi() ce soir), puisque
+  // recordToolUsage() n'a pas de fs injectable, comme le reste des historiques auto-déclarés.
+  const { recordToolUsage, toolUsageStats, toolsNeverUsed, USAGE_ORIGINS } = await import('../scripts/tool-usage.mjs');
+  assert.deepEqual(USAGE_ORIGINS, ['spontane', 'demande', 'automatique_post_commit'], 'the three real origins the user asked to distinguish must be exactly these, never a fourth invented one nor a missing one');
+  assert.throws(() => recordToolUsage(undefined, 'demande'), /toolSlug/, 'a usage event can never be anonymous — a missing toolSlug must fail loudly rather than silently recording a meaningless entry');
+  assert.throws(() => recordToolUsage('argus', 'origine-inconnue'), /origin inconnue/, 'an unrecognized origin must fail loudly rather than silently accepting a typo that would corrupt the honest byOrigin breakdown later');
+  {
+    const histPath = new URL('../.tool-usage-history.json', import.meta.url);
+    const { existsSync: exU, readFileSync: rdU, writeFileSync: wrU, unlinkSync: unU } = await import('node:fs');
+    const hadFile = exU(histPath);
+    const backup = hadFile ? rdU(histPath, 'utf8') : undefined;
+    try {
+      recordToolUsage('test-tool-usage-argus', 'automatique_post_commit', 1000, true);
+      recordToolUsage('test-tool-usage-argus', 'demande', 2000, false);
+      recordToolUsage('test-tool-usage-harmonia', 'spontane', 3000);
+      const history = JSON.parse(rdU(histPath, 'utf8'));
+      const statsArgus = toolUsageStats(history, 'test-tool-usage-argus');
+      assert.equal(statsArgus.total, 2, 'both real events for this tool must be counted, cumulatively, never reset within the same history');
+      assert.deepEqual(statsArgus.byOrigin, { spontane: 0, demande: 1, automatique_post_commit: 1 }, 'each origin must be counted separately and honestly — the real ask was to tell a tool that only ever runs automatically apart from one genuinely chosen');
+      assert.equal(statsArgus.foundSomethingRate, 50, 'foundSomethingRate must reflect the real ratio of confirmed-useful calls among those with a verdict at all (1 of 2 here), the exact "usage vs utility" distinction the user asked for');
+      const statsNeverSeen = toolUsageStats(history, 'test-tool-usage-never-recorded');
+      assert.deepEqual(statsNeverSeen, { total: 0, byOrigin: {}, foundSomethingCount: 0, foundSomethingRate: undefined }, 'a tool with zero recorded events must report an honest all-zero/undefined result, never a fabricated rate or a crash');
+      assert.deepEqual(toolsNeverUsed(history, ['test-tool-usage-argus', 'test-tool-usage-harmonia', 'test-tool-usage-never-recorded']), ['test-tool-usage-never-recorded'], 'toolsNeverUsed() must flag exactly the tool with zero real events among a known list, useful to Doc-Report/#165 for spotting a tool that produces reports nobody ever solicited');
+    } finally {
+      if (hadFile) wrU(histPath, backup); else if (exU(histPath)) unU(histPath);
+    }
+  }
+  console.log('Passed: the tool-usage counter (task #166) records each real solicitation cumulatively and permanently (never reset per session, the user\'s explicit choice), distinguishes the three real origins (spontaneous/requested/automatic-post-commit) honestly, and computes a real found-something rate distinguishing "often used" from "often USEFUL" — the exact anti-vanity-metric discipline already proven for ALWAYS-NEW-CODE/THE-DEEP-READER — verified against the real local history file with full backup/restore, never left in a dirty state.');
 }
