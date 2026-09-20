@@ -11,8 +11,9 @@ propre à *Maison IA vivante* vit dans `docs/referentiel/axa-check.md`.)*
 
 ## Le problème que ce patron résout
 
-Un projet peut avoir une suite de tests verte (`check-house.mjs` le garantit déjà) sans que cela
-dise QUELLE PART du code réel cette suite exécute vraiment. Une fonction jamais appelée par aucun
+Un projet peut avoir une suite de tests verte (un filet de sécurité mécanique existant, quel qu'en
+soit le nom d'un projet à l'autre) sans que cela dise QUELLE PART du code réel cette suite exécute
+vraiment. Une fonction jamais appelée par aucun
 test peut casser en silence à la prochaine modification, sans qu'aucun garde-fou mécanique ne le
 voie — jusqu'à ce jour, seule une lecture humaine attentive du code pouvait repérer ce genre
 d'angle mort. AXA-CHECK rend ce signal mesurable et automatique.
