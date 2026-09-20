@@ -73,3 +73,22 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   `docs/smart-conso-token/scans/claude-md-narrative-candidates.md` — un point de départ concret pour
   la future session de restructuration, jamais appliqué automatiquement (Article 0/14). Reste à
   planifier explicitement.
+- **Piège du « reset complet » (Article 18, étape 1) trouvé le 2026-09-20 en le vivant réellement** —
+  « reset complet » signifie appeler l'endpoint applicatif `mode:"reset"` (déjà fait par tous les
+  scripts `full_simN.mjs` via `ensureReset()`) sur un serveur de dev déjà démarré, **jamais** effacer
+  à la main le fichier sqlite local de D1
+  (`.wrangler/state/v3/d1/miniflare-D1DatabaseObject/*.sqlite`) : ce fichier porte aussi le SCHÉMA
+  (tables `agent_state`/`conversations`/`memories`/`world_lock`, etc.), pas seulement les données de
+  la partie en cours — le supprimer casse le serveur (`503 "mémoire de la maison indisponible"`)
+  jusqu'à ce que les migrations Drizzle (`drizzle/*.sql`) soient réappliquées à la main, car aucun
+  mécanisme du projet ne les réapplique automatiquement (`vite.config.ts` ne passe pas de
+  `migrations_dir` au plugin Cloudflare) et il n'existe pas de `wrangler.toml` autonome permettant
+  d'utiliser `wrangler d1 migrations apply --local` directement. Récupéré ce jour en rejouant les 7
+  fichiers `drizzle/0*.sql` dans l'ordre via `node:sqlite` (`DatabaseSync`) directement sur le
+  fichier — fonctionne, mais contourne la table de suivi `d1_migrations` que `wrangler` utilise
+  normalement pour l'idempotence : si quelqu'un lance un jour `wrangler d1 migrations apply --local`
+  sur cette base réparée à la main, il tentera de rejouer des migrations déjà présentes (probable
+  `table already exists`). Pas corrigé activement ce soir (aucun signe qu'un tel appel `wrangler d1`
+  existe ailleurs dans le projet — cf. recherche exhaustive du 2026-09-20, rien trouvé) ; à garder en
+  tête si ce mode d'usage apparaît un jour. Le vrai correctif de fond est comportemental, pas du
+  code : ne plus jamais effacer ce fichier soi-même pour un « reset complet ».
