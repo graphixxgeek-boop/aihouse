@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>État des tâches — Vue élargie (ouvertes + terminées récentes)</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--accent2); }
+  main p.dialogue.speaker-lia strong { color: var(--accent2); }
+  main p.dialogue.speaker-noe { border-left-color: var(--accent); }
+  main p.dialogue.speaker-noe strong { color: var(--accent); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-20T12:43:37.478Z</div>
+    <h1>État des tâches — Vue élargie (ouvertes + terminées récentes)</h1>
+    <p class="sub">Forme : arborescence détaillée · 30 tâche(s) affichée(s) sur 128 au total</p>
+  </header>
+  <div class="divider"></div>
+  <main><ul><li>Charte (10)<ul><li>Outillage de travail (10)<ul><li>#175 · [important] THE-DEEP-READER intégré au paysage d'outils (table + menu + canaux de consultation) — terminée — fidèle</li><li>#177 · [important] Ronde CIRCLE-TASKS exécutée (5 items) — démonstration concrète de la nouvelle règle de sollicitation — terminée — fidèle</li><li>#180 · [important] THE-DEEP-READER premier passage réel livré et réconcilié + bug CLI SMART-CONSO-TOKEN trouvé et corrigé — terminée — fidèle</li><li>#183 · [important] THE-DEEP-READER : persona enrichie (mémoire fiable, lecture profonde ligne par ligne, mesure de valeur SANS jamais filtrer) — terminée — fidèle</li><li>#184 · [important] THE-DEEP-READER : rentabilisation non négociable — chaque écart retenu reçoit systématiquement son propre numéro de tâche — terminée — fidèle</li><li>#185 · [normal] Numérotation rétroactive de la dette DRY THE-DEEP-READER/THE-FINAL-JUDGE (tâche #152) — terminée — fidèle</li><li>#189 · [normal] Tâche mise de côté par l'utilisateur : vérifier que le catalogue PRESTATIONS de LE-COORDINATEUR reflète bien les outils récents — terminée — fidèle (cf. #193, garde-fou reconfirmé à zéro écart)</li><li>#178 · [important] Premier passage réel THE-DEEP-READER lancé (agent séparé, en cours) — en cours</li><li>#165 · [normal] Nouvelle tâche récurrente demandée : audit périodique complet du système tableau de bord/KPI — ouverte</li><li>#181 · [critique] Nouvelle tâche urgente : enrichir SMART-CONSO-TOKEN (recherche web experte) puis relancer une passe d'allègement CLAUDE.md — ouverte</li></ul></li></ul></li><li>Méthode de travail (6)<ul><li>Suivi (6)<ul><li>#182 · [important] Arborescence détaillée des tâches livrée (forme exacte enfin conforme) + nouvelle règle de conformité de forme — terminée — fidèle</li><li>#186 · [important] Règle : ne jamais perdre le fil d'une tâche interrompue par un prompt intempestif — terminée — fidèle</li><li>#191 · [important] Complément à la règle de sollicitation des outils : annoncer explicitement chaque usage réel — terminée — fidèle</li><li>#194 · [important] Nouvelle règle : consulter systématiquement check-tasks-details avant toute lecture manuelle de l'état des tâches — terminée — fidèle</li><li>#148 · [normal] SMART-CONSO-TOKEN devrait accompagner en temps réel le traitement d'une tâche en cours (pas seulement avant un déclencheur ponctuel) — ouverte</li><li>#176 · [important] Nouvelle règle demandée : solliciter réellement les outils pendant le travail, pas seulement les construire — ouverte</li></ul></li></ul></li><li>Conception (10)<ul><li>Nouvel outil (check-tasks-details) (4)<ul><li>#187 · [important] Nouvelle demande, mise en application immédiate de la règle #186 : premier prompt intempestif reçu pendant la 4e passe d'allègement CLAUDE.md, absorbé sans perdre le fil — terminée — fidèle (cf. #193)</li><li>#188 · [important] Extension de scope demandée avant même la première réponse de calibrage : classification/organisation des tâches, pas seulement un rapport en lecture seule — terminée — fidèle (cf. #193)</li><li>#190 · [important] Nouvelle exigence de conception : check-tasks-details consulte LE-COORDINATEUR par tâche + conceptualiser le système d'échanges entre outils — terminée — fidèle (cf. #193)</li><li>#193 · [important] check-tasks-details construit et intégré (statut complet) — clôture des tâches #187/#188/#189/#190 — terminée — fidèle</li></ul></li><li>Nouvel outil (CASSANDRA-RH) (5)<ul><li>#— · [important] Design en cours, à haute densité, d'un nouvel agent &quot;RH&quot; (CASSANDRA-RH) — décisions déjà actées à conserver avant compaction ou interruption — en cours</li><li>#147 · [normal] Extension proposée : objectifs de résultat / score cible par membre d'équipe — ouverte</li><li>#171 · [normal] Décision : CASSANDRA-RH doit tenir la liste de l'équipe à jour — ouverte</li><li>#172 · [normal] Deux nouvelles tâches : liste de tous les employés, puis organigramme de l'équipe — ouverte</li><li>#179 · [normal] Décision : CASSANDRA-RH doit avoir une connaissance parfaite de chaque membre de l'équipe pour servir de point de consultation sur les fonctions/description d'un agent ou script — ouverte</li></ul></li><li>Nouvel outil (LE-COORDINATEUR) (1)<ul><li>#192 · [normal] Nouvelle tâche mise en file : catalogue d'offres nommé, historisé — ouverte</li></ul></li></ul></li><li>Smart Breaker (1)<ul><li>Général (1)<ul><li>#— · [critique] Blocage total du quota Gemini pendant full_sim11 — en cours — **mise à jour 20:50Z** : décision explicite de l'utilisateur (20:39Z) de lancer une simulation fraîche (`full_sim12.mjs`) plutôt que de reprendre full_sim11 ; routine horaire de surveillance du quota (`trig_0163yvWqaY29d1KTvKXCFcCY`) désactivée en conséquence (n'avait plus lieu d'être, elle ne surveillait que la reprise de full_sim11) ; `full_sim12` lancée avec repli de modèle déjà configuré, mais stoppée dès le round 11 (HTTP 429 répété) — re-sondage confirmé : les 3 clés × 6 modèles sont TOUS `QUOTA_ÉPUISÉ` de nouveau (épuisement total, y compris les modèles de repli qui répondaient encore 30 min plus tôt) ; simulation arrêtée proprement, aucune reprise possible avant renouvellement du quota Google</li></ul></li></ul></li><li>Refonte graphique (1)<ul><li>Général (1)<ul><li>#— · [important] Calibrage du plan d'interface plein écran (boutons, menus, disposition) — en cours — rédaction du plan complet dans `docs/referentiel/regles-des-graphismes.md` pas encore terminée</li></ul></li></ul></li><li>Enquête (1)<ul><li>Récit (1)<ul><li>#— · [important] Investiguer l'arc relationnel Lia/Noé avant la refonte graphique — ouverte</li></ul></li></ul></li><li>Documentation (1)<ul><li>Référentiel (1)<ul><li>#157 · [important] Distinguer référentiel générique (toute IA) vs Claude Code-spécifique — mise en queue explicite — ouverte</li></ul></li></ul></li></ul>
+<h2>Outils du coordinateur pouvant aider (correspondance de mots-clés, à vérifier)</h2>
+<ul><li>#— « Blocage total du quota Gemini pendant full_sim11 » → Smart Breaker (check-gemini-quota.mjs) (mots-clés : blocage, quota, gemini)</li><li>#178 « Premier passage réel THE-DEEP-READER lancé (agent séparé, en cours) » → THE-DEEP-READER (mots-clés : agent, separe)</li><li>#148 « SMART-CONSO-TOKEN devrait accompagner en temps réel le traitement d'une tâche en cours (pas seulement avant un déclencheur ponctuel) » → CIRCLE-TASKS (mots-clés : smart, conso, token)</li><li>#165 « Nouvelle tâche récurrente demandée : audit périodique complet du système tableau de bord/KPI » → CIRCLE-TASKS (mots-clés : periodique, kpi)</li><li>#172 « Deux nouvelles tâches : liste de tous les employés, puis organigramme de l'équipe » → check-tasks-details (mots-clés : taches, liste)</li><li>#181 « Nouvelle tâche urgente : enrichir SMART-CONSO-TOKEN (recherche web experte) puis relancer une passe d'allègement CLAUDE.md » → CIRCLE-TASKS (mots-clés : smart, conso, token)</li></ul></main>
+  <div class="divider"></div><footer><p>check-tasks-details — lecture seule, docs/suivi/ reste l'unique source de vérité du projet.</p></footer>
+</div>
+</body>
+</html>

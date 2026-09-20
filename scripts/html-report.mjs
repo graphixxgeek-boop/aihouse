@@ -72,6 +72,17 @@ export function renderBlock(block) {
       const speakerClass = DIALOGUE_SPEAKER_CLASS[String(block.speaker || "").toLowerCase()] || "speaker-other";
       return `<p class="dialogue ${speakerClass}"><strong>${escapeHtml(block.speaker)}</strong> — ${escapeHtml(block.text)}</p>`;
     }
+    // { type: 'tree', nodes: [{ label, children: [...] }] } (2026-09-20, besoin réel de
+    // check-tasks-details : une arborescence détaillée thème > sous-thème > tâche, jamais
+    // représentable par le type 'list' existant, à plat, sans imbrication). Même règle que les
+    // trois types précédents : enrichir le vocabulaire commun plutôt que forker une page à part.
+    case "tree": {
+      const renderNodes = (nodes) =>
+        `<ul>${(nodes || [])
+          .map((n) => `<li>${escapeHtml(n.label)}${n.children?.length ? renderNodes(n.children) : ""}</li>`)
+          .join("")}</ul>`;
+      return renderNodes(block.nodes);
+    }
     default:
       return "";
   }

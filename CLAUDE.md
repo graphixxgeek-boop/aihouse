@@ -1012,6 +1012,22 @@ fichier de référence gardé dans `docs/` (qui reste texte/markdown, relu par l
 une copie de présentation générée à la remise. Encore plus mince que LE-COORDINATEUR/CIRCLE-TASKS,
 entièrement documenté dans `docs/regles-de-travail.md` §7ter.
 
+## CHECK-TASKS-DETAILS — blueprint exportable
+
+`docs/check-tasks-details-blueprint.md` documente l'ARCHITECTURE de l'outil d'état des lieux des
+tâches à la demande (2026-09-20, demandé explicitement par l'utilisateur pour répondre à ses
+demandes récurrentes « fais-moi l'état des tâches en cours » avec un gabarit fixe) — zoom (en
+cours/élargi/projet entier) × forme (liste/arborescence), rapport HTML, strictement en lecture
+seule sur `docs/suivi/` (qui reste l'unique source de vérité, jamais une seconde porte d'écriture),
+vérification croisée automatique contre son propre historique (régression/stagnation) — sous une
+forme générique, réutilisable sur tout projet suivi par un système de tâches durable. Statut
+**complet** (choix explicite de l'utilisateur, Article 16), contrairement à LE-COORDINATEUR/
+CIRCLE-TASKS/html-report.mjs. Jamais les colonnes exactes ni le registre propre à ce projet, qui
+vivent dans `docs/referentiel/check-tasks-details.md` (instanciation) et
+`docs/check-tasks-details/` (dossier + index). Consulte `le-coordinateur.mjs::suggestPrestationsForTask()`
+pour chaque tâche ouverte — premier usage concret d'un principe désormais général, documenté dans
+`docs/regles-de-travail.md` §7ter (« Consultation programmatique outil→LE-COORDINATEUR »).
+
 ## CLEAN-DIRTY-OLD — blueprint exportable
 
 `docs/clean-dirty-old-blueprint.md` documente l'ARCHITECTURE du détecteur de stagnation (cf.
@@ -1145,6 +1161,11 @@ conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs se
   (Article 20) pour ce projet : les seuils de stagnation relative, la priorisation par nœud
   sensible, les trois questions déléguées à ARGUS/HARMONIA/ALWAYS-NEW-CODE, le registre
   (`docs/clean-dirty-old/`). Cf. `docs/clean-dirty-old-blueprint.md` pour le principe générique.
+- `docs/referentiel/check-tasks-details.md` (2026-09-20) — instanciation de CHECK-TASKS-DETAILS pour
+  ce projet : le gabarit de calibrage (zoom × forme), les colonnes lues dans `docs/suivi/`
+  (lecture seule), la consultation de `suggestPrestationsForTask()`, le mécanisme de vérification
+  croisée (régression/stagnation), le registre (`docs/check-tasks-details/`). Cf.
+  `docs/check-tasks-details-blueprint.md` pour le principe générique.
 - `docs/referentiel/el-professor.md` (2026-09-19) — instanciation d'EL-PROFESSOR (Article 18, étape
   4bis) pour ce projet : les 5 thèmes exacts (esprit, naturel, voix, enquête + fidélité du dossier,
   clarté), le calcul plafonné par l'Article 0, le format de livraison en fichier, les paliers

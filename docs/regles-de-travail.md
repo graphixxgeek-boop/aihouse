@@ -348,6 +348,7 @@ maximiser leurs performances ».)*
 | SMART-CONSO-TOKEN | rythme de consommation de TOKENS de l'agent (Agent séparé, lecture exhaustive, poids d'un document toujours chargé) ; peut aussi scanner et proposer des réductions | gratuit à consulter | avant tout appel à un agent séparé ou tout raisonnement coûteux — obligation écrite dans la charte, jamais un garde-fou vérifiable après coup |
 | CIRCLE-TASKS (« Ronde périodique ») | 13 tâches périodiques gratuites mal automatisées, regroupées par thème (profil utilisateur, relecture des référentiels, KPI, tâche ouverte la plus ancienne — Suivi & référentiels ; rapport KPI, scans Smart Conso API/SMART-CONSO-TOKEN — KPI & scans ; zone ALWAYS-NEW-CODE la plus négligée, dernier passage CLEAN-DIRTY-OLD, câblage HTML des rapports, poids en tokens de CLAUDE.md — Qualité du code ; photo de la dream team, THE-SCREENER — Qualité & fun) — regroupées dans une seule fenêtre à cocher ; THE-FINAL-JUDGE reste visible dans la même fenêtre (thème Audit lourd) mais toujours marqué ⚠️🔴 coûteux (37k tokens), jamais coché par défaut | gratuit (sauf si THE-FINAL-JUDGE est explicitement coché) | à la demande de l'utilisateur ou de l'agent ; rappel proactif automatique dans le crochet post-commit après 10 commits sans passage |
 | Gabarit HTML de remise de rapports (`scripts/html-report.mjs`) | mise en page soignée d'un rapport déjà produit (KPI, EL-PROFESSOR, THE-SCREENER, simulations, THE-FINAL-JUDGE...) — jamais le contenu métier lui-même | gratuit | importé et appelé par les autres outils au moment de produire une copie de présentation — jamais un outil qu'on invoque seul |
+| check-tasks-details | état des lieux des tâches à la demande (zoom en cours/élargi/projet entier × forme liste/arborescence), rapport HTML, lecture seule de `docs/suivi/`, vérification croisée automatique (régression/stagnation) contre son propre historique | gratuit | sur demande explicite (moi ou l'utilisateur), gabarit de questions dédié (cf. `docs/referentiel/check-tasks-details.md`) |
 
 Cette table remplace toute énumération informelle éparpillée dans la conversation : à jour à
 chaque nouvel outil créé (même discipline que la liste des documents de référence, Article 13).
@@ -474,6 +475,51 @@ d'intégration décidés ne sont pas câblés et testés ».)*
   qu'à LE-PLANIFICATEUR, jamais sollicité par EL-PROFESSOR, ALWAYS-NEW-CODE ou les autres — son
   périmètre (conversation vs `docs/suivi/`) ne recoupe aucun de leurs domaines.
 
+### Consultation programmatique outil→LE-COORDINATEUR (pas seulement une lecture humaine)
+
+*(Ajouté le 2026-09-20, demande explicite de l'utilisateur, en construisant check-tasks-details :
+« check-tasks-details travaille en étroite collaboration avec le coordinateur : pour chaque tâche à
+accomplir, il consulte le coordinateur qui lui dit quelles prestations permettent de remplir la
+tâche [...] conceptualise le système qui sous-tend tous ces échanges ». Jusqu'ici, PRESTATIONS
+n'était qu'un menu pour un lecteur humain/agent — ce complément l'ouvre aussi aux autres SCRIPTS du
+paysage, sans jamais changer sa nature : toujours une donnée statique, jamais une intelligence.)*
+
+`le-coordinateur.mjs` exporte `suggestPrestationsForTask(libelléDeTâche)` — un chevauchement de
+mots-clés (seuil ≥2, pour éviter le bruit d'un mot trop général) entre le texte d'une tâche et le
+champ `demande` de chaque ligne PRESTATIONS. N'importe quel outil du paysage peut l'importer et
+l'appeler pour se demander, à propos de N'IMPORTE QUELLE sous-tâche qu'il traite : « une prestation
+existante pourrait-elle m'aider ici ? » — un signal de « correspondance possible », toujours à
+vérifier par une vraie lecture, jamais une certitude (même honnêteté de conception qu'ARGUS/
+ALWAYS-NEW-CODE : ce garde-fou ne peut jamais inventer une combinaison, seulement rapprocher des
+mots).
+
+**Premier usage concret : check-tasks-details.** Pour chaque tâche encore ouverte dans son rapport,
+il appelle cette fonction et, quand une correspondance existe, l'affiche directement dans le
+rapport HTML (« #142 « corriger la répétition... » → HYPER-SCAN-CHECKPOINT »). Ça boucle
+directement dans le SMART-CONSO-TOKEN : reconnaître tôt qu'un outil déjà gratuit répond à une tâche
+évite de raisonner à la main un problème déjà résolu ailleurs dans le paysage, donc moins de tokens
+dépensés à réinventer.
+
+**Portée volontairement ouverte** : contrairement au canal unique de THE-DEEP-READER ci-dessus, rien
+n'empêche un futur outil de consulter aussi `suggestPrestationsForTask()` — c'est exactement le but
+de l'exposer comme fonction pure plutôt que comme mécanisme propre à un seul appelant.
+
+### Moi (l'agent) → check-tasks-details, systématiquement avant toute lecture manuelle de l'état des tâches
+
+*(Ajouté le 2026-09-20, demande explicite de l'utilisateur : « quand toi tu consultes les tâches à
+faire, il faut toujours que tu consultes check-tasks-details : une garantie de plus que tu vas
+utiliser les outils pour les tâches concernées. »)*
+
+Dès que je dois savoir où en sont les tâches — pour décider quoi faire ensuite, pour répondre à une
+question de l'utilisateur sur l'avancement, ou avant de proposer une priorité — je lance
+`node scripts/check-tasks-details.mjs <zoom> <forme>` (zoom adapté au besoin réel du moment) plutôt
+que de relire `docs/suivi/` à l'œil ou de me fier seulement à `TaskCreate`/`TaskUpdate`. Même
+raison d'être que la règle « Recevoir une sortie d'outil n'est pas la même chose que la traiter »
+ci-dessous : un outil gratuit déjà construit pour exactement ce besoin ne doit jamais rester ignoré
+au profit d'une lecture manuelle refaite à la main — chaque sollicitation réelle amortit le coût de
+sa construction (cf. le complément du même jour sur cette même règle) et doit être annoncée
+explicitement à l'utilisateur.
+
 ### Recevoir une sortie d'outil n'est pas la même chose que la traiter
 
 *(Ajouté le 2026-09-20, demande explicite de l'utilisateur juste après avoir trouvé l'oubli
@@ -495,6 +541,20 @@ la recommandation a cessé d'être pertinente.
 (`docs/systeme-de-suivi.md`) protège contre une décision de calibrage jamais suivie d'un vrai
 travail ; celle-ci protège contre un cran encore plus tôt dans la chaîne — une information
 mécanique déjà produite gratuitement par un outil, jamais même lue avec l'intention d'agir.
+
+**Complément ajouté le 2026-09-20, demande explicite de l'utilisateur** : « tu dois utiliser les
+outils au max, afin de rentabiliser leur coût, donner du sens à leur existence. et aussi me dire
+quand tu utilises un outil, car ça donne une bonne nouvelle pour le projet et pour la conso de
+token. » Deux volets, jamais l'un sans l'autre :
+- **Solliciter réellement** un outil du paysage dès qu'une situation de travail correspond à une
+  ligne du menu PRESTATIONS (`le-coordinateur.mjs`) plutôt que de raisonner à la main sur un
+  problème qu'un outil gratuit résout déjà — rentabiliser le coût de construction de chaque outil
+  en le faisant vraiment travailler, pas seulement en le laissant exister dans le paysage.
+- **Le dire explicitement** dans la réponse à l'utilisateur au moment où l'outil est sollicité
+  (« j'ai fait tourner HARMONIA », « ARGUS confirme... ») — jamais un simple résultat inséré sans
+  attribution. Ce n'est pas une formalité : chaque mention visible est un signal concret que le
+  réseau d'outils est réellement rentabilisé (moins de raisonnement à la main refait de zéro, donc
+  moins de tokens), au même titre que le repère 📜✅ pour la charte (Article 20 du jeu).
 
 ### Aucun de ces outils n'est autonome — l'agent reste toujours celui qui finalise
 

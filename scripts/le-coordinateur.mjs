@@ -120,6 +120,7 @@ export const PRESTATIONS = [
   { demande: "Diagnostiquer un blocage/quota Gemini épuisé (429/503 répétés)", outils: ["Smart Breaker (check-gemini-quota.mjs)"], cout: "gratuit à diagnostiquer — quelques appels Gemini minimaux, coût token négligeable" },
   { demande: "Réguler ma propre consommation de tokens avant une action coûteuse", outils: ["SMART-CONSO-TOKEN"], cout: "gratuit à consulter — 0 token, 0 appel API" },
   { demande: "Lancer la ronde périodique des tâches gratuites mal automatisées (profil, référentiels, KPI, ALWAYS-NEW-CODE, correctifs, scans Smart Conso API/SMART-CONSO-TOKEN, photo de la dream team, THE-SCREENER)", outils: ["CIRCLE-TASKS"], cout: "gratuit — sauf si THE-FINAL-JUDGE (visible dans la même fenêtre, ⚠️🔴) est explicitement coché : alors ~37k tokens fixes" },
+  { demande: "État des lieux des tâches en cours (zoom + liste ou arborescence détaillée), rapport HTML", outils: ["check-tasks-details"], cout: "gratuit — lecture seule de docs/suivi/, 0 appel API, coût token = taille du suivi relu" },
 ];
 
 export function formatMenu(prestations = PRESTATIONS) {
@@ -158,6 +159,47 @@ export function parseToolsTable(markdown) {
 
 export function isMenuWorthy(row) {
   return /réel/i.test(row.cout) || /sur demande|à la main|à la demande/i.test(row.declenchement);
+}
+
+// suggestPrestationsForTask() (2026-09-20, demande explicite de l'utilisateur : « check-tasks-details
+// travaille en étroite collaboration avec le coordinateur : pour chaque tâche à accomplir, il
+// consulte le coordinateur qui lui dit quelles prestations permettent de remplir la tâche »).
+// Jusqu'ici, PRESTATIONS n'était qu'un menu pour un LECTEUR humain/agent — cette fonction transforme
+// LE-COORDINATEUR en un vrai service qu'un AUTRE SCRIPT peut appeler directement (accès "privilégié",
+// même doctrine que le reste de ce fichier : importer une fonction pure plutôt que reparser une
+// sortie texte). Un simple chevauchement de mots-clés entre le libellé d'une tâche et le champ
+// `demande` de chaque prestation — JAMAIS une intelligence qui devine une intention : un
+// rapprochement mécanique, à vérifier toujours par une vraie lecture, même honnêteté de conception
+// que ARGUS/ALWAYS-NEW-CODE (un signal "correspondance possible", jamais une certitude). Documenté
+// comme principe général (pas seulement pour check-tasks-details) dans docs/regles-de-travail.md
+// §7ter — n'importe quel outil du paysage peut importer et appeler cette fonction.
+const STOPWORDS_FR = new Set([
+  "le", "la", "les", "de", "des", "du", "un", "une", "et", "ou", "à", "au", "aux", "pour", "sur",
+  "dans", "en", "avec", "sans", "que", "qui", "ne", "pas", "est", "être", "ce", "cette", "son", "sa",
+  "ses", "tout", "toute", "tous", "toutes", "plus", "déjà", "jamais", "cet", "cette",
+]);
+
+function significantWords(text) {
+  return String(text ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w.length > 2 && !STOPWORDS_FR.has(w));
+}
+
+// Seuil de 2 mots-clés partagés (pas 1) — un seul mot commun (souvent un mot très général du
+// domaine, ex. "tâche", "outil") produirait trop de faux positifs pour rester un signal honnête.
+export function suggestPrestationsForTask(taskLabel, prestations = PRESTATIONS) {
+  const taskWords = new Set(significantWords(taskLabel));
+  if (!taskWords.size) return [];
+  return prestations
+    .map((p) => {
+      const matched = [...new Set(significantWords(p.demande).filter((w) => taskWords.has(w)))];
+      return { ...p, score: matched.length, matched };
+    })
+    .filter((p) => p.score >= 2)
+    .sort((a, b) => b.score - a.score);
 }
 
 export function findToolsMissingFromMenu(toolsTableMarkdown, prestations = PRESTATIONS) {

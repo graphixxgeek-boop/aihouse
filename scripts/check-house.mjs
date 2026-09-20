@@ -1,4 +1,6 @@
 import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
 import ts from 'typescript';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
@@ -919,7 +921,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 152'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 153'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3124,6 +3126,118 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(realGaps,[],`every real costly/occasional tool listed in docs/regles-de-travail.md's own "carte des outils" must have a matching PRESTATIONS entry in scripts/le-coordinateur.mjs — missing: ${realGaps.join(', ')}`);
   console.log('Passed: the PRESTATIONS menu freshness guard reads the real tools table (backticks stripped, header/separator skipped), correctly tells a menu-worthy tool (real cost or on-demand trigger) from baseline free/always-deployed infrastructure, flags only a genuinely uncovered tool by name rather than fabricating a proposal, and — checked live against the project\'s own real table and real menu — currently finds zero real gap, a guarantee that breaks the build the day a new costly tool is added without a matching menu entry.');
 }
+{
+  // suggestPrestationsForTask() (2026-09-20, demande explicite de l'utilisateur : « check-tasks-
+  // details travaille en étroite collaboration avec le coordinateur : pour chaque tâche à
+  // accomplir, il consulte le coordinateur qui lui dit quelles prestations permettent de remplir la
+  // tâche »). Transforme PRESTATIONS d'un menu pour lecteur humain en un service qu'un autre script
+  // peut appeler — un chevauchement de mots-clés, jamais une intelligence qui devine.
+  const { suggestPrestationsForTask } = await import('../scripts/le-coordinateur.mjs');
+  const fakePrestations = [
+    { demande: 'Vérifier qu\'aucune idée/tâche n\'a été oubliée dans le suivi', outils: ['THE-DEEP-READER'], cout: 'réel' },
+    { demande: 'Qualité visuelle du rendu', outils: ['THE-SCREENER'], cout: 'réel' },
+  ];
+  const matches = suggestPrestationsForTask('Vérifier que la tâche du suivi n\'a pas été oubliée', fakePrestations);
+  assert.equal(matches.length, 1, 'a task label sharing at least two significant words with exactly one prestation\'s demande must return exactly that one match, never the unrelated one');
+  assert.deepEqual(matches[0].outils, ['THE-DEEP-READER'], 'the returned match must carry the real prestation data (outils/cout), never a stripped-down reference');
+  assert.ok(matches[0].matched.includes('oublie') || matches[0].matched.includes('oubliee') || matches[0].matched.length >= 2, 'the match must report which real keywords overlapped, never a silent score with no explanation');
+  assert.deepEqual(suggestPrestationsForTask('bonjour comment vas-tu', fakePrestations), [], 'a task label with no meaningful keyword overlap with any prestation must return an empty list, never a guessed match');
+  assert.deepEqual(suggestPrestationsForTask('la tâche', fakePrestations), [], 'a single shared word (even a real one) must never be enough on its own — the threshold of at least two shared keywords exists precisely to avoid this kind of noisy false positive');
+  const realMatches = suggestPrestationsForTask('Vérifier qu\'aucune tâche du suivi n\'a été oubliée');
+  assert.ok(realMatches.some((m) => m.outils.includes('THE-DEEP-READER')), 'run against the project\'s own real PRESTATIONS menu, a task label closely echoing THE-DEEP-READER\'s own real "demande" wording must actually surface it — the integration this function exists for, not just its isolated logic');
+  console.log('Passed: suggestPrestationsForTask() turns the PRESTATIONS menu into a callable service for other scripts — matching on a real, honest keyword overlap (never a single-word false positive, thanks to its ≥2 threshold), returning the full real prestation data with the matched keywords named, an honest empty list when nothing overlaps, and a real match when checked against the project\'s own live menu.');
+}
+
+{
+  // check-tasks-details.mjs (2026-09-20, demande explicite de l'utilisateur : un gabarit fixe pour
+  // ses demandes « état des tâches », zoom × forme, lecture seule sur docs/suivi/, vérification
+  // croisée automatique contre son propre historique). cf. docs/referentiel/check-tasks-details.md.
+  const ctd = await import('../scripts/check-tasks-details.mjs');
+  const { loadAllTaskRows, splitSujet, filterByZoom, buildTree, buildListBlocks, suggestToolsForOpenTasks, compareSnapshots, buildReport, appendSnapshot, loadSnapshotHistory } = ctd;
+
+  assert.deepEqual(splitSujet('Thème A / Sous-thème A'), { theme: 'Thème A', sousTheme: 'Sous-thème A' }, 'a real "Thème / Sous-thème" Sujet must split cleanly on the existing convention, never a new taxonomy invented on top');
+  assert.deepEqual(splitSujet('Thème B'), { theme: 'Thème B', sousTheme: 'Général' }, 'a Sujet with no " / " separator must fall back to a named "Général" bucket, never crash or leave sousTheme empty');
+  assert.deepEqual(splitSujet(undefined), { theme: '?', sousTheme: 'Général' }, 'a missing Sujet must degrade to an honest "?" theme, never crash');
+
+  const fakeDir = [
+    { name: 'a.md', text: [
+      '| 10 | h1 | Thème A / Sous-thème A | Tâche A1 | important | d1 | ouverte |',
+      '| 11 | h2 | Thème A / Sous-thème A | Tâche A2 | normal | d2 | en cours — x |',
+      '| 12 | h3 | Thème A / Sous-thème B | Tâche A3 | critique | d3 | terminée — fidèle |',
+    ].join('\n') },
+    { name: 'b.md', text: '| 13 | h4 | Thème B | Tâche B1 | normal | d4 | terminée — fidèle |' },
+  ];
+  const readDir = () => fakeDir.map((f) => f.name);
+  const readFile = (p) => fakeDir.find((f) => p.endsWith(f.name)).text;
+  const rows = loadAllTaskRows('/fake', readDir, readFile, () => true);
+  assert.equal(rows.length, 4, 'loadAllTaskRows() must flatten every bucket from every session file into one list, losing no row');
+  assert.deepEqual(new Set(rows.map((r) => r.n)), new Set([10, 11, 12, 13]), 'each row must carry its real N° (first column), read as a number, never left as the raw string or lost');
+  assert.deepEqual(rows.find((r) => r.n === 11).statusKey, 'enCours', 'a row categorized as "en cours" by categorizeAllSessions() must keep that same status key once flattened, never relabeled');
+
+  const openOnly = filterByZoom(rows, 'en_cours');
+  assert.deepEqual(new Set(openOnly.map((r) => r.n)), new Set([10, 11]), 'zoom "en_cours" must keep exactly the ouverte/en cours rows, never a terminée row and never dropping an open one');
+  const everything = filterByZoom(rows, 'projet_entier');
+  assert.equal(everything.length, 4, 'zoom "projet_entier" must return every row untouched, the identity case');
+  const elargi = filterByZoom(rows, 'elargi', { latestTaskNumber: 13 });
+  assert.deepEqual(new Set(elargi.map((r) => r.n)), new Set([10, 11, 12, 13]), 'zoom "elargi" with a small task-number range must include every open row plus every recently-numbered row (here all four, since none exceed the 20-task lookback window)');
+  assert.throws(() => filterByZoom(rows, 'pas-un-zoom'), /zoom inconnu/, 'an unknown zoom value must fail loudly rather than silently defaulting to some arbitrary scope');
+
+  const tree = buildTree(rows);
+  const themeA = tree.find((n) => n.label.startsWith('Thème A'));
+  assert.ok(themeA, 'buildTree() must produce one top-level node per real theme found in the data');
+  assert.equal(themeA.label, 'Thème A (3)', 'a theme node\'s label must report its real total task count across all its sous-thèmes, computed from the actual data, never hardcoded');
+  assert.equal(themeA.children.length, 2, 'a theme with two distinct sous-thèmes in the data must produce exactly two child nodes, never merged or split incorrectly');
+  const sousThemeB = themeA.children.find((c) => c.label.startsWith('Sous-thème B'));
+  assert.equal(sousThemeB.children[0].label, '#12 · [critique] Tâche A3 — terminée — fidèle', 'a leaf task node must show its real N°, sensibilité and statut exactly as recorded in the suivi, never a reformatted or partial summary');
+
+  const listBlocks = buildListBlocks(rows);
+  assert.ok(listBlocks.some((b) => b.type === 'heading' && b.text === 'En cours (1)'), 'buildListBlocks() must produce a real heading naming the exact count for a non-empty status group');
+  assert.ok(!listBlocks.some((b) => b.type === 'heading' && /^Autre statut/.test(b.text)), 'a status group with zero real rows (here "autre") must never appear in the output — an honest report shows only what actually exists');
+
+  const suggestions = suggestToolsForOpenTasks(
+    [{ n: 42, sujet: 'Charte / Outillage', sousSujet: 'Vérifier qu\'aucune tâche du suivi n\'a été oubliée', statusKey: 'ouverte' }],
+    [{ demande: 'Vérifier qu\'aucune idée/tâche n\'a été oubliée dans le suivi', outils: ['THE-DEEP-READER'], cout: 'réel' }],
+  );
+  assert.equal(suggestions.length, 1, 'an open task whose label genuinely overlaps a real prestation\'s demande must produce exactly one suggestion line');
+  assert.ok(suggestions[0].includes('#42') && suggestions[0].includes('THE-DEEP-READER'), 'the suggestion line must name both the real task number and the real matched tool, never a vague pointer');
+  assert.deepEqual(suggestToolsForOpenTasks([{ n: 1, sujet: 'X', sousSujet: 'sans rapport du tout', statusKey: 'ouverte' }], [{ demande: 'Qualité visuelle du rendu', outils: ['THE-SCREENER'], cout: 'réel' }]), [], 'an open task with no real keyword overlap with any prestation must produce zero suggestions, never a forced guess');
+
+  const snap1 = { at: 't1', rows: [{ n: 10, statusKey: 'ouverte' }, { n: 11, statusKey: 'terminee' }] };
+  const snap2 = { at: 't2', rows: [{ n: 10, statusKey: 'ouverte' }, { n: 11, statusKey: 'terminee' }] };
+  const regressed = compareSnapshots([snap1], [{ n: 10, sousSujet: 'X', statusKey: 'ouverte' }, { n: 11, sousSujet: 'Y', statusKey: 'ouverte' }]);
+  assert.equal(regressed.regressions.length, 1, 'a task that was terminée in the last snapshot but reads as ouverte now must be flagged as exactly one regression, never silently accepted as normal');
+  assert.equal(regressed.regressions[0].n, 11, 'the regression must name the real task number that actually regressed, never the wrong one');
+  const stagnated = compareSnapshots([snap1, snap2], [{ n: 10, sousSujet: 'X', statusKey: 'ouverte' }, { n: 11, sousSujet: 'Y', statusKey: 'terminee' }]);
+  assert.equal(stagnated.stagnant.length, 1, 'a task open and identical across the two most recent snapshots plus the current one must be flagged as stagnant exactly once, never for a task that has since closed');
+  assert.equal(stagnated.stagnant[0].n, 10, 'the stagnation signal must name the real still-open task, never a task that has already progressed');
+  assert.deepEqual(compareSnapshots([], rows), { regressions: [], stagnant: [] }, 'with no prior snapshot history at all (the very first run), both checks must report an honest empty result, never crash for lack of history to compare against');
+
+  const report = buildReport({ zoom: 'projet_entier', format: 'arborescence', allRows: rows, history: [] });
+  assert.ok(report.blocks.some((b) => b.type === 'tree'), 'format "arborescence" must include a real tree block in the report, never silently fall back to the flat list');
+  assert.equal(report.meta.count, 4, 'buildReport() must report the real number of rows actually shown after zoom filtering, matching the data, never a stale or guessed count');
+  const listReport = buildReport({ zoom: 'en_cours', format: 'liste', allRows: rows, history: [] });
+  assert.ok(!listReport.blocks.some((b) => b.type === 'tree'), 'format "liste" must never include a tree block — the two formats must stay genuinely distinct, not both always rendered');
+  assert.equal(listReport.meta.count, 2, 'zoom "en_cours" inside buildReport() must apply the same real filtering as filterByZoom() directly, never a second diverging implementation');
+  assert.throws(() => buildReport({ zoom: 'nope', allRows: rows }), /zoom inconnu/, 'buildReport() must reject an unknown zoom rather than silently defaulting');
+  assert.throws(() => buildReport({ format: 'nope', allRows: rows }), /format inconnu/, 'buildReport() must equally reject an unknown format rather than silently defaulting');
+
+  // appendSnapshot()/loadSnapshotHistory() — instantané réel sur disque, dans un dossier temporaire
+  // jamais le vrai docs/check-tasks-details/ du projet, pour ne jamais polluer son historique réel
+  // avec des données de test.
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctd-test-'));
+  const tmpFile = path.join(tmpDir, 'historique.jsonl');
+  assert.deepEqual(loadSnapshotHistory(tmpFile), [], 'loadSnapshotHistory() on a file that does not exist yet must return an honest empty history, never throw');
+  appendSnapshot(rows, { file: tmpFile, dir: tmpDir, now: () => 'fixed-time' });
+  const history1 = loadSnapshotHistory(tmpFile);
+  assert.equal(history1.length, 1, 'appendSnapshot() must add exactly one new line to the history file, readable back by loadSnapshotHistory()');
+  assert.equal(history1[0].at, 'fixed-time', 'the archived snapshot must record the real timestamp it was given, never a hardcoded or missing one');
+  assert.equal(history1[0].rows.length, 4, 'the archived snapshot must record every real row (N° + statusKey only, kept deliberately light), never a partial or padded copy');
+  appendSnapshot(rows, { file: tmpFile, dir: tmpDir, now: () => 'fixed-time-2' });
+  assert.equal(loadSnapshotHistory(tmpFile).length, 2, 'a second appendSnapshot() call must append a new line rather than overwrite the file, building a real growing history');
+  fs.rmSync(tmpDir, { recursive: true, force: true });
+
+  console.log('Passed: check-tasks-details.mjs stays strictly read-only on docs/suivi/ while flattening every real session row (loadAllTaskRows), splits Sujet on the existing Thème/Sous-thème convention rather than inventing a new taxonomy (splitSujet), filters correctly by all three zoom levels including a real task-number-based "elargi" window (filterByZoom), builds an honest theme>sous-thème>tâche tree with real counts and leaf details (buildTree), a status-grouped list that never shows an empty group (buildListBlocks), a real coordinator-consultation signal per open task with no forced guesses (suggestToolsForOpenTasks), an honest regression/stagnation cross-check against its own snapshot history including the very first run with no history at all (compareSnapshots), a full report assembly that genuinely differs by format and applies the same zoom filtering as the standalone function (buildReport), and a real, append-only, on-disk snapshot history (appendSnapshot/loadSnapshotHistory) tested in an isolated temp directory, never touching the project\'s real registry.');
+}
 
 {
   // Garde-fou du système de profil utilisateur (2026-09-19, cf. docs/profil-utilisateur/index.md).
@@ -3257,6 +3371,11 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(renderBlock({ type: 'dialogue', speaker: 'Noé', text: 'Toujours là.' }), '<p class="dialogue speaker-noe"><strong>Noé</strong> — Toujours là.</p>', 'a dialogue block for Noé must get his own distinct speaker class, never sharing Lia\'s — the same voice-separation discipline as the game itself (Article 11) carried into the report gabarit');
   assert.equal(renderBlock({ type: 'dialogue', speaker: 'Observateur', text: 'Qui êtes-vous ?' }), '<p class="dialogue speaker-other"><strong>Observateur</strong> — Qui êtes-vous ?</p>', 'a dialogue block from any third party (the observer, a narrator line) must fall back to a neutral speaker class, never silently mislabeled as Lia or Noé');
 
+  // Quatrième type de bloc ajouté le 2026-09-20, besoin réel de check-tasks-details : une
+  // arborescence imbriquée (thème > sous-thème > tâche), jamais représentable par 'list' à plat.
+  assert.equal(renderBlock({ type: 'tree', nodes: [{ label: 'Thème <A>', children: [{ label: 'Sous-thème' }] }] }), '<ul><li>Thème &lt;A&gt;<ul><li>Sous-thème</li></ul></li></ul>', 'a tree block must render real nested <ul>/<li> elements matching its nodes/children structure exactly, with every label escaped like any other text content');
+  assert.equal(renderBlock({ type: 'tree', nodes: [] }), '<ul></ul>', 'an empty tree must render an empty (but valid) list, never crash on a zero-node report');
+
   assert.throws(() => renderHtmlReport({}), /title/, 'renderHtmlReport() must refuse to produce a report with no title at all — Article 5, never a document with no identity');
   const html = renderHtmlReport({ title: 'Rapport <Test>', subtitle: 'Sous-titre', dateLabel: '2026-09-20', blocks: [{ type: 'paragraph', text: 'Contenu.' }], footer: 'Bas de page' });
   assert.ok(html.startsWith('<!DOCTYPE html>'), 'renderHtmlReport() must always produce a complete, self-contained HTML document, never a bare fragment');
@@ -3265,7 +3384,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(html.includes(THEME_CSS.trim().slice(0, 40)), 'the shared dark theme must be embedded inline in every report, for the same visual identity across all future "pretty" deliverables (the dream-team photo, KPI reports, EL-PROFESSOR notes, ...) — never a per-report reinvented style');
   const minimal = renderHtmlReport({ title: 'Minimal' });
   assert.ok(!minimal.includes('undefined') && !minimal.includes('null'), 'a report with no subtitle/blocks/footer must render cleanly with those sections simply absent, never leak a literal "undefined" or "null" into the page');
-  console.log("Passed: html-report.mjs's escapeHtml() neutralizes every HTML-significant character (including a real <script> injection attempt) and handles a missing value honestly, renderBlock() renders each of its block types faithfully (heading/paragraph/list/table/code/image/dialogue) with text always escaped, an image block with no src renders as an honest empty string while one with no caption simply omits the figcaption, a dialogue block gets Lia's or Noé's own distinct speaker class or a neutral fallback for anyone else (mirroring the game's own Article 11 voice separation), an unknown or null block renders as an honest empty string rather than crashing, renderHtmlReport() refuses a report with no title, always produces a complete self-contained document with the shared dark theme embedded and every spec field (title, subtitle, date, blocks, footer) actually present, and a minimal report with only a title never leaks a literal undefined/null into the page.");
+  console.log("Passed: html-report.mjs's escapeHtml() neutralizes every HTML-significant character (including a real <script> injection attempt) and handles a missing value honestly, renderBlock() renders each of its block types faithfully (heading/paragraph/list/table/code/image/dialogue/tree) with text always escaped, an image block with no src renders as an honest empty string while one with no caption simply omits the figcaption, a dialogue block gets Lia's or Noé's own distinct speaker class or a neutral fallback for anyone else (mirroring the game's own Article 11 voice separation), a tree block renders real nested lists matching its structure, an unknown or null block renders as an honest empty string rather than crashing, renderHtmlReport() refuses a report with no title, always produces a complete self-contained document with the shared dark theme embedded and every spec field (title, subtitle, date, blocks, footer) actually present, and a minimal report with only a title never leaks a literal undefined/null into the page.");
 }
 
 {
