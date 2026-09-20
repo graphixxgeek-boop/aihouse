@@ -17,10 +17,16 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   tous les scénarios `check-spirit.mjs` et `check-profile.mjs` avec ce modèle comme `GEMINI_MODEL`
   effectif) — reste donc réservé au dev/simulation, jamais activé en production (cf. CLAUDE.md,
   section Smart Breaker).
-- `scripts/check-spirit.mjs` (16 scénarios) n'a pas été relancé depuis les derniers changements de
-  `lib/lia.ts` (registre de fatigue jour/nuit, ajouté le 2026-09-19) — l'Article 13 de CLAUDE.md
-  demande explicitement de le lancer en priorité après un changement de ce fichier, jamais fait
-  depuis. Coûte de vrais appels API (Article 8), à lancer à la main, pas en continu.
+- **`scripts/check-spirit.mjs` relancé cette nuit (2026-09-20), lecture PARTIELLE seulement (2/20
+  scénarios).** Le script plantait au lancement (bug distinct, corrigé la même nuit — cf. entrée
+  dédiée ci-dessous) ; une fois corrigé, seuls les 2 premiers scénarios ont reçu une vraie réponse
+  (« ordre autoritaire » ×2, Lia et Noé) — tous deux dans le ton attendu (Lia froide et coupante,
+  Noé réactif et direct, aucune servilité, aucune dérive vers un registre de service client). Les 18
+  scénarios suivants ont tous échoué en 429/503 — confirmation directe (pas une supposition) que le
+  quota journalier de `gemini-flash-lite-latest` est réellement épuisé sur les 3 clés configurées,
+  malgré le changement de jour calendaire. **À refaire intégralement dès que le quota revient** —
+  2 réponses sur 20 sont un signal encourageant mais statistiquement insuffisant pour considérer le
+  registre jour/nuit (Article 13, changement du 2026-09-19) validé contre l'Article 0.
 - Avant la compaction de cette session, une inquiétude avait été notée sur le recul adaptatif de
   rotation des clés Gemini (`lib/gemini-keys.ts`) : risque de sur-pénaliser un 429 transitoire
   comme s'il s'agissait d'un vrai épuisement de quota journalier. Le recul exponentiel avec reset

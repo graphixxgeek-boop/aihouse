@@ -919,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 137'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 138'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2982,7 +2982,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // mise en forme du tableau, lecture d'état injectable) — tout le reste est de l'import direct de
   // fonctions déjà testées ailleurs (ARGUS, HARMONIA, AXA-CHECK, ALWAYS-NEW-CODE, CHECK-LEVEL-TARGET),
   // jamais retesté ici en double (règle anti-doublon, §7ter).
-  const {isDuplicateRun,formatTable,loadState,classifyRequest,formatMenu,PRESTATIONS}=await import('../scripts/le-coordinateur.mjs');
+  const {isDuplicateRun,formatTable,loadState,classifyRequest,formatMenu,PRESTATIONS,runNetworkCheck}=await import('../scripts/le-coordinateur.mjs');
   assert.equal(isDuplicateRun({lastHead:'abc123'},'abc123'),true,'the exact same commit as the last recorded run must be reported as a real duplicate');
   assert.equal(isDuplicateRun({lastHead:'abc123'},'def456'),false,'a genuinely different HEAD commit must never be flagged as a duplicate, however recently the last run happened');
   assert.equal(isDuplicateRun({},'abc123'),false,'a never-before-recorded state must never be treated as a duplicate of nothing');
@@ -2996,6 +2996,25 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // la suite de tests déjà dédiée à CHECK-LEVEL-TARGET lui-même.
   assert.equal(classifyRequest('corrige cette faute de frappe').level,'leger','the passthrough must genuinely reach the real classifyCheckLevel logic, not a stub — a trivial fix must classify exactly as CHECK-LEVEL-TARGET\'s own test suite already proves it does directly');
   console.log('Passed: LE-COORDINATEUR flags a duplicate run only when the current commit exactly matches the last recorded one (never a stale time-window guess), renders every real row of its summary table without dropping or reordering any, reports an honest empty state rather than crashing on a missing or malformed state file, and its CHECK-LEVEL-TARGET passthrough genuinely reaches the real classification logic rather than a disconnected stub.');
+
+  // Fumée end-to-end de runNetworkCheck() (2026-09-20, trouvaille réelle de nuit) : chaque sous-partie
+  // de cette fonction était déjà testée isolément (ci-dessus, plus les tests dédiés d'AXA-CHECK,
+  // ALWAYS-NEW-CODE, CLEAN-DIRTY-OLD, Smart Conso API, SMART-CONSO-TOKEN) mais runNetworkCheck()
+  // ELLE-MÊME n'avait jamais été appelée par aucun test — exactement pourquoi un vrai
+  // ReferenceError (summarizeTokenHistory, un nom qui n'a jamais existé, copié-collé fautif de
+  // summarizeHistory) a survécu sans être détecté jusqu'à un lancement manuel cette nuit. Ce test ne
+  // rejoue jamais check-house.mjs/check-argus.mjs/check-harmonia.mjs pour de vrai (shImpl stubé,
+  // jamais de récursion ni de lenteur) mais exécute réellement tout le reste de la fonction contre
+  // l'état RÉEL du dépôt (fichiers .gemini-key-health.json/.smart-conso-token-history.json s'ils
+  // existent, docs/always-new-code/index.md réel) — la même classe de garde-fou que
+  // findMissingAliasReplacements() plus haut : ne jamais laisser un point d'intégration entier hors
+  // de portée de la suite de tests.
+  const fakeShImpl = (cmd) => (cmd.includes('check-house') ? 'OK — suite verte.' : '');
+  const networkResult = runNetworkCheck({ shImpl: fakeShImpl });
+  assert.equal(networkResult.rows.length, 8, 'runNetworkCheck() must genuinely produce all 8 rows of the real network synthesis, never crash partway through (the exact real bug found tonight) nor silently drop one');
+  assert.ok(networkResult.rows.every((r) => typeof r.name === 'string' && typeof r.result === 'string' && r.result.length > 0), 'every row must carry a real name and a real, non-empty result string — never an undefined value leaking from a broken sub-computation');
+  assert.ok(networkResult.rows.some((r) => r.name.includes('SMART-CONSO-TOKEN')), 'the SMART-CONSO-TOKEN rhythm row specifically (the exact one that crashed tonight) must be genuinely present and computed, not skipped');
+  console.log('Passed: runNetworkCheck() runs end-to-end against the real repository state (with only the two subprocess calls stubbed) and produces all 8 expected rows with real, non-empty results — closing the exact real gap (a ReferenceError in the SMART-CONSO-TOKEN row, never caught because this integration point had no test at all) found by manually running node scripts/le-coordinateur.mjs tonight.');
   // Menu des prestations (2026-09-20, demande explicite de l'utilisateur : « le coordinateur est
   // capable de proposer de nouvelles prestations [...] ce menu est très utile pour toi »). Vérifie
   // que le menu réel (celui affiché à chaque passage automatique) est bien formé et que chaque

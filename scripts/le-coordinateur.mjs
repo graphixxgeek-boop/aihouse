@@ -50,6 +50,7 @@ import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
 import { classifyCheckLevel } from "./check-level-target.mjs";
 import { lastTouchDays, relativeStaleness } from "./clean-dirty-old.mjs";
 import { findUnconfirmedBursts } from "./smart-conso-api.mjs";
+import { summarizeHistory } from "./smart-conso-token.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 // Best-effort, local, jamais committé — même statut que .gemini-key-health.json (mémoire de
@@ -232,7 +233,7 @@ export function runNetworkCheck({ shImpl = sh } = {}) {
   // lecture reste toujours humaine/agent.
   const tokenHistoryPath = join(ROOT, ".smart-conso-token-history.json");
   const tokenHistory = existsSync(tokenHistoryPath) ? JSON.parse(readFileSync(tokenHistoryPath, "utf8")) : { actions: [] };
-  const tokenSummary = summarizeTokenHistory(tokenHistory, Date.now());
+  const tokenSummary = summarizeHistory(tokenHistory, Date.now());
   rows.push({ name: "SMART-CONSO-TOKEN (rythme 7 derniers jours)", result: `${tokenSummary.totalRecent} action(s) — ${JSON.stringify(tokenSummary.byType)}`, when: now });
 
   saveState({ lastHead: head, lastWhen: now });
