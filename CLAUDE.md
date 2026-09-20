@@ -903,6 +903,10 @@ contrairement à la charte de contenu ci-dessus (propre à ce projet) et à `reg
 (mécanique de collaboration), ce document est formulé pour rester utilisable sur un futur projet
 créatif/narratif piloté par IA. Texte fondateur, révisé exceptionnellement, pas au fil de l'eau.
 
+*(Sauf mention contraire, chaque outil ci-dessous suit le même schéma documentaire : un blueprint
+générique réutilisable sur un autre projet, une instanciation propre à ce projet dans
+`docs/referentiel/`, un registre dans un dossier dédié avec index.)*
+
 ## Outil de résilience API — blueprint exportable
 
 `docs/outil-resilience-api.md` documente l'ARCHITECTURE de l'outil de contournement de blocages de
@@ -916,41 +920,37 @@ mettre à jour quand la STRUCTURE de l'outil évolue, pas à chaque ajustement p
 
 `docs/tableau-de-bord-blueprint.md` documente l'ARCHITECTURE du tableau de bord interne (5
 familles génériques : performance runtime, robustesse du code, qualité de sortie, cohérence
-logique, variété/rejouabilité) sous une forme générique, réutilisable sur un autre projet
-équivalent — jamais les familles exactes ni les fichiers propres à ce projet, qui vivent dans
-`docs/referentiel/tableau-de-bord.md` (instanciation) et `docs/referentiel/points-fragiles.md`
-(registre vivant). Même séparation architecture/instanciation que pour l'outil de résilience API
-ci-dessus, à la demande explicite de l'utilisateur le 2026-09-19.
+logique, variété/rejouabilité) — jamais les familles exactes ni les fichiers propres à ce projet,
+qui vivent dans `docs/referentiel/tableau-de-bord.md` (instanciation) et
+`docs/referentiel/points-fragiles.md` (registre vivant, exception au dossier dédié standard).
 
 ## ARGUS — blueprint exportable
 
 `docs/argus-blueprint.md` documente l'ARCHITECTURE du détecteur de trous logiques (cf. Article 20)
-sous une forme générique, réutilisable sur un autre projet piloté par IA — jamais le registre des
-trouvailles propre à ce projet, qui vit dans `docs/argus/` (dossier + index) et
-`docs/referentiel/argus.md` (instanciation). Même séparation architecture/instanciation que pour
-l'outil de résilience API et le tableau de bord ci-dessus.
+— jamais le registre des trouvailles propre à ce projet, qui vit dans `docs/argus/` (dossier +
+index) et `docs/referentiel/argus.md` (instanciation).
 
 ## HARMONIA — blueprint exportable
 
 `docs/harmonia-blueprint.md` documente l'ARCHITECTURE du cousin d'ARGUS dédié à la cohérence des
-liens déjà existants (cf. Article 20) sous une forme générique — jamais la carte des dépendances
-propre à ce projet ni son registre de frictions, qui vivent dans `docs/referentiel/harmonia.md`
-(instanciation, carte par grand thème) et `docs/harmonia/` (dossier + index).
+liens déjà existants (cf. Article 20) — jamais la carte des dépendances propre à ce projet ni son
+registre de frictions, qui vivent dans `docs/referentiel/harmonia.md` (instanciation, carte par
+grand thème) et `docs/harmonia/` (dossier + index).
 
 ## Smart Conso API — blueprint exportable
 
 `docs/smart-conso-api-blueprint.md` documente l'ARCHITECTURE de la petite sœur de Smart Breaker,
 dédiée à réguler le rythme de consommation d'une API tierce à quota limité (seuils souple/dur,
-apprentissage progressif, validation humaine explicite de chaque durcissement) sous une forme
-générique — jamais les seuils exacts ni les fichiers propres à ce projet, qui vivent dans
-`docs/referentiel/smart-conso-api.md` (instanciation) et `docs/smart-conso-api/` (dossier + index).
+apprentissage progressif, validation humaine explicite de chaque durcissement) — jamais les seuils
+exacts ni les fichiers propres à ce projet, qui vivent dans `docs/referentiel/smart-conso-api.md`
+(instanciation) et `docs/smart-conso-api/` (dossier + index).
 Frontière stricte avec l'Article 8 : cf. section Article 8 ci-dessus.
 
 ## HYPER-SCAN-CHECKPOINT — blueprint exportable
 
 `docs/hyper-scan-checkpoint-blueprint.md` documente l'ARCHITECTURE de l'outil de vérification
-approfondie exceptionnelle (cf. Article 21) sous une forme générique — jamais les cinq prompts
-historiques exacts ni les fichiers propres à ce projet, qui vivent dans
+approfondie exceptionnelle (cf. Article 21) — jamais les cinq prompts historiques exacts ni les
+fichiers propres à ce projet, qui vivent dans
 `docs/referentiel/hyper-scan-checkpoint.md` (instanciation) et `docs/hyper-scan-checkpoint/`
 (dossier + index, y compris la mémoire du dernier passage).
 
@@ -959,7 +959,7 @@ historiques exacts ni les fichiers propres à ce projet, qui vivent dans
 `docs/check-level-target-blueprint.md` documente l'ARCHITECTURE de l'outil qui calcule, avant toute
 vérification, le niveau attendu et la combinaison d'outils à déployer (Léger/Standard/Approfondi/
 Exceptionnel pour ce projet) — remplace la façon informelle, au cas par cas, de choisir les outils.
-Nommé par l'utilisateur lui-même. Sous une forme générique — jamais les niveaux exacts ni les
+Nommé par l'utilisateur lui-même. Jamais les niveaux exacts ni les
 fichiers propres à ce projet, qui vivent dans `docs/referentiel/check-level-target.md`
 (instanciation) et `docs/check-level-target/` (dossier + index des évolutions de la règle). Distinct
 de l'échelle qualitative d'effort général ⏱️/🔢 (`docs/regles-de-travail.md` §B.2bis), jamais
@@ -970,8 +970,7 @@ fusionnés.
 `docs/always-new-code-blueprint.md` documente l'ARCHITECTURE de l'outil qui rend concrète
 l'épreuve de la page blanche (Article 7, formalisée en Article 23) : imaginer, zone par zone, la
 structure idéale d'un projet en repartant de zéro avec toute la connaissance actuelle, pour
-détecter la dette d'organisation — sous une forme générique, réutilisable sur un autre projet
-piloté par IA. Jamais les 8 zones exactes ni les fichiers propres à ce projet, qui vivent dans
+détecter la dette d'organisation. Jamais les 8 zones exactes ni les fichiers propres à ce projet, qui vivent dans
 `docs/referentiel/always-new-code.md` (instanciation, réutilise les thèmes d'HARMONIA) et
 `docs/always-new-code/` (dossier + index, mémoire de couverture pour la rotation).
 
@@ -1031,9 +1030,9 @@ pour chaque tâche ouverte — premier usage concret d'un principe désormais g�
 Article 20, quatrième membre "toujours déployé" aux côtés d'ARGUS, HARMONIA et AXA-CHECK) — code
 ancien et peu retouché RELATIVEMENT au reste du projet (jamais un seuil de date fixe), qui repère
 seul et délègue toujours le vrai jugement (encore utile ? encore à jour ? profiterait d'une
-refonte ?) à ARGUS/HARMONIA/ALWAYS-NEW-CODE — sous une forme générique, réutilisable sur un autre
-projet piloté par IA. Jamais les seuils exacts ni le registre propre à ce projet, qui vivent dans
-`docs/referentiel/clean-dirty-old.md` (instanciation) et `docs/clean-dirty-old/` (dossier + index).
+refonte ?) à ARGUS/HARMONIA/ALWAYS-NEW-CODE. Jamais les seuils exacts ni le registre propre à ce
+projet, qui vivent dans `docs/referentiel/clean-dirty-old.md` (instanciation) et
+`docs/clean-dirty-old/` (dossier + index).
 
 ## EL-PROFESSOR — blueprint exportable
 
