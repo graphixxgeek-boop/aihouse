@@ -918,6 +918,29 @@ suivi des tâches (dossier `docs/suivi/`, un fichier par session, un fichier d'i
 `docs/suivi/index.md`, quatre attributs par tâche — horodatage, sujet, sous-sujet, degré de
 sensibilité). Démarre à la création du système, sans reconstruire l'historique antérieur.
 
+**La mise à jour en temps réel de ce suivi est un point central de l'organisation du travail sur ce
+projet, pas un outil secondaire parmi d'autres** *(ajouté le 2026-09-20, à la demande explicite de
+l'utilisateur)*. Concrètement : chaque tâche substantielle se documente dans `docs/suivi/` DANS LE
+MÊME commit que le travail qu'elle décrit (jamais après coup, cf. `docs/regles-de-travail.md` §4) ;
+un crochet git tracké (`scripts/hooks/post-commit`, auto-installé à chaque `pnpm install` via le
+script `prepare` de `package.json`) avertit en temps réel — pas au bout de plusieurs heures — dès
+qu'un commit touche du code ou la charte sans mettre à jour le suivi. Des tests fiables doivent
+TOUJOURS garantir le bon fonctionnement de ce système, exactement comme c'est le cas aujourd'hui :
+`scripts/check-suivi-fidelity.mjs` (clôtures non vérifiées, tâches ouvertes même à statut vide,
+validation que les fichiers cités dans une tâche "terminée" existent réellement, vue temps réel
+terminé/en cours/à faire) et ses fonctions mécaniques (`recentCommits`, `findCommitsMissingSuiviUpdate`,
+`categorizeTasks`, etc.) sont couvertes par `scripts/check-house.mjs`, lui-même exécuté automatiquement
+avant chaque commit par le crochet `pre-commit` (bloquant). Un écart dans ce système se corrige donc
+avec la même rigueur qu'un bug de dialogue (Article 3), jamais traité comme une fonctionnalité annexe
+qu'on laisserait se dégrader. **Précision, en réponse à une question explicite sur le gestionnaire de
+tâches numéroté (`TaskCreate`/`TaskUpdate`) que l'agent utilise pendant la session** : cette
+numérotation (#1, #2, ...) est volontaire mais N'EST PAS le système de suivi durable décrit ci-dessus
+— c'est un aide-mémoire interne à l'outil Claude Code, propre à la session en cours, déjà documenté
+comme tel dans `docs/regles-de-travail.md` §B.1 (« n'est qu'un aide-mémoire pour l'agent lui-même,
+jamais une source de vérité pour l'utilisateur — ne remplace aucune des vérifications de la section
+3 »). La seule source de vérité durable, traversant les sessions et vérifiée par de vrais tests,
+reste `docs/suivi/`.
+
 ## Philosophie et politique — la boussole du projet
 
 `docs/philosophie-et-politique.md` extrait et généralise les valeurs et les principes d'arbitrage
