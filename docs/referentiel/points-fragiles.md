@@ -37,8 +37,6 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
 - Biais possible dans `generateDossierFragment()` qui sous-évalue l'hostilité réellement vécue par
   rapport au transcript (relevé dans 3 des 13 premières notations EL-PROFESSOR : `full_sim4`,
   `full_sim9`, `full_sim10`) — à vérifier comme un sujet à part, distinct d'un cas isolé.
-- Bug potentiel à revérifier dans le code actuel : un motif de déplacement annonçant une
-  destination différente de la pièce réellement rejointe, relevé dans `full_sim9`.
 - Bug potentiel à revérifier dans le code actuel : le dossier de `full_sim8` contenait deux valeurs
   différentes ("dix-neuf sur cent" / "treize sur cent") pour ce qui est censé être la même note
   globale — à vérifier si `generateDossierFragment()` peut encore produire cette incohérence.

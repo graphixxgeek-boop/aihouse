@@ -2,7 +2,7 @@ import {stockSurprise,stockThought} from "@/lib/stock";
 import {visualTiming,type VisualEvent} from "@/lib/visual-events";
 import {destinationAnchor,gardenAccess} from "@/lib/house";
 import {normaliseNickname,visibleScene} from "@/lib/perception";
-import {coldOpening,dialogueFingerprint,distinctReply,justifiedReply,truthfulGender,dramaRules,departureLine} from "@/lib/drama";
+import {coldOpening,dialogueFingerprint,distinctReply,justifiedReply,truthfulGender,dramaRules,departureLine,moveReasonMismatchesDestination} from "@/lib/drama";
 import {readLife,humanStress,isSleeping,isMuted,isStoic,activeBonus,detectDistress,appreciationFromTrust,appreciationOf,detectNegotiationOffer,TRAP_ORDER,type BonusId,type TrapId} from "@/lib/life";
 import { planTurn, coordinateRooms, residentPriority, sceneFor, proposedDestination } from "@/lib/turn";
 import { newStory, parseStory, rememberAges, advanceStory, storyContext, investigationTarget, investigationRecap, finaleReveal, groundFragment, seedPick, insoliteOpening, insoliteColdOpening, ageClueRevealed, fullEvidenceSet, skipRound, skipEmotionsFor, skipNeedsFor, type Story } from "@/lib/story";
@@ -1453,8 +1453,15 @@ export async function POST(request: Request) {
             // le modèle dans son propre registre, cf. Article 19 du retour utilisateur du
             // 2026-09-17 : plus de motif figé en dur) ; les tableaux fixes ci-dessous ne servent
             // plus que de filet de sécurité si le modèle ne le fournit pas (ex. anciens tests mockés).
+            // Garde-fou déterministe (2026-09-20, cf. lib/drama.ts::moveReasonMismatchesDestination
+            // pour le raisonnement complet) : un motif qui annonce une AUTRE pièce que la destination
+            // réelle (schéma JSON qui force `room` pendant un beat narratif, texte libre qui garde une
+            // intention devenue caduque) est écarté au profit du filet de secours ci-dessous, jamais
+            // affiché tel quel — même logique que DÉPART À DEUX juste au-dessus : une consigne de
+            // prompt seule ne suffit pas à garantir cette cohérence-là.
             const generatedReason=d.moveReason?.trim();
-            const motives:readonly string[]=generatedReason?[generatedReason]:!story.met?["je veux savoir s’il y a quelqu’un d’autre","je veux voir si je suis vraiment seul ici","je veux vérifier qu’il n’y a personne d’autre dans cette maison"]:
+            const reliableReason=generatedReason&&!moveReasonMismatchesDestination(generatedReason,destination)?generatedReason:undefined;
+            const motives:readonly string[]=reliableReason?[reliableReason]:!story.met?["je veux savoir s’il y a quelqu’un d’autre","je veux voir si je suis vraiment seul ici","je veux vérifier qu’il n’y a personne d’autre dans cette maison"]:
              d.intent==="sleep"?["mes yeux se ferment","je tiens plus debout","le sommeil me tombe dessus"]:
              d.intent==="eat"?["j’ai besoin de manger","la faim me travaille trop pour attendre","je dois avaler quelque chose"]:
              destination==="jardin"?["la porte est enfin ouverte, je veux voir ce qu’il y a derrière","cette porte ouverte, je veux enfin voir ce qu’il y a dehors","maintenant que c’est ouvert, je veux voir ce jardin de plus près"]:

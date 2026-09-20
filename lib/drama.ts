@@ -47,6 +47,23 @@ export function departureLine(motives:readonly string[],target:string,destinatio
  ];
  return candidates.find(c=>!avoid(c))??"Je pars "+target+" ; "+ordered[0]+".";
 }
+// Garde-fou déterministe (2026-09-20, root-cause après un vrai bug trouvé par EL-PROFESSOR dans
+// full_sim9 : « [chambre→salon] Je file au salon : Aller voir le bureau pour changer de pièce. » —
+// le motif généré par le modèle annonçait une pièce différente de la destination réelle). Cause :
+// le schéma JSON contraint `room` à UNE seule valeur possible quand la scène est imposée par un
+// beat narratif (cf. app/api/lia/route.ts, Object.assign(turnPlan,{room:"salon",...})), mais
+// `moveReason` reste un texte libre non contraint — le modèle peut y garder une intention antérieure
+// (aller étudier, aller dormir) qu'il ne peut plus réaliser ce tour-ci. Même précédent déjà établi
+// dans ce fichier pour DÉPART À DEUX (app/api/lia/route.ts) : quand une consigne de prompt seule ne
+// suffit pas à garantir la cohérence, un correctif déterministe au code prend le relais — jamais une
+// liste de mots qui grandit (Article 17, corollaire) : les 5 noms de pièces forment un ensemble fixe
+// et fermé, déjà celui du schéma JSON lui-même, jamais un vocabulaire ouvert.
+const ROOM_NAMES=["salon","cuisine","chambre","bureau","jardin"] as const;
+export function moveReasonMismatchesDestination(reason:string,destination:string):boolean{
+ const mentions=(room:string)=>new RegExp("\\b"+room+"\\b","i").test(reason);
+ if(mentions(destination))return false;
+ return ROOM_NAMES.some(room=>room!==destination&&mentions(room));
+}
 export function coldOpening(variant:number){return [
  ["T’es qui ? Reste là une seconde.","Pourquoi je suis ici ? Je te connais pas."],
  ["T’es qui ? C’est toi qui m’as fait venir ici ?","Non. Approche pas. Je sais même pas où on est."],
