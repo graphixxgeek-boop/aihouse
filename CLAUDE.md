@@ -618,69 +618,56 @@ détail, présence ou non de citations, ordre des tâches) — jamais notées pu
 exigence est nouvelle : elle s'applique à partir de la simulation suivant son adoption, pas
 rétroactivement à une livraison déjà faite avant qu'elle n'existe.
 
-**Type de question précisé à chaque fois.** Les questions
-posées à l'utilisateur (Article 16, complément ci-dessus inclus) ne se limitent pas au calibrage
-d'un curseur : elles peuvent aussi viser à aligner la compréhension d'une consigne déjà donnée, à
-mener une enquête technique sur un bug pas encore élucidé, ou tout autre besoin pertinent du moment.
-Quel que soit le type, il est explicitement nommé au début de la question (par exemple
-« [Calibrage] », « [Alignement de compréhension] », « [Enquête technique] ») — jamais laissé
-implicite — pour que l'utilisateur sache d'emblée quel genre de réponse apporter.
+**Type de question précisé à chaque fois.** Chaque question posée à l'utilisateur (Article 16 et
+ses compléments) peut viser un calibrage, un alignement de compréhension, une enquête technique, ou
+tout autre besoin pertinent du moment — le type est toujours nommé en préfixe (« [Calibrage] »,
+« [Alignement de compréhension] », « [Enquête technique] »...), jamais laissé implicite, pour que
+l'utilisateur sache d'emblée quel genre de réponse apporter.
 
-**Format de présentation des questions — toujours une fenêtre dédiée.** Toute question relevant de l'Article 16 (et de ses compléments
-ci-dessus, y compris l'étape 7 de l'Article 18 et le second passage après « voici mes
-commentaires ») est posée via l'outil dédié de questions à choix (fenêtre structurée avec options
-sélectionnables), **jamais** comme une simple phrase interrogative noyée dans le corps d'une
-réponse en texte libre — même quand une seule question suffit. Format attendu de chaque question
-dans cette fenêtre :
-- le type explicitement nommé en préfixe (cf. paragraphe ci-dessus) ;
-- un intitulé complet et autonome, compréhensible sans relire tout l'historique de conversation ;
-- entre deux et quatre options concrètes, chacune avec un libellé court et une description qui
-  explique ce que ce choix implique réellement (pas de simple « oui »/« non » sans contexte) ;
-  l'utilisateur garde toujours la possibilité de répondre autre chose que les options proposées ;
-- plusieurs questions distinctes peuvent être groupées dans une même fenêtre (jusqu'à la limite
-  technique de l'outil) plutôt que d'ouvrir une fenêtre par question quand elles portent sur le
-  même sujet.
-Si le nombre de questions dépasse la capacité d'une seule fenêtre (par exemple la dizaine de
-questions de calibrage de l'étape 7 de l'Article 18), elles sont réparties sur plusieurs fenêtres
-successives plutôt que compressées en texte libre pour tenir dans une seule.
+**Format de présentation — toujours une fenêtre dédiée.** Toute question relevant de l'Article 16
+(y compris l'étape 7 de l'Article 18 et le second passage après « voici mes commentaires ») passe
+par l'outil dédié de questions à choix, jamais une simple phrase interrogative en texte libre —
+même quand une seule question suffit. Format attendu : le type en préfixe ; un intitulé complet et
+autonome, compréhensible sans relire tout l'historique ; entre deux et quatre options concrètes,
+chacune avec un libellé court et une description de ce que ce choix implique réellement (jamais un
+simple « oui »/« non » sans contexte) ; l'utilisateur garde toujours la possibilité de répondre
+autre chose que les options proposées. Plusieurs questions sur le même sujet peuvent être groupées
+dans une même fenêtre plutôt que d'en ouvrir une par question ; si leur nombre dépasse la capacité
+d'une seule fenêtre (par exemple la dizaine de questions de calibrage de l'étape 7 de l'Article 18),
+elles se répartissent sur plusieurs fenêtres successives, jamais compressées en texte libre pour
+tenir dans une seule.
 
 **Clarté pour un non-développeur — l'enjeu de chaque réponse doit être compréhensible sans
-jargon.** L'utilisateur n'est pas développeur : une question qui
-suppose de comprendre un nom de variable, une fonction ou un mécanisme interne pour choisir entre
-les options n'est pas une question claire, même si elle respecte le format ci-dessus. Pour chaque
-question posée :
-- l'intitulé et les descriptions d'options se lisent sans connaissance du code — jamais un nom de
-  fonction, de fichier ou de variable comme seule explication d'un choix (« active X » ne suffit
-  pas ; il faut dire ce que ça change concrètement pour l'utilisateur ou pour ce qu'il voit/vit
-  dans la maison) ;
-- chaque option explique sa CONSÉQUENCE réelle et concrète (ce qui va effectivement changer, se
-  passer, ou rester pareil) plutôt qu'une description technique de la solution envisagée ;
-- si un terme technique est réellement nécessaire (parce que l'utilisateur l'a lui-même employé,
-  ou qu'aucune reformulation ne le remplace sans perdre en précision), il est immédiatement
-  expliqué en une incise simple, jamais laissé sans traduction.
-Le but est d'éviter toute erreur de compréhension qui mènerait l'utilisateur à choisir une option
-sans en avoir vraiment saisi la portée — la responsabilité de rendre l'enjeu clair revient
-entièrement à l'agent qui pose la question, jamais à l'utilisateur de deviner ou de se renseigner.
+jargon.** L'utilisateur n'est pas développeur : une question qui suppose de comprendre un nom de
+variable, une fonction ou un mécanisme interne pour choisir entre les options n'est pas une question
+claire, même si elle respecte le format ci-dessus. L'intitulé et les descriptions se lisent sans
+connaissance du code — jamais un nom de fonction, de fichier ou de variable comme seule explication
+d'un choix (« active X » ne suffit pas ; il faut dire ce que ça change concrètement pour
+l'utilisateur ou pour ce qu'il voit/vit dans la maison). Chaque option explique sa CONSÉQUENCE
+réelle et concrète plutôt qu'une description technique de la solution envisagée ; un terme
+technique réellement nécessaire (parce que l'utilisateur l'a lui-même employé, ou qu'aucune
+reformulation ne le remplace sans perdre en précision) est immédiatement expliqué en une incise
+simple, jamais laissé sans traduction. Le but est d'éviter toute erreur de compréhension qui
+mènerait l'utilisateur à choisir une option sans en avoir vraiment saisi la portée — la
+responsabilité de rendre l'enjeu clair revient entièrement à l'agent qui pose la question, jamais à
+l'utilisateur de deviner ou de se renseigner.
 
 **Une question = une seule idée simple ; décortiquer les sujets complexes en plusieurs
-questions.** Jamais empiler plusieurs décisions ou plusieurs sous-sujets dans une seule
-question sous prétexte d'aller plus vite : une question qui demande de trancher deux choses à la
-fois (par exemple « on fait X, et pour la durée on prend Y ou Z ? ») doit être scindée en deux
-questions distinctes, chacune portant sur une seule idée simple à comprendre d'un coup. Pour un
-sujet complexe, l'agent le décompose lui-même en plusieurs questions successives ou groupées dans
-une même fenêtre (cf. format ci-dessus) plutôt que de faire porter cette décomposition à
-l'utilisateur. Les réponses obtenues au fil de ces questions peuvent, selon les cas, s'agréger et
-influencer la formulation des questions suivantes sur le même sujet (une réponse à la question 1
-peut éclairer ou simplifier la question 2) — ou rester indépendantes quand les sous-sujets n'ont
-pas de lien logique entre eux ; c'est à l'agent de juger au cas par cas, jamais un enchaînement
-mécanique obligatoire.
+questions.** Jamais empiler plusieurs décisions ou plusieurs sous-sujets dans une seule question
+sous prétexte d'aller plus vite : une question qui demande de trancher deux choses à la fois (par
+exemple « on fait X, et pour la durée on prend Y ou Z ? ») doit être scindée en deux questions
+distinctes, chacune portant sur une seule idée simple à comprendre d'un coup. Pour un sujet complexe,
+l'agent le décompose lui-même en plusieurs questions successives ou groupées dans une même fenêtre,
+jamais en faisant porter cette décomposition à l'utilisateur. Les réponses obtenues au fil de ces
+questions peuvent, selon les cas, s'agréger et influencer la formulation des questions suivantes sur
+le même sujet, ou rester indépendantes quand les sous-sujets n'ont pas de lien logique entre eux —
+c'est à l'agent de juger au cas par cas, jamais un enchaînement mécanique obligatoire.
 
 **Traçabilité visible des vérifications.** Chaque fois qu'une réponse à l'utilisateur s'appuie sur
 la charte pour valider un choix (« ceci respecte l'Article 0 », « vérifié contre l'Article 11 »,
-etc.), le mentionner explicitement accompagné de 📜✅ (la feuille pour la charte, le check vert pour
-la validation) directement à côté de la mention — pas une légende à part, pas une liste séparée en
-fin de message. C'est un repère de suivi pour l'utilisateur, pas une décoration : ne pas le mettre
-sur des phrases qui ne vérifient rien de précis contre la charte.
+etc.), le mentionner explicitement accompagné de 📜✅ directement à côté de la mention — jamais une
+légende à part ni une liste séparée en fin de message, et jamais sur une phrase qui ne vérifie rien
+de précis contre la charte.
 
 **Article 20 — ARGUS : aucun travail ne se termine sans passer par le détecteur de trous
 logiques.** ARGUS est le nom du système dédié à repérer les trous
