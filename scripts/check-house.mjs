@@ -940,7 +940,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 186'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 187'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3653,7 +3653,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   } = await import('../scripts/circle-tasks.mjs');
   const { walkDocsPaths } = await import('../scripts/lib-shell.mjs');
 
-  assert.equal(CIRCLE_ITEMS.length, 19, 'CIRCLE_ITEMS must list exactly the 17 free periodic items (profil, the-king-signal, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, dream-team-photo, THE-SCREENER, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run, coordinateur-catalogue) plus THE-FINAL-JUDGE and its cousin THE-DEEP-READER, never silently gaining or losing an entry');
+  assert.equal(CIRCLE_ITEMS.length, 20, 'CIRCLE_ITEMS must list exactly the 18 free periodic items (profil, the-king-signal, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, dream-team-photo, THE-SCREENER, ines-official-signal, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run, coordinateur-catalogue) plus THE-FINAL-JUDGE and its cousin THE-DEEP-READER, never silently gaining or losing an entry');
   const profilGuardItem = CIRCLE_ITEMS.find((i) => i.id === 'profil-utilisateur-guard');
   assert.ok(profilGuardItem && !profilGuardItem.costly && profilGuardItem.theme === 'Passages réels (smoke run)', '2026-09-21 addition: the real check-profil-utilisateur.mjs smoke run must be free and live in its own "smoke run" theme, distinct from the "profil" item which writes a new observation rather than verifying disk integrity');
   const networkCheckItem = CIRCLE_ITEMS.find((i) => i.id === 'network-check-run');
@@ -3690,8 +3690,9 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const suiviCategorized = { terminee: [], enCours: [{ cells: ['1', '2026-09-15T00:00:00Z', 'x', 'x', 'x', 'x', 'en cours'] }], ouverte: [{ cells: ['2', '2026-09-18T00:00:00Z', 'x', 'x', 'x', 'x', 'ouverte'] }], autre: [] };
   const sampleClaudeMdText = 'x'.repeat(200) + '\n*(ajouté le 2026-09-19, test)*\n*(ajouté le 2026-09-20, test)*\n';
   const samplePhilosophyText = '### 1.1 Un principe **[Explicite]**\n\nOn agit toujours avec prudence budgétaire ambiante.\n\n### 1.2 Un autre principe **[Synthèse, 2026-09-19]**\n\nOn n\'agit jamais avec prudence budgétaire ambiante.';
-  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText: emptyAlwaysNewCode, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText: sampleClaudeMdText, philosophyText: samplePhilosophyText, philosophyFreshnessDaysValue: 3 }, now);
-  assert.equal(report.length, 19, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one');
+  const inesOfficialIndexText = '| Version | Date | Périmètre | Fichiers | Taille |\n|---|---|---|---|---|\n| v1 | 2026-09-18 | code seul | 40 | 500 Ko |';
+  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText: emptyAlwaysNewCode, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText: sampleClaudeMdText, philosophyText: samplePhilosophyText, philosophyFreshnessDaysValue: 3, inesOfficialIndexText }, now);
+  assert.equal(report.length, 20, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one');
   assert.equal(report.find((r) => r.id === 'claude-md-weight-signal').staleness, '66 tokens estimés, niveau "faible" — 2 aside(s) narrative(s) datée(s) encore réductible(s)', 'the CLAUDE.md weight signal must reuse the real SMART-CONSO-TOKEN scan functions live (never a second parser), reporting both the honest token estimate and the real count of still-reducible dated asides found in the actual text passed in');
   assert.equal(buildCircleReport({}, now).find((r) => r.id === 'claude-md-weight-signal').staleness, 'pas de signal disponible (CLAUDE.md non fourni)', 'with no CLAUDE.md text supplied at all, the signal must report an honest absence rather than crash or fabricate a number');
   assert.equal(report.find((r) => r.id === 'clean-dirty-old-signal').staleness, '1 jour(s) depuis le dernier passage journalisé', 'the CLEAN-DIRTY-OLD signal must compute its own staleness from its own real index text, distinct from every other source');
@@ -3701,6 +3702,8 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(report.find((r) => r.id === 'the-screener').staleness, 'pas de signal de fraîcheur mécanique disponible', 'THE-SCREENER likewise has no real mechanical freshness source in this ronde (its own dated registry docs/the-screener/ does not exist yet) and must say so honestly');
   assert.equal(report.find((r) => r.id === 'the-king-signal').staleness, 'dernière modification il y a 3 j — dernière évolution datée : 2026-09-19 — 1.2 Un autre principe — 1 tension(s) possible(s) à relire', 'THE-KING\'s Ronde item must report real freshness, the real latest dated evolution, and a real possible-tension count all in one line, reusing the-king.mjs\'s own functions rather than a second parser');
   assert.equal(buildCircleReport({}, now).find((r) => r.id === 'the-king-signal').staleness, 'pas de signal disponible (philosophie-et-politique.md non fourni)', 'with no philosophy text supplied at all, THE-KING\'s signal must report an honest absence rather than crash or fabricate a number');
+  assert.equal(report.find((r) => r.id === 'ines-official-signal').staleness, `${daysSince('2026-09-18', now)} jour(s) depuis la dernière édition`, 'INES-official\'s Ronde signal must compute real staleness from its own real index text, reusing mostRecentDate()/daysSince() rather than a second date parser');
+  assert.equal(buildCircleReport({}, now).find((r) => r.id === 'ines-official-signal').staleness, 'aucune édition jamais produite', 'with no INES-official index text supplied at all (or genuinely empty, as on day one), the signal must report an honest absence rather than crash or fabricate a number');
   assert.equal(report.find((r) => r.id === 'profil').staleness, '2 jour(s) depuis la dernière fiche', 'the profil item\'s staleness must be computed from the real most-recent date found in the real index text passed in');
   assert.equal(report.find((r) => r.id === 'kpi').staleness, '1 jour(s) depuis le dernier rapport archivé', 'the kpi item\'s staleness must likewise be computed from the real kpi index text, a genuinely distinct source from the profil index');
   assert.ok(/jamais examinée/.test(report.find((r) => r.id === 'always-new-code-signal').staleness), 'with a genuinely empty ALWAYS-NEW-CODE coverage memory, the signal must honestly report that every zone (the one recommended first) has never been examined, never a fabricated date');
@@ -4594,4 +4597,50 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 
   assert.ok(typeof philosophyFreshnessDays() === 'number', 'philosophyFreshnessDays() must report a real number of days for the actual committed docs/philosophie-et-politique.md file — reusing lastTouchDays() from CLEAN-DIRTY-OLD rather than a second divergent calculation');
   console.log('Passed: THE-KING (task #167) reminds to consult docs/philosophie-et-politique.md before a high-stakes decision across exactly its 6 confirmed trigger categories (never a false positive on a low-stakes request), parses the real document into dated/undated principles without ever fabricating a date, builds an honest chronological evolution digest, and flags a possible tension between two principles only when BOTH real shared vocabulary AND a genuine "jamais"/"toujours" polarity clash are present — never a bare keyword or polarity scan alone.');
+}
+
+{
+  // INES-official (tâche #168, 2026-09-21) : la "secrétaire" qui aplatit + annote le dépôt, jamais
+  // une réécriture réelle. Testé avec un système de fichiers entièrement injecté — jamais un vrai
+  // balayage du dépôt réel dans les tests, qui serait lent et non déterministe d'une session à l'autre.
+  const { FLATTEN_SCOPES, collectSourceFiles, annotateFile, buildTableOfContents, buildConsolidatedEdition, nextEditionVersion, buildIndexRow, recordEdition } = await import('../scripts/ines-official.mjs');
+  assert.deepEqual(FLATTEN_SCOPES, ['code', 'code_et_docs'], 'the two real scopes must stay exactly these two, in this order — a caller choosing a scope by name must never silently mismatch');
+  assert.throws(() => collectSourceFiles('inconnu'), /périmètre inconnu/, 'an unknown scope must throw immediately rather than silently falling back to an arbitrary default');
+
+  const fakeTree = {
+    lib: [{ name: 'a.ts', isDirectory: () => false }, { name: 'sub', isDirectory: () => true }],
+    'lib/sub': [{ name: 'b.ts', isDirectory: () => false }, { name: 'ignore.png', isDirectory: () => false }],
+    app: [], scripts: [], components: [],
+    docs: [{ name: 'notes.md', isDirectory: () => false }, { name: 'image.png', isDirectory: () => false }],
+  };
+  const readDirImpl = (dir) => fakeTree[dir] || [];
+  const existsImpl = (dir) => dir in fakeTree;
+  assert.deepEqual(collectSourceFiles('code', { readDirImpl, existsImpl }), ['lib/a.ts', 'lib/sub/b.ts'], 'the "code" scope must recurse into real subdirectories, include only whitelisted code extensions, and never pull in docs/ or a non-code extension like .png');
+  assert.deepEqual(collectSourceFiles('code_et_docs', { readDirImpl, existsImpl }), ['docs/notes.md', 'lib/a.ts', 'lib/sub/b.ts'], 'the "code_et_docs" scope must add real .md files from docs/ on top of the code scope, still excluding a non-doc extension like .png, sorted consistently');
+
+  assert.deepEqual(buildTableOfContents(['a.ts', 'b.ts'], { 'a.ts': 'x', 'b.ts': 'y' }), ['1. a.ts — x', '2. b.ts — y'], 'the table of contents must number every real file in order with its real annotation, the "oui maintenant" enrichment requested at calibration');
+
+  const edition = buildConsolidatedEdition({ scope: 'code', files: ['a.ts'], annotations: { 'a.ts': 'x' }, version: 3, date: '2026-09-21', readFileImpl: () => 'contenu réel' });
+  assert.ok(edition.includes('# INES-official — édition v3 (2026-09-21)') && edition.includes('## Table des matières') && edition.includes('1. a.ts — x') && edition.includes('contenu réel'), 'the consolidated edition must carry the real version/date header, the real table of contents, and the real file content verbatim — the "oui maintenant" dating/versioning enrichment requested at calibration');
+  const editionUnreadable = buildConsolidatedEdition({ scope: 'code', files: ['missing.ts'], annotations: {}, version: 1, date: '2026-09-21', readFileImpl: () => { throw new Error('ENOENT'); } });
+  assert.ok(editionUnreadable.includes('fichier illisible'), 'a file that genuinely fails to read at edition time must be reported honestly inline, never crash the whole edition');
+
+  assert.equal(nextEditionVersion(''), 1, 'the very first edition, with no prior index text at all, must start at version 1, never 0 or a crash');
+  assert.equal(nextEditionVersion('| v1 | ... |\n| v4 | ... |\n| v2 | ... |'), 5, 'the next version must be one past the real highest version number found in the index, regardless of row order — never a naive "last row + 1" that a reordered table would break');
+
+  assert.equal(buildIndexRow({ version: 2, date: '2026-09-21', scope: 'code', fileCount: 40, sizeBytes: 500_000 }), '| v2 | 2026-09-21 | code seul | 40 | 500 Ko |', 'a sub-megabyte edition must report its size in Ko, with the real human-readable scope label');
+  assert.equal(buildIndexRow({ version: 3, date: '2026-09-21', scope: 'code_et_docs', fileCount: 90, sizeBytes: 2_300_000 }), '| v3 | 2026-09-21 | code + documentation | 90 | 2.3 Mo |', 'a multi-megabyte edition must report its size in Mo with one decimal, never a raw byte count that would be unreadable at this scale');
+
+  {
+    // recordEdition() : le corps volumineux reste LOCAL (jamais committé), seule une ligne de
+    // métadonnées légère est retournée pour l'index committé — vérifié avec un writeFileImpl injecté,
+    // jamais une vraie écriture disque dans ce test.
+    const written = {};
+    const writeFileImpl = (path, content) => { written[path] = content; };
+    const result = recordEdition('code', { indexText: '', writeFileImpl, readFileImplForBody: () => 'x'.repeat(100) });
+    assert.equal(result.version, 1, 'the first real edition of a scope with no prior index history must be version 1');
+    assert.ok(result.latestPath.includes('ines-official-latest-code') && written[result.latestPath], 'the full body must be written to the local, scope-named latest file — never silently dropped');
+    assert.ok(result.row.includes('v1') && result.row.includes('code seul'), 'the returned metadata row must be ready to append to the committed index as-is, never requiring the caller to reformat it');
+  }
+  console.log('Passed: INES-official (task #168) collects real files by an explicit extension/root whitelist per scope (never a blacklist, and never pulling in docs/ under the "code" scope or a non-source extension under either scope), builds a real numbered table of contents and a dated/versioned consolidated edition (the two "oui maintenant" enrichments), reports an honest inline notice for a file that genuinely fails to read rather than crashing the whole edition, computes the real next version from the actual highest version found in the index regardless of row order, and keeps the potentially multi-megabyte edition body local while returning only a light, ready-to-append metadata row for the committed index — the real disk economy already applied elsewhere in this project to the raw simulation log.');
 }

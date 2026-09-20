@@ -55,6 +55,8 @@ next-env.d.ts
 .smart-conso-session.json
 .smart-conso-token-history.json
 .tool-usage-history.json
+.ines-official-latest-code.txt
+.ines-official-latest-code_et_docs.txt
 .le-coordinateur-last-run.json
 .circle-tasks-last-run.json
 .kpi-report-latest.html

@@ -502,6 +502,7 @@ bloqué par un statut, seulement par l'existence réelle d'une fonction ou d'un 
 | Compteur d'utilisation des outils (`scripts/tool-usage.mjs`) | Utilitaire nommé | — | journal permanent des sollicitations réelles d'un outil (origine, taux de trouvaille) — nourrit Doc-Report et la future CASSANDRA-RH | gratuit | l'agent l'appelle lui-même à chaque sollicitation réelle d'un outil (discipline auto-déclarée, aucune preuve mécanique externe) |
 | Doc-Report (`scripts/doc-report.mjs`) | Utilitaire nommé | — | index global des registres du réseau d'outils, gardien (jamais décideur) de la décision HTML/texte déjà actée par registre, croisé avec l'âge du dernier rapport et le compteur d'usage ci-dessus | gratuit | sur demande, ou proposé périodiquement via CIRCLE-TASKS |
 | THE-KING | Agent | 🎖️ | rappelle de consulter `docs/philosophie-et-politique.md` avant une décision à haut niveau (6 catégories), fraîcheur du document, digest de son évolution, tension possible entre deux principes | gratuit | avant une décision touchant l'une des 6 catégories (moi, l'utilisateur, ou un autre outil) |
+| INES-official | Agent | 🎖️ | aplatit le dépôt en une édition consolidée et annotée (code seul ou code + docs), table des matières, datage/versionnage — jamais une réécriture réelle du code | gratuit | proposé périodiquement via CIRCLE-TASKS, ou sur demande explicite |
 
 Cette table remplace toute énumération informelle éparpillée dans la conversation : à jour à
 chaque nouvel outil créé (même discipline que la liste des documents de référence, Article 13).
@@ -743,6 +744,13 @@ token. » Deux volets, jamais l'un sans l'autre :
   attribution. Ce n'est pas une formalité : chaque mention visible est un signal concret que le
   réseau d'outils est réellement rentabilisé (moins de raisonnement à la main refait de zéro, donc
   moins de tokens), au même titre que le repère 📜✅ pour la charte (Article 20 du jeu).
+
+**Renforcement ajouté le 2026-09-21, demande explicite de l'utilisateur** : « quand je te fais une
+demande qui peut faire intervenir un outil, fais intervenir l'outil [...] mentionne le
+systematiquement [le coût gratuit] ». Précision par rapport au complément ci-dessus : la mention ne
+se limite jamais au nom de l'outil sollicité, elle nomme aussi explicitement son coût réel (« gratuit
+— 0 appel API » quand c'est le cas, jamais sous-entendu) — pour que l'utilisateur voie concrètement,
+à chaque fois, qu'un raisonnement à la main a été évité SANS AUCUN coût API/tokens supplémentaire.
 
 ### Aucun de ces outils n'est autonome — l'agent reste toujours celui qui finalise
 

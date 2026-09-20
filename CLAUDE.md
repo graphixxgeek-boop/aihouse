@@ -797,6 +797,21 @@ projet gouverné par un document de philosophie séparé de sa charte de contenu
 exactes ni les fichiers propres à ce projet, qui vivent dans `docs/referentiel/the-king.md`
 (instanciation) et `docs/the-king/` (dossier + index des évolutions constatées).
 
+## INES-official — blueprint exportable
+
+`docs/ines-official-blueprint.md` documente l'ARCHITECTURE de la « secrétaire » qui aplatit le
+dépôt en une édition consolidée et annotée (2026-09-21, nom capturé en session antérieure, jamais
+concrétisé avant ce soir) — MVP calibré explicitement : APLATIR + ANNOTER, jamais une réécriture
+réelle du code ; périmètre (code seul / code + documentation) choisi à chaque édition ; annotation
+qui réutilise les signaux déjà calculés ailleurs (CLEAN-DIRTY-OLD, AXA-CHECK) sans jamais fabriquer
+de lien avec ARGUS/HARMONIA (scans en texte libre, non indexés par fichier) ; table des matières et
+datage/versionnage dès la première version ; déclenchement PÉRIODIQUE via CIRCLE-TASKS, jamais
+seulement sur demande — sous une forme générique, réutilisable sur un autre projet de code. Jamais
+les racines/extensions exactes ni les fichiers propres à ce projet, qui vivent dans
+`docs/referentiel/ines-official.md` (instanciation) et `docs/ines-official/` (index léger des
+métadonnées d'édition — le corps de chaque édition reste local, jamais committé, pour ne pas
+grossir le dépôt sans fin).
+
 ## ALWAYS-NEW-CODE — blueprint exportable
 
 `docs/always-new-code-blueprint.md` documente l'ARCHITECTURE de l'outil qui rend concrète
@@ -999,6 +1014,10 @@ conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs se
   (`scripts/the-king.mjs`), le digest de son évolution, la détection de tension possible entre deux
   principes, le registre (`docs/the-king/`). Cf. `docs/the-king-blueprint.md` pour le principe
   générique.
+- `docs/referentiel/ines-official.md` (2026-09-21) — instanciation d'INES-official pour ce projet :
+  les 2 périmètres (`scripts/ines-official.mjs`), l'annotation par stagnation CLEAN-DIRTY-OLD, le
+  déclenchement périodique via CIRCLE-TASKS, l'index léger des métadonnées d'édition
+  (`docs/ines-official/`). Cf. `docs/ines-official-blueprint.md` pour le principe générique.
 - `docs/referentiel/always-new-code.md` (2026-09-19) — instanciation d'ALWAYS-NEW-CODE (Article 23)
   pour ce projet : les 8 zones (réutilisées d'HARMONIA), la rotation intelligente
   (`scripts/always-new-code.mjs`), le déclenchement via CHECK-LEVEL-TARGET niveau Exceptionnel, le

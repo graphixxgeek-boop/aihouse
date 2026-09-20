@@ -42,6 +42,7 @@ export const REGISTRIES = [
   { slug: "hyper-scan-checkpoint", label: "HYPER-SCAN-CHECKPOINT", family: "Exceptionnel (page blanche / audit lourd)", path: "docs/hyper-scan-checkpoint/", decision: "texte", scriptPath: "scripts/hyper-scan-checkpoint.mjs" },
   { slug: "check-level-target", label: "CHECK-LEVEL-TARGET", family: "Gouvernance interne", path: "docs/check-level-target/", decision: "texte", scriptPath: "scripts/check-level-target.mjs" },
   { slug: "the-king", label: "THE-KING", family: "Gouvernance interne", path: "docs/the-king/", decision: "texte", scriptPath: "scripts/the-king.mjs" },
+  { slug: "ines-official", label: "INES-official", family: "Exceptionnel (page blanche / audit lourd)", path: "docs/ines-official/", decision: "texte", scriptPath: "scripts/ines-official.mjs" },
   { slug: "smart-conso-api", label: "Smart Conso API", family: "Gouvernance interne", path: "docs/smart-conso-api/", decision: "texte", scriptPath: "scripts/smart-conso-api.mjs" },
   { slug: "smart-conso-token", label: "SMART-CONSO-TOKEN", family: "Gouvernance interne", path: "docs/smart-conso-token/", decision: "texte", scriptPath: "scripts/smart-conso-token.mjs" },
   { slug: "kpi", label: "Tableau de bord / KPI", family: "Simulation & qualité narrative", path: "docs/referentiel/kpi-rapports/", decision: "delivery_html", scriptPath: "scripts/kpi-report.mjs" },

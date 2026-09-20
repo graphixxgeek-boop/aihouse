@@ -218,6 +218,18 @@ export const CIRCLE_ITEMS = [
     tokensEstimes: "modéré — lecture vision de 2 images par l'agent + rédaction de la notation",
     execute: "Lancer node scripts/the-screener-capture.mjs contre un serveur DÉJÀ actif (dev ou site en ligne) avec une vraie session en cours, lire les 2 captures et noter contre docs/referentiel/regles-des-graphismes.md — jamais déclencher une nouvelle simulation juste pour cet item.",
   },
+  // ines-official-signal (2026-09-21, tâche #168) : déclenchement PÉRIODIQUE explicitement demandé
+  // par l'utilisateur — jamais réservé à une demande explicite ponctuelle (correction d'une première
+  // proposition de l'agent). Le signal lui-même ne relit que l'index léger (gratuit) ; l'édition
+  // réelle, si proposée, reste une action distincte et confirmée (jamais lancée seule ici).
+  {
+    id: "ines-official-signal",
+    theme: "Qualité & fun",
+    label: "Proposer une nouvelle édition INES-official si l'ancienne date",
+    cout: "gratuit — lecture de l'index existant, l'édition elle-même (si proposée ensuite) reste 0 appel API",
+    tokensEstimes: "faible pour le signal seul ; élevé si l'édition complète est ensuite relue par l'agent (le corps reste local, jamais committé)",
+    execute: "Lire docs/ines-official/index.md (dernière version/date) et proposer une nouvelle édition (node scripts/ines-official.mjs <code|code_et_docs>) si aucune récente n'existe — jamais lancée automatiquement sans confirmation.",
+  },
   // profil-utilisateur-guard (2026-09-21, trouvaille : « il y a certainement de petits scripts peu
   // coûteux [...] qui peuvent être exécutés, simplement parce qu'ils sont très peu coûteux et que
   // ça garantit la fraîcheur du code » — scripts/check-profil-utilisateur.mjs existait déjà,
@@ -383,12 +395,13 @@ export function oldestOpenTaskDate(categorized) {
 // ALWAYS-NEW-CODE la plus négligée) — jamais pour "relecture référentiel" ou "correctifs", qui
 // n'ont aucune date de référence mécanique fiable (Article 13 elle-même n'impose aucune cadence
 // fixe, cf. CLAUDE.md — un signal inventé ici serait moins honnête que son absence).
-export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue } = {}, now = Date.now()) {
+export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText } = {}, now = Date.now()) {
   const profilLast = mostRecentDate(profilIndexText);
   const kpiLast = mostRecentDate(kpiIndexText);
   const smartConsoApiLast = mostRecentDate(smartConsoApiIndexText);
   const smartConsoTokenLast = mostRecentDate(smartConsoTokenIndexText);
   const cleanDirtyOldLast = mostRecentDate(cleanDirtyOldIndexText);
+  const inesOfficialLast = mostRecentDate(inesOfficialIndexText);
   const wiring = htmlWiringSources ? checkHtmlWiring(htmlWiringSources) : undefined;
   const oldestOpen = suiviCategorized ? oldestOpenTaskDate(suiviCategorized) : undefined;
   const coverage = parseCoverage(alwaysNewCodeIndexText || "");
@@ -400,6 +413,7 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCode
     if (item.id === "smart-conso-api-scan") return { ...item, staleness: smartConsoApiLast ? `${daysSince(smartConsoApiLast, now)} jour(s) depuis la dernière décision archivée` : "jamais fait" };
     if (item.id === "smart-conso-token-scan") return { ...item, staleness: smartConsoTokenLast ? `${daysSince(smartConsoTokenLast, now)} jour(s) depuis le dernier scan archivé` : "jamais fait" };
     if (item.id === "clean-dirty-old-signal") return { ...item, staleness: cleanDirtyOldLast ? `${daysSince(cleanDirtyOldLast, now)} jour(s) depuis le dernier passage journalisé` : "jamais fait" };
+    if (item.id === "ines-official-signal") return { ...item, staleness: inesOfficialLast ? `${daysSince(inesOfficialLast, now)} jour(s) depuis la dernière édition` : "aucune édition jamais produite" };
     if (item.id === "html-wiring-check") {
       if (!wiring) return { ...item, staleness: "pas de signal de fraîcheur mécanique disponible" };
       const missing = wiring.filter((w) => !w.wired).map((w) => w.script);
@@ -576,7 +590,8 @@ function main() {
   const claudeMdText = read("CLAUDE.md");
   const philosophyText = read("docs/philosophie-et-politique.md");
   const philosophyFreshnessDaysValue = philosophyFreshnessDays();
-  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue });
+  const inesOfficialIndexText = read("docs/ines-official/index.md");
+  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText });
   console.log("=== CIRCLE-TASKS — Ronde périodique ===\n");
   console.log(formatCircleMenu(report));
   console.log("\nJamais exécuté seul : l'agent qui pilote ouvre une fenêtre à cocher pour choisir précisément quoi lancer.");
