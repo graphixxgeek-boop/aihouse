@@ -36,7 +36,7 @@ const HARMONIA_THEME_KEYWORDS = {
 // immédiatement — jamais une nouvelle convention d'annotation, juste ce qui existe déjà. Sert les
 // fichiers découpés en fonctions (route.ts une fois découpé, la plupart de lib/).
 export function extractFunctionIndex(source) {
-  const lines = source.split("\n");
+  const lines = Array.isArray(source) ? source : source.split("\n");
   const entries = [];
   for (let i = 0; i < lines.length; i++) {
     const match = FUNCTION_RE.exec(lines[i]);
@@ -63,7 +63,7 @@ const BLOCK_START_RE = /^\{$/;
 // sur sa ligne dans le style de ce projet. Un bloc sans commentaire n'a honnêtement rien à indexer,
 // jamais un nom fabriqué à partir de rien.
 export function extractBlockIndex(source) {
-  const lines = source.split("\n");
+  const lines = Array.isArray(source) ? source : source.split("\n");
   const entries = [];
   for (let i = 0; i < lines.length; i++) {
     if (!BLOCK_START_RE.test(lines[i])) continue;
@@ -90,7 +90,7 @@ const HEADING_RE = /^(#{2,4})\s+(.+)$/;
 // description est le premier paragraphe qui le suit (jusqu'à la ligne vide ou le prochain titre) —
 // jamais un résumé fabriqué au-delà de ce qui est réellement écrit juste après.
 export function extractHeadingIndex(source) {
-  const lines = source.split("\n");
+  const lines = Array.isArray(source) ? source : source.split("\n");
   const entries = [];
   for (let i = 0; i < lines.length; i++) {
     const match = HEADING_RE.exec(lines[i]);
@@ -117,10 +117,20 @@ const DESCRIPTION_PREVIEW_LENGTH = 200;
 // a révélé (132 lignes seulement, mais chaque `text` fait plusieurs centaines de mots sur une seule
 // ligne). La description est tronquée à `DESCRIPTION_PREVIEW_LENGTH` caractères (avec "…") — jamais
 // le texte complet, qui rendrait chaque résultat de recherche imbuvable pour une simple navigation.
+//
+// Bug auto-référentiel trouvé et corrigé le 2026-09-21 (demande explicite d'optimisation, find-booster
+// lancé sur son propre fichier source) : contrairement à FUNCTION_RE/BLOCK_START_RE (ancrées en début
+// de ligne, donc jamais déclenchées par une ligne de commentaire qui commence toujours par `//`),
+// TITLED_ENTRY_RE n'est pas ancrée — elle matchait sa PROPRE ligne de documentation ci-dessus, qui cite
+// l'exemple littéral `{title:'...', text:'...'}`, produisant une fausse entrée `"..."`. Corrigé en
+// ignorant explicitement toute ligne dont le contenu (après indentation) commence par `//`, jamais en
+// modifiant le motif lui-même (qui doit rester capable de matcher n'importe où sur une vraie ligne de
+// code, ex. plusieurs entrées sur une seule ligne compactée).
 export function extractTitledArrayIndex(source) {
-  const lines = source.split("\n");
+  const lines = Array.isArray(source) ? source : source.split("\n");
   const entries = [];
   for (let i = 0; i < lines.length; i++) {
+    if (/^\s*\/\//.test(lines[i])) continue;
     const match = TITLED_ENTRY_RE.exec(lines[i]);
     if (!match) continue;
     const [, title, text] = match;
@@ -149,12 +159,25 @@ export function searchByConcept(index, keyword) {
 // jamais un motif au détriment d'un autre, pour servir route.ts (fonctions), check-house.mjs
 // (blocs), lib/reference.ts (tableau titré) et docs/regles-de-travail.md (titres) avec la même
 // qualité de résultat.
-export function buildIndex(filePath) {
-  const source = readFileSync(filePath, "utf8");
+//
+// Cœur séparé de la lecture disque (2026-09-21, demande explicite d'optimisation : « optimiser ce
+// que find-booster sait déjà faire ») : découpait la source en lignes SÉPARÉMENT dans chacun des 3
+// extracteurs JS (3 `.split("\n")` + 3 boucles complètes sur un même fichier, potentiellement
+// plusieurs milliers de lignes) — désormais découpé UNE seule fois ici et réutilisé par les trois,
+// chaque extracteur acceptant maintenant indifféremment une chaîne ou un tableau déjà découpé
+// (jamais un changement de signature pour les appels existants avec une chaîne, cf. les tests de
+// check-house.mjs qui continuent de passer une chaîne brute). `recommendFindBooster()` ci-dessous
+// réutilise ce même cœur pour ne jamais relire le fichier une seconde fois.
+function buildIndexFromSource(source, filePath) {
+  const lines = source.split("\n");
   const entries = /\.mdx?$/i.test(filePath)
-    ? extractHeadingIndex(source)
-    : [...extractFunctionIndex(source), ...extractBlockIndex(source), ...extractTitledArrayIndex(source)].sort((a, b) => a.line - b.line);
+    ? extractHeadingIndex(lines)
+    : [...extractFunctionIndex(lines), ...extractBlockIndex(lines), ...extractTitledArrayIndex(lines)].sort((a, b) => a.line - b.line);
   return entries.map((e) => ({ ...e, themes: tagHarmoniaThemes(e) }));
+}
+
+export function buildIndex(filePath) {
+  return buildIndexFromSource(readFileSync(filePath, "utf8"), filePath);
 }
 
 // recommendFindBooster() (2026-09-21, question directe de l'utilisateur : « est-ce que find-booster
@@ -165,10 +188,16 @@ export function buildIndex(filePath) {
 // lib/scripts à respecter ici, contrairement à memento weight) — jamais une seconde formule
 // divergente. `tokenThreshold` par défaut réutilise le palier "élevé" déjà calibré par
 // SMART-CONSO-TOKEN pour un document toujours chargé (cf. docs/referentiel/smart-conso-token.md).
+//
+// Ne lit plus le fichier deux fois (2026-09-21, même passe d'optimisation) : appelait `readFileSync`
+// pour son propre calcul de poids PUIS `buildIndex(filePath)`, qui relisait intégralement le même
+// fichier une seconde fois — un vrai gaspillage d'I/O sur un fichier potentiellement volumineux,
+// exactement le genre de fichier que cette fonction sert à évaluer. Une seule lecture désormais,
+// réutilisée pour les deux calculs via `buildIndexFromSource()`.
 export function recommendFindBooster(filePath, { tokenThreshold = 8000 } = {}) {
   const source = readFileSync(filePath, "utf8");
   const tokens = estimateTokens(source);
-  const entryCount = buildIndex(filePath).length;
+  const entryCount = buildIndexFromSource(source, filePath).length;
   const worthwhile = tokens >= tokenThreshold && entryCount >= 3;
   return { tokens, entryCount, worthwhile };
 }

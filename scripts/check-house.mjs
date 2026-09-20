@@ -942,7 +942,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 202'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 203'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4589,7 +4589,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // (docs/suivi #230), jamais celui qui la prend. Testé avec un readFileImpl injecté et un
   // sous-ensemble isolé de registres — jamais dépendant du contenu réel des scripts du dépôt, qui
   // peut changer indépendamment de ce test.
-  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex, LOCAL_JOURNALS, auditLocalJournals, findJournalsMissingFromGitignore, findEngineCodeInRegistries } = await import('../scripts/doc-report.mjs');
+  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex, LOCAL_JOURNALS, auditLocalJournals, findJournalsMissingFromGitignore, findEngineCodeInRegistries, flagFindBoosterCandidates } = await import('../scripts/doc-report.mjs');
   assert.ok(REGISTRIES.length >= 15, 'the registry table must cover every real tool registry of the network, never a partial or forgotten subset');
   assert.ok(REGISTRIES.every((r) => r.slug && r.label && r.family && r.path && r.decision), 'every registry entry must be fully specified — a half-filled row would silently break the family grouping or the decision audit');
 
@@ -4653,6 +4653,33 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const { readFileSync: readFileSyncForGitignore } = await import('node:fs');
   assert.deepEqual(findJournalsMissingFromGitignore(readFileSyncForGitignore(new URL('../.gitignore', import.meta.url), 'utf8'), LOCAL_JOURNALS), [], 'checked live against the project\'s own real .gitignore: every real local journal this project actually produces must already be declared, a guarantee that breaks the day a new journal is added without it');
   console.log('Passed: Doc-Report\'s local-journal extension (2026-09-21) answers the user\'s direct question — the SAME tool, never a twin — inventories every real gitignored state/cache file the tool network produces (owner, purpose, real filesystem mtime age, honest absence for one never yet written), and cross-checks live that every one of them is genuinely declared in .gitignore, catching a real leak risk before it ever reaches a commit.');
+
+  // flagFindBoosterCandidates() (2026-09-21, demande explicite : « améliore aussi la connexion avec
+  // Doc-Report [...] pour qu'il soit encore plus performant »). Opérationnalise l'obligation déjà
+  // écrite de find-booster en un vrai signal par registre, jamais une seconde formule de poids.
+  {
+    const fakeRecommend = (path) => {
+      if (path.endsWith('scripts/heavy-tool.mjs')) return { tokens: 20000, entryCount: 30, worthwhile: true };
+      if (path.endsWith('scripts/light-tool.mjs')) return { tokens: 500, entryCount: 2, worthwhile: false };
+      throw new Error('ENOENT');
+    };
+    const findBoosterRegistries = [
+      { slug: 'heavy-a', label: 'Heavy A', family: 'Test', path: 'docs/heavy-a/', decision: 'texte', scriptPath: 'scripts/heavy-tool.mjs' },
+      { slug: 'heavy-b', label: 'Heavy B', family: 'Test', path: 'docs/heavy-b/', decision: 'texte', scriptPath: 'scripts/heavy-tool.mjs' },
+      { slug: 'light', label: 'Light Tool', family: 'Test', path: 'docs/light/', decision: 'texte', scriptPath: 'scripts/light-tool.mjs' },
+      { slug: 'missing', label: 'Missing Tool', family: 'Test', path: 'docs/missing/', decision: 'texte', scriptPath: 'scripts/does-not-exist.mjs' },
+    ];
+    const flagged = flagFindBoosterCandidates(findBoosterRegistries, fakeRecommend);
+    assert.deepEqual(flagged.map((f) => f.label), ['Heavy A'], 'only a registry whose script is genuinely judged worthwhile must be flagged — a light script and an unreadable one must never appear, and a scriptPath shared by two registry entries must be evaluated once, never once per entry (Heavy B never re-listed alongside Heavy A)');
+    assert.equal(flagged[0].tokens, 20000, 'the flagged entry must carry the real token estimate recommendFindBooster() computed, never a re-derived or rounded figure');
+    assert.deepEqual(flagFindBoosterCandidates([], fakeRecommend), [], 'an empty registry list must report zero candidates, never crash or fabricate one');
+    // Vérifié en direct (2026-09-21) contre les vrais scripts du dépôt : ce test protège la forme du
+    // signal, jamais le contenu réel (qui évolue avec la taille des outils), même discipline que le
+    // reste de ce fichier pour les scans qui dépendent de l'état réel du dépôt.
+    const liveFlagged = flagFindBoosterCandidates();
+    assert.ok(liveFlagged.every((f) => f.label && f.scriptPath && typeof f.tokens === 'number'), 'every real candidate found live against this actual repository must carry a genuine label, scriptPath and token count, never a partially-filled entry');
+  }
+  console.log('Passed: flagFindBoosterCandidates() (2026-09-21) connects Doc-Report to find-booster\'s own recommendFindBooster() — flags exactly the registries whose real producing script is heavy enough to be worth searching by concept rather than reading whole, evaluates a scriptPath shared by two registry entries only once, never fabricates a candidate for an unreadable script, and — verified live against this actual repository — every flagged entry carries a genuine label/path/token count.');
 }
 
 {

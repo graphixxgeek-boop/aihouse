@@ -69,6 +69,36 @@ Deux garde-fous réels, déjà en place, renforcent cette obligation sans jamais
   historique avec `toolsNeverUsed()` pour signaler un outil que personne ne sollicite jamais ; un
   find-booster jamais utilisé malgré sa promotion serait donc visible, pas silencieux.
 
+## Optimisations réelles — "part 1" (2026-09-21, demande explicite)
+
+Demande explicite : « optimiser ce qu'il sait déjà faire », avant d'attaquer l'adaptation à des
+textes plus complexes (part 2, cf. tâche #180 ci-dessous). Trois trouvailles réelles, faites en
+utilisant find-booster sur lui-même (dogfooding) plutôt qu'en devinant :
+
+- **Bug auto-référentiel corrigé** — `extractTitledArrayIndex()` matchait sa PROPRE ligne de
+  documentation, qui cite l'exemple littéral `{title:'...', text:'...'}` : contrairement à
+  `FUNCTION_RE`/`BLOCK_START_RE` (ancrées en début de ligne, donc jamais déclenchées par un
+  commentaire qui commence toujours par `//`), `TITLED_ENTRY_RE` n'est pas ancrée. Reproduit en
+  lançant `node scripts/find-booster.mjs scripts/find-booster.mjs`, qui produisait une fausse entrée
+  `"..."` avant correction. Corrigé en ignorant toute ligne de commentaire, jamais en modifiant le
+  motif lui-même.
+- **I/O redondant éliminé dans `recommendFindBooster()`** — lisait le fichier deux fois
+  (`readFileSync` pour `estimateTokens()`, puis `buildIndex(filePath)` qui relisait tout) ; une seule
+  lecture désormais, réutilisée pour les deux calculs via un nouveau cœur interne
+  `buildIndexFromSource(source, filePath)`.
+- **Découpage en lignes redondant éliminé dans `buildIndex()`** — chacun des 3 extracteurs JS
+  (`extractFunctionIndex`/`extractBlockIndex`/`extractTitledArrayIndex`) découpait la source en
+  lignes séparément (3 `.split("\n")` + 3 boucles complètes sur un même fichier). Découpé UNE seule
+  fois désormais, réutilisé par les trois — chaque extracteur accepte maintenant indifféremment une
+  chaîne ou un tableau déjà découpé, jamais un changement de signature pour les appels existants
+  (les tests de `check-house.mjs` continuent de passer une chaîne brute sans modification).
+
+**Ampleur honnête du gain** : le gain de temps de calcul mesuré est modeste (millisecondes, jamais
+perceptible pour l'utilisateur) — le vrai bénéfice est la qualité du résultat (plus de fausse entrée
+à interpréter) et la propreté du code, pas une accélération spectaculaire. La part 2 (adapter
+find-booster à des textes plus denses/moins structurés, comme le cœur de `route.ts`) reste une tâche
+distincte et plus substantielle (#180), volontairement non attaquée le même soir.
+
 ## Statut sans blueprint de son voisin, route-booster
 
 `scripts/route-booster.mjs` (préparation d'un découpage : points de coupe candidats + indice de
@@ -76,12 +106,30 @@ risque lexical) reste lui un outil sans blueprint — décision explicite de l'u
 que rarement (uniquement quand un fichier doit vraiment être découpé), contrairement à find-booster
 qui sert quasiment à chaque session. Documenté dans `docs/regles-de-travail.md`.
 
-## Synergies identifiées, pas encore construites (2026-09-21)
+## Connexion Doc-Report construite — `flagFindBoosterCandidates()` (2026-09-21)
 
-- **Doc-Report** pourrait ajouter une colonne "bénéficierait de find-booster ?" à son index, en
-  réutilisant `recommendFindBooster()` — même principe que sa réutilisation déjà actée de
-  `lastTouchDays()` (CLEAN-DIRTY-OLD) et `toolsNeverUsed()` (tool-usage.mjs), jamais un second calcul
-  divergent.
+Demande explicite (« améliore aussi la connexion avec Doc-Report [...] pour qu'il soit encore plus
+performant »), suite directe de la synergie notée le même soir mais pas encore construite. Réalisée
+dans `scripts/doc-report.mjs` : `flagFindBoosterCandidates(registries, recommendImpl)` appelle
+`recommendFindBooster()` (jamais un second calcul de poids) pour chaque `scriptPath` réel de
+`REGISTRIES` et ne retient que les entrées `worthwhile`, en dédupliquant les `scriptPath` partagés
+par plusieurs registres (ex. `scripts/le-coordinateur.mjs`, référencé deux fois) pour ne jamais
+signaler le même script en double. Affiché dans le rapport CLI de Doc-Report juste après la section
+REGISTRIES. Vérifié en direct contre le vrai dépôt (2026-09-21) : `SMART-CONSO-TOKEN`, `Tableau de
+bord / KPI` et `Catalogue LE-COORDINATEUR` franchissent le seuil — trois scripts que l'agent devrait
+systématiquement chercher par concept plutôt que lire intégralement, exactement l'obligation déjà
+écrite ci-dessus, désormais rendue visible sans dépendre de la seule mémoire de l'agent.
+
+**Évalué et écarté le même soir : une connexion aux JOURNAUX locaux (`LOCAL_JOURNALS`)** — demande
+explicite posée par l'utilisateur, vérifiée avant de construire quoi que ce soit (Article 19) : les
+journaux sont des données brutes `{path, owner, purpose}`, jamais du contenu navigable par concept
+(aucune fonction, aucun bloc commenté, aucun tableau titré, aucun titre Markdown) — confirmé en
+lançant `find-booster` lui-même sur `scripts/doc-report.mjs` avec le mot-clé "LOCAL_JOURNALS" :
+zéro résultat, la preuve concrète que ce registre-là ne correspond à aucun des quatre motifs réels.
+Aucune connexion construite ici, à raison.
+
+## Autres synergies identifiées, pas encore construites (2026-09-21)
+
 - **ALWAYS-NEW-CODE** — son premier vrai passage (tâche #170, la nuit même) a demandé une lecture
   intégrale à l'aveugle de `lib/simulation.ts` avant de raisonner dessus ; `buildIndex()` aurait pu
   fournir cette carte instantanément.
@@ -100,3 +148,9 @@ Testé sur 4 fichiers réels différents (`app/api/lia/route.ts`, `scripts/check
 `docs/regles-de-travail.md`, `lib/reference.ts`), avec des fixtures pour chacun des 4 motifs
 d'extraction et pour `recommendFindBooster()`. Entrée PRESTATIONS "Pack Boussole". Registre :
 `docs/find-booster/` (dossier + index), vide à la création.
+
+**Usage réel journalisé le 2026-09-21** (question directe de l'utilisateur, « est-ce que tu utilises
+désormais find booster ? », honnêtement répondue par la négative avant correction) : deux
+sollicitations réelles enregistrées via `tool-usage.mjs` (origine spontanée puis demandée), toutes
+deux avec trouvaille confirmée — la première ayant permis la découverte du bug auto-référentiel
+documenté ci-dessus.

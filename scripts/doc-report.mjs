@@ -26,6 +26,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { toolsNeverUsed } from "./tool-usage.mjs";
+import { recommendFindBooster } from "./find-booster.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -131,6 +132,34 @@ export function checkHtmlWiring(scriptPath, readFileImpl = readFileSync) {
   return /html-report/.test(source);
 }
 
+// flagFindBoosterCandidates() (2026-09-21, demande explicite : « améliore aussi la connexion avec
+// Doc-Report [...] pour qu'il soit encore plus performant »). Opérationnalise l'obligation déjà
+// écrite de find-booster (« avant toute lecture intégrale d'un gros fichier, consulter d'abord
+// recommendFindBooster() ») en un vrai signal par outil, plutôt que de compter sur la seule mémoire
+// de l'agent pour s'en souvenir à chaque fois — exactement le type d'écart trouvé ce soir en se
+// faisant demander en direct « est-ce que tu utilises désormais find booster ? ». Appelle
+// `recommendFindBooster(scriptPath)` (jamais un second calcul de poids) pour CHAQUE `scriptPath`
+// réel de REGISTRIES et ne retient que ceux jugés `worthwhile` — un script introuvable ou en dessous
+// du seuil n'est jamais signalé, jamais une liste qui grossirait pour rien. `recommendImpl`
+// injectable (même patron que `readFileImpl` ailleurs dans ce fichier) pour rester testable sans
+// dépendre des vrais fichiers du dépôt.
+export function flagFindBoosterCandidates(registries = REGISTRIES, recommendImpl = recommendFindBooster) {
+  const seen = new Set();
+  const candidates = [];
+  for (const r of registries) {
+    if (!r.scriptPath || seen.has(r.scriptPath)) continue;
+    seen.add(r.scriptPath);
+    let verdict;
+    try {
+      verdict = recommendImpl(join(ROOT, r.scriptPath));
+    } catch {
+      continue; // absence honnête : script introuvable, jamais un faux positif fabriqué.
+    }
+    if (verdict?.worthwhile) candidates.push({ label: r.label, scriptPath: r.scriptPath, tokens: verdict.tokens, entryCount: verdict.entryCount });
+  }
+  return candidates;
+}
+
 // Compare la décision actée à la réalité du code — le seul rôle de "gardien" de ce module. Ne
 // tranche jamais lui-même une décision manquante ; une valeur `decision` absente est elle-même un
 // gap (cf. findRegistriesMissingDecision()).
@@ -222,6 +251,10 @@ function main() {
   }
   if (mismatches.length) {
     console.log(`\n⚠️  ${mismatches.length} écart(s) décision/code réel : ${mismatches.map((m) => m.label).join(", ")}`);
+  }
+  const findBoosterCandidates = flagFindBoosterCandidates();
+  if (findBoosterCandidates.length) {
+    console.log(`\n🧭 Script(s) assez lourd(s) pour bénéficier de find-booster avant toute lecture intégrale : ${findBoosterCandidates.map((c) => `${c.label} (~${c.tokens} tokens)`).join(", ")}`);
   }
 
   console.log("\n=== Journaux locaux (jamais committés, état/cache par outil) ===\n");
