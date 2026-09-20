@@ -78,17 +78,6 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   suit la même forme avec des règles spécifiques différentes. Jamais factorisé en un module partagé
   (risque de casser un outil déjà testé en refactorant dans l'urgence) — une vraie question
   ALWAYS-NEW-CODE à trancher lors d'un futur passage sur le thème « Outillage de travail ».
-- **`checkHtmlWiring()` (CIRCLE-TASKS/task #144) repose sur une prémisse fausse pour
-  `el-professor.mjs`/`the-final-judge.mjs`/`the-screener-capture.mjs` (2026-09-20, trouvé en
-  investiguant directement le code avant de forcer un câblage, Article 19)** — contrairement à
-  `kpi-report.mjs`, ces trois scripts ne calculent JAMAIS eux-mêmes de données de rapport à rendre :
-  le rapport réel (notation EL-PROFESSOR, verdict THE-FINAL-JUDGE, note THE-SCREENER) est toujours
-  composé en prose par l'agent qui pilote, jamais par le script. Leur demander d'importer
-  `html-report.mjs` produirait un import mort, jamais réellement appelé — une fausse conformité.
-  Piste réelle, pas encore tranchée avec l'utilisateur : soit corriger `checkHtmlWiring()`/le
-  libellé de la tâche #144 pour ces trois outils spécifiquement, soit documenter une procédure
-  côté agent (rendre la prose via `html-report.mjs` au moment de la livraison, jamais dans le
-  script lui-même).
 - **Piège du « reset complet » (Article 18, étape 1) trouvé le 2026-09-20 en le vivant réellement** —
   « reset complet » signifie appeler l'endpoint applicatif `mode:"reset"` (déjà fait par tous les
   scripts `full_simN.mjs` via `ensureReset()`) sur un serveur de dev déjà démarré, **jamais** effacer
