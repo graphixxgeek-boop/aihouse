@@ -157,35 +157,106 @@ export function appendHistoryRow(csvRow) {
 // d'autres outils ; ce fichier HTML (`KPI_HTML_PATH`, jamais committé, cf. .gitignore) est
 // entièrement régénéré à chaque exécution, une simple copie de présentation jetable.
 export const KPI_HTML_PATH = '.kpi-report-latest.html';
-export function buildKpiSynthesisHtml(run, d) {
+// Extrait une seule fois (2026-09-20) pour ne jamais dupliquer la construction des 7 lignes entre
+// la synthèse compacte et le rapport complet ci-dessous — règle anti-doublon, §7ter.
+function synthesisRows(d) {
     const cellPct = v => (v === undefined ? 'N/A' : pct(v));
+    return [
+        ['🔧 Smart Breaker — performance', cellPct(d.performance)],
+        ['📈 Smart Breaker — améliorations', d.improvement === undefined ? 'N/A' : pct(d.improvement.score)],
+        ['Robustesse du code', d.health === undefined ? 'N/A' : pct(d.health.overall)],
+        ['Qualité de sortie', cellPct(d.quality)],
+        ['Cohérence logique', cellPct(d.coherence)],
+        ['Rejouabilité (partiel)', cellPct(d.replay)],
+        ['Couverture du tableau de bord', pct(d.coverage.score)],
+    ];
+}
+function alertBlockFor(d) {
+    return d.alerts.length
+        ? { type: 'note', text: `🚨 Points d'attention : ${d.alerts.join(', ')}.` }
+        : { type: 'paragraph', text: 'Aucun point d’attention — tout est vert.' };
+}
+export function buildKpiSynthesisHtml(run, d) {
     return renderHtmlReport({
         title: 'Rapport KPI — Maison IA vivante',
         subtitle: 'Synthèse compacte du tableau de bord interne (cf. docs/referentiel/tableau-de-bord.md).',
         dateLabel: `Run : ${run}`,
         blocks: [
-            {
-                type: 'table',
-                headers: ['Famille', 'KPI global'],
-                rows: [
-                    ['🔧 Smart Breaker — performance', cellPct(d.performance)],
-                    ['📈 Smart Breaker — améliorations', d.improvement === undefined ? 'N/A' : pct(d.improvement.score)],
-                    ['Robustesse du code', d.health === undefined ? 'N/A' : pct(d.health.overall)],
-                    ['Qualité de sortie', cellPct(d.quality)],
-                    ['Cohérence logique', cellPct(d.coherence)],
-                    ['Rejouabilité (partiel)', cellPct(d.replay)],
-                    ['Couverture du tableau de bord', pct(d.coverage.score)],
-                ],
-            },
-            d.alerts.length
-                ? { type: 'note', text: `🚨 Points d'attention : ${d.alerts.join(', ')}.` }
-                : { type: 'paragraph', text: 'Aucun point d’attention — tout est vert.' },
+            { type: 'table', headers: ['Famille', 'KPI global'], rows: synthesisRows(d) },
+            alertBlockFor(d),
         ],
         footer: `Historique complet (toutes les exécutions, tous les chiffres) : ${KPI_HISTORY_PATH}.`,
     });
 }
+// Rapport HTML COMPLET (2026-09-20, demande explicite de l'utilisateur : « je n'ai pas eu de
+// rapport tableau de bord [...] j'ai une visibilité sur tous les chiffres en html ? »). La synthèse
+// compacte ci-dessus ne portait QUE les 7 pourcentages arrondis — jamais le détail réel (tours,
+// tentatives, 429/503/401, capacités du Smart Breaker une par une, taille du code, etc.) déjà
+// affiché dans le terminal mais jamais rendu en HTML. Ce rapport reprend TOUTES les données déjà
+// calculées par main() — jamais un second calcul, jamais un chiffre inventé pour l'occasion —
+// simplement le même détail, structuré en blocs plutôt que collé en texte brut de terminal.
+export function buildKpiFullReportHtml(run, full) {
+    const synthesisTable = { type: 'table', headers: ['Famille', 'KPI global'], rows: synthesisRows(full) };
+    const alertBlock = alertBlockFor(full);
+    const capabilitiesList = (full.capabilities ?? []).map(c => `${c.done ? '✅' : '⬜'} ${c.name}`);
+
+    const smartBreakerRows = full.smartBreakerDetail ? [
+        ['Tours réels (appels Gemini nécessaires)', String(full.smartBreakerDetail.turns)],
+        ['Clé principale déjà indisponible au départ du tour', `${full.smartBreakerDetail.primaryKeyUnavailableAtStart} / ${full.smartBreakerDetail.turns} (${full.smartBreakerDetail.turns ? Math.round(100 * full.smartBreakerDetail.primaryKeyUnavailableAtStart / full.smartBreakerDetail.turns) : 0}%)`],
+        ['Tentatives clé × modèle', String(full.smartBreakerDetail.attempts)],
+        ['— réussies', String(full.smartBreakerDetail.successes)],
+        ['— bloquées par quota (429)', String(full.smartBreakerDetail.quotaFailures)],
+        ['— erreurs transitoires (503)', String(full.smartBreakerDetail.transientFailures)],
+        ['— clés invalides (401/403)', String(full.smartBreakerDetail.invalidFailures)],
+    ] : undefined;
+
+    const codeHealthRows = [
+        ['Erreurs tsc (hors vite.config.ts, préexistante)', String(full.tscErrors)],
+        ['Tests check-house.mjs', full.tests ? `${full.tests.passed}/${full.tests.expected} bloc(s)${full.tests.green ? '' : ' — SUITE ROUGE'}` : 'N/A'],
+        ['Couverture réelle par fonction (AXA-CHECK)', full.tests?.coverageScore === undefined ? 'N/A' : pct(full.tests.coverageScore)],
+        ['Points fragiles ouverts', String(full.fragilePoints)],
+        ['lib/lia.ts', `${full.stats?.liaLines ?? 'N/A'} lignes`],
+        ['lib/dialogue.ts', `${full.stats?.dialogueLines ?? 'N/A'} lignes`],
+        ['Fichiers dans lib/', String(full.stats?.libFileCount ?? 'N/A')],
+    ];
+
+    const qualityCoherenceRows = full.qualityDetail ? [
+        ['Tours mesurés', String(full.qualityDetail.turns)],
+        ['Interventions anti-écho (repli de secours)', String(full.qualityDetail.antiEchoInterventions)],
+        ['Troncatures de sécurité — Lia', String(full.qualityDetail.truncationInterventions?.[1] ?? 0)],
+        ['Troncatures de sécurité — Noé', String(full.qualityDetail.truncationInterventions?.[2] ?? 0)],
+    ] : undefined;
+
+    const replayRows = full.replayDetail ? [
+        ['Bonus distincts vus (12 derniers tirages)', `${full.replayDetail.distinctBonuses} / ${full.replayDetail.totalBonusTypes}`],
+    ] : undefined;
+
+    return renderHtmlReport({
+        title: 'Rapport KPI complet — Maison IA vivante',
+        subtitle: 'Tableau de bord interne, détail complet (cf. docs/referentiel/tableau-de-bord.md) — chaque chiffre déjà calculé par kpi-report.mjs, jamais un second calcul ni une estimation pour l’occasion.',
+        dateLabel: `Run : ${run}`,
+        blocks: [
+            { type: 'heading', text: 'Synthèse par famille' },
+            synthesisTable,
+            alertBlock,
+            { type: 'heading', text: 'Smart Breaker — détail des tours réels' },
+            ...(smartBreakerRows ? [{ type: 'table', headers: ['Mesure', 'Valeur'], rows: smartBreakerRows }] : [{ type: 'paragraph', text: 'Pas de mesure disponible cette fois (serveur non joignable).' }]),
+            { type: 'heading', text: 'Smart Breaker — capacités construites' },
+            { type: 'list', items: capabilitiesList.length ? capabilitiesList : ['Aucune capacité listée.'] },
+            { type: 'heading', text: 'Robustesse du code — détail' },
+            { type: 'table', headers: ['Mesure', 'Valeur'], rows: codeHealthRows },
+            { type: 'heading', text: 'Qualité de sortie & cohérence logique — détail' },
+            ...(qualityCoherenceRows ? [{ type: 'table', headers: ['Mesure', 'Valeur'], rows: qualityCoherenceRows }] : [{ type: 'paragraph', text: 'Pas de tour enregistré cette session — rien à mesurer.' }]),
+            { type: 'heading', text: 'Rejouabilité — détail' },
+            ...(replayRows ? [{ type: 'table', headers: ['Mesure', 'Valeur'], rows: replayRows }] : [{ type: 'paragraph', text: 'Pas de mesure disponible cette fois.' }]),
+            { type: 'note', text: 'Limite honnête (rejouabilité) : bonusLog ne garde que les 12 derniers tirages — ce chiffre reflète la diversité RÉCENTE, pas garantie sur toute la session si plus de 12 tirages ont eu lieu.' },
+        ],
+        footer: `Historique complet (toutes les exécutions, tous les chiffres) : ${KPI_HISTORY_PATH}.`,
+    });
+}
+
 export function writeKpiHtml(run, d) {
-    writeFileSync(path(KPI_HTML_PATH), buildKpiSynthesisHtml(run, d));
+    writeFileSync(path(KPI_HTML_PATH), buildKpiFullReportHtml(run, d));
 }
 
 // --- Liste de référence des capacités du Smart Breaker ------------------------------------------
@@ -446,7 +517,11 @@ async function main() {
     console.log(alerts.length ? `\n🚨 Points d'attention : ${alerts.join(', ')}.` : '\nAucun point d’attention — tout est vert.');
     console.log(`\nHistorique complet (toutes les exécutions, tous les chiffres) : ${KPI_HISTORY_PATH} — à envoyer en pièce jointe, jamais collé dans la conversation.`);
 
-    writeKpiHtml(run, { performance, improvement, health, quality, coherence, replay, coverage, alerts });
+    writeKpiHtml(run, {
+        performance, improvement, health, quality, coherence, replay, coverage, alerts,
+        tscErrors, tests, fragilePoints, stats, capabilities: SMART_BREAKER_CAPABILITIES,
+        smartBreakerDetail: live?.geminiKeyMetrics, qualityDetail: live?.qualityMetrics, replayDetail: live?.replayabilityMetrics,
+    });
     console.log(`Copie de présentation HTML régénérée : ${KPI_HTML_PATH} (jamais committée — cf. .gitignore).`);
 }
 

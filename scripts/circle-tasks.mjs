@@ -60,6 +60,7 @@ export function red(text) { return `\x1b[31m${text}\x1b[0m`; }
 export const CIRCLE_ITEMS = [
   {
     id: "profil",
+    theme: "Suivi & référentiels",
     label: "Mettre à jour le profil utilisateur",
     cout: "gratuit — lecture/écriture de texte, zéro appel API",
     tokensEstimes: "quelques milliers de tokens (lecture de l'index + de la dernière fiche, rédaction d'une nouvelle observation datée)",
@@ -67,6 +68,7 @@ export const CIRCLE_ITEMS = [
   },
   {
     id: "referentiel",
+    theme: "Suivi & référentiels",
     label: "Relire tous les documents de référence",
     cout: "gratuit — lecture, aucun appel API",
     tokensEstimes: "élevé si réellement exhaustif — potentiellement plusieurs dizaines de milliers de tokens (CLAUDE.md seul pèse ~29 000 tokens estimés, cf. docs/smart-conso-token/) ; \"gratuit\" ne veut jamais dire \"gratuit en tokens\"",
@@ -74,6 +76,7 @@ export const CIRCLE_ITEMS = [
   },
   {
     id: "kpi",
+    theme: "KPI & scans",
     label: "Lancer le rapport KPI (familles gratuites)",
     cout: "gratuit — node scripts/kpi-report.mjs, zéro nouvel appel API",
     tokensEstimes: "faible à modéré — sortie du script (quelques milliers de tokens) + rédaction de l'entrée d'index",
@@ -81,6 +84,7 @@ export const CIRCLE_ITEMS = [
   },
   {
     id: "always-new-code-signal",
+    theme: "KPI & scans",
     label: "Signaler la zone la plus négligée (ALWAYS-NEW-CODE)",
     cout: "gratuit — lecture de la mémoire de couverture déjà accumulée, jamais le vrai zoom (ça, c'est un raisonnement coûteux à part, cf. Article 23)",
     tokensEstimes: "faible — lecture d'un seul fichier d'index compact",
@@ -88,6 +92,7 @@ export const CIRCLE_ITEMS = [
   },
   {
     id: "correctifs",
+    theme: "Suivi & référentiels",
     label: "Relire les carnets de correctifs et points fragiles",
     cout: "gratuit — lecture, aucun appel API",
     tokensEstimes: "modéré — lecture de deux carnets (points-fragiles.md, correctifs-a-revalider.md)",
@@ -95,6 +100,7 @@ export const CIRCLE_ITEMS = [
   },
   {
     id: "smart-conso-api-scan",
+    theme: "KPI & scans",
     label: "Scanner les schémas de consommation API (Smart Conso API)",
     cout: "gratuit — node scripts/smart-conso-api.mjs scan, lecture de l'historique déjà accumulé, zéro nouvel appel API",
     tokensEstimes: "faible — sortie compacte d'un script",
@@ -102,6 +108,7 @@ export const CIRCLE_ITEMS = [
   },
   {
     id: "smart-conso-token-scan",
+    theme: "KPI & scans",
     label: "Scanner le poids des documents de travail (SMART-CONSO-TOKEN)",
     cout: "gratuit — scan de portée Global, lecture de fichiers, zéro appel API",
     tokensEstimes: "faible à modéré — sortie du scan + lecture des fichiers qu'il pointe comme volumineux",
@@ -113,6 +120,7 @@ export const CIRCLE_ITEMS = [
   // un outil de travail technique, aucun impact sur la charte ni le code du jeu.
   {
     id: "dream-team-photo",
+    theme: "Qualité & fun",
     label: "Régénérer la « photo » de la dream team (récap des outils nommés)",
     cout: "gratuit — lecture de la liste des outils déjà nommés dans CLAUDE.md/docs/regles-de-travail.md, mise en forme, zéro appel API",
     tokensEstimes: "modéré — rédaction d'un document HTML complet à partir d'une liste déjà connue",
@@ -127,6 +135,7 @@ export const CIRCLE_ITEMS = [
   // serait un vrai coût Gemini indirect, contraire à l'Article 8).
   {
     id: "the-screener",
+    theme: "Qualité & fun",
     label: "Capturer et noter 2 captures d'écran (THE-SCREENER)",
     cout: "zéro appel à l'API Gemini pour le mécanisme lui-même (capture Playwright locale) — CONDITIONNEL : n'a de sens que si une session/un serveur avec un vrai état est déjà en cours ; ne jamais lancer une nouvelle simulation juste pour cet item",
     tokensEstimes: "modéré — lecture vision de 2 images par l'agent + rédaction de la notation",
@@ -140,6 +149,7 @@ export const CIRCLE_ITEMS = [
   // ⚠️🔴 partout) — jamais une case cochée par défaut, jamais bundlée silencieusement avec le reste.
   {
     id: "the-final-judge",
+    theme: "Audit lourd",
     label: "THE-FINAL-JUDGE — audit indépendant",
     cout: `${ALERT_ICON} COÛTEUX — ~${FINAL_JUDGE_TOKEN_COST.toLocaleString("fr-FR")} tokens fixes (agent séparé), quel que soit le palier choisi`,
     tokensEstimes: `~${FINAL_JUDGE_TOKEN_COST.toLocaleString("fr-FR")} tokens fixes — le seul chiffre de ce paysage issu d'une vraie recherche documentée plutôt que d'une estimation à l'ordre de grandeur`,
@@ -190,6 +200,20 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCode
     if (item.costly) return { ...item, staleness: "jamais une routine — décision au cas par cas, à chaque fois" };
     return { ...item, staleness: "pas de signal de fraîcheur mécanique disponible" };
   });
+}
+
+// Regroupement par thème (2026-09-20, idée explicite de l'utilisateur : « proposer les coches/les
+// prestations par thème » plutôt qu'un découpage arbitraire "les 4 premiers, puis les 4 suivants").
+// Ordre fixe, jamais recalculé dynamiquement (un thème qui change de place d'une ronde à l'autre
+// serait plus déroutant qu'utile) — THE-FINAL-JUDGE reste dans son propre thème "Audit lourd",
+// systématiquement en dernier, cohérent avec la convention déjà actée (toujours en dernière
+// position de la fenêtre). Chaque thème tient dans un seul bloc de question (≤4 options).
+export const THEME_ORDER = ["Suivi & référentiels", "KPI & scans", "Qualité & fun", "Audit lourd"];
+export function groupCircleReportByTheme(report) {
+  const groups = THEME_ORDER.map((theme) => ({ theme, items: report.filter((r) => r.theme === theme) }));
+  const untagged = report.filter((r) => !THEME_ORDER.includes(r.theme));
+  if (untagged.length) groups.push({ theme: "Autre", items: untagged });
+  return groups.filter((g) => g.items.length > 0);
 }
 
 // `colorize` par défaut vrai (sortie terminal réelle, ce script et les crochets git) — mis à faux

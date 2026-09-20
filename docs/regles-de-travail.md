@@ -644,6 +644,14 @@ question oblige à répartir les items sur plusieurs blocs de questions à l'int
 appel) — THE-FINAL-JUDGE systématiquement en toute dernière position, dernier bloc, dernière
 option.
 
+**Répartition des blocs PAR THÈME, pas arbitraire (2026-09-20, idée explicite de l'utilisateur : « je
+voudrais proposer les coches/les prestations par thème »)** — `groupCircleReportByTheme()` range les
+items en 4 thèmes fixes (jamais recalculés dynamiquement) : Suivi & référentiels (profil,
+référentiel, correctifs), KPI & scans (KPI, signal ALWAYS-NEW-CODE, scan Smart Conso API, scan
+SMART-CONSO-TOKEN), Qualité & fun (THE-SCREENER, photo dream team), Audit lourd (THE-FINAL-JUDGE,
+seul dans son thème, toujours dernier). Chaque groupe tient dans la limite de 4 options — remplace le
+découpage précédent ("les 4 premiers, puis les 4 suivants"), qui ne portait aucun sens propre.
+
 **Jamais un tout-en-un silencieux** (demande explicite de l'utilisateur : « tu ouvres une fenêtre
 question me demandant de cocher ce que je veux précisément exécuter ») : le script affiche
 seulement le menu, l'agent qui pilote ouvre TOUJOURS une vraie fenêtre à cocher (multi-sélection)
