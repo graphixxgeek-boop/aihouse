@@ -14,3 +14,4 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 | 2026-09-20T14:07:10.863Z | en_cours | liste | 16 | 142 | 0 | 15 | /home/user/aihouse/docs/check-tasks-details/1789913230863-en_cours-liste.html |
 | 2026-09-20T14:08:40.511Z | en_cours | arborescence | 16 | 142 | 0 | 16 | /home/user/aihouse/docs/check-tasks-details/1789913320510-en_cours-arborescence.html |
 | 2026-09-20T14:19:36.744Z | en_cours | arborescence | 14 | 143 | 0 | 14 | /home/user/aihouse/docs/check-tasks-details/1789913976744-en_cours-arborescence.html |
+| 2026-09-20T15:03:36.622Z | projet_entier | arborescence | 150 | 150 | 0 | 13 | /home/user/aihouse/docs/check-tasks-details/1789916616621-projet_entier-arborescence.html |

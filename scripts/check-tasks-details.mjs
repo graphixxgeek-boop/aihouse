@@ -436,7 +436,7 @@ export function buildReport({ zoom = "en_cours", format = "liste", allRows, hist
   const recommended = recommendNextTasks(rows, { stagnant });
   if (recommended.length) {
     blocks.push({ type: "heading", text: "Ordre recommandé des prochaines tâches (signal, jamais une décision)" });
-    blocks.push({ type: "list", items: recommended.map((r, i) => `${i + 1}. #${r.n} « ${r.sousSujet} » — ${r.reasons.join(" ; ")}`) });
+    blocks.push({ type: "list", items: recommended.map((r, i) => `${i + 1}. #${r.n ?? "—"} « ${r.sousSujet} » — ${r.reasons.join(" ; ")}`) });
   }
 
   return {
