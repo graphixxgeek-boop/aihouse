@@ -827,6 +827,25 @@ fichier de référence gardé dans `docs/` (qui reste texte/markdown, relu par l
 une copie de présentation générée à la remise. Encore plus mince que LE-COORDINATEUR/CIRCLE-TASKS,
 entièrement documenté dans `docs/regles-de-travail.md` §7ter.
 
+**Compteur d'utilisation des outils — le pendant "usage réel" de SMART-CONSO-TOKEN.**
+`scripts/tool-usage.mjs` (tâche #166, 2026-09-21) journalise chaque sollicitation RÉELLE d'un outil
+(`.tool-usage-history.json`, local, jamais committé, cumul permanent jamais remis à zéro) : l'origine
+(spontanée/demandée/automatique post-commit) et un taux de trouvaille (`foundSomething`), même
+discipline anti-vanity-metric que `rereadPerformance()`. Nourrit Doc-Report (ci-dessous) et la future
+CASSANDRA-RH. Même statut "sans blueprint" — entièrement documenté dans `docs/regles-de-travail.md`
+§7ter.
+
+**Doc-Report — le gardien de la décision HTML/texte, jamais celui qui la prend.** `scripts/doc-report.mjs`
+(tâche #165, 2026-09-21) relie les registres réels du réseau d'outils dans un index global : pour
+chaque registre, la décision HTML/texte déjà actée (remise HTML via `html-report.mjs`, archive HTML
+assumée, ou texte seul), vérifiée mécaniquement contre le vrai code (le script producteur importe-t-il
+réellement `html-report.mjs` ?) plutôt que supposée — a trouvé dès son premier lancement que
+THE-DEEP-READER et les Simulations n'avaient jamais reçu leur câblage HTML pourtant acté. Croisé avec
+l'âge du dernier rapport (`lastTouchDays()` de CLEAN-DIRTY-OLD) et le compteur d'usage
+(`toolsNeverUsed()` de `scripts/tool-usage.mjs`) pour signaler un outil dont les rapports ne sont
+jamais consultés. Même statut "sans blueprint" que LE-COORDINATEUR/CIRCLE-TASKS/html-report.mjs —
+entièrement documenté dans `docs/regles-de-travail.md` §7ter.
+
 ## CHECK-TASKS-DETAILS — blueprint exportable
 
 `docs/check-tasks-details-blueprint.md` documente l'ARCHITECTURE de l'outil d'état des lieux des

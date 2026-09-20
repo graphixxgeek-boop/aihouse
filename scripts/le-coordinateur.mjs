@@ -162,6 +162,7 @@ export const PRESTATIONS = [
   { nom: "Pack Ronde", description: "Ouvre la fenêtre à cocher de la Ronde périodique (profil, référentiels, KPI, signaux ALWAYS-NEW-CODE/CLEAN-DIRTY-OLD, scans Smart Conso, catalogue, photo de la dream team, THE-SCREENER).", demande: "Lancer la ronde périodique des tâches gratuites mal automatisées", outils: ["CIRCLE-TASKS"], cout: "0 appel API — sauf si THE-FINAL-JUDGE (⚠️🔴) est explicitement coché", tokensEstimes: "faible à modéré selon la sélection — ~37k tokens fixes seulement si THE-FINAL-JUDGE est explicitement coché" },
   { nom: "Pack Boussole", description: "Génère l'état des lieux des tâches en cours (zoom + forme liste/arborescence) en rapport HTML, strictement en lecture seule sur docs/suivi/.", demande: "État des lieux des tâches en cours", outils: ["check-tasks-details"], cout: "0 appel API — lecture seule de docs/suivi/", tokensEstimes: "variable — proportionnel à la taille du suivi relu" },
   { nom: "Pack Espion", description: "Classe chaque Article de CLAUDE.md par sensibilité/importance et repère une redondance possible entre deux règles.", demande: "Préparer un allègement de CLAUDE.md en identifiant les vrais candidats", outils: ["CLAUDE.MD.SPY (extension de SMART-CONSO-TOKEN)"], cout: "0 appel API — relit CLAUDE.md et le reste du dépôt", tokensEstimes: "faible — un seul fichier local relu par le script, pas par l'agent" },
+  { nom: "Pack Registre", description: "Index global des registres du réseau d'outils : décision HTML/texte vérifiée contre le vrai code, âge du dernier rapport, croisement avec le compteur d'usage pour repérer un outil dont les rapports ne sont jamais consultés.", demande: "Vérifier que chaque outil livre ses rapports comme prévu (décision HTML/texte, fraîcheur, usage réel)", outils: ["Doc-Report"], cout: "0 appel API — relit les registres et le code local", tokensEstimes: "faible — sortie compacte, un tableau par famille" },
   { nom: "Pack Rénovation", description: "Repère la zone de code la plus négligée (ALWAYS-NEW-CODE) et la stagnation relative (CLEAN-DIRTY-OLD).", demande: "Dette technique / code qui s'empile plutôt que d'être pensé", outils: ["ALWAYS-NEW-CODE", "CLEAN-DIRTY-OLD"], cout: "0 appel API — raisonnement, pas de Gemini", tokensEstimes: "élevé pour ALWAYS-NEW-CODE (vrai zoom, consulter SMART-CONSO-TOKEN avant) ; nul pour CLEAN-DIRTY-OLD (délègue sans raisonner)" },
   { nom: "Pack Décollage", description: "Avant de lancer une simulation Article 18 : vérifie le quota Gemini réellement disponible (Smart Conso API) et le carnet des correctifs encore en observation à revalider — jamais combinés avant.", demande: "Contrôle pré-simulation complet (quota + correctifs en attente de confirmation)", outils: ["Smart Conso API", "docs/simulations/correctifs-a-revalider.md"], cout: "0 appel API pour le contrôle lui-même — la simulation qui suit, elle, en fera beaucoup", tokensEstimes: "faible — lecture de deux sorties compactes" },
   { nom: "Pack Sentinelle", description: "Relance la suite de tests, ARGUS et HARMONIA sur le code réel du commit qui vient d'être fait.", demande: "Vérification rapide après un changement de code", outils: ["check-house.mjs", "ARGUS (mécanique)", "HARMONIA (mécanique)"], cout: "0 appel API, déjà automatique à chaque commit", tokensEstimes: "nul pour l'agent — tourne dans un processus séparé (post-commit), seul le résultat est lu" },
@@ -406,6 +407,7 @@ export function checkAgentOnboarding(agentName, {
   harmoniaFindingsCount = undefined,
   cleanDirtyOldFlagged = false,
   lastVerifiedAt = null,
+  hasDocReportDecision = undefined,
 } = {}) {
   assertNotAPersonnage(agentName, "checkAgentOnboarding()");
   const gaps = [];
@@ -432,6 +434,15 @@ export function checkAgentOnboarding(agentName, {
 
   if (!cousinOf && !existingPaths.has(`docs/${slug}-blueprint.md`)) {
     gaps.push(`blueprint manquant (docs/${slug}-blueprint.md) — si c'est volontaire (cousin d'un autre Agent), le déclarer via l'option cousinOf plutôt que de laisser ce point sans réponse`);
+  }
+
+  // 6e type de gap (tâche #165, Doc-Report, 2026-09-21) : un nouvel outil qui produit un registre
+  // mais n'a reçu AUCUNE décision HTML/texte enregistrée dans scripts/doc-report.mjs::REGISTRIES.
+  // `undefined` (jamais vérifié) est distinct de `false` (vérifié et manquant) — même discipline que
+  // axaCoveragePct ci-dessus, un appelant qui ne fournit pas cette info ne doit jamais fabriquer un
+  // gap qu'il n'a pas réellement constaté.
+  if (hasDocReportDecision === false) {
+    gaps.push("aucune décision HTML/texte enregistrée pour ce nouvel outil (Doc-Report, scripts/doc-report.mjs::REGISTRIES) — à trancher explicitement, jamais un défaut silencieux");
   }
 
   // CLAUDE.md lui-même (2026-09-20, demande explicite de l'utilisateur : « fiabilise/enrichis ce

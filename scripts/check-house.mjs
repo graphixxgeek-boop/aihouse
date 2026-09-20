@@ -940,7 +940,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 184'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 185'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3365,6 +3365,16 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.doesNotThrow(() => checkAgentOnboarding('FAKE-AGENT-COMPLET', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: completePaths }), 'a genuine team-member name must never be mistakenly caught by the Personnage guard — it must stay narrowly scoped to the two real character names');
   assert.equal(trueOk100.badge, '🎖️ Membre certifié', 'the badge itself must stay computed purely from complet/gaps, completely unaffected by the coverage tier — coverage and integration are explicitly two separate axes, never conflated');
 
+  // 6e type de gap (tâche #165, Doc-Report, 2026-09-21) : une décision HTML/texte manquante pour un
+  // nouvel outil. `undefined` (jamais vérifié) doit rester silencieux, jamais fabriquer un gap —
+  // même discipline que axaCoveragePct ci-dessus.
+  const docReportUnknown = checkAgentOnboarding('FAKE-AGENT-COMPLET', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: completePaths });
+  assert.ok(!docReportUnknown.gaps.some((g) => g.includes('Doc-Report')), 'omitting hasDocReportDecision entirely must never fabricate a gap the caller never actually checked for');
+  const docReportMissing = checkAgentOnboarding('FAKE-AGENT-COMPLET', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: completePaths, hasDocReportDecision: false });
+  assert.ok(docReportMissing.gaps.some((g) => g.includes('Doc-Report')), 'an explicitly confirmed missing HTML/texte decision (Doc-Report) must be surfaced as a real gap — the exact real omission this module found for THE-DEEP-READER before Doc-Report existed');
+  const docReportPresent = checkAgentOnboarding('FAKE-AGENT-COMPLET', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: completePaths, hasDocReportDecision: true });
+  assert.ok(!docReportPresent.gaps.some((g) => g.includes('Doc-Report')), 'a confirmed, registered decision must never be flagged as a gap');
+
   console.log('Passed: checkAgentOnboarding() correctly slugifies a real agent name into its real file-naming convention, reports zero gaps for a fully-wired fake agent while always still carrying its non-blocking reminders, reports every one of the five base gap types for a completely unwired one, respects an explicitly declared cousinOf exception for a missing blueprint, defaults the registry check to the standard docs/<slug>/ location while honoring an explicit registryPathPrefix override for a real documented deviation, checks CLAUDE.md itself for both its référentiel technique bullet and its own "## ... — blueprint exportable" section (waived for a declared cousin) and docs/suivi/ for a real trace of its construction when that text is supplied, never fabricating a gap when it is simply omitted, exempts an internal-regulation Agent from the PRESTATIONS check exactly like findToolsMissingFromMenu()\'s own isMenuWorthy() rule (a real false positive caught while building the badge) while still flagging a genuinely menu-worthy Agent that is actually missing, reports a live "🎖️ Membre certifié"/"⚠️ Pas encore certifié" badge that is nothing but a readable summary of complet, recomputed fresh every call, never a persisted fact, and — task #224\'s 3-tier coverage scale — reports an honest "en cours"/"partiel"/"OK 100%" verdict fully independent of the badge itself, "OK 100%" reachable only when 100% AXA-CHECK coverage AND zero open ARGUS/HARMONIA findings hold together, with the exact two-sentence announcement message the user validated verbatim.');
 }
 
@@ -4494,4 +4504,44 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     }
   }
   console.log('Passed: the tool-usage counter (task #166) records each real solicitation cumulatively and permanently (never reset per session, the user\'s explicit choice), distinguishes the three real origins (spontaneous/requested/automatic-post-commit) honestly, and computes a real found-something rate distinguishing "often used" from "often USEFUL" — the exact anti-vanity-metric discipline already proven for ALWAYS-NEW-CODE/THE-DEEP-READER — verified against the real local history file with full backup/restore, never left in a dirty state.');
+}
+
+{
+  // DOC-REPORT (tâche #165, 2026-09-21) : gardien de la décision HTML/texte déjà actée
+  // (docs/suivi #230), jamais celui qui la prend. Testé avec un readFileImpl injecté et un
+  // sous-ensemble isolé de registres — jamais dépendant du contenu réel des scripts du dépôt, qui
+  // peut changer indépendamment de ce test.
+  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex } = await import('../scripts/doc-report.mjs');
+  assert.ok(REGISTRIES.length >= 15, 'the registry table must cover every real tool registry of the network, never a partial or forgotten subset');
+  assert.ok(REGISTRIES.every((r) => r.slug && r.label && r.family && r.path && r.decision), 'every registry entry must be fully specified — a half-filled row would silently break the family grouping or the decision audit');
+
+  const fakeReadFile = (path) => {
+    if (path.includes('tool-with-html')) return 'import { renderHtmlReport } from "./html-report.mjs";';
+    if (path.includes('tool-plain-text')) return 'console.log("no html rendering here");';
+    throw new Error('ENOENT');
+  };
+  assert.equal(checkHtmlWiring('scripts/tool-with-html.mjs', fakeReadFile), true, 'a script that genuinely imports html-report.mjs must be detected as wired, by real text search — never guessed from the tool name');
+  assert.equal(checkHtmlWiring('scripts/tool-plain-text.mjs', fakeReadFile), false, 'a script that never imports html-report.mjs must be flagged as not wired, the exact real gap this module found for THE-DEEP-READER on its very first run');
+  assert.equal(checkHtmlWiring(null, fakeReadFile), undefined, 'a registry with no single producing script must report "unknown", never a fabricated true/false');
+  assert.equal(checkHtmlWiring('scripts/missing-tool.mjs', fakeReadFile), undefined, 'an unreadable script path must report "unknown" rather than crashing or silently counting as unwired');
+
+  const testRegistries = [
+    { slug: 'texte-tool', label: 'Texte Tool', family: 'Test', path: 'docs/texte-tool/', decision: 'texte', scriptPath: 'scripts/tool-plain-text.mjs' },
+    { slug: 'archived-tool', label: 'Archived Tool', family: 'Test', path: 'docs/archived-tool/', decision: 'archived_html', scriptPath: 'scripts/tool-plain-text.mjs' },
+    { slug: 'wired-html-tool', label: 'Wired HTML Tool', family: 'Test', path: 'docs/wired-html-tool/', decision: 'delivery_html', scriptPath: 'scripts/tool-with-html.mjs' },
+    { slug: 'unwired-html-tool', label: 'Unwired HTML Tool', family: 'Test', path: 'docs/unwired-html-tool/', decision: 'delivery_html', scriptPath: 'scripts/tool-plain-text.mjs' },
+  ];
+  const audited = auditHtmlDecisions(testRegistries, fakeReadFile);
+  assert.deepEqual(audited.filter((r) => r.mismatch).map((r) => r.slug), ['unwired-html-tool'], 'only a "delivery_html" registry whose script genuinely never imports html-report.mjs may be flagged as a mismatch — never a "texte" or "archived_html" registry, which are never expected to import it at all');
+
+  assert.deepEqual(findRegistriesMissingDecision(['docs/texte-tool', 'docs/some-brand-new-tool', 'docs/referentiel', 'docs/suivi'], testRegistries), ['docs/some-brand-new-tool'], 'a real docs/ folder with no registered decision is the real gap this function exists to catch, but the general reference/suivi folders (never a per-tool report registry) must never be false-flagged');
+
+  const usageHistory = { events: [{ toolSlug: 'texte-tool', origin: 'demande', at: 1 }] };
+  const { rows, byFamily, mismatches } = buildDocReportIndex({ registries: testRegistries, usageHistory, readFileImpl: fakeReadFile });
+  assert.equal(rows.length, 4, 'the assembled index must carry exactly one row per registry, never dropping or duplicating one');
+  assert.equal(rows.find((r) => r.slug === 'texte-tool').neverSolicited, false, 'a registry with at least one real usage event must never be flagged as unsolicited');
+  assert.equal(rows.find((r) => r.slug === 'archived-tool').neverSolicited, true, 'a registry with zero real usage events must be flagged as unsolicited, reusing tool-usage.mjs\'s own toolsNeverUsed() rather than a second divergent calculation');
+  assert.equal(byFamily.get('Test').length, 4, 'rows must be grouped by their declared family, never flattened or regrouped by a guessed criterion');
+  assert.deepEqual(mismatches.map((m) => m.slug), ['unwired-html-tool'], 'the top-level mismatches list must surface exactly the real HTML-wiring gap, ready for a human/agent to read — Doc-Report itself never fixes it');
+  console.log('Passed: Doc-Report (task #165) mechanically audits the already-decided HTML/texte choice against the real producing script\'s source (never guessed from a tool\'s name), flags an undeclared docs/ registry as a real gap while sparing the reference/suivi folders, and cross-references tool-usage.mjs\'s real usage history to spot a registry nobody ever solicits — a genuine wiring gap (THE-DEEP-READER, Simulations) was found on its very first real run against the live repository.');
 }
