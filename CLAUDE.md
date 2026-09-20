@@ -551,6 +551,17 @@ concernés (`lib/lia.ts::think()` et `app/api/lia/route.ts::generateDossierFragm
   (`scripts/check-house.mjs`) : avec 3 clés simultanément saines, 4 appels indépendants utilisent
   bien les 3, jamais une seule qui absorbe tout le trafic.
 
+**Trafic réel persisté dans l'historique partagé** *(2026-09-20, tâche #88 — écart réel trouvé et
+comblé : `.gemini-key-health.json` n'était alimenté que par les sondages manuels de diagnostic,
+jamais par le vrai trafic d'une simulation ou d'une vraie session)* — `recordKeyStatus()` journalise
+désormais aussi, en mémoire process, le MODÈLE essayé pour chaque tentative réelle, sous une
+empreinte de clé jamais la clé en clair (`fingerprint()`, identique à `keyLabel()` du diagnostic).
+Toujours **aucune écriture disque** dans `lib/gemini-keys.ts`/`route.ts` eux-mêmes (Cloudflare
+Workers n'a pas de système de fichiers persistant, contrainte technique déjà actée) : ce trafic est
+exposé via l'API admin déjà protégée, puis persisté après coup par `kpi-report.mjs` (étape 4 de
+l'Article 18, avant redémarrage du serveur) en réutilisant directement `recordOutcomeByLabel()` de
+`scripts/gemini-key-health.mjs` — jamais un second mécanisme d'écriture de ce fichier.
+
 **Inactif par défaut** dans tous les cas : listes absentes ou vides reproduisent exactement le
 comportement antérieur, zéro appel supplémentaire, zéro changement de modèle ou de clé silencieux
 sur le jeu réel — une bascule de modèle peut influer sur la qualité/le ton des réponses (Article 0),

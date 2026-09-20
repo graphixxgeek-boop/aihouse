@@ -919,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 131'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 132'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2371,6 +2371,37 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   resetForMetrics();
   assert.deepEqual(getGeminiKeyMetrics(),{turns:0,primaryKeyUnavailableAtStart:0,attempts:0,successes:0,quotaFailures:0,transientFailures:0,invalidFailures:0},'the test reset must also clear the metrics, never leave a stale count bleeding into the next test');
   console.log('Passed: the Smart Breaker efficiency counters (turns, primary-key availability at the start of a turn, attempts by outcome) track a scripted sequence of real key/status events exactly, and the test reset clears them alongside the rotation/cooldown state they already reset.');
+}
+
+{
+  // Persistance du vrai trafic Gemini dans l'historique partagé (2026-09-20, tâche #88 : « persister
+  // le vrai trafic Gemini dans l'historique partagé »). lib/gemini-keys.ts::fingerprint() DOIT rester
+  // identique, caractère pour caractère, à scripts/gemini-key-health.mjs::keyLabel() — sinon les
+  // empreintes envoyées par l'API admin ne recoupent jamais les bonnes entrées une fois persistées
+  // dans .gemini-key-health.json. Comparaison directe contre le VRAI module de diagnostic (jamais un
+  // second calcul recopié à la main qui pourrait diverger en silence) — aucune écriture disque ici
+  // (keyLabel()/normalize() sont pures), jamais touché le vrai fichier local non committé.
+  const {fingerprint,recordKeyStatus:recordStatusForEpisodes,getGeminiKeyEpisodes,__resetGeminiKeyRotationForTests:resetForEpisodes}=await import('../.sites-runtime/test-gemini-keys.mjs');
+  const {keyLabel}=await import('../scripts/gemini-key-health.mjs');
+  const sampleKey='AIzaSy-abcdEXAMPLE1234567890FAKE';
+  assert.equal(fingerprint(sampleKey),keyLabel(sampleKey),'lib/gemini-keys.ts::fingerprint() must produce byte-for-byte the same label as scripts/gemini-key-health.mjs::keyLabel() for a real-shaped key, or persisted episodes would never match up with the right entry');
+  assert.equal(fingerprint('short'),keyLabel('short'),'the short/invalid-key fallback must also match exactly between both implementations');
+  assert.equal(fingerprint(sampleKey).includes(sampleKey),false,'the fingerprint must never contain the full raw key in clear — only its short, non-reversible slice');
+
+  resetForEpisodes();
+  assert.deepEqual(getGeminiKeyEpisodes(),[],'right after a reset, the real-traffic episode log must be genuinely empty, never a stale entry from a previous test');
+  recordStatusForEpisodes(sampleKey,200,'gemini-flash-lite-latest');
+  recordStatusForEpisodes(sampleKey,429,'gemini-flash-lite-latest');
+  recordStatusForEpisodes('another-key-1234567890',401,'gemini-flash-latest');
+  const episodes=getGeminiKeyEpisodes();
+  assert.equal(episodes.length,3,'every recordKeyStatus() call must append exactly one real-traffic episode, regardless of its outcome');
+  assert.deepEqual(episodes.map(e=>e.outcome),['OK','429','401'],'each episode must record the real HTTP outcome (200 mapped to the honest label "OK", never a raw status code that would look like a fabricated protocol), never conflating a success with a failure');
+  assert.equal(episodes[0].fingerprint,fingerprint(sampleKey),'each episode must carry the fingerprint of the key that was actually used, never the raw key itself — this is exactly what the admin API is allowed to expose over the network');
+  assert.equal(episodes[0].model,'gemini-flash-lite-latest','each episode must record which model was actually tried — the real gap this task closes: recordKeyStatus() previously had no way to know which model a given attempt used at all');
+  assert.ok(!('key' in episodes[0])&&!('rawKey' in episodes[0]),'an episode object must never carry any field holding the raw key in clear, under any name');
+  resetForEpisodes();
+  assert.deepEqual(getGeminiKeyEpisodes(),[],'the shared test reset must also clear the episode log, never leave real-traffic entries bleeding into an unrelated test');
+  console.log('Passed: fingerprint() stays byte-for-byte identical to the real diagnostic tool\'s keyLabel() (so real-traffic episodes persisted via the admin API always match the right entry in the shared experience file), never exposes the raw key, and recordKeyStatus() now also records which real model was tried alongside the key and outcome for every single attempt — the exact real gap (task #88) between manual diagnostic probes and genuine game/simulation traffic in the Smart Breaker\'s accumulated experience.');
 }
 {
   const {recordTurn,recordAntiEchoIntervention,recordTruncation,getQualityMetrics,__resetQualityMetricsForTests}=await import('../.sites-runtime/test-quality-metrics.mjs');

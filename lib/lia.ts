@@ -141,9 +141,9 @@ JSON : schema strict. action none rester, move changer de pièce, talk parler. m
             catch {
                 throw new LiaError("La maison n’a pas pu joindre Gemini. Réessaie dans un moment.", 503);
             }
-            if (response.status === 401 || response.status === 403) { recordKeyStatus(rawKeys[rawIndex], response.status); break; } // clé invalide pour ce modèle : inutile d'essayer ses autres modèles, tenter la clé suivante
-            if (response.status === 429 || response.status === 503) { recordKeyStatus(rawKeys[rawIndex], response.status); if (m < modelsToTry.length - 1) continue; break; } // modèle suivant si possible, sinon clé suivante
-            recordKeyStatus(rawKeys[rawIndex], response.status); // réponse définitive et saine : efface un éventuel cooldown périmé
+            if (response.status === 401 || response.status === 403) { recordKeyStatus(rawKeys[rawIndex], response.status, modelsToTry[m]); break; } // clé invalide pour ce modèle : inutile d'essayer ses autres modèles, tenter la clé suivante
+            if (response.status === 429 || response.status === 503) { recordKeyStatus(rawKeys[rawIndex], response.status, modelsToTry[m]); if (m < modelsToTry.length - 1) continue; break; } // modèle suivant si possible, sinon clé suivante
+            recordKeyStatus(rawKeys[rawIndex], response.status, modelsToTry[m]); // réponse définitive et saine : efface un éventuel cooldown périmé
             break keyLoop; // réponse définitive (ok, ou erreur non récupérable par un changement de modèle/clé)
         }
     }

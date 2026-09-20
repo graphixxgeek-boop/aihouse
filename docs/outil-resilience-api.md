@@ -155,6 +155,21 @@ lecture des erreurs de l'API, comportements de fournisseur contre-intuitifs cons
 jamais redécouvrir deux fois la même leçon à des mois d'écart. S'affiche à côté de l'expérience
 automatique, jamais confondu avec elle (l'un est vécu par la machine, l'autre compris ensemble).
 
+### 2.5 Faire persister le vrai trafic de production/simulation dans la même mémoire
+
+Écart réel trouvé sur ce projet (2026-09-20) : la mémoire d'expérience (2.2) n'était alimentée que
+par les sondages manuels de diagnostic, jamais par le vrai trafic applicatif — un déséquilibre qui
+laisse l'outil "aveugle" à ce qui se passe réellement en dehors des diagnostics volontaires.
+
+Quand le code applicatif partagé avec une plateforme sans système de fichiers persistant (ex.
+Cloudflare Workers, un environnement serverless) ne peut PAS écrire directement dans cette mémoire,
+le patron reste : journaliser le trafic réel en mémoire process (empreinte de clé + modèle + issue,
+jamais la clé en clair), l'exposer via un canal déjà protégé existant (une route d'administration,
+par exemple), puis laisser un outil EXTÉRIEUR avec un vrai accès disque (un script de rapport déjà
+lancé après chaque session) le persister dans la mémoire d'expérience via la fonction d'écriture déjà
+existante — jamais un second mécanisme d'écriture, jamais une écriture directe depuis le code
+partagé avec la plateforme sans fichiers persistants.
+
 ## 3. Garde-fous de sécurité, non négociables
 
 - **Jamais écrire dans un fichier de configuration réel** (`.env`, `.dev.vars` ou équivalent) sans

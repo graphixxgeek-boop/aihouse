@@ -31,6 +31,7 @@ import {readFileSync, readdirSync, statSync, existsSync, appendFileSync, writeFi
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {collectCoverage, robustnessScore} from './axa-check.mjs';
+import {recordOutcomeByLabel} from './gemini-key-health.mjs';
 
 const root = new URL('..', import.meta.url).pathname;
 const path = (...parts) => join(root, ...parts);
@@ -262,6 +263,21 @@ function reportSmartBreaker(m) {
     console.log(`Tentatives individuelles (clé × modèle) : ${m.attempts} — ${m.successes} réussies, ${m.quotaFailures} bloquées par quota (429), ${m.transientFailures} erreurs transitoires (503), ${m.invalidFailures} clés invalides (401/403).`);
 }
 
+// Persistance du vrai trafic Gemini dans l'historique partagé (2026-09-20, tâche #88 : « persister
+// le vrai trafic Gemini dans l'historique partagé »). `episodes` vient de l'API admin
+// (lib/gemini-keys.ts::getGeminiKeyEpisodes(), jamais la clé en clair, seulement son empreinte) —
+// réutilise directement recordOutcomeByLabel() de scripts/gemini-key-health.mjs, jamais un second
+// mécanisme d'écriture de ce fichier (règle anti-doublon, §7ter). Volontairement appelé UNE FOIS
+// par exécution, avant le redémarrage du serveur pour la simulation suivante (même contrainte déjà
+// documentée pour geminiKeyMetrics ci-dessus) : rejouer ce rapport plusieurs fois sur le même
+// serveur sans redémarrage entre-temps ajouterait les mêmes épisodes en double dans l'historique —
+// limite honnête assumée, cohérente avec l'usage déjà établi de ce rapport (Article 18, étape 4).
+function persistGeminiKeyEpisodes(episodes) {
+    if (!episodes || !episodes.length) return;
+    for (const e of episodes) recordOutcomeByLabel(e.fingerprint, e.model, e.outcome, true, e.at);
+    console.log(`Trafic réel persisté dans .gemini-key-health.json : ${episodes.length} épisode(s) (par empreinte de clé × modèle).`);
+}
+
 function reportQuality(m) {
     section('Qualité de sortie');
     const score = qualityScore(m);
@@ -321,6 +337,7 @@ async function main() {
     }
 
     if (live?.geminiKeyMetrics) reportSmartBreaker(live.geminiKeyMetrics);
+    persistGeminiKeyEpisodes(live?.geminiKeyEpisodes);
     const quality = reportQuality(live?.qualityMetrics);
     const coherence = reportCoherence(live?.qualityMetrics);
     const replay = reportReplayability(live?.replayabilityMetrics);

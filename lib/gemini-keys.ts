@@ -29,6 +29,27 @@
 // l'ordre configuré, jamais une perte de clé ni un comportement incorrect).
 let rotation = 0;
 const cooldownUntil = new Map<string, number>();
+// Empreinte courte d'une clé (2026-09-20, tâche #88 : « persister le vrai trafic Gemini dans
+// l'historique partagé »), EXACT même algorithme que `keyLabel()` de `scripts/gemini-key-health.mjs`
+// (6 premiers + 4 derniers caractères) — dupliqué ici volontairement plutôt qu'importé, puisque ce
+// fichier est partagé avec la production Cloudflare Workers et ne doit JAMAIS tirer un module Node
+// avec accès disque dans son propre bundle (cf. le principe déjà posé dans gemini-key-health.mjs :
+// « portée strictement dev/simulation, jamais dans le code partagé avec la production »). Les deux
+// implémentations doivent rester identiques pour que les empreintes se recoupent correctement une
+// fois persistées — testé explicitement dans check-house.mjs (jamais une divergence silencieuse).
+// Jamais la clé en clair au-delà de ce fichier : jamais exposée telle quelle par l'API admin.
+export function fingerprint(rawKey: string): string {
+    if (!rawKey || rawKey.length < 12) return "clé-inconnue";
+    return rawKey.slice(0, 6) + "…" + rawKey.slice(-4);
+}
+// Trafic RÉEL observé, par empreinte de clé et par modèle (2026-09-20, tâche #88) — mémoire
+// "best-effort" au même niveau que le reste de ce fichier (process/isolate, jamais écrite en base
+// ici : cf. le principe ci-dessus). Exposée en lecture seule via getGeminiKeyEpisodes() pour qu'un
+// outil EXTÉRIEUR (tournant côté Node, avec un vrai accès disque) puisse la persister dans
+// l'historique partagé (.gemini-key-health.json) après une session — jamais une écriture disque
+// directe depuis ce fichier partagé avec la production.
+type KeyEpisode = { fingerprint: string; model: string; outcome: "OK" | "429" | "503" | "401" | "403"; at: number };
+const episodes: KeyEpisode[] = [];
 // Compteurs d'efficacité du Smart Breaker (2026-09-19, demande explicite de l'utilisateur : « un
 // petit KPI qui mesure l'efficacité du smart-breaker [...] pour s'assurer que l'utilisation de cet
 // outil est rentable »). Même mémoire "best effort" au niveau du module que le reste de ce fichier
@@ -89,8 +110,11 @@ export function orderKeys(rawKeys: readonly string[]): number[] {
 }
 
 /** Met à jour la disponibilité connue d'une clé d'après le statut HTTP obtenu avec elle. */
-export function recordKeyStatus(rawKey: string, status: number): void {
+export function recordKeyStatus(rawKey: string, status: number, model: string): void {
     metrics.attempts++;
+    const outcome: KeyEpisode["outcome"] = status === 401 ? "401" : status === 403 ? "403" : status === 429 ? "429" : status === 503 ? "503" : "OK";
+    episodes.push({ fingerprint: fingerprint(rawKey), model, outcome, at: Date.now() });
+    if (episodes.length > 200) episodes.shift();
     if (status === 401 || status === 403) { metrics.invalidFailures++; cooldownUntil.set(rawKey, Infinity); return; }
     if (status === 429 || status === 503) {
         if (status === 429) metrics.quotaFailures++; else metrics.transientFailures++;
@@ -108,8 +132,13 @@ export function recordKeyStatus(rawKey: string, status: number): void {
 /** Lecture des compteurs d'efficacité — jamais mutée depuis l'extérieur, une copie à chaque appel. */
 export function getGeminiKeyMetrics() { return { ...metrics }; }
 
+/** Lecture du trafic réel par empreinte de clé/modèle (tâche #88) — jamais la clé en clair, jamais
+ * mutée depuis l'extérieur (une copie à chaque appel). Destinée à un outil externe (Node, accès
+ * disque réel) qui la persiste dans l'historique partagé après une session. */
+export function getGeminiKeyEpisodes() { return [...episodes]; }
+
 /** Réservé aux tests (`scripts/check-house.mjs`) : repart d'un état neuf, déterministe. */
-export function __resetGeminiKeyRotationForTests(): void { rotation = 0; cooldownUntil.clear(); consecutiveFailures.clear(); metrics.turns = 0; metrics.primaryKeyUnavailableAtStart = 0; metrics.attempts = 0; metrics.successes = 0; metrics.quotaFailures = 0; metrics.transientFailures = 0; metrics.invalidFailures = 0; }
+export function __resetGeminiKeyRotationForTests(): void { rotation = 0; cooldownUntil.clear(); consecutiveFailures.clear(); episodes.length = 0; metrics.turns = 0; metrics.primaryKeyUnavailableAtStart = 0; metrics.attempts = 0; metrics.successes = 0; metrics.quotaFailures = 0; metrics.transientFailures = 0; metrics.invalidFailures = 0; }
 
 /** Réservé aux tests : millisecondes restantes avant la fin du cooldown d'une clé (0 si saine). */
 export function __cooldownRemainingForTests(rawKey: string): number { return Math.max(0, (cooldownUntil.get(rawKey) ?? 0) - Date.now()); }

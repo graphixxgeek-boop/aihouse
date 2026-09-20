@@ -71,16 +71,23 @@ function save(data) {
 // par le modèle réellement utilisé par l'application (bug réel trouvé en testant : sonder ensuite
 // gemini-pro-latest, presque toujours en quota serré, faisait passer une clé par ailleurs saine
 // pour "probablement encore à plat").
-export function recordOutcome(key, model, outcome, asKeySignal = true) {
+// Cœur partagé, réutilisable par label déjà connu (2026-09-20, tâche #88 : « persister le vrai
+// trafic Gemini dans l'historique partagé ») — l'appelant a déjà l'empreinte (ex. reçue via l'API
+// admin depuis `lib/gemini-keys.ts::getGeminiKeyEpisodes()`, jamais la clé en clair transmise sur le
+// réseau) et n'a donc jamais besoin de reproduire le calcul de `keyLabel()` lui-même. `recordOutcome`
+// ci-dessous n'est plus qu'un raccourci pour le cas où on a la clé en clair (sondes directes).
+export function recordOutcomeByLabel(label, model, outcome, asKeySignal = true, at = Date.now()) {
   const data = load();
-  const label = keyLabel(key);
   const entry = data.keys[label] ?? { models: {}, episodes: [] };
-  const now = Date.now();
-  entry.models[model] = { ...(entry.models[model] ?? {}), lastOutcome: outcome, lastAt: now };
-  if (asKeySignal) { entry.lastTouchedAt = now; entry.lastTouchedOutcome = outcome; }
-  entry.episodes = [...entry.episodes, { at: now, model, outcome }].slice(-100);
+  entry.models[model] = { ...(entry.models[model] ?? {}), lastOutcome: outcome, lastAt: at };
+  if (asKeySignal) { entry.lastTouchedAt = at; entry.lastTouchedOutcome = outcome; }
+  entry.episodes = [...entry.episodes, { at, model, outcome }].slice(-100);
   data.keys[label] = entry;
   save(data);
+}
+
+export function recordOutcome(key, model, outcome, asKeySignal = true) {
+  recordOutcomeByLabel(keyLabel(key), model, outcome, asKeySignal);
 }
 
 // Ordonne une liste de clés selon l'expérience accumulée : une clé vue bonne en dernier passe

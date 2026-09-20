@@ -54,9 +54,9 @@ async function callGeminiFragment(key:string,model:string,body:string,fallbackMo
                 const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelsToTry[m])}:generateContent`,{
                     method:"POST",headers:{"x-goog-api-key":rawKeys[rawIndex],"Content-Type":"application/json"},signal:AbortSignal.timeout(30000),body,
                 });
-                if(response.status===401||response.status===403){recordKeyStatus(rawKeys[rawIndex],response.status);break;}
-                if(response.status===429||response.status===503){recordKeyStatus(rawKeys[rawIndex],response.status);if(m<modelsToTry.length-1)continue;break;}
-                recordKeyStatus(rawKeys[rawIndex],response.status);
+                if(response.status===401||response.status===403){recordKeyStatus(rawKeys[rawIndex],response.status,modelsToTry[m]);break;}
+                if(response.status===429||response.status===503){recordKeyStatus(rawKeys[rawIndex],response.status,modelsToTry[m]);if(m<modelsToTry.length-1)continue;break;}
+                recordKeyStatus(rawKeys[rawIndex],response.status,modelsToTry[m]);
                 if(!response.ok)return "";
                 const responseBody=await response.json() as {candidates?:{content?:{parts?:{text?:string}[]}}[]};
                 const text=responseBody.candidates?.[0]?.content?.parts?.[0]?.text;
