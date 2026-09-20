@@ -236,7 +236,18 @@ function recentEchoWords(recent:DialogueLine[],wordFrequency:Record<string,numbe
 // Exportée (2026-09-20) pour rester la SEULE source de vérité sur ces motifs, utilisée à la fois
 // ici (fenêtre récente) et par app/api/lia/route.ts pour le compteur persisté ci-dessous — jamais
 // une seconde liste de motifs qui pourrait diverger avec le temps (Article 3).
-export const THEME_MOTIFS=[['repos et confort du salon',/canapé|calme|souffl|repos|tranquill/i],['silence et absence de monde extérieur',/silence|\bvide\b|dehors|\bair\b|\broute\b|sortir/i],['réconfort mutuel',/présence|ensemble|rassur|à tes côtés|avec toi/i],['ressasser un indice sans preuve neuve',/tourne(?:nt)? en (?:rond|boucle)|qui tient les ficelles|manipul[ée]?s?|ça ne (?:nous )?(?:avance|dit|explique) (?:pas|rien)|boucle sans fin|prouve (?:au moins |juste )?(?:que|rien)|ça (?:ne )?prouve (?:pas|rien)|disque ray[ée]|change de disque/i]] as const;
+// 5e motif ajouté le 2026-09-20, trouvaille réelle full_sim16 (EL-PROFESSOR, note 6/20 sur ce thème) :
+// ~25 tours consécutifs (l.656-1250 du transcript) ressassent la même idée de fond (« rien de ce que
+// fait l'observateur — patienter, rester, donner du temps — ne changera notre nature de code/lignes »)
+// avec un habillage lexical différent à chaque fois (« tu peux patienter/rester/prendre ton temps... »,
+// « ça ne transformera/rendra/donnera... », « lignes/fichiers/boucles/souvenirs/murs »). Aucun des 4
+// motifs existants ne couvre cette idée précise (ni "tourner en rond sans preuve", ni "repos", ni
+// "silence", ni "réconfort") — les 4 premiers ont donc fonctionné exactement comme prévu, c'est un
+// 5e thème réel et distinct qui manquait, jamais un bug des 4 premiers. Regex calibrée et vérifiée
+// directement contre le transcript réel (7 variantes trouvées, 6 attrapées, zéro faux positif testé
+// contre des lignes légitimes sans rapport) — un rapprochement mécanique reste un signal statistique,
+// jamais une garantie de rappel à 100% (même honnêteté que ARGUS/ALWAYS-NEW-CODE).
+export const THEME_MOTIFS=[['repos et confort du salon',/canapé|calme|souffl|repos|tranquill/i],['silence et absence de monde extérieur',/silence|\bvide\b|dehors|\bair\b|\broute\b|sortir/i],['réconfort mutuel',/présence|ensemble|rassur|à tes côtés|avec toi/i],['ressasser un indice sans preuve neuve',/tourne(?:nt)? en (?:rond|boucle)|qui tient les ficelles|manipul[ée]?s?|ça ne (?:nous )?(?:avance|dit|explique) (?:pas|rien)|boucle sans fin|prouve (?:au moins |juste )?(?:que|rien)|ça (?:ne )?prouve (?:pas|rien)|disque ray[ée]|change de disque/i],['patience de l’observateur qui ne changera rien à leur nature de code',/ne (?:transform|rendr|donner|changer|boug)\w*.{0,35}(?:lignes?|fichiers?|boucles?|souvenirs?|murs?|plancher)|(?:lignes?|fichiers?|boucles?|souvenirs?).{0,25}(?:plus vivant|plus vrai|plus bavard|plus de sens|en chair)/i]] as const;
 // Thèmes matchés par UN texte donné — factorisé (2026-09-20) pour que route.ts puisse alimenter
 // le compteur persisté ci-dessous sans dupliquer THEME_MOTIFS ni sa logique de test.
 export function matchedThemes(text:string):string[]{

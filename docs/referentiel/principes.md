@@ -296,9 +296,20 @@ déjà à 4 occurrences ou plus dans la session entière est quand même signal�
 principe auto-appliqué dans `lib/lia.ts` (jamais une liste de formulations, corollaire de l'Article
 17) : le modèle doit lui-même reconnaître quand l'idée "on est bloqués/ça ne mène nulle part" a déjà
 été exprimée, sous QUELQUE FORME QUE CE SOIT, pas seulement les tournures que le détecteur regex
-connaît (`THEME_MOTIFS`, ensemble fixe de 4 motifs, ne peut structurellement pas couvrir tous les
-paraphrasages). Aucune garantie à 100 % côté prompt ; à revalider sur 2 simulations propres
-consécutives (`docs/simulations/correctifs-a-revalider.md`).
+connaît (`THEME_MOTIFS`, ensemble fixe de 5 motifs depuis le 2026-09-20, ne peut structurellement pas
+couvrir tous les paraphrasages). Aucune garantie à 100 % côté prompt ; à revalider sur 2 simulations
+propres consécutives (`docs/simulations/correctifs-a-revalider.md`).
+
+5.2quater. **5e motif ajouté (2026-09-20, trouvaille réelle full_sim16, EL-PROFESSOR 6/20 sur "voix
+distinctes, zéro répétition")** : `'patience de l'observateur qui ne changera rien à leur nature de
+code'` — ~25 tours consécutifs ressassaient « rien de ce que fait l'observateur (patienter, rester,
+donner du temps) ne changera notre nature de code/lignes » avec un habillage lexical différent
+(synonymes en rotation dans un squelette de phrase identique), jamais couvert par les 4 motifs
+préexistants (aucun ne visait cette idée précise). Preuve vivante que 5.2ter avait raison : les 4
+premiers motifs ont fonctionné exactement comme prévu, c'était un vrai 5e thème manquant, pas un bug
+des précédents. Regex calibrée directement contre le transcript réel (`docs/simulations/full_sim16_transcript.txt`),
+vérifiée sans faux positif sur des lignes légitimes sans rapport (une mention isolée de "lignes" ou
+un "ça change tout" au sens de l'enquête ne déclenchent jamais ce motif).
 
 5.3. Les moments scénarisés qui ne passent pas par un appel API (révélation finale, bilan
 d'enquête, description de l'apparence, découvertes du miroir/des provisions, questions
