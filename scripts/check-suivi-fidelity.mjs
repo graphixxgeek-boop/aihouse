@@ -72,7 +72,13 @@ export function findClaimedFilesMissing(sessionText, existsFn = existsSync, root
     const cells = splitTableRow(row);
     const statut = cells[cells.length - 1] ?? "";
     if (!/^termin[ée]e/i.test(statut)) continue;
-    const description = cells[4] ?? "";
+    // Description = avant-dernière colonne, jamais un index fixe (2026-09-20, ajout de la colonne
+    // N° en première position, cf. extractTaskNumbers ci-dessous) : Description précède toujours
+    // immédiatement Statut, que la ligne porte ou non cette nouvelle colonne — même principe de
+    // robustesse que cells[cells.length-1] déjà utilisé pour Statut partout dans ce fichier, jamais
+    // un compte de colonnes supposé fixe qui casserait sur une ligne au format légèrement différent
+    // (ancienne fixture de test à 6 colonnes, vraie donnée à 7 colonnes depuis ce jour).
+    const description = cells[cells.length - 2] ?? "";
     const claimed = new Set([...description.matchAll(REPO_PATH_PATTERN)].map((m) => m[1]));
     for (const path of claimed) {
       if (!existsFn(join(root, path))) hits.push({ row: row.trim(), path });
@@ -196,11 +202,65 @@ export function auditAllSessions(sessionsDir = SESSIONS_DIR, readDir = readdirSy
   return results;
 }
 
-// Description courte d'une entrée de tableau pour l'affichage — Sujet + Sous-sujet (colonnes 2 et
-// 3), jamais la ligne brute entière (illisible) ni seulement l'horodatage (pas assez parlant).
+// Description courte d'une entrée de tableau pour l'affichage — Sujet + Sous-sujet (colonnes 3 et
+// 4 depuis l'ajout de la colonne N° en tête, 2026-09-20), jamais la ligne brute entière (illisible)
+// ni seulement l'horodatage (pas assez parlant).
 function describe(entry) {
-  const [, sujet, sousSujet] = entry.cells;
+  const [, , sujet, sousSujet] = entry.cells;
   return `${sujet ?? "?"} — ${sousSujet ?? "?"}`;
+}
+
+// Numérotation durable des tâches (2026-09-20, demande explicite de l'utilisateur : « peux tu
+// garantir l'execution de ce numérotage dans le prolongement de celui actuel et jusqu'à nouvel
+// ordre ? »). Contrairement au gestionnaire de tâches interne de Claude Code (TaskCreate/TaskUpdate,
+// un aide-mémoire propre à la session, cf. docs/regles-de-travail.md §B.1), ce numéro vit dans les
+// fichiers du projet (colonne N°, toujours en PREMIÈRE position — jamais en dernière, pour ne
+// jamais perturber la lecture de Statut par cells[cells.length-1] utilisée partout ailleurs dans ce
+// fichier) et est vérifié par un vrai test — il survit à la fin de n'importe quelle session. Les
+// lignes antérieures à cette règle portent "—", jamais un numéro reconstruit après coup (Article 3 :
+// ne jamais fabriquer une fausse précision historique) — la suite démarre à 117, dans le
+// prolongement du compteur de tâches de la session en cours au moment de cette demande.
+const TASK_NUMBER_SEED = 117;
+
+export function extractTaskNumbers(sessionText) {
+  const rows = sessionText
+    .split("\n")
+    .filter((l) => l.startsWith("|") && !/^\|\s*-+\s*\|/.test(l) && !l.includes("Horodatage"));
+  const numbers = [];
+  for (const row of rows) {
+    const raw = (splitTableRow(row)[0] ?? "").trim();
+    if (/^\d+$/.test(raw)) numbers.push(Number(raw));
+  }
+  return numbers;
+}
+
+export function nextTaskNumber(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+  if (!exists(sessionsDir)) return TASK_NUMBER_SEED;
+  const files = readDir(sessionsDir).filter((f) => f.endsWith(".md"));
+  let max = 0;
+  for (const file of files) for (const n of extractTaskNumbers(readFile(join(sessionsDir, file)))) if (n > max) max = n;
+  return max > 0 ? max + 1 : TASK_NUMBER_SEED;
+}
+
+// Détecte un doublon (même numéro utilisé deux fois, n'importe où) ou une régression (un numéro
+// inférieur ou égal au précédent DANS UN MÊME fichier — les lignes s'ajoutent toujours dans l'ordre
+// chronologique au sein d'un fichier de session) — jamais un jugement sur le contenu des tâches,
+// seulement sur la cohérence de la numérotation elle-même.
+export function findTaskNumberIssues(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+  if (!exists(sessionsDir)) return [];
+  const files = readDir(sessionsDir).filter((f) => f.endsWith(".md"));
+  const issues = [];
+  const seenIn = new Map();
+  for (const file of files) {
+    let previous = -Infinity;
+    for (const n of extractTaskNumbers(readFile(join(sessionsDir, file)))) {
+      if (seenIn.has(n)) issues.push({ type: "duplicate", number: n, file, firstSeenIn: seenIn.get(n) });
+      else seenIn.set(n, file);
+      if (n <= previous) issues.push({ type: "not-increasing", number: n, file, previous });
+      previous = n;
+    }
+  }
+  return issues;
 }
 
 function main() {
@@ -250,6 +310,14 @@ function main() {
     }
   }
   if (!anyMissingFile) console.log("Aucun fichier cité dans une tâche terminée ne manque sur disque.");
+
+  console.log("\n=== Garde-fou numérotation durable des tâches (docs/suivi/) ===\n");
+  const numberIssues = findTaskNumberIssues();
+  if (!numberIssues.length) {
+    console.log(`Numérotation cohérente sur tout le registre. Prochain numéro à utiliser : ${nextTaskNumber()}.`);
+  } else {
+    for (const i of numberIssues) console.log(`   - [${i.type}] n°${i.number} dans ${i.file}`);
+  }
 
   console.log("\n=== Garde-fou fraîcheur du suivi (commits récents sans mise à jour docs/suivi/) ===\n");
   const missing = findCommitsMissingSuiviUpdate(recentCommits());

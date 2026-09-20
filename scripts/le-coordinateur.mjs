@@ -83,6 +83,80 @@ export function formatTable(rows) {
   return lines.join("\n");
 }
 
+// MENU DES PRESTATIONS (2026-09-20, demande explicite de l'utilisateur : « le coordinateur est
+// capable de proposer de nouvelles prestations, quand les outils évoluent ou quand un nouvel outil
+// est créé [...] ce menu est très utile pour toi [...] il te rappelle les prestations que tu peux
+// commander au réseau d'outils [...] il est aussi utile pour moi, via toi »). Traduit chaque outil
+// coûteux ou occasionnel du paysage en une DEMANDE EN LANGAGE COURANT, jamais un nom d'outil interne
+// — le but est que l'agent (et l'utilisateur à travers lui) sache ce qu'il peut commander sans avoir
+// à se souvenir des noms internes. Volontairement une simple liste de données, jamais un mécanisme :
+// EXACTEMENT le même principe de sobriété que le reste de LE-COORDINATEUR (aucune connaissance
+// propre, juste agréger/rappeler ce qui existe déjà).
+//
+// ÉVOLUTIF PAR CONSTRUCTION : quand un nouvel outil est créé, ou qu'un outil existant change ce
+// qu'il peut faire, une entrée s'ajoute ou se met à jour ICI — fait partie du cahier des charges de
+// tout nouvel outil au même titre que son blueprint (cf. docs/regles-de-travail.md §7ter, « un outil
+// n'est jamais fini tant que ses points d'intégration ne sont pas câblés »). Jamais une liste figée
+// à réciter de mémoire : toujours relue avant de répondre à une demande qui pourrait y correspondre.
+export const PRESTATIONS = [
+  { demande: "Vérification rapide après un changement de code", outils: ["check-house.mjs", "ARGUS (mécanique)", "HARMONIA (mécanique)"], cout: "gratuit, déjà automatique" },
+  { demande: "Fidélité de l'esprit des personnages (Article 0)", outils: ["EL-PROFESSOR"], cout: "gratuit (relit un texte déjà produit)" },
+  { demande: "Diagnostic direct du ton face à une provocation réelle", outils: ["check-spirit.mjs"], cout: "réel (API Gemini) — consulter Smart Conso API avant" },
+  { demande: "Qualité visuelle du rendu", outils: ["THE-SCREENER"], cout: "réel (Playwright, léger)" },
+  { demande: "Dette technique / code qui s'empile plutôt que d'être pensé", outils: ["ALWAYS-NEW-CODE", "CLEAN-DIRTY-OLD"], cout: "réel (raisonnement)" },
+  { demande: "Robustesse et couverture de test réelle", outils: ["AXA-CHECK"], cout: "gratuit" },
+  { demande: "Chasse aux bugs cachés avant une étape importante", outils: ["HYPER-SCAN-CHECKPOINT"], cout: "réel (API en version complète) — consulter Smart Conso API avant" },
+  { demande: "Audit global indépendant (code + produit + reprise potentielle)", outils: ["THE-FINAL-JUDGE"], cout: "réel (agent séparé) — consulter Smart Conso API avant" },
+  { demande: "Sécurité et préparation à la mise en production", outils: ["THE-FINAL-JUDGE (mandat sécurité inclus)"], cout: "réel (agent séparé) — consulter Smart Conso API avant" },
+  { demande: "Diagnostiquer un blocage/quota Gemini épuisé (429/503 répétés)", outils: ["Smart Breaker (check-gemini-quota.mjs)"], cout: "gratuit à diagnostiquer" },
+];
+
+export function formatMenu(prestations = PRESTATIONS) {
+  const lines = ["| Si tu veux... | Ça déclenche | Coût |", "|---|---|---|"];
+  for (const p of prestations) lines.push(`| ${p.demande} | ${p.outils.join(" + ")} | ${p.cout} |`);
+  return lines.join("\n");
+}
+
+// GARDE-FOU DE FRAÎCHEUR DU CATALOGUE (2026-09-20, demande explicite de l'utilisateur : « il doit y
+// avoir un test dédié pour être sûr que le catalogue est bien mis à jour [...] quand un nouvel outil
+// est créé, il comprend de façon autonome quelles nouvelles prestations peuvent être proposées »).
+// Honnêteté de conception, même principe que ARGUS/HARMONIA/EL-PROFESSOR/AXA-CHECK : aucun script ne
+// peut créativement INVENTER une nouvelle combinaison d'outils — ça reste un vrai jugement (Article
+// 19). Ce que ce garde-fou PEUT garantir mécaniquement : qu'aucun outil coûteux ou occasionnel de la
+// carte de référence (docs/regles-de-travail.md §7ter) ne reste durablement absent du menu — un
+// signal sur l'ABSENCE, jamais une proposition fabriquée à sa place (corollaire Article 17).
+//
+// "Coûteux ou occasionnel" est lu directement dans la carte elle-même (colonnes Coût/Déclenchement),
+// jamais une liste séparée d'exclusions à maintenir à la main : un outil gratuit et "toujours déployé"
+// (ARGUS, HARMONIA, AXA-CHECK, CLEAN-DIRTY-OLD, check-house.mjs) ou un outil de régulation interne à
+// l'agent (Smart Conso API, CHECK-LEVEL-TARGET, LE-COORDINATEUR lui-même) n'a naturellement aucune
+// des deux marques ("réel"/"sur demande") et n'a donc pas besoin d'apparaître comme une "prestation"
+// commandable.
+export function parseToolsTable(markdown) {
+  const rows = [];
+  for (const line of markdown.split("\n")) {
+    if (!line.trim().startsWith("|")) continue;
+    const cells = line.split("|").slice(1, -1).map((c) => c.trim());
+    if (cells.length < 4) continue;
+    const [tool, , cout, declenchement] = cells;
+    if (!tool || tool === "Outil" || /^-+$/.test(tool)) continue;
+    rows.push({ tool: tool.replace(/`/g, ""), cout, declenchement });
+  }
+  return rows;
+}
+
+export function isMenuWorthy(row) {
+  return /réel/i.test(row.cout) || /sur demande|à la main|à la demande/i.test(row.declenchement);
+}
+
+export function findToolsMissingFromMenu(toolsTableMarkdown, prestations = PRESTATIONS) {
+  const menuText = prestations.map((p) => p.outils.join(" ")).join(" ").toLowerCase();
+  return parseToolsTable(toolsTableMarkdown)
+    .filter(isMenuWorthy)
+    .map((row) => row.tool.split(/[/(]/)[0].trim())
+    .filter((primaryName) => !menuText.includes(primaryName.toLowerCase()));
+}
+
 // Passthrough vers CHECK-LEVEL-TARGET (accès "privilégié" direct, jamais une réimplémentation) —
 // à appeler explicitement par l'agent pour classer UNE demande précise ; jamais invoqué tout seul
 // dans runNetworkCheck() ci-dessous, qui n'a pas de texte de demande à classer. Même signature que
@@ -156,6 +230,9 @@ function main() {
   console.log(formatTable(rows));
   console.log("\nCeci reste un tableau de synthèse, jamais un verdict : relire la sortie complète de l'outil concerné avant d'agir sur une ligne \"à regarder\" (cf. docs/regles-de-travail.md, aucun de ces outils n'est autonome).");
   console.log("Jamais déclenché ici : HYPER-SCAN-CHECKPOINT (version complète), Smart Conso API, ou une simulation — toujours une décision explicite séparée, jamais une initiative du coordinateur.");
+  console.log("\n=== Menu des prestations disponibles via le réseau d'outils ===\n");
+  console.log(formatMenu());
+  console.log("\nRappel ouvert à chaque passage automatique (demande explicite de l'utilisateur) : ce menu n'exécute rien tout seul — il rappelle ce qui PEUT être commandé, à l'agent comme à l'utilisateur à travers lui.");
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

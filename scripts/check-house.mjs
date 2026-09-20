@@ -919,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 119'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 121'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2667,6 +2667,35 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(hits[0].path,'docs/referentiel/jamais-cree.md','the flagged entry must name the exact missing path, never a vague pointer');
   assert.deepEqual(findClaimedFilesMissing('| Horodatage | Sujet | Sous-sujet | Sensibilité | Description | Statut |\n|---|---|---|---|---|---|'),[],'a session with zero task rows must report zero missing files, never crash');
   console.log('Passed: findClaimedFilesMissing() flags exactly a "terminée" row whose backtick-quoted repo file path does not really exist on disk, never a still-open row nor a command-line snippet without a real directory prefix, and reports zero rather than crashing on an empty session — closing the "validation des tâches terminées" gap the user asked for.');
+  // Non-régression du décalage de colonne (2026-09-20, ajout de la colonne N° en tête) : une
+  // ancienne ligne à 6 colonnes (sans N°) doit continuer à fonctionner exactement comme avant,
+  // preuve que la lecture par "avant-dernière colonne" reste robuste aux deux formats.
+  const sevenColSession='| 1 | h | S | s | normal | Créé `docs/referentiel/vrai.md` | terminée — fidèle |';
+  assert.deepEqual(findClaimedFilesMissing(sevenColSession,(p)=>p.endsWith('vrai.md')),[],'a real 7-column row (with the new N° column) must still correctly read the Description as its own column, never off by one');
+  console.log('Passed: findClaimedFilesMissing() reads Description as the column right before Statut regardless of whether a N° column precedes it — robust to both the old 6-column fixtures above and the real 7-column rows used from 2026-09-20 onward.');
+}
+{
+  // Numérotation durable des tâches (2026-09-20, demande explicite de l'utilisateur : « peux tu
+  // garantir l'execution de ce numérotage dans le prolongement de celui actuel et jusqu'à nouvel
+  // ordre ? »). Contrairement au gestionnaire de tâches interne de Claude Code (TaskCreate/
+  // TaskUpdate, propre à la session), ce numéro vit dans docs/suivi/ et doit être vérifiable.
+  const {extractTaskNumbers,nextTaskNumber,findTaskNumberIssues}=await import('../scripts/check-suivi-fidelity.mjs');
+  const withNumbers='| N° | h | S | s | normal | d1 | terminée |\n| — | h | S | s | normal | d2 | terminée |\n| 118 | h | S | s | normal | d3 | terminée |\n|---|---|---|---|---|---|---|';
+  assert.deepEqual(extractTaskNumbers(withNumbers),[118],'extractTaskNumbers() must extract only real numeric values, skip the header, the "—" placeholder for pre-numbering rows, and the separator line entirely');
+  assert.deepEqual(extractTaskNumbers('| N° | h | S | s | normal | d1 | terminée |'),[],'a session with no real numbers yet must report an empty list, never crash');
+  const fakeSessions=[{name:'a.md',text:'| 117 | h | S | s | normal | d1 | terminée |\n| 119 | h | S | s | normal | d2 | terminée |'},{name:'b.md',text:'| 120 | h | S | s | normal | d3 | terminée |'}];
+  const listDir=()=>fakeSessions.map(f=>f.name);
+  const readFakeFile=(p)=>fakeSessions.find(f=>p.endsWith(f.name)).text;
+  assert.equal(nextTaskNumber('/fake',listDir,readFakeFile,()=>true),121,'nextTaskNumber() must return the real global maximum plus one across every session file, never just the last file read');
+  assert.equal(nextTaskNumber('/definitely-not-a-real-path'),117,'a missing sessions directory (or one with no numbers yet) must seed at 117 — the exact continuation point of the ephemeral TaskCreate counter at the moment this durable rule was created, never zero or a crash');
+  assert.deepEqual(findTaskNumberIssues('/fake',listDir,readFakeFile,()=>true),[],'a globally unique, per-file increasing set of numbers must report zero issues');
+  const dupSessions=[{name:'a.md',text:'| 117 | h | S | s | normal | d1 | terminée |\n| 118 | h | S | s | normal | d2 | terminée |'},{name:'b.md',text:'| 118 | h | S | s | normal | d3 | terminée |'}];
+  const dupIssues=findTaskNumberIssues('/fake',()=>dupSessions.map(f=>f.name),(p)=>dupSessions.find(f=>p.endsWith(f.name)).text,()=>true);
+  assert.ok(dupIssues.some((i)=>i.type==='duplicate'&&i.number===118),'a number reused across two different session files must be flagged as a duplicate — the exact real gap this guard exists to catch');
+  const regressionSession=[{name:'a.md',text:'| 120 | h | S | s | normal | d1 | terminée |\n| 119 | h | S | s | normal | d2 | terminée |'}];
+  const regressionIssues=findTaskNumberIssues('/fake',()=>regressionSession.map(f=>f.name),(p)=>regressionSession.find(f=>p.endsWith(f.name)).text,()=>true);
+  assert.ok(regressionIssues.some((i)=>i.type==='not-increasing'&&i.number===119),'a number that goes DOWN within the same file (rows are always appended chronologically) must be flagged, never silently accepted');
+  console.log('Passed: extractTaskNumbers() reads only real numeric task numbers (skipping headers, separators, and "—" pre-numbering placeholders), nextTaskNumber() returns the true global maximum plus one across every session file (seeding at 117, the exact continuation point, when none exist yet), and findTaskNumberIssues() flags a real cross-file duplicate and a real within-file regression — the mechanical guarantee behind the durable task numbering the user asked for.');
 }
 {
   // findCommitsMissingSuiviUpdate() (2026-09-19, demande explicite : « comment nous assurer que le
@@ -2896,7 +2925,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // mise en forme du tableau, lecture d'état injectable) — tout le reste est de l'import direct de
   // fonctions déjà testées ailleurs (ARGUS, HARMONIA, AXA-CHECK, ALWAYS-NEW-CODE, CHECK-LEVEL-TARGET),
   // jamais retesté ici en double (règle anti-doublon, §7ter).
-  const {isDuplicateRun,formatTable,loadState,classifyRequest}=await import('../scripts/le-coordinateur.mjs');
+  const {isDuplicateRun,formatTable,loadState,classifyRequest,formatMenu,PRESTATIONS}=await import('../scripts/le-coordinateur.mjs');
   assert.equal(isDuplicateRun({lastHead:'abc123'},'abc123'),true,'the exact same commit as the last recorded run must be reported as a real duplicate');
   assert.equal(isDuplicateRun({lastHead:'abc123'},'def456'),false,'a genuinely different HEAD commit must never be flagged as a duplicate, however recently the last run happened');
   assert.equal(isDuplicateRun({},'abc123'),false,'a never-before-recorded state must never be treated as a duplicate of nothing');
@@ -2910,6 +2939,53 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // la suite de tests déjà dédiée à CHECK-LEVEL-TARGET lui-même.
   assert.equal(classifyRequest('corrige cette faute de frappe').level,'leger','the passthrough must genuinely reach the real classifyCheckLevel logic, not a stub — a trivial fix must classify exactly as CHECK-LEVEL-TARGET\'s own test suite already proves it does directly');
   console.log('Passed: LE-COORDINATEUR flags a duplicate run only when the current commit exactly matches the last recorded one (never a stale time-window guess), renders every real row of its summary table without dropping or reordering any, reports an honest empty state rather than crashing on a missing or malformed state file, and its CHECK-LEVEL-TARGET passthrough genuinely reaches the real classification logic rather than a disconnected stub.');
+  // Menu des prestations (2026-09-20, demande explicite de l'utilisateur : « le coordinateur est
+  // capable de proposer de nouvelles prestations [...] ce menu est très utile pour toi »). Vérifie
+  // que le menu réel (celui affiché à chaque passage automatique) est bien formé et que chaque
+  // entrée reste lisible en langage courant, jamais un tableau vide ou mal formaté.
+  assert.ok(PRESTATIONS.length>=8,'the real menu must list every major costly/occasional tool of the network, never a partial or forgotten subset');
+  assert.ok(PRESTATIONS.every((p)=>p.demande&&p.outils.length&&p.cout),'every real menu entry must have a plain-language request, at least one real tool it triggers, and an honest cost — never a half-filled entry');
+  const menu=formatMenu([{demande:'Test de menu',outils:['OUTIL-A','OUTIL-B'],cout:'gratuit'}]);
+  assert.ok(menu.includes('| Test de menu | OUTIL-A + OUTIL-B | gratuit |'),'formatMenu() must render each entry with its plain-language request, its combined tools, and its real cost, exactly as given — never dropped or reordered');
+  console.log('Passed: LE-COORDINATEUR\'s PRESTATIONS menu lists at least the 8 major costly/occasional tools with a plain-language request, real tools triggered and honest cost for each, and formatMenu() renders every entry correctly — the reusable reminder of what can be commanded from the tool network, for the agent and, through it, the user.');
+
+  // Garde-fou de fraîcheur du catalogue (2026-09-20, demande explicite de l'utilisateur : « il doit
+  // y avoir un test dédié pour être sûr que le catalogue est bien mis à jour [...] quand un nouvel
+  // outil est créé, il comprend de façon autonome quelles nouvelles prestations peuvent être
+  // proposées »). Ce garde-fou ne peut jamais INVENTER une nouvelle combinaison (un vrai jugement,
+  // Article 19) — il ne peut que signaler l'ABSENCE d'un outil coûteux/occasionnel dans le menu réel,
+  // exactement le principe déjà appliqué par ARGUS/HARMONIA/EL-PROFESSOR/AXA-CHECK.
+  const {parseToolsTable,isMenuWorthy,findToolsMissingFromMenu}=await import('../scripts/le-coordinateur.mjs');
+  const sampleTable=[
+    '| Outil | Ce qu\'il détecte/régule | Coût | Déclenchement |',
+    '|---|---|---|---|',
+    '| `check-house.mjs` | régressions de comportement | gratuit | à chaque changement de code |',
+    '| ARGUS | absences | gratuit (partie mécanique) | toujours déployé |',
+    '| THE-SCREENER | qualité graphique | réel (Playwright, léger) | après chaque simulation |',
+    '| NOUVEL-OUTIL | un tout nouveau service | réel (raisonnement) | sur demande explicite |',
+  ].join('\n');
+  const parsed=parseToolsTable(sampleTable);
+  assert.equal(parsed.length,4,'parseToolsTable() must read exactly the four real tool rows, never the header row nor the separator row');
+  assert.deepEqual(parsed[0],{tool:'check-house.mjs',cout:'gratuit',declenchement:'à chaque changement de code'},'a backtick-quoted tool name must be read with the backticks stripped, and its real cost/trigger columns kept exactly as written');
+  assert.equal(isMenuWorthy({cout:'gratuit',declenchement:'toujours déployé'}),false,'a free, always-deployed tool (ARGUS-style) is never required in the menu — it is baseline infrastructure, not a commandable prestation');
+  assert.equal(isMenuWorthy({cout:'réel (Playwright, léger)',declenchement:'après chaque simulation'}),true,'a tool with a real cost must always be considered menu-worthy, whatever its trigger wording');
+  assert.equal(isMenuWorthy({cout:'gratuit',declenchement:'sur demande explicite seulement'}),true,'an on-demand tool must always be considered menu-worthy even when it costs nothing to run, since it is still something one would deliberately \"commander\"');
+  const fakeMenu=[{demande:'Qualité visuelle',outils:['THE-SCREENER'],cout:'réel'}];
+  assert.deepEqual(findToolsMissingFromMenu(sampleTable,fakeMenu),['NOUVEL-OUTIL'],'a real costly/on-demand tool absent from every menu entry must be flagged by name, while a free always-deployed tool and one already present in the menu must never be flagged');
+  assert.deepEqual(findToolsMissingFromMenu(sampleTable,[{demande:'x',outils:['THE-SCREENER','NOUVEL-OUTIL'],cout:'réel'}]),[],'once every menu-worthy tool is covered by at least one entry, the guard must report a genuinely empty gap list, never a false positive');
+  // Vérification réelle et bloquante contre la vraie carte des outils (docs/regles-de-travail.md
+  // §7ter) et le vrai menu (PRESTATIONS ci-dessus) — la garantie mécanique elle-même, pas seulement
+  // sa logique testée sur un exemple synthétique : si un futur outil coûteux/occasionnel est ajouté à
+  // la carte sans jamais rejoindre PRESTATIONS, ce test échoue et bloque le commit (pre-commit hook).
+  const travailMd=fs.readFileSync('docs/regles-de-travail.md','utf8');
+  const travailLines=travailMd.split('\n');
+  const tableStart=travailLines.findIndex((l)=>l.includes('| Outil | Ce qu\'il détecte'));
+  assert.ok(tableStart>=0,'docs/regles-de-travail.md must still contain the real "carte des outils" table under its known heading — if this fails, the table was moved or renamed and this guard\'s anchor must move with it');
+  const tableLines=[];
+  for(let i=tableStart;i<travailLines.length;i++){if(i>tableStart&&!travailLines[i].trim().startsWith('|'))break;tableLines.push(travailLines[i]);}
+  const realGaps=findToolsMissingFromMenu(tableLines.join('\n'));
+  assert.deepEqual(realGaps,[],`every real costly/occasional tool listed in docs/regles-de-travail.md's own "carte des outils" must have a matching PRESTATIONS entry in scripts/le-coordinateur.mjs — missing: ${realGaps.join(', ')}`);
+  console.log('Passed: the PRESTATIONS menu freshness guard reads the real tools table (backticks stripped, header/separator skipped), correctly tells a menu-worthy tool (real cost or on-demand trigger) from baseline free/always-deployed infrastructure, flags only a genuinely uncovered tool by name rather than fabricating a proposal, and — checked live against the project\'s own real table and real menu — currently finds zero real gap, a guarantee that breaks the build the day a new costly tool is added without a matching menu entry.');
 }
 
 {

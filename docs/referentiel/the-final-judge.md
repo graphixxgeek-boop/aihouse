@@ -49,6 +49,30 @@ déjà identifiés par d'autres outils du projet.
 
 Même personnage, même structure de sortie dans les deux cas — seule la PROFONDEUR change.
 
+## Portée : projet entier (défaut) ou zoomée sur une zone
+
+*(Ajouté le 2026-09-20, à la demande explicite de l'utilisateur : « the judge peut auditer de façon
+profonde et large, mais aussi de façon zoomée ? ». Axe INDÉPENDANT du mode léger/lourd — la
+profondeur et la portée se combinent librement : "zoomé + lourd" creuse une seule zone à fond,
+"zoomé + léger" donne un avis rapide sur un point précis.)*
+
+Par défaut, la portée est le projet entier (comme au 2026-09-20). Une portée zoomée cible une seule
+zone, désignée parmi les 8 mêmes thèmes qu'ALWAYS-NEW-CODE/HARMONIA (`THEMES` de
+`scripts/always-new-code.mjs` : Fatigue, Cycle jour/nuit, Enquête, Bonus roulette, Appréciation de
+l'observateur, Dossier retourné, Déplacements/espace, Relation Lia/Noé) — jamais une deuxième
+taxonomie inventée pour l'occasion (Article 19). L'agent séparé reçoit alors une consigne
+supplémentaire : lire tout ce qui est nécessaire pour comprendre CETTE zone en profondeur (fichiers,
+documentation et simulations pertinentes), sans se sentir tenu de couvrir le reste du projet — même
+personnage, même structure de sortie en 4 parties, seulement recentrée sur la zone désignée.
+
+**Déclenchement, calibré explicitement le 2026-09-20** : un audit zoomé peut être demandé directement
+(moi ou l'utilisateur, comme pour le reste de l'outil) **ou proposé automatiquement par un autre
+outil du paysage** quand il ne parvient pas à trancher seul sur SA zone — en particulier EL-PROFESSOR
+(faiblesse chronique sur un thème précis) et ALWAYS-NEW-CODE (zone bloquée au palier "probable").
+Dans les deux cas, "proposé" ne veut jamais dire "déclenché sans confirmation" : la règle générale de
+l'outil (aucun déclenchement sans confirmation explicite) s'applique identiquement à une proposition
+venue d'un autre outil.
+
 ## Dualité dev/production, comme THE-SCREENER
 
 Le mécanisme ne change jamais selon que le produit jugé tourne en développement local ou est publié
@@ -70,8 +94,12 @@ aux yeux d'un regard expérimenté, au même titre que ses autres observations.
 2. Points positifs concrets, avec exemples précis du code/produit.
 3. Points à améliorer, classés par importance (jamais une liste plate).
 4. Pistes de développement futur.
-Jamais de code : uniquement des recommandations en langage clair. Livré en fichier joint, comme les
-autres rapports de ce projet.
+Jamais de code : uniquement des recommandations en langage clair. **Livraison toujours en deux
+parties, jamais une seule** (confirmé explicitement par l'utilisateur le 2026-09-20) : le rapport
+complet est TOUJOURS livré en fichier joint (archivé aussi dans `docs/the-final-judge/`), jamais
+collé en clair dans la conversation ; ET l'agent qui pilote le projet donne TOUJOURS, dans la
+conversation elle-même, une synthèse écrite par lui (jamais un simple renvoi au fichier sans rien
+dire) — même principe déjà établi pour les rapports KPI (Article 18, étape 4).
 
 ## Consultation Smart Conso API avant lancement
 
@@ -101,8 +129,17 @@ Ajouté à la table des niveaux (`docs/referentiel/check-level-target.md`) : mod
 ## Registre
 
 `docs/the-final-judge/` — un fichier par passage (`<date>-<mode>.md`), plus `index.md` : verdict
-global en une phrase, nombre de points retenus après réconciliation, lien vers le rapport complet.
-Permet de suivre si le verdict s'améliore réellement d'un passage à l'autre.
+global en une phrase, la portée (projet entier ou zone zoomée), nombre de points retenus après
+réconciliation, lien vers le rapport complet. Permet de suivre si le verdict s'améliore réellement
+d'un passage à l'autre.
+
+**Étiquette de nouveauté par point retenu (2026-09-20)**, à la demande explicite de l'utilisateur :
+mesurer si le regard neuf du juge apporte encore des choses vraiment nouvelles au fil des passages,
+ou si le projet a fini par couvrir tout ce qu'un œil extérieur repère. Chaque point du registre porte
+l'une de trois étiquettes, posées par l'AGENT au moment de la réconciliation (jamais par le juge
+lui-même dans son rapport brut, jamais automatisées) : **[nouveau]** (jamais identifié ailleurs avant
+ce passage), **[déjà connu]** (repéré indépendamment avant ce passage), **[confirme + creuse]** (un
+symptôme déjà connu, souvent via EL-PROFESSOR, que le juge enrichit d'une hypothèse ou piste inédite).
 
 ## Partie mécanique minimale (2026-09-20)
 

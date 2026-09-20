@@ -40,6 +40,25 @@ docs/suivi/
   ce qui s'est passé et pointe vers le fichier de session correspondant — sert à répondre vite à
   « dans quelle session ai-je traité tel sujet ? » sans avoir à rouvrir chaque fichier.
 
+## Numérotation durable des tâches (2026-09-20)
+
+*(Ajoutée à la demande explicite de l'utilisateur : « peux tu garantir l'execution de ce numérotage
+dans le prolongement de celui actuel et jusqu'à nouvel ordre ? ». Distincte du gestionnaire de
+tâches interne de Claude Code (`TaskCreate`/`TaskUpdate`, #1, #2...) — un aide-mémoire propre à la
+session, jamais une source de vérité durable, cf. `docs/regles-de-travail.md` §B.1. Cette
+numérotation-ci vit DANS les fichiers du projet et est vérifiée par un vrai test
+(`scripts/check-suivi-fidelity.mjs::findTaskNumberIssues`), ce qui est la seule façon de vraiment
+« garantir » une continuité au sens où l'utilisateur l'a demandé.)*
+
+Chaque tâche reçoit désormais un cinquième attribut : un **N°** unique et strictement croissant,
+en PREMIÈRE colonne du tableau (avant Horodatage). Les lignes créées avant le 2026-09-20 portent
+`—` — jamais un numéro reconstruit après coup (même principe que la portée non rétroactive
+ci-dessus : ne jamais fabriquer une fausse précision historique). La numérotation réelle démarre à
+**117**, dans le prolongement direct du compteur de tâches de la session en cours au moment de
+cette demande (`TaskCreate`/`TaskUpdate` en étaient à #116). `nextTaskNumber()` calcule toujours le
+prochain numéro à utiliser (le plus grand numéro réel déjà présent, plus un, à travers TOUS les
+fichiers de session) — jamais un compteur mental à tenir à jour à la main.
+
 ## Les quatre attributs de chaque tâche
 
 *(Tranchés avec l'utilisateur le 2026-09-19, question par question — cf. le format de question

@@ -33,3 +33,31 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   ou respect sincères, dispute grave Lia/Noé) restent quasiment jamais sollicités dans les 13
   premières simulations notées par EL-PROFESSOR — une future simulation Article 18 devrait les
   pousser délibérément pour vérifier qu'ils fonctionnent, pas seulement le registre habituel.
+- **Premier audit THE-FINAL-JUDGE (2026-09-20, mode lourd, `docs/the-final-judge/2026-09-20-lourd.md`)** —
+  points examinés et sciemment reportés avec l'utilisateur (jamais ignorés) :
+  - Le bouton "reset" (`app/api/lia/route.ts`, `mode==="reset"`) n'a aucune protection serveur
+    au-delà du verrou de concurrence générique — n'importe qui peut effacer l'état pour tous les
+    visiteurs sans authentification. Décision explicite de l'utilisateur (2026-09-20) : reporté,
+    jamais corrigé maintenant. **Contexte qui change l'urgence réelle** : la prochaine mise en ligne
+    est prévue via Cloudflare dans un environnement de TEST, pas une ouverture au grand public — le
+    risque réel avant la vraie mise en production reste donc faible, à réévaluer explicitement au
+    moment de basculer en production réelle.
+  - Le code d'accès du panneau admin (`'1980'`, sans limite de tentatives, `app/api/admin/route.ts`)
+    — déjà repéré indépendamment plus tôt dans cette session, reconfirmé par THE-FINAL-JUDGE.
+    Décision explicite de l'utilisateur : laissé tel quel pour l'instant (enjeu jugé faible, panneau
+    de documentation seulement, jamais un accès qui modifie l'état du jeu).
+  - Architecture mono-instance/mono-partie (une seule maison partagée par tous les visiteurs) —
+    déjà un chantier connu et volontairement déprioritisé (Plan d'origine, point 7, "mécaniques de
+    diffusion"). THE-FINAL-JUDGE conteste cette priorisation et la juge bloquante avant toute mise
+    en ligne publique ; décision explicite de l'utilisateur (2026-09-20) : garder l'ordre actuel de
+    la feuille de route (refonte graphique d'abord) — avis noté, priorisation inchangée.
+  - Absence de rate-limit sur `/api/lia` en production et absence de CI (`.github/workflows`) —
+    nouveaux constats, pas encore tranchés avec l'utilisateur, à calibrer avant la vraie mise en
+    production (moins urgent le temps de l'environnement de test Cloudflare).
+  - Hypothèse causale nouvelle sur la faiblesse chronique de l'Article 11 (Voix distinctes, 7,8/20
+    de moyenne EL-PROFESSOR, jamais au-dessus de 12/20) : peut-être une limite structurelle de
+    `gemini-flash-lite` à tenir deux voix distinctes sur 150+ tours, pas seulement un problème de
+    prompt — à investiguer comme piste distincte des correctifs de prompt déjà tentés.
+  - `app/chatgpt-auth.ts` (77 lignes, jamais importé nulle part) et `package.json` (`"name":
+    "site-creator-vinext-starter"`, jamais renommé) — code mort et reste de gabarit de démarrage,
+    mineur, pas encore traité.

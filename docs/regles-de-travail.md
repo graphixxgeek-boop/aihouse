@@ -374,14 +374,20 @@ fois construit.)*
   - **EL-PROFESSOR → THE-FINAL-JUDGE** : quand l'index d'EL-PROFESSOR montre un thème CHRONIQUEMENT
     faible sur plusieurs sessions (ex. Voix distinctes, moyenne 7,8/20 sur les 13 premières
     notations) — EL-PROFESSOR note le SYMPTÔME session par session, jamais la cause structurelle ;
-    un passage THE-FINAL-JUDGE (lourd) peut diagnostiquer si la cause est un défaut de prompt, une
+    un passage THE-FINAL-JUDGE peut diagnostiquer si la cause est un défaut de prompt, une
     architecture insuffisante, ou autre chose, et proposer une vraie direction plutôt qu'un énième
     correctif ponctuel. THE-FINAL-JUDGE peut lire l'index d'EL-PROFESSOR comme CONTEXTE (où porter
     l'attention), jamais comme instruction sur le verdict à rendre — sa lecture du texte reste
-    toujours la sienne, indépendante.
+    toujours la sienne, indépendante. **Portée recommandée (2026-09-20)** : une faiblesse chronique
+    isolée à un seul thème appelle d'abord une portée ZOOMÉE sur ce thème (cf.
+    `docs/referentiel/the-final-judge.md`) plutôt qu'un audit projet entier — jamais imposé, EL-
+    PROFESSOR PROPOSE, l'agent ou l'utilisateur décide toujours du déclenchement réel.
   - **ALWAYS-NEW-CODE → THE-FINAL-JUDGE** : quand une zone de dette d'organisation reste au palier de
     confiance "probable" (jamais "confirmé"), un second avis réellement indépendant sur la MÊME zone
-    aide à trancher avant de proposer une restructuration à l'utilisateur.
+    aide à trancher avant de proposer une restructuration à l'utilisateur. **Portée recommandée
+    (2026-09-20)** : même principe qu'EL-PROFESSOR ci-dessus — une portée ZOOMÉE sur la zone
+    concernée, jamais un audit projet entier pour trancher un seul palier "probable", et toujours
+    proposée, jamais déclenchée d'elle-même.
   - **THE-FINAL-JUDGE → THE-SCREENER** (sens inverse) : pour l'angle visuel, THE-FINAL-JUDGE
     s'appuie sur les rapports déjà archivés de THE-SCREENER (ou en demande un nouveau s'il n'y en a
     pas de récent) plutôt que de former son propre avis graphique en double.
@@ -597,6 +603,76 @@ une décision explicite séparée de l'agent ou de l'utilisateur, jamais une ini
 coordinateur. Il ne décide rien sur le fond : il agrège ce qui existe déjà et affiche un tableau,
 rien de plus — l'agent (moi) reste celui qui lit, décide et agit, exactement comme pour chaque
 autre outil de ce paysage.
+
+#### Le menu des prestations — traduire les outils en demandes, jamais en noms internes
+
+*(Ajouté le 2026-09-20, à la demande explicite de l'utilisateur : « le coordinateur est capable de
+proposer de nouvelles prestations, quand les outils évoluent ou quand un nouvel outil est créé
+[...] ce menu est très utile pour toi [...] il te rappelle les prestations que tu peux commander au
+réseau d'outils via le coordinateur [...] il est aussi utile pour moi, via toi ».)*
+
+`PRESTATIONS` (`scripts/le-coordinateur.mjs`) traduit chaque outil coûteux ou occasionnel du
+paysage en une DEMANDE EN LANGAGE COURANT ("audit global indépendant", "qualité visuelle",
+"sécurité et préparation à la mise en production"...), jamais en nom d'outil interne à retenir —
+avec les outils réels qu'elle déclenche et son coût honnête. `formatMenu()` l'affiche en tableau,
+imprimé automatiquement à CHAQUE passage de `le-coordinateur.mjs` (`main()`), aux côtés du tableau
+de synthèse habituel — jamais un document séparé à aller consulter, il revient à chaque fois que le
+réseau d'outils gratuit tourne.
+
+**Double utilité, comme demandé explicitement** :
+- **Pour l'agent** : un rappel systématique, à chaque passage automatique, de ce qui PEUT être
+  commandé au réseau — jamais besoin de se souvenir de la liste des outils exceptionnels de tête.
+- **Pour l'utilisateur, à travers l'agent** : l'agent doit relire ce menu et, au moment opportun
+  (une demande de l'utilisateur qui correspond clairement à une entrée), le lui rappeler
+  explicitement — jamais laisser l'utilisateur deviner qu'une prestation existe pour son besoin.
+
+**Évolutif par construction, jamais une liste figée** : quand un nouvel outil coûteux ou occasionnel
+est créé, ou qu'un outil existant change ce qu'il peut faire, une entrée `PRESTATIONS` s'ajoute ou se
+met à jour — fait désormais partie du cahier des charges de tout nouvel outil de ce paysage, au même
+titre qu'un blueprint séparé ou qu'un registre local (cf. "Aucun de ces outils n'est autonome" et le
+corollaire de calibrage plus haut) : la question « est-ce que ça mérite une entrée dans le menu de
+LE-COORDINATEUR ? » se pose systématiquement à la création d'un nouvel outil coûteux, jamais oubliée.
+Volontairement une simple liste de données (jamais un mécanisme, jamais un nouveau blueprint) — la
+même sobriété que le reste de LE-COORDINATEUR.
+
+**Garde-fou mécanique de fraîcheur (2026-09-20), pour que ça ne repose jamais sur la seule mémoire de
+l'agent.** *(Demande explicite de l'utilisateur : « il doit y avoir un test dédié pour être sûr que
+le catalogue est bien mis à jour [...] quand un nouvel outil est créé, il comprend de façon autonome
+quelles nouvelles prestations peuvent être proposées ».)* Limite honnête d'abord : aucun script ne
+peut créativement INVENTER une nouvelle combinaison d'outils pour un besoin encore jamais formulé —
+ça reste un vrai jugement (Article 19), jamais mécanisable, exactement comme ARGUS ne peut pas
+inventer le contenu d'un trou logique. Ce qui EST mécanisable et désormais garanti : que chaque outil
+coûteux ou déclenché « sur demande » de la carte des outils ci-dessus ait au moins une entrée dans
+`PRESTATIONS`. `findToolsMissingFromMenu()` (`scripts/le-coordinateur.mjs`) lit les deux colonnes
+Coût/Déclenchement de la vraie table ci-dessus (jamais une liste séparée d'exclusions à maintenir à
+la main), écarte les outils gratuits-et-toujours-déployés (ARGUS, HARMONIA, AXA-CHECK,
+CLEAN-DIRTY-OLD, `check-house.mjs`) et les outils de régulation interne à l'agent (Smart Conso API,
+CHECK-LEVEL-TARGET, LE-COORDINATEUR lui-même), et signale par son nom tout le reste resté absent du
+menu — un signal sur l'ABSENCE, jamais une proposition fabriquée à sa place (même principe qu'ARGUS/
+HARMONIA/EL-PROFESSOR/AXA-CHECK). Testé dans `scripts/check-house.mjs`, y compris une vérification
+RÉELLE et bloquante contre la vraie table et le vrai menu (pas seulement un exemple synthétique) : le
+jour où un futur outil coûteux rejoint la carte sans jamais rejoindre `PRESTATIONS`, le pre-commit
+hook casse — la garantie mécanique que l'utilisateur a demandée. Trouvaille réelle le jour même de sa
+construction : le Smart Breaker (diagnostic de blocage/quota Gemini, « à la demande ») n'avait jamais
+reçu d'entrée dans le menu malgré son coût nul à diagnostiquer — corrigé dans le même passage.
+
+**Trois canaux de disponibilité, honnêtement distincts, jamais confondus.** *(Clarifié le 2026-09-20,
+question explicite de l'utilisateur : « verifie que le catalogue [...] est bien disponible pour toi,
+moi, les outils ».)*
+- **Pour l'agent** : oui, disponible et fiable — `PRESTATIONS` est exporté depuis
+  `scripts/le-coordinateur.mjs`, documenté ici, et désormais protégé par le garde-fou ci-dessus.
+- **Pour l'utilisateur** : disponible seulement PAR RELAI de l'agent (cf. « double utilité »
+  ci-dessus) — il n'existe aujourd'hui aucun canal direct où l'utilisateur consulterait ce menu
+  lui-même sans passer par l'agent (cohérent avec le fait qu'il n'est pas développeur et ne lit pas
+  ce fichier au quotidien). Ce n'est pas un manque à combler tant que l'agent relit bien le menu à
+  chaque occasion pertinente — mais ça reste honnêtement différent de « disponible pour lui » au sens
+  où c'est disponible pour l'agent.
+- **Pour les autres outils du paysage** : disponible en théorie (export JS standard, importable par
+  n'importe quel script), mais AUCUN outil du paysage ne le consomme aujourd'hui pour sa propre
+  logique — sa seule vraie utilisation réelle reste l'agent (et l'utilisateur à travers lui), jamais
+  un autre outil qui irait le lire pour se comporter différemment. Vérifié par recherche exhaustive
+  dans le dépôt au moment d'écrire ceci (2026-09-20) : aucune référence à `PRESTATIONS` en dehors de
+  `le-coordinateur.mjs` lui-même et de `check-house.mjs` (qui le teste).
 
 ## 8. Profil de collaboration observé
 
