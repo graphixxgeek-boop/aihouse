@@ -43,7 +43,7 @@
 import { existsSync, mkdtempSync, rmSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { sh } from "./lib-shell.mjs";
+import { sh, assertNotAPersonnage } from "./lib-shell.mjs";
 import { collectCoverage, robustnessScore, LIB_MAP } from "./axa-check.mjs";
 import { summarizeArgusOutput, summarizeHarmoniaOutput } from "./hyper-scan-checkpoint.mjs";
 import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
@@ -401,7 +401,13 @@ export function checkAgentOnboarding(agentName, {
   registryPathPrefix = null,
   claudeMdText = null,
   suiviText = null,
+  axaCoveragePct = undefined,
+  argusFindingsCount = undefined,
+  harmoniaFindingsCount = undefined,
+  cleanDirtyOldFlagged = false,
+  lastVerifiedAt = null,
 } = {}) {
+  assertNotAPersonnage(agentName, "checkAgentOnboarding()");
   const gaps = [];
   const slug = slugifyAgentName(agentName);
   const nameLower = agentName.toLowerCase();
@@ -468,7 +474,39 @@ export function checkAgentOnboarding(agentName, {
   // construite, elle affichera/consultera ce même résultat, jamais un second calcul indépendant.
   const badge = gaps.length === 0 ? "🎖️ Membre certifié" : "⚠️ Pas encore certifié";
 
-  return { agentName, slug, gaps, rappels, badge, complet: gaps.length === 0 };
+  // Échelle de couverture à 3 niveaux (tâche #224, 2026-09-20T23:50Z, texte source reproduit à
+  // l'identique par l'utilisateur) : « en cours » (jamais scanné/très faible), « partiel »
+  // (couverture réelle incomplète), « OK 100% ». Jamais une promesse de "zéro bug" — AXA-CHECK ne
+  // peut mécaniquement prouver qu'une ligne EXÉCUTÉE est une ligne JUSTE. Format du "partiel" précisé
+  // le 2026-09-21 (tâche #226, retrouvé sur relecture explicite de l'utilisateur, jamais deviné) :
+  // chaque vérification KO nommée séparément, jointes par une virgule quand plusieurs — un
+  // pourcentage entre parenthèses UNIQUEMENT pour AXA-CHECK (seul signal chiffré ; ARGUS/HARMONIA/
+  // CLEAN-DIRTY-OLD restent binaires, jamais un KO nu accompagné d'un faux pourcentage). « OK 100% »
+  // exige les 4 membres de l'équipe noyau (Article 20) au vert ensemble — AXA-CHECK 100%, zéro
+  // trouvaille ARGUS, zéro trouvaille HARMONIA, zéro signal CLEAN-DIRTY-OLD — jamais un sous-ensemble
+  // de 3 sur 4 (écart trouvé le 2026-09-21 en répondant à une question directe de l'utilisateur : le
+  // premier jet oubliait CLEAN-DIRTY-OLD alors qu'il a exactement le même statut "toujours déployé"
+  // que les trois autres). Distinct du badge lui-même (jamais conditionné par la couverture).
+  const koParts = [];
+  if (argusFindingsCount) koParts.push("KO ARGUS");
+  if (harmoniaFindingsCount) koParts.push("KO HARMONIA");
+  if (cleanDirtyOldFlagged) koParts.push("KO CLEAN-DIRTY-OLD");
+  if (axaCoveragePct != null && axaCoveragePct < 100) koParts.push(`KO AXA-CHECK ${Math.round(axaCoveragePct)}%`);
+
+  const couvertureTier = axaCoveragePct == null ? "en cours" : koParts.length === 0 ? "OK 100%" : "partiel";
+  const couvertureLabel = couvertureTier === "en cours"
+    ? "en cours (jamais scanné ou très faible)"
+    : couvertureTier === "OK 100%"
+      ? "OK 100%"
+      : `partiel (${koParts.join(", ")})`;
+  const couverture = { tier: couvertureTier, label: couvertureLabel };
+  // Date de dernière vérification (2026-09-21, demande explicite) : jamais une donnée fabriquée —
+  // seulement affichée quand l'appelant la fournit réellement (moment du scan AXA-CHECK/ARGUS/
+  // HARMONIA/CLEAN-DIRTY-OLD ayant produit ces chiffres), jamais devinée ni datée du jour courant.
+  const verifiedSuffix = lastVerifiedAt ? ` (vérifié le ${lastVerifiedAt})` : "";
+  const message = `🎖️ ${agentName} obtient son badge — intégration complète vérifiée (blueprint, instanciation, registre, mention CLAUDE.md, présence PRESTATIONS). Couverture de code : ${couvertureLabel}${verifiedSuffix}.`;
+
+  return { agentName, slug, gaps, rappels, badge, complet: gaps.length === 0, couverture, message };
 }
 
 // Passthrough vers CHECK-LEVEL-TARGET (accès "privilégié" direct, jamais une réimplémentation) —

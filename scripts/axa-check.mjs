@@ -217,6 +217,57 @@ export function collectCoverage(covDir, { readDir = readdirSync, readFile = (f) 
   return perFile;
 }
 
+// Extension aux scripts/*.mjs des ~14 outils à badge (tâche #218, 2026-09-21, demande explicite de
+// l'utilisateur : AXA-CHECK ne mesurait jusqu'ici que lib/*.ts+route.ts, jamais les outils de
+// travail eux-mêmes). Calibrage explicite : information affichée à côté du badge, jamais une
+// condition qui pourrait le faire perdre (checkAgentOnboarding() reste inchangé pour le badge
+// lui-même). Contrairement à LIB_MAP (qui doit passer par l'indirection test-X.mjs des fichiers
+// TypeScript transpilés par check-house.mjs), un script est déjà du JS pur, directement importé par
+// check-house.mjs — son entrée V8 porte directement son vrai chemin, jamais un fichier intermédiaire
+// à retrouver. Nommage non uniforme constaté (ARGUS → check-argus.mjs, THE-SCREENER →
+// the-screener-capture.mjs) : une correspondance explicite, jamais déduite d'un slug.
+export const AGENT_SCRIPT_FILES = {
+  argus: "scripts/check-argus.mjs",
+  harmonia: "scripts/check-harmonia.mjs",
+  "smart-conso-api": "scripts/smart-conso-api.mjs",
+  "check-level-target": "scripts/check-level-target.mjs",
+  "hyper-scan-checkpoint": "scripts/hyper-scan-checkpoint.mjs",
+  "always-new-code": "scripts/always-new-code.mjs",
+  "axa-check": "scripts/axa-check.mjs",
+  "clean-dirty-old": "scripts/clean-dirty-old.mjs",
+  "el-professor": "scripts/el-professor.mjs",
+  "the-screener": "scripts/the-screener-capture.mjs",
+  "the-final-judge": "scripts/the-final-judge.mjs",
+  "the-deep-reader": "scripts/the-deep-reader.mjs",
+  "smart-conso-token": "scripts/smart-conso-token.mjs",
+  "check-tasks-details": "scripts/check-tasks-details.mjs",
+};
+
+export function collectScriptCoverage(covDir, { readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8") } = {}) {
+  const covFiles = existsSync(covDir) ? readDir(covDir) : [];
+  const perSlug = {};
+  for (const covFile of covFiles) {
+    let data;
+    try { data = JSON.parse(readFile(join(covDir, covFile))); } catch { continue; }
+    for (const entry of data.result ?? []) {
+      const match = Object.entries(AGENT_SCRIPT_FILES).find(([, path]) => entry.url.endsWith(path));
+      if (!match) continue;
+      const [slug, scriptPath] = match;
+      if (perSlug[slug]) continue; // déjà vu dans un autre relevé de process
+      let source;
+      try { source = readFileSync(join(ROOT, scriptPath), "utf8"); } catch { continue; }
+      perSlug[slug] = functionCoverageFromV8(entry, source);
+    }
+  }
+  return perSlug;
+}
+
+export function scriptRobustnessScore(slug, perSlug) {
+  const functions = perSlug?.[slug];
+  if (!functions) return undefined;
+  return robustnessScore(functions);
+}
+
 // Inversion de THEME_PRIMARY_FILE (zone → fichier) en fichier → zone, pour ne jamais tenir une
 // seconde carte séparée (règle anti-doublon, §7ter) — un fichier peut appartenir à plusieurs zones.
 // Exportée pour que CLEAN-DIRTY-OLD la réutilise telle quelle plutôt que de la reconstruire une
