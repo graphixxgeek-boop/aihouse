@@ -940,7 +940,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 169'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 170'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4145,4 +4145,61 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(rendered.includes('Aucune redondance forte détectée') || rendered.includes('Redondances possibles'), 'the rendered output must always say explicitly whether a redundancy was found or not, never silently omit that section');
 
   console.log('Passed: CLAUDE.MD.SPY (extractRuleUnits/countArticleCrossReferences/classifyRuleSensitivity/classifyRuleImportance/findRedundantRulePairs/buildClaudeMdRuleTable/renderClaudeMdRuleTable) correctly splits CLAUDE.md into one unit per real "Article N" heading bounded by either the next Article or the next top-level "## " heading — closing a real regression found while calibrating live against the actual file, where the last Article silently swallowed 510 unrelated lines — counts real cross-file "Article N" citations, gives Article 0 a fixed maximal sensitivity label untouched by any calculation while flagging other articles only on a genuine self-declared "non négociable" marker, classifies importance against thresholds empirically calibrated on this project\'s real citation distribution rather than arbitrary round numbers, flags strong vocabulary overlap between two rules at a strict threshold while never dragging in an unrelated third rule or crashing on an empty list, and assembles/renders the full reference table faithfully.');
+}
+
+{
+  // Chantier 3 (2026-09-21, arc relationnel Lia/Noé) : sous l'ancien code, un tour solo (pièces
+  // séparées) effaçait TOUJOURS l'attirance proposée par le modèle — hausse ou baisse — avant même
+  // d'atteindre le système de crédit de 28 %. Conséquence confirmée en relisant les 14 simulations
+  // archivées : le seuil de 75 % (doute amoureux privé, loveRealized) n'a jamais été franchi une
+  // seule fois, même sur 229 tours. Seule la moitié d'une vraie HAUSSE solo doit désormais survivre
+  // (throttlée par le même système de crédit que les tours ensemble) ; une BAISSE solo doit rester
+  // entièrement effacée, comportement inchangé. Placé en tout dernier bloc du fichier (plutôt qu'au
+  // fil de la suite) : ce test consomme 2 vrais tours (story.round avance, des mémoires "réflexion"
+  // sont insérées), ce qui décalait des tests plus loin dans le fichier qui supposaient un compte de
+  // tours précis (ex. seuil TV) — jamais un souci une fois placé en dernier, rien ne dépend de son
+  // état final.
+  const soloScenarioBackup=sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content;
+  const soloAgent1Backup=sqlite.prepare('SELECT room,intent,needs,emotions FROM agent_state WHERE id=1').get();
+  const soloAgent2Backup=sqlite.prepare('SELECT room,intent,needs,emotions FROM agent_state WHERE id=2').get();
+  const progress=JSON.parse(soloScenarioBackup);
+  progress.round=10;
+  progress.life={...progress.life,credit:{1:0,2:10},debrief:undefined,contact:undefined,dispute:undefined};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(progress));
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=1').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}),JSON.stringify({...steady,attraction:10,trust:40}));
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=2').run('cuisine','chat',JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}),JSON.stringify({...steady,attraction:20,trust:40}));
+  // stayAlone:true est indispensable : coordinateRooms() (lib/turn.ts) réunit sinon
+  // automatiquement le "suiveur" dans la pièce du "meneur" dès que story.round>=8 (join-together
+  // par défaut), ce qui aurait rendu ce test faussement "ensemble" malgré des pièces différentes.
+  const soloDecision=(attraction,room)=>({intent:'chat',affectionAccepted:false,emotions:{curiosity:60,tension:30,trust:40,comfort:50,attraction},reply:'On verra ça plus tard.',thought:'Je repense à lui, seule ici.',stayAlone:true,mood:'attentive',activity:'Je réfléchis',goal:'Comprendre',action:'none',room,memory:'Je repense à lui, seule ici.'});
+  const priorFetchSolo=globalThis.fetch;
+  let noeForcedAttraction=90; // largement au-dessus du plafond réel : sera clampé par evolveEmotions (+5 max) avant ce correctif
+  // Keyed on `state.id` (real Resident field of the character THIS call is for), never on
+  // `selfRole` : "interact" mode picks who is "primary" via nextSpeaker(speech, input.actor),
+  // which does not always honor input.actor — the reliable way to target Noé's own call.
+  globalThis.fetch=async(url,options)=>{
+    const context=JSON.parse(JSON.parse(options.body).contents[0].parts[0].text);
+    const decision=context.state?.id===2?soloDecision(noeForcedAttraction,'cuisine'):soloDecision(10,'salon');
+    return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(decision)}]}}]});
+  };
+  let epochSolo=(await readWorld(db)).epoch;
+  let responseSolo=await post(input('interact',2,{epoch:epochSolo}));assert.equal(responseSolo.status,200);
+  let resultSolo=await responseSolo.json();
+  const noeAfterRise=resultSolo.agents.find(a=>a.id===2).emotions.attraction;
+  assert.ok(noeAfterRise>20,'a solitary turn with a genuine increase proposed by the model must let SOME of it through (credited via the exact same 0.28 conversion already used for shared-room turns, here pre-loaded with credit=10 to make the step unmistakable), never fully erased back to the pre-turn value the way the old code always did — the exact real mechanism behind loveRealized never once firing across 229 real archived rounds');
+  assert.ok(noeAfterRise<=20+11,'the credited solitary increase must still be genuinely throttled (real evolveEmotions clamp + the halving + the existing 0.28 conversion on top of the pre-seeded credit=10), never an uncapped pass-through of the model\'s raw proposed jump to 90');
+
+  progress.life={...progress.life,credit:{1:0,2:10}};
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(progress));
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=2').run('cuisine','chat',JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}),JSON.stringify({...steady,attraction:20,trust:40}));
+  noeForcedAttraction=0;
+  epochSolo=(await readWorld(db)).epoch;
+  responseSolo=await post(input('interact',2,{epoch:epochSolo}));assert.equal(responseSolo.status,200);
+  resultSolo=await responseSolo.json();
+  assert.equal(resultSolo.agents.find(a=>a.id===2).emotions.attraction,20,'a solitary turn with a genuine DECREASE proposed by the model must still be entirely erased back to the pre-turn value — only the increase side was meant to soften, and the pre-seeded credit=10 must stay untouched since the decrease never reaches the credit-conversion branch at all');
+  globalThis.fetch=priorFetchSolo;
+  sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(soloScenarioBackup);
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=1').run(soloAgent1Backup.room,soloAgent1Backup.intent,soloAgent1Backup.needs,soloAgent1Backup.emotions);
+  sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=2').run(soloAgent2Backup.room,soloAgent2Backup.intent,soloAgent2Backup.needs,soloAgent2Backup.emotions);
+  console.log('Passed: a solitary turn now lets roughly half of a genuine attraction increase survive (still throttled by the existing 0.28 credit system, never a full pass-through) instead of erasing it outright — the real fix behind the loveRealized threshold being unreachable in every one of the 14 archived simulations — while a solitary decrease still resets fully to the pre-turn value, unchanged.');
 }

@@ -1245,7 +1245,17 @@ le 2026-09-16, pas seulement dans le référentiel qui se décrit lui-même :
    confiance ou des rapprochements trop rapides font redescendre attirance et attachement, cf.
    `parametres.md`), mais le calage précis de l'arc relationnel par rapport à la révélation n'a
    pas été vérifié par une simulation réelle — à confirmer en jouant plusieurs sessions, pas
-   seulement en lisant le code.
+   seulement en lisant le code. **Chantier 3 investigué le 2026-09-21 (sans nouvelle simulation,
+   comme demandé) : l'anomalie loveRealized diagnostiquée et corrigée.** Root-cause confirmée en
+   relisant les 14 simulations archivées : un tour solo (pièces séparées) effaçait TOUTE variation
+   d'attirance proposée par le modèle, cumulé au système de crédit de 28 % qui throttle déjà les
+   tours ensemble — le seuil de 75 % n'avait donc jamais été franchi une seule fois depuis
+   l'introduction de ce mécanisme (2026-09-18), y compris sur une session de 229 tours (full_sim16).
+   Corrigé (`app/api/lia/route.ts`) : seule la moitié d'une hausse solo survit désormais (avant de
+   repasser par le même crédit de 28 %) ; une baisse solo reste entièrement effacée. Reste à
+   confirmer via une prochaine simulation réelle (`docs/simulations/correctifs-a-revalider.md`,
+   0/2) — le calage précis de l'arc par rapport à la révélation reste donc toujours à vérifier en
+   jouant, cette correction rend seulement la culmination structurellement possible.
 4. Remplacer le visage emoji par une forme abstraite, désaturer la palette, ajouter une lumière
    directionnelle et une vignette — **largement fait, corrigé le 2026-09-19** (ce point affirmait
    à tort depuis sa rédaction que le visage restait un emoji — trouvé faux en vérifiant directement

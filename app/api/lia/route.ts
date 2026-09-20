@@ -1121,7 +1121,21 @@ export async function POST(request: Request) {
             d.reply = truthfulGender(groundPrivateThought(d.thought, d.actor, own.emotions.attraction, own.needs.stress, own.cycle, recent),d.actor);
             d.memory = d.reply;
             const previous=world.agents.find(a=>a.id===d.actor)!;
-            if (!affectionProposed && !["sleep","share_sleep"].includes(d.intent)) {d.emotions.attraction=previous.emotions.attraction;d.emotions.trust=previous.emotions.trust;}
+            // Assoupli le 2026-09-21 (chantier 3, arc relationnel Lia/Noé) : effacer TOUTE
+            // l'attirance proposée en solo, cumulé au système de crédit de 28 % plus bas
+            // (ligne ~1175), rendait le seuil de 75 % (doute amoureux privé) totalement
+            // inatteignable en pratique — confirmé en relisant les 14 simulations archivées
+            // (aucune occurrence, y compris une session de 229 tours). La moitié d'une HAUSSE
+            // proposée survit désormais : penser à l'autre en son absence compte un peu, mais
+            // moins qu'être ensemble (le bonus de pièce partagée continue de départager les
+            // deux cas). Une BAISSE solo reste entièrement effacée : l'absence seule ne doit
+            // jamais faire redescendre l'attirance, seul un vrai signal négatif partagé le peut.
+            if (!affectionProposed && !["sleep","share_sleep"].includes(d.intent)) {
+                d.emotions.attraction = d.emotions.attraction > previous.emotions.attraction
+                    ? previous.emotions.attraction + Math.round((d.emotions.attraction - previous.emotions.attraction) / 2)
+                    : previous.emotions.attraction;
+                d.emotions.trust=previous.emotions.trust;
+            }
         }
         // Miroir : découverte solo possible depuis le 2026-09-17 (retour utilisateur direct : la
         // mise en scène des découvertes restait toujours conjointe, jamais "l'un tombe dessus seul

@@ -73,6 +73,15 @@ et peuvent chuter plus vite qu'ils ne montent).
 - `mutualAttraction` : attirance ≥ 45 ET confiance ≥ 25 des deux côtés.
 - Gain autonome ralenti : système de crédit fractionnaire, 28 % du gain brut converti en points
   entiers par tour (`credit += gain*.28`), le reste reporté au tour suivant.
+- Tour solo (pièces séparées) : assoupli le 2026-09-21 (chantier 3, arc relationnel). Avant cette
+  date, TOUTE variation d'attirance proposée en solo était effacée (remise à la valeur précédente),
+  hausse comme baisse — cumulé au système de crédit ci-dessus, ce double frein rendait le seuil de
+  75 % totalement inatteignable en pratique : confirmé en relisant les 14 simulations archivées,
+  aucune occurrence du doute amoureux privé (`loveRealized`) depuis l'introduction de ce mécanisme
+  le 2026-09-18, y compris sur une session de 229 tours (full_sim16). Désormais, seule la MOITIÉ
+  d'une hausse solo proposée par le modèle survit (arrondie), avant de repasser par le même système
+  de crédit de 28 % ci-dessus — une baisse solo reste, elle, entièrement effacée : l'absence seule
+  ne doit jamais faire redescendre l'attirance, seul un vrai signal négatif partagé le peut.
 - Attachement (indépendant de l'attirance) : +1 point tous les 4 tours partagés, plafonné à 100 si
   attirance > 75 et confiance ≥ 60, à 65 si attirance ≥ 60, sinon à 25.
 - `personalBoost` (question « quel genre d'homme es-tu ? » suivie d'une réponse intéressée) :
