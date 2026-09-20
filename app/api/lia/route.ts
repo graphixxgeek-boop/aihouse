@@ -1471,14 +1471,27 @@ export async function POST(request: Request) {
             // prompt seule ne suffit pas à garantir cette cohérence-là.
             const generatedReason=d.moveReason?.trim();
             const reliableReason=generatedReason&&!moveReasonMismatchesDestination(generatedReason,destination)?generatedReason:undefined;
-            const motives:readonly string[]=reliableReason?[reliableReason]:!story.met?["je veux savoir s’il y a quelqu’un d’autre","je veux voir si je suis vraiment seul ici","je veux vérifier qu’il n’y a personne d’autre dans cette maison"]:
-             d.intent==="sleep"?["mes yeux se ferment","je tiens plus debout","le sommeil me tombe dessus"]:
-             d.intent==="eat"?["j’ai besoin de manger","la faim me travaille trop pour attendre","je dois avaler quelque chose"]:
-             destination==="jardin"?["la porte est enfin ouverte, je veux voir ce qu’il y a derrière","cette porte ouverte, je veux enfin voir ce qu’il y a dehors","maintenant que c’est ouvert, je veux voir ce jardin de plus près"]:
-             d.intent==="study"?["on a une piste à vérifier","il faut qu’on retourne vérifier ça","cette piste me travaille, faut qu’on aille voir"]:
-             destination==="salon"?["j’ai besoin de prendre du recul","j’ai besoin de m’éloigner deux minutes","ça me ferait du bien de changer d’air"]:
-             input.mode==="move"?["je vais regarder ce qui s’y trouve","je veux voir ce qu’il y a par là","je vais jeter un œil là-bas"]:
-             ["je préfère qu’on ne reste pas chacun de notre côté","je préfère qu’on reste ensemble","j’ai pas envie qu’on se sépare comme ça","je reste dans le même coin que toi"];
+            // Pools CLOISONNÉS par personnage (2026-09-20, root-cause après un vrai bug trouvé par
+            // EL-PROFESSOR dans full_sim14 : 60% des 65 déplacements de toute la session recyclaient
+            // mot pour mot l'une de 6 phrases — la preuve, ce sont très exactement les anciennes
+            // phrases uniques de ce filet ci-dessous, partagées par Lia ET Noé). Root cause : ce filet,
+            // pensé comme un cas rare ("si le modèle ne le fournit pas"), s'est révélé être emprunté
+            // bien plus souvent que prévu — le modèle laisse parfois moveReason vide malgré la consigne
+            // de prompt, une non-conformité qu'aucun renfort de texte ne peut garantir à 100% (même
+            // limite que pour l'accord de genre, tâche #109). Puisque ce filet est donc emprunté bien
+            // plus qu'un cas rare, il doit être aussi rigoureux que le chemin principal sur l'Article 11
+            // (voix étanches) : jamais une garantie déterministe possible sur LA FRÉQUENCE de recours à
+            // ce filet, mais une garantie déterministe totale sur SON CONTENU — Lia et Noé ne peuvent
+            // plus jamais partager le même mot pour mot ici, leurs pools étant disjoints par construction.
+            const isLia=d.actor===1;
+            const motives:readonly string[]=reliableReason?[reliableReason]:!story.met?(isLia?["je veux savoir s’il y a quelqu’un d’autre ici","je dois vérifier qu’on est vraiment seuls"]:["je veux voir si je suis vraiment seul ici","faut que je checke qu’y a personne d’autre dans cette baraque"]):
+             d.intent==="sleep"?(isLia?["mes yeux se ferment","je tiens plus debout"]:["le sommeil me tombe dessus","j’peux plus lutter, faut que je pionce"]):
+             d.intent==="eat"?(isLia?["j’ai besoin de manger, là","je dois avaler quelque chose"]:["la faim me travaille trop pour attendre","je dois avaler un truc, ça urge trop"]):
+             destination==="jardin"?(isLia?["la porte est enfin ouverte, je veux voir ce qu’il y a derrière","cette porte ouverte, je veux enfin voir ce qu’il y a dehors"]:["maintenant que c’est ouvert, je veux voir ce jardin de plus près","cette porte ouverte, ça se refuse pas"]):
+             d.intent==="study"?(isLia?["on a une piste à vérifier","cette histoire me travaille, faut que j’aille creuser"]:["il faut qu’on retourne vérifier ça","cette piste me travaille, faut qu’on aille voir"]):
+             destination==="salon"?(isLia?["j’ai besoin de prendre du recul","j’ai besoin de m’éloigner deux minutes"]:["ça me ferait du bien de changer d’air","j’ai besoin de souffler un peu"]):
+             input.mode==="move"?(isLia?["je vais regarder ce qui s’y trouve","je veux voir ce qu’il y a par là"]:["je vais jeter un œil là-bas","je passe voir ce que ça donne"]):
+             (isLia?["je préfère qu’on ne reste pas chacun de notre côté","je reste dans le même coin que toi"]:["je préfère qu’on reste ensemble","j’ai pas envie qu’on se sépare comme ça"]);
             const line=departureLine(motives,target,destination,story.seed,candidate=>spokenKeys.has(fingerprint("["+a.room+"→"+destination+"] "+candidate)),story.round);
             if(addLine(names[d.actor]+" · déplacement","["+a.room+"→"+destination+"] "+line,a.room))departures.push({actor:d.actor,from:a.room,to:destination,content:line});}}
         if(!life.dialogueIndexed){for(const key of pastKeys)statements.push(db.prepare(`INSERT OR IGNORE INTO dialogue_fingerprints (fingerprint) SELECT ? WHERE ${fence}`).bind(key,token,at));life.dialogueIndexed=true;}

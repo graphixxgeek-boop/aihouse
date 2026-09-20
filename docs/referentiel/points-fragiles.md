@@ -26,10 +26,6 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   comme s'il s'agissait d'un vrai épuisement de quota journalier. Le recul exponentiel avec reset
   au premier succès (déjà implémenté) semble répondre à cette inquiétude, mais ce lien n'a jamais
   été explicitement reconfirmé avec l'utilisateur — à vérifier avec lui plutôt que supposer réglé.
-- Répétitions verbatim de motifs de déplacement (`moveReason`) entre Lia et Noé, relevées sur la
-  quasi-totalité des 13 premières notations EL-PROFESSOR, un cas extrême dans `full_sim14` (60 %
-  des déplacements recyclant l'une de 6 phrases identiques) — le pool de motifs semble trop
-  restreint ou insuffisamment cloisonné par personnage malgré le principe de l'Article 10.
 - Biais possible dans `generateDossierFragment()` qui sous-évalue l'hostilité réellement vécue par
   rapport au transcript (relevé dans 3 des 13 premières notations EL-PROFESSOR : `full_sim4`,
   `full_sim9`, `full_sim10`) — à vérifier comme un sujet à part, distinct d'un cas isolé.
