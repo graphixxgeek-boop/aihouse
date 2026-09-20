@@ -342,6 +342,7 @@ maximiser leurs performances ».)*
 | EL-PROFESSOR | note qualitative de fidélité à la charte (esprit, naturel, voix, enquête, clarté) d'une simulation ou d'un extrait isolé (Article 18, étape 4bis) | gratuit (relit un texte déjà produit) | après chaque simulation Article 18, ou sur demande pour un extrait isolé |
 | THE-SCREENER | note indicative de qualité graphique (2 captures d'écran max) (Article 18, étape 4bis) | réel (Playwright, léger) | après chaque simulation Article 18, jamais bloquant |
 | THE-FINAL-JUDGE | audit indépendant du code et du produit par un agent réellement séparé, verdict opiniâtre + recommandations | réel (agent séparé, 6 paliers d'intensité × 4 paliers de périmètre) | sur demande explicite (moi, l'utilisateur, ou un autre outil), niveaux « Approfondi »/« Exceptionnel » de CHECK-LEVEL-TARGET (tendance, jamais un verrou) |
+| THE-DEEP-READER | cousin de THE-FINAL-JUDGE (même mécanique d'agent séparé, personas et règles d'entrée opposées) dédié à la relecture lourde du suivi (`docs/suivi/`) contre l'historique complet de la conversation | réel (agent séparé, coût variable — plancher fixe + volume réel de conversation à relire) | sur demande explicite (moi, l'utilisateur, ou `check-suivi-fidelity.mjs` en cas de faiblesse répétée), ou proposé périodiquement via CIRCLE-TASKS (jamais coché par défaut) |
 | LE-COORDINATEUR | agrège en un tableau très court ce que les outils gratuits ci-dessus disent déjà, repère un doublon de vérification récent ; son menu de prestations rappelle ce qui peut être commandé | gratuit | synthèse complète (`runNetworkCheck()`) = routine agent, jamais un crochet git (reshellerait `check-house.mjs`, redondant à chaque commit) ; menu des prestations seul = affiché automatiquement à chaque commit (`scripts/hooks/check-last-commit.mjs`, post-commit, 2026-09-20) |
 | Smart Breaker (`check-gemini-quota.mjs` + `gemini-key-health.mjs` + `api-providers.mjs` + `lib/gemini-keys.ts`) | blocages de quota/clé Gemini, portée PRODUCTION | gratuit à diagnostiquer | à la demande, ou automatique en production (repli) |
 | SMART-CONSO-TOKEN | rythme de consommation de TOKENS de l'agent (Agent séparé, lecture exhaustive, poids d'un document toujours chargé) ; peut aussi scanner et proposer des réductions | gratuit à consulter | avant tout appel à un agent séparé ou tout raisonnement coûteux — obligation écrite dans la charte, jamais un garde-fou vérifiable après coup |
@@ -445,6 +446,55 @@ fois construit.)*
   d'entrée ci-dessus — un outil coûteux à chaque déclenchement individuel qui ne serait sollicité
   qu'une fois n'aurait jamais amorti son intérêt. C'est pour ça que les trois canaux ci-dessus
   existent dès sa conception, pas ajoutés après coup.
+
+### Trois canaux de consultation pour THE-DEEP-READER, même modèle
+
+*(Ajouté le 2026-09-20, écart trouvé et corrigé le jour même : THE-DEEP-READER avait été construit
+— registre, script mécanique, KPI, tests — sans jamais appliquer ce modèle explicitement prévu
+« pour tout futur outil-agent » ci-dessus. Absent aussi de la table des outils et du menu
+LE-COORDINATEUR, ce qui a désactivé le garde-fou censé le détecter : `findToolsMissingFromMenu()`
+compare le menu à la table, mais un outil jamais entré dans la table n'a rien à comparer. Une
+récidive du principe déjà écrit plus bas — « un outil n'est jamais fini tant que ses points
+d'intégration décidés ne sont pas câblés et testés ».)*
+
+- **Moi (l'agent) → THE-DEEP-READER.** Je peux proposer de le déclencher quand la procédure légère
+  (`docs/systeme-de-suivi.md`) ne suffit plus à me rassurer sur la complétude du suivi — jamais de ma
+  propre initiative seule, toujours en demandant confirmation d'abord.
+- **L'utilisateur → THE-DEEP-READER.** Une demande directe déclenche l'outil sans détour par une
+  proposition de ma part.
+- **`check-suivi-fidelity.mjs` → THE-DEEP-READER** (calibré explicitement le 2026-09-20) : ses
+  garde-fous mécaniques déjà existants (`findUnverifiedClosures`, `findOpenTasks`,
+  `findClaimedFilesMissing`, `findTaskNumberIssues`, `findCommitsMissingSuiviUpdate`) tournent à
+  chaque commit — quand plusieurs d'entre eux trouvent un problème de façon RÉPÉTÉE sur plusieurs
+  commits consécutifs (jamais un signalement isolé, qui reste du bruit normal), c'est le signal
+  qu'une relecture lourde et indépendante pourrait valoir le coût réel — même logique que la
+  « faiblesse chronique » d'EL-PROFESSOR pour THE-FINAL-JUDGE. Toujours proposé, jamais déclenché
+  tout seul.
+- **Contrairement à THE-FINAL-JUDGE, un seul destinataire pour l'instant** : THE-DEEP-READER ne sert
+  qu'à LE-PLANIFICATEUR, jamais sollicité par EL-PROFESSOR, ALWAYS-NEW-CODE ou les autres — son
+  périmètre (conversation vs `docs/suivi/`) ne recoupe aucun de leurs domaines.
+
+### Recevoir une sortie d'outil n'est pas la même chose que la traiter
+
+*(Ajouté le 2026-09-20, demande explicite de l'utilisateur juste après avoir trouvé l'oubli
+d'intégration de THE-DEEP-READER ci-dessus : « apprends à solliciter les outils quand tu travailles :
+fiabilise ce point ». Preuve concrète, trouvée en se relisant : le crochet post-commit affiche « Ça
+fait N commits sans Ronde périodique (CIRCLE-TASKS) — envisage de la relancer » à CHAQUE commit de
+cette session — jamais traité une seule fois, N ayant grimpé au-delà de 230 sans réaction. Le
+symptôme exact que l'utilisateur pointe : un outil parle, l'agent ne donne pas suite.)*
+
+**Règle** : toute sortie d'outil qui contient une recommandation actionnable (pas un simple
+statut "ok") doit être explicitement traitée avant la fin du tour en cours — soit en agissant
+dessus, soit en la reportant avec une raison explicite écrite quelque part (réponse à
+l'utilisateur, ligne `docs/suivi/`) — jamais silencieusement laissée défiler dans une sortie de
+commande sans qu'aucune décision n'en découle. Une recommandation ignorée à répétition (comme le
+compteur CIRCLE-TASKS ci-dessus) est un signal que la règle elle-même n'est pas appliquée, pas que
+la recommandation a cessé d'être pertinente.
+
+**Différence avec les règles voisines déjà en place** : "une DÉCISION n'est jamais une EXÉCUTION"
+(`docs/systeme-de-suivi.md`) protège contre une décision de calibrage jamais suivie d'un vrai
+travail ; celle-ci protège contre un cran encore plus tôt dans la chaîne — une information
+mécanique déjà produite gratuitement par un outil, jamais même lue avec l'intention d'agir.
 
 ### Aucun de ces outils n'est autonome — l'agent reste toujours celui qui finalise
 

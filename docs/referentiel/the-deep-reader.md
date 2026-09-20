@@ -146,6 +146,24 @@ raisonnement, jamais mécanisable), même statut que `scripts/the-final-judge.mj
   confirmé au moins un écart — jamais un nombre de passages lancés, qui ne dit rien sur l'utilité
   réelle. Lit la colonne « Écarts trouvés » de `docs/suivi/relectures-lourdes/index.md`.
 
+## Intégration dans le paysage d'outils (2026-09-20, complétée après un vrai oubli)
+
+Trouvé en se relisant du point de vue de l'utilisateur (« est-ce qu'on a pensé à tout ? ») : les
+trois raccordements que le projet exige déjà explicitement pour tout outil-agent (« un outil n'est
+jamais fini tant que ses points d'intégration décidés ne sont pas câblés », cf.
+`docs/regles-de-travail.md` §7ter) avaient été sautés à la création. Comblés le même jour :
+- table maîtresse des outils (`docs/regles-de-travail.md`, sous `| Outil | Ce qu'il détecte`) ;
+- menu PRESTATIONS de `scripts/le-coordinateur.mjs` ;
+- section « Trois canaux de consultation pour THE-DEEP-READER » (même modèle que THE-FINAL-JUDGE,
+  `docs/regles-de-travail.md`) — un seul destinataire pour l'instant (LE-PLANIFICATEUR), jamais
+  sollicité par EL-PROFESSOR/ALWAYS-NEW-CODE, dont le périmètre ne recoupe pas le sien.
+
+**Dette structurelle notée, pas corrigée maintenant** : `extractPersonaBlock()`/`detectGenericReport()`
+de `scripts/the-deep-reader.mjs` reprennent une logique quasi identique à celles de
+`scripts/the-final-judge.mjs`, jamais factorisées en un module partagé — une vraie question
+ALWAYS-NEW-CODE, mise en queue plutôt que risquer une refactorisation de `the-final-judge.mjs`
+(outil déjà testé et utilisé) dans la même session que sa création.
+
 ## Statut du blueprint — décision explicite, pas un oubli
 
 Aucun blueprint générique séparé pour l'instant (contrairement à THE-FINAL-JUDGE) : cet outil est
