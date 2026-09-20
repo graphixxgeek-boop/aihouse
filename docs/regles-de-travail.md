@@ -330,12 +330,17 @@ maximiser leurs performances ».)*
 **Trois statuts, jamais confondus (2026-09-20, demande explicite de l'utilisateur : « peux-tu
 m'aider à clarifier ces distinctions entre scripts, employés de la team, scripts importants
 (considérés agents et pourquoi) »)** — la colonne Statut ci-dessous les distingue explicitement :
-- **Agent** (« employé de l'équipe », « membre de la dream team ») : possède un blueprint
-  générique + une instanciation propre à ce projet (`docs/referentiel/X.md`) + un registre
-  (`docs/X/`, dossier + index) — le même schéma standard à chaque fois, comme un poste de travail
-  standard que chaque nouvel employé reçoit puis personnalise. Ce qui justifie ce statut n'est
-  jamais l'ancienneté ni la taille du code, mais l'existence d'un DOMAINE DE JUGEMENT propre au
-  projet, qui mérite d'être documenté à part.
+- **Agent** (« employé de l'équipe », « membre de la dream team ») : possède au minimum une
+  instanciation propre à ce projet (`docs/referentiel/X.md`) + un registre (`docs/X/`, dossier +
+  index) — le même schéma standard à chaque fois, comme un poste de travail standard que chaque
+  nouvel employé reçoit puis personnalise. Le blueprint générique est la norme en plus de ces deux
+  pièces, mais PAS strictement obligatoire : un Agent peut explicitement partager le blueprint d'un
+  autre (déclaré comme son « cousin », jamais silencieux) — seul cas actuel, THE-DEEP-READER
+  partage la mécanique de THE-FINAL-JUDGE sans blueprint séparé, tout en gardant sa propre
+  instanciation et son propre registre. **Précision trouvée le 2026-09-20 en construisant le check
+  d'accueil ci-dessous** : ce qui justifie réellement ce statut n'est jamais l'ancienneté ni la
+  taille du code, ni même la présence d'un blueprint à elle seule, mais l'existence d'un DOMAINE DE
+  JUGEMENT propre au projet, documenté par au moins l'instanciation + le registre.
 - **Utilitaire nommé** (LE-COORDINATEUR, CIRCLE-TASKS, le gabarit HTML, CLAUDE.MD.SPY) : a un nom
   pour qu'on puisse s'y référer facilement, mais aucune connaissance propre au projet à documenter
   à part — sa seule valeur est d'appeler/agréger/mettre en forme ce que les Agents disent déjà.
@@ -774,6 +779,22 @@ une décision explicite séparée de l'agent ou de l'utilisateur, jamais une ini
 coordinateur. Il ne décide rien sur le fond : il agrège ce qui existe déjà et affiche un tableau,
 rien de plus — l'agent (moi) reste celui qui lit, décide et agit, exactement comme pour chaque
 autre outil de ce paysage.
+
+**La « séance d'accueil » d'un nouvel Agent (2026-09-20, demande explicite de l'utilisateur : « le
+coordinateur a pour rôle également de s'assurer que tous les outils sont bien câblés entre eux
+[...] lors de l'arrivée d'un nouveau membre de l'équipe, il y a un check bien défini »).**
+`checkAgentOnboarding(nomAgent, options)` formalise ce qui était fait à la main, de façon
+incomplète, à chaque nouvel Agent cette session (3 raccordements oubliés pour THE-DEEP-READER,
+retrouvés seulement après coup) : vérifie la présence dans la table maîtresse, dans le menu
+PRESTATIONS, l'instanciation (`docs/referentiel/<slug>.md`), le registre (`docs/<slug>/` par
+défaut, ou un chemin explicitement déclaré via `registryPathPrefix` pour une déviation réelle et
+assumée — ex. THE-DEEP-READER, dont le registre vit dans `docs/suivi/relectures-lourdes/`) et le
+blueprint (`docs/<slug>-blueprint.md`, sauf si l'agent déclare `cousinOf` un autre Agent dont il
+partage le blueprint). Jamais les tests eux-mêmes : `check-house.mjs` les couvre déjà à chaque
+commit. **Déclenchement sur demande explicite uniquement** (choix explicite de l'utilisateur,
+jamais automatique dans le crochet post-commit) : je le lance moi-même juste après avoir fini de
+construire un nouvel Agent, comme dernière étape avant de le considérer terminé — un nouvel Agent
+n'arrive pas assez souvent pour justifier une vérification à chaque commit.
 
 ### CIRCLE-TASKS — la « Ronde périodique », même exception volontairement mince
 

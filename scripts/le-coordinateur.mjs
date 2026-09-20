@@ -222,6 +222,57 @@ export function findToolsMissingFromMenu(toolsTableMarkdown, prestations = PREST
     .filter((primaryName) => !menuText.includes(primaryName.toLowerCase()));
 }
 
+// checkAgentOnboarding() — la « séance d'accueil du nouveau collaborateur » (2026-09-20, demande
+// explicite de l'utilisateur : « le coordinateur a pour rôle également de s'assurer que tous les
+// outils sont bien câblés entre eux [...] lors de l'arrivée d'un nouveau membre de l'équipe, il y a
+// un check bien défini pour être sûr de le câbler avec tous les autres »). Formalise ce qui était
+// fait à la main, de façon incomplète, à chaque nouvel Agent cette session (3 raccordements
+// oubliés pour THE-DEEP-READER, retrouvés seulement après coup). Réutilise `parseToolsTable()`
+// (lecture par nom de colonne, jamais par position — cf. le bug corrigé le même jour) et
+// `PRESTATIONS`, jamais une seconde lecture de la table.
+//
+// Vérifie les points de câblage DÉCIDÉS pour un Agent (cf. définition du statut Agent ci-dessus,
+// docs/regles-de-travail.md) : présence dans la table maîtresse, présence dans le menu PRESTATIONS,
+// instanciation (`docs/referentiel/<slug>.md`), registre (`docs/<slug>/`), et blueprint
+// (`docs/<slug>-blueprint.md`) — sauf si l'agent est explicitement déclaré `cousinOf` un autre
+// (seul cas actuel : THE-DEEP-READER, cousin de THE-FINAL-JUDGE). Jamais une vérification des
+// TESTS eux-mêmes (check-house.mjs le fait déjà à chaque commit, aucune raison de le refaire ici).
+export function slugifyAgentName(name) {
+  return String(name ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+export function checkAgentOnboarding(agentName, {
+  toolsTableMarkdown,
+  prestations = PRESTATIONS,
+  existingPaths = new Set(),
+  cousinOf = null,
+  registryPathPrefix = null,
+} = {}) {
+  const gaps = [];
+  const slug = slugifyAgentName(agentName);
+  const nameLower = agentName.toLowerCase();
+
+  const inTable = parseToolsTable(toolsTableMarkdown).some((row) => row.tool.toLowerCase().includes(nameLower));
+  if (!inTable) gaps.push("absent de la table maîtresse (docs/regles-de-travail.md, carte des outils)");
+
+  const inMenu = prestations.some((p) => p.outils.some((o) => o.toLowerCase().includes(nameLower)));
+  if (!inMenu) gaps.push("absent du menu PRESTATIONS (scripts/le-coordinateur.mjs)");
+
+  if (!existingPaths.has(`docs/referentiel/${slug}.md`)) gaps.push(`instanciation manquante (docs/referentiel/${slug}.md)`);
+
+  // Registre : chemin standard docs/<slug>/, SAUF déviation explicitement déclarée (trouvaille
+  // réelle en calibrant contre THE-DEEP-READER, dont le registre vit dans
+  // docs/suivi/relectures-lourdes/ — jamais un chemin deviné, toujours déclaré par l'appelant).
+  const registryPrefix = registryPathPrefix ?? `docs/${slug}/`;
+  if (![...existingPaths].some((p) => p.startsWith(registryPrefix))) gaps.push(`registre manquant (${registryPrefix})`);
+
+  if (!cousinOf && !existingPaths.has(`docs/${slug}-blueprint.md`)) {
+    gaps.push(`blueprint manquant (docs/${slug}-blueprint.md) — si c'est volontaire (cousin d'un autre Agent), le déclarer via l'option cousinOf plutôt que de laisser ce point sans réponse`);
+  }
+
+  return { agentName, slug, gaps, complet: gaps.length === 0 };
+}
+
 // Passthrough vers CHECK-LEVEL-TARGET (accès "privilégié" direct, jamais une réimplémentation) —
 // à appeler explicitement par l'agent pour classer UNE demande précise ; jamais invoqué tout seul
 // dans runNetworkCheck() ci-dessous, qui n'a pas de texte de demande à classer. Même signature que

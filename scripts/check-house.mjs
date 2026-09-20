@@ -921,7 +921,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 155'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 156'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3146,6 +3146,37 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const realMatches = suggestPrestationsForTask('Vérifier qu\'aucune tâche du suivi n\'a été oubliée');
   assert.ok(realMatches.some((m) => m.outils.includes('THE-DEEP-READER')), 'run against the project\'s own real PRESTATIONS menu, a task label closely echoing THE-DEEP-READER\'s own real "demande" wording must actually surface it — the integration this function exists for, not just its isolated logic');
   console.log('Passed: suggestPrestationsForTask() turns the PRESTATIONS menu into a callable service for other scripts — matching on a real, honest keyword overlap (never a single-word false positive, thanks to its ≥2 threshold), returning the full real prestation data with the matched keywords named, an honest empty list when nothing overlaps, and a real match when checked against the project\'s own live menu.');
+}
+{
+  // checkAgentOnboarding() — la "séance d'accueil du nouveau collaborateur" (2026-09-20, demande
+  // explicite de l'utilisateur : « lors de l'arrivée d'un nouveau membre de l'équipe, il y a un
+  // check bien défini pour être sûr de le câbler avec tous les autres »). Formalise ce qui était
+  // fait à la main (et incomplètement — 3 raccordements oubliés pour THE-DEEP-READER) à chaque
+  // nouvel Agent cette session.
+  const { slugifyAgentName, checkAgentOnboarding } = await import('../scripts/le-coordinateur.mjs');
+
+  assert.equal(slugifyAgentName('THE-DEEP-READER'), 'the-deep-reader', 'slugifyAgentName() must lowercase and hyphenate a real agent name exactly the way this project already names its own blueprint/referentiel files');
+  assert.equal(slugifyAgentName('Smart Conso API'), 'smart-conso-api', 'a name with spaces must collapse to the same kebab-case slug used for the real docs/referentiel/smart-conso-api.md file');
+
+  const fakeTable = '| Outil | Statut | Ce qu\'il détecte/régule | Coût | Déclenchement |\n|---|---|---|---|---|\n| FAKE-AGENT-COMPLET | Agent | fait des choses | gratuit | sur demande |';
+  const fakePrestations = [{ demande: 'Faire des choses', outils: ['FAKE-AGENT-COMPLET'], cout: 'gratuit' }];
+  const completePaths = new Set(['docs/fake-agent-complet-blueprint.md', 'docs/referentiel/fake-agent-complet.md', 'docs/fake-agent-complet/index.md']);
+  const complete = checkAgentOnboarding('FAKE-AGENT-COMPLET', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: completePaths });
+  assert.deepEqual(complete, { agentName: 'FAKE-AGENT-COMPLET', slug: 'fake-agent-complet', gaps: [], complet: true }, 'an agent with every real wiring point present (table row, PRESTATIONS entry, blueprint, instanciation, registry) must report zero gaps and complet:true');
+
+  const missingEverything = checkAgentOnboarding('AGENT-FANTOME', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: new Set() });
+  assert.equal(missingEverything.gaps.length, 5, 'an agent present nowhere at all must report exactly the five real gaps (table, menu, instanciation, registry, blueprint), never silently passing on any of them');
+  assert.equal(missingEverything.complet, false, 'complet must be false the moment even one real gap exists');
+
+  const cousinCase = checkAgentOnboarding('FAKE-AGENT-COMPLET', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: new Set(['docs/referentiel/fake-agent-complet.md', 'docs/fake-agent-complet/index.md']), cousinOf: 'UN-AUTRE-AGENT' });
+  assert.deepEqual(cousinCase.gaps, [], 'an agent missing its own blueprint but explicitly declared cousinOf another agent must never be flagged for that specific gap — the declared exception, not a silently guessed one');
+
+  const registryOverrideMissing = checkAgentOnboarding('FAKE-AGENT-COMPLET', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: new Set(['docs/fake-agent-complet-blueprint.md', 'docs/referentiel/fake-agent-complet.md']) });
+  assert.ok(registryOverrideMissing.gaps.some((g) => g.includes('docs/fake-agent-complet/')), 'without an explicit registryPathPrefix override, the registry check must default to the standard docs/<slug>/ location and flag it missing');
+  const registryOverridePresent = checkAgentOnboarding('FAKE-AGENT-COMPLET', { toolsTableMarkdown: fakeTable, prestations: fakePrestations, existingPaths: new Set(['docs/fake-agent-complet-blueprint.md', 'docs/referentiel/fake-agent-complet.md', 'docs/ailleurs/registre.md']), registryPathPrefix: 'docs/ailleurs/' });
+  assert.deepEqual(registryOverridePresent.gaps, [], 'a real, legitimate registry-location deviation (like THE-DEEP-READER\'s registry actually living under docs/suivi/relectures-lourdes/, not docs/the-deep-reader/) must be accepted once explicitly declared via registryPathPrefix, never guessed and never left as a permanent false gap');
+
+  console.log('Passed: checkAgentOnboarding() correctly slugifies a real agent name into its real file-naming convention, reports zero gaps and complet:true for a fully-wired fake agent, reports every one of the five real gap types for a completely unwired one, respects an explicitly declared cousinOf exception for a missing blueprint, and defaults the registry check to the standard docs/<slug>/ location while honoring an explicit registryPathPrefix override for a real documented deviation — the mechanical "onboarding session" the user asked for, replacing the manual, incomplete check that missed three real wiring points for THE-DEEP-READER earlier this session.');
 }
 
 {
