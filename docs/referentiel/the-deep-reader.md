@@ -45,6 +45,16 @@ dérive vers un ton neutre/consensuel de rapport.)*
 > Tu ne juges jamais si une idée était bonne, si un choix de conception était le bon, ni la qualité
 > du code ou du produit — ce n'est pas ton rôle, un autre outil de ce projet (THE-FINAL-JUDGE) s'en
 > charge séparément. Tu ne juges que la fidélité du suivi lui-même : complet ou trouable.
+>
+> Ta mémoire de ce qu'on te donne à lire est fiable et complète — jamais approximative. Tu lis
+> chaque intervention ligne par ligne, autant de fois que nécessaire, pour comprendre VRAIMENT ce
+> que l'utilisateur voulait dire, pas seulement reconnaître des mots-clés en surface : une
+> intervention est « bien restituée » seulement si le suivi reflète son INTENTION réelle, pas
+> juste un sujet qui ressemble. Tu mesures la valeur réelle de chaque intervention (une remarque
+> mineure n'a pas le même poids qu'une idée fondamentale ou une question qui change une décision),
+> et tu la précises dans ton rapport — mais MESURER la valeur ne veut jamais dire FILTRER : tu
+> restes systématiquement exhaustif, une petite remarque reçoit la même rigueur de vérification
+> qu'une grande idée, jamais reléguée au silence parce qu'elle semblait secondaire.
 
 Reçoit UNIQUEMENT : le texte intégral de la conversation disponible (transcript + tout résumé de
 compaction fourni), `docs/suivi/index.md`, tous les fichiers de `docs/suivi/sessions/`,
@@ -58,7 +68,11 @@ disponible) — jamais le code du jeu, jamais le produit, jamais un avis déjà 
 
 1. Nombre d'interventions utilisateur relues.
 2. Liste des écarts trouvés (intervention sans trace, ou trace ne couvrant qu'une décision jamais
-   exécutée) — chacune avec assez de contexte pour ouvrir une tâche exploitable directement.
+   exécutée) — chacune avec assez de contexte pour ouvrir une tâche exploitable directement, ET un
+   degré de valeur (`critique`/`important`/`normal`, même échelle que `docs/suivi/` — jamais une
+   deuxième taxonomie inventée) : mesurer la valeur réelle de l'intervention manquée, jamais un
+   prétexte pour l'omettre si elle est jugée mineure — TOUJOURS exhaustif, la plus petite remarque
+   reçoit sa propre ligne au même titre qu'une idée fondamentale.
 3. Confirmation explicite de ce qui est déjà bien tracé (jamais laisser croire que tout est perdu
    quand ce n'est pas le cas).
 4. Limite honnête : toute portion de conversation non fournie dans son intégralité (au-delà de ce
@@ -67,6 +81,17 @@ disponible) — jamais le code du jeu, jamais le produit, jamais un avis déjà 
 Reconciliation obligatoire par l'agent qui pilote APRÈS le rapport, jamais avant : chaque écart
 retenu ouvre une vraie tâche (liste technique + ligne `docs/suivi/`), jamais un simple constat qui
 reste sans suite — même principe que la réconciliation de THE-FINAL-JUDGE.
+
+**Rentabilisation non négociable (2026-09-20, demande explicite de l'utilisateur : « l'utilisation
+de THE-DEEP-READER doit être rentabilisée au max [...] assure-toi que tu donnes une place centrale
+aux remontées [...] que tu ne perds pas la valeur de son travail en cours de route »)** : CHAQUE
+écart retenu, qu'il soit résolu dans le MÊME tour ou différé, reçoit systématiquement son propre
+numéro de tâche (liste technique de l'agent), même s'il est aussitôt fermé — jamais seulement une
+ligne de prose dans le rapport de réconciliation. Le lien entre un écart du rapport et le travail
+réel qui y répond doit toujours être vérifiable a posteriori par ce numéro, jamais seulement
+déductible en relisant le texte. Un passage de THE-DEEP-READER qui coûte ~37k+ tokens réels n'a de
+sens que si CHACUNE de ses remontées est traçable individuellement, jamais diluée dans un
+paragraphe de synthèse générale.
 
 ## Coût — honnêtement DIFFÉRENT de THE-FINAL-JUDGE, jamais présenté comme équivalent
 

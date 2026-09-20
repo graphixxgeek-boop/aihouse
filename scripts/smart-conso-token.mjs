@@ -38,7 +38,49 @@ export const KNOWLEDGE_PROVENANCE = {
     "https://www.anthropic.com/engineering/advanced-tool-use",
     "https://alexop.dev/posts/stop-bloating-your-claude-md-progressive-disclosure-ai-coding-tools/",
     "https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models",
+    // Enrichissement du 2026-09-20 (2e recherche, demande explicite « niveau expert ») — source
+    // PREMIÈRE PARTIE (documentation officielle Anthropic sur CLAUDE.md lui-même, jamais consultée
+    // avant cette recherche) :
+    "https://code.claude.com/docs/en/best-practices",
+    "https://www.morphllm.com/prompt-compression",
+    "https://mem0.ai/blog/context-engineering-ai-agents-guide",
   ],
+};
+
+// Checklist ACTIONNABLE tirée de la documentation OFFICIELLE Anthropic (code.claude.com,
+// 2026-09-20, deuxième recherche à la demande explicite de l'utilisateur — jamais consultée avant
+// ce jour malgré son autorité) — vient COMPLÉTER, jamais remplacer, le repère "progressive
+// disclosure" déjà utilisé : un test plus précis, ligne par ligne, plutôt qu'un seul seuil global.
+export const CLAUDE_MD_INCLUDE_EXCLUDE = {
+  test: "Pour chaque ligne : « la retirer ferait-elle faire une erreur à l'agent ? » Si non, elle est candidate au retrait ou au déplacement vers un document lu à la demande.",
+  inclure: [
+    "commandes shell que l'agent ne devinerait pas",
+    "règles de style qui diffèrent des conventions par défaut",
+    "instructions de test et lanceur de test préféré",
+    "étiquette du dépôt (nommage de branche, conventions de PR)",
+    "décisions d'architecture spécifiques au projet",
+    "particularités d'environnement (variables requises)",
+    "pièges/comportements non évidents déjà rencontrés",
+  ],
+  exclure: [
+    "tout ce que l'agent peut déduire en lisant le code",
+    "conventions de langage standard déjà connues",
+    "documentation d'API détaillée (un lien suffit)",
+    "information qui change fréquemment",
+    "longues explications ou tutoriels",
+    "description fichier par fichier du dépôt",
+    "pratiques évidentes par elles-mêmes",
+  ],
+  // Trouvaille distincte, jamais dans le repère précédent : une emphase (gras, "IMPORTANT") sur
+  // trop de lignes à la fois DILUE l'emphase elle-même — l'agent ne sait plus laquelle prioriser.
+  // Un fichier avec beaucoup de gras/MAJUSCULES partout n'aide jamais plus qu'un fichier sobre où
+  // seules les vraies priorités ressortent.
+  averAttentionSurEmphase: "Une emphase (gras, « IMPORTANT ») répétée sur de nombreuses lignes dilue l'emphase elle-même — l'agent ne peut plus distinguer la vraie priorité du reste.",
+  // Conséquence qualité, pas seulement coût — directement pertinente pour le garde-fou non
+  // négociable de CLAUDE.md (« jamais entamer la qualité ») : un fichier trop long peut ACTIVEMENT
+  // nuire à la qualité (règles réelles noyées et ignorées), pas seulement coûter cher en tokens —
+  // donc l'alléger correctement PROTÈGE la qualité, il ne la menace pas par nature.
+  consequenceQualite: "Un fichier d'instructions trop long fait que l'agent ignore une partie de son contenu — les vraies règles se noient dans le volume. Le garde-fou « jamais entamer la qualité » ne s'oppose donc pas à l'allègement en soi : un fichier correctement allégé sert MIEUX la qualité qu'un fichier bloated, à condition de ne retirer que ce que ce test qualifie réellement.",
 };
 
 // Repère concret et sourcé (enrichissement du 2026-09-20, demande explicite de l'utilisateur :
