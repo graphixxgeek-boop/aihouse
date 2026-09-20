@@ -715,9 +715,23 @@ assert.ok([
 ].includes(result.decisions[1].reply));response=await post(repairInput);assert.equal(response.status,200);assert.equal(calls,repairCalls);
 console.log('Passed: acquired-evidence-only checkpoint, zero-call local recap, truthful resident memory and idempotent explicit legacy speaker activation.');
 
-const {dialogueProgress:progressOf,groundRoomSpeech:locatedSpeech}=await import('../.sites-runtime/test-dialogue.mjs');
+const {dialogueProgress:progressOf,groundRoomSpeech:locatedSpeech,matchedThemes}=await import('../.sites-runtime/test-dialogue.mjs');
 assert.ok(progressOf(Array.from({length:5},(_,i)=>({id:i,speaker:'Lia',content:'Ce canapé et ce calme nous reposent.'})),['Lia : peur du silence']).overusedThemes.includes('repos et confort du salon'));
 assert.ok(locatedSpeech('Ce miroir est bizarre.','salon',[]).includes('miroir de la chambre'));assert.ok(locatedSpeech('La plante et l’enceinte sont fausses.','bureau',[]).includes('plante du salon'));assert.ok(locatedSpeech('Je regarde la télévision.','salon',[]).includes('télévision'));
+{
+  // matchedThemes() + compteur persisté themeFrequency dans dialogueProgress() (2026-09-20, root-cause
+  // après un vrai trou trouvé sur plusieurs sessions EL-PROFESSOR : le motif "on tourne en rond"
+  // revenait jusqu'à 19 fois sur toute une session sans jamais être signalé "overusedThemes", parce
+  // que la seule fenêtre récente de 16 lignes ne voit jamais 4 occurrences espacées régulièrement —
+  // exactement le même bug déjà trouvé et corrigé une fois pour les mots isolés via wordFrequency.
+  assert.deepEqual(matchedThemes('On tourne en rond, ça ne mène nulle part.'),['ressasser un indice sans preuve neuve'],'matchedThemes() must extract exactly the themes a given text matches, reusing the same THEME_MOTIFS list dialogueProgress() uses internally — never a second, divergent copy of the pattern list');
+  assert.deepEqual(matchedThemes('Il fait beau aujourd’hui.'),[],'a text matching no known theme must report an empty list, never a false positive');
+  const sparseHistory=Array.from({length:16},(_,i)=>({id:i,speaker:i%2?'Noé':'Lia',content:'Un tour ordinaire sans rapport avec le motif surveillé.'}));
+  assert.deepEqual(progressOf(sparseHistory,[],{},{}).overusedThemes,[],'with zero recent matches and zero persisted history, no theme is flagged — the baseline before the fix, still correct');
+  assert.ok(progressOf(sparseHistory,[],{},{'ressasser un indice sans preuve neuve':4}).overusedThemes.includes('ressasser un indice sans preuve neuve'),'closing the exact real gap: a theme absent from the last 16 lines but already at 4+ occurrences in the session-wide persisted counter must still be flagged as overused, exactly like wordFrequency already does for isolated words');
+  assert.ok(!progressOf(sparseHistory,[],{},{'ressasser un indice sans preuve neuve':3}).overusedThemes.includes('ressasser un indice sans preuve neuve'),'a persisted count still under the threshold must not be flagged, so a theme that has come up a couple of times over a long session is not treated as a tic prematurely');
+  console.log('Passed: matchedThemes() extracts exactly the themes a text matches from the single shared THEME_MOTIFS list, and dialogueProgress() now flags a theme as overused when its session-wide persisted count reaches 4, even with zero occurrences in the last 16 lines — closing the exact real gap where "on tourne en rond" recurred up to 19 times across a session without ever tripping the recent-window-only detector.');
+}
 {
   // Trou trouvé le 2026-09-19 en auditant une simulation fraîche : « autant » employé seul revenait
   // 11 fois sur ~150 répliques sans jamais être capté, parce que la fenêtre récente (limitée à 24
@@ -905,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 117'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 118'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,

@@ -230,12 +230,29 @@ function recentEchoWords(recent:DialogueLine[],wordFrequency:Record<string,numbe
   for(const [w,n] of Object.entries(wordFrequency))if(n>=4)flagged.add(w);
   return [...flagged].slice(0,8);
 }
-export function dialogueProgress(history:DialogueLine[],contributions:readonly string[],wordFrequency:Record<string,number> = {}){
+// Chaque motif détecte un THÈME qui tourne à vide, pas seulement une phrase répétée mot pour
+// mot (déjà géré ailleurs par le registre anti-écho) : ici, la même idée ressassée avec des
+// mots différents à chaque fois compte aussi comme un thème épuisé (Article 9/11 de la charte).
+// Exportée (2026-09-20) pour rester la SEULE source de vérité sur ces motifs, utilisée à la fois
+// ici (fenêtre récente) et par app/api/lia/route.ts pour le compteur persisté ci-dessous — jamais
+// une seconde liste de motifs qui pourrait diverger avec le temps (Article 3).
+export const THEME_MOTIFS=[['repos et confort du salon',/canapé|calme|souffl|repos|tranquill/i],['silence et absence de monde extérieur',/silence|\bvide\b|dehors|\bair\b|\broute\b|sortir/i],['réconfort mutuel',/présence|ensemble|rassur|à tes côtés|avec toi/i],['ressasser un indice sans preuve neuve',/tourne(?:nt)? en (?:rond|boucle)|qui tient les ficelles|manipul[ée]?s?|ça ne (?:nous )?(?:avance|dit|explique) (?:pas|rien)|boucle sans fin|prouve (?:au moins |juste )?(?:que|rien)|ça (?:ne )?prouve (?:pas|rien)|disque ray[ée]|change de disque/i]] as const;
+// Thèmes matchés par UN texte donné — factorisé (2026-09-20) pour que route.ts puisse alimenter
+// le compteur persisté ci-dessous sans dupliquer THEME_MOTIFS ni sa logique de test.
+export function matchedThemes(text:string):string[]{
+ return THEME_MOTIFS.filter(([,pattern])=>pattern.test(text)).map(([name])=>name);
+}
+export function dialogueProgress(history:DialogueLine[],contributions:readonly string[],wordFrequency:Record<string,number> = {},themeFrequency:Record<string,number> = {}){
  const recent=history.slice(-16);
- // Chaque motif détecte un THÈME qui tourne à vide, pas seulement une phrase répétée mot pour
- // mot (déjà géré ailleurs par le registre anti-écho) : ici, la même idée ressassée avec des
- // mots différents à chaque fois compte aussi comme un thème épuisé (Article 9/11 de la charte).
- const motifs=[['repos et confort du salon',/canapé|calme|souffl|repos|tranquill/i],['silence et absence de monde extérieur',/silence|\bvide\b|dehors|\bair\b|\broute\b|sortir/i],['réconfort mutuel',/présence|ensemble|rassur|à tes côtés|avec toi/i],['ressasser un indice sans preuve neuve',/tourne(?:nt)? en (?:rond|boucle)|qui tient les ficelles|manipul[ée]?s?|ça ne (?:nous )?(?:avance|dit|explique) (?:pas|rien)|boucle sans fin|prouve (?:au moins |juste )?(?:que|rien)|ça (?:ne )?prouve (?:pas|rien)/i]] as const;
  const echoWords=recentEchoWords(history.slice(-30),wordFrequency);
- return {recentContributions:contributions.slice(-12),overusedThemes:motifs.filter(([,pattern])=>recent.filter(l=>pattern.test(l.content)).length>=4).map(([name])=>name),echoWords,rule:'Répondre à la dernière intervention avec un apport concret : une objection, un détail personnel ou une déduction prudente. Ne pas reformuler simplement l’accord du partenaire. Garder Lia incisive et Noé concret ; éviter la même tournure pour les deux. Si overusedThemes n’est pas vide, ne l’alimentez plus avec une nouvelle variante, même reformulée : proposez une action concrète (se déplacer, vérifier un autre objet), une hypothèse vraiment neuve, une question personnelle, ou reconnaissez l’impasse en une phrase puis changez réellement de sujet. Aucun faux indice pour renouveler le sujet. Si echoWords n’est pas vide, ces mots précis reviennent déjà plusieurs fois récemment (détection automatique, pas une interdiction définitive) : évite de les réutiliser dans cette réplique, cherche une formulation qui n’en a besoin d’aucun.'};
+ // Fenêtre récente (>=4 sur les 16 dernières lignes, inchangé) CROISÉE avec un compteur persisté
+ // sur toute la session (2026-09-20, root-cause après un vrai trou trouvé sur plusieurs
+ // simulations EL-PROFESSOR : le motif "on tourne en rond" revenait jusqu'à 19 fois sur une
+ // session sans jamais être détecté "overusedThemes", exactement le même bug déjà trouvé et
+ // corrigé une fois pour les mots isolés via wordFrequency (cf. recentEchoWords ci-dessus, même
+ // raisonnement) — un thème qui revient une fois toutes les 15-20 répliques ne se voit jamais 4
+ // fois dans une fenêtre de 16 lignes, quelle que soit sa fréquence réelle sur toute la partie.
+ // Même seuil (4) que wordFrequency sur sa fenêtre longue, pour la même raison de cohérence.
+ const overusedThemes=THEME_MOTIFS.filter(([name,pattern])=>recent.filter(l=>pattern.test(l.content)).length>=4||(themeFrequency[name]??0)>=4).map(([name])=>name);
+ return {recentContributions:contributions.slice(-12),overusedThemes,echoWords,rule:'Répondre à la dernière intervention avec un apport concret : une objection, un détail personnel ou une déduction prudente. Ne pas reformuler simplement l’accord du partenaire. Garder Lia incisive et Noé concret ; éviter la même tournure pour les deux. Si overusedThemes n’est pas vide, ne l’alimentez plus avec une nouvelle variante, même reformulée : proposez une action concrète (se déplacer, vérifier un autre objet), une hypothèse vraiment neuve, une question personnelle, ou reconnaissez l’impasse en une phrase puis changez réellement de sujet. Aucun faux indice pour renouveler le sujet. Si echoWords n’est pas vide, ces mots précis reviennent déjà plusieurs fois récemment (détection automatique, pas une interdiction définitive) : évite de les réutiliser dans cette réplique, cherche une formulation qui n’en a besoin d’aucun.'};
 }

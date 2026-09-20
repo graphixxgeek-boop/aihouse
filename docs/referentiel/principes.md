@@ -283,6 +283,23 @@ Aucune garantie mathématique que Gemini suive cette consigne à chaque tour (co
 reste du registre de prompt) ; à revalider par une nouvelle comparaison inter-sessions une fois
 plusieurs simulations rejouées avec ce correctif actif.
 
+5.2ter. **Compteur `themeFrequency` persisté pour les "thèmes épuisés"** (`lib/dialogue.ts`/
+`lib/life.ts`, 2026-09-20, root-cause après une vraie persistance trouvée par EL-PROFESSOR sur
+plusieurs sessions : le motif "on tourne en rond" revenait jusqu'à 19 fois sur une session sans
+jamais être signalé "overusedThemes"). Même angle mort que 5.8 avait déjà identifié et corrigé pour
+`echoWords`/mots isolés, jamais reproduit pour les THÈMES jusqu'ici (Article 3) : la détection de
+5.2 (seize dernières répliques, seuil 4) ne voit jamais un thème qui revient une fois toutes les
+15-20 répliques, quelle que soit sa fréquence réelle sur toute la session. `overusedThemes` croise
+désormais cette fenêtre courte avec `life.themeFrequency`, un compteur persisté sur toute la partie
+(même seuil 4, même patron que `wordFrequency`) — un thème absent des seize dernières lignes mais
+déjà à 4 occurrences ou plus dans la session entière est quand même signalé. Complété par un
+principe auto-appliqué dans `lib/lia.ts` (jamais une liste de formulations, corollaire de l'Article
+17) : le modèle doit lui-même reconnaître quand l'idée "on est bloqués/ça ne mène nulle part" a déjà
+été exprimée, sous QUELQUE FORME QUE CE SOIT, pas seulement les tournures que le détecteur regex
+connaît (`THEME_MOTIFS`, ensemble fixe de 4 motifs, ne peut structurellement pas couvrir tous les
+paraphrasages). Aucune garantie à 100 % côté prompt ; à revalider sur 2 simulations propres
+consécutives (`docs/simulations/correctifs-a-revalider.md`).
+
 5.3. Les moments scénarisés qui ne passent pas par un appel API (révélation finale, bilan
 d'enquête, description de l'apparence, découvertes du miroir/des provisions, questions
 personnelles) doivent exister en plusieurs formulations réellement distinctes, choisies de façon

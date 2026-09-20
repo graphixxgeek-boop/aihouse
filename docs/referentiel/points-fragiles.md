@@ -26,10 +26,6 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   comme s'il s'agissait d'un vrai épuisement de quota journalier. Le recul exponentiel avec reset
   au premier succès (déjà implémenté) semble répondre à cette inquiétude, mais ce lien n'a jamais
   été explicitement reconfirmé avec l'utilisateur — à vérifier avec lui plutôt que supposer réglé.
-- Le motif "on tourne en rond"/"en boucle"/"disque rayé" apparaît dans 8 des 13 premières notations
-  EL-PROFESSOR (`docs/el-professor/synthese-2026-09-19.md`), malgré un principe déjà écrit à
-  l'Article 17 censé le couvrir — le registre anti-doublon en place ne semble pas suffire pour cette
-  famille précise d'expressions ; à investiguer avant tout nouveau correctif (Article 3/19).
 - Répétitions verbatim de motifs de déplacement (`moveReason`) entre Lia et Noé, relevées sur la
   quasi-totalité des 13 premières notations EL-PROFESSOR, un cas extrême dans `full_sim14` (60 %
   des déplacements recyclant l'une de 6 phrases identiques) — le pool de motifs semble trop
