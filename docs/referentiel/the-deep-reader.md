@@ -130,6 +130,22 @@ jamais lancé sans repasser par les deux conseillers au moment précis de la sé
 Vit sous `docs/suivi/` plutôt qu'un dossier `docs/the-deep-reader/` séparé : son unique client est
 LE-PLANIFICATEUR, contrairement à THE-FINAL-JUDGE qui sert tout le projet.
 
+## Partie mécanique + KPI (2026-09-20)
+
+`scripts/the-deep-reader.mjs` — zéro appel réseau, zéro coût API (le jugement lui-même reste un vrai
+raisonnement, jamais mécanisable), même statut que `scripts/the-final-judge.mjs` :
+- `extractPersonaBlock(texte)` — extrait le personnage FIXE directement de ce document, jamais
+  reformulé à la main à chaque appel.
+- `detectGenericReport(texte)` — repère les signaux structurels d'un rapport trop vague pour être
+  exploitable : aucun nombre concret, une des trois parties attendues manquante (interventions
+  relues / écarts / déjà bien tracé), ou un rapport anormalement court. Ne détecte que les dérives
+  les plus grossières, comme pour THE-FINAL-JUDGE — jamais un jugement sur la justesse des écarts
+  trouvés eux-mêmes.
+- `rereadPerformance(indexText)` — KPI central, même vocation qu'HYPER-SCAN-CHECKPOINT : le succès
+  de l'outil ne se mesure JAMAIS à « a-t-il tourné sans erreur » mais au taux réel de passages ayant
+  confirmé au moins un écart — jamais un nombre de passages lancés, qui ne dit rien sur l'utilité
+  réelle. Lit la colonne « Écarts trouvés » de `docs/suivi/relectures-lourdes/index.md`.
+
 ## Statut du blueprint — décision explicite, pas un oubli
 
 Aucun blueprint générique séparé pour l'instant (contrairement à THE-FINAL-JUDGE) : cet outil est
