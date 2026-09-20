@@ -52,6 +52,23 @@ export const PROGRESSIVE_DISCLOSURE_BENCHMARK = { lignesIdeal: 100, lignesLimite
 // Schémas connus coûteux pour Claude (2026-09-20) — jamais un chiffre exact, un ORDRE DE GRANDEUR
 // documenté et sourcé, pour que l'agent pèse le besoin réel avant de foncer ("on ne chauffe pas une
 // pièce en été", demande explicite de l'utilisateur).
+// Nuance explicite (2026-09-20, demande explicite de l'utilisateur : « est-ce que d'un autre côté,
+// l'utilisation des outils peut économiser des tokens, car automatisés ? »). Réponse honnête, à
+// double sens, jamais une généralité du type "les outils coûtent" ou "les outils économisent" :
+// - AUTOMATISATION MÉCANIQUE (ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD, LE-COORDINATEUR) tourne
+//   dans un processus séparé, à COÛT NUL pour le contexte de l'agent — un vrai gain net, puisque
+//   reproduire le même travail à la main (relire tout le code pour chercher un champ jamais lu)
+//   coûterait, lui, de vrais tokens de contexte.
+// - AUTOMATISATION PAR AGENT SÉPARÉ (THE-FINAL-JUDGE, HYPER-SCAN-CHECKPOINT version complète)
+//   n'économise JAMAIS de tokens — elle ajoute un coût fixe (~37k, cf. agent_subagent_spawn
+//   ci-dessous) EN PLUS de ce qui a déjà été dépensé pour y arriver. Jamais un raisonnement délégué
+//   "gratuitement" : justifié seulement par un besoin réel de regard indépendant, jamais par l'idée
+//   fausse que "c'est automatisé donc c'est gratuit".
+export const AUTOMATION_TOKEN_NUANCE = {
+  mecanique: "Coût nul pour le contexte de l'agent — un vrai gain net face à l'équivalent manuel.",
+  agentSepare: "Coût fixe ajouté (~37k tokens), jamais une économie — justifié par le besoin de regard indépendant, jamais par l'automatisation elle-même.",
+};
+
 export const KNOWN_COSTLY_PATTERNS = {
   agent_subagent_spawn: {
     poids: "élevé",
@@ -91,24 +108,82 @@ export function measureClaudeMdWeight(text) {
   return { tokens, niveau: "faible", message: `~${tokens} tokens estimés — dans une fourchette raisonnable.` };
 }
 
+// Compte les asides narratives datées ("*(ajouté le 2026-09-19, ...)*") — un signal MÉCANIQUE
+// faible mais honnête de contenu historique/justificatif plutôt que de règle active, jamais une
+// preuve complète (une vraie lecture reste seule capable de trier tout le reste). Réutilisé comme
+// point de départ concret et sûr pour une restructuration (2026-09-20, affiné après un premier
+// scan jugé pas assez actionnable par l'utilisateur).
+const DATED_ASIDE_PATTERN = /\*\([^)]*\b20\d{2}-\d{2}-\d{2}\b[^)]*\)\*/g;
+export function countDatedNarrativeMarkers(text) {
+  const matches = text?.match(DATED_ASIDE_PATTERN) || [];
+  const tokens = matches.reduce((sum, m) => sum + estimateTokens(m), 0);
+  return { occurrences: matches.length, tokens };
+}
+
+// Livrable concret, pas seulement un chiffre (2026-09-20, demande explicite de l'utilisateur : « il
+// délivre un vrai résultat [...] il sait comment économiser »). Localise chaque aside narrative
+// datée (numéro de ligne + extrait) pour produire une vraie liste de candidats prête à l'emploi —
+// jamais appliquée automatiquement (Article 14), mais un travail mécanique fait une fois, gratuit,
+// qui évite de le refaire à la main au moment d'une vraie session de restructuration future : le
+// gain réel n'est pas le scan lui-même, c'est le temps/tokens économisés à CETTE session future.
+export function listDatedNarrativeMarkers(text) {
+  if (!text) return [];
+  const lines = text.split("\n");
+  let offset = 0;
+  const lineStarts = lines.map((l) => { const start = offset; offset += l.length + 1; return start; });
+  const results = [];
+  for (const m of text.matchAll(DATED_ASIDE_PATTERN)) {
+    const idx = m.index ?? 0;
+    let ligne = 1;
+    for (let i = 0; i < lineStarts.length; i++) if (lineStarts[i] <= idx) ligne = i + 1; else break;
+    const extrait = m[0].length > 140 ? m[0].slice(0, 140) + "…" : m[0];
+    results.push({ ligne, tokens: estimateTokens(m[0]), extrait: extrait.replace(/\n/g, " ") });
+  }
+  return results;
+}
+
 // Généralise measureClaudeMdWeight() à N'IMPORTE QUEL document toujours chargé ou fréquemment relu
 // (2026-09-20, demande explicite : « il est capable de réaliser un scan du code et proposer des
 // solutions moins coûteuses en token »). Ajoute le repère "progressive disclosure" (benchmark
 // ci-dessus) — jamais une décision automatique de couper quoi que ce soit : seulement un signal
 // mesurable, la décision de CE qui peut bouger vers un document à la demande reste toujours une
 // vraie lecture humaine/agent (Article 19).
-export function scanDocumentWeight(text, filename = "document") {
+//
+// **Affiné le 2026-09-20** (demande explicite : « chaque résultat doit correspondre à une action
+// possible »), après un premier scan jugé pas assez actionnable — traitait un document toujours
+// chargé (CLAUDE.md, coût payé à CHAQUE message) et un document lu à la demande (le reste de
+// docs/, coût payé une fois à la lecture) comme s'ils méritaient la même réaction. `alwaysLoaded`
+// change la nature du conseil rendu, jamais seulement son ton : un document toujours chargé reçoit
+// une action concrète et datée (les asides narratives déjà repérables mécaniquement) ; un document
+// à la demande reçoit explicitement l'absence d'action requise, pour ne jamais faire perdre du
+// temps sur un faux problème.
+export function scanDocumentWeight(text, filename = "document", { alwaysLoaded = false } = {}) {
   const weight = measureClaudeMdWeight(text);
   const lignes = (text?.match(/\n/g) || []).length + 1;
   const overBenchmark = lignes > PROGRESSIVE_DISCLOSURE_BENCHMARK.lignesLimite;
+  let actionPossible;
+  let urgence;
+  if (!overBenchmark) {
+    actionPossible = "Aucune action — dans le repère recommandé.";
+    urgence = "aucune";
+  } else if (!alwaysLoaded) {
+    actionPossible = "Aucune action requise maintenant : ce document est lu À LA DEMANDE, pas à chaque message — sa taille est normale pour de la documentation de référence. Seule question pertinente, qu'aucun scan ne peut mesurer : est-il relu plus souvent que nécessaire dans une même session ?";
+    urgence = "informative";
+  } else {
+    const markers = countDatedNarrativeMarkers(text);
+    actionPossible = markers.occurrences
+      ? `Document TOUJOURS CHARGÉ (coût payé à chaque message) : ${markers.occurrences} aside(s) narrative(s) datée(s) repérée(s) mécaniquement (~${markers.tokens} tokens, candidates sûres car déjà explicitement historiques) — commencer une restructuration par celles-ci, puis trier le reste à la main (Article 19, jamais automatique).`
+      : `Document TOUJOURS CHARGÉ (coût payé à chaque message), au-delà du repère, mais aucune aside narrative datée détectée mécaniquement — le tri doit se faire entièrement à la main, aucun point de départ mécanique à proposer ici.`;
+    urgence = "action_requise";
+  }
   return {
     fichier: filename,
     lignes,
+    alwaysLoaded,
     ...weight,
     conformeProgressiveDisclosure: !overBenchmark,
-    suggestion: overBenchmark
-      ? `${lignes} lignes, au-delà du repère de ${PROGRESSIVE_DISCLOSURE_BENCHMARK.lignesLimite} (idéal ${PROGRESSIVE_DISCLOSURE_BENCHMARK.lignesIdeal}) pour un document toujours chargé — candidat à un déplacement partiel vers un document lu à la demande (jamais automatique, une vraie lecture doit trier ce qui est universel de ce qui ne l'est pas).`
-      : "Dans le repère recommandé pour un document toujours chargé.",
+    urgence,
+    actionPossible,
   };
 }
 
@@ -118,14 +193,17 @@ export function scanDocumentWeight(text, filename = "document") {
 // 2026-09-20). "documents" est une Map<nomFichier, texte> — l'appelant choisit quels fichiers
 // correspondent à la portée demandée (Global = tous les documents toujours chargés/fréquemment
 // relus ; Partiel = plusieurs ; Zoomé = un seul ; Focus = un extrait précis d'un seul document).
+// `alwaysLoadedSet` : Set<nomFichier> des documents réellement toujours chargés (dans ce projet,
+// CLAUDE.md seul) — tout document absent du set est traité comme lu à la demande.
 export const SCOPE_LEVELS = ["global", "partiel", "zoome", "focus"];
 
-export function scanScope(portee, documents) {
+export function scanScope(portee, documents, alwaysLoadedSet = new Set()) {
   if (!SCOPE_LEVELS.includes(portee)) throw new Error(`Portée inconnue: "${portee}" — attendu l'un de ${SCOPE_LEVELS.join(", ")}`);
-  const resultats = Object.entries(documents ?? {}).map(([nom, texte]) => scanDocumentWeight(texte, nom));
+  const resultats = Object.entries(documents ?? {}).map(([nom, texte]) => scanDocumentWeight(texte, nom, { alwaysLoaded: alwaysLoadedSet.has(nom) }));
   const totalTokens = resultats.reduce((sum, r) => sum + r.tokens, 0);
-  const aRegarder = resultats.filter((r) => !r.conformeProgressiveDisclosure);
-  return { portee, totalTokens, documentsAnalyses: resultats.length, aRegarder };
+  const actionRequise = resultats.filter((r) => r.urgence === "action_requise");
+  const informatif = resultats.filter((r) => r.urgence === "informative");
+  return { portee, totalTokens, documentsAnalyses: resultats.length, actionRequise, informatif, aRegarder: [...actionRequise, ...informatif] };
 }
 
 // KPI (demandé explicitement le 2026-09-20 : « enrichis [...] avec son KPI ») — même principe que
@@ -237,6 +315,11 @@ export function summarizeHistory(history, now, windowDays = 7) {
 // session) : un rapport lisible complet dans `docs/smart-conso-token/scans/` (committé, consultable
 // par un futur agent) et une entrée compacte dans l'historique local non versionné (pour le rythme
 // et l'expérience accumulée, jamais pour relire le détail).
+// **Affiné le 2026-09-20** (demande explicite : « chaque résultat doit correspondre à une action
+// possible [...] plus cohérent, plus lisible ») : sépare clairement ce qui demande une vraie action
+// (documents toujours chargés au-delà du repère) de ce qui est purement informatif (documents lus à
+// la demande, taille normale pour de la référence) — jamais les deux mélangés dans une seule liste
+// plate comme le premier scan le faisait.
 export function formatScanReport(scopeResult, now) {
   const lines = [
     `SMART-CONSO-TOKEN — scan réel — ${new Date(now).toISOString()}`,
@@ -245,10 +328,13 @@ export function formatScanReport(scopeResult, now) {
     `Documents analysés : ${scopeResult.documentsAnalyses}`,
     `Total estimé : ~${scopeResult.totalTokens} tokens`,
     "",
-    scopeResult.aRegarder.length
-      ? `${scopeResult.aRegarder.length} document(s) au-delà du repère "progressive disclosure" :`
-      : "Aucun document au-delà du repère \"progressive disclosure\".",
-    ...scopeResult.aRegarder.map((r) => `  - ${r.fichier} : ${r.lignes} lignes, ~${r.tokens} tokens — ${r.suggestion}`),
+    "=== ACTION REQUISE (documents toujours chargés, au-delà du repère) ===",
+    scopeResult.actionRequise.length ? "" : "Aucun.",
+    ...scopeResult.actionRequise.map((r) => `  - ${r.fichier} : ${r.lignes} lignes, ~${r.tokens} tokens — ${r.actionPossible}`),
+    "",
+    "=== INFORMATIF SEULEMENT (documents lus à la demande, aucune action requise) ===",
+    scopeResult.informatif.length ? "" : "Aucun.",
+    ...scopeResult.informatif.map((r) => `  - ${r.fichier} : ${r.lignes} lignes, ~${r.tokens} tokens — ${r.actionPossible}`),
   ];
   return lines.join("\n") + "\n";
 }
@@ -259,6 +345,31 @@ export function recordScan(scopeResult, now) {
   history.actions.push({ type: "scan", at: now, portee: scopeResult.portee, totalTokens: scopeResult.totalTokens, aRegarder: scopeResult.aRegarder.length });
   writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 1));
   return history;
+}
+
+// Garde-fou d'AUTORITÉ RÉELLE sur les autres outils (2026-09-20, demande explicite de l'utilisateur :
+// « comment son autorité est réglée avec les outils ? »). Limite déjà posée : aucune preuve externe
+// n'existe pour un appel d'agent séparé EN GÉNÉRAL — mais un outil comme THE-FINAL-JUDGE laisse
+// toujours une trace externe et vérifiable de son propre passage (son rapport archivé dans
+// docs/the-final-judge/index.md) : ce garde-fou compare CETTE trace à l'historique local de
+// SMART-CONSO-TOKEN, exactement le même principe que findUnconfirmedBursts() de Smart Conso API
+// (comparer une preuve indépendante au carnet de consultation). Ça rend l'obligation de consultation
+// écrite dans la charte VÉRIFIABLE après coup pour les outils qui archivent leur propre passage —
+// jamais pour un simple appel d'agent ad hoc, qui reste hors de portée (aucune trace externe).
+export function findJudgeSpawnsWithoutConsultation(indexText, history, dayWindowMs = 24 * 60 * 60 * 1000) {
+  const dates = [];
+  for (const line of (indexText || "").split("\n")) {
+    const m = /^\|\s*(\d{4}-\d{2}-\d{2})\s*\|/.exec(line);
+    if (m) dates.push(m[1]);
+  }
+  const confirmedSpawns = (history?.actions ?? []).filter((a) => a.type === "agent_subagent_spawn").map((a) => a.at);
+  const missing = [];
+  for (const date of dates) {
+    const dayStart = new Date(date + "T00:00:00Z").getTime();
+    const hasConsultation = confirmedSpawns.some((at) => at >= dayStart - dayWindowMs && at < dayStart + dayWindowMs);
+    if (!hasConsultation) missing.push(date);
+  }
+  return missing;
 }
 
 function main() {

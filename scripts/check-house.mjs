@@ -919,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 126'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 127'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3122,7 +3122,8 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const {
     estimateTokens, measureClaudeMdWeight, checkKnowledgeFreshness, countRecentActions, assess,
     scanDocumentWeight, scanScope, SCOPE_LEVELS, computeAdoptionKpi, KNOWN_COSTLY_PATTERNS, KNOWLEDGE_PROVENANCE,
-    formatScanReport,
+    formatScanReport, countDatedNarrativeMarkers, findJudgeSpawnsWithoutConsultation, AUTOMATION_TOKEN_NUANCE,
+    listDatedNarrativeMarkers,
   } = await import('../scripts/smart-conso-token.mjs');
 
   assert.equal(estimateTokens('abcd'), 1, 'the ~4-characters-per-token heuristic must round to the nearest whole token, never a fractional or wildly inaccurate estimate');
@@ -3155,25 +3156,50 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(KNOWN_COSTLY_PATTERNS.agent_subagent_spawn.raison.includes('37'), 'the agent-spawn pattern must cite the real ~37k-token cold-start finding from the 2026-09-20 research, not a vague unsourced claim');
 
   const claudeMdText = 'ligne\n'.repeat(400);
-  const scanResult = scanDocumentWeight(claudeMdText, 'CLAUDE.md');
-  assert.equal(scanResult.conformeProgressiveDisclosure, false, 'a document well past the 300-line progressive-disclosure benchmark must be flagged as non-conforming, exactly the real finding on the project\'s own CLAUDE.md');
+  const scanResultAlways = scanDocumentWeight(claudeMdText, 'CLAUDE.md', { alwaysLoaded: true });
+  assert.equal(scanResultAlways.conformeProgressiveDisclosure, false, 'a document well past the 300-line progressive-disclosure benchmark must be flagged as non-conforming, exactly the real finding on the project\'s own CLAUDE.md');
+  assert.equal(scanResultAlways.urgence, 'action_requise', 'an always-loaded document over the benchmark must be classified as requiring real action, since its cost is paid on every single message');
+  const scanResultOnDemand = scanDocumentWeight(claudeMdText, 'docs/referentiel/principes.md', { alwaysLoaded: false });
+  assert.equal(scanResultOnDemand.urgence, 'informative', 'a document read only on demand must never be classified as requiring action even when it is large — its size is normal for reference material, exactly the distinction the user asked to add after judging the first scan not actionable enough');
+  assert.ok(scanResultOnDemand.actionPossible.includes('Aucune action'), 'an on-demand document\'s actionPossible field must explicitly say no action is needed, never the same generic suggestion given to an always-loaded document');
   const smallDoc = scanDocumentWeight('ligne\n'.repeat(10), 'petit.md');
   assert.equal(smallDoc.conformeProgressiveDisclosure, true, 'a small document well under the benchmark must never be falsely flagged');
+  assert.equal(smallDoc.alwaysLoaded, false, 'alwaysLoaded must default to false when not specified, never crash on a missing option');
+
+  const markers = countDatedNarrativeMarkers('*(ajouté le 2026-09-19, texte)* et encore *(précisé le 2026-09-20, autre texte)* et du texte normal.');
+  assert.equal(markers.occurrences, 2, 'countDatedNarrativeMarkers() must find every dated parenthetical aside in the text, a real mechanical signal of historical/justificatory content rather than active rule text');
+  assert.equal(countDatedNarrativeMarkers('texte sans aside daté du tout.').occurrences, 0, 'text with no dated aside must report zero markers, never a false positive');
+
+  const multiline = 'ligne1\nligne2\n*(ajouté le 2026-09-19, un texte assez long pour être tronqué si besoin)*\nligne4';
+  const listed = listDatedNarrativeMarkers(multiline);
+  assert.equal(listed.length, 1, 'listDatedNarrativeMarkers() must return one concrete entry per real dated aside found, a ready-to-use worklist rather than a bare count');
+  assert.equal(listed[0].ligne, 3, 'each entry must report the real 1-indexed line number where the aside starts, so a future restructuring pass can jump straight to it rather than re-searching the whole file');
+  assert.ok(listed[0].extrait.length > 0 && !listed[0].extrait.includes('\n'), 'each entry must include a readable single-line excerpt, never a raw multi-line dump');
+  assert.deepEqual(listDatedNarrativeMarkers(''), [], 'empty or missing text must return an empty worklist, never crash');
 
   assert.deepEqual(SCOPE_LEVELS, ['global', 'partiel', 'zoome', 'focus'], 'SMART-CONSO-TOKEN must reuse the exact same 4-level scope vocabulary already created for THE-FINAL-JUDGE, never a second invented taxonomy (explicit harmony request)');
   assert.throws(() => scanScope('portee-inconnue', {}), /Portée inconnue/, 'an unrecognized scope level must fail loudly rather than silently defaulting to some arbitrary behavior');
-  const scopeResult = scanScope('partiel', { 'a.md': 'x\n'.repeat(5), 'b.md': 'x\n'.repeat(500) });
-  assert.equal(scopeResult.documentsAnalyses, 2, 'scanScope() must analyze every document passed in for the given scope, never silently dropping one');
-  assert.equal(scopeResult.aRegarder.length, 1, 'scanScope() must flag only the document(s) that actually exceed the progressive-disclosure benchmark, not the whole set');
+  const scopeResult = scanScope('partiel', { 'a.md': 'x\n'.repeat(5), 'b.md': 'x\n'.repeat(500), 'CLAUDE.md': claudeMdText }, new Set(['CLAUDE.md']));
+  assert.equal(scopeResult.documentsAnalyses, 3, 'scanScope() must analyze every document passed in for the given scope, never silently dropping one');
+  assert.equal(scopeResult.actionRequise.length, 1, 'scanScope() must place only the always-loaded, over-benchmark document (CLAUDE.md) in actionRequise');
+  assert.equal(scopeResult.informatif.length, 1, 'scanScope() must place the on-demand, over-benchmark document (b.md) in informatif, never mixed in with real action items');
+  assert.equal(scopeResult.aRegarder.length, 2, 'aRegarder must remain the combined list for backward compatibility, covering both action_requise and informative findings');
 
   assert.deepEqual(computeAdoptionKpi({ actions: [] }), { propositionsAppliquees: 0, reductionMoyennePct: undefined }, 'with zero applied proposals, the KPI must report an honest zero/undefined, never a fabricated average');
   const kpi = computeAdoptionKpi({ actions: [{ type: 'proposition_appliquee', reductionPct: 20 }, { type: 'proposition_appliquee', reductionPct: 40 }, { type: 'autre_action' }] });
   assert.deepEqual(kpi, { propositionsAppliquees: 2, reductionMoyennePct: 30 }, 'the KPI must count and average only genuinely applied proposals with a real measured reduction, ignoring unrelated recorded actions — the tool\'s real vocation per the user\'s explicit request, never a count of scans merely run');
   assert.ok(KNOWLEDGE_PROVENANCE.validatedFor === 'claude' && KNOWLEDGE_PROVENANCE.sources.length > 0, 'the knowledge provenance must always declare which model it was validated for and cite real sources, never an unsourced or unattributed registry');
+  assert.ok(AUTOMATION_TOKEN_NUANCE.mecanique && AUTOMATION_TOKEN_NUANCE.agentSepare, 'the tool must explicitly know the two-sided truth about automation: mechanical scripts genuinely save tokens (zero context cost) while separate-agent spawns never do (fixed cost added on top) — the exact real distinction the user asked it to master for resource allocation');
 
   const report = formatScanReport(scopeResult, now);
-  assert.ok(report.includes('a.md') === false && report.includes('b.md'), 'formatScanReport() must list only the documents genuinely flagged as over the benchmark, never every document scanned regardless of outcome');
+  assert.ok(report.includes('ACTION REQUISE') && report.includes('INFORMATIF SEULEMENT'), 'the archived scan report must clearly separate action-required findings from informative-only ones into two distinct sections, never one flat mixed list — the exact readability fix the user asked for after judging the first report not actionable enough');
   assert.ok(report.includes(String(scopeResult.totalTokens)), 'the archived scan report must state the real total token estimate computed for this scan, never a placeholder');
 
-  console.log('Passed: SMART-CONSO-TOKEN correctly estimates token weight from raw text length, classifies a document into low/moderate/high relative to the cited research benchmarks, never silently assumes its costly-pattern knowledge stays valid across a real model/platform change, escalates a recognized costly pattern from soft to hard exactly at its configured threshold while never fabricating a verdict for an unknown pattern, reuses THE-FINAL-JUDGE\'s exact scope vocabulary rather than inventing a second one, flags only documents genuinely over the progressive-disclosure benchmark, and computes its adoption KPI from real applied proposals only, never from scans merely run.');
+  const judgeIndex = '| Date | X |\n|---|---|\n| 2026-09-20 | y |\n| 2026-09-25 | z |';
+  const historyWithOneSpawn = { actions: [{ type: 'agent_subagent_spawn', at: new Date('2026-09-20T12:00:00Z').getTime() }] };
+  const missing = findJudgeSpawnsWithoutConsultation(judgeIndex, historyWithOneSpawn);
+  assert.deepEqual(missing, ['2026-09-25'], 'findJudgeSpawnsWithoutConsultation() must flag exactly the real archived THE-FINAL-JUDGE passage date with no matching confirmed agent-spawn consultation nearby, while never flagging the date that does have one — this is real, verifiable authority over another tool, since a judge report can only exist if a spawn genuinely happened');
+  assert.deepEqual(findJudgeSpawnsWithoutConsultation('', { actions: [] }), [], 'an empty or missing index must report zero missing consultations, never crash or fabricate a finding from no data');
+
+  console.log('Passed: SMART-CONSO-TOKEN correctly estimates token weight from raw text length, classifies a document into low/moderate/high relative to the cited research benchmarks, never silently assumes its costly-pattern knowledge stays valid across a real model/platform change, escalates a recognized costly pattern from soft to hard exactly at its configured threshold while never fabricating a verdict for an unknown pattern, reuses THE-FINAL-JUDGE\'s exact scope vocabulary rather than inventing a second one, now correctly distinguishes an always-loaded document (real actionable cost) from an on-demand one (informative only) with a genuinely differentiated concrete action for each, mechanically counts real dated narrative markers as a safe starting point for a future restructuring, computes its adoption KPI from real applied proposals only, explicitly knows the two-sided truth about automation\'s real token cost, and can retroactively verify — using THE-FINAL-JUDGE\'s own archived reports as independent proof — whether a real agent spawn was ever actually preceded by a confirmed consultation.');
 }
