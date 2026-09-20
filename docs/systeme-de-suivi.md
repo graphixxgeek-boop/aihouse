@@ -177,6 +177,28 @@ système au risque d'un détail approximatif présenté comme fiable (cf. philos
    outil de travail interne consulté à la demande — jamais imposé en pièce jointe systématique,
    jamais affiché spontanément sans qu'on le demande.
 
+## Conformité EXACTE à la forme demandée, jamais une approximation qui répond "à l'esprit"
+
+*(Ajouté le 2026-09-20, écart réel trouvé par THE-DEEP-READER : un « état des lieux des tâches
+avec l'arborescence détaillée » demandé explicitement a été livré sous forme de liste par statut
+— terminé/en cours/ouvert — jamais la vraie vue arborescente par thème demandée. Sur le fond, la
+demande semblait traitée ; sur la forme exacte, non. Demande explicite de l'utilisateur au moment
+de le signaler : « assure-toi que ça ne se reproduise pas : une tâche doit toujours être exécutée
+100% conforme avec ma demande ».)*
+
+**Règle** : avant de considérer une tâche fermée, comparer la FORME exacte demandée (pas seulement
+l'objectif général) à ce qui a été livré. Une réponse qui couvre le même sujet mais sous une forme
+différente de celle explicitement demandée (une liste plate au lieu d'une arborescence, un résumé
+au lieu d'une citation exacte, un chiffre agrégé au lieu du détail par élément) n'est PAS une
+exécution conforme, même si elle est utile et pertinente sur le fond — elle reste `ouverte` ou
+`terminée — écart : forme demandée non respectée`, jamais un `terminée — fidèle` silencieux.
+
+**Différence avec les règles voisines déjà en place** : "une DÉCISION n'est jamais une EXÉCUTION"
+protège contre l'absence totale de travail réel derrière un choix ; celle-ci protège un cran plus
+loin — un vrai travail a été fait, mais sous une forme qui ne correspond pas à ce qui a été
+explicitement demandé. Les deux se vérifient ensemble à la clôture d'une tâche, jamais l'une sans
+l'autre.
+
 ## Garde-fou mécanique — ne jamais compter sur le seul réflexe
 
 *(Ajouté le 2026-09-19, demande explicite de l'utilisateur.)* Une règle de procédure peut s'oublier
