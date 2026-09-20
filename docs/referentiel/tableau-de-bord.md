@@ -8,7 +8,7 @@ ici, à quels fichiers, à quels Articles de la charte. Comme le patron l'impose
 ne s'accumulent jamais dans ce document — ils vivent en base de données (D1) et dans le dépôt lui-
 même, consultables via `scripts/kpi-report.mjs`.)*
 
-## Les 5 familles, pour ce projet
+## Les 6 familles, pour ce projet
 
 *(Chantier 2 livré le 2026-09-19 : chaque famille a désormais un KPI global en %, jamais un chiffre
 nu — toujours accompagné d'une lecture concrète et, si le seuil le justifie, d'une action à mener
@@ -55,6 +55,22 @@ mener [...] je veux un tableau de bord avec des données SMART »). Un élément
    PAS un historique inter-sessions réel (tours jusqu'à la révélation, nombre de disputes, variété
    des ouvertures), qui nécessiterait la table `kpi_session_snapshots` jamais construite — cf.
    "État d'avancement".
+6. **Smart Conso** (Article 22, écart réel comblé le 2026-09-20 — cette famille avait déjà une
+   réponse de calibrage de l'utilisateur, jamais construite : « taux de respect de leur consigne :
+   par moi, par toi, par les outils. KPI des tokens/API économisées grâce à l'outil + efficacité des
+   process actuels + indice de fraîcheur »). **KPI global** : `smartConsoScore()` moyenne les
+   composantes réellement mesurables cette fois (une composante absente est exclue, jamais comptée
+   comme zéro) :
+   - **Conformité API** (`burstComplianceScore()`, Smart Conso API) — proportion des vraies salves
+     d'appels Gemini (`.gemini-key-health.json`, preuve indépendante) réellement précédées d'une
+     consultation confirmée. La seule composante backée par un dénominateur honnête, contrairement
+     à l'historique de SMART-CONSO-TOKEN qui ne voit que les consultations réellement faites.
+   - **Adoption** (`computeAdoptionKpi()`, SMART-CONSO-TOKEN) — réduction moyenne réellement mesurée
+     des propositions déjà appliquées (l'« efficacité des process actuels »).
+   - **Fraîcheur** (`checkKnowledgeFreshness()`, SMART-CONSO-TOKEN) — le registre de schémas
+     coûteux est-il encore validé pour le modèle courant.
+   Limite honnête, documentée dans le rapport HTML lui-même : l'adoption ne peut jamais prouver
+   qu'une consultation a été OUBLIÉE (biais de survivance), seule la conformité API le peut.
 
 ## KPI général — couverture du tableau de bord lui-même
 
@@ -164,7 +180,7 @@ traité comme le bug documentaire qu'il est, pas laissé pour plus tard.)*
   de l'utilisateur) : un indicateur d'efficacité de la COLLABORATION elle-même — est-ce que l'agent
   comprend bien où en est le travail, comprend bien les demandes et les réponses de l'utilisateur,
   reste bien sur la même longueur d'onde — à consulter par l'agent lui-même régulièrement pour
-  vérifier la qualité et la pertinence de son propre travail. Distinct des 5 familles déjà définies
+  vérifier la qualité et la pertinence de son propre travail. Distinct des 6 familles déjà définies
   ci-dessus (qui mesurent le CODE et la PARTIE, pas la conversation de travail) — famille candidate
   à ajouter, ou son propre sujet séparé ; pas encore de conception à ce stade.
 - **Note de distinction (2026-09-19)** : ce tableau de bord mesure le CODE et la PARTIE jouée ; il

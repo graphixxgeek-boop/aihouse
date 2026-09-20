@@ -105,7 +105,13 @@ export function recordAction(actionType, now, confirmed = true) {
 // signale seulement qu'AUCUNE action, de quelque type que ce soit, n'a été confirmée avant une
 // vraie salve d'activité. Une lecture humaine reste nécessaire pour juger si c'était le bon type
 // d'action ou un oubli pur et simple.
-export function findUnconfirmedBursts(healthData, sessionLog, { burstWindowMinutes = 15, burstThreshold = 4, lookbackMinutes = 30 } = {}) {
+// Cœur partagé de la détection de salves (2026-09-20, extrait pour nourrir aussi
+// `burstComplianceScore()` ci-dessous, jamais une seconde boucle de détection dupliquée — même
+// règle anti-doublon que le reste de ce paysage, §7ter). Retourne TOUTES les salves détectées
+// (confirmées et non confirmées), chacune marquée `confirmed` — `findUnconfirmedBursts()` en garde
+// le comportement externe exact d'avant (ne retourne que les non confirmées), jamais un changement
+// de signature qui casserait ses appelants existants.
+function detectBurstWindows(healthData, sessionLog, { burstWindowMinutes = 15, burstThreshold = 4, lookbackMinutes = 30 } = {}) {
   const episodes = [];
   for (const key of Object.values(healthData?.keys ?? {})) {
     for (const ep of key?.episodes ?? []) {
@@ -126,13 +132,33 @@ export function findUnconfirmedBursts(healthData, sessionLog, { burstWindowMinut
     if (count >= burstThreshold) {
       const burstStart = episodes[i];
       const hasConfirmation = confirmedTimes.some((t) => t <= burstStart && burstStart - t <= lookbackMs);
-      if (!hasConfirmation) bursts.push({ start: burstStart, count });
+      bursts.push({ start: burstStart, count, confirmed: hasConfirmation });
       i = j;
     } else {
       i++;
     }
   }
   return bursts;
+}
+
+export function findUnconfirmedBursts(healthData, sessionLog, opts = {}) {
+  return detectBurstWindows(healthData, sessionLog, opts).filter((b) => !b.confirmed).map(({ start, count }) => ({ start, count }));
+}
+
+// Taux de conformité réel (2026-09-20, demande explicite de l'utilisateur : nourrir la famille KPI
+// "Smart Conso" du tableau de bord avec un vrai "taux de respect de la consigne", jamais un chiffre
+// inventé). Contrairement à l'historique de SMART-CONSO-TOKEN (qui ne peut voir QUE les
+// consultations réellement faites — biais de survivance, une non-consultation ne laisse aucune
+// trace de son côté), le vrai trafic API (`.gemini-key-health.json`) est une preuve INDÉPENDANTE de
+// l'activité réelle, qu'elle ait été consultée ou non — c'est la seule source de ce paysage qui
+// permette un vrai dénominateur honnête. Retourne `undefined` si aucune salve n'a jamais été
+// détectée (rien à mesurer), jamais un 100% par défaut qui ferait croire à une conformité jamais
+// testée.
+export function burstComplianceScore(healthData, sessionLog, opts = {}) {
+  const bursts = detectBurstWindows(healthData, sessionLog, opts);
+  if (!bursts.length) return undefined;
+  const confirmed = bursts.filter((b) => b.confirmed).length;
+  return { score: (confirmed / bursts.length) * 100, confirmed, total: bursts.length };
 }
 
 // Capacité de scan (2026-09-20, demande explicite de l'utilisateur : « est-ce que smart conso api

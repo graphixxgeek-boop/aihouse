@@ -919,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 145'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 146'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2427,7 +2427,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // scripts/kpi-report.mjs est un simple script .mjs (pas un module "@/lib" transpilé) : ses
   // fonctions pures s'importent directement, et main() est gardé par un test d'entrypoint pour ne
   // JAMAIS déclencher d'appel réseau/exec réel pendant ce test.
-  const {codeHealthScore,smartBreakerPerformanceScore,smartBreakerImprovementScore,qualityScore,coherenceScore,replayabilityScore,dashboardCoverageScore,expectedTestBlockCount,buildKpiSynthesisHtml,fetchLiveMetrics,DEV_PORTS}=await import('../scripts/kpi-report.mjs');
+  const {codeHealthScore,smartBreakerPerformanceScore,smartBreakerImprovementScore,qualityScore,coherenceScore,replayabilityScore,smartConsoScore,dashboardCoverageScore,expectedTestBlockCount,buildKpiSynthesisHtml,fetchLiveMetrics,DEV_PORTS}=await import('../scripts/kpi-report.mjs');
   // Chemin sain : chaque fonction renvoie un vrai nombre fini à partir de données bien formées.
   assert.deepEqual(codeHealthScore(0,79,79),{tscScore:100,testScore:100,overall:100});
   assert.equal(codeHealthScore(2,79,79).tscScore,0,'any tsc error must zero the tsc sub-score, never a partial credit');
@@ -2462,6 +2462,20 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(replayabilityScore({distinctBonuses:3,totalBonusTypes:0}),undefined,'zero total bonus types must never divide by zero');
   for(const bad of [NaN,Infinity,-Infinity,undefined])assert.equal(dashboardCoverageScore([bad,100,100,100,100]).measured,4,'a non-finite family score must count as unmeasured, never as a valid measurement');
   console.log('Passed: every kpi-report.mjs scoring function returns a correct percentage on well-formed data, and returns undefined — never NaN, Infinity, or a disguised 0% — on missing, malformed, or zero-denominator input, closing the exact class of bug (a silent miscount) found while building the dashboard.');
+
+  // smartConsoScore() (2026-09-20, écart réel comblé : famille KPI "Smart Conso" jamais construite
+  // malgré une réponse de calibrage déjà donnée par l'utilisateur — « taux de respect [...] tokens
+  // économisés [...] efficacité des process [...] indice de fraîcheur »). Même patron que
+  // codeHealthScore : moyenne des composantes réellement présentes, une composante absente est
+  // exclue plutôt que de faire chuter la moyenne à zéro.
+  assert.equal(smartConsoScore(undefined),undefined,'with no metrics object at all, there is nothing to measure — an honest absence, never a fabricated score');
+  assert.equal(smartConsoScore({}),undefined,'with zero measurable components, an honest absence, never a fake 0%');
+  assert.equal(smartConsoScore({complianceScore:80}),80,'a single available component must stand alone as the score, never diluted by components that were never measured');
+  assert.equal(smartConsoScore({complianceScore:80,adoptionReductionPct:40}),60,'two available components must average together, never weighted oddly or silently dropping one');
+  assert.equal(smartConsoScore({complianceScore:100,adoptionReductionPct:50,freshnessOk:true}),(100+50+100)/3,'freshnessOk:true must contribute a full 100 to the average, exactly like any other perfect component');
+  assert.equal(smartConsoScore({complianceScore:100,freshnessOk:false}),50,'freshnessOk:false must contribute a real 0 to the average, never silently excluded as if it were simply absent');
+  assert.equal(smartConsoScore({adoptionReductionPct:150}),100,'an adoption reduction percentage above 100 (a real possible input, since it is a raw measured percentage) must be clamped to 100, never inflate the average past what a percentage can honestly mean');
+  console.log('Passed: smartConsoScore() averages only the genuinely measured components (compliance, adoption, freshness) of the new Smart Conso KPI family, treating a missing component as excluded rather than a zero, a false freshness as a real zero rather than silently dropped, and clamping an out-of-range adoption percentage rather than ever exceeding 100% — closing the exact real gap where this family was promised in a calibration answer but never built.');
 
   // buildKpiSynthesisHtml() (2026-09-20, gabarit HTML de remise de rapports) : rend la MÊME
   // synthèse compacte déjà loggée par main(), jamais un second calcul ni une donnée en plus.
@@ -3266,6 +3280,21 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(findUnconfirmedBursts(healthNoBurst,{actions:[]}).length,0,'only two isolated episodes must never be treated as a burst — an occasional diagnostic ping is not the pattern this guard exists to catch');
   assert.deepEqual(findUnconfirmedBursts({keys:{}},{actions:[]}),[],'a genuinely empty health history must report zero bursts, never crash or fabricate one');
   console.log("Passed: findUnconfirmedBursts() flags a real burst of closely-spaced API activity only when no action was genuinely confirmed (confirmed:true, never a mere advice-only log) within the lookback window beforehand, never flags an isolated one-or-two-call ping as a burst, and reports zero on empty history rather than crashing — closing the exact real gap found on 2026-09-19 where a simulation was launched without ever consulting Smart Conso API first.");
+
+  // burstComplianceScore() (2026-09-20, écart réel comblé : famille KPI "Smart Conso" du tableau de
+  // bord jamais construite malgré une réponse de calibrage déjà donnée par l'utilisateur). Réutilise
+  // exactement la même détection de salves que findUnconfirmedBursts() (detectBurstWindows partagé,
+  // jamais une seconde boucle) mais rapporte un vrai TAUX sur TOUTES les salves (confirmées et non),
+  // la seule composante de ce paysage backée par une preuve indépendante du vrai trafic API.
+  const {burstComplianceScore}=await import('../scripts/smart-conso-api.mjs');
+  assert.equal(burstComplianceScore({keys:{}},{actions:[]}),undefined,'with zero bursts ever detected, there is nothing real to measure — an honest absence, never a fabricated 100%');
+  assert.deepEqual(burstComplianceScore(healthBurstNoConfirm,{actions:[]}),{score:0,confirmed:0,total:1},'a single real burst with zero confirmation anywhere must report an honest 0% compliance, not an undefined or a crash');
+  assert.deepEqual(burstComplianceScore(healthBurstNoConfirm,confirmedBefore),{score:100,confirmed:1,total:1},'the same burst, this time genuinely preceded by a confirmed action, must report 100% compliance');
+  const twoBurstsHealth={keys:{k1:{episodes:manyClose(t0,5)},k2:{episodes:manyClose(t0+3_600_000,5)}}};
+  const compliance2of2=burstComplianceScore(twoBurstsHealth,confirmedBefore);
+  assert.equal(compliance2of2.total,2,'two genuinely separate bursts (far enough apart to never merge into one window) must both be counted in the total, never silently dropped');
+  assert.equal(compliance2of2.confirmed,1,'only the burst genuinely covered by the confirmed action\'s lookback window counts as confirmed — the second, unconfirmed burst must not inherit the first one\'s compliance');
+  console.log('Passed: burstComplianceScore() reuses the exact same burst-detection core as findUnconfirmedBursts() (never a duplicated loop) to report an honest compliance percentage over ALL detected bursts — an honest absence on zero bursts ever detected, never a fabricated 100%, and each genuinely separate burst counted on its own merits rather than inheriting a neighboring burst\'s confirmation status.');
 
   // Capacité de scan de Smart Conso API (2026-09-20, demande explicite de l'utilisateur : « est-ce
   // que smart conso api peut réaliser un scan aussi ? [...] il faut l'ajouter »). Domaine différent
