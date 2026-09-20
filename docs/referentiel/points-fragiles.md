@@ -37,9 +37,6 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
 - Biais possible dans `generateDossierFragment()` qui sous-évalue l'hostilité réellement vécue par
   rapport au transcript (relevé dans 3 des 13 premières notations EL-PROFESSOR : `full_sim4`,
   `full_sim9`, `full_sim10`) — à vérifier comme un sujet à part, distinct d'un cas isolé.
-- Bug potentiel à revérifier dans le code actuel : le dossier de `full_sim8` contenait deux valeurs
-  différentes ("dix-neuf sur cent" / "treize sur cent") pour ce qui est censé être la même note
-  globale — à vérifier si `generateDossierFragment()` peut encore produire cette incohérence.
 - Les paliers rares de la charte (colère réellement débridée, silence méprisant de Lia, vulnérabilité
   ou respect sincères, dispute grave Lia/Noé) restent quasiment jamais sollicités dans les 13
   premières simulations notées par EL-PROFESSOR — une future simulation Article 18 devrait les
