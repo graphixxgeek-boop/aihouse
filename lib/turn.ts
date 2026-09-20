@@ -1,7 +1,7 @@
 import {visibleScene} from "./perception";
 import {readLife,isSleeping} from "./life";
-import { priority, intentRoom, mutualAttraction, type Intent } from "./simulation";
-import { sleepRoom } from "./relationship";
+import { priority, intentRoom, type Intent } from "./simulation";
+import { sleepRoom, mutualAttraction } from "./relationship";
 import {gardenAccess, type Person, type Room } from "./house";
 import type { Resident } from "./world";
 import { seedPick, type Story } from "./story";

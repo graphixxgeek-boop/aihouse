@@ -1,7 +1,7 @@
-import {sleepRoom} from "./relationship";
+import {sleepRoom, mutualAttraction} from "./relationship";
 import {readLife} from "./life";
 import {phaseOf,phaseLabel,isNight,dayIndex} from "./daynight";
-import { mutualAttraction, parseNeeds, initialNeedsFor, initialEmotionsFor, type Needs, type Intent, type InsoliteOpening } from "./simulation";
+import { parseNeeds, initialNeedsFor, initialEmotionsFor, type Needs, type Intent, type InsoliteOpening } from "./simulation";
 import { emotionSchema, type Emotions } from "./lia";
 import { names, type Person, type Room } from "./house";
 export type Resident = {location?:string;attachment?:number;

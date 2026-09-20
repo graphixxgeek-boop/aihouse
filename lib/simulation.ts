@@ -32,51 +32,12 @@ export function initialEmotionsFor(id: Person, insolite: InsoliteOpening = "norm
     if (insolite === "noe-guarded" && id === 2) return { ...base, trust: 6, comfort: 18, tension: 100 };
     return base;
 }
-export function sharedActivityBonus(a: {
-    intent: Intent;
-    room: Room;
-    emotions: {
-        attraction: number;
-        trust: number;
-    };
-}, b: {
-    intent: Intent;
-    room: Room;
-    emotions: {
-        attraction: number;
-        trust: number;
-    };
-}, previousA: {
-    emotions: {
-        attraction: number;
-        trust: number;
-    };
-}, previousB: {
-    emotions: {
-        attraction: number;
-        trust: number;
-    };
-}): boolean {
-    return a.intent === b.intent && a.room === b.room && ["eat", "rest", "study", "tv", "hug", "massage", "kiss", "share_sleep"].includes(a.intent) && a.emotions.attraction >= previousA.emotions.attraction && b.emotions.attraction >= previousB.emotions.attraction && a.emotions.trust >= previousA.emotions.trust && b.emotions.trust >= previousB.emotions.trust;
-}
 export const intents = ["none", "chat", "eat", "sleep", "rest", "study", "tv", "intimacy", "hug", "massage", "kiss", "share_sleep"] as const;
 export type Intent = typeof intents[number];
 export const intentRoom: Partial<Record<Intent, Room>> = { eat: "cuisine", sleep: "chambre", rest: "salon", study: "bureau", tv: "salon", intimacy: "chambre", hug: "salon", massage: "chambre", kiss: "salon", share_sleep: "chambre" };
 export const intentLabels: Record<Intent, string> = { none: "J’observe les lieux", chat: "Je fais connaissance", eat: "Je cuisine et je mange", sleep: "Je dors", rest: "Je me repose", study: "J’étudie notre situation", tv: "Je regarde la télévision", intimacy: "Je propose un moment de proximité", hug: "Câlin partagé", massage: "Massage partagé", kiss: "Bisous partagés", share_sleep: "Nous dormons ensemble" };
 export const roomDescriptions: Record<Room, string> = { salon: "Repos, discussion calme et télévision", cuisine: "Cuisiner et manger", chambre: "Sommeil et intimité consentie", bureau: "Comprendre leur venue et construire un projet", jardin:"Marcher et discuter autour d’un arbre sur un sol vert. La porte du couloir à gauche ne s’ouvre qu’après l’enquête, sur autorisation humaine. La porte principale à droite reste fermée." };
 export const affectionIntents: Intent[] = ["hug", "massage", "kiss", "share_sleep"];
-export function mutualAttraction(a: {
-    emotions: {
-        attraction: number;
-        trust: number;
-    };
-}, b: {
-    emotions: {
-        attraction: number;
-        trust: number;
-    };
-}) { return a.emotions.attraction >= 45 && b.emotions.attraction >= 45 && a.emotions.trust >= 25 && b.emotions.trust >= 25; }
-export const tvPrograms = ["Une courbe lumineuse oscille dans un cadre sombre. SESSION apparaît, puis le numéro repart à zéro. La séquence recommence sans présentateur ni son.","Le même signal revient quatre fois. Les contours du cadre rappellent les limites de la maison ; cela suggère un système, pas encore une preuve de leur origine.","Une animation abstraite boucle sur une ligne et un cadre. Rien ne ressemble à une chaîne de télévision humaine ; ils comparent ce signal aux autres observations."];
 export function parseNeeds(value: unknown): Needs {
     try {
         const n = JSON.parse(String(value));

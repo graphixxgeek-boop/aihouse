@@ -3,6 +3,10 @@ import type { Person, Room } from "./house";
 import { intents, type Intent, type InsoliteOpening, residentProfiles } from "./simulation";
 import type { DialogueLine } from "./dialogue";
 
+// Déplacé depuis lib/simulation.ts le 2026-09-21 (ALWAYS-NEW-CODE, tâche #170) : c'est du contenu
+// narratif (l'écran de télévision), jamais un calcul de besoins/fatigue.
+export const tvPrograms = ["Une courbe lumineuse oscille dans un cadre sombre. SESSION apparaît, puis le numéro repart à zéro. La séquence recommence sans présentateur ni son.","Le même signal revient quatre fois. Les contours du cadre rappellent les limites de la maison ; cela suggère un système, pas encore une preuve de leur origine.","Une animation abstraite boucle sur une ligne et un cadre. Rien ne ressemble à une chaîne de télévision humaine ; ils comparent ce signal aux autres observations."];
+
 // Choisit une variante stable pour CE scénario (story.seed) et CE moment précis (label),
 // sans dépendre uniquement de story.variant (qui n'a que 4 valeurs) : deux sessions différentes
 // ne doivent pas revivre le même moment scénarisé mot pour mot (Article 9 de la charte).

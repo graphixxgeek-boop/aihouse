@@ -10,7 +10,8 @@ import {departurePresentation,roomTag,uniqueObservations} from "@/lib/presentati
 import { HouseView } from "@/components/house-view";
 import { names, rooms, type Person, type Room } from "@/lib/house";
 import { emotionKeys } from "@/lib/lia";
-import { initialNeedsFor, initialEmotionsFor, faceExpression, needLevel, roomDescriptions, tvPrograms, type Intent } from "@/lib/simulation";
+import { initialNeedsFor, initialEmotionsFor, faceExpression, needLevel, roomDescriptions, type Intent } from "@/lib/simulation";
+import { tvPrograms } from "@/lib/story";
 import { drawFace } from "@/lib/face-render";
 import { ages, isInLove } from "@/lib/relationship";
 import type { Resident } from "@/lib/world";

@@ -1,6 +1,48 @@
 import type { Person, Room } from "./house";
 import type { Resident } from "./world";
+import type { Intent } from "./simulation";
 export const ages = { 1: 28, 2: 31 } as const;
+// Déplacées depuis lib/simulation.ts le 2026-09-21 (ALWAYS-NEW-CODE, tâche #170) : ces deux
+// fonctions manipulent l'attirance/la confiance mutuelles, exactement le sujet de ce fichier —
+// jamais un calcul de besoins/fatigue, qui restait le seul vrai sujet de simulation.ts.
+export function mutualAttraction(a: {
+    emotions: {
+        attraction: number;
+        trust: number;
+    };
+}, b: {
+    emotions: {
+        attraction: number;
+        trust: number;
+    };
+}) { return a.emotions.attraction >= 45 && b.emotions.attraction >= 45 && a.emotions.trust >= 25 && b.emotions.trust >= 25; }
+export function sharedActivityBonus(a: {
+    intent: Intent;
+    room: Room;
+    emotions: {
+        attraction: number;
+        trust: number;
+    };
+}, b: {
+    intent: Intent;
+    room: Room;
+    emotions: {
+        attraction: number;
+        trust: number;
+    };
+}, previousA: {
+    emotions: {
+        attraction: number;
+        trust: number;
+    };
+}, previousB: {
+    emotions: {
+        attraction: number;
+        trust: number;
+    };
+}): boolean {
+    return a.intent === b.intent && a.room === b.room && ["eat", "rest", "study", "tv", "hug", "massage", "kiss", "share_sleep"].includes(a.intent) && a.emotions.attraction >= previousA.emotions.attraction && b.emotions.attraction >= previousB.emotions.attraction && a.emotions.trust >= previousA.emotions.trust && b.emotions.trust >= previousB.emotions.trust;
+}
 export const isInLove = (attraction: number) => attraction > 75;
 export function sleepRoom(agent: Resident, other: Resident, mutual: boolean): Room {
     if (agent.id === 2)
