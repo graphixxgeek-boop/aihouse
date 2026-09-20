@@ -10,6 +10,7 @@ import { recentCommits, findCommitsMissingSuiviUpdate, findTaskNumberIssues, nex
 import { walk, findDeadLifeFields, findTodoMarkers } from "../check-argus.mjs";
 import { checkLinks, LINKS } from "../check-harmonia.mjs";
 import { PRESTATIONS, formatMenu } from "../le-coordinateur.mjs";
+import { summarizeHistory } from "../smart-conso-token.mjs";
 
 const [last] = recentCommits(1);
 if (last && findCommitsMissingSuiviUpdate([last]).length) {
@@ -79,3 +80,15 @@ try {
 console.log("\n📋 Prestations disponibles via le réseau d'outils (rappel automatique) :\n");
 console.log(formatMenu(PRESTATIONS));
 console.log("");
+
+// Rythme récent SMART-CONSO-TOKEN (2026-09-20, demande explicite de l'utilisateur : « je ne me
+// rends pas compte que mon rythme de conso de token connaît un pic depuis 30min [...] aux moments
+// déjà existants »). Affiché juste à côté du menu ci-dessus — les deux vus ensemble, jamais l'un
+// sans l'autre. Limite honnête assumée : un pic qui survient pendant une longue plage de travail
+// sans commit entre-temps ne sera vu qu'au prochain commit, pas en temps réel.
+try {
+  const summary = summarizeHistory(JSON.parse(readFileSync(new URL("../../.smart-conso-token-history.json", import.meta.url), "utf8")), Date.now());
+  console.log(`🪙 Rythme SMART-CONSO-TOKEN (7 derniers jours) : ${summary.totalRecent} action(s) coûteuse(s) confirmée(s) — ${JSON.stringify(summary.byType)}\n`);
+} catch {
+  console.log("🪙 Rythme SMART-CONSO-TOKEN : aucun historique local pour l'instant.\n");
+}

@@ -141,12 +141,27 @@ collé en clair dans la conversation ; ET l'agent qui pilote le projet donne TOU
 conversation elle-même, une synthèse écrite par lui (jamais un simple renvoi au fichier sans rien
 dire) — même principe déjà établi pour les rapports KPI (Article 18, étape 4).
 
-## Consultation Smart Conso API avant lancement
+## Coût réel en tokens — vigilance et parcimonie, règle durable
 
-Même règle que pour la double perspective d'HYPER-SCAN-CHECKPOINT (`docs/referentiel/hyper-scan-checkpoint.md`) :
-`node scripts/smart-conso-api.mjs the-final-judge --confirm` avant tout lancement, quel que soit le
-palier d'intensité ou de périmètre choisi — un vrai coût réel (temps d'un agent qui lit une partie ou
-tout le projet), jamais une exception parce que ce n'est pas un appel direct à l'API du jeu.
+**Règle durable (2026-09-20)**, à ne jamais oublier au fil des sessions futures : déclencher
+THE-FINAL-JUDGE coûte cher en tokens, pas seulement en temps. Chaque appel à un agent séparé (ce
+que fait toujours THE-FINAL-JUDGE, léger ou lourd) démarre avec un contexte "à froid" d'environ
+**37 000 tokens**, dont seulement ~3% concerne réellement la tâche demandée — un coût quasi fixe,
+presque le même pour un audit léger que pour un audit très lourd sur le projet entier (recherche
+réelle du 2026-09-20, sources et détail complet dans `docs/referentiel/smart-conso-token.md`).
+**Conséquence directe : ne jamais déclencher THE-FINAL-JUDGE par réflexe ou par confort — toujours
+peser le besoin réel avant de foncer** ("on ne chauffe pas une pièce en été"), en particulier pour
+un audit "Global" à intensité "très lourd" (la combinaison la plus coûteuse des deux échelles
+ci-dessus).
+
+## Consultation obligatoire avant lancement — DEUX conseillers, pas un seul
+
+Même règle que pour la double perspective d'HYPER-SCAN-CHECKPOINT (`docs/referentiel/hyper-scan-checkpoint.md`),
+étendue le 2026-09-20 : consulter **Smart Conso API** (`node scripts/smart-conso-api.mjs the-final-judge --confirm`)
+ET **SMART-CONSO-TOKEN** (`node scripts/smart-conso-token.mjs agent_subagent_spawn --confirm --identity=<modèle courant>`)
+avant tout lancement, quel que soit le palier d'intensité ou de périmètre choisi — un vrai coût réel
+(temps ET tokens d'un agent qui lit une partie ou tout le projet), jamais une exception parce que ce
+n'est pas un appel direct à l'API du jeu.
 
 ## Réconciliation : jamais avant, et ses conclusions retenues rejoignent les registres existants
 

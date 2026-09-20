@@ -919,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 123'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 124'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3098,4 +3098,68 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(detectGenericReport(concreteReport), [], 'a real, concrete, properly structured report citing actual files must never be flagged — the detector targets genuine genericness, not every report');
   assert.ok(detectGenericReport('Trop court.').some((s) => s.includes('court')), 'an abnormally short report must be flagged regardless of its other properties');
   console.log('Passed: THE-FINAL-JUDGE\'s two mechanical guards work correctly — extractPersonaBlock() pulls the exact fixed persona text from its single source of truth with nothing added or lost, and detectGenericReport() flags a report with no concrete file citations, missing required sections, or abnormal brevity, while never flagging a real, specific, properly structured report — the mechanical protection against the persona drifting toward a generic, standard tone.');
+}
+
+{
+  // SMART-CONSO-TOKEN (2026-09-20, cf. docs/referentiel/smart-conso-token.md) — le pendant de Smart
+  // Conso API pour les tokens de l'agent lui-même. Contrairement au quota Gemini, il n'existe aucun
+  // compteur externe réel : ces tests vérifient donc la LOGIQUE de reconnaissance de schémas connus
+  // et de combinaison avec l'historique mesurable, jamais un vrai total de tokens (qui n'existe pas).
+  const {
+    estimateTokens, measureClaudeMdWeight, checkKnowledgeFreshness, countRecentActions, assess,
+    scanDocumentWeight, scanScope, SCOPE_LEVELS, computeAdoptionKpi, KNOWN_COSTLY_PATTERNS, KNOWLEDGE_PROVENANCE,
+    formatScanReport,
+  } = await import('../scripts/smart-conso-token.mjs');
+
+  assert.equal(estimateTokens('abcd'), 1, 'the ~4-characters-per-token heuristic must round to the nearest whole token, never a fractional or wildly inaccurate estimate');
+  assert.equal(estimateTokens(''), 0, 'an empty or missing text must estimate to exactly zero tokens, never crash or return NaN');
+
+  assert.equal(measureClaudeMdWeight('a'.repeat(400)).niveau, 'faible', 'a small document (well under the healthy benchmark) must classify as low weight');
+  assert.equal(measureClaudeMdWeight('a'.repeat(8000)).niveau, 'modéré', 'a document above the healthy benchmark but below the heavily-penalizing threshold must classify as moderate, never silently lumped with either extreme');
+  assert.equal(measureClaudeMdWeight('a'.repeat(24000)).niveau, 'élevé', 'a document at or above the ~5000-token threshold the cited research identifies as meaningfully hurting effective working context must classify as high weight');
+
+  assert.equal(checkKnowledgeFreshness(undefined).fraiche, undefined, 'a missing agent identity must report an honest "unknown" freshness, never a false positive or negative');
+  assert.equal(checkKnowledgeFreshness('claude-sonnet-5').fraiche, true, 'an identity that contains the validated model name (case-insensitive substring) must be reported fresh');
+  assert.equal(checkKnowledgeFreshness('codex').fraiche, false, 'a genuinely different model identity must never be silently treated as still validated — the whole point of the freshness check the user asked for');
+  assert.equal(checkKnowledgeFreshness('claude-sonnet-5', { validatedFor: 'claude', researchedAt: 'x' }).fraiche, true, 'checkKnowledgeFreshness() must accept an injectable provenance rather than always reading the module-level default, so a future provenance update is testable in isolation');
+
+  const now = 1000000;
+  const history = { actions: [
+    { type: 'agent_subagent_spawn', at: now - 1000 },
+    { type: 'agent_subagent_spawn', at: now - 2000 },
+    { type: 'agent_subagent_spawn', at: now - 3000 },
+    { type: 'agent_subagent_spawn', at: now - 10 * 60 * 60 * 1000 },
+  ] };
+  assert.equal(countRecentActions(history, 'agent_subagent_spawn', now, 2), 3, 'countRecentActions() must count only the actions of the matching type within the real time window, excluding one that happened 10 hours ago from a 2-hour window');
+
+  const okVerdict = assess({ actionType: 'agent_subagent_spawn', history: { actions: [] }, now, agentIdentity: 'claude-sonnet-5' });
+  assert.equal(okVerdict.verdict, 'avertissement_souple', 'a recognized costly pattern below its hard threshold must return a soft, negotiable warning, never silently "ok" — an agent spawn is costly every single time, per the real research cited');
+  const hardVerdict = assess({ actionType: 'agent_subagent_spawn', history, now, agentIdentity: 'claude-sonnet-5' });
+  assert.equal(hardVerdict.verdict, 'seuil_dur', 'once the configured hard threshold (3 spawns / 2h) is reached, the verdict must escalate to the non-negotiable hard tier, requiring an explicit question window before continuing');
+  const unknownVerdict = assess({ actionType: 'un_schema_jamais_vu', history: { actions: [] }, now, agentIdentity: 'claude-sonnet-5' });
+  assert.equal(unknownVerdict.verdict, 'ok', 'an action type absent from the known costly-pattern registry must report a genuinely neutral verdict, never a fabricated warning about a pattern the tool has no real basis to judge');
+  assert.ok(KNOWN_COSTLY_PATTERNS.agent_subagent_spawn.raison.includes('37'), 'the agent-spawn pattern must cite the real ~37k-token cold-start finding from the 2026-09-20 research, not a vague unsourced claim');
+
+  const claudeMdText = 'ligne\n'.repeat(400);
+  const scanResult = scanDocumentWeight(claudeMdText, 'CLAUDE.md');
+  assert.equal(scanResult.conformeProgressiveDisclosure, false, 'a document well past the 300-line progressive-disclosure benchmark must be flagged as non-conforming, exactly the real finding on the project\'s own CLAUDE.md');
+  const smallDoc = scanDocumentWeight('ligne\n'.repeat(10), 'petit.md');
+  assert.equal(smallDoc.conformeProgressiveDisclosure, true, 'a small document well under the benchmark must never be falsely flagged');
+
+  assert.deepEqual(SCOPE_LEVELS, ['global', 'partiel', 'zoome', 'focus'], 'SMART-CONSO-TOKEN must reuse the exact same 4-level scope vocabulary already created for THE-FINAL-JUDGE, never a second invented taxonomy (explicit harmony request)');
+  assert.throws(() => scanScope('portee-inconnue', {}), /Portée inconnue/, 'an unrecognized scope level must fail loudly rather than silently defaulting to some arbitrary behavior');
+  const scopeResult = scanScope('partiel', { 'a.md': 'x\n'.repeat(5), 'b.md': 'x\n'.repeat(500) });
+  assert.equal(scopeResult.documentsAnalyses, 2, 'scanScope() must analyze every document passed in for the given scope, never silently dropping one');
+  assert.equal(scopeResult.aRegarder.length, 1, 'scanScope() must flag only the document(s) that actually exceed the progressive-disclosure benchmark, not the whole set');
+
+  assert.deepEqual(computeAdoptionKpi({ actions: [] }), { propositionsAppliquees: 0, reductionMoyennePct: undefined }, 'with zero applied proposals, the KPI must report an honest zero/undefined, never a fabricated average');
+  const kpi = computeAdoptionKpi({ actions: [{ type: 'proposition_appliquee', reductionPct: 20 }, { type: 'proposition_appliquee', reductionPct: 40 }, { type: 'autre_action' }] });
+  assert.deepEqual(kpi, { propositionsAppliquees: 2, reductionMoyennePct: 30 }, 'the KPI must count and average only genuinely applied proposals with a real measured reduction, ignoring unrelated recorded actions — the tool\'s real vocation per the user\'s explicit request, never a count of scans merely run');
+  assert.ok(KNOWLEDGE_PROVENANCE.validatedFor === 'claude' && KNOWLEDGE_PROVENANCE.sources.length > 0, 'the knowledge provenance must always declare which model it was validated for and cite real sources, never an unsourced or unattributed registry');
+
+  const report = formatScanReport(scopeResult, now);
+  assert.ok(report.includes('a.md') === false && report.includes('b.md'), 'formatScanReport() must list only the documents genuinely flagged as over the benchmark, never every document scanned regardless of outcome');
+  assert.ok(report.includes(String(scopeResult.totalTokens)), 'the archived scan report must state the real total token estimate computed for this scan, never a placeholder');
+
+  console.log('Passed: SMART-CONSO-TOKEN correctly estimates token weight from raw text length, classifies a document into low/moderate/high relative to the cited research benchmarks, never silently assumes its costly-pattern knowledge stays valid across a real model/platform change, escalates a recognized costly pattern from soft to hard exactly at its configured threshold while never fabricating a verdict for an unknown pattern, reuses THE-FINAL-JUDGE\'s exact scope vocabulary rather than inventing a second one, flags only documents genuinely over the progressive-disclosure benchmark, and computes its adoption KPI from real applied proposals only, never from scans merely run.');
 }

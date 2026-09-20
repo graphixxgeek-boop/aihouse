@@ -40,10 +40,13 @@ double perspective via un second agent indépendant) n'est PAS un mode du script
 elle nécessite une vraie consultation de Smart Conso API et l'orchestration d'un second agent —
 deux choses que seul l'agent qui pilote la conversation peut réellement faire, jamais un script
 isolé qui tournerait seul. Quand la version complète est demandée : (1) consulter
-`scripts/smart-conso-api.mjs simulation` (ou l'action concernée) avant de lancer quoi que ce soit
-de coûteux ; (2) lancer la version légère d'abord, toujours ; (3) pour la double perspective, un
-second agent (outil `Agent`) reçoit le même périmètre sans voir les conclusions du premier, produit
-sa propre analyse, puis les deux sont confrontées dans le rapport final.
+`scripts/smart-conso-api.mjs simulation` (ou l'action concernée) ET (depuis le 2026-09-20)
+`scripts/smart-conso-token.mjs agent_subagent_spawn` avant de lancer quoi que ce soit de coûteux —
+la double perspective appelle un second agent, exactement le schéma le plus coûteux du registre de
+SMART-CONSO-TOKEN, jamais une exception ; (2) lancer la version légère d'abord, toujours ; (3) pour
+la double perspective, un second agent (outil `Agent`) reçoit le même périmètre sans voir les
+conclusions du premier, produit sa propre analyse, puis les deux sont confrontées dans le rapport
+final.
 
 ## Garde-fous appliqués ici
 

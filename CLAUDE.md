@@ -890,6 +890,44 @@ l'Article 8, jamais la court-circuiter ni la remplacer. Architecture détaillée
 `docs/smart-conso-api-blueprint.md` (principe générique) et `docs/referentiel/smart-conso-api.md`
 (instanciation propre à ce projet).
 
+**SMART-CONSO-TOKEN — le pendant de Smart Conso API, mais pour les TOKENS de l'agent lui-même.**
+*(Ajouté le 2026-09-20, à la demande explicite de l'utilisateur, juste après Smart Conso API : « le
+pendant de smart-conso-API : son rôle est de réguler la consommation des tokens par les outils et
+par toi-même, et par moi aussi [...] à l'image d'un conseiller en réduction de conso électrique
+[...] on ne chauffe pas une pièce en été ».)* Différence structurelle assumée avec l'Article
+ci-dessus : le quota Gemini est sondable en direct (Smart Conso API peut vérifier un vrai état
+MAINTENANT) ; il n'existe AUCUN compteur externe des tokens de l'agent — SMART-CONSO-TOKEN reconnaît
+donc des SCHÉMAS CONNUS coûteux (recherche réelle du 2026-09-20 : un agent séparé coûte ~37 000
+tokens de contexte à froid, dont ~3% seulement utile à la tâche ; un fichier d'instructions toujours
+chargé au-delà d'environ 300 lignes paie ce poids à chaque session) combinés à des valeurs mesurables
+(taille réelle de documents, nombre d'actions confirmées récemment) — jamais un chiffre exact
+présenté comme tel.
+
+**Obligation écrite, non négociable, jamais un garde-fou vérifiable après coup** : contrairement au
+quota Gemini, aucune trace externe indépendante ne prouve qu'un agent séparé a été appelé ou qu'un
+contexte a été consommé — la seule protection possible est une règle explicite. L'agent consulte
+SMART-CONSO-TOKEN (`scripts/smart-conso-token.mjs`) avant : tout appel à un agent séparé (outil
+Agent — THE-FINAL-JUDGE, la double perspective d'HYPER-SCAN-CHECKPOINT, ou toute recherche déléguée
+ad hoc), toute lecture exhaustive du dépôt, et tout passage de raisonnement coûteux (ALWAYS-NEW-CODE
+— jamais CLEAN-DIRTY-OLD lui-même, qui délègue toujours son jugement sans jamais raisonner à sa
+propre charge). Trois destinataires régulés, jamais un seul : l'agent (avant sa propre action
+coûteuse), l'utilisateur (l'agent signale quand SA demande implique naturellement une action lourde,
+avant de foncer), et les autres outils du paysage ci-dessus. Même distinction souple/dur que
+l'Article 22 : un seuil dur ouvre une vraie fenêtre de question, jamais un blocage silencieux.
+
+**Capacité de scan, réutilisant l'échelle de portée de THE-FINAL-JUDGE** (jamais un second
+vocabulaire, harmonie de taxonomie demandée explicitement) : peut analyser une action isolée, un
+enchaînement, une partie des documents de travail, ou tous à la fois (Global/Partiel/Zoomé/Focus),
+et proposer des pistes concrètes de réduction — **jamais le texte envoyé à Gemini pour Lia et Noé**
+(`lib/lia.ts` reste le territoire exclusif de l'Article 8/0, décision explicite de l'utilisateur),
+**uniquement les documents de travail de l'agent** (`CLAUDE.md`, `docs/`, `scripts/`). Jamais une
+application automatique d'une proposition — une vraie lecture humaine/agent tranche toujours ce qui
+est universel de ce qui peut rejoindre un document lu à la demande. KPI dès la création (comme
+ALWAYS-NEW-CODE) : nombre de propositions réellement appliquées et leur réduction mesurée avant/après
+— jamais un nombre de scans lancés. Architecture détaillée : `docs/smart-conso-token-blueprint.md`
+(principe générique) et `docs/referentiel/smart-conso-token.md` (instanciation propre à ce projet,
+sources de la recherche incluses).
+
 **Article 23 — ALWAYS-NEW-CODE : l'épreuve de la page blanche, rendue concrète.** *(Ajouté le
 2026-09-19, à la demande explicite de l'utilisateur, juste après CHECK-LEVEL-TARGET : « imagine que
 le code n'existe pas et que tu dois le reconstruire depuis zéro, en partant de rien, mais en ayant
@@ -1115,6 +1153,10 @@ registre propres à ce projet, qui vivent dans
 `docs/referentiel/the-final-judge.md` (instanciation) et `docs/the-final-judge/` (dossier de
 rapports) — ses conclusions retenues après réconciliation rejoignent les registres existants
 (`points-fragiles.md`, `correctifs-a-revalider.md`, la feuille de route), jamais un rapport isolé.
+**Règle durable (2026-09-20) : coûte cher en tokens** (~37 000 tokens de coût fixe par appel d'agent
+séparé, recherche réelle documentée dans `docs/referentiel/smart-conso-token.md`) — vigilance et
+parcimonie requises à chaque déclenchement, jamais un réflexe. Consultation obligatoire des DEUX
+conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs sections dédiées).
 
 ## Référentiel technique — la référence à jour
 
@@ -1200,11 +1242,18 @@ rapports) — ses conclusions retenues après réconciliation rejoignent les reg
   générique.
 - `docs/referentiel/the-final-judge.md` (2026-09-20) — instanciation de THE-FINAL-JUDGE pour ce
   projet : le personnage FIXE donné à l'agent séparé (texte reproduit mot pour mot à chaque appel,
-  jamais reformulé — garde-fou non négociable contre toute dérive vers un ton neutre), les deux
-  modes (léger/lourd), la dualité dev/production, le mandat sécurité/production explicite, les trois
-  canaux de consultation (moi, l'utilisateur, les autres outils — détaillés dans
-  `docs/regles-de-travail.md` §7ter), le registre (`docs/the-final-judge/`). Cf.
-  `docs/the-final-judge-blueprint.md` pour le principe générique.
+  jamais reformulé — garde-fou non négociable contre toute dérive vers un ton neutre), les deux axes
+  croisables (6 paliers d'intensité, 4 paliers de périmètre), le coût réel en tokens et la règle de
+  vigilance/parcimonie durable qui en découle, la dualité dev/production, le mandat
+  sécurité/production explicite, les trois canaux de consultation (moi, l'utilisateur, les autres
+  outils — détaillés dans `docs/regles-de-travail.md` §7ter), le registre (`docs/the-final-judge/`).
+  Cf. `docs/the-final-judge-blueprint.md` pour le principe générique.
+- `docs/referentiel/smart-conso-token.md` (2026-09-20) — instanciation de SMART-CONSO-TOKEN pour ce
+  projet : le registre de schémas connus coûteux pour Claude (agent séparé, lecture exhaustive,
+  poids d'un document toujours chargé) et ses sources, la vérification de fraîcheur de connaissance
+  liée au modèle courant, le seuil dur proposé (pas encore validé), la capacité de scan réutilisant
+  l'échelle de portée de THE-FINAL-JUDGE, le KPI dès la création, le registre
+  (`docs/smart-conso-token/`). Cf. `docs/smart-conso-token-blueprint.md` pour le principe générique.
 
 Ces documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
 vérité (leur nombre exact a varié au fil des chantiers — se référer à la liste ci-dessus plutôt

@@ -98,17 +98,25 @@ export function formatTable(rows) {
 // tout nouvel outil au même titre que son blueprint (cf. docs/regles-de-travail.md §7ter, « un outil
 // n'est jamais fini tant que ses points d'intégration ne sont pas câblés »). Jamais une liste figée
 // à réciter de mémoire : toujours relue avant de répondre à une demande qui pourrait y correspondre.
+// Chaque coût donne, quand c'est pertinent, une estimation CHIFFRÉE en tokens (schémas connus de
+// SMART-CONSO-TOKEN, jamais un vrai compteur) en plus du coût en appels API — demande explicite de
+// l'utilisateur du 2026-09-20 : « assure-toi que le coordinateur donne toujours une estimation du
+// coût de l'utilisation des outils, en token et en API [...] raison pour laquelle tu dois ouvrir le
+// catalogue en auto, pour te rappeler des prix ». Un outil qui appelle un agent séparé (outil
+// `Agent`) porte systématiquement le repère "~37k tokens fixes" (KNOWN_COSTLY_PATTERNS.agent_subagent_spawn),
+// jamais un chiffre inventé au cas par cas.
 export const PRESTATIONS = [
-  { demande: "Vérification rapide après un changement de code", outils: ["check-house.mjs", "ARGUS (mécanique)", "HARMONIA (mécanique)"], cout: "gratuit, déjà automatique" },
-  { demande: "Fidélité de l'esprit des personnages (Article 0)", outils: ["EL-PROFESSOR"], cout: "gratuit (relit un texte déjà produit)" },
-  { demande: "Diagnostic direct du ton face à une provocation réelle", outils: ["check-spirit.mjs"], cout: "réel (API Gemini) — consulter Smart Conso API avant" },
-  { demande: "Qualité visuelle du rendu", outils: ["THE-SCREENER"], cout: "réel (Playwright, léger)" },
-  { demande: "Dette technique / code qui s'empile plutôt que d'être pensé", outils: ["ALWAYS-NEW-CODE", "CLEAN-DIRTY-OLD"], cout: "réel (raisonnement)" },
-  { demande: "Robustesse et couverture de test réelle", outils: ["AXA-CHECK"], cout: "gratuit" },
-  { demande: "Chasse aux bugs cachés avant une étape importante", outils: ["HYPER-SCAN-CHECKPOINT"], cout: "réel (API en version complète) — consulter Smart Conso API avant" },
-  { demande: "Audit global indépendant (code + produit + reprise potentielle)", outils: ["THE-FINAL-JUDGE"], cout: "réel (agent séparé) — consulter Smart Conso API avant" },
-  { demande: "Sécurité et préparation à la mise en production", outils: ["THE-FINAL-JUDGE (mandat sécurité inclus)"], cout: "réel (agent séparé) — consulter Smart Conso API avant" },
-  { demande: "Diagnostiquer un blocage/quota Gemini épuisé (429/503 répétés)", outils: ["Smart Breaker (check-gemini-quota.mjs)"], cout: "gratuit à diagnostiquer" },
+  { demande: "Vérification rapide après un changement de code", outils: ["check-house.mjs", "ARGUS (mécanique)", "HARMONIA (mécanique)"], cout: "gratuit, déjà automatique — 0 token, 0 appel API" },
+  { demande: "Fidélité de l'esprit des personnages (Article 0)", outils: ["EL-PROFESSOR"], cout: "gratuit (relit un texte déjà produit) — 0 appel API, coût token = taille du texte relu" },
+  { demande: "Diagnostic direct du ton face à une provocation réelle", outils: ["check-spirit.mjs"], cout: "réel (API Gemini, 16 scénarios) — consulter Smart Conso API avant" },
+  { demande: "Qualité visuelle du rendu", outils: ["THE-SCREENER"], cout: "réel (Playwright, léger) — pas d'agent séparé, coût token faible" },
+  { demande: "Dette technique / code qui s'empile plutôt que d'être pensé", outils: ["ALWAYS-NEW-CODE", "CLEAN-DIRTY-OLD"], cout: "réel (raisonnement, pas d'appel API) — consulter SMART-CONSO-TOKEN avant (ALWAYS-NEW-CODE seulement, CLEAN-DIRTY-OLD délègue sans raisonner)" },
+  { demande: "Robustesse et couverture de test réelle", outils: ["AXA-CHECK"], cout: "gratuit — 0 token, 0 appel API" },
+  { demande: "Chasse aux bugs cachés avant une étape importante", outils: ["HYPER-SCAN-CHECKPOINT"], cout: "réel — version légère gratuite ; version complète = ~37k tokens fixes (agent séparé) + appels Gemini — consulter Smart Conso API ET SMART-CONSO-TOKEN avant" },
+  { demande: "Audit global indépendant (code + produit + reprise potentielle)", outils: ["THE-FINAL-JUDGE"], cout: "réel — ~37k tokens fixes par appel (agent séparé, quasi le même quel que soit le palier d'intensité) — consulter Smart Conso API ET SMART-CONSO-TOKEN avant" },
+  { demande: "Sécurité et préparation à la mise en production", outils: ["THE-FINAL-JUDGE (mandat sécurité inclus)"], cout: "réel — ~37k tokens fixes (agent séparé) — consulter Smart Conso API ET SMART-CONSO-TOKEN avant" },
+  { demande: "Diagnostiquer un blocage/quota Gemini épuisé (429/503 répétés)", outils: ["Smart Breaker (check-gemini-quota.mjs)"], cout: "gratuit à diagnostiquer — quelques appels Gemini minimaux, coût token négligeable" },
+  { demande: "Réguler ma propre consommation de tokens avant une action coûteuse", outils: ["SMART-CONSO-TOKEN"], cout: "gratuit à consulter — 0 token, 0 appel API" },
 ];
 
 export function formatMenu(prestations = PRESTATIONS) {
@@ -216,6 +224,15 @@ export function runNetworkCheck({ shImpl = sh } = {}) {
   const sessionLog = existsSync(sessionPath) ? JSON.parse(readFileSync(sessionPath, "utf8")) : { actions: [] };
   const unconfirmedBursts = findUnconfirmedBursts(healthData, sessionLog);
   rows.push({ name: "Smart Conso API (salves jamais confirmées)", result: unconfirmedBursts.length > 0 ? `à regarder (${unconfirmedBursts.length} salve(s))` : "ok", when: now });
+
+  // Rythme SMART-CONSO-TOKEN (2026-09-20, demande explicite de l'utilisateur : « le coordinateur
+  // doit être rapproché de smart-conso-token pour veiller sur ce point »). Même principe que la
+  // ligne Smart Conso API ci-dessus : un simple affichage du rythme récent, jamais un jugement — la
+  // lecture reste toujours humaine/agent.
+  const tokenHistoryPath = join(ROOT, ".smart-conso-token-history.json");
+  const tokenHistory = existsSync(tokenHistoryPath) ? JSON.parse(readFileSync(tokenHistoryPath, "utf8")) : { actions: [] };
+  const tokenSummary = summarizeTokenHistory(tokenHistory, Date.now());
+  rows.push({ name: "SMART-CONSO-TOKEN (rythme 7 derniers jours)", result: `${tokenSummary.totalRecent} action(s) — ${JSON.stringify(tokenSummary.byType)}`, when: now });
 
   saveState({ lastHead: head, lastWhen: now });
   return { duplicate, previousRun: state, rows };

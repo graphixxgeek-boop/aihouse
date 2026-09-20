@@ -53,4 +53,5 @@ next-env.d.ts
 /build/
 .gemini-key-health.json
 .smart-conso-session.json
+.smart-conso-token-history.json
 .le-coordinateur-last-run.json

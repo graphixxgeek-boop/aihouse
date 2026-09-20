@@ -42,7 +42,10 @@ désormais des signaux dédiés à la restructuration ("reconstruire depuis zér
 "code empilé", "restructurer"...), distincts des signaux de vérification de bugs déjà en place, et
 recommande le tool adapté selon lequel des deux registres est détecté (ou les deux). En cas de
 doute réel (marge étroite, ou signaux mêlés), l'agent interroge l'utilisateur avant de lancer quoi
-que ce soit — jamais un choix silencieux.
+que ce soit — jamais un choix silencieux. **Depuis le 2026-09-20** : consulter
+`scripts/smart-conso-token.mjs full_repo_scope` avant de lancer le zoom profond sur une zone (un
+raisonnement coûteux consomme des tokens indépendamment de tout appel Gemini, cf.
+`docs/referentiel/smart-conso-token.md`).
 
 ## Rejoint la boîte à outils d'HYPER-SCAN-CHECKPOINT
 
