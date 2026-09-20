@@ -1171,6 +1171,12 @@ conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs se
   liée au modèle courant, le seuil dur proposé (pas encore validé), la capacité de scan réutilisant
   l'échelle de portée de THE-FINAL-JUDGE, le KPI dès la création, le registre
   (`docs/smart-conso-token/`). Cf. `docs/smart-conso-token-blueprint.md` pour le principe générique.
+- `docs/referentiel/the-deep-reader.md` (2026-09-20) — instanciation de THE-DEEP-READER, cousin de
+  THE-FINAL-JUDGE (même mécanique d'agent séparé, personas et règles d'entrée opposées : reçoit la
+  conversation, jamais le code/produit) dédié à la relecture lourde du système de suivi
+  (`docs/suivi/`) contre l'historique complet de la conversation. Coût variable (jamais fixe,
+  contrairement à THE-FINAL-JUDGE), mêmes deux conseillers obligatoires avant lancement, registre
+  dans `docs/suivi/relectures-lourdes/`. Aucun blueprint séparé (même statut que LE-COORDINATEUR).
 
 Ces documents remplacent l'usage du référentiel d'origine (ci-dessous) comme source de
 vérité (leur nombre exact a varié au fil des chantiers — se référer à la liste ci-dessus plutôt

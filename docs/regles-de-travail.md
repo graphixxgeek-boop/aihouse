@@ -702,6 +702,15 @@ même principe que la détection de doublon de LE-COORDINATEUR — déclenche un
 le crochet post-commit dès que ce nombre de commits s'est écoulé sans passage confirmé
 (`recordCircleTasksRun()`, mémoire locale `.circle-tasks-last-run.json`, jamais committée).
 
+**THE-DEEP-READER rejoint le thème « Audit lourd » (2026-09-20)** : cousin de THE-FINAL-JUDGE (même
+mécanique d'agent séparé, personas et règles d'entrée opposées — cf.
+`docs/referentiel/the-deep-reader.md`), dédié à la relecture lourde du système de suivi contre
+l'historique complet de la conversation, jamais un mode de THE-FINAL-JUDGE. Même traitement
+d'alerte (⚠️🔴, jamais coché par défaut), mais coût honnêtement VARIABLE (plancher fixe + volume
+réel de conversation à relire) plutôt que le chiffre constant de THE-FINAL-JUDGE — à préférer
+seulement quand la version légère et gratuite déjà décrite dans `docs/systeme-de-suivi.md` ne
+suffit pas.
+
 #### Le menu des prestations — traduire les outils en demandes, jamais en noms internes
 
 *(Ajouté le 2026-09-20, à la demande explicite de l'utilisateur : « le coordinateur est capable de

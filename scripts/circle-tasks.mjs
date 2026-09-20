@@ -212,6 +212,21 @@ export const CIRCLE_ITEMS = [
     execute: "Consulter Smart Conso API ET SMART-CONSO-TOKEN avant de lancer quoi que ce soit (Article 22) — jamais un réflexe de routine, seulement si un vrai besoin de regard indépendant justifie la dépense.",
     costly: true,
   },
+  // THE-DEEP-READER (2026-09-20, cousin de THE-FINAL-JUDGE, jamais un mode de THE-FINAL-JUDGE —
+  // règle d'entrée opposée : reçoit la conversation, jamais le code/produit, cf.
+  // docs/referentiel/the-deep-reader.md). Même traitement d'alerte que THE-FINAL-JUDGE (demande
+  // explicite de l'utilisateur : « il faut cabler suivi conso token sur la decision liée à cette
+  // operation ») — coût honnêtement DIFFÉRENT (pas fixe : le plancher agent + le volume réel de
+  // conversation à relire, jamais présenté comme équivalent au coût constant de THE-FINAL-JUDGE).
+  {
+    id: "the-deep-reader",
+    theme: "Audit lourd",
+    label: "THE-DEEP-READER — relecture lourde du suivi (conversation vs docs/suivi)",
+    cout: `${ALERT_ICON} COÛTEUX — ~${FINAL_JUDGE_TOKEN_COST.toLocaleString("fr-FR")} tokens fixes (agent séparé) + volume réel de la conversation à relire (variable, jamais fixe)`,
+    tokensEstimes: `~${FINAL_JUDGE_TOKEN_COST.toLocaleString("fr-FR")} tokens fixes au minimum, plus selon la taille de l'historique fourni — jamais un chiffre constant contrairement à THE-FINAL-JUDGE`,
+    execute: "Consulter Smart Conso API ET SMART-CONSO-TOKEN avant de lancer quoi que ce soit (même actionType agent_subagent_spawn que THE-FINAL-JUDGE) — préférer d'abord la version légère gratuite (docs/systeme-de-suivi.md) sauf besoin réel d'un regard non biaisé.",
+    costly: true,
+  },
 ];
 
 // Signal de fraîcheur MÉCANIQUE, jamais inventé (2026-09-20) : la date la plus récente mentionnée

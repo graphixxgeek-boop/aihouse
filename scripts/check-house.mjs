@@ -919,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 146'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 147'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2787,6 +2787,35 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   console.log('Passed: extractTaskNumbers() reads only real numeric task numbers (skipping headers, separators, and "—" pre-numbering placeholders), nextTaskNumber() returns the true global maximum plus one across every session file (seeding at 117, the exact continuation point, when none exist yet), and findTaskNumberIssues() flags a real cross-file duplicate and a real within-file regression — the mechanical guarantee behind the durable task numbering the user asked for.');
 }
 {
+  // countTasksSince() / lastCoveredTaskNumber() (2026-09-20, THE-DEEP-READER) : la borne de relecture
+  // est toujours un numéro de tâche, jamais une date/heure (risque de fuseau horaire explicitement
+  // signalé par l'utilisateur).
+  const {countTasksSince,lastCoveredTaskNumber}=await import('../scripts/check-suivi-fidelity.mjs');
+  const {classifyRereadVolume,recommendRereadBoundary}=await import('../scripts/smart-conso-token.mjs');
+  const rereadSessions=[{name:'a.md',text:'| 140 | h | S | s | normal | d1 | terminée |\n| 145 | h | S | s | normal | d2 | terminée |'},{name:'b.md',text:'| 150 | h | S | s | normal | d3 | terminée |'}];
+  const rereadListDir=()=>rereadSessions.map(f=>f.name);
+  const rereadReadFile=(p)=>rereadSessions.find(f=>p.endsWith(f.name)).text;
+  assert.equal(countTasksSince(140,'/fake',rereadListDir,rereadReadFile,()=>true),2,'countTasksSince() must count only real task numbers strictly greater than the given boundary, across every session file, never the boundary itself nor an earlier one');
+  assert.equal(countTasksSince(150,'/fake',rereadListDir,rereadReadFile,()=>true),0,'a boundary at or beyond the highest real task number must report zero, never a fabricated count');
+  assert.equal(countTasksSince(100,'/not-a-real-path'),0,'a missing sessions directory must report zero rather than crash');
+
+  const deepReaderIndex='| Date | Interventions relues | Écarts trouvés | Tâches ouvertes | Fichier | Dernière tâche couverte (N°) |\n|---|---|---|---|---|---|\n| 2026-09-20 | 40 | 2 | 2 | [x](x.md) | 140 |\n| 2026-09-21 | 12 | 0 | 0 | [y](y.md) | 150 |';
+  assert.equal(lastCoveredTaskNumber(deepReaderIndex),150,'lastCoveredTaskNumber() must read the real last-column value of the most recently reported pass (the genuine maximum across all rows), never the first row nor a stale earlier one');
+  assert.equal(lastCoveredTaskNumber(''),undefined,'an empty or missing registry must report an honest absence, never a fabricated zero — the correct signal for "first pass ever, reread from the start"');
+
+  assert.deepEqual(classifyRereadVolume(0),{taskCount:0,niveau:'nul',message:'Aucune tâche enregistrée depuis cette borne — probablement rien de neuf à relire.'},'zero tasks since the boundary must classify as "nul", the honest floor');
+  assert.equal(classifyRereadVolume(3).niveau,'faible','a handful of tasks must classify as "faible", never over-alarming a small gap');
+  assert.equal(classifyRereadVolume(12).niveau,'modéré','a two-digit task count must classify as "modéré", the real order-of-magnitude jump the user asked this tool to reflect');
+  assert.equal(classifyRereadVolume(50).niveau,'élevé','a large task count must classify as "élevé", never silently capped at "modéré" no matter how large the real gap grows');
+
+  const noPassRecommendation=recommendRereadBoundary('');
+  assert.equal(noPassRecommendation.borne,'debut','with no THE-DEEP-READER pass ever recorded, the recommended boundary must honestly be "depuis le début" — there is nothing to compare against yet');
+  const withPassRecommendation=recommendRereadBoundary(deepReaderIndex,'/fake',rereadListDir,rereadReadFile,()=>true);
+  assert.equal(withPassRecommendation.borne,150,'with a real prior pass recorded, the recommended boundary must be the genuine last-covered task number, never a re-derived or guessed value');
+  assert.equal(withPassRecommendation.niveau,'nul','with the sample sessions used here, nothing lies past task #150 yet, so the honest recommendation is "nothing new to reread" rather than a fabricated volume');
+  console.log('Passed: countTasksSince() and lastCoveredTaskNumber() anchor THE-DEEP-READER\'s reread boundary on a strictly-increasing global task number rather than a date/time (closing the real timezone-ambiguity risk the user flagged), classifyRereadVolume() turns that count into an honest order-of-magnitude signal without ever fabricating an exact token count, and recommendRereadBoundary() combines the registry\'s last recorded pass with the real task count to recommend resuming right where the previous pass left off — or an honest "depuis le début" on the very first pass, never a guessed value.');
+}
+{
   // findCommitsMissingSuiviUpdate() (2026-09-19, demande explicite : « comment nous assurer que le
   // suivi est correctement fait et historisé ? peux-tu fiabiliser ? »). Trouvaille réelle qui a
   // motivé cette fonction : 7 des 8 derniers commits d'une vraie session avaient changé du code réel
@@ -3123,11 +3152,14 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     THEME_ORDER, groupCircleReportByTheme, checkHtmlWiring, oldestOpenTaskDate,
   } = await import('../scripts/circle-tasks.mjs');
 
-  assert.equal(CIRCLE_ITEMS.length, 14, 'CIRCLE_ITEMS must list exactly the 13 free periodic items (profil, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, dream-team-photo, THE-SCREENER, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal) plus THE-FINAL-JUDGE, never silently gaining or losing an entry');
+  assert.equal(CIRCLE_ITEMS.length, 15, 'CIRCLE_ITEMS must list exactly the 13 free periodic items (profil, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, dream-team-photo, THE-SCREENER, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal) plus THE-FINAL-JUDGE and its cousin THE-DEEP-READER, never silently gaining or losing an entry');
   const judgeItem = CIRCLE_ITEMS.find((i) => i.id === 'the-final-judge');
   assert.ok(judgeItem && judgeItem.costly === true, 'THE-FINAL-JUDGE must be present in the same checklist (explicit 2026-09-20 reversal of the initial "keep it out entirely" design) but flagged costly, never treated as an ordinary free item');
   assert.ok(judgeItem.cout.includes(String(FINAL_JUDGE_TOKEN_COST / 1000) + ' 000') || judgeItem.cout.includes('37'), 'THE-FINAL-JUDGE\'s cost label must state the real fixed token cost in plain text, never a vague "expensive" with no number');
-  assert.ok(CIRCLE_ITEMS.filter((i) => i.costly).length === 1, 'exactly one item (THE-FINAL-JUDGE) must be marked costly — every other item in this ronde stays genuinely free, per the explicit split the user asked to preserve');
+  const deepReaderItem = CIRCLE_ITEMS.find((i) => i.id === 'the-deep-reader');
+  assert.ok(deepReaderItem && deepReaderItem.costly === true, 'THE-DEEP-READER (THE-FINAL-JUDGE\'s cousin, dedicated to the heavy suivi reread) must also be present and flagged costly, same treatment as THE-FINAL-JUDGE, never an ordinary free item');
+  assert.ok(/variable|jamais.*fixe|volume réel/.test(deepReaderItem.cout), 'THE-DEEP-READER\'s cost label must honestly state its cost is variable (fixed spawn floor plus the real conversation volume to reread), never presented as a constant figure the way THE-FINAL-JUDGE\'s is');
+  assert.ok(CIRCLE_ITEMS.filter((i) => i.costly).length === 2, 'exactly two items (THE-FINAL-JUDGE and THE-DEEP-READER) must be marked costly — every other item in this ronde stays genuinely free, per the explicit split the user asked to preserve');
   assert.ok(CIRCLE_ITEMS.every((i) => typeof i.tokensEstimes === 'string' && i.tokensEstimes.length > 0), 'every single item, free or costly, must carry an honest order-of-magnitude Claude-token estimate (2026-09-20 catalog enrichment) — never a silently missing field on a future addition');
   const screenerItem = CIRCLE_ITEMS.find((i) => i.id === 'the-screener');
   assert.ok(screenerItem && !screenerItem.costly, 'THE-SCREENER\'s own capture mechanism costs zero Gemini API calls (confirmed in docs/referentiel/the-screener.md) so it must never be marked costly, unlike THE-FINAL-JUDGE');
@@ -3151,7 +3183,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const suiviCategorized = { terminee: [], enCours: [{ cells: ['1', '2026-09-15T00:00:00Z', 'x', 'x', 'x', 'x', 'en cours'] }], ouverte: [{ cells: ['2', '2026-09-18T00:00:00Z', 'x', 'x', 'x', 'x', 'ouverte'] }], autre: [] };
   const sampleClaudeMdText = 'x'.repeat(200) + '\n*(ajouté le 2026-09-19, test)*\n*(ajouté le 2026-09-20, test)*\n';
   const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText: emptyAlwaysNewCode, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText: sampleClaudeMdText }, now);
-  assert.equal(report.length, 14, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one');
+  assert.equal(report.length, 15, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one');
   assert.equal(report.find((r) => r.id === 'claude-md-weight-signal').staleness, '66 tokens estimés, niveau "faible" — 2 aside(s) narrative(s) datée(s) encore réductible(s)', 'the CLAUDE.md weight signal must reuse the real SMART-CONSO-TOKEN scan functions live (never a second parser), reporting both the honest token estimate and the real count of still-reducible dated asides found in the actual text passed in');
   assert.equal(buildCircleReport({}, now).find((r) => r.id === 'claude-md-weight-signal').staleness, 'pas de signal disponible (CLAUDE.md non fourni)', 'with no CLAUDE.md text supplied at all, the signal must report an honest absence rather than crash or fabricate a number');
   assert.equal(report.find((r) => r.id === 'clean-dirty-old-signal').staleness, '1 jour(s) depuis le dernier passage journalisé', 'the CLEAN-DIRTY-OLD signal must compute its own staleness from its own real index text, distinct from every other source');
@@ -3182,15 +3214,16 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // groupCircleReportByTheme() (2026-09-20, idée explicite de l'utilisateur : proposer les items par
   // thème plutôt qu'un découpage arbitraire de 4). Chaque item réel doit porter un thème connu, se
   // ranger dans le bon groupe, chaque groupe doit tenir dans la limite de 4 options par question, et
-  // THE-FINAL-JUDGE doit rester seul dans son propre thème, en toute dernière position des groupes.
+  // le thème "Audit lourd" (THE-FINAL-JUDGE + son cousin THE-DEEP-READER, tous deux costly, jamais
+  // un item gratuit) doit rester en toute dernière position des groupes.
   assert.ok(CIRCLE_ITEMS.every((i) => THEME_ORDER.includes(i.theme)), 'every real catalog item must carry a theme from the known fixed list, never an untagged or unknown one slipping through silently');
   const grouped = groupCircleReportByTheme(report);
-  assert.deepEqual(grouped.map((g) => g.theme), THEME_ORDER, 'the groups must appear in the fixed, never-reshuffled theme order, with THE-FINAL-JUDGE\'s "Audit lourd" theme genuinely last');
+  assert.deepEqual(grouped.map((g) => g.theme), THEME_ORDER, 'the groups must appear in the fixed, never-reshuffled theme order, with the "Audit lourd" theme genuinely last');
   assert.ok(grouped.every((g) => g.items.length <= 4), 'every theme group must fit within the real 4-options-per-question UI limit, the whole reason this grouping exists');
-  assert.deepEqual(grouped.at(-1).items.map((i) => i.id), ['the-final-judge'], 'THE-FINAL-JUDGE must be alone in the last group, never bundled with a free item in the same theme');
+  assert.deepEqual(grouped.at(-1).items.map((i) => i.id), ['the-final-judge', 'the-deep-reader'], 'the last "Audit lourd" group must contain exactly THE-FINAL-JUDGE and its cousin THE-DEEP-READER, both costly, never bundled with a free item from another theme');
   assert.deepEqual(groupCircleReportByTheme([{ id: 'mystere', theme: 'Thème inconnu' }]).map((g) => g.theme), ['Autre'], 'an item with a theme outside the known list must fall into an honest "Autre" catch-all, never silently disappear from the grouping');
 
-  console.log('Passed: CIRCLE-TASKS lists exactly its 13 free periodic items (profil, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, dream-team-photo, THE-SCREENER, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal) plus THE-FINAL-JUDGE (the sole exception, explicitly reversed into the same checklist but always flagged costly with its real fixed token price, never a vague warning), every item carrying an honest order-of-magnitude Claude-token estimate in a column distinct from the Gemini/API cost column, THE-SCREENER correctly staying free (its capture mechanism costs zero Gemini calls) while explicitly warning against launching a fresh simulation just for a screenshot, computes an honest mechanical freshness signal from real index files for the items that have one (profil, KPI, the most-neglected ALWAYS-NEW-CODE zone, Smart Conso API scan, SMART-CONSO-TOKEN scan) and an honest absence for those that don\'t (referentiel, dream-team-photo, THE-SCREENER), correctly refuses to fabricate a negative day count from a future-dated entry (the exact real bug found tonight), renders the costly item in real ANSI red for genuine terminal output while never leaking escape codes into a plain-text rendering, and its post-commit reminder threshold fires at exactly the configured commit count, never early nor only after overshooting it.');
+  console.log('Passed: CIRCLE-TASKS lists exactly its 13 free periodic items (profil, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, dream-team-photo, THE-SCREENER, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal) plus THE-FINAL-JUDGE and its cousin THE-DEEP-READER (the two exceptions, always flagged costly with their real token cost — a fixed figure for THE-FINAL-JUDGE, an honestly variable one for THE-DEEP-READER — never a vague warning), every item carrying an honest order-of-magnitude Claude-token estimate in a column distinct from the Gemini/API cost column, THE-SCREENER correctly staying free (its capture mechanism costs zero Gemini calls) while explicitly warning against launching a fresh simulation just for a screenshot, computes an honest mechanical freshness signal from real index files for the items that have one (profil, KPI, the most-neglected ALWAYS-NEW-CODE zone, Smart Conso API scan, SMART-CONSO-TOKEN scan) and an honest absence for those that don\'t (referentiel, dream-team-photo, THE-SCREENER), correctly refuses to fabricate a negative day count from a future-dated entry (the exact real bug found tonight), renders the costly item in real ANSI red for genuine terminal output while never leaking escape codes into a plain-text rendering, and its post-commit reminder threshold fires at exactly the configured commit count, never early nor only after overshooting it.');
 }
 
 {
@@ -3492,8 +3525,9 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(checkToolConnections(allConnectedExceptClaude), ['CLAUDE.md'], 'checkToolConnections() must flag exactly the document genuinely missing a reference to SMART-CONSO-TOKEN, case-insensitively, while never flagging one that already cites it');
   assert.deepEqual(checkToolConnections({}), Object.keys(EXPECTED_CONNECTIONS), 'with no documents provided at all, every expected connection must be reported missing, never silently skipped');
   // Vérification RÉELLE et bloquante contre les vrais fichiers du dépôt (pas seulement un exemple
-  // synthétique) : casse le pre-commit hook le jour où l'un de ces quatre documents perdrait sa
-  // référence à SMART-CONSO-TOKEN — la garantie mécanique que l'utilisateur a demandée.
+  // synthétique) : casse le pre-commit hook le jour où l'un de ces documents (EXPECTED_CONNECTIONS,
+  // dont THE-DEEP-READER depuis le 2026-09-20) perdrait sa référence à SMART-CONSO-TOKEN — la
+  // garantie mécanique que l'utilisateur a demandée.
   const realConnectionDocs = {};
   for (const path of Object.keys(EXPECTED_CONNECTIONS)) realConnectionDocs[path] = fs.readFileSync(path, 'utf8');
   const realMissingConnections = checkToolConnections(realConnectionDocs);

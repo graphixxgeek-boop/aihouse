@@ -263,6 +263,39 @@ export function findTaskNumberIssues(sessionsDir = SESSIONS_DIR, readDir = readd
   return issues;
 }
 
+// countTasksSince() (2026-09-20, THE-DEEP-READER) : compte les tâches réelles enregistrées APRÈS une
+// borne donnée (numéro de tâche, jamais une date/heure — demande explicite de l'utilisateur : « prends
+// en compte le fuseau, erreur de moi à ce moment là » — un numéro de tâche est strictement croissant
+// et global, aucune ambiguïté de fuseau horaire possible, contrairement à une date/heure qu'il
+// faudrait faire correspondre entre le fuseau de l'utilisateur et l'UTC déjà utilisé dans
+// docs/suivi/). Réutilise extractTaskNumbers() (jamais un second parseur) — sert de proxy honnête au
+// volume de conversation à relire depuis cette borne, jamais un vrai compte de tokens.
+export function countTasksSince(sinceTaskNumber, sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+  if (!exists(sessionsDir)) return 0;
+  const files = readDir(sessionsDir).filter((f) => f.endsWith(".md"));
+  let count = 0;
+  for (const file of files) for (const n of extractTaskNumbers(readFile(join(sessionsDir, file)))) if (n > sinceTaskNumber) count++;
+  return count;
+}
+
+// lastCoveredTaskNumber() (2026-09-20, THE-DEEP-READER) : lit le registre
+// docs/suivi/relectures-lourdes/index.md (cf. docs/referentiel/the-deep-reader.md) et retourne le plus
+// grand numéro de tâche déjà couvert par un passage précédent — la colonne "Dernière tâche couverte
+// (N°)", toujours en dernière position de chaque ligne réelle. Sert de borne de départ PAR DÉFAUT pour
+// le prochain passage (reprendre juste après, jamais tout relire depuis le début à chaque fois) —
+// jamais une date/heure, même raison que countTasksSince() ci-dessus. Retourne undefined si aucun
+// passage n'a encore été enregistré (première relecture, forcément depuis le début).
+export function lastCoveredTaskNumber(indexText) {
+  const rows = (indexText || "").split("\n").filter((l) => l.startsWith("|") && !/^\|\s*-+\s*\|/.test(l) && !l.includes("Dernière tâche couverte"));
+  let max = 0;
+  for (const row of rows) {
+    const cells = splitTableRow(row);
+    const n = Number((cells[cells.length - 1] ?? "").trim());
+    if (Number.isFinite(n) && n > max) max = n;
+  }
+  return max > 0 ? max : undefined;
+}
+
 function main() {
   console.log("=== État des tâches, en temps réel (docs/suivi/) ===\n");
   const all = categorizeAllSessions();

@@ -195,7 +195,27 @@ sont encore oubliées. Mets en place un process pour ça [...] doit se déclench
 garde-fou-ci ne remplace jamais la discipline "au fil de l'eau" du point 0 ci-dessus — il existe
 justement parce que cette discipline peut échouer, et qu'il faut un filet de rattrapage.)*
 
-**Déclencheurs, jamais automatique** (ce serait un coût réel à chaque tour, disproportionné — cf.
+**Trois niveaux, du gratuit au coûteux (2026-09-20, complété à la demande explicite de
+l'utilisateur : « il n'y a pas une autre solution moins coûteuse ? »)** :
+- **Étape 0, gratuite et mécanique** : avant même la procédure légère ci-dessous, comparer la
+  liste de tâches technique de la session en cours (`TaskCreate`/`TaskUpdate`) avec les lignes de
+  `docs/suivi/sessions/<session>.md` — toute tâche présente dans l'une et absente de l'autre est un
+  écart détecté à coût nul. Limite honnête : ne rattrape que les idées déjà transformées en tâche
+  technique ; une idée jamais formalisée en tâche n'y laisse aucune trace non plus — c'est pour ça
+  que les deux niveaux suivants restent nécessaires.
+- **Version légère (ci-dessous, procédure en 5 étapes)** : exécutée directement par l'agent qui
+  pilote le projet, gratuite (pas d'agent séparé), à utiliser en premier dans l'immense majorité
+  des cas.
+- **Version lourde (THE-DEEP-READER)** : agent séparé réellement lancé, coûteuse (cf.
+  `docs/referentiel/the-deep-reader.md` pour le mécanisme complet), réservée au cas où un regard
+  vraiment neuf — non biaisé par la propre conviction de l'agent d'avoir déjà bien tracé — est
+  nécessaire. Jamais un mode de THE-FINAL-JUDGE (règle d'entrée opposée), mais un cousin qui
+  réutilise sa même mécanique de déclenchement et ses mêmes garde-fous de coût. Coût variable,
+  jamais fixe (dépend du volume réel de conversation à relire) — deux conseillers obligatoires
+  avant lancement (Smart Conso API + SMART-CONSO-TOKEN), encart ⚠️🔴, jamais coché par défaut dans
+  CIRCLE-TASKS où elle apparaît désormais comme item périodique.
+
+**Déclencheurs de la version légère, jamais automatique** (ce serait un coût réel à chaque tour, disproportionné — cf.
 Article 3bis de CLAUDE.md, test d'utilité) :
 1. L'utilisateur le demande explicitement (« relis toute la conversation », « vérifie que rien n'est
    oublié », ou tout équivalent).

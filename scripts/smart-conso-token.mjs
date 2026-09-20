@@ -20,6 +20,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { countTasksSince, lastCoveredTaskNumber } from "./check-suivi-fidelity.mjs";
 
 const HISTORY_PATH = fileURLToPath(new URL("../.smart-conso-token-history.json", import.meta.url));
 
@@ -282,6 +283,42 @@ export function checkKnowledgeFreshness(agentIdentity, provenance = KNOWLEDGE_PR
     };
   }
   return { fraiche: true, message: `Registre validé pour "${provenance.validatedFor}" (recherche du ${provenance.researchedAt}) — cohérent avec l'identité déclarée "${agentIdentity}".` };
+}
+
+// classifyRereadVolume() / recommendRereadBoundary() (2026-09-20, THE-DEEP-READER) : répondent à la
+// demande explicite de l'utilisateur au déclenchement de THE-DEEP-READER — « quel est le repère
+// temporel qui fixe la borne de relecture ? comment smart conso accompagne sur le sujet ? ». Jamais un
+// repère de date/heure (risque de fuseau horaire explicitement signalé par l'utilisateur : « erreur de
+// moi à ce moment là ») — toujours un NUMÉRO DE TÂCHE, strictement croissant et global, zéro ambiguïté
+// possible. `countTasksSince()`/`lastCoveredTaskNumber()` (check-suivi-fidelity.mjs) donnent le compte
+// réel de tâches enregistrées depuis une borne ; ces deux fonctions traduisent ce compte en un ordre de
+// grandeur honnête (jamais un vrai chiffre de tokens, même discipline qu'estimateTokens()) pour aider
+// l'agent à présenter des options réelles dans sa fenêtre de calibrage, plutôt que de deviner à l'aveugle.
+export function classifyRereadVolume(taskCount) {
+  if (!Number.isFinite(taskCount) || taskCount === 0) return { taskCount: 0, niveau: "nul", message: "Aucune tâche enregistrée depuis cette borne — probablement rien de neuf à relire." };
+  if (taskCount <= 5) return { taskCount, niveau: "faible", message: `${taskCount} tâche(s) enregistrée(s) depuis cette borne — volume de conversation à relire probablement faible.` };
+  if (taskCount <= 20) return { taskCount, niveau: "modéré", message: `${taskCount} tâche(s) enregistrée(s) depuis cette borne — volume modéré, un coût de lecture réel s'ajoute au plancher fixe de l'agent séparé.` };
+  return { taskCount, niveau: "élevé", message: `${taskCount} tâche(s) enregistrée(s) depuis cette borne — volume élevé, coût de lecture réel significatif à anticiper en plus du plancher fixe.` };
+}
+
+// Combine le registre des passages déjà effectués (docs/suivi/relectures-lourdes/index.md) et le
+// compte réel de tâches pour recommander une borne PAR DÉFAUT — jamais imposée, l'agent ou
+// l'utilisateur peuvent toujours désigner une autre tâche précise ou choisir "depuis le début" dans la
+// fenêtre de calibrage. `deepReaderIndexText` : le texte déjà lu du registre ; `sessionsDir`/`readDir`/
+// `readFile`/`exists` : mêmes paramètres injectables que countTasksSince(), pour rester testable sans
+// toucher au vrai disque.
+export function recommendRereadBoundary(deepReaderIndexText, sessionsDir, readDir, readFile, exists) {
+  const lastCovered = lastCoveredTaskNumber(deepReaderIndexText);
+  if (lastCovered === undefined) {
+    return { borne: "debut", raison: "Aucun passage THE-DEEP-READER encore enregistré — première relecture, forcément depuis le début (aucun ordre de grandeur mesurable pour l'instant)." };
+  }
+  const args = [lastCovered, sessionsDir, readDir, readFile, exists].filter((a) => a !== undefined);
+  const taskCount = countTasksSince(...args);
+  return {
+    borne: lastCovered,
+    ...classifyRereadVolume(taskCount),
+    raison: `Dernier passage confirmé après la tâche #${lastCovered} — reprendre à partir de là évite de relire un territoire déjà vérifié.`,
+  };
 }
 
 function loadJson(path, fallback) {
@@ -555,6 +592,7 @@ export const EXPECTED_CONNECTIONS = {
   "docs/referentiel/the-final-judge.md": "outil",
   "docs/referentiel/hyper-scan-checkpoint.md": "outil",
   "docs/referentiel/always-new-code.md": "outil",
+  "docs/referentiel/the-deep-reader.md": "outil",
 };
 
 export function checkToolConnections(documents) {
