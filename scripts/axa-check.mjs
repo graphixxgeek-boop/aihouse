@@ -241,6 +241,7 @@ export const AGENT_SCRIPT_FILES = {
   "the-deep-reader": "scripts/the-deep-reader.mjs",
   "smart-conso-token": "scripts/smart-conso-token.mjs",
   "check-tasks-details": "scripts/check-tasks-details.mjs",
+  "clone-hunter": "scripts/clone-hunter.mjs",
 };
 
 export function collectScriptCoverage(covDir, { readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8") } = {}) {

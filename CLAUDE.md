@@ -874,6 +874,27 @@ il ne sert que rarement, contrairement à find-booster. Jamais les motifs exacts
 propres à ce projet, qui vivent dans `docs/referentiel/find-booster.md` (instanciation) et
 `docs/find-booster/` (dossier + index).
 
+## CLONE-HUNTER — blueprint exportable
+
+*(2026-09-21, construit en réponse directe à une question de l'utilisateur : « est-ce qu'on a deja
+un outil qui traque les redondances, repetition, duplicatas, dans le code ? » — vérifié avant
+construction, en lisant les fonctions exportées d'ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD une par
+une (Article 19), qu'aucune ne fait ce métier. Membre complet dès la construction, décision
+explicite de l'utilisateur, jamais l'étape intermédiaire "sans blueprint" habituelle.)*
+
+`docs/clone-hunter-blueprint.md` documente l'ARCHITECTURE du détecteur de blocs de code dupliqués —
+v1 volontairement littérale (blocs de lignes identiques après normalisation d'espaces, jamais une
+ressemblance sémantique, cf. tâche de suivi ouverte pour une v2), un diff de blocs qui étend la
+comparaison ligne par ligne plutôt qu'un fenêtrage à taille fixe, un regroupement par union-find
+pour qu'un bloc dupliqué à N endroits ne produise jamais N alertes redondantes, et une exclusion
+vérifiée (jamais générique) du code vendu tel quel dont la duplication est assumée par design
+(`components/ui/`, le kit shadcn/Radix de ce projet). `clone-hunter-run` rejoint CIRCLE-TASKS en
+lancement RÉEL à chaque passage (thème "Passages réels (smoke run)", comme
+profil-utilisateur-guard/network-check-run) — jamais un simple signal de fraîcheur, la détection de
+duplication n'ayant aucune mémoire persistante à consulter. Jamais les seuils exacts ni les fichiers
+propres à ce projet, qui vivent dans `docs/referentiel/clone-hunter.md` (instanciation) et
+`docs/clone-hunter/` (dossier + index).
+
 ## AXA-CHECK — blueprint exportable
 
 `docs/axa-check-blueprint.md` documente l'ARCHITECTURE de l'outil de robustesse/fragilité RÉELLES
@@ -1099,6 +1120,11 @@ conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs se
   les 4 motifs d'extraction réels, `recommendFindBooster()` et sa preuve vivante (`lib/reference.ts`),
   l'obligation écrite d'usage réel, le statut sans blueprint de son voisin route-booster, le registre
   (`docs/find-booster/`). Cf. `docs/find-booster-blueprint.md` pour le principe générique.
+- `docs/referentiel/clone-hunter.md` (2026-09-21) — instanciation de CLONE-HUNTER pour ce projet :
+  l'algorithme de diff de blocs (`scripts/clone-hunter.mjs`), l'exclusion vérifiée de
+  `components/ui/`, la trouvaille réelle (`loadJson()` dupliqué entre smart-conso-api.mjs et
+  smart-conso-token.mjs), l'item `clone-hunter-run` de CIRCLE-TASKS, le registre
+  (`docs/clone-hunter/`). Cf. `docs/clone-hunter-blueprint.md` pour le principe générique.
 - `docs/referentiel/clean-dirty-old.md` (2026-09-19) — instanciation de CLEAN-DIRTY-OLD
   (Article 20) pour ce projet : les seuils de stagnation relative, la priorisation par nœud
   sensible, les trois questions déléguées à ARGUS/HARMONIA/ALWAYS-NEW-CODE, le registre
