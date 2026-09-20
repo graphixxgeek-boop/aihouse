@@ -940,7 +940,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 192'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 193'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4521,11 +4521,12 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(REGISTRIES.length >= 15, 'the registry table must cover every real tool registry of the network, never a partial or forgotten subset');
   assert.ok(REGISTRIES.every((r) => r.slug && r.label && r.family && r.path && r.decision), 'every registry entry must be fully specified — a half-filled row would silently break the family grouping or the decision audit');
 
-  // findEngineCodeInRegistries() (2026-09-21, real category error found: "MEMENTO" conflated a real
-  // team-member script (scripts/memento.mjs) with a fragment of the game engine itself
-  // (lib/memento-weight.ts, wired into lib/lia.ts) under one name). A Membre de l'équipe entry must
-  // never point its scriptPath at lib/, app/, or components/ — only scripts/*.mjs is a valid path.
-  assert.deepEqual(findEngineCodeInRegistries(REGISTRIES), [], 'checked live against every real registry in this project: none may point at the game engine (lib/app/components) rather than a real scripts/*.mjs tool — a guarantee that breaks the day a future tool repeats the MEMENTO conflation');
+  // findEngineCodeInRegistries() (2026-09-21, real category error found: "MEMENTO" — since retired
+  // as a shared name, cf. memory-audit/memento weight — conflated a real team-member script
+  // (scripts/memento.mjs) with a fragment of the game engine itself (lib/memento-weight.ts, wired
+  // into lib/lia.ts) under one name). A Membre de l'équipe entry must never point its scriptPath at
+  // lib/, app/, or components/ — only scripts/*.mjs is a valid path.
+  assert.deepEqual(findEngineCodeInRegistries(REGISTRIES), [], 'checked live against every real registry in this project: none may point at the game engine (lib/app/components) rather than a real scripts/*.mjs tool — a guarantee that breaks the day a future tool repeats that conflation');
   const fakeEngineRegistries = [
     { slug: 'real-tool', label: 'Real Tool', family: 'Test', path: 'docs/real-tool/', decision: 'texte', scriptPath: 'scripts/real-tool.mjs' },
     { slug: 'fake-member', label: 'Fake Member', family: 'Test', path: 'docs/fake-member/', decision: 'texte', scriptPath: 'lib/some-engine-file.ts' },
@@ -4630,10 +4631,12 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 }
 
 {
-  // MEMENTO (tâche #169, 2026-09-21) — cible EXCLUSIVEMENT les Personnages (Lia/Noé), jamais les
-  // membres de l'équipe. Testé contre les VRAIES formes de lib/life.ts trouvées par l'investigation
-  // Article 19 (bonusLog/negotiationLog/contacts/wordFrequency/themeFrequency/worstMoment).
-  const { checkChronologicalOrder, detectSuspiciousCounterReset, detectWorstMomentRegression, checkMemoryCoherence, estimateContextWeight } = await import('../scripts/memento.mjs');
+  // memory-audit (tâche #169, 2026-09-21 ; surnom retenu le même soir à la place de l'ombrelle
+  // "MEMENTO", cf. docs/referentiel/memory-audit.md) — cible EXCLUSIVEMENT les Personnages (Lia/Noé),
+  // jamais les membres de l'équipe. Testé contre les VRAIES formes de lib/life.ts trouvées par
+  // l'investigation Article 19 (bonusLog/negotiationLog/contacts/wordFrequency/themeFrequency/worstMoment).
+  const { checkChronologicalOrder, detectSuspiciousCounterReset, detectWorstMomentRegression, checkMemoryCoherence } = await import('../scripts/memento.mjs');
+  const { estimateContextWeight } = await import('../scripts/memento-weight.mjs');
 
   assert.deepEqual(checkChronologicalOrder([{ round: 3 }, { round: 5 }, { round: 4 }, { round: 8 }]), [{ index: 2, previousRound: 5, currentRound: 4 }], 'a real bonusLog/negotiationLog-shaped array must flag exactly the one genuine out-of-order entry, by its real index and real round numbers, never a false positive on the two entries that stay correctly ordered');
   assert.deepEqual(checkChronologicalOrder([1, 4, 9]), [], 'a genuinely non-decreasing array (contacts\' real shape — bare round numbers) must report zero violations');
@@ -4660,7 +4663,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 
   assert.equal(estimateContextWeight({ a: 'x'.repeat(400) }), Math.round(JSON.stringify({ a: 'x'.repeat(400) }).length / 4), 'estimateContextWeight() must reuse SMART-CONSO-TOKEN\'s own estimateTokens() heuristic verbatim (4 chars ≈ 1 token) applied to the real JSON.stringify(context) payload — the same object shape lib/lia.ts actually sends to Gemini — never a second, divergent estimation formula');
   assert.equal(estimateContextWeight(undefined), 1, 'a missing/undefined context must fall back to measuring an empty object ("{}", 2 chars) rather than crashing on JSON.stringify(undefined) — never a fabricated zero unrelated to what would actually be measured');
-  console.log('Passed: MEMENTO (task #169) — role (a) mechanically detects a real chronological break in any round-numbered memory log (object-shaped like bonusLog/negotiationLog or bare-number like contacts, same function for both), a suspicious silent reset of a persisted word/theme counter above a real significance threshold (never flagging noise below it), and a real severity regression of worstMoment (the exact invariant the game\'s own write logic is supposed to enforce) — surfacing all three at once from a realistic pair of Life snapshots, and staying silent on a genuinely healthy one; role (b) reuses SMART-CONSO-TOKEN\'s own token-estimation heuristic verbatim on the real Gemini payload shape, never a second divergent formula.');
+  console.log('Passed: memory-audit (task #169) — role (a) mechanically detects a real chronological break in any round-numbered memory log (object-shaped like bonusLog/negotiationLog or bare-number like contacts, same function for both), a suspicious silent reset of a persisted word/theme counter above a real significance threshold (never flagging noise below it), and a real severity regression of worstMoment (the exact invariant the game\'s own write logic is supposed to enforce) — surfacing all three at once from a realistic pair of Life snapshots, and staying silent on a genuinely healthy one; role (b) reuses SMART-CONSO-TOKEN\'s own token-estimation heuristic verbatim on the real Gemini payload shape, never a second divergent formula.');
 
   // lib/memento-weight.ts — le point d'observation réel câblé dans lib/lia.ts::think() (jamais
   // utilisé pour modifier le contexte envoyé, Article 8/0). Même patron de test que
@@ -4675,9 +4678,11 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(getContextWeightSamples().length,200,'the sample log must respect the same real hard cap (200) as lib/gemini-keys.ts::episodes, dropping the oldest first — never grow without bound in a long-running process');
   __resetContextWeightSamplesForTests();
 
-  // Persistance + agrégation par acteur (scripts/memento.mjs) — testées avec un vrai fichier local
-  // sauvegardé/restauré, même discipline que tool-usage.mjs/recordAction() plus haut ce soir.
-  const {persistContextWeightSamples,averageContextWeightByActor}=await import('../scripts/memento.mjs');
+  // Persistance + agrégation par acteur (scripts/memento-weight.mjs, extrait de scripts/memento.mjs
+  // le 2026-09-21 pour séparer les deux rôles — cf. docs/referentiel/memento-weight.md) — testées
+  // avec un vrai fichier local sauvegardé/restauré, même discipline que tool-usage.mjs/recordAction()
+  // plus haut ce soir.
+  const {persistContextWeightSamples,averageContextWeightByActor}=await import('../scripts/memento-weight.mjs');
   assert.deepEqual(averageContextWeightByActor([{actor:'Lia',tokens:100},{actor:'Lia',tokens:200},{actor:'Noé',tokens:50}]),{Lia:150,'Noé':50},'the average must be computed honestly per actor, never a single pooled average that would hide a real imbalance between Lia and Noé');
   assert.deepEqual(averageContextWeightByActor([]),{},'an empty sample list must report an honest empty breakdown, never a crash or a fabricated entry');
   assert.deepEqual(averageContextWeightByActor([{actor:'Lia',tokens:'x'},{},null,{actor:'Noé',tokens:10}]),{'Noé':10},'a malformed entry (non-numeric tokens, missing actor, or a genuinely null sample) must be skipped honestly, never crash the whole aggregation or pollute a real actor\'s average');
@@ -4697,7 +4702,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
       if(hadFile)wrM(historyPath,backup);else if(exM(historyPath))unM(historyPath);
     }
   }
-  console.log('Passed: lib/memento-weight.ts is the real observation point wired into lib/lia.ts::think() (a real token estimate returned and recorded per real call, capped at the same 200-entry hard limit as lib/gemini-keys.ts::episodes, reset cleanly between tests), and scripts/memento.mjs persists real samples append-only into .memento-history.json (verified with the real local file, backed up and restored) while averageContextWeightByActor() reports an honest per-actor breakdown that never pools Lia and Noé into one misleading average and never crashes on a malformed entry.');
+  console.log('Passed: lib/memento-weight.ts is the real observation point wired into lib/lia.ts::think() (a real token estimate returned and recorded per real call, capped at the same 200-entry hard limit as lib/gemini-keys.ts::episodes, reset cleanly between tests), and scripts/memento-weight.mjs persists real samples append-only into .memento-history.json (verified with the real local file, backed up and restored) while averageContextWeightByActor() reports an honest per-actor breakdown that never pools Lia and Noé into one misleading average and never crashes on a malformed entry.');
 }
 
 {

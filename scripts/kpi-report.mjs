@@ -36,7 +36,7 @@ import {recordOutcomeByLabel} from './gemini-key-health.mjs';
 import {renderHtmlReport} from './html-report.mjs';
 import {burstComplianceScore} from './smart-conso-api.mjs';
 import {computeAdoptionKpi, checkKnowledgeFreshness} from './smart-conso-token.mjs';
-import {persistContextWeightSamples, averageContextWeightByActor} from './memento.mjs';
+import {persistContextWeightSamples, averageContextWeightByActor} from './memento-weight.mjs';
 
 const root = new URL('..', import.meta.url).pathname;
 const path = (...parts) => join(root, ...parts);
@@ -437,14 +437,15 @@ function persistGeminiKeyEpisodes(episodes) {
     console.log(`Trafic réel persisté dans .gemini-key-health.json : ${episodes.length} épisode(s) (par empreinte de clé × modèle).`);
 }
 
-// MEMENTO rôle (b) (tâche #169, 2026-09-21) : première famille KPI pour le poids réel du contexte
-// envoyé à Gemini par tour, par personnage (jamais une moyenne globale qui masquerait un
-// déséquilibre Lia/Noé) — `contextWeightSamples` vient de l'API admin
+// memento weight (tâche #169, 2026-09-21 ; nom conservé tel quel le même soir en retirant
+// l'ombrelle "MEMENTO" — cf. docs/referentiel/memento-weight.md) : première famille KPI pour le
+// poids réel du contexte envoyé à Gemini par tour, par personnage (jamais une moyenne globale qui
+// masquerait un déséquilibre Lia/Noé) — `contextWeightSamples` vient de l'API admin
 // (lib/memento-weight.ts::getContextWeightSamples()). Aucun seuil de jugement fourni ici (bon/
 // mauvais) : ce territoire n'a jamais été mesuré avant ce soir, un seuil inventé serait un chiffre
 // fabriqué — la lecture humaine décide, exactement la même retenue que le reste du réseau d'outils.
 function reportMementoWeight(samples) {
-    section('KPI — Mémoire des personnages (MEMENTO, rôle b)');
+    section('KPI — Mémoire des personnages (memento weight)');
     if (!samples || !samples.length) { console.log('Pas de mesure disponible cette fois (serveur non joignable, ou aucun tour joué).'); return; }
     const byActor = averageContextWeightByActor(samples);
     for (const [actor, avg] of Object.entries(byActor)) console.log(`${actor} : ~${avg} tokens estimés en moyenne par tour (${samples.filter(s => s.actor === actor).length} échantillon(s) cette session).`);

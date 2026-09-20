@@ -1,30 +1,30 @@
-// MEMENTO (tâche #169, 2026-09-21) — cible EXCLUSIVEMENT la catégorie "Personnages" (Lia/Noé),
-// jamais les membres de l'équipe (cf. PERSONNAGES/assertNotAPersonnage de lib-shell.mjs, qui fait
-// l'inverse — refuser un outil de membre de l'équipe sur un Personnage — MEMENTO est le premier
-// outil pour qui l'inverse est vrai : il s'applique VRAIMENT aux personnages, jamais aux scripts).
+// memory-audit (surnom, 2026-09-21 — remplace le nom "MEMENTO", retiré de la documentation à la
+// demande explicite de l'utilisateur une fois son rôle mieux compris : « memento audite la
+// capacité des persos sur la memoire, ce n'est pas un outil de la gestion directe de la memoire
+// dans le jeu [...] donc oui, il fait bien partie de l'equipe aux cotés de el professor »). Nom de
+// fichier technique inchangé (`scripts/memento.mjs`) — même discipline que Smart Breaker, jamais
+// de renommage de fichier pour un simple changement de surnom affiché.
 //
-// Deux rôles confirmés (2026-09-21, calibrage explicite) :
-//  (a) cohérence de la mémoire dans le temps — détection MÉCANIQUE seulement, jamais un second
-//      appel Gemini, jamais un jugement sur ce qui EST dit, seulement sur la structure des données
-//      persistées (lib/life.ts) qui nourrissent chaque tour.
-//  (b) dette de taille mémoire — mesure honnête de ce qui est réellement envoyé à Gemini par tour,
-//      jamais utilisée pour modifier le prompt lui-même (territoire exclusif de l'Article 8/0).
+// Rôle exact, confirmé le même soir : un Membre de l'équipe (Outillage de travail, structurellement
+// identique à `check-argus.mjs`), catégorie "audit de simulation" aux côtés d'EL-PROFESSOR — jamais
+// un second appel Gemini, jamais un jugement sur ce qui EST dit, seulement sur la structure des
+// données persistées (`lib/life.ts`) qui nourrissent chaque tour.
+//
+// Ce fichier ne couvre plus QUE ce rôle. Le second volet de l'initiative d'origine (mesurer le
+// poids réel du contexte envoyé à Gemini par tour) est un artefact de nature différente — vit dans
+// `scripts/memento-weight.mjs` (partie outillage) + `lib/memento-weight.ts` (partie moteur du jeu,
+// câblée dans lib/lia.ts) — jamais réuni ici, pour que ce fichier reste lisible comme un seul sujet
+// (cf. docs/referentiel/memory-audit.md et docs/referentiel/memento-weight.md).
 //
 // Investigation préalable (Article 19, 2026-09-21, agent séparé) : le stockage de `Life`
 // (lib/life.ts) est déjà rigoureusement plafonné — chaque tableau porte une limite explicite
-// (`.slice(-12)`, `.slice(0,300)`, etc.) directement dans `readLife()`. MEMENTO n'a donc AUCUNE
+// (`.slice(-12)`, `.slice(0,300)`, etc.) directement dans `readLife()`. Ce fichier n'a donc AUCUNE
 // raison de refaire ce travail de plafonnage. Ce qui manque réellement, confirmé par
-// l'investigation : (a) aucune vérification mécanique n'existe que ces données plafonnées restent
+// l'investigation : aucune vérification mécanique n'existe que ces données plafonnées restent
 // VRAIMENT cohérentes dans le temps (ordre chronologique, remise à zéro suspecte, régression de
-// gravité) ; (b) le poids réel envoyé à Gemini par tour est un territoire explicitement laissé de
-// côté par SMART-CONSO-TOKEN et Smart Conso API (cf. docs/referentiel/smart-conso-token.md :
-// « jamais le texte envoyé à Gemini pour Lia et Noé »).
+// gravité).
 
-import { readFileSync, writeFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { estimateTokens } from "./smart-conso-token.mjs";
-
-// --- Rôle (a) : cohérence mécanique de la mémoire ------------------------------------------------
+// --- Cohérence mécanique de la mémoire ------------------------------------------------------------
 
 // Vérifie qu'une liste d'entrées portant un numéro de round réel (bonusLog, negotiationLog,
 // contacts...) reste dans l'ordre chronologique où elle s'est VRAIMENT produite — un mélange serait
@@ -106,52 +106,4 @@ export function checkMemoryCoherence(life, previousLife = null) {
     if (regression) findings.push({ type: "regression_gravite", champ: "worstMoment", ...regression });
   }
   return findings;
-}
-
-// --- Rôle (b) : dette de taille mémoire (poids réel envoyé à Gemini par tour) -------------------
-
-// Réutilise TEL QUEL l'heuristique déjà validée de SMART-CONSO-TOKEN (4 caractères ≈ 1 token),
-// jamais un second calcul divergent — appliquée ici à un artefact différent (le contexte JSON
-// envoyé à Gemini, `JSON.stringify(context)` dans lib/lia.ts, jamais le texte de CLAUDE.md).
-// `context` est l'objet passé à `think()`, jamais une chaîne déjà sérialisée par l'appelant — cette
-// fonction fait elle-même la sérialisation pour ne jamais dépendre d'un choix de format en amont.
-export function estimateContextWeight(context) {
-  return estimateTokens(JSON.stringify(context ?? {}));
-}
-
-// Persistance après coup (2026-09-21), même chemin déjà validé pour le trafic réel des clés Gemini
-// (tâche #88) : `samples` vient de l'API admin (lib/memento-weight.ts::getContextWeightSamples(),
-// mémoire process, jamais écrite en base côté jeu — Cloudflare Workers n'a pas de disque
-// persistant). Écrit dans `.memento-history.json` (local, gitignored), plafonné à 500 échantillons
-// — jamais un second mécanisme d'écriture pour un concept déjà couvert par un autre fichier.
-const HISTORY_PATH = fileURLToPath(new URL("../.memento-history.json", import.meta.url));
-
-function loadHistory() {
-  try {
-    return JSON.parse(readFileSync(HISTORY_PATH, "utf8"));
-  } catch {
-    return { samples: [] };
-  }
-}
-
-export function persistContextWeightSamples(samples) {
-  if (!samples || !samples.length) return;
-  const data = loadHistory();
-  data.samples = [...(data.samples ?? []), ...samples].slice(-500);
-  writeFileSync(HISTORY_PATH, JSON.stringify(data, null, 1));
-  return data.samples.length;
-}
-
-// Poids moyen honnête — `undefined` (jamais 0 fabriqué) sur un historique vide, distingué par
-// acteur pour ne jamais masquer un déséquilibre Lia/Noé derrière une seule moyenne globale.
-export function averageContextWeightByActor(samples) {
-  const byActor = {};
-  for (const s of samples ?? []) {
-    if (!s || typeof s.tokens !== "number" || !s.actor) continue;
-    byActor[s.actor] = byActor[s.actor] ?? [];
-    byActor[s.actor].push(s.tokens);
-  }
-  return Object.fromEntries(
-    Object.entries(byActor).map(([actor, tokens]) => [actor, Math.round(tokens.reduce((a, b) => a + b, 0) / tokens.length)]),
-  );
 }

@@ -106,7 +106,7 @@ JSON : schema strict. action none rester, move changer de pièce, talk parler. m
                 contents: [{ role: "user", parts: [{ text: JSON.stringify(context) }] }],
                 generationConfig: { maxOutputTokens: 1800, responseMimeType: "application/json", responseJsonSchema: responseSchema }
     });
-    // MEMENTO rôle (b), 2026-09-21 : observation pure du poids du contexte réellement envoyé,
+    // memento weight (2026-09-21) : observation pure du poids du contexte réellement envoyé,
     // jamais utilisée pour le modifier (Article 8/0) — la ligne ci-dessus n'est jamais lue avant
     // celle-ci, aucun risque de fuite d'information dans le prompt lui-même.
     recordContextWeightSample(name, context);

@@ -89,8 +89,9 @@ avec "la mesure n'existe pas" — est le même principe que la distinction `unde
 absente) vs `0` (vraie mesure nulle) appliquée à chaque fonction de calcul du rapport, cf. section
 "Fiabilité" ci-dessous.
 
-**Section observationnelle non comptée dans les 6 familles (2026-09-21, ajoutée le jour de MEMENTO,
-tâche #169) : « KPI — Mémoire des personnages (MEMENTO, rôle b) ».** Rapporte le poids moyen réel
+**Section observationnelle non comptée dans les 6 familles (2026-09-21, ajoutée le jour de la
+tâche #169, initialement sous le nom "MEMENTO" — cf. `docs/referentiel/memento-weight.md`) :
+« KPI — Mémoire des personnages (memento weight) ».** Rapporte le poids moyen réel
 du contexte envoyé à Gemini par tour et par personnage (`reportMementoWeight()`, alimenté par
 `averageContextWeightByActor()`), affichée dans chaque rapport mais délibérément EXCLUE du calcul
 de `dashboardCoverageScore` — même précédent déjà établi pour ARGUS/HARMONIA/Smart Conso API avant

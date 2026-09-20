@@ -25,16 +25,16 @@ import { join } from "node:path";
 // simulation, un domaine entièrement séparé (charte de contenu CLAUDE.md), jamais une case de
 // l'organigramme de travail (docs/regles-de-travail.md). Cette constante n'est donc pas une
 // catégorie interne à ranger à côté des autres : c'est une LISTE D'EXCLUSION, un pare-feu au bord
-// du domaine équipe. Partagée ici (jamais dans le-coordinateur.mjs, pour que MEMENTO puisse
+// du domaine équipe. Partagée ici (jamais dans le-coordinateur.mjs, pour que memory-audit puisse
 // l'importer aussi sans créer de cycle) : aucun mécanisme pensé pour l'équipe (badge, PRESTATIONS,
 // blueprint, couverture AXA-CHECK) ne doit jamais s'appliquer à Lia/Noé, et réciproquement aucun
-// mécanisme de mémoire/cohérence narrative pensée pour eux (MEMENTO) ne doit jamais s'appliquer à
-// un script.
+// mécanisme de mémoire/cohérence narrative pensée pour eux (memory-audit) ne doit jamais s'appliquer
+// à un script.
 export const PERSONNAGES = new Set(["Lia", "Noé", "Noe"]);
 
 export function assertNotAPersonnage(name, callerLabel) {
   if (PERSONNAGES.has(name)) {
-    throw new Error(`${callerLabel} ne s'applique jamais à un Personnage ("${name}") — Lia et Noé n'ont aucune existence dans l'équipe de travail, ce sont des personnages de la simulation (cf. docs/suivi tâche #245 et sa correction du 2026-09-21). Un outil pensé pour la mémoire/cohérence narrative des personnages (ex. MEMENTO) ne doit jamais recouper un outil de badge/blueprint/couverture de code.`);
+    throw new Error(`${callerLabel} ne s'applique jamais à un Personnage ("${name}") — Lia et Noé n'ont aucune existence dans l'équipe de travail, ce sont des personnages de la simulation (cf. docs/suivi tâche #245 et sa correction du 2026-09-21). Un outil pensé pour la mémoire/cohérence narrative des personnages (ex. memory-audit) ne doit jamais recouper un outil de badge/blueprint/couverture de code.`);
   }
 }
 

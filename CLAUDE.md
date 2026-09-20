@@ -821,26 +821,37 @@ détecter la dette d'organisation. Jamais les 8 zones exactes ni les fichiers pr
 `docs/referentiel/always-new-code.md` (instanciation, réutilise les thèmes d'HARMONIA) et
 `docs/always-new-code/` (dossier + index, mémoire de couverture pour la rotation).
 
-## MEMENTO — blueprint exportable, l'exception qui cible les Personnages
+## memory-audit — blueprint exportable, l'exception qui cible les Personnages
 
-`docs/memento-blueprint.md` documente l'ARCHITECTURE de MEMENTO (2026-09-21, tâche #169) — pas un
-seul outil homogène mais une initiative à deux facettes de nature différente (précision fixée le
-même soir) : `scripts/memento.mjs` (rôle a) est un vrai script d'**Outillage de travail = Membre de
-l'équipe**, tandis que `lib/memento-weight.ts` (rôle b) vit dans le **Moteur du jeu** (`lib/`),
-jamais un membre, jamais un badge — exactement la même catégorie que `lib/gemini-keys.ts` (cf.
-`docs/regles-de-travail.md`, « Moteur du jeu vs Outillage de travail »). Son SUJET, en revanche, EST
-un personnage narratif (Lia/Noé, qui n'ont AUCUNE existence dans l'équipe de travail — jamais une
+*(2026-09-21, tâche #169 — conçu sous le nom "MEMENTO", renommé le même soir en retirant cette
+ombrelle une fois son rôle mieux compris par l'utilisateur : « memento audite la capacité des
+persos sur la memoire [...] donc oui, il fait bien partie de l'equipe aux cotés de el professor ».)*
+
+`docs/memory-audit-blueprint.md` documente l'ARCHITECTURE de memory-audit — un vrai script
+d'**Outillage de travail = Membre de l'équipe** (`scripts/memento.mjs`, nom de fichier technique
+inchangé), catégorie "audit de simulation" aux côtés d'EL-PROFESSOR. Son SUJET, en revanche, EST un
+personnage narratif (Lia/Noé, qui n'ont AUCUNE existence dans l'équipe de travail — jamais une
 catégorie de l'organigramme, cf. `PERSONNAGES`/`assertNotAPersonnage()` de `scripts/lib-shell.mjs`,
-un garde-fou d'exclusion, pas une case de plus). Couvre deux dettes distinctes, chacune hors du domaine des outils
-de gouvernance de tokens existants (frontière écrite des deux côtés) : (a) cohérence mécanique de
-la mémoire persistée d'un personnage dans le temps (ordre chronologique, remise à zéro suspecte
-d'un compteur, régression d'un indicateur à sens unique) — jamais un second appel au modèle de
-langage ; (b) poids réel du contexte envoyé au modèle par tour — une observation pure, ajoutée au
-point d'appel réseau réel, qui ne modifie jamais ce qui est envoyé (Article 0/8). Une investigation
-préalable dédiée (Article 19) est un prérequis non négociable avant toute conception, pour éviter
-de dupliquer un plafonnage de stockage déjà résolu ou de heurter une frontière déjà actée pour de
-bonnes raisons. Jamais les champs exacts ni les fichiers propres à ce projet, qui vivent dans
-`docs/referentiel/memento.md` (instanciation) et `docs/memento/` (dossier + index).
+un garde-fou d'exclusion, pas une case de plus) — c'est son SUJET qui est hors norme, jamais sa
+NATURE de code. Couvre une dette hors du domaine des outils de gouvernance de tokens existants
+(frontière écrite des deux côtés) : cohérence mécanique de la mémoire persistée d'un personnage dans
+le temps (ordre chronologique, remise à zéro suspecte d'un compteur, régression d'un indicateur à
+sens unique) — jamais un second appel au modèle de langage. Une investigation préalable dédiée
+(Article 19) est un prérequis non négociable avant toute conception, pour éviter de dupliquer un
+plafonnage de stockage déjà résolu ou de heurter une frontière déjà actée pour de bonnes raisons.
+Jamais les champs exacts ni les fichiers propres à ce projet, qui vivent dans
+`docs/referentiel/memory-audit.md` (instanciation) et `docs/memory-audit/` (dossier + index).
+
+**Voisin distinct, jamais le même statut : memento weight.** Un second besoin, de nature différente,
+est né avec la même investigation : mesurer le poids réel du contexte envoyé au modèle par tour —
+une observation PURE, ajoutée au point d'appel réseau réel, qui ne modifie jamais ce qui est envoyé
+(Article 0/8). Ce fragment vit dans le **Moteur du jeu** (`lib/memento-weight.ts`, `lib/`), jamais
+un membre, jamais un badge — exactement la même catégorie que `lib/gemini-keys.ts` (cf.
+`docs/regles-de-travail.md`, « Moteur du jeu vs Outillage de travail ») ; sa partie outillage
+(persistance + agrégation pour le rapport KPI) vit dans `scripts/memento-weight.mjs`, séparée le
+2026-09-21 de `scripts/memento.mjs` pour ne plus mélanger les deux rôles dans un seul fichier. Nom
+conservé tel quel (jamais rattaché à l'ombrelle retirée, qui ne le désignait déjà que par ce nom).
+Détail complet : `docs/referentiel/memento-weight.md`.
 
 ## AXA-CHECK — blueprint exportable
 
@@ -1050,11 +1061,14 @@ conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs se
   (`scripts/always-new-code.mjs`), le déclenchement via CHECK-LEVEL-TARGET niveau Exceptionnel, le
   registre des passages (`docs/always-new-code/`). Cf. `docs/always-new-code-blueprint.md` pour le
   principe générique.
-- `docs/referentiel/memento.md` (2026-09-21) — instanciation de MEMENTO pour ce projet : les deux
-  rôles (cohérence mécanique de `lib/life.ts`, poids réel du contexte envoyé à Gemini par tour), les
-  deux investigations préalables (Article 19) qui l'ont précédé, le patron de persistance réutilisé
-  de `lib/gemini-keys.ts`, l'exclusion documentée de CIRCLE-TASKS, le registre (`docs/memento/`).
-  Cf. `docs/memento-blueprint.md` pour le principe générique.
+- `docs/referentiel/memory-audit.md` (2026-09-21) — instanciation de memory-audit pour ce projet
+  (conçu sous le nom "MEMENTO", ombrelle retirée le même soir) : cohérence mécanique de `lib/life.ts`,
+  l'investigation préalable (Article 19) qui l'a précédée, l'exclusion documentée de CIRCLE-TASKS, le
+  registre (`docs/memory-audit/`). Cf. `docs/memory-audit-blueprint.md` pour le principe générique.
+- `docs/referentiel/memento-weight.md` (2026-09-21) — instanciation du voisin "memento weight" :
+  poids réel du contexte envoyé à Gemini par tour, le patron de persistance réutilisé de
+  `lib/gemini-keys.ts`, les deux fichiers séparés (`lib/memento-weight.ts` +
+  `scripts/memento-weight.mjs`, ce dernier extrait le même soir de `scripts/memento.mjs`).
 - `docs/referentiel/axa-check.md` (2026-09-19) — instanciation d'AXA-CHECK (Article 20) pour ce
   projet : la mécanique de couverture V8 par fonction (`scripts/axa-check.mjs`), la fragilité
   enrichie (nœuds sensibles HARMONIA + churn ALWAYS-NEW-CODE), la corroboration par les simulations

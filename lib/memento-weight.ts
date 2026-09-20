@@ -1,13 +1,19 @@
-// Rôle (b) de MEMENTO (tâche #169, 2026-09-21) — mesure OBSERVATIONNELLE du poids réel du contexte
-// envoyé à Gemini par tour (JSON.stringify(context) dans lib/lia.ts::think()), jamais utilisée pour
-// modifier ce contexte : territoire exclusif de l'Article 8/0 de CLAUDE.md, cette mesure ne fait
-// qu'observer de l'extérieur, exactement la limite posée à l'investigation préalable (Article 19).
+// memento weight (nom conservé tel quel, 2026-09-21 — l'ombrelle "MEMENTO" qui regroupait ce fichier
+// et scripts/memento.mjs sous un même nom a été retirée de la documentation à la demande explicite
+// de l'utilisateur, une fois son rôle mieux compris ; ce fichier garde son nom d'origine puisqu'il
+// désignait déjà précisément ce rôle). Mesure OBSERVATIONNELLE du poids réel du contexte envoyé à
+// Gemini par tour (JSON.stringify(context) dans lib/lia.ts::think()), jamais utilisée pour modifier
+// ce contexte : territoire exclusif de l'Article 8/0 de CLAUDE.md, cette mesure ne fait qu'observer
+// de l'extérieur, exactement la limite posée à l'investigation préalable (Article 19).
 //
 // PRÉCISION DE CATÉGORIE (2026-09-21, cf. docs/regles-de-travail.md « Moteur du jeu vs Outillage de
 // travail ») : ce fichier vit dans le MOTEUR DU JEU (lib/), pas dans l'Outillage de travail
-// (scripts/) — ce n'est donc PAS « l'Agent MEMENTO » lui-même (ça, c'est scripts/memento.mjs, un
-// vrai Membre de l'équipe). C'est un fragment de code de PRODUIT, exactement la même catégorie que
-// lib/gemini-keys.ts — jamais éligible à un badge, un blueprint ou une entrée PRESTATIONS.
+// (scripts/) — ce n'est donc PAS l'agent « memory-audit » lui-même (ça, c'est scripts/memento.mjs,
+// un vrai Membre de l'équipe). C'est un fragment de code de PRODUIT, exactement la même catégorie
+// que lib/gemini-keys.ts — jamais éligible à un badge, un blueprint ou une entrée PRESTATIONS. Son
+// pendant outillage (persistance après coup + agrégation) vit dans scripts/memento-weight.mjs,
+// jamais mélangé avec scripts/memento.mjs (rôle memory-audit, séparé le même soir pour plus de
+// clarté — cf. docs/referentiel/memento-weight.md).
 //
 // Même patron que lib/gemini-keys.ts::episodes (mémoire best-effort au niveau du module JS, jamais
 // écrite en base — Cloudflare Workers n'a pas de disque persistant —, cap dur à 200 entrées,

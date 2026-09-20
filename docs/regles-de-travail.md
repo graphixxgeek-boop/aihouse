@@ -503,7 +503,7 @@ bloqué par un statut, seulement par l'existence réelle d'une fonction ou d'un 
 | Doc-Report (`scripts/doc-report.mjs`) | Utilitaire nommé | — | index global des registres du réseau d'outils, gardien (jamais décideur) de la décision HTML/texte déjà actée par registre, croisé avec l'âge du dernier rapport et le compteur d'usage ci-dessus ; inventorie aussi les journaux locaux jamais committés (fraîcheur par mtime, cross-check `.gitignore`) | gratuit | sur demande, ou proposé périodiquement via CIRCLE-TASKS |
 | THE-KING | Agent | 🎖️ | rappelle de consulter `docs/philosophie-et-politique.md` avant une décision à haut niveau (6 catégories), fraîcheur du document, digest de son évolution, tension possible entre deux principes | gratuit | avant une décision touchant l'une des 6 catégories (moi, l'utilisateur, ou un autre outil) |
 | INES-official | Agent | 🎖️ | aplatit le dépôt en une édition consolidée et annotée (code seul ou code + docs), table des matières, datage/versionnage — jamais une réécriture réelle du code | gratuit | proposé périodiquement via CIRCLE-TASKS, ou sur demande explicite |
-| MEMENTO | Agent | 🎖️ | seul outil ciblant les Personnages (Lia/Noé) plutôt qu'un membre de l'équipe : cohérence mécanique de la mémoire persistée (ordre chronologique, remise à zéro suspecte, régression de gravité) + poids réel du contexte envoyé à Gemini par tour (observation pure, jamais un changement de prompt) | gratuit — mécanique, jamais un second appel Gemini | sur demande explicite après une simulation ; hors CIRCLE-TASKS (exclusion documentée, rôle a n'a de sens que sur une partie réelle) |
+| memory-audit (anciennement "MEMENTO", nom d'ensemble retiré le 2026-09-21) | Agent | 🎖️ | seul outil ciblant en SUJET un Personnage (Lia/Noé) tout en restant un vrai Membre de l'équipe, catégorie "audit de simulation" aux côtés d'EL-PROFESSOR : cohérence mécanique de la mémoire persistée (ordre chronologique, remise à zéro suspecte, régression de gravité). Son voisin "memento weight" (Moteur du jeu, `lib/memento-weight.ts` + `scripts/memento-weight.mjs`, jamais un Membre de l'équipe) mesure séparément le poids réel du contexte envoyé à Gemini par tour (observation pure, jamais un changement de prompt) | gratuit — mécanique, jamais un second appel Gemini | sur demande explicite après une simulation ; hors CIRCLE-TASKS (exclusion documentée, cette vérification n'a de sens que sur une partie réelle) |
 
 Cette table remplace toute énumération informelle éparpillée dans la conversation : à jour à
 chaque nouvel outil créé (même discipline que la liste des documents de référence, Article 13).
@@ -862,11 +862,20 @@ narratif) :
   jamais une entrée PRESTATIONS** — c'est le PRODUIT que l'équipe construit et vérifie (par
   `tsc`/`check-house.mjs`/AXA-CHECK comme n'importe quel autre code), pas un travailleur de plus.
 
-**Conséquence directe sur MEMENTO** : ce n'est pas « un membre de l'équipe », c'est une initiative à
-deux facettes de nature différente — `scripts/memento.mjs` (Outillage, Membre, seul éligible à
-PRESTATIONS/Doc-Report/un futur badge) et `lib/memento-weight.ts` (Moteur du jeu, jamais éligible à
-rien de tout ça, au même titre que le reste de `lib/`). `docs/referentiel/memento.md` et le
-commentaire de `lib/memento-weight.ts` nomment désormais cette distinction explicitement.
+**Conséquence directe, ce qui devint MEMENTO** : deux facettes de nature différente —
+`scripts/memento.mjs` (Outillage, Membre, seul éligible à PRESTATIONS/Doc-Report/un futur badge) et
+`lib/memento-weight.ts` (Moteur du jeu, jamais éligible à rien de tout ça, au même titre que le
+reste de `lib/`). **Précision du même soir, plus tard dans la soirée** : l'ombrelle "MEMENTO" qui
+regroupait les deux facettes sous un même nom a elle-même été retirée à la demande explicite de
+l'utilisateur, une fois son rôle mieux compris (« memento audite la capacité des persos sur la
+memoire [...] donc oui, il fait bien partie de l'equipe aux cotés de el professor ») — la facette
+Outillage porte désormais le surnom **memory-audit** (fichier technique inchangé,
+`scripts/memento.mjs`), confirmée Membre de l'équipe dans la catégorie "audit de simulation" aux
+côtés d'EL-PROFESSOR ; la facette Moteur du jeu garde son nom d'origine **memento weight**, séparée
+le même soir dans son propre fichier outillage (`scripts/memento-weight.mjs`, distinct de
+`scripts/memento.mjs`) pour ne plus mélanger les deux rôles dans un seul script.
+`docs/referentiel/memory-audit.md`/`memento-weight.md` (qui remplacent l'ancien
+`docs/referentiel/memento.md`) nomment cette distinction explicitement.
 
 **Garde-fou mécanique ajouté** (`scripts/doc-report.mjs::findEngineCodeInRegistries()`) : vérifie
 que le champ `scriptPath` de chaque entrée `REGISTRIES` (le seul des trois catalogues — PRESTATIONS,
