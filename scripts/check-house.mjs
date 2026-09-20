@@ -919,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 149'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 150'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3449,7 +3449,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     scanDocumentWeight, scanScope, SCOPE_LEVELS, computeAdoptionKpi, KNOWN_COSTLY_PATTERNS, KNOWLEDGE_PROVENANCE,
     formatScanReport, countDatedNarrativeMarkers, findJudgeSpawnsWithoutConsultation, AUTOMATION_TOKEN_NUANCE,
     listDatedNarrativeMarkers, checkToolConnections, EXPECTED_CONNECTIONS, trackWeightTrend,
-    classifyConsumption, computeInvestmentRatio, diagnoseAdviceAccuracy,
+    classifyConsumption, computeInvestmentRatio, diagnoseAdviceAccuracy, parseOutcomeArgs,
   } = await import('../scripts/smart-conso-token.mjs');
 
   assert.equal(estimateTokens('abcd'), 1, 'the ~4-characters-per-token heuristic must round to the nearest whole token, never a fractional or wildly inaccurate estimate');
@@ -3628,6 +3628,14 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   ] }, dNow);
   assert.equal(outcomeFindings.length, 3, 'diagnoseAdviceAccuracy() must surface a finding for every recorded outcome that is genuinely informative about a past verdict (soft-warning-confirmed-real-problem, soft-warning-with-no-consequence, investment-that-turned-out-wasteful), while silently ignoring an outcome recorded against a plain "ok" verdict that carries no such signal');
   assert.deepEqual(diagnoseAdviceAccuracy({ actions: [] }, dNow), [], 'with a genuinely empty history, the diagnostic must report zero findings, never fabricate one from no data');
+
+  // parseOutcomeArgs() (2026-09-20) : le vrai découpage de process.argv pour "node
+  // scripts/smart-conso-token.mjs outcome <type> <at> <outcome>" — trouvé cassé au tout premier
+  // usage réel en ligne de commande (l'ancien code sautait un élément de trop et lisait
+  // silencieusement le triplet décalé, jamais détecté avant car recordOutcome() n'était testé que
+  // par appel direct de fonction, jamais via le vrai CLI).
+  const realOutcomeArgv = ['/usr/bin/node', '/home/user/aihouse/scripts/smart-conso-token.mjs', 'outcome', 'agent_subagent_spawn', '1789904646767', 'confirme_utile'];
+  assert.deepEqual(parseOutcomeArgs(realOutcomeArgv), { type: 'agent_subagent_spawn', atArg: '1789904646767', outcome: 'confirme_utile' }, 'parseOutcomeArgs() must read the real type/timestamp/outcome triplet from a genuine process.argv shape, never a shifted-by-one triplet that would silently record the wrong data or reject valid input as missing');
 
   console.log('Passed: diagnoseAdviceAccuracy() mechanically flags a hard threshold likely unrespected (a same-type confirmed action mere seconds after a "seuil_dur" verdict) and surfaces every genuinely recorded outcome that contradicts or confirms a past verdict, restricts its scan to the agent and tools only (the user\'s own compliance is never mechanically inferred, per the explicit 2026-09-20 calibration after the tension with the never-self-adjust rule was flagged), reports zero findings on empty history, and — the whole point of this safer design — never itself changes any threshold or classification, only ever surfacing a proposal for a human/agent to read.');
 }

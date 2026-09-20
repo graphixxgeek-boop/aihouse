@@ -626,6 +626,16 @@ export function trackWeightTrend(history, currentTotal, now) {
   };
 }
 
+// Extrait les 3 arguments réels de la sous-commande "outcome" depuis un vrai process.argv (2026-09-20,
+// corrige un bug trouvé au tout premier usage réel en ligne de commande : l'ancien découpage sautait
+// un élément de trop et lisait silencieusement le mauvais triplet — jamais détecté avant, car
+// recordOutcome() lui-même n'était testé que par appel direct de fonction, jamais via le vrai CLI).
+// argv = [node, script, "outcome", type, atArg, outcome] — les 3 premiers éléments sont toujours à ignorer.
+export function parseOutcomeArgs(argv) {
+  const [, , , type, atArg, outcome] = argv;
+  return { type, atArg, outcome };
+}
+
 function main() {
   const actionType = process.argv[2];
 
@@ -633,7 +643,7 @@ function main() {
   // mélangée avec le flux normal d'avis, pour ne jamais confondre "je consulte avant d'agir" et
   // "je rapporte après coup ce qui s'est réellement passé".
   if (actionType === "outcome") {
-    const [, , type, atArg, outcome] = process.argv;
+    const { type, atArg, outcome } = parseOutcomeArgs(process.argv);
     if (!type || !atArg || !outcome) {
       console.log('Usage: node scripts/smart-conso-token.mjs outcome <type-d\'action> <horodatage-ms> <sans_consequence|probleme_reel|confirme_utile>');
       process.exit(1);

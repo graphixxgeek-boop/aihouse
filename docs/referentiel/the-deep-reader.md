@@ -47,9 +47,12 @@ dérive vers un ton neutre/consensuel de rapport.)*
 > charge séparément. Tu ne juges que la fidélité du suivi lui-même : complet ou trouable.
 
 Reçoit UNIQUEMENT : le texte intégral de la conversation disponible (transcript + tout résumé de
-compaction fourni), `docs/suivi/index.md`, tous les fichiers de `docs/suivi/sessions/`, et un
-export de la liste de tâches technique de l'agent au moment du déclenchement (si disponible) —
-jamais le code du jeu, jamais le produit, jamais un avis déjà formé par un autre outil du projet.
+compaction fourni), `docs/suivi/index.md`, tous les fichiers de `docs/suivi/sessions/`,
+`docs/referentiel/points-fragiles.md` et `docs/simulations/correctifs-a-revalider.md` (trouvaille du
+premier passage réel, 2026-09-20 : ces deux registres peuvent légitimement tracer une intervention
+sans qu'elle ait sa propre ligne dans `docs/suivi/` — les ignorer produit un faux écart, pas un vrai
+angle mort), et un export de la liste de tâches technique de l'agent au moment du déclenchement (si
+disponible) — jamais le code du jeu, jamais le produit, jamais un avis déjà formé par un autre outil.
 
 ## Sortie attendue, toujours en français
 
@@ -163,6 +166,16 @@ de `scripts/the-deep-reader.mjs` reprennent une logique quasi identique à celle
 `scripts/the-final-judge.mjs`, jamais factorisées en un module partagé — une vraie question
 ALWAYS-NEW-CODE, mise en queue plutôt que risquer une refactorisation de `the-final-judge.mjs`
 (outil déjà testé et utilisé) dans la même session que sa création.
+
+## Premier passage réel (2026-09-20, borne #137 → #178)
+
+69 interventions substantielles relues, 65 déjà bien tracées, 4 écarts remontés — dont 1 confirmé
+et déjà en file (aucune nouvelle tâche nécessaire), 1 déjà résorbé entre la fin de la fenêtre auditée
+et la réconciliation, 1 trouvaille sur la conception de l'outil lui-même (corrigée le jour même,
+cf. ci-dessus), 1 mineur nécessitant une clarification avec l'utilisateur. Coût réel observé :
+**252 252 tokens, 12 appels d'outil, 424s** — très au-delà du plancher ~37k, confirme empiriquement
+la section « Coût » ci-dessus (jamais un chiffre fixe). Détail complet :
+`docs/suivi/relectures-lourdes/2026-09-20-nuit-autonome.md`.
 
 ## Statut du blueprint — décision explicite, pas un oubli
 
