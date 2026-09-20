@@ -128,6 +128,25 @@ seulement par un besoin réel de regard indépendant, jamais par l'idée fausse 
 serait gratuite en soi. Question que l'outil doit maîtriser pour décider de l'allocation des
 ressources, pas une simple curiosité.
 
+## Test de connexion (2026-09-20) — vérifie mécaniquement, jamais sur parole
+
+Demandé explicitement : « smart conso token a un test de connexion dédié à tous les autres outils,
+ainsi qu'à toi ». `checkToolConnections()` + `EXPECTED_CONNECTIONS` vérifient, contre les VRAIS
+fichiers du dépôt (jamais un exemple synthétique seul), que chaque document censé citer
+SMART-CONSO-TOKEN le fait réellement : `CLAUDE.md` (la connexion à l'agent lui-même) et les
+instantiations de THE-FINAL-JUDGE/HYPER-SCAN-CHECKPOINT/ALWAYS-NEW-CODE (la connexion à chaque outil
+coûteux). Testé dans `check-house.mjs` avec une vérification bloquante en direct — casse le
+pre-commit hook le jour où l'un de ces quatre documents perdrait sa référence.
+
+## Base de données exploitée de façon autonome (2026-09-20)
+
+Demandé explicitement : « il enrichit une base de données qu'il exploite de façon autonome pour
+nourrir la qualité de ses conseils ». `.smart-conso-token-history.json` grossit à chaque action et
+chaque scan confirmés ; `trackWeightTrend()` compare AUTOMATIQUEMENT le total du scan le plus
+récent au scan précédent et rapporte une amélioration/dégradation/stabilité réelle dans le rapport
+archivé — jamais un ajustement silencieux de ses propres seuils (cf. blueprint), seulement un fait
+observé qui nourrit la lecture humaine/agent du résultat.
+
 ## Apprentissage et auto-évaluation — pas encore en place
 
 Prématuré à ce stade (outil créé le jour même, zéro historique réel). Revenir ici une fois plusieurs

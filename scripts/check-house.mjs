@@ -919,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 127'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 128'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3123,7 +3123,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     estimateTokens, measureClaudeMdWeight, checkKnowledgeFreshness, countRecentActions, assess,
     scanDocumentWeight, scanScope, SCOPE_LEVELS, computeAdoptionKpi, KNOWN_COSTLY_PATTERNS, KNOWLEDGE_PROVENANCE,
     formatScanReport, countDatedNarrativeMarkers, findJudgeSpawnsWithoutConsultation, AUTOMATION_TOKEN_NUANCE,
-    listDatedNarrativeMarkers,
+    listDatedNarrativeMarkers, checkToolConnections, EXPECTED_CONNECTIONS, trackWeightTrend,
   } = await import('../scripts/smart-conso-token.mjs');
 
   assert.equal(estimateTokens('abcd'), 1, 'the ~4-characters-per-token heuristic must round to the nearest whole token, never a fractional or wildly inaccurate estimate');
@@ -3201,5 +3201,34 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(missing, ['2026-09-25'], 'findJudgeSpawnsWithoutConsultation() must flag exactly the real archived THE-FINAL-JUDGE passage date with no matching confirmed agent-spawn consultation nearby, while never flagging the date that does have one — this is real, verifiable authority over another tool, since a judge report can only exist if a spawn genuinely happened');
   assert.deepEqual(findJudgeSpawnsWithoutConsultation('', { actions: [] }), [], 'an empty or missing index must report zero missing consultations, never crash or fabricate a finding from no data');
 
-  console.log('Passed: SMART-CONSO-TOKEN correctly estimates token weight from raw text length, classifies a document into low/moderate/high relative to the cited research benchmarks, never silently assumes its costly-pattern knowledge stays valid across a real model/platform change, escalates a recognized costly pattern from soft to hard exactly at its configured threshold while never fabricating a verdict for an unknown pattern, reuses THE-FINAL-JUDGE\'s exact scope vocabulary rather than inventing a second one, now correctly distinguishes an always-loaded document (real actionable cost) from an on-demand one (informative only) with a genuinely differentiated concrete action for each, mechanically counts real dated narrative markers as a safe starting point for a future restructuring, computes its adoption KPI from real applied proposals only, explicitly knows the two-sided truth about automation\'s real token cost, and can retroactively verify — using THE-FINAL-JUDGE\'s own archived reports as independent proof — whether a real agent spawn was ever actually preceded by a confirmed consultation.');
+  // Test de connexion (2026-09-20, demande explicite : « smart conso token a un test de connexion
+  // dédié à tous les autres outils, ainsi qu'à toi »).
+  const allConnectedExceptClaude = Object.fromEntries(Object.keys(EXPECTED_CONNECTIONS).map((p) => [p, 'cite smart-conso-token ici']));
+  allConnectedExceptClaude['CLAUDE.md'] = 'aucune mention';
+  assert.deepEqual(checkToolConnections(allConnectedExceptClaude), ['CLAUDE.md'], 'checkToolConnections() must flag exactly the document genuinely missing a reference to SMART-CONSO-TOKEN, case-insensitively, while never flagging one that already cites it');
+  assert.deepEqual(checkToolConnections({}), Object.keys(EXPECTED_CONNECTIONS), 'with no documents provided at all, every expected connection must be reported missing, never silently skipped');
+  // Vérification RÉELLE et bloquante contre les vrais fichiers du dépôt (pas seulement un exemple
+  // synthétique) : casse le pre-commit hook le jour où l'un de ces quatre documents perdrait sa
+  // référence à SMART-CONSO-TOKEN — la garantie mécanique que l'utilisateur a demandée.
+  const realConnectionDocs = {};
+  for (const path of Object.keys(EXPECTED_CONNECTIONS)) realConnectionDocs[path] = fs.readFileSync(path, 'utf8');
+  const realMissingConnections = checkToolConnections(realConnectionDocs);
+  assert.deepEqual(realMissingConnections, [], `every real document expected to reference SMART-CONSO-TOKEN (CLAUDE.md for the agent itself, plus every costly tool that must consult it) must genuinely do so — missing: ${realMissingConnections.join(', ')}`);
+
+  // Exploitation autonome de l'historique accumulé (2026-09-20, demande explicite : « il enrichit
+  // une base de données qu'il exploite de façon autonome pour nourrir la qualité de ses conseils »).
+  const t1 = 5_000_000;
+  const trendNoPast = trackWeightTrend({ actions: [] }, 1000, t1);
+  assert.equal(trendNoPast.direction, 'premier_scan', 'with no past scan recorded, the trend must honestly report this is the first scan, never fabricate a false baseline');
+  const historyWithPastScan = { actions: [{ type: 'scan', at: t1 - 1000, totalTokens: 2000 }] };
+  const improved = trackWeightTrend(historyWithPastScan, 1500, t1);
+  assert.equal(improved.direction, 'amelioration', 'a genuinely lower total than the most recent past scan must be reported as a real improvement');
+  const degraded = trackWeightTrend(historyWithPastScan, 2500, t1);
+  assert.equal(degraded.direction, 'degradation', 'a genuinely higher total than the most recent past scan must be reported as a real degradation, never silently ignored');
+  const stable = trackWeightTrend(historyWithPastScan, 2000, t1);
+  assert.equal(stable.direction, 'stable', 'an exactly unchanged total must be reported as stable, neither a false improvement nor a false degradation');
+  const multiPast = { actions: [{ type: 'scan', at: t1 - 5000, totalTokens: 9000 }, { type: 'scan', at: t1 - 1000, totalTokens: 3000 }] };
+  assert.equal(trackWeightTrend(multiPast, 3000, t1).direction, 'stable', 'with multiple past scans recorded, the comparison must always use the MOST RECENT one, never an older or averaged figure');
+
+  console.log('Passed: SMART-CONSO-TOKEN correctly estimates token weight from raw text length, classifies a document into low/moderate/high relative to the cited research benchmarks, never silently assumes its costly-pattern knowledge stays valid across a real model/platform change, escalates a recognized costly pattern from soft to hard exactly at its configured threshold while never fabricating a verdict for an unknown pattern, reuses THE-FINAL-JUDGE\'s exact scope vocabulary rather than inventing a second one, now correctly distinguishes an always-loaded document (real actionable cost) from an on-demand one (informative only) with a genuinely differentiated concrete action for each, mechanically counts real dated narrative markers as a safe starting point for a future restructuring, computes its adoption KPI from real applied proposals only, explicitly knows the two-sided truth about automation\'s real token cost, can retroactively verify — using THE-FINAL-JUDGE\'s own archived reports as independent proof — whether a real agent spawn was ever actually preceded by a confirmed consultation, mechanically confirms (checked live against the project\'s own real files) that every document meant to reference it genuinely does, and exploits its own accumulated scan history to report a real improvement or degradation trend rather than a bare current number.');
 }

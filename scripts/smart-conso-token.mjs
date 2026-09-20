@@ -320,13 +320,17 @@ export function summarizeHistory(history, now, windowDays = 7) {
 // (documents toujours chargés au-delà du repère) de ce qui est purement informatif (documents lus à
 // la demande, taille normale pour de la référence) — jamais les deux mélangés dans une seule liste
 // plate comme le premier scan le faisait.
-export function formatScanReport(scopeResult, now) {
+// `trend` (optionnel, sortie de trackWeightTrend()) : exploite l'historique déjà accumulé pour dire
+// si la situation s'améliore ou se dégrade réellement d'un scan à l'autre — jamais recalculé à la
+// main, jamais un ajustement silencieux des seuils, seulement un fait rapporté.
+export function formatScanReport(scopeResult, now, trend) {
   const lines = [
     `SMART-CONSO-TOKEN — scan réel — ${new Date(now).toISOString()}`,
     "",
     `Portée : ${scopeResult.portee}`,
     `Documents analysés : ${scopeResult.documentsAnalyses}`,
     `Total estimé : ~${scopeResult.totalTokens} tokens`,
+    ...(trend ? [`Tendance : ${trend.message}`] : []),
     "",
     "=== ACTION REQUISE (documents toujours chargés, au-delà du repère) ===",
     scopeResult.actionRequise.length ? "" : "Aucun.",
@@ -370,6 +374,51 @@ export function findJudgeSpawnsWithoutConsultation(indexText, history, dayWindow
     if (!hasConsultation) missing.push(date);
   }
   return missing;
+}
+
+// Test de connexion (2026-09-20, demande explicite de l'utilisateur : « smart conso token a un
+// test de connexion dédié à tous les autres outils, ainsi qu'à toi »). Vérifie MÉCANIQUEMENT que
+// chaque document censé le citer le fait RÉELLEMENT — jamais une simple affirmation dans une
+// conversation, un vrai grep contre le vrai fichier. "CLAUDE.md" représente la connexion à l'agent
+// lui-même (ses propres instructions de travail) ; les autres, la connexion à chaque outil coûteux
+// censé le consulter avant de se déclencher. Même principe que findToolsMissingFromMenu()
+// (LE-COORDINATEUR) : signale une absence réelle, jamais une invention.
+export const EXPECTED_CONNECTIONS = {
+  "CLAUDE.md": "agent",
+  "docs/referentiel/the-final-judge.md": "outil",
+  "docs/referentiel/hyper-scan-checkpoint.md": "outil",
+  "docs/referentiel/always-new-code.md": "outil",
+};
+
+export function checkToolConnections(documents) {
+  const missing = [];
+  for (const path of Object.keys(EXPECTED_CONNECTIONS)) {
+    const texte = documents[path];
+    if (!texte || !/smart-conso-token/i.test(texte)) missing.push(path);
+  }
+  return missing;
+}
+
+// Exploite l'historique local accumulé de façon autonome pour NOURRIR LA QUALITÉ du prochain
+// diagnostic (2026-09-20, demande explicite de l'utilisateur : « il enrichit une base de données
+// qu'il exploite de façon autonome pour nourrir la qualité de ses conseils »). Jamais un
+// apprentissage qui modifie ses propres seuils tout seul (cf. blueprint, "jamais un ajustement
+// silencieux") : compare le total de tokens du scan le plus récent PRÉCÉDENT à celui d'aujourd'hui,
+// pour que le rapport dise si un chantier de réduction a réellement porté ses fruits, ou si la
+// situation a empiré — un fait observé, jamais une décision prise à la place de l'utilisateur.
+export function trackWeightTrend(history, currentTotal, now) {
+  const pastScans = (history?.actions ?? []).filter((a) => a.type === "scan" && typeof a.totalTokens === "number" && a.at < now).sort((a, b) => b.at - a.at);
+  if (!pastScans.length) return { direction: "premier_scan", message: "Premier scan enregistré — rien à comparer pour l'instant." };
+  const previousTotal = pastScans[0].totalTokens;
+  const delta = currentTotal - previousTotal;
+  if (delta === 0) return { direction: "stable", previousTotal, currentTotal, delta, message: `Stable depuis le dernier scan (${new Date(pastScans[0].at).toISOString().slice(0, 10)}) : ~${currentTotal} tokens.` };
+  const direction = delta < 0 ? "amelioration" : "degradation";
+  return {
+    direction, previousTotal, currentTotal, delta,
+    message: delta < 0
+      ? `Amélioration réelle depuis le dernier scan (${new Date(pastScans[0].at).toISOString().slice(0, 10)}) : ~${Math.abs(delta)} tokens en moins (${previousTotal} → ${currentTotal}).`
+      : `Dégradation depuis le dernier scan (${new Date(pastScans[0].at).toISOString().slice(0, 10)}) : ~${delta} tokens en plus (${previousTotal} → ${currentTotal}) — à surveiller.`,
+  };
 }
 
 function main() {
