@@ -919,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 136'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 137'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3270,6 +3270,35 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(detectGenericReport(concreteReport), [], 'a real, concrete, properly structured report citing actual files must never be flagged — the detector targets genuine genericness, not every report');
   assert.ok(detectGenericReport('Trop court.').some((s) => s.includes('court')), 'an abnormally short report must be flagged regardless of its other properties');
   console.log('Passed: THE-FINAL-JUDGE\'s two mechanical guards work correctly — extractPersonaBlock() pulls the exact fixed persona text from its single source of truth with nothing added or lost, and detectGenericReport() flags a report with no concrete file citations, missing required sections, or abnormal brevity, while never flagging a real, specific, properly structured report — the mechanical protection against the persona drifting toward a generic, standard tone.');
+}
+
+{
+  // Garde-fou de dérive check-spirit.mjs/route.ts (2026-09-20, trouvaille réelle en relançant
+  // check-spirit.mjs cette nuit après un long silence : app/api/lia/route.ts importe désormais
+  // "@/lib/quality-metrics" (ajouté le 2026-09-19, chantier 2 du tableau de bord) mais la chaîne de
+  // remplacement d'alias de check-spirit.mjs — une copie quasi-identique de celle de check-house.mjs
+  // ci-dessus, jamais partagée — n'avait jamais été mise à jour en conséquence, provoquant un
+  // ERR_MODULE_NOT_FOUND sur "@/lib" au tout premier lancement. Exactement la même classe de bug
+  // que GEMINI_API_KEY_FALLBACKS documentée dans le commentaire de check-spirit.mjs lui-même — donc
+  // exactement le genre de récidive que l'Article 3 interdit ("une règle corrigée une fois ne doit
+  // plus jamais se reproduire ailleurs sous une autre forme"). Ce garde-fou lit les deux VRAIS
+  // fichiers du dépôt pour ne plus jamais laisser cette dérive passer inaperçue.
+  function extractLibAliasImports(routeTsText) {
+    return [...new Set([...routeTsText.matchAll(/"@\/lib\/([a-z-]+)"/g)].map((m) => m[1]))];
+  }
+  function findMissingAliasReplacements(aliasNames, scriptText) {
+    return aliasNames.filter((name) => !scriptText.includes(`"@/lib/${name}"`));
+  }
+  const routeTsReal = fs.readFileSync('app/api/lia/route.ts', 'utf8');
+  const realAliases = extractLibAliasImports(routeTsReal);
+  assert.ok(realAliases.includes('quality-metrics') && realAliases.includes('lia') && realAliases.length >= 15, 'extractLibAliasImports() must genuinely parse the real route.ts and find its real @/lib imports, not an empty or fixed list — a sanity check that this guard is reading live code, not a stale fixture');
+  assert.deepEqual(findMissingAliasReplacements(['lia', 'made-up-module'], '"@/lib/lia"'), ['made-up-module'], 'findMissingAliasReplacements() must flag exactly the alias with no matching replaceAll target in the script text, never the one that is genuinely covered');
+  const checkSpiritReal = fs.readFileSync('scripts/check-spirit.mjs', 'utf8');
+  const missingInCheckSpirit = findMissingAliasReplacements(realAliases, checkSpiritReal);
+  assert.deepEqual(missingInCheckSpirit, [], `check-spirit.mjs is missing a replaceAll target for real route.ts import(s): ${missingInCheckSpirit.join(', ')} — it would crash with ERR_MODULE_NOT_FOUND on its very first real run, exactly the drift found and fixed tonight (quality-metrics)`);
+  const checkHouseReal = fs.readFileSync('scripts/check-house.mjs', 'utf8');
+  assert.deepEqual(findMissingAliasReplacements(realAliases, checkHouseReal), [], 'check-house.mjs\'s own copy of this same replacement chain must likewise never drift behind the real route.ts imports — checked live, not just in check-spirit.mjs');
+  console.log('Passed: findMissingAliasReplacements() correctly flags a real route.ts "@/lib/X" import with no matching replaceAll target in a given script\'s transpile chain, and — checked live against the real files tonight — check-spirit.mjs and check-house.mjs both now genuinely cover every real alias import, closing the exact ERR_MODULE_NOT_FOUND drift found while relaunching check-spirit.mjs after the quality-metrics module was added.');
 }
 
 {
