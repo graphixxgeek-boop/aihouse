@@ -2672,6 +2672,29 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(findCommitsMissingSuiviUpdate([{hash:'b1',subject:'x',filesChanged:['docs/argus/scan.txt']}]),[],'a commit touching only a generated registry file (never real code or the charter) must never be flagged — this guard is about real work, not every commit whatsoever');
   console.log('Passed: findCommitsMissingSuiviUpdate() flags exactly the commits that touched real code, TypeScript, or the charter/method docs while never touching docs/suivi/ in the same commit — a commit that already included a suivi update is correctly exempt, and a commit touching only generated registry output is never flagged as if it were substantive work, closing the exact real drift found on 2026-09-19 (7 of the last 8 commits in one session never touched docs/suivi/ once).');
 }
+{
+  // recentCommits() (2026-09-20, gap réel trouvé en vérifiant à la demande de l'utilisateur « existe
+  // t il un test prevu et calibré pour les toutes dernieres mises à jour du suivi ? » : les fonctions
+  // qu'elle nourrit — findCommitsMissingSuiviUpdate, le crochet post-commit — étaient bien testées,
+  // mais recentCommits() elle-même, qui parse trois familles de commandes git en un seul objet par
+  // commit, ne l'était jamais alors qu'elle accepte déjà un shImpl injectable pour ça (même patron
+  // que categorizeAllSessions un peu plus haut). Un vrai crochet a été déclenché en direct sur ce
+  // dépôt (commit jetable, immédiatement annulé) pour confirmer le comportement live une fois, mais
+  // ça ne remplace jamais un test répétable — d'où ce test avec de fausses commandes git.
+  const {recentCommits}=await import('../scripts/check-suivi-fidelity.mjs');
+  const fakeSh=(cmd)=>{
+    if(cmd.includes('git log -2 --format=%H'))return 'aaa\nbbb\n';
+    if(cmd.includes('git log -1 --format=%s aaa'))return 'Premier commit\n';
+    if(cmd.includes('git log -1 --format=%s bbb'))return 'Second commit\n';
+    if(cmd.includes('git diff-tree --no-commit-id --name-only -r aaa'))return 'lib/x.ts\ndocs/suivi/sessions/s.md\n';
+    if(cmd.includes('git diff-tree --no-commit-id --name-only -r bbb'))return '';
+    throw new Error('commande git inattendue dans le test : '+cmd);
+  };
+  assert.deepEqual(recentCommits(2,fakeSh,'/fake'),[{hash:'aaa',subject:'Premier commit',filesChanged:['lib/x.ts','docs/suivi/sessions/s.md']},{hash:'bbb',subject:'Second commit',filesChanged:[]}],'recentCommits() must correctly assemble the three separate git queries (hash list, subject, changed files) into one object per commit, in order, with an empty file list reported as [] rather than [""] for a commit touching nothing');
+  const emptySh=(cmd)=>cmd.includes('git log -5 --format=%H')?'':'';
+  assert.deepEqual(recentCommits(5,emptySh,'/fake'),[],'a repository with no commits in range must report an empty list, never a list containing one bogus empty-string entry');
+  console.log('Passed: recentCommits() correctly assembles the three separate git queries (hash list, subject, changed files) into one ordered object per commit, reports an empty file list as [] rather than [""], and reports zero commits rather than one bogus empty entry when the log itself is empty — the real gap found while verifying that every part of the real-time suivi mechanism is actually test-covered, not just the functions built on top of it.');
+}
 
 {
   // Extraction compacte des simulations archivées (2026-09-19, demande explicite de l'utilisateur,
