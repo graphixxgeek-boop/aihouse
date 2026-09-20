@@ -245,7 +245,7 @@ export function buildCatalogDelivery(recordResult, prestations = PRESTATIONS) {
         title: "LE-COORDINATEUR — catalogue d'offres nommé",
         subtitle: `Nouvelle version réelle du catalogue (${recordResult.dateLabel}) — archivée dans docs/le-coordinateur-catalogue/${recordResult.fileName}.`,
         dateLabel: recordResult.dateLabel,
-        blocks: [{ type: "table", headers: ["Nom", "Si tu veux...", "Ça déclenche", "Coût"], rows: prestations.map((p) => [p.nom ?? "—", p.demande, p.outils.join(" + "), p.cout]) }],
+        blocks: [{ type: "table", headers: ["Nom", "Description", "Si tu veux...", "Ça déclenche", "Coût API", "Coût tokens"], rows: prestations.map((p) => [p.nom ?? "—", p.description ?? "—", p.demande, p.outils.join(" + "), p.cout, p.tokensEstimes ?? "—"]) }],
         footer: "Catalogue régénéré à chaque Ronde CIRCLE-TASKS — HTML seulement quand son contenu a réellement changé, texte simple sinon.",
       }),
     };
