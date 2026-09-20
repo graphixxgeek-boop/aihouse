@@ -4,7 +4,10 @@
 quel le même soir en retirant l'ombrelle "MEMENTO" (demande explicite de l'utilisateur : « je n'ai
 pas tres bien compris le role b [...] on pourrait le laisser en 'memento weight' »), car il désignait
 déjà précisément ce rôle. Cf. `docs/memory-audit-blueprint.md` pour le patron générique voisin
-(memory-audit), et `docs/referentiel/memory-audit.md` pour son instanciation.)*
+(memory-audit), et `docs/referentiel/memory-audit.md` pour son instanciation. Voir aussi
+`docs/referentiel/regles-de-la-memoire.md` (tâche #175, section 8) : ce document-là décrit le
+SYSTÈME de mémoire narrative du jeu, memento weight en est explicitement exclu (mesure de poids,
+jamais de contenu) — jamais confondus.)*
 
 ## Rôle exact
 

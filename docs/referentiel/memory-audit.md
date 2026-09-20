@@ -5,7 +5,10 @@ fois son rôle mieux compris par l'utilisateur — l'ombrelle "MEMENTO", qui le 
 second artefact de nature différente (`lib/memento-weight.ts` + `scripts/memento-weight.mjs`, cf.
 `docs/referentiel/memento-weight.md`), a été retirée. Principe générique :
 `docs/memory-audit-blueprint.md`. Code : `scripts/memento.mjs` (nom de fichier technique inchangé,
-même discipline que Smart Breaker). Registre : `docs/memory-audit/`.)*
+même discipline que Smart Breaker). Registre : `docs/memory-audit/`. Ce document décrit l'OUTIL ;
+`docs/referentiel/regles-de-la-memoire.md` (tâche #175, créé le même soir en comblant le trou de
+nommage laissé par le retrait de l'ombrelle) décrit le SYSTÈME de mémoire du jeu que cet outil
+vérifie — jamais confondus.)*
 
 ## Rôle exact
 

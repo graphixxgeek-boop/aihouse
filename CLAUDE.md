@@ -1062,9 +1062,17 @@ conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs se
   Instruments à la barre espace, caméra dynamique, transitions animées, contraste jour/nuit,
   trottoir à l'identité propre, détail réservé aux objets d'enquête). Base de jugement de
   THE-SCREENER une fois cet outil construit.
-- `docs/referentiel/tableau-de-bord.md` (2026-09-19) — règles du tableau de bord/KPI interne
-  (5 familles, accès, alertes, cadence de mise à jour) : un outil d'observation à destination de
-  l'utilisateur et de l'agent, strictement réservé à l'admin/créateur, jamais un mécanisme de jeu.
+- `docs/referentiel/regles-de-la-memoire.md` (2026-09-21, tâche #175) — traverse les mêmes documents
+  par l'axe de la mémoire, sur le modèle de `regles-du-temps.md`/`regles-de-l-espace.md` : les trois
+  natures de mémoire à ne jamais confondre (persistée dans `Life`, technique anti-répétition,
+  narrative méta), le plafonnage de chaque champ de `Life`, la règle transversale qu'aucune mémoire
+  de personnage ne survit à un `reset`, et l'articulation avec memory-audit (l'outil qui la vérifie)
+  et memento weight (qui mesure son poids, jamais son contenu). Comble le trou de nommage laissé par
+  le retrait de l'ombrelle "MEMENTO" (cf. sections dédiées ci-dessous).
+- `docs/referentiel/tableau-de-bord.md` (2026-09-19, corrigé le 2026-09-21) — règles du tableau de
+  bord/KPI interne (6 familles depuis l'ajout de Smart Conso API comme 6e le 2026-09-20, accès,
+  alertes, cadence de mise à jour) : un outil d'observation à destination de l'utilisateur et de
+  l'agent, strictement réservé à l'admin/créateur, jamais un mécanisme de jeu.
 - `docs/referentiel/points-fragiles.md` (2026-09-19) — registre vivant des points identifiés comme
   fragiles ou en attente d'une décision de conception (pas des bugs actifs, ceux-là se corrigent
   directement) ; compté par `scripts/kpi-report.mjs` comme un des indicateurs de robustesse du code.
