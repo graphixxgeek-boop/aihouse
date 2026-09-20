@@ -256,6 +256,18 @@ jamais la règle elle-même. Déclenché quand `claude-md-weight-signal` (CIRCLE
 `scripts/circle-tasks.mjs`) rapporte un niveau "élevé" (≥5000 tokens estimés) ou un nombre
 significatif de nouvelles asides datées détectées.
 
+**Garde-fou non négociable, écrit dans CLAUDE.md lui-même (2026-09-20, à la demande explicite de
+l'utilisateur : « jamais un allegement de claude.md ne doit entamer la qualité ou les
+fonctionnalités du projet [...] mets un garde fou formulé par tes soins »)** : le poids en tokens
+n'est JAMAIS un critère qui l'emporte sur le contenu. En cas de doute réel sur si un retrait
+affaiblirait une règle, la réponse par défaut est de NE PAS couper, jamais de trancher par excès de
+prudence inverse (tout garder par peur de mal faire serait tout aussi contraire à l'esprit de cette
+procédure — la bonne réponse est un jugement explicite au cas par cas, jamais un réflexe dans un
+sens ou dans l'autre). Ce garde-fou n'est pas qu'une déclaration d'intention : les étapes 5
+(vérification) et 6 (documentation) ci-dessous en sont la mise en œuvre concrète — un allègement
+qui casse `check-house.mjs`/`tsc`, ou dont le gain n'est pas honnêtement mesuré et documenté, n'est
+jamais considéré terminé, quel que soit le nombre de tokens économisés.
+
 **Méthode, en 6 étapes, reproduites du premier exercice réel :**
 
 1. **Scanner** : `scanScope('zoome', { 'CLAUDE.md': texte }, new Set(['CLAUDE.md']))` — jamais un

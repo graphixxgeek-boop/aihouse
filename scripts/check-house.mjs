@@ -919,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 144'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 145'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3415,6 +3415,15 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const markers = countDatedNarrativeMarkers('*(ajouté le 2026-09-19, texte)* et encore *(précisé le 2026-09-20, autre texte)* et du texte normal.');
   assert.equal(markers.occurrences, 2, 'countDatedNarrativeMarkers() must find every dated parenthetical aside in the text, a real mechanical signal of historical/justificatory content rather than active rule text');
   assert.equal(countDatedNarrativeMarkers('texte sans aside daté du tout.').occurrences, 0, 'text with no dated aside must report zero markers, never a false positive');
+
+  // Parenthèse imbriquée (2026-09-20, limite réelle trouvée en pratique sur CLAUDE.md — deux vrais
+  // cas manqués par la version précédente du regex, cf. claude-md-asides-historique.md) : l'aside
+  // entière doit être capturée d'un bloc, jamais coupée à la première parenthèse fermante interne.
+  const nestedText = "*(Ajouté le 2026-09-19, reconstruit à partir de cinq vrais prompts (16 au 19 septembre) retrouvés)* reste du texte normal.";
+  const nestedMarkers = listDatedNarrativeMarkers(nestedText);
+  assert.equal(nestedMarkers.length, 1, 'a dated aside containing one nested parenthesis must still be recognized as exactly one marker, never split into a truncated fragment plus leftover text');
+  assert.ok(nestedMarkers[0].extrait.includes('16 au 19 septembre'), 'the captured aside must span the full nested content, never stop at the first inner closing parenthesis');
+  assert.equal(countDatedNarrativeMarkers('*(a)* *(b 2026-09-19 c)* texte').occurrences, 1, 'a real dated aside must still be told apart from an unrelated undated parenthetical right next to it, never merged into one over-greedy match');
 
   const multiline = 'ligne1\nligne2\n*(ajouté le 2026-09-19, un texte assez long pour être tronqué si besoin)*\nligne4';
   const listed = listDatedNarrativeMarkers(multiline);

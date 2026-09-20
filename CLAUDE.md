@@ -6,12 +6,11 @@ ordre : ce qu'est le projet et sur quelle stack il tourne, le principe fondateur
 tout le reste, la charte de qualité à appliquer à chaque itération, où trouver la documentation
 de référence et de contexte, et l'état d'avancement du plan d'origine.
 
-*(Réorganisé le 2026-09-17 à la demande explicite de l'utilisateur : structure reclassée de façon
-plus logique, aucun changement de sens. Les numéros d'Article existants n'ont volontairement pas
-été changés, car ils sont cités tels quels dans de nombreux commentaires de code à travers le
-projet (`lib/*.ts`, `scripts/*.mjs`, `docs/referentiel/*.md`) — les renuméroter aurait cassé ces
-renvois et créé la dette documentaire que l'Article 13 interdit justement. Le nouvel Article 15
-est donc ajouté à la suite plutôt qu'inséré au milieu.)*
+**Les numéros d'Article ne doivent jamais être renumérotés** : ils sont cités tels quels dans de
+nombreux commentaires de code à travers le projet (`lib/*.ts`, `scripts/*.mjs`,
+`docs/referentiel/*.md`) — les renuméroter casserait ces renvois et créerait la dette documentaire
+que l'Article 13 interdit justement. Un nouvel article rejoint toujours la suite de la liste,
+jamais inséré au milieu d'une numérotation existante.
 
 ## Le projet, en une phrase
 
@@ -225,6 +224,13 @@ justification narrative de QUAND et POURQUOI une règle a été ajoutée (date, 
 vit dans `docs/referentiel/smart-breaker-historique.md` et `docs/referentiel/claude-md-asides-historique.md`
 plutôt que mêlée à la règle elle-même — jamais l'information perdue, seulement déplacée là où elle
 coûte moins cher (lu à la demande, pas à chaque message).
+
+**Garde-fou non négociable : un allègement de CLAUDE.md ne doit JAMAIS entamer la qualité ou les
+fonctionnalités du projet.** Le poids en tokens n'est jamais un critère qui l'emporte sur le
+contenu — en cas de doute sur si un retrait affaiblit une règle réelle, la réponse par défaut est
+de NE PAS couper. Toute passe d'allègement suit la procédure formalisée de
+`docs/referentiel/smart-conso-token.md` (scanner/identifier/trier/archiver/vérifier/documenter),
+jamais un retrait à l'aveugle.
 
 **Vérification périodique de TOUS les documents de référence, pas seulement au fil des changements.**
 Le paragraphe
@@ -732,22 +738,15 @@ spécifiquement, une seconde partie avec un vrai raisonnement plus poussé (donc
 Article 8) se déclenche en plus, à l'initiative de l'agent OU de l'utilisateur, sur un sujet précis
 — en particulier avant toute idée nouvelle, jamais seulement sur le code déjà écrit.
 
-**Précision du 2026-09-20, écart réel trouvé et comblé le jour même (demande explicite de
-l'utilisateur : « je voudrais que ça tourne à chaque commit »).** Jusqu'à cette date, « tourne
-automatiquement à chaque changement de code » n'était vrai qu'à moitié pour ARGUS/HARMONIA : leur
-LOGIQUE de détection était bien testée à chaque commit via `check-house.mjs` (contre des cas
-synthétiques), mais jamais réellement APPLIQUÉE au code courant sans invocation manuelle — un vrai
-écart entre la promesse de cet article et le câblage réel (Article 13). Comblé en ajoutant un
-balayage réel (fonctions pures réutilisées, zéro second lancement de `check-house.mjs`, zéro écriture
-de fichier dans `docs/argus/`/`docs/harmonia/` à chaque commit) dans le crochet `post-commit`
-(`scripts/hooks/check-last-commit.mjs`), warn-only comme le reste de ce crochet. Le même crochet
-affiche désormais aussi, systématiquement, le menu des prestations de LE-COORDINATEUR (jamais la
-synthèse complète `runNetworkCheck()`, qui redemanderait un second passage de `check-house.mjs`
-coûteux et redondant à chaque commit) — pour que ce rappel soit vraiment vu par l'agent à chaque
-commit, pas seulement quand il pense à relancer l'outil. Dans tous les
-cas, un rappel explicite fait partie du protocole de travail (cf. `docs/regles-de-travail.md`) pour
-ne jamais laisser cette vérification retomber dans l'oubli si, sur le moment, ni l'utilisateur ni
-l'agent n'y pense spontanément — exactement le risque que cette règle a été créée pour éliminer.
+**ARGUS et HARMONIA tournent réellement à chaque commit**, pas seulement testés par
+`check-house.mjs` contre des cas synthétiques : un balayage réel (fonctions pures réutilisées, zéro
+second lancement de `check-house.mjs`, zéro écriture de fichier dans `docs/argus/`/`docs/harmonia/`)
+est intégré dans le crochet `post-commit` (`scripts/hooks/check-last-commit.mjs`), warn-only comme
+le reste de ce crochet. Le même crochet affiche aussi, à chaque commit, le menu des prestations de
+LE-COORDINATEUR (jamais la synthèse complète `runNetworkCheck()`, coûteuse et redondante à chaque
+commit) — pour que ce rappel soit vraiment vu, pas seulement quand quelqu'un pense à relancer
+l'outil. Un rappel explicite fait partie du protocole de travail (cf. `docs/regles-de-travail.md`)
+pour ne jamais laisser cette vérification retomber dans l'oubli.
 
 **Protocole d'application** à chaque itération sur le code : Article 19 (a-t-on compris la logique
 et la raison d'être du code existant avant d'y toucher ?) → Article 0 (l'esprit est-il
@@ -767,14 +766,7 @@ avant/pendant l'exécution, sur les points où une demande était réellement am
 rendu à l'utilisateur doit dire explicitement
 ce qui a été vérifié, préservé, amélioré et corrigé.
 
-**Article 21 — HYPER-SCAN-CHECKPOINT : la vérification approfondie exceptionnelle.** *(Ajouté le
-2026-09-19, reconstruit à partir de cinq vrais prompts de l'utilisateur retrouvés dans l'historique
-complet de la session (16 au 19 septembre) : « j'ai dû te demander ça quelque fois, à des moments
-stratégiques [...] je me souviens que tu m'avais remercié car ça fait ressurgir parfois des bugs
-latents [...] je veux créer avec toi un outil d'analyse approfondie qui fonctionne sur le modèle de
-ces prompts ». Confirmé comme un vrai outil technique, pas un simple protocole : « il faut en faire
-une vraie machine de guerre [...] si un blueprint n'est pas nécessaire, c'est le signe que l'outil
-n'est pas assez abouti ».)* Contrairement à ARGUS et HARMONIA (Article 20, toujours déployés),
+**Article 21 — HYPER-SCAN-CHECKPOINT : la vérification approfondie exceptionnelle.** Contrairement à ARGUS et HARMONIA (Article 20, toujours déployés),
 HYPER-SCAN-CHECKPOINT est un outil EXCEPTIONNEL : il ne se déclenche jamais automatiquement, jamais
 en continu — seulement sur demande explicite de l'utilisateur, ou proposé par l'agent après avoir
 remarqué une grosse vague de changements (jamais lancé sans confirmation). Il orchestre TOUT ce que

@@ -113,7 +113,15 @@ export function measureClaudeMdWeight(text) {
 // preuve complète (une vraie lecture reste seule capable de trier tout le reste). Réutilisé comme
 // point de départ concret et sûr pour une restructuration (2026-09-20, affiné après un premier
 // scan jugé pas assez actionnable par l'utilisateur).
-const DATED_ASIDE_PATTERN = /\*\([^)]*\b20\d{2}-\d{2}-\d{2}\b[^)]*\)\*/g;
+//
+// Tolère UN niveau de parenthèse imbriquée à l'intérieur de l'aside (2026-09-20, limite réelle
+// trouvée en pratique : « *(Ajouté le 2026-09-19 [...] (16 au 19 septembre) [...])* » n'était pas
+// détecté par la version précédente, qui s'arrêtait à la première parenthèse fermante rencontrée —
+// deux cas réels manqués lors de la première passe d'allègement, documentés dans
+// claude-md-asides-historique.md avant ce correctif). Ne tente PAS de gérer un niveau
+// d'imbrication arbitraire (jamais rencontré en pratique dans ce fichier) — un cas plus profond
+// resterait un angle mort honnête, jamais silencieusement mal découpé.
+const DATED_ASIDE_PATTERN = /\*\((?:[^()]*\([^()]*\))*[^()]*\b20\d{2}-\d{2}-\d{2}\b(?:[^()]*\([^()]*\))*[^()]*\)\*/g;
 export function countDatedNarrativeMarkers(text) {
   const matches = text?.match(DATED_ASIDE_PATTERN) || [];
   const tokens = matches.reduce((sum, m) => sum + estimateTokens(m), 0);
