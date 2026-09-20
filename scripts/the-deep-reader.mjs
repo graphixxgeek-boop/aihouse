@@ -14,28 +14,29 @@
 // (3) rereadPerformance() — KPI central, même vocation qu'HYPER-SCAN-CHECKPOINT : le succès ne se
 //     mesure jamais à "a-t-il tourné sans erreur" mais au nombre de passages ayant réellement trouvé
 //     un écart confirmé — jamais un nombre de passages lancés.
+//
+// extractPersonaBlock() et la logique commune de detectGenericReport() (sections manquantes, rapport
+// trop court) vivent désormais dans judge-persona-shared.mjs (2026-09-21, tâche #152) — étaient
+// strictement dupliquées à l'identique avec the-final-judge.mjs, corrigé une fois plutôt que deux
+// fois divergentes (règle anti-doublon §7ter). Seul le signal propre à CE personnage (chiffrer le
+// nombre d'interventions relues) reste local.
+
+import { extractPersonaBlock, missingSectionsSignal, tooShortSignal } from "./judge-persona-shared.mjs";
+
+export { extractPersonaBlock };
 
 const REQUIRED_SECTIONS = ["interventions relues", "écart", "déjà bien tracé"];
-
-// Le personnage fixe vit dans un bloc de citation markdown ("> ...") sous le titre "Personnage —
-// texte FIXE" de docs/referentiel/the-deep-reader.md — extrait ligne par ligne, jamais recopié à la
-// main ailleurs (même mécanique que extractPersonaBlock() de the-final-judge.mjs).
-export function extractPersonaBlock(instantiationText) {
-  const lines = instantiationText.split("\n");
-  const quoted = lines.filter((l) => l.trim().startsWith(">"));
-  return quoted.map((l) => l.replace(/^\s*>\s?/, "")).join("\n").trim();
-}
 
 // Signes structurels d'un rapport trop vague pour être exploitable : jamais un jugement sur la
 // justesse des écarts trouvés (impossible à mécaniser), seulement l'absence de ce que la sortie
 // attendue exige explicitement (cf. docs/referentiel/the-deep-reader.md, "Sortie attendue").
 export function detectGenericReport(reportText) {
   const signals = [];
-  const lower = reportText.toLowerCase();
-  if (!/\d/.test(reportText)) signals.push("aucun nombre concret (le rapport doit toujours chiffrer le nombre d'interventions relues)");
-  const missingSections = REQUIRED_SECTIONS.filter((s) => !lower.includes(s));
-  if (missingSections.length) signals.push("structure attendue incomplète (manque : " + missingSections.join(", ") + ")");
-  if (reportText.trim().length < 200) signals.push("rapport anormalement court pour une relecture réelle (moins de 200 caractères)");
+  if (!/\d/.test(reportText || "")) signals.push("aucun nombre concret (le rapport doit toujours chiffrer le nombre d'interventions relues)");
+  const missing = missingSectionsSignal(reportText, REQUIRED_SECTIONS);
+  if (missing) signals.push(missing);
+  const short = tooShortSignal(reportText, 200, "une relecture réelle");
+  if (short) signals.push(short);
   return signals;
 }
 

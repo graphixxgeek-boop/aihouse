@@ -240,6 +240,25 @@ export const CIRCLE_ITEMS = [
     tokensEstimes: "modéré à élevé — sortie complète de la synthèse (tableau agrégeant check-house.mjs, AXA-CHECK, ARGUS, HARMONIA, ALWAYS-NEW-CODE, CLEAN-DIRTY-OLD)",
     execute: "Lancer `node scripts/le-coordinateur.mjs` (ou appeler runNetworkCheck() directement) et lire la synthèse complète — plus cher que les autres items de cette Ronde, à réserver aux passages où une vraie vérification croisée de tout le paysage est utile, pas à chaque Ronde mécaniquement.",
   },
+  // coordinateur-catalogue (2026-09-21, demande explicite de l'utilisateur : « le catalogue du
+  // coordinateur doit être accroché à circle, dès le départ, comme la mise à jour du profil psycho »).
+  // Format de livraison conditionnel, précision explicite du même jour : « en format html si c'est
+  // un nouveau catalogue jamais produit, en txt si c'est un catalogue qui n'a pas changé » —
+  // buildCatalogDelivery() réutilise directement le booléen `written` de recordCatalog() (déjà le
+  // signal anti-doublon exact), jamais une seconde détection de changement divergente.
+  // Revue combinatoire SYSTÉMATIQUE avant chaque appel (demande explicite le même jour : « je veux
+  // que ce soit le coordinateur qui réalise systématiquement cette passe et qui réfléchit aux
+  // différentes combinaisons avant de délivrer le catalogue ») : jamais une heuristique mécanique
+  // inventée dans le code (LE-COORDINATEUR ne raisonne jamais lui-même, §7ter) — une vraie relecture
+  // par l'agent qui pilote, à chaque passage de cet item, pas seulement la première fois.
+  {
+    id: "coordinateur-catalogue",
+    theme: "Passages réels (smoke run)",
+    label: "Mettre à jour le catalogue d'offres nommé (LE-COORDINATEUR)",
+    cout: "gratuit — node scripts/le-coordinateur.mjs catalogue, écrit une nouvelle version seulement si PRESTATIONS a réellement changé, zéro appel API",
+    tokensEstimes: "faible si inchangé (texte simple) ; modéré si nouveau (rédaction d'un rapport HTML complet)",
+    execute: "AVANT tout appel de code : relire PRESTATIONS et le paysage complet des outils (docs/regles-de-travail.md §7ter) pour identifier toute combinaison de 2-3 outils réellement utile pas encore proposée ensemble — l'ajouter comme nouvelle prestation nommée si elle apporte une vraie valeur, jamais mécaniquement générée. Appeler ENSUITE recordCatalog() puis buildCatalogDelivery() (scripts/le-coordinateur.mjs) — livrer le résultat en fichier HTML si written:true (nouvelle version réelle, review comprise), ou juste le texte simple si written:false (rien n'a changé depuis la dernière fois, review déjà faite sans rien trouver de neuf).",
+  },
   // THE-FINAL-JUDGE (2026-09-20, demande explicite de l'utilisateur : « integre le dans la liste à
   // cocher malgré tout [...] avec un panneau d'avertissement [...] caractères couleur rouge [...]
   // le coût en token »). Revient sur le choix initial (le garder hors de la fenêtre) — l'utilisateur
@@ -407,6 +426,33 @@ export function groupCircleReportByTheme(report) {
   const untagged = report.filter((r) => !THEME_ORDER.includes(r.theme));
   if (untagged.length) groups.push({ theme: "Autre", items: untagged });
   return groups.filter((g) => g.items.length > 0);
+}
+
+// recommendCircleSelection() — tâche #155 (2026-09-21, « calibrer une sélection recommandée par
+// défaut »). Jusqu'ici, le choix des items pour l'option "NON, lancer avec les paramètres
+// recommandés" du garde-fou en 2 temps était un jugement de l'agent, refait à la main à chaque
+// Ronde (#225, #231) — jamais une vraie règle codée, donc jamais garanti de rester cohérent d'une
+// fois à l'autre. Encodage EXPLICITE de la pratique réelle déjà observée sur ces deux passages,
+// jamais une règle inférée à l'aveugle depuis les champs texte libres (`tokensEstimes`/`cout`, trop
+// ambigus à parser mécaniquement) — même style que CIRCLE_EXCLUDED_REGISTRIES : un nom, une raison
+// écrite, jamais un silence. Exclus par défaut : la relecture exhaustive du référentiel (gratuite en
+// appel API mais coûteuse en tokens de l'agent, cf. son propre `tokensEstimes`), l'item purement
+// récréatif, l'item conditionnel à une session déjà en cours, et les deux items costly (déjà exclus
+// par défaut de longue date, jamais une nouveauté ici). Tout le reste de CIRCLE_ITEMS est recommandé
+// par défaut. Ajustable à tout moment si la pratique réelle diverge — jamais gravé dans le marbre.
+export const NOT_RECOMMENDED_BY_DEFAULT = {
+  referentiel: "lecture exhaustive de tous les documents de référence — gratuite en appels API mais coûteuse en tokens de l'agent (cf. son propre tokensEstimes), jamais recommandée par défaut",
+  "dream-team-photo": "purement récréatif, jamais prioritaire par défaut",
+  "the-screener": "conditionnel à une session/un serveur déjà en cours — jamais recommandé sans cette condition réelle, que ce mécanisme ne peut pas vérifier lui-même",
+  "the-final-judge": "coûteux (agent séparé), jamais coché par défaut — déjà établi",
+  "the-deep-reader": "coûteux (agent séparé), jamais coché par défaut — déjà établi",
+};
+export function recommendCircleSelection(report) {
+  return report.map((r) => ({
+    ...r,
+    recommande: !(r.id in NOT_RECOMMENDED_BY_DEFAULT),
+    raisonExclusion: NOT_RECOMMENDED_BY_DEFAULT[r.id],
+  }));
 }
 
 // `colorize` par défaut vrai (sortie terminal réelle, ce script et les crochets git) — mis à faux

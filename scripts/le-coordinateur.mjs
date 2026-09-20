@@ -40,7 +40,7 @@
 // Doublon : si le commit HEAD n'a pas bougé depuis le dernier passage complet, le signale avant de
 // relancer pour rien (jamais une fenêtre de temps, qui pourrait rater un vrai changement fait vite).
 
-import { existsSync, mkdtempSync, rmSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { sh } from "./lib-shell.mjs";
@@ -51,6 +51,7 @@ import { classifyCheckLevel } from "./check-level-target.mjs";
 import { lastTouchDays, relativeStaleness } from "./clean-dirty-old.mjs";
 import { findUnconfirmedBursts } from "./smart-conso-api.mjs";
 import { summarizeHistory, findJudgeSpawnsWithoutConsultation } from "./smart-conso-token.mjs";
+import { renderHtmlReport } from "./html-report.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 // Best-effort, local, jamais committé — même statut que .gemini-key-health.json (mémoire de
@@ -106,28 +107,150 @@ export function formatTable(rows) {
 // catalogue en auto, pour te rappeler des prix ». Un outil qui appelle un agent séparé (outil
 // `Agent`) porte systématiquement le repère "~37k tokens fixes" (KNOWN_COSTLY_PATTERNS.agent_subagent_spawn),
 // jamais un chiffre inventé au cas par cas.
+// `nom` (2026-09-21, tâche #154 — « toutes les combinaisons outils, un nom pour chaque prestation »)
+// : un identifiant court et mémorable par offre, pour pouvoir parler du "Pack X" plutôt que de
+// redécrire la combinaison d'outils à chaque fois — jamais un renommage des outils eux-mêmes,
+// seulement de la COMBINAISON packagée ici.
+//
+// Écart réel trouvé et corrigé le 2026-09-21 (question directe de l'utilisateur : « on est d'accord
+// que le coordinateur a pris le soin de réfléchir aux différentes combinaisons possibles... ? ») :
+// vérifié en relisant la liste — NON, seules 2 des 14 lignes d'origine combinaient réellement
+// plusieurs outils (Pack Sentinelle, Pack Rénovation), le reste était un mapping un-besoin-un-outil
+// construit incrémentalement. Un vrai trou trouvé au passage : la synthèse complète et gratuite du
+// réseau (`runNetworkCheck()`, déjà exposée dans la Ronde via l'item `network-check-run`) n'avait
+// AUCUNE ligne PRESTATIONS — jamais proposée comme "offre" alors qu'elle combine 6 outils gratuits.
+// Corrigé : "Pack Panorama" ajouté. Systématisé pour l'avenir (demande explicite : « je veux que ce
+// soit le coordinateur qui réalise systématiquement cette passe [...] avant de délivrer le
+// catalogue ») dans l'`execute` de l'item CIRCLE-TASKS `coordinateur-catalogue` (circle-tasks.mjs) —
+// une vraie relecture combinatoire par l'agent avant chaque appel à recordCatalog(), jamais une
+// heuristique mécanique inventée ici : LE-COORDINATEUR ne raisonne jamais lui-même (§7ter), décider
+// qu'une combinaison est réellement utile reste un jugement, pas un calcul.
+//
+// Structure enrichie le 2026-09-21, deuxième vérification directe de l'utilisateur : « on est ok
+// qu'il y a à chaque fois un prix en token ET api ? [...] avec une courte description, quelle que
+// soit la combinaison ? ». Vérifié : NON — plusieurs lignes n'avaient aucun coût token chiffré
+// (Pack Provocation) ou aucune mention explicite du coût API (Pack Ronde), les deux coûts mélangés
+// dans une seule phrase libre selon les lignes. Corrigé en adoptant la MÊME séparation déjà validée
+// dans CIRCLE_ITEMS (`cout` = appels Gemini/API réels, `tokensEstimes` = coût en tokens Claude,
+// jamais confondus, cf. commentaire en tête de circle-tasks.mjs) — jamais un second vocabulaire
+// inventé ici. `description` ajoutée : ce que la prestation délivre concrètement, distincte de
+// `demande` (dans quel cas s'en servir) — pour que chaque ligne se lise comme une vraie offre de
+// catalogue, pas seulement un renvoi vers un nom d'outil.
+// Deuxième passe combinatoire le même jour (déjà systématisée ci-dessus, appliquée une seconde fois
+// tout de suite à la demande explicite : « je imagine qu'il va y avoir beaucoup de combinaisons
+// possibles [...] TOUTES CELLES qui peuvent être utiles pour toi ou pour le projet ») : deux
+// nouveaux packs trouvés — "Pack Éclaireur" (AXA-CHECK + CLEAN-DIRTY-OLD + nœuds sensibles HARMONIA,
+// jamais combinés avant pour un contrôle ciblé PRÉ-modification d'un fichier précis, distinct du
+// balayage global de Pack Panorama) et "Pack Décollage" (Smart Conso API + le carnet de correctifs,
+// jamais combinés avant pour un vrai contrôle pré-simulation, cf. Article 18 étape 0).
+// Ordre du catalogue (2026-09-21, demande explicite de l'utilisateur : « en premier, sont présentés
+// les outils seuls, tous les outils seuls, avant les combinaisons plus complexes ») : les 13
+// prestations à un seul outil d'abord, puis les 5 combinaisons multi-outils ensuite (elles-mêmes
+// triées par nombre d'outils croissant) — jamais un ordre historique arbitraire (Pack Sentinelle, un
+// combo à 3 outils, était auparavant en toute première ligne).
 export const PRESTATIONS = [
-  { demande: "Vérification rapide après un changement de code", outils: ["check-house.mjs", "ARGUS (mécanique)", "HARMONIA (mécanique)"], cout: "gratuit, déjà automatique — 0 token, 0 appel API" },
-  { demande: "Fidélité de l'esprit des personnages (Article 0)", outils: ["EL-PROFESSOR"], cout: "gratuit (relit un texte déjà produit) — 0 appel API, coût token = taille du texte relu" },
-  { demande: "Diagnostic direct du ton face à une provocation réelle", outils: ["check-spirit.mjs"], cout: "réel (API Gemini, 16 scénarios) — consulter Smart Conso API avant" },
-  { demande: "Qualité visuelle du rendu", outils: ["THE-SCREENER"], cout: "réel (Playwright, léger) — pas d'agent séparé, coût token faible" },
-  { demande: "Dette technique / code qui s'empile plutôt que d'être pensé", outils: ["ALWAYS-NEW-CODE", "CLEAN-DIRTY-OLD"], cout: "réel (raisonnement, pas d'appel API) — consulter SMART-CONSO-TOKEN avant (ALWAYS-NEW-CODE seulement, CLEAN-DIRTY-OLD délègue sans raisonner)" },
-  { demande: "Robustesse et couverture de test réelle", outils: ["AXA-CHECK"], cout: "gratuit — 0 token, 0 appel API" },
-  { demande: "Chasse aux bugs cachés avant une étape importante", outils: ["HYPER-SCAN-CHECKPOINT"], cout: "réel — version légère gratuite ; version complète = ~37k tokens fixes (agent séparé) + appels Gemini — consulter Smart Conso API ET SMART-CONSO-TOKEN avant" },
-  { demande: "Audit global indépendant (code + produit + reprise potentielle)", outils: ["THE-FINAL-JUDGE"], cout: "réel — ~37k tokens fixes par appel (agent séparé, quasi le même quel que soit le palier d'intensité) — consulter Smart Conso API ET SMART-CONSO-TOKEN avant" },
-  { demande: "Sécurité et préparation à la mise en production", outils: ["THE-FINAL-JUDGE (mandat sécurité inclus)"], cout: "réel — ~37k tokens fixes (agent séparé) — consulter Smart Conso API ET SMART-CONSO-TOKEN avant" },
-  { demande: "Vérifier qu'aucune idée/tâche n'a été oubliée dans le suivi (relecture lourde, agent séparé)", outils: ["THE-DEEP-READER"], cout: "réel — ~37k tokens fixes minimum (agent séparé) + volume réel de conversation à relire, jamais un chiffre fixe comme THE-FINAL-JUDGE — consulter Smart Conso API ET SMART-CONSO-TOKEN avant, préférer d'abord la version légère gratuite (docs/systeme-de-suivi.md)" },
-  { demande: "Diagnostiquer un blocage/quota Gemini épuisé (429/503 répétés)", outils: ["Smart Breaker (check-gemini-quota.mjs)"], cout: "gratuit à diagnostiquer — quelques appels Gemini minimaux, coût token négligeable" },
-  { demande: "Réguler ma propre consommation de tokens avant une action coûteuse", outils: ["SMART-CONSO-TOKEN"], cout: "gratuit à consulter — 0 token, 0 appel API" },
-  { demande: "Lancer la ronde périodique des tâches gratuites mal automatisées (profil, référentiels, KPI, ALWAYS-NEW-CODE, correctifs, scans Smart Conso API/SMART-CONSO-TOKEN, photo de la dream team, THE-SCREENER)", outils: ["CIRCLE-TASKS"], cout: "gratuit — sauf si THE-FINAL-JUDGE (visible dans la même fenêtre, ⚠️🔴) est explicitement coché : alors ~37k tokens fixes" },
-  { demande: "État des lieux des tâches en cours (zoom + liste ou arborescence détaillée), rapport HTML", outils: ["check-tasks-details"], cout: "gratuit — lecture seule de docs/suivi/, 0 appel API, coût token = taille du suivi relu" },
-  { demande: "Classer les Articles de CLAUDE.md par sensibilité/importance, repérer une redondance possible avant un allègement", outils: ["CLAUDE.MD.SPY (extension de SMART-CONSO-TOKEN)"], cout: "gratuit — relit CLAUDE.md et le reste du dépôt, 0 appel API" },
+  { nom: "Pack Empreinte", description: "Note la fidélité d'un texte déjà écrit (transcript, extrait) à l'esprit rugueux des personnages.", demande: "Fidélité de l'esprit des personnages (Article 0)", outils: ["EL-PROFESSOR"], cout: "0 appel API — relit un texte déjà produit", tokensEstimes: "variable — proportionnel à la taille du texte relu" },
+  { nom: "Pack Provocation", description: "Envoie 16 provocations réelles au modèle Gemini et affiche les réponses de Lia/Noé pour lecture humaine.", demande: "Diagnostic direct du ton face à une provocation réelle", outils: ["check-spirit.mjs"], cout: "réel — 16 vrais appels Gemini, consulter Smart Conso API avant", tokensEstimes: "modéré — lecture des 16 réponses produites" },
+  { nom: "Pack Vitrine", description: "Capture 2 écrans du rendu 3D réel (session déjà en cours) et les note contre la charte graphique.", demande: "Qualité visuelle du rendu", outils: ["THE-SCREENER"], cout: "0 appel API — capture Playwright locale", tokensEstimes: "faible — lecture vision de 2 images" },
+  { nom: "Pack Blindage", description: "Mesure la couverture de test réelle par fonction (V8) sur les fichiers du dépôt.", demande: "Robustesse et couverture de test réelle", outils: ["AXA-CHECK"], cout: "0 appel API", tokensEstimes: "nul — 0 token, 0 appel API" },
+  { nom: "Pack Chasse", description: "Orchestre ARGUS/HARMONIA/check-house.mjs/le tableau de bord en version légère gratuite ; version complète ajoute une double perspective par agent séparé.", demande: "Chasse aux bugs cachés avant une étape importante", outils: ["HYPER-SCAN-CHECKPOINT"], cout: "version légère : 0 appel API ; version complète : appels Gemini réels — consulter Smart Conso API avant", tokensEstimes: "version légère : faible ; version complète : ~37k tokens fixes (agent séparé) — consulter SMART-CONSO-TOKEN avant" },
+  { nom: "Pack Verdict", description: "Un agent séparé, sans mémoire du projet, incarne un professionnel senior et rend un verdict opiniâtre sur le code et le produit.", demande: "Audit global indépendant (code + produit + reprise potentielle)", outils: ["THE-FINAL-JUDGE"], cout: "0 appel API — agent séparé, jamais de Gemini", tokensEstimes: "~37k tokens fixes par appel (quasi le même quel que soit le palier d'intensité) — consulter Smart Conso API ET SMART-CONSO-TOKEN avant" },
+  { nom: "Pack Bouclier", description: "Même agent séparé que Pack Verdict, mandat explicitement étendu aux risques de sécurité/production.", demande: "Sécurité et préparation à la mise en production", outils: ["THE-FINAL-JUDGE (mandat sécurité inclus)"], cout: "0 appel API — agent séparé, jamais de Gemini", tokensEstimes: "~37k tokens fixes — consulter Smart Conso API ET SMART-CONSO-TOKEN avant" },
+  { nom: "Pack Mémoire Longue", description: "Un agent séparé archiviste relit la conversation entière contre docs/suivi/ pour trouver ce qui n'a jamais été tracé.", demande: "Vérifier qu'aucune idée/tâche n'a été oubliée dans le suivi (relecture lourde, agent séparé)", outils: ["THE-DEEP-READER"], cout: "0 appel API — agent séparé, jamais de Gemini", tokensEstimes: "~37k tokens fixes minimum + volume réel de conversation à relire, jamais un chiffre fixe comme Pack Verdict — consulter Smart Conso API ET SMART-CONSO-TOKEN avant, préférer d'abord la version légère gratuite (docs/systeme-de-suivi.md)" },
+  { nom: "Pack Dépannage", description: "Sonde plusieurs modèles/clés Gemini avec un appel minimal réel pour identifier ce qui est encore disponible.", demande: "Diagnostiquer un blocage/quota Gemini épuisé (429/503 répétés)", outils: ["Smart Breaker (check-gemini-quota.mjs)"], cout: "réel — quelques appels Gemini minimaux de diagnostic", tokensEstimes: "négligeable" },
+  { nom: "Pack Sobriété", description: "Donne un avis fiabilisé avant une action coûteuse en tokens, combinant schémas connus et historique observé.", demande: "Réguler ma propre consommation de tokens avant une action coûteuse", outils: ["SMART-CONSO-TOKEN"], cout: "0 appel API", tokensEstimes: "nul — 0 token, 0 appel API" },
+  { nom: "Pack Ronde", description: "Ouvre la fenêtre à cocher de la Ronde périodique (profil, référentiels, KPI, signaux ALWAYS-NEW-CODE/CLEAN-DIRTY-OLD, scans Smart Conso, catalogue, photo de la dream team, THE-SCREENER).", demande: "Lancer la ronde périodique des tâches gratuites mal automatisées", outils: ["CIRCLE-TASKS"], cout: "0 appel API — sauf si THE-FINAL-JUDGE (⚠️🔴) est explicitement coché", tokensEstimes: "faible à modéré selon la sélection — ~37k tokens fixes seulement si THE-FINAL-JUDGE est explicitement coché" },
+  { nom: "Pack Boussole", description: "Génère l'état des lieux des tâches en cours (zoom + forme liste/arborescence) en rapport HTML, strictement en lecture seule sur docs/suivi/.", demande: "État des lieux des tâches en cours", outils: ["check-tasks-details"], cout: "0 appel API — lecture seule de docs/suivi/", tokensEstimes: "variable — proportionnel à la taille du suivi relu" },
+  { nom: "Pack Espion", description: "Classe chaque Article de CLAUDE.md par sensibilité/importance et repère une redondance possible entre deux règles.", demande: "Préparer un allègement de CLAUDE.md en identifiant les vrais candidats", outils: ["CLAUDE.MD.SPY (extension de SMART-CONSO-TOKEN)"], cout: "0 appel API — relit CLAUDE.md et le reste du dépôt", tokensEstimes: "faible — un seul fichier local relu par le script, pas par l'agent" },
+  { nom: "Pack Rénovation", description: "Repère la zone de code la plus négligée (ALWAYS-NEW-CODE) et la stagnation relative (CLEAN-DIRTY-OLD).", demande: "Dette technique / code qui s'empile plutôt que d'être pensé", outils: ["ALWAYS-NEW-CODE", "CLEAN-DIRTY-OLD"], cout: "0 appel API — raisonnement, pas de Gemini", tokensEstimes: "élevé pour ALWAYS-NEW-CODE (vrai zoom, consulter SMART-CONSO-TOKEN avant) ; nul pour CLEAN-DIRTY-OLD (délègue sans raisonner)" },
+  { nom: "Pack Décollage", description: "Avant de lancer une simulation Article 18 : vérifie le quota Gemini réellement disponible (Smart Conso API) et le carnet des correctifs encore en observation à revalider — jamais combinés avant.", demande: "Contrôle pré-simulation complet (quota + correctifs en attente de confirmation)", outils: ["Smart Conso API", "docs/simulations/correctifs-a-revalider.md"], cout: "0 appel API pour le contrôle lui-même — la simulation qui suit, elle, en fera beaucoup", tokensEstimes: "faible — lecture de deux sorties compactes" },
+  { nom: "Pack Sentinelle", description: "Relance la suite de tests, ARGUS et HARMONIA sur le code réel du commit qui vient d'être fait.", demande: "Vérification rapide après un changement de code", outils: ["check-house.mjs", "ARGUS (mécanique)", "HARMONIA (mécanique)"], cout: "0 appel API, déjà automatique à chaque commit", tokensEstimes: "nul pour l'agent — tourne dans un processus séparé (post-commit), seul le résultat est lu" },
+  { nom: "Pack Éclaireur", description: "Avant de toucher un fichier précis : sa couverture de test réelle (AXA-CHECK), sa stagnation relative (CLEAN-DIRTY-OLD) et sa proximité avec un nœud sensible HARMONIA, en un coup d'œil ciblé — jamais le balayage global de Pack Panorama.", demande: "Contrôle pré-modification d'un fichier précis avant un changement risqué", outils: ["AXA-CHECK", "CLEAN-DIRTY-OLD", "HARMONIA (nœuds sensibles)"], cout: "0 appel API", tokensEstimes: "faible — signal ciblé sur un seul fichier, jamais tout le dépôt" },
+  { nom: "Pack Panorama", description: "Synthèse en un seul tableau des 4 outils noyau (ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD) + le rythme des deux Smart Conso, sur tout le dépôt.", demande: "Vue d'ensemble croisée et gratuite de tout le réseau d'outils avant une décision de priorisation", outils: ["check-house.mjs", "ARGUS", "HARMONIA", "AXA-CHECK", "CLEAN-DIRTY-OLD", "ALWAYS-NEW-CODE (préparation)", "Smart Conso API", "SMART-CONSO-TOKEN"], cout: "0 appel API", tokensEstimes: "modéré à élevé — sortie complète de la synthèse, plus lourd que les autres lignes (relance check-house.mjs avec instrumentation de couverture V8)" },
 ];
 
 export function formatMenu(prestations = PRESTATIONS) {
   const lines = ["| Si tu veux... | Ça déclenche | Coût |", "|---|---|---|"];
   for (const p of prestations) lines.push(`| ${p.demande} | ${p.outils.join(" + ")} | ${p.cout} |`);
   return lines.join("\n");
+}
+
+// Catalogue d'offres nommé, historisé — tâche #154 (2026-09-19, demande explicite : « sur demande,
+// le coordinateur peut produire une version à jour du catalogue d'offres [...] il historise chaque
+// version du catalogue dans un dossier local avec index »). Exception ÉTROITE et explicite au
+// principe général de LE-COORDINATEUR (« jamais de registre dédié », §7ter) : ce catalogue EST un
+// artefact versionné dans le temps, contrairement à la synthèse `runNetworkCheck()` elle-même, qui
+// reste toujours éphémère/live. Une nouvelle version n'est écrite que si son contenu diffère
+// réellement de la dernière déjà archivée (même discipline anti-doublon que `isDuplicateRun()`) —
+// jamais une entrée par simple relance sans rien de neuf.
+//
+// Nom de fichier à la MINUTE, pas au jour (2026-09-21, vrai bug trouvé en conditions réelles : le
+// décalage d'horloge du conteneur — déjà documenté ailleurs dans ce projet — a fait tomber deux
+// vrais changements de contenu, à quelques minutes d'écart, sur la même date calendaire ; un nom de
+// fichier `YYYY-MM-DD.md` a silencieusement écrasé la première version tout en laissant une ligne
+// d'index périmée pointer vers un fichier qui ne correspondait plus à ce qu'elle décrivait). Même
+// convention que les scans ARGUS (`scan-YYYY-MM-DD-HH-MM.txt`), déjà éprouvée dans ce projet pour
+// exactement cette raison.
+export const CATALOGUE_DIR = join(ROOT, "docs/le-coordinateur-catalogue");
+export const CATALOGUE_INDEX_PATH = join(CATALOGUE_DIR, "index.md");
+const CATALOGUE_INDEX_HEADER = "# Catalogue d'offres nommé — historique\n\n*(Cf. docs/regles-de-travail.md §7ter et la tâche #154. Chaque ligne est une version datée (à la minute, cf. commentaire ci-dessus) du catalogue de `PRESTATIONS`, écrite uniquement quand son contenu a réellement changé — jamais une entrée par simple relance sans rien de neuf. Exception étroite au principe général de LE-COORDINATEUR — \"jamais de registre dédié\" — qui reste vrai pour sa synthèse `runNetworkCheck()`, toujours éphémère.)*\n\n| Date | Nombre d'offres | Fichier |\n|---|---|---|\n";
+
+export function renderNamedCatalog(prestations = PRESTATIONS) {
+  const lines = [
+    "| Nom | Description | Si tu veux... | Ça déclenche | Coût API | Coût tokens |",
+    "|---|---|---|---|---|---|",
+  ];
+  for (const p of prestations) {
+    lines.push(
+      `| ${p.nom ?? "—"} | ${p.description ?? "—"} | ${p.demande} | ${p.outils.join(" + ")} | ${p.cout} | ${p.tokensEstimes ?? "—"} |`
+    );
+  }
+  return lines.join("\n");
+}
+
+export function recordCatalog(prestations = PRESTATIONS, now = new Date(), fsImpl = { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync }) {
+  const dateLabel = now.toISOString().slice(0, 10);
+  const timestampLabel = now.toISOString().slice(0, 16).replace(/[:T]/g, "-");
+  const table = renderNamedCatalog(prestations);
+  let latestFile;
+  if (fsImpl.existsSync(CATALOGUE_DIR)) {
+    const files = fsImpl.readdirSync(CATALOGUE_DIR).filter((f) => /^\d{4}-\d{2}-\d{2}-\d{2}-\d{2}\.md$/.test(f)).sort();
+    latestFile = files[files.length - 1];
+  }
+  if (latestFile) {
+    const previousContent = fsImpl.readFileSync(join(CATALOGUE_DIR, latestFile), "utf8");
+    if (previousContent.includes(table)) {
+      return { written: false, message: `Catalogue déjà à jour depuis ${latestFile.replace(".md", "")} — aucun changement réel de PRESTATIONS depuis.` };
+    }
+  }
+  if (!fsImpl.existsSync(CATALOGUE_DIR)) fsImpl.mkdirSync(CATALOGUE_DIR, { recursive: true });
+  const fileName = `${timestampLabel}.md`;
+  fsImpl.writeFileSync(join(CATALOGUE_DIR, fileName), `# Catalogue d'offres nommé — ${dateLabel}\n\n${table}\n`);
+  const indexExisting = fsImpl.existsSync(CATALOGUE_INDEX_PATH) ? fsImpl.readFileSync(CATALOGUE_INDEX_PATH, "utf8") : CATALOGUE_INDEX_HEADER;
+  fsImpl.writeFileSync(CATALOGUE_INDEX_PATH, indexExisting + `| ${dateLabel} | ${prestations.length} | [${fileName}](${fileName}) |\n`);
+  return { written: true, fileName, dateLabel };
+}
+
+// Livraison du catalogue à chaque Ronde CIRCLE-TASKS (2026-09-21, demande explicite de l'utilisateur :
+// « à chaque ronde, en même temps que le rapport de ronde, le coordinateur révèle la version à jour
+// du catalogue d'outils : en format html si c'est un nouveau catalogue jamais produit, en txt si
+// c'est un catalogue qui n'a pas changé »). Réutilise DIRECTEMENT le booléen `written` de
+// recordCatalog() — le signal exact de nouveauté réelle, déjà anti-doublon — jamais une seconde
+// détection de changement divergente construite à côté.
+export function buildCatalogDelivery(recordResult, prestations = PRESTATIONS) {
+  if (recordResult.written) {
+    return {
+      format: "html",
+      content: renderHtmlReport({
+        title: "LE-COORDINATEUR — catalogue d'offres nommé",
+        subtitle: `Nouvelle version réelle du catalogue (${recordResult.dateLabel}) — archivée dans docs/le-coordinateur-catalogue/${recordResult.fileName}.`,
+        dateLabel: recordResult.dateLabel,
+        blocks: [{ type: "table", headers: ["Nom", "Si tu veux...", "Ça déclenche", "Coût"], rows: prestations.map((p) => [p.nom ?? "—", p.demande, p.outils.join(" + "), p.cout]) }],
+        footer: "Catalogue régénéré à chaque Ronde CIRCLE-TASKS — HTML seulement quand son contenu a réellement changé, texte simple sinon.",
+      }),
+    };
+  }
+  return { format: "text", content: `${recordResult.message}\n\n${renderNamedCatalog(prestations)}` };
 }
 
 // GARDE-FOU DE FRAÎCHEUR DU CATALOGUE (2026-09-20, demande explicite de l'utilisateur : « il doit y
@@ -438,6 +561,17 @@ export function runNetworkCheck({ shImpl = sh } = {}) {
 }
 
 function main() {
+  // Sous-commande "catalogue" (tâche #154) : sur demande seulement, jamais mêlée à la synthèse
+  // gratuite ci-dessous — `node scripts/le-coordinateur.mjs catalogue`.
+  if (process.argv[2] === "catalogue") {
+    const result = recordCatalog();
+    console.log("=== LE-COORDINATEUR — catalogue d'offres nommé ===\n");
+    console.log(renderNamedCatalog());
+    console.log("");
+    console.log(result.written ? `✅ Nouvelle version archivée : docs/le-coordinateur-catalogue/${result.fileName}` : `ℹ️  ${result.message}`);
+    return;
+  }
+
   const { duplicate, previousRun, rows } = runNetworkCheck();
   if (duplicate) {
     console.log(`⏭️  Aucun commit nouveau depuis le dernier passage complet (${previousRun.lastWhen}) — relancé quand même, purement informatif.\n`);

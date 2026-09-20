@@ -15,19 +15,19 @@
 //
 // Ses heuristiques ne détectent que les dérives les plus grossières, comme pour check-spirit.mjs :
 // elles ne dispensent jamais de lire le rapport.
+//
+// extractPersonaBlock() et la logique commune de detectGenericReport() (sections manquantes, rapport
+// trop court) vivent désormais dans judge-persona-shared.mjs (2026-09-21, tâche #152) — étaient
+// strictement dupliquées à l'identique avec the-deep-reader.mjs, corrigé une fois plutôt que deux
+// fois divergentes (règle anti-doublon §7ter). Seul le signal propre à CE personnage (citation d'un
+// vrai fichier du dépôt) reste local.
 
 import { renderHtmlReport } from "./html-report.mjs";
+import { extractPersonaBlock, missingSectionsSignal, tooShortSignal } from "./judge-persona-shared.mjs";
+
+export { extractPersonaBlock };
 
 const REPO_PATH_PATTERN = /`((?:docs|lib|app|scripts|components)\/[A-Za-z0-9_.\-/]+\.[A-Za-z0-9]+)`/g;
-
-// Le personnage fixe vit dans un bloc de citation markdown ("> ...") sous le titre "Personnage
-// donné à l'agent séparé" de docs/referentiel/the-final-judge.md — extrait ligne par ligne, jamais
-// recopié à la main ailleurs.
-export function extractPersonaBlock(instantiationText) {
-  const lines = instantiationText.split("\n");
-  const quoted = lines.filter((l) => l.trim().startsWith(">"));
-  return quoted.map((l) => l.replace(/^\s*>\s?/, "")).join("\n").trim();
-}
 
 // Signes structurels d'un rapport générique : jamais un jugement de contenu (impossible à
 // mécaniser, cf. Article 17 corollaire), seulement l'absence de ce que le personnage exige
@@ -36,11 +36,10 @@ export function detectGenericReport(reportText) {
   const signals = [];
   const citations = [...reportText.matchAll(REPO_PATH_PATTERN)];
   if (citations.length === 0) signals.push("aucune référence concrète à un fichier réel du dépôt (le personnage exige de toujours citer des exemples précis)");
-  const fourSections = ["verdict", "positif", "améliorer", "pistes"];
-  const lower = reportText.toLowerCase();
-  const missingSections = fourSections.filter((s) => !lower.includes(s));
-  if (missingSections.length) signals.push("structure attendue en 4 parties incomplète (manque : " + missingSections.join(", ") + ")");
-  if (reportText.trim().length < 400) signals.push("rapport anormalement court pour un audit réel (moins de 400 caractères)");
+  const missing = missingSectionsSignal(reportText, ["verdict", "positif", "améliorer", "pistes"]);
+  if (missing) signals.push(missing);
+  const short = tooShortSignal(reportText, 400, "un audit réel");
+  if (short) signals.push(short);
   return signals;
 }
 

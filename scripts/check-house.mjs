@@ -940,7 +940,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 175'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 179'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3064,7 +3064,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // mise en forme du tableau, lecture d'état injectable) — tout le reste est de l'import direct de
   // fonctions déjà testées ailleurs (ARGUS, HARMONIA, AXA-CHECK, ALWAYS-NEW-CODE, CHECK-LEVEL-TARGET),
   // jamais retesté ici en double (règle anti-doublon, §7ter).
-  const {isDuplicateRun,formatTable,loadState,classifyRequest,formatMenu,PRESTATIONS,runNetworkCheck}=await import('../scripts/le-coordinateur.mjs');
+  const {isDuplicateRun,formatTable,loadState,classifyRequest,formatMenu,PRESTATIONS,runNetworkCheck,renderNamedCatalog,recordCatalog,buildCatalogDelivery,CATALOGUE_DIR,CATALOGUE_INDEX_PATH}=await import('../scripts/le-coordinateur.mjs');
   assert.equal(isDuplicateRun({lastHead:'abc123'},'abc123'),true,'the exact same commit as the last recorded run must be reported as a real duplicate');
   assert.equal(isDuplicateRun({lastHead:'abc123'},'def456'),false,'a genuinely different HEAD commit must never be flagged as a duplicate, however recently the last run happened');
   assert.equal(isDuplicateRun({},'abc123'),false,'a never-before-recorded state must never be treated as a duplicate of nothing');
@@ -3114,6 +3114,51 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const menu=formatMenu([{demande:'Test de menu',outils:['OUTIL-A','OUTIL-B'],cout:'gratuit'}]);
   assert.ok(menu.includes('| Test de menu | OUTIL-A + OUTIL-B | gratuit |'),'formatMenu() must render each entry with its plain-language request, its combined tools, and its real cost, exactly as given — never dropped or reordered');
   console.log('Passed: LE-COORDINATEUR\'s PRESTATIONS menu lists at least the 8 major costly/occasional tools with a plain-language request, real tools triggered and honest cost for each, and formatMenu() renders every entry correctly — the reusable reminder of what can be commanded from the tool network, for the agent and, through it, the user.');
+
+  // Catalogue d'offres nommé, historisé (tâche #154, 2026-09-21) : chaque PRESTATIONS doit porter
+  // un vrai nom, renderNamedCatalog() doit les afficher, et recordCatalog() doit écrire une nouvelle
+  // version SEULEMENT quand le contenu a réellement changé — jamais une entrée par simple relance.
+  assert.ok(PRESTATIONS.every((p) => typeof p.nom === 'string' && p.nom.length > 0), 'every single real prestation must carry a real, non-empty name — never a silently missing one on a future addition');
+  const namedCatalog = renderNamedCatalog([{ nom: 'Pack Test', description: 'Fait un test.', demande: 'Faire un test', outils: ['OUTIL-A'], cout: 'gratuit', tokensEstimes: 'nul' }]);
+  assert.ok(namedCatalog.includes('| Pack Test | Fait un test. | Faire un test | OUTIL-A | gratuit | nul |'), 'renderNamedCatalog() must render each prestation\'s real name, description, request/tools and BOTH cost dimensions (API cost and Claude token cost) separately, never merge them into a single column nor omit either');
+  const namedCatalogMissingFields = renderNamedCatalog([{ nom: 'Pack Sans Description', demande: 'x', outils: ['OUTIL-B'], cout: 'gratuit' }]);
+  assert.ok(namedCatalogMissingFields.includes('| Pack Sans Description | — | x | OUTIL-B | gratuit | — |'), 'a prestation missing description/tokensEstimes (e.g. a fixture built before this restructuring) must render an honest em-dash placeholder rather than crashing or printing "undefined"');
+  const fakeCatalogFs = {
+    files: {},
+    existsSync(p) { return p in this.files || Object.keys(this.files).some((f) => f.startsWith(p + '/')); },
+    mkdirSync() {},
+    readdirSync(dir) { return Object.keys(this.files).filter((f) => f.startsWith(dir + '/')).map((f) => f.slice(dir.length + 1)); },
+    readFileSync(p) { return this.files[p]; },
+    writeFileSync(p, content) { this.files[p] = content; },
+  };
+  const firstWrite = recordCatalog([{ nom: 'Pack Un', demande: 'x', outils: ['A'], cout: 'gratuit' }], new Date('2026-09-21T00:00:00Z'), fakeCatalogFs);
+  assert.ok(firstWrite.written, 'the very first catalog snapshot must always be written — there is nothing yet to compare it against');
+  assert.ok(fakeCatalogFs.files[path.join(CATALOGUE_DIR, '2026-09-21-00-00.md')]?.includes('Pack Un'), 'the dated snapshot file must actually contain the real rendered catalog, never an empty placeholder');
+  assert.ok(fakeCatalogFs.files[CATALOGUE_INDEX_PATH]?.includes('2026-09-21'), 'the index must gain a real row for this new dated snapshot');
+  const sameContentWrite = recordCatalog([{ nom: 'Pack Un', demande: 'x', outils: ['A'], cout: 'gratuit' }], new Date('2026-09-22T00:00:00Z'), fakeCatalogFs);
+  assert.equal(sameContentWrite.written, false, 'a second call with genuinely unchanged PRESTATIONS content must never write a redundant new snapshot, even on a later date — the whole anti-doublon point of this mechanism');
+  const changedContentWrite = recordCatalog([{ nom: 'Pack Deux', demande: 'y', outils: ['B'], cout: 'réel' }], new Date('2026-09-22T00:00:00Z'), fakeCatalogFs);
+  assert.ok(changedContentWrite.written, 'a genuinely changed PRESTATIONS content must always produce a new dated snapshot, never silently skipped just because a previous one exists');
+  // Bug réel trouvé en conditions réelles le 2026-09-21 (décalage d'horloge du conteneur, deux vrais
+  // changements tombés sur la même date calendaire) : le nom de fichier doit inclure l'heure/minute,
+  // jamais seulement la date, sous peine d'écraser silencieusement une version précédente tout en
+  // laissant une ligne d'index périmée pointer vers un fichier qui ne correspond plus à ce qu'elle
+  // décrit — même convention que les scans ARGUS (scan-YYYY-MM-DD-HH-MM.txt).
+  const sameDayDifferentMinute = recordCatalog([{ nom: 'Pack Trois', demande: 'z', outils: ['C'], cout: 'réel' }], new Date('2026-09-22T00:05:00Z'), fakeCatalogFs);
+  assert.ok(sameDayDifferentMinute.written && sameDayDifferentMinute.fileName !== changedContentWrite.fileName, 'two genuinely different changes on the exact same calendar day must never collide into the same filename and silently overwrite each other — the exact real bug found tonight, caused by the container\'s already-documented clock lag');
+  assert.ok(fakeCatalogFs.files[path.join(CATALOGUE_DIR, changedContentWrite.fileName)]?.includes('Pack Deux'), 'the earlier same-day snapshot must still exist on disk, untouched, after a later same-day snapshot is written');
+  console.log('Passed: the named, historized catalog (task #154) gives every real prestation an actual name, renderNamedCatalog() surfaces it in its own table distinct from the everyday formatMenu() reminder, recordCatalog() only ever writes a new snapshot (plus its index row) when the content genuinely changed, and — the real 2026-09-21 fix — filenames carry minute precision so two real same-day changes never collide and silently overwrite each other, a narrow, explicit exception to LE-COORDINATEUR\'s general "no dedicated registry" rule, verified against an injected fake filesystem rather than the real disk.');
+
+  // buildCatalogDelivery() (2026-09-21, demande explicite : « en format html si c'est un nouveau
+  // catalogue jamais produit, en txt si c'est un catalogue qui n'a pas changé »). Réutilise
+  // directement le booléen `written` déjà produit ci-dessus, jamais une seconde détection.
+  const htmlDelivery = buildCatalogDelivery(firstWrite, [{ nom: 'Pack Un', demande: 'x', outils: ['A'], cout: 'gratuit' }]);
+  assert.equal(htmlDelivery.format, 'html', 'a genuinely new/changed catalog (written:true) must be delivered as a real HTML report, per the explicit user request');
+  assert.ok(htmlDelivery.content.includes('Pack Un') && htmlDelivery.content.includes('<html') , 'the HTML delivery must actually contain the real catalog data inside a real HTML document, never an empty shell');
+  const textDelivery = buildCatalogDelivery(sameContentWrite, [{ nom: 'Pack Un', demande: 'x', outils: ['A'], cout: 'gratuit' }]);
+  assert.equal(textDelivery.format, 'text', 'an unchanged catalog (written:false) must be delivered as plain text, never a needlessly regenerated HTML page');
+  assert.ok(!textDelivery.content.includes('<html') && textDelivery.content.includes('Pack Un'), 'the text delivery must still show the real current catalog table, just never wrapped in HTML markup');
+  console.log('Passed: buildCatalogDelivery() (task #154 follow-up) delivers the named catalog as real HTML exactly when recordCatalog() reports a genuine new version, and as plain text otherwise — reusing that exact written flag rather than a second, potentially diverging change-detection.');
 
   // Garde-fou de fraîcheur du catalogue (2026-09-20, demande explicite de l'utilisateur : « il doit
   // y avoir un test dédié pour être sûr que le catalogue est bien mis à jour [...] quand un nouvel
@@ -3539,14 +3584,17 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     shouldRemindCircleTasks, REMINDER_COMMIT_THRESHOLD, ALERT_ICON, FINAL_JUDGE_TOKEN_COST,
     THEME_ORDER, groupCircleReportByTheme, checkHtmlWiring, oldestOpenTaskDate,
     buildCircleRunSummaryText, findRegistriesMissingFromCircle, CIRCLE_EXCLUDED_REGISTRIES,
+    recommendCircleSelection, NOT_RECOMMENDED_BY_DEFAULT,
   } = await import('../scripts/circle-tasks.mjs');
   const { walkDocsPaths } = await import('../scripts/lib-shell.mjs');
 
-  assert.equal(CIRCLE_ITEMS.length, 17, 'CIRCLE_ITEMS must list exactly the 15 free periodic items (profil, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, dream-team-photo, THE-SCREENER, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run) plus THE-FINAL-JUDGE and its cousin THE-DEEP-READER, never silently gaining or losing an entry');
+  assert.equal(CIRCLE_ITEMS.length, 18, 'CIRCLE_ITEMS must list exactly the 16 free periodic items (profil, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, dream-team-photo, THE-SCREENER, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run, coordinateur-catalogue) plus THE-FINAL-JUDGE and its cousin THE-DEEP-READER, never silently gaining or losing an entry');
   const profilGuardItem = CIRCLE_ITEMS.find((i) => i.id === 'profil-utilisateur-guard');
   assert.ok(profilGuardItem && !profilGuardItem.costly && profilGuardItem.theme === 'Passages réels (smoke run)', '2026-09-21 addition: the real check-profil-utilisateur.mjs smoke run must be free and live in its own "smoke run" theme, distinct from the "profil" item which writes a new observation rather than verifying disk integrity');
   const networkCheckItem = CIRCLE_ITEMS.find((i) => i.id === 'network-check-run');
   assert.ok(networkCheckItem && !networkCheckItem.costly && networkCheckItem.theme === 'Passages réels (smoke run)', '2026-09-21 addition: a real runNetworkCheck() pass must be free (no separate agent spawn) and must never be bundled into "Audit lourd", a theme reserved for the two costly agent-spawn items');
+  const catalogueItem = CIRCLE_ITEMS.find((i) => i.id === 'coordinateur-catalogue');
+  assert.ok(catalogueItem && !catalogueItem.costly && catalogueItem.theme === 'Passages réels (smoke run)', '2026-09-21 addition: hooking LE-COORDINATEUR\'s named catalog into every Ronde from the start, alongside the other real smoke-run passages, per explicit user request');
   const judgeItem = CIRCLE_ITEMS.find((i) => i.id === 'the-final-judge');
   assert.ok(judgeItem && judgeItem.costly === true, 'THE-FINAL-JUDGE must be present in the same checklist (explicit 2026-09-20 reversal of the initial "keep it out entirely" design) but flagged costly, never treated as an ordinary free item');
   assert.ok(judgeItem.cout.includes(String(FINAL_JUDGE_TOKEN_COST / 1000) + ' 000') || judgeItem.cout.includes('37'), 'THE-FINAL-JUDGE\'s cost label must state the real fixed token cost in plain text, never a vague "expensive" with no number');
@@ -3577,7 +3625,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const suiviCategorized = { terminee: [], enCours: [{ cells: ['1', '2026-09-15T00:00:00Z', 'x', 'x', 'x', 'x', 'en cours'] }], ouverte: [{ cells: ['2', '2026-09-18T00:00:00Z', 'x', 'x', 'x', 'x', 'ouverte'] }], autre: [] };
   const sampleClaudeMdText = 'x'.repeat(200) + '\n*(ajouté le 2026-09-19, test)*\n*(ajouté le 2026-09-20, test)*\n';
   const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText: emptyAlwaysNewCode, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText: sampleClaudeMdText }, now);
-  assert.equal(report.length, 17, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one');
+  assert.equal(report.length, 18, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one');
   assert.equal(report.find((r) => r.id === 'claude-md-weight-signal').staleness, '66 tokens estimés, niveau "faible" — 2 aside(s) narrative(s) datée(s) encore réductible(s)', 'the CLAUDE.md weight signal must reuse the real SMART-CONSO-TOKEN scan functions live (never a second parser), reporting both the honest token estimate and the real count of still-reducible dated asides found in the actual text passed in');
   assert.equal(buildCircleReport({}, now).find((r) => r.id === 'claude-md-weight-signal').staleness, 'pas de signal disponible (CLAUDE.md non fourni)', 'with no CLAUDE.md text supplied at all, the signal must report an honest absence rather than crash or fabricate a number');
   assert.equal(report.find((r) => r.id === 'clean-dirty-old-signal').staleness, '1 jour(s) depuis le dernier passage journalisé', 'the CLEAN-DIRTY-OLD signal must compute its own staleness from its own real index text, distinct from every other source');
@@ -3616,6 +3664,19 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(grouped.every((g) => g.items.length <= 4), 'every theme group must fit within the real 4-options-per-question UI limit, the whole reason this grouping exists');
   assert.deepEqual(grouped.at(-1).items.map((i) => i.id), ['the-final-judge', 'the-deep-reader'], 'the last "Audit lourd" group must contain exactly THE-FINAL-JUDGE and its cousin THE-DEEP-READER, both costly, never bundled with a free item from another theme');
   assert.deepEqual(groupCircleReportByTheme([{ id: 'mystere', theme: 'Thème inconnu' }]).map((g) => g.theme), ['Autre'], 'an item with a theme outside the known list must fall into an honest "Autre" catch-all, never silently disappear from the grouping');
+
+  // recommendCircleSelection() (tâche #155, 2026-09-21) : encode explicitement la sélection déjà
+  // pratiquée à la main lors des deux vraies Rondes #225/#231 — jamais une règle inférée à l'aveugle
+  // depuis les champs texte libres.
+  const recommended = recommendCircleSelection(report);
+  assert.ok(recommended.find((r) => r.id === 'profil').recommande, 'a real, cheap, mechanically-signaled item like profil must be recommended by default, matching real past Ronde practice');
+  assert.ok(!recommended.find((r) => r.id === 'referentiel').recommande, 'the exhaustive reference reread must never be recommended by default despite being free of API calls — it is still costly in agent tokens, exactly why it was excluded from both real past Rondes');
+  assert.ok(!recommended.find((r) => r.id === 'dream-team-photo').recommande, 'the purely recreational item must never be recommended by default');
+  assert.ok(!recommended.find((r) => r.id === 'the-screener').recommande, 'the session-conditional item must never be recommended by default, since this mechanism has no way to verify a live server session exists');
+  assert.ok(!recommended.find((r) => r.id === 'the-final-judge').recommande && !recommended.find((r) => r.id === 'the-deep-reader').recommande, 'both costly agent-spawn items must never be recommended by default, consistent with their already-established costly treatment');
+  assert.equal(recommended.find((r) => r.id === 'referentiel').raisonExclusion, NOT_RECOMMENDED_BY_DEFAULT.referentiel, 'an excluded item must carry its own documented reason verbatim, never a silent exclusion with no explanation');
+  assert.equal(recommended.find((r) => r.id === 'profil').raisonExclusion, undefined, 'a recommended item must carry no exclusion reason at all, never a fabricated empty string');
+  assert.equal(recommended.length, report.length, 'recommendCircleSelection() must annotate every real item from the report, never drop or add one');
 
   // buildCircleRunSummaryText() (2026-09-20, trou trouvé par l'utilisateur : « je n'ai pas eu de
   // rapport à la fin de la ronde, c'est voulu ? » — non, main() n'affichait que le menu AVANT
@@ -3844,6 +3905,21 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(finalJudgeHtml.includes('<pre><code>') && finalJudgeHtml.includes('Audit test'), 'buildFinalJudgeReportHtml() must wrap the free-form prose report in a "code" block (preserving line breaks) under the given title, never reformat or summarize it');
   assert.ok(finalJudgeHtml.includes('ligne 1') && finalJudgeHtml.includes('ligne 2'), 'the full report text must appear verbatim in the HTML, never truncated or paraphrased');
   console.log('Passed: THE-FINAL-JUDGE\'s two mechanical guards work correctly — extractPersonaBlock() pulls the exact fixed persona text from its single source of truth with nothing added or lost, and detectGenericReport() flags a report with no concrete file citations, missing required sections, or abnormal brevity, while never flagging a real, specific, properly structured report — the mechanical protection against the persona drifting toward a generic, standard tone; and — the 2026-09-20 task #144 fix — buildFinalJudgeReportHtml() wraps the free-form prose report verbatim in a "code" block (never "paragraph", which would collapse every line break into one wall of text) under the real point of integration this script always lacked, since it has no main() of its own.');
+}
+{
+  // judge-persona-shared.mjs (2026-09-21, tâche #152) : extractPersonaBlock() et la logique commune
+  // de detectGenericReport() étaient strictement dupliquées entre the-final-judge.mjs et
+  // the-deep-reader.mjs — factorisées ici une fois, corrigeant l'écart plutôt que de le laisser
+  // diverger silencieusement. Ce test vérifie le module partagé directement, en plus des deux tests
+  // ci-dessus/ci-dessous qui vérifient que chaque fichier appelant produit toujours EXACTEMENT le
+  // même comportement qu'avant ce refactor (aucune régression de comportement observable).
+  const { extractPersonaBlock: sharedExtractPersona, missingSectionsSignal, tooShortSignal } = await import('../scripts/judge-persona-shared.mjs');
+  assert.equal(sharedExtractPersona('Intro.\n\n> Une phrase.\n> Une autre.\n\nHors bloc.'), 'Une phrase.\nUne autre.', 'the shared extractPersonaBlock() must pull exactly the blockquoted lines, the single source of truth both the-final-judge.mjs and the-deep-reader.mjs now import rather than each keeping its own identical copy');
+  assert.equal(missingSectionsSignal('ceci contient verdict et positif', ['verdict', 'positif']), undefined, 'a report containing every required section must report an honest absence of this signal, never a false positive');
+  assert.ok(missingSectionsSignal('ceci contient seulement verdict', ['verdict', 'positif']).includes('positif'), 'a report missing one of several required sections must name exactly the missing one(s), never a vague generic message');
+  assert.equal(tooShortSignal('un texte suffisamment long pour ne rien signaler ici', 10, 'un test'), undefined, 'a report at or above the minimum length must report an honest absence, never a false positive');
+  assert.ok(tooShortSignal('court', 100, 'un audit réel').includes('un audit réel'), 'a report below the minimum length must name the caller-supplied label in its message, never a generic one-size-fits-all wording — the whole reason this stays a parameter rather than a hardcoded string');
+  console.log('Passed: judge-persona-shared.mjs correctly centralizes extractPersonaBlock() (the exact single source of truth both THE-FINAL-JUDGE and THE-DEEP-READER now import) and the two generic-report signals they share (missing sections, named explicitly; report too short, labeled per caller) — closing the real duplication task #152 was opened for, verified live to preserve each caller\'s exact prior observable behavior.');
 }
 {
   // THE-DEEP-READER (2026-09-20, cf. scripts/the-deep-reader.mjs et docs/referentiel/the-deep-reader.md).

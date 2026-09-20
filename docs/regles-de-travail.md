@@ -198,6 +198,20 @@ seule ne révèle pas (ex. le Point 2, retrouvé par une lecture directe du code
 requêtes, pas par une différence visible entre deux transcripts). L'agent l'essaie en priorité
 quand une version de référence existe, sans jamais s'y arrêter si elle ne suffit pas à conclure.
 
+**Tout rapport produit doit être lu en entier par l'agent lui-même, jamais seulement livré.**
+*(Ajouté le 2026-09-21, à la demande explicite de l'utilisateur, pendant la conception du catalogue
+LE-COORDINATEUR : « rappel : quand un rapport est produit, tu dois le lire entièrement aussi ».)*
+Généralise une discipline déjà pratiquée ponctuellement pour certains outils (ex. check-tasks-details :
+« rapport toujours livré en fichier séparé ET lu en entier avant de répondre ») à TOUT rapport que
+l'agent produit ou fait produire — jamais réservé à un seul outil. Concrètement : avant de répondre à
+l'utilisateur après avoir généré un rapport (HTML, texte, ou tout autre format), l'agent le relit
+lui-même intégralement, pas seulement son résumé ou son titre — la lecture réelle du contenu, jamais
+supposée inutile parce que l'agent "sait déjà ce qu'il a écrit dedans" (un rapport peut agréger des
+données calculées mécaniquement, jamais vraiment lues avant cet instant). Quand ce rapport est
+produit à répétition (ex. le catalogue LE-COORDINATEUR à chaque Ronde CIRCLE-TASKS), cette lecture
+donne matière à un commentaire court et réel dans la conversation elle-même — jamais un rapport
+livré en silence sans que l'agent n'en dise rien.
+
 ## 7bis. Rendre compte des progrès de l'outillage interne (ex. « Smart Breaker », l'outil quota Gemini)
 
 *(Nom d'usage « Smart Breaker » donné le 2026-09-19 à la demande explicite de l'utilisateur, pour
@@ -1059,10 +1073,16 @@ de se terminer, combien de commits depuis le dernier passage). Nouvelle règle :
 déclenchement, l'agent lit d'abord les signaux de fraîcheur déjà calculés par `buildCircleReport()`
 et propose une sélection déjà calibrée, marquée « recommandé », plutôt que de renvoyer le menu brut
 sans avis — le reste des items reste visible et cochable pour qui veut une ronde plus large ou plus
-poussée, jamais retiré de la fenêtre. Reste à construire (mise en file, pas encore implémenté au
-moment de cette règle) : une fonction dédiée qui transforme les signaux de fraîcheur déjà présents
-dans `buildCircleReport()` en une sélection par défaut, plutôt qu'un jugement refait à la main à
-chaque fois — cf. le carnet de tâches pour son suivi.
+poussée, jamais retiré de la fenêtre. **Construit le 2026-09-21 (tâche #155)** :
+`recommendCircleSelection()` (`scripts/circle-tasks.mjs`) encode explicitement cette sélection —
+`NOT_RECOMMENDED_BY_DEFAULT` exclut, chacun avec sa propre raison écrite (même style que
+`CIRCLE_EXCLUDED_REGISTRIES`) : la relecture exhaustive du référentiel (gratuite en appel API mais
+coûteuse en tokens de l'agent), l'item purement récréatif (photo de la dream team), l'item
+conditionnel à une session déjà en cours (THE-SCREENER, jamais vérifiable mécaniquement par cet
+outil), et les deux items costly (déjà exclus par défaut de longue date). Tout le reste de
+CIRCLE_ITEMS est recommandé par défaut. Remplace le jugement refait à la main à chaque Ronde
+(#225/#231) par une règle codée, testée et ajustable si la pratique réelle diverge un jour — jamais
+gravée dans le marbre pour autant.
 
 **Garde-fou en 2 temps, non négociable (2026-09-20, trouvé nécessaire après un vrai manquement :
 une Ronde entière exécutée sans jamais montrer de fenêtre à cocher — l'agent avait substitué son
