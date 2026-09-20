@@ -622,6 +622,26 @@ vérifier une par une qu'elles ont un point de code réel qui leur correspond, e
 (`check-house.mjs` ou équivalent) échouerait si ce câblage disparaissait — sinon, ce n'est pas fini,
 c'est en cours.
 
+**Un nouvel Agent n'est intégré que lorsque DEUX volets sont faits, jamais un seul (2026-09-20,
+demande explicite de l'utilisateur : « je veux que lorsqu'un nouvel employé est identifié, cassandra
+le consigne et le coordinateur fait son accueil opérationnel au sein de l'équipe »).** Volet
+administratif : CASSANDRA-RH consigne le nouvel Agent dans la liste de l'équipe (exigence déjà
+actée pour elle, cf. tâche de calibrage dédiée — **volet en attente, CASSANDRA-RH n'est pas encore
+construite**, jamais présenté comme fait tant que ce n'est pas vrai). Volet opérationnel :
+`checkAgentOnboarding()` (LE-COORDINATEUR, ci-dessus) rapporte `complet: true`. Jamais un troisième
+script pour orchestrer les deux (anti-duplication) — une règle explicite suffit, appliquée par
+l'agent qui pilote juste après avoir fini de construire un nouvel Agent.
+
+**Précision honnête, en réponse à une question directe de l'utilisateur sur la détection de
+doublons de FONCTIONS entre outils (2026-09-20)** : contrairement à ce qu'on pourrait supposer,
+rien de mécanique ne vérifie aujourd'hui qu'une nouvelle fonction ne duplique pas une fonction
+existante ailleurs dans le paysage — ni ARGUS (absences), ni HARMONIA (contradictions doc/code), ni
+CLEAN-DIRTY-OLD (stagnation) ne couvrent ce cas précis. La seule protection réelle aujourd'hui est
+la discipline manuelle de l'Article 19/doctrine anti-doublon (consulter
+`suggestPrestationsForTask()` et relire le code existant avant de construire), jamais un garde-fou
+automatique — à ne pas présenter comme « déjà vérifié en amont » tant qu'aucun outil ne le fait
+réellement.
+
 **Fixer une règle quand elle en a besoin, sans attendre qu'on le demande.** *(Même échange,
 demande explicite : « n'hésite pas à me dire quand tu sens qu'une règle doit être fixée, pour le
 bien du projet ».)* Quand l'agent repère, en travaillant, un vrai point de méthode qui mériterait
