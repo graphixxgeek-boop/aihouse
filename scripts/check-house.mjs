@@ -940,7 +940,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 187'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 188'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4517,7 +4517,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // (docs/suivi #230), jamais celui qui la prend. Testé avec un readFileImpl injecté et un
   // sous-ensemble isolé de registres — jamais dépendant du contenu réel des scripts du dépôt, qui
   // peut changer indépendamment de ce test.
-  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex } = await import('../scripts/doc-report.mjs');
+  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex, LOCAL_JOURNALS, auditLocalJournals, findJournalsMissingFromGitignore } = await import('../scripts/doc-report.mjs');
   assert.ok(REGISTRIES.length >= 15, 'the registry table must cover every real tool registry of the network, never a partial or forgotten subset');
   assert.ok(REGISTRIES.every((r) => r.slug && r.label && r.family && r.path && r.decision), 'every registry entry must be fully specified — a half-filled row would silently break the family grouping or the decision audit');
 
@@ -4550,6 +4550,25 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(byFamily.get('Test').length, 4, 'rows must be grouped by their declared family, never flattened or regrouped by a guessed criterion');
   assert.deepEqual(mismatches.map((m) => m.slug), ['unwired-html-tool'], 'the top-level mismatches list must surface exactly the real HTML-wiring gap, ready for a human/agent to read — Doc-Report itself never fixes it');
   console.log('Passed: Doc-Report (task #165) mechanically audits the already-decided HTML/texte choice against the real producing script\'s source (never guessed from a tool\'s name), flags an undeclared docs/ registry as a real gap while sparing the reference/suivi folders, and cross-references tool-usage.mjs\'s real usage history to spot a registry nobody ever solicits — a genuine wiring gap (THE-DEEP-READER, Simulations) was found on its very first real run against the live repository.');
+
+  // LOCAL_JOURNALS (2026-09-21, direct question from the user: is Doc-Report itself capable of
+  // organizing the local, never-committed state files too, or does a twin tool need to?). Answer:
+  // same tool, same module — tested with injected fs functions, never the real filesystem timing.
+  assert.ok(LOCAL_JOURNALS.length >= 8, 'the local journal table must cover every real gitignored state/cache file the tool network actually produces, never a partial subset');
+  assert.ok(LOCAL_JOURNALS.every((j) => j.path && j.owner && j.purpose), 'every journal entry must be fully specified — a half-filled row would silently break the audit or the gitignore cross-check');
+  const fakeJournals = [{ path: '.fake-present.json', owner: 'X', purpose: 'y' }, { path: '.fake-absent.json', owner: 'X', purpose: 'y' }];
+  const fixedNow = 1_700_000_000_000;
+  const auditedJournals = auditLocalJournals(fakeJournals, {
+    existsImpl: (p) => p === '.fake-present.json',
+    statImpl: () => ({ mtimeMs: fixedNow - 2 * 86_400_000 }),
+  });
+  assert.deepEqual(auditedJournals.map((j) => j.present), [true, false], 'a journal that genuinely exists on disk must report present:true with a real age, and one that was never written must report present:false — never fabricating an age of 0 for a file that simply does not exist yet');
+  assert.equal(auditedJournals[1].ageDays, undefined, 'an absent journal must report an honest undefined age, never a fabricated zero that would misleadingly read as "just written"');
+
+  assert.deepEqual(findJournalsMissingFromGitignore('.env*\n.fake-present.json\n', fakeJournals), ['.fake-absent.json'], 'a journal genuinely absent from .gitignore\'s real text must be flagged as a real leak risk, while one genuinely present must never be flagged');
+  const { readFileSync: readFileSyncForGitignore } = await import('node:fs');
+  assert.deepEqual(findJournalsMissingFromGitignore(readFileSyncForGitignore(new URL('../.gitignore', import.meta.url), 'utf8'), LOCAL_JOURNALS), [], 'checked live against the project\'s own real .gitignore: every real local journal this project actually produces must already be declared, a guarantee that breaks the day a new journal is added without it');
+  console.log('Passed: Doc-Report\'s local-journal extension (2026-09-21) answers the user\'s direct question — the SAME tool, never a twin — inventories every real gitignored state/cache file the tool network produces (owner, purpose, real filesystem mtime age, honest absence for one never yet written), and cross-checks live that every one of them is genuinely declared in .gitignore, catching a real leak risk before it ever reaches a commit.');
 }
 
 {
@@ -4603,7 +4622,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // INES-official (tâche #168, 2026-09-21) : la "secrétaire" qui aplatit + annote le dépôt, jamais
   // une réécriture réelle. Testé avec un système de fichiers entièrement injecté — jamais un vrai
   // balayage du dépôt réel dans les tests, qui serait lent et non déterministe d'une session à l'autre.
-  const { FLATTEN_SCOPES, collectSourceFiles, annotateFile, buildTableOfContents, buildConsolidatedEdition, nextEditionVersion, buildIndexRow, recordEdition } = await import('../scripts/ines-official.mjs');
+  const { FLATTEN_SCOPES, collectSourceFiles, annotateFile, buildTableOfContents, buildConsolidatedEdition, nextEditionVersion, buildIndexRow, recordEdition, buildEditionSummary, renderEditionSummary } = await import('../scripts/ines-official.mjs');
   assert.deepEqual(FLATTEN_SCOPES, ['code', 'code_et_docs'], 'the two real scopes must stay exactly these two, in this order — a caller choosing a scope by name must never silently mismatch');
   assert.throws(() => collectSourceFiles('inconnu'), /périmètre inconnu/, 'an unknown scope must throw immediately rather than silently falling back to an arbitrary default');
 
@@ -4622,6 +4641,23 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 
   const edition = buildConsolidatedEdition({ scope: 'code', files: ['a.ts'], annotations: { 'a.ts': 'x' }, version: 3, date: '2026-09-21', readFileImpl: () => 'contenu réel' });
   assert.ok(edition.includes('# INES-official — édition v3 (2026-09-21)') && edition.includes('## Table des matières') && edition.includes('1. a.ts — x') && edition.includes('contenu réel'), 'the consolidated edition must carry the real version/date header, the real table of contents, and the real file content verbatim — the "oui maintenant" dating/versioning enrichment requested at calibration');
+  assert.ok(edition.includes('Résumé indisponible pour cette édition.'), 'an edition built with no summary object at all must say so honestly rather than silently omitting the whole section');
+
+  // Rapport de synthèse (2026-09-21, demande explicite de l'utilisateur pendant la construction :
+  // « elle fait ses commentaires [...] donne des chiffres intéressants, pertinents sur le code [...]
+  // elle reprend aussi les données fournies par cassandra sur les KPI »). Strictement descriptif,
+  // jamais un jugement (ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD gardent ce rôle).
+  const summary = buildEditionSummary(['a.ts', 'b.ts', 'c.md'], { staleDaysByFile: { 'a.ts': 2, 'b.ts': 10 }, sizeByFile: { 'a.ts': 500, 'b.ts': 1500, 'c.md': 300 } });
+  assert.deepEqual(summary.byExtension, { '.ts': 2, '.md': 1 }, 'the extension breakdown must count every real file by its real extension, never guessed');
+  assert.equal(summary.neverCommittedCount, 1, 'a file with no known staleness (never committed) must be counted honestly as such, distinct from a file genuinely aged 0 days');
+  assert.deepEqual(summary.oldestFile, { path: 'b.ts', days: 10 }, 'the oldest file must be the real maximum staleness among files that DO have a known date, never confused by an unknown-date file');
+  assert.equal(summary.averageStaleDays, 6, 'the average staleness must be computed only over files with a real known date, never diluted by an unknown one counted as zero');
+  assert.equal(summary.totalSizeBytes, 2300, 'the total size must sum every real per-file size supplied, never recomputed by re-reading files a third time');
+  assert.equal(summary.kpiFromCassandra, null, 'with no CASSANDRA-RH data supplied (it does not exist yet), the KPI hook must stay an honest null, never a fabricated number');
+  const rendered = renderEditionSummary(summary).join('\n');
+  assert.ok(rendered.includes('CASSANDRA-RH n\'est pas encore construite'), 'the rendered summary must explicitly name the real reason the KPI section is empty — a future reader must never mistake this for a bug or an omission');
+  const renderedWithKpi = renderEditionSummary({ ...summary, kpiFromCassandra: '1200 visites/mois' }).join('\n');
+  assert.ok(renderedWithKpi.includes('repris de CASSANDRA-RH') && renderedWithKpi.includes('1200 visites/mois'), 'once CASSANDRA-RH data is genuinely supplied, the summary must present it as REUSED from CASSANDRA-RH, never recomputed by INES-official itself — the exact anti-duplication discipline already applied elsewhere in this project (Doc-Report/tool-usage.mjs)');
   const editionUnreadable = buildConsolidatedEdition({ scope: 'code', files: ['missing.ts'], annotations: {}, version: 1, date: '2026-09-21', readFileImpl: () => { throw new Error('ENOENT'); } });
   assert.ok(editionUnreadable.includes('fichier illisible'), 'a file that genuinely fails to read at edition time must be reported honestly inline, never crash the whole edition');
 
@@ -4641,6 +4677,8 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.equal(result.version, 1, 'the first real edition of a scope with no prior index history must be version 1');
     assert.ok(result.latestPath.includes('ines-official-latest-code') && written[result.latestPath], 'the full body must be written to the local, scope-named latest file — never silently dropped');
     assert.ok(result.row.includes('v1') && result.row.includes('code seul'), 'the returned metadata row must be ready to append to the committed index as-is, never requiring the caller to reformat it');
+    assert.ok(written[result.latestPath].includes('## Résumé'), 'the written edition body must genuinely embed the summary section, never just the raw file dump');
+    assert.equal(result.summary.kpiFromCassandra, null, 'recordEdition() called with no kpiFromCassandra override must default to an honest null, never silently fabricate one');
   }
   console.log('Passed: INES-official (task #168) collects real files by an explicit extension/root whitelist per scope (never a blacklist, and never pulling in docs/ under the "code" scope or a non-source extension under either scope), builds a real numbered table of contents and a dated/versioned consolidated edition (the two "oui maintenant" enrichments), reports an honest inline notice for a file that genuinely fails to read rather than crashing the whole edition, computes the real next version from the actual highest version found in the index regardless of row order, and keeps the potentially multi-megabyte edition body local while returning only a light, ready-to-append metadata row for the committed index — the real disk economy already applied elsewhere in this project to the raw simulation log.');
 }

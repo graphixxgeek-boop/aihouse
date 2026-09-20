@@ -22,12 +22,51 @@
 // AGENT_SCRIPT_FILES d'axa-check.mjs — un registre non listé ici est lui-même un gap réel (cf.
 // findRegistriesMissingDecision()), jamais une raison de deviner sa famille.
 
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { toolsNeverUsed } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
+
+// LOCAL_JOURNALS (2026-09-21, question directe de l'utilisateur : « doc-report est-il aussi
+// capable d'organiser les journaux locaux, ou faut-il un outil jumeau ? »). Réponse tranchée : le
+// MÊME outil, jamais un jumeau — le domaine est identique (inventaire de ce que le réseau d'outils
+// produit), seul le TYPE d'artefact diffère. Distinct de REGISTRIES : ces fichiers ne sont JAMAIS
+// committés (état/cache local, gitignored, perdu à chaque nouveau conteneur d'exécution) — jamais
+// suivis par git, donc jamais par lastTouchDays()/git log ; leur fraîcheur se lit via l'horodatage
+// du système de fichiers lui-même (mtime).
+export const LOCAL_JOURNALS = [
+  { path: ".gemini-key-health.json", owner: "Smart Breaker", purpose: "historique de santé des clés/modèles Gemini" },
+  { path: ".smart-conso-session.json", owner: "Smart Conso API", purpose: "état de session en cours (consultations récentes)" },
+  { path: ".smart-conso-token-history.json", owner: "SMART-CONSO-TOKEN", purpose: "historique des actions coûteuses classifiées" },
+  { path: ".tool-usage-history.json", owner: "tool-usage.mjs (tâche #166)", purpose: "compteur d'utilisation réelle des outils" },
+  { path: ".le-coordinateur-last-run.json", owner: "LE-COORDINATEUR", purpose: "anti-doublon du dernier passage réseau" },
+  { path: ".circle-tasks-last-run.json", owner: "CIRCLE-TASKS", purpose: "anti-doublon de la dernière Ronde" },
+  { path: ".kpi-report-latest.html", owner: "kpi-report.mjs", purpose: "copie de remise HTML du dernier rapport KPI" },
+  { path: ".el-professor-coverage-latest.html", owner: "el-professor.mjs", purpose: "copie de remise HTML de la couverture EL-PROFESSOR" },
+  { path: ".circle-tasks-run-summary-latest.txt", owner: "CIRCLE-TASKS", purpose: "récap texte de la dernière Ronde exécutée" },
+  { path: ".ines-official-latest-code.txt", owner: "INES-official", purpose: "corps de la dernière édition (périmètre code)" },
+  { path: ".ines-official-latest-code_et_docs.txt", owner: "INES-official", purpose: "corps de la dernière édition (périmètre code + documentation)" },
+];
+
+// `present: false` (jamais confondu avec `ageDays: 0`) pour un journal qui n'a encore jamais été
+// écrit — cas normal pour un outil jamais encore sollicité, pas une anomalie en soi.
+export function auditLocalJournals(journals = LOCAL_JOURNALS, { existsImpl = existsSync, statImpl = statSync } = {}) {
+  return journals.map((j) => {
+    if (!existsImpl(j.path)) return { ...j, present: false, ageDays: undefined };
+    const ageDays = (Date.now() - statImpl(j.path).mtimeMs) / 86_400_000;
+    return { ...j, present: true, ageDays };
+  });
+}
+
+// Un journal local jamais déclaré dans .gitignore fuirait dans le prochain commit — un vrai risque
+// de sécurité/propreté (un historique local peut contenir des détails internes jamais destinés à
+// être publiés). Vérifié mécaniquement contre le texte réel de .gitignore, jamais supposé.
+export function findJournalsMissingFromGitignore(gitignoreText, journals = LOCAL_JOURNALS) {
+  const lines = new Set(String(gitignoreText ?? "").split(/\r?\n/).map((l) => l.trim()));
+  return journals.filter((j) => !lines.has(j.path)).map((j) => j.path);
+}
 
 // decision : "delivery_html" (registre texte, copie de remise en HTML via html-report.mjs) |
 // "archived_html" (le registre committe directement du HTML, exception assumée) | "texte" (aucune
@@ -165,6 +204,22 @@ function main() {
   }
   if (mismatches.length) {
     console.log(`\n⚠️  ${mismatches.length} écart(s) décision/code réel : ${mismatches.map((m) => m.label).join(", ")}`);
+  }
+
+  console.log("\n=== Journaux locaux (jamais committés, état/cache par outil) ===\n");
+  for (const j of auditLocalJournals()) {
+    const ageLabel = !j.present ? "jamais encore écrit" : j.ageDays < 1 ? "modifié aujourd'hui" : `modifié il y a ${Math.round(j.ageDays)} j`;
+    console.log(`  ${j.path} (${j.owner}) — ${j.purpose} — ${ageLabel}`);
+  }
+  let gitignoreText = "";
+  try {
+    gitignoreText = readFileSync(join(ROOT, ".gitignore"), "utf8");
+  } catch {
+    // absence honnête : .gitignore introuvable, jamais fabriqué.
+  }
+  const missingFromGitignore = findJournalsMissingFromGitignore(gitignoreText);
+  if (missingFromGitignore.length) {
+    console.log(`\n⚠️  Journal(aux) local (locaux) absent(s) de .gitignore, risque de fuite au prochain commit : ${missingFromGitignore.join(", ")}`);
   }
 }
 

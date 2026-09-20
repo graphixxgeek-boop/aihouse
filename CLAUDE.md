@@ -871,8 +871,14 @@ réellement `html-report.mjs` ?) plutôt que supposée — a trouvé dès son pr
 THE-DEEP-READER et les Simulations n'avaient jamais reçu leur câblage HTML pourtant acté. Croisé avec
 l'âge du dernier rapport (`lastTouchDays()` de CLEAN-DIRTY-OLD) et le compteur d'usage
 (`toolsNeverUsed()` de `scripts/tool-usage.mjs`) pour signaler un outil dont les rapports ne sont
-jamais consultés. Même statut "sans blueprint" que LE-COORDINATEUR/CIRCLE-TASKS/html-report.mjs —
-entièrement documenté dans `docs/regles-de-travail.md` §7ter.
+jamais consultés. Étend aussi son inventaire aux JOURNAUX LOCAUX jamais committés
+(`.gemini-key-health.json`, `.smart-conso-token-history.json`, `.tool-usage-history.json`, etc. —
+réponse tranchée le 2026-09-21 à une question directe de l'utilisateur : le MÊME outil, jamais un
+jumeau, seul le type d'artefact diffère) : `LOCAL_JOURNALS`/`auditLocalJournals()` (fraîcheur par
+mtime du système de fichiers, jamais git) et `findJournalsMissingFromGitignore()` (un journal local
+absent de `.gitignore` est un vrai risque de fuite au prochain commit). Même statut "sans blueprint"
+que LE-COORDINATEUR/CIRCLE-TASKS/html-report.mjs — entièrement documenté dans
+`docs/regles-de-travail.md` §7ter.
 
 ## CHECK-TASKS-DETAILS — blueprint exportable
 

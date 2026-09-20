@@ -69,15 +69,61 @@ export function buildTableOfContents(files, annotations) {
   return files.map((f, i) => `${i + 1}. ${f} — ${annotations[f] ?? "annotation indisponible"}`);
 }
 
+// Rapport de synthèse (2026-09-21, demande explicite de l'utilisateur : « elle fait ses
+// commentaires selon les données qu'elle a récoltées et donne des chiffres intéressants,
+// pertinents sur le code »). STRICTEMENT DESCRIPTIF, jamais un jugement de qualité — un chiffre
+// réel (répartition, ancienneté, taille), jamais un verdict "bon"/"mauvais" qui empiéterait sur le
+// rôle déjà tenu par ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD. `kpiFromCassandra` : un CROCHET
+// explicite pour la future section KPI que CASSANDRA-RH doit fournir une fois construite (décision
+// #251 du suivi : CASSANDRA reprend tout le mandat KPI) — INES-official ne calcule JAMAIS ce chiffre
+// elle-même, elle le REPREND, même discipline anti-duplication que Doc-Report/tool-usage.mjs.
+// `null` tant que CASSANDRA-RH n'existe pas, jamais un chiffre fabriqué en attendant.
+export function buildEditionSummary(files, { staleDaysByFile = {}, sizeByFile = {}, kpiFromCassandra = null } = {}) {
+  const byExtension = {};
+  for (const f of files) {
+    const ext = extname(f) || "(sans extension)";
+    byExtension[ext] = (byExtension[ext] ?? 0) + 1;
+  }
+  const staleValues = files.map((f) => staleDaysByFile[f]).filter((d) => typeof d === "number");
+  const neverCommittedCount = files.length - staleValues.length;
+  let oldestFile = null;
+  for (const f of files) {
+    const d = staleDaysByFile[f];
+    if (typeof d === "number" && (!oldestFile || d > oldestFile.days)) oldestFile = { path: f, days: d };
+  }
+  const averageStaleDays = staleValues.length ? staleValues.reduce((a, b) => a + b, 0) / staleValues.length : undefined;
+  const totalSizeBytes = files.reduce((sum, f) => sum + (sizeByFile[f] ?? 0), 0);
+  return { fileCount: files.length, byExtension, neverCommittedCount, oldestFile, averageStaleDays, totalSizeBytes, kpiFromCassandra };
+}
+
+export function renderEditionSummary(summary) {
+  const sizeLabel = summary.totalSizeBytes >= 1_000_000 ? `${(summary.totalSizeBytes / 1_000_000).toFixed(1)} Mo` : `${Math.round(summary.totalSizeBytes / 1000)} Ko`;
+  const lines = [
+    `${summary.fileCount} fichier(s), ${sizeLabel} au total.`,
+    `Répartition par extension : ${Object.entries(summary.byExtension).map(([ext, n]) => `${ext} (${n})`).join(", ")}.`,
+    summary.averageStaleDays == null
+      ? "Aucune date de dernière modification connue pour ces fichiers."
+      : `Ancienneté moyenne depuis la dernière modification : ${Math.round(summary.averageStaleDays)} j${summary.oldestFile ? ` — le plus ancien : ${summary.oldestFile.path} (${Math.round(summary.oldestFile.days)} j)` : ""}.`,
+    summary.neverCommittedCount > 0 ? `${summary.neverCommittedCount} fichier(s) jamais committé(s) (hors historique git).` : null,
+    summary.kpiFromCassandra == null
+      ? "KPI du site (fournis par CASSANDRA-RH) : pas encore disponibles — CASSANDRA-RH n'est pas encore construite."
+      : `KPI du site (repris de CASSANDRA-RH) : ${summary.kpiFromCassandra}`,
+  ].filter(Boolean);
+  return lines;
+}
+
 // Enrichissement confirmé "oui maintenant" #1 : table des matières en tête de l'édition.
 // Enrichissement confirmé "oui maintenant" #2 : datage/versionnage explicite dans l'en-tête, même
 // esprit que renderNamedCatalog() de LE-COORDINATEUR.
-export function buildConsolidatedEdition({ scope, files, annotations, version, date, readFileImpl = readFileSync }) {
+export function buildConsolidatedEdition({ scope, files, annotations, version, date, summary = null, readFileImpl = readFileSync }) {
   if (!FLATTEN_SCOPES.includes(scope)) throw new Error(`buildConsolidatedEdition: périmètre inconnu "${scope}"`);
   const toc = buildTableOfContents(files, annotations);
   const header = [
     `# INES-official — édition v${version} (${date})`,
     `Périmètre : ${scope === "code" ? "code seul" : "code + documentation"} — ${files.length} fichier(s)`,
+    "",
+    "## Résumé",
+    ...(summary ? renderEditionSummary(summary) : ["Résumé indisponible pour cette édition."]),
     "",
     "## Table des matières",
     ...toc,
@@ -116,15 +162,24 @@ const LATEST_PATH_BY_SCOPE = {
   code_et_docs: ".ines-official-latest-code_et_docs.txt",
 };
 
-export function recordEdition(scope, { indexText, now = new Date(), writeFileImpl = writeFileSync, readFileImplForBody = readFileSync } = {}) {
+export function recordEdition(scope, { indexText, now = new Date(), writeFileImpl = writeFileSync, readFileImplForBody = readFileSync, kpiFromCassandra = null } = {}) {
   const files = collectSourceFiles(scope);
   const annotations = Object.fromEntries(files.map((f) => [f, annotateFile(f)]));
+  const staleDaysByFile = Object.fromEntries(files.map((f) => [f, lastTouchDays(f)]));
+  const sizeByFile = Object.fromEntries(files.map((f) => {
+    try {
+      return [f, Buffer.byteLength(readFileImplForBody(f, "utf8"), "utf8")];
+    } catch {
+      return [f, 0];
+    }
+  }));
+  const summary = buildEditionSummary(files, { staleDaysByFile, sizeByFile, kpiFromCassandra });
   const version = nextEditionVersion(indexText);
   const date = now.toISOString().slice(0, 10);
-  const body = buildConsolidatedEdition({ scope, files, annotations, version, date, readFileImpl: readFileImplForBody });
+  const body = buildConsolidatedEdition({ scope, files, annotations, version, date, summary, readFileImpl: readFileImplForBody });
   writeFileImpl(LATEST_PATH_BY_SCOPE[scope], body);
   const row = buildIndexRow({ version, date, scope, fileCount: files.length, sizeBytes: Buffer.byteLength(body, "utf8") });
-  return { version, date, scope, fileCount: files.length, sizeBytes: Buffer.byteLength(body, "utf8"), row, latestPath: LATEST_PATH_BY_SCOPE[scope] };
+  return { version, date, scope, fileCount: files.length, sizeBytes: Buffer.byteLength(body, "utf8"), row, latestPath: LATEST_PATH_BY_SCOPE[scope], summary };
 }
 
 function main() {

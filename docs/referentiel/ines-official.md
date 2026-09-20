@@ -29,9 +29,21 @@ fiable.
 
 ## Édition consolidée
 
-`buildConsolidatedEdition()` assemble : en-tête (version, date, périmètre, nombre de fichiers),
-table des matières (`buildTableOfContents()` — enrichissement confirmé "oui maintenant"), puis
-chaque fichier précédé de son chemin et de son annotation.
+`buildConsolidatedEdition()` assemble : en-tête (version, date, périmètre, nombre de fichiers), le
+rapport de synthèse (ci-dessous), table des matières (`buildTableOfContents()` — enrichissement
+confirmé "oui maintenant"), puis chaque fichier précédé de son chemin et de son annotation.
+
+## Rapport de synthèse (2026-09-21, demande explicite en cours de construction)
+
+`buildEditionSummary()`/`renderEditionSummary()` : des chiffres RÉELS et STRICTEMENT DESCRIPTIFS
+(nombre de fichiers, répartition par extension, ancienneté moyenne/maximale réutilisant
+`lastTouchDays()`, taille totale) — jamais un jugement de qualité, qui resterait le rôle
+d'ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD. `kpiFromCassandra` est un CROCHET explicite pour la
+future section KPI que CASSANDRA-RH doit fournir une fois construite (décision #251 du suivi :
+CASSANDRA reprend tout le mandat KPI du site) — `null` tant que CASSANDRA-RH n'existe pas, jamais un
+chiffre fabriqué en attendant ; une fois fourni, présenté explicitement comme REPRIS de CASSANDRA-RH,
+jamais recalculé par INES-official elle-même (même discipline anti-duplication que
+Doc-Report/tool-usage.mjs).
 
 ## Économie de dépôt
 
