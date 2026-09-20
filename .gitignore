@@ -63,3 +63,4 @@ next-env.d.ts
 .kpi-report-latest.html
 .el-professor-coverage-latest.html
 .circle-tasks-run-summary-latest.txt
+.badge-ceremony-history.json

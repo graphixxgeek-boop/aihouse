@@ -841,6 +841,15 @@ domaine équipe, jamais une catégorie interne à ce domaine.
   elle pourra un jour AGRÉGER les verdicts narratifs déjà produits ailleurs (MEMENTO, EL-PROFESSOR,
   check-spirit.mjs) sur Lia/Noé, jamais les noter/scorer comme des membres de l'équipe.
 
+**Périmètre de recrutement de CASSANDRA-RH, précisé le 2026-09-21 (demande explicite de
+l'utilisateur, avant même sa construction réelle) : pas seulement des scripts.** Pendant le
+« recrutement » (la détection d'un nouvel Agent à consigner), CASSANDRA-RH devra chercher non
+seulement des scripts (`scripts/*.mjs`) et de futures skills, mais aussi des **blueprints**
+(`docs/*-blueprint.md`) — un blueprint sans script associé reste un candidat légitime à consigner
+(ex. un patron générique documenté avant toute implémentation), au même titre qu'un script sans
+blueprint séparé (ex. route-booster). Note de conception, jamais encore implémentée : à reprendre
+lors du round de calibrage de la tâche #134.
+
 ### Moteur du jeu vs Outillage de travail : deux natures de code, jamais confondues sous un même nom
 
 *(Fixée le 2026-09-21, tout de suite après la règle ci-dessus, sur une question directe de
@@ -1148,6 +1157,37 @@ décisions calibrées explicitement avec l'utilisateur :
   résultat (elle « supervise » la remise, dans l'image de l'utilisateur), jamais de le recalculer
   indépendamment — une seule source de vérité pour ce jugement, jamais deux mécanismes qui
   pourraient un jour se contredire.
+
+**La cérémonie de certification (2026-09-21, demande explicite de l'utilisateur : « quand tu
+affiches "membre certifié" tu ne donnes pas l'état des infos du badge ni l'icône badge [...] le
+moment de l'intégration doit être bien repérable [...] imagine un système autour de ce moment »).**
+Écart réel trouvé : `checkAgentOnboarding()` produit déjà un `message` complet (icône + badge +
+couverture), mais rien n'obligeait à le montrer TEL QUEL — le risque constaté était de le résumer en
+une phrase noyée dans le reste du compte rendu, exactement ce que l'utilisateur a signalé pour
+clone-hunter. Trois choix calibrés explicitement (jamais devinés) :
+- **Un bloc visuellement à part**, jamais mêlé au reste du texte — `formatBadgeCeremonyAnnouncement()`
+  (`scripts/le-coordinateur.mjs`) encadre le `message` de `checkAgentOnboarding()` (repris verbatim,
+  jamais reformulé) d'un titre « 🎖️ CERTIFICATION — NomAgent » et de bordures, avec le badge et la
+  couverture explicitement répétés en dessous.
+- **Seulement la PREMIÈRE fois** qu'un Agent devient certifié — jamais répété à chaque mention
+  ultérieure du même badge, qui resterait un point normal du compte rendu sans ce traitement.
+  Détection mécanique du "première fois" via un petit journal local
+  (`.badge-ceremony-history.json`, gitignored, déclaré dans Doc-Report `LOCAL_JOURNALS` — une seule
+  date par slug, jamais mise à jour ensuite) plutôt que la seule mémoire de session de l'agent qui
+  pilote : `announceBadgeCeremony(result)` ne rend le bloc que si `complet` est vrai ET que ce slug
+  n'a encore jamais été vu, puis persiste immédiatement.
+- **Une fonction dédiée**, pas une habitude d'écriture non vérifiable — garantit un format identique
+  à chaque fois, jamais dépendant de la mémoire de l'agent d'une session à l'autre.
+
+**Qui délivre le "go" reste inchangé, cette cérémonie ne fait que le rendre VISIBLE** : LE-COORDINATEUR
+délivre le badge de fait aujourd'hui (`checkAgentOnboarding()`) ; CASSANDRA-RH, une fois construite,
+consultera/affichera ce même résultat, jamais un second calcul indépendant (cf. section "Le badge"
+ci-dessus, décision déjà actée le 2026-09-20).
+
+`loadBadgeCeremonyHistory()` réutilise `loadJson()` de `scripts/tool-usage.mjs` (désormais exportée)
+plutôt que d'écrire une 4e copie — CLONE-HUNTER venait de trouver cette exacte duplication (3
+occurrences déjà) le soir même de la construction de cette cérémonie ; jamais rouvrir un cas déjà
+signalé sous une forme légèrement différente (Article 3).
 
 Un membre de l'équipe (ligne « Agent » de la table maîtresse) durablement sans badge est donc bien,
 comme le suggérait l'utilisateur, le signe d'une anomalie à investiguer en priorité dans le process

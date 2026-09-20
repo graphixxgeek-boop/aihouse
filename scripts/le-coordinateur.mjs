@@ -52,8 +52,10 @@ import { lastTouchDays, relativeStaleness } from "./clean-dirty-old.mjs";
 import { findUnconfirmedBursts } from "./smart-conso-api.mjs";
 import { summarizeHistory, findJudgeSpawnsWithoutConsultation } from "./smart-conso-token.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
+import { loadJson } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
+const BADGE_CEREMONY_HISTORY_PATH = join(ROOT, ".badge-ceremony-history.json");
 // Best-effort, local, jamais committé — même statut que .gemini-key-health.json (mémoire de
 // process/session, jamais une garantie inter-redémarrage, cf. CLAUDE.md section Smart Breaker).
 const STATE_FILE = join(ROOT, ".le-coordinateur-last-run.json");
@@ -524,6 +526,66 @@ export function checkAgentOnboarding(agentName, {
   const message = `🎖️ ${agentName} obtient son badge — intégration complète vérifiée (blueprint, instanciation, registre, mention CLAUDE.md, présence PRESTATIONS). Couverture de code : ${couvertureLabel}${verifiedSuffix}.`;
 
   return { agentName, slug, gaps, rappels, badge, complet: gaps.length === 0, couverture, message };
+}
+
+// Cérémonie de certification (2026-09-21, demande explicite de l'utilisateur : « quand tu affiches
+// "membre certifié" tu ne donnes pas l'état des infos du badge ni l'icône badge [...] le moment de
+// l'intégration doit être bien repérable [...] imagine un système autour de ce moment pour que je
+// sois bien informé »). Trois choix calibrés explicitement : un bloc visuellement à part (jamais
+// mêlé au reste du compte rendu), déclenché SEULEMENT la première fois qu'un Agent devient certifié
+// (jamais répété à chaque mention ultérieure du même badge), via une petite fonction dédiée plutôt
+// qu'une habitude d'écriture non vérifiable. Qui délivre le badge reste déjà tranché ailleurs
+// (§"Le badge" ci-dessus, docs/regles-de-travail.md) : LE-COORDINATEUR aujourd'hui, CASSANDRA-RH en
+// consultation/affichage une fois construite — cette cérémonie ne change rien à cette règle, elle
+// rend seulement le moment VISIBLE.
+//
+// `loadBadgeCeremonyHistory()` réutilise `loadJson()` de tool-usage.mjs (jamais une 4e copie — la
+// duplication exacte que CLONE-HUNTER venait de trouver ce même soir entre smart-conso-api.mjs et
+// smart-conso-token.mjs). Journal local, jamais committé (`.badge-ceremony-history.json`, déclaré
+// dans .gitignore et dans Doc-Report LOCAL_JOURNALS), qui ne retient qu'UNE date par agent : la
+// première fois où `complet` a été vu vrai — jamais mis à jour ensuite, exactement ce qui permet de
+// détecter mécaniquement "première fois" plutôt que de compter sur ma seule mémoire de session.
+export function loadBadgeCeremonyHistory(historyPath = BADGE_CEREMONY_HISTORY_PATH) {
+  return loadJson(historyPath, { certifications: {} });
+}
+
+export function hasBeenCertifiedBefore(slug, history) {
+  return Boolean(history?.certifications?.[slug]);
+}
+
+export function recordCertification(slug, now = Date.now(), historyPath = BADGE_CEREMONY_HISTORY_PATH) {
+  const history = loadBadgeCeremonyHistory(historyPath);
+  history.certifications = history.certifications ?? {};
+  if (!history.certifications[slug]) history.certifications[slug] = new Date(now).toISOString();
+  writeFileSync(historyPath, JSON.stringify(history, null, 1));
+  return history;
+}
+
+// Le bloc lui-même : toujours visuellement séparé (bordures ASCII, jamais une phrase noyée dans un
+// paragraphe), reprend tel quel le `message` déjà produit par checkAgentOnboarding() (jamais une
+// seconde formulation qui pourrait diverger) plus le badge et la couverture en évidence.
+export function formatBadgeCeremonyAnnouncement(result) {
+  const border = "━".repeat(Math.max(20, result.agentName.length + 20));
+  return [
+    border,
+    `🎖️ CERTIFICATION — ${result.agentName}`,
+    border,
+    result.message,
+    `Statut : ${result.badge}`,
+    `Couverture : ${result.couverture.label}`,
+    border,
+  ].join("\n");
+}
+
+// Point d'entrée unique à appeler après checkAgentOnboarding() : ne produit le bloc que si
+// `complet` est vrai ET que ce n'est jamais arrivé avant pour ce slug — sinon `null` (rien à
+// annoncer), jamais un bloc vide affiché quand même. Persiste la première certification au passage.
+export function announceBadgeCeremony(result, { historyPath = BADGE_CEREMONY_HISTORY_PATH, now = Date.now() } = {}) {
+  if (!result?.complet) return null;
+  const history = loadBadgeCeremonyHistory(historyPath);
+  if (hasBeenCertifiedBefore(result.slug, history)) return null;
+  recordCertification(result.slug, now, historyPath);
+  return formatBadgeCeremonyAnnouncement(result);
 }
 
 // Passthrough vers CHECK-LEVEL-TARGET (accès "privilégié" direct, jamais une réimplémentation) —

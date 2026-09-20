@@ -20,7 +20,11 @@ const HISTORY_PATH = fileURLToPath(new URL("../.tool-usage-history.json", import
 
 export const USAGE_ORIGINS = ["spontane", "demande", "automatique_post_commit"];
 
-function loadJson(path, fallback) {
+// Exportée (2026-09-21) pour que le-coordinateur.mjs::formatBadgeCeremonyAnnouncement() la
+// réutilise verbatim plutôt que d'écrire une 4e copie identique — CLONE-HUNTER venait de trouver
+// cette exacte duplication (déjà présente 3 fois : ici, smart-conso-api.mjs, smart-conso-token.mjs)
+// le soir même ; jamais rouvrir un cas déjà signalé sous une forme légèrement différente (Article 3).
+export function loadJson(path, fallback) {
   try {
     return JSON.parse(readFileSync(path, "utf8"));
   } catch {
