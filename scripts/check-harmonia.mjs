@@ -12,7 +12,7 @@ const ROOT = new URL("..", import.meta.url).pathname;
 // Chaque entrée : une constante réelle extraite du code source (regex + groupe numérique), et une
 // ou plusieurs affirmations attendues dans un document de référence (regex + groupe numérique).
 // Si les deux ne matchent pas ou si les nombres diffèrent, c'est une friction.
-const LINKS = [
+export const LINKS = [
   {
     theme: "Cycle jour/nuit — durée du jour (DAY_ROUNDS)",
     code: { file: "lib/daynight.ts", pattern: /export const DAY_ROUNDS\s*=\s*(\d+)/ },

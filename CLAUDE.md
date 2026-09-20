@@ -807,7 +807,21 @@ jugement reste entièrement mécanique ou délégué (aucune couche de raisonnem
 aux deux autres), c'est la totalité de l'outil qui tourne ainsi. Pour ARGUS ET HARMONIA
 spécifiquement, une seconde partie avec un vrai raisonnement plus poussé (donc un coût réel,
 Article 8) se déclenche en plus, à l'initiative de l'agent OU de l'utilisateur, sur un sujet précis
-— en particulier avant toute idée nouvelle, jamais seulement sur le code déjà écrit. Dans tous les
+— en particulier avant toute idée nouvelle, jamais seulement sur le code déjà écrit.
+
+**Précision du 2026-09-20, écart réel trouvé et comblé le jour même (demande explicite de
+l'utilisateur : « je voudrais que ça tourne à chaque commit »).** Jusqu'à cette date, « tourne
+automatiquement à chaque changement de code » n'était vrai qu'à moitié pour ARGUS/HARMONIA : leur
+LOGIQUE de détection était bien testée à chaque commit via `check-house.mjs` (contre des cas
+synthétiques), mais jamais réellement APPLIQUÉE au code courant sans invocation manuelle — un vrai
+écart entre la promesse de cet article et le câblage réel (Article 13). Comblé en ajoutant un
+balayage réel (fonctions pures réutilisées, zéro second lancement de `check-house.mjs`, zéro écriture
+de fichier dans `docs/argus/`/`docs/harmonia/` à chaque commit) dans le crochet `post-commit`
+(`scripts/hooks/check-last-commit.mjs`), warn-only comme le reste de ce crochet. Le même crochet
+affiche désormais aussi, systématiquement, le menu des prestations de LE-COORDINATEUR (jamais la
+synthèse complète `runNetworkCheck()`, qui redemanderait un second passage de `check-house.mjs`
+coûteux et redondant à chaque commit) — pour que ce rappel soit vraiment vu par l'agent à chaque
+commit, pas seulement quand il pense à relancer l'outil. Dans tous les
 cas, un rappel explicite fait partie du protocole de travail (cf. `docs/regles-de-travail.md`) pour
 ne jamais laisser cette vérification retomber dans l'oubli si, sur le moment, ni l'utilisateur ni
 l'agent n'y pense spontanément — exactement le risque que cette règle a été créée pour éliminer.

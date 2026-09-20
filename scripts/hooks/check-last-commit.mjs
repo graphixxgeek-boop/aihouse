@@ -5,7 +5,11 @@
 // déclenchement exact sur l'événement qui compte. N'écrit jamais rien lui-même : signale seulement
 // (cf. docs/regles-de-travail.md §4), la rédaction reste toujours faite avec le vrai contexte de la
 // conversation, jamais reconstituée depuis le seul message de commit.
+import { readFileSync } from "node:fs";
 import { recentCommits, findCommitsMissingSuiviUpdate, findTaskNumberIssues, nextTaskNumber } from "../check-suivi-fidelity.mjs";
+import { walk, findDeadLifeFields, findTodoMarkers } from "../check-argus.mjs";
+import { checkLinks, LINKS } from "../check-harmonia.mjs";
+import { PRESTATIONS, formatMenu } from "../le-coordinateur.mjs";
 
 const [last] = recentCommits(1);
 if (last && findCommitsMissingSuiviUpdate([last]).length) {
@@ -29,3 +33,49 @@ if (numberIssues.length) {
     `. Prochain numéro correct à utiliser : ${nextTaskNumber()} — corrige avant le prochain commit.\n`,
   );
 }
+
+// ARGUS/HARMONIA — vrai balayage à chaque commit, pas seulement le test unitaire de leur logique
+// (2026-09-20, demande explicite de l'utilisateur : « je voudrais que ça tourne à chaque commit »).
+// Écart réel trouvé en creusant cette demande : `check-house.mjs` teste déjà la LOGIQUE de
+// détection à chaque commit (findDeadLifeFields/findTodoMarkers/checkLinks contre des cas
+// synthétiques), mais ne l'applique jamais au VRAI code courant — l'Article 20 promettait « toujours
+// déployé » sans que ce soit mécaniquement garanti. Ici, on appelle directement les fonctions pures
+// (accès "privilégié", même règle que LE-COORDINATEUR) plutôt que le CLI `check-argus.mjs`/
+// `check-harmonia.mjs`, dont le `main()` écrirait un nouveau fichier dans docs/argus/ à CHAQUE
+// commit — jamais souhaitable à cette fréquence (docs/argus/ n'accueille qu'un balayage archivé
+// volontairement, pas un par commit). Warn-only comme le reste de ce hook, jamais bloquant : ces
+// verdicts restent une invitation à vérifier, jamais un verdict à traiter comme acquis.
+try {
+  const lifeSource = readFileSync("lib/life.ts", "utf8");
+  const files = walk("lib").concat(walk("app"));
+  const dead = findDeadLifeFields(files, lifeSource);
+  const todos = findTodoMarkers(walk(".").filter((f) => !f.includes("/scratchpad/")));
+  if (dead.length || todos.length) {
+    console.error(
+      "\n🔎 ARGUS (balayage réel post-commit) : " +
+      (dead.length ? `${dead.length} champ(s) life.ts potentiellement jamais lu(s) (${dead.map((d) => d.field).join(", ")})` : "") +
+      (dead.length && todos.length ? " ; " : "") +
+      (todos.length ? `${todos.length} marqueur(s) TODO/FIXME` : "") +
+      " — à vérifier avant d'agir, jamais un verdict acquis (cf. docs/argus/index.md).\n",
+    );
+  }
+  const frictions = checkLinks(LINKS).filter((r) => r.confidence === "confirmé");
+  if (frictions.length) {
+    console.error(
+      "\n🔎 HARMONIA (balayage réel post-commit) : " + frictions.length + " friction(s) confirmée(s) — " +
+      frictions.map((f) => f.theme).join(", ") + " (cf. docs/harmonia/index.md).\n",
+    );
+  }
+} catch { /* best-effort, jamais bloquant — un balayage raté ne doit jamais empêcher un commit */ }
+
+// Rappel du catalogue LE-COORDINATEUR (2026-09-20, demande explicite de l'utilisateur : « je
+// voudrais que tu exploites ce catalogue et que tu en bénéficies, c'est pour ça que je cherche une
+// ouverture auto »). Toujours affiché, jamais conditionné à un problème détecté — ce n'est pas un
+// avertissement, c'est un pense-bête systématique de ce qui peut être commandé au réseau d'outils.
+// Volontairement SANS relancer runNetworkCheck() (qui reshellerait check-house.mjs une seconde fois
+// avec instrumentation de couverture, juste pour le score AXA-CHECK — un vrai coût redondant à
+// chaque commit, contraire à la règle anti-doublon) : ce hook n'affiche que la liste de données,
+// gratuite et instantanée.
+console.log("\n📋 Prestations disponibles via le réseau d'outils (rappel automatique) :\n");
+console.log(formatMenu(PRESTATIONS));
+console.log("");

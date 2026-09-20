@@ -14,7 +14,7 @@ import { join, relative } from "node:path";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
-function walk(dir, out = []) {
+export function walk(dir, out = []) {
   for (const entry of readdirSync(dir)) {
     if (["node_modules", ".git", ".next", ".wrangler", ".sites-runtime", "dist"].includes(entry)) continue;
     const full = join(dir, entry);
