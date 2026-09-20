@@ -135,6 +135,16 @@ système au risque d'un détail approximatif présenté comme fiable (cf. philos
    qui verrait la conversation se dérouler. Un message qui ne fait que répondre à une question déjà
    posée par l'agent (ex. une réponse à `AskUserQuestion`) n'ouvre pas une ligne séparée — il vient
    compléter/clôturer la ligne de la question elle-même, même principe qu'au point 2 ci-dessous.
+   **Précision non négociable (2026-09-20, écart réel trouvé : une famille KPI entière promise en
+   réponse à une question de calibrage n'a jamais été construite, jamais détectée parce que
+   "fusionnée" mentalement avec un correctif voisin mais distinct)** : quand une seule fenêtre de
+   questions en pose PLUSIEURS distinctes (cf. Article 16, format de question de CLAUDE.md), la
+   clôture doit traiter CHAQUE réponse individuellement — soit une ligne par réponse dès qu'elle
+   arrive, soit, si elles restent groupées sur une ligne commune, un statut qui nomme explicitement
+   l'état de CHAQUE sous-réponse (jamais un « terminée » global qui ne reflète que le sous-point le
+   plus visible ou le plus proche d'un autre travail en cours). Un sous-point d'une réponse groupée
+   qui n'a encore aucune trace de mise en œuvre reste explicitement `ouverte` pour CE sous-point,
+   jamais silencieusement absorbé par la clôture des autres.
 1. Dès qu'une tâche est créée (dans la liste de tâches technique de l'agent, cf.
    `docs/regles-de-travail.md` §10), elle reçoit aussi une ligne dans le fichier de la session en
    cours (`docs/suivi/sessions/<session>.md`), avec ses quatre attributs.
