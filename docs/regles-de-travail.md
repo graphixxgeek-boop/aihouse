@@ -836,6 +836,16 @@ moment de cette règle) : une fonction dédiée qui transforme les signaux de fr
 dans `buildCircleReport()` en une sélection par défaut, plutôt qu'un jugement refait à la main à
 chaque fois — cf. le carnet de tâches pour son suivi.
 
+**Catalogue distinct de celui de LE-COORDINATEUR, précision explicite de l'utilisateur (2026-09-20) :
+« on sépare bien le catalogue des rondes CIRCLE-TASKS et le catalogue des prestations du
+coordinateur ».** Les deux catalogues à venir (la sélection "recommandé" ci-dessus, tâche #155 ; et
+le catalogue d'offres nommé/historisé de LE-COORDINATEUR, tâche #154) répondent à des besoins
+différents et restent deux mécanismes séparés, jamais fusionnés en un seul : `CIRCLE_ITEMS` couvre
+des TÂCHES PÉRIODIQUES gratuites mal automatisées (une routine à cocher), `PRESTATIONS` couvre des
+DEMANDES PONCTUELLES traduites en combinaison d'outils (un menu à la carte) — même quand les deux
+listes se recoupent parfois sur un même outil (ex. THE-FINAL-JUDGE apparaît dans les deux), chacune
+garde sa propre logique de sélection et son propre format d'affichage.
+
 #### Le menu des prestations — traduire les outils en demandes, jamais en noms internes
 
 *(Ajouté le 2026-09-20, à la demande explicite de l'utilisateur : « le coordinateur est capable de
