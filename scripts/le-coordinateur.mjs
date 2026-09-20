@@ -121,6 +121,7 @@ export const PRESTATIONS = [
   { demande: "Réguler ma propre consommation de tokens avant une action coûteuse", outils: ["SMART-CONSO-TOKEN"], cout: "gratuit à consulter — 0 token, 0 appel API" },
   { demande: "Lancer la ronde périodique des tâches gratuites mal automatisées (profil, référentiels, KPI, ALWAYS-NEW-CODE, correctifs, scans Smart Conso API/SMART-CONSO-TOKEN, photo de la dream team, THE-SCREENER)", outils: ["CIRCLE-TASKS"], cout: "gratuit — sauf si THE-FINAL-JUDGE (visible dans la même fenêtre, ⚠️🔴) est explicitement coché : alors ~37k tokens fixes" },
   { demande: "État des lieux des tâches en cours (zoom + liste ou arborescence détaillée), rapport HTML", outils: ["check-tasks-details"], cout: "gratuit — lecture seule de docs/suivi/, 0 appel API, coût token = taille du suivi relu" },
+  { demande: "Classer les Articles de CLAUDE.md par sensibilité/importance, repérer une redondance possible avant un allègement", outils: ["CLAUDE.MD.SPY (extension de SMART-CONSO-TOKEN)"], cout: "gratuit — relit CLAUDE.md et le reste du dépôt, 0 appel API" },
 ];
 
 export function formatMenu(prestations = PRESTATIONS) {
@@ -144,15 +145,26 @@ export function formatMenu(prestations = PRESTATIONS) {
 // l'agent (Smart Conso API, CHECK-LEVEL-TARGET, LE-COORDINATEUR lui-même) n'a naturellement aucune
 // des deux marques ("réel"/"sur demande") et n'a donc pas besoin d'apparaître comme une "prestation"
 // commandable.
+// Colonnes lues par NOM sur la ligne d'en-tête, jamais par position fixe (2026-09-20, bug réel
+// trouvé et corrigé le jour même : l'ajout d'une colonne "Statut" dans la carte des outils avait
+// décalé "Coût"/"Déclenchement" d'un cran, et l'ancienne lecture positionnelle
+// (`[tool, , cout, declenchement]`) aurait silencieusement lu les mauvaises colonnes sans jamais
+// planter — exactement le genre de dépendance fragile qu'un futur ajout de colonne recasserait à
+// nouveau si elle restait positionnelle).
 export function parseToolsTable(markdown) {
+  const lines = markdown.split("\n").filter((l) => l.trim().startsWith("|"));
+  if (!lines.length) return [];
+  const headerCells = lines[0].split("|").slice(1, -1).map((c) => c.trim());
+  const coutIdx = headerCells.indexOf("Coût");
+  const declenchementIdx = headerCells.indexOf("Déclenchement");
+  if (coutIdx === -1 || declenchementIdx === -1) return [];
   const rows = [];
-  for (const line of markdown.split("\n")) {
-    if (!line.trim().startsWith("|")) continue;
+  for (const line of lines.slice(1)) {
     const cells = line.split("|").slice(1, -1).map((c) => c.trim());
-    if (cells.length < 4) continue;
-    const [tool, , cout, declenchement] = cells;
+    if (cells.length <= Math.max(coutIdx, declenchementIdx)) continue;
+    const tool = cells[0];
     if (!tool || tool === "Outil" || /^-+$/.test(tool)) continue;
-    rows.push({ tool: tool.replace(/`/g, ""), cout, declenchement });
+    rows.push({ tool: tool.replace(/`/g, ""), cout: cells[coutIdx], declenchement: cells[declenchementIdx] });
   }
   return rows;
 }

@@ -327,28 +327,55 @@ maximiser leurs performances ».)*
 
 ### La carte des outils, pour ne plus se perdre
 
-| Outil | Ce qu'il détecte/régule | Coût | Déclenchement |
-|---|---|---|---|
-| `check-house.mjs` | régressions de comportement (filet de sécurité) | gratuit | à chaque changement de code |
-| `check-spirit.mjs` / `check-profile.mjs` | fidélité de l'esprit des personnages (Article 0) | réel (API) | à la main, si `lib/lia.ts`/personnalités changent |
-| ARGUS | absences — ce qui devrait exister et n'existe pas (Article 20) | gratuit (partie mécanique) | toujours déployé — logique testée à chaque commit (`check-house.mjs`, pre-commit) ET balayage réel du code courant à chaque commit (`scripts/hooks/check-last-commit.mjs`, post-commit, warn-only, 2026-09-20) |
-| HARMONIA | frictions — deux choses qui existent et se contredisent (Article 20) | gratuit (partie mécanique) | idem ARGUS ci-dessus |
-| Smart Conso API | rythme de consommation API de l'AGENT pendant le travail (Article 22) ; peut aussi scanner l'historique réel pour repérer des schémas coûteux | gratuit à consulter | avant toute action coûteuse de l'agent |
-| CHECK-LEVEL-TARGET | quel niveau de vérification une demande appelle, quels outils déployer | gratuit | avant de décider comment traiter une demande |
-| HYPER-SCAN-CHECKPOINT | orchestrateur exceptionnel, fidélité aux consignes passées (Article 21) | réel (API, en version complète) | sur demande explicite seulement |
-| ALWAYS-NEW-CODE | dette d'organisation — code empilé plutôt que pensé (Article 23) | réel (raisonnement) | niveau « Exceptionnel » de CHECK-LEVEL-TARGET |
-| AXA-CHECK | robustesse/fragilité RÉELLE par fonction (couverture de test V8, zéro nouvelle dépendance) (Article 20) | gratuit | toujours déployé |
-| CLEAN-DIRTY-OLD | stagnation relative du code, délègue le jugement à ARGUS/HARMONIA/ALWAYS-NEW-CODE (Article 20) | gratuit | toujours déployé |
-| EL-PROFESSOR | note qualitative de fidélité à la charte (esprit, naturel, voix, enquête, clarté) d'une simulation ou d'un extrait isolé (Article 18, étape 4bis) | gratuit (relit un texte déjà produit) | après chaque simulation Article 18, ou sur demande pour un extrait isolé |
-| THE-SCREENER | note indicative de qualité graphique (2 captures d'écran max) (Article 18, étape 4bis) | réel (Playwright, léger) | après chaque simulation Article 18, jamais bloquant |
-| THE-FINAL-JUDGE | audit indépendant du code et du produit par un agent réellement séparé, verdict opiniâtre + recommandations | réel (agent séparé, 6 paliers d'intensité × 4 paliers de périmètre) | sur demande explicite (moi, l'utilisateur, ou un autre outil), niveaux « Approfondi »/« Exceptionnel » de CHECK-LEVEL-TARGET (tendance, jamais un verrou) |
-| THE-DEEP-READER | cousin de THE-FINAL-JUDGE (même mécanique d'agent séparé, personas et règles d'entrée opposées) dédié à la relecture lourde du suivi (`docs/suivi/`) contre l'historique complet de la conversation | réel (agent séparé, coût variable — plancher fixe + volume réel de conversation à relire) | sur demande explicite (moi, l'utilisateur, ou `check-suivi-fidelity.mjs` en cas de faiblesse répétée), ou proposé périodiquement via CIRCLE-TASKS (jamais coché par défaut) |
-| LE-COORDINATEUR | agrège en un tableau très court ce que les outils gratuits ci-dessus disent déjà, repère un doublon de vérification récent ; son menu de prestations rappelle ce qui peut être commandé | gratuit | synthèse complète (`runNetworkCheck()`) = routine agent, jamais un crochet git (reshellerait `check-house.mjs`, redondant à chaque commit) ; menu des prestations seul = affiché automatiquement à chaque commit (`scripts/hooks/check-last-commit.mjs`, post-commit, 2026-09-20) |
-| Smart Breaker (`check-gemini-quota.mjs` + `gemini-key-health.mjs` + `api-providers.mjs` + `lib/gemini-keys.ts`) | blocages de quota/clé Gemini, portée PRODUCTION | gratuit à diagnostiquer | à la demande, ou automatique en production (repli) |
-| SMART-CONSO-TOKEN | rythme de consommation de TOKENS de l'agent (Agent séparé, lecture exhaustive, poids d'un document toujours chargé) ; peut aussi scanner et proposer des réductions | gratuit à consulter | avant tout appel à un agent séparé ou tout raisonnement coûteux — obligation écrite dans la charte, jamais un garde-fou vérifiable après coup |
-| CIRCLE-TASKS (« Ronde périodique ») | 13 tâches périodiques gratuites mal automatisées, regroupées par thème (profil utilisateur, relecture des référentiels, KPI, tâche ouverte la plus ancienne — Suivi & référentiels ; rapport KPI, scans Smart Conso API/SMART-CONSO-TOKEN — KPI & scans ; zone ALWAYS-NEW-CODE la plus négligée, dernier passage CLEAN-DIRTY-OLD, câblage HTML des rapports, poids en tokens de CLAUDE.md — Qualité du code ; photo de la dream team, THE-SCREENER — Qualité & fun) — regroupées dans une seule fenêtre à cocher ; THE-FINAL-JUDGE reste visible dans la même fenêtre (thème Audit lourd) mais toujours marqué ⚠️🔴 coûteux (37k tokens), jamais coché par défaut | gratuit (sauf si THE-FINAL-JUDGE est explicitement coché) | à la demande de l'utilisateur ou de l'agent ; rappel proactif automatique dans le crochet post-commit après 10 commits sans passage |
-| Gabarit HTML de remise de rapports (`scripts/html-report.mjs`) | mise en page soignée d'un rapport déjà produit (KPI, EL-PROFESSOR, THE-SCREENER, simulations, THE-FINAL-JUDGE...) — jamais le contenu métier lui-même | gratuit | importé et appelé par les autres outils au moment de produire une copie de présentation — jamais un outil qu'on invoque seul |
-| check-tasks-details | état des lieux des tâches à la demande (zoom en cours/élargi/projet entier × forme liste/arborescence), rapport HTML, lecture seule de `docs/suivi/`, vérification croisée automatique (régression/stagnation) contre son propre historique | gratuit | sur demande explicite (moi ou l'utilisateur), gabarit de questions dédié (cf. `docs/referentiel/check-tasks-details.md`) |
+**Trois statuts, jamais confondus (2026-09-20, demande explicite de l'utilisateur : « peux-tu
+m'aider à clarifier ces distinctions entre scripts, employés de la team, scripts importants
+(considérés agents et pourquoi) »)** — la colonne Statut ci-dessous les distingue explicitement :
+- **Agent** (« employé de l'équipe », « membre de la dream team ») : possède un blueprint
+  générique + une instanciation propre à ce projet (`docs/referentiel/X.md`) + un registre
+  (`docs/X/`, dossier + index) — le même schéma standard à chaque fois, comme un poste de travail
+  standard que chaque nouvel employé reçoit puis personnalise. Ce qui justifie ce statut n'est
+  jamais l'ancienneté ni la taille du code, mais l'existence d'un DOMAINE DE JUGEMENT propre au
+  projet, qui mérite d'être documenté à part.
+- **Utilitaire nommé** (LE-COORDINATEUR, CIRCLE-TASKS, le gabarit HTML, CLAUDE.MD.SPY) : a un nom
+  pour qu'on puisse s'y référer facilement, mais aucune connaissance propre au projet à documenter
+  à part — sa seule valeur est d'appeler/agréger/mettre en forme ce que les Agents disent déjà.
+  Jamais de blueprint, jamais de registre séparé.
+- **Infrastructure** (`check-house.mjs`, `check-spirit.mjs`/`check-profile.mjs`, et tout script
+  sans nom propre comme `check-argus.mjs`/`lib-shell.mjs`) : le filet de sécurité et les briques
+  mécaniques qui FONT tourner les Agents, jamais une identité à part. Un Agent peut être implémenté
+  par plusieurs fichiers d'infrastructure (ex. Smart Breaker = 4 fichiers) sans que chacun d'eux
+  ait besoin de son propre statut.
+
+**Un script d'infrastructure ou un utilitaire nommé PEUT être sollicité par LE-COORDINATEUR
+librement, sans avoir le statut Agent** — le statut Agent est une question de DOCUMENTATION/
+IDENTITÉ, jamais un contrôle d'accès. `runNetworkCheck()` appelle déjà directement
+`check-argus.mjs`/`check-harmonia.mjs` par le shell et importe des fonctions pures d'AXA-CHECK/
+ALWAYS-NEW-CODE/CLEAN-DIRTY-OLD/CHECK-LEVEL-TARGET/Smart Conso API/SMART-CONSO-TOKEN — jamais
+bloqué par un statut, seulement par l'existence réelle d'une fonction ou d'un CLI à appeler.
+
+| Outil | Statut | Ce qu'il détecte/régule | Coût | Déclenchement |
+|---|---|---|---|---|
+| `check-house.mjs` | Infrastructure | régressions de comportement (filet de sécurité) | gratuit | à chaque changement de code |
+| `check-spirit.mjs` / `check-profile.mjs` | Infrastructure | fidélité de l'esprit des personnages (Article 0) | réel (API) | à la main, si `lib/lia.ts`/personnalités changent |
+| ARGUS | Agent | absences — ce qui devrait exister et n'existe pas (Article 20) | gratuit (partie mécanique) | toujours déployé — logique testée à chaque commit (`check-house.mjs`, pre-commit) ET balayage réel du code courant à chaque commit (`scripts/hooks/check-last-commit.mjs`, post-commit, warn-only, 2026-09-20) |
+| HARMONIA | Agent | frictions — deux choses qui existent et se contredisent (Article 20) | gratuit (partie mécanique) | idem ARGUS ci-dessus |
+| Smart Conso API | Agent | rythme de consommation API de l'AGENT pendant le travail (Article 22) ; peut aussi scanner l'historique réel pour repérer des schémas coûteux | gratuit à consulter | avant toute action coûteuse de l'agent |
+| CHECK-LEVEL-TARGET | Agent | quel niveau de vérification une demande appelle, quels outils déployer | gratuit | avant de décider comment traiter une demande |
+| HYPER-SCAN-CHECKPOINT | Agent | orchestrateur exceptionnel, fidélité aux consignes passées (Article 21) | réel (API, en version complète) | sur demande explicite seulement |
+| ALWAYS-NEW-CODE | Agent | dette d'organisation — code empilé plutôt que pensé (Article 23) | réel (raisonnement) | niveau « Exceptionnel » de CHECK-LEVEL-TARGET |
+| AXA-CHECK | Agent | robustesse/fragilité RÉELLE par fonction (couverture de test V8, zéro nouvelle dépendance) (Article 20) | gratuit | toujours déployé |
+| CLEAN-DIRTY-OLD | Agent | stagnation relative du code, délègue le jugement à ARGUS/HARMONIA/ALWAYS-NEW-CODE (Article 20) | gratuit | toujours déployé |
+| EL-PROFESSOR | Agent | note qualitative de fidélité à la charte (esprit, naturel, voix, enquête, clarté) d'une simulation ou d'un extrait isolé (Article 18, étape 4bis) | gratuit (relit un texte déjà produit) | après chaque simulation Article 18, ou sur demande pour un extrait isolé |
+| THE-SCREENER | Agent | note indicative de qualité graphique (2 captures d'écran max) (Article 18, étape 4bis) | réel (Playwright, léger) | après chaque simulation Article 18, jamais bloquant |
+| THE-FINAL-JUDGE | Agent | audit indépendant du code et du produit par un agent réellement séparé, verdict opiniâtre + recommandations | réel (agent séparé, 6 paliers d'intensité × 4 paliers de périmètre) | sur demande explicite (moi, l'utilisateur, ou un autre outil), niveaux « Approfondi »/« Exceptionnel » de CHECK-LEVEL-TARGET (tendance, jamais un verrou) |
+| THE-DEEP-READER | Agent | cousin de THE-FINAL-JUDGE (même mécanique d'agent séparé, personas et règles d'entrée opposées) dédié à la relecture lourde du suivi (`docs/suivi/`) contre l'historique complet de la conversation | réel (agent séparé, coût variable — plancher fixe + volume réel de conversation à relire) | sur demande explicite (moi, l'utilisateur, ou `check-suivi-fidelity.mjs` en cas de faiblesse répétée), ou proposé périodiquement via CIRCLE-TASKS (jamais coché par défaut) |
+| LE-COORDINATEUR | Utilitaire nommé | agrège en un tableau très court ce que les outils gratuits ci-dessus disent déjà, repère un doublon de vérification récent ; son menu de prestations rappelle ce qui peut être commandé | gratuit | synthèse complète (`runNetworkCheck()`) = routine agent, jamais un crochet git (reshellerait `check-house.mjs`, redondant à chaque commit) ; menu des prestations seul = affiché automatiquement à chaque commit (`scripts/hooks/check-last-commit.mjs`, post-commit, 2026-09-20) |
+| Smart Breaker (`check-gemini-quota.mjs` + `gemini-key-health.mjs` + `api-providers.mjs` + `lib/gemini-keys.ts`) | Agent (structure particulière : pas de dossier `docs/` dédié, son « registre » est le fichier local `.gemini-key-health.json`, jamais committé) | blocages de quota/clé Gemini, portée PRODUCTION | gratuit à diagnostiquer | à la demande, ou automatique en production (repli) |
+| SMART-CONSO-TOKEN | Agent | rythme de consommation de TOKENS de l'agent (Agent séparé, lecture exhaustive, poids d'un document toujours chargé) ; peut aussi scanner et proposer des réductions | gratuit à consulter | avant tout appel à un agent séparé ou tout raisonnement coûteux — obligation écrite dans la charte, jamais un garde-fou vérifiable après coup |
+| CIRCLE-TASKS (« Ronde périodique ») | Utilitaire nommé | 13 tâches périodiques gratuites mal automatisées, regroupées par thème (profil utilisateur, relecture des référentiels, KPI, tâche ouverte la plus ancienne — Suivi & référentiels ; rapport KPI, scans Smart Conso API/SMART-CONSO-TOKEN — KPI & scans ; zone ALWAYS-NEW-CODE la plus négligée, dernier passage CLEAN-DIRTY-OLD, câblage HTML des rapports, poids en tokens de CLAUDE.md — Qualité du code ; photo de la dream team, THE-SCREENER — Qualité & fun) — regroupées dans une seule fenêtre à cocher ; THE-FINAL-JUDGE reste visible dans la même fenêtre (thème Audit lourd) mais toujours marqué ⚠️🔴 coûteux (37k tokens), jamais coché par défaut | gratuit (sauf si THE-FINAL-JUDGE est explicitement coché) | à la demande de l'utilisateur ou de l'agent ; rappel proactif automatique dans le crochet post-commit après 10 commits sans passage |
+| Gabarit HTML de remise de rapports (`scripts/html-report.mjs`) | Utilitaire nommé | mise en page soignée d'un rapport déjà produit (KPI, EL-PROFESSOR, THE-SCREENER, simulations, THE-FINAL-JUDGE...) — jamais le contenu métier lui-même | gratuit | importé et appelé par les autres outils au moment de produire une copie de présentation — jamais un outil qu'on invoque seul |
+| check-tasks-details | Agent | état des lieux des tâches à la demande (zoom en cours/élargi/projet entier × forme liste/arborescence), rapport HTML, lecture seule de `docs/suivi/`, vérification croisée automatique (régression/stagnation) contre son propre historique | gratuit | sur demande explicite (moi ou l'utilisateur), gabarit de questions dédié (cf. `docs/referentiel/check-tasks-details.md`) |
+| CLAUDE.MD.SPY (extension de SMART-CONSO-TOKEN) | Utilitaire nommé | classe chaque Article de CLAUDE.md par sensibilité/importance, détecte les redondances possibles entre Articles | gratuit | sur demande, avant/pendant une passe d'allègement de CLAUDE.md (étape 2 de la procédure formalisée) |
 
 Cette table remplace toute énumération informelle éparpillée dans la conversation : à jour à
 chaque nouvel outil créé (même discipline que la liste des documents de référence, Article 13).

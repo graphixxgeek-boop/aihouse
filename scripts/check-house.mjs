@@ -3118,7 +3118,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // la carte sans jamais rejoindre PRESTATIONS, ce test échoue et bloque le commit (pre-commit hook).
   const travailMd=fs.readFileSync('docs/regles-de-travail.md','utf8');
   const travailLines=travailMd.split('\n');
-  const tableStart=travailLines.findIndex((l)=>l.includes('| Outil | Ce qu\'il détecte'));
+  const tableStart=travailLines.findIndex((l)=>l.startsWith('| Outil |')&&l.includes('Ce qu\'il détecte'));
   assert.ok(tableStart>=0,'docs/regles-de-travail.md must still contain the real "carte des outils" table under its known heading — if this fails, the table was moved or renamed and this guard\'s anchor must move with it');
   const tableLines=[];
   for(let i=tableStart;i<travailLines.length;i++){if(i>tableStart&&!travailLines[i].trim().startsWith('|'))break;tableLines.push(travailLines[i]);}
@@ -3570,6 +3570,8 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     listDatedNarrativeMarkers, checkToolConnections, EXPECTED_CONNECTIONS, trackWeightTrend,
     classifyConsumption, computeInvestmentRatio, diagnoseAdviceAccuracy, parseOutcomeArgs,
     extractNormativeMarkers, diffNormativeMarkers,
+    extractRuleUnits, countArticleCrossReferences, classifyRuleSensitivity, classifyRuleImportance,
+    findRedundantRulePairs, buildClaudeMdRuleTable, renderClaudeMdRuleTable,
   } = await import('../scripts/smart-conso-token.mjs');
 
   assert.equal(estimateTokens('abcd'), 1, 'the ~4-characters-per-token heuristic must round to the nearest whole token, never a fractional or wildly inaccurate estimate');
@@ -3777,4 +3779,61 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(diffNormativeMarkers('', ''), { oldCount: 0, newCount: 0, lost: [] }, 'a genuinely empty before/after (or a section with no normative content at all) must report an honest all-zero result, never crash or fabricate a finding');
 
   console.log('Passed: diagnoseAdviceAccuracy() mechanically flags a hard threshold likely unrespected (a same-type confirmed action mere seconds after a "seuil_dur" verdict) and surfaces every genuinely recorded outcome that contradicts or confirms a past verdict, restricts its scan to the agent and tools only (the user\'s own compliance is never mechanically inferred, per the explicit 2026-09-20 calibration after the tension with the never-self-adjust rule was flagged), reports zero findings on empty history, and — the whole point of this safer design — never itself changes any threshold or classification, only ever surfacing a proposal for a human/agent to read; and extractNormativeMarkers()/diffNormativeMarkers() correctly isolate sentences carrying a real normative keyword, numeric threshold, or Article/file reference, tolerate genuine rewording that preserves substance, and catch — by name, not just by count — every real rule silently dropped during a prose-tightening pass, the exact safety net the user asked for before the CLAUDE.md lightening pass.');
+
+  // CLAUDE.MD.SPY (2026-09-20, demande explicite de l'utilisateur : classer chaque règle de
+  // CLAUDE.md par sensibilité/importance, détecter les redondances). PAS un membre de l'équipe,
+  // une extension de SMART-CONSO-TOKEN — cf. docs/referentiel/smart-conso-token.md.
+  const fakeCharter = [
+    '**Article 0 — Titre zéro.** Texte de l\'article zéro, toujours très sensible par construction.',
+    '',
+    '**Article 1 — Un premier sujet.** Ce texte parle de chats et de chiens dans le jardin.',
+    '',
+    '**Article 2 — Un principe non négociable.** Ceci est non négociable et doit toujours être respecté.',
+    '',
+    '## Une section hors charte',
+    '',
+    'Du texte qui ne doit jamais être compté comme faisant partie de l\'Article 2.',
+  ].join('\n');
+  const units = extractRuleUnits(fakeCharter);
+  assert.equal(units.length, 3, 'extractRuleUnits() must find exactly the three real "Article N — Title." headings, never miscounting on a realistic multi-article fixture');
+  assert.equal(units[0].article, 0, 'the first unit must carry its real article number, read from the heading itself');
+  assert.equal(units[1].titre, 'Un premier sujet', 'the title must be the real text between the em-dash and the closing period, never including the bold markers themselves');
+  assert.ok(!units[2].texte.includes('ne doit jamais être compté'), 'a unit must stop at the next top-level "## " heading even when no further "Article N" heading follows — closing the real bug found while calibrating this against the actual CLAUDE.md, where the last Article (23) was silently swallowing the entire rest of the file (510 lines of unrelated "Plan d\'origine" content) for lack of this boundary');
+
+  assert.equal(countArticleCrossReferences(2, { 'a.mjs': 'cf. Article 2 et Article 2 encore', 'b.md': 'voir Article 2' }), 3, 'countArticleCrossReferences() must count every real occurrence of "Article N" across every other file, never stopping at the first match per file');
+  assert.equal(countArticleCrossReferences(5, { 'a.mjs': 'rien à voir ici' }), 0, 'a genuinely uncited article must report zero, never a false positive from a loosely related number');
+
+  assert.equal(classifyRuleSensitivity({ article: 0, texte: 'peu importe le texte' }), 'très sensible (Article 0, fixe — jamais recalculée)', 'Article 0 must always receive the fixed maximal sensitivity label regardless of its own text, per the explicit user calibration — never computed like any other article');
+  assert.equal(classifyRuleSensitivity({ article: 7, texte: 'Ceci est non négociable.' }), 'sensible (se déclare non négociable)', 'a non-zero article that explicitly self-declares as "non négociable" must be flagged sensitive, a real mechanical proxy rather than a guess');
+  assert.equal(classifyRuleSensitivity({ article: 7, texte: 'Un texte ordinaire sans marqueur.' }), 'normale', 'an article with neither the Article-0 status nor a self-declared non-negotiable marker must default to the honest "normale" tier, never inflated');
+
+  assert.equal(classifyRuleImportance(50), 'élevée', 'a high real cross-reference count (calibrated empirically against the actual CLAUDE.md, where citation counts range from 3 to 81) must classify as élevée');
+  assert.equal(classifyRuleImportance(20), 'moyenne', 'a mid-range count must classify as moyenne, never collapsed into élevée by an unrealistically low threshold');
+  assert.equal(classifyRuleImportance(2), 'faible', 'a genuinely rarely-cited article must classify as faible, never inflated by a threshold too low to discriminate on this project\'s real citation density');
+
+  const redundantFixture = [
+    { article: 1, texte: 'chevaux ecureuils papillons libellules hirondelles moineaux tortues grenouilles' },
+    { article: 2, texte: 'chevaux ecureuils papillons libellules hirondelles moineaux tortues renards' },
+    { article: 3, texte: 'automobiles ordinateurs telephones imprimantes claviers ecrans souris cables' },
+  ];
+  const strongPairs = findRedundantRulePairs(redundantFixture, { threshold: 0.5 });
+  assert.equal(strongPairs.length, 1, 'two rules sharing almost all of their significant vocabulary must be flagged as exactly one redundant pair at a strict threshold');
+  assert.deepEqual([strongPairs[0].a, strongPairs[0].b], [1, 2], 'the flagged pair must name the real two articles that overlap, never the unrelated third one');
+  assert.equal(findRedundantRulePairs(redundantFixture, { threshold: 0.5 }).some((p) => p.a === 3 || p.b === 3), false, 'an article with genuinely unrelated vocabulary must never be pulled into a redundant pair just because it exists in the same batch');
+  assert.deepEqual(findRedundantRulePairs([], { threshold: 0.2 }), [], 'an empty rule list must report zero pairs rather than crash on a division by zero inside the Jaccard computation');
+
+  const realClaudeMd = fs.readFileSync('CLAUDE.md', 'utf8');
+  const realUnits = extractRuleUnits(realClaudeMd);
+  assert.ok(realUnits.length >= 20, 'run live against the project\'s own real CLAUDE.md, extractRuleUnits() must find every real numbered Article (currently 24, Article 0 through 23) rather than losing any to a parsing edge case');
+  const lastRealUnit = realUnits[realUnits.length - 1];
+  assert.ok(lastRealUnit.texte.split('\n').length < 100, 'checked live: the real LAST article\'s unit must stay bounded to its own real content (well under 100 lines) rather than swallowing the "Plan d\'origine" section and everything after it — the exact real regression this boundary fix closes');
+
+  const { rows, redondances } = buildClaudeMdRuleTable(fakeCharter, { 'x.mjs': 'Article 2 Article 2' });
+  assert.equal(rows.length, 3, 'buildClaudeMdRuleTable() must aggregate one row per real rule unit, combining sensitivity/importance/cross-references/line count without dropping any');
+  assert.equal(rows[0].sensibilite, 'très sensible (Article 0, fixe — jamais recalculée)', 'the aggregated table must carry through the fixed Article 0 sensitivity exactly as classifyRuleSensitivity() would report it alone');
+  const rendered = renderClaudeMdRuleTable({ rows, redondances });
+  assert.ok(rendered.includes('| Article | Titre | Sensibilité | Importance | Réf. croisées | Lignes |'), 'renderClaudeMdRuleTable() must produce a real markdown table with the documented header row');
+  assert.ok(rendered.includes('Aucune redondance forte détectée') || rendered.includes('Redondances possibles'), 'the rendered output must always say explicitly whether a redundancy was found or not, never silently omit that section');
+
+  console.log('Passed: CLAUDE.MD.SPY (extractRuleUnits/countArticleCrossReferences/classifyRuleSensitivity/classifyRuleImportance/findRedundantRulePairs/buildClaudeMdRuleTable/renderClaudeMdRuleTable) correctly splits CLAUDE.md into one unit per real "Article N" heading bounded by either the next Article or the next top-level "## " heading — closing a real regression found while calibrating live against the actual file, where the last Article silently swallowed 510 unrelated lines — counts real cross-file "Article N" citations, gives Article 0 a fixed maximal sensitivity label untouched by any calculation while flagging other articles only on a genuine self-declared "non négociable" marker, classifies importance against thresholds empirically calibrated on this project\'s real citation distribution rather than arbitrary round numbers, flags strong vocabulary overlap between two rules at a strict threshold while never dragging in an unrelated third rule or crashing on an empty list, and assembles/renders the full reference table faithfully.');
 }
