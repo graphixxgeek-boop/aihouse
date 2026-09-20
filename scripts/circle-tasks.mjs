@@ -28,6 +28,7 @@ import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { scanDocumentWeight, listDatedNarrativeMarkers, extractRuleUnits, findRedundantRulePairs } from "./smart-conso-token.mjs";
 import { walkDocsPaths } from "./lib-shell.mjs";
+import { extractPrincipleUnits, buildEvolutionDigest, findPossibleTensions, philosophyFreshnessDays } from "./the-king.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -79,6 +80,18 @@ export const CIRCLE_ITEMS = [
     cout: "gratuit — lecture, aucun appel API",
     tokensEstimes: "élevé si réellement exhaustif — potentiellement plusieurs dizaines de milliers de tokens (CLAUDE.md seul pèse ~29 000 tokens estimés, cf. docs/smart-conso-token/) ; \"gratuit\" ne veut jamais dire \"gratuit en tokens\"",
     execute: "Relire CLAUDE.md (Article 13, vérification périodique) et toute la table des matières réelle de docs/referentiel/ + racine de docs/ — corriger tout écart trouvé immédiatement (Article 3), jamais seulement le signaler.",
+  },
+  // the-king-signal (2026-09-21, tâche #167) : la promesse initiale de l'utilisateur pour THE-KING
+  // ("il remet à jour [le digest] à chaque ronde, à integrer à la ronde auto") — jamais un vrai
+  // balayage lourd ici, seulement la fraîcheur (lastTouchDays réutilisé) et le digest déjà mécanique
+  // (extractPrincipleUnits/buildEvolutionDigest/findPossibleTensions, zéro appel API).
+  {
+    id: "the-king-signal",
+    theme: "KPI & scans",
+    label: "Digest THE-KING : fraîcheur et tensions possibles de la philosophie",
+    cout: "gratuit — relit un seul fichier local, zéro appel API",
+    tokensEstimes: "faible — sortie compacte (fraîcheur + digest daté + tensions éventuelles)",
+    execute: "Lancer node scripts/the-king.mjs (ou appeler philosophyFreshnessDays()/buildEvolutionDigest()/findPossibleTensions() directement) et reporter honnêtement la fraîcheur de docs/philosophie-et-politique.md et toute tension possible trouvée — jamais corriger le document soi-même, seulement signaler.",
   },
   {
     id: "kpi",
@@ -370,7 +383,7 @@ export function oldestOpenTaskDate(categorized) {
 // ALWAYS-NEW-CODE la plus négligée) — jamais pour "relecture référentiel" ou "correctifs", qui
 // n'ont aucune date de référence mécanique fiable (Article 13 elle-même n'impose aucune cadence
 // fixe, cf. CLAUDE.md — un signal inventé ici serait moins honnête que son absence).
-export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText } = {}, now = Date.now()) {
+export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue } = {}, now = Date.now()) {
   const profilLast = mostRecentDate(profilIndexText);
   const kpiLast = mostRecentDate(kpiIndexText);
   const smartConsoApiLast = mostRecentDate(smartConsoApiIndexText);
@@ -408,6 +421,16 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCode
       if (!zoneRec) return { ...item, staleness: "aucun thème connu" };
       const zoneDate = coverage[zoneRec.zone];
       return { ...item, staleness: zoneDate ? `zone la plus négligée : "${zoneRec.zone}" (${daysSince(zoneDate, now)} jour(s))` : `zone la plus négligée : "${zoneRec.zone}" (jamais examinée)` };
+    }
+    if (item.id === "the-king-signal") {
+      if (!philosophyText) return { ...item, staleness: "pas de signal disponible (philosophie-et-politique.md non fourni)" };
+      const principles = extractPrincipleUnits(philosophyText);
+      const digest = buildEvolutionDigest(principles);
+      const tensions = findPossibleTensions(principles);
+      const freshnessLabel = philosophyFreshnessDaysValue == null ? "fraîcheur inconnue" : `dernière modification il y a ${Math.round(philosophyFreshnessDaysValue)} j`;
+      const digestLabel = digest.length ? `dernière évolution datée : ${digest[digest.length - 1]}` : "aucune évolution datée trouvée";
+      const tensionLabel = tensions.length ? `${tensions.length} tension(s) possible(s) à relire` : "aucune tension possible détectée";
+      return { ...item, staleness: `${freshnessLabel} — ${digestLabel} — ${tensionLabel}` };
     }
     if (item.costly) return { ...item, staleness: "jamais une routine — décision au cas par cas, à chaque fois" };
     return { ...item, staleness: "pas de signal de fraîcheur mécanique disponible" };
@@ -551,7 +574,9 @@ function main() {
   };
   const suiviCategorized = categorizeAllSessions();
   const claudeMdText = read("CLAUDE.md");
-  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText });
+  const philosophyText = read("docs/philosophie-et-politique.md");
+  const philosophyFreshnessDaysValue = philosophyFreshnessDays();
+  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue });
   console.log("=== CIRCLE-TASKS — Ronde périodique ===\n");
   console.log(formatCircleMenu(report));
   console.log("\nJamais exécuté seul : l'agent qui pilote ouvre une fenêtre à cocher pour choisir précisément quoi lancer.");

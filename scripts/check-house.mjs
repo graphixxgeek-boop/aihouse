@@ -940,7 +940,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 185'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 186'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3653,7 +3653,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   } = await import('../scripts/circle-tasks.mjs');
   const { walkDocsPaths } = await import('../scripts/lib-shell.mjs');
 
-  assert.equal(CIRCLE_ITEMS.length, 18, 'CIRCLE_ITEMS must list exactly the 16 free periodic items (profil, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, dream-team-photo, THE-SCREENER, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run, coordinateur-catalogue) plus THE-FINAL-JUDGE and its cousin THE-DEEP-READER, never silently gaining or losing an entry');
+  assert.equal(CIRCLE_ITEMS.length, 19, 'CIRCLE_ITEMS must list exactly the 17 free periodic items (profil, the-king-signal, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, dream-team-photo, THE-SCREENER, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run, coordinateur-catalogue) plus THE-FINAL-JUDGE and its cousin THE-DEEP-READER, never silently gaining or losing an entry');
   const profilGuardItem = CIRCLE_ITEMS.find((i) => i.id === 'profil-utilisateur-guard');
   assert.ok(profilGuardItem && !profilGuardItem.costly && profilGuardItem.theme === 'Passages réels (smoke run)', '2026-09-21 addition: the real check-profil-utilisateur.mjs smoke run must be free and live in its own "smoke run" theme, distinct from the "profil" item which writes a new observation rather than verifying disk integrity');
   const networkCheckItem = CIRCLE_ITEMS.find((i) => i.id === 'network-check-run');
@@ -3689,8 +3689,9 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const htmlWiringSources = { 'el-professor.mjs': 'no html-report here', 'the-final-judge.mjs': 'import { renderHtmlReport } from "./html-report.mjs";', 'the-screener-capture.mjs': 'no html-report here either' };
   const suiviCategorized = { terminee: [], enCours: [{ cells: ['1', '2026-09-15T00:00:00Z', 'x', 'x', 'x', 'x', 'en cours'] }], ouverte: [{ cells: ['2', '2026-09-18T00:00:00Z', 'x', 'x', 'x', 'x', 'ouverte'] }], autre: [] };
   const sampleClaudeMdText = 'x'.repeat(200) + '\n*(ajouté le 2026-09-19, test)*\n*(ajouté le 2026-09-20, test)*\n';
-  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText: emptyAlwaysNewCode, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText: sampleClaudeMdText }, now);
-  assert.equal(report.length, 18, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one');
+  const samplePhilosophyText = '### 1.1 Un principe **[Explicite]**\n\nOn agit toujours avec prudence budgétaire ambiante.\n\n### 1.2 Un autre principe **[Synthèse, 2026-09-19]**\n\nOn n\'agit jamais avec prudence budgétaire ambiante.';
+  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText: emptyAlwaysNewCode, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText: sampleClaudeMdText, philosophyText: samplePhilosophyText, philosophyFreshnessDaysValue: 3 }, now);
+  assert.equal(report.length, 19, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one');
   assert.equal(report.find((r) => r.id === 'claude-md-weight-signal').staleness, '66 tokens estimés, niveau "faible" — 2 aside(s) narrative(s) datée(s) encore réductible(s)', 'the CLAUDE.md weight signal must reuse the real SMART-CONSO-TOKEN scan functions live (never a second parser), reporting both the honest token estimate and the real count of still-reducible dated asides found in the actual text passed in');
   assert.equal(buildCircleReport({}, now).find((r) => r.id === 'claude-md-weight-signal').staleness, 'pas de signal disponible (CLAUDE.md non fourni)', 'with no CLAUDE.md text supplied at all, the signal must report an honest absence rather than crash or fabricate a number');
   assert.equal(report.find((r) => r.id === 'clean-dirty-old-signal').staleness, '1 jour(s) depuis le dernier passage journalisé', 'the CLEAN-DIRTY-OLD signal must compute its own staleness from its own real index text, distinct from every other source');
@@ -3698,6 +3699,8 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(report.find((r) => r.id === 'suivi-open-tasks-signal').staleness, 'tâche ouverte depuis 5 jour(s)', 'the oldest-open-task signal must pick the genuinely oldest date (2026-09-15, the "en cours" entry) among both "en cours" and "ouverte" buckets, never just the newer "ouverte" one');
   assert.equal(report.find((r) => r.id === 'dream-team-photo').staleness, 'pas de signal de fraîcheur mécanique disponible', 'the purely recreational dream-team-photo item has no real mechanical freshness source either, and must say so honestly rather than fabricate one');
   assert.equal(report.find((r) => r.id === 'the-screener').staleness, 'pas de signal de fraîcheur mécanique disponible', 'THE-SCREENER likewise has no real mechanical freshness source in this ronde (its own dated registry docs/the-screener/ does not exist yet) and must say so honestly');
+  assert.equal(report.find((r) => r.id === 'the-king-signal').staleness, 'dernière modification il y a 3 j — dernière évolution datée : 2026-09-19 — 1.2 Un autre principe — 1 tension(s) possible(s) à relire', 'THE-KING\'s Ronde item must report real freshness, the real latest dated evolution, and a real possible-tension count all in one line, reusing the-king.mjs\'s own functions rather than a second parser');
+  assert.equal(buildCircleReport({}, now).find((r) => r.id === 'the-king-signal').staleness, 'pas de signal disponible (philosophie-et-politique.md non fourni)', 'with no philosophy text supplied at all, THE-KING\'s signal must report an honest absence rather than crash or fabricate a number');
   assert.equal(report.find((r) => r.id === 'profil').staleness, '2 jour(s) depuis la dernière fiche', 'the profil item\'s staleness must be computed from the real most-recent date found in the real index text passed in');
   assert.equal(report.find((r) => r.id === 'kpi').staleness, '1 jour(s) depuis le dernier rapport archivé', 'the kpi item\'s staleness must likewise be computed from the real kpi index text, a genuinely distinct source from the profil index');
   assert.ok(/jamais examinée/.test(report.find((r) => r.id === 'always-new-code-signal').staleness), 'with a genuinely empty ALWAYS-NEW-CODE coverage memory, the signal must honestly report that every zone (the one recommended first) has never been examined, never a fabricated date');
@@ -4544,4 +4547,51 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(byFamily.get('Test').length, 4, 'rows must be grouped by their declared family, never flattened or regrouped by a guessed criterion');
   assert.deepEqual(mismatches.map((m) => m.slug), ['unwired-html-tool'], 'the top-level mismatches list must surface exactly the real HTML-wiring gap, ready for a human/agent to read — Doc-Report itself never fixes it');
   console.log('Passed: Doc-Report (task #165) mechanically audits the already-decided HTML/texte choice against the real producing script\'s source (never guessed from a tool\'s name), flags an undeclared docs/ registry as a real gap while sparing the reference/suivi folders, and cross-references tool-usage.mjs\'s real usage history to spot a registry nobody ever solicits — a genuine wiring gap (THE-DEEP-READER, Simulations) was found on its very first real run against the live repository.');
+}
+
+{
+  // THE-KING (tâche #167, 2026-09-21) : rappelle de consulter docs/philosophie-et-politique.md
+  // avant une décision à haut niveau, jamais un décideur lui-même.
+  const { TRIGGER_CATEGORIES, classifyDecisionTriggers, reminderFor, extractPrincipleUnits, extractPrincipleDate, buildEvolutionDigest, findPossibleTensions, philosophyFreshnessDays } = await import('../scripts/the-king.mjs');
+  assert.equal(TRIGGER_CATEGORIES.length, 6, 'the 6 trigger categories are the exact number confirmed with the user — never more (would dilute the signal) nor fewer (would miss a real category)');
+
+  assert.deepEqual(classifyDecisionTriggers('on prépare une nouvelle architecture, réutilisable pour un futur projet').map((c) => c.key), ['architecture', 'generalisable'], 'a request text touching two real categories at once must surface both, never force a single pick');
+  assert.deepEqual(classifyDecisionTriggers('juste un correctif de coquille dans un commentaire'), [], 'a genuinely low-stakes request must trigger zero categories, never a false positive that would erode the reminder\'s value');
+  assert.equal(reminderFor('juste un correctif de coquille'), null, 'reminderFor() must return null (never an empty-but-truthy string) when no category is detected — a caller can then skip the reminder entirely rather than print a hollow one');
+  assert.ok(reminderFor('on va supprimer définitivement ce champ, c\'est irréversible').includes('philosophie-et-politique.md'), 'a genuinely irreversible decision must produce a reminder that names the actual file to consult, never a vague pointer');
+
+  const fakePhilosophy = [
+    '## Partie 1 — Philosophie',
+    '',
+    '### 1.1 Principe fondateur **[Explicite]**',
+    '',
+    'Un texte fondateur sans date, jamais daté à tort.',
+    '',
+    '### 1.2 Un principe récent **[Synthèse, 2026-09-10]**',
+    '',
+    'Un principe daté explicitement, ajouté après coup.',
+    '',
+    '## Partie 2 — Politique',
+    '',
+    '### 2.1 Toujours prudence budgétaire ambiante **[Explicite]**',
+    '',
+    'On dépense toujours avec prudence sur le budget ambiant du projet.',
+    '',
+    '### 2.2 Jamais de prudence budgétaire ambiante **[Synthèse, 2026-09-11]**',
+    '',
+    'On ne fait jamais preuve de prudence sur le budget ambiant du projet.',
+  ].join('\n');
+  const fakePrinciples = extractPrincipleUnits(fakePhilosophy);
+  assert.equal(fakePrinciples.length, 4, 'extractPrincipleUnits() must find exactly the 4 real "### N.N" sections, bounded by the next section or the next top-level "## " heading, never swallowing a neighboring Part');
+  assert.deepEqual(fakePrinciples.map((p) => `${p.partie}.${p.numero}`), ['1.1', '1.2', '2.1', '2.2'], 'principles must be extracted in real document order, each carrying its real Partie/numero pair');
+  assert.equal(extractPrincipleDate(fakePrinciples[0]), undefined, 'a principle with no explicit date in its tag must report undefined honestly, never a fabricated date guessed from context');
+  assert.equal(extractPrincipleDate(fakePrinciples[1]), '2026-09-10', 'a principle whose tag genuinely carries a date must have it extracted exactly');
+  assert.deepEqual(buildEvolutionDigest(fakePrinciples), ['2026-09-10 — 1.2 Un principe récent', '2026-09-11 — 2.2 Jamais de prudence budgétaire ambiante'], 'the evolution digest must list only dated principles, in real chronological order (oldest first), never document order nor an undated founding principle');
+
+  const tensions = findPossibleTensions(fakePrinciples);
+  assert.deepEqual(tensions.map((t) => `${t.a}-${t.b}`), ['2.1-2.2'], 'a real "always" vs "never" divergence over genuinely shared vocabulary must be flagged as a possible tension — but 1.1 vs 1.2 (no shared vocabulary, no polarity clash) must never be flagged, proving this is not a bare keyword scan');
+  assert.deepEqual(findPossibleTensions([fakePrinciples[0], fakePrinciples[1]]), [], 'two principles sharing no real vocabulary overlap must never be flagged, however their polarity markers read — the Jaccard threshold is the real gate, never the polarity check alone');
+
+  assert.ok(typeof philosophyFreshnessDays() === 'number', 'philosophyFreshnessDays() must report a real number of days for the actual committed docs/philosophie-et-politique.md file — reusing lastTouchDays() from CLEAN-DIRTY-OLD rather than a second divergent calculation');
+  console.log('Passed: THE-KING (task #167) reminds to consult docs/philosophie-et-politique.md before a high-stakes decision across exactly its 6 confirmed trigger categories (never a false positive on a low-stakes request), parses the real document into dated/undated principles without ever fabricating a date, builds an honest chronological evolution digest, and flags a possible tension between two principles only when BOTH real shared vocabulary AND a genuine "jamais"/"toujours" polarity clash are present — never a bare keyword or polarity scan alone.');
 }

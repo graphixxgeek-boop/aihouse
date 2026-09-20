@@ -784,6 +784,19 @@ fichiers propres à ce projet, qui vivent dans `docs/referentiel/check-level-tar
 de l'échelle qualitative d'effort général ⏱️/🔢 (`docs/regles-de-travail.md` §B.2bis), jamais
 fusionnés.
 
+## THE-KING — blueprint exportable
+
+`docs/the-king-blueprint.md` documente l'ARCHITECTURE de l'Agent qui veille au respect de
+`docs/philosophie-et-politique.md` dans les décisions à haut niveau (2026-09-21, demande explicite
+de l'utilisateur, rôle de « père »/« grand-père ») — rappel ciblé sur 6 catégories de déclenchement
+(architecture, mécanique de jeu à fort impact, nouvel outil, priorité de la feuille de route,
+décision généralisable, décision irréversible/coûteuse), fraîcheur du document (jamais un auto-edit),
+digest chronologique de son évolution et détection de tension possible entre deux principes (signal
+heuristique, jamais une contradiction prouvée) — sous une forme générique, réutilisable sur un autre
+projet gouverné par un document de philosophie séparé de sa charte de contenu. Jamais les catégories
+exactes ni les fichiers propres à ce projet, qui vivent dans `docs/referentiel/the-king.md`
+(instanciation) et `docs/the-king/` (dossier + index des évolutions constatées).
+
 ## ALWAYS-NEW-CODE — blueprint exportable
 
 `docs/always-new-code-blueprint.md` documente l'ARCHITECTURE de l'outil qui rend concrète
@@ -981,6 +994,11 @@ conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs se
   ce projet : les 4 niveaux et leurs outils associés, `scripts/check-level-target.mjs`, validé
   contre les vrais prompts historiques d'HYPER-SCAN-CHECKPOINT. Cf.
   `docs/check-level-target-blueprint.md` pour le principe générique.
+- `docs/referentiel/the-king.md` (2026-09-21) — instanciation de THE-KING pour ce projet : les 6
+  catégories de déclenchement, le parsing de `docs/philosophie-et-politique.md`
+  (`scripts/the-king.mjs`), le digest de son évolution, la détection de tension possible entre deux
+  principes, le registre (`docs/the-king/`). Cf. `docs/the-king-blueprint.md` pour le principe
+  générique.
 - `docs/referentiel/always-new-code.md` (2026-09-19) — instanciation d'ALWAYS-NEW-CODE (Article 23)
   pour ce projet : les 8 zones (réutilisées d'HARMONIA), la rotation intelligente
   (`scripts/always-new-code.mjs`), le déclenchement via CHECK-LEVEL-TARGET niveau Exceptionnel, le
