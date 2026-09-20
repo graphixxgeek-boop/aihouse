@@ -6,12 +6,22 @@
 
 ## Rôle exact
 
-MEMENTO est le seul outil du réseau à cibler les **Personnages** (Lia/Noé) plutôt qu'un membre de
-l'équipe (script de travail). Décision durable (2026-09-21, corrigeant #245 une seconde fois après
-un nouveau quasi-recouvrement) : les Personnages n'ont AUCUNE existence dans l'équipe — jamais une
+MEMENTO n'est PAS un seul « outil » homogène — c'est une initiative à deux facettes de nature
+différente (précision fixée le 2026-09-21, en réponse à une question directe de l'utilisateur :
+« MEMENTO n'est pas un membre de l'équipe je pense ? [...] il faut peut-être créer 2 catégories »).
+Sujet visé (les **Personnages**, Lia/Noé) : ils n'ont AUCUNE existence dans l'équipe — jamais une
 case de l'organigramme, un domaine entièrement séparé (charte de contenu). `PERSONNAGES`/
 `assertNotAPersonnage()` de `scripts/lib-shell.mjs` n'est donc pas une catégorie interne au même
 tableau que Direction/Équipe noyau/Membre/VIP, mais une liste d'exclusion au bord du domaine équipe.
+Nature des DEUX ARTEFACTS qui composent MEMENTO (cf. `docs/regles-de-travail.md`, « Moteur du jeu vs
+Outillage de travail ») :
+
+- `scripts/memento.mjs` (rôle a) = **Outillage de travail = Membre de l'équipe**, structurellement
+  identique à `check-argus.mjs` — seul artefact éligible à un badge/PRESTATIONS/Doc-Report.
+- `lib/memento-weight.ts` (rôle b) = **Moteur du jeu**, jamais un membre, jamais un badge — un
+  fragment de code de PRODUIT câblé dans `lib/lia.ts`, exactement la même catégorie que
+  `lib/gemini-keys.ts`.
+
 MEMENTO couvre deux dettes distinctes, jamais adressées ailleurs :
 
 1. **Cohérence mécanique de la mémoire persistée** (`lib/life.ts`) — jamais un second appel Gemini.
@@ -87,9 +97,11 @@ séparé dupliquerait un rapport déjà couvert.
 
 ## Doc-Report
 
-Entrée `REGISTRIES` dédiée (`scripts/doc-report.mjs`), famille **Hors équipe (mémoire narrative des
-Personnages)** — la seule entrée de cette famille à ce jour, décision "texte" (aucun rapport HTML
-prévu, MEMENTO ne produit que des signaux lus par l'agent et par `kpi-report.mjs`).
+Entrée `REGISTRIES` dédiée (`scripts/doc-report.mjs`), `scriptPath: "scripts/memento.mjs"` — jamais
+`lib/memento-weight.ts` (`findEngineCodeInRegistries()` refuse mécaniquement tout `scriptPath` du
+Moteur du jeu). Famille **Hors équipe (mémoire narrative des Personnages)** — la seule entrée de
+cette famille à ce jour, décision "texte" (aucun rapport HTML prévu, MEMENTO ne produit que des
+signaux lus par l'agent et par `kpi-report.mjs`).
 
 ## Statut d'intégration
 

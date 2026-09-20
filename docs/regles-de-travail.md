@@ -838,6 +838,44 @@ domaine équipe, jamais une catégorie interne à ce domaine.
   elle pourra un jour AGRÉGER les verdicts narratifs déjà produits ailleurs (MEMENTO, EL-PROFESSOR,
   check-spirit.mjs) sur Lia/Noé, jamais les noter/scorer comme des membres de l'équipe.
 
+### Moteur du jeu vs Outillage de travail : deux natures de code, jamais confondues sous un même nom
+
+*(Fixée le 2026-09-21, tout de suite après la règle ci-dessus, sur une question directe de
+l'utilisateur : « MEMENTO n'est pas un membre de l'équipe je pense ? [...] MEMENTO est similaire à
+ces scripts [regles-du-temps.md, regles-de-travail.md], on aurait pu l'appeler regles de la
+memoire non ? [...] il faut peut être créer 2 catégories de scripts ? [...] à toi de choisir la
+meilleure formule ». Root-cause trouvée en répondant : "MEMENTO" désignait sous un même nom deux
+artefacts de nature différente — `scripts/memento.mjs` (rôle a, une vraie vérification mécanique,
+structurellement un Membre de l'équipe comme `check-argus.mjs`) et `lib/memento-weight.ts` (rôle b,
+un point d'observation câblé dans `lib/lia.ts`) — le second n'a jamais été un outil de travail : il
+vit dans le MOTEUR DU JEU lui-même (terme déjà employé dans CLAUDE.md, section « Stack technique » :
+« le moteur applicatif vit dans lib/ »), exactement la même catégorie que `lib/gemini-keys.ts` — du
+code de PRODUIT, jamais un travailleur qu'on badge ou qu'on liste au catalogue.)*
+
+**Règle durable, à appliquer à tout futur outil qui, comme MEMENTO, ajoute un point d'observation
+DANS le moteur du jeu plutôt que de rester un simple script externe** — deux catégories de code,
+orthogonales à la catégorie « Personnages » ci-dessus (qui n'est pas du code, mais du contenu
+narratif) :
+- **Outillage de travail** (`scripts/*.mjs`) = **Membre de l'équipe** — badge, blueprint,
+  instanciation, registre, entrée PRESTATIONS : la catégorie déjà établie, inchangée.
+- **Moteur du jeu** (`lib/*.ts`, `app/*`, `components/*`) = **jamais un membre, jamais un badge,
+  jamais une entrée PRESTATIONS** — c'est le PRODUIT que l'équipe construit et vérifie (par
+  `tsc`/`check-house.mjs`/AXA-CHECK comme n'importe quel autre code), pas un travailleur de plus.
+
+**Conséquence directe sur MEMENTO** : ce n'est pas « un membre de l'équipe », c'est une initiative à
+deux facettes de nature différente — `scripts/memento.mjs` (Outillage, Membre, seul éligible à
+PRESTATIONS/Doc-Report/un futur badge) et `lib/memento-weight.ts` (Moteur du jeu, jamais éligible à
+rien de tout ça, au même titre que le reste de `lib/`). `docs/referentiel/memento.md` et le
+commentaire de `lib/memento-weight.ts` nomment désormais cette distinction explicitement.
+
+**Garde-fou mécanique ajouté** (`scripts/doc-report.mjs::findEngineCodeInRegistries()`) : vérifie
+que le champ `scriptPath` de chaque entrée `REGISTRIES` (le seul des trois catalogues — PRESTATIONS,
+REGISTRIES, CIRCLE_ITEMS — à porter un vrai chemin de fichier ; les deux autres ne référencent des
+outils que par leur NOM, jamais un chemin, donc rien à vérifier mécaniquement de ce côté) ne pointe
+jamais vers un fichier du Moteur du jeu (`lib/`, `app/`, `components/`) — seul `scripts/*.mjs` est un
+chemin valide pour un Membre de l'équipe. Vérifié vert contre l'état réel du dépôt au moment de sa
+création : zéro violation.
+
 **Précision honnête, en réponse à une question directe de l'utilisateur sur la détection de
 doublons de FONCTIONS entre outils (2026-09-20)** : contrairement à ce qu'on pourrait supposer,
 rien de mécanique ne vérifie aujourd'hui qu'une nouvelle fonction ne duplique pas une fonction

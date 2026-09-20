@@ -823,11 +823,15 @@ détecter la dette d'organisation. Jamais les 8 zones exactes ni les fichiers pr
 
 ## MEMENTO — blueprint exportable, l'exception qui cible les Personnages
 
-`docs/memento-blueprint.md` documente l'ARCHITECTURE de MEMENTO (2026-09-21, tâche #169) — le seul
-outil du réseau dont le domaine EST un personnage narratif (Lia/Noé, qui n'ont AUCUNE existence
-dans l'équipe de travail — jamais une catégorie de l'organigramme, cf. `PERSONNAGES`/
-`assertNotAPersonnage()` de `scripts/lib-shell.mjs`, un garde-fou d'exclusion, pas une case de plus)
-plutôt qu'un script membre de l'équipe. Couvre deux dettes distinctes, chacune hors du domaine des outils
+`docs/memento-blueprint.md` documente l'ARCHITECTURE de MEMENTO (2026-09-21, tâche #169) — pas un
+seul outil homogène mais une initiative à deux facettes de nature différente (précision fixée le
+même soir) : `scripts/memento.mjs` (rôle a) est un vrai script d'**Outillage de travail = Membre de
+l'équipe**, tandis que `lib/memento-weight.ts` (rôle b) vit dans le **Moteur du jeu** (`lib/`),
+jamais un membre, jamais un badge — exactement la même catégorie que `lib/gemini-keys.ts` (cf.
+`docs/regles-de-travail.md`, « Moteur du jeu vs Outillage de travail »). Son SUJET, en revanche, EST
+un personnage narratif (Lia/Noé, qui n'ont AUCUNE existence dans l'équipe de travail — jamais une
+catégorie de l'organigramme, cf. `PERSONNAGES`/`assertNotAPersonnage()` de `scripts/lib-shell.mjs`,
+un garde-fou d'exclusion, pas une case de plus). Couvre deux dettes distinctes, chacune hors du domaine des outils
 de gouvernance de tokens existants (frontière écrite des deux côtés) : (a) cohérence mécanique de
 la mémoire persistée d'un personnage dans le temps (ordre chronologique, remise à zéro suspecte
 d'un compteur, régression d'un indicateur à sens unique) — jamais un second appel au modèle de

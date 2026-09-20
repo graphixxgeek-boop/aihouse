@@ -96,6 +96,20 @@ export const REGISTRIES = [
   { slug: "dream-team-photo", label: "Photo de la dream team", family: "Coordination", path: "docs/profil-utilisateur/", decision: "delivery_html", scriptPath: "scripts/le-coordinateur.mjs" },
 ];
 
+// findEngineCodeInRegistries() (2026-09-21, demande explicite de l'utilisateur après avoir repéré
+// que "MEMENTO" mélangeait sous un même nom un vrai script d'outillage (scripts/memento.mjs) et un
+// fragment du Moteur du jeu lui-même (lib/memento-weight.ts, câblé dans lib/lia.ts) : « MEMENTO
+// n'est pas un membre de l'équipe je pense ? [...] il faut peut être créer 2 catégories »).
+// Garde-fou mécanique : un Membre de l'équipe (une entrée REGISTRIES) ne doit JAMAIS pointer son
+// `scriptPath` vers un fichier du Moteur du jeu (lib/, app/, components/) — seul scripts/*.mjs est
+// un chemin valide, cf. docs/regles-de-travail.md « Moteur du jeu vs Outillage de travail ».
+// PRESTATIONS et CIRCLE_ITEMS ne référencent leurs outils que par NOM (jamais un chemin de fichier),
+// donc rien à vérifier mécaniquement de ce côté — seul REGISTRIES porte un vrai `scriptPath`.
+const ENGINE_CODE_PREFIXES = ["lib/", "app/", "components/"];
+export function findEngineCodeInRegistries(registries = REGISTRIES) {
+  return registries.filter((r) => ENGINE_CODE_PREFIXES.some((prefix) => (r.scriptPath ?? "").startsWith(prefix)));
+}
+
 function readScriptSource(scriptPath, readFileImpl = readFileSync) {
   try {
     return readFileImpl(join(ROOT, scriptPath), "utf8");

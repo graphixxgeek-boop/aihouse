@@ -3,6 +3,12 @@
 // modifier ce contexte : territoire exclusif de l'Article 8/0 de CLAUDE.md, cette mesure ne fait
 // qu'observer de l'extérieur, exactement la limite posée à l'investigation préalable (Article 19).
 //
+// PRÉCISION DE CATÉGORIE (2026-09-21, cf. docs/regles-de-travail.md « Moteur du jeu vs Outillage de
+// travail ») : ce fichier vit dans le MOTEUR DU JEU (lib/), pas dans l'Outillage de travail
+// (scripts/) — ce n'est donc PAS « l'Agent MEMENTO » lui-même (ça, c'est scripts/memento.mjs, un
+// vrai Membre de l'équipe). C'est un fragment de code de PRODUIT, exactement la même catégorie que
+// lib/gemini-keys.ts — jamais éligible à un badge, un blueprint ou une entrée PRESTATIONS.
+//
 // Même patron que lib/gemini-keys.ts::episodes (mémoire best-effort au niveau du module JS, jamais
 // écrite en base — Cloudflare Workers n'a pas de disque persistant —, cap dur à 200 entrées,
 // exposée en lecture seule via l'API admin déjà protégée, persistée après coup par

@@ -940,7 +940,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 190'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 191'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4517,9 +4517,20 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // (docs/suivi #230), jamais celui qui la prend. Testé avec un readFileImpl injecté et un
   // sous-ensemble isolé de registres — jamais dépendant du contenu réel des scripts du dépôt, qui
   // peut changer indépendamment de ce test.
-  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex, LOCAL_JOURNALS, auditLocalJournals, findJournalsMissingFromGitignore } = await import('../scripts/doc-report.mjs');
+  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex, LOCAL_JOURNALS, auditLocalJournals, findJournalsMissingFromGitignore, findEngineCodeInRegistries } = await import('../scripts/doc-report.mjs');
   assert.ok(REGISTRIES.length >= 15, 'the registry table must cover every real tool registry of the network, never a partial or forgotten subset');
   assert.ok(REGISTRIES.every((r) => r.slug && r.label && r.family && r.path && r.decision), 'every registry entry must be fully specified — a half-filled row would silently break the family grouping or the decision audit');
+
+  // findEngineCodeInRegistries() (2026-09-21, real category error found: "MEMENTO" conflated a real
+  // team-member script (scripts/memento.mjs) with a fragment of the game engine itself
+  // (lib/memento-weight.ts, wired into lib/lia.ts) under one name). A Membre de l'équipe entry must
+  // never point its scriptPath at lib/, app/, or components/ — only scripts/*.mjs is a valid path.
+  assert.deepEqual(findEngineCodeInRegistries(REGISTRIES), [], 'checked live against every real registry in this project: none may point at the game engine (lib/app/components) rather than a real scripts/*.mjs tool — a guarantee that breaks the day a future tool repeats the MEMENTO conflation');
+  const fakeEngineRegistries = [
+    { slug: 'real-tool', label: 'Real Tool', family: 'Test', path: 'docs/real-tool/', decision: 'texte', scriptPath: 'scripts/real-tool.mjs' },
+    { slug: 'fake-member', label: 'Fake Member', family: 'Test', path: 'docs/fake-member/', decision: 'texte', scriptPath: 'lib/some-engine-file.ts' },
+  ];
+  assert.deepEqual(findEngineCodeInRegistries(fakeEngineRegistries).map((r) => r.slug), ['fake-member'], 'a registry entry whose scriptPath lives in lib/ (the game engine, never a team member) must be flagged by name, while a genuine scripts/*.mjs entry is never a false positive');
 
   const fakeReadFile = (path) => {
     if (path.includes('tool-with-html')) return 'import { renderHtmlReport } from "./html-report.mjs";';
@@ -4549,7 +4560,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(rows.find((r) => r.slug === 'archived-tool').neverSolicited, true, 'a registry with zero real usage events must be flagged as unsolicited, reusing tool-usage.mjs\'s own toolsNeverUsed() rather than a second divergent calculation');
   assert.equal(byFamily.get('Test').length, 4, 'rows must be grouped by their declared family, never flattened or regrouped by a guessed criterion');
   assert.deepEqual(mismatches.map((m) => m.slug), ['unwired-html-tool'], 'the top-level mismatches list must surface exactly the real HTML-wiring gap, ready for a human/agent to read — Doc-Report itself never fixes it');
-  console.log('Passed: Doc-Report (task #165) mechanically audits the already-decided HTML/texte choice against the real producing script\'s source (never guessed from a tool\'s name), flags an undeclared docs/ registry as a real gap while sparing the reference/suivi folders, and cross-references tool-usage.mjs\'s real usage history to spot a registry nobody ever solicits — a genuine wiring gap (THE-DEEP-READER, Simulations) was found on its very first real run against the live repository.');
+  console.log('Passed: Doc-Report (task #165) mechanically audits the already-decided HTML/texte choice against the real producing script\'s source (never guessed from a tool\'s name), flags an undeclared docs/ registry as a real gap while sparing the reference/suivi folders, cross-references tool-usage.mjs\'s real usage history to spot a registry nobody ever solicits — a genuine wiring gap (THE-DEEP-READER, Simulations) was found on its very first real run against the live repository — and, findEngineCodeInRegistries(), flags any registry whose scriptPath points at the game engine (lib/app/components) rather than a real scripts/*.mjs team-member tool, verified live to hold on every real registry today.');
 
   // LOCAL_JOURNALS (2026-09-21, direct question from the user: is Doc-Report itself capable of
   // organizing the local, never-committed state files too, or does a twin tool need to?). Answer:
