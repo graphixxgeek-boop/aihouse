@@ -352,10 +352,7 @@ enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redem
    (cf. préférence déjà actée plus haut, jamais collé en clair dans la réponse), accompagné du
    dossier retourné complet.
 3bis. **Archiver durablement transcript + dossier, et extraire un résumé compact du journal JSON
-   avant de le laisser disparaître** (2026-09-19, ajouté après un vrai risque de perte constaté :
-   onze simulations passées ne vivaient que dans le scratchpad éphémère, jamais dans le dépôt, à
-   l'exception d'une seule rangée par erreur dans `docs/contexte-projet/` — un dossier documenté
-   comme "jamais une source de vérité", donc le mauvais endroit). Copier transcript + dossier dans
+   avant de le laisser disparaître.** Copier transcript + dossier dans
    `docs/simulations/` (jamais le journal JSON brut lui-même — plusieurs Mo par simulation, coût
    disproportionné pour sa valeur de vérification, décision explicite de l'utilisateur), lancer
    `node scripts/summarize-simulation-log.mjs <chemin du journal>` et garder son résultat compact
@@ -365,15 +362,11 @@ enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redem
    documentée s'est vraiment produite en jeu, pas seulement que le code et la doc s'accordent entre
    eux ; ARGUS peut corroborer un champ "jamais lu" par une absence d'effet observé en session
    réelle) — à répéter à CHAQUE simulation, jamais seulement pour rattraper un retard une fois.
-4. **Lancer `node scripts/kpi-report.mjs` avant de redémarrer le serveur** (2026-09-19, ajouté après
-   un oubli réel constaté par l'utilisateur : la livraison d'une simulation n'incluait ni le rapport
-   ni les KPI du Smart Breaker, alors que `docs/referentiel/tableau-de-bord.md` prévoyait déjà cette
-   cadence sans qu'elle soit explicitement une étape d'Article 18 — un écart entre deux documents,
-   traité comme un bug, cf. Article 13) et inclure ses résultats dans la même livraison que le
-   transcript/dossier — jamais un rapport à part, oublié ou différé. Les compteurs du Smart Breaker
-   étant en mémoire process, ce rapport doit être pris AVANT de relancer le serveur pour la
-   simulation suivante, sous peine de perdre les chiffres de cette session précise. **Complément
-   ajouté le 2026-09-19, même jour** : archiver le texte complet de cette exécution dans
+4. **Lancer `node scripts/kpi-report.mjs` avant de redémarrer le serveur** et inclure ses résultats
+   dans la même livraison que le transcript/dossier — jamais un rapport à part, oublié ou différé.
+   Les compteurs du Smart Breaker étant en mémoire process, ce rapport doit être pris AVANT de
+   relancer le serveur pour la simulation suivante, sous peine de perdre les chiffres de cette
+   session précise. En complément, archiver le texte complet de cette exécution dans
    `docs/referentiel/kpi-rapports/<run>.txt` et ajouter une ligne à
    `docs/referentiel/kpi-index.md` (comparaison explicite avec le run précédent, jamais une lecture
    isolée) — procédure complète documentée dans `kpi-index.md` lui-même. Dans la conversation,
@@ -381,9 +374,7 @@ enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redem
    points d'attention) accompagnée de `docs/referentiel/kpi-historique.csv` en fichier joint —
    jamais le rapport complet collé en clair (demande explicite de l'utilisateur : « dans la
    conversation, tu ne fais que la synthèse globale »).
-4bis. **Faire lire la simulation par EL-PROFESSOR avant de commencer l'analyse** (2026-09-19, à la
-   demande explicite de l'utilisateur : « je voudrais un agent qui donne une note de reussite sur
-   100 à chaque version, en fonction du respect de la charte »). Une vraie lecture (jamais un calcul
+4bis. **Faire lire la simulation par EL-PROFESSOR avant de commencer l'analyse.** Une vraie lecture (jamais un calcul
    mécanique) du transcript ET du dossier retourné (obligatoire dès qu'il existe) contre les 5 thèmes
    de la charte, plafonnée par l'Article 0 si l'esprit dérive — cf.
    `docs/referentiel/el-professor.md` pour la méthode complète. Livrée en fichier joint, dans la

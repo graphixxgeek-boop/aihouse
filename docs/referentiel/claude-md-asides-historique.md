@@ -192,6 +192,26 @@ avant l'astérisque de fermeture (`).* ` au lieu de `)*`), un format que `DATED_
 couvre pas. Trouvaille purement manuelle, aucune correction du regex appliquée — même discipline que
 pour la limite déjà connue : jamais une évolution du motif sans nouvelle demande explicite.)*
 
+## Article 18, étape 3bis — « Archiver durablement transcript + dossier »
+
+> *(2026-09-19, ajouté après un vrai risque de perte constaté : onze simulations passées ne
+> vivaient que dans le scratchpad éphémère, jamais dans le dépôt, à l'exception d'une seule rangée
+> par erreur dans `docs/contexte-projet/` — un dossier documenté comme "jamais une source de
+> vérité", donc le mauvais endroit.)*
+
+## Article 18, étape 4 — « Lancer node scripts/kpi-report.mjs avant de redémarrer le serveur »
+
+> *(2026-09-19, ajouté après un oubli réel constaté par l'utilisateur : la livraison d'une
+> simulation n'incluait ni le rapport ni les KPI du Smart Breaker, alors que
+> `docs/referentiel/tableau-de-bord.md` prévoyait déjà cette cadence sans qu'elle soit
+> explicitement une étape d'Article 18 — un écart entre deux documents, traité comme un bug, cf.
+> Article 13.)*
+
+## Article 18, étape 4bis — « Faire lire la simulation par EL-PROFESSOR avant de commencer l'analyse »
+
+> *(2026-09-19, à la demande explicite de l'utilisateur : « je voudrais un agent qui donne une note
+> de reussite sur 100 à chaque version, en fonction du respect de la charte ».)*
+
 ## Note pour une future passe (jamais faite ici, hors du périmètre validé par l'utilisateur)
 
 Le balayage mécanique de `listDatedNarrativeMarkers()` ne détecte que les asides dont la parenthèse
