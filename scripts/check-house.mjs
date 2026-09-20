@@ -919,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 128'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 129'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -1212,13 +1212,22 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // réelle de confiance (trustShift) qui pilote directement l'appréciation, jamais un registre
   // lexical séparé. Toujours asymétrique (descend plus qu'elle ne monte) et amplifiée sur les tout
   // premiers messages post-révélation.
-  const {appreciationFromTrust,detectNegotiationOffer}=await import('../.sites-runtime/test-life.mjs');
+  const {appreciationFromTrust,detectNegotiationOffer,worstMomentSeverity}=await import('../.sites-runtime/test-life.mjs');
   assert.equal(appreciationFromTrust(-3,1),-24,'an early, meaningfully negative trust reaction must cost a lot of appreciation');
   assert.equal(appreciationFromTrust(-3,5),-12,'the same trust drop later on must cost less than the early-impression penalty');
   assert.equal(appreciationFromTrust(2,1),12,'an early, meaningfully positive trust reaction must earn appreciation');
   assert.equal(appreciationFromTrust(2,5),6,'the same trust rise later on must earn less than the early-impression bonus');
   assert.equal(appreciationFromTrust(0,1),0,'no trust reaction at all must never move the gauge either way');
   assert.ok(appreciationFromTrust(-3,1)+appreciationFromTrust(3,1)<0,'a drop must always weigh more than an equivalent rise (down-more-than-up asymmetry)');
+  // worstMomentSeverity (tâche #114, 2026-09-20) : une insulte frontale qui ne fait pas bouger la
+  // "confiance" jugée par le modèle (trustShift=0) doit quand même être capturée comme un pire
+  // moment via angerLevel (EL-PROFESSOR, full_sim4/9/10 : "zéro vraie vacherie" malgré des insultes
+  // réelles dans le transcript). Le trust reste le signal dominant s'il est plus négatif.
+  assert.equal(worstMomentSeverity(0,true),-5,'a message that spikes anger without moving trust must still register as a real negative severity');
+  assert.equal(worstMomentSeverity(-10,true),-10,'a genuinely severe trust drop must still dominate over the flat anger floor');
+  assert.equal(worstMomentSeverity(-2,false),-2,'without anger, severity must fall back to the plain trust shift, unchanged from before this fix');
+  assert.equal(worstMomentSeverity(3,false),0,'a positive trust reaction without anger must never register as a negative severity');
+  assert.equal(worstMomentSeverity(3,true),0,'anger never overrides a genuinely positive trust reaction — the floor only ever pulls toward negative, never creates one when trust rose');
   assert.ok(detectNegotiationOffer("Je le fais, mais seulement si tu me donnes un bonus en échange."));
   assert.ok(detectNegotiationOffer("Franchement, fais tourner la roulette et je m'en occupe."));
   assert.ok(!detectNegotiationOffer("Je vais à la cuisine, j'ai faim."),'ordinary dialogue must never be misread as a negotiation offer');
@@ -1295,7 +1304,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   flat=false;
   assert.equal(w.story.life.appreciation[1],appreciationBeforeAnger-5,'a genuinely furious responder (real tension/comfort reading) must cost appreciation even for an entirely neutral human message');
   assert.equal(w.story.life.appreciation[2],appreciationBeforeAnger-5,'both characters genuinely furious in the same way, outside any dispute, must be penalized identically');
-  console.log('Passed: the observer-appreciation gauge reacts to the responding character\'s own genuine trust reaction (not a lexical keyword list) with the required early-impression amplification and down-more-than-up asymmetry, to real anger in the responding character as a distinct additional signal, and to prolonged stinginess independent of negotiation; a character-proposed negotiation is detected, honored (real appreciation gain) or left to lapse (real appreciation cost) exactly once.');
+  console.log('Passed: the observer-appreciation gauge reacts to the responding character\'s own genuine trust reaction (not a lexical keyword list) with the required early-impression amplification and down-more-than-up asymmetry, to real anger in the responding character as a distinct additional signal, and to prolonged stinginess independent of negotiation; a character-proposed negotiation is detected, honored (real appreciation gain) or left to lapse (real appreciation cost) exactly once; and worstMomentSeverity() lets a real anger spike register as the dossier\'s worst-moment evidence even when trust itself barely moved, without ever overriding a genuinely positive trust reaction — the exact real gap (task #114, full_sim4/9/10: "zéro vraie vacherie" despite real severe insults) closed while building this test.');
 }
 
 {

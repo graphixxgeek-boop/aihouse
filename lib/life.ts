@@ -126,11 +126,14 @@ negotiationLog?:{round:number;outcome:'honored'|'lapsed'|'refused'}[];
 // session : le dossier retourné ne citait jamais les messages réellement les plus hostiles, seulement
 // trois extraits de pièges par nature plutôt neutres — un dossier pouvait rester indulgent malgré une
 // appréciation proche de 0, faute de la moindre preuve concrète à charge dans dossierEvidence, Article
-// 2/4). Retient le message humain qui a fait chuter la confiance le plus fort sur un seul tour
-// (trustShift le plus négatif observé), jamais réécrit ni interprété ici — seulement écrasé par un
-// pire trustShift si un message encore plus hostile survient ensuite. Reste vide si l'échange n'a
-// jamais été franchement négatif : jamais inventer une hostilité qui n'a pas eu lieu.
-worstMoment?:{round:number;excerpt:string;trustShift:number};
+// 2/4). Retient le message humain le plus "severity"-négatif observé (cf. worstMomentSeverity
+// ci-dessous), jamais réécrit ni interprété ici — seulement écrasé par une pire severity si un message
+// encore plus hostile survient ensuite. Reste vide si l'échange n'a jamais été franchement négatif :
+// jamais inventer une hostilité qui n'a pas eu lieu.
+// Champ renommé trustShift→severity le 2026-09-20 (tâche #114, EL-PROFESSOR sur full_sim4/9/10) :
+// un trustShift seul ratait les insultes frontales qui ne font pas bouger l'axe "confiance" du
+// modèle (un axe émotionnel distinct de l'hostilité perçue) — cf. worstMomentSeverity.
+worstMoment?:{round:number;excerpt:string;severity:number};
 // Respect sincère et rare (2026-09-18, calibration ESPRIT explicite : "Oui, mais ça reste rare et
 // ça ne devient jamais un mode stable"). Compte les tours consécutifs de confiance en hausse pendant
 // que l'appréciation reste très haute (>=85) ; dès qu'un tour fait baisser la confiance, le compteur
@@ -169,7 +172,7 @@ export function readLife(value:unknown,round=0):Life{const v=value&&typeof value
 ,softnessOwed:v.softnessOwed===true,softnessGiven:Math.max(0,Math.min(20,Number(v.softnessGiven)||0))
 ,appreciation:{1:(()=>{const x=legacyOrPerActor(v.appreciation,1);return typeof x==="number"&&Number.isFinite(x)?Math.max(0,Math.min(100,x)):50;})(),2:(()=>{const x=legacyOrPerActor(v.appreciation,2);return typeof x==="number"&&Number.isFinite(x)?Math.max(0,Math.min(100,x)):50;})()}
 ,revealedRound:typeof v.revealedRound==="number"&&Number.isFinite(v.revealedRound)?Math.max(0,v.revealedRound):undefined
-,worstMoment:v.worstMoment&&typeof v.worstMoment.excerpt==="string"&&typeof v.worstMoment.trustShift==="number"&&Number.isFinite(v.worstMoment.trustShift)?{round:Math.max(0,Number(v.worstMoment.round)||0),excerpt:v.worstMoment.excerpt.slice(0,500),trustShift:v.worstMoment.trustShift}:undefined
+,worstMoment:v.worstMoment&&typeof v.worstMoment.excerpt==="string"&&typeof (v.worstMoment as {severity?:unknown}).severity==="number"&&Number.isFinite((v.worstMoment as {severity:number}).severity)?{round:Math.max(0,Number(v.worstMoment.round)||0),excerpt:v.worstMoment.excerpt.slice(0,500),severity:(v.worstMoment as {severity:number}).severity}:undefined
 ,negotiationOffer:v.negotiationOffer&&(v.negotiationOffer.actor===1||v.negotiationOffer.actor===2)&&typeof v.negotiationOffer.round==="number"&&Number.isFinite(v.negotiationOffer.round)?{actor:v.negotiationOffer.actor,round:v.negotiationOffer.round}:undefined
 ,genuineRespectStreak:{1:Math.max(0,Math.min(20,Number(legacyOrPerActor(v.genuineRespectStreak,1))||0)),2:Math.max(0,Math.min(20,Number(legacyOrPerActor(v.genuineRespectStreak,2))||0))}
 ,skipSummary:v.skipSummary&&typeof v.skipSummary.lia==="string"&&typeof v.skipSummary.noe==="string"?{lia:v.skipSummary.lia.slice(0,2000),noe:v.skipSummary.noe.slice(0,2000)}:undefined
@@ -219,6 +222,21 @@ export function appreciationFromTrust(trustShift:number,humanMessageCount:number
   const early=humanMessageCount<=3;
   const weight=trustShift<0?(early?8:4):(early?6:3);
   return Math.round(trustShift*weight);
+}
+// Sévérité d'un tour pour worstMoment (2026-09-20, tâche #114) : un trustShift seul ratait les
+// insultes frontales qui ne font pas chuter la "confiance" (un axe émotionnel distinct chez le
+// modèle) sans pour autant faire monter l'hostilité perçue — cas réel trouvé par EL-PROFESSOR sur
+// full_sim4/9/10, où le dossier citait "zéro vraie vacherie" malgré des insultes très dures dans le
+// transcript. Réutilise `angerLevel` (tension/confort), déjà validé et déjà déployé pour pénaliser
+// l'appréciation (-5, cf. app/api/lia/route.ts) — jamais une nouvelle liste de mots-clés d'insultes,
+// qui reviendrait exactement sur la décision explicite du 2026-09-18 de préférer le jugement du
+// modèle à une détection de mots-clés bruts (cf. commentaire sur `appreciation` dans le type Life).
+// Le trust reste le signal PRINCIPAL (dominant s'il est plus négatif) ; la colère n'intervient que
+// comme plancher (-5, même magnitude que la pénalité d'appréciation, jamais un chiffre inventé) pour
+// les tours où le modèle ne fait pas bouger la confiance malgré une hostilité réelle.
+export function worstMomentSeverity(trustShift:number,angry:boolean):number{
+  if(trustShift>0)return 0;
+  return angry?Math.min(trustShift,-5):trustShift;
 }
 // Lecture pratique de la jauge par personnage (2026-09-18) : neutre à 50 si jamais initialisée,
 // jamais un accès direct à life.appreciation?.[actor] dispersé partout dans route.ts.

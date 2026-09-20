@@ -671,9 +671,18 @@ interlocuteur fixe (miroir → Lia, dilemme → Noé, excuse → Lia).
 - Le tout premier message humain qui suit une question posée est enregistré verbatim
   (`dossierTraps[trap].excerpt`), jamais reformulé ni interprété à ce stade — la lecture qualitative
   appartient exclusivement au diagnostic généré plus bas. `life.worstMoment` retient en parallèle,
-  sur toute la session, le message humain au `trustShift` le plus négatif observé (jamais réécrit,
-  écrasé seulement par un pire ensuite) : la seule pièce à charge concrète en cas de session
-  vraiment hostile, en plus des trois extraits par nature plutôt neutres.
+  sur toute la session, le message humain le plus "sévère" observé (`worstMomentSeverity()`, jamais
+  réécrit, écrasé seulement par un pire ensuite) : la seule pièce à charge concrète en cas de session
+  vraiment hostile, en plus des trois extraits par nature plutôt neutres. **Corrigé le 2026-09-20**
+  (tâche #114, EL-PROFESSOR sur full_sim4/9/10 : le dossier citait "zéro vraie vacherie" malgré des
+  insultes réelles et sévères dans le transcript) : la sévérité ne se base plus sur le seul
+  `trustShift` (variation de confiance jugée par le modèle) — une insulte frontale peut ne pas faire
+  chuter cet axe émotionnel précis sans pour autant être bienveillante. `worstMomentSeverity()`
+  recroise désormais `angerLevel()` (tension/confort), déjà validé et déjà déployé pour pénaliser
+  l'appréciation, comme signal de plancher (-5) quand la confiance ne bouge pas malgré une colère
+  réelle détectée — le trust reste le signal principal, dominant s'il est plus négatif. Jamais une
+  liste de mots-clés d'insultes : ça correspondrait à défaire la décision explicite du 2026-09-18 de
+  préférer le jugement du modèle à une lecture lexicale brute (cf. 8.5 ci-dessous).
 - Le dossier ne se ferme qu'une fois les trois pièges répondus ET au moins un tirage de la roulette
   des bonus enregistré (`life.bonusLog`, le « test de pouvoir ») — la générosité ou l'avarice de
   l'observateur envers ce pouvoir fait partie du profil, autant que ses réponses.

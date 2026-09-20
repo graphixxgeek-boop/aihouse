@@ -466,10 +466,19 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
   formulation dans ce résumé (honorée / laissée sans réponse / explicitement refusée) — jamais un
   refus assumé présenté comme une simple négligence.
 - Alimente le dossier retourné (`dossierEvidence`) comme preuve supplémentaire (valeur arrondie).
-- `worstMoment:{round,excerpt,trustShift}` (2026-09-18, `principes.md` 8.4) : le message humain au
-  `trustShift` le plus négatif observé sur toute la session, écrasé uniquement par un pire ensuite,
-  jamais réinitialisé ; vide si l'échange n'a jamais été franchement négatif. Ajouté à
-  `dossierEvidence` comme seule preuve concrète d'hostilité en plus des trois extraits de pièges.
+- `worstMoment:{round,excerpt,severity}` (2026-09-18, `principes.md` 8.4 ; champ renommé
+  `trustShift`→`severity` le 2026-09-20, tâche #114) : le message humain à la `severity` la plus
+  négative observée sur toute la session (`worstMomentSeverity(trustShift,angry)`, `lib/life.ts`),
+  écrasé uniquement par une pire severity ensuite, jamais réinitialisé ; vide si l'échange n'a jamais
+  été franchement négatif. Ajouté à `dossierEvidence` comme seule preuve concrète d'hostilité en plus
+  des trois extraits de pièges. **`worstMomentSeverity()`** : `trustShift` si positif → 0 (jamais de
+  severity négative sur une confiance qui monte réellement) ; sinon `min(trustShift,-5)` si
+  `angerLevel(tension,confort)>.5` (plancher -5, même magnitude que la pénalité d'appréciation liée à
+  la colère, cf. ci-dessus), sinon `trustShift` tel quel. Corrige un vrai gap trouvé par EL-PROFESSOR
+  (full_sim4/9/10) : une insulte qui ne fait pas bouger l'axe "confiance" du modèle passait
+  auparavant totalement inaperçue de `worstMoment`, même si `angerLevel` faisait déjà baisser
+  l'appréciation en parallèle — le dossier pouvait donc rester sans la moindre citation hostile
+  malgré une session dure.
 
 ## Cohérence colère/tendresse (`lib/simulation.ts`, `app/api/lia/route.ts`, `principes.md` 8.7/8.9)
 

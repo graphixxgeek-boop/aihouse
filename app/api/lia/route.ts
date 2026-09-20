@@ -3,7 +3,7 @@ import {visualTiming,type VisualEvent} from "@/lib/visual-events";
 import {destinationAnchor,gardenAccess} from "@/lib/house";
 import {normaliseNickname,visibleScene} from "@/lib/perception";
 import {coldOpening,dialogueFingerprint,distinctReply,justifiedReply,truthfulGender,dramaRules,departureLine,moveReasonMismatchesDestination} from "@/lib/drama";
-import {readLife,humanStress,isSleeping,isMuted,isStoic,activeBonus,detectDistress,appreciationFromTrust,appreciationOf,detectNegotiationOffer,TRAP_ORDER,type BonusId,type TrapId} from "@/lib/life";
+import {readLife,humanStress,isSleeping,isMuted,isStoic,activeBonus,detectDistress,appreciationFromTrust,appreciationOf,worstMomentSeverity,detectNegotiationOffer,TRAP_ORDER,type BonusId,type TrapId} from "@/lib/life";
 import { planTurn, coordinateRooms, residentPriority, sceneFor, proposedDestination } from "@/lib/turn";
 import { newStory, parseStory, rememberAges, advanceStory, storyContext, investigationTarget, investigationRecap, finaleReveal, groundFragment, seedPick, insoliteOpening, insoliteColdOpening, ageClueRevealed, fullEvidenceSet, skipRound, skipEmotionsFor, skipNeedsFor, type Story } from "@/lib/story";
 import { ages, sleepRoom, attractionAfterTurn, proposalPressure, flirtingAssessment, receivedAffectionBonus } from "@/lib/relationship";
@@ -1597,8 +1597,15 @@ export async function POST(request: Request) {
             const before=world.agents.find(a=>a.id===id)!;
             const trustShift=responder.emotions.trust-before.emotions.trust;
             life.appreciation={...life.appreciation,[id]:Math.max(0,Math.min(100,appreciationOf(life,id)+appreciationFromTrust(trustShift,life.dossierHumanTurns??0)))};
-            if(angerLevel(responder.emotions.tension,responder.emotions.comfort,Boolean(life.dispute?.remaining))>.5)life.appreciation={...life.appreciation,[id]:Math.max(0,appreciationOf(life,id)-5)};
-            if(trustShift<0&&trustShift<(life.worstMoment?.trustShift??1))life.worstMoment={round:story.round,excerpt:input.message.slice(0,500),trustShift};
+            const angry=angerLevel(responder.emotions.tension,responder.emotions.comfort,Boolean(life.dispute?.remaining))>.5;
+            if(angry)life.appreciation={...life.appreciation,[id]:Math.max(0,appreciationOf(life,id)-5)};
+            // severity (tâche #114, 2026-09-20) : reprend aussi angerLevel, pas seulement trustShift
+            // — une insulte frontale ne fait pas toujours chuter la "confiance" jugée par le modèle,
+            // mais fait déjà chuter l'appréciation via angerLevel ci-dessus ; sans ce recroisement,
+            // le dossier pouvait rester sans la moindre citation hostile malgré une session dure
+            // (EL-PROFESSOR, full_sim4/9/10 : "zéro vraie vacherie" malgré des insultes réelles).
+            const severity=worstMomentSeverity(trustShift,angry);
+            if(severity<0&&severity<(life.worstMoment?.severity??1))life.worstMoment={round:story.round,excerpt:input.message.slice(0,500),severity};
             // genuineRespectStreak : construit un palier rare de respect sincère (cf. observerStandingFor
             // plus haut), jamais un acquis — toute confiance en baisse le remet immédiatement à zéro,
             // et le déclenchement du palier (rareRespectFor, lu AVANT cette mise à jour) le consomme
