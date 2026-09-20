@@ -1,0 +1,58 @@
+OK — 0 erreur.
+
+== Robustesse du code : check-house.mjs ==
+OK — 118/118 bloc(s) de test passés, suite verte.
+
+== Robustesse du code : points fragiles ouverts ==
+7 point(s) fragile(s) ouvert(s) — détail dans docs/referentiel/points-fragiles.md.
+
+== Robustesse du code : taille et densité ==
+lib/lia.ts : 185 lignes (prompt géant, à surveiller — pas un défaut en soi).
+lib/dialogue.ts : 259 lignes.
+lib/ : 24 fichiers.
+
+== KPI global — Robustesse du code ==
+100% (moyenne : propreté tsc 100%, suite de tests 100%, couverture réelle par fonction (AXA-CHECK) 99%). Points fragiles et taille de code restent affichés en compteurs bruts ci-dessus (pas de plafond naturel pour un %).
+→ Lecture : code sain, rien à faire ici pour l'instant.
+
+== Performance runtime — Smart Breaker (détail) ==
+Tours réels (appels Gemini nécessaires) : 0.
+Clé principale déjà indisponible au départ du tour : 0 fois sur 0 (0%).
+Tentatives individuelles (clé × modèle) : 0 — 0 réussies, 0 bloquées par quota (429), 0 erreurs transitoires (503), 0 clés invalides (401/403).
+
+== Qualité de sortie ==
+KPI global Qualité : 100% des tours n'ont eu besoin d'aucune réplique de repli anti-écho (0 intervention(s) sur 7 tour(s)).
+→ Lecture : le modèle varie déjà suffisamment sans avoir besoin du filet de secours la plupart du temps — rien à faire ici pour l'instant.
+
+== Cohérence logique ==
+KPI global Cohérence logique : 100% des tours n'ont nécessité aucune troncature de sécurité (0 intervention(s) sur 7 tour(s) — Lia : 0, Noé : 0).
+→ Lecture : le filet de sécurité intervient rarement, signe que le modèle produit déjà des répliques correctement formées — rien à faire ici pour l'instant.
+
+== Rejouabilité (signal partiel — diversité récente des bonus) ==
+KPI global Rejouabilité (partiel) : 0% des 9 bonus possibles vus parmi les 12 derniers tirages (0/9).
+Limite honnête : bonusLog ne garde que les 12 derniers tirages (app/api/lia/route.ts) — ce chiffre reflète la diversité RÉCENTE, pas garantie sur toute la session si plus de 12 tirages ont eu lieu. Un historique inter-sessions réel (tours jusqu'à révélation, nombre de disputes, variété des ouvertures) reste à construire (chantier 2, cf. docs/referentiel/tableau-de-bord.md).
+→ Action : plusieurs bonus n'ont pas été tirés récemment — vérifier que la roulette n'a pas de biais de tirage avant de conclure à un simple hasard défavorable.
+
+== KPI global — Performance runtime ==
+N/A cette fois.
+
+== KPI général — Couverture du tableau de bord lui-même (à surveiller en priorité) ==
+80% des 5 familles ont produit une vraie mesure cette exécution (4/5).
+→ Action : une ou plusieurs familles n'ont renvoyé aucune mesure — vérifier si c'est normal (serveur non lancé, aucun tour joué cette session) ou si un branchement du tableau de bord lui-même est cassé, avant de faire confiance à la synthèse ci-dessous.
+
+== Synthèse ==
+🚨 ALERTE TABLEAU DE BORD — couverture du tableau de bord à 80% (4/5 familles mesurées).
+
+== SYNTHÈSE COMPACTE (à relayer telle quelle dans la conversation) ==
+Run : manuel-2026-09-20T03:33
+| Famille | KPI global |
+|---|---|
+| 🔧 Smart Breaker — performance | N/A |
+| 📈 Smart Breaker — améliorations | 88% |
+| Robustesse du code | 100% |
+| Qualité de sortie | 100% |
+| Cohérence logique | 100% |
+| Rejouabilité (partiel) | 0% |
+| Couverture du tableau de bord | 80% |
+
+🚨 Points d'attention : couverture du tableau de bord à 80% (4/5 familles mesurées).

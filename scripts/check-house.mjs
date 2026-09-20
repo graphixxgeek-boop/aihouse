@@ -919,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 133'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 135'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3054,11 +3054,15 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     shouldRemindCircleTasks, REMINDER_COMMIT_THRESHOLD, ALERT_ICON, FINAL_JUDGE_TOKEN_COST,
   } = await import('../scripts/circle-tasks.mjs');
 
-  assert.equal(CIRCLE_ITEMS.length, 6, 'CIRCLE_ITEMS must list exactly the 5 free periodic items plus THE-FINAL-JUDGE, never silently gaining or losing an entry');
+  assert.equal(CIRCLE_ITEMS.length, 10, 'CIRCLE_ITEMS must list exactly the 9 free periodic items (profil, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, dream-team-photo, THE-SCREENER) plus THE-FINAL-JUDGE, never silently gaining or losing an entry');
   const judgeItem = CIRCLE_ITEMS.find((i) => i.id === 'the-final-judge');
   assert.ok(judgeItem && judgeItem.costly === true, 'THE-FINAL-JUDGE must be present in the same checklist (explicit 2026-09-20 reversal of the initial "keep it out entirely" design) but flagged costly, never treated as an ordinary free item');
   assert.ok(judgeItem.cout.includes(String(FINAL_JUDGE_TOKEN_COST / 1000) + ' 000') || judgeItem.cout.includes('37'), 'THE-FINAL-JUDGE\'s cost label must state the real fixed token cost in plain text, never a vague "expensive" with no number');
   assert.ok(CIRCLE_ITEMS.filter((i) => i.costly).length === 1, 'exactly one item (THE-FINAL-JUDGE) must be marked costly — every other item in this ronde stays genuinely free, per the explicit split the user asked to preserve');
+  assert.ok(CIRCLE_ITEMS.every((i) => typeof i.tokensEstimes === 'string' && i.tokensEstimes.length > 0), 'every single item, free or costly, must carry an honest order-of-magnitude Claude-token estimate (2026-09-20 catalog enrichment) — never a silently missing field on a future addition');
+  const screenerItem = CIRCLE_ITEMS.find((i) => i.id === 'the-screener');
+  assert.ok(screenerItem && !screenerItem.costly, 'THE-SCREENER\'s own capture mechanism costs zero Gemini API calls (confirmed in docs/referentiel/the-screener.md) so it must never be marked costly, unlike THE-FINAL-JUDGE');
+  assert.ok(/jamais lancer.*simulation|ne jamais lancer.*simulation/.test(screenerItem.cout + screenerItem.execute), 'THE-SCREENER\'s catalog entry must explicitly warn against launching a fresh simulation just to get a screenshot — that would be a real indirect Gemini cost, contrary to Article 8, even though the capture mechanism itself is free');
 
   assert.equal(mostRecentDate('rien ici'), undefined, 'a text with no date at all must report an honest absence, never a fabricated date');
   assert.equal(mostRecentDate('vu le 2026-09-18 puis confirmé le 2026-09-20T03:21:22Z et enfin le 2026-09-19'), '2026-09-20T03:21:22Z', 'mostRecentDate() must pick the genuinely most recent date among several mixed plain-date and full-ISO mentions, never the first or the last one found in reading order');
@@ -3071,25 +3075,75 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const profilIndexText = '| Horodatage | Fiche |\n|---|---|\n| 2026-09-18T00:00:00Z | x |';
   const kpiIndexText = '| Run | Date |\n|---|---|\n| r1 | 2026-09-19 |';
   const emptyAlwaysNewCode = '| Date | Zone examinée | Trouvailles confirmées | Rapport | Notes |\n|---|---|---|---|---|';
-  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText: emptyAlwaysNewCode }, now);
-  assert.equal(report.length, 6, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one');
+  const smartConsoApiIndexText = '| Date | Décision | Verdict |\n|---|---|---|\n| 2026-09-19 | x | souple |';
+  const smartConsoTokenIndexText = '| Date | Portée | Constat |\n|---|---|---|\n| 2026-09-20T02:19:00Z | Global | x |';
+  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText: emptyAlwaysNewCode, smartConsoApiIndexText, smartConsoTokenIndexText }, now);
+  assert.equal(report.length, 10, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one');
+  assert.equal(report.find((r) => r.id === 'dream-team-photo').staleness, 'pas de signal de fraîcheur mécanique disponible', 'the purely recreational dream-team-photo item has no real mechanical freshness source either, and must say so honestly rather than fabricate one');
+  assert.equal(report.find((r) => r.id === 'the-screener').staleness, 'pas de signal de fraîcheur mécanique disponible', 'THE-SCREENER likewise has no real mechanical freshness source in this ronde (its own dated registry docs/the-screener/ does not exist yet) and must say so honestly');
   assert.equal(report.find((r) => r.id === 'profil').staleness, '2 jour(s) depuis la dernière fiche', 'the profil item\'s staleness must be computed from the real most-recent date found in the real index text passed in');
   assert.equal(report.find((r) => r.id === 'kpi').staleness, '1 jour(s) depuis le dernier rapport archivé', 'the kpi item\'s staleness must likewise be computed from the real kpi index text, a genuinely distinct source from the profil index');
   assert.ok(/jamais examinée/.test(report.find((r) => r.id === 'always-new-code-signal').staleness), 'with a genuinely empty ALWAYS-NEW-CODE coverage memory, the signal must honestly report that every zone (the one recommended first) has never been examined, never a fabricated date');
   assert.equal(report.find((r) => r.id === 'referentiel').staleness, 'pas de signal de fraîcheur mécanique disponible', 'an item with no real mechanical freshness source (periodic reference-doc reread) must say so honestly, never fabricate a fake signal');
   assert.equal(report.find((r) => r.id === 'the-final-judge').staleness, 'jamais une routine — décision au cas par cas, à chaque fois', 'the costly item must get its own distinct honest message, never a fabricated freshness figure that would frame it as just another routine item');
+  assert.equal(report.find((r) => r.id === 'smart-conso-api-scan').staleness, '1 jour(s) depuis la dernière décision archivée', 'the Smart Conso API scan item must compute its own staleness from its own real index text, distinct from the other sources');
+  assert.equal(report.find((r) => r.id === 'smart-conso-token-scan').staleness, '0 jour(s) depuis le dernier scan archivé', 'the SMART-CONSO-TOKEN scan item must likewise compute its own staleness from its own real index text, distinct from the other sources');
 
   const menuColored = formatCircleMenu(report);
   const menuPlain = formatCircleMenu(report, { colorize: false });
   assert.ok(menuColored.includes('\x1b[31m') && menuColored.includes(ALERT_ICON), 'formatCircleMenu() must wrap the costly row in real ANSI red escape codes for genuine terminal output, with the alert icon prefixed — the exact "red warning characters" the user asked for');
   assert.ok(!menuPlain.includes('\x1b[31m'), 'formatCircleMenu() with colorize:false must never leak raw ANSI codes into output meant to be read as plain text');
   assert.ok(menuPlain.includes(judgeItem.label), 'the plain, uncolored rendering must still name THE-FINAL-JUDGE by name — colorize only strips the ANSI styling, never the row itself');
+  assert.ok(menuPlain.includes('Tokens Claude'), 'the menu must render a distinct Claude-token estimate column (2026-09-20 catalog enrichment), never merged into or hidden behind the Gemini/API cost column');
+  assert.ok(menuPlain.includes(report.find((r) => r.id === 'profil').tokensEstimes), 'the plain rendering must actually include a real item\'s token estimate text, not just an empty column header');
 
   assert.equal(shouldRemindCircleTasks(NaN), false, 'an unknown/uncountable commit delta must never trigger a fabricated reminder');
   assert.equal(shouldRemindCircleTasks(REMINDER_COMMIT_THRESHOLD - 1), false, 'one commit short of the real threshold must stay silent, never an off-by-one early reminder');
   assert.equal(shouldRemindCircleTasks(REMINDER_COMMIT_THRESHOLD), true, 'reaching the exact threshold must trigger the reminder, never require overshooting it');
 
-  console.log('Passed: CIRCLE-TASKS lists exactly its 5 free periodic items plus THE-FINAL-JUDGE (the sole exception, explicitly reversed into the same checklist but always flagged costly with its real fixed token price, never a vague warning), computes an honest mechanical freshness signal from real index files for the items that have one (profil, KPI, the most-neglected ALWAYS-NEW-CODE zone) and an honest absence for those that don\'t, correctly refuses to fabricate a negative day count from a future-dated entry (the exact real bug found tonight), renders the costly item in real ANSI red for genuine terminal output while never leaking escape codes into a plain-text rendering, and its post-commit reminder threshold fires at exactly the configured commit count, never early nor only after overshooting it.');
+  console.log('Passed: CIRCLE-TASKS lists exactly its 9 free periodic items (profil, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, dream-team-photo, THE-SCREENER) plus THE-FINAL-JUDGE (the sole exception, explicitly reversed into the same checklist but always flagged costly with its real fixed token price, never a vague warning), every item carrying an honest order-of-magnitude Claude-token estimate in a column distinct from the Gemini/API cost column, THE-SCREENER correctly staying free (its capture mechanism costs zero Gemini calls) while explicitly warning against launching a fresh simulation just for a screenshot, computes an honest mechanical freshness signal from real index files for the items that have one (profil, KPI, the most-neglected ALWAYS-NEW-CODE zone, Smart Conso API scan, SMART-CONSO-TOKEN scan) and an honest absence for those that don\'t (referentiel, dream-team-photo, THE-SCREENER), correctly refuses to fabricate a negative day count from a future-dated entry (the exact real bug found tonight), renders the costly item in real ANSI red for genuine terminal output while never leaking escape codes into a plain-text rendering, and its post-commit reminder threshold fires at exactly the configured commit count, never early nor only after overshooting it.');
+}
+
+{
+  // html-report.mjs (2026-09-20, demande explicite de l'utilisateur après la photo de la dream
+  // team : « tu vas transformer tous les rapports en fichiers HTML avec une mise en page
+  // améliorée »). Calibré : portée = tous les rapports livrés ; le texte archivé dans docs/ reste
+  // la version de travail ; ce gabarit ne produit JAMAIS le fichier de référence, seulement une
+  // copie de présentation générée à la remise — d'où l'absence totale de lien avec les fichiers
+  // docs/ dans ce module, contrairement à CIRCLE-TASKS.
+  const { escapeHtml, renderBlock, renderHtmlReport, THEME_CSS } = await import('../scripts/html-report.mjs');
+
+  assert.equal(escapeHtml('<script>alert(1)</script> & "quotes"'), '&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;quotes&quot;', 'escapeHtml() must neutralize every HTML-significant character a real report could legitimately contain (a comparison like "x < y", an ampersand, a quoted phrase) — never leave raw markup that could break the page or worse, inject a real script tag');
+  assert.equal(escapeHtml(undefined), '', 'escapeHtml() must handle a missing value as an honest empty string, never crash or print "undefined" literally');
+
+  assert.equal(renderBlock({ type: 'heading', text: 'Titre' }), '<h2>Titre</h2>', 'a heading block must render as a real heading element, never a styled paragraph masquerading as one');
+  assert.equal(renderBlock({ type: 'paragraph', text: 'Un texte < risqué' }), '<p>Un texte &lt; risqué</p>', 'a paragraph block\'s text must go through the same escaping as everything else — no block type gets a free pass');
+  assert.equal(renderBlock({ type: 'list', items: ['a', 'b'] }), '<ul><li>a</li><li>b</li></ul>', 'a list block must render every item, in order, never dropping or reordering entries');
+  assert.equal(renderBlock({ type: 'table', headers: ['H1'], rows: [['v1'], ['v2']] }), '<table><thead><tr><th>H1</th></tr></thead><tbody><tr><td>v1</td></tr><tr><td>v2</td></tr></tbody></table>', 'a table block must render a real semantic table, header row first, then every data row in order');
+  assert.equal(renderBlock({ type: 'unknown-type', text: 'x' }), '', 'an unrecognized block type must render as an honest empty string, never crash the whole report over one bad block');
+  assert.equal(renderBlock(null), '', 'a missing/null block must never crash renderBlock() — an honest empty string, same discipline as the unknown-type case');
+
+  // Trois types de bloc ajoutés le 2026-09-20 après avoir examiné chaque type de rapport existant
+  // contre ce gabarit (demande explicite : « essaie de voir si des documents spécifiques doivent
+  // sortir de ce gabarit pour des bonnes raisons ») — aucun rapport n'a eu besoin de sortir du
+  // gabarit commun, chaque besoin réel s'est résolu en enrichissant le vocabulaire de blocs.
+  assert.equal(renderBlock({ type: 'code', text: 'if (x < 1) { y = "a" }' }), '<pre><code>if (x &lt; 1) { y = &quot;a&quot; }</code></pre>', 'a code block (THE-FINAL-JUDGE citing real source) must render as a real monospace <pre><code> block with its content still escaped — code is exactly the kind of content most likely to contain HTML-significant characters');
+  assert.equal(renderBlock({ type: 'image', src: 'capture1.png', caption: 'Salon <de nuit>' }), '<figure><img src="capture1.png" alt="Salon &lt;de nuit&gt;" loading="lazy"><figcaption>Salon &lt;de nuit&gt;</figcaption></figure>', 'an image block (THE-SCREENER) must render a real <figure>/<img>/<figcaption> with the caption escaped both as the alt text and as the visible caption');
+  assert.equal(renderBlock({ type: 'image', src: '' }), '', 'an image block with no real src must render as an honest empty string rather than a broken <img> tag with no source');
+  assert.equal(renderBlock({ type: 'image', src: 'shot.png' }), '<figure><img src="shot.png" alt="" loading="lazy"></figure>', 'an image block with no caption must omit the <figcaption> entirely rather than rendering an empty one');
+  assert.equal(renderBlock({ type: 'dialogue', speaker: 'Lia', text: 'On tourne en rond.' }), '<p class="dialogue speaker-lia"><strong>Lia</strong> — On tourne en rond.</p>', 'a dialogue block (simulation transcripts) for Lia must get her own distinct speaker class, for a colored, readable transcript rather than a wall of undifferentiated paragraphs');
+  assert.equal(renderBlock({ type: 'dialogue', speaker: 'Noé', text: 'Toujours là.' }), '<p class="dialogue speaker-noe"><strong>Noé</strong> — Toujours là.</p>', 'a dialogue block for Noé must get his own distinct speaker class, never sharing Lia\'s — the same voice-separation discipline as the game itself (Article 11) carried into the report gabarit');
+  assert.equal(renderBlock({ type: 'dialogue', speaker: 'Observateur', text: 'Qui êtes-vous ?' }), '<p class="dialogue speaker-other"><strong>Observateur</strong> — Qui êtes-vous ?</p>', 'a dialogue block from any third party (the observer, a narrator line) must fall back to a neutral speaker class, never silently mislabeled as Lia or Noé');
+
+  assert.throws(() => renderHtmlReport({}), /title/, 'renderHtmlReport() must refuse to produce a report with no title at all — Article 5, never a document with no identity');
+  const html = renderHtmlReport({ title: 'Rapport <Test>', subtitle: 'Sous-titre', dateLabel: '2026-09-20', blocks: [{ type: 'paragraph', text: 'Contenu.' }], footer: 'Bas de page' });
+  assert.ok(html.startsWith('<!DOCTYPE html>'), 'renderHtmlReport() must always produce a complete, self-contained HTML document, never a bare fragment');
+  assert.ok(html.includes('Rapport &lt;Test&gt;'), 'the title must be escaped both in <title> and in the visible heading — a report title is real content, not trusted markup');
+  assert.ok(html.includes('Sous-titre') && html.includes('2026-09-20') && html.includes('Contenu.') && html.includes('Bas de page'), 'every part of the report spec (subtitle, date label, block content, footer) must actually appear in the rendered output, never silently dropped');
+  assert.ok(html.includes(THEME_CSS.trim().slice(0, 40)), 'the shared dark theme must be embedded inline in every report, for the same visual identity across all future "pretty" deliverables (the dream-team photo, KPI reports, EL-PROFESSOR notes, ...) — never a per-report reinvented style');
+  const minimal = renderHtmlReport({ title: 'Minimal' });
+  assert.ok(!minimal.includes('undefined') && !minimal.includes('null'), 'a report with no subtitle/blocks/footer must render cleanly with those sections simply absent, never leak a literal "undefined" or "null" into the page');
+  console.log("Passed: html-report.mjs's escapeHtml() neutralizes every HTML-significant character (including a real <script> injection attempt) and handles a missing value honestly, renderBlock() renders each of its block types faithfully (heading/paragraph/list/table/code/image/dialogue) with text always escaped, an image block with no src renders as an honest empty string while one with no caption simply omits the figcaption, a dialogue block gets Lia's or Noé's own distinct speaker class or a neutral fallback for anyone else (mirroring the game's own Article 11 voice separation), an unknown or null block renders as an honest empty string rather than crashing, renderHtmlReport() refuses a report with no title, always produces a complete self-contained document with the shared dark theme embedded and every spec field (title, subtitle, date, blocks, footer) actually present, and a minimal report with only a title never leaks a literal undefined/null into the page.");
 }
 
 {

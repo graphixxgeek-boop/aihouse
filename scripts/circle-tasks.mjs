@@ -39,40 +39,98 @@ export const ALERT_ICON = "⚠️🔴";
 export const FINAL_JUDGE_TOKEN_COST = 37000;
 export function red(text) { return `\x1b[31m${text}\x1b[0m`; }
 
-// Les 5 items gratuits (2026-09-20). Chacun a une raison d'être et un chemin d'exécution déjà
-// documenté ailleurs — CIRCLE-TASKS ne réimplémente RIEN, il rappelle et agrège (règle anti-doublon,
-// §7ter). Le champ `execute` décrit en une phrase la procédure réelle à suivre pour un item coché,
-// jamais un code à lancer aveuglément.
+// Les 9 items gratuits (2026-09-20, complétés en plusieurs passes le même jour : « il n'y a pas
+// aussi les smart scans de api et token ? » — écart réel trouvé en refaisant le tour complet du
+// paysage ; « la photo de la dream team », ajoutée comme seul item purement récréatif ; puis « la
+// possibilité de demander une capture d'écran de la simulation » — THE-SCREENER, dernier oubli
+// trouvé). Chacun a une raison d'être et un chemin d'exécution déjà documenté ailleurs —
+// CIRCLE-TASKS ne réimplémente RIEN, il rappelle et agrège (règle anti-doublon, §7ter). Le champ
+// `execute` décrit en une phrase la procédure réelle à suivre pour un item coché, jamais un code à
+// lancer aveuglément.
+//
+// `tokensEstimes` (2026-09-20, demande explicite : « alimente ce catalogue avec une estimation du
+// prix en token et/ou en API ») — un ORDRE DE GRANDEUR honnête du coût en tokens Claude (agent
+// pilote) pour exécuter l'item, jamais un chiffre exact fabriqué (même discipline que
+// SMART-CONSO-TOKEN, Article 22 : « jamais un chiffre exact présenté comme tel », sauf quand une
+// vraie recherche documentée existe déjà — cf. le-final-judge ci-dessous). `cout` reste le texte
+// qui décrit le coût en appels API réels (Gemini, ou agent séparé) ; `tokensEstimes` est le nouveau
+// champ distinct pour le coût en tokens de CE agent — les deux budgets ne se confondent jamais
+// (Article 22 régule les appels Gemini déclenchés par l'agent, SMART-CONSO-TOKEN régule les tokens
+// de l'agent lui-même, cf. CLAUDE.md).
 export const CIRCLE_ITEMS = [
   {
     id: "profil",
     label: "Mettre à jour le profil utilisateur",
     cout: "gratuit — lecture/écriture de texte, zéro appel API",
+    tokensEstimes: "quelques milliers de tokens (lecture de l'index + de la dernière fiche, rédaction d'une nouvelle observation datée)",
     execute: "Suivre la procédure de docs/regles-de-travail.md §9 (Historisation du profil) : comparer les signaux de la session en cours à la dernière fiche, écrire une nouvelle observation datée, mettre à jour l'index.",
   },
   {
     id: "referentiel",
     label: "Relire tous les documents de référence",
     cout: "gratuit — lecture, aucun appel API",
+    tokensEstimes: "élevé si réellement exhaustif — potentiellement plusieurs dizaines de milliers de tokens (CLAUDE.md seul pèse ~29 000 tokens estimés, cf. docs/smart-conso-token/) ; \"gratuit\" ne veut jamais dire \"gratuit en tokens\"",
     execute: "Relire CLAUDE.md (Article 13, vérification périodique) et toute la table des matières réelle de docs/referentiel/ + racine de docs/ — corriger tout écart trouvé immédiatement (Article 3), jamais seulement le signaler.",
   },
   {
     id: "kpi",
     label: "Lancer le rapport KPI (familles gratuites)",
     cout: "gratuit — node scripts/kpi-report.mjs, zéro nouvel appel API",
+    tokensEstimes: "faible à modéré — sortie du script (quelques milliers de tokens) + rédaction de l'entrée d'index",
     execute: "Lancer node scripts/kpi-report.mjs et lire au moins la famille Robustesse du code (100% mécanique) — les autres familles restent honnêtement N/A si aucun serveur de dev avec du vrai trafic n'est joignable.",
   },
   {
     id: "always-new-code-signal",
     label: "Signaler la zone la plus négligée (ALWAYS-NEW-CODE)",
     cout: "gratuit — lecture de la mémoire de couverture déjà accumulée, jamais le vrai zoom (ça, c'est un raisonnement coûteux à part, cf. Article 23)",
+    tokensEstimes: "faible — lecture d'un seul fichier d'index compact",
     execute: "Lire docs/always-new-code/index.md et reporter honnêtement la zone la plus négligée (ou jamais examinée) — proposer, jamais lancer, le vrai zoom profond correspondant, qui reste un raisonnement coûteux nécessitant sa propre consultation SMART-CONSO-TOKEN.",
   },
   {
     id: "correctifs",
     label: "Relire les carnets de correctifs et points fragiles",
     cout: "gratuit — lecture, aucun appel API",
+    tokensEstimes: "modéré — lecture de deux carnets (points-fragiles.md, correctifs-a-revalider.md)",
     execute: "Relire docs/simulations/correctifs-a-revalider.md et docs/referentiel/points-fragiles.md — retirer ce qui est confirmé stable (2 simulations propres consécutives), signaler ce qui traîne sans jamais avancer.",
+  },
+  {
+    id: "smart-conso-api-scan",
+    label: "Scanner les schémas de consommation API (Smart Conso API)",
+    cout: "gratuit — node scripts/smart-conso-api.mjs scan, lecture de l'historique déjà accumulé, zéro nouvel appel API",
+    tokensEstimes: "faible — sortie compacte d'un script",
+    execute: "Lancer `node scripts/smart-conso-api.mjs scan` et lire les constats (taux d'épuisement récent élevé, relancement trop rapide après un épisode confirmé) — jamais un jugement sur le code du jeu, seulement le rythme des appels déjà faits.",
+  },
+  {
+    id: "smart-conso-token-scan",
+    label: "Scanner le poids des documents de travail (SMART-CONSO-TOKEN)",
+    cout: "gratuit — scan de portée Global, lecture de fichiers, zéro appel API",
+    tokensEstimes: "faible à modéré — sortie du scan + lecture des fichiers qu'il pointe comme volumineux",
+    execute: "Relancer un scan de portée Global (cf. docs/referentiel/smart-conso-token.md) — particulièrement utile après une session qui a fait grossir CLAUDE.md ou docs/, pour repérer une dérive avant qu'elle ne s'accumule trop.",
+  },
+  // « Photo de la dream team » (2026-09-20, demande explicite de l'utilisateur, pendant une pause
+  // fun : « garde en mémoire et écrit que cette "photo" de la dream team fait partie des tâches
+  // proposées lors des rondes périodiques »). Seul item de CIRCLE_ITEMS purement récréatif — jamais
+  // un outil de travail technique, aucun impact sur la charte ni le code du jeu.
+  {
+    id: "dream-team-photo",
+    label: "Régénérer la « photo » de la dream team (récap des outils nommés)",
+    cout: "gratuit — lecture de la liste des outils déjà nommés dans CLAUDE.md/docs/regles-de-travail.md, mise en forme, zéro appel API",
+    tokensEstimes: "modéré — rédaction d'un document HTML complet à partir d'une liste déjà connue",
+    execute: "Régénérer le document récapitulatif (nom, rôle, commentaire sur le nom choisi) de tous les outils/agents nommés du projet et le livrer en fichier HTML à l'utilisateur (cf. scripts/html-report.mjs) — pour le plaisir, jamais un livrable technique.",
+  },
+  // THE-SCREENER (2026-09-20, demande explicite de l'utilisateur : « il y a aussi la possibilité de
+  // demander une capture d'écran de la simulation (avec coût API) si je ne me trompe pas »).
+  // Précision importante trouvée en relisant docs/referentiel/the-screener.md avant d'ajouter cet
+  // item (Article 19) : le MÉCANISME lui-même (capture Playwright + lecture vision par l'agent)
+  // coûte ZÉRO appel Gemini — la seule vraie condition est de disposer déjà d'une session/un serveur
+  // avec un état réel à capturer, jamais de lancer une simulation complète juste pour la photo (ce
+  // serait un vrai coût Gemini indirect, contraire à l'Article 8).
+  {
+    id: "the-screener",
+    label: "Capturer et noter 2 captures d'écran (THE-SCREENER)",
+    cout: "zéro appel à l'API Gemini pour le mécanisme lui-même (capture Playwright locale) — CONDITIONNEL : n'a de sens que si une session/un serveur avec un vrai état est déjà en cours ; ne jamais lancer une nouvelle simulation juste pour cet item",
+    tokensEstimes: "modéré — lecture vision de 2 images par l'agent + rédaction de la notation",
+    execute: "Lancer node scripts/the-screener-capture.mjs contre un serveur DÉJÀ actif (dev ou site en ligne) avec une vraie session en cours, lire les 2 captures et noter contre docs/referentiel/regles-des-graphismes.md — jamais déclencher une nouvelle simulation juste pour cet item.",
   },
   // THE-FINAL-JUDGE (2026-09-20, demande explicite de l'utilisateur : « integre le dans la liste à
   // cocher malgré tout [...] avec un panneau d'avertissement [...] caractères couleur rouge [...]
@@ -84,6 +142,7 @@ export const CIRCLE_ITEMS = [
     id: "the-final-judge",
     label: "THE-FINAL-JUDGE — audit indépendant",
     cout: `${ALERT_ICON} COÛTEUX — ~${FINAL_JUDGE_TOKEN_COST.toLocaleString("fr-FR")} tokens fixes (agent séparé), quel que soit le palier choisi`,
+    tokensEstimes: `~${FINAL_JUDGE_TOKEN_COST.toLocaleString("fr-FR")} tokens fixes — le seul chiffre de ce paysage issu d'une vraie recherche documentée plutôt que d'une estimation à l'ordre de grandeur`,
     execute: "Consulter Smart Conso API ET SMART-CONSO-TOKEN avant de lancer quoi que ce soit (Article 22) — jamais un réflexe de routine, seulement si un vrai besoin de regard indépendant justifie la dépense.",
     costly: true,
   },
@@ -110,15 +169,19 @@ export function daysSince(dateStr, now = Date.now()) {
 // ALWAYS-NEW-CODE la plus négligée) — jamais pour "relecture référentiel" ou "correctifs", qui
 // n'ont aucune date de référence mécanique fiable (Article 13 elle-même n'impose aucune cadence
 // fixe, cf. CLAUDE.md — un signal inventé ici serait moins honnête que son absence).
-export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText } = {}, now = Date.now()) {
+export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText } = {}, now = Date.now()) {
   const profilLast = mostRecentDate(profilIndexText);
   const kpiLast = mostRecentDate(kpiIndexText);
+  const smartConsoApiLast = mostRecentDate(smartConsoApiIndexText);
+  const smartConsoTokenLast = mostRecentDate(smartConsoTokenIndexText);
   const coverage = parseCoverage(alwaysNewCodeIndexText || "");
   const zoneRec = recommendZone(THEMES, coverage, undefined, new Date(now));
 
   return CIRCLE_ITEMS.map((item) => {
     if (item.id === "profil") return { ...item, staleness: profilLast ? `${daysSince(profilLast, now)} jour(s) depuis la dernière fiche` : "jamais fait" };
     if (item.id === "kpi") return { ...item, staleness: kpiLast ? `${daysSince(kpiLast, now)} jour(s) depuis le dernier rapport archivé` : "jamais fait" };
+    if (item.id === "smart-conso-api-scan") return { ...item, staleness: smartConsoApiLast ? `${daysSince(smartConsoApiLast, now)} jour(s) depuis la dernière décision archivée` : "jamais fait" };
+    if (item.id === "smart-conso-token-scan") return { ...item, staleness: smartConsoTokenLast ? `${daysSince(smartConsoTokenLast, now)} jour(s) depuis le dernier scan archivé` : "jamais fait" };
     if (item.id === "always-new-code-signal") {
       if (!zoneRec) return { ...item, staleness: "aucun thème connu" };
       const zoneDate = coverage[zoneRec.zone];
@@ -133,11 +196,12 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCode
 // pour toute sortie destinée à être relue comme du texte brut (tests, archive future) où des codes
 // ANSI seraient juste des caractères parasites, jamais un vrai signal visuel.
 export function formatCircleMenu(report, { colorize = true } = {}) {
-  const lines = ["| Item | Coût | Fraîcheur |", "|---|---|---|"];
+  const lines = ["| Item | Coût API | Tokens Claude (estimation) | Fraîcheur |", "|---|---|---|---|"];
   for (const r of report) {
     const label = r.costly && colorize ? red(`${ALERT_ICON} ${r.label}`) : r.label;
     const cout = r.costly && colorize ? red(r.cout) : r.cout;
-    lines.push(`| ${label} | ${cout} | ${r.staleness} |`);
+    const tokens = r.costly && colorize ? red(r.tokensEstimes) : r.tokensEstimes;
+    lines.push(`| ${label} | ${cout} | ${tokens} | ${r.staleness} |`);
   }
   return lines.join("\n");
 }
@@ -175,10 +239,13 @@ export function recordCircleTasksRun(totalCommitCount, now = Date.now()) {
 }
 
 function main() {
-  const profilIndexText = existsSync(`${ROOT}docs/profil-utilisateur/index.md`) ? readFileSync(`${ROOT}docs/profil-utilisateur/index.md`, "utf8") : "";
-  const kpiIndexText = existsSync(`${ROOT}docs/referentiel/kpi-index.md`) ? readFileSync(`${ROOT}docs/referentiel/kpi-index.md`, "utf8") : "";
-  const alwaysNewCodeIndexText = existsSync(`${ROOT}docs/always-new-code/index.md`) ? readFileSync(`${ROOT}docs/always-new-code/index.md`, "utf8") : "";
-  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText });
+  const read = (p) => (existsSync(`${ROOT}${p}`) ? readFileSync(`${ROOT}${p}`, "utf8") : "");
+  const profilIndexText = read("docs/profil-utilisateur/index.md");
+  const kpiIndexText = read("docs/referentiel/kpi-index.md");
+  const alwaysNewCodeIndexText = read("docs/always-new-code/index.md");
+  const smartConsoApiIndexText = read("docs/smart-conso-api/index.md");
+  const smartConsoTokenIndexText = read("docs/smart-conso-token/index.md");
+  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText });
   console.log("=== CIRCLE-TASKS — Ronde périodique ===\n");
   console.log(formatCircleMenu(report));
   console.log("\nJamais exécuté seul : l'agent qui pilote ouvre une fenêtre à cocher pour choisir précisément quoi lancer.");

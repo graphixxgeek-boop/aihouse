@@ -26,13 +26,6 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   comme s'il s'agissait d'un vrai épuisement de quota journalier. Le recul exponentiel avec reset
   au premier succès (déjà implémenté) semble répondre à cette inquiétude, mais ce lien n'a jamais
   été explicitement reconfirmé avec l'utilisateur — à vérifier avec lui plutôt que supposer réglé.
-- **Corrigé le 2026-09-20 (tâche #114)** : le biais de sous-évaluation de l'hostilité dans
-  `generateDossierFragment()` (relevé dans 3 des 13 premières notations EL-PROFESSOR : `full_sim4`,
-  `full_sim9`, `full_sim10`) avait une vraie root-cause, pas un cas isolé — `life.worstMoment` ne se
-  déclenchait que sur un `trustShift` négatif, un axe émotionnel distinct de l'hostilité perçue
-  qu'une insulte frontale ne fait pas toujours bouger. Corrigé en recroisant `angerLevel()` (déjà
-  détecté séparément pour l'appréciation) via `worstMomentSeverity()` (`lib/life.ts`). Déplacé au
-  carnet `docs/simulations/correctifs-a-revalider.md` pour confirmation sur 2 simulations propres.
 - Les paliers rares de la charte (colère réellement débridée, silence méprisant de Lia, vulnérabilité
   ou respect sincères, dispute grave Lia/Noé) restent quasiment jamais sollicités dans les 13
   premières simulations notées par EL-PROFESSOR — une future simulation Article 18 devrait les

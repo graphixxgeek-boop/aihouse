@@ -314,7 +314,8 @@ maximiser leurs performances ».)*
 | LE-COORDINATEUR | agrège en un tableau très court ce que les outils gratuits ci-dessus disent déjà, repère un doublon de vérification récent ; son menu de prestations rappelle ce qui peut être commandé | gratuit | synthèse complète (`runNetworkCheck()`) = routine agent, jamais un crochet git (reshellerait `check-house.mjs`, redondant à chaque commit) ; menu des prestations seul = affiché automatiquement à chaque commit (`scripts/hooks/check-last-commit.mjs`, post-commit, 2026-09-20) |
 | Smart Breaker (`check-gemini-quota.mjs` + `gemini-key-health.mjs` + `api-providers.mjs` + `lib/gemini-keys.ts`) | blocages de quota/clé Gemini, portée PRODUCTION | gratuit à diagnostiquer | à la demande, ou automatique en production (repli) |
 | SMART-CONSO-TOKEN | rythme de consommation de TOKENS de l'agent (Agent séparé, lecture exhaustive, poids d'un document toujours chargé) ; peut aussi scanner et proposer des réductions | gratuit à consulter | avant tout appel à un agent séparé ou tout raisonnement coûteux — obligation écrite dans la charte, jamais un garde-fou vérifiable après coup |
-| CIRCLE-TASKS (« Ronde périodique ») | tâches périodiques gratuites mal automatisées (profil utilisateur, relecture des référentiels, KPI, zone ALWAYS-NEW-CODE la plus négligée, carnets de correctifs) — regroupées dans une seule fenêtre à cocher ; THE-FINAL-JUDGE reste visible dans la même fenêtre mais toujours marqué ⚠️🔴 coûteux (37k tokens), jamais coché par défaut | gratuit (sauf si THE-FINAL-JUDGE est explicitement coché) | à la demande de l'utilisateur ou de l'agent ; rappel proactif automatique dans le crochet post-commit après 10 commits sans passage |
+| CIRCLE-TASKS (« Ronde périodique ») | tâches périodiques gratuites mal automatisées (profil utilisateur, relecture des référentiels, KPI, zone ALWAYS-NEW-CODE la plus négligée, carnets de correctifs, scans Smart Conso API/SMART-CONSO-TOKEN, photo de la dream team, THE-SCREENER) — regroupées dans une seule fenêtre à cocher ; THE-FINAL-JUDGE reste visible dans la même fenêtre mais toujours marqué ⚠️🔴 coûteux (37k tokens), jamais coché par défaut | gratuit (sauf si THE-FINAL-JUDGE est explicitement coché) | à la demande de l'utilisateur ou de l'agent ; rappel proactif automatique dans le crochet post-commit après 10 commits sans passage |
+| Gabarit HTML de remise de rapports (`scripts/html-report.mjs`) | mise en page soignée d'un rapport déjà produit (KPI, EL-PROFESSOR, THE-SCREENER, simulations, THE-FINAL-JUDGE...) — jamais le contenu métier lui-même | gratuit | importé et appelé par les autres outils au moment de produire une copie de présentation — jamais un outil qu'on invoque seul |
 
 Cette table remplace toute énumération informelle éparpillée dans la conversation : à jour à
 chaque nouvel outil créé (même discipline que la liste des documents de référence, Article 13).
@@ -616,11 +617,32 @@ de la session, retrouvé seulement parce que l'utilisateur a posé la question.)
 `scripts/circle-tasks.mjs` regroupe les tâches périodiques **gratuites** mal automatisées (mise à
 jour du profil utilisateur, relecture de tous les documents de référence — Article 13, rapport KPI
 famille Robustesse, signal mécanique de la zone ALWAYS-NEW-CODE la plus négligée, relecture des
-carnets de correctifs/points fragiles) dans un seul menu affiché avec un signal de fraîcheur
-honnête (jours depuis la dernière fois, jamais inventé s'il n'existe aucune date de référence).
-Même principe que LE-COORDINATEUR : aucun blueprint, aucune instanciation séparée — cette section
-EST sa documentation complète, il n'a aucune connaissance propre au projet qui mériterait d'être
+carnets de correctifs/points fragiles, scan Smart Conso API des schémas de consommation, scan
+SMART-CONSO-TOKEN de portée Global, régénération de la « photo de la dream team ») dans un seul
+menu affiché avec un signal de fraîcheur honnête (jours depuis la dernière fois, jamais inventé
+s'il n'existe aucune date de référence) et, depuis le 2026-09-20, une estimation honnête du coût en
+tokens Claude pour l'agent pilote (`tokensEstimes`, ordre de grandeur, jamais un chiffre exact
+fabriqué — distinct du champ `cout` qui reste le coût en appels API réels). Même principe que
+LE-COORDINATEUR : aucun blueprint, aucune instanciation séparée — cette section EST sa
+documentation complète, il n'a aucune connaissance propre au projet qui mériterait d'être
 documentée ailleurs.
+
+**Complété deux fois le 2026-09-20** en refaisant le tour complet du paysage (demande explicite :
+« fais le tour pour être sûr stp ») : le scan Smart Conso API et le scan SMART-CONSO-TOKEN
+existaient déjà mais n'étaient reliés à aucun rappel périodique ; THE-SCREENER a rejoint la liste
+(son mécanisme de capture coûte zéro appel Gemini, mais l'item rappelle explicitement de ne jamais
+lancer une simulation complète juste pour la photo — ce serait un vrai coût Gemini indirect,
+contraire à l'Article 8). **Exclusion délibérée, pas un oubli** : les archivages/passages d'ARGUS/
+HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD/CHECK-LEVEL-TARGET ne rejoignent pas ce menu — leur logique
+mécanique tourne déjà à chaque commit via le crochet post-commit (warn-only, zéro écriture de
+fichier) ; un ré-archivage à chaque Ronde créerait du bruit, contraire à la décision déjà prise pour
+ce crochet (« docs/argus/ n'accueille qu'un balayage archivé volontairement, pas un par commit »).
+
+**Format de la fenêtre à cocher, actée le 2026-09-20** : toujours un seul appel d'outil groupé
+(jamais plusieurs fenêtres séparées pour un même passage, même si la limite de 4 options par
+question oblige à répartir les items sur plusieurs blocs de questions à l'intérieur de ce même
+appel) — THE-FINAL-JUDGE systématiquement en toute dernière position, dernier bloc, dernière
+option.
 
 **Jamais un tout-en-un silencieux** (demande explicite de l'utilisateur : « tu ouvres une fenêtre
 question me demandant de cocher ce que je veux précisément exécuter ») : le script affiche
@@ -710,6 +732,50 @@ moi, les outils ».)*
   un autre outil qui irait le lire pour se comporter différemment. Vérifié par recherche exhaustive
   dans le dépôt au moment d'écrire ceci (2026-09-20) : aucune référence à `PRESTATIONS` en dehors de
   `le-coordinateur.mjs` lui-même et de `check-house.mjs` (qui le teste).
+
+### Le gabarit HTML de remise de rapports — un outil sans blueprint, encore plus mince que CIRCLE-TASKS
+
+*(Ajouté le 2026-09-20, demande explicite de l'utilisateur après avoir reçu la « photo de la dream
+team » (récap des outils nommés, cf. l'item `dream-team-photo` de CIRCLE-TASKS ci-dessus) en HTML
+soigné plutôt qu'en texte brut : « tu vas transformer tous les rapports en fichiers HTML avec une
+mise en page améliorée [...] petit bond en avant du projet pour la partie remise de rapport au
+dev ».)*
+
+`scripts/html-report.mjs` exporte une fonction pure, `renderHtmlReport({ title, subtitle, dateLabel,
+blocks, footer })`, qui rend une page HTML autonome (thème sombre partagé, zéro dépendance externe)
+à partir d'une structure générique de blocs — jamais une connaissance du contenu métier d'un rapport
+précis. Encore plus mince que CIRCLE-TASKS/LE-COORDINATEUR : ni blueprint, ni instanciation, ni
+registre — cette section est sa documentation complète.
+
+**Trois questions de calibrage tranchées avant d'écrire une ligne de code** (Article 16) :
+- **Portée** : TOUS les rapports livrés en pièce jointe (KPI, EL-PROFESSOR, THE-SCREENER,
+  simulations, THE-FINAL-JUDGE, CIRCLE-TASKS...), pas seulement les documents « fun ».
+- **Archive vs remise** : le fichier gardé DANS le projet (`docs/...`, relu par les outils comme
+  `mostRecentDate()`/`parseCoverage()`) reste la version texte/markdown de travail — ce gabarit ne
+  produit JAMAIS le fichier de référence, seulement une copie de présentation générée au moment de
+  la remise. Zéro risque pour les parseurs existants.
+- **Point de départ** : construire ce modèle réutilisable D'ABORD, avant de l'appliquer à un
+  rapport précis — pas encore fait à ce jour, une décision volontairement laissée pour la suite.
+
+**Vocabulaire de blocs, jamais un document HTML réinventé à chaque fois** : `heading`, `paragraph`,
+`note` (encadré discret), `list`, `table` — puis trois types ajoutés le même jour en réponse à une
+question explicite (« essaie de voir si des documents spécifiques doivent sortir de ce gabarit pour
+des bonnes raisons ») : `code` (citations de code pour THE-FINAL-JUDGE), `image` (captures pour
+THE-SCREENER — `src` en chemin relatif ou data URI, jamais téléchargé par ce module lui-même),
+`dialogue` (ligne de transcript colorée par personnage pour les simulations — Lia et Noé reçoivent
+chacun leur propre classe CSS, tout autre locuteur une classe neutre, même discipline de séparation
+des voix que l'Article 11 du jeu lui-même). **Conclusion de cet examen : aucun type de rapport
+existant n'a eu besoin de sortir du gabarit commun** — chaque besoin réel s'est résolu en enrichissant
+le vocabulaire de blocs, jamais en forkant une page à part. Tout le texte passe par `escapeHtml()`
+(échappement systématique) — un rapport peut légitimement contenir des caractères qui casseraient du
+HTML brut, jamais une raison d'injecter du HTML non échappé.
+
+**Distinct, jamais confondu, avec `docs/referentiel/regles-des-graphismes.md`** : ce document-là
+gouverne la scène 3D et l'interface web du SITE PUBLIC (le jeu que l'observateur voit) — ce
+gabarit-ci habille des rapports de travail internes, jamais montrés à un visiteur. Une coïncidence
+de calendrier avec la future refonte graphique (« on met un pied dans la refonte graphique, en
+commençant par les rapports ! »), pas une même surface : le thème sombre de ce gabarit n'a donc
+aucune obligation de suivre `scenePalette` ou toute décision prise pour le rendu 3D.
 
 ## 8. Profil de collaboration observé
 
