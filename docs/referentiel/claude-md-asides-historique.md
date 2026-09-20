@@ -175,6 +175,23 @@ justification narrative ci-dessous est déplacée ici.)*
 
 > *(ajouté le 2026-09-19, demande explicite de l'utilisateur)*
 
+## Article 19 (bloc adjacent) — « Double lecture en parallèle »
+
+> *(Ajouté le 2026-09-18, à la demande explicite de l'utilisateur, pour rester synchronisé sur ce
+> déroulé à chaque nouvelle simulation.)*
+
+## Article 19 (bloc adjacent) — « Questions de calibrage après « voici mes commentaires » »
+
+> *(Ajouté le 2026-09-18, à la demande explicite de l'utilisateur : « tu peux maintenant me poser
+> des questions... c'est le bon moment ».)*
+
+*(Ces deux asides — trouvées le 2026-09-20 en reprenant la passe d'allègement, section 3 — avaient
+échappé au balayage mécanique original `listDatedNarrativeMarkers()` pour une raison DIFFÉRENTE de
+la limite des parenthèses imbriquées déjà documentée plus bas : leur phrase se termine par un point
+avant l'astérisque de fermeture (`).* ` au lieu de `)*`), un format que `DATED_ASIDE_PATTERN` ne
+couvre pas. Trouvaille purement manuelle, aucune correction du regex appliquée — même discipline que
+pour la limite déjà connue : jamais une évolution du motif sans nouvelle demande explicite.)*
+
 ## Note pour une future passe (jamais faite ici, hors du périmètre validé par l'utilisateur)
 
 Le balayage mécanique de `listDatedNarrativeMarkers()` ne détecte que les asides dont la parenthèse

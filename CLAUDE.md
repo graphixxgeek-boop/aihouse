@@ -580,8 +580,7 @@ qu'aucun processus `workerd` orphelin ne survit à un `pkill` précédent (nom d
 de `vinext dev`/`node scripts/run-framework`, peut garder le port occupé) ; (5) relancer ou laisser
 reprendre la simulation.
 
-**Double lecture en parallèle** *(Ajouté le 2026-09-18, à la demande explicite de l'utilisateur,
-pour rester synchronisé sur ce déroulé à chaque nouvelle simulation).* Dès que le transcript est
+**Double lecture en parallèle.** Dès que le transcript est
 livré (étape 3), l'utilisateur le lit et rédige ses propres commentaires de son côté, en parallèle
 du travail de l'agent (étapes 4 à 7) — les deux lectures avancent en même temps, chacune de son
 côté, pas l'une après l'autre. Une fois son propre travail de mise à jour terminé (étape 7 close),
@@ -593,9 +592,7 @@ synchronisé à chaque fois, l'agent rappelle explicitement ce déroulé (livrai
 parallèle → signal de fin de son côté → « voici mes commentaires » attendu de l'utilisateur) au
 moment où il livre le transcript d'une nouvelle simulation, pas seulement la première fois.
 
-**Questions de calibrage après « voici mes commentaires »** *(Ajouté le 2026-09-18, à la demande
-explicite de l'utilisateur : « tu peux maintenant me poser des questions... c'est le bon moment »).*
-L'exigence de l'étape 7 de l'Article 18 (au moins une dizaine de questions avant correction) ne
+**Questions de calibrage après « voici mes commentaires ».** L'exigence de l'étape 7 de l'Article 18 (au moins une dizaine de questions avant correction) ne
 s'applique pas seulement à l'analyse initiale de l'agent : elle s'applique de la même façon à ce
 second passage de retours annotés par l'utilisateur. Dès que « voici mes commentaires » arrive avec
 plusieurs points distincts, l'agent identifie lesquels sont des bugs à cause racine évidente
