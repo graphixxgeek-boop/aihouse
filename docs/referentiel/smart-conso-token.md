@@ -430,12 +430,50 @@ l'exige. » Vérifié point par point plutôt que supposé : `checkToolConnectio
 API a son équivalent (`findUnconfirmedBursts()`) déjà réellement câblé dans `runNetworkCheck()`.
 Le seul vrai trou trouvé : `findJudgeSpawnsWithoutConsultation()` (SMART-CONSO-TOKEN, autorité réelle
 sur THE-FINAL-JUDGE/THE-DEEP-READER) n'était jamais appelée en production — corrigé, cf. section
-"Autorité réelle" plus haut. **Non traité, laissé explicitement en file** : `#138` (accompagnement en
-temps réel d'une tâche longue) reste trop ouvert pour être implémenté sans calibrage — quel signal
-déclencherait une relance en cours de tâche, sous quelle forme, à quelle fréquence, sont des choix
-réels qui appartiennent à l'utilisateur, jamais devinés (Article 16).
+"Autorité réelle" plus haut. **Laissé explicitement en file le même soir** : `#138` (accompagnement en
+temps réel d'une tâche longue) — traité ci-dessous une fois calibré.
 
 **Rattaché à CIRCLE-TASKS.** `claude-md-weight-signal` (thème "Qualité du code") relit CLAUDE.md et
 appelle en direct `scanDocumentWeight()`/`listDatedNarrativeMarkers()` — jamais un second calcul,
 jamais une estimation périmée issue d'un index séparé. Voir `scripts/circle-tasks.mjs` pour
 l'implémentation.
+
+## Accompagnement en temps réel d'une tâche longue — `detectTaskMomentum()` (tâche #138, 2026-09-21)
+
+Calibré par trois questions explicites, laissées ouvertes lors de l'audit #137 :
+
+1. **Déclencheur** — « trouve un système pertinent qui combine plusieurs solutions » : trois axes
+   indépendants combinés en OR (n'importe lequel suffit), chacun attrapant un motif de dérive
+   différent qu'un seul aurait manqué — un nombre d'actions coûteuses enchaînées (`actionCount>=5`),
+   un temps réel écoulé depuis la première de la lancée (`elapsedMs>=45min`), un poids cumulé estimé
+   en tokens (`cumulativeTokens>=50000`, alimenté par un nouveau champ optionnel
+   `recordAction(..., {tokensEstimes})` — jamais un second calcul, l'appelant fournit le chiffre déjà
+   connu ou déjà mesuré ailleurs, ex. `measureClaudeMdWeight()`).
+2. **Forme** — « entre les deux : informé de manière claire et précise » (entre une simple ligne
+   discrète et un vrai point d'arrêt bloquant) : un bloc distinct (`⏳ SMART-CONSO-TOKEN — chantier en
+   cours`), purement informatif, jamais une question qui exige une réponse avant de continuer.
+3. **Répétition** — une seule fois par tâche.
+
+**Notion de "tâche" approximée honnêtement.** Aucun identifiant de tâche n'existe dans l'historique
+(jamais eu besoin de savoir où une tâche commence/finit avant ce jour) — une LANCÉE (`currentTaskRun`,
+privée) regroupe les actions confirmées consécutives sans écart de plus de 30 minutes entre deux
+d'entre elles ni entre la dernière et maintenant. Une vraie pause plus longue (confirmation utilisateur
+en attente, chantier repris le lendemain) ferme la lancée — un nouveau signal peut alors se déclencher
+pour la lancée suivante, jamais une reprise silencieuse de l'ancienne. Heuristique honnête, jamais une
+garantie, comme le reste de ce fichier.
+
+**Discipline "une seule fois" sans second fichier d'état.** Une fois le signal déclenché, un marqueur
+interne (`long_task_signal`, jamais un schéma connu coûteux, jamais passé par `assess()`) est écrit dans
+le MÊME historique via `recordAction()` — il rejoint la lancée courante et `detectTaskMomentum()` le
+détecte pour se taire tant qu'aucun écart de plus de 30 minutes ne l'a fermée.
+
+**Seuils choisis par l'agent, jamais calibrés empiriquement.** Délégué explicitement par l'utilisateur
+(« trouve un système pertinent ») faute d'historique réel pour calibrer — `TASK_MOMENTUM_THRESHOLDS`
+(5 actions / 45 min / 50 000 tokens), à ajuster une fois l'usage réel accumulé, même discipline que les
+autres seuils de ce fichier (Article 19).
+
+**Câblage réel.** `main()` — après une confirmation réelle (`--confirm`) seulement, jamais sur un
+simple avis — appelle `detectTaskMomentum()` et affiche le bloc s'il se déclenche, puis enregistre
+lui-même le marqueur. Correction au passage : `main()` utilisait encore l'historique chargé AVANT
+`recordAction()` pour le résumé de rythme affiché juste après, jamais rafraîchi avec l'action qui vient
+d'être confirmée — corrigé en réutilisant directement la valeur de retour de `recordAction()`.

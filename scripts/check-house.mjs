@@ -942,7 +942,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 201'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 202'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4093,6 +4093,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     extractRuleUnits, countArticleCrossReferences, classifyRuleSensitivity, classifyRuleImportance,
     findRedundantRulePairs, buildClaudeMdRuleTable, renderClaudeMdRuleTable,
     ARCHIVE_FIRST_REMINDER, compareChantiers, formatChantierComparison, recordAction,
+    detectTaskMomentum, formatTaskMomentumBlock, TASK_MOMENTUM_THRESHOLDS,
   } = await import('../scripts/smart-conso-token.mjs');
 
   assert.equal(estimateTokens('abcd'), 1, 'the ~4-characters-per-token heuristic must round to the nearest whole token, never a fractional or wildly inaccurate estimate');
@@ -4242,7 +4243,49 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const multiPast = { actions: [{ type: 'scan', at: t1 - 5000, totalTokens: 9000 }, { type: 'scan', at: t1 - 1000, totalTokens: 3000 }] };
   assert.equal(trackWeightTrend(multiPast, 3000, t1).direction, 'stable', 'with multiple past scans recorded, the comparison must always use the MOST RECENT one, never an older or averaged figure');
 
-  console.log('Passed: SMART-CONSO-TOKEN correctly estimates token weight from raw text length, classifies a document into low/moderate/high relative to the cited research benchmarks, never silently assumes its costly-pattern knowledge stays valid across a real model/platform change, escalates a recognized costly pattern from soft to hard exactly at its configured threshold while never fabricating a verdict for an unknown pattern, reuses THE-FINAL-JUDGE\'s exact scope vocabulary rather than inventing a second one, now correctly distinguishes an always-loaded document (real actionable cost) from an on-demand one (informative only) with a genuinely differentiated concrete action for each, mechanically counts real dated narrative markers as a safe starting point for a future restructuring, computes its adoption KPI from real applied proposals only, explicitly knows the two-sided truth about automation\'s real token cost, can retroactively verify — using THE-FINAL-JUDGE\'s own archived reports as independent proof — whether a real agent spawn was ever actually preceded by a confirmed consultation, mechanically confirms (checked live against the project\'s own real files) that every document meant to reference it genuinely does, and exploits its own accumulated scan history to report a real improvement or degradation trend rather than a bare current number.');
+  // detectTaskMomentum() (tâche #138, 2026-09-21) : accompagnement en temps réel d'une tâche longue,
+  // calibré par 3 questions explicites — un déclencheur combiné (nombre d'actions OU temps écoulé OU
+  // poids cumulé, n'importe lequel suffit), un bloc informatif jamais un blocage, une seule fois par
+  // lancée (jamais répété tant que le seuil reste franchi sur la même lancée).
+  {
+    const tnow = 5_000_000_000;
+    const run = { actions: [
+      { type: 'scan', at: tnow - 20 * 60000 },
+      { type: 'scan', at: tnow - 15 * 60000 },
+      { type: 'scan', at: tnow - 10 * 60000, tokensEstimes: 20000 },
+      { type: 'agent_subagent_spawn', at: tnow - 5 * 60000, tokensEstimes: 37000 },
+      { type: 'scan', at: tnow - 1 * 60000 },
+    ] };
+    const idle = detectTaskMomentum({ actions: [] }, tnow);
+    assert.equal(idle.signale, false, 'an empty history must never signal a long-running task — nothing has happened yet');
+
+    const fired = detectTaskMomentum(run, tnow);
+    assert.equal(fired.signale, true, 'a run of 5 chained costly actions (at the configured count threshold) must trip the signal even before the time or token thresholds are separately checked');
+    assert.equal(fired.actionCount, 5, 'the reported action count must be the real number of chained actions in the current run, never an estimate');
+    assert.equal(fired.cumulativeTokens, 57000, 'the cumulative token figure must sum only the real tokensEstimes values actually supplied by the caller, never guess a number for actions that carried none');
+    assert.ok(fired.franchis.length >= 2, 'both the action-count threshold AND the cumulative-token threshold are genuinely crossed by this run, so the report must name both, never silently pick just one axis when several fire together');
+    assert.ok(fired.bloc.startsWith('⏳ SMART-CONSO-TOKEN'), 'the rendered block must be immediately recognizable as a distinct, clearly-labeled callout — the explicit calibration answer "clear and precise, between a buried line and a hard stop"');
+
+    // Seuil temps testé isolément : 3 actions seulement (bien sous le seuil de compte de 5), mais
+    // chaînées avec un écart ≤30 min entre chacune (donc une seule et même lancée) et un total de
+    // ~50 min entre la première et maintenant — au-delà du seuil de 45 min, doit déclencher sur cet
+    // axe seul.
+    const timeOnly = detectTaskMomentum({ actions: [{ type: 'scan', at: tnow - 50 * 60000 }, { type: 'scan', at: tnow - 25 * 60000 }, { type: 'scan', at: tnow - 1000 }] }, tnow);
+    assert.equal(timeOnly.actionCount, 3, 'sanity check on the test fixture itself: all 3 actions must belong to the same run (each gap under the 30-minute run-boundary), never accidentally split by the currentTaskRun heuristic');
+    assert.equal(timeOnly.signale, true, 'elapsed real time alone (a task dragging on with few actions) must be able to trip the signal on its own, independent of the action-count axis — the whole point of combining several axes rather than relying on count alone');
+
+    const withMarker = { actions: [...run.actions, { type: 'long_task_signal', at: tnow }] };
+    const suppressed = detectTaskMomentum(withMarker, tnow + 60000);
+    assert.equal(suppressed.signale, false, 'once the marker itself has been recorded for this exact run, the signal must never fire a second time for the same run — the explicit "once per task" calibration answer');
+
+    const afterGap = detectTaskMomentum(withMarker, tnow + 60 * 60000);
+    assert.equal(afterGap.signale, false, 'a fresh moment with no new action after a real gap must never resurrect an old, already-closed run just because its marker is still sitting in history');
+    assert.equal(afterGap.actionCount, 0, 'a genuinely empty new run (nothing happened after the gap) must report zero actions, never leak the count from the previous, unrelated run');
+
+    assert.ok(TASK_MOMENTUM_THRESHOLDS.actionCount > 0 && TASK_MOMENTUM_THRESHOLDS.elapsedMs > 0 && TASK_MOMENTUM_THRESHOLDS.cumulativeTokens > 0, 'all three combined thresholds must be genuinely positive numbers, never a disabled/zeroed axis silently doing nothing');
+  }
+
+  console.log('Passed: SMART-CONSO-TOKEN correctly estimates token weight from raw text length, classifies a document into low/moderate/high relative to the cited research benchmarks, never silently assumes its costly-pattern knowledge stays valid across a real model/platform change, escalates a recognized costly pattern from soft to hard exactly at its configured threshold while never fabricating a verdict for an unknown pattern, reuses THE-FINAL-JUDGE\'s exact scope vocabulary rather than inventing a second one, now correctly distinguishes an always-loaded document (real actionable cost) from an on-demand one (informative only) with a genuinely differentiated concrete action for each, mechanically counts real dated narrative markers as a safe starting point for a future restructuring, computes its adoption KPI from real applied proposals only, explicitly knows the two-sided truth about automation\'s real token cost, can retroactively verify — using THE-FINAL-JUDGE\'s own archived reports as independent proof — whether a real agent spawn was ever actually preceded by a confirmed consultation, mechanically confirms (checked live against the project\'s own real files) that every document meant to reference it genuinely does, exploits its own accumulated scan history to report a real improvement or degradation trend rather than a bare current number, and — task #138 — combines a chained-action count, elapsed real time, and cumulative estimated token weight (whichever crosses first) into a single once-per-run, purely informative block that never blocks the agent\'s work.');
 
   // Distinction investissement / consommation sans retour (2026-09-20, demande explicite : « il ne
   // faut pas qu'il décourage un investissement sain, qu'il vienne de moi, toi ou les outils »).

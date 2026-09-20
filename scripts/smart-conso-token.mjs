@@ -717,11 +717,18 @@ export function assess({ actionType, context, history, now, agentIdentity, inves
 // ou "utilisateur" (l'agent signale une demande lourde de l'utilisateur). `options.verdict` : le
 // verdict rendu par assess() pour CETTE action précise, conservé pour pouvoir plus tard vérifier si
 // l'interlocuteur s'y est conformé (cf. diagnoseAdviceAccuracy ci-dessous).
+// `options.tokensEstimes` (2026-09-21, tâche #138) : le coût déjà connu ou déjà mesuré de CETTE
+// action précise (37000 pour un spawn d'agent séparé, le résultat déjà calculé par
+// measureClaudeMdWeight()/estimateTokens() pour les schémas "variable", etc.) — jamais un second
+// calcul ici, l'appelant fournit le chiffre qu'il a déjà en main. Optionnel : une action dont le
+// poids réel n'est pas connu numériquement (ex. large_archive_read sans mesure faite) reste comptée
+// pour le nombre d'actions et le temps écoulé (cf. detectTaskMomentum ci-dessous), simplement pour
+// zéro dans le cumul de tokens.
 export function recordAction(actionType, context, now, options = {}) {
-  const { classification, recipient = "agent", verdict, reductionPct } = options;
+  const { classification, recipient = "agent", verdict, reductionPct, tokensEstimes } = options;
   const history = loadJson(HISTORY_PATH, { actions: [] });
   history.actions = (history.actions ?? []).slice(-300);
-  history.actions.push({ type: actionType, context: context || null, at: now, recipient, ...(classification ? { classification } : {}), ...(verdict ? { verdict } : {}), ...(typeof reductionPct === "number" ? { reductionPct } : {}) });
+  history.actions.push({ type: actionType, context: context || null, at: now, recipient, ...(classification ? { classification } : {}), ...(verdict ? { verdict } : {}), ...(typeof reductionPct === "number" ? { reductionPct } : {}), ...(typeof tokensEstimes === "number" ? { tokensEstimes } : {}) });
   writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 1));
   return history;
 }
@@ -740,6 +747,78 @@ export function recordOutcome(actionType, at, outcome, now = Date.now()) {
   if (match) match.outcome = outcome;
   writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 1));
   return { history, found: Boolean(match), recordedAt: now };
+}
+
+// Accompagnement en temps réel d'une tâche longue (2026-09-21, tâche #138 — demande explicite :
+// « SMART-CONSO-TOKEN doit aussi pouvoir intervenir PENDANT une tâche qui s'étire, pas seulement
+// avant chaque action isolée »). Laissée explicitement en file le 2026-09-21 lors de l'audit de
+// fiabilité (#137) car trop ouverte pour être devinée — calibrée maintenant par trois questions :
+// (1) déclencheur — l'utilisateur a demandé "un système pertinent qui combine plusieurs solutions",
+// jamais un seul axe ; (2) forme du signal — "entre" une simple ligne discrète et un vrai point
+// d'arrêt bloquant : un bloc clairement identifiable, mais purement informatif, jamais une question
+// qui exige une réponse avant de continuer ; (3) répétition — une seule fois par tâche, jamais à
+// chaque action tant que le seuil reste franchi.
+//
+// Aucun identifiant de "tâche" n'existe dans l'historique (SMART-CONSO-TOKEN n'a jamais eu besoin
+// de savoir où une tâche commence/finit avant ce jour) — approximé honnêtement par une LANCÉE :
+// des actions confirmées consécutives, sans écart de plus de `maxGapMs` entre deux d'entre elles ni
+// entre la dernière et maintenant. Une vraie tâche qui ferait une pause plus longue que ce délai
+// (attente d'une confirmation utilisateur, chantier repris le lendemain) compte alors comme une
+// NOUVELLE lancée, ce qui est le comportement voulu : le compteur ne doit jamais recoller
+// silencieusement deux chantiers sans lien réel entre eux. Heuristique honnête, jamais une garantie
+// (même esprit que le reste de ce fichier) — cf. `docs/referentiel/smart-conso-token.md`.
+function currentTaskRun(history, now, { maxGapMs = 30 * 60 * 1000 } = {}) {
+  const actions = [...(history?.actions ?? [])].filter((a) => now - a.at >= 0).sort((a, b) => a.at - b.at);
+  if (!actions.length || now - actions[actions.length - 1].at > maxGapMs) return [];
+  let startIdx = actions.length - 1;
+  for (let i = actions.length - 1; i > 0; i--) {
+    if (actions[i].at - actions[i - 1].at > maxGapMs) break;
+    startIdx = i - 1;
+  }
+  return actions.slice(startIdx);
+}
+
+// Trois seuils indépendants, combinés en OR (n'importe lequel suffit à déclencher) — chacun
+// attrape un motif de dérive différent qu'un seul axe manquerait : beaucoup de petites actions
+// rapprochées (nombre), un chantier qui traîne en longueur même avec peu d'actions coûteuses
+// (temps), une poignée d'actions individuellement énormes (poids cumulé). Valeurs de départ
+// choisies par l'agent (délégué explicitement par l'utilisateur : « trouve un système pertinent »),
+// jamais calibrées empiriquement faute d'historique réel — à ajuster une fois l'usage réel accumulé
+// (même discipline que HARD_THRESHOLDS/classifyRuleImportance ailleurs dans ce fichier).
+export const TASK_MOMENTUM_THRESHOLDS = { actionCount: 5, elapsedMs: 45 * 60 * 1000, cumulativeTokens: 50000 };
+
+// Marqueur interne (jamais un schéma connu coûteux lui-même, jamais passé par assess()) : une fois
+// écrit dans l'historique via recordAction(), il rejoint la lancée courante et empêche un second
+// signal tant qu'aucun écart de plus de maxGapMs ne l'a fermée — c'est ce qui fait respecter "une
+// seule fois par tâche" sans avoir besoin d'un second fichier d'état séparé.
+const TASK_MOMENTUM_MARKER = "long_task_signal";
+
+export function detectTaskMomentum(history, now, { maxGapMs = 30 * 60 * 1000, thresholds = TASK_MOMENTUM_THRESHOLDS } = {}) {
+  const run = currentTaskRun(history, now, { maxGapMs });
+  const alreadySignaled = run.some((a) => a.type === TASK_MOMENTUM_MARKER);
+  const countableRun = run.filter((a) => a.type !== TASK_MOMENTUM_MARKER);
+  if (!countableRun.length) return { signale: false, actionCount: 0, elapsedMs: 0, cumulativeTokens: 0 };
+  const elapsedMs = now - countableRun[0].at;
+  const cumulativeTokens = countableRun.reduce((sum, a) => sum + (typeof a.tokensEstimes === "number" ? a.tokensEstimes : 0), 0);
+  const franchis = [];
+  if (countableRun.length >= thresholds.actionCount) franchis.push(`${countableRun.length} actions coûteuses enchaînées (seuil : ${thresholds.actionCount})`);
+  if (elapsedMs >= thresholds.elapsedMs) franchis.push(`${Math.round(elapsedMs / 60000)} min écoulées sur ce chantier (seuil : ${Math.round(thresholds.elapsedMs / 60000)} min)`);
+  if (cumulativeTokens >= thresholds.cumulativeTokens) franchis.push(`~${cumulativeTokens} tokens cumulés estimés (seuil : ${thresholds.cumulativeTokens})`);
+  const base = { actionCount: countableRun.length, elapsedMs, cumulativeTokens };
+  if (!franchis.length || alreadySignaled) return { signale: false, ...base };
+  return { signale: true, franchis, bloc: formatTaskMomentumBlock({ ...base, franchis }), ...base };
+}
+
+// Bloc informatif seul (calibrage : "entre" une ligne discrète et un vrai point d'arrêt) — un
+// paragraphe clairement identifiable dans la réponse de l'agent, jamais une question qui bloque la
+// suite du travail en attendant une confirmation.
+export function formatTaskMomentumBlock({ actionCount, elapsedMs, cumulativeTokens, franchis }) {
+  return [
+    "⏳ SMART-CONSO-TOKEN — chantier en cours",
+    `${actionCount} action(s) coûteuse(s) enchaînée(s) depuis ${Math.round(elapsedMs / 60000)} min${cumulativeTokens ? `, ~${cumulativeTokens} tokens estimés cumulés` : ""}.`,
+    `Seuil(s) franchi(s) : ${franchis.join(" ; ")}.`,
+    "Signal informatif seul, jamais un blocage — à l'utilisateur/l'agent de juger si une pause ou un point d'étape serait utile maintenant.",
+  ].join("\n");
 }
 
 // Auto-diagnostic (2026-09-20, demande explicite : « il se rend compte s'il a fait des erreurs
@@ -972,14 +1051,16 @@ function main() {
   const identityArg = process.argv.find((a) => a.startsWith("--identity="));
   const contextArg = process.argv.find((a) => a.startsWith("--context="));
   const recipientArg = process.argv.find((a) => a.startsWith("--recipient="));
+  const tokensEstimesArg = process.argv.find((a) => a.startsWith("--tokens-estimes="));
   const agentIdentity = identityArg ? identityArg.slice("--identity=".length) : undefined;
   const context = contextArg ? contextArg.slice("--context=".length) : undefined;
   const recipient = recipientArg ? recipientArg.slice("--recipient=".length) : "agent";
+  const tokensEstimes = tokensEstimesArg ? Number(tokensEstimesArg.slice("--tokens-estimes=".length)) : undefined;
   const now = Date.now();
-  const history = loadJson(HISTORY_PATH, { actions: [] });
+  let history = loadJson(HISTORY_PATH, { actions: [] });
 
   if (!actionType) {
-    console.log("Usage: node scripts/smart-conso-token.mjs <type-d'action> [--confirm] [--identity=claude-sonnet-5] [--context=\"...\"] [--recipient=agent|outil|utilisateur] [--builds-tool] [--prevents-debugging] [--duplicate] [--scope-mismatch]");
+    console.log("Usage: node scripts/smart-conso-token.mjs <type-d'action> [--confirm] [--identity=claude-sonnet-5] [--context=\"...\"] [--recipient=agent|outil|utilisateur] [--tokens-estimes=37000] [--builds-tool] [--prevents-debugging] [--duplicate] [--scope-mismatch]");
     console.log("Types connus :", Object.keys(KNOWN_COSTLY_PATTERNS).join(", "));
     console.log("Autre usage : node scripts/smart-conso-token.mjs outcome <type> <horodatage-ms> <résultat>");
     process.exit(1);
@@ -1005,8 +1086,16 @@ function main() {
   else if (advice.freshness) console.log(`(${advice.freshness.message})`);
 
   if (process.argv.includes("--confirm")) {
-    recordAction(actionType, context, now, { classification: advice.investment?.classification, recipient, verdict: advice.verdict });
+    history = recordAction(actionType, context, now, { classification: advice.investment?.classification, recipient, verdict: advice.verdict, tokensEstimes });
     console.log(`\nAction confirmée et enregistrée dans l'historique local (horodatage ${now}, à réutiliser pour "outcome" une fois le résultat connu).`);
+
+    // Accompagnement en temps réel (tâche #138) : vérifié seulement APRÈS une confirmation réelle,
+    // jamais sur un simple avis — un chantier "en cours" se mesure à ce qui a vraiment été fait.
+    const momentum = detectTaskMomentum(history, now);
+    if (momentum.signale) {
+      console.log(`\n${momentum.bloc}`);
+      history = recordAction(TASK_MOMENTUM_MARKER, null, now + 1);
+    }
   } else {
     console.log("\n(Avis seul — relancer avec --confirm une fois la décision prise.)");
   }
