@@ -821,6 +821,21 @@ réel de conversation à relire) plutôt que le chiffre constant de THE-FINAL-JU
 seulement quand la version légère et gratuite déjà décrite dans `docs/systeme-de-suivi.md` ne
 suffit pas.
 
+**Ronde sur mesure, calibrée par l'agent, jamais le même menu brut recopié à chaque fois (2026-09-20,
+demande explicite de l'utilisateur : « je veux que tu me propose une ronde sur mesure à chaque fois,
+avec la possibilité d'ajouter des rondes plus poussées ou des rondes supplémentaires. Mais c'est toi
+qui calibre la ronde à réaliser, que tu me proposes par défaut avec le flag "recommandé" »).**
+Jusqu'ici, chaque déclenchement de CIRCLE-TASKS présentait la même fenêtre à cocher, sans lien avec
+le contexte réel du moment (quels signaux de fraîcheur sont réellement dégradés, quel chantier vient
+de se terminer, combien de commits depuis le dernier passage). Nouvelle règle : à chaque
+déclenchement, l'agent lit d'abord les signaux de fraîcheur déjà calculés par `buildCircleReport()`
+et propose une sélection déjà calibrée, marquée « recommandé », plutôt que de renvoyer le menu brut
+sans avis — le reste des items reste visible et cochable pour qui veut une ronde plus large ou plus
+poussée, jamais retiré de la fenêtre. Reste à construire (mise en file, pas encore implémenté au
+moment de cette règle) : une fonction dédiée qui transforme les signaux de fraîcheur déjà présents
+dans `buildCircleReport()` en une sélection par défaut, plutôt qu'un jugement refait à la main à
+chaque fois — cf. le carnet de tâches pour son suivi.
+
 #### Le menu des prestations — traduire les outils en demandes, jamais en noms internes
 
 *(Ajouté le 2026-09-20, à la demande explicite de l'utilisateur : « le coordinateur est capable de
