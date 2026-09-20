@@ -131,9 +131,11 @@ export function summarize(keys) {
 // (recordOutcome/summarize, alimentée par de vraies sondes, se réinitialise à chaque nouveau
 // conteneur) : ceci est un historique CURATÉ à la main, jamais généré par une sonde, qui capture
 // ce qu'on a compris ENSEMBLE (diagnostic humain + IA) en creusant de vrais blocages en
-// simulation. Narré en détail dans CLAUDE.md ("Blocage de quota Gemini — diagnostic et repli") ;
-// reproduit ici en forme courte pour un affichage outillage, jamais comme copie faisant autorité
-// — CLAUDE.md reste la version de référence en cas de divergence (Article 6/13). Une leçon
+// simulation. Narré en détail dans docs/referentiel/smart-breaker-historique.md (extrait de
+// CLAUDE.md le 2026-09-20, allègement du fichier — CLAUDE.md garde les règles opérationnelles, le
+// récit complet vit désormais là) ; reproduit ici en forme courte pour un affichage outillage,
+// jamais comme copie faisant autorité — le fichier historique reste la version de référence en cas
+// de divergence (Article 6/13). Une leçon
 // s'ajoute ici seulement après avoir été vécue et comprise en vrai, jamais par anticipation d'un
 // cas hypothétique.
 export const KNOWN_LESSONS = [

@@ -113,6 +113,22 @@ système au risque d'un détail approximatif présenté comme fiable (cf. philos
 
 ## Procédure
 
+0. **Automatique, jamais sur demande (2026-09-20, demande explicite et insistante de l'utilisateur :
+   « le fait que j'intervienne dans la conversation doit AUTOMATIQUEMENT créer une tâche, je ne dois
+   pas avoir à le demander à chaque fois [...] chacune de mes interventions : même une courte
+   intervention, du moment que j'apporte une idée, l'idée ne doit jamais être perdue ».)** Dès qu'un
+   message de l'utilisateur apporte une idée — une demande, une remarque, une question, une
+   extension d'un chantier déjà ouvert — même courte, même arrivée en plein milieu d'un tour (un
+   message "mid-turn" surfacé par l'outillage pendant que l'agent travaille encore sur autre chose),
+   il reçoit sa ligne dans le fichier de la session en cours AVANT de reprendre le travail
+   interrompu, jamais après coup et jamais seulement si l'utilisateur le redemande explicitement.
+   Limite honnête, à ne jamais masquer (déjà connue, cf. l'entrée du 2026-09-19T23:42Z dans
+   `docs/suivi/sessions/`) : aucun crochet technique ne peut se déclencher sur un simple message de
+   chat — seul un commit git déclenche `pre-commit`/`post-commit`. La seule garantie réelle est donc
+   la discipline de l'agent d'écrire la ligne au moment où l'idée arrive, pas un mécanisme externe
+   qui verrait la conversation se dérouler. Un message qui ne fait que répondre à une question déjà
+   posée par l'agent (ex. une réponse à `AskUserQuestion`) n'ouvre pas une ligne séparée — il vient
+   compléter/clôturer la ligne de la question elle-même, même principe qu'au point 2 ci-dessous.
 1. Dès qu'une tâche est créée (dans la liste de tâches technique de l'agent, cf.
    `docs/regles-de-travail.md` §10), elle reçoit aussi une ligne dans le fichier de la session en
    cours (`docs/suivi/sessions/<session>.md`), avec ses quatre attributs.
