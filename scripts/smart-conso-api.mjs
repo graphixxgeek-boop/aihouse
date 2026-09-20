@@ -135,6 +135,49 @@ export function findUnconfirmedBursts(healthData, sessionLog, { burstWindowMinut
   return bursts;
 }
 
+// Capacité de scan (2026-09-20, demande explicite de l'utilisateur : « est-ce que smart conso api
+// peut réaliser un scan aussi ? [...] si non, il faut l'ajouter : c'est utile de savoir scanner »).
+// Domaine différent de SMART-CONSO-TOKEN : jamais la taille de documents/texte, toujours le RYTHME
+// des appels réels à l'API régulée (Article 22) — cohérent avec la frontière déjà posée avec
+// l'Article 8 (jamais l'architecture ou le contenu des prompts, toujours le rythme). Repère des
+// SCHÉMAS RÉELS dans l'historique déjà accumulé (`.gemini-key-health.json` partagé avec Smart
+// Breaker, `.smart-conso-session.json` propre à cet outil) — jamais un jugement sur le code du jeu
+// lui-même, seulement sur la façon dont l'agent a réellement sollicité l'API par le passé.
+export function scanConsumptionPatterns(healthData, sessionLog, now) {
+  const findings = [];
+  const exhaustionRate = recentExhaustionRate(healthData, now, 2);
+  if (typeof exhaustionRate === "number" && exhaustionRate >= 0.5) {
+    findings.push({
+      constat: `Taux d'épuisement élevé sur les 2 dernières heures (${Math.round(exhaustionRate * 100)}%).`,
+      piste: "Espacer les prochaines actions coûteuses plutôt que d'insister sur le même modèle/la même clé — consulter check-gemini-quota.mjs avant de relancer quoi que ce soit.",
+    });
+  }
+
+  // Repère un relancement trop rapproché après un épisode d'épuisement confirmé — schéma réel
+  // rencontré le 2026-09-18/19 (une simulation relancée immédiatement après un blocage total a
+  // épuisé les modèles de repli en quelques minutes).
+  const episodes = [];
+  for (const key of Object.values(healthData?.keys ?? {})) {
+    for (const ep of key?.episodes ?? []) if (typeof ep?.at === "number") episodes.push(ep);
+  }
+  episodes.sort((a, b) => a.at - b.at);
+  const confirmedActions = (sessionLog?.actions ?? []).filter((a) => a?.confirmed && typeof a?.at === "number").sort((a, b) => a.at - b.at);
+  let quickRelaunches = 0;
+  for (const ep of episodes) {
+    if (ep.outcome !== "QUOTA_ÉPUISÉ") continue;
+    const relaunch = confirmedActions.find((a) => a.at > ep.at && a.at - ep.at <= 10 * 60 * 1000);
+    if (relaunch) quickRelaunches++;
+  }
+  if (quickRelaunches > 0) {
+    findings.push({
+      constat: `${quickRelaunches} relancement(s) confirmé(s) dans les 10 minutes suivant un épisode d'épuisement réel.`,
+      piste: "Un quota journalier épuisé ne revient pas en quelques minutes (le retryDelay de Google est trompeur pour ce cas) — attendre une confirmation de check-gemini-quota.mjs avant de relancer, jamais réessayer à l'aveugle.",
+    });
+  }
+
+  return findings;
+}
+
 function reportUnconfirmedBursts(healthData, sessionLog) {
   const bursts = findUnconfirmedBursts(healthData, sessionLog);
   console.log("\n=== Garde-fou fiabilité — salves d'activité jamais confirmées ===\n");
@@ -152,9 +195,21 @@ function main() {
   const healthData = loadJson(HEALTH_PATH, { keys: {} });
   const sessionLog = loadJson(SESSION_PATH, { actions: [] });
 
+  if (actionType === "scan") {
+    console.log("=== SMART CONSO API — scan des schémas de consommation réels ===\n");
+    const findings = scanConsumptionPatterns(healthData, sessionLog, now);
+    if (!findings.length) {
+      console.log("Aucun schéma coûteux repéré dans l'historique réel accumulé.");
+    } else {
+      for (const f of findings) console.log(`⚠️ ${f.constat}\n   → ${f.piste}\n`);
+    }
+    reportUnconfirmedBursts(healthData, sessionLog);
+    return;
+  }
+
   if (!actionType) {
-    console.log("Usage: node scripts/smart-conso-api.mjs <type-d'action> [--confirm]");
-    console.log("Types connus : simulation, check-spirit, diagnostic");
+    console.log("Usage: node scripts/smart-conso-api.mjs <type-d'action|scan> [--confirm]");
+    console.log("Types connus : simulation, check-spirit, diagnostic, scan");
     reportUnconfirmedBursts(healthData, sessionLog);
     process.exit(1);
   }

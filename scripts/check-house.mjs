@@ -919,7 +919,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 125'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 126'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3050,6 +3050,20 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(findUnconfirmedBursts(healthNoBurst,{actions:[]}).length,0,'only two isolated episodes must never be treated as a burst — an occasional diagnostic ping is not the pattern this guard exists to catch');
   assert.deepEqual(findUnconfirmedBursts({keys:{}},{actions:[]}),[],'a genuinely empty health history must report zero bursts, never crash or fabricate one');
   console.log("Passed: findUnconfirmedBursts() flags a real burst of closely-spaced API activity only when no action was genuinely confirmed (confirmed:true, never a mere advice-only log) within the lookback window beforehand, never flags an isolated one-or-two-call ping as a burst, and reports zero on empty history rather than crashing — closing the exact real gap found on 2026-09-19 where a simulation was launched without ever consulting Smart Conso API first.");
+
+  // Capacité de scan de Smart Conso API (2026-09-20, demande explicite de l'utilisateur : « est-ce
+  // que smart conso api peut réaliser un scan aussi ? [...] il faut l'ajouter »). Domaine différent
+  // de SMART-CONSO-TOKEN : jamais la taille de texte, toujours le RYTHME réel des appels déjà
+  // enregistrés — jamais un jugement sur le code du jeu lui-même.
+  const {scanConsumptionPatterns}=await import('../scripts/smart-conso-api.mjs');
+  const tS=2_000_000_000_000;
+  const healthHighExhaustion={keys:{k1:{episodes:[{at:tS-60000,outcome:'QUOTA_ÉPUISÉ'},{at:tS-30000,outcome:'QUOTA_ÉPUISÉ'}]}}};
+  const quickRelaunchLog={actions:[{type:'simulation',at:tS-50000,confirmed:true}]};
+  const findings=scanConsumptionPatterns(healthHighExhaustion,quickRelaunchLog,tS);
+  assert.ok(findings.some((f)=>f.constat.includes("Taux d'épuisement")),'a genuinely high recent exhaustion rate must be surfaced as a real finding, with a concrete piste rather than a bare percentage');
+  assert.ok(findings.some((f)=>f.constat.includes('relancement')),'a real confirmed relaunch within 10 minutes of a genuine exhaustion episode must be flagged — the exact real pattern that caused full_sim12 to burn through its fallback models within minutes');
+  assert.deepEqual(scanConsumptionPatterns({keys:{}},{actions:[]},tS),[],'an empty history must report zero findings, never a fabricated warning from no data');
+  console.log("Passed: Smart Conso API's scan capability surfaces a real high-exhaustion-rate finding and a real too-quick-relaunch-after-exhaustion finding from the actual shared history, each with a concrete process suggestion rather than a bare statistic, and reports an honest empty list rather than a fabricated finding when the history is genuinely empty — its domain staying strictly the RHYTHM of real API calls already made, never the game's own code or prompts.");
 }
 
 {

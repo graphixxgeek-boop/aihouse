@@ -64,6 +64,15 @@ cerveau par personnage", protégée par l'Article 0 de la charte). Son terrain e
 d'utilisation d'un système déjà conçu, jamais sa conception elle-même — cette frontière doit être
 écrite noir sur blanc dans l'instanciation propre à chaque projet, jamais laissée implicite.
 
+## Capacité de scan (2026-09-20) — repérer des schémas dans l'historique déjà accumulé
+
+Au-delà de l'avis avant action, ce patron peut aussi relire son propre historique déjà enregistré
+pour y repérer des SCHÉMAS RÉELS de consommation (un taux d'épuisement élevé récent, un relancement
+trop rapproché après un blocage confirmé) et proposer une piste concrète pour chacun — jamais un
+jugement sur le code de l'application régulée, toujours sur la façon dont elle a été SOLLICITÉE.
+Cette capacité reste dans la même frontière que le reste du patron (cf. ci-dessous) : elle informe,
+elle ne modifie jamais rien elle-même.
+
 ## Une seule source de vérité pour l'historique brut
 
 Cf. le principe déjà appliqué dans ce projet (bonusLog/bonusPsychLog, Article 3) : l'historique

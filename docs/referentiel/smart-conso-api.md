@@ -57,6 +57,17 @@ l'Article 8 et protégée par l'Article 0. Dans l'autre sens, son expérience ac
 une décision future sous l'Article 8 (ex. combien coûte réellement telle catégorie d'action), sans
 jamais la trancher à sa place.
 
+## Capacité de scan (2026-09-20)
+
+`node scripts/smart-conso-api.mjs scan` — `scanConsumptionPatterns()` repère des schémas RÉELS dans
+l'historique déjà accumulé (jamais le code du jeu lui-même, cf. la frontière avec l'Article 8
+ci-dessous) : un taux d'épuisement élevé récent, ou un relancement confirmé dans les 10 minutes
+suivant un épisode d'épuisement réel (le schéma exact qui a fait s'épuiser les modèles de repli en
+quelques minutes le 2026-09-18/19). Chaque constat vient avec une piste concrète, jamais une
+statistique brute sans suite. Domaine différent de SMART-CONSO-TOKEN (qui scanne des DOCUMENTS pour
+leur taille) : ici, toujours le RYTHME des appels déjà faits, jamais la taille d'un texte ou le
+contenu d'un prompt.
+
 ## Apprentissage et auto-évaluation — pas encore en place
 
 Prématuré à ce stade (outil créé le jour même, zéro historique de conseils donnés) : la phase

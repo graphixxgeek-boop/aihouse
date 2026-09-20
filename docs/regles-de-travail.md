@@ -302,7 +302,7 @@ maximiser leurs performances ».)*
 | `check-spirit.mjs` / `check-profile.mjs` | fidélité de l'esprit des personnages (Article 0) | réel (API) | à la main, si `lib/lia.ts`/personnalités changent |
 | ARGUS | absences — ce qui devrait exister et n'existe pas (Article 20) | gratuit (partie mécanique) | toujours déployé — logique testée à chaque commit (`check-house.mjs`, pre-commit) ET balayage réel du code courant à chaque commit (`scripts/hooks/check-last-commit.mjs`, post-commit, warn-only, 2026-09-20) |
 | HARMONIA | frictions — deux choses qui existent et se contredisent (Article 20) | gratuit (partie mécanique) | idem ARGUS ci-dessus |
-| Smart Conso API | rythme de consommation API de l'AGENT pendant le travail (Article 22) | gratuit à consulter | avant toute action coûteuse de l'agent |
+| Smart Conso API | rythme de consommation API de l'AGENT pendant le travail (Article 22) ; peut aussi scanner l'historique réel pour repérer des schémas coûteux | gratuit à consulter | avant toute action coûteuse de l'agent |
 | CHECK-LEVEL-TARGET | quel niveau de vérification une demande appelle, quels outils déployer | gratuit | avant de décider comment traiter une demande |
 | HYPER-SCAN-CHECKPOINT | orchestrateur exceptionnel, fidélité aux consignes passées (Article 21) | réel (API, en version complète) | sur demande explicite seulement |
 | ALWAYS-NEW-CODE | dette d'organisation — code empilé plutôt que pensé (Article 23) | réel (raisonnement) | niveau « Exceptionnel » de CHECK-LEVEL-TARGET |
