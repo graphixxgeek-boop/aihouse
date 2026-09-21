@@ -243,6 +243,16 @@ export const AGENT_SCRIPT_FILES = {
   "smart-conso-token": "scripts/smart-conso-token.mjs",
   "check-tasks-details": "scripts/check-tasks-details.mjs",
   "clone-hunter": "scripts/clone-hunter.mjs",
+  // 6 entrées ajoutées le 2026-09-21 par le nouveau garde-fou findScriptsMissingFromAgentFiles()
+  // (audit d'évolutivité) : ces Agents réels de la table maîtresse étaient invisibles à la
+  // couverture AXA-CHECK et à la stagnation CASSANDRA-RH depuis leur construction, sans qu'aucun
+  // signal ne le détecte — exactement le gap que ce garde-fou existe désormais pour prévenir.
+  "the-king": "scripts/the-king.mjs",
+  "ines-official": "scripts/ines-official.mjs",
+  "memory-audit": "scripts/memento.mjs",
+  "find-booster": "scripts/find-booster.mjs",
+  "objectifs-vs-resultats": "scripts/objectifs-vs-resultats.mjs",
+  "cassandra-rh": "scripts/cassandra-rh.mjs",
 };
 
 export function collectScriptCoverage(covDir, { readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8") } = {}) {

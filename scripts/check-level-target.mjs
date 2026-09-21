@@ -169,6 +169,33 @@ export const SENSITIVE_NODES = [
   { node: "life.appreciation", files: ["app/api/lia/route.ts", "lib/life.ts"] },
 ];
 
+// Garde-fou de fraîcheur (2026-09-21, même audit d'évolutivité que THEMES d'ALWAYS-NEW-CODE) : le
+// commentaire ci-dessus promet une synchronisation avec harmonia.md sans qu'aucune vérification
+// mécanique n'existe. `extractHarmoniaSensitiveNodes()` relit tel quel la section « Nœuds
+// sensibles identifiés » de harmonia.md, `findSensitiveNodesDivergingFromHarmonia()` rapporte les
+// deux sens de l'écart (jamais un seul silencieusement privilégié).
+export function extractHarmoniaSensitiveNodes(harmoniaMdText) {
+  const text = String(harmoniaMdText ?? "");
+  const start = text.indexOf("## Nœuds sensibles identifiés");
+  if (start === -1) return [];
+  const rest = text.slice(start + 1);
+  const nextHeading = rest.search(/\n## /);
+  const section = nextHeading === -1 ? rest : rest.slice(0, nextHeading);
+  const nodes = [];
+  for (const m of section.matchAll(/^- \*\*`([^`]+)`\*\*/gm)) nodes.push(m[1].trim());
+  return nodes;
+}
+
+export function findSensitiveNodesDivergingFromHarmonia(harmoniaMdText, nodes = SENSITIVE_NODES) {
+  const harmoniaNodes = extractHarmoniaSensitiveNodes(harmoniaMdText);
+  const nodeSet = new Set(nodes.map((n) => n.node));
+  const harmoniaSet = new Set(harmoniaNodes);
+  return {
+    missingFromHere: harmoniaNodes.filter((n) => !nodeSet.has(n)),
+    missingFromHarmonia: nodes.map((n) => n.node).filter((n) => !harmoniaSet.has(n)),
+  };
+}
+
 export function recentlyChangedSensitiveNodes(changedFiles, nodes = SENSITIVE_NODES) {
   if (!changedFiles || !changedFiles.length) return [];
   const hits = [];
@@ -190,6 +217,16 @@ function main() {
   try {
     const pointsFragilesText = readFileSync(new URL("../docs/referentiel/points-fragiles.md", import.meta.url), "utf8");
     result = combineWithRegistryPressure(result, countOpenFragilePoints(pointsFragilesText));
+  } catch {}
+  try {
+    const harmoniaMdText = readFileSync(new URL("../docs/referentiel/harmonia.md", import.meta.url), "utf8");
+    const divergence = findSensitiveNodesDivergingFromHarmonia(harmoniaMdText);
+    if (divergence.missingFromHere.length || divergence.missingFromHarmonia.length) {
+      console.log("⚠️  SENSITIVE_NODES a divergé de harmonia.md (garde-fou de fraîcheur, 2026-09-21) :");
+      if (divergence.missingFromHere.length) console.log(`   présent dans harmonia.md, absent d'ici : ${divergence.missingFromHere.join(", ")}`);
+      if (divergence.missingFromHarmonia.length) console.log(`   présent ici, absent de harmonia.md : ${divergence.missingFromHarmonia.join(", ")}`);
+      console.log("");
+    }
   } catch {}
   console.log("=== CHECK-LEVEL-TARGET ===\n");
   console.log(`Niveau retenu : ${result.level.toUpperCase()} (confiance : ${result.confidence})`);

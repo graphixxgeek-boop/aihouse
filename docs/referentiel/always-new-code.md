@@ -99,3 +99,11 @@ que les autres outils de raisonnement de ce projet. Le mapping zone→fichier pr
 (`THEME_PRIMARY_FILE`) est approximatif ; les seuils de la couche mécanique (`addendaSignal`,
 `churnSignal`) sont calibrés sur ce projet à un instant donné, à recalibrer si l'expérience montre
 qu'ils sont trop ou trop peu sensibles.
+
+## Garde-fou de fraîcheur (2026-09-21, Article 24)
+
+`THEMES` promettait par simple commentaire de rester synchronisé avec la carte HARMONIA
+(`docs/referentiel/harmonia.md`), sans aucune vérification mécanique — un écart aurait pu s'installer
+en silence. `extractHarmoniaThemes()`/`findThemesDivergingFromHarmonia()` relisent le texte réel de
+harmonia.md et rapportent tout écart dans les deux sens (un thème d'HARMONIA absent d'ici, ou
+l'inverse), câblé dans `main()`.

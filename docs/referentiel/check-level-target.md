@@ -81,6 +81,13 @@ choisis pour chaque niveau resteront à affiner avec l'usage réel ; toute évol
 est une évolution de RÈGLE, à consigner dans `docs/check-level-target/index.md`, jamais un simple
 ajustement silencieux.
 
+## Garde-fou de fraîcheur (2026-09-21, Article 24)
+
+`SENSITIVE_NODES` promettait par simple commentaire de rester synchronisé avec la carte HARMONIA,
+sans aucune vérification mécanique — même classe de bug que `THEMES` d'ALWAYS-NEW-CODE.
+`extractHarmoniaSensitiveNodes()`/`findSensitiveNodesDivergingFromHarmonia()` relisent le texte réel
+de harmonia.md et rapportent tout écart dans les deux sens, câblé dans `main()`.
+
 ## Registre
 
 `docs/check-level-target/` — évolutions de la règle (signaux ajoutés/retirés, poids recalibrés),

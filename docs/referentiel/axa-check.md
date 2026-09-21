@@ -143,3 +143,13 @@ réserve explicite conservée dans le libellé maximal plutôt que "100% safe" l
   ont reçu un enregistrement `exceptionnel` le jour même, à l'issue de l'audit ligne-par-ligne
   exhaustif demandé par l'utilisateur (mega-prompt "PAUSE") — premier vrai passage de ce registre,
   pas un exemple fabriqué pour la documentation.
+
+## Garde-fou de fraîcheur d'AGENT_SCRIPT_FILES (2026-09-21, Article 24)
+
+`AGENT_SCRIPT_FILES` n'avait jamais eu de vérification mécanique contre la table maîtresse réelle —
+seul un test check-house.mjs affirmait une borne basse figée ("au moins 14"), sans jamais signaler
+un Agent réel oublié. `findScriptsMissingFromAgentFiles()` (`scripts/le-coordinateur.mjs`, câblé
+dans `runNetworkCheck()`) a trouvé et permis de corriger 6 Agents réels invisibles depuis leur
+construction (the-king, ines-official, memory-audit, find-booster, objectifs-vs-resultats,
+cassandra-rh) — invisibles donc à la fois à la couverture AXA-CHECK et à la stagnation lue par
+CASSANDRA-RH.

@@ -443,6 +443,18 @@ ajouté demain à cette liste (ou un item retiré) est automatiquement couvert o
 retoucher cette règle elle-même, exactement le même principe que la règle générale ci-dessus
 ("TOUT rapport que l'agent produit ou fait produire — jamais réservé à un seul outil").
 
+**Étendu le 2026-09-21 (demande explicite : « étends ce principe aux rapports issus des
+simulations »)** : la même obligation d'action de suivi s'applique explicitement aux rapports
+produits par le protocole de simulation complète (Article 18) — transcript, dossier retourné,
+rapport KPI, note EL-PROFESSOR, capture THE-SCREENER, archivage LE-RÉGISSEUR — jamais seulement les
+rapports rattachés à CIRCLE_ITEMS. Une conclusion réelle tirée de la lecture d'un de ces rapports
+(un écart trouvé, un correctif à revalider, un signal qui mérite un suivi) doit, de la même façon,
+se traduire en une vraie action dans `docs/suivi/` (ou dans le carnet dédié
+`docs/simulations/correctifs-a-revalider.md` quand la nature du correctif l'appelle), jamais
+seulement mentionnée dans l'analyse puis oubliée. Les deux catégories (outils via CIRCLE_ITEMS,
+simulations via l'Article 18) restent chacune par construction évolutive dans leur propre périmètre
+— jamais une troisième liste figée qui tenterait de fusionner les deux.
+
 ## 7bis. Rendre compte des progrès de l'outillage interne (ex. « Smart Breaker », l'outil quota Gemini)
 
 *(Nom d'usage « Smart Breaker » donné le 2026-09-19 à la demande explicite de l'utilisateur, pour

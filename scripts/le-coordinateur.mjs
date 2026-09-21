@@ -44,7 +44,7 @@ import { existsSync, mkdtempSync, rmSync, readFileSync, writeFileSync, mkdirSync
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { sh, assertNotAPersonnage, AGENT_CATEGORIES } from "./lib-shell.mjs";
-import { collectCoverage, robustnessScore, LIB_MAP } from "./axa-check.mjs";
+import { collectCoverage, robustnessScore, LIB_MAP, AGENT_SCRIPT_FILES } from "./axa-check.mjs";
 import { summarizeArgusOutput, summarizeHarmoniaOutput } from "./hyper-scan-checkpoint.mjs";
 import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
 import { classifyCheckLevel } from "./check-level-target.mjs";
@@ -411,6 +411,22 @@ export function findToolsMissingFromMenu(toolsTableMarkdown, prestations = PREST
     .filter(isMenuWorthy)
     .map((row) => row.tool.split(/[/(]/)[0].trim())
     .filter((primaryName) => !menuText.includes(primaryName.toLowerCase()));
+}
+
+// Garde-fou de fraîcheur (2026-09-21, audit d'évolutivité) : `AGENT_SCRIPT_FILES` (axa-check.mjs,
+// qui alimente la couverture AXA-CHECK des badges ET la stagnation relative lue par CASSANDRA-RH)
+// n'avait jamais eu de vérification mécanique contre la table maîtresse réelle — seul un test
+// check-house.mjs affirmait une borne basse figée ("au moins 14"), qu'il faudrait remonter à la
+// main à chaque nouvel Agent sans que rien ne le signale. Réutilise `parseToolsTable()` (déjà ici,
+// jamais une seconde lecture), `slugifyAgentName()` (même découpage `primaryName` que partout
+// ailleurs dans ce fichier) — jamais un second calcul.
+export function findScriptsMissingFromAgentFiles(toolsTableMarkdown, agentScriptFiles = AGENT_SCRIPT_FILES) {
+  const known = new Set(Object.keys(agentScriptFiles));
+  return parseToolsTable(toolsTableMarkdown)
+    .filter((row) => row.statut === "Agent")
+    .map((row) => row.tool.split(/[/(]/)[0].trim())
+    .map((primaryName) => slugifyAgentName(primaryName))
+    .filter((slug) => !known.has(slug));
 }
 
 // checkAgentOnboarding() — la « séance d'accueil du nouveau collaborateur » (2026-09-20, demande
@@ -848,6 +864,14 @@ export function runNetworkCheck({ shImpl = sh } = {}) {
   const deepReaderIndex = existsSync(deepReaderIndexPath) ? readFileSync(deepReaderIndexPath, "utf8") : "";
   const deepReaderMissing = findJudgeSpawnsWithoutConsultation(deepReaderIndex, tokenHistory);
   rows.push({ name: "SMART-CONSO-TOKEN (spawns THE-DEEP-READER sans consultation confirmée)", result: deepReaderMissing.length ? `à regarder (${deepReaderMissing.length} : ${deepReaderMissing.join(", ")})` : "ok", when: now });
+
+  // Garde-fou de fraîcheur AGENT_SCRIPT_FILES (2026-09-21, audit d'évolutivité) — un Agent réel de
+  // la table maîtresse jamais ajouté à AGENT_SCRIPT_FILES (axa-check.mjs) échapperait sinon
+  // silencieusement à toute couverture AXA-CHECK et à toute stagnation CASSANDRA-RH.
+  const rulesMdPath = join(ROOT, "docs/regles-de-travail.md");
+  const rulesMdText = existsSync(rulesMdPath) ? readFileSync(rulesMdPath, "utf8") : "";
+  const missingAgentFiles = findScriptsMissingFromAgentFiles(rulesMdText);
+  rows.push({ name: "AXA-CHECK (Agents absents d'AGENT_SCRIPT_FILES)", result: missingAgentFiles.length ? `à regarder (${missingAgentFiles.join(", ")})` : "ok", when: now });
 
   saveState({ lastHead: head, lastWhen: now });
   return { duplicate, previousRun: state, rows };

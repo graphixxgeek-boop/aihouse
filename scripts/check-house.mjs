@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 240'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 241'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2687,7 +2687,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   console.log('Passed: CHECK-LEVEL-TARGET correctly classifies the real historical prompts that motivated its own creation (a trivial fix stays léger, the exact 2026-09-19 "vérification approfondie" prompt classifies as approfondi with its real costly tools recommended, an explicit "machine de guerre"/hyper-scan mention reaches exceptionnel), falls back to the safe standard default on zero signal rather than under-checking silently, always returns an explicit boolean on whether real doubt warrants confirmation, and — closing a real gap found the day ALWAYS-NEW-CODE was designed — distinguishes the "bugs cachés" and "restructuration" registers within the exceptionnel tier so a structural-rebuild request recommends ALWAYS-NEW-CODE rather than silently under-classifying or defaulting to HYPER-SCAN-CHECKPOINT alone.');
   // Vue d'ensemble du réseau (2026-09-19, demande explicite de l'utilisateur : « centraliser le
   // réseau des outils de vérification ») — un conseiller mieux informé, jamais un chef d'orchestre.
-  const {countOpenFragilePoints,combineWithRegistryPressure,recentlyChangedSensitiveNodes,SENSITIVE_NODES}=await import('../scripts/check-level-target.mjs');
+  const {countOpenFragilePoints,combineWithRegistryPressure,recentlyChangedSensitiveNodes,SENSITIVE_NODES,extractHarmoniaSensitiveNodes,findSensitiveNodesDivergingFromHarmonia}=await import('../scripts/check-level-target.mjs');
   const fragileFixture=[
     '# Points fragiles ouverts','','## Points ouverts','',
     '- point un','- point deux','- point trois','','## Une autre section','','- pas compté ici',
@@ -2711,6 +2711,17 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const multi=recentlyChangedSensitiveNodes(['lib/turn.ts','lib/life.ts','app/page.tsx']);
   assert.equal(multi.length,2,'multiple genuinely distinct sensitive nodes touched at once must each be reported, never collapsed into one or silently dropped');
   console.log('Passed: the CHECK-LEVEL-TARGET sensitive-node reminder reuses the real HARMONIA sensitive-node map, reports exactly the matched node and files for a real hit, reports zero for no changes or a missing list rather than a false positive or a crash, and reports every distinct node touched when several are hit at once.');
+
+  // findSensitiveNodesDivergingFromHarmonia() (2026-09-21, audit d'évolutivité, même classe de bug
+  // que THEMES) — SENSITIVE_NODES avait promis par commentaire de rester synchronisé avec
+  // harmonia.md, sans jamais de vérification mécanique.
+  const harmoniaNodesFixture='## Nœuds sensibles identifiés (blah)\n\n- **`needs.fatigue`** — blah\n- **`story.round`** — blah\n\n## Premier balayage\n\nrien ici';
+  assert.deepEqual(extractHarmoniaSensitiveNodes(harmoniaNodesFixture),['needs.fatigue','story.round'],'must extract exactly the real backtick-wrapped node names between the two known headings, never a false match from an unrelated section');
+  assert.deepEqual(extractHarmoniaSensitiveNodes('rien du tout'),[],'a text with no matching heading must report an honest empty list, never crash');
+  assert.deepEqual(findSensitiveNodesDivergingFromHarmonia(harmoniaNodesFixture,[{node:'needs.fatigue',files:[]},{node:'story.round',files:[]}]),{missingFromHere:[],missingFromHarmonia:[]},'two identical lists must report zero divergence in either direction');
+  assert.deepEqual(findSensitiveNodesDivergingFromHarmonia(harmoniaNodesFixture,[{node:'needs.fatigue',files:[]}]),{missingFromHere:['story.round'],missingFromHarmonia:[]},'a real node present in harmonia.md but absent here must be flagged by name — the exact real drift class this guard exists to catch');
+  assert.deepEqual(findSensitiveNodesDivergingFromHarmonia(harmoniaNodesFixture,[{node:'needs.fatigue',files:[]},{node:'story.round',files:[]},{node:'un.noeud.fantome',files:[]}]),{missingFromHere:[],missingFromHarmonia:['un.noeud.fantome']},'a node present here but no longer in harmonia.md must be flagged in the other direction, never silently ignored');
+  console.log('Passed: findSensitiveNodesDivergingFromHarmonia() (2026-09-21, évolutivité audit) closes the real freshness gap SENSITIVE_NODES had carried since its creation, reading harmonia.md\'s own real backtick-wrapped node section rather than a second hand-copied list, and reporting both real directions of drift.');
 }
 
 {
@@ -2951,7 +2962,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // ALWAYS-NEW-CODE (2026-09-19, cf. docs/always-new-code-blueprint.md et
   // docs/referentiel/always-new-code.md). Rend concret l'Article 7 (page blanche) : dette
   // d'organisation, distincte des absences (ARGUS) et frictions (HARMONIA).
-  const {THEMES,parseCoverage,recommendZone,countDatedAddenda,addendaSignal,parseNumstat,churnSignal,alwaysNewCodePerformance}=await import('../scripts/always-new-code.mjs');
+  const {THEMES,parseCoverage,recommendZone,countDatedAddenda,addendaSignal,parseNumstat,churnSignal,alwaysNewCodePerformance,extractHarmoniaThemes,findThemesDivergingFromHarmonia}=await import('../scripts/always-new-code.mjs');
   assert.equal(THEMES.length,8,'must reuse the exact 8 HARMONIA grand-theme zones, never a second invented split of the project');
   const idx=[
     '| Date | Zone examinée | Trouvailles confirmées | Rapport | Notes |',
@@ -2987,6 +2998,17 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   ].join('\n');
   assert.deepEqual(alwaysNewCodePerformance(perfIdx),{passages:2,totalFindings:4,findingsPerPassage:2},'the KPI must compute the exact real average of confirmed findings per pass, tracked from day one per the explicit user decision');
   console.log('Passed: ALWAYS-NEW-CODE reuses the exact 8 HARMONIA zones, its coverage memory keeps the most recent pass per zone and reports an honest absence for a never-seen zone, its rotation always proposes the most-neglected zone first while an explicit valid request always overrides it and an unknown requested zone is flagged ambiguous for the agent to ask back rather than silently accepted or ignored, its mechanical stacking signals (dated-addenda count, git-history pure-growth pattern) only ever reach "probable" and report an honest absence rather than a fake zero-signal on missing data, and its from-day-one KPI computes the exact real findings-per-pass average.');
+
+  // findThemesDivergingFromHarmonia() (2026-09-21, audit d'évolutivité) — THEMES avait promis par
+  // simple commentaire de rester synchronisé avec harmonia.md depuis sa création, sans jamais de
+  // vérification mécanique. Fixture minimale, jamais le vrai harmonia.md (qui varierait dans le temps).
+  const harmoniaFixture='## La carte des dépendances, par grand thème\n\n- **Fatigue** (blah)\n- **Cycle jour/nuit** (blah)\n\n## Nœuds sensibles identifiés\n\nrien ici';
+  assert.deepEqual(extractHarmoniaThemes(harmoniaFixture),['Fatigue','Cycle jour/nuit'],'must extract exactly the real bulleted theme names between the two known headings, never a false match from an unrelated section');
+  assert.deepEqual(extractHarmoniaThemes('rien du tout'),[],'a text with no matching heading must report an honest empty list, never crash');
+  assert.deepEqual(findThemesDivergingFromHarmonia(harmoniaFixture,['Fatigue','Cycle jour/nuit']),{missingFromThemes:[],missingFromHarmonia:[]},'two identical lists must report zero divergence in either direction');
+  assert.deepEqual(findThemesDivergingFromHarmonia(harmoniaFixture,['Fatigue']),{missingFromThemes:['Cycle jour/nuit'],missingFromHarmonia:[]},'a real theme present in harmonia.md but absent from THEMES must be flagged by name — the exact real drift class this guard exists to catch');
+  assert.deepEqual(findThemesDivergingFromHarmonia(harmoniaFixture,['Fatigue','Cycle jour/nuit','Un thème fantôme']),{missingFromThemes:[],missingFromHarmonia:['Un thème fantôme']},'a theme present in THEMES but no longer in harmonia.md must be flagged in the other direction, never silently ignored');
+  console.log('Passed: findThemesDivergingFromHarmonia() (2026-09-21, évolutivité audit) closes the real freshness gap THEMES had carried since its creation — extractHarmoniaThemes() reads harmonia.md\'s own real bulleted theme section rather than a second hand-copied list, and the divergence check reports both real directions of drift (a theme harmonia.md gained that THEMES never saw, and a theme THEMES still carries that harmonia.md no longer lists) rather than favoring one silently.');
 }
 
 {
@@ -3048,7 +3070,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // extension d'AXA-CHECK aux scripts/*.mjs des ~14 outils à badge). Un script est déjà du JS pur
   // (contrairement à lib/*.ts, qui a besoin de l'indirection test-X.mjs de LIB_MAP) : son entrée V8
   // porte directement son vrai chemin, jamais un fichier transpilé intermédiaire.
-  assert.ok(Object.keys(AGENT_SCRIPT_FILES).length>=14,'the badge-eligible tool map must cover at least the 14 real Agent-status tools listed in docs/regles-de-travail.md §7ter, never silently missing one');
+  assert.ok(Object.keys(AGENT_SCRIPT_FILES).length>=20,'the badge-eligible tool map must cover at least the real Agent-status tools listed in docs/regles-de-travail.md §7ter, never silently missing one (2026-09-21: this bound is now backed by a real mechanical guard, findScriptsMissingFromAgentFiles(), rather than being the only protection)');
   assert.equal(AGENT_SCRIPT_FILES.argus,'scripts/check-argus.mjs','ARGUS\'s real script filename does not follow the slug convention (check-argus.mjs, not argus.mjs) — the map must reflect the real, non-uniform filenames rather than a guessed pattern');
   const fixtureScriptCovDir='.sites-runtime/axa-check-script-fixture-cov';
   fs.mkdirSync(fixtureScriptCovDir,{recursive:true});
@@ -3143,7 +3165,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // de portée de la suite de tests.
   const fakeShImpl = (cmd) => (cmd.includes('check-house') ? 'OK — suite verte.' : '');
   const networkResult = runNetworkCheck({ shImpl: fakeShImpl });
-  assert.equal(networkResult.rows.length, 10, 'runNetworkCheck() must genuinely produce all 10 rows of the real network synthesis (8 original + the 2026-09-21 findJudgeSpawnsWithoutConsultation() rows for THE-FINAL-JUDGE/THE-DEEP-READER), never crash partway through nor silently drop one');
+  assert.equal(networkResult.rows.length, 11, 'runNetworkCheck() must genuinely produce all 11 rows of the real network synthesis (8 original + the 2026-09-21 findJudgeSpawnsWithoutConsultation() rows for THE-FINAL-JUDGE/THE-DEEP-READER + the 2026-09-21 évolutivité audit AGENT_SCRIPT_FILES row), never crash partway through nor silently drop one');
   assert.ok(networkResult.rows.every((r) => typeof r.name === 'string' && typeof r.result === 'string' && r.result.length > 0), 'every row must carry a real name and a real, non-empty result string — never an undefined value leaking from a broken sub-computation');
   assert.ok(networkResult.rows.some((r) => r.name.includes('SMART-CONSO-TOKEN')), 'the SMART-CONSO-TOKEN rhythm row specifically (the exact one that crashed tonight) must be genuinely present and computed, not skipped');
   // Tâche #137 (2026-09-21, question directe de l'utilisateur sur les priorités de scan de l'équipe
@@ -3217,7 +3239,8 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // proposées »). Ce garde-fou ne peut jamais INVENTER une nouvelle combinaison (un vrai jugement,
   // Article 19) — il ne peut que signaler l'ABSENCE d'un outil coûteux/occasionnel dans le menu réel,
   // exactement le principe déjà appliqué par ARGUS/HARMONIA/EL-PROFESSOR/AXA-CHECK.
-  const {parseToolsTable,isMenuWorthy,findToolsMissingFromMenu}=await import('../scripts/le-coordinateur.mjs');
+  const {parseToolsTable,isMenuWorthy,findToolsMissingFromMenu,findScriptsMissingFromAgentFiles}=await import('../scripts/le-coordinateur.mjs');
+  const {AGENT_SCRIPT_FILES:realAgentScriptFiles}=await import('../scripts/axa-check.mjs');
   const sampleTable=[
     '| Outil | Ce qu\'il détecte/régule | Coût | Déclenchement |',
     '|---|---|---|---|',
@@ -3244,6 +3267,19 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const fakeMenu=[{demande:'Qualité visuelle',outils:['THE-SCREENER'],cout:'réel'}];
   assert.deepEqual(findToolsMissingFromMenu(sampleTable,fakeMenu),['NOUVEL-OUTIL'],'a real costly/on-demand tool absent from every menu entry must be flagged by name, while a free always-deployed tool and one already present in the menu must never be flagged');
   assert.deepEqual(findToolsMissingFromMenu(sampleTable,[{demande:'x',outils:['THE-SCREENER','NOUVEL-OUTIL'],cout:'réel'}]),[],'once every menu-worthy tool is covered by at least one entry, the guard must report a genuinely empty gap list, never a false positive');
+
+  // findScriptsMissingFromAgentFiles() (2026-09-21, audit d'évolutivité) — AGENT_SCRIPT_FILES
+  // (axa-check.mjs, alimente la couverture des badges ET la stagnation lue par CASSANDRA-RH)
+  // n'avait jamais eu de vérification mécanique contre la table maîtresse réelle avant ce soir.
+  const agentTable=[
+    '| Outil | Statut | Ce qu\'il détecte/régule | Coût | Déclenchement |',
+    '|---|---|---|---|---|',
+    '| ARGUS | Agent | absences | gratuit | toujours déployé |',
+    '| NOUVEL-AGENT | Agent | un tout nouveau service | gratuit | sur demande |',
+    '| LE-COORDINATEUR | Utilitaire nommé | agrège | gratuit | routine |',
+  ].join('\n');
+  assert.deepEqual(findScriptsMissingFromAgentFiles(agentTable,{argus:'scripts/check-argus.mjs'}),['nouvel-agent'],'a real Agent-status row absent from AGENT_SCRIPT_FILES must be flagged by its slug, while a covered Agent and a non-Agent (Utilitaire nommé) row must never be flagged');
+  assert.deepEqual(findScriptsMissingFromAgentFiles(agentTable,{argus:'scripts/check-argus.mjs','nouvel-agent':'scripts/nouvel-agent.mjs'}),[],'once every real Agent-status row is covered, the guard must report a genuinely empty gap list, never a false positive');
   // Vérification réelle et bloquante contre la vraie carte des outils (docs/regles-de-travail.md
   // §7ter) et le vrai menu (PRESTATIONS ci-dessus) — la garantie mécanique elle-même, pas seulement
   // sa logique testée sur un exemple synthétique : si un futur outil coûteux/occasionnel est ajouté à
@@ -3256,7 +3292,14 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   for(let i=tableStart;i<travailLines.length;i++){if(i>tableStart&&!travailLines[i].trim().startsWith('|'))break;tableLines.push(travailLines[i]);}
   const realGaps=findToolsMissingFromMenu(tableLines.join('\n'));
   assert.deepEqual(realGaps,[],`every real costly/occasional tool listed in docs/regles-de-travail.md's own "carte des outils" must have a matching PRESTATIONS entry in scripts/le-coordinateur.mjs — missing: ${realGaps.join(', ')}`);
-  console.log('Passed: the PRESTATIONS menu freshness guard reads the real tools table (backticks stripped, header/separator skipped), correctly tells a menu-worthy tool (real cost or on-demand trigger) from baseline free/always-deployed infrastructure, flags only a genuinely uncovered tool by name rather than fabricating a proposal, and — checked live against the project\'s own real table and real menu — currently finds zero real gap, a guarantee that breaks the build the day a new costly tool is added without a matching menu entry.');
+  // Vérification réelle et bloquante contre AGENT_SCRIPT_FILES, la même discipline que le test
+  // PRESTATIONS ci-dessus — si un futur Agent est ajouté à la table maîtresse sans jamais rejoindre
+  // AGENT_SCRIPT_FILES, ce test échoue et bloque le commit (l'exact angle mort trouvé et corrigé le
+  // 2026-09-21 pour 6 Agents réels : the-king, ines-official, memory-audit, find-booster,
+  // objectifs-vs-resultats, cassandra-rh).
+  const realAgentGaps=findScriptsMissingFromAgentFiles(travailMd,realAgentScriptFiles);
+  assert.deepEqual(realAgentGaps,[],`every real Agent-status tool in docs/regles-de-travail.md's master table must have a real entry in AGENT_SCRIPT_FILES (axa-check.mjs) — found missing: ${realAgentGaps.join(', ')||'(none)'}`);
+  console.log('Passed: the PRESTATIONS menu freshness guard reads the real tools table (backticks stripped, header/separator skipped), correctly tells a menu-worthy tool (real cost or on-demand trigger) from baseline free/always-deployed infrastructure, flags only a genuinely uncovered tool by name rather than fabricating a proposal, and — checked live against the project\'s own real table and real menu — currently finds zero real gap, a guarantee that breaks the build the day a new costly tool is added without a matching menu entry; and (2026-09-21, évolutivité audit) findScriptsMissingFromAgentFiles() closes the matching freshness gap for AGENT_SCRIPT_FILES, flagging a real Agent-status row by its slug when AGENT_SCRIPT_FILES has no entry for it while never flagging a covered Agent or a non-Agent row, checked live against the project\'s own real table to currently find zero gap — a guarantee that breaks the build the day a new Agent is added without joining AGENT_SCRIPT_FILES, exactly the real blind spot 6 tools (the-king, ines-official, memory-audit, find-booster, objectifs-vs-resultats, cassandra-rh) had fallen into unnoticed tonight.');
 }
 {
   // suggestPrestationsForTask() (2026-09-20, demande explicite de l'utilisateur : « check-tasks-
@@ -4941,7 +4984,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // (docs/suivi #230), jamais celui qui la prend. Testé avec un readFileImpl injecté et un
   // sous-ensemble isolé de registres — jamais dépendant du contenu réel des scripts du dépôt, qui
   // peut changer indépendamment de ce test.
-  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex, LOCAL_JOURNALS, auditLocalJournals, findJournalsMissingFromGitignore, findEngineCodeInRegistries, findGardiensMissingFromSource, flagFindBoosterCandidates, checkHtmlReportTheme } = await import('../scripts/doc-report.mjs');
+  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex, LOCAL_JOURNALS, auditLocalJournals, findJournalsMissingFromGitignore, findUndeclaredLocalJournals, findEngineCodeInRegistries, findGardiensMissingFromSource, flagFindBoosterCandidates, checkHtmlReportTheme } = await import('../scripts/doc-report.mjs');
   assert.ok(REGISTRIES.length >= 15, 'the registry table must cover every real tool registry of the network, never a partial or forgotten subset');
   assert.ok(REGISTRIES.every((r) => r.slug && r.label && r.family && r.path && r.decision), 'every registry entry must be fully specified — a half-filled row would silently break the family grouping or the decision audit');
 
@@ -5035,6 +5078,14 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const { readFileSync: readFileSyncForGitignore } = await import('node:fs');
   assert.deepEqual(findJournalsMissingFromGitignore(readFileSyncForGitignore(new URL('../.gitignore', import.meta.url), 'utf8'), LOCAL_JOURNALS), [], 'checked live against the project\'s own real .gitignore: every real local journal this project actually produces must already be declared, a guarantee that breaks the day a new journal is added without it');
   console.log('Passed: Doc-Report\'s local-journal extension (2026-09-21) answers the user\'s direct question — the SAME tool, never a twin — inventories every real gitignored state/cache file the tool network produces (owner, purpose, real filesystem mtime age, honest absence for one never yet written), and cross-checks live that every one of them is genuinely declared in .gitignore, catching a real leak risk before it ever reaches a commit.');
+
+  // findUndeclaredLocalJournals() (2026-09-21, audit d'évolutivité — the OTHER direction of the
+  // journal-freshness guard above) — found 2 real gaps tonight (.memento-history.json,
+  // .the-ghost-session.json), both now declared and fixed.
+  assert.deepEqual(findUndeclaredLocalJournals('.env*\n.fake-present.json\n.undeclared-journal.json\nnode_modules/\n', fakeJournals), ['.undeclared-journal.json'], 'a real root-level .gitignore entry shaped like a local journal (dot-prefixed, .json/.html/.txt extension) but absent from LOCAL_JOURNALS must be flagged by name, while a genuinely declared one and an unrelated entry (node_modules/) must never be flagged');
+  assert.deepEqual(findUndeclaredLocalJournals('.env*\nnode_modules/\n', []), [], 'a .gitignore with no journal-shaped entry at all must report a genuinely empty list, never a false positive from an unrelated dotfile');
+  assert.deepEqual(findUndeclaredLocalJournals(readFileSyncForGitignore(new URL('../.gitignore', import.meta.url), 'utf8'), LOCAL_JOURNALS), [], 'checked live against the project\'s own real .gitignore: every real journal-shaped entry must already be declared in LOCAL_JOURNALS — a guarantee that breaks the day a new tool\'s local journal is added to .gitignore without ever joining LOCAL_JOURNALS, exactly the real blind spot .memento-history.json/.the-ghost-session.json had fallen into unnoticed tonight');
+  console.log('Passed: findUndeclaredLocalJournals() (2026-09-21, évolutivité audit) closes the freshness gap in the OTHER direction from findJournalsMissingFromGitignore() — a real journal-shaped .gitignore entry never declared in LOCAL_JOURNALS is flagged by name (reading .gitignore rather than the filesystem, so it holds true even before the file is ever written in a fresh checkout), never a false positive from an unrelated dotfile, and — checked live — the project\'s own real .gitignore currently has zero such gap after tonight\'s fix.');
 
   // flagFindBoosterCandidates() (2026-09-21, demande explicite : « améliore aussi la connexion avec
   // Doc-Report [...] pour qu'il soit encore plus performant »). Opérationnalise l'obligation déjà

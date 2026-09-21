@@ -41,6 +41,37 @@ export const THEMES = [
   "Relation Lia/Noé",
 ];
 
+// Garde-fou de fraîcheur (2026-09-21, audit d'évolutivité demandé par l'utilisateur : « on a une
+// liste copiée à la main, ça peut diverger sans qu'on le sache ») — le commentaire ci-dessus
+// promettait une synchronisation avec harmonia.md depuis la création de THEMES (2026-09-19) sans
+// qu'aucune vérification mécanique n'existe : exactement la même classe de bug que la dérive
+// CLONE-HUNTER trouvée le même soir. `extractHarmoniaThemes()` relit tel quel le texte de
+// harmonia.md (jamais un second découpage inventé), `findThemesDivergingFromHarmonia()` rapporte
+// les deux sens de l'écart (un thème d'HARMONIA absent d'ici, ou l'inverse), jamais un seul sens
+// silencieusement privilégié — même discipline que EL-PROFESSOR (missing/orphan) et HARMONIA
+// (findRegistriesMissingFromCircle).
+export function extractHarmoniaThemes(harmoniaMdText) {
+  const text = String(harmoniaMdText ?? "");
+  const start = text.indexOf("## La carte des dépendances, par grand thème");
+  if (start === -1) return [];
+  const rest = text.slice(start + 1);
+  const nextHeading = rest.search(/\n## /);
+  const section = nextHeading === -1 ? rest : rest.slice(0, nextHeading);
+  const themes = [];
+  for (const m of section.matchAll(/^- \*\*([^*]+)\*\*/gm)) themes.push(m[1].trim());
+  return themes;
+}
+
+export function findThemesDivergingFromHarmonia(harmoniaMdText, themes = THEMES) {
+  const harmoniaThemes = extractHarmoniaThemes(harmoniaMdText);
+  const themeSet = new Set(themes);
+  const harmoniaSet = new Set(harmoniaThemes);
+  return {
+    missingFromThemes: harmoniaThemes.filter((t) => !themeSet.has(t)),
+    missingFromHarmonia: themes.filter((t) => !harmoniaSet.has(t)),
+  };
+}
+
 // Un fichier principal par thème, pour l'indice git optionnel ci-dessous — approximatif et
 // honnêtement incomplet (plusieurs fichiers touchent souvent le même thème) : à affiner avec
 // l'usage réel, comme les signaux de CHECK-LEVEL-TARGET (jamais figé une fois pour toutes).
@@ -154,9 +185,20 @@ export function alwaysNewCodePerformance(indexText) {
   return { passages, totalFindings, findingsPerPassage: totalFindings / passages };
 }
 
+const HARMONIA_MD_PATH = join(ROOT, "docs/referentiel/harmonia.md");
+
 function main() {
   recordCliUsage("always-new-code");
   console.log("=== ALWAYS-NEW-CODE — préparation (zéro coût, la couche raisonnement suit) ===\n");
+  if (existsSync(HARMONIA_MD_PATH)) {
+    const divergence = findThemesDivergingFromHarmonia(readFileSync(HARMONIA_MD_PATH, "utf8"));
+    if (divergence.missingFromThemes.length || divergence.missingFromHarmonia.length) {
+      console.log("⚠️  THEMES a divergé de harmonia.md (garde-fou de fraîcheur, 2026-09-21) :");
+      if (divergence.missingFromThemes.length) console.log(`   présent dans harmonia.md, absent de THEMES : ${divergence.missingFromThemes.join(", ")}`);
+      if (divergence.missingFromHarmonia.length) console.log(`   présent dans THEMES, absent de harmonia.md : ${divergence.missingFromHarmonia.join(", ")}`);
+      console.log("");
+    }
+  }
   const requested = process.argv[2];
   const indexText = existsSync(INDEX_PATH) ? readFileSync(INDEX_PATH, "utf8") : "";
   const coverage = parseCoverage(indexText);

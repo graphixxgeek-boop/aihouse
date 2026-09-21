@@ -52,6 +52,11 @@ export const LOCAL_JOURNALS = [
   { path: ".ines-official-latest-code_et_docs.txt", owner: "INES-official", purpose: "corps de la dernière édition (périmètre code + documentation)" },
   { path: ".badge-ceremony-history.json", owner: "LE-COORDINATEUR (cérémonie de certification)", purpose: "date de première certification de chaque Agent, pour n'annoncer le badge qu'une seule fois" },
   { path: ".cassandra-rh-known-members.json", owner: "CASSANDRA-RH (nouveaux visages, Phase 1)", purpose: "slugs déjà vus au moins une fois par CASSANDRA, pour n'accueillir un nouveau membre qu'une seule fois" },
+  // Deux entrées trouvées le 2026-09-21 par le nouveau garde-fou findUndeclaredLocalJournals() (audit
+  // d'évolutivité) : déclarées dans .gitignore depuis leur création respective, jamais ajoutées ici —
+  // exactement le gap que ce garde-fou existe désormais pour prévenir à l'avenir.
+  { path: ".memento-history.json", owner: "memory-audit (memento weight)", purpose: "historique du poids réel du contexte envoyé à Gemini par tour/personnage" },
+  { path: ".the-ghost-session.json", owner: "THE-GHOST", purpose: "état minimal de la session nocturne autonome en cours (heure de début, compteur de tâches enchaînées)" },
 ];
 
 // `present: false` (jamais confondu avec `ageDays: 0`) pour un journal qui n'a encore jamais été
@@ -70,6 +75,21 @@ export function auditLocalJournals(journals = LOCAL_JOURNALS, { existsImpl = exi
 export function findJournalsMissingFromGitignore(gitignoreText, journals = LOCAL_JOURNALS) {
   const lines = new Set(String(gitignoreText ?? "").split(/\r?\n/).map((l) => l.trim()));
   return journals.filter((j) => !lines.has(j.path)).map((j) => j.path);
+}
+
+// Garde-fou dans l'AUTRE sens (2026-09-21, audit d'évolutivité) : `findJournalsMissingFromGitignore`
+// ci-dessus vérifie qu'un journal DÉCLARÉ dans LOCAL_JOURNALS l'est aussi dans .gitignore, mais rien
+// ne signalait l'inverse — un nouveau fichier local (`.mon-outil-history.json` par exemple) ajouté à
+// .gitignore pour un futur outil, sans jamais être ajouté à LOCAL_JOURNALS, resterait invisible à
+// l'inventaire de Doc-Report pour toujours. Repère, dans .gitignore, une entrée à la racine qui
+// ressemble à un journal local (point de suspension, extension .json/.html/.txt) mais qu'aucune
+// entrée de LOCAL_JOURNALS ne référence — jamais l'inverse d'un scan disque (qui manquerait tout
+// journal pas encore écrit dans un checkout frais), une lecture de .gitignore reste vraie même
+// avant la première écriture réelle du fichier.
+export function findUndeclaredLocalJournals(gitignoreText, journals = LOCAL_JOURNALS) {
+  const declared = new Set(journals.map((j) => j.path));
+  const lines = String(gitignoreText ?? "").split(/\r?\n/).map((l) => l.trim());
+  return lines.filter((l) => /^\.[\w-]+\.(json|html|txt)$/.test(l) && !declared.has(l));
 }
 
 // decision : "delivery_html" (registre texte, copie de remise en HTML via html-report.mjs) |
@@ -333,6 +353,10 @@ function main() {
   const missingFromGitignore = findJournalsMissingFromGitignore(gitignoreText);
   if (missingFromGitignore.length) {
     console.log(`\n⚠️  Journal(aux) local (locaux) absent(s) de .gitignore, risque de fuite au prochain commit : ${missingFromGitignore.join(", ")}`);
+  }
+  const undeclared = findUndeclaredLocalJournals(gitignoreText);
+  if (undeclared.length) {
+    console.log(`\n⚠️  Entrée(s) de .gitignore ressemblant à un journal local mais absente(s) de LOCAL_JOURNALS (garde-fou de fraîcheur, 2026-09-21) : ${undeclared.join(", ")}`);
   }
 }
 

@@ -672,6 +672,35 @@ application automatique (l'agent interroge toujours l'utilisateur avant tout cha
 vérifier d'abord que ce n'est pas déjà une décision assumée et documentée ailleurs (Article 19).
 Détail complet : `docs/always-new-code-blueprint.md` et `docs/referentiel/always-new-code.md`.
 
+**Article 24 — Toute construction doit être évolutive, jamais figée sur une liste copiée à la
+main.** *(2026-09-21, audit d'évolutivité demandé explicitement par l'utilisateur.)* Portée
+strictement le CODE et l'OUTILLAGE de travail (les ~25 scripts de l'Agence Codex et leur
+documentation technique) — jamais le contenu narratif du jeu, déjà couvert séparément par le
+corollaire de l'Article 10 (variété de fond des répliques de secours) et celui de l'Article 17
+(jamais de liste de mots figée pour le registre). **Règle** : toute construction qui reflète l'état
+d'un autre système ou d'un autre document (une carte de dépendances, une table maîtresse, un
+inventaire de fichiers réels) doit soit le LIRE DYNAMIQUEMENT au moment de l'exécution, soit être
+accompagnée d'un GARDE-FOU MÉCANIQUE qui détecte tout écart — jamais une copie tenue à la main sans
+aucune vérification que rien ne diverge silencieusement. Un simple commentaire promettant une
+synchronisation future ("à garder aligné avec X") n'est jamais une protection suffisante : ce
+n'est qu'une intention, jamais un mécanisme, et l'audit du 2026-09-21 a trouvé quatre cas réels où
+cette seule promesse avait déjà cessé d'être vraie : `THEMES` (`always-new-code.mjs`, dérivé de la
+carte HARMONIA), `SENSITIVE_NODES` (`check-level-target.mjs`, idem), `AGENT_SCRIPT_FILES`
+(`axa-check.mjs`, dérivé de la table maîtresse — 6 Agents réels invisibles à la couverture AXA-CHECK
+et à la stagnation CASSANDRA-RH depuis leur construction) et `LOCAL_JOURNALS` (`doc-report.mjs`,
+2 journaux locaux réels jamais déclarés). Les quatre ont reçu un vrai garde-fou mécanique le soir
+même (`findThemesDivergingFromHarmonia()`, `findSensitiveNodesDivergingFromHarmonia()`,
+`findScriptsMissingFromAgentFiles()`, `findUndeclaredLocalJournals()`), sur le même patron déjà
+prouvé ailleurs dans le projet (`findToolsMissingFromMenu()`, `findRegistriesMissingFromCircle()`,
+`findRegistriesMissingDecision()`, `findGardiensMissingFromSource()` — 8 outils protégés de cette
+façon avant même cet audit). **Ce que cet Article n'exige PAS** : un vocabulaire fermé et stable par
+nature (les états d'une machine à états, une énumération de paliers) n'a rien à synchroniser et
+n'est jamais concerné ; un contenu explicitement curaté à la main par décision humaine documentée
+(ex. `KNOWN_LESSONS` du Smart Breaker, `SMART_BREAKER_CAPABILITIES`) reste légitime tel quel, tant
+que cette nature volontairement manuelle est écrite noir sur blanc à côté. Un audit exhaustif de
+tout le reste du paysage (au-delà des 12 outils déjà couverts par un garde-fou après cet audit) n'a
+pas été fait ce soir-là au-delà de ce qui précède — un futur passage complémentaire reste ouvert.
+
 ## Règles de travail — collaboration avec l'utilisateur
 
 `docs/regles-de-travail.md` documente, séparément de la charte de contenu ci-dessus, la façon dont
