@@ -870,14 +870,20 @@ motifs de code jamais mélangés), un tag thématique optionnel (indice de rappr
 thèmes HARMONIA, jamais
 une classification certaine), et une recommandation d'usage (`recommendFindBooster()`, poids réel
 en tokens plutôt que nombre de lignes seul — `lib/reference.ts`, 132 lignes mais ~55 500 tokens, en
-est la preuve vivante) — jamais une application automatique. **Obligation écrite d'usage réel**
-(même limite honnête que SMART-CONSO-TOKEN) : avant toute lecture intégrale ou tout grep répété sur
-un fichier potentiellement volumineux, consulter d'abord `recommendFindBooster()`. Son voisin
-`scripts/route-booster.mjs` (préparation d'un découpage réel : points de coupe candidats + indice
-de risque lexical) reste lui un outil sans blueprint, documenté dans `docs/regles-de-travail.md` —
-il ne sert que rarement, contrairement à find-booster. Jamais les motifs exacts ni les fichiers
-propres à ce projet, qui vivent dans `docs/referentiel/find-booster.md` (instanciation) et
-`docs/find-booster/` (dossier + index).
+est la preuve vivante) — jamais une application automatique. Son voisin `scripts/route-booster.mjs`
+(surnom d'affichage « find-deep-booster », 2026-09-21 — le fichier technique ne change jamais :
+préparation d'un découpage réel, points de coupe candidats + indice de risque lexical) reste lui un
+outil sans blueprint, documenté dans `docs/regles-de-travail.md` — il ne sert que rarement,
+contrairement à find-booster. **`scripts/find-brain.mjs`** (2026-09-21) unifie les deux : rend un
+jugement unique, jamais exclusif, sur lequel des deux (ou les deux) utiliser pour un fichier donné,
+sans rien recalculer lui-même. **Obligation écrite d'usage réel** (même limite honnête que
+SMART-CONSO-TOKEN, aucun mécanisme technique ne peut intercepter un `Read`/`Grep` avant qu'il n'ait
+lieu) : avant toute lecture intégrale ou tout grep répété sur un fichier potentiellement volumineux
+ou complexe, consulter d'abord `node scripts/find-brain.mjs <fichier>` — jamais seulement se fier
+au rappel automatique du dernier commit (`docs/regles-de-travail.md` §7ter), qui peut être périmé
+si le fichier a grossi depuis. Jamais les motifs exacts ni les fichiers propres à ce projet, qui
+vivent dans `docs/referentiel/find-booster.md` (instanciation) et `docs/find-booster/` (dossier +
+index).
 
 ## CLONE-HUNTER — blueprint exportable
 
