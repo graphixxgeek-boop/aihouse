@@ -21,7 +21,10 @@ import { AGENT_CATEGORIES, assertNotAPersonnage, sh } from "./lib-shell.mjs";
 import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson } from "./tool-usage.mjs";
 import { relativeStaleness, lastTouchDays } from "./clean-dirty-old.mjs";
 import { AGENT_SCRIPT_FILES, collectScriptCoverage, scriptRobustnessScore } from "./axa-check.mjs";
-import { KPI_HISTORY_COLUMNS, KPI_HISTORY_PATH } from "./kpi-report.mjs";
+import { KPI_HISTORY_COLUMNS, KPI_HISTORY_PATH, parseKpiHistoryCsv } from "./kpi-report.mjs";
+// Ré-exportée telle quelle (jamais une redéfinition) : cassandra-rh.mjs reste le point d'import déjà
+// utilisé par check-house.mjs pour cette fonction, même après son déplacement vers kpi-report.mjs.
+export { parseKpiHistoryCsv };
 import { renderHtmlReport } from "./html-report.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -44,28 +47,9 @@ export const CASSANDRA_PERSONA = [
 
 // --- Lecture du KPI existant (kpi-report.mjs garde le calcul, CASSANDRA lit) ------------------
 
-// Parseur minimal volontaire : les colonnes de kpi-historique.csv sont toutes des nombres ou des
-// chaînes simples sans virgule interne (KPI_HISTORY_COLUMNS, kpi-report.mjs) — un vrai parseur CSV
-// (guillemets, virgules échappées) serait une dépendance de plus pour un besoin qui n'existe pas
-// dans ce fichier précis. Une cellule vide reste `undefined`, jamais une chaîne vide ni un 0 fabriqué
-// (Article 1.9 de docs/philosophie-et-politique.md : une mesure absente doit rester visiblement
-// absente).
-export function parseKpiHistoryCsv(csvText) {
-  const lines = csvText.split("\n").map((l) => l.trim()).filter(Boolean);
-  if (!lines.length) return [];
-  const header = lines[0].split(",");
-  const rows = [];
-  for (const line of lines.slice(1)) {
-    const cells = line.split(",");
-    const row = {};
-    header.forEach((col, i) => {
-      const raw = cells[i];
-      row[col] = raw === undefined || raw === "" ? undefined : (Number.isNaN(Number(raw)) ? raw : Number(raw));
-    });
-    rows.push(row);
-  }
-  return rows;
-}
+// parseKpiHistoryCsv() déplacée vers kpi-report.mjs (2026-09-21, importée ci-dessus) : elle sert
+// désormais aussi objectifs-vs-resultats.mjs (source "kpi:<colonne>") — jamais un second parseur
+// divergent, et jamais un import d'objectifs-vs-resultats vers cassandra-rh.mjs (organigramme plat).
 
 // Compare les deux dernières lignes ayant une vraie valeur pour chaque famille demandée — jamais
 // une comparaison entre deux lignes qui n'ont simplement pas mesuré la même chose (une famille

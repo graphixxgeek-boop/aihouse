@@ -179,6 +179,34 @@ export function appendHistoryRow(csvRow) {
     appendFileSync(full, csvRow + '\n');
 }
 
+// parseKpiHistoryCsv (déplacée depuis cassandra-rh.mjs, 2026-09-21 — même bug de duplication de
+// parseur que CLONE-HUNTER trouvait déjà entre smart-conso-api.mjs/smart-conso-token.mjs le même
+// soir : objectifs-vs-resultats.mjs a besoin exactement de la même lecture pour un objectif de type
+// "kpi:<colonne>", jamais un second parseur divergent, et jamais un import d'objectifs-vs-resultats
+// vers cassandra-rh.mjs — l'organigramme reste plat, CASSANDRA consomme les autres Membres, jamais
+// l'inverse). Parseur minimal volontaire : les colonnes de kpi-historique.csv sont toutes des
+// nombres ou des chaînes simples sans virgule interne (KPI_HISTORY_COLUMNS ci-dessus) — un vrai
+// parseur CSV (guillemets, virgules échappées) serait une dépendance de plus pour un besoin qui
+// n'existe pas dans ce fichier précis. Une cellule vide reste `undefined`, jamais une chaîne vide
+// ni un 0 fabriqué (Article 1.9 de docs/philosophie-et-politique.md : une mesure absente doit
+// rester visiblement absente).
+export function parseKpiHistoryCsv(csvText) {
+    const lines = csvText.split('\n').map((l) => l.trim()).filter(Boolean);
+    if (!lines.length) return [];
+    const header = lines[0].split(',');
+    const rows = [];
+    for (const line of lines.slice(1)) {
+        const cells = line.split(',');
+        const row = {};
+        header.forEach((col, i) => {
+            const raw = cells[i];
+            row[col] = raw === undefined || raw === '' ? undefined : (Number.isNaN(Number(raw)) ? raw : Number(raw));
+        });
+        rows.push(row);
+    }
+    return rows;
+}
+
 // Gabarit HTML de remise (2026-09-19, scripts/html-report.mjs, cf. docs/regles-de-travail.md pour
 // la décision de calibrage) : rend la MÊME synthèse compacte que celle déjà loggée ci-dessus, pour
 // une remise à l'utilisateur plus agréable qu'un tableau markdown collé en texte — jamais un

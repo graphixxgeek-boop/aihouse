@@ -12,14 +12,26 @@
 // Registre hand-maintained (docs/objectifs-vs-resultats/registre.md, jamais généré) : une table
 // markdown Entité|Début|Fin|Objectif|Unité|Source|Note. `Source` dit QUEL signal déjà existant lire
 // pour mesurer le résultat réel — jamais un second calcul divergent de tool-usage.mjs :
-//   - "usage-count"  : nombre de sollicitations réelles de l'entité (un slug d'outil) sur la période.
-//   - "found-rate"   : % de sollicitations ayant réellement trouvé quelque chose sur la période.
+//   - "usage-count"    : nombre de sollicitations réelles de l'entité (un slug d'outil) sur la
+//     période.
+//   - "found-rate"     : % de sollicitations ayant réellement trouvé quelque chose sur la période.
+//   - "kpi:<colonne>"  (2026-09-21, extension demandée explicitement : « objectifs de la simu, etc.
+//     »). Lit kpi-historique.csv (kpi-report.mjs) — jamais un second calcul, jamais une lecture
+//     directe de main() : réutilise parseKpiHistoryCsv() telle quelle, comme CASSANDRA-RH. <colonne>
+//     doit être un nom réel de KPI_HISTORY_COLUMNS (ex. "kpi:robustesse_code_pct",
+//     "kpi:anti_echo_interventions") — une colonne inconnue ou absente sur la période reste "pas de
+//     données", jamais une valeur inventée. `Entité` sert ici de simple libellé humain (ex. « Qualité
+//     de simulation »), jamais un filtre — un KPI n'est pas mesuré "par outil" comme usage-count/
+//     found-rate le sont. La valeur retenue est celle du run le PLUS RÉCENT à l'intérieur de la
+//     période, cohérent avec la lecture "tendance actuelle" déjà faite par latestKpiTrend()
+//     (cassandra-rh.mjs) — jamais une moyenne, qui masquerait un vrai retour en arrière ponctuel.
 // Toute autre valeur de Source est un gap de conception à combler plus tard (memory-audit,
-// AXA-CHECK, KPI...), jamais fabriquée ici par supposition.
+// AXA-CHECK...), jamais fabriquée ici par supposition.
 
 import { readFileSync } from "node:fs";
 import { dataRows } from "./lib-markdown-table.mjs";
 import { loadToolUsageHistory } from "./tool-brain.mjs";
+import { parseKpiHistoryCsv, KPI_HISTORY_PATH } from "./kpi-report.mjs";
 
 const REGISTRY_PATH = new URL("../docs/objectifs-vs-resultats/registre.md", import.meta.url);
 
@@ -80,9 +92,33 @@ function eventsInPeriod(history, entite, debut, finEffective) {
   return (history?.events ?? []).filter((e) => e.toolSlug === entite && e.at >= start && e.at <= end);
 }
 
-export function computeResultat(row, history, now = Date.now()) {
+// kpiRowsInPeriod() — même discipline de bornage que eventsInPeriod() ci-dessus, sur horodatage
+// (chaîne ISO, jamais parsée en nombre par parseKpiHistoryCsv puisqu'elle contient "T"/"Z") plutôt
+// que sur `at` (timestamp numérique côté tool-usage). Ne retient que les lignes où la colonne
+// demandée a réellement une valeur numérique — une ligne où ce KPI précis n'a pas été mesuré ce
+// run-là (cellule vide) ne compte jamais comme "pas de résultat sur la période" si un AUTRE run de
+// la même période, lui, l'a mesuré.
+function kpiRowsInPeriod(kpiRows, debut, finEffectiveIso, column) {
+  const start = Date.parse(debut);
+  const end = Date.parse(finEffectiveIso);
+  return (kpiRows ?? []).filter(
+    (r) => typeof r.horodatage === "string" && Date.parse(r.horodatage) >= start && Date.parse(r.horodatage) <= end && typeof r[column] === "number"
+  );
+}
+
+export function computeResultat(row, history, now = Date.now(), kpiRows = []) {
   const finBorne = Math.min(Date.parse(row.fin), now);
-  const events = eventsInPeriod(history, row.entite, row.debut, new Date(finBorne).toISOString());
+  const finEffectiveIso = new Date(finBorne).toISOString();
+  if (row.source?.startsWith("kpi:")) {
+    const column = row.source.slice(4);
+    const rowsInPeriod = kpiRowsInPeriod(kpiRows, row.debut, finEffectiveIso, column);
+    if (!rowsInPeriod.length) return { valeur: null, hasData: false };
+    // Le run le plus récent de la période (jamais une moyenne, qui masquerait un retour en arrière
+    // ponctuel) — kpi-historique.csv est toujours écrit en ordre chronologique (appendHistoryRow()),
+    // donc le dernier élément après filtrage est bien le plus récent.
+    return { valeur: rowsInPeriod[rowsInPeriod.length - 1][column], hasData: true };
+  }
+  const events = eventsInPeriod(history, row.entite, row.debut, finEffectiveIso);
   if (row.source === "found-rate") {
     if (!events.length) return { valeur: null, hasData: false };
     const trouve = events.filter((e) => e.foundSomething === true).length;
@@ -109,11 +145,22 @@ export function computeStatus(row, resultat) {
   return resultat.valeur > row.objectif ? "dépassé" : "en dessous";
 }
 
-export function buildObjectifsReport(markdown, history, { now = Date.now() } = {}) {
+export function buildObjectifsReport(markdown, history, { now = Date.now(), kpiRows = [] } = {}) {
   return parseObjectifsTable(markdown).map((row) => {
-    const resultat = computeResultat(row, history, now);
+    const resultat = computeResultat(row, history, now, kpiRows);
     return { ...row, resultat: resultat.valeur, hasData: resultat.hasData, statut: computeStatus(row, resultat), periode: periodStatus(row, now) };
   });
+}
+
+// loadKpiHistoryRows() — même fichier que kpi-report.mjs écrit et que CASSANDRA-RH relit
+// (loadKpiTrend()), jamais une 3e lecture qui pourrait diverger. Une absence de fichier (aucun
+// rapport KPI encore lancé) reste une liste vide, jamais une erreur qui ferait planter le rapport.
+export function loadKpiHistoryRows(readFile = (u) => readFileSync(u, "utf8")) {
+  try {
+    return parseKpiHistoryCsv(readFile(new URL(`../${KPI_HISTORY_PATH}`, import.meta.url)));
+  } catch {
+    return [];
+  }
 }
 
 export function formatObjectifsReport(rows) {
@@ -136,7 +183,8 @@ function main() {
   }
   const markdown = loadObjectifsRegistry();
   const history = loadToolUsageHistory();
-  const rows = buildObjectifsReport(markdown, history);
+  const kpiRows = loadKpiHistoryRows();
+  const rows = buildObjectifsReport(markdown, history, { kpiRows });
   console.log("=== objectifs-vs-resultats — rapport ===\n");
   console.log(formatObjectifsReport(rows));
 }

@@ -17,14 +17,23 @@ une extension du tableau de bord/KPI existant.
 - **Registre** : `docs/objectifs-vs-resultats/registre.md`, table markdown hand-maintained,
   colonnes `Entité | Début | Fin | Objectif | Unité | Source | Note`, colonnes lues par NOM (jamais
   par position fixe, même discipline que `parseToolsTable()` de `le-coordinateur.mjs`).
-- **Sources supportées aujourd'hui** (deux seulement, jamais devinée pour une troisième) :
+- **Sources supportées** (trois, jamais devinée pour une quatrième) :
   - `usage-count` : nombre réel de sollicitations de l'entité (un slug d'outil) sur la période,
     lu directement dans `.tool-usage-history.json` (le même historique que `tool-usage.mjs`/
     `tool-brain.mjs` lisent déjà — jamais un second fichier).
   - `found-rate` : % de sollicitations ayant réellement trouvé quelque chose (`foundSomething:
     true`) sur la période, même historique.
-  - Étendre à un troisième signal (couverture AXA-CHECK, une figure du tableau de bord KPI) est un
-    chantier futur explicitement identifié, jamais fait par supposition dans la v1.
+  - `kpi:<colonne>` (2026-09-21, extension demandée explicitement pour couvrir des objectifs de
+    simulation) : lit `kpi-historique.csv` (`kpi-report.mjs`) via `parseKpiHistoryCsv()` — la même
+    fonction que CASSANDRA-RH utilise pour sa tendance KPI, désormais logée dans `kpi-report.mjs`
+    plutôt que dupliquée. `<colonne>` doit être un nom réel de `KPI_HISTORY_COLUMNS` (ex.
+    `kpi:robustesse_code_pct`, `kpi:anti_echo_interventions`). Retient le run le plus récent à
+    l'intérieur de la période (jamais une moyenne, qui masquerait un retour en arrière ponctuel) ;
+    `Entité` sert ici de simple libellé humain, jamais un filtre (un KPI n'est pas mesuré "par
+    outil"). Une colonne jamais mesurée sur la période reste `pas de données`, jamais une valeur
+    inventée.
+  - Étendre à un 4e signal (couverture AXA-CHECK par exemple) reste un chantier futur explicitement
+    identifié, jamais fait par supposition.
 - **Calcul de la période** : la borne de fin effective est toujours `min(Fin déclarée, maintenant)`
   — un objectif dont la période n'est pas encore terminée est jugé sur ce qui s'est réellement
   passé jusqu'à aujourd'hui, jamais sur une fenêtre future fictive.

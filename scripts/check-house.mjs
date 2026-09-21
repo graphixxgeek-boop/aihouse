@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 234'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 235'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -5539,7 +5539,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // objectifs-vs-resultats (tâche #287, 2026-09-21) — jamais un second calcul divergent : lit
   // .tool-usage-history.json à travers loadToolUsageHistory() (tool-brain.mjs), jamais un second
   // fichier ou un second parseur. Colonnes lues par nom (même discipline que parseToolsTable()).
-  const { parseObjectifsTable, computeResultat, periodStatus, computeStatus, buildObjectifsReport, formatObjectifsReport, loadObjectifsRegistry } = await import('../scripts/objectifs-vs-resultats.mjs');
+  const { parseObjectifsTable, computeResultat, periodStatus, computeStatus, buildObjectifsReport, formatObjectifsReport, loadObjectifsRegistry, loadKpiHistoryRows } = await import('../scripts/objectifs-vs-resultats.mjs');
   const { loadToolUsageHistory: loadToolUsageHistoryLive } = await import('../scripts/tool-brain.mjs');
 
   const fakeMarkdown = [
@@ -5592,7 +5592,24 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const liveMarkdown = loadObjectifsRegistry();
   const liveReport = buildObjectifsReport(liveMarkdown, loadToolUsageHistoryLive());
   assert.ok(liveReport.length >= 1, 'the real committed registre.md must be readable and carry at least the tool-brain objective set the same night it was created');
-  console.log('Passed: objectifs-vs-resultats (task #287, 2026-09-21) parses its hand-maintained registry by column name, computes a real result strictly bounded to [début, min(fin, maintenant)] from the exact same .tool-usage-history.json tool-usage.mjs/tool-brain.mjs already read (never a second divergent measurement), reports an honest "pas de données" for a found-rate objective with zero matching events rather than a fabricated 0%, derives atteint/en dessous/dépassé with a strict equality for "atteint" rather than an arbitrary margin, tracks the period\'s own à-venir/en-cours/clos state separately from the objective\'s status, and — verified live — reads the real committed registry.');
+
+  // Source "kpi:<colonne>" (2026-09-21, extension demandée explicitement pour couvrir des objectifs
+  // de simulation) — jamais un second calcul divergent de kpi-historique.csv : lit les mêmes lignes
+  // que latestKpiTrend()/loadKpiTrend() (cassandra-rh.mjs) via la même parseKpiHistoryCsv().
+  const kpiRow = { entite: 'Qualité de simulation', debut: '2020-01-01', fin: '2020-01-31', objectif: 100, unite: '%', source: 'kpi:robustesse_code_pct', note: undefined };
+  const fakeKpiRows = [
+    { run: 'r1', horodatage: '2020-01-05T00:00:00.000Z', robustesse_code_pct: 80 },
+    { run: 'r2', horodatage: '2020-01-20T00:00:00.000Z', robustesse_code_pct: 100 },
+    { run: 'r3', horodatage: '2020-02-01T00:00:00.000Z', robustesse_code_pct: 42 }, // hors période, doit être ignoré
+  ];
+  const nowKpi = Date.parse('2020-06-01');
+  const resultatKpi = computeResultat(kpiRow, { events: [] }, nowKpi, fakeKpiRows);
+  assert.deepEqual(resultatKpi, { valeur: 100, hasData: true }, 'a "kpi:" source must read the most recent kpi-historique.csv row strictly inside the period, ignoring one that falls outside it even for the same column');
+  assert.equal(computeStatus(kpiRow, resultatKpi), 'atteint', 'a kpi-sourced result exactly equal to the objective must read "atteint", the same discipline as usage-count/found-rate');
+  const resultatKpiEmpty = computeResultat({ ...kpiRow, source: 'kpi:qualite_pct' }, { events: [] }, nowKpi, fakeKpiRows);
+  assert.deepEqual(resultatKpiEmpty, { valeur: null, hasData: false }, 'a "kpi:" source for a column never measured inside the period must report an honest absence of data, never a fabricated value');
+  assert.deepEqual(loadKpiHistoryRows(() => { throw new Error('ENOENT'); }), [], 'a missing kpi-historique.csv (no KPI report ever run yet) must report an empty list, never crash the objectives report');
+  console.log('Passed: objectifs-vs-resultats (task #287, 2026-09-21) parses its hand-maintained registry by column name, computes a real result strictly bounded to [début, min(fin, maintenant)] from the exact same .tool-usage-history.json tool-usage.mjs/tool-brain.mjs already read (never a second divergent measurement), reports an honest "pas de données" for a found-rate objective with zero matching events rather than a fabricated 0%, derives atteint/en dessous/dépassé with a strict equality for "atteint" rather than an arbitrary margin, tracks the period\'s own à-venir/en-cours/clos state separately from the objective\'s status, verified live reading the real committed registry — and (2026-09-21) a new "kpi:<colonne>" source reads kpi-historique.csv through the exact same parseKpiHistoryCsv() CASSANDRA-RH already uses, taking the most recent in-period run rather than an averaging that would mask a real regression, honestly absent for a column never measured in the period, and never crashing when no KPI report has ever run yet.');
 }
 
 {
