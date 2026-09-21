@@ -1772,6 +1772,32 @@ de calendrier avec la future refonte graphique (« on met un pied dans la refont
 commençant par les rapports ! »), pas une même surface : le thème sombre de ce gabarit n'a donc
 aucune obligation de suivre `scenePalette` ou toute décision prise pour le rendu 3D.
 
+### Principe général — un réflexe outil avant chaque commande, sur 3 axes
+
+*(2026-09-21, demande explicite de l'utilisateur : « avant chaque commande, tu devrais regarder si
+l'utilisation d'un outil ne peut pas t'aider à répondre 1/ plus rapidement 2/ plus efficacement :
+plus de performances 3/ de manière plus complète, accès aux reports, etc. »)*
+
+Avant de lancer une commande brute (`Grep`, `Read` intégral, `Bash` de recherche ad hoc), se
+demander explicitement si un outil déjà existant du réseau ferait mieux sur au moins un de ces trois
+axes, jamais un seul réflexe par défaut vers la commande générique :
+
+1. **Plus rapidement** — un outil qui indexe déjà par concept (find-booster) évite de relire un
+   fichier entier pour trouver une seule fonction.
+2. **Plus efficacement / plus de performance** — un outil qui a déjà fait le calcul (couverture
+   AXA-CHECK, stagnation CLEAN-DIRTY-OLD, historique d'usage tool-usage.mjs) évite de relancer une
+   analyse coûteuse ou approximative à la main.
+3. **De manière plus complète** — un outil qui donne accès à un rapport déjà produit (KPI, ARGUS/
+   HARMONIA, un registre `docs/<slug>/`) apporte souvent plus de contexte fiable qu'une recherche
+   ponctuelle improvisée dans le code.
+
+**Limite honnête, non résolue mécaniquement** : comme pour SMART-CONSO-TOKEN, aucun mécanisme
+technique ne peut intercepter une commande avant qu'elle n'ait lieu — ceci reste une obligation
+écrite, vérifiée après coup (rappel post-commit, `tool-usage.mjs`), jamais une garantie a priori. Le
+cas concret déjà rencontré (2026-09-21) est documenté dans la section find-booster de `CLAUDE.md` :
+consulter `node scripts/tool-brain.mjs "<tâche>" --file <fichier>` (ou `find-brain.mjs <fichier>`)
+avant toute recherche dans un fichier existant, jamais seulement avant une lecture intégrale.
+
 ### tool-brain — le cerveau central des rappels d'outils, généralise find-brain
 
 *(2026-09-21, demande explicite de l'utilisateur : « ca ne doit pas seulement pointer vers find
