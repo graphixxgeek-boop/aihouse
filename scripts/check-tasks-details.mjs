@@ -414,6 +414,7 @@ export const CHANTIER_PRELIMINARY_FILES = {
   "Agence exportable": { file: "docs/agence-exportable-conception.md", match: /agence exportable|gabarit générique|gabarit generique/i },
   "Changement de modèle IA (CIRCLE-TASKS)": { file: "docs/changement-de-modele-ia-conception.md", match: /changement de mod[eè]le|changement-de-modele-ia/i },
   "circle-process-guardian": { file: "docs/circle-process-detail.txt", match: /circle-process-guardian/i },
+  "Utilité des outils dans CLAUDE.md vs la Ronde": { file: "docs/claude-md-tool-listing-conception.md", match: /outils dans claude\.md|claude-md-tool-listing/i },
 };
 
 // checkChantierFileFreshness() — la « vérification, jamais seulement une intention déclarée »
