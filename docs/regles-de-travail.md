@@ -430,6 +430,19 @@ produit à répétition (ex. le catalogue LE-COORDINATEUR à chaque Ronde CIRCLE
 donne matière à un commentaire court et réel dans la conversation elle-même — jamais un rapport
 livré en silence sans que l'agent n'en dise rien.
 
+**Renforcé le 2026-09-21 (question directe de l'utilisateur avant une Ronde CIRCLE-TASKS : « vas-tu
+bien lire tous les rapports qui en découlent et ajuster des tâches en fonction de tes conclusions ?
+[...] une règle évolutive, au cas où un nouveau rapport est rattaché à Circle, pas une liste
+figée »)** : la lecture intégrale ci-dessus ne s'arrête jamais à un commentaire — chaque conclusion
+réelle qu'elle produit (un écart trouvé, un outil à surveiller, un signal qui mérite un suivi) doit
+se traduire en une vraie action de suivi dans `docs/suivi/` (une nouvelle ligne, ou l'ajustement
+d'une tâche déjà ouverte), jamais seulement mentionnée puis oubliée. Cette obligation est **par
+construction évolutive, jamais une liste figée** : elle porte sur TOUT rapport produit par un item
+de `CIRCLE_ITEMS` (`scripts/circle-tasks.mjs`) au moment de la Ronde, quel qu'il soit — un item
+ajouté demain à cette liste (ou un item retiré) est automatiquement couvert ou exclu sans jamais
+retoucher cette règle elle-même, exactement le même principe que la règle générale ci-dessus
+("TOUT rapport que l'agent produit ou fait produire — jamais réservé à un seul outil").
+
 ## 7bis. Rendre compte des progrès de l'outillage interne (ex. « Smart Breaker », l'outil quota Gemini)
 
 *(Nom d'usage « Smart Breaker » donné le 2026-09-19 à la demande explicite de l'utilisateur, pour
