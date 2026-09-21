@@ -31,6 +31,17 @@ propre connaissance propre au projet (statut "Agent" plein, jamais "classique").
 - **Outils à retirer ou refondre** — `toolsToReconsider()` combine `toolsNeverUsed()`
   (`tool-usage.mjs`) et `relativeStaleness()` (`clean-dirty-old.mjs`, appliqué aux scripts via
   `AGENT_SCRIPT_FILES` d'`axa-check.mjs`) — jamais un troisième calcul de pertinence inventé.
+  Enrichi le 2026-09-21 (3 idées neuves approuvées par l'utilisateur, « OK GO ») de trois éclairages
+  supplémentaires, chacun une relecture, jamais un second calcul : (1) un objectif chiffré « en
+  dessous » (`objectifs-vs-resultats.mjs::buildObjectifsReport()`, `row.entite` porte déjà le slug)
+  renforce un « jamais sollicité » déjà présent, jamais un déclencheur indépendant ; (2)
+  `tokenInvestmentVerdict()` relit le dernier verdict déjà enregistré par
+  `classifyConsumption()`/`recordAction()` (SMART-CONSO-TOKEN, `.smart-conso-token-history.json`)
+  dont le `context` mentionne le slug — une correspondance textuelle honnête, aucune convention
+  stricte de nommage n'existant avant ce soir pour relier une action SMART-CONSO-TOKEN à un outil
+  précis ; (3) un registre `doc-report.mjs::buildDocReportIndex()` jamais committé (`ageDays`
+  indéfini) signale que personne ne consulte jamais la SORTIE de l'outil, distinct de « l'outil
+  lui-même jamais lancé ».
 - **Recrutement** — squelette à 3 étapes (`cv_provisoire` → `entretien_preliminaire` →
   `proposition`), chaque avancée exigeant une décision explicite (`avancer`/`rejeter`), un dossier
   clos jamais rouvert silencieusement. Aucune vraie recherche web à ce stade — hors périmètre de

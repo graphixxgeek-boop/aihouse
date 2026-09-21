@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 239'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 240'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -5640,7 +5640,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // kpi-historique.csv pour le KPI, tool-usage.mjs pour l'usage, clean-dirty-old.mjs pour la
   // stagnation).
   const cr = await import('../scripts/cassandra-rh.mjs');
-  const { CASSANDRA_PERSONA, parseKpiHistoryCsv, latestKpiTrend, loadKpiTrend, teamRoster, teamSizeSnapshot, toolsToReconsider, RECRUITMENT_STAGES, createRecruitmentCandidate, advanceRecruitmentStage, badgeOversightSummary, computeBadgeResults, computeCoverageGaps, buildCassandraLightSignal, buildCassandraReportBlocks, buildCassandraReportHtml, detectNewArrivals, narrateNewArrivals, loadKnownMembers, recordKnownMembers } = cr;
+  const { CASSANDRA_PERSONA, parseKpiHistoryCsv, latestKpiTrend, loadKpiTrend, teamRoster, teamSizeSnapshot, toolsToReconsider, tokenInvestmentVerdict, RECRUITMENT_STAGES, createRecruitmentCandidate, advanceRecruitmentStage, badgeOversightSummary, computeBadgeResults, computeCoverageGaps, buildCassandraLightSignal, buildCassandraReportBlocks, buildCassandraReportHtml, detectNewArrivals, narrateNewArrivals, loadKnownMembers, recordKnownMembers } = cr;
 
   assert.ok(CASSANDRA_PERSONA.includes('CASSANDRA-RH'), 'the fixed persona text must genuinely identify CASSANDRA-RH, the same anti-drift discipline already proven for THE-FINAL-JUDGE');
 
@@ -5688,6 +5688,30 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   });
   assert.deepEqual(reconsiderFindings.find((f) => f.slug === 'never-used-tool').reasons, ['jamais sollicité (tool-usage.mjs)'], 'a tool with zero real usage events must be flagged by name with the exact reused tool-usage.mjs reason, never a second divergent phrase');
   assert.ok(reconsiderFindings.find((f) => f.slug === 'used-tool') === undefined, 'a genuinely solicited tool with no staleness signal must never be flagged for retirement');
+
+  // tokenInvestmentVerdict() (2026-09-21, "OK GO" idea #2) — a plain textual re-read of a verdict
+  // already recorded by SMART-CONSO-TOKEN's own classifyConsumption()/recordAction(), never a
+  // second classification computed here.
+  assert.equal(tokenInvestmentVerdict('mon-outil', { actions: [] }), 'pas de données', 'an empty token history must report an honest absence, never a fabricated verdict for a tool that was simply never mentioned');
+  assert.equal(tokenInvestmentVerdict('mon-outil', { actions: [{ context: 'construction de mon-outil', classification: 'sans_retour' }] }), 'sans_retour', 'a real recorded classification whose context mentions the tool by name must be surfaced verbatim, never recomputed');
+  assert.equal(tokenInvestmentVerdict('mon-outil', { actions: [{ context: 'sans rapport', classification: 'investissement' }] }), 'pas de données', 'a classified action whose context never mentions this tool must never be wrongly attributed to it');
+  assert.equal(tokenInvestmentVerdict('mon-outil', { actions: [{ context: 'mon-outil', classification: 'investissement' }, { context: 'mon-outil v2', classification: 'sans_retour' }] }), 'sans_retour', 'when several matching actions exist, the most recent one (last in the array) must win, never an earlier stale verdict');
+
+  // toolsToReconsider() — les 3 éclairages supplémentaires (2026-09-21, "OK GO" ideas #1/#2/#3),
+  // chacun une relecture d'un signal déjà calculé ailleurs, jamais un second calcul RH inventé.
+  const enrichedFindings = toolsToReconsider({
+    usageHistory: { events: [] },
+    knownSlugs: ['never-used-with-objective', 'never-used-plain', 'used-but-sans-retour', 'never-consulted-report'],
+    staleness: {},
+    objectifsRows: [{ entite: 'never-used-with-objective', statut: 'en dessous' }, { entite: 'never-used-plain', statut: 'atteint' }],
+    tokenHistory: { actions: [{ context: 'used-but-sans-retour', classification: 'sans_retour' }] },
+    docReportRows: [{ slug: 'never-consulted-report', ageDays: undefined }, { slug: 'never-used-plain', ageDays: 3 }],
+  });
+  assert.ok(enrichedFindings.find((f) => f.slug === 'never-used-with-objective').reasons.includes('objectif chiffré en dessous ET jamais sollicité — signal renforcé (objectifs-vs-resultats)'), 'a tool both never solicited AND with a real "en dessous" objective must carry the reinforced reason, never silently dropped');
+  assert.ok(!enrichedFindings.find((f) => f.slug === 'never-used-plain').reasons.some((r) => r.includes('signal renforcé')), 'an "atteint" objective must never trigger the reinforced reason meant only for a genuine "en dessous" status');
+  assert.ok(enrichedFindings.find((f) => f.slug === 'used-but-sans-retour').reasons.includes('tokens investis à sa construction classés sans retour (SMART-CONSO-TOKEN)'), 'a tool with a real "sans_retour" SMART-CONSO-TOKEN verdict must be flagged even when tool-usage.mjs shows no other signal against it — a distinct real angle, never folded into "jamais sollicité"');
+  assert.ok(enrichedFindings.find((f) => f.slug === 'never-consulted-report').reasons.includes('registre de rapports jamais committé (Doc-Report) — personne ne consulte jamais sa sortie'), 'a tool whose own Doc-Report registry was never committed must be flagged for that distinct angle, never confused with "the tool itself was never invoked"');
+  console.log('Passed: the three "OK GO" CASSANDRA-RH signals (2026-09-21) — tokenInvestmentVerdict() honestly re-reads SMART-CONSO-TOKEN\'s own recorded classification for a real context match, reporting an absence rather than a fabricated verdict and always preferring the most recent match — and toolsToReconsider() now also reinforces a "jamais sollicité" finding with a real "en dessous" objectifs-vs-resultats status, flags a real "sans_retour" SMART-CONSO-TOKEN verdict, and flags a real Doc-Report registry that was never committed, each a genuinely distinct angle from the two pre-existing signals, never a third invented calculation.');
 
   // Recrutement — squelette de progression, jamais de recherche web réelle à ce stade.
   const candidate = createRecruitmentCandidate('Nouvel Outil');

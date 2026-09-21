@@ -22,6 +22,8 @@ import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson } from "./too
 import { relativeStaleness, lastTouchDays } from "./clean-dirty-old.mjs";
 import { AGENT_SCRIPT_FILES, collectScriptCoverage, scriptRobustnessScore } from "./axa-check.mjs";
 import { KPI_HISTORY_COLUMNS, KPI_HISTORY_PATH, parseKpiHistoryCsv } from "./kpi-report.mjs";
+import { loadObjectifsRegistry, buildObjectifsReport, loadKpiHistoryRows } from "./objectifs-vs-resultats.mjs";
+import { buildDocReportIndex, REGISTRIES as DOC_REPORT_REGISTRIES } from "./doc-report.mjs";
 // Ré-exportée telle quelle (jamais une redéfinition) : cassandra-rh.mjs reste le point d'import déjà
 // utilisé par check-house.mjs pour cette fonction, même après son déplacement vers kpi-report.mjs.
 export { parseKpiHistoryCsv };
@@ -117,7 +119,34 @@ export function teamSizeSnapshot(roster) {
 // sollicité (tool-usage.mjs::toolsNeverUsed) et stagnation relative sur le fichier script lui-même
 // (clean-dirty-old.mjs::relativeStaleness, appliqué ici à AGENT_SCRIPT_FILES plutôt qu'à LIB_MAP,
 // qui ne couvre que le moteur du jeu).
-export function toolsToReconsider({ usageHistory, knownSlugs, staleness }) {
+// Trois éclairages supplémentaires (2026-09-21, idées neuves proposées par l'utilisateur et
+// approuvées explicitement — « OK GO »), tous optionnels et tous des RELECTURES de ce qu'un autre
+// outil sait déjà, jamais un second calcul :
+// - objectifsRows (objectifs-vs-resultats.mjs::buildObjectifsReport(), `row.entite` porte déjà le
+//   slug de l'outil — cf. eventsInPeriod()) : un objectif chiffré "en dessous" pour un outil déjà
+//   "jamais sollicité" transforme un simple constat en un signal renforcé, jamais un troisième
+//   calcul de résultat.
+// - tokenHistory (.smart-conso-token-history.json, lu tel quel comme usageHistory ci-dessus) :
+//   tokenInvestmentVerdict() relit le DERNIER verdict déjà enregistré par
+//   classifyConsumption()/recordAction() pour une action dont le contexte mentionne ce slug — jamais
+//   une reclassification. Aucune convention stricte de nommage n'existait avant ce soir pour relier
+//   une action SMART-CONSO-TOKEN à un slug d'outil précis ; ceci reste donc une correspondance
+//   textuelle honnête (mention du slug dans `context`), pas une garantie pour tout appel passé.
+// - docReportRows (doc-report.mjs::buildDocReportIndex().rows) : un registre jamais committé
+//   (`ageDays===undefined`) signale que personne ne consulte jamais la SORTIE de cet outil,
+//   distinct de "l'outil lui-même jamais lancé" (le même `neverSolicited` que toolsNeverUsed()
+//   calcule déjà là-bas, jamais un second calcul ici non plus).
+export function tokenInvestmentVerdict(slug, tokenHistory) {
+  const actions = (tokenHistory?.actions ?? []).filter((a) => {
+    const ctx = typeof a.context === "string" ? a.context : JSON.stringify(a.context ?? "");
+    return ctx.toLowerCase().includes(String(slug).toLowerCase());
+  });
+  const withClassification = actions.filter((a) => a.classification);
+  if (!withClassification.length) return "pas de données";
+  return withClassification[withClassification.length - 1].classification;
+}
+
+export function toolsToReconsider({ usageHistory, knownSlugs, staleness, objectifsRows = [], tokenHistory, docReportRows = [] }) {
   const neverUsed = new Set(toolsNeverUsed(usageHistory, knownSlugs));
   const findings = [];
   for (const slug of knownSlugs) {
@@ -126,6 +155,14 @@ export function toolsToReconsider({ usageHistory, knownSlugs, staleness }) {
     const scriptPath = AGENT_SCRIPT_FILES[slug];
     const staleEntry = scriptPath ? staleness?.[scriptPath] : undefined;
     if (staleEntry?.stale) reasons.push(`stagnant relativement au reste du projet (${staleEntry.days} j)`);
+    const belowObjective = objectifsRows.some((r) => r.entite === slug && r.statut === "en dessous");
+    if (belowObjective && neverUsed.has(slug)) reasons.push("objectif chiffré en dessous ET jamais sollicité — signal renforcé (objectifs-vs-resultats)");
+    if (tokenHistory) {
+      const verdict = tokenInvestmentVerdict(slug, tokenHistory);
+      if (verdict === "sans_retour") reasons.push("tokens investis à sa construction classés sans retour (SMART-CONSO-TOKEN)");
+    }
+    const docRow = docReportRows.find((r) => r.slug === slug);
+    if (docRow && docRow.ageDays === undefined) reasons.push("registre de rapports jamais committé (Doc-Report) — personne ne consulte jamais sa sortie");
     if (reasons.length) findings.push({ slug, reasons });
   }
   return findings;
@@ -364,7 +401,13 @@ function collectRealCassandraData({ withCoverage = false } = {}) {
   const usageHistory = loadUsageJson(join(ROOT, ".tool-usage-history.json"), { events: [] });
   const staleness = scriptStaleness();
   const knownToolSlugs = roster.map((m) => m.slug);
-  const reconsider = toolsToReconsider({ usageHistory, knownSlugs: knownToolSlugs, staleness });
+  // Trois éclairages supplémentaires (2026-09-21, « OK GO ») — chacun une simple relecture d'un
+  // fichier/registre déjà écrit ailleurs, jamais un second calcul (cf. commentaire de
+  // toolsToReconsider() ci-dessus pour le détail de chacun).
+  const objectifsRows = buildObjectifsReport(loadObjectifsRegistry(), usageHistory, { kpiRows: loadKpiHistoryRows() });
+  const tokenHistory = loadUsageJson(join(ROOT, ".smart-conso-token-history.json"), { actions: [] });
+  const docReportRows = buildDocReportIndex({ registries: DOC_REPORT_REGISTRIES, usageHistory }).rows;
+  const reconsider = toolsToReconsider({ usageHistory, knownSlugs: knownToolSlugs, staleness, objectifsRows, tokenHistory, docReportRows });
   const { trend } = loadKpiTrend();
   const badgeResults = computeBadgeResults(roster, onboardingContext);
   const badgeSummary = badgeOversightSummary(badgeResults);
