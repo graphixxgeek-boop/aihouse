@@ -64,10 +64,12 @@ documenter à part :
 ## 2. Les Agents Cadre (Direction)
 
 **CASSANDRA-RH + LE-COORDINATEUR** — aucun des deux ne vérifie le code lui-même : l'un route le
-travail (LE-COORDINATEUR agrège et suggère), l'autre évalue les postes (CASSANDRA-RH, à construire,
-round de calibrage #134). Les deux directeurs passent par les mêmes scans mécaniques que tout le
-monde (couverture AXA-CHECK, trous ARGUS, frictions HARMONIA) — seule l'évaluation RH de pertinence
-de poste leur échappe structurellement à eux-mêmes.
+travail (LE-COORDINATEUR agrège et suggère), l'autre évalue les postes (CASSANDRA-RH, noyau
+construit et certifié le 2026-09-21, cf. `docs/referentiel/cassandra-rh.md` — corrigé le
+2026-09-21, cette phrase affirmait encore « à construire » alors que l'Agent existe déjà, exactement
+le genre d'écart doc/code que l'Article 13 interdit). Les deux directeurs passent par les mêmes
+scans mécaniques que tout le monde (couverture AXA-CHECK, trous ARGUS, frictions HARMONIA) — seule
+l'évaluation RH de pertinence de poste leur échappe structurellement à eux-mêmes.
 
 ## 3. Les Gardiens sacrés du code (Équipe noyau)
 
@@ -235,10 +237,12 @@ du badge.
 
 ## 8. Entretien de ce document
 
-**C'est le domaine de CASSANDRA-RH** (une fois construite, round de calibrage #134) : elle tient ce
-document à jour à chaque nouvel outil créé, chaque outil retiré, chaque déplacement entre suites —
-exactement comme elle tiendra la liste de l'équipe à jour (cf. `docs/cassandra-rh-conception.md`
-§2). En attendant sa construction, la mise à jour reste manuelle, à la charge de l'agent qui pilote,
-au même titre que la table maîtresse de `docs/regles-de-travail.md` §7ter (Article 13 — un nouvel
-outil qui rejoint l'agence sans mise à jour de ce document est une dette documentaire, pas un détail
-reportable).
+**C'est le domaine de CASSANDRA-RH** (noyau construit et certifié le 2026-09-21, round de calibrage
+#134) : elle tient ce document à jour à chaque nouvel outil créé, chaque outil retiré, chaque
+déplacement entre suites — exactement comme elle tiendra la liste de l'équipe à jour (cf.
+`docs/cassandra-rh-conception.md` §2). **Corrigé le 2026-09-21** : cette auto-maintenance
+elle-même n'est PAS encore construite dans le noyau actuel (`scripts/cassandra-rh.mjs` note/lit
+l'équipe, supervise le badge, ne réécrit jamais ce document) — la mise à jour reste donc manuelle,
+à la charge de l'agent qui pilote, au même titre que la table maîtresse de
+`docs/regles-de-travail.md` §7ter (Article 13 — un nouvel outil qui rejoint l'agence sans mise à
+jour de ce document est une dette documentaire, pas un détail reportable).

@@ -287,6 +287,11 @@ export function buildCatalogDelivery(recordResult, prestations = PRESTATIONS) {
 // (`[tool, , cout, declenchement]`) aurait silencieusement lu les mauvaises colonnes sans jamais
 // planter — exactement le genre de dépendance fragile qu'un futur ajout de colonne recasserait à
 // nouveau si elle restait positionnelle).
+// `description` (2026-09-21, demande explicite de l'utilisateur : « j'ai besoin d'une courte
+// description [...] à chaque fois » dans le gabarit de certification) — extraite par NOM de la
+// colonne "Ce qu'il détecte/régule" déjà présente dans la table maîtresse, jamais un second texte
+// hand-maintained ailleurs qui pourrait diverger. `undefined` pour une table de test qui n'a pas
+// cette colonne (jamais un texte fabriqué) — même discipline que statutIdx ci-dessous.
 export function parseToolsTable(markdown) {
   const lines = markdown.split("\n").filter((l) => l.trim().startsWith("|"));
   if (!lines.length) return [];
@@ -294,6 +299,7 @@ export function parseToolsTable(markdown) {
   const coutIdx = headerCells.indexOf("Coût");
   const declenchementIdx = headerCells.indexOf("Déclenchement");
   const statutIdx = headerCells.indexOf("Statut");
+  const descriptionIdx = headerCells.indexOf("Ce qu'il détecte/régule");
   if (coutIdx === -1 || declenchementIdx === -1) return [];
   const rows = [];
   for (const line of lines.slice(1)) {
@@ -302,9 +308,29 @@ export function parseToolsTable(markdown) {
     const tool = cells[0];
     if (!tool || tool === "Outil" || /^-+$/.test(tool)) continue;
     const statut = statutIdx !== -1 ? cells[statutIdx] : null;
-    rows.push({ tool: tool.replace(/`/g, ""), cout: cells[coutIdx], declenchement: cells[declenchementIdx], statut });
+    const description = descriptionIdx !== -1 ? cells[descriptionIdx] : undefined;
+    rows.push({ tool: tool.replace(/`/g, ""), cout: cells[coutIdx], declenchement: cells[declenchementIdx], statut, description });
   }
   return rows;
+}
+
+// toolCompanions() (2026-09-21, même demande : « savoir aussi avec quels outils cet outil est
+// susceptible de se plugger ») — jamais une nouvelle donnée hand-maintained : dérive la réponse du
+// catalogue PRESTATIONS déjà existant, en listant les autres outils qui apparaissent dans au moins
+// une même prestation que `agentName`. Un outil absent de toute prestation combinée (aucune entrée
+// PRESTATIONS ne le cite aux côtés d'un autre) rapporte honnêtement une liste vide, jamais une
+// combinaison inventée.
+export function toolCompanions(agentName, prestations = PRESTATIONS) {
+  const nameLower = agentName.toLowerCase();
+  const companions = new Set();
+  for (const p of prestations) {
+    const selfIdx = p.outils.findIndex((o) => o.toLowerCase().includes(nameLower));
+    if (selfIdx === -1) continue;
+    for (let i = 0; i < p.outils.length; i++) {
+      if (i !== selfIdx) companions.add(p.outils[i]);
+    }
+  }
+  return [...companions];
 }
 
 export function isMenuWorthy(row) {
@@ -615,7 +641,17 @@ export function checkAgentOnboarding(agentName, {
   }
   const message = `🎖️ ${agentName} obtient son badge — toutes les validations réunies : ${validations.join(", ")}. Couverture de code : ${couvertureLabel}${verifiedSuffix}.`;
 
-  return { agentName, slug, gaps, rappels, badge, complet: gaps.length === 0, couverture, message };
+  // description/companions (2026-09-21, demande explicite de l'utilisateur pour fiabiliser le
+  // gabarit du bloc de certification : « une courte description, savoir si tout est bien pluggé,
+  // savoir aussi avec quels outils cet outil est susceptible de se plugger », même format assuré à
+  // chaque fois) — jamais une 2e donnée hand-maintained : `description` vient de la colonne "Ce
+  // qu'il détecte/régule" déjà présente dans la table maîtresse (tableRow, jamais fabriquée si la
+  // ligne ou la colonne est absente), `companions` de toolCompanions() sur le catalogue PRESTATIONS
+  // déjà fourni à cette fonction (jamais un second catalogue).
+  const description = tableRow?.description || undefined;
+  const companions = toolCompanions(agentName, prestations);
+
+  return { agentName, slug, gaps, rappels, badge, complet: gaps.length === 0, couverture, message, description, companions };
 }
 
 // Cérémonie de certification (2026-09-21, demande explicite de l'utilisateur : « quand tu affiches
@@ -654,14 +690,23 @@ export function recordCertification(slug, now = Date.now(), historyPath = BADGE_
 // Le bloc lui-même : toujours visuellement séparé (bordures ASCII, jamais une phrase noyée dans un
 // paragraphe), reprend tel quel le `message` déjà produit par checkAgentOnboarding() (jamais une
 // seconde formulation qui pourrait diverger) plus le badge et la couverture en évidence.
+// Gabarit fiabilisé (2026-09-21, demande explicite de l'utilisateur : « fiabilise le gabarit du
+// bloc certification : même format assuré à chaque fois : j'ai besoin d'une courte description, de
+// savoir si tout est bien pluggé, de savoir aussi avec quels outils cet outil est susceptible de se
+// plugger ») — 3 lignes garanties dans CET ORDRE à chaque annonce, jamais un sous-ensemble variable
+// selon ce qui a été calculé cette fois-là. Une absence réelle de donnée reste dite explicitement
+// (« non renseignée », « aucune connue ») — jamais une ligne simplement omise, qui laisserait croire
+// que la question n'a pas été posée.
 export function formatBadgeCeremonyAnnouncement(result) {
   const border = "━".repeat(Math.max(20, result.agentName.length + 20));
   return [
     border,
     `🎖️ CERTIFICATION — ${result.agentName}`,
     border,
-    result.message,
+    `Description : ${result.description || "non renseignée (colonne « Ce qu'il détecte/régule » absente de la table maîtresse)"}`,
+    `Câblage : ${result.message}`,
     `Statut : ${result.badge}`,
+    `Combine typiquement avec : ${result.companions?.length ? result.companions.join(", ") : "aucune combinaison connue dans le catalogue PRESTATIONS"}`,
     `Couverture : ${result.couverture.label}`,
     border,
   ].join("\n");

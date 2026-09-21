@@ -1329,6 +1329,22 @@ clone-hunter. Trois choix calibrés explicitement (jamais devinés) :
   (`scripts/le-coordinateur.mjs`) encadre le `message` de `checkAgentOnboarding()` (repris verbatim,
   jamais reformulé) d'un titre « 🎖️ CERTIFICATION — NomAgent » et de bordures, avec le badge et la
   couverture explicitement répétés en dessous.
+
+  **Gabarit fiabilisé (2026-09-21, demande explicite de l'utilisateur : « même format assuré à
+  chaque fois : j'ai besoin d'une courte description, de savoir si tout est bien pluggé, de savoir
+  aussi avec quels outils cet outil est susceptible de se plugger »)** : 6 lignes garanties dans cet
+  ordre à chaque annonce, jamais un sous-ensemble variable selon ce qui a pu être calculé cette
+  fois-là — une absence réelle de donnée reste dite explicitement, jamais une ligne omise :
+  1. **Description** — courte phrase lue par NOM depuis la colonne « Ce qu'il détecte/régule » de la
+     table maîtresse (`parseToolsTable()`, jamais un second texte hand-maintened) ; « non renseignée »
+     si la table n'a pas cette colonne pour cette ligne.
+  2. **Câblage** — le `message` complet de `checkAgentOnboarding()` (validations réunies), inchangé.
+  3. **Statut** — le badge lui-même (🎖️/⚠️, catégorie), inchangé.
+  4. **Combine typiquement avec** — `toolCompanions()` (`scripts/le-coordinateur.mjs`) liste les
+     autres outils qui apparaissent avec celui-ci dans au moins une même entrée du catalogue
+     `PRESTATIONS` — jamais une donnée hand-maintained en plus, jamais une combinaison inventée ;
+     « aucune combinaison connue » si cet outil n'apparaît dans aucune prestation combinée.
+  5. **Couverture** — le niveau de couverture AXA-CHECK à 3 paliers, inchangé.
 - **Seulement la PREMIÈRE fois** qu'un Agent devient certifié — jamais répété à chaque mention
   ultérieure du même badge, qui resterait un point normal du compte rendu sans ce traitement.
   Détection mécanique du "première fois" via un petit journal local
