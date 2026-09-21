@@ -91,10 +91,11 @@ export function sh(cmd, { cwd, verbose = false, env } = {}) {
 
 // Extrait le 2026-09-21 de check-tasks-details.mjs (même règle de mutualisation §7ter que sh()
 // ci-dessus) : circle-tasks.mjs en a aussi besoin (garde-fou de fraîcheur du catalogue de la
-// Ronde) et importer directement depuis check-tasks-details.mjs créerait un cycle (celui-ci importe
-// déjà daysSince() de circle-tasks.mjs). `root` doit être fourni SANS séparateur final (rappel
-// trouvé le 2026-09-20 : un simple `slice(root.length + 1)` grignotait la première lettre de
-// "docs/", faussant silencieusement toute vérification de registre en aval).
+// Ronde) et importer directement depuis check-tasks-details.mjs créerait un cycle avec
+// daysSince() ci-dessous — résolu en plaçant les deux ici, jamais dans l'un ou l'autre. `root`
+// doit être fourni SANS séparateur final (rappel trouvé le 2026-09-20 : un simple
+// `slice(root.length + 1)` grignotait la première lettre de "docs/", faussant silencieusement
+// toute vérification de registre en aval).
 export function walkDocsPaths(dir, root, out = new Set()) {
   if (!existsSync(dir)) return out;
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -103,4 +104,16 @@ export function walkDocsPaths(dir, root, out = new Set()) {
     if (entry.isDirectory()) walkDocsPaths(full, root, out);
   }
   return out;
+}
+
+// Extrait le 2026-09-21 de circle-tasks.mjs (audit d'évolutivité — nouveau signal
+// chantier-preliminaire-signal) : circle-tasks.mjs doit désormais importer checkChantierFileFreshness()/
+// loadAllTaskRows() de check-tasks-details.mjs, ce qui aurait créé exactement le même cycle que
+// walkDocsPaths() ci-dessus si daysSince() était resté dans circle-tasks.mjs (check-tasks-details.mjs
+// l'importait déjà de là). Résolu de la même façon : un utilitaire pur, sans dépendance vers l'un ou
+// l'autre, vit ici — jamais dans l'un des deux fichiers qui en dépendent tous les deux.
+export function daysSince(dateStr, now = Date.now()) {
+  if (!dateStr) return undefined;
+  const days = Math.floor((now - new Date(dateStr).getTime()) / (24 * 60 * 60 * 1000));
+  return days >= 0 ? days : undefined;
 }

@@ -27,7 +27,12 @@ import { fileURLToPath } from "node:url";
 import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { scanDocumentWeight, listDatedNarrativeMarkers, extractRuleUnits, findRedundantRulePairs } from "./smart-conso-token.mjs";
-import { walkDocsPaths } from "./lib-shell.mjs";
+import { walkDocsPaths, daysSince } from "./lib-shell.mjs";
+import { checkChantierFileFreshness, loadAllTaskRows } from "./check-tasks-details.mjs";
+// Ré-exportée telle quelle (jamais une redéfinition) : circle-tasks.mjs reste le point d'import déjà
+// utilisé ailleurs (check-house.mjs) pour cette fonction, même après son déplacement vers lib-shell.mjs
+// le 2026-09-21 (cf. commentaire au-dessus de sa définition dans lib-shell.mjs).
+export { daysSince };
 import { extractPrincipleUnits, buildEvolutionDigest, findPossibleTensions, philosophyFreshnessDays } from "./the-king.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
@@ -175,6 +180,23 @@ export const CIRCLE_ITEMS = [
     cout: "gratuit — lecture des fichiers de session déjà écrits, aucun appel API",
     tokensEstimes: "faible — parcours mécanique de fichiers déjà en mémoire de travail",
     execute: "Lire docs/suivi/sessions/*.md via categorizeAllSessions() et reporter la tâche ouverte/en cours la plus ancienne — jamais juger seul si elle doit être close, juste signaler qu'elle traîne (ou qu'elle a été interrompue par un prompt intempestif et jamais reprise).",
+  },
+  // chantier-preliminaire-signal (2026-09-21, demande explicite de l'utilisateur : « je veux un
+  // petit outil qui verifie lors de la ronde que les idees formulées ont bien été renseignées dans
+  // un fichier prelimnaire [...] certainement une extension d'un outil existant »). Extension
+  // exacte, jamais un second calcul : réutilise checkChantierFileFreshness()/loadAllTaskRows()
+  // (check-tasks-details.mjs, registre CHANTIER_PRELIMINARY_FILES), jusqu'ici câblées seulement
+  // dans le rapport de check-tasks-details lui-même, jamais vues si on ne le lance pas explicitement.
+  // Calibrage explicite : signal automatique à chaque Ronde (jamais un item à cocher à part) ; sur
+  // un vrai écart trouvé, propose explicitement de mettre à jour le fichier concerné dans la foulée,
+  // jamais un simple constat qui resterait en suspens jusqu'à la prochaine Ronde.
+  {
+    id: "chantier-preliminaire-signal",
+    theme: "Suivi des chantiers",
+    label: "Vérifier que les idées de gros chantier sont bien dans leur fichier préliminaire",
+    cout: "gratuit — relit docs/suivi/ et croise avec le registre CHANTIER_PRELIMINARY_FILES, aucun appel API",
+    tokensEstimes: "faible — parcours mécanique de fichiers déjà en mémoire de travail",
+    execute: "Appeler checkChantierFileFreshness(loadAllTaskRows()) — sur un vrai écart (une tâche de suivi mentionne un chantier connu, plus récente que son fichier préliminaire), proposer explicitement de le mettre à jour tout de suite, jamais le laisser en suspens jusqu'à la prochaine Ronde.",
   },
   {
     id: "smart-conso-api-scan",
@@ -356,12 +378,6 @@ export function mostRecentDate(text) {
   return isoStrings.reduce((max, d) => (d > max ? d : max));
 }
 
-export function daysSince(dateStr, now = Date.now()) {
-  if (!dateStr) return undefined;
-  const days = Math.floor((now - new Date(dateStr).getTime()) / (24 * 60 * 60 * 1000));
-  return days >= 0 ? days : undefined;
-}
-
 // checkHtmlWiring() (2026-09-20) : vérifie mécaniquement, par une simple recherche de texte dans
 // le CODE SOURCE déjà en mémoire (jamais une exécution, jamais un appel réseau), qu'un script cite
 // bien html-report.mjs — le seul signal fiable qu'il produit réellement sa copie HTML plutôt que du
@@ -453,6 +469,10 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCode
       return { ...item, staleness: missing.length ? `${missing.length} script(s) pas encore câblé(s) : ${missing.join(", ")}` : "tous câblés" };
     }
     if (item.id === "suivi-open-tasks-signal") return { ...item, staleness: oldestOpen ? `tâche ouverte depuis ${daysSince(oldestOpen, now)} jour(s)` : "aucune tâche ouverte connue" };
+    if (item.id === "chantier-preliminaire-signal") {
+      const gaps = checkChantierFileFreshness(loadAllTaskRows());
+      return { ...item, staleness: gaps.length ? `${gaps.length} écart(s) trouvé(s) — ${gaps.map((g) => `${g.chantier} (${g.message})`).join(" ; ")} — proposer de mettre à jour le fichier concerné maintenant` : "aucun écart détecté" };
+    }
     if (item.id === "claude-md-weight-signal") {
       if (!claudeMdText) return { ...item, staleness: "pas de signal disponible (CLAUDE.md non fourni)" };
       const weight = scanDocumentWeight(claudeMdText, "CLAUDE.md", { alwaysLoaded: true });
@@ -490,7 +510,11 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCode
 // serait plus déroutant qu'utile) — THE-FINAL-JUDGE reste dans son propre thème "Audit lourd",
 // systématiquement en dernier, cohérent avec la convention déjà actée (toujours en dernière
 // position de la fenêtre). Chaque thème tient dans un seul bloc de question (≤4 options).
-export const THEME_ORDER = ["Suivi & référentiels", "KPI & scans", "Qualité du code", "Passages réels (smoke run)", "Qualité & fun", "Audit lourd"];
+// "Suivi des chantiers" (2026-09-21) — nouveau thème, jamais fusionné dans "Suivi & référentiels"
+// (déjà à sa limite réelle de 4 items, la contrainte d'interface qui gouverne ce découpage) :
+// chantier-preliminaire-signal en est le premier membre, d'autres signaux liés aux gros chantiers
+// pourront le rejoindre plus tard sans avoir à re-scinder un thème déjà plein.
+export const THEME_ORDER = ["Suivi & référentiels", "Suivi des chantiers", "KPI & scans", "Qualité du code", "Passages réels (smoke run)", "Qualité & fun", "Audit lourd"];
 export function groupCircleReportByTheme(report) {
   const groups = THEME_ORDER.map((theme) => ({ theme, items: report.filter((r) => r.theme === theme) }));
   const untagged = report.filter((r) => !THEME_ORDER.includes(r.theme));
