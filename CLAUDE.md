@@ -829,9 +829,7 @@ détecter la dette d'organisation. Jamais les 8 zones exactes ni les fichiers pr
 
 ## memory-audit — blueprint exportable, l'exception qui cible les Personnages
 
-*(2026-09-21, tâche #169 — conçu sous le nom "MEMENTO", renommé le même soir en retirant cette
-ombrelle une fois son rôle mieux compris par l'utilisateur : « memento audite la capacité des
-persos sur la memoire [...] donc oui, il fait bien partie de l'equipe aux cotés de el professor ».)*
+*(Genèse du nom : cf. `docs/referentiel/claude-md-asides-historique.md`.)*
 
 `docs/memory-audit-blueprint.md` documente l'ARCHITECTURE de memory-audit — un vrai script
 d'**Outillage de travail = Membre de l'équipe** (`scripts/memento.mjs`, nom de fichier technique
@@ -861,9 +859,8 @@ Détail complet : `docs/referentiel/memento-weight.md`.
 
 ## find-booster — blueprint exportable
 
-*(2026-09-21, conçu sous le nom "route-find-booster" pour `app/api/lia/route.ts`, renommé
-"find-booster" le même soir une fois confirmé générique, puis promu Membre de l'équipe complet
-après un usage réel concluant sur 4 fichiers de nature différente en une seule soirée.)*
+*(Genèse du nom et de la promotion en Membre complet : cf.
+`docs/referentiel/claude-md-asides-historique.md`.)*
 
 `docs/find-booster-blueprint.md` documente l'ARCHITECTURE de l'outil de navigation par concept dans
 un gros fichier — quatre motifs d'extraction réels reconnus (fonctions nommées, blocs anonymes

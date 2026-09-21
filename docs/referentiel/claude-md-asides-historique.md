@@ -212,6 +212,32 @@ pour la limite déjà connue : jamais une évolution du motif sans nouvelle dema
 > *(2026-09-19, à la demande explicite de l'utilisateur : « je voudrais un agent qui donne une note
 > de reussite sur 100 à chaque version, en fonction du respect de la charte ».)*
 
+## memory-audit — genèse du nom (2026-09-22, passe manuelle, tâche #171)
+
+> *(2026-09-21, tâche #169 — conçu sous le nom "MEMENTO", renommé le même soir en retirant cette
+> ombrelle une fois son rôle mieux compris par l'utilisateur : « memento audite la capacité des
+> persos sur la memoire [...] donc oui, il fait bien partie de l'equipe aux cotés de el professor ».)*
+
+## find-booster — genèse du nom et de la promotion (2026-09-22, passe manuelle, tâche #171)
+
+> *(2026-09-21, conçu sous le nom "route-find-booster" pour `app/api/lia/route.ts`, renommé
+> "find-booster" le même soir une fois confirmé générique, puis promu Membre de l'équipe complet
+> après un usage réel concluant sur 4 fichiers de nature différente en une seule soirée.)*
+
+## Passe manuelle du 2026-09-22 (tâche #171, autonome — les candidats mécaniques de la première
+## passe étaient déjà tous épuisés)
+
+`listDatedNarrativeMarkers()` relancé contre CLAUDE.md a trouvé 3 nouveaux candidats apparus depuis
+(memory-audit, find-booster, CLONE-HUNTER — tous des asides de genèse de nom/construction ajoutées
+au fil des chantiers de la soirée du 2026-09-21). Les deux premiers ci-dessus ont été déplacés :
+`extractNormativeMarkers()` y trouve zéro marqueur normatif, purs éléments narratifs. **Le 3e
+(CLONE-HUNTER) a été délibérément LAISSÉ dans CLAUDE.md, jamais un oubli** : il contient une vraie
+information factuelle réutilisable (« vérifié avant construction, en lisant les fonctions exportées
+d'ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD une par une (Article 19) » — une preuve concrète
+d'application de l'Article 19, pas seulement une couleur historique) — `extractNormativeMarkers()`
+le confirme en y détectant du contenu normatif, et le garde-fou explicite de CLAUDE.md (« en cas de
+doute [...] la réponse par défaut est de NE PAS couper ») s'applique donc ici sans ambiguïté.
+
 ## Note pour une future passe (jamais faite ici, hors du périmètre validé par l'utilisateur)
 
 Le balayage mécanique de `listDatedNarrativeMarkers()` ne détecte que les asides dont la parenthèse
