@@ -9,10 +9,11 @@ CLEAN-DIRTY-OLD une par une, aucune ne fait ce métier. Principe générique :
 ## Rôle exact
 
 Un Membre de l'équipe (Outillage de travail) qui scanne `lib/`, `scripts/`, `app/` et `components/`
-(hors `components/ui/`, cf. plus bas) à la recherche de blocs de lignes IDENTIQUES (après
-normalisation d'espaces) répétés à plusieurs endroits — v1 volontairement littérale, calibrée
-explicitement avec l'utilisateur (jamais une ressemblance sémantique pour l'instant, cf. tâche #177
-« Améliorer CLONE-HUNTER (v2) », ouverte mais non calibrée).
+(hors `components/ui/`, cf. plus bas) à la recherche de blocs de lignes dupliqués à plusieurs
+endroits — v1 littérale (identiques après normalisation d'espaces) ET v2 (identiques après un
+renommage bijectif cohérent d'identifiants, cf. plus bas), calibrées et construites toutes deux le
+2026-09-21, jamais une ressemblance sémantique complète (réarrangement de logique) qui demanderait
+un vrai parseur AST hors de portée de cet outil.
 
 ## Le cœur de l'algorithme, `scripts/clone-hunter.mjs`
 
@@ -63,14 +64,37 @@ jamais une factorisation appliquée automatiquement — la décision de factoris
 l'agent qui pilote, au cas par cas : une ressemblance de surface peut cacher une intention
 différente qui justifie deux implémentations distinctes.
 
-## v2 (sémantique) — ouverte, pas encore calibrée
+## v2 (quasi-duplication par renommage) — construite le 2026-09-21, tâche #177
 
-Tâche interne #177, créée le soir même à la demande de l'utilisateur (« ameliorer l'outil clone
-hunter est inscrit à la to do ») : détecter une ressemblance de LOGIQUE (mêmes opérations, noms de
-variables différents, lignes réarrangées) plutôt qu'une identité littérale — hors de portée de la
-v1, demanderait une vraie réflexion de conception (tokenisation par identifiants génériques ? seuil
-de similarité plutôt qu'égalité stricte ?). Jamais construite à l'aveugle : à calibrer avec
-l'utilisateur avant toute implémentation, comme toute extension d'outil de ce réseau.
+Calibrée puis construite le même soir (demande explicite : « améliore CLONE-HUNTER, au-delà de la
+v1 littérale »). Toujours zéro nouvelle dépendance, zéro parseur AST : compare la FORME token par
+token (`tokenizeLine()`) plutôt que le texte littéral, et exige qu'un SEUL renommage bijectif
+cohérent (`matchLineTokens()`) explique tout le bloc — jamais juste "même forme de ligne", qui
+serait bien trop bruyant seul (des lignes aussi banales que `return x;` partagent leur forme
+partout). C'est cette cohérence de renommage maintenue sur toute la longueur du bloc
+(`extendNearDuplicateBlock()`) qui distingue un vrai copié-collé renommé d'une simple coïncidence de
+structure. Un mot-clé du langage ou une propriété réelle après un "." (`.length`, `.push`) ne sont
+jamais traités comme des identifiants renommables (`RESERVED_WORDS`, `isRenamableIdentifier()`).
+
+**Jamais un doublon avec v1** : `findNearDuplicateBlocks()` ignore volontairement tout bloc où le
+"renommage" trouvé est en réalité l'identité (a→a partout, via `hasRealRenaming()`) — ce cas-là est
+un doublon LITTÉRAL, déjà signalé par v1, jamais compté deux fois (Article 3). v1 reste inchangée et
+continue de tourner en plus (les deux se complètent).
+
+**Cœur partagé, extrait en dogfooding immédiat** : lancer v2 sur `clone-hunter.mjs` lui-même a
+révélé, dès le premier essai, que v1 et v2 dupliquaient leur propre boucle de parcours de paires
+candidates — corrigé aussitôt en extrayant `findBlocksFromIndex()` (index → paires → extension
+déléguée à une stratégie `extend` → filtre optionnel `accept`), réutilisé par les deux versions.
+Preuve vivante trouvée le même soir : `collectCoverage()` dupliquée deux fois dans
+`scripts/axa-check.mjs` (identifiants différents, 7 lignes) et une boucle `totalFindings` quasi
+identique entre `scripts/hyper-scan-checkpoint.mjs` et `scripts/the-deep-reader.mjs` (9 lignes) —
+deux trouvailles réelles que v1 ne pouvait structurellement pas voir.
+
+**Limite honnête assumée** : `hasRealRenaming()` est évalué sur le mapping complet AVANT troncature
+de recouvrement même fichier — dans le cas rare d'un bloc tronqué authentiquement littéral dont le
+renommage n'apparaîtrait que dans la portion coupée, l'étiquette "renommé" pourrait être trop
+optimiste. Jamais une fausse PAIRE, seulement une étiquette optimiste sur un cas marginal — non
+corrigé pour rester simple (Article 5).
 
 ## Doc-Report
 
@@ -78,8 +102,11 @@ Entrée `REGISTRIES` dédiée (`scripts/doc-report.mjs`), famille "Qualité du c
 
 ## Statut d'intégration
 
-Testé en fixtures synthétiques (bloc partagé entre 2 fichiers, bloc trop court écarté, duplication
-au sein d'un même fichier, cluster à 3 occurrences regroupé en une seule alerte) ET vérifié live
-contre le vrai dépôt (exclusion de `components/ui/` confirmée, trouvaille réelle de `loadJson()`
-retrouvée). Entrée PRESTATIONS "Pack Chasse aux clones". Item CIRCLE-TASKS `clone-hunter-run`.
-Registre : `docs/clone-hunter/` (dossier + index), un premier constat déjà consigné.
+v1 testée en fixtures synthétiques (bloc partagé entre 2 fichiers, bloc trop court écarté,
+duplication au sein d'un même fichier, cluster à 3 occurrences regroupé en une seule alerte) ET
+vérifiée live contre le vrai dépôt (exclusion de `components/ui/` confirmée, trouvaille réelle de
+`loadJson()` retrouvée). v2 testée en fixtures synthétiques (renommage cohérent détecté, mapping
+incohérent rejeté, doublon littéral jamais recompté, propriété réelle après un "." jamais renommée)
+ET vérifiée live (6 trouvailles réelles inédites, même exclusion `components/ui/` héritée). Entrée
+PRESTATIONS "Pack Chasse aux clones". Item CIRCLE-TASKS `clone-hunter-run` (relance les deux
+versions). Registre : `docs/clone-hunter/` (dossier + index), deux constats consignés.

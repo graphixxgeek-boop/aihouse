@@ -942,7 +942,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 207'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 208'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -5026,6 +5026,52 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // trouve un vrai problème réel dans ce dépôt, pas seulement dans des fixtures synthétiques.
   assert.ok(liveClusters.some((c) => c.occurrences.some((o) => o.file === 'scripts/smart-conso-api.mjs') && c.occurrences.some((o) => o.file === 'scripts/smart-conso-token.mjs')), 'the real, already-known loadJson() duplication between smart-conso-api.mjs and smart-conso-token.mjs must be found live against the actual repository, not just a synthetic fixture');
   console.log('Passed: CLONE-HUNTER (2026-09-21) — a real gap confirmed by reading ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD\'s own exported functions one by one, none of which detects repeated code — detects a genuine multi-line block shared verbatim across files (never truncating it short, never a false positive from one coincidentally-shared line, and honoring a configured minimum length), finds duplication within a single file as well as across files, collapses a block shared by three real locations into one cluster with all three occurrences rather than one redundant alert per pair, and — verified live against this actual repository — correctly excludes components/ui (the vendored shadcn/Radix kit, whose duplication is assumed by design) while still surfacing the real, already-known loadJson() duplication between scripts/smart-conso-api.mjs and scripts/smart-conso-token.mjs.');
+
+  // CLONE-HUNTER v2 (2026-09-21, tâche #177, demande explicite de l'utilisateur : « améliore
+  // CLONE-HUNTER, au-delà de la v1 littérale »). Toujours zéro nouvelle dépendance, zéro parseur
+  // AST : compare la FORME token par token et exige un renommage bijectif cohérent sur tout le
+  // bloc, jamais juste "même forme de ligne" (trop bruyant seul).
+  const { tokenizeLine, matchLineTokens, shapeFingerprint, isSubstantialShape, extendNearDuplicateBlock, findNearDuplicateBlocks, buildNearDuplicateReport } = await import('../scripts/clone-hunter.mjs');
+  assert.deepEqual(tokenizeLine('const total = items.length;'), ['const', 'total', '=', 'items', '.', 'length', ';']);
+
+  const renamedPairA = new Map([
+    ['renamedA.mjs', ['function foo() {', '  const total = items.reduce((acc, item) => acc + item.value, 0);', '  const average = total / items.length;', '  console.log(average);', '  return average;', '}']],
+    ['renamedB.mjs', ['function bar() {', '  const sum = things.reduce((acc, thing) => acc + thing.value, 0);', '  const mean = sum / things.length;', '  console.log(mean);', '  return mean;', '}']],
+  ]);
+  const nearPairs = findNearDuplicateBlocks(renamedPairA, { minLines: 3, minRealTokens: 4 });
+  assert.ok(nearPairs.some((p) => p.lines >= 5 && [p.fileA, p.fileB].includes('renamedA.mjs') && [p.fileA, p.fileB].includes('renamedB.mjs')), 'a block that is the same logic under one single consistent identifier renaming (items->things, total->sum, average->mean) must be detected as a near-duplicate — the exact case v1 structurally cannot see');
+
+  // Jamais un doublon avec v1 : un bloc littéralement identique (aucun renommage réel) ne doit
+  // JAMAIS ressortir de findNearDuplicateBlocks() — déjà signalé par v1, jamais compté deux fois
+  // (Article 3 : une même vraie duplication ne produit jamais deux signalements distincts).
+  const literalOnly = new Map([
+    ['litA.mjs', ['const total = items.reduce((acc, item) => acc + item.value, 0);', 'const average = total / items.length;', 'console.log(average);']],
+    ['litB.mjs', ['const total = items.reduce((acc, item) => acc + item.value, 0);', 'const average = total / items.length;', 'console.log(average);']],
+  ]);
+  assert.equal(findNearDuplicateBlocks(literalOnly, { minLines: 3, minRealTokens: 4 }).length, 0, 'a purely literal duplicate (zero real renaming) must never surface in v2 results — that is v1\'s territory, never double-counted');
+
+  // Garde-fou anti-bruit central de v2 : une coïncidence de forme SANS renommage bijectif cohérent
+  // (le même identifiant devrait être mappé à deux cibles différentes selon la ligne) ne doit
+  // jamais être rapportée comme une quasi-duplication — la preuve que ce n'est pas juste "même
+  // forme de ligne" mais un vrai renommage cohérent de bout en bout qui est exigé.
+  const incoherentMapping = new Map([
+    ['incA.mjs', ['const value = compute(x, y);', 'const other = compute(y, x);']],
+    ['incB.mjs', ['const value = compute(p, q);', 'const other = compute(r, s);']],
+  ]);
+  assert.equal(findNearDuplicateBlocks(incoherentMapping, { minLines: 2, minRealTokens: 3 }).length, 0, 'a structural coincidence with NO single consistent bijective renaming across the block must never be reported as a near-duplicate — the exact noise guard that makes v2 more than "same line shape"');
+
+  // Un mot-clé du langage ou une propriété réelle après un "." ne sont jamais traités comme des
+  // identifiants renommables — sinon `.push`/`.length` se feraient passer pour des variables.
+  assert.equal(matchLineTokens(tokenizeLine('return items.length;'), tokenizeLine('return things.count;'), new Map(), new Map()), null, 'a real member access (.length vs .count) must never be treated as a renamable identifier — matching it would be nonsensical');
+  assert.ok(matchLineTokens(tokenizeLine('return items.length;'), tokenizeLine('return things.length;'), new Map(), new Map()), 'the same real member access (.length on both sides) with only the renamable base identifier changed must still match');
+
+  assert.equal(isSubstantialShape(tokenizeLine('return x;')), false, 'a trivial return must never count as substantial by default — the same noise-filtering spirit as v1\'s isSubstantialLine()');
+  assert.equal(isSubstantialShape(tokenizeLine('const total = items.reduce((acc, item) => acc + item.value, 0);')), true, 'a genuinely rich line (enough real identifiers/keywords/numbers) must count as substantial');
+  assert.equal(shapeFingerprint(tokenizeLine('const total = 0;')), 'const • = 0 ;');
+
+  const nearLive = buildNearDuplicateReport();
+  assert.ok(!nearLive.some((c) => c.occurrences.some((o) => o.file.startsWith('components/ui/'))), 'v2 must inherit the same components/ui exclusion as v1 — the same vendored-kit noise, never re-introduced through the near-duplicate path');
+  console.log('Passed: CLONE-HUNTER v2 (2026-09-21, task #177) — detects a block that is the exact same logic under one single consistent bijective identifier renaming across the whole block (never just "same line shape" alone, which real code shares constantly and would be pure noise), correctly rejects a structural coincidence where the required renaming is inconsistent line-to-line, never treats a real member access (.length, .push) as a renamable identifier, and never double-reports a purely literal duplicate already caught by v1 — verified live against this actual repository to inherit the same components/ui exclusion.');
 }
 
 {

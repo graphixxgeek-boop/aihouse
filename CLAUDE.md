@@ -883,12 +883,14 @@ une (Article 19), qu'aucune ne fait ce métier. Membre complet dès la construct
 explicite de l'utilisateur, jamais l'étape intermédiaire "sans blueprint" habituelle.)*
 
 `docs/clone-hunter-blueprint.md` documente l'ARCHITECTURE du détecteur de blocs de code dupliqués —
-v1 volontairement littérale (blocs de lignes identiques après normalisation d'espaces, jamais une
-ressemblance sémantique, cf. tâche de suivi ouverte pour une v2), un diff de blocs qui étend la
-comparaison ligne par ligne plutôt qu'un fenêtrage à taille fixe, un regroupement par union-find
-pour qu'un bloc dupliqué à N endroits ne produise jamais N alertes redondantes, et une exclusion
-vérifiée (jamais générique) du code vendu tel quel dont la duplication est assumée par design
-(`components/ui/`, le kit shadcn/Radix de ce projet). `clone-hunter-run` rejoint CIRCLE-TASKS en
+v1 littérale (blocs de lignes identiques après normalisation d'espaces) ET v2 (2026-09-21, blocs
+structurellement identiques sous un renommage bijectif cohérent d'identifiants, jamais une
+ressemblance sémantique complète qui demanderait un vrai parseur AST), un diff de blocs qui étend la
+comparaison ligne par ligne plutôt qu'un fenêtrage à taille fixe (cœur partagé par les deux
+versions), un regroupement par union-find pour qu'un bloc dupliqué à N endroits ne produise jamais N
+alertes redondantes, et une exclusion vérifiée (jamais générique) du code vendu tel quel dont la
+duplication est assumée par design (`components/ui/`, le kit shadcn/Radix de ce projet).
+`clone-hunter-run` rejoint CIRCLE-TASKS en
 lancement RÉEL à chaque passage (thème "Passages réels (smoke run)", comme
 profil-utilisateur-guard/network-check-run) — jamais un simple signal de fraîcheur, la détection de
 duplication n'ayant aucune mémoire persistante à consulter. Jamais les seuils exacts ni les fichiers
