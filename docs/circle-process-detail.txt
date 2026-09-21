@@ -1,0 +1,341 @@
+CIRCLE-TASKS — PROCESSUS COMPLET ACTUEL, POUR LA CONCEPTION DE circle-process-guardian
+Généré le 2026-09-21 (tâche #340-341), à partir du VRAI code (scripts/circle-tasks.mjs,
+scripts/le-coordinateur.mjs, scripts/doc-report.mjs, docs/regles-de-travail.md) — jamais recopié
+de mémoire. Sert de matière brute pour concevoir circle-process-guardian, l'outil demandé par
+l'utilisateur pour connaître ce processus parfaitement et vérifier, à chaque Ronde, que toutes les
+étapes ont bien été livrées et tous les rapports attendus produits.
+
+=====================================================================
+PARTIE 1 — LE DÉROULEMENT COMPLET D'UNE RONDE, ÉTAPE PAR ÉTAPE
+=====================================================================
+
+Étape 0 — Déclenchement
+  Une Ronde démarre soit sur demande explicite de l'utilisateur, soit sur proposition de l'agent
+  après un rappel de fraîcheur (voir Étape 6). Jamais automatique/silencieuse.
+
+Étape 1 — La question à 3 modes (OBLIGATOIRE, jamais sautée)
+  Avant toute exécution, l'agent pose TOUJOURS une première question à 3 réponses :
+    1. AUTO (recommandé) — lance directement la sélection calibrée
+       (recommendCircleSelectionWithPeriodicity()), sans autre fenêtre.
+    2. PRIME — même sélection recommandée que AUTO, plus la possibilité d'ajouter des tâches
+       GRATUITES supplémentaires via primeAddableItems() (actuellement : referentiel,
+       dream-team-photo, the-screener). Les 2 items costly (the-final-judge, the-deep-reader) ne
+       sont jamais ajoutables ici — seulement mentionnés avec renvoi au mode GOAT.
+    3. GOAT — ouvre une série de fenêtres à cocher par thème (groupCircleReportByTheme()), tous
+       les items réaffichés (y compris les 2 costly, seul mode où ils sont sélectionnables), et
+       pour tout item ayant une version légère/complète, le niveau de profondeur se choisit
+       PAR TÂCHE.
+
+Étape 2 — Calcul de la sélection recommandée
+  recommendCircleSelection(report) exclut les items non recommandés par défaut
+  (NOT_RECOMMENDED_BY_DEFAULT) et les items costly. recommendCircleSelectionWithPeriodicity()
+  étend ce résultat : si un item costly n'a pas tourné depuis plus de COSTLY_DUE_THRESHOLD_DAYS
+  (30 jours, lu depuis son propre registre réel — docs/the-final-judge/index.md,
+  docs/suivi/relectures-lourdes/index.md), il rejoint EXCEPTIONNELLEMENT la sélection AUTO, avec
+  une alerte explicite (ALERT_ICON) et un substitut gratuit documenté (COSTLY_SUBSTITUTES). Un
+  item jamais lancé n'est jamais "dû" (absence honnête, jamais un signal fabriqué).
+
+Étape 3 — Garde-fou de fraîcheur du catalogue (mécanique, à chaque lancement de circle-tasks.mjs)
+  findRegistriesMissingFromCircle() compare chaque registre réel (docs/<slug>/index.md, listé via
+  walkDocsPaths()) à CIRCLE_ITEMS ET à CIRCLE_EXCLUDED_REGISTRIES (liste d'exclusions documentées :
+  ARGUS/HARMONIA/AXA-CHECK déjà automatiques à chaque commit, EL-PROFESSOR déjà obligatoire par
+  Article 18, etc.). Une alerte ⚠️🔴 s'affiche si un registre orphelin est trouvé — zéro trouvaille
+  aujourd'hui, garantie qui casse le jour où un nouvel outil obtient un registre sans rejoindre
+  l'un ou l'autre.
+
+Étape 4 — Exécution des items sélectionnés
+  L'agent qui pilote exécute chaque item selon son champ `execute` (voir Partie 2 pour le détail
+  complet des 23 items existants). Aucun mécanisme automatique n'exécute les items à la place de
+  l'agent — chaque item est une vraie action pilotée (lancer un script, lire un fichier, écrire une
+  observation). C'est cette étape que les rapports manquants de ce soir (tâche #337 : KPI jamais
+  archivé ; tâche #340 : 6 fichiers ARGUS jamais indexés) ont révélé fragile : rien ne garantit
+  MÉCANIQUEMENT que l'agent, en plein enchaînement de 18 items, n'en oublie pas une sous-étape
+  (archiver un fichier, indexer une trouvaille) — exactement le trou que circle-process-guardian
+  doit combler.
+
+Étape 5 — Récapitulatif de fin de Ronde
+  Une fois la Ronde exécutée (quel que soit le mode), l'agent appelle lui-même
+  buildCircleRunSummaryText(entries, {dateLabel, items}) — jamais un main() automatique, qui ne
+  connaît pas la sélection réelle faite en conversation. Le résultat est livré en fichier TEXTE
+  (jamais HTML, décision explicite du 2026-09-21) via SendUserFile. Depuis ce soir, chaque ligne du
+  tableau porte l'icône 📄 si l'item a réellement produit un rapport archivé (lu depuis le champ
+  producesReport de l'item correspondant dans CIRCLE_ITEMS), rien sinon.
+
+Étape 6 — Clôture obligatoire : record-run
+  `node scripts/circle-tasks.mjs record-run` DOIT être appelé à la toute fin de CHAQUE Ronde, quel
+  que soit le mode. Cette commande (ajoutée ce soir, tâche #337, après l'avoir oubliée lors de la
+  toute première Ronde AUTO réelle) enregistre le commit courant dans .circle-tasks-last-run.json
+  via recordCircleTasksRun() — sans cet appel, le compteur de fraîcheur post-commit
+  (shouldRemindCircleTasks(), seuil REMINDER_COMMIT_THRESHOLD=10 commits) ne repart jamais de zéro
+  et le rappel proactif du crochet post-commit devient un faux signal permanent.
+
+Étape 7 (mécanique, pas une étape pilotée) — Rappel proactif post-commit
+  Le crochet post-commit (scripts/hooks/check-last-commit.mjs) affiche une ligne de rappel dès que
+  REMINDER_COMMIT_THRESHOLD (10) commits se sont écoulés sans record-run confirmé — c'est ce qui a
+  révélé ce soir que record-run n'avait jamais été appelé (le compteur était resté bloqué à "32
+  commits sans Ronde" juste après avoir exécuté une Ronde réelle).
+
+=====================================================================
+PARTIE 2 — LES 23 ITEMS DE CIRCLE_ITEMS, DÉTAIL COMPLET
+=====================================================================
+(Extrait automatiquement de scripts/circle-tasks.mjs::CIRCLE_ITEMS le 2026-09-21 — jamais recopié
+à la main, pour ne jamais diverger silencieusement du vrai code — cf. Article 24.)
+
+--- profil ---
+Thème        : Suivi & référentiels
+Libellé      : Mettre à jour le profil utilisateur
+Coût         : gratuit — lecture/écriture de texte, zéro appel API
+Coûteux      : non
+Produit un rapport archivé : OUI 📄
+Exécution    : Suivre la procédure de docs/regles-de-travail.md §9 (Historisation du profil) : comparer les signaux de la session en cours à la dernière fiche, écrire une nouvelle observation datée, mettre à jour l'index.
+
+--- referentiel ---
+Thème        : Suivi & référentiels
+Libellé      : Relire tous les documents de référence
+Coût         : gratuit — lecture, aucun appel API
+Coûteux      : non
+Produit un rapport archivé : non — signal console seulement
+Exécution    : Relire CLAUDE.md (Article 13, vérification périodique) et toute la table des matières réelle de docs/referentiel/ + racine de docs/ — corriger tout écart trouvé immédiatement (Article 3), jamais seulement le signaler.
+
+--- the-king-signal ---
+Thème        : KPI & scans
+Libellé      : Digest THE-KING : fraîcheur et tensions possibles de la philosophie
+Coût         : gratuit — relit un seul fichier local, zéro appel API
+Coûteux      : non
+Produit un rapport archivé : non — signal console seulement
+Exécution    : Lancer node scripts/the-king.mjs et reporter honnêtement la fraîcheur de docs/philosophie-et-politique.md et toute tension possible trouvée — jamais corriger le document soi-même, seulement signaler.
+
+--- kpi ---
+Thème        : KPI & scans
+Libellé      : Lancer le rapport KPI (familles gratuites)
+Coût         : gratuit — node scripts/kpi-report.mjs, zéro nouvel appel API
+Coûteux      : non
+Produit un rapport archivé : OUI 📄
+Exécution    : Lancer node scripts/kpi-report.mjs et lire au moins la famille Robustesse du code — les autres familles restent honnêtement N/A si aucun serveur de dev n'est joignable.
+
+--- clean-dirty-old-signal ---
+Thème        : Qualité du code
+Libellé      : Vérifier depuis quand CLEAN-DIRTY-OLD n'a pas été consulté
+Coût         : gratuit
+Coûteux      : non
+Produit un rapport archivé : non — signal console seulement
+Exécution    : Lire docs/clean-dirty-old/index.md et reporter honnêtement depuis quand aucun passage n'a été journalisé.
+
+--- html-wiring-check ---
+Thème        : Qualité du code
+Libellé      : Vérifier que tous les rapports produisent bien leur copie HTML
+Coût         : gratuit
+Coûteux      : non
+Produit un rapport archivé : non — signal console seulement
+Exécution    : Vérifier que el-professor.mjs, the-final-judge.mjs et the-screener-capture.mjs importent bien html-report.mjs.
+
+--- claude-md-weight-signal ---
+Thème        : Qualité du code
+Libellé      : Vérifier le poids en tokens de CLAUDE.md (allègement périodique)
+Coût         : gratuit
+Coûteux      : non
+Produit un rapport archivé : non — signal console seulement
+Exécution    : Lire CLAUDE.md et appeler scanDocumentWeight()/listDatedNarrativeMarkers().
+
+--- correctifs ---
+Thème        : Suivi & référentiels
+Libellé      : Relire les carnets de correctifs et points fragiles
+Coût         : gratuit
+Coûteux      : non
+Produit un rapport archivé : non — signal console seulement (peut ÉDITER points-fragiles.md/correctifs-a-revalider.md si un retrait est confirmé, mais ne crée jamais de nouveau fichier)
+Exécution    : Relire docs/simulations/correctifs-a-revalider.md et docs/referentiel/points-fragiles.md.
+
+--- suivi-open-tasks-signal ---
+Thème        : Suivi & référentiels
+Libellé      : Signaler la tâche ouverte la plus ancienne (docs/suivi)
+Coût         : gratuit
+Coûteux      : non
+Produit un rapport archivé : non — signal console seulement
+Exécution    : Lire docs/suivi/sessions/*.md via categorizeAllSessions() et reporter la tâche ouverte/en cours la plus ancienne.
+
+--- chantier-preliminaire-signal ---
+Thème        : Suivi des chantiers
+Libellé      : Vérifier que les idées de gros chantier sont bien dans leur fichier préliminaire
+Coût         : gratuit
+Coûteux      : non
+Produit un rapport archivé : non — signal console seulement
+Exécution    : Appeler checkChantierFileFreshness(loadAllTaskRows()).
+
+--- idee-a-trancher-signal ---
+Thème        : Suivi des chantiers
+Libellé      : Vérifier qu'aucune idée nouvelle n'attend encore une décision
+Coût         : gratuit
+Coûteux      : non
+Produit un rapport archivé : non — signal console seulement (peut ÉCRIRE dans docs/idees-a-trancher.md si une décision est prise)
+Exécution    : Appeler findIdeasNeedingDecision(detectPendingIdeaCandidates(...)).
+
+--- smart-conso-api-scan ---
+Thème        : KPI & scans
+Libellé      : Scanner les schémas de consommation API (Smart Conso API)
+Coût         : gratuit
+Coûteux      : non
+Produit un rapport archivé : non — signal console seulement
+Exécution    : Lancer node scripts/smart-conso-api.mjs scan.
+
+--- smart-conso-token-scan ---
+Thème        : KPI & scans
+Libellé      : Scanner le poids des documents de travail (SMART-CONSO-TOKEN)
+Coût         : gratuit
+Coûteux      : non
+Produit un rapport archivé : OUI 📄
+Exécution    : Relancer un scan de portée Global.
+
+--- tool-brain-report ---
+Thème        : Passages réels (smoke run)
+Libellé      : Rapport tool-brain (usage réel des outils + auto-diagnostic)
+Coût         : gratuit
+Coûteux      : non
+Produit un rapport archivé : non — signal console seulement
+Exécution    : Lancer node scripts/tool-brain.mjs rapport.
+
+--- dream-team-photo ---
+Thème        : Qualité & fun
+Libellé      : Régénérer la « photo » de la dream team
+Coût         : gratuit
+Coûteux      : non
+Produit un rapport archivé : OUI 📄
+Exécution    : Régénérer le document récapitulatif HTML de tous les outils/agents nommés.
+
+--- the-screener ---
+Thème        : Qualité & fun
+Libellé      : Capturer et noter 2 captures d'écran (THE-SCREENER)
+Coût         : zéro appel Gemini pour le mécanisme — CONDITIONNEL (session déjà en cours requise)
+Coûteux      : non
+Produit un rapport archivé : OUI 📄
+Exécution    : Lancer node scripts/the-screener-capture.mjs contre un serveur déjà actif.
+
+--- ines-official-signal ---
+Thème        : Qualité & fun
+Libellé      : Proposer une nouvelle édition INES-official si l'ancienne date
+Coût         : gratuit pour le signal
+Coûteux      : non
+Produit un rapport archivé : non — signal console seulement (l'édition elle-même, si déclenchée séparément, produit un vrai rapport)
+Exécution    : Lire docs/ines-official/index.md et proposer une édition si nécessaire.
+
+--- cassandra-rh-signal ---
+Thème        : Qualité & fun
+Libellé      : Signal RH de l'équipe — CASSANDRA-RH
+Coût         : gratuit
+Coûteux      : non
+Produit un rapport archivé : non — signal console seulement (le bilan complet, sur demande séparée, produit un vrai rapport HTML)
+Exécution    : Lancer node scripts/cassandra-rh.mjs (sans argument).
+
+--- profil-utilisateur-guard ---
+Thème        : Passages réels (smoke run)
+Libellé      : Lancer le vrai garde-fou du dossier profil-utilisateur
+Coût         : gratuit
+Coûteux      : non
+Produit un rapport archivé : non — signal console seulement
+Exécution    : Lancer node scripts/check-profil-utilisateur.mjs.
+
+--- network-check-run ---
+Thème        : Passages réels (smoke run)
+Libellé      : Lancer une vraie synthèse LE-COORDINATEUR (runNetworkCheck)
+Coût         : gratuit, mais plus lourd (relance check-house.mjs avec instrumentation V8)
+Coûteux      : non
+Produit un rapport archivé : non — signal console seulement (MAIS déclenche en side-effect un vrai scan ARGUS qui, lui, écrit un fichier — cf. Partie 3)
+Exécution    : Lancer node scripts/le-coordinateur.mjs.
+
+--- coordinateur-catalogue ---
+Thème        : Passages réels (smoke run)
+Libellé      : Mettre à jour le catalogue d'offres nommé (LE-COORDINATEUR)
+Coût         : gratuit, écrit une nouvelle version seulement si PRESTATIONS a changé
+Coûteux      : non
+Produit un rapport archivé : OUI 📄 (conditionnel : HTML si nouveau, texte simple si inchangé — jamais rien d'écrit dans les deux cas de figure sauf la nouvelle version)
+Exécution    : Relire PRESTATIONS, appeler recordCatalog() puis buildCatalogDelivery().
+
+--- the-final-judge --- [COÛTEUX ⚠️🔴 ~37 000 tokens fixes, agent séparé]
+Thème        : Audit lourd
+Libellé      : THE-FINAL-JUDGE — audit indépendant
+Produit un rapport archivé : OUI 📄
+Exécution    : Consulter Smart Conso API ET SMART-CONSO-TOKEN avant tout lancement (Article 22).
+
+--- the-deep-reader --- [COÛTEUX ⚠️🔴 ~37 000 tokens fixes + volume de conversation, agent séparé]
+Thème        : Audit lourd
+Libellé      : THE-DEEP-READER — relecture lourde du suivi
+Produit un rapport archivé : OUI 📄
+Exécution    : Consulter Smart Conso API ET SMART-CONSO-TOKEN avant tout lancement.
+
+RÉSUMÉ : 8 items sur 23 produisent un vrai rapport archivé (profil, kpi, smart-conso-token-scan,
+dream-team-photo, the-screener, coordinateur-catalogue, the-final-judge, the-deep-reader) ; 15
+restent des signaux console purs par conception (documentée explicitement dans leur propre
+commentaire de code : "jamais un vrai passage", "signal léger", "lecture seule").
+
+=====================================================================
+PARTIE 3 — CE QUI SE PASSE "EN DEHORS" DES 23 ITEMS : LES 6 GARDIENS AUTOMATIQUES
+=====================================================================
+Indépendamment de toute Ronde, 6 outils tournent automatiquement à CHAQUE commit (crochet
+scripts/hooks/check-last-commit.mjs) : ARGUS, HARMONIA, AXA-CHECK, CLEAN-DIRTY-OLD, CLONE-HUNTER,
+ALWAYS-NEW-CODE (couche légère). Leur rapport à circle-process-guardian :
+
+- ARGUS (scripts/check-argus.mjs) écrit un VRAI fichier de scan (docs/argus/scan-<horodatage>.txt)
+  à CHAQUE exécution (chaque commit ET chaque lancement manuel/via network-check-run). RIEN ne
+  garantit mécaniquement que docs/argus/index.md soit mis à jour en conséquence — 6 fichiers sont
+  restés orphelins ce soir avant d'être indexés rétroactivement (tâche #340). Corrigé par
+  findOrphanReportFiles() (scripts/doc-report.mjs), maintenant câblé dans runNetworkCheck() (donc
+  visible à chaque item network-check-run) — périmètre volontairement curaté
+  (REPORT_PER_RUN_REGISTRIES = ["argus"] seulement, jamais tout REGISTRIES par défaut : `kpi` a son
+  index à un chemin FRÈRE, `hyper-scan-checkpoint` ne loggue délibérément que les passages complets
+  avec checklist qualitative traitée — deux vraies exceptions trouvées en testant en direct, jamais
+  des divergences à corriger).
+- AXA-CHECK écrit un fichier interne (docs/axa-check/depth-checks.json) — un carnet de bord, jamais
+  un rapport narratif destiné à être lu directement.
+- HARMONIA, CLEAN-DIRTY-OLD, CLONE-HUNTER, ALWAYS-NEW-CODE (couche légère) n'écrivent JAMAIS rien
+  automatiquement — signal console uniquement à chaque commit ; leurs propres docs/<outil>/index.md
+  ne bougent que si l'agent qui pilote décide manuellement d'y noter une trouvaille réelle.
+
+circle-process-guardian doit donc distinguer 3 régimes différents, jamais 2 :
+  (A) écrit un fichier à CHAQUE passage, doit être indexé à chaque fois (ARGUS aujourd'hui)
+  (B) écrit un fichier interne non narratif (AXA-CHECK)
+  (C) ne produit jamais de fichier automatiquement, seulement sur décision de l'agent (les 4 autres
+      Gardiens + les 15 items "signal" de CIRCLE_ITEMS)
+
+=====================================================================
+PARTIE 4 — INTÉGRATION FUTURE : LE CHANGEMENT DE MODÈLE IA
+=====================================================================
+cf. docs/changement-de-modele-ia-conception.md pour le dossier de conception complet (20 questions
+de calibrage posées et répondues, idée mise de côté pour l'instant, rien codé).
+
+Résumé pour circle-process-guardian : un futur protocole en 3 questions doit s'insérer AVANT
+l'étape 1 ci-dessus (la question AUTO/PRIME/GOAT) :
+  Q1 — « Voulez-vous changer de modèle/agent IA pour exécuter la Ronde ? »
+  Si oui, Q2 — « Voulez-vous revenir à votre modèle actuel, avant ou après l'édition des rapports
+  et de l'analyse générale ? »
+    - Si AVANT : une pause supplémentaire s'insère entre l'étape 4 (exécution des scans) et
+      l'étape 5 (rédaction des rapports) — l'agent écrit les rapports tout de suite dans tous les
+      cas, la vérification de retour n'arrive qu'à la fin sous forme d'un dernier rappel.
+    - Si APRÈS : déroulement habituel (étapes 4-6 inchangées), avec un rappel final systématique
+      une fois l'étape 6 terminée : « Êtes-vous bien revenu au modèle précédent comme prévu ? »
+      (marqué explicitement "dernier rappel" quand c'est le cas).
+  Q1 sautée intégralement si la Ronde se déclenche sans personne présent (mode nocturne autonome,
+  Routine planifiée) — jamais de blocage en attente d'une réponse qui ne viendra pas.
+  La vérification technique de quel modèle exécute réellement la session (via un outil de
+  diagnostic de session) doit être utilisée pour repérer un désaccord avec la réponse de
+  l'utilisateur, JAMAIS pour sauter l'étape de confirmation manuelle elle-même.
+
+circle-process-guardian devra donc, une fois ce mécanisme construit, vérifier une étape
+supplémentaire : que Q1 a bien été posée à l'étape 1 (sauf mode nocturne autonome), et que le
+rappel de retour (Q3) a bien été honoré avant l'étape 5 ou 6 selon la branche choisie.
+
+=====================================================================
+PARTIE 5 — CE QUE circle-process-guardian DOIT VÉRIFIER, RÉCAPITULATIF
+=====================================================================
+1. La question AUTO/PRIME/GOAT a bien été posée (jamais sautée).
+2. (futur) La question de changement de modèle a bien été posée en premier, sauf mode nocturne.
+3. Chaque item coché a bien été exécuté (comparé à la liste réellement cochée en conversation —
+   circle-process-guardian ne peut pas le déduire seul, l'agent doit lui fournir la liste réelle).
+4. Chaque item marqué producesReport:true a bien produit son artefact attendu (fichier existant,
+   daté du jour de la Ronde).
+5. Le récapitulatif de fin de Ronde a bien été construit et livré en fichier texte.
+6. record-run a bien été appelé (le compteur de fraîcheur post-commit doit être retombé à 0).
+7. findOrphanReportFiles() ne remonte aucun fichier ARGUS (ou futur registre "un fichier par
+   passage") resté orphelin.
+8. findRegistriesMissingFromCircle() ne remonte aucun registre orphelin.
+
+Jamais une correction automatique à aucune de ces 8 vérifications — signaler seulement, comme tout
+le reste de ce paysage d'outils (décision explicite de l'utilisateur, 2026-09-21).

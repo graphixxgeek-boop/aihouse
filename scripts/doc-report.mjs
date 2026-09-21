@@ -143,6 +143,43 @@ export function findEngineCodeInRegistries(registries = REGISTRIES) {
   return registries.filter((r) => ENGINE_CODE_PREFIXES.some((prefix) => (r.scriptPath ?? "").startsWith(prefix)));
 }
 
+// findOrphanReportFiles() (2026-09-21, tâche #340, question directe de l'utilisateur : « en plus des
+// 18 outils, il y a des rapports qui doivent être produits mécaniquement à cette occasion [...] est-ce
+// qu'on crée un petit outil juste pour s'assurer que le process circle est bien suivi mécaniquement,
+// à chaque fois ? »). Ferme un vrai trou trouvé le soir même en vérifiant : ARGUS écrit un vrai
+// fichier de scan à CHAQUE exécution (post-commit compris, jamais seulement pendant une Ronde), mais
+// rien ne garantissait que `index.md` suive — 6 fichiers réels sont restés orphelins (jamais
+// référencés) avant d'être indexés rétroactivement ce soir même. Générique, jamais spécifique à
+// ARGUS (Article 24, évolutivité) : n'importe quel registre dont le dossier contient des fichiers
+// datés (un nom incluant AAAA-MM-JJ, le patron déjà partagé par tous les scans/éditions de ce
+// paysage) non mentionnés dans son propre `index.md` est flaggé par nom, jamais deviné. Signale
+// seulement — jamais une correction automatique, même discipline que le reste de Doc-Report.
+//
+// PÉRIMÈTRE VOLONTAIREMENT CURATÉ, jamais TOUT `REGISTRIES` par défaut (limite honnête trouvée en
+// testant en direct, Article 3/19) : deux registres cassent la convention "un fichier par passage =
+// une ligne d'index" pour des raisons chacune légitimes, jamais une divergence à corriger — `kpi`
+// a son index à un chemin FRÈRE (`docs/referentiel/kpi-index.md`), jamais `kpi-rapports/index.md` ;
+// `hyper-scan-checkpoint` ne loggue délibérément QUE les passages complets avec checklist
+// qualitative traitée (cf. son propre index.md : « pas seulement la partie mécanique »), jamais un
+// simple passage mécanique comme celui qui a produit son tout premier fichier. `REPORT_PER_RUN_REGISTRIES`
+// reste donc une liste explicitement curatée (même statut que `KNOWN_LESSONS` du Smart Breaker,
+// Article 24) — à étendre seulement quand un futur registre confirme réellement écrire un fichier
+// par passage ET indexer chacun d'eux, jamais par simple présomption.
+export const REPORT_PER_RUN_REGISTRIES = ["argus"];
+export function findOrphanReportFiles(registries = REGISTRIES.filter((r) => REPORT_PER_RUN_REGISTRIES.includes(r.slug)), { listDirImpl = (dir) => (existsSync(dir) ? readdirSync(dir) : []), readFileImpl = readFileSync, existsImpl = existsSync } = {}) {
+  const findings = [];
+  for (const r of registries) {
+    const dir = join(ROOT, r.path);
+    const files = listDirImpl(dir).filter((f) => f !== "index.md" && /\d{4}-\d{2}-\d{2}/.test(f) && (f.endsWith(".txt") || f.endsWith(".md")));
+    if (!files.length) continue;
+    const indexPath = join(dir, "index.md");
+    const indexText = existsImpl(indexPath) ? readFileImpl(indexPath, "utf8") : "";
+    const orphans = files.filter((f) => !indexText.includes(f));
+    if (orphans.length) findings.push({ slug: r.slug, path: r.path, orphans });
+  }
+  return findings;
+}
+
 // findGardiensMissingFromSource() (2026-09-21, tâche #290 « registre canonique des outils ») —
 // root cause réelle trouvée en investiguant : aucune liste unique ne dit "quels outils DOIVENT être
 // appelés où" ; chaque script qui a besoin de "tous les outils" (HYPER-SCAN-CHECKPOINT, CIRCLE_ITEMS,

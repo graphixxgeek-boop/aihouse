@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 250'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 251'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3165,7 +3165,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // de portée de la suite de tests.
   const fakeShImpl = (cmd) => (cmd.includes('check-house') ? 'OK — suite verte.' : '');
   const networkResult = runNetworkCheck({ shImpl: fakeShImpl });
-  assert.equal(networkResult.rows.length, 11, 'runNetworkCheck() must genuinely produce all 11 rows of the real network synthesis (8 original + the 2026-09-21 findJudgeSpawnsWithoutConsultation() rows for THE-FINAL-JUDGE/THE-DEEP-READER + the 2026-09-21 évolutivité audit AGENT_SCRIPT_FILES row), never crash partway through nor silently drop one');
+  assert.equal(networkResult.rows.length, 12, 'runNetworkCheck() must genuinely produce all 12 rows of the real network synthesis (8 original + the 2026-09-21 findJudgeSpawnsWithoutConsultation() rows for THE-FINAL-JUDGE/THE-DEEP-READER + the 2026-09-21 évolutivité audit AGENT_SCRIPT_FILES row + the 2026-09-21 Doc-Report findOrphanReportFiles() row), never crash partway through nor silently drop one');
   assert.ok(networkResult.rows.every((r) => typeof r.name === 'string' && typeof r.result === 'string' && r.result.length > 0), 'every row must carry a real name and a real, non-empty result string — never an undefined value leaking from a broken sub-computation');
   assert.ok(networkResult.rows.some((r) => r.name.includes('SMART-CONSO-TOKEN')), 'the SMART-CONSO-TOKEN rhythm row specifically (the exact one that crashed tonight) must be genuinely present and computed, not skipped');
   // Tâche #137 (2026-09-21, question directe de l'utilisateur sur les priorités de scan de l'équipe
@@ -4034,7 +4034,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // d'un vrai retard constaté deux fois de suite sur la mise à jour du profil utilisateur.
   const {
     CIRCLE_ITEMS, mostRecentDate, daysSince, buildCircleReport, formatCircleMenu,
-    shouldRemindCircleTasks, REMINDER_COMMIT_THRESHOLD, ALERT_ICON, FINAL_JUDGE_TOKEN_COST,
+    shouldRemindCircleTasks, REMINDER_COMMIT_THRESHOLD, ALERT_ICON, REPORT_ICON, FINAL_JUDGE_TOKEN_COST,
     THEME_ORDER, groupCircleReportByTheme, checkHtmlWiring, oldestOpenTaskDate,
     buildCircleRunSummaryText, findRegistriesMissingFromCircle, CIRCLE_EXCLUDED_REGISTRIES,
     recommendCircleSelection, NOT_RECOMMENDED_BY_DEFAULT, primeAddableItems,
@@ -4119,6 +4119,15 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(menuPlain.includes(judgeItem.label), 'the plain, uncolored rendering must still name THE-FINAL-JUDGE by name — colorize only strips the ANSI styling, never the row itself');
   assert.ok(menuPlain.includes('Tokens Claude'), 'the menu must render a distinct Claude-token estimate column (2026-09-20 catalog enrichment), never merged into or hidden behind the Gemini/API cost column');
   assert.ok(menuPlain.includes(report.find((r) => r.id === 'profil').tokensEstimes), 'the plain rendering must actually include a real item\'s token estimate text, not just an empty column header');
+
+  // REPORT_ICON (2026-09-21, task #340, direct user question on which of the 18 Ronde items
+  // genuinely produce an archived report) — the menu must visually distinguish an item whose
+  // execution genuinely writes a persisted, indexed artifact from one that is console-only.
+  assert.ok(menuPlain.includes(`${REPORT_ICON} ${report.find((r) => r.id === 'profil').label}`), 'an item flagged producesReport:true (profil, which genuinely writes a new fiche + index entry) must carry the report icon in the menu, never left indistinguishable from a console-only signal');
+  assert.ok(!menuPlain.includes(`${REPORT_ICON} ${report.find((r) => r.id === 'the-king-signal').label}`), 'an item with no producesReport flag (the-king-signal, console-only by its own documented design) must never carry the report icon');
+  const runSummaryWithReport = buildCircleRunSummaryText([{ id: 'profil', label: report.find((r) => r.id === 'profil').label, outcome: 'fait', link: 'docs/profil-utilisateur/index.md' }, { id: 'the-king-signal', label: report.find((r) => r.id === 'the-king-signal').label, outcome: 'ok' }], { dateLabel: '2026-09-21', items: report });
+  assert.ok(runSummaryWithReport.includes(`${REPORT_ICON} ${report.find((r) => r.id === 'profil').label}`), 'the end-of-Ronde recap must likewise mark a genuine report-producing item with the icon, looked up honestly from the real CIRCLE_ITEMS producesReport flag rather than guessed from the entry alone');
+  assert.ok(!runSummaryWithReport.includes(`${REPORT_ICON} ${report.find((r) => r.id === 'the-king-signal').label}`), 'the recap must never flag a console-only signal item with the report icon either');
 
   assert.equal(shouldRemindCircleTasks(NaN), false, 'an unknown/uncountable commit delta must never trigger a fabricated reminder');
   assert.equal(shouldRemindCircleTasks(REMINDER_COMMIT_THRESHOLD - 1), false, 'one commit short of the real threshold must stay silent, never an off-by-one early reminder');
@@ -5104,7 +5113,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // (docs/suivi #230), jamais celui qui la prend. Testé avec un readFileImpl injecté et un
   // sous-ensemble isolé de registres — jamais dépendant du contenu réel des scripts du dépôt, qui
   // peut changer indépendamment de ce test.
-  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex, LOCAL_JOURNALS, auditLocalJournals, findJournalsMissingFromGitignore, findUndeclaredLocalJournals, findEngineCodeInRegistries, findGardiensMissingFromSource, flagFindBoosterCandidates, checkHtmlReportTheme } = await import('../scripts/doc-report.mjs');
+  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex, LOCAL_JOURNALS, auditLocalJournals, findJournalsMissingFromGitignore, findUndeclaredLocalJournals, findEngineCodeInRegistries, findGardiensMissingFromSource, flagFindBoosterCandidates, checkHtmlReportTheme, findOrphanReportFiles, REPORT_PER_RUN_REGISTRIES } = await import('../scripts/doc-report.mjs');
   assert.ok(REGISTRIES.length >= 15, 'the registry table must cover every real tool registry of the network, never a partial or forgotten subset');
   assert.ok(REGISTRIES.every((r) => r.slug && r.label && r.family && r.path && r.decision), 'every registry entry must be fully specified — a half-filled row would silently break the family grouping or the decision audit');
 
@@ -5166,6 +5175,26 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(byFamily.get('Test').length, 4, 'rows must be grouped by their declared family, never flattened or regrouped by a guessed criterion');
   assert.deepEqual(mismatches.map((m) => m.slug), ['unwired-html-tool'], 'the top-level mismatches list must surface exactly the real HTML-wiring gap, ready for a human/agent to read — Doc-Report itself never fixes it');
   console.log('Passed: Doc-Report (task #165) mechanically audits the already-decided HTML/texte choice against the real producing script\'s source (never guessed from a tool\'s name), flags an undeclared docs/ registry as a real gap while sparing the reference/suivi folders, cross-references tool-usage.mjs\'s real usage history to spot a registry nobody ever solicits — a genuine wiring gap (THE-DEEP-READER, Simulations) was found on its very first real run against the live repository — findEngineCodeInRegistries() flags any registry whose scriptPath points at the game engine (lib/app/components) rather than a real scripts/*.mjs team-member tool, verified live to hold on every real registry today — and findGardiensMissingFromSource() (task #290, the canonical tool registry) reuses AGENT_CATEGORIES + REGISTRIES to verify live that hyper-scan-checkpoint.mjs genuinely calls every current Gardien sacré du code, never a second divergent list.');
+
+  // findOrphanReportFiles() (2026-09-21, task #340, direct user question: "en plus des 18 outils,
+  // il y a des rapports qui doivent être produits mécaniquement à cette occasion") — closes a real
+  // gap found the same night: ARGUS writes a real scan file on EVERY run (post-commit included),
+  // but nothing guaranteed index.md would follow — 6 real files sat orphaned before tonight.
+  const fakeArgusRegistry = [{ slug: 'argus', label: 'ARGUS', family: 'Test', path: 'docs/fake-argus/', decision: 'texte', scriptPath: 'scripts/check-argus.mjs' }];
+  const fakeOrphanListDir = (dir) => (dir.endsWith('fake-argus/') ? ['scan-2026-09-19-10-00.txt', 'scan-2026-09-20-11-00.txt', 'index.md'] : []);
+  const fakeOrphanReadFile = () => '| Date | Rapport |\n|---|---|\n| 2026-09-19 | [scan-2026-09-19-10-00.txt](scan-2026-09-19-10-00.txt) |\n';
+  const orphanFindings = findOrphanReportFiles(fakeArgusRegistry, { listDirImpl: fakeOrphanListDir, readFileImpl: fakeOrphanReadFile, existsImpl: () => true });
+  assert.equal(orphanFindings.length, 1, 'a registry whose directory holds a dated report file never mentioned in its own index.md must be flagged — the exact real gap 6 real ARGUS scan files fell into before tonight');
+  assert.deepEqual(orphanFindings[0].orphans, ['scan-2026-09-20-11-00.txt'], 'only the genuinely unindexed dated file must be named — a file already linked from index.md must never be flagged, and index.md itself must never be treated as an orphan of itself');
+  assert.deepEqual(findOrphanReportFiles(fakeArgusRegistry, { listDirImpl: () => ['index.md'], readFileImpl: fakeOrphanReadFile, existsImpl: () => true }), [], 'a registry directory with no dated report file at all (only index.md) must never fabricate a finding');
+  // Curated scope, never every REGISTRIES by default (real false positives found live testing this
+  // the same night, Article 3/19): `kpi`'s real index lives at a SIBLING path
+  // (docs/referentiel/kpi-index.md, never kpi-rapports/index.md), and `hyper-scan-checkpoint`
+  // deliberately logs only full qualitative passages, never a bare mechanical-only run — both would
+  // have been false-flagged by a blind directory-vs-index.md scan across every registry.
+  assert.deepEqual(REPORT_PER_RUN_REGISTRIES, ['argus'], 'the report-per-run scope must stay a deliberately curated allowlist, not silently widened to registries whose own conventions (kpi\'s sibling index path, hyper-scan-checkpoint\'s qualitative-passage-only logging) would produce real false positives');
+  assert.deepEqual(findOrphanReportFiles(), [], 'checked live against this project\'s own real docs/argus/: after tonight\'s retroactive indexing of the 6 real orphaned scan files, zero real gap must remain — a guarantee that breaks the day a future ARGUS run is left unindexed again');
+  console.log('Passed: findOrphanReportFiles() (task #340, 2026-09-21) closes the real gap found the same night — ARGUS writes a genuine scan file on every run but nothing enforced index.md keeping up, leaving 6 real files orphaned (one from that very evening\'s own CIRCLE-TASKS Ronde) before being indexed retroactively — flags only a genuinely unindexed dated file, never index.md itself nor a directory with no report files at all, and keeps its scope to a deliberately curated allowlist (REPORT_PER_RUN_REGISTRIES) rather than every REGISTRIES entry, since kpi\'s sibling-path index and hyper-scan-checkpoint\'s qualitative-passage-only logging would otherwise produce real false positives — verified live to find zero remaining gap in the project\'s own real docs/argus/ tonight, and now wired into runNetworkCheck() so every future Ronde carries this same check automatically.');
 
   // checkHtmlReportTheme() (2026-09-22, explicit user rule: every HTML report must stay in the
   // game's real colors even as the future graphic charter evolves, and must open at 150% zoom).

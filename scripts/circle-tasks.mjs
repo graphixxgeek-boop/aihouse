@@ -45,6 +45,12 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 // caractères ANSI rouges sont affichables. Jamais mélangé : une fenêtre à cocher ne rend jamais les
 // codes ANSI, elle recevrait du texte brut illisible — seul le préfixe ⚠️🔴 y est utilisé.
 export const ALERT_ICON = "⚠️🔴";
+// REPORT_ICON (2026-09-21, tâche #340, question directe de l'utilisateur : « je voudrais un icone
+// supplementaire "rapport" partout ou c'est necessaire, pour ceux qui produisent des rapport vs les
+// autres ») — distingue un item qui produit réellement un artefact durable et indexé (nouvelle
+// fiche, fichier archivé, nouvelle édition) d'un item qui n'est qu'un signal console, jamais deviné
+// depuis le nom de l'item : lu directement sur `producesReport` de CIRCLE_ITEMS.
+export const REPORT_ICON = "📄";
 export const FINAL_JUDGE_TOKEN_COST = 37000;
 export function red(text) { return `\x1b[31m${text}\x1b[0m`; }
 
@@ -77,6 +83,7 @@ export const CIRCLE_ITEMS = [
     cout: "gratuit — lecture/écriture de texte, zéro appel API",
     tokensEstimes: "quelques milliers de tokens (lecture de l'index + de la dernière fiche, rédaction d'une nouvelle observation datée)",
     execute: "Suivre la procédure de docs/regles-de-travail.md §9 (Historisation du profil) : comparer les signaux de la session en cours à la dernière fiche, écrire une nouvelle observation datée, mettre à jour l'index.",
+    producesReport: true,
   },
   {
     id: "referentiel",
@@ -105,6 +112,7 @@ export const CIRCLE_ITEMS = [
     cout: "gratuit — node scripts/kpi-report.mjs, zéro nouvel appel API",
     tokensEstimes: "faible à modéré — sortie du script (quelques milliers de tokens) + rédaction de l'entrée d'index",
     execute: "Lancer node scripts/kpi-report.mjs et lire au moins la famille Robustesse du code (100% mécanique) — les autres familles restent honnêtement N/A si aucun serveur de dev avec du vrai trafic n'est joignable.",
+    producesReport: true,
   },
   // always-new-code-signal RETIRÉ le 2026-09-21 : ALWAYS-NEW-CODE promu sixième Gardien sacré (couche
   // légère seulement — recommendZone()/addendaSignal()/churnSignal(), zéro raisonnement) — tourne
@@ -231,6 +239,7 @@ export const CIRCLE_ITEMS = [
     cout: "gratuit — scan de portée Global, lecture de fichiers, zéro appel API",
     tokensEstimes: "faible à modéré — sortie du scan + lecture des fichiers qu'il pointe comme volumineux",
     execute: "Relancer un scan de portée Global (cf. docs/referentiel/smart-conso-token.md) — particulièrement utile après une session qui a fait grossir CLAUDE.md ou docs/, pour repérer une dérive avant qu'elle ne s'accumule trop.",
+    producesReport: true,
   },
   // tool-brain-report (2026-09-21, demande explicite de l'utilisateur : « tool brain délivre un
   // rapport txt à chaque ronde, pour te dire si tu as suffisamment utilisé les outils [...] et
@@ -260,6 +269,7 @@ export const CIRCLE_ITEMS = [
     cout: "gratuit — lecture de la liste des outils déjà nommés dans CLAUDE.md/docs/regles-de-travail.md, mise en forme, zéro appel API",
     tokensEstimes: "modéré — rédaction d'un document HTML complet à partir d'une liste déjà connue",
     execute: "Régénérer le document récapitulatif (nom, rôle, commentaire sur le nom choisi) de tous les outils/agents nommés du projet et le livrer en fichier HTML à l'utilisateur (cf. scripts/html-report.mjs) — pour le plaisir, jamais un livrable technique.",
+    producesReport: true,
   },
   // THE-SCREENER (2026-09-20, demande explicite de l'utilisateur : « il y a aussi la possibilité de
   // demander une capture d'écran de la simulation (avec coût API) si je ne me trompe pas »).
@@ -275,6 +285,7 @@ export const CIRCLE_ITEMS = [
     cout: "zéro appel à l'API Gemini pour le mécanisme lui-même (capture Playwright locale) — CONDITIONNEL : n'a de sens que si une session/un serveur avec un vrai état est déjà en cours ; ne jamais lancer une nouvelle simulation juste pour cet item",
     tokensEstimes: "modéré — lecture vision de 2 images par l'agent + rédaction de la notation",
     execute: "Lancer node scripts/the-screener-capture.mjs contre un serveur DÉJÀ actif (dev ou site en ligne) avec une vraie session en cours, lire les 2 captures et noter contre docs/referentiel/regles-des-graphismes.md — jamais déclencher une nouvelle simulation juste pour cet item.",
+    producesReport: true,
   },
   // ines-official-signal (2026-09-21, tâche #168) : déclenchement PÉRIODIQUE explicitement demandé
   // par l'utilisateur — jamais réservé à une demande explicite ponctuelle (correction d'une première
@@ -352,6 +363,7 @@ export const CIRCLE_ITEMS = [
     cout: "gratuit — node scripts/le-coordinateur.mjs catalogue, écrit une nouvelle version seulement si PRESTATIONS a réellement changé, zéro appel API",
     tokensEstimes: "faible si inchangé (texte simple) ; modéré si nouveau (rédaction d'un rapport HTML complet)",
     execute: "AVANT tout appel de code : relire PRESTATIONS et le paysage complet des outils (docs/regles-de-travail.md §7ter) pour identifier toute combinaison de 2-3 outils réellement utile pas encore proposée ensemble — l'ajouter comme nouvelle prestation nommée si elle apporte une vraie valeur, jamais mécaniquement générée. Appeler ENSUITE recordCatalog() puis buildCatalogDelivery() (scripts/le-coordinateur.mjs) — livrer le résultat en fichier HTML si written:true (nouvelle version réelle, review comprise), ou juste le texte simple si written:false (rien n'a changé depuis la dernière fois, review déjà faite sans rien trouver de neuf).",
+    producesReport: true,
   },
   // THE-FINAL-JUDGE (2026-09-20, demande explicite de l'utilisateur : « integre le dans la liste à
   // cocher malgré tout [...] avec un panneau d'avertissement [...] caractères couleur rouge [...]
@@ -367,6 +379,7 @@ export const CIRCLE_ITEMS = [
     tokensEstimes: `~${FINAL_JUDGE_TOKEN_COST.toLocaleString("fr-FR")} tokens fixes — le seul chiffre de ce paysage issu d'une vraie recherche documentée plutôt que d'une estimation à l'ordre de grandeur`,
     execute: "Consulter Smart Conso API ET SMART-CONSO-TOKEN avant de lancer quoi que ce soit (Article 22) — jamais un réflexe de routine, seulement si un vrai besoin de regard indépendant justifie la dépense.",
     costly: true,
+    producesReport: true,
   },
   // THE-DEEP-READER (2026-09-20, cousin de THE-FINAL-JUDGE, jamais un mode de THE-FINAL-JUDGE —
   // règle d'entrée opposée : reçoit la conversation, jamais le code/produit, cf.
@@ -382,6 +395,7 @@ export const CIRCLE_ITEMS = [
     tokensEstimes: `~${FINAL_JUDGE_TOKEN_COST.toLocaleString("fr-FR")} tokens fixes au minimum, plus selon la taille de l'historique fourni — jamais un chiffre constant contrairement à THE-FINAL-JUDGE`,
     execute: "Consulter Smart Conso API ET SMART-CONSO-TOKEN avant de lancer quoi que ce soit (même actionType agent_subagent_spawn que THE-FINAL-JUDGE) — préférer d'abord la version légère gratuite (docs/systeme-de-suivi.md) sauf besoin réel d'un regard non biaisé.",
     costly: true,
+    producesReport: true,
   },
 ];
 
@@ -631,7 +645,8 @@ export function recommendCircleSelectionWithPeriodicity(report, { lastRunDates =
 export function formatCircleMenu(report, { colorize = true } = {}) {
   const lines = ["| Item | Coût API | Tokens Claude (estimation) | Fraîcheur |", "|---|---|---|---|"];
   for (const r of report) {
-    const label = r.costly && colorize ? red(`${ALERT_ICON} ${r.label}`) : r.label;
+    const withReportIcon = r.producesReport ? `${REPORT_ICON} ${r.label}` : r.label;
+    const label = r.costly && colorize ? red(`${ALERT_ICON} ${withReportIcon}`) : withReportIcon;
     const cout = r.costly && colorize ? red(r.cout) : r.cout;
     const tokens = r.costly && colorize ? red(r.tokensEstimes) : r.tokensEstimes;
     lines.push(`| ${label} | ${cout} | ${tokens} | ${r.staleness} |`);
@@ -689,18 +704,22 @@ export function recordCircleTasksRun(totalCommitCount, now = Date.now()) {
 // l'écart qu'Article 13 interdit. `renderHtmlReport()` n'a donc plus sa place ici.
 // `entries`: Array<{ id: string, label: string, outcome: string, link?: string }>.
 export const CIRCLE_RUN_SUMMARY_PATH = ".circle-tasks-run-summary-latest.txt";
-export function buildCircleRunSummaryText(entries, { dateLabel } = {}) {
+export function buildCircleRunSummaryText(entries, { dateLabel, items = CIRCLE_ITEMS } = {}) {
   const lines = [
     "=== CIRCLE-TASKS — récapitulatif de la Ronde ===",
     `Date : ${dateLabel ?? new Date().toISOString()}`,
-    "Index léger : ce qui a tourné et un pointeur vers la sortie déjà produite par chaque item, jamais son contenu dupliqué ici.",
+    `Index léger : ce qui a tourné et un pointeur vers la sortie déjà produite par chaque item, jamais son contenu dupliqué ici. ${REPORT_ICON} = produit un vrai rapport archivé et indexé ; sans icône = signal console seulement, rien écrit sur disque.`,
     "",
   ];
   if (!entries || !entries.length) {
     lines.push("Aucun item n'a été coché pour cette Ronde.");
   } else {
     lines.push("| Item exécuté | Résultat | Lien |", "|---|---|---|");
-    for (const e of entries) lines.push(`| ${e.label ?? e.id ?? "—"} | ${e.outcome ?? "—"} | ${e.link ?? "—"} |`);
+    for (const e of entries) {
+      const producesReport = items.find((i) => i.id === e.id)?.producesReport;
+      const label = producesReport ? `${REPORT_ICON} ${e.label ?? e.id ?? "—"}` : (e.label ?? e.id ?? "—");
+      lines.push(`| ${label} | ${e.outcome ?? "—"} | ${e.link ?? "—"} |`);
+    }
   }
   lines.push("", "CIRCLE-TASKS — la sélection des items reste toujours confirmée par une fenêtre à cocher avant exécution, jamais un tout-en-un silencieux.");
   return lines.join("\n");

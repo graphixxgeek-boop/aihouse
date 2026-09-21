@@ -45,6 +45,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { sh, assertNotAPersonnage, AGENT_CATEGORIES } from "./lib-shell.mjs";
 import { collectCoverage, robustnessScore, LIB_MAP, AGENT_SCRIPT_FILES } from "./axa-check.mjs";
+import { findOrphanReportFiles } from "./doc-report.mjs";
 import { summarizeArgusOutput, summarizeHarmoniaOutput } from "./hyper-scan-checkpoint.mjs";
 import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
 import { classifyCheckLevel } from "./check-level-target.mjs";
@@ -875,6 +876,13 @@ export function runNetworkCheck({ shImpl = sh } = {}) {
   const rulesMdText = existsSync(rulesMdPath) ? readFileSync(rulesMdPath, "utf8") : "";
   const missingAgentFiles = findScriptsMissingFromAgentFiles(rulesMdText);
   rows.push({ name: "AXA-CHECK (Agents absents d'AGENT_SCRIPT_FILES)", result: missingAgentFiles.length ? `à regarder (${missingAgentFiles.join(", ")})` : "ok", when: now });
+
+  // Doc-Report (2026-09-21, tâche #340, trouvaille réelle : 6 fichiers de scan ARGUS restés
+  // orphelins avant d'être indexés rétroactivement) — vérifie qu'un registre à "un fichier par
+  // passage" (ARGUS aujourd'hui, périmètre curaté explicitement, cf. REPORT_PER_RUN_REGISTRIES)
+  // n'accumule pas de fichiers jamais référencés dans son propre index.md.
+  const orphanReportFindings = findOrphanReportFiles();
+  rows.push({ name: "Doc-Report (rapports orphelins jamais indexés)", result: orphanReportFindings.length ? `à regarder (${orphanReportFindings.map((f) => `${f.slug}: ${f.orphans.length}`).join(", ")})` : "ok", when: now });
 
   saveState({ lastHead: head, lastWhen: now });
   return { duplicate, previousRun: state, rows };
