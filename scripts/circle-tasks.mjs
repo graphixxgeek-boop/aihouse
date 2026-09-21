@@ -191,6 +191,23 @@ export const CIRCLE_ITEMS = [
     tokensEstimes: "faible à modéré — sortie du scan + lecture des fichiers qu'il pointe comme volumineux",
     execute: "Relancer un scan de portée Global (cf. docs/referentiel/smart-conso-token.md) — particulièrement utile après une session qui a fait grossir CLAUDE.md ou docs/, pour repérer une dérive avant qu'elle ne s'accumule trop.",
   },
+  // tool-brain-report (2026-09-21, demande explicite de l'utilisateur : « tool brain délivre un
+  // rapport txt à chaque ronde, pour te dire si tu as suffisamment utilisé les outils [...] et
+  // eventuellement diagnostiquer des ameliorations à apporter sur le systeme global "tool-brain" »).
+  // Réutilise formatToolBrainReport() (scripts/tool-brain.mjs) tel quel, jamais un second calcul —
+  // thème "Passages réels (smoke run)" (jamais "KPI & scans", déjà plein à 4 items) : comme
+  // profil-utilisateur-guard/network-check-run, ce n'est jamais une simple lecture d'index déjà
+  // calculé, mais un vrai calcul relancé contre l'historique réel à chaque passage. Aucun signal de
+  // fraîcheur mécanique ici (tool-brain n'a pas de registre propre, catégorie « Membre certifié
+  // classique »), même fallback honnête que "correctifs"/"referentiel" ci-dessus.
+  {
+    id: "tool-brain-report",
+    theme: "Passages réels (smoke run)",
+    label: "Rapport tool-brain (usage réel des outils + auto-diagnostic)",
+    cout: "gratuit — relit .tool-usage-history.json (compteur déjà existant), zéro appel API",
+    tokensEstimes: "faible — sortie compacte du script",
+    execute: "Lancer `node scripts/tool-brain.mjs rapport` et lire le rapport (outils du catalogue jamais sollicités, outils les moins utilisés, auto-diagnostic borné au périmètre de tool-brain lui-même) — jamais un jugement sur le reste du paysage, seulement l'usage réel des outils et tool-brain lui-même.",
+  },
   // « Photo de la dream team » (2026-09-20, demande explicite de l'utilisateur, pendant une pause
   // fun : « garde en mémoire et écrit que cette "photo" de la dream team fait partie des tâches
   // proposées lors des rondes périodiques »). Seul item de CIRCLE_ITEMS purement récréatif — jamais

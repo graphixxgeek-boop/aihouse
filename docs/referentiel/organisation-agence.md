@@ -23,18 +23,34 @@ le roster lui-même plutôt que de le dupliquer.
 ## 1. Deux axes, toujours séparés
 
 Toute confusion entre ces deux axes est une erreur de lecture de l'organigramme — ils répondent à
-des questions différentes et se combinent librement (ex. LE-COORDINATEUR est « Utilitaire nommé »
-sur l'axe A et « Direction » sur l'axe B en même temps).
+des questions différentes et se combinent librement (ex. LE-COORDINATEUR est « Membre certifié
+(classique) » sur l'axe A et « Agent Cadre » (Direction) sur l'axe B en même temps).
 
 ### Axe A — Statut de documentation (« quel dossier ce poste a-t-il ? »)
 
-- **Agent** (badge 🎖️ éligible) : instanciation propre (`docs/referentiel/<slug>.md`) + registre
+**Reclarifié le 2026-09-21** (correction explicite de l'utilisateur : « les agents que tu cites
+[LE-COORDINATEUR, CIRCLE-TASKS, route-booster] [...] ce sont bien des membres certifiés avec badge
+[...] refaisons une passe [...] pour que tout soit parfaitement clair à 100% »). Le badge 🎖️
+« Membre certifié » couvre désormais DEUX catégories, jamais une seule — le critère qui les sépare
+n'est jamais le badge lui-même, mais l'existence ou non d'une connaissance PROPRE AU PROJET à
+documenter à part :
+
+- **Agent** — dit aussi Sage (sans connaissance propre au projet mais un vrai domaine de jugement) ou
+  Gardien sacré (cf. §3 ci-dessous) : instanciation propre (`docs/referentiel/<slug>.md`) + registre
   dédié (`docs/<slug>/`). Le blueprint générique est la norme en plus, sans être strictement
   obligatoire (un Agent peut être déclaré `cousinOf` un autre — seul cas actuel, THE-DEEP-READER).
-- **Utilitaire nommé** : a un nom, mais aucune connaissance propre au projet à documenter à part —
-  sa seule valeur est d'appeler/agréger/mettre en forme ce que les Agents disent déjà. Jamais de
-  blueprint, jamais de registre séparé.
-- **Infrastructure** : pas de nom propre, la plomberie qui fait tourner les Agents.
+- **Membre certifié (classique)** *(nouveau statut, 2026-09-21)* — LE-COORDINATEUR, CIRCLE-TASKS,
+  route-booster, tool-brain : badge 🎖️ réel, mais AUCUNE connaissance propre au projet à documenter
+  à part — sa seule valeur est d'appeler/agréger/mettre en forme ce que les Agents disent déjà.
+  Jamais de blueprint, jamais de registre, jamais d'instanciation séparée — `checkAgentOnboarding()`
+  (`le-coordinateur.mjs`) porte le paramètre `ownKnowledge: false` pour ce statut, qui dispense
+  exactement ces 3 exigences sans jamais dispenser la présence dans la table maîtresse elle-même.
+- **Utilitaire nommé** *(portée réduite depuis le 2026-09-21)* : a un nom, mais n'a PAS (encore) le
+  statut de membre certifié — find-brain, CHARTER-SPY, tool-usage.mjs, Doc-Report, le gabarit HTML.
+  Aucun badge. Leur éventuelle promotion vers « Membre certifié (classique) » reste une question
+  ouverte, jamais tranchée silencieusement (cf. `docs/regles-de-travail.md` §7ter).
+- **Infrastructure** : pas de nom propre, la plomberie qui fait tourner les Agents et les Membres
+  certifiés classiques.
 
 ### Axe B — Rôle dans l'organigramme (« à quel niveau ce poste travaille-t-il ? »)
 
@@ -158,8 +174,9 @@ Dette technique et navigation dans du code volumineux.
 promotion actée après vérification qu'il remplit le critère double scan-de-qualité + tourne à chaque
 commit.)*
 - find-booster — index par concept dans un gros fichier déjà structuré
-- route-booster — points de coupe candidats pour découper une fonction géante (Utilitaire nommé,
-  pas Agent — reste dans ce groupe fonctionnel malgré son statut de documentation différent)
+- route-booster — points de coupe candidats pour découper une fonction géante (Membre certifié
+  classique depuis le 2026-09-21, pas Agent — reste dans ce groupe fonctionnel malgré son statut
+  de documentation différent)
 - ALWAYS-NEW-CODE — dette d'organisation, l'épreuve de la page blanche rendue concrète (Article 23)
 
 ### La Cour du Roi

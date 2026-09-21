@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 226'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 227'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3495,6 +3495,93 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 }
 
 {
+  // ownKnowledge / « Membre certifié (classique) » (2026-09-21, reclarification explicite de
+  // l'utilisateur : « il y a des membres certifiés qui ont une connaissance propre au projet et
+  // d'autres qui n'en ont pas [...] oui ce sont tous des membres certifiés » puis « membre certifié
+  // couvre les deux catégories »). LE-COORDINATEUR/CIRCLE-TASKS/route-booster/tool-brain passent de
+  // "Utilitaire nommé" (aucun badge) à "Membre certifié (classique)" (badge 🎖️, mais sans exiger
+  // instanciation/registre/blueprint — ils n'ont, par définition, aucune connaissance propre au
+  // projet à documenter à part).
+  const { checkAgentOnboarding: checkClassique, checkAllAgentBadges: sweepClassique, CLASSIQUE_STATUT, CERTIFIABLE_STATUTS } = await import('../scripts/le-coordinateur.mjs');
+  assert.deepEqual(CERTIFIABLE_STATUTS, ['Agent', CLASSIQUE_STATUT], 'the two badge-eligible statuts must be exactly Agent and the classique statut, never a third value invented silently');
+
+  const classiqueComplete = checkClassique('FAKE-CLASSIQUE', { toolsTableMarkdown: '| Outil | Statut | Coût | Déclenchement |\n|---|---|---|---|\n| FAKE-CLASSIQUE | Membre certifié (classique) | gratuit | à la demande |', prestations: [{ demande: 'Faire une chose classique', outils: ['FAKE-CLASSIQUE'], cout: 'gratuit' }], existingPaths: new Set(), ownKnowledge: false });
+  assert.equal(classiqueComplete.gaps.length, 0, 'a classique member must reach zero gaps with NO instanciation/registre/blueprint on disk at all — those three requirements must never apply when ownKnowledge is false');
+  assert.equal(classiqueComplete.badge, '🎖️ Membre certifié (classique) (catégorie non répertoriée — à ajouter dans AGENT_CATEGORIES)', 'the badge label must explicitly say "(classique)" to distinguish it from a Sage/Gardien with full own-knowledge, while still carrying the real 🎖️ icon — both are genuine membres certifiés');
+  assert.ok(!/instanciation|registre|blueprint/.test(classiqueComplete.message), 'the certification message itself must never claim to have checked instanciation/registre/blueprint for a classique member — it never verified them because they never apply');
+
+  const classiqueMissingTableRow = checkClassique('FAKE-CLASSIQUE-ABSENT', { toolsTableMarkdown: '| Outil | Statut | Coût | Déclenchement |\n|---|---|---|---|\n| AUTRE-OUTIL | Agent | gratuit | à la demande |', prestations: [], existingPaths: new Set(), ownKnowledge: false });
+  assert.ok(classiqueMissingTableRow.gaps.some((g) => g.includes('table maîtresse')), 'a classique member still needs the one gap that applies to EVERY certifiable tool regardless of category: presence in the master table — ownKnowledge never waives this base requirement');
+
+  // ownKnowledge défaut = true : aucune régression sur le comportement Agent déjà couvert par les
+  // tests ci-dessus (checkAgentOnboarding()/checkAllAgentBadges() sans jamais préciser ownKnowledge).
+  const sageStillRequiresOwnKnowledge = checkClassique('FAKE-AGENT-SAGE', { toolsTableMarkdown: '| Outil | Statut | Coût | Déclenchement |\n|---|---|---|---|\n| FAKE-AGENT-SAGE | Agent | gratuit | à la demande |', prestations: [{ demande: 'Etre un sage', outils: ['FAKE-AGENT-SAGE'], cout: 'gratuit' }], existingPaths: new Set() });
+  assert.ok(sageStillRequiresOwnKnowledge.gaps.some((g) => g.includes('instanciation manquante')), 'a plain Agent (ownKnowledge defaults to true) must still require its own instanciation/registre/blueprint exactly as before — the new parameter must never silently relax the existing Sage/Gardien requirements');
+
+  // checkAllAgentBadges() balaie désormais AUSSI les lignes "Membre certifié (classique)", en
+  // dérivant ownKnowledge directement du statut de la ligne — jamais une seconde source de vérité.
+  const classiqueSweepDir = fs.mkdtempSync(path.join(os.tmpdir(), 'badge-sweep-classique-'));
+  const classiqueSweepPath = path.join(classiqueSweepDir, 'history.json');
+  const classiqueSweepTable = '| Outil | Statut | Coût | Déclenchement |\n|---|---|---|---|\n| FAKE-CLASSIQUE-SWEEP | Membre certifié (classique) | gratuit | à la demande |\n| SMART-BREAKER | Utilitaire nommé | réel | automatique |';
+  const classiqueSweep = sweepClassique({ toolsTableMarkdown: classiqueSweepTable, prestations: [{ demande: 'Faire une chose classique balayée', outils: ['FAKE-CLASSIQUE-SWEEP'], cout: 'gratuit' }], existingPaths: new Set() }, { historyPath: classiqueSweepPath });
+  assert.equal(classiqueSweep.length, 1, 'the sweep must now certify a classique row too (zero gaps reachable without any blueprint on disk), while still skipping the plain Utilitaire nommé row (SMART-BREAKER) exactly as before');
+  assert.ok(classiqueSweep[0].includes('FAKE-CLASSIQUE-SWEEP') && classiqueSweep[0].includes('(classique)'), 'the announcement must name the real tool and carry the "(classique)" qualifier, never the plain Agent badge wording');
+
+  console.log('Passed: checkAgentOnboarding()\'s new ownKnowledge flag (2026-09-21) lets a "Membre certifié (classique)" reach zero gaps and a genuine 🎖️ badge without ever requiring instanciation/registre/blueprint/CLAUDE.md-blueprint-section — reserved for tools with no project-specific knowledge to document (LE-COORDINATEUR, CIRCLE-TASKS, route-booster, tool-brain) — while the base table-row requirement still applies to everyone, the default (ownKnowledge: true) never regresses the existing Agent/Sage/Gardien behavior, and checkAllAgentBadges() now sweeps both certifiable statuts, deriving ownKnowledge straight from the row\'s own statut rather than a second source of truth.');
+}
+
+{
+  // tool-brain.mjs (2026-09-21, demande explicite de l'utilisateur : « cree un petit outil
+  // "tool-brain" [...] rappel centralisé [...] rapport txt à chaque ronde [...] KPI »). Généralise
+  // find-brain.mjs à tout le catalogue PRESTATIONS ; réutilise toolUsageStats()/toolsNeverUsed()
+  // (tool-usage.mjs) telles quelles pour le KPI, jamais un second compteur.
+  const tb = await import('../scripts/tool-brain.mjs');
+  const { adviseToolBrain, knownToolSlugsFromPrestations, buildToolBrainUsageReport, diagnoseToolBrainSelf, formatToolBrainReport, formatToolBrainReminder, TOOL_BRAIN_SLUG } = tb;
+
+  // adviseToolBrain() — inchangé depuis la première version, simple relais.
+  const adviceNone = adviseToolBrain({});
+  assert.deepEqual(adviceNone, { prestations: [], fileAdvice: undefined }, 'with neither a task description nor a file, adviseToolBrain() must return empty/undefined signals, never fabricate a recommendation from nothing');
+  const adviceTask = adviseToolBrain({ taskDescription: 'Avant de lire un gros fichier potentiellement volumineux, quel outil de recherche utiliser' });
+  assert.ok(Array.isArray(adviceTask.prestations), 'a real task description must run through suggestPrestationsForTask() and return an array, even if empty depending on the live PRESTATIONS catalogue');
+
+  // formatToolBrainReminder() — bannière centralisée, doit toujours inclure le menu PRESTATIONS
+  // (jamais conditionné, contrairement aux 2 blocs find-booster/find-deep-booster).
+  const reminder = formatToolBrainReminder();
+  assert.ok(reminder.includes('tool-brain — rappel centralisé') && reminder.includes('Prestations disponibles'), 'the centralized reminder must always carry both its own banner and the PRESTATIONS menu, replacing the 3 previously-scattered blocks with one call');
+
+  // knownToolSlugsFromPrestations() — dérivé de PRESTATIONS, jamais une seconde liste maintenue à la main.
+  const fakePrestationsForSlugs = [{ outils: ['ARGUS', 'find-brain'] }, { outils: ['ARGUS'] }];
+  assert.deepEqual(knownToolSlugsFromPrestations(fakePrestationsForSlugs), ['argus', 'find-brain'], 'the known-tool-slug list must be the deduplicated, slugified union of every outils entry across PRESTATIONS — never a hand-maintained second list that could drift from the real catalogue');
+
+  // buildToolBrainUsageReport() — réutilise toolUsageStats()/toolsNeverUsed() telles quelles.
+  const fakeHistory = { events: [
+    { toolSlug: 'argus', origin: 'automatique_post_commit', at: 1 },
+    { toolSlug: 'argus', origin: 'demande', at: 2, foundSomething: true },
+  ] };
+  const usageReport = buildToolBrainUsageReport(fakeHistory, [{ outils: ['ARGUS'] }, { outils: ['find-brain'] }]);
+  assert.deepEqual(usageReport.neverUsed, ['find-brain'], 'a tool with zero real events must show up as never-used, exactly what toolsNeverUsed() already computes — never recalculated a second way here');
+  assert.equal(usageReport.perTool.find((t) => t.slug === 'argus').total, 2, 'a tool with real events must report its real cumulative total via toolUsageStats(), unmodified');
+
+  // diagnoseToolBrainSelf() — borné au SEUL périmètre de tool-brain (jamais un audit du paysage entier).
+  const neverSolicited = diagnoseToolBrainSelf({ events: [] });
+  assert.ok(neverSolicited.findings.some((f) => f.includes('jamais été sollicité')), 'if tool-brain itself has zero recorded events, the self-diagnosis must say so plainly rather than staying silent');
+  const onlyAutomatic = diagnoseToolBrainSelf({ events: [{ toolSlug: TOOL_BRAIN_SLUG, origin: 'automatique_post_commit', at: 1 }] });
+  assert.ok(onlyAutomatic.findings.some((f) => f.includes('jamais spontanément')), 'if tool-brain has only ever fired via the automatic post-commit reminder and never a spontaneous/requested call, the self-diagnosis must flag that the reflex is not yet real — a signal the user explicitly cares about');
+  const genuinelyUsed = diagnoseToolBrainSelf({ events: [{ toolSlug: TOOL_BRAIN_SLUG, origin: 'spontane', at: 1 }] });
+  assert.equal(genuinelyUsed.findings.length, 0, 'once tool-brain has at least one real spontaneous call, no finding should fire — a false alarm here would undermine trust in the self-diagnosis');
+  const wiringOk = diagnoseToolBrainSelf({ events: [] }, { checkLastCommitSource: 'import { formatToolBrainReminder } from "../tool-brain.mjs";' });
+  assert.equal(wiringOk.wiredInPostCommitHook, true, 'a real check-last-commit.mjs source that imports tool-brain.mjs must be recognized as genuinely wired, a simple text search exactly like checkHtmlWiring()');
+  const wiringMissing = diagnoseToolBrainSelf({ events: [] }, { checkLastCommitSource: 'no mention of the tool here' });
+  assert.ok(wiringMissing.findings.some((f) => f.includes('câblé dans le crochet post-commit')), 'if the post-commit hook source no longer mentions tool-brain.mjs at all, that must surface as a real finding — the exact kind of reciprocal-wiring regression this project has been bitten by before');
+
+  // formatToolBrainReport() — le rapport texte de Ronde, combine les deux ci-dessus.
+  const report = formatToolBrainReport({ history: fakeHistory, prestations: [{ outils: ['ARGUS'] }, { outils: ['find-brain'] }], now: 0 });
+  assert.ok(report.includes('rapport de Ronde') && report.includes('find-brain') && report.includes('Auto-diagnostic'), 'the Ronde report must combine the usage report (naming the never-used tool) and the self-diagnosis section under one readable text block, ready for the txt delivery the user asked for');
+
+  console.log('Passed: tool-brain.mjs (2026-09-21) generalizes find-brain to the whole PRESTATIONS catalogue via adviseToolBrain(), centralizes the 3 previously-scattered post-commit reminder blocks into one formatToolBrainReminder() banner, derives its known-tool list straight from PRESTATIONS rather than a hand-kept duplicate, reuses tool-usage.mjs\'s own toolUsageStats()/toolsNeverUsed() unmodified for its usage report, runs a self-diagnosis strictly bounded to tool-brain\'s own perimeter (never-solicited, automatic-only, and reciprocal post-commit wiring — never a judgment on the rest of the tool landscape), and assembles all of it into the single Ronde-ready text report the user asked for.');
+}
+
+{
   // check-tasks-details.mjs (2026-09-20, demande explicite de l'utilisateur : un gabarit fixe pour
   // ses demandes « état des tâches », zoom × forme, lecture seule sur docs/suivi/, vérification
   // croisée automatique contre son propre historique). cf. docs/referentiel/check-tasks-details.md.
@@ -3825,7 +3912,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   } = await import('../scripts/circle-tasks.mjs');
   const { walkDocsPaths } = await import('../scripts/lib-shell.mjs');
 
-  assert.equal(CIRCLE_ITEMS.length, 20, 'CIRCLE_ITEMS must list exactly the 18 free periodic items (profil, the-king-signal, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, dream-team-photo, THE-SCREENER, ines-official-signal, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run, coordinateur-catalogue — clone-hunter-run removed 2026-09-22, CLONE-HUNTER promoted to fifth Gardien sacré, now runs automatically at every commit like the other 4) plus THE-FINAL-JUDGE and its cousin THE-DEEP-READER, never silently gaining or losing an entry');
+  assert.equal(CIRCLE_ITEMS.length, 21, 'CIRCLE_ITEMS must list exactly the 19 free periodic items (profil, the-king-signal, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, tool-brain-report — added 2026-09-21 —, dream-team-photo, THE-SCREENER, ines-official-signal, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run, coordinateur-catalogue — clone-hunter-run removed 2026-09-22, CLONE-HUNTER promoted to fifth Gardien sacré, now runs automatically at every commit like the other 4) plus THE-FINAL-JUDGE and its cousin THE-DEEP-READER, never silently gaining or losing an entry');
   const profilGuardItem = CIRCLE_ITEMS.find((i) => i.id === 'profil-utilisateur-guard');
   assert.ok(profilGuardItem && !profilGuardItem.costly && profilGuardItem.theme === 'Passages réels (smoke run)', '2026-09-21 addition: the real check-profil-utilisateur.mjs smoke run must be free and live in its own "smoke run" theme, distinct from the "profil" item which writes a new observation rather than verifying disk integrity');
   const networkCheckItem = CIRCLE_ITEMS.find((i) => i.id === 'network-check-run');
@@ -3864,7 +3951,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const samplePhilosophyText = '### 1.1 Un principe **[Explicite]**\n\nOn agit toujours avec prudence budgétaire ambiante.\n\n### 1.2 Un autre principe **[Synthèse, 2026-09-19]**\n\nOn n\'agit jamais avec prudence budgétaire ambiante.';
   const inesOfficialIndexText = '| Version | Date | Périmètre | Fichiers | Taille |\n|---|---|---|---|---|\n| v1 | 2026-09-18 | code seul | 40 | 500 Ko |';
   const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText: emptyAlwaysNewCode, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText: sampleClaudeMdText, philosophyText: samplePhilosophyText, philosophyFreshnessDaysValue: 3, inesOfficialIndexText }, now);
-  assert.equal(report.length, 20, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one — 20 since clone-hunter-run left CIRCLE_ITEMS on 2026-09-22 (CLONE-HUNTER promoted to fifth Gardien sacré, runs at every commit instead)');
+  assert.equal(report.length, 21, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one — 21 since tool-brain-report joined CIRCLE_ITEMS on 2026-09-21');
   assert.equal(report.find((r) => r.id === 'claude-md-weight-signal').staleness, '66 tokens estimés, niveau "faible" — 2 aside(s) narrative(s) datée(s) encore réductible(s)', 'the CLAUDE.md weight signal must reuse the real SMART-CONSO-TOKEN scan functions live (never a second parser), reporting both the honest token estimate and the real count of still-reducible dated asides found in the actual text passed in');
   assert.equal(buildCircleReport({}, now).find((r) => r.id === 'claude-md-weight-signal').staleness, 'pas de signal disponible (CLAUDE.md non fourni)', 'with no CLAUDE.md text supplied at all, the signal must report an honest absence rather than crash or fabricate a number');
   assert.equal(report.find((r) => r.id === 'clean-dirty-old-signal').staleness, '1 jour(s) depuis le dernier passage journalisé', 'the CLEAN-DIRTY-OLD signal must compute its own staleness from its own real index text, distinct from every other source');

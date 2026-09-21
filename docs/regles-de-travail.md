@@ -594,20 +594,21 @@ bloqué par un statut, seulement par l'existence réelle d'une fonction ou d'un 
 | THE-SCREENER | Agent | 🎖️ | note indicative de qualité graphique (2 captures d'écran max) (Article 18, étape 4bis) | réel (Playwright, léger) | après chaque simulation Article 18, jamais bloquant |
 | THE-FINAL-JUDGE | Agent | 🎖️ | audit indépendant du code et du produit par un agent réellement séparé, verdict opiniâtre + recommandations | réel (agent séparé, 6 paliers d'intensité × 4 paliers de périmètre) | sur demande explicite (moi, l'utilisateur, ou un autre outil), niveaux « Approfondi »/« Exceptionnel » de CHECK-LEVEL-TARGET (tendance, jamais un verrou) |
 | THE-DEEP-READER | Agent | 🎖️ | cousin de THE-FINAL-JUDGE (même mécanique d'agent séparé, personas et règles d'entrée opposées) dédié à la relecture lourde du suivi (`docs/suivi/`) contre l'historique complet de la conversation | réel (agent séparé, coût variable — plancher fixe + volume réel de conversation à relire) | sur demande explicite (moi, l'utilisateur, ou `check-suivi-fidelity.mjs` en cas de faiblesse répétée), ou proposé périodiquement via CIRCLE-TASKS (jamais coché par défaut) |
-| LE-COORDINATEUR | Utilitaire nommé | — | agrège en un tableau très court ce que les outils gratuits ci-dessus disent déjà, repère un doublon de vérification récent ; son menu de prestations rappelle ce qui peut être commandé | gratuit | synthèse complète (`runNetworkCheck()`) = routine agent, jamais un crochet git (reshellerait `check-house.mjs`, redondant à chaque commit) ; menu des prestations seul = affiché automatiquement à chaque commit (`scripts/hooks/check-last-commit.mjs`, post-commit, 2026-09-20) |
+| LE-COORDINATEUR | Membre certifié (classique) | 🎖️ | agrège en un tableau très court ce que les outils gratuits ci-dessus disent déjà, repère un doublon de vérification récent ; son menu de prestations rappelle ce qui peut être commandé | gratuit | synthèse complète (`runNetworkCheck()`) = routine agent, jamais un crochet git (reshellerait `check-house.mjs`, redondant à chaque commit) ; menu des prestations seul = affiché automatiquement à chaque commit (`scripts/hooks/check-last-commit.mjs`, post-commit, 2026-09-20) |
 | Smart Breaker (`check-gemini-quota.mjs` + `gemini-key-health.mjs` + `api-providers.mjs` + `lib/gemini-keys.ts`) | Agent (structure particulière : pas de dossier `docs/` dédié, son « registre » est le fichier local `.gemini-key-health.json`, jamais committé) | — (jamais vérifié mécaniquement, sa structure hors norme n'a pas de chemin standard à contrôler) | blocages de quota/clé Gemini, portée PRODUCTION | gratuit à diagnostiquer | à la demande, ou automatique en production (repli) |
 | SMART-CONSO-TOKEN | Agent | 🎖️ | rythme de consommation de TOKENS de l'agent (Agent séparé, lecture exhaustive, poids d'un document toujours chargé) ; peut aussi scanner et proposer des réductions | gratuit à consulter | avant tout appel à un agent séparé ou tout raisonnement coûteux — obligation écrite dans la charte, jamais un garde-fou vérifiable après coup |
-| CIRCLE-TASKS (« Ronde périodique ») | Utilitaire nommé | — | 15 tâches périodiques gratuites mal automatisées, regroupées par thème (profil utilisateur, relecture des référentiels, KPI, tâche ouverte la plus ancienne — Suivi & référentiels ; rapport KPI, scans Smart Conso API/SMART-CONSO-TOKEN — KPI & scans ; zone ALWAYS-NEW-CODE la plus négligée, dernier passage CLEAN-DIRTY-OLD, câblage HTML des rapports, poids en tokens de CLAUDE.md — Qualité du code ; garde-fou profil-utilisateur réellement exécuté, synthèse LE-COORDINATEUR réellement exécutée — Passages réels (smoke run), ajouté le 2026-09-21 ; photo de la dream team, THE-SCREENER — Qualité & fun) — regroupées dans une seule fenêtre à cocher ; THE-FINAL-JUDGE et THE-DEEP-READER restent visibles dans la même fenêtre (thème Audit lourd) mais toujours marqués ⚠️🔴 coûteux, jamais cochés par défaut | gratuit (sauf si THE-FINAL-JUDGE/THE-DEEP-READER est explicitement coché) | à la demande de l'utilisateur ou de l'agent ; rappel proactif automatique dans le crochet post-commit après 10 commits sans passage |
+| CIRCLE-TASKS (« Ronde périodique ») | Membre certifié (classique) | 🎖️ | 15 tâches périodiques gratuites mal automatisées, regroupées par thème (profil utilisateur, relecture des référentiels, KPI, tâche ouverte la plus ancienne — Suivi & référentiels ; rapport KPI, scans Smart Conso API/SMART-CONSO-TOKEN — KPI & scans ; zone ALWAYS-NEW-CODE la plus négligée, dernier passage CLEAN-DIRTY-OLD, câblage HTML des rapports, poids en tokens de CLAUDE.md — Qualité du code ; garde-fou profil-utilisateur réellement exécuté, synthèse LE-COORDINATEUR réellement exécutée — Passages réels (smoke run), ajouté le 2026-09-21 ; photo de la dream team, THE-SCREENER — Qualité & fun) — regroupées dans une seule fenêtre à cocher ; THE-FINAL-JUDGE et THE-DEEP-READER restent visibles dans la même fenêtre (thème Audit lourd) mais toujours marqués ⚠️🔴 coûteux, jamais cochés par défaut | gratuit (sauf si THE-FINAL-JUDGE/THE-DEEP-READER est explicitement coché) | à la demande de l'utilisateur ou de l'agent ; rappel proactif automatique dans le crochet post-commit après 10 commits sans passage |
 | Gabarit HTML de remise de rapports (`scripts/html-report.mjs`) | Utilitaire nommé | — | mise en page soignée d'un rapport déjà produit (KPI, EL-PROFESSOR, THE-SCREENER, simulations, THE-FINAL-JUDGE...) — jamais le contenu métier lui-même | gratuit | importé et appelé par les autres outils au moment de produire une copie de présentation — jamais un outil qu'on invoque seul |
 | check-tasks-details | Agent | 🎖️ | état des lieux des tâches à la demande (zoom en cours/élargi/projet entier × forme liste/arborescence), rapport HTML, lecture seule de `docs/suivi/`, vérification croisée automatique (régression/stagnation) contre son propre historique | gratuit | sur demande explicite (moi ou l'utilisateur), gabarit de questions dédié (cf. `docs/referentiel/check-tasks-details.md`) |
-| CLAUDE.MD.SPY (extension de SMART-CONSO-TOKEN) | Utilitaire nommé | — | classe chaque Article de CLAUDE.md par sensibilité/importance, détecte les redondances possibles entre Articles | gratuit | sur demande, avant/pendant une passe d'allègement de CLAUDE.md (étape 2 de la procédure formalisée) |
+| CHARTER-SPY (surnom, anciennement CLAUDE.MD.SPY — extension de SMART-CONSO-TOKEN) | Utilitaire nommé | — | classe chaque Article/règle de CLAUDE.md ET de `docs/regles-de-travail.md` par sensibilité/importance, détecte les redondances possibles entre règles — périmètre élargi le 2026-09-21 (demande explicite de l'utilisateur, en même temps que le plan d'action route.ts/check-house.mjs/regles-de-travail.md) | gratuit | sur demande, avant/pendant une passe d'allègement de l'un ou l'autre document |
 | Compteur d'utilisation des outils (`scripts/tool-usage.mjs`) | Utilitaire nommé | — | journal permanent des sollicitations réelles d'un outil (origine, taux de trouvaille) — nourrit Doc-Report et la future CASSANDRA-RH | gratuit | l'agent l'appelle lui-même à chaque sollicitation réelle d'un outil (discipline auto-déclarée, aucune preuve mécanique externe) |
 | Doc-Report (`scripts/doc-report.mjs`) | Utilitaire nommé | — | index global des registres du réseau d'outils, gardien (jamais décideur) de la décision HTML/texte déjà actée par registre, croisé avec l'âge du dernier rapport et le compteur d'usage ci-dessus ; inventorie aussi les journaux locaux jamais committés (fraîcheur par mtime, cross-check `.gitignore`) | gratuit | sur demande, ou proposé périodiquement via CIRCLE-TASKS |
 | THE-KING | Agent | 🎖️ | rappelle de consulter `docs/philosophie-et-politique.md` avant une décision à haut niveau (6 catégories), fraîcheur du document, digest de son évolution, tension possible entre deux principes | gratuit | avant une décision touchant l'une des 6 catégories (moi, l'utilisateur, ou un autre outil) |
 | INES-official | Agent | 🎖️ | aplatit le dépôt en une édition consolidée et annotée (code seul ou code + docs), table des matières, datage/versionnage — jamais une réécriture réelle du code | gratuit | proposé périodiquement via CIRCLE-TASKS, ou sur demande explicite |
 | memory-audit (anciennement "MEMENTO", nom d'ensemble retiré le 2026-09-21) | Agent | 🎖️ | seul outil ciblant en SUJET un Personnage (Lia/Noé) tout en restant un vrai Membre de l'équipe, catégorie "audit de simulation" aux côtés d'EL-PROFESSOR : cohérence mécanique de la mémoire persistée (ordre chronologique, remise à zéro suspecte, régression de gravité). Son voisin "memento weight" (Moteur du jeu, `lib/memento-weight.ts` + `scripts/memento-weight.mjs`, jamais un Membre de l'équipe) mesure séparément le poids réel du contexte envoyé à Gemini par tour (observation pure, jamais un changement de prompt) | gratuit — mécanique, jamais un second appel Gemini | sur demande explicite après une simulation ; hors CIRCLE-TASKS (exclusion documentée, cette vérification n'a de sens que sur une partie réelle) |
-| route-booster (`scripts/route-booster.mjs`, surnom d'affichage « find-deep-booster ») | Utilitaire nommé | — | points de coupe candidats + indice de risque lexical pour découper une fonction géante (conçu pour `app/api/lia/route.ts`, 24 candidats réels détectés) — jamais une réécriture automatique, guide une extraction manuelle testée à chaque étape | gratuit | à la demande, avant/pendant un chantier de découpage de fichier |
+| route-booster (`scripts/route-booster.mjs`, surnom d'affichage « find-deep-booster ») | Membre certifié (classique) | 🎖️ | points de coupe candidats + indice de risque lexical pour découper une fonction géante (conçu pour `app/api/lia/route.ts`, 24 candidats réels détectés) — jamais une réécriture automatique, guide une extraction manuelle testée à chaque étape | gratuit | à la demande, avant/pendant un chantier de découpage de fichier |
 | find-brain (`scripts/find-brain.mjs`) | Utilitaire nommé | — | cerveau unifié : recommande find-booster et/ou find-deep-booster pour un fichier donné (jamais un choix exclusif), réutilise leurs fonctions telles quelles sans rien recalculer | gratuit | à la demande (`node scripts/find-brain.mjs <fichier>`) et automatiquement à chaque commit (rappel post-commit) |
+| tool-brain (`scripts/tool-brain.mjs`) | Membre certifié (classique) | 🎖️ | cerveau élargi des rappels d'outils : généralise find-brain à TOUT le catalogue PRESTATIONS de LE-COORDINATEUR (description de tâche et/ou fichier ciblé) ; rappel post-commit centralisé (find-booster + find-deep-booster + menu PRESTATIONS en un seul bloc) ; rapport KPI (outils jamais sollicités, auto-diagnostic borné à son propre périmètre) | gratuit | à la demande (`node scripts/tool-brain.mjs "<tâche>" [--file <chemin>]` / `rapport`), automatiquement à chaque commit (rappel), et à chaque Ronde CIRCLE-TASKS (rapport) |
 | find-booster (`scripts/find-booster.mjs`, anciennement "route-find-booster") | Agent | 🎖️ | index par concept de 4 motifs réels (fonctions nommées, blocs anonymes commentés, entrées de tableau titrées, titres Markdown) — sert route.ts, check-house.mjs, lib/reference.ts et regles-de-travail.md, vérifié live sur les 4 ; `recommendFindBooster()` détecte le poids réel d'un fichier (réutilise SMART-CONSO-TOKEN, jamais le nombre de lignes seul) | gratuit | à la demande, sur (presque) tout fichier du dépôt — promu Membre de l'équipe complet le 2026-09-21 après usage réel concluant, cf. `docs/referentiel/find-booster.md` |
 | CLONE-HUNTER (`scripts/clone-hunter.mjs`) | Agent | 🎖️ | détecte des blocs de code dupliqués — v1 littérale (lignes identiques après normalisation d'espaces) ET v2 (blocs structurellement identiques sous renommage bijectif cohérent d'identifiants) — dans lib/scripts/app/components (hors components/ui, exclu — kit shadcn/Radix vendu tel quel, duplication assumée par design) ; vérifié live (13 trouvailles réelles au total) | gratuit, <1s sur tout le dépôt | **5e Gardien sacré du code depuis le 2026-09-22** (Article 20 — délivre un vrai scan de qualité ET tourne à chaque commit) : câblé dans le crochet post-commit réel, retiré de CIRCLE-TASKS (doublon dès qu'automatique à chaque commit), agrégé dans HYPER-SCAN-CHECKPOINT, cf. `docs/referentiel/clone-hunter.md` et `docs/referentiel/organisation-agence.md` §3 |
 
@@ -1721,6 +1722,82 @@ gabarit-ci habille des rapports de travail internes, jamais montrés à un visit
 de calendrier avec la future refonte graphique (« on met un pied dans la refonte graphique, en
 commençant par les rapports ! »), pas une même surface : le thème sombre de ce gabarit n'a donc
 aucune obligation de suivre `scenePalette` ou toute décision prise pour le rendu 3D.
+
+### tool-brain — le cerveau central des rappels d'outils, généralise find-brain
+
+*(2026-09-21, demande explicite de l'utilisateur : « ca ne doit pas seulement pointer vers find
+brain, mais aussi vers tous les outils et pour ce faire via le catalogue du coordinateur [...]
+cree un petit outil "tool-brain" [...] trouve un systeme performant, sur mesure pour toi, qui
+resoud ce point definitivement » — confirmé volontairement mince le même soir : « tool-brain n'a
+pas besoin d'etre un script lourd : il puise dans tous les scripts environnants, il centralise, il
+rentabilise ».)*
+
+**Statut : « Membre certifié (classique) »** (badge 🎖️ réel, mais sans instanciation/registre/
+blueprint séparés — cf. reclarification de l'organigramme ci-dessous, §7ter). tool-brain n'a AUCUNE
+connaissance propre au projet à documenter à part : il appelle/agrège ce que LE-COORDINATEUR/
+find-brain/tool-usage.mjs disent déjà, exactement la même nature que LE-COORDINATEUR/CIRCLE-TASKS/
+route-booster — jamais un nouveau raisonnement.
+
+**Cinq points d'entrée, aucun ne recalcule quoi que ce soit lui-même :**
+1. **`adviseToolBrain({ taskDescription, filePath })`** — généralise find-brain à TOUT le catalogue
+   PRESTATIONS : à partir d'une description de tâche libre et/ou d'un fichier ciblé, réutilise
+   `suggestPrestationsForTask()` (LE-COORDINATEUR) et `recommendFindBrain()` (find-brain.mjs) sans
+   rien recalculer. CLI : `node scripts/tool-brain.mjs "<tâche>" [--file <chemin>]`.
+2. **`formatToolBrainReminder()`** — le rappel post-commit CENTRALISÉ (demande explicite : « je veux
+   un rappel centralisé sur tool-brain : c'est sa vocation profonde plutôt que des rappels
+   éparpillés »). Remplace les 3 blocs auparavant séparés dans `scripts/hooks/check-last-commit.mjs`
+   (find-booster, find-deep-booster, menu PRESTATIONS nu) par UN seul appel, une seule bannière.
+3. **`buildToolBrainUsageReport()`** — le KPI d'usage réel (« il a son KPI, très important »). La
+   liste des outils connus vient de PRESTATIONS elle-même (jamais une deuxième liste maintenue à la
+   main) ; réutilise `toolUsageStats()`/`toolsNeverUsed()` de `tool-usage.mjs` telles quelles.
+4. **`diagnoseToolBrainSelf()`** — auto-diagnostic borné STRICTEMENT au périmètre de tool-brain
+   lui-même (précision explicite de l'utilisateur : « je parle des ameliorations sur le perimetre
+   de tool-brain et de ses objectifs uniquement » — jamais un audit du paysage entier, déjà couvert
+   ailleurs par ARGUS/HARMONIA) : tool-brain a-t-il déjà été sollicité, spontanément ou seulement
+   via le rappel automatique, et reste-t-il bien câblé dans le crochet post-commit (simple recherche
+   de texte, même patron que `checkHtmlWiring()`).
+5. **`formatToolBrainReport()`** — le rapport txt combinant les deux précédents, disponible aux deux
+   déclenchements demandés : à chaque Ronde CIRCLE-TASKS (item `tool-brain-report`) ET à la demande
+   (`node scripts/tool-brain.mjs rapport`).
+
+**Trouvaille réelle en le lançant pour de vrai contre ce dépôt (2026-09-21)** : la première version
+de `knownToolSlugsFromPrestations()` slugifiait le texte ENTIER de chaque `outils` de PRESTATIONS,
+y compris une précision entre parenthèses (« ARGUS (mécanique) », « THE-FINAL-JUDGE (mandat
+sécurité inclus) ») — produisant un faux slug distinct jamais utilisé nulle part par
+`recordToolUsage()`, faisant apparaître à tort le même outil comme « jamais sollicité » sous deux
+identités différentes. Corrigé en réutilisant le même découpage `primaryName` déjà établi ailleurs
+dans ce fichier (`badgeWarningsForOutils()`, `findToolsMissingFromMenu()`) — jamais une troisième
+règle divergente.
+
+### Reclarification de l'organigramme — « Membre certifié » couvre deux catégories
+
+*(2026-09-21, correction explicite de l'utilisateur après une confusion réelle de ma part sur le
+statut de LE-COORDINATEUR/CIRCLE-TASKS/route-booster : « les agents que tu cites [...] ce sont bien
+des membres certifiés avec badge [...] refaisons une passe [...] et si tu as fait une erreur [...]
+assure toi de mettre en place un plan d'action pour que ça ne se reproduise plus ».)*
+
+Ce que ce document affirmait jusqu'ici (LE-COORDINATEUR/CIRCLE-TASKS/route-booster = « Utilitaire
+nommé », aucun badge) reflétait fidèlement le texte alors écrit — mais la règle elle-même vient de
+changer, en calibrant avec l'utilisateur le critère exact qui sépare deux vraies catégories, toutes
+deux de vrais **« Membres certifiés »** (badge 🎖️ réel dans les deux cas) :
+
+- **Sages/Gardiens** (`ownKnowledge: true`, comportement inchangé) — possèdent une connaissance
+  PROPRE AU PROJET à documenter à part (instanciation `docs/referentiel/<slug>.md` + registre
+  `docs/<slug>/` + blueprint, sauf `cousinOf`).
+- **Membres certifiés (classique)** (`ownKnowledge: false`, nouveau) — LE-COORDINATEUR, CIRCLE-TASKS,
+  route-booster, tool-brain : aucune connaissance propre à documenter, ils appellent/agrègent
+  seulement ce que d'autres outils disent déjà. Badge 🎖️ réel, mais SANS instanciation/registre/
+  blueprint exigés — `checkAgentOnboarding()` (`le-coordinateur.mjs`) porte désormais ce paramètre
+  `ownKnowledge`, `CERTIFIABLE_STATUTS`/`CLASSIQUE_STATUT` remplacent le filtre `statut === "Agent"`
+  partout où `checkAllAgentBadges()`/`badgeWarningsForOutils()` balaient la table maîtresse.
+
+**Plan d'action pour que cette ambiguïté ne se reproduise plus** : la table maîtresse ci-dessus, ce
+paragraphe et `docs/referentiel/organisation-agence.md` (Axe A) sont mis à jour **dans le même
+commit** que le changement de règle lui-même — jamais un des trois documents laissé en retard sur
+les autres (exactement l'écart que l'Article 13 de CLAUDE.md interdit). Statut restant ouvert,
+signalé explicitement plutôt que tranché seul : find-brain, CHARTER-SPY, tool-usage.mjs, Doc-Report
+et le gabarit HTML restent « Utilitaire nommé » (aucun badge) pour l'instant — leur éventuelle
+promotion en « classique » est une question distincte, pas encore posée à l'utilisateur.
 
 ## 8. Profil de collaboration observé
 

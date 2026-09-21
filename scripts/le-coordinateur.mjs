@@ -163,7 +163,7 @@ export const PRESTATIONS = [
   { nom: "Pack Sobriété", description: "Donne un avis fiabilisé avant une action coûteuse en tokens, combinant schémas connus et historique observé.", demande: "Réguler ma propre consommation de tokens avant une action coûteuse", outils: ["SMART-CONSO-TOKEN"], cout: "0 appel API", tokensEstimes: "nul — 0 token, 0 appel API" },
   { nom: "Pack Ronde", description: "Ouvre la fenêtre à cocher de la Ronde périodique (profil, référentiels, KPI, signaux ALWAYS-NEW-CODE/CLEAN-DIRTY-OLD, scans Smart Conso, catalogue, photo de la dream team, THE-SCREENER).", demande: "Lancer la ronde périodique des tâches gratuites mal automatisées", outils: ["CIRCLE-TASKS"], cout: "0 appel API — sauf si THE-FINAL-JUDGE (⚠️🔴) est explicitement coché", tokensEstimes: "faible à modéré selon la sélection — ~37k tokens fixes seulement si THE-FINAL-JUDGE est explicitement coché" },
   { nom: "Pack Boussole", description: "Génère l'état des lieux des tâches en cours (zoom + forme liste/arborescence) en rapport HTML, strictement en lecture seule sur docs/suivi/.", demande: "État des lieux des tâches en cours", outils: ["check-tasks-details"], cout: "0 appel API — lecture seule de docs/suivi/", tokensEstimes: "variable — proportionnel à la taille du suivi relu" },
-  { nom: "Pack Espion", description: "Classe chaque Article de CLAUDE.md par sensibilité/importance et repère une redondance possible entre deux règles.", demande: "Préparer un allègement de CLAUDE.md en identifiant les vrais candidats", outils: ["CLAUDE.MD.SPY (extension de SMART-CONSO-TOKEN)"], cout: "0 appel API — relit CLAUDE.md et le reste du dépôt", tokensEstimes: "faible — un seul fichier local relu par le script, pas par l'agent" },
+  { nom: "Pack Espion", description: "Classe chaque Article/règle de CLAUDE.md ET de docs/regles-de-travail.md par sensibilité/importance et repère une redondance possible entre deux règles.", demande: "Préparer un allègement de CLAUDE.md ou de regles-de-travail.md en identifiant les vrais candidats", outils: ["CHARTER-SPY (anciennement CLAUDE.MD.SPY, extension de SMART-CONSO-TOKEN)"], cout: "0 appel API — relit le document ciblé et le reste du dépôt", tokensEstimes: "faible — un seul fichier local relu par le script, pas par l'agent" },
   { nom: "Pack Registre", description: "Index global des registres du réseau d'outils : décision HTML/texte vérifiée contre le vrai code, âge du dernier rapport, croisement avec le compteur d'usage pour repérer un outil dont les rapports ne sont jamais consultés.", demande: "Vérifier que chaque outil livre ses rapports comme prévu (décision HTML/texte, fraîcheur, usage réel)", outils: ["Doc-Report"], cout: "0 appel API — relit les registres et le code local", tokensEstimes: "faible — sortie compacte, un tableau par famille" },
   { nom: "Pack Régence", description: "Rappelle de consulter docs/philosophie-et-politique.md avant une décision à haut niveau (6 catégories), signale sa fraîcheur, son évolution datée et une tension possible entre deux principes.", demande: "Vérifier qu'une décision de fond respecte la philosophie et la politique du projet", outils: ["THE-KING"], cout: "0 appel API — relit un document local", tokensEstimes: "faible — sortie compacte, un rappel ciblé" },
   { nom: "Pack Secrétariat", description: "Aplatit le dépôt (code seul ou code + documentation) en une édition consolidée, annotée par fraîcheur/couverture, avec table des matières et versionnage — jamais une réécriture réelle.", demande: "Obtenir une version de référence unique et lisible du code (ou code + docs) du projet", outils: ["INES-official"], cout: "0 appel API — relit les fichiers locaux", tokensEstimes: "élevé si le corps complet est relu par l'agent — le corps reste local, jamais committé" },
@@ -176,6 +176,7 @@ export const PRESTATIONS = [
   { nom: "Pack Découpage", description: "Détecte des points de coupe candidats et un indice de risque lexical dans une fonction géante d'un fichier donné, pour préparer un découpage manuel en sous-fonctions testées à chaque étape (route-booster, surnom d'affichage « find-deep-booster »).", demande: "Avant/pendant un chantier de découpage d'un fichier fourre-tout (ex. route.ts)", outils: ["route-booster"], cout: "0 appel API — heuristique texte, jamais un vrai parseur", tokensEstimes: "faible à modéré — dépend de la taille du fichier ciblé" },
   { nom: "Pack Boussole", description: "Indexe par concept les fonctions nommées ou les blocs commentés d'un fichier déjà découpé (route.ts une fois découpé, ou check-house.mjs dès aujourd'hui), avec un rattachement indicatif aux thèmes HARMONIA.", demande: "Retrouver rapidement où se trouve une logique précise dans un gros fichier déjà structuré", outils: ["find-booster"], cout: "0 appel API", tokensEstimes: "faible" },
   { nom: "Pack Cerveau de recherche", description: "Rend un jugement unifié — find-booster et/ou find-deep-booster (surnom de route-booster) pour un fichier donné, jamais un choix exclusif — en réutilisant leurs fonctions telles quelles, sans rien recalculer.", demande: "Savoir lequel des deux outils de recherche (ou les deux) utiliser avant de lire un fichier potentiellement volumineux ou complexe", outils: ["find-brain"], cout: "0 appel API", tokensEstimes: "faible" },
+  { nom: "Pack Cerveau central", description: "Généralise find-brain à tout le catalogue PRESTATIONS : à partir d'une description de tâche et/ou d'un fichier ciblé, indique quelle(s) prestation(s) et quel(s) outil(s) de recherche utiliser, sans rien recalculer soi-même. Délivre aussi le rapport de Ronde (outils jamais sollicités, auto-diagnostic borné à son propre périmètre).", demande: "Savoir quel outil ou quelle combinaison d'outils déjà existante utiliser pour une tâche donnée, sans avoir à y réfléchir soi-même", outils: ["tool-brain"], cout: "0 appel API", tokensEstimes: "faible" },
   { nom: "Pack Chasse aux clones", description: "Scanne lib/scripts/app/components (hors components/ui, vendored) à la recherche de blocs de lignes identiques répétés à plusieurs endroits, regroupés par cluster et triés par impact réel.", demande: "Dette technique / code qui s'empile plutôt que d'être pensé — trouver un bloc de logique recopié plutôt que factorisé", outils: ["clone-hunter"], cout: "0 appel API — heuristique texte, zéro parseur AST", tokensEstimes: "faible à modéré — sortie compacte des clusters trouvés" },
 ];
 
@@ -356,9 +357,9 @@ function badgeWarningsForOutils(outils, onboardingContext) {
   for (const outil of outils) {
     const primaryName = outil.split(/[/(]/)[0].trim();
     const row = rows.find((r) => r.tool.toLowerCase().includes(primaryName.toLowerCase()) || primaryName.toLowerCase().includes(r.tool.toLowerCase()));
-    if (!row || row.statut !== "Agent") continue;
+    if (!row || !CERTIFIABLE_STATUTS.includes(row.statut)) continue;
     const overrides = onboardingContext.agentOverrides?.[row.tool] ?? {};
-    const result = checkAgentOnboarding(row.tool, { ...onboardingContext, ...overrides });
+    const result = checkAgentOnboarding(row.tool, { ...onboardingContext, ownKnowledge: row.statut !== CLASSIQUE_STATUT, ...overrides });
     if (!result.complet) warnings.push(`${row.tool} n'a pas son badge (${result.gaps.join(" ; ")})`);
   }
   return warnings;
@@ -403,6 +404,14 @@ export function slugifyAgentName(name) {
   return String(name ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
+// CLASSIQUE_STATUT (2026-09-21, reclarification explicite : « membre certifié couvre les deux
+// catégories ») : la valeur exacte attendue dans la colonne Statut de la table maîtresse pour un
+// « Membre certifié (classique) » — LE-COORDINATEUR, CIRCLE-TASKS, route-booster, tool-brain.
+// CERTIFIABLE_STATUTS regroupe les deux statuts éligibles au badge (Agent = connaissance propre,
+// classique = sans), jamais recopié en dur ailleurs.
+export const CLASSIQUE_STATUT = "Membre certifié (classique)";
+export const CERTIFIABLE_STATUTS = ["Agent", CLASSIQUE_STATUT];
+
 export function checkAgentOnboarding(agentName, {
   toolsTableMarkdown,
   prestations = PRESTATIONS,
@@ -419,6 +428,16 @@ export function checkAgentOnboarding(agentName, {
   lastVerifiedAt = null,
   hasDocReportDecision = undefined,
   reciprocalWiring = null,
+  // ownKnowledge (2026-09-21, reclarification explicite de l'utilisateur : « il y a des membres
+  // certifiés qui ont une connaissance propre au projet et d'autres qui n'en ont pas [...] oui ce
+  // sont tous des membres certifiés, mais créons 2 catégories » puis « membre certifié couvre les
+  // deux catégories »). Par défaut `true` (comportement inchangé pour tout Agent/Sage/Gardien déjà
+  // couvert par les tests existants) : la connaissance propre au projet exige une instanciation, un
+  // registre et un blueprint. `false` désigne un « Membre certifié (classique) » — LE-COORDINATEUR,
+  // CIRCLE-TASKS, route-booster, tool-brain — qui n'a AUCUNE connaissance propre à documenter à
+  // part (il appelle/agrège ce que d'autres outils disent déjà) : ces 3 exigences ne le concernent
+  // jamais, il reste néanmois un vrai membre certifié badgé 🎖️, jamais un simple Utilitaire nommé.
+  ownKnowledge = true,
 } = {}) {
   assertNotAPersonnage(agentName, "checkAgentOnboarding()");
   const gaps = [];
@@ -435,16 +454,21 @@ export function checkAgentOnboarding(agentName, {
   const inMenu = prestations.some((p) => p.outils.some((o) => o.toLowerCase().includes(nameLower)));
   if (!inMenu && (!tableRow || isMenuWorthy(tableRow))) gaps.push("absent du menu PRESTATIONS (scripts/le-coordinateur.mjs)");
 
-  if (!existingPaths.has(`docs/referentiel/${slug}.md`)) gaps.push(`instanciation manquante (docs/referentiel/${slug}.md)`);
-
-  // Registre : chemin standard docs/<slug>/, SAUF déviation explicitement déclarée (trouvaille
-  // réelle en calibrant contre THE-DEEP-READER, dont le registre vit dans
-  // docs/suivi/relectures-lourdes/ — jamais un chemin deviné, toujours déclaré par l'appelant).
+  // Instanciation/registre/blueprint : exigés seulement pour un membre à connaissance propre au
+  // projet (Sage/Gardien) — un « Membre certifié (classique) » (ownKnowledge: false) n'a par
+  // définition rien de propre à documenter à part, ces 3 gaps ne le concernent jamais.
   const registryPrefix = registryPathPrefix ?? `docs/${slug}/`;
-  if (![...existingPaths].some((p) => p.startsWith(registryPrefix))) gaps.push(`registre manquant (${registryPrefix})`);
+  if (ownKnowledge) {
+    if (!existingPaths.has(`docs/referentiel/${slug}.md`)) gaps.push(`instanciation manquante (docs/referentiel/${slug}.md)`);
 
-  if (!cousinOf && !existingPaths.has(`docs/${slug}-blueprint.md`)) {
-    gaps.push(`blueprint manquant (docs/${slug}-blueprint.md) — si c'est volontaire (cousin d'un autre Agent), le déclarer via l'option cousinOf plutôt que de laisser ce point sans réponse`);
+    // Registre : chemin standard docs/<slug>/, SAUF déviation explicitement déclarée (trouvaille
+    // réelle en calibrant contre THE-DEEP-READER, dont le registre vit dans
+    // docs/suivi/relectures-lourdes/ — jamais un chemin deviné, toujours déclaré par l'appelant).
+    if (![...existingPaths].some((p) => p.startsWith(registryPrefix))) gaps.push(`registre manquant (${registryPrefix})`);
+
+    if (!cousinOf && !existingPaths.has(`docs/${slug}-blueprint.md`)) {
+      gaps.push(`blueprint manquant (docs/${slug}-blueprint.md) — si c'est volontaire (cousin d'un autre Agent), le déclarer via l'option cousinOf plutôt que de laisser ce point sans réponse`);
+    }
   }
 
   // 6e type de gap (tâche #165, Doc-Report, 2026-09-21) : un nouvel outil qui produit un registre
@@ -460,7 +484,10 @@ export function checkAgentOnboarding(agentName, {
   // process [...] pour en tirer de vrais bénéfices ») — angle mort réel du premier jet : la table
   // maîtresse et PRESTATIONS étaient vérifiées, jamais CLAUDE.md, alors que c'est le document TOUJOURS
   // relu (Article 13) et que j'ai dû l'éditer à la main pour chaque nouvel Agent cette session.
-  if (claudeMdText != null) {
+  // Même dispense pour les 2 sous-vérifications CLAUDE.md liées à la connaissance propre : un
+  // Membre certifié (classique) n'a ni bullet docs/referentiel/<slug>.md ni section blueprint —
+  // il vit entièrement dans docs/regles-de-travail.md §7ter (cf. LE-COORDINATEUR/CIRCLE-TASKS).
+  if (claudeMdText != null && ownKnowledge) {
     if (!claudeMdText.includes(`docs/referentiel/${slug}.md`)) {
       gaps.push("absent de la section « Référentiel technique » de CLAUDE.md (bullet docs/referentiel/<slug>.md)");
     }
@@ -522,7 +549,13 @@ export function checkAgentOnboarding(agentName, {
   // défaut inventée.
   const category = AGENT_CATEGORIES[slug];
   const categoryLabel = category ? ` (${category})` : " (catégorie non répertoriée — à ajouter dans AGENT_CATEGORIES)";
-  const badge = gaps.length === 0 ? `🎖️ Membre certifié${categoryLabel}` : `⚠️ Pas encore certifié${categoryLabel}`;
+  // « (classique) » (2026-09-21, reclarification explicite ci-dessus) : même icône 🎖️ pour tous les
+  // membres certifiés — seule la mention textuelle distingue un Membre certifié (classique, sans
+  // connaissance propre) d'un Sage/Gardien (icône supplémentaire propre à ces deux sous-catégories,
+  // gérée dans la documentation, jamais recalculée ici).
+  const badge = gaps.length === 0
+    ? `🎖️ Membre certifié${ownKnowledge ? "" : " (classique)"}${categoryLabel}`
+    : `⚠️ Pas encore certifié${categoryLabel}`;
 
   // Échelle de couverture à 3 niveaux (tâche #224, 2026-09-20T23:50Z, texte source reproduit à
   // l'identique par l'utilisateur) : « en cours » (jamais scanné/très faible), « partiel »
@@ -567,10 +600,12 @@ export function checkAgentOnboarding(agentName, {
   // fonction (`undefined`/`null` = jamais vérifié, jamais listé comme si ça l'avait été).
   const validations = ["table maîtresse (docs/regles-de-travail.md §7ter)"];
   if (inMenu) validations.push("entrée PRESTATIONS (catalogue LE-COORDINATEUR)");
-  validations.push(`instanciation (docs/referentiel/${slug}.md)`);
-  validations.push(`registre (${registryPrefix})`);
-  validations.push(cousinOf ? `blueprint (cousin de ${cousinOf})` : `blueprint (docs/${slug}-blueprint.md)`);
-  if (claudeMdText != null) validations.push("mention CLAUDE.md");
+  if (ownKnowledge) {
+    validations.push(`instanciation (docs/referentiel/${slug}.md)`);
+    validations.push(`registre (${registryPrefix})`);
+    validations.push(cousinOf ? `blueprint (cousin de ${cousinOf})` : `blueprint (docs/${slug}-blueprint.md)`);
+  }
+  if (claudeMdText != null && ownKnowledge) validations.push("mention CLAUDE.md");
   if (suiviText != null) validations.push("trace docs/suivi/");
   if (hasDocReportDecision != null) validations.push("décision Doc-Report (HTML/texte)");
   if (reciprocalWiring) {
@@ -655,13 +690,13 @@ export function announceBadgeCeremony(result, { historyPath = BADGE_CEREMONY_HIS
 // testable sans toucher au disque, exactement comme `checkAgentOnboarding()`.
 export function checkAllAgentBadges(onboardingContext, { historyPath = BADGE_CEREMONY_HISTORY_PATH, now = Date.now() } = {}) {
   if (!onboardingContext?.toolsTableMarkdown) return [];
-  const rows = parseToolsTable(onboardingContext.toolsTableMarkdown).filter((r) => r.statut === "Agent");
+  const rows = parseToolsTable(onboardingContext.toolsTableMarkdown).filter((r) => CERTIFIABLE_STATUTS.includes(r.statut));
   const announcements = [];
   for (const row of rows) {
     const overrides = onboardingContext.agentOverrides?.[row.tool] ?? {};
     let result;
     try {
-      result = checkAgentOnboarding(row.tool, { ...onboardingContext, ...overrides });
+      result = checkAgentOnboarding(row.tool, { ...onboardingContext, ownKnowledge: row.statut !== CLASSIQUE_STATUT, ...overrides });
     } catch {
       continue; // garde-fou Personnage ou nom malformé — jamais un balayage cassé pour un seul outil
     }

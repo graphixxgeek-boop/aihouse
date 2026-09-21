@@ -13,9 +13,8 @@ import { collectCoverage, robustnessScore, collectScriptCoverage, scriptRobustne
 import { lastTouchDays, relativeStaleness } from "../clean-dirty-old.mjs";
 import { buildDuplicateReport, buildNearDuplicateReport } from "../clone-hunter.mjs";
 import { findMissingNotes, findOrphanNotes } from "../el-professor.mjs";
-import { PRESTATIONS, formatMenu, parseToolsTable, slugifyAgentName, checkAllAgentBadges } from "../le-coordinateur.mjs";
-import { flagFindBoosterCandidates } from "../doc-report.mjs";
-import { flagFindDeepBoosterCandidates, FIND_DEEP_BOOSTER_NICKNAME } from "../find-brain.mjs";
+import { parseToolsTable, slugifyAgentName, checkAllAgentBadges } from "../le-coordinateur.mjs";
+import { formatToolBrainReminder } from "../tool-brain.mjs";
 import { summarizeHistory, computeInvestmentRatio, diagnoseAdviceAccuracy } from "../smart-conso-token.mjs";
 import { sh, AGENT_CATEGORIES } from "../lib-shell.mjs";
 import { loadLastRun, shouldRemindCircleTasks } from "../circle-tasks.mjs";
@@ -176,48 +175,15 @@ try {
   }
 } catch { /* best-effort, jamais bloquant */ }
 
-// find-booster — signal concret et automatique, jamais un rappel générique (2026-09-21, question
-// directe de l'utilisateur : « comment tu sécurises ça sans pouvoir l'oublier ? »). Le rappel
-// générique du menu PRESTATIONS ci-dessous (« find-booster existe ») s'est révélé insuffisant —
-// l'agent a dû admettre en session ne pas l'avoir utilisé jusqu'à ce qu'on le lui demande
-// explicitement. `flagFindBoosterCandidates()` (Doc-Report, tâche #182) nomme les scripts RÉELS,
-// MAINTENANT, assez lourds pour mériter une recherche par concept — un signal beaucoup plus dur à
-// ignorer qu'une ligne de menu parmi vingt. Reste imparfait par nature (aucun mécanisme ne peut
+// tool-brain — rappel CENTRALISÉ des outils (2026-09-21, remplace 3 blocs auparavant éparpillés
+// ici — find-booster, find-deep-booster, le menu PRESTATIONS nu — demande explicite de
+// l'utilisateur : « je veux un rappel centralisé sur tool-brain : c'est sa vocation profonde
+// plutôt que des rappels éparpillés. remets à jour tout le système dans ce sens »). Une seule
+// bannière, une seule fonction (`formatToolBrainReminder()`) qui réutilise elle-même
+// flagFindBoosterCandidates()/flagFindDeepBoosterCandidates()/formatMenu() sans rien recalculer —
+// jamais un second calcul dupliqué ici. Reste imparfait par nature (aucun mécanisme ne peut
 // intercepter un Read/Grep avant qu'il n'ait lieu) : ceci renforce le rappel, ne le remplace jamais.
-try {
-  const candidates = flagFindBoosterCandidates();
-  if (candidates.length) {
-    console.log(`🧭 find-booster : ${candidates.map((c) => `${c.label} (~${c.tokens} tokens)`).join(", ")} méritent une recherche par concept avant toute lecture intégrale.\n`);
-  }
-} catch { /* best-effort, jamais bloquant */ }
-
-// find-deep-booster (surnom d'affichage de route-booster.mjs) — même discipline que le bloc
-// find-booster ci-dessus, même renforcement du rappel demandé le même soir par l'utilisateur
-// (« pluggé en priorité [...] rappelle d'utiliser ces 2 outils le plus souvent possible »).
-try {
-  const deepCandidates = flagFindDeepBoosterCandidates();
-  if (deepCandidates.length) {
-    console.log(`🧠 ${FIND_DEEP_BOOSTER_NICKNAME} : ${deepCandidates.map((c) => `${c.label} (${c.lineCount} lignes, ${c.cutPointCount} points de coupe)`).join(", ")} méritent un vrai zoom de découpage avant toute lecture intégrale.\n`);
-  }
-} catch { /* best-effort, jamais bloquant */ }
-
-// Rappel du catalogue LE-COORDINATEUR (2026-09-20, demande explicite de l'utilisateur : « je
-// voudrais que tu exploites ce catalogue et que tu en bénéficies, c'est pour ça que je cherche une
-// ouverture auto »). Toujours affiché, jamais conditionné à un problème détecté — ce n'est pas un
-// avertissement, c'est un pense-bête systématique de ce qui peut être commandé au réseau d'outils.
-// Volontairement SANS relancer runNetworkCheck() (qui reshellerait check-house.mjs une seconde fois
-// avec instrumentation de couverture, juste pour le score AXA-CHECK — un vrai coût redondant à
-// chaque commit, contraire à la règle anti-doublon) : ce hook n'affiche que la liste de données,
-// gratuite et instantanée.
-// Réflexe attendu de l'agent à CE moment précis (précisé le 2026-09-20, correction explicite de
-// l'utilisateur — l'enchaînement exact, pas seulement "relire avant de répondre") : dès que ce
-// catalogue s'affiche en auto, se demander IMMÉDIATEMENT « une de ces prestations correspond-elle au
-// besoin actuellement en cours ? ». Un second réflexe, distinct et CUMULABLE avec celui-ci (jamais un
-// remplaçant) : relire aussi ce catalogue avant de répondre à toute future demande qui pourrait y
-// correspondre, même en dehors d'un commit.
-console.log("\n📋 Prestations disponibles via le réseau d'outils (rappel automatique) :\n");
-console.log(formatMenu(PRESTATIONS));
-console.log("");
+console.log(`\n${formatToolBrainReminder()}\n`);
 
 // Rythme récent SMART-CONSO-TOKEN (2026-09-20, demande explicite de l'utilisateur : « je ne me
 // rends pas compte que mon rythme de conso de token connaît un pic depuis 30min [...] aux moments
