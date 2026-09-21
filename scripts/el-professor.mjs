@@ -8,6 +8,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { renderHtmlReport } from "./html-report.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 // Copie de présentation jetable, jamais committée (même patron que KPI_HTML_PATH de
@@ -69,6 +70,7 @@ export function buildElProfessorCoverageHtml(missing, orphans) {
 }
 
 function main() {
+  recordCliUsage("el-professor");
   const simIndex = readFileSync(join(ROOT, "docs/simulations/index.md"), "utf8");
   const elProfessorIndex = readFileSync(join(ROOT, "docs/el-professor/index.md"), "utf8");
   const missing = findMissingNotes(simIndex, elProfessorIndex);

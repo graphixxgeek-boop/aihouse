@@ -14,6 +14,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const HEALTH_PATH = fileURLToPath(new URL("../.gemini-key-health.json", import.meta.url));
 const SESSION_PATH = fileURLToPath(new URL("../.smart-conso-session.json", import.meta.url));
@@ -216,6 +217,7 @@ function reportUnconfirmedBursts(healthData, sessionLog) {
 }
 
 function main() {
+  recordCliUsage("smart-conso-api");
   const actionType = process.argv[2];
   const now = Date.now();
   const healthData = loadJson(HEALTH_PATH, { keys: {} });

@@ -23,6 +23,7 @@ import { sh } from "./lib-shell.mjs";
 import { dataRows, numericColumn } from "./lib-markdown-table.mjs";
 import { SENSITIVE_NODES } from "./check-level-target.mjs";
 import { LIB_MAP, FILE_TO_ZONES, collectCoverage, robustnessScore } from "./axa-check.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const INDEX_PATH = join(ROOT, "docs/clean-dirty-old/index.md");
@@ -108,6 +109,7 @@ export function lastTouchDays(file) {
 }
 
 function main() {
+  recordCliUsage("clean-dirty-old");
   console.log("=== CLEAN-DIRTY-OLD — code ancien et peu retouché (repérage seul, jamais un jugement) ===\n");
 
   const files = Object.values(LIB_MAP);

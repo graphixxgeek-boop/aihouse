@@ -37,6 +37,7 @@ import { PRESTATIONS, suggestPrestationsForTask, significantWords } from "./le-c
 import { daysSince } from "./circle-tasks.mjs";
 import { walkDocsPaths } from "./lib-shell.mjs";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 export const OUT_DIR = join(ROOT, "docs/check-tasks-details");
@@ -543,6 +544,7 @@ export function buildRealOnboardingContext(root = ROOT.replace(/\/$/, "")) {
 }
 
 function main() {
+  recordCliUsage("check-tasks-details");
   const [, , zoomArg = "en_cours", formatArg = "liste"] = process.argv;
   const zoom = ZOOM_LEVELS.includes(zoomArg) ? zoomArg : "en_cours";
   const format = FORMATS.includes(formatArg) ? formatArg : "liste";

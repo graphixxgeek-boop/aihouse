@@ -21,6 +21,7 @@ import { join } from "node:path";
 import { recommendFindBooster } from "./find-booster.mjs";
 import { proposeDecomposition } from "./route-booster.mjs";
 import { REGISTRIES } from "./doc-report.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 // Racine du dépôt dérivée du fichier lui-même (jamais process.cwd(), qui dépendrait de l'endroit
 // d'où node est lancé) — même patron que ROOT dans doc-report.mjs.
@@ -85,6 +86,7 @@ export function recommendFindBrain(filePath) {
 }
 
 function main() {
+  recordCliUsage("find-brain");
   const target = process.argv[2];
   if (!target) {
     console.log("Usage : node scripts/find-brain.mjs <fichier>");

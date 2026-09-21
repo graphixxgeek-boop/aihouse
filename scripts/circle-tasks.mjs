@@ -29,6 +29,7 @@ import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { scanDocumentWeight, listDatedNarrativeMarkers, extractRuleUnits, findRedundantRulePairs } from "./smart-conso-token.mjs";
 import { walkDocsPaths } from "./lib-shell.mjs";
 import { extractPrincipleUnits, buildEvolutionDigest, findPossibleTensions, philosophyFreshnessDays } from "./the-king.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -606,6 +607,7 @@ export function buildCircleRunSummaryText(entries, { dateLabel } = {}) {
 }
 
 function main() {
+  recordCliUsage("circle-tasks");
   const read = (p) => (existsSync(`${ROOT}${p}`) ? readFileSync(`${ROOT}${p}`, "utf8") : "");
   const profilIndexText = read("docs/profil-utilisateur/index.md");
   const kpiIndexText = read("docs/referentiel/kpi-index.md");

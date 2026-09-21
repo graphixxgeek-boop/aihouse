@@ -24,6 +24,7 @@
 import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { sh as shBase } from "./lib-shell.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const INDEX_PATH = join(ROOT, "docs/hyper-scan-checkpoint/index.md");
@@ -91,6 +92,7 @@ function countOpenBullets(text) {
 }
 
 function main() {
+  recordCliUsage("hyper-scan-checkpoint");
   const now = new Date().toISOString();
   console.log("=== HYPER-SCAN-CHECKPOINT — version légère (zéro appel réseau) ===\n");
 

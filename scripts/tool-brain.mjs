@@ -24,7 +24,7 @@ import { readFileSync } from "node:fs";
 import { PRESTATIONS, suggestPrestationsForTask, formatMenu, slugifyAgentName } from "./le-coordinateur.mjs";
 import { recommendFindBrain, flagFindDeepBoosterCandidates, FIND_DEEP_BOOSTER_NICKNAME } from "./find-brain.mjs";
 import { flagFindBoosterCandidates } from "./doc-report.mjs";
-import { toolUsageStats, toolsNeverUsed } from "./tool-usage.mjs";
+import { toolUsageStats, toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
 
 export const TOOL_BRAIN_SLUG = "tool-brain";
 const USAGE_HISTORY_URL = new URL("../.tool-usage-history.json", import.meta.url);
@@ -138,6 +138,7 @@ export function formatToolBrainReport({ history, prestations = PRESTATIONS, chec
 }
 
 function main() {
+  recordCliUsage("tool-brain");
   const [, , ...rest] = process.argv;
 
   if (rest[0] === "rapport") {

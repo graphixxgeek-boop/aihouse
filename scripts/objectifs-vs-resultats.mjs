@@ -32,6 +32,7 @@ import { readFileSync } from "node:fs";
 import { dataRows } from "./lib-markdown-table.mjs";
 import { loadToolUsageHistory } from "./tool-brain.mjs";
 import { parseKpiHistoryCsv, KPI_HISTORY_PATH } from "./kpi-report.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const REGISTRY_PATH = new URL("../docs/objectifs-vs-resultats/registre.md", import.meta.url);
 
@@ -176,6 +177,7 @@ export function formatObjectifsReport(rows) {
 }
 
 function main() {
+  recordCliUsage("objectifs-vs-resultats");
   const [, , sub] = process.argv;
   if (sub !== "rapport") {
     console.log("Usage : node scripts/objectifs-vs-resultats.mjs rapport");

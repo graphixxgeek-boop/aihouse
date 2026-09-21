@@ -20,6 +20,7 @@
 import { readFileSync, readdirSync, existsSync, writeFileSync } from "node:fs";
 import { join, extname } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 export const FLATTEN_SCOPES = ["code", "code_et_docs"];
 
@@ -183,6 +184,7 @@ export function recordEdition(scope, { indexText, now = new Date(), writeFileImp
 }
 
 function main() {
+  recordCliUsage("ines-official");
   const scope = process.argv[2] === "code_et_docs" ? "code_et_docs" : "code";
   const indexPath = "docs/ines-official/index.md";
   const indexText = existsSync(indexPath) ? readFileSync(indexPath, "utf8") : "";

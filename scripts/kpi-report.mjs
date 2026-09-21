@@ -37,6 +37,7 @@ import {renderHtmlReport} from './html-report.mjs';
 import {burstComplianceScore} from './smart-conso-api.mjs';
 import {computeAdoptionKpi, checkKnowledgeFreshness} from './smart-conso-token.mjs';
 import {persistContextWeightSamples, averageContextWeightByActor, loadHistory as loadMementoWeightHistory} from './memento-weight.mjs';
+import {recordCliUsage} from './tool-usage.mjs';
 
 const root = new URL('..', import.meta.url).pathname;
 const path = (...parts) => join(root, ...parts);
@@ -557,6 +558,7 @@ function reportSmartConso(m) {
 }
 
 async function main() {
+    recordCliUsage('kpi');
     console.log('Tableau de bord — rapport KPI complet (cf. docs/referentiel/tableau-de-bord.md pour les règles).');
 
     const live = await fetchLiveMetrics();

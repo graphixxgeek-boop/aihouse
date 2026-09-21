@@ -52,7 +52,7 @@ import { lastTouchDays, relativeStaleness } from "./clean-dirty-old.mjs";
 import { findUnconfirmedBursts } from "./smart-conso-api.mjs";
 import { summarizeHistory, findJudgeSpawnsWithoutConsultation } from "./smart-conso-token.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
-import { loadJson } from "./tool-usage.mjs";
+import { loadJson, recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const BADGE_CEREMONY_HISTORY_PATH = join(ROOT, ".badge-ceremony-history.json");
@@ -854,6 +854,7 @@ export function runNetworkCheck({ shImpl = sh } = {}) {
 }
 
 function main() {
+  recordCliUsage("le-coordinateur");
   // Sous-commande "catalogue" (tâche #154) : sur demande seulement, jamais mêlée à la synthèse
   // gratuite ci-dessous — `node scripts/le-coordinateur.mjs catalogue`.
   if (process.argv[2] === "catalogue") {

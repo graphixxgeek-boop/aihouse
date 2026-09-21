@@ -25,6 +25,14 @@
 import { readFileSync } from "node:fs";
 import { keyLabel, recordOutcome, orderKeysByExperience, summarize, describeKnownLessons } from "./gemini-key-health.mjs";
 import { PROVIDERS, parseKeyEntry } from "./api-providers.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
+
+// Script top-level (jamais un main()/CLI guard classique — rien n'importe ce fichier pour ses
+// fonctions, il ne s'exécute donc jamais que lorsqu'il est lancé directement) : l'enregistrement se
+// fait dès l'entrée, avant toute logique susceptible de sortir tôt (clé manquante, etc.), sous le
+// slug "smart-breaker" qui regroupe ce script + gemini-key-health.mjs + api-providers.mjs (Smart
+// Breaker, cf. CLAUDE.md).
+recordCliUsage("smart-breaker");
 
 const devVars = readFileSync(new URL("../.dev.vars", import.meta.url), "utf8");
 const key = (process.env.GEMINI_API_KEY ?? devVars.match(/^GEMINI_API_KEY=(.*)$/m)?.[1] ?? "").trim();

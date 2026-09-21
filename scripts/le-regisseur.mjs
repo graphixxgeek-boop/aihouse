@@ -20,6 +20,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync } from
 import { join } from "node:path";
 import { sh } from "./lib-shell.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 export const SIMULATIONS_DIR = join(ROOT, "docs/simulations");
@@ -169,6 +170,7 @@ export function postSimulationChecklist() {
 }
 
 function main() {
+  recordCliUsage("simulations");
   const cmd = process.argv[2];
   if (cmd === "checklist") {
     const which = process.argv[3];

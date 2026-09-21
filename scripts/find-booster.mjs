@@ -16,6 +16,7 @@
 
 import { readFileSync } from "node:fs";
 import { estimateTokens } from "./smart-conso-token.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const FUNCTION_RE = /^(?:export\s+)?(?:async\s+)?function\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*\(/;
 
@@ -283,6 +284,7 @@ export function recommendFindBooster(filePath, { tokenThreshold = 8000 } = {}) {
 }
 
 function main() {
+  recordCliUsage("find-booster");
   const [, , target, ...keywordParts] = process.argv;
   if (!target) {
     console.log("Usage : node scripts/find-booster.mjs <fichier> [mot-clé...] (plusieurs mots-clés = OR, jamais une seule phrase collée)");

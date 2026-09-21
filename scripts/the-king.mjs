@@ -13,6 +13,7 @@
 
 import { significantWords } from "./le-coordinateur.mjs";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const PHILOSOPHY_PATH = "docs/philosophie-et-politique.md";
 
@@ -123,6 +124,7 @@ export function philosophyFreshnessDays() {
 }
 
 function main() {
+  recordCliUsage("the-king");
   const requestText = process.argv.slice(2).join(" ");
   if (requestText) {
     const reminder = reminderFor(requestText);

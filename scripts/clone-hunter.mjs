@@ -28,6 +28,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -363,6 +364,7 @@ export function formatClusterSummary(cluster) {
 }
 
 function main() {
+  recordCliUsage("clone-hunter");
   const clusters = buildDuplicateReport();
   if (!clusters.length) {
     console.log("CLONE-HUNTER : aucun bloc dupliqué détecté au-dessus du seuil (≥5 lignes, ≥20 caractères par ligne).");

@@ -26,6 +26,7 @@ import { KPI_HISTORY_COLUMNS, KPI_HISTORY_PATH, parseKpiHistoryCsv } from "./kpi
 // utilisé par check-house.mjs pour cette fonction, même après son déplacement vers kpi-report.mjs.
 export { parseKpiHistoryCsv };
 import { renderHtmlReport } from "./html-report.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -386,6 +387,7 @@ function collectRealCassandraData({ withCoverage = false } = {}) {
 }
 
 function main() {
+  recordCliUsage("cassandra-rh");
   assertNotAPersonnage("CASSANDRA-RH", "cassandra-rh.mjs::main()");
   const [, , sub] = process.argv;
   if (sub === "rapport") {

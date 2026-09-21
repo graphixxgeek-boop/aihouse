@@ -6,6 +6,7 @@
 // soit la doc s'est trompée dès le départ — dans les deux cas, un signal utile.
 
 import { readFileSync } from "node:fs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -85,6 +86,7 @@ export function checkLinks(links, readFile = (f) => readFileSync(f, "utf8")) {
 }
 
 function main() {
+  recordCliUsage("harmonia");
   const results = checkLinks(LINKS);
   console.log("=== HARMONIA — partie mécanique (cohérence chiffrée doc/code, zéro coût API) ===\n");
   for (const r of results) {

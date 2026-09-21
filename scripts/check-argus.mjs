@@ -11,6 +11,7 @@
 
 import { readFileSync, readdirSync, statSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -89,6 +90,7 @@ export function findTodoMarkers(files) {
 }
 
 function main() {
+  recordCliUsage("argus");
   const lifeSource = readFileSync(join(ROOT, "lib/life.ts"), "utf8");
   const files = walk(join(ROOT, "lib")).concat(walk(join(ROOT, "app"))).concat(walk(join(ROOT, "components")).filter(f => existsSync(join(ROOT, "components"))));
   const dead = findDeadLifeFields(files, lifeSource);

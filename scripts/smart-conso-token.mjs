@@ -21,6 +21,7 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { countTasksSince, lastCoveredTaskNumber } from "./check-suivi-fidelity.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const HISTORY_PATH = fileURLToPath(new URL("../.smart-conso-token-history.json", import.meta.url));
 
@@ -1032,6 +1033,7 @@ export function parseOutcomeArgs(argv) {
 }
 
 function main() {
+  recordCliUsage("smart-conso-token");
   const actionType = process.argv[2];
 
   // Sous-commande dédiée à l'enregistrement d'un résultat réellement observé (2026-09-20) — jamais

@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 237'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 238'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4897,8 +4897,8 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // vraies trouvailles produites). Testé contre le vrai fichier local avec sauvegarde/restauration
   // complète (même discipline que recordAction()/computeAdoptionKpi() ce soir), puisque
   // recordToolUsage() n'a pas de fs injectable, comme le reste des historiques auto-déclarés.
-  const { recordToolUsage, toolUsageStats, toolsNeverUsed, USAGE_ORIGINS } = await import('../scripts/tool-usage.mjs');
-  assert.deepEqual(USAGE_ORIGINS, ['spontane', 'demande', 'automatique_post_commit'], 'the three real origins the user asked to distinguish must be exactly these, never a fourth invented one nor a missing one');
+  const { recordToolUsage, recordCliUsage, toolUsageStats, toolsNeverUsed, USAGE_ORIGINS } = await import('../scripts/tool-usage.mjs');
+  assert.deepEqual(USAGE_ORIGINS, ['spontane', 'demande', 'automatique_post_commit', 'cli_direct'], 'the three original real origins must stay exactly as the user asked, plus (2026-09-21) the new honest "cli_direct" origin — a tool knows it was launched via its own command line, never why, so it must never be confused with the two judgment-based origins');
   assert.throws(() => recordToolUsage(undefined, 'demande'), /toolSlug/, 'a usage event can never be anonymous — a missing toolSlug must fail loudly rather than silently recording a meaningless entry');
   assert.throws(() => recordToolUsage('argus', 'origine-inconnue'), /origin inconnue/, 'an unrecognized origin must fail loudly rather than silently accepting a typo that would corrupt the honest byOrigin breakdown later');
   {
@@ -4913,16 +4913,27 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
       const history = JSON.parse(rdU(histPath, 'utf8'));
       const statsArgus = toolUsageStats(history, 'test-tool-usage-argus');
       assert.equal(statsArgus.total, 2, 'both real events for this tool must be counted, cumulatively, never reset within the same history');
-      assert.deepEqual(statsArgus.byOrigin, { spontane: 0, demande: 1, automatique_post_commit: 1 }, 'each origin must be counted separately and honestly — the real ask was to tell a tool that only ever runs automatically apart from one genuinely chosen');
+      assert.deepEqual(statsArgus.byOrigin, { spontane: 0, demande: 1, automatique_post_commit: 1, cli_direct: 0 }, 'each origin must be counted separately and honestly — the real ask was to tell a tool that only ever runs automatically apart from one genuinely chosen');
       assert.equal(statsArgus.foundSomethingRate, 50, 'foundSomethingRate must reflect the real ratio of confirmed-useful calls among those with a verdict at all (1 of 2 here), the exact "usage vs utility" distinction the user asked for');
       const statsNeverSeen = toolUsageStats(history, 'test-tool-usage-never-recorded');
       assert.deepEqual(statsNeverSeen, { total: 0, byOrigin: {}, foundSomethingCount: 0, foundSomethingRate: undefined }, 'a tool with zero recorded events must report an honest all-zero/undefined result, never a fabricated rate or a crash');
       assert.deepEqual(toolsNeverUsed(history, ['test-tool-usage-argus', 'test-tool-usage-harmonia', 'test-tool-usage-never-recorded']), ['test-tool-usage-never-recorded'], 'toolsNeverUsed() must flag exactly the tool with zero real events among a known list, useful to Doc-Report/#165 for spotting a tool that produces reports nobody ever solicited');
+
+      // recordCliUsage() (2026-09-21) — l'écart réel trouvé le même soir : le compteur restait à
+      // zéro pour tout le paysage malgré des vrais lancements d'outils, parce qu'aucun main() de CLI
+      // n'appelait jamais recordToolUsage(). Ce helper doit rester best-effort (jamais bloquant) et
+      // ne jamais planter même s'il reçoit un toolSlug manquant (le seul cas réel de recordToolUsage()
+      // qui lève une exception) — vérifié ici plutôt que via un vrai chemin disque inutilisable, qui
+      // romprait ce test sur une autre machine.
+      recordCliUsage('test-tool-usage-cli', 4000);
+      const historyAfterCli = JSON.parse(rdU(histPath, 'utf8'));
+      assert.equal(toolUsageStats(historyAfterCli, 'test-tool-usage-cli').byOrigin.cli_direct, 1, 'recordCliUsage() must record a genuine event under the honest "cli_direct" origin, distinct from a human-judged spontane/demande call');
+      assert.doesNotThrow(() => recordCliUsage(undefined), 'recordCliUsage() must swallow even a real recordToolUsage() failure (missing toolSlug) silently — the tool it instruments must never fail because of this purely observational side effect');
     } finally {
       if (hadFile) wrU(histPath, backup); else if (exU(histPath)) unU(histPath);
     }
   }
-  console.log('Passed: the tool-usage counter (task #166) records each real solicitation cumulatively and permanently (never reset per session, the user\'s explicit choice), distinguishes the three real origins (spontaneous/requested/automatic-post-commit) honestly, and computes a real found-something rate distinguishing "often used" from "often USEFUL" — the exact anti-vanity-metric discipline already proven for ALWAYS-NEW-CODE/THE-DEEP-READER — verified against the real local history file with full backup/restore, never left in a dirty state.');
+  console.log('Passed: the tool-usage counter (task #166) records each real solicitation cumulatively and permanently (never reset per session, the user\'s explicit choice), distinguishes the four real origins (spontaneous/requested/automatic-post-commit/cli_direct) honestly, and computes a real found-something rate distinguishing "often used" from "often USEFUL" — the exact anti-vanity-metric discipline already proven for ALWAYS-NEW-CODE/THE-DEEP-READER — verified against the real local history file with full backup/restore, never left in a dirty state — and (2026-09-21) recordCliUsage() gives every tool\'s own main() a single, never-blocking self-recording call, the real fix for a compteur that stayed at zero all evening despite genuine tool launches.');
 }
 
 {

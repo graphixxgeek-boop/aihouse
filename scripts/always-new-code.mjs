@@ -21,6 +21,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { dataRows, numericColumn } from "./lib-markdown-table.mjs";
 import { join } from "node:path";
 import { sh } from "./lib-shell.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const INDEX_PATH = join(ROOT, "docs/always-new-code/index.md");
@@ -154,6 +155,7 @@ export function alwaysNewCodePerformance(indexText) {
 }
 
 function main() {
+  recordCliUsage("always-new-code");
   console.log("=== ALWAYS-NEW-CODE — préparation (zéro coût, la couche raisonnement suit) ===\n");
   const requested = process.argv[2];
   const indexText = existsSync(INDEX_PATH) ? readFileSync(INDEX_PATH, "utf8") : "";

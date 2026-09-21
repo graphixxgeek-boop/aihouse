@@ -18,7 +18,15 @@ import { fileURLToPath } from "node:url";
 
 const HISTORY_PATH = fileURLToPath(new URL("../.tool-usage-history.json", import.meta.url));
 
-export const USAGE_ORIGINS = ["spontane", "demande", "automatique_post_commit"];
+// "cli_direct" (2026-09-21, correctif demandé explicitement après un audit honnête : le compteur
+// affichait ZÉRO sollicitation réelle pour tout le paysage malgré plusieurs vrais lancements d'outils
+// la même soirée — cause racine : aucun `main()` de CLI n'appelait jamais recordToolUsage(), l'agent
+// devait s'en souvenir séparément à chaque fois et ne l'a jamais fait). Origine honnête, distincte des
+// deux autres : le script SAIT qu'il a été lancé via sa propre ligne de commande, mais ne peut jamais
+// savoir POURQUOI (spontané ou demandé — un jugement que seul l'agent qui pilote peut porter) —
+// jamais fabriquer cette distinction à l'aveugle. Câblée directement dans le main()/point d'entrée de
+// chaque outil réel (recordCliUsage() ci-dessous), best-effort, jamais bloquant.
+export const USAGE_ORIGINS = ["spontane", "demande", "automatique_post_commit", "cli_direct"];
 
 // Exportée (2026-09-21) pour que le-coordinateur.mjs::formatBadgeCeremonyAnnouncement() la
 // réutilise verbatim plutôt que d'écrire une 4e copie identique — CLONE-HUNTER venait de trouver
@@ -43,6 +51,17 @@ export function recordToolUsage(toolSlug, origin, now = Date.now(), foundSomethi
   history.events.push({ toolSlug, origin, at: now, ...(typeof foundSomething === "boolean" ? { foundSomething } : {}) });
   writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 1));
   return history;
+}
+
+// recordCliUsage() — le point d'appel unique câblé dans le main()/point d'entrée de chaque outil
+// réel (2026-09-21). Jamais l'appelant lui-même ne construit un try/catch : centralisé une seule
+// fois ici pour qu'un échec d'écriture (disque plein, permissions) ne bloque JAMAIS la vraie sortie
+// de l'outil, qui reste l'objectif premier — ce compteur reste un bonus d'observation, jamais une
+// dépendance du fonctionnement réel (même discipline que lib/memento-weight.ts).
+export function recordCliUsage(toolSlug, now = Date.now()) {
+  try {
+    recordToolUsage(toolSlug, "cli_direct", now);
+  } catch { /* best-effort, jamais bloquant — cf. commentaire ci-dessus */ }
 }
 
 // Statistiques cumulées, jamais remises à zéro (décision explicite de l'utilisateur : le total

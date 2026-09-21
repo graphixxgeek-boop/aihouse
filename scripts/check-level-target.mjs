@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { sh } from "./lib-shell.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 // CHECK-LEVEL-TARGET (2026-09-19, cf. docs/check-level-target-blueprint.md et
 // docs/referentiel/check-level-target.md). Calcule le niveau de vérification qu'une demande
@@ -179,6 +180,7 @@ export function recentlyChangedSensitiveNodes(changedFiles, nodes = SENSITIVE_NO
 }
 
 function main() {
+  recordCliUsage("check-level-target");
   const text = process.argv.slice(2).join(" ");
   if (!text) {
     console.log("Usage: node scripts/check-level-target.mjs <texte de la demande>");

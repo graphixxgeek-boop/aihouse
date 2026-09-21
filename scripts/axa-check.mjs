@@ -21,6 +21,7 @@ import { tmpdir } from "node:os";
 import { sh } from "./lib-shell.mjs";
 import { SENSITIVE_NODES, LEVEL_ORDER } from "./check-level-target.mjs";
 import { THEME_PRIMARY_FILE, parseNumstat, churnSignal } from "./always-new-code.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -287,6 +288,7 @@ function loadArchivedSimulationActions() {
 }
 
 function main() {
+  recordCliUsage("axa-check");
   const args = process.argv.slice(2);
   if (args[0] === "record-check") {
     const [, file, depth, ...functionNames] = args;
