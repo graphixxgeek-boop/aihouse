@@ -541,6 +541,201 @@ export function findIdeasNeedingDecision(candidates, decisions) {
   });
 }
 
+// =============================================================================================
+// RAPPORT DE RONDE EN TROIS REGARDS (2026-09-22, tâche #357, demande explicite de l'utilisateur :
+// « je veux aussi un rapport txt, dans le cadre des rondes, de la part de check-tasks-detail [...]
+// un état des lieux precis des taches en cours, plus une vision globale au niveau du projet.
+// capable de dire ou on en est dans le projet, oeil critique, avec differents zoom, differents
+// regards. + de verifier les chiffres du suivi »).
+//
+// Les trois fonctions ci-dessous sont PURES et ne lisent rien elles-mêmes : elles reçoivent les
+// lignes déjà extraites par loadAllTaskRows() (qui ne fait lui-même que relayer
+// categorizeAllSessions()). Aucune ne compte quoi que ce soit une seconde fois — c'est le même
+// principe anti-duplication qui gouverne déjà tout ce fichier.
+//
+// Limite honnête, valable pour les trois : elles ne LISENT pas le projet, elles comptent ce que le
+// suivi en dit. Un chantier réellement avancé mais jamais consigné leur est invisible — c'est une
+// mesure de ce qui est TRACÉ, jamais de ce qui est FAIT. Dit explicitement dans le rapport lui-même
+// plutôt que laissé à la déduction du lecteur (Article 15).
+
+// PARTIE 1 — les chiffres vérifiés du suivi.
+// « Vérifiés » au sens strict : chaque nombre est recalculé depuis les lignes réelles, et les
+// incohérences internes sont signalées plutôt que lissées (un total qui ne retombe pas sur ses
+// pieds est un bug du suivi, pas un arrondi à masquer).
+export function suiviFigures(rows, { now = Date.now() } = {}) {
+  const total = rows.length;
+  const byStatus = { terminee: 0, enCours: 0, ouverte: 0, autre: 0 };
+  for (const r of rows) byStatus[r.statusKey] = (byStatus[r.statusKey] ?? 0) + 1;
+  const numbered = rows.filter((r) => Number.isFinite(r.n) && r.n > 0);
+  const numbers = numbered.map((r) => r.n);
+  const highest = numbers.length ? Math.max(...numbers) : 0;
+  // Trous de numérotation : un numéro absent signale une tâche perdue lors d'un découpage de
+  // fichier, ou jamais écrite. Le balayage part du PLUS PETIT numéro réellement présent, jamais de
+  // 1 : le système de suivi a démarré en cours de projet (première tâche tracée : #117), donc
+  // partir de 1 inventait 116 « trous » qui n'en sont pas — faux positif trouvé en lançant la
+  // fonction pour de vrai sur le dépôt réel, jamais visible sur une fixture synthétique.
+  // Sans aucun numéro exploitable, il n'y a pas de fenêtre à balayer : lowest et highest valant
+  // tous deux 0, la boucle signalait « le numéro 0 manque » sur un projet vide (edge case trouvé
+  // par son propre test, jamais en usage réel). Une absence de données n'est pas une anomalie.
+  const lowest = numbers.length ? Math.min(...numbers) : 0;
+  const seen = new Set(numbers);
+  const missing = [];
+  if (numbers.length) for (let i = lowest; i <= highest; i++) if (!seen.has(i)) missing.push(i);
+  const duplicates = [...new Set(numbers.filter((n, i) => numbers.indexOf(n) !== i))];
+  // Rythme réel : tâches portant un horodatage dans les 1/7/30 derniers jours, tous statuts
+  // confondus (le suivi horodate la CRÉATION de la ligne, jamais sa clôture — on mesure donc le
+  // rythme d'ouverture, ce qui est dit tel quel plutôt que présenté comme un rythme de clôture).
+  const ageDays = (r) => { const t = Date.parse(r.horodatage ?? ""); return Number.isFinite(t) ? (now - t) / 86400000 : null; };
+  const within = (d) => rows.filter((r) => { const a = ageDays(r); return a !== null && a >= 0 && a <= d; }).length;
+  const byTheme = {};
+  for (const r of rows) {
+    const t = splitSujet(r.sujet).theme || "(sans thème)";
+    byTheme[t] ??= { total: 0, ouvertes: 0 };
+    byTheme[t].total++;
+    if (r.statusKey !== "terminee") byTheme[t].ouvertes++;
+  }
+  const incoherences = [];
+  const summed = byStatus.terminee + byStatus.enCours + byStatus.ouverte + byStatus.autre;
+  if (summed !== total) incoherences.push(`La somme des statuts (${summed}) ne retombe pas sur le total de lignes (${total}) — une ligne échappe au classement.`);
+  if (missing.length) incoherences.push(`${missing.length} numéro(s) de tâche manquant(s) entre #${lowest} et #${highest} : ${missing.slice(0, 12).join(", ")}${missing.length > 12 ? "…" : ""}.`);
+  if (duplicates.length) incoherences.push(`${duplicates.length} numéro(s) de tâche en double : ${duplicates.join(", ")} — deux tâches distinctes partagent un identifiant.`);
+  if (rows.length && !numbered.length) incoherences.push("Aucune ligne ne porte de numéro exploitable — le suivi est illisible par numéro.");
+  return {
+    total, byStatus, lowest, highest, numberedCount: numbered.length, missing, duplicates,
+    rythme: { jour1: within(1), jours7: within(7), jours30: within(30) },
+    byTheme, incoherences,
+  };
+}
+
+// PARTIE 2 — où en est le projet, vu de haut.
+// Les chantiers viennent de CHANTIER_PRELIMINARY_FILES (déjà maintenu, déjà utilisé par le contrôle
+// de fraîcheur) : jamais une seconde liste de chantiers à tenir à jour en parallèle, ce que
+// l'Article 24 interdit explicitement. Chaque chantier est rapproché de ses tâches par le `match`
+// déjà déclaré là-bas.
+export function projectStanding(rows, { chantiers = CHANTIER_PRELIMINARY_FILES, now = Date.now() } = {}) {
+  // Clampé à 0 : une ligne horodatée « demain » (fuseau, ou horodatage saisi en avance) donnerait
+  // un âge négatif affiché « il y a -1 j », absurde à la lecture. Un âge négatif veut dire « tout
+  // juste », jamais « dans le futur » — même honnêteté d'affichage qu'ailleurs dans ce fichier.
+  const ageDays = (r) => { const t = Date.parse(r.horodatage ?? ""); return Number.isFinite(t) ? Math.max(0, Math.floor((now - t) / 86400000)) : null; };
+  const out = [];
+  for (const [nom, def] of Object.entries(chantiers)) {
+    const mine = rows.filter((r) => def.match.test(`${r.sujet ?? ""} ${r.sousSujet ?? ""} ${r.detail ?? ""}`));
+    const ouvertes = mine.filter((r) => r.statusKey !== "terminee");
+    const ages = mine.map(ageDays).filter((a) => a !== null);
+    out.push({
+      chantier: nom,
+      total: mine.length,
+      terminees: mine.length - ouvertes.length,
+      ouvertes: ouvertes.length,
+      // "Jamais commencé" est un constat fort : on ne le prononce que si AUCUNE tâche ne s'y
+      // rattache, jamais sur une simple impression de lenteur.
+      jamaisCommence: mine.length === 0,
+      dernierMouvementJours: ages.length ? Math.min(...ages) : null,
+      avancementPct: mine.length ? Math.round(((mine.length - ouvertes.length) / mine.length) * 100) : null,
+    });
+  }
+  return out.sort((a, b) => (b.ouvertes - a.ouvertes) || (b.total - a.total));
+}
+
+// PARTIE 3 — l'œil critique.
+// Uniquement des constats CHIFFRÉS et vérifiables : chaque entrée porte le nombre qui la justifie,
+// jamais une opinion fabriquée (même discipline que CASSANDRA-RH, qui « ne descend jamais un outil
+// sans donner le chiffre exact qui le justifie »). Une liste vide est un résultat légitime.
+export function criticalEye(rows, { stagnant = [], standing = [], figures = null, now = Date.now() } = {}) {
+  const findings = [];
+  const fig = figures ?? suiviFigures(rows, { now });
+  for (const s of stagnant.filter((s) => (s.streak ?? 3) >= 3).sort((a, b) => (b.streak ?? 0) - (a.streak ?? 0))) {
+    findings.push({ gravite: (s.streak ?? 3) >= 5 ? "forte" : "moyenne", constat: `#${s.n} « ${s.sousSujet} » est ouverte et identique depuis ${s.streak ?? 3} rapports consécutifs.` });
+  }
+  for (const c of standing.filter((c) => c.jamaisCommence)) {
+    findings.push({ gravite: "forte", constat: `Le chantier « ${c.chantier} » a un fichier de conception mais 0 tâche de suivi s'y rattache — annoncé, jamais commencé.` });
+  }
+  for (const c of standing.filter((c) => !c.jamaisCommence && c.ouvertes > 0 && (c.dernierMouvementJours ?? 0) >= 3)) {
+    findings.push({ gravite: "moyenne", constat: `Le chantier « ${c.chantier} » a ${c.ouvertes} tâche(s) ouverte(s) et rien n'y a bougé depuis ${c.dernierMouvementJours} jour(s).` });
+  }
+  // Déséquilibre outillage / jeu. Les deux familles sont reconnues par le thème déjà écrit dans le
+  // suivi, jamais par une classification inventée ici. Le seuil de 70 % n'est pas un idéal de
+  // répartition : c'est le point à partir duquel le déséquilibre mérite d'être REGARDÉ, l'arbitrage
+  // restant entièrement humain (construire de l'outillage est un investissement légitime).
+  const outillage = rows.filter((r) => /outil|agence|m[ée]thode de travail|suivi/i.test(splitSujet(r.sujet).theme)).length;
+  const jeu = rows.filter((r) => /jeu|dialogue|personnage|graphis|simulation|moteur/i.test(splitSujet(r.sujet).theme)).length;
+  if (outillage + jeu > 0) {
+    const pct = Math.round((outillage / (outillage + jeu)) * 100);
+    if (pct >= 70) findings.push({ gravite: "moyenne", constat: `${pct} % des tâches tracées portent sur l'outillage de travail (${outillage}) contre ${100 - pct} % sur le jeu lui-même (${jeu}) — à regarder, jamais un défaut en soi.` });
+  }
+  for (const i of fig.incoherences) findings.push({ gravite: "forte", constat: `Incohérence de comptage du suivi : ${i}` });
+  return findings;
+}
+
+// Assemble le rapport de Ronde en texte brut. Les TROIS zooms y figurent successivement (choix
+// explicite de l'utilisateur : « je n'ai jamais à relancer l'outil pour changer d'angle »).
+// Le txt est la version archivée et relue par les outils ; le HTML reste la version de
+// présentation, construit à partir des MÊMES données — jamais un second calcul (cf. la décision
+// HTML/texte déjà suivie par Doc-Report).
+export function buildRondeTextReport({ rows, history = [], now = Date.now() } = {}) {
+  const allRows = rows ?? loadAllTaskRows();
+  const fig = suiviFigures(allRows, { now });
+  const standing = projectStanding(allRows, { now });
+  const { stagnant } = compareSnapshots(history, allRows);
+  const critical = criticalEye(allRows, { stagnant, standing, figures: fig, now });
+  const latestTaskNumber = fig.highest;
+  const L = [];
+  const pad = (s, n) => String(s).padEnd(n);
+  L.push("=== check-tasks-details — rapport de Ronde ===");
+  L.push(`Date : ${new Date(now).toISOString().slice(0, 16).replace("T", " ")}`);
+  L.push("");
+  L.push("Limite honnête, valable pour tout ce qui suit : ce rapport compte ce que le SUIVI dit du");
+  L.push("projet, jamais ce que le projet est réellement. Un travail fait sans être consigné lui est");
+  L.push("invisible.");
+  L.push("");
+
+  L.push("--- PARTIE 1 · LES CHIFFRES VÉRIFIÉS DU SUIVI ---------------------------------------");
+  L.push(`Total de tâches tracées : ${fig.total}   (numéros #${fig.lowest} à #${fig.highest} — le suivi a démarré en cours de projet, les numéros antérieurs n'ont jamais existé)`);
+  L.push(`  terminées : ${fig.byStatus.terminee}   en cours : ${fig.byStatus.enCours}   ouvertes : ${fig.byStatus.ouverte}   autre/indéterminé : ${fig.byStatus.autre}`);
+  L.push(`Rythme d'ouverture de tâches : ${fig.rythme.jour1} sur 24 h · ${fig.rythme.jours7} sur 7 j · ${fig.rythme.jours30} sur 30 j`);
+  L.push("  (le suivi horodate la création d'une ligne, jamais sa clôture — c'est donc un rythme");
+  L.push("   d'ouverture, jamais un rythme d'achèvement.)");
+  L.push("");
+  L.push("Répartition par thème (total / encore ouvertes) :");
+  for (const [theme, v] of Object.entries(fig.byTheme).sort((a, b) => b[1].total - a[1].total)) {
+    L.push(`  ${pad(theme.slice(0, 48), 50)} ${pad(v.total, 5)} ${v.ouvertes ? `(${v.ouvertes} ouverte(s))` : ""}`);
+  }
+  L.push("");
+  L.push(fig.incoherences.length ? "⚠️ Incohérences de comptage trouvées :" : "✅ Aucune incohérence de comptage : les statuts retombent sur le total, la numérotation est continue et sans doublon.");
+  for (const i of fig.incoherences) L.push(`  - ${i}`);
+  L.push("");
+
+  L.push("--- PARTIE 2 · OÙ EN EST LE PROJET, VU DE HAUT --------------------------------------");
+  L.push("Un chantier = une entrée de CHANTIER_PRELIMINARY_FILES (la liste déjà tenue pour le");
+  L.push("contrôle de fraîcheur, jamais une seconde liste en parallèle).");
+  L.push("");
+  for (const c of standing) {
+    const etat = c.jamaisCommence ? "JAMAIS COMMENCÉ" : c.ouvertes === 0 ? "rien d'ouvert" : `${c.ouvertes} ouverte(s)`;
+    const bouge = c.dernierMouvementJours === null ? "aucun mouvement daté" : `dernier mouvement il y a ${c.dernierMouvementJours} j`;
+    L.push(`  ${pad(c.chantier.slice(0, 42), 44)} ${pad(etat, 18)} ${pad(c.avancementPct === null ? "—" : c.avancementPct + " %", 6)} ${bouge}`);
+  }
+  L.push("");
+
+  L.push("--- PARTIE 3 · L'ŒIL CRITIQUE ------------------------------------------------------");
+  if (!critical.length) L.push("✅ Aucun constat critique chiffrable ce passage — jamais une absence de problème prouvée, seulement l'absence de signal mesurable.");
+  for (const f of critical) L.push(`  [${f.gravite === "forte" ? "!!" : "! "}] ${f.constat}`);
+  L.push("");
+
+  L.push("--- PARTIE 4 · L'ÉTAT DÉTAILLÉ, AUX TROIS ZOOMS -------------------------------------");
+  for (const zoom of ZOOM_LEVELS) {
+    const scoped = filterByZoom(allRows, zoom, { latestTaskNumber });
+    L.push("");
+    L.push(`### ${ZOOM_LABELS[zoom]} — ${scoped.length} tâche(s)`);
+    for (const t of scoped) {
+      const icone = t.statusKey === "terminee" ? "✔" : t.statusKey === "enCours" ? "▶" : t.statusKey === "ouverte" ? "○" : "?";
+      L.push(`  ${icone} #${pad(t.n ?? "—", 4)} ${pad(splitSujet(t.sujet).theme.slice(0, 26), 28)} ${String(t.sousSujet ?? "").slice(0, 96)}`);
+    }
+  }
+  L.push("");
+  L.push(`(Fin du rapport — ${critical.length} constat(s) critique(s), ${fig.incoherences.length} incohérence(s) de comptage.)`);
+  return { text: L.join("\n"), figures: fig, standing, critical, stagnant };
+}
+
 // Construit le contenu du rapport (pure, testable) — la génération HTML et l'écriture d'instantané
 // restent dans main(), jamais mélangées ici.
 export function buildReport({ zoom = "en_cours", format = "liste", allRows, history = [], onboardingContext = null, registryFindings } = {}) {
@@ -633,8 +828,37 @@ export function buildRealOnboardingContext(root = ROOT.replace(/\/$/, "")) {
   };
 }
 
+function rondeCli() {
+  const allRows = loadAllTaskRows();
+  const history = loadSnapshotHistory();
+  const report = buildRondeTextReport({ rows: allRows, history });
+  if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  const txtFile = join(OUT_DIR, `ronde-${stamp}.txt`);
+  writeFileSync(txtFile, report.text, "utf8");
+  // Le HTML relit `report` (déjà calculé), jamais les lignes du suivi une seconde fois.
+  const htmlFile = join(OUT_DIR, `ronde-${stamp}.html`);
+  writeFileSync(htmlFile, renderHtmlReport({
+    title: "check-tasks-details — rapport de Ronde",
+    subtitle: `${report.figures.total} tâche(s) tracées · ${report.critical.length} constat(s) critique(s) · ${report.figures.incoherences.length} incohérence(s) de comptage`,
+    dateLabel: new Date().toISOString(),
+    blocks: [{ type: "pre", text: report.text }],
+    footer: "check-tasks-details — lecture seule, docs/suivi/ reste l'unique source de vérité du projet.",
+  }), "utf8");
+  appendSnapshot(allRows);
+  console.log(report.text);
+  console.log(`\nRapport txt  : ${txtFile}`);
+  console.log(`Rapport HTML : ${htmlFile}`);
+}
+
 function main() {
   recordCliUsage("check-tasks-details");
+  // Sous-commande `ronde` (2026-09-22) : le rapport de Ronde en quatre parties, txt + HTML tirés
+  // des MÊMES données (jamais deux calculs qui pourraient diverger — le txt est la version
+  // archivée et relue par les outils, le HTML la version de présentation, décision explicite de
+  // l'utilisateur). Sous-commande dédiée plutôt qu'un 3e argument positionnel : ce rapport ne prend
+  // ni zoom ni forme, il les contient tous les trois.
+  if (process.argv[2] === "ronde") return rondeCli();
   const [, , zoomArg = "en_cours", formatArg = "liste"] = process.argv;
   const zoom = ZOOM_LEVELS.includes(zoomArg) ? zoomArg : "en_cours";
   const format = FORMATS.includes(formatArg) ? formatArg : "liste";

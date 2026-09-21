@@ -264,6 +264,29 @@ export const CIRCLE_ITEMS = [
   // calculé, mais un vrai calcul relancé contre l'historique réel à chaque passage. Aucun signal de
   // fraîcheur mécanique ici (tool-brain n'a pas de registre propre, catégorie « Membre certifié
   // classique »), même fallback honnête que "correctifs"/"referentiel" ci-dessus.
+  // check-tasks-details en RAPPORT DE RONDE (2026-09-22, tâche #357, demande explicite de
+  // l'utilisateur : « je veux aussi un rapport txt, dans le cadre des rondes, de la part de
+  // check-tasks-detail [...] un état des lieux precis des taches en cours, plus une vision globale
+  // au niveau du projet. capable de dire ou on en est dans le projet, oeil critique, avec
+  // differents zoom, differents regards. + de verifier les chiffres du suivi »).
+  // Quatre parties calibrées explicitement, et les TROIS zooms dans le même rapport plutôt qu'un
+  // zoom à choisir au lancement : un item de Ronde tourne sans personne pour arbitrer, donc lui
+  // faire choisir un angle reviendrait à perdre les deux autres. Ses constats rejoignent la série
+  // de questions à choix forcé de l'Étape 5, jamais un rapport qu'on peut ne pas ouvrir.
+  {
+    id: "check-tasks-report",
+    // Thème « Suivi des chantiers » plutôt que « Suivi & référentiels » : le second était déjà à 4
+    // items, soit exactement la limite réelle de 4 options par question de la fenêtre à cocher — un
+    // 5e l'aurait rendu impossible à afficher (contrainte attrapée en direct par le test dédié, pas
+    // devinée). Le classement n'est pas un pis-aller pour autant : la PARTIE 2 de ce rapport porte
+    // précisément sur l'état des chantiers, le même sujet que les deux autres items de ce thème.
+    theme: "Suivi des chantiers",
+    label: "check-tasks-details — rapport de Ronde (chiffres vérifiés, état du projet, œil critique, 3 zooms)",
+    cout: "gratuit — relecture seule de docs/suivi/, zéro appel API",
+    tokensEstimes: "modéré — quatre parties dont l'état détaillé aux trois zooms, le plus long rapport de la Ronde",
+    execute: "Appeler buildRondeTextReport() (scripts/check-tasks-details.mjs) — jamais un second calcul des chiffres du suivi — et écrire le texte via recordCircleItemReport('check-tasks-report', ...). Lire ensuite la PARTIE 3 (œil critique) : chacun de ses constats doit rejoindre la série de questions à choix forcé de l'Étape 5, jamais rester dans le fichier seul.",
+    producesReport: true,
+  },
   {
     id: "tool-brain-report",
     theme: "Passages réels (smoke run)",
@@ -782,6 +805,7 @@ export const CIRCLE_REPORT_FOLDERS = {
   "suivi-open-tasks-signal": "docs/suivi-open-tasks/",
   "chantier-preliminaire-signal": "docs/chantier-preliminaire/",
   "idee-a-trancher-signal": "docs/idee-a-trancher/",
+  "check-tasks-report": "docs/check-tasks-details/",
   "tool-brain-report": "docs/tool-brain/",
   "network-check-run": "docs/network-check/",
   "referentiel": "docs/relecture-referentiel/",

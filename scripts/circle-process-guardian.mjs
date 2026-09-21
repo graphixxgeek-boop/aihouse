@@ -205,6 +205,61 @@ export function verifyHyperScanProcess({
 // CIRCLE_REPORT_FOLDERS) ; et un item costly/periodicityTracked DOIT avoir un substitut déclaré
 // (sinon la ligne d'alerte imprimerait littéralement "undefined" — un vrai bug déjà possible
 // aujourd'hui, jamais hypothétique). Signal CONFIRMÉ dans les deux cas, jamais une supposition.
+// CIRCLE_ITEMS_CHANGELOG (2026-09-22, tâche #357, demande explicite de l'utilisateur au moment
+// d'ajouter l'item check-tasks-report : « que process.circle soit là pour consigner ce
+// changement »). circle-process-guardian ne se contentait jusqu'ici que de VÉRIFIER la discipline
+// d'exécution d'une Ronde ; il consigne désormais aussi l'histoire de la Ronde elle-même — quel
+// item est apparu, quand, et pourquoi.
+//
+// Pourquoi ici plutôt que dans circle-tasks.mjs : le gardien est déjà celui qui compare CIRCLE_ITEMS
+// à ses tables satellites (findCircleItemsMapDrift) et qui traque les références périmées à son
+// nombre d'items (findStaleItemCountReferences). L'historique des changements appartient à la même
+// famille — la mémoire de ce qui a bougé, séparée de ce qui bouge. circle-tasks.mjs reste la
+// définition, jamais son propre historien.
+//
+// Nature volontairement MANUELLE, écrite noir sur blanc comme l'Article 24 l'exige d'une liste
+// curatée : le « pourquoi » d'un changement n'est déductible d'aucun diff. Ce que l'Article 24
+// exige en revanche, et qui est bien mécanique ici, c'est le GARDE-FOU :
+// findItemsMissingFromChangelog() compare ce registre aux vrais CIRCLE_ITEMS et refuse qu'un item
+// apparaisse sans jamais avoir été consigné.
+export const CIRCLE_ITEMS_CHANGELOG = [
+  {
+    date: "2026-09-22",
+    itemId: "check-tasks-report",
+    changement: "ajout",
+    pourquoi: "Demande explicite de l'utilisateur : un rapport txt de check-tasks-details dans les Rondes, en plusieurs parties traitant de sujets différents — chiffres vérifiés du suivi, où en est le projet vu de haut, œil critique, et l'état détaillé aux trois zooms dans un seul fichier. Calibré par quatre questions (parties retenues, zooms, format, questions forcées).",
+  },
+  {
+    date: "2026-09-22",
+    itemId: "hyper-scan-checkpoint-light",
+    changement: "ajout",
+    pourquoi: "Rentabiliser une erreur de compréhension : verifyHyperScanProcess() avait été construit sur une mauvaise lecture d'une demande, et vérifiait la discipline d'un outil qui ne faisait pas partie de la Ronde. Plutôt que de retirer ce travail, l'utilisateur a demandé d'y faire entrer HYPER-SCAN-CHECKPOINT pour que la vérification ait un sens.",
+  },
+];
+
+// Garde-fou mécanique du registre ci-dessus (Article 24) : un item réel jamais consigné est une
+// dérive silencieuse exactement comme une entrée de map oubliée. Les items ANTÉRIEURS au registre
+// ne sont pas signalés — le registre naît le 2026-09-22 et n'a jamais prétendu reconstruire
+// l'histoire des 23 items qui existaient déjà (absence honnête, jamais un faux historique
+// fabriqué après coup pour faire nombre).
+export function findItemsMissingFromChangelog(items = CIRCLE_ITEMS, changelog = CIRCLE_ITEMS_CHANGELOG, knownBefore = KNOWN_ITEMS_BEFORE_CHANGELOG) {
+  const consigned = new Set(changelog.map((e) => e.itemId));
+  return items
+    .filter((i) => !consigned.has(i.id) && !knownBefore.has(i.id))
+    .map((i) => ({ check: "item-missing-from-changelog", message: `L'item "${i.id}" existe dans CIRCLE_ITEMS mais n'a jamais été consigné dans CIRCLE_ITEMS_CHANGELOG — son "pourquoi" est déjà perdu.` }));
+}
+
+// Les 23 items présents avant la création du registre, figés une fois pour toutes : cette liste ne
+// grandit JAMAIS. Tout item ajouté après le 2026-09-22 doit passer par le changelog, sans exception.
+export const KNOWN_ITEMS_BEFORE_CHANGELOG = new Set([
+  "profil", "the-king-signal", "kpi", "clean-dirty-old-signal", "html-wiring-check",
+  "claude-md-weight-signal", "correctifs", "suivi-open-tasks-signal", "chantier-preliminaire-signal",
+  "idee-a-trancher-signal", "smart-conso-api-scan", "smart-conso-token-scan", "tool-brain-report",
+  "ines-official-signal", "cassandra-rh-signal", "profil-utilisateur-guard", "network-check-run",
+  "coordinateur-catalogue", "referentiel", "dream-team-photo", "the-screener", "the-final-judge",
+  "the-deep-reader", "clone-hunter-run",
+]);
+
 export function findCircleItemsMapDrift(items = CIRCLE_ITEMS, {
   notRecommendedByDefault = NOT_RECOMMENDED_BY_DEFAULT,
   costlySubstitutes = COSTLY_SUBSTITUTES,

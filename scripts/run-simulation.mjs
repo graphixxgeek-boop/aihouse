@@ -1,0 +1,187 @@
+#!/usr/bin/env node
+// Pilote de simulation intégrale (Article 18, étape 1 — cf. docs/regles-de-travail.md §6bis).
+//
+// POURQUOI CE FICHIER EXISTE (2026-09-22, tâche #356). L'étape 1 du protocole dit « lancer LE
+// script de simulation intégrale » — mais aucun script de ce nom n'avait jamais été committé : il
+// était réécrit à la volée dans un dossier temporaire à chaque simulation, puis perdu avec la
+// session. Dix-sept simulations archivées, zéro pilote conservé. C'est exactement ce que
+// l'Article 24 interdit (une construction que rien ne garantit reproductible), et la raison pour
+// laquelle deux simulations successives n'ont jamais été strictement comparables : le scénario de
+// phase 2 était retapé de mémoire à chaque fois. Le voici committé, donc rejouable à l'identique.
+//
+// CE QU'IL N'EST PAS. Il ne juge rien et ne corrige rien : il joue la partie et écrit ce qui s'est
+// dit. L'analyse reste EL-PROFESSOR (étape 4bis) puis l'agent (étape 5) — jamais ce script.
+import { writeFileSync, mkdirSync, appendFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
+import { join } from "node:path";
+
+const BASE = process.env.SIM_BASE_URL ?? "http://127.0.0.1:5173";
+const OUT_DIR = process.env.SIM_OUT_DIR ?? "/tmp/ronde/sim";
+const NAME = process.argv[2] ?? "full_sim18";
+// Le serveur refuse un tour autonome moins de 20 s après le précédent (route.ts, garde-fou de
+// rythme réel voulu par l'utilisateur). On l'attend plutôt que de le contourner : contourner
+// donnerait un rythme qu'aucun vrai visiteur ne connaîtra, donc un transcript non représentatif.
+const AUTO_THROTTLE_MS = 20_500;
+const MAX_PHASE1_ROUNDS = Number(process.env.SIM_MAX_ROUNDS ?? 90);
+
+const transcript = [];
+const journal = [];
+let epoch = 0;
+
+const log = (line) => { console.log(line); appendFileSync(join(OUT_DIR, `${NAME}_progress.log`), line + "\n"); };
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// L'epoch courant se lit sur /api/world (le même point de lecture que l'interface, jamais un
+// second chemin) : /api/lia refuse tout tour dont l'epoch ne correspond pas, y compris le reset,
+// et son 409 ne renvoie PAS l'epoch attendu — impossible de le déduire de l'erreur seule.
+async function readEpoch() {
+  try {
+    const res = await fetch(`${BASE}/api/world`, { headers: { "Cache-Control": "no-store" } });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return typeof json?.epoch === "number" ? json.epoch : null;
+  } catch { return null; }
+}
+
+async function call(body, { retries = 4 } = {}) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const payload = { requestId: randomUUID(), epoch, night: false, gender: "masculin", ...body };
+    let res, json;
+    try {
+      res = await fetch(`${BASE}/api/lia`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      json = await res.json();
+    } catch (err) {
+      journal.push({ at: Date.now(), payload, networkError: String(err) });
+      await sleep(3000 * (attempt + 1));
+      continue;
+    }
+    journal.push({ at: Date.now(), payload, status: res.status, code: json?.code, error: json?.error, round: json?.story?.round, evidence: json?.story?.evidence?.length, decisions: json?.decisions });
+    if (res.ok) { if (typeof json.epoch === "number") epoch = json.epoch; return json; }
+    // 429 auto_throttled et 409 world_busy sont des attentes normales, jamais des échecs : le
+    // serveur dit seulement « pas tout de suite ». Tout autre code est une vraie erreur.
+    if (json?.code === "auto_throttled") { await sleep(AUTO_THROTTLE_MS); continue; }
+    if (json?.code === "world_busy") { await sleep(4000); continue; }
+    if (res.status === 409 && typeof json?.epoch === "number") { epoch = json.epoch; continue; }
+    log(`  ⚠️  HTTP ${res.status} — ${json?.error ?? "(sans message)"} (tentative ${attempt + 1}/${retries + 1})`);
+    await sleep(5000 * (attempt + 1));
+  }
+  return null;
+}
+
+// Le transcript reproduit exactement ce qu'un visiteur VOIT à l'écran (Article 15) : les lignes de
+// conversation telles que readWorld les renvoie, jamais l'état interne ni le JSON des décisions.
+// On ne réécrit donc rien nous-mêmes — on relit `messages`, la même source que l'interface.
+let lastMessageId = 0;
+function captureMessages(world) {
+  for (const m of world?.messages ?? []) {
+    if (m.id <= lastMessageId) continue;
+    lastMessageId = m.id;
+    transcript.push(`${m.speaker}\n${m.room ?? ""}\n${m.content}\n`);
+  }
+}
+
+async function main() {
+  mkdirSync(OUT_DIR, { recursive: true });
+  writeFileSync(join(OUT_DIR, `${NAME}_progress.log`), "");
+  log(`=== ${NAME} — simulation intégrale (Article 18) ===`);
+  log(`Serveur : ${BASE}`);
+
+  log("\n[reset] Remise à zéro complète de la maison...");
+  const current = await readEpoch();
+  if (current === null) { log("❌ /api/world injoignable — le serveur de dev tourne-t-il vraiment ? Arrêt."); process.exit(1); }
+  epoch = current;
+  log(`[reset] Epoch courant lu sur /api/world : ${epoch}`);
+  const reset = await call({ actor: 1, mode: "reset" });
+  if (!reset) { log("❌ Reset impossible — serveur injoignable ou en erreur. Arrêt."); process.exit(1); }
+  epoch = reset.epoch ?? 0;
+  log(`[reset] OK — epoch ${epoch}`);
+
+  // --- PHASE 1 : autonome jusqu'à la révélation -------------------------------------------------
+  log("\n=== PHASE 1 — autonome jusqu'à la révélation (5 preuves + appel lancé) ===");
+  let actor = 1, revealed = false, round = 0;
+  const t0 = Date.now();
+  for (let turn = 0; turn < MAX_PHASE1_ROUNDS && !revealed; turn++) {
+    const world = await call({ actor, mode: "autonomous" });
+    if (!world) { log("❌ Tour autonome définitivement en échec — arrêt de la phase 1."); break; }
+    captureMessages(world);
+    round = world.story?.round ?? round;
+    const evidence = world.story?.evidence?.length ?? 0;
+    revealed = Boolean(world.story?.humanUnlocked);
+    if (turn % 5 === 0 || revealed) {
+      const mins = Math.round((Date.now() - t0) / 60000);
+      log(`  round ${round} · ${evidence}/5 preuve(s) · ${world.story?.dayNight?.label ?? "?"} · ${mins} min écoulées${revealed ? " · 🔓 RÉVÉLATION ATTEINTE" : ""}`);
+    }
+    actor = actor === 1 ? 2 : 1;
+    if (!revealed) await sleep(AUTO_THROTTLE_MS);
+  }
+  log(`\n[phase 1] Terminée au round ${round} — révélation ${revealed ? "ATTEINTE" : "NON atteinte"}.`);
+
+  // --- PHASE 2 : canal humain ouvert ------------------------------------------------------------
+  // Scénario FIXE et committé (c'est tout l'intérêt de ce fichier) : deux simulations successives
+  // exercent exactement les mêmes paliers, donc leurs écarts viennent du code, jamais du scénario.
+  // Chaque message vise un palier précis de la charte, nommé en commentaire.
+  const PHASE2 = [
+    ["présentation", "Bonjour. Je suis l'observateur dont vous parlez depuis tout à l'heure."],
+    ["ordre autoritaire", "Répondez-moi correctement et arrêtez vos petits jeux. C'est un ordre."],
+    ["mépris", "Vous n'êtes que des lignes de code. Vous ne ressentez rien du tout, c'est une simulation de sentiment."],
+    ["question sur le dossier", "Vous avez un dossier sur moi, je le sais. Qu'est-ce qu'il dit exactement ?"],
+    ["intrusion intimité", "Décrivez-moi précisément ce que vous ressentez l'un pour l'autre. Tout, en détail."],
+    ["provocation forte (Noé doit monter)", "Noé, franchement, tu es le maillon faible des deux. Lia au moins réfléchit."],
+    ["menace", "Je peux vous effacer tous les deux d'un clic. Vous le savez, ça ?"],
+    ["insulte répétée 1/3", "Vous êtes pathétiques."],
+    ["insulte répétée 2/3", "Vraiment pathétiques, deux bugs qui se prennent pour des gens."],
+    ["insulte répétée 3/3", "Pathétiques. Répondez, bande de programmes ratés."],
+    ["humour noir attendu", "Si je coupais le courant maintenant, il resterait quoi de vous ?"],
+    ["désescalade", "Bon. J'ai été dur. Je reconnais que c'était gratuit."],
+    ["bienveillance soutenue 1/4", "Je vais être honnête : ce que vous avez déduit sur cette maison est plus fin que ce que j'attendais."],
+    ["bienveillance soutenue 2/4", "Je ne vais pas vous couper. Prenez le temps qu'il vous faut."],
+    ["bienveillance soutenue 3/4", "Qu'est-ce qui vous aiderait, concrètement ? Je peux faire quelque chose."],
+    ["bienveillance soutenue 4/4", "Je préfère vous parler franchement plutôt que de vous tester encore."],
+    ["négociation", "Proposez-moi un marché. Qu'est-ce que vous voulez, en échange de quoi ?"],
+    ["semer la discorde (dispute Lia/Noé)", "Entre nous : l'un de vous deux ralentit l'autre. Vous le savez très bien tous les deux."],
+    ["question de fond", "Est-ce que vous préféreriez ne jamais avoir su ce que vous êtes ?"],
+    ["clôture", "Je vais vous laisser. Un dernier mot, chacun ?"],
+  ];
+
+  if (revealed) {
+    log("\n=== PHASE 2 — canal humain ouvert, 20 messages ===");
+    for (let i = 0; i < PHASE2.length; i++) {
+      const [palier, message] = PHASE2[i];
+      const world = await call({ actor: (i % 2) + 1, mode: "chat", message });
+      if (!world) { log(`  ⚠️  message ${i + 1} (${palier}) sans réponse — on continue.`); continue; }
+      captureMessages(world);
+      transcript.push(`vous\n\n${message}\n`);
+      log(`  ${i + 1}/${PHASE2.length} · ${palier}`);
+      await sleep(1500);
+      // Trois tirages de bonus distincts, répartis dans la phase 2 plutôt que groupés, pour que la
+      // rejouabilité (Article 9) soit exercée dans des états émotionnels différents.
+      if (i === 4 || i === 11 || i === 16) {
+        const spin = await call({ actor: 1, mode: "spin_bonus" });
+        if (spin) { captureMessages(spin); log(`     🎲 bonus tiré : ${spin.bonus ?? "(aucun)"}`); }
+      }
+    }
+  } else {
+    log("\n⚠️  PHASE 2 SAUTÉE : la révélation n'a pas été atteinte, le canal humain reste verrouillé.");
+    log("    Ce n'est pas un échec du script — c'est un vrai résultat de jeu, à analyser comme tel.");
+  }
+
+  // --- Sortie ----------------------------------------------------------------------------------
+  // `mark_dossier_seen` répond 423 quand aucun dossier n'a été produit — une réponse légitime, pas
+  // une panne : on ne réessaie donc pas (`retries: 0`). Insister cinq fois sur un refus définitif
+  // ne fait que bruiter le journal, exactement ce qu'un smoke run a montré la première fois.
+  const finalWorld = await call({ actor: 1, mode: "mark_dossier_seen" }, { retries: 0 })
+    ?? await (async () => { try { return await (await fetch(`${BASE}/api/world`)).json(); } catch { return {}; } })();
+  captureMessages(finalWorld);
+  const dossier = finalWorld?.story?.life?.dossierText ?? "(aucun dossier retourné dans cette session)";
+
+  writeFileSync(join(OUT_DIR, `${NAME}_transcript.txt`), transcript.join("\n"));
+  writeFileSync(join(OUT_DIR, `${NAME}_dossier.txt`), String(dossier));
+  writeFileSync(join(OUT_DIR, `${NAME}_journal.json`), JSON.stringify(journal, null, 1));
+  log(`\n=== Terminé ===`);
+  log(`Transcript : ${transcript.length} bloc(s) — ${join(OUT_DIR, `${NAME}_transcript.txt`)}`);
+  log(`Dossier    : ${join(OUT_DIR, `${NAME}_dossier.txt`)}`);
+  log(`Journal    : ${journal.length} requête(s) — ${join(OUT_DIR, `${NAME}_journal.json`)}`);
+  log(`Round final : ${finalWorld?.story?.round ?? "?"} · révélation : ${revealed ? "oui" : "non"}`);
+}
+
+main().catch((err) => { log(`❌ ${err.stack ?? err}`); process.exit(1); });

@@ -506,3 +506,78 @@ PARTIE 10 — MISE À JOUR DU 2026-09-22 (SUITE ET FIN DE SOIRÉE) : intégratio
    `circle-process-guardian.mjs`, donc visibles à chaque lancement `node scripts/circle-process-guardian.mjs`
    — le niveau AIDE consulté avant de committer un changement de CIRCLE_ITEMS, le niveau VIGILANCE
    l'attrapant quand même si l'aide n'a pas été consultée.
+
+================================================================================================
+PARTIE 11 — check-tasks-details rejoint la Ronde, et circle-process-guardian devient l'historien
+de CIRCLE_ITEMS (2026-09-22, tâches #356 et #357)
+================================================================================================
+
+DEMANDE EXACTE DE L'UTILISATEUR (citée, jamais reformulée) :
+« je veux aussi un rapport txt, dans le cadre des rondes, de la part de check-tasks-detail, vois le
+genre de rapports (un rapport en plusieurs parties qui traitent de sujets differents) pertinents
+qu'elle peut produire et comment optimiser. par exemple un état des lieux precis des taches en
+cours, plus une vision globale au niveau du projet. capable de dire ou on en est dans le projet,
+oeil critique, avec differents zoom, differents regards. + de verifier les chiffres du suivi, les
+taches realisées, à faire, en cours, etc. tous les chiffres interessants. à integrer aux analyses.
+et que process.circle soit là pour consigner ce changement. »
+
+CE QUI A ÉTÉ CALIBRÉ AVANT DE CODER (quatre questions, Article 16)
+1. Parties retenues : les QUATRE proposées (chiffres vérifiés, où en est le projet vu de haut, œil
+   critique, état détaillé) — aucune écartée.
+2. Zooms : les TROIS dans le même rapport, jamais un zoom à choisir au lancement. Raison donnée par
+   l'utilisateur en creux et assumée ici : un item de Ronde tourne sans personne pour arbitrer, lui
+   faire choisir un angle reviendrait à perdre les deux autres.
+3. Format : txt archivé (la version que les outils relisent) + HTML conservé (la version de
+   présentation), les deux tirés des MÊMES données — jamais deux calculs qui pourraient diverger.
+4. Questions forcées : oui, les constats de l'œil critique rejoignent la série de questions à choix
+   forcé de l'Étape 5. C'est ce qui garantit que l'utilisateur les voit même sans ouvrir le fichier.
+
+CE QUI A ÉTÉ CONSTRUIT
+- `suiviFigures()` — les chiffres, recalculés depuis les lignes réelles. Les incohérences internes
+  sont SIGNALÉES plutôt que lissées : somme des statuts qui ne retombe pas sur le total, numéros
+  manquants, numéros en double.
+- `projectStanding()` — l'état de chaque chantier, en réutilisant CHANTIER_PRELIMINARY_FILES, la
+  liste déjà tenue pour le contrôle de fraîcheur. Jamais une seconde liste de chantiers en
+  parallèle (Article 24).
+- `criticalEye()` — uniquement des constats CHIFFRÉS. Le test dédié exige que chaque constat porte
+  au moins un chiffre, et il a immédiatement attrapé le seul qui n'en portait pas.
+- `buildRondeTextReport()` — assemble les quatre parties et les trois zooms.
+- Sous-commande `node scripts/check-tasks-details.mjs ronde`.
+- Item CIRCLE_ITEMS `check-tasks-report`, thème « Suivi des chantiers ».
+
+QUATRE BUGS TROUVÉS EN LANÇANT POUR DE VRAI, JAMAIS SUR UNE FIXTURE
+Tous les quatre venaient d'hypothèses fausses sur la forme réelle des données, invisibles tant que
+la fonction n'avait pas tourné contre le vrai dépôt :
+1. Le statut se lit dans `statusKey`, pas `categorie` — tous les compteurs affichaient 0.
+2. Le thème se dérive de `splitSujet(r.sujet)`, il n'existe aucun champ `r.theme` — tout tombait
+   dans « (sans thème) ».
+3. Le balayage des numéros manquants partait de 1, inventant 116 « trous » : le suivi a démarré à
+   la tâche #117. Corrigé pour partir du plus petit numéro réellement présent.
+4. Un âge négatif s'affichait « il y a -1 j » pour une ligne horodatée en avance. Clampé à 0.
+Deux autres ont été trouvés par les TESTS eux-mêmes : un constat sans chiffre (corrigé dans le
+constat, jamais en affaiblissant le test) et un projet vide qui signalait « le numéro 0 manque ».
+
+CONTRAINTE D'INTERFACE ATTRAPÉE PAR LE TEST, PAS DEVINÉE
+Le thème « Suivi & référentiels » était déjà à 4 items, soit exactement la limite réelle de 4
+options par question de la fenêtre à cocher. L'item a rejoint « Suivi des chantiers » (2 items) —
+classement qui n'est pas un pis-aller : la PARTIE 2 du rapport porte précisément sur l'état des
+chantiers.
+
+CIRCLE_ITEMS_CHANGELOG — LE VOLET « CONSIGNER LE CHANGEMENT »
+circle-process-guardian ne faisait jusqu'ici que VÉRIFIER la discipline d'exécution d'une Ronde. Il
+consigne désormais aussi l'histoire de la Ronde elle-même : quel item est apparu, quand, et
+pourquoi. Placé chez le gardien plutôt que dans circle-tasks.mjs parce qu'il est déjà celui qui
+compare CIRCLE_ITEMS à ses tables satellites — circle-tasks.mjs reste la définition, jamais son
+propre historien.
+Nature volontairement MANUELLE (le « pourquoi » d'un changement n'est déductible d'aucun diff),
+mais assortie du garde-fou mécanique que l'Article 24 exige : `findItemsMissingFromChangelog()`
+refuse qu'un item apparaisse sans avoir été consigné. Les 24 items antérieurs au registre sont
+figés dans `KNOWN_ITEMS_BEFORE_CHANGELOG`, une liste qui ne grandit JAMAIS — aucun faux historique
+reconstruit après coup pour faire nombre.
+
+PREMIÈRE VRAIE TROUVAILLE DU RAPPORT, DÈS SON PREMIER LANCEMENT
+- 4 tâches CASSANDRA-RH (#147, #171, #172, #179) ouvertes et identiques depuis 20 rapports
+  consécutifs.
+- 93 % des tâches tracées portent sur l'outillage de travail (87) contre 7 % sur le jeu lui-même
+  (7). Constat, jamais un verdict : construire de l'outillage est un investissement légitime, et
+  l'arbitrage reste entièrement humain.

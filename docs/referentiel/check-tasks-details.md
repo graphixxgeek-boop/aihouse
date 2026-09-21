@@ -182,3 +182,47 @@ Suivi dès la création (même discipline que THE-DEEP-READER/ALWAYS-NEW-CODE) :
 régressions/stagnations réellement confirmées comme de vrais oublis (par opposition à un faux
 positif du seuil de stagnation) — mesuré au fil des générations suivantes, encore à zéro passage au
 moment de la création de ce document.
+
+
+## Le rapport de Ronde en quatre parties (2026-09-22, tâche #357)
+
+Demande explicite de l'utilisateur : « un rapport txt, dans le cadre des rondes [...] un rapport en
+plusieurs parties qui traitent de sujets differents [...] capable de dire ou on en est dans le
+projet, oeil critique, avec differents zoom, differents regards ».
+
+**Quatre parties, calibrées par quatre questions avant tout code :**
+
+1. **Les chiffres vérifiés du suivi** (`suiviFigures()`) — total, répartition par statut, fenêtre de
+   numérotation réelle, numéros manquants et en double, rythme d'ouverture à 1/7/30 jours,
+   répartition par thème. « Vérifiés » au sens strict : les incohérences internes sont signalées
+   plutôt que lissées.
+2. **Où en est le projet, vu de haut** (`projectStanding()`) — un chantier = une entrée de
+   `CHANTIER_PRELIMINARY_FILES`, la liste déjà tenue pour le contrôle de fraîcheur (jamais une
+   seconde liste en parallèle, Article 24). Pour chacun : avancement, tâches ouvertes, jours depuis
+   le dernier mouvement, et le constat fort « annoncé, jamais commencé » quand aucune tâche ne s'y
+   rattache.
+3. **L'œil critique** (`criticalEye()`) — uniquement des constats CHIFFRÉS : tâche immobile depuis N
+   rapports (gravité forte au-delà de 5), chantier jamais commencé, chantier figé, déséquilibre
+   outillage/jeu au-delà de 70 %, incohérences de comptage. Un test dédié exige que chaque constat
+   porte son chiffre — il a attrapé le seul qui n'en portait pas.
+4. **L'état détaillé, aux trois zooms** — les trois zooms dans le MÊME rapport plutôt qu'un à choisir
+   au lancement : un item de Ronde tourne sans personne pour arbitrer.
+
+**Limite honnête, écrite dans le rapport lui-même** : ces quatre parties comptent ce que le SUIVI dit
+du projet, jamais ce que le projet est réellement. Un travail fait sans être consigné leur est
+invisible.
+
+**Format** : `node scripts/check-tasks-details.mjs ronde` écrit un txt (la version archivée, relue
+par les outils) ET un HTML (la version de présentation), tous deux tirés des mêmes données — jamais
+deux calculs qui pourraient diverger.
+
+**Intégration à la Ronde** : item `check-tasks-report`, thème « Suivi des chantiers » (et non
+« Suivi & référentiels », déjà à la limite réelle de 4 options par question de la fenêtre à cocher).
+Ses constats rejoignent la série de questions à choix forcé de l'Étape 5, jamais un rapport qu'on
+peut ne pas ouvrir. Le changement lui-même est consigné dans `CIRCLE_ITEMS_CHANGELOG`
+(`scripts/circle-process-guardian.mjs`), avec son garde-fou mécanique
+`findItemsMissingFromChangelog()`.
+
+**Première trouvaille réelle, dès le premier lancement** : 4 tâches CASSANDRA-RH ouvertes et
+identiques depuis 20 rapports consécutifs, et 93 % des tâches tracées portant sur l'outillage de
+travail contre 7 % sur le jeu lui-même.

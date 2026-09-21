@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 261'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 262'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3964,6 +3964,55 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // seulement une intention déclarée ») pour les fichiers préliminaires de chantier (CASSANDRA-RH,
   // refonte graphique). `lastTouch` est injecté ici pour rester indépendant du vrai git du dépôt.
   const { checkChantierFileFreshness, CHANTIER_PRELIMINARY_FILES } = await import('../scripts/check-tasks-details.mjs');
+
+  // Rapport de Ronde en quatre parties (2026-09-22, tâche #357). Les quatre bugs corrigés ci-dessous
+  // ont TOUS été trouvés en lançant les fonctions pour de vrai sur le dépôt, jamais sur une fixture :
+  // un mauvais nom de champ de statut, un thème lu au mauvais endroit, un plancher de numérotation
+  // à 1 qui inventait 116 trous, et un âge négatif affiché « il y a -1 j ». D'où ces tests.
+  const { suiviFigures, projectStanding, criticalEye, buildRondeTextReport } = await import('../scripts/check-tasks-details.mjs');
+  const NOW = Date.parse('2026-09-22T12:00:00Z');
+  const fakeRows = [
+    { n: 117, horodatage: '2026-09-22T11:00Z', sujet: 'Outillage de travail / ARGUS', sousSujet: 'a', detail: '', statusKey: 'terminee' },
+    { n: 118, horodatage: '2026-09-20T10:00Z', sujet: 'Jeu / Dialogue', sousSujet: 'b', detail: 'refonte graphique du salon', statusKey: 'ouverte' },
+    { n: 120, horodatage: '2026-09-15T10:00Z', sujet: 'Outillage de travail / CASSANDRA-RH', sousSujet: 'c', detail: 'cassandra', statusKey: 'enCours' },
+  ];
+  const fig = suiviFigures(fakeRows, { now: NOW });
+  assert.deepEqual(fig.byStatus, { terminee: 1, enCours: 1, ouverte: 1, autre: 0 }, 'statuses must be counted from statusKey — the real field name loadAllTaskRows() produces, never an invented one (the first live run reported 0 everywhere)');
+  assert.equal(fig.total, 3);
+  assert.deepEqual([fig.lowest, fig.highest], [117, 120], 'the numbering window must be the real one, never assumed to start at 1');
+  assert.deepEqual(fig.missing, [119], 'only #119 is genuinely missing — scanning from 1 would invent 116 phantom gaps, the exact false positive found on the real repository where tracking starts at #117');
+  assert.equal(fig.incoherences.length, 1, 'one real gap yields exactly one incoherence, never a flood');
+  assert.deepEqual(fig.rythme, { jour1: 1, jours7: 2, jours30: 3 }, 'the rhythm windows must be cumulative and count only rows with a parseable timestamp');
+  assert.ok(fig.byTheme['Outillage de travail'] && fig.byTheme['Outillage de travail'].total === 2, 'the theme must be read through splitSujet() (the « Thème / Sous-thème » convention already in docs/suivi), never from a non-existent r.theme field');
+  assert.equal(fig.byTheme['Outillage de travail'].ouvertes, 1, 'only the non-terminee row of a theme counts as still open');
+  // Une numérotation parfaitement continue ne doit produire AUCUNE incohérence.
+  assert.deepEqual(suiviFigures([{ n: 5, horodatage: '2026-09-22T11:00Z', sujet: 'A / B', statusKey: 'terminee' }, { n: 6, horodatage: '2026-09-22T11:00Z', sujet: 'A / B', statusKey: 'terminee' }], { now: NOW }).incoherences, [], 'a continuous, duplicate-free numbering must report zero incoherence, never a cosmetic warning');
+  assert.ok(suiviFigures([{ n: 7, sujet: 'A / B', statusKey: 'terminee' }, { n: 7, sujet: 'A / B', statusKey: 'terminee' }], { now: NOW }).incoherences.some(i => /double/.test(i)), 'two rows sharing one task number must be reported — a real identity collision, never tolerated silently');
+
+  const standing = projectStanding(fakeRows, { now: NOW, chantiers: {
+    'Refonte graphique': { file: 'x', match: /refonte graphique/i },
+    'CASSANDRA-RH': { file: 'y', match: /cassandra/i },
+    'Chantier fantôme': { file: 'z', match: /jamais-mentionne-nulle-part/i },
+  } });
+  const byName = Object.fromEntries(standing.map(c => [c.chantier, c]));
+  assert.equal(byName['Chantier fantôme'].jamaisCommence, true, 'a chantier with a design file but zero matching task must be flagged as announced-never-started — the strongest finding this part can make');
+  assert.equal(byName['Refonte graphique'].jamaisCommence, false);
+  assert.equal(byName['Refonte graphique'].ouvertes, 1, 'the match must also read the detail column, not just the subject');
+  assert.equal(byName['CASSANDRA-RH'].dernierMouvementJours, 7, 'the age must be computed from the most RECENT matching task, never the oldest');
+  assert.ok(standing.every(c => c.dernierMouvementJours === null || c.dernierMouvementJours >= 0), 'an age can never be negative — a row timestamped slightly ahead must read « just now », never « il y a -1 j » as the first live run displayed');
+
+  const crit = criticalEye(fakeRows, { stagnant: [{ n: 118, sousSujet: 'b', streak: 6 }, { n: 120, sousSujet: 'c', streak: 3 }], standing, figures: fig, now: NOW });
+  assert.ok(crit.some(f => /#118/.test(f.constat) && f.gravite === 'forte'), 'a task stuck for 6 consecutive reports must be graded severe');
+  assert.ok(crit.some(f => /#120/.test(f.constat) && f.gravite === 'moyenne'), 'a task stuck for exactly 3 reports must be graded moderate — the scale must actually distinguish, never one flat verdict');
+  assert.ok(crit.some(f => /Chantier fantôme/.test(f.constat)), 'the never-started chantier must reach the critical eye, not stay buried in part 2');
+  assert.ok(crit.every(f => /\d/.test(f.constat)), 'every critical finding must carry the figure that justifies it — never an opinion with no number, the same discipline CASSANDRA-RH follows');
+  assert.deepEqual(criticalEye([], { stagnant: [], standing: [], figures: suiviFigures([], { now: NOW }), now: NOW }), [], 'an empty project must yield an empty critical eye, never a fabricated concern to look useful');
+
+  const ronde = buildRondeTextReport({ rows: fakeRows, history: [], now: NOW });
+  for (const part of ['PARTIE 1', 'PARTIE 2', 'PARTIE 3', 'PARTIE 4']) assert.ok(ronde.text.includes(part), `the Ronde report must always carry ${part} — four parts on four different subjects, the exact shape the user asked for`);
+  for (const zoomLabel of ['Tâches en cours actuellement', 'Vue élargie', 'Tout le projet']) assert.ok(ronde.text.includes(zoomLabel), `all three zooms must appear in the SAME report (explicit user choice) — ${zoomLabel} is missing`);
+  assert.ok(/compte ce que le SUIVI dit du/.test(ronde.text), 'the honest limit (this measures what is TRACKED, never what is DONE) must be stated in the report itself, never left for the reader to infer');
+  assert.ok(ronde.figures && ronde.critical && ronde.standing, 'the report must also return its underlying data so the HTML rendering reuses it rather than recomputing — never two calculations that could diverge');
   const now = Date.now();
   const daysAgo = (d) => new Date(now - d * 86400000).toISOString();
   const cassandraFile = CHANTIER_PRELIMINARY_FILES['CASSANDRA-RH'].file;
@@ -4114,7 +4163,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   } = await import('../scripts/circle-tasks.mjs');
   const { walkDocsPaths } = await import('../scripts/lib-shell.mjs');
 
-  assert.equal(CIRCLE_ITEMS.length, 24, 'CIRCLE_ITEMS must list exactly the 21 free periodic items (profil, the-king-signal, référentiels, KPI, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, tool-brain-report, cassandra-rh-signal — added 2026-09-21 —, dream-team-photo, THE-SCREENER, ines-official-signal, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run, coordinateur-catalogue, chantier-preliminaire-signal, idee-a-trancher-signal — added 2026-09-21, second "Suivi des chantiers" signal, filet de sécurité mécanique du réflexe temps réel — clone-hunter-run removed 2026-09-22 and always-new-code-signal removed 2026-09-21, CLONE-HUNTER then ALWAYS-NEW-CODE (light layer) promoted to fifth and sixth Gardiens sacrés, both now run automatically at every commit) plus THE-FINAL-JUDGE, its cousin THE-DEEP-READER, and (2026-09-22) hyper-scan-checkpoint-light — the exact real drift found live by the new findStaleItemCountReferences() self-check tonight — never silently gaining or losing an entry');
+  assert.equal(CIRCLE_ITEMS.length, 25, 'CIRCLE_ITEMS must list exactly the 22 free periodic items (profil, the-king-signal, référentiels, KPI, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, tool-brain-report, cassandra-rh-signal — added 2026-09-21 —, dream-team-photo, THE-SCREENER, ines-official-signal, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run, coordinateur-catalogue, chantier-preliminaire-signal, idee-a-trancher-signal — added 2026-09-21, second "Suivi des chantiers" signal, filet de sécurité mécanique du réflexe temps réel — clone-hunter-run removed 2026-09-22 and always-new-code-signal removed 2026-09-21, CLONE-HUNTER then ALWAYS-NEW-CODE (light layer) promoted to fifth and sixth Gardiens sacrés, both now run automatically at every commit) plus THE-FINAL-JUDGE, its cousin THE-DEEP-READER, and (2026-09-22) hyper-scan-checkpoint-light then check-tasks-report — the exact real drift found live by the new findStaleItemCountReferences() self-check tonight — never silently gaining or losing an entry');
   const profilGuardItem = CIRCLE_ITEMS.find((i) => i.id === 'profil-utilisateur-guard');
   assert.ok(profilGuardItem && !profilGuardItem.costly && profilGuardItem.theme === 'Passages réels (smoke run)', '2026-09-21 addition: the real check-profil-utilisateur.mjs smoke run must be free and live in its own "smoke run" theme, distinct from the "profil" item which writes a new observation rather than verifying disk integrity');
   const networkCheckItem = CIRCLE_ITEMS.find((i) => i.id === 'network-check-run');
@@ -4157,7 +4206,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const samplePhilosophyText = '### 1.1 Un principe **[Explicite]**\n\nOn agit toujours avec prudence budgétaire ambiante.\n\n### 1.2 Un autre principe **[Synthèse, 2026-09-19]**\n\nOn n\'agit jamais avec prudence budgétaire ambiante.';
   const inesOfficialIndexText = '| Version | Date | Périmètre | Fichiers | Taille |\n|---|---|---|---|---|\n| v1 | 2026-09-18 | code seul | 40 | 500 Ko |';
   const report = buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringReadFileImpl, suiviCategorized, claudeMdText: sampleClaudeMdText, philosophyText: samplePhilosophyText, philosophyFreshnessDaysValue: 3, inesOfficialIndexText }, now);
-  assert.equal(report.length, 24, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one — 24 since hyper-scan-checkpoint-light joined CIRCLE_ITEMS on 2026-09-22');
+  assert.equal(report.length, 25, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one — 25 since check-tasks-report joined CIRCLE_ITEMS on 2026-09-22, after hyper-scan-checkpoint-light the same day');
   assert.equal(report.find((r) => r.id === 'claude-md-weight-signal').staleness, '66 tokens estimés, niveau "faible" — 2 aside(s) narrative(s) datée(s) encore réductible(s)', 'the CLAUDE.md weight signal must reuse the real SMART-CONSO-TOKEN scan functions live (never a second parser), reporting both the honest token estimate and the real count of still-reducible dated asides found in the actual text passed in');
   assert.equal(buildCircleReport({}, now).find((r) => r.id === 'claude-md-weight-signal').staleness, 'pas de signal disponible (CLAUDE.md non fourni)', 'with no CLAUDE.md text supplied at all, the signal must report an honest absence rather than crash or fabricate a number');
   assert.equal(report.find((r) => r.id === 'clean-dirty-old-signal').staleness, '1 jour(s) depuis le dernier passage journalisé', 'the CLEAN-DIRTY-OLD signal must compute its own staleness from its own real index text, distinct from every other source');
