@@ -107,7 +107,7 @@ de code »), à la demande explicite de l'utilisateur de consolider l'organigram
 endroit — jamais dupliqué ici. Ce document canonique définit : les deux axes (Statut de
 documentation / Rôle dans l'organigramme), Les Agents Cadre (renommage de Direction, 2026-09-22 —
 CASSANDRA-RH + LE-COORDINATEUR), les Gardiens sacrés du code (renommage de l'Équipe noyau —
-ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD/CLONE-HUNTER, 5 membres depuis le 2026-09-22), les 6 suites
+ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD/CLONE-HUNTER/ALWAYS-NEW-CODE (couche légère), 6 membres depuis le 2026-09-21), les 6 suites
 de travail parmi les Membres ordinaires, les 3 catégories définitivement hors de l'agence
 (Personnages, Moteur du jeu, code tiers vendu tel quel), et l'Infrastructure comme 3e rang
 d'employés sans dossier individuel.

@@ -155,6 +155,9 @@ export function findEngineCodeInRegistries(registries = REGISTRIES) {
 // ci-dessus (son scriptPath réel) — et vérifie que le texte source du passage donné appelle bien
 // chacun de ces scriptPath. Un futur 6e Gardien oublié dans HYPER-SCAN-CHECKPOINT ferait échouer ce
 // test dès le prochain commit, jamais seulement remarqué par une relecture manuelle a posteriori.
+// (2026-09-21) ALWAYS-NEW-CODE promu 6e Gardien (couche légère) — même mécanique, aucun changement
+// nécessaire ici : le test continue de dériver la liste des Gardiens depuis AGENT_CATEGORIES, jamais
+// une liste recopiée à la main, donc jamais périmé par un futur 7e Gardien non plus.
 export function findGardiensMissingFromSource(sourceText, { categories = AGENT_CATEGORIES, registries = REGISTRIES } = {}) {
   const gardienSlugs = Object.entries(categories)
     .filter(([, cat]) => cat === "Gardien sacré du code")

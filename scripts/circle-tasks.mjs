@@ -24,7 +24,6 @@
 // discussion de leur extension éventuelle au même traitement.
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { scanDocumentWeight, listDatedNarrativeMarkers, extractRuleUnits, findRedundantRulePairs } from "./smart-conso-token.mjs";
 import { walkDocsPaths, daysSince } from "./lib-shell.mjs";
@@ -107,14 +106,13 @@ export const CIRCLE_ITEMS = [
     tokensEstimes: "faible à modéré — sortie du script (quelques milliers de tokens) + rédaction de l'entrée d'index",
     execute: "Lancer node scripts/kpi-report.mjs et lire au moins la famille Robustesse du code (100% mécanique) — les autres familles restent honnêtement N/A si aucun serveur de dev avec du vrai trafic n'est joignable.",
   },
-  {
-    id: "always-new-code-signal",
-    theme: "Qualité du code",
-    label: "Signaler la zone la plus négligée (ALWAYS-NEW-CODE)",
-    cout: "gratuit — lecture de la mémoire de couverture déjà accumulée, jamais le vrai zoom (ça, c'est un raisonnement coûteux à part, cf. Article 23)",
-    tokensEstimes: "faible — lecture d'un seul fichier d'index compact",
-    execute: "Lire docs/always-new-code/index.md et reporter honnêtement la zone la plus négligée (ou jamais examinée) — proposer, jamais lancer, le vrai zoom profond correspondant, qui reste un raisonnement coûteux nécessitant sa propre consultation SMART-CONSO-TOKEN.",
-  },
+  // always-new-code-signal RETIRÉ le 2026-09-21 : ALWAYS-NEW-CODE promu sixième Gardien sacré (couche
+  // légère seulement — recommendZone()/addendaSignal()/churnSignal(), zéro raisonnement) — tourne
+  // désormais déjà automatiquement à chaque commit (scripts/hooks/check-last-commit.mjs), exactement
+  // le même précédent que CLONE-HUNTER (son propre item de Ronde retiré à sa promotion le 2026-09-22
+  // pour la même raison) — jamais une routine manuelle en plus. Cf. CIRCLE_EXCLUDED_REGISTRIES
+  // ci-dessous pour la raison documentée. Le vrai zoom profond, lui, reste hors Ronde (raisonnement
+  // payant, Article 23) — inchangé.
   // clean-dirty-old-signal (2026-09-20, idée proposée par l'agent, validée par l'utilisateur : « ajoute
   // les nouvelles idées au catalogue »). Même patron que le signal ALWAYS-NEW-CODE ci-dessus, mais
   // CLEAN-DIRTY-OLD n'a pas d'équivalent "mémoire de couverture par zone" à lire — son propre index
@@ -426,6 +424,7 @@ export const CIRCLE_EXCLUDED_REGISTRIES = {
   "axa-check": "tourne déjà à chaque commit (Article 20), jamais une routine manuelle en plus",
   "clean-dirty-old": "sa partie mécanique tourne déjà à chaque commit (Article 20) — seul son SIGNAL de fraîcheur rejoint la Ronde (clean-dirty-old-signal), jamais un second passage complet",
   "clone-hunter": "cinquième Gardien sacré depuis le 2026-09-22 (demande explicite de l'utilisateur), tourne désormais déjà à chaque commit (Article 20) — jamais une routine manuelle en plus, exactement comme les 4 autres Gardiens ci-dessus",
+  "always-new-code": "sixième Gardien sacré depuis le 2026-09-21 (couche légère seulement — demande explicite de l'utilisateur), tourne désormais déjà à chaque commit (Article 20) — jamais une routine manuelle en plus, exactement comme les 5 autres Gardiens ci-dessus ; le vrai zoom profond, lui, reste un raisonnement payant hors Ronde (Article 23), inchangé",
   "check-level-target": "outil de classification interne, jamais une routine à cocher soi-même",
   "hyper-scan-checkpoint": "outil exceptionnel (Article 21), jamais coché par défaut ni régulier",
   "memory-audit": "cible la mémoire narrative de Lia/Noé en jeu, jamais un scan de repo — vérifiable seulement sur des instantanés réels de partie (pendant/après une simulation) ; son voisin memento weight est déjà rapporté via kpi-report.mjs (reportMementoWeight), jamais une routine CIRCLE-TASKS séparée",
@@ -464,7 +463,7 @@ export function oldestOpenTaskDate(categorized) {
 // ALWAYS-NEW-CODE la plus négligée) — jamais pour "relecture référentiel" ou "correctifs", qui
 // n'ont aucune date de référence mécanique fiable (Article 13 elle-même n'impose aucune cadence
 // fixe, cf. CLAUDE.md — un signal inventé ici serait moins honnête que son absence).
-export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText, ideesATrancherText } = {}, now = Date.now()) {
+export function buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText, ideesATrancherText } = {}, now = Date.now()) {
   const profilLast = mostRecentDate(profilIndexText);
   const kpiLast = mostRecentDate(kpiIndexText);
   const smartConsoApiLast = mostRecentDate(smartConsoApiIndexText);
@@ -473,8 +472,6 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCode
   const inesOfficialLast = mostRecentDate(inesOfficialIndexText);
   const wiring = htmlWiringSources ? checkHtmlWiring(htmlWiringSources) : undefined;
   const oldestOpen = suiviCategorized ? oldestOpenTaskDate(suiviCategorized) : undefined;
-  const coverage = parseCoverage(alwaysNewCodeIndexText || "");
-  const zoneRec = recommendZone(THEMES, coverage, undefined, new Date(now));
 
   return CIRCLE_ITEMS.map((item) => {
     if (item.id === "profil") return { ...item, staleness: profilLast ? `${daysSince(profilLast, now)} jour(s) depuis la dernière fiche` : "jamais fait" };
@@ -508,11 +505,6 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCode
       const redundant = findRedundantRulePairs(extractRuleUnits(claudeMdText));
       const redundancyNote = redundant.length ? ` — candidat de redondance : ${redundant[0].a} / ${redundant[0].b} (indice ${redundant[0].jaccard.toFixed(2)})` : "";
       return { ...item, staleness: `${weight.tokens} tokens estimés, niveau "${weight.niveau}"${markers.length ? ` — ${markers.length} aside(s) narrative(s) datée(s) encore réductible(s)` : ""}${redundancyNote}` };
-    }
-    if (item.id === "always-new-code-signal") {
-      if (!zoneRec) return { ...item, staleness: "aucun thème connu" };
-      const zoneDate = coverage[zoneRec.zone];
-      return { ...item, staleness: zoneDate ? `zone la plus négligée : "${zoneRec.zone}" (${daysSince(zoneDate, now)} jour(s))` : `zone la plus négligée : "${zoneRec.zone}" (jamais examinée)` };
     }
     if (item.id === "the-king-signal") {
       if (!philosophyText) return { ...item, staleness: "pas de signal disponible (philosophie-et-politique.md non fourni)" };
@@ -660,7 +652,6 @@ function main() {
   const read = (p) => (existsSync(`${ROOT}${p}`) ? readFileSync(`${ROOT}${p}`, "utf8") : "");
   const profilIndexText = read("docs/profil-utilisateur/index.md");
   const kpiIndexText = read("docs/referentiel/kpi-index.md");
-  const alwaysNewCodeIndexText = read("docs/always-new-code/index.md");
   const smartConsoApiIndexText = read("docs/smart-conso-api/index.md");
   const smartConsoTokenIndexText = read("docs/smart-conso-token/index.md");
   const cleanDirtyOldIndexText = read("docs/clean-dirty-old/index.md");
@@ -675,7 +666,7 @@ function main() {
   const philosophyFreshnessDaysValue = philosophyFreshnessDays();
   const inesOfficialIndexText = read("docs/ines-official/index.md");
   const ideesATrancherText = read(IDEES_REGISTRY_PATH);
-  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText, ideesATrancherText });
+  const report = buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText, ideesATrancherText });
   console.log("=== CIRCLE-TASKS — Ronde périodique ===\n");
   console.log(formatCircleMenu(report));
   console.log("\nJamais exécuté seul : l'agent qui pilote ouvre une fenêtre à cocher pour choisir précisément quoi lancer.");

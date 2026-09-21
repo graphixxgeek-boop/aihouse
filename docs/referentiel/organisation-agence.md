@@ -76,11 +76,15 @@ l'évaluation RH de pertinence de poste leur échappe structurellement à eux-m�
 **Critère d'appartenance exact — un critère double, jamais un seul des deux pris isolément** (une
 première formulation à un seul volet a chaque fois exclu ou inclus le mauvais outil : « tourne à
 chaque commit » seul aurait laissé dehors un futur scan de qualité pas encore câblé au hook ; «
-délivre un scan de qualité » seul aurait à tort inclus n'importe quel script utile mais coûteux comme
-ALWAYS-NEW-CODE) : (a) **délivre un vrai scan de qualité du code** ET (b) **peut tourner
-automatiquement, mécaniquement, gratuitement, à CHAQUE commit**, jamais sur demande, jamais
-périodique (Article 20 de CLAUDE.md). Exactement 5 membres, jamais un groupe inventé au coup par
-coup :
+délivre un scan de qualité » seul aurait à tort inclus n'importe quel LIVRABLE utile mais coûteux
+comme le vrai zoom profond « page blanche » d'ALWAYS-NEW-CODE) : (a) **délivre un vrai scan de
+qualité du code** ET (b) **peut tourner automatiquement, mécaniquement, gratuitement, à CHAQUE
+commit**, jamais sur demande, jamais périodique (Article 20 de CLAUDE.md). **Correction du
+2026-09-21** (le premier jet de ce critère nommait ALWAYS-NEW-CODE par son nom global comme exemple
+d'exclusion — trop large : c'est le LIVRABLE qui exige un raisonnement payant qui ne peut jamais
+devenir un Gardien, jamais l'outil dans son ensemble quand une couche légère et déjà gratuite existe
+séparément, cf. ALWAYS-NEW-CODE ci-dessous, dont seule cette couche légère porte le statut). Exactement
+6 membres, jamais un groupe inventé au coup par coup :
 
 - **ARGUS** — absences (ce qui devrait exister et n'existe pas)
 - **HARMONIA** — frictions (deux choses qui existent et se contredisent)
@@ -89,6 +93,12 @@ coup :
 - **CLONE-HUNTER** (rejoint le 2026-09-22) — blocs de code dupliqués (littéral + renommage
   bijectif cohérent) ; rapide (<1s sur tout le dépôt), donc compatible avec le critère (b) malgré son
   arrivée tardive dans le réseau d'outils
+- **ALWAYS-NEW-CODE** (couche légère seulement, rejoint le 2026-09-21) — `recommendZone()` (rotation
+  de la zone la plus négligée) + `addendaSignal()`/`churnSignal()` (indices mécaniques d'empilement
+  sur le fichier principal de la zone recommandée), zéro raisonnement, coût minime ; le VRAI zoom
+  profond « page blanche » (Article 23) reste exclu, exige un raisonnement payant à chaque fois,
+  jamais mécanisable — même limite que THE-FINAL-JUDGE ci-dessous, qui lui n'a AUCUNE couche gratuite
+  du tout et reste donc entièrement hors des Gardiens, sans exception
 
 **Gabarit de poste spécifique** (décision actée le 2026-09-22, au-delà du gabarit standard Agent) :
 en plus de l'instanciation + registre standard, la fiche d'un Gardien porte deux champs propres,
@@ -103,7 +113,7 @@ qu'aucun autre groupe ne porte :
 *(2026-09-22, demande explicite de l'utilisateur : « identifie le fonctionnement spécifique des
 gardiens (qui se valident les uns les autres par ex) et lorsqu'on intègre un nouveau gardien, veille
 à ce qu'il rentre bien dans tous ces fonctionnements ». Checklist à cocher intégralement pour tout
-futur 6e Gardien — CASSANDRA-RH s'y réfère directement pour sa mission « Promotion de poste »,
+futur 7e Gardien — CASSANDRA-RH s'y réfère directement pour sa mission « Promotion de poste »,
 cf. `docs/cassandra-rh-conception.md` §2.)*
 
 1. **Câblage post-commit réel** — importé et appelé par sa FONCTION PURE (jamais son `main()` CLI,
@@ -122,7 +132,7 @@ cf. `docs/cassandra-rh-conception.md` §2.)*
    vert simultanément, jamais un sous-ensemble.
 5. **Agrégation dans HYPER-SCAN-CHECKPOINT** (version légère, `scripts/hyper-scan-checkpoint.mjs`) —
    appelé via `sh()` aux côtés des autres Gardiens, pour qu'un passage HYPER-SCAN-CHECKPOINT reflète
-   TOUJOURS l'état complet des 5, jamais 4 sur 5 par oubli (écart réel trouvé le 2026-09-22 à
+   TOUJOURS l'état complet des 6, jamais un sous-ensemble par oubli (écart réel trouvé le 2026-09-22 à
    l'arrivée de CLONE-HUNTER, corrigé le même soir).
 6. **Validation croisée informelle, pas mécanique** — les Gardiens ne s'exécutent jamais les uns les
    autres, mais leurs signaux se recoupent en pratique lors d'une revue (ex. une trouvaille HARMONIA
@@ -130,13 +140,17 @@ cf. `docs/cassandra-rh-conception.md` §2.)*
    ce recoupement aujourd'hui, c'est une lecture humaine/agent au moment de l'analyse, jamais une
    fusion de leurs sorties.
 7. **Aucun coût API/agent séparé** — un Gardien reste, par définition, un calcul mécanique local
-   (grep, parsing, comparaison de blocs) ; un outil qui a besoin d'un vrai raisonnement (ALWAYS-NEW-
-   CODE, THE-FINAL-JUDGE) ne peut jamais devenir un Gardien, même s'il produit un excellent scan de
-   qualité — c'est exactement ce qui l'exclut du critère (b) ci-dessus.
+   (grep, parsing, comparaison de blocs) ; un LIVRABLE qui a besoin d'un vrai raisonnement (le vrai
+   zoom profond d'ALWAYS-NEW-CODE, THE-FINAL-JUDGE dans son ensemble) ne peut jamais devenir un
+   Gardien, même s'il produit un excellent scan de qualité — c'est exactement ce qui l'exclut du
+   critère (b) ci-dessus. Jamais le nom de l'outil entier par contrecoup : ALWAYS-NEW-CODE porte les
+   deux à la fois (une couche légère déjà Gardien, un vrai zoom qui ne le sera jamais) — THE-FINAL-JUDGE,
+   lui, n'a aucune couche légère du tout, donc reste entièrement hors des Gardiens sans aucune
+   exception.
 
 Détail complet de chacun : `docs/referentiel/argus.md`, `harmonia.md`, `axa-check.md`,
-`clean-dirty-old.md`, `clone-hunter.md` (inchangés par ce document, sauf `clone-hunter.md` lui-même
-mis à jour pour refléter son nouveau statut).
+`clean-dirty-old.md`, `clone-hunter.md`, `always-new-code.md` (inchangés par ce document, sauf
+`clone-hunter.md`/`always-new-code.md` eux-mêmes mis à jour pour refléter leur nouveau statut).
 
 ## 4. Membre de l'équipe — 6 suites de travail
 
@@ -172,15 +186,16 @@ significatif, jamais automatiques, jamais cochés par défaut dans une Ronde.
 
 ### Suite Dette & Structure du code
 Dette technique et navigation dans du code volumineux.
-*(CLONE-HUNTER a quitté cette suite le 2026-09-22 pour rejoindre les Gardiens sacrés du code, §3 —
-promotion actée après vérification qu'il remplit le critère double scan-de-qualité + tourne à chaque
-commit.)*
+*(CLONE-HUNTER a quitté cette suite le 2026-09-22, puis ALWAYS-NEW-CODE le 2026-09-21, pour
+rejoindre les Gardiens sacrés du code, §3 — deux promotions actées après vérification qu'ils
+remplissent le critère double scan-de-qualité + tourne à chaque commit ; le vrai zoom profond
+d'ALWAYS-NEW-CODE, lui, n'a pas de suite fonctionnelle propre — c'est un raisonnement à la demande,
+jamais un Membre au sens de ce document.)*
 - find-booster — index par concept dans un gros fichier déjà structuré
 - find-deep-booster (`scripts/route-booster.mjs`, renommé depuis « route-booster ») — points de
   coupe candidats pour découper une fonction géante (Membre certifié classique depuis le
   2026-09-21, pas Agent — reste dans ce groupe fonctionnel malgré son statut de documentation
   différent)
-- ALWAYS-NEW-CODE — dette d'organisation, l'épreuve de la page blanche rendue concrète (Article 23)
 
 ### La Cour du Roi
 *(Anciennement « Suite Référentiel & Vue d'ensemble », renommée par l'utilisateur — un nom qui

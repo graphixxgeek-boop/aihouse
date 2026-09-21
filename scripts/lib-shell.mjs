@@ -51,6 +51,13 @@ export const AGENT_CATEGORIES = {
   "axa-check": "Gardien sacré du code",
   "clean-dirty-old": "Gardien sacré du code",
   "clone-hunter": "Gardien sacré du code",
+  // ALWAYS-NEW-CODE (2026-09-21) : sixième Gardien, couche LÉGÈRE seulement (recommendZone() +
+  // addendaSignal()/churnSignal(), zéro raisonnement) — le vrai zoom profond, qui exige un
+  // raisonnement payant, reste explicitement exclu du statut de Gardien (cf.
+  // docs/referentiel/organisation-agence.md §3, critère double : c'est le LIVRABLE qui exige un
+  // raisonnement payant qui ne peut jamais devenir un Gardien, jamais le nom de l'outil dans son
+  // ensemble — sa couche légère satisfait le critère double exactement comme les 5 autres).
+  "always-new-code": "Gardien sacré du code",
   // Suite Suivi-Conso
   "smart-conso-api": "Membre — Suite Suivi-Conso",
   "smart-conso-token": "Membre — Suite Suivi-Conso",
@@ -63,9 +70,9 @@ export const AGENT_CATEGORIES = {
   "the-final-judge": "Membre — Suite Audit lourd",
   "the-deep-reader": "Membre — Suite Audit lourd",
   "hyper-scan-checkpoint": "Membre — Suite Audit lourd",
-  // Suite Dette & Structure du code
+  // Suite Dette & Structure du code (ALWAYS-NEW-CODE en est retiré le 2026-09-21 — promu Gardien
+  // sacré du code ci-dessus, jamais listé deux fois)
   "find-booster": "Membre — Suite Dette & Structure du code",
-  "always-new-code": "Membre — Suite Dette & Structure du code",
   // La Cour du Roi
   "ines-official": "Membre — La Cour du Roi",
   "the-king": "Membre — La Cour du Roi",

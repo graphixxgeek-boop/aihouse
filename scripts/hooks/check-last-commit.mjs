@@ -12,6 +12,7 @@ import { checkLinks, LINKS } from "../check-harmonia.mjs";
 import { collectCoverage, robustnessScore, collectScriptCoverage, scriptRobustnessScore, LIB_MAP } from "../axa-check.mjs";
 import { lastTouchDays, relativeStaleness } from "../clean-dirty-old.mjs";
 import { buildDuplicateReport, buildNearDuplicateReport } from "../clone-hunter.mjs";
+import { THEMES, THEME_PRIMARY_FILE, parseCoverage, recommendZone, countDatedAddenda, addendaSignal, parseNumstat, churnSignal } from "../always-new-code.mjs";
 import { findMissingNotes, findOrphanNotes } from "../el-professor.mjs";
 import { parseToolsTable, slugifyAgentName, checkAllAgentBadges } from "../le-coordinateur.mjs";
 import { formatToolBrainReminder } from "../tool-brain.mjs";
@@ -57,7 +58,7 @@ if (numberIssues.length) {
 // argusFindingsCount/harmoniaFindingsCount/cleanDirtyOldFlagged/cloneHunterFindingsCount capturés en
 // dehors des try ci-dessous (mêmes blocs, valeurs déjà calculées) pour nourrir le badge automatique
 // plus bas — jamais un second balayage rien que pour ce signal (règle anti-doublon, §7ter).
-let argusFindingsCount, harmoniaFindingsCount, cleanDirtyOldFlagged, cloneHunterFindingsCount;
+let argusFindingsCount, harmoniaFindingsCount, cleanDirtyOldFlagged, cloneHunterFindingsCount, alwaysNewCodeFlagged;
 try {
   const lifeSource = readFileSync("lib/life.ts", "utf8");
   const files = walk("lib").concat(walk("app"));
@@ -144,6 +145,39 @@ try {
       (literalClusters.length && nearClusters.length ? " ; " : "") +
       (nearClusters.length ? `${nearClusters.length} cluster(s) structurellement dupliqué(s) (renommage)` : "") +
       " — jamais une factorisation acquise, un signal à vérifier (cf. docs/clone-hunter/index.md).\n",
+    );
+  }
+} catch { /* best-effort, jamais bloquant */ }
+
+// ALWAYS-NEW-CODE — sixième Gardien sacré, COUCHE LÉGÈRE seulement (2026-09-21, demande explicite de
+// l'utilisateur : « On devrait avoir une version legere de always new code qui tourne à chaque
+// commit : always new est un gardien à mon sens » puis confirmé « OK pour always code : on l'integre
+// tout de suite en gardien sacré [...] integration complete »). Distinction non négociable avec le
+// reste de l'outil (Article 23) : seule la couche déjà gratuite (`recommendZone()`/
+// `countDatedAddenda()`/`churnSignal()`, zéro raisonnement) tourne ici, jamais le vrai zoom profond
+// (qui exige un vrai raisonnement payant, reste exclusivement déclenché via CHECK-LEVEL-TARGET
+// niveau Exceptionnel ou sur demande explicite). Calcule le signal SEULEMENT sur le fichier principal
+// de la zone actuellement recommandée par la rotation (THEME_PRIMARY_FILE) — jamais un balayage de
+// tout le dépôt à chaque commit, coût minime comme CLEAN-DIRTY-OLD ci-dessus.
+try {
+  const alwaysNewCodeIndexText = readFileSync("docs/always-new-code/index.md", "utf8");
+  const coverage = parseCoverage(alwaysNewCodeIndexText);
+  const zoneRec = recommendZone(THEMES, coverage, undefined, new Date());
+  const primaryFile = zoneRec?.zone ? THEME_PRIMARY_FILE[zoneRec.zone] : undefined;
+  let addenda, churn;
+  if (primaryFile) {
+    const fileText = readFileSync(primaryFile, "utf8");
+    addenda = addendaSignal(countDatedAddenda(fileText));
+    const numstat = sh(`git log --numstat --format= -- ${primaryFile}`, { cwd: new URL("../..", import.meta.url).pathname });
+    churn = churnSignal(parseNumstat(numstat));
+  }
+  alwaysNewCodeFlagged = addenda === "probable" || churn === "probable";
+  if (alwaysNewCodeFlagged) {
+    console.error(
+      "\n🔎 ALWAYS-NEW-CODE (signal léger post-commit) : zone \"" + zoneRec.zone + "\" (" + primaryFile + ") " +
+      "montre un indice PROBABLE d'empilement (" +
+      [addenda === "probable" && "addenda datés", churn === "probable" && "croissance sans réorganisation"].filter(Boolean).join(" + ") +
+      ") — jamais une preuve, proposer un vrai zoom profond (Article 23) plutôt qu'agir seul (cf. docs/always-new-code/index.md).\n",
     );
   }
 } catch { /* best-effort, jamais bloquant */ }
@@ -277,6 +311,7 @@ try {
     harmoniaFindingsCount,
     cleanDirtyOldFlagged,
     cloneHunterFindingsCount,
+    alwaysNewCodeFlagged,
     agentOverrides: mergedOverrides,
   });
   for (const announcement of announcements) console.log("\n" + announcement + "\n");

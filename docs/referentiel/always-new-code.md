@@ -16,6 +16,39 @@ formalisé en Article 23.)*
 - **`docs/always-new-code/`** — dossier des passages archivés + `index.md` (mémoire de couverture
   pour la rotation, et suivi KPI).
 
+## Statut : Gardien sacré du code (couche légère seulement, 2026-09-21)
+
+Demande explicite de l'utilisateur : « On devrait avoir une version legere de always new code qui
+tourne à chaque commit : always new est un gardien à mon sens » puis confirmé « OK pour always code :
+on l'integre tout de suite en gardien sacré [...] integration complete ». Promu sixième Gardien
+sacré du code (Article 20, `docs/referentiel/organisation-agence.md` §3) — mais SEULE la couche
+légère décrite ci-dessus (`recommendZone()`/`addendaSignal()`/`churnSignal()`, zéro raisonnement)
+porte ce statut, jamais le vrai zoom profond, qui exige un raisonnement payant et reste hors des
+Gardiens par construction (le critère double de l'Article 20 l'exclut structurellement, cf.
+`organisation-agence.md` §3, correction du 2026-09-21 sur la portée exacte de cette exclusion).
+
+Câblage réel, suivant exactement le même « Répertoire des fonctionnements spécifiques partagés par
+tous les Gardiens » (`organisation-agence.md` §3) que les 5 autres :
+1. **Post-commit** (`scripts/hooks/check-last-commit.mjs`) — calcule `recommendZone()` sur
+   `docs/always-new-code/index.md`, puis `addendaSignal(countDatedAddenda(...))`/
+   `churnSignal(parseNumstat(...))` sur le SEUL fichier principal (`THEME_PRIMARY_FILE`) de la zone
+   recommandée — jamais un balayage de tout le dépôt à chaque commit, coût minime comme
+   CLEAN-DIRTY-OLD. Signale un indice PROBABLE d'empilement, jamais une preuve.
+2. **CIRCLE-TASKS** — l'ancien item `always-new-code-signal` (surface la zone la plus négligée) a
+   été RETIRÉ le 2026-09-21, devenu redondant avec le signal post-commit automatique — même
+   précédent que `clone-hunter-run` retiré à la promotion de CLONE-HUNTER. `CIRCLE_EXCLUDED_REGISTRIES`
+   documente la raison.
+3. **`check-house.mjs`** — bloc de test dédié (fixtures + garde-fous du critère « OK 100% »
+   exigeant les 6 Gardiens ensemble).
+4. **Badge** (`checkAgentOnboarding()`) — nouveau paramètre `alwaysNewCodeFlagged`, alimente
+   `koParts` (« KO ALWAYS-NEW-CODE ») exactement comme les 5 autres.
+5. **HYPER-SCAN-CHECKPOINT** — déjà câblé de longue date (`sh("node scripts/always-new-code.mjs")`),
+   aucun changement nécessaire à cette promotion.
+6. **Validation croisée informelle** — inchangé, aucun mécanisme automatique.
+7. **Aucun coût API/agent séparé** — la couche légère seule est concernée ; le vrai zoom reste, lui,
+   un raisonnement à consulter via SMART-CONSO-TOKEN avant tout lancement, inchangé par cette
+   promotion.
+
 ## Les 8 zones — réutilisées d'HARMONIA, jamais un second découpage
 
 Décision explicite de l'utilisateur (2026-09-19) : les zones d'ALWAYS-NEW-CODE sont exactement les

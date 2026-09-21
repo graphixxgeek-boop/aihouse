@@ -469,6 +469,7 @@ export function checkAgentOnboarding(agentName, {
   harmoniaFindingsCount = undefined,
   cleanDirtyOldFlagged = false,
   cloneHunterFindingsCount = undefined,
+  alwaysNewCodeFlagged = false,
   lastVerifiedAt = null,
   hasDocReportDecision = undefined,
   reciprocalWiring = null,
@@ -609,18 +610,20 @@ export function checkAgentOnboarding(agentName, {
   // chaque vérification KO nommée séparément, jointes par une virgule quand plusieurs — un
   // pourcentage entre parenthèses UNIQUEMENT pour AXA-CHECK (seul signal chiffré ; ARGUS/HARMONIA/
   // CLEAN-DIRTY-OLD restent binaires, jamais un KO nu accompagné d'un faux pourcentage). « OK 100% »
-  // exige les 5 Gardiens sacrés du code (Article 20) au vert ensemble — AXA-CHECK 100%, zéro
+  // exige les 6 Gardiens sacrés du code (Article 20) au vert ensemble — AXA-CHECK 100%, zéro
   // trouvaille ARGUS, zéro trouvaille HARMONIA, zéro signal CLEAN-DIRTY-OLD, zéro trouvaille
-  // CLONE-HUNTER — jamais un sous-ensemble de 4 sur 5 (déjà corrigé une première fois le 2026-09-21
+  // CLONE-HUNTER, zéro signal ALWAYS-NEW-CODE — jamais un sous-ensemble (déjà corrigé une première fois le 2026-09-21
   // quand le premier jet oubliait CLEAN-DIRTY-OLD, puis une seconde fois le même soir à l'arrivée de
-  // CLONE-HUNTER comme 5e Gardien — même défaut structurel à chaque fois : un nouveau Gardien doit
-  // systématiquement rejoindre CETTE liste, jamais seulement le post-commit hook). Distinct du badge
-  // lui-même (jamais conditionné par la couverture).
+  // CLONE-HUNTER comme 5e Gardien, puis ALWAYS-NEW-CODE (couche légère seulement) comme 6e le
+  // 2026-09-21 — même défaut structurel à chaque fois : un nouveau Gardien doit systématiquement
+  // rejoindre CETTE liste, jamais seulement le post-commit hook). Distinct du badge lui-même (jamais
+  // conditionné par la couverture).
   const koParts = [];
   if (argusFindingsCount) koParts.push("KO ARGUS");
   if (harmoniaFindingsCount) koParts.push("KO HARMONIA");
   if (cleanDirtyOldFlagged) koParts.push("KO CLEAN-DIRTY-OLD");
   if (cloneHunterFindingsCount) koParts.push("KO CLONE-HUNTER");
+  if (alwaysNewCodeFlagged) koParts.push("KO ALWAYS-NEW-CODE");
   if (axaCoveragePct != null && axaCoveragePct < 100) koParts.push(`KO AXA-CHECK ${Math.round(axaCoveragePct)}%`);
 
   const couvertureTier = axaCoveragePct == null ? "en cours" : koParts.length === 0 ? "OK 100%" : "partiel";

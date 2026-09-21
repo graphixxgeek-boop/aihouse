@@ -601,18 +601,21 @@ logique manquée, lien discret non vu) — sur une idée neuve comme sur le code
 fragilité RÉELLES par couverture de test), **CLEAN-DIRTY-OLD** (quatrième membre, stagnation
 relative — délègue toujours son jugement aux trois autres, jamais une réponse fabriquée) et
 **CLONE-HUNTER** (cinquième membre depuis le 2026-09-22, blocs de code dupliqués — littéral et par
-renommage bijectif cohérent) rejoignent la même règle — le critère d'appartenance : délivre un vrai
-scan de qualité du code ET peut tourner gratuitement, mécaniquement, à chaque commit (ce qui exclut
-structurellement ALWAYS-NEW-CODE, dont le vrai zoom coûte un raisonnement réel, jamais automatique).
-Les cinq tournent automatiquement, comme `check-house.mjs`, à chaque commit (partie mécanique
-gratuite, câblée dans le crochet `post-commit`) ; ARGUS et HARMONIA ajoutent en plus, sur demande,
-une seconde partie à vrai raisonnement (coût réel, Article 8), en particulier avant toute idée
-nouvelle. Détail complet de chaque outil (mécanique exacte, carte de dépendances, registres) :
-`docs/regles-de-travail.md` §7ter (tableau des outils), `docs/referentiel/organisation-agence.md`
-(l'organigramme complet — ces cinq y sont « les Gardiens sacrés du code ») et la fiche dédiée de
-chacun (`docs/referentiel/argus.md`, `harmonia.md`, `axa-check.md`, `clean-dirty-old.md`,
-`clone-hunter.md`, chacune avec son
-propre blueprint générique) — jamais répété ici.
+renommage bijectif cohérent) et **ALWAYS-NEW-CODE** (sixième membre depuis le 2026-09-21, mais
+seulement sa COUCHE LÉGÈRE — `recommendZone()`/`addendaSignal()`/`churnSignal()`, zéro raisonnement)
+rejoignent la même règle — le critère d'appartenance : délivre un vrai scan de qualité du code ET
+peut tourner gratuitement, mécaniquement, à chaque commit. Ce critère exclut structurellement le
+LIVRABLE qui exige un vrai raisonnement payant (le vrai zoom profond « page blanche » d'ALWAYS-NEW-
+CODE lui-même, ou THE-FINAL-JUDGE dans son ensemble — celui-ci sans aucune couche gratuite),
+jamais l'outil entier par contrecoup quand une couche légère existe séparément. Les six tournent
+automatiquement, comme `check-house.mjs`, à chaque commit (partie mécanique gratuite, câblée dans le
+crochet `post-commit`) ; ARGUS et HARMONIA ajoutent en plus, sur demande, une seconde partie à vrai
+raisonnement (coût réel, Article 8), en particulier avant toute idée nouvelle. Détail complet de
+chaque outil (mécanique exacte, carte de dépendances, registres) : `docs/regles-de-travail.md` §7ter
+(tableau des outils), `docs/referentiel/organisation-agence.md` (l'organigramme complet — ces six y
+sont « les Gardiens sacrés du code ») et la fiche dédiée de chacun (`docs/referentiel/argus.md`,
+`harmonia.md`, `axa-check.md`, `clean-dirty-old.md`, `clone-hunter.md`, `always-new-code.md`,
+chacune avec son propre blueprint générique) — jamais répété ici.
 
 **Protocole d'application** à chaque itération sur le code : Article 19 (a-t-on compris la logique
 et la raison d'être du code existant avant d'y toucher ?) → Article 0 (l'esprit est-il
@@ -665,9 +668,12 @@ et `docs/referentiel/smart-conso-token.md`.
 demandait déjà, périodiquement, de se poser la question de la page blanche — cet Article lui donne
 un vrai outil. Sur UNE zone à la fois, ALWAYS-NEW-CODE imagine comment cette zone serait construite
 aujourd'hui avec toute la connaissance actuelle du projet, puis compare à la structure réelle pour
-repérer la dette d'organisation — jamais automatique (déclenché via CHECK-LEVEL-TARGET niveau
-"Exceptionnel"), jamais un résultat "exact à 100 %" (toujours un palier de confiance), jamais une
-application automatique (l'agent interroge toujours l'utilisateur avant tout changement réel).
+repérer la dette d'organisation — ce vrai zoom profond reste jamais automatique (déclenché via
+CHECK-LEVEL-TARGET niveau "Exceptionnel"), jamais un résultat "exact à 100 %" (toujours un palier de
+confiance), jamais une application automatique (l'agent interroge toujours l'utilisateur avant tout
+changement réel). Distinct de sa couche légère (rotation + indices mécaniques d'empilement, zéro
+raisonnement), qui elle tourne bien automatiquement à chaque commit en tant que sixième Gardien
+sacré du code (Article 20) — les deux ne sont jamais confondues.
 **Garde-fou non négociable** : avant de qualifier quoi que ce soit d'"empilé, à corriger", toujours
 vérifier d'abord que ce n'est pas déjà une décision assumée et documentée ailleurs (Article 19).
 Détail complet : `docs/always-new-code-blueprint.md` et `docs/referentiel/always-new-code.md`.
@@ -1171,7 +1177,8 @@ conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs se
   Infrastructure ; Rôle dans l'organigramme Les Agents Cadre/Gardiens sacrés du code/Membre/VIP), les
   Gardiens sacrés du code (renommage de l'Équipe noyau, critère double exact — délivre un vrai scan
   de qualité ET tourne automatiquement à CHAQUE commit, jamais un seul des deux volets pris isolément
-  — 5 membres depuis l'arrivée de CLONE-HUNTER le 2026-09-22), les 6 suites de travail parmi les
+  — 6 membres depuis l'arrivée d'ALWAYS-NEW-CODE (couche légère seulement) le 2026-09-21, après
+  CLONE-HUNTER le 2026-09-22), les 6 suites de travail parmi les
   Membres ordinaires (Suivi-Conso, Suite Audit Simulation, Suite Audit lourd, Dette & Structure du
   code, La Cour du Roi, plus Les Agents Spéciaux — Smart Breaker/CHECK-LEVEL-TARGET), les 3
   catégories définitivement hors de l'agence (Personnages, Moteur du jeu, code tiers vendu tel
