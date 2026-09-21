@@ -424,3 +424,31 @@ circle-process-guardian devra donc vérifier une neuvième chose (en plus des 8 
 que la séquence stricte ci-dessus a bien été respectée dans cet ordre exact, et que le nombre de
 questions posées en fin d'analyse est cohérent avec le nombre de points réels trouvés (jamais zéro
 question sur une analyse à plusieurs problèmes, jamais une question par détail insignifiant).
+
+=====================================================================
+PARTIE 8 — MISE À JOUR DU 2026-09-22 : circle-process-guardian EST CONSTRUIT
+=====================================================================
+Ce document a servi de matière brute — l'outil qu'il décrit existe désormais réellement :
+`scripts/circle-process-guardian.mjs`, testé (`scripts/check-house.mjs`, bloc dédié). Il couvre
+mécaniquement les 8 points de la PARTIE 5 plus le point 9 de la PARTIE 7 ci-dessus, via
+`verifyRondeProcess({...})` — point d'entrée unique, jamais un second calcul divergent :
+réutilise `findOrphanReportFiles()` (doc-report.mjs) et `findRegistriesMissingFromCircle()`
+(circle-tasks.mjs) telles quelles.
+
+Portée honnête, assumée dès la conception : les faits observables depuis le disque seul (fichier
+de rapport frais daté du jour via `hasFreshReportFile()`, écart de commits depuis le dernier
+`record-run()`, registres orphelins, registres manquants dans CIRCLE_ITEMS) sont vérifiés
+directement. Les faits de conversation (la question AUTO/PRIME/GOAT a bien été posée, quels items
+ont réellement été cochés puis exécutés, la séquence stricte de l'Étape 5 a bien été respectée
+dans cet ordre, le nombre de questions forcées posées) ne sont PAS déductibles du code seul —
+l'agent qui pilote la Ronde doit les fournir explicitement en argument ; leur absence est
+elle-même signalée comme un écart, jamais supposée conforme par défaut. Lancé sans argument
+(`node scripts/circle-process-guardian.mjs`), l'outil ne vérifie donc que la moitié mécanique du
+processus (7 des 9 points) — un usage complet exige que l'agent appelle `verifyRondeProcess()`
+en lui fournissant les faits de conversation de la Ronde qui vient de se dérouler.
+
+Reste ouvert (pas fait ce soir, hors périmètre de cette première construction) : le branchement
+réel de `verifyRondeProcess()` dans le déroulement effectif d'une Ronde CIRCLE-TASKS (aujourd'hui,
+l'outil existe et fonctionne mais n'est encore appelé par aucun script automatique — c'est
+l'agent qui pilote qui doit l'invoquer lui-même, à la fin de chaque Ronde, en lui passant les
+faits réels de la Ronde qu'il vient de mener).

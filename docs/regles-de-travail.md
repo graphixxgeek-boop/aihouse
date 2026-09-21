@@ -1684,6 +1684,19 @@ rapport lui-même — chaque problème mérite une action, même minimale. S'ajo
 (≥3 questions de vérification à chaque demande) sans le remplacer : cette série est spécifique à
 l'Étape 5 de CIRCLE-TASKS.
 
+**circle-process-guardian est construit (2026-09-22)** — `scripts/circle-process-guardian.mjs`,
+testé (`scripts/check-house.mjs`), point d'entrée unique `verifyRondeProcess({...})`. Couvre
+mécaniquement les 9 points de vérification listés dans `docs/circle-process-detail.txt` (Parties 5
+et 7) sans aucun second calcul divergent : réutilise `findOrphanReportFiles()` (doc-report.mjs) et
+`findRegistriesMissingFromCircle()` (circle-tasks.mjs) telles quelles, jamais recopiées. Portée
+honnête : seuls les faits observables depuis le disque (fichier de rapport frais du jour, écart de
+commits depuis `record-run()`, registres orphelins/manquants) sont vérifiés directement — les faits
+de conversation (question AUTO/PRIME/GOAT posée, items réellement cochés puis exécutés, séquence
+stricte de l'Étape 5 respectée, nombre de questions forcées posées) doivent être fournis
+explicitement par l'agent qui pilote, jamais devinés ; leur absence est elle-même signalée comme un
+écart. Reste ouvert : le branchement réel dans le déroulement d'une Ronde — aujourd'hui l'outil doit
+être invoqué à la main par l'agent en fin de Ronde, rien ne l'appelle encore automatiquement.
+
 **Garde-fou de fraîcheur du catalogue (2026-09-21, trou trouvé par l'utilisateur : « est-ce que la
 ronde a bien dans son catalogue tous les outils pertinents ? incluant tous les nouveaux
 outils/scripts ? »).** LE-COORDINATEUR a déjà `findToolsMissingFromMenu()` pour vérifier que son

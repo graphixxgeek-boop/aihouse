@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 255'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 256'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -6219,4 +6219,148 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.equal(result.summary.kpiFromCassandra, null, 'recordEdition() called with no kpiFromCassandra override must default to an honest null, never silently fabricate one');
   }
   console.log('Passed: INES-official (task #168) collects real files by an explicit extension/root whitelist per scope (never a blacklist, and never pulling in docs/ under the "code" scope or a non-source extension under either scope), builds a real numbered table of contents and a dated/versioned consolidated edition (the two "oui maintenant" enrichments), reports an honest inline notice for a file that genuinely fails to read rather than crashing the whole edition, computes the real next version from the actual highest version found in the index regardless of row order, and keeps the potentially multi-megabyte edition body local while returning only a light, ready-to-append metadata row for the committed index — the real disk economy already applied elsewhere in this project to the raw simulation log.');
+}
+
+{
+  // circle-process-guardian (2026-09-22) : vérifie mécaniquement que le processus complet d'une
+  // Ronde CIRCLE-TASKS a bien été suivi (docs/circle-process-detail.txt Parties 5 et 7). Testé avec
+  // toutes les implémentations injectées — jamais un vrai `git rev-list`/scan disque dans ce test,
+  // qui serait lent et dépendant de l'état réel du dépôt au moment du test.
+  const { hasFreshReportFile, verifyRondeProcess } = await import('../scripts/circle-process-guardian.mjs');
+
+  const fakeFolders = { 'argus-scan': 'docs/argus', 'cassandra-rh-signal': undefined };
+  assert.equal(hasFreshReportFile('cassandra-rh-signal', { folders: fakeFolders }), undefined, 'an item with no known report folder (cassandra-rh-signal never uses this mechanism) must report an honest undefined, never a guessed true/false');
+  const today = new Date('2026-09-22T10:00:00Z').getTime();
+  assert.equal(hasFreshReportFile('argus-scan', { folders: fakeFolders, now: today, listDirImpl: () => ['circle-signal-2026-09-22T09-00-00.txt'] }), true, 'a circle-signal-* file dated today must count as a fresh report artifact');
+  assert.equal(hasFreshReportFile('argus-scan', { folders: fakeFolders, now: today, listDirImpl: () => ['snapshot-2026-09-22T09-00-00.txt'] }), true, 'a snapshot-* file dated today must also count as a fresh report artifact — the same two real filename patterns used elsewhere in this project, never a third invented format');
+  assert.equal(hasFreshReportFile('argus-scan', { folders: fakeFolders, now: today, listDirImpl: () => ['circle-signal-2026-09-21T09-00-00.txt'] }), false, 'a report file dated yesterday must never count as fresh today');
+
+  // Lancé sans aucun fait fourni : doit honnêtement signaler l'absence de faits de conversation,
+  // jamais les supposer vrais par défaut.
+  const bareResult = verifyRondeProcess({
+    findOrphanReportFilesImpl: () => [],
+    findRegistriesMissingFromCircleImpl: () => [],
+    existingPaths: [],
+    shImpl: () => { throw new Error('git indisponible dans ce test'); },
+  });
+  assert.ok(!bareResult.ok, 'a call with zero conversation facts supplied must never report ok:true — real gaps (AUTO/PRIME/GOAT, checked-vs-executed) always exist by default');
+  assert.ok(bareResult.findings.some((f) => f.check === 'auto-prime-goat'), 'missing confirmation that AUTO/PRIME/GOAT was asked must be flagged');
+  assert.ok(bareResult.findings.some((f) => f.check === 'checked-vs-executed'), 'an unsupplied checked/executed item list must be flagged as an undeducible fact, never silently assumed clean');
+
+  // nightAutonomousMode doit lever l'exigence AUTO/PRIME/GOAT (une Ronde nocturne autonome ne pose
+  // jamais cette question à un utilisateur endormi).
+  const nightResult = verifyRondeProcess({
+    nightAutonomousMode: true,
+    checkedItemIds: [], executedItemIds: [],
+    findOrphanReportFilesImpl: () => [],
+    findRegistriesMissingFromCircleImpl: () => [],
+    existingPaths: [],
+    shImpl: () => 'not-a-number',
+    loadLastRunImpl: () => ({ lastRunCommitCount: undefined }),
+  });
+  assert.ok(!nightResult.findings.some((f) => f.check === 'auto-prime-goat'), 'a genuinely night-autonomous Ronde must never be flagged for a missing AUTO/PRIME/GOAT confirmation — that question is never asked in that mode');
+
+  // Items cochés vs exécutés : un écart réel doit être détecté.
+  const checkedVsExecuted = verifyRondeProcess({
+    autoPrimeGoatAsked: true,
+    checkedItemIds: ['argus-scan', 'harmonia-scan'], executedItemIds: ['argus-scan'],
+    findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
+    shImpl: () => '100', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
+  });
+  assert.ok(checkedVsExecuted.findings.some((f) => f.check === 'checked-vs-executed' && f.message.includes('harmonia-scan')), 'an item checked in conversation but never actually executed must be named explicitly, never silently dropped');
+
+  // Item exécuté avec producesReport:true mais sans fichier frais : détecté via hasFreshReportFileImpl injecté.
+  const missingArtifact = verifyRondeProcess({
+    autoPrimeGoatAsked: true,
+    checkedItemIds: ['argus-scan'], executedItemIds: ['argus-scan'],
+    circleItems: [{ id: 'argus-scan', producesReport: true }],
+    reportFolders: { 'argus-scan': 'docs/argus' },
+    hasFreshReportFileImpl: () => false,
+    findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
+    shImpl: () => '100', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
+  });
+  assert.ok(missingArtifact.findings.some((f) => f.check === 'missing-report-artifact'), 'an item executed with producesReport:true that left no fresh file must be flagged — the universal "double communication" rule (2026-09-22) applied mechanically');
+
+  // Étape 5 : format du récapitulatif, mise en évidence de l'analyse, séquence stricte, questions forcées.
+  const badRecap = verifyRondeProcess({
+    autoPrimeGoatAsked: true, checkedItemIds: [], executedItemIds: [],
+    recapHtml: '<div>pas un vrai document HTML</div>', analysisPointsFound: 2, questionsAsked: 2,
+    findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
+    shImpl: () => '100', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
+  });
+  assert.ok(badRecap.findings.some((f) => f.check === 'recap-format'), 'a recap missing a real <!DOCTYPE html> must be flagged as not a genuine HTML document');
+  assert.ok(badRecap.findings.some((f) => f.check === 'recap-highlight'), 'points found but no class="highlight" block in the recap must be flagged — an analysis that found real problems must never be delivered without visual emphasis');
+
+  const badSequence = verifyRondeProcess({
+    autoPrimeGoatAsked: true, checkedItemIds: [], executedItemIds: [],
+    reportsDeliveredBeforeAnalysis: false,
+    findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
+    shImpl: () => '100', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
+  });
+  assert.ok(badSequence.findings.some((f) => f.check === 'sequence-order'), 'building the analysis before the reports were delivered must be flagged — the strict Étape 5 sequencing rule (docs/circle-process-detail.txt Partie 7)');
+
+  const tooFewQuestions = verifyRondeProcess({
+    autoPrimeGoatAsked: true, checkedItemIds: [], executedItemIds: [],
+    analysisPointsFound: 8, questionsAsked: 1,
+    findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
+    shImpl: () => '100', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
+  });
+  assert.ok(tooFewQuestions.findings.some((f) => f.check === 'forced-questions' && f.message.includes('attendu au moins')), 'fewer forced-choice questions than real problems found (capped at 5) must be flagged — the user\'s own explicit rule to force attention on every real problem');
+
+  const tooManyQuestions = verifyRondeProcess({
+    autoPrimeGoatAsked: true, checkedItemIds: [], executedItemIds: [],
+    analysisPointsFound: 3, questionsAsked: 12,
+    findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
+    shImpl: () => '100', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
+  });
+  assert.ok(tooManyQuestions.findings.some((f) => f.check === 'forced-questions' && f.message.includes('au-delà de la fourchette')), 'more than 10 forced-choice questions must also be flagged — never a question per insignificant detail');
+
+  const zeroPointsNoQuestions = verifyRondeProcess({
+    autoPrimeGoatAsked: true, checkedItemIds: [], executedItemIds: [],
+    analysisPointsFound: 0, questionsAsked: 0,
+    findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
+    shImpl: () => '100', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
+  });
+  assert.ok(!zeroPointsNoQuestions.findings.some((f) => f.check === 'forced-questions'), 'an analysis that genuinely found zero problems must never be forced into fabricating questions just to hit a quota');
+
+  // record-run : un vrai écart de commits doit être détecté, et un état jamais enregistré aussi.
+  const staleRecordRun = verifyRondeProcess({
+    autoPrimeGoatAsked: true, checkedItemIds: [], executedItemIds: [],
+    findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
+    shImpl: () => '109', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
+  });
+  assert.ok(staleRecordRun.findings.some((f) => f.check === 'record-run' && f.message.includes('9 commit')), 'a real gap between the current commit count and the last recorded Ronde must be named with the exact number of commits — the real 9-commit gap found live tonight, proving the check works against a genuine drift');
+  const neverRecorded = verifyRondeProcess({
+    autoPrimeGoatAsked: true, checkedItemIds: [], executedItemIds: [],
+    findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
+    shImpl: () => '50', loadLastRunImpl: () => ({ lastRunCommitCount: undefined }),
+  });
+  assert.ok(neverRecorded.findings.some((f) => f.check === 'record-run' && f.message.includes('jamais')), 'a Ronde state that was never recorded even once must say so explicitly, never silently pass as if 0 commits had elapsed');
+
+  // orphan-reports / registries-missing-from-circle : simple relais des fonctions déjà écrites, jamais un second calcul.
+  const withOrphans = verifyRondeProcess({
+    autoPrimeGoatAsked: true, checkedItemIds: [], executedItemIds: [],
+    findOrphanReportFilesImpl: () => [{ slug: 'un-registre-fantome' }],
+    findRegistriesMissingFromCircleImpl: () => ['docs/un-nouveau-dossier'],
+    existingPaths: [],
+    shImpl: () => '100', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
+  });
+  assert.ok(withOrphans.findings.some((f) => f.check === 'orphan-reports' && f.message.includes('un-registre-fantome')), 'an orphan report registry found by the already-existing findOrphanReportFiles() must be relayed by name, never recomputed');
+  assert.ok(withOrphans.findings.some((f) => f.check === 'registries-missing-from-circle' && f.message.includes('docs/un-nouveau-dossier')), 'a real registry missing from CIRCLE_ITEMS must be relayed by name, exactly as findRegistriesMissingFromCircle() already reports it elsewhere');
+
+  // Un passage entièrement propre doit rendre ok:true — jamais un findings vide par accident de logique.
+  const cleanResult = verifyRondeProcess({
+    autoPrimeGoatAsked: true,
+    checkedItemIds: ['argus-scan'], executedItemIds: ['argus-scan'],
+    circleItems: [{ id: 'argus-scan', producesReport: true }],
+    reportFolders: { 'argus-scan': 'docs/argus' },
+    hasFreshReportFileImpl: () => true,
+    recapHtml: '<!DOCTYPE html><html><body><div class="highlight">analyse</div></body></html>',
+    analysisPointsFound: 2, questionsAsked: 5, reportsDeliveredBeforeAnalysis: true,
+    findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
+    shImpl: () => '101', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
+  });
+  assert.deepEqual(cleanResult, { ok: true, findings: [] }, 'a Ronde where every real fact checks out must report a genuinely clean ok:true with zero fabricated findings');
+
+  console.log('Passed: circle-process-guardian (2026-09-22) verifies the full CIRCLE-TASKS Ronde process mechanically wherever the facts are observable from disk (fresh report artifacts via the same circle-signal-*/snapshot-* filenames already used by recordCircleItemReport()/recordSnapshotIfChanged(), the record-run commit-count drift, orphan reports and registries missing from CIRCLE_ITEMS — both relayed from the already-existing functions rather than recomputed), honestly refuses to guess conversation-only facts (AUTO/PRIME/GOAT asked, items actually checked vs executed, the Étape 5 sequencing and forced-questions count) when they are not supplied, correctly exempts a genuine night-autonomous run from the AUTO/PRIME/GOAT requirement, enforces the 5-10 forced-choice-question range scaled to the real number of problems found without ever fabricating a question when zero problems exist, and reports a fully clean ok:true only when every one of these real facts checks out.');
 }
