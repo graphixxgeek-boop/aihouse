@@ -2259,6 +2259,8 @@ discipline explicite plutôt que de compter sur le simple réflexe.
 cette ampleur reconnu :*
 - CASSANDRA-RH → `docs/cassandra-rh-conception.md`
 - Refonte graphique → `docs/referentiel/regles-des-graphismes.md`
+- Outil concordance/évolutivité (2026-09-21, potentiel 6e Gardien sacré) → `docs/concordance-evolutivite-conception.md`
+- Agence exportable comme gabarit générique (2026-09-21, explicitement pour bien plus tard) → `docs/agence-exportable-conception.md`
 
 **Ce qui distingue un « gros morceau » d'une idée ordinaire** : un chantier qui va occuper plusieurs
 sessions de construction, avec ses propres arbitrages de conception à accumuler AVANT que le premier

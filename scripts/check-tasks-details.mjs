@@ -405,11 +405,12 @@ export function appendSnapshot(rows, { file = SNAPSHOTS_FILE, dir = OUT_DIR, now
 // CHANTIER_PRELIMINARY_FILES (tâche #185, 2026-09-22) : registre des chantiers connus → leur
 // fichier préliminaire dédié, cf. docs/regles-de-travail.md « Idées dites en avance sur un « gros
 // chantier » ». Tenu à jour à chaque nouveau chantier de cette ampleur reconnu — jamais un chantier
-// ordinaire (seuls CASSANDRA-RH et la refonte graphique qualifient à ce jour, même liste que
-// celle-ci).
+// ordinaire (même liste que docs/regles-de-travail.md, jamais une seconde énumération divergente).
 export const CHANTIER_PRELIMINARY_FILES = {
   "CASSANDRA-RH": { file: "docs/cassandra-rh-conception.md", match: /cassandra/i },
   "Refonte graphique": { file: "docs/referentiel/regles-des-graphismes.md", match: /refonte graphique/i },
+  "Outil concordance/évolutivité": { file: "docs/concordance-evolutivite-conception.md", match: /concordance|évolutivité|evolutivite/i },
+  "Agence exportable": { file: "docs/agence-exportable-conception.md", match: /agence exportable|gabarit générique|gabarit generique/i },
 };
 
 // checkChantierFileFreshness() — la « vérification, jamais seulement une intention déclarée »
