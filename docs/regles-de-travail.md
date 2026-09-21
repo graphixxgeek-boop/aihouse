@@ -1663,8 +1663,9 @@ index concurrent (un fichier frère `circle-signals-index.md` si ce dossier a d�
 curaté à la main dans un format propre à l'outil) ; un item sans outil enregistré reçoit un nouveau
 dossier dédié, lui-même ajouté à `REGISTRIES` (9 nouveaux registres "texte" : html-wiring-check,
 claude-md-weight, suivi-open-tasks, chantier-preliminaire, idee-a-trancher, tool-brain,
-network-check, relecture-referentiel, relecture-correctifs). Résultat : les 23 items de la Ronde
-portent désormais `producesReport: true`, contre 8 avant cette correction. `cassandra-rh-signal`
+network-check, relecture-referentiel, relecture-correctifs). Résultat : tous les items de la Ronde
+(23 ce soir-là, contre 8 avant cette correction — le compte réel continue d'évoluer, cf.
+`CIRCLE_ITEMS.length`) portent désormais `producesReport: true`. `cassandra-rh-signal`
 passe en RAPPORT COMPLET (`node scripts/cassandra-rh.mjs rapport`) à CHAQUE Ronde (demande
 explicite, aucun coût API réel — reversal assumé du signal léger initial) ; `network-check-run`
 reçoit désormais un vrai rapport txt archivé (auparavant signal console seulement). THE-KING et
@@ -1726,6 +1727,31 @@ stricte de l'Étape 5 respectée, nombre de questions forcées posées) doivent 
 explicitement par l'agent qui pilote, jamais devinés ; leur absence est elle-même signalée comme un
 écart. Reste ouvert : le branchement réel dans le déroulement d'une Ronde — aujourd'hui l'outil doit
 être invoqué à la main par l'agent en fin de Ronde, rien ne l'appelle encore automatiquement.
+
+**Double rôle aide + vigilance pour la maintenance de CIRCLE_ITEMS (2026-09-22, demande explicite :
+« je veux que circle.process t'aide quand tu mets à jour circle [...] 2 niveaux »).**
+`findCircleItemsMapDrift()` (une entrée orpheline dans NOT_RECOMMENDED_BY_DEFAULT/COSTLY_SUBSTITUTES/
+CIRCLE_REPORT_FOLDERS pointant vers un id retiré, ou un item costly/periodicityTracked sans
+substitut déclaré) et `findStaleItemCountReferences()` (un compte figé — `CIRCLE_ITEMS.length, N`
+ou « les N items » — qui ne correspond plus au vrai compte de `CIRCLE_ITEMS.length`) sont câblées
+dans `main()` de `circle-process-guardian.mjs` : consultées AVANT de committer un changement de
+CIRCLE_ITEMS (niveau aide), elles rappellent ce qu'il faut vérifier ; jamais consultées, elles
+l'attrapent quand même au lancement suivant (niveau vigilance). Preuve vivante : ces deux fonctions
+ont attrapé, le soir même de leur construction, le vrai écart laissé par l'ajout de
+`hyper-scan-checkpoint-light` juste avant (deux assertions `check-house.mjs` encore sur l'ancien
+compte de 23 items).
+
+**HYPER-SCAN-CHECKPOINT rejoint réellement CIRCLE_ITEMS (2026-09-22, demande explicite : « vois
+comment integrer hyper-scan dans circle sinon ca n'a pas trop de sens que circle.process verifie
+hyper-scan »).** Nouvel item `hyper-scan-checkpoint-light` (thème Audit lourd, jamais `costly` —
+sa couche mécanique est réellement gratuite — mais `periodicityTracked: true`, jamais recommandé
+par défaut, addable en PRIME, sélectionnable en GOAT). Donne enfin un contexte concret à
+`verifyHyperScanProcess()` ci-dessus. `scripts/hyper-scan-checkpoint.mjs` lui-même modernisé le même
+soir (« mets le en phase avec le paysage actuel des outils ») : agrège désormais aussi
+`verifyRondeProcess({})` (filtré aux 3 signaux mécaniques) et 9 registres jusque-là jamais suivis
+(SMART-CONSO-TOKEN, THE-FINAL-JUDGE, THE-DEEP-READER, THE-KING, INES-official, memory-audit,
+find-booster, objectifs-vs-resultats, CASSANDRA-RH). Cf. `docs/circle-process-detail.txt` Partie 10
+et `docs/referentiel/hyper-scan-checkpoint.md` pour le détail complet.
 
 **Garde-fou de fraîcheur du catalogue (2026-09-21, trou trouvé par l'utilisateur : « est-ce que la
 ronde a bien dans son catalogue tous les outils pertinents ? incluant tous les nouveaux

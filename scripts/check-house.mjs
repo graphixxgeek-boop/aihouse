@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 259'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 260'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2644,7 +2644,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // HYPER-SCAN-CHECKPOINT (2026-09-19, cf. docs/hyper-scan-checkpoint-blueprint.md et
   // docs/referentiel/hyper-scan-checkpoint.md). Fonctions pures testées contre des fixtures en
   // mémoire, jamais contre le vrai docs/hyper-scan-checkpoint/index.md (qui grossit dans le temps).
-  const {lastCheckpointCommit,summarizeArgusOutput,summarizeHarmoniaOutput,checkpointPerformance}=await import('../scripts/hyper-scan-checkpoint.mjs');
+  const {lastCheckpointCommit,summarizeArgusOutput,summarizeHarmoniaOutput,checkpointPerformance,mechanicalCircleFindings}=await import('../scripts/hyper-scan-checkpoint.mjs');
   const emptyIndex='# titre\n\n| Date | Commit couvert jusqu\'à | Version | Trouvailles | Rapport | Notes |\n|---|---|---|---|---|---|\n';
   const oneRowIndex=emptyIndex+'| 2026-09-19 | `abc1234` | légère | 2 | [scan.txt](scan.txt) | premier passage |\n';
   const twoRowIndex=oneRowIndex+'| 2026-09-20 | `def5678` | complète | 0 | [scan2.txt](scan2.txt) | rien trouvé cette fois |\n';
@@ -2657,7 +2657,24 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(summarizeArgusOutput('[confirmé] a\n[probable] b\nMarqueurs TODO/FIXME trouvés (3) :'),{candidatsDetectes:2,todos:3});
   assert.deepEqual(summarizeHarmoniaOutput('2 friction(s) confirmée(s) sur 5 lien(s) vérifié(s).'),{frictions:2,liensVerifies:5});
   assert.deepEqual(summarizeHarmoniaOutput('rien à voir ici'),{frictions:undefined,liensVerifies:undefined},'unparseable HARMONIA output must never be silently miscounted as zero');
-  console.log("Passed: HYPER-SCAN-CHECKPOINT correctly reads the last recorded commit from its own index (never confusing the date column with the commit column, always the most recent row), reports an honest absence rather than a fake 0% when no passage has been recorded yet, and computes its own central performance KPI — the real hit rate of passages that surfaced a genuine confirmed finding, the tool's whole stated vocation — exactly rather than as a averaged-away percentage.");
+
+  // mechanicalCircleFindings() (2026-09-22, mise en phase avec le paysage actuel des outils — le
+  // plus jeune, circle-process-guardian, n'était jamais consulté ici). Filtre les 3 seuls signaux
+  // réellement mécaniques, jamais les signaux de conversation (toujours faussement rouges ici
+  // puisqu'HYPER-SCAN-CHECKPOINT ne pilote jamais lui-même de Ronde).
+  const cleanVerify=()=>({ok:true,findings:[]});
+  assert.deepEqual(mechanicalCircleFindings(cleanVerify),[],'a genuinely clean verifyRondeProcess() result must report zero findings here too, never a fabricated one');
+  const noisyVerify=()=>({ok:false,findings:[
+    {check:'auto-prime-goat',message:'jamais posée ici'},
+    {check:'checked-vs-executed',message:'jamais fourni ici'},
+    {check:'record-run',message:'9 commits d\'écart'},
+    {check:'orphan-reports',message:'1 registre orphelin'},
+    {check:'registries-missing-from-circle',message:'1 registre manquant'},
+  ]});
+  const filtered=mechanicalCircleFindings(noisyVerify);
+  assert.deepEqual(filtered.map((f)=>f.check).sort(),['orphan-reports','record-run','registries-missing-from-circle'],'only the 3 genuinely mechanical signals must survive the filter — auto-prime-goat and checked-vs-executed are conversation-only facts that would always be falsely red here, since HYPER-SCAN-CHECKPOINT never itself drives a Ronde');
+  assert.ok(filtered.some((f)=>f.message.includes('9 commits')),'the real message text of each surviving finding must be preserved verbatim, never reduced to just its check name');
+  console.log("Passed: HYPER-SCAN-CHECKPOINT correctly reads the last recorded commit from its own index (never confusing the date column with the commit column, always the most recent row), reports an honest absence rather than a fake 0% when no passage has been recorded yet, computes its own central performance KPI — the real hit rate of passages that surfaced a genuine confirmed finding, the tool's whole stated vocation — exactly rather than as a averaged-away percentage, and (2026-09-22) mechanicalCircleFindings() brings circle-process-guardian into the checkpoint's mechanical layer, filtered to only the 3 signals that are genuinely mechanical here.");
 }
 
 {
@@ -4049,7 +4066,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   } = await import('../scripts/circle-tasks.mjs');
   const { walkDocsPaths } = await import('../scripts/lib-shell.mjs');
 
-  assert.equal(CIRCLE_ITEMS.length, 23, 'CIRCLE_ITEMS must list exactly the 21 free periodic items (profil, the-king-signal, référentiels, KPI, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, tool-brain-report, cassandra-rh-signal — added 2026-09-21 —, dream-team-photo, THE-SCREENER, ines-official-signal, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run, coordinateur-catalogue, chantier-preliminaire-signal, idee-a-trancher-signal — added 2026-09-21, second "Suivi des chantiers" signal, filet de sécurité mécanique du réflexe temps réel — clone-hunter-run removed 2026-09-22 and always-new-code-signal removed 2026-09-21, CLONE-HUNTER then ALWAYS-NEW-CODE (light layer) promoted to fifth and sixth Gardiens sacrés, both now run automatically at every commit) plus THE-FINAL-JUDGE and its cousin THE-DEEP-READER, never silently gaining or losing an entry');
+  assert.equal(CIRCLE_ITEMS.length, 24, 'CIRCLE_ITEMS must list exactly the 21 free periodic items (profil, the-king-signal, référentiels, KPI, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, tool-brain-report, cassandra-rh-signal — added 2026-09-21 —, dream-team-photo, THE-SCREENER, ines-official-signal, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run, coordinateur-catalogue, chantier-preliminaire-signal, idee-a-trancher-signal — added 2026-09-21, second "Suivi des chantiers" signal, filet de sécurité mécanique du réflexe temps réel — clone-hunter-run removed 2026-09-22 and always-new-code-signal removed 2026-09-21, CLONE-HUNTER then ALWAYS-NEW-CODE (light layer) promoted to fifth and sixth Gardiens sacrés, both now run automatically at every commit) plus THE-FINAL-JUDGE, its cousin THE-DEEP-READER, and (2026-09-22) hyper-scan-checkpoint-light — the exact real drift found live by the new findStaleItemCountReferences() self-check tonight — never silently gaining or losing an entry');
   const profilGuardItem = CIRCLE_ITEMS.find((i) => i.id === 'profil-utilisateur-guard');
   assert.ok(profilGuardItem && !profilGuardItem.costly && profilGuardItem.theme === 'Passages réels (smoke run)', '2026-09-21 addition: the real check-profil-utilisateur.mjs smoke run must be free and live in its own "smoke run" theme, distinct from the "profil" item which writes a new observation rather than verifying disk integrity');
   const networkCheckItem = CIRCLE_ITEMS.find((i) => i.id === 'network-check-run');
@@ -4092,7 +4109,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const samplePhilosophyText = '### 1.1 Un principe **[Explicite]**\n\nOn agit toujours avec prudence budgétaire ambiante.\n\n### 1.2 Un autre principe **[Synthèse, 2026-09-19]**\n\nOn n\'agit jamais avec prudence budgétaire ambiante.';
   const inesOfficialIndexText = '| Version | Date | Périmètre | Fichiers | Taille |\n|---|---|---|---|---|\n| v1 | 2026-09-18 | code seul | 40 | 500 Ko |';
   const report = buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringReadFileImpl, suiviCategorized, claudeMdText: sampleClaudeMdText, philosophyText: samplePhilosophyText, philosophyFreshnessDaysValue: 3, inesOfficialIndexText }, now);
-  assert.equal(report.length, 23, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one — 23 since idee-a-trancher-signal joined and always-new-code-signal left CIRCLE_ITEMS on 2026-09-21');
+  assert.equal(report.length, 24, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one — 24 since hyper-scan-checkpoint-light joined CIRCLE_ITEMS on 2026-09-22');
   assert.equal(report.find((r) => r.id === 'claude-md-weight-signal').staleness, '66 tokens estimés, niveau "faible" — 2 aside(s) narrative(s) datée(s) encore réductible(s)', 'the CLAUDE.md weight signal must reuse the real SMART-CONSO-TOKEN scan functions live (never a second parser), reporting both the honest token estimate and the real count of still-reducible dated asides found in the actual text passed in');
   assert.equal(buildCircleReport({}, now).find((r) => r.id === 'claude-md-weight-signal').staleness, 'pas de signal disponible (CLAUDE.md non fourni)', 'with no CLAUDE.md text supplied at all, the signal must report an honest absence rather than crash or fabricate a number');
   assert.equal(report.find((r) => r.id === 'clean-dirty-old-signal').staleness, '1 jour(s) depuis le dernier passage journalisé', 'the CLEAN-DIRTY-OLD signal must compute its own staleness from its own real index text, distinct from every other source');
@@ -4178,13 +4195,16 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // groupCircleReportByTheme() (2026-09-20, idée explicite de l'utilisateur : proposer les items par
   // thème plutôt qu'un découpage arbitraire de 4). Chaque item réel doit porter un thème connu, se
   // ranger dans le bon groupe, chaque groupe doit tenir dans la limite de 4 options par question, et
-  // le thème "Audit lourd" (THE-FINAL-JUDGE + son cousin THE-DEEP-READER, tous deux costly, jamais
-  // un item gratuit) doit rester en toute dernière position des groupes.
+  // le thème "Audit lourd" doit rester en toute dernière position des groupes. Depuis le 2026-09-22,
+  // ce thème mélange volontairement 2 items costly (THE-FINAL-JUDGE/THE-DEEP-READER) et 1 item
+  // gratuit (hyper-scan-checkpoint-light, `periodicityTracked` mais jamais `costly`) — les 3
+  // partagent le même vrai regroupement thématique (audit exceptionnel, jamais coché par défaut)
+  // même si leur coût réel diffère, cf. circle-tasks.mjs.
   assert.ok(CIRCLE_ITEMS.every((i) => THEME_ORDER.includes(i.theme)), 'every real catalog item must carry a theme from the known fixed list, never an untagged or unknown one slipping through silently');
   const grouped = groupCircleReportByTheme(report);
   assert.deepEqual(grouped.map((g) => g.theme), THEME_ORDER, 'the groups must appear in the fixed, never-reshuffled theme order, with the "Audit lourd" theme genuinely last');
   assert.ok(grouped.every((g) => g.items.length <= 4), 'every theme group must fit within the real 4-options-per-question UI limit, the whole reason this grouping exists');
-  assert.deepEqual(grouped.at(-1).items.map((i) => i.id), ['the-final-judge', 'the-deep-reader'], 'the last "Audit lourd" group must contain exactly THE-FINAL-JUDGE and its cousin THE-DEEP-READER, both costly, never bundled with a free item from another theme');
+  assert.deepEqual(grouped.at(-1).items.map((i) => i.id), ['the-final-judge', 'the-deep-reader', 'hyper-scan-checkpoint-light'], 'the last "Audit lourd" group must contain exactly these 3 real items in their real order — the 2 costly ones plus the 2026-09-22 free addition, never dropping, reordering, or silently excluding any of them');
   assert.deepEqual(groupCircleReportByTheme([{ id: 'mystere', theme: 'Thème inconnu' }]).map((g) => g.theme), ['Autre'], 'an item with a theme outside the known list must fall into an honest "Autre" catch-all, never silently disappear from the grouping');
 
   // recommendCircleSelection() (tâche #155, 2026-09-21) : encode explicitement la sélection déjà
@@ -4203,7 +4223,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // primeAddableItems()/costlyItemDueStatus()/recommendCircleSelectionWithPeriodicity() (2026-09-21,
   // protocole AUTO/PRIME/GOAT demandé explicitement par l'utilisateur).
   const addable = primeAddableItems(recommended).map((r) => r.id);
-  assert.deepEqual(addable.sort(), ['dream-team-photo', 'referentiel', 'the-screener'], 'PRIME must only offer the free excluded-by-default items as add-ons — the two costly items must never appear here, reserved for GOAT ("les taches ne sont pas accessibles dans PRIME")');
+  assert.deepEqual(addable.sort(), ['dream-team-photo', 'hyper-scan-checkpoint-light', 'referentiel', 'the-screener'], 'PRIME must only offer the free excluded-by-default items as add-ons (including the 2026-09-22 hyper-scan-checkpoint-light, genuinely free) — the two truly costly items must never appear here, reserved for GOAT ("les taches ne sont pas accessibles dans PRIME")');
 
   assert.deepEqual(costlyItemDueStatus(undefined), { due: false, reason: "jamais lancé — absence honnête, jamais un signal de retard fabriqué" }, 'an item never run at all must never be treated as "due" — that would falsely flag a freshly-installed agency on day one');
   const dueNow = new Date('2026-10-25T00:00:00Z').getTime();
@@ -6248,7 +6268,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // Ronde CIRCLE-TASKS a bien été suivi (docs/circle-process-detail.txt Parties 5 et 7). Testé avec
   // toutes les implémentations injectées — jamais un vrai `git rev-list`/scan disque dans ce test,
   // qui serait lent et dépendant de l'état réel du dépôt au moment du test.
-  const { hasFreshReportFile, verifyRondeProcess, verifyHyperScanProcess, verifyDoubleCommunication } = await import('../scripts/circle-process-guardian.mjs');
+  const { hasFreshReportFile, verifyRondeProcess, verifyHyperScanProcess, verifyDoubleCommunication, findCircleItemsMapDrift, findStaleItemCountReferences } = await import('../scripts/circle-process-guardian.mjs');
 
   const fakeFolders = { 'argus-scan': 'docs/argus', 'cassandra-rh-signal': undefined };
   assert.equal(hasFreshReportFile('cassandra-rh-signal', { folders: fakeFolders }), undefined, 'an item with no known report folder (cassandra-rh-signal never uses this mechanism) must report an honest undefined, never a guessed true/false');
@@ -6429,5 +6449,28 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 
   assert.deepEqual(verifyDoubleCommunication([]), { ok: true, findings: [] }, 'an empty list (no items to cross-check this run) must report a clean ok:true, never a fabricated finding from no data');
 
-  console.log('Passed: circle-process-guardian (2026-09-22) verifies the full CIRCLE-TASKS Ronde process mechanically wherever the facts are observable from disk (fresh report artifacts via the same circle-signal-*/snapshot-* filenames already used by recordCircleItemReport()/recordSnapshotIfChanged(), the record-run commit-count drift, orphan reports and registries missing from CIRCLE_ITEMS — both relayed from the already-existing functions rather than recomputed), honestly refuses to guess conversation-only facts (AUTO/PRIME/GOAT asked, items actually checked vs executed, the Étape 5 sequencing and forced-questions count) when they are not supplied, correctly exempts a genuine night-autonomous run from the AUTO/PRIME/GOAT requirement, enforces the 5-10 forced-choice-question range scaled to the real number of problems found without ever fabricating a question when zero problems exist, and reports a fully clean ok:true only when every one of these real facts checks out — and (same commit) verifyHyperScanProcess() extends this exact discipline to HYPER-SCAN-CHECKPOINT\'s own garde-fous (mandatory full CLAUDE.md reread even in the light version, Smart Conso API/SMART-CONSO-TOKEN consultation and the light-before-heavy order for a heavy pass, the non-negotiable 3-attempt iteration cap, the double-perspective requirement, and the index-entry memory check), despite HYPER-SCAN-CHECKPOINT never being a CIRCLE_ITEMS entry itself — and verifyDoubleCommunication() makes the real point 3 ("double communication", alert console + report) genuinely checkable once both texts are supplied, catching a real substance divergence rather than only documenting it as a standing comment.');
+  // findCircleItemsMapDrift()/findStaleItemCountReferences() (2026-09-22, demande explicite : « je
+  // veux que circle.process t'aide quand tu mets à jour circle [...] 2 niveaux » — aide avant de
+  // committer un changement de CIRCLE_ITEMS, vigilance après coup si l'aide n'a pas été consultée).
+  const fakeItems = [{ id: 'a', producesReport: true }, { id: 'b', costly: true, producesReport: true }];
+  const cleanMaps = { notRecommendedByDefault: { a: 'raison' }, costlySubstitutes: { b: 'substitut' }, reportFolders: { a: 'docs/a/' } };
+  assert.deepEqual(findCircleItemsMapDrift(fakeItems, cleanMaps), [], 'fully consistent supporting maps (every key still a real item id, the costly item has its substitute) must report zero findings');
+  const danglingMaps = { notRecommendedByDefault: { a: 'raison', ghost: 'un item retiré' }, costlySubstitutes: {}, reportFolders: {} };
+  const driftFindings = findCircleItemsMapDrift(fakeItems, danglingMaps);
+  assert.ok(driftFindings.some((f) => f.check === 'dangling-map-entry' && f.message.includes('"ghost"')), 'a map entry referencing an id no longer present in CIRCLE_ITEMS (an item removed or renamed without cleanup) must be named explicitly by its stale key');
+  assert.ok(driftFindings.some((f) => f.check === 'missing-substitute' && f.message.includes('"b"')), 'a costly/periodicityTracked item with no COSTLY_SUBSTITUTES entry must be flagged — the alert line would otherwise literally print "undefined" the day it becomes due');
+  // Fixtures volontairement composées à l'exécution, jamais un compte figé écrit tel quel dans ce
+  // commentaire ou dans le code ci-dessous : ce fichier de test est lui-même scanné par le vrai
+  // findStaleItemCountReferences() pendant le passage HYPER-SCAN-CHECKPOINT/circle-process-guardian
+  // en direct — un littéral figé ici deviendrait un faux positif permanent contre le vrai compte
+  // courant de CIRCLE_ITEMS.
+  const fakeStaleCode = ['assert.equal(CIRCLE_ITEMS', '.length, 23, ...)'].join('');
+  const fakeFreshCode = ['assert.equal(CIRCLE_ITEMS', '.length, 24, ...)'].join('');
+  const fakeStaleProse = ['les 23', ' items de la Ronde portent producesReport'].join('');
+  assert.equal(findStaleItemCountReferences(fakeStaleCode, 24).length, 1, 'a hardcoded item count that no longer matches the real CIRCLE_ITEMS.length must be flagged — the exact real drift found live tonight after adding hyper-scan-checkpoint-light (a test still asserting 23 when the real count had become 24)');
+  assert.deepEqual(findStaleItemCountReferences(fakeFreshCode, 24), [], 'a reference that already matches the real count must never be flagged');
+  assert.deepEqual(findStaleItemCountReferences(fakeStaleProse, 24).length, 1, 'the free-prose phrasing ("les N items de la Ronde") must be caught too, never only the code-literal form');
+  assert.deepEqual(findStaleItemCountReferences('rien de pertinent ici', 24), [], 'text with no item-count reference at all must report zero findings, never a false positive');
+
+  console.log('Passed: circle-process-guardian (2026-09-22) verifies the full CIRCLE-TASKS Ronde process mechanically wherever the facts are observable from disk (fresh report artifacts via the same circle-signal-*/snapshot-* filenames already used by recordCircleItemReport()/recordSnapshotIfChanged(), the record-run commit-count drift, orphan reports and registries missing from CIRCLE_ITEMS — both relayed from the already-existing functions rather than recomputed), honestly refuses to guess conversation-only facts (AUTO/PRIME/GOAT asked, items actually checked vs executed, the Étape 5 sequencing and forced-questions count) when they are not supplied, correctly exempts a genuine night-autonomous run from the AUTO/PRIME/GOAT requirement, enforces the 5-10 forced-choice-question range scaled to the real number of problems found without ever fabricating a question when zero problems exist, and reports a fully clean ok:true only when every one of these real facts checks out — and (same commit) verifyHyperScanProcess() extends this exact discipline to HYPER-SCAN-CHECKPOINT\'s own garde-fous (mandatory full CLAUDE.md reread even in the light version, Smart Conso API/SMART-CONSO-TOKEN consultation and the light-before-heavy order for a heavy pass, the non-negotiable 3-attempt iteration cap, the double-perspective requirement, and the index-entry memory check), despite HYPER-SCAN-CHECKPOINT never being a CIRCLE_ITEMS entry itself — verifyDoubleCommunication() makes the real point 3 ("double communication", alert console + report) genuinely checkable once both texts are supplied, catching a real substance divergence rather than only documenting it as a standing comment — and findCircleItemsMapDrift()/findStaleItemCountReferences() give circle-process-guardian a genuine "help + guard" dual role for maintaining CIRCLE_ITEMS itself, catching (live, the same night they were built) both a dangling-map class of bug and the exact stale-count regression this session\'s own hyper-scan-checkpoint-light addition had just introduced.');
 }

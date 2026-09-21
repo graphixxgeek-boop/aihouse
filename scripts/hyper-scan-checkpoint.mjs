@@ -4,10 +4,9 @@
 // retrouvés dans l'historique complet de la session à sa demande explicite.
 //
 // Rôle : ORCHESTRATEUR, jamais un réimplémenteur. Version LÉGÈRE (celle-ci, zéro appel réseau) :
-// agrège tout ce qu'ARGUS, HARMONIA, AXA-CHECK, CLEAN-DIRTY-OLD, CLONE-HUNTER (les 5 Gardiens
-// sacrés du code, Article 20 — cf. docs/referentiel/organisation-agence.md §3), ALWAYS-NEW-CODE
-// (préparation — zone recommandée + indices mécaniques, jamais le vrai zoom profond, un
-// raisonnement que seul l'agent peut faire), check-house.mjs, kpi-report.mjs et tous les
+// agrège tout ce qu'ARGUS, HARMONIA, AXA-CHECK, CLEAN-DIRTY-OLD, CLONE-HUNTER, ALWAYS-NEW-CODE
+// (préparation — les 6 Gardiens sacrés du code au complet, Article 20, cf.
+// docs/referentiel/organisation-agence.md §3), check-house.mjs, kpi-report.mjs et tous les
 // registres/historiques déjà accumulés savent dire
 // MÉCANIQUEMENT, détermine ce qui a changé depuis le dernier passage (mémoire automatique via
 // docs/hyper-scan-checkpoint/index.md, jamais un fichier d'état séparé), puis produit une
@@ -15,6 +14,20 @@
 // consignes passées, combinaisons non pensées, comparaison humaine de deux transcripts, le zoom
 // ALWAYS-NEW-CODE) — jamais prétendre que ces dernières sont automatisées alors qu'elles ne le
 // sont pas (cf. blueprint, "Ce que ce patron n'est pas").
+//
+// Mise à jour 2026-09-22 (« mets hyper-scan en phase avec le paysage actuel des outils, plus
+// efficace, plus performant ») : câble désormais aussi verifyRondeProcess() (le plus jeune outil du
+// paysage, circle-process-guardian.mjs) pour son sous-ensemble mécaniquement observable
+// (record-run, orphan-reports, registries-missing-from-circle) — JAMAIS un second calcul de ces
+// trois signaux, qui existaient déjà séparément dans doc-report.mjs/circle-tasks.mjs mais n'étaient
+// jusqu'ici jamais agrégés ici ; et étend la liste des registres suivis (9 nouveaux : le registre
+// de fraîcheur SMART-CONSO-TOKEN lui-même, THE-FINAL-JUDGE, THE-DEEP-READER, THE-KING, INES-official,
+// memory-audit, find-booster, objectifs-vs-resultats, CASSANDRA-RH — tous des Membres/Agents réels
+// du paysage jamais suivis ici depuis leur création, un vrai angle mort d'évolutivité, cf.
+// Article 24). Volontairement PAS de second appel à check-house.mjs/ARGUS/HARMONIA via
+// runNetworkCheck() (LE-COORDINATEUR) : ce script a déjà ses propres appels directs juste en
+// dessous, un second passage par LE-COORDINATEUR relancerait la suite de tests et les deux Gardiens
+// une deuxième fois pour rien — l'exact contraire de « plus performant ».
 //
 // La version COMPLÈTE (check-spirit.mjs, check-profile.mjs, mini-simulations plafonnées, double
 // perspective via un second agent indépendant) n'est jamais lancée par ce script seul : elle
@@ -25,6 +38,7 @@ import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync } from 
 import { join } from "node:path";
 import { sh as shBase } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { verifyRondeProcess } from "./circle-process-guardian.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const INDEX_PATH = join(ROOT, "docs/hyper-scan-checkpoint/index.md");
@@ -91,6 +105,18 @@ function countOpenBullets(text) {
   return (text.match(/^- /gm) || []).length;
 }
 
+// mechanicalCircleFindings() (2026-09-22) — n'appelle verifyRondeProcess() qu'à vide (aucun fait de
+// conversation fourni, HYPER-SCAN-CHECKPOINT ne pilote jamais lui-même une Ronde) et filtre ses
+// résultats aux 3 seuls signaux réellement mécaniques (record-run, orphan-reports,
+// registries-missing-from-circle) — jamais les signaux "AUTO/PRIME/GOAT"/"checked-vs-executed", qui
+// seraient toujours faussement rouges ici puisqu'aucune Ronde n'est en cours au moment de ce
+// passage. Exportée pour rester testable sans dépendre du vrai dépôt/git dans les tests unitaires.
+export function mechanicalCircleFindings(verifyRondeProcessImpl = verifyRondeProcess) {
+  const MECHANICAL_CHECKS = new Set(["record-run", "orphan-reports", "registries-missing-from-circle"]);
+  const { findings } = verifyRondeProcessImpl({});
+  return findings.filter((f) => MECHANICAL_CHECKS.has(f.check));
+}
+
 function main() {
   recordCliUsage("hyper-scan-checkpoint");
   const now = new Date().toISOString();
@@ -137,6 +163,18 @@ function main() {
   const cloneHunterOut = sh("node scripts/clone-hunter.mjs");
   console.log(cloneHunterOut.trim());
 
+  // circle-process-guardian (2026-09-22, mise en phase avec le paysage actuel des outils) : le plus
+  // jeune outil du réseau, jamais consulté ici jusqu'à ce soir. Sous-ensemble mécanique seulement
+  // (record-run, orphan-reports, registries-missing-from-circle) — HYPER-SCAN-CHECKPOINT ne pilote
+  // jamais lui-même de Ronde, les signaux de conversation (AUTO/PRIME/GOAT, etc.) n'ont donc aucun
+  // sens ici et sont filtrés.
+  console.log("\n--- circle-process-guardian (discipline mécanique de CIRCLE-TASKS) ---");
+  const circleFindings = mechanicalCircleFindings();
+  const circleSummaryLines = circleFindings.length
+    ? circleFindings.map((f) => `[${f.check}] ${f.message}`)
+    : ["Aucun écart mécanique détecté (record-run, orphan-reports, registries-missing-from-circle)."];
+  for (const line of circleSummaryLines) console.log(line);
+
   console.log("\n--- Suite de tests (check-house.mjs) ---");
   const testOut = sh("node scripts/check-house.mjs 2>&1");
   const testsOk = !/AssertionError|Error:/.test(testOut) || /ExperimentalWarning/.test(testOut.split("AssertionError")[0] || "");
@@ -155,6 +193,18 @@ function main() {
     ["AXA-CHECK (index)", "docs/axa-check/index.md"],
     ["CLEAN-DIRTY-OLD (index)", "docs/clean-dirty-old/index.md"],
     ["CLONE-HUNTER (index)", "docs/clone-hunter/index.md"],
+    // 9 registres ajoutés le 2026-09-22 (mise en phase avec le paysage actuel des outils) — des
+    // Membres/Agents réels créés depuis la conception d'HYPER-SCAN-CHECKPOINT (2026-09-19), jamais
+    // suivis ici jusqu'à ce soir malgré leur pertinence pour un audit exceptionnel.
+    ["SMART-CONSO-TOKEN (index)", "docs/smart-conso-token/index.md"],
+    ["THE-FINAL-JUDGE (index)", "docs/the-final-judge/index.md"],
+    ["THE-DEEP-READER (index)", "docs/suivi/relectures-lourdes/index.md"],
+    ["THE-KING (index)", "docs/the-king/index.md"],
+    ["INES-official (index)", "docs/ines-official/index.md"],
+    ["memory-audit (index)", "docs/memory-audit/index.md"],
+    ["find-booster (index)", "docs/find-booster/index.md"],
+    ["objectifs-vs-resultats (index)", "docs/objectifs-vs-resultats/index.md"],
+    ["CASSANDRA-RH (index)", "docs/cassandra-rh/index.md"],
   ];
   const registrySummary = [];
   for (const [label, relPath] of registries) {
@@ -219,6 +269,9 @@ function main() {
     "",
     "=== CLONE-HUNTER (blocs de code dupliqués, littéral + renommage bijectif) ===",
     cloneHunterOut,
+    "",
+    "=== circle-process-guardian (discipline mécanique de CIRCLE-TASKS) ===",
+    ...circleSummaryLines,
     "",
     "=== Suite de tests ===",
     realFailure ? "ÉCHEC — voir sortie complète ci-dessous." : "Verte.",

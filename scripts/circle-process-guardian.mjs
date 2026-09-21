@@ -27,7 +27,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-import { CIRCLE_ITEMS, CIRCLE_REPORT_FOLDERS, loadLastRun, findRegistriesMissingFromCircle } from "./circle-tasks.mjs";
+import { CIRCLE_ITEMS, CIRCLE_REPORT_FOLDERS, NOT_RECOMMENDED_BY_DEFAULT, COSTLY_SUBSTITUTES, loadLastRun, findRegistriesMissingFromCircle } from "./circle-tasks.mjs";
 import { findOrphanReportFiles, REGISTRIES } from "./doc-report.mjs";
 import { walkDocsPaths, sh } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
@@ -151,14 +151,17 @@ export function verifyRondeProcess({
 
 // verifyHyperScanProcess() (2026-09-22, demande explicite : « l'outil process.circle doit aussi
 // l'avoir en tete [HYPER-SCAN-CHECKPOINT], on parle de discipline d'execution, il est la pour ca »).
-// HYPER-SCAN-CHECKPOINT n'est PAS un item de CIRCLE_ITEMS (cf. CIRCLE_EXCLUDED_REGISTRIES : « outil
-// exceptionnel, jamais coché par défaut ni régulier ») — mais le mandat de ce module (discipline
-// d'exécution d'un protocole à plusieurs étapes) s'applique tout aussi bien à SES PROPRES garde-fous
-// (docs/referentiel/hyper-scan-checkpoint.md) qu'à ceux de la Ronde ci-dessus. Même portée honnête :
-// aucun de ces faits n'est observable depuis le disque seul (la consultation de Smart Conso
-// API/SMART-CONSO-TOKEN avant une version complète, la version légère lancée d'abord, le plafond de
-// 3 tentatives respecté, la relecture complète de CLAUDE.md, la double perspective) — l'agent qui
-// pilote doit les fournir explicitement, jamais devinés.
+// **Intégration réelle depuis le même soir** (« vois comment integrer hyper-scan dans circle sinon
+// ca n'a pas trop de sens que circle.process verifie hyper-scan ») : HYPER-SCAN-CHECKPOINT a
+// désormais un vrai item CIRCLE_ITEMS (`hyper-scan-checkpoint-light`, jamais coché par défaut,
+// périodicité suivie comme un item costly sans jamais en être un — cf. circle-tasks.mjs), ce qui
+// donne à cette fonction un contexte concret plutôt qu'une vérification hors sol. Le mandat de ce
+// module (discipline d'exécution d'un protocole à plusieurs étapes) s'applique tout aussi bien à SES
+// PROPRES garde-fous (docs/referentiel/hyper-scan-checkpoint.md) qu'à ceux de la Ronde ci-dessus.
+// Même portée honnête : aucun de ces faits n'est observable depuis le disque seul (la consultation
+// de Smart Conso API/SMART-CONSO-TOKEN avant une version complète, la version légère lancée
+// d'abord, le plafond de 3 tentatives respecté, la relecture complète de CLAUDE.md, la double
+// perspective) — l'agent qui pilote doit les fournir explicitement, jamais devinés.
 export function verifyHyperScanProcess({
   version, // "légère" | "complète" — quelle version a été demandée/exécutée
   claudeMdFullyReread,
@@ -187,6 +190,63 @@ export function verifyHyperScanProcess({
   return { ok: findings.length === 0, findings };
 }
 
+// --- Aide à la mise à jour de CIRCLE-TASKS (2026-09-22, demande explicite : « je veux que
+// circle.process t'aide quand tu mets à jour circle [...] je veux qu'il soit à la fois là pour
+// t'aider, à la fois la pour veiller à ce que tu respectes bien les process de circles [...] 2
+// niveaux »). Ces deux fonctions servent DOUBLEMENT : consultées AVANT de committer un changement de
+// CIRCLE_ITEMS (aide), elles évitent exactement la classe de bug trouvée en construisant
+// hyper-scan-checkpoint-light ce soir (un test `CIRCLE_ITEMS.length` resté à l'ancien chiffre) ;
+// jamais consultées, elles restent le filet qui l'aurait attrapé quand même au commit suivant
+// (vigilance). Jamais un second calcul divergent d'un invariant déjà vérifié ailleurs — ces deux
+// fonctions couvrent des invariants qu'aucun autre outil du paysage ne vérifie aujourd'hui.
+
+// findCircleItemsMapDrift() — un item RETIRÉ ou RENOMMÉ doit laisser AUCUNE trace orpheline dans les
+// 3 tables qui le référencent par id (NOT_RECOMMENDED_BY_DEFAULT, COSTLY_SUBSTITUTES,
+// CIRCLE_REPORT_FOLDERS) ; et un item costly/periodicityTracked DOIT avoir un substitut déclaré
+// (sinon la ligne d'alerte imprimerait littéralement "undefined" — un vrai bug déjà possible
+// aujourd'hui, jamais hypothétique). Signal CONFIRMÉ dans les deux cas, jamais une supposition.
+export function findCircleItemsMapDrift(items = CIRCLE_ITEMS, {
+  notRecommendedByDefault = NOT_RECOMMENDED_BY_DEFAULT,
+  costlySubstitutes = COSTLY_SUBSTITUTES,
+  reportFolders = CIRCLE_REPORT_FOLDERS,
+} = {}) {
+  const findings = [];
+  const ids = new Set(items.map((i) => i.id));
+  const danglingKeys = (map, mapName) => {
+    if (!map) return;
+    for (const key of Object.keys(map)) {
+      if (!ids.has(key)) findings.push({ check: "dangling-map-entry", message: `${mapName}["${key}"] référence un id qui n'existe plus dans CIRCLE_ITEMS — item retiré ou renommé sans nettoyer cette entrée.` });
+    }
+  };
+  danglingKeys(notRecommendedByDefault, "NOT_RECOMMENDED_BY_DEFAULT");
+  danglingKeys(costlySubstitutes, "COSTLY_SUBSTITUTES");
+  danglingKeys(reportFolders, "CIRCLE_REPORT_FOLDERS");
+
+  if (costlySubstitutes) {
+    for (const item of items) {
+      if ((item.costly || item.periodicityTracked) && !(item.id in costlySubstitutes)) {
+        findings.push({ check: "missing-substitute", message: `L'item "${item.id}" (costly ou periodicityTracked) n'a aucune entrée dans COSTLY_SUBSTITUTES — l'alerte de fraîcheur afficherait littéralement "undefined" le jour où il devient dû.` });
+      }
+    }
+  }
+  return findings;
+}
+
+// findStaleItemCountReferences() — la classe de bug réellement trouvée ce soir : un commentaire ou
+// un test cite un nombre figé d'items ("CIRCLE_ITEMS.length, 23", "les 23 items de la Ronde") qui ne
+// correspond plus au vrai compte après un ajout/retrait. Jamais une liste de fichiers à surveiller
+// recopiée à la main (Article 24) : l'appelant fournit le texte à vérifier (n'importe quel fichier
+// réel), cette fonction reste agnostique de la source.
+const ITEM_COUNT_REFERENCE_PATTERN = /CIRCLE_ITEMS\.length,\s*(\d+)|les\s+(\d+)\s+items?\s+(?:de la Ronde|libres|gratuits)/gi;
+export function findStaleItemCountReferences(text, realCount) {
+  const findings = [];
+  for (const m of String(text ?? "").matchAll(ITEM_COUNT_REFERENCE_PATTERN)) {
+    const cited = Number(m[1] ?? m[2]);
+    if (cited !== realCount) findings.push({ check: "stale-item-count", message: `Une référence cite ${cited} item(s), alors que CIRCLE_ITEMS en compte réellement ${realCount} aujourd'hui : "${m[0]}".` });
+  }
+  return findings;
+}
+
 function main() {
   recordCliUsage("circle-process-guardian");
   console.log("=== circle-process-guardian — vérification mécanique du processus de Ronde ===\n");
@@ -197,6 +257,18 @@ function main() {
   const result = verifyRondeProcess({});
   for (const f of result.findings) console.log(`- [${f.check}] ${f.message}`);
   console.log(result.ok ? "\nAucun écart mécaniquement détectable." : `\n${result.findings.length} écart(s) trouvé(s) — jamais une correction automatique, signaler seulement à l'agent qui pilote.`);
+
+  console.log("\n=== Aide/vigilance pour une mise à jour de CIRCLE_ITEMS (2026-09-22) ===");
+  console.log("Consulté AVANT un changement de CIRCLE_ITEMS, ceci aide à ne rien oublier ; jamais consulté, ceci l'attrape quand même au commit suivant :\n");
+  const mapDrift = findCircleItemsMapDrift();
+  for (const f of mapDrift) console.log(`- [${f.check}] ${f.message}`);
+  let countDrift = [];
+  try {
+    const checkHouseText = readFileSync(join(ROOT, "scripts/check-house.mjs"), "utf8");
+    countDrift = findStaleItemCountReferences(checkHouseText, CIRCLE_ITEMS.length);
+    for (const f of countDrift) console.log(`- [${f.check}] ${f.message}`);
+  } catch { /* best-effort, jamais bloquant */ }
+  if (!mapDrift.length && !countDrift.length) console.log("Aucun écart de maintenance détecté (tables associées cohérentes, aucun compte figé obsolète trouvé dans check-house.mjs).");
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

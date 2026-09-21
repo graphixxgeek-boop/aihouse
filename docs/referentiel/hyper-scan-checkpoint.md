@@ -58,19 +58,48 @@ final.
 - **Relecture de la charte toujours complète**, même en version légère (décision explicite de
   l'utilisateur : jamais seulement les sections qu'on croit concernées).
 
+## Intégration réelle à CIRCLE-TASKS (2026-09-22)
+
+*(Demande explicite : « vois comment integrer hyper-scan dans circle sinon ca n'a pas trop de sens
+que circle.process verifie hyper-scan ».)* HYPER-SCAN-CHECKPOINT a désormais un vrai item
+`CIRCLE_ITEMS` : `hyper-scan-checkpoint-light` (`scripts/circle-tasks.mjs`), thème "Audit lourd",
+JAMAIS `costly` (sa couche mécanique est réellement gratuite, Article 21) mais JAMAIS recommandé par
+défaut non plus (`NOT_RECOMMENDED_BY_DEFAULT`) — addable en PRIME, sélectionnable en GOAT, exactement
+comme "relecture exhaustive du référentiel". `periodicityTracked: true` réutilise le mécanisme de
+seuil déjà en place pour THE-FINAL-JUDGE/THE-DEEP-READER (`costlyItemDueStatus()`, lu depuis
+`docs/hyper-scan-checkpoint/index.md`) sans jamais le classer à tort comme un coût financier. Son
+`execute` est honnête sur ce qu'une simple sélection en Ronde couvre : SEULEMENT la couche mécanique
+(`node scripts/hyper-scan-checkpoint.mjs`) — traiter la checklist qualitative et ajouter la ligne à
+`index.md` restent un choix délibéré et séparé, jamais impliqués par la seule case cochée.
+
 ## Discipline d'exécution vérifiable — circle-process-guardian (2026-09-22)
 
 *(Demande explicite de l'utilisateur : « l'outil process.circle doit aussi l'avoir en tete, on parle
-de discipline d'execution, il est la pour ca ».)* HYPER-SCAN-CHECKPOINT n'est pas un item de
-`CIRCLE_ITEMS` (cf. `CIRCLE_EXCLUDED_REGISTRIES` : « outil exceptionnel, jamais coché par défaut ni
-régulier »), mais `scripts/circle-process-guardian.mjs::verifyHyperScanProcess({...})` applique la
-même discipline de vérification honnête à SES PROPRES garde-fous : relecture complète de CLAUDE.md
-(exigée même en version légère), consultation de Smart Conso API et de SMART-CONSO-TOKEN avant une
-version complète, version légère toujours lancée en premier, plafond non négociable de 3 tentatives
-de mini-simulation, double perspective réellement séparée, et une ligne bien ajoutée à
-`docs/hyper-scan-checkpoint/index.md` après la checklist qualitative. Même portée honnête que le
-reste de ce module : aucun de ces faits n'est observable depuis le disque seul — l'agent qui pilote
-doit les fournir explicitement à chaque appel, jamais devinés.
+de discipline d'execution, il est la pour ca ».)* Grâce à l'intégration ci-dessus,
+`scripts/circle-process-guardian.mjs::verifyHyperScanProcess({...})` a désormais un contexte
+concret plutôt qu'une vérification hors sol. Elle applique une discipline de vérification honnête à
+SES PROPRES garde-fous : relecture complète de CLAUDE.md (exigée même en version légère),
+consultation de Smart Conso API et de SMART-CONSO-TOKEN avant une version complète, version légère
+toujours lancée en premier, plafond non négociable de 3 tentatives de mini-simulation, double
+perspective réellement séparée, et une ligne bien ajoutée à `docs/hyper-scan-checkpoint/index.md`
+après la checklist qualitative. Même portée honnête que le reste de ce module : aucun de ces faits
+n'est observable depuis le disque seul — l'agent qui pilote doit les fournir explicitement à chaque
+appel, jamais devinés.
+
+## HYPER-SCAN-CHECKPOINT modernisé pour rejoindre le paysage actuel (2026-09-22)
+
+*(Demande explicite : « vois comment tu peux ameliorer hyper-scan [...] le mettre en phase avec le
+paysage actuel des outils [...] plus efficace, plus performant ».)* `scripts/hyper-scan-checkpoint.mjs`
+(version légère) agrège désormais aussi : `verifyRondeProcess({})` de circle-process-guardian, filtré
+à ses 3 seuls signaux mécaniques (`mechanicalCircleFindings()`, jamais les signaux de conversation
+toujours faussement rouges ici) ; et 9 registres supplémentaires jusque-là jamais suivis
+(SMART-CONSO-TOKEN, THE-FINAL-JUDGE, THE-DEEP-READER, THE-KING, INES-official, memory-audit,
+find-booster, objectifs-vs-resultats, CASSANDRA-RH — tous des Membres/Agents réels créés depuis la
+conception de cet outil le 2026-09-19). Volontairement PAS de second appel à `runNetworkCheck()`
+(LE-COORDINATEUR) : ce script a déjà ses propres appels directs à ARGUS/HARMONIA/AXA-CHECK/
+CLEAN-DIRTY-OLD/CLONE-HUNTER/ALWAYS-NEW-CODE juste au-dessus — un second passage relancerait
+`check-house.mjs` et ces deux premiers Gardiens une deuxième fois pour rien, l'exact contraire de
+« plus performant ».
 
 ## SMART-CONSO-TOKEN pioche désormais dans ce registre (2026-09-22)
 

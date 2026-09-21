@@ -474,3 +474,35 @@ PARTIE 9 — MISE À JOUR DU 2026-09-22 (SUITE) : deux ajouts supplémentaires l
    ET rendu réellement vérifiable : `verifyDoubleCommunication()` compare mécaniquement le texte
    annoncé et le texte réellement écrit, dès que l'agent fournit les deux — jamais un simple rappel
    sans prise sur un vrai manquement.
+
+=====================================================================
+PARTIE 10 — MISE À JOUR DU 2026-09-22 (SUITE ET FIN DE SOIRÉE) : intégration réelle + double rôle
+=====================================================================
+1. **HYPER-SCAN-CHECKPOINT rejoint réellement CIRCLE_ITEMS** (demande explicite : « vois comment
+   integrer hyper-scan dans circle sinon ca n'a pas trop de sens que circle.process verifie
+   hyper-scan »). Nouvel item `hyper-scan-checkpoint-light` (thème Audit lourd, jamais `costly`,
+   `periodicityTracked: true`) — addable en PRIME, sélectionnable en GOAT, jamais dans la sélection
+   AUTO par défaut. Ceci donne enfin un contexte concret à `verifyHyperScanProcess()` : avant ce
+   soir, HYPER-SCAN-CHECKPOINT n'avait aucune existence dans CIRCLE-TASKS, rendant cette vérification
+   hors sol.
+2. **HYPER-SCAN-CHECKPOINT lui-même modernisé** (demande explicite : « vois comment tu peux
+   ameliorer hyper-scan [...] le mettre en phase avec le paysage actuel des outils [...] plus
+   efficace, plus performant ») : agrège désormais `verifyRondeProcess({})` (filtré aux 3 signaux
+   mécaniques via `mechanicalCircleFindings()`) et 9 registres jusque-là jamais suivis (créés depuis
+   sa conception le 2026-09-19). Trouvaille réelle en le lançant en direct pendant cette
+   modernisation : un fichier ARGUS orphelin (`scan-2026-09-21-22-13.txt`) jamais indexé — corrigé le
+   même soir (`docs/argus/index.md`).
+3. **circle-process-guardian gagne un vrai double rôle, demandé explicitement** (« je veux que
+   circle.process t'aide quand tu mets à jour circle [...] je veux qu'il soit à la fois là pour
+   t'aider, à la fois la pour veiller à ce que tu respectes bien les process de circles [...] 2
+   niveaux ») : `findCircleItemsMapDrift()` (signal CONFIRMÉ — un item retiré/renommé laissant une
+   entrée orpheline dans NOT_RECOMMENDED_BY_DEFAULT/COSTLY_SUBSTITUTES/CIRCLE_REPORT_FOLDERS, ou un
+   item costly/periodicityTracked sans substitut déclaré) et `findStaleItemCountReferences()` (un
+   compte figé — `CIRCLE_ITEMS.length, N` ou « les N items » — qui ne correspond plus au vrai
+   compte). Preuve vivante de l'utilité de ces deux fonctions, trouvée EN LES CONSTRUISANT ce même
+   soir : l'ajout de `hyper-scan-checkpoint-light` avait laissé deux assertions `check-house.mjs`
+   et un commentaire `regles-de-travail.md` bloqués sur l'ancien compte (23 au lieu de 24) — attrapé
+   en direct par `findStaleItemCountReferences()` lui-même. Câblées dans `main()` de
+   `circle-process-guardian.mjs`, donc visibles à chaque lancement `node scripts/circle-process-guardian.mjs`
+   — le niveau AIDE consulté avant de committer un changement de CIRCLE_ITEMS, le niveau VIGILANCE
+   l'attrapant quand même si l'aide n'a pas été consultée.

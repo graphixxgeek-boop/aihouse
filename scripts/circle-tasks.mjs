@@ -418,6 +418,26 @@ export const CIRCLE_ITEMS = [
     costly: true,
     producesReport: true,
   },
+  // HYPER-SCAN-CHECKPOINT — version légère (2026-09-22, intégration demandée explicitement : « vois
+  // comment integrer hyper-scan dans circle sinon ca n'a pas trop de sens que circle.process
+  // verifie hyper-scan »). Jamais `costly` (sa version légère est réellement gratuite en appel
+  // réseau, Article 21) — mais jamais recommandée par défaut non plus : le vrai coût est en
+  // RAISONNEMENT agent après coup (la checklist qualitative qui suit, jamais complétée par la seule
+  // exécution de cet item). `periodicityTracked: true` réutilise le même mécanisme de seuil que les
+  // deux items costly ci-dessus (costlyItemDueStatus()) sans jamais prétendre que ce coût est
+  // financier — désormais le lien concret qui donne un sens à circle-process-guardian::
+  // verifyHyperScanProcess() (avant ce soir, HYPER-SCAN-CHECKPOINT n'avait aucune existence dans
+  // CIRCLE-TASKS, rendant cette vérification hors contexte).
+  {
+    id: "hyper-scan-checkpoint-light",
+    theme: "Audit lourd",
+    label: "HYPER-SCAN-CHECKPOINT — version légère (couche mécanique)",
+    cout: "gratuit (zéro appel réseau) — mais la checklist qualitative qui suit reste un vrai passage à part, jamais automatisable",
+    tokensEstimes: "faible pour la partie mécanique elle-même ; la checklist qualitative qui suit (Article 21) reste un vrai coût de raisonnement variable, jamais estimable à l'avance",
+    execute: "Lancer node scripts/hyper-scan-checkpoint.mjs et écrire le résultat via recordCircleItemReport('hyper-scan-checkpoint-light', ...) — ce lancement couvre SEULEMENT la couche mécanique. Traiter la checklist qualitative et ajouter la ligne à docs/hyper-scan-checkpoint/index.md restent un choix DÉLIBÉRÉ et séparé, jamais impliqués par la seule sélection de cet item dans la Ronde (cf. docs/referentiel/hyper-scan-checkpoint.md).",
+    periodicityTracked: true,
+    producesReport: true,
+  },
 ];
 
 // Signal de fraîcheur MÉCANIQUE, jamais inventé (2026-09-20) : la date la plus récente mentionnée
@@ -461,7 +481,6 @@ export const CIRCLE_EXCLUDED_REGISTRIES = {
   "clone-hunter": "cinquième Gardien sacré depuis le 2026-09-22 (demande explicite de l'utilisateur), tourne désormais déjà à chaque commit (Article 20) — jamais une routine manuelle en plus, exactement comme les 4 autres Gardiens ci-dessus",
   "always-new-code": "sixième Gardien sacré depuis le 2026-09-21 (couche légère seulement — demande explicite de l'utilisateur), tourne désormais déjà à chaque commit (Article 20) — jamais une routine manuelle en plus, exactement comme les 5 autres Gardiens ci-dessus ; le vrai zoom profond, lui, reste un raisonnement payant hors Ronde (Article 23), inchangé",
   "check-level-target": "outil de classification interne, jamais une routine à cocher soi-même",
-  "hyper-scan-checkpoint": "outil exceptionnel (Article 21), jamais coché par défaut ni régulier",
   "memory-audit": "cible la mémoire narrative de Lia/Noé en jeu, jamais un scan de repo — vérifiable seulement sur des instantanés réels de partie (pendant/après une simulation) ; son voisin memento weight est déjà rapporté via kpi-report.mjs (reportMementoWeight), jamais une routine CIRCLE-TASKS séparée",
   "check-tasks-details": "état des lieux à la demande, pas une routine périodique mal automatisée",
   "find-booster": "outil de navigation à la demande sur un fichier précis, jamais un scan périodique de tout le dépôt",
@@ -596,6 +615,7 @@ export const NOT_RECOMMENDED_BY_DEFAULT = {
   "the-screener": "conditionnel à une session/un serveur déjà en cours — jamais recommandé sans cette condition réelle, que ce mécanisme ne peut pas vérifier lui-même",
   "the-final-judge": "coûteux (agent séparé), jamais coché par défaut — déjà établi",
   "the-deep-reader": "coûteux (agent séparé), jamais coché par défaut — déjà établi",
+  "hyper-scan-checkpoint-light": "jamais automatique (Article 21) — la couche mécanique est gratuite mais la checklist qualitative qui suit reste un vrai coût de raisonnement, jamais recommandée par défaut",
 };
 export function recommendCircleSelection(report) {
   return report.map((r) => ({
@@ -646,6 +666,7 @@ export function costlyItemDueStatus(lastRunDate, now = Date.now(), thresholdDays
 export const COSTLY_SUBSTITUTES = {
   "the-final-judge": "network-check-run (synthèse gratuite déjà dans cette Ronde, LE-COORDINATEUR) — jamais un remplacement complet, juste la meilleure alternative gratuite disponible",
   "the-deep-reader": "check-tasks-details / docs/systeme-de-suivi.md (version légère déjà documentée dans organisation-agence.md) — jamais un remplacement complet",
+  "hyper-scan-checkpoint-light": "aucun substitut nécessaire — cet item EST déjà la version gratuite, rien de moins coûteux à proposer à la place",
 };
 
 // recommendCircleSelectionWithPeriodicity() — étend recommendCircleSelection() SANS le modifier
@@ -657,7 +678,11 @@ export const COSTLY_SUBSTITUTES = {
 // docs/suivi/relectures-lourdes/index.md, jamais un second parseur ici).
 export function recommendCircleSelectionWithPeriodicity(report, { lastRunDates = {}, now = Date.now(), thresholdDays = COSTLY_DUE_THRESHOLD_DAYS } = {}) {
   return recommendCircleSelection(report).map((r) => {
-    if (!r.costly) return r;
+    // Gate étendu le 2026-09-22 (`|| r.periodicityTracked`) pour couvrir aussi HYPER-SCAN-CHECKPOINT
+    // — GRATUIT mais dont le coût réel (raisonnement agent) mérite le même suivi de fraîcheur que
+    // les items costly, sans jamais le classer à tort comme `costly` (réservé au coût $/agent-spawn
+    // réel, jamais réutilisé pour un coût de raisonnement).
+    if (!r.costly && !r.periodicityTracked) return r;
     const status = costlyItemDueStatus(lastRunDates[r.id], now, thresholdDays);
     if (!status.due) return r;
     return { ...r, recommande: true, raisonExclusion: undefined, periodiciteDue: true, periodiciteRaison: status.reason, substitutGratuit: COSTLY_SUBSTITUTES[r.id] };
@@ -738,6 +763,7 @@ export const CIRCLE_REPORT_FOLDERS = {
   "network-check-run": "docs/network-check/",
   "referentiel": "docs/relecture-referentiel/",
   "correctifs": "docs/relecture-correctifs/",
+  "hyper-scan-checkpoint-light": "docs/hyper-scan-checkpoint/",
 };
 
 // recordCircleItemReport() — écrit un fichier .txt daté (la preuve d'exécution minimale exigée)
@@ -855,7 +881,7 @@ export function buildCircleRunSummaryText(entries, { dateLabel, items = CIRCLE_I
 // l'analyse — demande explicite du 2026-09-21.
 export function buildCircleRunSummaryHtml(entries, { dateLabel, items = CIRCLE_ITEMS, analysis, followUpTasks = [], reportLinks = [], executedByModel } = {}) {
   const blocks = [
-    { type: "paragraph", text: `Index léger : ce qui a tourné et un pointeur vers la sortie déjà produite par chaque item, jamais son contenu dupliqué ici. ${REPORT_ICON} = produit un vrai rapport archivé et indexé — depuis le 2026-09-21, les 23 items de la Ronde le font tous.` },
+    { type: "paragraph", text: `Index léger : ce qui a tourné et un pointeur vers la sortie déjà produite par chaque item, jamais son contenu dupliqué ici. ${REPORT_ICON} = produit un vrai rapport archivé et indexé — depuis le 2026-09-21, tous les items de la Ronde le font.` },
   ];
   if (!entries || !entries.length) {
     blocks.push({ type: "note", text: "Aucun item n'a été coché pour cette Ronde." });
@@ -906,6 +932,7 @@ function main() {
   const lastRunDates = {
     "the-final-judge": mostRecentDate(read("docs/the-final-judge/index.md")),
     "the-deep-reader": mostRecentDate(read("docs/suivi/relectures-lourdes/index.md")),
+    "hyper-scan-checkpoint-light": mostRecentDate(read("docs/hyper-scan-checkpoint/index.md")),
   };
   const withPeriodicity = recommendCircleSelectionWithPeriodicity(report, { lastRunDates });
   const due = withPeriodicity.filter((r) => r.periodiciteDue);
