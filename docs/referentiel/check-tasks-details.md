@@ -50,6 +50,22 @@ instantané archivé :
   présente dans au moins 3 générations de suite en comptant la courante) — signal d'oubli possible,
   jamais une certitude, à vérifier comme toute trouvaille ARGUS/ALWAYS-NEW-CODE.
 
+## Fraîcheur des fichiers préliminaires de chantier (`checkChantierFileFreshness()`, tâche #185, 2026-09-22)
+
+La « vérification, jamais seulement une intention déclarée » demandée explicitement dans
+`docs/regles-de-travail.md` pour les fichiers préliminaires de « gros chantier » (CASSANDRA-RH,
+refonte graphique — `CHANTIER_PRELIMINARY_FILES`) : compare la tâche de suivi la plus récente qui
+concerne un chantier connu (mot-clé sur Sujet/Sous-sujet/Détail) à la dernière modification réelle
+(git, `lastTouchDays()` de CLEAN-DIRTY-OLD, jamais un second calcul divergent) de son fichier
+dédié. Signale un écart honnête — idée notée en suivi, jamais recopiée — jamais une certitude
+d'oubli, avec une tolérance d'une journée pour un commit groupé le même tour. **Faux positif réel
+trouvé et corrigé le soir même de sa construction, en le lançant en direct contre le vrai dépôt** :
+l'horodatage narratif d'une ligne de suivi suit la date "aujourd'hui" donnée en tête de session, qui
+peut courir devant l'horloge système réelle de plusieurs heures à une journée entière (décalage
+constaté : système à `2026-09-21 04h35 UTC` pendant qu'une ligne fraîchement écrite portait
+`2026-09-22T06:30Z`) — sans clamp, cet écart d'horloge produisait un âge de tâche négatif et donc un
+"retard" fabriqué. Corrigé en clampant l'âge d'une tâche à 0 minimum, jamais en dessous.
+
 ## Contexte d'onboarding et badge (`buildRealOnboardingContext()`)
 
 Avant chaque génération, `main()` construit un contexte réel (CLAUDE.md, la table des outils de

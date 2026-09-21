@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 219'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 220'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3737,6 +3737,62 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   fs.rmSync(tmpDir, { recursive: true, force: true });
 
   console.log('Passed: check-tasks-details.mjs stays strictly read-only on docs/suivi/ while flattening every real session row (loadAllTaskRows), splits Sujet on the existing Thème/Sous-thème convention rather than inventing a new taxonomy (splitSujet), filters correctly by all three zoom levels including a real task-number-based "elargi" window (filterByZoom), builds an honest theme>sous-thème>tâche tree with real counts and leaf details (buildTree), a status-grouped list that never shows an empty group (buildListBlocks), a real coordinator-consultation signal per open task with no forced guesses (suggestToolsForOpenTasks) — now also carrying a visible badge warning when an onboardingContext is supplied and the matched tool is uncertified, and staying silent without one (full backward compatibility) — an honest regression/stagnation cross-check against its own snapshot history including the very first run with no history at all (compareSnapshots), a full report assembly that genuinely differs by format and applies the same zoom filtering as the standalone function (buildReport), a real, append-only, on-disk snapshot history (appendSnapshot/loadSnapshotHistory) tested in an isolated temp directory, never touching the project\'s real registry, and — the 2026-09-20 badge wiring — buildRealOnboardingContext() correctly builds the real badge context (CLAUDE.md, the tools table, docs/ paths, docs/suivi/ text, THE-DEEP-READER\'s declared deviation) with the right "docs/"-prefixed paths, closing a real path-slicing bug found while wiring this into check-tasks-details.mjs\'s own real production call — the one and only place this whole badge system was ever actually invoked before this fix, and — the 2026-09-20 recommendNextTasks() feature — compareSnapshots() now carries a real consecutive-open streak count (consecutiveOpenStreak()) rather than a bare stagnation flag, parseRegistryTable()/loadRegistryFindings() correctly extract only genuinely confirmed findings from any of the 4 vigie registries by locating their "confirmée" column by header rather than a fixed index, corroborateWithRegistries() reuses le-coordinateur.mjs\'s own keyword-overlap threshold to match a task against those findings honestly, and recommendNextTasks() combines all 5 now-progressive criteria (declared sensitivity, streak-scaled stagnation, age, two-tier explicit-priority wording, and multi-vigie corroboration strength) into a capped, fully-explained ranking — excluding closed tasks and signal-free tasks alike, and wired into buildReport()\'s own meta and a visible heading that only ever appears when a real recommendation exists.');
+}
+
+{
+  // checkChantierFileFreshness() (tâche #185, 2026-09-22, mode nocturne autonome) : la vérification
+  // mécanique demandée explicitement dans docs/regles-de-travail.md (« vérification, jamais
+  // seulement une intention déclarée ») pour les fichiers préliminaires de chantier (CASSANDRA-RH,
+  // refonte graphique). `lastTouch` est injecté ici pour rester indépendant du vrai git du dépôt.
+  const { checkChantierFileFreshness, CHANTIER_PRELIMINARY_FILES } = await import('../scripts/check-tasks-details.mjs');
+  const now = Date.now();
+  const daysAgo = (d) => new Date(now - d * 86400000).toISOString();
+  const cassandraFile = CHANTIER_PRELIMINARY_FILES['CASSANDRA-RH'].file;
+  const refonteFile = CHANTIER_PRELIMINARY_FILES['Refonte graphique'].file;
+
+  // Cas 1 : le fichier a été retouché APRÈS la dernière tâche de suivi qui le concerne — aucun écart.
+  const rowsFresh = [{ n: 1, horodatage: daysAgo(5), sujet: 'Conception / Nouvel outil (CASSANDRA-RH)', sousSujet: 'Une idée quelconque', detail: '' }];
+  const freshResult = checkChantierFileFreshness(rowsFresh, { lastTouch: (f) => (f === cassandraFile ? 1 : undefined) });
+  assert.equal(freshResult.length, 0, 'a preliminary file touched more recently than the newest matching suivi task must never be flagged — the file is genuinely up to date');
+
+  // Cas 2 : une idée plus récente que le fichier — écart réel signalé, jamais silencieux.
+  const rowsStale = [{ n: 2, horodatage: daysAgo(1), sujet: 'Conception / Nouvel outil (CASSANDRA-RH)', sousSujet: 'Idée pas encore recopiée', detail: '' }];
+  const staleResult = checkChantierFileFreshness(rowsStale, { lastTouch: (f) => (f === cassandraFile ? 30 : undefined) });
+  assert.equal(staleResult.length, 1, 'a suivi task genuinely newer than its chantier\'s preliminary file must be flagged — the exact real gap this tool exists to catch');
+  assert.ok(staleResult[0].message.includes('#2') && staleResult[0].chantier === 'CASSANDRA-RH', 'the finding must name the real task number and chantier responsible, never a vague unattributed warning');
+
+  // Cas 3 : tolérance d'une journée pour un commit groupé le même jour — jamais un faux positif.
+  const rowsSameDay = [{ n: 3, horodatage: daysAgo(2), sujet: 'Conception / Nouvel outil (CASSANDRA-RH)', sousSujet: 'Idée committée le même jour', detail: '' }];
+  const sameDayResult = checkChantierFileFreshness(rowsSameDay, { lastTouch: (f) => (f === cassandraFile ? 2.5 : undefined) });
+  assert.equal(sameDayResult.length, 0, 'a preliminary file committed within the same grouped commit (a fraction of a day apart) must never be flagged as stale — the explicit tolerance exists for exactly this frequent real case');
+
+  // Cas 4 : fichier introuvable/jamais commité alors qu'une idée existe déjà — signalé, jamais ignoré.
+  const missingResult = checkChantierFileFreshness(rowsStale, { lastTouch: () => undefined });
+  assert.equal(missingResult.length, 1, 'a preliminary file that git has never touched at all, while a matching suivi task already exists, must be flagged just as loudly as a stale one — never silently skipped');
+  assert.ok(missingResult[0].message.includes('introuvable'), 'the missing-file case must be worded distinctly from the stale-file case, never conflated');
+
+  // Cas 5 : aucune tâche de suivi ne concerne un chantier donné — aucun signal fabriqué.
+  const rowsUnrelated = [{ n: 4, horodatage: daysAgo(1), sujet: 'Autre chose entièrement', sousSujet: 'Rien à voir', detail: '' }];
+  const unrelatedResult = checkChantierFileFreshness(rowsUnrelated, { lastTouch: () => undefined });
+  assert.equal(unrelatedResult.length, 0, 'a chantier with zero matching suivi rows must never be flagged — no fabricated finding from the mere absence of activity');
+
+  // Cas 6 : les deux chantiers connus sont bien couverts indépendamment, jamais un seul testé au hasard.
+  const rowsBoth = [
+    { n: 5, horodatage: daysAgo(1), sujet: 'Conception / Nouvel outil (CASSANDRA-RH)', sousSujet: 'x', detail: '' },
+    { n: 6, horodatage: daysAgo(1), sujet: 'Refonte graphique', sousSujet: 'y', detail: '' },
+  ];
+  const bothResult = checkChantierFileFreshness(rowsBoth, { lastTouch: (f) => (f === cassandraFile ? 30 : f === refonteFile ? 30 : undefined) });
+  assert.equal(bothResult.length, 2, 'both known chantiers must be checked independently in the same pass, never only the first one found');
+
+  // Cas 7 (2026-09-22, faux positif réel trouvé en lançant l'outil en direct le soir même) : une
+  // ligne de suivi horodatée dans le "futur" relatif à l'horloge système réelle (le décalage entre
+  // la date "aujourd'hui" donnée en tête de session et l'horloge réelle utilisée par git) ne doit
+  // jamais produire un écart fabriqué à cause d'une soustraction négative.
+  const rowsFuture = [{ n: 7, horodatage: new Date(now + 26 * 3600000).toISOString(), sujet: 'Conception / Nouvel outil (CASSANDRA-RH)', sousSujet: 'Idée notée avec l\'horodatage "aujourd\'hui" du début de session', detail: '' }];
+  const futureResult = checkChantierFileFreshness(rowsFuture, { lastTouch: (f) => (f === cassandraFile ? 0 : undefined) });
+  assert.equal(futureResult.length, 0, 'a suivi row dated slightly ahead of the real system clock (the exact real "today" vs git-clock skew found live) must never be flagged as overdue just because the raw subtraction goes negative — clamped to "just now", never a fabricated gap');
+
+  console.log('Passed: checkChantierFileFreshness() (task #185) correctly leaves a genuinely fresh preliminary file alone, flags a real gap by the exact task number and chantier responsible, tolerates a same-day grouped commit rather than a false positive, flags a preliminary file git has never touched at all just as loudly as a stale one, never fabricates a finding for a chantier with zero matching suivi activity, checks every known chantier (CASSANDRA-RH, refonte graphique) independently in the same pass, and — the exact real false positive found running this tool live the same evening — never flags a row whose narrative "today" timestamp runs ahead of git\'s real system clock as if it were overdue.');
 }
 
 {

@@ -239,6 +239,29 @@ bonne.
    doit-elle produire à l'intégration pour que ce passage ait un effet réel, vérifiable, plutôt qu'un
    rituel ?
 
+   **Pistes préparées le 2026-09-22 (mode nocturne autonome, pour accélérer la réponse) — jamais
+   tranchées ici, une vraie décision de conception reste due :**
+   - **Option A — Gap zéro vérifié, pas simplement déclaré.** CASSANDRA n'accepte l'intégration que
+     si elle relance elle-même `checkAgentOnboarding()` et obtient un `gaps: []` horodaté — la preuve
+     est un STATUT VÉRIFIÉ, jamais la simple présence d'une fiche rédigée. Avantage : zéro nouveau
+     mécanisme, réutilise ce qui existe déjà. Limite : ne garantit que la CONFORMITÉ administrative,
+     jamais l'utilité réelle de l'outil lui-même.
+   - **Option B — Preuve d'usage réel après coup.** L'intégration n'est marquée "réussie" qu'après un
+     premier usage réel constaté du nouvel outil (`tool-usage.mjs`), dans une fenêtre de temps donnée
+     — jamais à la construction elle-même. Avantage : garantit que l'outil sert VRAIMENT, pas
+     seulement qu'il existe proprement. Limite : un outil rarement sollicité par nature (ex. un
+     diagnostic d'urgence) resterait artificiellement "en attente" longtemps.
+   - **Option C — Les deux combinées (recommandation).** Gap zéro vérifié (A) ET un premier usage réel
+     enregistré dans les N jours suivants (B) ; si (B) n'arrive jamais dans le délai, CASSANDRA relance
+     une alerte de suivi plutôt que de conclure silencieusement à un échec — jamais un couperet
+     automatique. Couvre les deux angles (conformité + utilité réelle) sans sur-construire.
+   - **Option D — Preuve de non-redondance.** CASSANDRA vérifie explicitement, via CLONE-HUNTER/
+     HARMONIA, qu'aucune fonctionnalité du nouvel outil ne duplique un outil déjà existant, avant de
+     considérer le passage "réel". Complémentaire aux trois précédentes plutôt qu'exclusive — pourrait
+     s'ajouter à l'option choisie plutôt que la remplacer.
+   Recommandation si une réponse rapide est voulue : **C**, éventuellement enrichie de **D** en
+   vérification d'entrée avant même le gap zéro — mais la décision reste entièrement à l'utilisateur.
+
 ## 8bis. Le Catalogue — le rapport principal de CASSANDRA-RH (2026-09-22, round de calibrage dédié)
 
 Ce que l'utilisateur appelait au départ "des propositions de combinaisons d'outils" (une extension

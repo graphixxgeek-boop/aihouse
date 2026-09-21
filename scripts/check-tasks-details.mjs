@@ -36,6 +36,7 @@ import { renderHtmlReport } from "./html-report.mjs";
 import { PRESTATIONS, suggestPrestationsForTask, significantWords } from "./le-coordinateur.mjs";
 import { daysSince } from "./circle-tasks.mjs";
 import { walkDocsPaths } from "./lib-shell.mjs";
+import { lastTouchDays } from "./clean-dirty-old.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 export const OUT_DIR = join(ROOT, "docs/check-tasks-details");
@@ -400,6 +401,55 @@ export function appendSnapshot(rows, { file = SNAPSHOTS_FILE, dir = OUT_DIR, now
   return snapshot;
 }
 
+// CHANTIER_PRELIMINARY_FILES (tâche #185, 2026-09-22) : registre des chantiers connus → leur
+// fichier préliminaire dédié, cf. docs/regles-de-travail.md « Idées dites en avance sur un « gros
+// chantier » ». Tenu à jour à chaque nouveau chantier de cette ampleur reconnu — jamais un chantier
+// ordinaire (seuls CASSANDRA-RH et la refonte graphique qualifient à ce jour, même liste que
+// celle-ci).
+export const CHANTIER_PRELIMINARY_FILES = {
+  "CASSANDRA-RH": { file: "docs/cassandra-rh-conception.md", match: /cassandra/i },
+  "Refonte graphique": { file: "docs/referentiel/regles-des-graphismes.md", match: /refonte graphique/i },
+};
+
+// checkChantierFileFreshness() — la « vérification, jamais seulement une intention déclarée »
+// demandée explicitement (docs/regles-de-travail.md) : compare, pour chaque chantier connu, la
+// tâche de suivi la plus récente qui le concerne (Sujet/Sous-sujet/Détail, jamais une nouvelle
+// classification inventée) à la dernière modification RÉELLE (git, `lastTouchDays()`,
+// clean-dirty-old.mjs — jamais un second calcul de fraîcheur divergent, Article 3) de son fichier
+// préliminaire dédié. Signale un ÉCART honnête (idée notée en suivi, jamais recopiée dans son
+// fichier), jamais une certitude d'oubli — l'idée a pu être jugée non pertinente après coup, ou
+// recopiée sans qu'un nouveau commit du fichier suive immédiatement le même jour (tolérance d'une
+// journée, `TOLERANCE_DAYS`, pour ce cas fréquent de commit groupé). `lastTouch` injectable (même
+// patron que clean-dirty-old.mjs) pour rester testable sans dépendre de git réel.
+const TOLERANCE_DAYS = 1;
+export function checkChantierFileFreshness(allRows, { lastTouch = lastTouchDays } = {}) {
+  const findings = [];
+  for (const [chantier, { file, match }] of Object.entries(CHANTIER_PRELIMINARY_FILES)) {
+    const matching = allRows.filter((r) => match.test(r.sujet) || match.test(r.sousSujet) || match.test(r.detail));
+    if (!matching.length) continue;
+    const dated = matching.map((r) => ({ row: r, at: new Date(r.horodatage).getTime() })).filter((x) => Number.isFinite(x.at));
+    if (!dated.length) continue;
+    const latest = dated.reduce((a, b) => (b.at > a.at ? b : a));
+    // Clampé à 0 (2026-09-22, faux positif réel trouvé en lançant cet outil en direct le soir même
+    // de son écriture) : l'horodatage narratif d'une ligne de suivi suit la date "aujourd'hui"
+    // donnée en tout début de session, qui peut courir de quelques heures à toute une journée
+    // devant l'horloge système réelle utilisée par git (`lastTouchDays()`) — un simple décalage de
+    // fuseau/arrondi, jamais une vraie tâche du futur. Sans ce clamp, une idée notée puis
+    // immédiatement recopiée dans son fichier au même tour ressortait à tort comme "en retard",
+    // uniquement à cause de ce décalage d'horloge, jamais d'un vrai oubli.
+    const rowAgeDays = Math.max(0, (Date.now() - latest.at) / 86400000);
+    const fileAgeDays = lastTouch(file);
+    if (fileAgeDays === undefined) {
+      findings.push({ chantier, file, taskNumber: latest.row.n, message: `fichier "${file}" introuvable ou jamais commité, alors qu'une tâche de suivi (#${latest.row.n ?? "?"}) le concerne déjà` });
+      continue;
+    }
+    if (fileAgeDays > rowAgeDays + TOLERANCE_DAYS) {
+      findings.push({ chantier, file, taskNumber: latest.row.n, message: `tâche #${latest.row.n ?? "?"} « ${latest.row.sousSujet} » (${rowAgeDays.toFixed(1)}j) plus récente que "${file}" (${fileAgeDays.toFixed(1)}j) — vérifier que l'idée a bien été recopiée` });
+    }
+  }
+  return findings;
+}
+
 // Construit le contenu du rapport (pure, testable) — la génération HTML et l'écriture d'instantané
 // restent dans main(), jamais mélangées ici.
 export function buildReport({ zoom = "en_cours", format = "liste", allRows, history = [], onboardingContext = null, registryFindings } = {}) {
@@ -410,8 +460,13 @@ export function buildReport({ zoom = "en_cours", format = "liste", allRows, hist
   const latestTaskNumber = Math.max(0, ...rows.map((r) => r.n || 0));
   const scoped = filterByZoom(rows, zoom, { latestTaskNumber });
   const { regressions, stagnant } = compareSnapshots(history, rows);
+  const chantierFreshnessGaps = checkChantierFileFreshness(rows);
 
   const blocks = [];
+  if (chantierFreshnessGaps.length) {
+    blocks.push({ type: "note", text: `⚠️ ${chantierFreshnessGaps.length} fichier(s) préliminaire(s) de chantier possiblement en retard sur le suivi — à vérifier (jamais une certitude, l'idée a pu être jugée non pertinente après coup).` });
+    blocks.push({ type: "list", items: chantierFreshnessGaps.map((g) => `${g.chantier} : ${g.message}`) });
+  }
   if (regressions.length) {
     blocks.push({ type: "note", text: `⚠️ ${regressions.length} régression(s) de statut détectée(s) depuis le dernier rapport — à vérifier en priorité.` });
     blocks.push({ type: "list", items: regressions.map((r) => `#${r.n} « ${r.sousSujet} » : ${r.before} → ${r.after}`) });
@@ -444,7 +499,7 @@ export function buildReport({ zoom = "en_cours", format = "liste", allRows, hist
     title: `État des tâches — ${ZOOM_LABELS[zoom]}`,
     subtitle: `Forme : ${FORMAT_LABELS[format]} · ${scoped.length} tâche(s) affichée(s) sur ${rows.length} au total`,
     blocks: blocks.filter((b) => b.type !== "noop"),
-    meta: { zoom, format, count: scoped.length, total: rows.length, regressions, stagnant, recommended },
+    meta: { zoom, format, count: scoped.length, total: rows.length, regressions, stagnant, recommended, chantierFreshnessGaps },
   };
 }
 
@@ -516,6 +571,7 @@ function main() {
   console.log(`${report.meta.count} tâche(s) affichée(s) sur ${report.meta.total} au total.`);
   if (report.meta.regressions.length) console.log(`⚠️ ${report.meta.regressions.length} régression(s) détectée(s).`);
   if (report.meta.stagnant.length) console.log(`${report.meta.stagnant.length} tâche(s) possiblement oubliée(s) (stagnation).`);
+  if (report.meta.chantierFreshnessGaps.length) console.log(`⚠️ ${report.meta.chantierFreshnessGaps.length} fichier(s) préliminaire(s) de chantier possiblement en retard sur le suivi.`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();
