@@ -119,6 +119,19 @@ compte rendu clair de ce qui a été fait, de ce qui reste bloqué avec les sugg
 `docs/suivi/` à jour comme pour toute tâche substantielle — jamais un silence qui laisserait
 l'utilisateur reconstituer seul ce qui s'est passé pendant son absence.
 
+**Dernier geste, systématique, avant de rendre la main.** *(Recalibré le 2026-09-21, demande
+explicite de l'utilisateur à son réveil : « je voudrais par ex que la derniere tache soit un etat
+des lieux des taches en cours affiché à l'écran que je me repere (comme pour toi quand tu
+commences) ».)* Après le compte rendu narratif ci-dessus (jamais à sa place — les deux
+coexistent, dans cet ordre), l'agent termine TOUJOURS son message de clôture par un état des lieux
+complet des tâches (`node scripts/check-tasks-details.mjs projet_entier`, cf. Article 13 de
+CLAUDE.md, `docs/referentiel/check-tasks-details.md`), affiché directement dans la conversation —
+jamais seulement en fichier joint — sous les deux formes à la suite : d'abord un résumé compact
+rédigé par l'agent (statuts, ce qui reste ouvert, ce qui est bloqué), puis le détail complet en
+dessous. Objectif explicite : que l'utilisateur retrouve, dès son retour, le même genre de repère
+immédiat que l'agent lui-même construit en tout début de mode nocturne (étape 1 ci-dessus) — jamais
+besoin d'ouvrir un fichier séparé pour savoir où en est le projet.
+
 ## 2. Calibrage et questions
 
 Poser des questions avant d'exécuter, plutôt que supposer, est une règle centrale (cf. `CLAUDE.md`
