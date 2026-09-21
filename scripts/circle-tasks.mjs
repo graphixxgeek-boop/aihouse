@@ -22,12 +22,12 @@
 // par défaut. Les autres items coûteux du paysage (check-spirit.mjs, HYPER-SCAN-CHECKPOINT complet)
 // restent hors de cette fenêtre pour l'instant, cf. docs/referentiel/smart-conso-token.md pour la
 // discussion de leur extension éventuelle au même traitement.
-import { readFileSync, existsSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, existsSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { scanDocumentWeight, listDatedNarrativeMarkers, extractRuleUnits, findRedundantRulePairs } from "./smart-conso-token.mjs";
-import { walkDocsPaths, daysSince, sh } from "./lib-shell.mjs";
+import { walkDocsPaths, daysSince, sh, shouldSnapshotText } from "./lib-shell.mjs";
 import { checkChantierFileFreshness, loadAllTaskRows, detectPendingIdeaCandidates, loadIdeaDecisions, findIdeasNeedingDecision, IDEES_REGISTRY_PATH } from "./check-tasks-details.mjs";
 import { auditHtmlDecisions, REGISTRIES as DOC_REPORT_REGISTRIES } from "./doc-report.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
@@ -107,7 +107,7 @@ export const CIRCLE_ITEMS = [
     label: "Digest THE-KING : fraîcheur et tensions possibles de la philosophie",
     cout: "gratuit — relit un seul fichier local, zéro appel API",
     tokensEstimes: "faible — sortie compacte (fraîcheur + digest daté + tensions éventuelles)",
-    execute: "Lancer node scripts/the-king.mjs (ou appeler philosophyFreshnessDays()/buildEvolutionDigest()/findPossibleTensions() directement) et reporter honnêtement la fraîcheur de docs/philosophie-et-politique.md et toute tension possible trouvée — jamais corriger le document soi-même, seulement signaler. Écrire le résultat via recordCircleItemReport('the-king-signal', ...) (dossier docs/the-king/, jamais son index.md principal — cf. CIRCLE_REPORT_FOLDERS). Comparer ensuite le contenu actuel de docs/philosophie-et-politique.md à docs/the-king/philosophie-et-politique-derniere-version.txt via shouldSnapshotPhilosophy() — sur un vrai changement (ou une toute première fois), écraser cette snapshot avec le contenu actuel, jamais une cadence fixe en nombre de Rondes (2026-09-21, demande explicite de l'utilisateur).",
+    execute: "Lancer node scripts/the-king.mjs (ou appeler philosophyFreshnessDays()/buildEvolutionDigest()/findPossibleTensions() directement) et reporter honnêtement la fraîcheur de docs/philosophie-et-politique.md et toute tension possible trouvée — jamais corriger le document soi-même, seulement signaler. Écrire le résultat via recordCircleItemReport('the-king-signal', ...) (dossier docs/the-king/, jamais son index.md principal — cf. CIRCLE_REPORT_FOLDERS). Appeler ensuite recordSnapshotIfChanged('the-king-signal', contenu actuel de docs/philosophie-et-politique.md, ...) — une NOUVELLE snapshot datée s'ajoute à l'historique local du dossier seulement si le contenu a réellement changé depuis la dernière (jamais une cadence fixe en nombre de Rondes, jamais un fichier unique écrasé — corrigé le 2026-09-22, la version du 2026-09-21 écrasait à tort un seul fichier).",
     producesReport: true,
   },
   {
@@ -169,7 +169,7 @@ export const CIRCLE_ITEMS = [
     label: "Vérifier le poids en tokens de CLAUDE.md (allègement périodique)",
     cout: "gratuit — relit CLAUDE.md et applique les fonctions déjà exportées par SMART-CONSO-TOKEN, aucun appel API",
     tokensEstimes: "faible — un seul fichier local relu par le script, pas par l'agent",
-    execute: "Lire CLAUDE.md et appeler scanDocumentWeight()/listDatedNarrativeMarkers() (docs/referentiel/smart-conso-token.md) — si le niveau remonte à \"élevé\" ou que de nouvelles asides datées apparaissent, proposer une passe d'allègement selon la procédure formalisée, jamais l'exécuter seul. Écrire le résultat via recordCircleItemReport('claude-md-weight-signal', ...).",
+    execute: "Lire CLAUDE.md et appeler scanDocumentWeight()/listDatedNarrativeMarkers() (docs/referentiel/smart-conso-token.md) — si le niveau remonte à \"élevé\" ou que de nouvelles asides datées apparaissent, proposer une passe d'allègement selon la procédure formalisée, jamais l'exécuter seul. Écrire le résultat via recordCircleItemReport('claude-md-weight-signal', ...). Appeler ensuite recordSnapshotIfChanged('claude-md-weight-signal', contenu actuel de CLAUDE.md, ...) — copie texte de CLAUDE.md, historique local daté, une nouvelle snapshot seulement sur un vrai changement (2026-09-22, demande explicite de l'utilisateur).",
     producesReport: true,
   },
   {
@@ -770,6 +770,29 @@ export function recordCircleItemReport(itemId, contentText, { folders = CIRCLE_R
   writeFileImpl(indexPath, existingIndexText.endsWith("\n") ? existingIndexText + row : existingIndexText + "\n" + row, "utf8");
 
   return { filePath: join(folder, fileName), indexPath: join(folder, hasPrimaryIndex ? "circle-signals-index.md" : "index.md") };
+}
+
+// recordSnapshotIfChanged() (2026-09-22, demande explicite de l'utilisateur : « je veux aussi une
+// copie de claude.md dans un fichier txt à chaque ronde avec un historique local » — et retrofit du
+// même soir sur THE-KING, qui n'avait par erreur qu'un seul fichier écrasé alors que la demande
+// d'origine voulait déjà « garder une trace DES instantanés »). Contrairement à
+// recordCircleItemReport() (écrit systématiquement), celle-ci n'écrit une NOUVELLE snapshot datée
+// que si le contenu a réellement changé depuis la dernière (shouldSnapshotText(), lib-shell.mjs) —
+// jamais une cadence fixe en nombre de Rondes, jamais une snapshot identique dupliquée pour rien.
+// `listDirImpl` injectable comme le reste de ce fichier ; le tri lexicographique des noms suffit
+// car l'horodatage ISO trie déjà chronologiquement.
+export function recordSnapshotIfChanged(itemId, currentText, { folders = CIRCLE_REPORT_FOLDERS, now = Date.now(), writeFileImpl = writeFileSync, readFileImpl = readFileSync, existsImpl = existsSync, mkdirImpl = mkdirSync, listDirImpl = (dir) => (existsSync(dir) ? readdirSync(dir) : []) } = {}) {
+  const folder = folders[itemId];
+  if (!folder) throw new Error(`recordSnapshotIfChanged: aucun dossier connu pour l'item "${itemId}" (cf. CIRCLE_REPORT_FOLDERS)`);
+  const fullFolder = join(ROOT, folder);
+  mkdirImpl(fullFolder, { recursive: true });
+  const previousSnapshots = listDirImpl(fullFolder).filter((f) => f.startsWith("snapshot-") && f.endsWith(".txt")).sort();
+  const lastFile = previousSnapshots[previousSnapshots.length - 1];
+  const lastText = lastFile ? readFileImpl(join(fullFolder, lastFile), "utf8") : undefined;
+  if (!shouldSnapshotText(lastText, currentText)) return { snapshotted: false, filePath: lastFile ? join(folder, lastFile) : undefined };
+  const fileName = `snapshot-${new Date(now).toISOString().replace(/[:.]/g, "-")}.txt`;
+  writeFileImpl(join(fullFolder, fileName), currentText ?? "", "utf8");
+  return { snapshotted: true, filePath: join(folder, fileName) };
 }
 
 // Rapport de fin de Ronde (2026-09-20, trou trouvé par l'utilisateur : « je n'ai pas eu de rapport

@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 252'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 253'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2942,7 +2942,12 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 {
   // Mutualisation d'un utilitaire (2026-09-19, cf. docs/regles-de-travail.md §7ter) : le même petit
   // assistant shell était réécrit à l'identique dans trois scripts, extrait ici dans lib-shell.mjs.
-  const {sh,PERSONNAGES,assertNotAPersonnage}=await import('../scripts/lib-shell.mjs');
+  const {sh,PERSONNAGES,assertNotAPersonnage,shouldSnapshotText}=await import('../scripts/lib-shell.mjs');
+  // shouldSnapshotText() (née the-king.mjs sous shouldSnapshotPhilosophy(), déplacée ici le
+  // 2026-09-22 pour un second appelant réel — la snapshot CLAUDE.md, circle-tasks.mjs).
+  assert.equal(shouldSnapshotText(undefined,'x'),true,'no prior snapshot at all must always trigger the first one');
+  assert.equal(shouldSnapshotText('x','x'),false,'identical content must never trigger a duplicate snapshot');
+  assert.equal(shouldSnapshotText('x','y'),true,'a real content change must always trigger a new snapshot');
   assert.equal(sh('echo bonjour').trim(),'bonjour','a successful command must return its real stdout');
   assert.equal(sh('exit 1'),'','a failing command must never throw, and defaults to empty output rather than a fake success');
   assert.ok(sh('node -e "process.stderr.write(1); process.exit(1)"',{verbose:true}).includes('[erreur:'),'verbose mode must surface the real error detail for tools that report it (HYPER-SCAN-CHECKPOINT), never silently swallow it');
@@ -4039,7 +4044,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     buildCircleRunSummaryText, buildCircleRunSummaryHtml, findRegistriesMissingFromCircle, CIRCLE_EXCLUDED_REGISTRIES,
     recommendCircleSelection, NOT_RECOMMENDED_BY_DEFAULT, primeAddableItems,
     costlyItemDueStatus, COSTLY_DUE_THRESHOLD_DAYS, recommendCircleSelectionWithPeriodicity, COSTLY_SUBSTITUTES,
-    recordCircleItemReport, CIRCLE_REPORT_FOLDERS,
+    recordCircleItemReport, CIRCLE_REPORT_FOLDERS, recordSnapshotIfChanged,
   } = await import('../scripts/circle-tasks.mjs');
   const { walkDocsPaths } = await import('../scripts/lib-shell.mjs');
 
@@ -4296,6 +4301,34 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.ok(![...fakeFs.keys()].some(isCurated), 'the pre-existing curated index.md must never be written to at all — recordCircleItemReport() must never corrupt a format it does not own');
   }
   assert.throws(() => recordCircleItemReport('never-registered-item', 'x'), /aucun dossier connu/, 'an item with no entry in CIRCLE_REPORT_FOLDERS must fail loudly rather than silently writing nowhere or to a guessed path');
+
+  // recordSnapshotIfChanged() (2026-09-22, demande explicite : « je veux aussi une copie de
+  // claude.md dans un fichier txt à chaque ronde avec un historique local » + retrofit du même
+  // soir sur THE-KING, dont la version du 2026-09-21 écrasait à tort un seul fichier plutôt que de
+  // garder l'historique des instantanés déjà demandé ce soir-là). Contrairement à
+  // recordCircleItemReport() (écrit systématiquement), n'écrit une NOUVELLE snapshot datée que sur
+  // un vrai changement de contenu, jamais une cadence fixe ni une snapshot dupliquée pour rien.
+  {
+    const fakeFs = new Map();
+    const written = [];
+    const opts = {
+      folders: { 'snap-item': 'docs/fake-snap/' },
+      writeFileImpl: (p, c) => { fakeFs.set(p, c); if (!written.includes(p)) written.push(p); },
+      readFileImpl: (p) => fakeFs.get(p),
+      existsImpl: (p) => fakeFs.has(p),
+      mkdirImpl: () => {},
+      listDirImpl: (dir) => written.filter((f) => f.startsWith(dir)).map((f) => f.slice(dir.length)),
+    };
+    const first = recordSnapshotIfChanged('snap-item', 'contenu v1', { ...opts, now: Date.parse('2026-09-22T01:00:00Z') });
+    assert.equal(first.snapshotted, true, 'the very first snapshot (no prior file to compare against) must always be written, never skipped for lack of a baseline');
+    assert.ok(first.filePath.startsWith('docs/fake-snap/snapshot-') && first.filePath.endsWith('.txt'), 'a snapshot file must be named with a real ISO-derived timestamp, never a fixed filename that a second real change would silently overwrite');
+    const second = recordSnapshotIfChanged('snap-item', 'contenu v1', { ...opts, now: Date.parse('2026-09-22T02:00:00Z') });
+    assert.equal(second.snapshotted, false, 'an unchanged content must never produce a duplicate snapshot, whatever the elapsed time since the last one');
+    assert.equal(second.filePath, first.filePath, 'when nothing changed, the reported "current" snapshot must still point at the real last file on disk, never undefined');
+    const third = recordSnapshotIfChanged('snap-item', 'contenu v2 — un vrai changement', { ...opts, now: Date.parse('2026-09-22T03:00:00Z') });
+    assert.equal(third.snapshotted, true, 'a genuine content change must always produce a new dated snapshot, the real "historique local" the user asked for');
+    assert.notEqual(third.filePath, first.filePath, 'a new real change must never overwrite the previous snapshot file — both must coexist in the local history');
+  }
 
   // findRegistriesMissingFromCircle() (2026-09-21, trou trouvé par l'utilisateur : « est-ce que la
   // ronde a bien dans son catalogue tous les outils pertinents ? »). Contrairement à

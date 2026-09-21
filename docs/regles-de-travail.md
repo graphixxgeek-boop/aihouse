@@ -1637,13 +1637,21 @@ network-check, relecture-referentiel, relecture-correctifs). Résultat : les 23 
 portent désormais `producesReport: true`, contre 8 avant cette correction. `cassandra-rh-signal`
 passe en RAPPORT COMPLET (`node scripts/cassandra-rh.mjs rapport`) à CHAQUE Ronde (demande
 explicite, aucun coût API réel — reversal assumé du signal léger initial) ; `network-check-run`
-reçoit désormais un vrai rapport txt archivé (auparavant signal console seulement). THE-KING écrit
-en plus une snapshot texte à jour de `docs/philosophie-et-politique.md`
-(`docs/the-king/philosophie-et-politique-derniere-version.txt`), déclenchée sur un vrai changement
-de contenu (`shouldSnapshotPhilosophy()`), jamais une cadence fixe en nombre de Rondes — même
-principe que le propre journal d'évolutions de THE-KING (« évolutions constatées », jamais un
-journal périodique aveugle) ; le "profil" écrase de même `docs/profil-utilisateur/profil-actuel.txt`
-à chaque Ronde, un seul fichier toujours à jour distinct de l'historique daté déjà existant.
+reçoit désormais un vrai rapport txt archivé (auparavant signal console seulement). THE-KING et
+`claude-md-weight-signal` écrivent chacun une snapshot texte datée (`docs/the-king/snapshot-*.txt`
+pour `docs/philosophie-et-politique.md`, `docs/claude-md-weight/snapshot-*.txt` pour CLAUDE.md —
+demande explicite du 2026-09-22 : « je veux aussi une copie de claude.md dans un fichier txt à
+chaque ronde avec un historique local »), via `recordSnapshotIfChanged()`/`shouldSnapshotText()`
+(circle-tasks.mjs/lib-shell.mjs) — une NOUVELLE snapshot datée s'ajoute à l'historique local
+seulement sur un vrai changement de contenu, jamais une cadence fixe en nombre de Rondes, jamais un
+fichier unique écrasé. **Correction du 2026-09-22** : la toute première version de THE-KING (même
+soir, plus tôt) écrasait à tort un seul fichier (`philosophie-et-politique-derniere-version.txt`),
+contredisant la demande d'origine qui voulait déjà « garder une trace des instantanés » — jamais
+appliqué en production (aucune Ronde réelle n'avait encore tourné depuis), corrigé avant tout
+premier usage réel. Le "profil" reste à part : il écrase `docs/profil-utilisateur/profil-actuel.txt`
+à chaque Ronde, un seul fichier toujours à jour distinct de l'historique daté déjà existant — choix
+délibérément différent (l'historique par observation existait déjà avant ce soir, contrairement à
+CLAUDE.md/la philosophie qui n'avaient jamais eu de copie texte).
 
 **Trouvaille en construisant cette règle (Article 3/19, anti-duplication)** : `html-wiring-check`
 dupliquait un mécanisme déjà écrit — `circle-tasks.mjs` avait sa propre fonction

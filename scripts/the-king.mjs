@@ -123,17 +123,9 @@ export function philosophyFreshnessDays() {
   return lastTouchDays(PHILOSOPHY_PATH);
 }
 
-// shouldSnapshotPhilosophy() (2026-09-21, demande explicite de l'utilisateur : « the-king doit
-// aussi editer une version txt à jour de "politique et philo" à chaque ronde [...] mais peut être
-// pas sauvegardé à chaque fois [...] propose »). Choix assumé : jamais une cadence fixe en nombre
-// de Rondes (une Ronde sur 5/10 pourrait manquer un vrai changement survenu juste après une
-// snapshot, ou en réécrire une identique 9 fois sur 10 pour rien) — le déclenchement est le
-// changement RÉEL du contenu, exactement le même principe déjà en place pour docs/the-king/index.md
-// lui-même (« évolutions constatées », jamais un journal périodique aveugle). `undefined` en
-// dernier argument = aucune snapshot précédente (première fois) → toujours vrai.
-export function shouldSnapshotPhilosophy(lastSnapshotText, currentText) {
-  return lastSnapshotText == null || lastSnapshotText !== currentText;
-}
+// shouldSnapshotPhilosophy() DÉPLACÉE dans lib-shell.mjs le 2026-09-22 sous le nom générique
+// shouldSnapshotText() — un second appelant réel est apparu le même soir (la snapshot CLAUDE.md de
+// claude-md-weight-signal, cf. circle-tasks.mjs), jamais un second calcul divergent (Article 3).
 
 function main() {
   recordCliUsage("the-king");

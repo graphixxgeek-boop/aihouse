@@ -124,3 +124,14 @@ export function daysSince(dateStr, now = Date.now()) {
   const days = Math.floor((now - new Date(dateStr).getTime()) / (24 * 60 * 60 * 1000));
   return days >= 0 ? days : undefined;
 }
+
+// shouldSnapshotText() (2026-09-21, extraite ici le 2026-09-22 pour être réutilisée par un second
+// appelant, jamais un second calcul divergent — Article 3). Née dans the-king.mjs sous le nom
+// shouldSnapshotPhilosophy() (demande explicite : « the-king doit aussi editer une version txt à
+// jour de "politique et philo" à chaque ronde [...] propose » — choix assumé : jamais une cadence
+// fixe en nombre de Rondes, le déclenchement est le changement RÉEL du contenu). Généralisée le
+// même soir pour couvrir aussi la snapshot CLAUDE.md (claude-md-weight-signal, circle-tasks.mjs) —
+// même besoin exact, même fonction, jamais une resemblance codée deux fois.
+export function shouldSnapshotText(lastSnapshotText, currentText) {
+  return lastSnapshotText == null || lastSnapshotText !== currentText;
+}
