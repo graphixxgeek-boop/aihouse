@@ -141,3 +141,13 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   calibrage sur ce que "résumé" et "résumé de résumés" signifient précisément pour chaque type de
   journal (un historique de statuts clé/modèle n'a pas la même structure qu'un compteur d'usage) —
   jamais une implémentation devinée sans cette clarification.
+- **ALWAYS-NEW-CODE (Article 23) n'a jamais reçu son premier vrai passage, malgré au moins 3
+  signalements successifs (trouvaille de la veille hebdomadaire automatique du réseau, 2026-09-21)**
+  — `docs/always-new-code/index.md` est resté strictement vide (zéro ligne de passage) depuis sa
+  construction. La zone "Fatigue" a été recommandée comme la plus négligée à trois reprises dans
+  les Rondes CIRCLE-TASKS (lignes #177, #207, #225 de `docs/suivi/`), à chaque fois écartée comme
+  "hors scope d'une ronde légère" plutôt que réellement traitée. Écart annexe trouvé au passage : la
+  liste de tâches interne à l'agent affichait la tâche correspondante comme terminée, alors que
+  `docs/suivi/` — seule source de vérité durable — ne l'atteste nulle part ; corrigé par ce
+  signalement même. À planifier explicitement comme un vrai passage (niveau Exceptionnel de
+  CHECK-LEVEL-TARGET), pas reporté une 4e fois.
