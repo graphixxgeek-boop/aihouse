@@ -66,6 +66,19 @@ resterait sinon coûteux à chaque Ronde. `computeCoverageGaps()` (pure, testabl
 membre en dessous de 100% de couverture ou jamais scanné — un poste dont personne ne peut
 garantir qu'il tient la route, un « trou » RH au sens propre.
 
+## Nouveaux visages — Phase 1 (2026-09-21)
+
+Calibrage explicite : « c'est typiquement le role de cassandra de verifier que chaque nouveau
+membre est intégré selon le process, avec remise de badge à la fin et message ici dans la
+conversation ». `detectNewArrivals()` compare le roster réel à `.cassandra-rh-known-members.json`
+(local, jamais committé, même patron que `.badge-ceremony-history.json`) et `narrateNewArrivals()`
+nomme chaque membre jamais encore vu — complet ou non, avec ses trous exacts s'il en a. Distinct du
+badge mécanique de `checkAgentOnboarding()`/`announceBadgeCeremony()` (`le-coordinateur.mjs`) : ce
+bloc répond à « je t'ai vu arriver », le badge répond à « tu es maintenant complet » — les deux
+cohabitent sans se dupliquer. Uniquement dans le rapport complet (jamais le signal léger), et
+toujours en tête du rapport — c'est le bloc que l'utilisateur veut voir défiler dans la
+conversation.
+
 ## Reste hors de cette première vague (§8bis/§8ter de `docs/cassandra-rh-conception.md`)
 
 Le Catalogue (rapport principal enrichi, combinaisons d'outils, score composite) et les 3

@@ -139,8 +139,21 @@ noter/scorer comme des membres de l'équipe — une distinction stricte à ne pl
 
 Un nouvel Agent n'est intégré que lorsque **CASSANDRA-RH l'a consigné** ET que
 **`checkAgentOnboarding()` rapporte complet** — jamais un troisième script d'orchestration séparé.
-En attendant que CASSANDRA-RH existe, ce premier volet reste marqué "en attente" (documenté dans
-`docs/regles-de-travail.md`) — `checkAgentOnboarding()` seul fait foi aujourd'hui.
+
+**Volet 1 construit (2026-09-21, Phase 1, tâche de la même soirée que le noyau)** :
+`detectNewArrivals()`/`narrateNewArrivals()` (`scripts/cassandra-rh.mjs`) donnent à CASSANDRA sa
+propre narration de « nouveau visage », distincte du badge mécanique de `checkAgentOnboarding()` :
+elle nomme tout membre jamais encore vu dans le roster, complet ou non, avec ses trous exacts s'il
+en a — jamais seulement quand il devient complet (ce que fait déjà, séparément, la cérémonie de
+badge de `le-coordinateur.mjs`). Persisté dans `.cassandra-rh-known-members.json` (local, jamais
+committé), un membre n'est accueilli qu'une seule fois. Ce bloc ouvre toujours le rapport complet
+(`node scripts/cassandra-rh.mjs rapport`), jamais le signal léger — c'est la CONVERSATION qui doit
+voir défiler ce message (demande explicite de l'utilisateur), pas seulement le terminal du crochet
+post-commit.
+
+**Volet 2 (checkAgentOnboarding() rapporte complet)** : déjà en place depuis la construction du
+noyau (`badgeOversightSummary()`/`computeBadgeResults()`, cf. §2 ci-dessus) — CASSANDRA supervise,
+jamais ne recalcule.
 
 **Extension AXA-CHECK ↔ badge, pour le futur rôle de CASSANDRA-RH** (précisions actées, rien
 construit) :

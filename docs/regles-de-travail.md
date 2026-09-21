@@ -1361,6 +1361,16 @@ plutôt que d'écrire une 4e copie — CLONE-HUNTER venait de trouver cette exac
 occurrences déjà) le soir même de la construction de cette cérémonie ; jamais rouvrir un cas déjà
 signalé sous une forme légèrement différente (Article 3).
 
+**Même règle pour la narration « Nouveaux visages » de CASSANDRA-RH (Phase 1, 2026-09-21)** : le
+bloc `🆕 Nouveau visage à l'Agence Codex : X` produit par `narrateNewArrivals()` en tête du rapport
+complet (`node scripts/cassandra-rh.mjs rapport`) est exactement le même genre d'événement que la
+cérémonie de badge — un bloc qui n'existe, du point de vue de l'utilisateur, que s'il est
+effectivement recopié dans la réponse de l'agent (Article 15). Chaque fois que ce rapport est
+réellement lancé et affiche une section « Nouveaux visages à l'Agence Codex » non vide, l'agent la
+recopie dans son prochain message, jamais résumée en une phrase, exactement comme pour la
+certification de badge — les deux mécanismes cohabitent (présence vs complétude, cf.
+`docs/cassandra-rh-conception.md` §5) et suivent donc la même discipline de relais.
+
 Un membre de l'équipe (ligne « Agent » de la table maîtresse) durablement sans badge est donc bien,
 comme le suggérait l'utilisateur, le signe d'une anomalie à investiguer en priorité dans le process
 d'intégration ci-dessus — jamais un détail cosmétique. La colonne « 🎖️ Badge » de la table

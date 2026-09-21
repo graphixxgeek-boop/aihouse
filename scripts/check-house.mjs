@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 235'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 236'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -5619,7 +5619,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // kpi-historique.csv pour le KPI, tool-usage.mjs pour l'usage, clean-dirty-old.mjs pour la
   // stagnation).
   const cr = await import('../scripts/cassandra-rh.mjs');
-  const { CASSANDRA_PERSONA, parseKpiHistoryCsv, latestKpiTrend, loadKpiTrend, teamRoster, teamSizeSnapshot, toolsToReconsider, RECRUITMENT_STAGES, createRecruitmentCandidate, advanceRecruitmentStage, badgeOversightSummary, computeBadgeResults, computeCoverageGaps, buildCassandraLightSignal, buildCassandraReportBlocks, buildCassandraReportHtml } = cr;
+  const { CASSANDRA_PERSONA, parseKpiHistoryCsv, latestKpiTrend, loadKpiTrend, teamRoster, teamSizeSnapshot, toolsToReconsider, RECRUITMENT_STAGES, createRecruitmentCandidate, advanceRecruitmentStage, badgeOversightSummary, computeBadgeResults, computeCoverageGaps, buildCassandraLightSignal, buildCassandraReportBlocks, buildCassandraReportHtml, detectNewArrivals, narrateNewArrivals, loadKnownMembers, recordKnownMembers } = cr;
 
   assert.ok(CASSANDRA_PERSONA.includes('CASSANDRA-RH'), 'the fixed persona text must genuinely identify CASSANDRA-RH, the same anti-drift discipline already proven for THE-FINAL-JUDGE');
 
@@ -5749,7 +5749,46 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.ok(result, `computeBadgeResults() must report a result for the real Agent "${name}"`);
     assert.equal(result.complet, true, `checked live: "${name}" (a real Agent whose master-table cell carries a parenthetical precision) must resolve complet:true through computeBadgeResults(), the exact same fix already proven for checkAllAgentBadges()`);
   }
-  console.log('Passed: CASSANDRA-RH (2026-09-21, noyau fiabilisé + trous d\'équipe) — the fixed persona text stays verbatim, parseKpiHistoryCsv()/latestKpiTrend() read kpi-historique.csv honestly (an absent cell stays undefined, a family missing a measurement is skipped rather than fabricated), teamRoster() correctly resolves a tool name carrying a parenthetical precision to its real AGENT_CATEGORIES entry — the exact real bug found and fixed tonight, verified live against the actual master table with zero uncategorized Agent remaining — teamSizeSnapshot() gives an honest plain headcount never a judged verdict, toolsToReconsider() combines tool-usage.mjs/clean-dirty-old.mjs signals without a third invented calculation, the recruitment skeleton enforces an explicit decision at every stage and never reopens a closed file, badgeOversightSummary()/computeBadgeResults() supervise checkAgentOnboarding()\'s real results without ever recalculating coverage themselves (and, verified live, resolve a parenthetical Agent name correctly, the same fix already proven for checkAllAgentBadges()), computeCoverageGaps() reads real AXA-CHECK coverage to flag a fragile or never-scanned team member — "trous d\'équipe" resolved explicitly as team/coverage gaps, never the separate document-structure role reserved for LE-GRAND-ARCHITECTE — never relaunched in the light signal (coverageGaps stays null there, [] never fabricated), only in the explicit full report, and the light signal/full HTML report otherwise read the exact same underlying data.');
+  // Nouveaux visages (Phase 1, 2026-09-21) — detectNewArrivals()/narrateNewArrivals() restent purs,
+  // jamais de disque touché ici (loadKnownMembers()/recordKnownMembers() sont testées séparément
+  // juste après, avec un vrai fichier temporaire).
+  const arrivalRoster = [
+    { tool: 'Outil Connu', primaryName: 'Outil Connu', slug: 'outil-connu' },
+    { tool: 'Outil Neuf Complet', primaryName: 'Outil Neuf Complet', slug: 'outil-neuf-complet' },
+    { tool: 'Outil Neuf Incomplet', primaryName: 'Outil Neuf Incomplet', slug: 'outil-neuf-incomplet' },
+  ];
+  const newArrivals = detectNewArrivals(arrivalRoster, ['outil-connu']);
+  assert.deepEqual(newArrivals.map((m) => m.slug), ['outil-neuf-complet', 'outil-neuf-incomplet'], 'a member whose slug is already in the known list must never be reported as a new arrival, and every genuinely unknown slug must be, in roster order');
+  assert.deepEqual(detectNewArrivals(arrivalRoster, arrivalRoster.map((m) => m.slug)), [], 'a roster with every slug already known must report zero new arrivals, never a false positive');
+
+  const arrivalBadgeResults = [
+    { agentName: 'Outil Neuf Complet', complet: true, badge: '🎖️ Membre certifié', gaps: [] },
+    { agentName: 'Outil Neuf Incomplet', complet: false, badge: '⚠️ Pas encore certifié', gaps: ['blueprint manquant'] },
+  ];
+  const narration = narrateNewArrivals(newArrivals, arrivalBadgeResults);
+  assert.equal(narration.length, 2, 'one narration line per new arrival, never more or fewer');
+  assert.ok(narration[0].includes('Outil Neuf Complet') && narration[0].includes('déjà complète'), 'a new arrival that is already complete must be narrated as such, badge included, never left ambiguous');
+  assert.ok(narration[1].includes('Outil Neuf Incomplet') && narration[1].includes('blueprint manquant'), 'a new arrival still incomplete must be narrated with its exact real gaps, never a vague "pas encore prêt"');
+
+  const blocksWithArrivals = buildCassandraReportBlocks({ teamSize, badgeSummary, kpiTrend: trend, reconsider: [], newArrivalsNarration: narration });
+  assert.ok(blocksWithArrivals[0].type === 'heading' && blocksWithArrivals[0].text === 'Nouveaux visages à l\'Agence Codex', 'a report with real new arrivals must lead with their section, first thing visible, matching the explicit "message ici dans la conversation" request');
+  assert.ok(!buildCassandraReportBlocks({ teamSize, badgeSummary, kpiTrend: trend, reconsider: [] }).some((b) => b.text?.includes('Nouveaux visages')), 'a report with zero new arrivals (the default) must never fabricate an empty section — silence is the honest signal here, same discipline as "Recrutement en cours"');
+
+  // loadKnownMembers()/recordKnownMembers() — vrai fichier temporaire, jamais le vrai journal du
+  // dépôt touché par un test (même discipline que les autres journaux locaux de ce projet).
+  const { mkdtempSync: mkTmpDirArrivals, rmSync: rmTmpArrivals } = await import('node:fs');
+  const { tmpdir: osTmpDirArrivals } = await import('node:os');
+  const tmpArrivalsDir = mkTmpDirArrivals(path.join(osTmpDirArrivals(), 'cassandra-rh-known-members-'));
+  const tmpArrivalsPath = path.join(tmpArrivalsDir, 'known.json');
+  try {
+    assert.deepEqual(loadKnownMembers(tmpArrivalsPath), { slugs: [] }, 'a journal never yet written must report an honest empty list, never crash');
+    recordKnownMembers(['a', 'b', 'a'], tmpArrivalsPath);
+    assert.deepEqual(loadKnownMembers(tmpArrivalsPath).slugs.sort(), ['a', 'b'], 'the journal must persist a deduplicated set of slugs, never a repeated entry that would inflate a future diff for no reason');
+  } finally {
+    rmTmpArrivals(tmpArrivalsDir, { recursive: true, force: true });
+  }
+
+  console.log('Passed: CASSANDRA-RH (2026-09-21, noyau fiabilisé + trous d\'équipe) — the fixed persona text stays verbatim, parseKpiHistoryCsv()/latestKpiTrend() read kpi-historique.csv honestly (an absent cell stays undefined, a family missing a measurement is skipped rather than fabricated), teamRoster() correctly resolves a tool name carrying a parenthetical precision to its real AGENT_CATEGORIES entry — the exact real bug found and fixed tonight, verified live against the actual master table with zero uncategorized Agent remaining — teamSizeSnapshot() gives an honest plain headcount never a judged verdict, toolsToReconsider() combines tool-usage.mjs/clean-dirty-old.mjs signals without a third invented calculation, the recruitment skeleton enforces an explicit decision at every stage and never reopens a closed file, badgeOversightSummary()/computeBadgeResults() supervise checkAgentOnboarding()\'s real results without ever recalculating coverage themselves (and, verified live, resolve a parenthetical Agent name correctly, the same fix already proven for checkAllAgentBadges()), computeCoverageGaps() reads real AXA-CHECK coverage to flag a fragile or never-scanned team member — "trous d\'équipe" resolved explicitly as team/coverage gaps, never the separate document-structure role reserved for LE-GRAND-ARCHITECTE — never relaunched in the light signal (coverageGaps stays null there, [] never fabricated), only in the explicit full report, and the light signal/full HTML report otherwise read the exact same underlying data — and (2026-09-21, Phase 1) detectNewArrivals()/narrateNewArrivals() give CASSANDRA her own "nouveaux visages" narration, distinct from the mechanical badge ceremony (presence vs completeness), persisted one-time via loadKnownMembers()/recordKnownMembers() with a real deduplicated journal, leading the full report exactly once per real new slug and never fabricating the section when there is nothing to announce.');
 }
 
 {

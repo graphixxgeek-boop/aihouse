@@ -13,7 +13,7 @@
 // (le-coordinateur.mjs), le KPI vient de kpi-historique.csv (kpi-report.mjs), l'usage réel vient de
 // tool-usage.mjs, la stagnation relative vient de clean-dirty-old.mjs — aucune de ces quatre choses
 // n'est recalculée ici, jamais une seconde version qui pourrait diverger de l'originale.
-import { readFileSync, existsSync, rmSync } from "node:fs";
+import { readFileSync, existsSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseToolsTable, slugifyAgentName, checkAgentOnboarding } from "./le-coordinateur.mjs";
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
@@ -237,6 +237,53 @@ export function computeCoverageGaps(roster, perSlugCoverage, threshold = 100) {
     .filter((entry) => entry.pct === undefined || entry.pct < threshold);
 }
 
+// --- Nouveaux visages : Phase 1 (2026-09-21, demande explicite de l'utilisateur : « c'est
+// typiquement le role de cassandra de verifier que chaque nouveau membre est intégré selon le
+// process, avec remise de badge à la fin et message ici dans la conversation »). Distinct du badge
+// mécanique de checkAgentOnboarding()/announceBadgeCeremony() (le-coordinateur.mjs, cf.
+// docs/regles-de-travail.md) : celui-ci célèbre "complet pour la première fois", jamais "présent
+// pour la première fois" — un nouveau membre encore incomplet (blueprint pas encore écrit, par
+// exemple) mérite quand même d'être VU et nommé par CASSANDRA dès son arrivée, avec ses trous
+// listés, plutôt que d'attendre silencieusement qu'il devienne complet un commit plus tard. Les deux
+// mécanismes cohabitent sans se dupliquer : celui-ci répond à « je t'ai vu arriver, voici où tu en
+// es » ; l'autre répond à « tu es maintenant complet ».
+//
+// Journal local dédié (jamais committé, même patron que .badge-ceremony-history.json) : retient
+// uniquement les slugs déjà VUS par CASSANDRA au moins une fois, pour ne narrer une arrivée qu'une
+// seule fois — jamais répétée à chaque rapport suivant, jamais un doublon du badge qui, lui, se
+// redéclenche seulement au passage à `complet:true`.
+const KNOWN_MEMBERS_PATH = join(ROOT, ".cassandra-rh-known-members.json");
+
+export function loadKnownMembers(path = KNOWN_MEMBERS_PATH) {
+  return loadUsageJson(path, { slugs: [] });
+}
+
+export function recordKnownMembers(slugs, path = KNOWN_MEMBERS_PATH) {
+  writeFileSync(path, JSON.stringify({ slugs: [...new Set(slugs)] }, null, 1));
+}
+
+// Pure — reçoit le roster déjà calculé et la liste des slugs déjà vus, jamais un second calcul de
+// roster ni une lecture de disque ici (le disque reste la responsabilité de loadKnownMembers()).
+export function detectNewArrivals(roster, knownSlugs) {
+  const known = new Set(knownSlugs ?? []);
+  return roster.filter((member) => !known.has(member.slug));
+}
+
+// narrateNewArrivals() — voix de CASSANDRA, jamais un second calcul de complétude : relit
+// simplement le badgeResult déjà produit par computeBadgeResults() pour le même membre (par
+// primaryName, jamais par une recherche approximative). Un membre complet est nommé avec son badge ;
+// un membre encore incomplet est nommé avec la liste exacte de ce qu'il lui manque, jamais un
+// jugement flou ("pas encore prêt").
+export function narrateNewArrivals(newArrivals, badgeResults) {
+  return newArrivals.map((member) => {
+    const badge = badgeResults.find((r) => r.agentName === member.primaryName);
+    if (!badge || badge.complet) {
+      return `🆕 Nouveau visage à l'Agence Codex : ${member.primaryName} — intégration déjà complète, badge ${badge?.badge ?? "🎖️ Membre certifié"}.`;
+    }
+    return `🆕 Nouveau visage à l'Agence Codex : ${member.primaryName} — pas encore complet, à finir : ${badge.gaps.join(" ; ")}.`;
+  });
+}
+
 // --- Signal léger automatique (2026-09-22 : « signal auto léger + bilan complet sur demande ») --
 
 export function buildCassandraLightSignal({ teamSize, badgeSummary, kpiTrend }) {
@@ -249,8 +296,17 @@ export function buildCassandraLightSignal({ teamSize, badgeSummary, kpiTrend }) 
 
 // --- Rapport complet, en HTML dès cette première version (2026-09-22, demande explicite) -------
 
-export function buildCassandraReportBlocks({ teamSize, badgeSummary, kpiTrend, reconsider, recruitmentCandidates = [], coverageGaps = null }) {
+export function buildCassandraReportBlocks({ teamSize, badgeSummary, kpiTrend, reconsider, recruitmentCandidates = [], coverageGaps = null, newArrivalsNarration = [] }) {
   const blocks = [];
+
+  // Nouveaux visages (Phase 1, 2026-09-21) — toujours en premier, avant même l'effectif : c'est le
+  // bloc que l'utilisateur a explicitement demandé de voir défiler dans la conversation à chaque
+  // arrivée. Jamais fabriqué quand vide (même discipline que "Recrutement en cours" ci-dessous).
+  if (newArrivalsNarration.length) {
+    blocks.push({ type: "heading", text: "Nouveaux visages à l'Agence Codex" });
+    blocks.push({ type: "list", items: newArrivalsNarration });
+  }
+
   blocks.push({ type: "heading", text: "Effectif de l'équipe" });
   blocks.push({ type: "paragraph", text: `${teamSize.total} membre(s) actif(s) — ${Object.entries(teamSize.byCategory).map(([cat, n]) => `${n} ${cat}`).join(", ")}.` });
 
@@ -306,12 +362,27 @@ function collectRealCassandraData({ withCoverage = false } = {}) {
   const teamSize = teamSizeSnapshot(roster);
   const usageHistory = loadUsageJson(join(ROOT, ".tool-usage-history.json"), { events: [] });
   const staleness = scriptStaleness();
-  const knownSlugs = roster.map((m) => m.slug);
-  const reconsider = toolsToReconsider({ usageHistory, knownSlugs, staleness });
+  const knownToolSlugs = roster.map((m) => m.slug);
+  const reconsider = toolsToReconsider({ usageHistory, knownSlugs: knownToolSlugs, staleness });
   const { trend } = loadKpiTrend();
-  const badgeSummary = badgeOversightSummary(computeBadgeResults(roster, onboardingContext));
+  const badgeResults = computeBadgeResults(roster, onboardingContext);
+  const badgeSummary = badgeOversightSummary(badgeResults);
   const coverageGaps = withCoverage ? computeCoverageGaps(roster, runAxaCheckCoverage()) : null;
-  return { teamSize, badgeSummary, kpiTrend: trend, reconsider, coverageGaps };
+
+  // Nouveaux visages (Phase 1) : jamais dans le signal léger, réservé au rapport complet — c'est là
+  // que la narration est effectivement montrée à l'utilisateur, donc là seulement qu'un membre est
+  // marqué "vu". Persistance immédiate après calcul : un rapport qui plante après ce point ne doit
+  // jamais faire perdre l'accueil (préférer un membre marqué "vu" un peu tôt à une répétition infinie
+  // si le rapport échouait systématiquement après ce calcul).
+  let newArrivalsNarration = [];
+  if (withCoverage) {
+    const alreadyWelcomed = loadKnownMembers().slugs;
+    const newArrivals = detectNewArrivals(roster, alreadyWelcomed);
+    newArrivalsNarration = narrateNewArrivals(newArrivals, badgeResults);
+    recordKnownMembers(knownToolSlugs);
+  }
+
+  return { teamSize, badgeSummary, kpiTrend: trend, reconsider, coverageGaps, newArrivalsNarration };
 }
 
 function main() {
