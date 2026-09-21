@@ -128,3 +128,16 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   correspond au format réel acteur/pièce/horodatage/texte) — nécessiterait un 5e motif dédié
   réutilisant `parseTranscriptToDialogueBlocks()`. Rien construit, idée à reprendre si le besoin de
   repérage mécanique dans les transcripts devient concret.
+- **Idée non tranchée : compaction progressive des journaux locaux (brut → résumé → résumé de
+  résumés), Doc-Report/`LOCAL_JOURNALS`** — mentionnée en session mais jamais réellement spécifiée
+  ni consignée nulle part ailleurs que dans l'aide-mémoire de tâches interne à l'agent (l'écart de
+  process exact que la discipline "idée dite en avance → fichier dédié" existe pour éviter, cf.
+  `docs/regles-de-travail.md` — corrigé ici en la faisant enfin atterrir dans un vrai registre).
+  **Vérifié en direct (2026-09-22, mode nocturne autonome) que ce n'est PAS encore un problème
+  réel** : les 9 journaux `LOCAL_JOURNALS` présents dans ce conteneur pèsent tous entre quelques
+  centaines d'octets et 33 Ko (`.gemini-key-health.json`, le plus gros) — rien qui justifie une
+  compaction aujourd'hui. Idée à reprendre concrètement le jour où un journal réel dépasse une
+  taille gênante (à observer via `auditLocalJournals()`, déjà câblé), avec un vrai round de
+  calibrage sur ce que "résumé" et "résumé de résumés" signifient précisément pour chaque type de
+  journal (un historique de statuts clé/modèle n'a pas la même structure qu'un compteur d'usage) —
+  jamais une implémentation devinée sans cette clarification.

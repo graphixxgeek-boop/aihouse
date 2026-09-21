@@ -81,6 +81,39 @@ export function extractBlockIndex(source) {
   return entries;
 }
 
+// extractCommentedStatementIndex() (tâche #180, 2026-09-22, mode nocturne autonome) — 5e motif,
+// pensé pour un code dense et peu structuré comme le cœur de app/api/lia/route.ts : un long bloc
+// de commentaires (2+ lignes `//`, le seuil qui distingue une vraie explication d'une simple
+// remarque d'une ligne) directement suivi de code réel. Contrairement à extractBlockIndex
+// ci-dessus, n'exige JAMAIS que la ligne précédente soit une accolade top-level seule (`^\{$`) —
+// ce style n'existe pas dans route.ts, où un commentaire précède directement une instruction dense
+// sur une seule ligne (souvent un `if(...)` ou une affectation), jamais un bloc `{ ... }` séparé.
+// Dédoublonnage explicite avec extractBlockIndex (jamais compter deux fois le même commentaire
+// sous deux noms différents, Article 3) : `excludeLines` reçoit les lignes déjà capturées par ce
+// motif, sautées ici sans réanalyse. Un commentaire suivi d'une ligne vide ou d'une accolade
+// fermante seule est ignoré : il clôt une section plutôt que d'en ouvrir une, jamais un vrai titre.
+export function extractCommentedStatementIndex(source, { excludeLines = new Set() } = {}) {
+  const lines = Array.isArray(source) ? source : source.split("\n");
+  const entries = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (!/^\s*\/\//.test(lines[i]) || excludeLines.has(i + 1)) continue;
+    if (i > 0 && /^\s*\/\//.test(lines[i - 1])) continue; // pas le début réel du bloc de commentaires
+    const start = i;
+    const commentLines = [];
+    let j = i;
+    while (j < lines.length && /^\s*\/\//.test(lines[j])) {
+      commentLines.push(lines[j].replace(/^\s*\/\/\s?/, ""));
+      j++;
+    }
+    const next = lines[j];
+    if (commentLines.length < 2 || !next || !next.trim() || /^\s*\}\s*$/.test(next)) continue;
+    const description = commentLines.join(" ").trim();
+    const label = (description.split(/\s*[(—]/)[0] || description).trim();
+    entries.push({ name: label, line: start + 1, description });
+  }
+  return entries;
+}
+
 const HEADING_RE = /^(#{2,4})\s+(.+)$/;
 
 // Extrait les titres Markdown (## / ### / ####) d'un document de référence (docs/regles-de-travail.md,
@@ -180,13 +213,15 @@ export function searchByConcepts(index, keywords) {
   });
 }
 
-// Combine les quatre motifs réels de ce projet — fonctions nommées, blocs anonymes commentés et
-// entrées de tableau titrées pour le code (les trois sont structurellement exclusifs par ligne,
-// jamais de double comptage), titres Markdown pour un document de référence (choisi par extension,
-// jamais mélangé : un .md n'a pas de fonctions/blocs/tableaux JS, un .mjs/.ts n'a pas de titres) —
-// jamais un motif au détriment d'un autre, pour servir route.ts (fonctions), check-house.mjs
-// (blocs), lib/reference.ts (tableau titré) et docs/regles-de-travail.md (titres) avec la même
-// qualité de résultat.
+// Combine les cinq motifs réels de ce projet — fonctions nommées, blocs anonymes commentés,
+// entrées de tableau titrées et commentaires denses non accolade-préfixés pour le code (les
+// quatre sont structurellement exclusifs par ligne, dédoublonnés explicitement entre blocs et
+// commentaires denses, jamais de double comptage), titres Markdown pour un document de référence
+// (choisi par extension, jamais mélangé : un .md n'a pas de fonctions/blocs/tableaux JS, un
+// .mjs/.ts n'a pas de titres) — jamais un motif au détriment d'un autre, pour servir route.ts
+// (fonctions ET, depuis la tâche #180, son cœur dense de commentaires non accolade-préfixés),
+// check-house.mjs (blocs), lib/reference.ts (tableau titré) et docs/regles-de-travail.md (titres)
+// avec la même qualité de résultat.
 //
 // Cœur séparé de la lecture disque (2026-09-21, demande explicite d'optimisation : « optimiser ce
 // que find-booster sait déjà faire ») : découpait la source en lignes SÉPARÉMENT dans chacun des 3
@@ -198,9 +233,17 @@ export function searchByConcepts(index, keywords) {
 // réutilise ce même cœur pour ne jamais relire le fichier une seconde fois.
 function buildIndexFromSource(source, filePath) {
   const lines = source.split("\n");
-  const entries = /\.mdx?$/i.test(filePath)
-    ? extractHeadingIndex(lines)
-    : [...extractFunctionIndex(lines), ...extractBlockIndex(lines), ...extractTitledArrayIndex(lines)].sort((a, b) => a.line - b.line);
+  let entries;
+  if (/\.mdx?$/i.test(filePath)) {
+    entries = extractHeadingIndex(lines);
+  } else {
+    const blockEntries = extractBlockIndex(lines);
+    // +1 : extractBlockIndex() rapporte la ligne de l'ACCOLADE ouvrante, jamais celle du
+    // commentaire lui-même (qui vit juste en dessous) — c'est cette ligne du commentaire,
+    // pas celle de l'accolade, qu'extractCommentedStatementIndex() doit exclure.
+    const commentedEntries = extractCommentedStatementIndex(lines, { excludeLines: new Set(blockEntries.map((e) => e.line + 1)) });
+    entries = [...extractFunctionIndex(lines), ...blockEntries, ...extractTitledArrayIndex(lines), ...commentedEntries].sort((a, b) => a.line - b.line);
+  }
   return entries.map((e) => ({ ...e, themes: tagHarmoniaThemes(e) }));
 }
 

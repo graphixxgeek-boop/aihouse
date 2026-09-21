@@ -863,9 +863,11 @@ Détail complet : `docs/referentiel/memento-weight.md`.
 `docs/referentiel/claude-md-asides-historique.md`.)*
 
 `docs/find-booster-blueprint.md` documente l'ARCHITECTURE de l'outil de navigation par concept dans
-un gros fichier — quatre motifs d'extraction réels reconnus (fonctions nommées, blocs anonymes
-commentés, entrées de tableau titrées, titres Markdown, routés par extension/contexte, jamais
-mélangés), un tag thématique optionnel (indice de rapprochement vers les 8 thèmes HARMONIA, jamais
+un gros fichier — cinq motifs d'extraction réels reconnus (fonctions nommées, blocs anonymes
+commentés, commentaires denses non accolade-préfixés pour un code peu structuré, entrées de
+tableau titrées, titres Markdown, routés par extension/contexte, dédoublonnés explicitement entre
+motifs de code jamais mélangés), un tag thématique optionnel (indice de rapprochement vers les 8
+thèmes HARMONIA, jamais
 une classification certaine), et une recommandation d'usage (`recommendFindBooster()`, poids réel
 en tokens plutôt que nombre de lignes seul — `lib/reference.ts`, 132 lignes mais ~55 500 tokens, en
 est la preuve vivante) — jamais une application automatique. **Obligation écrite d'usage réel**
@@ -1146,10 +1148,12 @@ conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs se
   enrichie (nœuds sensibles HARMONIA + churn ALWAYS-NEW-CODE), la corroboration par les simulations
   archivées, le registre des trouvailles (`docs/axa-check/`). Cf. `docs/axa-check-blueprint.md`
   pour le principe générique.
-- `docs/referentiel/find-booster.md` (2026-09-21) — instanciation de find-booster pour ce projet :
-  les 4 motifs d'extraction réels, `recommendFindBooster()` et sa preuve vivante (`lib/reference.ts`),
-  l'obligation écrite d'usage réel, le statut sans blueprint de son voisin route-booster, le registre
-  (`docs/find-booster/`). Cf. `docs/find-booster-blueprint.md` pour le principe générique.
+- `docs/referentiel/find-booster.md` (2026-09-21, 5e motif ajouté le 2026-09-22, tâche #180) —
+  instanciation de find-booster pour ce projet : les 5 motifs d'extraction réels (dont le
+  commentaire dense non accolade-préfixé qui a fait passer route.ts de 10 à 125 entrées),
+  `recommendFindBooster()` et sa preuve vivante (`lib/reference.ts`), l'obligation écrite d'usage
+  réel, le statut sans blueprint de son voisin route-booster, le registre (`docs/find-booster/`).
+  Cf. `docs/find-booster-blueprint.md` pour le principe générique.
 - `docs/referentiel/clone-hunter.md` (2026-09-21) — instanciation de CLONE-HUNTER pour ce projet :
   l'algorithme de diff de blocs (`scripts/clone-hunter.mjs`), l'exclusion vérifiée de
   `components/ui/`, la trouvaille réelle (`loadJson()` dupliqué entre smart-conso-api.mjs et

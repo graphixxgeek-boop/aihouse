@@ -13,7 +13,7 @@ différente : `app/api/lia/route.ts` (code, fonctions nommées), `scripts/check-
 blocs de test anonymes), `docs/regles-de-travail.md` (documentation, titres Markdown), et
 `lib/reference.ts` (données, tableau d'entrées titrées).
 
-## Les quatre motifs d'extraction réels, `scripts/find-booster.mjs`
+## Les cinq motifs d'extraction réels, `scripts/find-booster.mjs`
 
 - `extractFunctionIndex()` — fonctions nommées top-level + le commentaire qui les précède déjà.
   Motif de `route.ts` une fois découpé, de la plupart de `lib/`.
@@ -29,10 +29,21 @@ blocs de test anonymes), `docs/regles-de-travail.md` (documentation, titres Mark
 - `extractHeadingIndex()` — titres Markdown `##`/`###`/`####` + le premier paragraphe qui suit.
   Motif réel de `docs/regles-de-travail.md` (1896 lignes, 40 titres réels comptés en direct) et de
   tout `docs/referentiel/*.md`.
+- `extractCommentedStatementIndex()` (tâche #180, 2026-09-22, mode nocturne autonome) — un long
+  commentaire (2+ lignes, seuil qui distingue une vraie explication d'une simple remarque) suivi
+  DIRECTEMENT de code réel, SANS exiger l'accolade top-level seule qu'`extractBlockIndex()` exige.
+  Le motif réel du cœur de `app/api/lia/route.ts`, écrit dans un style dense où un commentaire
+  précède directement une instruction (souvent un `if(...)` ou une affectation sur une seule
+  ligne), jamais un bloc `{ ... }` séparé. Dédoublonné explicitement contre `extractBlockIndex()`
+  (`excludeLines`, jamais un double comptage du même commentaire sous deux noms — Article 3).
+  **Résultat mesuré en direct le soir de sa construction** : `route.ts` passe de 10 entrées
+  (fonctions nommées seules) à 125 — la preuve vivante que ce motif comble le vrai vide que ce
+  fichier représentait pour find-booster jusqu'ici, exactement le gap que la tâche #180 visait.
 
-`buildIndex(filePath)` route par extension (`.md`/`.mdx` → titres Markdown ; sinon → les trois
-motifs de code combinés, structurellement exclusifs par ligne donc jamais de double comptage) et
-tague chaque entrée via `tagHarmoniaThemes()` (mots-clés des 8 thèmes de `docs/referentiel/
+`buildIndex(filePath)` route par extension (`.md`/`.mdx` → titres Markdown ; sinon → les quatre
+motifs de code combinés, dédoublonnés explicitement entre blocs et commentaires denses, jamais de
+double comptage) et tague chaque entrée via `tagHarmoniaThemes()` (mots-clés des 8 thèmes de
+`docs/referentiel/
 harmonia.md` dans le nom/la description — un indice de rapprochement, jamais une classification
 certaine). `searchByConcept(index, motClé)` répond à une recherche par concept contre nom+description
 plutôt qu'un grep littéral.

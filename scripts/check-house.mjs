@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 220'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 221'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -5171,6 +5171,49 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const lightLive = recommendFindBooster('lib/house.ts');
   assert.equal(lightLive.worthwhile, false, 'checked live: a genuinely small, low-weight real file (lib/house.ts) must never be recommended — the guard against recommending find-booster on every file indiscriminately');
   console.log('Passed: find-booster (2026-09-21, promoted the same night to a full Membre de l\'équipe after proving itself on 4 real different files) indexes all four real structural patterns this codebase actually uses — named functions, anonymous top-level test blocks, titled array entries (lib/reference.ts\'s real style, with an honest length-capped preview rather than a full-text dump), and Markdown headings (gated to .md files only) — tags each against the real HARMONIA themes by honest keyword match, answers a concept search against name+description, and now recommends itself via recommendFindBooster(), which reuses SMART-CONSO-TOKEN\'s own real token-weight formula rather than line count — verified live to correctly flag lib/reference.ts as worthwhile (high real weight, low line count) and lib/house.ts as not (genuinely small).');
+}
+
+{
+  // extractCommentedStatementIndex() (tâche #180, 2026-09-22, mode nocturne autonome) — 5e motif,
+  // pensé pour un code dense et peu structuré comme le cœur de route.ts, où un long commentaire
+  // précède directement une instruction dense plutôt qu'un bloc `{ ... }` séparé (le motif que
+  // extractBlockIndex, ci-dessus, exige déjà).
+  const { extractBlockIndex, extractCommentedStatementIndex, buildIndex } = await import('../scripts/find-booster.mjs');
+  const denseFixture = [
+    'const a = 1;',
+    '// Une seule ligne de commentaire, jamais assez pour mériter une entrée — trop bref pour',
+    'const b = 2;',
+    '',
+    '// Un vrai bloc de commentaire dense, sur plusieurs lignes, expliquant le pourquoi',
+    '// — d\'une instruction qui suit directement, sans accolade séparée (le style réel de route.ts).',
+    'if (x === 2) doSomething();',
+    '',
+    '// Un commentaire qui précède une ligne vide, jamais un vrai titre de section',
+    '// puisqu\'il ne mène nulle part de concret.',
+    '',
+    '// Un commentaire qui précède une accolade fermante seule, la fin d\'un bloc, jamais son début',
+    '// — ne doit jamais être indexé comme une nouvelle section.',
+    '}',
+  ].join('\n');
+  const denseIndex = extractCommentedStatementIndex(denseFixture);
+  assert.equal(denseIndex.length, 1, 'a single-line comment must never be indexed (too brief to be a real section header), a genuine multi-line comment followed by dead code (a blank line or a lone closing brace) must never be indexed as if it opened a new section, and only the one real multi-line comment genuinely followed by live code must be captured');
+  assert.equal(denseIndex[0].name, 'Un vrai bloc de commentaire dense, sur plusieurs lignes, expliquant le pourquoi', 'the synthetic name must be the real comment text up to the first parenthesis/em-dash, the same naming convention already used by extractBlockIndex — never a different convention for this new pattern');
+  assert.equal(denseIndex[0].line, 5, 'the reported line must be the real first comment line of the block, 1-indexed');
+
+  // Dédoublonnage explicite avec extractBlockIndex — un commentaire déjà capturé par le motif
+  // accolade ne doit JAMAIS réapparaître ici sous un second nom (Article 3).
+  const overlapFixture = ['{', '// Un commentaire de tête de bloc, déjà capturé par extractBlockIndex', '// sur deux lignes, jamais compté une seconde fois ici.', 'const z = 1;', '}'].join('\n');
+  const overlapBlockIndex = extractBlockIndex(overlapFixture);
+  assert.equal(overlapBlockIndex.length, 1, 'setup check: the fixture\'s brace-prefixed comment must actually be captured by extractBlockIndex, or this deduplication test proves nothing');
+  const overlapCommentedIndex = extractCommentedStatementIndex(overlapFixture, { excludeLines: new Set(overlapBlockIndex.map((e) => e.line + 1)) });
+  assert.equal(overlapCommentedIndex.length, 0, 'a comment already captured by extractBlockIndex (brace-prefixed) must never be counted a second time here once its line is passed via excludeLines — the exact real double-counting this deduplication exists to prevent');
+
+  // Câblage réel dans buildIndex() — vérifié en direct contre route.ts, la cible réelle de cette
+  // tâche : 10 entrées avant ce correctif (fonctions nommées seulement), 125 après (mesuré en
+  // direct le soir de la construction) — la preuve vivante que ce motif comble bien le vrai vide.
+  const liveDenseIndex = buildIndex('app/api/lia/route.ts');
+  assert.ok(liveDenseIndex.length >= 100, 'checked live against the real route.ts: adding the dense-comment pattern must multiply the real number of navigable entries by an order of magnitude (10 named functions alone, 125+ once dense comment sections are included) — the exact real gap task #180 was opened to close');
+  console.log('Passed: extractCommentedStatementIndex() (task #180) correctly ignores a single-line comment (too brief to be a real section header), never indexes a genuine multi-line comment that leads into dead code (a blank line or a lone closing brace) as if it opened a section, names and lines a real match with the exact same convention already used by extractBlockIndex, never double-counts a comment already captured by extractBlockIndex once deduplicated via excludeLines, and — checked live against the real app/api/lia/route.ts, the exact file this task was opened for — multiplies the number of navigable entries by more than an order of magnitude (10 → 125+) by finally recognizing its dense, comment-led, brace-less style.');
 }
 
 {
