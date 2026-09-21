@@ -12,6 +12,7 @@ import { checkLinks, LINKS } from "../check-harmonia.mjs";
 import { collectCoverage, robustnessScore, LIB_MAP } from "../axa-check.mjs";
 import { lastTouchDays, relativeStaleness } from "../clean-dirty-old.mjs";
 import { PRESTATIONS, formatMenu } from "../le-coordinateur.mjs";
+import { flagFindBoosterCandidates } from "../doc-report.mjs";
 import { summarizeHistory, computeInvestmentRatio, diagnoseAdviceAccuracy } from "../smart-conso-token.mjs";
 import { sh } from "../lib-shell.mjs";
 import { loadLastRun, shouldRemindCircleTasks } from "../circle-tasks.mjs";
@@ -109,6 +110,21 @@ try {
       ` fichier(s) stagnant(s) relativement au reste du projet — ${staleFiles.join(", ")} ` +
       "(à vérifier via ARGUS/HARMONIA/ALWAYS-NEW-CODE, jamais un jugement seul, cf. docs/clean-dirty-old/index.md).\n",
     );
+  }
+} catch { /* best-effort, jamais bloquant */ }
+
+// find-booster — signal concret et automatique, jamais un rappel générique (2026-09-21, question
+// directe de l'utilisateur : « comment tu sécurises ça sans pouvoir l'oublier ? »). Le rappel
+// générique du menu PRESTATIONS ci-dessous (« find-booster existe ») s'est révélé insuffisant —
+// l'agent a dû admettre en session ne pas l'avoir utilisé jusqu'à ce qu'on le lui demande
+// explicitement. `flagFindBoosterCandidates()` (Doc-Report, tâche #182) nomme les scripts RÉELS,
+// MAINTENANT, assez lourds pour mériter une recherche par concept — un signal beaucoup plus dur à
+// ignorer qu'une ligne de menu parmi vingt. Reste imparfait par nature (aucun mécanisme ne peut
+// intercepter un Read/Grep avant qu'il n'ait lieu) : ceci renforce le rappel, ne le remplace jamais.
+try {
+  const candidates = flagFindBoosterCandidates();
+  if (candidates.length) {
+    console.log(`🧭 find-booster : ${candidates.map((c) => `${c.label} (~${c.tokens} tokens)`).join(", ")} méritent une recherche par concept avant toute lecture intégrale.\n`);
   }
 } catch { /* best-effort, jamais bloquant */ }
 

@@ -52,6 +52,19 @@ poids réel ~55 500 tokens) est recommandé ; `lib/house.ts` (75 lignes, poids r
 l'est pas — deux fichiers courts, un seul verdict correct par ligne, deux verdicts corrects par
 poids réel.
 
+## Rappel automatique sharpened — signal nommé, plus un rappel générique (2026-09-21)
+
+Question directe de l'utilisateur : « comment tu t'assures que tu vas utiliser cet outil [...]
+comment tu sécurises ça sans pouvoir l'oublier ? ». Réponse honnête : aucune garantie mécanique
+n'existe (même limite que SMART-CONSO-TOKEN — rien dans cette architecture ne peut intercepter un
+Read/Grep avant qu'il n'ait lieu). Le rappel générique du menu PRESTATIONS ci-dessous s'est révélé
+concrètement insuffisant : l'agent a dû admettre en session ne pas avoir utilisé find-booster
+jusqu'à ce qu'on le lui demande explicitement. Renforcé (jamais remplacé) par un signal NOMMÉ :
+`scripts/hooks/check-last-commit.mjs` appelle désormais `flagFindBoosterCandidates()` (Doc-Report)
+à chaque commit et affiche les scripts RÉELS, MAINTENANT, assez lourds pour mériter une recherche
+par concept — plus dur à ignorer qu'une ligne parmi vingt dans un menu générique. Reste imparfait
+par nature : un rappel qui n'arrive qu'au moment du commit, jamais au moment réel de la lecture.
+
 ## Obligation écrite d'usage réel, jamais seulement construit (2026-09-21, demande explicite)
 
 Même limite honnête que SMART-CONSO-TOKEN (« aucun compteur externe des tokens de l'agent
