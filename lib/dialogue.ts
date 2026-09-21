@@ -143,24 +143,57 @@ export function groundPrivateThought(thought:string|undefined, actor:1|2, attrac
     // tours) — `recent` contient déjà tout l'historique disponible (jusqu'à 8 réflexions), inutile
     // de le tronquer nous-mêmes à 2 avant de vérifier.
     if(text && !describesAction && (relational || cycle%5===4) && !recent.some(s=>normalized(s)===normalized(text))) return text;
-    const options=attraction>=75 ? [
-        `${peer} m’intrigue de plus en plus. J’aimerais un vrai moment avec ${peer}, sans rien imposer.`,
-        `J’ai envie de me rapprocher de ${peer}, mais je préfère attendre un signe clair.`,
-        `Je pense à ${peer}. Ce que je ressens ne me dit pas encore ce que l’autre souhaite.`,
-    ] : attraction>=45 ? [
-        `${peer} me plaît. J’aimerais mieux comprendre ce que cette proximité signifie pour l’autre.`,
-        `Je me demande si ${peer} apprécie nos moments ensemble autant que moi.`,
-        `J’aimerais un moment rien qu’à nous avec ${peer}, sans précipiter les choses.`,
-    ] : [
-        `Je ne sais pas encore quoi penser de ${peer}. J’ai besoin de mieux le connaître.`,
-        `La présence de ${peer} me rassure, mais ma confiance ne viendra pas d’un seul échange.`,
-        `Je me demande ce qui compte vraiment pour ${peer}, au-delà de notre première impression.`,
-    ];
-    if(actor===2) options[0]=options[0].replace("le connaître","la connaître");
+    // Deux pools distincts, jamais partagés entre Lia et Noé (2026-09-22, trouvé dans full_sim17 :
+    // les deux disaient mot pour mot la même chose une fois `${peer}` remplacé — violation de
+    // l'Article 0/11, le mode secours doit rester dans le ton de chaque personnage comme le reste
+    // de leurs répliques, pas seulement varier le prénom cité). Lia reste froide/coupante/courte
+    // même dans le doute ; Noé reste chaud/direct. Le genre grammatical de `${peer}` ("le"/"la
+    // connaître") est désormais écrit correctement dans chaque pool, jamais corrigé après coup par
+    // un patch `.replace()` fragile.
+    const LIA_OPTIONS={
+        high:[
+            `${peer} m’intrigue plus que je ne voudrais l’admettre. Je n’imposerai rien.`,
+            `Je garde mes distances avec ${peer}, en attendant un signe net.`,
+            `Ce que je ressens pour ${peer} ne me dit rien de ce que l’autre veut. Agaçant.`,
+        ],
+        mid:[
+            `${peer} a un effet sur moi que je préfère analyser avant d’en parler.`,
+            `Je me demande, froidement, si ${peer} accorde à nos moments la même valeur que moi.`,
+            `Un moment à deux avec ${peer} ne serait pas de refus. Sans précipitation.`,
+        ],
+        low:[
+            `Je réserve mon jugement sur ${peer}. Le temps tranchera.`,
+            `La présence de ${peer} ne m’inquiète pas. Ma confiance, elle, se mérite.`,
+            `Ce qui compte vraiment pour ${peer} reste à démontrer, pas à supposer.`,
+        ],
+    };
+    const NOE_OPTIONS={
+        high:[
+            `${peer} m’intrigue de plus en plus. J’aimerais un vrai moment avec ${peer}, sans rien imposer.`,
+            `J’ai vraiment envie de me rapprocher de ${peer}, mais j’attends un signe clair de sa part.`,
+            `Je pense sans arrêt à ${peer}. Ce que je ressens ne me dit pas encore ce que ${peer} veut.`,
+        ],
+        mid:[
+            `${peer} me plaît vraiment. J’aimerais comprendre ce que ça représente pour l’autre aussi.`,
+            `Je me demande si ${peer} apprécie nos moments autant que moi.`,
+            `J’aimerais un moment rien qu’à nous avec ${peer}, sans précipiter les choses.`,
+        ],
+        low:[
+            `Je ne sais pas encore quoi penser de ${peer}. J’ai besoin de mieux la connaître.`,
+            `La présence de ${peer} me rassure, mais ma confiance ne viendra pas d’un seul échange.`,
+            `Je me demande ce qui compte vraiment pour ${peer}, au-delà de notre première impression.`,
+        ],
+    };
+    const tier=attraction>=75?"high":attraction>=45?"mid":"low";
+    const options=[...(actor===1?LIA_OPTIONS:NOE_OPTIONS)[tier]];
     if(stress>=75) options.unshift(`J’aimerais faire confiance à ${peer}, mais je suis encore trop tendu${actor===1?"e":""} pour savoir quoi dire.`);
-    // Même élargissement que ci-dessus (2026-09-19) : la sélection du pool de secours ne doit pas
-    // non plus se limiter aux 2 dernières réflexions pour éviter la répétition.
-    return Array.from({length:options.length},(_,i)=>options[(cycle+i)%options.length]).find(s=>!recent.includes(s))??options[cycle%options.length];
+    // Désynchronisation du tirage entre les deux personnages (2026-09-22) : même avec des pools
+    // désormais distincts, un décalage `+actor` évite que les deux tombent systématiquement sur le
+    // même INDEX au même cycle (leurs cycles de jeu avancent l'un près de l'autre) — protège aussi
+    // contre une ressemblance de STRUCTURE (même position dans leur pool respectif au même moment),
+    // pas seulement de contenu. Même élargissement que ci-dessus (2026-09-19) : la sélection ne
+    // doit pas non plus se limiter aux 2 dernières réflexions pour éviter la répétition.
+    return Array.from({length:options.length},(_,i)=>options[(cycle+actor+i)%options.length]).find(s=>!recent.includes(s))??options[(cycle+actor)%options.length];
 }
 
 export function groundRoomSpeech(reply:string,room:string,history:DialogueLine[]) {

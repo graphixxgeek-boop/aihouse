@@ -61,12 +61,11 @@ export function parseTranscriptToDialogueBlocks(transcriptText) {
   return blocks;
 }
 
-// Zoom 150% à l'ouverture (2026-09-22, demande explicite de l'utilisateur sur le rendu déjà
-// livré) — propre au transcript uniquement (dense, beaucoup de répliques courtes), jamais imposé
-// au reste des rapports partageant THEME_CSS (KPI, EL-PROFESSOR...) qui n'ont pas cette densité.
+// Zoom 150% (2026-09-22) : généralisé depuis le 2026-09-22 à TOUS les rapports HTML directement
+// dans THEME_CSS (html-report.mjs) — plus un traitement spécial ici, jamais deux mécanismes qui
+// pourraient un jour diverger.
 export function renderTranscriptHtml(transcriptText, { title = "Transcript de simulation", dateLabel = new Date().toISOString() } = {}) {
-  const html = renderHtmlReport({ title, dateLabel, blocks: parseTranscriptToDialogueBlocks(transcriptText) });
-  return html.replace("</head>", `<style>body{zoom:1.5}</style>\n</head>`);
+  return renderHtmlReport({ title, dateLabel, blocks: parseTranscriptToDialogueBlocks(transcriptText) });
 }
 
 // Le dossier retourné a une structure différente (prose continue en 3 sections, jamais un

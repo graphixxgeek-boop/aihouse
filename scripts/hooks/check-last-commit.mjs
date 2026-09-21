@@ -12,6 +12,7 @@ import { checkLinks, LINKS } from "../check-harmonia.mjs";
 import { collectCoverage, robustnessScore, collectScriptCoverage, scriptRobustnessScore, LIB_MAP } from "../axa-check.mjs";
 import { lastTouchDays, relativeStaleness } from "../clean-dirty-old.mjs";
 import { buildDuplicateReport, buildNearDuplicateReport } from "../clone-hunter.mjs";
+import { findMissingNotes, findOrphanNotes } from "../el-professor.mjs";
 import { PRESTATIONS, formatMenu, parseToolsTable, slugifyAgentName, checkAllAgentBadges } from "../le-coordinateur.mjs";
 import { flagFindBoosterCandidates } from "../doc-report.mjs";
 import { summarizeHistory, computeInvestmentRatio, diagnoseAdviceAccuracy } from "../smart-conso-token.mjs";
@@ -143,6 +144,33 @@ try {
       (literalClusters.length && nearClusters.length ? " ; " : "") +
       (nearClusters.length ? `${nearClusters.length} cluster(s) structurellement dupliqué(s) (renommage)` : "") +
       " — jamais une factorisation acquise, un signal à vérifier (cf. docs/clone-hunter/index.md).\n",
+    );
+  }
+} catch { /* best-effort, jamais bloquant */ }
+
+// EL-PROFESSOR — garde-fou de couverture réel (2026-09-22, trouvé par l'utilisateur : « tu ne m'as
+// pas livré de rapport à part le transcript [...] normalement tu dois me faire livrer les
+// rapports »). Root-cause confirmée : `findMissingNotes()`/`findOrphanNotes()` (el-professor.mjs)
+// existaient déjà et sont déjà testés dans check-house.mjs, mais n'étaient jamais appelés nulle part
+// dans le réseau réel — full_sim17 a pu être archivé dans docs/simulations/index.md pendant toute
+// une conversation sans que rien ne signale l'absence de sa note EL-PROFESSOR correspondante,
+// exactement le même angle mort que celui déjà comblé pour docs/suivi/ (findCommitsMissingSuiviUpdate)
+// mais jamais reproduit ici (Article 3 : une règle corrigée une fois ne doit plus jamais se
+// reproduire ailleurs sous une autre forme). Warn-only comme le reste de ce hook : ne bloque jamais
+// un commit, se contente de rendre l'oubli visible au moment même où il se produit plutôt que des
+// tours plus tard.
+try {
+  const simIndex = readFileSync("docs/simulations/index.md", "utf8");
+  const elIndex = readFileSync("docs/el-professor/index.md", "utf8");
+  const missing = findMissingNotes(simIndex, elIndex);
+  const orphans = findOrphanNotes(simIndex, elIndex);
+  if (missing.length || orphans.length) {
+    console.error(
+      "\n🔎 EL-PROFESSOR (couverture réelle post-commit) : " +
+      (missing.length ? `${missing.length} simulation(s) archivée(s) sans note EL-PROFESSOR (${missing.join(", ")})` : "") +
+      (missing.length && orphans.length ? " ; " : "") +
+      (orphans.length ? `${orphans.length} note(s) référençant une simulation absente de l'archive (${orphans.join(", ")})` : "") +
+      " — cf. docs/referentiel/el-professor.md.\n",
     );
   }
 } catch { /* best-effort, jamais bloquant */ }

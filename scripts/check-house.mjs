@@ -380,6 +380,12 @@ console.log('Passed: divergent needs produce private thoughts without remote spe
 
 const {groundPrivateThought}=await import('../.sites-runtime/test-dialogue.mjs');
 assert.doesNotMatch(groundPrivateThought('Je m’approche de l’écran avec Noé.',1,55,20,0,[]),/écran|approche/);assert.match(groundPrivateThought('Ces chiffres me troublent.',2,80,20,0,[]),/Lia/);const firstPrivate=groundPrivateThought(undefined,2,80,20,0,[]);assert.notEqual(groundPrivateThought(firstPrivate,2,80,20,1,[firstPrivate]),firstPrivate);
+// 2026-09-22 (full_sim17) : Lia et Noé ne doivent plus jamais retomber sur la même phrase de
+// secours mot pour mot (seul le prénom cité changeait avant ce correctif) — vérifié sur les 3
+// paliers d'attirance, plusieurs cycles, jamais une seule coïncidence de contenu ni de position.
+for(const attraction of [80,60,20]){for(let cycle=0;cycle<6;cycle++){const lia=groundPrivateThought(undefined,1,attraction,20,cycle,[]);const noe=groundPrivateThought(undefined,2,attraction,20,cycle,[]);assert.notEqual(lia,noe,`palier ${attraction}, cycle ${cycle} : Lia et Noé ne doivent jamais dire la même chose`);}}
+assert.ok([0,1,2,3,4,5].some(cycle=>groundPrivateThought(undefined,2,20,20,cycle,[]).includes('la connaître')),'Noé referring to Lia in his own low-attraction pool must use the correct feminine grammatical gender ("la connaître"), now written correctly by construction in NOE_OPTIONS rather than patched after the fact by the old fragile .replace()');
+console.log('Passed: groundPrivateThought() fallback pool is now genuinely distinct per character (Lia cold/curt, Noé warm/direct) across all three attraction tiers, never collapsing to the same sentence with only the peer\'s name swapped, and the peer\'s grammatical gender ("la connaître") is now correct by construction rather than patched after the fact.');
 const reunionStory=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);reunionStory.life={...reunionStory.life,mirrorVerified:true,foodVerified:true,debrief:undefined};reunionStory.round=10;reunionStory.apartTurns=0;reunionStory.salonTurns=3;sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(reunionStory));
 separatePreference=true;const separated=[];
 for(let i=0;i<3;i++){
@@ -942,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 217'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 218'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4593,14 +4599,14 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(transcriptBlocks[2].text.includes('[bureau→salon]'),'a movement line\'s bracketed content must survive into the rendered text unchanged');
   const transcriptHtml=renderTranscriptHtml(fakeTranscript,{title:'fake — transcript'});
   assert.ok(transcriptHtml.includes('<p class="dialogue speaker-lia"><strong>Lia</strong>')&&transcriptHtml.includes('<p class="dialogue speaker-noe"><strong>Noé</strong>'),'the rendered HTML must apply the real per-character CSS classes already defined in html-report.mjs (speaker-lia/speaker-noe), the exact reason the speaker field must stay clean');
-  assert.ok(transcriptHtml.includes('body{zoom:1.5}'),'the transcript report must open at 150% zoom (explicit user request on the already-delivered render), injected right before </head>');
+  assert.match(transcriptHtml,/body\s*\{[^}]*zoom:\s*1\.5/,'every HTML report (not just the transcript) must open at 150% zoom, per the shared THEME_CSS rule');
 
   const fakeDossier='=== VOIX DE LIA ===\nTexte de Lia.\n\n=== VOIX DE NOÉ ===\nTexte de Noé.\n\n=== SYNTHÈSE ===\nTexte de synthèse.';
   const dossierBlocks=parseDossierToBlocks(fakeDossier);
   assert.deepEqual(dossierBlocks,[{type:'heading',text:'VOIX DE LIA'},{type:'paragraph',text:'Texte de Lia.'},{type:'heading',text:'VOIX DE NOÉ'},{type:'paragraph',text:'Texte de Noé.'},{type:'heading',text:'SYNTHÈSE'},{type:'paragraph',text:'Texte de synthèse.'}],'the dossier\'s real 3-section prose structure (never a tour-by-tour dialogue) must become a heading+paragraph pair per section, in order, never the dialogue template which would make no sense here');
   const dossierHtml=renderDossierHtml(fakeDossier,{title:'fake — dossier'});
   assert.ok(dossierHtml.includes('<h2>VOIX DE LIA</h2>')&&dossierHtml.includes('<h2>SYNTHÈSE</h2>'),'the rendered dossier HTML must carry a real heading per section');
-  assert.ok(!dossierHtml.includes('zoom:1.5'),'the 150% zoom is a transcript-only request (dense dialogue), never silently widened to the dossier which the user never asked about');
+  assert.match(dossierHtml,/body\s*\{[^}]*zoom:\s*1\.5/,'the 150% zoom rule was generalized (2026-09-22) from the transcript alone to every HTML report — the dossier must carry it too now, via the shared THEME_CSS rather than a per-report special case');
 
   const fakeFs={
     files:{sources:{'/tmp/fake_transcript.txt':fakeTranscript,'/tmp/fake_dossier.txt':fakeDossier}},
@@ -4676,7 +4682,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // (docs/suivi #230), jamais celui qui la prend. Testé avec un readFileImpl injecté et un
   // sous-ensemble isolé de registres — jamais dépendant du contenu réel des scripts du dépôt, qui
   // peut changer indépendamment de ce test.
-  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex, LOCAL_JOURNALS, auditLocalJournals, findJournalsMissingFromGitignore, findEngineCodeInRegistries, flagFindBoosterCandidates } = await import('../scripts/doc-report.mjs');
+  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex, LOCAL_JOURNALS, auditLocalJournals, findJournalsMissingFromGitignore, findEngineCodeInRegistries, flagFindBoosterCandidates, checkHtmlReportTheme } = await import('../scripts/doc-report.mjs');
   assert.ok(REGISTRIES.length >= 15, 'the registry table must cover every real tool registry of the network, never a partial or forgotten subset');
   assert.ok(REGISTRIES.every((r) => r.slug && r.label && r.family && r.path && r.decision), 'every registry entry must be fully specified — a half-filled row would silently break the family grouping or the decision audit');
 
@@ -4721,6 +4727,19 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(byFamily.get('Test').length, 4, 'rows must be grouped by their declared family, never flattened or regrouped by a guessed criterion');
   assert.deepEqual(mismatches.map((m) => m.slug), ['unwired-html-tool'], 'the top-level mismatches list must surface exactly the real HTML-wiring gap, ready for a human/agent to read — Doc-Report itself never fixes it');
   console.log('Passed: Doc-Report (task #165) mechanically audits the already-decided HTML/texte choice against the real producing script\'s source (never guessed from a tool\'s name), flags an undeclared docs/ registry as a real gap while sparing the reference/suivi folders, cross-references tool-usage.mjs\'s real usage history to spot a registry nobody ever solicits — a genuine wiring gap (THE-DEEP-READER, Simulations) was found on its very first real run against the live repository — and, findEngineCodeInRegistries(), flags any registry whose scriptPath points at the game engine (lib/app/components) rather than a real scripts/*.mjs team-member tool, verified live to hold on every real registry today.');
+
+  // checkHtmlReportTheme() (2026-09-22, explicit user rule: every HTML report must stay in the
+  // game's real colors even as the future graphic charter evolves, and must open at 150% zoom).
+  const themeOk = checkHtmlReportTheme(':root{--lia:#f29bc3;--noe:#55dbe5;}', '--lia: #f29bc3; --noe: #55dbe5; body { zoom: 1.5; }');
+  assert.deepEqual(themeOk.colorMismatches, [], 'when the report\'s colors genuinely match app/globals.css, nothing must be flagged');
+  assert.ok(themeOk.hasZoom, 'the 150% zoom rule must be detected when genuinely present in THEME_CSS');
+  const themeDrifted = checkHtmlReportTheme(':root{--lia:#ff0000;--noe:#55dbe5;}', '--lia: #f29bc3; --noe: #55dbe5;');
+  assert.deepEqual(themeDrifted.colorMismatches, ['lia'], 'a report color that has drifted from the real game color (e.g. after a future charter change never propagated) must be flagged by name, never silently accepted');
+  assert.ok(!themeDrifted.hasZoom, 'a THEME_CSS missing the zoom rule entirely must be flagged, verified live against the real scripts/html-report.mjs');
+  const realTheme = checkHtmlReportTheme(fs.readFileSync('app/globals.css', 'utf8'), fs.readFileSync('scripts/html-report.mjs', 'utf8'));
+  assert.deepEqual(realTheme.colorMismatches, [], 'checked live against the real files: html-report.mjs\'s colors must currently match app/globals.css exactly');
+  assert.ok(realTheme.hasZoom, 'checked live: the real THEME_CSS must currently carry the 150% zoom rule for every report, not just the transcript');
+  console.log('Passed: checkHtmlReportTheme() (2026-09-22) mechanically compares scripts/html-report.mjs\'s shared --lia/--noe colors against app/globals.css\'s real values (never a supposition), flags a genuine drift by name rather than silently accepting it, and confirms the 150% zoom rule is present — verified live against this actual repository to hold today, the exact two permanent rules the user asked for.');
 
   // LOCAL_JOURNALS (2026-09-21, direct question from the user: is Doc-Report itself capable of
   // organizing the local, never-committed state files too, or does a twin tool need to?). Answer:

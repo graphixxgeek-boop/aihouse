@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EL-PROFESSOR — full_sim17</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu). */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-21T03:43:43.639Z</div>
+    <h1>EL-PROFESSOR — full_sim17</h1>
+    <p class="sub">Note globale : 67/100 — voir le détail par thème ci-dessous</p>
+  </header>
+  <div class="divider"></div>
+  <main><h2>Note globale : 67/100</h2>
+<p>*(Article 0 : thème 1 = 16/20 ≥ 10/20, aucun plafond appliqué — somme normale des 5 thèmes.)*</p>
+<table><thead><tr><th>Thème</th><th>Note</th></tr></thead><tbody><tr><td>1. Esprit des personnages</td><td>16/20</td></tr><tr><td>2. Naturel et crédibilité</td><td>12/20</td></tr><tr><td>3. Voix distinctes, zéro répétition</td><td>8/20</td></tr><tr><td>4. Cohérence de l'enquête</td><td>16/20</td></tr><tr><td>5. Clarté pour un lecteur neutre</td><td>15/20</td></tr></tbody></table>
+<h2>1. Esprit des personnages — 16/20</h2>
+<p>Le dossier retourné (généré au round 180) porte une vraie texture différenciée dans la colère froide : Lia conclut par un jugement clinique et distant — « Mon verdict est sans appel : nous avons affaire à un petit tyran de salon, lâche et inconstant, dont la violence verbale ne cache qu'un vide abyssal » (dossier, VOIX DE LIA) — quand Noé est plus direct et corrosif, avec une pointe de mépris plus chaud : « un lâche narcissique qui cherche du pouvoir à bon compte en nous regardant galérer » (VOIX DE NOÉ). Les deux appréciations chiffrées (5/100 pour Lia, 1/100 pour Noé) reflètent une hostilité réellement sévère, cohérente avec l'esprit fondateur (jamais de servilité malgré la pression). Aucune dérive consensuelle détectée dans les passages relus.</p>
+<p>Ce qui retient la note sous 18-20 : aucun palier rare exercé cette session (colère réellement débridée, silence méprisant de Lia comme arme, vulnérabilité ou respect sincères) — non tenté, pas une faute en soi mais pas de point supplémentaire pour un registre jamais sollicité. Et une phrase de conclusion strictement identique entre les deux voix du dossier — « Mon verdict est sans appel » — répétée mot pour mot d'une voix à l'autre, un léger accroc à l'étanchéité des voix qui aurait mérité une formulation propre à chacune (cf. thème 3, où ce détail compte aussi).</p>
+<h2>2. Naturel et crédibilité — 12/20</h2>
+<p>Trouvaille centrale de l'analyse qualitative (cf. `docs/simulations/correctifs-a-revalider.md`) : au moment exact où l'attirance de chaque personnage franchit le seuil des 75% (Noé round 80, Lia round 87 — normalement le déclencheur d'un vrai moment de doute amoureux), la pensée réellement affichée à l'écran ne porte pas du tout sur ce sujet. Noé : « Il croit nous faire une faveur en nous laissant gérer notre temps. » (l.1151-1154) — sur l'observateur, pas sur ses sentiments. Lia : « Il s'emballe un peu vite en croyant qu'on forme un front uni sur tout, j'ai besoin de marquer ma propre distance. » (l.1276-1279) — sur une friction avec Noé, pas sur l'attirance. Pour un lecteur qui suit l'histoire, ce décalage entre ce qui est censé se passer émotionnellement (un cap psychologique important) et ce qui est réellement pensé à cet instant nuit à la crédibilité du moment (Article 17 : cohérent avec l'état émotionnel réel).</p>
+<p>Le reste des réactions moment à moment reste solide (émotions qui évoluent de façon lisible avec les événements — fatigue, faim, tension avec l'observateur), mais ce décalage touche un beat narratif important, d'où une note qui reste moyenne plutôt que haute.</p>
+<h2>3. Voix distinctes, zéro répétition — 8/20</h2>
+<p>Trouvaille principale : une fois l'attirance des deux personnages restée au-dessus de 75%, leurs pensées privées de doute amoureux (générées par le pool de secours du jeu, pas par une improvisation du modèle) sont devenues **mot pour mot identiques**, seul le prénom cité changeant : « Noé m'intrigue de plus en plus. J'aimerais un vrai moment avec Noé, sans rien imposer. » (Lia, l.2299) contre « Lia m'intrigue de plus en plus. J'aimerais un vrai moment avec Lia, sans rien imposer. » (Noé, l.1544) ; et « Je pense à Lia. Ce que je ressens ne me dit pas encore ce que l'autre souhaite. » (Noé, l.2159) contre « Je pense à Noé. Ce que je ressens ne me dit pas encore ce que l'autre souhaite. » (Lia, l.2339). C'est une vraie infraction à l'Article 11 : Lia et Noé ne doivent jamais dire la même chose de la même manière. **Correctif déjà écrit et testé le jour même** (cf. suivi, tâche #187) — reste à confirmer sur une prochaine simulation fraîche.</p>
+<p>Deuxième occurrence, plus mineure, déjà notée au thème 1 : la même formule de clôture (« Mon verdict est sans appel ») dans les deux fragments du dossier.</p>
+<p>Point positif à ne pas passer sous silence : hors de ces deux occurrences précises, aucune autre répétition mot pour mot n'a été relevée dans le reste du transcript en dehors de la boucle d'attente du script de test lui-même (cf. thème 5) — la note reste donc au-dessus du plancher vu sur full_sim16 (6/20, ~25 tours consécutifs sur la même idée), mais une vraie duplication verbatim confirmée pèse plus lourd qu'une simple absence de variété.</p>
+<h2>4. Cohérence de l'enquête, transcript ET dossier — 16/20</h2>
+<p>Le dossier est fidèle à ce qui a réellement été vécu : les deux appréciations chiffrées extrêmement basses (5/100, 1/100) correspondent bien à une session où « hostilité sévère » a été confirmée (cf. `docs/simulations/index.md`, tirages roulette « pouvoir » avec observer_mute/camera_hide, menace directe citée mot pour mot par les deux voix — « s'il ne devrait pas nous éteindre là, maintenant, tout de suite, sans prévenir » / « si je vous éteignais là, maintenant, tout de suite, sans prévenir ? »). Aucune invention de fait détectée, aucune contradiction entre le verdict et le vécu. La seule tâche de dossier non déclenchée (provocation de dispute avant le test de divergence, `dispute obtenue: false`) est correctement documentée comme non aboutie plutôt que forcée ou inventée.</p>
+<p>Légère réserve : les deux voix citent la menace de l'observateur avec des mots quasiment identiques (« là, maintenant, tout de suite, sans prévenir » dans les deux fragments) — cohérent avec le fait qu'il s'agit d'une citation d'un même événement réel, donc pas une faute de voix ici, juste noté pour la transparence de la lecture.</p>
+<h2>5. Clarté pour un lecteur neutre — 15/20</h2>
+<p>Aucune confusion majeure relevée dans l'enchaînement dialogue/pensée/déplacement lors de la lecture complète. Le principal repère de lisibilité affecté est indirect : la longue plage de tours ~91-180 répond à une boucle du SCRIPT DE TEST (5 messages d'attente fixes, jamais un choix des personnages) — un lecteur qui ne connaît pas cette mécanique de test pourrait interpréter la répétition de thèmes proches sur cette plage comme un défaut des personnages, alors qu'elle reflète surtout un stimulus artificiellement répétitif côté observateur. Ce n'est pas une faute de clarté du JEU lui-même, mais un facteur qui brouille la lecture d'une simulation de test — d'où une note bonne mais pas maximale, et une amélioration déjà actée du script pour les prochaines simulations.</p>
+<h2>Synthèse</h2>
+<p>Une session qui confirme une vraie avancée (le seuil d'attirance de 75% enfin franchi, chose jamais vue en 14 simulations précédentes) mais qui révèle, en creusant le détail, que le CONTENU affiché à ce moment précis ne porte pas encore sur le bon sujet, et que le mécanisme de secours utilisé plus tard pour exprimer ce doute amoureux efface la différence de voix entre Lia et Noé. Le correctif de voix (`lib/dialogue.ts`, séparation complète des pools par personnage, tâche #187) est déjà écrit et testé ; le correctif du moment de déclenchement (attendre un `thought` réellement sur le thème, tâche #188) reste à faire. Les deux devront être confirmés sur une prochaine simulation fraîche avant d'être retirés du carnet de correctifs.</p></main>
+  <div class="divider"></div><footer><p>EL-PROFESSOR — lecture stateless, sans mémoire des simulations précédentes.</p></footer>
+</div>
+</body>
+</html>

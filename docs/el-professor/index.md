@@ -32,6 +32,7 @@ chacun sans mémoire des autres. Le thème le plus faible du lot, systématiquem
 | full_sim14 | 61 | 15 | 11 | 6 | 15 | 14 | partielle (aucun dossier archivé) | [full_sim14.md](full_sim14.md) |
 | full_sim15 | 62 | 15 | 12 | 6 | 15 | 14 | partielle (aucun dossier archivé) | [full_sim15.md](full_sim15.md) |
 | full_sim16 | 58 | 15 | 10 | 6 | 14 | 13 | partielle (aucun dossier généré cette fois, root-cause identifiée — cf. `docs/simulations/index.md`) | [full_sim16.md](full_sim16.md) |
+| full_sim17 | 67 | 16 | 12 | 8 | 16 | 15 | confiante (dossier présent, transcript intégral déjà lu) | [full_sim17.md](full_sim17.md) |
 
 **Moyennes du lot** (recalculées et vérifiées à la main le 2026-09-19, après avoir déjà trouvé une
 erreur d'addition dans `full_sim6.md` — même vigilance appliquée ici) : globale = 63,0/100 ·

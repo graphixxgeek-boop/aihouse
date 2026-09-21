@@ -50,6 +50,14 @@ une charte qui deviendrait fausse dès que la palette change) : construire une v
 unique (couleurs, typographie, tons) déclinée dans les trois surfaces — jamais trois palettes
 maintenues séparément comme aujourd'hui.
 
+**Règle permanente actée le même soir, à ne jamais casser pendant la refonte** : quand la future
+charte graphique changera ces couleurs, `--lia`/`--noe` dans `scripts/html-report.mjs` DOIVENT être
+mis à jour dans la même foulée — jamais laissés à l'ancienne valeur. Vérifié mécaniquement par
+`checkHtmlReportTheme()` (`scripts/doc-report.mjs`), qui compare les deux fichiers réels à chaque
+exécution et signale toute désynchronisation. Même soir, le zoom 150% à l'ouverture (déjà demandé
+pour le transcript) a été généralisé à TOUS les rapports HTML, directement dans `THEME_CSS` —
+détail complet : `docs/regles-de-travail.md` §7.
+
 ## Principe directeur
 
 **Le monde affiché doit toujours être celui qui existe RÉELLEMENT au moment présent** — jamais un

@@ -1,0 +1,92 @@
+Synthèse par famille
+Famille
+KPI global
+🔧 Smart Breaker — performance
+92%
+📈 Smart Breaker — améliorations
+88%
+Robustesse du code
+100%
+Qualité de sortie
+99%
+Cohérence logique
+99%
+Rejouabilité (partiel)
+100%
+Smart Conso
+71%
+Couverture du tableau de bord
+100%
+Aucun point d’attention — tout est vert.
+Smart Breaker — détail des tours réels
+Mesure
+Valeur
+Tours réels (appels Gemini nécessaires)
+328
+Clé principale déjà indisponible au départ du tour
+218 / 328 (66%)
+Tentatives clé × modèle
+358
+— réussies
+328
+— bloquées par quota (429)
+17
+— erreurs transitoires (503)
+13
+— clés invalides (401/403)
+0
+Smart Breaker — capacités construites
+✅ Rotation de clés (round-robin + cooldown différencié par code d’erreur)
+✅ Repli de modèle sur 429/503
+✅ Repli de clé sur 429/503
+✅ Recul exponentiel adaptatif (reset au premier succès)
+✅ Sondage multi-fournisseurs (diagnostic, check-gemini-quota.mjs)
+✅ Correction du biais de sonde secondaire (asKeySignal)
+✅ Compteurs d’efficacité (KPI tours/tentatives, ce rapport)
+⬜ Validation qualité intégrale de GEMINI_FALLBACK_MODELS avant activation en production
+Robustesse du code — détail
+Mesure
+Valeur
+Erreurs tsc (hors vite.config.ts, préexistante)
+0
+Tests check-house.mjs
+153/153 bloc(s)
+Couverture réelle par fonction (AXA-CHECK)
+99%
+Points fragiles ouverts
+8
+lib/lia.ts
+190 lignes
+lib/dialogue.ts
+270 lignes
+Fichiers dans lib/
+25
+Qualité de sortie & cohérence logique — détail
+Mesure
+Valeur
+Tours mesurés
+199
+Interventions anti-écho (repli de secours)
+1
+Troncatures de sécurité — Lia
+0
+Troncatures de sécurité — Noé
+1
+Rejouabilité — détail
+Mesure
+Valeur
+Bonus distincts vus (12 derniers tirages)
+9 / 9
+Limite honnête (rejouabilité) : bonusLog ne garde que les 12 derniers tirages — ce chiffre reflète la diversité RÉCENTE, pas garantie sur toute la session si plus de 12 tirages ont eu lieu.
+Smart Conso — détail
+Mesure
+Valeur
+Conformité API (salves confirmées avant d'agir)
+100% (3/3 salve(s))
+Propositions SMART-CONSO-TOKEN appliquées
+1
+Réduction moyenne mesurée
+13%
+Fraîcheur des schémas connus
+Registre validé pour "claude" (recherche du 2026-09-20) — cohérent avec l'identité déclarée "claude-sonnet-5".
+Limite honnête (Smart Conso) : la conformité API se mesure sur un vrai trafic indépendant (.gemini-key-health.json), mais l'adoption SMART-CONSO-TOKEN ne peut refléter que les consultations RÉELLEMENT faites — une non-consultation ne laisse aucune trace de son propre côté.

@@ -290,6 +290,21 @@ que Doc-Report avait déjà repéré). C'est ce `.html` qui doit être livré en
 jamais le `.txt` brut — le fichier de référence gardé dans `docs/simulations/` reste le `.txt`,
 seule la présentation à la remise change.
 
+**Deux règles permanentes pour TOUS les rapports HTML, pas seulement les transcripts (2026-09-22,
+demande explicite de l'utilisateur : « tous les rapports html doivent être aux couleurs de la charte
+[...] même si celle-ci évolue. et tous les rapports html doivent s'ouvrir avec zoom 150% »).**
+Généralisé le même soir depuis une première demande limitée au seul transcript. Les deux règles
+vivent directement dans `THEME_CSS` (`scripts/html-report.mjs`, partagé par tous les rapports —
+KPI, EL-PROFESSOR, simulations, THE-FINAL-JUDGE...), jamais un traitement spécial par rapport :
+1. **Couleurs** — `--lia`/`--noe` reprennent telles quelles les valeurs réelles de `app/globals.css`
+   (le jeu), jamais une palette de rapport inventée à part. Doit rester synchronisé même quand la
+   future charte graphique de la refonte les changera — vérifié mécaniquement par
+   `checkHtmlReportTheme()` (`scripts/doc-report.mjs`), qui compare les deux fichiers réels à
+   chaque exécution et signale toute désynchronisation par son nom exact.
+2. **Zoom 150% à l'ouverture** — `body { zoom: 1.5; }`, présent dans `THEME_CSS` lui-même, jamais
+   un post-traitement par rapport. Même garde-fou `checkHtmlReportTheme()` que ci-dessus, qui
+   vérifie sa présence à chaque exécution de Doc-Report.
+
 **Conserver les versions précédentes pour comparaison rapide.** *(Ajouté le 2026-09-18, à la
 demande explicite de l'utilisateur, après un besoin réel : comparer deux transcripts de simulation
 pour diagnostiquer une régression sur un passage précis — Point 7 de la relecture du

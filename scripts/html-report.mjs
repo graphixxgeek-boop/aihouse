@@ -102,10 +102,19 @@ export const THEME_CSS = `
     --ok: #6fbf73; --warn: #e0645a;
     /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
        réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
-       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu). */
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
     --lia: #f29bc3; --noe: #55dbe5;
   }
   * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
   body {
     margin: 0; padding: 40px 20px 60px;
     background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);

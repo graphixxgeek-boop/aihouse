@@ -187,6 +187,26 @@ export function findRegistriesMissingDecision(realDocsDirs, registries = REGISTR
   return [...realDocsDirs].filter((d) => !known.has(d) && !NON_REGISTRY_DOCS_DIRS.has(d));
 }
 
+// checkHtmlReportTheme() — garde-fou mécanique pour deux règles permanentes actées le 2026-09-22,
+// demande explicite de l'utilisateur : « tous les rapports html doivent être aux couleurs de la
+// charte (règle) même si celle-ci évolue [...] et tous les rapports html doivent s'ouvrir avec zoom
+// 150% (doc-report) ». Compare le CODE RÉEL de html-report.mjs (THEME_CSS, partagé par tous les
+// rapports) à app/globals.css (la seule source de vérité pour --lia/--noe tant que la vraie charte
+// graphique de la refonte n'existe pas) — jamais une supposition, jamais un second calcul des
+// couleurs. Vérifie aussi la présence du zoom 150%, généralisé le même soir depuis le seul
+// transcript vers TOUS les rapports directement dans THEME_CSS.
+export function checkHtmlReportTheme(globalsCssText, htmlReportSource) {
+  const extractVar = (text, name) => {
+    const m = text.match(new RegExp(`--${name}\\s*:\\s*(#[0-9a-fA-F]{3,8})`));
+    return m ? m[1].toLowerCase() : undefined;
+  };
+  const gameColors = { lia: extractVar(globalsCssText, "lia"), noe: extractVar(globalsCssText, "noe") };
+  const reportColors = { lia: extractVar(htmlReportSource, "lia"), noe: extractVar(htmlReportSource, "noe") };
+  const colorMismatches = ["lia", "noe"].filter((k) => gameColors[k] && reportColors[k] && gameColors[k] !== reportColors[k]);
+  const hasZoom = /body\s*\{[^}]*zoom:\s*1\.5/.test(htmlReportSource);
+  return { gameColors, reportColors, colorMismatches, hasZoom };
+}
+
 // Âge du dernier rapport par registre, en jours (réutilise lastTouchDays() de clean-dirty-old.mjs,
 // jamais réimplémenté ici — même discipline de mutualisation que le reste du réseau §7ter). Prend
 // le fichier index.md du registre comme proxy de fraîcheur ; `undefined` (jamais 0 fabriqué) quand
@@ -256,6 +276,17 @@ function main() {
   if (findBoosterCandidates.length) {
     console.log(`\n🧭 Script(s) assez lourd(s) pour bénéficier de find-booster avant toute lecture intégrale : ${findBoosterCandidates.map((c) => `${c.label} (~${c.tokens} tokens)`).join(", ")}`);
   }
+  try {
+    const theme = checkHtmlReportTheme(readFileSync(join(ROOT, "app/globals.css"), "utf8"), readFileSync(join(ROOT, "scripts/html-report.mjs"), "utf8"));
+    if (theme.colorMismatches.length || !theme.hasZoom) {
+      console.log(
+        `\n⚠️  Rapports HTML (scripts/html-report.mjs) : ` +
+        (theme.colorMismatches.length ? `couleur(s) désynchronisée(s) de app/globals.css (${theme.colorMismatches.join(", ")})` : "") +
+        (theme.colorMismatches.length && !theme.hasZoom ? " ; " : "") +
+        (!theme.hasZoom ? `zoom 150% absent de THEME_CSS` : ""),
+      );
+    }
+  } catch { /* best-effort, jamais bloquant */ }
 
   console.log("\n=== Journaux locaux (jamais committés, état/cache par outil) ===\n");
   for (const j of auditLocalJournals()) {
