@@ -212,6 +212,23 @@ la trace de POURQUOI chaque choix a été fait (Article 13) :
 8. **Frontière avec `kpi-report.mjs`** — `kpi-report.mjs` reste le seul moteur de calcul KPI ;
    CASSANDRA-RH LIT `kpi-historique.csv` produit par ce script, ne le recalcule jamais elle-même.
 
+**Note ajoutée le 2026-09-22 (message envoyé juste avant que l'utilisateur n'aille dormir, en mode
+nocturne autonome, cf. `docs/regles-de-travail.md` §1bis) : « cassandra pourrait decider si
+certains scripts meritent de passer membres certifiés comme on l'a vu ensemble »** — rapproché
+délibérément, jamais fondu silencieusement, de la mission « Promotion de poste » déjà actée
+ci-dessus (section 2) : CASSANDRA-RH propose qu'un script Infrastructure/Utilitaire nommé devienne
+Agent/Membre une fois son éligibilité réelle vérifiée. **Ambiguïté de terminologie à lever
+explicitement avec l'utilisateur, jamais tranchée seule ici** : « Membre certifié » désigne déjà,
+ailleurs dans ce paysage, un badge mécanique précis (`checkAgentOnboarding()`/
+`checkAllAgentBadges()`, lib-shell.mjs — 100% de couverture AXA-CHECK ET zéro trou ARGUS/HARMONIA
+ouvert), calculé automatiquement, jamais un jugement RH. Si l'utilisateur voulait dire « devenir un
+vrai Membre de l'équipe » (la promotion de poste, un jugement RH réel), la mission existe déjà
+telle quelle. S'il voulait dire « CASSANDRA-RH devrait pouvoir décider/influencer le calcul du
+badge de couverture lui-même », ce serait un rôle NOUVEAU, jamais encore acté (le badge reste à ce
+jour un calcul strictement mécanique, sans jugement possible) — à poser comme question de calibrage
+explicite dès que l'utilisateur revient, plutôt que de deviner laquelle des deux lectures est la
+bonne.
+
 **Encore ouvert, à trancher avant la construction réelle du noyau** :
 
 9. **Le "vrai bénéfice" du passage par CASSANDRA-RH à l'intégration, explicité** (2026-09-20T13:32Z,

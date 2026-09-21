@@ -63,6 +63,62 @@ vient d'utiliser et pourquoi (ex. « je lance `check-house.mjs` pour vérifier..
 SMART-CONSO-TOKEN avant... »), pas seulement le résultat obtenu. Une préférence de plaisir de
 lecture, pas une exigence de justification technique.
 
+## 1bis. Mode nocturne autonome — « continuer sans s'arrêter »
+
+*(2026-09-22, demande explicite de l'utilisateur, formulée juste avant d'aller dormir : « ecrit un
+process pour quand je vais dormir [...] mais sans te confier plus d'autonomie de deceision sur les
+sujets : je reste le seul decideur final [...] enregistre ce process pour les prochaines fois ».)*
+
+**Ce que ce mode change — et ce qu'il ne change JAMAIS.** Un changement de RYTHME uniquement :
+l'agent enchaîne les tâches ouvertes sans attendre de retour entre chacune, au lieu du rythme normal
+question/réponse. **Aucune autorité de décision supplémentaire n'est accordée** : sur tout sujet qui
+demanderait normalement calibrage ou tranchage (Article 16 de CLAUDE.md, et ses compléments), le
+même principe s'applique très exactement comme en présence de l'utilisateur — la seule différence
+est que l'agent ne bloque plus en attendant la réponse en direct (impossible, l'utilisateur dort) :
+il consigne la question, prépare des suggestions concrètes pour accélérer la réponse à venir, et
+passe à une autre tâche ouverte plutôt que de rester à l'arrêt. L'utilisateur reste dans tous les
+cas le seul décideur final. La double confirmation de l'Article 14 (tension charte/demande) reste
+elle aussi entièrement en vigueur, sans aucune exception liée à ce mode.
+
+**Déclenchement.** Deux cas, jamais un mode permanent par défaut : (1) l'utilisateur signale
+explicitement qu'il part se coucher ou s'absente pour la nuit ; (2) l'utilisateur demande
+explicitement de passer dans ce mode. Reste actif jusqu'à son retour explicite (nouveau message qui
+n'active pas de nouveau ce mode) ou jusqu'à une limite qu'il a lui-même fixée pour cette session
+(ex. « arrête-toi à la refonte graphique ») — cette limite, quand elle existe, est propre à la
+session qui l'a posée, jamais une règle permanente de ce mode.
+
+**À l'entrée dans ce mode, dans l'ordre :**
+1. **État des lieux des tâches**, sur les 3 échelles de zoom (`node scripts/check-tasks-details.mjs
+   en_cours`, `elargi`, `projet_entier` — cf. Article 13, `docs/referentiel/check-tasks-details.md`)
+   — jamais improvisé de mémoire sur ce qui reste ouvert.
+2. **Lecture des rapports/registres pertinents déjà accumulés** (points-fragiles.md,
+   correctifs-a-revalider.md, verdicts ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD les plus récents) —
+   jamais reparti d'une feuille blanche alors que le réseau d'outils a déjà des signaux disponibles.
+3. **Organisation d'un plan d'exécution** : ordre de priorité des tâches ouvertes, en tenant compte
+   de ce qui est bloqué par une décision de l'utilisateur (mis de côté avec des suggestions prêtes,
+   jamais laissé bloquant) contre ce qui peut avancer sans lui.
+
+**Pendant ce mode :**
+- Une Ronde CIRCLE-TASKS de temps en temps (jamais à chaque tâche, jamais jamais non plus) —
+  fréquence laissée au jugement de l'agent selon le volume réel de travail abattu.
+- Smart Conso API et SMART-CONSO-TOKEN consultés avant toute action coûteuse (agent séparé,
+  simulation, diagnostic à vrais appels API) — Article 22, sans exception liée à l'absence de
+  l'utilisateur ; le budget disponible se surveille, jamais dépensé à l'aveugle sous prétexte que
+  « personne ne regarde ».
+- Si une tâche est bloquée par une vraie question de calibrage : ne jamais la laisser sèche — au
+  minimum consigner la question ET préparer des pistes concrètes qui font gagner du temps à la
+  réponse (options déjà réfléchies, avantages/inconvénients esquissés), puis passer à la tâche
+  ouverte suivante.
+- Si plus aucune tâche ouverte identifiée dans `docs/suivi/` : chercher activement les tâches
+  cachées dans les recoins (référentiels jamais relus depuis longtemps, écarts doc/code, signaux
+  CLEAN-DIRTY-OLD/ALWAYS-NEW-CODE jamais suivis d'effet) avant de conclure qu'il n'y a plus rien à
+  faire.
+
+**En sortie de ce mode (retour de l'utilisateur, ou fin de la fenêtre de travail autonome)** : un
+compte rendu clair de ce qui a été fait, de ce qui reste bloqué avec les suggestions préparées, et
+`docs/suivi/` à jour comme pour toute tâche substantielle — jamais un silence qui laisserait
+l'utilisateur reconstituer seul ce qui s'est passé pendant son absence.
+
 ## 2. Calibrage et questions
 
 Poser des questions avant d'exécuter, plutôt que supposer, est une règle centrale (cf. `CLAUDE.md`

@@ -1,0 +1,72 @@
+Tableau de bord — rapport KPI complet (cf. docs/referentiel/tableau-de-bord.md pour les règles).
+Serveur de dev non joignable sur les ports connus (5173, 3000) — normal si aucune simulation n’est en cours, pas de mesure cette fois.
+
+**🔧 Performance globale du Smart Breaker : N/A (serveur non joignable)**
+**📈 Améliorations réalisées sur l’outil : 88%** (7/8 capacités prévues, implémentées et testées)
+→ Action : Validation qualité intégrale de GEMINI_FALLBACK_MODELS avant activation en production
+
+== Robustesse du code : tsc --noEmit ==
+OK — 0 erreur.
+
+== Robustesse du code : check-house.mjs ==
+OK — 155/155 bloc(s) de test passés, suite verte.
+
+== Robustesse du code : points fragiles ouverts ==
+10 point(s) fragile(s) ouvert(s) — détail dans docs/referentiel/points-fragiles.md.
+
+== Robustesse du code : taille et densité ==
+lib/lia.ts : 190 lignes (prompt géant, à surveiller — pas un défaut en soi).
+lib/dialogue.ts : 317 lignes.
+lib/ : 25 fichiers.
+
+== KPI global — Robustesse du code ==
+100% (moyenne : propreté tsc 100%, suite de tests 100%, couverture réelle par fonction (AXA-CHECK) 99%). Points fragiles et taille de code restent affichés en compteurs bruts ci-dessus (pas de plafond naturel pour un %).
+→ Lecture : code sain, rien à faire ici pour l’instant.
+
+== KPI — Mémoire des personnages (memento weight) ==
+Pas de mesure disponible cette fois (serveur non joignable, ou aucun tour joué).
+
+== Qualité de sortie ==
+Pas de tour enregistré cette session — rien à mesurer (normal si le serveur vient de démarrer ou si aucune simulation n’a encore tourné).
+
+== Cohérence logique ==
+Pas de tour enregistré cette session — rien à mesurer.
+
+== Rejouabilité (signal partiel — diversité récente des bonus) ==
+Pas de mesure disponible cette fois (serveur non joignable, ou aucune session en cours).
+
+== KPI global — Performance runtime ==
+N/A cette fois.
+
+== Smart Conso — détail (Smart Conso API + SMART-CONSO-TOKEN) ==
+Conformité API (salves confirmées avant d'agir) : 100% (3/3 salve(s))
+Adoption SMART-CONSO-TOKEN : 1 proposition(s) réellement appliquée(s), réduction moyenne mesurée 13%.
+Fraîcheur des schémas connus : Registre validé pour "claude" (recherche du 2026-09-20) — cohérent avec l'identité déclarée "claude-sonnet-5".
+
+== KPI global — Smart Conso ==
+71% (moyenne des composantes réellement mesurées cette fois — jamais un chiffre fabriqué pour une composante absente).
+
+== KPI général — Couverture du tableau de bord lui-même (à surveiller en priorité) ==
+33% des 6 familles ont produit une vraie mesure cette exécution (2/6).
+→ Action : une ou plusieurs familles n’ont renvoyé aucune mesure — vérifier si c’est normal (serveur non lancé, aucun tour joué cette session, aucun historique Smart Conso encore accumulé) ou si un branchement du tableau de bord lui-même est cassé, avant de faire confiance à la synthèse ci-dessous.
+
+== Synthèse ==
+🚨 ALERTE TABLEAU DE BORD — couverture du tableau de bord à 33% (2/6 familles mesurées).
+
+== SYNTHÈSE COMPACTE (à relayer telle quelle dans la conversation) ==
+Run : manuel-2026-09-22-ronde
+| Famille | KPI global |
+|---|---|
+| 🔧 Smart Breaker — performance | N/A |
+| 📈 Smart Breaker — améliorations | 88% |
+| Robustesse du code | 100% |
+| Qualité de sortie | N/A |
+| Cohérence logique | N/A |
+| Rejouabilité (partiel) | N/A |
+| Smart Conso | 71% |
+| Couverture du tableau de bord | 33% |
+
+🚨 Points d'attention : couverture du tableau de bord à 33% (2/6 familles mesurées).
+
+Historique complet (toutes les exécutions, tous les chiffres) : docs/referentiel/kpi-historique.csv — à envoyer en pièce jointe, jamais collé dans la conversation.
+Copie de présentation HTML régénérée : .kpi-report-latest.html (jamais committée — cf. .gitignore).
