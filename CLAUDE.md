@@ -870,10 +870,11 @@ motifs de code jamais mélangés), un tag thématique optionnel (indice de rappr
 thèmes HARMONIA, jamais
 une classification certaine), et une recommandation d'usage (`recommendFindBooster()`, poids réel
 en tokens plutôt que nombre de lignes seul — `lib/reference.ts`, 132 lignes mais ~55 500 tokens, en
-est la preuve vivante) — jamais une application automatique. Son voisin `scripts/route-booster.mjs`
-(surnom d'affichage « find-deep-booster », 2026-09-21 — le fichier technique ne change jamais :
-préparation d'un découpage réel, points de coupe candidats + indice de risque lexical) reste lui un
-outil sans blueprint, documenté dans `docs/regles-de-travail.md` — il ne sert que rarement,
+est la preuve vivante) — jamais une application automatique. Son voisin **find-deep-booster**
+(surnom d'affichage, 2026-09-21, anciennement « route-booster » — `scripts/route-booster.mjs`, le
+fichier technique ne change jamais : préparation d'un découpage réel, points de coupe candidats +
+indice de risque lexical) reste lui un outil sans blueprint, documenté dans
+`docs/regles-de-travail.md` — il ne sert que rarement,
 contrairement à find-booster. **`scripts/find-brain.mjs`** (2026-09-21) unifie les deux : rend un
 jugement unique, jamais exclusif, sur lequel des deux (ou les deux) utiliser pour un fichier donné,
 sans rien recalculer lui-même. **`scripts/tool-brain.mjs`** (2026-09-21) généralise find-brain à
@@ -940,12 +941,15 @@ fenêtre mais toujours marqué ⚠️🔴 coûteux, jamais coché par défaut. N
 séparés, même principe que LE-COORDINATEUR ci-dessus — entièrement documenté dans
 `docs/regles-de-travail.md` §7ter.
 
-**Le gabarit HTML de remise de rapports — pas un outil de vigilance, un simple rendu.** `scripts/html-report.mjs` rend
-n'importe quel rapport déjà produit (KPI, EL-PROFESSOR, THE-SCREENER, simulations, THE-FINAL-JUDGE,
-CIRCLE-TASKS...) en page HTML autonome, cohérente visuellement d'un rapport à l'autre — jamais le
-fichier de référence gardé dans `docs/` (qui reste texte/markdown, relu par les outils), seulement
-une copie de présentation générée à la remise. Encore plus mince que LE-COORDINATEUR/CIRCLE-TASKS,
-entièrement documenté dans `docs/regles-de-travail.md` §7ter.
+**doc-HTML (surnom, anciennement « gabarit HTML ») — pas un outil de vigilance, un simple rendu.**
+`scripts/html-report.mjs` rend n'importe quel rapport déjà produit (KPI, EL-PROFESSOR, THE-SCREENER,
+simulations, THE-FINAL-JUDGE, CIRCLE-TASKS...) en page HTML autonome, cohérente visuellement d'un
+rapport à l'autre — jamais le fichier de référence gardé dans `docs/` (qui reste texte/markdown,
+relu par les outils), seulement une copie de présentation générée à la remise. Encore plus mince que
+LE-COORDINATEUR/CIRCLE-TASKS. Importé directement par ~10 scripts (jamais par Doc-Report, qui reste
+un pair au même statut « Utilitaire nommé » — son rôle est d'AUDITER de l'extérieur que doc-HTML est
+bien utilisé où il devrait l'être, jamais de l'importer lui-même). Entièrement documenté dans
+`docs/regles-de-travail.md` §7ter.
 
 **Compteur d'utilisation des outils — le pendant "usage réel" de SMART-CONSO-TOKEN.**
 `scripts/tool-usage.mjs` (tâche #166, 2026-09-21) journalise chaque sollicitation RÉELLE d'un outil
@@ -1163,7 +1167,8 @@ conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs se
   instanciation de find-booster pour ce projet : les 5 motifs d'extraction réels (dont le
   commentaire dense non accolade-préfixé qui a fait passer route.ts de 10 à 125 entrées),
   `recommendFindBooster()` et sa preuve vivante (`lib/reference.ts`), l'obligation écrite d'usage
-  réel, le statut sans blueprint de son voisin route-booster, le registre (`docs/find-booster/`).
+  réel, le statut sans blueprint de son voisin find-deep-booster (anciennement « route-booster »),
+  le registre (`docs/find-booster/`).
   Cf. `docs/find-booster-blueprint.md` pour le principe générique.
 - `docs/referentiel/clone-hunter.md` (2026-09-21) — instanciation de CLONE-HUNTER pour ce projet :
   l'algorithme de diff de blocs (`scripts/clone-hunter.mjs`), l'exclusion vérifiée de

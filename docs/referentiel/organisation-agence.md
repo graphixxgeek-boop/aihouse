@@ -174,9 +174,10 @@ Dette technique et navigation dans du code volumineux.
 promotion actée après vérification qu'il remplit le critère double scan-de-qualité + tourne à chaque
 commit.)*
 - find-booster — index par concept dans un gros fichier déjà structuré
-- route-booster — points de coupe candidats pour découper une fonction géante (Membre certifié
-  classique depuis le 2026-09-21, pas Agent — reste dans ce groupe fonctionnel malgré son statut
-  de documentation différent)
+- find-deep-booster (`scripts/route-booster.mjs`, renommé depuis « route-booster ») — points de
+  coupe candidats pour découper une fonction géante (Membre certifié classique depuis le
+  2026-09-21, pas Agent — reste dans ce groupe fonctionnel malgré son statut de documentation
+  différent)
 - ALWAYS-NEW-CODE — dette d'organisation, l'épreuve de la page blanche rendue concrète (Article 23)
 
 ### La Cour du Roi

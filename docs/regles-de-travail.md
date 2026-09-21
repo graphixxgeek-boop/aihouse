@@ -561,7 +561,7 @@ m'aider à clarifier ces distinctions entre scripts, employés de la team, scrip
   d'accueil ci-dessous** : ce qui justifie réellement ce statut n'est jamais l'ancienneté ni la
   taille du code, ni même la présence d'un blueprint à elle seule, mais l'existence d'un DOMAINE DE
   JUGEMENT propre au projet, documenté par au moins l'instanciation + le registre.
-- **Utilitaire nommé** (LE-COORDINATEUR, CIRCLE-TASKS, le gabarit HTML, CLAUDE.MD.SPY) : a un nom
+- **Utilitaire nommé** (doc-HTML, CHARTER-SPY, tool-usage.mjs, Doc-Report, find-brain) : a un nom
   pour qu'on puisse s'y référer facilement, mais aucune connaissance propre au projet à documenter
   à part — sa seule valeur est d'appeler/agréger/mettre en forme ce que les Agents disent déjà.
   Jamais de blueprint, jamais de registre séparé.
@@ -570,6 +570,18 @@ m'aider à clarifier ces distinctions entre scripts, employés de la team, scrip
   mécaniques qui FONT tourner les Agents, jamais une identité à part. Un Agent peut être implémenté
   par plusieurs fichiers d'infrastructure (ex. Smart Breaker = 4 fichiers) sans que chacun d'eux
   ait besoin de son propre statut.
+
+**Lecture groupée demandée par l'utilisateur (2026-09-21) : « la Plomberie » vs les Utilitaires
+nommés proprement dits.** Ces deux statuts (Utilitaire nommé, Infrastructure) restent DEUX statuts
+Axe A distincts, jamais fusionnés dans le code ni dans `checkAgentOnboarding()` — mais pour la
+LECTURE humaine de l'organigramme (schéma, futurs documents d'organisation), l'utilisateur a
+explicitement demandé de les regrouper visuellement sous deux sous-catégories nommées, jamais
+mélangées en une seule liste indifférenciée comme un premier schéma l'a fait par erreur :
+- **La Plomberie** (= Infrastructure ci-dessus) — `check-house.mjs`, `check-spirit.mjs`/
+  `check-profile.mjs`, `lib-shell.mjs`, `check-argus.mjs`, `check-harmonia.mjs` : jamais nommée
+  individuellement dans le catalogue, fait tourner tout le reste.
+- **Utilitaires nommés** (au sens strict) — doc-HTML, CHARTER-SPY, tool-usage.mjs, Doc-Report,
+  find-brain : un nom réel, une identité propre, mais aucune connaissance propre au projet.
 
 **Un script d'infrastructure ou un utilitaire nommé PEUT être sollicité par LE-COORDINATEUR
 librement, sans avoir le statut Agent** — le statut Agent est une question de DOCUMENTATION/
@@ -598,7 +610,7 @@ bloqué par un statut, seulement par l'existence réelle d'une fonction ou d'un 
 | Smart Breaker (`check-gemini-quota.mjs` + `gemini-key-health.mjs` + `api-providers.mjs` + `lib/gemini-keys.ts`) | Agent (structure particulière : pas de dossier `docs/` dédié, son « registre » est le fichier local `.gemini-key-health.json`, jamais committé) | — (jamais vérifié mécaniquement, sa structure hors norme n'a pas de chemin standard à contrôler) | blocages de quota/clé Gemini, portée PRODUCTION | gratuit à diagnostiquer | à la demande, ou automatique en production (repli) |
 | SMART-CONSO-TOKEN | Agent | 🎖️ | rythme de consommation de TOKENS de l'agent (Agent séparé, lecture exhaustive, poids d'un document toujours chargé) ; peut aussi scanner et proposer des réductions | gratuit à consulter | avant tout appel à un agent séparé ou tout raisonnement coûteux — obligation écrite dans la charte, jamais un garde-fou vérifiable après coup |
 | CIRCLE-TASKS (« Ronde périodique ») | Membre certifié (classique) | 🎖️ | 15 tâches périodiques gratuites mal automatisées, regroupées par thème (profil utilisateur, relecture des référentiels, KPI, tâche ouverte la plus ancienne — Suivi & référentiels ; rapport KPI, scans Smart Conso API/SMART-CONSO-TOKEN — KPI & scans ; zone ALWAYS-NEW-CODE la plus négligée, dernier passage CLEAN-DIRTY-OLD, câblage HTML des rapports, poids en tokens de CLAUDE.md — Qualité du code ; garde-fou profil-utilisateur réellement exécuté, synthèse LE-COORDINATEUR réellement exécutée — Passages réels (smoke run), ajouté le 2026-09-21 ; photo de la dream team, THE-SCREENER — Qualité & fun) — regroupées dans une seule fenêtre à cocher ; THE-FINAL-JUDGE et THE-DEEP-READER restent visibles dans la même fenêtre (thème Audit lourd) mais toujours marqués ⚠️🔴 coûteux, jamais cochés par défaut | gratuit (sauf si THE-FINAL-JUDGE/THE-DEEP-READER est explicitement coché) | à la demande de l'utilisateur ou de l'agent ; rappel proactif automatique dans le crochet post-commit après 10 commits sans passage |
-| Gabarit HTML de remise de rapports (`scripts/html-report.mjs`) | Utilitaire nommé | — | mise en page soignée d'un rapport déjà produit (KPI, EL-PROFESSOR, THE-SCREENER, simulations, THE-FINAL-JUDGE...) — jamais le contenu métier lui-même | gratuit | importé et appelé par les autres outils au moment de produire une copie de présentation — jamais un outil qu'on invoque seul |
+| doc-HTML (surnom, anciennement « gabarit HTML » — `scripts/html-report.mjs`) | Utilitaire nommé | — | mise en page soignée d'un rapport déjà produit (KPI, EL-PROFESSOR, THE-SCREENER, simulations, THE-FINAL-JUDGE...) — jamais le contenu métier lui-même. Importé directement par ~10 scripts (cassandra-rh, check-tasks-details, circle-tasks, el-professor, kpi-report, le-coordinateur, le-regisseur, the-final-judge, the-screener-capture) — jamais un import de Doc-Report, qui reste un PAIR au même statut, pas un supérieur | gratuit | importé et appelé par les autres outils au moment de produire une copie de présentation — jamais un outil qu'on invoque seul |
 | check-tasks-details | Agent | 🎖️ | état des lieux des tâches à la demande (zoom en cours/élargi/projet entier × forme liste/arborescence), rapport HTML, lecture seule de `docs/suivi/`, vérification croisée automatique (régression/stagnation) contre son propre historique | gratuit | sur demande explicite (moi ou l'utilisateur), gabarit de questions dédié (cf. `docs/referentiel/check-tasks-details.md`) |
 | CHARTER-SPY (surnom, anciennement CLAUDE.MD.SPY — extension de SMART-CONSO-TOKEN) | Utilitaire nommé | — | classe chaque Article/règle de CLAUDE.md ET de `docs/regles-de-travail.md` par sensibilité/importance, détecte les redondances possibles entre règles — périmètre élargi le 2026-09-21 (demande explicite de l'utilisateur, en même temps que le plan d'action route.ts/check-house.mjs/regles-de-travail.md) | gratuit | sur demande, avant/pendant une passe d'allègement de l'un ou l'autre document |
 | Compteur d'utilisation des outils (`scripts/tool-usage.mjs`) | Utilitaire nommé | — | journal permanent des sollicitations réelles d'un outil (origine, taux de trouvaille) — nourrit Doc-Report et la future CASSANDRA-RH | gratuit | l'agent l'appelle lui-même à chaque sollicitation réelle d'un outil (discipline auto-déclarée, aucune preuve mécanique externe) |
@@ -606,7 +618,7 @@ bloqué par un statut, seulement par l'existence réelle d'une fonction ou d'un 
 | THE-KING | Agent | 🎖️ | rappelle de consulter `docs/philosophie-et-politique.md` avant une décision à haut niveau (6 catégories), fraîcheur du document, digest de son évolution, tension possible entre deux principes | gratuit | avant une décision touchant l'une des 6 catégories (moi, l'utilisateur, ou un autre outil) |
 | INES-official | Agent | 🎖️ | aplatit le dépôt en une édition consolidée et annotée (code seul ou code + docs), table des matières, datage/versionnage — jamais une réécriture réelle du code | gratuit | proposé périodiquement via CIRCLE-TASKS, ou sur demande explicite |
 | memory-audit (anciennement "MEMENTO", nom d'ensemble retiré le 2026-09-21) | Agent | 🎖️ | seul outil ciblant en SUJET un Personnage (Lia/Noé) tout en restant un vrai Membre de l'équipe, catégorie "audit de simulation" aux côtés d'EL-PROFESSOR : cohérence mécanique de la mémoire persistée (ordre chronologique, remise à zéro suspecte, régression de gravité). Son voisin "memento weight" (Moteur du jeu, `lib/memento-weight.ts` + `scripts/memento-weight.mjs`, jamais un Membre de l'équipe) mesure séparément le poids réel du contexte envoyé à Gemini par tour (observation pure, jamais un changement de prompt) | gratuit — mécanique, jamais un second appel Gemini | sur demande explicite après une simulation ; hors CIRCLE-TASKS (exclusion documentée, cette vérification n'a de sens que sur une partie réelle) |
-| route-booster (`scripts/route-booster.mjs`, surnom d'affichage « find-deep-booster ») | Membre certifié (classique) | 🎖️ | points de coupe candidats + indice de risque lexical pour découper une fonction géante (conçu pour `app/api/lia/route.ts`, 24 candidats réels détectés) — jamais une réécriture automatique, guide une extraction manuelle testée à chaque étape | gratuit | à la demande, avant/pendant un chantier de découpage de fichier |
+| find-deep-booster (`scripts/route-booster.mjs`, nom de fichier technique inchangé) | Membre certifié (classique) | 🎖️ | points de coupe candidats + indice de risque lexical pour découper une fonction géante (conçu pour `app/api/lia/route.ts`, 24 candidats réels détectés) — jamais une réécriture automatique, guide une extraction manuelle testée à chaque étape | gratuit | à la demande, avant/pendant un chantier de découpage de fichier |
 | find-brain (`scripts/find-brain.mjs`) | Utilitaire nommé | — | cerveau unifié : recommande find-booster et/ou find-deep-booster pour un fichier donné (jamais un choix exclusif), réutilise leurs fonctions telles quelles sans rien recalculer | gratuit | à la demande (`node scripts/find-brain.mjs <fichier>`) et automatiquement à chaque commit (rappel post-commit) |
 | tool-brain (`scripts/tool-brain.mjs`) | Membre certifié (classique) | 🎖️ | cerveau élargi des rappels d'outils : généralise find-brain à TOUT le catalogue PRESTATIONS de LE-COORDINATEUR (description de tâche et/ou fichier ciblé) ; rappel post-commit centralisé (find-booster + find-deep-booster + menu PRESTATIONS en un seul bloc) ; rapport KPI (outils jamais sollicités, auto-diagnostic borné à son propre périmètre) | gratuit | à la demande (`node scripts/tool-brain.mjs "<tâche>" [--file <chemin>]` / `rapport`), automatiquement à chaque commit (rappel), et à chaque Ronde CIRCLE-TASKS (rapport) |
 | find-booster (`scripts/find-booster.mjs`, anciennement "route-find-booster") | Agent | 🎖️ | index par concept de 4 motifs réels (fonctions nommées, blocs anonymes commentés, entrées de tableau titrées, titres Markdown) — sert route.ts, check-house.mjs, lib/reference.ts et regles-de-travail.md, vérifié live sur les 4 ; `recommendFindBooster()` détecte le poids réel d'un fichier (réutilise SMART-CONSO-TOKEN, jamais le nombre de lignes seul) | gratuit | à la demande, sur (presque) tout fichier du dépôt — promu Membre de l'équipe complet le 2026-09-21 après usage réel concluant, cf. `docs/referentiel/find-booster.md` |
@@ -1604,13 +1616,14 @@ complète du vrai fichier local (même discipline que `tool-usage.mjs`), y compr
 démarrage à froid (repli sur la durée du mode quand aucune Ronde n'a jamais été journalisée) et la
 fermeture propre de session (aucun reliquat d'une nuit précédente).
 
-### Le gabarit HTML de remise de rapports — un outil sans blueprint, encore plus mince que CIRCLE-TASKS
+### doc-HTML (surnom, anciennement « gabarit HTML ») — un outil sans blueprint, encore plus mince que CIRCLE-TASKS
 
 *(Ajouté le 2026-09-20, demande explicite de l'utilisateur après avoir reçu la « photo de la dream
 team » (récap des outils nommés, cf. l'item `dream-team-photo` de CIRCLE-TASKS ci-dessus) en HTML
 soigné plutôt qu'en texte brut : « tu vas transformer tous les rapports en fichiers HTML avec une
 mise en page améliorée [...] petit bond en avant du projet pour la partie remise de rapport au
-dev ».)*
+dev ». Surnom « doc-HTML » adopté le 2026-09-21, demande explicite de l'utilisateur, même patron que
+MEMENTO/find-deep-booster — `scripts/html-report.mjs` ne change jamais.)*
 
 `scripts/html-report.mjs` exporte une fonction pure, `renderHtmlReport({ title, subtitle, dateLabel,
 blocks, footer })`, qui rend une page HTML autonome (thème sombre partagé, zéro dépendance externe)
@@ -1644,7 +1657,7 @@ le vocabulaire de blocs, jamais en forkant une page à part. Tout le texte passe
 (échappement systématique) — un rapport peut légitimement contenir des caractères qui casseraient du
 HTML brut, jamais une raison d'injecter du HTML non échappé.
 
-### route-booster (surnom d'affichage « find-deep-booster ») — outil sans blueprint
+### find-deep-booster (surnom d'affichage, anciennement « route-booster » — le fichier `scripts/route-booster.mjs` ne change jamais) — outil sans blueprint
 
 *(Surnom ajouté le 2026-09-21, demande explicite de l'utilisateur : « renomme (surnom) le script
 "route-booster" par "find-deep-booster" ». Même patron que MEMENTO/Smart Conso API (tâche #172) —
