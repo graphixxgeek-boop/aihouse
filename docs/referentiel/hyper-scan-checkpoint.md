@@ -58,6 +58,32 @@ final.
 - **Relecture de la charte toujours complète**, même en version légère (décision explicite de
   l'utilisateur : jamais seulement les sections qu'on croit concernées).
 
+## Discipline d'exécution vérifiable — circle-process-guardian (2026-09-22)
+
+*(Demande explicite de l'utilisateur : « l'outil process.circle doit aussi l'avoir en tete, on parle
+de discipline d'execution, il est la pour ca ».)* HYPER-SCAN-CHECKPOINT n'est pas un item de
+`CIRCLE_ITEMS` (cf. `CIRCLE_EXCLUDED_REGISTRIES` : « outil exceptionnel, jamais coché par défaut ni
+régulier »), mais `scripts/circle-process-guardian.mjs::verifyHyperScanProcess({...})` applique la
+même discipline de vérification honnête à SES PROPRES garde-fous : relecture complète de CLAUDE.md
+(exigée même en version légère), consultation de Smart Conso API et de SMART-CONSO-TOKEN avant une
+version complète, version légère toujours lancée en premier, plafond non négociable de 3 tentatives
+de mini-simulation, double perspective réellement séparée, et une ligne bien ajoutée à
+`docs/hyper-scan-checkpoint/index.md` après la checklist qualitative. Même portée honnête que le
+reste de ce module : aucun de ces faits n'est observable depuis le disque seul — l'agent qui pilote
+doit les fournir explicitement à chaque appel, jamais devinés.
+
+## SMART-CONSO-TOKEN pioche désormais dans ce registre (2026-09-22)
+
+*(Demande explicite : « l'equipe smart conso pouvait aussi venir piocher de la donnée ».)* Symétrique
+à la consultation déjà établie dans l'autre sens (HYPER-SCAN-CHECKPOINT consulte Smart Conso
+API/SMART-CONSO-TOKEN avant une version complète, cf. section ci-dessus « Version complète ») :
+`runNetworkCheck()` (`scripts/le-coordinateur.mjs`) lit désormais aussi `docs/hyper-scan-checkpoint/index.md`,
+filtré à ses seules lignes "complète" (`filterIndexRowsByVersion()`, `scripts/smart-conso-token.mjs`
+— une version légère n'appelle jamais Smart Conso, jamais un faux signal), puis réutilise
+`findJudgeSpawnsWithoutConsultation()` telle quelle (déjà câblée pour THE-FINAL-JUDGE/THE-DEEP-READER)
+pour signaler tout passage complet réellement archivé sans consultation SMART-CONSO-TOKEN confirmée
+à proximité. Jamais un second calcul de date, seulement une réduction du texte en amont.
+
 ## Premier passage réel — pas encore effectué
 
 La partie mécanique du script a été validée (exécutions de test lors de la construction, jamais

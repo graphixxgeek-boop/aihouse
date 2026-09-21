@@ -452,3 +452,25 @@ réel de `verifyRondeProcess()` dans le déroulement effectif d'une Ronde CIRCLE
 l'outil existe et fonctionne mais n'est encore appelé par aucun script automatique — c'est
 l'agent qui pilote qui doit l'invoquer lui-même, à la fin de chaque Ronde, en lui passant les
 faits réels de la Ronde qu'il vient de mener).
+
+=====================================================================
+PARTIE 9 — MISE À JOUR DU 2026-09-22 (SUITE) : deux ajouts supplémentaires le même soir
+=====================================================================
+1. **`verifyHyperScanProcess({...})`** — étend la même discipline honnête à HYPER-SCAN-CHECKPOINT
+   (jamais un item de CIRCLE_ITEMS, mais un protocole à plusieurs étapes qui mérite la même
+   vérification) : relecture complète de CLAUDE.md (exigée même en version légère), consultation
+   de Smart Conso API/SMART-CONSO-TOKEN avant une version complète, version légère toujours lancée
+   en premier, plafond non négociable de 3 tentatives, double perspective réellement séparée, et
+   une ligne bien ajoutée à `docs/hyper-scan-checkpoint/index.md`. Né d'une lecture erronée du point
+   3 d'un message combiné de l'utilisateur (compris à tort comme visant HYPER-SCAN-CHECKPOINT, sujet
+   de la question juste avant) — corrigée le même soir (cf. point 2 ci-dessous), mais le travail
+   restait utile : question de calibrage posée explicitement (garder ou retirer), réponse : garder.
+2. **`verifyDoubleCommunication(entries)`** — le VRAI point 3 : « Double communication (alerte
+   console + rapport) ». Par construction, `recordCircleItemReport()` écrit déjà exactement le
+   texte que chaque item annonce à l'oral (chaque `execute` de CIRCLE_ITEMS le dit littéralement) —
+   donc rien à corriger dans le code des items eux-mêmes. Le vrai point de vigilance est la
+   discipline d'exécution de l'agent qui pilote une vraie Ronde. Documenté comme rappel permanent en
+   commentaire dans `circle-process-guardian.mjs` (le fichier n'a aucune autre mémoire persistante),
+   ET rendu réellement vérifiable : `verifyDoubleCommunication()` compare mécaniquement le texte
+   annoncé et le texte réellement écrit, dès que l'agent fournit les deux — jamais un simple rappel
+   sans prise sur un vrai manquement.

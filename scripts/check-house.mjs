@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 257'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 258'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3170,7 +3170,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // de portée de la suite de tests.
   const fakeShImpl = (cmd) => (cmd.includes('check-house') ? 'OK — suite verte.' : '');
   const networkResult = runNetworkCheck({ shImpl: fakeShImpl });
-  assert.equal(networkResult.rows.length, 12, 'runNetworkCheck() must genuinely produce all 12 rows of the real network synthesis (8 original + the 2026-09-21 findJudgeSpawnsWithoutConsultation() rows for THE-FINAL-JUDGE/THE-DEEP-READER + the 2026-09-21 évolutivité audit AGENT_SCRIPT_FILES row + the 2026-09-21 Doc-Report findOrphanReportFiles() row), never crash partway through nor silently drop one');
+  assert.equal(networkResult.rows.length, 13, 'runNetworkCheck() must genuinely produce all 13 rows of the real network synthesis (8 original + the 2026-09-21 findJudgeSpawnsWithoutConsultation() rows for THE-FINAL-JUDGE/THE-DEEP-READER + the 2026-09-21 évolutivité audit AGENT_SCRIPT_FILES row + the 2026-09-21 Doc-Report findOrphanReportFiles() row + the 2026-09-22 HYPER-SCAN-CHECKPOINT row), never crash partway through nor silently drop one');
   assert.ok(networkResult.rows.every((r) => typeof r.name === 'string' && typeof r.result === 'string' && r.result.length > 0), 'every row must carry a real name and a real, non-empty result string — never an undefined value leaking from a broken sub-computation');
   assert.ok(networkResult.rows.some((r) => r.name.includes('SMART-CONSO-TOKEN')), 'the SMART-CONSO-TOKEN rhythm row specifically (the exact one that crashed tonight) must be genuinely present and computed, not skipped');
   // Tâche #137 (2026-09-21, question directe de l'utilisateur sur les priorités de scan de l'équipe
@@ -3181,7 +3181,8 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // docs/suivi/relectures-lourdes/index.md), jamais une fixture synthétique.
   assert.ok(networkResult.rows.some((r) => r.name.includes('THE-FINAL-JUDGE') && r.name.includes('SMART-CONSO-TOKEN')), 'a real row must now check real THE-FINAL-JUDGE spawns (docs/the-final-judge/index.md) against confirmed SMART-CONSO-TOKEN consultations, closing the exact real gap found while answering the "core team priority" question tonight');
   assert.ok(networkResult.rows.some((r) => r.name.includes('THE-DEEP-READER') && r.name.includes('SMART-CONSO-TOKEN')), 'the same real check must also run for THE-DEEP-READER (docs/suivi/relectures-lourdes/index.md), its cousin, never checked in isolation only');
-  console.log('Passed: runNetworkCheck() runs end-to-end against the real repository state (with only the two subprocess calls stubbed) and produces all 10 expected rows with real, non-empty results — closing the exact real gap (a ReferenceError in the SMART-CONSO-TOKEN row, never caught because this integration point had no test at all) found by manually running node scripts/le-coordinateur.mjs tonight, plus (2026-09-21) the newly-wired real THE-FINAL-JUDGE/THE-DEEP-READER spawn-without-consultation checks.');
+  assert.ok(networkResult.rows.some((r) => r.name.includes('HYPER-SCAN-CHECKPOINT') && r.name.includes('SMART-CONSO-TOKEN')), '2026-09-22: the same real authority must extend to HYPER-SCAN-CHECKPOINT (docs/hyper-scan-checkpoint/index.md), filtered to its own complete-version passages only, closing the "Smart Conso team could also draw data from it" request');
+  console.log('Passed: runNetworkCheck() runs end-to-end against the real repository state (with only the two subprocess calls stubbed) and produces all 13 expected rows with real, non-empty results — closing the exact real gap (a ReferenceError in the SMART-CONSO-TOKEN row, never caught because this integration point had no test at all) found by manually running node scripts/le-coordinateur.mjs tonight, plus (2026-09-21) the newly-wired real THE-FINAL-JUDGE/THE-DEEP-READER spawn-without-consultation checks, plus (2026-09-22) the same authority extended to HYPER-SCAN-CHECKPOINT.');
   // Menu des prestations (2026-09-20, demande explicite de l'utilisateur : « le coordinateur est
   // capable de proposer de nouvelles prestations [...] ce menu est très utile pour toi »). Vérifie
   // que le menu réel (celui affiché à chaque passage automatique) est bien formé et que chaque
@@ -4685,7 +4686,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const {
     estimateTokens, measureClaudeMdWeight, checkKnowledgeFreshness, countRecentActions, assess,
     scanDocumentWeight, scanScope, SCOPE_LEVELS, computeAdoptionKpi, KNOWN_COSTLY_PATTERNS, KNOWLEDGE_PROVENANCE,
-    formatScanReport, countDatedNarrativeMarkers, findJudgeSpawnsWithoutConsultation, AUTOMATION_TOKEN_NUANCE,
+    formatScanReport, countDatedNarrativeMarkers, findJudgeSpawnsWithoutConsultation, filterIndexRowsByVersion, AUTOMATION_TOKEN_NUANCE,
     listDatedNarrativeMarkers, checkToolConnections, EXPECTED_CONNECTIONS, trackWeightTrend,
     classifyConsumption, computeInvestmentRatio, diagnoseAdviceAccuracy, parseOutcomeArgs,
     extractNormativeMarkers, diffNormativeMarkers,
@@ -4811,6 +4812,17 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const missing = findJudgeSpawnsWithoutConsultation(judgeIndex, historyWithOneSpawn);
   assert.deepEqual(missing, ['2026-09-25'], 'findJudgeSpawnsWithoutConsultation() must flag exactly the real archived THE-FINAL-JUDGE passage date with no matching confirmed agent-spawn consultation nearby, while never flagging the date that does have one — this is real, verifiable authority over another tool, since a judge report can only exist if a spawn genuinely happened');
   assert.deepEqual(findJudgeSpawnsWithoutConsultation('', { actions: [] }), [], 'an empty or missing index must report zero missing consultations, never crash or fabricate a finding from no data');
+
+  // filterIndexRowsByVersion() (2026-09-22, extension demandée pour que SMART-CONSO-TOKEN puisse
+  // aussi piocher de la donnée dans le registre HYPER-SCAN-CHECKPOINT, qui archive aussi des
+  // passages légers ne nécessitant jamais de consultation).
+  const hyperScanIndexFixture = '| Date | Commit | Version | Trouvailles |\n|---|---|---|---|\n| 2026-09-20 | a | légère | 0 |\n| 2026-09-25 | b | complète | 2 |';
+  const filteredComplete = filterIndexRowsByVersion(hyperScanIndexFixture, /complète/i);
+  assert.ok(filteredComplete.includes('2026-09-25') && !filteredComplete.includes('2026-09-20'), 'filterIndexRowsByVersion() must keep only the dated rows matching the given version pattern, dropping the light-version row that never required any consultation');
+  assert.ok(filteredComplete.includes('| Date | Commit | Version | Trouvailles |'), 'the header row (never matching the date pattern) must always survive the filter unchanged, so the filtered text stays a valid table');
+  const hyperScanMissingFixture = findJudgeSpawnsWithoutConsultation(filteredComplete, { actions: [] });
+  assert.deepEqual(hyperScanMissingFixture, ['2026-09-25'], 'once filtered to complete-version rows only, the existing findJudgeSpawnsWithoutConsultation() must apply unchanged and flag the real unconsulted complete passage — no second date-matching logic duplicated for this new caller');
+  assert.deepEqual(filterIndexRowsByVersion('', /complète/i), '', 'an empty index must filter to an empty string, never crash');
 
   // Test de connexion (2026-09-20, demande explicite : « smart conso token a un test de connexion
   // dédié à tous les autres outils, ainsi qu'à toi »).
@@ -6236,7 +6248,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // Ronde CIRCLE-TASKS a bien été suivi (docs/circle-process-detail.txt Parties 5 et 7). Testé avec
   // toutes les implémentations injectées — jamais un vrai `git rev-list`/scan disque dans ce test,
   // qui serait lent et dépendant de l'état réel du dépôt au moment du test.
-  const { hasFreshReportFile, verifyRondeProcess } = await import('../scripts/circle-process-guardian.mjs');
+  const { hasFreshReportFile, verifyRondeProcess, verifyHyperScanProcess, verifyDoubleCommunication } = await import('../scripts/circle-process-guardian.mjs');
 
   const fakeFolders = { 'argus-scan': 'docs/argus', 'cassandra-rh-signal': undefined };
   assert.equal(hasFreshReportFile('cassandra-rh-signal', { folders: fakeFolders }), undefined, 'an item with no known report folder (cassandra-rh-signal never uses this mechanism) must report an honest undefined, never a guessed true/false');
@@ -6372,5 +6384,50 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   });
   assert.deepEqual(cleanResult, { ok: true, findings: [] }, 'a Ronde where every real fact checks out must report a genuinely clean ok:true with zero fabricated findings');
 
-  console.log('Passed: circle-process-guardian (2026-09-22) verifies the full CIRCLE-TASKS Ronde process mechanically wherever the facts are observable from disk (fresh report artifacts via the same circle-signal-*/snapshot-* filenames already used by recordCircleItemReport()/recordSnapshotIfChanged(), the record-run commit-count drift, orphan reports and registries missing from CIRCLE_ITEMS — both relayed from the already-existing functions rather than recomputed), honestly refuses to guess conversation-only facts (AUTO/PRIME/GOAT asked, items actually checked vs executed, the Étape 5 sequencing and forced-questions count) when they are not supplied, correctly exempts a genuine night-autonomous run from the AUTO/PRIME/GOAT requirement, enforces the 5-10 forced-choice-question range scaled to the real number of problems found without ever fabricating a question when zero problems exist, and reports a fully clean ok:true only when every one of these real facts checks out.');
+  // verifyHyperScanProcess() (2026-09-22, demande explicite : « l'outil process.circle doit aussi
+  // l'avoir en tete, on parle de discipline d'execution, il est la pour ca »). HYPER-SCAN-CHECKPOINT
+  // n'est jamais un item CIRCLE_ITEMS, mais son propre protocole (docs/referentiel/hyper-scan-checkpoint.md)
+  // reçoit la même discipline de vérification honnête que verifyRondeProcess() ci-dessus.
+  const hyperScanBare = verifyHyperScanProcess({});
+  assert.ok(!hyperScanBare.ok && hyperScanBare.findings.some((f) => f.check === 'claude-md-reread'), 'a call with no facts at all must never assume the mandatory full CLAUDE.md reread happened — it is required even for the light version and must be flagged absent by default');
+
+  const hyperScanLightClean = verifyHyperScanProcess({ version: 'légère', claudeMdFullyReread: true });
+  assert.deepEqual(hyperScanLightClean, { ok: true, findings: [] }, 'a genuinely clean light-version pass (full CLAUDE.md reread confirmed) must report ok:true — the heavy-version-only checks (Smart Conso consultation, iteration cap, double perspective) must never fire for a light pass');
+
+  const hyperScanHeavyBare = verifyHyperScanProcess({ version: 'complète', claudeMdFullyReread: true });
+  assert.ok(hyperScanHeavyBare.findings.some((f) => f.check === 'smart-conso-api'), 'a heavy pass with no Smart Conso API consultation confirmed must be flagged (Article 22)');
+  assert.ok(hyperScanHeavyBare.findings.some((f) => f.check === 'smart-conso-token'), 'a heavy pass with no SMART-CONSO-TOKEN consultation confirmed must be flagged (the double perspective is an agent_subagent_spawn, the most costly schema of that registry)');
+  assert.ok(hyperScanHeavyBare.findings.some((f) => f.check === 'light-first'), 'a heavy pass must always be preceded by the light version — not confirmed here, must be flagged');
+  assert.ok(hyperScanHeavyBare.findings.some((f) => f.check === 'double-perspective'), 'a heavy pass without a genuinely separate second agent confirmed must be flagged — the distinguishing feature of this pattern, never optional');
+
+  const hyperScanIterationOverCap = verifyHyperScanProcess({
+    version: 'complète', claudeMdFullyReread: true, smartConsoApiConsulted: true, smartConsoTokenConsulted: true,
+    lightVersionRanFirst: true, doublePerspectiveUsed: true, iterationsUsed: 4,
+  });
+  assert.ok(hyperScanIterationOverCap.findings.some((f) => f.check === 'iteration-cap' && f.message.includes('4')), 'exceeding the non-negotiable 3-attempt mini-simulation cap must be flagged by its real count, never silently allowed to keep retrying');
+
+  const hyperScanHeavyClean = verifyHyperScanProcess({
+    version: 'complète', claudeMdFullyReread: true, smartConsoApiConsulted: true, smartConsoTokenConsulted: true,
+    lightVersionRanFirst: true, doublePerspectiveUsed: true, iterationsUsed: 2, indexEntryRecorded: true,
+  });
+  assert.deepEqual(hyperScanHeavyClean, { ok: true, findings: [] }, 'a genuinely clean heavy pass with every real garde-fou confirmed must report ok:true');
+
+  const hyperScanMissingIndexEntry = verifyHyperScanProcess({ version: 'légère', claudeMdFullyReread: true, indexEntryRecorded: false });
+  assert.ok(hyperScanMissingIndexEntry.findings.some((f) => f.check === 'index-entry'), 'a pass that never got a real line added to docs/hyper-scan-checkpoint/index.md must be flagged — the next pass\'s "since which commit" memory would otherwise be silently wrong');
+
+  // verifyDoubleCommunication() (2026-09-22, le vrai point 3 : « Double communication (alerte
+  // console + rapport) »). Rend vérifiable, dès que les deux textes sont fournis, la discipline déjà
+  // garantie par construction dans le code des items eux-mêmes.
+  const matchingComms = verifyDoubleCommunication([{ itemId: 'argus-scan', announcedText: 'RAS ce soir.', recordedText: '  RAS ce soir.  ' }]);
+  assert.deepEqual(matchingComms, { ok: true, findings: [] }, 'identical text on both channels (ignoring only leading/trailing whitespace) must report a clean ok:true, never a false positive over a trivial formatting difference');
+
+  const mismatchedComms = verifyDoubleCommunication([{ itemId: 'argus-scan', announcedText: '2 trous trouvés.', recordedText: 'RAS.' }]);
+  assert.ok(!mismatchedComms.ok && mismatchedComms.findings.some((f) => f.check === 'double-communication' && f.message.includes('argus-scan')), 'a genuine divergence in substance between what was announced and what was actually recorded must be flagged by the real item id — exactly the discipline breach this check exists to catch');
+
+  const missingCommsTexts = verifyDoubleCommunication([{ itemId: 'harmonia-scan', announcedText: 'RAS.', recordedText: undefined }]);
+  assert.ok(missingCommsTexts.findings.some((f) => f.check === 'double-communication' && f.message.includes('n\'ont pas été fournis')), 'when either text is simply not supplied at all, this must be flagged as an impossible comparison, never silently assumed to match');
+
+  assert.deepEqual(verifyDoubleCommunication([]), { ok: true, findings: [] }, 'an empty list (no items to cross-check this run) must report a clean ok:true, never a fabricated finding from no data');
+
+  console.log('Passed: circle-process-guardian (2026-09-22) verifies the full CIRCLE-TASKS Ronde process mechanically wherever the facts are observable from disk (fresh report artifacts via the same circle-signal-*/snapshot-* filenames already used by recordCircleItemReport()/recordSnapshotIfChanged(), the record-run commit-count drift, orphan reports and registries missing from CIRCLE_ITEMS — both relayed from the already-existing functions rather than recomputed), honestly refuses to guess conversation-only facts (AUTO/PRIME/GOAT asked, items actually checked vs executed, the Étape 5 sequencing and forced-questions count) when they are not supplied, correctly exempts a genuine night-autonomous run from the AUTO/PRIME/GOAT requirement, enforces the 5-10 forced-choice-question range scaled to the real number of problems found without ever fabricating a question when zero problems exist, and reports a fully clean ok:true only when every one of these real facts checks out — and (same commit) verifyHyperScanProcess() extends this exact discipline to HYPER-SCAN-CHECKPOINT\'s own garde-fous (mandatory full CLAUDE.md reread even in the light version, Smart Conso API/SMART-CONSO-TOKEN consultation and the light-before-heavy order for a heavy pass, the non-negotiable 3-attempt iteration cap, the double-perspective requirement, and the index-entry memory check), despite HYPER-SCAN-CHECKPOINT never being a CIRCLE_ITEMS entry itself — and verifyDoubleCommunication() makes the real point 3 ("double communication", alert console + report) genuinely checkable once both texts are supplied, catching a real substance divergence rather than only documenting it as a standing comment.');
 }

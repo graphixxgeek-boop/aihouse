@@ -976,6 +976,22 @@ export function findJudgeSpawnsWithoutConsultation(indexText, history, dayWindow
   return missing;
 }
 
+// filterIndexRowsByVersion() (2026-09-22, demande explicite de l'utilisateur : « l'equipe smart
+// conso pouvait aussi venir piocher de la donnée » — depuis le registre de HYPER-SCAN-CHECKPOINT
+// cette fois, pas seulement THE-FINAL-JUDGE/THE-DEEP-READER ci-dessus). HYPER-SCAN-CHECKPOINT
+// archive AUSSI ses passages en version LÉGÈRE (zéro appel réseau, aucune consultation requise) —
+// passer son index tel quel à findJudgeSpawnsWithoutConsultation() ci-dessus fabriquerait un faux
+// signal sur chaque passage léger. Filtre GÉNÉRIQUE, réutilisable par tout futur registre à colonne
+// "Version" : réduit le texte de l'index aux seules lignes datées qui matchent le motif demandé,
+// jamais un second calcul de date — le texte filtré se réinjecte tel quel dans
+// findJudgeSpawnsWithoutConsultation(), aucune duplication de logique.
+export function filterIndexRowsByVersion(indexText, versionPattern) {
+  return (indexText || "")
+    .split("\n")
+    .filter((line) => !/^\|\s*\d{4}-\d{2}-\d{2}\s*\|/.test(line) || versionPattern.test(line))
+    .join("\n");
+}
+
 // Test de connexion (2026-09-20, demande explicite de l'utilisateur : « smart conso token a un
 // test de connexion dédié à tous les autres outils, ainsi qu'à toi »). Vérifie MÉCANIQUEMENT que
 // chaque document censé le citer le fait RÉELLEMENT — jamais une simple affirmation dans une

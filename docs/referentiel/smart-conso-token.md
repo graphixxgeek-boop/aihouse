@@ -159,6 +159,16 @@ outils ? ». Trois relations de nature différente, jamais un seul mécanisme :
   ET son cousin THE-DEEP-READER (`docs/suivi/relectures-lourdes/index.md`), jamais l'un sans l'autre —
   deux nouvelles lignes dans la synthèse gratuite, réellement exercées à chaque passage
   `runNetworkCheck()` (donc à chaque Ronde CIRCLE-TASKS qui coche l'item `network-check-run`).
+  **Étendu le 2026-09-22** à HYPER-SCAN-CHECKPOINT (demande explicite : « l'equipe smart conso
+  pouvait aussi venir piocher de la donnée ») — troisième ligne dans la même synthèse, lisant
+  `docs/hyper-scan-checkpoint/index.md`. Différence réelle avec les deux premières : ce registre
+  archive AUSSI des passages en version LÉGÈRE (zéro appel réseau, aucune consultation jamais requise)
+  — `filterIndexRowsByVersion(indexText, versionPattern)` réduit d'abord le texte de l'index aux
+  seules lignes datées dont la colonne Version matche `/complète|complet/i`, PUIS le résultat se
+  réinjecte tel quel dans `findJudgeSpawnsWithoutConsultation()` sans aucune duplication de logique
+  de date. Le premier vrai passage d'HYPER-SCAN-CHECKPOINT reste à faire (cf.
+  `docs/referentiel/hyper-scan-checkpoint.md`) — cette ligne rend donc honnêtement `ok` pour l'instant
+  (aucune ligne "complète" à vérifier), pas une preuve d'absence de problème.
 
 ## Nuance sur l'automatisation elle-même (2026-09-20)
 

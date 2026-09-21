@@ -12,6 +12,17 @@
 //
 // Jamais une correction automatique (cf. Article 20/circle-process-detail.txt : « signaler
 // seulement, comme tout le reste de ce paysage d'outils »).
+//
+// Double communication (alerte console + rapport) — rappel permanent (2026-09-22) : par
+// construction, chaque item de CIRCLE_ITEMS écrit dans son rapport (recordCircleItemReport())
+// exactement le même texte qu'il annonce à l'oral (son `execute` le dit littéralement). Le vrai
+// point de vigilance n'est donc jamais un bug de conception, mais la discipline d'exécution de
+// l'agent qui pilote une vraie Ronde : suivre cette instruction à chaque item, sans jamais
+// improviser un contenu de rapport différent de ce qui vient d'être annoncé en conversation. Ce
+// commentaire EST une part du mécanisme de mémoire pour ce point (le fichier n'a aucune autre
+// mémoire persistante) — jamais à retirer au prétexte qu'« il n'y a rien à vérifier mécaniquement » :
+// verifyDoubleCommunication() ci-dessous rend le point réellement vérifiable dès que l'agent fournit
+// les deux textes, jamais un simple rappel qui resterait sans prise sur un vrai manquement.
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -32,6 +43,27 @@ export function hasFreshReportFile(itemId, { folders = CIRCLE_REPORT_FOLDERS, no
   const todayLabel = new Date(now).toISOString().slice(0, 10);
   const files = listDirImpl(join(ROOT, folder));
   return files.some((f) => (f.startsWith("circle-signal-") || f.startsWith("snapshot-")) && f.includes(todayLabel));
+}
+
+// verifyDoubleCommunication() (2026-09-22, point 3 réel du message de l'utilisateur : « Double
+// communication (alerte console + rapport) [...] on parle de discipline d'execution »). Rend le
+// point réellement vérifiable dès que l'agent qui pilote fournit les DEUX textes (jamais deviné) —
+// une vraie comparaison mécanique, pas seulement un rappel écrit en commentaire (cf. ci-dessus).
+// Comparaison volontairement stricte après un simple `trim()` (espaces de bord ignorés, jamais le
+// fond) : une vraie divergence de fond entre les deux canaux est exactement ce que ce garde-fou doit
+// attraper, jamais masquée par une tolérance approximative.
+export function verifyDoubleCommunication(entries = []) {
+  const findings = [];
+  for (const { itemId, announcedText, recordedText } of entries) {
+    if (announcedText == null || recordedText == null) {
+      findings.push({ check: "double-communication", message: `Item "${itemId}" : le texte annoncé en conversation et/ou le texte réellement écrit via recordCircleItemReport() n'ont pas été fournis — comparaison impossible, jamais supposée conforme.` });
+      continue;
+    }
+    if (String(announcedText).trim() !== String(recordedText).trim()) {
+      findings.push({ check: "double-communication", message: `Item "${itemId}" : le texte annoncé en conversation diffère de celui écrit dans le rapport — la discipline "une seule chaîne, deux canaux" n'a pas été suivie.` });
+    }
+  }
+  return { ok: findings.length === 0, findings };
 }
 
 // verifyRondeProcess() — le point d'entrée unique. `checkedItemIds`/`executedItemIds` et les
@@ -113,6 +145,44 @@ export function verifyRondeProcess({
   const realExistingPaths = existingPaths ?? walkDocsPaths("docs", "");
   const missingFromCircle = findRegistriesMissingFromCircleImpl(realExistingPaths);
   if (missingFromCircle.length) add("registries-missing-from-circle", `${missingFromCircle.length} registre(s) réel(s) sans entrée CIRCLE_ITEMS ni exclusion documentée : ${missingFromCircle.join(", ")}.`);
+
+  return { ok: findings.length === 0, findings };
+}
+
+// verifyHyperScanProcess() (2026-09-22, demande explicite : « l'outil process.circle doit aussi
+// l'avoir en tete [HYPER-SCAN-CHECKPOINT], on parle de discipline d'execution, il est la pour ca »).
+// HYPER-SCAN-CHECKPOINT n'est PAS un item de CIRCLE_ITEMS (cf. CIRCLE_EXCLUDED_REGISTRIES : « outil
+// exceptionnel, jamais coché par défaut ni régulier ») — mais le mandat de ce module (discipline
+// d'exécution d'un protocole à plusieurs étapes) s'applique tout aussi bien à SES PROPRES garde-fous
+// (docs/referentiel/hyper-scan-checkpoint.md) qu'à ceux de la Ronde ci-dessus. Même portée honnête :
+// aucun de ces faits n'est observable depuis le disque seul (la consultation de Smart Conso
+// API/SMART-CONSO-TOKEN avant une version complète, la version légère lancée d'abord, le plafond de
+// 3 tentatives respecté, la relecture complète de CLAUDE.md, la double perspective) — l'agent qui
+// pilote doit les fournir explicitement, jamais devinés.
+export function verifyHyperScanProcess({
+  version, // "légère" | "complète" — quelle version a été demandée/exécutée
+  claudeMdFullyReread,
+  smartConsoApiConsulted,
+  smartConsoTokenConsulted,
+  lightVersionRanFirst,
+  iterationsUsed,
+  doublePerspectiveUsed,
+  indexEntryRecorded,
+} = {}) {
+  const findings = [];
+  const add = (check, message) => findings.push({ check, message });
+
+  if (claudeMdFullyReread !== true) add("claude-md-reread", "La relecture complète et littérale de CLAUDE.md n'est pas confirmée — garde-fou non négociable, exigé même en version légère (docs/referentiel/hyper-scan-checkpoint.md).");
+
+  if (version === "complète") {
+    if (smartConsoApiConsulted !== true) add("smart-conso-api", "La version complète a été lancée sans confirmation que Smart Conso API a été consulté avant (Article 22).");
+    if (smartConsoTokenConsulted !== true) add("smart-conso-token", "La version complète (double perspective = agent_subagent_spawn) a été lancée sans confirmation que SMART-CONSO-TOKEN a été consulté avant.");
+    if (lightVersionRanFirst !== true) add("light-first", "La version légère doit toujours tourner avant la version complète — non confirmé ici.");
+    if (typeof iterationsUsed === "number" && iterationsUsed > 3) add("iteration-cap", `${iterationsUsed} tentative(s) de mini-simulation utilisée(s) — dépasse le plafond non négociable de 3 (docs/referentiel/hyper-scan-checkpoint.md).`);
+    if (doublePerspectiveUsed !== true) add("double-perspective", "La version complète doit inclure une double perspective (un second agent réellement séparé, qui ne voit pas les conclusions du premier) — non confirmée ici.");
+  }
+
+  if (indexEntryRecorded === false) add("index-entry", "Aucune ligne n'a été ajoutée à docs/hyper-scan-checkpoint/index.md après la checklist qualitative — la mémoire du prochain passage (depuis quel commit reprendre) serait faussée.");
 
   return { ok: findings.length === 0, findings };
 }

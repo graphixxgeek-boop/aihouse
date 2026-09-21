@@ -51,7 +51,7 @@ import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
 import { classifyCheckLevel } from "./check-level-target.mjs";
 import { lastTouchDays, relativeStaleness } from "./clean-dirty-old.mjs";
 import { findUnconfirmedBursts } from "./smart-conso-api.mjs";
-import { summarizeHistory, findJudgeSpawnsWithoutConsultation } from "./smart-conso-token.mjs";
+import { summarizeHistory, findJudgeSpawnsWithoutConsultation, filterIndexRowsByVersion } from "./smart-conso-token.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { loadJson, recordCliUsage } from "./tool-usage.mjs";
 
@@ -868,6 +868,18 @@ export function runNetworkCheck({ shImpl = sh } = {}) {
   const deepReaderIndex = existsSync(deepReaderIndexPath) ? readFileSync(deepReaderIndexPath, "utf8") : "";
   const deepReaderMissing = findJudgeSpawnsWithoutConsultation(deepReaderIndex, tokenHistory);
   rows.push({ name: "SMART-CONSO-TOKEN (spawns THE-DEEP-READER sans consultation confirmée)", result: deepReaderMissing.length ? `à regarder (${deepReaderMissing.length} : ${deepReaderMissing.join(", ")})` : "ok", when: now });
+
+  // Même autorité étendue à HYPER-SCAN-CHECKPOINT (2026-09-22, demande explicite : « l'equipe smart
+  // conso pouvait aussi venir piocher de la donnée »). Son registre archive AUSSI des passages en
+  // version LÉGÈRE (zéro appel réseau, aucune consultation requise) — filterIndexRowsByVersion()
+  // réduit d'abord l'index aux seules lignes "complète" avant de le passer, inchangé, à
+  // findJudgeSpawnsWithoutConsultation() : jamais un second calcul de date, seulement une réduction
+  // du texte en amont.
+  const hyperScanIndexPath = join(ROOT, "docs/hyper-scan-checkpoint/index.md");
+  const hyperScanIndex = existsSync(hyperScanIndexPath) ? readFileSync(hyperScanIndexPath, "utf8") : "";
+  const hyperScanCompleteIndex = filterIndexRowsByVersion(hyperScanIndex, /complète|complet/i);
+  const hyperScanMissing = findJudgeSpawnsWithoutConsultation(hyperScanCompleteIndex, tokenHistory);
+  rows.push({ name: "SMART-CONSO-TOKEN (passages HYPER-SCAN-CHECKPOINT complets sans consultation confirmée)", result: hyperScanMissing.length ? `à regarder (${hyperScanMissing.length} : ${hyperScanMissing.join(", ")})` : "ok", when: now });
 
   // Garde-fou de fraîcheur AGENT_SCRIPT_FILES (2026-09-21, audit d'évolutivité) — un Agent réel de
   // la table maîtresse jamais ajouté à AGENT_SCRIPT_FILES (axa-check.mjs) échapperait sinon
