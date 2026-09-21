@@ -37,6 +37,7 @@ import { PRESTATIONS, suggestPrestationsForTask, significantWords } from "./le-c
 import { daysSince } from "./lib-shell.mjs";
 import { walkDocsPaths } from "./lib-shell.mjs";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
+import { sh } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -411,6 +412,7 @@ export const CHANTIER_PRELIMINARY_FILES = {
   "Refonte graphique": { file: "docs/referentiel/regles-des-graphismes.md", match: /refonte graphique/i },
   "Outil concordance/évolutivité": { file: "docs/concordance-evolutivite-conception.md", match: /concordance|évolutivité|evolutivite/i },
   "Agence exportable": { file: "docs/agence-exportable-conception.md", match: /agence exportable|gabarit générique|gabarit generique/i },
+  "Changement de modèle IA (CIRCLE-TASKS)": { file: "docs/changement-de-modele-ia-conception.md", match: /changement de mod[eè]le|changement-de-modele-ia/i },
 };
 
 // checkChantierFileFreshness() — la « vérification, jamais seulement une intention déclarée »
@@ -424,7 +426,19 @@ export const CHANTIER_PRELIMINARY_FILES = {
 // journée, `TOLERANCE_DAYS`, pour ce cas fréquent de commit groupé). `lastTouch` injectable (même
 // patron que clean-dirty-old.mjs) pour rester testable sans dépendre de git réel.
 const TOLERANCE_DAYS = 1;
-export function checkChantierFileFreshness(allRows, { lastTouch = lastTouchDays } = {}) {
+// isStagedForCommit() (2026-09-21, faux positif réel trouvé en committant CE MÊME soir la toute
+// première fois qu'un fichier préliminaire de chantier a été introduit dans le MÊME commit que la
+// tâche de suivi qui le mentionne — exactement la discipline demandée par Article 13 : « chaque
+// tâche substantielle se documente dans docs/suivi/ DANS LE MÊME commit »). `lastTouchDays()`
+// interroge `git log`, qui ne voit encore AUCUN commit touchant ce fichier tant que le commit en
+// cours (celui que le crochet pre-commit est justement en train de valider) n'a pas réellement eu
+// lieu — un vrai paradoxe temporel du crochet pre-commit, jamais un oubli réel. Distingue donc un
+// fichier réellement absent (jamais écrit ni indexé par git, un vrai oubli) d'un fichier déjà STAGÉ
+// pour ce commit précis (`git diff --cached`), qui va bien atterrir avec lui dans quelques instants.
+export function isStagedForCommit(file, shImpl = sh) {
+  return shImpl(`git diff --cached --name-only -- ${file}`, { cwd: ROOT }).trim().length > 0;
+}
+export function checkChantierFileFreshness(allRows, { lastTouch = lastTouchDays, isStaged = isStagedForCommit } = {}) {
   const findings = [];
   for (const [chantier, { file, match }] of Object.entries(CHANTIER_PRELIMINARY_FILES)) {
     const matching = allRows.filter((r) => match.test(r.sujet) || match.test(r.sousSujet) || match.test(r.detail));
@@ -442,6 +456,7 @@ export function checkChantierFileFreshness(allRows, { lastTouch = lastTouchDays 
     const rowAgeDays = Math.max(0, (Date.now() - latest.at) / 86400000);
     const fileAgeDays = lastTouch(file);
     if (fileAgeDays === undefined) {
+      if (isStaged(file)) continue;
       findings.push({ chantier, file, taskNumber: latest.row.n, message: `fichier "${file}" introuvable ou jamais commité, alors qu'une tâche de suivi (#${latest.row.n ?? "?"}) le concerne déjà` });
       continue;
     }

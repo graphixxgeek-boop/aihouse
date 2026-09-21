@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 248'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 250'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3916,13 +3916,23 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(sameDayResult.length, 0, 'a preliminary file committed within the same grouped commit (a fraction of a day apart) must never be flagged as stale — the explicit tolerance exists for exactly this frequent real case');
 
   // Cas 4 : fichier introuvable/jamais commité alors qu'une idée existe déjà — signalé, jamais ignoré.
-  const missingResult = checkChantierFileFreshness(rowsStale, { lastTouch: () => undefined });
+  // isStaged injecté à false explicitement (jamais le vrai git du dépôt réel) pour rester déterministe.
+  const missingResult = checkChantierFileFreshness(rowsStale, { lastTouch: () => undefined, isStaged: () => false });
   assert.equal(missingResult.length, 1, 'a preliminary file that git has never touched at all, while a matching suivi task already exists, must be flagged just as loudly as a stale one — never silently skipped');
   assert.ok(missingResult[0].message.includes('introuvable'), 'the missing-file case must be worded distinctly from the stale-file case, never conflated');
 
+  // Cas 4bis (2026-09-21, faux positif réel trouvé en committant CE MÊME soir la toute première fois
+  // qu'un fichier préliminaire de chantier a été introduit dans le MÊME commit que la tâche de suivi
+  // qui le mentionne, exactement la discipline demandée par Article 13) : un fichier STAGÉ pour le
+  // commit en cours (mais sans encore aucun historique git, puisque ce commit n'existe pas encore au
+  // moment où le crochet pre-commit s'exécute) ne doit jamais être confondu avec un fichier
+  // réellement introuvable — le paradoxe temporel exact du crochet pre-commit.
+  const stagedResult = checkChantierFileFreshness(rowsStale, { lastTouch: () => undefined, isStaged: (f) => f === cassandraFile });
+  assert.equal(stagedResult.length, 0, 'a preliminary file already staged for the commit currently being validated must never be flagged as missing — it is about to land with this very commit, never a real gap');
+
   // Cas 5 : aucune tâche de suivi ne concerne un chantier donné — aucun signal fabriqué.
   const rowsUnrelated = [{ n: 4, horodatage: daysAgo(1), sujet: 'Autre chose entièrement', sousSujet: 'Rien à voir', detail: '' }];
-  const unrelatedResult = checkChantierFileFreshness(rowsUnrelated, { lastTouch: () => undefined });
+  const unrelatedResult = checkChantierFileFreshness(rowsUnrelated, { lastTouch: () => undefined, isStaged: () => false });
   assert.equal(unrelatedResult.length, 0, 'a chantier with zero matching suivi rows must never be flagged — no fabricated finding from the mere absence of activity');
 
   // Cas 6 : les deux chantiers connus sont bien couverts indépendamment, jamais un seul testé au hasard.
@@ -3941,7 +3951,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const futureResult = checkChantierFileFreshness(rowsFuture, { lastTouch: (f) => (f === cassandraFile ? 0 : undefined) });
   assert.equal(futureResult.length, 0, 'a suivi row dated slightly ahead of the real system clock (the exact real "today" vs git-clock skew found live) must never be flagged as overdue just because the raw subtraction goes negative — clamped to "just now", never a fabricated gap');
 
-  console.log('Passed: checkChantierFileFreshness() (task #185) correctly leaves a genuinely fresh preliminary file alone, flags a real gap by the exact task number and chantier responsible, tolerates a same-day grouped commit rather than a false positive, flags a preliminary file git has never touched at all just as loudly as a stale one, never fabricates a finding for a chantier with zero matching suivi activity, checks every known chantier (CASSANDRA-RH, refonte graphique) independently in the same pass, and — the exact real false positive found running this tool live the same evening — never flags a row whose narrative "today" timestamp runs ahead of git\'s real system clock as if it were overdue.');
+  console.log('Passed: checkChantierFileFreshness() (task #185) correctly leaves a genuinely fresh preliminary file alone, flags a real gap by the exact task number and chantier responsible, tolerates a same-day grouped commit rather than a false positive, flags a preliminary file git has never touched at all just as loudly as a stale one, never fabricates a finding for a chantier with zero matching suivi activity, checks every known chantier (CASSANDRA-RH, refonte graphique) independently in the same pass, never flags a row whose narrative "today" timestamp runs ahead of git\'s real system clock as if it were overdue, and — the exact real pre-commit-hook time paradox found tonight introducing this project\'s own new chantier file — never confuses a file already staged for the commit currently being validated with one genuinely never written at all.');
 }
 
 {
