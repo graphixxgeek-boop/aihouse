@@ -55,32 +55,39 @@ indicateur universel — un proxy différent par catégorie (tours Smart Breaker
 fraîcheur/churn pour les scripts, aucun signal fiable pour les skills externes) — à documenter
 comme limite, jamais un chiffre inventé.
 
-## 4. Organigramme de l'équipe (calibré en 4 rondes de questions, corrigé une fois)
+## 4. Organigramme de l'équipe — consolidé dans son propre document canonique
 
-- **Direction (CODIR)** = CASSANDRA-RH + LE-COORDINATEUR — aucun des deux ne vérifie le code
-  lui-même (l'un route le travail, l'autre évalue les postes).
-- **Équipe noyau** = exactement les 4 outils "toujours déployés" de l'Article 20
-  (ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD) — jamais un groupe inventé.
-- **Membre de l'équipe** = tous les autres outils, statut Agent/Utilitaire nommé/Infrastructure
-  inchangé.
-- **VIP** = l'utilisateur et l'agent (Claude) — explicitement hors du tableau, jamais évalués,
-  jamais une ligne du badge.
-- **Le rôle (Direction/Noyau/Membre) est une case À L'INTÉRIEUR du statut Agent existant**, jamais
-  un 4e axe séparé.
-- **Contrôle croisé** : l'équipe noyau se vérifie aussi ELLE-MÊME entre ses 4 membres. Les deux
-  directeurs passent par les MÊMES scans mécaniques que tout le monde (couverture AXA-CHECK, trous
-  ARGUS, frictions HARMONIA) — seule l'évaluation RH de pertinence de poste (jugement de
-  CASSANDRA-RH) échappe structurellement à eux-mêmes, jamais les scans mécaniques objectifs.
+**Déplacé le 2026-09-22** vers `docs/referentiel/organisation-agence.md` (« l'Agence de production
+de code »), à la demande explicite de l'utilisateur de consolider l'organigramme complet en un seul
+endroit — jamais dupliqué ici. Ce document canonique définit : les deux axes (Statut de
+documentation / Rôle dans l'organigramme), Direction (CASSANDRA-RH + LE-COORDINATEUR), les Gardiens
+sacrés du code (renommage de l'Équipe noyau — exactement ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD),
+les 6 suites de travail parmi les Membres ordinaires, les 3 catégories définitivement hors de
+l'agence (Personnages, Moteur du jeu, code tiers vendu tel quel), et l'Infrastructure comme 3e rang
+d'employés sans dossier individuel.
+
+**Ce qui reste ici, propre à la CONCEPTION de CASSANDRA-RH elle-même** (pas au roster lui-même,
+qui vit désormais dans le document canonique) :
+- **Le rôle (Direction/Gardiens/Membre) est une case À L'INTÉRIEUR du statut Agent existant**,
+  jamais un 4e axe séparé.
+- **Contrôle croisé** : les Gardiens sacrés se vérifient aussi ENTRE EUX. Les deux directeurs
+  passent par les MÊMES scans mécaniques que tout le monde (couverture AXA-CHECK, trous ARGUS,
+  frictions HARMONIA) — seule l'évaluation RH de pertinence de poste (jugement de CASSANDRA-RH)
+  échappe structurellement à eux-mêmes, jamais les scans mécaniques objectifs.
 - **Agrégation** : vit DANS le badge existant, enrichi — pas un nouveau mécanisme séparé.
+- **Entretien du document canonique** : une fois construite, CASSANDRA-RH tient
+  `docs/referentiel/organisation-agence.md` à jour à chaque changement d'organigramme (§8 de ce
+  document) — l'info est chez elle, c'est son domaine.
 
 **Correction structurelle définitive (2026-09-21, remplace toute mention antérieure de "mascottes"
-comme catégorie de l'organigramme)** : les Personnages (Lia, Noé) sont **entièrement hors de
-l'équipe**, jamais une catégorie de l'organigramme (ni une 5e case) — aucun badge, aucun blueprint,
-aucune couverture AXA-CHECK, rien de tout ça n'a de sens pour un personnage narratif. CASSANDRA-RH
-pourra un jour **agréger des verdicts narratifs déjà produits ailleurs** (memory-audit/EL-PROFESSOR/
-check-spirit.mjs) sur les Personnages, mais jamais les noter/scorer comme des membres de l'équipe —
-une distinction stricte à ne plus jamais violer (cf. `scripts/lib-shell.mjs::assertNotAPersonnage()`,
-le même garde-fou déjà câblé pour `checkAgentOnboarding()`).
+comme catégorie de l'organigramme, désormais formalisée dans le document canonique §5)** : les
+Personnages (Lia, Noé) sont **entièrement hors de l'équipe**, jamais une catégorie de l'organigramme
+— aucun badge, aucun blueprint, aucune couverture AXA-CHECK, rien de tout ça n'a de sens pour un
+personnage narratif. CASSANDRA-RH pourra un jour **agréger des verdicts narratifs déjà produits
+ailleurs** (memory-audit/EL-PROFESSOR/check-spirit.mjs) sur les Personnages, mais jamais les
+noter/scorer comme des membres de l'équipe — une distinction stricte à ne plus jamais violer (cf.
+`scripts/lib-shell.mjs::assertNotAPersonnage()`, le même garde-fou déjà câblé pour
+`checkAgentOnboarding()`).
 
 ## 5. Intégration d'un nouvel Agent — les deux volets
 
