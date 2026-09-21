@@ -1072,17 +1072,18 @@ conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs se
   et memento weight (qui mesure son poids, jamais son contenu). Comble le trou de nommage laissé par
   le retrait de l'ombrelle "MEMENTO" (cf. sections dédiées ci-dessous).
 - `docs/referentiel/organisation-agence.md` (2026-09-22) — le référentiel CANONIQUE de
-  l'organisation de l'outillage de travail, « l'Agence de production de code » (nom choisi par
-  l'utilisateur, à distinguer du jeu lui-même) : les deux axes jamais confondus (Statut de
-  documentation Agent/Utilitaire nommé/Infrastructure ; Rôle dans l'organigramme Direction/Gardiens
-  sacrés du code/Membre/VIP), les Gardiens sacrés du code (renommage de l'Équipe noyau, critère
-  exact — tourne automatiquement à CHAQUE commit, jamais seulement « délivre un scan de qualité »),
-  les 6 suites de travail parmi les Membres ordinaires (Suivi-Conso, Simulation & Qualité narrative,
-  Audit lourd, Dette & Structure du code, Référentiel & Vue d'ensemble, plus Smart Breaker/
-  CHECK-LEVEL-TARGET à part), les 3 catégories définitivement hors de l'agence (Personnages, Moteur
-  du jeu, code tiers vendu tel quel), et l'Infrastructure comme 3e rang d'employés sans dossier
-  individuel. Consolide ce qui était dispersé entre `docs/cassandra-rh-conception.md` §4 (qui le
-  référence désormais plutôt que de le dupliquer) et `docs/regles-de-travail.md` §7ter (qui reste la
+  l'organisation de l'outillage de travail, « l'Agence Codex » (nom choisi par l'utilisateur, en
+  souvenir de Codex, l'IA qui a initialement produit le code de ce projet, à distinguer du jeu
+  lui-même) : les deux axes jamais confondus (Statut de documentation Agent/Utilitaire nommé/
+  Infrastructure ; Rôle dans l'organigramme Direction/Gardiens sacrés du code/Membre/VIP), les
+  Gardiens sacrés du code (renommage de l'Équipe noyau, critère exact — tourne automatiquement à
+  CHAQUE commit, jamais seulement « délivre un scan de qualité »), les 6 suites de travail parmi les
+  Membres ordinaires (Suivi-Conso, Suite Audit Simulation, Suite Audit lourd, Dette & Structure du
+  code, La Cour du Roi, plus Les Agents Spéciaux — Smart Breaker/CHECK-LEVEL-TARGET), les 3
+  catégories définitivement hors de l'agence (Personnages, Moteur du jeu, code tiers vendu tel
+  quel), et l'Infrastructure comme 3e rang d'employés sans dossier individuel. Consolide ce qui
+  était dispersé entre `docs/cassandra-rh-conception.md` §4 (qui le référence désormais plutôt que
+  de le dupliquer) et `docs/regles-de-travail.md` §7ter (qui reste la
   table maîtresse détaillée outil par outil, jamais dupliquée ici non plus). **C'est le domaine de
   CASSANDRA-RH une fois construite** (round de calibrage #134) — elle le tient à jour à chaque
   changement d'organigramme, exactement comme elle tiendra la liste de l'équipe.

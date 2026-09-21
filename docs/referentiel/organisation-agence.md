@@ -1,13 +1,16 @@
-# L'Agence de production de code — organisation et organigramme
+# L'Agence Codex — organisation et organigramme
 
 *(2026-09-22, demande explicite de l'utilisateur : « consolidons toute cette partie, livre moi
 l'organisation complète, bien définie [...] ce doc sera mis dans le référentiel à l'usage de
 CASSANDRA qui devra le remettre à jour régulièrement : l'info est chez elle, logique [...] c'est
 son domaine ». Ce document est le référentiel CANONIQUE de l'organisation de l'outillage de
-travail — « l'Agence de production de code » (nom choisi par l'utilisateur), à distinguer du jeu
-lui-même (la « maison » où vivent Lia et Noé). Calibré en 4 questions le soir de sa création,
-consolidant des décisions déjà prises séparément dans `docs/cassandra-rh-conception.md` §4 et
-`docs/regles-de-travail.md` §7ter — jamais une réinvention, une mise en ordre.)*
+travail — « l'Agence Codex » (nom choisi par l'utilisateur, en souvenir de Codex, l'IA qui a
+initialement produit le code de ce projet avant la reprise par Claude Code, cf.
+`docs/contexte-projet/historique-prompts-codex.txt`), à distinguer du jeu lui-même (la « maison »
+où vivent Lia et Noé). Calibré en 4 questions le soir de sa création, consolidant des décisions déjà
+prises séparément dans `docs/cassandra-rh-conception.md` §4 et `docs/regles-de-travail.md` §7ter —
+jamais une réinvention, une mise en ordre. Renommages complémentaires actés le même soir, une
+seconde salve de réponses de l'utilisateur : le nom de l'ensemble, et 3 des 6 suites de travail.)*
 
 **Frontière avec les autres documents, pour ne jamais dupliquer (Article 6)** : ce document répond
 à « qui appartient à l'agence, et comment est-elle structurée ? ». Le détail complet outil par
@@ -91,9 +94,9 @@ Régule et observe la consommation (API et tokens) et l'usage réel des outils.
 - SMART-CONSO-TOKEN — rythme de consommation de tokens de l'agent (obligation écrite)
 - Compteur d'utilisation des outils (`tool-usage.mjs`) — journal des sollicitations réelles
 
-### Suite Simulation & Qualité narrative
-Juge une partie réellement jouée (dialogue, visuel, mémoire persistée) — jamais le code du moteur
-lui-même.
+### Suite Audit Simulation
+*(Anciennement « Suite Simulation & Qualité narrative », renommée par l'utilisateur.)* Juge une
+partie réellement jouée (dialogue, visuel, mémoire persistée) — jamais le code du moteur lui-même.
 - EL-PROFESSOR — fidélité à la charte (esprit, naturel, voix, enquête, clarté)
 - THE-SCREENER — qualité visuelle indicative (2 captures d'écran max)
 - memory-audit — cohérence mécanique de la mémoire persistée de Lia/Noé (seul Membre dont le SUJET
@@ -114,14 +117,18 @@ Dette technique et navigation dans du code volumineux.
   pas Agent — reste dans ce groupe fonctionnel malgré son statut de documentation différent)
 - ALWAYS-NEW-CODE — dette d'organisation, l'épreuve de la page blanche rendue concrète (Article 23)
 
-### Suite Référentiel & Vue d'ensemble
-Donne une vue consolidée — du code, de la philosophie, des rapports, des tâches.
+### La Cour du Roi
+*(Anciennement « Suite Référentiel & Vue d'ensemble », renommée par l'utilisateur — un nom qui
+trouve sa logique dans le fait que THE-KING lui-même y siège.)* Donne une vue consolidée — du code,
+de la philosophie, des rapports, des tâches.
 - INES-official — édition consolidée et annotée du dépôt
 - THE-KING — veille de `docs/philosophie-et-politique.md`
 - Doc-Report — index global des registres et journaux locaux du réseau d'outils
 - check-tasks-details — état des lieux des tâches à la demande
 
-### À part (n'appartiennent à aucune des 5 suites ci-dessus)
+### Les Agents Spéciaux
+*(Anciennement « À part », renommée par l'utilisateur — n'appartiennent à aucune des 5 suites
+ci-dessus, chacun pour sa propre raison structurelle.)*
 - **Smart Breaker** (`check-gemini-quota.mjs` + `gemini-key-health.mjs` + `api-providers.mjs` +
   `lib/gemini-keys.ts`) — structure hors norme déjà notée (pas de dossier `docs/` dédié, registre =
   fichier local jamais committé), portée PRODUCTION plutôt qu'outillage de développement.
@@ -137,7 +144,8 @@ poste de travail :
 1. **Les Personnages (Lia, Noé)** — contenu narratif, gouvernés exclusivement par la charte de
    contenu (CLAUDE.md), jamais une catégorie de l'organigramme. Un outil DE l'équipe peut avoir pour
    SUJET un Personnage (memory-audit) sans que cela le fasse rejoindre l'équipe.
-2. **Le Moteur du jeu** (`lib/*.ts`, `app/*`, `components/*` — hors `components/ui/`, cf. §5.3) —
+2. **Le Moteur du jeu** (`lib/*.ts`, `app/*`, `components/*` — hors `components/ui/`, cf. point 3
+   ci-dessous) —
    le PRODUIT que l'agence construit et vérifie (par `tsc`/`check-house.mjs`/AXA-CHECK comme
    n'importe quel code), jamais un travailleur de plus. Un outil peut ajouter un point
    d'observation DANS le moteur (`lib/memento-weight.ts`, `lib/gemini-keys.ts`) sans que ce

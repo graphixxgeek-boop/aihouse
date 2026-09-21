@@ -46,6 +46,16 @@ fiable existant s'absorbe, jamais dupliqué à côté (même principe que
   proposition d'une ou deux embauches pertinentes sur demande de l'utilisateur, jamais spontané.
 - **Rapport RH chiffré régulier**, dans la Ronde CIRCLE-TASKS : effectif, organigramme à jour,
   besoins de recrutement, nouveaux candidats à étudier.
+- **Promotion de poste (2026-09-22, demande explicite)** : identifier un script qui a grossi en
+  taille et en fonctionnalités au fil des évolutions (Infrastructure ou Utilitaire nommé,
+  cf. `docs/referentiel/organisation-agence.md` Axe A) au point de mériter le statut Agent/Membre.
+  CASSANDRA vérifie d'abord l'ÉLIGIBILITÉ réelle avant de proposer quoi que ce soit — jamais la
+  taille ou l'ancienneté seule ne suffit (critère déjà établi, `docs/regles-de-travail.md` §7ter :
+  « ce qui justifie réellement ce statut n'est jamais l'ancienneté ni la taille du code [...] mais
+  l'existence d'un DOMAINE DE JUGEMENT propre au projet »). Une fois l'éligibilité confirmée, elle
+  PROPOSE l'évolution (jamais ne l'exécute seule) — la promotion réelle (instanciation + registre +
+  mise à jour de `organisation-agence.md`) reste toujours soumise à la confirmation explicite de
+  l'utilisateur, même schéma que le recrutement en 3 temps ci-dessus.
 
 ## 3. Suivi RH dans le temps
 
