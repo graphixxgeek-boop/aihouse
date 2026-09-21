@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 223'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 224'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -5271,6 +5271,47 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const liveDenseIndex = buildIndex('app/api/lia/route.ts');
   assert.ok(liveDenseIndex.length >= 100, 'checked live against the real route.ts: adding the dense-comment pattern must multiply the real number of navigable entries by an order of magnitude (10 named functions alone, 125+ once dense comment sections are included) — the exact real gap task #180 was opened to close');
   console.log('Passed: extractCommentedStatementIndex() (task #180) correctly ignores a single-line comment (too brief to be a real section header), never indexes a genuine multi-line comment that leads into dead code (a blank line or a lone closing brace) as if it opened a section, names and lines a real match with the exact same convention already used by extractBlockIndex, never double-counts a comment already captured by extractBlockIndex once deduplicated via excludeLines, and — checked live against the real app/api/lia/route.ts, the exact file this task was opened for — multiplies the number of navigable entries by more than an order of magnitude (10 → 125+) by finally recognizing its dense, comment-led, brace-less style.');
+}
+
+{
+  // find-brain (2026-09-21, demande explicite de l'utilisateur : « un cerveau intelligent
+  // "find-brain" qui englobe les 2 scripts find-booster et find-deep-booster [...] pour plus
+  // d'efficacité dans les recherches »). find-deep-booster est le surnom d'affichage de
+  // route-booster.mjs (tâche de surnom, même patron que MEMENTO) — le fichier technique reste
+  // route-booster.mjs, jamais importé sous un autre nom.
+  const { recommendFindDeepBooster, flagFindDeepBoosterCandidates, recommendFindBrain, FIND_DEEP_BOOSTER_NICKNAME, MONOLITH_LINE_THRESHOLD, MIN_CUT_POINTS } = await import('../scripts/find-brain.mjs');
+  assert.equal(FIND_DEEP_BOOSTER_NICKNAME, 'find-deep-booster', 'the display nickname must be exactly what the user asked for, never a variant spelling');
+
+  // recommendFindDeepBooster() — symétrique au recommendFindBooster() déjà existant, jamais un
+  // second calcul de points de coupe (réutilise proposeDecomposition() de route-booster.mjs
+  // telle quelle).
+  const liveRoute = recommendFindDeepBooster('app/api/lia/route.ts');
+  assert.ok(liveRoute.lineCount > MONOLITH_LINE_THRESHOLD, 'checked live against the real app/api/lia/route.ts (the exact file route-booster was built for): its real line count must exceed the monolith threshold');
+  assert.ok(liveRoute.cutPointCount >= MIN_CUT_POINTS, 'checked live: the real file must have enough real candidate cut points (route-booster already found 24 live) to be flagged worthwhile');
+  assert.equal(liveRoute.worthwhile, true, 'a real monolith with real cut points must be flagged worthwhile, never silently ignored');
+  const liveSmallFile = recommendFindDeepBooster('scripts/lib-shell.mjs');
+  assert.equal(liveSmallFile.worthwhile, false, 'checked live against a genuinely small real file: it must never be flagged worthwhile just because it happens to contain a branch or two — both real signals (length AND cut points) are required together, never either alone');
+
+  // flagFindDeepBoosterCandidates() — même forme que flagFindBoosterCandidates() (doc-report.mjs),
+  // jamais une seconde liste de fichiers à maintenir : balaie REGISTRIES tel quel.
+  const fakeRegistries = [
+    { label: 'Gros fichier fictif', scriptPath: '__does_not_exist__.mjs' },
+    { label: 'route.ts (réel)', scriptPath: 'app/api/lia/route.ts' },
+    { label: 'route.ts (doublon)', scriptPath: 'app/api/lia/route.ts' },
+  ];
+  const flagged = flagFindDeepBoosterCandidates(fakeRegistries);
+  assert.equal(flagged.length, 1, 'a missing script must be silently skipped (never a crash nor a fabricated positive) and a scriptPath appearing twice must be counted only once, never double-flagged for the same real file');
+  assert.equal(flagged[0].scriptPath, 'app/api/lia/route.ts', 'the one real, genuinely worthwhile file must be the one reported, by its real path');
+  assert.ok(flagged[0].lineCount > 0 && flagged[0].cutPointCount > 0, 'the flagged candidate must carry its own real lineCount/cutPointCount, never the tokens/entryCount fields that belong to the unrelated find-booster signal');
+
+  // recommendFindBrain() — jugement unifié, jamais un tri-état exclusif : les deux peuvent
+  // recommander à la fois sur un même fichier.
+  const brain = recommendFindBrain('app/api/lia/route.ts');
+  assert.deepEqual(brain.recommend.sort(), ['find-booster', 'find-deep-booster'].sort(), 'checked live against the real route.ts: a file this dense in named/commented sections AND this rich in real cut point candidates must recommend BOTH tools at once, never forced into an exclusive either/or choice');
+  const brainSmall = recommendFindBrain('scripts/lib-shell.mjs');
+  assert.deepEqual(brainSmall.recommend, [], 'checked live against a genuinely small real file: neither tool should be recommended — an honest empty recommendation, never a forced suggestion just to have something to say');
+
+  console.log('Passed: find-brain (2026-09-21) unifies find-booster and find-deep-booster (the real display nickname for route-booster.mjs, never a file rename) without reimplementing either — recommendFindDeepBooster() reuses proposeDecomposition() verbatim and correctly requires BOTH real length AND real cut-point richness together (checked live: the real route.ts crosses both, a genuinely small real file crosses neither), flagFindDeepBoosterCandidates() mirrors flagFindBoosterCandidates()\'s exact shape over the same real REGISTRIES (a missing script skipped honestly, a duplicated scriptPath counted once), and recommendFindBrain() renders a genuinely non-exclusive verdict — checked live to recommend both tools together on the real dense route.ts and neither on a genuinely small real file.');
 }
 
 {

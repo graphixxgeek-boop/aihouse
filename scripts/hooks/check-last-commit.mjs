@@ -15,6 +15,7 @@ import { buildDuplicateReport, buildNearDuplicateReport } from "../clone-hunter.
 import { findMissingNotes, findOrphanNotes } from "../el-professor.mjs";
 import { PRESTATIONS, formatMenu, parseToolsTable, slugifyAgentName, checkAllAgentBadges } from "../le-coordinateur.mjs";
 import { flagFindBoosterCandidates } from "../doc-report.mjs";
+import { flagFindDeepBoosterCandidates, FIND_DEEP_BOOSTER_NICKNAME } from "../find-brain.mjs";
 import { summarizeHistory, computeInvestmentRatio, diagnoseAdviceAccuracy } from "../smart-conso-token.mjs";
 import { sh, AGENT_CATEGORIES } from "../lib-shell.mjs";
 import { loadLastRun, shouldRemindCircleTasks } from "../circle-tasks.mjs";
@@ -187,6 +188,16 @@ try {
   const candidates = flagFindBoosterCandidates();
   if (candidates.length) {
     console.log(`🧭 find-booster : ${candidates.map((c) => `${c.label} (~${c.tokens} tokens)`).join(", ")} méritent une recherche par concept avant toute lecture intégrale.\n`);
+  }
+} catch { /* best-effort, jamais bloquant */ }
+
+// find-deep-booster (surnom d'affichage de route-booster.mjs) — même discipline que le bloc
+// find-booster ci-dessus, même renforcement du rappel demandé le même soir par l'utilisateur
+// (« pluggé en priorité [...] rappelle d'utiliser ces 2 outils le plus souvent possible »).
+try {
+  const deepCandidates = flagFindDeepBoosterCandidates();
+  if (deepCandidates.length) {
+    console.log(`🧠 ${FIND_DEEP_BOOSTER_NICKNAME} : ${deepCandidates.map((c) => `${c.label} (${c.lineCount} lignes, ${c.cutPointCount} points de coupe)`).join(", ")} méritent un vrai zoom de découpage avant toute lecture intégrale.\n`);
   }
 } catch { /* best-effort, jamais bloquant */ }
 

@@ -606,7 +606,8 @@ bloqué par un statut, seulement par l'existence réelle d'une fonction ou d'un 
 | THE-KING | Agent | 🎖️ | rappelle de consulter `docs/philosophie-et-politique.md` avant une décision à haut niveau (6 catégories), fraîcheur du document, digest de son évolution, tension possible entre deux principes | gratuit | avant une décision touchant l'une des 6 catégories (moi, l'utilisateur, ou un autre outil) |
 | INES-official | Agent | 🎖️ | aplatit le dépôt en une édition consolidée et annotée (code seul ou code + docs), table des matières, datage/versionnage — jamais une réécriture réelle du code | gratuit | proposé périodiquement via CIRCLE-TASKS, ou sur demande explicite |
 | memory-audit (anciennement "MEMENTO", nom d'ensemble retiré le 2026-09-21) | Agent | 🎖️ | seul outil ciblant en SUJET un Personnage (Lia/Noé) tout en restant un vrai Membre de l'équipe, catégorie "audit de simulation" aux côtés d'EL-PROFESSOR : cohérence mécanique de la mémoire persistée (ordre chronologique, remise à zéro suspecte, régression de gravité). Son voisin "memento weight" (Moteur du jeu, `lib/memento-weight.ts` + `scripts/memento-weight.mjs`, jamais un Membre de l'équipe) mesure séparément le poids réel du contexte envoyé à Gemini par tour (observation pure, jamais un changement de prompt) | gratuit — mécanique, jamais un second appel Gemini | sur demande explicite après une simulation ; hors CIRCLE-TASKS (exclusion documentée, cette vérification n'a de sens que sur une partie réelle) |
-| route-booster (`scripts/route-booster.mjs`) | Utilitaire nommé | — | points de coupe candidats + indice de risque lexical pour découper une fonction géante (conçu pour `app/api/lia/route.ts`, 24 candidats réels détectés) — jamais une réécriture automatique, guide une extraction manuelle testée à chaque étape | gratuit | à la demande, avant/pendant un chantier de découpage de fichier |
+| route-booster (`scripts/route-booster.mjs`, surnom d'affichage « find-deep-booster ») | Utilitaire nommé | — | points de coupe candidats + indice de risque lexical pour découper une fonction géante (conçu pour `app/api/lia/route.ts`, 24 candidats réels détectés) — jamais une réécriture automatique, guide une extraction manuelle testée à chaque étape | gratuit | à la demande, avant/pendant un chantier de découpage de fichier |
+| find-brain (`scripts/find-brain.mjs`) | Utilitaire nommé | — | cerveau unifié : recommande find-booster et/ou find-deep-booster pour un fichier donné (jamais un choix exclusif), réutilise leurs fonctions telles quelles sans rien recalculer | gratuit | à la demande (`node scripts/find-brain.mjs <fichier>`) et automatiquement à chaque commit (rappel post-commit) |
 | find-booster (`scripts/find-booster.mjs`, anciennement "route-find-booster") | Agent | 🎖️ | index par concept de 4 motifs réels (fonctions nommées, blocs anonymes commentés, entrées de tableau titrées, titres Markdown) — sert route.ts, check-house.mjs, lib/reference.ts et regles-de-travail.md, vérifié live sur les 4 ; `recommendFindBooster()` détecte le poids réel d'un fichier (réutilise SMART-CONSO-TOKEN, jamais le nombre de lignes seul) | gratuit | à la demande, sur (presque) tout fichier du dépôt — promu Membre de l'équipe complet le 2026-09-21 après usage réel concluant, cf. `docs/referentiel/find-booster.md` |
 | CLONE-HUNTER (`scripts/clone-hunter.mjs`) | Agent | 🎖️ | détecte des blocs de code dupliqués — v1 littérale (lignes identiques après normalisation d'espaces) ET v2 (blocs structurellement identiques sous renommage bijectif cohérent d'identifiants) — dans lib/scripts/app/components (hors components/ui, exclu — kit shadcn/Radix vendu tel quel, duplication assumée par design) ; vérifié live (13 trouvailles réelles au total) | gratuit, <1s sur tout le dépôt | **5e Gardien sacré du code depuis le 2026-09-22** (Article 20 — délivre un vrai scan de qualité ET tourne à chaque commit) : câblé dans le crochet post-commit réel, retiré de CIRCLE-TASKS (doublon dès qu'automatique à chaque commit), agrégé dans HYPER-SCAN-CHECKPOINT, cf. `docs/referentiel/clone-hunter.md` et `docs/referentiel/organisation-agence.md` §3 |
 
@@ -1642,7 +1643,14 @@ le vocabulaire de blocs, jamais en forkant une page à part. Tout le texte passe
 (échappement systématique) — un rapport peut légitimement contenir des caractères qui casseraient du
 HTML brut, jamais une raison d'injecter du HTML non échappé.
 
-### route-booster — outil sans blueprint (find-booster, son voisin, est promu Membre de l'équipe)
+### route-booster (surnom d'affichage « find-deep-booster ») — outil sans blueprint
+
+*(Surnom ajouté le 2026-09-21, demande explicite de l'utilisateur : « renomme (surnom) le script
+"route-booster" par "find-deep-booster" ». Même patron que MEMENTO/Smart Conso API (tâche #172) —
+surnom d'AFFICHAGE uniquement, jamais un renommage de fichier : `scripts/route-booster.mjs` reste
+le nom technique sur disque, dans tous les imports, dans `PRESTATIONS`. Le nom « find-deep-booster »
+n'apparaît que dans la prose/les rapports/les messages destinés à être lus par l'agent ou
+l'utilisateur — jamais dans le code lui-même.)*
 
 *(2026-09-21, demande explicite de l'utilisateur pour app/api/lia/route.ts, un fichier « fourre-tout »
 vérifié à 1753 lignes dont ~1665 dans la seule fonction `POST` : « le script route-find-booster est
@@ -1668,6 +1676,44 @@ le cœur du jeu ne tolère aucune régression silencieuse). Vérifié live contr
 0 bannière de commentaire dans tout le fichier (confirme le diagnostic « fourre-tout »), mais 24
 branches `if (x.y === "...")` réelles détectées avec un risque calculé pour chacune. Reste dans
 l'équipe après le découpage initial : le relancer re-signale un futur fichier qui regonflerait.
+
+### find-brain — le cerveau unifié de find-booster et find-deep-booster
+
+*(2026-09-21, demande explicite de l'utilisateur : « je veux un cerveau intelligent "find-brain"
+qui englobe les 2 scripts find-booster et find-deep-booster pour plus d'efficacité dans les
+recherches. toi tu dois être pluggé en priorité à ce cerveau qui te rappelle d'utiliser ces 2
+outils le plus souvent possible ». Statut décidé en calibrant : script séparé
+(`scripts/find-brain.mjs`), jamais une fonction ajoutée dans l'un des deux outils existants.)*
+
+**Ne réimplémente rien** : importe `recommendFindBooster()` de `find-booster.mjs` et
+`proposeDecomposition()` de `route-booster.mjs` telles quelles (Article 3 de CLAUDE.md). Son seul
+travail propre : `recommendFindDeepBooster()` (un « worthwhile » pour route-booster, symétrique à
+celui que find-booster avait déjà, absent jusqu'ici — un fichier mérite un vrai zoom de découpage
+seulement s'il est à la fois long ET riche en points de coupe candidats, jamais l'un sans l'autre)
+et `recommendFindBrain()`, qui rend un jugement unifié jamais exclusif — un même fichier peut
+mériter les deux recherches à la fois.
+
+**Le rappel, renforcé sur les deux volets demandés explicitement :**
+1. **Rappel automatique existant, étendu.** Le message post-commit qui nommait déjà les scripts
+   réels méritant find-booster (`flagFindBoosterCandidates()`, tâche #182) est rejoint par un second
+   message symétrique pour find-deep-booster (`flagFindDeepBoosterCandidates()`, même patron,
+   mêmes registres réels de `REGISTRIES`, jamais une seconde liste à maintenir à la main) — les deux
+   s'affichent désormais à chaque commit, jamais un seul des deux oublié.
+2. **Obligation écrite, non négociable** (même statut que l'obligation d'usage de SMART-CONSO-TOKEN,
+   cf. `docs/referentiel/smart-conso-token.md` — aucun mécanisme technique ne peut intercepter un
+   `Read`/`Grep` avant qu'il n'ait lieu, la seule vraie garantie dans ce paysage est une règle
+   écrite) : avant toute lecture intégrale d'un fichier potentiellement volumineux ou complexe,
+   consulter `node scripts/find-brain.mjs <fichier>` — jamais seulement se fier au rappel
+   automatique du dernier commit, qui peut être périmé si le fichier a grossi depuis.
+
+**Rappel plus général, à cet endroit précis de la charte** (demande explicite de l'utilisateur, au
+moment même de calibrer cette obligation) : cette discipline de consultation systématique avant
+d'agir ne se limite jamais à find-brain seul — le catalogue de LE-COORDINATEUR (`PRESTATIONS`,
+cf. section dédiée plus haut) reste le point d'entrée général pour se demander « un outil du
+paysage répond-il déjà à ce besoin ? » avant de foncer, à chaque nouvelle tâche, pas seulement pour
+la recherche dans le code. find-brain en est une instance concrète et automatisée ; le réflexe de
+fond reste toujours le même : penser à consulter les outils déjà là avant de refaire le travail à
+la main.
 
 **Distinct, jamais confondu, avec `docs/referentiel/regles-des-graphismes.md`** : ce document-là
 gouverne la scène 3D et l'interface web du SITE PUBLIC (le jeu que l'observateur voit) — ce
