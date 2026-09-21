@@ -636,7 +636,7 @@ bloqué par un statut, seulement par l'existence réelle d'une fonction ou d'un 
 | tool-brain (`scripts/tool-brain.mjs`) | Membre certifié (classique) | 🎖️ | cerveau élargi des rappels d'outils : généralise find-brain à TOUT le catalogue PRESTATIONS de LE-COORDINATEUR (description de tâche et/ou fichier ciblé) ; rappel post-commit centralisé (find-booster + find-deep-booster + menu PRESTATIONS en un seul bloc) ; rapport KPI (outils jamais sollicités, auto-diagnostic borné à son propre périmètre) | gratuit | à la demande (`node scripts/tool-brain.mjs "<tâche>" [--file <chemin>]` / `rapport`), automatiquement à chaque commit (rappel), et à chaque Ronde CIRCLE-TASKS (rapport) |
 | find-booster (`scripts/find-booster.mjs`, anciennement "route-find-booster") | Agent | 🎖️ | index par concept de 4 motifs réels (fonctions nommées, blocs anonymes commentés, entrées de tableau titrées, titres Markdown) — sert route.ts, check-house.mjs, lib/reference.ts et regles-de-travail.md, vérifié live sur les 4 ; `recommendFindBooster()` détecte le poids réel d'un fichier (réutilise SMART-CONSO-TOKEN, jamais le nombre de lignes seul) | gratuit | à la demande, sur (presque) tout fichier du dépôt — promu Membre de l'équipe complet le 2026-09-21 après usage réel concluant, cf. `docs/referentiel/find-booster.md` |
 | CLONE-HUNTER (`scripts/clone-hunter.mjs`) | Agent | 🎖️ | détecte des blocs de code dupliqués — v1 littérale (lignes identiques après normalisation d'espaces) ET v2 (blocs structurellement identiques sous renommage bijectif cohérent d'identifiants) — dans lib/scripts/app/components (hors components/ui, exclu — kit shadcn/Radix vendu tel quel, duplication assumée par design) ; vérifié live (13 trouvailles réelles au total) | gratuit, <1s sur tout le dépôt | **5e Gardien sacré du code depuis le 2026-09-22** (Article 20 — délivre un vrai scan de qualité ET tourne à chaque commit) : câblé dans le crochet post-commit réel, retiré de CIRCLE-TASKS (doublon dès qu'automatique à chaque commit), agrégé dans HYPER-SCAN-CHECKPOINT, cf. `docs/referentiel/clone-hunter.md` et `docs/referentiel/organisation-agence.md` §3 |
-| objectifs-vs-resultats (`scripts/objectifs-vs-resultats.mjs`) | Agent | 🎖️ | registre hand-maintained d'objectifs chiffrés par entité/période (`docs/objectifs-vs-resultats/registre.md`), calcule le résultat réel via `.tool-usage-history.json` (jamais un second calcul), statut atteint/en dessous/dépassé/pas de données — jamais un sous-agent de CASSANDRA-RH ni une extension du tableau de bord/KPI, cf. `docs/objectifs-vs-resultats-blueprint.md` | gratuit — mécanique, relit un historique déjà écrit | à la demande (`node scripts/objectifs-vs-resultats.mjs rapport`) |
+| objectifs-vs-resultats (surnom « R/O-Guardian », 2026-09-21 — nom technique gardé comme nom PRINCIPAL de la cellule à dessein : slugifyAgentName() dérive le slug du premier mot avant toute parenthèse, cf. note ci-dessous ; `scripts/objectifs-vs-resultats.mjs` inchangé) | Agent | 🎖️ | registre hand-maintained d'objectifs chiffrés par entité/période (`docs/objectifs-vs-resultats/registre.md`), calcule le résultat réel via `.tool-usage-history.json` (jamais un second calcul), statut atteint/en dessous/dépassé/pas de données — jamais un sous-agent de CASSANDRA-RH ni une extension du tableau de bord/KPI, cf. `docs/objectifs-vs-resultats-blueprint.md` | gratuit — mécanique, relit un historique déjà écrit | à la demande (`node scripts/objectifs-vs-resultats.mjs rapport`) |
 | CASSANDRA-RH (`scripts/cassandra-rh.mjs`) | Agent | 🎖️ | l'Agent Cadre RH de l'Agence Codex — NOTE l'équipe (constat chiffré par catégorie, jamais un seuil auto-jugé), SUPERVISE le badge (lit `checkAgentOnboarding()`, jamais ne le recalcule), LIT le KPI (`kpi-historique.csv`, jamais un second calcul), signale les outils à retirer/refondre (réutilise `tool-usage.mjs`/`clean-dirty-old.mjs`), squelette de recrutement en 3 étapes (sans vraie recherche web à ce stade) — jamais un jugement automatique, toujours l'utilisateur qui décide. Personnage fixe (même garde-fou anti-dérive que THE-FINAL-JUDGE), cf. `docs/cassandra-rh-conception.md` pour l'historique complet des décisions de calibrage | gratuit — mécanique, relit ce que le reste du réseau d'outils sait déjà, jamais un second calcul ni un appel API | signal léger à chaque Ronde CIRCLE-TASKS (`node scripts/cassandra-rh.mjs`) + bilan complet HTML sur demande (`node scripts/cassandra-rh.mjs rapport`) |
 
 Cette table remplace toute énumération informelle éparpillée dans la conversation : à jour à
@@ -1194,6 +1194,13 @@ que de compter sur la vigilance seule :
   CLAUDE.md` et relire chaque occurrence — si l'une d'elles attribue une capacité de LE-COORDINATEUR
   (câblage d'outils) à LE-PLANIFICATEUR ou inversement, c'est un vrai écart à corriger immédiatement
   (Article 3), jamais laissé pour plus tard.
+- **Un troisième nom souvent confondu avec les deux premiers, désambiguïsé le 2026-09-21** (question
+  directe de l'utilisateur : « check-details n'a-t-il pas cannibalisé le rôle de LE-PLANIFICATEUR ? »,
+  réponse vérifiée : non) : **check-tasks-details.mjs** ne stocke jamais rien et n'orchestre aucun
+  outil — il LIT LE-PLANIFICATEUR en lecture seule et en tire un rapport/une recommandation
+  (`recommendNextTasks()`), une capacité que LE-PLANIFICATEUR lui-même n'a jamais revendiquée. Même
+  mnémotechnique étendu : COORDINATEUR → outils ; PLANIFICATEUR → la mémoire des tâches ; check-tasks-
+  details → un rapport construit PAR-DESSUS cette mémoire, jamais un second endroit qui l'écrit.
 
 *(Ajouté le 2026-09-19, à la demande explicite de l'utilisateur : « est-il possible de le créer à
 moindre coût, simplement comme un coordinateur de fonctions existantes ? juste là pour fiabiliser
@@ -1336,6 +1343,18 @@ clone-hunter. Trois choix calibrés explicitement (jamais devinés) :
 délivre le badge de fait aujourd'hui (`checkAgentOnboarding()`) ; CASSANDRA-RH, une fois construite,
 consultera/affichera ce même résultat, jamais un second calcul indépendant (cf. section "Le badge"
 ci-dessus, décision déjà actée le 2026-09-20).
+
+**Écart réel trouvé et corrigé le 2026-09-21 (l'utilisateur n'a jamais vu défiler ces blocs dans la
+conversation malgré 7 certifications réellement déclenchées le même soir)** : « visible » voulait
+dire visible dans le TERMINAL du crochet post-commit (`scripts/hooks/check-last-commit.mjs`,
+exécuté automatiquement par git) — mais rien n'obligeait l'agent qui pilote à RECOPIER ce bloc dans
+sa PROCHAINE réponse à l'utilisateur, la seule chose que l'utilisateur voit réellement (Article 15).
+Un bloc produit dans une sortie de commande que l'agent ne cite jamais reste, du point de vue de
+l'utilisateur, comme s'il n'avait jamais existé. **Règle explicite ajoutée** : chaque fois qu'un
+commit déclenche une ou plusieurs annonces `🎖️ CERTIFICATION — NomAgent` (visibles dans la sortie du
+commit), l'agent les recopie VERBATIM dans son prochain message à l'utilisateur — jamais résumées en
+une phrase ("7 certifications se sont déclenchées"), jamais différées à "plus tard si demandé". Une
+absence d'annonce dans la sortie du commit n'a, à l'inverse, rien à recopier (silence normal).
 
 `loadBadgeCeremonyHistory()` réutilise `loadJson()` de `scripts/tool-usage.mjs` (désormais exportée)
 plutôt que d'écrire une 4e copie — CLONE-HUNTER venait de trouver cette exacte duplication (3

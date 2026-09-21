@@ -882,21 +882,33 @@ TOUT le catalogue PRESTATIONS de LE-COORDINATEUR (description de tâche libre et
 centralise en une seule bannière le rappel post-commit auparavant éparpillé en 3 blocs, et délivre
 un rapport de KPI d'usage réel (outils jamais sollicités) plus un auto-diagnostic borné à son propre
 périmètre — à chaque Ronde CIRCLE-TASKS et à la demande (`node scripts/tool-brain.mjs rapport`).
-**Obligation écrite d'usage réel, renforcée le 2026-09-21 (demande explicite de l'utilisateur :
-« toujours tester si find booster ou find deep peut être utilisé avant "grep" : toujours passer par
-"find brain" avant de faire une recherche, pour optimiser »)** — même limite honnête que
-SMART-CONSO-TOKEN, aucun mécanisme technique ne peut intercepter un `Read`/`Grep` avant qu'il n'ait
-lieu : **avant toute recherche dans un fichier existant** (pas seulement une lecture intégrale ou un
-grep répété), consulter d'abord `node scripts/tool-brain.mjs "<tâche>" --file <fichier>` (ou
-`find-brain.mjs <fichier>` directement pour le seul signal fichier) — jamais seulement se fier au
-rappel automatique du dernier commit (`docs/regles-de-travail.md` §7ter), qui peut être périmé si le
-fichier a grossi depuis. Preuve honnête que ce réflexe n'était pas encore acquis avant ce
-renforcement : trouvé le soir même en lançant `find-booster.mjs` directement sur un fichier sans
-passer par tool-brain d'abord. Principe général associé (même soir, même demande) : **avant chaque
-commande, se demander si un outil déjà existant répondrait plus vite, plus efficacement, ou de façon
-plus complète (accès à un rapport déjà produit)** — cf. `docs/regles-de-travail.md` §7ter pour le
-détail. Jamais les motifs exacts ni les fichiers propres à ce projet, qui vivent dans
-`docs/referentiel/find-booster.md` (instanciation) et `docs/find-booster/` (dossier + index).
+**Un seul point d'entrée obligatoire : tool-brain, jamais un choix entre plusieurs outils
+(re-précisé le 2026-09-21, demande explicite de l'utilisateur : « je ne dois pas m'emmêler entre
+tool-brain et find-brain, find-booster et find-deep-booster [...] tool-brain doit m'aider
+systématiquement, c'est lui qui est plugué directement à moi »).** Hiérarchie stricte, à ne jamais
+recomposer soi-même au moment d'agir :
+```
+tool-brain (le SEUL réflexe à avoir — jamais choisir entre les couches ci-dessous)
+ └─ find-brain (interne à tool-brain — décide find-booster et/ou find-deep-booster pour UN fichier)
+     ├─ find-booster       (index par concept dans un fichier déjà structuré)
+     └─ find-deep-booster  (surnom de route-booster.mjs — points de coupe d'une fonction géante)
+ └─ suggestPrestationsForTask (interne à tool-brain — tout le catalogue PRESTATIONS, pas que la recherche)
+```
+**Obligation écrite d'usage réel** (même limite honnête que SMART-CONSO-TOKEN, aucun mécanisme
+technique ne peut intercepter un `Read`/`Grep` avant qu'il n'ait lieu) : **avant toute recherche
+dans un fichier existant** (pas seulement une lecture intégrale ou un grep répété), consulter
+`node scripts/tool-brain.mjs "<tâche>" --file <fichier>` — **jamais** find-brain.mjs/find-booster.mjs/
+find-deep-booster(route-booster).mjs directement : `adviseToolBrain()` (tool-brain.mjs) appelle déjà
+`recommendFindBrain(filePath)` en interne, un appel séparé à find-brain serait redondant, jamais un
+second chemin légitime. Jamais seulement se fier au rappel automatique du dernier commit
+(`docs/regles-de-travail.md` §7ter), qui peut être périmé si le fichier a grossi depuis. Preuve
+honnête que ce réflexe n'était pas encore acquis avant ce renforcement : trouvé le soir même en
+lançant `find-booster.mjs` directement sur un fichier sans passer par tool-brain d'abord. Principe
+général associé (même soir, même demande) : **avant chaque commande, se demander si un outil déjà
+existant répondrait plus vite, plus efficacement, ou de façon plus complète (accès à un rapport
+déjà produit)** — cf. `docs/regles-de-travail.md` §7ter pour le détail. Jamais les motifs exacts ni
+les fichiers propres à ce projet, qui vivent dans `docs/referentiel/find-booster.md` (instanciation)
+et `docs/find-booster/` (dossier + index).
 
 ## CLONE-HUNTER — blueprint exportable
 
@@ -922,6 +934,10 @@ propres à ce projet, qui vivent dans `docs/referentiel/clone-hunter.md` (instan
 `docs/clone-hunter/` (dossier + index).
 
 ## objectifs-vs-resultats — blueprint exportable
+
+*(Surnom, 2026-09-21 : « R/O-Guardian » — nom technique gardé comme nom principal partout où un
+slug en dépend, jamais renommé en tête de la table maîtresse, contrairement à route-booster/
+CLAUDE.MD.SPY qui n'avaient aucun registre/catégorie accroché à leur slug.)*
 
 `docs/objectifs-vs-resultats-blueprint.md` documente l'ARCHITECTURE d'un registre hand-maintained
 d'objectifs chiffrés par entité/période confronté à un résultat mesuré par des outils déjà

@@ -1,5 +1,9 @@
 # objectifs-vs-resultats — blueprint exportable
 
+*(Surnom donné à l'instanciation de ce projet, 2026-09-21 : « R/O-Guardian ». Le blueprint générique
+ci-dessous reste sous son nom technique — un surnom est une décision par projet, pas une propriété du
+principe réutilisable.)*
+
 Petit outil générique : un registre hand-maintained d'objectifs chiffrés (une valeur cible, par
 entité, sur une période) confronté à un résultat mesuré par des outils DÉJÀ EXISTANTS dans le
 paysage — jamais un second calcul divergent, jamais un audit indépendant.

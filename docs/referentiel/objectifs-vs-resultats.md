@@ -1,5 +1,8 @@
 # objectifs-vs-resultats — instanciation pour ce projet
 
+*(Surnom, 2026-09-21 : « R/O-Guardian » — nom technique gardé comme nom principal partout où un
+slug en dépend, cf. la note dans CLAUDE.md à la section correspondante.)*
+
 Cf. `docs/objectifs-vs-resultats-blueprint.md` pour le principe générique. Ce document ne décrit que
 ce qui est propre à ce projet.
 
