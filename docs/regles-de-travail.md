@@ -1670,6 +1670,20 @@ Portée explicitement limitée à CIRCLE-TASKS (calibrage du 2026-09-20) : les a
 "recommandées" du projet (ex. `recommendNextTasks()` de check-tasks-details) gardent leur
 fonctionnement actuel, jamais généralisé sans nouvelle demande explicite.
 
+**Séquence stricte de l'Étape 5 + questions forcées (2026-09-22, demande explicite, à écrire noir
+sur blanc et à prévoir pour circle-process-guardian — détail complet dans
+`docs/circle-process-detail.txt`, Partie 7).** Ordre jamais réordonné : (1) livrer tous les rapports
+txt de la Ronde dans la conversation, (2) SEULEMENT ENSUITE les lire tous, (3) construire l'analyse,
+(4) livrer le récapitulatif HTML, (5) poser une série de 5 à 10 questions à choix forcé,
+proportionnellement au nombre de points réellement trouvés — une par problème identifié, jamais un
+nombre fixe. Raison explicite de l'ordre (1)→(2), donnée par l'utilisateur lui-même : il doit
+pouvoir lire les rapports AVANT l'analyse de l'agent, pour pouvoir proposer une lecture différente —
+jamais une analyse qui s'impose avant sa propre lecture. But assumé des questions forcées, écrit noir
+sur blanc par l'utilisateur : forcer son attention sur chaque problème trouvé même s'il n'ouvre aucun
+rapport lui-même — chaque problème mérite une action, même minimale. S'ajoute à l'Article 16 général
+(≥3 questions de vérification à chaque demande) sans le remplacer : cette série est spécifique à
+l'Étape 5 de CIRCLE-TASKS.
+
 **Garde-fou de fraîcheur du catalogue (2026-09-21, trou trouvé par l'utilisateur : « est-ce que la
 ronde a bien dans son catalogue tous les outils pertinents ? incluant tous les nouveaux
 outils/scripts ? »).** LE-COORDINATEUR a déjà `findToolsMissingFromMenu()` pour vérifier que son

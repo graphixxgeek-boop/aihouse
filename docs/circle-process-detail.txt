@@ -340,6 +340,14 @@ PARTIE 5 — CE QUE circle-process-guardian DOIT VÉRIFIER, RÉCAPITULATIF
 5bis. Le récapitulatif contient une vraie analyse approfondie (pas un simple tableau) construite à
    partir de la lecture individuelle de chaque rapport produit — et toute action qui en découle est
    à la fois écrite dans docs/suivi/ ET rapportée explicitement à l'utilisateur dans la même Ronde.
+5ter. SÉQUENCE STRICTE, jamais réordonnée (demande explicite du 2026-09-22, cf. PARTIE 7) :
+   (a) livrer TOUS les rapports txt produits par la Ronde dans la conversation, (b) SEULEMENT
+   ENSUITE lire tous les fichiers, (c) construire l'analyse, (d) livrer le récapitulatif HTML,
+   (e) poser une série de 5 à 10 questions à choix forcé (une par point/problème important trouvé,
+   jamais une simple case à cocher "vu") pour attirer l'attention de l'utilisateur sur chaque point,
+   même s'il n'ouvre aucun rapport lui-même. Le but explicite de l'ordre (a)→(b) : l'utilisateur a
+   accès aux rapports AVANT l'analyse de l'agent, pour pouvoir proposer une lecture différente —
+   jamais une analyse imposée avant qu'il ait pu lire lui-même.
 6. record-run a bien été appelé (le compteur de fraîcheur post-commit doit être retombé à 0).
 7. findOrphanReportFiles() ne remonte aucun fichier ARGUS (ou futur registre "un fichier par
    passage") resté orphelin.
@@ -389,3 +397,30 @@ circle-process-guardian devra donc, une fois construit, connaître EXACTEMENT ce
 par outil (jamais un chemin recopié en dur qui divergerait au premier nouvel outil ajouté — lire
 CIRCLE_REPORT_FOLDERS/REGISTRIES dynamiquement, même discipline Article 24 que le reste du
 paysage).
+
+=====================================================================
+PARTIE 7 — MISE À JOUR DU 2026-09-22 (nouvelle règle de séquençage + questions forcées)
+=====================================================================
+Demande explicite de l'utilisateur, à écrire noir sur blanc et à prévoir pour circle-process-guardian
+(cf. point 5ter, PARTIE 5 ci-dessus) :
+
+1. SÉQUENCE OBLIGATOIRE de l'Étape 5 (jamais réordonnée) : livraison de tous les rapports txt de la
+   Ronde dans la conversation → lecture de tous les fichiers par l'agent → construction de l'analyse
+   → livraison du récapitulatif HTML → question de calibrage forcée. Raison explicite : l'utilisateur
+   doit pouvoir lire les rapports AVANT l'analyse de l'agent, pour proposer une lecture différente —
+   jamais un ordre qui lui imposerait la lecture de l'agent en premier.
+2. SÉRIE DE QUESTIONS FORCÉES en fin d'analyse, 5 à 10 questions proportionnellement au nombre de
+   points/problèmes réellement trouvés dans l'analyse (jamais un nombre fixe indépendant du contenu).
+   Chaque question porte sur UN point précis de l'analyse et force un choix explicite, même simple,
+   via l'outil de questions dédié (format Article 16 : type en préfixe, options concrètes). But
+   assumé, écrit noir sur blanc par l'utilisateur lui-même : forcer l'attention de l'utilisateur sur
+   chaque problème trouvé, même s'il n'a ouvert aucun rapport et ne lit pas l'analyse en détail —
+   chaque problème mérite une action, même minimale.
+3. Cette règle s'ajoute à l'Article 16 existant (≥3 questions de vérification) sans le remplacer :
+   la série de 5-10 questions est spécifique à l'Étape 5 de CIRCLE-TASKS, jamais une substitution
+   des questions de vérification générales posées à chaque demande de l'utilisateur.
+
+circle-process-guardian devra donc vérifier une neuvième chose (en plus des 8 de la PARTIE 5) :
+que la séquence stricte ci-dessus a bien été respectée dans cet ordre exact, et que le nombre de
+questions posées en fin d'analyse est cohérent avec le nombre de points réels trouvés (jamais zéro
+question sur une analyse à plusieurs problèmes, jamais une question par détail insignifiant).
