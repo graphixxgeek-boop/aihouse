@@ -346,3 +346,23 @@ ci-dessus. Cette technique reste un filtre MOT-CLÉ gratuit, jamais un remplacem
 (qui fait une vraie relecture qualitative capable de détecter un écart subtil, pas seulement une
 recherche littérale) — utile ici parce que la question posée était concrète et cherchable
 ("CASSANDRA a-t-elle été mentionnée sans être tracée ?"), pas une évaluation de fidélité globale.
+
+## 10. Premier livrable concret — l'organigramme visuel (2026-09-21)
+
+*(Demande explicite de l'utilisateur, au moment même de la reclarification du badge « Membre
+certifié » : « montre moi un schema de l'organisation de l'agence [...] cette vue et cette demande
+devraient invoquer des rapports existants chez cassandra : mais elle n'existe pas encore. servons
+nous de cette tache pour alimenter le projet "CASSANDRA" [...] c'est cassandra qui s'occupe de ce
+genre de questions normalement ».)*
+
+Premier signe concret de ce que sera une mission réelle de CASSANDRA-RH une fois construite :
+produire, à la demande, une vue visuelle consolidée de l'organigramme (`docs/referentiel/organisation-agence.md`
++ la carte des outils de `docs/regles-de-travail.md` §7ter), plutôt qu'un document texte à lire
+ligne par ligne. Livré ce soir-là comme un Artifact HTML autonome (org chart complet : Direction,
+5 Gardiens sacrés, Agents Spéciaux, 6 suites de Membres, Utilitaires nommés, Infrastructure, et le
+rappel des 3 catégories définitivement hors agence), intégré à une vue plus large du projet (Le Jeu
+vs L'Agence Codex) — pas un rapport isolé. **Reconstruction mécanique attendue une fois CASSANDRA-RH
+construite** : régénérer cette même vue en relisant directement `AGENT_CATEGORIES` (lib-shell.mjs),
+la table maîtresse et `checkAllAgentBadges()` plutôt qu'une transcription manuelle recopiée à la
+main comme ce soir — jamais une seconde source de vérité qui pourrait diverger de l'organigramme
+canonique.
