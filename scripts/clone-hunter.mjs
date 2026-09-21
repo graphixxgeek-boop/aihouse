@@ -12,6 +12,19 @@
 // demanderait une vraie analyse syntaxique hors de portée d'un outil "sans nouvelle dépendance".
 // Même famille d'heuristique texte que route-booster.mjs/find-booster.mjs — zéro parseur AST,
 // zéro dépendance nouvelle.
+//
+// v2 (2026-09-21, tâche #177, demande explicite : « améliore CLONE-HUNTER, au-delà de la v1
+// littérale »). Reste dans le même esprit "zéro nouvelle dépendance, zéro parseur AST" : au lieu
+// d'un texte identique, on compare la SHAPE token par token (identifiants ↔ un même symbole neutre,
+// tout le reste — mots-clés, opérateurs, ponctuation, nombres, chaînes — doit rester identique) et
+// on exige qu'un SEUL renommage bijectif cohérent explique tout le bloc (findNearDuplicateBlocks/
+// matchLineTokens) — jamais juste "même forme de ligne", qui serait beaucoup trop bruyant seul
+// (des lignes aussi banales que `return x;` partagent leur forme partout). C'est cette cohérence de
+// renommage sur toute la longueur du bloc qui fait la différence entre un vrai copié-collé renommé
+// et une simple coïncidence de structure. v1 reste inchangée et continue de tourner en plus (les
+// deux se complètent, jamais l'un ne remplace l'autre) ; v2 ignore volontairement tout bloc où le
+// "renommage" trouvé est en réalité l'identité (a→a partout) — ce cas-là, c'est un doublon littéral,
+// déjà signalé par v1, jamais compté deux fois.
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
