@@ -27,6 +27,7 @@ import { join } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { toolsNeverUsed } from "./tool-usage.mjs";
 import { recommendFindBooster } from "./find-booster.mjs";
+import { AGENT_CATEGORIES } from "./lib-shell.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -97,7 +98,13 @@ export const REGISTRIES = [
   { slug: "le-coordinateur-catalogue", label: "Catalogue LE-COORDINATEUR", family: "Coordination", path: "docs/le-coordinateur-catalogue/", decision: "delivery_html", scriptPath: "scripts/le-coordinateur.mjs" },
   { slug: "dream-team-photo", label: "Photo de la dream team", family: "Coordination", path: "docs/profil-utilisateur/", decision: "delivery_html", scriptPath: "scripts/le-coordinateur.mjs" },
   { slug: "find-booster", label: "find-booster", family: "Outillage de navigation", path: "docs/find-booster/", decision: "texte", scriptPath: "scripts/find-booster.mjs" },
-  { slug: "clone-hunter", label: "CLONE-HUNTER", family: "Qualité du code", path: "docs/clone-hunter/", decision: "texte", scriptPath: "scripts/clone-hunter.mjs" },
+  // family corrigée le 2026-09-21 (tâche #290, écart réel trouvé en construisant
+  // findGardiensMissingFromSource() ci-dessous) : "Qualité du code" datait d'avant la promotion de
+  // CLONE-HUNTER en 5e Gardien sacré du code (AGENT_CATEGORIES, lib-shell.mjs) — jamais mise à jour
+  // ici au moment de cette promotion, exactement le genre d'écart entre deux registres que
+  // l'Article 2/13 interdit de laisser traîner une fois trouvé.
+  { slug: "clone-hunter", label: "CLONE-HUNTER", family: "Équipe noyau (Article 20)", path: "docs/clone-hunter/", decision: "texte", scriptPath: "scripts/clone-hunter.mjs" },
+  { slug: "objectifs-vs-resultats", label: "objectifs-vs-resultats", family: "Gouvernance interne", path: "docs/objectifs-vs-resultats/", decision: "texte", scriptPath: "scripts/objectifs-vs-resultats.mjs" },
 ];
 
 // findEngineCodeInRegistries() (2026-09-21, demande explicite de l'utilisateur après avoir repéré
@@ -112,6 +119,28 @@ export const REGISTRIES = [
 const ENGINE_CODE_PREFIXES = ["lib/", "app/", "components/"];
 export function findEngineCodeInRegistries(registries = REGISTRIES) {
   return registries.filter((r) => ENGINE_CODE_PREFIXES.some((prefix) => (r.scriptPath ?? "").startsWith(prefix)));
+}
+
+// findGardiensMissingFromSource() (2026-09-21, tâche #290 « registre canonique des outils ») —
+// root cause réelle trouvée en investiguant : aucune liste unique ne dit "quels outils DOIVENT être
+// appelés où" ; chaque script qui a besoin de "tous les outils" (HYPER-SCAN-CHECKPOINT, CIRCLE_ITEMS,
+// PRESTATIONS...) maintient sa propre copie, jamais vérifiée contre les autres — exemple réel déjà
+// survenu le même soir : CLONE-HUNTER promu 5e Gardien sacré du code (AGENT_CATEGORIES,
+// lib-shell.mjs) mais un temps oublié dans le sh() de la version légère de HYPER-SCAN-CHECKPOINT
+// (corrigé le soir même de sa promotion, mais rien n'empêchait mécaniquement l'oubli de durer).
+// Plutôt qu'une NOUVELLE liste à maintenir (Article 10, anti-duplication) : réutilise deux registres
+// déjà canoniques et déjà tenus à la main — AGENT_CATEGORIES (qui EST un Gardien) et REGISTRIES
+// ci-dessus (son scriptPath réel) — et vérifie que le texte source du passage donné appelle bien
+// chacun de ces scriptPath. Un futur 6e Gardien oublié dans HYPER-SCAN-CHECKPOINT ferait échouer ce
+// test dès le prochain commit, jamais seulement remarqué par une relecture manuelle a posteriori.
+export function findGardiensMissingFromSource(sourceText, { categories = AGENT_CATEGORIES, registries = REGISTRIES } = {}) {
+  const gardienSlugs = Object.entries(categories)
+    .filter(([, cat]) => cat === "Gardien sacré du code")
+    .map(([slug]) => slug);
+  return gardienSlugs.filter((slug) => {
+    const scriptPath = registries.find((r) => r.slug === slug)?.scriptPath;
+    return !scriptPath || !String(sourceText ?? "").includes(scriptPath);
+  });
 }
 
 function readScriptSource(scriptPath, readFileImpl = readFileSync) {

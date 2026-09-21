@@ -36,8 +36,16 @@ export const FIND_DEEP_BOOSTER_NICKNAME = "find-deep-booster";
 export const MONOLITH_LINE_THRESHOLD = 500;
 export const MIN_CUT_POINTS = 2;
 
+// notFound : même correction et même raison que recommendFindBooster() (find-booster.mjs,
+// 2026-09-21) — un ENOENT non catché ici plantait tout appelant direct sur un fichier pas encore
+// créé, exactement le moment où on veut consulter l'outil avant d'écrire.
 export function recommendFindDeepBooster(filePath, { lineThreshold = MONOLITH_LINE_THRESHOLD, minCutPoints = MIN_CUT_POINTS } = {}) {
-  const source = readFileSync(filePath, "utf8");
+  let source;
+  try {
+    source = readFileSync(filePath, "utf8");
+  } catch {
+    return { lineCount: 0, cutPointCount: 0, worthwhile: false, notFound: true };
+  }
   const lineCount = source.split("\n").length;
   const cutPointCount = proposeDecomposition(filePath).length;
   return { lineCount, cutPointCount, worthwhile: lineCount >= lineThreshold && cutPointCount >= minCutPoints };

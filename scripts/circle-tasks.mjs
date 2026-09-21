@@ -385,6 +385,7 @@ export const CIRCLE_EXCLUDED_REGISTRIES = {
   "find-booster": "outil de navigation à la demande sur un fichier précis, jamais un scan périodique de tout le dépôt",
   "el-professor": "déjà obligatoire à chaque simulation (Article 18, étape 4bis), une seconde routine ferait doublon",
   simulations: "l'archive elle-même, pas un outil à relancer périodiquement",
+  "objectifs-vs-resultats": "registre hand-maintained consulté quand un objectif précis intéresse quelqu'un, pas une routine mécanique qui aurait toujours quelque chose de neuf à dire à chaque Ronde (contrairement à tool-brain-report, pensé pour construire une habitude) — même logique que check-tasks-details ci-dessus",
 };
 export function findRegistriesMissingFromCircle(existingPaths, items = CIRCLE_ITEMS) {
   const registrySlugs = [...new Set(

@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 229'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 230'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4920,7 +4920,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // (docs/suivi #230), jamais celui qui la prend. Testé avec un readFileImpl injecté et un
   // sous-ensemble isolé de registres — jamais dépendant du contenu réel des scripts du dépôt, qui
   // peut changer indépendamment de ce test.
-  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex, LOCAL_JOURNALS, auditLocalJournals, findJournalsMissingFromGitignore, findEngineCodeInRegistries, flagFindBoosterCandidates, checkHtmlReportTheme } = await import('../scripts/doc-report.mjs');
+  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex, LOCAL_JOURNALS, auditLocalJournals, findJournalsMissingFromGitignore, findEngineCodeInRegistries, findGardiensMissingFromSource, flagFindBoosterCandidates, checkHtmlReportTheme } = await import('../scripts/doc-report.mjs');
   assert.ok(REGISTRIES.length >= 15, 'the registry table must cover every real tool registry of the network, never a partial or forgotten subset');
   assert.ok(REGISTRIES.every((r) => r.slug && r.label && r.family && r.path && r.decision), 'every registry entry must be fully specified — a half-filled row would silently break the family grouping or the decision audit');
 
@@ -4935,6 +4935,23 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     { slug: 'fake-member', label: 'Fake Member', family: 'Test', path: 'docs/fake-member/', decision: 'texte', scriptPath: 'lib/some-engine-file.ts' },
   ];
   assert.deepEqual(findEngineCodeInRegistries(fakeEngineRegistries).map((r) => r.slug), ['fake-member'], 'a registry entry whose scriptPath lives in lib/ (the game engine, never a team member) must be flagged by name, while a genuine scripts/*.mjs entry is never a false positive');
+
+  // findGardiensMissingFromSource() (2026-09-21, task #290 "registre canonique des outils") — reuses
+  // AGENT_CATEGORIES (lib-shell.mjs, which Gardiens exist) and REGISTRIES (their real scriptPath)
+  // rather than inventing a third list, and checks a given source text calls every one of them.
+  const fakeCategories = { 'gardien-un': 'Gardien sacré du code', 'gardien-deux': 'Gardien sacré du code', 'pas-un-gardien': 'Membre — Suite Test' };
+  const fakeGardienRegistries = [
+    { slug: 'gardien-un', label: 'Gardien Un', family: 'Test', path: 'docs/gardien-un/', decision: 'texte', scriptPath: 'scripts/gardien-un.mjs' },
+    { slug: 'gardien-deux', label: 'Gardien Deux', family: 'Test', path: 'docs/gardien-deux/', decision: 'texte', scriptPath: 'scripts/gardien-deux.mjs' },
+  ];
+  assert.deepEqual(findGardiensMissingFromSource('sh("node scripts/gardien-un.mjs"); sh("node scripts/gardien-deux.mjs");', { categories: fakeCategories, registries: fakeGardienRegistries }), [], 'a source text that calls every real Gardien scriptPath must report zero gaps, never a false positive');
+  assert.deepEqual(findGardiensMissingFromSource('sh("node scripts/gardien-un.mjs");', { categories: fakeCategories, registries: fakeGardienRegistries }), ['gardien-deux'], 'a Gardien whose scriptPath never appears in the given source text is the exact real gap this function exists to catch — the class of oversight CLONE-HUNTER once fell into in hyper-scan-checkpoint.mjs\'s light-version sub-process list, corrected the same evening but never mechanically guaranteed until now');
+  assert.deepEqual(findGardiensMissingFromSource('rien du tout ici', { categories: fakeCategories, registries: [] }), ['gardien-un', 'gardien-deux'], 'a Gardien with no registered scriptPath at all (REGISTRIES desync) must also be flagged as missing, never silently skipped');
+  // Live check against the real repository (2026-09-21) — the actual guarantee this test buys:
+  // every Gardien sacré du code known to AGENT_CATEGORIES today is genuinely called from
+  // hyper-scan-checkpoint.mjs's real source, not just from a fabricated fixture.
+  const realHyperScanSource = fs.readFileSync(new URL('../scripts/hyper-scan-checkpoint.mjs', import.meta.url), 'utf8');
+  assert.deepEqual(findGardiensMissingFromSource(realHyperScanSource), [], 'checked live against the real hyper-scan-checkpoint.mjs and the real AGENT_CATEGORIES/REGISTRIES: every current Gardien sacré du code (ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD/CLONE-HUNTER) must genuinely be called from its light-version sub-process list — a future 6th Gardien forgotten here now fails this test on the very next commit, instead of only being noticed by a manual re-read');
 
   const fakeReadFile = (path) => {
     if (path.includes('tool-with-html')) return 'import { renderHtmlReport } from "./html-report.mjs";';
@@ -4964,7 +4981,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(rows.find((r) => r.slug === 'archived-tool').neverSolicited, true, 'a registry with zero real usage events must be flagged as unsolicited, reusing tool-usage.mjs\'s own toolsNeverUsed() rather than a second divergent calculation');
   assert.equal(byFamily.get('Test').length, 4, 'rows must be grouped by their declared family, never flattened or regrouped by a guessed criterion');
   assert.deepEqual(mismatches.map((m) => m.slug), ['unwired-html-tool'], 'the top-level mismatches list must surface exactly the real HTML-wiring gap, ready for a human/agent to read — Doc-Report itself never fixes it');
-  console.log('Passed: Doc-Report (task #165) mechanically audits the already-decided HTML/texte choice against the real producing script\'s source (never guessed from a tool\'s name), flags an undeclared docs/ registry as a real gap while sparing the reference/suivi folders, cross-references tool-usage.mjs\'s real usage history to spot a registry nobody ever solicits — a genuine wiring gap (THE-DEEP-READER, Simulations) was found on its very first real run against the live repository — and, findEngineCodeInRegistries(), flags any registry whose scriptPath points at the game engine (lib/app/components) rather than a real scripts/*.mjs team-member tool, verified live to hold on every real registry today.');
+  console.log('Passed: Doc-Report (task #165) mechanically audits the already-decided HTML/texte choice against the real producing script\'s source (never guessed from a tool\'s name), flags an undeclared docs/ registry as a real gap while sparing the reference/suivi folders, cross-references tool-usage.mjs\'s real usage history to spot a registry nobody ever solicits — a genuine wiring gap (THE-DEEP-READER, Simulations) was found on its very first real run against the live repository — findEngineCodeInRegistries() flags any registry whose scriptPath points at the game engine (lib/app/components) rather than a real scripts/*.mjs team-member tool, verified live to hold on every real registry today — and findGardiensMissingFromSource() (task #290, the canonical tool registry) reuses AGENT_CATEGORIES + REGISTRIES to verify live that hyper-scan-checkpoint.mjs genuinely calls every current Gardien sacré du code, never a second divergent list.');
 
   // checkHtmlReportTheme() (2026-09-22, explicit user rule: every HTML report must stay in the
   // game's real colors even as the future graphic charter evolves, and must open at 150% zoom).
@@ -5314,7 +5331,11 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(heavyLive.worthwhile === true && heavyLive.tokens > 8000, 'checked live: lib/reference.ts must be recommended as worthwhile by its real high token weight, despite its genuinely low line count — the exact real case that disproves a line-count-only heuristic');
   const lightLive = recommendFindBooster('lib/house.ts');
   assert.equal(lightLive.worthwhile, false, 'checked live: a genuinely small, low-weight real file (lib/house.ts) must never be recommended — the guard against recommending find-booster on every file indiscriminately');
-  console.log('Passed: find-booster (2026-09-21, promoted the same night to a full Membre de l\'équipe after proving itself on 4 real different files) indexes all four real structural patterns this codebase actually uses — named functions, anonymous top-level test blocks, titled array entries (lib/reference.ts\'s real style, with an honest length-capped preview rather than a full-text dump), and Markdown headings (gated to .md files only) — tags each against the real HARMONIA themes by honest keyword match, answers a concept search against name+description, and now recommends itself via recommendFindBooster(), which reuses SMART-CONSO-TOKEN\'s own real token-weight formula rather than line count — verified live to correctly flag lib/reference.ts as worthwhile (high real weight, low line count) and lib/house.ts as not (genuinely small).');
+  // notFound (2026-09-21, real bug found running tool-brain against a file not yet created) : a
+  // missing path must never crash, only report an honest absence.
+  const missingLive = recommendFindBooster('scripts/does-not-exist-yet.mjs');
+  assert.deepEqual(missingLive, { tokens: 0, entryCount: 0, worthwhile: false, notFound: true }, 'a nonexistent file path must return an honest notFound verdict rather than throwing an uncaught ENOENT — the exact crash found live while consulting tool-brain before creating a new script');
+  console.log('Passed: find-booster (2026-09-21, promoted the same night to a full Membre de l\'équipe after proving itself on 4 real different files) indexes all four real structural patterns this codebase actually uses — named functions, anonymous top-level test blocks, titled array entries (lib/reference.ts\'s real style, with an honest length-capped preview rather than a full-text dump), and Markdown headings (gated to .md files only) — tags each against the real HARMONIA themes by honest keyword match, answers a concept search against name+description, now recommends itself via recommendFindBooster(), which reuses SMART-CONSO-TOKEN\'s own real token-weight formula rather than line count — verified live to correctly flag lib/reference.ts as worthwhile (high real weight, low line count) and lib/house.ts as not (genuinely small) — and, since the same evening, reports an honest notFound rather than crashing on a file that does not exist yet.');
 }
 
 {
@@ -5397,6 +5418,12 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(brain.recommend.sort(), ['find-booster', 'find-deep-booster'].sort(), 'checked live against the real route.ts: a file this dense in named/commented sections AND this rich in real cut point candidates must recommend BOTH tools at once, never forced into an exclusive either/or choice');
   const brainSmall = recommendFindBrain('scripts/lib-shell.mjs');
   assert.deepEqual(brainSmall.recommend, [], 'checked live against a genuinely small real file: neither tool should be recommended — an honest empty recommendation, never a forced suggestion just to have something to say');
+  // notFound (2026-09-21) — same real bug, checked through the unified recommendFindBrain() entry
+  // point rather than only the two underlying functions directly.
+  const brainMissing = recommendFindBrain('scripts/does-not-exist-yet.mjs');
+  assert.equal(brainMissing.findBooster.notFound, true, 'recommendFindBrain() must surface findBooster.notFound on a missing path rather than crash');
+  assert.equal(brainMissing.findDeepBooster.notFound, true, 'recommendFindBrain() must surface findDeepBooster.notFound on a missing path rather than crash');
+  assert.deepEqual(brainMissing.recommend, [], 'a missing file must recommend neither tool, never a false positive fabricated from empty defaults');
 
   console.log('Passed: find-brain (2026-09-21) unifies find-booster and find-deep-booster (the real display nickname for route-booster.mjs, never a file rename) without reimplementing either — recommendFindDeepBooster() reuses proposeDecomposition() verbatim and correctly requires BOTH real length AND real cut-point richness together (checked live: the real route.ts crosses both, a genuinely small real file crosses neither), flagFindDeepBoosterCandidates() mirrors flagFindBoosterCandidates()\'s exact shape over the same real REGISTRIES (a missing script skipped honestly, a duplicated scriptPath counted once), and recommendFindBrain() renders a genuinely non-exclusive verdict — checked live to recommend both tools together on the real dense route.ts and neither on a genuinely small real file.');
 }
@@ -5506,6 +5533,66 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const nearLive = buildNearDuplicateReport();
   assert.ok(!nearLive.some((c) => c.occurrences.some((o) => o.file.startsWith('components/ui/'))), 'v2 must inherit the same components/ui exclusion as v1 — the same vendored-kit noise, never re-introduced through the near-duplicate path');
   console.log('Passed: CLONE-HUNTER v2 (2026-09-21, task #177) — detects a block that is the exact same logic under one single consistent bijective identifier renaming across the whole block (never just "same line shape" alone, which real code shares constantly and would be pure noise), correctly rejects a structural coincidence where the required renaming is inconsistent line-to-line, never treats a real member access (.length, .push) as a renamable identifier, and never double-reports a purely literal duplicate already caught by v1 — verified live against this actual repository to inherit the same components/ui exclusion.');
+}
+
+{
+  // objectifs-vs-resultats (tâche #287, 2026-09-21) — jamais un second calcul divergent : lit
+  // .tool-usage-history.json à travers loadToolUsageHistory() (tool-brain.mjs), jamais un second
+  // fichier ou un second parseur. Colonnes lues par nom (même discipline que parseToolsTable()).
+  const { parseObjectifsTable, computeResultat, periodStatus, computeStatus, buildObjectifsReport, formatObjectifsReport, loadObjectifsRegistry } = await import('../scripts/objectifs-vs-resultats.mjs');
+  const { loadToolUsageHistory: loadToolUsageHistoryLive } = await import('../scripts/tool-brain.mjs');
+
+  const fakeMarkdown = [
+    '| Entité | Début | Fin | Objectif | Unité | Source | Note |',
+    '|---|---|---|---|---|---|---|',
+    '| outil-a | 2020-01-01 | 2020-01-31 | 3 | sollicitations | usage-count | test compte |',
+    '| outil-b | 2020-01-01 | 2020-01-31 | 50 | % | found-rate | test taux |',
+    '| outil-c | 2020-01-01 | 2020-01-31 | 2 | sollicitations | usage-count | jamais sollicité sur la période |',
+  ].join('\n');
+  assert.equal(parseObjectifsTable('').length, 0, 'an empty registry must report zero objectives, never crash');
+  const parsed = parseObjectifsTable(fakeMarkdown);
+  assert.equal(parsed.length, 3, 'every real data row must be parsed, the header/separator lines excluded');
+  assert.deepEqual(parsed[0], { entite: 'outil-a', debut: '2020-01-01', fin: '2020-01-31', objectif: 3, unite: 'sollicitations', source: 'usage-count', note: 'test compte' }, 'columns must be read by name, matching the exact real header order');
+
+  const fakeHistory = { events: [
+    { toolSlug: 'outil-a', origin: 'demande', at: Date.parse('2020-01-05'), foundSomething: true },
+    { toolSlug: 'outil-a', origin: 'demande', at: Date.parse('2020-01-10'), foundSomething: false },
+    { toolSlug: 'outil-a', origin: 'demande', at: Date.parse('2020-02-01'), foundSomething: true }, // hors période, doit être ignoré
+    { toolSlug: 'outil-b', origin: 'demande', at: Date.parse('2020-01-05'), foundSomething: true },
+    { toolSlug: 'outil-b', origin: 'demande', at: Date.parse('2020-01-06'), foundSomething: false },
+  ] };
+  const now = Date.parse('2020-06-01'); // bien après la fin des 3 périodes de test
+
+  const resultatA = computeResultat(parsed[0], fakeHistory, now);
+  assert.deepEqual(resultatA, { valeur: 2, hasData: true }, 'usage-count must count only the events genuinely inside [début, fin], excluding one that falls outside the period even for the same entity');
+  const resultatB = computeResultat(parsed[1], fakeHistory, now);
+  assert.deepEqual(resultatB, { valeur: 50, hasData: true }, 'found-rate must compute the real percentage of foundSomething:true among matching events, never a second divergent formula from tool-usage.mjs');
+  const resultatC = computeResultat(parsed[2], fakeHistory, now);
+  assert.deepEqual(resultatC, { valeur: 0, hasData: true }, 'usage-count with zero matching events is an honest real zero, never confused with "no data"');
+  const resultatBEmpty = computeResultat({ ...parsed[1], entite: 'outil-jamais-vu' }, fakeHistory, now);
+  assert.deepEqual(resultatBEmpty, { valeur: null, hasData: false }, 'found-rate with zero matching events must report an honest absence of data, never a fabricated 0%');
+
+  assert.equal(computeStatus(parsed[0], resultatA), 'en dessous', 'a result below the objective must read "en dessous"');
+  assert.equal(computeStatus({ ...parsed[0], objectif: 2 }, resultatA), 'atteint', 'a result exactly equal to the objective must read "atteint", never "dépassé" from an arbitrary margin');
+  assert.equal(computeStatus({ ...parsed[0], objectif: 1 }, resultatA), 'dépassé', 'a result strictly above the objective must read "dépassé"');
+  assert.equal(computeStatus(parsed[1], resultatBEmpty), 'pas de données', 'a found-rate objective with zero real events must read "pas de données", never a misleading numeric status');
+
+  assert.equal(periodStatus(parsed[0], Date.parse('2019-12-01')), 'à venir', 'a period whose start date is still in the future must read "à venir"');
+  assert.equal(periodStatus(parsed[0], Date.parse('2020-01-15')), 'en cours', 'a period currently between début and fin must read "en cours"');
+  assert.equal(periodStatus(parsed[0], now), 'clos', 'a period whose end date has already passed must read "clos"');
+
+  const report = buildObjectifsReport(fakeMarkdown, fakeHistory, { now });
+  assert.equal(report.length, 3, 'the report must carry exactly one row per registry entry');
+  assert.equal(report[0].statut, 'en dessous', 'the assembled report must carry the same computed status as the standalone functions, never a diverging recomputation');
+  assert.equal(report[0].periode, 'clos', 'the assembled report must also carry the period status alongside the objective status');
+  assert.ok(formatObjectifsReport([]).length > 0 && !/undefined/.test(formatObjectifsReport(report)), 'an empty report must render an honest explanatory message, and a real report must never leak a literal "undefined" for a missing unité/note');
+
+  // Vérification live (2026-09-21) — le vrai registre + le vrai historique du dépôt, jamais un
+  // fichier introuvable qui ferait planter le rapport plutôt que d'afficher une liste vide.
+  const liveMarkdown = loadObjectifsRegistry();
+  const liveReport = buildObjectifsReport(liveMarkdown, loadToolUsageHistoryLive());
+  assert.ok(liveReport.length >= 1, 'the real committed registre.md must be readable and carry at least the tool-brain objective set the same night it was created');
+  console.log('Passed: objectifs-vs-resultats (task #287, 2026-09-21) parses its hand-maintained registry by column name, computes a real result strictly bounded to [début, min(fin, maintenant)] from the exact same .tool-usage-history.json tool-usage.mjs/tool-brain.mjs already read (never a second divergent measurement), reports an honest "pas de données" for a found-rate objective with zero matching events rather than a fabricated 0%, derives atteint/en dessous/dépassé with a strict equality for "atteint" rather than an arbitrary margin, tracks the period\'s own à-venir/en-cours/clos state separately from the objective\'s status, and — verified live — reads the real committed registry.');
 }
 
 {

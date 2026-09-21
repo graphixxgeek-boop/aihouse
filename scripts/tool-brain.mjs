@@ -169,7 +169,11 @@ function main() {
     console.log("Aucune correspondance dans le catalogue PRESTATIONS pour cette description.");
   }
   if (fileAdvice) {
-    console.log(fileAdvice.recommend.length ? `\n🧠 find-brain : ${fileAdvice.recommend.join(" + ")} recommandé(s) pour ce fichier.` : "\n🧠 find-brain : aucun des deux outils de recherche n'est nécessaire pour ce fichier.");
+    if (fileAdvice.findBooster.notFound && fileAdvice.findDeepBooster.notFound) {
+      console.log("\n🧠 find-brain : fichier introuvable (pas encore créé ?) — rien à recommander tant qu'il n'existe pas.");
+    } else {
+      console.log(fileAdvice.recommend.length ? `\n🧠 find-brain : ${fileAdvice.recommend.join(" + ")} recommandé(s) pour ce fichier.` : "\n🧠 find-brain : aucun des deux outils de recherche n'est nécessaire pour ce fichier.");
+    }
   }
   if (!prestations.length && !fileAdvice) {
     console.log("Vérifier manuellement si un outil existant répond déjà au besoin avant de foncer (Article 3, anti-doublon).");

@@ -636,6 +636,7 @@ bloqué par un statut, seulement par l'existence réelle d'une fonction ou d'un 
 | tool-brain (`scripts/tool-brain.mjs`) | Membre certifié (classique) | 🎖️ | cerveau élargi des rappels d'outils : généralise find-brain à TOUT le catalogue PRESTATIONS de LE-COORDINATEUR (description de tâche et/ou fichier ciblé) ; rappel post-commit centralisé (find-booster + find-deep-booster + menu PRESTATIONS en un seul bloc) ; rapport KPI (outils jamais sollicités, auto-diagnostic borné à son propre périmètre) | gratuit | à la demande (`node scripts/tool-brain.mjs "<tâche>" [--file <chemin>]` / `rapport`), automatiquement à chaque commit (rappel), et à chaque Ronde CIRCLE-TASKS (rapport) |
 | find-booster (`scripts/find-booster.mjs`, anciennement "route-find-booster") | Agent | 🎖️ | index par concept de 4 motifs réels (fonctions nommées, blocs anonymes commentés, entrées de tableau titrées, titres Markdown) — sert route.ts, check-house.mjs, lib/reference.ts et regles-de-travail.md, vérifié live sur les 4 ; `recommendFindBooster()` détecte le poids réel d'un fichier (réutilise SMART-CONSO-TOKEN, jamais le nombre de lignes seul) | gratuit | à la demande, sur (presque) tout fichier du dépôt — promu Membre de l'équipe complet le 2026-09-21 après usage réel concluant, cf. `docs/referentiel/find-booster.md` |
 | CLONE-HUNTER (`scripts/clone-hunter.mjs`) | Agent | 🎖️ | détecte des blocs de code dupliqués — v1 littérale (lignes identiques après normalisation d'espaces) ET v2 (blocs structurellement identiques sous renommage bijectif cohérent d'identifiants) — dans lib/scripts/app/components (hors components/ui, exclu — kit shadcn/Radix vendu tel quel, duplication assumée par design) ; vérifié live (13 trouvailles réelles au total) | gratuit, <1s sur tout le dépôt | **5e Gardien sacré du code depuis le 2026-09-22** (Article 20 — délivre un vrai scan de qualité ET tourne à chaque commit) : câblé dans le crochet post-commit réel, retiré de CIRCLE-TASKS (doublon dès qu'automatique à chaque commit), agrégé dans HYPER-SCAN-CHECKPOINT, cf. `docs/referentiel/clone-hunter.md` et `docs/referentiel/organisation-agence.md` §3 |
+| objectifs-vs-resultats (`scripts/objectifs-vs-resultats.mjs`) | Agent | 🎖️ | registre hand-maintained d'objectifs chiffrés par entité/période (`docs/objectifs-vs-resultats/registre.md`), calcule le résultat réel via `.tool-usage-history.json` (jamais un second calcul), statut atteint/en dessous/dépassé/pas de données — jamais un sous-agent de CASSANDRA-RH ni une extension du tableau de bord/KPI, cf. `docs/objectifs-vs-resultats-blueprint.md` | gratuit — mécanique, relit un historique déjà écrit | à la demande (`node scripts/objectifs-vs-resultats.mjs rapport`) |
 
 Cette table remplace toute énumération informelle éparpillée dans la conversation : à jour à
 chaque nouvel outil créé (même discipline que la liste des documents de référence, Article 13).
@@ -1025,6 +1026,28 @@ outils que par leur NOM, jamais un chemin, donc rien à vérifier mécaniquement
 jamais vers un fichier du Moteur du jeu (`lib/`, `app/`, `components/`) — seul `scripts/*.mjs` est un
 chemin valide pour un Membre de l'équipe. Vérifié vert contre l'état réel du dépôt au moment de sa
 création : zéro violation.
+
+**Registre canonique des outils — `findGardiensMissingFromSource()` (2026-09-21, tâche #290).**
+Root cause investiguée à la demande explicite de l'utilisateur : aucune liste unique ne dit
+« quels outils DOIVENT être appelés où » — chaque script qui a besoin de « tous les outils »
+(HYPER-SCAN-CHECKPOINT, CIRCLE_ITEMS, PRESTATIONS, REGISTRIES) maintient sa propre copie, jamais
+vérifiée contre les autres. Exemple réel déjà survenu le même soir : CLONE-HUNTER promu 5e Gardien
+sacré du code (`AGENT_CATEGORIES`, `lib-shell.mjs`) mais un temps oublié dans le `sh()` de la
+version légère de HYPER-SCAN-CHECKPOINT — corrigé au moment même de sa promotion, mais rien
+n'empêchait mécaniquement l'oubli de durer. Plutôt qu'une nouvelle liste à maintenir (Article 10,
+anti-duplication) : `findGardiensMissingFromSource()` (`scripts/doc-report.mjs`) réutilise deux
+registres déjà canoniques et déjà tenus à la main — `AGENT_CATEGORIES` (qui EST un Gardien) et
+`REGISTRIES` (son `scriptPath` réel) — et vérifie que le texte source d'un passage donné (en
+pratique, `hyper-scan-checkpoint.mjs`) appelle bien chacun de ces `scriptPath`. Un futur 6e Gardien
+oublié y échouerait dès le prochain commit (test câblé dans `check-house.mjs`, vérifié en direct
+contre le vrai fichier), au lieu d'être seulement remarqué par une relecture manuelle a posteriori.
+Écart connexe trouvé et corrigé en même temps : la `family` de CLONE-HUNTER dans `REGISTRIES`
+disait encore « Qualité du code » (valeur d'avant sa promotion), jamais mise à jour au moment où
+`AGENT_CATEGORIES` l'a reclassé « Gardien sacré du code » — corrigé pour que les deux tables
+s'accordent. **Périmètre assumé, jamais élargi sans nouvelle demande** : ce garde-fou couvre
+spécifiquement la classe d'oubli « un Gardien manque à l'appel d'un passage donné » — il ne
+remplace ni ne fusionne PRESTATIONS/CIRCLE_ITEMS/REGISTRIES en un unique fichier, un chantier plus
+lourd resté hors de portée de cette correction ciblée.
 
 **Précision honnête, en réponse à une question directe de l'utilisateur sur la détection de
 doublons de FONCTIONS entre outils (2026-09-20)** : contrairement à ce qu'on pourrait supposer,

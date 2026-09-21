@@ -265,8 +265,17 @@ export function buildIndex(filePath) {
 // fichier une seconde fois — un vrai gaspillage d'I/O sur un fichier potentiellement volumineux,
 // exactement le genre de fichier que cette fonction sert à évaluer. Une seule lecture désormais,
 // réutilisée pour les deux calculs via `buildIndexFromSource()`.
+// notFound (2026-09-21, bug réel trouvé en lançant tool-brain sur un fichier pas encore créé) :
+// un ENOENT non catché ici plantait tool-brain avant même d'afficher son propre message d'usage —
+// exactement le cas où on consulte l'outil AVANT d'écrire un nouveau fichier. Absence honnête,
+// même discipline que checkHtmlWiring()/flagFindBoosterCandidates() : jamais un faux `worthwhile`.
 export function recommendFindBooster(filePath, { tokenThreshold = 8000 } = {}) {
-  const source = readFileSync(filePath, "utf8");
+  let source;
+  try {
+    source = readFileSync(filePath, "utf8");
+  } catch {
+    return { tokens: 0, entryCount: 0, worthwhile: false, notFound: true };
+  }
   const tokens = estimateTokens(source);
   const entryCount = buildIndexFromSource(source, filePath).length;
   const worthwhile = tokens >= tokenThreshold && entryCount >= 3;
