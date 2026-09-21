@@ -30,3 +30,7 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 | 2026-09-21T04:36:39.724Z | en_cours | liste | 8 | 238 | 0 | 8 | /home/user/aihouse/docs/check-tasks-details/1789965399724-en_cours-liste.html |
 | 2026-09-21T12:32:34.852Z | en_cours | liste | 8 | 243 | 0 | 8 | /home/user/aihouse/docs/check-tasks-details/1789993954850-en_cours-liste.html |
 | 2026-09-21T12:33:13.699Z | projet_entier | arborescence | 243 | 243 | 0 | 8 | /home/user/aihouse/docs/check-tasks-details/1789993993698-projet_entier-arborescence.html |
+| 2026-09-21T12:51:00.774Z | en_cours | liste | 8 | 244 | 0 | 8 | /home/user/aihouse/docs/check-tasks-details/1789995060773-en_cours-liste.html |
+| 2026-09-21T12:51:01.212Z | elargi | liste | 28 | 244 | 0 | 8 | /home/user/aihouse/docs/check-tasks-details/1789995061211-elargi-liste.html |
+| 2026-09-21T12:51:01.665Z | projet_entier | liste | 244 | 244 | 0 | 8 | /home/user/aihouse/docs/check-tasks-details/1789995061664-projet_entier-liste.html |
+| 2026-09-21T12:51:10.774Z | projet_entier | arborescence | 244 | 244 | 0 | 8 | /home/user/aihouse/docs/check-tasks-details/1789995070773-projet_entier-arborescence.html |

@@ -88,9 +88,11 @@ n'active pas de nouveau ce mode) ou jusqu'à une limite qu'il a lui-même fixée
 session qui l'a posée, jamais une règle permanente de ce mode.
 
 **À l'entrée dans ce mode, dans l'ordre :**
-1. **État des lieux des tâches**, sur les 3 échelles de zoom (`node scripts/check-tasks-details.mjs
-   en_cours`, `elargi`, `projet_entier` — cf. Article 13, `docs/referentiel/check-tasks-details.md`)
-   — jamais improvisé de mémoire sur ce qui reste ouvert.
+1. **État des lieux des tâches**, sur les 3 échelles de zoom — mécanisé depuis le 2026-09-21 par
+   `node scripts/the-ghost.mjs start` (cf. section dédiée §7ter), qui ouvre la session ET déclenche
+   les 3 appels à `check-tasks-details.mjs` (`en_cours`/`elargi`/`projet_entier` — cf. Article 13,
+   `docs/referentiel/check-tasks-details.md`) en un seul geste — jamais improvisé de mémoire sur ce
+   qui reste ouvert.
 2. **Lecture des rapports/registres pertinents déjà accumulés** (points-fragiles.md,
    correctifs-a-revalider.md, verdicts ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD les plus récents) —
    jamais reparti d'une feuille blanche alors que le réseau d'outils a déjà des signaux disponibles.
@@ -99,8 +101,12 @@ session qui l'a posée, jamais une règle permanente de ce mode.
    jamais laissé bloquant) contre ce qui peut avancer sans lui.
 
 **Pendant ce mode :**
+- Chaque tâche substantielle bouclée se signale à the-ghost (`node scripts/the-ghost.mjs chained
+  "<libellé>"`), pour garder un vrai compteur de progression sur la session en cours.
 - Une Ronde CIRCLE-TASKS de temps en temps (jamais à chaque tâche, jamais jamais non plus) —
-  fréquence laissée au jugement de l'agent selon le volume réel de travail abattu.
+  fréquence laissée au jugement de l'agent selon le volume réel de travail abattu, éclairé par
+  `node scripts/the-ghost.mjs pacing` (depuis combien d'heures le mode tourne, depuis combien
+  d'heures aucune Ronde n'a tourné) — un signal chiffré, jamais une obligation mécanique.
 - Smart Conso API et SMART-CONSO-TOKEN consultés avant toute action coûteuse (agent séparé,
   simulation, diagnostic à vrais appels API) — Article 22, sans exception liée à l'absence de
   l'utilisateur ; le budget disponible se surveille, jamais dépensé à l'aveugle sous prétexte que
@@ -124,8 +130,10 @@ explicite de l'utilisateur à son réveil : « je voudrais par ex que la dernier
 des lieux des taches en cours affiché à l'écran que je me repere (comme pour toi quand tu
 commences) ».)* Après le compte rendu narratif ci-dessus (jamais à sa place — les deux
 coexistent, dans cet ordre), l'agent termine TOUJOURS son message de clôture par un état des lieux
-complet des tâches (`node scripts/check-tasks-details.mjs projet_entier`, cf. Article 13 de
-CLAUDE.md, `docs/referentiel/check-tasks-details.md`), affiché directement dans la conversation —
+complet des tâches — mécanisé depuis le 2026-09-21 par `node scripts/the-ghost.mjs end` (cf. section
+dédiée §7ter, qui réutilise `check-tasks-details.mjs projet_entier` et referme la session), cf.
+Article 13 de CLAUDE.md, `docs/referentiel/check-tasks-details.md` — affiché directement dans la
+conversation —
 jamais seulement en fichier joint — sous les deux formes à la suite : d'abord un résumé compact
 rédigé par l'agent (statuts, ce qui reste ouvert, ce qui est bloqué), puis le détail complet en
 dessous. Objectif explicite : que l'utilisateur retrouve, dès son retour, le même genre de repère
@@ -1548,6 +1556,51 @@ moi, les outils ».)*
   un autre outil qui irait le lire pour se comporter différemment. Vérifié par recherche exhaustive
   dans le dépôt au moment d'écrire ceci (2026-09-20) : aucune référence à `PRESTATIONS` en dehors de
   `le-coordinateur.mjs` lui-même et de `check-house.mjs` (qui le teste).
+
+### THE-GHOST — l'orchestrateur du mode nocturne autonome, même exception volontairement mince
+
+*(Ajouté le 2026-09-21, nommé par l'utilisateur : « créé un petit agent script "the-ghost" qui gere
+le mode autonome [...] quand je vais dormir ou quand je te laisse travailler seul ». Statut décidé
+en calibrant avec lui — « on fait au plus rentable » — plutôt qu'un Membre complet avec blueprint,
+jugé disproportionné pour ce rôle.)*
+
+**Frontière stricte avec check-tasks-details.mjs, clarifiée explicitement par l'utilisateur en
+calibrant : « check-details a des fonctions plus transverses, comme évaluer la pertinence des
+tâches ».** check-tasks-details reste seul propriétaire du jugement de pertinence/ordre des tâches
+(`recommendNextTasks()`, utilisable à tout moment, pas seulement la nuit) — the-ghost ne le
+réimplémente jamais, il l'appelle via son propre CLI (`sh()`, même patron de mutualisation que
+LE-COORDINATEUR pour ARGUS/HARMONIA). the-ghost (`scripts/the-ghost.mjs`) ne gère QUE ce qui est
+propre au mode nocturne LUI-MÊME (cf. `§1bis` ci-dessus pour le protocole complet) :
+
+- **Rituel d'entrée** (`node scripts/the-ghost.mjs start`) : ouvre une nouvelle fenêtre de session
+  (écrase toute session précédente jamais refermée proprement) et déclenche les 3 zooms de
+  check-tasks-details déjà prescrits par §1bis (`en_cours`/`elargi`/`projet_entier`) en un seul
+  geste plutôt que trois commandes séparées.
+- **Rythme de la session** (`node scripts/the-ghost.mjs pacing`) : depuis combien d'heures le mode
+  tourne, combien de tâches ont été enchaînées, et depuis combien d'heures aucune Ronde CIRCLE-TASKS
+  n'a tourné — ce dernier signal réutilise tel quel `loadLastRun()` de `circle-tasks.mjs` (jamais un
+  second calcul de fraîcheur divergent, Article 3 de CLAUDE.md), avec un repli honnête sur la durée
+  du mode lui-même si aucune Ronde n'a jamais été journalisée (cas de démarrage à froid). Un simple
+  signal chiffré, jamais une obligation ni un déclenchement automatique — la fréquence réelle d'une
+  Ronde reste au jugement de l'agent (§1bis).
+- **Rituel de sortie** (`node scripts/the-ghost.mjs end`) : réutilise tel quel le pipeline complet
+  de check-tasks-details.mjs au zoom `projet_entier`/`arborescence` calibré avec l'utilisateur (cf.
+  paragraphe « Dernier geste, systématique » de §1bis), puis referme proprement la session — une
+  nouvelle entrée en mode nocturne repart toujours de zéro.
+- **Suivi de progression** (`node scripts/the-ghost.mjs chained "<libellé>"`) : à appeler par
+  l'agent chaque fois qu'une tâche substantielle est bouclée pendant cette fenêtre — jamais
+  automatique, aucun mécanisme ne peut savoir tout seul qu'un vrai travail a eu lieu (même
+  honnêteté que `recordToolUsage()`/`recordCircleTasksRun()`).
+
+Un seul état propre, minimal : `.the-ghost-session.json` (local, gitignored, jamais commité) retient
+l'heure de début de la session en cours et le compteur de tâches enchaînées — la seule information
+qui n'existait nulle part ailleurs sous forme déjà calculée. Tout le reste (pertinence des tâches,
+fraîcheur des Rondes, staleness des registres) est lu depuis les outils qui le savent déjà, jamais
+recalculé une seconde fois. Comme LE-COORDINATEUR/CIRCLE-TASKS, aucun blueprint ni instanciation
+séparés, documenté ici même. Testé dans `scripts/check-house.mjs` avec sauvegarde/restauration
+complète du vrai fichier local (même discipline que `tool-usage.mjs`), y compris le cas limite du
+démarrage à froid (repli sur la durée du mode quand aucune Ronde n'a jamais été journalisée) et la
+fermeture propre de session (aucun reliquat d'une nuit précédente).
 
 ### Le gabarit HTML de remise de rapports — un outil sans blueprint, encore plus mince que CIRCLE-TASKS
 

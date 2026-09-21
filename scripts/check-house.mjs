@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 222'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 223'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3959,6 +3959,63 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(findRegistriesMissingFromCircle(realExistingPaths), [], 'checked live against this project\'s real docs/ tree: every real registry folder must already be covered by either a real CIRCLE_ITEMS entry or a documented exclusion — a guarantee that breaks the moment a new tool gets a docs/<slug>/index.md registry without either');
 
   console.log('Passed: CIRCLE-TASKS lists exactly its 18 free periodic items (profil, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, dream-team-photo, THE-SCREENER, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run, coordinateur-catalogue, ines-official-signal, the-king-signal — clone-hunter-run REMOVED 2026-09-22, CLONE-HUNTER promoted to fifth Gardien sacré (Article 20), now wired directly into the real post-commit hook exactly like the other 4, never a periodic Ronde item anymore) joining profil-utilisateur-guard/network-check-run/coordinateur-catalogue in the "Passages réels (smoke run)" theme, distinct from Audit lourd\'s two costly agent-spawn items) plus THE-FINAL-JUDGE and its cousin THE-DEEP-READER (the two exceptions, always flagged costly with their real token cost — a fixed figure for THE-FINAL-JUDGE, an honestly variable one for THE-DEEP-READER — never a vague warning), every item carrying an honest order-of-magnitude Claude-token estimate in a column distinct from the Gemini/API cost column, THE-SCREENER correctly staying free (its capture mechanism costs zero Gemini calls) while explicitly warning against launching a fresh simulation just for a screenshot, computes an honest mechanical freshness signal from real index files for the items that have one (profil, KPI, the most-neglected ALWAYS-NEW-CODE zone, Smart Conso API scan, SMART-CONSO-TOKEN scan) and an honest absence for those that don\'t (referentiel, dream-team-photo, THE-SCREENER), correctly refuses to fabricate a negative day count from a future-dated entry (the exact real bug found tonight), renders the costly item in real ANSI red for genuine terminal output while never leaking escape codes into a plain-text rendering, and its post-commit reminder threshold fires at exactly the configured commit count, never early nor only after overshooting it. buildCircleRunSummaryText() renders an honest post-Ronde recap as plain text (never HTML — corrected 2026-09-21, this function predates the HTML-vs-text split decision and was never revisited against it) with real items in their real order, each with its own outcome and link, an honest empty-run message when nothing was ticked, and never a leaked "undefined" — the missing end-of-Ronde report the user pointed out tonight. findRegistriesMissingFromCircle() closes the matching gap on the OTHER end (no menu-freshness guard existed for CIRCLE_ITEMS the way findToolsMissingFromMenu() already protects PRESTATIONS): every real docs/<slug>/index.md registry must be covered by either a real CIRCLE_ITEMS entry or a documented CIRCLE_EXCLUDED_REGISTRIES reason, checked live against this project\'s real docs/ tree — a guarantee that breaks the day a new tool gets a registry without either.');
+}
+
+{
+  // THE-GHOST (2026-09-21, nommé par l'utilisateur : « créé un petit agent script "the-ghost" qui
+  // gere le mode autonome [...] quand je vais dormir »). Frontière clarifiée en direct par
+  // l'utilisateur : check-tasks-details.mjs reste seul propriétaire du jugement de pertinence des
+  // tâches (recommendNextTasks, réutilisé jamais réimplémenté) ; the-ghost ne gère que ce qui est
+  // propre au mode nocturne lui-même (rituel d'entrée/sortie, rythme de la session en cours).
+  // Testé contre le vrai fichier local avec sauvegarde/restauration complète (même discipline que
+  // recordToolUsage()/tool-usage.mjs ci-dessus), puisque ces fonctions n'ont pas de fs injectable
+  // pour l'écriture (seule la lecture l'est), comme le reste des historiques auto-déclarés.
+  const { loadGhostState, enterAutonomousMode, recordTaskChained, checkPacing, exitAutonomousMode, RONDE_REMINDER_HOURS } = await import('../scripts/the-ghost.mjs');
+  const statePath = new URL('../.the-ghost-session.json', import.meta.url);
+  const { existsSync: exG, readFileSync: rdG, writeFileSync: wrG, unlinkSync: unG } = await import('node:fs');
+  const hadFile = exG(statePath);
+  const backup = hadFile ? rdG(statePath, 'utf8') : undefined;
+  try {
+    if (exG(statePath)) unG(statePath);
+    assert.equal(loadGhostState(), null, 'with no session file at all, loadGhostState() must report an honest absence, never a crash or a fabricated empty object');
+    assert.equal(recordTaskChained('test', 1000), null, 'recording a chained task with no active session must never fabricate an implicit session — nothing to record yet');
+    assert.deepEqual(checkPacing(2000, {}), { active: false }, 'checking pacing with no active session must report {active:false} plainly, never a crash from missing startedAt');
+
+    const fakeSh = (cmd) => `[fake output for: ${cmd}]`;
+    const { state, zoomOutputs } = enterAutonomousMode(1000, fakeSh);
+    assert.deepEqual(state, { startedAt: 1000, tasksChained: 0, chainedLabels: [] }, 'entering the mode for the first time must record a fresh session with the exact real start timestamp, zero chained tasks, and an empty label history');
+    assert.deepEqual(Object.keys(zoomOutputs).sort(), ['elargi', 'en_cours', 'projet_entier'].sort(), 'entering the mode must trigger exactly the three zoom levels already prescribed by docs/regles-de-travail.md §1bis, never a subset nor an extra one');
+    assert.ok(zoomOutputs.en_cours.includes('check-tasks-details.mjs en_cours'), 'each zoom output must come from the real check-tasks-details.mjs CLI command (via the injectable shell call), never a second reimplementation of its logic');
+
+    const afterChain1 = recordTaskChained('première tâche', 1500);
+    assert.equal(afterChain1.tasksChained, 1, 'a real chained task recorded during an active session must increment the counter from zero');
+    const afterChain2 = recordTaskChained('deuxième tâche', 1600);
+    assert.equal(afterChain2.tasksChained, 2, 'a second chained task must increment further, never reset — the whole point is a cumulative count for this one session');
+    assert.deepEqual(afterChain2.chainedLabels.map((c) => c.label), ['première tâche', 'deuxième tâche'], 'both real labels must be kept in their real chronological order, never dropped nor reordered');
+
+    const oneHourMs = 3600000;
+    const pacingNoRonde = checkPacing(1000 + 2 * oneHourMs, {});
+    assert.equal(pacingNoRonde.active, true, 'with a real active session, checkPacing() must report active:true');
+    assert.equal(pacingNoRonde.modeRunningHours, 2, 'modeRunningHours must reflect the exact real elapsed time since the session genuinely started, never a guessed or rounded-away figure');
+    assert.equal(pacingNoRonde.hoursSinceLastRonde, undefined, 'with no Ronde ever logged (an honestly empty lastRun, exactly what loadLastRun() returns before any real Ronde), hoursSinceLastRonde must stay an honest absence, never a fabricated zero');
+    assert.equal(pacingNoRonde.rondeSuggested, false, 'below RONDE_REMINDER_HOURS and with no Ronde history at all, the fallback (mode duration itself) must correctly stay under the threshold — no premature suggestion');
+    const pacingLongNoRonde = checkPacing(1000 + (RONDE_REMINDER_HOURS + 1) * oneHourMs, {});
+    assert.equal(pacingLongNoRonde.rondeSuggested, true, 'once the session itself has run past RONDE_REMINDER_HOURS with zero Ronde ever logged, the honest fallback signal must trigger — this is exactly the real cold-start case (a brand new project with no .circle-tasks-last-run.json yet)');
+
+    const pacingWithRonde = checkPacing(1000 + 5 * oneHourMs, { lastRunAt: 1000 + 1 * oneHourMs });
+    assert.equal(pacingWithRonde.hoursSinceLastRonde, 4, 'once a real Ronde timestamp exists (reused verbatim from circle-tasks.mjs::loadLastRun(), never a second divergent calculation), hoursSinceLastRonde must reflect the exact real gap since that Ronde, not since the mode started');
+    assert.equal(pacingWithRonde.rondeSuggested, true, 'past RONDE_REMINDER_HOURS since the last real Ronde, the suggestion must fire — the whole point of this signal, never silently ignored once a real Ronde history exists');
+    const pacingFreshRonde = checkPacing(1000 + 5 * oneHourMs, { lastRunAt: 1000 + 4.5 * oneHourMs });
+    assert.equal(pacingFreshRonde.rondeSuggested, false, 'a Ronde that ran recently enough must correctly suppress the suggestion, never fire on a stale mode-duration fallback once real Ronde history exists — the fallback is for cold-start only');
+
+    const { pacing, output } = exitAutonomousMode(1000 + 5 * oneHourMs, fakeSh);
+    assert.deepEqual(pacing, { modeRunningHours: 5, tasksChained: 2 }, 'the exit ritual must report the exact real accumulated duration and chained-task count from this same session, never a reset-to-zero figure');
+    assert.ok(output.includes('projet_entier arborescence'), 'the exit ritual must reuse the exact real check-tasks-details.mjs pipeline at the zoom level calibrated with the user (projet entier), never a lighter zoom nor a second reimplemented report');
+    assert.equal(loadGhostState(), null, 'the exit ritual must close the session cleanly (state file removed) — a later entry into the mode must never inherit a stale previous night\'s counters');
+  } finally {
+    if (hadFile) wrG(statePath, backup); else if (exG(statePath)) unG(statePath);
+  }
+  console.log('Passed: THE-GHOST (2026-09-21) owns exactly the autonomous-mode lifecycle and nothing else — it never reimplements check-tasks-details.mjs\'s task-relevance judgment (recommendNextTasks stays there, untouched), it triggers the real three-zoom entry ritual and the real projet_entier exit ritual through the actual check-tasks-details.mjs CLI (via an injectable shell call, never a parallel reimplementation), it tracks a real chained-task counter and label history across the session with no silent reset, its pacing signal reuses circle-tasks.mjs\'s own loadLastRun() verbatim for Ronde freshness (never a second divergent Ronde-freshness calculation) while honestly falling back to the mode\'s own duration only when zero Ronde has ever been logged (the real cold-start case), correctly stays inert (never fabricates a session) when asked to record progress or pacing outside any active window, and closes the session cleanly on exit so a later night never inherits a stale counter.');
 }
 
 {

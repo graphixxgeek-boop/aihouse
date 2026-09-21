@@ -60,6 +60,7 @@ next-env.d.ts
 .memento-history.json
 .le-coordinateur-last-run.json
 .circle-tasks-last-run.json
+.the-ghost-session.json
 .kpi-report-latest.html
 .el-professor-coverage-latest.html
 .circle-tasks-run-summary-latest.txt
