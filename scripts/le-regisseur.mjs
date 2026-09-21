@@ -19,6 +19,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 import { sh } from "./lib-shell.mjs";
+import { renderHtmlReport } from "./html-report.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 export const SIMULATIONS_DIR = join(ROOT, "docs/simulations");
@@ -32,6 +33,58 @@ const defaultFs = { existsSync, mkdirSync, readFileSync, writeFileSync, copyFile
 // full_sim6/full_sim16). Toujours vers le nommage plat déjà établi (`<sim>_transcript.txt`,
 // `<sim>_dossier.txt`) — jamais un sous-dossier par simulation, qui casserait la convention réelle
 // déjà utilisée par les 16 simulations archivées à ce jour.
+// Rendu HTML des transcripts (2026-09-22, demande explicite de l'utilisateur : « je souhaite que
+// les transcripts soient livrés en html agréables à lire »). Ferme un trou déjà repéré par
+// Doc-Report (« THE-DEEP-READER et les Simulations n'avaient jamais reçu leur câblage HTML pourtant
+// acté », CLAUDE.md) : le type de bloc `dialogue` de html-report.mjs existe depuis le 2026-09-20,
+// conçu explicitement "pour les simulations", mais n'avait jamais été câblé jusqu'ici. Réutilise ce
+// type tel quel, jamais une seconde palette de rendu (règle anti-doublon, §7ter).
+//
+// Format du transcript texte (convention déjà utilisée par tous les scripts de simulation, jamais
+// changée ici) : groupes de 4 lignes séparés par une ligne vide — acteur (avec un éventuel
+// qualificatif "· pensée"/"· déplacement"/"· rêve"), icône de pièce, heure, contenu. Le qualificatif
+// est extrait pour que `speaker` reste exactement "Lia"/"Noé" (nécessaire pour que la coloration par
+// personnage de html-report.mjs s'applique), jamais perdu pour autant : reporté en préfixe du texte.
+export function parseTranscriptToDialogueBlocks(transcriptText) {
+  const chunks = String(transcriptText ?? "").split(/\n\s*\n/).map((c) => c.trim()).filter(Boolean);
+  const blocks = [];
+  for (const chunk of chunks) {
+    const lines = chunk.split("\n");
+    if (lines.length < 4) continue;
+    const [actorLine, roomLine, timeLine, ...rest] = lines;
+    const text = rest.join(" ").trim();
+    if (!text) continue;
+    const [speaker, qualifier] = actorLine.split("·").map((s) => s.trim());
+    const prefix = qualifier ? `(${qualifier}) ` : "";
+    blocks.push({ type: "dialogue", speaker, text: `[${roomLine} · ${timeLine}] ${prefix}${text}` });
+  }
+  return blocks;
+}
+
+export function renderTranscriptHtml(transcriptText, { title = "Transcript de simulation", dateLabel = new Date().toISOString() } = {}) {
+  return renderHtmlReport({ title, dateLabel, blocks: parseTranscriptToDialogueBlocks(transcriptText) });
+}
+
+// Le dossier retourné a une structure différente (prose continue en 3 sections, jamais un
+// dialogue tour par tour) — un heading + un paragraphe par section "=== NOM ===", jamais le même
+// gabarit `dialogue` qui n'aurait aucun sens ici.
+export function parseDossierToBlocks(dossierText) {
+  const parts = String(dossierText ?? "").split(/\n(?===+ )/).map((p) => p.trim()).filter(Boolean);
+  const blocks = [];
+  for (const part of parts) {
+    const m = part.match(/^===\s*(.+?)\s*===\s*([\s\S]*)$/);
+    if (!m) continue;
+    blocks.push({ type: "heading", text: m[1] });
+    const body = m[2].trim();
+    if (body) blocks.push({ type: "paragraph", text: body });
+  }
+  return blocks;
+}
+
+export function renderDossierHtml(dossierText, { title = "Dossier retourné", dateLabel = new Date().toISOString() } = {}) {
+  return renderHtmlReport({ title, dateLabel, blocks: parseDossierToBlocks(dossierText) });
+}
+
 export function archiveSimulationFiles({ simName, transcriptPath, dossierPath }, fsImpl = defaultFs) {
   if (!simName || !transcriptPath) throw new Error("archiveSimulationFiles: simName et transcriptPath sont obligatoires — rien à archiver sans un nom et un transcript réel.");
   if (!fsImpl.existsSync(SIMULATIONS_DIR)) fsImpl.mkdirSync(SIMULATIONS_DIR, { recursive: true });
@@ -39,10 +92,16 @@ export function archiveSimulationFiles({ simName, transcriptPath, dossierPath },
   const transcriptDest = join(SIMULATIONS_DIR, `${simName}_transcript.txt`);
   fsImpl.copyFileSync(transcriptPath, transcriptDest);
   written.push(transcriptDest);
+  const transcriptHtmlDest = join(SIMULATIONS_DIR, `${simName}_transcript.html`);
+  fsImpl.writeFileSync(transcriptHtmlDest, renderTranscriptHtml(fsImpl.readFileSync(transcriptPath, "utf8"), { title: `${simName} — transcript` }));
+  written.push(transcriptHtmlDest);
   if (dossierPath) {
     const dossierDest = join(SIMULATIONS_DIR, `${simName}_dossier.txt`);
     fsImpl.copyFileSync(dossierPath, dossierDest);
     written.push(dossierDest);
+    const dossierHtmlDest = join(SIMULATIONS_DIR, `${simName}_dossier.html`);
+    fsImpl.writeFileSync(dossierHtmlDest, renderDossierHtml(fsImpl.readFileSync(dossierPath, "utf8"), { title: `${simName} — dossier retourné` }));
+    written.push(dossierHtmlDest);
   }
   return { written };
 }

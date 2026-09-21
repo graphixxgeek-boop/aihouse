@@ -942,7 +942,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 213'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 214'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4580,21 +4580,42 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // en lisant docs/referentiel/kpi-index.md avant de coder (Article 19) : les DEUX index de
   // jugement (docs/simulations/index.md, docs/referentiel/kpi-index.md) restent hors périmètre —
   // vérifié ici en s'assurant qu'aucune fonction n'écrit dedans.
-  const {archiveSimulationFiles,summarizeAndArchiveJournal,extractSyntheseCompacte,runAndArchiveKpiReport,preSimulationChecklist,postSimulationChecklist,SIMULATIONS_DIR,KPI_RAPPORTS_DIR}=await import('../scripts/le-regisseur.mjs');
+  const {archiveSimulationFiles,summarizeAndArchiveJournal,extractSyntheseCompacte,runAndArchiveKpiReport,preSimulationChecklist,postSimulationChecklist,parseTranscriptToDialogueBlocks,parseDossierToBlocks,renderTranscriptHtml,renderDossierHtml,SIMULATIONS_DIR,KPI_RAPPORTS_DIR}=await import('../scripts/le-regisseur.mjs');
+
+  // Rendu HTML des transcripts (2026-09-22, demande explicite de l'utilisateur : « je souhaite que
+  // les transcripts soient livrés en html agréables à lire ») — réutilise le type de bloc `dialogue`
+  // déjà construit dans html-report.mjs pour ce besoin précis, jamais une seconde palette de rendu.
+  const fakeTranscript='Lia · pensée\n◈ SAL\n02:08\nPremière pensée de Lia.\n\nNoé\n⌂ BUR\n02:08\nRéponse de Noé.\n\nNoé · déplacement\n⌂ BUR\n02:09\n[bureau→salon] Je file au salon.';
+  const transcriptBlocks=parseTranscriptToDialogueBlocks(fakeTranscript);
+  assert.equal(transcriptBlocks.length,3,'parseTranscriptToDialogueBlocks() must produce exactly one dialogue block per real 4-line chunk of the transcript text, never merging or dropping one');
+  assert.deepEqual(transcriptBlocks[0],{type:'dialogue',speaker:'Lia',text:'[◈ SAL · 02:08] (pensée) Première pensée de Lia.'},'a qualified actor line ("Lia · pensée") must split into a clean speaker ("Lia", so html-report.mjs\'s per-character coloring still matches) with the qualifier reported as a prefix in the text, never lost and never left attached to the speaker field');
+  assert.deepEqual(transcriptBlocks[1],{type:'dialogue',speaker:'Noé',text:'[⌂ BUR · 02:08] Réponse de Noé.'},'an unqualified actor line must produce a bare speaker with no fabricated prefix');
+  assert.ok(transcriptBlocks[2].text.includes('[bureau→salon]'),'a movement line\'s bracketed content must survive into the rendered text unchanged');
+  const transcriptHtml=renderTranscriptHtml(fakeTranscript,{title:'fake — transcript'});
+  assert.ok(transcriptHtml.includes('<p class="dialogue speaker-lia"><strong>Lia</strong>')&&transcriptHtml.includes('<p class="dialogue speaker-noe"><strong>Noé</strong>'),'the rendered HTML must apply the real per-character CSS classes already defined in html-report.mjs (speaker-lia/speaker-noe), the exact reason the speaker field must stay clean');
+
+  const fakeDossier='=== VOIX DE LIA ===\nTexte de Lia.\n\n=== VOIX DE NOÉ ===\nTexte de Noé.\n\n=== SYNTHÈSE ===\nTexte de synthèse.';
+  const dossierBlocks=parseDossierToBlocks(fakeDossier);
+  assert.deepEqual(dossierBlocks,[{type:'heading',text:'VOIX DE LIA'},{type:'paragraph',text:'Texte de Lia.'},{type:'heading',text:'VOIX DE NOÉ'},{type:'paragraph',text:'Texte de Noé.'},{type:'heading',text:'SYNTHÈSE'},{type:'paragraph',text:'Texte de synthèse.'}],'the dossier\'s real 3-section prose structure (never a tour-by-tour dialogue) must become a heading+paragraph pair per section, in order, never the dialogue template which would make no sense here');
+  const dossierHtml=renderDossierHtml(fakeDossier,{title:'fake — dossier'});
+  assert.ok(dossierHtml.includes('<h2>VOIX DE LIA</h2>')&&dossierHtml.includes('<h2>SYNTHÈSE</h2>'),'the rendered dossier HTML must carry a real heading per section');
+
   const fakeFs={
-    files:{sources:{'/tmp/fake_transcript.txt':'contenu transcript','/tmp/fake_dossier.txt':'contenu dossier'}},
+    files:{sources:{'/tmp/fake_transcript.txt':fakeTranscript,'/tmp/fake_dossier.txt':fakeDossier}},
     existsSync(p){return p in this.files||Object.keys(this.files).some(f=>f.startsWith(p+'/'));},
     mkdirSync(){},
-    readFileSync(p){return this.files[p];},
+    readFileSync(p){return this.files.sources[p]??this.files[p];},
     writeFileSync(p,content){this.files[p]=content;},
     copyFileSync(src,dest){this.files[dest]=this.files.sources[src];},
   };
   const archived=archiveSimulationFiles({simName:'fake_sim',transcriptPath:'/tmp/fake_transcript.txt',dossierPath:'/tmp/fake_dossier.txt'},fakeFs);
-  assert.equal(archived.written.length,2,'both a real transcript and a real dossier path must produce exactly two archived files, never silently dropping the dossier when one is genuinely provided');
-  assert.equal(fakeFs.files[`${SIMULATIONS_DIR}/fake_sim_transcript.txt`],'contenu transcript','the transcript must be copied to the exact flat naming convention already used by all 16 real archived simulations (<sim>_transcript.txt), never a new per-simulation subfolder that would break that convention');
-  assert.equal(fakeFs.files[`${SIMULATIONS_DIR}/fake_sim_dossier.txt`],'contenu dossier','the dossier must be archived the same way, under <sim>_dossier.txt');
+  assert.equal(archived.written.length,4,'a real transcript AND a real dossier must each produce their .txt (reference file, reparsed by other tools) AND their .html (presentation copy) companion — four files total, never silently dropping one');
+  assert.equal(fakeFs.files[`${SIMULATIONS_DIR}/fake_sim_transcript.txt`],fakeTranscript,'the transcript .txt must still be copied verbatim to the exact flat naming convention already used by all 16 real archived simulations, never altered by the new HTML rendering being added alongside it');
+  assert.equal(fakeFs.files[`${SIMULATIONS_DIR}/fake_sim_dossier.txt`],fakeDossier,'the dossier .txt must be archived the same way, under <sim>_dossier.txt, unchanged');
+  assert.ok(fakeFs.files[`${SIMULATIONS_DIR}/fake_sim_transcript.html`].includes('speaker-lia'),'the transcript .html companion must be the real rendered dialogue page, not a placeholder');
+  assert.ok(fakeFs.files[`${SIMULATIONS_DIR}/fake_sim_dossier.html`].includes('<h2>VOIX DE LIA</h2>'),'the dossier .html companion must be the real rendered section page, not a placeholder');
   const archivedNoDossier=archiveSimulationFiles({simName:'fake_sim2',transcriptPath:'/tmp/fake_transcript.txt'},fakeFs);
-  assert.equal(archivedNoDossier.written.length,1,'a simulation that never reached phase 2 (no dossier, exactly like the real full_sim6/full_sim16 cases already in the registry) must archive only the transcript, never fabricate an empty dossier file');
+  assert.equal(archivedNoDossier.written.length,2,'a simulation that never reached phase 2 (no dossier, exactly like the real full_sim6/full_sim16 cases already in the registry) must archive only the transcript .txt+.html pair, never fabricate an empty dossier file of either format');
   assert.throws(()=>archiveSimulationFiles({transcriptPath:'/tmp/fake_transcript.txt'},fakeFs),/simName/,'a missing simName must fail loudly with a clear message, never silently write to a malformed path');
 
   const fakeSh=(cmd)=>cmd.includes('summarize-simulation-log')?'RÉSUMÉ FAKE':'== SYNTHÈSE COMPACTE (à relayer telle quelle dans la conversation) ==\nRun : fake-run\n| Famille | KPI global |\n|---|---|\n| Robustesse du code | 99% |\n\nHistorique complet : docs/referentiel/kpi-historique.csv\n== Autre section jamais imprimée par kpi-report.mjs mais utile pour vérifier la borne ==\nignoré';
@@ -4854,6 +4875,12 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     const {existsSync:exM,readFileSync:rdM,writeFileSync:wrM,unlinkSync:unM}=await import('node:fs');
     const hadFile=exM(historyPath);
     const backup=hadFile?rdM(historyPath,'utf8'):undefined;
+    // Isolation réelle (2026-09-22, bug trouvé en lançant ce test juste après full_sim17, qui a
+    // fait écrire de vrais échantillons dans ce même fichier via lib/lia.ts::think()) : sauvegarder
+    // le fichier ne suffit pas à isoler ce test si persistContextWeightSamples() APPEND à un fichier
+    // déjà rempli par une vraie session de jeu — il faut aussi le vider avant de tester, jamais
+    // supposer un fichier vide par chance. Toujours restauré dans le `finally`, jamais perdu.
+    if(hadFile)unM(historyPath);
     try{
       assert.equal(persistContextWeightSamples([]),undefined,'persisting an empty sample list must be a genuine no-op — never write a file just to record "nothing happened"');
       persistContextWeightSamples([{actor:'Lia',tokens:120,at:1000}]);

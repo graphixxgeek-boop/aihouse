@@ -188,31 +188,99 @@ le monde a bien son badge — une prise de fonction totale, jamais une mise en r
   familles/outils n'est oubliée) — à planifier une fois CASSANDRA-RH construite, rejoint la tâche
   #145 sans la remplacer.
 
-## 8. Pistes de conception non tranchées, à soumettre au round de calibrage (#134)
+## 8. Décisions actées lors des rounds de calibrage (résumé, mis à jour à chaque round)
 
-Ces points **restent de vraies questions ouvertes** — jamais devinés, jamais tranchés seul
-(Article 16) :
+Les 8 premiers points listés ici comme "non tranchés" (rédaction du 2026-09-21) ont tous été
+tranchés depuis, au fil de deux rounds de questions (20 questions le 2026-09-21, puis 6 questions
+le 2026-09-22 portant sur le Catalogue/Stagiaire, cf. §8bis/§8ter) — résumé, pour ne jamais perdre
+la trace de POURQUOI chaque choix a été fait (Article 13) :
 
-1. **Cadence de déclenchement** — proposition de l'agent, jamais validée : un signal mécanique
-   intégré à CIRCLE-TASKS + un "entretien annuel" complet à la demande (comme THE-FINAL-JUDGE).
-2. **Texte de personnage RH** — fixe (comme THE-FINAL-JUDGE) ou libre ?
-3. **Base du jugement de taille d'équipe** — quel critère objectif, si un existe ?
-4. **Photo de la dream team** — CASSANDRA-RH la reprend, ou elle reste séparée (LE-COORDINATEUR) ?
-5. **Initiative de recrutement** — l'agent peut-il proposer une session de recrutement de sa propre
-   initiative, ou seulement sur demande explicite ?
-6. **Stagiaire pré-processeur** — un second agent scripté et gratuit (sur le modèle
-   LE-COORDINATEUR/THE-FINAL-JUDGE) qui prépare/formate les candidats de recrutement avant qu'un
-   vrai jugement CASSANDRA-RH coûteux ne s'applique — architecture à valider.
-7. **Rapport de "licenciements"** — doit-il apparaître explicitement dans le rapport RH régulier,
-   sur quels signaux exactement (`toolsNeverUsed()`/taux de trouvaille de `tool-usage.mjs`) ?
-8. **Frontière exacte avec `kpi-report.mjs`** — CASSANDRA-RH absorbe-t-elle le script existant, ou
-   s'appuie-t-elle dessus en gardant `kpi-report.mjs` comme moteur de calcul pur ?
+1. **Cadence de déclenchement** — un signal mécanique léger à chaque Ronde CIRCLE-TASKS (pas de
+   calcul lourd) + un bilan complet sur demande explicite (jamais un "entretien annuel" imposé).
+2. **Texte de personnage RH** — fixe et reconnaissable (même garde-fou anti-dérive que
+   THE-FINAL-JUDGE), jamais reformulé à chaque appel.
+3. **Base du jugement de taille d'équipe** — un constat CHIFFRÉ et honnête (nombre réel de
+   membres, par catégorie), jamais un seuil auto-jugé ("trop" ou "pas assez") inventé sans preuve.
+4. **Photo de la dream team** — reste chez LE-COORDINATEUR, CASSANDRA-RH ne la reprend pas.
+5. **Initiative de recrutement** — l'agent peut PROPOSER une session de recrutement de sa propre
+   initiative, jamais la LANCER seule : la décision reste toujours à l'utilisateur.
+6. **Stagiaire pré-processeur** — construit dès la première vague (cf. §8ter ci-dessous), pas
+   repoussé comme envisagé initialement.
+7. **Rapport de "licenciements"** — une liste NOMMÉE explicite ("à retirer ou refondre"), réutilisant
+   telle quelle `toolsNeverUsed()` (`scripts/tool-usage.mjs`) et la stagnation relative de
+   CLEAN-DIRTY-OLD — jamais un nouveau calcul de pertinence inventé à côté.
+8. **Frontière avec `kpi-report.mjs`** — `kpi-report.mjs` reste le seul moteur de calcul KPI ;
+   CASSANDRA-RH LIT `kpi-historique.csv` produit par ce script, ne le recalcule jamais elle-même.
+
+**Encore ouvert, à trancher avant la construction réelle du noyau** :
+
 9. **Le "vrai bénéfice" du passage par CASSANDRA-RH à l'intégration, explicité** (2026-09-20T13:32Z,
    retrouvé en relisant l'historique brut de la session, jamais perdu mais resté implicite) :
    l'utilisateur demandait explicitement en quoi le passage d'un nouvel Agent par CASSANDRA-RH ET par
    LE-COORDINATEUR garantit une vraie utilité — pas seulement une case cochée. À poser explicitement
-   au round de calibrage : quelle preuve concrète (pas seulement "consignée") CASSANDRA-RH doit-elle
-   produire à l'intégration pour que ce passage ait un effet réel, vérifiable, plutôt qu'un rituel ?
+   au prochain round de calibrage : quelle preuve concrète (pas seulement "consignée") CASSANDRA-RH
+   doit-elle produire à l'intégration pour que ce passage ait un effet réel, vérifiable, plutôt qu'un
+   rituel ?
+
+## 8bis. Le Catalogue — le rapport principal de CASSANDRA-RH (2026-09-22, round de calibrage dédié)
+
+Ce que l'utilisateur appelait au départ "des propositions de combinaisons d'outils" (une extension
+du menu `PRESTATIONS` de LE-COORDINATEUR) s'est révélé, une fois creusé, être en réalité **le
+rapport principal que CASSANDRA-RH devait déjà produire** (ses deux objectifs fondateurs : KPI +
+recrutement) — pas un second document séparé. Décisions actées :
+
+- **Propriété du document** : CASSANDRA-RH ÉCRIT et SIGNE le Catalogue. LE-COORDINATEUR reste en
+  coulisse, simple fournisseur de calculs bruts (combinaisons candidates, chiffres de couverture/
+  usage/fraîcheur) — jamais l'inverse, jamais deux rapports concurrents.
+- **Fiche par outil** : une fiche COMPLÈTE par outil certifié, qui regroupe TOUT ce qu'on sait déjà
+  sur lui (coût estimé en tokens/appels API, famille/suite d'appartenance, dernier usage réel,
+  couverture de test AXA-CHECK, fraîcheur CLEAN-DIRTY-OLD) — jamais une fiche minimaliste, jamais un
+  second calcul de ce qui existe déjà ailleurs.
+- **Score KPI par outil (nouveau calcul, n'existait pas)** : le tableau de bord actuel mesure des
+  FAMILLES (6 grandes catégories), jamais un outil individuel. Le score par outil est un COMPOSITE
+  fabriqué à partir de signaux déjà collectés ailleurs (fréquence d'usage réel + taux de trouvaille
+  de `tool-usage.mjs` + fraîcheur relative de CLEAN-DIRTY-OLD) — zéro nouvelle mesure à instrumenter,
+  juste un calcul de plus sur des données déjà là.
+- **Combinaisons en chaînes, pas seulement des paires** : le coordinateur peut proposer des
+  combinaisons de 3 outils ou plus qui s'enchaînent, pas seulement des duos.
+- **Critère de "vont bien ensemble" (mécanique, LE-COORDINATEUR ne réfléchit pas)** : un score
+  mixte cumulant trois signaux — même grand thème du projet (classification déjà utilisée par
+  HARMONIA), même source de données consultée par les deux outils, même suite de l'organigramme
+  (`docs/referentiel/organisation-agence.md`).
+- **Promotion combo → "prestation pérenne"** : une combinaison suggérée devient une prestation
+  officielle et figée seulement si elle a été RÉELLEMENT utilisée plusieurs fois avec un bon
+  résultat (preuve mécanique via `scripts/tool-usage.mjs`), jamais sur simple impression.
+- **Archivage/versionnage** : réutilise le mécanisme déjà construit à la tâche #154
+  (`docs/le-coordinateur-catalogue/`, un fichier daté par version + `index.md`) — jamais un second
+  dossier d'archivage créé à côté ; ce mécanisme est juste enrichi pour porter le contenu plus riche
+  décrit ci-dessus, au lieu du simple menu `PRESTATIONS` actuel.
+- **Déclenchement** : automatique, mais UNIQUEMENT lors des Rondes périodiques CIRCLE-TASKS — jamais
+  à chaque commit (contrairement aux 5 Gardiens sacrés) : c'est un moment stratégique de réflexion
+  sur l'outillage, pas un scan mécanique de code.
+- **Qui alerte l'utilisateur** : CASSANDRA-RH seule, puisque le Catalogue est désormais SON rapport
+  — jamais une double alerte séparée du coordinateur sur le même sujet.
+
+## 8ter. Le Stagiaire (2026-09-22, décision explicite de construire dès maintenant)
+
+Contrairement à la décision initiale ("repoussé à plus tard", §8 point 6 ci-dessus, révisée le
+2026-09-22) : le Stagiaire est un vrai second agent séparé, à construire dès la première vague de
+CASSANDRA-RH — décision explicitement NON recommandée par l'agent mais actée par l'utilisateur.
+
+- **Rôle exact** : rédige UNIQUEMENT les fiches individuelles par outil (la partie la plus longue et
+  répétitive du Catalogue) à partir des chiffres bruts. CASSANDRA-RH garde la main sur tout ce qui
+  demande un vrai jugement : les combinaisons, les alertes, le résumé général — jamais le Stagiaire
+  ne rédige la partie "voix propre" de CASSANDRA-RH.
+- **Déclenchement** : CASSANDRA-RH décide elle-même, à chaque Ronde, si assez de choses ont changé
+  depuis le dernier appel pour justifier de repayer le coût réel du Stagiaire — jamais un appel
+  automatique systématique à chaque Ronde sans condition. Si rien de neuf, elle réutilise les fiches
+  déjà écrites.
+- **Personnage fixe, même garde-fou que THE-FINAL-JUDGE/THE-DEEP-READER** : un texte de personnalité
+  fixe (ton factuel, robotique — son "client" principal est l'agent qui pilote, pas l'utilisateur),
+  recopié à l'identique à chaque appel, jamais reformulé — protection contre toute dérive de ton au
+  fil des Rondes.
+- **Coût réel, Article 22/SMART-CONSO-TOKEN** : c'est un vrai appel à un agent séparé — consultation
+  des deux conseillers (Smart Conso API + SMART-CONSO-TOKEN) obligatoire avant chaque appel réel,
+  jamais une exception parce que c'est "juste" un stagiaire.
 
 ## 9. Note méthodologique (2026-09-21)
 

@@ -280,6 +280,16 @@ pièce jointe véritable, jamais collée en clair dans la réponse — préfére
 cf. `CLAUDE.md`. Le mécanisme concret utilisé pour ça avec Claude Code (`SendUserFile`) est propre
 à l'outil : voir Partie B.1.
 
+**Format HTML par défaut, pas le .txt brut (2026-09-22, demande explicite de l'utilisateur : « je
+souhaite que les transcripts soient livrés en html agréables à lire »).** `archiveSimulationFiles()`
+(`scripts/le-regisseur.mjs`) produit désormais systématiquement, en plus du `.txt` de référence
+(inchangé — c'est lui que relisent `summarize-simulation-log.mjs`/HARMONIA/ARGUS), un `.html`
+compagnon coloré par personnage (réutilise le type de bloc `dialogue` de `html-report.mjs`, conçu
+"pour les simulations" dès le 2026-09-20 mais jamais câblé jusqu'ici — fermait exactement le trou
+que Doc-Report avait déjà repéré). C'est ce `.html` qui doit être livré en pièce jointe désormais,
+jamais le `.txt` brut — le fichier de référence gardé dans `docs/simulations/` reste le `.txt`,
+seule la présentation à la remise change.
+
 **Conserver les versions précédentes pour comparaison rapide.** *(Ajouté le 2026-09-18, à la
 demande explicite de l'utilisateur, après un besoin réel : comparer deux transcripts de simulation
 pour diagnostiquer une régression sur un passage précis — Point 7 de la relecture du
