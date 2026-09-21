@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 247'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 248'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4113,6 +4113,18 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(shouldRemindCircleTasks(NaN), false, 'an unknown/uncountable commit delta must never trigger a fabricated reminder');
   assert.equal(shouldRemindCircleTasks(REMINDER_COMMIT_THRESHOLD - 1), false, 'one commit short of the real threshold must stay silent, never an off-by-one early reminder');
   assert.equal(shouldRemindCircleTasks(REMINDER_COMMIT_THRESHOLD), true, 'reaching the exact threshold must trigger the reminder, never require overshooting it');
+
+  // record-run CLI wiring (2026-09-21, task #336): recordCircleTasksRun() already existed but had
+  // zero simple call path before tonight — the agent piloting the very first real AUTO Ronde forgot
+  // to invoke it, leaving the post-commit staleness counter stuck. Structural check only (never
+  // calling recordCircleTasksRun() itself here, which would overwrite the real local
+  // .circle-tasks-last-run.json state file with test data): the source must expose the "record-run"
+  // CLI branch, and it must call the real, already-tested recordCircleTasksRun()/sh("git rev-list
+  // --count HEAD") — never a second divergent commit-count calculation.
+  const circleTasksSource = fs.readFileSync(new URL('../scripts/circle-tasks.mjs', import.meta.url), 'utf8');
+  assert.ok(circleTasksSource.includes('"record-run"'), 'circle-tasks.mjs must expose a real "record-run" CLI subcommand — recordCircleTasksRun() must never stay reachable only via an improvised node -e call');
+  assert.ok(circleTasksSource.includes('recordCircleTasksRun(count)'), 'the record-run CLI branch must call the real recordCircleTasksRun(), never a second divergent write to .circle-tasks-last-run.json');
+  assert.ok(circleTasksSource.includes('git rev-list --count HEAD'), 'the record-run CLI branch must reuse the exact same commit-count command as the post-commit hook, never a second divergent counting method');
 
   // groupCircleReportByTheme() (2026-09-20, idée explicite de l'utilisateur : proposer les items par
   // thème plutôt qu'un découpage arbitraire de 4). Chaque item réel doit porter un thème connu, se

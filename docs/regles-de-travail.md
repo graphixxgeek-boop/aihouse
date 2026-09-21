@@ -1524,6 +1524,17 @@ même principe que la détection de doublon de LE-COORDINATEUR — déclenche un
 le crochet post-commit dès que ce nombre de commits s'est écoulé sans passage confirmé
 (`recordCircleTasksRun()`, mémoire locale `.circle-tasks-last-run.json`, jamais committée).
 
+**Dernière étape obligatoire d'une Ronde, quel que soit le mode (AUTO/PRIME/GOAT) : `node
+scripts/circle-tasks.mjs record-run`** (2026-09-21, trouvaille de la toute première vraie Ronde AUTO,
+tâche #336 — `recordCircleTasksRun()` existait déjà mais n'avait aucun chemin d'appel simple, et
+l'agent qui pilotait a justement oublié de l'appeler à la fin de sa première Ronde réelle : le
+rappel post-commit affichait encore « 32 commits sans Ronde » juste après l'avoir exécutée, alors
+qu'elle venait de tourner). Sans cet appel, le compteur de fraîcheur ne repart jamais de zéro et le
+rappel proactif ci-dessus devient un faux signal permanent — exactement le genre d'écart qu'Article 24
+vise (un mécanisme qui existe en code mais qu'aucune surface simple ne rend réflexe). Cette commande
+doit clore CHAQUE Ronde, dans le même message que la livraison du récapitulatif, jamais reportée à
+plus tard ni oubliée parce que « les items gratuits, eux, ont déjà tourné ».
+
 **THE-DEEP-READER rejoint le thème « Audit lourd » (2026-09-20)** : cousin de THE-FINAL-JUDGE (même
 mécanique d'agent séparé, personas et règles d'entrée opposées — cf.
 `docs/referentiel/the-deep-reader.md`), dédié à la relecture lourde du système de suivi contre

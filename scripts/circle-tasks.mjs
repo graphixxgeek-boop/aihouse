@@ -26,7 +26,7 @@ import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { scanDocumentWeight, listDatedNarrativeMarkers, extractRuleUnits, findRedundantRulePairs } from "./smart-conso-token.mjs";
-import { walkDocsPaths, daysSince } from "./lib-shell.mjs";
+import { walkDocsPaths, daysSince, sh } from "./lib-shell.mjs";
 import { checkChantierFileFreshness, loadAllTaskRows, detectPendingIdeaCandidates, loadIdeaDecisions, findIdeasNeedingDecision, IDEES_REGISTRY_PATH } from "./check-tasks-details.mjs";
 // Ré-exportée telle quelle (jamais une redéfinition) : circle-tasks.mjs reste le point d'import déjà
 // utilisé ailleurs (check-house.mjs) pour cette fonction, même après son déplacement vers lib-shell.mjs
@@ -751,4 +751,25 @@ function main() {
   if (missingRegistries.length) console.log(red(`${ALERT_ICON} Registre(s) sans item ni exclusion documentée dans la Ronde : ${missingRegistries.join(", ")} — à ajouter à CIRCLE_ITEMS ou à CIRCLE_EXCLUDED_REGISTRIES avec sa raison.`));
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+// `record-run` (2026-09-21, trouvaille de la première vraie Ronde AUTO, tâche #336) : recordCircleTasksRun()
+// existait déjà mais n'avait AUCUN chemin d'appel simple — seul un `node -e` improvisé pouvait
+// l'invoquer, un geste que l'agent qui pilote a justement oublié de faire à la fin de sa toute
+// première Ronde réelle (le rappel post-commit affichait encore « 32 commits sans Ronde » juste
+// après l'avoir exécutée). Exactement le risque qu'Article 24 vise : un mécanisme qui existe en
+// code mais qu'aucune surface simple ne rend réflexe. `git rev-list --count HEAD`, même commande
+// que le crochet post-commit (`check-last-commit.mjs`), jamais un second calcul divergent.
+function recordRunCli() {
+  const count = Number(sh("git rev-list --count HEAD", { cwd: ROOT.replace(/\/$/, "") }).trim());
+  if (!Number.isFinite(count)) {
+    console.error("Impossible de lire le nombre de commits réel (git rev-list --count HEAD) — rien enregistré.");
+    process.exitCode = 1;
+    return;
+  }
+  const state = recordCircleTasksRun(count);
+  console.log(`✅ Ronde CIRCLE-TASKS enregistrée comme faite au commit #${state.lastRunCommitCount} — le rappel post-commit repart de zéro à partir de maintenant.`);
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  if (process.argv[2] === "record-run") recordRunCli();
+  else main();
+}
