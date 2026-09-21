@@ -22,8 +22,28 @@
 // nombre d'interventions relues) reste local.
 
 import { extractPersonaBlock, missingSectionsSignal, tooShortSignal } from "./judge-persona-shared.mjs";
+import { renderHtmlReport } from "./html-report.mjs";
 
 export { extractPersonaBlock };
+
+// buildDeepReaderReportHtml() (2026-09-21, trouvaille réelle de auditHtmlDecisions()/doc-report.mjs
+// en construisant la règle « tous les outils de la Ronde produisent un rapport » : ce fichier était
+// enregistré "delivery_html" dans REGISTRIES depuis sa création mais n'a JAMAIS importé
+// html-report.mjs — un vrai écart resté invisible tant que le seul garde-fou existant
+// (l'ancien checkHtmlWiring() de circle-tasks.mjs) ne vérifiait que 3 scripts codés en dur, jamais
+// celui-ci. Mêmes commentaires et même forme que buildFinalJudgeReportHtml() (the-final-judge.mjs,
+// son cousin) : THE-DEEP-READER n'a pas de main()/CLI, le vrai rapport est écrit en prose par
+// l'agent séparé puis réconcilié par l'agent orchestrateur — cette fonction est le point
+// d'intégration réel, appelée à la main au moment de LIVRER un rapport, jamais un second calcul.
+export function buildDeepReaderReportHtml(reportText, { title = "THE-DEEP-READER — rapport", subtitle, dateLabel } = {}) {
+  return renderHtmlReport({
+    title,
+    subtitle: subtitle ?? "Relecture lourde du suivi (conversation vs docs/suivi), agent séparé — cf. docs/referentiel/the-deep-reader.md.",
+    dateLabel: dateLabel ?? new Date().toISOString(),
+    blocks: [{ type: "code", text: reportText }],
+    footer: "THE-DEEP-READER — conseiller uniquement, jamais un exécutant ni une décision automatique.",
+  });
+}
 
 const REQUIRED_SECTIONS = ["interventions relues", "écart", "déjà bien tracé"];
 

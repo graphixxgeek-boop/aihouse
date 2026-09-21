@@ -1606,16 +1606,57 @@ Un item JAMAIS lancé n'est jamais automatiquement « dû » (ça flagrerait à 
 neuve dès le premier jour) — seul un vrai dernier passage devenu trop vieux déclenche le signal.
 
 Une fois la Ronde effectivement exécutée (quel que soit le mode), l'agent appelle lui-même
-`buildCircleRunSummaryText()` (jamais un `main()` automatique, qui ne connaît pas la sélection
-réelle faite en conversation) et livre ce récapitulatif en fichier **texte, jamais HTML** — le
-rapport de fin de Ronde qui manquait jusqu'ici (même écart Article 13 constaté le même jour : la
-doc annonçait déjà CIRCLE-TASKS parmi les rapports rendus par html-report.mjs, jamais câblé dans le
-vrai `main()`). Corrigé le 2026-09-21 (trouvaille directe de l'utilisateur : « le rapport de circle
-devrait etre en txt et non html ») : cette fonction avait initialement été construite en HTML, AVANT
-la décision explicite du partage HTML/texte des rapports du projet (capturée dans docs/suivi, pas
-encore construite en outil — Doc-Report — mais dont la règle range déjà le récap CIRCLE-TASKS du
-côté texte) — jamais revisitée contre cette décision une fois prise, exactement l'écart que
-l'Article 13 interdit.
+`buildCircleRunSummaryHtml()` (jamais un `main()` automatique, qui ne connaît pas la sélection
+réelle faite en conversation) et livre ce récapitulatif en fichier **HTML, mis en évidence dans un
+bloc séparé** — historique complet de ce choix, jamais reperdu (Article 13) : construit en HTML le
+2026-09-20 ; repassé en texte le 2026-09-21 (trouvaille directe de l'utilisateur : « le rapport de
+circle devrait etre en txt et non html », la fonction avait été construite AVANT la décision
+explicite du partage HTML/texte des rapports du projet, docs/suivi #230, qui rangeait alors le récap
+CIRCLE-TASKS du côté texte) ; **RE-INVERSÉ le même soir, plus tard** (demande explicite, double
+confirmation Article 14 obtenue avant d'exécuter ce changement) — le récapitulatif doit désormais
+porter une vraie analyse approfondie, construite à partir de la lecture individuelle de chaque
+rapport produit par la Ronde, mise en évidence dans un bloc séparé (`type: "highlight"`, nouveau
+vocabulaire de bloc ajouté à `html-report.mjs` pour ce besoin précis), suivie des tâches de suivi qui
+en découlent (écrites à la fois ici ET dans `docs/suivi/`, jamais l'une sans l'autre) et de la liste
+des rapports individuels produits — ce que le texte brut ne pouvait pas rendre visuellement.
+`buildCircleRunSummaryText()` reste disponible (texte brut, sans l'analyse ni le bloc mis en
+évidence) pour qui en a besoin, mais n'est plus la fonction canonique de fin de Ronde.
+
+**Règle générale ajoutée le 2026-09-21, même soir (demande explicite après lecture de
+`docs/circle-process-detail.txt`) : tous les items de la Ronde DOIVENT produire un rapport texte
+minimum, lu par l'agent.** Vérifié un par un (Article 19) : aucune exception jugée réellement
+justifiable, y compris pour un signal trivial ("rien à signaler" reste une preuve d'exécution utile
+au futur circle-process-guardian). `recordCircleItemReport()`/`CIRCLE_REPORT_FOLDERS`
+(`scripts/circle-tasks.mjs`) portent ce mécanisme : un item qui correspond à un outil déjà
+enregistré dans `doc-report.mjs::REGISTRIES` écrit dans SON dossier déjà existant, jamais un second
+index concurrent (un fichier frère `circle-signals-index.md` si ce dossier a déjà un `index.md`
+curaté à la main dans un format propre à l'outil) ; un item sans outil enregistré reçoit un nouveau
+dossier dédié, lui-même ajouté à `REGISTRIES` (9 nouveaux registres "texte" : html-wiring-check,
+claude-md-weight, suivi-open-tasks, chantier-preliminaire, idee-a-trancher, tool-brain,
+network-check, relecture-referentiel, relecture-correctifs). Résultat : les 23 items de la Ronde
+portent désormais `producesReport: true`, contre 8 avant cette correction. `cassandra-rh-signal`
+passe en RAPPORT COMPLET (`node scripts/cassandra-rh.mjs rapport`) à CHAQUE Ronde (demande
+explicite, aucun coût API réel — reversal assumé du signal léger initial) ; `network-check-run`
+reçoit désormais un vrai rapport txt archivé (auparavant signal console seulement). THE-KING écrit
+en plus une snapshot texte à jour de `docs/philosophie-et-politique.md`
+(`docs/the-king/philosophie-et-politique-derniere-version.txt`), déclenchée sur un vrai changement
+de contenu (`shouldSnapshotPhilosophy()`), jamais une cadence fixe en nombre de Rondes — même
+principe que le propre journal d'évolutions de THE-KING (« évolutions constatées », jamais un
+journal périodique aveugle) ; le "profil" écrase de même `docs/profil-utilisateur/profil-actuel.txt`
+à chaque Ronde, un seul fichier toujours à jour distinct de l'historique daté déjà existant.
+
+**Trouvaille en construisant cette règle (Article 3/19, anti-duplication)** : `html-wiring-check`
+dupliquait un mécanisme déjà écrit — `circle-tasks.mjs` avait sa propre fonction
+`checkHtmlWiring(sources)` (grep de 3 scripts codés en dur : el-professor.mjs, the-final-judge.mjs,
+the-screener-capture.mjs), alors que `doc-report.mjs` a déjà `checkHtmlWiring(scriptPath)` +
+`auditHtmlDecisions(registries)`, strictement supérieure (parcourt TOUS les registres marqués
+"delivery_html"/"archived_html" via leur vrai champ `decision`, jamais une liste figée). La
+duplication a été retirée ; `html-wiring-check` appelle désormais `auditHtmlDecisions()`
+directement. Ce recâblage a lui-même trouvé un second vrai écart, invisible tant que seul l'ancien
+mécanisme à 3 scripts existait : `scripts/the-deep-reader.mjs` était enregistré "delivery_html"
+depuis sa création mais n'avait jamais importé `html-report.mjs` — corrigé le même soir
+(`buildDeepReaderReportHtml()`, miroir exact de `buildFinalJudgeReportHtml()` de son cousin
+THE-FINAL-JUDGE).
 
 Portée explicitement limitée à CIRCLE-TASKS (calibrage du 2026-09-20) : les autres listes
 "recommandées" du projet (ex. `recommendNextTasks()` de check-tasks-details) gardent leur

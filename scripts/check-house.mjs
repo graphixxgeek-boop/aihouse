@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 251'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 252'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4035,10 +4035,11 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const {
     CIRCLE_ITEMS, mostRecentDate, daysSince, buildCircleReport, formatCircleMenu,
     shouldRemindCircleTasks, REMINDER_COMMIT_THRESHOLD, ALERT_ICON, REPORT_ICON, FINAL_JUDGE_TOKEN_COST,
-    THEME_ORDER, groupCircleReportByTheme, checkHtmlWiring, oldestOpenTaskDate,
-    buildCircleRunSummaryText, findRegistriesMissingFromCircle, CIRCLE_EXCLUDED_REGISTRIES,
+    THEME_ORDER, groupCircleReportByTheme, oldestOpenTaskDate,
+    buildCircleRunSummaryText, buildCircleRunSummaryHtml, findRegistriesMissingFromCircle, CIRCLE_EXCLUDED_REGISTRIES,
     recommendCircleSelection, NOT_RECOMMENDED_BY_DEFAULT, primeAddableItems,
     costlyItemDueStatus, COSTLY_DUE_THRESHOLD_DAYS, recommendCircleSelectionWithPeriodicity, COSTLY_SUBSTITUTES,
+    recordCircleItemReport, CIRCLE_REPORT_FOLDERS,
   } = await import('../scripts/circle-tasks.mjs');
   const { walkDocsPaths } = await import('../scripts/lib-shell.mjs');
 
@@ -4074,17 +4075,33 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const smartConsoApiIndexText = '| Date | Décision | Verdict |\n|---|---|---|\n| 2026-09-19 | x | souple |';
   const smartConsoTokenIndexText = '| Date | Portée | Constat |\n|---|---|---|\n| 2026-09-20T02:19:00Z | Global | x |';
   const cleanDirtyOldIndexText = '| Date | Zone signalée | Trouvailles confirmées | Rapport | Notes |\n|---|---|---|---|---|\n| 2026-09-19 | (aucune) | 0 | — | x |';
-  const htmlWiringSources = { 'el-professor.mjs': 'no html-report here', 'the-final-judge.mjs': 'import { renderHtmlReport } from "./html-report.mjs";', 'the-screener-capture.mjs': 'no html-report here either' };
+  // htmlWiringReadFileImpl (2026-09-21, recâblé sur auditHtmlDecisions()/doc-report.mjs — jamais un
+  // second calcul, cf. le retrait du doublon checkHtmlWiring() de circle-tasks.mjs). Le rapport
+  // `report` ci-dessous utilise une version "tout est câblé" pour rester simple ; le vrai
+  // comportement de détection de mismatch est testé séparément plus bas, contre le vrai REGISTRIES,
+  // sans jamais recopier sa liste complète en dur (fragile, Article 24).
+  const htmlWiringReadFileImpl = () => 'import { renderHtmlReport } from "./html-report.mjs";';
   const suiviCategorized = { terminee: [], enCours: [{ cells: ['1', '2026-09-15T00:00:00Z', 'x', 'x', 'x', 'x', 'en cours'] }], ouverte: [{ cells: ['2', '2026-09-18T00:00:00Z', 'x', 'x', 'x', 'x', 'ouverte'] }], autre: [] };
   const sampleClaudeMdText = 'x'.repeat(200) + '\n*(ajouté le 2026-09-19, test)*\n*(ajouté le 2026-09-20, test)*\n';
   const samplePhilosophyText = '### 1.1 Un principe **[Explicite]**\n\nOn agit toujours avec prudence budgétaire ambiante.\n\n### 1.2 Un autre principe **[Synthèse, 2026-09-19]**\n\nOn n\'agit jamais avec prudence budgétaire ambiante.';
   const inesOfficialIndexText = '| Version | Date | Périmètre | Fichiers | Taille |\n|---|---|---|---|---|\n| v1 | 2026-09-18 | code seul | 40 | 500 Ko |';
-  const report = buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText: sampleClaudeMdText, philosophyText: samplePhilosophyText, philosophyFreshnessDaysValue: 3, inesOfficialIndexText }, now);
+  const report = buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringReadFileImpl, suiviCategorized, claudeMdText: sampleClaudeMdText, philosophyText: samplePhilosophyText, philosophyFreshnessDaysValue: 3, inesOfficialIndexText }, now);
   assert.equal(report.length, 23, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one — 23 since idee-a-trancher-signal joined and always-new-code-signal left CIRCLE_ITEMS on 2026-09-21');
   assert.equal(report.find((r) => r.id === 'claude-md-weight-signal').staleness, '66 tokens estimés, niveau "faible" — 2 aside(s) narrative(s) datée(s) encore réductible(s)', 'the CLAUDE.md weight signal must reuse the real SMART-CONSO-TOKEN scan functions live (never a second parser), reporting both the honest token estimate and the real count of still-reducible dated asides found in the actual text passed in');
   assert.equal(buildCircleReport({}, now).find((r) => r.id === 'claude-md-weight-signal').staleness, 'pas de signal disponible (CLAUDE.md non fourni)', 'with no CLAUDE.md text supplied at all, the signal must report an honest absence rather than crash or fabricate a number');
   assert.equal(report.find((r) => r.id === 'clean-dirty-old-signal').staleness, '1 jour(s) depuis le dernier passage journalisé', 'the CLEAN-DIRTY-OLD signal must compute its own staleness from its own real index text, distinct from every other source');
-  assert.equal(report.find((r) => r.id === 'html-wiring-check').staleness, '2 script(s) pas encore câblé(s) : el-professor.mjs, the-screener-capture.mjs', 'the HTML wiring check must name, by real filename, exactly the scripts genuinely missing the html-report.mjs import, never a vague count with no names');
+  assert.equal(report.find((r) => r.id === 'html-wiring-check').staleness, 'tous câblés', 'with every registry\'s producing script genuinely importing html-report.mjs, the item must honestly report full coverage, never a fabricated gap');
+  // Un vrai mismatch ciblé, jamais la liste complète de REGISTRIES recopiée en dur (fragile face à
+  // sa croissance future, Article 24) : un seul scriptPath réel (kpi-report.mjs) rapporté comme non
+  // câblé, tout le reste câblé — la fonction doit nommer PRÉCISÉMENT ce seul outil, jamais plus.
+  const oneMismatchReadFileImpl = (scriptPath) => (scriptPath.includes('kpi-report.mjs') ? 'console.log("no html rendering here")' : 'import { renderHtmlReport } from "./html-report.mjs";');
+  const oneMismatchReport = buildCircleReport({ htmlWiringReadFileImpl: oneMismatchReadFileImpl }, now);
+  const oneMismatchStaleness = oneMismatchReport.find((r) => r.id === 'html-wiring-check').staleness;
+  assert.ok(oneMismatchStaleness.startsWith('1 outil(s) pas encore câblé(s) :') && oneMismatchStaleness.includes('Tableau de bord / KPI'), 'a single genuine mismatch (kpi-report.mjs failing to import html-report.mjs) must be named precisely by its real registry label, never bundled with unrelated tools nor silently dropped');
+  // Vérifié en direct contre le vrai système de fichiers (même discipline que le bloc doc-report.mjs
+  // ci-dessus qui confirme déjà zéro mismatch réel aujourd'hui) : aucune fixture, le vrai readFileSync.
+  const liveWiringReport = buildCircleReport({ htmlWiringReadFileImpl: (p) => fs.readFileSync(p, 'utf8') }, now);
+  assert.equal(liveWiringReport.find((r) => r.id === 'html-wiring-check').staleness, 'tous câblés', 'checked live against the real repository: every real "delivery_html"/"archived_html" registry\'s producing script must currently import html-report.mjs — a guarantee that breaks the day a future report-producing tool forgets to wire it');
   assert.equal(report.find((r) => r.id === 'suivi-open-tasks-signal').staleness, 'tâche ouverte depuis 5 jour(s)', 'the oldest-open-task signal must pick the genuinely oldest date (2026-09-15, the "en cours" entry) among both "en cours" and "ouverte" buckets, never just the newer "ouverte" one');
   assert.equal(report.find((r) => r.id === 'dream-team-photo').staleness, 'pas de signal de fraîcheur mécanique disponible', 'the purely recreational dream-team-photo item has no real mechanical freshness source either, and must say so honestly rather than fabricate one');
   assert.equal(report.find((r) => r.id === 'the-screener').staleness, 'pas de signal de fraîcheur mécanique disponible', 'THE-SCREENER likewise has no real mechanical freshness source in this ronde (its own dated registry docs/the-screener/ does not exist yet) and must say so honestly');
@@ -4123,11 +4140,18 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // REPORT_ICON (2026-09-21, task #340, direct user question on which of the 18 Ronde items
   // genuinely produce an archived report) — the menu must visually distinguish an item whose
   // execution genuinely writes a persisted, indexed artifact from one that is console-only.
+  // UPDATED same night (task #341, user rule: every one of the 23 items must now leave at least a
+  // minimal txt trace) : every real CIRCLE_ITEMS entry today carries producesReport:true, so the
+  // "no icon" contrast can no longer be demonstrated on a real item — a synthetic fake item (never
+  // a real CIRCLE_ITEMS id) now stands in for it, proving the underlying lookup still genuinely
+  // reads producesReport rather than always defaulting to true.
+  assert.ok(CIRCLE_ITEMS.every((i) => i.producesReport === true), '2026-09-21: every single one of the 23 real Ronde items must now carry producesReport:true — no exception was found justifiable after individually reviewing all 15 that lacked one before tonight');
   assert.ok(menuPlain.includes(`${REPORT_ICON} ${report.find((r) => r.id === 'profil').label}`), 'an item flagged producesReport:true (profil, which genuinely writes a new fiche + index entry) must carry the report icon in the menu, never left indistinguishable from a console-only signal');
-  assert.ok(!menuPlain.includes(`${REPORT_ICON} ${report.find((r) => r.id === 'the-king-signal').label}`), 'an item with no producesReport flag (the-king-signal, console-only by its own documented design) must never carry the report icon');
-  const runSummaryWithReport = buildCircleRunSummaryText([{ id: 'profil', label: report.find((r) => r.id === 'profil').label, outcome: 'fait', link: 'docs/profil-utilisateur/index.md' }, { id: 'the-king-signal', label: report.find((r) => r.id === 'the-king-signal').label, outcome: 'ok' }], { dateLabel: '2026-09-21', items: report });
+  const fakeNoReportItems = [{ id: 'fake-console-only-item', label: 'Fake console-only item', producesReport: false }];
+  assert.ok(!formatCircleMenu(fakeNoReportItems, { colorize: false }).includes(REPORT_ICON), 'an item explicitly WITHOUT producesReport must never carry the report icon — proven on a synthetic fixture now that no real CIRCLE_ITEMS entry demonstrates the negative case any more');
+  const runSummaryWithReport = buildCircleRunSummaryText([{ id: 'profil', label: report.find((r) => r.id === 'profil').label, outcome: 'fait', link: 'docs/profil-utilisateur/index.md' }, { id: 'fake-console-only-item', label: 'Fake console-only item', outcome: 'ok' }], { dateLabel: '2026-09-21', items: [...report, ...fakeNoReportItems] });
   assert.ok(runSummaryWithReport.includes(`${REPORT_ICON} ${report.find((r) => r.id === 'profil').label}`), 'the end-of-Ronde recap must likewise mark a genuine report-producing item with the icon, looked up honestly from the real CIRCLE_ITEMS producesReport flag rather than guessed from the entry alone');
-  assert.ok(!runSummaryWithReport.includes(`${REPORT_ICON} ${report.find((r) => r.id === 'the-king-signal').label}`), 'the recap must never flag a console-only signal item with the report icon either');
+  assert.ok(!runSummaryWithReport.includes(`${REPORT_ICON} Fake console-only item`), 'the recap must never flag an item explicitly without producesReport with the report icon either');
 
   assert.equal(shouldRemindCircleTasks(NaN), false, 'an unknown/uncountable commit delta must never trigger a fabricated reminder');
   assert.equal(shouldRemindCircleTasks(REMINDER_COMMIT_THRESHOLD - 1), false, 'one commit short of the real threshold must stay silent, never an off-by-one early reminder');
@@ -4209,6 +4233,69 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(!/1 nouvelle fiche ajoutée[\s\S]*Rapport KPI/.test(realSummary) || realSummary.indexOf('Profil utilisateur') < realSummary.indexOf('Rapport KPI'), 'entries must render in the same order they were passed in, never silently reordered');
   assert.ok(realSummary.includes('CIRCLE-TASKS'), 'the summary must carry its own clear title so a reader knows which tool produced it, never an anonymous table');
   assert.ok(!realSummary.includes('undefined'), 'a real entry must never leak a literal "undefined" into the rendered page — every field must fall back to an honest placeholder when missing');
+
+  // buildCircleRunSummaryHtml() (2026-09-21, ré-inversion assumée du choix texte ci-dessus, double
+  // confirmation Article 14 obtenue avant d'exécuter) — la fonction CANONIQUE désormais, avec une
+  // vraie analyse mise en évidence dans un bloc HTML séparé (jamais généré automatiquement — un
+  // paramètre fourni par l'agent qui pilote), les tâches de suivi qui en découlent, et les liens
+  // vers les rapports individuels de la Ronde. Réutilise buildCircleEntryRows() en interne — jamais
+  // un second calcul de la table divergent de buildCircleRunSummaryText().
+  const emptyHtmlSummary = buildCircleRunSummaryHtml([]);
+  assert.ok(/<!DOCTYPE html>/i.test(emptyHtmlSummary) && emptyHtmlSummary.includes('CIRCLE-TASKS'), 'buildCircleRunSummaryHtml() must render a genuine standalone HTML page via html-report.mjs, never a bare fragment');
+  assert.ok(/Aucun item n.a été coché/.test(emptyHtmlSummary), 'an empty run must render the same honest empty-run message as the text variant, never a fabricated table');
+  const realHtmlSummary = buildCircleRunSummaryHtml([
+    { id: 'profil', label: 'Profil utilisateur', outcome: '1 nouvelle fiche ajoutée', link: 'docs/profil-utilisateur/observations/2026-09-20-2350.md' },
+  ], { dateLabel: '2026-09-21T23:59:00Z', analysis: ['Premier constat.', 'Second constat.'], followUpTasks: ['Vérifier X au prochain passage'], reportLinks: ['docs/the-king/circle-signal-2026-09-21.txt'] });
+  assert.ok(realHtmlSummary.includes('class="highlight"') && realHtmlSummary.includes('Analyse approfondie de la Ronde') && realHtmlSummary.includes('Premier constat.') && realHtmlSummary.includes('Second constat.'), 'the deep analysis must render inside a genuinely distinct highlighted block, never mixed into the plain table rows, and every paragraph passed in must appear');
+  assert.ok(realHtmlSummary.includes('Vérifier X au prochain passage'), 'follow-up tasks born from the analysis must be listed in the recap itself, not only written to docs/suivi/ separately');
+  assert.ok(realHtmlSummary.includes('docs/the-king/circle-signal-2026-09-21.txt'), 'individual per-item reports produced during the Ronde must be listed for easy access, never left implicit');
+  assert.ok(!buildCircleRunSummaryHtml([]).includes('undefined'), 'the HTML variant must never leak a literal "undefined" either');
+  const noAnalysisSummary = buildCircleRunSummaryHtml([{ id: 'profil', label: 'x', outcome: 'y' }]);
+  assert.ok(!noAnalysisSummary.includes('class="highlight"'), 'when no analysis is provided (e.g. a quick re-render before the agent has written one), the highlighted block itself must never appear as an empty shell — the shared THEME_CSS rule for .highlight is always present and must never be confused with a rendered block');
+
+  // recordCircleItemReport()/CIRCLE_REPORT_FOLDERS (2026-09-21, correction demandée par
+  // l'utilisateur après lecture de docs/circle-process-detail.txt : « tous les outils qui
+  // interviennent lors de la ronde DOIVENT produire un rapport txt au minimum »). Deux régimes :
+  // un dossier SANS index.md préexistant reçoit sa propre primary index.md (créée ici) ; un dossier
+  // avec un index.md déjà curaté à la main (format propre à l'outil) reçoit un fichier FRÈRE
+  // circle-signals-index.md, jamais une écriture générique dans l'index principal qui casserait
+  // son format.
+  assert.ok(Object.keys(CIRCLE_REPORT_FOLDERS).length >= 14, 'CIRCLE_REPORT_FOLDERS must cover every one of the 15 items that had no report before 2026-09-21 (cassandra-rh-signal excluded on purpose — full HTML mode, its own established mechanism, never this generic recorder)');
+  {
+    const fakeFs = new Map();
+    const opts = {
+      folders: { 'new-dossier-item': 'docs/fake-new-dossier/' },
+      now: Date.parse('2026-09-21T23:00:00Z'),
+      writeFileImpl: (p, c) => fakeFs.set(p, c),
+      readFileImpl: (p) => fakeFs.get(p),
+      existsImpl: (p) => fakeFs.has(p),
+      mkdirImpl: () => {},
+    };
+    const res = recordCircleItemReport('new-dossier-item', 'Rien à signaler.', opts);
+    assert.ok(res.filePath.startsWith('docs/fake-new-dossier/circle-signal-') && res.filePath.endsWith('.txt'), 'a brand-new dossier must receive a real dated .txt proof-of-execution file, never a placeholder');
+    assert.ok(res.indexPath.endsWith('/index.md'), 'a dossier with no pre-existing index.md must have its report tracked in a fresh, fully-owned index.md — the primary one, since nothing else claims it yet');
+    assert.ok(/Rien à signaler\./.test([...fakeFs.values()].join('\n')), 'the raw content passed in must genuinely be written to disk, never silently dropped');
+  }
+  {
+    // Le chemin absolu réel dépend de ROOT (privé au module) — on matche donc par suffixe, même
+    // patron que findOrphanReportFiles() ci-dessous (dir.endsWith('fake-argus/')), jamais un chemin
+    // absolu deviné en dur.
+    const curatedContent = '# Existing curated index\n\n| Date | Real thing |\n|---|---|\n';
+    const fakeFs = new Map();
+    const isCurated = (p) => p.endsWith('fake-existing-tool/index.md');
+    const opts = {
+      folders: { 'existing-tool-item': 'docs/fake-existing-tool/' },
+      now: Date.parse('2026-09-21T23:10:00Z'),
+      writeFileImpl: (p, c) => fakeFs.set(p, c),
+      readFileImpl: (p) => (isCurated(p) && !fakeFs.has(p) ? curatedContent : fakeFs.get(p)),
+      existsImpl: (p) => isCurated(p) || fakeFs.has(p),
+      mkdirImpl: () => {},
+    };
+    const res = recordCircleItemReport('existing-tool-item', 'Fraîcheur : 0 jour.', opts);
+    assert.equal(res.indexPath, 'docs/fake-existing-tool/circle-signals-index.md', 'a dossier that already owns a hand-curated index.md must never have it touched — the signal goes to a distinct sibling file instead');
+    assert.ok(![...fakeFs.keys()].some(isCurated), 'the pre-existing curated index.md must never be written to at all — recordCircleItemReport() must never corrupt a format it does not own');
+  }
+  assert.throws(() => recordCircleItemReport('never-registered-item', 'x'), /aucun dossier connu/, 'an item with no entry in CIRCLE_REPORT_FOLDERS must fail loudly rather than silently writing nowhere or to a guessed path');
 
   // findRegistriesMissingFromCircle() (2026-09-21, trou trouvé par l'utilisateur : « est-ce que la
   // ronde a bien dans son catalogue tous les outils pertinents ? »). Contrairement à

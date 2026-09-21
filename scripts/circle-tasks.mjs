@@ -22,12 +22,15 @@
 // par défaut. Les autres items coûteux du paysage (check-spirit.mjs, HYPER-SCAN-CHECKPOINT complet)
 // restent hors de cette fenêtre pour l'instant, cf. docs/referentiel/smart-conso-token.md pour la
 // discussion de leur extension éventuelle au même traitement.
-import { readFileSync, existsSync, writeFileSync } from "node:fs";
+import { readFileSync, existsSync, writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { scanDocumentWeight, listDatedNarrativeMarkers, extractRuleUnits, findRedundantRulePairs } from "./smart-conso-token.mjs";
 import { walkDocsPaths, daysSince, sh } from "./lib-shell.mjs";
 import { checkChantierFileFreshness, loadAllTaskRows, detectPendingIdeaCandidates, loadIdeaDecisions, findIdeasNeedingDecision, IDEES_REGISTRY_PATH } from "./check-tasks-details.mjs";
+import { auditHtmlDecisions, REGISTRIES as DOC_REPORT_REGISTRIES } from "./doc-report.mjs";
+import { renderHtmlReport } from "./html-report.mjs";
 // Ré-exportée telle quelle (jamais une redéfinition) : circle-tasks.mjs reste le point d'import déjà
 // utilisé ailleurs (check-house.mjs) pour cette fonction, même après son déplacement vers lib-shell.mjs
 // le 2026-09-21 (cf. commentaire au-dessus de sa définition dans lib-shell.mjs).
@@ -82,7 +85,7 @@ export const CIRCLE_ITEMS = [
     label: "Mettre à jour le profil utilisateur",
     cout: "gratuit — lecture/écriture de texte, zéro appel API",
     tokensEstimes: "quelques milliers de tokens (lecture de l'index + de la dernière fiche, rédaction d'une nouvelle observation datée)",
-    execute: "Suivre la procédure de docs/regles-de-travail.md §9 (Historisation du profil) : comparer les signaux de la session en cours à la dernière fiche, écrire une nouvelle observation datée, mettre à jour l'index.",
+    execute: "Suivre la procédure de docs/regles-de-travail.md §9 (Historisation du profil) : comparer les signaux de la session en cours à la dernière fiche, écrire une nouvelle observation datée, mettre à jour l'index. Écraser ensuite docs/profil-utilisateur/profil-actuel.txt avec cette même observation à jour (2026-09-21, demande explicite : « mon profil utilisateur à part, dans un fichier txt ») — un seul fichier toujours à jour, séparé de l'historique daté, jamais un second calcul divergent.",
     producesReport: true,
   },
   {
@@ -91,7 +94,8 @@ export const CIRCLE_ITEMS = [
     label: "Relire tous les documents de référence",
     cout: "gratuit — lecture, aucun appel API",
     tokensEstimes: "élevé si réellement exhaustif — potentiellement plusieurs dizaines de milliers de tokens (CLAUDE.md seul pèse ~29 000 tokens estimés, cf. docs/smart-conso-token/) ; \"gratuit\" ne veut jamais dire \"gratuit en tokens\"",
-    execute: "Relire CLAUDE.md (Article 13, vérification périodique) et toute la table des matières réelle de docs/referentiel/ + racine de docs/ — corriger tout écart trouvé immédiatement (Article 3), jamais seulement le signaler.",
+    execute: "Relire CLAUDE.md (Article 13, vérification périodique) et toute la table des matières réelle de docs/referentiel/ + racine de docs/ — corriger tout écart trouvé immédiatement (Article 3), jamais seulement le signaler. Écrire ensuite un court résumé de ce qui a été relu et trouvé via recordCircleItemReport('referentiel', ...) — règle générale du 2026-09-21, même les relectures manuelles laissent une trace.",
+    producesReport: true,
   },
   // the-king-signal (2026-09-21, tâche #167) : la promesse initiale de l'utilisateur pour THE-KING
   // ("il remet à jour [le digest] à chaque ronde, à integrer à la ronde auto") — jamais un vrai
@@ -103,7 +107,8 @@ export const CIRCLE_ITEMS = [
     label: "Digest THE-KING : fraîcheur et tensions possibles de la philosophie",
     cout: "gratuit — relit un seul fichier local, zéro appel API",
     tokensEstimes: "faible — sortie compacte (fraîcheur + digest daté + tensions éventuelles)",
-    execute: "Lancer node scripts/the-king.mjs (ou appeler philosophyFreshnessDays()/buildEvolutionDigest()/findPossibleTensions() directement) et reporter honnêtement la fraîcheur de docs/philosophie-et-politique.md et toute tension possible trouvée — jamais corriger le document soi-même, seulement signaler.",
+    execute: "Lancer node scripts/the-king.mjs (ou appeler philosophyFreshnessDays()/buildEvolutionDigest()/findPossibleTensions() directement) et reporter honnêtement la fraîcheur de docs/philosophie-et-politique.md et toute tension possible trouvée — jamais corriger le document soi-même, seulement signaler. Écrire le résultat via recordCircleItemReport('the-king-signal', ...) (dossier docs/the-king/, jamais son index.md principal — cf. CIRCLE_REPORT_FOLDERS). Comparer ensuite le contenu actuel de docs/philosophie-et-politique.md à docs/the-king/philosophie-et-politique-derniere-version.txt via shouldSnapshotPhilosophy() — sur un vrai changement (ou une toute première fois), écraser cette snapshot avec le contenu actuel, jamais une cadence fixe en nombre de Rondes (2026-09-21, demande explicite de l'utilisateur).",
+    producesReport: true,
   },
   {
     id: "kpi",
@@ -134,19 +139,22 @@ export const CIRCLE_ITEMS = [
     label: "Vérifier depuis quand CLEAN-DIRTY-OLD n'a pas été consulté",
     cout: "gratuit — lecture du registre de passages déjà accumulé, jamais le vrai balayage (ça, c'est le travail réel de CLEAN-DIRTY-OLD une fois lancé)",
     tokensEstimes: "faible — lecture d'un seul fichier d'index compact",
-    execute: "Lire docs/clean-dirty-old/index.md et reporter honnêtement depuis quand aucun passage n'a été journalisé — proposer, jamais lancer seul, un vrai passage CLEAN-DIRTY-OLD si le carnet est resté silencieux trop longtemps.",
+    execute: "Lire docs/clean-dirty-old/index.md et reporter honnêtement depuis quand aucun passage n'a été journalisé — proposer, jamais lancer seul, un vrai passage CLEAN-DIRTY-OLD si le carnet est resté silencieux trop longtemps. Écrire le signal via recordCircleItemReport('clean-dirty-old-signal', ...).",
+    producesReport: true,
   },
-  // html-wiring-check (2026-09-20, même origine). Vérifie mécaniquement (grep de import, jamais une
-  // exécution) que les outils censés produire une copie HTML (Article 13, gabarit html-report.mjs)
-  // le font bien réellement — trouvaille concrète cette nuit : seul kpi-report.mjs l'utilisait,
-  // el-professor.mjs/the-final-judge.mjs/the-screener-capture.mjs pas encore câblés.
+  // html-wiring-check (2026-09-20, même origine ; RECÂBLÉ le 2026-09-21 sur doc-report.mjs après
+  // avoir trouvé — en construisant la règle « chaque outil doit produire un rapport » — que ce
+  // check dupliquait un mécanisme déjà écrit : doc-report.mjs a déjà checkHtmlWiring(scriptPath) +
+  // auditHtmlDecisions(REGISTRIES), qui parcourt TOUS les registres marqués "delivery_html"/
+  // "archived_html" via leur vrai champ `decision`, jamais 3 scripts codés en dur.
   {
     id: "html-wiring-check",
     theme: "Qualité du code",
     label: "Vérifier que tous les rapports produisent bien leur copie HTML",
-    cout: "gratuit — lecture du code source de chaque script, aucun appel API",
-    tokensEstimes: "faible — quelques fichiers courts à relire",
-    execute: "Vérifier que el-professor.mjs, the-final-judge.mjs et the-screener-capture.mjs importent bien html-report.mjs (cf. checkHtmlWiring()) — câbler ceux qui manquent encore, jamais laisser un rapport sortir en texte brut alors que la règle demande du HTML.",
+    cout: "gratuit — lecture du code source de chaque script déjà enregistré, aucun appel API",
+    tokensEstimes: "faible — sortie compacte de auditHtmlDecisions()",
+    execute: "Appeler auditHtmlDecisions() (scripts/doc-report.mjs) — jamais un second calcul — et écrire le résultat via recordCircleItemReport('html-wiring-check', ...) : tout registre en mismatch (decision HTML mais script non câblé) doit être câblé dans la foulée, jamais laissé en texte brut.",
+    producesReport: true,
   },
   // claude-md-weight-signal (2026-09-20, demande explicite de l'utilisateur après la tâche #122 :
   // « prevois que l'allegement de claude.md peut devenir une tache recurrente [...] peut etre à
@@ -161,7 +169,8 @@ export const CIRCLE_ITEMS = [
     label: "Vérifier le poids en tokens de CLAUDE.md (allègement périodique)",
     cout: "gratuit — relit CLAUDE.md et applique les fonctions déjà exportées par SMART-CONSO-TOKEN, aucun appel API",
     tokensEstimes: "faible — un seul fichier local relu par le script, pas par l'agent",
-    execute: "Lire CLAUDE.md et appeler scanDocumentWeight()/listDatedNarrativeMarkers() (docs/referentiel/smart-conso-token.md) — si le niveau remonte à \"élevé\" ou que de nouvelles asides datées apparaissent, proposer une passe d'allègement selon la procédure formalisée, jamais l'exécuter seul.",
+    execute: "Lire CLAUDE.md et appeler scanDocumentWeight()/listDatedNarrativeMarkers() (docs/referentiel/smart-conso-token.md) — si le niveau remonte à \"élevé\" ou que de nouvelles asides datées apparaissent, proposer une passe d'allègement selon la procédure formalisée, jamais l'exécuter seul. Écrire le résultat via recordCircleItemReport('claude-md-weight-signal', ...).",
+    producesReport: true,
   },
   {
     id: "correctifs",
@@ -169,7 +178,8 @@ export const CIRCLE_ITEMS = [
     label: "Relire les carnets de correctifs et points fragiles",
     cout: "gratuit — lecture, aucun appel API",
     tokensEstimes: "modéré — lecture de deux carnets (points-fragiles.md, correctifs-a-revalider.md)",
-    execute: "Relire docs/simulations/correctifs-a-revalider.md et docs/referentiel/points-fragiles.md — retirer ce qui est confirmé stable (2 simulations propres consécutives), signaler ce qui traîne sans jamais avancer.",
+    execute: "Relire docs/simulations/correctifs-a-revalider.md et docs/referentiel/points-fragiles.md — retirer ce qui est confirmé stable (2 simulations propres consécutives), signaler ce qui traîne sans jamais avancer. Écrire un court résumé via recordCircleItemReport('correctifs', ...) — règle générale du 2026-09-21, même les relectures manuelles laissent une trace.",
+    producesReport: true,
   },
   // suivi-open-tasks-signal (2026-09-20, même origine que les deux items ci-dessus). Réutilise
   // categorizeAllSessions() de check-suivi-fidelity.mjs (jamais un second parseur de docs/suivi/) —
@@ -185,7 +195,8 @@ export const CIRCLE_ITEMS = [
     label: "Signaler la tâche ouverte la plus ancienne (docs/suivi)",
     cout: "gratuit — lecture des fichiers de session déjà écrits, aucun appel API",
     tokensEstimes: "faible — parcours mécanique de fichiers déjà en mémoire de travail",
-    execute: "Lire docs/suivi/sessions/*.md via categorizeAllSessions() et reporter la tâche ouverte/en cours la plus ancienne — jamais juger seul si elle doit être close, juste signaler qu'elle traîne (ou qu'elle a été interrompue par un prompt intempestif et jamais reprise).",
+    execute: "Lire docs/suivi/sessions/*.md via categorizeAllSessions() et reporter la tâche ouverte/en cours la plus ancienne — jamais juger seul si elle doit être close, juste signaler qu'elle traîne (ou qu'elle a été interrompue par un prompt intempestif et jamais reprise). Écrire le signal via recordCircleItemReport('suivi-open-tasks-signal', ...).",
+    producesReport: true,
   },
   // chantier-preliminaire-signal (2026-09-21, demande explicite de l'utilisateur : « je veux un
   // petit outil qui verifie lors de la ronde que les idees formulées ont bien été renseignées dans
@@ -202,7 +213,8 @@ export const CIRCLE_ITEMS = [
     label: "Vérifier que les idées de gros chantier sont bien dans leur fichier préliminaire",
     cout: "gratuit — relit docs/suivi/ et croise avec le registre CHANTIER_PRELIMINARY_FILES, aucun appel API",
     tokensEstimes: "faible — parcours mécanique de fichiers déjà en mémoire de travail",
-    execute: "Appeler checkChantierFileFreshness(loadAllTaskRows()) — sur un vrai écart (une tâche de suivi mentionne un chantier connu, plus récente que son fichier préliminaire), proposer explicitement de le mettre à jour tout de suite, jamais le laisser en suspens jusqu'à la prochaine Ronde.",
+    execute: "Appeler checkChantierFileFreshness(loadAllTaskRows()) — sur un vrai écart (une tâche de suivi mentionne un chantier connu, plus récente que son fichier préliminaire), proposer explicitement de le mettre à jour tout de suite, jamais le laisser en suspens jusqu'à la prochaine Ronde. Écrire le signal via recordCircleItemReport('chantier-preliminaire-signal', ...).",
+    producesReport: true,
   },
   // idee-a-trancher-signal (2026-09-21, demande explicite de l'utilisateur : « me demander
   // systematiquement, pour chaque idee developpée, [...] si je souhaite la creation d'un fichier
@@ -222,7 +234,8 @@ export const CIRCLE_ITEMS = [
     label: "Vérifier qu'aucune idée nouvelle n'attend encore une décision (fichier / abandon / entre-deux)",
     cout: "gratuit — relit docs/suivi/ et docs/idees-a-trancher.md, aucun appel API",
     tokensEstimes: "faible — parcours mécanique de fichiers déjà en mémoire de travail",
-    execute: "Appeler findIdeasNeedingDecision(detectPendingIdeaCandidates(loadAllTaskRows()), loadIdeaDecisions(lecture de docs/idees-a-trancher.md)) — pour chaque idée remontée, poser la question à 3 voies (créer un fichier préliminaire / abandonner / entre-deux) via une fenêtre dédiée, jamais déduire la décision soi-même ; consigner la réponse dans docs/idees-a-trancher.md le jour même.",
+    execute: "Appeler findIdeasNeedingDecision(detectPendingIdeaCandidates(loadAllTaskRows()), loadIdeaDecisions(lecture de docs/idees-a-trancher.md)) — pour chaque idée remontée, poser la question à 3 voies (créer un fichier préliminaire / abandonner / entre-deux) via une fenêtre dédiée, jamais déduire la décision soi-même ; consigner la réponse dans docs/idees-a-trancher.md le jour même. Écrire aussi le signal via recordCircleItemReport('idee-a-trancher-signal', ...) (jamais un doublon de docs/idees-a-trancher.md, qui reste le registre des DÉCISIONS — celui-ci n'est que la preuve d'exécution du contrôle).",
+    producesReport: true,
   },
   {
     id: "smart-conso-api-scan",
@@ -230,7 +243,8 @@ export const CIRCLE_ITEMS = [
     label: "Scanner les schémas de consommation API (Smart Conso API)",
     cout: "gratuit — node scripts/smart-conso-api.mjs scan, lecture de l'historique déjà accumulé, zéro nouvel appel API",
     tokensEstimes: "faible — sortie compacte d'un script",
-    execute: "Lancer `node scripts/smart-conso-api.mjs scan` et lire les constats (taux d'épuisement récent élevé, relancement trop rapide après un épisode confirmé) — jamais un jugement sur le code du jeu, seulement le rythme des appels déjà faits.",
+    execute: "Lancer `node scripts/smart-conso-api.mjs scan` et lire les constats (taux d'épuisement récent élevé, relancement trop rapide après un épisode confirmé) — jamais un jugement sur le code du jeu, seulement le rythme des appels déjà faits. Écrire le résultat via recordCircleItemReport('smart-conso-api-scan', ...) (dossier docs/smart-conso-api/, jamais son index.md principal).",
+    producesReport: true,
   },
   {
     id: "smart-conso-token-scan",
@@ -256,7 +270,8 @@ export const CIRCLE_ITEMS = [
     label: "Rapport tool-brain (usage réel des outils + auto-diagnostic)",
     cout: "gratuit — relit .tool-usage-history.json (compteur déjà existant), zéro appel API",
     tokensEstimes: "faible — sortie compacte du script",
-    execute: "Lancer `node scripts/tool-brain.mjs rapport` et lire le rapport (outils du catalogue jamais sollicités, outils les moins utilisés, auto-diagnostic borné au périmètre de tool-brain lui-même) — jamais un jugement sur le reste du paysage, seulement l'usage réel des outils et tool-brain lui-même.",
+    execute: "Lancer `node scripts/tool-brain.mjs rapport` et lire le rapport (outils du catalogue jamais sollicités, outils les moins utilisés, auto-diagnostic borné au périmètre de tool-brain lui-même) — jamais un jugement sur le reste du paysage, seulement l'usage réel des outils et tool-brain lui-même. Écrire le résultat via recordCircleItemReport('tool-brain-report', ...) (nouveau dossier docs/tool-brain/).",
+    producesReport: true,
   },
   // « Photo de la dream team » (2026-09-20, demande explicite de l'utilisateur, pendant une pause
   // fun : « garde en mémoire et écrit que cette "photo" de la dream team fait partie des tâches
@@ -297,18 +312,22 @@ export const CIRCLE_ITEMS = [
     label: "Proposer une nouvelle édition INES-official si l'ancienne date",
     cout: "gratuit — lecture de l'index existant, l'édition elle-même (si proposée ensuite) reste 0 appel API",
     tokensEstimes: "faible pour le signal seul ; élevé si l'édition complète est ensuite relue par l'agent (le corps reste local, jamais committé)",
-    execute: "Lire docs/ines-official/index.md (dernière version/date) et proposer une nouvelle édition (node scripts/ines-official.mjs <code|code_et_docs>) si aucune récente n'existe — jamais lancée automatiquement sans confirmation.",
+    execute: "Lire docs/ines-official/index.md (dernière version/date) et proposer une nouvelle édition (node scripts/ines-official.mjs <code|code_et_docs>) si aucune récente n'existe — jamais lancée automatiquement sans confirmation. Écrire le signal via recordCircleItemReport('ines-official-signal', ...) (dossier docs/ines-official/, jamais son index.md principal).",
+    producesReport: true,
   },
   // cassandra-rh-signal (2026-09-21, noyau CASSANDRA-RH fiabilisé) — signal léger décidé dès la
-  // conception (« signal léger à chaque Ronde CIRCLE-TASKS + bilan complet sur demande »). Gratuit,
-  // relit ce que le reste du réseau d'outils sait déjà, jamais un second calcul.
+  // conception (« signal léger à chaque Ronde CIRCLE-TASKS + bilan complet sur demande »).
+  // PROMU AU RAPPORT COMPLET le 2026-09-21 (même soir, demande explicite : « je veux un rapport
+  // complet à chaque ronde ») — reversal assumé du calibrage initial, jamais un coût API réel
+  // (calcul local, node scripts/cassandra-rh.mjs rapport n'appelle jamais Gemini).
   {
     id: "cassandra-rh-signal",
     theme: "Qualité & fun",
-    label: "Signal RH de l'équipe (effectif, badges, tendance KPI) — CASSANDRA-RH",
-    cout: "gratuit — relit checkAgentOnboarding()/kpi-historique.csv/tool-usage.mjs, jamais un second calcul",
-    tokensEstimes: "faible — une ligne de signal",
-    execute: "Lancer node scripts/cassandra-rh.mjs (sans argument) pour le signal léger ; node scripts/cassandra-rh.mjs rapport pour le bilan HTML complet, seulement sur demande explicite.",
+    label: "Bilan RH complet de l'équipe (effectif, badges, tendance KPI) — CASSANDRA-RH",
+    cout: "gratuit — relit checkAgentOnboarding()/kpi-historique.csv/tool-usage.mjs, jamais un second calcul, zéro appel API malgré le mode complet",
+    tokensEstimes: "modéré — rapport HTML complet (~9 000-12 500 octets mesurés), à chaque Ronde depuis le 2026-09-21",
+    execute: "Lancer node scripts/cassandra-rh.mjs rapport (mode complet, plus le signal léger) à CHAQUE Ronde — livrer le HTML via html-report.mjs/SendUserFile et mettre à jour docs/cassandra-rh/index.md selon son format déjà établi, jamais recordCircleItemReport (réservé aux signaux texte simples).",
+    producesReport: true,
   },
   // profil-utilisateur-guard (2026-09-21, trouvaille : « il y a certainement de petits scripts peu
   // coûteux [...] qui peuvent être exécutés, simplement parce qu'ils sont très peu coûteux et que
@@ -325,7 +344,8 @@ export const CIRCLE_ITEMS = [
     label: "Lancer le vrai garde-fou du dossier profil-utilisateur (fiches orphelines, liens morts)",
     cout: "gratuit — node scripts/check-profil-utilisateur.mjs, lecture de fichiers déjà sur disque, zéro appel API",
     tokensEstimes: "faible — sortie compacte du script",
-    execute: "Lancer `node scripts/check-profil-utilisateur.mjs` et lire le verdict (fiches sur disque non référencées dans l'index, liens de l'index vers un fichier disparu) — jamais un remplacement des fixtures synthétiques de check-house.mjs, un vrai passage contre l'état réel du dossier.",
+    execute: "Lancer `node scripts/check-profil-utilisateur.mjs` et lire le verdict (fiches sur disque non référencées dans l'index, liens de l'index vers un fichier disparu) — jamais un remplacement des fixtures synthétiques de check-house.mjs, un vrai passage contre l'état réel du dossier. Écrire le verdict via recordCircleItemReport('profil-utilisateur-guard', ...) (dossier docs/profil-utilisateur/, jamais son index.md principal).",
+    producesReport: true,
   },
   // network-check-run (2026-09-21, même trouvaille). runNetworkCheck() (le-coordinateur.mjs) est
   // délibérément exclu du crochet post-commit (docs/regles-de-travail.md : « synthèse complète =
@@ -343,7 +363,8 @@ export const CIRCLE_ITEMS = [
     label: "Lancer une vraie synthèse LE-COORDINATEUR (runNetworkCheck)",
     cout: "gratuit — zéro appel API, mais plus lourd que les autres items de cette liste : relance check-house.mjs avec instrumentation de couverture V8",
     tokensEstimes: "modéré à élevé — sortie complète de la synthèse (tableau agrégeant check-house.mjs, AXA-CHECK, ARGUS, HARMONIA, ALWAYS-NEW-CODE, CLEAN-DIRTY-OLD)",
-    execute: "Lancer `node scripts/le-coordinateur.mjs` (ou appeler runNetworkCheck() directement) et lire la synthèse complète — plus cher que les autres items de cette Ronde, à réserver aux passages où une vraie vérification croisée de tout le paysage est utile, pas à chaque Ronde mécaniquement.",
+    execute: "Lancer `node scripts/le-coordinateur.mjs` (ou appeler runNetworkCheck() directement) et lire la synthèse complète (les branchements/vérifications croisées entre tous les outils du paysage) — plus cher que les autres items de cette Ronde, à réserver aux passages où une vraie vérification croisée est utile, pas à chaque Ronde mécaniquement. Quand il tourne, écrire la synthèse via recordCircleItemReport('network-check-run', ...) (nouveau dossier docs/network-check/) — demande explicite du 2026-09-21, jamais laissé en signal console seulement.",
+    producesReport: true,
   },
   // coordinateur-catalogue (2026-09-21, demande explicite de l'utilisateur : « le catalogue du
   // coordinateur doit être accroché à circle, dès le départ, comme la mise à jour du profil psycho »).
@@ -410,13 +431,13 @@ export function mostRecentDate(text) {
   return isoStrings.reduce((max, d) => (d > max ? d : max));
 }
 
-// checkHtmlWiring() (2026-09-20) : vérifie mécaniquement, par une simple recherche de texte dans
-// le CODE SOURCE déjà en mémoire (jamais une exécution, jamais un appel réseau), qu'un script cite
-// bien html-report.mjs — le seul signal fiable qu'il produit réellement sa copie HTML plutôt que du
-// texte brut. `sources` : { "nom-du-script.mjs": "contenu source" }.
-export function checkHtmlWiring(sources) {
-  return Object.entries(sources || {}).map(([script, content]) => ({ script, wired: /html-report\.mjs/.test(content || "") }));
-}
+// checkHtmlWiring() DUPLIQUÉE ICI JUSQU'AU 2026-09-21 — retirée (Article 3/19, trouvaille du
+// soir en construisant l'item "chaque outil doit produire un rapport" : cette version ne
+// vérifiait que 3 scripts codés en dur, jamais tenue à jour, alors que doc-report.mjs a déjà
+// checkHtmlWiring(scriptPath)/auditHtmlDecisions(registries) — strictement supérieure (parcourt
+// TOUS les registres marqués "delivery_html"/"archived_html" via leur vrai `decision`, jamais une
+// liste figée). html-wiring-check importe désormais auditHtmlDecisions directement, jamais un
+// second calcul divergent.
 
 // findRegistriesMissingFromCircle() (2026-09-21, trou trouvé par l'utilisateur : « est-ce que la
 // ronde a bien dans son catalogue tous les outils pertinents ? incluant tous les nouveaux
@@ -477,14 +498,18 @@ export function oldestOpenTaskDate(categorized) {
 // ALWAYS-NEW-CODE la plus négligée) — jamais pour "relecture référentiel" ou "correctifs", qui
 // n'ont aucune date de référence mécanique fiable (Article 13 elle-même n'impose aucune cadence
 // fixe, cf. CLAUDE.md — un signal inventé ici serait moins honnête que son absence).
-export function buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText, ideesATrancherText } = {}, now = Date.now()) {
+export function buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringReadFileImpl, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText, ideesATrancherText } = {}, now = Date.now()) {
   const profilLast = mostRecentDate(profilIndexText);
   const kpiLast = mostRecentDate(kpiIndexText);
   const smartConsoApiLast = mostRecentDate(smartConsoApiIndexText);
   const smartConsoTokenLast = mostRecentDate(smartConsoTokenIndexText);
   const cleanDirtyOldLast = mostRecentDate(cleanDirtyOldIndexText);
   const inesOfficialLast = mostRecentDate(inesOfficialIndexText);
-  const wiring = htmlWiringSources ? checkHtmlWiring(htmlWiringSources) : undefined;
+  // RECÂBLÉ le 2026-09-21 sur auditHtmlDecisions() (doc-report.mjs) — jamais un second calcul de
+  // câblage HTML (cf. le commentaire de l'item html-wiring-check ci-dessus). `htmlWiringReadFileImpl`
+  // injectable (même patron que le reste de cette fonction, qui reste pure — aucun accès disque
+  // direct ici) ; le vrai readFileSync n'est fourni que par main() ci-dessous.
+  const wiring = htmlWiringReadFileImpl ? auditHtmlDecisions(DOC_REPORT_REGISTRIES, htmlWiringReadFileImpl) : undefined;
   const oldestOpen = suiviCategorized ? oldestOpenTaskDate(suiviCategorized) : undefined;
 
   return CIRCLE_ITEMS.map((item) => {
@@ -496,8 +521,8 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApi
     if (item.id === "ines-official-signal") return { ...item, staleness: inesOfficialLast ? `${daysSince(inesOfficialLast, now)} jour(s) depuis la dernière édition` : "aucune édition jamais produite" };
     if (item.id === "html-wiring-check") {
       if (!wiring) return { ...item, staleness: "pas de signal de fraîcheur mécanique disponible" };
-      const missing = wiring.filter((w) => !w.wired).map((w) => w.script);
-      return { ...item, staleness: missing.length ? `${missing.length} script(s) pas encore câblé(s) : ${missing.join(", ")}` : "tous câblés" };
+      const mismatched = wiring.filter((w) => w.mismatch).map((w) => w.label);
+      return { ...item, staleness: mismatched.length ? `${mismatched.length} outil(s) pas encore câblé(s) : ${mismatched.join(", ")}` : "tous câblés" };
     }
     if (item.id === "suivi-open-tasks-signal") return { ...item, staleness: oldestOpen ? `tâche ouverte depuis ${daysSince(oldestOpen, now)} jour(s)` : "aucune tâche ouverte connue" };
     if (item.id === "chantier-preliminaire-signal") {
@@ -686,6 +711,67 @@ export function recordCircleTasksRun(totalCommitCount, now = Date.now()) {
   return state;
 }
 
+// CIRCLE_REPORT_FOLDERS (2026-09-21, correction demandée par l'utilisateur après lecture de
+// docs/circle-process-detail.txt : « tous les outils qui interviennent lors de la ronde DOIVENT
+// produire un rapport txt au minimum [...] sinon ils doivent tous produire un rapport txt de leur
+// activité pendant le circle »). Vérifié un par un (Article 19) : aucune exception réellement
+// justifiable, même pour un signal trivial ("rien à signaler" reste une preuve d'exécution utile
+// au futur circle-process-guardian). Deux régimes, jamais confondus :
+//  - un item qui correspond à un outil DÉJÀ enregistré dans doc-report.mjs::REGISTRIES écrit dans
+//    SON dossier déjà existant (jamais un second dossier concurrent pour le même outil) ;
+//  - un item sans outil enregistré reçoit un nouveau dossier dédié (ajouté à REGISTRIES).
+// « Un dossier propre à chaque outil » (choix explicite de l'utilisateur, jamais un unique dossier
+// fourre-tout par Ronde) — jamais recopié en dur ailleurs : circle-process-guardian devra lire
+// cette table dynamiquement, jamais un chemin réinventé (Article 24).
+export const CIRCLE_REPORT_FOLDERS = {
+  "the-king-signal": "docs/the-king/",
+  "clean-dirty-old-signal": "docs/clean-dirty-old/",
+  "smart-conso-api-scan": "docs/smart-conso-api/",
+  "ines-official-signal": "docs/ines-official/",
+  "profil-utilisateur-guard": "docs/profil-utilisateur/",
+  "html-wiring-check": "docs/html-wiring-check/",
+  "claude-md-weight-signal": "docs/claude-md-weight/",
+  "suivi-open-tasks-signal": "docs/suivi-open-tasks/",
+  "chantier-preliminaire-signal": "docs/chantier-preliminaire/",
+  "idee-a-trancher-signal": "docs/idee-a-trancher/",
+  "tool-brain-report": "docs/tool-brain/",
+  "network-check-run": "docs/network-check/",
+  "referentiel": "docs/relecture-referentiel/",
+  "correctifs": "docs/relecture-correctifs/",
+};
+
+// recordCircleItemReport() — écrit un fichier .txt daté (la preuve d'exécution minimale exigée)
+// dans le dossier de l'item, puis journalise cette écriture dans un index que la fonction possède
+// entièrement : `index.md` si le dossier n'en a pas encore (les 9 nouveaux dossiers ci-dessus), ou
+// un fichier frère `circle-signals-index.md` si le dossier a déjà un index.md à un format propre à
+// l'outil (les 5 dossiers réutilisés) — JAMAIS une écriture générique dans un index déjà curaté à
+// la main, qui casserait son format existant (Article 19). cassandra-rh-signal (rapport complet,
+// HTML) et le récapitulatif de fin de Ronde suivent chacun leur propre mécanisme déjà établi,
+// jamais celui-ci — cf. leur `execute` respectif.
+export function recordCircleItemReport(itemId, contentText, { folders = CIRCLE_REPORT_FOLDERS, now = Date.now(), writeFileImpl = writeFileSync, readFileImpl = readFileSync, existsImpl = existsSync, mkdirImpl = mkdirSync } = {}) {
+  const folder = folders[itemId];
+  if (!folder) throw new Error(`recordCircleItemReport: aucun dossier connu pour l'item "${itemId}" (cf. CIRCLE_REPORT_FOLDERS)`);
+  const fullFolder = join(ROOT, folder);
+  mkdirImpl(fullFolder, { recursive: true });
+  const dateLabel = new Date(now).toISOString();
+  const fileSlug = dateLabel.replace(/[:.]/g, "-");
+  const fileName = `circle-signal-${fileSlug}.txt`;
+  writeFileImpl(join(fullFolder, fileName), contentText ?? "", "utf8");
+
+  const primaryIndexPath = join(fullFolder, "index.md");
+  const hasPrimaryIndex = existsImpl(primaryIndexPath);
+  const indexPath = hasPrimaryIndex ? join(fullFolder, "circle-signals-index.md") : primaryIndexPath;
+  const excerpt = String(contentText ?? "").split("\n").find((l) => l.trim().length) ?? "(rapport vide)";
+  const header = hasPrimaryIndex
+    ? "# Signaux CIRCLE-TASKS — index (jamais l'index principal de cet outil, cf. index.md)\n\n| Date | Fichier | Résumé |\n|---|---|---|\n"
+    : "# Index — rapports produits pendant les Rondes CIRCLE-TASKS\n\n| Date | Fichier | Résumé |\n|---|---|---|\n";
+  const existingIndexText = existsImpl(indexPath) ? readFileImpl(indexPath, "utf8") : header;
+  const row = `| ${dateLabel} | ${fileName} | ${excerpt.slice(0, 160)} |\n`;
+  writeFileImpl(indexPath, existingIndexText.endsWith("\n") ? existingIndexText + row : existingIndexText + "\n" + row, "utf8");
+
+  return { filePath: join(folder, fileName), indexPath: join(folder, hasPrimaryIndex ? "circle-signals-index.md" : "index.md") };
+}
+
 // Rapport de fin de Ronde (2026-09-20, trou trouvé par l'utilisateur : « je n'ai pas eu de rapport
 // à la fin de la ronde, c'est voulu ? » — non, ce n'était qu'un oubli : main() n'a jamais affiché
 // que le menu AVANT exécution, jamais un récapitulatif APRÈS). Même principe que
@@ -696,14 +782,25 @@ export function recordCircleTasksRun(totalCommitCount, now = Date.now()) {
 // 2026-09-20) : chaque item coché produit déjà sa propre sortie de référence (fiche profil, CSV
 // KPI, entrée de registre...) — ce rapport se contente de lister quoi a tourné, un résultat en une
 // phrase, et un lien vers cette sortie déjà produite, jamais son contenu recopié.
-// TEXTE, pas HTML (corrigé le 2026-09-21, trouvaille directe de l'utilisateur — « le rapport de
-// circle devrait etre en txt et non html ») : cette fonction avait été construite le 2026-09-20,
-// AVANT la décision explicite du partage HTML/texte des rapports du projet (docs/suivi #230, réponse
-// de l'utilisateur : seuls les transcripts de simulation méritent le HTML, le récap de fin de Ronde
-// CIRCLE-TASKS reste texte) — jamais revisitée contre cette décision une fois prise, exactement
-// l'écart qu'Article 13 interdit. `renderHtmlReport()` n'a donc plus sa place ici.
+// TEXTE puis HTML — historique de ce choix (jamais reperdu, Article 13) : construite en HTML le
+// 2026-09-20, repassée en texte le 2026-09-21 (« le rapport de circle devrait etre en txt et non
+// html », docs/suivi #230 : seuls les transcripts de simulation méritent le HTML). RE-INVERSÉE le
+// même soir (2026-09-21, plus tard) — demande explicite de l'utilisateur, avec double confirmation
+// Article 14 obtenue avant d'exécuter ce changement : le récapitulatif doit porter une vraie
+// analyse approfondie « mise en évidence [...] dans un bloc séparé », ce que le texte brut ne peut
+// pas rendre visuellement — cf. buildCircleRunSummaryHtml() ci-dessous, la fonction canonique
+// désormais utilisée par l'agent qui pilote. buildCircleRunSummaryText() reste disponible (repris
+// par les tests existants et par quiconque veut une version texte brute), jamais dupliquée : les
+// deux réutilisent buildCircleEntryRows() pour construire les lignes du tableau.
 // `entries`: Array<{ id: string, label: string, outcome: string, link?: string }>.
 export const CIRCLE_RUN_SUMMARY_PATH = ".circle-tasks-run-summary-latest.txt";
+function buildCircleEntryRows(entries, items) {
+  return (entries || []).map((e) => {
+    const producesReport = items.find((i) => i.id === e.id)?.producesReport;
+    const label = producesReport ? `${REPORT_ICON} ${e.label ?? e.id ?? "—"}` : (e.label ?? e.id ?? "—");
+    return [label, e.outcome ?? "—", e.link ?? "—"];
+  });
+}
 export function buildCircleRunSummaryText(entries, { dateLabel, items = CIRCLE_ITEMS } = {}) {
   const lines = [
     "=== CIRCLE-TASKS — récapitulatif de la Ronde ===",
@@ -715,14 +812,45 @@ export function buildCircleRunSummaryText(entries, { dateLabel, items = CIRCLE_I
     lines.push("Aucun item n'a été coché pour cette Ronde.");
   } else {
     lines.push("| Item exécuté | Résultat | Lien |", "|---|---|---|");
-    for (const e of entries) {
-      const producesReport = items.find((i) => i.id === e.id)?.producesReport;
-      const label = producesReport ? `${REPORT_ICON} ${e.label ?? e.id ?? "—"}` : (e.label ?? e.id ?? "—");
-      lines.push(`| ${label} | ${e.outcome ?? "—"} | ${e.link ?? "—"} |`);
+    for (const [label, outcome, link] of buildCircleEntryRows(entries, items)) {
+      lines.push(`| ${label} | ${outcome} | ${link} |`);
     }
   }
   lines.push("", "CIRCLE-TASKS — la sélection des items reste toujours confirmée par une fenêtre à cocher avant exécution, jamais un tout-en-un silencieux.");
   return lines.join("\n");
+}
+
+// buildCircleRunSummaryHtml() (2026-09-21) — la fonction CANONIQUE de fin de Ronde depuis la
+// ré-inversion ci-dessus. `analysis` (string ou array de paragraphes) : jamais généré
+// automatiquement, c'est l'analyse approfondie de l'agent qui pilote, construite à partir de la
+// lecture individuelle de chaque rapport produit (demande explicite : « une analyse approfondie de
+// la situation, à partir des resultats obtenus par circle et de tous les rapports qui doivent etre
+// lus individuellement »). `followUpTasks` : les actions qui en découlent, à la fois listées ici ET
+// écrites dans docs/suivi/ par l'agent (jamais l'un sans l'autre). `reportLinks` : les rapports
+// individuels de la Ronde (txt sauf ceux déjà en HTML par décision Doc-Report), listés juste sous
+// l'analyse — demande explicite du 2026-09-21.
+export function buildCircleRunSummaryHtml(entries, { dateLabel, items = CIRCLE_ITEMS, analysis, followUpTasks = [], reportLinks = [] } = {}) {
+  const blocks = [
+    { type: "paragraph", text: `Index léger : ce qui a tourné et un pointeur vers la sortie déjà produite par chaque item, jamais son contenu dupliqué ici. ${REPORT_ICON} = produit un vrai rapport archivé et indexé — depuis le 2026-09-21, les 23 items de la Ronde le font tous.` },
+  ];
+  if (!entries || !entries.length) {
+    blocks.push({ type: "note", text: "Aucun item n'a été coché pour cette Ronde." });
+  } else {
+    blocks.push({ type: "table", headers: ["Item exécuté", "Résultat", "Lien"], rows: buildCircleEntryRows(entries, items) });
+  }
+  if (analysis) {
+    blocks.push({ type: "highlight", heading: "Analyse approfondie de la Ronde", paragraphs: Array.isArray(analysis) ? analysis : [analysis] });
+  }
+  if (followUpTasks.length) {
+    blocks.push({ type: "heading", text: "Tâches inscrites au suivi suite à cette analyse" });
+    blocks.push({ type: "list", items: followUpTasks });
+  }
+  if (reportLinks.length) {
+    blocks.push({ type: "heading", text: "Rapports individuels disponibles" });
+    blocks.push({ type: "list", items: reportLinks });
+  }
+  blocks.push({ type: "note", text: "CIRCLE-TASKS — la sélection des items reste toujours confirmée par une fenêtre à cocher avant exécution, jamais un tout-en-un silencieux." });
+  return renderHtmlReport({ title: "CIRCLE-TASKS — récapitulatif de la Ronde", dateLabel: dateLabel ?? new Date().toISOString(), blocks });
 }
 
 function main() {
@@ -733,18 +861,14 @@ function main() {
   const smartConsoApiIndexText = read("docs/smart-conso-api/index.md");
   const smartConsoTokenIndexText = read("docs/smart-conso-token/index.md");
   const cleanDirtyOldIndexText = read("docs/clean-dirty-old/index.md");
-  const htmlWiringSources = {
-    "el-professor.mjs": read("scripts/el-professor.mjs"),
-    "the-final-judge.mjs": read("scripts/the-final-judge.mjs"),
-    "the-screener-capture.mjs": read("scripts/the-screener-capture.mjs"),
-  };
+  const htmlWiringReadFileImpl = (scriptPath) => readFileSync(`${ROOT}${scriptPath}`, "utf8");
   const suiviCategorized = categorizeAllSessions();
   const claudeMdText = read("CLAUDE.md");
   const philosophyText = read("docs/philosophie-et-politique.md");
   const philosophyFreshnessDaysValue = philosophyFreshnessDays();
   const inesOfficialIndexText = read("docs/ines-official/index.md");
   const ideesATrancherText = read(IDEES_REGISTRY_PATH);
-  const report = buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText, ideesATrancherText });
+  const report = buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringReadFileImpl, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText, ideesATrancherText });
   console.log("=== CIRCLE-TASKS — Ronde périodique ===\n");
   console.log(formatCircleMenu(report));
   console.log("\nJamais exécuté seul : l'agent qui pilote ouvre une fenêtre à cocher (protocole AUTO/PRIME/GOAT, docs/regles-de-travail.md) pour choisir précisément quoi lancer.");

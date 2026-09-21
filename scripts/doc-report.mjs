@@ -127,6 +127,20 @@ export const REGISTRIES = [
   { slug: "clone-hunter", label: "CLONE-HUNTER", family: "Équipe noyau (Article 20)", path: "docs/clone-hunter/", decision: "texte", scriptPath: "scripts/clone-hunter.mjs" },
   { slug: "objectifs-vs-resultats", label: "objectifs-vs-resultats", family: "Gouvernance interne", path: "docs/objectifs-vs-resultats/", decision: "texte", scriptPath: "scripts/objectifs-vs-resultats.mjs" },
   { slug: "cassandra-rh", label: "CASSANDRA-RH", family: "Gouvernance interne", path: "docs/cassandra-rh/", decision: "delivery_html", scriptPath: "scripts/cassandra-rh.mjs" },
+  // 9 nouveaux registres ajoutés le 2026-09-21 (règle générale : « tous les outils qui interviennent
+  // lors de la Ronde DOIVENT produire un rapport txt au minimum ») — les items de CIRCLE_ITEMS sans
+  // outil déjà enregistré ci-dessus reçoivent chacun leur propre dossier (cf.
+  // circle-tasks.mjs::CIRCLE_REPORT_FOLDERS, recordCircleItemReport()). Tous "texte" : de simples
+  // signaux, jamais une remise HTML.
+  { slug: "html-wiring-check", label: "html-wiring-check (Ronde)", family: "Coordination", path: "docs/html-wiring-check/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
+  { slug: "claude-md-weight", label: "Poids CLAUDE.md (Ronde)", family: "Coordination", path: "docs/claude-md-weight/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
+  { slug: "suivi-open-tasks", label: "Tâche ouverte la plus ancienne (Ronde)", family: "Coordination", path: "docs/suivi-open-tasks/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
+  { slug: "chantier-preliminaire", label: "Fraîcheur fichiers préliminaires (Ronde)", family: "Coordination", path: "docs/chantier-preliminaire/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
+  { slug: "idee-a-trancher", label: "Idées en attente de décision (Ronde)", family: "Coordination", path: "docs/idee-a-trancher/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
+  { slug: "tool-brain", label: "tool-brain (Ronde)", family: "Coordination", path: "docs/tool-brain/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
+  { slug: "network-check", label: "network-check-run (Ronde)", family: "Coordination", path: "docs/network-check/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
+  { slug: "relecture-referentiel", label: "Relecture référentiel (Ronde)", family: "Coordination", path: "docs/relecture-referentiel/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
+  { slug: "relecture-correctifs", label: "Relecture correctifs (Ronde)", family: "Coordination", path: "docs/relecture-correctifs/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
 ];
 
 // findEngineCodeInRegistries() (2026-09-21, demande explicite de l'utilisateur après avoir repéré

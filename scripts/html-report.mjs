@@ -52,6 +52,16 @@ export function renderBlock(block) {
       return `<p>${escapeHtml(block.text)}</p>`;
     case "note":
       return `<p class="note">${escapeHtml(block.text)}</p>`;
+    // { type: 'highlight', heading?, paragraphs: [...] } (2026-09-21, besoin réel de
+    // buildCircleRunSummaryHtml() — le récapitulatif de fin de Ronde CIRCLE-TASKS doit mettre en
+    // évidence son analyse approfondie « dans un bloc séparé », demande explicite de l'utilisateur).
+    // Distinct de 'note' (une mise en garde discrète en italique) : un bloc PROÉMINENT, bordure
+    // pleine et fond marqué — jamais confondu visuellement avec un simple avertissement.
+    case "highlight": {
+      const heading = block.heading ? `<h3>${escapeHtml(block.heading)}</h3>` : "";
+      const paragraphs = (block.paragraphs || [block.text]).filter(Boolean).map((p) => `<p>${escapeHtml(p)}</p>`).join("");
+      return `<div class="highlight">${heading}${paragraphs}</div>`;
+    }
     case "list":
       return `<ul>${(block.items || []).map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>`;
     case "table": {
@@ -136,6 +146,12 @@ export const THEME_CSS = `
     font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
     padding-left: 10px; margin: 10px 0;
   }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
   main ul { padding-left: 22px; }
   main li { margin: 4px 0; }
   main li.tree-status-enCours { color: var(--accent); font-weight: 600; }

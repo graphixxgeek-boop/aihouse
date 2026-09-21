@@ -413,6 +413,7 @@ export const CHANTIER_PRELIMINARY_FILES = {
   "Outil concordance/évolutivité": { file: "docs/concordance-evolutivite-conception.md", match: /concordance|évolutivité|evolutivite/i },
   "Agence exportable": { file: "docs/agence-exportable-conception.md", match: /agence exportable|gabarit générique|gabarit generique/i },
   "Changement de modèle IA (CIRCLE-TASKS)": { file: "docs/changement-de-modele-ia-conception.md", match: /changement de mod[eè]le|changement-de-modele-ia/i },
+  "circle-process-guardian": { file: "docs/circle-process-detail.txt", match: /circle-process-guardian/i },
 };
 
 // checkChantierFileFreshness() — la « vérification, jamais seulement une intention déclarée »

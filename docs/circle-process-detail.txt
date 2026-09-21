@@ -330,12 +330,62 @@ PARTIE 5 — CE QUE circle-process-guardian DOIT VÉRIFIER, RÉCAPITULATIF
 3. Chaque item coché a bien été exécuté (comparé à la liste réellement cochée en conversation —
    circle-process-guardian ne peut pas le déduire seul, l'agent doit lui fournir la liste réelle).
 4. Chaque item marqué producesReport:true a bien produit son artefact attendu (fichier existant,
-   daté du jour de la Ronde).
-5. Le récapitulatif de fin de Ronde a bien été construit et livré en fichier texte.
+   daté du jour de la Ronde) — DEPUIS LA MISE À JOUR CI-DESSOUS, cela veut dire LES 23 ITEMS SANS
+   EXCEPTION, plus les deux relectures manuelles (referentiel, correctifs).
+5. Le récapitulatif de fin de Ronde a bien été construit et livré — DEPUIS LA MISE À JOUR
+   CI-DESSOUS, en fichier HTML (mis en évidence dans un bloc séparé), plus la liste de tous les
+   rapports individuels disponibles juste en dessous (txt sauf ceux déjà en HTML par décision
+   Doc-Report). Ce point contredisait la mise à jour du 2026-09-21 — inversé le 2026-09-21 (même
+   soir), avec double confirmation explicite de l'utilisateur (Article 14).
+5bis. Le récapitulatif contient une vraie analyse approfondie (pas un simple tableau) construite à
+   partir de la lecture individuelle de chaque rapport produit — et toute action qui en découle est
+   à la fois écrite dans docs/suivi/ ET rapportée explicitement à l'utilisateur dans la même Ronde.
 6. record-run a bien été appelé (le compteur de fraîcheur post-commit doit être retombé à 0).
 7. findOrphanReportFiles() ne remonte aucun fichier ARGUS (ou futur registre "un fichier par
    passage") resté orphelin.
 8. findRegistriesMissingFromCircle() ne remonte aucun registre orphelin.
 
-Jamais une correction automatique à aucune de ces 8 vérifications — signaler seulement, comme tout
+Jamais une correction automatique à aucune de ces vérifications — signaler seulement, comme tout
 le reste de ce paysage d'outils (décision explicite de l'utilisateur, 2026-09-21).
+
+=====================================================================
+PARTIE 6 — MISE À JOUR DU 2026-09-21 (même soir, après relecture de ce fichier par l'utilisateur)
+=====================================================================
+Suite à la lecture de ce document, l'utilisateur a demandé une correction structurelle avant même
+la construction de circle-process-guardian — capturée ici pour que sa conception future parte du
+process RÉEL, jamais d'un instantané déjà périmé (Article 13/24) :
+
+1. RÈGLE GÉNÉRALE NOUVELLE — « tous les outils qui interviennent lors de la Ronde DOIVENT produire
+   un rapport txt au minimum, lu par l'agent ». Vérifié item par item (les 15 qui n'en produisaient
+   pas encore) : aucune exception jugée réellement justifiable à 100 %, y compris pour un signal
+   trivial ("rien à signaler" reste une preuve d'exécution). Conséquence explicitement anticipée
+   par l'utilisateur : « il se pourrait que certains agents doivent être promus, ou bénéficier de
+   l'icône [rapport] — mais voyons si CASSANDRA-RH le détecte une fois qu'elle sera prête », donc
+   circle-process-guardian n'a PAS à inventer ce jugement lui-même, seulement à vérifier la présence
+   mécanique du fichier.
+2. RANGEMENT — chaque outil reçoit SON PROPRE dossier dédié (jamais un dossier fourre-tout par
+   Ronde) : les 6 items qui correspondent à un outil déjà enregistré dans Doc-Report/REGISTRIES
+   (the-king-signal, clean-dirty-old-signal, smart-conso-api-scan, ines-official-signal,
+   cassandra-rh-signal, profil-utilisateur-guard) écrivent dans le dossier DÉJÀ existant de cet
+   outil, jamais un second dossier concurrent. Les items sans outil enregistré (html-wiring-check,
+   claude-md-weight-signal, suivi-open-tasks-signal, chantier-preliminaire-signal,
+   idee-a-trancher-signal, tool-brain-report, network-check-run, referentiel, correctifs) reçoivent
+   chacun un nouveau dossier dédié + une entrée REGISTRIES.
+3. cassandra-rh-signal passe en RAPPORT COMPLET (node scripts/cassandra-rh.mjs rapport) à CHAQUE
+   Ronde, jamais seulement le signal léger — demande explicite, aucun coût API réel (calcul local).
+4. network-check-run reçoit désormais un vrai rapport .txt archivé à chaque exécution (jusqu'ici
+   signal console seulement) — confirmé avec l'utilisateur : ce rapport documente bien les
+   « branchements entre les outils » (les lignes de synthèse de runNetworkCheck()).
+5. TROUVAILLE EN CONSTRUISANT CE POINT (Article 19/3, anti-duplication) — html-wiring-check
+   dupliquait un mécanisme : circle-tasks.mjs avait sa PROPRE fonction checkHtmlWiring(sources)
+   (grep de 3 scripts codés en dur), alors que doc-report.mjs a déjà checkHtmlWiring(scriptPath) +
+   auditHtmlDecisions(registries) — une version strictement supérieure (parcourt TOUS les registres
+   marqués HTML, respecte le champ `decision`, jamais une liste figée de 3 noms). La duplication de
+   circle-tasks.mjs a été retirée ; html-wiring-check appelle désormais auditHtmlDecisions()
+   directement. circle-process-guardian doit donc vérifier CE mécanisme-là (le seul), jamais
+   supposer qu'un second existe encore dans circle-tasks.mjs.
+
+circle-process-guardian devra donc, une fois construit, connaître EXACTEMENT ce nouveau rangement
+par outil (jamais un chemin recopié en dur qui divergerait au premier nouvel outil ajouté — lire
+CIRCLE_REPORT_FOLDERS/REGISTRIES dynamiquement, même discipline Article 24 que le reste du
+paysage).
