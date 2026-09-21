@@ -1,12 +1,15 @@
-# CASSANDRA-RH — dossier de conception consolidé
+# CASSANDRA-RH — dossier de conception consolidé (archivé, récit fondateur)
 
-*(2026-09-21. CASSANDRA-RH n'existe pas encore en tant qu'outil réel — aucun code, aucun blueprint,
-aucune instanciation. Ce document réorganise, en un seul endroit cohérent, toutes les décisions de
-conception déjà actées avec l'utilisateur au fil de la session (dispersées sur 16+ lignes de
-`docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo.md`, jamais réécrites — ce document ne
-remplace pas le suivi chronologique, il le rend exploitable avant le round de calibrage #134).
-Une fois CASSANDRA-RH réellement construite, ce fichier sera remplacé par le triptyque standard
-`docs/cassandra-rh-blueprint.md` + `docs/referentiel/cassandra-rh.md` + `docs/cassandra-rh/`.)*
+*(2026-09-21, mis à jour le même soir : le noyau CASSANDRA-RH est désormais réellement construit et
+testé — `scripts/cassandra-rh.mjs`. Ce document n'est plus la source de vérité opérationnelle,
+remplacée par le triptyque standard `docs/cassandra-rh-blueprint.md` (architecture générique) +
+`docs/referentiel/cassandra-rh.md` (instanciation à jour) + `docs/cassandra-rh/` (registre) — cf.
+ces trois documents en premier. Ce fichier reste conservé tel quel comme récit fondateur : POURQUOI
+chaque décision a été prise, dans quel ordre, à quelles questions de calibrage elle répond
+(dispersées sur 16+ lignes de `docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo.md`) — utile
+pour comprendre l'esprit d'une décision déjà actée (Article 19), jamais à relire pour savoir ce que
+le code fait aujourd'hui. Le Catalogue (§8bis) et les 3 Stagiaires (§8ter) restent, eux, une
+conception encore valide pour une prochaine vague de construction — pas encore périmés.)*
 
 ## 1. Rôle et principe fondamental
 

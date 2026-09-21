@@ -105,6 +105,7 @@ export const REGISTRIES = [
   // l'Article 2/13 interdit de laisser traîner une fois trouvé.
   { slug: "clone-hunter", label: "CLONE-HUNTER", family: "Équipe noyau (Article 20)", path: "docs/clone-hunter/", decision: "texte", scriptPath: "scripts/clone-hunter.mjs" },
   { slug: "objectifs-vs-resultats", label: "objectifs-vs-resultats", family: "Gouvernance interne", path: "docs/objectifs-vs-resultats/", decision: "texte", scriptPath: "scripts/objectifs-vs-resultats.mjs" },
+  { slug: "cassandra-rh", label: "CASSANDRA-RH", family: "Gouvernance interne", path: "docs/cassandra-rh/", decision: "delivery_html", scriptPath: "scripts/cassandra-rh.mjs" },
 ];
 
 // findEngineCodeInRegistries() (2026-09-21, demande explicite de l'utilisateur après avoir repéré

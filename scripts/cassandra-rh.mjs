@@ -15,7 +15,8 @@
 // n'est recalculée ici, jamais une seconde version qui pourrait diverger de l'originale.
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { parseToolsTable } from "./le-coordinateur.mjs";
+import { parseToolsTable, slugifyAgentName, checkAgentOnboarding } from "./le-coordinateur.mjs";
+import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
 import { AGENT_CATEGORIES, assertNotAPersonnage } from "./lib-shell.mjs";
 import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson } from "./tool-usage.mjs";
 import { relativeStaleness, lastTouchDays } from "./clean-dirty-old.mjs";
@@ -92,14 +93,24 @@ export function loadKpiTrend(path = join(ROOT, KPI_HISTORY_PATH)) {
 // Table maîtresse -> uniquement les lignes de statut "Agent" (les seules éligibles au badge,
 // cf. checkAgentOnboarding()) — un Utilitaire nommé ou une Infrastructure n'est jamais compté ici
 // comme "membre" au sens RH, cohérent avec le reste du réseau d'outils.
+//
+// `slug` calculé UNE SEULE FOIS ici et réutilisé partout ailleurs dans ce fichier (main(),
+// toolsToReconsider()) — jamais recalculé séparément, ce qui a causé un vrai bug trouvé en testant
+// ce brouillon pour de vrai (2026-09-21) : `slugify(row.tool)` slugifiait le texte ENTIER de la
+// colonne Outil, y compris une précision entre parenthèses ("CLONE-HUNTER (scripts/clone-hunter.mjs)",
+// "memory-audit (anciennement...)"), produisant un slug jamais présent dans AGENT_CATEGORIES et donc
+// 4 Agents réels (CLONE-HUNTER, memory-audit, find-booster, objectifs-vs-resultats) affichés à tort
+// comme "catégorie non répertoriée". Corrigé avec le même découpage `primaryName` déjà établi
+// ailleurs dans ce paysage (badgeWarningsForOutils(), le-coordinateur.mjs) et `slugifyAgentName()`
+// elle-même réutilisée telle quelle (jamais une seconde fonction de slugification divergente).
 export function teamRoster(toolsTableMarkdown) {
   return parseToolsTable(toolsTableMarkdown)
     .filter((row) => row.statut === "Agent")
-    .map((row) => ({ tool: row.tool, category: AGENT_CATEGORIES[slugify(row.tool)] }));
-}
-
-function slugify(name) {
-  return String(name ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    .map((row) => {
+      const primaryName = row.tool.split(/[/(]/)[0].trim();
+      const slug = slugifyAgentName(primaryName);
+      return { tool: row.tool, slug, category: AGENT_CATEGORIES[slug] };
+    });
 }
 
 // Simple constat chiffré (2026-09-22, demande explicite : « un simple constat chiffré, jamais un
@@ -187,6 +198,24 @@ export function badgeOversightSummary(badgeResults) {
   };
 }
 
+// computeBadgeResults() — le SEUL endroit de ce fichier qui appelle réellement checkAgentOnboarding()
+// (le-coordinateur.mjs), une fois par membre du roster, jamais un second calcul de couverture/
+// registre/blueprint inventé ici. `main()` fournit `onboardingContext` réel
+// (buildRealOnboardingContext(), check-tasks-details.mjs — déjà éprouvé en production, jamais une
+// seconde construction de contexte divergente) ; les tests injectent leur propre contexte fictif.
+// `ownKnowledge` est calculé par checkAgentOnboarding() lui-même à partir du statut réel de la ligne
+// (CLASSIQUE_STATUT vs Agent) — jamais deviné ici.
+export function computeBadgeResults(roster, onboardingContext) {
+  return roster.map((member) => {
+    const overrides = onboardingContext.agentOverrides?.[member.tool] ?? {};
+    try {
+      return checkAgentOnboarding(member.tool, { ...onboardingContext, ownKnowledge: true, ...overrides });
+    } catch {
+      return { agentName: member.tool, complet: false, gaps: ["vérification impossible (nom malformé ou Personnage)"] };
+    }
+  });
+}
+
 // --- Signal léger automatique (2026-09-22 : « signal auto léger + bilan complet sur demande ») --
 
 export function buildCassandraLightSignal({ teamSize, badgeSummary, kpiTrend }) {
@@ -235,20 +264,33 @@ export function buildCassandraReportHtml(data, dateLabel = new Date().toISOStrin
   });
 }
 
-function main() {
-  assertNotAPersonnage("CASSANDRA-RH", "cassandra-rh.mjs::main()");
-  const toolsTableMarkdown = readFileSync(join(ROOT, "docs/regles-de-travail.md"), "utf8");
-  const roster = teamRoster(toolsTableMarkdown);
+// Assemble tout ce qui est réellement calculé ailleurs (jamais un second calcul) — factorisé une
+// seule fois pour que le signal léger et le bilan complet lisent EXACTEMENT les mêmes chiffres,
+// jamais deux calculs qui pourraient diverger entre les deux déclenchements.
+function collectRealCassandraData() {
+  const onboardingContext = buildRealOnboardingContext();
+  const roster = teamRoster(onboardingContext.toolsTableMarkdown);
   const teamSize = teamSizeSnapshot(roster);
   const usageHistory = loadUsageJson(join(ROOT, ".tool-usage-history.json"), { events: [] });
   const staleness = scriptStaleness();
-  const knownSlugs = roster.map((m) => slugify(m.tool));
+  const knownSlugs = roster.map((m) => m.slug);
   const reconsider = toolsToReconsider({ usageHistory, knownSlugs, staleness });
   const { trend } = loadKpiTrend();
-  const badgeSummary = { total: 0, certified: 0, notCertified: [] };
+  const badgeSummary = badgeOversightSummary(computeBadgeResults(roster, onboardingContext));
+  return { teamSize, badgeSummary, kpiTrend: trend, reconsider };
+}
+
+function main() {
+  assertNotAPersonnage("CASSANDRA-RH", "cassandra-rh.mjs::main()");
+  const [, , sub] = process.argv;
+  const data = collectRealCassandraData();
   console.log(CASSANDRA_PERSONA);
   console.log("");
-  console.log(buildCassandraLightSignal({ teamSize, badgeSummary, kpiTrend: trend }));
+  if (sub === "rapport") {
+    console.log(buildCassandraReportHtml(data));
+    return;
+  }
+  console.log(buildCassandraLightSignal(data));
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

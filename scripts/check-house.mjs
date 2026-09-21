@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 231'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 232'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3912,7 +3912,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   } = await import('../scripts/circle-tasks.mjs');
   const { walkDocsPaths } = await import('../scripts/lib-shell.mjs');
 
-  assert.equal(CIRCLE_ITEMS.length, 21, 'CIRCLE_ITEMS must list exactly the 19 free periodic items (profil, the-king-signal, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, tool-brain-report — added 2026-09-21 —, dream-team-photo, THE-SCREENER, ines-official-signal, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run, coordinateur-catalogue — clone-hunter-run removed 2026-09-22, CLONE-HUNTER promoted to fifth Gardien sacré, now runs automatically at every commit like the other 4) plus THE-FINAL-JUDGE and its cousin THE-DEEP-READER, never silently gaining or losing an entry');
+  assert.equal(CIRCLE_ITEMS.length, 22, 'CIRCLE_ITEMS must list exactly the 20 free periodic items (profil, the-king-signal, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, tool-brain-report, cassandra-rh-signal — added 2026-09-21 —, dream-team-photo, THE-SCREENER, ines-official-signal, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run, coordinateur-catalogue — clone-hunter-run removed 2026-09-22, CLONE-HUNTER promoted to fifth Gardien sacré, now runs automatically at every commit like the other 4) plus THE-FINAL-JUDGE and its cousin THE-DEEP-READER, never silently gaining or losing an entry');
   const profilGuardItem = CIRCLE_ITEMS.find((i) => i.id === 'profil-utilisateur-guard');
   assert.ok(profilGuardItem && !profilGuardItem.costly && profilGuardItem.theme === 'Passages réels (smoke run)', '2026-09-21 addition: the real check-profil-utilisateur.mjs smoke run must be free and live in its own "smoke run" theme, distinct from the "profil" item which writes a new observation rather than verifying disk integrity');
   const networkCheckItem = CIRCLE_ITEMS.find((i) => i.id === 'network-check-run');
@@ -3951,7 +3951,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const samplePhilosophyText = '### 1.1 Un principe **[Explicite]**\n\nOn agit toujours avec prudence budgétaire ambiante.\n\n### 1.2 Un autre principe **[Synthèse, 2026-09-19]**\n\nOn n\'agit jamais avec prudence budgétaire ambiante.';
   const inesOfficialIndexText = '| Version | Date | Périmètre | Fichiers | Taille |\n|---|---|---|---|---|\n| v1 | 2026-09-18 | code seul | 40 | 500 Ko |';
   const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText: emptyAlwaysNewCode, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText: sampleClaudeMdText, philosophyText: samplePhilosophyText, philosophyFreshnessDaysValue: 3, inesOfficialIndexText }, now);
-  assert.equal(report.length, 21, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one — 21 since tool-brain-report joined CIRCLE_ITEMS on 2026-09-21');
+  assert.equal(report.length, 22, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one — 22 since cassandra-rh-signal joined CIRCLE_ITEMS on 2026-09-21');
   assert.equal(report.find((r) => r.id === 'claude-md-weight-signal').staleness, '66 tokens estimés, niveau "faible" — 2 aside(s) narrative(s) datée(s) encore réductible(s)', 'the CLAUDE.md weight signal must reuse the real SMART-CONSO-TOKEN scan functions live (never a second parser), reporting both the honest token estimate and the real count of still-reducible dated asides found in the actual text passed in');
   assert.equal(buildCircleReport({}, now).find((r) => r.id === 'claude-md-weight-signal').staleness, 'pas de signal disponible (CLAUDE.md non fourni)', 'with no CLAUDE.md text supplied at all, the signal must report an honest absence rather than crash or fabricate a number');
   assert.equal(report.find((r) => r.id === 'clean-dirty-old-signal').staleness, '1 jour(s) depuis le dernier passage journalisé', 'the CLEAN-DIRTY-OLD signal must compute its own staleness from its own real index text, distinct from every other source');
@@ -5593,6 +5593,110 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const liveReport = buildObjectifsReport(liveMarkdown, loadToolUsageHistoryLive());
   assert.ok(liveReport.length >= 1, 'the real committed registre.md must be readable and carry at least the tool-brain objective set the same night it was created');
   console.log('Passed: objectifs-vs-resultats (task #287, 2026-09-21) parses its hand-maintained registry by column name, computes a real result strictly bounded to [début, min(fin, maintenant)] from the exact same .tool-usage-history.json tool-usage.mjs/tool-brain.mjs already read (never a second divergent measurement), reports an honest "pas de données" for a found-rate objective with zero matching events rather than a fabricated 0%, derives atteint/en dessous/dépassé with a strict equality for "atteint" rather than an arbitrary margin, tracks the period\'s own à-venir/en-cours/clos state separately from the objective\'s status, and — verified live — reads the real committed registry.');
+}
+
+{
+  // CASSANDRA-RH (noyau, tâche #184/#287bis, brouillon fiabilisé le 2026-09-21) — l'Agent Cadre RH :
+  // NOTE l'équipe, SUPERVISE le badge, LIT le KPI, jamais un second calcul de ce que le reste du
+  // réseau d'outils sait déjà (checkAgentOnboarding()/checkAllAgentBadges() pour le badge,
+  // kpi-historique.csv pour le KPI, tool-usage.mjs pour l'usage, clean-dirty-old.mjs pour la
+  // stagnation).
+  const cr = await import('../scripts/cassandra-rh.mjs');
+  const { CASSANDRA_PERSONA, parseKpiHistoryCsv, latestKpiTrend, loadKpiTrend, teamRoster, teamSizeSnapshot, toolsToReconsider, RECRUITMENT_STAGES, createRecruitmentCandidate, advanceRecruitmentStage, badgeOversightSummary, computeBadgeResults, buildCassandraLightSignal, buildCassandraReportBlocks, buildCassandraReportHtml } = cr;
+
+  assert.ok(CASSANDRA_PERSONA.includes('CASSANDRA-RH'), 'the fixed persona text must genuinely identify CASSANDRA-RH, the same anti-drift discipline already proven for THE-FINAL-JUDGE');
+
+  // parseKpiHistoryCsv()/latestKpiTrend() — un parseur minimal volontaire, jamais un vrai CSV
+  // (guillemets/virgules échappées) pour un besoin qui n'existe pas dans ce fichier précis.
+  const fakeCsv = 'date,cohesion_pct,robustness_pct\n2026-09-01,80,\n2026-09-08,85,90\n2026-09-15,90,92';
+  const rows = parseKpiHistoryCsv(fakeCsv);
+  assert.equal(rows.length, 3, 'every real data row must be parsed, header excluded');
+  assert.equal(rows[0].robustness_pct, undefined, 'an empty CSV cell must stay undefined, never a fabricated 0 or empty string — an absent measure must remain visibly absent');
+  const trend = latestKpiTrend(rows, ['cohesion_pct', 'robustness_pct']);
+  assert.deepEqual(trend.cohesion_pct, { current: 90, previous: 85, delta: 5 }, 'the trend must compare the two most recent rows that actually carry a value for that family');
+  assert.deepEqual(trend.robustness_pct, { current: 92, previous: 90, delta: 2 }, 'a family with one missing measurement (2026-09-01) must skip that row rather than comparing against a fabricated absence');
+  assert.deepEqual(latestKpiTrend([], ['cohesion_pct']).cohesion_pct, { current: undefined, previous: undefined, delta: undefined }, 'zero history rows must report an honest full absence, never a crash or a fabricated zero');
+  assert.deepEqual(loadKpiTrend('/definitely/not/a/real/path.csv'), { rows: [], trend: {} }, 'a missing kpi-historique.csv must report an honest empty state rather than crashing — CASSANDRA-RH may run before the first KPI report ever exists');
+
+  // teamRoster() — LE bug réel trouvé et corrigé ce soir en testant ce brouillon pour de vrai
+  // (2026-09-21) : un nom d'outil avec une précision entre parenthèses ("CLONE-HUNTER
+  // (scripts/clone-hunter.mjs)") slugifié EN ENTIER ne matchait plus AGENT_CATEGORIES, laissant
+  // 4 Agents réels affichés à tort comme "catégorie non répertoriée".
+  const fakeRosterTable = [
+    '| Outil | Statut | 🎖️ Badge | Coût | Déclenchement |',
+    '|---|---|---|---|---|',
+    '| ARGUS | Agent | 🎖️ | gratuit | toujours déployé |',
+    '| CLONE-HUNTER (`scripts/clone-hunter.mjs`) | Agent | 🎖️ | gratuit | toujours déployé |',
+    '| NOUVEL-OUTIL-JAMAIS-CATEGORISE | Agent | 🎖️ | gratuit | à la demande |',
+    '| LE-COORDINATEUR | Membre certifié (classique) | 🎖️ | gratuit | routine |',
+    '| doc-HTML | Utilitaire nommé | — | gratuit | importé |',
+  ].join('\n');
+  const roster = teamRoster(fakeRosterTable);
+  assert.equal(roster.length, 3, 'only the real "Agent" rows must be counted as team members — never a Membre certifié (classique) or a Utilitaire nommé, which are never "membres" in the RH sense here');
+  assert.equal(roster.find((r) => r.tool.startsWith('CLONE-HUNTER')).category, 'Gardien sacré du code', 'a tool name carrying a parenthetical precision must still resolve to its real AGENT_CATEGORIES entry — the exact real bug found and fixed tonight, via the same primaryName split already established elsewhere in this codebase');
+  assert.equal(roster.find((r) => r.tool === 'ARGUS').slug, 'argus', 'the computed slug must be exposed on the roster entry itself, reused everywhere else in this file rather than recomputed and risking divergence');
+  assert.equal(roster.find((r) => r.tool === 'NOUVEL-OUTIL-JAMAIS-CATEGORISE').category, undefined, 'a real Agent genuinely missing from AGENT_CATEGORIES (a real documentation gap, not a bug in this function) must report an honest undefined category, never a guessed one');
+
+  const teamSize = teamSizeSnapshot(roster);
+  assert.equal(teamSize.total, 3, 'the headcount must be a plain honest count, never a judged "too many/too few" verdict');
+  assert.deepEqual(teamSize.byCategory, { 'Gardien sacré du code': 2, '(catégorie non répertoriée)': 1 }, 'members must be grouped by their real AGENT_CATEGORIES label, with an honest fallback bucket for a genuine gap in that table — never silently dropped');
+
+  // toolsToReconsider() — combine deux signaux déjà calculés ailleurs, jamais un troisième calcul
+  // RH inventé.
+  const reconsiderFindings = toolsToReconsider({
+    usageHistory: { events: [{ toolSlug: 'used-tool', origin: 'demande', at: 1, foundSomething: true }] },
+    knownSlugs: ['used-tool', 'never-used-tool', 'stale-tool'],
+    staleness: { 'scripts/stale-tool.mjs': { stale: true, days: 90 } },
+  });
+  assert.deepEqual(reconsiderFindings.find((f) => f.slug === 'never-used-tool').reasons, ['jamais sollicité (tool-usage.mjs)'], 'a tool with zero real usage events must be flagged by name with the exact reused tool-usage.mjs reason, never a second divergent phrase');
+  assert.ok(reconsiderFindings.find((f) => f.slug === 'used-tool') === undefined, 'a genuinely solicited tool with no staleness signal must never be flagged for retirement');
+
+  // Recrutement — squelette de progression, jamais de recherche web réelle à ce stade.
+  const candidate = createRecruitmentCandidate('Nouvel Outil');
+  assert.equal(candidate.stage, RECRUITMENT_STAGES[0], 'a fresh candidate must start at the first real stage, never skip ahead');
+  assert.throws(() => createRecruitmentCandidate(), /doit avoir un nom/, 'a candidate with no name must be refused immediately, never silently created as "undefined"');
+  const advanced = advanceRecruitmentStage(candidate, 'avancer');
+  assert.equal(advanced.stage, RECRUITMENT_STAGES[1], 'an explicit "avancer" decision must move to the next real stage, never more than one at a time');
+  const rejected = advanceRecruitmentStage(candidate, 'rejeter');
+  assert.equal(rejected.stage, 'rejete', 'an explicit "rejeter" decision must close the file immediately, from any stage');
+  assert.throws(() => advanceRecruitmentStage(rejected, 'avancer'), /déjà clos/, 'a closed file must never be silently reopened by a later call — every real recruitment initiative stays an explicit decision, never a spontaneous one (Article 16)');
+  const finalStage = advanceRecruitmentStage(advanceRecruitmentStage(advanced, 'avancer'), 'avancer');
+  // idx after 2 advances from stage[1] lands one past the array — proposé.
+  assert.equal(finalStage.stage, 'propose', 'reaching the end of RECRUITMENT_STAGES must land on the real terminal "propose" stage, never an out-of-bounds crash');
+
+  // Badge — CASSANDRA supervise, jamais ne recalcule.
+  const badgeSummary = badgeOversightSummary([
+    { agentName: 'A', complet: true, gaps: [] },
+    { agentName: 'B', complet: false, gaps: ['instanciation manquante'] },
+  ]);
+  assert.deepEqual(badgeSummary, { total: 2, certified: 1, notCertified: [{ agentName: 'B', gaps: ['instanciation manquante'] }] }, 'the oversight summary must split certified/notCertified honestly from whatever real checkAgentOnboarding() results it is handed, never recomputing coverage itself');
+
+  // computeBadgeResults() — le seul point de ce fichier qui appelle réellement checkAgentOnboarding().
+  const fakeOnboardingContext = { toolsTableMarkdown: fakeRosterTable, existingPaths: new Set(), suiviText: '', claudeMdText: '' };
+  const badgeResults = computeBadgeResults([{ tool: 'ARGUS', slug: 'argus', category: undefined }], fakeOnboardingContext);
+  assert.equal(badgeResults.length, 1, 'one badge result per roster member, never more or fewer');
+  assert.equal(badgeResults[0].complet, false, 'a fake context with no real docs/ paths must honestly report ARGUS as not fully onboarded here, never a false positive fabricated for the test');
+
+  // Signal léger + rapport complet — même donnée sous-jacente, jamais deux calculs divergents.
+  const lightSignal = buildCassandraLightSignal({ teamSize, badgeSummary, kpiTrend: trend });
+  assert.ok(lightSignal.includes('3 membre'), 'the light signal must state the real headcount in plain language');
+  assert.ok(lightSignal.includes('1 sans badge'), 'the light signal must state how many members lack a badge, the single most actionable RH fact for a periodic Ronde signal');
+
+  const blocks = buildCassandraReportBlocks({ teamSize, badgeSummary, kpiTrend: trend, reconsider: reconsiderFindings, recruitmentCandidates: [candidate] });
+  assert.ok(blocks.some((b) => b.type === 'heading' && b.text === 'Recrutement en cours'), 'a report with at least one open recruitment candidate must surface its own section, never silently merged into another block');
+  assert.ok(!buildCassandraReportBlocks({ teamSize, badgeSummary, kpiTrend: trend, reconsider: [] }).some((b) => b.text === 'Recrutement en cours'), 'a report with zero open candidates must never fabricate an empty recruitment section');
+
+  const html = buildCassandraReportHtml({ teamSize, badgeSummary, kpiTrend: trend, reconsider: reconsiderFindings });
+  assert.ok(html.includes('CASSANDRA-RH') && html.includes(CASSANDRA_PERSONA), 'the HTML report must carry both the tool\'s own name and the full fixed persona text verbatim, never a paraphrase');
+
+  // Vérification live (2026-09-21) — la vraie table maîtresse du dépôt, pour prouver que le
+  // correctif tient sur les vraies lignes réelles, pas seulement sur la fixture ci-dessus.
+  const { readFileSync: readReal } = await import('node:fs');
+  const realRoster = teamRoster(readReal('docs/regles-de-travail.md', 'utf8'));
+  assert.ok(realRoster.length >= 15, 'the real master table must yield a real double-digit team headcount, never an empty or half-parsed roster');
+  const realUncategorized = realRoster.filter((r) => !r.category);
+  assert.deepEqual(realUncategorized, [], 'checked live against the real docs/regles-de-travail.md: every current real Agent must resolve to a real AGENT_CATEGORIES entry — zero "catégorie non répertoriée" left, the exact live proof the parenthetical-name bug is genuinely fixed');
+  console.log('Passed: CASSANDRA-RH (2026-09-21, noyau fiabilisé) — the fixed persona text stays verbatim, parseKpiHistoryCsv()/latestKpiTrend() read kpi-historique.csv honestly (an absent cell stays undefined, a family missing a measurement is skipped rather than fabricated), teamRoster() correctly resolves a tool name carrying a parenthetical precision to its real AGENT_CATEGORIES entry — the exact real bug found and fixed tonight, verified live against the actual master table with zero uncategorized Agent remaining — teamSizeSnapshot() gives an honest plain headcount never a judged verdict, toolsToReconsider() combines tool-usage.mjs/clean-dirty-old.mjs signals without a third invented calculation, the recruitment skeleton enforces an explicit decision at every stage and never reopens a closed file, badgeOversightSummary()/computeBadgeResults() supervise checkAgentOnboarding()\'s real results without ever recalculating coverage themselves, and the light signal/full HTML report read the exact same underlying data.');
 }
 
 {

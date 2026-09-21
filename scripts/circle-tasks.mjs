@@ -247,6 +247,17 @@ export const CIRCLE_ITEMS = [
     tokensEstimes: "faible pour le signal seul ; élevé si l'édition complète est ensuite relue par l'agent (le corps reste local, jamais committé)",
     execute: "Lire docs/ines-official/index.md (dernière version/date) et proposer une nouvelle édition (node scripts/ines-official.mjs <code|code_et_docs>) si aucune récente n'existe — jamais lancée automatiquement sans confirmation.",
   },
+  // cassandra-rh-signal (2026-09-21, noyau CASSANDRA-RH fiabilisé) — signal léger décidé dès la
+  // conception (« signal léger à chaque Ronde CIRCLE-TASKS + bilan complet sur demande »). Gratuit,
+  // relit ce que le reste du réseau d'outils sait déjà, jamais un second calcul.
+  {
+    id: "cassandra-rh-signal",
+    theme: "Qualité & fun",
+    label: "Signal RH de l'équipe (effectif, badges, tendance KPI) — CASSANDRA-RH",
+    cout: "gratuit — relit checkAgentOnboarding()/kpi-historique.csv/tool-usage.mjs, jamais un second calcul",
+    tokensEstimes: "faible — une ligne de signal",
+    execute: "Lancer node scripts/cassandra-rh.mjs (sans argument) pour le signal léger ; node scripts/cassandra-rh.mjs rapport pour le bilan HTML complet, seulement sur demande explicite.",
+  },
   // profil-utilisateur-guard (2026-09-21, trouvaille : « il y a certainement de petits scripts peu
   // coûteux [...] qui peuvent être exécutés, simplement parce qu'ils sont très peu coûteux et que
   // ça garantit la fraîcheur du code » — scripts/check-profil-utilisateur.mjs existait déjà,

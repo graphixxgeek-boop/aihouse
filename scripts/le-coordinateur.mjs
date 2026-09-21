@@ -179,6 +179,7 @@ export const PRESTATIONS = [
   { nom: "Pack Cerveau central", description: "Généralise find-brain à tout le catalogue PRESTATIONS : à partir d'une description de tâche et/ou d'un fichier ciblé, indique quelle(s) prestation(s) et quel(s) outil(s) de recherche utiliser, sans rien recalculer soi-même. Délivre aussi le rapport de Ronde (outils jamais sollicités, auto-diagnostic borné à son propre périmètre).", demande: "Savoir quel outil ou quelle combinaison d'outils déjà existante utiliser pour une tâche donnée, sans avoir à y réfléchir soi-même", outils: ["tool-brain"], cout: "0 appel API", tokensEstimes: "faible" },
   { nom: "Pack Chasse aux clones", description: "Scanne lib/scripts/app/components (hors components/ui, vendored) à la recherche de blocs de lignes identiques répétés à plusieurs endroits, regroupés par cluster et triés par impact réel.", demande: "Dette technique / code qui s'empile plutôt que d'être pensé — trouver un bloc de logique recopié plutôt que factorisé", outils: ["clone-hunter"], cout: "0 appel API — heuristique texte, zéro parseur AST", tokensEstimes: "faible à modéré — sortie compacte des clusters trouvés" },
   { nom: "Pack Objectifs", description: "Confronte chaque objectif chiffré du registre (par entité/période) au résultat réel déjà mesuré par tool-usage.mjs, avec un statut atteint/en dessous/dépassé/pas de données.", demande: "Vérifier si un objectif fixé sur un outil ou une entité a été atteint sur sa période", outils: ["objectifs-vs-resultats"], cout: "0 appel API — relit un historique déjà écrit, jamais un second calcul", tokensEstimes: "faible — sortie compacte, une ligne par objectif" },
+  { nom: "Pack Direction RH", description: "Constat chiffré de l'effectif de l'équipe par catégorie, supervision du badge (lit checkAgentOnboarding(), jamais ne le recalcule), tendance KPI lue depuis kpi-historique.csv, outils à retirer/refondre — jamais un jugement automatique, toujours l'utilisateur qui décide.", demande: "Bilan RH de l'équipe de l'Agence Codex, effectif, badges, tendance KPI, outils à reconsidérer", outils: ["CASSANDRA-RH"], cout: "0 appel API — relit ce que le reste du réseau d'outils sait déjà", tokensEstimes: "faible pour le signal léger, modéré pour le bilan HTML complet" },
 ];
 
 export function formatMenu(prestations = PRESTATIONS) {
@@ -689,15 +690,26 @@ export function announceBadgeCeremony(result, { historyPath = BADGE_CEREMONY_HIS
 // AXA-CHECK par script, câblage réciproque des Gardiens) reste la responsabilité de l'appelant
 // (`scripts/hooks/check-last-commit.mjs`), jamais de cette fonction elle-même : elle reste pure et
 // testable sans toucher au disque, exactement comme `checkAgentOnboarding()`.
+// `primaryName` (2026-09-21, bug réel trouvé en fiabilisant CASSANDRA-RH le même soir) : passer
+// `row.tool` BRUT à checkAgentOnboarding() slugifiait le texte ENTIER de la cellule Outil, y compris
+// une précision entre parenthèses ("CASSANDRA-RH (scripts/cassandra-rh.mjs)", "CLONE-HUNTER
+// (`scripts/clone-hunter.mjs`)") — produisant un slug jamais présent dans AGENT_CATEGORIES ni sur le
+// disque, donc `complet:false` à tort pour TOUT Agent dont la cellule Outil porte une précision
+// entre parenthèses, jamais annoncé même une fois réellement complet. Même découpage déjà établi
+// ailleurs dans ce fichier (badgeWarningsForOutils(), findToolsMissingFromMenu()) — jamais une
+// troisième règle divergente. `agentOverrides` est également indexé par ce nom propre, jamais la
+// cellule brute (buildRealOnboardingContext() déclare ses overrides par nom propre, ex.
+// "THE-DEEP-READER").
 export function checkAllAgentBadges(onboardingContext, { historyPath = BADGE_CEREMONY_HISTORY_PATH, now = Date.now() } = {}) {
   if (!onboardingContext?.toolsTableMarkdown) return [];
   const rows = parseToolsTable(onboardingContext.toolsTableMarkdown).filter((r) => CERTIFIABLE_STATUTS.includes(r.statut));
   const announcements = [];
   for (const row of rows) {
-    const overrides = onboardingContext.agentOverrides?.[row.tool] ?? {};
+    const primaryName = row.tool.split(/[/(]/)[0].trim();
+    const overrides = onboardingContext.agentOverrides?.[primaryName] ?? {};
     let result;
     try {
-      result = checkAgentOnboarding(row.tool, { ...onboardingContext, ownKnowledge: row.statut !== CLASSIQUE_STATUT, ...overrides });
+      result = checkAgentOnboarding(primaryName, { ...onboardingContext, ownKnowledge: row.statut !== CLASSIQUE_STATUT, ...overrides });
     } catch {
       continue; // garde-fou Personnage ou nom malformé — jamais un balayage cassé pour un seul outil
     }

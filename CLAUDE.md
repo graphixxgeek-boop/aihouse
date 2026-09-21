@@ -921,6 +921,27 @@ duplication n'ayant aucune mémoire persistante à consulter. Jamais les seuils 
 propres à ce projet, qui vivent dans `docs/referentiel/clone-hunter.md` (instanciation) et
 `docs/clone-hunter/` (dossier + index).
 
+## objectifs-vs-resultats — blueprint exportable
+
+`docs/objectifs-vs-resultats-blueprint.md` documente l'ARCHITECTURE d'un registre hand-maintained
+d'objectifs chiffrés par entité/période confronté à un résultat mesuré par des outils déjà
+existants (tâche #287, 2026-09-21) — jamais un second calcul divergent, jamais un audit
+indépendant, jamais un sous-agent d'un outil de gouvernance d'équipe. Jamais les sources exactes ni
+le registre propre à ce projet, qui vivent dans `docs/referentiel/objectifs-vs-resultats.md`
+(instanciation) et `docs/objectifs-vs-resultats/` (dossier + index).
+
+## CASSANDRA-RH — blueprint exportable
+
+`docs/cassandra-rh-blueprint.md` documente l'ARCHITECTURE de l'Agent Cadre RH de l'outillage de
+travail (tâche #184, noyau construit et fiabilisé le 2026-09-21) — NOTE l'équipe (constat chiffré,
+jamais un seuil auto-jugé), SUPERVISE le badge (lit le système de certification existant, jamais ne
+le recalcule), LIT le KPI (lit un historique déjà produit), signale les outils à retirer/refondre
+(réutilise des signaux déjà calculés ailleurs), squelette de recrutement en 3 étapes (décision
+humaine explicite à chaque étape) — jamais un décideur final. Récit complet des décisions de
+calibrage : `docs/cassandra-rh-conception.md` (archivé, conservé comme fondation). Jamais le
+mécanisme exact ni le registre propre à ce projet, qui vivent dans `docs/referentiel/cassandra-rh.md`
+(instanciation) et `docs/cassandra-rh/` (dossier + index).
+
 ## AXA-CHECK — blueprint exportable
 
 `docs/axa-check-blueprint.md` documente l'ARCHITECTURE de l'outil de robustesse/fragilité RÉELLES
@@ -1113,8 +1134,9 @@ conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs se
   était dispersé entre `docs/cassandra-rh-conception.md` §4 (qui le référence désormais plutôt que
   de le dupliquer) et `docs/regles-de-travail.md` §7ter (qui reste la
   table maîtresse détaillée outil par outil, jamais dupliquée ici non plus). **C'est le domaine de
-  CASSANDRA-RH une fois construite** (round de calibrage #134) — elle le tient à jour à chaque
-  changement d'organigramme, exactement comme elle tiendra la liste de l'équipe.
+  CASSANDRA-RH** (`docs/referentiel/cassandra-rh.md`, noyau construit le 2026-09-21) — la tenue à
+  jour de ce document à chaque changement d'organigramme reste manuelle pour l'instant, une future
+  vague de construction, jamais encore automatisée par le noyau actuel.
 - `docs/referentiel/tableau-de-bord.md` (2026-09-19, corrigé le 2026-09-21) — règles du tableau de
   bord/KPI interne (6 familles depuis l'ajout de Smart Conso API comme 6e le 2026-09-20, accès,
   alertes, cadence de mise à jour) : un outil d'observation à destination de l'utilisateur et de
@@ -1182,6 +1204,18 @@ conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs se
   `components/ui/`, la trouvaille réelle (`loadJson()` dupliqué entre smart-conso-api.mjs et
   smart-conso-token.mjs), l'item `clone-hunter-run` de CIRCLE-TASKS, le registre
   (`docs/clone-hunter/`). Cf. `docs/clone-hunter-blueprint.md` pour le principe générique.
+- `docs/referentiel/objectifs-vs-resultats.md` (2026-09-21, tâche #287) — instanciation d'objectifs-
+  vs-resultats pour ce projet : le registre hand-maintained (`docs/objectifs-vs-resultats/registre.md`),
+  les deux sources supportées (usage-count/found-rate, lues dans `.tool-usage-history.json`, jamais
+  un second calcul), les statuts atteint/en dessous/dépassé/pas de données, le registre
+  (`docs/objectifs-vs-resultats/`). Cf. `docs/objectifs-vs-resultats-blueprint.md` pour le principe
+  générique.
+- `docs/referentiel/cassandra-rh.md` (2026-09-21, tâche #184) — instanciation de CASSANDRA-RH pour
+  ce projet : l'Agent Cadre RH (`scripts/cassandra-rh.mjs`) — effectif chiffré, supervision du
+  badge (lit `checkAgentOnboarding()`, jamais ne le recalcule), lecture du KPI, outils à retirer/
+  refondre, squelette de recrutement en 3 étapes — jamais un jugement automatique. Le récit complet
+  des décisions de calibrage reste dans `docs/cassandra-rh-conception.md` (archivé, conservé comme
+  fondation). Cf. `docs/cassandra-rh-blueprint.md` pour le principe générique.
 - `docs/referentiel/clean-dirty-old.md` (2026-09-19) — instanciation de CLEAN-DIRTY-OLD
   (Article 20) pour ce projet : les seuils de stagnation relative, la priorisation par nœud
   sensible, les trois questions déléguées à ARGUS/HARMONIA/ALWAYS-NEW-CODE, le registre
