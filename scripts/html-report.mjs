@@ -100,6 +100,10 @@ export const THEME_CSS = `
     --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
     --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
     --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu). */
+    --lia: #f29bc3; --noe: #55dbe5;
   }
   * { box-sizing: border-box; }
   body {
@@ -148,10 +152,10 @@ export const THEME_CSS = `
   }
   main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
   main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
-  main p.dialogue.speaker-lia { border-left-color: var(--accent2); }
-  main p.dialogue.speaker-lia strong { color: var(--accent2); }
-  main p.dialogue.speaker-noe { border-left-color: var(--accent); }
-  main p.dialogue.speaker-noe strong { color: var(--accent); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
   main p.dialogue.speaker-other strong { color: var(--muted); }
   footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
 `;

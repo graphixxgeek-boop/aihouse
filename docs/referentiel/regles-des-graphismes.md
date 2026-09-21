@@ -36,6 +36,20 @@ sujet reconnu comme important et même urgent (un nom de domaine se réserve à 
 ligne approche), mais volontairement traité à part, plus tard, pour ne pas diluer ce chantier-ci.
 **Ne pas perdre ce point de vue : à reprendre explicitement avant la mise en ligne.**
 
+**Extension actée le 2026-09-22** : le périmètre couvre aussi les RAPPORTS produits par l'outillage
+de travail (`scripts/html-report.mjs`, utilisé par les simulations, KPI, EL-PROFESSOR, etc.), pas
+seulement le jeu et son interface web — demande explicite de l'utilisateur (« nous devons tout
+d'abord créer une charte graphique qui sera utilisée aussi bien dans le jeu, dans l'interface, dans
+les rapports, etc. »). Trouvaille concrète qui motive ce point : jusqu'à ce soir,
+`html-report.mjs` colorait les répliques de Lia/Noé avec ses deux couleurs génériques de thème
+(orange/bleu), sans aucun lien avec `--lia`/`--noe` (`app/globals.css`, #f29bc3/#55dbe5) — deux
+palettes qui vivaient chacune de leur côté. Corrigé en réutilisant telles quelles les couleurs
+réelles du jeu dans `html-report.mjs` (`--lia: #f29bc3; --noe: #55dbe5`) plutôt que d'inventer une
+troisième palette de rapport. **À FAIRE pendant la refonte graphique** (pas avant, pour ne pas fixer
+une charte qui deviendrait fausse dès que la palette change) : construire une vraie charte graphique
+unique (couleurs, typographie, tons) déclinée dans les trois surfaces — jamais trois palettes
+maintenues séparément comme aujourd'hui.
+
 ## Principe directeur
 
 **Le monde affiché doit toujours être celui qui existe RÉELLEMENT au moment présent** — jamais un
