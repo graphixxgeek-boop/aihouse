@@ -16,6 +16,11 @@ jamais le code du projet lui-même, jamais l'organisation documentaire du projet
 3. **LIRE le KPI** — lit un historique déjà produit ailleurs (jamais un second calcul de mesure).
 4. **Signaler les outils à retirer ou refondre** — réutilise des signaux déjà calculés ailleurs
    (jamais sollicité, stagnation relative) — jamais un troisième calcul de pertinence inventé.
+5. **Trous d'équipe** — un poste dont la couverture de test réelle est fragile ou jamais mesurée,
+   lu depuis l'outil de couverture déjà existant (jamais un second calcul). Distinct, à ne jamais
+   confondre, du rôle d'un éventuel outil séparé qui détecterait des trous dans la STRUCTURE
+   DOCUMENTAIRE du projet — ce niveau au-dessus reste hors du périmètre RH. Réservé au rapport
+   complet sur demande, jamais au signal léger (relancerait un vrai calcul à chaque Ronde).
 
 Une cinquième capacité, le recrutement, reste volontairement un SQUELETTE de progression (étapes
 explicites, décision toujours humaine à chaque étape) plutôt qu'une vraie recherche externe, tant

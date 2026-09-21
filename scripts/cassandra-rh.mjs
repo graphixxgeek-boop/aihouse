@@ -13,14 +13,14 @@
 // (le-coordinateur.mjs), le KPI vient de kpi-historique.csv (kpi-report.mjs), l'usage réel vient de
 // tool-usage.mjs, la stagnation relative vient de clean-dirty-old.mjs — aucune de ces quatre choses
 // n'est recalculée ici, jamais une seconde version qui pourrait diverger de l'originale.
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { parseToolsTable, slugifyAgentName, checkAgentOnboarding } from "./le-coordinateur.mjs";
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
-import { AGENT_CATEGORIES, assertNotAPersonnage } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, assertNotAPersonnage, sh } from "./lib-shell.mjs";
 import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson } from "./tool-usage.mjs";
 import { relativeStaleness, lastTouchDays } from "./clean-dirty-old.mjs";
-import { AGENT_SCRIPT_FILES } from "./axa-check.mjs";
+import { AGENT_SCRIPT_FILES, collectScriptCoverage, scriptRobustnessScore } from "./axa-check.mjs";
 import { KPI_HISTORY_COLUMNS, KPI_HISTORY_PATH } from "./kpi-report.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 
@@ -109,7 +109,7 @@ export function teamRoster(toolsTableMarkdown) {
     .map((row) => {
       const primaryName = row.tool.split(/[/(]/)[0].trim();
       const slug = slugifyAgentName(primaryName);
-      return { tool: row.tool, slug, category: AGENT_CATEGORIES[slug] };
+      return { tool: row.tool, primaryName, slug, category: AGENT_CATEGORIES[slug] };
     });
 }
 
@@ -205,15 +205,52 @@ export function badgeOversightSummary(badgeResults) {
 // seconde construction de contexte divergente) ; les tests injectent leur propre contexte fictif.
 // `ownKnowledge` est calculé par checkAgentOnboarding() lui-même à partir du statut réel de la ligne
 // (CLASSIQUE_STATUT vs Agent) — jamais deviné ici.
+// `member.primaryName` (jamais `member.tool`, qui garde le texte brut de la cellule pour
+// l'affichage) — même bug/même correctif que checkAllAgentBadges() (le-coordinateur.mjs, trouvé le
+// même soir) : passer le texte entier d'une cellule Outil porteuse d'une précision entre
+// parenthèses produirait un slug garbage et un `complet:false` fabriqué pour un membre pourtant
+// réellement complet.
 export function computeBadgeResults(roster, onboardingContext) {
   return roster.map((member) => {
-    const overrides = onboardingContext.agentOverrides?.[member.tool] ?? {};
+    const overrides = onboardingContext.agentOverrides?.[member.primaryName] ?? {};
     try {
-      return checkAgentOnboarding(member.tool, { ...onboardingContext, ownKnowledge: true, ...overrides });
+      return checkAgentOnboarding(member.primaryName, { ...onboardingContext, ownKnowledge: true, ...overrides });
     } catch {
-      return { agentName: member.tool, complet: false, gaps: ["vérification impossible (nom malformé ou Personnage)"] };
+      return { agentName: member.primaryName, complet: false, gaps: ["vérification impossible (nom malformé ou Personnage)"] };
     }
   });
+}
+
+// --- Trous d'équipe : couverture fragile (2026-09-21, calibrage explicite : « CASSANDRA doit être
+// capable de voir s'il n'y a pas de trous dans l'organisation [...] elle a accès à tous les outils,
+// tous les rapports qui peuvent lui servir ») -----------------------------------------------------
+//
+// Lecture retenue après clarification : « trous dans l'ÉQUIPE » (un poste mal couvert, jamais un
+// document manquant — ce second sens resterait le rôle d'un futur outil séparé, jamais dupliqué
+// ici). AXA-CHECK mesure déjà la couverture de test réelle par script ; ce module ne la recalcule
+// jamais, il la LIT et signale les membres dont la couverture est fragile — un « trou » RH au sens
+// où c'est un poste dont personne ne peut garantir qu'il tient la route. `runAxaCheckCoverage()`
+// est le SEUL endroit de ce fichier qui relance une instrumentation V8 — jamais dans le signal léger
+// (coûterait un vrai temps de recalcul à chaque Ronde), uniquement dans le rapport complet sur
+// demande. Même mécanique exacte que axa-check.mjs::main() (sh() + collectScriptCoverage()),
+// jamais une seconde façon de produire ce dossier de couverture.
+export function runAxaCheckCoverage({ shImpl = sh, collectImpl = collectScriptCoverage, rmImpl = rmSync } = {}) {
+  const covDir = join(ROOT, ".sites-runtime/cassandra-rh-cov");
+  try {
+    shImpl(`node scripts/check-house.mjs`, { cwd: ROOT, env: { ...process.env, NODE_V8_COVERAGE: covDir } });
+    return collectImpl(covDir);
+  } finally {
+    rmImpl(covDir, { recursive: true, force: true });
+  }
+}
+
+// Pure, testable sans toucher au disque — reçoit `perSlugCoverage` déjà produit ailleurs (jamais un
+// second calcul). Un membre jamais scanné (`pct === undefined`) est un trou tout aussi réel qu'un
+// membre mal couvert, jamais confondu avec une couverture de 0% mesurée.
+export function computeCoverageGaps(roster, perSlugCoverage, threshold = 100) {
+  return roster
+    .map((member) => ({ tool: member.tool, slug: member.slug, pct: scriptRobustnessScore(member.slug, perSlugCoverage) }))
+    .filter((entry) => entry.pct === undefined || entry.pct < threshold);
 }
 
 // --- Signal léger automatique (2026-09-22 : « signal auto léger + bilan complet sur demande ») --
@@ -228,7 +265,7 @@ export function buildCassandraLightSignal({ teamSize, badgeSummary, kpiTrend }) 
 
 // --- Rapport complet, en HTML dès cette première version (2026-09-22, demande explicite) -------
 
-export function buildCassandraReportBlocks({ teamSize, badgeSummary, kpiTrend, reconsider, recruitmentCandidates = [] }) {
+export function buildCassandraReportBlocks({ teamSize, badgeSummary, kpiTrend, reconsider, recruitmentCandidates = [], coverageGaps = null }) {
   const blocks = [];
   blocks.push({ type: "heading", text: "Effectif de l'équipe" });
   blocks.push({ type: "paragraph", text: `${teamSize.total} membre(s) actif(s) — ${Object.entries(teamSize.byCategory).map(([cat, n]) => `${n} ${cat}`).join(", ")}.` });
@@ -248,6 +285,16 @@ export function buildCassandraReportBlocks({ teamSize, badgeSummary, kpiTrend, r
     ? { type: "list", items: reconsider.map((r) => `${r.slug} — ${r.reasons.join(" ; ")}`) }
     : { type: "paragraph", text: "Aucun signal de retrait pour l'instant." });
 
+  // `coverageGaps` (2026-09-21, « trous dans l'équipe ») : null quand le rapport n'a pas relancé
+  // AXA-CHECK (jamais dans le signal léger) — distinct de [] (relancé, aucun trou trouvé), jamais
+  // confondu (même discipline honnête que le reste de ce fichier).
+  if (coverageGaps !== null) {
+    blocks.push({ type: "heading", text: "Trous d'équipe — couverture de test fragile (AXA-CHECK, jamais recalculée)" });
+    blocks.push(coverageGaps.length
+      ? { type: "list", items: coverageGaps.map((g) => `${g.tool} — ${g.pct === undefined ? "jamais scanné" : `${Math.round(g.pct)}% de couverture`}`) }
+      : { type: "paragraph", text: "Aucun poste fragile détecté — tous les membres scannés sont à 100% de couverture." });
+  }
+
   if (recruitmentCandidates.length) {
     blocks.push({ type: "heading", text: "Recrutement en cours" });
     blocks.push({ type: "list", items: recruitmentCandidates.map((c) => `${c.name} — étape : ${c.stage}`) });
@@ -265,9 +312,11 @@ export function buildCassandraReportHtml(data, dateLabel = new Date().toISOStrin
 }
 
 // Assemble tout ce qui est réellement calculé ailleurs (jamais un second calcul) — factorisé une
-// seule fois pour que le signal léger et le bilan complet lisent EXACTEMENT les mêmes chiffres,
-// jamais deux calculs qui pourraient diverger entre les deux déclenchements.
-function collectRealCassandraData() {
+// seule fois pour que le signal léger et le bilan complet lisent EXACTEMENT les mêmes chiffres pour
+// les 4 signaux communs, jamais deux calculs qui pourraient diverger entre les deux déclenchements.
+// `withCoverage` (2026-09-21, « trous dans l'équipe ») relance AXA-CHECK réellement — jamais dans le
+// signal léger (coûterait un vrai temps de recalcul à chaque Ronde), seulement quand demandé.
+function collectRealCassandraData({ withCoverage = false } = {}) {
   const onboardingContext = buildRealOnboardingContext();
   const roster = teamRoster(onboardingContext.toolsTableMarkdown);
   const teamSize = teamSizeSnapshot(roster);
@@ -277,19 +326,23 @@ function collectRealCassandraData() {
   const reconsider = toolsToReconsider({ usageHistory, knownSlugs, staleness });
   const { trend } = loadKpiTrend();
   const badgeSummary = badgeOversightSummary(computeBadgeResults(roster, onboardingContext));
-  return { teamSize, badgeSummary, kpiTrend: trend, reconsider };
+  const coverageGaps = withCoverage ? computeCoverageGaps(roster, runAxaCheckCoverage()) : null;
+  return { teamSize, badgeSummary, kpiTrend: trend, reconsider, coverageGaps };
 }
 
 function main() {
   assertNotAPersonnage("CASSANDRA-RH", "cassandra-rh.mjs::main()");
   const [, , sub] = process.argv;
-  const data = collectRealCassandraData();
-  console.log(CASSANDRA_PERSONA);
-  console.log("");
   if (sub === "rapport") {
+    const data = collectRealCassandraData({ withCoverage: true });
+    console.log(CASSANDRA_PERSONA);
+    console.log("");
     console.log(buildCassandraReportHtml(data));
     return;
   }
+  const data = collectRealCassandraData();
+  console.log(CASSANDRA_PERSONA);
+  console.log("");
   console.log(buildCassandraLightSignal(data));
 }
 

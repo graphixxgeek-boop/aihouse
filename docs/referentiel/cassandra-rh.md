@@ -53,6 +53,19 @@ vérifié en direct : zéro Agent réel non catégorisé après correctif.
   nombre sans badge, tendance KPI. Destiné à rejoindre chaque Ronde CIRCLE-TASKS.
 - **Lourd** — `node scripts/cassandra-rh.mjs rapport`, bilan complet en HTML (via `html-report.mjs`).
 
+## Trous d'équipe — couverture de test fragile (2026-09-21)
+
+Calibrage explicite : « CASSANDRA doit être capable de voir s'il n'y a pas de trous dans
+l'organisation [...] elle a accès à tous les outils, tous les rapports qui peuvent lui servir ».
+Lecture retenue après clarification : « trous dans l'ÉQUIPE » (jamais dans la structure
+documentaire du projet — ce second sens resterait le rôle d'un futur outil séparé, jamais
+dupliqué ici). `runAxaCheckCoverage()` relance réellement une instrumentation V8 (même mécanique
+exacte qu'`axa-check.mjs::main()`, jamais une seconde façon de la produire) — **uniquement dans le
+rapport complet** (`node scripts/cassandra-rh.mjs rapport`), jamais dans le signal léger, qui
+resterait sinon coûteux à chaque Ronde. `computeCoverageGaps()` (pure, testable) signale tout
+membre en dessous de 100% de couverture ou jamais scanné — un poste dont personne ne peut
+garantir qu'il tient la route, un « trou » RH au sens propre.
+
 ## Reste hors de cette première vague (§8bis/§8ter de `docs/cassandra-rh-conception.md`)
 
 Le Catalogue (rapport principal enrichi, combinaisons d'outils, score composite) et les 3
