@@ -1,0 +1,13 @@
+terminée: 275 | en cours: 0 | ouverte: 6 | autre: 2
+
+--- OUVERTES ---
+{"row":"| 147 | 2026-09-20T09:47Z | Conception / Nouvel outil (CASSANDRA-RH) | Extension proposée : objectifs de résultat / score cible par membre d'équipe | normal | Idée de l'utilisateur, en plus du tableau de bord/KPI déjà existant : fixer un score cible à chaque membre de l'équipe (moi, l'agent,
+{"row":"| 171 | 2026-09-20T13:36Z | Conception / Nouvel outil (CASSANDRA-RH) | Décision : CASSANDRA-RH doit tenir la liste de l'équipe à jour | normal | Demande explicite de l'utilisateur, juste après l'accueil de THE-DEEP-READER dans l'équipe : « penser au suivi cassandra vs photo d'équipe. pour ca
+{"row":"| 172 | 2026-09-20T13:45Z | Conception / Nouvel outil (CASSANDRA-RH) | Deux nouvelles tâches : liste de tous les employés, puis organigramme de l'équipe | normal | Demande explicite de l'utilisateur : « pour cassandra nouvelle tâche : créer un organigramme de l'équipe. aussi, la liste de tou
+{"row":"| 179 | 2026-09-20T14:45Z | Conception / Nouvel outil (CASSANDRA-RH) | Décision : CASSANDRA-RH doit avoir une connaissance parfaite de chaque membre de l'équipe pour servir de point de consultation sur les fonctions/description d'un agent ou script | normal | Demande explicite de l'utilisate
+{"row":"| 287 | 2026-09-21T23:20Z | Conception / Nouvel outil (objectifs vs résultats) | Nouvel outil validé : séparer le calcul objectifs/résultats de CASSANDRA-RH, conception à sauvegarder pour construction future | important | Demande explicite de l'utilisateur : « je pense qu'il faut separer le 
+{"row":"| 290 | 2026-09-21T23:50Z | Conception / Outillage de travail (registre canonique des outils) | Trou confirmé : HYPER-SCAN-CHECKPOINT n'appelle pas CLONE-HUNTER (oubli, jamais une exclusion assumée) ; nouvelle idée validée : formaliser un registre canonique unique des membres de l'équipe | i
+
+--- AUTRE ---
+{"row":"| — | 2026-09-20T09:40Z | Conception / Nouvel outil (CASSANDRA-RH) | Design en cours, à haute densité, d'un nouvel agent \"RH\" (CASSANDRA-RH) — décisions déjà actées à conserver avant compaction ou interruption | important | Suite à une rafale de messages rapides de l'utilisateur juste aprè
+{"row":"| 279 | 2026-09-21T20:50Z | Méthode de travail / Feuille de route | Tâche #171 (passe manuelle d'allègement CLAUDE.md) : reportée explicitement, pas abandonnée | normal | Reprise de #171 dans l'ordre de file convenu (E→F→H→B→CASSANDRA-RH→simulation→refonte). Vérification réelle avant d'agir

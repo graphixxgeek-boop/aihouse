@@ -1,0 +1,7 @@
+Registres audités : 34
+Mismatch (décision HTML mais script non câblé) : 0
+
+Répartition des décisions :
+  texte : 24
+  delivery_html : 9
+  archived_html : 1

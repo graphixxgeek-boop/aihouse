@@ -126,10 +126,37 @@ export function smartConsoScore(m) {
 // confiance à la synthèse globale. Un score de famille invalide (NaN/Infinity, ne devrait jamais
 // arriver vu les gardes ci-dessus, mais vérifié quand même) compte comme NON mesuré, jamais comme
 // une mesure douteuse acceptée telle quelle.
-export function dashboardCoverageScore(scores) {
-    const total = scores.length;
-    const measured = scores.filter(s => s !== undefined && (typeof s !== 'number' || Number.isFinite(s))).length;
-    return { score: total > 0 ? (measured / total) * 100 : 0, measured, total };
+// Distinction « hors de portée ici » / « cassé » (2026-09-22, décision explicite de l'utilisateur
+// pendant la Ronde AUTO). Problème réel corrigé : quatre des six familles (performance, qualité de
+// sortie, cohérence logique, rejouabilité) ne peuvent structurellement PAS être mesurées sans un
+// serveur de jeu qui tourne avec du vrai trafic — ce qui n'arrive jamais pendant une Ronde. La
+// couverture affichait donc 33 % et levait une alerte à CHAQUE passage, pour une raison qui n'est
+// pas un défaut. Une alerte toujours rouge est une alerte qu'on cesse de lire, y compris le jour où
+// elle signale autre chose : c'est le vrai risque, pas le chiffre lui-même.
+// Le score porte désormais sur les seules familles qui POUVAIENT être mesurées dans ce contexte ;
+// les familles hors de portée sont comptées et nommées à part, jamais fondues dans le même chiffre.
+// Rétrocompatible à dessein : un simple tableau de scores (l'appel historique, et tous les tests
+// déjà écrits contre lui) se comporte exactement comme avant, aucune famille n'étant alors déclarée
+// hors de portée.
+export function dashboardCoverageScore(entries) {
+    const normalized = (entries ?? []).map(e => (e && typeof e === 'object' && 'score' in e ? e : { score: e, outOfReach: false }));
+    const total = normalized.length;
+    const outOfReach = normalized.filter(e => e.outOfReach);
+    const inReach = normalized.filter(e => !e.outOfReach);
+    const isMeasured = e => e.score !== undefined && (typeof e.score !== 'number' || Number.isFinite(e.score));
+    const measured = normalized.filter(isMeasured).length;
+    const measuredInReach = inReach.filter(isMeasured).length;
+    return {
+        // `score` reste la couverture parmi ce qui était atteignable — c'est lui qui déclenche
+        // l'alerte. Sans aucune famille atteignable, 100 % est la réponse honnête : rien n'a
+        // échoué, il n'y avait simplement rien à mesurer ici (jamais 0 %, qui accuserait à tort).
+        score: inReach.length > 0 ? (measuredInReach / inReach.length) * 100 : 100,
+        measured,
+        total,
+        measuredInReach,
+        inReachTotal: inReach.length,
+        outOfReach: outOfReach.map(e => e.famille).filter(Boolean),
+    };
 }
 
 // Total de blocs de test connus (2026-09-19) : compté statiquement dans le script lui-même plutôt
@@ -600,11 +627,22 @@ async function main() {
     section('KPI global — Smart Conso');
     console.log(smartConso === undefined ? 'N/A cette fois (aucune composante mesurable).' : `${pct(smartConso)} (moyenne des composantes réellement mesurées cette fois — jamais un chiffre fabriqué pour une composante absente).`);
 
-    const coverage = dashboardCoverageScore([performance, health?.overall, quality, coherence, replay, smartConso]);
+    // `live` est indéfini quand aucun serveur de jeu n'est joignable : les quatre familles qui
+    // dépendent d'un vrai trafic sont alors hors de portée par nature, pas en panne.
+    const noLiveServer = !live;
+    const coverage = dashboardCoverageScore([
+        { famille: 'Smart Breaker — performance', score: performance, outOfReach: noLiveServer },
+        { famille: 'Robustesse du code', score: health?.overall, outOfReach: false },
+        { famille: 'Qualité de sortie', score: quality, outOfReach: noLiveServer },
+        { famille: 'Cohérence logique', score: coherence, outOfReach: noLiveServer },
+        { famille: 'Rejouabilité', score: replay, outOfReach: noLiveServer },
+        { famille: 'Smart Conso', score: smartConso, outOfReach: false },
+    ]);
     section('KPI général — Couverture du tableau de bord lui-même (à surveiller en priorité)');
-    console.log(`${pct(coverage.score)} des 6 familles ont produit une vraie mesure cette exécution (${coverage.measured}/${coverage.total}).`);
-    if (coverage.score < 100) console.log('→ Action : une ou plusieurs familles n’ont renvoyé aucune mesure — vérifier si c’est normal (serveur non lancé, aucun tour joué cette session, aucun historique Smart Conso encore accumulé) ou si un branchement du tableau de bord lui-même est cassé, avant de faire confiance à la synthèse ci-dessous.');
-    else console.log('→ Lecture : les 6 familles répondent — la synthèse ci-dessous reflète bien l’état réel du projet, pas un tableau de bord partiellement éteint.');
+    console.log(`${pct(coverage.score)} des familles ATTEIGNABLES dans ce contexte ont produit une vraie mesure (${coverage.measuredInReach}/${coverage.inReachTotal}).`);
+    if (coverage.outOfReach.length) console.log(`→ Hors de portée ici, jamais un défaut : ${coverage.outOfReach.join(', ')} — ces familles ont besoin d'un serveur de jeu avec du vrai trafic, absent de cette exécution (typiquement une Ronde ou un contrôle après commit). Elles se mesurent pendant une simulation.`);
+    if (coverage.score < 100) console.log('→ Action : une famille pourtant ATTEIGNABLE n’a renvoyé aucune mesure — c’est le signal qui compte, un branchement du tableau de bord lui-même est probablement cassé. À vérifier avant de faire confiance à la synthèse ci-dessous.');
+    else console.log(`→ Lecture : tout ce qui pouvait être mesuré ici l’a été (${coverage.measured}/${coverage.total} familles au total, le reste hors de portée dans ce contexte) — rien n’indique un tableau de bord cassé.`);
 
     section('Synthèse');
     const alerts = [];
@@ -615,7 +653,7 @@ async function main() {
     if (coherence !== undefined && coherence < 90) alerts.push(`Cohérence logique à ${pct(coherence)}`);
     if (smartConsoMetrics.complianceDetail && smartConsoMetrics.complianceDetail.score < 100) alerts.push(`${smartConsoMetrics.complianceDetail.total - smartConsoMetrics.complianceDetail.confirmed} salve(s) API non confirmée(s)`);
     if (smartConsoMetrics.freshnessOk === false) alerts.push('registre Smart Conso non validé pour ce modèle');
-    if (coverage.score < 100) alerts.push(`couverture du tableau de bord à ${pct(coverage.score)} (${coverage.measured}/${coverage.total} familles mesurées)`);
+    if (coverage.score < 100) alerts.push(`couverture du tableau de bord à ${pct(coverage.score)} (${coverage.measuredInReach}/${coverage.inReachTotal} familles pourtant atteignables ici)`);
     if (alerts.length) {
         console.log(`🚨 ALERTE TABLEAU DE BORD — ${alerts.join(', ')}.`);
     } else {

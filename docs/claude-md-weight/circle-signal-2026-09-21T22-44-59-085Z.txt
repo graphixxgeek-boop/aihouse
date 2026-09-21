@@ -1,0 +1,11 @@
+=== claude-md-weight-signal ===
+Lignes : 1471 | tokens estimés : 29606 | urgence : action_requise
+Conforme progressive disclosure : false
+→ Document TOUJOURS CHARGÉ (coût payé à chaque message) : 3 aside(s) narrative(s) datée(s) repérée(s) mécaniquement (~203 tokens, candidates sûres car déjà explicitement historiques) — commencer une restructuration par celles-ci, puis trier le reste à la main (Article 19, jamais automatique).
+
+Asides datées repérées : 3
+  - *(2026-09-21, audit d'évolutivité demandé explicitement par l'utilisateur.)*
+  - *(2026-09-21, construit en réponse directe à une question de l'utilisateur : « est-ce qu'on a deja un outil qui traque les redondances, repe…
+  - *(Surnom, 2026-09-21 : « R/O-Guardian » — nom technique gardé comme nom principal partout où un slug en dépend, jamais renommé en tête de la…
+
+Snapshot écrite : docs/claude-md-weight/snapshot-2026-09-21T22-43-59-282Z.txt (CLAUDE.md a bien changé depuis la dernière snapshot).

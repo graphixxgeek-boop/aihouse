@@ -1,0 +1,19 @@
+=== tool-brain — rapport de Ronde ===
+Date : 2026-09-21T22:38:38.137Z
+
+14 outil(s) du catalogue jamais sollicité(s) : el-professor, check-spirit-mjs, the-screener, the-final-judge, the-deep-reader, smart-breaker, check-tasks-details, charter-spy, doc-report, ines-official, docs, check-house-mjs, memory-audit, find-deep-booster.
+
+Outils les moins sollicités (total cumulé, jamais remis à zéro) :
+- el-professor : 0 sollicitation(s)
+- check-spirit-mjs : 0 sollicitation(s)
+- the-screener : 0 sollicitation(s)
+- the-final-judge : 0 sollicitation(s)
+- the-deep-reader : 0 sollicitation(s)
+- smart-breaker : 0 sollicitation(s)
+- check-tasks-details : 0 sollicitation(s)
+- charter-spy : 0 sollicitation(s)
+- doc-report : 0 sollicitation(s)
+- ines-official : 0 sollicitation(s)
+
+Auto-diagnostic (périmètre tool-brain uniquement, jamais un audit du paysage entier) :
+- tool-brain a été sollicité 6 fois, mais jamais spontanément — signe que le réflexe n'est pas encore acquis, seulement le rappel mécanique.

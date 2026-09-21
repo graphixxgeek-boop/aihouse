@@ -117,7 +117,33 @@ function main() {
     "Marqueurs TODO/FIXME :",
     ...(todos.length ? todos.map(t => `  ${t.file}:${t.line} — ${t.text}`) : ["  Aucun."]),
   ].join("\n") + "\n");
-  console.log(`\nRapport archivé : docs/argus/${runId}.txt (voir docs/argus/index.md pour l'historique)`);
+  const indexed = indexArgusScan(runId, { dead, todos });
+  console.log(`\nRapport archivé : docs/argus/${runId}.txt${indexed ? " — et indexé automatiquement dans docs/argus/index.md" : " (déjà présent dans docs/argus/index.md)"}`);
+}
+
+// Auto-indexation du scan qui vient d'être écrit (2026-09-22, Ronde CIRCLE-TASKS en mode AUTO).
+// Cause racine réelle, corrigée ICI plutôt que chez chaque appelant (Article 3) : ce script écrivait
+// bien son rapport mais n'a JAMAIS ajouté la ligne d'index correspondante, alors que trois chemins
+// distincts l'appellent (crochet post-commit, runNetworkCheck() de LE-COORDINATEUR, la version
+// modernisée d'HYPER-SCAN-CHECKPOINT). Résultat : cinq scans orphelins à rattraper à la main en deux
+// jours, dont un pendant la Ronde qui a trouvé ce trou. Corriger l'appelant aurait laissé les deux
+// autres chemins produire des orphelins — la correction n'a de sens qu'à la source.
+// Ligne volontairement FACTUELLE (le décompte mécanique, jamais un jugement) : la colonne
+// "Trouvailles confirmées" d'un vrai passage reste la plume de l'agent, qui écrase cette ligne
+// quand il a réellement lu le scan. Écrire une ligne pauvre mais présente vaut mieux qu'un orphelin
+// invisible à `findOrphanReportFiles()` — même principe d'absence honnête que le reste du paysage.
+export function indexArgusScan(runId, { dead = [], todos = [] } = {}, indexPath = join(ROOT, "docs/argus/index.md")) {
+  if (!existsSync(indexPath)) return false;
+  const text = readFileSync(indexPath, "utf8");
+  if (text.includes(runId)) return false;
+  const lines = text.split("\n");
+  const headerIdx = lines.findIndex(l => /^\|\s*-+\s*\|/.test(l.replace(/\s/g, " ")) || /^\|[-\s|]+\|$/.test(l));
+  if (headerIdx === -1) return false;
+  const date = runId.slice("scan-".length, "scan-".length + 10);
+  const row = `| ${date} | [${runId}.txt](${runId}.txt) | ${dead.length} champ(s) candidat(s), ${todos.length} marqueur(s) TODO/FIXME | Indexé automatiquement à l'écriture du scan (jamais relu par un humain à ce stade — cette ligne est un décompte mécanique, à écraser par un vrai constat si le scan est réellement analysé). |`;
+  lines.splice(headerIdx + 1, 0, row);
+  writeFileSync(indexPath, lines.join("\n"));
+  return true;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

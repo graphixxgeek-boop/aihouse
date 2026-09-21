@@ -1,0 +1,1 @@
+Aucune idée en attente de décision : detectPendingIdeaCandidates() remonte 0 candidat (plancher tâche #332) sur 283 tâches — aucune question à 3 voies à poser cette Ronde.

@@ -1,0 +1,7 @@
+=== SMART CONSO API — scan des schémas de consommation réels ===
+
+Aucun schéma coûteux repéré dans l'historique réel accumulé.
+
+=== Garde-fou fiabilité — salves d'activité jamais confirmées ===
+
+Aucune salve d'activité récente sans consultation préalable — discipline respectée.

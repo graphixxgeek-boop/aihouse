@@ -1,0 +1,22 @@
+⏭️  Aucun commit nouveau depuis le dernier passage complet (2026-09-21T22:40:12.993Z) — relancé quand même, purement informatif.
+
+=== LE-COORDINATEUR — synthèse gratuite du réseau d'outils ===
+
+| Outil | Résultat | Dernier passage |
+|---|---|---|
+| check-house.mjs (suite de tests) | ok | 2026-09-21T22:41:12.258Z |
+| AXA-CHECK (couverture réelle par fonction) | 99% | 2026-09-21T22:41:12.258Z |
+| ARGUS (mécanique) | à regarder (6 candidat(s)) | 2026-09-21T22:41:12.258Z |
+| HARMONIA (mécanique) | ok | 2026-09-21T22:41:12.258Z |
+| ALWAYS-NEW-CODE (préparation) | zone recommandée : Cycle jour/nuit | 2026-09-21T22:41:12.258Z |
+| CLEAN-DIRTY-OLD (repérage seul) | ok | 2026-09-21T22:41:12.258Z |
+| Smart Conso API (salves jamais confirmées) | ok | 2026-09-21T22:41:12.258Z |
+| SMART-CONSO-TOKEN (rythme 7 derniers jours) | 16 action(s) — {"scan":4,"charter_size_tax":3,"agent_subagent_spawn":1,"full_repo_scope":4,"proposition_appliquee":1,"assess":3} | 2026-09-21T22:41:12.258Z |
+| SMART-CONSO-TOKEN (spawns THE-FINAL-JUDGE sans consultation confirmée) | ok | 2026-09-21T22:41:12.258Z |
+| SMART-CONSO-TOKEN (spawns THE-DEEP-READER sans consultation confirmée) | ok | 2026-09-21T22:41:12.258Z |
+| SMART-CONSO-TOKEN (passages HYPER-SCAN-CHECKPOINT complets sans consultation confirmée) | ok | 2026-09-21T22:41:12.258Z |
+| AXA-CHECK (Agents absents d'AGENT_SCRIPT_FILES) | ok | 2026-09-21T22:41:12.258Z |
+| Doc-Report (rapports orphelins jamais indexés) | à regarder (argus: 1) | 2026-09-21T22:41:12.258Z |
+
+Ceci reste un tableau de synthèse, jamais un verdict : relire la sortie complète de l'outil concerné avant d'agir sur une ligne "à regarder" (cf. docs/regles-de-travail.md, aucun de ces outils n'est autonome).
+Jamais déclenché ici : HYPER-SCAN-CHECKPOINT (version complète), Smart Conso API, ou une simulation — toujours une décision explicite séparée, jamais une initiative du coordinateur.

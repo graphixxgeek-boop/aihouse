@@ -1,0 +1,1 @@
+Aucun écart : checkChantierFileFreshness() sur 283 tâches de suivi ne remonte aucun chantier dont le fichier préliminaire serait plus ancien que la tâche qui le mentionne.

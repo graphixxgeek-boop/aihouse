@@ -1,0 +1,12 @@
+ARGUS — balayage mécanique — 2026-09-21T22:41:25.671Z
+
+Champs de life.ts potentiellement jamais lus ailleurs :
+  [probable] trottoirGranted (3 occurrence(s))
+  [probable] ambientSeen (4 occurrence(s))
+  [probable] observerNamed (4 occurrence(s))
+  [probable] exitSearched (4 occurrence(s))
+  [probable] proposalHistoryChecked (4 occurrence(s))
+  [probable] personalBoosted (4 occurrence(s))
+
+Marqueurs TODO/FIXME :
+  Aucun.

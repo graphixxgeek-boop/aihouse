@@ -1,0 +1,59 @@
+# Observation — 2026-09-22T02:45:00Z
+
+**Source** : session en cours (`session_0151JrVYzJ2bdCShaXhFAjLo`), segment couvrant la finalisation
+de circle-process-guardian, la construction du protocole de changement de modèle IA, un message à
+8 points distincts (snapshot THE-KING, rôle d'HYPER-SCAN-CHECKPOINT, discipline d'exécution,
+branchements Smart Conso, utilité réelle des outils listés dans CLAUDE.md, mise en to-do, lancement
+de la Ronde), la correction d'une erreur de compréhension sur le point 3, la modernisation
+d'HYPER-SCAN-CHECKPOINT, son intégration dans CIRCLE-TASKS, le passage de circle-process-guardian à
+un rôle à 2 niveaux, et l'exécution de la Ronde AUTO sous Opus 5 (~01:15Z à ~02:45Z).
+
+## Signaux extraits
+
+### Nouveau
+
+- **Récupère la valeur d'une erreur de communication plutôt que de la faire annuler.** Preuve : après
+  avoir constaté que j'avais construit `verifyHyperScanProcess()` sur une mauvaise lecture du point 3,
+  ne demande pas de la retirer — demande d'abord de garder le travail via une question explicite
+  (« si tu as implanté une chose dans circle.process qui n'est pas la bonne, propose moi avec une
+  question de la garder »), puis d'ajouter ce qu'il fallait vraiment, puis d'aller jusqu'à intégrer
+  HYPER-SCAN-CHECKPOINT à CIRCLE-TASKS pour que la vérification ait un sens (« je veux aussi
+  rentabiliser notre erreur de comprehnsion »). Trois messages successifs qui transforment une
+  dépense perdue en trois vraies fonctionnalités.
+- **Conçoit un rôle d'outil en deux niveaux distincts plutôt qu'un seul.** Preuve : « je veux qu'il
+  soit à la fois là pour t'aider, à la fois la pour veiller à ce que tu respectes bien les process de
+  circles. tu vois le principe ? 2 niveaux. » — demande explicite d'une double vocation (assistance à
+  la mise à jour + surveillance de la discipline) pour un outil déjà construit avec une seule, plutôt
+  que d'en créer un second.
+- **Remet en cause l'utilité d'une pratique installée de longue date, sans la supposer acquise ni la
+  condamner d'avance.** Preuve : sur les outils listés dans CLAUDE.md — « à la base nous avions mis
+  des regles de codage qui sont devenues des outils. mais en fait, tout ca est-il bien utile vs la
+  ronde ? [...] peux tu verifier la pertinence des elements presents dans claude.md et si ca
+  t'apporte vraiment quelque chose ? est-ce qu'un outil peut t'aider à faire ce travail, regarde. »
+  Trois mouvements dans une seule question : douter, demander une vérification réelle, et chercher
+  l'outil déjà existant qui pourrait la faire — jamais une conclusion posée d'avance.
+- **Corrige une erreur de lecture en réaffirmant la règle générale plutôt qu'en se contentant du cas
+  précis.** Preuve : après avoir rectifié que le point 3 portait sur la double communication et non
+  sur HYPER-SCAN-CHECKPOINT, ajoute « on s'est bien compris, pas d'erreur de communication. rappelle :
+  si tu as un doute, pose moi la question. » — la correction ponctuelle sert de support à un rappel
+  de méthode durable (cohérent avec l'Article 16).
+
+### Déjà observé, confirmé
+
+- **Redirige par impératifs brefs et répétés quand plusieurs fils avancent en parallèle** (déjà noté
+  le 2026-09-22T00:05Z) : « continues ce que tu fais », « ensuite reprends là ou tu en etais »,
+  « continues ce que tu fais en parallele », « mais finis aussi tout ce que tu etais en train de
+  faire » — quatre relances dans le même segment, jamais une remise en cause du travail, seulement
+  un refus que l'un des fils soit abandonné pour l'autre.
+- **Répond systématiquement « recommandé » une fois les enjeux bien expliqués** (déjà noté à plusieurs
+  reprises) : confirmé ici sur la fenêtre « garder le travail issu de l'erreur » (choix « Garder
+  (Recommandé) ») et sur le mode de Ronde (choix « AUTO (Recommandé) »).
+
+## Ce que ça change concrètement pour l'agent
+
+- Une erreur de compréhension se signale et se corrige, mais ne se jette pas : proposer d'abord ce que
+  le travail déjà fait peut légitimement servir, avant de proposer de le retirer.
+- Quand un nouvel outil est demandé, vérifier s'il ne s'agit pas d'un second niveau à ajouter à un
+  outil existant plutôt que d'un outil de plus.
+- Une question qui commence par « est-ce que c'est vraiment utile ? » attend une vérification réelle
+  contre le dépôt, jamais une réponse d'opinion — et de préférence menée par un outil déjà construit.

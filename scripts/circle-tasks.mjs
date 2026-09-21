@@ -501,6 +501,29 @@ export function findRegistriesMissingFromCircle(existingPaths, items = CIRCLE_IT
   return registrySlugs.filter((slug) => !(slug in CIRCLE_EXCLUDED_REGISTRIES) && !items.some((i) => slug.includes(i.id) || i.id.includes(slug)));
 }
 
+// findPromisedFilesMissing() (2026-09-22, Ronde CIRCLE-TASKS en mode AUTO — Article 24).
+// Trou réel qui a motivé cette fonction : `docs/profil-utilisateur/profil-actuel.txt` n'avait JAMAIS
+// été créé, alors que DEUX documents promettaient noir sur blanc qu'il serait réécrit à chaque
+// Ronde (l'`execute` de l'item `profil` ci-dessus, et `docs/regles-de-travail.md` §9) — une promesse
+// écrite sans aucun mécanisme pour la vérifier, exactement ce que l'Article 24 interdit. La Ronde
+// l'a découvert par hasard en tentant de l'écraser, pas par un contrôle.
+// Volontairement une liste COURTE et explicite plutôt qu'un balayage de tous les chemins cités dans
+// la documentation : un tel balayage produirait surtout des faux positifs (chemins d'exemple,
+// fichiers locaux jamais committés, dossiers créés à la demande). Chaque entrée nomme la promesse
+// qu'elle garde, jamais un chemin nu — et l'ajout d'une entrée reste une décision humaine
+// documentée, la nature manuelle de cette liste étant ici écrite noir sur blanc comme l'Article 24
+// l'exige pour un contenu curaté.
+export const CIRCLE_PROMISED_FILES = [
+  {
+    path: "docs/profil-utilisateur/profil-actuel.txt",
+    promesse: "l'item `profil` de la Ronde et docs/regles-de-travail.md §9 disent tous deux que ce fichier est écrasé à chaque passage (demande explicite du 2026-09-21 : « mon profil utilisateur à part, dans un fichier txt »)",
+  },
+];
+
+export function findPromisedFilesMissing(existsImpl = existsSync, promised = CIRCLE_PROMISED_FILES, root = ROOT) {
+  return promised.filter((p) => !existsImpl(join(root.replace(/\/$/, ""), p.path)));
+}
+
 // oldestOpenTaskDate() (2026-09-20) : lit directement le résultat déjà calculé par
 // categorizeAllSessions() (check-suivi-fidelity.mjs, jamais un second parseur de docs/suivi/) et
 // retient la date la plus ancienne parmi les tâches "ouverte"/"en cours" — la colonne horodatage
@@ -944,6 +967,9 @@ function main() {
   const rootNoSlash = ROOT.replace(/\/$/, "");
   const missingRegistries = findRegistriesMissingFromCircle(walkDocsPaths(`${rootNoSlash}/docs`, rootNoSlash));
   if (missingRegistries.length) console.log(red(`${ALERT_ICON} Registre(s) sans item ni exclusion documentée dans la Ronde : ${missingRegistries.join(", ")} — à ajouter à CIRCLE_ITEMS ou à CIRCLE_EXCLUDED_REGISTRIES avec sa raison.`));
+  for (const missing of findPromisedFilesMissing()) {
+    console.log(red(`${ALERT_ICON} Fichier promis par la documentation mais ABSENT du disque : ${missing.path} — ${missing.promesse}.`));
+  }
 }
 
 // `record-run` (2026-09-21, trouvaille de la première vraie Ronde AUTO, tâche #336) : recordCircleTasksRun()

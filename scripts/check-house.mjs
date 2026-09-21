@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 260'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 261'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -2487,7 +2487,33 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(qualityScore({turns:10,antiEchoInterventions:1}),90);
   assert.equal(coherenceScore({turns:10,truncationInterventions:{1:1,2:0}}),90);
   assert.equal(replayabilityScore({distinctBonuses:8,totalBonusTypes:9}),(8/9)*100);
-  assert.deepEqual(dashboardCoverageScore([100,undefined,90,80,undefined]),{score:60,measured:3,total:5});
+  // Appel historique (un simple tableau de scores) : le contrat d'origine doit rester intact au
+  // token près après l'ajout de la distinction "hors de portée" du 2026-09-22 — score, measured et
+  // total inchangés, aucune famille jamais déclarée hors de portée quand l'appelant n'en dit rien.
+  assert.deepEqual(dashboardCoverageScore([100,undefined,90,80,undefined]),{score:60,measured:3,total:5,measuredInReach:3,inReachTotal:5,outOfReach:[]},'a plain array of scores must keep the exact historical contract, never silently change meaning');
+  // Distinction "hors de portée ici" / "cassé" (2026-09-22) : une famille non mesurée PARCE QUE le
+  // contexte ne le permettait pas ne doit jamais faire baisser le score ni déclencher l'alerte —
+  // sinon l'alerte est rouge en permanence et on cesse de la lire.
+  assert.deepEqual(
+    dashboardCoverageScore([
+      {famille:'Robustesse',score:100,outOfReach:false},
+      {famille:'Smart Conso',score:71,outOfReach:false},
+      {famille:'Qualité',score:undefined,outOfReach:true},
+      {famille:'Cohérence',score:undefined,outOfReach:true},
+    ]),
+    {score:100,measured:2,total:4,measuredInReach:2,inReachTotal:2,outOfReach:['Qualité','Cohérence']},
+    'families out of reach in this context must be named apart and never drag the score down',
+  );
+  // À l'inverse, une famille ATTEIGNABLE mais muette est le vrai signal : elle doit bien faire
+  // chuter le score, c'est le seul cas où l'alerte a un sens.
+  assert.equal(
+    dashboardCoverageScore([{famille:'Robustesse',score:undefined,outOfReach:false},{famille:'Smart Conso',score:71,outOfReach:false},{famille:'Qualité',score:undefined,outOfReach:true}]).score,
+    50,
+    'a family that was reachable yet returned nothing must still lower the score — that is the only case worth an alert',
+  );
+  // Aucune famille atteignable : 100% est la réponse honnête (rien n'a échoué, il n'y avait rien à
+  // mesurer), jamais 0% qui accuserait un tableau de bord parfaitement sain.
+  assert.equal(dashboardCoverageScore([{famille:'Qualité',score:undefined,outOfReach:true}]).score,100,'with nothing reachable at all, the honest answer is 100%, never a 0% that accuses a healthy dashboard');
   // Fixture construite par concaténation (jamais le motif "console.log(<guillemet>Passed:" écrit
   // tel quel dans CE fichier) : sinon expectedTestBlockCount(), en lisant plus tard le vrai contenu
   // de check-house.mjs, compterait aussi cette ligne de test elle-même — un bug auto-référentiel
@@ -2655,6 +2681,27 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const perf=checkpointPerformance(twoRowIndex);
   assert.equal(perf.passages,2);assert.equal(perf.totalFindings,2);assert.equal(perf.findingsPerPassage,1);assert.equal(perf.hitRate,50,'exactly one of the two recorded passages found something real, so the hit rate — the tool\'s actual vocation per the user\'s explicit framing — must read 50%, not an average that would hide it');
   assert.deepEqual(summarizeArgusOutput('[confirmé] a\n[probable] b\nMarqueurs TODO/FIXME trouvés (3) :'),{candidatsDetectes:2,todos:3});
+
+  // indexArgusScan() (2026-09-22, Ronde CIRCLE-TASKS en mode AUTO) : check-argus.mjs écrivait son
+  // rapport sans jamais ajouter la ligne d'index correspondante, alors que TROIS chemins l'appellent
+  // (crochet post-commit, runNetworkCheck(), HYPER-SCAN-CHECKPOINT) — cinq orphelins à rattraper à
+  // la main en deux jours. Corrigé à la source (Article 3), donc testé à la source.
+  const {indexArgusScan}=await import('../scripts/check-argus.mjs');
+  const argusTmp=fs.mkdtempSync(path.join(os.tmpdir(),'argus-index-'));
+  const argusIdx=path.join(argusTmp,'index.md');
+  fs.writeFileSync(argusIdx,'# ARGUS\n\n| Date | Rapport | Trouvailles confirmées | Notes |\n|---|---|---|---|\n| 2026-09-20 | [vieux.txt](vieux.txt) | rien | note |\n');
+  assert.equal(indexArgusScan('scan-2026-09-22-03-00',{dead:[1,2],todos:[3]},argusIdx),true,'a brand-new scan must be indexed and report that it was');
+  const afterFirst=fs.readFileSync(argusIdx,'utf8');
+  assert.ok(afterFirst.includes('[scan-2026-09-22-03-00.txt](scan-2026-09-22-03-00.txt)'),'the new row must link the scan file by its real name');
+  assert.ok(afterFirst.indexOf('scan-2026-09-22-03-00')<afterFirst.indexOf('vieux.txt'),'the newest scan must be inserted at the TOP of the table, matching how this index is read (newest first)');
+  assert.ok(/\| 2026-09-22 \|/.test(afterFirst),'the date column must come from the scan id itself, never from the clock at index time');
+  assert.ok(afterFirst.includes('2 champ(s) candidat(s), 1 marqueur(s) TODO/FIXME'),'the row must carry the mechanical counts, the only thing this function can honestly claim to know');
+  assert.equal(indexArgusScan('scan-2026-09-22-03-00',{dead:[1,2],todos:[3]},argusIdx),false,'re-indexing the same scan must be a no-op — the hook can run twice on the same file without duplicating its row');
+  assert.equal(fs.readFileSync(argusIdx,'utf8'),afterFirst,'a no-op re-index must leave the file byte-for-byte unchanged, never rewrite it');
+  assert.equal(indexArgusScan('scan-x',{},path.join(argusTmp,'absent.md')),false,'a missing index file must return false rather than throw — writing a scan must never fail because its index disappeared');
+  fs.writeFileSync(path.join(argusTmp,'no-table.md'),'# ARGUS\n\nAucun tableau ici.\n');
+  assert.equal(indexArgusScan('scan-y',{},path.join(argusTmp,'no-table.md')),false,'an index with no table separator must be left alone rather than corrupted by a row inserted at a guessed position');
+  fs.rmSync(argusTmp,{recursive:true,force:true});
   assert.deepEqual(summarizeHarmoniaOutput('2 friction(s) confirmée(s) sur 5 lien(s) vérifié(s).'),{frictions:2,liensVerifies:5});
   assert.deepEqual(summarizeHarmoniaOutput('rien à voir ici'),{frictions:undefined,liensVerifies:undefined},'unparseable HARMONIA output must never be silently miscounted as zero');
 
@@ -4060,6 +4107,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     shouldRemindCircleTasks, REMINDER_COMMIT_THRESHOLD, ALERT_ICON, REPORT_ICON, FINAL_JUDGE_TOKEN_COST,
     THEME_ORDER, groupCircleReportByTheme, oldestOpenTaskDate,
     buildCircleRunSummaryText, buildCircleRunSummaryHtml, findRegistriesMissingFromCircle, CIRCLE_EXCLUDED_REGISTRIES,
+    findPromisedFilesMissing, CIRCLE_PROMISED_FILES,
     recommendCircleSelection, NOT_RECOMMENDED_BY_DEFAULT, primeAddableItems,
     costlyItemDueStatus, COSTLY_DUE_THRESHOLD_DAYS, recommendCircleSelectionWithPeriodicity, COSTLY_SUBSTITUTES,
     recordCircleItemReport, CIRCLE_REPORT_FOLDERS, recordSnapshotIfChanged,
@@ -4373,6 +4421,18 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(findRegistriesMissingFromCircle(new Set(['docs/brand-new-tool/index.md']), fakeItems), ['brand-new-tool'], 'a genuinely new registry with neither a matching CIRCLE_ITEMS entry nor a documented exclusion must be flagged by name — the exact real gap the user pointed out, now caught mechanically for any future tool');
   assert.deepEqual(findRegistriesMissingFromCircle(new Set(['not-a-registry.md', 'docs/argus/other-file.md']), fakeItems), [], 'only real docs/<slug>/index.md paths count as a registry — an unrelated file or a non-index file inside a known folder must never be mistaken for one');
   assert.ok(Object.keys(CIRCLE_EXCLUDED_REGISTRIES).every((k) => typeof CIRCLE_EXCLUDED_REGISTRIES[k] === 'string' && CIRCLE_EXCLUDED_REGISTRIES[k].length > 0), 'every excluded registry must carry an actual documented reason, never a bare name with no explanation');
+
+  // findPromisedFilesMissing() (2026-09-22, Article 24) : trou réel — profil-actuel.txt était promis
+  // par DEUX documents et n'existait pas, personne ne le vérifiait. L'injection de `existsImpl` est
+  // ce qui rend ce test possible sans toucher au vrai disque.
+  const fakePromised = [{ path: 'docs/a/promis.txt', promesse: 'raison A' }, { path: 'docs/b/promis.txt', promesse: 'raison B' }];
+  assert.deepEqual(findPromisedFilesMissing(() => true, fakePromised, '/root'), [], 'when every promised file exists on disk, nothing must be flagged');
+  assert.deepEqual(findPromisedFilesMissing((p) => !p.includes('docs/b/'), fakePromised, '/root').map((e) => e.path), ['docs/b/promis.txt'], 'a promised file absent from disk must be flagged by its own path, never silently tolerated');
+  assert.ok(findPromisedFilesMissing(() => false, fakePromised, '/root').every((e) => typeof e.promesse === 'string' && e.promesse.length > 0), 'every flagged entry must carry the promise it guards, never a bare path with no explanation of why it should exist');
+  assert.ok(CIRCLE_PROMISED_FILES.length > 0 && CIRCLE_PROMISED_FILES.every((e) => e.path && e.promesse), 'the real curated list must be non-empty and every entry must name the promise it keeps (Article 24 requires a curated list to state its manual nature explicitly)');
+  // Vérifié en direct contre le vrai disque, pas seulement une fixture : le fichier réellement
+  // promis doit exister MAINTENANT — c'est ce test qui aurait fait échouer le commit d'avant.
+  assert.deepEqual(findPromisedFilesMissing(), [], 'every file the documentation promises must actually exist in the repository right now — profil-actuel.txt was missing for a full day before this guard existed');
   // Vérifié en direct contre l'état réel du dépôt (pas seulement une fixture synthétique, même
   // discipline que checkHtmlWiring()) : aucun registre réel n'est aujourd'hui orphelin.
   const realExistingPaths = walkDocsPaths('docs', '');

@@ -1,0 +1,1 @@
+docs/ines-official/index.md est VIDE (en-tête de tableau seul, aucune ligne) : aucune édition consolidée n'a jamais été produite depuis la construction de l'outil le 2026-09-21. Proposition, jamais lancée sans confirmation : une première édition `node scripts/ines-official.mjs code` pour inaugurer le registre.
