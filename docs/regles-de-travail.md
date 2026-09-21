@@ -1858,11 +1858,22 @@ son propre fichier créé DÈS la première idée exprimée à son sujet, jamais
 fichier existe pour être notée.
 
 **Vérification, jamais seulement une intention déclarée** (même discipline que le reste de cette
-section : « le contrôle passe par la preuve »). THE-DEEP-READER, qui relit déjà l'historique complet
-de la conversation contre `docs/suivi/`, est le candidat naturel pour vérifier RÉTROACTIVEMENT
-qu'aucune idée mentionnée sur un gros chantier n'est restée hors de son fichier préliminaire —
-extension proposée ici, pas encore construite (aucun code écrit ce soir), pour ne pas laisser cette
-garantie reposer uniquement sur la vigilance de l'agent au moment où l'idée est dite.
+section : « le contrôle passe par la preuve »). **Corrigé le 2026-09-22, remarque directe de
+l'utilisateur** (« je pensais à check-tasks-details plutôt, non ? ») — le premier réflexe (THE-
+DEEP-READER) visait trop haut pour le cas le plus fréquent : THE-DEEP-READER relit l'historique
+COMPLET de la conversation, un vrai appel d'agent séparé, coûteux (Article 22/SMART-CONSO-TOKEN à
+consulter avant chaque lancement). Pour le cas courant — une idée déjà notée en tâche de suivi
+(`docs/suivi/`) mais pas encore recopiée dans son fichier préliminaire — **check-tasks-details est
+le bon outil, gratuit et déjà construit** : il lit déjà le thème de chaque tâche (`splitSujet()`,
+ex. « Conception / Nouvel outil (CASSANDRA-RH) ») ; une extension naturelle (pas encore codée)
+compare la date de la dernière tâche de suivi sur un chantier connu à la date de dernière
+modification de son fichier préliminaire (même patron que `lastTouchDays()`, déjà réutilisé
+ailleurs) et signale un écart — mécanique, zéro coût API. **THE-DEEP-READER reste utile, mais
+seulement pour le cas plus rare et plus profond** : une idée dite en conversation qui n'aurait
+JAMAIS atteint `docs/suivi/` non plus — un angle mort que check-tasks-details ne peut structurellement
+pas voir, puisqu'il ne lit jamais la conversation elle-même. Les deux se complètent en couches
+(gratuite d'abord, coûteuse seulement si la première ne suffit pas), jamais l'une à la place de
+l'autre.
 
 ---
 
