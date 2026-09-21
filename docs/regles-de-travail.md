@@ -1831,6 +1831,39 @@ section-ci dit COMMENT suivre le travail dans la durée, ces sections-là disent
 l'utilisateur au moment où le message arrive ; les deux se complètent, jamais l'une à la place de
 l'autre.
 
+**Idées dites en avance sur un « gros chantier » → fichier préliminaire dédié (2026-09-22, demande
+explicite de l'utilisateur : « lorsqu'une idée est dite en avance au sujet d'un chantier à venir,
+cette idée est automatiquement enregistrée sur un fichier préliminaire dédié [...] surtout si le
+chantier en question est un gros morceau du projet comme CASSANDRA ou la refonte »).** Distinct des
+trois cas ci-dessus (qui couvrent toute idée, petite ou grande, vers la liste de tâches technique
+générale) : une idée qui concerne spécifiquement un chantier déjà identifié comme un gros morceau du
+projet ne suffit pas à rejoindre ce suivi générique — elle doit être consignée LE MÊME TOUR dans le
+fichier préliminaire dédié à ce chantier précis. Ce patron existait déjà en pratique, sans avoir été
+nommé explicitement jusqu'ici (`docs/cassandra-rh-conception.md` pour CASSANDRA-RH,
+`docs/referentiel/regles-des-graphismes.md` pour la refonte graphique) — la règle rend cette
+discipline explicite plutôt que de compter sur le simple réflexe.
+
+*Registre des chantiers connus → fichier préliminaire, à tenir à jour à chaque nouveau chantier de
+cette ampleur reconnu :*
+- CASSANDRA-RH → `docs/cassandra-rh-conception.md`
+- Refonte graphique → `docs/referentiel/regles-des-graphismes.md`
+
+**Ce qui distingue un « gros morceau » d'une idée ordinaire** : un chantier qui va occuper plusieurs
+sessions de construction, avec ses propres arbitrages de conception à accumuler AVANT que le premier
+code ne soit écrit — le critère déjà appliqué de fait à CASSANDRA-RH et à la refonte graphique. Une
+idée ponctuelle sur un outil déjà existant (une amélioration, un bug) reste sur son registre habituel
+(`docs/referentiel/points-fragiles.md`, ou directement corrigée) — jamais dans un fichier
+préliminaire, qui grossirait sans discrimination sinon. Un nouveau chantier de cette ampleur reçoit
+son propre fichier créé DÈS la première idée exprimée à son sujet, jamais une idée qui attend qu'un
+fichier existe pour être notée.
+
+**Vérification, jamais seulement une intention déclarée** (même discipline que le reste de cette
+section : « le contrôle passe par la preuve »). THE-DEEP-READER, qui relit déjà l'historique complet
+de la conversation contre `docs/suivi/`, est le candidat naturel pour vérifier RÉTROACTIVEMENT
+qu'aucune idée mentionnée sur un gros chantier n'est restée hors de son fichier préliminaire —
+extension proposée ici, pas encore construite (aucun code écrit ce soir), pour ne pas laisser cette
+garantie reposer uniquement sur la vigilance de l'agent au moment où l'idée est dite.
+
 ---
 
 # Partie B — Spécificités propres à Claude Code

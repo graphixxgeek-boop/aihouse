@@ -136,6 +136,26 @@ successives à la demande explicite de l'utilisateur. Reprises ici depuis `docs/
 3. **Absence de défaut technique visible** — chevauchements, textures qui clignotent, géométrie
    cassée, personnage hors-cadre, HUD qui masque une information utile.
 
+**To-do pour la refonte graphique elle-même (2026-09-22, idée dite en avance par l'utilisateur) :
+booster THE-SCREENER et le calibrer sur les préférences réelles de l'utilisateur.** Contexte qui
+motive cette priorité : l'avis de THE-SCREENER va compter davantage une fois la refonte lancée
+(caméra dynamique, transitions, interface entièrement repensée) — pas seulement une note indicative
+en passant. Deux volets, à traiter au moment du chantier, jamais devinés d'avance :
+1. **« Booster » l'agent** — portée exacte à calibrer à ce moment-là (plus de captures que les 2
+   actuelles ? un axe de jugement en plus que les 3 critères ci-dessus, ex. caméra/mouvement ?).
+2. **Calibrer sur les préférences réelles de l'utilisateur** — aujourd'hui THE-SCREENER ne juge que
+   contre les 3 critères génériques ci-dessus ; le calibrer sur des goûts personnels précis
+   (exemples concrets à demander à l'utilisateur au moment venu) reste entièrement à définir.
+
+**Rappel honnête au moment où cette idée est notée** (trouvé en vérifiant le registre réel,
+`docs/the-screener/index.md`) : THE-SCREENER n'a encore JAMAIS produit un vrai rapport à ce jour,
+malgré plusieurs simulations complètes depuis sa construction — le mécanisme de capture est testé et
+fonctionnel en isolation, mais jamais réellement déclenché pendant une vraie simulation (fermeture
+automatique des popups d'accueil restée à faire, cf. `docs/referentiel/the-screener.md`). Ce
+rattrapage (le faire tourner au moins une fois pour de vrai) est un préalable naturel avant de
+parler de le « booster » — inutile d'enrichir un outil qu'on n'a jamais vu produire un résultat réel.
+Détail complet de ce constat : `docs/referentiel/points-fragiles.md`.
+
 ## Ordre de grandeur du chantier (organisation, pas encore un planning tranché)
 
 Ce périmètre couvre en réalité plusieurs sous-chantiers de complexité très inégale — à séquencer

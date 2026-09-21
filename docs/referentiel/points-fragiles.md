@@ -97,3 +97,19 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   existe ailleurs dans le projet — cf. recherche exhaustive du 2026-09-20, rien trouvé) ; à garder en
   tête si ce mode d'usage apparaît un jour. Le vrai correctif de fond est comportemental, pas du
   code : ne plus jamais effacer ce fichier soi-même pour un « reset complet ».
+- **THE-SCREENER n'a jamais produit un vrai rapport, malgré plusieurs simulations complètes depuis
+  sa construction (2026-09-22, question directe de l'utilisateur)** — vérifié dans le registre réel :
+  `docs/the-screener/index.md` affirme toujours « Aucun passage archivé pour l'instant », malgré
+  full_sim10/11/16/17 exécutées depuis. Cause confirmée : le mécanisme de capture
+  (`scripts/the-screener-capture.mjs`) est testé et fonctionnel EN ISOLATION, mais n'a jamais été
+  réellement déclenché PENDANT une simulation Article 18 — la fermeture automatique des popups
+  d'accueil et le raccordement des 2 déclencheurs (état courant / moment distinctif) à l'état réel
+  de la partie restent, comme noté depuis le 2026-09-19/20, « à faire au moment de la prochaine
+  simulation » sans que personne (agent inclus) n'y soit jamais revenu. Un vrai oubli process, pas
+  une décision assumée — à corriger avant ou pendant la refonte graphique (cf.
+  `docs/referentiel/regles-des-graphismes.md`, où l'utilisateur prévoit justement de « booster » cet
+  agent). Effet de bord noté au passage : le signal de fraîcheur de Doc-Report (mtime du dernier
+  commit touchant le dossier) affiche un âge récent même quand ce dossier ne contient qu'un
+  `index.md` jamais réellement peuplé — une limite honnête de cette heuristique (elle mesure quand
+  le DOSSIER a été touché, pas si un vrai rapport y a été ajouté), à garder en tête en lisant ce
+  signal pour un registre encore vide, pas un bug à corriger d'urgence.
