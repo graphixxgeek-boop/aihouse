@@ -2289,6 +2289,34 @@ pas voir, puisqu'il ne lit jamais la conversation elle-même. Les deux se compl�
 (gratuite d'abord, coûteuse seulement si la première ne suffit pas), jamais l'une à la place de
 l'autre.
 
+**Toute idée nouvelle, pas seulement les « gros chantiers » nommés → question à 3 voies EN TEMPS
+RÉEL (2026-09-21, demande explicite de l'utilisateur : « à chaque fois que je propose une nouvelle
+idée [...] cette fenêtre devrait s'ouvrir »).** Généralise le patron ci-dessus au-delà des seuls
+« gros morceaux » nommés (CASSANDRA-RH, refonte graphique...) : dès qu'une idée de nouvel outil ou de
+conception nouvelle est développée en conversation — la mienne comme celle de l'utilisateur — le
+réflexe PRINCIPAL et immédiat est de poser, via une fenêtre à choix dédiée (format Article 16), la
+question à 3 voies :
+1. Créer un fichier préliminaire dédié à cette idée précise (comme pour un « gros chantier »
+   ci-dessus, à toute échelle — pas seulement les quatre déjà nommés dans le registre).
+2. Abandonner l'idée (décision réservée exclusivement à l'utilisateur, jamais déduite par l'agent).
+3. « Entre-deux » : l'idée reste notée (dans `docs/suivi/` comme toute tâche substantielle, cf.
+   Article 13/`docs/systeme-de-suivi.md`) mais aucun fichier n'est créé pour l'instant — décision
+   explicitement réversible dans les deux sens (relancer une idée abandonnée, ou au contraire
+   abandonner une idée restée entre-deux), jamais un état figé.
+
+Une décision « entre-deux » n'est jamais définitive : elle reste ouverte tant que l'utilisateur n'a
+pas explicitement tranché pour un fichier ou un abandon. **Ce réflexe en temps réel est le mécanisme
+PRINCIPAL** — poser la question au moment même où l'idée est formulée, jamais différée. Le signal
+CIRCLE-TASKS `idee-a-trancher-signal` (cf. `scripts/circle-tasks.mjs`,
+`docs/idees-a-trancher.md`) est un FILET DE SÉCURITÉ MÉCANIQUE, jamais un substitut : il rattrape
+une idée pour laquelle ce réflexe en temps réel aurait été oublié dans le feu de la conversation,
+en la reposant à chaque Ronde tant qu'aucune décision définitive (fichier créé ou abandon) n'est
+enregistrée dans `docs/idees-a-trancher.md`. L'avantage de la Ronde, précisément, est d'être
+mécanique et donc impossible à zapper — contrairement au réflexe en temps réel, qui reste une
+discipline humaine (de l'agent) faillible. Toute décision, qu'elle vienne du réflexe en temps réel
+ou du signal de Ronde, se consigne dans `docs/idees-a-trancher.md` (table « Idées nouvelles »),
+jamais seulement dans la conversation.
+
 ---
 
 # Partie B — Spécificités propres à Claude Code

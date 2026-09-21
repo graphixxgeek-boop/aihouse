@@ -28,7 +28,7 @@ import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { scanDocumentWeight, listDatedNarrativeMarkers, extractRuleUnits, findRedundantRulePairs } from "./smart-conso-token.mjs";
 import { walkDocsPaths, daysSince } from "./lib-shell.mjs";
-import { checkChantierFileFreshness, loadAllTaskRows } from "./check-tasks-details.mjs";
+import { checkChantierFileFreshness, loadAllTaskRows, detectPendingIdeaCandidates, loadIdeaDecisions, findIdeasNeedingDecision, IDEES_REGISTRY_PATH } from "./check-tasks-details.mjs";
 // Ré-exportée telle quelle (jamais une redéfinition) : circle-tasks.mjs reste le point d'import déjà
 // utilisé ailleurs (check-house.mjs) pour cette fonction, même après son déplacement vers lib-shell.mjs
 // le 2026-09-21 (cf. commentaire au-dessus de sa définition dans lib-shell.mjs).
@@ -197,6 +197,26 @@ export const CIRCLE_ITEMS = [
     cout: "gratuit — relit docs/suivi/ et croise avec le registre CHANTIER_PRELIMINARY_FILES, aucun appel API",
     tokensEstimes: "faible — parcours mécanique de fichiers déjà en mémoire de travail",
     execute: "Appeler checkChantierFileFreshness(loadAllTaskRows()) — sur un vrai écart (une tâche de suivi mentionne un chantier connu, plus récente que son fichier préliminaire), proposer explicitement de le mettre à jour tout de suite, jamais le laisser en suspens jusqu'à la prochaine Ronde.",
+  },
+  // idee-a-trancher-signal (2026-09-21, demande explicite de l'utilisateur : « me demander
+  // systematiquement, pour chaque idee developpée, [...] si je souhaite la creation d'un fichier
+  // preliminaire [...] ou si l'idee doit etre abandonnée, ou entre-deux [...] L'alerte remontera
+  // alors une deuxieme fois lors de la prochaine ronde, si entre temps aucun fichier n'a été créé »).
+  // FILET DE SÉCURITÉ MÉCANIQUE, jamais le mécanisme principal (qui reste le réflexe en temps réel
+  // documenté dans docs/regles-de-travail.md, déclenché au moment même où une idée est proposée) —
+  // rattrape ce que ce réflexe aurait manqué, cf. docs/idees-a-trancher.md pour le registre complet
+  // et sa note méthodologique (portée volontairement limitée aux idées NOUVELLES, jamais un
+  // balayage textuel brut sur l'historique déjà clos). Voisin direct de chantier-preliminaire-signal
+  // ci-dessus (même thème, même famille de garde-fou), mais une idée n'est pas forcément un "gros
+  // chantier" nommé : portée plus large (tout Sujet "Nouvel outil"/"Conception"), décision à 3 voies
+  // (fichier créé / abandonnée / entre-deux) au lieu d'un simple écart de fraîcheur binaire.
+  {
+    id: "idee-a-trancher-signal",
+    theme: "Suivi des chantiers",
+    label: "Vérifier qu'aucune idée nouvelle n'attend encore une décision (fichier / abandon / entre-deux)",
+    cout: "gratuit — relit docs/suivi/ et docs/idees-a-trancher.md, aucun appel API",
+    tokensEstimes: "faible — parcours mécanique de fichiers déjà en mémoire de travail",
+    execute: "Appeler findIdeasNeedingDecision(detectPendingIdeaCandidates(loadAllTaskRows()), loadIdeaDecisions(lecture de docs/idees-a-trancher.md)) — pour chaque idée remontée, poser la question à 3 voies (créer un fichier préliminaire / abandonner / entre-deux) via une fenêtre dédiée, jamais déduire la décision soi-même ; consigner la réponse dans docs/idees-a-trancher.md le jour même.",
   },
   {
     id: "smart-conso-api-scan",
@@ -444,7 +464,7 @@ export function oldestOpenTaskDate(categorized) {
 // ALWAYS-NEW-CODE la plus négligée) — jamais pour "relecture référentiel" ou "correctifs", qui
 // n'ont aucune date de référence mécanique fiable (Article 13 elle-même n'impose aucune cadence
 // fixe, cf. CLAUDE.md — un signal inventé ici serait moins honnête que son absence).
-export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText } = {}, now = Date.now()) {
+export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText, ideesATrancherText } = {}, now = Date.now()) {
   const profilLast = mostRecentDate(profilIndexText);
   const kpiLast = mostRecentDate(kpiIndexText);
   const smartConsoApiLast = mostRecentDate(smartConsoApiIndexText);
@@ -472,6 +492,11 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCode
     if (item.id === "chantier-preliminaire-signal") {
       const gaps = checkChantierFileFreshness(loadAllTaskRows());
       return { ...item, staleness: gaps.length ? `${gaps.length} écart(s) trouvé(s) — ${gaps.map((g) => `${g.chantier} (${g.message})`).join(" ; ")} — proposer de mettre à jour le fichier concerné maintenant` : "aucun écart détecté" };
+    }
+    if (item.id === "idee-a-trancher-signal") {
+      const decisions = loadIdeaDecisions(ideesATrancherText || "");
+      const pending = findIdeasNeedingDecision(detectPendingIdeaCandidates(loadAllTaskRows()), decisions);
+      return { ...item, staleness: pending.length ? `${pending.length} idée(s) en attente d'une décision — ${pending.map((r) => `#${r.n}`).join(", ")} — poser la question à 3 voies maintenant` : "aucune idée en attente" };
     }
     if (item.id === "claude-md-weight-signal") {
       if (!claudeMdText) return { ...item, staleness: "pas de signal disponible (CLAUDE.md non fourni)" };
@@ -649,7 +674,8 @@ function main() {
   const philosophyText = read("docs/philosophie-et-politique.md");
   const philosophyFreshnessDaysValue = philosophyFreshnessDays();
   const inesOfficialIndexText = read("docs/ines-official/index.md");
-  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText });
+  const ideesATrancherText = read(IDEES_REGISTRY_PATH);
+  const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText, ideesATrancherText });
   console.log("=== CIRCLE-TASKS — Ronde périodique ===\n");
   console.log(formatCircleMenu(report));
   console.log("\nJamais exécuté seul : l'agent qui pilote ouvre une fenêtre à cocher pour choisir précisément quoi lancer.");

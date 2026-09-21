@@ -452,6 +452,78 @@ export function checkChantierFileFreshness(allRows, { lastTouch = lastTouchDays 
   return findings;
 }
 
+// --- Idées à trancher (2026-09-21, demande explicite : « à chaque fois que je propose une nouvelle
+// idée [...] cette fenêtre devrait s'ouvrir [...] l'avantage de la ronde, c'est que c'est mécanique,
+// donc impossible à zapper ») — filet de sécurité mécanique du réflexe en temps réel documenté dans
+// docs/regles-de-travail.md, jamais le mécanisme principal lui-même (qui reste une discipline de
+// l'agent au moment où l'idée est proposée). Voir docs/idees-a-trancher.md pour le registre complet
+// et sa note méthodologique (pourquoi la portée reste volontairement limitée aux idées nouvelles).
+
+// detectPendingIdeaCandidates() — repère honnête, jamais un jugement sémantique profond : le même
+// libellé de Sujet que l'agent choisit déjà lui-même à chaque fois qu'il note une idée de ce type
+// (« Nouvel outil »/« Conception »), jamais un second marqueur à saisir en plus.
+// `sinceTaskNumber` (défaut : 332, la dernière tâche couverte par le balayage rétrospectif manuel du
+// 2026-09-21/22, cf. docs/idees-a-trancher.md) — garde-fou non négociable trouvé EN TESTANT en direct
+// contre le vrai docs/suivi/ avant tout câblage dans la Ronde (Article 3/19) : une simple date plancher
+// (ex. "2026-09-21") aurait quand même remonté plus de 40 tâches "Nouvel outil"/"Conception" du jour
+// même — la quasi-totalité de la session en cours, déjà construites et closes le jour même sans jamais
+// être passées par une vraie décision de fichier préliminaire (des outils trop petits pour ça). Un
+// numéro de tâche est strictement croissant et sans ambiguïté de fuseau horaire (même principe déjà
+// établi par filterByZoom() ci-dessus) — un plancher au NUMÉRO exclut précisément tout ce que le
+// balayage manuel a déjà tranché, sans exclure la moindre idée réellement nouvelle à partir de
+// maintenant, quelle que soit l'heure exacte à laquelle ce mécanisme est effectivement déployé.
+// `statusKey !== "terminee"` — second garde-fou trouvé EN TESTANT en direct (Article 3/19, le jour
+// même où cette fonction a été câblée pour la première fois : la tâche de suivi documentant CE
+// mécanisme lui-même — construit et clôturé dans le même tour, sur ordre explicite de
+// l'utilisateur — s'est retrouvée signalée comme "idée en attente d'une décision" dès le premier
+// passage réel). Une idée réellement "en attente" est une tâche encore OUVERTE (le travail n'est pas
+// fait, la question du fichier préliminaire reste réellement ouverte) — une tâche déjà "terminée"
+// documente un travail déjà livré : la question ne se pose plus, quel que soit le libellé de son
+// Sujet (exactement le même principe que le balayage rétrospectif manuel, qui n'a jamais recensé de
+// décision pour les dizaines de "Nouvel outil" déjà closes).
+export function detectPendingIdeaCandidates(allRows, sinceTaskNumber = 332) {
+  return allRows.filter((r) => /^(Nouvel outil|Conception)/i.test(r.sujet ?? "") && (r.n ?? 0) > sinceTaskNumber && r.statusKey !== "terminee");
+}
+
+export const IDEES_REGISTRY_PATH = "docs/idees-a-trancher.md";
+
+// loadIdeaDecisions() — scan direct des lignes de tableau markdown (jamais dataRows(), qui exige un
+// unique en-tête connu : ce registre porte plusieurs tableaux distincts dans le même fichier) :
+// toute ligne portant une décision reconnue associe chaque numéro de tâche cité en 1re cellule (une
+// cellule peut citer plusieurs tâches, ex. "#297") à cette décision.
+// Détection par VALEUR, jamais par position fixe (bug réel trouvé en testant en direct avant tout
+// câblage dans la Ronde, Article 3/19) : le tableau « Balayage rétrospectif » a 4 colonnes
+// (Tâche(s)/Idée/Décision/Fichier — décision en index 2) tandis que le tableau « Idées nouvelles » a
+// 5 colonnes (Tâche/Date/Idée/Décision/Fichier — décision en index 3) ; un index fixe (cells[3])
+// aurait lu la colonne Fichier du premier tableau et n'aurait donc jamais retrouvé les décisions
+// #297/#226 déjà enregistrées lors du balayage rétrospectif.
+export function loadIdeaDecisions(registryText) {
+  const decisions = {};
+  const KNOWN = new Set(["à trancher", "entre-deux", "abandonnée", "fichier créé"]);
+  for (const line of String(registryText ?? "").split("\n")) {
+    if (!line.trim().startsWith("|")) continue;
+    const cells = line.split("|").slice(1, -1).map((c) => c.trim());
+    const decision = cells.find((c) => KNOWN.has(c));
+    if (!decision) continue;
+    // `#(\d+)` uniquement, jamais un `\d+` nu (bug réel trouvé en testant en direct : la 1re cellule
+    // peut porter une référence de section comme "§8ter", dont le "8" nu serait à tort lu comme un
+    // second numéro de tâche).
+    for (const [, n] of cells[0].matchAll(/#(\d+)/g)) decisions[n] = decision;
+  }
+  return decisions;
+}
+
+// findIdeasNeedingDecision() — une décision "abandonnée" ou "fichier créé" ne redemande plus jamais
+// la question ; "entre-deux" la repose à CHAQUE Ronde tant qu'aucun fichier n'a été créé (demande
+// explicite) ; une idée jamais rencontrée ("à trancher" implicite, absente du registre) la pose pour
+// la première fois.
+export function findIdeasNeedingDecision(candidates, decisions) {
+  return candidates.filter((r) => {
+    const known = decisions[String(r.n)];
+    return known === undefined || known === "entre-deux";
+  });
+}
+
 // Construit le contenu du rapport (pure, testable) — la génération HTML et l'écriture d'instantané
 // restent dans main(), jamais mélangées ici.
 export function buildReport({ zoom = "en_cours", format = "liste", allRows, history = [], onboardingContext = null, registryFindings } = {}) {

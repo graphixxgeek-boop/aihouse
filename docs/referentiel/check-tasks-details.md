@@ -66,6 +66,48 @@ constaté : système à `2026-09-21 04h35 UTC` pendant qu'une ligne fraîchement
 `2026-09-22T06:30Z`) — sans clamp, cet écart d'horloge produisait un âge de tâche négatif et donc un
 "retard" fabriqué. Corrigé en clampant l'âge d'une tâche à 0 minimum, jamais en dessous.
 
+## Idées à trancher (`detectPendingIdeaCandidates()`/`loadIdeaDecisions()`/`findIdeasNeedingDecision()`, 2026-09-21)
+
+Généralise `checkChantierFileFreshness()` ci-dessus au-delà des seuls « gros chantiers » nommés :
+toute idée nouvelle (« Nouvel outil »/« Conception » en tête de Sujet) doit passer par une décision
+explicite à 3 voies (fichier préliminaire créé / abandonnée / entre-deux), jamais seulement les
+quatre chantiers du registre `CHANTIER_PRELIMINARY_FILES`. Le mécanisme PRINCIPAL reste un réflexe
+en temps réel (documenté dans `docs/regles-de-travail.md`) ; ces fonctions alimentent le signal
+CIRCLE-TASKS `idee-a-trancher-signal`, un filet de sécurité mécanique qui rattrape une idée oubliée
+en la reposant à chaque Ronde tant qu'aucune décision définitive n'est enregistrée.
+
+`detectPendingIdeaCandidates(allRows, sinceTaskNumber = 332)` filtre `docs/suivi/` par le même
+libellé de Sujet que l'agent choisit déjà lui-même, AU-DESSUS d'un plancher au NUMÉRO de tâche —
+jamais une date. **Bug réel trouvé en testant en direct avant tout câblage (Article 3/19)** : un
+premier essai avec un plancher de date (« 2026-09-21 ») remontait plus de 40 tâches du jour même
+comme fausses alertes, la quasi-totalité de la session en cours — une date ne peut pas séparer
+« avant l'existence du mécanisme » de « après », puisque ce jour-là contient déjà des dizaines de
+tâches. Le plancher au numéro (332, la dernière tâche couverte par le balayage rétrospectif manuel
+de `docs/idees-a-trancher.md`) résout ça proprement, un numéro étant strictement croissant et sans
+ambiguïté de fuseau horaire (même principe que `filterByZoom()` plus haut dans ce document).
+
+`loadIdeaDecisions(registryText)` lit `docs/idees-a-trancher.md`, qui porte DEUX tableaux markdown à
+des largeurs de colonnes différentes (le balayage rétrospectif à 4 colonnes, les idées nouvelles à
+5). **Second bug réel trouvé en testant en direct** : une première version lisait la décision à un
+index de cellule fixe, qui ne correspond qu'au tableau à 5 colonnes — corrigée pour détecter la
+cellule décision PAR VALEUR (elle correspond à l'un des 4 mots connus) plutôt que par position, et
+pour n'extraire un numéro de tâche que via `#(\d+)` strict (un `\d+` nu confondait un vrai numéro de
+tâche avec un chiffre de référence de section, ex. « §8ter »).
+
+`findIdeasNeedingDecision(candidates, decisions)` ne resurfait jamais une idée déjà « fichier créé »
+ou « abandonnée » (finales), mais continue de resurfacer une idée « entre-deux » à chaque appel — le
+comportement explicitement demandé (« L'alerte remontera alors une deuxième fois [...] tant qu'aucun
+fichier n'a été créé »).
+
+**Troisième bug réel, trouvé au tout premier passage contre le vrai dépôt** (le crochet pre-commit a
+bloqué le commit lui-même) : la tâche de suivi documentant CE mécanisme (#333, construite et close
+dans le même tour, sur ordre explicite de l'utilisateur) s'est retrouvée signalée à tort comme
+« idée en attente d'une décision ». `detectPendingIdeaCandidates()` exclut donc aussi toute ligne
+dont `statusKey === "terminee"` — une tâche déjà terminée documente un travail déjà livré, la
+question ne se pose plus quel que soit le libellé de son Sujet, exactement le même principe que le
+balayage rétrospectif manuel (qui n'a jamais recensé de décision pour les dizaines de « Nouvel
+outil » déjà closes de l'historique).
+
 ## Contexte d'onboarding et badge (`buildRealOnboardingContext()`)
 
 Avant chaque génération, `main()` construit un contexte réel (CLAUDE.md, la table des outils de

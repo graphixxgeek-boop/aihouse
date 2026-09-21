@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 243'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 244'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3936,6 +3936,63 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 }
 
 {
+  // Idées à trancher (2026-09-21, filet de sécurité mécanique du réflexe temps réel — cf.
+  // docs/idees-a-trancher.md) : detectPendingIdeaCandidates()/loadIdeaDecisions()/
+  // findIdeasNeedingDecision(). Le point le plus important à couvrir ici est le garde-fou trouvé en
+  // testant en direct AVANT tout câblage réel dans CIRCLE-TASKS (Article 3/19) : un plancher de DATE
+  // aurait remonté plus de 40 tâches "Nouvel outil"/"Conception" du jour même comme fausses alertes —
+  // le plancher au NUMÉRO de tâche (sinceTaskNumber) est le correctif réel, jamais un détail cosmétique.
+  const { detectPendingIdeaCandidates, loadIdeaDecisions, findIdeasNeedingDecision, IDEES_REGISTRY_PATH } = await import('../scripts/check-tasks-details.mjs');
+
+  const rows = [
+    { n: 10, sujet: 'Nouvel outil / Quelque chose', sousSujet: 'x', statusKey: 'ouverte' },
+    { n: 340, sujet: 'Nouvel outil / Idée neuve', sousSujet: 'y', statusKey: 'ouverte' },
+    { n: 341, sujet: 'Conception / Autre idée neuve', sousSujet: 'z', statusKey: 'enCours' },
+    { n: 342, sujet: 'Correctif de code', sousSujet: 'jamais une idée', statusKey: 'ouverte' },
+    { n: 343, sujet: 'Nouvel outil / Idée déjà construite et close le même tour', sousSujet: 'w', statusKey: 'terminee' },
+  ];
+  assert.deepEqual(detectPendingIdeaCandidates(rows, 332).map((r) => r.n), [340, 341], 'detectPendingIdeaCandidates() must match only rows whose Sujet starts with "Nouvel outil"/"Conception" (never an unrelated row like a plain correctif) AND whose task number is genuinely above the floor — task #10, though it matches the label, must never resurface as if it were new, exactly the real false-positive class found live against this project\'s own docs/suivi/ before this floor existed');
+  assert.equal(detectPendingIdeaCandidates(rows, 341).length, 0, 'raising the floor must correctly exclude a row exactly at the floor number, never an off-by-one that still includes it');
+  // Second garde-fou trouvé EN TESTANT en direct, le jour même du câblage réel de cette fonction dans
+  // CIRCLE-TASKS : la tâche de suivi documentant ce mécanisme lui-même (#333, construite et close dans
+  // le même tour sur ordre explicite de l'utilisateur) s'est retrouvée signalée à tort comme "idée en
+  // attente d'une décision" au tout premier passage réel — une tâche déjà "terminée" documente un
+  // travail déjà livré, la question ne se pose plus quel que soit le libellé de son Sujet.
+  assert.ok(!detectPendingIdeaCandidates(rows, 332).some((r) => r.n === 343), 'a "terminee" row must never resurface as a pending idea even when its Sujet matches and its number is past the floor — the exact real false positive found live the day this function was first wired into CIRCLE-TASKS, via this project\'s own docs/suivi/ row documenting this very mechanism');
+
+  const registryText = [
+    '| Tâche(s) | Idée | Décision | Fichier |',
+    '|---|---|---|---|',
+    '| #340 | Une idée | fichier créé | docs/x.md |',
+    '| #341 | Une autre idée | entre-deux | — |',
+    '| Tâche | Date | Idée | Décision | Fichier |',
+    '|---|---|---|---|---|',
+    '| #999 | 2026-09-21 | Idée future non liée | abandonnée | — |',
+  ].join('\n');
+  const decisions = loadIdeaDecisions(registryText);
+  assert.deepEqual(decisions, { '340': 'fichier créé', '341': 'entre-deux', '999': 'abandonnée' }, 'loadIdeaDecisions() must scan every real markdown table row in the registry (both the retrospective table and the "new ideas" table use different headers) directly by cell position, never a header-dependent parser that would silently miss the second table');
+  assert.deepEqual(loadIdeaDecisions('| #1 | idée | pas une vraie décision | x |'), {}, 'an unrecognized 4th-column value must never be mistaken for a real decision — only the 4 known decision words count');
+
+  const candidates = detectPendingIdeaCandidates(rows, 332);
+  assert.deepEqual(findIdeasNeedingDecision(candidates, decisions).map((r) => r.n), [341], 'a "fichier créé" decision (#340) must never resurface, but an "entre-deux" decision (#341) is never final — it must keep resurfacing at every Ronde until it becomes "fichier créé" or "abandonnée", exactly the explicit user request ("L\'alerte remontera alors une deuxieme fois [...] tant qu\'aucun fichier n\'a été créé")');
+  assert.deepEqual(findIdeasNeedingDecision(candidates, { '340': 'fichier créé' }).map((r) => r.n), [341], 'a candidate genuinely absent from the decisions map (never yet asked about) must resurface — task #341 here — while an already-resolved one (#340) must not, the exact "ask again next Ronde until decided" behavior the user asked for');
+  assert.deepEqual(findIdeasNeedingDecision(candidates, { '340': 'fichier créé', '341': 'entre-deux' }).map((r) => r.n), [341], 'an explicit "entre-deux" decision must keep resurfacing at every Ronde until it becomes "fichier créé" or "abandonnée" — never silently treated as final the way "fichier créé"/"abandonnée" are');
+  assert.equal(IDEES_REGISTRY_PATH, 'docs/idees-a-trancher.md', 'the registry path constant must point at the real committed file, never a stale or renamed path');
+
+  // Vérifié LIVE contre le vrai docs/suivi/ + le vrai docs/idees-a-trancher.md (jamais seulement des
+  // fixtures synthétiques) : la toute première exécution réelle de ce garde-fou doit rapporter un
+  // état propre, exactement la trouvaille qui a motivé le passage d'un plancher de date à un plancher
+  // de numéro de tâche avant tout câblage dans CIRCLE-TASKS.
+  const { loadAllTaskRows: loadAllTaskRowsForIdeas } = await import('../scripts/check-tasks-details.mjs');
+  const { readFileSync: readFileSyncForIdeas } = await import('node:fs');
+  const realRows = loadAllTaskRowsForIdeas();
+  const realCandidates = detectPendingIdeaCandidates(realRows);
+  assert.equal(realCandidates.length, 0, 'checked live against this project\'s own real docs/suivi/: the default task-number floor (332) must currently exclude every existing "Nouvel outil"/"Conception" row, since all of them predate this mechanism and were already resolved by the 2026-09-21/22 manual retrospective review — a guarantee that breaks the day a genuinely new idea is logged past #332 without ever asking the 3-way question');
+
+  console.log('Passed: detectPendingIdeaCandidates()/loadIdeaDecisions()/findIdeasNeedingDecision() (2026-09-21) correctly detect only genuinely new "Nouvel outil"/"Conception" suivi rows above a real task-number floor — never a date floor, which was tested live and found to produce 40+ false positives on this project\'s own same-day history before this floor was chosen — read every real decision table row by position regardless of which of the registry\'s two differently-headed tables it lives in, correctly keep re-surfacing an "entre-deux" decision at every Ronde while retiring a "fichier créé"/"abandonnée" one for good, and report a genuinely clean slate when checked live against this project\'s real docs/suivi/ and docs/idees-a-trancher.md.');
+}
+
+{
   // Garde-fou du système de profil utilisateur (2026-09-19, cf. docs/profil-utilisateur/index.md).
   // Une fiche jamais indexée serait invisible pour un futur agent qui ne lirait que l'index ; un
   // lien mort pointerait vers une preuve disparue — les deux écarts doivent être signalés séparément.
@@ -3965,7 +4022,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   } = await import('../scripts/circle-tasks.mjs');
   const { walkDocsPaths } = await import('../scripts/lib-shell.mjs');
 
-  assert.equal(CIRCLE_ITEMS.length, 23, 'CIRCLE_ITEMS must list exactly the 21 free periodic items (profil, the-king-signal, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, tool-brain-report, cassandra-rh-signal — added 2026-09-21 —, dream-team-photo, THE-SCREENER, ines-official-signal, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run, coordinateur-catalogue, chantier-preliminaire-signal — added 2026-09-21, extension of checkChantierFileFreshness() — clone-hunter-run removed 2026-09-22, CLONE-HUNTER promoted to fifth Gardien sacré, now runs automatically at every commit like the other 4) plus THE-FINAL-JUDGE and its cousin THE-DEEP-READER, never silently gaining or losing an entry');
+  assert.equal(CIRCLE_ITEMS.length, 24, 'CIRCLE_ITEMS must list exactly the 22 free periodic items (profil, the-king-signal, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, tool-brain-report, cassandra-rh-signal — added 2026-09-21 —, dream-team-photo, THE-SCREENER, ines-official-signal, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run, coordinateur-catalogue, chantier-preliminaire-signal, idee-a-trancher-signal — added 2026-09-21, second "Suivi des chantiers" signal, filet de sécurité mécanique du réflexe temps réel — clone-hunter-run removed 2026-09-22, CLONE-HUNTER promoted to fifth Gardien sacré, now runs automatically at every commit like the other 4) plus THE-FINAL-JUDGE and its cousin THE-DEEP-READER, never silently gaining or losing an entry');
   const profilGuardItem = CIRCLE_ITEMS.find((i) => i.id === 'profil-utilisateur-guard');
   assert.ok(profilGuardItem && !profilGuardItem.costly && profilGuardItem.theme === 'Passages réels (smoke run)', '2026-09-21 addition: the real check-profil-utilisateur.mjs smoke run must be free and live in its own "smoke run" theme, distinct from the "profil" item which writes a new observation rather than verifying disk integrity');
   const networkCheckItem = CIRCLE_ITEMS.find((i) => i.id === 'network-check-run');
@@ -4004,7 +4061,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const samplePhilosophyText = '### 1.1 Un principe **[Explicite]**\n\nOn agit toujours avec prudence budgétaire ambiante.\n\n### 1.2 Un autre principe **[Synthèse, 2026-09-19]**\n\nOn n\'agit jamais avec prudence budgétaire ambiante.';
   const inesOfficialIndexText = '| Version | Date | Périmètre | Fichiers | Taille |\n|---|---|---|---|---|\n| v1 | 2026-09-18 | code seul | 40 | 500 Ko |';
   const report = buildCircleReport({ profilIndexText, kpiIndexText, alwaysNewCodeIndexText: emptyAlwaysNewCode, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText: sampleClaudeMdText, philosophyText: samplePhilosophyText, philosophyFreshnessDaysValue: 3, inesOfficialIndexText }, now);
-  assert.equal(report.length, 23, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one — 23 since chantier-preliminaire-signal joined CIRCLE_ITEMS on 2026-09-21');
+  assert.equal(report.length, 24, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one — 24 since idee-a-trancher-signal joined CIRCLE_ITEMS on 2026-09-21');
   assert.equal(report.find((r) => r.id === 'claude-md-weight-signal').staleness, '66 tokens estimés, niveau "faible" — 2 aside(s) narrative(s) datée(s) encore réductible(s)', 'the CLAUDE.md weight signal must reuse the real SMART-CONSO-TOKEN scan functions live (never a second parser), reporting both the honest token estimate and the real count of still-reducible dated asides found in the actual text passed in');
   assert.equal(buildCircleReport({}, now).find((r) => r.id === 'claude-md-weight-signal').staleness, 'pas de signal disponible (CLAUDE.md non fourni)', 'with no CLAUDE.md text supplied at all, the signal must report an honest absence rather than crash or fabricate a number');
   assert.equal(report.find((r) => r.id === 'clean-dirty-old-signal').staleness, '1 jour(s) depuis le dernier passage journalisé', 'the CLEAN-DIRTY-OLD signal must compute its own staleness from its own real index text, distinct from every other source');
@@ -4022,6 +4079,13 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // CHANTIER_PRELIMINARY_FILES : aucun écart réel ne doit subsister aujourd'hui (les 2 nouveaux
   // fichiers préliminaires créés le même soir que leur tâche de suivi correspondante).
   assert.equal(report.find((r) => r.id === 'chantier-preliminaire-signal').staleness, 'aucun écart détecté', 'checked live against this project\'s real docs/suivi/ and CHANTIER_PRELIMINARY_FILES registry: every known chantier\'s preliminary file must currently be at least as fresh as its most recent matching suivi task — a guarantee that breaks the day an idea is logged in docs/suivi/ but never copied into its dedicated file');
+  // idee-a-trancher-signal (2026-09-21, filet de sécurité mécanique du réflexe temps réel) — vérifié
+  // live contre le vrai docs/suivi/ et le vrai docs/idees-a-trancher.md : le plancher au NUMÉRO de
+  // tâche (sinceTaskNumber, défaut 332) doit exclure la totalité des tâches "Nouvel outil"/
+  // "Conception" déjà closes ce même jour, sans quoi ce signal remonterait plus de 40 faux positifs
+  // à sa toute première exécution réelle (trouvé en testant en direct avant tout câblage, cf. la
+  // note méthodologique de docs/idees-a-trancher.md).
+  assert.equal(report.find((r) => r.id === 'idee-a-trancher-signal').staleness, 'aucune idée en attente', 'checked live against this project\'s real docs/suivi/ and docs/idees-a-trancher.md: the task-number floor (332, the last task covered by the manual retrospective review) must exclude every already-closed same-day "Nouvel outil"/"Conception" task, reporting a clean slate rather than dozens of false positives on its very first real run');
   assert.equal(report.find((r) => r.id === 'kpi').staleness, '1 jour(s) depuis le dernier rapport archivé', 'the kpi item\'s staleness must likewise be computed from the real kpi index text, a genuinely distinct source from the profil index');
   assert.ok(/jamais examinée/.test(report.find((r) => r.id === 'always-new-code-signal').staleness), 'with a genuinely empty ALWAYS-NEW-CODE coverage memory, the signal must honestly report that every zone (the one recommended first) has never been examined, never a fabricated date');
   assert.equal(report.find((r) => r.id === 'referentiel').staleness, 'pas de signal de fraîcheur mécanique disponible', 'an item with no real mechanical freshness source (periodic reference-doc reread) must say so honestly, never fabricate a fake signal');
