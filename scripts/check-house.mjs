@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 256'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 257'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4239,6 +4239,13 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(realSummary.includes('CIRCLE-TASKS'), 'the summary must carry its own clear title so a reader knows which tool produced it, never an anonymous table');
   assert.ok(!realSummary.includes('undefined'), 'a real entry must never leak a literal "undefined" into the rendered page — every field must fall back to an honest placeholder when missing');
 
+  // executedByModel (2026-09-22, changement-de-modele-IA — journalisation de quel modèle a
+  // réellement exécuté la Ronde, cf. docs/changement-de-modele-ia-conception.md). Optionnel, jamais
+  // un champ obligatoire : silence total quand non fourni, comportement inchangé.
+  assert.ok(!realSummary.includes('Modèle ayant exécuté'), 'when executedByModel is not supplied at all, the text recap must stay exactly as before — no fabricated model line');
+  const summaryWithModel = buildCircleRunSummaryText([], { executedByModel: 'claude-opus-5' });
+  assert.ok(summaryWithModel.includes('Modèle ayant exécuté cette Ronde : claude-opus-5.'), 'when executedByModel is genuinely supplied, the text recap must name the real model that ran the Ronde');
+
   // buildCircleRunSummaryHtml() (2026-09-21, ré-inversion assumée du choix texte ci-dessus, double
   // confirmation Article 14 obtenue avant d'exécuter) — la fonction CANONIQUE désormais, avec une
   // vraie analyse mise en évidence dans un bloc HTML séparé (jamais généré automatiquement — un
@@ -4257,6 +4264,9 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(!buildCircleRunSummaryHtml([]).includes('undefined'), 'the HTML variant must never leak a literal "undefined" either');
   const noAnalysisSummary = buildCircleRunSummaryHtml([{ id: 'profil', label: 'x', outcome: 'y' }]);
   assert.ok(!noAnalysisSummary.includes('class="highlight"'), 'when no analysis is provided (e.g. a quick re-render before the agent has written one), the highlighted block itself must never appear as an empty shell — the shared THEME_CSS rule for .highlight is always present and must never be confused with a rendered block');
+  assert.ok(!noAnalysisSummary.includes('Modèle ayant exécuté'), 'the HTML recap must also stay silent about executedByModel when it is not supplied, the same discipline as the text variant');
+  const htmlSummaryWithModel = buildCircleRunSummaryHtml([], { executedByModel: 'claude-opus-5' });
+  assert.ok(htmlSummaryWithModel.includes('Modèle ayant exécuté cette Ronde : claude-opus-5.'), 'when executedByModel is genuinely supplied, the HTML recap must name the real model that ran the Ronde, the same journalisation the changement-de-modele-IA protocol requires');
 
   // recordCircleItemReport()/CIRCLE_REPORT_FOLDERS (2026-09-21, correction demandée par
   // l'utilisateur après lecture de docs/circle-process-detail.txt : « tous les outils qui

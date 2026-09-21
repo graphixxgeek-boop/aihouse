@@ -106,5 +106,15 @@ une demande de switch à n'importe quel moment.
 
 ## 4. Statut
 
-Idée validée et calibrée dans son ensemble (20 questions, toutes répondues), mais explicitement mise
-de côté par décision de l'utilisateur — reprise le jour où il le demandera, jamais engagée d'elle-même.
+**Construit le 2026-09-22** (demande explicite : « on enchaine tout de suite »). Le protocole en 3
+questions est désormais un comportement conversationnel systématique de l'agent, documenté noir sur
+blanc dans `docs/regles-de-travail.md` (juste avant le garde-fou AUTO/PRIME/GOAT) : Q1 posée avant
+même AUTO/PRIME/GOAT dans les 3 modes, Q2/Q3 selon la réponse, vérification technique via
+`get_session` en appui (jamais en remplacement) de la confirmation manuelle, absence de réponse
+traitée comme un « non », question intégralement sautée en mode nocturne/autonome. Seule partie
+codée : la journalisation (`executedByModel`, nouveau paramètre optionnel de
+`buildCircleRunSummaryText()`/`buildCircleRunSummaryHtml()`, `scripts/circle-tasks.mjs`) — une note
+ajoutée au récapitulatif de fin de Ronde nommant le modèle réellement utilisé, jamais un champ
+obligatoire. Testé (`scripts/check-house.mjs`). Reste honnêtement hors de portée mécanique : aucun
+garde-fou ne peut vérifier que Q1/Q2/Q3 ont bien été posées en conversation — circle-process-guardian
+ne couvre pas ce protocole aujourd'hui (extension future possible, jamais engagée maintenant).

@@ -824,7 +824,7 @@ function buildCircleEntryRows(entries, items) {
     return [label, e.outcome ?? "—", e.link ?? "—"];
   });
 }
-export function buildCircleRunSummaryText(entries, { dateLabel, items = CIRCLE_ITEMS } = {}) {
+export function buildCircleRunSummaryText(entries, { dateLabel, items = CIRCLE_ITEMS, executedByModel } = {}) {
   const lines = [
     "=== CIRCLE-TASKS — récapitulatif de la Ronde ===",
     `Date : ${dateLabel ?? new Date().toISOString()}`,
@@ -839,6 +839,7 @@ export function buildCircleRunSummaryText(entries, { dateLabel, items = CIRCLE_I
       lines.push(`| ${label} | ${outcome} | ${link} |`);
     }
   }
+  if (executedByModel) lines.push("", `Modèle ayant exécuté cette Ronde : ${executedByModel}.`);
   lines.push("", "CIRCLE-TASKS — la sélection des items reste toujours confirmée par une fenêtre à cocher avant exécution, jamais un tout-en-un silencieux.");
   return lines.join("\n");
 }
@@ -852,7 +853,7 @@ export function buildCircleRunSummaryText(entries, { dateLabel, items = CIRCLE_I
 // écrites dans docs/suivi/ par l'agent (jamais l'un sans l'autre). `reportLinks` : les rapports
 // individuels de la Ronde (txt sauf ceux déjà en HTML par décision Doc-Report), listés juste sous
 // l'analyse — demande explicite du 2026-09-21.
-export function buildCircleRunSummaryHtml(entries, { dateLabel, items = CIRCLE_ITEMS, analysis, followUpTasks = [], reportLinks = [] } = {}) {
+export function buildCircleRunSummaryHtml(entries, { dateLabel, items = CIRCLE_ITEMS, analysis, followUpTasks = [], reportLinks = [], executedByModel } = {}) {
   const blocks = [
     { type: "paragraph", text: `Index léger : ce qui a tourné et un pointeur vers la sortie déjà produite par chaque item, jamais son contenu dupliqué ici. ${REPORT_ICON} = produit un vrai rapport archivé et indexé — depuis le 2026-09-21, les 23 items de la Ronde le font tous.` },
   ];
@@ -861,6 +862,7 @@ export function buildCircleRunSummaryHtml(entries, { dateLabel, items = CIRCLE_I
   } else {
     blocks.push({ type: "table", headers: ["Item exécuté", "Résultat", "Lien"], rows: buildCircleEntryRows(entries, items) });
   }
+  if (executedByModel) blocks.push({ type: "note", text: `Modèle ayant exécuté cette Ronde : ${executedByModel}.` });
   if (analysis) {
     blocks.push({ type: "highlight", heading: "Analyse approfondie de la Ronde", paragraphs: Array.isArray(analysis) ? analysis : [analysis] });
   }

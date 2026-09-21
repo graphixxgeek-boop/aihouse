@@ -1565,6 +1565,36 @@ CIRCLE_ITEMS est recommandé par défaut. Remplace le jugement refait à la main
 (#225/#231) par une règle codée, testée et ajustable si la pratique réelle diverge un jour — jamais
 gravée dans le marbre pour autant.
 
+**changement-de-modele-IA : le protocole en 3 questions est construit (2026-09-22).** Conception
+complète dans `docs/changement-de-modele-ia-conception.md` (20 questions de calibrage), reprise ce
+soir sur demande explicite de l'utilisateur (« on enchaine tout de suite »). Avant même la question
+AUTO/PRIME/GOAT ci-dessous, dans les 3 modes sans exception, l'agent pose systématiquement **Q1**
+(« Voulez-vous changer de modèle/agent IA pour exécuter cette Ronde ? »), jamais mémorisée d'une
+Ronde à l'autre — reposée à chaque fois, jamais supposée. Une absence de réponse vaut « non »
+implicite ; une Ronde nocturne/autonome sans utilisateur présent saute intégralement Q1, jamais de
+blocage. Si **non** : déroulement habituel, aucune autre question de ce protocole. Si **oui**,
+**Q2** (« Voulez-vous revenir à votre modèle actuel avant ou après l'édition des rapports et de
+l'analyse ? ») : **avant** → une seule pause, une fois TOUS les scans de la Ronde terminés (jamais
+plusieurs pauses par lot), matérialisée par **Q3** (« Vous pouvez maintenant revenir au modèle/agent
+IA précédent, est-ce que c'est ok ? »), l'agent attendant simplement sans limite de temps ni relance
+automatique ; **après** → l'agent écrit rapports et analyse tout de suite sans attendre, avec un
+rappel final systématique une fois l'analyse terminée (« Voulez-vous maintenant revenir au modèle
+précédent (dernier rappel) ? », toujours posé même si rien ne laisse penser à un oubli) — une
+réponse négative à ce dernier rappel n'est jamais suivie d'insistance, l'agent continue normalement.
+**Vérification technique** : l'agent peut interroger sa propre session (`get_session`) pour
+connaître le modèle réellement actif et repérer un désaccord avec ce que l'utilisateur affirme —
+signalé clairement si trouvé, mais cette vérification ne remplace JAMAIS la confirmation manuelle
+de Q1/Q3 : l'agent pose toujours la question, même s'il pense déjà connaître la réponse.
+**Journalisation** : `buildCircleRunSummaryText()`/`buildCircleRunSummaryHtml()`
+(`scripts/circle-tasks.mjs`) acceptent désormais un paramètre optionnel `executedByModel` — une
+simple note ajoutée au récapitulatif nommant quel modèle a réellement exécuté la Ronde, jamais un
+champ obligatoire (silence total, comportement inchangé, si l'agent qui pilote ne le fournit pas).
+**Portée** : uniquement CIRCLE-TASKS pour l'instant, comme calibré — pas la simulation ni les audits
+coûteux (piste ouverte, jamais engagée). **Reste non construit, assumé** : aucun garde-fou mécanique
+ne peut vérifier que Q1/Q2/Q3 ont bien été posées en conversation (même limite honnête que le reste
+de ce paysage) — circle-process-guardian ne couvre pas ce protocole aujourd'hui, une extension
+future si le besoin s'en fait sentir.
+
 **Garde-fou en 3 modes AUTO/PRIME/GOAT, non négociable (2026-09-20, trouvé nécessaire après un vrai
 manquement : une Ronde entière exécutée sans jamais montrer de fenêtre à cocher — l'agent avait
 substitué son propre jugement de « Ronde sur mesure » ci-dessus à la confirmation, dérivant
