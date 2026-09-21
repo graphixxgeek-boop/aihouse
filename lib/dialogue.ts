@@ -126,13 +126,27 @@ export function conversationFocus(history: DialogueLine[], current: {
     return topics[Math.floor(current.cycle / 2) % topics.length];
 }
 
+// isRelationalThought() (2026-09-22, extrait de groundPrivateThought() pour être réutilisée par
+// app/api/lia/route.ts::loveRealized — Article 3, jamais une seconde copie de ce même regex).
+// Teste seulement si un texte mentionne l'autre personnage, jamais si son CONTENU est
+// spécifiquement "amoureux" (aucune liste de mots-clés, cf. Article 17 corollaire).
+// Bug trouvé en écrivant le test de ce correctif (même famille que le bug CLONE-HUNTER trouvé le
+// même soir) : `\bNoé\b` ne matche JAMAIS en JS non-Unicode, car "é" n'est pas un caractère de mot
+// pour `\b` (ASCII seul) — la frontière juste après "é" ne se déclenche donc jamais. Corrigé avec
+// des lookarounds Unicode (`\p{L}`, drapeau `u`) plutôt que `\b` — jamais un correctif partiel qui
+// laisserait Noé mal reconnu par son propre nom pendant que Lia l'est déjà (Article 3 : corrigé une
+// fois, plus jamais sous une autre forme).
+export function isRelationalThought(text:string) {
+    return /(?<![\p{L}\p{N}_])(?:Noé|Lia|elle|lui|son|sa|ses)(?![\p{L}\p{N}_])/iu.test(text);
+}
+
 // Thoughts are private feelings, never a substitute for physical actions.
 export function groundPrivateThought(thought:string|undefined, actor:1|2, attraction:number, stress:number, cycle:number, recent:string[]) {
     const peer=actor===1?"Noé":"Lia";
     const normalized=(s:string)=>s.toLowerCase().replace(/[^\p{L}\p{N}]/gu,"");
     const text=thought?.trim()??"";
     const describesAction=/\b(?:je|nous)\s+(?:m[’']approche|rejoins|regardons|examinons|lis|vois)|(?:avec\s+(?:Noé|Lia)|ensemble)\s+(?:devant|dans|au|à)|\b(?:écran|chiffres|code|ces chiffres)\b/i.test(text);
-    const relational=/\b(?:Noé|Lia|elle|lui|son|sa|ses)\b/i.test(text);
+    const relational=isRelationalThought(text);
     // Fenêtre anti-répétition élargie (2026-09-19, bug réel trouvé en analysant full_sim7 : « Je
     // pense à Noé... »/« J'ai envie de me rapprocher de Noé... »/« Noé m'intrigue... » revenaient
     // mot pour mot toutes les 2-3 occurrences pendant une longue plage de pensées solitaires en

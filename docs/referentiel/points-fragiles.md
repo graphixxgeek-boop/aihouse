@@ -113,3 +113,18 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   `index.md` jamais réellement peuplé — une limite honnête de cette heuristique (elle mesure quand
   le DOSSIER a été touché, pas si un vrai rapport y a été ajouté), à garder en tête en lisant ce
   signal pour un registre encore vide, pas un bug à corriger d'urgence.
+- **Idée non tranchée : un « mode simu » pour CLONE-HUNTER, distinct du mode code existant
+  (2026-09-22, question directe de l'utilisateur)** — test réel effectué sur les deux pensées mot
+  pour mot identiques trouvées dans full_sim17 (« Noé m'intrigue... » vs « Lia m'intrigue... ») :
+  le détecteur v2 (renommage bijectif) ne les reconnaît PAS comme un cas de renommage, alors que
+  c'est exactement le cas qu'il est censé couvrir. Cause confirmée : `TOKEN_RE`
+  (`scripts/clone-hunter.mjs`) ne reconnaît que les lettres ASCII — « Noé » se scinde en deux
+  tokens (« No » + « é ») alors que « Lia » reste un seul token, cassant l'égalité de longueur que
+  `matchLineTokens()` exige. Un « mode simu » (déclenché après chaque simulation, jamais à chaque
+  commit comme le mode code) nécessiterait donc d'abord d'étendre `TOKEN_RE` aux lettres
+  accentuées — pourrait ensuite pré-repérer des zones candidates à la répétition pour EL-PROFESSOR,
+  jamais remplacer son jugement. Question connexe posée le même soir, vérifiée : find-booster ne
+  reconnaît pas non plus la structure d'un transcript aujourd'hui (aucun de ses 4 motifs ne
+  correspond au format réel acteur/pièce/horodatage/texte) — nécessiterait un 5e motif dédié
+  réutilisant `parseTranscriptToDialogueBlocks()`. Rien construit, idée à reprendre si le besoin de
+  repérage mécanique dans les transcripts devient concret.

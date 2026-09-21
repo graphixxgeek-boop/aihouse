@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 218'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 219'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -1726,9 +1726,18 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
   sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=1').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),JSON.stringify({...initialEmotionsFor(1),attraction:70,trust:60}));
   sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=2').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:10,uncertainty:10}),JSON.stringify({...initialEmotionsFor(2),attraction:30,trust:60}));
-  const loveThought="Est-ce qu'on est vraiment en train de vivre une histoire, tous les deux ? Je n'ose rien dire pour l'instant.";
+  // 2026-09-22, corrigé après full_sim17 : le déclencheur n'exige plus que le thought tombe pile
+  // sur le TOUR EXACT du franchissement — il attend patiemment un tour où le thought est
+  // réellement relationnel (isRelationalThought(), lib/dialogue.ts). offTopicThought reproduit
+  // mot pour mot le vrai bug trouvé (le thought du tour de franchissement parlait de l'observateur,
+  // jamais de l'autre personnage) : « Il croit nous faire une faveur en nous laissant gérer notre
+  // temps. » (Noé, full_sim17 l.1154) — ne doit PAS déclencher le beat. loveThought, lui, mentionne
+  // bien l'autre personnage et doit déclencher le beat dès qu'il apparaît, même sur un tour LATER.
+  const offTopicThought="Il croit nous faire une faveur en nous laissant gérer notre temps.";
+  const loveThought="Est-ce qu'on est vraiment en train de vivre une histoire, Noé et moi ? Je n'ose rien dire pour l'instant.";
   const epoch1=(await readWorld(db)).epoch;
   const priorFetch2=globalThis.fetch;
+  let partnerThought=offTopicThought;
   globalThis.fetch=async(url,options)=>{
     const payload=JSON.parse(options.body),context=JSON.parse(payload.contents[0].parts[0].text);
     const isPartner=context.selfRole==='partner';
@@ -1737,7 +1746,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     // pipeline (attractionAfterTurn, pull-back solidaire...) amortissent le saut décidé par le
     // modèle avant le résultat final — ce test vérifie le franchissement, pas la valeur exacte.
     const emotions=isPartner?{...context.state.emotions,attraction:100}:context.state.emotions;
-    return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({intent:'chat',affectionAccepted:false,emotions,reply:isPartner?'On verra bien où ça va.':'Ça va, toi ?',thought:isPartner?loveThought:'Rien de spécial.',stayAlone:false,mood:'attentive',activity:'Je discute',goal:'Faire connaissance',action:'none',room:context.scene.room,memory:isPartner?loveThought:'Discussion.'})}]}}]});
+    return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({intent:'chat',affectionAccepted:false,emotions,reply:isPartner?'On verra bien où ça va.':'Ça va, toi ?',thought:isPartner?partnerThought:'Rien de spécial.',stayAlone:false,mood:'attentive',activity:'Je discute',goal:'Faire connaissance',action:'none',room:context.scene.room,memory:isPartner?partnerThought:'Discussion.'})}]}}]});
   };
   // Mode 'chat' délibérément : tout autre mode fait passer l'attirance par le lissage/crédit
   // (route.ts, ~l.961, "gain*.28") qui étalerait ce saut sur plusieurs tours et ne franchirait
@@ -1747,16 +1756,24 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(r1.status,200);
   const w1=await r1.json();
   assert.ok(w1.agents.find(a=>a.id===1).emotions.attraction>75,'setup check: Lia must actually cross 75 this turn, or this test proves nothing');
-  assert.ok(w1.story.life.loveRealized?.[1],'crossing 75 for the first time must set the persistent loveRealized flag for that character');
-  assert.ok(w1.messages.some(m=>m.speaker==='Lia · pensée'&&m.content===loveThought),'the model\'s own thought generated the same turn attraction crosses 75 for the first time must surface as a visible private line, never discarded');
-  // Un second tour, attirance encore au-dessus de 75 : la pensée ne doit jamais se répéter, le
+  assert.ok(!w1.story.life.loveRealized?.[1],'crossing 75 on a turn whose thought is NOT relational (the exact full_sim17 bug) must NOT set loveRealized yet — the beat must wait for a fitting thought, never fire with whatever text happens to be there');
+  assert.ok(!w1.messages.some(m=>m.speaker==='Lia · pensée'&&m.content===offTopicThought),'an off-topic thought must never be surfaced as the love-realization beat, even on the exact crossing turn');
+  // Tour suivant, attirance toujours au-dessus de 75, mais CETTE FOIS le thought est relationnel —
+  // le beat doit se déclencher MAINTENANT, sur ce tour plus tardif, jamais perdu pour toujours.
+  partnerThought=loveThought;
+  const epoch1b=(await readWorld(db)).epoch;
+  const r1b=await post(input('chat',2,{epoch:epoch1b,message:'Tu es toujours là ?'}));
+  const w1b=await r1b.json();
+  assert.ok(w1b.story.life.loveRealized?.[1],'once a genuinely relational thought appears on a LATER turn while attraction stays above 75, the beat must fire then — never permanently missed just because the crossing turn itself did not fit');
+  assert.ok(w1b.messages.some(m=>m.speaker==='Lia · pensée'&&m.content===loveThought),'the relational thought that actually triggers the beat must be the one surfaced as the visible private line');
+  // Un tour de plus, attirance encore au-dessus de 75 : la pensée ne doit jamais se répéter, le
   // franchissement n'ayant lieu qu'une fois.
   const epoch2=(await readWorld(db)).epoch;
   const r2=await post(input('chat',2,{epoch:epoch2,message:'Toujours là ?'}));
   const w2=await r2.json();
-  // w2.messages est l'historique CUMULÉ (jamais purgé) : la ligne du tour 1 y reste normalement
-  // visible. Ce qu'il faut vérifier n'est pas son absence mais qu'elle n'a jamais été ajoutée UNE
-  // SECONDE fois au tour 2 (compter, pas seulement chercher une présence déjà garantie par tour 1).
+  // w2.messages est l'historique CUMULÉ (jamais purgé) : la ligne du tour précédent y reste
+  // normalement visible. Ce qu'il faut vérifier n'est pas son absence mais qu'elle n'a jamais été
+  // ajoutée UNE SECONDE fois (compter, pas seulement chercher une présence déjà garantie avant).
   assert.equal(w2.messages.filter(m=>m.speaker==='Lia · pensée'&&m.content===loveThought).length,1,'the private love-realization line must never be inserted a second time once already shown once');
   globalThis.fetch=priorFetch2;
   // loveDiscussable : signalé seulement une fois un massage/baiser réellement consenti ET le doute
@@ -4540,10 +4557,31 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const soloAgent2Backup=sqlite.prepare('SELECT room,intent,needs,emotions FROM agent_state WHERE id=2').get();
   const progress=JSON.parse(soloScenarioBackup);
   progress.round=10;
+  // apartTurns (lib/story.ts, top-level, jamais sous life) doit être remis à 0 comme les autres
+  // compteurs ci-dessous — sinon ce test hérite silencieusement de tout ce que les tests précédents
+  // ont accumulé dans le fichier avant lui (coordinateRooms, lib/turn.ts, force le "suiveur" à
+  // rejoindre le "meneur" dès que apartTurns>=2, quel que soit stayAlone). Bug réel trouvé en
+  // écrivant Correctif 2 : un tour de plus ajouté à un test antérieur suffisait à faire passer ce
+  // compteur hérité au-dessus du seuil, fusionnant Lia et Noé dans la même pièce malgré stayAlone et
+  // faisant totalement disparaître l'amortissement solo que ce test vérifie (Article 5 : ne jamais
+  // dépendre d'un état accumulé silencieusement par d'autres tests).
+  progress.apartTurns=0;
   progress.life={...progress.life,credit:{1:0,2:10},debrief:undefined,contact:undefined,dispute:undefined};
   sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(progress));
   sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=1').run('salon','chat',JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}),JSON.stringify({...steady,attraction:10,trust:40}));
   sqlite.prepare('UPDATE agent_state SET room=?,intent=?,needs=?,emotions=? WHERE id=2').run('cuisine','chat',JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:50}),JSON.stringify({...steady,attraction:20,trust:40}));
+  // Historique de conversation vidé (2026-09-22, même geste que le test du doute amoureux privé
+  // plus haut) : nextSpeaker() (lib/dialogue.ts) choisit qui est "meneur" ce tour en lisant le
+  // DERNIER message de la table conversations, partagée par tous les tests de ce fichier — sans
+  // ce vidage, ce choix dépend silencieusement du nombre exact de tours joués par TOUS les tests
+  // précédents. Bug réel trouvé en écrivant Correctif 2 : ajouter un seul tour à un test antérieur a
+  // suffi à faire basculer nextSpeaker() vers Lia comme "meneur" au lieu de Noé — or seul le
+  // "second" (celui qui répond en retrait, jamais le "meneur") voit sa propre pièce respectée via
+  // stayAlone (route.ts, ~l.987) : le "meneur" est TOUJOURS placé par turnPlan.room, qui lisait ce
+  // même historique (agreedDestination/warmthChain/investigativeCue) et proposait alors une pièce
+  // différente de celle fixée ci-dessus, fusionnant silencieusement Lia et Noé dans la même pièce
+  // malgré stayAlone (Article 5 : ne jamais dépendre d'un état accumulé silencieusement ailleurs).
+  sqlite.exec('DELETE FROM conversations; DELETE FROM dialogue_fingerprints; DELETE FROM world_requests');
   // stayAlone:true est indispensable : coordinateRooms() (lib/turn.ts) réunit sinon
   // automatiquement le "suiveur" dans la pièce du "meneur" dès que story.round>=8 (join-together
   // par défaut), ce qui aurait rendu ce test faussement "ensemble" malgré des pièces différentes.

@@ -7,7 +7,7 @@ import {readLife,humanStress,isSleeping,isMuted,isStoic,activeBonus,detectDistre
 import { planTurn, coordinateRooms, residentPriority, sceneFor, proposedDestination } from "@/lib/turn";
 import { newStory, parseStory, rememberAges, advanceStory, storyContext, investigationTarget, investigationRecap, finaleReveal, groundFragment, seedPick, insoliteOpening, insoliteColdOpening, ageClueRevealed, fullEvidenceSet, skipRound, skipEmotionsFor, skipNeedsFor, tvPrograms, type Story } from "@/lib/story";
 import { ages, sleepRoom, attractionAfterTurn, proposalPressure, flirtingAssessment, receivedAffectionBonus, mutualAttraction, sharedActivityBonus } from "@/lib/relationship";
-import { nextSpeaker, dialogueProgress, dialogueContext, completedActivity, conversationFocus, explicitGestureConsent, groundAgeQuestion, groundIntroduction, groundScreenNotice, groundPrivateThought, groundRoomSpeech, groundSingleQuestion, groundRegister, groundTruncation, groundTvNotice, matchedThemes } from "@/lib/dialogue";
+import { nextSpeaker, dialogueProgress, dialogueContext, completedActivity, conversationFocus, explicitGestureConsent, groundAgeQuestion, groundIntroduction, groundScreenNotice, groundPrivateThought, groundRoomSpeech, groundSingleQuestion, groundRegister, groundTruncation, groundTvNotice, matchedThemes, isRelationalThought } from "@/lib/dialogue";
 import { advanceNeeds, priority, intentRoom, intentLabels, intents, affectionIntents, residentProfiles, initialNeedsFor, initialEmotionsFor, angerLevel } from "@/lib/simulation";
 import { env } from "cloudflare:workers";
 import { z } from "zod";
@@ -1583,18 +1583,23 @@ export async function POST(request: Request) {
                 continue;
             }
             d.emotions.attraction=Math.max(life.attachment[agent.id],d.emotions.attraction);
-            // Doute amoureux privé, la toute première fois seulement (2026-09-18, cf. lib/lia.ts
-            // DOUTE AMOUREUX PRIVÉ) : le modèle sait déjà reconnaître ce franchissement lui-même
-            // via state.emotions.attraction (valeur transmise AVANT ce tour) et y répondre dans
-            // thought — ce code décide seulement QUAND surfacer ce thought déjà généré (zéro appel
-            // API de plus), jamais son contenu. Une rare coïncidence avec la pensée de validation
-            // ci-dessus (même thought, même tour) resterait sans casse — deux lignes redondantes,
-            // jamais une incohérence — donc volontairement non gardée ici. Remplace l'ancien beat
-            // scripté à deux lignes fixes ("Punaise… je crois que je tombe amoureuse.") qui
-            // détectait le même franchissement (`life.loveNoticed`, retiré) sans jamais varier ni
-            // porter le doute existentiel demandé (Article 3/7 : une seule cause, pas deux
-            // mécanismes concurrents sur le même déclencheur).
-            if(agent.emotions.attraction<=75&&d.emotions.attraction>75&&!life.loveRealized?.[agent.id]&&d.thought){
+            // Doute amoureux privé (2026-09-18, cf. lib/lia.ts DOUTE AMOUREUX PRIVÉ ; corrigé le
+            // 2026-09-22, trouvaille de full_sim17) : le modèle sait souvent reconnaître ce
+            // franchissement lui-même et y répondre dans thought — ce code décide seulement QUAND
+            // surfacer ce thought déjà généré (zéro appel API de plus), jamais son contenu. Root-
+            // cause du correctif : la version précédente exigeait que ce thought tombe pile sur le
+            // TOUR EXACT du franchissement (`agent.emotions.attraction<=75`) — vérifié faux deux
+            // fois dans full_sim17 (Noé et Lia ont chacun franchi le seuil sur un tour dont le
+            // thought parlait d'autre chose que d'attirance, cf. correctifs-a-revalider.md). Le
+            // déclencheur ne regarde plus QUAND le seuil a été franchi, seulement s'il L'EST
+            // ACTUELLEMENT et si le thought de CE tour est relationnel (isRelationalThought(),
+            // lib/dialogue.ts, la même détection déjà utilisée par groundPrivateThought() — jamais
+            // une seconde règle divergente) : le jeu attend patiemment un tour où ça tombe juste,
+            // sur autant de tours qu'il faut, plutôt que de figer un thought hors sujet dès le
+            // premier tour disponible. Jamais un contenu forcé (Article 9 : ce moment reste
+            // possible mais jamais garanti si le modèle ne produit jamais de thought relationnel
+            // pendant que l'attirance reste au-dessus du seuil).
+            if(d.emotions.attraction>75&&!life.loveRealized?.[agent.id]&&d.thought&&isRelationalThought(d.thought)){
                 addLine(names[agent.id]+" · pensée",groundRegister(trackedGroundTruncation(d.thought,agent.id)),room);
                 life.loveRealized={...life.loveRealized,[agent.id]:true};
             }
