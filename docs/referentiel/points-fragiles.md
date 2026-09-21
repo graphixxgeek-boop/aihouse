@@ -141,13 +141,15 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   calibrage sur ce que "résumé" et "résumé de résumés" signifient précisément pour chaque type de
   journal (un historique de statuts clé/modèle n'a pas la même structure qu'un compteur d'usage) —
   jamais une implémentation devinée sans cette clarification.
-- **ALWAYS-NEW-CODE (Article 23) n'a jamais reçu son premier vrai passage, malgré au moins 3
-  signalements successifs (trouvaille de la veille hebdomadaire automatique du réseau, 2026-09-21)**
-  — `docs/always-new-code/index.md` est resté strictement vide (zéro ligne de passage) depuis sa
-  construction. La zone "Fatigue" a été recommandée comme la plus négligée à trois reprises dans
-  les Rondes CIRCLE-TASKS (lignes #177, #207, #225 de `docs/suivi/`), à chaque fois écartée comme
-  "hors scope d'une ronde légère" plutôt que réellement traitée. Écart annexe trouvé au passage : la
-  liste de tâches interne à l'agent affichait la tâche correspondante comme terminée, alors que
-  `docs/suivi/` — seule source de vérité durable — ne l'atteste nulle part ; corrigé par ce
-  signalement même. À planifier explicitement comme un vrai passage (niveau Exceptionnel de
-  CHECK-LEVEL-TARGET), pas reporté une 4e fois.
+- **ALWAYS-NEW-CODE (Article 23) : premier vrai passage effectué le 2026-09-21 (zone Fatigue),
+  2 trouvailles confirmées en attente de décision utilisateur** — cf.
+  `docs/always-new-code/2026-09-21-fatigue.md` pour le détail complet : (1) le seuil de sommeil
+  (`fatigue>=68`) est dupliqué en toutes lettres dans le prompt de `lib/lia.ts`, sans constante
+  partagée avec `lib/simulation.ts:96` — un futur rééquilibrage pourrait faire diverger les deux
+  sans avertissement ; (2) `cyclePosition(round)===0&&round>0` ("l'aube") est retapé à l'identique
+  deux fois dans `app/api/lia/route.ts`, alors que `lib/daynight.ts` exporte déjà `isNight()`/
+  `isMidnight()` pour éviter exactement ce risque — aucun `isDawn()` équivalent n'a jamais été créé.
+  Aucun changement appliqué (Article 23 : jamais automatique) — questions de calibrage préparées
+  pour le retour de l'utilisateur. Les 7 autres zones (Cycle jour/nuit, Enquête, Bonus roulette,
+  Appréciation de l'observateur, Dossier retourné, Déplacements/espace, Relation Lia/Noé) restent
+  toutes à égalité de fraîcheur (jamais examinées).
