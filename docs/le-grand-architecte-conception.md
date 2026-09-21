@@ -76,9 +76,12 @@ déclenchée), jamais une intuition non vérifiable.
 - **Coût** : gratuit en appel API (raisonnement pur, aucun appel Gemini) — mais un vrai coût de
   RAISONNEMENT pour l'agent qui pilote, exactement comme ALWAYS-NEW-CODE. **Consultation
   SMART-CONSO-TOKEN obligatoire avant tout vrai passage**, jamais un réflexe gratuit.
-- **Déclenchement (proposé, à calibrer)** : sur demande explicite, ou proposé via
-  CHECK-LEVEL-TARGET niveau « Exceptionnel » (même mécanisme que ALWAYS-NEW-CODE) — jamais
-  automatique à chaque commit.
+- **Déclenchement, calibré (2026-09-21)** : 2 niveaux, même patron qu'ALWAYS-NEW-CODE. **Léger** —
+  un signal inclus automatiquement dans chaque Ronde CIRCLE-TASKS (item à créer, ex.
+  `le-grand-architecte-signal`), qui se contente de lire les signaux déjà accumulés (comme
+  `always-new-code-signal` le fait déjà) — jamais un vrai raisonnement à ce niveau. **Lourd** — le
+  vrai passage d'évaluation/recommandation, uniquement sur demande explicite ou proposé au niveau
+  « Exceptionnel » de CHECK-LEVEL-TARGET, jamais automatique.
 
 ## 6. Statut de ce document
 

@@ -45,6 +45,18 @@ document qu'elle cite.
 | Projet entier — vue mère (ce document) | `docs/referentiel/organisation-globale-projet.md` | Agent, manuellement | LE-GRAND-ARCHITECTE (§4 ci-dessous, proposé) |
 | Méthode de collaboration | `docs/regles-de-travail.md` (hors §7ter) | Utilisateur + agent | inchangé |
 | Boussole de valeurs | `docs/philosophie-et-politique.md` | Révisé exceptionnellement | veillé par THE-KING (inchangé) |
+| **Cartographie des blueprints** *(candidat identifié, pas encore construit)* | Aujourd'hui dupliqué entre `CLAUDE.md` (une section « ## X — blueprint exportable » par outil, ~40 sections) et `docs/regles-de-travail.md` §7ter (table complète) | Aucun — duplication non arbitrée | LE-GRAND-ARCHITECTE, une fois construit |
+
+**Candidat de centralisation trouvé en cherchant (demande explicite : « essaie de voir ce qu'il y
+a de plus pertinent »)** : `CLAUDE.md` porte aujourd'hui ~40 sections « blueprint exportable », une
+par outil, qui redisent en prose ce que la table de `docs/regles-de-travail.md` §7ter dit déjà en
+colonnes — la seule vraie info propre à `CLAUDE.md` est le pointeur vers les 2 fichiers de chaque
+outil (`docs/X-blueprint.md` + `docs/referentiel/X.md`). Extraire cette cartographie dans un document
+séparé (`docs/referentiel/index-outils.md` ou fusionné dans ce document mère) allégerait `CLAUDE.md`
+— le seul document relu à CHAQUE message (Article 13) — d'un poids réel. **Pas exécuté maintenant** :
+une vraie migration de contenu hors de `CLAUDE.md` suit la procédure formalisée de
+`docs/referentiel/smart-conso-token.md` (scanner/identifier/trier/archiver/vérifier/documenter),
+jamais un retrait improvisé — proposé ici comme candidat, décision à confirmer séparément.
 
 **Décision explicite prise en construisant ce document (2026-09-21)** : pas de sous-document
 supplémentaire par pôle au-delà de ce qui existe déjà. `organisation-agence.md` couvre déjà

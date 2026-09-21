@@ -382,6 +382,18 @@ KPI, EL-PROFESSOR, simulations, THE-FINAL-JUDGE...), jamais un traitement spéci
    un post-traitement par rapport. Même garde-fou `checkHtmlReportTheme()` que ci-dessus, qui
    vérifie sa présence à chaque exécution de Doc-Report.
 
+**Économie de tokens sur les corrections mineures d'un Artifact déjà livré (2026-09-21, demande
+explicite de l'utilisateur : « fais juste la correction sans me livrer le fichier mis à jour stp
+(economie token, smart conso, regles à fixer pour economies token) »).** Un renommage cosmétique ou
+une correction mineure (typo, libellé, couleur d'un badge) sur un Artifact déjà livré n'exige jamais
+de republier ET de renarrer l'action à chaque fois — les deux coûtent des tokens réels pour un
+changement que l'utilisateur n'a pas besoin de revoir immédiatement. Par défaut : appliquer la
+correction au fichier source, la mentionner en une ligne (jamais un silence complet — Article 13
+sur la traçabilité), et ne republier l'Artifact que si l'utilisateur le redemande explicitement ou
+qu'une accumulation de plusieurs petites corrections justifie un rafraîchissement groupé. Distinct
+de la règle « Conserver les versions précédentes » ci-dessous, qui protège l'archive — celle-ci
+protège le rythme de republication/narration, jamais le contenu conservé.
+
 **Conserver les versions précédentes pour comparaison rapide.** *(Ajouté le 2026-09-18, à la
 demande explicite de l'utilisateur, après un besoin réel : comparer deux transcripts de simulation
 pour diagnostiquer une régression sur un passage précis — Point 7 de la relecture du
@@ -571,13 +583,14 @@ m'aider à clarifier ces distinctions entre scripts, employés de la team, scrip
   par plusieurs fichiers d'infrastructure (ex. Smart Breaker = 4 fichiers) sans que chacun d'eux
   ait besoin de son propre statut.
 
-**Lecture groupée demandée par l'utilisateur (2026-09-21) : « la Plomberie » vs les Utilitaires
+**Lecture groupée demandée par l'utilisateur (2026-09-21) : « Équipe Infrastructure » (renommée
+depuis « la Plomberie », même soir) vs les Utilitaires
 nommés proprement dits.** Ces deux statuts (Utilitaire nommé, Infrastructure) restent DEUX statuts
 Axe A distincts, jamais fusionnés dans le code ni dans `checkAgentOnboarding()` — mais pour la
 LECTURE humaine de l'organigramme (schéma, futurs documents d'organisation), l'utilisateur a
 explicitement demandé de les regrouper visuellement sous deux sous-catégories nommées, jamais
 mélangées en une seule liste indifférenciée comme un premier schéma l'a fait par erreur :
-- **La Plomberie** (= Infrastructure ci-dessus) — `check-house.mjs`, `check-spirit.mjs`/
+- **Équipe Infrastructure** (= Infrastructure ci-dessus) — `check-house.mjs`, `check-spirit.mjs`/
   `check-profile.mjs`, `lib-shell.mjs`, `check-argus.mjs`, `check-harmonia.mjs` : jamais nommée
   individuellement dans le catalogue, fait tourner tout le reste.
 - **Utilitaires nommés** (au sens strict) — doc-HTML, CHARTER-SPY, tool-usage.mjs, Doc-Report,
