@@ -284,21 +284,6 @@ export const CIRCLE_ITEMS = [
     tokensEstimes: "faible si inchangé (texte simple) ; modéré si nouveau (rédaction d'un rapport HTML complet)",
     execute: "AVANT tout appel de code : relire PRESTATIONS et le paysage complet des outils (docs/regles-de-travail.md §7ter) pour identifier toute combinaison de 2-3 outils réellement utile pas encore proposée ensemble — l'ajouter comme nouvelle prestation nommée si elle apporte une vraie valeur, jamais mécaniquement générée. Appeler ENSUITE recordCatalog() puis buildCatalogDelivery() (scripts/le-coordinateur.mjs) — livrer le résultat en fichier HTML si written:true (nouvelle version réelle, review comprise), ou juste le texte simple si written:false (rien n'a changé depuis la dernière fois, review déjà faite sans rien trouver de neuf).",
   },
-  // clone-hunter-run (2026-09-21, tâche #170bis — demande explicite de l'utilisateur : « tu
-  // integres clone hunter à la ronde periodique, en lancement auto comme les autres de la suite
-  // verif »). Contrairement aux "-signal" ci-dessus (qui ne font QUE lire un index de passages
-  // déjà faits), celui-ci relance le VRAI scan à chaque passage — même traitement que
-  // profil-utilisateur-guard/network-check-run, jamais une simple promesse de fraîcheur : la
-  // détection de duplication n'a pas de mémoire persistante à consulter, seule une exécution
-  // réelle donne un résultat honnête.
-  {
-    id: "clone-hunter-run",
-    theme: "Passages réels (smoke run)",
-    label: "Chasser les blocs de code dupliqués (CLONE-HUNTER)",
-    cout: "gratuit — node scripts/clone-hunter.mjs, scan mécanique de texte sur lib/scripts/app/components (hors components/ui, vendored), zéro appel API",
-    tokensEstimes: "faible à modéré — sortie compacte des clusters trouvés, plus la lecture du code source si une factorisation est ensuite proposée",
-    execute: "Lancer `node scripts/clone-hunter.mjs` (ou appeler buildDuplicateReport() directement) et lire les clusters trouvés, triés par impact — jamais une factorisation automatique, seulement un signal factuel ; proposer une factorisation seulement pour un cluster réellement significatif, jamais chaque paire de lignes coïncidentes.",
-  },
   // THE-FINAL-JUDGE (2026-09-20, demande explicite de l'utilisateur : « integre le dans la liste à
   // cocher malgré tout [...] avec un panneau d'avertissement [...] caractères couleur rouge [...]
   // le coût en token »). Revient sur le choix initial (le garder hors de la fenêtre) — l'utilisateur
@@ -375,6 +360,7 @@ export const CIRCLE_EXCLUDED_REGISTRIES = {
   harmonia: "tourne déjà à chaque commit (Article 20), jamais une routine manuelle en plus",
   "axa-check": "tourne déjà à chaque commit (Article 20), jamais une routine manuelle en plus",
   "clean-dirty-old": "sa partie mécanique tourne déjà à chaque commit (Article 20) — seul son SIGNAL de fraîcheur rejoint la Ronde (clean-dirty-old-signal), jamais un second passage complet",
+  "clone-hunter": "cinquième Gardien sacré depuis le 2026-09-22 (demande explicite de l'utilisateur), tourne désormais déjà à chaque commit (Article 20) — jamais une routine manuelle en plus, exactement comme les 4 autres Gardiens ci-dessus",
   "check-level-target": "outil de classification interne, jamais une routine à cocher soi-même",
   "hyper-scan-checkpoint": "outil exceptionnel (Article 21), jamais coché par défaut ni régulier",
   "memory-audit": "cible la mémoire narrative de Lia/Noé en jeu, jamais un scan de repo — vérifiable seulement sur des instantanés réels de partie (pendant/après une simulation) ; son voisin memento weight est déjà rapporté via kpi-report.mjs (reportMementoWeight), jamais une routine CIRCLE-TASKS séparée",

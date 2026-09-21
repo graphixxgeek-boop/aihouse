@@ -47,15 +47,28 @@ restants (dans `scripts/`) sont tous des trouvailles réelles, vérifiées une �
 plus significative : `loadJson()` dupliqué verbatim entre `scripts/smart-conso-api.mjs` et
 `scripts/smart-conso-token.mjs` (8 lignes).
 
-## CIRCLE-TASKS — un vrai lancement à chaque passage, jamais un simple signal
+## Promotion en Gardien sacré du code (2026-09-22) — statut actuel, remplace la Ronde périodique
 
-Demande explicite de l'utilisateur (« tu integres clone hunter à la ronde periodique, en lancement
-auto comme les autres de la suite verif ») : contrairement aux items `-signal` de CIRCLE-TASKS (qui
-ne lisent QUE la fraîcheur d'un index de passages déjà faits), `clone-hunter-run` relance le VRAI
-scan à chaque passage — même traitement que `profil-utilisateur-guard`/`network-check-run`, dans le
-même thème "Passages réels (smoke run)". Raison : la détection de duplication n'a pas de mémoire
-persistante à consulter pour estimer une fraîcheur honnête, seule une exécution réelle donne un
-résultat qui vaille la peine d'être lu.
+CLONE-HUNTER a d'abord rejoint la Ronde périodique CIRCLE-TASKS (`clone-hunter-run`, lancement réel
+à chaque passage — raison à l'époque : la détection de duplication n'a pas de mémoire persistante à
+consulter pour estimer une fraîcheur honnête). Le même soir, l'utilisateur a demandé sa promotion au
+rang de **5e Gardien sacré du code** (Article 20 de CLAUDE.md, critère double : délivre un vrai scan
+de qualité ET peut tourner automatiquement, gratuitement, à chaque commit — confirmé, <1s sur tout
+le dépôt). Cette promotion REMPLACE l'intégration CIRCLE-TASKS plutôt que de s'y ajouter :
+- `clone-hunter-run` a été retiré de `CIRCLE_ITEMS` (le lancement périodique devient un doublon dès
+  qu'un vrai lancement automatique existe à chaque commit).
+- `docs/clone-hunter/` a rejoint `CIRCLE_EXCLUDED_REGISTRIES` avec la justification standard des
+  Gardiens.
+- CLONE-HUNTER est désormais appelé directement (fonction pure, jamais son `main()` CLI) dans le
+  crochet `post-commit` réel (`scripts/hooks/check-last-commit.mjs`), aux côtés d'ARGUS/HARMONIA/
+  AXA-CHECK/CLEAN-DIRTY-OLD.
+- Son résultat alimente `checkAgentOnboarding()` (paramètre `cloneHunterFindingsCount`, badge et
+  échelle de couverture « OK 100% » désormais à 5 signaux sur 5, jamais 4).
+- Il est agrégé dans la version légère de HYPER-SCAN-CHECKPOINT (gap réel trouvé et corrigé le même
+  soir que la promotion).
+
+Détail complet du répertoire des 7 fonctionnements partagés que tout Gardien doit honorer :
+`docs/referentiel/organisation-agence.md` §3.
 
 ## Un signal factuel, jamais une correction automatique
 
@@ -108,5 +121,6 @@ vérifiée live contre le vrai dépôt (exclusion de `components/ui/` confirmée
 `loadJson()` retrouvée). v2 testée en fixtures synthétiques (renommage cohérent détecté, mapping
 incohérent rejeté, doublon littéral jamais recompté, propriété réelle après un "." jamais renommée)
 ET vérifiée live (6 trouvailles réelles inédites, même exclusion `components/ui/` héritée). Entrée
-PRESTATIONS "Pack Chasse aux clones". Item CIRCLE-TASKS `clone-hunter-run` (relance les deux
-versions). Registre : `docs/clone-hunter/` (dossier + index), deux constats consignés.
+PRESTATIONS "Pack Chasse aux clones". Statut : 5e Gardien sacré du code depuis le 2026-09-22 (cf.
+section dédiée ci-dessus), plus d'item CIRCLE-TASKS. Registre : `docs/clone-hunter/` (dossier +
+index), deux constats consignés.

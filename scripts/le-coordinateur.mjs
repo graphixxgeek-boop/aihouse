@@ -43,7 +43,7 @@
 import { existsSync, mkdtempSync, rmSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { sh, assertNotAPersonnage } from "./lib-shell.mjs";
+import { sh, assertNotAPersonnage, AGENT_CATEGORIES } from "./lib-shell.mjs";
 import { collectCoverage, robustnessScore, LIB_MAP } from "./axa-check.mjs";
 import { summarizeArgusOutput, summarizeHarmoniaOutput } from "./hyper-scan-checkpoint.mjs";
 import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
@@ -414,8 +414,10 @@ export function checkAgentOnboarding(agentName, {
   argusFindingsCount = undefined,
   harmoniaFindingsCount = undefined,
   cleanDirtyOldFlagged = false,
+  cloneHunterFindingsCount = undefined,
   lastVerifiedAt = null,
   hasDocReportDecision = undefined,
+  reciprocalWiring = null,
 } = {}) {
   assertNotAPersonnage(agentName, "checkAgentOnboarding()");
   const gaps = [];
@@ -473,6 +475,24 @@ export function checkAgentOnboarding(agentName, {
     gaps.push("aucune mention trouvée dans docs/suivi/ — sa construction ne serait pas tracée dans le système de suivi durable");
   }
 
+  // Câblage réciproque (2026-09-22, demande explicite de l'utilisateur : « je veux [...] celle qui
+  // dit que l'agent-script est bien câblé avec tous les autres, et tous les autres sont bien câblés à
+  // lui »). Généralise et rend mécanique le type de trou trouvé deux fois le même soir à l'arrivée de
+  // CLONE-HUNTER comme Gardien (câblé dans le post-commit hook, oublié dans HYPER-SCAN-CHECKPOINT) :
+  // les 6 vérifications ci-dessus regardent seulement "cet Agent existe-t-il aux bons endroits ?",
+  // jamais "les AUTRES systèmes le mentionnent-ils réellement là où ils le devraient ?". L'appelant
+  // fournit un tableau hétérogène de {label, ok} — le contenu exact dépend du type d'Agent (pour un
+  // Gardien sacré : présence dans check-last-commit.mjs, dans hyper-scan-checkpoint.mjs, exclusion de
+  // CIRCLE_ITEMS ; pour un Membre ordinaire : présence dans le menu PRESTATIONS, référence dans
+  // organisation-agence.md) — checkAgentOnboarding() reste agnostique du détail, il ne fait
+  // qu'agréger honnêtement ce que l'appelant a déjà vérifié. `null` (jamais fourni) reste silencieux,
+  // jamais un gap fabriqué — même discipline que axaCoveragePct/claudeMdText ci-dessus.
+  if (reciprocalWiring) {
+    for (const { label, ok } of reciprocalWiring) {
+      if (!ok) gaps.push(`câblage réciproque manquant : ${label}`);
+    }
+  }
+
   // Rappels : jamais vérifiables mécaniquement avec une confiance suffisante pour compter comme un
   // vrai "gap" (un faux positif serait pire qu'un oubli réel), mais des points RÉELLEMENT oubliés au
   // moins une fois cette session (THE-DEEP-READER) — toujours rendus, jamais un blocage.
@@ -491,7 +511,17 @@ export function checkAgentOnboarding(agentName, {
   // jamais bloquer le jeu réel pour une question d'outillage de travail). LE-COORDINATEUR est
   // aujourd'hui celui qui délivre ce badge de fait (CASSANDRA-RH n'existe pas encore) ; une fois
   // construite, elle affichera/consultera ce même résultat, jamais un second calcul indépendant.
-  const badge = gaps.length === 0 ? "🎖️ Membre certifié" : "⚠️ Pas encore certifié";
+  //
+  // Catégorie (2026-09-22, demande explicite de l'utilisateur : « le badge de chaque employé de
+  // l'agence codex mentionne la catégorie à laquelle il appartient »). Lue depuis la même source que
+  // CASSANDRA-RH utilisera plus tard (`AGENT_CATEGORIES`, lib-shell.mjs — miroir de
+  // docs/referentiel/organisation-agence.md), jamais une seconde classification recalculée ici.
+  // `undefined` pour un Agent absent de cette table (oubli de mise à jour, ou script pas encore un
+  // Agent statutaire) — affiché tel quel comme un signal d'écart, jamais masqué par une valeur par
+  // défaut inventée.
+  const category = AGENT_CATEGORIES[slug];
+  const categoryLabel = category ? ` (${category})` : " (catégorie non répertoriée — à ajouter dans AGENT_CATEGORIES)";
+  const badge = gaps.length === 0 ? `🎖️ Membre certifié${categoryLabel}` : `⚠️ Pas encore certifié${categoryLabel}`;
 
   // Échelle de couverture à 3 niveaux (tâche #224, 2026-09-20T23:50Z, texte source reproduit à
   // l'identique par l'utilisateur) : « en cours » (jamais scanné/très faible), « partiel »
@@ -501,15 +531,18 @@ export function checkAgentOnboarding(agentName, {
   // chaque vérification KO nommée séparément, jointes par une virgule quand plusieurs — un
   // pourcentage entre parenthèses UNIQUEMENT pour AXA-CHECK (seul signal chiffré ; ARGUS/HARMONIA/
   // CLEAN-DIRTY-OLD restent binaires, jamais un KO nu accompagné d'un faux pourcentage). « OK 100% »
-  // exige les 4 membres de l'équipe noyau (Article 20) au vert ensemble — AXA-CHECK 100%, zéro
-  // trouvaille ARGUS, zéro trouvaille HARMONIA, zéro signal CLEAN-DIRTY-OLD — jamais un sous-ensemble
-  // de 3 sur 4 (écart trouvé le 2026-09-21 en répondant à une question directe de l'utilisateur : le
-  // premier jet oubliait CLEAN-DIRTY-OLD alors qu'il a exactement le même statut "toujours déployé"
-  // que les trois autres). Distinct du badge lui-même (jamais conditionné par la couverture).
+  // exige les 5 Gardiens sacrés du code (Article 20) au vert ensemble — AXA-CHECK 100%, zéro
+  // trouvaille ARGUS, zéro trouvaille HARMONIA, zéro signal CLEAN-DIRTY-OLD, zéro trouvaille
+  // CLONE-HUNTER — jamais un sous-ensemble de 4 sur 5 (déjà corrigé une première fois le 2026-09-21
+  // quand le premier jet oubliait CLEAN-DIRTY-OLD, puis une seconde fois le même soir à l'arrivée de
+  // CLONE-HUNTER comme 5e Gardien — même défaut structurel à chaque fois : un nouveau Gardien doit
+  // systématiquement rejoindre CETTE liste, jamais seulement le post-commit hook). Distinct du badge
+  // lui-même (jamais conditionné par la couverture).
   const koParts = [];
   if (argusFindingsCount) koParts.push("KO ARGUS");
   if (harmoniaFindingsCount) koParts.push("KO HARMONIA");
   if (cleanDirtyOldFlagged) koParts.push("KO CLEAN-DIRTY-OLD");
+  if (cloneHunterFindingsCount) koParts.push("KO CLONE-HUNTER");
   if (axaCoveragePct != null && axaCoveragePct < 100) koParts.push(`KO AXA-CHECK ${Math.round(axaCoveragePct)}%`);
 
   const couvertureTier = axaCoveragePct == null ? "en cours" : koParts.length === 0 ? "OK 100%" : "partiel";
@@ -523,7 +556,26 @@ export function checkAgentOnboarding(agentName, {
   // seulement affichée quand l'appelant la fournit réellement (moment du scan AXA-CHECK/ARGUS/
   // HARMONIA/CLEAN-DIRTY-OLD ayant produit ces chiffres), jamais devinée ni datée du jour courant.
   const verifiedSuffix = lastVerifiedAt ? ` (vérifié le ${lastVerifiedAt})` : "";
-  const message = `🎖️ ${agentName} obtient son badge — intégration complète vérifiée (blueprint, instanciation, registre, mention CLAUDE.md, présence PRESTATIONS). Couverture de code : ${couvertureLabel}${verifiedSuffix}.`;
+
+  // Message (2026-09-22, demande explicite de l'utilisateur : « je veux toutes les validations,
+  // surtout celle qui dit que l'agent-script est bien câblé avec tous les autres [...] et ses
+  // prestations figurent bien au catalogue du coordinateur »). Remplace l'ancienne liste FIXE
+  // ("blueprint, instanciation, registre, mention CLAUDE.md, présence PRESTATIONS", toujours
+  // affichée à l'identique quels que soient les paramètres réellement fournis) par une énumération
+  // CONSTRUITE à partir de ce qui a été réellement vérifié — même discipline que le reste de la
+  // fonction (`undefined`/`null` = jamais vérifié, jamais listé comme si ça l'avait été).
+  const validations = ["table maîtresse (docs/regles-de-travail.md §7ter)"];
+  if (inMenu) validations.push("entrée PRESTATIONS (catalogue LE-COORDINATEUR)");
+  validations.push(`instanciation (docs/referentiel/${slug}.md)`);
+  validations.push(`registre (${registryPrefix})`);
+  validations.push(cousinOf ? `blueprint (cousin de ${cousinOf})` : `blueprint (docs/${slug}-blueprint.md)`);
+  if (claudeMdText != null) validations.push("mention CLAUDE.md");
+  if (suiviText != null) validations.push("trace docs/suivi/");
+  if (hasDocReportDecision != null) validations.push("décision Doc-Report (HTML/texte)");
+  if (reciprocalWiring) {
+    for (const { label, ok } of reciprocalWiring) if (ok) validations.push(label);
+  }
+  const message = `🎖️ ${agentName} obtient son badge — toutes les validations réunies : ${validations.join(", ")}. Couverture de code : ${couvertureLabel}${verifiedSuffix}.`;
 
   return { agentName, slug, gaps, rappels, badge, complet: gaps.length === 0, couverture, message };
 }
@@ -586,6 +638,36 @@ export function announceBadgeCeremony(result, { historyPath = BADGE_CEREMONY_HIS
   if (hasBeenCertifiedBefore(result.slug, history)) return null;
   recordCertification(result.slug, now, historyPath);
   return formatBadgeCeremonyAnnouncement(result);
+}
+
+// checkAllAgentBadges() (2026-09-22, demande explicite de l'utilisateur : « tu crées un petit script
+// pour gérer toute cette partie validation/intégration/badge/message [...] avec déclenchement auto
+// quand le script reçoit son badge réellement dans le code »). Décision explicite prise avec
+// l'utilisateur : jamais un nouveau fichier séparé — LE-COORDINATEUR porte déjà `checkAgentOnboarding()`
+// et `announceBadgeCeremony()`, cette fonction ne fait que balayer TOUTE la table maîtresse plutôt que
+// de dépendre d'un appel manuel outil par outil (ce que `badgeWarningsForOutils()` ci-dessus fait déjà,
+// mais seulement pour les outils cités dans UNE prestation précise, jamais pour l'ensemble).
+// `onboardingContext` suit exactement la même forme que `checkAgentOnboarding()` (mêmes clés,
+// `agentOverrides` inclus) — le vrai rassemblement des données (CLAUDE.md, docs/suivi, couverture
+// AXA-CHECK par script, câblage réciproque des Gardiens) reste la responsabilité de l'appelant
+// (`scripts/hooks/check-last-commit.mjs`), jamais de cette fonction elle-même : elle reste pure et
+// testable sans toucher au disque, exactement comme `checkAgentOnboarding()`.
+export function checkAllAgentBadges(onboardingContext, { historyPath = BADGE_CEREMONY_HISTORY_PATH, now = Date.now() } = {}) {
+  if (!onboardingContext?.toolsTableMarkdown) return [];
+  const rows = parseToolsTable(onboardingContext.toolsTableMarkdown).filter((r) => r.statut === "Agent");
+  const announcements = [];
+  for (const row of rows) {
+    const overrides = onboardingContext.agentOverrides?.[row.tool] ?? {};
+    let result;
+    try {
+      result = checkAgentOnboarding(row.tool, { ...onboardingContext, ...overrides });
+    } catch {
+      continue; // garde-fou Personnage ou nom malformé — jamais un balayage cassé pour un seul outil
+    }
+    const announcement = announceBadgeCeremony(result, { historyPath, now });
+    if (announcement) announcements.push(announcement);
+  }
+  return announcements;
 }
 
 // Passthrough vers CHECK-LEVEL-TARGET (accès "privilégié" direct, jamais une réimplémentation) —

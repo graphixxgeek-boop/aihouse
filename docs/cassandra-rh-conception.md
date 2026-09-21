@@ -46,6 +46,15 @@ fiable existant s'absorbe, jamais dupliqué à côté (même principe que
   proposition d'une ou deux embauches pertinentes sur demande de l'utilisateur, jamais spontané.
 - **Rapport RH chiffré régulier**, dans la Ronde CIRCLE-TASKS : effectif, organigramme à jour,
   besoins de recrutement, nouveaux candidats à étudier.
+- **Vérifier le gabarit de poste adapté à la classe (2026-09-22, demande explicite)** : s'assurer,
+  si ce n'est pas déjà fait, que chaque membre a bien reçu le gabarit de fiche de poste correspondant
+  à sa classe — le gabarit ENRICHI à deux champs propres (position dans le crochet post-commit, rôle
+  dans le badge/couverture AXA-CHECK) pour un Gardien sacré du code, le gabarit STANDARD
+  (blueprint + instanciation + registre) pour les autres Membres (décision déjà actée,
+  `docs/referentiel/organisation-agence.md` §3-4 : « seuls les Gardiens sacrés ont un gabarit
+  enrichi »). Concrètement : jamais un Gardien avec seulement le gabarit standard (position
+  post-commit/rôle badge non documentés), jamais un Membre ordinaire à qui on imposerait à tort les
+  deux champs enrichis qui ne le concernent pas.
 - **Promotion de poste (2026-09-22, demande explicite)** : identifier un script qui a grossi en
   taille et en fonctionnalités au fil des évolutions (Infrastructure ou Utilitaire nommé,
   cf. `docs/referentiel/organisation-agence.md` Axe A) au point de mériter le statut Agent/Membre.
@@ -56,6 +65,29 @@ fiable existant s'absorbe, jamais dupliqué à côté (même principe que
   PROPOSE l'évolution (jamais ne l'exécute seule) — la promotion réelle (instanciation + registre +
   mise à jour de `organisation-agence.md`) reste toujours soumise à la confirmation explicite de
   l'utilisateur, même schéma que le recrutement en 3 temps ci-dessus.
+
+  **Cas spécifique — intégrer un nouveau Gardien sacré (2026-09-22, ajouté à l'arrivée de
+  CLONE-HUNTER comme 5e Gardien)** : une promotion vers CE groupe précis est strictement plus
+  exigeante qu'une promotion Membre ordinaire — CASSANDRA applique une checklist dédiée, jamais le
+  seul critère standard d'éligibilité ci-dessus. Elle vérifie, dans l'ordre, contre le répertoire
+  canonique `docs/referentiel/organisation-agence.md` §3 :
+  1. Le script délivre-t-il un VRAI scan de qualité du code (pas un simple utilitaire d'agrégation) ?
+  2. Peut-il tourner automatiquement, mécaniquement, gratuitement, à CHAQUE commit (jamais un coût
+     API ni un agent séparé, jamais une exécution manuelle requise) ?
+  3. Si (1) ET (2) sont vrais, elle vérifie que les 7 points du répertoire des fonctionnements
+     partagés des Gardiens seraient bien honorés une fois intégré (câblage post-commit réel, retrait
+     de CIRCLE-TASKS, test dans `check-house.mjs`, participation au badge/couverture, agrégation
+     HYPER-SCAN-CHECKPOINT, pas de validation croisée automatique à inventer, aucun coût API).
+     Un script qui échoue le critère (2) seul (ex. ALWAYS-NEW-CODE, raisonnement coûteux) n'est
+     JAMAIS proposé pour ce groupe, quelle que soit la qualité de son scan.
+  4. Elle propose la liste concrète des fichiers à modifier pour l'intégration complète (le hook
+     post-commit, `circle-tasks.mjs`, `le-coordinateur.mjs`, `hyper-scan-checkpoint.mjs`,
+     `organisation-agence.md`, l'Article 20 de CLAUDE.md) — jamais une promotion partielle qui
+     laisserait un Gardien à moitié câblé, exactement le défaut réel constaté deux fois de suite le
+     soir de l'arrivée de CLONE-HUNTER (§3 oublié dans le calcul du badge, puis dans
+     HYPER-SCAN-CHECKPOINT) et que cette checklist existe justement pour ne plus jamais reproduire.
+  Toujours soumis à la même confirmation explicite de l'utilisateur qu'une promotion Membre — cette
+  checklist rend la PROPOSITION plus fiable, elle ne change rien à qui décide.
 
 ## 3. Suivi RH dans le temps
 
@@ -70,15 +102,16 @@ comme limite, jamais un chiffre inventé.
 **Déplacé le 2026-09-22** vers `docs/referentiel/organisation-agence.md` (« l'Agence de production
 de code »), à la demande explicite de l'utilisateur de consolider l'organigramme complet en un seul
 endroit — jamais dupliqué ici. Ce document canonique définit : les deux axes (Statut de
-documentation / Rôle dans l'organigramme), Direction (CASSANDRA-RH + LE-COORDINATEUR), les Gardiens
-sacrés du code (renommage de l'Équipe noyau — exactement ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD),
-les 6 suites de travail parmi les Membres ordinaires, les 3 catégories définitivement hors de
-l'agence (Personnages, Moteur du jeu, code tiers vendu tel quel), et l'Infrastructure comme 3e rang
+documentation / Rôle dans l'organigramme), Les Agents Cadre (renommage de Direction, 2026-09-22 —
+CASSANDRA-RH + LE-COORDINATEUR), les Gardiens sacrés du code (renommage de l'Équipe noyau —
+ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD/CLONE-HUNTER, 5 membres depuis le 2026-09-22), les 6 suites
+de travail parmi les Membres ordinaires, les 3 catégories définitivement hors de l'agence
+(Personnages, Moteur du jeu, code tiers vendu tel quel), et l'Infrastructure comme 3e rang
 d'employés sans dossier individuel.
 
 **Ce qui reste ici, propre à la CONCEPTION de CASSANDRA-RH elle-même** (pas au roster lui-même,
 qui vit désormais dans le document canonique) :
-- **Le rôle (Direction/Gardiens/Membre) est une case À L'INTÉRIEUR du statut Agent existant**,
+- **Le rôle (Agent Cadre/Gardien/Membre) est une case À L'INTÉRIEUR du statut Agent existant**,
   jamais un 4e axe séparé.
 - **Contrôle croisé** : les Gardiens sacrés se vérifient aussi ENTRE EUX. Les deux directeurs
   passent par les MÊMES scans mécaniques que tout le monde (couverture AXA-CHECK, trous ARGUS,
@@ -135,6 +168,17 @@ le monde a bien son badge — une prise de fonction totale, jamais une mise en r
 
 ## 7. Crochets déjà posés dans le code existant, en attente de CASSANDRA-RH
 
+- **Historique des badges attribués, une ressource déjà PARTAGÉE, jamais un doublon à créer
+  (2026-09-22, question explicite de l'utilisateur : « je ne sais pas si c'est un doublon ou un
+  trou »)** — vérifié : ni l'un ni l'autre. `.badge-ceremony-history.json` (local, gitignored, même
+  discipline que les autres journaux locaux du réseau d'outils) existe déjà : LE-COORDINATEUR
+  (`announceBadgeCeremony()`/`recordCertification()`) y écrit la date de première certification de
+  chaque Agent, et `checkAllAgentBadges()` le consulte à chaque commit réel (câblé dans
+  `scripts/hooks/check-last-commit.mjs`, 2026-09-22) pour ne jamais réannoncer une certification déjà
+  connue. CASSANDRA-RH, une fois construite, LIRA ce même fichier pour s'y référer (« qui a été
+  certifié, quand ») — jamais un second fichier séparé à sa main : la garde reste commune entre les
+  deux Agents Cadre, exactement comme `docs/referentiel/organisation-agence.md` est déjà partagé
+  entre eux pour l'organigramme.
 - `scripts/ines-official.mjs::buildEditionSummary()` — `kpiFromCassandra` explicite, `null` tant
   que CASSANDRA-RH n'existe pas, jamais fabriqué.
 - Note fondatrice corrigée (2026-09-21) : CASSANDRA-RH pourra un jour agréger les verdicts

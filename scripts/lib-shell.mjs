@@ -32,6 +32,48 @@ import { join } from "node:path";
 // à un script.
 export const PERSONNAGES = new Set(["Lia", "Noé", "Noe"]);
 
+// AGENT_CATEGORIES (2026-09-22, demande explicite de l'utilisateur : « le badge de chaque employé
+// de l'agence codex mentionne la catégorie à laquelle il appartient »). Miroir en code de
+// `docs/referentiel/organisation-agence.md` — clé = slug (`slugifyAgentName()`, le-coordinateur.mjs),
+// valeur = le libellé de catégorie exact du document canonique. Partagée ici (même raison que
+// PERSONNAGES ci-dessus, éviter un cycle d'import) pour que `checkAgentOnboarding()` (badge) ET tout
+// futur outil (CASSANDRA-RH) lisent la MÊME source, jamais deux copies divergentes. Seuls les outils
+// de statut "Agent" (badge-éligibles) sont listés ici — un Utilitaire nommé/Infrastructure n'a
+// jamais de badge, donc jamais besoin d'y figurer. À tenir à jour à chaque changement d'organigramme
+// (même discipline que la table maîtresse `docs/regles-de-travail.md` §7ter, Article 13).
+export const AGENT_CATEGORIES = {
+  // Les Agents Cadre (Direction/CODIR) — nom acté le 2026-09-22
+  "cassandra-rh": "Agent Cadre",
+  "le-coordinateur": "Agent Cadre",
+  // Les Gardiens sacrés du code (Article 20 — tourne automatiquement à chaque commit)
+  argus: "Gardien sacré du code",
+  harmonia: "Gardien sacré du code",
+  "axa-check": "Gardien sacré du code",
+  "clean-dirty-old": "Gardien sacré du code",
+  "clone-hunter": "Gardien sacré du code",
+  // Suite Suivi-Conso
+  "smart-conso-api": "Membre — Suite Suivi-Conso",
+  "smart-conso-token": "Membre — Suite Suivi-Conso",
+  // Suite Audit Simulation
+  "el-professor": "Membre — Suite Audit Simulation",
+  "the-screener": "Membre — Suite Audit Simulation",
+  "memory-audit": "Membre — Suite Audit Simulation",
+  // Suite Audit lourd
+  "the-final-judge": "Membre — Suite Audit lourd",
+  "the-deep-reader": "Membre — Suite Audit lourd",
+  "hyper-scan-checkpoint": "Membre — Suite Audit lourd",
+  // Suite Dette & Structure du code
+  "find-booster": "Membre — Suite Dette & Structure du code",
+  "always-new-code": "Membre — Suite Dette & Structure du code",
+  // La Cour du Roi
+  "ines-official": "Membre — La Cour du Roi",
+  "the-king": "Membre — La Cour du Roi",
+  "check-tasks-details": "Membre — La Cour du Roi",
+  // Les Agents Spéciaux
+  "check-level-target": "Agent Spécial",
+  "smart-breaker": "Agent Spécial",
+};
+
 export function assertNotAPersonnage(name, callerLabel) {
   if (PERSONNAGES.has(name)) {
     throw new Error(`${callerLabel} ne s'applique jamais à un Personnage ("${name}") — Lia et Noé n'ont aucune existence dans l'équipe de travail, ce sont des personnages de la simulation (cf. docs/suivi tâche #245 et sa correction du 2026-09-21). Un outil pensé pour la mémoire/cohérence narrative des personnages (ex. memory-audit) ne doit jamais recouper un outil de badge/blueprint/couverture de code.`);

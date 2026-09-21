@@ -38,14 +38,14 @@ sur l'axe A et « Direction » sur l'axe B en même temps).
 
 ### Axe B — Rôle dans l'organigramme (« à quel niveau ce poste travaille-t-il ? »)
 
-- **Direction (CODIR)**
+- **Direction** — rebaptisée ici **« Les Agents Cadre »** (nom choisi par l'utilisateur, 2026-09-22)
 - **Équipe noyau** — rebaptisée ici **« les Gardiens sacrés du code »** (nom choisi par
   l'utilisateur)
 - **Membre de l'équipe** — regroupés en 6 suites de travail (§4)
 - **VIP**
 - **Hors de l'agence, définitivement** (§5)
 
-## 2. Direction (CODIR)
+## 2. Les Agents Cadre (Direction)
 
 **CASSANDRA-RH + LE-COORDINATEUR** — aucun des deux ne vérifie le code lui-même : l'un route le
 travail (LE-COORDINATEUR agrège et suggère), l'autre évalue les postes (CASSANDRA-RH, à construire,
@@ -55,16 +55,22 @@ de poste leur échappe structurellement à eux-mêmes.
 
 ## 3. Les Gardiens sacrés du code (Équipe noyau)
 
-**Critère d'appartenance exact — à ne jamais confondre avec « délivre un scan de qualité »** (un
-critère plus large qui inclurait à tort CLONE-HUNTER, qui délivre aussi un scan de qualité mais
-n'est PAS un Gardien) : tourne **automatiquement, mécaniquement, gratuitement, à CHAQUE commit**,
-jamais sur demande, jamais périodique (Article 20 de CLAUDE.md). Exactement 4 membres, jamais un
-groupe inventé au coup par coup :
+**Critère d'appartenance exact — un critère double, jamais un seul des deux pris isolément** (une
+première formulation à un seul volet a chaque fois exclu ou inclus le mauvais outil : « tourne à
+chaque commit » seul aurait laissé dehors un futur scan de qualité pas encore câblé au hook ; «
+délivre un scan de qualité » seul aurait à tort inclus n'importe quel script utile mais coûteux comme
+ALWAYS-NEW-CODE) : (a) **délivre un vrai scan de qualité du code** ET (b) **peut tourner
+automatiquement, mécaniquement, gratuitement, à CHAQUE commit**, jamais sur demande, jamais
+périodique (Article 20 de CLAUDE.md). Exactement 5 membres, jamais un groupe inventé au coup par
+coup :
 
 - **ARGUS** — absences (ce qui devrait exister et n'existe pas)
 - **HARMONIA** — frictions (deux choses qui existent et se contredisent)
 - **AXA-CHECK** — robustesse/fragilité réelle par fonction (couverture de test V8)
 - **CLEAN-DIRTY-OLD** — stagnation relative, délègue toujours son jugement aux trois autres
+- **CLONE-HUNTER** (rejoint le 2026-09-22) — blocs de code dupliqués (littéral + renommage
+  bijectif cohérent) ; rapide (<1s sur tout le dépôt), donc compatible avec le critère (b) malgré son
+  arrivée tardive dans le réseau d'outils
 
 **Gabarit de poste spécifique** (décision actée le 2026-09-22, au-delà du gabarit standard Agent) :
 en plus de l'instanciation + registre standard, la fiche d'un Gardien porte deux champs propres,
@@ -74,8 +80,45 @@ qu'aucun autre groupe ne porte :
 2. **Rôle dans le badge/couverture AXA-CHECK** — comment sa sortie alimente `checkAgentOnboarding()`
    et le badge 🎖️ des autres outils.
 
+### Répertoire des fonctionnements spécifiques partagés par tous les Gardiens
+
+*(2026-09-22, demande explicite de l'utilisateur : « identifie le fonctionnement spécifique des
+gardiens (qui se valident les uns les autres par ex) et lorsqu'on intègre un nouveau gardien, veille
+à ce qu'il rentre bien dans tous ces fonctionnements ». Checklist à cocher intégralement pour tout
+futur 6e Gardien — CASSANDRA-RH s'y réfère directement pour sa mission « Promotion de poste »,
+cf. `docs/cassandra-rh-conception.md` §2.)*
+
+1. **Câblage post-commit réel** — importé et appelé par sa FONCTION PURE (jamais son `main()` CLI,
+   pour ne jamais écrire un nouveau fichier de registre à chaque commit) dans
+   `scripts/hooks/check-last-commit.mjs`, dans un bloc `try/catch` isolé (une erreur d'un Gardien ne
+   doit jamais faire échouer le hook ni bloquer le commit — warn-only, Article 20).
+2. **Retrait de CIRCLE-TASKS** — un Gardien ne doit JAMAIS avoir d'entrée dans `CIRCLE_ITEMS`
+   (`scripts/circle-tasks.mjs`) : il tourne déjà à chaque commit, une entrée périodique serait un
+   doublon. Son registre rejoint `CIRCLE_EXCLUDED_REGISTRIES` avec la justification standard
+   « Gardien sacré, tourne à chaque commit ».
+3. **Test dans `check-house.mjs`** — au moins un bloc de test dédié dans le filet de sécurité
+   mécanique, comme tout code du projet, avant de considérer son intégration terminée.
+4. **Participation à la couverture du badge** (`checkAgentOnboarding()`,
+   `scripts/le-coordinateur.mjs`) — son résultat doit pouvoir alimenter un paramètre `koParts` (ex.
+   `cloneHunterFindingsCount`) et compter dans le calcul « OK 100% », qui exige TOUS les Gardiens au
+   vert simultanément, jamais un sous-ensemble.
+5. **Agrégation dans HYPER-SCAN-CHECKPOINT** (version légère, `scripts/hyper-scan-checkpoint.mjs`) —
+   appelé via `sh()` aux côtés des autres Gardiens, pour qu'un passage HYPER-SCAN-CHECKPOINT reflète
+   TOUJOURS l'état complet des 5, jamais 4 sur 5 par oubli (écart réel trouvé le 2026-09-22 à
+   l'arrivée de CLONE-HUNTER, corrigé le même soir).
+6. **Validation croisée informelle, pas mécanique** — les Gardiens ne s'exécutent jamais les uns les
+   autres, mais leurs signaux se recoupent en pratique lors d'une revue (ex. une trouvaille HARMONIA
+   peut confirmer un signal CLEAN-DIRTY-OLD sur la même zone) ; aucun mécanisme automatique ne force
+   ce recoupement aujourd'hui, c'est une lecture humaine/agent au moment de l'analyse, jamais une
+   fusion de leurs sorties.
+7. **Aucun coût API/agent séparé** — un Gardien reste, par définition, un calcul mécanique local
+   (grep, parsing, comparaison de blocs) ; un outil qui a besoin d'un vrai raisonnement (ALWAYS-NEW-
+   CODE, THE-FINAL-JUDGE) ne peut jamais devenir un Gardien, même s'il produit un excellent scan de
+   qualité — c'est exactement ce qui l'exclut du critère (b) ci-dessus.
+
 Détail complet de chacun : `docs/referentiel/argus.md`, `harmonia.md`, `axa-check.md`,
-`clean-dirty-old.md` (inchangés par ce document).
+`clean-dirty-old.md`, `clone-hunter.md` (inchangés par ce document, sauf `clone-hunter.md` lui-même
+mis à jour pour refléter son nouveau statut).
 
 ## 4. Membre de l'équipe — 6 suites de travail
 
@@ -111,7 +154,9 @@ significatif, jamais automatiques, jamais cochés par défaut dans une Ronde.
 
 ### Suite Dette & Structure du code
 Dette technique et navigation dans du code volumineux.
-- CLONE-HUNTER — blocs de code dupliqués (littéral + renommage bijectif cohérent)
+*(CLONE-HUNTER a quitté cette suite le 2026-09-22 pour rejoindre les Gardiens sacrés du code, §3 —
+promotion actée après vérification qu'il remplit le critère double scan-de-qualité + tourne à chaque
+commit.)*
 - find-booster — index par concept dans un gros fichier déjà structuré
 - route-booster — points de coupe candidats pour découper une fonction géante (Utilitaire nommé,
   pas Agent — reste dans ce groupe fonctionnel malgré son statut de documentation différent)

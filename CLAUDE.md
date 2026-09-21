@@ -598,14 +598,20 @@ logiques.** ARGUS repère les trous logiques qu'aucun autre garde-fou de cette c
 explicitement (combinaison de mécanismes jamais envisagée, cas limite oublié, conséquence
 logique manquée, lien discret non vu) — sur une idée neuve comme sur le code déjà écrit. **HARMONIA**
 (cousin d'ARGUS, cohérence des liens déjà existants), **AXA-CHECK** (troisième membre, robustesse/
-fragilité RÉELLES par couverture de test) et **CLEAN-DIRTY-OLD** (quatrième membre, stagnation
-relative — délègue toujours son jugement aux trois autres, jamais une réponse fabriquée) rejoignent
-la même règle. Les quatre tournent automatiquement, comme `check-house.mjs`, à chaque commit
-(partie mécanique gratuite, câblée dans le crochet `post-commit`) ; ARGUS et HARMONIA ajoutent en
-plus, sur demande, une seconde partie à vrai raisonnement (coût réel, Article 8), en particulier
-avant toute idée nouvelle. Détail complet de chaque outil (mécanique exacte, carte de dépendances,
-registres) : `docs/regles-de-travail.md` §7ter (tableau des outils) et la fiche dédiée de chacun
-(`docs/referentiel/argus.md`, `harmonia.md`, `axa-check.md`, `clean-dirty-old.md`, chacune avec son
+fragilité RÉELLES par couverture de test), **CLEAN-DIRTY-OLD** (quatrième membre, stagnation
+relative — délègue toujours son jugement aux trois autres, jamais une réponse fabriquée) et
+**CLONE-HUNTER** (cinquième membre depuis le 2026-09-22, blocs de code dupliqués — littéral et par
+renommage bijectif cohérent) rejoignent la même règle — le critère d'appartenance : délivre un vrai
+scan de qualité du code ET peut tourner gratuitement, mécaniquement, à chaque commit (ce qui exclut
+structurellement ALWAYS-NEW-CODE, dont le vrai zoom coûte un raisonnement réel, jamais automatique).
+Les cinq tournent automatiquement, comme `check-house.mjs`, à chaque commit (partie mécanique
+gratuite, câblée dans le crochet `post-commit`) ; ARGUS et HARMONIA ajoutent en plus, sur demande,
+une seconde partie à vrai raisonnement (coût réel, Article 8), en particulier avant toute idée
+nouvelle. Détail complet de chaque outil (mécanique exacte, carte de dépendances, registres) :
+`docs/regles-de-travail.md` §7ter (tableau des outils), `docs/referentiel/organisation-agence.md`
+(l'organigramme complet — ces cinq y sont « les Gardiens sacrés du code ») et la fiche dédiée de
+chacun (`docs/referentiel/argus.md`, `harmonia.md`, `axa-check.md`, `clean-dirty-old.md`,
+`clone-hunter.md`, chacune avec son
 propre blueprint générique) — jamais répété ici.
 
 **Protocole d'application** à chaque itération sur le code : Article 19 (a-t-on compris la logique
@@ -1075,9 +1081,10 @@ conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs se
   l'organisation de l'outillage de travail, « l'Agence Codex » (nom choisi par l'utilisateur, en
   souvenir de Codex, l'IA qui a initialement produit le code de ce projet, à distinguer du jeu
   lui-même) : les deux axes jamais confondus (Statut de documentation Agent/Utilitaire nommé/
-  Infrastructure ; Rôle dans l'organigramme Direction/Gardiens sacrés du code/Membre/VIP), les
-  Gardiens sacrés du code (renommage de l'Équipe noyau, critère exact — tourne automatiquement à
-  CHAQUE commit, jamais seulement « délivre un scan de qualité »), les 6 suites de travail parmi les
+  Infrastructure ; Rôle dans l'organigramme Les Agents Cadre/Gardiens sacrés du code/Membre/VIP), les
+  Gardiens sacrés du code (renommage de l'Équipe noyau, critère double exact — délivre un vrai scan
+  de qualité ET tourne automatiquement à CHAQUE commit, jamais un seul des deux volets pris isolément
+  — 5 membres depuis l'arrivée de CLONE-HUNTER le 2026-09-22), les 6 suites de travail parmi les
   Membres ordinaires (Suivi-Conso, Suite Audit Simulation, Suite Audit lourd, Dette & Structure du
   code, La Cour du Roi, plus Les Agents Spéciaux — Smart Breaker/CHECK-LEVEL-TARGET), les 3
   catégories définitivement hors de l'agence (Personnages, Moteur du jeu, code tiers vendu tel

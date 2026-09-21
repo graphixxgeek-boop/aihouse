@@ -9,13 +9,15 @@ import { readFileSync, rmSync } from "node:fs";
 import { recentCommits, findCommitsMissingSuiviUpdate, findTaskNumberIssues, nextTaskNumber } from "../check-suivi-fidelity.mjs";
 import { walk, findDeadLifeFields, findTodoMarkers } from "../check-argus.mjs";
 import { checkLinks, LINKS } from "../check-harmonia.mjs";
-import { collectCoverage, robustnessScore, LIB_MAP } from "../axa-check.mjs";
+import { collectCoverage, robustnessScore, collectScriptCoverage, scriptRobustnessScore, LIB_MAP } from "../axa-check.mjs";
 import { lastTouchDays, relativeStaleness } from "../clean-dirty-old.mjs";
-import { PRESTATIONS, formatMenu } from "../le-coordinateur.mjs";
+import { buildDuplicateReport, buildNearDuplicateReport } from "../clone-hunter.mjs";
+import { PRESTATIONS, formatMenu, parseToolsTable, slugifyAgentName, checkAllAgentBadges } from "../le-coordinateur.mjs";
 import { flagFindBoosterCandidates } from "../doc-report.mjs";
 import { summarizeHistory, computeInvestmentRatio, diagnoseAdviceAccuracy } from "../smart-conso-token.mjs";
-import { sh } from "../lib-shell.mjs";
+import { sh, AGENT_CATEGORIES } from "../lib-shell.mjs";
 import { loadLastRun, shouldRemindCircleTasks } from "../circle-tasks.mjs";
+import { buildRealOnboardingContext } from "../check-tasks-details.mjs";
 
 const [last] = recentCommits(1);
 if (last && findCommitsMissingSuiviUpdate([last]).length) {
@@ -51,11 +53,16 @@ if (numberIssues.length) {
 // commit — jamais souhaitable à cette fréquence (docs/argus/ n'accueille qu'un balayage archivé
 // volontairement, pas un par commit). Warn-only comme le reste de ce hook, jamais bloquant : ces
 // verdicts restent une invitation à vérifier, jamais un verdict à traiter comme acquis.
+// argusFindingsCount/harmoniaFindingsCount/cleanDirtyOldFlagged/cloneHunterFindingsCount capturés en
+// dehors des try ci-dessous (mêmes blocs, valeurs déjà calculées) pour nourrir le badge automatique
+// plus bas — jamais un second balayage rien que pour ce signal (règle anti-doublon, §7ter).
+let argusFindingsCount, harmoniaFindingsCount, cleanDirtyOldFlagged, cloneHunterFindingsCount;
 try {
   const lifeSource = readFileSync("lib/life.ts", "utf8");
   const files = walk("lib").concat(walk("app"));
   const dead = findDeadLifeFields(files, lifeSource);
   const todos = findTodoMarkers(walk(".").filter((f) => !f.includes("/scratchpad/")));
+  argusFindingsCount = dead.length + todos.length;
   if (dead.length || todos.length) {
     console.error(
       "\n🔎 ARGUS (balayage réel post-commit) : " +
@@ -66,6 +73,7 @@ try {
     );
   }
   const frictions = checkLinks(LINKS).filter((r) => r.confidence === "confirmé");
+  harmoniaFindingsCount = frictions.length;
   if (frictions.length) {
     console.error(
       "\n🔎 HARMONIA (balayage réel post-commit) : " + frictions.length + " friction(s) confirmée(s) — " +
@@ -85,6 +93,9 @@ try {
 // check-house.mjs (NODE_V8_COVERAGE pointé sur .sites-runtime/axa-check-postcommit-cov) — jamais un
 // second lancement rien que pour ce signal (règle anti-doublon, §7ter). Le dossier est consommé puis
 // nettoyé ici, jamais laissé traîner d'un commit à l'autre.
+// perSlugScriptCoverage capturé ici (avant le rmSync) pour nourrir le badge automatique plus bas
+// (axaCoveragePct par outil) — même dossier de couverture déjà ouvert, jamais un second lancement.
+let perSlugScriptCoverage;
 try {
   const covDir = ".sites-runtime/axa-check-postcommit-cov";
   const perFile = collectCoverage(covDir);
@@ -92,6 +103,7 @@ try {
   if (score !== undefined) {
     console.log(`🔎 AXA-CHECK (balayage réel post-commit) : couverture globale par fonction ${Math.round(score)}% sur ${Object.keys(perFile).length} fichier(s) mesuré(s) — jamais une preuve de correction, un signal de robustesse seulement (cf. docs/axa-check/index.md).\n`);
   }
+  perSlugScriptCoverage = collectScriptCoverage(covDir);
   rmSync(covDir, { recursive: true, force: true });
 } catch { /* best-effort, jamais bloquant */ }
 
@@ -104,11 +116,33 @@ try {
   const lastTouchByFile = Object.fromEntries(Object.values(LIB_MAP).map((f) => [f, lastTouchDays(f)]));
   const staleness = relativeStaleness(lastTouchByFile);
   const staleFiles = Object.entries(staleness).filter(([, s]) => s.stale).map(([f]) => f);
+  cleanDirtyOldFlagged = staleFiles.length > 0;
   if (staleFiles.length) {
     console.error(
       "\n🔎 CLEAN-DIRTY-OLD (balayage réel post-commit) : " + staleFiles.length +
       ` fichier(s) stagnant(s) relativement au reste du projet — ${staleFiles.join(", ")} ` +
       "(à vérifier via ARGUS/HARMONIA/ALWAYS-NEW-CODE, jamais un jugement seul, cf. docs/clean-dirty-old/index.md).\n",
+    );
+  }
+} catch { /* best-effort, jamais bloquant */ }
+
+// CLONE-HUNTER — cinquième Gardien sacré (2026-09-22, demande explicite de l'utilisateur : « clone
+// hunter doit rejoindre les gardiens sacrés [...] il devrait être dans les outils AUTO, à chaque
+// commit »). Coût minime mesuré en direct avant ce câblage (~0,4s pour v1+v2 sur tout le dépôt réel,
+// aucune instrumentation lourde) — même famille de coût que CLEAN-DIRTY-OLD ci-dessus, jamais un
+// frein réel à un commit. v1 (littérale) et v2 (renommage bijectif cohérent) tournent toutes les
+// deux — jamais un doublon entre elles, v2 ignore déjà tout bloc que v1 aurait signalé (Article 3).
+try {
+  const literalClusters = buildDuplicateReport();
+  const nearClusters = buildNearDuplicateReport();
+  cloneHunterFindingsCount = literalClusters.length + nearClusters.length;
+  if (literalClusters.length || nearClusters.length) {
+    console.error(
+      "\n🔎 CLONE-HUNTER (balayage réel post-commit) : " +
+      (literalClusters.length ? `${literalClusters.length} cluster(s) dupliqué(s) identique(s)` : "") +
+      (literalClusters.length && nearClusters.length ? " ; " : "") +
+      (nearClusters.length ? `${nearClusters.length} cluster(s) structurellement dupliqué(s) (renommage)` : "") +
+      " — jamais une factorisation acquise, un signal à vérifier (cf. docs/clone-hunter/index.md).\n",
     );
   }
 } catch { /* best-effort, jamais bloquant */ }
@@ -180,4 +214,56 @@ try {
   if (shouldRemindCircleTasks(commitsSinceLastRun)) {
     console.log(`🔄 Ça fait ${commitsSinceLastRun} commits sans Ronde périodique (CIRCLE-TASKS, node scripts/circle-tasks.mjs) — envisage de la relancer.\n`);
   }
+} catch { /* best-effort, jamais bloquant */ }
+
+// Badge automatique — déclenchement réel à chaque commit (2026-09-22, demande explicite de
+// l'utilisateur : « tu crées un petit script pour gérer toute cette partie validation/intégration/
+// badge/message [...] avec déclenchement auto quand le script reçoit son badge réellement dans le
+// code »). Décision explicite : jamais un nouveau fichier séparé — étend LE-COORDINATEUR
+// (`checkAllAgentBadges()`), qui porte déjà `checkAgentOnboarding()`/`announceBadgeCeremony()`.
+// Rassemble ici les VRAIES données déjà disponibles à ce point du hook (rien n'est relu en double) :
+// `buildRealOnboardingContext()` (déjà construit pour check-tasks-details.mjs) donne CLAUDE.md, la
+// table maîtresse, l'arborescence docs/ et le texte du suivi ; les 4 comptes ARGUS/HARMONIA/
+// CLEAN-DIRTY-OLD/CLONE-HUNTER et la couverture AXA-CHECK par script sont ceux déjà calculés
+// ci-dessus, jamais un second balayage. Le câblage réciproque des Gardiens (post-commit hook,
+// HYPER-SCAN-CHECKPOINT, exclusion CIRCLE-TASKS) est vérifié ici en relisant directement les 3
+// fichiers concernés — la seule vraie façon de savoir si "les autres le mentionnent" (cf.
+// docs/referentiel/organisation-agence.md §3, répertoire des fonctionnements des Gardiens).
+// Résultat affiché SEULEMENT au terminal (décision explicite de l'utilisateur, jamais un fichier
+// archivé de plus) : `announceBadgeCeremony()` persiste déjà, en interne, la première certification
+// dans son propre petit fichier de dédoublonnage — c'est cette persistance-là, minuscule et déjà
+// testée, qui garantit que l'annonce ne se répète jamais, jamais un nouveau rapport par certification.
+try {
+  const onboardingContext = buildRealOnboardingContext();
+  const hyperScanText = readFileSync("scripts/hyper-scan-checkpoint.mjs", "utf8");
+  const postCommitHookText = readFileSync(new URL(import.meta.url).pathname, "utf8");
+  const circleTasksText = readFileSync("scripts/circle-tasks.mjs", "utf8");
+
+  const gardienOverrides = {};
+  for (const row of parseToolsTable(onboardingContext.toolsTableMarkdown).filter((r) => r.statut === "Agent")) {
+    const slug = slugifyAgentName(row.tool);
+    const perTool = {};
+    const pct = perSlugScriptCoverage ? scriptRobustnessScore(slug, perSlugScriptCoverage) : undefined;
+    if (pct !== undefined) perTool.axaCoveragePct = pct;
+    if (AGENT_CATEGORIES[slug] === "Gardien sacré du code") {
+      perTool.reciprocalWiring = [
+        { label: "câblé dans le crochet post-commit réel", ok: postCommitHookText.includes(row.tool) },
+        { label: "agrégé dans HYPER-SCAN-CHECKPOINT", ok: hyperScanText.includes(row.tool) },
+        { label: "exclu de la Ronde périodique CIRCLE-TASKS (déjà automatique à chaque commit)", ok: circleTasksText.includes(slug) },
+      ];
+    }
+    if (Object.keys(perTool).length) gardienOverrides[row.tool] = perTool;
+  }
+  const mergedOverrides = { ...onboardingContext.agentOverrides };
+  for (const [tool, extra] of Object.entries(gardienOverrides)) mergedOverrides[tool] = { ...mergedOverrides[tool], ...extra };
+
+  const announcements = checkAllAgentBadges({
+    ...onboardingContext,
+    argusFindingsCount,
+    harmoniaFindingsCount,
+    cleanDirtyOldFlagged,
+    cloneHunterFindingsCount,
+    agentOverrides: mergedOverrides,
+  });
+  for (const announcement of announcements) console.log("\n" + announcement + "\n");
 } catch { /* best-effort, jamais bloquant */ }

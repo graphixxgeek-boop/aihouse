@@ -4,9 +4,11 @@
 // retrouvés dans l'historique complet de la session à sa demande explicite.
 //
 // Rôle : ORCHESTRATEUR, jamais un réimplémenteur. Version LÉGÈRE (celle-ci, zéro appel réseau) :
-// agrège tout ce qu'ARGUS, HARMONIA, ALWAYS-NEW-CODE (préparation — zone recommandée + indices
-// mécaniques, jamais le vrai zoom profond, un raisonnement que seul l'agent peut faire),
-// check-house.mjs, kpi-report.mjs et tous les registres/historiques déjà accumulés savent dire
+// agrège tout ce qu'ARGUS, HARMONIA, AXA-CHECK, CLEAN-DIRTY-OLD, CLONE-HUNTER (les 5 Gardiens
+// sacrés du code, Article 20 — cf. docs/referentiel/organisation-agence.md §3), ALWAYS-NEW-CODE
+// (préparation — zone recommandée + indices mécaniques, jamais le vrai zoom profond, un
+// raisonnement que seul l'agent peut faire), check-house.mjs, kpi-report.mjs et tous les
+// registres/historiques déjà accumulés savent dire
 // MÉCANIQUEMENT, détermine ce qui a changé depuis le dernier passage (mémoire automatique via
 // docs/hyper-scan-checkpoint/index.md, jamais un fichier d'état séparé), puis produit une
 // CHECKLIST explicite des vérifications qui restent du ressort du raisonnement (fidélité aux
@@ -125,6 +127,14 @@ function main() {
   const cleanDirtyOldOut = sh("node scripts/clean-dirty-old.mjs");
   console.log(cleanDirtyOldOut.trim());
 
+  // CLONE-HUNTER (2026-09-22) : 5e Gardien sacré du code — gap réel trouvé le soir de sa promotion
+  // (déjà câblé dans le post-commit hook et dans checkAgentOnboarding(), oublié ici) et corrigé le
+  // même soir. Répertoire des fonctionnements partagés des Gardiens, point 5 :
+  // docs/referentiel/organisation-agence.md §3.
+  console.log("\n--- CLONE-HUNTER (blocs de code dupliqués, littéral + renommage bijectif) ---");
+  const cloneHunterOut = sh("node scripts/clone-hunter.mjs");
+  console.log(cloneHunterOut.trim());
+
   console.log("\n--- Suite de tests (check-house.mjs) ---");
   const testOut = sh("node scripts/check-house.mjs 2>&1");
   const testsOk = !/AssertionError|Error:/.test(testOut) || /ExperimentalWarning/.test(testOut.split("AssertionError")[0] || "");
@@ -142,6 +152,7 @@ function main() {
     ["CHECK-LEVEL-TARGET (index)", "docs/check-level-target/index.md"],
     ["AXA-CHECK (index)", "docs/axa-check/index.md"],
     ["CLEAN-DIRTY-OLD (index)", "docs/clean-dirty-old/index.md"],
+    ["CLONE-HUNTER (index)", "docs/clone-hunter/index.md"],
   ];
   const registrySummary = [];
   for (const [label, relPath] of registries) {
@@ -203,6 +214,9 @@ function main() {
     "",
     "=== CLEAN-DIRTY-OLD (code ancien et peu retouché, repérage seul) ===",
     cleanDirtyOldOut,
+    "",
+    "=== CLONE-HUNTER (blocs de code dupliqués, littéral + renommage bijectif) ===",
+    cloneHunterOut,
     "",
     "=== Suite de tests ===",
     realFailure ? "ÉCHEC — voir sortie complète ci-dessous." : "Verte.",
