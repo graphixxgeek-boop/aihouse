@@ -942,7 +942,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 204'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 205'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4852,7 +4852,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // (route.ts une fois découpé) qu'un fichier découpé en BLOCS ANONYMES commentés (check-house.mjs
   // déjà aujourd'hui) — demande explicite de l'utilisateur : « assure toi que find booster est bien
   // construit pour aider les 2 fichiers, autant l'un que l'autre ».
-  const { extractFunctionIndex, extractBlockIndex, extractHeadingIndex, extractTitledArrayIndex, tagHarmoniaThemes, searchByConcept, buildIndex, recommendFindBooster } = await import('../scripts/find-booster.mjs');
+  const { extractFunctionIndex, extractBlockIndex, extractHeadingIndex, extractTitledArrayIndex, tagHarmoniaThemes, searchByConcept, searchByConcepts, buildIndex, recommendFindBooster } = await import('../scripts/find-booster.mjs');
   const fixtureSource = [
     '// Tire un bonus de la roulette et l\'applique au personnage ciblé.',
     'function resolveBonusRoulette(actor) { return actor; }',
@@ -4869,6 +4869,15 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 
   assert.deepEqual(searchByConcept(index, 'roulette').map((e) => e.name), ['resolveBonusRoulette'], 'searching by a real concept keyword must match against both the function name and its description, surfacing exactly the real match and never the unrelated function');
   assert.deepEqual(searchByConcept(index, 'inconnu'), [], 'a keyword matching nothing real must report an honest empty result, never a fabricated fallback');
+
+  // searchByConcepts() (pluriel, 2026-09-21, 2e passe d'optimisation) — le bug réel trouvé en
+  // relisant main() avec un œil neuf : plusieurs mots-clés CLI étaient joints en une seule phrase
+  // littérale ("resolveBonusRoulette undocumented" cherché comme une seule sous-chaîne, jamais
+  // trouvée même si chaque terme existe séparément), reproduit d'abord contre le vrai
+  // scripts/smart-conso-token.mjs avant d'être corrigé ici.
+  assert.deepEqual(searchByConcepts(index, ['roulette', 'undocumented']).map((e) => e.name).sort(), ['resolveBonusRoulette', 'undocumented'], 'multiple keywords must be combined in OR, each matched independently against name+description — never joined into one literal phrase that would never match either function on its own');
+  assert.deepEqual(searchByConcepts(index, ['inconnu']), [], 'a single unmatched keyword passed through the plural function must behave exactly like searchByConcept(), an honest empty result');
+  assert.deepEqual(searchByConcepts(index, []), index, 'zero keywords must return the full index unfiltered, never an empty result mistaken for "nothing found"');
 
   // extractBlockIndex() — le motif réel de check-house.mjs (chaque test vit dans son propre bloc
   // top-level anonyme `{ ... }`, jamais une fonction nommée) : le commentaire suit l'accolade,

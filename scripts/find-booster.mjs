@@ -140,8 +140,16 @@ export function extractTitledArrayIndex(source) {
   return entries;
 }
 
+// Haystack partagé (2026-09-21, 2e passe d'optimisation : « encore un cran ») — nom+description en
+// minuscules était recalculé séparément dans tagHarmoniaThemes() et searchByConcept(), la même
+// donnée construite deux fois sans jamais être partagée. Factorisé une fois ici, jamais une 3e copie
+// divergente ajoutée par searchByConcepts() ci-dessous.
+function entryHaystack(entry) {
+  return `${entry.name} ${entry.description}`.toLowerCase();
+}
+
 export function tagHarmoniaThemes(entry) {
-  const haystack = `${entry.name} ${entry.description}`.toLowerCase();
+  const haystack = entryHaystack(entry);
   return Object.entries(HARMONIA_THEME_KEYWORDS)
     .filter(([, keywords]) => keywords.some((k) => haystack.includes(k)))
     .map(([theme]) => theme);
@@ -149,7 +157,27 @@ export function tagHarmoniaThemes(entry) {
 
 export function searchByConcept(index, keyword) {
   const needle = keyword.toLowerCase();
-  return index.filter((e) => e.name.toLowerCase().includes(needle) || e.description.toLowerCase().includes(needle));
+  return index.filter((e) => entryHaystack(e).includes(needle));
+}
+
+// searchByConcepts() (pluriel, 2026-09-21, 2e passe d'optimisation) — trouvaille réelle en relisant
+// main() avec un œil neuf : plusieurs mots-clés passés en ligne de commande étaient joints en UNE
+// SEULE phrase (`recordAction assess` cherché comme la sous-chaîne littérale exacte "recordaction
+// assess", jamais trouvée même si les deux termes existent séparément) — reproduit en direct contre
+// scripts/smart-conso-token.mjs (0 résultat alors que les deux existent). Root-cause du vrai coût en
+// temps pour l'agent : une recherche de plusieurs concepts liés pendant une même investigation (ex.
+// "recordAction" puis "assess" puis "seuil" sur le même fichier, un usage réel de cette session)
+// exigeait autant d'appels CLI séparés que de mots-clés — chacun payant le coût de démarrage Node.
+// Combine désormais tous les mots-clés en OR (une entrée matche si elle contient N'IMPORTE LEQUEL),
+// jamais en ET — cohérent avec l'usage réel constaté, jamais une phrase à mots multiples cassée pour
+// autant (un seul argument shell "plusieurs mots" reste un seul mot-clé, inchangé).
+export function searchByConcepts(index, keywords) {
+  const needles = keywords.map((k) => k.toLowerCase()).filter(Boolean);
+  if (!needles.length) return index;
+  return index.filter((e) => {
+    const haystack = entryHaystack(e);
+    return needles.some((n) => haystack.includes(n));
+  });
 }
 
 // Combine les quatre motifs réels de ce projet — fonctions nommées, blocs anonymes commentés et
@@ -205,13 +233,13 @@ export function recommendFindBooster(filePath, { tokenThreshold = 8000 } = {}) {
 function main() {
   const [, , target, ...keywordParts] = process.argv;
   if (!target) {
-    console.log("Usage : node scripts/find-booster.mjs <fichier> [mot-clé...]");
+    console.log("Usage : node scripts/find-booster.mjs <fichier> [mot-clé...] (plusieurs mots-clés = OR, jamais une seule phrase collée)");
     return;
   }
   const index = buildIndex(target);
-  const keyword = keywordParts.join(" ");
-  const results = keyword ? searchByConcept(index, keyword) : index;
-  console.log(`find-booster — ${results.length} fonction(s) ${keyword ? `pour "${keyword}"` : "indexée(s)"} dans ${target} :\n`);
+  const results = keywordParts.length ? searchByConcepts(index, keywordParts) : index;
+  const label = keywordParts.length ? keywordParts.map((k) => `"${k}"`).join(" / ") : null;
+  console.log(`find-booster — ${results.length} fonction(s) ${label ? `pour ${label}` : "indexée(s)"} dans ${target} :\n`);
   for (const r of results) {
     console.log(`L${r.line} ${r.name}()${r.themes.length ? ` [${r.themes.join(", ")}]` : ""}`);
     if (r.description) console.log(`   ${r.description}`);

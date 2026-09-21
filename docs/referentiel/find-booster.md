@@ -112,6 +112,48 @@ perceptible pour l'utilisateur) — le vrai bénéfice est la qualité du résul
 find-booster à des textes plus denses/moins structurés, comme le cœur de `route.ts`) reste une tâche
 distincte et plus substantielle (#180), volontairement non attaquée le même soir.
 
+## 2e passe d'optimisation — "encore un cran" (2026-09-21, demande explicite)
+
+Demande explicite de refaire une passe, en cherchant cette fois un gain qui compte réellement pour
+l'agent (« gain de temps pour l'agent »), pas seulement des micro-optimisations CPU. Trouvaille
+réelle en relisant `main()` avec un œil neuf : **plusieurs mots-clés passés en ligne de commande
+étaient joints en UNE SEULE phrase littérale** (`keywordParts.join(" ")`) plutôt que cherchés
+indépendamment — `node scripts/find-booster.mjs fichier.mjs recordAction assess` cherchait la
+sous-chaîne exacte "recordaction assess", jamais trouvée même si les deux termes existent
+séparément dans le fichier (reproduit en direct contre le vrai `scripts/smart-conso-token.mjs` :
+0 résultat avant correction, 5 résultats après). C'est exactement le coût réel identifié pendant
+cette même session : investiguer plusieurs concepts liés sur un même fichier (comme réellement fait
+ce soir) exigeait un appel CLI séparé par mot-clé, chacun payant le démarrage d'un nouveau process
+Node.
+
+**Corrigé** : `searchByConcepts(index, keywords)` (pluriel, nouvelle fonction) combine tous les
+mots-clés en OR — une entrée matche si elle contient N'IMPORTE LEQUEL, jamais une phrase collée en
+ET. `searchByConcept` (singulier) reste inchangé pour la compatibilité des appels/tests existants.
+`main()` utilise désormais la version plurielle : une seule invocation CLI peut désormais chercher
+plusieurs concepts d'un coup. Nettoyage associé (DRY, Article 3) : le calcul `${nom} ${description}`
+en minuscules était refait séparément dans `tagHarmoniaThemes()` et `searchByConcept()` — factorisé
+dans un `entryHaystack()` interne partagé, jamais une 3e copie divergente ajoutée par
+`searchByConcepts()`.
+
+**Autres pistes évaluées et écartées cette 2e passe, honnêtement documentées** : fusionner les 3
+boucles JS de `buildIndexFromSource()` en une seule (au lieu de 3 boucles séparées sur la même
+source déjà découpée une fois) reste possible mais jugé disproportionné — le gain resterait de
+l'ordre de la milliseconde même sur le plus gros fichier réel du dépôt (~4800 lignes), pour un
+risque de régression réel sur une logique déjà correcte et testée ; jamais fait au nom de
+l'optimisation pour l'optimisation.
+
+## Alimentation du catalogue LE-COORDINATEUR — évalué, la bonne réponse n'était pas d'y ajouter le signal live
+
+Demande explicite : « alimentation catalogue coordinateur ». Vérifié avant de construire (Article
+19) : le catalogue nommé (`recordCatalog()`/`buildCatalogDelivery()`, `docs/le-coordinateur-catalogue/`)
+n'archive une nouvelle version QUE quand le contenu STATIQUE de PRESTATIONS change réellement
+(anti-doublon délibéré) — y injecter le signal `flagFindBoosterCandidates()`, qui change à chaque
+modification de code dans le dépôt, casserait cette discipline anti-doublon et ferait tourner le
+catalogue en boucle sans vraie nouveauté à chaque commit. find-booster est déjà "nourri" dans le sens
+qui compte pour ce mécanisme : une entrée durable dans PRESTATIONS ("Pack Boussole"). Le signal
+VRAIMENT live (quels scripts en ont besoin MAINTENANT) vit à raison ailleurs : le rappel post-commit
+sharpened (section suivante), jamais dans le catalogue historisé lui-même.
+
 ## Statut sans blueprint de son voisin, route-booster
 
 `scripts/route-booster.mjs` (préparation d'un découpage : points de coupe candidats + indice de
