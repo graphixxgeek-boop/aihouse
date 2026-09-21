@@ -300,27 +300,41 @@ recrutement) — pas un second document séparé. Décisions actées :
 - **Qui alerte l'utilisateur** : CASSANDRA-RH seule, puisque le Catalogue est désormais SON rapport
   — jamais une double alerte séparée du coordinateur sur le même sujet.
 
-## 8ter. Le Stagiaire (2026-09-22, décision explicite de construire dès maintenant)
+## 8ter. Les Stagiaires (conception corrigée le 2026-09-21 — jamais des agents séparés)
 
-Contrairement à la décision initiale ("repoussé à plus tard", §8 point 6 ci-dessus, révisée le
-2026-09-22) : le Stagiaire est un vrai second agent séparé, à construire dès la première vague de
-CASSANDRA-RH — décision explicitement NON recommandée par l'agent mais actée par l'utilisateur.
+**Correction explicite de l'utilisateur, qui annule la conception précédente ci-dessous en italique**
+*(l'ancienne version — « le Stagiaire est un vrai second agent séparé » — reposait sur une confusion
+de vocabulaire déjà documentée dans `docs/regles-de-travail.md` (« "Agent" veut souvent dire
+"script" »), jamais revérifiée au moment d'écrire cette section) :* « je n'utilise pas le terme
+agent [...] en réalité, je parle de scripts, de "membres" ou employés de l'agence, pas d'agents IA
+autonomes en tant que tel [...] propose moi une nouvelle orga [...] des stagiaires qui aident
+vraiment : catalogue, dossier KPI et RECRUTEMENT ». Un Stagiaire n'est donc JAMAIS un appel à
+l'outil `Agent` (aucun coût fixe ~37k tokens, aucun personnage fixe séparé, aucune consultation
+Smart Conso API/SMART-CONSO-TOKEN nécessaire) — c'est une fonction/script MÉCANIQUE, exactement la
+même nature que le reste des Membres de l'agence (ARGUS, tool-usage.mjs, etc.) : coût nul, jamais
+de jugement ni de prose rédigée par le Stagiaire lui-même. Le jugement et la rédaction finale
+restent toujours le travail de l'agent qui pilote (moi), en endossant la « voix » de CASSANDRA ou de
+LE-COORDINATEUR selon le rapport concerné — jamais un second interlocuteur réellement distinct.
 
-- **Rôle exact** : rédige UNIQUEMENT les fiches individuelles par outil (la partie la plus longue et
-  répétitive du Catalogue) à partir des chiffres bruts. CASSANDRA-RH garde la main sur tout ce qui
-  demande un vrai jugement : les combinaisons, les alertes, le résumé général — jamais le Stagiaire
-  ne rédige la partie "voix propre" de CASSANDRA-RH.
-- **Déclenchement** : CASSANDRA-RH décide elle-même, à chaque Ronde, si assez de choses ont changé
-  depuis le dernier appel pour justifier de repayer le coût réel du Stagiaire — jamais un appel
-  automatique systématique à chaque Ronde sans condition. Si rien de neuf, elle réutilise les fiches
-  déjà écrites.
-- **Personnage fixe, même garde-fou que THE-FINAL-JUDGE/THE-DEEP-READER** : un texte de personnalité
-  fixe (ton factuel, robotique — son "client" principal est l'agent qui pilote, pas l'utilisateur),
-  recopié à l'identique à chaque appel, jamais reformulé — protection contre toute dérive de ton au
-  fil des Rondes.
-- **Coût réel, Article 22/SMART-CONSO-TOKEN** : c'est un vrai appel à un agent séparé — consultation
-  des deux conseillers (Smart Conso API + SMART-CONSO-TOKEN) obligatoire avant chaque appel réel,
-  jamais une exception parce que c'est "juste" un stagiaire.
+**Trois Stagiaires proposés, un par déliverable réel** (à valider avec l'utilisateur avant toute
+construction — CASSANDRA-RH elle-même reste en dernier dans l'ordre de la session) :
+
+- **Stagiaire Catalogue** (sert LE-COORDINATEUR) — fonction qui assemble, pour chaque entrée
+  `PRESTATIONS`, les vrais chiffres déjà calculés ailleurs (usage réel via `tool-usage.mjs`,
+  fraîcheur via `clean-dirty-old.mjs`) en une fiche brute prête à narrer — jamais un second calcul
+  de ces chiffres, jamais une description inventée à la place de l'agent.
+- **Stagiaire Dossier KPI** (sert la famille tableau de bord/KPI, et par extension le rapport de
+  CASSANDRA) — fonction qui pré-agrège les chiffres bruts déjà produits par `kpi-report.mjs` en
+  blocs prêts à narrer (écarts depuis le dernier rapport, changements notables) — jamais un second
+  calcul de KPI, une simple mise en forme.
+- **Stagiaire Recrutement** (sert CASSANDRA) — fonction qui assemble, pour un script/outil candidat
+  à une décision RH, les signaux déjà calculés par ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD/
+  `tool-usage.mjs` en une fiche de comparaison structurée — CASSANDRA (l'agent, sous sa voix) lit
+  cette fiche et rédige elle-même la recommandation, dans le même tour, sans second appel.
+
+Aucun personnage fixe, aucune consultation Smart Conso API/SMART-CONSO-TOKEN nécessaire (coût nul) —
+seule règle de mutualisation à respecter (Article 3) : chaque Stagiaire réutilise des fonctions déjà
+exportées ailleurs, jamais un second calcul divergent des mêmes chiffres.
 
 ## 9. Note méthodologique (2026-09-21)
 

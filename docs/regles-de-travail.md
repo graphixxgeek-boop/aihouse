@@ -1848,6 +1848,12 @@ seulement ce qui aide l'agent à ne pas créer de friction évitable.)*
   séparé) gonflerait un coût pour rien ; l'inverse (traiter un vrai besoin d'agent séparé comme un
   simple script) priverait d'un regard réellement indépendant quand il est nécessaire — les deux
   erreurs sont à éviter, d'où la vérification systématique plutôt qu'une supposition par défaut.
+  **Cas réel où cette règle n'a pas été appliquée (2026-09-21)** : le Stagiaire de CASSANDRA-RH
+  (`docs/cassandra-rh-conception.md` §8ter) a été conçu comme « un vrai second agent séparé »
+  sans revérifier explicitement avec l'utilisateur lequel des deux sens il visait — corrigé après
+  qu'il a précisé lui-même : « je n'utilise pas le terme agent [...] en réalité, je parle de
+  scripts, de "membres" ou employés de l'agence, pas d'agents IA autonomes ». Reconçu en script/
+  fonction mécanique, jamais un spawn `Agent` — cf. §8ter pour la conception à jour.
 
 ### Profil psychologique — ce qui peut créer de la friction si mal anticipé
 
