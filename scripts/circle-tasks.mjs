@@ -566,6 +566,65 @@ export function recommendCircleSelection(report) {
   }));
 }
 
+// primeAddableItems() — tâche du 2026-09-21 (protocole AUTO/PRIME/GOAT, demande explicite de
+// l'utilisateur). PRIME ajoute des tâches GRATUITES en plus de la sélection recommandée, jamais les
+// items costly (réservés à GOAT, décision explicite : « les taches ne sont pas accessibles dans
+// PRIME, mais elles sont mentionnées comme les autres, avec un renvoi à GOAT »). Dérive de
+// recommendCircleSelection() plutôt que de relire NOT_RECOMMENDED_BY_DEFAULT une seconde fois —
+// jamais un second filtre divergent.
+export function primeAddableItems(recommendedReport) {
+  return recommendedReport.filter((r) => r.recommande === false && !r.costly);
+}
+
+// --- Périodicité des items costly (2026-09-21, demande explicite : « selon la periodicité, circle
+// peut inclure un scan couteux et lourd dans les parametres recommandés [...] il y a une alerte
+// explicite et un choix qui reste possible : parametres recommandés, mais sans les scans
+// couteux/lourds [...] à voir si ces scans peuvent etre remplacés par d'autres outils ou versions
+// plutot que purement supprimés ») ---------------------------------------------------------------
+
+// Seuil VOLONTAIREMENT long (aucun des deux items costly n'est censé tourner souvent, Article 8/22
+// — un audit à agent séparé coûte ~37 000 tokens à chaque lancement) — à ajuster avec l'usage réel,
+// jamais gravé dans le marbre. `daysSince()` reste la seule source de calcul de jours, jamais un
+// second calcul de date divergent.
+export const COSTLY_DUE_THRESHOLD_DAYS = 30;
+
+// costlyItemDueStatus() — un item JAMAIS lancé n'est jamais automatiquement "due" (il serait sinon
+// "en retard" dès le premier jour d'une agence fraîchement installée, un faux signal jamais
+// souhaité) — seul un VRAI dernier passage devenu trop vieux déclenche le signal.
+export function costlyItemDueStatus(lastRunDate, now = Date.now(), thresholdDays = COSTLY_DUE_THRESHOLD_DAYS) {
+  if (!lastRunDate) return { due: false, reason: "jamais lancé — absence honnête, jamais un signal de retard fabriqué" };
+  const days = daysSince(lastRunDate, now);
+  if (days >= thresholdDays) return { due: true, reason: `dernier passage il y a ${days} jour(s), au-delà du seuil de ${thresholdDays}` };
+  return { due: false, reason: `dernier passage il y a ${days} jour(s), sous le seuil de ${thresholdDays}` };
+}
+
+// Substitut gratuit déjà documenté ailleurs pour chaque item costly (jamais un remplacement
+// complet — juste la meilleure alternative gratuite déjà actée) : THE-DEEP-READER a déjà sa version
+// légère écrite noir sur blanc dans organisation-agence.md (« préférer d'abord la version légère
+// gratuite docs/systeme-de-suivi.md ») ; THE-FINAL-JUDGE n'a pas d'équivalent direct, la synthèse
+// gratuite la plus proche reste runNetworkCheck() (LE-COORDINATEUR), déjà dans CIRCLE_ITEMS
+// (`network-check-run`).
+export const COSTLY_SUBSTITUTES = {
+  "the-final-judge": "network-check-run (synthèse gratuite déjà dans cette Ronde, LE-COORDINATEUR) — jamais un remplacement complet, juste la meilleure alternative gratuite disponible",
+  "the-deep-reader": "check-tasks-details / docs/systeme-de-suivi.md (version légère déjà documentée dans organisation-agence.md) — jamais un remplacement complet",
+};
+
+// recommendCircleSelectionWithPeriodicity() — étend recommendCircleSelection() SANS le modifier
+// (rétrocompatible, tests existants inchangés) : un item costly dont le dernier passage réel dépasse
+// le seuil rejoint la sélection recommandée, mais toujours marqué `periodiciteDue`/`periodiciteRaison`
+// (pour l'alerte explicite) et `substitutGratuit` (pour la question "sans les scans coûteux, avec
+// quoi à la place ?"). `lastRunDates` : { [itemId]: dateISO | undefined } — fourni par l'appelant
+// (déjà lu depuis les vrais registres docs/the-final-judge/index.md et
+// docs/suivi/relectures-lourdes/index.md, jamais un second parseur ici).
+export function recommendCircleSelectionWithPeriodicity(report, { lastRunDates = {}, now = Date.now(), thresholdDays = COSTLY_DUE_THRESHOLD_DAYS } = {}) {
+  return recommendCircleSelection(report).map((r) => {
+    if (!r.costly) return r;
+    const status = costlyItemDueStatus(lastRunDates[r.id], now, thresholdDays);
+    if (!status.due) return r;
+    return { ...r, recommande: true, raisonExclusion: undefined, periodiciteDue: true, periodiciteRaison: status.reason, substitutGratuit: COSTLY_SUBSTITUTES[r.id] };
+  });
+}
+
 // `colorize` par défaut vrai (sortie terminal réelle, ce script et les crochets git) — mis à faux
 // pour toute sortie destinée à être relue comme du texte brut (tests, archive future) où des codes
 // ANSI seraient juste des caractères parasites, jamais un vrai signal visuel.
@@ -669,9 +728,24 @@ function main() {
   const report = buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringSources, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText, ideesATrancherText });
   console.log("=== CIRCLE-TASKS — Ronde périodique ===\n");
   console.log(formatCircleMenu(report));
-  console.log("\nJamais exécuté seul : l'agent qui pilote ouvre une fenêtre à cocher pour choisir précisément quoi lancer.");
+  console.log("\nJamais exécuté seul : l'agent qui pilote ouvre une fenêtre à cocher (protocole AUTO/PRIME/GOAT, docs/regles-de-travail.md) pour choisir précisément quoi lancer.");
   console.log(red(`${ALERT_ICON} THE-FINAL-JUDGE reste visible ci-dessus mais n'est JAMAIS coché par défaut — vérifie Smart Conso API ET SMART-CONSO-TOKEN avant de le sélectionner.`));
   console.log("Rappel : les autres items coûteux du paysage (check-spirit.mjs, HYPER-SCAN-CHECKPOINT complet) restent hors de cette ronde pour l'instant, jamais des cases à cocher ici.");
+
+  // Périodicité des items costly (2026-09-21) — lu depuis les vrais registres, jamais une date
+  // inventée. Un item "due" ci-dessous doit rejoindre le mode AUTO (avec son alerte), jamais rester
+  // silencieux.
+  const lastRunDates = {
+    "the-final-judge": mostRecentDate(read("docs/the-final-judge/index.md")),
+    "the-deep-reader": mostRecentDate(read("docs/suivi/relectures-lourdes/index.md")),
+  };
+  const withPeriodicity = recommendCircleSelectionWithPeriodicity(report, { lastRunDates });
+  const due = withPeriodicity.filter((r) => r.periodiciteDue);
+  if (due.length) {
+    for (const d of due) {
+      console.log(red(`${ALERT_ICON} ${d.label} est DÛ (${d.periodiciteRaison}) — rejoint exceptionnellement le mode AUTO. Alternative gratuite si tu préfères t'en passer : ${d.substitutGratuit}.`));
+    }
+  }
   const rootNoSlash = ROOT.replace(/\/$/, "");
   const missingRegistries = findRegistriesMissingFromCircle(walkDocsPaths(`${rootNoSlash}/docs`, rootNoSlash));
   if (missingRegistries.length) console.log(red(`${ALERT_ICON} Registre(s) sans item ni exclusion documentée dans la Ronde : ${missingRegistries.join(", ")} — à ajouter à CIRCLE_ITEMS ou à CIRCLE_EXCLUDED_REGISTRIES avec sa raison.`));

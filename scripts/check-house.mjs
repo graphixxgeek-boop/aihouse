@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 245'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 246'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4027,7 +4027,8 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     shouldRemindCircleTasks, REMINDER_COMMIT_THRESHOLD, ALERT_ICON, FINAL_JUDGE_TOKEN_COST,
     THEME_ORDER, groupCircleReportByTheme, checkHtmlWiring, oldestOpenTaskDate,
     buildCircleRunSummaryText, findRegistriesMissingFromCircle, CIRCLE_EXCLUDED_REGISTRIES,
-    recommendCircleSelection, NOT_RECOMMENDED_BY_DEFAULT,
+    recommendCircleSelection, NOT_RECOMMENDED_BY_DEFAULT, primeAddableItems,
+    costlyItemDueStatus, COSTLY_DUE_THRESHOLD_DAYS, recommendCircleSelectionWithPeriodicity, COSTLY_SUBSTITUTES,
   } = await import('../scripts/circle-tasks.mjs');
   const { walkDocsPaths } = await import('../scripts/lib-shell.mjs');
 
@@ -4137,6 +4138,26 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(recommended.find((r) => r.id === 'referentiel').raisonExclusion, NOT_RECOMMENDED_BY_DEFAULT.referentiel, 'an excluded item must carry its own documented reason verbatim, never a silent exclusion with no explanation');
   assert.equal(recommended.find((r) => r.id === 'profil').raisonExclusion, undefined, 'a recommended item must carry no exclusion reason at all, never a fabricated empty string');
   assert.equal(recommended.length, report.length, 'recommendCircleSelection() must annotate every real item from the report, never drop or add one');
+
+  // primeAddableItems()/costlyItemDueStatus()/recommendCircleSelectionWithPeriodicity() (2026-09-21,
+  // protocole AUTO/PRIME/GOAT demandé explicitement par l'utilisateur).
+  const addable = primeAddableItems(recommended).map((r) => r.id);
+  assert.deepEqual(addable.sort(), ['dream-team-photo', 'referentiel', 'the-screener'], 'PRIME must only offer the free excluded-by-default items as add-ons — the two costly items must never appear here, reserved for GOAT ("les taches ne sont pas accessibles dans PRIME")');
+
+  assert.deepEqual(costlyItemDueStatus(undefined), { due: false, reason: "jamais lancé — absence honnête, jamais un signal de retard fabriqué" }, 'an item never run at all must never be treated as "due" — that would falsely flag a freshly-installed agency on day one');
+  const dueNow = new Date('2026-10-25T00:00:00Z').getTime();
+  assert.equal(costlyItemDueStatus('2026-09-20', dueNow).due, true, `a real last run older than the ${COSTLY_DUE_THRESHOLD_DAYS}-day threshold must be flagged due`);
+  assert.equal(costlyItemDueStatus('2026-10-10', dueNow).due, false, 'a real last run within the threshold must never be flagged due');
+
+  const withPeriodicity = recommendCircleSelectionWithPeriodicity(report, { lastRunDates: { 'the-final-judge': '2026-09-20' }, now: dueNow });
+  const dueJudge = withPeriodicity.find((r) => r.id === 'the-final-judge');
+  assert.equal(dueJudge.recommande, true, 'a genuinely overdue costly item must join the recommended set — the exact real behavior the user asked for ("circle peut inclure un scan couteux [...] dans les parametres recommandés")');
+  assert.equal(dueJudge.periodiciteDue, true, 'the item must carry an explicit periodiciteDue flag so the caller can render the mandatory alert, never silently folded into the ordinary recommended items');
+  assert.equal(dueJudge.substitutGratuit, COSTLY_SUBSTITUTES['the-final-judge'], 'a due costly item must carry its documented free substitute, so the "recommended without the costly scan" choice always has something concrete to offer instead of a bare removal');
+  const notDueReader = withPeriodicity.find((r) => r.id === 'the-deep-reader');
+  assert.equal(notDueReader.recommande, false, 'an item with no known last-run date must stay excluded by default exactly like today, never turned "due" by omission');
+  const stillFreeItem = withPeriodicity.find((r) => r.id === 'profil');
+  assert.deepEqual(stillFreeItem, recommended.find((r) => r.id === 'profil'), 'a non-costly item must be entirely unaffected by the periodicity layer — recommendCircleSelectionWithPeriodicity() only ever touches costly items');
 
   // buildCircleRunSummaryText() (2026-09-20, trou trouvé par l'utilisateur : « je n'ai pas eu de
   // rapport à la fin de la ronde, c'est voulu ? » — non, main() n'affichait que le menu AVANT

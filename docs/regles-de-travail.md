@@ -1554,29 +1554,57 @@ CIRCLE_ITEMS est recommandé par défaut. Remplace le jugement refait à la main
 (#225/#231) par une règle codée, testée et ajustable si la pratique réelle diverge un jour — jamais
 gravée dans le marbre pour autant.
 
-**Garde-fou en 2 temps, non négociable (2026-09-20, trouvé nécessaire après un vrai manquement :
-une Ronde entière exécutée sans jamais montrer de fenêtre à cocher — l'agent avait substitué son
-propre jugement de « Ronde sur mesure » ci-dessus à la confirmation, dérivant silencieusement vers
-le « tout-en-un » explicitement interdit plus haut).** Avant toute Ronde, l'agent ouvre TOUJOURS une
-première question, jamais la fenêtre à cocher directement :
-1. *« Voulez-vous paramétrer la Ronde ? »* avec 2 réponses : **NON, lancer avec les paramètres
-   recommandés** (recommandé) — l'agent lance directement sa sélection calibrée sans autre fenêtre ;
-   **OUI, je veux paramétrer finement** — l'agent ouvre alors la série de fenêtres à cocher par
-   thème (`groupCircleReportByTheme()`), items « recommandé » réaffichés normalement avec leur
-   étiquette, à re-cocher comme les autres (limite technique actée : aucune case ne peut être
-   pré-cochée dans l'outil de questions utilisé ici, l'utilisateur doit toujours cliquer lui-même
-   sur ce qu'il veut garder).
-2. Une fois la Ronde effectivement exécutée, l'agent appelle lui-même `buildCircleRunSummaryText()`
-   (jamais un `main()` automatique, qui ne connaît pas la sélection réelle faite en conversation) et
-   livre ce récapitulatif en fichier **texte, jamais HTML** — le rapport de fin de Ronde qui manquait
-   jusqu'ici (même écart Article 13 constaté le même jour : la doc annonçait déjà CIRCLE-TASKS parmi
-   les rapports rendus par html-report.mjs, jamais câblé dans le vrai `main()`). Corrigé le
-   2026-09-21 (trouvaille directe de l'utilisateur : « le rapport de circle devrait etre en txt et
-   non html ») : cette fonction avait initialement été construite en HTML, AVANT la décision
-   explicite du partage HTML/texte des rapports du projet (capturée dans docs/suivi, pas encore
-   construite en outil — Doc-Report — mais dont la règle range déjà le récap CIRCLE-TASKS du côté
-   texte) — jamais revisitée contre cette décision une fois prise, exactement l'écart que
-   l'Article 13 interdit.
+**Garde-fou en 3 modes AUTO/PRIME/GOAT, non négociable (2026-09-20, trouvé nécessaire après un vrai
+manquement : une Ronde entière exécutée sans jamais montrer de fenêtre à cocher — l'agent avait
+substitué son propre jugement de « Ronde sur mesure » ci-dessus à la confirmation, dérivant
+silencieusement vers le « tout-en-un » explicitement interdit plus haut). Étendu de 2 à 3 modes le
+2026-09-21 (demande explicite de l'utilisateur : « il doit y avoir 3 niveaux »).** Avant toute
+Ronde, l'agent ouvre TOUJOURS une première question à 3 réponses, jamais la fenêtre à cocher
+directement :
+1. **AUTO** (recommandé) — l'agent lance directement sa sélection calibrée
+   (`recommendCircleSelectionWithPeriodicity()`, cf. ci-dessous) sans autre fenêtre.
+2. **PRIME** — même sélection recommandée que AUTO, plus la possibilité d'ajouter une ou plusieurs
+   tâches GRATUITES en plus (`primeAddableItems()` : la relecture exhaustive du référentiel, la
+   photo de la dream team, THE-SCREENER). Les 2 items costly (THE-FINAL-JUDGE/THE-DEEP-READER) ne
+   sont JAMAIS ajoutables en PRIME — décision explicite de l'utilisateur (« les taches ne sont pas
+   accessibles dans PRIME, mais elles sont mentionnées comme les autres, avec un renvoi à GOAT ») :
+   ils restent visibles dans la fenêtre avec une mention renvoyant au mode GOAT, jamais absents ni
+   silencieusement inaccessibles.
+3. **GOAT** — l'agent ouvre la série de fenêtres à cocher par thème (`groupCircleReportByTheme()`),
+   items « recommandé » réaffichés normalement avec leur étiquette, à re-cocher comme les autres
+   (limite technique actée : aucune case ne peut être pré-cochée dans l'outil de questions utilisé
+   ici, l'utilisateur doit toujours cliquer lui-même sur ce qu'il veut garder) — c'est le SEUL mode
+   où les 2 items costly sont sélectionnables, et le seul où le NIVEAU DE PROFONDEUR se choisit
+   PAR TÂCHE (demande explicite, calibrage du 2026-09-21) : pour tout item ayant une version légère
+   et une version complète (ex. HYPER-SCAN-CHECKPOINT, ou le vrai zoom profond d'ALWAYS-NEW-CODE),
+   l'agent demande laquelle des deux lancer plutôt que de choisir seul.
+
+**Périodicité des items costly (2026-09-21, demande explicite de l'utilisateur : « selon la
+periodicité, circle peut inclure un scan couteux et lourd dans les parametres recommandés »).**
+`recommendCircleSelectionWithPeriodicity()` (`scripts/circle-tasks.mjs`) étend
+`recommendCircleSelection()` sans le modifier : si le dernier passage RÉEL connu d'un item costly
+(lu dans son propre registre — `docs/the-final-judge/index.md`,
+`docs/suivi/relectures-lourdes/index.md`) dépasse `COSTLY_DUE_THRESHOLD_DAYS` (30 jours, seuil
+volontairement long, à ajuster avec l'usage réel), cet item rejoint EXCEPTIONNELLEMENT la sélection
+recommandée du mode AUTO — mais TOUJOURS accompagné d'une alerte explicite (`${ALERT_ICON}`, jamais
+silencieux) et d'un substitut gratuit documenté (`COSTLY_SUBSTITUTES` : `network-check-run` pour
+THE-FINAL-JUDGE, `check-tasks-details`/`docs/systeme-de-suivi.md` pour THE-DEEP-READER — jamais un
+remplacement complet, juste la meilleure alternative gratuite déjà actée), pour que le choix
+« paramètres recommandés, mais sans le scan coûteux » reste réel plutôt qu'une pure suppression.
+Un item JAMAIS lancé n'est jamais automatiquement « dû » (ça flagrerait à tort une agence toute
+neuve dès le premier jour) — seul un vrai dernier passage devenu trop vieux déclenche le signal.
+
+Une fois la Ronde effectivement exécutée (quel que soit le mode), l'agent appelle lui-même
+`buildCircleRunSummaryText()` (jamais un `main()` automatique, qui ne connaît pas la sélection
+réelle faite en conversation) et livre ce récapitulatif en fichier **texte, jamais HTML** — le
+rapport de fin de Ronde qui manquait jusqu'ici (même écart Article 13 constaté le même jour : la
+doc annonçait déjà CIRCLE-TASKS parmi les rapports rendus par html-report.mjs, jamais câblé dans le
+vrai `main()`). Corrigé le 2026-09-21 (trouvaille directe de l'utilisateur : « le rapport de circle
+devrait etre en txt et non html ») : cette fonction avait initialement été construite en HTML, AVANT
+la décision explicite du partage HTML/texte des rapports du projet (capturée dans docs/suivi, pas
+encore construite en outil — Doc-Report — mais dont la règle range déjà le récap CIRCLE-TASKS du
+côté texte) — jamais revisitée contre cette décision une fois prise, exactement l'écart que
+l'Article 13 interdit.
 
 Portée explicitement limitée à CIRCLE-TASKS (calibrage du 2026-09-20) : les autres listes
 "recommandées" du projet (ex. `recommendNextTasks()` de check-tasks-details) gardent leur
