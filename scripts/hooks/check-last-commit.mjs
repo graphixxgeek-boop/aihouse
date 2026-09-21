@@ -244,20 +244,29 @@ try {
   const postCommitHookText = readFileSync(new URL(import.meta.url).pathname, "utf8");
   const circleTasksText = readFileSync("scripts/circle-tasks.mjs", "utf8");
 
+  // primaryName (2026-09-21, même bug de la même famille trouvé une 3e fois en fiabilisant tout
+  // ceci ce soir — cf. checkAllAgentBadges()/computeBadgeResults() corrigées plus tôt) : `row.tool`
+  // brut porte parfois une précision entre parenthèses ("CLONE-HUNTER (`scripts/clone-hunter.mjs`)",
+  // "CASSANDRA-RH (...)", "find-booster (...)") — le slugifier tel quel produit un slug qui ne
+  // correspond JAMAIS à AGENT_CATEGORIES ni à perSlugScriptCoverage, désactivant silencieusement
+  // l'override axaCoveragePct/reciprocalWiring pour ces 3 Agents précisément. Même découpage que
+  // checkAllAgentBadges() ; les overrides doivent aussi être indexés par ce même nom propre, jamais
+  // la cellule brute (checkAllAgentBadges() cherche `agentOverrides?.[primaryName]`).
   const gardienOverrides = {};
   for (const row of parseToolsTable(onboardingContext.toolsTableMarkdown).filter((r) => r.statut === "Agent")) {
-    const slug = slugifyAgentName(row.tool);
+    const primaryName = row.tool.split(/[/(]/)[0].trim();
+    const slug = slugifyAgentName(primaryName);
     const perTool = {};
     const pct = perSlugScriptCoverage ? scriptRobustnessScore(slug, perSlugScriptCoverage) : undefined;
     if (pct !== undefined) perTool.axaCoveragePct = pct;
     if (AGENT_CATEGORIES[slug] === "Gardien sacré du code") {
       perTool.reciprocalWiring = [
-        { label: "câblé dans le crochet post-commit réel", ok: postCommitHookText.includes(row.tool) },
-        { label: "agrégé dans HYPER-SCAN-CHECKPOINT", ok: hyperScanText.includes(row.tool) },
+        { label: "câblé dans le crochet post-commit réel", ok: postCommitHookText.includes(primaryName) },
+        { label: "agrégé dans HYPER-SCAN-CHECKPOINT", ok: hyperScanText.includes(primaryName) },
         { label: "exclu de la Ronde périodique CIRCLE-TASKS (déjà automatique à chaque commit)", ok: circleTasksText.includes(slug) },
       ];
     }
-    if (Object.keys(perTool).length) gardienOverrides[row.tool] = perTool;
+    if (Object.keys(perTool).length) gardienOverrides[primaryName] = perTool;
   }
   const mergedOverrides = { ...onboardingContext.agentOverrides };
   for (const [tool, extra] of Object.entries(gardienOverrides)) mergedOverrides[tool] = { ...mergedOverrides[tool], ...extra };
