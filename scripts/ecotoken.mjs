@@ -472,6 +472,18 @@ export function checkWeightBudget(charterText, budget = DEFAULT_BUDGET_TOKENS) {
 }
 
 // Le même contrôle, sur tous les documents budgétés d'un coup.
+// Garde-fou d'évolutivité (Article 24) : BUDGETS et DOCUMENT_PROFILES sont deux tables tenues à la
+// main qui parlent des mêmes documents. Rien ne détectait qu'un document profilé — donc reconnu
+// comme réellement relu — n'avait aucun budget : il pouvait grossir indéfiniment sans qu'un seul
+// avertissement ne se déclenche. Trouvé en cherchant les trous de logique de cet outil même, et non
+// par un scan : `docs/referentiel/parametres.md` était dans ce cas. Les dossiers sont exclus, un
+// budget ne voulant rien dire sur un répertoire entier.
+export function findProfiledDocumentsWithoutBudget(profiles = DOCUMENT_PROFILES, budgets = BUDGETS) {
+  return profiles
+    .filter((p) => !p.dossier && !(p.chemin in budgets))
+    .map((p) => ({ chemin: p.chemin, chargement: p.chargement, ecart: "document profilé (donc réellement relu) mais sans budget — il peut grossir sans qu'aucun avertissement ne se déclenche" }));
+}
+
 export function checkAllBudgets(budgets = BUDGETS, root = ROOT) {
   const lignes = [];
   for (const [chemin, budget] of Object.entries(budgets)) {
@@ -488,10 +500,18 @@ export function checkAllBudgets(budgets = BUDGETS, root = ROOT) {
 // commit qui n'a touché que du code est exactement le coup d'épée dans l'eau qu'ecotoken dénonce.
 // Il ne se réveille donc que si un document BUDGÉTÉ a réellement changé.
 // Même prudence que pour les Gardiens : si on ne sait pas ce qui a changé, on tourne.
-export function ecotokenShouldRun(changedFiles, budgets = BUDGETS) {
-  if (!changedFiles) return true;
+// Une seule source pour « quels documents surveillés ont bougé » (Article 3 : une règle, un
+// endroit). `ecotokenShouldRun` et `recommendScope` répondaient à la même question avec deux
+// implémentations parallèles : elles s'accordent aujourd'hui, mais rien ne le garantissait demain.
+export function watchedDocumentsTouched(changedFiles, budgets = BUDGETS) {
+  if (!changedFiles) return null; // « on ne sait pas » n'est pas « aucun » — distinction à ne jamais perdre.
   const surveilles = Object.keys(budgets);
-  return changedFiles.some((f) => surveilles.some((d) => f === d || f.startsWith(d.replace(/\.md$/, "") + "/")));
+  return changedFiles.filter((f) => surveilles.some((d) => f === d || f.startsWith(d.replace(/\.md$/, "") + "/")));
+}
+
+export function ecotokenShouldRun(changedFiles, budgets = BUDGETS) {
+  const touches = watchedDocumentsTouched(changedFiles, budgets);
+  return touches === null || touches.length > 0;
 }
 
 // --- SÛRETÉ : POURQUOI CET OUTIL NE PEUT PAS ABÎMER CE QU'IL ANALYSE ------------------------------
@@ -871,8 +891,23 @@ export function resolveScopeTargets(portee, cible, { root = ROOT, budgets = BUDG
 
 export function scanScope(portee, cible, { root = ROOT, repoFiles = null } = {}) {
   const cibles = resolveScopeTargets(portee, cible, { root });
+  // Le dépôt est lu UNE fois pour tout le scan (corrigé le 2026-09-22) : sans ça, chaque document
+  // analysé relisait l'intégralité du dépôt pour calculer sa criticité — 37 relectures complètes
+  // sur un scan de `docs/referentiel/`, 1 320 ms là où 90 suffisent. Un outil qui prêche la sobriété
+  // n'a pas le droit de gaspiller ainsi.
+  repoFiles = repoFiles ?? loadRepoFiles(root);
   const section = portee === "focus" ? String(cible).split("#").slice(1).join("#") : null;
   if (portee === "focus" && !section) throw new Error('Portée "focus" : attendu la forme "fichier.md#Titre de section".');
+  // Une section qui n'existe pas rendait « 0 gain », exactement comme une vraie section sans rien à
+  // gagner — un silence trompeur, le contraire de l'honnêteté que tout le reste de cet outil
+  // s'impose. On vérifie donc d'abord qu'elle existe réellement.
+  if (section) {
+    const titres = splitSections(readFileSync(join(root, cibles[0]), "utf8")).map((x) => String(x.titre).toLowerCase());
+    if (!titres.some((t) => t.includes(section.toLowerCase()))) {
+      return { portee, cible, section, sectionIntrouvable: true, documentsAnalyses: 0, tokensTotal: 0, gainTotal: 0, avecGain: [], sansGain: [],
+        raison: `Aucune section de ${cibles[0]} ne correspond à « ${section} » — ce n'est pas « rien à gagner », c'est une cible qui n'existe pas.` };
+    }
+  }
   const documents = [];
   for (const chemin of cibles) {
     const r = analyzeDocument(chemin, { repoFiles, root });
@@ -902,9 +937,8 @@ export function scanScope(portee, cible, { root = ROOT, repoFiles = null } = {})
 // THE-FINAL-JUDGE, dont l'intensité se choisit au déclenchement) : la portée se déduit de ce qui a
 // réellement changé, et le cas « on ne sait pas » retombe sur global, le plus prudent.
 export function recommendScope(changedFiles, { budgets = BUDGETS } = {}) {
-  if (!changedFiles) return { portee: "global", cible: null, raison: "Rien ne dit ce qui a changé — on regarde tout le paysage surveillé plutôt que de deviner." };
-  const surveilles = Object.keys(budgets);
-  const touches = changedFiles.filter((f) => surveilles.some((d) => f === d || f.startsWith(d.replace(/\.md$/, "") + "/")));
+  const touches = watchedDocumentsTouched(changedFiles, budgets);
+  if (touches === null) return { portee: "global", cible: null, raison: "Rien ne dit ce qui a changé — on regarde tout le paysage surveillé plutôt que de deviner." };
   if (!touches.length) return { portee: null, cible: null, raison: "Aucun document budgété n'a bougé — ecotoken n'a rien à faire ici (son propre réveil conditionnel)." };
   if (touches.length === 1) return { portee: "zoome", cible: touches[0], raison: `Un seul document surveillé a changé (${touches[0]}) — inutile de rescanner les autres.` };
   return { portee: "global", cible: null, raison: `${touches.length} documents surveillés ont changé — le paysage entier est plus honnête qu'un scan partiel arbitraire.` };
@@ -1214,6 +1248,43 @@ export function learnFromHistory(history, currentTokens) {
   return { refusees, nbAcceptees: acceptees.length, nbPassages: history.length, efficaciteReelle };
 }
 
+// L'ironie à corriger (trouvée en cherchant les trous de cet outil même, 2026-09-22) : la criticité
+// déclare `verifyProtectiveSubstance()` OBLIGATOIRE sur le fichier maître, mais rien ne la rendait
+// possible — il fallait avoir gardé une copie d'avant sous la main. Une obligation écrite sans
+// mécanisme, exactement ce qu'ecotoken reproche aux autres.
+//
+// La correction n'est pas un rappel de plus : à chaque scan, une copie du fichier maître est
+// déposée dans le dossier de l'outil (donc via assertSafeWriteTarget, la sûreté reste entière).
+// Le contrôle avant/après devient alors exécutable à tout moment, sans rien demander à personne.
+// Journal LOCAL, jamais committé (déclaré dans .gitignore, même statut que .gemini-key-health.json
+// ou .tool-usage-history.json) : committer une copie entière de la charte à chaque changement
+// dupliquerait le document le plus lourd du dépôt, indéfiniment. Il vit donc à la racine, hors du
+// dossier de rapports — mais reste couvert par assertSafeWriteTarget via son propre dossier autorisé.
+export const SNAPSHOT_MAITRE = join(OUT_DIR, ".dernier-fichier-maitre.local.txt");
+
+export function snapshotMasterFile({ root = ROOT, chemin = null, indexPath = SNAPSHOT_MAITRE } = {}) {
+  const cible = chemin ?? detectMasterFile({ root }).chemin;
+  if (!cible || !existsSync(join(root, cible))) return { ecrit: false, raison: "aucun fichier maître détecté" };
+  if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
+  const texte = readFileSync(join(root, cible), "utf8");
+  const avant = existsSync(indexPath) ? readFileSync(indexPath, "utf8") : null;
+  // Jamais de réécriture inutile : une copie identique n'apprend rien et efface la référence utile.
+  if (avant === texte) return { ecrit: false, raison: "identique à la copie précédente", chemin: cible };
+  writeFileSync(assertSafeWriteTarget(indexPath), texte, "utf8");
+  return { ecrit: true, chemin: cible, precedent: avant };
+}
+
+// Le contrôle avant/après, désormais réellement exécutable : il compare la copie déposée au dernier
+// scan au contenu actuel. Sans copie précédente, il le dit — jamais un faux « tout va bien ».
+export function verifyAgainstSnapshot({ root = ROOT, indexPath = SNAPSHOT_MAITRE } = {}) {
+  const cible = detectMasterFile({ root }).chemin;
+  if (!cible) return { possible: false, raison: "aucun fichier maître détecté" };
+  if (!existsSync(indexPath)) return { possible: false, raison: "aucune copie de référence encore déposée — elle le sera au prochain scan" };
+  const avant = readFileSync(indexPath, "utf8"), apres = readFileSync(join(root, cible), "utf8");
+  if (avant === apres) return { possible: true, inchange: true, chemin: cible };
+  return { possible: true, inchange: false, chemin: cible, ...verifyProtectiveSubstance(avant, apres) };
+}
+
 export function recordPass({ poids, gainPropose, decision = "à trancher", cible = "", indexPath = INDEX_FILE } = {}) {
   if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
   const header = "# ecotoken — registre des passages\n\n*(Une ligne par passage. `Décision` est la seule colonne écrite à la main : c'est la réponse de\nl'utilisateur, que rien ne peut deviner. L'outil la relit au passage suivant pour ne jamais\nreproposer en tête ce qui a déjà été refusé.)*\n\n| Date | Poids CLAUDE.md | Gain proposé | Décision | Cible |\n|---|---|---|---|---|\n";
@@ -1262,6 +1333,10 @@ export function buildEcotokenReport({ charterText, repoFiles } = {}) {
   for (const t of declencheurs) L.push(`  ${t.cable ? "✅" : "❌"} ${t.id} — ${t.quand}${t.ecart ? ` [${t.ecart}]` : ""}`);
   L.push(`  ${declencheurs.filter((t) => t.cable).length}/${declencheurs.length} vérifiés en lisant les fichiers, jamais sur promesse.`);
   L.push(`  Portées disponibles : ${SCOPE_LEVELS.join(" / ")} (vocabulaire partagé avec THE-FINAL-JUDGE et SMART-CONSO-TOKEN).`);
+  const sansBudget = findProfiledDocumentsWithoutBudget();
+  if (sansBudget.length) for (const d of sansBudget) L.push(`  ⚠️  ${d.chemin} — ${d.ecart}`);
+  const controle = verifyAgainstSnapshot();
+  L.push(`  Contrôle avant/après du fichier maître : ${controle.possible ? (controle.inchange ? "possible, fichier inchangé depuis le dernier scan" : `${controle.sur ? "✅ fond intact" : "❌ FOND ALTÉRÉ"} depuis le dernier scan`) : controle.raison}`);
   L.push("");
   L.push("--- RÉPARTITION PAR NATURE ---------------------------------------------------------");
   L.push("Une RÈGLE gouverne le comportement et reste quoi qu'elle pèse. Une NARRATION raconte");
@@ -1390,6 +1465,18 @@ function main() {
     for (const g of pertes.graves) console.log(`   ⚠️  ${g}`);
     return;
   }
+  if (sub === "verifier-maitre") {
+    const r = verifyAgainstSnapshot();
+    if (!r.possible) { console.log(`Contrôle impossible : ${r.raison}`); return; }
+    if (r.inchange) { console.log(`✅ ${r.chemin} est inchangé depuis la dernière copie de référence.`); return; }
+    console.log(`=== ${r.chemin} a changé depuis la dernière copie de référence ===\n`);
+    console.log(`${r.sur ? "✅" : "❌"} Articles : ${r.articles.avant} → ${r.articles.apres}${r.articles.perdus.length ? ` — PERDUS : ${r.articles.perdus.join(" / ")}` : " (tous intacts)"}`);
+    console.log(`${r.soclesPerdus.length ? "❌" : "✅"} Phrases socles : ${r.soclesPerdus.length ? "PERDUES → " + r.soclesPerdus.join(" | ") : "toutes présentes"}`);
+    console.log(`Phrases normatives : ${r.normatives.avant} → ${r.normatives.apres} (${r.normatives.aExaminer.length} à examiner à la main)`);
+    r.normatives.aExaminer.forEach((x, i) => console.log(`  [${i + 1}] ${x.slice(0, 200)}`));
+    console.log(`\n${r.limite}`);
+    return;
+  }
   if (sub === "declencheurs") {
     const audit = auditTriggers();
     console.log("=== ecotoken · quand il DOIT se déclencher / quand il se déclenche VRAIMENT ===\n");
@@ -1420,6 +1507,8 @@ function main() {
   if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
   const file = join(OUT_DIR, `scan-${new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)}.txt`);
   writeFileSync(assertSafeWriteTarget(file), report.text, "utf8");
+  const snap = snapshotMasterFile();
+  if (snap.ecrit) console.log(`Copie de référence du fichier maître déposée (${snap.chemin}) — le contrôle avant/après est désormais exécutable : node scripts/ecotoken.mjs verifier-maitre`);
   const top = report.plan.propositions[0];
   recordPass({ poids: report.poids.tokens, gainPropose: report.plan.gainTotal, decision: "à trancher", cible: top ? top.cible : "" });
   console.log(`\nRapport archivé : ${file}`);

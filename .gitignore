@@ -55,6 +55,10 @@ next-env.d.ts
 .smart-conso-session.json
 .smart-conso-token-history.json
 .tool-usage-history.json
+# Copie de référence du fichier maître déposée par ecotoken pour rendre son contrôle
+# avant/après exécutable — un journal local, jamais un artefact à committer (ce serait dupliquer
+# le document le plus lourd du dépôt à chaque changement).
+docs/ecotoken/.dernier-fichier-maitre.local.txt
 .ines-official-latest-code.txt
 .ines-official-latest-code_et_docs.txt
 .memento-history.json

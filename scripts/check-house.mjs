@@ -4171,6 +4171,32 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(/VIGILANCE MAXIMALE/.test(critCharte.consigne) && /verifyProtectiveSubstance/.test(critCharte.consigne), 'the heightened vigilance owed to the master file must be spelled out in the instruction — including the substance check it alone requires — never left implicit');
   assert.ok(!eco.assessCriticality('docs/regles-de-travail.md').estFichierMaitre, 'a merely sensitive document must never be mistaken for the master file — there is exactly one');
 
+  // --- COUVERTURE (AXA-CHECK, 2026-09-22) : le passage des Gardiens sur ce fichier a trouvé 12
+  // fonctions jamais exécutées par un test, dont le RENDEMENT (la mesure phare de l'outil) et le
+  // réveil conditionnel. Les voici couvertes ; restent hors test celles qui ne peuvent pas l'être
+  // honnêtement (main, la lecture de git, un lecteur injecté par défaut).
+  const rendement = eco.articleYield('**Article 7 — Épreuve.** du texte\n**Article 9 — Autre.** du texte', { 'a.mjs': 'cf. Article 7 et encore Article 7' });
+  const art7 = rendement.find((r) => r.article === 7);
+  assert.ok(art7 && art7.referencesCroisees === 2 && art7.rendement === 2, 'the yield metric must count real cross-references to an Article — it is the tool\'s headline measure and was never once exercised by a test');
+  assert.ok(rendement.find((r) => r.article === 9).referencesCroisees === 0, 'an Article nobody cites must honestly score zero, never a floor invented to flatter it');
+  assert.equal(eco.ecotokenShouldRun(['lib/simulation.ts']), false, 'the conditional wake-up must stay silent when no budgeted document moved — untested until AXA-CHECK pointed it out');
+  assert.equal(eco.ecotokenShouldRun(['CLAUDE.md']), true, 'and must fire when one did');
+  assert.equal(eco.ecotokenShouldRun(null), true, 'not knowing what changed must run, exactly like the guardians\' own prudence path');
+  const budgets = eco.checkAllBudgets();
+  assert.ok(budgets.lignes.length === Object.keys(eco.BUDGETS).length && budgets.lignes.every((l) => l.absent || typeof l.tokens === 'number'), 'every budgeted document must be really measured, or honestly reported absent');
+  assert.deepEqual(eco.findProfiledDocumentsWithoutBudget([{ chemin: 'a.md', chargement: 'toujours' }], { 'a.md': 1 }), [], 'a profiled document that has a budget is no gap');
+  const trou = eco.findProfiledDocumentsWithoutBudget([{ chemin: 'b.md', chargement: 'a_la_demande' }], {});
+  assert.equal(trou.length, 1, 'a profiled document with NO budget can grow forever without a single warning — the real gap found on docs/referentiel/parametres.md while hunting this tool\'s own logical holes');
+  assert.deepEqual(eco.findProfiledDocumentsWithoutBudget([{ chemin: 'docs/suivi/sessions', chargement: 'a_la_demande', dossier: true }], {}), [], 'a folder is excluded — a token budget means nothing on a whole directory');
+  assert.deepEqual(eco.loadPassHistory('/nonexistent/index.md', () => ''), [], 'an absent history must read as empty, never crash');
+  // Le dépôt de copie de référence est idempotent : rappelé sur un fichier inchangé, il ne réécrit
+  // rien (sinon il effacerait la référence utile à chaque scan).
+  eco.snapshotMasterFile();
+  assert.equal(eco.snapshotMasterFile().ecrit, false, 'a second snapshot of an unchanged master file must write nothing — rewriting would destroy the very reference the before/after check needs');
+  const controle = eco.verifyAgainstSnapshot();
+  assert.ok(controle.possible && controle.inchange, 'with a fresh snapshot the before/after check must be possible and report no change — the obligation the criticality declares is now genuinely executable, not just written');
+  assert.ok(eco.buildEcotokenReport().text.includes('CRITICITÉ DE LA CIBLE'), 'the report must carry the criticality block before any gain figure — knowing what you risk comes before knowing what you gain');
+
   // --- HARMONIE AVEC LES AUTRES ÉCHELLES DU PROJET (2026-09-22). Ce dépôt a quatre échelles qui ne
   // mesurent PAS la même chose (effort de vérification / nœud du moteur / gravité d'une règle /
   // criticité d'un fichier). Les fondre serait une fausse harmonie ; ce qui est exigé ici, ce sont
