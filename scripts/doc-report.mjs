@@ -824,4 +824,53 @@ export function findRapportsQuiPointent({ dossier, listDirImpl = readdirSync, re
   return ecarts;
 }
 
+
+// ————————————————————————————————————————————————————————————————————————
+// « EN GÉNÉRAL » RENDU VÉRIFIABLE : qui écrit un registre sans le déclarer (2026-09-23)
+// ————————————————————————————————————————————————————————————————————————
+//
+// L'utilisateur a demandé quatre moments opportuns pour alimenter le compteur de contributions,
+// puis la vraie question : « et en général, comment respecter "en général" ? ». Quatre points de
+// câblage ne sont pas une règle générale — c'est une liste, et une liste se périme au cinquième
+// outil (Article 24).
+//
+// CE QUE CE GARDE-FOU FAIT : il lit les scripts, repère ceux qui ÉCRIVENT dans un registre
+// (`docs/<outil>/…`) et vérifie qu'ils enregistrent cette écriture. Un nouvel outil qui écrira un
+// registre sans le déclarer se signalera tout seul, sans que personne ait à penser à l'ajouter à
+// quoi que ce soit — c'est la différence exacte entre une convention tenue à la main et une
+// convention vérifiée.
+//
+// SA LIMITE, déclarée : il repère une écriture par la forme du code (un chemin `docs/x/` passé à
+// une fonction d'écriture). Un script qui construirait son chemin autrement lui échappe. Il
+// attrape donc le cas courant, jamais tous les cas — et le dire vaut mieux que le laisser croire.
+export function findEcrivainsDeRegistreSansContribution({ root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync } = {}) {
+  let fichiers = [];
+  try { fichiers = listDirImpl(join(root, "scripts")).filter((f) => f.endsWith(".mjs")); } catch { return []; }
+  const ecarts = [];
+  for (const f of fichiers) {
+    let texte;
+    try { texte = readFileImpl(join(root, "scripts", f), "utf8"); } catch { continue; }
+    // Écrit-il vraiment dans un registre ? On cherche une écriture ET un chemin de registre, pas
+    // l'un ou l'autre : citer `docs/argus/` dans un commentaire n'est pas écrire dedans.
+    // RESSERRÉ IMMÉDIATEMENT (2026-09-23) : la première version testait « le fichier écrit quelque
+    // part » ET « le fichier cite un chemin de registre » — deux faits vrais séparément dans
+    // report-template.mjs, qui n'écrit en réalité que le fichier de session. Un garde-fou qui
+    // accuse à tort perd sa crédibilité, et c'est la troisième fois de la journée que je paie
+    // cette leçon. Il faut donc que l'ÉCRITURE ELLE-MÊME vise un registre.
+    //
+    // Deux formes reconnues, les seules réellement employées ici : un chemin littéral passé à
+    // l'écriture, ou une constante définie plus haut comme un chemin de registre puis passée à
+    // l'écriture. Ce qui sort de ces deux formes échappe au garde-fou — dit plutôt que masqué.
+    const constantesRegistre = [...texte.matchAll(/(?:const|let)\s+([A-Z_][A-Z0-9_]*)\s*=\s*[^;\n]*["'`]docs\/[a-z0-9][a-z0-9-]*\//g)].map((m) => m[1]);
+    const appelsEcriture = [...texte.matchAll(/\b(?:writeFileSync|appendFileSync)\s*\(([^;]{0,200})/g)].map((m) => m[1]);
+    const ecritDansUnRegistre = appelsEcriture.some((args) =>
+      /["'`]docs\/[a-z0-9][a-z0-9-]*\//.test(args) || constantesRegistre.some((c) => new RegExp(`\\b${c}\\b`).test(args))
+    );
+    if (!ecritDansUnRegistre) continue;
+    const declare = /recordRegistryWrite|recordToolContribution/.test(texte);
+    if (!declare) ecarts.push({ fichier: `scripts/${f}`, pourquoi: "écrit dans un registre sans enregistrer la contribution — le compteur ne verra jamais que cet outil a été alimenté (recordRegistryWrite déduit le bénéficiaire du chemin, il n'y a rien à nommer)." });
+  }
+  return ecarts;
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) main();

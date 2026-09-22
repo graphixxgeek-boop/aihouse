@@ -196,6 +196,38 @@ export function toolsNeverFed(history, knownToolSlugs, { sansRegistre = [], fami
   });
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// « EN GÉNÉRAL » : DÉRIVER LE BÉNÉFICIAIRE DU CHEMIN ÉCRIT (2026-09-23)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Demande de l'utilisateur, après deux points de câblage : « la Ronde reste un moment opportun,
+// trouve encore deux occasions autres ET EN GÉNÉRAL, comment respecter "en général" ».
+//
+// LE PIÈGE QU'IL POINTE, et il est réel : câbler un point d'appel à la fois ne finit jamais. Il
+// resterait toujours un écrivain de registre qu'on n'a pas vu, et le compteur redeviendrait faux
+// en silence — la définition exacte de ce que l'Article 24 interdit (« un registre se LIT, il ne
+// s'énumère pas »).
+//
+// LA RÈGLE GÉNÉRALE, et elle tient en une phrase : le dépôt suit une convention SANS EXCEPTION —
+// le registre d'un outil vit dans `docs/<nom-de-l-outil-en-minuscules>/`. Le bénéficiaire d'une
+// écriture se DÉDUIT donc du chemin écrit, au lieu d'être nommé à chaque appel. N'importe quel
+// outil qui écrit dans un registre appelle cette fonction avec le chemin, et le compteur sait qui
+// vient d'être nourri — y compris un outil qui n'existe pas encore aujourd'hui.
+//
+// CE QU'ELLE NE FAIT PAS, dit plutôt que masqué : elle ne devine rien hors de cette convention.
+// Un chemin qui ne commence pas par `docs/<quelque chose>/` rend null et n'enregistre rien — une
+// attribution inventée serait pire qu'une absence, puisqu'elle créditerait le mauvais outil.
+export function beneficiaireDuChemin(chemin) {
+  const m = String(chemin ?? "").replace(/^\.\//, "").match(/^docs\/([a-z0-9][a-z0-9-]*)\//);
+  return m ? m[1] : null;
+}
+
+export function recordRegistryWrite(chemin, { nature = "registre", now = Date.now(), par = "outil" } = {}) {
+  const slug = beneficiaireDuChemin(chemin);
+  if (!slug) return null; // hors convention : on ne crédite jamais au hasard
+  try { return recordToolContribution(slug, chemin, { nature, now, par }); } catch { return null; }
+}
+
 // Un outil "jamais réellement sollicité" (utile à Doc-Report/#165 et à la future CASSANDRA-RH) :
 // aucun événement d'usage n'existe pour lui alors qu'il fait bien partie de la liste des outils
 // connus — jamais deviné, toujours comparé à une vraie liste fournie par l'appelant.

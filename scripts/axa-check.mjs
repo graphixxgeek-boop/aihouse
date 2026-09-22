@@ -21,7 +21,7 @@ import { tmpdir } from "node:os";
 import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { SENSITIVE_NODES, LEVEL_ORDER } from "./check-level-target.mjs";
 import { THEME_PRIMARY_FILE, parseNumstat, churnSignal } from "./always-new-code.mjs";
-import { recordCliUsage } from "./tool-usage.mjs";
+import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
 import { printReportHeader } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -120,6 +120,10 @@ export function loadDepthChecks(readFile = (f) => readFileSync(f, "utf8")) {
 function saveDepthChecks(ledger) {
   mkdirSync(join(ROOT, "docs/axa-check"), { recursive: true });
   writeFileSync(LEDGER_PATH, JSON.stringify(ledger, null, 2));
+  // Dernier écrivain de registre à ne pas se déclarer, trouvé par findEcrivainsDeRegistreSansContribution()
+  // le 2026-09-23 : le registre de couverture d'AXA-CHECK est relu à chaque Ronde et par CASSANDRA-RH.
+  // L'écrire, c'est l'alimenter — le bénéficiaire se déduit du chemin, rien à nommer ici.
+  recordRegistryWrite(LEDGER_PATH, { par: "axa-check" });
 }
 
 // Arbitrage fichier/portion : voir le commentaire de section ci-dessus pour le principe complet.

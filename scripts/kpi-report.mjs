@@ -28,6 +28,7 @@
 // fin de chantier, cf. "Quand les valeurs se mettent à jour" dans le document de référence, et
 // désormais une étape explicite de l'Article 18 après chaque simulation complète).
 import {execSync} from 'node:child_process';
+import { recordRegistryWrite } from './tool-usage.mjs';
 import {readFileSync, readdirSync, statSync, existsSync, appendFileSync, writeFileSync, mkdtempSync, rmSync} from 'node:fs';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
@@ -205,6 +206,10 @@ export function appendHistoryRow(csvRow) {
     const full = path(KPI_HISTORY_PATH);
     if (!existsSync(full)) writeFileSync(full, KPI_HISTORY_COLUMNS.join(',') + '\n');
     appendFileSync(full, csvRow + '\n');
+    // TROISIÈME MOMENT OPPORTUN (2026-09-23) — une ligne d'historique KPI nourrit le registre que
+    // CASSANDRA-RH et objectifs-vs-resultats relisent réellement pour juger une tendance. Le
+    // bénéficiaire se DÉDUIT du chemin écrit, jamais nommé ici (cf. recordRegistryWrite).
+    recordRegistryWrite(KPI_HISTORY_PATH, { par: 'kpi-report' });
 }
 
 // parseKpiHistoryCsv (déplacée depuis cassandra-rh.mjs, 2026-09-21 — même bug de duplication de

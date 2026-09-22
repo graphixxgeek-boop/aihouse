@@ -36,6 +36,7 @@ import { renderHtmlReport } from "./html-report.mjs";
 import { PRESTATIONS, suggestPrestationsForTask, significantWords, badgeSignalsAsContext } from "./le-coordinateur.mjs";
 import { daysSince, printReliabilityNotice } from "./lib-shell.mjs";
 import { renderTextReport } from "./report-template.mjs";
+import { recordRegistryWrite } from "./tool-usage.mjs";
 import { walkDocsPaths } from "./lib-shell.mjs";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { sh } from "./lib-shell.mjs";
@@ -946,6 +947,9 @@ function appendIndexRow({ file, zoom, format, count, total, regressions, stagnan
   const prior = existsSync(INDEX_FILE) ? readFileSync(INDEX_FILE, "utf8") : `# Registre check-tasks-details\n\n${header}`;
   const row = `| ${new Date().toISOString()} | ${zoom} | ${format} | ${count} | ${total} | ${regressions.length} | ${stagnant.length} | ${file} |\n`;
   writeFileSync(INDEX_FILE, prior + row, "utf8");
+  // QUATRIÈME MOMENT OPPORTUN (2026-09-23) — l'index de check-tasks-details est lu par la Ronde
+  // (fraîcheur) et par data-archangel. L'écrire, c'est l'alimenter.
+  recordRegistryWrite(INDEX_FILE, { par: "check-tasks-details" });
 }
 
 // Construit le contexte de badge réel — zéro coût API, aucun appel réseau : uniquement des

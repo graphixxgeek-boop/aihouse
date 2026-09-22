@@ -5331,6 +5331,23 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.equal(dr.findLanceursPrematures({ listDirImpl: () => ['x.mjs'], readFileImpl: () => lanceurSain }).length, 0, 'a hoisted function and a local variable are never a dead-zone risk, and flagging them would make the real finding indistinguishable from noise');
     assert.deepEqual(dr.findLanceursPrematures(), [], 'no script in the repository launches main() before its own module-level declarations exist');
 
+    // « EN GÉNÉRAL » (2026-09-23) — l'utilisateur a demandé quatre moments opportuns pour alimenter
+    // le compteur de contributions, puis la vraie question : « et en général ? ». Quatre points de
+    // câblage sont une liste, pas une règle : le bénéficiaire se DÉDUIT du chemin écrit, et un
+    // garde-fou vérifie qu'aucun écrivain de registre ne se tait.
+    const tu = await import('../scripts/tool-usage.mjs');
+    assert.equal(tu.beneficiaireDuChemin('docs/argus/index.md'), 'argus', 'the beneficiary is derived from the repository-wide convention docs/<tool>/, never named at each call site');
+    assert.equal(tu.beneficiaireDuChemin('docs/CLAUDE.md'), null, 'a path outside that convention credits nobody — an invented attribution is worse than an absence, it credits the wrong tool');
+    assert.equal(tu.recordRegistryWrite('scripts/foo.mjs'), null, 'and nothing is recorded for it');
+    // LE RESSERREMENT, payé par un faux positif comme les deux autres détecteurs du jour : la
+    // première version accusait tout script qui écrit quelque part ET cite un chemin de registre —
+    // deux faits vrais séparément dans report-template.mjs, qui n'écrit que le fichier de session.
+    const ecritAilleurs = 'const SESSION_FILE = ".sess";\n// voir docs/argus/index.md\nwriteFileSync(SESSION_FILE, x);\n';
+    const ecritRegistre = 'const LEDGER = "docs/axa-check/ledger.json";\nwriteFileSync(LEDGER, x);\n';
+    assert.equal(dr.findEcrivainsDeRegistreSansContribution({ listDirImpl: () => ['a.mjs'], readFileImpl: () => ecritAilleurs }).length, 0, 'citing a registry path in a comment is not writing into it');
+    assert.equal(dr.findEcrivainsDeRegistreSansContribution({ listDirImpl: () => ['a.mjs'], readFileImpl: () => ecritRegistre }).length, 1, 'a real registry write that declares nothing is named — the counter would never see that tool being fed');
+    assert.deepEqual(dr.findEcrivainsDeRegistreSansContribution(), [], 'checked live: every real registry writer in this repository now records the contribution itself, so the rule holds without anyone having to remember it (Article 27)');
+
     // UN RAPPORT QUI POINTE AU LIEU DE DIRE (2026-09-23) — constat de l'utilisateur sur les
     // rapports livrés : « check-detail est vide de contenu data et analytique [...] à chaque fois
     // je dois avoir un contenu intéressant non ? ». Il l'était : l'outil produisait un vrai
