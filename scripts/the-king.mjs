@@ -18,6 +18,7 @@ import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { printReportHeader } from "./report-template.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = process.cwd();
 
@@ -194,6 +195,27 @@ function main() {
   const tensions = findPossibleTensions(principles);
   console.log(`\n⚖️  Tensions POSSIBLES entre principes : ${tensions.length === 0 ? "aucune détectée" : `${tensions.length} à relire humainement`}`);
   for (const t of tensions) console.log(`   ${t.a} ↔ ${t.b} (vocabulaire partagé ${t.jaccard}) — un SIGNAL, jamais une contradiction prouvée.`);
+
+  // LE PLAN D'ACTION (2026-09-23, tâche #211). THE-KING est un VEILLEUR de document, et ses deux
+  // constats sont de nature opposée — les fondre serait mentir sur ce qu'il sait.
+  //
+  // Un principe NON DATÉ est un fait établi : ni date déclarée, ni trace git. Il devient donc une
+  // tâche RETENUE, avec ce qu'il faut faire.
+  //
+  // Une TENSION, elle, reste « à trancher » quoi qu'il arrive : l'outil mesure un vocabulaire
+  // partagé et une polarité opposée, ce qui est un SIGNAL, jamais une contradiction prouvée. La
+  // classer « retenu » ferait d'une heuristique un verdict — et sur la philosophie du projet,
+  // c'est précisément la décision qui ne m'appartient pas (Article 16).
+  const nonDates = principles.length - digest.length;
+  const constatsRoi = [
+    ...(nonDates > 0 ? [{ constat: `${nonDates} principe(s) sans aucune date : ni déclarée, ni retrouvable dans l'historique git`, etat: "retenu",
+      tache: "dater ces principes à la main, ou écrire qu'ils précèdent le suivi" }] : []),
+    ...tensions.map((t) => ({ constat: `tension possible entre « ${t.a} » et « ${t.b} » (vocabulaire partagé ${t.jaccard})`, etat: "a-trancher",
+      pourquoi: "vocabulaire partagé + polarité opposée est un signal mécanique, jamais une contradiction prouvée — trancher la philosophie du projet n'est pas une décision d'outil" })),
+  ];
+  const planRoi = buildPlanDaction(constatsRoi, { toolSlug: "the-king" });
+  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of planRoi.lignes) console.log(l);
 
 }
 

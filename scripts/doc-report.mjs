@@ -29,6 +29,7 @@ import { toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
 import { recommendFindBooster } from "./find-booster.mjs";
 import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice } from "./lib-shell.mjs";
 import { parseToolsTable, slugifyAgentName } from "./le-coordinateur.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -516,6 +517,29 @@ function main() {
   if (undeclared.length) {
     console.log(`\n⚠️  Entrée(s) de .gitignore ressemblant à un journal local mais absente(s) de LOCAL_JOURNALS (garde-fou de fraîcheur, 2026-09-21) : ${undeclared.join(", ")}`);
   }
+
+  // LE PLAN D'ACTION (2026-09-23, tâche #211). Doc-Report est un VEILLEUR : il ne corrige rien, il
+  // constate. Ses quatre constats actifs ne sont pas de même nature, et les fondre sous une tâche
+  // unique effacerait ce qui compte — un journal absent de .gitignore est un risque de FUITE au
+  // prochain commit, une décision HTML/texte manquante est une lacune de registre.
+  //
+  // `fausseUneMesure` seulement pour les écarts décision/code : quand le registre dit une chose et
+  // le code une autre, tout ce qui lit ce registre travaille sur du faux.
+  const ecartsDocReport = [
+    ...missing.map((d) => ({ fichier: d, defaut: "dossier sous docs/ sans décision HTML/texte enregistrée",
+      tache: `trancher la décision HTML/texte de ${d} et l'inscrire au registre`, fausseUneMesure: false })),
+    ...mismatches.map((m2) => ({ fichier: m2.label, defaut: "la décision enregistrée ne correspond pas au code réel",
+      tache: `réaligner ${m2.label} : corriger le registre ou le code, selon lequel des deux a raison`, fausseUneMesure: true })),
+    ...missingFromGitignore.map((j) => ({ fichier: j, defaut: "journal local absent de .gitignore — risque de fuite au prochain commit",
+      tache: `ajouter ${j} à .gitignore AVANT le prochain commit`, fausseUneMesure: true })),
+    ...undeclared.map((j) => ({ fichier: j, defaut: "entrée de .gitignore ressemblant à un journal local, jamais déclarée dans LOCAL_JOURNALS",
+      tache: `déclarer ${j} dans LOCAL_JOURNALS, ou écrire pourquoi il n'en est pas un`, fausseUneMesure: false })),
+  ];
+  const planDoc = planDactionDepuisEcarts(ecartsDocReport, { toolSlug: "doc-report",
+    libelle: (e) => `${e.fichier} — ${e.defaut}`,
+    tache: (e) => e.tache });
+  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of planDoc.lignes) console.log(l);
 }
 
 

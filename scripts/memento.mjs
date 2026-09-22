@@ -35,6 +35,7 @@
 import { reliabilityNotice } from "./lib-shell.mjs";
 import { renderTextReport } from "./report-template.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 export function checkChronologicalOrder(entries, getRound = (e) => (typeof e === "number" ? e : e?.round)) {
   const violations = [];
@@ -159,6 +160,24 @@ export function buildMemoryAuditReport(findings = []) {
 function main() {
   const findings = checkMemoryCoherence(null, null);
   console.log(buildMemoryAuditReport(findings));
+
+  // LE PLAN D'ACTION (2026-09-23, tâche #211). LE CAS LE PLUS DÉLICAT DU LOT, et il fallait le
+  // traiter à l'envers de tous les autres : lancé à froid depuis le dépôt, memory-audit ne compare
+  // RIEN — il lui faut deux états de mémoire d'un personnage, fournis pendant une simulation.
+  //
+  // Un plan disant « aucun constat retenu » serait donc FAUX ici : ce n'est pas « j'ai regardé, il
+  // n'y a rien », c'est « je n'ai rien regardé ». Les deux se ressemblent dans un rapport et ne
+  // veulent pas du tout dire la même chose — c'est exactement la confusion absence/mesure que tout
+  // ce paysage traque. D'où un constat « à trancher » qui DIT l'absence de mesure, plutôt qu'une
+  // section vide qui la ferait passer pour un vert.
+  const constatsMemoire = findings.length
+    ? findings.map((f) => ({ constat: String(f.message ?? f.pourquoi ?? f), etat: "retenu", toucheLeJeu: true,
+        tache: "remonter à la cause dans le code de sauvegarde de la mémoire, jamais corriger l'état lui-même" }))
+    : [{ constat: "aucune comparaison effectuée : lancé à froid, sans les deux états de mémoire qu'il lui faut", etat: "a-trancher",
+        pourquoi: "ce silence ne dit RIEN sur la santé de la mémoire — le sollicter pendant une simulation est la seule façon d'en obtenir un vrai verdict" }];
+  const planMemoire = buildPlanDaction(constatsMemoire, { toolSlug: "memory-audit" });
+  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of planMemoire.lignes) console.log(l);
   if (!findings.length) {
     console.log("\nPAS MESURÉ, et ce n'est pas un vert : memory-audit compare une mémoire de personnage à son état précédent.");
     console.log("Aucun état de jeu n'est fourni en ligne de commande, donc rien n'a été comparé — ce silence ne dit rien sur la santé de la mémoire.");

@@ -348,6 +348,14 @@ export const SANS_CONSTAT_PROPRE = {
   "ines-official": "aplatit le dépôt en une édition, aucun jugement",
   "serie-temporelle": "mécanisme partagé d'historisation, aucun constat propre",
   "integration-outil": "répond à une question posée, ne scanne rien de lui-même",
+  // AJOUTS DU 2026-09-23 (tâche #211), chacun VÉRIFIÉ en lisant l'outil, jamais supposé depuis son
+  // nom. Leur point commun : ils font tourner ou ils préparent, ils ne constatent pas — leur
+  // demander un plan d'action produirait une section vide à chaque passage, c'est-à-dire du bruit
+  // qui apprend à ne plus lire les sections de plan d'action.
+  "le-regisseur": "orchestrateur mécanique du protocole de simulation : « jamais de raisonnement à sa charge », les constats appartiennent aux outils qu'il enchaîne",
+  "the-ghost": "orchestrateur du mode nocturne : il appelle le jugement des autres (recommendNextTasks) et n'en produit aucun",
+  "the-final-judge": "socle mécanique d'un agent séparé : le jugement EST le rapport de l'agent, ce script ne porte que deux garde-fous sur sa forme",
+  "the-deep-reader": "idem, pour l'autre juge : la comparaison au transcript est un raisonnement, jamais un calcul de ce script",
 };
 
 // LES PORTES D'ENTRÉE du plan d'action, déclarées plutôt qu'énumérées au fil du code (Article 24).
