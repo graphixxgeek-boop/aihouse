@@ -1,0 +1,22 @@
+⚠️  Attention, mes résultats peuvent être inexacts : un candidat de redondance repose sur un vocabulaire partagé, jamais sur le sens réel de deux règles. À vérifier avant d'agir, jamais un verdict acquis.
+⚠️  Attention, mes résultats peuvent être inexacts : aucun compteur réel de tokens n'existe côté agent — tout y est estimation. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : 2026-09-22 à 19:08 UTC
+État du code : 79b7dd7 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : smart-conso-token — inchangé depuis le 2026-09-22
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== SMART-CONSO-TOKEN — avis avant action coûteuse en tokens ===
+
+Action envisagée : scan (destinataire : agent)
+Avis : [ok] Schéma "scan" non répertorié dans le registre connu — rien à signaler de spécifique.
+(Identité de l'agent non fournie — impossible de confirmer que le registre de schémas coûteux reste valable. À fournir explicitement pour une vérification fiable.)
+
+(Avis seul — relancer avec --confirm une fois la décision prise.)
+
+Rythme observé (7 derniers jours) : 18 action(s) au total — {"scan":4,"charter_size_tax":3,"agent_subagent_spawn":1,"full_repo_scope":5,"proposition_appliquee":1,"assess":3,"long_task_signal":1}
+Bilan investissement (7 derniers jours) : ⚠️ NON CONCLUANT — 2/2 action(s) classifiée(s) comme investissement réel (0 sans retour, 0 à évaluer), mais 16 des 18 actions de la période n'ont JAMAIS été classées : moins de 4 cas mesurés : aucun taux ne tient sur si peu, quelle que soit la part que ça représente.
+Auto-diagnostic (agent + outils) : aucun constat pour l'instant.

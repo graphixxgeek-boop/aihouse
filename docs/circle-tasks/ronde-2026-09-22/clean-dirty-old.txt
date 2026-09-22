@@ -1,0 +1,13 @@
+⚠️  Attention, mes résultats peuvent être inexacts : l'ancienneté d'un fichier ne dit pas s'il est périmé — seulement qu'on n'y a pas regardé depuis longtemps. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : 2026-09-22 à 19:07 UTC
+État du code : 79b7dd7 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : clean-dirty-old — inchangé depuis le 2026-09-22
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== CLEAN-DIRTY-OLD — code ancien et peu retouché (repérage seul, jamais un jugement) ===
+
+Aucune zone signalée cette fois — rien n'est nettement plus ancien que le reste du projet en ce moment.

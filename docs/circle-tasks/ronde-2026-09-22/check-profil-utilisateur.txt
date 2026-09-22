@@ -1,0 +1,3 @@
+=== Garde-fou système de profil utilisateur (docs/profil-utilisateur/) ===
+
+OK — 11 fiche(s) sur disque, toutes référencées dans l'index, aucun lien mort.

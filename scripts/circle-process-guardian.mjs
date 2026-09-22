@@ -40,7 +40,7 @@ import {
   MAX_TENTATIVES_PAR_RONDE, loadSeriesPassees, effetDUneSeriePassee, HYPOTHESE_SILENCE,
 } from "./circle-tasks.mjs";
 import { findOrphanReportFiles, REGISTRIES } from "./doc-report.mjs";
-import { walkDocsPaths, sh } from "./lib-shell.mjs";
+import { walkDocsPaths, sh, outilsHorsPortee, porteeDe } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -227,10 +227,27 @@ export function verifyRondeProcess({
     add("voix-utilisateur", "La fenêtre de réponses sur les points problématiques de son évaluation n'a pas été confirmée comme posée avant la clôture de la Ronde.");
   }
 
-  // 3. Items cochés vs réellement exécutés
+  // 3. Items cochés vs réellement exécutés — ET L'INVERSE, ajouté le 2026-09-23 après un cas réel.
+  //
+  // CE QUI MANQUAIT, ET C'EST MOI QUI L'AI RÉVÉLÉ. Pendant la Ronde de ce jour j'ai lancé
+  // memory-audit, qui n'est pas dans CIRCLE_ITEMS : je l'avais ajouté de ma propre initiative. Rien
+  // ne l'a signalé — ce contrôle ne regardait que les items cochés et NON exécutés, jamais les
+  // items exécutés et non choisis. L'utilisateur a tranché : « oui, le contrôleur doit le voir ».
+  //
+  // Pourquoi ce n'est pas un excès de zèle inoffensif : du travail non demandé reste du travail non
+  // tracé. Il ne figure dans aucun rapport de Ronde, son résultat n'est rattaché à rien, et il
+  // consomme un temps que la sélection n'avait pas prévu. Surtout, il masque le vrai problème —
+  // dans mon cas, un outil de portée SIMULATION lancé dans un contexte Agence, ce que le contrôle
+  // de portée juste en dessous nomme désormais explicitement.
   if (checkedItemIds && executedItemIds) {
     const missing = checkedItemIds.filter((id) => !executedItemIds.includes(id));
     if (missing.length) add("checked-vs-executed", `${missing.length} item(s) coché(s) jamais exécuté(s) : ${missing.join(", ")}.`);
+    const enTrop = executedItemIds.filter((id) => !checkedItemIds.includes(id));
+    if (enTrop.length) add("execute-hors-selection", `${enTrop.length} outil(s) exécuté(s) sans avoir été choisi(s) dans la fenêtre : ${enTrop.join(", ")}. Du travail non demandé reste du travail non tracé — il n'apparaît dans aucun rapport de Ronde et masque parfois un vrai défaut de portée.`);
+    // LA PORTÉE (2026-09-23) : un outil de simulation n'a rien à dire sur le dépôt seul. Le
+    // registre est lu tel quel, jamais recopié ici (Article 24), et « les deux » n'est jamais
+    // signalé — un outil mixte est légitimement aux deux endroits.
+    for (const ecart of outilsHorsPortee(executedItemIds, "agence")) add("outil-hors-portee", ecart);
   } else {
     add("checked-vs-executed", "La liste réelle des items cochés et/ou exécutés n'a pas été fournie — ce fait n'est jamais déductible du code seul.");
   }

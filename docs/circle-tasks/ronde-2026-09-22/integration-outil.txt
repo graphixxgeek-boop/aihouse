@@ -1,0 +1,34 @@
+Version de Claude : claude-opus-5
+Produit le : 2026-09-22 à 19:08 UTC
+État du code : 79b7dd7 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : automatique_post_commit
+Outil : integration-outil — inchangé depuis le 2026-09-22
+Santé de l'outil : 1/2 signal(aux) au vert — aucun objectif chiffré — rien à quoi comparer son résultat
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== INTEGRATION-OUTIL — faire entrer un outil dans l'Agence Codex ===
+
+10 registres à renseigner pour un outil qui arrive :
+
+· fiabilite — classification de fiabilité (l'avertissement d'inexactitude affiché en tête de rapport)
+    scripts/lib-shell.mjs
+· categorie — rôle dans l'organigramme (Agent / Gardien sacré / Membre)
+    scripts/lib-shell.mjs
+· domaine-gardien (selon décision) — domaine surveillé (uniquement si l'outil devient Gardien sacré)
+    scripts/lib-shell.mjs
+· couverture-axa — couverture de test réelle (sans quoi l'outil est invisible à AXA-CHECK et à la stagnation)
+    scripts/axa-check.mjs
+· registre-rapports — registre de rapports (décision HTML/texte, index global, journaux orphelins)
+    scripts/doc-report.mjs
+· avertissement — fichier porteur de l'avertissement d'inexactitude
+    scripts/doc-report.mjs
+· catalogue-coordinateur — catalogue des prestations (ce que tool-brain peut me recommander)
+    scripts/le-coordinateur.mjs
+· ronde — item de Ronde périodique, OU exclusion documentée si l'outil tourne déjà à chaque commit
+    scripts/circle-tasks.mjs
+· table-maitresse — table maîtresse §7ter (la description détaillée outil par outil)
+    docs/regles-de-travail.md
+· inventaire-charte — inventaire documentaire de la charte (blueprint + instanciation + script)
+    CLAUDE.md
+
+Usage : node scripts/integration-outil.mjs <slug-de-l-outil>

@@ -1,0 +1,73 @@
+⚠️  Attention, mes résultats peuvent être inexacts : ses seuils de navigabilité et de fraîcheur sont des repères choisis, jamais des vérités. À vérifier avant d'agir, jamais un verdict acquis.
+=== Doc-Report — index global des rapports (gardien HTML/texte, tâche #165) ===
+
+-- Équipe noyau (Article 20) --
+  ARGUS — texte — dernier rapport : aujourd'hui
+  HARMONIA — texte — dernier rapport : aujourd'hui
+  AXA-CHECK — texte — dernier rapport : 3 j
+  CLEAN-DIRTY-OLD — texte — dernier rapport : 3 j
+  CLONE-HUNTER — texte — dernier rapport : 2 j
+  SAFE-EXPORT — texte — dernier rapport : jamais committé
+-- Exceptionnel (page blanche / audit lourd) --
+  ALWAYS-NEW-CODE — texte — dernier rapport : 1 j
+  HYPER-SCAN-CHECKPOINT — texte — dernier rapport : 3 j
+  INES-official — texte — dernier rapport : 2 j
+-- Gouvernance interne --
+  CHECK-LEVEL-TARGET — texte — dernier rapport : 3 j
+  THE-KING — texte — dernier rapport : 2 j
+  Smart Conso API — texte — dernier rapport : 3 j
+  SMART-CONSO-TOKEN — texte — dernier rapport : aujourd'hui
+  objectifs-vs-resultats — texte — dernier rapport : 1 j
+  CASSANDRA-RH — remise HTML — dernier rapport : aujourd'hui
+  ecotoken — texte — dernier rapport : aujourd'hui
+-- Simulation & qualité narrative --
+  Tableau de bord / KPI — remise HTML — dernier rapport : jamais committé
+  EL-PROFESSOR — remise HTML — dernier rapport : aujourd'hui
+  memory-audit — texte — dernier rapport : 2 j
+  THE-SCREENER — remise HTML — dernier rapport : aujourd'hui
+  Simulations (Article 18) — remise HTML — dernier rapport : aujourd'hui
+-- Audit indépendant --
+  THE-FINAL-JUDGE — remise HTML — dernier rapport : 3 j [aucun point d'enregistrement dans son script — le compteur ne peut rien voir, ce n'est PAS un constat de désusage]
+  THE-DEEP-READER — remise HTML — dernier rapport : 2 j [aucun point d'enregistrement dans son script — le compteur ne peut rien voir, ce n'est PAS un constat de désusage]
+-- Coordination --
+  check-tasks-details — archive HTML — dernier rapport : aujourd'hui
+  Catalogue LE-COORDINATEUR — remise HTML — dernier rapport : aujourd'hui [jamais sollicité selon tool-usage.mjs]
+  Photo de la dream team — remise HTML — dernier rapport : aujourd'hui [jamais sollicité selon tool-usage.mjs]
+  html-wiring-check (Ronde) — texte — dernier rapport : aujourd'hui [jamais sollicité selon tool-usage.mjs]
+  Scan ecotoken produit pendant une Ronde (item ecotoken-scan) — texte — dernier rapport : aujourd'hui [jamais sollicité selon tool-usage.mjs]
+  Tâche ouverte la plus ancienne (Ronde) — texte — dernier rapport : aujourd'hui [jamais sollicité selon tool-usage.mjs]
+  Fraîcheur fichiers préliminaires (Ronde) — texte — dernier rapport : aujourd'hui [jamais sollicité selon tool-usage.mjs]
+  Idées en attente de décision (Ronde) — texte — dernier rapport : aujourd'hui [jamais sollicité selon tool-usage.mjs]
+  tool-brain (Ronde) — texte — dernier rapport : aujourd'hui
+  network-check-run (Ronde) — texte — dernier rapport : aujourd'hui [jamais sollicité selon tool-usage.mjs]
+  Relecture référentiel (Ronde) — texte — dernier rapport : jamais committé [jamais sollicité selon tool-usage.mjs]
+  Relecture correctifs (Ronde) — texte — dernier rapport : aujourd'hui [jamais sollicité selon tool-usage.mjs]
+-- Outillage de navigation --
+  find-booster — texte — dernier rapport : 2 j
+-- Suite Dette & Structure du code --
+  TOOL-LEARNING — texte — dernier rapport : aujourd'hui
+  integration-outil — texte — dernier rapport : aujourd'hui
+
+⚠️  Dossier(s) sous docs/ sans décision HTML/texte enregistrée : docs/angel-of-ia-process, docs/circle-tasks, docs/data-archangel, docs/god-of-all-process, docs/le-coordinateur, docs/process-simulation-guardian, docs/pure-gold-unity, docs/rapports-de-nuit, docs/smart-breaker, docs/tableau-de-bord, docs/tasks-process-guardian
+
+🧭 Script(s) assez lourd(s) pour bénéficier de find-booster avant toute lecture intégrale : SMART-CONSO-TOKEN (~20777 tokens), Tableau de bord / KPI (~13240 tokens), check-tasks-details (~17804 tokens), Catalogue LE-COORDINATEUR (~26119 tokens), SAFE-EXPORT (~9019 tokens), CASSANDRA-RH (~18617 tokens), ecotoken (~31233 tokens), html-wiring-check (Ronde) (~33571 tokens)
+
+=== Journaux locaux (jamais committés, état/cache par outil) ===
+
+  .gemini-key-health.json (Smart Breaker) — historique de santé des clés/modèles Gemini — modifié aujourd'hui
+  .smart-conso-session.json (Smart Conso API) — état de session en cours (consultations récentes) — modifié aujourd'hui
+  .smart-conso-token-history.json (SMART-CONSO-TOKEN) — historique des actions coûteuses classifiées — modifié aujourd'hui
+  .tool-usage-history.json (tool-usage.mjs (tâche #166)) — compteur d'utilisation réelle des outils — modifié aujourd'hui
+  .agent-session.json (report-template.mjs (2026-09-22)) — identité de la session de l'agent (version de Claude) — déposée en début de session, reprise en tête de chaque rapport ; jamais committée, elle décrit qui produit un rapport à un instant donné, pas un état du projet — modifié aujourd'hui
+  .le-coordinateur-last-run.json (LE-COORDINATEUR) — anti-doublon du dernier passage réseau — modifié aujourd'hui
+  .circle-tasks-last-run.json (CIRCLE-TASKS) — anti-doublon de la dernière Ronde — modifié aujourd'hui
+  .kpi-report-latest.html (kpi-report.mjs) — copie de remise HTML du dernier rapport KPI — modifié aujourd'hui
+  .el-professor-coverage-latest.html (el-professor.mjs) — copie de remise HTML de la couverture EL-PROFESSOR — modifié aujourd'hui
+  .circle-tasks-run-summary-latest.txt (CIRCLE-TASKS) — récap texte de la dernière Ronde exécutée — modifié aujourd'hui
+  .ines-official-latest-code.txt (INES-official) — corps de la dernière édition (périmètre code) — modifié aujourd'hui
+  .ines-official-latest-code_et_docs.txt (INES-official) — corps de la dernière édition (périmètre code + documentation) — jamais encore écrit
+  .badge-ceremony-history.json (LE-COORDINATEUR (cérémonie de certification)) — date de première certification de chaque Agent, pour n'annoncer le badge qu'une seule fois — modifié aujourd'hui
+  .cassandra-rh-known-members.json (CASSANDRA-RH (nouveaux visages, Phase 1)) — slugs déjà vus au moins une fois par CASSANDRA, pour n'accueillir un nouveau membre qu'une seule fois — modifié aujourd'hui
+  .memento-history.json (memory-audit (memento weight)) — historique du poids réel du contexte envoyé à Gemini par tour/personnage — modifié aujourd'hui
+  .the-ghost-session.json (THE-GHOST) — état minimal de la session nocturne autonome en cours (heure de début, compteur de tâches enchaînées) — jamais encore écrit
+  .badge-signals-snapshot.json (LE-COORDINATEUR (relevé des 6 signaux de Gardien)) — les 6 signaux mesurés au dernier commit (couverture AXA-CHECK par outil + les 5 drapeaux de Gardien), pour que tout afficheur de badge lise la même vérité sans relancer check-house.mjs — modifié aujourd'hui

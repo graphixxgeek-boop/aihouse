@@ -41,6 +41,69 @@ export const PERSONNAGES = new Set(["Lia", "Noé", "Noe"]);
 // de statut "Agent" (badge-éligibles) sont listés ici — un Utilitaire nommé/Infrastructure n'a
 // jamais de badge, donc jamais besoin d'y figurer. À tenir à jour à chaque changement d'organigramme
 // (même discipline que la table maîtresse `docs/regles-de-travail.md` §7ter, Article 13).
+// ————————————————————————————————————————————————————————————————————————
+// LA PORTÉE D'UN OUTIL — ce qu'il analyse (2026-09-23)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Décidé par l'utilisateur après une erreur réelle de ma part le 2026-09-23 : j'ai lancé
+// memory-audit pendant une Ronde. Il n'y était pas — je l'avais ajouté de ma propre initiative —
+// et il n'avait rien à y faire : il juge la mémoire d'un personnage en fin de simulation, jamais
+// l'état du dépôt. Sa remarque : « distinguons les outils qui analysent le code ou les outils ou
+// l'agence ou l'organisation, etc. des outils qui analysent les simulations. Point important :
+// certains outils peuvent peut-être faire les 2, ce qui explique si on les retrouve aux 2
+// endroits. »
+//
+// CE QUE CET ATTRIBUT CORRIGE, ET POURQUOI IL FALLAIT L'ÉCRIRE : la distinction existait dans ma
+// tête, nulle part ailleurs. Rien n'empêchait un outil de simulation de se retrouver dans une
+// Ronde, et rien ne l'aurait signalé. C'est exactement le motif de l'Article 27 — une obligation
+// qui ne repose que sur la mémoire d'un agent n'existe plus à la session suivante.
+//
+// LA TROISIÈME VALEUR EST LA PLUS IMPORTANTE, et c'est lui qui l'a posée : « les deux » n'est pas
+// une facilité pour les cas douteux. C'est ce qui rend LÉGITIME la présence d'un outil aux deux
+// endroits, au lieu de la faire passer pour un oubli. Un outil mixte déclare qu'il l'est.
+export const PORTEES = {
+  agence: "analyse le CODE, l'outillage, l'organisation ou la documentation — se lance à froid sur le dépôt, sans partie en cours",
+  simulation: "analyse une SIMULATION ou une partie en cours — n'a rien à dire tant qu'aucun état de jeu ne lui est fourni",
+  "les-deux": "les deux réellement, jamais par commodité — sa présence aux deux endroits est alors justifiée, jamais un oubli",
+};
+
+// Le registre lui-même. Il se LIT (findToolsMissingPortee ci-dessous vérifie qu'aucun outil réel
+// n'y manque), il ne s'énumère jamais de mémoire — Article 24.
+export const TOOL_PORTEE = {
+  // — Portée simulation : rien à dire sur le dépôt seul —
+  "memory-audit": "simulation",
+  "memento-weight": "simulation",
+  "el-professor": "simulation",
+  "the-screener": "simulation",
+  "the-ghost": "simulation",
+  "le-regisseur": "simulation",
+  "process-simulation-guardian": "simulation",
+  "check-spirit": "simulation",
+  // — Portée « les deux », et chacune pour une raison précise —
+  "tableau-de-bord-interne-kpi": "les-deux",   // mesure des familles d'outils ET des indicateurs narratifs d'une simulation
+  "smart-conso-api": "les-deux",               // régule le rythme du travail ET le quota brûlé par une simulation
+  "smart-conso-token": "les-deux",             // pèse les documents de travail ET le coût d'une analyse de simulation
+  "hyper-scan-checkpoint": "les-deux",         // sa version complète inclut une mini-simulation réelle
+  "the-final-judge": "les-deux",               // audite le code ET le produit
+  // Tout le reste est de portée « agence » — déclaré par défaut plus bas plutôt qu'énuméré ici,
+  // pour qu'un nouvel outil hérite du cas majoritaire sans inscription manuelle (Article 24).
+};
+
+export const PORTEE_PAR_DEFAUT = "agence";
+
+export function porteeDe(slug, { registre = TOOL_PORTEE, defaut = PORTEE_PAR_DEFAUT } = {}) {
+  return registre[slug] ?? defaut;
+}
+
+// Un outil lancé hors de sa portée : le cas réel du 2026-09-23. Rend une raison, jamais un booléen —
+// « memory-audit est de portée simulation » et « rien à signaler » ne sont pas la même information.
+export function outilsHorsPortee(slugsLances = [], contexte = "agence", { registre = TOOL_PORTEE } = {}) {
+  return slugsLances
+    .map((slug) => ({ slug, portee: porteeDe(slug, { registre }) }))
+    .filter(({ portee }) => portee !== "les-deux" && portee !== contexte)
+    .map(({ slug, portee }) => `${slug} : portée « ${portee} », lancé dans un contexte « ${contexte} » — ${PORTEES[portee]}`);
+}
+
 export const AGENT_CATEGORIES = {
   // Les Agents Cadre (Direction/CODIR) — nom acté le 2026-09-22
   "cassandra-rh": "Agent Cadre",

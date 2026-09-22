@@ -1,0 +1,20 @@
+⚠️  Attention, mes résultats peuvent être inexacts : associe une tâche à des outils par mots-clés — il peut passer à côté de l'outil réellement utile. À vérifier avant d'agir, jamais un verdict acquis.
+=== tool-brain — rapport de Ronde ===
+Date : 2026-09-22T19:08:06.356Z
+
+8 outil(s) du catalogue jamais sollicité(s) : check-spirit-mjs, the-final-judge, the-deep-reader, charter-spy, docs, check-house-mjs, memory-audit, angel-of-ia-process.
+
+Outils les moins sollicités (total cumulé, jamais remis à zéro) :
+- check-spirit-mjs : 0 sollicitation(s)
+- the-final-judge : 0 sollicitation(s)
+- the-deep-reader : 0 sollicitation(s)
+- charter-spy : 0 sollicitation(s)
+- docs : 0 sollicitation(s)
+- check-house-mjs : 0 sollicitation(s)
+- memory-audit : 0 sollicitation(s)
+- angel-of-ia-process : 0 sollicitation(s)
+- smart-breaker : 1 sollicitation(s)
+- find-deep-booster : 1 sollicitation(s)
+
+Auto-diagnostic (périmètre tool-brain uniquement, jamais un audit du paysage entier) :
+- tool-brain a été sollicité 34 fois, mais jamais spontanément — signe que le réflexe n'est pas encore acquis, seulement le rappel mécanique.

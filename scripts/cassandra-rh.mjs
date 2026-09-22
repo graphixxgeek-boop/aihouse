@@ -933,13 +933,31 @@ function main() {
     for (const t of tendancesRH()) console.log(`  ${t.cle} : ${t.tendance ?? t.etat ?? "pas encore de tendance"}`);
     return;
   }
+  // ORGANIGRAMME — TROUVÉ PAR LA RONDE DU 2026-09-23, et c'est exactement le genre de trou
+  // qu'elle existe pour attraper. buildOrganigramme()/renderOrganigrammeReport() étaient
+  // entièrement construits et testés, la Ronde avait son item « Organigramme de l'Agence Codex,
+  // reconstruit depuis les données réelles », et AUCUNE commande ne le produisait : main() ne
+  // connaissait que « rapport ». Le rapport se construisait en mémoire et n'en sortait jamais.
+  //
+  // Un mécanisme qui ne sort pas du script est une intention, pas un outil — la même leçon que
+  // safe-export.mjs avait déjà apprise en calculant toute son escalade sans jamais l'imprimer.
+  if (sub === "organigramme") {
+    console.log(CASSANDRA_PERSONA);
+    console.log("");
+    // La table maîtresse est LUE à l'exécution, jamais recopiée (Article 24) : c'est elle la
+    // source de l'organigramme, et buildOrganigramme() ne la lit pas lui-même pour rester
+    // testable sans disque. La commande fournit donc le texte réel.
+    const toolsTableMarkdown = readFileSync(join(ROOT, "docs/regles-de-travail.md"), "utf8");
+    console.log(renderOrganigrammeReport(buildOrganigramme({ toolsTableMarkdown }), { dateLabel: new Date().toISOString() }));
+    return;
+  }
   const data = collectRealCassandraData();
   console.log(CASSANDRA_PERSONA);
   console.log("");
   console.log(buildCassandraLightSignal(data));
+  console.log("\nSous-commandes : `rapport` (bilan RH complet), `organigramme` (l'Agence reconstruite depuis les données réelles).");
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
 
 // --- L'ORGANIGRAMME, RECONSTRUIT À CHAQUE FOIS (2026-09-22, tâches #171/#172/#179, calibrage
 // explicite de l'utilisateur : « CASSANDRA le reconstruit à chaque fois »).
@@ -1075,3 +1093,10 @@ export function renderOrganigrammeReport(org, { dateLabel } = {}) {
     footer: "CASSANDRA-RH constate l'organisation, elle ne la décide jamais — un changement de rang reste une décision humaine.",
   });
 }
+
+// LE LANCEUR EN DERNIER (2026-09-23, deuxième occurrence du même bug en une heure). Il était au
+// milieu du fichier, donc main() partait avant que ORG_RANKS — déclaré deux cents lignes plus bas —
+// n'existe : la sous-commande `organigramme` plantait sur une zone morte temporelle. safe-export.mjs
+// portait exactement le même défaut le même jour. Deux fois le même bug n'est plus un accident
+// (Article 3), d'où le garde-fou mécanique ajouté dans doc-report.mjs : findLanceursPrematures().
+if (import.meta.url === `file://${process.argv[1]}`) main();

@@ -1,0 +1,27 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il croise des horodatages : une consultation faite dans une session sans commit lui reste invisible, et un commit groupant plusieurs heures élargit la fenêtre — un signal daté, jamais une preuve. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : 2026-09-22 à 19:09 UTC
+État du code : 79b7dd7 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : angel-of-ia-process — inchangé depuis le 2026-09-22
+Santé de l'outil : 1/2 signal(aux) au vert — jamais sollicité d'après le compteur — ou jamais instrumenté pour l'être
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== angel-of-ia-process — discipline d'exécution des règles de travail ===
+Surveille la CONDUITE (agent et utilisateur), jamais le déroulé d'une activité — ça, c'est god-of-all-process.
+
+— Discipline d'exécution (angel-of-ia-process) —
+0 manquement(s), 8 règle(s) non vérifiable(s) sans réponse.
+  ? [agent] Documenter chaque tâche substantielle dans docs/suivi/ DANS LE MÊME commit que le travail décrit. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Pousser au fil de l'eau : ce qui n'est pas poussé n'existe pas si la session s'interrompt. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Poser au moins trois questions de vérification AVANT ou PENDANT l'exécution, jamais après coup — et plus si le sujet contient plus de décisions réelles. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Traiter point par point une demande qui en contient plusieurs, sans jamais noyer les points dans une synthèse. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Poser les questions dans une vraie fenêtre à choix, avec leur contexte rappelé, jamais en texte libre. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [les deux] Après la livraison d'un transcript : l'utilisateur le lit pendant que l'agent travaille, en parallèle et non l'un après l'autre. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [utilisateur] Le signal « voici mes commentaires » ouvre un second passage sur le même transcript, que l'agent doit attendre et reconnaître. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [utilisateur] Trancher les questions laissées en attente : une décision jamais prise bloque le travail qui en dépend. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+
+Croisement des horodatages : 10 commit(s) examiné(s), 0 consultation(s) de jugement faite(s) après coup, 0 signal(aux) non concluant(s).
+Limite honnête : une consultation dans une session sans commit reste invisible, et un commit groupant plusieurs heures élargit la fenêtre — c'est un signal daté, jamais une preuve.
+Deux origines sont écartées du verdict : « verification » (relancer un outil pour voir s'il marche encore n'est pas le consulter) et « cli_direct » (le compteur sait qu'un outil a été lancé, jamais pourquoi — insuffisant pour nommer un manquement).

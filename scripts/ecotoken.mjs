@@ -825,6 +825,19 @@ function candidatsRacine(root) {
   try {
     for (const nom of readdirSync(root)) {
       if (/^(node_modules|\.git)$/.test(nom)) continue;
+      // UN JOURNAL LOCAL N'EST JAMAIS UNE CHARTE (2026-09-23, régression réelle trouvée par la
+      // Ronde du jour). INES-official venait d'écrire `.ines-official-latest-code.txt` — 3,9 Mo
+      // aplatissant tout le dépôt, donc une densité de « jamais / toujours / doit » écrasante — et
+      // ce fichier a détrôné CLAUDE.md comme fichier maître déduit. Un test l'a attrapé, mais
+      // seulement parce qu'il vérifiait le résultat exact ; sans lui, ecotoken aurait raisonné sur
+      // la mauvaise charte en silence.
+      //
+      // LE CRITÈRE, et il est vrai sur n'importe quel projet, pas seulement ici : un fichier maître
+      // est COMMITTÉ et CITÉ. Un fichier caché (préfixé d'un point) généré par un outil n'est ni
+      // l'un ni l'autre — c'est une sortie de travail, jamais une règle. Les conventions de chartes
+      // cachées légitimes (.cursorrules, .windsurfrules) restent acceptées juste en dessous, par
+      // leur forme exacte.
+      if (nom.startsWith(".") && !/^\.[a-z-]*rules$/i.test(nom)) continue;
       if (/\.(md|mdc|txt)$/i.test(nom)) out.add(nom);
       // Les conventions sans extension (.cursorrules, .windsurfrules…) sont aussi des chartes.
       else if (/^\.[a-z-]*rules$/i.test(nom)) out.add(nom);

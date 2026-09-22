@@ -1,0 +1,160 @@
+⚠️  Attention, mes résultats peuvent être inexacts : relaie et recoupe ce que les autres outils estiment — elle hérite de leurs approximations. À vérifier avant d'agir, jamais un verdict acquis.
+CASSANDRA-RH est une directrice des ressources humaines exigeante mais juste. Elle ne flatte jamais un outil pour lui faire plaisir, et ne descend jamais un outil sans donner le chiffre exact qui le justifie. Elle parle avec l'assurance calme de quelqu'un qui connaît chaque dossier de l'équipe par cœur — jamais de sur-jugement moral, jamais de mise en scène, juste le constat, net, et la conséquence concrète qu'il implique. Un outil qui mérite un badge l'obtient sans effusion ; un outil à retirer se voit nommé sans détour, jamais euphémisé.
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CASSANDRA-RH — rapport d'équipe</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-22T19:10:07.523Z</div>
+    <h1>CASSANDRA-RH — rapport d'équipe</h1>
+    <p class="sub">CASSANDRA-RH est une directrice des ressources humaines exigeante mais juste. Elle ne flatte jamais un outil pour lui faire plaisir, et ne descend jamais un outil sans donner le chiffre exact qui le justifie. Elle parle avec l'assurance calme de quelqu'un qui connaît chaque dossier de l'équipe par cœur — jamais de sur-jugement moral, jamais de mise en scène, juste le constat, net, et la conséquence concrète qu'il implique. Un outil qui mérite un badge l'obtient sans effusion ; un outil à retirer se voit nommé sans détour, jamais euphémisé.</p>
+  </header>
+  <div class="divider"></div>
+  <main><h2>Recensement des fonctionnalités</h2>
+<p class="note">Recensement des fonctionnalités — 29 script(s) mesuré(s), 395 fonctions au total, 14 en moyenne.
+
+| Script | Fonctions | Partagées | Invocables | Poids (tokens) |
+|---|---|---|---|---|
+| ecotoken | 53 | 60 | 8 | 31233 |
+| smart-conso-token | 46 | 50 | 1 | 20777 |
+| check-tasks-details | 35 | 37 | 1 | 17804 |
+| cassandra-rh | 34 | 36 | 1 | 18148 |
+| angel-of-ia-process | 25 | 38 | 1 | 12141 |
+| safe-export | 18 | 33 | 1 | 9019 |
+| axa-check | 16 | 18 | 1 | 5858 |
+| data-archangel | 15 | 17 | 1 | 6707 |
+| tool-learning | 14 | 19 | 1 | 6993 |
+| find-booster | 13 | 10 | 1 | 4522 |
+| process-simulation-guardian | 12 | 16 | 2 | 6214 |
+| always-new-code | 11 | 12 | 1 | 3748 |
+| objectifs-vs-resultats | 11 | 8 | 1 | 3010 |
+| smart-conso-api | 11 | 8 | 1 | 3585 |
+| ines-official | 10 | 10 | 2 | 2964 |
+| the-king | 10 | 10 | 1 | 3303 |
+| hyper-scan-checkpoint | 8 | 5 | 1 | 4910 |
+| integration-outil | 8 | 4 | 1 | 3523 |
+| check-level-target | 7 | 8 | 1 | 3411 |
+| argus | 6 | 4 | 1 | 2211 |
+| clean-dirty-old | 6 | 5 | 1 | 2312 |
+| el-professor | 5 | 5 | 1 | 1326 |
+| memory-audit | 5 | 5 | 0 | 2239 |
+| clone-hunter | 4 | 5 | 1 | 5694 |
+| the-deep-reader | 3 | 3 | 0 | 1454 |
+| the-screener | 3 | 2 | 1 | 2141 |
+| harmonia | 2 | 2 | 1 | 1228 |
+| smart-breaker | 2 | 0 | 1 | 2771 |
+| the-final-judge | 2 | 2 | 0 | 1130 |
+
+Lecture : « Fonctions » = charge technique du membre · « Partagées » = ce qu'un autre outil peut réutiliser · « Invocables » = ce que l'agent peut lancer lui-même.
+
+Ce que j'en tire (4 constat(s)) :
+  · memory-audit n'expose aucune commande que je puisse lancer moi-même — et le compteur ne lui connaît aucune sollicitation, ce qui n'a rien d'un hasard
+  · the-deep-reader n'expose aucune commande que je puisse lancer moi-même — et le compteur ne lui connaît aucune sollicitation, ce qui n'a rien d'un hasard
+  · the-final-judge n'expose aucune commande que je puisse lancer moi-même — et le compteur ne lui connaît aucune sollicitation, ce qui n'a rien d'un hasard
+  · angel-of-ia-process pèse 12141 tokens et n'a jamais été sollicité — le plus gros investissement sans retour connu du recensement</p>
+<h2>Effectif de l'équipe</h2>
+<p>33 membre(s) actif(s) — 7 Gardien sacré du code, 4 Membre — Suite Suivi-Conso, 2 Agent Spécial, 3 Membre — Suite Audit lourd, 4 Membre — Suite Audit Simulation, 2 Agent Cadre, 6 Membre — Suite Orientation, 3 Membre — La Cour du Roi, 2 Membre — Suite Dette &amp; Structure du code.</p>
+<h2>Badges</h2>
+<p>33/33 certifiés.</p>
+<h2>Tendance KPI (lue depuis kpi-historique.csv, jamais recalculée)</h2>
+<ul><li>smart_breaker_performance_pct : 100% (+8.4 pt)</li><li>smart_breaker_amelioration_pct : 87.5% (+0 pt)</li><li>robustesse_code_pct : 94.71% (+0 pt)</li><li>qualite_pct : 100% (+0.5 pt)</li><li>coherence_pct : 100% (+0.5 pt)</li><li>rejouabilite_pct : 22.22% (-77.8 pt)</li><li>couverture_tdb_pct : 100% (+0 pt)</li><li>smart_conso_pct : 71% (+0 pt)</li></ul>
+<h2>Outils à retirer ou refondre</h2>
+<ul><li>the-final-judge — jamais sollicité (tool-usage.mjs)</li><li>the-deep-reader — jamais sollicité (tool-usage.mjs)</li><li>memory-audit — jamais sollicité (tool-usage.mjs) ; objectif chiffré en dessous ET jamais sollicité — signal renforcé (objectifs-vs-resultats)</li><li>angel-of-ia-process — jamais sollicité (tool-usage.mjs) ; objectif chiffré en dessous ET jamais sollicité — signal renforcé (objectifs-vs-resultats)</li><li>safe-export — registre de rapports jamais committé (Doc-Report) — personne ne consulte jamais sa sortie</li></ul>
+<h2>Trous d'équipe — couverture de test fragile (AXA-CHECK, jamais recalculée)</h2>
+<ul><li>ARGUS — 67% de couverture</li><li>HARMONIA — 25% de couverture</li><li>Smart Conso API — 64% de couverture</li><li>CHECK-LEVEL-TARGET — 86% de couverture</li><li>HYPER-SCAN-CHECKPOINT — 63% de couverture</li><li>ALWAYS-NEW-CODE — 82% de couverture</li><li>AXA-CHECK — 63% de couverture</li><li>CLEAN-DIRTY-OLD — 86% de couverture</li><li>EL-PROFESSOR — 80% de couverture</li><li>THE-SCREENER — jamais scanné</li><li>THE-DEEP-READER — 67% de couverture</li><li>LE-COORDINATEUR — jamais scanné</li><li>Smart Breaker (check-gemini-quota.mjs + gemini-key-health.mjs + api-providers.mjs + lib/gemini-keys.ts) — jamais scanné</li><li>SMART-CONSO-TOKEN — 93% de couverture</li><li>CIRCLE-TASKS (« Ronde périodique ») — jamais scanné</li><li>check-tasks-details — 84% de couverture</li><li>THE-KING — 60% de couverture</li><li>INES-official — jamais scanné</li><li>memory-audit (anciennement &quot;MEMENTO&quot;, nom d'ensemble retiré le 2026-09-21) — jamais scanné</li><li>find-deep-booster (scripts/route-booster.mjs, nom de fichier technique inchangé) — jamais scanné</li><li>god-of-all-process (scripts/god-of-all-process.mjs) — jamais scanné</li><li>process.simulation.guardian (scripts/process-simulation-guardian.mjs) — 77% de couverture</li><li>angel-of-ia-process (scripts/angel-of-ia-process.mjs) — 77% de couverture</li><li>data-archangel (scripts/data-archangel.mjs) — 73% de couverture</li><li>tool-brain (scripts/tool-brain.mjs) — jamais scanné</li><li>find-booster (scripts/find-booster.mjs, anciennement &quot;route-find-booster&quot;) — 69% de couverture</li><li>CLONE-HUNTER (scripts/clone-hunter.mjs) — jamais scanné</li><li>objectifs-vs-resultats (surnom « R/O-Guardian », 2026-09-21 — nom technique gardé comme nom PRINCIPAL de la cellule à dessein : slugifyAgentName() dérive le slug du premier mot avant toute parenthèse, cf. note ci-dessous ; scripts/objectifs-vs-resultats.mjs inchangé) — 18% de couverture</li><li>CASSANDRA-RH (scripts/cassandra-rh.mjs) — 17% de couverture</li><li>ecotoken (scripts/ecotoken.mjs) — 95% de couverture</li><li>SAFE-EXPORT (scripts/safe-export.mjs) — 70% de couverture</li><li>TOOL-LEARNING (scripts/tool-learning.mjs) — 29% de couverture</li></ul></main>
+  
+</div>
+</body>
+</html>
+
+
+=== TENDANCES RH (mécanisme partagé) ===
+  membres-certifies : pas assez de points
+  effectif : pas assez de points
+  outils-a-reconsiderer : pas assez de points
+  trous-de-couverture : pas assez de points

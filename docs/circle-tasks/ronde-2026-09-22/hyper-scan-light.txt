@@ -1,0 +1,314 @@
+⚠️  Attention, mes résultats peuvent être inexacts : cherche des bugs inconnus — n'en trouver aucun ne prouve jamais qu'il n'y en a pas. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : 2026-09-22 à 19:08 UTC
+État du code : 79b7dd7 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : hyper-scan-checkpoint — inchangé depuis le 2026-09-22
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== HYPER-SCAN-CHECKPOINT — version légère (zéro appel réseau) ===
+
+Dernier passage couvrait jusqu'à : (aucun — premier passage)
+HEAD actuel : 79b7dd7c09a66aaf2675f5c856bfd862bc9a36ce
+
+--- Commits depuis le dernier passage ---
+premier passage — aucune référence antérieure, portée = tout l'historique récent visible.
+
+--- ARGUS ---
+6 candidat(s) de trou signalé(s), 0 marqueur(s) TODO/FIXME.
+
+--- HARMONIA ---
+0 friction(s) confirmée(s) sur 5 lien(s) vérifié(s).
+
+--- ALWAYS-NEW-CODE (préparation) ---
+⚠️  Attention, mes résultats peuvent être inexacts : l'empilement se devine par des indices, et un choix assumé peut y ressembler de loin. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : 2026-09-22 à 19:08 UTC
+État du code : 79b7dd7 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : always-new-code — inchangé depuis le 2026-09-22
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== ALWAYS-NEW-CODE — préparation (zéro coût, la couche raisonnement suit) ===
+
+Zone recommandée : Cycle jour/nuit (rotation, jamais examinée)
+
+Indice git (lib/daynight.ts) : 1 commit(s), +101/-0 — signal : aucun.
+
+--- Ce qui reste du ressort du raisonnement (jamais mécanisable) ---
+1. Décrire les GRANDS AXES d'une structure idéale pour cette zone, en repartant de zéro avec toute la connaissance actuelle du projet.
+2. Comparer point par point cette structure imaginée à la structure réelle de la zone.
+3. Vérifier, pour chaque écart trouvé, qu'il ne s'agit pas déjà d'une décision assumée et documentée (Article 19 — leçon trottoirGranted, 2026-09-19).
+4. Vérifier qu'aucune fonctionnalité déjà couverte par check-house.mjs ne serait perdue par le changement proposé.
+5. Classer chaque trouvaille par palier de confiance (confirmé / probable / à surveiller) — jamais une certitude absolue.
+6. Proposer, jamais appliquer seul : préciser la portée exacte et le temps estimé, puis demander confirmation avant tout changement réel.
+
+--- Performance de l'outil (KPI) ---
+1 passage(s) · 2 trouvaille(s) confirmée(s) · 2.0 en moyenne par passage.
+
+--- AXA-CHECK (robustesse/fragilité par fonction) ---
+⚠️  Attention, mes résultats peuvent être inexacts : la couverture mesurée est exacte, mais en conclure « robuste » ne l'est jamais. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : 2026-09-22 à 19:08 UTC
+État du code : 79b7dd7 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : axa-check — inchangé depuis le 2026-09-22
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== AXA-CHECK — robustesse et fragilité par fonction (zéro coût additionnel) ===
+
+app/api/lia/route.ts : 100% (26 fonction(s))
+lib/stock.ts : 100% (2 fonction(s))
+   [confiance-maximale] stockSurprise (ligne 1) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] stockThought (ligne 8) — Confiance maximale — vérifié en profondeur et testé
+lib/visual-events.ts : N/A (0 fonction(s))
+lib/house.ts : 100% (6 fonction(s))
+   [confiance-maximale] gardenAccess (ligne 4) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] blocked (ligne 26) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] pathBetween (ligne 30) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] key (ligne 31) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] destinationAnchor (ligne 60) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] residentDestination (ligne 69) — Confiance maximale — vérifié en profondeur et testé
+lib/perception.ts : 100% (5 fonction(s))
+   [confiance-maximale] appearanceFor (ligne 14) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] visibleScene (ligne 15) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] normaliseNickname (ligne 18) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] restingPose (ligne 20) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] appearanceReply (ligne 22) — Confiance maximale — vérifié en profondeur et testé
+lib/drama.ts : 100% (13 fonction(s))
+lib/life.ts : 100% (13 fonction(s))
+lib/turn.ts : 100% (6 fonction(s))
+lib/story.ts : 100% (20 fonction(s))
+lib/relationship.ts : 100% (8 fonction(s))
+lib/dialogue.ts : 100% (20 fonction(s))
+lib/simulation.ts : 100% (10 fonction(s))
+lib/lia.ts : 100% (4 fonction(s))
+lib/gemini-keys.ts : 100% (7 fonction(s))
+lib/quality-metrics.ts : 100% (5 fonction(s))
+   [confiance-maximale] recordTurn (ligne 6) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] recordAntiEchoIntervention (ligne 7) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] recordTruncation (ligne 7) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] getQualityMetrics (ligne 12) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] __resetQualityMetricsForTests (ligne 14) — Confiance maximale — vérifié en profondeur et testé
+lib/world.ts : 100% (2 fonction(s))
+lib/daynight.ts : 100% (6 fonction(s))
+   [confiance-maximale] cyclePosition (ligne 36) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] dayIndex (ligne 38) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] isNight (ligne 39) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] isMidnight (ligne 45) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] phaseOf (ligne 55) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] fatigueRateMultiplier (ligne 97) — Confiance maximale — vérifié en profondeur et testé
+lib/evidence.ts : 100% (2 fonction(s))
+   [confiance-maximale] evidenceLedger (ligne 16) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] investigationCounts (ligne 19) — Confiance maximale — vérifié en profondeur et testé
+lib/presentation.ts : 100% (2 fonction(s))
+   [confiance-maximale] departurePresentation (ligne 2) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] uniqueObservations (ligne 3) — Confiance maximale — vérifié en profondeur et testé
+lib/playback.ts : 50% (2 fonction(s))
+   [confiance-maximale] waitForPlayback (ligne 2) — Confiance maximale — vérifié en profondeur et testé
+   [à-surveiller] wait (ligne 2) — À surveiller — vérifié en profondeur mais sans preuve de test automatique
+   [détail] wait : jamais exécutée par un test
+lib/reference.ts : N/A (0 fonction(s))
+lib/update-audit.ts : N/A (0 fonction(s))
+
+Robustesse globale (fonctions couvertes) : 99% sur 159 fonction(s) analysée(s).
+
+Pour enregistrer un audit approfondi réellement effectué : node scripts/axa-check.mjs record-check <fichier> <leger|standard|approfondi|exceptionnel> [fonctions...]
+
+--- CLEAN-DIRTY-OLD (code ancien et peu retouché, repérage seul) ---
+⚠️  Attention, mes résultats peuvent être inexacts : l'ancienneté d'un fichier ne dit pas s'il est périmé — seulement qu'on n'y a pas regardé depuis longtemps. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : 2026-09-22 à 19:08 UTC
+État du code : 79b7dd7 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : clean-dirty-old — inchangé depuis le 2026-09-22
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== CLEAN-DIRTY-OLD — code ancien et peu retouché (repérage seul, jamais un jugement) ===
+
+Aucune zone signalée cette fois — rien n'est nettement plus ancien que le reste du projet en ce moment.
+
+--- CLONE-HUNTER (blocs de code dupliqués, littéral + renommage bijectif) ---
+⚠️  Attention, mes résultats peuvent être inexacts : deux blocs qui se ressemblent ne sont pas toujours deux blocs à factoriser. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : 2026-09-22 à 19:09 UTC
+État du code : 79b7dd7 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : clone-hunter — inchangé depuis le 2026-09-22
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== CLONE-HUNTER — blocs de code dupliqués ===
+
+CLONE-HUNTER : 15 cluster(s) de code dupliqué (identique) trouvé(s) (triés par impact décroissant) :
+  - 11 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/doc-report.mjs:324, scripts/find-brain.mjs:61 — aperçu: "const seen = new Set();"
+  - 7 ligne(s) dupliquée(s) × 3 endroit(s) — scripts/check-suivi-fidelity.mjs:44, scripts/check-suivi-fidelity.mjs:67, scripts/check-suivi-fidelity.mjs:94 — aperçu: "const rows = sessionText"
+  - 5 ligne(s) dupliquée(s) × 4 endroit(s) — scripts/circle-tasks.mjs:1348, scripts/circle-tasks.mjs:1426, scripts/safe-export.mjs:263, scripts/tool-learning.mjs:103 — aperçu: "return Array.isArray(b) ? b : [];"
+  - 9 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/doc-report.mjs:326, scripts/find-brain.mjs:63 — aperçu: "for (const r of registries) {"
+  - 8 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/le-coordinateur.mjs:945, scripts/le-coordinateur.mjs:970 — aperçu: "`Description : ${result.description || "non renseignée (colonne « Ce qu'il détecte/régule » absente de la table maîtresse)"}`,"
+  - 8 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/smart-conso-api.mjs:32, scripts/smart-conso-token.mjs:684 — aperçu: "function loadJson(path, fallback) {"
+  - 8 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/summarize-simulation-log.mjs:97, scripts/summarize-simulation-log.mjs:127 — aperçu: "if (d.room && prevRoom[d.actor] !== undefined && prevRoom[d.actor] !== d.room) {"
+  - 5 ligne(s) dupliquée(s) × 3 endroit(s) — scripts/angel-of-ia-process.mjs:427, scripts/angel-of-ia-process.mjs:554, scripts/serie-temporelle.mjs:65 — aperçu: "return Array.isArray(brut) ? brut : [];"
+  - 5 ligne(s) dupliquée(s) × 3 endroit(s) — scripts/smart-conso-api.mjs:35, scripts/smart-conso-token.mjs:687, scripts/tool-usage.mjs:61 — aperçu: "return JSON.parse(readFileSync(path, "utf8"));"
+  - 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/always-new-code.mjs:208, scripts/clean-dirty-old.mjs:95 — aperçu: "if (!counts.length) return undefined;"
+  - 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/api-providers.mjs:70, scripts/api-providers.mjs:93 — aperçu: "return { status: `HTTP ${r.status}`, ms, detail: message.slice(0, 100) };"
+  - 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/check-house.mjs:1531, scripts/check-house.mjs:1556 — aperçu: "const priorFetch=globalThis.fetch;"
+  - 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/god-of-all-process.mjs:28, scripts/process-simulation-guardian.mjs:31 — aperçu: "import { existsSync, readFileSync, readdirSync } from "node:fs";"
+  - 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/the-deep-reader.mjs:43, scripts/the-final-judge.mjs:58 — aperçu: "dateLabel: dateLabel ?? new Date().toISOString(),"
+  - 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/smart-conso-token.mjs:373, scripts/the-king.mjs:140 — aperçu: "const a = wordSets[i], b = wordSets[j];"
+CLONE-HUNTER v2 (renommage) : 11 cluster(s) de code structurellement dupliqué (identifiants renommés, jamais déjà comptés par v1) trouvé(s) :
+  - 8 ligne(s) dupliquée(s) × 6 endroit(s) — scripts/angel-of-ia-process.mjs:424, scripts/angel-of-ia-process.mjs:551, scripts/circle-tasks.mjs:1345, scripts/circle-tasks.mjs:1423, scripts/safe-export.mjs:260, scripts/tool-learning.mjs:100 — aperçu: "export function loadEvaluationHistory({ root = ROOT, readFileImpl = readFileSync } = {}) {"
+  - 12 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/doc-report.mjs:323, scripts/find-brain.mjs:60 — aperçu: "export function flagFindBoosterCandidates(registries = REGISTRIES, recommendImpl = recommendFindBooster) {"
+  - 9 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/hyper-scan-checkpoint.mjs:85, scripts/the-deep-reader.mjs:84 — aperçu: "const totalFindings = counts.reduce((a, b) => a + b, 0);"
+  - 6 ligne(s) dupliquée(s) × 3 endroit(s) — scripts/safe-export.mjs:76, scripts/safe-export.mjs:131, scripts/safe-export.mjs:159 — aperçu: "export function findFuitesDeSpecificite(fichiers = [], { readFileImpl = readFileSync, root = ROOT } = {}) {"
+  - 7 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/smart-conso-token.mjs:371, scripts/the-king.mjs:138 — aperçu: "for (let i = 0; i < rules.length; i++) {"
+  - 7 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/axa-check.mjs:203, scripts/axa-check.mjs:278 — aperçu: "export function collectCoverage(covDir, { readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8") } = {}) {"
+  - 6 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/god-of-all-process.mjs:364, scripts/god-of-all-process.mjs:378 — aperçu: "export function findMecanismesAbsentsDuGardien({ processes = PROCESSES, root = ROOT, readFileImpl = readFileSync } = {}) {"
+  - 6 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/smart-conso-token.mjs:300, scripts/the-king.mjs:61 — aperçu: "const headingStarts = [...source.matchAll(TOP_HEADING_PATTERN)].map((m) => m.index ?? source.length);"
+  - 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/check-suivi-fidelity.mjs:143, scripts/check-suivi-fidelity.mjs:193 — aperçu: "export function auditOpenTasks(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {"
+  - 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/find-booster.mjs:42, scripts/find-booster.mjs:129 — aperçu: "const lines = Array.isArray(source) ? source : source.split("\n");"
+  - 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/find-booster.mjs:81, scripts/find-booster.mjs:114 — aperçu: "const label = (description.split(/\s*[(—]/)[0] || description).trim();"
+
+=== Plan d'action ===
+  → RETENU · 11 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/doc-report.mjs:324, scripts/find-brain.mjs:61 — aperçu: "const seen = new Set();" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 7 ligne(s) dupliquée(s) × 3 endroit(s) — scripts/check-suivi-fidelity.mjs:44, scripts/check-suivi-fidelity.mjs:67, scripts/check-suivi-fidelity.mjs:94 — aperçu: "const rows = sessionText" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 5 ligne(s) dupliquée(s) × 4 endroit(s) — scripts/circle-tasks.mjs:1348, scripts/circle-tasks.mjs:1426, scripts/safe-export.mjs:263, scripts/tool-learning.mjs:103 — aperçu: "return Array.isArray(b) ? b : [];" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 9 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/doc-report.mjs:326, scripts/find-brain.mjs:63 — aperçu: "for (const r of registries) {" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 8 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/le-coordinateur.mjs:945, scripts/le-coordinateur.mjs:970 — aperçu: "`Description : ${result.description || "non renseignée (colonne « Ce qu'il détecte/régule » absente de la table maîtresse)"}`," — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 8 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/smart-conso-api.mjs:32, scripts/smart-conso-token.mjs:684 — aperçu: "function loadJson(path, fallback) {" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 8 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/summarize-simulation-log.mjs:97, scripts/summarize-simulation-log.mjs:127 — aperçu: "if (d.room && prevRoom[d.actor] !== undefined && prevRoom[d.actor] !== d.room) {" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 5 ligne(s) dupliquée(s) × 3 endroit(s) — scripts/angel-of-ia-process.mjs:427, scripts/angel-of-ia-process.mjs:554, scripts/serie-temporelle.mjs:65 — aperçu: "return Array.isArray(brut) ? brut : [];" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 5 ligne(s) dupliquée(s) × 3 endroit(s) — scripts/smart-conso-api.mjs:35, scripts/smart-conso-token.mjs:687, scripts/tool-usage.mjs:61 — aperçu: "return JSON.parse(readFileSync(path, "utf8"));" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/always-new-code.mjs:208, scripts/clean-dirty-old.mjs:95 — aperçu: "if (!counts.length) return undefined;" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/api-providers.mjs:70, scripts/api-providers.mjs:93 — aperçu: "return { status: `HTTP ${r.status}`, ms, detail: message.slice(0, 100) };" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/check-house.mjs:1531, scripts/check-house.mjs:1556 — aperçu: "const priorFetch=globalThis.fetch;" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/god-of-all-process.mjs:28, scripts/process-simulation-guardian.mjs:31 — aperçu: "import { existsSync, readFileSync, readdirSync } from "node:fs";" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/the-deep-reader.mjs:43, scripts/the-final-judge.mjs:58 — aperçu: "dateLabel: dateLabel ?? new Date().toISOString()," — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/smart-conso-token.mjs:373, scripts/the-king.mjs:140 — aperçu: "const a = wordSets[i], b = wordSets[j];" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 8 ligne(s) dupliquée(s) × 6 endroit(s) — scripts/angel-of-ia-process.mjs:424, scripts/angel-of-ia-process.mjs:551, scripts/circle-tasks.mjs:1345, scripts/circle-tasks.mjs:1423, scripts/safe-export.mjs:260, scripts/tool-learning.mjs:100 — aperçu: "export function loadEvaluationHistory({ root = ROOT, readFileImpl = readFileSync } = {}) {" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 12 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/doc-report.mjs:323, scripts/find-brain.mjs:60 — aperçu: "export function flagFindBoosterCandidates(registries = REGISTRIES, recommendImpl = recommendFindBooster) {" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 9 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/hyper-scan-checkpoint.mjs:85, scripts/the-deep-reader.mjs:84 — aperçu: "const totalFindings = counts.reduce((a, b) => a + b, 0);" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 6 ligne(s) dupliquée(s) × 3 endroit(s) — scripts/safe-export.mjs:76, scripts/safe-export.mjs:131, scripts/safe-export.mjs:159 — aperçu: "export function findFuitesDeSpecificite(fichiers = [], { readFileImpl = readFileSync, root = ROOT } = {}) {" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 7 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/smart-conso-token.mjs:371, scripts/the-king.mjs:138 — aperçu: "for (let i = 0; i < rules.length; i++) {" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 7 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/axa-check.mjs:203, scripts/axa-check.mjs:278 — aperçu: "export function collectCoverage(covDir, { readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8") } = {}) {" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 6 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/god-of-all-process.mjs:364, scripts/god-of-all-process.mjs:378 — aperçu: "export function findMecanismesAbsentsDuGardien({ processes = PROCESSES, root = ROOT, readFileImpl = readFileSync } = {}) {" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 6 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/smart-conso-token.mjs:300, scripts/the-king.mjs:61 — aperçu: "const headingStarts = [...source.matchAll(TOP_HEADING_PATTERN)].map((m) => m.index ?? source.length);" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/check-suivi-fidelity.mjs:143, scripts/check-suivi-fidelity.mjs:193 — aperçu: "export function auditOpenTasks(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/find-booster.mjs:42, scripts/find-booster.mjs:129 — aperçu: "const lines = Array.isArray(source) ? source : source.split("\n");" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+  → RETENU · 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/find-booster.mjs:81, scripts/find-booster.mjs:114 — aperçu: "const label = (description.split(/\s*[(—]/)[0] || description).trim();" — tâche [RECOMMANDEE] : factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte
+
+--- SAFE-EXPORT (exportabilité de l'Agence, lisibilité par une autre IA) ---
+⚠️  Attention, mes résultats peuvent être inexacts : une absence d'explication n'est pas une absence de raison, et un terme sans fiche n'est pas forcément mal défini — ses détecteurs sont des indices, jamais des preuves. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : 2026-09-22 à 19:09 UTC
+État du code : 79b7dd7 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : automatique_post_commit
+Outil : safe-export — inchangé depuis le 2026-09-22
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== SAFE-EXPORT — exportabilité de l'Agence, lisibilité du projet ===
+
+=== SAFE-EXPORT — exportabilité de l'Agence, lisibilité du projet ===
+
+· cible « agence » : l'outillage de travail est-il exportable vers un autre projet ?
+· cible « projet » : une autre IA reprendrait-elle ce code sans le casser ?
+
+29 blueprint(s) trouvé(s).
+  fuites de spécificité : 4
+  blueprints mal construits : 7
+  dépendances à un outillage particulier : 0
+
+11 écart(s) à regarder (0 écarté(s) avec votre accord explicite, jamais reposé(s)).
+
+📖 VOCABULAIRE — mesuré sur 47 document(s) normatif(s) : 0 emploi(s) ambigu(s).
+
+=== Plan d'action ===
+  → RETENU · docs/argus-blueprint.md:30 — jargon propre au projet : « - **Asymétrie entre deux entités censées être comparables** (dans ce projet : Lia/Noé) — u » — tâche [OBLIGATOIRE] : rendre docs/argus-blueprint.md réellement exportable
+  → RETENU · docs/harmonia-blueprint.md:35 — jargon propre au projet : « reconnaît sans lire le code ("la fatigue", "l'enquête", "la roulette de bonus"), pas un no » — tâche [OBLIGATOIRE] : rendre docs/harmonia-blueprint.md réellement exportable
+  → RETENU · docs/smart-conso-api-blueprint.md:4 — jargon propre au projet : « d'épuisement total du quota Gemini pendant cette même session : « pour l'aider [Smart Brea » — tâche [OBLIGATOIRE] : rendre docs/smart-conso-api-blueprint.md réellement exportable
+  → RETENU · docs/the-screener-blueprint.md:5 — jargon propre au projet : « de la maison, de l'interface, et une note globale [...] pour alimenter the-screener, on jo » — tâche [OBLIGATOIRE] : rendre docs/the-screener-blueprint.md réellement exportable
+  → RETENU · docs/angel-of-ia-process-blueprint.md — ne se déclare pas générique (aucun détecteur de fuite ne le regardera — il pourra contenir n'importe quoi sans que rien ne le dise) — tâche [OBLIGATOIRE] : rendre docs/angel-of-ia-process-blueprint.md réellement exportable
+  → RETENU · docs/cassandra-rh-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/cassandra-rh-blueprint.md réellement exportable
+  → RETENU · docs/data-archangel-blueprint.md — ne se déclare pas générique (aucun détecteur de fuite ne le regardera — il pourra contenir n'importe quoi sans que rien ne le dise) — tâche [OBLIGATOIRE] : rendre docs/data-archangel-blueprint.md réellement exportable
+  → RETENU · docs/objectifs-vs-resultats-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/objectifs-vs-resultats-blueprint.md réellement exportable
+  → RETENU · docs/process-simulation-guardian-blueprint.md — ne se déclare pas générique (aucun détecteur de fuite ne le regardera — il pourra contenir n'importe quoi sans que rien ne le dise) — tâche [OBLIGATOIRE] : rendre docs/process-simulation-guardian-blueprint.md réellement exportable
+  → RETENU · docs/process-simulation-guardian-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/process-simulation-guardian-blueprint.md réellement exportable
+  → RETENU · docs/the-screener-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/the-screener-blueprint.md réellement exportable
+
+· Aucune sonde proposée : aucun fichier ne concentre 3 écarts ou plus — des écarts éparpillés sont du bruit ordinaire, jamais un signal
+  fuites : pas assez de points
+  blueprints-mal-construits : pas assez de points
+  dependances-outillage : pas assez de points
+  blueprints-total : pas assez de points
+
+--- circle-process-guardian (discipline mécanique de CIRCLE-TASKS) ---
+[record-run] record-run() n'a pas été appelé à la fin de cette Ronde : 10 commit(s) d'écart avec le dernier passage enregistré.
+
+--- KPI (échelle des constats ci-dessus) ---
+== SYNTHÈSE COMPACTE(à relayer telle quelle dans la conversation) ==
+Run : manuel-2026-09-22T19:09
+| Famille | KPI global |
+|---|---|
+| 🔧 Smart Breaker — performance | N/A |
+| 📈 Smart Breaker — améliorations | 88% |
+| Robustesse du code | 95% |
+| Qualité de sortie | N/A |
+| Cohérence logique | N/A |
+| Rejouabilité (partiel) | N/A |
+| Smart Conso | 71% |
+| Couverture du tableau de bord | 100% |
+
+🚨 Points d'attention : suite check-house.mjs rouge.
+
+--- Suite de tests (check-house.mjs) ---
+ÉCHEC détecté dans la suite de tests — voir le rapport complet.
+
+--- Registres et historiques disponibles ---
+Points fragiles ouverts : 14 puce(s), 0 ligne(s) de tableau — docs/referentiel/points-fragiles.md
+Suivi des tâches (index) : 0 puce(s), 3 ligne(s) de tableau — docs/suivi/index.md
+ARGUS (index) : 0 puce(s), 24 ligne(s) de tableau — docs/argus/index.md
+HARMONIA (index) : 0 puce(s), 4 ligne(s) de tableau — docs/harmonia/index.md
+Smart Conso API (index) : 0 puce(s), 3 ligne(s) de tableau — docs/smart-conso-api/index.md
+ALWAYS-NEW-CODE (index) : 0 puce(s), 3 ligne(s) de tableau — docs/always-new-code/index.md
+CHECK-LEVEL-TARGET (index) : 0 puce(s), 3 ligne(s) de tableau — docs/check-level-target/index.md
+AXA-CHECK (index) : 0 puce(s), 3 ligne(s) de tableau — docs/axa-check/index.md
+CLEAN-DIRTY-OLD (index) : 0 puce(s), 3 ligne(s) de tableau — docs/clean-dirty-old/index.md
+CLONE-HUNTER (index) : 0 puce(s), 4 ligne(s) de tableau — docs/clone-hunter/index.md
+SMART-CONSO-TOKEN (index) : 0 puce(s), 11 ligne(s) de tableau — docs/smart-conso-token/index.md
+THE-FINAL-JUDGE (index) : 0 puce(s), 3 ligne(s) de tableau — docs/the-final-judge/index.md
+THE-DEEP-READER (index) : 0 puce(s), 3 ligne(s) de tableau — docs/suivi/relectures-lourdes/index.md
+THE-KING (index) : 0 puce(s), 3 ligne(s) de tableau — docs/the-king/index.md
+INES-official (index) : 0 puce(s), 2 ligne(s) de tableau — docs/ines-official/index.md
+memory-audit (index) : 0 puce(s), 3 ligne(s) de tableau — docs/memory-audit/index.md
+find-booster (index) : 0 puce(s), 3 ligne(s) de tableau — docs/find-booster/index.md
+objectifs-vs-resultats (index) : 1 puce(s), 0 ligne(s) de tableau — docs/objectifs-vs-resultats/index.md
+CASSANDRA-RH (index) : 0 puce(s), 0 ligne(s) de tableau — docs/cassandra-rh/index.md
+
+--- Performance de l'outil lui-même (KPI central) ---
+Aucun passage complet enregistré à ce jour (absence de donnée, jamais un faux 0%) — ce signal apparaîtra à partir du prochain passage dont la trouvaille est consignée dans l'index.
+
+--- Charte (CLAUDE.md) ---
+94176 caractères, 1152 lignes — relecture COMPLÈTE requise en aval (jamais un résumé de mémoire, décision explicite de l'utilisateur).
+
+--- Checklist qualitative restant à exécuter (raisonnement, jamais mécanisable) ---
+1. Relire CLAUDE.md EN ENTIER (le fichier vient d'être chargé ci-dessus ; cette étape reste un vrai raisonnement, jamais automatisable) — chaque Article est-il toujours respecté par le code actuel ?
+2. Reprendre CHAQUE consigne explicite formulée par l'utilisateur depuis le dernier passage (cf. commits ci-dessus) et confirmer, une par une, qu'elle a été précisément et entièrement honorée — pas seulement dans l'esprit.
+3. Balayer les COMBINAISONS de mécanismes récents entre eux et avec l'existant (ex. un mécanisme nouveau actif en même temps qu'un mécanisme ancien) — jamais couvert par un outil mécanique, une vraie réflexion à chaque fois.
+4. Identifier le code sensible/central touché récemment et resté sans test dédié — en écrire un si c'est le cas.
+5. Si une simulation complète existe depuis le dernier passage, comparer sa transcription à la précédente réplique par réplique, comme le ferait un humain — repérer les régressions de naturel, pas seulement les bugs.
+6. Distinguer explicitement, dans le rapport final : vrai oubli corrigé / déjà connu et sciemment reporté / question ouverte pour l'utilisateur.
+7. Sur la zone recommandée par ALWAYS-NEW-CODE ci-dessus (ou une autre zone explicitement demandée) : faire le vrai zoom profond "page blanche" — jamais mécanisable, cf. docs/referentiel/always-new-code.md.
+
+Rapport archivé : docs/hyper-scan-checkpoint/scan-2026-09-22-19-08.txt
+Ce fichier + la checklist qualitative ci-dessus doivent maintenant être traités par l'agent avant de considérer ce passage terminé (cf. docs/referentiel/hyper-scan-checkpoint.md).

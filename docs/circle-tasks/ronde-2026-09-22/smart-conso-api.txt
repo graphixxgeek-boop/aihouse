@@ -1,0 +1,19 @@
+⚠️  Attention, mes résultats peuvent être inexacts : un quota se lit à un instant donné et peut avoir changé à la seconde suivante. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : 2026-09-22 à 19:08 UTC
+État du code : 79b7dd7 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : smart-conso-api — inchangé depuis le 2026-09-22
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== SMART CONSO API — scan des schémas de consommation réels ===
+
+⚠️ 1 relancement(s) confirmé(s) dans les 10 minutes suivant un épisode d'épuisement réel.
+   → Un quota journalier épuisé ne revient pas en quelques minutes (le retryDelay de Google est trompeur pour ce cas) — attendre une confirmation de check-gemini-quota.mjs avant de relancer, jamais réessayer à l'aveugle.
+
+
+=== Garde-fou fiabilité — salves d'activité jamais confirmées ===
+
+Aucune salve d'activité récente sans consultation préalable — discipline respectée.

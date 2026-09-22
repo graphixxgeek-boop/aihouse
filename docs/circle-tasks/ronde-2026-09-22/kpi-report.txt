@@ -1,0 +1,94 @@
+Tableau de bord — rapport KPI complet (cf. docs/referentiel/tableau-de-bord.md pour les règles).
+Serveur de dev non joignable sur les ports connus (5173, 3000) — normal si aucune simulation n’est en cours, pas de mesure cette fois.
+
+**🔧 Performance globale du Smart Breaker : N/A (serveur non joignable)**
+**📈 Améliorations réalisées sur l’outil : 88%** (7/8 capacités prévues, implémentées et testées)
+→ Action : Validation qualité intégrale de GEMINI_FALLBACK_MODELS avant activation en production
+
+== Robustesse du code : tsc --noEmit ==
+OK — 0 erreur.
+
+== Robustesse du code : check-house.mjs ==
+⚠️ SUITE ROUGE — 150/177 bloc(s) passés avant l'échec. Sortie :
+s roughly half of a genuine attraction increase survive (still throttled by the existing 0.28 credit system, never a full pass-through) instead of erasing it outright — the real fix behind the loveRealized threshold being unreachable in every one of the 14 archived simulations — while a solitary decrease still resets fully to the pre-turn value, unchanged.
+Passed: LE-RÉGISSEUR (2026-09-21) mechanically archives a simulation's transcript/dossier/action-summary under the real flat naming convention (dossier omitted honestly when a simulation never reached phase 2), reuses summarize-simulation-log.mjs and kpi-report.mjs's own real output verbatim rather than reinventing either, isolates the exact real SYNTHÈSE COMPACTE section kpi-report.mjs already prints, and its own checklists make explicit — never silently — that both judgment indexes (docs/simulations/index.md, docs/referentiel/kpi-index.md) stay the agent's to write, exactly the boundary found by reading kpi-index.md's own stated rule before writing a single line of code.
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: recordCliUsage() must record a genuine event under the honest "cli_direct" origin, distinct from a human-judged spontane/demande call
+
+0 !== 1
+
+    at file:///home/user/aihouse/scripts/check-house.mjs:6799:14 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 0,
+  expected: 1,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.22.2
+
+
+== Robustesse du code : points fragiles ouverts ==
+14 point(s) fragile(s) ouvert(s) — détail dans docs/referentiel/points-fragiles.md.
+
+== Robustesse du code : taille et densité ==
+lib/lia.ts : 191 lignes (prompt géant, à surveiller — pas un défaut en soi).
+lib/dialogue.ts : 317 lignes.
+lib/ : 26 fichiers.
+
+== KPI global — Robustesse du code ==
+95% (moyenne : propreté tsc 100%, suite de tests 85%, couverture réelle par fonction (AXA-CHECK) 99%). Points fragiles et taille de code restent affichés en compteurs bruts ci-dessus (pas de plafond naturel pour un %).
+→ Action : la suite est rouge — corriger la cause avant de considérer un changement terminé (Article 3), jamais contourner un test qui gêne.
+
+== KPI — Mémoire des personnages (memento weight) ==
+Pas de mesure disponible cette fois (serveur non joignable, ou aucun tour joué).
+
+== Qualité de sortie ==
+Pas de tour enregistré cette session — rien à mesurer (normal si le serveur vient de démarrer ou si aucune simulation n’a encore tourné).
+
+== Cohérence logique ==
+Pas de tour enregistré cette session — rien à mesurer.
+
+== Rejouabilité (signal partiel — diversité récente des bonus) ==
+Pas de mesure disponible cette fois (serveur non joignable, ou aucune session en cours).
+
+== KPI global — Performance runtime ==
+N/A cette fois.
+
+== Smart Conso — détail (Smart Conso API + SMART-CONSO-TOKEN) ==
+Conformité API (salves confirmées avant d'agir) : 100% (6/6 salve(s))
+Adoption SMART-CONSO-TOKEN : 1 proposition(s) réellement appliquée(s), réduction moyenne mesurée 13%.
+Fraîcheur des schémas connus : Registre validé pour "claude" (recherche du 2026-09-20) — cohérent avec l'identité déclarée "claude-sonnet-5".
+
+== KPI global — Smart Conso ==
+71% (moyenne des composantes réellement mesurées cette fois — jamais un chiffre fabriqué pour une composante absente).
+
+== KPI général — Couverture du tableau de bord lui-même (à surveiller en priorité) ==
+100% des familles ATTEIGNABLES dans ce contexte ont produit une vraie mesure (2/2).
+→ Hors de portée ici, jamais un défaut : Smart Breaker — performance, Qualité de sortie, Cohérence logique, Rejouabilité — ces familles ont besoin d'un serveur de jeu avec du vrai trafic, absent de cette exécution (typiquement une Ronde ou un contrôle après commit). Elles se mesurent pendant une simulation.
+→ Lecture : tout ce qui pouvait être mesuré ici l’a été (2/6 familles au total, le reste hors de portée dans ce contexte) — rien n’indique un tableau de bord cassé.
+
+== Synthèse ==
+🚨 ALERTE TABLEAU DE BORD — suite check-house.mjs rouge.
+
+== SYNTHÈSE COMPACTE (à relayer telle quelle dans la conversation) ==
+Run : manuel-2026-09-22T19:07
+| Famille | KPI global |
+|---|---|
+| 🔧 Smart Breaker — performance | N/A |
+| 📈 Smart Breaker — améliorations | 88% |
+| Robustesse du code | 95% |
+| Qualité de sortie | N/A |
+| Cohérence logique | N/A |
+| Rejouabilité (partiel) | N/A |
+| Smart Conso | 71% |
+| Couverture du tableau de bord | 100% |
+
+🚨 Points d'attention : suite check-house.mjs rouge.
+
+Historique complet (toutes les exécutions, tous les chiffres) : docs/referentiel/kpi-historique.csv — à envoyer en pièce jointe, jamais collé dans la conversation.
+Copie de présentation HTML régénérée : .kpi-report-latest.html (jamais committée — cf. .gitignore).

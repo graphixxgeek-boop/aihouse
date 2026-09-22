@@ -1,0 +1,34 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il juge une trajectoire : sous trois passages il refuse de conclure, et une baisse de trouvailles peut venir d'un code qui s'est amélioré plutôt que d'un outil qui régresse. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : 2026-09-22 à 19:08 UTC
+État du code : 79b7dd7 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : automatique_post_commit
+Outil : tool-learning — inchangé depuis le 2026-09-22
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== TOOL-LEARNING — l'apprentissage de l'outillage, et le mien à son égard ===
+
+Évolutivité, moitié 1 (pouvoir partir)   → SAFE-EXPORT
+Évolutivité, moitié 2 (devenir meilleur) → TOOL-LEARNING
+
+Frontière avec CASSANDRA : elle juge l'ÉTAT et les MOYENS, lui la TRAJECTOIRE et l'USAGE.
+Un outil peut avoir une mémoire et ne jamais la relire — équipé pour elle, immobile pour lui.
+
+· relit-sa-memoire (autonome) — son code lit vraiment le registre qu'il écrit
+· taux-de-trouvaille (autonome) — il trouve proportionnellement plus de vrais problèmes qu'avant
+· faux-positifs-en-baisse (autonome) — il se trompe moins au fil du temps
+· enrichi-par-l-agent (enseigné) — une trace montre que l'agent l'a corrigé ou enrichi, avec la raison
+
+· Aucun de mes verdicts passés n'a été réfuté (ou pas encore assez d'historique).
+
+=== CE QU'IL ME REPROCHE, À MOI (0 passage(s) d'historique) ===
+Gravité : PAS ENCORE MESURABLE — registre de verdicts vide — absence de mesure, jamais un bon résultat
+
+=== CE QUE ME COÛTE L'AIDE (mesuré le 2026-09-22, jamais estimé) ===
+Aider un outil ≈ le poids de son script : médiane 3300 tokens, soit ~9 % d'un agent séparé.
+Le frein n'est pas là : son TEST (check-house.mjs) pèse 273000 tokens, 44 % de tout scripts/.
+→ Règle : jamais de lecture intégrale de check-house.mjs pour ajouter un test — tool-brain --file d'abord.
+
+· Aucune série enregistrée : le registre de verdicts est vide, et un point à zéro sur un registre vide serait une fausse courbe plate, jamais une mesure.

@@ -5314,6 +5314,22 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     // L'AUTRE MOITIÉ : sans elle, les documents resteraient impeccables pendant que le code
     // rouvrirait l'ambiguïté par un nom de fichier.
     assert.deepEqual(se.findGuardiansHorsProcess(), [], 'no script carries "guardian" without "process" — the rank is always stated by the name');
+    // LE LANCEUR PRÉMATURÉ (2026-09-23) — trouvé DEUX FOIS le même jour par un vrai lancement,
+    // jamais par un test : safe-export.mjs et cassandra-rh.mjs plaçaient leur lanceur au milieu du
+    // fichier, donc main() partait avant les const écrits dessous. Les tests ne l'avaient pas vu
+    // parce qu'ils importent les fonctions sans jamais exécuter main() — exactement l'angle mort
+    // que l'Article 25 décrit (« un outil qui n'a jamais tourné contre le vrai dépôt n'est pas un
+    // outil vérifié »).
+    const dr = await import('../scripts/doc-report.mjs');
+    const lanceurCasse = 'function main(){}\nif (import.meta.url === `file://${process.argv[1]}`) main();\nexport const APRES = 1;\n';
+    const lanceurSain = 'export const AVANT = 1;\nfunction main(){}\nif (import.meta.url === `file://${process.argv[1]}`) main();\nfunction tard(){ const local = 1; return local; }\n';
+    assert.equal(dr.findLanceursPrematures({ listDirImpl: () => ['x.mjs'], readFileImpl: () => lanceurCasse }).length, 1, 'a top-level const written after the launcher is in the temporal dead zone when main() runs');
+    // DEUX RESSERREMENTS, chacun payé par une fausse accusation. La première version signalait
+    // toute ligne après le lanceur (une `function` est pourtant remontée) ; la deuxième comptait
+    // les variables LOCALES d'une fonction écrite plus bas. Un détecteur qui accuse des fichiers
+    // sains rend ses vraies trouvailles indiscernables du bruit.
+    assert.equal(dr.findLanceursPrematures({ listDirImpl: () => ['x.mjs'], readFileImpl: () => lanceurSain }).length, 0, 'a hoisted function and a local variable are never a dead-zone risk, and flagging them would make the real finding indistinguishable from noise');
+    assert.deepEqual(dr.findLanceursPrematures(), [], 'no script in the repository launches main() before its own module-level declarations exist');
     // LA GÉNÉRALISATION (Article 24) : un futur terme ambigu rejoint le registre, il ne demande
     // aucune réécriture de la logique.
     assert.ok(se.VOCABULAIRE_RESERVE.every((v) => v.motif && v.definition && v.pourquoi), 'every reserved term states its pattern, where it is defined, and why it exists');
@@ -7757,7 +7773,12 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // recommander à la fois sur un même fichier.
   const brain = recommendFindBrain('app/api/lia/route.ts');
   assert.deepEqual(brain.recommend.sort(), ['find-booster', 'find-deep-booster'].sort(), 'checked live against the real route.ts: a file this dense in named/commented sections AND this rich in real cut point candidates must recommend BOTH tools at once, never forced into an exclusive either/or choice');
-  const brainSmall = recommendFindBrain('scripts/lib-shell.mjs');
+  // FICHIER TÉMOIN CHANGÉ LE 2026-09-23, et la raison mérite d'être écrite plutôt que le seuil
+  // relâché : ce test visait lib-shell.mjs, qui a grossi (registre des portées d'outils) au point
+  // que find-booster le recommande désormais à juste titre. Le test ne mesurait plus « un petit
+  // fichier ne déclenche rien », il mesurait « lib-shell est petit » — ce qui a cessé d'être vrai.
+  // Déplacer le témoin garde l'intention ; abaisser le seuil l'aurait trahie.
+  const brainSmall = recommendFindBrain('scripts/api-providers.mjs');
   assert.deepEqual(brainSmall.recommend, [], 'checked live against a genuinely small real file: neither tool should be recommended — an honest empty recommendation, never a forced suggestion just to have something to say');
   // notFound (2026-09-21) — same real bug, checked through the unified recommendFindBrain() entry
   // point rather than only the two underlying functions directly.

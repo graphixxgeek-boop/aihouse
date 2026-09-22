@@ -1,0 +1,30 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il associe une tâche à un process par mots-clés, et ne voit d'une étape que la trace qu'elle laisse sur le disque — une étape faite sans trace lui reste invisible. À vérifier avant d'agir, jamais un verdict acquis.
+=== god-of-all-process — état du dispositif ===
+
+✅ Process maître : god-of-all-process se surveille bien lui-même, et le dispositif est cohérent. 
+
+✅ Identité de session déposée : claude-opus-5 (le 2026-09-22). 
+
+Process suivis (5) :
+· Ronde périodique (CIRCLE-TASKS) — 4/4 étape(s) vérifiable(s) tracée(s) — 1 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· Simulation intégrale (Article 18) — 10/15 étape(s) vérifiable(s) tracée(s) — manque : lancer contre un serveur à jour ; livrer le transcript en fichier joint + le diagnostic du profil de l'utilisateur ; lire les rapports individuels des agents AVANT d'écrire l'analyse, jamais après ; poser le sondage en 3 questions juste après la livraison, avant toute analyse détaillée ; poser les questions de calibrage avant toute correction
+· mode-auto-process-guardian — travail autonome (mode nocturne) — 7/7 étape(s) vérifiable(s) tracée(s) — 2 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· Tenue du dispositif de process lui-même (process maître) — 3/3 étape(s) vérifiable(s) tracée(s) — 3 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· Intégration d'un nouvel outil dans l'Agence — 3/3 étape(s) vérifiable(s) tracée(s) — 3 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre 
+
+✅ Process sans gardien : aucun. 
+
+✅ Process dont le document déclaré n'existe pas : aucun. 
+
+✅ Tensions déclarées sur un process disparu : aucun. 
+
+✅ Sondes cassées (défaut de CET outil, jamais du travail surveillé) : aucun. 
+
+Tensions connues entre process (3), déclarées à la main et résolues :
+· nuit ↔ simulation — Le mode nocturne autorise à consommer de l'API sans validation ; le protocole de simulation exige une consultation préalable de Smart Conso API.
+  → Les deux tiennent ensemble : l'autorisation nocturne porte sur le fait de consommer, jamais sur le fait de sauter la consultation. Tranché par l'utilisateur le 2026-09-22 (« tu es quand meme autorisé à consommer des api, tout en respectant les conseils de smart conso api »).
+· nuit ↔ ronde — La Ronde exige une vraie fenêtre à cocher posée à l'utilisateur ; le mode nocturne se déroule en son absence.
+  → Une Ronde lancée en nuit autonome est explicitement dispensée de cette fenêtre — exemption déjà codée dans le gardien de la Ronde, jamais une entorse improvisée.
+· nuit ↔ ronde — La Ronde doit poser à l'utilisateur une fenêtre de réponses sur les points problématiques de son évaluation ; le mode nocturne se déroule en son absence.
+  → L'exemption nocturne est CONDITIONNELLE : les points problématiques sont reportés au prochain passage en sa présence (reporterPointsAuProchainPassage), jamais simplement sautés. Le gardien de la Ronde refuse une Ronde nocturne qui aurait des points à poser et n'aurait rien reporté. 
+

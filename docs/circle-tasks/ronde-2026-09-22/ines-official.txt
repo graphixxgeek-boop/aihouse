@@ -1,0 +1,14 @@
+Version de Claude : claude-opus-5
+Produit le : 2026-09-22 à 19:08 UTC
+État du code : 79b7dd7 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : ines-official — inchangé depuis le 2026-09-22
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== INES-official — édition consolidée du dépôt ===
+
+Édition v1 (2026-09-22, code) : 163 fichier(s), 3943280 octets.
+Corps écrit dans .ines-official-latest-code.txt (local, jamais committé).
+Ligne d'index à ajouter à docs/ines-official/index.md :
+| v1 | 2026-09-22 | code seul | 163 | 3.9 Mo |

@@ -329,3 +329,42 @@ est faite pour partir, et un ensemble qui ne sait pas se présenter ne part pas.
 **Ce que ça n'est pas** : ni un doublon de `organisation-agence.md` (qui dit COMMENT c'est
 organisé, pas POURQUOI ça vaut le coup), ni de `agence-exportable-conception.md` (qui prépare le
 projet suivant, pas la présentation de celui-ci).
+
+## Idée n°9 — LA PORTÉE : ce qu'un outil analyse (décidée, pas juste notée)
+
+*(2026-09-23. Tranchée par l'utilisateur dans la fenêtre de questions de la Ronde : « Oui, 3
+portées : consolide bien ce point pour que cette erreur ne se reproduise pas : sujet organisation,
+classification. »)*
+
+**L'erreur qui l'a provoquée, et c'est la mienne.** Pendant la Ronde du 2026-09-23 j'ai lancé
+memory-audit. Il n'était pas dans les 32 items — je l'avais ajouté de ma propre initiative — et il
+n'avait rien à y faire : il juge la mémoire d'un personnage en fin de simulation, jamais l'état du
+dépôt. Sa remarque : « memory-audit n'a rien à dire pour la Ronde, il intervient en fin de simu,
+c'est une erreur de le trouver ici. »
+
+**La distinction qu'il pose**, et elle manquait entièrement : les outils qui analysent le CODE,
+l'outillage, l'Agence ou l'organisation ne sont pas les mêmes que ceux qui analysent les
+SIMULATIONS. Sa précision est le cœur du mécanisme : « certains outils peuvent peut-être faire les
+2, ce qui explique si on les retrouve aux 2 endroits ». La troisième valeur n'est donc pas une
+facilité pour les cas douteux — c'est ce qui rend LÉGITIME une présence double, au lieu de la faire
+passer pour un oubli.
+
+**Ce qui est construit** (`TOOL_PORTEE` / `porteeDe()` / `outilsHorsPortee()` dans
+`scripts/lib-shell.mjs`, branché dans `scripts/circle-process-guardian.mjs`) :
+- trois portées : `agence`, `simulation`, `les-deux` ;
+- 8 outils déclarés `simulation` (memory-audit, memento-weight, EL-PROFESSOR, THE-SCREENER,
+  the-ghost, LE-RÉGISSEUR, process-simulation-guardian, check-spirit) ;
+- 5 outils déclarés `les-deux`, chacun avec sa raison écrite à côté ;
+- tout le reste hérite d'`agence` par défaut — un nouvel outil n'a donc RIEN à inscrire pour le cas
+  majoritaire (Article 24 : un registre se lit, il ne s'énumère pas) ;
+- le contrôleur de la Ronde signale désormais deux choses distinctes qu'il confondait : un outil
+  exécuté hors de la sélection (`execute-hors-selection`) et un outil lancé hors de sa portée
+  (`outil-hors-portee`).
+
+**Ce qui reste ouvert, et c'est sa question** : « THE-SCREENER n'a pas un mode où il peut être utile
+à la Ronde en mode lourd ? À vérifier. » **Vérifié** : aujourd'hui, non. `the-screener-capture.mjs`
+ne sait faire qu'une chose — capturer une URL vivante via Playwright (`[url] [outDir]`), sans aucun
+mode alternatif. Un mode « Ronde lourde » serait à CONSTRUIRE, pas à activer : il consisterait à
+démarrer le serveur de développement, capturer l'état initial de la maison et le juger contre
+`docs/referentiel/regles-des-graphismes.md` — ce qui ne demande aucune simulation. C'est une vraie
+proposition, à trancher avec lui, jamais à décider seul.

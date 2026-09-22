@@ -518,7 +518,6 @@ function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
 
 // --- SECTIONS DEVENUES INTROUVABLES (2026-09-22) --------------------------------------------------
 // Apprentissage venu d'un travail fait à la main sur docs/regles-de-travail.md, volontairement gardé
@@ -703,3 +702,72 @@ export function toolsBoundByReportTemplate({ registries = REGISTRIES, natures = 
   for (const [chemin, { nature }] of Object.entries(natures)) if (nature === "rapport") chemins.add(chemin);
   return [...chemins].sort();
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// LE LANCEUR PRÉMATURÉ — un outil qui paraît fini et n'a jamais tourné (2026-09-23)
+// ————————————————————————————————————————————————————————————————————————
+//
+// TROUVÉ DEUX FOIS LE MÊME JOUR, à une heure d'intervalle, et la deuxième fois suffit à en faire
+// une règle plutôt qu'un accident (Article 3 : « une règle corrigée une fois ne doit plus jamais
+// se reproduire ailleurs sous une autre forme »).
+//   · safe-export.mjs : son lanceur était au milieu du fichier, donc main() partait avant que les
+//     `const` écrits en dessous n'existent. scanVocabulaire() plantait au premier vrai lancement.
+//   · cassandra-rh.mjs : même forme, et la sous-commande `organigramme` mourait sur ORG_RANKS,
+//     déclaré deux cents lignes plus bas.
+//
+// POURQUOI C'EST GRAVE ALORS QUE ÇA SE VOIT TOUT DE SUITE : justement, ça ne se voit PAS tout de
+// suite. Les deux fichiers passaient check-house (les tests importent les fonctions, ils
+// n'exécutent jamais main()), passaient la relecture, étaient inscrits partout. Le plantage
+// n'apparaît qu'au premier lancement réel en ligne de commande — et un outil qu'on ne lance jamais
+// n'a jamais montré son défaut. C'est la définition exacte que l'Article 25 donne d'un outil non
+// vérifié : « un outil qui n'a jamais tourné contre le vrai dépôt n'est pas un outil vérifié,
+// c'est une intention ».
+//
+// LA RÈGLE MÉCANIQUE : la ligne qui déclenche main() doit être la DERNIÈRE instruction du module.
+// Tout ce qui est déclaré après elle est inaccessible au moment où elle part.
+export function findLanceursPrematures({ root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync } = {}) {
+  let fichiers = [];
+  try { fichiers = listDirImpl(join(root, "scripts")).filter((f) => f.endsWith(".mjs")); } catch { return []; }
+  const ecarts = [];
+  for (const f of fichiers) {
+    let texte;
+    try { texte = readFileImpl(join(root, "scripts", f), "utf8"); } catch { continue; }
+    const lignes = texte.split("\n");
+    const iLanceur = lignes.findIndex((l) => l.includes("process.argv[1]") && l.includes("import.meta.url") && /\bmain\(\)/.test(l));
+    if (iLanceur === -1) continue;
+    // CE QUI EST RÉELLEMENT DANGEREUX, ET PAS UNE LIGNE DE PLUS. Première version : toute ligne de
+    // code après le lanceur. Elle a signalé check-house.mjs (3 555 lignes après) et doc-report.mjs
+    // (114) — deux fichiers qui fonctionnent parfaitement, parce qu'une `function` déclarée est
+    // REMONTÉE par JavaScript et reste appelable depuis une ligne écrite au-dessus d'elle.
+    //
+    // Seuls `const`, `let` et `class` tombent en zone morte temporelle. C'est exactement ce qui a
+    // cassé safe-export et cassandra-rh, et rien d'autre. Un garde-fou qui accuse deux fichiers
+    // sains sur deux détections perd sa crédibilité au premier passage — et un garde-fou qu'on
+    // apprend à ignorer ne garde plus rien.
+    // Et seulement au PREMIER NIVEAU du module : une variable locale à une fonction est créée à
+    // chaque appel, elle n'a jamais de zone morte vis-à-vis du lanceur. Deuxième resserrement en
+    // deux minutes, et la même leçon les deux fois — un détecteur trop large ne trouve pas plus,
+    // il rend juste ses vraies trouvailles indiscernables du bruit. L'indentation suffit à
+    // trancher : une déclaration de module commence en colonne zéro.
+    const apres = lignes.slice(iLanceur + 1)
+      .map((l, i) => ({ n: iLanceur + 2 + i, brut: l }))
+      .filter(({ brut }) => /^(export\s+)?(const|let|class)\s/.test(brut));
+    if (apres.length) {
+      ecarts.push({
+        fichier: `scripts/${f}`,
+        ligneDuLanceur: iLanceur + 1,
+        premiereDeclarationInaccessible: apres[0]?.n,
+        combien: apres.length,
+        pourquoi: `${apres.length} déclaration(s) const/let/class écrites APRÈS le lanceur : au moment où main() part, elles sont en zone morte temporelle. L'outil paraît fini et plante au premier vrai lancement. (Une fonction declaree, elle, est remontee et ne pose aucun probleme.)`,
+      });
+    }
+  }
+  return ecarts;
+}
+
+// LE LANCEUR EN DERNIER, et ce fichier-ci est le troisième du même jour. Il ne PLANTAIT pas :
+// main() ne touche à aucune des trois constantes écrites sous lui. C'est précisément ce qui rend
+// le motif dangereux — il ne se manifeste que le jour où quelqu'un ajoute un appel, et le lien
+// avec la mise en page du fichier est alors invisible. findLanceursPrematures() ci-dessus le
+// signale désormais avant ce jour-là, plutôt qu'après.
+if (import.meta.url === `file://${process.argv[1]}`) main();

@@ -34,6 +34,7 @@
 // pour une seule et même règle.
 import { reliabilityNotice } from "./lib-shell.mjs";
 import { renderTextReport } from "./report-template.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 export function checkChronologicalOrder(entries, getRound = (e) => (typeof e === "number" ? e : e?.round)) {
   const violations = [];
@@ -139,3 +140,39 @@ export function buildMemoryAuditReport(findings = []) {
     blocks: [{ type: "note", text: lignes.join("\n") }],
   });
 }
+
+// LE POINT D'ENTRÉE, ABSENT JUSQU'AU 2026-09-23 — trouvé par la Ronde, et il ne s'agissait pas
+// d'un détail de confort : `node scripts/memento.mjs` n'affichait RIEN DU TOUT. L'outil était
+// construit, exporté, testé, inscrit dans la table maîtresse et dans l'inventaire de la charte —
+// et personne ne pouvait le lancer. Un outil qu'aucune commande ne déclenche n'a jamais tourné
+// contre le vrai dépôt, ce que l'Article 25 refuse explicitement d'appeler un outil vérifié.
+//
+// Même garde que le reste du paysage (`process.argv[1]` et `import.meta.url` sur la même ligne),
+// jamais une variante de plus : c'est cette forme exacte que checkAgentOnboarding() recherche pour
+// déclarer qu'un script a bien un point d'entrée.
+// CE QUE CETTE COMMANDE PEUT ET NE PEUT PAS FAIRE, dit plutôt que masqué. memory-audit juge la
+// cohérence d'une mémoire de personnage VIVANTE (un objet `Life` en cours de partie) : sans partie,
+// il n'a rien à auditer. La tentation serait d'afficher « aucune incohérence détectée » — ce serait
+// rendre une absence de mesure comme une mesure, le défaut que ce projet corrige partout ailleurs.
+// Il annonce donc les trois états : ce qu'il vérifie, ce qu'il a trouvé, et pourquoi il ne trouve
+// rien quand aucun état ne lui est fourni.
+function main() {
+  const findings = checkMemoryCoherence(null, null);
+  console.log(buildMemoryAuditReport(findings));
+  if (!findings.length) {
+    console.log("\nPAS MESURÉ, et ce n'est pas un vert : memory-audit compare une mémoire de personnage à son état précédent.");
+    console.log("Aucun état de jeu n'est fourni en ligne de commande, donc rien n'a été comparé — ce silence ne dit rien sur la santé de la mémoire.");
+    console.log("Il se sollicite pendant une simulation (checkMemoryCoherence(life, lifePrecedente)), jamais à froid sur le dépôt.");
+    // DIT EXPLICITEMENT, à la demande de l'utilisateur le 2026-09-23 (« le garder et le rendre
+    // explicite »), parce que je venais moi-même de faire l'erreur : lancer cet outil pendant une
+    // Ronde. La correction de la commande manquante était bonne — l'outil était inscrit partout et
+    // aucune ligne ne pouvait le lancer — mais une commande qui marche invite à s'en servir. Sans
+    // cette phrase, la prochaine IA referait exactement mon erreur, et c'est précisément ce que
+    // l'Article 27 demande d'empêcher.
+    console.log("\nPORTÉE : simulation (scripts/lib-shell.mjs, TOOL_PORTEE). Il n'a JAMAIS sa place dans une Ronde —");
+    console.log("l'agent qui l'a lancé pendant celle du 2026-09-23 s'est trompé, et le contrôleur de la Ronde le signale désormais.");
+  }
+  recordCliUsage("memory-audit", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
+}
+
+if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split("/").pop())) main();

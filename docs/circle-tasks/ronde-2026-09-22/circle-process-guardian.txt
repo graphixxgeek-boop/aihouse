@@ -1,0 +1,22 @@
+=== circle-process-guardian — vérification mécanique du processus de Ronde ===
+
+Ce script ne peut vérifier seul que les faits observables depuis le disque (Parties 4/7/8 de
+docs/circle-process-detail.txt) — les faits de conversation (question AUTO/PRIME/GOAT, items
+réellement cochés, séquence de l'Étape 5) doivent être fournis par l'agent qui pilote via
+verifyRondeProcess(), jamais devinés. Lancé sans argument, il ne vérifie donc que 7/8 : 
+
+- [changement-de-modele] La question Q1 (« Voulez-vous changer de modèle/agent IA pour exécuter cette Ronde ? ») n'a pas été posée avant la fenêtre AUTO/PRIME/GOAT. Elle est obligatoire dans les 3 modes, reposée à chaque Ronde et jamais mémorisée de l'une à l'autre — un « ne t'arrête pas » général ne vaut jamais dispense d'une étape précise. Seul le mode autonome en dispense.
+- [auto-prime-goat] La question AUTO/PRIME/GOAT n'a pas été posée avant l'exécution de la Ronde. Depuis le 2026-09-22 elle est obligatoire en présence de l'utilisateur, même s'il a demandé de ne pas être arrêté — elle coûte un clic et détermine toute la Ronde. Seul le mode autonome en dispense, et cette dispense est une garantie, jamais une tolérance.
+- [voix-utilisateur] La fenêtre de réponses sur les points problématiques de son évaluation n'a pas été confirmée comme posée avant la clôture de la Ronde.
+- [checked-vs-executed] La liste réelle des items cochés et/ou exécutés n'a pas été fournie — ce fait n'est jamais déductible du code seul.
+- [recap-absent] Le récapitulatif de fin de Ronde (Étape 5) n'a pas été fourni. Ne pas le fournir n'est pas la même chose que ne pas en avoir besoin : tant qu'il manque, la Ronde n'est pas terminée, quoi que disent les autres vérifications.
+- [sequence-non-declaree] La séquence de l'Étape 5 (rapports livrés AVANT la construction de l'analyse) n'a pas été déclarée. Un ordre non déclaré n'est pas un ordre respecté.
+- [record-run] record-run() n'a pas été appelé à la fin de cette Ronde : 10 commit(s) d'écart avec le dernier passage enregistré.
+- [series-non-declarees] La liste des séries de questions réellement posées pendant cette Ronde n'a pas été déclarée. Sans elle, une série oubliée est indiscernable d'une série répondue — et l'hypothèse en vigueur reste « accident (clavier, fermeture involontaire) — jamais un refus tant qu'il n'est pas formulé ».
+
+8 écart(s) trouvé(s) — jamais une correction automatique, signaler seulement à l'agent qui pilote.
+
+=== Aide/vigilance pour une mise à jour de CIRCLE_ITEMS (2026-09-22) ===
+Consulté AVANT un changement de CIRCLE_ITEMS, ceci aide à ne rien oublier ; jamais consulté, ceci l'attrape quand même au commit suivant :
+
+Aucun écart de maintenance détecté (tables associées cohérentes, aucun compte figé obsolète trouvé dans check-house.mjs).

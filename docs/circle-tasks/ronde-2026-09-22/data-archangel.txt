@@ -1,0 +1,45 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il mesure une lecture à la citation d'un chemin dans le code — une mention, jamais la preuve que la donnée est réellement exploitée, et un chemin construit dynamiquement lui échappe complètement. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : 2026-09-22 à 19:08 UTC
+État du code : 79b7dd7 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : data-archangel — inchangé depuis le 2026-09-22
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== data-archangel — circulation des données dans l'Agence Codex ===
+Ce que l'équipe produit, qui le relit, et ce que l'agent lui-même n'exploite pas encore.
+
+Sources de données inventoriées : 56 — 37 réellement relues par un autre outil (66 %).
+
+🚨 18 donnée(s) FRAÎCHE(S) que personne ne lit — écrite il y a peu, donc elle a quelque chose à dire, et aucun outil ne l'écoute :
+  · .circle-tasks-last-run.json (CIRCLE-TASKS, 0 j) — anti-doublon de la dernière Ronde
+  · .circle-tasks-run-summary-latest.txt (CIRCLE-TASKS, 0 j) — récap texte de la dernière Ronde exécutée
+  · docs/the-screener/ (THE-SCREENER, 0 j) — registre Simulation & qualité narrative
+  · docs/check-tasks-details/ (check-tasks-details, 0 j) — registre Coordination
+  · docs/le-coordinateur-catalogue/ (Catalogue LE-COORDINATEUR, 0 j) — registre Coordination
+  · docs/safe-export/ (SAFE-EXPORT, 0 j) — registre Équipe noyau (Article 20)
+  · docs/tool-learning/ (TOOL-LEARNING, 0 j) — registre Suite Dette & Structure du code
+  · docs/integration-outil/ (integration-outil, 0 j) — registre Suite Dette & Structure du code
+  · docs/ecotoken/ (ecotoken, 0 j) — registre Gouvernance interne
+  · docs/html-wiring-check/ (html-wiring-check (Ronde), 0 j) — registre Coordination
+  · docs/ecotoken/ronde/ (Scan ecotoken produit pendant une Ronde (item ecotoken-scan), 0 j) — registre Coordination
+  · docs/suivi-open-tasks/ (Tâche ouverte la plus ancienne (Ronde), 0 j) — registre Coordination
+  · docs/chantier-preliminaire/ (Fraîcheur fichiers préliminaires (Ronde), 0 j) — registre Coordination
+  · docs/idee-a-trancher/ (Idées en attente de décision (Ronde), 0 j) — registre Coordination
+  · docs/tool-brain/ (tool-brain (Ronde), 0 j) — registre Coordination
+  · docs/network-check/ (network-check-run (Ronde), 0 j) — registre Coordination
+  · docs/relecture-correctifs/ (Relecture correctifs (Ronde), 0 j) — registre Coordination
+  · docs/referentiel/kpi-rapports/ (Tableau de bord / KPI, 1 j) — registre Simulation & qualité narrative
+
+1 source(s) déclarée(s) mais jamais écrite(s) — rien à relire, jamais un reproche : docs/relecture-referentiel/
+
+Branchements suggérés (2 outil(s)) — une suggestion, jamais un manquement :
+  · scripts/clean-dirty-old.mjs pourrait gagner à lire docs/harmonia/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/clean-dirty-old.mjs pourrait gagner à lire docs/axa-check/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/clean-dirty-old.mjs pourrait gagner à lire docs/suivi/relectures-lourdes/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/smart-conso-api.mjs pourrait gagner à lire .smart-conso-token-history.json — 2 outil(s) travaillant sur le même terrain le font déjà
+
+Comment lire ce qui précède : un registre destiné à l'œil humain n'a pas besoin d'un lecteur-outil. Ce qu'aucun humain ne fera jamais, c'est comparer trente passages pour en tirer une tendance — c'est cette exploitation-là qui manque, jamais forcément une lecture.
+Méthode : « lire » se mesure à la citation du chemin dans le code, commentaires et déclarations retirés — une mention, jamais une preuve de lecture effective. Un catalogue qui DÉCLARE une source (doc-report) n'en est pas un lecteur, et la suite de tests qui la VÉRIFIE non plus.
