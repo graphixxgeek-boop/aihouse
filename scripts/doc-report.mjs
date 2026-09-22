@@ -528,7 +528,7 @@ export const RELIABILITY_SCRIPT_FILES = {
   "the-king": "scripts/the-king.mjs", "memory-audit": "scripts/memento.mjs",
   "find-deep-booster": "scripts/route-booster.mjs", "find-brain": "scripts/find-brain.mjs",
   "tool-brain": "scripts/tool-brain.mjs", "find-booster": "scripts/find-booster.mjs",
-  "angel-of-ia-process": "scripts/angel-of-ia-process.mjs", "pure-gold-unity": "scripts/pure-gold-unity.mjs",   "god-of-all-process": "scripts/god-of-all-process.mjs", "process-simulation-guardian": "scripts/process-simulation-guardian.mjs",
+  "angel-of-ia-process": "scripts/angel-of-ia-process.mjs", "data-archangel": "scripts/data-archangel.mjs", "pure-gold-unity": "scripts/pure-gold-unity.mjs",   "god-of-all-process": "scripts/god-of-all-process.mjs", "process-simulation-guardian": "scripts/process-simulation-guardian.mjs",
   "clone-hunter": "scripts/clone-hunter.mjs", "cassandra-rh": "scripts/cassandra-rh.mjs",
   ecotoken: "scripts/ecotoken.mjs",
 };

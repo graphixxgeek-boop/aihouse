@@ -809,6 +809,7 @@ tableau garde ce qui doit rester sous les yeux en permanence.)*
 | CLEAN-DIRTY-OLD | détecteur de stagnation | `docs/clean-dirty-old-blueprint.md` | `docs/referentiel/clean-dirty-old.md` | `scripts/clean-dirty-old.mjs` |
 | CLONE-HUNTER | détecteur de blocs de code dupliqués | `docs/clone-hunter-blueprint.md` | `docs/referentiel/clone-hunter.md` | `scripts/clone-hunter.mjs` |
 | ecotoken | réduit le coût permanent en tokens des documents que l’agent recharge | `docs/ecotoken-blueprint.md` | `docs/referentiel/ecotoken.md` | `scripts/ecotoken.mjs` |
+| data-archangel | veille sur la circulation des données dans l'Agence, et sur l'accès de l'agent lui-même à tout ce que l'équipe sait | `docs/data-archangel-blueprint.md` | `docs/referentiel/data-archangel.md` | `scripts/data-archangel.mjs` |
 | EL-PROFESSOR | l'outil de notation de fidélité à la charte | `docs/el-professor-blueprint.md` | `docs/referentiel/el-professor.md` | `scripts/el-professor.mjs` |
 | find-booster | l'outil de navigation par concept dans un gros fichier | `docs/find-booster-blueprint.md` | `docs/referentiel/find-booster.md` | `scripts/find-booster.mjs` |
 | HARMONIA | cousin d'ARGUS dédié à la cohérence des liens déjà existants | `docs/harmonia-blueprint.md` | `docs/referentiel/harmonia.md` | `scripts/check-harmonia.mjs` |

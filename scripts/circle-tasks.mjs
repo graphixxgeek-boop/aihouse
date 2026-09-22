@@ -406,6 +406,18 @@ export const CIRCLE_ITEMS = [
   // matin même et inscrit dans la table maîtresse, n'avait ni instanciation, ni registre, ni
   // blueprint, ni mention dans la charte. Certifié sur le papier, incomplet en réalité — exactement
   // le trou que cet item existe pour fermer.
+  // data-archangel (2026-09-22) — troisième volet de son calibrage : « les 2 + pendant la ronde ».
+  // La commande à la demande sert l'agent quand il y pense ; l'alerte sonne quand une donnée fraîche
+  // est ignorée ; cet item-ci est le rattrapage périodique, celui qui ne dépend de personne.
+  {
+    id: "data-archangel-scan",
+    theme: "KPI & scans",
+    label: "La donnée produite par l'équipe est-elle exploitée, ou écrite pour rien ?",
+    cout: "gratuit — relit le code des scripts et la date des fichiers déjà sur le disque, zéro appel API",
+    tokensEstimes: "faible — un ratio, la liste des orphelines, quelques branchements suggérés",
+    execute: "Lancer node scripts/data-archangel.mjs et lire le ratio de sources réellement relues. LIRE la nuance imprimée en bas du rapport avant de conclure : un registre destiné à l'œil humain n'a pas besoin d'un lecteur-outil, la question posée est « personne n'exploite la SÉRIE ? ». Les branchements suggérés sont des suggestions, jamais des manquements — en retenir un est une décision, jamais une évidence. Écrire le signal via recordCircleItemReport('data-archangel-scan', ...).",
+    producesReport: true,
+  },
   {
     id: "integration-audit",
     theme: "Qualité du code",
