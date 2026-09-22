@@ -1008,6 +1008,80 @@ export function announceBadgeCeremony(result, { historyPath = BADGE_CEREMONY_HIS
 // troisième règle divergente. `agentOverrides` est également indexé par ce nom propre, jamais la
 // cellule brute (buildRealOnboardingContext() déclare ses overrides par nom propre, ex.
 // "THE-DEEP-READER").
+// integrationAudit() (2026-09-22) — RÉPONSE À UNE QUESTION DE L'UTILISATEUR, et la réponse était
+// « non » : « lors de la ronde, on est ok qu'il y a un check pour chaque nouveau outil : bien
+// intégré à tout, bien certifié, etc. ? ».
+//
+// Ce qui existait, et pourquoi ça ne suffisait pas :
+//   · checkAllAgentBadges() n'annonce QUE des changements — une certification neuve ou un badge qui
+//     bouge. Un membre incomplet depuis trois jours ne produit rien du tout : le silence d'un outil
+//     d'annonce ne dit jamais « tout va bien », il dit « rien n'a bougé ». Encore une absence de
+//     signal lue comme un signal positif.
+//   · les garde-fous d'intégration (findScriptsMissingFromAgentFiles, findToolsMissingFromMenu,
+//     findReportingToolsMissingFromCircle) tournent bien, mais à CHAQUE COMMIT via check-house —
+//     jamais dans la Ronde, et jamais regroupés en une seule vue lisible.
+//   · CASSANDRA ne voit que les membres DÉCLARÉS : un script d'outil posé sur le disque et jamais
+//     inscrit dans l'organigramme lui est parfaitement invisible.
+//
+// Celui-ci répond à la question telle qu'elle est posée, d'un coup : QUI, à cet instant, n'est pas
+// complètement intégré — qu'il vienne d'arriver ou qu'il traîne depuis longtemps. Il n'annonce rien
+// et ne fête rien : il fait l'état des lieux. Il ne recalcule aucune règle d'intégration, il appelle
+// checkAgentOnboarding() membre par membre (anti-doublon, §7ter).
+export function integrationAudit(onboardingContext, { scriptsNonDeclares = [], absentsDuMenu = [], absentsDeLaRonde = [] } = {}) {
+  if (!onboardingContext?.toolsTableMarkdown) {
+    // Sans la table maîtresse, l'audit est IMPOSSIBLE, jamais « tout va bien » : un retour vide
+    // serait lu comme un verdict propre alors qu'aucune mesure n'a eu lieu.
+    return { mesurable: false, raison: "table maîtresse (docs/regles-de-travail.md) illisible ou absente — aucun membre n'a pu être vérifié" };
+  }
+  const rows = parseToolsTable(onboardingContext.toolsTableMarkdown).filter((r) => CERTIFIABLE_STATUTS.includes(r.statut));
+  const incomplets = [];
+  const nonVerifiables = [];
+  for (const row of rows) {
+    const primaryName = row.tool.split(/[/(]/)[0].trim();
+    const overrides = onboardingContext.agentOverrides?.[primaryName] ?? {};
+    let res;
+    try {
+      res = checkAgentOnboarding(primaryName, { ...onboardingContext, ownKnowledge: row.statut !== CLASSIQUE_STATUT, ...overrides });
+    } catch (e) {
+      // Un membre qu'on n'a pas pu évaluer n'est NI complet NI fautif — il est à part, nommé.
+      nonVerifiables.push({ nom: primaryName, raison: e?.message?.slice(0, 120) ?? "erreur inconnue" });
+      continue;
+    }
+    if (res.gaps?.length) incomplets.push({ nom: primaryName, statut: row.statut, gaps: res.gaps });
+  }
+  return {
+    mesurable: true,
+    membresVerifies: rows.length,
+    incomplets,
+    nonVerifiables,
+    // Les trois angles morts que l'audit membre par membre ne peut PAS voir, puisqu'ils concernent
+    // justement ce qui n'est déclaré nulle part. Fournis par l'appelant depuis les garde-fous déjà
+    // existants — jamais recalculés ici.
+    scriptsNonDeclares,
+    absentsDuMenu,
+    absentsDeLaRonde,
+    ok: rows.length > 0 && !incomplets.length && !nonVerifiables.length && !scriptsNonDeclares.length && !absentsDuMenu.length && !absentsDeLaRonde.length,
+  };
+}
+
+export function integrationAuditLines(audit) {
+  if (!audit.mesurable) return [`⚠️ Audit d'intégration impossible : ${audit.raison}`];
+  const l = [];
+  if (audit.ok) {
+    l.push(`✅ ${audit.membresVerifies} membre(s) vérifié(s) : chacun est complètement intégré, et aucun script d'outil ne traîne hors de l'organigramme.`);
+    return l;
+  }
+  l.push(`${audit.membresVerifies} membre(s) vérifié(s) — ${audit.incomplets.length} incomplet(s).`);
+  for (const m of audit.incomplets) l.push(`  ✗ ${m.nom} (${m.statut}) : ${m.gaps.join(" · ")}`);
+  for (const n of audit.nonVerifiables) l.push(`  ? ${n.nom} — non vérifiable : ${n.raison}`);
+  // Les trois angles morts, nommés séparément : ce ne sont pas des membres incomplets, ce sont des
+  // outils que l'organisation ne connaît pas encore du tout.
+  if (audit.scriptsNonDeclares.length) l.push(`  ⚠ ${audit.scriptsNonDeclares.length} script(s) d'outil jamais déclaré(s) dans l'organigramme : ${audit.scriptsNonDeclares.join(", ")}`);
+  if (audit.absentsDuMenu.length) l.push(`  ⚠ ${audit.absentsDuMenu.length} outil(s) absent(s) du catalogue du coordinateur : ${audit.absentsDuMenu.join(", ")}`);
+  if (audit.absentsDeLaRonde.length) l.push(`  ⚠ ${audit.absentsDeLaRonde.length} membre(s) n'apparaissant ni comme item de Ronde ni comme exclusion motivée : ${audit.absentsDeLaRonde.join(", ")}`);
+  return l;
+}
+
 export function checkAllAgentBadges(onboardingContext, { historyPath = BADGE_CEREMONY_HISTORY_PATH, now = Date.now() } = {}) {
   if (!onboardingContext?.toolsTableMarkdown) return [];
   const rows = parseToolsTable(onboardingContext.toolsTableMarkdown).filter((r) => CERTIFIABLE_STATUTS.includes(r.statut));

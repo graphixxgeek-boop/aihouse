@@ -392,6 +392,29 @@ export const CIRCLE_ITEMS = [
     execute: "Appeler buildProcessComplianceReport() (scripts/god-of-all-process.mjs) en lui passant les verdicts des gardiens secondaires déjà obtenus, puis écrire le résultat via recordCircleItemReport('god-of-all-process-conformite', texte). Le rapport nomme le responsable de chaque étape sautée, et liste séparément les étapes qu'aucun mécanisme ne peut vérifier — celles-là ne sont reprochées à personne.",
     producesReport: true,
   },
+  // integration-audit (2026-09-22) — NÉ D'UNE QUESTION DE L'UTILISATEUR : « lors de la ronde, on est
+  // ok qu'il y a un check pour chaque nouveau outil : bien intégré à tout, bien certifié, etc. ? ».
+  // Vérifié avant de répondre, et la réponse était NON.
+  //
+  // Ce qui existait ne couvrait pas la question : cassandra-rh-signal n'annonce QUE les badges qui
+  // BOUGENT (un membre incomplet depuis trois jours ne produit rien — le silence d'un outil
+  // d'annonce n'a jamais voulu dire « tout va bien ») ; organigramme-signal ne voit que les membres
+  // déjà déclarés ; et les vrais garde-fous d'intégration tournent à chaque commit via check-house,
+  // jamais ici, jamais regroupés en une vue lisible.
+  //
+  // Son premier passage réel a immédiatement trouvé que process.simulation.guardian, construit le
+  // matin même et inscrit dans la table maîtresse, n'avait ni instanciation, ni registre, ni
+  // blueprint, ni mention dans la charte. Certifié sur le papier, incomplet en réalité — exactement
+  // le trou que cet item existe pour fermer.
+  {
+    id: "integration-audit",
+    theme: "Qualité du code",
+    label: "Chaque membre est-il RÉELLEMENT intégré partout (badge, docs, catalogue, Ronde) ?",
+    cout: "gratuit — relit la table maîtresse, les documents et les registres déjà sur le disque, zéro appel API",
+    tokensEstimes: "faible — une ligne par membre incomplet, rien du tout quand l'équipe est complète",
+    execute: "Appeler integrationAudit() (scripts/le-coordinateur.mjs) avec le contexte de buildRealOnboardingContext() et les trois angles morts (findScriptsMissingFromAgentFiles, findToolsMissingFromMenu, findReportingToolsMissingFromCircle), puis integrationAuditLines(). Un membre incomplet est une VRAIE tâche à ouvrir, jamais une remarque à noter — un outil certifié sur le papier mais sans documentation est indéfendable devant un agent qui reprend le projet (Article 27). Écrire le signal via recordCircleItemReport('integration-audit', ...).",
+    producesReport: true,
+  },
   {
     id: "organigramme-signal",
     // Thème « Qualité du code » plutôt que « Qualité & fun » (corrigé le soir même par le test qui
