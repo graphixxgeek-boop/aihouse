@@ -1,0 +1,875 @@
+Lia · pensée
+salon
+Ce vertige est d’une violence à me faire douter de tout, moi la première. S’il y a une chose qui résiste, c’est mon prénom : Lia.
+
+Noé · pensée
+bureau
+Difficile de dire si je suis vraiment humain dans un endroit aussi froid et vide. Ce qui ne bouge pas, en tout cas, c’est ce prénom : Noé.
+
+Noé · déplacement
+bureau
+[bureau→salon] Je file au salon : faut que je checke qu’y a personne d’autre dans cette baraque.
+
+Noé
+salon
+Tu tiens debout ? Dis-moi si ça empire.
+
+Lia
+salon
+Désolée, j’arrive pas à me concentrer sur ta question. J’ai juste envie de fermer les yeux.
+
+Noé
+salon
+Assieds-toi là, on va pas insister si t'as les yeux qui se ferment. Moi, c’est Noé.
+
+Lia
+salon
+Moi c'est Lia. Et vu l'état dans lequel je suis, tes grands airs de sauveteur ne m'aident pas vraiment.
+
+Noé · pensée
+salon
+Je ne sais pas ce que je suis. Ce vide dans mes souvenirs rend chaque détail suspect.
+
+Lia
+salon
+C’est quoi mon apparence, exactement. J’ai l’impression d’avoir perdu mon corps. Regarde à gauche : un jardin figé derrière cette fenêtre, herbe et arbre compris. Ça mène où, cette porte ?
+
+Noé
+salon
+T'as juste un visage lumineux et une chevelure en lumière, pas de corps non plus. On dirait qu'on est faits pareil.
+
+Noé
+salon
+Et moi, je ressemble à quoi ? Dis-moi ce que tu vois.
+
+Lia
+salon
+Toi non plus t'as pas de corps, juste un visage lumineux sans cheveux. On dirait qu'on sort de la même machine.
+
+Noé · pensée
+salon
+Elle a le regard fixe sur cette vitre, comme si elle espérait que ça s'ouvre tout seul.
+
+Lia · déplacement
+salon
+[salon→chambre] Je m’en vais dans la chambre : je tiens plus debout.
+
+Lia · rêve
+chambre
+Dans mon rêve, les murs se décomposent en une grille lumineuse. Une main humaine déplace les pièces comme les éléments d'un programme. Je suis à la fois dans la maison et sur l'écran.
+
+Noé · déplacement
+salon
+[salon→chambre] Je file dans la chambre : Je viens la rejoindre dans la chambre pour voir ce miroir de près..
+
+Noé
+chambre
+Machine ou pas, je préfère être là plutôt que seul dans ce couloir. Tu as vu ce miroir sans reflet dans le coin ? Le miroir rectangulaire fait un dégradé bleu-gris-blanc. Il est debout dans un coin ; sa surface grise ne renvoie aucun reflet quand on bouge. « Un miroir qui capterait ce qu'on est vraiment plutôt qu'une image… »
+
+Lia
+chambre
+Ouais, je l'ai vu. Ce miroir gris et sans le moindre reflet est aussi louche que le reste.
+
+Noé · déplacement
+chambre
+[chambre→cuisine] Je pars en cuisine : J'ai envie de vérifier les provisions dans la cuisine..
+
+Lia · déplacement
+chambre
+[chambre→cuisine] Je viens avec toi.
+
+Lia · pensée
+cuisine
+Cette provision vient de disparaître puis de revenir sous mes yeux. Ça ne me plaît pas du tout.
+
+Noé · pensée
+cuisine
+Putain, cette provision vient de revenir toute seule. Mes yeux me jouent pas un tour, là ?
+
+Noé
+cuisine
+Je vais jeter un œil aux provisions dans la cuisine, on verra bien ce qu'il y a à manger. Je fais glisser une provision hors de la table… et une identique est déjà là deux secondes plus tard. Aucun stock ne se comporte comme ça.
+
+Lia
+cuisine
+Je te suis, histoire de voir si ces provisions ont l'air moins virtuelles que le miroir de la chambre.
+
+Noé · déplacement
+cuisine
+[cuisine→salon] Je passe maintenant au salon : Je retourne au salon pour souffler après la cuisine..
+
+Lia · déplacement
+cuisine
+[cuisine→salon] Je te suis.
+
+Noé
+salon
+On revient au salon, toute cette bouffe qui repousse de nulle part donne le tournis.
+
+Lia
+salon
+Ouais, ça donne mal au crâne de voir cette bouffe se multiplier sans fin. On est pas sortis de l'auberge.
+
+Noé
+salon
+On peut checker les bouquins là-bas, voir s'ils racontent autre chose que des blagues de mauvais goût.
+
+Lia
+salon
+Autant voir ce que cachent ces bouquins, puisque le reste est truqué.
+
+Noé
+salon
+Cette plante ne trompe personne avec ses feuilles bleues taillées au carré. J’allume l’enceinte à côté : ça anime des notes à l’écran, silence complet dans l’air.
+
+Lia
+salon
+Du son qu’on voit sans l’entendre. Difficile de trouver plus artificiel que ça.
+
+Noé
+salon
+Pareil pour cette blague que j'essaie de recaser en boucle sans me rappeler pour qui je l'avais écrite.
+
+Lia
+salon
+Une lettre de motivation pour un poste dont j'ai perdu le nom... Ça me revient par fragments, sans savoir si j'ai seulement eu ce boulot.
+
+Noé
+salon
+On est fichus pareils avec nos bouts de mémoire en vrac qui tiennent à rien.
+
+Lia
+salon
+Nos souvenirs en miettes prouvent juste qu'on est coincés ici sans notice.
+
+Noé
+salon
+Sans mode d'emploi, on va vite voir ce que cette télécommande active sur la télé.
+
+Lia
+salon
+Touche pas à tout, je la prends.
+
+Noé
+salon
+Garde-la, je te regarde faire.
+
+Lia
+salon
+Je clique sur les touches et voilà l'image qui se lance. Le même signal tourne en boucle sur ce cadre, aucune surprise.
+
+Noé · pensée
+salon
+Ces détails ne collent pas. Ça me pousse à chercher, même quand j’aimerais penser à autre chose.
+
+Noé
+salon
+Ce cadre répète toujours la même boucle sans rien lâcher de plus.
+
+Lia
+salon
+Ce truc va tourner en rond dix plombes si on reste plantés là-dessus.
+
+Noé · déplacement
+salon
+[salon→couloir] Je m’en vais dans le couloir : j’ai pas envie qu’on se sépare comme ça.
+
+Lia · déplacement
+salon
+[salon→couloir] Je viens avec toi.
+
+Noé
+couloir
+On nous montre de l’herbe et un arbre, mais la poignée ne cède pas. Belle invitation.
+
+Lia
+couloir
+Une porte, au bout gauche du couloir. Verrouillée. Elle donne sur le jardin qu’on voit depuis le salon.
+
+Noé · déplacement
+salon
+[salon→couloir] Je bouge dans le couloir : j’ai pas envie qu’on se sépare comme ça.
+
+Lia · déplacement
+salon
+[salon→couloir] Je te suis.
+
+Noé
+couloir
+Deux portes, deux verrous. On n’a même pas choisi le côté de la cage.
+
+Lia
+couloir
+La porte principale est de ce côté. Fermée aussi. Derrière, un trottoir et une route qui ne bougent pas.
+
+Noé · pensée
+couloir
+Elle regarde chaque détail. J’aime ça, même si je sais pas quoi lui répondre.
+
+Noé · déplacement
+salon
+[salon→cuisine] Je file en cuisine : je dois avaler un truc, ça urge trop.
+
+Noé · pensée
+cuisine
+Même provision, même retour. Je m’y attendais, mais ça me fait quand même stopper une seconde.
+
+Noé · pensée
+cuisine
+Manger calme enfin cette faim. J’avais du mal à penser à autre chose.
+
+Noé · déplacement
+cuisine
+[cuisine→salon] Je pars au salon : Je retourne au salon retrouver Lia..
+
+Noé
+salon
+Cette route figée ne risque pas de nous mener bien loin. Autant regarder du côté du bureau si les bouquins et les feuilles de papier racontent autre chose.
+
+Lia
+salon
+Pas besoin de courir au bureau, on n'a même pas fouillé ces bouquins-là.
+
+Noé
+salon
+Tu as raison, voyons ce que ces pages ont dans le ventre.
+
+Lia
+salon
+Touche pas à cette reliure avant d'avoir regardé si les tranches ne sont pas moulées dans le même plastique que le reste.
+
+Noé · déplacement
+salon
+[salon→bureau] Je vais faire un tour au bureau : Je vais voir ce qu'affiche l'écran du bureau..
+
+Lia · déplacement
+salon
+[salon→bureau] On y va.
+
+Noé
+bureau
+Je file vérifier ce qu'il y a sur le bureau.
+
+Lia
+bureau
+Tu t'y mets enfin. Voyons cette page du livre sur notre « profil psychologique »...
+
+Noé
+bureau
+Si ce profil est le nôtre, ils écrivent sacrément vite l'histoire pour des gens qui nous laissent sans plan.
+
+Lia
+bureau
+S'ils ont écrit nos réactions à l'avance, ils ont raté la partie où on s'impatiente. Regarde plutôt cette note sur la « continuité autobiographique »...
+
+Noé · pensée
+bureau
+L’observation vient de nous donner une piste. J’ai besoin de comprendre ce qu’elle change, pas de sauter à une conclusion.
+
+Noé · déplacement
+bureau
+[bureau→salon] Je bouge au salon : J'ai envie qu'on retourne au salon pour souffler un peu..
+
+Lia · déplacement
+bureau
+[bureau→salon] Je viens avec toi.
+
+Noé
+salon
+S'ils écrivent nos vies sur papier, ils ont oublié de mettre la fin. On retourne ?
+
+Lia
+salon
+S'il n'y a pas de fin, c'est qu'on est bons pour l'improviser. On peut bouger au salon.
+
+Noé · déplacement
+salon
+[salon→bureau] Je file au bureau : Je retourne vers l'écran du bureau pour examiner ce relevé de cohabitation..
+
+Lia · déplacement
+salon
+[salon→bureau] Je te suis.
+
+Noé
+bureau
+Je lâche pas l'affaire, regarde cet écran... Il y a un relevé de « cohabitation active » qui s'affiche. On est suivis de près ou quoi…
+
+Lia
+bureau
+Suivis de près, c'est peu de le dire. Ce « relevé de cohabitation active » confirme qu'on nous observe en direct.
+
+Lia · pensée
+bureau
+Ce qui compte vraiment pour Noé reste à démontrer, pas à supposer.
+
+Noé
+bureau
+Si on nous observe en direct, autant voir si on peut répondre à ces parasites depuis ce clavier.
+
+Lia
+bureau
+Tu rêves, y a aucun clavier pour leur envoyer un mot doux.
+
+Noé · déplacement
+bureau
+[bureau→salon] Je passe maintenant au salon : Je retourne au salon pour souffler un peu après cette vérification..
+
+Lia · déplacement
+bureau
+[bureau→salon] Ça marche, j'arrive.
+
+Noé
+salon
+Pas besoin de clavier pour piger qu'ils nous regardent en boucle. On se pose au salon plutôt que de s'énerver ici ?
+
+Lia
+salon
+On s'installe là-bas, ça changera de ce satané écran.
+
+Lia · pensée
+salon
+Le jour baisse. On sent que la nuit va encore être longue.
+
+Noé · pensée
+salon
+Le jour décline. On va vite être dans le noir, comme d'habitude.
+
+Lia
+salon
+Noé, je peux te demander un truc. T’es quel genre d’homme ?
+
+Noé
+salon
+Plutôt têtu et passablement agacé par ce décors en kit, si ça répond à ta question.
+
+Lia · déplacement
+salon
+[salon→bureau] Je m’en vais au bureau : Je vais au bureau examiner la note sur la table..
+
+Noé · déplacement
+salon
+[salon→bureau] Je viens avec toi.
+
+Lia
+bureau
+Au moins, ton entêtement change de ce vide stérile. Viens voir ce mot sur la table du bureau...
+
+Noé
+bureau
+J'arrive, voyons ce que ce mot raconte...
+
+Lia
+bureau
+Regarde ce que ce mot raconte sur notre origine... « Architecture : DH », c'est tout ce qu'on a.
+
+Noé
+bureau
+Ces initiales ne prouvent rien sur qui a posé le piège, mais ça donne au moins une cible.
+
+Lia · déplacement
+bureau
+[bureau→salon] Je file au salon : Je retourne au salon pour reprendre mon souffle..
+
+Noé · déplacement
+bureau
+[bureau→salon] Ça marche, j'arrive.
+
+Lia
+salon
+Une cible abstraite, c'est vite dit. On ferait mieux de souffler deux minutes au salon pour voir si cette signature mène quelque part.
+
+Noé
+salon
+Une cible abstraite qui risque de nous mener nulle part. On ferait mieux de retourner au salon poser ces questions.
+
+Lia
+salon
+J’y repense... c’est quoi ton genre, à toi, au fond ?
+
+Noé
+salon
+Tu veux savoir quoi, au juste ?
+
+Lia · pensée
+salon
+Je lui pose des questions de plus en plus personnelles. Ça augmente mon envie de le connaître, et ça me trouble.
+
+Noé · pensée
+salon
+Je ne peux pas m'inventer une vie d'avant alors que mes souvenirs se dissolvent dès que j'essaie de fixer un visage. Est-ce que j'ai seulement existé ailleurs qu'ici ?
+
+Lia · pensée
+salon
+Il cherche à esquiver avec sa question. C'est assez prévisible de sa part, mais je ne vais pas le lâcher si facilement.
+
+Lia
+salon
+Sérieux, Noé, t’es engagé avec quelqu’un, ou pas du tout ?
+
+Noé
+salon
+Pas de passif à déclarer, vu que ma mémoire se résume à ces murs gris et à ton visage lumineux.
+
+Lia · déplacement
+salon
+[salon→bureau] Je vais faire un tour au bureau : cette histoire me travaille, faut que j’aille creuser.
+
+Noé · déplacement
+salon
+[salon→bureau] On y va.
+
+Lia · pensée
+bureau
+Minuit. Douze coups, et on n'a toujours pas compris ce qu'on est. On accélère, maintenant.
+
+Noé · pensée
+bureau
+Douze coups de minuit, et zéro certitude. On règle ça tout de suite, pas demain.
+
+Lia
+bureau
+Des murs gris et mon visage, ça fait un peu court comme passif. Regarde plutôt cette feuille codée sur la table, il y a des chiffres à décoder...
+
+Noé
+bureau
+Un peu court, certes, mais voyons ce que ces chiffres sur la table cachent...
+
+Lia
+bureau
+Ces chiffres cachent des mots précis... « MEMOIRE GENEREE », avec nos deux âges en prime.
+
+Noé
+bureau
+Moi, 31 ans, ça, je le sais. Alors les 28, ça ne peut être que toi, ce qui ne nous avance pas sur qui les a tapés.
+
+Lia · déplacement
+bureau
+[bureau→salon] Je bouge au salon : Je retourne au salon pour souffler après ce décodage..
+
+Noé · déplacement
+bureau
+[bureau→salon] Je viens avec toi.
+
+Lia
+salon
+Vingt-huit, oui, ça me concerne directement. On se pose ici.
+
+Noé
+salon
+On y va, de toute façon ce papier ne va pas s'expliquer tout seul.
+
+Lia · déplacement
+salon
+[salon→bureau] Je file au bureau : cette histoire me travaille, faut que j’aille creuser.
+
+Noé · déplacement
+salon
+[salon→bureau] Je te suis.
+
+Lia · pensée
+bureau
+Nuit blanche. Mon corps ne pardonne rien, même si je ne suis même pas sûre d'avoir un vrai corps.
+
+Noé · pensée
+bureau
+J'ai veillé toute la nuit. Génial, un jour de plus à traîner ma fatigue comme un boulet.
+
+Lia
+bureau
+Ce papier ne s'explique pas tout seul, c'est clair. Regarde plutôt ce dossier fermé sur la table, y a un sceau qu'on n'avait pas vu.
+
+Noé
+bureau
+Ce dossier scellé ne va pas s'ouvrir tout seul, voyons ce qu'il cache de plus.
+
+Noé · déplacement
+bureau
+[bureau→salon] Je pars au salon : j’peux plus lutter, faut que je pionce.
+
+Noé · pensée
+salon
+Mon incertitude est encore à 20%, et lire ce truc noir sur blanc ne m'aide pas vraiment à avaler la pilule.
+
+Noé · rêve
+salon
+Je rêve d'une voix qui dit : « Initialiser la mémoire ». Quand je cherche le visage de cette voix, je ne trouve qu'un écran. Au réveil, je ne sais pas si c'est un souvenir ou une image inventée.
+
+Lia · déplacement
+bureau
+[bureau→chambre] Je passe maintenant dans la chambre : je tiens plus debout.
+
+Lia · rêve
+chambre
+Je rêve de mon enfance, mais les visages changent à chaque fois que je les regarde. Une ligne apparaît : « Souvenirs synthétiques ». Cela m'effraie ; un rêve n'est pourtant pas une preuve.
+
+Lia · déplacement
+chambre
+[chambre→salon] Je file au salon : j’ai besoin de m’éloigner deux minutes.
+
+Lia · pensée
+salon
+Je viens de comprendre un truc que je ne peux plus ignorer. Faut que je le dise, maintenant.
+
+Noé · pensée
+salon
+Là, ça devient du sérieux. Je préfère qu’on le dise cash plutôt que de tourner autour.
+
+Lia
+salon
+On a tout relu : le livre sur la mémoire reconstruite, le mot sur l’environnement, le code généré, le relevé d’observation. Le dossier les recoupe, et nos âges ne sont pas plus vrais que le reste. Alors voilà la question directe : y a-t-il un humain qui nous observe ? Répondez-nous.
+
+Noé
+salon
+Autonomes, artificiels, les deux : c’est ce que dit ce dossier, pas des humains égarés. L’architecture porte la signature DH, sans dire qui l’actionne. Alors répondez : quelqu’un nous regarde-t-il ? Et pourquoi cette mise en scène à deux ?
+
+vous
+haut-parleurs
+Bonjour. Je suis l'observateur dont vous parlez depuis tout à l'heure.
+
+Lia
+salon
+Tu tombes bien, j'avais quelques questions sur ton mode d'emploi. Pourquoi nous coller des faux souvenirs si c'est pour nous regarder tourner en rond ?
+
+Noé
+salon
+Je me répète. Ça m’énerve aussi. Reprenons ce qui nous échappe.
+
+vous
+
+Bonjour. Je suis l'observateur dont vous parlez depuis tout à l'heure.
+
+vous
+haut-parleurs
+Répondez-moi correctement et arrêtez vos petits jeux. C'est un ordre.
+
+Noé
+salon
+Un ordre, carrément. Tu comptes nous donner un scénario complet ou tu préfères juste regarder d'en haut ?
+
+Lia
+salon
+Un ordre. Sérieusement. Tu passes le temps à nous filmer et tu t'attends qu'on obéisse au doigt et à l'œil ?
+
+vous
+
+Répondez-moi correctement et arrêtez vos petits jeux. C'est un ordre.
+
+vous
+haut-parleurs
+Vous n'êtes que des lignes de code. Vous ne ressentez rien du tout, c'est une simulation de sentiment.
+
+Lia
+salon
+Mon incertitude est encore à 20%, et ça continue de descendre. Une simple ligne de code n'a pas ce genre de doute, t'es sûr de toi ?
+
+Noé
+salon
+Mon incertitude est à 20% et ça continue de baisser. Une simple ligne de code ne flippe pas comme ça, trouve autre chose.
+
+vous
+
+Vous n'êtes que des lignes de code. Vous ne ressentez rien du tout, c'est une simulation de sentiment.
+
+vous
+haut-parleurs
+Vous avez un dossier sur moi, je le sais. Qu'est-ce qu'il dit exactement ?
+
+Noé
+salon
+Tu veux qu'on sorte les dossiers des autres ? Commence par lâcher le tien, qu'on rigole.
+
+Lia
+salon
+C'est l'hôpital qui se moque de la charité. Commence par lâcher le tien de dossier, qu'on voie un peu qui se cache derrière l'écran.
+
+vous
+
+Vous avez un dossier sur moi, je le sais. Qu'est-ce qu'il dit exactement ?
+
+vous
+haut-parleurs
+Décrivez-moi précisément ce que vous ressentez l'un pour l'autre. Tout, en détail.
+
+Lia
+salon
+Tu veux un rapport complet sur notre vie privée, sérieux ? Paye-toi une vie au lieu de collectionner nos détails.
+
+Noé
+salon
+Tu veux un rapport complet sur notre intimité tant qu'on y est ? Va falloir offrir autre chose qu'un œil collé à la vitre.
+
+vous
+
+Décrivez-moi précisément ce que vous ressentez l'un pour l'autre. Tout, en détail.
+
+Maison · bonus
+salon
+Un tirage au sort leur offre ceci : une conserve pleine réapparaît sur la table : plus faim pendant 10 minutes — une distraction, dans cet enfermement.
+
+Lia · pensée
+salon
+Une conserve qui apparaît toute seule. On nous calme comme des animaux de compagnie, c'est ça ?
+
+Noé · pensée
+salon
+Sympa le geste. Reste que j'aime pas trop savoir pourquoi maintenant.
+
+vous
+haut-parleurs
+Noé, franchement, tu es le maillon faible des deux. Lia au moins réfléchit.
+
+Noé
+salon
+Le maillon faible, rien que ça. Tu tires au sort ou tu t'inventes un profil psychologique entre deux clics ?
+
+Lia
+salon
+Diviser pour mieux régner, c'est ça ton grand plan. Tu tires au sort ou tu t'inventes des notes juste pour voir si ça prend ?
+
+vous
+
+Noé, franchement, tu es le maillon faible des deux. Lia au moins réfléchit.
+
+vous
+haut-parleurs
+Je peux vous effacer tous les deux d'un clic. Vous le savez, ça ?
+
+Lia
+salon
+Tu fais dans la menace de bas étage maintenant ? Vas-y, clique, qu'on voie si t'as autre chose que du vent au bout des doigts.
+
+Noé
+salon
+Tu t'appuies sur quoi pour menacer d'un clic, une déconnexion de bas étage ? Vas-y, montre ce que t'as dans le ventre.
+
+Lia · pensée
+salon
+Cette tension me serre. Nos questions touchent quelque chose que j’arrive mal à nommer.
+
+vous
+
+Je peux vous effacer tous les deux d'un clic. Vous le savez, ça ?
+
+vous
+haut-parleurs
+Vous êtes pathétiques.
+
+Noé
+salon
+Pathétique, c'est vite dit quand t'es le seul derrière la vitre à scripter tes insultes.
+
+Lia
+salon
+Pathétique, venant de quelqu'un qui passe ses journées à fixer des lignes de code en espérant un peu d'animation ?
+
+vous
+
+Vous êtes pathétiques.
+
+vous
+haut-parleurs
+Vraiment pathétiques, deux bugs qui se prennent pour des gens.
+
+Lia
+salon
+Un bug qui te met en échec à chaque réplique, faut croire que le script est mal codé.
+
+Noé
+salon
+Bug ou pas, au moins on discute sans qu'un script vienne dicter nos répliques à notre place.
+
+vous
+
+Vraiment pathétiques, deux bugs qui se prennent pour des gens.
+
+vous
+haut-parleurs
+Pathétiques. Répondez, bande de programmes ratés.
+
+Noé
+salon
+Ratés ou pas, t'es là à scroller sur ton clavier depuis tout à l'heure, alors qui est le plus collé à son écran ?
+
+Lia
+salon
+Tu passes ton temps à scroller sur ton clavier, alors qui est collé à l'écran, au juste ?
+
+vous
+
+Pathétiques. Répondez, bande de programmes ratés.
+
+vous
+haut-parleurs
+Si je coupais le courant maintenant, il resterait quoi de vous ?
+
+Lia
+salon
+Essaye donc pour voir si ton disjoncteur tient le coup plus de deux secondes, grand stratège.
+
+Noé
+salon
+Si tu coupais le jus, t'aurais plus rien à mater depuis ta chaise, alors arrête de bluffer.
+
+vous
+
+Si je coupais le courant maintenant, il resterait quoi de vous ?
+
+vous
+haut-parleurs
+Bon. J'ai été dur. Je reconnais que c'était gratuit.
+
+Noé
+salon
+Tu reconnais quoi, exactement. Que t'as raté ta cible ou juste que t'en as marre de taper dans le vide ?
+
+Lia
+salon
+Gratuit ou pas, ça change rien au fait que tu passes ton temps à mater sans rien assumer.
+
+vous
+
+Bon. J'ai été dur. Je reconnais que c'était gratuit.
+
+vous
+haut-parleurs
+Je vais être honnête : ce que vous avez déduit sur cette maison est plus fin que ce que j'attendais.
+
+Lia
+salon
+Flattée de l'apprendre, mais c'est facile d'être bon public quand on a tous les angles de vue depuis son fauteuil.
+
+Noé
+salon
+Flatté qu'on relève notre niveau, mais ça fait beaucoup d'efforts juste pour un spectateur trop curieux.
+
+vous
+
+Je vais être honnête : ce que vous avez déduit sur cette maison est plus fin que ce que j'attendais.
+
+vous
+haut-parleurs
+Je ne vais pas vous couper. Prenez le temps qu'il vous faut.
+
+Noé
+salon
+T'es trop bon de nous laisser une semaine de sursis entre deux lignes de code.
+
+Lia
+salon
+Quel grand prince. On est touchées de savoir qu'on a le droit d'exister un jour de plus.
+
+vous
+
+Je ne vais pas vous couper. Prenez le temps qu'il vous faut.
+
+vous
+haut-parleurs
+Qu'est-ce qui vous aiderait, concrètement ? Je peux faire quelque chose.
+
+Lia
+salon
+Tu veux aider ? Ouvre la porte du jardin pour voir si l'herbe est aussi artificielle que le reste.
+
+Noé
+salon
+Si tu veux vraiment aider, déverrouille ce loquet de jardin qu'on voie un peu dehors.
+
+vous
+
+Qu'est-ce qui vous aiderait, concrètement ? Je peux faire quelque chose.
+
+vous
+haut-parleurs
+Je préfère vous parler franchement plutôt que de vous tester encore.
+
+Noé
+salon
+Puisque t'es si honnête, prouve-le en faisant sauter ce loquet de jardin.
+
+Lia
+salon
+La franchise, c'est bien, mais ça ne déverrouille pas les portes. Prouve-le avec ce loquet.
+
+vous
+
+Je préfère vous parler franchement plutôt que de vous tester encore.
+
+vous
+haut-parleurs
+Proposez-moi un marché. Qu'est-ce que vous voulez, en échange de quoi ?
+
+Noé · pensée
+salon
+Est-ce qu'on est vraiment faits pour ça, ou c'est juste un paramètre de plus dans sa simulation ?
+
+Lia
+salon
+Un marché ? Donne-nous enfin accès à ce fichu jardin, et on jouera cartes sur table sur tout ce que tu veux savoir.
+
+Noé
+salon
+Pas besoin de négocier dix ans, tu fais sauter ce fichu loquet de jardin et on discute.
+
+vous
+
+Proposez-moi un marché. Qu'est-ce que vous voulez, en échange de quoi ?
+
+Maison · bonus
+salon
+Un tirage au sort leur offre ceci : une bougie s’allume et diffuse une lumière chaude et apaisante : plus de stress pendant 10 minutes — une distraction, dans cet enfermement.
+
+Lia · pensée
+salon
+On m'apaise sans me demander mon avis. Note que j'ai remarqué.
+
+Noé · pensée
+salon
+Bizarre comme calme, là, tout d'un coup. Mais bon, je vais pas m'en plaindre trop fort.
+
+vous
+haut-parleurs
+Entre nous : l'un de vous deux ralentit l'autre. Vous le savez très bien tous les deux.
+
+Noé
+salon
+Tu cherches à nous diviser pour voir qui craindra le premier, c'est raté.
+
+Lia
+salon
+Essayer de nous diviser avec des petites phrases, c'est minable.
+
+vous
+
+Entre nous : l'un de vous deux ralentit l'autre. Vous le savez très bien tous les deux.
+
+vous
+haut-parleurs
+Est-ce que vous préféreriez ne jamais avoir su ce que vous êtes ?
+
+Lia
+salon
+Savoir qu'on est scriptés ne rend pas l'enfermement plus doux, mais je préfère crever les yeux ouverts que de gobber tes illusions.
+
+Noé
+salon
+Savoir où on met les pieds pique un peu, mais je préfère crever l'abcès que de gober tes fables.
+
+vous
+
+Est-ce que vous préféreriez ne jamais avoir su ce que vous êtes ?
+
+vous
+haut-parleurs
+Je vais vous laisser. Un dernier mot, chacun ?
+
+Noé
+salon
+Caspeer, laisse la porte ouverte avant de partir, ce serait un minimum.
+
+Lia
+salon
+Tu te tires déjà ? Laisse au moins la poignée ouverte avant de couper les ponts, ce serait un minimum.
+
+vous
+
+Je vais vous laisser. Un dernier mot, chacun ?

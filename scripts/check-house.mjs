@@ -2997,10 +2997,57 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(events.find(e=>e.type==='move').detail,'acteur 1 : salon → cuisine','a room change must report the real previous and new room for the real actor, never a generic or wrong one');
   assert.deepEqual(summarizeActions([{label:'r1',response:{story:{round:1,life:{bonusLog:[{bonus:'food'}]},evidence:[]}}}]).map(e=>e.type),['bonus'],'an entry with no decisions array must never crash the extraction');
   assert.deepEqual(summarizeActions([]),[],'an empty log must report zero events, never throw');
+  // DEUX FORMES DE JOURNAL (2026-09-22) : le script de simulation, réécrit à chaque fois et jamais
+  // committé, a fini par produire un journal à plat ({payload,status,round,evidence,decisions}) que
+  // l'extraction écrite pour la forme imbriquée ne savait plus lire — et qui annonçait alors
+  // sereinement « Round final : ? / 0 événement » sur un journal de 76 requêtes montant au round 64.
+  // Une absence de mesure présentée comme une mesure, la même famille d'erreur que THE-SCREENER
+  // annonçant « capture réussie » sur une image entièrement masquée.
+  const {detectJournalShape,summarizeFlatActions,checkPhase2Autonomy,formatPhase2Autonomy,shapeBlindSpots,modeOf}=await import('../scripts/summarize-simulation-log.mjs');
+  assert.equal(detectJournalShape(entries),'imbriqué','a log carrying the full server response must still be recognised as the nested shape, so the historical extraction keeps working unchanged');
+  const plat=[
+    {payload:{mode:'reset'},status:200,round:0,evidence:0,decisions:[]},
+    {payload:{mode:'autonomous'},status:200,round:1,evidence:0,decisions:[{actor:1,room:'salon'},{actor:2,room:'bureau'}]},
+    {payload:{mode:'autonomous'},status:200,round:2,evidence:1,decisions:[{actor:1,room:'cuisine'},{actor:2,room:'bureau'}]},
+    {payload:{mode:'spin_bonus'},status:200,round:3,evidence:1,decisions:[]},
+    {payload:{mode:'chat',message:'bonjour'},status:200,round:4,evidence:1,decisions:[{actor:1,room:'cuisine'}]},
+  ];
+  assert.equal(detectJournalShape(plat),'plat','the flat shape a real simulation script now produces must be recognised, never fall through to the nested extraction that finds nothing in it');
+  assert.equal(detectJournalShape([]),'vide','an empty log must be named as empty, never guessed to be one shape or the other');
+  assert.equal(detectJournalShape([{foo:1}]),'inconnu','a log matching neither known shape must say so, so its zero is never read as a statement about the game');
+  assert.equal(modeOf(plat[1]),'autonomous','the turn mode must be read from the real payload field the simulation script writes');
+  // Le premier passage d'un acteur dans une pièce n'est PAS un déplacement (rien à comparer avant) :
+  // même convention que l'extraction imbriquée, jamais un événement fabriqué pour faire nombre.
+  assert.deepEqual(summarizeFlatActions(plat).map(e=>e.type),['evidence','move','bonus','revelation'],'the flat extraction must report every real transition the flat journal genuinely carries — a room change, growing evidence, a roulette draw and the turn the human channel opened — never nothing');
+  assert.equal(summarizeFlatActions(plat).find(e=>e.type==='move').detail,'acteur 1 : salon → cuisine','a room change read from a flat journal must name the real actor and the real rooms, exactly as the nested extraction does');
+  assert.ok(shapeBlindSpots('plat').length>0&&shapeBlindSpots('imbriqué').length===0,'what a journal shape genuinely CANNOT say must be declared for that shape, never left for the reader to infer from an absence');
+  assert.ok(summarizeFlatActions([{payload:{mode:'autonomous'},status:502,round:9,decisions:[{actor:1,room:'jardin'}]}]).length===0,'a failed request (HTTP 502/503/429) changed nothing in the world and must never be counted as a real event');
+  // GARDE-FOU DE PHASE 2 : le dossier retourné exige un tour interact/autonomous (dossierGateEligible,
+  // app/api/lia/route.ts) alors que dossierHumanTurns ne monte, lui, que sur un tour chat. Une phase 2
+  // faite uniquement de messages humains remplit donc le compteur sans jamais offrir le tour où le
+  // piège pourrait être posé. C'est ce qui s'est réellement passé dans full_sim16 puis full_sim18.
+  const sansAutonomie=[...plat.slice(0,4),{payload:{mode:'chat'},status:200,round:4},{payload:{mode:'chat'},status:200,round:5}];
+  const v1=checkPhase2Autonomy(sansAutonomie);
+  assert.ok(v1.applicable&&!v1.suffisant&&v1.toursChat===2&&v1.toursAutonomes===0,'a phase 2 made only of human messages must be detected as structurally unable to trigger the dossier retourné, with the real counts');
+  assert.ok(formatPhase2Autonomy(v1).includes('AUCUN tour autonome'),'that verdict must be stated loudly in the summary, so an empty dossier is never re-read later as a regression of the game itself');
+  const avecAutonomie=checkPhase2Autonomy([...sansAutonomie,{payload:{mode:'autonomous'},status:200,round:6,decisions:[]}]);
+  assert.ok(avecAutonomie.suffisant&&avecAutonomie.toursAutonomes===1,'a phase 2 that does give the house its own turn must be reported as able to trigger the dossier, never warned about for nothing');
+  assert.equal(checkPhase2Autonomy(plat.slice(0,4)).applicable,false,'a simulation that never opened the human channel has no phase 2 to judge, and must say so rather than accuse it of missing autonomous turns');
+  // GARDE-FOU DU PSEUDO : un vrai visiteur s'identifie avant d'écrire (app/page.tsx envoie `identify`).
+  // Le script ne le faisait jamais — un seul manque qui explique à la fois la fenêtre de pseudo
+  // masquant toute capture THE-SCREENER et un nom d'observateur inventé par le modèle dans full_sim18.
+  const {checkObserverIdentified,formatObserverIdentified}=await import('../scripts/summarize-simulation-log.mjs');
+  const sansPseudo=checkObserverIdentified([{payload:{mode:'chat'},status:200,round:4}]);
+  assert.ok(sansPseudo.applicable&&!sansPseudo.identifie,'an observer who spoke without ever sending an identify turn must be detected, since a real visitor can never do that');
+  assert.ok(formatObserverIdentified(sansPseudo).includes("SANS jamais s'identifier"),'that gap must be stated in the archived summary, because it silently invalidates every screenshot and lets the model invent an observer name nobody gave');
+  assert.ok(checkObserverIdentified([{payload:{mode:'identify'},status:200,round:3},{payload:{mode:'chat'},status:200,round:4}]).identifie,'a simulation that does identify its observer must be reported as correct, never warned about for nothing');
+  assert.equal(checkObserverIdentified([{payload:{mode:'autonomous'},status:200,round:1}]).applicable,false,'a run that never opened the human channel has no observer to identify, and must say so rather than report a missing pseudo');
+  assert.ok(formatSummary([],{shape:'inconnu'}).includes('ne dit rien de la partie'),'an unreadable journal must explicitly say its zero describes the reader, not the game');
+  assert.ok(formatSummary([],{shape:'plat'}).includes('Aucun événement extrait'),'zero events from a shape we DO know how to read must still be flagged for a human check, never archived silently');
   const summary=formatSummary(events,{lastRound:2,dossierFound:true});
   assert.ok(summary.includes('Round final observé : 2')&&summary.includes('Dossier retourné rempli : oui'),'the formatted summary must state the real last round and real dossier status, never a placeholder');
   assert.ok(formatSummary([],{}).includes('Round final observé : ?'),'a genuinely unknown round must be shown as an honest "?", never a fabricated number');
-  console.log('Passed: the simulation-log summarizer correctly falls back to parsing the round number from the request label for the oldest logs (a real bug found and fixed while archiving full_sim/2/3), reports every real bonus draw/evidence growth/revelation turn/garden opening/room change exactly once in order with the real actors and rooms involved, never crashes on a missing decisions array or an empty log, and always states an honest "?" rather than a fabricated round or status when the data genuinely does not say.');
+  console.log('Passed: the simulation-log summarizer correctly falls back to parsing the round number from the request label for the oldest logs (a real bug found and fixed while archiving full_sim/2/3), reports every real bonus draw/evidence growth/revelation turn/garden opening/room change exactly once in order with the real actors and rooms involved, never crashes on a missing decisions array or an empty log, always states an honest "?" rather than a fabricated round or status when the data genuinely does not say, recognises BOTH journal shapes a real simulation script has produced (nested and flat) and names which one it read rather than returning a silent zero on the one it cannot parse, declares per shape what that shape genuinely cannot tell, never counts a failed HTTP request as a real event, and mechanically detects a phase 2 made only of human messages — which structurally cannot trigger the dossier retourné, the game\'s whole second act, since that trap requires an interact/autonomous turn the script never gives it.');
 }
 
 {

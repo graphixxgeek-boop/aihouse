@@ -366,6 +366,28 @@ enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redem
    retourné, négociation, plusieurs tirages de bonus distincts, hostilité sévère, humour noir,
    désescalade, bienveillance soutenue, divergence par dispute) — produisant un nouveau transcript
    horodaté par pièce, le dossier retourné complet et un journal JSON des requêtes/réponses.
+   **La phase 2 doit intercaler de vrais tours autonomes entre les messages humains, jamais
+   n'enchaîner que des `chat`.** Ce n'est pas un réglage de confort : le dossier retourné — tout le
+   second acte du jeu — ne peut se poser QUE sur un tour `interact`/`autonomous`
+   (`dossierGateEligible`, `app/api/lia/route.ts`), alors que le compteur qui l'autorise
+   (`dossierHumanTurns`) ne monte, lui, que sur un tour `chat`. Une phase 2 faite uniquement de
+   messages humains remplit donc le compteur sans jamais offrir le tour où le piège pourrait être
+   posé : le jeu ne peut structurellement pas répondre, et l'archive montre un dossier vide qu'on
+   relit ensuite comme une régression du jeu. C'est arrivé deux fois (full_sim16, puis full_sim18
+   après que la tâche #143 eut conclu à tort que le budget de tours était en cause). Le vrai
+   visiteur n'a jamais ce trou : `app/page.tsx` relance un tour autonome toutes les 21 secondes, en
+   parallèle de ce qu'il tape — une simulation qui ne le fait pas ne teste pas la même maison.
+   Garde-fou mécanique, jamais une promesse écrite ici (Article 24) :
+   `checkPhase2Autonomy()`/`formatPhase2Autonomy()` (`scripts/summarize-simulation-log.mjs`) le
+   vérifient sur le journal réel et le disent en tête du résumé archivé à l'étape 3bis.
+   **L'observateur doit aussi s'identifier (tour `identify`) avant son premier message**, comme le
+   fait tout vrai visiteur (`app/page.tsx`). Un script qui poste des `chat` sans pseudo produit deux
+   symptômes qu'on a longtemps cherchés séparément : la fenêtre de pseudo reste ouverte et couvre la
+   scène pendant toute la phase 2 (d'où l'impossibilité de la moindre capture THE-SCREENER
+   exploitable, tâche #186), et `story.observer` restant vide, la réplique qui nomme l'observateur ne
+   peut pas se déclencher — dans full_sim18 le modèle a comblé ce vide en inventant un nom
+   (« Caspeer ») que personne n'avait donné, une réplique invérifiable à l'écran (Article 12).
+   Garde-fou mécanique : `checkObserverIdentified()`/`formatObserverIdentified()`, même fichier.
 2. **Donner régulièrement à l'utilisateur l'avancement réel pendant que ça tourne** (round atteint,
    preuves découvertes, révélation atteinte ou non, étape de la phase 2 en cours) — jamais un
    silence total le temps que la simulation s'exécute, pour qu'il puisse suivre en même temps que
