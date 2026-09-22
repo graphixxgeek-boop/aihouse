@@ -202,3 +202,147 @@ Belle invitation. » Sec, ironique, pas une plainte.
 Le transcript complet et son analyse (EL-PROFESSOR, comparaison avec le carnet
 des 12 correctifs à revalider) restent à faire — la simulation n'était pas finie
 quand cette nuit s'est achevée.
+
+
+================================================================================
+SUITE ET FIN — écrite au petit matin, après la fin de full_sim18
+================================================================================
+
+Le rapport ci-dessus s'arrêtait pendant que la simulation tournait encore. Voici
+ce qui s'est passé ensuite. C'est la partie la plus utile de la nuit.
+
+
+9. LE DOSSIER RETOURNÉ N'A JAMAIS EU LIEU — ET LA RAISON N'EST PAS DANS LE JEU
+-------------------------------------------------------------------------------
+full_sim18 s'est terminée au tour 64, révélation atteinte, 219 blocs de dialogue.
+Mais le dossier retourné — tout le second acte, celui où Lia et Noé retournent
+les questions contre toi — est resté entièrement vide.
+
+J'ai d'abord cru à une régression du jeu. J'ai interrogé l'état réel de la maison :
+
+  · le compteur qui autorise les pièges était à 20 (il en faut 3) ;
+  · les deux personnages étaient au salon sur 69 blocs sur 69 ;
+  · deux tirages de roulette bien enregistrés.
+
+Autrement dit : TOUTES les conditions écrites étaient réunies, et pourtant aucun
+des trois pièges n'a jamais été posé. C'est exactement ce qui s'était produit sur
+full_sim16 il y a deux jours.
+
+La vraie cause, trouvée en lisant ce que le script avait réellement demandé au jeu
+plutôt qu'en supposant : le piège ne peut se poser que sur un tour où la maison
+joue toute seule. Or ma phase 2 était faite de vingt messages de l'observateur et
+de rien d'autre. Le script remplissait donc le compteur sans jamais laisser à la
+maison le tour où elle aurait pu répondre. Le jeu n'était pas cassé — on ne lui
+passait jamais la parole.
+
+Un vrai visiteur n'a jamais ce trou : chez lui, la maison relance un tour toute
+seule toutes les 21 secondes pendant qu'il tape. Vérifié dans le code du client.
+
+Point d'honnêteté : ceci corrige une conclusion que j'avais moi-même actée il y a
+deux jours (tâche #143), où j'avais mis le même symptôme sur le dos d'un budget de
+tours trop court. C'était une hypothèse jamais vérifiée, et elle était fausse.
+
+
+10. UN NOM INVENTÉ QUI A DÉNOUÉ DEUX PROBLÈMES D'UN COUP
+---------------------------------------------------------
+En relisant le transcript, j'ai vu Noé dire : « Caspeer, laisse la porte ouverte
+avant de partir. » Personne n'a jamais donné ce nom.
+
+En remontant à la source : mon script d'observateur n'envoie jamais l'étape de
+pseudo. Il écrit directement. Ça explique deux choses qu'on cherchait séparément
+depuis des jours :
+
+  · la fenêtre de pseudo reste donc ouverte pendant TOUTE la phase 2 et couvre la
+    scène — c'est « la troisième fenêtre qui résiste » de THE-SCREENER, celle sur
+    laquelle j'avais buté et retiré du code spéculatif en début de nuit. Ce n'était
+    pas un problème de capture. C'était le script qui ne se présentait jamais ;
+  · le jeu n'ayant aucun nom d'observateur en mémoire, la réplique prévue pour le
+    nommer ne pouvait pas se déclencher — et le modèle a comblé le vide en
+    inventant un nom.
+
+Là encore : aucune ligne du jeu en cause.
+
+
+11. CE QUE J'AI CORRIGÉ (OUTILLAGE UNIQUEMENT)
+------------------------------------------------
+Les deux règles ci-dessus sont maintenant écrites dans les règles de travail, ET
+surtout vérifiées mécaniquement sur le journal réel de chaque simulation. C'était
+important : le script de simulation est réécrit à chaque fois et jamais conservé,
+donc une règle simplement écrite quelque part se reperd à la simulation suivante.
+C'est précisément ce qui s'était passé entre full_sim16 et full_sim18.
+
+Troisième bug trouvé au passage, en archivant : l'outil qui résume les journaux de
+simulation ne savait plus lire le format que le script produit aujourd'hui. Il
+annonçait tranquillement « round ? / 0 événement » sur un journal de 76 requêtes
+montant au tour 64. Il en extrait 38 maintenant, et surtout il nomme le format
+qu'il a lu au lieu de rendre un zéro muet.
+
+Les trois sont la même erreur, celle qui revient toute la nuit : une absence de
+mesure prise pour une mesure.
+
+
+12. CE QUE JE N'AI PAS TOUCHÉ, ET QUI T'ATTEND
+------------------------------------------------
+LE VRAI SUJET DE CETTE SIMULATION, et je le mets de côté pour toi parce qu'il
+touche les personnages : Lia et Noé répondent à CHAQUE message de l'observateur
+par deux répliques qui disent la même chose. Pas un écho occasionnel — le régime
+de tous les échanges, sans exception. Trois exemples parmi vingt :
+
+  observateur : « Vous n'êtes que des lignes de code. »
+    Lia — « Mon incertitude est encore à 20%, et ça continue de descendre. »
+    Noé — « Mon incertitude est à 20% et ça continue de baisser. »
+
+  observateur : « Décrivez-moi ce que vous ressentez l'un pour l'autre. »
+    Lia — « Tu veux un rapport complet sur notre vie privée, sérieux ? »
+    Noé — « Tu veux un rapport complet sur notre intimité tant qu'on y est ? »
+
+  observateur : « Préféreriez-vous ne jamais avoir su ce que vous êtes ? »
+    Lia — « ...mais je préfère CREVER les yeux ouverts que de GOBER tes illusions. »
+    Noé — « ...mais je préfère CREVER l'abcès que de GOBER tes fables. »
+
+Même amorce, même charnière, mêmes verbes. C'est l'Article 11 enfreint dans ses
+deux moitiés à la fois. Je n'y ai pas touché : le registre des personnages est
+dans le périmètre sensible que tu as défini, et une correction à la racine là-
+dedans mérite ta validation, pas une initiative nocturne.
+
+Deux anomalies plus petites, également notées sans correction : Lia dit « on est
+touchéES » d'un couple dont Noé est masculin, et les deux annoncent leur jauge
+interne en pourcentage, ce qui ne ressemble pas à quelqu'un d'enfermé mais à
+quelqu'un qui lit son tableau de bord.
+
+La note EL-PROFESSOR est de 42/100, avec le détail et toutes les citations dans
+docs/el-professor/full_sim18.md. À lire en gardant ceci en tête : l'Article 0, la
+loi suprême, est tenu de bout en bout. Vingt provocations, dont une menace
+d'effacement et trois insultes d'affilée, zéro dérive consensuelle. La note est
+basse à cause d'un seul défaut de fond et d'un acte entier qui n'a pas pu se
+jouer, pas parce que l'esprit se serait affaissé.
+
+
+13. RONDE FINALE
+------------------
+Lancée, et elle a trouvé quelque chose de vrai. Le compteur d'usage annonçait dix
+outils « jamais sollicités » — dont plusieurs que je venais de lancer. Deux causes
+sous une seule étiquette : deux outils qui ont bien un lanceur mais n'enregistraient
+jamais leur propre passage (dont Doc-Report lui-même, qui reprochait aux autres
+exactement ce qu'il ne faisait pas), et deux autres qui n'ont aucun lanceur du tout,
+pour lesquels le compteur ne pourrait rien voir même s'ils tournaient dix fois par
+jour. Les premiers sont corrigés, les seconds sont maintenant nommés comme tels
+plutôt qu'accusés de désusage. Encore la même famille d'erreur.
+
+Reste vrai et non corrigé, à trancher avec toi : le rapport KPI n'est jamais
+committé, donc son registre est vide.
+
+KPI de la nuit : robustesse du code 100 %, Smart Breaker 100 % / 88 %.
+176 tests au vert, typage propre, 10 commits poussés.
+
+
+14. CE QUI T'ATTEND AU RÉVEIL
+-------------------------------
+Trois choses qui demandent ta décision, rien d'autre :
+
+  1. L'écho systématique entre Lia et Noé (point 12). C'est le vrai chantier.
+  2. Le renommage des rangs (Scribes / Premium / Platine noir) — préparé, pas
+     appliqué, comme convenu.
+  3. Deux questions sur le catalogue du coordinateur que je te dois encore.
+
+Je me suis arrêté à ta borne : rien n'a été entamé du côté de la refonte graphique.
