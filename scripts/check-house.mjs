@@ -8833,3 +8833,49 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log('Passed: the certification ceremony finally keeps its TEXT, not just a slug and a date (2026-09-23, task #210) — the hook demanded the block be shown "TEL QUEL", while the journal retained nothing that could be shown, so a ceremony not relayed the same day became permanently unrelayable and the reminder kept demanding, at every commit, something nobody could produce (two real ones were lost this way). Root cause was the write ORDER: the certification was recorded before the text was ever formed. Both paths are fixed through one single recording point — the initial certification AND the badge-change path, which writes into the same journal and would otherwise have left half the hole open — the stored text is byte-identical to what the hook received, it is re-rendered verbatim by the hook itself rather than merely referenced, a first production is never overwritten by a later one, and a legacy entry honestly reports that its text is unrecoverable instead of printing an empty block that would read as the agent\'s own omission.');
 }
+
+{
+  // ARGUS REÇOIT LA MÉMOIRE DES ÉCARTS TRANCHÉS (2026-09-23, tâche #214, accord explicite de
+  // l'utilisateur). Il re-signalait six candidats enquêtés et CLOS le 2026-09-19 — verdicts écrits
+  // dans son propre registre, qu'il ne lisait pas. Trois jours de bandeau « ARGUS ⚠️6 », et c'est
+  // cette alarme permanente qui a fait rouvrir une enquête complète sur des questions déjà tranchées.
+  const { loadMemoire, filtrerDejaTranches, MEMOIRE_FILE } = await import('../scripts/safe-export.mjs');
+
+  // Le mécanisme est RELAYÉ depuis SAFE-EXPORT, jamais recopié : deux mémoires séparées auraient
+  // vite donné deux disciplines différentes sur la même question (§7ter).
+  assert.ok(MEMOIRE_FILE.includes('safe-export'), "SAFE-EXPORT keeps its own memory path as the default");
+  const memoireArgus = loadMemoire({ fichier: 'docs/argus/memoire.json' });
+  assert.equal(memoireArgus.length, 6, "ARGUS's memory must hold the six verdicts established on 2026-09-19 and re-verified against the live code on 2026-09-22 — the registry held the conclusion all along, the tool simply never read it");
+  for (const m of memoireArgus) {
+    assert.ok(m.accordUtilisateur, 'every single dismissal must carry an explicit dated user agreement — an agent that can silence its own guard is the one failure worse than noise');
+    assert.ok(m.pourquoi && m.pourquoi.length > 40, 'and a written reason: a dismissal without a reason is not a decision, it is an abandonment in disguise (Article 28)');
+  }
+
+  const ecartsFictifs = [
+    { fichier: 'lib/life.ts', defaut: 'champ « ambientSeen » probablement jamais lu ailleurs' },
+    { fichier: 'lib/autre.ts', defaut: 'un écart tout neuf, jamais vu' },
+  ];
+  const tri = filtrerDejaTranches(ecartsFictifs, memoireArgus);
+  assert.equal(tri.gardes.length, 1, 'a finding already dismissed WITH agreement must drop out, while a brand-new one is kept — otherwise the memory would either silence everything or nothing');
+  assert.equal(tri.gardes[0].fichier, 'lib/autre.ts', 'and it must be the NEW one that survives');
+
+  // GARDE-FOU 2 — le plus important des trois : un « écarté » posé sans accord ne fait PAS taire
+  // l'alerte, et il est nommé au rapport comme une tentative de le faire.
+  const sansAccord = [{ fichier: 'lib/life.ts', defaut: 'champ « ambientSeen » probablement jamais lu ailleurs', etat: 'écarté sciemment' }];
+  const triSansAccord = filtrerDejaTranches(ecartsFictifs, sansAccord);
+  assert.equal(triSansAccord.gardes.length, 2, 'a dismissal WITHOUT explicit agreement must silence nothing at all: ignoring is a non-event, dismissing is a decision, and only the second may quiet an alert');
+  assert.ok(triSansAccord.ecartesSansAccord.some((e) => e.fichier === 'lib/life.ts'), 'and it must be NAMED in the report as an attempt to quiet the alert, never simply ignored in silence');
+
+  // GARDE-FOU 3 — une règle corrigée ne doit jamais se reproduire (Article 3).
+  const memoireCorrigee = [{ fichier: 'lib/life.ts', defaut: 'peu importe', etat: 'corrigé' }];
+  assert.ok(filtrerDejaTranches(ecartsFictifs, memoireCorrigee).regressions.length >= 1, 'a finding that was once corrected and has come back must be flagged as a regression, never quietly re-listed as an ordinary new finding');
+
+  // Le champ qui n'est PAS un faux positif reste dans la mémoire avec son statut réel : écarté en
+  // attente de la refonte graphique, jamais clos. Le distinguer des cinq autres est tout l'objet de
+  // l'enquête, et l'effacer les confondrait.
+  const trottoir = memoireArgus.find((m) => m.defaut.includes('trottoirGranted'));
+  assert.ok(trottoir.pourquoi.includes('parametres.md'), 'trottoirGranted is the one genuinely never-read field, and its dismissal must point at the documented decision that justifies it (parametres.md:306, "on verra après") rather than rest on anyone\'s memory');
+  assert.ok(trottoir.pourquoi.includes('#92'), 'and at the graphic-refonte task that will have to pick it back up: dismissed PENDING, never closed');
+
+  console.log('Passed: ARGUS finally remembers its own verdicts (2026-09-23, task #214) — it had been re-reporting six candidates investigated and CLOSED on 2026-09-19, the conclusions sitting in its own registry which it never read, producing three days of a permanent "⚠️6" banner whose real cost was not being ignored but making a full investigation be reopened on questions already settled. The mechanism is relayed from SAFE-EXPORT rather than copied, since two separate memories would soon have meant two different disciplines on the same question, and all three guards are verified here rather than assumed: only a dismissal carrying an explicit dated user agreement AND a written reason silences anything, a dismissal without that agreement silences nothing and is NAMED in the report as an attempt to quiet the alert, and a corrected finding that returns is flagged as a regression. The one genuinely never-read field keeps a dismissal that points at the documented decision justifying it and at the task that must pick it back up — set aside pending, never closed.');
+}

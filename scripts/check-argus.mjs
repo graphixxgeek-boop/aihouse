@@ -14,6 +14,9 @@ import { join, relative } from "node:path";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+// La mémoire des écarts déjà tranchés est RELAYÉE depuis SAFE-EXPORT, jamais réécrite ici (§7ter).
+// Deux mémoires séparées auraient vite donné deux disciplines différentes sur la même question.
+import { loadMemoire, filtrerDejaTranches } from "./safe-export.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -98,10 +101,19 @@ function main() {
   const dead = findDeadLifeFields(files, lifeSource);
   const todos = findTodoMarkers(walk(ROOT).filter(f => !f.includes("/scratchpad/")));
 
+  // La mémoire est chargée AVANT l'affichage brut : un lecteur qui voit « 6 champs » puis « 0 écart
+  // à regarder » se demande lequel des deux chiffres est faux (Article 15). Chaque candidat déjà
+  // tranché le dit donc sur sa propre ligne, plutôt que de laisser deviner.
+  const memoireArgus = loadMemoire({ fichier: "docs/argus/memoire.json" });
+  const dejaTranche = new Set(memoireArgus
+    .filter((m) => m.etat === "écarté sciemment" && m.accordUtilisateur)
+    .map((m) => String(m.defaut ?? "").match(/«\s*(\w+)\s*»/)?.[1])
+    .filter(Boolean));
+
   printReportHeader({ tool: "argus", title: "ARGUS — partie mécanique (zéro coût API)", scriptPath: "scripts/check-argus.mjs" });
   console.log(`Champs de life.ts potentiellement jamais lus ailleurs (${dead.length}) :`);
   if (!dead.length) console.log("  Aucun — tous les champs déclarés dans le type Life sont référencés au moins 5 fois dans le projet.");
-  for (const d of dead) console.log(`  [${d.confidence}] ${d.field} (${d.uses} occurrence(s) trouvée(s) au total, déclaration + lecture éventuelle incluses)`);
+  for (const d of dead) console.log(`  [${d.confidence}] ${d.field} (${d.uses} occurrence(s) trouvée(s) au total, déclaration + lecture éventuelle incluses)${dejaTranche.has(d.field) ? " — déjà tranché avec votre accord, ne compte plus comme un écart" : ""}`);
   console.log(`\nMarqueurs TODO/FIXME trouvés (${todos.length}) :`);
   if (!todos.length) console.log("  Aucun.");
   for (const t of todos) console.log(`  ${t.file}:${t.line} — ${t.text}`);
@@ -121,7 +133,27 @@ function main() {
     ...dead.map((d) => ({ fichier: "lib/life.ts", defaut: `champ « ${d.field} » ${d.confidence === "probable" ? "probablement" : "possiblement"} jamais lu ailleurs`, consequence: `${d.uses} occurrence(s) au total, déclaration incluse — à confirmer à la main avant tout retrait (Article 19 : la leçon trottoirGranted)` })),
     ...todos.map((t) => ({ fichier: `${t.file}:${t.line}`, defaut: "marqueur TODO/FIXME laissé dans le code", consequence: String(t.text).slice(0, 90) })),
   ];
-  const planArgus = planDactionDepuisEcarts(ecartsArgus, { toolSlug: "argus", fausseUneMesure: false,
+  // LA MÉMOIRE (2026-09-23, tâche #214, accord explicite de l'utilisateur ce jour-là).
+  //
+  // CE QU'ELLE CORRIGE, et le coût était réel : ARGUS re-signalait six candidats enquêtés et CLOS
+  // le 2026-09-19 — verdicts écrits en toutes lettres dans son propre registre, qu'il ne lisait
+  // pas. Trois jours d'un bandeau « ARGUS ⚠️6 » à chaque commit. Une alarme permanente ne se
+  // contente pas d'être ignorée : c'est elle qui a fait rouvrir une enquête complète sur des
+  // questions déjà tranchées. Un Gardien sans mémoire de ses propres jugements fait re-payer
+  // chaque verdict.
+  //
+  // LES TROIS GARDE-FOUS, hérités tels quels et non négociés — sans eux, donner à un Gardien le
+  // droit de se taire serait pire que le bruit qu'on corrige :
+  //   1. seul un écart portant un ACCORD EXPLICITE DATÉ de l'utilisateur est filtré ;
+  //   2. un « écarté » posé sans cet accord est NOMMÉ au rapport comme une tentative de faire
+  //      taire l'alerte, et continue de remonter ;
+  //   3. un écart déjà corrigé qui REVIENT est signalé comme régression (Article 3).
+  const triArgus = filtrerDejaTranches(ecartsArgus, memoireArgus);
+  console.log(`\n${triArgus.gardes.length} écart(s) à regarder (${triArgus.ecartesAvecAccord} écarté(s) avec votre accord explicite, jamais reposé(s)).`);
+  for (const e of triArgus.ecartesSansAccord) console.log(`   ⚠️  ${e.fichier} : ${e.pourquoi}`);
+  for (const r of triArgus.regressions) console.log(`   🔁 ${r.fichier} : déjà corrigé une fois, revenu depuis — une règle corrigée ne doit jamais se reproduire (Article 3).`);
+
+  const planArgus = planDactionDepuisEcarts(triArgus.gardes, { toolSlug: "argus", fausseUneMesure: false,
     libelle: (e) => `${e.fichier} — ${e.defaut} (${e.consequence})`,
     tache: (e) => e.defaut.startsWith("marqueur")
       ? `trancher le TODO laissé en ${e.fichier} : le faire ou l'effacer`

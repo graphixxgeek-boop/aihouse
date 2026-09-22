@@ -60,3 +60,33 @@ exécution (cf. le principe "une donnée absente reste une absence" du tableau d
 
 Voir `docs/argus/index.md` — pas dupliqué ici (Article 6/7 : une seule source de vérité pour ce
 qui change à chaque exécution).
+
+
+## La mémoire des écarts tranchés (2026-09-23, tâche #214)
+
+ARGUS re-signalait six candidats `lib/life.ts` **enquêtés et clos le 2026-09-19** — verdicts écrits
+en toutes lettres dans `docs/argus/index.md`, que l'outil ne lisait pas. Trois jours d'un bandeau
+`ARGUS ⚠️6` à chaque commit.
+
+**Le coût n'était pas d'être ignoré, il était pire :** c'est cette alarme permanente qui a fait
+rouvrir une enquête complète (tâche #214) sur des questions déjà tranchées. Un Gardien sacré sans mémoire
+de ses propres jugements fait re-payer chaque verdict.
+
+**Le mécanisme est RELAYÉ depuis SAFE-EXPORT** (`loadMemoire()` + `filtrerDejaTranches()`), jamais
+recopié : deux mémoires séparées auraient vite donné deux disciplines différentes sur la même
+question. Le fichier suit la convention de registre du projet : `docs/argus/memoire.json`.
+
+**Les trois garde-fous, hérités tels quels et non négociables** — sans eux, donner à un Gardien sacré le
+droit de se taire serait pire que le bruit qu'on corrige :
+
+1. seul un écart portant un **accord explicite daté de l'utilisateur** est filtré ;
+2. un « écarté » posé **sans** cet accord est **nommé au rapport** comme une tentative de faire
+   taire l'alerte, et continue de remonter ;
+3. un écart déjà corrigé qui **revient** est signalé comme régression (Article 3).
+
+**Les six entrées actuelles, et la distinction qui compte** : cinq sont des FAUX POSITIFS vérifiés
+contre le code réel (chacun lu comme condition à l'endroit même où il est écrit — l'heuristique
+compte des occurrences brutes et un champ lu une seule fois passe sous son seuil de 4). La sixième,
+`trottoirGranted`, est le seul champ réellement jamais lu : son écart est **écarté EN ATTENTE**,
+jamais clos, rattaché à la décision documentée de `docs/referentiel/parametres.md:306` et à la
+tâche #92 (refonte graphique) qui devra le reprendre.

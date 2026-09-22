@@ -284,9 +284,14 @@ export const MEMOIRE_FILE = "docs/safe-export/memoire.json";
 // décision. Seule la seconde a le droit de faire taire l'alerte.
 export const ACCORD_REQUIS = "accord explicite de l'utilisateur, daté";
 
-export function loadMemoire({ root = ROOT, readFileImpl = readFileSync } = {}) {
+// `fichier` paramétrable depuis le 2026-09-23 : ARGUS reçoit la même mémoire (tâche #214, accord
+// explicite de l'utilisateur ce jour-là), et la recopier chez lui aurait été exactement le doublon
+// que CLONE-HUNTER traque — pire, deux mémoires divergentes auraient vite donné deux disciplines
+// différentes sur la même question. Le chemin suit la convention de registre déjà sans exception du
+// projet (`docs/<outil>/`), donc un troisième Gardien s'y branche sans qu'on touche à cette ligne.
+export function loadMemoire({ root = ROOT, readFileImpl = readFileSync, fichier = MEMOIRE_FILE } = {}) {
   try {
-    const b = JSON.parse(readFileImpl(join(root, MEMOIRE_FILE), "utf8"));
+    const b = JSON.parse(readFileImpl(join(root, fichier), "utf8"));
     return Array.isArray(b) ? b : [];
   } catch {
     return [];

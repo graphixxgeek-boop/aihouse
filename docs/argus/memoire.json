@@ -1,0 +1,50 @@
+[
+  {
+    "fichier": "lib/life.ts",
+    "defaut": "champ « ambientSeen » probablement jamais lu ailleurs",
+    "etat": "écarté sciemment",
+    "accordUtilisateur": "2026-09-22 — accord explicite en fenêtre de calibrage : « Oui, avec les 3 garde-fous de SAFE-EXPORT », sur une question nommant ces 6 cas comme déjà tranchés",
+    "pourquoi": "FAUX POSITIF vérifié contre le code réel le 2026-09-22 (et déjà une fois le 2026-09-19) : lu comme condition en app/api/lia/route.ts:664, où !story.life?.ambientSeen conditionne le beat d'ambiance. L'heuristique compte des occurrences brutes ; un champ lu UNE fois passe sous son seuil de 4.",
+    "passages": 0
+  },
+  {
+    "fichier": "lib/life.ts",
+    "defaut": "champ « observerNamed » probablement jamais lu ailleurs",
+    "etat": "écarté sciemment",
+    "accordUtilisateur": "2026-09-22 — même accord explicite",
+    "pourquoi": "FAUX POSITIF vérifié : lu en app/api/lia/route.ts:1392 (!life.observerNamed) — c'est ce qui empêche Lia de redemander son nom à l'observateur une seconde fois.",
+    "passages": 0
+  },
+  {
+    "fichier": "lib/life.ts",
+    "defaut": "champ « exitSearched » probablement jamais lu ailleurs",
+    "etat": "écarté sciemment",
+    "accordUtilisateur": "2026-09-22 — même accord explicite",
+    "pourquoi": "FAUX POSITIF vérifié : lu en lib/turn.ts:74 (!life.exitSearched), où il conditionne toute la scène d'inspection du couloir. Déjà écarté comme tel le 2026-09-19.",
+    "passages": 0
+  },
+  {
+    "fichier": "lib/life.ts",
+    "defaut": "champ « proposalHistoryChecked » probablement jamais lu ailleurs",
+    "etat": "écarté sciemment",
+    "accordUtilisateur": "2026-09-22 — même accord explicite",
+    "pourquoi": "FAUX POSITIF vérifié : lu en app/api/lia/route.ts:723 (!life.proposalHistoryChecked), écrit deux lignes plus bas en 725.",
+    "passages": 0
+  },
+  {
+    "fichier": "lib/life.ts",
+    "defaut": "champ « personalBoosted » probablement jamais lu ailleurs",
+    "etat": "écarté sciemment",
+    "accordUtilisateur": "2026-09-22 — même accord explicite",
+    "pourquoi": "FAUX POSITIF vérifié : lu en app/api/lia/route.ts:1219 (!life.personalBoosted) — empêche de rejouer deux fois le même élan personnel.",
+    "passages": 0
+  },
+  {
+    "fichier": "lib/life.ts",
+    "defaut": "champ « trottoirGranted » probablement jamais lu ailleurs",
+    "etat": "écarté sciemment",
+    "accordUtilisateur": "2026-09-22 — accord explicite et SÉPARÉ, sur une question dédiée à ce seul champ : « On ne touche à rien, c'est la refonte »",
+    "pourquoi": "SEUL VRAI CAS des six : écrit une fois (app/api/lia/route.ts:202), jamais lu. Mais c'est une décision assumée et documentée depuis docs/referentiel/parametres.md:306 — le trottoir est « un accès narré […] pas encore une zone 3D pathable complète comme le jardin — on verra après ». La scène est entièrement résolue au moment du tirage, le flag n'a structurellement rien à relire. Rattaché à la tâche #92 (refonte graphique), la borne posée par l'utilisateur. ÉCARTÉ EN ATTENTE, jamais clos : la refonte devra le reprendre.",
+    "passages": 0
+  }
+]
