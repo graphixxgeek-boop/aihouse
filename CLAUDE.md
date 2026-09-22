@@ -887,6 +887,21 @@ fond — et c'est précisément le travail que l'agent est censé épargner.
    être expliqué ; il doit l'être avec des mots simples. Un nom de fonction, de fichier ou de
    variable n'explique jamais rien à lui seul : ce qui compte est ce que ça change concrètement.
 
+**Trois calibrages tranchés par l'utilisateur le jour même, en fenêtre dédiée :**
+
+- **Portée** — « à chaque COMPTE RENDU DE TRAVAIL ». Dès qu'une réponse rend du travail (une tâche
+  avancée, une enquête, un correctif), les quatre rappels sont obligatoires. Une réponse courte à
+  une question factuelle y échappe : quatre lignes de préambule pour dire « oui, le quota est
+  revenu » feraient plus de bruit que de service.
+- **Étiquette** — **toutes** les tâches concernées, avec leur numéro, jamais la seule principale :
+  le travail fait sur les autres deviendrait invisible. Quand la réponse ne relève d'aucune tâche
+  numérotée (une demande directe, comme celle qui a créé cet Article), le dire explicitement —
+  « hors tâche numérotée » — plutôt que d'omettre le point.
+- **Forme** — un **bloc d'ouverture visuellement séparé**, trois ou quatre lignes détachées en
+  tête, que l'utilisateur peut survoler ou sauter selon que le contexte lui manque ou non. Jamais
+  fondu dans le premier paragraphe : fondu, il devient impossible à sauter les jours où le contexte
+  est déjà frais.
+
 **Ce que cet Article n'autorise pas** : diluer. Rappeler le contexte n'est pas réécrire l'historique,
 et les quatre points tiennent en quelques lignes. Un préambule qui devient plus long que le fond
 manque sa cible aussi sûrement qu'un compte rendu sans préambule.
