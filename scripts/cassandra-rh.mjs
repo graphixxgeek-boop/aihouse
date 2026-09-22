@@ -630,9 +630,41 @@ export function buildCassandraLightSignal({ teamSize, badgeSummary, kpiTrend }) 
 // ressemble (docs/systeme-de-suivi.md, « conformité EXACTE à la forme demandée »).
 export const NOM_FICHIER_EVAL = "EVAL-DEV";
 
-export function buildEvaluationRecapBlocks({ jury = [], evaluation = null, equipe = [], jugesSansOutil = [], desaccords = [] } = {}) {
+export function buildEvaluationRecapBlocks({ jury = [], evaluation = null, equipe = [], jugesSansOutil = [], desaccords = [], evolutions = [], chiffresQuiBougent = [] } = {}) {
   const blocks = [];
   blocks.push({ type: "note", text: "Comment lire ce rapport : chaque verdict est attribué à l'outil qui l'a rendu, avec la donnée exacte sur laquelle il se fonde. Un juge qui n'a rien rendu est affiché comme tel — jamais confondu avec un juge qui n'a rien trouvé." });
+
+  // SECTION 0 — LES ÉVOLUTIONS (2026-09-22, « je veux que ce rapport soit comparé à chaque ronde, et
+  // me dire les evolutions »). Placée EN TÊTE, avant même le jury : c'est la première chose qu'il
+  // regardera, et une trajectoire dit plus qu'une photographie. Un rapport sans historique laissait
+  // une note qui se dégradait trois Rondes de suite se lire exactement comme une note stable.
+  if (evolutions.length || chiffresQuiBougent.length) {
+    blocks.push({ type: "heading", text: "0. Ce qui a bougé depuis la dernière Ronde" });
+    const regressions = evolutions.filter((e) => e.evolution === "régression");
+    const perdus = evolutions.filter((e) => e.evolution === "plus mesuré");
+    if (regressions.length || perdus.length) {
+      blocks.push({ type: "highlight", heading: "À regarder en premier", paragraphs: [
+        regressions.length ? `${regressions.length} domaine(s) en régression : ${regressions.map((e) => `${e.id} (${e.avant} → ${e.apres})`).join(", ")}.` : "Aucune régression de note.",
+        // « Plus mesuré » est le piège de cette section, et il est nommé plutôt que fondu dans le
+        // reste : une note qui DISPARAÎT ressemble à une note qui tient. C'est la même confusion
+        // qui a coûté cher ailleurs dans ce projet, refusée ici aussi.
+        perdus.length ? `${perdus.length} domaine(s) ne sont PLUS mesurés du tout : ${perdus.map((e) => e.id).join(", ")}. Ce n'est pas de la stabilité — c'est une note qui a disparu, et une note qui disparaît ressemble à une note qui tient.` : "Aucun domaine perdu de vue.",
+      ] });
+    }
+    if (evolutions.length) {
+      blocks.push({
+        type: "table",
+        headers: ["Domaine", "Avant", "Maintenant", "Évolution"],
+        rows: evolutions.map((e) => [e.id, e.avant === null ? "—" : `${e.avant}/5`, e.apres === null ? "— plus mesuré" : `${e.apres}/5`, e.evolution]),
+      });
+    }
+    if (chiffresQuiBougent.length) {
+      blocks.push({ type: "paragraph", text: "Les chiffres des juges qui ont bougé. Volontairement sans flèche verte ni rouge : selon le juge, un chiffre qui monte peut être une bonne ou une mauvaise nouvelle, et poser un jugement automatique dessus serait une interprétation déguisée en mesure." });
+      blocks.push({ type: "table", headers: ["Juge", "Avant", "Maintenant"], rows: chiffresQuiBougent.map((c) => [c.id, c.avant ?? "—", c.apres ?? "—"]) });
+    }
+  } else {
+    blocks.push({ type: "note", text: "Aucune comparaison possible : c'est la première évaluation enregistrée. Ce n'est pas de la stabilité, c'est une absence de passé — la prochaine Ronde aura de quoi comparer." });
+  }
 
   blocks.push({ type: "heading", text: "1. Qui te juge, et sur quoi" });
   blocks.push({ type: "paragraph", text: `${jury.length} outil(s) détiennent de la donnée qui parle de toi. Chacun lit une mesure réelle déjà collectée — jamais un chiffre produit pour l'occasion.` });

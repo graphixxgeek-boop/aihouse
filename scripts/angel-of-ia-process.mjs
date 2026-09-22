@@ -368,6 +368,82 @@ export function findConstatsSansChiffre(verdictsCollectes = []) {
     .map((v) => ({ id: v.id, constat: v.pertinenceConstat }));
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// L'HISTORIQUE DES ÉVALUATIONS — ce qui a bougé depuis la dernière Ronde
+// ————————————————————————————————————————————————————————————————————————
+//
+// Demandé le 2026-09-22 : « je veux que ce rapport soit comparé à chaque ronde, et me dire les
+// evolutions. c'est dejà prevu ? ». Réponse honnête à cette question : NON, ça ne l'était pas. Le
+// rapport se régénérait à vide à chaque passage, sans aucune mémoire — donc une note qui se
+// dégradait trois Rondes de suite se lisait exactement comme une note stable, et un chiffre qui
+// avait doublé ressemblait à un chiffre normal. Une évaluation sans historique ne mesure pas une
+// trajectoire, elle photographie un instant.
+//
+// CINQ ÉTATS, JAMAIS TROIS, et c'est tout l'enjeu de cette construction. La tentation est de
+// comparer deux nombres et de conclure « mieux / pareil / moins bien ». Mais deux cas de plus
+// existent et se confondraient avec « pareil » :
+//   - PREMIÈRE MESURE : rien à comparer. Ce n'est pas de la stabilité, c'est une absence de passé.
+//   - PLUS MESURÉ : le domaine était évalué, il ne l'est plus. C'est le pire des cinq à laisser
+//     passer pour « stable » — une note qui disparaît ressemble à une note qui tient.
+// Ce projet a déjà payé cette confusion plusieurs fois (une absence de mesure prise pour une
+// mesure rassurante) ; elle est nommée ici pour ne pas la repayer.
+export const EVOLUTIONS = ["progression", "régression", "stable", "première mesure", "plus mesuré"];
+export const HISTORIQUE_EVAL_FILE = "docs/angel-of-ia-process/historique-evaluations.json";
+
+export function loadEvaluationHistory({ root = ROOT, readFileImpl = readFileSync } = {}) {
+  try {
+    const brut = JSON.parse(readFileImpl(join(root, HISTORIQUE_EVAL_FILE), "utf8"));
+    return Array.isArray(brut) ? brut : [];
+  } catch {
+    return [];
+  }
+}
+
+// Le format persisté est volontairement minimal : la date, et par domaine l'indice numérique de la
+// note plus le chiffre brut quand il y en a un. On ne persiste NI les justifications NI les
+// commentaires — ils vivent déjà dans le rapport archivé, et les dupliquer ici ferait grossir un
+// fichier relu à chaque Ronde pour une information qu'on ne compare jamais mécaniquement.
+export function snapshotEvaluation(evaluation, { date = new Date().toISOString().slice(0, 10), jury = [] } = {}) {
+  const domaines = {};
+  for (const d of [...(evaluation?.mesurable ?? []), ...(evaluation?.jugement ?? [])]) {
+    if (d.etat === "non fourni") continue;
+    domaines[d.id] = { indice: d.note?.indice ?? null, valeur: d.valeur ?? null };
+  }
+  const chiffres = {};
+  for (const j of jury) {
+    if (j.chiffre) chiffres[j.id] = j.chiffre;
+  }
+  return { date, domaines, chiffres };
+}
+
+export function compareEvaluations(courant, precedent) {
+  if (!precedent) {
+    return Object.keys(courant?.domaines ?? {}).map((id) => ({ id, evolution: "première mesure", avant: null, apres: courant.domaines[id].indice }));
+  }
+  const ids = new Set([...Object.keys(precedent.domaines ?? {}), ...Object.keys(courant?.domaines ?? {})]);
+  return [...ids].map((id) => {
+    const av = precedent.domaines?.[id]?.indice ?? null;
+    const ap = courant?.domaines?.[id]?.indice ?? null;
+    if (ap === null) return { id, evolution: "plus mesuré", avant: av, apres: null };
+    if (av === null) return { id, evolution: "première mesure", avant: null, apres: ap };
+    if (ap > av) return { id, evolution: "progression", avant: av, apres: ap };
+    if (ap < av) return { id, evolution: "régression", avant: av, apres: ap };
+    return { id, evolution: "stable", avant: av, apres: ap };
+  });
+}
+
+// Les chiffres du jury bougent aussi, et ce sont souvent eux qui parlent le plus fort (un poids de
+// charte qui grimpe, un retard de Ronde qui s'allonge). On ne les interprète PAS en bien/mal : un
+// chiffre qui monte n'est pas toujours une dégradation, ça dépend du juge. On montre donc l'avant
+// et l'après, et c'est la lecture humaine qui tranche — jamais une flèche verte posée à l'aveugle.
+export function compareChiffresDuJury(courant, precedent) {
+  if (!precedent) return [];
+  const ids = new Set([...Object.keys(precedent.chiffres ?? {}), ...Object.keys(courant?.chiffres ?? {})]);
+  return [...ids]
+    .map((id) => ({ id, avant: precedent.chiffres?.[id] ?? null, apres: courant?.chiffres?.[id] ?? null }))
+    .filter((x) => x.avant !== x.apres);
+}
+
 export const DESACCORDS_FILE = "docs/angel-of-ia-process/desaccords.md";
 
 // Les objections de l'utilisateur, relues du disque. Le format est volontairement le plus simple

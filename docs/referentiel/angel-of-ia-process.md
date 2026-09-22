@@ -162,3 +162,33 @@ Testé par son échec avant d'être cru sur son succès.
 **Et un juge muet n'est jamais « rien à signaler »** : `collectJuryVerdicts()` distingue trois états
 — verdict rendu, rien à signaler (le juge s'est prononcé), pas de verdict (il n'a pas tourné). Les
 confondre est l'erreur que ce paysage combat depuis le début.
+
+### L'historique et les évolutions (2026-09-22)
+
+Question posée : « je veux que ce rapport soit comparé à chaque ronde, et me dire les evolutions.
+c'est dejà prevu ? ». **Réponse honnête : non, ça ne l'était pas.** Le rapport se régénérait à vide
+à chaque passage, sans aucune mémoire — donc une note qui se dégradait trois Rondes de suite se
+lisait exactement comme une note stable, et un chiffre qui avait doublé ressemblait à un chiffre
+normal. Une évaluation sans historique ne mesure pas une trajectoire, elle photographie un instant.
+
+**Cinq états, jamais trois**, et c'est tout l'enjeu. La tentation est de comparer deux nombres et de
+conclure mieux / pareil / moins bien. Deux cas de plus existent et se confondraient avec « pareil » :
+
+- **première mesure** — rien à comparer. Ce n'est pas de la stabilité, c'est une absence de passé ;
+- **plus mesuré** — le domaine était évalué, il ne l'est plus. C'est le pire des cinq à laisser
+  passer pour « stable » : **une note qui disparaît ressemble à une note qui tient.**
+
+Ce projet a déjà payé cette confusion plusieurs fois (une absence de mesure prise pour une mesure
+rassurante) ; elle est nommée ici pour ne pas la repayer. Un domaine non évalué n'est d'ailleurs
+**pas persisté du tout** — l'enregistrer avec une valeur nulle ferait lire « stable » au passage
+suivant au lieu de « première mesure ».
+
+**Les chiffres du jury sont comparés aussi**, et ce sont souvent eux qui parlent le plus fort (un
+poids de charte qui grimpe, un retard de Ronde qui s'allonge). Volontairement **sans flèche verte ni
+rouge** : selon le juge, un chiffre qui monte peut être une bonne ou une mauvaise nouvelle, et poser
+un jugement automatique dessus serait une interprétation déguisée en mesure.
+
+**Section 0, en tête du rapport** — avant même le jury : une trajectoire dit plus qu'une
+photographie, et c'est la première chose qu'il regardera. Registre :
+`docs/angel-of-ia-process/historique-evaluations.json`. On compare **avant** d'enregistrer, sinon on
+comparerait le passage à lui-même.

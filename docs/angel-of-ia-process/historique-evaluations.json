@@ -1,0 +1,43 @@
+[
+ {
+  "date": "2026-09-22",
+  "domaines": {
+   "vitesse-de-decision": {
+    "indice": 3,
+    "valeur": 2
+   },
+   "decisions-en-suspens": {
+    "indice": 4,
+    "valeur": 2
+   },
+   "idees-jamais-tranchees": {
+    "indice": 4,
+    "valeur": 1
+   },
+   "clarte-des-demandes": {
+    "indice": 3,
+    "valeur": null
+   },
+   "coherence-des-priorites": {
+    "indice": 2,
+    "valeur": null
+   },
+   "qualite-de-la-direction": {
+    "indice": 4,
+    "valeur": null
+   },
+   "reaction-a-la-critique": {
+    "indice": 5,
+    "valeur": null
+   }
+  },
+  "chiffres": {
+   "cout-des-redirections": "0 gaspillage identifié",
+   "poids-de-ses-regles": "21 767 tokens × chaque message",
+   "objectifs-tenus": "2 objectifs en dessous sur 12",
+   "taches-qui-trainent": "2 décisions en attente depuis 2 jours",
+   "rondes-jamais-lancees": "22 commits",
+   "couverture-de-ce-qu-il-demande": "1 fonction non couverte"
+  }
+ }
+]

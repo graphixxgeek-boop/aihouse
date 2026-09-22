@@ -5126,6 +5126,35 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     const blocsPert = c.buildEvaluationRecapBlocks({ jury: pert, evaluation: ev, jugesSansOutil: [], desaccords: [] });
     assert.ok(blocsPert.some((b) => b.type === 'heading' && /choix/.test(b.text)), 'the relevance findings must live in their OWN section, never mixed into the metrics table — what is measured and what that measurement reveals about his choices are two different things, and merging them would drown the second, which is the harder one to hear and the more useful');
 
+    // L'HISTORIQUE ET LES ÉVOLUTIONS (2026-09-22, « je veux que ce rapport soit comparé à chaque
+    // ronde, et me dire les evolutions »). Réponse honnête à sa question « c'est dejà prevu ? » :
+    // non. Le rapport se régénérait sans mémoire, donc une note qui se dégradait trois Rondes de
+    // suite se lisait comme une note stable.
+    const snap = a.snapshotEvaluation({
+      mesurable: [{ id: 'm1', etat: 'évalué', note: { indice: 3 }, valeur: 2 }],
+      jugement: [{ id: 'j1', etat: 'évalué', note: { indice: 2 } }, { id: 'j2', etat: 'non fourni' }],
+    }, { date: '2026-09-22', jury: [{ id: 'ecotoken', chiffre: '21767' }] });
+    assert.ok(!('j2' in snap.domaines), 'a domain that was not evaluated is not persisted at all — persisting it with a null would make the next run read it as "stable" instead of "première mesure"');
+    assert.deepEqual(a.compareEvaluations(snap, null).map((e) => e.evolution), ['première mesure', 'première mesure'], 'with no history there is nothing to compare, and that must read as an ABSENCE OF PAST, never as stability — the first run of anything looks calm by construction');
+
+    const avant = { date: '2026-09-21', domaines: { m1: { indice: 4 }, j1: { indice: 2 }, disparu: { indice: 5 } }, chiffres: { ecotoken: '18000' } };
+    const evo = a.compareEvaluations(snap, avant);
+    assert.equal(evo.find((e) => e.id === 'm1').evolution, 'régression', 'a note that went down must be named a regression, with both figures shown');
+    assert.equal(evo.find((e) => e.id === 'j1').evolution, 'stable', 'an unchanged note is stable');
+    // LE PIÈGE DE CETTE SECTION, et la raison des cinq états plutôt que trois : un domaine mesuré
+    // hier et plus mesuré aujourd'hui n'est PAS stable. Une note qui disparaît ressemble à une note
+    // qui tient — c'est la même confusion (absence prise pour mesure) qui a coûté cher ailleurs.
+    assert.equal(evo.find((e) => e.id === 'disparu').evolution, 'plus mesuré', 'a domain that was graded yesterday and is not graded today must never fall into "stable": a note that vanishes looks exactly like a note that holds');
+    assert.ok(a.EVOLUTIONS.includes('plus mesuré') && a.EVOLUTIONS.includes('première mesure'), 'the two states that would otherwise be swallowed by "stable" are declared explicitly rather than left implicit');
+
+    assert.deepEqual(a.compareChiffresDuJury(snap, avant), [{ id: 'ecotoken', avant: '18000', apres: '21767' }], 'a jury figure that moved must surface — those often speak louder than the notes (a charter weight climbing, a Ronde delay stretching)');
+    assert.deepEqual(a.compareChiffresDuJury(snap, { chiffres: { ecotoken: '21767' } }), [], 'a figure that did not move is not noise to report');
+    assert.deepEqual(a.compareChiffresDuJury(snap, null), [], 'and with no previous run there is nothing to compare rather than a fabricated delta');
+
+    const avecEvo = c.buildEvaluationRecapBlocks({ jury: [], evaluation: ev, evolutions: evo, chiffresQuiBougent: [{ id: 'ecotoken', avant: '18000', apres: '21767' }] });
+    assert.equal(avecEvo.filter((b) => b.type === 'heading')[0].text, '0. Ce qui a bougé depuis la dernière Ronde', 'the evolution section comes FIRST, before even the jury: a trajectory says more than a snapshot, and it is the first thing he will look at');
+    assert.ok(avecEvo.some((b) => b.type === 'highlight' && /disparu/.test(b.paragraphs?.join(' ') ?? '')), 'a domain no longer measured must be surfaced prominently, named, and explained — not quietly dropped from the table');
+
     const blocks = c.buildEvaluationRecapBlocks({ jury: verdicts, evaluation: ev, jugesSansOutil: [], desaccords: [{ date: '2026-09-22', domaine: 'clarte-des-demandes', texte: 'pas d\'accord' }] });
     const titres = blocks.filter((b) => b.type === 'heading').map((b) => b.text);
     assert.equal(titres.length, 4, 'the recap must carry its four real separated sections (who judges you / the facts / my opinion / your disagreements) — "tout est clair et bien presenté, avec des separations" was the literal request');
