@@ -476,6 +476,52 @@ KPI, EL-PROFESSOR, simulations, THE-FINAL-JUDGE...), jamais un traitement spéci
 2. **Zoom 150% à l'ouverture** — `body { zoom: 1.5; }`, présent dans `THEME_CSS` lui-même, jamais
    un post-traitement par rapport. Même garde-fou `checkHtmlReportTheme()` que ci-dessus, qui
    vérifie sa présence à chaque exécution de Doc-Report.
+3. **Emplacement générique d'en-tête** (2026-09-22, tâche #198) — chaque rapport réserve une place,
+   tout en haut, pour une phrase venue d'un registre PARTAGÉ plutôt qu'écrite à la main dans l'outil.
+   Son premier locataire est l'avertissement de fiabilité ci-dessous ; l'intérêt de la place est
+   qu'une future phrase générique (mention légale, rappel de contexte, statut d'un chantier) s'y
+   ajoute en UN endroit pour tout le paysage, jamais en repassant sur trente scripts.
+
+### Fiabilité déclarée : tout outil approximatif le dit en tête de rapport
+
+*(2026-09-22, tâche #198, demande explicite : « ecotoken devrait indiquer en debut de rapport :
+"attention mes resultats peuvent etre inexactes" [...] on pourrait elargir cette regle à tous les
+outils concernés, sauf ceux qui sont fiables 100% (calculs mathematiques purs) ».)*
+
+**La règle.** Tout outil dont la sortie repose sur une estimation, un seuil choisi, une similarité
+de vocabulaire, une lecture de sens, ou sur une mesure exacte dont l'INTERPRÉTATION ne l'est pas,
+affiche en PREMIÈRE ligne de son rapport : *« Attention, mes résultats peuvent être inexacts : <sa
+raison propre>. À vérifier avant d'agir, jamais un verdict acquis. »* Un outil dont la sortie est un
+fait exact (un test passe ou échoue, un fichier existe ou non, un compteur compte ce qui a été
+enregistré) n'affiche RIEN — un avertissement partout perdrait toute sa valeur d'alerte.
+
+**Pourquoi la phrase est partagée et non recopiée.** Chaque outil disait déjà sa nuance — mais à sa
+façon, à un endroit différent, parfois pas du tout. La phrase vient donc d'un registre unique,
+`TOOL_RELIABILITY` (`scripts/lib-shell.mjs`), qui porte pour chaque outil sa nature (`mecanique` /
+`heuristique`) et **sa raison propre** : jamais un texte passe-partout, toujours ce qui rend CE
+chiffre-là approximatif. Changer la formulation commune se fait en un seul endroit.
+
+**En cas de doute, on classe « heuristique »** : un avertissement de trop coûte une ligne, un
+avertissement manquant coûte une décision prise sur un chiffre faux.
+
+**Ce registre est tenu à la main, et c'est assumé** (Article 24, cas explicitement prévu) — aucune
+mécanique ne peut deviner si un calcul est exact ou approché, c'est un jugement. Ce qui est
+mécanique, et obligatoire, ce sont ses **deux garde-fous** (`scripts/doc-report.mjs`, testés en
+direct contre le vrai dépôt à chaque commit) :
+- `findToolsMissingReliability()` — aucun outil de la table maîtresse ne peut manquer au registre,
+  donc aucun nouvel outil ne peut naître silencieusement sans avertissement ;
+- `findHeuristicToolsWithoutNotice()` — aucun outil classé heuristique ne peut omettre d'afficher
+  réellement **son propre** avertissement. Vérifié par SLUG, jamais « la fonction apparaît quelque
+  part dans le fichier » : deux outils peuvent partager un fichier (CHARTER-SPY vit dans
+  `smart-conso-token.mjs`) et l'un couvrirait l'autre. Les deux câblages comptent —
+  `printReliabilityNotice()` pour un outil qui écrit en console, `reliabilityNotice()` posé en bloc
+  d'en-tête pour un outil dont le rapport est un document construit (THE-FINAL-JUDGE,
+  THE-DEEP-READER). Seul un outil muet est en faute.
+
+Écart réel trouvé en câblant cette règle : **memory-audit n'avait aucune forme de rapport**, alors
+que Doc-Report le déclarait bien comme en produisant un (`REGISTRIES`, décision « texte ») — il
+rendait un tableau d'objets que l'agent racontait différemment à chaque fois.
+`buildMemoryAuditReport()` lui donne la même forme qu'à ses pairs.
 
 **Économie de tokens sur les corrections mineures d'un Artifact déjà livré (2026-09-21, demande
 explicite de l'utilisateur : « fais juste la correction sans me livrer le fichier mis à jour stp

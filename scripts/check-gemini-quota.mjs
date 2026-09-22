@@ -26,6 +26,7 @@ import { readFileSync } from "node:fs";
 import { keyLabel, recordOutcome, orderKeysByExperience, summarize, describeKnownLessons } from "./gemini-key-health.mjs";
 import { PROVIDERS, parseKeyEntry } from "./api-providers.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { printReliabilityNotice } from "./lib-shell.mjs";
 
 // Script top-level (jamais un main()/CLI guard classique — rien n'importe ce fichier pour ses
 // fonctions, il ne s'exécute donc jamais que lorsqu'il est lancé directement) : l'enregistrement se
@@ -46,6 +47,7 @@ const allKeys = orderKeysByExperience([{ provider: "gemini", key }, ...fallbackK
 // Nom d'usage "Smart Breaker" donné le 2026-09-19 à la demande explicite de l'utilisateur, pour le
 // plaisir — désigne cet outil et ses compagnons (gemini-key-health.mjs, api-providers.mjs,
 // lib/gemini-keys.ts), jamais un renommage des fichiers eux-mêmes (cf. docs/outil-resilience-api.md).
+printReliabilityNotice("smart-breaker");
 console.log("=== Smart Breaker — diagnostic quota/clé Gemini ===\n");
 
 const primary = process.env.GEMINI_MODEL ?? devVars.match(/^GEMINI_MODEL=(.*)$/m)?.[1]?.trim() ?? "gemini-flash-lite-latest";

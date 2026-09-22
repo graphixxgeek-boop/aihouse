@@ -15,6 +15,7 @@
 
 import { readFileSync } from "node:fs";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { printReliabilityNotice } from "./lib-shell.mjs";
 
 const BANNER_RE = /^\s*\/\/\s*-{3,}/;
 // Testé contre le vrai route.ts (2026-09-21) : la fonction POST est indentée par un bloc `try`
@@ -103,6 +104,7 @@ export function proposeDecomposition(filePath, { functionStart = 0, functionEnd 
 }
 
 function main() {
+  printReliabilityNotice("find-deep-booster");
   recordCliUsage("find-deep-booster");
   const target = process.argv[2] ?? "app/api/lia/route.ts";
   const proposals = proposeDecomposition(target);

@@ -32,6 +32,8 @@
 // lui-même. `getRound` accepte aussi bien un tableau d'objets `{round}` (bonusLog, negotiationLog)
 // qu'un tableau de nombres bruts (contacts) — même fonction, jamais deux vérifications séparées
 // pour une seule et même règle.
+import { reliabilityNotice } from "./lib-shell.mjs";
+
 export function checkChronologicalOrder(entries, getRound = (e) => (typeof e === "number" ? e : e?.round)) {
   const violations = [];
   for (let i = 1; i < entries.length; i++) {
@@ -106,4 +108,25 @@ export function checkMemoryCoherence(life, previousLife = null) {
     if (regression) findings.push({ type: "regression_gravite", champ: "worstMoment", ...regression });
   }
   return findings;
+}
+
+// buildMemoryAuditReport() (2026-09-22, tâche #198) — memory-audit était le seul outil du registre
+// à n'avoir AUCUNE forme de rapport : `checkMemoryCoherence()` rend un tableau d'objets, et c'est
+// l'agent qui le racontait à sa façon, différemment à chaque fois. Or Doc-Report le déclare bien
+// comme produisant un rapport « texte » (`REGISTRIES`) — un écart réel entre ce que le registre
+// affirme et ce que le code sait faire, trouvé en câblant l'avertissement de fiabilité. Cette
+// fonction donne donc à memory-audit la même forme de rapport que ses pairs, avec l'emplacement
+// générique d'en-tête en premier : la phrase vient du registre partagé, jamais réécrite ici.
+export function buildMemoryAuditReport(findings = []) {
+  const lignes = [];
+  const notice = reliabilityNotice("memory-audit");
+  if (notice) lignes.push(notice, "");
+  lignes.push("=== memory-audit — cohérence de la mémoire narrative persistée ===", "");
+  if (!findings.length) {
+    lignes.push("Aucune incohérence trouvée sur les champs audités — ce qui ne prouve pas qu'il n'y en a aucune (cf. l'avertissement ci-dessus), seulement qu'aucun des motifs surveillés ne s'est déclenché.");
+  } else {
+    lignes.push(`${findings.length} constat(s) à relire :`, "");
+    for (const f of findings) lignes.push(`  · [${f.type}] champ "${f.champ}"${f.violations ? ` — ${f.violations.length} rupture(s) d'ordre` : ""}${f.resets ? ` — ${f.resets.length} remise(s) à zéro suspecte(s)` : ""}`);
+  }
+  return lignes.join("\n");
 }

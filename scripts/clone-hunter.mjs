@@ -29,6 +29,7 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { printReliabilityNotice } from "./lib-shell.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -364,6 +365,7 @@ export function formatClusterSummary(cluster) {
 }
 
 function main() {
+  printReliabilityNotice("clone-hunter");
   recordCliUsage("clone-hunter");
   const clusters = buildDuplicateReport();
   if (!clusters.length) {

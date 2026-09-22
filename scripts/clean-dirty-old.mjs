@@ -19,7 +19,7 @@
 import { existsSync, mkdtempSync, rmSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { sh } from "./lib-shell.mjs";
+import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { dataRows, numericColumn } from "./lib-markdown-table.mjs";
 import { SENSITIVE_NODES } from "./check-level-target.mjs";
 import { LIB_MAP, FILE_TO_ZONES, collectCoverage, robustnessScore } from "./axa-check.mjs";
@@ -109,6 +109,7 @@ export function lastTouchDays(file) {
 }
 
 function main() {
+  printReliabilityNotice("clean-dirty-old");
   recordCliUsage("clean-dirty-old");
   console.log("=== CLEAN-DIRTY-OLD — code ancien et peu retouché (repérage seul, jamais un jugement) ===\n");
 

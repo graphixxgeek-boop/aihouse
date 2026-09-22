@@ -18,6 +18,7 @@ import { mkdirSync, existsSync, writeFileSync } from "node:fs";
 import { join, basename } from "node:path";
 import { renderHtmlReport } from "./html-report.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { printReliabilityNotice } from "./lib-shell.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -57,6 +58,7 @@ export function buildScreenerCaptureHtml(result, { url } = {}) {
 }
 
 async function main() {
+  printReliabilityNotice("the-screener");
   recordCliUsage("the-screener");
   const url = process.argv[2] || "http://127.0.0.1:5173/";
   const outDir = process.argv[3] || join(ROOT, "docs/the-screener");

@@ -1,0 +1,196 @@
+HYPER-SCAN-CHECKPOINT — version légère — 2026-09-22T04:15:28.007Z
+Dernier passage : (aucun)  |  HEAD actuel : e732ad9c1b7f05a16f11c48628097d903bedb529
+
+=== Commits depuis le dernier passage ===
+premier passage — aucune référence antérieure, portée = tout l'historique récent visible.
+
+=== ARGUS ===
+⚠️  Attention, mes résultats peuvent être inexacts : un champ « potentiellement jamais lu » peut l'être par un chemin que ce balayage ne voit pas. À vérifier avant d'agir, jamais un verdict acquis.
+=== ARGUS — partie mécanique (zéro coût API) ===
+
+Champs de life.ts potentiellement jamais lus ailleurs (6) :
+  [probable] trottoirGranted (3 occurrence(s) trouvée(s) au total, déclaration + lecture éventuelle incluses)
+  [probable] ambientSeen (4 occurrence(s) trouvée(s) au total, déclaration + lecture éventuelle incluses)
+  [probable] observerNamed (4 occurrence(s) trouvée(s) au total, déclaration + lecture éventuelle incluses)
+  [probable] exitSearched (4 occurrence(s) trouvée(s) au total, déclaration + lecture éventuelle incluses)
+  [probable] proposalHistoryChecked (4 occurrence(s) trouvée(s) au total, déclaration + lecture éventuelle incluses)
+  [probable] personalBoosted (4 occurrence(s) trouvée(s) au total, déclaration + lecture éventuelle incluses)
+
+Marqueurs TODO/FIXME trouvés (0) :
+  Aucun.
+
+Rapport archivé : docs/argus/scan-2026-09-22-04-15.txt (déjà présent dans docs/argus/index.md)
+
+
+=== HARMONIA ===
+⚠️  Attention, mes résultats peuvent être inexacts : une incohérence de lien est un candidat, jamais une preuve que le lien est faux. À vérifier avant d'agir, jamais un verdict acquis.
+=== HARMONIA — partie mécanique (cohérence chiffrée doc/code, zéro coût API) ===
+
+[✓] Cycle jour/nuit — durée du jour (DAY_ROUNDS) — cohérent (code=29)
+[✓] Cycle jour/nuit — durée de la nuit (NIGHT_ROUNDS) — cohérent (code=9)
+[✓] Cycle jour/nuit — décalage de minuit (MIDNIGHT_OFFSET) — cohérent (code=35)
+[✓] Nuit blanche — malus de fatigue fixe — cohérent (code=28)
+[✓] Palier de respect sincère — seuil d'appréciation — cohérent (code=78)
+
+0 friction(s) confirmée(s) sur 5 lien(s) vérifié(s).
+
+
+=== ALWAYS-NEW-CODE (préparation) ===
+⚠️  Attention, mes résultats peuvent être inexacts : l'empilement se devine par des indices, et un choix assumé peut y ressembler de loin. À vérifier avant d'agir, jamais un verdict acquis.
+=== ALWAYS-NEW-CODE — préparation (zéro coût, la couche raisonnement suit) ===
+
+Zone recommandée : Cycle jour/nuit (rotation, jamais examinée)
+
+Indice git (lib/daynight.ts) : 1 commit(s), +101/-0 — signal : aucun.
+
+--- Ce qui reste du ressort du raisonnement (jamais mécanisable) ---
+1. Décrire les GRANDS AXES d'une structure idéale pour cette zone, en repartant de zéro avec toute la connaissance actuelle du projet.
+2. Comparer point par point cette structure imaginée à la structure réelle de la zone.
+3. Vérifier, pour chaque écart trouvé, qu'il ne s'agit pas déjà d'une décision assumée et documentée (Article 19 — leçon trottoirGranted, 2026-09-19).
+4. Vérifier qu'aucune fonctionnalité déjà couverte par check-house.mjs ne serait perdue par le changement proposé.
+5. Classer chaque trouvaille par palier de confiance (confirmé / probable / à surveiller) — jamais une certitude absolue.
+6. Proposer, jamais appliquer seul : préciser la portée exacte et le temps estimé, puis demander confirmation avant tout changement réel.
+
+--- Performance de l'outil (KPI) ---
+1 passage(s) · 2 trouvaille(s) confirmée(s) · 2.0 en moyenne par passage.
+
+
+=== AXA-CHECK (robustesse/fragilité par fonction) ===
+⚠️  Attention, mes résultats peuvent être inexacts : la couverture mesurée est exacte, mais en conclure « robuste » ne l'est jamais. À vérifier avant d'agir, jamais un verdict acquis.
+=== AXA-CHECK — robustesse et fragilité par fonction (zéro coût additionnel) ===
+
+app/api/lia/route.ts : 100% (26 fonction(s))
+lib/stock.ts : 100% (2 fonction(s))
+   [confiance-maximale] stockSurprise (ligne 1) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] stockThought (ligne 8) — Confiance maximale — vérifié en profondeur et testé
+lib/visual-events.ts : N/A (0 fonction(s))
+lib/house.ts : 100% (6 fonction(s))
+   [confiance-maximale] gardenAccess (ligne 4) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] blocked (ligne 26) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] pathBetween (ligne 30) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] key (ligne 31) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] destinationAnchor (ligne 60) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] residentDestination (ligne 69) — Confiance maximale — vérifié en profondeur et testé
+lib/perception.ts : 100% (5 fonction(s))
+   [confiance-maximale] appearanceFor (ligne 14) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] visibleScene (ligne 15) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] normaliseNickname (ligne 18) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] restingPose (ligne 20) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] appearanceReply (ligne 22) — Confiance maximale — vérifié en profondeur et testé
+lib/drama.ts : 100% (13 fonction(s))
+lib/life.ts : 100% (13 fonction(s))
+lib/turn.ts : 100% (6 fonction(s))
+lib/story.ts : 100% (20 fonction(s))
+lib/relationship.ts : 100% (8 fonction(s))
+lib/dialogue.ts : 100% (20 fonction(s))
+lib/simulation.ts : 100% (10 fonction(s))
+lib/lia.ts : 100% (4 fonction(s))
+lib/gemini-keys.ts : 100% (7 fonction(s))
+lib/quality-metrics.ts : 100% (5 fonction(s))
+   [confiance-maximale] recordTurn (ligne 6) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] recordAntiEchoIntervention (ligne 7) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] recordTruncation (ligne 7) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] getQualityMetrics (ligne 12) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] __resetQualityMetricsForTests (ligne 14) — Confiance maximale — vérifié en profondeur et testé
+lib/world.ts : 100% (2 fonction(s))
+lib/daynight.ts : 100% (6 fonction(s))
+   [confiance-maximale] cyclePosition (ligne 36) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] dayIndex (ligne 38) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] isNight (ligne 39) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] isMidnight (ligne 45) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] phaseOf (ligne 55) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] fatigueRateMultiplier (ligne 97) — Confiance maximale — vérifié en profondeur et testé
+lib/evidence.ts : 100% (2 fonction(s))
+   [confiance-maximale] evidenceLedger (ligne 16) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] investigationCounts (ligne 19) — Confiance maximale — vérifié en profondeur et testé
+lib/presentation.ts : 100% (2 fonction(s))
+   [confiance-maximale] departurePresentation (ligne 2) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] uniqueObservations (ligne 3) — Confiance maximale — vérifié en profondeur et testé
+lib/playback.ts : 50% (2 fonction(s))
+   [confiance-maximale] waitForPlayback (ligne 2) — Confiance maximale — vérifié en profondeur et testé
+   [à-surveiller] wait (ligne 2) — À surveiller — vérifié en profondeur mais sans preuve de test automatique
+   [détail] wait : jamais exécutée par un test
+lib/reference.ts : N/A (0 fonction(s))
+lib/update-audit.ts : N/A (0 fonction(s))
+
+Robustesse globale (fonctions couvertes) : 99% sur 159 fonction(s) analysée(s).
+
+Pour enregistrer un audit approfondi réellement effectué : node scripts/axa-check.mjs record-check <fichier> <leger|standard|approfondi|exceptionnel> [fonctions...]
+
+
+=== CLEAN-DIRTY-OLD (code ancien et peu retouché, repérage seul) ===
+⚠️  Attention, mes résultats peuvent être inexacts : l'ancienneté d'un fichier ne dit pas s'il est périmé — seulement qu'on n'y a pas regardé depuis longtemps. À vérifier avant d'agir, jamais un verdict acquis.
+=== CLEAN-DIRTY-OLD — code ancien et peu retouché (repérage seul, jamais un jugement) ===
+
+Aucune zone signalée cette fois — rien n'est nettement plus ancien que le reste du projet en ce moment.
+
+
+=== CLONE-HUNTER (blocs de code dupliqués, littéral + renommage bijectif) ===
+⚠️  Attention, mes résultats peuvent être inexacts : deux blocs qui se ressemblent ne sont pas toujours deux blocs à factoriser. À vérifier avant d'agir, jamais un verdict acquis.
+CLONE-HUNTER : 11 cluster(s) de code dupliqué (identique) trouvé(s) (triés par impact décroissant) :
+  - 11 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/doc-report.mjs:255, scripts/find-brain.mjs:61 — aperçu: "const seen = new Set();"
+  - 7 ligne(s) dupliquée(s) × 3 endroit(s) — scripts/check-suivi-fidelity.mjs:44, scripts/check-suivi-fidelity.mjs:67, scripts/check-suivi-fidelity.mjs:94 — aperçu: "const rows = sessionText"
+  - 9 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/doc-report.mjs:257, scripts/find-brain.mjs:63 — aperçu: "for (const r of registries) {"
+  - 8 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/le-coordinateur.mjs:901, scripts/le-coordinateur.mjs:926 — aperçu: "`Description : ${result.description || "non renseignée (colonne « Ce qu'il détecte/régule » absente de la table maîtresse)"}`,"
+  - 8 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/smart-conso-api.mjs:31, scripts/smart-conso-token.mjs:638 — aperçu: "function loadJson(path, fallback) {"
+  - 5 ligne(s) dupliquée(s) × 3 endroit(s) — scripts/smart-conso-api.mjs:34, scripts/smart-conso-token.mjs:641, scripts/tool-usage.mjs:37 — aperçu: "return JSON.parse(readFileSync(path, "utf8"));"
+  - 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/always-new-code.mjs:207, scripts/clean-dirty-old.mjs:94 — aperçu: "if (!counts.length) return undefined;"
+  - 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/api-providers.mjs:70, scripts/api-providers.mjs:93 — aperçu: "return { status: `HTTP ${r.status}`, ms, detail: message.slice(0, 100) };"
+  - 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/check-house.mjs:1522, scripts/check-house.mjs:1547 — aperçu: "const priorFetch=globalThis.fetch;"
+  - 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/smart-conso-token.mjs:368, scripts/the-king.mjs:139 — aperçu: "const a = wordSets[i], b = wordSets[j];"
+  - 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/the-deep-reader.mjs:43, scripts/the-final-judge.mjs:58 — aperçu: "dateLabel: dateLabel ?? new Date().toISOString(),"
+CLONE-HUNTER v2 (renommage) : 8 cluster(s) de code structurellement dupliqué (identifiants renommés, jamais déjà comptés par v1) trouvé(s) :
+  - 12 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/doc-report.mjs:254, scripts/find-brain.mjs:60 — aperçu: "export function flagFindBoosterCandidates(registries = REGISTRIES, recommendImpl = recommendFindBooster) {"
+  - 9 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/hyper-scan-checkpoint.mjs:83, scripts/the-deep-reader.mjs:84 — aperçu: "const totalFindings = counts.reduce((a, b) => a + b, 0);"
+  - 7 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/smart-conso-token.mjs:366, scripts/the-king.mjs:137 — aperçu: "for (let i = 0; i < rules.length; i++) {"
+  - 7 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/axa-check.mjs:202, scripts/axa-check.mjs:259 — aperçu: "export function collectCoverage(covDir, { readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8") } = {}) {"
+  - 6 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/smart-conso-token.mjs:295, scripts/the-king.mjs:60 — aperçu: "const headingStarts = [...source.matchAll(TOP_HEADING_PATTERN)].map((m) => m.index ?? source.length);"
+  - 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/check-suivi-fidelity.mjs:143, scripts/check-suivi-fidelity.mjs:193 — aperçu: "export function auditOpenTasks(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {"
+  - 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/find-booster.mjs:41, scripts/find-booster.mjs:128 — aperçu: "const lines = Array.isArray(source) ? source : source.split("\n");"
+  - 5 ligne(s) dupliquée(s) × 2 endroit(s) — scripts/find-booster.mjs:80, scripts/find-booster.mjs:113 — aperçu: "const label = (description.split(/\s*[(—]/)[0] || description).trim();"
+
+
+=== circle-process-guardian (discipline mécanique de CIRCLE-TASKS) ===
+[record-run] record-run() n'a pas été appelé à la fin de cette Ronde : 25 commit(s) d'écart avec le dernier passage enregistré.
+
+=== Suite de tests ===
+Verte.
+ge themselves (and, verified live, resolve a parenthetical Agent name correctly, the same fix already proven for checkAllAgentBadges()), computeCoverageGaps() reads real AXA-CHECK coverage to flag a fragile or never-scanned team member — "trous d'équipe" resolved explicitly as team/coverage gaps, never the separate document-structure role reserved for LE-GRAND-ARCHITECTE — never relaunched in the light signal (coverageGaps stays null there, [] never fabricated), only in the explicit full report, and the light signal/full HTML report otherwise read the exact same underlying data — and (2026-09-21, Phase 1) detectNewArrivals()/narrateNewArrivals() give CASSANDRA her own "nouveaux visages" narration, distinct from the mechanical badge ceremony (presence vs completeness), persisted one-time via loadKnownMembers()/recordKnownMembers() with a real deduplicated journal, leading the full report exactly once per real new slug and never fabricating the section when there is nothing to announce.
+Passed: INES-official (task #168) collects real files by an explicit extension/root whitelist per scope (never a blacklist, and never pulling in docs/ under the "code" scope or a non-source extension under either scope), builds a real numbered table of contents and a dated/versioned consolidated edition (the two "oui maintenant" enrichments), reports an honest inline notice for a file that genuinely fails to read rather than crashing the whole edition, computes the real next version from the actual highest version found in the index regardless of row order, and keeps the potentially multi-megabyte edition body local while returning only a light, ready-to-append metadata row for the committed index — the real disk economy already applied elsewhere in this project to the raw simulation log.
+Passed: circle-process-guardian (2026-09-22) verifies the full CIRCLE-TASKS Ronde process mechanically wherever the facts are observable from disk (fresh report artifacts via the same circle-signal-*/snapshot-* filenames already used by recordCircleItemReport()/recordSnapshotIfChanged(), the record-run commit-count drift, orphan reports and registries missing from CIRCLE_ITEMS — both relayed from the already-existing functions rather than recomputed), honestly refuses to guess conversation-only facts (AUTO/PRIME/GOAT asked, items actually checked vs executed, the Étape 5 sequencing and forced-questions count) when they are not supplied, correctly exempts a genuine night-autonomous run from the AUTO/PRIME/GOAT requirement, enforces the 5-10 forced-choice-question range scaled to the real number of problems found without ever fabricating a question when zero problems exist, and reports a fully clean ok:true only when every one of these real facts checks out — and (same commit) verifyHyperScanProcess() extends this exact discipline to HYPER-SCAN-CHECKPOINT's own garde-fous (mandatory full CLAUDE.md reread even in the light version, Smart Conso API/SMART-CONSO-TOKEN consultation and the light-before-heavy order for a heavy pass, the non-negotiable 3-attempt iteration cap, the double-perspective requirement, and the index-entry memory check), despite HYPER-SCAN-CHECKPOINT never being a CIRCLE_ITEMS entry itself — verifyDoubleCommunication() makes the real point 3 ("double communication", alert console + report) genuinely checkable once both texts are supplied, catching a real substance divergence rather than only documenting it as a standing comment — and findCircleItemsMapDrift()/findStaleItemCountReferences() give circle-process-guardian a genuine "help + guard" dual role for maintaining CIRCLE_ITEMS itself, catching (live, the same night they were built) both a dangling-map class of bug and the exact stale-count regression this session's own hyper-scan-checkpoint-light addition had just introduced.
+(node:2179) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+=== Registres et historiques ===
+Points fragiles ouverts : 14 puce(s), 0 ligne(s) de tableau — docs/referentiel/points-fragiles.md
+Suivi des tâches (index) : 0 puce(s), 3 ligne(s) de tableau — docs/suivi/index.md
+ARGUS (index) : 0 puce(s), 17 ligne(s) de tableau — docs/argus/index.md
+HARMONIA (index) : 0 puce(s), 4 ligne(s) de tableau — docs/harmonia/index.md
+Smart Conso API (index) : 0 puce(s), 3 ligne(s) de tableau — docs/smart-conso-api/index.md
+ALWAYS-NEW-CODE (index) : 0 puce(s), 3 ligne(s) de tableau — docs/always-new-code/index.md
+CHECK-LEVEL-TARGET (index) : 0 puce(s), 3 ligne(s) de tableau — docs/check-level-target/index.md
+AXA-CHECK (index) : 0 puce(s), 3 ligne(s) de tableau — docs/axa-check/index.md
+CLEAN-DIRTY-OLD (index) : 0 puce(s), 3 ligne(s) de tableau — docs/clean-dirty-old/index.md
+CLONE-HUNTER (index) : 0 puce(s), 4 ligne(s) de tableau — docs/clone-hunter/index.md
+SMART-CONSO-TOKEN (index) : 0 puce(s), 11 ligne(s) de tableau — docs/smart-conso-token/index.md
+THE-FINAL-JUDGE (index) : 0 puce(s), 3 ligne(s) de tableau — docs/the-final-judge/index.md
+THE-DEEP-READER (index) : 0 puce(s), 3 ligne(s) de tableau — docs/suivi/relectures-lourdes/index.md
+THE-KING (index) : 0 puce(s), 3 ligne(s) de tableau — docs/the-king/index.md
+INES-official (index) : 0 puce(s), 2 ligne(s) de tableau — docs/ines-official/index.md
+memory-audit (index) : 0 puce(s), 3 ligne(s) de tableau — docs/memory-audit/index.md
+find-booster (index) : 0 puce(s), 3 ligne(s) de tableau — docs/find-booster/index.md
+objectifs-vs-resultats (index) : 1 puce(s), 0 ligne(s) de tableau — docs/objectifs-vs-resultats/index.md
+CASSANDRA-RH (index) : 0 puce(s), 0 ligne(s) de tableau — docs/cassandra-rh/index.md
+
+=== Performance de l'outil lui-même (KPI central) ===
+Absence de donnée (aucun passage complet encore consigné dans l'index) — jamais un faux 0%.
+
+=== Checklist qualitative restant à exécuter ===
+1. Relire CLAUDE.md EN ENTIER (le fichier vient d'être chargé ci-dessus ; cette étape reste un vrai raisonnement, jamais automatisable) — chaque Article est-il toujours respecté par le code actuel ?
+2. Reprendre CHAQUE consigne explicite formulée par l'utilisateur depuis le dernier passage (cf. commits ci-dessus) et confirmer, une par une, qu'elle a été précisément et entièrement honorée — pas seulement dans l'esprit.
+3. Balayer les COMBINAISONS de mécanismes récents entre eux et avec l'existant (ex. un mécanisme nouveau actif en même temps qu'un mécanisme ancien) — jamais couvert par un outil mécanique, une vraie réflexion à chaque fois.
+4. Identifier le code sensible/central touché récemment et resté sans test dédié — en écrire un si c'est le cas.
+5. Si une simulation complète existe depuis le dernier passage, comparer sa transcription à la précédente réplique par réplique, comme le ferait un humain — repérer les régressions de naturel, pas seulement les bugs.
+6. Distinguer explicitement, dans le rapport final : vrai oubli corrigé / déjà connu et sciemment reporté / question ouverte pour l'utilisateur.
+7. Sur la zone recommandée par ALWAYS-NEW-CODE ci-dessus (ou une autre zone explicitement demandée) : faire le vrai zoom profond "page blanche" — jamais mécanisable, cf. docs/referentiel/always-new-code.md.

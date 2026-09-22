@@ -22,6 +22,7 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { countTasksSince, lastCoveredTaskNumber } from "./check-suivi-fidelity.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { printReliabilityNotice } from "./lib-shell.mjs";
 
 const HISTORY_PATH = fileURLToPath(new URL("../.smart-conso-token-history.json", import.meta.url));
 
@@ -1055,6 +1056,10 @@ export function parseOutcomeArgs(argv) {
 }
 
 function main() {
+  printReliabilityNotice("smart-conso-token");
+  // CHARTER-SPY vit dans ce même fichier (extension de SMART-CONSO-TOKEN) mais reste un outil
+  // distinct au registre : sa propre phrase, jamais celle de son hôte (tâche #198).
+  printReliabilityNotice("charter-spy");
   recordCliUsage("smart-conso-token");
   const actionType = process.argv[2];
 

@@ -27,7 +27,7 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { scanDocumentWeight, listDatedNarrativeMarkers, extractRuleUnits, findRedundantRulePairs } from "./smart-conso-token.mjs";
-import { walkDocsPaths, daysSince, sh, shouldSnapshotText } from "./lib-shell.mjs";
+import { walkDocsPaths, daysSince, sh, shouldSnapshotText, printReliabilityNotice } from "./lib-shell.mjs";
 import { checkChantierFileFreshness, loadAllTaskRows, detectPendingIdeaCandidates, loadIdeaDecisions, findIdeasNeedingDecision, IDEES_REGISTRY_PATH } from "./check-tasks-details.mjs";
 import { auditHtmlDecisions, REGISTRIES as DOC_REPORT_REGISTRIES } from "./doc-report.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
@@ -956,6 +956,7 @@ export function buildCircleRunSummaryHtml(entries, { dateLabel, items = CIRCLE_I
 }
 
 function main() {
+  printReliabilityNotice("circle-tasks");
   recordCliUsage("circle-tasks");
   const read = (p) => (existsSync(`${ROOT}${p}`) ? readFileSync(`${ROOT}${p}`, "utf8") : "");
   const profilIndexText = read("docs/profil-utilisateur/index.md");

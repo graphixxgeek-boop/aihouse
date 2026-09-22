@@ -23,6 +23,7 @@
 
 import { extractPersonaBlock, missingSectionsSignal, tooShortSignal } from "./judge-persona-shared.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
+import { reliabilityNotice } from "./lib-shell.mjs";
 
 export { extractPersonaBlock };
 
@@ -40,7 +41,13 @@ export function buildDeepReaderReportHtml(reportText, { title = "THE-DEEP-READER
     title,
     subtitle: subtitle ?? "Relecture lourde du suivi (conversation vs docs/suivi), agent séparé — cf. docs/referentiel/the-deep-reader.md.",
     dateLabel: dateLabel ?? new Date().toISOString(),
-    blocks: [{ type: "code", text: reportText }],
+    blocks: [
+      // L'emplacement générique d'en-tête (2026-09-22, tâche #198) : la phrase de fiabilité vient du
+      // registre partagé TOOL_RELIABILITY, jamais réécrite à la main ici — un outil mécanique n'en
+      // reçoit aucune, et changer la formulation se fait en UN endroit pour tout le paysage.
+      ...(reliabilityNotice("the-deep-reader") ? [{ type: "note", text: reliabilityNotice("the-deep-reader") }] : []),
+      { type: "code", text: reportText },
+    ],
     footer: "THE-DEEP-READER — conseiller uniquement, jamais un exécutant ni une décision automatique.",
   });
 }

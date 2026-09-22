@@ -24,6 +24,7 @@
 
 import { renderHtmlReport } from "./html-report.mjs";
 import { extractPersonaBlock, missingSectionsSignal, tooShortSignal } from "./judge-persona-shared.mjs";
+import { reliabilityNotice } from "./lib-shell.mjs";
 
 export { extractPersonaBlock };
 
@@ -55,7 +56,13 @@ export function buildFinalJudgeReportHtml(reportText, { title = "THE-FINAL-JUDGE
     title,
     subtitle: subtitle ?? "Audit indépendant de code et de produit, agent séparé — cf. docs/referentiel/the-final-judge.md.",
     dateLabel: dateLabel ?? new Date().toISOString(),
-    blocks: [{ type: "code", text: reportText }],
+    blocks: [
+      // L'emplacement générique d'en-tête (2026-09-22, tâche #198) : la phrase de fiabilité vient du
+      // registre partagé TOOL_RELIABILITY, jamais réécrite à la main ici — un outil mécanique n'en
+      // reçoit aucune, et changer la formulation se fait en UN endroit pour tout le paysage.
+      ...(reliabilityNotice("the-final-judge") ? [{ type: "note", text: reliabilityNotice("the-final-judge") }] : []),
+      { type: "code", text: reportText },
+    ],
     footer: "THE-FINAL-JUDGE — conseiller uniquement, jamais un exécutant ni une décision automatique.",
   });
 }

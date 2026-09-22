@@ -14,7 +14,7 @@
 import { significantWords } from "./le-coordinateur.mjs";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { sh } from "./lib-shell.mjs";
+import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -167,6 +167,7 @@ export function philosophyFreshnessDays() {
 // claude-md-weight-signal, cf. circle-tasks.mjs), jamais un second calcul divergent (Article 3).
 
 function main() {
+  printReliabilityNotice("the-king");
   recordCliUsage("the-king");
   const requestText = process.argv.slice(2).join(" ");
   if (requestText) {
@@ -193,7 +194,6 @@ function main() {
   console.log(`\n⚖️  Tensions POSSIBLES entre principes : ${tensions.length === 0 ? "aucune détectée" : `${tensions.length} à relire humainement`}`);
   for (const t of tensions) console.log(`   ${t.a} ↔ ${t.b} (vocabulaire partagé ${t.jaccard}) — un SIGNAL, jamais une contradiction prouvée.`);
 
-  console.log(`\n⚠️  THE-KING lit des titres et du vocabulaire, jamais le SENS réel de deux phrases : ses tensions sont des candidats à relire, ses dates dérivées sont des déductions git. Ses résultats peuvent être inexacts — jamais un verdict qui remplace la lecture humaine.`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

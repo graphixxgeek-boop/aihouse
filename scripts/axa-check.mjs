@@ -18,7 +18,7 @@
 import { readFileSync, readdirSync, existsSync, mkdtempSync, rmSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { sh } from "./lib-shell.mjs";
+import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { SENSITIVE_NODES, LEVEL_ORDER } from "./check-level-target.mjs";
 import { THEME_PRIMARY_FILE, parseNumstat, churnSignal } from "./always-new-code.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
@@ -299,6 +299,7 @@ function loadArchivedSimulationActions() {
 }
 
 function main() {
+  printReliabilityNotice("axa-check");
   recordCliUsage("axa-check");
   const args = process.argv.slice(2);
   if (args[0] === "record-check") {

@@ -36,7 +36,7 @@
 
 import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { sh as shBase } from "./lib-shell.mjs";
+import { sh as shBase, printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { verifyRondeProcess } from "./circle-process-guardian.mjs";
 
@@ -118,6 +118,7 @@ export function mechanicalCircleFindings(verifyRondeProcessImpl = verifyRondePro
 }
 
 function main() {
+  printReliabilityNotice("hyper-scan-checkpoint");
   recordCliUsage("hyper-scan-checkpoint");
   const now = new Date().toISOString();
   console.log("=== HYPER-SCAN-CHECKPOINT — version légère (zéro appel réseau) ===\n");

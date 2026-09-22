@@ -34,7 +34,7 @@ import { join } from "node:path";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { PRESTATIONS, suggestPrestationsForTask, significantWords, badgeSignalsAsContext } from "./le-coordinateur.mjs";
-import { daysSince } from "./lib-shell.mjs";
+import { daysSince, printReliabilityNotice } from "./lib-shell.mjs";
 import { walkDocsPaths } from "./lib-shell.mjs";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { sh } from "./lib-shell.mjs";
@@ -875,6 +875,7 @@ function rondeCli() {
 }
 
 function main() {
+  printReliabilityNotice("check-tasks-details");
   recordCliUsage("check-tasks-details");
   // Sous-commande `ronde` (2026-09-22) : le rapport de Ronde en quatre parties, txt + HTML tirés
   // des MÊMES données (jamais deux calculs qui pourraient diverger — le txt est la version

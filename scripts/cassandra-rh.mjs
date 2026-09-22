@@ -17,7 +17,7 @@ import { readFileSync, existsSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseToolsTable, slugifyAgentName, checkAgentOnboarding, loadBadgeCeremonyHistory } from "./le-coordinateur.mjs";
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
-import { AGENT_CATEGORIES, assertNotAPersonnage, sh } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, assertNotAPersonnage, sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson } from "./tool-usage.mjs";
 import { relativeStaleness, lastTouchDays } from "./clean-dirty-old.mjs";
 import { AGENT_SCRIPT_FILES, collectScriptCoverage, scriptRobustnessScore } from "./axa-check.mjs";
@@ -472,6 +472,7 @@ function collectRealCassandraData({ withCoverage = false } = {}) {
 }
 
 function main() {
+  printReliabilityNotice("cassandra-rh");
   recordCliUsage("cassandra-rh");
   assertNotAPersonnage("CASSANDRA-RH", "cassandra-rh.mjs::main()");
   const [, , sub] = process.argv;

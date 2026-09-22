@@ -6097,6 +6097,46 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 }
 
 {
+  // FIABILITÉ DÉCLARÉE DE CHAQUE OUTIL (tâche #198, 2026-09-22 — demande explicite : « ecotoken
+  // devrait indiquer en debut de rapport : "attention mes resultats peuvent etre inexactes" [...]
+  // on pourrait elargir cette regle à tous les outils concernés, sauf ceux qui sont fiables 100%
+  // (calculs mathematiques purs) »). Le registre lui-même est un jugement humain assumé ; ce sont
+  // ses DEUX garde-fous mécaniques qui doivent tenir, sans quoi il se périmerait en silence.
+  const { TOOL_RELIABILITY, reliabilityNotice, printReliabilityNotice } = await import('../scripts/lib-shell.mjs');
+  const { findToolsMissingReliability, findHeuristicToolsWithoutNotice, RELIABILITY_SCRIPT_FILES } = await import('../scripts/doc-report.mjs');
+
+  const faux = { "outil-mecanique": { nature: 'mecanique', pourquoi: 'un fait exact' }, "outil-heuristique": { nature: 'heuristique', pourquoi: 'une estimation' } };
+  assert.equal(reliabilityNotice('outil-mecanique', faux), null, 'a genuinely mechanical tool must get NO warning at all — a caveat printed everywhere would lose all its alert value, exactly the reason reminderFor() returns null too');
+  assert.equal(reliabilityNotice('un-outil-jamais-classe', faux), null, 'an unclassified tool must never inherit a default warning: that would silently paper over the fact that it is missing from the registry, which is the guard\'s job to shout about');
+  const avertissement = reliabilityNotice('outil-heuristique', faux);
+  assert.ok(avertissement.includes('peuvent être inexacts') && avertissement.includes('une estimation'), 'the warning must carry BOTH the shared sentence (so it reads the same across every tool) and that tool\'s own real reason (so it is never a hollow boilerplate)');
+  const printed = [];
+  assert.equal(printReliabilityNotice('outil-mecanique', faux, (l) => printed.push(l)), null, 'printing for a mechanical tool must output nothing, which is what makes the call safe to write in every tool without thinking');
+  assert.equal(printed.length, 0, 'a mechanical tool must not emit even an empty line');
+  printReliabilityNotice('outil-heuristique', faux, (l) => printed.push(l));
+  assert.equal(printed.length, 1, 'a heuristic tool must emit exactly one line, at the top of its report');
+
+  // Garde-fou 1 — vérifié LIVE contre la vraie table maîtresse : aucun outil non classé.
+  assert.deepEqual(findToolsMissingReliability(fs.readFileSync('docs/regles-de-travail.md', 'utf8')), [], 'checked live against this project\'s real master table: every single tool must carry an explicit reliability classification — a guarantee that breaks the day a new tool is added without one, instead of it being born silently without a warning (the exact blind spot 6 real Agents had already fallen into with AGENT_SCRIPT_FILES)');
+  assert.deepEqual(findToolsMissingReliability('| Outil | Coût | Déclenchement | Statut | Description |\n|---|---|---|---|---|\n| NOUVEL-OUTIL | gratuit | à la demande | Agent | fait des choses |\n', faux).map((x) => x.slug), ['nouvel-outil'], 'a tool genuinely absent from the registry must be named by its real slug, derived with the same primaryName split and the same slugifyAgentName() used everywhere else — never a third naming rule');
+
+  // Garde-fou 2 — vérifié LIVE contre les vrais scripts : chaque outil heuristique avertit vraiment.
+  assert.deepEqual(findHeuristicToolsWithoutNotice(), [], 'checked live against the real scripts on disk: every tool classified heuristic must actually print its own warning — a classification that never reaches the reader only moves the problem, it does not fix it');
+  const sansFichier = findHeuristicToolsWithoutNotice({ "outil-orphelin": { nature: 'heuristique', pourquoi: 'x' } }, { scriptFor: {} });
+  assert.equal(sansFichier.length, 1, 'a heuristic tool whose script is unknown must be reported, never skipped — an absence of verification is never a conformity');
+  const muet = findHeuristicToolsWithoutNotice({ muet: { nature: 'heuristique', pourquoi: 'x' } }, { scriptFor: { muet: 'scripts/x.mjs' }, existsImpl: () => true, readFileImpl: () => 'export function main() { console.log("rien"); }' });
+  assert.equal(muet.length, 1, 'a heuristic tool whose script never calls the notice must be flagged — this is the exact defect the whole task fixes');
+  const autreSlug = findHeuristicToolsWithoutNotice({ muet: { nature: 'heuristique', pourquoi: 'x' } }, { scriptFor: { muet: 'scripts/x.mjs' }, existsImpl: () => true, readFileImpl: () => 'printReliabilityNotice("un-autre-outil");' });
+  assert.equal(autreSlug.length, 1, 'a file that warns for a DIFFERENT tool must not count as warning for this one — two tools can share one file (CHARTER-SPY lives inside smart-conso-token.mjs), and without the slug check one would silently cover for the other');
+  const documentConstruit = findHeuristicToolsWithoutNotice({ juge: { nature: 'heuristique', pourquoi: 'x' } }, { scriptFor: { juge: 'scripts/x.mjs' }, existsImpl: () => true, readFileImpl: () => 'blocks: [{ type: "note", text: reliabilityNotice("juge") }]' });
+  assert.deepEqual(documentConstruit, [], 'a tool whose report is a built document (THE-FINAL-JUDGE, THE-DEEP-READER) satisfies the rule by putting the notice INTO that document rather than on the console — both wirings are honest, only a silent tool is not');
+
+  assert.ok(Object.values(TOOL_RELIABILITY).every((e) => e.pourquoi && e.pourquoi.length > 20), 'every classification must carry a real, specific reason — a registry of bare labels would tell a reader nothing about WHY a number is approximate');
+  assert.ok(Object.keys(RELIABILITY_SCRIPT_FILES).length >= Object.values(TOOL_RELIABILITY).filter((e) => e.nature === 'heuristique').length, 'every heuristic tool must have a known script, otherwise guard 2 could never check it');
+  console.log('Passed: TOOL_RELIABILITY (task #198) gives every tool in the real master table an explicit honest/approximate classification, renders one shared warning sentence carrying each tool\'s own real reason, stays completely silent for a genuinely mechanical tool and for an unclassified one (never a default caveat that would hide a missing entry), and is held in place by two mechanical guards checked live against this project: no tool of the real master table can be missing a classification, and no tool classified heuristic can fail to actually emit its OWN warning — verified per slug, so two tools sharing one file can never cover for each other, and accepting both a console print and a notice built into a delivered document.');
+}
+
+{
   // memory-audit (tâche #169, 2026-09-21 ; surnom retenu le même soir à la place de l'ombrelle
   // "MEMENTO", cf. docs/referentiel/memory-audit.md) — cible EXCLUSIVEMENT les Personnages (Lia/Noé),
   // jamais les membres de l'équipe. Testé contre les VRAIES formes de lib/life.ts trouvées par

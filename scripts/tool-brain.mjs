@@ -26,6 +26,7 @@ import { recommendFindBrain, flagFindDeepBoosterCandidates, FIND_DEEP_BOOSTER_NI
 import { flagFindBoosterCandidates } from "./doc-report.mjs";
 import { toolUsageStats, toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
 import { assessCriticality } from "./ecotoken.mjs";
+import { printReliabilityNotice } from "./lib-shell.mjs";
 
 export const TOOL_BRAIN_SLUG = "tool-brain";
 const USAGE_HISTORY_URL = new URL("../.tool-usage-history.json", import.meta.url);
@@ -148,6 +149,7 @@ export function formatToolBrainReport({ history, prestations = PRESTATIONS, chec
 }
 
 function main() {
+  printReliabilityNotice("tool-brain");
   recordCliUsage("tool-brain");
   const [, , ...rest] = process.argv;
 

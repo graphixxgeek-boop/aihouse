@@ -27,7 +27,8 @@ import { join } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { toolsNeverUsed } from "./tool-usage.mjs";
 import { recommendFindBooster } from "./find-booster.mjs";
-import { AGENT_CATEGORIES } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice } from "./lib-shell.mjs";
+import { parseToolsTable, slugifyAgentName } from "./le-coordinateur.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -351,6 +352,7 @@ function formatDays(days) {
 }
 
 function main() {
+  printReliabilityNotice("doc-report");
   const usageHistoryPath = join(ROOT, ".tool-usage-history.json");
   let usageHistory = { events: [] };
   try {
@@ -457,4 +459,63 @@ export function findUnnavigableSections(markdown, seuils = SEUIL_SECTION_INTROUV
     });
   }
   return findings;
+}
+
+// --- LES DEUX GARDE-FOUS DE TOOL_RELIABILITY (2026-09-22, tâche #198). Le registre lui-même est
+// volontairement tenu à la main (aucune mécanique ne peut deviner si un calcul est exact ou
+// approché) — l'Article 24 l'autorise explicitement, à la condition stricte qu'un garde-fou
+// mécanique détecte tout écart. En voici les deux, qui ferment les deux seules façons dont ce
+// registre peut cesser d'être vrai sans que personne ne s'en aperçoive.
+
+// (1) Un outil de la table maîtresse qui n'est classé nulle part. Sans ce garde-fou, tout nouvel
+// outil naîtrait silencieusement SANS avertissement — exactement l'angle mort que 6 Agents réels
+// avaient déjà connu avec AGENT_SCRIPT_FILES (cf. Article 24). Même découpage `primaryName` et même
+// `slugifyAgentName()` que partout ailleurs, jamais une troisième façon de nommer un outil.
+export function findToolsMissingReliability(toolsTableMarkdown, registry = TOOL_RELIABILITY) {
+  const known = new Set(Object.keys(registry));
+  return parseToolsTable(toolsTableMarkdown)
+    .map((row) => ({ tool: row.tool, slug: slugifyAgentName(row.tool.split(/[/(]/)[0].trim()) }))
+    .filter(({ slug }) => !known.has(slug));
+}
+
+// (2) Un outil classé "heuristique" dont le script n'affiche en réalité jamais l'avertissement.
+// C'est LE défaut que cette tâche corrige : la nuance existait dans la tête de l'outil, pas dans sa
+// sortie. Une classification sans affichage ne vaut rien — elle ne fait que déplacer le mensonge.
+// `scriptFor` associe un slug à son fichier ; un outil dont le script est introuvable est signalé
+// comme tel plutôt que silencieusement passé (une absence n'est jamais une conformité).
+export const RELIABILITY_SCRIPT_FILES = {
+  "check-spirit-mjs": "scripts/check-spirit.mjs", argus: "scripts/check-argus.mjs", harmonia: "scripts/check-harmonia.mjs",
+  "smart-conso-api": "scripts/smart-conso-api.mjs", "check-level-target": "scripts/check-level-target.mjs",
+  "hyper-scan-checkpoint": "scripts/hyper-scan-checkpoint.mjs", "always-new-code": "scripts/always-new-code.mjs",
+  "axa-check": "scripts/axa-check.mjs", "clean-dirty-old": "scripts/clean-dirty-old.mjs",
+  "el-professor": "scripts/el-professor.mjs", "the-screener": "scripts/the-screener-capture.mjs",
+  "the-final-judge": "scripts/the-final-judge.mjs", "the-deep-reader": "scripts/the-deep-reader.mjs",
+  "smart-breaker": "scripts/check-gemini-quota.mjs", "smart-conso-token": "scripts/smart-conso-token.mjs",
+  "circle-tasks": "scripts/circle-tasks.mjs", "check-tasks-details": "scripts/check-tasks-details.mjs",
+  "charter-spy": "scripts/smart-conso-token.mjs", "doc-report": "scripts/doc-report.mjs",
+  "the-king": "scripts/the-king.mjs", "memory-audit": "scripts/memento.mjs",
+  "find-deep-booster": "scripts/route-booster.mjs", "find-brain": "scripts/find-brain.mjs",
+  "tool-brain": "scripts/tool-brain.mjs", "find-booster": "scripts/find-booster.mjs",
+  "clone-hunter": "scripts/clone-hunter.mjs", "cassandra-rh": "scripts/cassandra-rh.mjs",
+  ecotoken: "scripts/ecotoken.mjs",
+};
+export function findHeuristicToolsWithoutNotice(registry = TOOL_RELIABILITY, { scriptFor = RELIABILITY_SCRIPT_FILES, readFileImpl = readFileSync, existsImpl = existsSync } = {}) {
+  const manques = [];
+  for (const [slug, entry] of Object.entries(registry)) {
+    if (entry.nature !== "heuristique") continue;
+    const file = scriptFor[slug];
+    if (!file) { manques.push({ slug, raison: "aucun script connu pour cet outil heuristique — impossible de vérifier qu'il avertit" }); continue; }
+    const full = join(ROOT, file);
+    if (!existsImpl(full)) { manques.push({ slug, file, raison: "script introuvable sur le disque" }); continue; }
+    const source = readFileImpl(full, "utf8");
+    // Vérifié AVEC LE SLUG, jamais seulement « la fonction apparaît quelque part » : deux outils
+    // peuvent vivre dans le même fichier (CHARTER-SPY partage scripts/smart-conso-token.mjs avec son
+    // hôte), et sans le slug l'un couvrirait l'autre sans que le second n'avertisse jamais — la même
+    // erreur de fond que le reste de ce chantier corrige : une présence approximative lue comme une
+    // conformité. Les deux formes comptent : printReliabilityNotice() pour un outil qui écrit en
+    // console, reliabilityNotice() pour un outil dont le rapport est un document construit.
+    const attendu = new RegExp(`(print)?[rR]eliabilityNotice\\(\\s*["'\`]${slug}["'\`]`);
+    if (!attendu.test(source)) manques.push({ slug, file, raison: "classé heuristique mais n'affiche jamais son propre avertissement (aucun appel nommant ce slug)" });
+  }
+  return manques;
 }

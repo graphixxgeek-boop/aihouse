@@ -20,7 +20,7 @@
 import { statSync, readFileSync, existsSync } from "node:fs";
 import { dataRows, numericColumn } from "./lib-markdown-table.mjs";
 import { join } from "node:path";
-import { sh } from "./lib-shell.mjs";
+import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -213,6 +213,7 @@ export function alwaysNewCodePerformance(indexText) {
 const HARMONIA_MD_PATH = join(ROOT, "docs/referentiel/harmonia.md");
 
 function main() {
+  printReliabilityNotice("always-new-code");
   recordCliUsage("always-new-code");
   console.log("=== ALWAYS-NEW-CODE — préparation (zéro coût, la couche raisonnement suit) ===\n");
   if (existsSync(HARMONIA_MD_PATH)) {

@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { sh } from "./lib-shell.mjs";
+import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
 // CHECK-LEVEL-TARGET (2026-09-19, cf. docs/check-level-target-blueprint.md et
@@ -207,6 +207,7 @@ export function recentlyChangedSensitiveNodes(changedFiles, nodes = SENSITIVE_NO
 }
 
 function main() {
+  printReliabilityNotice("check-level-target");
   recordCliUsage("check-level-target");
   const text = process.argv.slice(2).join(" ");
   if (!text) {
