@@ -41,6 +41,7 @@ import { sh as shBase, printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { verifyRondeProcess } from "./circle-process-guardian.mjs";
 import { printReportHeader } from "./report-template.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const INDEX_PATH = join(ROOT, "docs/hyper-scan-checkpoint/index.md");
@@ -314,6 +315,29 @@ function main() {
   ].join("\n") + "\n");
   console.log(`\nRapport archivé : docs/hyper-scan-checkpoint/${runId}.txt`);
   console.log("Ce fichier + la checklist qualitative ci-dessus doivent maintenant être traités par l'agent avant de considérer ce passage terminé (cf. docs/referentiel/hyper-scan-checkpoint.md).");
+
+  // LE PLAN D'ACTION (2026-09-23, tâche #211). HYPER-SCAN-CHECKPOINT est la vérification
+  // EXCEPTIONNELLE (Article 21) : il ne tourne jamais tout seul, et son seul vrai critère de
+  // succès n'est pas « a-t-il tourné sans erreur » mais COMBIEN de bugs réellement inconnus il a
+  // fait remonter.
+  //
+  // Son plan relaie donc ce que son passage a trouvé, sans rien y ajouter : les constats
+  // appartiennent aux outils qu'il orchestre, et les requalifier ici reviendrait à juger deux fois
+  // la même chose.
+  try {
+    const trouvailles = typeof collectFindings === "function" ? (collectFindings() ?? []) : [];
+    const planHyper = buildPlanDaction((Array.isArray(trouvailles) ? trouvailles : []).map((t) => ({
+      constat: String(t.constat ?? t.message ?? t), etat: "retenu",
+      tache: t.tache ?? "requalifier ce constat auprès de l'outil qui l'a produit, jamais le traiter deux fois",
+    })), { toolSlug: "hyper-scan-checkpoint" });
+    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+    for (const l of planHyper.lignes) console.log(l);
+  } catch {
+    // Un passage qui n'a rien collecté ne doit pas casser le rapport : l'absence se dit, elle ne
+    // plante pas.
+    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+    console.log("Aucune trouvaille collectée par ce passage — un passage léger ne remonte rien de lui-même.");
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

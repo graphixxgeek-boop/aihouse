@@ -39,6 +39,7 @@ import {burstComplianceScore} from './smart-conso-api.mjs';
 import {computeAdoptionKpi, checkKnowledgeFreshness} from './smart-conso-token.mjs';
 import {persistContextWeightSamples, averageContextWeightByActor, loadHistory as loadMementoWeightHistory} from './memento-weight.mjs';
 import {recordCliUsage} from './tool-usage.mjs';
+import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const root = new URL('..', import.meta.url).pathname;
 const path = (...parts) => join(root, ...parts);
@@ -604,6 +605,26 @@ async function main() {
     const tscErrors = runTypeCheck();
     const tests = runTestSuite();
     const fragilePoints = countFragilePoints();
+
+    // LE PLAN D'ACTION (2026-09-23, tâche #211). Le tableau de bord RELAIE des mesures produites
+    // ailleurs — il n'en invente aucune. Son plan ne relaie donc que ce qui est FACTUELLEMENT
+    // cassé, jamais un chiffre en baisse : un indicateur qui descend est une tendance, pas un
+    // défaut, et le transformer en tâche fabriquerait du travail à partir d'une courbe.
+    //
+    // Une erreur de typage et un test rouge sont, eux, des faits : le code ne compile pas ou ne
+    // passe pas. `fausseUneMesure: true` parce que tout le reste du tableau de bord s'appuie
+    // dessus — un score de qualité calculé sur une suite rouge ne vaut rien.
+    const constatsKpi = [
+      ...(tscErrors > 0 ? [{ constat: `${tscErrors} erreur(s) de typage : le code ne compile pas proprement`, etat: "retenu", fausseUneMesure: true,
+        tache: "corriger les erreurs de typage avant toute autre mesure — elles faussent tout le tableau de bord" }] : []),
+      ...(tests && tests.failed > 0 ? [{ constat: `${tests.failed} bloc(s) de test en échec`, etat: "retenu", fausseUneMesure: true,
+        tache: "remonter à la cause de chaque échec, jamais neutraliser le test" }] : []),
+      ...(fragilePoints > 0 ? [{ constat: `${fragilePoints} point(s) fragile(s) ouvert(s) dans docs/referentiel/points-fragiles.md`, etat: "a-trancher",
+        pourquoi: "un point fragile est une zone identifiée EN ATTENTE d'une décision de conception, jamais un bug actif — le traiter comme une tâche automatique reviendrait à trancher à la place de l'utilisateur" }] : []),
+    ];
+    const planKpi = buildPlanDaction(constatsKpi, { toolSlug: "kpi-report" });
+    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+    for (const l of planKpi.lignes) console.log(l);
     const stats = repoStats();
     const health = codeHealthScore(tscErrors, tests.passed, tests.expected, tests.coverageScore);
     section('KPI global — Robustesse du code');

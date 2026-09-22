@@ -355,6 +355,8 @@ export const SANS_CONSTAT_PROPRE = {
   "le-regisseur": "orchestrateur mécanique du protocole de simulation : « jamais de raisonnement à sa charge », les constats appartiennent aux outils qu'il enchaîne",
   "the-ghost": "orchestrateur du mode nocturne : il appelle le jugement des autres (recommendNextTasks) et n'en produit aucun",
   "the-final-judge": "socle mécanique d'un agent séparé : le jugement EST le rapport de l'agent, ce script ne porte que deux garde-fous sur sa forme",
+  "check-spirit": "envoie de vraies provocations au modèle et AFFICHE les réponses pour une lecture humaine : la charte dit que ses heuristiques « ne dispensent jamais de lire les réponses » — le verdict sur l'esprit des personnages est une lecture, jamais un calcul",
+  "the-screener-capture": "prend des captures d'écran : la NOTE de qualité graphique est un raisonnement sur l'image, jamais un calcul de ce script — il fournit la matière, il ne juge pas",
   "the-deep-reader": "idem, pour l'autre juge : la comparaison au transcript est un raisonnement, jamais un calcul de ce script",
 };
 

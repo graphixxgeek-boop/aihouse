@@ -10,6 +10,7 @@ import { join } from "node:path";
 import { renderHtmlReport } from "./html-report.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 // Copie de présentation jetable, jamais committée (même patron que KPI_HTML_PATH de
@@ -92,6 +93,26 @@ function main() {
   }
   writeFileSync(join(ROOT, EL_PROFESSOR_HTML_PATH), buildElProfessorCoverageHtml(missing, orphans));
   console.log(`\nCopie HTML : ${EL_PROFESSOR_HTML_PATH}`);
+
+  // LE PLAN D'ACTION (2026-09-23, tâche #211). EL-PROFESSOR note la FIDÉLITÉ À L'ESPRIT des
+  // personnages — l'Article 0, la loi suprême du projet. Ses deux constats sont symétriques et
+  // n'ont pourtant pas la même gravité du tout.
+  //
+  // Une simulation SANS NOTE est un trou dans la surveillance de l'Article 0 : une session entière
+  // a été jouée et personne n'a vérifié que Lia et Noé y sonnaient juste. C'est ce que cet outil
+  // existe pour empêcher, donc RETENU sans discussion.
+  //
+  // Une note ORPHELINE (une note dont la simulation a disparu de l'index) est une incohérence de
+  // registre, pas un risque pour l'esprit. Retenue aussi, mais elle ne raconte pas la même histoire.
+  const constatsProf = [
+    ...missing.map((sim) => ({ constat: `simulation « ${sim} » jamais notée : personne n'a vérifié la fidélité à l'esprit sur cette session`, etat: "retenu", toucheLeJeu: true,
+      tache: `noter ${sim} avec EL-PROFESSOR, ou écrire pourquoi cette session n'a pas à l'être` })),
+    ...orphans.map((note) => ({ constat: `note « ${note} » sans simulation correspondante dans l'index`, etat: "retenu",
+      tache: `retrouver la simulation de ${note} et la réinscrire à l'index, ou retirer la note devenue sans objet` })),
+  ];
+  const planProf = buildPlanDaction(constatsProf, { toolSlug: "el-professor" });
+  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of planProf.lignes) console.log(l);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

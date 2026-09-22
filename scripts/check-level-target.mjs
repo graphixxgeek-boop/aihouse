@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader } from "./report-template.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 // CHECK-LEVEL-TARGET (2026-09-19, cf. docs/check-level-target-blueprint.md et
 // docs/referentiel/check-level-target.md). Calcule le niveau de vérification qu'une demande
@@ -222,6 +223,23 @@ function main() {
   try {
     const harmoniaMdText = readFileSync(new URL("../docs/referentiel/harmonia.md", import.meta.url), "utf8");
     const divergence = findSensitiveNodesDivergingFromHarmonia(harmoniaMdText);
+
+    // LE PLAN D'ACTION (2026-09-23, tâche #211). Cet outil calcule le niveau de vérification
+    // ATTENDU avant un changement — un conseil, jamais un constat. Il n'a donc qu'un seul vrai
+    // constat à porter, et c'est un garde-fou d'évolutivité (Article 24) : sa liste de nœuds
+    // sensibles est DÉRIVÉE de la carte HARMONIA, et si les deux divergent, le niveau qu'il
+    // recommande est calculé sur une carte périmée.
+    //
+    // `fausseUneMesure: true` sans hésitation : ce n'est pas l'outil qui se trompe, c'est tout ce
+    // qu'il conseille ensuite qui devient faux.
+    const planNiveau = buildPlanDaction([
+      ...(divergence?.missingFromSensitive ?? []).map((n) => ({ constat: `nœud « ${n} » présent dans harmonia.md, absent de SENSITIVE_NODES`, etat: "retenu", fausseUneMesure: true,
+        tache: `ajouter « ${n} » aux nœuds sensibles, sinon un changement qui le touche sera sous-évalué` })),
+      ...(divergence?.missingFromHarmonia ?? []).map((n) => ({ constat: `nœud « ${n} » déclaré sensible, absent de harmonia.md`, etat: "retenu", fausseUneMesure: true,
+        tache: `documenter « ${n} » dans harmonia.md, ou le retirer des nœuds sensibles` })),
+    ], { toolSlug: "check-level-target" });
+    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+    for (const l of planNiveau.lignes) console.log(l);
     if (divergence.missingFromHere.length || divergence.missingFromHarmonia.length) {
       console.log("⚠️  SENSITIVE_NODES a divergé de harmonia.md (garde-fou de fraîcheur, 2026-09-21) :");
       if (divergence.missingFromHere.length) console.log(`   présent dans harmonia.md, absent d'ici : ${divergence.missingFromHere.join(", ")}`);

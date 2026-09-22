@@ -25,6 +25,7 @@ import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice, qualifierIndicateur } from "./lib-shell.mjs";
 import { printReportHeader } from "./report-template.mjs";
 import { loadJson } from "./lib-json.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const HISTORY_PATH = fileURLToPath(new URL("../.smart-conso-token-history.json", import.meta.url));
 
@@ -1194,6 +1195,22 @@ function main() {
   const summary = summarizeHistory(history, now);
   console.log(`\nRythme observé (${summary.windowDays} derniers jours) : ${summary.totalRecent} action(s) au total — ${JSON.stringify(summary.byType)}`);
   const ratio = computeInvestmentRatio(history, now);
+
+  // LE PLAN D'ACTION (2026-09-23, tâche #211). SMART-CONSO-TOKEN est un CONSEILLER : on le consulte
+  // AVANT une action coûteuse, il rend un avis. Un avis n'est pas un constat, et transformer chaque
+  // avis en tâche remplirait le suivi de décisions déjà prises.
+  //
+  // Son seul vrai constat est son AUTO-DIAGNOSTIC : quand il repère que sa propre mesure dérive.
+  // Et il est classé « à trancher », jamais « retenu » — la règle de l'Article 22 est formelle,
+  // cet outil INFORME et ne tranche jamais, pas même sur lui-même.
+  const auto = typeof autoDiagnostic === "function" ? (autoDiagnostic(history, now) ?? []) : [];
+  const planToken = buildPlanDaction((Array.isArray(auto) ? auto : []).map((d) => ({
+    constat: String(d.constat ?? d.message ?? d),
+    etat: "a-trancher",
+    pourquoi: "auto-diagnostic : l'outil signale une dérive de sa PROPRE mesure, et l'Article 22 lui interdit de s'auto-ajuster — la correction est une décision humaine",
+  })), { toolSlug: "smart-conso-token" });
+  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of planToken.lignes) console.log(l);
   console.log(`Bilan investissement (${7} derniers jours) : ${ratio.message}`);
   const findings = diagnoseAdviceAccuracy(history, now);
   console.log(`Auto-diagnostic (agent + outils) : ${findings.length ? findings.length + " constat(s) — voir le rapport détaillé si besoin" : "aucun constat pour l'instant"}.`);

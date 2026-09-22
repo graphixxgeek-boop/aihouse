@@ -34,6 +34,7 @@ import { loadToolUsageHistory } from "./tool-brain.mjs";
 import { parseKpiHistoryCsv, KPI_HISTORY_PATH } from "./kpi-report.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader } from "./report-template.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const REGISTRY_PATH = new URL("../docs/objectifs-vs-resultats/registre.md", import.meta.url);
 
@@ -206,8 +207,30 @@ function main() {
   const history = loadToolUsageHistory();
   const kpiRows = loadKpiHistoryRows();
   const rows = buildObjectifsReport(markdown, history, { kpiRows });
+
+  // LE PLAN D'ACTION (2026-09-23, tâche #211). Cet outil confronte un objectif chiffré à un
+  // résultat mesuré ailleurs — il ne mesure jamais lui-même. Son plan hérite de cette prudence et
+  // sépare trois situations que le registre confondrait volontiers.
+  //
+  // « EN DESSOUS » est un fait chiffré : l'écart existe, il devient une tâche.
+  //
+  // « PAS DE DONNÉES » est LE cas qui justifie cet outil, et il ne doit surtout pas devenir une
+  // tâche sur l'objectif : une cible sans aucun signal mesuré n'est pas un échec, c'est une mesure
+  // qui manque. La tâche porte donc sur la MESURE à construire, jamais sur le résultat à améliorer
+  // — un faux zéro déclencherait des décisions prises sur du vide.
+  const constatsObjectifs = (rows ?? []).flatMap((r) => {
+    const nom = r.entite ?? r.entity ?? r.outil ?? "(entité)";
+    if (r.statut === "en dessous") return [{ constat: `${nom} : objectif ${r.objectif ?? "?"}, résultat ${r.resultat ?? "?"} — en dessous`, etat: "retenu",
+      tache: `comprendre pourquoi ${nom} reste en dessous de sa cible, ou réviser une cible qui n'était pas réaliste` }];
+    if (r.statut === "pas de données") return [{ constat: `${nom} : objectif fixé, mais AUCUN signal mesuré sur la période`, etat: "retenu",
+      tache: `construire la mesure qui manque pour ${nom} — sans elle, cet objectif ne peut être ni atteint ni raté, seulement ignoré` }];
+    return [];
+  });
+  const planObj = buildPlanDaction(constatsObjectifs, { toolSlug: "objectifs-vs-resultats" });
   printReportHeader({ tool: "objectifs-vs-resultats", title: "objectifs-vs-resultats — rapport", scriptPath: "scripts/objectifs-vs-resultats.mjs" });
   console.log(formatObjectifsReport(rows));
+  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of planObj.lignes) console.log(l);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

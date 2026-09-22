@@ -41,6 +41,7 @@ import { walkDocsPaths } from "./lib-shell.mjs";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { sh } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 export const OUT_DIR = join(ROOT, "docs/check-tasks-details");
@@ -1140,6 +1141,24 @@ function main() {
   if (report.meta.regressions.length) console.log(`⚠️ ${report.meta.regressions.length} régression(s) détectée(s).`);
   if (report.meta.stagnant.length) console.log(`${report.meta.stagnant.length} tâche(s) possiblement oubliée(s) (stagnation).`);
   if (report.meta.chantierFreshnessGaps.length) console.log(`⚠️ ${report.meta.chantierFreshnessGaps.length} fichier(s) préliminaire(s) de chantier possiblement en retard sur le suivi.`);
+
+  // LE PLAN D'ACTION (2026-09-23, tâche #211). Cet outil dresse l'état des tâches — il est donc le
+  // seul dont le plan d'action porte sur… le suivi des plans d'action. D'où une prudence
+  // particulière : il ne doit jamais fabriquer des tâches à partir de l'état des tâches, sous peine
+  // d'une boucle qui gonflerait le suivi sans rien faire avancer.
+  //
+  // Une RÉGRESSION est un fait dur : une tâche déclarée terminée qui ne l'est plus. RETENU.
+  // Un fichier de chantier POSSIBLEMENT en retard est, comme son nom le dit, une possibilité — le
+  // classer « retenu » transformerait une heuristique de fraîcheur en verdict.
+  const constatsTaches = [
+    ...(report.meta.regressions ?? []).map((r) => ({ constat: `régression : ${r.tache ?? r.label ?? r} n'est plus dans l'état où elle avait été déclarée`, etat: "retenu",
+      tache: "remonter à ce qui a défait cette tâche, jamais la re-cocher sans comprendre" })),
+    ...(report.meta.chantierFreshnessGaps ?? []).map((g) => ({ constat: `fichier préliminaire de chantier possiblement en retard sur le suivi : ${g.fichier ?? g.label ?? g}`, etat: "a-trancher",
+      pourquoi: "la fraîcheur se mesure sur des dates, pas sur le contenu : un fichier ancien peut être simplement fini" })),
+  ];
+  const planTaches = buildPlanDaction(constatsTaches, { toolSlug: "check-tasks-details" });
+  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of planTaches.lignes) console.log(l);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

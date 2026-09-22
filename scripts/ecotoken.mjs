@@ -29,6 +29,7 @@ import { SENSITIVE_NODES } from "./check-level-target.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { printReportHeader } from "./report-template.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 export const CHARTER = join(ROOT, "CLAUDE.md");
@@ -1679,6 +1680,25 @@ function main() {
     if (r.strategiesEcartees.length) console.log(`Stratégies écartées : ${r.strategiesEcartees.join(" | ")}`);
     console.log(`Gain total détecté : ~${r.gainTotal} tokens sur ${r.propositions.length} proposition(s).\n`);
     for (const p of r.propositions) console.log(`  [${p.risque}] ${p.strategie} — ${p.cible}\n      ~${p.tokensAvant} → ~${p.tokensApres} tk (gain ~${p.gain})`);
+
+    // LE PLAN D'ACTION (2026-09-23, tâche #211). ecotoken est l'outil le plus dangereux du
+    // paysage, et son plan doit le refléter : il propose d'ALLÉGER la charte, c'est-à-dire de
+    // retirer du texte qui fait loi. Le garde-fou non négociable de l'Article 13 est formel —
+    // « en cas de doute sur si un retrait affaiblit une règle réelle, la réponse par défaut est de
+    // NE PAS COUPER ».
+    //
+    // AUCUNE de ses propositions n'est donc « retenue ». TOUTES sont « à trancher », sans
+    // exception et quel que soit le gain annoncé. Un plan d'action qui transformerait ces
+    // propositions en tâches à faire produirait exactement la dérive que ce garde-fou interdit :
+    // un allègement appliqué parce qu'un outil l'a suggéré, jamais parce qu'un humain l'a voulu.
+    // C'est le seul outil du paysage dont le plan ne peut, par construction, rien retenir.
+    const planEco = buildPlanDaction(r.propositions.map((prop) => ({
+      constat: `[risque ${prop.risque}] ${prop.strategie} sur ${prop.cible} — gain estimé ~${prop.gain} tokens`,
+      etat: "a-trancher",
+      pourquoi: "alléger la charte, c'est retirer du texte qui fait loi : le garde-fou de l'Article 13 impose de NE PAS couper en cas de doute, et ce choix n'appartient jamais à l'outil qui l'a proposé",
+    })), { toolSlug: "ecotoken" });
+    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+    for (const l of planEco.lignes) console.log(l);
     return;
   }
   if (sub === "scan") {
@@ -1772,6 +1792,18 @@ function main() {
       if (p.remplacement) { console.log("\n--- TEXTE DE REMPLACEMENT PROPOSÉ (rien n'est écrit sans ta validation) ---\n"); console.log(p.remplacement); }
       console.log("");
     }
+
+    // MÊME RÈGLE QUE POUR `doc`, et elle vaut surtout ici : `plan` est la sous-commande qui propose
+    // d'alléger la CHARTE elle-même. Toutes ses propositions sont « à trancher », sans exception et
+    // quel que soit le gain — le garde-fou non négociable de l'Article 13 impose de NE PAS couper
+    // en cas de doute, et ce choix n'appartient jamais à l'outil qui l'a suggéré.
+    const planPlan = buildPlanDaction(plan.propositions.map((prop) => ({
+      constat: `[risque ${prop.risque}] ${prop.strategie} — gain estimé ~${prop.gain} tokens`,
+      etat: "a-trancher",
+      pourquoi: "alléger la charte, c'est retirer du texte qui fait loi : en cas de doute, l'Article 13 tranche pour NE PAS couper",
+    })), { toolSlug: "ecotoken" });
+    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+    for (const l of planPlan.lignes) console.log(l);
     return;
   }
   const report = buildEcotokenReport({ charterText: texte });
