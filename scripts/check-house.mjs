@@ -9046,8 +9046,17 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.deepEqual(se.findOutilsSansBlueprint(['le-coordinateur']), [], 'a tool the charter explicitly declares as having no blueprint must never be accused — that would be reproaching a documented decision (Article 19)');
   assert.deepEqual(se.findOutilsSansBlueprint(['un-registre-de-contenu']), [], 'a docs/ folder with no matching script is a CONTENT registry, not a tool: deriving this from the filesystem replaces a hand-kept list of folder names that would have gone stale at the very next folder');
   assert.deepEqual(se.findOutilsSansBlueprint(['smart-breaker']), [], 'a blueprint filed under a different filename must be found through the declared alias, never counted missing — the charter says so: "le blueprint garde son nom d\'avant le surnom"');
-  const vraisManques = se.findOutilsSansBlueprint(['tool-brain']);
-  assert.equal(vraisManques.length, 1, 'and a real tool with a script, a registry and no blueprint anywhere must still be caught — narrowing the detector must not empty it');
+  // TÉMOIN SYNTHÉTIQUE, et c'est délibéré (corrigé le 2026-09-23, quelques heures après la MÊME
+  // leçon sur le test de CLONE-HUNTER) : la première version prenait un vrai outil du dépôt comme
+  // témoin du manque, et elle a cassé dès que ce manque a été comblé. Un test qui exige qu'un défaut
+  // PERSISTE devient un frein le jour où on le corrige. Les implémentations sont donc injectées :
+  // ce qui est vérifié est la LOGIQUE du détecteur, jamais l'état momentané du dépôt.
+  const vraisManques = se.findOutilsSansBlueprint(['un-vrai-outil'], {
+    exists: (chemin) => String(chemin).endsWith('scripts/un-vrai-outil.mjs'), // le script existe, le blueprint non
+    exemptes: {}, alias: {},
+  });
+  assert.equal(vraisManques.length, 1, 'a real tool with a script and no blueprint anywhere must still be caught — narrowing the detector twice must never empty it');
+  assert.ok(vraisManques[0].pourquoi.includes("ne partira pas"), 'and it must say what the gap COSTS — not that a file is missing, but that this tool would be left behind on the day the toolkit moves to another project');
 
   console.log('Passed: the three mute detectors are wired (2026-09-23, task #218), and the worst of them answered an explicit user request — "assure-toi qu\'un mécanisme vérifie que tout est toujours bien présent dans le process ET chez son gardien". It was built that same morning, it worked, and it ran for nobody; worse, a comment elsewhere asserted "Il est VÉRIFIÉ, jamais déclaratif", a verification claimed in writing with nothing behind it. The two directions now derive from one traversal instead of each redoing it, they keep naming which side is missing the mechanism (a rule written but unenforced is not the defect a rule enforced but unwritten is), and a process sharing no source file reports "pas mesuré" rather than a green count on an empty denominator. findOutilsSansBlueprint was narrowed twice without being emptied: charter-declared exemptions are honoured rather than reproached, and "is this folder a tool?" is derived from whether a matching script exists — replacing a hand-kept list of folder names that would have gone stale at the next folder created.');
 }

@@ -215,6 +215,14 @@ export const SANS_BLUEPRINT_ASSUME = {
   "tool-usage": "compteur d'usage — CLAUDE.md le déclare sans blueprint",
   "doc-report": "veilleur de la décision HTML/texte — CLAUDE.md le déclare sans blueprint",
   "route-booster": "find-deep-booster — CLAUDE.md le déclare sans blueprint",
+  // AJOUTÉ le 2026-09-23 (tâche #219) : son propre en-tête enregistre la décision explicite de
+  // l'utilisateur du 2026-09-21 — « Membre certifié (classique) [...] SANS instanciation/registre/
+  // blueprint séparés ». Lui écrire un blueprint reviendrait à défaire une décision documentée, très
+  // exactement ce que le garde-fou trottoirGranted interdit (Article 19).
+  //
+  // ÉCART SIGNALÉ, jamais corrigé en douce : la décision dit « sans registre » et docs/tool-brain/
+  // existe pourtant. L'un des deux a bougé sans l'autre. Ce n'est pas à cet outil de trancher lequel.
+  "tool-brain": "décision explicite de l'utilisateur (2026-09-21) : membre certifié classique, sans blueprint séparé — mais son registre existe malgré la même décision, écart à trancher",
   "html-wiring-check": "vérification interne de la Ronde, jamais un outil autonome",
   "chantier-preliminaire": "dossier de travail, pas un outil",
   "idee-a-trancher": "registre de décisions en attente, pas un outil",
