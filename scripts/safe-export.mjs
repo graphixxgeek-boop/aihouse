@@ -237,6 +237,24 @@ export function choisirZoneAScanner(zones = [], { indices = {}, dernierScan = {}
 export const ETATS_MEMOIRE = ["vu", "corrigé", "écarté sciemment"];
 export const MEMOIRE_FILE = "docs/safe-export/memoire.json";
 
+// UN ÉCART NE SE MET DE CÔTÉ QU'AVEC SON ACCORD EXPLICITE (correction du 2026-09-22, le jour même
+// où cette mémoire a été écrite, sur sa relecture : « ne jamais ecarter une zone sciemment laissée
+// de coté par moi, sauf avec mon accord explicite »).
+//
+// CE QUE JE M'ÉTAIS DONNÉ SANS LE VOIR : la première version filtrait tout écart marqué « écarté
+// sciemment » sans jamais demander qui l'avait écarté. L'agent pouvait donc faire taire un
+// avertissement tout seul, et le silence qui suit ressemble exactement à un problème réglé. C'est
+// la même famille d'erreur que celle traquée toute la journée — une absence prise pour un
+// résultat — mais appliquée au dispositif de surveillance lui-même, ce qui est pire : un gardien
+// qui peut se taire à sa propre initiative ne garde plus rien.
+//
+// LA RÈGLE : seul un écart portant un accord explicite daté de l'utilisateur est filtré. Tous les
+// autres REVIENNENT, et leur rappel GROSSIT — « les gardiens sacrés doivent repeter une alerte si
+// je ne la prends pas en compte, pour etre sur que je la traite ou l'ignore VOLONTAIREMENT ». La
+// distinction qui compte est entre IGNORÉ et ÉCARTÉ : ignorer est un non-événement, écarter est une
+// décision. Seule la seconde a le droit de faire taire l'alerte.
+export const ACCORD_REQUIS = "accord explicite de l'utilisateur, daté";
+
 export function loadMemoire({ root = ROOT, readFileImpl = readFileSync } = {}) {
   try {
     const b = JSON.parse(readFileImpl(join(root, MEMOIRE_FILE), "utf8"));
@@ -246,13 +264,44 @@ export function loadMemoire({ root = ROOT, readFileImpl = readFileSync } = {}) {
   }
 }
 
-// filtrerDejaTranches() — retire des écarts ceux qui ont été explicitement écartés. Les CORRIGÉS ne
-// sont PAS filtrés : s'ils réapparaissent, c'est une régression, et une régression doit se voir.
+// Les paliers de relance. Un rappel identique devient un meuble — ce projet en a la preuve chiffrée
+// (son rappel de Ronde ignoré plus de 200 fois, mot pour mot le même). À partir du troisième
+// passage, l'alerte ne se contente plus de revenir : elle exige une réponse par une vraie question,
+// pour qu'il soit certain de l'avoir traitée ou ignorée VOLONTAIREMENT.
+export const PALIERS_RELANCE = [
+  { passages: 5, action: "question obligatoire", ton: "🔴 signalé 5 fois sans décision — cette alerte bloque une question à te poser, elle ne repartira pas seule" },
+  { passages: 3, action: "question proposée", ton: "🟠 signalé 3 fois : à trancher explicitement, garder ou écarter" },
+  { passages: 1, action: "rappel", ton: "🟡 déjà signalé" },
+  { passages: 0, action: "nouveau", ton: "· nouvel écart" },
+];
+
 export function filtrerDejaTranches(ecarts = [], memoire = []) {
-  const ecartes = new Set(memoire.filter((m) => m.etat === "écarté sciemment").map((m) => `${m.fichier}::${m.defaut ?? m.pourquoi ?? ""}`));
-  const gardes = ecarts.filter((e) => !ecartes.has(`${e.fichier ?? e.outil}::${e.defaut ?? e.pourquoi ?? ""}`));
+  const cle = (e) => `${e.fichier ?? e.outil}::${e.defaut ?? e.pourquoi ?? ""}`;
+  // SEULS les écarts portant un accord explicite sont filtrés. Un « écarté sciemment » sans accord
+  // est traité comme non tranché — donc il revient, ce qui est exactement le but.
+  const ecartesAvecAccord = new Set(
+    memoire.filter((m) => m.etat === "écarté sciemment" && m.accordUtilisateur).map((m) => `${m.fichier}::${m.defaut ?? m.pourquoi ?? ""}`),
+  );
+  const sansAccord = memoire.filter((m) => m.etat === "écarté sciemment" && !m.accordUtilisateur);
+  const gardes = ecarts.filter((e) => !ecartesAvecAccord.has(cle(e)));
+  // Le compteur de passages porte la relance : il vit dans la mémoire, pas dans la tête de l'agent.
+  const avecRelance = gardes.map((e) => {
+    const vu = memoire.find((m) => `${m.fichier}::${m.defaut ?? m.pourquoi ?? ""}` === cle(e));
+    const passages = vu?.passages ?? 0;
+    const palier = PALIERS_RELANCE.find((p) => passages >= p.passages);
+    return { ...e, passages, relance: palier.action, ton: palier.ton };
+  });
   const revenus = ecarts.filter((e) => memoire.some((m) => m.etat === "corrigé" && m.fichier === (e.fichier ?? e.outil)));
-  return { gardes, ecartesSilencieusement: ecarts.length - gardes.length, regressions: revenus };
+  return {
+    gardes: avecRelance,
+    ecartesAvecAccord: ecarts.length - gardes.length,
+    // Nommé plutôt que tu : un « écarté » posé sans accord est une tentative de faire taire
+    // l'alerte, et elle doit se voir dans le rapport.
+    ecartesSansAccord: sansAccord.map((m) => ({ fichier: m.fichier, pourquoi: "marqué écarté sans accord explicite de l'utilisateur — l'alerte continue donc de remonter" })),
+    regressions: revenus,
+    // Ce que l'agent DOIT poser en question, jamais à son appréciation.
+    aTrancherObligatoirement: avecRelance.filter((e) => e.relance === "question obligatoire"),
+  };
 }
 
 function main() {

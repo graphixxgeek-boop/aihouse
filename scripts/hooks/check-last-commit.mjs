@@ -5,7 +5,7 @@
 // déclenchement exact sur l'événement qui compte. N'écrit jamais rien lui-même : signale seulement
 // (cf. docs/regles-de-travail.md §4), la rédaction reste toujours faite avec le vrai contexte de la
 // conversation, jamais reconstituée depuis le seul message de commit.
-import { readFileSync, rmSync } from "node:fs";
+import { readFileSync, readdirSync, rmSync } from "node:fs";
 import { recentCommits, findCommitsMissingSuiviUpdate, findTaskNumberIssues, nextTaskNumber } from "../check-suivi-fidelity.mjs";
 import { walk, findDeadLifeFields, findTodoMarkers } from "../check-argus.mjs";
 import { checkLinks, LINKS } from "../check-harmonia.mjs";
@@ -180,6 +180,40 @@ if (reveille("clone-hunter")) try {
       (literalClusters.length && nearClusters.length ? " ; " : "") +
       (nearClusters.length ? `${nearClusters.length} cluster(s) structurellement dupliqué(s) (renommage)` : "") +
       " — jamais une factorisation acquise, un signal à vérifier (cf. docs/clone-hunter/index.md).\n",
+    );
+  }
+} catch { /* best-effort, jamais bloquant */ }
+
+// SAFE-EXPORT — SEPTIÈME Gardien sacré, COUCHE LÉGÈRE seulement (2026-09-22, nom donné par
+// l'utilisateur). Même distinction non négociable qu'ALWAYS-NEW-CODE juste en dessous : seuls les
+// INDICES mécaniques tournent ici (déclaration manquante, fuite de spécificité, dépendance à un
+// outillage) — jamais le vrai jugement « est-ce qu'une autre IA s'y retrouve », qui exige un
+// raisonnement payant et reste exceptionnel.
+//
+// IL NE REGARDE QUE LES BLUEPRINTS, et c'est la même économie que ses voisins : un balayage de tout
+// le dépôt à chaque commit coûterait trop pour un gardien censé être gratuit. Les blueprints sont
+// le seul endroit où une fuite de spécificité est certaine d'être un défaut, puisqu'ils se
+// déclarent eux-mêmes exportables.
+//
+// LA RELANCE EST LE POINT IMPORTANT (correction du 2026-09-22, sur sa relecture) : un écart marqué
+// « écarté » SANS son accord explicite continue de remonter, et le rappel grossit jusqu'à exiger
+// une vraie question. « Les gardiens sacrés doivent repeter une alerte si je ne la prends pas en
+// compte, pour etre sur que je la traite ou l'ignore VOLONTAIREMENT. » Un gardien qui peut se taire
+// de sa propre initiative ne garde plus rien.
+if (reveille("safe-export")) try {
+  const { findFuitesDeSpecificite, findBlueprintsMalConstruits, findDependancesOutillage, filtrerDejaTranches, loadMemoire, proposerSondePoussee } = await import("../safe-export.mjs");
+  const blueprints = readdirSync("docs").filter((f) => f.endsWith("-blueprint.md")).map((f) => `docs/${f}`);
+  const bruts = [...findFuitesDeSpecificite(blueprints), ...findBlueprintsMalConstruits(blueprints), ...findDependancesOutillage(blueprints)];
+  const { gardes, aTrancherObligatoirement, ecartesSansAccord, regressions } = filtrerDejaTranches(bruts, loadMemoire());
+  if (gardes.length) {
+    const sonde = proposerSondePoussee(gardes);
+    console.error(
+      `\n🧭 SAFE-EXPORT (indices mécaniques) : ${gardes.length} écart(s) d'exportabilité sur ${blueprints.length} blueprint(s)` +
+      (regressions.length ? ` — dont ${regressions.length} RÉGRESSION(S) (déjà corrigé, revenu)` : "") +
+      (aTrancherObligatoirement.length ? `\n   🔴 ${aTrancherObligatoirement.length} écart(s) signalé(s) 5 fois sans décision : une question doit être posée, ils ne repartiront pas seuls.` : "") +
+      (ecartesSansAccord.length ? `\n   ⚠️  ${ecartesSansAccord.length} écart(s) marqué(s) « écarté » sans accord explicite — l'alerte continue donc de remonter.` : "") +
+      (sonde.propose ? `\n   🔍 ${sonde.raison}` : "") +
+      "\n",
     );
   }
 } catch { /* best-effort, jamais bloquant */ }

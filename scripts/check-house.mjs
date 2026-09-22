@@ -5336,10 +5336,30 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     // LA MÉMOIRE — « écarté sciemment » est le plus utile des trois états : sans lui le rapport se
     // remplit de bruit déjà tranché et on cesse de le lire, ce qui tue l'outil plus sûrement qu'un
     // bug. Mais un CORRIGÉ qui réapparaît est une régression, et une régression doit se voir.
-    const memoire = [{ fichier: 'a', defaut: 'X', etat: 'écarté sciemment' }, { fichier: 'b', defaut: 'Y', etat: 'corrigé' }];
-    const filtre = se.filtrerDejaTranches([{ fichier: 'a', defaut: 'X' }, { fichier: 'b', defaut: 'Y' }], memoire);
-    assert.equal(filtre.gardes.length, 1, 'a finding explicitly set aside is not raised again');
-    assert.equal(filtre.regressions.length, 1, 'but a finding previously CORRECTED that came back is surfaced as a regression rather than silently filtered');
+    // ET LA CORRECTION DU JOUR MÊME, sur sa relecture : « ne jamais ecarter une zone sciemment
+    // laissée de coté par moi, sauf avec mon accord explicite ». La première version filtrait tout
+    // écart marqué « écarté » sans demander qui l'avait écarté — l'agent pouvait donc faire taire
+    // un avertissement tout seul, et le silence qui suit ressemble exactement à un problème réglé.
+    // Un gardien qui peut se taire de sa propre initiative ne garde plus rien.
+    const memoire = [
+      { fichier: 'a', defaut: 'X', etat: 'écarté sciemment', accordUtilisateur: '2026-09-22' },
+      { fichier: 'b', defaut: 'Y', etat: 'écarté sciemment' },
+      { fichier: 'c', defaut: 'Z', etat: 'corrigé' },
+    ];
+    const filtre = se.filtrerDejaTranches([{ fichier: 'a', defaut: 'X' }, { fichier: 'b', defaut: 'Y' }, { fichier: 'c', defaut: 'Z' }], memoire);
+    assert.equal(filtre.ecartesAvecAccord, 1, 'ONLY a finding set aside with his dated explicit agreement is filtered');
+    assert.ok(filtre.gardes.some((g) => g.fichier === 'b'), 'one marked "écarté" WITHOUT his agreement keeps coming back — that is the whole point of the correction');
+    assert.equal(filtre.ecartesSansAccord.length, 1, 'and the attempt to silence it is itself named in the report, never swallowed');
+    assert.equal(filtre.regressions.length, 1, 'a finding previously CORRECTED that came back is surfaced as a regression rather than filtered');
+
+    // LA RELANCE GROSSIT — « les gardiens sacrés doivent repeter une alerte si je ne la prends pas
+    // en compte, pour etre sur que je la traite ou l'ignore VOLONTAIREMENT ». Un rappel identique
+    // devient un meuble : ce projet en a la preuve chiffrée, son rappel de Ronde ignoré plus de 200
+    // fois, mot pour mot le même à chaque commit.
+    const relance = se.filtrerDejaTranches([{ fichier: 'z', defaut: 'W' }], [{ fichier: 'z', defaut: 'W', passages: 5 }]);
+    assert.equal(relance.gardes[0].relance, 'question obligatoire', 'past five silent passages the alert stops merely repeating and demands a real question');
+    assert.equal(relance.aTrancherObligatoirement.length, 1, 'and that obligation is surfaced separately so it cannot be left to the agent\'s appreciation');
+    assert.equal(se.filtrerDejaTranches([{ fichier: 'n', defaut: 'V' }], []).gardes[0].relance, 'nouveau', 'a brand-new finding is not escalated — escalation measures silence, never severity');
   }
 
   // SÉRIE-TEMPORELLE (2026-09-22) — le mécanisme partagé d'historisation, demandé parce que « tous
