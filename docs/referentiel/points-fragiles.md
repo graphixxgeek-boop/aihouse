@@ -167,3 +167,13 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   « CET outil est au vert » (attribution par fichier, possible pour 3 Gardiens sur 6 seulement, donc
   un palier qui mélangerait deux échelles) ? Aucun changement appliqué — le libellé exact
   `KO <NOM>` est calibré par l'utilisateur (tâche #226), il n'est pas modifié sans sa décision.
+- **Réveil conditionnel des Gardiens : un Gardien peut dormir indéfiniment** (2026-09-22, trouvé en
+  vérifiant l'intuition de l'utilisateur sur ARGUS/HARMONIA et la Ronde). `gardienShouldRun()`
+  (`lib-shell.mjs`) ne réveille un Gardien que si un fichier de SON domaine a changé — sur un commit
+  réel de cette session, 5 des 6 ont dormi. C'est voulu (ne pas relancer six scans pour une
+  correction de commentaire), mais rien ne RATTRAPE un Gardien resté muet longtemps : ni le
+  post-commit (qui vient justement de le laisser dormir), ni la Ronde (dont il est absent, à raison,
+  puisqu'il est censé tourner au commit). Un outil peut donc ne pas avoir été scanné depuis des
+  jours sans que personne ne le sache. Piste retenue mais non implémentée, en attente de décision :
+  un item de Ronde « tel Gardien n'a pas tourné depuis N commits, on le relance une fois » plutôt
+  que six items qui referaient à l'identique le scan d'il y a trois minutes.

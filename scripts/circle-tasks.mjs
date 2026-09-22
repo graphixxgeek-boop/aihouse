@@ -123,7 +123,7 @@ export const CIRCLE_ITEMS = [
   // légère seulement — recommendZone()/addendaSignal()/churnSignal(), zéro raisonnement) — tourne
   // désormais déjà automatiquement à chaque commit (scripts/hooks/check-last-commit.mjs), exactement
   // le même précédent que CLONE-HUNTER (son propre item de Ronde retiré à sa promotion le 2026-09-22
-  // pour la même raison) — jamais une routine manuelle en plus. Cf. CIRCLE_EXCLUDED_REGISTRIES
+  // pour la même raison) — jamais une routine manuelle en plus. Cf. CIRCLE_AUTO_COVERED_REGISTRIES
   // ci-dessous pour la raison documentée. Le vrai zoom profond, lui, reste hors Ronde (raisonnement
   // payant, Article 23) — inchangé.
   // clean-dirty-old-signal (2026-09-20, idée proposée par l'agent, validée par l'utilisateur : « ajoute
@@ -496,14 +496,14 @@ export function mostRecentDate(text) {
 // propre raison plutôt qu'un silence. `existingPaths` : même Set que buildRealOnboardingContext()
 // (check-tasks-details.mjs), jamais un second parcours de disque réinventé (walkDocsPaths(),
 // extraite dans lib-shell.mjs pour éviter un cycle d'import entre les deux fichiers).
-export const CIRCLE_EXCLUDED_REGISTRIES = {
+export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // ecotoken (2026-09-22) : son registre existe, mais il n'a PAS d'item propre — c'est
   // `ecotoken-scan` qui le lance, harmonisation explicitement demandée par l'utilisateur
   // (« je crois qu'il y a deja un rapport sur claude.md dans circle. vois comment tu peux tout
   // harmoniser sur ce sujet »). Un second item aurait dit la même chose deux fois.
-  argus: "tourne déjà à chaque commit (Article 20), jamais une routine manuelle en plus",
-  harmonia: "tourne déjà à chaque commit (Article 20), jamais une routine manuelle en plus",
-  "axa-check": "tourne déjà à chaque commit (Article 20), jamais une routine manuelle en plus",
+  argus: "couvert PAR DÉFAUT : tourne déjà automatiquement à chaque commit (Article 20) — jamais écarté de la Ronde, simplement déjà fait quand elle démarre",
+  harmonia: "couvert PAR DÉFAUT : tourne déjà automatiquement à chaque commit (Article 20) — jamais écarté de la Ronde, simplement déjà fait quand elle démarre",
+  "axa-check": "couvert PAR DÉFAUT : tourne déjà automatiquement à chaque commit (Article 20) — jamais écarté de la Ronde, simplement déjà fait quand elle démarre",
   "clean-dirty-old": "sa partie mécanique tourne déjà à chaque commit (Article 20) — seul son SIGNAL de fraîcheur rejoint la Ronde (clean-dirty-old-signal), jamais un second passage complet",
   "clone-hunter": "cinquième Gardien sacré depuis le 2026-09-22 (demande explicite de l'utilisateur), tourne désormais déjà à chaque commit (Article 20) — jamais une routine manuelle en plus, exactement comme les 4 autres Gardiens ci-dessus",
   "always-new-code": "sixième Gardien sacré depuis le 2026-09-21 (couche légère seulement — demande explicite de l'utilisateur), tourne désormais déjà à chaque commit (Article 20) — jamais une routine manuelle en plus, exactement comme les 5 autres Gardiens ci-dessus ; le vrai zoom profond, lui, reste un raisonnement payant hors Ronde (Article 23), inchangé",
@@ -525,7 +525,7 @@ export function findRegistriesMissingFromCircle(existingPaths, items = CIRCLE_IT
   // Comparaison bidirectionnelle par id (jamais un texte joint) : un registre plus court que son
   // item ("profil" ⊂ "profil-utilisateur") ou plus long ("always-new-code" ⊂
   // "always-new-code-signal") doit matcher dans les deux sens, jamais un seul.
-  return registrySlugs.filter((slug) => !(slug in CIRCLE_EXCLUDED_REGISTRIES) && !items.some((i) => slug.includes(i.id) || i.id.includes(slug)));
+  return registrySlugs.filter((slug) => !(slug in CIRCLE_AUTO_COVERED_REGISTRIES) && !items.some((i) => slug.includes(i.id) || i.id.includes(slug)));
 }
 
 // findPromisedFilesMissing() (2026-09-22, Ronde CIRCLE-TASKS en mode AUTO — Article 24).
@@ -653,7 +653,7 @@ export function groupCircleReportByTheme(report) {
 // Ronde (#225, #231) — jamais une vraie règle codée, donc jamais garanti de rester cohérent d'une
 // fois à l'autre. Encodage EXPLICITE de la pratique réelle déjà observée sur ces deux passages,
 // jamais une règle inférée à l'aveugle depuis les champs texte libres (`tokensEstimes`/`cout`, trop
-// ambigus à parser mécaniquement) — même style que CIRCLE_EXCLUDED_REGISTRIES : un nom, une raison
+// ambigus à parser mécaniquement) — même style que CIRCLE_AUTO_COVERED_REGISTRIES : un nom, une raison
 // écrite, jamais un silence. Exclus par défaut : la relecture exhaustive du référentiel (gratuite en
 // appel API mais coûteuse en tokens de l'agent, cf. son propre `tokensEstimes`), l'item purement
 // récréatif, l'item conditionnel à une session déjà en cours, et les deux items costly (déjà exclus
@@ -994,7 +994,7 @@ function main() {
   }
   const rootNoSlash = ROOT.replace(/\/$/, "");
   const missingRegistries = findRegistriesMissingFromCircle(walkDocsPaths(`${rootNoSlash}/docs`, rootNoSlash));
-  if (missingRegistries.length) console.log(red(`${ALERT_ICON} Registre(s) sans item ni exclusion documentée dans la Ronde : ${missingRegistries.join(", ")} — à ajouter à CIRCLE_ITEMS ou à CIRCLE_EXCLUDED_REGISTRIES avec sa raison.`));
+  if (missingRegistries.length) console.log(red(`${ALERT_ICON} Registre(s) sans item de Ronde ni couverture automatique documentée : ${missingRegistries.join(", ")} — à ajouter à CIRCLE_ITEMS ou à CIRCLE_AUTO_COVERED_REGISTRIES avec la raison de sa couverture.`));
   for (const missing of findPromisedFilesMissing()) {
     console.log(red(`${ALERT_ICON} Fichier promis par la documentation mais ABSENT du disque : ${missing.path} — ${missing.promesse}.`));
   }
