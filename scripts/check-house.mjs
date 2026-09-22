@@ -3308,6 +3308,19 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(avancement.sansTrace.length,0,'checked live: every step of the simulation process now carries a real trace. The four conversational ones (launch, delivery, survey, calibration) got one rather than being dropped or declared verified without being so — the whole point of the simulation logbook.');
   assert.ok(processProgress('nuit').sansTrace.length>0,'the night process, by contrast, still has genuinely untraceable steps — and the tool must keep saying so rather than flattening the two cases');
   assert.ok(!checkAgentSessionDeclared({session:{}}).ok&&checkAgentSessionDeclared({session:{model:'x'}}).ok,'a missing session identity must be flagged, since every report produced then carries "Version de Claude : non renseignée"');
+  // LE DÉPÔT VIDE DÉGUISÉ EN DÉPÔT FAIT (2026-09-23, trouvé en conditions réelles à l'ouverture de
+  // la nuit autonome). L'identité avait été déposée avec une clé mal orthographiée ; la fonction
+  // avait écrit `model: null` sans broncher. Le fichier existait, l'étape du process paraissait
+  // faite, et chaque rapport de la nuit aurait porté « non renseignée » alors que tout semblait en
+  // ordre. UN FICHIER VIDE EST PIRE QU'UN FICHIER ABSENT : l'absence se voit, le vide se déguise.
+  {
+    const rt = await import('../scripts/report-template.mjs');
+    assert.throws(() => rt.recordAgentSession({ modele: 'claude-opus-5' }), /cl\u00e9\(s\) inconnue\(s\)/, 'a misspelled key is refused outright: it is the typo that produced the empty deposit, not forgetting the field, so refusing only a missing `model` would not have caught the real case');
+    assert.throws(() => rt.recordAgentSession({}), /obligatoire/, 'and an identity with no model at all is refused too — writing null there manufactures a deposit that never happened');
+    // Le cas nominal doit rester possible, sinon le durcissement casserait ce qu'il protège.
+    const ok = rt.recordAgentSession({ model: 'test-model', sessionId: 'test', root: fs.mkdtempSync('/tmp/sess-') });
+    assert.equal(ok.model, 'test-model', 'a correct deposit still works, and returns what it wrote');
+  }
   const {preflight,gate,postflight,brief,LESSONS,REQUIRED_BEATS}=await import('../scripts/process-simulation-guardian.mjs');
   const planBon={phase2AutonomousTurns:true,sendsIdentify:true,baseUrl:'http://127.0.0.1:3000',handlesLocks:true,dossierCheckedOnWholeHistory:true,smartConsoConsulted:true,beats:REQUIRED_BEATS};
   assert.ok(preflight(planBon).ok,'a plan that satisfies every lesson already paid for must be allowed through without friction');

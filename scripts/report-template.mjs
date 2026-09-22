@@ -63,8 +63,26 @@ export const REPORT_CONTRACT = [
 // version périmée affirmée avec aplomb serait exactement l'erreur que tout ce paysage combat (une
 // absence de mesure présentée comme une mesure). L'utilisateur a ajouté le corollaire : veiller à ce
 // que ce cas n'arrive jamais est le travail du gardien de process, pas celui du rapport.
-export function recordAgentSession({ model, sessionId, root = ROOT } = {}) {
-  const payload = { model: model ?? null, sessionId: sessionId ?? null, recordedAt: new Date().toISOString() };
+// REFUSE UN DÉPÔT VIDE (2026-09-23, trouvé en conditions réelles à l'ouverture de la nuit autonome).
+//
+// CE QUI S'EST PASSÉ, et c'est exactement le défaut que ce paysage traque partout : l'identité a été
+// déposée avec une clé mal orthographiée (`modele` au lieu de `model`). La fonction a écrit
+// `model: null` sans broncher, le fichier existait, l'étape du process paraissait faite — et chaque
+// rapport de la nuit aurait porté « Version de Claude : non renseignée » alors que tout semblait en
+// ordre. UN FICHIER DÉPOSÉ QUI NE CONTIENT RIEN EST PIRE QU'UN FICHIER ABSENT : l'absence se voit,
+// le vide se déguise en présence.
+//
+// La correction ne se contente donc pas de refuser `model` manquant : elle refuse aussi les clés
+// INCONNUES, parce que c'est la faute d'orthographe qui a produit le vide, pas l'oubli. Un appelant
+// qui se trompe de nom l'apprend tout de suite, au lieu de croire son identité déposée.
+const CLES_SESSION_CONNUES = new Set(["model", "sessionId", "root"]);
+
+export function recordAgentSession(options = {}) {
+  const { model, sessionId, root = ROOT } = options;
+  const inconnues = Object.keys(options).filter((k) => !CLES_SESSION_CONNUES.has(k));
+  if (inconnues.length) throw new Error(`recordAgentSession(): clé(s) inconnue(s) ${inconnues.join(", ")} — attendu ${[...CLES_SESSION_CONNUES].join(", ")}. Une faute de frappe ici produit une identité vide qui passe pour déposée.`);
+  if (!model) throw new Error("recordAgentSession(): `model` est obligatoire — un fichier d'identité sans modèle est un dépôt vide déguisé en dépôt fait, et chaque rapport de la session porterait le trou sans que rien ne le signale.");
+  const payload = { model, sessionId: sessionId ?? null, recordedAt: new Date().toISOString() };
   writeFileSync(join(root, SESSION_FILE), JSON.stringify(payload, null, 1));
   return payload;
 }
