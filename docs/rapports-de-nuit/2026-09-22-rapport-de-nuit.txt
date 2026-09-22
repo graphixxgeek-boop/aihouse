@@ -157,3 +157,48 @@ lectures dans le test. Si je me suis trompé, ça se renverse en une ligne.
   · Le palier de badge « OK 100% » : deux lectures légitimes, à trancher avec toi.
   · Le réveil conditionnel des Gardiens (#362) : un Gardien peut dormir
     indéfiniment sans que personne ne le sache. Piste prête, décision à toi.
+
+
+7. UN POINT OÙ JE ME SUIS ARRÊTÉ VOLONTAIREMENT — THE-SCREENER
+---------------------------------------------------------------
+J'ai rendu l'outil HONNÊTE (il ne prétend plus avoir réussi une capture masquée,
+et il NOMME la fenêtre qui bloque). Mais je n'ai pas réussi à obtenir une vraie
+capture de la scène, et je préfère te le dire franchement plutôt que de livrer
+une demi-solution.
+
+Ce que j'ai éliminé, dans l'ordre, en le vérifiant à chaque fois :
+  1. La popup de pseudo — elle s'ouvre tant que la partie n'a pas d'observateur.
+     Capturé en phase 2, observateur posé : elle ne bloque plus.
+  2. L'avertissement légal et le message d'accueil — ils dépendent de la MÉMOIRE
+     DU NAVIGATEUR, pas du jeu. Pré-posés avant le chargement (ça reproduit
+     exactement un visiteur déjà venu, ça ne touche rien côté serveur).
+  3. Il reste « Reprendre la maison ? ». J'ai tenté de cliquer « Conserver
+     l'histoire » (un bouton purement local, qui ne lance aucun reset). Ça n'a
+     pas suffi. J'ai RETIRÉ ce code plutôt que de le laisser : un outil qui
+     prétend avoir dégagé la vue sans l'avoir fait est pire que rien.
+
+Mon avis, à trancher avec toi : la bonne réponse est probablement côté
+APPLICATION, pas côté capture — un mode ou un paramètre d'URL « observation »
+qui n'ouvre aucune fenêtre modale. Ça touche l'interface, donc ça relève de la
+refonte graphique, ta borne. Je m'arrête ici.
+
+
+8. OÙ EN EST LA SIMULATION
+---------------------------
+full_sim18 a été lancée contre un serveur à jour, après consultation de Smart
+Conso API (verdict : rien à signaler, confirmé et journalisé).
+
+  · Phase 1 bouclée : 5/5 preuves au tour 41, en 17 minutes.
+  · Le plafond d'enquête a fonctionné — il a paru lent (0/5 encore au tour 21),
+    mais c'était la scène d'inspection des portes qui tenait la priorité, pas un
+    bug : vérifié dans l'état réel du monde, pas seulement dans le log.
+  · Minuit a sonné au bon moment, synchronisé avec le plafond comme prévu.
+  · Phase 2 en cours au moment où j'écris.
+
+Ce que j'ai déjà pu lire du ton me paraît bon — par exemple Noé devant la porte
+du jardin : « On nous montre de l'herbe et un arbre, mais la poignée ne cède pas.
+Belle invitation. » Sec, ironique, pas une plainte.
+
+Le transcript complet et son analyse (EL-PROFESSOR, comparaison avec le carnet
+des 12 correctifs à revalider) restent à faire — la simulation n'était pas finie
+quand cette nuit s'est achevée.
