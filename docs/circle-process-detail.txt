@@ -1152,3 +1152,60 @@ ORDRE NON NÉGOCIABLE DE LA FIN DE RONDE, rappelé ici parce que c'est lui que j
   4. seulement ensuite : l'analyse, puis le plan d'action, puis les tâches ;
   5. puis EVAL-DEV et EVAL-IA ;
   6. puis les séries de questions.
+
+════════════════════════════════════════════════════════════════════════
+PARTIE 14 — ALIMENTER UN OUTIL EST UN GESTE QUI SE COMPTE (2026-09-23)
+════════════════════════════════════════════════════════════════════════
+
+Posé par l'utilisateur en trois temps, le même jour :
+  1. « Si tu alimentes un fichier de data appartenant à un outil membre, ça ne compte pas comme une
+     utilisation de l'outil, mais c'est un bon réflexe qui mérite d'être comptabilisé et inclus
+     dans le calcul du KPI correspondant avec objectifs. »
+  2. « Pense à l'alimenter aux moments opportuns, sers-toi des process et de l'existant pour
+     trouver des moments opportuns comme simu par ex, mais aussi de façon générale si tu peux. »
+  3. « La Ronde reste un moment opportun, trouve encore deux occasions autres ET EN GÉNÉRAL,
+     comment respecter "en général" ? »
+
+LES DEUX MOITIÉS DE LA RÈGLE, ET AUCUNE NE VA SANS L'AUTRE :
+  · alimenter un outil NE COMPTE PAS comme l'utiliser — l'additionner au nombre de sollicitations
+    gonflerait le taux d'usage avec des gestes qui n'ont produit aucun verdict ;
+  · alimenter MÉRITE d'être compté — c'est le geste qui empêche un outil de mourir de faim, et
+    rien ne distinguait « jamais alimenté » d'« alimenté hier ».
+Les deux séries vivent donc côte à côte et ne s'additionnent JAMAIS. Un outil très alimenté et
+jamais consulté est un constat en soi, pas une moyenne à lisser.
+
+POURQUOI CE N'EST PAS UNE CONSIGNE À L'AGENT, et la preuve est datée : le compteur a été construit
+le matin du 2026-09-23 et affichait ZÉRO le soir. J'avais l'intention de m'en servir. L'Article 27
+dit exactement pourquoi ça ne suffit pas — une obligation qui ne repose que sur la mémoire d'un
+agent n'existe plus à la session suivante.
+
+LES QUATRE MOMENTS OPPORTUNS, cherchés DANS LES PROCESS EXISTANTS comme l'utilisateur le
+suggérait, et câblés là où l'écriture a réellement lieu :
+  1. LA RONDE — `recordCircleItemReport()` : chaque signal écrit dans le registre d'un outil EST
+     une alimentation de cet outil ;
+  2. LA SIMULATION — `archiveSimulationFiles()` (LE-RÉGISSEUR) : archiver un transcript nourrit
+     docs/simulations/, que HARMONIA et EL-PROFESSOR relisent réellement ;
+  3. LE TABLEAU DE BORD — `appendHistoryRow()` (kpi-report) : une ligne d'historique nourrit ce que
+     CASSANDRA-RH et objectifs-vs-resultats relisent pour juger une tendance ;
+  4. L'ÉTAT DES TÂCHES — `appendIndexRow()` (check-tasks-details) : son index est relu par la Ronde
+     et par data-archangel.
+Les quatre appels sont best-effort et jamais bloquants : un compteur qui ferait échouer l'écriture
+qu'il observe serait pire que pas de compteur.
+
+ET « EN GÉNÉRAL », qui est la vraie réponse — quatre points de câblage sont une LISTE, et une liste
+se périme au cinquième outil (Article 24). Le dépôt suit une convention sans exception : le
+registre d'un outil vit dans `docs/<nom-de-l-outil-en-minuscules>/`. Le bénéficiaire d'une écriture
+se DÉDUIT donc du chemin écrit (`beneficiaireDuChemin()` / `recordRegistryWrite()`), au lieu d'être
+nommé à chaque appel — un outil qui n'existe pas encore aujourd'hui en hérite sans rien à inscrire.
+Hors convention, rien n'est enregistré : créditer le mauvais outil serait pire que ne rien compter.
+
+LE GARDE-FOU QUI REND LA RÈGLE VÉRIFIABLE : `findEcrivainsDeRegistreSansContribution()`
+(doc-report.mjs) lit les scripts, repère ceux dont l'ÉCRITURE vise un registre, et nomme ceux qui
+ne déclarent rien. Un nouvel outil qui écrira un registre sans le déclarer se signalera tout seul.
+Sa limite est déclarée : il reconnaît un chemin littéral ou une constante définie comme chemin de
+registre — un script qui construirait son chemin autrement lui échappe.
+
+TRACE VÉRIFIABLE DE CETTE ÉTAPE : `.tool-usage-history.json` — les contributions y vivent dans une
+série SÉPARÉE des sollicitations, jamais mélangée (deux natures dans une même série produiraient un
+total qui ne décrit ni l'une ni l'autre). C'est le fichier-preuve déclaré par l'étape
+« contributions » du process de la Ronde dans `scripts/god-of-all-process.mjs`.

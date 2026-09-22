@@ -69,6 +69,9 @@ export const PROCESSES = [
       // Le trou qu'elle ferme, dans ses mots : « pour que ma voix ait un retour dans la mecanique
       // d'evaluation ». L'évaluation était à sens unique — je jugeais, il lisait.
       { cle: "voix-utilisateur", libelle: "poser la fenêtre de réponses sur les points problématiques de son évaluation, avant de clore", preuve: { fichier: "docs/angel-of-ia-process/reponses-evaluation.md" } },
+      // AJOUTÉE (2026-09-23) : alimenter un outil est un geste qui se compte, et le moment opportun
+      // est l'écriture elle-même — jamais un rappel à l'agent (cf. Partie 14 du document de process).
+      { cle: "contributions", libelle: "chaque signal écrit dans le registre d'un outil enregistre la contribution (recordCircleItemReport → recordToolContribution)", preuve: { fichier: ".tool-usage-history.json" } },
       { cle: "enregistrement", libelle: "enregistrer la Ronde comme faite", preuve: { fichier: ".circle-tasks-last-run.json" } },
     ],
   },
