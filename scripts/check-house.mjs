@@ -252,6 +252,15 @@ console.log('Passed: varied reset scenarios, word ages beyond context window, ea
   assert.ok(lastContext.negotiationContext,'the very first real message from the observer must flip certainty on within that same turn, not a turn later');
   assert.equal(lastContext.awaitingObserver,undefined,'once the observer has spoken, the doubt instruction must disappear — the wait is over');
   assert.equal(lastContext.revealed,true,'revealed must flip to true in the exact same turn as negotiationContext, once the observer has genuinely spoken');
+  // L'ÉCHO ENTRE LIA ET NOÉ (2026-09-22, après full_sim18 : les deux répondaient à CHAQUE message
+  // par la même idée, jusqu'à partager le squelette de phrase et les verbes — Article 11 enfreint
+  // dans ses deux moitiés à la fois). Cause trouvée avant de toucher au code (Article 19) : le second
+  // personnage VOIT la réplique du premier, et la seule consigne anti-écho qu'il recevait était
+  // « sans répéter sa question » — étroite pour un problème qui porte sur le fond. `lastContext`
+  // capture le DERNIER appel du tour, donc celui du partenaire : c'est bien sa consigne qu'on lit ici.
+  assert.match(lastContext.conversationFocus,/ANGLE DOIT ÊTRE DIFFÉRENT/,'the second character must receive a real requirement of substance, not a narrow ban on repeating the question — the narrow version let him say the same thing in other words, every single turn');
+  assert.match(lastContext.conversationFocus,/charpente de sa phrase/,'sharing the sentence skeleton must be forbidden explicitly: in full_sim18 both characters used the same opening, the same hinge and the same two verbs — two characters who build their sentences alike stop being two characters');
+  assert.ok(!/sans répéter sa question/.test(lastContext.conversationFocus),'the old narrow instruction must be gone, not merely supplemented — leaving it would keep suggesting that avoiding the question is enough');
   r=await post(input('interact',1,{epoch:certaintyEpoch}));assert.equal(r.status,200);
   assert.ok(lastContext.negotiationContext,'certainty must persist on a later autonomous turn once the observer has already spoken once, never reset to doubt');
   assert.equal(lastContext.revealed,true,'revealed must persist true on a later turn just like negotiationContext, never regress to false');
@@ -2997,6 +3006,15 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(events.find(e=>e.type==='move').detail,'acteur 1 : salon → cuisine','a room change must report the real previous and new room for the real actor, never a generic or wrong one');
   assert.deepEqual(summarizeActions([{label:'r1',response:{story:{round:1,life:{bonusLog:[{bonus:'food'}]},evidence:[]}}}]).map(e=>e.type),['bonus'],'an entry with no decisions array must never crash the extraction');
   assert.deepEqual(summarizeActions([]),[],'an empty log must report zero events, never throw');
+  // LES DEUX RÈGLES DE LANGUE AJOUTÉES APRÈS full_sim18 (2026-09-22), vérifiées sur le vrai fichier
+  // de consignes plutôt que promises : Lia avait dit « on est touchéES » d'un duo dont Noé est un
+  // homme, et les deux avaient annoncé « mon incertitude est à 20 % » — un personnage enfermé qui
+  // lit sa propre jauge à voix haute sonne comme une machine qui récite, et c'est en plus ce chiffre
+  // partagé qui rendait les deux répliques jumelles.
+  const consignes = (await import('node:fs')).readFileSync(new URL('../lib/lia.ts', import.meta.url), 'utf8');
+  assert.match(consignes,/MASCULIN PLURIEL/,'the duo-agreement rule must be stated as a grammar principle the model applies itself, never as a list of phrasings to memorise (Article 17 corollary)');
+  assert.match(consignes,/JAUGES INTERNES NE SE DISENT PAS EN CHIFFRES/,'a character must never speak his own inner gauge as a number — he feels a doubt, he does not know its percentage');
+  assert.match(consignes,/chiffres qui décrivent le MONDE/,'the rule must spare real-world numbers (an age, an hour, a date on a document): banning every number would cost the investigation its concrete details');
   // GOD-OF-ALL-PROCESS et PROCESS.SIMULATION.GUARDIAN (2026-09-22) — les deux outils de process
   // demandés par l'utilisateur le matin suivant la nuit autonome. Le premier est le tool-brain des
   // process (quel process gouverne cette tâche, où en est-on) ; le second est le référent de
