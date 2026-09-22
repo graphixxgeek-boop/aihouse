@@ -3717,9 +3717,22 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const tb = await import('../scripts/tool-brain.mjs');
   const { adviseToolBrain, knownToolSlugsFromPrestations, buildToolBrainUsageReport, diagnoseToolBrainSelf, formatToolBrainReport, formatToolBrainReminder, TOOL_BRAIN_SLUG } = tb;
 
-  // adviseToolBrain() — inchangé depuis la première version, simple relais.
+  // adviseToolBrain() — relais, plus la criticité depuis le 2026-09-22 (règle de travail 3quater).
   const adviceNone = adviseToolBrain({});
-  assert.deepEqual(adviceNone, { prestations: [], fileAdvice: undefined }, 'with neither a task description nor a file, adviseToolBrain() must return empty/undefined signals, never fabricate a recommendation from nothing');
+  assert.deepEqual(adviceNone, { prestations: [], fileAdvice: undefined, criticite: undefined }, 'with neither a task description nor a file, adviseToolBrain() must return empty/undefined signals, never fabricate a recommendation from nothing — criticality included: no file means no measurement, never a default level');
+
+  // CRITICITÉ AVANT D'AGIR (2026-09-22, règle 3quater : « la criticité d'un fichier doit toujours
+  // être évaluée avant d'y mener une action spécifique »). La mesure existait dans ecotoken depuis
+  // le matin même, mais il fallait lancer ecotoken SUR le fichier pour l'obtenir — donc jamais au
+  // moment où elle sert. tool-brain étant le seul réflexe obligatoire avant de toucher un fichier,
+  // c'est là qu'elle doit tomber d'office, sinon la règle reste un vœu.
+  const adviceCharte = adviseToolBrain({ taskDescription: 'alléger la charte', filePath: 'CLAUDE.md' });
+  assert.equal(adviceCharte.criticite?.niveau, 'maitre', 'the project master file must be recognised as such through tool-brain itself, not only when ecotoken is pointed at it — this is the whole point of the rule');
+  assert.equal(adviceCharte.criticite?.risqueMaxAutorise, 'faible', 'the level must carry what it actually AUTHORISES, not just a label: on the master file, only low-risk changes may be applied without going back to the user');
+  const adviceOrdinaire = adviseToolBrain({ filePath: 'docs/referentiel/points-fragiles.md' });
+  assert.ok(['ordinaire', 'sensible', 'peripherique'].includes(adviceOrdinaire.criticite?.niveau), 'an ordinary reference document must NOT come back at a high level — a scale that rates everything critical authorises nothing and gets ignored');
+  const adviceInexistant = adviseToolBrain({ filePath: 'lib/ce-fichier-nexiste-pas.ts' });
+  assert.ok(adviceInexistant.criticite === undefined || adviceInexistant.criticite.absent, 'a file that does not exist must yield an honest absence, never a fabricated level — and never crash the one reflex the agent is required to run before touching anything');
   const adviceTask = adviseToolBrain({ taskDescription: 'Avant de lire un gros fichier potentiellement volumineux, quel outil de recherche utiliser' });
   assert.ok(Array.isArray(adviceTask.prestations), 'a real task description must run through suggestPrestationsForTask() and return an array, even if empty depending on the live PRESTATIONS catalogue');
 
@@ -4906,6 +4919,20 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(findRegistriesMissingFromCircle(new Set(['docs/argus/index.md']), fakeItems), [], 'a registry present in CIRCLE_AUTO_COVERED_REGISTRIES (argus — already re-run at every commit per Article 20) must never be flagged as missing, its exclusion reason stands in for coverage');
   assert.deepEqual(findRegistriesMissingFromCircle(new Set(['docs/brand-new-tool/index.md']), fakeItems), ['brand-new-tool'], 'a genuinely new registry with neither a matching CIRCLE_ITEMS entry nor a documented exclusion must be flagged by name — the exact real gap the user pointed out, now caught mechanically for any future tool');
   assert.deepEqual(findRegistriesMissingFromCircle(new Set(['not-a-registry.md', 'docs/argus/other-file.md']), fakeItems), [], 'only real docs/<slug>/index.md paths count as a registry — an unrelated file or a non-index file inside a known folder must never be mistaken for one');
+    // La table maîtresse se reconnaît à ses COLONNES (2026-09-22, régression réelle provoquée le jour
+  // même en ajoutant une section avec un tableau avant §7ter : le parseur prenait « le premier
+  // tableau du document » et renvoyait une liste vide, donc un effectif d'équipe à zéro et tous les
+  // badges perdus d'un coup). Sur un document de 56 000 tokens qui contient plusieurs tableaux
+  // légitimes, cette hypothèse devait casser tôt ou tard, par quiconque ajouterait un tableau.
+  {
+    const { parseToolsTable: parse } = await import('../scripts/le-coordinateur.mjs');
+    const vraieTable = '| Outil | Statut | Ce qu\'il détecte/régule | Déclenchement | Coût |\n|---|---|---|---|---|\n| FAKE-OUTIL | Agent | des choses | à la demande | gratuit |';
+    const tableIntruse = '| Niveau | Ce que ça veut dire |\n|---|---|\n| critique | attention |\n\n';
+    assert.equal(parse(vraieTable).length, 1, 'baseline: the real master table alone parses its single row');
+    assert.equal(parse(tableIntruse + vraieTable).length, 1, 'an unrelated table placed BEFORE the master table must never hide it — the parser identifies its table by its real columns (Coût + Déclenchement), never by position');
+    assert.equal(parse(tableIntruse).length, 0, 'a document with no master table at all must return an honest empty list, never rows scraped from whatever table happens to be there');
+  }
+
   assert.ok(Object.keys(CIRCLE_AUTO_COVERED_REGISTRIES).every((k) => typeof CIRCLE_AUTO_COVERED_REGISTRIES[k] === 'string' && CIRCLE_AUTO_COVERED_REGISTRIES[k].length > 0), 'every excluded registry must carry an actual documented reason, never a bare name with no explanation');
 
   // findPromisedFilesMissing() (2026-09-22, Article 24) : trou réel — profil-actuel.txt était promis

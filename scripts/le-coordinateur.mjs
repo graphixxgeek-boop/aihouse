@@ -347,14 +347,25 @@ export function buildCatalogDelivery(recordResult, prestations = PRESTATIONS) {
 export function parseToolsTable(markdown) {
   const lines = markdown.split("\n").filter((l) => l.trim().startsWith("|"));
   if (!lines.length) return [];
-  const headerCells = lines[0].split("|").slice(1, -1).map((c) => c.trim());
+  // La table maîtresse se RECONNAÎT à ses colonnes, elle n'est jamais « le premier tableau du
+  // document » (corrigé le 2026-09-22, régression réelle provoquée le jour même : ajouter une
+  // section avec un tableau de six lignes AVANT §7ter dans docs/regles-de-travail.md faisait lire
+  // cet autre tableau comme en-tête, donc renvoyer une liste vide — effectif de l'équipe à zéro,
+  // tous les badges perdus d'un coup, sur un document de 56 000 tokens qui contient plusieurs
+  // tableaux légitimes. La même hypothèse implicite aurait cassé au prochain tableau ajouté, par
+  // quiconque. On cherche donc la ligne d'en-tête qui porte réellement les colonnes attendues.
+  const enTete = lines.findIndex((l) => {
+    const cells = l.split("|").slice(1, -1).map((c) => c.trim());
+    return cells.includes("Coût") && cells.includes("Déclenchement");
+  });
+  if (enTete === -1) return [];
+  const headerCells = lines[enTete].split("|").slice(1, -1).map((c) => c.trim());
   const coutIdx = headerCells.indexOf("Coût");
   const declenchementIdx = headerCells.indexOf("Déclenchement");
   const statutIdx = headerCells.indexOf("Statut");
   const descriptionIdx = headerCells.indexOf("Ce qu'il détecte/régule");
-  if (coutIdx === -1 || declenchementIdx === -1) return [];
   const rows = [];
-  for (const line of lines.slice(1)) {
+  for (const line of lines.slice(enTete + 1)) {
     const cells = line.split("|").slice(1, -1).map((c) => c.trim());
     if (cells.length <= Math.max(coutIdx, declenchementIdx)) continue;
     const tool = cells[0];

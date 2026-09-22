@@ -258,6 +258,42 @@ tâche de `docs/suivi/` qui décrit une trouvaille d'outil doit nommer ce qui a 
 et où — un compte rendu qui raconte la trouvaille sans dire ce qu'elle a changé dans le code est le
 signal que la règle n'a pas été appliquée.
 
+## 3quater. La criticité d'un fichier s'évalue AVANT d'y mener une action
+
+*(2026-09-22, demande explicite de l'utilisateur : « la criticité d'un fichier doit toujours être
+évaluée avant d'y mener une action spécifique — comme une optimisation, une modification
+importante, etc. ».)*
+
+**La règle** : avant toute action spécifique sur un fichier — allègement, refonte, déplacement de
+blocs, modification structurelle, tout ce qui va plus loin qu'une correction ponctuelle — sa
+CRITICITÉ est mesurée, jamais supposée. Le niveau obtenu ne se contente pas de qualifier le
+fichier : il **fixe ce qu'on a le droit d'appliquer sans repasser par l'utilisateur**.
+
+L'échelle est celle d'ecotoken, la seule du projet, jamais une seconde inventée à côté — six
+niveaux, dont les deux premiers sont catégoriels (un seul fait suffit à les atteindre) :
+
+| Niveau | Ce que ça veut dire | Ce que ça change |
+|---|---|---|
+| `maitre` | le fichier qui gouverne tout le travail (ici `CLAUDE.md`) | vigilance maximale : risque « faible » seulement, relecture humaine ET contrôle de perte de références obligatoires |
+| `tuyauterie` | lancé par un crochet, ou importé par beaucoup | idem : le casser casse le filet de sécurité lui-même |
+| `critique` (≥6) | rechargé souvent, très cité, dense en règles | mêmes obligations, le doute tranche toujours pour NE PAS couper |
+| `sensible` (≥4) | vraies conséquences en cas d'erreur | risque « faible » applicable, le reste se propose |
+| `ordinaire` (≥2) | fichier courant | risque « moyen » applicable |
+| `peripherique` (0) | sans dépendance connue | aucune contrainte particulière |
+
+**Où la mesure se prend** : dans `tool-brain`, le réflexe déjà obligatoire avant toute recherche
+dans un fichier existant (`node scripts/tool-brain.mjs "<tâche>" --file <fichier>`). La criticité
+s'y affiche désormais **d'office**, avec ses signaux réels et, pour les trois niveaux hauts, le
+rappel explicite des obligations. C'est volontaire et c'est le cœur de cette règle : la mesure
+existait déjà dans ecotoken depuis le 2026-09-22 au matin, mais il fallait lancer ecotoken SUR le
+fichier pour l'obtenir — donc jamais au moment où elle sert, juste avant d'agir. Une règle qui
+oblige à consulter un outil qu'on ne pense pas à consulter n'est pas une règle, c'est un vœu.
+
+**Ce que la règle n'exige PAS** : une correction ponctuelle (corriger une faute, ajouter une ligne
+de suivi, mettre à jour un chiffre) n'est pas une « action spécifique » au sens ci-dessus. Exiger
+une mesure de criticité pour chaque frappe la rendrait mécanique, donc invisible — exactement ce
+que l'Article 14 de la charte reproche à une vigilance qui coche des cases.
+
 ## 4. Git et livraison
 
 - **Commit dès qu'un morceau de travail cohérent passe les tests**, sans attendre une demande

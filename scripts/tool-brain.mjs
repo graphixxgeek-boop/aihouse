@@ -25,6 +25,7 @@ import { PRESTATIONS, suggestPrestationsForTask, formatMenu, slugifyAgentName } 
 import { recommendFindBrain, flagFindDeepBoosterCandidates, FIND_DEEP_BOOSTER_NICKNAME } from "./find-brain.mjs";
 import { flagFindBoosterCandidates } from "./doc-report.mjs";
 import { toolUsageStats, toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
+import { assessCriticality } from "./ecotoken.mjs";
 
 export const TOOL_BRAIN_SLUG = "tool-brain";
 const USAGE_HISTORY_URL = new URL("../.tool-usage-history.json", import.meta.url);
@@ -46,7 +47,16 @@ export function loadToolUsageHistory(readFile = (u) => readFileSync(u, "utf8")) 
 export function adviseToolBrain({ taskDescription, filePath } = {}) {
   const prestations = taskDescription ? suggestPrestationsForTask(taskDescription) : [];
   const fileAdvice = filePath ? recommendFindBrain(filePath) : undefined;
-  return { prestations, fileAdvice };
+  // CRITICITÉ (2026-09-22, règle de travail 3quater : « la criticité d'un fichier doit toujours être
+  // évaluée avant d'y mener une action spécifique »). La mesure existait déjà dans ecotoken, mais
+  // elle n'était atteignable qu'en lançant ecotoken SUR ce fichier — donc jamais au moment où elle
+  // sert, c'est-à-dire juste avant d'agir. tool-brain étant le seul réflexe obligatoire avant de
+  // toucher un fichier, c'est ici qu'elle doit apparaître : la règle devient atteignable au lieu de
+  // rester une bonne intention. Jamais un second calcul — assessCriticality() est appelée telle
+  // quelle, l'unique source de cette échelle à 6 niveaux.
+  let criticite;
+  if (filePath) { try { criticite = assessCriticality(filePath); } catch { criticite = undefined; } }
+  return { prestations, fileAdvice, criticite };
 }
 
 // --- 2. Rappel centralisé post-commit (2026-09-21, remplace 3 blocs auparavant éparpillés dans
@@ -160,7 +170,7 @@ function main() {
   const fileFlagIndex = rest.indexOf("--file");
   const filePath = fileFlagIndex >= 0 ? rest[fileFlagIndex + 1] : undefined;
   const cleanDescription = fileFlagIndex >= 0 ? rest.slice(0, fileFlagIndex).join(" ") : taskDescription;
-  const { prestations, fileAdvice } = adviseToolBrain({ taskDescription: cleanDescription, filePath });
+  const { prestations, fileAdvice, criticite } = adviseToolBrain({ taskDescription: cleanDescription, filePath });
 
   console.log(`tool-brain — pour : "${cleanDescription}"${filePath ? ` (fichier : ${filePath})` : ""}\n`);
   if (prestations.length) {
@@ -174,6 +184,15 @@ function main() {
       console.log("\n🧠 find-brain : fichier introuvable (pas encore créé ?) — rien à recommander tant qu'il n'existe pas.");
     } else {
       console.log(fileAdvice.recommend.length ? `\n🧠 find-brain : ${fileAdvice.recommend.join(" + ")} recommandé(s) pour ce fichier.` : "\n🧠 find-brain : aucun des deux outils de recherche n'est nécessaire pour ce fichier.");
+    }
+  }
+  // La criticité passe AVANT tout le reste dans la lecture : savoir qu'on s'apprête à toucher un
+  // fichier maître change la façon de mener l'action, pas seulement l'outil qu'on choisit.
+  if (criticite && !criticite.absent) {
+    console.log(`\n⚖️  criticité : ${String(criticite.niveau).toUpperCase()} (score ${criticite.score}) — risque maximal applicable sans repasser par l'utilisateur : « ${criticite.risqueMaxAutorise} »`);
+    for (const sig of (criticite.signaux ?? []).slice(0, 4)) console.log(`     · ${typeof sig === "string" ? sig : `${sig.nom}${sig.detail ? ` — ${sig.detail}` : ""}`}`);
+    if (["maitre", "tuyauterie", "critique"].includes(criticite.niveau)) {
+      console.log("     ⚠️  Relecture humaine et contrôle de perte de références OBLIGATOIRES avant d'appliquer quoi que ce soit ici.");
     }
   }
   if (!prestations.length && !fileAdvice) {
