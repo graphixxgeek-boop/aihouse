@@ -9,7 +9,7 @@ import { readFileSync, rmSync } from "node:fs";
 import { recentCommits, findCommitsMissingSuiviUpdate, findTaskNumberIssues, nextTaskNumber } from "../check-suivi-fidelity.mjs";
 import { walk, findDeadLifeFields, findTodoMarkers } from "../check-argus.mjs";
 import { checkLinks, LINKS } from "../check-harmonia.mjs";
-import { collectCoverage, robustnessScore, collectScriptCoverage, scriptRobustnessScore, LIB_MAP } from "../axa-check.mjs";
+import { collectCoverage, robustnessScore, collectScriptCoverage, scriptRobustnessScore, LIB_MAP, AGENT_SCRIPT_FILES } from "../axa-check.mjs";
 import { lastTouchDays, relativeStaleness } from "../clean-dirty-old.mjs";
 import { buildDuplicateReport, buildNearDuplicateReport } from "../clone-hunter.mjs";
 import { THEMES, THEME_PRIMARY_FILE, parseCoverage, recommendZone, countDatedAddenda, addendaSignal, parseNumstat, churnSignal } from "../always-new-code.mjs";
@@ -116,6 +116,31 @@ if (reveille("axa-check")) try {
     console.log(`🔎 AXA-CHECK (balayage réel post-commit) : couverture globale par fonction ${Math.round(score)}% sur ${Object.keys(perFile).length} fichier(s) mesuré(s) — jamais une preuve de correction, un signal de robustesse seulement (cf. docs/axa-check/index.md).\n`);
   }
   perSlugScriptCoverage = collectScriptCoverage(covDir);
+
+  // FIN DE GROS CHANTIER — le déclencheur qui manquait (2026-09-22, constat de l'utilisateur :
+  // « quand on finalise un outil comme ça ou un gros morceau de code, la suite des gardiens devrait
+  // faire une passe dans ce type de cas, sans que je sois obligé de demander »). Il avait raison :
+  // le balayage global annonçait « 99 % » pendant qu'ecotoken, tout juste terminé, était à 82 % avec
+  // 12 fonctions jamais testées — dont sa mesure phare. Une moyenne sur tout le dépôt noie
+  // exactement le fichier sur lequel on vient de travailler.
+  //
+  // La règle est mécanique et gratuite (la couverture est déjà mesurée, rien n'est relancé) : dès
+  // qu'un commit touche substantiellement le script d'un outil à badge, sa couverture PAR FONCTION
+  // est affichée et ses fonctions non testées sont nommées. Le seuil de lignes évite de crier pour
+  // une correction de commentaire.
+  const SEUIL_GROS_CHANTIER = 40;
+  for (const [slug, chemin] of Object.entries(AGENT_SCRIPT_FILES)) {
+    if (!changedFiles?.includes(chemin)) continue;
+    const ampleur = Number(sh(`git show --numstat --format= HEAD -- ${chemin} | awk '{print $1+$2}'`, { quiet: true })?.trim() || 0);
+    if (ampleur < SEUIL_GROS_CHANTIER) continue;
+    const fonctions = perSlugScriptCoverage?.[slug];
+    if (!fonctions?.length) continue;
+    const nonTestees = fonctions.filter((f) => !f.covered);
+    const pct = Math.round(((fonctions.length - nonTestees.length) / fonctions.length) * 100);
+    console.log(`🎯 FIN DE CHANTIER sur ${chemin} (${ampleur} lignes touchées) — couverture PAR FONCTION : ${pct} % (${fonctions.length - nonTestees.length}/${fonctions.length}).`);
+    if (nonTestees.length) console.log(`   ${nonTestees.length} fonction(s) jamais exécutée(s) par un test : ${nonTestees.map((f) => f.name).join(", ")}\n   (une moyenne globale les noie — c'est ce fichier-ci qui vient d'être retouché.)\n`);
+    else console.log("   Toutes ses fonctions sont exercées par au moins un test.\n");
+  }
   rmSync(covDir, { recursive: true, force: true });
 } catch { /* best-effort, jamais bloquant */ }
 
