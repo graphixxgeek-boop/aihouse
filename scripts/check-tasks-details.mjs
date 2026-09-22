@@ -847,7 +847,13 @@ export function buildRealOnboardingContext(root = ROOT.replace(/\/$/, "")) {
     // Seule déviation Agent réelle et documentée à ce jour (docs/regles-de-travail.md) — sans ça,
     // THE-DEEP-READER ressortirait à tort "sans badge" ici, alors qu'il est complet une fois ses
     // deux déviations assumées prises en compte (cf. checkAgentOnboarding(), le-coordinateur.mjs).
-    agentOverrides: { "THE-DEEP-READER": { cousinOf: "THE-FINAL-JUDGE", registryPathPrefix: "docs/suivi/relectures-lourdes/" } },
+    agentOverrides: {
+      "THE-DEEP-READER": { cousinOf: "THE-FINAL-JUDGE", registryPathPrefix: "docs/suivi/relectures-lourdes/" },
+      // Smart Breaker (2026-09-22) : son blueprint porte le nom d'avant son surnom — écrit le
+      // 2026-09-18, baptisé seulement le 2026-09-19. Déviation déclarée plutôt que renommage, qui
+      // casserait les renvois croisés de CLAUDE.md et de plusieurs fiches.
+      "Smart Breaker": { blueprintPath: "docs/outil-resilience-api.md" },
+    },
   };
 }
 

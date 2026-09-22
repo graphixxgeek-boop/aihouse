@@ -254,6 +254,11 @@ export const AGENT_SCRIPT_FILES = {
   "objectifs-vs-resultats": "scripts/objectifs-vs-resultats.mjs",
   "cassandra-rh": "scripts/cassandra-rh.mjs",
   "ecotoken": "scripts/ecotoken.mjs",
+  // Smart Breaker (2026-09-22) : rejoint la couverture le jour où il est devenu un vrai Agent
+  // certifié. Signalé instantanément par findScriptsMissingFromAgentFiles() dès le changement de
+  // statut — le garde-fou de l'Article 24 faisant exactement ce pour quoi il a été écrit.
+  // Point d'entrée réel de l'ensemble (4 fichiers), jamais un second chemin inventé.
+  "smart-breaker": "scripts/check-gemini-quota.mjs",
 };
 
 export function collectScriptCoverage(covDir, { readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8") } = {}) {

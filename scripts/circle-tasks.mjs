@@ -521,6 +521,13 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // `ecotoken-scan` qui le lance, harmonisation explicitement demandée par l'utilisateur
   // (« je crois qu'il y a deja un rapport sur claude.md dans circle. vois comment tu peux tout
   // harmoniser sur ce sujet »). Un second item aurait dit la même chose deux fois.
+  // smart-breaker (2026-09-22, le jour de sa certification) : son registre n'archive que des
+  // ÉPISODES RÉELS de blocage quota/clé — il se remplit quand un incident survient, jamais sur un
+  // rythme. Lui donner un item de Ronde imposerait de sonder l'API périodiquement, ce qui coûte de
+  // vrais appels (Article 22) pour, presque toujours, écrire « rien à signaler ». Exclusion
+  // MOTIVÉE, jamais un oubli : le bon déclencheur de cet outil est un 429/503 répété, pas le
+  // calendrier.
+  "smart-breaker": "couvert PAR ÉVÉNEMENT, jamais par calendrier : ce registre n'archive que de vrais épisodes de blocage — le sonder périodiquement coûterait de vrais appels API pour écrire « rien à signaler » (Article 22)",
   argus: "couvert PAR DÉFAUT : tourne déjà automatiquement à chaque commit (Article 20) — jamais écarté de la Ronde, simplement déjà fait quand elle démarre",
   harmonia: "couvert PAR DÉFAUT : tourne déjà automatiquement à chaque commit (Article 20) — jamais écarté de la Ronde, simplement déjà fait quand elle démarre",
   "axa-check": "couvert PAR DÉFAUT : tourne déjà automatiquement à chaque commit (Article 20) — jamais écarté de la Ronde, simplement déjà fait quand elle démarre",

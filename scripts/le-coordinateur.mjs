@@ -540,6 +540,14 @@ export function checkAgentOnboarding(agentName, {
   existingPaths = new Set(),
   cousinOf = null,
   registryPathPrefix = null,
+  // blueprintPath (2026-09-22, en certifiant Smart Breaker) — même patron que registryPathPrefix
+  // juste au-dessus, et pour la même raison : un chemin qui dévie de la convention doit être
+  // DÉCLARÉ par l'appelant, jamais deviné ni silencieusement toléré. Cas réel : le blueprint de
+  // Smart Breaker s'appelle `docs/outil-resilience-api.md` parce qu'il a été écrit AVANT que le
+  // surnom n'existe ; le renommer casserait les renvois croisés de plusieurs documents. Distinct de
+  // `cousinOf`, qui dit « cet Agent n'a PAS de blueprint propre, et c'est voulu » — ici il en a bien
+  // un, simplement ailleurs.
+  blueprintPath = null,
   claudeMdText = null,
   suiviText = null,
   axaCoveragePct = undefined,
@@ -595,8 +603,9 @@ export function checkAgentOnboarding(agentName, {
     // docs/suivi/relectures-lourdes/ — jamais un chemin deviné, toujours déclaré par l'appelant).
     if (![...existingPaths].some((p) => p.startsWith(registryPrefix))) gaps.push(`registre manquant (${registryPrefix})`);
 
-    if (!cousinOf && !existingPaths.has(`docs/${slug}-blueprint.md`)) {
-      gaps.push(`blueprint manquant (docs/${slug}-blueprint.md) — si c'est volontaire (cousin d'un autre Agent), le déclarer via l'option cousinOf plutôt que de laisser ce point sans réponse`);
+    const attenduBlueprint = blueprintPath ?? `docs/${slug}-blueprint.md`;
+    if (!cousinOf && !existingPaths.has(attenduBlueprint)) {
+      gaps.push(`blueprint manquant (${attenduBlueprint}) — si c'est volontaire (cousin d'un autre Agent), le déclarer via l'option cousinOf plutôt que de laisser ce point sans réponse`);
     }
   }
 
