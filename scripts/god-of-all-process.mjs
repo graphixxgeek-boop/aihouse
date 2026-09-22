@@ -28,7 +28,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReliabilityNotice, sh } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 // LE RELAIS D'ANGEL, RENDU RÉEL (2026-09-23). Il existait depuis le 2026-09-22 comme un PARAMÈTRE
 // (`sectionAngel`) que god attendait qu'on lui tende — et personne ne le lui tendait jamais :
@@ -71,6 +71,13 @@ export const PROCESSES = [
       { cle: "voix-utilisateur", libelle: "poser la fenêtre de réponses sur les points problématiques de son évaluation, avant de clore", preuve: { fichier: "docs/angel-of-ia-process/reponses-evaluation.md" } },
       // AJOUTÉE (2026-09-23) : alimenter un outil est un geste qui se compte, et le moment opportun
       // est l'écriture elle-même — jamais un rappel à l'agent (cf. Partie 14 du document de process).
+      // LES TROIS MAILLONS MANQUANTS (2026-09-23), trouvés en vérifiant le schéma de référence avec
+      // l'utilisateur. Ce process s'arrêtait à « enregistrement » : il surveillait le déroulé
+      // mécanique de la Ronde et laissait échapper ce à quoi ce déroulé SERT. La moitié de la
+      // chaîne que l'Article 28 déclare non négociable n'était donc vérifiée par personne.
+      { cle: "analyse", libelle: "trier les constats des rapports — jamais un récapitulatif, un tri", preuve: { dossier: "docs/circle-tasks/", motif: /ANALYSE\.md$/, recursif: true } },
+      { cle: "plan-action", libelle: "donner à chaque constat son état : retenu / écarté avec sa raison / à trancher (le plan vit DANS l'analyse, jamais ailleurs)", preuve: { dossier: "docs/circle-tasks/", motif: /ANALYSE\.md$/, recursif: true } },
+      { cle: "taches", libelle: "inscrire dans docs/suivi/ les tâches issues des constats retenus", preuve: { dossier: "docs/suivi/sessions/", motif: /\.md$/ } },
       { cle: "contributions", libelle: "chaque signal écrit dans le registre d'un outil enregistre la contribution (recordCircleItemReport → recordToolContribution)", preuve: { fichier: ".tool-usage-history.json" } },
       { cle: "enregistrement", libelle: "enregistrer la Ronde comme faite", preuve: { fichier: ".circle-tasks-last-run.json" } },
     ],
@@ -151,6 +158,10 @@ export const PROCESSES = [
   },
   {
     slug: "nuit",
+    maillonsSansObjet: {
+      scan: "la nuit ORCHESTRE d'autres process (Ronde, simulation) qui scannent eux-mêmes — elle n'a pas de mesure propre",
+      questions: "personne n'est là pour répondre : la borne posée par l'utilisateur (« aucune fenêtre ne doit être bloquante pour le mode autonome ») l'interdit, et les points sont reportés au prochain passage en sa présence",
+    },
     nom: "mode-auto-process-guardian — travail autonome (mode nocturne)",
     quand: "travailler seul pendant l'absence de l'utilisateur",
     motsCles: ["autonome", "nuit", "nocturne", "pendant que je dors", "seul"],
@@ -194,6 +205,15 @@ export const PROCESSES = [
     // son sommet. Il se surveille donc lui-même, et `selfCheck()` plus bas rend cette
     // auto-surveillance réellement vérifiable plutôt que simplement déclarée ici.
     slug: "meta",
+    // « SOUVENT », PAS « TOUJOURS » (mot de l'utilisateur) : ce process-ci tient le DISPOSITIF des
+    // process, il ne produit aucun constat à trier. Lui reprocher l'absence d'analyse apprendrait à
+    // ignorer ce contrôle — et un contrôle qu'on apprend à ignorer ne garde plus rien.
+    maillonsSansObjet: {
+      analyse: "ce process vérifie une structure (registre, documents, sondes), il ne produit aucun constat à trier",
+      "plan-action": "son verdict est binaire — un process a son document et son contrôleur, ou il ne les a pas",
+      questions: "rien à trancher : ce qui manque se corrige, ça ne se calibre pas",
+      taches: "ses écarts sont corrigés dans la foulée par selfCheck(), jamais différés en tâche",
+    },
     nom: "Tenue du dispositif de process lui-même (process maître)",
     quand: "ajouter, retirer ou modifier un process, un gardien de process, ou god-of-all-process",
     motsCles: ["process", "gardien de process", "god-of-all-process", "dispositif"],
@@ -207,6 +227,19 @@ export const PROCESSES = [
       // 2026-09-23, demande explicite : « inscris tout ce que tu fais en lien avec le process, dans
       // le process : comme ça si tu mets le process à jour, tu n'oublies rien. Règle valable pour
       // les autres process aussi. » Vérifiée mécaniquement par findMecanismesAbsentsDuProcess().
+      // AJOUTÉE (2026-09-23, demande explicite de l'utilisateur : « ajoute que le process maître
+      // indique que toute modification INDIRECTE d'un process doit être suivie d'une mise à jour du
+      // process directement »). Elle vise ce que j'ai fait DEUX FOIS le jour même : construire des
+      // mécanismes qui servent un process (le compteur de contributions, puis le schéma de
+      // référence) sans toucher au document du process — jusqu'à ce qu'il me le rappelle.
+      //
+      // LA DISTINCTION QU'ELLE POSE : une modification DIRECTE touche le document ; une
+      // modification INDIRECTE touche le CODE qui fait vivre le process (son contrôleur, une
+      // fonction qu'il invoque, une preuve qu'il déclare). La seconde est la plus dangereuse,
+      // parce qu'elle ne ressemble pas à un changement de process — et le document continue de
+      // décrire un process qui n'existe plus tel quel. C'est l'Article 13 appliqué aux process :
+      // un écart entre le document et le code se corrige le jour même, jamais par une note.
+      { cle: "modification-indirecte", libelle: "toute modification INDIRECTE d'un process (son contrôleur, un mécanisme qu'il invoque, une preuve qu'il déclare) est suivie le jour même d'une mise à jour DIRECTE de son document", preuve: { fichier: "scripts/god-of-all-process.mjs" } },
       { cle: "mecanismes-inscrits", libelle: "tout mécanisme servant un process est écrit DANS son document, jamais seulement dans son code ou dans le suivi", preuve: { fichier: "scripts/god-of-all-process.mjs" } },
       { cle: "identite", libelle: "l'identité de session est déposée, sinon chaque rapport porte un trou", preuve: { fichier: SESSION_FILE } },
     ],
@@ -224,6 +257,15 @@ export const PROCESSES = [
   // jamais tourné contre le vrai dépôt n'est pas un outil, c'est une intention.
   {
     slug: "integration-outil",
+    // Une liste de registres à renseigner, pas une enquête : il n'y a rien à scanner ni à rapporter,
+    // seulement des cases à remplir dont l'outil dit lesquelles manquent.
+    maillonsSansObjet: {
+      scan: "rien à mesurer : l'outil LIT les registres réels et dit lesquels manquent, ce n'est pas un scan de découverte",
+      rapports: "sa sortie EST la liste des manques — il n'y a pas de rapport séparé à livrer",
+      analyse: "aucun tri à faire : un registre est renseigné ou il ne l'est pas",
+      "plan-action": "chaque manque appelle exactement un geste, jamais un arbitrage",
+      questions: "rien à trancher — les 10 registres sont obligatoires, sans exception",
+    },
     nom: "Intégration d'un nouvel outil dans l'Agence",
     quand: "créer un nouvel outil, le faire entrer dans l'équipe, lui donner un rang ou un badge",
     motsCles: ["nouvel outil", "intégrer", "intégration", "registre", "équipe", "badge", "arrivée"],
@@ -422,6 +464,156 @@ export function etatConnexionProcessGardien({ processes = PROCESSES, root = ROOT
       gardienSeul: gardienSeul.map((m) => m.nom),
     };
   });
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// LE SCHÉMA DE RÉFÉRENCE D'UN PROCESS (2026-09-23)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Posé par l'utilisateur : « on a bien la logique SCAN >> RAPPORTS >> ANALYSE >> QUESTIONS >>
+// TÂCHES DE TRAVAIL, ou tout au moins un schéma proche de celui-ci ? Ce schéma est une référence
+// dans les process, à enregistrer en tant que tel : un process respecte SOUVENT ce schéma. »
+//
+// SA LECTURE ÉTAIT JUSTE, et la Ronde du jour l'a suivie de bout en bout. Deux précisions sont
+// pourtant sorties de la vérification, et aucune n'est un détail de vocabulaire :
+//
+//   1. IL MANQUE UN MAILLON À SA FORMULATION : le PLAN D'ACTION, entre l'analyse et les tâches.
+//      L'Article 28 le nomme explicitement (« rapport → analyse → plan d'action → tâches »), et
+//      c'est LÀ que vivent les trois états d'un constat (retenu / écarté AVEC SA RAISON / à
+//      trancher). Sans ce maillon, « écarté » n'existe pas — et un constat qu'on ne retient pas
+//      disparaît sans laisser de trace, ce qui est exactement l'abandon déguisé que l'Article 28
+//      interdit.
+//
+//   2. LES QUESTIONS NE SONT PAS UNE ÉTAPE DE LA FILE, C'EST UNE BIFURCATION. Il les place avant
+//      les tâches ; le process écrit (Partie 13) les place après. Les deux sont vrais, pour deux
+//      choses différentes : un constat RETENU devient une tâche sans qu'on ait rien à demander,
+//      un constat À TRANCHER a besoin de la question D'ABORD. Les questions ne suivent donc pas
+//      l'analyse, elles sortent du plan d'action — et seulement pour une partie des constats.
+//
+// LE TROU QUE CETTE VÉRIFICATION A OUVERT, et il est réel : les étapes que ce fichier déclarait
+// pour la Ronde s'arrêtaient à « enregistrement ». Ni analyse, ni plan d'action, ni tâches. Le
+// contrôleur ne vérifiait donc PAS la moitié de la chaîne que l'Article 28 déclare non
+// négociable — il surveillait le déroulé mécanique et laissait échapper ce à quoi ce déroulé sert.
+//
+// « SOUVENT », PAS « TOUJOURS » — c'est son mot, et il commande le mécanisme. Un maillon absent
+// n'est donc jamais une faute en soi : il se DÉCLARE, avec sa raison, comme tout le reste ici. Un
+// process de consultation avant action (Smart Conso) n'a pas de rapport à produire ; le lui
+// reprocher apprendrait à ignorer ce contrôle.
+export const SCHEMA_DE_REFERENCE = [
+  { maillon: "scan", quoi: "produire une mesure réelle sur l'état des choses", sansQuoi: "l'analyse porterait sur une impression" },
+  { maillon: "rapports", quoi: "écrire ET LIVRER ce que le scan a trouvé", sansQuoi: "seul l'agent sait ce qui a été vu (Partie 13 : écrire n'est pas livrer)" },
+  { maillon: "analyse", quoi: "trier ce qui compte de ce qui ne compte pas", sansQuoi: "un tas de constats bruts, que personne ne hiérarchise" },
+  { maillon: "plan-action", quoi: "donner à CHAQUE constat un des trois états : retenu / écarté avec sa raison / à trancher", sansQuoi: "un constat écarté disparaît sans trace — l'abandon déguisé de l'Article 28" },
+  { maillon: "questions", quoi: "poser à l'utilisateur les constats « à trancher », et eux seuls", sansQuoi: "l'agent décide à sa place, ou bloque tout en attendant", bifurcation: true },
+  { maillon: "taches", quoi: "inscrire dans docs/suivi/ les tâches réelles issues des constats retenus et des réponses", sansQuoi: "le rapport a coûté son temps et n'a rien changé" },
+];
+
+// Quels maillons un process porte-t-il réellement ? Dérivé de ses étapes déclarées (leur clé et
+// leur libellé), jamais d'une seconde table à tenir en parallèle (Article 24).
+export const MOTS_DU_SCHEMA = {
+  scan: /scan|exécuter|execution|lancer|mesure|capture|sonde/i,
+  rapports: /rapport|livr|transcript|dossier/i,
+  analyse: /analyse|relire|lecture|diagnostic/i,
+  "plan-action": /plan d'action|plan-action|constat/i,
+  questions: /question|fenêtre|calibrage|trancher/i,
+  taches: /tâche|tache|suivi\//i,
+};
+
+export function maillonsDuProcess(p, { schema = SCHEMA_DE_REFERENCE, mots = MOTS_DU_SCHEMA } = {}) {
+  const texte = (p.etapes ?? []).map((e) => `${e.cle} ${e.libelle}`).join(" | ");
+  return schema.map(({ maillon, quoi, sansQuoi, bifurcation }) => ({
+    maillon, quoi, sansQuoi, bifurcation: Boolean(bifurcation),
+    present: mots[maillon].test(texte),
+    exempte: (p.maillonsSansObjet ?? {})[maillon] ?? null,
+  }));
+}
+
+// LES MAILLONS MANQUANTS SANS RAISON ÉCRITE. Un maillon exempté par une raison déclarée n'est
+// jamais compté comme un manque — c'est ce que « souvent » veut dire, rendu mécanique.
+export function findMaillonsManquants({ processes = PROCESSES, schema = SCHEMA_DE_REFERENCE } = {}) {
+  const manques = [];
+  for (const p of processes) {
+    for (const m of maillonsDuProcess(p, { schema })) {
+      if (!m.present && !m.exempte) manques.push({ process: p.slug ?? p.nom, maillon: m.maillon, sansQuoi: m.sansQuoi });
+    }
+  }
+  return manques;
+}
+
+// La vue lisible, process par process — ce que l'utilisateur lirait pour vérifier son schéma.
+export function etatDuSchema({ processes = PROCESSES, schema = SCHEMA_DE_REFERENCE } = {}) {
+  return processes.map((p) => ({
+    process: p.slug ?? p.nom,
+    maillons: maillonsDuProcess(p, { schema }).map((m) => ({
+      maillon: m.maillon,
+      etat: m.present ? "présent" : m.exempte ? "sans objet" : "MANQUANT",
+      pourquoi: m.present ? null : m.exempte ?? m.sansQuoi,
+    })),
+  }));
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// UNE MODIFICATION INDIRECTE NON SUIVIE (2026-09-23)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Le garde-fou de l'étape « modification-indirecte » du process maître. Il lit les commits récents
+// et cherche ceux qui touchent le CODE d'un process — son contrôleur, ou un fichier qu'une de ses
+// étapes déclare comme preuve — sans toucher au document de ce process dans le même commit.
+//
+// POURQUOI LE MÊME COMMIT, et pas « dans la journée » : c'est la règle que le suivi applique déjà
+// (`findCommitsMissingSuiviUpdate`), pour la même raison — « je le ferai après » est la forme que
+// prend l'oubli. Un commit est l'unité qui se relit, se cite et se révoque d'un bloc.
+//
+// SA LIMITE, déclarée : il juge sur les fichiers d'un commit, donc un commit qui groupe plusieurs
+// sujets élargit la fenêtre et peut laisser passer un cas. Il attrape le cas net — du code de
+// process modifié seul — jamais tous les cas.
+export function findChangementsIndirectsSansMiseAJour({ processes = PROCESSES, shImpl = sh, root = ROOT, nbCommits = 15 } = {}) {
+  let brut;
+  try {
+    brut = shImpl(`git log -n ${nbCommits} --name-only --pretty=format:%H%x09%s`, { cwd: root.replace(/\/$/, "") });
+  } catch {
+    return []; // pas de git lisible : une absence de mesure, jamais un vert (l'appelant le dit)
+  }
+  const commits = [];
+  let courant = null;
+  for (const ligne of String(brut).split("\n")) {
+    if (/^[0-9a-f]{7,40}\t/.test(ligne)) {
+      const [hash, ...sujet] = ligne.split("\t");
+      courant = { hash: hash.slice(0, 8), sujet: sujet.join(" "), fichiers: [] };
+      commits.push(courant);
+    } else if (ligne.trim() && courant) courant.fichiers.push(ligne.trim());
+  }
+  // DEUX RESSERREMENTS, et chacun est payé par du bruit constaté au premier lancement (12 écarts
+  // dont la moitié faux) :
+  //
+  //   · `check-house.mjs` est EXCLU. C'est le filet de sécurité de tout le dépôt : n'importe quel
+  //     changement le touche, donc le compter comme « code d'un process » ferait crier ce contrôle
+  //     à chaque commit. Il est déclaré comme preuve par un process, il n'en est pas un mécanisme.
+  //   · UN ÉCART PAR (commit, fichier), jamais un par process. god-of-all-process.mjs est le
+  //     contrôleur de deux process à la fois : le modifier produisait deux lignes identiques pour
+  //     un seul geste. Les process concernés sont NOMMÉS dans l'écart, jamais multipliés par lui.
+  const PARTAGES = new Set(["scripts/check-house.mjs"]);
+  const parCle = new Map();
+  for (const c of commits) {
+    for (const p of processes) {
+      if (!p.doc) continue;
+      const codeDuProcess = new Set();
+      if (p.gardien) codeDuProcess.add(p.gardien);
+      for (const e of p.etapes ?? []) if (e.preuve?.fichier?.endsWith(".mjs")) codeDuProcess.add(e.preuve.fichier);
+      const touche = c.fichiers.filter((f) => codeDuProcess.has(f) && !PARTAGES.has(f));
+      if (!touche.length || c.fichiers.includes(p.doc)) continue;
+      for (const fichier of touche) {
+        const cle = `${c.hash}|${fichier}`;
+        if (!parCle.has(cle)) parCle.set(cle, { commit: c.hash, sujet: c.sujet, fichier, processes: [], docs: [] });
+        parCle.get(cle).processes.push(p.slug ?? p.nom);
+        parCle.get(cle).docs.push(p.doc);
+      }
+    }
+  }
+  // Deux process peuvent partager le même document (nuit et meta) : le nommer deux fois donnerait
+  // « docs/x.md ni docs/x.md », ce qui se lit comme un bug du message et fait douter du reste.
+  return [...parCle.values()].map((e) => ({ ...e, docs: [...new Set(e.docs)] })).map((e) => ({ ...e,
+    pourquoi: `${e.fichier} a changé sans que ${e.docs.join(" ni ")} ne soit mis à jour dans le même commit — le document décrit désormais un process qui n'existe plus tel quel (process concerné${e.processes.length > 1 ? "s" : ""} : ${e.processes.join(", ")})` }));
 }
 
 // ————————————————————————————————————————————————————————————————————————
@@ -817,6 +1009,13 @@ export function buildGodReportBlocks({ processes = PROCESSES, root = ROOT, sessi
     // amputé qui a l'air complet — exactement le défaut qu'on vient de corriger.
     blocks.push({ type: "note", text: `⚠️ Section conduite indisponible : angel-of-ia-process n'a pas pu être relayé (${e.message}). Le rapport est incomplet, il n'est pas vert.` });
   }
+
+  // LA MODIFICATION INDIRECTE NON SUIVIE (2026-09-23) — sort dans le rapport, sinon le mécanisme
+  // resterait une intention, ce que ce fichier a déjà appris à ses dépens.
+  const indirects = findChangementsIndirectsSansMiseAJour({ processes, root });
+  blocks.push({ type: "note", text: indirects.length
+    ? `⚠️ ${indirects.length} modification(s) INDIRECTE(S) d'un process non suivie(s) d'une mise à jour de son document :\n  ${indirects.map((e) => `${e.commit} — ${e.pourquoi}`).join("\n  ")}`
+    : "✅ Modifications indirectes : chaque changement du code d'un process a bien mis à jour son document dans le même commit." });
 
   const sansGardien = findProcessesWithoutGuardian({ processes, root });
   const docsAbsents = findProcessDocsMissing({ processes, root });

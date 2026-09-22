@@ -1209,3 +1209,55 @@ TRACE VÉRIFIABLE DE CETTE ÉTAPE : `.tool-usage-history.json` — les contribut
 série SÉPARÉE des sollicitations, jamais mélangée (deux natures dans une même série produiraient un
 total qui ne décrit ni l'une ni l'autre). C'est le fichier-preuve déclaré par l'étape
 « contributions » du process de la Ronde dans `scripts/god-of-all-process.mjs`.
+
+════════════════════════════════════════════════════════════════════════
+PARTIE 15 — LE SCHÉMA DE RÉFÉRENCE D'UN PROCESS (2026-09-23)
+════════════════════════════════════════════════════════════════════════
+
+Posé par l'utilisateur : « On a bien la logique SCAN >> RAPPORTS >> ANALYSE >> QUESTIONS >> TÂCHES
+DE TRAVAIL, ou tout au moins un schéma proche de celui-ci ? Ce schéma est une référence dans les
+process, à enregistrer en tant que tel : un process respecte SOUVENT ce schéma. »
+
+SA LECTURE ÉTAIT JUSTE, ET LA RONDE DU JOUR L'A SUIVIE DE BOUT EN BOUT. Deux précisions sont
+sorties de la vérification, et aucune n'est un détail de vocabulaire.
+
+PRÉCISION 1 — IL MANQUE UN MAILLON À LA FORMULATION : LE PLAN D'ACTION.
+L'Article 28 le nomme explicitement : `rapport → analyse → plan d'action → tâches`. Ce maillon
+n'est pas une redite de l'analyse : c'est LÀ que chaque constat reçoit l'un de ses trois états —
+RETENU (ça devient une tâche) / ÉCARTÉ AVEC SA RAISON ÉCRITE / À TRANCHER. Sans lui, « écarté »
+n'existe pas, et un constat qu'on ne retient pas disparaît sans laisser de trace. C'est exactement
+l'abandon déguisé que l'Article 28 interdit.
+
+PRÉCISION 2 — LES QUESTIONS NE SONT PAS UNE ÉTAPE DE LA FILE, C'EST UNE BIFURCATION.
+La formulation les place avant les tâches ; la Partie 13 les place après. Les deux sont vraies,
+pour deux choses différentes :
+  · un constat RETENU devient une tâche sans qu'on ait rien à demander ;
+  · un constat À TRANCHER a besoin de la question D'ABORD, sinon la tâche n'existe pas encore.
+Les questions ne suivent donc pas l'analyse : elles SORTENT du plan d'action, et seulement pour
+une partie des constats. C'est ce que le champ `bifurcation` marque dans SCHEMA_DE_REFERENCE.
+
+LE SCHÉMA, ENREGISTRÉ COMME RÉFÉRENCE (`SCHEMA_DE_REFERENCE`, scripts/god-of-all-process.mjs) :
+  1. SCAN         — produire une mesure réelle ; sans lui, l'analyse porte sur une impression.
+  2. RAPPORTS     — écrire ET LIVRER ; sans la livraison, seul l'agent sait ce qui a été vu.
+  3. ANALYSE      — trier ce qui compte ; sans elle, un tas de constats que personne ne hiérarchise.
+  4. PLAN D'ACTION — les trois états ; sans lui, un constat écarté disparaît sans trace.
+  5. QUESTIONS    — les « à trancher », et eux seuls (bifurcation, jamais toute la file).
+  6. TÂCHES       — dans docs/suivi/ ; sans elles, le rapport a coûté son temps et n'a rien changé.
+
+LE TROU QUE CETTE VÉRIFICATION A OUVERT, et il était réel : les étapes déclarées du process de la
+Ronde s'arrêtaient à « enregistrement ». Ni analyse, ni plan d'action, ni tâches. Le contrôleur
+surveillait donc le déroulé mécanique de la Ronde et laissait échapper ce à quoi ce déroulé SERT —
+la moitié de la chaîne que l'Article 28 déclare non négociable n'était vérifiée par personne. Les
+trois étapes manquantes ont été ajoutées le jour même (preuves réelles : `ANALYSE.md` dans le
+dossier de la Ronde, et `docs/suivi/sessions/`).
+
+« SOUVENT », PAS « TOUJOURS » — c'est son mot, et il commande le mécanisme. Un maillon absent n'est
+jamais une faute en soi : il se DÉCLARE (`maillonsSansObjet`), avec sa raison, comme tout le reste
+ici. Le process d'intégration d'un outil n'a rien à scanner — c'est une liste de registres à
+remplir, pas une enquête ; le mode nocturne n'a pas de questions — personne n'est là pour y
+répondre, et la borne posée par l'utilisateur l'interdit. Le reprocher à ces process apprendrait à
+ignorer le contrôle, et un contrôle qu'on apprend à ignorer ne garde plus rien.
+
+VÉRIFIÉ MÉCANIQUEMENT : `findMaillonsManquants()` — 14 maillons manquants au premier passage,
+0 après avoir complété la Ronde et déclaré les exemptions. `etatDuSchema()` donne la vue lisible,
+process par process.

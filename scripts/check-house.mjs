@@ -3042,6 +3042,28 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // dispositif : l'outil qui reproche aux autres de ne pas avoir de gardien n'en avait aucun.
   // ANGEL-OF-IA-PROCESS (2026-09-22, nom donné par l'utilisateur) — outil SÉPARÉ de god : god surveille
   // le déroulé d'activités, angel surveille la CONDUITE (agent ET utilisateur, notés pareil).
+  // LE SCHÉMA DE RÉFÉRENCE D'UN PROCESS (2026-09-23) — formulé par l'utilisateur (« SCAN >>
+  // RAPPORTS >> ANALYSE >> QUESTIONS >> TÂCHES »), enregistré comme référence vérifiable. Sa
+  // lecture était juste ; deux précisions en sont sorties, et un vrai trou avec.
+  {
+    const g = await import('../scripts/god-of-all-process.mjs');
+    assert.equal(g.SCHEMA_DE_REFERENCE.length, 6, 'six links: the user named five, and the verification added the one Article 28 names explicitly — the plan of action, where a finding gets its three states');
+    assert.ok(g.SCHEMA_DE_REFERENCE.every((m) => m.quoi && m.sansQuoi), 'every link states what it does AND what its absence costs — a schema that only lists names teaches nothing to the next agent');
+    // LA BIFURCATION, seconde précision : les questions ne suivent pas l'analyse dans une file,
+    // elles sortent du plan d'action et seulement pour les constats « à trancher ».
+    assert.equal(g.SCHEMA_DE_REFERENCE.filter((m) => m.bifurcation).length, 1, 'exactly one link is a branch, not a queue step: a RETENU finding becomes a task with nothing to ask, an À TRANCHER one needs the question first');
+    assert.equal(g.SCHEMA_DE_REFERENCE.find((m) => m.bifurcation).maillon, 'questions');
+    // LE TROU RÉEL trouvé en vérifiant : le process de la Ronde s'arrêtait à « enregistrement ».
+    const ronde = g.PROCESSES.find((p) => p.slug === 'ronde');
+    for (const cle of ['analyse', 'plan-action', 'taches']) {
+      assert.ok(ronde.etapes.some((e) => e.cle === cle), `the Ronde process must carry the "${cle}" step: watching the mechanical run while ignoring what the run is FOR is exactly how a report ends up costing its time and changing nothing`);
+    }
+    // « SOUVENT », PAS « TOUJOURS » — le mot de l'utilisateur, rendu mécanique.
+    assert.deepEqual(g.findMaillonsManquants(), [], 'checked live: every process either carries each link or declares in writing why that link has no object for it');
+    assert.ok(g.etatDuSchema().find((e) => e.process === 'integration-outil').maillons.some((m) => m.etat === 'sans objet' && m.pourquoi), 'a link without object states its reason, never a bare exemption');
+    assert.ok(g.etatDuSchema().every((e) => e.maillons.every((m) => ['présent', 'sans objet', 'MANQUANT'].includes(m.etat))), 'three states, never two — "absent" and "has no object here" are different facts');
+  }
+
   const {auditWorkingRules,checkConsultationOrder,angelSectionLines,REGLES_SURVEILLEES,ORIGINES_DE_JUGEMENT,ORIGINE_NON_CONCLUANTE,findOriginesInconnues}=await import('../scripts/angel-of-ia-process.mjs');
   assert.ok(REGLES_SURVEILLEES.some(r=>r.cote==='utilisateur')&&REGLES_SURVEILLEES.some(r=>r.cote==='agent'),'both sides must be watched: the user asked for a tool that checks execution discipline "que ce soit pour moi ou pour toi", and a rule with two sides checked on one side only is checked by half');
   assert.ok(REGLES_SURVEILLEES.every(r=>r.source),'every watched rule must cite where it is written — a rule without its source gets deleted by the next agent who finds it puzzling');

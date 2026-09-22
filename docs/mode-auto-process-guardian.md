@@ -126,3 +126,39 @@ sans qu'aucune ligne d'ici ne dise ce qu'ils sont.*
 - **`.circle-tasks-run-summary-latest.txt`** — le récapitulatif texte de la dernière Ronde,
   régénéré à chaque passage. Fichier de travail local, jamais committé ; le registre durable vit
   dans les artefacts datés de chaque item.
+
+## Toute modification INDIRECTE d'un process se solde par une mise à jour DIRECTE de son document
+
+*(2026-09-23, demande explicite de l'utilisateur : « ajoute que le process maître indique que toute
+modification indirecte d'un process doit être suivie d'une mise à jour du process directement ».)*
+
+**La distinction, et c'est elle qui fait tout le travail :**
+
+- une modification **DIRECTE** touche le document du process — elle se voit, elle se relit ;
+- une modification **INDIRECTE** touche le CODE qui fait vivre ce process : son contrôleur, un
+  mécanisme qu'il invoque, un fichier qu'une de ses étapes déclare comme preuve.
+
+**La seconde est la plus dangereuse, précisément parce qu'elle ne ressemble pas à un changement de
+process.** On croit corriger un script ; en réalité on vient de déplacer une règle. Le document,
+lui, continue de décrire un process qui n'existe plus tel quel — et le prochain agent (ou la
+prochaine IA, cf. Article 27) le lira comme s'il était vrai.
+
+**La preuve est du jour même, et elle est double.** J'ai construit le compteur de contributions et
+ses quatre points de câblage sans rien inscrire, puis le schéma de référence des process sans rien
+inscrire non plus. Dans les deux cas, c'est l'utilisateur qui a dû me rappeler à l'ordre
+(« process à consigner et à consolider juste avant »). Deux fois en une journée n'est plus un
+oubli, c'est un motif — et l'Article 3 dit quoi en faire.
+
+**Le garde-fou** : `findChangementsIndirectsSansMiseAJour()` (`scripts/god-of-all-process.mjs`) lit
+les commits récents et nomme ceux qui touchent le code d'un process sans toucher son document dans
+le MÊME commit. Le même commit, et pas « dans la journée », pour la raison que le suivi applique
+déjà : « je le ferai après » est la forme que prend l'oubli.
+
+**Ses deux limites, déclarées plutôt que masquées :**
+- il juge sur les fichiers d'un commit, donc un commit qui groupe plusieurs sujets élargit la
+  fenêtre et peut laisser passer un cas ;
+- `check-house.mjs` en est exclu : c'est le filet de sécurité de tout le dépôt, n'importe quel
+  changement le touche, et le compter ferait crier ce contrôle à chaque commit — un contrôle qui
+  crie toujours n'est plus lu.
+
+**Premier passage réel : 5 écarts, tous les miens, tous du 2026-09-23.**
