@@ -18,6 +18,7 @@ import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { printReportHeader } from "./report-template.mjs";
 import { loadJson } from "./lib-json.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const HEALTH_PATH = fileURLToPath(new URL("../.gemini-key-health.json", import.meta.url));
 const SESSION_PATH = fileURLToPath(new URL("../.smart-conso-session.json", import.meta.url));
@@ -228,6 +229,21 @@ function main() {
       console.log("Aucun schéma coûteux repéré dans l'historique réel accumulé.");
     } else {
       for (const f of findings) console.log(`⚠️ ${f.constat}\n   → ${f.piste}\n`);
+    }
+    {
+      // LE PLAN D'ACTION (2026-09-23, tâche #211). Smart Conso API surveille le RYTHME de
+      // consommation de l'API pendant le travail de développement — jamais l'architecture de
+      // production, qui reste sous la seule autorité de l'Article 8.
+      //
+      // `fausseUneMesure: true` : une rafale non confirmée fausse le quota restant sur lequel TOUTES
+      // les décisions coûteuses suivantes s'appuient. Ce n'est pas du confort, c'est l'instrument.
+      //
+      // La PISTE que l'outil a déjà calculée devient la tâche : il sait quoi proposer, il ne le
+      // disait simplement jamais sous forme de suite à donner.
+      const planConso = planDactionDepuisEcarts(findings, { toolSlug: "smart-conso-api", fausseUneMesure: true,
+        libelle: (f) => f.constat, tache: (f) => f.piste });
+      console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+      for (const l of planConso.lignes) console.log(l);
     }
     reportUnconfirmedBursts(healthData, sessionLog);
     return;

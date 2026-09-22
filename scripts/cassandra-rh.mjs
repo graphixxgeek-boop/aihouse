@@ -32,6 +32,7 @@ export { parseKpiHistoryCsv };
 import { estimateTokens } from "./smart-conso-token.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -1092,6 +1093,30 @@ export function renderOrganigrammeReport(org, { dateLabel } = {}) {
     blocks,
     footer: "CASSANDRA-RH constate l'organisation, elle ne la décide jamais — un changement de rang reste une décision humaine.",
   });
+
+  // LE PLAN D'ACTION (2026-09-23, tâche #211). CASSANDRA est l'Agent Cadre RH : elle constate
+  // l'état de l'équipe, elle ne corrige jamais personne. Ses constats se séparent nettement en
+  // deux, et les mélanger ferait d'elle un juge de valeur alors qu'elle est une greffière.
+  //
+  // Un membre certifié SANS SUITE assignée est un fait vérifiable et corrigeable : il est
+  // littéralement invisible dans l'organigramme tant que ce n'est pas tranché. RETENU.
+  //
+  // Un outil « à reconsidérer », lui, reste à TRANCHER quoi qu'il arrive : il est signalé parce
+  // qu'il n'a jamais été sollicité ou qu'il stagne, jamais parce qu'il serait prouvé inutile.
+  // Retirer un outil de l'équipe est une décision humaine — et le garde-fou trottoirGranted
+  // (Article 19) dit exactement pourquoi : ce qui n'a pas bougé n'est pas pour autant mort.
+  const constatsRH = [
+    ...(org?.sansCategorie ?? []).map((nom) => ({ constat: `${nom} est certifié mais sans suite assignée`, etat: "retenu",
+      tache: `assigner ${nom} à une suite de l'organigramme, ou déclarer qu'il n'en relève d'aucune` })),
+    ...(Array.isArray(reconsider) ? reconsider : []).map((r) => ({
+      constat: `outil à reconsidérer : ${r.outil ?? r.tool ?? r} — ${r.pourquoi ?? r.raison ?? "signal de désuétude"}`,
+      etat: "a-trancher",
+      pourquoi: "jamais sollicité ou en stagnation est un signal, jamais une preuve d'inutilité — retirer un membre de l'équipe est une décision humaine (leçon trottoirGranted, Article 19)",
+    })),
+  ];
+  const planRH = buildPlanDaction(constatsRH, { toolSlug: "cassandra-rh" });
+  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of planRH.lignes) console.log(l);
 }
 
 // LE LANCEUR EN DERNIER (2026-09-23, deuxième occurrence du même bug en une heure). Il était au

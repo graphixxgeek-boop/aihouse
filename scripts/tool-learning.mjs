@@ -31,6 +31,7 @@ import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader } from "./report-template.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
 import { loadJsonArray } from "./lib-json.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -403,6 +404,24 @@ function main() {
   console.log(`\n=== CE QU'IL ME REPROCHE, À MOI (${passagesConnus} passage(s) d'historique) ===`);
   console.log(`Gravité : ${surMoi.gravite.toUpperCase()} — ${surMoi.resume}`);
   for (const i of surMoi.ignores) console.log(`   ⚠️  ${i.outil} : jugé « ${i.verdict} » le ${i.depuis}, aucun commit sur son script depuis, revu ${i.passages} fois.`);
+
+  // LE PLAN D'ACTION (2026-09-23, tâche #211). TOOL-LEARNING porte la MOITIÉ 2 de l'évolutivité
+  // (devenir meilleur), et ses deux constats visent deux responsables différents — les mélanger
+  // reviendrait à me dédouaner sur le dos des outils.
+  //
+  // Un verdict RÉFUTÉ met en cause l'outil : il a jugé, et les faits l'ont démenti.
+  // Un verdict IGNORÉ me met en cause, MOI : l'outil a dit quelque chose d'utile et je n'ai rien
+  // fait. C'est le seul plan d'action du paysage dont les tâches me désignent nommément, et c'est
+  // exactement ce que l'utilisateur demandait en construisant cet outil.
+  const constatsApprentissage = [
+    ...refutes.map((r) => ({ constat: `verdict réfuté par les faits : ${r.outil} — ${r.pourquoi ?? "jugement démenti depuis"}`, etat: "retenu",
+      tache: `corriger le jugement de ${r.outil}, ou écrire pourquoi le verdict tenait quand même` })),
+    ...surMoi.ignores.map((i) => ({ constat: `verdict ignoré PAR MOI : ${i.outil}, jugé « ${i.verdict} » le ${i.depuis}, revu ${i.passages} fois sans un seul commit depuis`, etat: "retenu",
+      tache: `traiter ce que ${i.outil} dit depuis le ${i.depuis}, ou écarter son verdict explicitement — le revoir sans agir n'est ni l'un ni l'autre` })),
+  ];
+  const planAppr = buildPlanDaction(constatsApprentissage, { toolSlug: "tool-learning" });
+  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of planAppr.lignes) console.log(l);
   for (const g of surMoi.geles) console.log(`   ⏸️  ${g.outil} : ${g.note} (jugé « ${g.verdict} » le ${g.depuis}).`);
   for (const c of surMoi.chezLUtilisateur) console.log(`   ⏳ ${c.outil} : ${c.note}.`);
   if (surMoi.questionObligatoire) console.log(`\n🔴 ${surMoi.action}`);

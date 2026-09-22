@@ -864,6 +864,40 @@ Une référence morte ressemble à un lien, ce qui est pire qu'une absence — `
 vérifie donc que la tâche annoncée existe réellement dans le suivi, jamais seulement qu'elle est
 citée.
 
+**Article 29 — Tout compte rendu s'ouvre en rappelant à qui il s'adresse.**
+*(2026-09-23, demande explicite de l'utilisateur, qualifiée par lui d'URGENTE : « quand tu me fais
+ton résumé final à chaque réponse [...] tu dois absolument me rappeler en intro : 1/ le contexte
+2/ à quelle demande (résumé) de ma part ça correspond 3/ l'étiquette de la tâche 4/ te souvenir que
+je ne suis pas codeur ».)*
+
+**LE PROBLÈME QU'IL RÈGLE, et il est structurel, jamais un défaut d'attention.** L'agent termine
+une réponse avec en tête tout ce qu'il vient de faire ; l'utilisateur la reçoit après avoir fait
+autre chose, parfois des heures plus tard, parfois plusieurs chantiers en parallèle. Un compte rendu
+qui démarre au milieu de son sujet oblige à reconstituer le contexte avant de pouvoir juger le
+fond — et c'est précisément le travail que l'agent est censé épargner.
+
+**Les quatre obligations d'ouverture, dans cet ordre :**
+
+1. **Le contexte** — de quoi on parle, en une phrase qui tient debout seule.
+2. **À quelle demande ça répond** — sa demande à lui, résumée dans ses termes à lui, jamais
+   reformulée en vocabulaire d'agent.
+3. **L'étiquette de la tâche** — son numéro et son intitulé (`#211 — câbler les plans d'action`),
+   pour rattacher la réponse au suivi durable sans avoir à chercher.
+4. **Un vocabulaire compréhensible** — l'utilisateur n'est pas développeur. Un sujet compliqué peut
+   être expliqué ; il doit l'être avec des mots simples. Un nom de fonction, de fichier ou de
+   variable n'explique jamais rien à lui seul : ce qui compte est ce que ça change concrètement.
+
+**Ce que cet Article n'autorise pas** : diluer. Rappeler le contexte n'est pas réécrire l'historique,
+et les quatre points tiennent en quelques lignes. Un préambule qui devient plus long que le fond
+manque sa cible aussi sûrement qu'un compte rendu sans préambule.
+
+**Où il vit, en plus d'ici** : `scripts/angel-of-ia-process.mjs` le porte comme règle de CONDUITE
+surveillée (`resume-contextualise`). C'est le bon domicile — angel surveille le comportement, là où
+god-of-all-process surveille le déroulé des activités (Article 26). Aucun mécanisme ne peut lire un
+compte rendu sur disque : angel DEMANDE donc si la règle a été tenue, et refuse d'être au vert sans
+réponse. C'est la seule protection possible pour une règle qui ne se joue que dans la conversation,
+et la déclarer ainsi vaut mieux que de la confier à la mémoire d'un agent (Article 27).
+
 ## Règles de travail — collaboration avec l'utilisateur
 
 `docs/regles-de-travail.md` documente, séparément de la charte de contenu ci-dessus, la façon dont

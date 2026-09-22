@@ -58,6 +58,12 @@ export const REGLES_SURVEILLEES = [
   { id: "fenetre-dediee", cote: "agent", observable: false, regle: "Poser les questions dans une vraie fenêtre à choix, avec leur contexte rappelé, jamais en texte libre.", source: "CLAUDE.md Article 16" },
   { id: "double-lecture", cote: "les deux", observable: false, regle: "Après la livraison d'un transcript : l'utilisateur le lit pendant que l'agent travaille, en parallèle et non l'un après l'autre.", source: "CLAUDE.md Article 18" },
   { id: "commentaires-attendus", cote: "utilisateur", observable: false, regle: "Le signal « voici mes commentaires » ouvre un second passage sur le même transcript, que l'agent doit attendre et reconnaître.", source: "CLAUDE.md Article 18" },
+  // AJOUTÉE LE 2026-09-23 (Article 29, demande qualifiée d'URGENTE par l'utilisateur). Non
+  // observable par nature : aucun fichier sur disque ne porte le compte rendu d'une réponse. Angel
+  // la DEMANDE donc, et refuse d'être vert sans réponse — c'est la seule protection possible pour
+  // une règle qui ne se joue que dans la conversation, et l'écrire ainsi vaut mieux que de la
+  // confier à la mémoire d'un agent qui changera de session (Article 27).
+  { id: "resume-contextualise", cote: "agent", observable: false, regle: "Ouvrir chaque compte rendu final par les quatre rappels : le contexte, la demande de l'utilisateur résumée dans ses termes, l'étiquette de la tâche (numéro + intitulé), et un vocabulaire compréhensible par un non-développeur.", source: "CLAUDE.md Article 29" },
   { id: "decisions-en-attente", cote: "utilisateur", observable: true, regle: "Trancher les questions laissées en attente : une décision jamais prise bloque le travail qui en dépend.", source: "docs/regles-de-travail.md §2" },
 ];
 
