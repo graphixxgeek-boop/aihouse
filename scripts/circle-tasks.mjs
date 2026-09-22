@@ -1372,16 +1372,71 @@ export function marquerRepondue(question, { serie, root = ROOT, readFileImpl = r
   return restantes;
 }
 
-// PALIERS_QUESTION — même logique d'escalade que SAFE-EXPORT : une question évitée trois fois n'est
-// plus un oubli, c'est un refus que personne n'a jamais formulé. On le formule alors.
+// L'HYPOTHÈSE PAR DÉFAUT EST L'ACCIDENT, JAMAIS LE REFUS (corrigé le 2026-09-23, dans l'heure).
+//
+// Ma première version escaladait vers « une question évitée trois fois est un refus ». L'utilisateur
+// a corrigé, et il avait raison : « si je ne réponds pas aux questions de la ronde, c'est sûrement
+// une erreur ou un bug de ma part (clavier...) ». Supposer le refus revenait à interpréter un
+// incident matériel comme une intention — le genre exact de mesure adjacente que ce projet traque.
+//
+// LA RÈGLE QUI EN DÉCOULE : un silence ne veut RIEN dire. Seule une réponse explicite « je ne veux
+// pas répondre » vaut refus. Tant qu'elle n'est pas donnée, la question revient.
+export const HYPOTHESE_SILENCE = "accident (clavier, fermeture involontaire) — jamais un refus tant qu'il n'est pas formulé";
+
+// PALIERS_QUESTION — l'escalade ne va PLUS vers le reproche mais vers l'OFFRE EXPLICITE de passer.
+// Elle se joue DANS LA MÊME RONDE, immédiatement : reporter au prochain passage laisserait la Ronde
+// se terminer sans ses réponses, ce qui est précisément ce qu'on veut éviter.
 export const PALIERS_QUESTION = [
-  { fois: 3, action: "à poser en la nommant comme évitée trois fois, avec l'option « je ne veux pas répondre, et c'est ma réponse »" },
-  { fois: 2, action: "à reposer en tête de série, avant les nouvelles" },
-  { fois: 1, action: "à reposer normalement, avec son âge" },
+  { fois: 3, immediat: true, offrirDePasser: true, action: "reposée avec l'option explicite « je ne veux pas répondre à cette série » — après trois tentatives, l'offre de passer devient elle-même une question, jamais une supposition" },
+  { fois: 2, immediat: true, offrirDePasser: true, action: "reposée immédiatement, accompagnée de la question « voulez-vous passer cette série ? » — l'accident reste l'hypothèse, mais on cesse d'insister sans demander" },
+  { fois: 1, immediat: true, offrirDePasser: false, action: "reposée immédiatement, telle quelle : une fenêtre fermée est d'abord un accident, et un accident se rattrape sans cérémonie" },
 ];
 
 export function questionsAReposer(registre = [], { paliers = PALIERS_QUESTION } = {}) {
   return (registre ?? []).map((q) => ({ ...q, ...(paliers.find((p) => (q.fois ?? 1) >= p.fois) ?? paliers[paliers.length - 1]) }));
+}
+
+// SERIES_PASSEES_PATH — les séries que l'utilisateur a EXPLICITEMENT choisi de ne pas traiter. Un
+// fichier séparé du registre des sans-réponse, et c'est délibéré : une série passée sur décision
+// n'est pas une série perdue, et les mélanger ferait réapparaître le défaut qu'on vient de corriger.
+export const SERIES_PASSEES_PATH = "docs/circle-tasks/series-passees.json";
+
+export function loadSeriesPassees({ root = ROOT, readFileImpl = readFileSync } = {}) {
+  try {
+    const b = JSON.parse(readFileImpl(join(root, SERIES_PASSEES_PATH), "utf8"));
+    return Array.isArray(b) ? b : [];
+  } catch {
+    return [];
+  }
+}
+
+// passerLaSerie() — n'est appelée QUE sur une réponse explicite de l'utilisateur. Elle retire les
+// questions de la série du registre des sans-réponse et acte la décision avec sa date : le
+// « pourquoi » reste facultatif, parce qu'exiger une justification pour ne pas répondre
+// transformerait l'offre de passer en épreuve, et personne ne la prendrait.
+export function passerLaSerie(serie, { pourquoi = null, root = ROOT, readFileImpl = readFileSync, writeFileImpl = writeFileSync, mkdirImpl = mkdirSync, date = new Date().toISOString().slice(0, 10) } = {}) {
+  const passees = loadSeriesPassees({ root, readFileImpl });
+  passees.push({ serie, pourquoi, date });
+  try { mkdirImpl(join(root, "docs/circle-tasks"), { recursive: true }); } catch { /* existe déjà */ }
+  writeFileImpl(join(root, SERIES_PASSEES_PATH), JSON.stringify(passees, null, 1), "utf8");
+  const restantes = loadQuestionsSansReponse({ root, readFileImpl }).filter((q) => q.serie !== serie);
+  writeFileImpl(join(root, QUESTIONS_SANS_REPONSE_PATH), JSON.stringify(restantes, null, 1), "utf8");
+  return { passees, restantes };
+}
+
+// prochaineAction() — ce que l'agent doit faire MAINTENANT, en une réponse plutôt qu'en une lecture
+// de registre. Rend toujours l'un des trois cas, jamais un silence.
+export function prochaineAction({ registre = [], serie = null } = {}) {
+  const concernees = questionsAReposer(registre).filter((q) => serie === null || q.serie === serie);
+  if (!concernees.length) return { quoi: "rien", pourquoi: "aucune question en attente" };
+  const pire = concernees.reduce((max, q) => ((q.fois ?? 1) > (max.fois ?? 1) ? q : max), concernees[0]);
+  return {
+    quoi: pire.offrirDePasser ? "reposer-et-offrir-de-passer" : "reposer",
+    questions: concernees.map((q) => q.question),
+    fois: pire.fois ?? 1,
+    action: pire.action,
+    hypothese: HYPOTHESE_SILENCE,
+  };
 }
 
 // ————————————————————————————————————————————————————————————————————————

@@ -995,13 +995,39 @@ MÉCANIQUE : `enregistrerQuestionsSansReponse()` écrit dans
 compteur) ; `marquerRepondue()` l'en retire quand elle obtient enfin sa réponse ;
 `questionsAReposer()` les rend avec leur palier de relance.
 
-PALIERS DE RELANCE (PALIERS_QUESTION), même logique d'escalade que SAFE-EXPORT :
-  1 fois évitée  → reposée normalement, avec son âge
-  2 fois évitée  → reposée EN TÊTE de série, avant les nouvelles
-  3 fois évitée  → posée en la NOMMANT comme évitée trois fois, avec l'option explicite
-                   « je ne veux pas répondre, et c'est ma réponse »
-Une question évitée trois fois n'est plus un oubli : c'est un refus que personne n'a jamais
-formulé. On le formule alors, et le refus devient une vraie réponse.
+L'HYPOTHÈSE PAR DÉFAUT EST L'ACCIDENT, JAMAIS LE REFUS (corrigé dans l'heure, le 2026-09-23).
+La première version de ce mécanisme escaladait vers « une question évitée trois fois est un refus ».
+L'utilisateur a corrigé, et il avait raison : « si je ne réponds pas aux questions de la ronde,
+c'est sûrement une erreur ou un bug de ma part (clavier...) ». Supposer le refus revenait à
+interpréter un incident matériel comme une intention — exactement la mesure adjacente que ce projet
+traque partout ailleurs.
+
+LA RÈGLE : un silence ne veut RIEN dire. Seule une réponse explicite « je ne veux pas répondre »
+vaut refus. Tant qu'elle n'est pas donnée, la question revient.
+
+PALIERS (PALIERS_QUESTION), et l'escalade ne va PAS vers le reproche mais vers l'OFFRE EXPLICITE :
+  1re fois  → reposée IMMÉDIATEMENT, telle quelle, sans commentaire. Un accident se rattrape sans
+              cérémonie.
+  2e fois   → reposée immédiatement, ACCOMPAGNÉE de la question « voulez-vous passer cette série ? ».
+              L'accident reste l'hypothèse, mais on cesse d'insister sans demander.
+  3e fois   → reposée avec l'option explicite « je ne veux pas répondre à cette série ». Après trois
+              tentatives, l'offre de passer devient elle-même une question — jamais une supposition.
+
+TOUT SE JOUE DANS LA MÊME RONDE, immédiatement. Reporter au prochain passage laisserait la Ronde se
+terminer sans ses réponses, ce qui est précisément ce qu'on veut éviter.
+
+DEUX REGISTRES SÉPARÉS, et la séparation est délibérée :
+  docs/circle-tasks/questions-sans-reponse.json  — les questions en attente
+  docs/circle-tasks/series-passees.json          — les séries PASSÉES SUR DÉCISION EXPLICITE
+Une série passée sur décision n'est pas une série perdue. Les mélanger ferait réapparaître le
+défaut qu'on vient de corriger : confondre un choix et un accident.
+
+`passerLaSerie()` n'est appelée QUE sur une réponse explicite. Le « pourquoi » y est FACULTATIF —
+exiger une justification pour ne pas répondre transformerait l'offre de passer en épreuve, et
+personne ne la prendrait.
+
+`prochaineAction()` rend en une fois ce que l'agent doit faire maintenant : reposer, ou reposer en
+offrant de passer. Jamais un silence, jamais une lecture de registre à interpréter.
 
 CE QUE LE MÉCANISME NE FAIT PAS : il ne juge jamais POURQUOI une question est restée sans réponse.
 Une fenêtre fermée par inadvertance et une fenêtre fermée par lassitude se ressemblent trop pour
