@@ -83,9 +83,25 @@ export function buildPoint({ date = new Date().toISOString().slice(0, 10), metho
   return { date, methode, mesures: propres };
 }
 
+// UN POINT PAR JOUR, JAMAIS UN PAR LANCEMENT (corrigé le 2026-09-23, trouvé pendant une Ronde).
+//
+// CE QUI N'ALLAIT PAS, et c'est le défaut récurrent de ce projet dans sa forme la plus discrète :
+// chaque exécution écrivait un point. J'ai lancé safe-export quatre fois en une heure en le
+// déboguant, et la série a répondu « stable » sur quatre points — un verdict techniquement exact et
+// entièrement vide de sens, puisqu'il décrivait quatre photos du même instant, pas une évolution.
+// Le seuil POINTS_MINIMUM_POUR_UNE_TENDANCE existait justement pour refuser de conclure trop tôt ;
+// il était franchi en une heure, donc il ne protégeait rien.
+//
+// Une tendance décrit le TEMPS. Un point par jour et par outil : le dernier du jour remplace celui
+// du matin (l'état le plus récent est le bon), et la série garde une vraie profondeur temporelle.
+// La conséquence assumée : les tendances mettront désormais quatre JOURS à apparaître au lieu de
+// quatre lancements. C'est exactement ce qu'on veut — une pente qui se forme en une heure ne
+// mesurait rien.
 export function recordPoint(outil, point, { root = ROOT, readFileImpl = readFileSync, writeFileImpl = writeFileSync, mkdirImpl = mkdirSync } = {}) {
   const serie = loadSerie(outil, { root, readFileImpl });
-  const suivante = [...serie, point];
+  const jour = String(point?.date ?? "").slice(0, 10);
+  const sansAujourdhui = jour ? serie.filter((p) => String(p?.date ?? "").slice(0, 10) !== jour) : serie;
+  const suivante = [...sansAujourdhui, point];
   const chemin = join(root, seriePath(outil));
   try { mkdirImpl(dirname(chemin), { recursive: true }); } catch { /* le dossier existe déjà */ }
   writeFileImpl(chemin, JSON.stringify(suivante, null, 1));

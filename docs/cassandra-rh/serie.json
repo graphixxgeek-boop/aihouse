@@ -12,29 +12,7 @@
     "sens": "neutre — la lecture humaine tranche"
    },
    "outils-a-reconsiderer": {
-    "valeur": 6,
-    "sens": "plus bas = mieux"
-   },
-   "trous-de-couverture": {
-    "valeur": 32,
-    "sens": "plus bas = mieux"
-   }
-  }
- },
- {
-  "date": "2026-09-22",
-  "methode": "v1",
-  "mesures": {
-   "membres-certifies": {
-    "valeur": 33,
-    "sens": "plus haut = mieux"
-   },
-   "effectif": {
-    "valeur": 33,
-    "sens": "neutre — la lecture humaine tranche"
-   },
-   "outils-a-reconsiderer": {
-    "valeur": 6,
+    "valeur": 5,
     "sens": "plus bas = mieux"
    },
    "trous-de-couverture": {

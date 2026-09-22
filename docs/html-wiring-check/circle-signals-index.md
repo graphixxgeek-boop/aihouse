@@ -3,3 +3,4 @@
 | Date | Fichier | Résumé |
 |---|---|---|
 | 2026-09-22T17:19:15.254Z | circle-signal-2026-09-22T17-19-15-254Z.txt | Câblage HTML/texte vérifié contre les scripts producteurs réels — aucune divergence. |
+| 2026-09-22T17:42:10.134Z | circle-signal-2026-09-22T17-42-10-134Z.txt | RONDE 2 (conforme au process, ouverte dans les règles) — Câblage HTML/texte vérifié contre les scripts producteurs réels — aucune divergence. |

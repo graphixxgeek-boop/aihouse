@@ -6894,6 +6894,20 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(findMecanismesAbsentsDuProcess({ processes: [{ slug: 'p2', doc: 'absent.md', gardien: 'scripts/x.mjs' }], readFileImpl: () => { throw new Error('nope'); } }), [], 'a missing document reports nothing here: its absence is already named by findProcessDocsMissing(), and two tools shouting the same thing teaches people to ignore both');
   assert.deepEqual(findMecanismesAbsentsDuProcess(), [], 'checked live against the real repository: every file a real process leans on is at least named in its own document — this assertion found EIGHT genuine gaps on its very first run (four state files across the Ronde, the simulation and the night process, plus the test file of integration-outil), all of them mechanisms that existed only in code and in docs/suivi/');
 
+  // recordPoint : un point par JOUR, jamais un par lancement (2026-09-23, trouvé pendant une Ronde).
+  // Le seuil POINTS_MINIMUM_POUR_UNE_TENDANCE existait pour refuser de conclure trop tôt ; il était
+  // franchi en une heure de débogage, donc il ne protégeait rien. Une tendance décrit le TEMPS.
+  const st = await import('../scripts/serie-temporelle.mjs');
+  let serieFausse = [];
+  const lireSerie = () => JSON.stringify(serieFausse);
+  const ecrireSerie = (_c, t) => { serieFausse = JSON.parse(t); };
+  const io = { readFileImpl: lireSerie, writeFileImpl: ecrireSerie, mkdirImpl: () => {} };
+  for (let i = 0; i < 4; i++) st.recordPoint('x', st.buildPoint({ date: '2026-09-23', mesures: { a: { valeur: i, sens: st.SENS.BAS_MIEUX } } }), io);
+  assert.equal(serieFausse.length, 1, 'four runs on the same day collapse into ONE point: four snapshots minutes apart are not a trend, and calling them one was how "stable" got declared on an hour of debugging');
+  assert.equal(serieFausse[0].mesures.a.valeur, 3, 'and it keeps the LAST run of the day — the most recent state is the true one');
+  st.recordPoint('x', st.buildPoint({ date: '2026-09-24', mesures: { a: { valeur: 9, sens: st.SENS.BAS_MIEUX } } }), io);
+  assert.equal(serieFausse.length, 2, 'a genuinely new day adds a genuinely new point — the fix must not flatten the series into a single value forever');
+
   const fakeReadFile = (path) => {
     if (path.includes('tool-with-html')) return 'import { renderHtmlReport } from "./html-report.mjs";';
     if (path.includes('tool-plain-text')) return 'console.log("no html rendering here");';

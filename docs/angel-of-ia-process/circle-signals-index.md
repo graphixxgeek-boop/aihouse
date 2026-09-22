@@ -3,3 +3,4 @@
 | Date | Fichier | Résumé |
 |---|---|---|
 | 2026-09-22T17:20:06.065Z | circle-signal-2026-09-22T17-20-06-065Z.txt | EVAL-DEV première édition : 8 juges sur 8 ont rendu un verdict chiffré. Premier essai rendu à vide (clés ne correspondant pas aux identifiants du jury), corrigé |
+| 2026-09-22T17:42:10.134Z | circle-signal-2026-09-22T17-42-10-134Z.txt | RONDE 2 (conforme au process, ouverte dans les règles) — EVAL-DEV livré la veille, 8 juges sur 8. Prochaine édition comparable. |
