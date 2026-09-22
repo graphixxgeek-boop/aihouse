@@ -936,6 +936,41 @@ export function shouldRemindCircleTasks(commitsSinceLastRun) {
   return commitsSinceLastRun >= REMINDER_COMMIT_THRESHOLD;
 }
 
+// DU RAPPEL PASSIF À LA RELANCE PROPOSÉE (2026-09-22, calibrage explicite de l'utilisateur).
+//
+// LE FAIT QUI A MOTIVÉ CE CHANGEMENT, et il est accablant : le rappel passif existait déjà, il
+// s'affichait à chaque commit, et je l'ai ignoré QUATORZE FOIS DE SUITE. Un rappel qu'on peut lire
+// sans rien faire n'est pas un mécanisme, c'est une décoration — exactement la même limite que
+// celle déjà écrite pour tool-brain et SMART-CONSO-TOKEN, constatée cette fois sur pièces.
+//
+// Ce que ça change concrètement : au-delà d'un second seuil, plus élevé que celui du simple rappel,
+// la Ronde n'est plus « à envisager » — elle est PROPOSÉE explicitement à l'utilisateur, avec le
+// retard chiffré et ce qu'il implique. Trois paliers, jamais deux, parce qu'un retard de 8 commits
+// et un retard de 30 n'appellent pas la même réaction.
+export const RELANCE_PALIERS = [
+  { seuil: 8, palier: "rappel", quoi: "mention discrète en bas du compte rendu de commit" },
+  { seuil: 15, palier: "proposition", quoi: "proposition explicite à l'utilisateur, avec le retard chiffré — jamais une simple mention qu'on peut survoler" },
+  { seuil: 30, palier: "alerte", quoi: "le retard devient un constat en soi : à ce stade, des vérifications gratuites dorment depuis des semaines et personne ne sait ce qu'elles auraient trouvé" },
+];
+
+export function relanceCircleTasks(commitsSinceLastRun, { paliers = RELANCE_PALIERS } = {}) {
+  // Un compte non mesurable n'est PAS un retard de zéro : c'est une absence de mesure, et la
+  // confondre avec « tout va bien » serait la faute que ce paysage passe son temps à corriger.
+  if (!Number.isFinite(commitsSinceLastRun)) return { mesurable: false, raison: "nombre de commits depuis la dernière Ronde non mesurable — ni un retard, ni une absence de retard" };
+  const atteints = paliers.filter((p) => commitsSinceLastRun >= p.seuil);
+  if (!atteints.length) return { mesurable: true, palier: null, commits: commitsSinceLastRun };
+  const courant = atteints.at(-1);
+  return { mesurable: true, palier: courant.palier, seuil: courant.seuil, commits: commitsSinceLastRun, quoi: courant.quoi };
+}
+
+export function relanceMessage(relance) {
+  if (!relance.mesurable) return `🔄 Ronde : ${relance.raison}`;
+  if (!relance.palier) return null;
+  if (relance.palier === "rappel") return `🔄 ${relance.commits} commits sans Ronde périodique (CIRCLE-TASKS) — envisage de la relancer.`;
+  if (relance.palier === "proposition") return `🔄 ${relance.commits} commits sans Ronde — au-delà de ${relance.seuil}, ce n'est plus un rappel : je te PROPOSE de la lancer maintenant (node scripts/circle-tasks.mjs). Le rappel discret n'a rien changé pendant ${relance.commits - RELANCE_PALIERS[0].seuil} commits.`;
+  return `🚨 ${relance.commits} commits sans Ronde. À ce stade ce n'est plus un retard, c'est un constat : une trentaine de vérifications gratuites dorment depuis des semaines, et personne ne sait ce qu'elles auraient trouvé entre-temps.`;
+}
+
 // À appeler explicitement par l'agent une fois une vraie ronde effectuée (au moins un item traité),
 // jamais automatiquement — CIRCLE-TASKS ne sait jamais tout seul si l'agent a réellement fait le
 // travail derrière chaque case cochée (aucun mécanisme ne peut le vérifier, même honnêteté que le

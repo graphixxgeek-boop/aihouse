@@ -18,7 +18,7 @@ import { parseToolsTable, slugifyAgentName, checkAllAgentBadges, pendingCeremoni
 import { formatToolBrainReminder } from "../tool-brain.mjs";
 import { summarizeHistory, computeInvestmentRatio, diagnoseAdviceAccuracy } from "../smart-conso-token.mjs";
 import { sh, AGENT_CATEGORIES, gardienShouldRun, lastCommitFiles, realCodeFilesChanged } from "../lib-shell.mjs";
-import { loadLastRun, shouldRemindCircleTasks } from "../circle-tasks.mjs";
+import { loadLastRun, relanceCircleTasks, relanceMessage, shouldRemindCircleTasks } from "../circle-tasks.mjs";
 import { buildRealOnboardingContext } from "../check-tasks-details.mjs";
 
 const [last] = recentCommits(1);
@@ -331,9 +331,10 @@ try {
   const totalCommitCount = Number(sh("git rev-list --count HEAD", { cwd: new URL("../..", import.meta.url).pathname }).trim());
   const lastRun = loadLastRun();
   const commitsSinceLastRun = Number.isFinite(totalCommitCount) ? totalCommitCount - (lastRun.lastRunCommitCount ?? 0) : NaN;
-  if (shouldRemindCircleTasks(commitsSinceLastRun)) {
-    console.log(`🔄 Ça fait ${commitsSinceLastRun} commits sans Ronde périodique (CIRCLE-TASKS, node scripts/circle-tasks.mjs) — envisage de la relancer.\n`);
-  }
+  // RELANCE À PALIERS (2026-09-22) — remplace le rappel unique, que j'ai ignoré quatorze fois de
+  // suite. Un message qu'on peut lire sans rien faire n'est pas un mécanisme.
+  const msg = relanceMessage(relanceCircleTasks(commitsSinceLastRun));
+  if (msg) console.log(`${msg}\n`);
 } catch { /* best-effort, jamais bloquant */ }
 
 // Badge automatique — déclenchement réel à chaque commit (2026-09-22, demande explicite de

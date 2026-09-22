@@ -98,8 +98,35 @@ export const REQUIRED_BEATS = [
 // jamais. Un champ absent n'est PAS traité comme faux : il est signalé comme non renseigné, parce
 // que confondre « je n'ai pas l'information » et « la réponse est non » est exactement l'erreur que
 // ce paysage d'outils combat.
+// DEUX FORMATS, NOMMÉS ET DISTINCTS (2026-09-22, calibrage explicite de l'utilisateur : « oui pour
+// une simulation complète, non pour un test ciblé »). Avant ça, les neuf moments étaient exigés de
+// tout lancement — donc un essai court sur UNE mécanique précise ressortait comme un ratage alors
+// qu'il répondait simplement à une autre question.
+//
+// LE GARDE-FOU QUI EMPÊCHE LA DÉRIVE ÉVIDENTE — que tout devienne un « test ciblé » pour échapper
+// aux exigences : un test ciblé doit DÉCLARER À L'AVANCE les moments qu'il vise, et il est jugé sur
+// ceux-là, entièrement. Un test ciblé sans moments déclarés n'est pas un test ciblé, c'est une
+// simulation complète qui s'ignore — et il est traité comme telle.
+export const FORMATS_SIMULATION = {
+  complete: { label: "simulation intégrale (Article 18)", exigeTousLesBeats: true },
+  cible: { label: "test ciblé sur une mécanique précise", exigeTousLesBeats: false },
+};
+
+export function beatsExigesPour(plan = {}, beats = REQUIRED_BEATS) {
+  if (plan.format !== "cible") return { beats, format: "complete", raison: null };
+  const vises = Array.isArray(plan.beatsVises) ? plan.beatsVises.filter((b) => beats.includes(b)) : [];
+  if (!vises.length) {
+    return { beats, format: "complete", raison: "format « ciblé » annoncé sans aucun moment visé déclaré — traité comme une simulation complète, puisque rien ne dit ce qu'il cible" };
+  }
+  const inconnus = (plan.beatsVises ?? []).filter((b) => !beats.includes(b));
+  return { beats: vises, format: "cible", raison: inconnus.length ? `moment(s) visé(s) inconnu(s), ignoré(s) : ${inconnus.join(", ")}` : null };
+}
+
 export function preflight(plan = {}, { lessons = LESSONS, beats = REQUIRED_BEATS } = {}) {
   const echecs = [];
+  // Les moments réellement exigés dépendent du format déclaré, jamais de la liste complète par défaut.
+  const exigence = beatsExigesPour(plan, beats);
+  beats = exigence.beats;
   const nonRenseignes = [];
   for (const l of lessons) {
     // CHAQUE LEÇON DÉCLARE SON CHAMP, ELLE NE LE TESTE PAS ELLE-MÊME (corrigé le 2026-09-22, au
