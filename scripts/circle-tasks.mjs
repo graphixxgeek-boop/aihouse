@@ -682,7 +682,7 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // Partie 10 du process) — l'un juge celui qui décide, l'autre celui qui exécute, mais c'est un
   // seul moment de la Ronde. Le crochet pre-commit a refusé le commit qui créait ce dossier sans
   // cette ligne : le garde-fou a fonctionné exactement comme prévu.
-  "eval-ia": "Couvert par l'item CIRCLE_ITEMS `recap-evaluations`, qui produit les DEUX rapports d'évaluation (EVAL-DEV et EVAL-IA) au même moment de la Ronde — étape D de la Partie 10",
+  "cassandra-rh/evaluations": "Couvert par l'item CIRCLE_ITEMS `recap-evaluations`, qui produit les DEUX rapports d'évaluation (EVAL-DEV et EVAL-IA) au même moment de la Ronde — étape D de la Partie 10. Regroupés chez CASSANDRA le 2026-09-23 : elle les construit et les archive, angel-of-ia-process détient les données brutes de jugement sans plus les ranger",
   // tableau-de-bord (2026-09-22) : registre créé le jour où l'item `kpi` a enfin reçu un dossier
   // d'artefacts. Il EST couvert par une vraie entrée CIRCLE_ITEMS — simplement sous un autre nom
   // (l'item s'appelle `kpi`, le registre `tableau-de-bord`), et le rapprochement par nom ne pouvait

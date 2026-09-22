@@ -831,6 +831,13 @@ LA SÉQUENCE COMPLÈTE, DANS CET ORDRE EXACT
         ⭐⚖️ EVAL-DEV — l'évaluation de l'utilisateur
         ⭐🤖 EVAL-IA  — l'évaluation de l'agent
      Ils ne fusionnent jamais : l'un juge celui qui décide, l'autre celui qui exécute.
+     ARCHIVAGE, unifié le 2026-09-23 sur question de l'utilisateur (« cette évaluation de toi est
+     hébergée chez CASSANDRA, comme la mienne ? » — la réponse honnête était NON) : les deux vivent
+     dans docs/cassandra-rh/evaluations/. CASSANDRA les CONSTRUIT (buildEvaluationRecapBlocks) et
+     les ARCHIVE, c'est son métier de RH ; angel-of-ia-process DÉTIENT les données brutes de
+     jugement (les 8 juges, les réponses, les désaccords, les points reportés) sans plus les ranger.
+     Raison concrète du regroupement : la section « LA RELATION », commune aux deux rapports,
+     devrait sinon chercher ses deux moitiés dans deux dossiers différents.
 
   ÉTAPE E — LES QUATRE RAPPORTS DE TÂCHES, livrés ici et pas au début (exception à l'étape A).
      Raison : ce sont eux qui nourrissent les questions de l'étape F, et un état des tâches lu une
