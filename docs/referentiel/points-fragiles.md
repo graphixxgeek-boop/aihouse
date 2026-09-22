@@ -153,3 +153,17 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   pour le retour de l'utilisateur. Les 7 autres zones (Cycle jour/nuit, Enquête, Bonus roulette,
   Appréciation de l'observateur, Dossier retourné, Déplacements/espace, Relation Lia/Noé) restent
   toutes à égalité de fraîcheur (jamais examinées).
+- **Badge / couverture : les signaux ARGUS et CLONE-HUNTER sont mesurés à l'échelle du DÉPÔT, pas
+  de l'outil** (constaté le 2026-09-22 en fiabilisant le relevé partagé des 6 Gardiens). Conséquence
+  visible depuis que tous les afficheurs lisent enfin ces signaux : un outil parfaitement propre
+  affiche quand même `partiel (KO ARGUS, KO CLONE-HUNTER)` parce qu'une trouvaille existe quelque
+  part dans le dépôt. Ce n'est pas une régression (le crochet post-commit passait déjà ces mêmes
+  comptes globaux à tous les outils) — c'est une imprécision devenue visible. **Pas corrigeable
+  uniformément aujourd'hui** : la couche mécanique d'ARGUS ne scanne que les champs de `lib/life.ts`
+  et des marqueurs TODO, elle ne produit AUCUNE trouvaille attribuable à un script d'outil ;
+  CLEAN-DIRTY-OLD et CLONE-HUNTER, eux, nomment bien des fichiers et seraient attribuables. Deux
+  lectures légitimes du palier, à trancher avec l'utilisateur avant de coder quoi que ce soit :
+  « OK 100% » veut-il dire « ce réseau d'outils est au vert » (lecture actuelle, signaux globaux) ou
+  « CET outil est au vert » (attribution par fichier, possible pour 3 Gardiens sur 6 seulement, donc
+  un palier qui mélangerait deux échelles) ? Aucun changement appliqué — le libellé exact
+  `KO <NOM>` est calibré par l'utilisateur (tâche #226), il n'est pas modifié sans sa décision.
