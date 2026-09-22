@@ -17,6 +17,7 @@ import { fileURLToPath } from "node:url";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { printReportHeader } from "./report-template.mjs";
+import { loadJson } from "./lib-json.mjs";
 
 const HEALTH_PATH = fileURLToPath(new URL("../.gemini-key-health.json", import.meta.url));
 const SESSION_PATH = fileURLToPath(new URL("../.smart-conso-session.json", import.meta.url));
@@ -29,14 +30,9 @@ const SESSION_PATH = fileURLToPath(new URL("../.smart-conso-session.json", impor
 // avant de le considérer vraiment "dur" (cf. blueprint, "validation humaine explicite").
 export const HARD_THRESHOLDS = { simulation: { count: 2, windowHours: 6 } };
 
-function loadJson(path, fallback) {
-  if (!existsSync(path)) return fallback;
-  try {
-    return JSON.parse(readFileSync(path, "utf8"));
-  } catch {
-    return fallback;
-  }
-}
+// loadJson : copie privée retirée le 2026-09-23 (tâche #216), remplacée par l'import partagé
+// en tête de fichier. Le `existsSync` qu'elle faisait en plus ne changeait rien : le try/catch
+// attrape déjà le fichier absent.
 
 export function recentExhaustionRate(healthData, now, windowHours = 2) {
   const keys = healthData?.keys && typeof healthData.keys === "object" ? Object.values(healthData.keys) : [];

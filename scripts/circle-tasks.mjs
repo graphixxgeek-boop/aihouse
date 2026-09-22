@@ -37,6 +37,7 @@ import { renderHtmlReport } from "./html-report.mjs";
 export { daysSince };
 import { extractPrincipleUnits, buildEvolutionDigest, findPossibleTensions, philosophyFreshnessDays } from "./the-king.mjs";
 import { recordCliUsage, recordToolContribution } from "./tool-usage.mjs";
+import { loadJsonArray } from "./lib-json.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -1428,12 +1429,7 @@ export const QUESTIONS_SANS_REPONSE_PATH = "docs/circle-tasks/questions-sans-rep
 export const ETATS_QUESTION = ["répondue", "sans réponse", "jamais posée"];
 
 export function loadQuestionsSansReponse({ root = ROOT, readFileImpl = readFileSync } = {}) {
-  try {
-    const b = JSON.parse(readFileImpl(join(root, QUESTIONS_SANS_REPONSE_PATH), "utf8"));
-    return Array.isArray(b) ? b : [];
-  } catch {
-    return [];
-  }
+  return loadJsonArray(QUESTIONS_SANS_REPONSE_PATH, { root, readFileImpl });
 }
 
 export function enregistrerQuestionsSansReponse(questions = [], { serie, root = ROOT, readFileImpl = readFileSync, writeFileImpl = writeFileSync, mkdirImpl = mkdirSync, date = new Date().toISOString().slice(0, 10) } = {}) {
@@ -1506,12 +1502,7 @@ export function enAttenteProchaineRonde(registre = [], { max = MAX_TENTATIVES_PA
 export const SERIES_PASSEES_PATH = "docs/circle-tasks/series-passees.json";
 
 export function loadSeriesPassees({ root = ROOT, readFileImpl = readFileSync } = {}) {
-  try {
-    const b = JSON.parse(readFileImpl(join(root, SERIES_PASSEES_PATH), "utf8"));
-    return Array.isArray(b) ? b : [];
-  } catch {
-    return [];
-  }
+  return loadJsonArray(SERIES_PASSEES_PATH, { root, readFileImpl });
 }
 
 // passerLaSerie() — n'est appelée QUE sur une réponse explicite de l'utilisateur. Elle retire les

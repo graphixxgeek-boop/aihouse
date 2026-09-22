@@ -21,6 +21,7 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
+import { loadJsonArray } from "./lib-json.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -60,12 +61,7 @@ export function seriePath(outil) {
 }
 
 export function loadSerie(outil, { root = ROOT, readFileImpl = readFileSync } = {}) {
-  try {
-    const brut = JSON.parse(readFileImpl(join(root, seriePath(outil)), "utf8"));
-    return Array.isArray(brut) ? brut : [];
-  } catch {
-    return [];
-  }
+  return loadJsonArray(seriePath(outil), { root, readFileImpl });
 }
 
 // Un point = une date, la méthode qui l'a produit, et des mesures nommées. Chaque mesure porte sa

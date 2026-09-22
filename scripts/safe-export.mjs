@@ -20,6 +20,7 @@ import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
+import { loadJsonArray } from "./lib-json.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -290,12 +291,7 @@ export const ACCORD_REQUIS = "accord explicite de l'utilisateur, daté";
 // différentes sur la même question. Le chemin suit la convention de registre déjà sans exception du
 // projet (`docs/<outil>/`), donc un troisième Gardien s'y branche sans qu'on touche à cette ligne.
 export function loadMemoire({ root = ROOT, readFileImpl = readFileSync, fichier = MEMOIRE_FILE } = {}) {
-  try {
-    const b = JSON.parse(readFileImpl(join(root, fichier), "utf8"));
-    return Array.isArray(b) ? b : [];
-  } catch {
-    return [];
-  }
+  return loadJsonArray(fichier, { root, readFileImpl });
 }
 
 // Les paliers de relance. Un rappel identique devient un meuble — ce projet en a la preuve chiffrée

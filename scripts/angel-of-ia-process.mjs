@@ -38,6 +38,7 @@ import { recordCliUsage, USAGE_ORIGINS } from "./tool-usage.mjs";
 // durée. Deux besoins réels, jamais une duplication — et c'est écrit ici pour qu'on ne fusionne pas
 // les deux en croyant nettoyer.
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
+import { loadJsonArray } from "./lib-json.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -476,12 +477,7 @@ export const EVOLUTIONS = ["progression", "régression", "stable", "première me
 export const HISTORIQUE_EVAL_FILE = "docs/angel-of-ia-process/historique-evaluations.json";
 
 export function loadEvaluationHistory({ root = ROOT, readFileImpl = readFileSync } = {}) {
-  try {
-    const brut = JSON.parse(readFileImpl(join(root, HISTORIQUE_EVAL_FILE), "utf8"));
-    return Array.isArray(brut) ? brut : [];
-  } catch {
-    return [];
-  }
+  return loadJsonArray(HISTORIQUE_EVAL_FILE, { root, readFileImpl });
 }
 
 // Le format persisté est volontairement minimal : la date, et par domaine l'indice numérique de la
@@ -603,12 +599,7 @@ export function pointsAInterroger({ evaluation = null, jury = [], evolutions = [
 export const POINTS_EN_ATTENTE_FILE = "docs/angel-of-ia-process/points-en-attente.json";
 
 export function loadPointsEnAttente({ root = ROOT, readFileImpl = readFileSync } = {}) {
-  try {
-    const brut = JSON.parse(readFileImpl(join(root, POINTS_EN_ATTENTE_FILE), "utf8"));
-    return Array.isArray(brut) ? brut : [];
-  } catch {
-    return [];
-  }
+  return loadJsonArray(POINTS_EN_ATTENTE_FILE, { root, readFileImpl });
 }
 
 // reporterPointsAuProchainPassage() — appelée à la place de la fenêtre quand la Ronde tourne sans

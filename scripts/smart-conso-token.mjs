@@ -24,6 +24,7 @@ import { countTasksSince, lastCoveredTaskNumber } from "./check-suivi-fidelity.m
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice, qualifierIndicateur } from "./lib-shell.mjs";
 import { printReportHeader } from "./report-template.mjs";
+import { loadJson } from "./lib-json.mjs";
 
 const HISTORY_PATH = fileURLToPath(new URL("../.smart-conso-token-history.json", import.meta.url));
 
@@ -681,14 +682,9 @@ export function formatChantierComparison(result) {
   return lines.join("\n");
 }
 
-function loadJson(path, fallback) {
-  if (!existsSync(path)) return fallback;
-  try {
-    return JSON.parse(readFileSync(path, "utf8"));
-  } catch {
-    return fallback;
-  }
-}
+// loadJson : copie privée retirée le 2026-09-23 (tâche #216), remplacée par l'import partagé
+// en tête de fichier. Le `existsSync` qu'elle faisait en plus ne changeait rien : le try/catch
+// attrape déjà le fichier absent.
 
 export function countRecentActions(history, actionType, now, windowHours) {
   const windowMs = windowHours * 60 * 60 * 1000;

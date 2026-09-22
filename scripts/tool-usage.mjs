@@ -15,6 +15,7 @@
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { loadJson } from "./lib-json.mjs";
 
 const HISTORY_PATH = fileURLToPath(new URL("../.tool-usage-history.json", import.meta.url));
 
@@ -56,13 +57,14 @@ export const USAGE_ORIGINS = ["spontane", "demande", "automatique_post_commit", 
 // réutilise verbatim plutôt que d'écrire une 4e copie identique — CLONE-HUNTER venait de trouver
 // cette exacte duplication (déjà présente 3 fois : ici, smart-conso-api.mjs, smart-conso-token.mjs)
 // le soir même ; jamais rouvrir un cas déjà signalé sous une forme légèrement différente (Article 3).
-export function loadJson(path, fallback) {
-  try {
-    return JSON.parse(readFileSync(path, "utf8"));
-  } catch {
-    return fallback;
-  }
-}
+// Ré-export depuis le 2026-09-23 (tâche #216) : cette fonction ÉTAIT le canonique — le-coordinateur
+// et cassandra-rh l'importent d'ici — mais deux outils s'en étaient fait des copies privées quand
+// même. Le corps a déménagé dans lib-json.mjs ; le ré-export garde intacts les deux importeurs.
+// Importée ET ré-exportée, jamais seulement ré-exportée : `export { x } from "…"` ne crée AUCUNE
+// liaison locale, et ce fichier appelle loadJson() lui-même dans recordToolUsage(). La première
+// version de ce commit ne faisait que ré-exporter — la suite de tests l'a attrapée immédiatement
+// avec un « loadJson is not defined » à l'exécution réelle, ce qu'aucune relecture n'aurait vu.
+export { loadJson };
 
 // Enregistre une sollicitation RÉELLE d'un outil. `toolSlug` : identifiant stable de l'outil (même
 // convention que slugifyAgentName() de le-coordinateur.mjs, ex. "argus", "the-final-judge") — jamais

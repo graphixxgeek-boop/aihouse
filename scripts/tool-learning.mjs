@@ -30,6 +30,7 @@ import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader } from "./report-template.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
+import { loadJsonArray } from "./lib-json.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -98,12 +99,7 @@ export function jugerUnOutil(outil, { preuves = {}, passages = 0, minPassages = 
 export const VERDICTS_FILE = "docs/tool-learning/verdicts.json";
 
 export function loadVerdicts({ root = ROOT, readFileImpl = readFileSync } = {}) {
-  try {
-    const b = JSON.parse(readFileImpl(join(root, VERDICTS_FILE), "utf8"));
-    return Array.isArray(b) ? b : [];
-  } catch {
-    return [];
-  }
+  return loadJsonArray(VERDICTS_FILE, { root, readFileImpl });
 }
 
 export function enregistrerVerdict(verdict, { root = ROOT, readFileImpl = readFileSync, writeFileImpl = writeFileSync, date = new Date().toISOString().slice(0, 10) } = {}) {
