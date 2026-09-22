@@ -439,7 +439,43 @@ export function renderClaudeMdRuleTable({ rows, redondances }) {
 // ecotoken importe déjà ce fichier, l'importer en retour créerait un cycle. Frontière nette —
 // SMART-CONSO-TOKEN dit combien ça coûte, ecotoken dit quoi faire pour que ça coûte
 // moins, et aucun des deux ne recalcule ce que l'autre sait déjà.
-export function scanDocumentWeight(text, filename = "document", { alwaysLoaded = false } = {}) {
+// L'EXPÉRIENCE D'ECOTOKEN, LUE SANS L'IMPORTER (2026-09-22, question directe de l'utilisateur :
+// « est-ce que ecotoken partage son experience avec smart eco token ? »).
+//
+// RÉPONSE HONNÊTE À CETTE QUESTION, AVANT CE CORRECTIF : le partage existait, mais à SENS UNIQUE.
+// ecotoken importe bien 5 fonctions d'ici ; l'inverse est refusé par conception (cycle d'import),
+// et le lien retour se faisait par une simple phrase nommant ecotoken. Ce qui manquait n'était donc
+// pas le code — c'était l'EXPÉRIENCE : le registre d'ecotoken (`docs/ecotoken/index.md`) accumule
+// ce qui a réellement été proposé, et surtout ce que l'utilisateur a REFUSÉ, et rien ici ne le
+// lisait. Or lire un fichier n'est pas importer un module : aucun cycle, aucune frontière franchie.
+// C'est exactement la règle de travail §3ter (« toute expérience vécue doit alimenter un outil »).
+//
+// La frontière reste intacte : SMART-CONSO-TOKEN dit combien ça coûte et ce qui a déjà été tenté,
+// ecotoken dit quoi faire — celui-ci ne propose toujours aucun plan de réduction lui-même.
+export function ecotokenExperience(indexText) {
+  const lignes = String(indexText ?? "").split("\n").filter((l) => l.trim().startsWith("|") && !/^\|\s*-+/.test(l.trim()));
+  const passages = lignes.slice(1).map((l) => l.split("|").slice(1, -1).map((c) => c.trim())).filter((c) => c.length >= 5 && /^\d{4}-\d{2}-\d{2}/.test(c[0]));
+  if (!passages.length) return { passages: 0, refuses: [], aTrancher: 0, dernierPoids: undefined };
+  // Une cible REFUSÉE ne doit jamais être reproposée en tête ; une cible « à trancher » est en
+  // attente, jamais un refus — la nuance compte, et c'est la seule colonne écrite à la main.
+  const refuses = [...new Set(passages.filter((c) => /refus|non|rejet/i.test(c[3])).map((c) => c[4]))];
+  const aTrancher = passages.filter((c) => /à trancher|a trancher/i.test(c[3])).length;
+  const dernierPoids = Number(passages[passages.length - 1][1]) || undefined;
+  return { passages: passages.length, refuses, aTrancher, dernierPoids };
+}
+
+// La phrase à glisser dans un avis, quand cette expérience dit quelque chose d'utile. `null` quand
+// elle ne dit rien : jamais une ligne creuse ajoutée pour faire savant.
+export function ecotokenExperienceNote(experience) {
+  if (!experience?.passages) return null;
+  const bouts = [`ecotoken a déjà fait ${experience.passages} passage(s) sur ce document`];
+  if (experience.dernierPoids) bouts.push(`dernier poids relevé ${experience.dernierPoids} tokens`);
+  if (experience.refuses.length) bouts.push(`${experience.refuses.length} cible(s) déjà REFUSÉE(S) par l'utilisateur, à ne jamais reproposer en tête : ${experience.refuses.join(" ; ")}`);
+  if (experience.aTrancher) bouts.push(`${experience.aTrancher} proposition(s) encore en attente de décision — relancer un plan avant de trancher celles-là ne servirait à rien`);
+  return `Expérience d'ecotoken (lue dans son registre, jamais recalculée) : ${bouts.join(" ; ")}.`;
+}
+
+export function scanDocumentWeight(text, filename = "document", { alwaysLoaded = false, ecotokenIndexText = null } = {}) {
   const weight = measureClaudeMdWeight(text);
   const lignes = (text?.match(/\n/g) || []).length + 1;
   const overBenchmark = lignes > PROGRESSIVE_DISCLOSURE_BENCHMARK.lignesLimite;
@@ -456,6 +492,11 @@ export function scanDocumentWeight(text, filename = "document", { alwaysLoaded =
     actionPossible = markers.occurrences
       ? `Document TOUJOURS CHARGÉ (coût payé à chaque message) : ${markers.occurrences} aside(s) narrative(s) datée(s) repérée(s) mécaniquement (~${markers.tokens} tokens, candidates sûres car déjà explicitement historiques). Pour un PLAN DE RÉDUCTION chiffré et le texte de remplacement prêt à relire : \`node scripts/ecotoken.mjs plan\` (ecotoken). Le tri final reste manuel (Article 19, jamais automatique).`
       : `Document TOUJOURS CHARGÉ (coût payé à chaque message), au-delà du repère, mais aucune aside narrative datée détectée mécaniquement. Le filon mécanique de CE scan est épuisé — ecotoken (\`node scripts/ecotoken.mjs\`) prend le relais avec ses autres stratégies (catalogue, extraction, doublons), jamais ce scan-ci.`;
+    // L'expérience d'ecotoken s'ajoute à l'avis quand elle est fournie — jamais recalculée ici, et
+    // jamais fabriquée quand le registre est absent (un appelant qui ne la fournit pas obtient
+    // exactement l'avis d'avant, mot pour mot).
+    const note = ecotokenExperienceNote(ecotokenExperience(ecotokenIndexText));
+    if (note) actionPossible += ` ${note}`;
     urgence = "action_requise";
   }
   return {

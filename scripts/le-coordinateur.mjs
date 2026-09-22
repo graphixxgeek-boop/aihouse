@@ -595,6 +595,11 @@ export function checkAgentOnboarding(agentName, {
   // projet (Sage/Gardien) — un « Membre certifié (classique) » (ownKnowledge: false) n'a par
   // définition rien de propre à documenter à part, ces 3 gaps ne le concernent jamais.
   const registryPrefix = registryPathPrefix ?? `docs/${slug}/`;
+  // Calculé UNE fois ici plutôt que dans le bloc de vérification : le contrôle plus bas et la ligne
+  // de validation affichée plus loin doivent nommer exactement le même chemin (cf. le commentaire
+  // de cette ligne de validation — un chemin annoncé différent du chemin vérifié envoie le lecteur
+  // vers un fichier fantôme).
+  const attenduBlueprint = blueprintPath ?? `docs/${slug}-blueprint.md`;
   if (ownKnowledge) {
     if (!existingPaths.has(`docs/referentiel/${slug}.md`)) gaps.push(`instanciation manquante (docs/referentiel/${slug}.md)`);
 
@@ -603,7 +608,6 @@ export function checkAgentOnboarding(agentName, {
     // docs/suivi/relectures-lourdes/ — jamais un chemin deviné, toujours déclaré par l'appelant).
     if (![...existingPaths].some((p) => p.startsWith(registryPrefix))) gaps.push(`registre manquant (${registryPrefix})`);
 
-    const attenduBlueprint = blueprintPath ?? `docs/${slug}-blueprint.md`;
     if (!cousinOf && !existingPaths.has(attenduBlueprint)) {
       gaps.push(`blueprint manquant (${attenduBlueprint}) — si c'est volontaire (cousin d'un autre Agent), le déclarer via l'option cousinOf plutôt que de laisser ce point sans réponse`);
     }
@@ -791,7 +795,12 @@ export function checkAgentOnboarding(agentName, {
   if (ownKnowledge) {
     validations.push(`instanciation (docs/referentiel/${slug}.md)`);
     validations.push(`registre (${registryPrefix})`);
-    validations.push(cousinOf ? `blueprint (cousin de ${cousinOf})` : `blueprint (docs/${slug}-blueprint.md)`);
+    // Le chemin ANNONCÉ doit être celui réellement VÉRIFIÉ (corrigé le 2026-09-22 en lisant le bloc
+    // de certification de Smart Breaker, qui annonçait fièrement « blueprint
+    // (docs/smart-breaker-blueprint.md) » — un fichier qui n'existe pas, alors que le contrôle avait
+    // bien lu le vrai chemin déclaré). Une validation qui nomme autre chose que ce qu'elle a
+    // contrôlé est pire qu'une validation absente : elle envoie le lecteur vers un fichier fantôme.
+    validations.push(cousinOf ? `blueprint (cousin de ${cousinOf})` : `blueprint (${attenduBlueprint})`);
   }
   if (claudeMdText != null && ownKnowledge) validations.push("mention CLAUDE.md");
   if (suiviText != null) validations.push("trace docs/suivi/");

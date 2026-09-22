@@ -6228,6 +6228,37 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 }
 
 {
+  // L'EXPÉRIENCE D'ECOTOKEN LUE PAR SMART-CONSO-TOKEN (2026-09-22, question directe de
+  // l'utilisateur : « est-ce que ecotoken partage son experience avec smart eco token ? »).
+  // Réponse honnête d'alors : le partage était à SENS UNIQUE (ecotoken importe 5 fonctions d'ici,
+  // l'inverse est refusé par conception — cycle d'import). Ce qui manquait n'était pas du code mais
+  // l'EXPÉRIENCE : le registre d'ecotoken accumule ce que l'utilisateur a REFUSÉ, et rien ne le
+  // lisait. Lire un fichier n'est pas importer un module : aucun cycle, la frontière tient.
+  const { ecotokenExperience, ecotokenExperienceNote, scanDocumentWeight } = await import('../scripts/smart-conso-token.mjs');
+
+  const faux = ['# registre', '', '| Date | Poids CLAUDE.md | Gain proposé | Décision | Cible |', '|---|---|---|---|---|', '| 2026-09-20 10:00 | 30000 | 5000 | refusé | Les 22 fiches |', '| 2026-09-21 11:00 | 28000 | 4000 | à trancher | Le plan d\'origine |', '| 2026-09-22 12:00 | 18222 | 3000 | à trancher | Le catalogue |'].join('\n');
+  const exp = ecotokenExperience(faux);
+  assert.equal(exp.passages, 3, 'every real dated row of the registry must be counted — never the header nor the separator, which a naive line count would swallow');
+  assert.deepEqual(exp.refuses, ['Les 22 fiches'], 'a target the user genuinely REFUSED must be named, so it is never put back at the top of a future plan — the whole point of reading this registry rather than recomputing');
+  assert.equal(exp.aTrancher, 2, 'a target still awaiting a decision must be counted separately from a refusal — "not yet answered" and "answered no" are not the same fact, and the Décision column is the only hand-written one');
+  assert.equal(exp.dernierPoids, 18222, 'the most recent measured weight must come from the LAST row, never the first nor an average');
+  assert.deepEqual(ecotokenExperience(''), { passages: 0, refuses: [], aTrancher: 0, dernierPoids: undefined }, 'an empty or missing registry must report an honest nothing rather than crash or fabricate a zero-weight measurement');
+  assert.deepEqual(ecotokenExperience('| pas | une | vraie | ligne | datée |'), { passages: 0, refuses: [], aTrancher: 0, dernierPoids: undefined }, 'a table row that carries no real date must never be counted as a passage — the date is what proves it is a real recorded run');
+
+  assert.equal(ecotokenExperienceNote(ecotokenExperience('')), null, 'with no experience to report the note must be null, never a hollow sentence added to look thorough');
+  const note = ecotokenExperienceNote(exp);
+  assert.ok(note.includes('REFUSÉE') && note.includes('Les 22 fiches'), 'the note must surface the refused targets by name — that is the single most actionable thing this registry knows');
+  assert.ok(note.includes('en attente de décision'), 'the note must also say how many proposals are still unanswered, so a new plan is not generated on top of decisions nobody has made yet');
+
+  const avecExperience = scanDocumentWeight('x\n'.repeat(400), 'CLAUDE.md', { alwaysLoaded: true, ecotokenIndexText: faux });
+  const sansExperience = scanDocumentWeight('x\n'.repeat(400), 'CLAUDE.md', { alwaysLoaded: true });
+  assert.ok(avecExperience.actionPossible.includes('Expérience d\'ecotoken'), 'when the registry is supplied, the scan advice must carry that experience');
+  assert.ok(!sansExperience.actionPossible.includes('Expérience d\'ecotoken'), 'a caller that supplies no registry must get exactly the advice it got before — the experience is added, never fabricated from an absence');
+  assert.equal(scanDocumentWeight('court', 'petit.md', { alwaysLoaded: true, ecotokenIndexText: faux }).urgence, 'aucune', 'a document within the benchmark must stay untouched by all this — the experience only enriches an advice that already had something to say');
+  console.log('Passed: SMART-CONSO-TOKEN now reads ecotoken\'s accumulated EXPERIENCE (the user\'s own question) — which targets the user already refused, how many proposals still await a decision, and the last real measured weight — by reading its registry file rather than importing it, so the deliberate no-cycle boundary holds and neither tool recomputes what the other knows; it counts only genuinely dated rows, tells "refused" apart from "not yet answered", reports an honest nothing for an empty registry, and leaves a caller that supplies no registry with byte-identical advice.');
+}
+
+{
   // memory-audit (tâche #169, 2026-09-21 ; surnom retenu le même soir à la place de l'ombrelle
   // "MEMENTO", cf. docs/referentiel/memory-audit.md) — cible EXCLUSIVEMENT les Personnages (Lia/Noé),
   // jamais les membres de l'équipe. Testé contre les VRAIES formes de lib/life.ts trouvées par
