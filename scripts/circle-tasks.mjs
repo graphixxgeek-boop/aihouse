@@ -1312,6 +1312,93 @@ function main() {
   }
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LA BARRIÈRE D'OUVERTURE (2026-09-23) — ce qui force VRAIMENT, et ce qui ne le peut pas
+// ————————————————————————————————————————————————————————————————————————
+//
+// Question de l'utilisateur, et elle vise juste : « tu peux accrocher le process dans le git
+// crochet [...] ou une autre solution qui te force mécaniquement à devoir respecter tout le
+// process ? »
+//
+// POURQUOI LE CROCHET GIT NE PEUT PAS LE FAIRE, et c'est important de le dire plutôt que de
+// construire quelque chose qui en aurait l'air : `post-commit` se déclenche APRÈS un commit. Au
+// moment où il parle, la Ronde est finie depuis longtemps. Il détecte, il n'empêche jamais. Le
+// crochet `pre-commit`, lui, bloque bien — mais il bloque un COMMIT, pas le lancement d'une Ronde,
+// et faire échouer tous les commits du dépôt parce qu'une Ronde traîne serait absurde.
+//
+// CE QUI FORCE RÉELLEMENT : l'outil lui-même. Une Ronde ne peut plus être CLÔTURÉE (`record-run`)
+// sans qu'un enregistrement d'ouverture existe, frais et complet. Comme `record-run` est ce qui
+// remet à zéro le compteur « N commits sans Ronde », une Ronde non ouverte dans les règles ne
+// compte tout simplement pas : le rappel continue de monter, de plus en plus fort, jusqu'à la
+// question obligatoire. Le travail bâclé ne se solde pas.
+//
+// LA LIMITE, DÉCLARÉE : rien n'empêchera jamais un agent de lancer les 26 scripts à la main sans
+// rien ouvrir — c'est exactement ce que j'ai fait le 2026-09-22. Ce que cette barrière change,
+// c'est qu'un tel passage ne peut plus se CONCLURE, donc ne peut plus passer pour une Ronde faite.
+// L'échec devient bruyant au lieu d'être invisible. C'est la même honnêteté que tool-brain et
+// SMART-CONSO-TOKEN : on ne prétend pas intercepter la conversation, on rend l'omission coûteuse.
+export const OUVERTURE_PATH = "docs/circle-tasks/ouverture.json";
+
+// Les faits d'ouverture obligatoires, dans l'ordre réel du process (Q1 AVANT AUTO/PRIME/GOAT).
+// `requisSi` porte les dépendances : le rappel de retour n'est dû que si un changement de modèle a
+// été accepté — le réclamer toujours ferait échouer l'ouverture sur le cas le plus fréquent.
+export const FAITS_D_OUVERTURE = [
+  { cle: "changementModelePosee", libelle: "Q1 posée (changement de modèle IA)", requis: true },
+  { cle: "changementModeleReponse", libelle: "réponse à Q1 (oui/non)", requis: true },
+  { cle: "retourModeleQuand", libelle: "Q2 : retour avant ou après les rapports", requisSi: (o) => o.changementModeleReponse === "oui" },
+  { cle: "mode", libelle: "mode choisi (AUTO / PRIME / GOAT)", requis: true },
+];
+
+export function loadOuverture({ root = ROOT, readFileImpl = readFileSync } = {}) {
+  try {
+    return JSON.parse(readFileImpl(join(root, OUVERTURE_PATH), "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+// findFaitsManquants() — ce qui manque pour qu'une ouverture soit valable. Rendu comme une LISTE et
+// jamais comme un booléen : « il manque le mode » et « il ne manque rien » sont deux informations,
+// « false » n'en est aucune.
+export function findFaitsManquants(ouverture, faits = FAITS_D_OUVERTURE) {
+  if (!ouverture) return faits.filter((f) => f.requis).map((f) => f.libelle);
+  return faits
+    .filter((f) => (f.requis || (f.requisSi && f.requisSi(ouverture))) && (ouverture[f.cle] === undefined || ouverture[f.cle] === null || ouverture[f.cle] === ""))
+    .map((f) => f.libelle);
+}
+
+// ouvertureEstFraiche() — une ouverture d'il y a trois jours ne couvre pas la Ronde d'aujourd'hui.
+// Fenêtre large et assumée (24 h) : le but est d'empêcher qu'une vieille ouverture serve
+// indéfiniment de laissez-passer, jamais de chronométrer une Ronde qui peut légitimement s'étaler.
+export const OUVERTURE_VALIDE_HEURES = 24;
+export function ouvertureEstFraiche(ouverture, maintenant = Date.now(), heures = OUVERTURE_VALIDE_HEURES) {
+  if (!ouverture?.at) return false;
+  const age = maintenant - new Date(ouverture.at).getTime();
+  return age >= 0 && age <= heures * 3600 * 1000;
+}
+
+export function ouvrirRonde(faits, { root = ROOT, writeFileImpl = writeFileSync, mkdirImpl = mkdirSync, now = Date.now() } = {}) {
+  const manquants = findFaitsManquants(faits);
+  if (manquants.length) return { ok: false, manquants };
+  const dossier = join(root, "docs/circle-tasks");
+  mkdirImpl(dossier, { recursive: true });
+  const enregistrement = { ...faits, at: new Date(now).toISOString() };
+  writeFileImpl(join(root, OUVERTURE_PATH), JSON.stringify(enregistrement, null, 1), "utf8");
+  return { ok: true, ouverture: enregistrement };
+}
+
+// autoriseCloture() — le point de blocage réel. En mode autonome, TOUT est autorisé sans ouverture :
+// la borne posée par l'utilisateur ne souffre aucune exception (« aucune fenêtre y compris
+// GOAT/AUTO ne doit être bloquante pour le mode autonome »), et une barrière qui empêcherait une
+// Ronde de nuit de se clôturer serait précisément le blocage qu'elle interdit.
+export function autoriseCloture({ ouverture, nightAutonomousMode = false, maintenant = Date.now() } = {}) {
+  if (nightAutonomousMode) return { autorise: true, raison: "mode autonome : aucune ouverture requise, jamais de blocage sans personne pour répondre" };
+  const manquants = findFaitsManquants(ouverture);
+  if (manquants.length) return { autorise: false, raison: `ouverture absente ou incomplète — il manque : ${manquants.join(", ")}`, manquants };
+  if (!ouvertureEstFraiche(ouverture, maintenant)) return { autorise: false, raison: `l'ouverture enregistrée date de plus de ${OUVERTURE_VALIDE_HEURES} h : elle ne peut pas servir de laissez-passer à la Ronde d'aujourd'hui`, manquants: [] };
+  return { autorise: true, raison: "ouverture complète et fraîche" };
+}
+
 // `record-run` (2026-09-21, trouvaille de la première vraie Ronde AUTO, tâche #336) : recordCircleTasksRun()
 // existait déjà mais n'avait AUCUN chemin d'appel simple — seul un `node -e` improvisé pouvait
 // l'invoquer, un geste que l'agent qui pilote a justement oublié de faire à la fin de sa toute
@@ -1320,6 +1407,27 @@ function main() {
 // code mais qu'aucune surface simple ne rend réflexe. `git rev-list --count HEAD`, même commande
 // que le crochet post-commit (`check-last-commit.mjs`), jamais un second calcul divergent.
 function recordRunCli() {
+  // LA BARRIÈRE, appliquée ici et pas ailleurs : c'est `record-run` qui remet à zéro le compteur
+  // « N commits sans Ronde ». Refuser ici, c'est refuser qu'une Ronde mal ouverte compte comme
+  // faite — le rappel continue de monter et finit en question obligatoire. Le travail bâclé ne se
+  // solde pas.
+  const autonome = process.argv.includes("--autonome");
+  const verdict = autoriseCloture({ ouverture: loadOuverture(), nightAutonomousMode: autonome });
+  if (!verdict.autorise) {
+    console.error(`❌ Clôture REFUSÉE — ${verdict.raison}.`);
+    console.error("");
+    console.error("Le process exige, AVANT de lancer la Ronde et dans cet ordre :");
+    console.error("  Q1  « Voulez-vous changer de modèle/agent IA pour exécuter cette Ronde ? » (les 3 modes, reposée à chaque fois)");
+    console.error("  Q2  si oui : revenir au modèle avant ou après l'édition des rapports ?");
+    console.error("  puis la fenêtre AUTO / PRIME / GOAT.");
+    console.error("");
+    console.error("Une fois ces réponses obtenues de l'utilisateur :");
+    console.error("  node scripts/circle-tasks.mjs ouvrir --q1=oui|non [--retour=avant|après] --mode=AUTO|PRIME|GOAT");
+    console.error("");
+    console.error("Mode autonome (personne à qui demander) : node scripts/circle-tasks.mjs record-run --autonome");
+    process.exitCode = 1;
+    return;
+  }
   const count = Number(sh("git rev-list --count HEAD", { cwd: ROOT.replace(/\/$/, "") }).trim());
   if (!Number.isFinite(count)) {
     console.error("Impossible de lire le nombre de commits réel (git rev-list --count HEAD) — rien enregistré.");
@@ -1330,7 +1438,28 @@ function recordRunCli() {
   console.log(`✅ Ronde CIRCLE-TASKS enregistrée comme faite au commit #${state.lastRunCommitCount} — le rappel post-commit repart de zéro à partir de maintenant.`);
 }
 
+function ouvrirCli() {
+  const arg = (nom) => (process.argv.find((a) => a.startsWith(`--${nom}=`)) ?? "").split("=")[1];
+  const q1 = arg("q1");
+  const faits = {
+    changementModelePosee: q1 === "oui" || q1 === "non",
+    changementModeleReponse: q1,
+    retourModeleQuand: arg("retour"),
+    mode: (arg("mode") ?? "").toUpperCase(),
+  };
+  const res = ouvrirRonde(faits);
+  if (!res.ok) {
+    console.error(`❌ Ouverture refusée — il manque : ${res.manquants.join(", ")}.`);
+    console.error("Usage : node scripts/circle-tasks.mjs ouvrir --q1=oui|non [--retour=avant|après] --mode=AUTO|PRIME|GOAT");
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`✅ Ronde ouverte dans les règles (Q1 : ${faits.changementModeleReponse}${faits.retourModeleQuand ? `, retour ${faits.retourModeleQuand}` : ""}, mode ${faits.mode}).`);
+  console.log(`   Enregistré dans ${OUVERTURE_PATH} — la clôture par record-run est désormais autorisée pendant ${OUVERTURE_VALIDE_HEURES} h.`);
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   if (process.argv[2] === "record-run") recordRunCli();
+  else if (process.argv[2] === "ouvrir") ouvrirCli();
   else main();
 }

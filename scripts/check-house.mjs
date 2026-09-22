@@ -6864,6 +6864,22 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const autonomeRonde = vrp2({ ...socle, nightAutonomousMode: true, pointsReportes: [], pointsAInterrogerCount: 0 });
   assert.ok(!aLeCheck(autonomeRonde, 'changement-de-modele') && !aLeCheck(autonomeRonde, 'retour-de-modele'), 'in autonomous mode NEITHER may fire: "aucune fenêtre y compris GOAT/AUTO ne doit être bloquante pour le mode autonome" — a question put to nobody is a stall, never a check');
 
+  // La barrière d'ouverture de la Ronde (2026-09-23) — la réponse à « une solution qui te force
+  // mécaniquement ». Le crochet git ne peut pas forcer (post-commit parle trop tard, pre-commit
+  // bloquerait le mauvais geste) ; l'outil, lui, le peut : une Ronde ne se CLÔTURE plus sans
+  // ouverture, donc ne remet plus le compteur à zéro, donc ne compte pas comme faite.
+  const { findFaitsManquants, ouvertureEstFraiche, autoriseCloture, OUVERTURE_VALIDE_HEURES } = await import('../scripts/circle-tasks.mjs');
+  assert.ok(findFaitsManquants(null).length >= 3, 'no opening record at all means every mandatory fact is missing — returned as a LIST, never a bare false: "the mode is missing" and "nothing is missing" are two pieces of information, false is neither');
+  assert.deepEqual(findFaitsManquants({ changementModelePosee: true, changementModeleReponse: 'non', mode: 'AUTO' }), [], 'a no to Q1 with a mode chosen is a complete opening — the ordinary case must not be obstructed');
+  assert.deepEqual(findFaitsManquants({ changementModelePosee: true, changementModeleReponse: 'oui', mode: 'AUTO' }), ['Q2 : retour avant ou après les rapports'], 'saying yes to Q1 makes Q2 mandatory — a dependency, never a flat requirement that would fail on the most frequent case');
+  const maintenant = Date.UTC(2026, 8, 23, 12, 0, 0);
+  assert.ok(ouvertureEstFraiche({ at: new Date(maintenant - 3600 * 1000).toISOString() }, maintenant), 'an opening from an hour ago covers today Ronde');
+  assert.ok(!ouvertureEstFraiche({ at: new Date(maintenant - (OUVERTURE_VALIDE_HEURES + 1) * 3600 * 1000).toISOString() }, maintenant), 'a stale opening must never serve as an indefinite pass — that is exactly how a guard turns into a formality');
+  const complete = { changementModelePosee: true, changementModeleReponse: 'non', mode: 'AUTO', at: new Date(maintenant).toISOString() };
+  assert.equal(autoriseCloture({ ouverture: null, maintenant }).autorise, false, 'closing a Ronde that was never opened is refused — record-run resets the "N commits without a Ronde" counter, so refusing here means a badly-opened Ronde simply does not count as done');
+  assert.equal(autoriseCloture({ ouverture: complete, maintenant }).autorise, true, 'a complete, fresh opening authorises closing');
+  assert.equal(autoriseCloture({ ouverture: null, nightAutonomousMode: true, maintenant }).autorise, true, 'autonomous mode is ALWAYS authorised with no opening at all: a barrier that stopped a night Ronde from closing would be the very blocking the user forbade ("aucune fenêtre y compris GOAT/AUTO ne doit être bloquante pour le mode autonome")');
+
   const fakeReadFile = (path) => {
     if (path.includes('tool-with-html')) return 'import { renderHtmlReport } from "./html-report.mjs";';
     if (path.includes('tool-plain-text')) return 'console.log("no html rendering here");';
