@@ -6278,6 +6278,22 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 }
 
 {
+  // CLONE-HUNTER ET LES LETTRES ACCENTUÉES (2026-09-22, bug consigné dans points-fragiles.md puis
+  // corrigé). Son motif de jetons ne reconnaissait que l'ASCII : « Noé » se scindait en DEUX jetons
+  // (« No » + « é ») là où « Lia » n'en faisait qu'un, cassant l'égalité de longueur que
+  // matchLineTokens() exige. Un détecteur de duplication aveugle aux accents rate tout bloc de code
+  // français — identifiants, chaînes, commentaires — ce qui est la moitié de ce dépôt.
+  const { tokenizeLine } = await import('../scripts/clone-hunter.mjs');
+
+  assert.deepEqual(tokenizeLine('Noé intrigue'), ['Noé', 'intrigue'], 'an accented word must be ONE token, never split at the accent — the exact bug that made "Noé" two tokens while "Lia" stayed one');
+  assert.equal(tokenizeLine('Noé').length, tokenizeLine('Lia').length, 'two names of the same word count must produce the same token count whatever their accents, otherwise the renaming detector can never even compare them');
+  assert.deepEqual(tokenizeLine('const étape = 1;'), ['const', 'étape', '=', '1', ';'], 'a real accented identifier in French code must tokenize as one identifier — half of this repository is written this way');
+  assert.deepEqual(tokenizeLine('const a = 1;'), ['const', 'a', '=', '1', ';'], 'plain ASCII code must tokenize exactly as before — the fix widens what is recognised, it never changes what already worked');
+  assert.deepEqual(tokenizeLine('"déjà vu"'), ['"déjà vu"'], 'a quoted string keeps being one token accents included, never broken apart into pieces that would defeat every comparison');
+  console.log('Passed: CLONE-HUNTER now tokenizes accented letters as part of a word (the real blind spot recorded in points-fragiles.md) — "Noé" is one token like "Lia", French identifiers and strings stay whole, and plain ASCII code tokenizes exactly as it did before, the fix widening what is recognised without changing what already worked.');
+}
+
+{
   // memory-audit (tâche #169, 2026-09-21 ; surnom retenu le même soir à la place de l'ombrelle
   // "MEMENTO", cf. docs/referentiel/memory-audit.md) — cible EXCLUSIVEMENT les Personnages (Lia/Noé),
   // jamais les membres de l'équipe. Testé contre les VRAIES formes de lib/life.ts trouvées par

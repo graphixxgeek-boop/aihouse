@@ -214,7 +214,15 @@ export function clusterDuplicates(pairs) {
 // et tout le reste caractère par caractère — opérateurs, ponctuation) — jamais un vrai lexer JS,
 // juste assez pour distinguer "un nom qu'on pourrait renommer" du reste, qui doit rester identique
 // des deux côtés pour qu'un bloc soit structurellement le même.
-const TOKEN_RE = /[A-Za-z_$][A-Za-z0-9_$]*|\d+\.\d+|\d+|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|\s+|./g;
+// LETTRES ACCENTUÉES INCLUSES (2026-09-22, bug réel consigné dans points-fragiles.md puis corrigé).
+// Le motif ne reconnaissait que l'ASCII : « Noé » se scindait en DEUX jetons (« No » + « é ») là où
+// « Lia » n'en faisait qu'un — cassant l'égalité de longueur que matchLineTokens() exige, donc
+// rendant invisible au détecteur v2 (renommage bijectif) exactement le cas qu'il est censé couvrir :
+// les deux pensées mot pour mot identiques de full_sim17 (« Noé m'intrigue… » / « Lia m'intrigue… »).
+// Un détecteur de duplication aveugle aux prénoms des deux personnages du projet passait à côté de
+// sa cible la plus utile. `\p{L}` (avec le drapeau u) couvre toutes les lettres, pas une liste
+// d'accents recopiée à la main qui oublierait le prochain caractère.
+const TOKEN_RE = /[\p{L}_$][\p{L}\p{N}_$]*|\d+\.\d+|\d+|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|\s+|./gu;
 export function tokenizeLine(line) {
   return (line.match(TOKEN_RE) || []).filter((t) => !/^\s+$/.test(t));
 }

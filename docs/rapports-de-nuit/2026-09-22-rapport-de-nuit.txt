@@ -1,0 +1,159 @@
+================================================================================
+RAPPORT DE NUIT — 2026-09-22
+Mode autonome (THE-GHOST), pendant ton sommeil
+================================================================================
+
+CE QU'IL FAUT RETENIR EN TROIS LIGNES
+-------------------------------------
+7 commits poussés, 175 tests verts, tsc propre à chaque étape.
+Trois vrais bugs trouvés — dont un où CASSANDRA ne voyait pas 4 de ses membres.
+Une décision prise seul, à confirmer au réveil (détaillée plus bas, section 5).
+
+
+1. CE QUI A ÉTÉ CONSTRUIT
+--------------------------
+
+[#196] THE-KING datait 2 principes sur 19 — il les date tous.
+   Les dates n'existaient que dans un tag ; les principes fondateurs n'en avaient
+   aucune. La date manquante est désormais dérivée de l'historique git réel — le
+   PREMIER commit qui a introduit le titre, jamais le dernier qui l'a touché.
+   Chaque date dit d'où elle vient ("déclarée" ou "git"). 19/19, mesuré.
+   Trou trouvé en finissant : le digest n'existait que pour la Ronde, jamais pour
+   quelqu'un qui lance l'outil à la main. Il s'affiche maintenant.
+
+[#198] Tout outil approximatif le dit en tête de rapport.
+   28 outils sur 34 produisent des signaux, pas des verdicts. Chacun le disait
+   déjà, mais à sa façon, à un endroit différent, parfois pas du tout.
+   Une phrase commune, en première ligne, avec la raison propre de chaque outil.
+   Les 6 dont la sortie est un fait exact restent muets : un avertissement
+   partout perdrait toute valeur d'alerte.
+   Le registre est un jugement humain, donc tenu à la main — mais deux garde-fous
+   mécaniques l'entourent : aucun outil de la table ne peut y manquer, aucun outil
+   heuristique ne peut rester muet.
+
+[#199] Le gabarit unifié des rapports (ta demande Doc-Report).
+   Asymétrie réelle mesurée : les rapports HTML partageaient déjà un contrat
+   unique, les rapports TEXTE n'en avaient AUCUN. D'où la phrase de fiabilité
+   qu'il a fallu insérer à la main dans 28 fichiers, faute d'une place prévue.
+   report-template.mjs est cette place : une définition, deux rendus, et un
+   EMPLACEMENT GÉNÉRIQUE en tête qui se remplit tout seul. La prochaine phrase
+   transverse arrivera en un endroit, pas en trente.
+   Deuxième moitié : 25 scripts écrivent un fichier, 16 étaient connus. Chacun
+   est désormais classé (rapport / journal / infrastructure) avec sa raison.
+
+[#171/#172/#179] CASSANDRA reconstruit l'organigramme depuis les données réelles.
+   Tes trois tâches ouvertes, fermées d'un coup. Tout est dérivé : les rangs de la
+   table maîtresse, les 6 Gardiens de leur source mécanique, les émetteurs de leur
+   classification. Un organigramme qui se recalcule ne se périme pas.
+   Les libellés de rang vivent en UN endroit : le renommage que tu as calibré
+   tiendra en une ligne.
+
+[Smart Breaker] Certifié — 27 membres au lieu de 26.
+   L'anomalie était son statut ; le manque qu'il décrivait était réel (aucun
+   registre committé). Corrigé pour de vrai : fiche d'instanciation + dossier
+   d'épisodes de blocage. Jamais une copie du fichier de santé des clés, qui
+   reste gitignoré.
+
+[#186] THE-SCREENER a enfin tourné pour de vrai — et s'est trompé. Cf. section 2.
+
+[Ta question] ecotoken partage-t-il son expérience ? Cf. section 4.
+
+
+2. LES TROIS VRAIS BUGS TROUVÉS
+--------------------------------
+
+(a) CASSANDRA ne voyait pas 4 de ses 26 membres, dont son co-directeur.
+    Son bilan disait « 22 membres, 1 Cadre » pendant que l'organigramme, construit
+    une heure plus tôt, en comptait 26 et 2. Son roster ne retenait que le statut
+    « Agent » — une ligne écrite avant que la catégorie « classique » n'existe.
+    Les 4 concernés n'étaient pas mal comptés : ils étaient INVISIBLES. Badge non
+    supervisé, couverture jamais mesurée, jamais accueillis.
+    → C'est là qu'est la décision à confirmer (section 5).
+
+(b) THE-SCREENER annonçait « Capture réussie » sur une image sans rien à voir.
+    Premier déclenchement réel depuis sa construction. L'image ne montre que la
+    popup de pseudo, toute la scène floutée derrière. Cette popup reste ouverte
+    tant que la partie n'a pas d'observateur — donc pendant TOUTE la phase 1.
+    Le bon moment de capture est la phase 2.
+    Le défaut était dans l'outil, pas dans la page : pour un outil dont le métier
+    est de noter un rendu, annoncer un succès là-dessus aurait fait poser une note
+    sur du vide. Il distingue maintenant, et le dit AVANT l'image.
+
+(c) Deux faux positifs du garde-fou des chantiers, même famille.
+    Une tâche dont le récit disait « sauf pour la refonte graphique » était comptée
+    comme une tâche DE ce chantier. Et un verdict affichait « 1.0j contre 1.0j » —
+    dans la tolérance — tout en alertant, parce qu'il comparait des fractions là où
+    son message arrondit.
+
+Le fil commun de la nuit, qu'il vaut la peine de nommer : une absence de mesure,
+ou une mesure approchée, lue comme une mesure ferme. Les cinq corrections en
+relèvent toutes.
+
+
+3. LA RONDE
+------------
+Lancée en sélection AUTO (20 items sur 26 ; 6 écartés à raison, dont les deux
+agents coûteux). Résultats notables :
+  · THE-KING : 19/19 principes datés, aucune tension détectée.
+  · CLEAN-DIRTY-OLD : aucune zone signalée.
+  · ecotoken : CLAUDE.md à 18 222 tokens, 39 % de marge sous budget.
+  · Garde-fou profil : 11 fiches, aucun lien mort.
+  · KPI : robustesse 100 %, couverture tableau de bord 100 %, Smart Conso 71 %.
+  · CASSANDRA : c'est elle qui a révélé le bug (a) ci-dessus.
+  · tool-brain : 24 sollicitations, jamais spontanées — le réflexe reste mécanique
+    chez moi, c'est un constat honnête sur ma propre discipline.
+
+Point d'attention : docs/regles-de-travail.md n'a plus que 3 % de marge sous son
+budget. Il grossit à chaque règle ajoutée, et j'en ai ajouté cette nuit.
+
+
+4. RÉPONSES À TES QUESTIONS EN ATTENTE
+---------------------------------------
+
+« ecotoken partage-t-il son expérience avec smart conso token ? »
+  Oui, mais à SENS UNIQUE et volontairement : ecotoken importe 5 fonctions du
+  scan, l'inverse créerait un cycle (c'était déjà documenté dans le code).
+  Ce qui manquait n'était pas du code mais l'EXPÉRIENCE : le registre d'ecotoken
+  accumule 17 passages réels, dont ce que tu as refusé — et rien ne le lisait.
+  Lire un fichier n'est pas importer un module : construit, sans toucher à la
+  frontière. Fait utile immédiatement remonté : **15 propositions d'ecotoken
+  attendent encore ta décision**, et 1 cible a déjà été refusée.
+
+« Quel outil vérifie que tous les outils sont bien pluggés entre eux ? »
+  checkAgentOnboarding() (LE-COORDINATEUR), au moment du badge. Il vérifie 7
+  points de câblage : table maîtresse, catalogue du coordinateur, instanciation,
+  registre, blueprint, mention CLAUDE.md, trace docs/suivi. C'est bien « au moment
+  du badge » comme tu le supposais — et le badge se recalcule à chaque commit.
+
+« LE-COORDINATEUR et CIRCLE-TASKS ne sont pas membres certifiés ? »
+  Tu avais raison de tiquer : je m'étais trompé. Ils le sont. Le vrai compte est
+  27 (26 + Smart Breaker cette nuit), pas 22. Mon « 22 » venait d'une autre liste
+  que j'avais confondue avec celle des badges.
+
+
+5. DÉCISION PRISE SEUL, À CONFIRMER
+------------------------------------
+En corrigeant le bug (a), j'ai trouvé un test qui affirmait explicitement
+l'ancien comportement : « only the real "Agent" rows must be counted as team
+members — never a Membre certifié (classique) ».
+
+Son commentaire ne justifiait NULLE PART cette exclusion (il portait sur un tout
+autre bug). Et elle contredit tes propres mots, enregistrés le même jour dans le
+code : « membre certifié couvre les deux catégories », « il reste néanmoins un
+vrai membre certifié badgé 🎖️, jamais un simple Utilitaire nommé ».
+
+J'ai tranché pour tes mots et inversé l'assertion, en documentant les deux
+lectures dans le test. Si je me suis trompé, ça se renverse en une ligne.
+
+
+6. MIS DE CÔTÉ, COMME CONVENU
+------------------------------
+  · Le renommage des rangs (Scribes / Premium / Platine noir) — classé sensible
+    « difficile à annuler ». Entièrement préparé : ORG_RANKS centralise les
+    libellés, il ne reste qu'à valider.
+  · Refonte graphique (#92, trottoir 3D) — ta borne, pas touché.
+  · Les 2 trouvailles d'ALWAYS-NEW-CODE (seuil de sommeil dupliqué, isDawn()
+    manquant) — l'Article 23 interdit de les appliquer sans te demander.
+  · Le palier de badge « OK 100% » : deux lectures légitimes, à trancher avec toi.
+  · Le réveil conditionnel des Gardiens (#362) : un Gardien peut dormir
+    indéfiniment sans que personne ne le sache. Piste prête, décision à toi.
