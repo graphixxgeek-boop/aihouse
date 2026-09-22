@@ -6794,14 +6794,26 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     '| doc-HTML | Utilitaire nommé | — | gratuit | importé |',
   ].join('\n');
   const roster = teamRoster(fakeRosterTable);
-  assert.equal(roster.length, 3, 'only the real "Agent" rows must be counted as team members — never a Membre certifié (classique) or a Utilitaire nommé, which are never "membres" in the RH sense here');
+  // INVERSÉ le 2026-09-22 (bug réel : le bilan de CASSANDRA annonçait « 22 membres, 1 Agent Cadre »
+  // pendant que l'organigramme construit le même soir en comptait 26 et 2). L'assertion précédente
+  // exigeait le contraire — « never a Membre certifié (classique) [...] never membres in the RH
+  // sense » — mais aucun commentaire ne justifiait jamais cette exclusion, et elle contredit les
+  // mots explicites de l'utilisateur, enregistrés le MÊME JOUR dans le-coordinateur.mjs : « membre
+  // certifié couvre les deux catégories », « il reste néanmoins un vrai membre certifié badgé 🎖️,
+  // jamais un simple Utilitaire nommé ». Conséquence réelle de l'ancien filtre, bien pire qu'un
+  // chiffre faux : les 4 classiques étaient TOTALEMENT invisibles à CASSANDRA — badge non supervisé,
+  // trou de couverture jamais détecté, jamais accueillis comme nouveaux visages. L'Agent RH ne
+  // voyait pas son propre co-directeur, à rebours de la tâche #179 (« connaissance parfaite de
+  // chaque membre »). Un Utilitaire nommé, lui, reste bien exclu : ce n'est pas un membre certifié.
+  assert.equal(roster.length, 4, 'both certifiable statuses must count as team members — an "Agent" AND a "Membre certifié (classique)", never only the former — while a Utilitaire nommé stays out, since it holds no badge at all');
+  assert.deepEqual(roster.filter((m) => m.classique).map((m) => m.primaryName), ['LE-COORDINATEUR'], 'the roster must carry WHICH members are classique, so badge checking can waive the instanciation/registre/blueprint requirements they are not supposed to meet — without it, widening the roster would have fabricated three false gaps for each of them');
   assert.equal(roster.find((r) => r.tool.startsWith('CLONE-HUNTER')).category, 'Gardien sacré du code', 'a tool name carrying a parenthetical precision must still resolve to its real AGENT_CATEGORIES entry — the exact real bug found and fixed tonight, via the same primaryName split already established elsewhere in this codebase');
   assert.equal(roster.find((r) => r.tool === 'ARGUS').slug, 'argus', 'the computed slug must be exposed on the roster entry itself, reused everywhere else in this file rather than recomputed and risking divergence');
   assert.equal(roster.find((r) => r.tool === 'NOUVEL-OUTIL-JAMAIS-CATEGORISE').category, undefined, 'a real Agent genuinely missing from AGENT_CATEGORIES (a real documentation gap, not a bug in this function) must report an honest undefined category, never a guessed one');
 
   const teamSize = teamSizeSnapshot(roster);
-  assert.equal(teamSize.total, 3, 'the headcount must be a plain honest count, never a judged "too many/too few" verdict');
-  assert.deepEqual(teamSize.byCategory, { 'Gardien sacré du code': 2, '(catégorie non répertoriée)': 1 }, 'members must be grouped by their real AGENT_CATEGORIES label, with an honest fallback bucket for a genuine gap in that table — never silently dropped');
+  assert.equal(teamSize.total, 4, 'the headcount must be a plain honest count, never a judged "too many/too few" verdict');
+  assert.deepEqual(teamSize.byCategory, { 'Gardien sacré du code': 2, '(catégorie non répertoriée)': 1, 'Agent Cadre': 1 }, 'members must be grouped by their real AGENT_CATEGORIES label, with an honest fallback bucket for a genuine gap in that table — never silently dropped');
 
   // toolsToReconsider() — combine deux signaux déjà calculés ailleurs, jamais un troisième calcul
   // RH inventé.
@@ -6877,7 +6889,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 
   // Signal léger + rapport complet — même donnée sous-jacente, jamais deux calculs divergents.
   const lightSignal = buildCassandraLightSignal({ teamSize, badgeSummary, kpiTrend: trend });
-  assert.ok(lightSignal.includes('3 membre'), 'the light signal must state the real headcount in plain language');
+  assert.ok(lightSignal.includes('4 membre'), 'the light signal must state the real headcount in plain language');
   assert.ok(lightSignal.includes('1 sans badge'), 'the light signal must state how many members lack a badge, the single most actionable RH fact for a periodic Ronde signal');
 
   const blocks = buildCassandraReportBlocks({ teamSize, badgeSummary, kpiTrend: trend, reconsider: reconsiderFindings, recruitmentCandidates: [candidate] });

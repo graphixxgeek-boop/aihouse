@@ -91,13 +91,26 @@ export function loadKpiTrend(path = join(ROOT, KPI_HISTORY_PATH)) {
 // comme "catégorie non répertoriée". Corrigé avec le même découpage `primaryName` déjà établi
 // ailleurs dans ce paysage (badgeWarningsForOutils(), le-coordinateur.mjs) et `slugifyAgentName()`
 // elle-même réutilisée telle quelle (jamais une seconde fonction de slugification divergente).
+// TOUS LES MEMBRES CERTIFIÉS, PAS SEULEMENT LES « Agent » (corrigé le 2026-09-22, bug réel trouvé
+// en construisant l'organigramme : son bilan annonçait « 22 membres, 1 Agent Cadre » pendant que
+// l'organigramme, lui, en comptait 26 et 2). Cause : ce filtre ne retenait que `statut === "Agent"`,
+// écrit AVANT que la catégorie « Membre certifié (classique) » n'existe (2026-09-21), et jamais
+// revisité depuis (Article 19 : une ligne qui ne dit pas pourquoi elle exclut finit par exclure ce
+// qu'elle ne devrait pas). Conséquence réelle, bien pire qu'un chiffre faux : les 4 classiques
+// (LE-COORDINATEUR, CIRCLE-TASKS, find-deep-booster, tool-brain) étaient TOTALEMENT invisibles à
+// CASSANDRA — pas de badge supervisé, pas de trou de couverture détecté, jamais accueillis comme
+// nouveaux visages. L'Agent RH ne voyait pas son propre co-directeur. Exactement ce que la tâche
+// #179 demandait (« une connaissance parfaite de chaque membre de l'équipe »).
+// `classique` est porté jusqu'aux consommateurs : checkAgentOnboarding() n'exige instanciation,
+// registre et blueprint que d'un membre à connaissance propre — LE-COORDINATEUR applique déjà cette
+// distinction (checkAllAgentBadges), CASSANDRA s'aligne dessus plutôt que d'en inventer une autre.
 export function teamRoster(toolsTableMarkdown) {
   return parseToolsTable(toolsTableMarkdown)
-    .filter((row) => row.statut === "Agent")
+    .filter((row) => CERTIFIABLE_STATUTS.includes(row.statut))
     .map((row) => {
       const primaryName = row.tool.split(/[/(]/)[0].trim();
       const slug = slugifyAgentName(primaryName);
-      return { tool: row.tool, primaryName, slug, category: AGENT_CATEGORIES[slug] };
+      return { tool: row.tool, primaryName, slug, classique: row.statut === CLASSIQUE_STATUT, category: AGENT_CATEGORIES[slug] };
     });
 }
 
@@ -263,7 +276,10 @@ export function computeBadgeResults(roster, onboardingContext) {
   return roster.map((member) => {
     const overrides = onboardingContext.agentOverrides?.[member.primaryName] ?? {};
     try {
-      return checkAgentOnboarding(member.primaryName, { ...onboardingContext, ownKnowledge: true, ...overrides });
+      // ownKnowledge dérivé du membre (2026-09-22) et non plus figé à true : sans ça, élargir le
+      // roster aux 4 « Membre certifié (classique) » leur aurait fabriqué trois faux manques chacun
+      // (instanciation, registre, blueprint) qu'ils n'ont par définition pas à fournir.
+      return checkAgentOnboarding(member.primaryName, { ...onboardingContext, ownKnowledge: !member.classique, ...overrides });
     } catch {
       return { agentName: member.primaryName, complet: false, gaps: ["vérification impossible (nom malformé ou Personnage)"] };
     }
