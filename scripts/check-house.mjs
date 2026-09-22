@@ -4970,7 +4970,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   } = await import('../scripts/circle-tasks.mjs');
   const { walkDocsPaths } = await import('../scripts/lib-shell.mjs');
 
-  assert.equal(CIRCLE_ITEMS.length, 31, 'CIRCLE_ITEMS must list exactly the 27 free periodic items (profil, the-king-signal, référentiels, KPI, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, tool-brain-report, cassandra-rh-signal — added 2026-09-21 —, dream-team-photo, THE-SCREENER, ines-official-signal, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, ecotoken-scan, profil-utilisateur-guard, network-check-run, coordinateur-catalogue, chantier-preliminaire-signal, idee-a-trancher-signal — added 2026-09-21, second "Suivi des chantiers" signal, filet de sécurité mécanique du réflexe temps réel — clone-hunter-run removed 2026-09-22 and always-new-code-signal removed 2026-09-21, CLONE-HUNTER then ALWAYS-NEW-CODE (light layer) promoted to fifth and sixth Gardiens sacrés, both now run automatically at every commit) plus THE-FINAL-JUDGE, its cousin THE-DEEP-READER, and (2026-09-22) hyper-scan-checkpoint-light then check-tasks-report, then organigramme-signal (2026-09-22, tasks #171/#172/#179 — CASSANDRA rebuilding the org chart from real data, deliberately NOT merged into cassandra-rh-signal: that one judges the team, this one only shows its structure and who is nowhere in it), then god-of-all-process-conformite (2026-09-22 — god-of-all-process delivering THE single process report of the Ronde: the secondary guardians keep their own verdicts but never deliver them to the Ronde themselves, god relays them, an architecture the user fixed explicitly that day to keep one voice rather than one per guardian), then pure-gold-unity-scan (2026-09-22 — added after the user simply ASKED whether pure-gold-unity was in the Ronde; it was not, and findRegistriesMissingFromCircle() structurally could not say so since it starts from registries on disk and that tool had none, the hole living inside the guard itself), then integration-audit (2026-09-22 — same shape of finding, same origin: the user simply ASKED whether the Ronde checks that each new tool is genuinely integrated and certified; it did not, since checkAllAgentBadges() only ever announces badges that CHANGE and a member left incomplete for days produces nothing at all), then data-archangel-scan (2026-09-22 — the periodic catch-up of the data-circulation watch, the third of its three calibrated deliveries alongside the on-demand command and the rare freshness alert), then recap-evaluations (2026-09-22 — the full evaluation recap the user asked for by name, including the evaluation of HIS OWN participation that he requested himself so that the project stays the priority even at the cost of friction; CASSANDRA publishes it, angel produces the user part, nobody centralises) — the exact real drift found live by the new findStaleItemCountReferences() self-check tonight — never silently gaining or losing an entry');
+  assert.equal(CIRCLE_ITEMS.length, 32, 'CIRCLE_ITEMS must list exactly the 27 free periodic items (profil, the-king-signal, référentiels, KPI, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, tool-brain-report, cassandra-rh-signal — added 2026-09-21 —, dream-team-photo, THE-SCREENER, ines-official-signal, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, ecotoken-scan, profil-utilisateur-guard, network-check-run, coordinateur-catalogue, chantier-preliminaire-signal, idee-a-trancher-signal — added 2026-09-21, second "Suivi des chantiers" signal, filet de sécurité mécanique du réflexe temps réel — clone-hunter-run removed 2026-09-22 and always-new-code-signal removed 2026-09-21, CLONE-HUNTER then ALWAYS-NEW-CODE (light layer) promoted to fifth and sixth Gardiens sacrés, both now run automatically at every commit) plus THE-FINAL-JUDGE, its cousin THE-DEEP-READER, and (2026-09-22) hyper-scan-checkpoint-light then check-tasks-report, then organigramme-signal (2026-09-22, tasks #171/#172/#179 — CASSANDRA rebuilding the org chart from real data, deliberately NOT merged into cassandra-rh-signal: that one judges the team, this one only shows its structure and who is nowhere in it), then god-of-all-process-conformite (2026-09-22 — god-of-all-process delivering THE single process report of the Ronde: the secondary guardians keep their own verdicts but never deliver them to the Ronde themselves, god relays them, an architecture the user fixed explicitly that day to keep one voice rather than one per guardian), then pure-gold-unity-scan (2026-09-22 — added after the user simply ASKED whether pure-gold-unity was in the Ronde; it was not, and findRegistriesMissingFromCircle() structurally could not say so since it starts from registries on disk and that tool had none, the hole living inside the guard itself), then integration-audit (2026-09-22 — same shape of finding, same origin: the user simply ASKED whether the Ronde checks that each new tool is genuinely integrated and certified; it did not, since checkAllAgentBadges() only ever announces badges that CHANGE and a member left incomplete for days produces nothing at all), then data-archangel-scan (2026-09-22 — the periodic catch-up of the data-circulation watch, the third of its three calibrated deliveries alongside the on-demand command and the rare freshness alert), then recap-evaluations (2026-09-22 — the full evaluation recap the user asked for by name, including the evaluation of HIS OWN participation that he requested himself so that the project stays the priority even at the cost of friction; CASSANDRA publishes it, angel produces the user part, nobody centralises), then tool-learning (2026-09-22 — the second half of évolutivité, SAFE-EXPORT carrying the first: it judges a TRAJECTORY, so it belongs to a periodic rhythm rather than to every commit, and refuses to conclude under three real passages) — the exact real drift found live by the new findStaleItemCountReferences() self-check tonight — never silently gaining or losing an entry');
   const profilGuardItem = CIRCLE_ITEMS.find((i) => i.id === 'profil-utilisateur-guard');
   assert.ok(profilGuardItem && !profilGuardItem.costly && profilGuardItem.theme === 'Passages réels (smoke run)', '2026-09-21 addition: the real check-profil-utilisateur.mjs smoke run must be free and live in its own "smoke run" theme, distinct from the "profil" item which writes a new observation rather than verifying disk integrity');
   const networkCheckItem = CIRCLE_ITEMS.find((i) => i.id === 'network-check-run');
@@ -5013,7 +5013,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const samplePhilosophyText = '### 1.1 Un principe **[Explicite]**\n\nOn agit toujours avec prudence budgétaire ambiante.\n\n### 1.2 Un autre principe **[Synthèse, 2026-09-19]**\n\nOn n\'agit jamais avec prudence budgétaire ambiante.';
   const inesOfficialIndexText = '| Version | Date | Périmètre | Fichiers | Taille |\n|---|---|---|---|---|\n| v1 | 2026-09-18 | code seul | 40 | 500 Ko |';
   const report = buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringReadFileImpl, suiviCategorized, claudeMdText: sampleClaudeMdText, philosophyText: samplePhilosophyText, philosophyFreshnessDaysValue: 3, inesOfficialIndexText }, now);
-  assert.equal(report.length, 31, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one — 31 since recap-evaluations joined CIRCLE_ITEMS on 2026-09-22 (the full evaluation recap, including the evaluation of the person directing this project, which he requested himself), after data-archangel-scan the same day, right after integration-audit and pure-gold-unity-scan, after god-of-all-process-conformite, organigramme-signal, check-tasks-report and hyper-scan-checkpoint-light the same day');
+  assert.equal(report.length, 32, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one — 32 since tool-learning joined CIRCLE_ITEMS on 2026-09-22, after recap-evaluations joined CIRCLE_ITEMS on 2026-09-22 (the full evaluation recap, including the evaluation of the person directing this project, which he requested himself), after data-archangel-scan the same day, right after integration-audit and pure-gold-unity-scan, after god-of-all-process-conformite, organigramme-signal, check-tasks-report and hyper-scan-checkpoint-light the same day');
   assert.equal(report.find((r) => r.id === 'ecotoken-scan').staleness, '66 tokens estimés, niveau "faible" — 2 aside(s) narrative(s) datée(s) encore réductible(s)', 'the CLAUDE.md weight signal must reuse the real SMART-CONSO-TOKEN scan functions live (never a second parser), reporting both the honest token estimate and the real count of still-reducible dated asides found in the actual text passed in');
   assert.equal(buildCircleReport({}, now).find((r) => r.id === 'ecotoken-scan').staleness, 'pas de signal disponible (CLAUDE.md non fourni)', 'with no CLAUDE.md text supplied at all, the signal must report an honest absence rather than crash or fabricate a number');
   assert.equal(report.find((r) => r.id === 'clean-dirty-old-signal').staleness, '1 jour(s) depuis le dernier passage journalisé', 'the CLEAN-DIRTY-OLD signal must compute its own staleness from its own real index text, distinct from every other source');
@@ -5360,6 +5360,58 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.equal(relance.gardes[0].relance, 'question obligatoire', 'past five silent passages the alert stops merely repeating and demands a real question');
     assert.equal(relance.aTrancherObligatoirement.length, 1, 'and that obligation is surfaced separately so it cannot be left to the agent\'s appreciation');
     assert.equal(se.filtrerDejaTranches([{ fichier: 'n', defaut: 'V' }], []).gardes[0].relance, 'nouveau', 'a brand-new finding is not escalated — escalation measures silence, never severity');
+  }
+
+  // TOOL-LEARNING (2026-09-22, nom donné par l'utilisateur) — la seconde moitié de l'évolutivité.
+  // L'harmonisation avec SAFE-EXPORT est la phrase de l'utilisateur coupée à sa propre jointure :
+  // « à la fois pouvoir etre exporté, en meme temps avec des capacités accrues grace à
+  // l'apprentissage » — un outil par moitié, jamais un découpage inventé pour justifier deux outils.
+  {
+    const tl = await import('../scripts/tool-learning.mjs');
+
+    // LES DEUX NATURES DE PREUVE SONT COMPTÉES SÉPARÉMENT, et c'est le cœur : sans ça, un outil que
+    // j'aurais beaucoup corrigé passerait pour apprenant alors qu'il n'a rien fait seul. Un outil
+    // beaucoup corrigé est ENSEIGNÉ, pas apprenant — la distinction vient de sa propre formulation
+    // (« tu eduques les outils petit à petit, EN PLUS qu'ils s'eduquent eux-memes »).
+    assert.equal(tl.PREUVES.filter((p) => p.nature === 'autonome').length, 3, 'three proofs measure what the tool does alone');
+    assert.equal(tl.PREUVES.filter((p) => p.nature === 'enseigné').length, 1, 'and exactly one measures MY contribution, kept apart on purpose');
+    const enseigneSeul = tl.jugerUnOutil('x', { preuves: { 'enrichi-par-l-agent': true }, passages: 5 });
+    assert.equal(enseigneSeul.verdict, 'immobile', 'a tool that only improved because I corrected it is taught, never learning — collapsing the two would flatter both of us');
+
+    // « ARCHIVE SEULEMENT » est le verdict que CASSANDRA ne peut pas rendre : elle verrait une
+    // mémoire présente et déclarerait l'outil équipé. Mémoire ≠ apprentissage.
+    const archive = tl.jugerUnOutil('y', { preuves: { 'a-une-memoire': true, 'relit-sa-memoire': false }, passages: 5 });
+    assert.equal(archive.verdict, 'archive seulement', 'a tool that writes a register it never reads is equipped to learn and standing still — exactly the case the state-based view cannot see');
+
+    // IL REFUSE DE JUGER UNE TRAJECTOIRE SANS RECUL, comme serie-temporelle refuse une tendance sur
+    // deux points.
+    assert.equal(tl.jugerUnOutil('z', { preuves: {}, passages: 1 }).verdict, 'pas assez de recul', 'a trajectory cannot be judged on one passage, and saying so is honest where "immobile" would be a verdict on nothing');
+
+    // SON PROPRE APPRENTISSAGE — il enregistre ses verdicts et vérifie s'ils se confirment. La
+    // condition « sans intervention de ma part » est celle qu'on oublie : si j'ai corrigé l'outil
+    // entre les deux passages, son progrès CONFIRME le verdict au lieu de le réfuter.
+    const refutes = tl.verifierSesPropresVerdicts([
+      { outil: 'a', verdict: 'immobile', date: '2026-09-01' },
+      { outil: 'a', verdict: 'apprend', enseigne: false, date: '2026-09-15' },
+      { outil: 'b', verdict: 'immobile', date: '2026-09-01' },
+      { outil: 'b', verdict: 'apprend', enseigne: true, date: '2026-09-15' },
+    ]);
+    assert.equal(refutes.length, 1, 'only the tool that progressed WITHOUT my intervention refutes the earlier verdict');
+    assert.equal(refutes[0].outil, 'a', 'and it is the right one: b progressed because I corrected it, which confirms the verdict rather than disproving it');
+
+    // LA PROPOSITION EST PRÉCISE ET LA MOINS COÛTEUSE D'ABORD — proposer le chantier le plus lourd
+    // à un outil qui n'a aucune preuve est le meilleur moyen que rien ne soit jamais fait.
+    const prop = tl.proposerAmelioration({ outil: 'c', verdict: 'immobile' }, { preuves: {} });
+    assert.ok(prop && /faible/.test(prop.effort), 'the cheapest missing proof is proposed first');
+    assert.equal(tl.proposerAmelioration({ outil: 'd', verdict: 'apprend' }), null, 'and a tool that already learns gets no proposal — a report that always finds something to say stops being read');
+
+    // LE DOUBLE FILTRE AVANT DE CRÉER UNE TÂCHE : l'agent tranche, ET la validation humaine doit
+    // être nécessaire. Sans lui, l'outil inonderait le suivi — et une liste inondée ne se lit plus,
+    // ce qui détruirait la valeur même que la chaîne de l'Article 28 protège.
+    assert.equal(tl.tacheADeclencher(prop, { agentRetient: false }), null, 'nothing is created while the agent has not decided');
+    assert.equal(tl.tacheADeclencher(prop, { agentRetient: true }).cree, false, 'a proposal I can simply apply does not become a pending task — it becomes work');
+    const lourde = tl.proposerAmelioration({ outil: 'e', verdict: 'immobile' }, { preuves: { 'relit-sa-memoire': true, 'faux-positifs-en-baisse': true } });
+    assert.equal(tl.tacheADeclencher(lourde, { agentRetient: true }).cree, true, 'and only one genuinely needing his validation becomes a real task in the tracker');
   }
 
   // SÉRIE-TEMPORELLE (2026-09-22) — le mécanisme partagé d'historisation, demandé parce que « tous

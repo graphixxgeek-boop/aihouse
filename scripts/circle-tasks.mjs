@@ -241,6 +241,19 @@ export const CIRCLE_ITEMS = [
     execute: "Appeler checkChantierFileFreshness(loadAllTaskRows()), findChantierFilesMissingValueRestitution() et findConceptionFilesMissingFromRegistry() — sur un vrai écart (une tâche de suivi plus récente que son fichier préliminaire, un fichier qui ne porte qu'une seule des deux voix, ou un fichier de conception réel jamais déclaré au registre), proposer explicitement de le corriger tout de suite, jamais le laisser en suspens jusqu'à la prochaine Ronde. Écrire le signal via recordCircleItemReport('chantier-preliminaire-signal', ...).",
     producesReport: true,
   },
+  // tool-learning (2026-09-22, demande explicite : « intégré à circle pour un suivi au top, comme
+  // le reste »). Seconde moitié de l'évolutivité — SAFE-EXPORT porte la première (pouvoir partir),
+  // celui-ci la seconde (devenir meilleur). Il juge une TRAJECTOIRE, donc il a sa place dans un
+  // rythme périodique et pas à chaque commit : trois passages minimum avant de conclure.
+  {
+    id: "tool-learning",
+    theme: "Qualité & fun",
+    label: "Vérifier que les outils apprennent — et que je les aide vraiment à progresser",
+    cout: "gratuit — relit les registres et les traces déjà produits, aucun appel API",
+    tokensEstimes: "faible — lecture de journaux existants",
+    execute: "Lancer node scripts/tool-learning.mjs, juger chaque outil concerné (jugerUnOutil), proposer l'amélioration la moins coûteuse là où une preuve manque (proposerAmelioration), et NE créer une tâche que si l'agent retient la proposition ET qu'elle exige une validation de l'utilisateur (tacheADeclencher). Vérifier aussi ses propres verdicts passés (verifierSesPropresVerdicts) — un outil jugé immobile qui a progressé sans mon intervention réfute le critère, pas l'outil. Écrire le signal via recordCircleItemReport('tool-learning', ...).",
+    producesReport: true,
+  },
   // recap-evaluations (2026-09-22, demande explicite de l'utilisateur : « je veux lors de la ronde le
   // détail des KPI et/ou evaluations, notes qui sont produites par certains outils, dans un fichier
   // HTML normé bien mis en evidence [...] qui me juge comment, de quelle maniere, sur quelles bases,
@@ -655,6 +668,9 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // safe-export (2026-09-22) : septième Gardien sacré par sa COUCHE LÉGÈRE, donc câblé dans le
   // crochet post-commit et jamais dans la Ronde — même règle que les six autres Gardiens. Son
   // registre n'archive que les passages PROFONDS, qui eux restent exceptionnels (Article 23).
+  // tool-learning (2026-09-22) : lui a bien un item de Ronde (« intégré à circle pour un suivi au
+  // top, comme le reste » — sa demande), donc pas d'exclusion. Cette ligne existe uniquement pour
+  // que la prochaine relecture ne se demande pas s'il a été oublié : il est DANS la Ronde.
   "safe-export": "Gardien sacré du code (couche légère) : tourne automatiquement à CHAQUE commit via le crochet post-commit, jamais un item de Ronde — même régime que les six autres Gardiens. Son scan profond, lui, est exceptionnel et se déclenche sur proposition, jamais sur calendrier",
   "tasks-process-guardian": "gardien de process SECONDAIRE, même règle que process-simulation-guardian et angel-of-ia-process : god-of-all-process centralise et relaie son verdict (décision de l'utilisateur, 2026-09-22 — une seule voix à la Ronde, jamais une par gardien). Son déclencheur est l'état du suivi, pas le calendrier",
   "process-simulation-guardian": "gardien de process SECONDAIRE, même règle qu'angel-of-ia-process ci-dessus : god-of-all-process centralise et relaie son verdict (décision de l'utilisateur, 2026-09-22). Son vrai déclencheur est de toute façon une simulation, jamais le calendrier",
