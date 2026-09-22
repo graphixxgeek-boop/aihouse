@@ -613,15 +613,22 @@ export function buildCassandraLightSignal({ teamSize, badgeSummary, kpiTrend }) 
 // l'a rendu. Personne ne centralise : angel PRODUIT sur la conduite, CASSANDRA ASSEMBLE et PUBLIE.
 // (Corrigé le même jour : un commentaire d'angel affirmait que CASSANDRA notait déjà l'utilisateur.
 // C'était faux, et jamais vérifié — elle note l'équipe d'outils, jamais l'humain.)
-// LE NOM DU FICHIER REMONTÉ EN CONVERSATION, fixé par l'utilisateur le 2026-09-22 : « je veux que
-// le fichier qui m'est remonté dans la conversation s'appelle : "EVAL-DH" en majuscules ».
+// LE NOM DU FICHIER REMONTÉ EN CONVERSATION, fixé par l'utilisateur le 2026-09-22 : « EVAL-DEV »,
+// en majuscules.
+//
+// IL A D'ABORD DIT « EVAL-DH », PUIS S'EST REPRIS LUI-MÊME DANS LA MINUTE — et sa raison mérite
+// d'être conservée parce qu'elle ne saute pas aux yeux : « ce nom n'est pas exportable ». « DH »
+// sont ses initiales ; elles n'ont aucun sens sur un autre projet. Or toute cette Agence est
+// conçue pour être exportée un jour (docs/agence-exportable-conception.md), et l'Article 24 exige
+// que ce qu'on construit reste transposable. Un nom propre gravé dans un livrable est exactement
+// le genre de détail qui rend un gabarit inutilisable ailleurs — et il l'a vu avant moi.
 //
 // Il vit ici, en constante exportée et couverte par un test, plutôt que dans la mémoire de l'agent
-// qui livre : c'est exactement le cas de l'Article 27 — une obligation qu'aucun mécanisme ne porte
+// qui livre : c'est le cas d'école de l'Article 27 — une obligation qu'aucun mécanisme ne porte
 // n'existera plus à la session suivante, et le nom d'un livrable est la première chose qu'une
 // reprise perd. Majuscules comprises : c'est la forme demandée, pas une approximation qui y
 // ressemble (docs/systeme-de-suivi.md, « conformité EXACTE à la forme demandée »).
-export const NOM_FICHIER_EVAL = "EVAL-DH";
+export const NOM_FICHIER_EVAL = "EVAL-DEV";
 
 export function buildEvaluationRecapBlocks({ jury = [], evaluation = null, equipe = [], jugesSansOutil = [], desaccords = [] } = {}) {
   const blocks = [];

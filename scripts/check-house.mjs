@@ -5081,7 +5081,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.equal(conteste.objections.length, 1, 'the objection must be attached to the remark it contests');
     assert.equal(conteste.justification, 'raison', 'and the contested remark must still be there, unchanged — the objection sits beside it, it never replaces or softens it');
 
-    assert.equal(c.NOM_FICHIER_EVAL, 'EVAL-DH', 'the file name delivered in conversation is the user\'s explicit choice, uppercase included — it lives in code rather than in the agent\'s memory because a deliverable\'s name is the first thing a handover loses (Article 27), and an approximation that merely resembles it is not conformity');
+    assert.equal(c.NOM_FICHIER_EVAL, 'EVAL-DEV', 'the file name delivered in conversation is the user\'s explicit choice, uppercase included — EVAL-DEV and not the EVAL-DH he first said, because he caught himself within the minute: DH are his initials and mean nothing on another project, while this whole Agency is meant to be exported one day (Article 24). It lives in code rather than in the agent\'s memory because a deliverable\'s name is the first thing a handover loses (Article 27), and an approximation that merely resembles it is not conformity');
 
     // LA PERTINENCE (2026-09-22) — « je veux plus d'evaluation de pertinence sur mes choix, je veux
     // que ce rapport soit un peu plus acerbe à mon egard, sans me menager, je veux des infos, pas
