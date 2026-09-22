@@ -28,5 +28,13 @@
     "periode": "session du 2026-09-22 au 2026-09-23",
     "texte": "Mon travers dominant sur cette période est identifiable et il est unique : je construis le mécanisme et je m arrête avant de le brancher. Sept occurrences en une journée, dont une qui répondait à une demande explicite faite le matin même. Le défaut n est pas l oubli — c est que le mécanisme construit RESSEMBLE à un problème traité, ce qui éteint la vigilance juste avant la dernière étape. Corollaire mesuré : chaque détecteur neuf a dû être resserré au moins une fois, ce qui veut dire que mon premier jet sur-accuse systématiquement. Conduite à tenir : ne jamais considérer un mécanisme comme fini tant que je n ai pas vu sa sortie de mes propres yeux dans le rapport réel, et faire tourner chaque détecteur neuf sur le vrai dépôt avant de l appeler terminé.",
     "date": "2026-09-23T04:30:00Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "fin-de-compte-rendu",
+    "rienARetenir": false,
+    "quoi": "En livrant le détecteur d'entrées équivalentes, il rendait 0 sur le vrai registre et j'allais m'en satisfaire. Un zéro non éprouvé ne distingue pas un dépôt propre d'un outil aveugle.",
+    "entree": "BP4",
+    "date": "2026-09-23T06:20:00Z"
   }
 ]

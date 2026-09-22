@@ -1,5 +1,5 @@
 {
-  "occasions": 3,
+  "occasions": 4,
   "entrees": {
     "L1": {
       "remontees": 1,
@@ -56,13 +56,13 @@
       "derniere": null
     },
     "BP2": {
-      "remontees": 2,
+      "remontees": 3,
       "premiereObservation": "2026-09-22",
       "occasionsALObservation": 0,
       "derniere": "2026-09-22"
     },
     "BP3": {
-      "remontees": 2,
+      "remontees": 3,
       "premiereObservation": "2026-09-22",
       "occasionsALObservation": 0,
       "derniere": "2026-09-22"

@@ -254,3 +254,24 @@ attendu, rouge
 *Observée plusieurs fois : « le fait manquant a été fourni plutôt que l'assertion assouplie ». La
 seule exception légitime rencontrée était une assertion qui visait réellement le mauvais palier, et
 elle a été corrigée dans le test sans jamais déplacer le seuil qu'elle mesurait.*
+
+## BP4 — Un détecteur qui n'a jamais mordu ne prouve rien : le vérifier dans les DEUX sens
+
+Un détecteur neuf qui rend zéro sur le vrai dépôt a deux lectures indiscernables : soit le dépôt est
+propre, soit le détecteur ne détecte rien. **Un zéro n'est une bonne nouvelle qu'une fois qu'on a vu
+l'outil mordre.** Il faut donc toujours deux épreuves, jamais une :
+
+1. un cas fabriqué qu'il DOIT attraper — sinon on livre un détecteur décoratif ;
+2. un cas proche mais légitime qu'il doit LAISSER PASSER — sinon on livre du bruit, et un garde-fou
+   qui accuse à tort cesse d'être lu (L4).
+
+**Terrain** : quand je construis ou je livre un détecteur · mots : détecteur, garde-fou, vérifier,
+faux positif, zéro, aucun écart · fichiers : scripts/*.mjs
+
+**Porté par** : **aucun mécanisme** — rien ne peut constater qu'un détecteur a été éprouvé dans les
+deux sens, seule la discipline le porte. Déclaré plutôt que tu.
+
+*Observée le 2026-09-23 : le détecteur d'entrées équivalentes rendait « 0 groupe » sur le vrai
+registre. C'était juste — vérifié ensuite sur des doublons fabriqués, qu'il a bien attrapés, et sur
+deux entrées de même terrain mais de sujets différents, qu'il a bien laissées tranquilles. Sans ces
+deux épreuves, le zéro n'aurait rien valu.*
