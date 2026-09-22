@@ -241,6 +241,26 @@ export const CIRCLE_ITEMS = [
     execute: "Appeler checkChantierFileFreshness(loadAllTaskRows()), findChantierFilesMissingValueRestitution() et findConceptionFilesMissingFromRegistry() — sur un vrai écart (une tâche de suivi plus récente que son fichier préliminaire, un fichier qui ne porte qu'une seule des deux voix, ou un fichier de conception réel jamais déclaré au registre), proposer explicitement de le corriger tout de suite, jamais le laisser en suspens jusqu'à la prochaine Ronde. Écrire le signal via recordCircleItemReport('chantier-preliminaire-signal', ...).",
     producesReport: true,
   },
+  // recap-evaluations (2026-09-22, demande explicite de l'utilisateur : « je veux lors de la ronde le
+  // détail des KPI et/ou evaluations, notes qui sont produites par certains outils, dans un fichier
+  // HTML normé bien mis en evidence [...] qui me juge comment, de quelle maniere, sur quelles bases,
+  // avec quel resultat »). Inclut l'évaluation de SA PROPRE participation, qu'il a demandée lui-même
+  // et pour une raison conservée dans angel-of-ia-process.mjs : que le projet reste la priorité même
+  // au prix de frictions. Ce n'est donc jamais un item à adoucir.
+  {
+    id: "recap-evaluations",
+    // « KPI & scans » plutôt qu'un thème neuf : ce récapitulatif assemble des KPI déjà produits, il
+    // appartient donc à la famille de l'item `kpi`. Inventer une catégorie pour un seul item aurait
+    // ajouté une fenêtre de plus à cocher pour zéro clarté gagnée — et le garde-fou de thèmes de
+    // check-house l'a attrapé le jour même, la première tentative ayant justement créé un thème
+    // inconnu de THEME_ORDER.
+    theme: "KPI & scans",
+    label: "Récapitulatif complet des évaluations — qui juge qui, sur quelles bases, avec quel résultat",
+    cout: "gratuit — relit des mesures déjà collectées par huit outils, aucun appel API",
+    tokensEstimes: "moyen — assemble des verdicts déjà produits, n'en recalcule aucun",
+    execute: "Récolter les verdicts du JURY (angel-of-ia-process), calculer mesurerParticipation(), fournir les notes de jugement AVEC leur justification (jamais laissées non fournies sans le dire), puis buildEvaluationRecapBlocks() (cassandra-rh) rendu en HTML via renderHtmlReport(). Vérifier findJugesSansOutil() avant de se fier au rapport. Écrire le signal via recordCircleItemReport('recap-evaluations', ...).",
+    producesReport: true,
+  },
   // idee-a-trancher-signal (2026-09-21, demande explicite de l'utilisateur : « me demander
   // systematiquement, pour chaque idee developpée, [...] si je souhaite la creation d'un fichier
   // preliminaire [...] ou si l'idee doit etre abandonnée, ou entre-deux [...] L'alerte remontera

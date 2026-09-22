@@ -6,7 +6,11 @@
 // Dans les mots de l'utilisateur : « sa vocation est comme pour tous les outils process : verifier
 // et garantir la discipline d'execution, que ce soit pour moi ou pour toi ». Les deux côtés sont
 // donc notés de la même façon — pas de complaisance pour l'agent, pas d'exemption pour l'humain
-// (même parti pris que CASSANDRA-RH, qui note déjà tout le monde y compris l'utilisateur).
+// (même parti pris que CASSANDRA-RH pour l'ÉQUIPE d'outils — corrigé le 2026-09-22 : cette ligne
+// affirmait que CASSANDRA « note déjà tout le monde y compris l'utilisateur », ce qui était FAUX et
+// n'avait jamais été vérifié. Elle note l'équipe, jamais l'humain. C'est angel qui porte
+// l'évaluation de l'utilisateur, par l'Article 26 — et il la porte pour de vrai depuis ce jour-là,
+// cf. DOMAINES_UTILISATEUR plus bas, au lieu de s'en remettre à une voisine qui ne le faisait pas).
 //
 // SON APPORT PRINCIPAL, celui que rien d'autre ne fait : LE CROISEMENT DES HORODATAGES. Plusieurs
 // règles de la charte imposent de consulter un outil AVANT d'agir — tool-brain avant de chercher
@@ -168,6 +172,235 @@ export function auditWorkingRules({ root = ROOT, faits = {}, regles = REGLES_SUR
     // Vert seulement si tout est réellement vérifié : un verdict vert obtenu en laissant la moitié
     // des règles « non fournies » serait un faux vert, exactement ce que ce paysage combat.
     ok: manquements.length === 0 && nonFournis.length === 0,
+  };
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// L'ÉVALUATION DE L'UTILISATEUR — demandée par lui, et pour une raison qu'il faut garder écrite
+// ————————————————————————————————————————————————————————————————————————
+//
+// Elle existe parce qu'il l'a demandée, dans ces termes (2026-09-22) :
+//
+//   « Toi aussi tu dois alimenter ce rapport et me mettre une evaluation sur ma participation à ce
+//   projet : je n'ai pas besoin d'eloges ou faux semblants, je veux un oeil critique qui sert le
+//   projet en priorité. Pourquoi cette notation sur moi-meme ? Justement pour que le projet reste
+//   la priorité, la seule valeur à protéger, meme au detriment de quelques frictions ou
+//   desaccords ou remarques à mon sujet. »
+//
+// Cette justification n'est pas décorative : c'est elle qui rend l'exercice tenable. Un agent qui
+// note celui qui le dirige a une pente naturelle et forte vers la complaisance — la seule chose qui
+// s'y oppose est un mandat explicite disant que le projet prime sur le confort de la relation. Sans
+// cette phrase conservée ici, le prochain agent qui reprendra ce fichier adoucira, croyant bien
+// faire.
+//
+// TROIS GARDE-FOUS STRUCTURELS, chacun choisi contre un mode d'échec précis :
+//
+// 1. MESURABLE ET JUGEMENT NE SE MÉLANGENT JAMAIS (choix explicite de l'utilisateur : « les deux,
+//    mais dans deux sections séparées »). Un fait qui se compte et une opinion qui s'argumente
+//    n'ont pas le même poids ; les présenter ensemble laisserait croire que l'opinion est aussi
+//    solide que le chiffre. Et ça lui permet de contester mon jugement sans que ça entame les
+//    faits.
+// 2. UNE NOTE PAR DOMAINE, JAMAIS UNE NOTE GLOBALE (son choix aussi). Une moyenne unique noie le
+//    domaine qui va mal dans ceux qui vont bien — exactement l'inverse du service rendu.
+// 3. UN DÉSACCORD N'EFFACE JAMAIS LA REMARQUE, il se pose à côté (son choix). Une critique qu'on
+//    peut faire disparaître en la contestant ne vaut rien, et il l'a dit lui-même. Les deux
+//    lectures coexistent, la suite tranche.
+//
+// LES NOTES sont des paliers nommés, jamais un nombre nu. Un « 12/20 » ne dit pas ce qu'il faut
+// changer ; « fragile » si. L'indice numérique existe à côté uniquement pour suivre une évolution
+// dans le temps — jamais pour faire une moyenne, qui reconstruirait la note globale qu'on vient
+// d'écarter.
+export const PALIERS_NOTE = [
+  { indice: 1, nom: "à corriger", sens: "un vrai coût pour le projet, visible maintenant" },
+  { indice: 2, nom: "fragile", sens: "ça tient, mais un incident suffirait à le faire basculer" },
+  { indice: 3, nom: "correct", sens: "fait le travail, sans plus" },
+  { indice: 4, nom: "solide", sens: "fiable, et le projet en bénéficie réellement" },
+  { indice: 5, nom: "exemplaire", sens: "c'est ce qui fait avancer le projet plus vite que prévu" },
+];
+
+// `nature` sépare les deux sections. `base` dit SUR QUOI la note se fonde — c'est la colonne que
+// l'utilisateur a explicitement demandée (« qui me juge comment, de quelle maniere, sur quelles
+// bases, avec quel resultat »), et sans elle une note n'est qu'une humeur chiffrée.
+export const DOMAINES_UTILISATEUR = [
+  { id: "vitesse-de-decision", nature: "mesurable", libelle: "Vitesse de décision", base: "âge de la plus ancienne question qui attend sa réponse, lu dans docs/suivi/" },
+  { id: "decisions-en-suspens", nature: "mesurable", libelle: "Décisions laissées en suspens", base: "nombre de tâches réellement bloquées sur une décision qui n'appartient qu'à lui" },
+  { id: "idees-jamais-tranchees", nature: "mesurable", libelle: "Idées jamais tranchées", base: "entrées de docs/idees-a-trancher.md restées sans décision définitive" },
+  { id: "clarte-des-demandes", nature: "jugement", libelle: "Clarté des demandes", base: "combien de fois j'ai dû supposer une intention faute d'avoir compris, sur la période" },
+  { id: "coherence-des-priorites", nature: "jugement", libelle: "Cohérence des priorités", base: "une consigne en a-t-elle contredit une autre, un chantier a-t-il été rouvert sans raison" },
+  { id: "qualite-de-la-direction", nature: "jugement", libelle: "Qualité de la direction donnée", base: "les redirections ont-elles servi le projet ou dispersé le travail" },
+  { id: "reaction-a-la-critique", nature: "jugement", libelle: "Réaction à la critique", base: "ce qui se passe quand je signale un écart : traité, discuté, ou ignoré" },
+];
+
+// LE JURY — les outils qui détiennent déjà de la donnée SUR LUI, et qui ne la lui montraient pas.
+//
+// Ajouté le 2026-09-22 sur sa demande : « il devrait y avoir plus d'outils qui me jugent [...]
+// pourvu que ce soit pertinent à me faire remonter. Moi aussi, je veux profiter de la data ! ».
+//
+// LE CONSTAT QUI JUSTIFIE CE REGISTRE : plusieurs outils mesurent depuis des semaines des choses
+// qui parlent de LUI et de personne d'autre — ce que ses demandes ont coûté, ce que ses règles
+// pèsent, si ses propres objectifs sont tenus — et toute cette donnée ne servait qu'à juger le
+// CODE. Elle existait déjà ; elle ne lui était simplement jamais adressée.
+//
+// LE CRITÈRE D'ENTRÉE, et il est strict — « pourvu que ce soit pertinent à me faire remonter » :
+// un juge n'entre ici que s'il lit une donnée RÉELLE déjà collectée (jamais une mesure inventée
+// pour l'occasion) ET que cette donnée dise quelque chose qu'il ne peut pas voir autrement. Un
+// chiffre qu'il a déjà sous les yeux ailleurs n'apporte rien et encombrerait le rapport.
+//
+// `juge` est le slug de l'outil source — vérifié mécaniquement contre les scripts réels par
+// findJugesSansOutil(), jamais une liste de confort qui se périmerait au premier renommage
+// (Article 24).
+export const JURY = [
+  {
+    id: "cout-des-redirections", juge: "smart-conso-token", script: "scripts/smart-conso-token.mjs",
+    quoi: "Combien de ses demandes ont produit un vrai retour, et combien ont consommé sans rien rendre.",
+    base: "le journal des actions coûteuses, chacune déjà classée investissement réel / sans retour / à évaluer",
+    pertinence: "c'est la seule mesure qui distingue une redirection qui a fait gagner du temps d'une qui en a coûté — et elle existait sans jamais lui être montrée",
+  },
+  {
+    id: "rythme-impose", juge: "smart-conso-api", script: "scripts/smart-conso-api.mjs",
+    quoi: "Le rythme de consommation d'API que ses demandes imposent réellement.",
+    base: "le trafic Gemini réel enregistré, pas une estimation",
+    pertinence: "il décide quand lancer une simulation ou un diagnostic sans jamais voir le cumul que ça fait sur une semaine",
+  },
+  {
+    id: "poids-de-ses-regles", juge: "ecotoken", script: "scripts/ecotoken.mjs",
+    quoi: "Ce que pèsent, en tokens rechargés à CHAQUE message, les règles qu'il a lui-même ajoutées.",
+    base: "le poids mesuré de CLAUDE.md et des documents toujours chargés",
+    pertinence: "le plus utile des huit, et le plus invisible : une règle ajoutée en trois lignes se paie à chaque message, pour toujours. Il n'a jamais vu ce prix, donc il ne peut pas l'arbitrer.",
+  },
+  {
+    id: "objectifs-tenus", juge: "objectifs-vs-resultats", script: "scripts/objectifs-vs-resultats.mjs",
+    quoi: "Les objectifs chiffrés qu'il a fixés lui-même, confrontés aux résultats réels.",
+    base: "le registre d'objectifs tenu à la main, croisé avec les mesures réelles de la période",
+    pertinence: "un objectif qu'on fixe puis qu'on ne regarde plus n'est pas un objectif ; c'est lui qui les pose, donc c'est à lui que l'écart revient",
+  },
+  {
+    id: "fidelite-a-sa-philosophie", juge: "the-king", script: "scripts/the-king.mjs",
+    quoi: "Si ses propres décisions respectent les valeurs qu'il a lui-même écrites.",
+    base: "docs/philosophie-et-politique.md, le texte fondateur qu'il a posé, confronté aux arbitrages réellement rendus",
+    pertinence: "personne d'autre ne peut lui opposer son propre texte — et c'est exactement le service qu'il demande en acceptant d'être noté",
+  },
+  {
+    id: "taches-qui-trainent", juge: "check-tasks-details", script: "scripts/check-tasks-details.mjs",
+    // Élargi le 2026-09-22, sur sa remarque amusée et parfaitement fondée : « j'imagine que
+    // check-list a un jugement interessant sur moi ! ». Il a raison, et plus qu'il ne le pensait :
+    // cet outil ne voit pas seulement CE QUI ATTEND, il voit le RYTHME — combien il ouvre contre
+    // combien il clôt, et surtout quelles tâches dérivent parce qu'elles n'appartiennent à aucun
+    // chantier (celles-là, il a lui-même dit qu'elles « ont tendance à se perdre »). Élargir ce
+    // juge plutôt qu'en ajouter un second : la donnée sort du même outil, deux entrées auraient
+    // dupliqué la même lecture (§7ter).
+    quoi: "Ce qui attend sa décision et depuis quand, le rythme entre ce qu'il ouvre et ce qu'il clôt, et les tâches transverses qui dérivent faute d'appartenir à un chantier.",
+    base: "docs/suivi/ : les lignes bloquées sur un arbitrage qui n'appartient qu'à lui, l'âge de la plus ancienne, et celles qu'aucun chantier ne réclame",
+    pertinence: "une décision jamais prise bloque en silence tout ce qui en dépend — et une tâche transverse sans chantier d'accueil est celle qu'il a lui-même identifiée comme la plus facile à perdre",
+  },
+  {
+    id: "rondes-jamais-lancees", juge: "circle-tasks", script: "scripts/circle-tasks.mjs",
+    quoi: "Le nombre de commits écoulés sans qu'une Ronde soit lancée.",
+    base: "le compteur réel de commits depuis le dernier passage enregistré",
+    pertinence: "la Ronde est le seul moment où tout le paysage se prononce ; la sauter longtemps, c'est travailler sans retour — et le rappel a déjà été ignoré plus de deux cents fois",
+  },
+  {
+    id: "couverture-de-ce-qu-il-demande", juge: "axa-check", script: "scripts/axa-check.mjs",
+    quoi: "Si le code écrit à sa demande est réellement couvert par un test, ou seulement livré.",
+    base: "la couverture réelle par fonction, jamais une estimation globale",
+    pertinence: "il arbitre souvent pour la vitesse ; ceci lui montre ce que cet arbitrage laisse derrière lui, chiffre à l'appui",
+  },
+];
+
+// Le garde-fou du registre (Article 24) : un juge dont le script n'existe plus produirait une
+// section vide que personne ne remarquerait — le rapport paraîtrait complet en ayant perdu un
+// témoin. Même patron que les garde-fous déjà en place ailleurs dans ce paysage.
+export function findJugesSansOutil({ jury = JURY, root = ROOT, exists = existsSync } = {}) {
+  return jury.filter((j) => !exists(join(root, j.script))).map((j) => ({ id: j.id, script: j.script }));
+}
+
+// collectJuryVerdicts() — n'INVENTE jamais un verdict. Chaque juge fournit le sien via `verdicts`
+// (l'appelant les récolte en lançant les outils), et un juge qui n'a rien rendu ressort comme
+// « pas de verdict » plutôt que comme un silence qui se lirait à tort comme « rien à signaler ».
+// C'est la distinction qui a coûté le plus cher à ce projet : une absence de mesure n'est pas une
+// mesure rassurante.
+export function collectJuryVerdicts({ verdicts = {}, jury = JURY } = {}) {
+  return jury.map((j) => {
+    const v = verdicts[j.id];
+    return {
+      ...j,
+      etat: v === undefined ? "pas de verdict" : "rendu",
+      resultat: v?.resultat ?? null,
+      chiffre: v?.chiffre ?? null,
+      // Un juge peut légitimement n'avoir rien à dire cette fois-ci : il le DIT, au lieu de se
+      // taire. Les deux se distinguent, toujours.
+      rienASignaler: v?.rienASignaler === true,
+    };
+  });
+}
+
+export const DESACCORDS_FILE = "docs/angel-of-ia-process/desaccords.md";
+
+// Les objections de l'utilisateur, relues du disque. Le format est volontairement le plus simple
+// qui puisse survivre à une reprise par une autre IA (Article 27) : une ligne de tableau par
+// objection, la date, l'identifiant du domaine, le texte. Rien à parser de subtil.
+export function loadDesaccords({ root = ROOT, readFileImpl = readFileSync } = {}) {
+  try {
+    const texte = readFileImpl(join(root, DESACCORDS_FILE), "utf8");
+    return texte.split("\n")
+      .filter((l) => /^\|\s*\d{4}-\d{2}-\d{2}/.test(l))
+      .map((l) => l.split("|").map((c) => c.trim()).filter(Boolean))
+      .filter((c) => c.length >= 3)
+      .map(([date, domaine, texte]) => ({ date, domaine, texte }));
+  } catch {
+    return [];
+  }
+}
+
+// Les trois domaines mesurables, calculés pour de vrai. `sources` est injectable pour rester
+// testable sans dépendre de l'état du dépôt au moment du test — même patron que partout ailleurs.
+export function mesurerParticipation({ tachesOuvertes, ideesNonTranchees, maintenant = Date.now() } = {}) {
+  const mesures = {};
+  if (Array.isArray(tachesOuvertes)) {
+    const dates = tachesOuvertes
+      .map((t) => Date.parse((t.row ?? t).match?.(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z/)?.[0] ?? ""))
+      .filter(Number.isFinite);
+    const ageMax = dates.length ? Math.floor((maintenant - Math.min(...dates)) / 86400000) : 0;
+    mesures["vitesse-de-decision"] = { valeur: ageMax, unite: "jour(s) d'attente pour la plus ancienne" };
+    mesures["decisions-en-suspens"] = { valeur: tachesOuvertes.length, unite: "tâche(s) bloquée(s) sur sa décision" };
+  }
+  if (Number.isFinite(ideesNonTranchees)) {
+    mesures["idees-jamais-tranchees"] = { valeur: ideesNonTranchees, unite: "idée(s) sans décision définitive" };
+  }
+  return mesures;
+}
+
+// evaluateUserParticipation() — assemble les deux sections. Les notes de JUGEMENT ne sont jamais
+// calculées : elles sont FOURNIES par l'agent, et leur absence se voit ("non fourni") au lieu de se
+// combler par un palier moyen poli. C'est la même discipline que partout dans ce paysage : une
+// absence de mesure ne se déguise jamais en mesure.
+export function evaluateUserParticipation({ mesures = {}, jugements = {}, desaccords = [], domaines = DOMAINES_UTILISATEUR, paliers = PALIERS_NOTE } = {}) {
+  const parNote = new Map(paliers.map((p) => [p.nom, p]));
+  const lignes = domaines.map((d) => {
+    const fourni = d.nature === "mesurable" ? mesures[d.id] : jugements[d.id];
+    const objections = desaccords.filter((x) => x.domaine === d.id);
+    if (!fourni) return { ...d, etat: "non fourni", note: null, objections };
+    const note = d.nature === "mesurable" ? (fourni.note ?? null) : (fourni.note ?? null);
+    return {
+      ...d,
+      etat: "évalué",
+      note: note && parNote.has(note) ? { nom: note, ...parNote.get(note) } : null,
+      // Une note hors barème est signalée plutôt que silencieusement acceptée : sans ça, une faute
+      // de frappe produirait une évaluation sans palier, illisible et jamais détectée.
+      noteInvalide: note && !parNote.has(note) ? note : null,
+      valeur: fourni.valeur,
+      unite: fourni.unite,
+      justification: fourni.justification ?? null,
+      objections,
+    };
+  });
+  return {
+    mesurable: lignes.filter((l) => l.nature === "mesurable"),
+    jugement: lignes.filter((l) => l.nature === "jugement"),
+    nonFournis: lignes.filter((l) => l.etat === "non fourni"),
+    // Jamais de note globale : décision explicite de l'utilisateur, et la raison est écrite plus
+    // haut. La tentation de « juste faire la moyenne » reviendra — ce commentaire est là pour elle.
+    noteGlobale: null,
   };
 }
 

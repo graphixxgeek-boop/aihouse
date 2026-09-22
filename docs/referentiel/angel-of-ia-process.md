@@ -92,3 +92,73 @@ directement à la Ronde — mais la conduite ne se mélange jamais aux étapes d
 Classé `heuristique` dans `TOOL_RELIABILITY` : il croise des horodatages, et une consultation faite
 dans une session sans commit lui reste invisible. Un signal daté, jamais une preuve — l'avertissement
 est imprimé en tête de chaque rapport.
+
+## L'évaluation de l'utilisateur, et le JURY (2026-09-22)
+
+**Demandée par lui, et la raison est conservée dans le code** parce qu'elle seule rend l'exercice
+tenable :
+
+> « Toi aussi tu dois alimenter ce rapport et me mettre une evaluation sur ma participation à ce
+> projet : je n'ai pas besoin d'eloges ou faux semblants, je veux un oeil critique qui sert le
+> projet en priorité. Pourquoi cette notation sur moi-meme ? Justement pour que le projet reste la
+> priorité, la seule valeur à protéger, meme au detriment de quelques frictions ou desaccords ou
+> remarques à mon sujet. »
+
+Un agent qui note celui qui le dirige penche naturellement vers la complaisance. Le seul contrepoids
+est ce mandat explicite ; sans lui conservé noir sur blanc, le prochain agent adoucira en croyant
+bien faire. Le rapport le dit d'ailleurs lui-même, dans la section de jugement : *si une note paraît
+trop douce, c'est probablement elle qui a raison et moi qui ai reculé.*
+
+**Pourquoi angel et pas CASSANDRA.** L'Article 26 lui donne déjà ce mandat (« les deux côtés,
+l'agent comme l'utilisateur, sont notés pareil »). CASSANDRA note l'ÉQUIPE d'outils, jamais l'humain
+— un commentaire de ce fichier affirmait le contraire jusqu'au 2026-09-22, sans que personne ne
+l'ait jamais vérifié ; corrigé le même jour.
+
+**L'organisation, et personne n'y centralise** : angel PRODUIT les verdicts de conduite, CASSANDRA
+ASSEMBLE et PUBLIE le récapitulatif — même relais que god relayant angel pour les process. Une
+seule voix à la Ronde, mais chaque verdict reste attribué à qui l'a rendu.
+
+### Les trois garde-fous de structure, chacun contre un mode d'échec précis
+
+1. **Mesurable et jugement ne se mélangent jamais** (choix explicite) — un fait qui se compte et une
+   opinion qui s'argumente n'ont pas le même poids ; les mêler laisserait croire que l'opinion est
+   aussi solide que le chiffre, et empêcherait de contester l'une sans entamer l'autre.
+2. **Une note par domaine, jamais de note globale** (choix explicite) — une moyenne unique noie le
+   domaine qui va mal dans ceux qui vont bien.
+3. **Un désaccord n'efface jamais la remarque**, il se pose à côté (choix explicite, et sa propre
+   raison) — une critique qu'on peut faire disparaître en la contestant ne vaut rien. Registre :
+   `docs/angel-of-ia-process/desaccords.md`.
+
+**Les notes sont des paliers nommés** (`PALIERS_NOTE` : à corriger / fragile / correct / solide /
+exemplaire), jamais un nombre nu — « 12/20 » ne dit pas quoi changer, « fragile » si. L'indice
+numérique n'existe que pour suivre une évolution, jamais pour faire une moyenne qui reconstruirait
+la note globale écartée.
+
+### Le JURY — huit outils qui détenaient déjà de la donnée sur lui
+
+Ajouté le même jour sur sa demande : « il devrait y avoir plus d'outils qui me jugent [...] pourvu
+que ce soit pertinent à me faire remonter. Moi aussi, je veux profiter de la data ! » — puis, en
+précision : « je ne crois pas que la creation de scripts "juges" soit necessaire, on fait avec
+l'existant ». Aucun outil n'a donc été créé pour ça.
+
+**Le constat qui a justifié le registre** : plusieurs outils mesuraient depuis des semaines des
+choses qui parlent de lui et de personne d'autre — ce que ses demandes ont coûté, ce que ses règles
+pèsent, si ses propres objectifs sont tenus — et toute cette donnée ne servait qu'à juger le CODE.
+Elle existait ; elle ne lui était simplement jamais adressée.
+
+**Critère d'entrée, strict** : un juge n'entre que s'il lit une donnée RÉELLE déjà collectée, et que
+cette donnée dise quelque chose qu'il ne peut pas voir autrement. Les huit : SMART-CONSO-TOKEN (le
+retour réel de ses demandes), Smart Conso API (le rythme imposé), **ecotoken** (le plus invisible
+des huit : ce que pèsent ses propres règles, rechargées à chaque message, pour toujours),
+objectifs-vs-resultats (ses objectifs confrontés aux résultats), **THE-KING** (ses décisions
+confrontées au texte de valeurs qu'il a lui-même écrit), check-tasks-details (ce qui attend sa
+décision, le rythme ouvert/clos, et les tâches transverses qui dérivent), CIRCLE-TASKS (les Rondes
+jamais lancées), AXA-CHECK (ce que son arbitrage pour la vitesse laisse derrière).
+
+**Garde-fou** (Article 24) : `findJugesSansOutil()` — un juge dont le script a disparu produirait une
+section vide que personne ne remarque, et le rapport paraîtrait complet en ayant perdu un témoin.
+Testé par son échec avant d'être cru sur son succès.
+
+**Et un juge muet n'est jamais « rien à signaler »** : `collectJuryVerdicts()` distingue trois états
+— verdict rendu, rien à signaler (le juge s'est prononcé), pas de verdict (il n'a pas tourné). Les
+confondre est l'erreur que ce paysage combat depuis le début.

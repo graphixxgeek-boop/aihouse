@@ -107,3 +107,24 @@ effectif chiffré, supervision du badge, lecture du KPI, outils à retirer ou re
 recrutement en trois étapes. Elle ne PRONONCE jamais d'elle-même un verdict sur un membre de
 l'équipe : chacun de ses signaux est un élément porté à la décision de l'utilisateur, jamais la
 décision elle-même.
+
+## Le récapitulatif des évaluations (2026-09-22) — elle le publie, elle ne le produit pas seule
+
+Demandé mot pour mot : « je veux lors de la ronde le détail des KPI et/ou evaluations, notes qui
+sont produites par certains outils, dans un fichier HTML normé bien mis en evidence [...] qui me
+juge comment, de quelle maniere, sur quelles bases, avec quel resultat ».
+
+**Pourquoi CASSANDRA** : elle est déjà la gardienne des objectifs et des KPI, donc elle lit déjà la
+plupart de ces chiffres. Un outil de plus pour les rassembler aurait dupliqué son travail (§7ter).
+
+**Ce qu'elle ne fait pas** : produire l'évaluation de l'utilisateur. Celle-là vient d'angel-of-ia-
+process (Article 26) et CASSANDRA la RELAIE — exactement comme god relaie angel pour les process.
+Personne ne centralise : angel produit sur la conduite, CASSANDRA assemble et publie.
+
+**Fonction** : `buildEvaluationRecapBlocks()`, rendue en HTML par `renderHtmlReport()`. Cinq
+sections séparées, comme demandé (« tout est clair et bien presenté, avec des separations ») : qui
+te juge et sur quoi · les faits qui se comptent · mon jugement, annoncé comme une opinion et avec
+son biais nommé · tes désaccords · et de l'autre côté, qui juge l'équipe d'outils.
+
+**Item de Ronde** : `recap-evaluations`, thème « KPI & scans » — jamais un thème neuf pour un seul
+item (la première tentative en avait créé un, attrapé le jour même par le garde-fou de thèmes).

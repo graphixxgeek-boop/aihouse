@@ -594,6 +594,95 @@ export function buildCassandraLightSignal({ teamSize, badgeSummary, kpiTrend }) 
 
 // --- Rapport complet, en HTML dès cette première version (2026-09-22, demande explicite) -------
 
+// ————————————————————————————————————————————————————————————————————————
+// LE RÉCAPITULATIF DES ÉVALUATIONS — « qui me juge, comment, sur quelles bases, avec quel résultat »
+// ————————————————————————————————————————————————————————————————————————
+//
+// Demandé le 2026-09-22 : « je veux lors de la ronde le détail des KPI et/ou evaluations, notes qui
+// sont produites par certains outils, dans un fichier HTML normé bien mis en evidence. Je veux tout
+// le détail : qui me juge comment, de quelle maniere, sur quelles bases, avec quel resultat. »
+//
+// POURQUOI C'EST CASSANDRA QUI LE DÉLIVRE, plutôt qu'un outil de plus : elle est déjà la gardienne
+// des objectifs et des KPI (décision du même jour), donc elle lit déjà la plupart de ces chiffres.
+// Un agent supplémentaire pour les rassembler aurait dupliqué son travail — ce que §7ter interdit.
+//
+// MAIS ELLE NE PRODUIT PAS L'ÉVALUATION DE L'UTILISATEUR, elle la RELAIE, et la distinction est le
+// cœur de l'organisation retenue : angel-of-ia-process la produit, par l'Article 26 (« les deux
+// côtés, l'agent comme l'utilisateur, sont notés pareil »), exactement comme god relaie angel pour
+// les process. Une seule voix à la Ronde, jamais deux — mais chaque verdict reste attribué à qui
+// l'a rendu. Personne ne centralise : angel PRODUIT sur la conduite, CASSANDRA ASSEMBLE et PUBLIE.
+// (Corrigé le même jour : un commentaire d'angel affirmait que CASSANDRA notait déjà l'utilisateur.
+// C'était faux, et jamais vérifié — elle note l'équipe d'outils, jamais l'humain.)
+export function buildEvaluationRecapBlocks({ jury = [], evaluation = null, equipe = [], jugesSansOutil = [], desaccords = [] } = {}) {
+  const blocks = [];
+  blocks.push({ type: "note", text: "Comment lire ce rapport : chaque verdict est attribué à l'outil qui l'a rendu, avec la donnée exacte sur laquelle il se fonde. Un juge qui n'a rien rendu est affiché comme tel — jamais confondu avec un juge qui n'a rien trouvé." });
+
+  blocks.push({ type: "heading", text: "1. Qui te juge, et sur quoi" });
+  blocks.push({ type: "paragraph", text: `${jury.length} outil(s) détiennent de la donnée qui parle de toi. Chacun lit une mesure réelle déjà collectée — jamais un chiffre produit pour l'occasion.` });
+  blocks.push({
+    type: "table",
+    headers: ["Juge", "Ce qu'il juge", "Sur quelle base", "Pourquoi ça vaut d'être remonté", "Résultat"],
+    rows: jury.map((j) => [
+      j.juge, j.quoi, j.base, j.pertinence,
+      j.etat === "pas de verdict" ? "— pas de verdict rendu cette fois" : (j.rienASignaler ? "rien à signaler (le juge s'est prononcé)" : [j.resultat, j.chiffre].filter(Boolean).join(" · ")),
+    ]),
+  });
+  const muets = jury.filter((j) => j.etat === "pas de verdict");
+  if (muets.length) blocks.push({ type: "note", text: `${muets.length} juge(s) n'ont rendu aucun verdict : ${muets.map((j) => j.juge).join(", ")}. Ce n'est PAS « rien à signaler » — c'est une absence de mesure, et les confondre est l'erreur que ce paysage combat depuis le début.` });
+  if (jugesSansOutil.length) blocks.push({ type: "highlight", heading: "Un juge a perdu son outil", paragraphs: [`${jugesSansOutil.map((j) => `${j.id} → ${j.script}`).join(" ; ")}. Le rapport paraîtrait complet en ayant perdu un témoin — à corriger avant de se fier à ce récapitulatif.`] });
+
+  if (evaluation) {
+    blocks.push({ type: "heading", text: "2. Ton évaluation — les faits, ceux qui se comptent" });
+    blocks.push({ type: "note", text: "Cette section ne contient aucune opinion. Tout ce qui s'y trouve se recompte à partir du dépôt, et se conteste en montrant un autre chiffre." });
+    blocks.push({
+      type: "table",
+      headers: ["Domaine", "Base de la mesure", "Valeur relevée", "Note"],
+      rows: evaluation.mesurable.map((d) => [
+        d.libelle, d.base,
+        d.etat === "non fourni" ? "— non mesuré cette fois" : `${d.valeur ?? "?"} ${d.unite ?? ""}`.trim(),
+        d.note ? `${d.note.nom} (${d.note.indice}/5) — ${d.note.sens}` : (d.noteInvalide ? `⚠️ note hors barème : « ${d.noteInvalide} »` : "—"),
+      ]),
+    });
+
+    blocks.push({ type: "heading", text: "3. Ton évaluation — mon jugement, et c'est une opinion" });
+    blocks.push({ type: "highlight", heading: "Ce que vaut cette section, et ce qu'elle ne vaut pas", paragraphs: [
+      "Rien ici ne se recompte : c'est mon appréciation, argumentée mais faillible. Tu peux la contester sans que ça entame la section précédente — c'est exactement pour ça qu'elles sont séparées.",
+      "Le biais à connaître, puisque c'est le mien : un agent qui note celui qui le dirige penche naturellement vers la complaisance. Si une note te paraît trop douce, c'est probablement elle qui a raison et moi qui ai reculé.",
+    ] });
+    blocks.push({
+      type: "table",
+      headers: ["Domaine", "Ce que je regarde", "Note", "Ce qui la justifie"],
+      rows: evaluation.jugement.map((d) => [
+        d.libelle, d.base,
+        d.note ? `${d.note.nom} (${d.note.indice}/5)` : (d.noteInvalide ? `⚠️ hors barème : « ${d.noteInvalide} »` : "— non évalué"),
+        d.justification ?? (d.etat === "non fourni" ? "— aucune évaluation fournie cette fois, jamais comblée par un palier moyen poli" : "—"),
+      ]),
+    });
+    blocks.push({ type: "note", text: "Aucune note globale n'est calculée, et c'est délibéré : une moyenne unique noierait le domaine qui va mal dans ceux qui vont bien." });
+
+    blocks.push({ type: "heading", text: "4. Tes désaccords" });
+    if (!desaccords.length) {
+      blocks.push({ type: "paragraph", text: "Aucune objection enregistrée à ce jour. Une objection ne retire jamais la remarque qu'elle conteste : les deux restent, côte à côte, et la suite tranche sur les faits." });
+    } else {
+      blocks.push({
+        type: "table",
+        headers: ["Date", "Domaine contesté", "Ton objection", "La remarque, qui reste"],
+        rows: desaccords.map((d) => {
+          const cible = [...evaluation.mesurable, ...evaluation.jugement].find((x) => x.id === d.domaine);
+          return [d.date, cible?.libelle ?? d.domaine, d.texte, cible?.justification ?? cible?.base ?? "— domaine introuvable, objection orpheline"];
+        }),
+      });
+    }
+  }
+
+  if (equipe.length) {
+    blocks.push({ type: "heading", text: "5. Et de l'autre côté : qui juge l'équipe d'outils" });
+    blocks.push({ type: "paragraph", text: "Le même exercice appliqué aux outils eux-mêmes — pour que le récapitulatif dise qui juge QUI, pas seulement qui te juge toi." });
+    blocks.push({ type: "table", headers: ["Membre", "Ce qui le note", "Résultat"], rows: equipe });
+  }
+  return blocks;
+}
+
 export function buildCassandraReportBlocks({ teamSize, badgeSummary, kpiTrend, reconsider, recruitmentCandidates = [], coverageGaps = null, newArrivalsNarration = [], objectifs = null, census = null, censusSignaux = [] }) {
   const blocks = [];
 
