@@ -885,7 +885,22 @@ export function constatsChaineXp(chaine) {
 // n'est jamais jugée avant d'avoir eu assez d'occasions de servir, et ces occasions se comptent
 // DEPUIS SA PROPRE ARRIVÉE, jamais depuis le début du compteur — sinon une entrée écrite ce matin
 // hériterait du passé de toutes les autres et serait condamnée avant d'avoir vécu.
-export const REMONTEES_PATH = "docs/tool-learning/xp-remontees.json";
+// POURQUOI CE FICHIER EST UN JOURNAL LOCAL, À LA RACINE ET JAMAIS COMMITTÉ (corrigé le
+// 2026-09-23, quelques minutes après sa création). Il vit d'abord dans docs/tool-learning/, et le
+// défaut est apparu au premier commit qui l'a fait vivre : il est écrit par le crochet
+// POST-commit, donc il ne peut PAS faire partie du commit qui le met à jour — il laisse le dépôt
+// modifié après chaque commit, indéfiniment. Un état permanent « il y a des changements non
+// committés » finit par être ignoré, et ce jour-là c'est un vrai changement non committé qu'on ne
+// verra plus. C'est la leçon L6 (une alarme permanente fait dépenser du travail) reproduite par le
+// mécanisme même que j'ai écrit pour la faire respecter.
+//
+// Sa vraie famille était déjà là, et il suffisait de regarder : les journaux d'état locaux du
+// projet (santé des clés, compteur d'usage, anti-doublons de passage) sont tous à la racine, en
+// `.fichier.json`, dans .gitignore, et DÉCLARÉS dans LOCAL_JOURNALS chez Doc-Report — qui vérifie
+// mécaniquement qu'aucun d'eux ne traîne hors de .gitignore, un journal local oublié là étant un
+// vrai risque de fuite au commit suivant. Ce compteur est exactement de cette nature : une mesure
+// de MON rythme de travail local, jamais un état du projet que quelqu'un d'autre doit relire.
+export const REMONTEES_PATH = ".xp-remontees.json";
 export const SEUILS_REMONTEES = {
   // Assez d'occasions pour qu'un silence veuille dire quelque chose. Volontairement haut : accuser
   // une entrée utile de ne servir à rien la ferait retirer, et on repaierait son erreur d'origine.

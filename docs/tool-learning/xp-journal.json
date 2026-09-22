@@ -36,5 +36,13 @@
     "quoi": "En livrant le détecteur d'entrées équivalentes, il rendait 0 sur le vrai registre et j'allais m'en satisfaire. Un zéro non éprouvé ne distingue pas un dépôt propre d'un outil aveugle.",
     "entree": "BP4",
     "date": "2026-09-23T06:20:00Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "garde-fou-bloque",
+    "rienARetenir": false,
+    "quoi": "Le contrôle de fin de session a signalé un dépôt modifié : le compteur que je venais de construire est écrit par le crochet POST-commit, donc il ne peut structurellement pas faire partie du commit qui le met à jour. Il aurait laissé le dépôt modifié après CHAQUE commit — une alarme permanente (L6) fabriquée par le mécanisme écrit pour faire respecter L6. Sa vraie famille existait déjà et il suffisait de regarder : les journaux d'état locaux, à la racine, dans .gitignore, déclarés chez Doc-Report.",
+    "entree": "L6",
+    "date": "2026-09-23T06:40:00Z"
   }
 ]

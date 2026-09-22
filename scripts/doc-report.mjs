@@ -53,6 +53,7 @@ export const LOCAL_JOURNALS = [
   { path: ".circle-tasks-run-summary-latest.txt", owner: "CIRCLE-TASKS", purpose: "récap texte de la dernière Ronde exécutée" },
   { path: ".ines-official-latest-code.txt", owner: "INES-official", purpose: "corps de la dernière édition (périmètre code)" },
   { path: ".ines-official-latest-code_et_docs.txt", owner: "INES-official", purpose: "corps de la dernière édition (périmètre code + documentation)" },
+  { path: ".xp-remontees.json", owner: "TOOL-LEARNING (process XP-IA-bonnes-pratiques-et-lecons)", purpose: "occasions et remontées par entrée du registre des leçons — mesure locale du rythme de travail de l'agent, jamais un état du projet ; écrit par le crochet post-commit, donc structurellement incommittable par le commit qui le met à jour" },
   { path: ".badge-ceremony-history.json", owner: "LE-COORDINATEUR (cérémonie de certification)", purpose: "date de première certification de chaque Agent, pour n'annoncer le badge qu'une seule fois" },
   { path: ".cassandra-rh-known-members.json", owner: "CASSANDRA-RH (nouveaux visages, Phase 1)", purpose: "slugs déjà vus au moins une fois par CASSANDRA, pour n'accueillir un nouveau membre qu'une seule fois" },
   // Deux entrées trouvées le 2026-09-21 par le nouveau garde-fou findUndeclaredLocalJournals() (audit
