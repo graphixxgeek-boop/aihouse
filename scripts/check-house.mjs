@@ -6313,9 +6313,26 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // commit, son absence d'objectif est écrite comme une décision et ne doit donc rien lui coûter ;
   // un outil sans ligne du tout, lui, reste signalé. Sans cette distinction, la note pousserait à
   // inventer des objectifs creux pour verdir — exactement ce que le badge évite déjà par ailleurs.
+  // CASSANDRA GARDIENNE DES OBJECTIFS (2026-09-22, demande de l'utilisateur : « c'est elle qui
+  // verifie que tout est bien pluggé sur les KPI/objectifs et qui l'indique dans son rapport »).
+  // Elle CONSTATE le branchement, elle ne recalcule jamais une note : objectifs-vs-resultats compare,
+  // kpi-report mesure. Le trou qu'elle seule peut voir est celui d'un membre branché à RIEN — que ni
+  // l'un ni l'autre ne peut détecter, chacun ne connaissant que ce qui lui est déjà déclaré.
+  const {objectivesCoverage,objectivesCoverageLines}=await import('../scripts/cassandra-rh.mjs');
+  const couverture=objectivesCoverage();
+  assert.ok(couverture.mesurable&&couverture.total>0,'the objectives coverage must be measured against the REAL team roster, never an enumeration written here — a tool joining the team must appear in it the same day (Article 24)');
+  assert.deepEqual(couverture.trous,[],'checked live: every real team member must be plugged into the objectives system, either with a figure or with a written decision not to have one — this was 16 members plugged to nothing this morning');
+  assert.ok(couverture.assumes.length>0&&couverture.chiffres.length>0,'both states must exist in practice: forcing a figure on a Gardien that runs at every commit would measure the number of commits, and having no assumed-absence state would push to invent hollow objectives to go green');
+  assert.match(objectivesCoverageLines({mesurable:true,total:3,chiffres:['a'],assumes:[],trous:['b','c'],couverts:1}).join(' '),/branché\(s\) à RIEN/,'a member plugged to nothing must be named loudly — it is a decision never taken, not a fault of the tool');
+  assert.match(objectivesCoverageLines({mesurable:false,raison:'illisible'}).join(' '),/illisible/,'an unreadable registry must be reported as unreadable, never as full coverage');
   assert.match(healthLine('argus'), /2\/2/, 'a Gardien whose absence of objective is a written decision must not be penalised for it — inventing a frequency target for a tool that runs at every commit would measure the number of commits, nothing else');
   assert.ok(toolHealth('argus').signaux.some((sig) => /décision écrite/.test(sig.texte)), 'the deliberate absence must be NAMED as a decision in the signal, never silently counted as if an objective existed');
-  assert.match(healthLine('check-level-target'), /1\/2/, 'a tool with neither an objective nor a written decision must still be flagged — checked live, this is a real gap today and the note must keep showing it');
+  // Cette assertion visait check-level-target quand il n'avait NI objectif NI décision écrite. Le
+  // trou a été comblé le jour même (absence assumée : il est appelé par d'autres outils plutôt que
+  // lancé à la main), donc l'assertion est reportée sur un slug synthétique : son INTENTION — un
+  // outil branché à rien reste signalé — doit survivre au fait qu'aucun outil réel ne soit plus dans
+  // ce cas, sans quoi elle disparaîtrait au moment précis où elle devient un acquis à protéger.
+  assert.match(healthLine('outil-sans-aucune-ligne-au-registre'), /aucun objectif chiffré/, 'a tool with neither an objective nor a written decision must still be flagged — the day no real tool is in that state, the guarantee must keep holding for the next one that arrives');
   assert.ok(toolHealth('tool-brain').signaux.every((sig) => 'ok' in sig), 'every health signal must carry an explicit verdict, including the honest "undefined" of a signal that could not be read');
   assert.match(healthLine('x', { health: { mesurable: true, signaux: [{ ok: undefined, texte: 'illisible' }], bons: 0, mesures: 0, nonMesures: 1 } }), /non mesuré/, 'a signal that could not be read must be counted apart, never as a failure nor as a success');
   // La gravité vient de l'outil : la deviner serait le pire défaut possible sur un rapport d'alerte.

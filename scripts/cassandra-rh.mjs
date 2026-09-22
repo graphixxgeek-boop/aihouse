@@ -367,6 +367,69 @@ export function narrateNewArrivals(newArrivals, badgeResults) {
 
 // --- Signal léger automatique (2026-09-22 : « signal auto léger + bilan complet sur demande ») --
 
+// ————————————————————————————————————————————————————————————————————————
+// CASSANDRA, GARDIENNE DES OBJECTIFS ET DES KPI (2026-09-22, demande de l'utilisateur : « Cassandra
+// est la gardienne des objectifs et KPI : c'est elle qui verifie que tout est bien pluggé sur les
+// KPI/objectifs et qui l'indique dans son rapport »)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Son métier ici est de VÉRIFIER LE BRANCHEMENT, jamais de recalculer une note : c'est
+// `objectifs-vs-resultats` qui compare un objectif à un résultat, et `kpi-report` qui mesure les
+// familles. Elle constate qui n'est branché à rien — le trou qu'aucun des deux ne peut voir, chacun
+// ne connaissant que ce qui lui est déjà déclaré.
+//
+// TROIS ÉTATS, jamais deux (même discipline que la note de santé des rapports) : un objectif chiffré,
+// une absence ASSUMÉE et écrite, ou un vrai trou. Confondre les deux derniers pousserait à inventer
+// des objectifs creux pour verdir un tableau, exactement ce que le badge évite déjà.
+export function objectivesCoverage({ root = ROOT, readFileImpl = readFileSync, slugs } = {}) {
+  let registre = "";
+  try { registre = readFileImpl(join(root, "docs/objectifs-vs-resultats/registre.md"), "utf8"); }
+  catch { return { mesurable: false, raison: "registre d'objectifs illisible — rien ne peut être affirmé sur la couverture" }; }
+
+  const lignes = registre.split("\n").filter((l) => l.startsWith("|"));
+  const parSlug = new Map();
+  for (const l of lignes) {
+    const cols = l.split("|");
+    const slug = cols[1]?.trim();
+    const objectif = cols[4]?.trim();
+    if (!slug || slug === "Entité" || /^-+$/.test(slug)) continue;
+    parSlug.set(slug, objectif === "—" || objectif === "-" || objectif === "" ? "assumée" : "chiffré");
+  }
+
+  // La liste des outils vient de l'équipe réelle, jamais d'une énumération ici (Article 24) : un
+  // outil qui rejoint l'équipe apparaît donc dans cette couverture le jour même.
+  const equipe = slugs ?? (() => {
+    try { return teamRoster(readFileImpl(join(root, "docs/regles-de-travail.md"), "utf8")).map((m) => m.slug); }
+    catch { return []; }
+  })();
+
+  const chiffres = equipe.filter((s) => parSlug.get(s) === "chiffré");
+  const assumes = equipe.filter((s) => parSlug.get(s) === "assumée");
+  const trous = equipe.filter((s) => !parSlug.has(s));
+  return {
+    mesurable: true,
+    total: equipe.length,
+    chiffres,
+    assumes,
+    trous,
+    couverts: chiffres.length + assumes.length,
+  };
+}
+
+export function objectivesCoverageLines(couverture) {
+  if (!couverture.mesurable) return [`⚠️ Couverture objectifs : ${couverture.raison}`];
+  const l = [];
+  l.push(`Couverture objectifs/KPI : ${couverture.couverts}/${couverture.total} membre(s) branché(s) — ${couverture.chiffres.length} avec un objectif chiffré, ${couverture.assumes.length} avec une absence assumée et écrite.`);
+  if (couverture.trous.length) {
+    l.push(`⚠️ ${couverture.trous.length} membre(s) branché(s) à RIEN — ni objectif, ni décision écrite de ne pas en avoir :`);
+    l.push(`    ${couverture.trous.join(", ")}`);
+    l.push("    Ce n'est pas un reproche à l'outil : c'est une décision qui n'a jamais été prise. Fixer un objectif OU écrire pourquoi il n'en a pas — les deux valent, l'absence de choix ne vaut rien.");
+  } else {
+    l.push("✅ Aucun membre branché à rien : chacun a soit un objectif, soit une raison écrite de ne pas en avoir.");
+  }
+  return l;
+}
+
 export function buildCassandraLightSignal({ teamSize, badgeSummary, kpiTrend }) {
   const parts = [`${teamSize.total} membre(s) actif(s)`];
   parts.push(badgeSummary.notCertified.length ? `${badgeSummary.notCertified.length} sans badge` : "tous certifiés");
@@ -377,8 +440,16 @@ export function buildCassandraLightSignal({ teamSize, badgeSummary, kpiTrend }) 
 
 // --- Rapport complet, en HTML dès cette première version (2026-09-22, demande explicite) -------
 
-export function buildCassandraReportBlocks({ teamSize, badgeSummary, kpiTrend, reconsider, recruitmentCandidates = [], coverageGaps = null, newArrivalsNarration = [] }) {
+export function buildCassandraReportBlocks({ teamSize, badgeSummary, kpiTrend, reconsider, recruitmentCandidates = [], coverageGaps = null, newArrivalsNarration = [], objectifs = null }) {
   const blocks = [];
+
+  // GARDIENNE DES OBJECTIFS ET DES KPI (2026-09-22, demande de l'utilisateur). Placé haut dans le
+  // rapport : un membre branché à rien ne sera jamais mesuré par personne, et c'est le genre de trou
+  // qui grandit en silence. Elle CONSTATE le branchement, elle ne recalcule jamais une note —
+  // objectifs-vs-resultats compare, kpi-report mesure, elle vérifie que chacun a bien quelqu'un.
+  if (objectifs) {
+    blocks.push({ type: "note", text: objectivesCoverageLines(objectifs).join("\n") });
+  }
 
   // Nouveaux visages (Phase 1, 2026-09-21) — toujours en premier, avant même l'effectif : c'est le
   // bloc que l'utilisateur a explicitement demandé de voir défiler dans la conversation à chaque
