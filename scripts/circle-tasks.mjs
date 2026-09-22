@@ -550,6 +550,13 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   "clean-dirty-old": "sa partie mécanique tourne déjà à chaque commit (Article 20) — seul son SIGNAL de fraîcheur rejoint la Ronde (clean-dirty-old-signal), jamais un second passage complet",
   "clone-hunter": "cinquième Gardien sacré depuis le 2026-09-22 (demande explicite de l'utilisateur), tourne désormais déjà à chaque commit (Article 20) — jamais une routine manuelle en plus, exactement comme les 4 autres Gardiens ci-dessus",
   "always-new-code": "sixième Gardien sacré depuis le 2026-09-21 (couche légère seulement — demande explicite de l'utilisateur), tourne désormais déjà à chaque commit (Article 20) — jamais une routine manuelle en plus, exactement comme les 5 autres Gardiens ci-dessus ; le vrai zoom profond, lui, reste un raisonnement payant hors Ronde (Article 23), inchangé",
+  // angel-of-ia-process (2026-09-22) : exclusion qui APPLIQUE une décision de l'utilisateur, jamais
+  // un oubli — « Les rapports de process secondaires ne produisent pas de rapport dirctement livrés
+  // à la ronde : ce serait trop : god of process centralise ». Sa section est relayée par
+  // god-of-all-process (buildProcessComplianceReport, paramètre sectionAngel) dans le rapport unique
+  // de la Ronde. Lui donner son propre item dirait la même chose deux fois, et casserait la voix
+  // unique que l'utilisateur a explicitement demandée.
+  "angel-of-ia-process": "gardien de process SECONDAIRE : son verdict est relayé par god-of-all-process dans le rapport unique de la Ronde (décision de l'utilisateur, 2026-09-22 : god centralise) — jamais un second item qui doublerait cette voix",
   "check-level-target": "outil de classification interne, jamais une routine à cocher soi-même",
   "memory-audit": "cible la mémoire narrative de Lia/Noé en jeu, jamais un scan de repo — vérifiable seulement sur des instantanés réels de partie (pendant/après une simulation) ; son voisin memento weight est déjà rapporté via kpi-report.mjs (reportMementoWeight), jamais une routine CIRCLE-TASKS séparée",
   "check-tasks-details": "état des lieux à la demande, pas une routine périodique mal automatisée",

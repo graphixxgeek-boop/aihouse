@@ -3040,6 +3040,43 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // LE PROCESS MAÎTRE (2026-09-22, question de l'utilisateur : god-of-all-process a-t-il son propre
   // process, et le vérifie-t-il ?). La réponse était non, et c'était le seul point aveugle du
   // dispositif : l'outil qui reproche aux autres de ne pas avoir de gardien n'en avait aucun.
+  // ANGEL-OF-IA-PROCESS (2026-09-22, nom donné par l'utilisateur) — outil SÉPARÉ de god : god surveille
+  // le déroulé d'activités, angel surveille la CONDUITE (agent ET utilisateur, notés pareil).
+  const {auditWorkingRules,checkConsultationOrder,angelSectionLines,REGLES_SURVEILLEES,ORIGINES_DE_JUGEMENT,ORIGINE_NON_CONCLUANTE,findOriginesInconnues}=await import('../scripts/angel-of-ia-process.mjs');
+  assert.ok(REGLES_SURVEILLEES.some(r=>r.cote==='utilisateur')&&REGLES_SURVEILLEES.some(r=>r.cote==='agent'),'both sides must be watched: the user asked for a tool that checks execution discipline "que ce soit pour moi ou pour toi", and a rule with two sides checked on one side only is checked by half');
+  assert.ok(REGLES_SURVEILLEES.every(r=>r.source),'every watched rule must cite where it is written — a rule without its source gets deleted by the next agent who finds it puzzling');
+  const auditVide=auditWorkingRules({faits:{}});
+  assert.ok(!auditVide.ok&&auditVide.nonFournis.length>0,'a verdict must never go green while half the rules are simply unanswered — a green obtained by not asking would be the worst kind of false green');
+  const auditPlein=auditWorkingRules({faits:Object.fromEntries(REGLES_SURVEILLEES.map(r=>[r.id,true])),ordre:{mesurable:true,commitsExamines:3,constats:[]}});
+  assert.ok(auditPlein.ok,'a run where every rule is answered and the timestamp crossing is clean must be able to reach green — a tool that can never be satisfied stops being read');
+  assert.ok(auditWorkingRules({faits:{'point-par-point':false},ordre:{mesurable:true,commitsExamines:1,constats:[]}}).manquements.some(m=>m.id==='point-par-point'),'a rule answered NO must be a real manquement, never folded into the unanswered pile');
+  // LE CROISEMENT DES HORODATAGES, l'apport propre d'angel — et le faux positif qu'il a produit à son
+  // tout premier lancement : un lancement de VÉRIFICATION ressemblait à une consultation tardive.
+  const t=Date.parse('2026-09-22T10:00:00Z');
+  const commits=[{hash:'abc1234',at:t,sujet:'travail'}];
+  const obl=[{slug:'smart-conso-api',avant:'une action coûteuse'}];
+  const tardif=checkConsultationOrder({commits,evenements:[{toolSlug:'smart-conso-api',origin:'demande',at:t+60000}],obligations:obl});
+  assert.equal(tardif.constats.length,1,'a tool consulted only AFTER the commit, under an origin the agent DECLARED (demande/spontane), must be reported: the rule says before, and consulting afterwards is worth nothing');
+  const verif=checkConsultationOrder({commits,evenements:[{toolSlug:'smart-conso-api',origin:'verification',at:t+60000}],obligations:obl});
+  assert.deepEqual(verif.constats,[],'a run merely verifying that a tool still works must NEVER be counted as a late consultation — that exact confusion produced six false accusations on this tool\'s first real run');
+  // LE SECOND PASSAGE RATÉ (2026-09-22) : la correction ci-dessus ne réparait que les événements
+  // enregistrés APRÈS elle, et les six accusations tenaient toujours, portées cette fois par des
+  // `cli_direct`. La vraie cause était dans la définition même de cette origine — « le script sait
+  // qu'il a été lancé, jamais POURQUOI » : elle ne prouve donc aucune consultation. La lire comme
+  // telle, c'était présenter une mesure adjacente comme la mesure visée, dans l'outil même écrit
+  // pour surveiller la discipline.
+  const nonConcluant=checkConsultationOrder({commits,evenements:[{toolSlug:'smart-conso-api',origin:ORIGINE_NON_CONCLUANTE,at:t+60000}],obligations:obl});
+  assert.deepEqual(nonConcluant.constats,[],'a bare cli_direct launch can NEVER found a named manquement: by its own written definition the counter knows a tool ran but never why, and naming a culprit on a measurement that proves nothing costs the tool the right to be believed the day it holds a real one');
+  assert.equal(nonConcluant.signaux.length,1,'that same cli_direct launch must not vanish either: it is shown as a non-conclusive signal — the third state this project uses everywhere (traced / not traced / not verifiable), never silently dropped into either of the other two');
+  const avantCliDirect=checkConsultationOrder({commits,evenements:[{toolSlug:'smart-conso-api',origin:ORIGINE_NON_CONCLUANTE,at:t-60000},{toolSlug:'smart-conso-api',origin:ORIGINE_NON_CONCLUANTE,at:t+60000}],obligations:obl});
+  assert.deepEqual(avantCliDirect.signaux,[],'a cli_direct launch BEFORE the commit clears the signal too: the doubt is about ordering, and an order that looks respected must never be raised as a signal');
+  assert.ok(ORIGINES_DE_JUGEMENT.every(o=>o!==ORIGINE_NON_CONCLUANTE)&&ORIGINES_DE_JUGEMENT.length===2,'exactly the two origins the agent declares knowingly may found a verdict — the automatic and command-line ones say what happened, never why');
+  assert.deepEqual(findOriginesInconnues(),[],'angel names origins defined in tool-usage.mjs, so a mechanical guard must prove they still exist (Article 24) rather than a comment promising to keep them aligned');
+  assert.ok(!checkConsultationOrder({origines:['spontane'],commits,evenements:[],obligations:obl}).mesurable,'if a named origin ever disappears from the counter, angel must refuse to conclude rather than silently score zero judgment-origin consultations — a false green would be worse than the error it watches for');
+  const jamais=checkConsultationOrder({commits,evenements:[],obligations:[{slug:'smart-conso-api',avant:'x'}]});
+  assert.deepEqual(jamais.constats,[],'never having consulted a tool at all proves nothing — that commit may simply not have concerned it, and accusing on an absence would be the very error this landscape fights');
+  assert.ok(angelSectionLines(auditVide)[0].includes('angel-of-ia-process'),'the section must name itself: it is relayed inside god\'s single report and must stay distinguishable from the process steps around it');
+  assert.ok(angelSectionLines(auditVide,nonConcluant).some(l=>l.includes('jamais imputés')),'the non-conclusive signals must be rendered in their own clearly separate group, never mixed into the manquements a reader would take as proven');
   const {selfCheck,buildProcessComplianceReport,findScriptsDeservingProcess,RESPONSABLES}=await import('../scripts/god-of-all-process.mjs');
   // LE RAPPORT DE CONFORMITÉ (2026-09-22) — architecture fixée par l'utilisateur : god centralise,
   // les gardiens secondaires ne livrent jamais leur rapport à la Ronde eux-mêmes, et le responsable
@@ -5970,7 +6007,8 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // complète (même discipline que recordAction()/computeAdoptionKpi() ce soir), puisque
   // recordToolUsage() n'a pas de fs injectable, comme le reste des historiques auto-déclarés.
   const { recordToolUsage, recordCliUsage, toolUsageStats, toolsNeverUsed, USAGE_ORIGINS } = await import('../scripts/tool-usage.mjs');
-  assert.deepEqual(USAGE_ORIGINS, ['spontane', 'demande', 'automatique_post_commit', 'cli_direct'], 'the three original real origins must stay exactly as the user asked, plus (2026-09-21) the new honest "cli_direct" origin — a tool knows it was launched via its own command line, never why, so it must never be confused with the two judgment-based origins');
+  assert.deepEqual(USAGE_ORIGINS, ['spontane', 'demande', 'automatique_post_commit', 'cli_direct', 'verification'], 'the three original real origins must stay exactly as the user asked, plus (2026-09-21) the honest "cli_direct" origin — a tool knows it was launched via its own command line, never why — plus (2026-09-22) "verification", a tool relaunched only to check it still works after a migration: a test is not a consultation, and angel-of-ia-process accused 6 tools wrongly the day this distinction did not exist yet');
+  assert.ok(USAGE_ORIGINS.indexOf('verification') === USAGE_ORIGINS.length - 1 && !['spontane', 'demande'].includes('verification'), 'the "verification" origin must stay appended at the end and never merge into the two judgment-based origins — a relaunch done to prove a tool still runs can never be counted as a real consultation by the discipline auditors');
   assert.throws(() => recordToolUsage(undefined, 'demande'), /toolSlug/, 'a usage event can never be anonymous — a missing toolSlug must fail loudly rather than silently recording a meaningless entry');
   assert.throws(() => recordToolUsage('argus', 'origine-inconnue'), /origin inconnue/, 'an unrecognized origin must fail loudly rather than silently accepting a typo that would corrupt the honest byOrigin breakdown later');
   {
@@ -5985,7 +6023,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
       const history = JSON.parse(rdU(histPath, 'utf8'));
       const statsArgus = toolUsageStats(history, 'test-tool-usage-argus');
       assert.equal(statsArgus.total, 2, 'both real events for this tool must be counted, cumulatively, never reset within the same history');
-      assert.deepEqual(statsArgus.byOrigin, { spontane: 0, demande: 1, automatique_post_commit: 1, cli_direct: 0 }, 'each origin must be counted separately and honestly — the real ask was to tell a tool that only ever runs automatically apart from one genuinely chosen');
+      assert.deepEqual(statsArgus.byOrigin, { spontane: 0, demande: 1, automatique_post_commit: 1, cli_direct: 0, verification: 0 }, 'each origin must be counted separately and honestly — the real ask was to tell a tool that only ever runs automatically apart from one genuinely chosen — and every declared origin must appear in the breakdown even at zero, so a missing key never gets read as "not measured"');
       assert.equal(statsArgus.foundSomethingRate, 50, 'foundSomethingRate must reflect the real ratio of confirmed-useful calls among those with a verdict at all (1 of 2 here), the exact "usage vs utility" distinction the user asked for');
       const statsNeverSeen = toolUsageStats(history, 'test-tool-usage-never-recorded');
       assert.deepEqual(statsNeverSeen, { total: 0, byOrigin: {}, foundSomethingCount: 0, foundSomethingRate: undefined }, 'a tool with zero recorded events must report an honest all-zero/undefined result, never a fabricated rate or a crash');

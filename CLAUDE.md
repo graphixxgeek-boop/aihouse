@@ -751,6 +751,7 @@ tableau garde ce qui doit rester sous les yeux en permanence.)*
 | Nom | Ce que c'est | Architecture | Instanciation | Script |
 |---|---|---|---|---|
 | ALWAYS-NEW-CODE | l'outil qui rend concrète l'épreuve de la page blanche | `docs/always-new-code-blueprint.md` | `docs/referentiel/always-new-code.md` | `scripts/always-new-code.mjs` |
+| angel-of-ia-process | gardien de la CONDUITE (respect des règles de travail), jamais du déroulé d'une activité | `docs/angel-of-ia-process-blueprint.md` | `docs/referentiel/angel-of-ia-process.md` | `scripts/angel-of-ia-process.mjs` |
 | ARGUS | détecteur de trous logiques | `docs/argus-blueprint.md` | `docs/referentiel/argus.md` | `scripts/check-argus.mjs` |
 | AXA-CHECK | l'outil de robustesse/fragilité RÉELLES par fonction | `docs/axa-check-blueprint.md` | `docs/referentiel/axa-check.md` | `scripts/axa-check.mjs` |
 | CASSANDRA-RH | l'Agent Cadre RH de l'outillage de travail | `docs/cassandra-rh-blueprint.md` | `docs/referentiel/cassandra-rh.md` | `scripts/cassandra-rh.mjs` |

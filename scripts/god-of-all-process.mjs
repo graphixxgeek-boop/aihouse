@@ -311,7 +311,7 @@ export const RESPONSABLES = {
   personne: "personne — aucun mécanisme ne peut vérifier cette étape, elle repose sur la seule discipline",
 };
 
-export function buildProcessComplianceReport({ processes = PROCESSES, root = ROOT, verdictsSecondaires = [] } = {}) {
+export function buildProcessComplianceReport({ processes = PROCESSES, root = ROOT, verdictsSecondaires = [], sectionAngel } = {}) {
   const lignes = [];
   const manquements = [];
   for (const p of processes) {
@@ -332,6 +332,11 @@ export function buildProcessComplianceReport({ processes = PROCESSES, root = ROO
     lignes.push("", `${nonVerifiables.length} étape(s) que rien ne peut vérifier — ni reprochées à personne, ni comptées comme faites :`);
     for (const m of nonVerifiables) lignes.push(`  · ${m.process} — « ${m.etape} »`);
   }
+  // LA CONDUITE, dans une section clairement à part (décision de l'utilisateur, 2026-09-22) : une
+  // seule voix à la Ronde, mais la discipline de l'agent ne se mélange jamais aux étapes de process
+  // sautées — ce sont deux natures différentes, et les fondre rendrait les deux illisibles. Relayé
+  // depuis angel, jamais recalculé ici, exactement comme les verdicts des autres gardiens.
+  if (sectionAngel && sectionAngel.length) lignes.push("", ...sectionAngel);
   const merite = findScriptsDeservingProcess({ processes, root });
   if (merite.length) {
     lignes.push("", `${merite.length} script(s) qui mériteraient peut-être un process et n'en ont aucun (indice, jamais un reproche) :`);

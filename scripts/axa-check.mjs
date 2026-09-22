@@ -263,6 +263,7 @@ export const AGENT_SCRIPT_FILES = {
   // Nom donné par l'utilisateur (« process.simulation.guardian »), d'où le slug en tirets qui en
   // dérive ; le fichier, lui, garde l'ordre habituel des noms de scripts de ce dépôt.
   "process-simulation-guardian": "scripts/process-simulation-guardian.mjs",
+  "angel-of-ia-process": "scripts/angel-of-ia-process.mjs",
 };
 
 export function collectScriptCoverage(covDir, { readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8") } = {}) {

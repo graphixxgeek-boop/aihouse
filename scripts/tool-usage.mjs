@@ -26,7 +26,15 @@ const HISTORY_PATH = fileURLToPath(new URL("../.tool-usage-history.json", import
 // savoir POURQUOI (spontané ou demandé — un jugement que seul l'agent qui pilote peut porter) —
 // jamais fabriquer cette distinction à l'aveugle. Câblée directement dans le main()/point d'entrée de
 // chaque outil réel (recordCliUsage() ci-dessous), best-effort, jamais bloquant.
-export const USAGE_ORIGINS = ["spontane", "demande", "automatique_post_commit", "cli_direct"];
+// "verification" (2026-09-22, cause racine trouvée par le premier vrai passage d'angel-of-ia-process :
+// il a accusé 6 outils d'avoir été consultés trop tard, alors que ces « consultations » étaient en
+// réalité l'agent relançant ces outils pour vérifier qu'ils fonctionnaient encore après leur
+// migration). Relancer un outil pour contrôler qu'il tourne n'est PAS le consulter : c'est un test,
+// pas un jugement, et le confondre avec une consultation fabrique une conformité qui n'a pas eu
+// lieu. Déclarée par la variable d'environnement TOOL_USAGE_ORIGIN au moment du lancement ; les
+// outils qui mesurent la DISCIPLINE (angel) doivent l'exclure, ceux qui mesurent l'USAGE réel
+// (tool-brain, Doc-Report) la comptent normalement — un test reste un vrai lancement.
+export const USAGE_ORIGINS = ["spontane", "demande", "automatique_post_commit", "cli_direct", "verification"];
 
 // Exportée (2026-09-21) pour que le-coordinateur.mjs::formatBadgeCeremonyAnnouncement() la
 // réutilise verbatim plutôt que d'écrire une 4e copie identique — CLONE-HUNTER venait de trouver
@@ -58,9 +66,16 @@ export function recordToolUsage(toolSlug, origin, now = Date.now(), foundSomethi
 // fois ici pour qu'un échec d'écriture (disque plein, permissions) ne bloque JAMAIS la vraie sortie
 // de l'outil, qui reste l'objectif premier — ce compteur reste un bonus d'observation, jamais une
 // dépendance du fonctionnement réel (même discipline que lib/memento-weight.ts).
-export function recordCliUsage(toolSlug, now = Date.now()) {
+// UN LANCEMENT DE VÉRIFICATION N'EST PAS UNE CONSULTATION (2026-09-22, trouvé au premier lancement
+// réel d'angel-of-ia-process). Il accusait une consultation « après coup » alors que l'événement
+// venait de moi relançant l'outil pour vérifier qu'il marchait encore après sa migration — le
+// compteur enregistrait les deux à l'identique, et l'accusation était donc fausse. Encore la même
+// famille : un signal adjacent lu comme le signal visé. `TOOL_USAGE_ORIGIN=verification` marque
+// désormais ces passages, et angel les écarte de son croisement d'horodatages.
+export function recordCliUsage(toolSlug, now = Date.now(), env = process.env) {
   try {
-    recordToolUsage(toolSlug, "cli_direct", now);
+    const declaree = env?.TOOL_USAGE_ORIGIN;
+    recordToolUsage(toolSlug, USAGE_ORIGINS.includes(declaree) ? declaree : "cli_direct", now);
   } catch { /* best-effort, jamais bloquant — cf. commentaire ci-dessus */ }
 }
 
