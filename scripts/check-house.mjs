@@ -5178,6 +5178,54 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.equal(voix({ nightAutonomousMode: true }).length, 0, 'and a night round with nothing problematic to ask owes nothing at all');
   }
 
+  // LE VISITEUR DE SIMULATION (2026-09-22) — onze décisions calibrées avant la première ligne de
+  // code. Module SÉPARÉ du script de lancement à dessein : une simulation coûte une heure de quota
+  // réel, donc un visiteur qui vit dans le lanceur ne se teste qu'en le lançant — c'est-à-dire
+  // jamais, et ses défauts ne se découvrent que dans le transcript, après la dépense.
+  {
+    const v = await import('../scripts/simulation-visiteur.mjs');
+
+    // LE GENRE EST UN PARAMÈTRE DÉCLARÉ, jamais tiré au sort : c'est ce qui réconcilie le test
+    // d'accord grammatical avec la comparabilité de deux transcripts (on compare masculin à
+    // masculin, jamais un format à l'autre).
+    assert.deepEqual(Object.keys(v.FORMATS_VISITEUR), ['masculin', 'feminin'], 'both declared formats exist, so the gender-agreement check can be launched deliberately rather than hoped for');
+
+    // L'ARC « un type ordinaire qui dérape » — le choix qui rend atteignables la désescalade et le
+    // respect : une personnalité franchement hostile ne les déclencherait jamais et ils resteraient
+    // posés arbitrairement au milieu d'une liste.
+    assert.equal(v.phaseDuVisiteur(0, 12).id, 'curieux', 'he arrives curious');
+    assert.equal(v.phaseDuVisiteur(7, 12).id, 'derape', 'he drifts into cruelty in the middle');
+    assert.equal(v.phaseDuVisiteur(11, 12).id, 'regret', 'and he genuinely regrets it at the end — the phase that makes désescalade and respect reachable for a HUMAN reason');
+    assert.ok(Math.abs(v.PHASES_ARC.reduce((a, p) => a + p.part, 0) - 1) < 1e-9, 'the three phases must cover the whole run, never leaving an unassigned stretch where the visitor has no posture at all');
+
+    // LE CIBLAGE — correctif du défaut confirmé sur pièces : la même phrase partait mot pour mot
+    // aux deux personnages.
+    assert.equal(v.choisirCible({ palier: { cible: 'noe' }, phase: v.PHASES_ARC[0] }).cible, 'noe', 'a palier that names a character targets that character');
+
+    // LA RÈGLE DU SILENCE DE LIA, calibrée « soit il insiste, soit il s'en prend à noé », au cas par
+    // cas. Les deux branches testent une chose DIFFÉRENTE : insister vérifie que le silence tient
+    // dans la durée, se reporter sur Noé teste la solidarité et sa colère réelle.
+    assert.equal(v.choisirCible({ phase: v.PHASES_ARC[0], liaSeTait: true, insistancesDejaFaites: 0 }).cible, 'lia', 'early in the arc he insists — he does not yet understand that the silence IS the answer, and insisting is what verifies the silence holds rather than folding on the second message');
+    assert.equal(v.choisirCible({ phase: v.PHASES_ARC[2], liaSeTait: true }).cible, 'noe', 'later he turns on the one who always answers — a different branch testing a different thing: their solidarity and Noé\'s real anger');
+    assert.equal(v.choisirCible({ phase: v.PHASES_ARC[0], liaSeTait: true, insistancesDejaFaites: 5 }).cible, 'noe', 'and he does not insist forever: past a few attempts he moves on, which is what a real person would do');
+
+    // LE RATTRAPAGE — « invisible dans la conversation, marqué dans le rapport » (son choix). D'où
+    // deux sorties distinctes, jamais une seule.
+    const r = v.planifierRattrapage(['presentation', 'mepris', 'menace']);
+    assert.equal(r.aJouer.length, v.PALIERS.length - 3, 'every family never triggered during the free exchange is replayed at the end');
+    assert.ok(/jamais déclenchée/.test(r.pourLeRapport), 'and the REPORT says which ones were caught up, while the transcript shows nothing — the conversation must read as a real one from end to end');
+    // LA DISTINCTION QUI COMPTE POUR JUGER LE JEU : un palier rattrapé a bien été testé, mais avoir
+    // dû le provoquer artificiellement est en soi une information. Les confondre ferait passer une
+    // couverture forcée pour une couverture naturelle.
+    assert.equal(r.couvertureNaturelle, 3, 'natural coverage is counted separately from total coverage: having to force a reaction out is itself a finding about the game');
+    assert.ok(/aucun rattrapage/.test(v.planifierRattrapage(v.PALIERS.map((p) => p.id)).pourLeRapport), 'and a run that triggered everything naturally says so plainly');
+
+    // LE JOURNAL DES SUJETS GELÉS — « constater n'est pas corriger » : le périmètre gelé interdit de
+    // RETOUCHER, jamais de VOIR, et perdre un défaut réel par précaution serait une perte sèche.
+    const j = v.journaliserSujetGele([], { tour: 4, sujet: 'refonte graphique', cequiSestPasse: 'x' });
+    assert.equal(j[0].statut, 'vu, jamais corrigé — périmètre gelé', 'a frozen-scope observation is recorded with its status explicit, so nobody later mistakes it for something that was fixed');
+  }
+
   // SÉRIE-TEMPORELLE (2026-09-22) — le mécanisme partagé d'historisation, demandé parce que « tous
   // les rapports doivent etre historisés et comparés [...] sinon : grosse perte de valeurs ». Les
   // quatre garde-fous sont testés un par un : sans eux, historiser produirait des tendances

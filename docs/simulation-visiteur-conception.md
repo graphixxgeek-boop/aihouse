@@ -142,7 +142,29 @@ réaction restaient à couvrir. Coût accepté : un rapport de plus à produire.
 Rien de bloquant pour écrire le script. Le chiffre de douze échanges est le seul point à revoir
 après la première lecture d'un vrai transcript.
 
-## 7. Statut
+## 7. Ce qui est construit (2026-09-22)
+
+`scripts/simulation-visiteur.mjs`, **module séparé du lanceur** et c'est délibéré : une simulation
+coûte une heure de quota réel, donc un visiteur qui vit dans `run-simulation.mjs` ne se teste qu'en
+le lançant — c'est-à-dire jamais, et ses défauts ne se découvrent que dans le transcript, après la
+dépense. Ici tout se vérifie à sec : l'arc, le ciblage, la couverture, le rattrapage.
+
+Contenu : les deux formats déclarés, l'arc en trois phases (curieux 35 % / dérape 40 % / regret
+25 %, couvrant la totalité du run sans laisser de tronçon sans posture), les **16 paliers** à
+couvrir (les 15 du script existant, qui les annotait déjà un par un, plus M10 « proposition intime »
+ajouté par l'utilisateur), le ciblage avec la règle du silence de Lia, le rattrapage à deux sorties
+distinctes (ce qui se joue / ce que le rapport en dit), et le journal des sujets gelés.
+
+**La distinction à ne pas perdre** : `couvertureNaturelle` est comptée séparément de la couverture
+totale. Un palier rattrapé a bien été testé, mais avoir dû le provoquer artificiellement est en soi
+une information sur le jeu — les confondre ferait passer une couverture forcée pour une couverture
+naturelle.
+
+**Reste à faire** : brancher ce module dans `run-simulation.mjs` à la place de la liste plate de 20
+messages, et écrire la génération de texte par palier (intention + cible + phase de l'arc), qui
+n'existe pas encore.
+
+## 8. Statut
 
 Conception en cours, aucun code écrit. Le script actuel (`scripts/run-simulation.mjs`, batterie
 fixe) reste en service tant que celui-ci n'est pas construit et vérifié.
