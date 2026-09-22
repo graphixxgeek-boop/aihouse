@@ -129,7 +129,18 @@ cf. `docs/cassandra-rh-conception.md` §2.)*
 4. **Participation à la couverture du badge** (`checkAgentOnboarding()`,
    `scripts/le-coordinateur.mjs`) — son résultat doit pouvoir alimenter un paramètre `koParts` (ex.
    `cloneHunterFindingsCount`) et compter dans le calcul « OK 100% », qui exige TOUS les Gardiens au
-   vert simultanément, jamais un sous-ensemble.
+   vert simultanément, jamais un sous-ensemble. **Précision du 2026-09-22** : « au vert » veut dire
+   *consulté ET propre*. Un signal non fourni (le Gardien dormait à ce commit, ou l'appelant ne le
+   transmet pas) laisse le palier à « en cours », désormais avec un libellé qui nomme les Gardiens
+   manquants (« en cours (4/6 Gardiens au vert — CLONE-HUNTER, ALWAYS-NEW-CODE non consulté(s) à ce
+   relevé) ») — jamais confondu avec un zéro mesuré, jamais un 4e palier ajouté à l'échelle à 3
+   niveaux calibrée par l'utilisateur (tâche #224).
+   **Relevé partagé** (même date) : les 6 signaux mesurés à chaque commit sont déposés par le
+   crochet post-commit dans `.badge-signals-snapshot.json` (journal local, gitignored, déclaré dans
+   `LOCAL_JOURNALS`) et relus gratuitement par tout afficheur de badge via
+   `badgeSignalsAsContext()`. Sans ce relevé, seul le crochet connaissait ces signaux : CASSANDRA-RH
+   et check-tasks-details affichaient « jamais scanné » pour des outils mesurés trente secondes plus
+   tôt — deux chemins d'affichage du même badge disaient deux choses différentes.
 5. **Agrégation dans HYPER-SCAN-CHECKPOINT** (version légère, `scripts/hyper-scan-checkpoint.mjs`) —
    appelé via `sh()` aux côtés des autres Gardiens, pour qu'un passage HYPER-SCAN-CHECKPOINT reflète
    TOUJOURS l'état complet des 6, jamais un sous-ensemble par oubli (écart réel trouvé le 2026-09-22 à

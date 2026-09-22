@@ -57,6 +57,7 @@ export const LOCAL_JOURNALS = [
   // exactement le gap que ce garde-fou existe désormais pour prévenir à l'avenir.
   { path: ".memento-history.json", owner: "memory-audit (memento weight)", purpose: "historique du poids réel du contexte envoyé à Gemini par tour/personnage" },
   { path: ".the-ghost-session.json", owner: "THE-GHOST", purpose: "état minimal de la session nocturne autonome en cours (heure de début, compteur de tâches enchaînées)" },
+  { path: ".badge-signals-snapshot.json", owner: "LE-COORDINATEUR (relevé des 6 signaux de Gardien)", purpose: "les 6 signaux mesurés au dernier commit (couverture AXA-CHECK par outil + les 5 drapeaux de Gardien), pour que tout afficheur de badge lise la même vérité sans relancer check-house.mjs" },
 ];
 
 // `present: false` (jamais confondu avec `ageDays: 0`) pour un journal qui n'a encore jamais été

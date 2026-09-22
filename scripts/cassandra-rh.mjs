@@ -409,9 +409,25 @@ function collectRealCassandraData({ withCoverage = false } = {}) {
   const docReportRows = buildDocReportIndex({ registries: DOC_REPORT_REGISTRIES, usageHistory }).rows;
   const reconsider = toolsToReconsider({ usageHistory, knownSlugs: knownToolSlugs, staleness, objectifsRows, tokenHistory, docReportRows });
   const { trend } = loadKpiTrend();
-  const badgeResults = computeBadgeResults(roster, onboardingContext);
+  // Couverture AVANT les badges (2026-09-22) : dans l'ordre précédent, le rapport complet calculait
+  // la couverture réelle DEUX LIGNES après des badges qui la déclaraient inconnue — le même rapport
+  // affirmait donc deux choses opposées sur le même outil au même instant. La mesure fraîche de ce
+  // lancement prime désormais sur le relevé du dernier commit que porte déjà `onboardingContext`
+  // (badgeSignalsAsContext(), check-tasks-details.mjs) ; le signal léger, lui, garde ce relevé, qui
+  // reste infiniment plus honnête que rien. Jamais un second lancement d'AXA-CHECK pour autant :
+  // c'est LE MÊME appel runAxaCheckCoverage() qu'avant, seulement placé plus haut et lu deux fois.
+  const perSlugCoverage = withCoverage ? runAxaCheckCoverage() : null;
+  const badgeResults = computeBadgeResults(roster, perSlugCoverage
+    ? {
+      ...onboardingContext,
+      axaCoverageBySlug: Object.fromEntries(
+        roster.map((m) => [m.slug, scriptRobustnessScore(m.slug, perSlugCoverage)]).filter(([, pct]) => pct !== undefined),
+      ),
+      lastVerifiedAt: new Date().toISOString().slice(0, 10),
+    }
+    : onboardingContext);
   const badgeSummary = badgeOversightSummary(badgeResults);
-  const coverageGaps = withCoverage ? computeCoverageGaps(roster, runAxaCheckCoverage()) : null;
+  const coverageGaps = perSlugCoverage ? computeCoverageGaps(roster, perSlugCoverage) : null;
 
   // Nouveaux visages (Phase 1) : jamais dans le signal léger, réservé au rapport complet — c'est là
   // que la narration est effectivement montrée à l'utilisateur, donc là seulement qu'un membre est

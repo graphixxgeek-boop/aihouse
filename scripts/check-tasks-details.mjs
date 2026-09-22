@@ -33,7 +33,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 
 import { join } from "node:path";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
-import { PRESTATIONS, suggestPrestationsForTask, significantWords } from "./le-coordinateur.mjs";
+import { PRESTATIONS, suggestPrestationsForTask, significantWords, badgeSignalsAsContext } from "./le-coordinateur.mjs";
 import { daysSince } from "./lib-shell.mjs";
 import { walkDocsPaths } from "./lib-shell.mjs";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
@@ -821,6 +821,12 @@ export function buildRealOnboardingContext(root = ROOT.replace(/\/$/, "")) {
     claudeMdText: existsSync(join(root, "CLAUDE.md")) ? readFileSync(join(root, "CLAUDE.md"), "utf8") : "",
     existingPaths,
     suiviText,
+    // Les 6 signaux de Gardien du dernier commit (2026-09-22) — relevé déposé par le crochet
+    // post-commit, relu gratuitement ici. Sans ça, tout badge produit par ce contexte affichait
+    // « en cours (jamais scanné) », y compris pour un outil mesuré à 100 % au commit précédent :
+    // deux chemins d'affichage du MÊME badge disaient deux choses différentes. Relevé absent
+    // (premier lancement, conteneur neuf) ⇒ objet vide ⇒ retour honnête à « jamais consulté ».
+    ...badgeSignalsAsContext(),
     // Seule déviation Agent réelle et documentée à ce jour (docs/regles-de-travail.md) — sans ça,
     // THE-DEEP-READER ressortirait à tort "sans badge" ici, alors qu'il est complet une fois ses
     // deux déviations assumées prises en compte (cf. checkAgentOnboarding(), le-coordinateur.mjs).

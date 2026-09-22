@@ -14,7 +14,7 @@ import { lastTouchDays, relativeStaleness } from "../clean-dirty-old.mjs";
 import { buildDuplicateReport, buildNearDuplicateReport } from "../clone-hunter.mjs";
 import { THEMES, THEME_PRIMARY_FILE, parseCoverage, recommendZone, countDatedAddenda, addendaSignal, parseNumstat, churnSignal, outillageZones } from "../always-new-code.mjs";
 import { findMissingNotes, findOrphanNotes } from "../el-professor.mjs";
-import { parseToolsTable, slugifyAgentName, checkAllAgentBadges, pendingCeremonies } from "../le-coordinateur.mjs";
+import { parseToolsTable, slugifyAgentName, checkAllAgentBadges, pendingCeremonies, saveBadgeSignals } from "../le-coordinateur.mjs";
 import { formatToolBrainReminder } from "../tool-brain.mjs";
 import { summarizeHistory, computeInvestmentRatio, diagnoseAdviceAccuracy } from "../smart-conso-token.mjs";
 import { sh, AGENT_CATEGORIES, gardienShouldRun, lastCommitFiles, realCodeFilesChanged } from "../lib-shell.mjs";
@@ -353,6 +353,30 @@ try {
 // archivé de plus) : `announceBadgeCeremony()` persiste déjà, en interne, la première certification
 // dans son propre petit fichier de dédoublonnage — c'est cette persistance-là, minuscule et déjà
 // testée, qui garantit que l'annonce ne se répète jamais, jamais un nouveau rapport par certification.
+// Relevé déposé pour les AUTRES appelants (2026-09-22) : ce crochet est le seul endroit du projet
+// où les 6 signaux existent ensemble au même instant. CASSANDRA-RH et check-tasks-details affichent
+// les mêmes badges sans aucun de ces signaux — donc « en cours » pour tout le monde, y compris pour
+// un outil mesuré à 100 % trente secondes plus tôt. On dépose donc ici ce qui vient d'être mesuré,
+// gratuitement (rien n'est relancé), plutôt que de laisser chaque appelant relancer check-house.mjs
+// ou afficher une inconnue. Écrit AVANT la cérémonie et hors de son try : un badge raté ne doit
+// jamais emporter le relevé avec lui.
+saveBadgeSignals({
+  commit: sh("git rev-parse HEAD", { quiet: true })?.trim() || undefined,
+  date: new Date().toISOString().slice(0, 10),
+  argusFindingsCount,
+  harmoniaFindingsCount,
+  cleanDirtyOldFlagged,
+  cloneHunterFindingsCount,
+  alwaysNewCodeFlagged,
+  coverageBySlug: perSlugScriptCoverage
+    ? Object.fromEntries(
+      Object.keys(AGENT_SCRIPT_FILES)
+        .map((slug) => [slug, scriptRobustnessScore(slug, perSlugScriptCoverage)])
+        .filter(([, pct]) => pct !== undefined),
+    )
+    : undefined,
+});
+
 try {
   const onboardingContext = buildRealOnboardingContext();
   const hyperScanText = readFileSync("scripts/hyper-scan-checkpoint.mjs", "utf8");

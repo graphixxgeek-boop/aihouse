@@ -63,6 +63,55 @@ const BADGE_CEREMONY_HISTORY_PATH = join(ROOT, ".badge-ceremony-history.json");
 const STATE_FILE = join(ROOT, ".le-coordinateur-last-run.json");
 const ALWAYS_NEW_CODE_INDEX = join(ROOT, "docs/always-new-code/index.md");
 
+// --- Relevé des 6 signaux de Gardien (2026-09-22) ---------------------------------------------
+//
+// Écart trouvé en vérifiant la divergence notée plus tôt (« le badge d'ecotoken affiche "en cours"
+// alors qu'AXA-CHECK le mesure à 82 % ») : le crochet post-commit est le SEUL appelant qui fournit
+// réellement les 6 signaux (couverture AXA-CHECK par script + les 4 comptes de Gardien + le drapeau
+// ALWAYS-NEW-CODE) à checkAgentOnboarding(). Les deux autres appelants réels — CASSANDRA-RH
+// (badgeOversightSummary) et check-tasks-details.mjs — n'en fournissent aucun : leurs badges
+// affichent donc tous « en cours (jamais scanné ou très faible) », y compris pour un outil que le
+// commit d'il y a trente secondes a mesuré à 100 %. Pire dans le rapport complet de CASSANDRA, où
+// la couverture réelle est calculée DEUX LIGNES plus bas que des badges qui la disent inconnue.
+//
+// Corrigé à la racine plutôt qu'appelant par appelant (Article 3) : le producteur qui a déjà tout
+// mesuré (le post-commit) DÉPOSE son relevé ici ; tout appelant le relit gratuitement. Jamais un
+// second calcul, jamais un relancement de check-house.mjs pour un simple affichage de badge —
+// exactement le patron déjà éprouvé de .gemini-key-health.json et .badge-ceremony-history.json
+// (journal local, gitignored, best-effort, perdu à chaque nouveau conteneur : une absence de relevé
+// redevient alors un honnête « jamais scanné », jamais une valeur périmée présentée comme fraîche).
+//
+// `commit` est enregistré avec le relevé pour que le lecteur sache de QUEL état du dépôt il parle ;
+// `date` alimente le « (vérifié le ...) » du message de badge, jamais une date fabriquée au moment
+// de la lecture.
+const BADGE_SIGNALS_PATH = join(ROOT, ".badge-signals-snapshot.json");
+
+export function saveBadgeSignals(signals, path = BADGE_SIGNALS_PATH) {
+  try { writeFileSync(path, JSON.stringify(signals, null, 1)); } catch { /* best-effort, jamais bloquant */ }
+}
+
+export function loadBadgeSignals(path = BADGE_SIGNALS_PATH, readFile = (f) => readFileSync(f, "utf8")) {
+  try {
+    const data = JSON.parse(readFile(path));
+    return data && typeof data === "object" ? data : null;
+  } catch { return null; }
+}
+
+// Traduit un relevé en champs de contexte directement consommables par checkAgentOnboarding() —
+// jamais une seconde interprétation des mêmes données chez chaque appelant. Un relevé absent rend
+// un objet VIDE (jamais des zéros fabriqués) : les badges retombent alors honnêtement sur « jamais
+// consulté », ce qui est la vérité quand personne n'a encore mesuré quoi que ce soit.
+export function badgeSignalsAsContext(snapshot = loadBadgeSignals()) {
+  if (!snapshot) return {};
+  const contexte = {};
+  for (const clef of ["argusFindingsCount", "harmoniaFindingsCount", "cleanDirtyOldFlagged", "cloneHunterFindingsCount", "alwaysNewCodeFlagged"]) {
+    if (snapshot[clef] !== undefined && snapshot[clef] !== null) contexte[clef] = snapshot[clef];
+  }
+  if (snapshot.coverageBySlug) contexte.axaCoverageBySlug = snapshot.coverageBySlug;
+  if (snapshot.date) contexte.lastVerifiedAt = snapshot.date;
+  return contexte;
+}
+
 export function currentHead() {
   return sh("git rev-parse HEAD", { cwd: ROOT }).trim() || undefined;
 }
@@ -468,11 +517,17 @@ export function checkAgentOnboarding(agentName, {
   claudeMdText = null,
   suiviText = null,
   axaCoveragePct = undefined,
+  // axaCoverageBySlug (2026-09-22) : la couverture de TOUS les outils, indexée par slug, telle que
+  // le relevé du post-commit la dépose (badgeSignalsAsContext()). Repli seulement — un appelant qui
+  // fournit `axaCoveragePct` pour CET outil précis a forcément une mesure plus fraîche ou plus
+  // ciblée, elle gagne toujours. Évite à chaque appelant de devoir refaire le lien slug→outil
+  // lui-même (le bug primaryName déjà trouvé trois fois cette semaine vivait exactement là).
+  axaCoverageBySlug = null,
   argusFindingsCount = undefined,
   harmoniaFindingsCount = undefined,
-  cleanDirtyOldFlagged = false,
+  cleanDirtyOldFlagged = undefined,
   cloneHunterFindingsCount = undefined,
-  alwaysNewCodeFlagged = false,
+  alwaysNewCodeFlagged = undefined,
   lastVerifiedAt = null,
   hasDocReportDecision = undefined,
   reciprocalWiring = null,
@@ -634,20 +689,50 @@ export function checkAgentOnboarding(agentName, {
   // 2026-09-21 — même défaut structurel à chaque fois : un nouveau Gardien doit systématiquement
   // rejoindre CETTE liste, jamais seulement le post-commit hook). Distinct du badge lui-même (jamais
   // conditionné par la couverture).
+  const pctEffectif = axaCoveragePct ?? axaCoverageBySlug?.[slug];
   const koParts = [];
   if (argusFindingsCount) koParts.push("KO ARGUS");
   if (harmoniaFindingsCount) koParts.push("KO HARMONIA");
   if (cleanDirtyOldFlagged) koParts.push("KO CLEAN-DIRTY-OLD");
   if (cloneHunterFindingsCount) koParts.push("KO CLONE-HUNTER");
   if (alwaysNewCodeFlagged) koParts.push("KO ALWAYS-NEW-CODE");
-  if (axaCoveragePct != null && axaCoveragePct < 100) koParts.push(`KO AXA-CHECK ${Math.round(axaCoveragePct)}%`);
+  if (pctEffectif != null && pctEffectif < 100) koParts.push(`KO AXA-CHECK ${Math.round(pctEffectif)}%`);
 
-  const couvertureTier = axaCoveragePct == null ? "en cours" : koParts.length === 0 ? "OK 100%" : "partiel";
-  const couvertureLabel = couvertureTier === "en cours"
-    ? "en cours (jamais scanné ou très faible)"
-    : couvertureTier === "OK 100%"
-      ? "OK 100%"
-      : `partiel (${koParts.join(", ")})`;
+  // Second défaut de la même famille, trouvé le 2026-09-22 en fiabilisant le relevé ci-dessus : un
+  // Gardien NON CONSULTÉ (signal `undefined` — il dormait à ce commit, ou l'appelant ne le fournit
+  // pas) était traité exactement comme un Gardien consulté et vert, puisque `if (compte)` ne
+  // distingue pas `undefined` de `0`. Un outil pouvait donc décrocher « OK 100% » — palier qui
+  // EXIGE explicitement les 6 Gardiens au vert ENSEMBLE — alors que trois d'entre eux n'avaient
+  // jamais regardé son code. C'est la même confusion « absence de mesure = mesure verte » corrigée
+  // partout ailleurs cette semaine (mention ≠ lancement, clé absente ≠ clé saine).
+  //
+  // Corrigé SANS ajouter un 4e palier : l'échelle à 3 niveaux est calibrée par l'utilisateur (tâche
+  // #224), on ne la réécrit pas pour un cas qu'elle couvre déjà — une vérification incomplète EST
+  // « en cours », au sens propre. Seule la précision du libellé change, pour ne jamais confondre
+  // « personne n'a rien mesuré » et « 4 Gardiens sur 6 ont répondu, au vert ».
+  const nonConsultes = [];
+  if (pctEffectif == null) nonConsultes.push("AXA-CHECK");
+  if (argusFindingsCount === undefined) nonConsultes.push("ARGUS");
+  if (harmoniaFindingsCount === undefined) nonConsultes.push("HARMONIA");
+  if (cleanDirtyOldFlagged === undefined) nonConsultes.push("CLEAN-DIRTY-OLD");
+  if (cloneHunterFindingsCount === undefined) nonConsultes.push("CLONE-HUNTER");
+  if (alwaysNewCodeFlagged === undefined) nonConsultes.push("ALWAYS-NEW-CODE");
+
+  let couvertureTier;
+  let couvertureLabel;
+  if (koParts.length) {
+    couvertureTier = "partiel";
+    couvertureLabel = `partiel (${koParts.join(", ")})`;
+  } else if (nonConsultes.length === 6) {
+    couvertureTier = "en cours";
+    couvertureLabel = "en cours (jamais scanné ou très faible)";
+  } else if (nonConsultes.length) {
+    couvertureTier = "en cours";
+    couvertureLabel = `en cours (${6 - nonConsultes.length}/6 Gardiens au vert — ${nonConsultes.join(", ")} non consulté(s) à ce relevé)`;
+  } else {
+    couvertureTier = "OK 100%";
+    couvertureLabel = "OK 100%";
+  }
   const couverture = { tier: couvertureTier, label: couvertureLabel };
   // Date de dernière vérification (2026-09-21, demande explicite) : jamais une donnée fabriquée —
   // seulement affichée quand l'appelant la fournit réellement (moment du scan AXA-CHECK/ARGUS/
