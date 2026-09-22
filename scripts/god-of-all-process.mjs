@@ -276,6 +276,140 @@ export function findMecanismesAbsentsDuProcess({ processes = PROCESSES, root = R
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// LE MÊME MÉCANISME, DANS LES DEUX SENS : process ↔ gardien (2026-09-23)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Demande explicite de l'utilisateur : « vérifie que tous les gardiens, tous les outils concernés
+// sont bien connectés avec leur document de process [...] et assure-toi qu'un mécanisme vérifie que
+// tout est toujours bien présent dans le process ET CHEZ SON GARDIEN, le cas échéant. »
+//
+// CE QUI MANQUAIT, ET L'EXEMPLE EST D'IL Y A UNE HEURE. findMecanismesAbsentsDuProcess() ci-dessus
+// ne regardait qu'un seul sens (le document cite-t-il les FICHIERS du process ?) et qu'un seul
+// grain (le fichier, jamais la fonction). Résultat : la barrière d'ouverture et tout le suivi des
+// questions sans réponse ont été construits, documentés dans docs/circle-process-detail.txt
+// (Parties 8 et 11) et committés — pendant que scripts/circle-process-guardian.mjs n'en connaissait
+// pas un mot. Un `grep` sur les cinq noms rendait 0. Le gardien déclarait pourtant la Ronde
+// conforme : il gardait la moitié du process qu'il connaissait, et se taisait sur l'autre.
+//
+// LES DEUX SENS, ET AUCUN NE SUFFIT SEUL :
+//   - un mécanisme ÉCRIT dans le process mais IGNORÉ du gardien → une règle que personne ne fait
+//     respecter (le cas ci-dessus) ;
+//   - un mécanisme CÂBLÉ dans le gardien mais ABSENT du document → une règle qu'on fait respecter
+//     sans l'avoir écrite, donc que le prochain agent défera sans le savoir (Article 27).
+//
+// RIEN N'EST RECOPIÉ À LA MAIN (Article 24, qui interdirait justement une liste de mécanismes
+// tenue ici). Les deux sens se DÉRIVENT à l'exécution : les fichiers-source d'un process sont ceux
+// que son gardien importe réellement plus ceux que son document nomme ; les mécanismes sont leurs
+// exports RÉELS, lus dans le code. Une fonction renommée, ajoutée ou supprimée change donc le
+// verdict toute seule, sans que personne ait à y penser.
+//
+// LA PORTÉE HONNÊTE, et elle est la même que celle de findMecanismesAbsentsDuProcess() : citer un
+// nom n'est pas le décrire, ni le vérifier. Ce garde-fou attrape le cas grossier — le silence
+// total — jamais le cas subtil d'une mention creuse. C'est déjà celui qui s'est produit.
+
+const IMPORT_LOCAL = /import\s*\{([^}]*)\}\s*from\s*"\.\/([A-Za-z0-9._-]+\.mjs)"/g;
+const EXPORT_NOMME = /^export\s+(?:async\s+)?(?:function|const|class)\s+([A-Za-z_$][\w$]*)/gm;
+
+function lireTexte(chemin, readFileImpl) {
+  try { return readFileImpl(chemin, "utf8"); } catch { return null; }
+}
+
+// Les mécanismes d'un process = les exports RÉELS de ses fichiers-source. Les fichiers-source se
+// déduisent de deux endroits, jamais déclarés à la main : ce que le gardien importe localement, et
+// ce que le document nomme. Un mécanisme n'est retenu que s'il est cité quelque part — un export
+// interne que ni le doc ni le gardien ne nomme n'est pas une règle de process, c'est du code.
+export function mecanismesDuProcess(p, { root = ROOT, readFileImpl = readFileSync } = {}) {
+  const docTexte = p.doc ? lireTexte(join(root, p.doc), readFileImpl) : null;
+  const gardienTexte = p.gardien ? lireTexte(join(root, p.gardien), readFileImpl) : null;
+  if (!docTexte || !gardienTexte) return { sources: [], mecanismes: [], docTexte, gardienTexte };
+
+  // LES FICHIERS-SOURCE = UNE INTERSECTION, JAMAIS UNE UNION, et ce choix est le cœur du
+  // garde-fou. Première version écrite ce soir : l'union de ce que le gardien importe et de tout
+  // `*.mjs` nommé dans le document. Elle a rendu 51 fichiers-source pour le process simulation —
+  // parce que docs/regles-de-travail.md nomme les 65 scripts du dépôt — et plus de cent
+  // « mécanismes absents » dont pas un seul n'était un vrai manquement. Un garde-fou qui crie à
+  // tort finit par ne plus être lu, donc par ne plus rien garder : le rendre bruyant aurait été
+  // pire que ne rien construire.
+  //
+  // L'intersection dit exactement la bonne chose : un fichier que le gardien importe ET que le
+  // document nomme est un fichier dont LES DEUX CÔTÉS reconnaissent qu'il sert ce process. C'est
+  // le seul périmètre où un écart entre les deux est réellement un écart, et non une différence
+  // de sujet. Un module d'infrastructure (lib-shell, tool-usage) tombe de lui-même, sans aucune
+  // liste d'exclusion à tenir à jour (Article 24).
+  const importes = new Set();
+  for (const m of gardienTexte.matchAll(IMPORT_LOCAL)) importes.add(`scripts/${m[2]}`);
+  const sources = new Set();
+  for (const chemin of importes) {
+    if (chemin === p.gardien) continue; // le gardien n'est pas sa propre source à surveiller
+    if (docTexte.includes(chemin.split("/").pop())) sources.add(chemin);
+  }
+
+  const mecanismes = [];
+  for (const src of sources) {
+    const texte = lireTexte(join(root, src), readFileImpl);
+    if (!texte) continue;
+    for (const m of texte.matchAll(EXPORT_NOMME)) {
+      const nom = m[1];
+      // Un nom trop court produirait des collisions de sous-chaîne (« sh », « add »...) : le
+      // garde-fou crierait à tort, et un garde-fou qui crie à tort finit par ne plus être lu.
+      if (nom.length < 5) continue;
+      const cible = new RegExp(`\\b${nom}\\b`);
+      mecanismes.push({ nom, fichier: src, dansDoc: cible.test(docTexte), dansGardien: cible.test(gardienTexte) });
+    }
+  }
+  return { sources: [...sources], mecanismes, docTexte, gardienTexte };
+}
+
+// SENS 1 — écrit dans le process, ignoré du gardien. Le cas réel du 2026-09-23.
+export function findMecanismesAbsentsDuGardien({ processes = PROCESSES, root = ROOT, readFileImpl = readFileSync } = {}) {
+  const manques = [];
+  for (const p of processes) {
+    if (!p.doc || !p.gardien) continue;
+    const { mecanismes } = mecanismesDuProcess(p, { root, readFileImpl });
+    for (const m of mecanismes) {
+      if (m.dansDoc && !m.dansGardien) manques.push({ process: p.slug ?? p.nom, gardien: p.gardien, mecanisme: m.nom, fichier: m.fichier });
+    }
+  }
+  return manques;
+}
+
+// SENS 2 — câblé dans le gardien, absent du document. Une règle qu'on fait respecter sans l'avoir
+// écrite : elle tient tant que l'agent qui l'a posée est là, et pas une session de plus.
+export function findMecanismesAbsentsDuDocument({ processes = PROCESSES, root = ROOT, readFileImpl = readFileSync } = {}) {
+  const manques = [];
+  for (const p of processes) {
+    if (!p.doc || !p.gardien) continue;
+    const { mecanismes } = mecanismesDuProcess(p, { root, readFileImpl });
+    for (const m of mecanismes) {
+      if (m.dansGardien && !m.dansDoc) manques.push({ process: p.slug ?? p.nom, doc: p.doc, mecanisme: m.nom, fichier: m.fichier });
+    }
+  }
+  return manques;
+}
+
+// LE VERDICT LISIBLE, process par process : combien de mécanismes des deux côtés, combien d'un seul.
+// Jamais un pourcentage vert sur un dénominateur vide — zéro mécanisme trouvé se DIT (« pas
+// mesuré »), il ne se rend jamais comme une conformité.
+export function etatConnexionProcessGardien({ processes = PROCESSES, root = ROOT, readFileImpl = readFileSync } = {}) {
+  return processes.filter((p) => p.doc && p.gardien).map((p) => {
+    const { sources, mecanismes } = mecanismesDuProcess(p, { root, readFileImpl });
+    const partages = mecanismes.filter((m) => m.dansDoc && m.dansGardien);
+    const docSeul = mecanismes.filter((m) => m.dansDoc && !m.dansGardien);
+    const gardienSeul = mecanismes.filter((m) => !m.dansDoc && m.dansGardien);
+    return {
+      process: p.slug ?? p.nom,
+      doc: p.doc,
+      gardien: p.gardien,
+      sources,
+      mesure: mecanismes.length === 0 ? "pas mesuré — aucun fichier-source commun trouvé entre le document et le gardien" : "mesuré",
+      partages: partages.length,
+      docSeul: docSeul.map((m) => m.nom),
+      gardienSeul: gardienSeul.map((m) => m.nom),
+    };
+  });
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LE RÉFLEXE : quel process gouverne ce que je m'apprête à faire ?
 // ————————————————————————————————————————————————————————————————————————
 

@@ -58,7 +58,7 @@ le dépôt). Cette promotion REMPLACE l'intégration CIRCLE-TASKS plutôt que de
 - `clone-hunter-run` a été retiré de `CIRCLE_ITEMS` (le lancement périodique devient un doublon dès
   qu'un vrai lancement automatique existe à chaque commit).
 - `docs/clone-hunter/` a rejoint `CIRCLE_EXCLUDED_REGISTRIES` avec la justification standard des
-  Gardiens.
+  Gardiens sacrés.
 - CLONE-HUNTER est désormais appelé directement (fonction pure, jamais son `main()` CLI) dans le
   crochet `post-commit` réel (`scripts/hooks/check-last-commit.mjs`), aux côtés d'ARGUS/HARMONIA/
   AXA-CHECK/CLEAN-DIRTY-OLD.
@@ -67,7 +67,7 @@ le dépôt). Cette promotion REMPLACE l'intégration CIRCLE-TASKS plutôt que de
 - Il est agrégé dans la version légère de HYPER-SCAN-CHECKPOINT (gap réel trouvé et corrigé le même
   soir que la promotion).
 
-Détail complet du répertoire des 7 fonctionnements partagés que tout Gardien doit honorer :
+Détail complet du répertoire des 7 fonctionnements partagés que tout Gardien sacré doit honorer :
 `docs/referentiel/organisation-agence.md` §3.
 
 ## Un signal factuel, jamais une correction automatique

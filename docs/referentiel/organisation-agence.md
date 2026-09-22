@@ -95,7 +95,7 @@ qualité du code** ET (b) **peut tourner automatiquement, mécaniquement, gratui
 commit**, jamais sur demande, jamais périodique (Article 20 de CLAUDE.md). **Correction du
 2026-09-21** (le premier jet de ce critère nommait ALWAYS-NEW-CODE par son nom global comme exemple
 d'exclusion — trop large : c'est le LIVRABLE qui exige un raisonnement payant qui ne peut jamais
-devenir un Gardien, jamais l'outil dans son ensemble quand une couche légère et déjà gratuite existe
+devenir un Gardien sacré, jamais l'outil dans son ensemble quand une couche légère et déjà gratuite existe
 séparément, cf. ALWAYS-NEW-CODE ci-dessous, dont seule cette couche légère porte le statut). Exactement
 6 membres, jamais un groupe inventé au coup par coup :
 
@@ -111,29 +111,29 @@ séparément, cf. ALWAYS-NEW-CODE ci-dessous, dont seule cette couche légère p
   sur le fichier principal de la zone recommandée), zéro raisonnement, coût minime ; le VRAI zoom
   profond « page blanche » (Article 23) reste exclu, exige un raisonnement payant à chaque fois,
   jamais mécanisable — même limite que THE-FINAL-JUDGE ci-dessous, qui lui n'a AUCUNE couche gratuite
-  du tout et reste donc entièrement hors des Gardiens, sans exception
+  du tout et reste donc entièrement hors des Gardiens sacrés, sans exception
 
 **Gabarit de poste spécifique** (décision actée le 2026-09-22, au-delà du gabarit standard Agent) :
-en plus de l'instanciation + registre standard, la fiche d'un Gardien porte deux champs propres,
+en plus de l'instanciation + registre standard, la fiche d'un Gardien sacré porte deux champs propres,
 qu'aucun autre groupe ne porte :
 1. **Position dans le crochet post-commit** (`scripts/hooks/check-last-commit.mjs`) — où et dans
    quel ordre il est appelé.
 2. **Rôle dans le badge/couverture AXA-CHECK** — comment sa sortie alimente `checkAgentOnboarding()`
    et le badge 🎖️ des autres outils.
 
-### Répertoire des fonctionnements spécifiques partagés par tous les Gardiens
+### Répertoire des fonctionnements spécifiques partagés par tous les Gardiens sacrés
 
 *(2026-09-22, demande explicite de l'utilisateur : « identifie le fonctionnement spécifique des
 gardiens (qui se valident les uns les autres par ex) et lorsqu'on intègre un nouveau gardien, veille
 à ce qu'il rentre bien dans tous ces fonctionnements ». Checklist à cocher intégralement pour tout
-futur 7e Gardien — CASSANDRA-RH s'y réfère directement pour sa mission « Promotion de poste »,
+futur 7e Gardien sacré — CASSANDRA-RH s'y réfère directement pour sa mission « Promotion de poste »,
 cf. `docs/cassandra-rh-conception.md` §2.)*
 
 1. **Câblage post-commit réel** — importé et appelé par sa FONCTION PURE (jamais son `main()` CLI,
    pour ne jamais écrire un nouveau fichier de registre à chaque commit) dans
-   `scripts/hooks/check-last-commit.mjs`, dans un bloc `try/catch` isolé (une erreur d'un Gardien ne
+   `scripts/hooks/check-last-commit.mjs`, dans un bloc `try/catch` isolé (une erreur d'un Gardien sacré ne
    doit jamais faire échouer le hook ni bloquer le commit — warn-only, Article 20).
-2. **Retrait de CIRCLE-TASKS** — un Gardien ne doit JAMAIS avoir d'entrée dans `CIRCLE_ITEMS`
+2. **Retrait de CIRCLE-TASKS** — un Gardien sacré ne doit JAMAIS avoir d'entrée dans `CIRCLE_ITEMS`
    (`scripts/circle-tasks.mjs`) : il tourne déjà à chaque commit, une entrée périodique serait un
    doublon. Son registre rejoint `CIRCLE_EXCLUDED_REGISTRIES` avec la justification standard
    « Gardien sacré, tourne à chaque commit ».
@@ -141,11 +141,11 @@ cf. `docs/cassandra-rh-conception.md` §2.)*
    mécanique, comme tout code du projet, avant de considérer son intégration terminée.
 4. **Participation à la couverture du badge** (`checkAgentOnboarding()`,
    `scripts/le-coordinateur.mjs`) — son résultat doit pouvoir alimenter un paramètre `koParts` (ex.
-   `cloneHunterFindingsCount`) et compter dans le calcul « OK 100% », qui exige TOUS les Gardiens au
+   `cloneHunterFindingsCount`) et compter dans le calcul « OK 100% », qui exige TOUS les Gardiens sacrés au
    vert simultanément, jamais un sous-ensemble. **Précision du 2026-09-22** : « au vert » veut dire
-   *consulté ET propre*. Un signal non fourni (le Gardien dormait à ce commit, ou l'appelant ne le
-   transmet pas) laisse le palier à « en cours », désormais avec un libellé qui nomme les Gardiens
-   manquants (« en cours (4/6 Gardiens au vert — CLONE-HUNTER, ALWAYS-NEW-CODE non consulté(s) à ce
+   *consulté ET propre*. Un signal non fourni (le Gardien sacré dormait à ce commit, ou l'appelant ne le
+   transmet pas) laisse le palier à « en cours », désormais avec un libellé qui nomme les Gardiens sacrés
+   manquants (« en cours (4/6 Gardiens sacrés au vert — CLONE-HUNTER, ALWAYS-NEW-CODE non consulté(s) à ce
    relevé) ») — jamais confondu avec un zéro mesuré, jamais un 4e palier ajouté à l'échelle à 3
    niveaux calibrée par l'utilisateur (tâche #224).
    **Relevé partagé** (même date) : les 6 signaux mesurés à chaque commit sont déposés par le
@@ -155,21 +155,21 @@ cf. `docs/cassandra-rh-conception.md` §2.)*
    et check-tasks-details affichaient « jamais scanné » pour des outils mesurés trente secondes plus
    tôt — deux chemins d'affichage du même badge disaient deux choses différentes.
 5. **Agrégation dans HYPER-SCAN-CHECKPOINT** (version légère, `scripts/hyper-scan-checkpoint.mjs`) —
-   appelé via `sh()` aux côtés des autres Gardiens, pour qu'un passage HYPER-SCAN-CHECKPOINT reflète
+   appelé via `sh()` aux côtés des autres Gardiens sacrés, pour qu'un passage HYPER-SCAN-CHECKPOINT reflète
    TOUJOURS l'état complet des 6, jamais un sous-ensemble par oubli (écart réel trouvé le 2026-09-22 à
    l'arrivée de CLONE-HUNTER, corrigé le même soir).
-6. **Validation croisée informelle, pas mécanique** — les Gardiens ne s'exécutent jamais les uns les
+6. **Validation croisée informelle, pas mécanique** — les Gardiens sacrés ne s'exécutent jamais les uns les
    autres, mais leurs signaux se recoupent en pratique lors d'une revue (ex. une trouvaille HARMONIA
    peut confirmer un signal CLEAN-DIRTY-OLD sur la même zone) ; aucun mécanisme automatique ne force
    ce recoupement aujourd'hui, c'est une lecture humaine/agent au moment de l'analyse, jamais une
    fusion de leurs sorties.
-7. **Aucun coût API/agent séparé** — un Gardien reste, par définition, un calcul mécanique local
+7. **Aucun coût API/agent séparé** — un Gardien sacré reste, par définition, un calcul mécanique local
    (grep, parsing, comparaison de blocs) ; un LIVRABLE qui a besoin d'un vrai raisonnement (le vrai
    zoom profond d'ALWAYS-NEW-CODE, THE-FINAL-JUDGE dans son ensemble) ne peut jamais devenir un
-   Gardien, même s'il produit un excellent scan de qualité — c'est exactement ce qui l'exclut du
+   Gardien sacré, même s'il produit un excellent scan de qualité — c'est exactement ce qui l'exclut du
    critère (b) ci-dessus. Jamais le nom de l'outil entier par contrecoup : ALWAYS-NEW-CODE porte les
-   deux à la fois (une couche légère déjà Gardien, un vrai zoom qui ne le sera jamais) — THE-FINAL-JUDGE,
-   lui, n'a aucune couche légère du tout, donc reste entièrement hors des Gardiens sans aucune
+   deux à la fois (une couche légère déjà Gardien sacré, un vrai zoom qui ne le sera jamais) — THE-FINAL-JUDGE,
+   lui, n'a aucune couche légère du tout, donc reste entièrement hors des Gardiens sacrés sans aucune
    exception.
 
 Détail complet de chacun : `docs/referentiel/argus.md`, `harmonia.md`, `axa-check.md`,

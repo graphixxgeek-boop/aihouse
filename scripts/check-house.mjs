@@ -5297,6 +5297,30 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.equal(se.declarationDuFichier("*(instanciation propre à ce projet)*"), 'spécifique', 'an instantiation declares itself specific');
     assert.equal(se.declarationDuFichier('rien du tout'), 'non déclarée', 'and an undeclared file is named as such rather than assumed either way');
 
+    // LA DETTE DE VOCABULAIRE (2026-09-23) — « gardien » désignait quatre rôles différents, ce
+    // que l'Article 27 compte comme une dette de reprise au même titre qu'un chemin cassé, d'où
+    // sa place chez SAFE-EXPORT plutôt que chez un Gardien sacré du code.
+    assert.equal(se.findGardienAmbigu('Le gardien a validé la Ronde.').length, 1, 'a bare "gardien" used as a title is an ambiguity');
+    assert.equal(se.findGardienAmbigu('Le Gardien sacré ARGUS a validé.').length, 0, 'the sacred rank keeps the word, and is never flagged');
+    assert.equal(se.findGardienAmbigu('Le contrôleur de process a vu un gardien manquant.').length, 0, 'a qualified rank in the same sentence resolves the word');
+    // « guardian » compte pareil (précision de l'utilisateur), MAIS un nom de script qui porte
+    // déjà `process` dit son rang — l'exempter évite un garde-fou qui crierait sur ce qu'il y a de
+    // moins ambigu dans tout le paysage.
+    assert.equal(se.findGardienAmbigu('Le guardian a parlé.').length, 1, 'the English spelling counts the same');
+    assert.equal(se.findGardienAmbigu('Voir scripts/circle-process-guardian.mjs et process.simulation.guardian.').length, 0, 'both spellings of a process-controller script name already state the rank');
+    // UNE CITATION N'EST PAS UN EMPLOI : réécrire les mots de l'utilisateur pour faire taire un
+    // garde-fou falsifierait ce qui a été dit.
+    assert.equal(se.findGardienAmbigu('Il a écrit « always new est un gardien à mon sens » ce jour-là.').length, 0, 'a quotation is history, never a title use');
+    // L'AUTRE MOITIÉ : sans elle, les documents resteraient impeccables pendant que le code
+    // rouvrirait l'ambiguïté par un nom de fichier.
+    assert.deepEqual(se.findGuardiansHorsProcess(), [], 'no script carries "guardian" without "process" — the rank is always stated by the name');
+    // LA GÉNÉRALISATION (Article 24) : un futur terme ambigu rejoint le registre, il ne demande
+    // aucune réécriture de la logique.
+    assert.ok(se.VOCABULAIRE_RESERVE.every((v) => v.motif && v.definition && v.pourquoi), 'every reserved term states its pattern, where it is defined, and why it exists');
+    const vocScan = se.scanVocabulaire();
+    assert.ok(vocScan.cibles > 0 && vocScan.mesure === 'mesuré', 'the scan says "pas mesuré" rather than green when it finds no normative document');
+    assert.deepEqual(vocScan.ecarts, [], 'the normative documents carry no ambiguous use left');
+
     // LES QUATRE DÉTECTEURS, chacun sur son angle. On ne cherche les fuites QUE dans les fichiers
     // déclarés génériques — « Lia » dans une fiche spécifique est normal, et le signaler noierait
     // les vrais cas.
@@ -8340,8 +8364,49 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     analysisPointsFound: 2, questionsAsked: 5, reportsDeliveredBeforeAnalysis: true,
     findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
     shImpl: () => '101', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
+    // Troisième fois que ce test échoue à l'ajout d'une étape, et la troisième fois c'est voulu :
+    // la barrière d'ouverture et le suivi des questions (2026-09-23) rejoignent les faits qu'une
+    // Ronde « parfaitement propre » doit tous présenter. Les deux premiers se LISENT sur disque
+    // (une ouverture et un registre laissent une trace, donc on les injecte ici plutôt que de les
+    // croire sur parole) ; le troisième est un fait de conversation, fourni comme les autres.
+    loadOuvertureImpl: () => ({ changementModelePosee: true, changementModeleReponse: 'non', mode: 'AUTO', rythme: "d'une traite", at: new Date().toISOString() }),
+    loadQuestionsSansReponseImpl: () => [],
+    loadSeriesPasseesImpl: () => [],
+    seriesReellementPosees: ['ouverture'],
   });
   assert.deepEqual(cleanResult, { ok: true, findings: [] }, 'a Ronde where every real fact checks out must report a genuinely clean ok:true with zero fabricated findings');
+
+  // LES NOUVEAUX CONTRÔLES, chacun sur son écart réel — jamais seulement leur absence dans le cas propre.
+  const sansOuverture = verifyRondeProcess({
+    autoPrimeGoatAsked: true, voixUtilisateurPosee: true, changementModelePosee: true, changementModeleReponse: 'non',
+    checkedItemIds: [], executedItemIds: [], recapHtml: '<!DOCTYPE html><html></html>', reportsDeliveredBeforeAnalysis: true,
+    findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
+    shImpl: () => '101', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
+    loadOuvertureImpl: () => null, loadQuestionsSansReponseImpl: () => [], loadSeriesPasseesImpl: () => [], seriesReellementPosees: [],
+  });
+  assert.ok(sansOuverture.findings.some((f) => f.check === 'ouverture-barriere'), 'a Ronde opened without its gate is named before closing time, not discovered at the last gesture');
+
+  const questionsEnAttente = verifyRondeProcess({
+    autoPrimeGoatAsked: true, voixUtilisateurPosee: true, changementModelePosee: true, changementModeleReponse: 'non',
+    checkedItemIds: [], executedItemIds: [], recapHtml: '<!DOCTYPE html><html></html>', reportsDeliveredBeforeAnalysis: true,
+    findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
+    shImpl: () => '101', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
+    loadOuvertureImpl: () => ({ changementModelePosee: true, changementModeleReponse: 'non', mode: 'AUTO', rythme: "d'une traite", at: new Date().toISOString() }),
+    loadQuestionsSansReponseImpl: () => [{ serie: 'ouverture', question: 'Changer de modèle ?', fois: 2 }],
+    loadSeriesPasseesImpl: () => [], seriesReellementPosees: ['ouverture'],
+  });
+  assert.ok(questionsEnAttente.findings.some((f) => f.check === 'questions-a-reposer'), 'an unanswered series is never left behind by a closing Ronde — the hypothesis stays "accident", never "refusal"');
+
+  // Le mode autonome exempte TOUT ce qui suppose quelqu'un en face : la borne posée par
+  // l'utilisateur (« aucune fenêtre y compris GOAT/AUTO ne doit être bloquante pour le mode
+  // autonome ») est une garantie, jamais une tolérance qu'on resserrerait plus tard.
+  const nuitSansOuverture = verifyRondeProcess({
+    nightAutonomousMode: true, checkedItemIds: [], executedItemIds: [], pointsReportes: true,
+    findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
+    shImpl: () => '101', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
+    loadOuvertureImpl: () => null, loadQuestionsSansReponseImpl: () => [], loadSeriesPasseesImpl: () => [],
+  });
+  assert.ok(!nuitSansOuverture.findings.some((f) => ['ouverture-barriere', 'series-non-declarees'].includes(f.check)), 'an autonomous Ronde is never blocked by a gate nobody is there to open');
 
   // verifyHyperScanProcess() (2026-09-22, demande explicite : « l'outil process.circle doit aussi
   // l'avoir en tete, on parle de discipline d'execution, il est la pour ca »). HYPER-SCAN-CHECKPOINT

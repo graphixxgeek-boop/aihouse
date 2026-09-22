@@ -549,6 +549,52 @@ avant/pendant l'exécution, sur les points où une demande était réellement am
 rendu à l'utilisateur doit dire explicitement
 ce qui a été vérifié, préservé, amélioré et corrigé.
 
+**Article 20bis — Quatre mots distincts, jamais « gardien » tout court.**
+*(2026-09-23, demande explicite de l'utilisateur : « autre dette de vocabulaire : l'appellation
+"gardien" pour des agents différents : corrige ça : les différents gardiens doivent être distingués,
+garde l'expression "gardien sacré" ».)* Le même mot désignait quatre rôles qui n'ont ni le même
+objet, ni la même autorité, ni le même rythme — exactement la dette de reprise que l'Article 27
+nomme : un nom propre sans définition atteignable. Une IA lisant « le gardien a validé » ne pouvait
+pas savoir lequel avait validé quoi.
+
+- **Gardien sacré du code** — les sept de l'Article 20, et eux seuls. Critère double et
+  non négociable : délivre un vrai scan de QUALITÉ DU CODE **et** tourne gratuitement,
+  mécaniquement, à CHAQUE commit. L'expression reste réservée à ce rang.
+- **Contrôleur de process** — surveille le DÉROULÉ d'une activité à étapes, jamais la qualité du
+  code : god-of-all-process (le contrôleur maître, qui relaie la voix des autres),
+  circle-process-guardian, process-simulation-guardian, angel-of-ia-process (côté conduite),
+  tasks-process-guardian. Il signale, il ne corrige jamais.
+- **Veilleur** — surveille UN document ou UNE décision déjà actée, sans scanner le code et sans
+  gouverner d'étapes : THE-KING (la philosophie), Doc-Report (la décision HTML/texte),
+  data-archangel (la circulation des données).
+- **Garde-fou mécanique** — jamais un outil, toujours une FONCTION à l'intérieur d'un outil
+  (`findToolsMissingFromMenu()`, `findFaitsManquants()`...). C'est le grain que l'Article 24 exige
+  derrière toute liste : le mot désigne le mécanisme, jamais celui qui le porte.
+
+**« guardian » compte pareil** *(précision de l'utilisateur dans le même échange : « "gardien" ou
+"guardian" en anglais, c'est pareil »)*. Les trois scripts qui portent ce mot anglais —
+`circle-process-guardian.mjs`, `process-simulation-guardian.mjs`, `tasks-process-guardian.mjs` —
+sont des **contrôleurs de process**, sans exception : chacun porte déjà `process` dans son nom, de
+sorte qu'aucun Gardien sacré ne s'est jamais appelé ainsi. Ces noms de fichiers sont l'orthographe
+historique du rang, jamais un cinquième terme. Deux conséquences mécaniques, vérifiées et non
+laissées à la mémoire : un futur script nommé `*-guardian` **sans** `process` dans son nom est un
+écart, et aucun Gardien sacré ne peut prendre cette orthographe.
+
+**Une seule exception déclarée, parce qu'elle vient de l'utilisateur lui-même** : le surnom
+**R/O-Guardian** (objectifs-vs-resultats, 2026-09-21) — un veilleur, jamais un contrôleur de
+process. Un surnom donné par l'utilisateur ne se corrige pas dans son dos ; il se déclare, comme
+tout contenu volontairement curaté à la main (Article 24).
+
+Le mot « gardien » employé seul, comme titre, n'a plus de sens dans ce projet : il se qualifie
+toujours. `findGardienAmbigu()` (`scripts/safe-export.mjs`) le vérifie mécaniquement sur les
+documents normatifs — cette charte et `docs/referentiel/` — plutôt que de compter sur la mémoire
+d'un agent (Article 27).
+
+**Ce qui N'A PAS été fait, et c'est dit plutôt que taire** : les 67 fichiers qui citent les trois noms
+`*-process-guardian` n'ont pas été renommés. Le rang y est déjà non ambigu (`process` est dans le
+nom), et un renommage massif juste avant une Ronde risquait de casser des registres pour un gain
+de clarté nul. Tâche ouverte, jamais un abandon silencieux (Article 28).
+
 **Article 21 — HYPER-SCAN-CHECKPOINT : la vérification approfondie exceptionnelle.** Contrairement
 à ARGUS et HARMONIA (Article 20, toujours déployés), HYPER-SCAN-CHECKPOINT ne se déclenche jamais
 automatiquement, jamais en continu — seulement sur demande explicite de l'utilisateur, ou proposé
@@ -684,13 +730,13 @@ d'exécution**, et son rôle est triple :
 1. **Avant d'agir** — on lui demande quel process gouverne ce qu'on s'apprête à faire, plutôt que de
    recomposer soi-même le choix entre plusieurs documents. Même réflexe unique que tool-brain pour
    les outils.
-2. **À chaque Ronde** — il produit LE rapport de conformité des process, et lui seul : les gardiens
+2. **À chaque Ronde** — il produit LE rapport de conformité des process, et lui seul : les contrôleurs
    secondaires (celui de la Ronde, `process.simulation.guardian`) gardent leur verdict, mais c'est
-   god qui les relaie. Une seule voix, jamais une par gardien. Ce rapport **nomme le responsable**
+   god qui les relaie. Une seule voix, jamais une par contrôleur. Ce rapport **nomme le responsable**
    de chaque étape sautée — presque toujours l'agent — et liste à part les étapes qu'aucun mécanisme
    ne peut vérifier, qui ne sont reprochées à personne.
 3. **Il signale ce qui manque** — les scripts qui mériteraient un process et n'en ont aucun, un
-   process sans gardien, un document promis qui n'existe pas, une tension non résolue entre deux
+   process sans contrôleur, un document promis qui n'existe pas, une tension non résolue entre deux
    process. Y compris sur lui-même : il porte son propre process maître et le vérifie
    (`selfCheck()`), parce qu'un surveillant que personne ne surveille dérive sans que rien ne le dise.
 
@@ -721,7 +767,7 @@ Produire un changement et le tester une fois ne suffit pas : l'agent revient pé
 propre travail déjà livré pour y chercher ses erreurs, **en sollicitant réellement les outils du
 paysage plutôt qu'en se relisant de mémoire**. Cet Article se distingue nettement de ses voisins :
 l'Article 14 demande une vigilance AU MOMENT d'agir, l'Article 20 fait passer chaque itération par
-les Gardiens, l'Article 21 déclenche une vérification exceptionnelle sur demande — celui-ci porte
+les Gardiens sacrés, l'Article 21 déclenche une vérification exceptionnelle sur demande — celui-ci porte
 sur le retour, à froid, vers ce qu'on a soi-même déjà considéré comme terminé.
 
 **Pourquoi il existe, et ce n'est pas théorique.** Le 2026-09-22, une seule matinée de relecture de
@@ -791,7 +837,7 @@ repère mécaniquement (`reportHasPlanDaction()`). Un troisième endroit à teni
 périmé comme tous les autres.
 
 **Les trois états d'un constat, jamais deux** — c'est ce qui empêche le plan de devenir une
-formalité qu'on remplit pour faire taire le gardien :
+formalité qu'on remplit pour faire taire le contrôleur :
 - **RETENU** — ça devient une tâche, et cette tâche doit exister pour de vrai dans `docs/suivi/` ;
 - **ÉCARTÉ** — on a regardé et on ne fait rien, **avec la raison écrite** (un écart sans raison
   n'est pas une décision, c'est un abandon déguisé) ;
@@ -810,7 +856,7 @@ tout seul, et ne garantit plus rien.
 
 **L'autorité de god sur cette chaîne, tranchée explicitement : il SIGNALE FORT, il ne bloque
 JAMAIS.** Le manquement est nommé, le responsable désigné, et il reste visible tant qu'il n'est pas
-traité — donc impossible à oublier, mais rien ne s'arrête. Un gardien qui bloquerait sur un sujet
+traité — donc impossible à oublier, mais rien ne s'arrête. Un contrôleur qui bloquerait sur un sujet
 sans rapport avec le travail en cours pousserait justement à le contourner.
 
 **Le cas le plus vicieux, et il est couvert** : un constat qui annonce une tâche *qui n'existe pas*.
@@ -884,7 +930,7 @@ tableau garde ce qui doit rester sous les yeux en permanence.)*
 | Nom | Ce que c'est | Architecture | Instanciation | Script |
 |---|---|---|---|---|
 | ALWAYS-NEW-CODE | l'outil qui rend concrète l'épreuve de la page blanche | `docs/always-new-code-blueprint.md` | `docs/referentiel/always-new-code.md` | `scripts/always-new-code.mjs` |
-| angel-of-ia-process | gardien de la CONDUITE (respect des règles de travail), jamais du déroulé d'une activité | `docs/angel-of-ia-process-blueprint.md` | `docs/referentiel/angel-of-ia-process.md` | `scripts/angel-of-ia-process.mjs` |
+| angel-of-ia-process | contrôleur de process pour la CONDUITE (respect des règles de travail), jamais du déroulé d'une activité | `docs/angel-of-ia-process-blueprint.md` | `docs/referentiel/angel-of-ia-process.md` | `scripts/angel-of-ia-process.mjs` |
 | ARGUS | détecteur de trous logiques | `docs/argus-blueprint.md` | `docs/referentiel/argus.md` | `scripts/check-argus.mjs` |
 | AXA-CHECK | l'outil de robustesse/fragilité RÉELLES par fonction | `docs/axa-check-blueprint.md` | `docs/referentiel/axa-check.md` | `scripts/axa-check.mjs` |
 | CASSANDRA-RH | l'Agent Cadre RH de l'outillage de travail | `docs/cassandra-rh-blueprint.md` | `docs/referentiel/cassandra-rh.md` | `scripts/cassandra-rh.mjs` |
@@ -902,7 +948,7 @@ tableau garde ce qui doit rester sous les yeux en permanence.)*
 | integration-outil | le process d'intégration d'un nouvel outil, rendu ACTIF plutôt qu'écrit | `docs/integration-outil-blueprint.md` | `docs/referentiel/integration-outil.md` | `scripts/integration-outil.mjs` |
 | memory-audit | *(à écrire à la main — non extractible mécaniquement)* | `docs/memory-audit-blueprint.md` | `docs/referentiel/memory-audit.md` | `scripts/memento.mjs` |
 | objectifs-vs-resultats | un registre hand-maintained d'objectifs chiffrés par entité/période confronté à un… | `docs/objectifs-vs-resultats-blueprint.md` | `docs/referentiel/objectifs-vs-resultats.md` | `scripts/objectifs-vs-resultats.mjs` |
-| process-simulation-guardian | gardien du protocole de simulation, consulté AVANT le lancement et pouvant le bloquer | `docs/process-simulation-guardian-blueprint.md` | `docs/referentiel/process-simulation-guardian.md` | `scripts/process-simulation-guardian.mjs` |
+| process-simulation-guardian | contrôleur du process de simulation, consulté AVANT le lancement et pouvant le bloquer | `docs/process-simulation-guardian-blueprint.md` | `docs/referentiel/process-simulation-guardian.md` | `scripts/process-simulation-guardian.mjs` |
 | SAFE-EXPORT | septième Gardien sacré (couche légère) : l'Agence est-elle exportable, le code reprenable par une autre IA ? | `docs/safe-export-blueprint.md` | `docs/referentiel/safe-export.md` | `scripts/safe-export.mjs` |
 | TOOL-LEARNING | vérifie que les outils apprennent — et que l'agent les aide vraiment à progresser | `docs/tool-learning-blueprint.md` | `docs/referentiel/tool-learning.md` | `scripts/tool-learning.mjs` |
 | Smart Breaker | l'outil de contournement de blocages de clé/quota API *(le blueprint garde son nom d'avant le surnom)* | `docs/outil-resilience-api.md` | `docs/referentiel/smart-breaker.md` | `scripts/check-gemini-quota.mjs` |
@@ -925,7 +971,7 @@ reste visible mais toujours marqué ⚠️🔴 coûteux, jamais coché par défa
 de référence gardé dans `docs/`, qui reste texte relu par les outils) ; **le compteur d'usage**
 (`scripts/tool-usage.mjs`, journalise chaque sollicitation RÉELLE avec son taux de trouvaille,
 même discipline anti-vanity-metric que `rereadPerformance()`) ; **Doc-Report**
-(`scripts/doc-report.mjs`, gardien — jamais décideur — de la décision HTML/texte déjà actée par
+(`scripts/doc-report.mjs`, veilleur — jamais décideur — de la décision HTML/texte déjà actée par
 registre, vérifiée mécaniquement contre le vrai code plutôt que supposée ; inventorie aussi les
 journaux locaux jamais committés, dont `findJournalsMissingFromGitignore()` : un journal local
 absent de `.gitignore` est un vrai risque de fuite au prochain commit ; reste un pair de doc-HTML,

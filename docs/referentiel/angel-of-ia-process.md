@@ -84,7 +84,7 @@ ne subsistent. Un vert obtenu en ne posant pas les questions serait le pire des 
 
 `angelSectionLines()` produit une section autonome, relayée par
 `god-of-all-process.mjs::buildProcessComplianceReport({ sectionAngel })`. Décision de l'utilisateur
-du 2026-09-22 : **god centralise**, les gardiens secondaires ne livrent jamais leur rapport
+du 2026-09-22 : **god centralise**, les contrôleurs de process secondaires ne livrent jamais leur rapport
 directement à la Ronde — mais la conduite ne se mélange jamais aux étapes de process sautées.
 
 ## Nature du résultat

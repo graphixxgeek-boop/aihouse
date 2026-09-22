@@ -74,7 +74,7 @@ plus rien.
    paragraphe, faisant remonter les 193 lignes du Référentiel technique d'un bloc (~3 900 tokens)
    parce qu'une seule de ses entrées contenait le mot « consulter ».
 
-## Le réveil conditionnel des Gardiens (tâche #362) — un sujet voisin, pas le même
+## Le réveil conditionnel des Gardiens sacrés (tâche #362) — un sujet voisin, pas le même
 
 Ouvert par une question de l'utilisateur dans la même session. Le mécanisme vit dans
 `scripts/lib-shell.mjs` (`GARDIEN_DOMAINS`, `NOT_REALLY_CODE`, `gardienShouldRun()`), pas dans
@@ -87,14 +87,14 @@ vide.
 | | Ce qui tourne | Effet | Conditionné ? |
 |---|---|---|---|
 | **GARANTIT** | `check-house.mjs` + `tsc` (pre-commit) | **Bloque** le commit | **Jamais** — conditionner créerait un trou |
-| **RENFORCE** | Les 6 Gardiens (post-commit) | Signale, n'a jamais rien bloqué | Oui |
+| **RENFORCE** | Les 6 Gardiens sacrés (post-commit) | Signale, n'a jamais rien bloqué | Oui |
 
 **La cause racine, mesurée :** sur 20 commits, 18 ne touchaient `lib/` que par `lib/reference.ts` —
 le référentiel AFFICHÉ en jeu, de la donnée narrative incrémentée à chaque commit. Il faisait passer
 tout commit pour un changement de moteur. `NOT_REALLY_CODE` l'exclut, et c'est ce seul exclusion qui
 débloque tout le reste.
 
-**Deux chemins de prudence, non négociables :** un Gardien absent de la table tourne toujours, et si
+**Deux chemins de prudence, non négociables :** un Gardien sacré absent de la table tourne toujours, et si
 git ne dit pas ce qui a changé, tout tourne. Ne pas savoir n'autorise jamais à se taire.
 
 ## Criticité — ce que l'outil fait de la sensibilité d'un fichier (2026-09-22)

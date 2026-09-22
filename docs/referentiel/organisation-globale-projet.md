@@ -20,7 +20,7 @@ la même distinction qui protège l'Agence Codex de toute confusion avec les Per
   `regles-de-l-espace.md`, `regles-de-la-memoire.md`, `regles-des-graphismes.md`). Ce document mère
   ne détaille jamais ce monde — `CLAUDE.md` joue déjà ce rôle consolidateur pour le contenu du jeu,
   aucun doublon n'est utile ici.
-- **L'Agence Codex** — l'outillage de travail (scripts, Agents, Membres, Gardiens) qui construit et
+- **L'Agence Codex** — l'outillage de travail (scripts, Agents, Membres, Gardiens sacrés) qui construit et
   vérifie le jeu, jamais vu par l'observateur. Son organisation complète vit dans
   `docs/referentiel/organisation-agence.md` (les deux axes Statut de documentation/Rôle dans
   l'organigramme, les Gardiens sacrés, les 6 suites de Membres, les 3 catégories définitivement

@@ -43,7 +43,7 @@ pourra rien conclure sur la partie manquante.
 ## Le bug de sa propre première version
 
 `preflight()` écrivait ses contrôles sous la forme `(plan) => plan.X === true`, ce qui renvoie
-toujours un booléen : un champ **non renseigné** devenait un « non ». Le gardien reprochait donc une
+toujours un booléen : un champ **non renseigné** devenait un « non ». Le contrôleur de process reprochait donc une
 absence qu'il n'avait pas constatée — exactement le défaut récurrent du projet, commis dans l'outil
 écrit pour l'éviter. Corrigé en déclarant `champ` et en lisant la valeur brute, trois états
 distincts : rempli / vide / non applicable. Trouvé par son propre test.
@@ -54,7 +54,7 @@ distincts : rempli / vide / non applicable. Trouvé par son propre test.
 `summarize-simulation-log.mjs` — jamais un second calcul. Dès son premier lancement réel, il a
 trouvé que la ligne KPI de full_sim18 manquait.
 
-## Sa place : gardien SECONDAIRE
+## Sa place : contrôleur de process SECONDAIRE
 
 Il ne livre jamais son rapport à la Ronde lui-même — god-of-all-process le relaie (décision de
 l'utilisateur, 2026-09-22 : « god of process centralise »). Exclusion de Ronde motivée, écrite dans

@@ -154,7 +154,7 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   Appréciation de l'observateur, Dossier retourné, Déplacements/espace, Relation Lia/Noé) restent
   toutes à égalité de fraîcheur (jamais examinées).
 - **Badge / couverture : les signaux ARGUS et CLONE-HUNTER sont mesurés à l'échelle du DÉPÔT, pas
-  de l'outil** (constaté le 2026-09-22 en fiabilisant le relevé partagé des 6 Gardiens). Conséquence
+  de l'outil** (constaté le 2026-09-22 en fiabilisant le relevé partagé des 6 Gardiens sacrés). Conséquence
   visible depuis que tous les afficheurs lisent enfin ces signaux : un outil parfaitement propre
   affiche quand même `partiel (KO ARGUS, KO CLONE-HUNTER)` parce qu'une trouvaille existe quelque
   part dans le dépôt. Ce n'est pas une régression (le crochet post-commit passait déjà ces mêmes
@@ -164,16 +164,16 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
   CLEAN-DIRTY-OLD et CLONE-HUNTER, eux, nomment bien des fichiers et seraient attribuables. Deux
   lectures légitimes du palier, à trancher avec l'utilisateur avant de coder quoi que ce soit :
   « OK 100% » veut-il dire « ce réseau d'outils est au vert » (lecture actuelle, signaux globaux) ou
-  « CET outil est au vert » (attribution par fichier, possible pour 3 Gardiens sur 6 seulement, donc
+  « CET outil est au vert » (attribution par fichier, possible pour 3 Gardiens sacrés sur 6 seulement, donc
   un palier qui mélangerait deux échelles) ? Aucun changement appliqué — le libellé exact
   `KO <NOM>` est calibré par l'utilisateur (tâche #226), il n'est pas modifié sans sa décision.
-- **Réveil conditionnel des Gardiens : un Gardien peut dormir indéfiniment** (2026-09-22, trouvé en
+- **Réveil conditionnel des Gardiens sacrés : un Gardien sacré peut dormir indéfiniment** (2026-09-22, trouvé en
   vérifiant l'intuition de l'utilisateur sur ARGUS/HARMONIA et la Ronde). `gardienShouldRun()`
-  (`lib-shell.mjs`) ne réveille un Gardien que si un fichier de SON domaine a changé — sur un commit
+  (`lib-shell.mjs`) ne réveille un Gardien sacré que si un fichier de SON domaine a changé — sur un commit
   réel de cette session, 5 des 6 ont dormi. C'est voulu (ne pas relancer six scans pour une
-  correction de commentaire), mais rien ne RATTRAPE un Gardien resté muet longtemps : ni le
+  correction de commentaire), mais rien ne RATTRAPE un Gardien sacré resté muet longtemps : ni le
   post-commit (qui vient justement de le laisser dormir), ni la Ronde (dont il est absent, à raison,
   puisqu'il est censé tourner au commit). Un outil peut donc ne pas avoir été scanné depuis des
   jours sans que personne ne le sache. Piste retenue mais non implémentée, en attente de décision :
-  un item de Ronde « tel Gardien n'a pas tourné depuis N commits, on le relance une fois » plutôt
+  un item de Ronde « tel Gardien sacré n'a pas tourné depuis N commits, on le relance une fois » plutôt
   que six items qui referaient à l'identique le scan d'il y a trois minutes.

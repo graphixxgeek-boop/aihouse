@@ -1,20 +1,20 @@
 # Les process, tels que l'utilisateur les a calibrés
 
 *2026-09-22. Ce document existe parce qu'un constat gênant a été fait ce jour-là : quatre process
-étaient écrits, trois gardiens les faisaient respecter, et **le contenu de leurs étapes n'avait
+étaient écrits, trois contrôleurs de process les faisaient respecter, et **le contenu de leurs étapes n'avait
 jamais été soumis à l'utilisateur**. On s'apprêtait à faire appliquer des règles que l'agent avait
 inventées seul. Chaque ligne ci-dessous porte donc une décision explicite, jamais une supposition.*
 
 ## Ce qui existait avant cette calibration
 
-| Process | Gardien | Étapes | Origine |
+| Process | Gardien sacré | Étapes | Origine |
 |---|---|---|---|
 | Ronde périodique (CIRCLE-TASKS) | `circle-process-guardian` | 4 | préexistait |
 | Simulation intégrale (Article 18) | `process-simulation-guardian` | 7 | créé le 2026-09-22 |
 | Travail autonome (nuit) | god-of-all-process | 5 | créé le 2026-09-22 |
 | Process maître (le dispositif) | god-of-all-process | 5 | créé le 2026-09-22 |
 
-Verdict de god au moment de la calibration : aucun process sans gardien, aucun document promis
+Verdict de god au moment de la calibration : aucun process sans contrôleur de process, aucun document promis
 manquant, aucune sonde cassée, 12/12 étapes vérifiables tracées — **mais 9 étapes sur 21 sans trace
 vérifiable**, c'est-à-dire la moitié du dispositif reposant sur la parole de l'agent.
 
@@ -22,7 +22,7 @@ vérifiable**, c'est-à-dire la moitié du dispositif reposant sur la parole de 
 
 ## 1. Process de simulation
 
-**Autorité du gardien : REFUSER, sauf raison écrite.** *(Confirme le comportement existant.)*
+**Autorité du contrôleur de process : REFUSER, sauf raison écrite.** *(Confirme le comportement existant.)*
 Un lancement dont le scénario est incomplet est bloqué. Le passage en force reste possible à
 condition d'écrire pourquoi, et cette raison est archivée avec la simulation. Le coût du
 contournement n'est pas un clic : c'est devoir se justifier par écrit, ce qui écarte les

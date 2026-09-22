@@ -361,10 +361,19 @@ function main() {
     console.log(`\n🔴 ${tri.aTrancherObligatoirement.length} écart(s) à vous poser en question OBLIGATOIRE — ce n'est plus à mon appréciation :`);
     for (const e of tri.aTrancherObligatoirement) console.log(`   ${e.fichier ?? e.outil} : ${e.defaut ?? e.pourquoi}`);
   }
+  // LA DETTE DE VOCABULAIRE, SORTIE DU SCRIPT (2026-09-23). Un mécanisme qui ne s'affiche jamais
+  // est une intention, pas un garde-fou — c'est la leçon que ce fichier a déjà apprise une fois,
+  // quand toute son escalade se calculait sans jamais être imprimée.
+  const voc = scanVocabulaire();
+  console.log(`\n📖 VOCABULAIRE — ${voc.mesure} sur ${voc.cibles} document(s) normatif(s) : ${voc.ecarts.length} emploi(s) ambigu(s).`);
+  for (const e of voc.ecarts.slice(0, 12)) console.log(`   • ${e.fichier} — « ${e.terme} » sans son rang : « ${e.phrase} » (définition : ${e.definition})`);
+  if (voc.ecarts.length > 12) console.log(`   … +${voc.ecarts.length - 12} autre(s).`);
+  for (const g of findGuardiansHorsProcess()) console.log(`   ⚠️  ${g}`);
+
   // CONSTAT >> TÂCHES (2026-09-23) : chaque rapport dit désormais ce qu'il faut FAIRE de ce qu'il
   // a trouvé, pas seulement ce qu'il a trouvé. `fausseUneMesure` déclaré ici parce qu'un blueprint
   // qui fuit du jargon propre au projet rend faux ce qu'il prétend : être exportable.
-  const plan = planDactionDepuisEcarts(tri.gardes, { toolSlug: "safe-export", fausseUneMesure: true,
+  const plan = planDactionDepuisEcarts([...tri.gardes, ...voc.ecarts.map((e) => ({ fichier: e.fichier, defaut: `« ${e.terme} » employé sans son rang`, consequence: `définition : ${e.definition}` }))], { toolSlug: "safe-export", fausseUneMesure: true,
     // Les trois détecteurs ne rendent pas la même forme : une FUITE porte une occurrence et sa
     // ligne, un blueprint MAL CONSTRUIT porte un défaut nommé. Un libellé unique qui supposerait
     // un seul champ affichait « undefined » sur quatre écarts sur onze — un rapport qui dit
@@ -392,4 +401,152 @@ function main() {
   recordCliUsage("safe-export", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
 }
 
+
+// ————————————————————————————————————————————————————————————————————————
+// LA DETTE DE VOCABULAIRE : « gardien » employé seul (2026-09-23)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Demande explicite de l'utilisateur : « autre dette de vocabulaire : l'appellation "gardien" pour
+// des agents différents : corrige ça [...] garde l'expression "gardien sacré" » — puis, dans le
+// même échange : « "gardien" ou "guardian" en anglais, c'est pareil ».
+//
+// POURQUOI C'EST ICI, ET PAS AILLEURS. L'Article 27 le dit : « un nom propre sans définition
+// atteignable est une dette de reprise, au même titre qu'un chemin cassé ». SAFE-EXPORT est
+// précisément l'outil qui juge si une autre IA peut reprendre ce dépôt — un mot qui désigne quatre
+// rôles différents est exactement ce qui la ferait se tromper, et c'est le seul outil du paysage
+// dont c'est le mandat.
+//
+// LA PORTÉE, VOLONTAIREMENT ÉTROITE : les documents NORMATIFS seulement (CLAUDE.md et
+// docs/referentiel/), jamais les registres, les rapports archivés ni le suivi. Un rapport daté
+// écrit avant cette règle n'est pas un écart, c'est de l'histoire — le réécrire effacerait la
+// trace de ce qui a été dit à l'époque, ce qu'aucun Article n'autorise. Et un garde-fou qui crie
+// sur trois cents fichiers d'archive n'est plus lu.
+//
+// CE QU'IL ACCEPTE, donc ce qu'il ne signale jamais : les quatre termes qualifiés (Article 20bis
+// de la charte), la définition elle-même, et le surnom R/O-Guardian donné par l'utilisateur.
+// LA GÉNÉRALISATION (2026-09-23, question de l'utilisateur dans le même échange : « les dettes de
+// vocabulaire sont à inclure dans l'outil dédié export, non ? »). Oui — et pas sous la forme d'un
+// mot câblé en dur, sinon le prochain terme ambigu demanderait de réécrire la logique au lieu de
+// rejoindre un registre (Article 24 : « un registre se LIT, il ne s'énumère pas »).
+//
+// VOCABULAIRE_RESERVE est ce registre. Un terme y déclare : le mot qui pose problème (les deux
+// langues si besoin), les rangs qui le qualifient légitimement, et où la définition vit. Ajouter
+// un terme ne touche aucune fonction — findVocabulaireAmbigu() le lit tel quel.
+export const VOCABULAIRE_RESERVE = [
+  {
+    terme: "gardien",
+    motif: /\b(gardiens?|guardians?)\b/gi,
+    definition: "CLAUDE.md, Article 20bis",
+    depuis: "2026-09-23",
+    pourquoi: "le même mot désignait quatre rôles qui n'ont ni le même objet, ni la même autorité, ni le même rythme",
+    rangs: () => RANGS_QUALIFIES,
+    // Les noms de scripts qui portent déjà leur rang dans leur nom : jamais un emploi ambigu.
+    toleres: /[a-z]*[.-]?process[.-][a-z.-]*guardian[a-z.-]*/gi,
+  },
+];
+
+export const RANGS_QUALIFIES = [
+  /gardiens?\s+sacrés?/i,          // le rang des sept, seul à garder le mot
+  /contrôleurs?\s+de\s+process/i,  // le déroulé d'une activité à étapes
+  /veilleurs?/i,                   // un document ou une décision déjà actée
+  /garde-?fous?/i,                 // une fonction, jamais un outil
+];
+
+// Les orthographes anglaises acceptées : toutes portent `process` dans le nom, donc le rang y est
+// déjà dit. Cette liste se VÉRIFIE contre les fichiers réels (findGuardiansHorsProcess ci-dessous),
+// jamais recopiée à la main sans contrôle (Article 24).
+export const SURNOMS_DECLARES = [
+  { surnom: "R/O-Guardian", outil: "objectifs-vs-resultats", rang: "veilleur", pourquoi: "surnom donné par l'utilisateur le 2026-09-21 — un surnom d'utilisateur ne se corrige jamais dans son dos, il se déclare" },
+];
+
+const MOT_GARDIEN = /\b(gardiens?|guardians?)\b/gi;
+
+// Un emploi est ambigu quand le mot apparaît SANS qu'un rang qualifié soit nommé dans la même
+// phrase. La phrase — et non la ligne — est la bonne unité : un document à lignes courtes couperait
+// « gardien » de son qualificatif à la ligne suivante et produirait un faux positif à chaque
+// retour à la ligne.
+export function findVocabulaireAmbigu(texte, entree, { surnoms = SURNOMS_DECLARES } = {}) {
+  const MOT_GARDIEN = entree.motif;
+  const rangs = typeof entree.rangs === "function" ? entree.rangs() : (entree.rangs ?? []);
+  const ecarts = [];
+  // Découpe sur la ponctuation FORTE seulement. Les deux-points ont d'abord été inclus, et ils
+  // coupaient les citations en deux : « ... always new est un gardien à mon sens » devenait un
+  // fragment sans son guillemet ouvrant, donc un faux écart sur les mots mêmes de l'utilisateur.
+  const phrases = String(texte ?? "").split(/(?<=[.!?])\s+|\n\n+/);
+  for (const phrase of phrases) {
+    MOT_GARDIEN.lastIndex = 0;
+    if (!MOT_GARDIEN.test(phrase)) continue;
+    if (rangs.some((r) => r.test(phrase))) continue;
+    if (surnoms.some((s) => phrase.includes(s.surnom))) continue;
+    // UNE CITATION N'EST PAS UN EMPLOI (2026-09-23). Les fiches du référentiel citent les mots
+    // exacts de l'utilisateur (« always new est un gardien à mon sens »). Les réécrire pour faire
+    // taire ce garde-fou falsifierait ce qui a été dit, et la charte n'autorise nulle part à
+    // corriger un propos dans le dos de celui qui l'a tenu. Le mot n'est donc retenu que hors
+    // guillemets — c'est là seulement qu'il sert de titre.
+    // Une citation coupée par la découpe en phrases garde un seul guillemet : « ... est un gardien
+    // à mon sens » commence dans la phrase d'avant. Un fragment déséquilibré est donc encore une
+    // citation, et la réécrire falsifierait tout autant le propos.
+    const ouvrants = (phrase.match(/«/g) ?? []).length;
+    const fermants = (phrase.match(/»/g) ?? []).length;
+    if (ouvrants !== fermants) continue;
+    const horsCitation = phrase.replace(/«[^»]*»/g, "").replace(/"[^"]*"/g, "");
+    MOT_GARDIEN.lastIndex = 0;
+    if (!MOT_GARDIEN.test(horsCitation)) continue;
+    // `*-process-guardian` : l'orthographe historique du rang contrôleur de process, jamais un
+    // cinquième terme. Un nom de fichier qui porte déjà `process` dit son rang.
+    // Les deux orthographes réelles du nom : `process-simulation-guardian.mjs` (fichier) et
+    // `process.simulation.guardian` (le nom parlé, donné par l'utilisateur). Les deux disent déjà
+    // le rang par leur `process` — les traiter comme un emploi ambigu ferait crier le garde-fou sur
+    // chaque mention d'un script, donc sur ce qu'il y a de moins ambigu dans tout le paysage.
+    const sansNomsDeFichiers = entree.toleres ? phrase.replace(entree.toleres, "") : phrase;
+    MOT_GARDIEN.lastIndex = 0;
+    if (!MOT_GARDIEN.test(sansNomsDeFichiers)) continue;
+    ecarts.push(phrase.trim().replace(/\s+/g, " ").slice(0, 160));
+  }
+  return ecarts;
+}
+
+// L'INSTANCE HISTORIQUE, gardée sous son nom parce que la charte le cite : elle ne fait plus que
+// choisir son entrée dans le registre. Un nom cité ailleurs ne se change jamais en silence.
+export function findGardienAmbigu(texte, options = {}) {
+  return findVocabulaireAmbigu(texte, VOCABULAIRE_RESERVE.find((v) => v.terme === "gardien"), options);
+}
+
+// LE BALAYAGE RÉEL, sur les documents normatifs seulement (cf. portée ci-dessus). C'est ce que
+// SAFE-EXPORT fait remonter dans ses écarts : une dette de vocabulaire est une dette de REPRISE,
+// donc son domaine, jamais celui d'un Gardien sacré du code.
+export function scanVocabulaire({ root = ROOT, termes = VOCABULAIRE_RESERVE, readFileImpl = readFileSync, listDirImpl = readdirSync } = {}) {
+  const cibles = ["CLAUDE.md"];
+  try {
+    for (const f of listDirImpl(join(root, "docs/referentiel"))) if (f.endsWith(".md")) cibles.push(`docs/referentiel/${f}`);
+  } catch { /* référentiel absent : le dire par un résultat vide, jamais par un vert */ }
+  const ecarts = [];
+  for (const cible of cibles) {
+    let texte;
+    try { texte = readFileImpl(join(root, cible), "utf8"); } catch { continue; }
+    for (const entree of termes) {
+      for (const phrase of findVocabulaireAmbigu(texte, entree)) {
+        ecarts.push({ fichier: cible, terme: entree.terme, definition: entree.definition, phrase });
+      }
+    }
+  }
+  return { cibles: cibles.length, mesure: cibles.length ? "mesuré" : "pas mesuré — aucun document normatif trouvé", ecarts };
+}
+
+// L'AUTRE MOITIÉ, et sans elle la première ne garantit rien : un futur script nommé `*-guardian`
+// SANS `process` dans son nom rouvrirait l'ambiguïté par le code, pendant que les documents
+// resteraient impeccables. Lu sur le disque réel, jamais sur une liste tenue à la main.
+export function findGuardiansHorsProcess({ root = ROOT, listDirImpl = readdirSync } = {}) {
+  let fichiers = [];
+  try { fichiers = listDirImpl(join(root, "scripts")); } catch { return []; }
+  return fichiers
+    .filter((f) => /guardian/i.test(f) && !/process/i.test(f))
+    .map((f) => `scripts/${f} : porte « guardian » sans « process » — le rang n'est plus dit par le nom. Un contrôleur de process le nomme ; un Gardien sacré ne prend jamais cette orthographe.`);
+}
+
+// LE LANCEUR EN DERNIER, ET C'EST UNE CONTRAINTE RÉELLE, pas une préférence de rangement : il
+// était placé au milieu du fichier, donc main() s'exécutait avant que les `const` écrits en
+// dessous n'existent (zone morte temporelle). scanVocabulaire() a planté au premier vrai
+// lancement — l'outil aurait paru fini et n'aurait jamais tourné. Toute section ajoutée plus bas
+// hérite désormais de la garantie : au moment où main() part, tout le module est initialisé.
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split("/").pop())) main();

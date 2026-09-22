@@ -27,7 +27,18 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-import { CIRCLE_ITEMS, CIRCLE_REPORT_FOLDERS, NOT_RECOMMENDED_BY_DEFAULT, COSTLY_SUBSTITUTES, loadLastRun, findRegistriesMissingFromCircle } from "./circle-tasks.mjs";
+import {
+  CIRCLE_ITEMS, CIRCLE_REPORT_FOLDERS, NOT_RECOMMENDED_BY_DEFAULT, COSTLY_SUBSTITUTES, loadLastRun, findRegistriesMissingFromCircle,
+  // LA BARRIÈRE D'OUVERTURE ET LE SUIVI DES QUESTIONS (câblés ici le 2026-09-23). Ces mécanismes
+  // vivaient dans circle-tasks.mjs et dans docs/circle-process-detail.txt (Parties 8 et 11) — le
+  // gardien du process, lui, n'en savait rien : `grep` n'en trouvait pas une seule mention. Un
+  // process dont le gardien ignore la moitié des règles ne garde que l'autre moitié, et le dit
+  // pourtant conforme. Jamais un second calcul : ce sont les fonctions RÉELLES qui sont importées,
+  // jamais une logique réécrite ici (Article 24).
+  loadOuverture, findFaitsManquants, ouvertureEstFraiche, autoriseCloture, OUVERTURE_VALIDE_HEURES,
+  loadQuestionsSansReponse, questionsAReposer, enAttenteProchaineRonde, prochaineAction,
+  MAX_TENTATIVES_PAR_RONDE, loadSeriesPassees, effetDUneSeriePassee, HYPOTHESE_SILENCE,
+} from "./circle-tasks.mjs";
 import { findOrphanReportFiles, REGISTRIES } from "./doc-report.mjs";
 import { walkDocsPaths, sh } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
@@ -66,6 +77,51 @@ export function verifyDoubleCommunication(entries = []) {
   return { ok: findings.length === 0, findings };
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// CE QUE CE GARDIEN COUVRE DU PROCESS, MÉCANISME PAR MÉCANISME (2026-09-23)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Demande explicite de l'utilisateur : « assure-toi qu'un mécanisme vérifie que tout est toujours
+// bien présent dans le process ET CHEZ SON GARDIEN ». Ce bloc est la moitié « chez son gardien ».
+// Il est VÉRIFIÉ, jamais déclaratif : etatConnexionProcessGardien() (god-of-all-process.mjs) croise
+// les exports réels de scripts/circle-tasks.mjs avec docs/circle-process-detail.txt et avec ce
+// fichier-ci, et fait remonter tout mécanisme qu'un seul des deux côtés connaît.
+//
+// POURQUOI UNE LISTE ÉCRITE PLUTÔT QUE DES IMPORTS. Importer une fonction qu'on n'appelle pas
+// serait un faux témoignage : le gardien paraîtrait la surveiller alors qu'il ne fait que la
+// nommer. Ce qui suit dit donc, pour chaque mécanisme du process, COMMENT il est couvert — ou
+// pourquoi il ne relève pas de ce gardien. Une ligne « non couvert » est une limite déclarée, pas
+// un trou caché : c'est la même discipline des trois états que partout ailleurs (couvert / non
+// couvert avec raison / pas mesurable).
+export const COUVERTURE_MECANISMES = {
+  // — Sélection et lancement (Étapes 1-2) —
+  recommendCircleSelection: "couvert indirectement par le contrôle auto-prime-goat : c'est la fenêtre qui détermine la sélection, et c'est elle qui est exigée.",
+  recommendCircleSelectionWithPeriodicity: "idem — la périodicité ne change pas l'obligation de poser la fenêtre, seulement ce qu'elle propose.",
+  primeAddableItems: "idem : le mode PRIME n'existe que par la fenêtre, déjà exigée.",
+  COSTLY_DUE_THRESHOLD_DAYS: "non couvert ici, et c'est volontaire : un seuil de périodicité relève du calibrage de la Ronde, jamais de la discipline d'exécution.",
+  // — Exécution et traces (Étapes 3-4) —
+  recordCircleItemReport: "couvert par hasFreshReportFile() : c'est la trace que cette fonction laisse qui est vérifiée, jamais son appel.",
+  recordCircleTasksRun: "couvert par le contrôle record-run, via loadLastRun() — l'écart de commits, jamais la parole de l'agent.",
+  shouldRemindCircleTasks: "non couvert : c'est le rappel qui pousse à lancer une Ronde, donc l'amont du process, jamais son déroulé.",
+  REMINDER_COMMIT_THRESHOLD: "idem — seuil du rappel amont.",
+  // — Barrière d'ouverture (Partie 8) —
+  FAITS_D_OUVERTURE: "couvert par autoriseCloture(), qui s'appuie sur findFaitsManquants() : les faits manquants sont nommés un par un, jamais un simple « incomplet ».",
+  // — Questions (Partie 11) —
+  ETATS_QUESTION: "couvert par le contrôle questions-a-reposer : les trois états sont ce que loadQuestionsSansReponse() restitue.",
+  PALIERS_QUESTION: "couvert par prochaineAction(), qui applique les paliers — le gardien relaie son verdict plutôt que de recalculer l'escalade.",
+  enregistrerQuestionsSansReponse: "couvert par l'écart : si une série reste sans réponse sans être enregistrée, series-non-declarees le dit.",
+  marquerRepondue: "couvert de la même façon — une question répondue sans être marquée reste au registre et ressort au contrôle suivant.",
+  passerLaSerie: "couvert par serie-passee-inconnue : le registre des séries passées est la seule preuve d'une décision de passer.",
+  // — Rendu (jamais du ressort de ce gardien) —
+  buildCircleRunSummaryText: "non couvert : la FORME du rapport appartient à Doc-Report et report-template, jamais à la discipline d'exécution.",
+  groupCircleReportByTheme: "non couvert — présentation.",
+  ALERT_ICON: "non couvert — présentation.",
+  // — Domaine de Doc-Report (Article 26 : un gardien ne garde jamais le domaine d'un autre) —
+  REPORT_PER_RUN_REGISTRIES: "non couvert ici : c'est findOrphanReportFiles() qui en tire la conséquence, et ce gardien relaie son verdict (contrôle orphan-reports).",
+  checkHtmlWiring: "non couvert : décision HTML/texte, domaine de Doc-Report.",
+  auditHtmlDecisions: "non couvert : même domaine.",
+};
+
 // verifyRondeProcess() — le point d'entrée unique. `checkedItemIds`/`executedItemIds` et les
 // signaux de l'Étape 5 (recapHtml, analysisPointsFound, questionsAsked, reportsDeliveredBeforeAnalysis)
 // sont fournis par l'agent qui pilote, jamais déduits — cf. portée honnête ci-dessus.
@@ -94,6 +150,14 @@ export function verifyRondeProcess({
   changementModeleReponse,
   retourModeleQuand,
   retourModeleRappelPose,
+  // Les faits de la barrière d'ouverture et du suivi des questions : lus sur disque par défaut
+  // (ils Y vivent réellement), injectables pour les tests. Jamais fournis par l'agent : ces
+  // deux-là sont les rares faits du process qui LAISSENT une trace — les demander à l'agent
+  // reviendrait à préférer sa parole à la preuve.
+  loadOuvertureImpl = loadOuverture,
+  loadQuestionsSansReponseImpl = loadQuestionsSansReponse,
+  loadSeriesPasseesImpl = loadSeriesPassees,
+  seriesReellementPosees,
 } = {}) {
   const findings = [];
   const add = (check, message) => findings.push({ check, message });
@@ -234,6 +298,53 @@ export function verifyRondeProcess({
   const realExistingPaths = existingPaths ?? walkDocsPaths("docs", "");
   const missingFromCircle = findRegistriesMissingFromCircleImpl(realExistingPaths);
   if (missingFromCircle.length) add("registries-missing-from-circle", `${missingFromCircle.length} registre(s) réel(s) sans entrée CIRCLE_ITEMS ni exclusion documentée : ${missingFromCircle.join(", ")}.`);
+
+  // 9. LA BARRIÈRE D'OUVERTURE (docs/circle-process-detail.txt Partie 8). Elle bloque déjà
+  // `record-run` côté circle-tasks.mjs ; ici elle est VÉRIFIÉE plutôt que subie, pour que le
+  // rapport du gardien dise POURQUOI une Ronde ne pourra pas se clore, au lieu de laisser
+  // l'agent le découvrir au dernier geste. Jamais un second calcul : autoriseCloture() est la
+  // fonction réelle, appelée telle quelle.
+  //
+  // La borne autonome est celle de tout le reste de ce fichier, et pour la même raison :
+  // autoriseCloture() rend `autorise: true` sans condition en mode autonome. Une barrière qui
+  // arrêterait une Ronde de nuit serait exactement le blocage que l'utilisateur interdit.
+  {
+    const ouverture = loadOuvertureImpl();
+    const verdict = autoriseCloture({ ouverture, nightAutonomousMode, now });
+    if (!verdict.autorise) add("ouverture-barriere", `La Ronde ne pourra pas être clôturée : ${verdict.raison}. Tant que l'ouverture manque, record-run refuse, le compteur « N commits sans Ronde » continue de monter, et la Ronde ne compte pas comme faite.`);
+  }
+
+  // 10. LE SUIVI DES QUESTIONS SANS RÉPONSE (Partie 11). Trois états, jamais deux : répondue,
+  // sans réponse, jamais posée — et une question sans réponse est d'abord un ACCIDENT, jamais un
+  // refus tant qu'il n'est pas formulé.
+  //
+  // CE QUE CE BLOC ATTRAPE VRAIMENT, et c'est le trou réel : une série laissée sans réponse qui
+  // ne serait ni reposée, ni passée, ni reportée — donc disparue en silence. C'est précisément
+  // ce que tout le mécanisme existe pour empêcher, et rien ne le vérifiait.
+  {
+    const registre = loadQuestionsSansReponseImpl();
+    const suite = prochaineAction({ registre });
+    if (suite.quoi === "reposer" || suite.quoi === "reposer-et-offrir-de-passer") {
+      add("questions-a-reposer", `${suite.questions.length} question(s) en attente au palier ${suite.fois} : ${suite.action}. Hypothèse en vigueur : ${suite.hypothese}. La Ronde ne se clôt pas en les laissant derrière elle.`);
+    }
+    const reportees = enAttenteProchaineRonde(registre);
+    if (reportees.length) {
+      add("questions-reportees", `${reportees.length} question(s) au-delà du plafond de ${MAX_TENTATIVES_PAR_RONDE} tentatives : l'insistance s'arrête, le suivi non — elles doivent apparaître dans le rapport de fin de Ronde, jamais disparaître.`);
+    }
+    // Une série déclarée passée par l'agent sans décision réelle de l'utilisateur : le registre des
+    // séries passées est la SEULE preuve valable. Une série inconnue de DEFAUTS_SERIE_PASSEE ne
+    // prend aucun défaut improvisé — effetDUneSeriePassee() le dit, ce contrôle le relaie.
+    for (const passee of loadSeriesPasseesImpl()) {
+      const effet = effetDUneSeriePassee(passee.serie);
+      if (!effet.connu) add("serie-passee-inconnue", `Série passée « ${passee.serie} » inconnue de DEFAUTS_SERIE_PASSEE : ${effet.avertissement} — aucun défaut ne sera appliqué, l'agent doit demander plutôt que d'improviser.`);
+    }
+    // Les séries réellement posées pendant cette Ronde : fait non observable depuis le disque
+    // (une fenêtre posée ne laisse aucune trace tant qu'elle n'a pas reçu de réponse). Son absence
+    // compte comme un manquement, jamais comme un laissez-passer — même patron que l'Étape 5.
+    if (!nightAutonomousMode && seriesReellementPosees === undefined) {
+      add("series-non-declarees", `La liste des séries de questions réellement posées pendant cette Ronde n'a pas été déclarée. Sans elle, une série oubliée est indiscernable d'une série répondue — et l'hypothèse en vigueur reste « ${HYPOTHESE_SILENCE} ».`);
+    }
+  }
 
   return { ok: findings.length === 0, findings };
 }

@@ -7,7 +7,7 @@ Registre des passages : `docs/integration-outil/index.md`.
 
 Demande explicite de l'utilisateur, le 2026-09-22 : « ecris quelque part le process integration ou
 renforce le si deja existant, pour le rendre plus efficace et te permettre d'integrer plus facilement
-un outil ». Il n'existait rien : ni document, ni entrée dans `PROCESSES`, ni gardien.
+un outil ». Il n'existait rien : ni document, ni entrée dans `PROCESSES`, ni contrôleur de process.
 
 Le constat chiffré derrière la demande : faire entrer SAFE-EXPORT puis TOOL-LEARNING a demandé
 **sept inscriptions manuelles chacun**, chacune révélée en faisant échouer un test. C'est mot pour
@@ -20,7 +20,7 @@ l'ÉVITER : l'agent reste le mécanisme d'intégration ».
 |---|---|---|
 | `fiabilite` | `scripts/lib-shell.mjs` | l'avertissement d'inexactitude affiché en tête de ses rapports |
 | `categorie` | `scripts/lib-shell.mjs` | son rang dans l'organigramme (Agent / Gardien sacré / Membre) |
-| `domaine-gardien` | `scripts/lib-shell.mjs` | *(selon décision)* les dossiers qu'il surveille, si Gardien |
+| `domaine-gardien` | `scripts/lib-shell.mjs` | *(selon décision)* les dossiers qu'il surveille, si Gardien sacré |
 | `couverture-axa` | `scripts/axa-check.mjs` | sans quoi il est invisible à la couverture de test et à la stagnation |
 | `registre-rapports` | `scripts/doc-report.mjs` | décision HTML/texte, index global, journaux orphelins |
 | `avertissement` | `scripts/doc-report.mjs` | le fichier porte-t-il réellement l'avertissement |
@@ -42,7 +42,7 @@ outil vérifié, c'est une intention »), il a été lancé sur le vrai dépôt 
   commentaire 80 lignes plus haut) plutôt que sur la déclaration ; `id:` pris pour `slug:` ; un
   registre dont les entrées nomment les outils en toutes lettres.
 - **Une exclusion volontaire réclamée comme un manque** : safe-export est délibérément hors de la
-  Ronde (Gardien, il tourne à chaque commit), et l'outil demandait de l'y inscrire. Corrigé en lui
+  Ronde (Gardien sacré, il tourne à chaque commit), et l'outil demandait de l'y inscrire. Corrigé en lui
   apprenant à lire `CIRCLE_AUTO_COVERED_REGISTRIES` — l'exclusion déclarée EST la décision.
 
 ## Sa limite, déclarée

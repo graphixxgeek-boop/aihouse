@@ -12,7 +12,7 @@ d'ALWAYS-NEW-CODE, et la distinction est non négociable (Article 23).
 
 ## Ce qu'il regarde à chaque commit
 
-Les blueprints seulement — même économie que ses voisins Gardiens : un balayage complet du dépôt à
+Les blueprints seulement — même économie que ses voisins Gardiens sacrés : un balayage complet du dépôt à
 chaque commit coûterait trop pour un outil censé être gratuit. Et c'est le seul endroit où une fuite
 de spécificité est certaine d'être un défaut, puisque ces fichiers se déclarent exportables.
 
@@ -33,7 +33,7 @@ entièrement faux (Article 25).
 Sur relecture de l'utilisateur : « ne jamais ecarter une zone sciemment laissée de coté par moi,
 sauf avec mon accord explicite ». La première version filtrait tout écart marqué « écarté » sans
 jamais demander qui l'avait écarté — l'agent pouvait donc faire taire un avertissement tout seul.
-**Un gardien qui peut se taire de sa propre initiative ne garde plus rien.**
+**Un Gardien sacré qui peut se taire de sa propre initiative ne garde plus rien.**
 
 Désormais : seul un écart portant un **accord explicite daté** est filtré. Les autres reviennent, et
 leur rappel grossit — rappel, puis question proposée à 3 passages, puis **question obligatoire à 5**.

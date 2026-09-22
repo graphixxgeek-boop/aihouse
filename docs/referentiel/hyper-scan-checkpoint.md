@@ -98,7 +98,7 @@ find-booster, objectifs-vs-resultats, CASSANDRA-RH — tous des Membres/Agents r
 conception de cet outil le 2026-09-19). Volontairement PAS de second appel à `runNetworkCheck()`
 (LE-COORDINATEUR) : ce script a déjà ses propres appels directs à ARGUS/HARMONIA/AXA-CHECK/
 CLEAN-DIRTY-OLD/CLONE-HUNTER/ALWAYS-NEW-CODE juste au-dessus — un second passage relancerait
-`check-house.mjs` et ces deux premiers Gardiens une deuxième fois pour rien, l'exact contraire de
+`check-house.mjs` et ces deux premiers Gardiens sacrés une deuxième fois pour rien, l'exact contraire de
 « plus performant ».
 
 ## SMART-CONSO-TOKEN pioche désormais dans ce registre (2026-09-22)

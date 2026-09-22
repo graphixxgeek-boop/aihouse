@@ -24,11 +24,11 @@ on l'integre tout de suite en gardien sacré [...] integration complete ». Prom
 sacré du code (Article 20, `docs/referentiel/organisation-agence.md` §3) — mais SEULE la couche
 légère décrite ci-dessus (`recommendZone()`/`addendaSignal()`/`churnSignal()`, zéro raisonnement)
 porte ce statut, jamais le vrai zoom profond, qui exige un raisonnement payant et reste hors des
-Gardiens par construction (le critère double de l'Article 20 l'exclut structurellement, cf.
+Gardiens sacrés par construction (le critère double de l'Article 20 l'exclut structurellement, cf.
 `organisation-agence.md` §3, correction du 2026-09-21 sur la portée exacte de cette exclusion).
 
 Câblage réel, suivant exactement le même « Répertoire des fonctionnements spécifiques partagés par
-tous les Gardiens » (`organisation-agence.md` §3) que les 5 autres :
+tous les Gardiens sacrés » (`organisation-agence.md` §3) que les 5 autres :
 1. **Post-commit** (`scripts/hooks/check-last-commit.mjs`) — calcule `recommendZone()` sur
    `docs/always-new-code/index.md`, puis `addendaSignal(countDatedAddenda(...))`/
    `churnSignal(parseNumstat(...))` sur le SEUL fichier principal (`THEME_PRIMARY_FILE`) de la zone
@@ -39,7 +39,7 @@ tous les Gardiens » (`organisation-agence.md` §3) que les 5 autres :
    précédent que `clone-hunter-run` retiré à la promotion de CLONE-HUNTER. `CIRCLE_EXCLUDED_REGISTRIES`
    documente la raison.
 3. **`check-house.mjs`** — bloc de test dédié (fixtures + garde-fous du critère « OK 100% »
-   exigeant les 6 Gardiens ensemble).
+   exigeant les 6 Gardiens sacrés ensemble).
 4. **Badge** (`checkAgentOnboarding()`) — nouveau paramètre `alwaysNewCodeFlagged`, alimente
    `koParts` (« KO ALWAYS-NEW-CODE ») exactement comme les 5 autres.
 5. **HYPER-SCAN-CHECKPOINT** — déjà câblé de longue date (`sh("node scripts/always-new-code.mjs")`),
