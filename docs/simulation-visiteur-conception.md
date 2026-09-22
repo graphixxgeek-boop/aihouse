@@ -95,12 +95,54 @@ la comparabilité point à point entre deux simulations (les tirages ne tombent 
 et on gagne le réalisme, plus un test des bonus dans des états émotionnels variés plutôt que
 toujours les mêmes trois.
 
-## 5. Ce qui reste à trancher
+## 5. Identité, longueur, rattrapage — et la variante de genre
 
-Identité affichée du visiteur, longueur de la phase libre avant le rattrapage final, et forme de ce
-rattrapage (annoncé dans la fiction ou invisible).
+**Pseudo fixe : « Le Visiteur ».** Deux simulations restent comparables jusque dans les répliques où
+Lia et Noé le nomment : un écart entre deux sessions vient alors du code, jamais du nom.
 
-## 6. Statut
+**La variante « L'Observatrice », et comment elle se concilie avec la lecture en parallèle.**
+Question posée par l'utilisateur en répondant :
+
+> « j'aurais bien aimé une variante "L'Observatrice" pour voir si la simu reagit bien aux accord de
+> genre masculin/feminin. Comment concilier la lecture facile en parallele ? »
+
+**Réponse : le genre devient un PARAMÈTRE DÉCLARÉ de la simulation, jamais une variation tirée au
+sort.** C'est ce qui réconcilie les deux exigences, et la réconciliation tient à une seule chose :
+on ne compare jamais une simulation masculine à une féminine, on compare une masculine à une
+masculine. Deux formats nommés (`Le Visiteur` / `L'Observatrice`), le format employé écrit en tête
+du transcript et du rapport — une transcription ne laisse donc jamais de doute sur ce qui a tourné,
+et la lecture en parallèle reste exactement aussi facile qu'avant à l'intérieur de chaque format.
+Le test d'accord de genre cesse d'être une loterie qu'on espère voir se déclencher : il se lance
+délibérément, le jour où on veut cette réponse-là.
+
+**Et ce test manque réellement aujourd'hui, ce n'est pas une précaution théorique.** Deux constats
+tirés de `docs/simulations/correctifs-a-revalider.md` :
+
+- Le correctif d'accord de genre de 2026-09-20 (Noé disait « Désolée ») est à **0/2 revalidations —
+  jamais observé une seule fois en simulation depuis**. Un format féminin lui donnerait enfin une
+  occasion de se voir.
+- Surtout, l'axe que la variante ouvre n'est couvert par **aucun** correctif existant : tous portent
+  sur le genre que Lia ou Noé s'appliquent à EUX-MÊMES. Comment ils accordent en parlant de
+  l'observateur — une tierce personne dont le genre change — n'a jamais été vérifié du tout. Ce
+  n'est donc pas seulement une revalidation, c'est une zone entièrement neuve.
+
+**Longueur : une douzaine d'échanges libres**, plus court qu'aujourd'hui pour compenser le temps du
+rattrapage final — durée totale proche de l'actuelle. Risque assumé et à surveiller à la première
+lecture : douze échanges laissent peu de place pour que l'arc (curieux → cruel → regret) soit
+crédible. Si le transcript montre un basculement trop brutal, c'est ce chiffre qu'il faudra revoir,
+jamais la personnalité.
+
+**Rattrapage : invisible dans la conversation, marqué dans le rapport.** Rien ne signale un
+changement de régime dans le transcript — il se lit comme une vraie conversation de bout en bout —
+mais le rapport dit précisément quels échanges relevaient du rattrapage et quelles familles de
+réaction restaient à couvrir. Coût accepté : un rapport de plus à produire.
+
+## 6. Ce qui reste à trancher
+
+Rien de bloquant pour écrire le script. Le chiffre de douze échanges est le seul point à revoir
+après la première lecture d'un vrai transcript.
+
+## 7. Statut
 
 Conception en cours, aucun code écrit. Le script actuel (`scripts/run-simulation.mjs`, batterie
 fixe) reste en service tant que celui-ci n'est pas construit et vérifié.
