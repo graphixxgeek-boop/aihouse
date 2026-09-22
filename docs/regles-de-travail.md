@@ -482,6 +482,54 @@ KPI, EL-PROFESSOR, simulations, THE-FINAL-JUDGE...), jamais un traitement spéci
    qu'une future phrase générique (mention légale, rappel de contexte, statut d'un chantier) s'y
    ajoute en UN endroit pour tout le paysage, jamais en repassant sur trente scripts.
 
+### Le gabarit unifié : un seul contrat, deux rendus
+
+*(2026-09-22, tâche #199, demande explicite : « s'assurer que tous les reports ont le meme format,
+gabarit : ce format est graphique (txt ou html, mise en page, couleurs, etc.) mais aussi au niveau
+du contenu : message d'en tete, titres, facon de presnter, organisation, structure... Il y a une
+place dans chaque report pour pouvoir importer une phrase generique ».)*
+
+**L'asymétrie réelle qui l'a motivé**, mesurée avant d'écrire une ligne : les rapports **HTML**
+partageaient déjà un contrat unique (`title` / `subtitle` / `dateLabel` / `blocks` / `footer`,
+`html-report.mjs`) — c'est pour ça qu'ils se ressemblent tous. Les rapports **TEXTE** n'avaient
+aucun contrat : chaque outil improvisait son en-tête, son titre, sa façon de dater, son ordre. D'où
+l'épisode de la phrase de fiabilité (#198), qu'il a fallu insérer à la main dans 28 fichiers faute
+d'un endroit prévu pour ça.
+
+**`scripts/report-template.mjs` est la définition unique.** Une seule description de ce qu'EST un
+rapport (`REPORT_CONTRACT`), deux rendus qui la consomment (`renderTextReport()` et
+`renderHtmlReport()`, ce dernier routé par le même `buildReportFrame()`) — jamais deux gabarits
+parallèles qui divergeraient au premier changement. Le vocabulaire de blocs est commun aux deux
+(`note` / `code` / `list` / `table`), sinon un outil devrait écrire son corps deux fois.
+
+**L'emplacement générique d'en-tête (`slots`)** est le cœur de la demande : une place réservée, en
+tête, remplie depuis un registre PARTAGÉ dès que l'outil donne son nom — l'appelant n'a rien à y
+penser. Son premier locataire est l'avertissement de fiabilité ; une mention légale, un rappel de
+contexte ou un statut de chantier s'y ajouteraient **en un seul endroit**, jamais en repassant sur
+trente scripts. Il s'affiche AVANT le titre : une nuance imprimée sous les constats se lit une fois
+le mal fait.
+
+**Qui est tenu par le gabarit.** 25 scripts écrivent un fichier ; 16 seulement étaient déclarés. Les
+9 autres n'étaient ni déclarés ni écartés — un angle mort, pas une décision. Mais en les regardant
+un par un (Article 19), la plupart n'écrivent pas un *rapport*. `FILE_WRITER_NATURES`
+(`doc-report.mjs`) classe donc chaque émetteur en trois natures, jamais confondues :
+- **rapport** — un document destiné à être LU : **doit suivre le gabarit** ;
+- **journal** — une mémoire machine relue par du code, jamais par un humain (compteurs, historiques,
+  snapshots) : aucun gabarit, ce serait du bruit ;
+- **infrastructure** — n'écrit rien qui lui appartienne (un moteur de rendu, un installeur, un
+  lanceur) : rien à formater non plus.
+
+Garde-fou mécanique : `findUnclassifiedFileWriters()` — **aucun script ne peut écrire un fichier
+sans être soit déclaré comme produisant un rapport, soit classé avec une raison écrite**. Il a
+attrapé deux fois ses propres auteurs le soir même : `report-template.mjs` (classé infrastructure,
+il définit le gabarit sans en produire) puis **Doc-Report lui-même** (classé « rapport » — un
+gardien qui s'exempte laisse exactement le trou qu'il traque ailleurs). `toolsBoundByReportTemplate()`
+dérive la liste des tenus au gabarit de REGISTRIES + les « rapport », jamais une troisième liste.
+
+**Reste ouvert** : la vérification que chaque outil tenu applique RÉELLEMENT le gabarit (et non
+seulement qu'il le doit) — c'est le rôle de **pure-gold-unity**, qui vient ensuite et dont ce
+gabarit est la référence de comparaison manquante.
+
 ### Fiabilité déclarée : tout outil approximatif le dit en tête de rapport
 
 *(2026-09-22, tâche #198, demande explicite : « ecotoken devrait indiquer en debut de rapport :

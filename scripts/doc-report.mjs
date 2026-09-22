@@ -519,3 +519,70 @@ export function findHeuristicToolsWithoutNotice(registry = TOOL_RELIABILITY, { s
   }
   return manques;
 }
+
+// --- QUI ÉMET UN RAPPORT, ET QUI N'EN ÉMET PAS (2026-09-22, tâche #199, demande explicite :
+// « assure toi que doc-report est bien pluggé à tous les outils qui emettent un rapport, et que ces
+// outils savent qu'ils doivent respecter le format »).
+//
+// LE CONSTAT MESURÉ QUI L'A MOTIVÉ : 25 scripts écrivent un fichier, 16 seulement figuraient dans
+// REGISTRIES. Les 9 autres n'étaient ni déclarés ni écartés — un angle mort, pas une décision. Mais
+// en les regardant un par un (Article 19), la plupart n'écrivent PAS un rapport : ils écrivent un
+// journal local, un artefact de travail, ou la mise en page d'un rapport appartenant à un autre.
+// La vraie correction n'est donc pas de tous les déclarer comme rapports — ce serait remplacer un
+// angle mort par une fausse déclaration — mais d'exiger que chacun soit CLASSÉ, rapport ou non,
+// avec une raison écrite.
+//
+// Trois natures, jamais confondues :
+//  · "rapport"        — un document destiné à être LU (par l'utilisateur ou par un autre outil) :
+//                       doit suivre le gabarit (report-template.mjs, REPORT_CONTRACT) ;
+//  · "journal"        — une mémoire machine relue par du code, jamais par un humain (compteurs,
+//                       historiques, snapshots) : aucun gabarit à respecter, ce serait du bruit ;
+//  · "infrastructure" — n'écrit rien qui lui appartienne (un moteur de rendu, un installeur, un
+//                       lanceur de simulation) : rien à formater non plus.
+//
+// Registre volontairement tenu à la main, comme TOOL_RELIABILITY et pour la même raison (aucune
+// mécanique ne peut deviner si un fichier est destiné à un lecteur humain) — et pour la même raison
+// accompagné d'un garde-fou mécanique, `findUnclassifiedFileWriters()` (Article 24).
+export const FILE_WRITER_NATURES = {
+  "scripts/check-house.mjs": { nature: "infrastructure", pourquoi: "filet de tests : son résultat est un code de sortie et une sortie console, les fichiers qu'il écrit sont des relevés de couverture temporaires" },
+  "scripts/check-spirit.mjs": { nature: "rapport", pourquoi: "affiche de vraies réponses du modèle destinées à une lecture humaine — le diagnostic de ton" },
+  "scripts/gemini-key-health.mjs": { nature: "journal", pourquoi: "tient .gemini-key-health.json, relu par le code de rotation des clés, jamais par un humain" },
+  "scripts/html-report.mjs": { nature: "infrastructure", pourquoi: "c'est le moteur de rendu lui-même (doc-HTML) — il met en page le rapport des autres, il n'en a aucun" },
+  "scripts/memento-weight.mjs": { nature: "journal", pourquoi: "tient l'historique du poids de contexte par tour, relu par les outils de suivi conso" },
+  // Signalé par le garde-fou dès son premier lancement, le soir même de sa création : il ne fait
+  // que DÉFINIR renderTextReport(), il ne produit aucun rapport à lui — même statut que html-report.
+  // Doc-Report lui-même : il produit bien un rapport lisible (l'index global des rapports du
+  // projet, buildDocReportIndex()). Signalé par son propre garde-fou au second lancement — il ne
+  // figure dans REGISTRIES qu'en tant que PROPRIÉTAIRE d'autres registres, jamais comme émetteur.
+  // Un gardien qui ne se surveille pas lui-même laisserait exactement le trou qu'il traque ailleurs.
+  "scripts/doc-report.mjs": { nature: "rapport", pourquoi: "produit l'index global des rapports du projet, destiné à être lu" },
+  "scripts/report-template.mjs": { nature: "infrastructure", pourquoi: "c'est la définition du gabarit elle-même — il décrit la forme des rapports des autres, il n'en a aucun" },
+  "scripts/pnpm-install.mjs": { nature: "infrastructure", pourquoi: "installation des dépendances et des crochets git — aucun constat à présenter" },
+  "scripts/run-simulation.mjs": { nature: "infrastructure", pourquoi: "lance une simulation et écrit son journal brut ; le rapport lisible, lui, est produit ensuite par LE-RÉGISSEUR et EL-PROFESSOR" },
+  "scripts/the-ghost.mjs": { nature: "rapport", pourquoi: "rend compte du rituel de nuit autonome — ce qui a tourné, ce qui reste — destiné à être lu au réveil" },
+  "scripts/tool-usage.mjs": { nature: "journal", pourquoi: "compteur de sollicitations relu par Doc-Report et CASSANDRA-RH, jamais lu tel quel" },
+};
+
+// Tout script qui écrit un fichier doit être connu : soit déclaré comme produisant un rapport dans
+// REGISTRIES, soit classé explicitement ci-dessus. Ni l'un ni l'autre = un émetteur dans l'ombre.
+export function findUnclassifiedFileWriters({ registries = REGISTRIES, natures = FILE_WRITER_NATURES, listDirImpl = (dir) => (existsSync(dir) ? readdirSync(dir) : []), readFileImpl = readFileSync } = {}) {
+  const declares = new Set(registries.map((r) => r.scriptPath).filter(Boolean));
+  const inconnus = [];
+  for (const nom of listDirImpl(join(ROOT, "scripts")).filter((f) => f.endsWith(".mjs")).sort()) {
+    const chemin = `scripts/${nom}`;
+    if (declares.has(chemin) || natures[chemin]) continue;
+    let source;
+    try { source = readFileImpl(join(ROOT, chemin), "utf8"); } catch { continue; }
+    if (/writeFileSync\(|renderHtmlReport\(|renderTextReport\(/.test(source)) inconnus.push(chemin);
+  }
+  return inconnus;
+}
+
+// Les scripts qui DOIVENT suivre le gabarit — ce que pure-gold-unity vérifiera réellement, et ce
+// que la fiche de chaque outil doit énoncer. Dérivé, jamais recopié : REGISTRIES + les "rapport"
+// ci-dessus, sans jamais une troisième liste à tenir à jour en parallèle.
+export function toolsBoundByReportTemplate({ registries = REGISTRIES, natures = FILE_WRITER_NATURES } = {}) {
+  const chemins = new Set(registries.map((r) => r.scriptPath).filter(Boolean));
+  for (const [chemin, { nature }] of Object.entries(natures)) if (nature === "rapport") chemins.add(chemin);
+  return [...chemins].sort();
+}

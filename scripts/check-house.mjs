@@ -6137,6 +6137,54 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 }
 
 {
+  // GABARIT UNIFIÉ DES RAPPORTS (tâche #199, 2026-09-22 — demande explicite : « s'assurer que tous
+  // les reports ont le meme format [...] Il y a une place dans chaque report pour pouvoir importer
+  // une phrase generique »). L'asymétrie réelle corrigée : les rapports HTML partageaient déjà un
+  // contrat unique, les rapports TEXTE n'en avaient aucun — d'où la phrase de fiabilité qu'il avait
+  // fallu insérer à la main dans 28 fichiers faute d'emplacement prévu.
+  const { REPORT_CONTRACT, buildReportFrame, renderTextReport, renderTextBlock, genericSlots } = await import('../scripts/report-template.mjs');
+  const { renderHtmlReport } = await import('../scripts/html-report.mjs');
+  const { findUnclassifiedFileWriters, toolsBoundByReportTemplate, FILE_WRITER_NATURES } = await import('../scripts/doc-report.mjs');
+
+  assert.throws(() => buildReportFrame({ blocks: [] }), /jamais un rapport sans titre/, 'the contract must refuse a report with no title at all, in text exactly as the HTML renderer already refused it — never two different strictnesses for the same gabarit');
+  const cadre = buildReportFrame({ tool: 'ecotoken', title: 'T' });
+  assert.ok(cadre.dateLabel, 'a report with no date supplied must still get one — REPORT_CONTRACT makes the date mandatory because a report that cannot be placed in time compares to nothing');
+  assert.equal(cadre.slots.length, 1, 'the generic header slot must be filled automatically from the shared registry for a heuristic tool, without the calling tool having to think about it — the whole point of the slot');
+  assert.deepEqual(buildReportFrame({ tool: 'check-house-mjs', title: 'T' }).slots, [], 'a mechanical tool gets an EMPTY slot, never an empty-but-present line: the gabarit adds the phrase only where it is true');
+  assert.deepEqual(buildReportFrame({ title: 'T' }).slots, [], 'a caller that supplies no tool at all keeps its report exactly as before — the ~10 existing HTML callers must never break because the gabarit arrived');
+  assert.deepEqual(genericSlots(undefined), [], 'genericSlots() must answer an honest empty list rather than crash when no tool is named');
+
+  // Le rendu TEXTE porte réellement chaque partie du contrat, dans l'ordre.
+  const texte = renderTextReport({ tool: 'ecotoken', title: 'Mon titre', subtitle: 'ma portée', dateLabel: '2026-09-22', blocks: [{ type: 'list', items: ['a', 'b'] }], footer: 'ma limite' });
+  for (const attendu of ['peuvent être inexacts', '=== Mon titre ===', 'ma portée', 'Date : 2026-09-22', '· a', 'ma limite']) {
+    assert.ok(texte.includes(attendu), `the text rendering must carry every part of REPORT_CONTRACT — "${attendu}" is missing, so a text report would still be improvising where an HTML one would not`);
+  }
+  assert.ok(texte.indexOf('peuvent être inexacts') < texte.indexOf('=== Mon titre ==='), 'the generic slot must come FIRST, before the title: a caveat printed under the findings is read after the damage is done — the exact defect this task fixes');
+  // Le piège réel rencontré en écrivant cette fonction : un objet brut d'appelant a lui aussi un
+  // titre, si bien qu'un test sur le titre le prenait pour un cadre déjà construit et sautait tout
+  // le gabarit en silence.
+  assert.ok(renderTextReport(buildReportFrame({ tool: 'ecotoken', title: 'Deux fois' })).split('peuvent être inexacts').length === 2, 'passing an ALREADY-built frame must not add the generic slot a second time — normalising twice would duplicate every transverse sentence');
+  assert.ok(renderTextReport({ tool: 'ecotoken', title: 'Brut' }).includes('peuvent être inexacts'), 'passing a RAW object must still go through the frame — recognised by its slots, never by its title, which a raw object also has');
+
+  assert.equal(renderTextBlock({ type: 'table', headers: ['A', 'BB'], rows: [['1', '2']] }).split('\n').length, 3, 'the text renderer must speak the same block vocabulary as the HTML one (note/code/list/table) — otherwise a tool would have to write its body twice, once per format');
+  assert.equal(renderTextBlock(undefined), '', 'a missing block must render as nothing rather than a leaked "undefined" in a delivered report');
+  assert.equal(REPORT_CONTRACT.filter((c) => c.obligatoire).map((c) => c.cle).join(','), 'title,dateLabel,blocks', 'the contract must state exactly which parts are mandatory, mechanically readable rather than promised in a comment');
+
+  // Le rendu HTML passe par le MÊME cadre — jamais un second gabarit parallèle.
+  assert.ok(renderHtmlReport({ tool: 'ecotoken', title: 'T', blocks: [] }).includes('peuvent être inexacts'), 'an HTML report naming its tool must receive the same generic slot as a text one, from the same single definition');
+  assert.ok(!renderHtmlReport({ title: 'T', blocks: [] }).includes('peuvent être inexacts'), 'an HTML report from an existing caller that names no tool must be byte-for-byte what it always was — the gabarit is added without breaking anything already delivered');
+
+  // Garde-fou : plus aucun script n'écrit un rapport hors de la connaissance de Doc-Report.
+  assert.deepEqual(findUnclassifiedFileWriters(), [], 'checked live against the real scripts/ folder: every script that writes a file must be either declared as producing a report or explicitly classified as journal/infrastructure with a written reason — never neither, which is an unnoticed blind spot rather than a decision (the real state before this task: 25 writers, only 16 known)');
+  assert.deepEqual(findUnclassifiedFileWriters({ registries: [], natures: {}, listDirImpl: () => ['inconnu.mjs'], readFileImpl: () => 'writeFileSync("x")' }), ['scripts/inconnu.mjs'], 'a genuinely unknown writer must be named by its real path, never counted silently');
+  assert.deepEqual(findUnclassifiedFileWriters({ registries: [], natures: {}, listDirImpl: () => ['muet.mjs'], readFileImpl: () => 'console.log("je ne produis rien")' }), [], 'a script that writes nothing at all must never be flagged — the guard tracks real emitters, not every file in the folder');
+  assert.ok(Object.values(FILE_WRITER_NATURES).every((n) => ['rapport', 'journal', 'infrastructure'].includes(n.nature) && n.pourquoi.length > 20), 'every classification must use one of the three real natures AND carry a written reason — a bare label would not let a future reader tell a decision from an oversight');
+  assert.ok(toolsBoundByReportTemplate().includes('scripts/doc-report.mjs'), 'Doc-Report must be bound by its own gabarit — a guardian that exempts itself leaves exactly the hole it hunts elsewhere (it flagged itself on its second run tonight, and was classified rather than excluded)');
+  assert.ok(toolsBoundByReportTemplate().length > Object.keys(FILE_WRITER_NATURES).length, 'the bound list must be DERIVED from REGISTRIES plus the "rapport" classifications, never a third hand-kept list that would drift from both');
+  console.log('Passed: the unified report gabarit (task #199) gives text reports the single contract HTML reports already had — one definition, two renderings, never two parallel gabarits — with a reserved generic header slot that fills itself from the shared registry, comes before the title rather than after the findings, stays empty for a mechanical tool, never duplicates when a frame is normalised twice, and leaves every existing HTML caller byte-for-byte unchanged; and Doc-Report now knows every single script that writes a file, each one either declared as producing a report or explicitly classified as journal/infrastructure with a written reason — checked live, including Doc-Report itself, which its own guard caught and which was classified rather than exempted.');
+}
+
+{
   // memory-audit (tâche #169, 2026-09-21 ; surnom retenu le même soir à la place de l'ombrelle
   // "MEMENTO", cf. docs/referentiel/memory-audit.md) — cible EXCLUSIVEMENT les Personnages (Lia/Noé),
   // jamais les membres de l'équipe. Testé contre les VRAIES formes de lib/life.ts trouvées par

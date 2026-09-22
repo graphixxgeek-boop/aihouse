@@ -18,6 +18,8 @@
 // page HTML autonome, cohérente visuellement avec la première page produite dans ce style (la photo
 // de la dream team). Aucune dépendance externe, aucun réseau, un seul fichier auto-suffisant.
 
+import { buildReportFrame } from "./report-template.mjs";
+
 export function escapeHtml(text) {
   return String(text ?? "")
     .replace(/&/g, "&amp;")
@@ -187,9 +189,19 @@ export const THEME_CSS = `
 
 // `title` obligatoire (Article 5 : jamais un rapport sans identité claire). `blocks` peut être
 // vide (rapport minimal), jamais une erreur en soi.
-export function renderHtmlReport({ title, subtitle, dateLabel, blocks = [], footer } = {}) {
+// `tool` (2026-09-22, tâche #199) : le slug de l'outil au registre. Facultatif, pour ne casser aucun
+// des ~10 appelants existants — mais dès qu'il est fourni, le rapport reçoit automatiquement
+// l'emplacement générique d'en-tête (aujourd'hui l'avertissement de fiabilité), sans que l'appelant
+// ait à y penser. C'est tout l'intérêt du gabarit : la phrase transverse suivante arrivera par le
+// même chemin, en UN endroit, jamais en repassant sur chaque outil.
+export function renderHtmlReport({ tool, title, subtitle, dateLabel, blocks = [], footer } = {}) {
   if (!title) throw new Error("renderHtmlReport() requires a title — jamais un rapport sans titre");
-  const body = blocks.map(renderBlock).join("\n");
+  // Le cadre unique (report-template.mjs) plutôt que les arguments bruts : les rendus texte et HTML
+  // consomment la MÊME description, sinon l'un appliquerait une partie du gabarit que l'autre oublie.
+  const frame = buildReportFrame({ tool, title, subtitle, dateLabel, blocks, footer });
+  const avecSlots = [...frame.slots.map((texte) => ({ type: "note", text: texte })), ...frame.blocks];
+  const body = avecSlots.map(renderBlock).join("\n");
+  dateLabel = frame.dateLabel;
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
