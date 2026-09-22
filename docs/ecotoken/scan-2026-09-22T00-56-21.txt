@@ -1,0 +1,74 @@
+=== ecotoken — réduire le coût permanent de la charte ===
+Date : 2026-09-22 00:56
+
+CLAUDE.md pèse 24536 tokens sur 1175 lignes, et c'est le SEUL document rechargé
+à chaque message — son poids se paie en boucle, jamais une seule fois.
+
+--- CRITICITÉ DE LA CIBLE ----------------------------------------------------------
+Niveau : MAITRE (score 12) — VIGILANCE MAXIMALE — aucune proposition appliquée sans relecture humaine, sans contrôle de perte de références ET sans verifyProtectiveSubstance() avant/après ; le doute tranche toujours pour NE PAS couper
+  · rechargé à chaque message : toute règle retirée cesse d'être vue à CHAQUE tour, pas seulement quand on ouvre le fichier
+  · cité par 110 fichiers : un renvoi cassé se propage
+  · 255 formulations normatives : document de règles : ce qui en disparaît cesse de s'appliquer
+  · lu par un test ou un crochet : un changement peut casser le filet de sécurité lui-même
+  · FICHIER MAÎTRE du dépôt (détection certaine) : déclaré rechargé à chaque message dans les profils de documents ; confirmé par les faits : 269 formulations normatives, cité par 110 fichiers — tout ce qui en disparaît cesse de gouverner le travail, immédiatement et partout
+  → risque maximal des propositions retenues : « faible » · validation humaine OBLIGATOIRE · contrôle de perte de références OBLIGATOIRE après application
+  Sûreté : ecotoken n'écrit JAMAIS dans le document analysé (assertSafeWriteTarget) —
+  ses seules écritures vont dans docs/ecotoken/. Tout allègement est appliqué à la main.
+
+--- DÉCLENCHEURS : ATTENDUS vs RÉELLEMENT CÂBLÉS -----------------------------------
+  ✅ post-commit — à chaque commit touchant un document budgété (jamais les autres — réveil conditionnel)
+  ✅ ronde-circle — à chaque Ronde CIRCLE-TASKS (périodique), même si aucun commit n'a touché la charte
+  ✅ network-check — à chaque passage réseau de LE-COORDINATEUR (état de santé instantané du poids)
+  ✅ sur-demande — quand l'agent ou l'utilisateur veut un plan chiffré avant d'alléger un document
+  4/4 vérifiés en lisant les fichiers, jamais sur promesse.
+  Portées disponibles : global / partiel / zoome / focus (vocabulaire partagé avec THE-FINAL-JUDGE et SMART-CONSO-TOKEN).
+
+--- RÉPARTITION PAR NATURE ---------------------------------------------------------
+Une RÈGLE gouverne le comportement et reste quoi qu'elle pèse. Une NARRATION raconte
+quand et pourquoi — précieuse, mais lue à la demande. Un INVENTAIRE énumère ce qui
+existe ailleurs — un tableau suffit.
+  regle         5 section(s)  ~ 15160 tokens
+  inventaire    4 section(s)  ~  6815 tokens
+  narration     3 section(s)  ~  2559 tokens
+
+--- RENDEMENT DES ARTICLES (citations réelles ÷ lignes occupées) --------------------
+Un rendement bas n'est JAMAIS un ordre de couper — seulement un article à regarder.
+    0.7 | Art.19  251 l. | 179 citation(s) | Comprendre avant de toucher
+    1.6 | Art.14   15 l. | 24 citation(s) | Vigilance permanente, à chaque tour et à chaqu
+    1.7 | Art.12    3 l. | 5 citation(s) | Le sens avant la forme
+    1.8 | Art.1     4 l. | 7 citation(s) | La conversation prime sur tout le reste
+    1.8 | Art.13   58 l. | 106 citation(s) | Les outils de travail vivent avec le code
+    1.8 | Art.23   13 l. | 23 citation(s) | ALWAYS-NEW-CODE : l'épreuve de la page blanche
+  … les 19 autres articles ont un meilleur rendement.
+
+--- CE QUE L'OUTIL A RETENU DES PASSAGES PRÉCÉDENTS --------------------------------
+  3 passage(s) enregistré(s), 0 proposition(s) réellement acceptée(s).
+  Efficacité RÉELLE : la charte a REGROSSI de 179 tokens depuis le dernier passage — c'est exactement ce que le budget est censé attraper.
+
+--- PLAN DE RÉDUCTION — toutes stratégies, la plus rentable et la moins risquée d'abord ---
+  Gain cumulé si tout était appliqué : ~8945 tokens, payés à CHAQUE message.
+
+  [faible] Section longue lue à la demande → déplacée, un renvoi reste
+            cible : Plan d'origine (analyse Opus) — état d'avancement
+            ~2343 tk → ~48 tk   GAIN ~2295 tk
+  [faible] Procédure déjà appliquée par un crochet → un fait court remplace la consigne
+            cible : 3 passage(s) décrivant une procédure déjà automatisée (dont 1 par un mécanisme BLOQUANT)
+            ~711 tk → ~214 tk   GAIN ~497 tk
+  [faible] Apartés narratifs datés → fichier d'historique
+            cible : 2 aparté(s) narratif(s) daté(s)
+            ~54 tk → ~0 tk   GAIN ~54 tk
+  [moyen ] Section longue lue à la demande → déplacée, un renvoi reste
+            cible : Référentiel technique — la référence à jour
+            ~4414 tk → ~43 tk   GAIN ~4371 tk
+  [moyen ] Section longue lue à la demande → déplacée, un renvoi reste
+            cible : Catalogue — blueprint exportable
+            ~1769 tk → ~41 tk   GAIN ~1728 tk
+
+--- BUDGET ANTI-REGROSSISSEMENT ----------------------------------------------------
+  ✅ 24536 tokens sous le budget de 30000 (marge 18 %).
+     la plus lourde : Charte de qualité — à appliquer à chaque itération (~12346 tk)
+     la plus lourde : Référentiel technique — la référence à jour (~4414 tk)
+     la plus lourde : Plan d'origine (analyse Opus) — état d'avancement (~2343 tk)
+
+--- APARTÉS NARRATIFS DATÉS restants : 2 (~54 tokens) ---
+  (le filon mécanique est épuisé — la suite du tri est manuelle, Article 19.)

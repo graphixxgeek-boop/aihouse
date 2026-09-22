@@ -156,7 +156,7 @@ export const CIRCLE_ITEMS = [
     execute: "Appeler auditHtmlDecisions() (scripts/doc-report.mjs) — jamais un second calcul — et écrire le résultat via recordCircleItemReport('html-wiring-check', ...) : tout registre en mismatch (decision HTML mais script non câblé) doit être câblé dans la foulée, jamais laissé en texte brut.",
     producesReport: true,
   },
-  // claude-md-weight-signal (2026-09-20, demande explicite de l'utilisateur après la tâche #122 :
+  // ecotoken-scan (2026-09-20, demande explicite de l'utilisateur après la tâche #122 :
   // « prevois que l'allegement de claude.md peut devenir une tache recurrente [...] peut etre à
   // ajouter au menu des taches periodiques »). Contrairement aux autres signaux de ce thème, celui-ci
   // ne lit pas un index de passages passés : il relance le VRAI calcul (scanDocumentWeight,
@@ -164,12 +164,12 @@ export const CIRCLE_ITEMS = [
   // calcul, jamais une estimation périmée. cf. docs/referentiel/smart-conso-token.md pour la
   // procédure formalisée complète (objectifs + méthode) à suivre si ce signal recommande une passe.
   {
-    id: "claude-md-weight-signal",
+    id: "ecotoken-scan",
     theme: "Qualité du code",
     label: "Vérifier le poids en tokens de CLAUDE.md (allègement périodique)",
     cout: "gratuit — relit CLAUDE.md et applique les fonctions déjà exportées par SMART-CONSO-TOKEN, aucun appel API",
     tokensEstimes: "faible — un seul fichier local relu par le script, pas par l'agent",
-    execute: "Lancer `node scripts/ecotoken-claude-md.mjs` (ecotoken-claude.md) — il relit lui-même scanDocumentWeight()/listDatedNarrativeMarkers() de SMART-CONSO-TOKEN, jamais un second calcul, et ajoute ce que ce signal ne savait pas faire : le rendement par article (citations réelles ÷ lignes), le plan de réduction chiffré avec son texte de remplacement prêt à relire, le budget anti-regrossissement, et ce que l'outil a retenu des passages précédents. Écrire son rapport via recordCircleItemReport('claude-md-weight-signal', ...), puis recordSnapshotIfChanged('claude-md-weight-signal', contenu actuel de CLAUDE.md, ...) — copie texte datée, une nouvelle snapshot seulement sur un vrai changement. Remplir ENSUITE à la main la colonne « Décision » de docs/ecotoken-claude-md/index.md : c'est la seule chose que l'outil ne peut pas deviner, et c'est ce qui l'empêche de reproposer indéfiniment une piste déjà refusée. HARMONISATION (2026-09-22) : un seul item de Ronde sur CLAUDE.md, jamais deux — ecotoken-claude.md a absorbé ce signal plutôt que de s'ajouter à côté.",
+    execute: "Lancer `node scripts/ecotoken.mjs` (ecotoken) — il relit lui-même scanDocumentWeight()/listDatedNarrativeMarkers() de SMART-CONSO-TOKEN, jamais un second calcul, et ajoute ce que ce signal ne savait pas faire : le rendement par article (citations réelles ÷ lignes), le plan de réduction chiffré avec son texte de remplacement prêt à relire, le budget anti-regrossissement, et ce que l'outil a retenu des passages précédents. Écrire son rapport via recordCircleItemReport('ecotoken-scan', ...), puis recordSnapshotIfChanged('ecotoken-scan', contenu actuel de CLAUDE.md, ...) — copie texte datée, une nouvelle snapshot seulement sur un vrai changement. Remplir ENSUITE à la main la colonne « Décision » de docs/ecotoken/index.md : c'est la seule chose que l'outil ne peut pas deviner, et c'est ce qui l'empêche de reproposer indéfiniment une piste déjà refusée. HARMONISATION (2026-09-22) : un seul item de Ronde sur CLAUDE.md, jamais deux — ecotoken a absorbé ce signal plutôt que de s'ajouter à côté.",
     producesReport: true,
   },
   {
@@ -497,11 +497,10 @@ export function mostRecentDate(text) {
 // (check-tasks-details.mjs), jamais un second parcours de disque réinventé (walkDocsPaths(),
 // extraite dans lib-shell.mjs pour éviter un cycle d'import entre les deux fichiers).
 export const CIRCLE_EXCLUDED_REGISTRIES = {
-  // ecotoken-claude.md (2026-09-22) : son registre existe, mais il n'a PAS d'item propre — c'est
-  // `claude-md-weight-signal` qui le lance, harmonisation explicitement demandée par l'utilisateur
+  // ecotoken (2026-09-22) : son registre existe, mais il n'a PAS d'item propre — c'est
+  // `ecotoken-scan` qui le lance, harmonisation explicitement demandée par l'utilisateur
   // (« je crois qu'il y a deja un rapport sur claude.md dans circle. vois comment tu peux tout
   // harmoniser sur ce sujet »). Un second item aurait dit la même chose deux fois.
-  "ecotoken-claude-md": "couvert par l'item claude-md-weight-signal, qui lance ecotoken-claude.md — un seul item de Ronde sur le sujet CLAUDE.md, jamais deux",
   argus: "tourne déjà à chaque commit (Article 20), jamais une routine manuelle en plus",
   harmonia: "tourne déjà à chaque commit (Article 20), jamais une routine manuelle en plus",
   "axa-check": "tourne déjà à chaque commit (Article 20), jamais une routine manuelle en plus",
@@ -604,7 +603,7 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApi
       const pending = findIdeasNeedingDecision(detectPendingIdeaCandidates(loadAllTaskRows()), decisions);
       return { ...item, staleness: pending.length ? `${pending.length} idée(s) en attente d'une décision — ${pending.map((r) => `#${r.n}`).join(", ")} — poser la question à 3 voies maintenant` : "aucune idée en attente" };
     }
-    if (item.id === "claude-md-weight-signal") {
+    if (item.id === "ecotoken-scan") {
       if (!claudeMdText) return { ...item, staleness: "pas de signal disponible (CLAUDE.md non fourni)" };
       const weight = scanDocumentWeight(claudeMdText, "CLAUDE.md", { alwaysLoaded: true });
       const markers = listDatedNarrativeMarkers(claudeMdText);
@@ -806,7 +805,7 @@ export const CIRCLE_REPORT_FOLDERS = {
   "ines-official-signal": "docs/ines-official/",
   "profil-utilisateur-guard": "docs/profil-utilisateur/",
   "html-wiring-check": "docs/html-wiring-check/",
-  "claude-md-weight-signal": "docs/claude-md-weight/",
+  "ecotoken-scan": "docs/ecotoken/ronde/",
   "suivi-open-tasks-signal": "docs/suivi-open-tasks/",
   "chantier-preliminaire-signal": "docs/chantier-preliminaire/",
   "idee-a-trancher-signal": "docs/idee-a-trancher/",

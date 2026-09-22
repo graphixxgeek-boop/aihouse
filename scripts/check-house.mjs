@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 263'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 264'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3234,7 +3234,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // de portée de la suite de tests.
   const fakeShImpl = (cmd) => (cmd.includes('check-house') ? 'OK — suite verte.' : '');
   const networkResult = runNetworkCheck({ shImpl: fakeShImpl });
-  assert.equal(networkResult.rows.length, 14, 'runNetworkCheck() must genuinely produce all 14 rows of the real network synthesis (8 original + the 2026-09-21 findJudgeSpawnsWithoutConsultation() rows for THE-FINAL-JUDGE/THE-DEEP-READER + the 2026-09-21 évolutivité audit AGENT_SCRIPT_FILES row + the 2026-09-21 Doc-Report findOrphanReportFiles() row + the 2026-09-22 HYPER-SCAN-CHECKPOINT row + the 2026-09-22 ecotoken-claude.md charter-weight row), never crash partway through nor silently drop one');
+  assert.equal(networkResult.rows.length, 14, 'runNetworkCheck() must genuinely produce all 14 rows of the real network synthesis (8 original + the 2026-09-21 findJudgeSpawnsWithoutConsultation() rows for THE-FINAL-JUDGE/THE-DEEP-READER + the 2026-09-21 évolutivité audit AGENT_SCRIPT_FILES row + the 2026-09-21 Doc-Report findOrphanReportFiles() row + the 2026-09-22 HYPER-SCAN-CHECKPOINT row + the 2026-09-22 ecotoken charter-weight row), never crash partway through nor silently drop one');
   assert.ok(networkResult.rows.every((r) => typeof r.name === 'string' && typeof r.result === 'string' && r.result.length > 0), 'every row must carry a real name and a real, non-empty result string — never an undefined value leaking from a broken sub-computation');
   assert.ok(networkResult.rows.some((r) => r.name.includes('SMART-CONSO-TOKEN')), 'the SMART-CONSO-TOKEN rhythm row specifically (the exact one that crashed tonight) must be genuinely present and computed, not skipped');
   // Tâche #137 (2026-09-21, question directe de l'utilisateur sur les priorités de scan de l'équipe
@@ -3971,11 +3971,47 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // à 1 qui inventait 116 trous, et un âge négatif affiché « il y a -1 j ». D'où ces tests.
   const { suiviFigures, projectStanding, criticalEye, buildRondeTextReport } = await import('../scripts/check-tasks-details.mjs');
 
-  // ecotoken-claude.md (2026-09-22, tâche #359) — réduire le coût PERMANENT de la charte, le seul
+  // ecotoken (2026-09-22, tâche #359) — réduire le coût PERMANENT de la charte, le seul
   // document rechargé à chaque message. Il ne recalcule rien de ce que CHARTER-SPY sait déjà : les
   // tests portent donc sur ce qu'il ajoute vraiment (découpage, nature, rendement, stratégies
   // génériques, budget, mémoire) — jamais sur ce qu'il se contente de relayer.
-  const eco = await import('../scripts/ecotoken-claude-md.mjs');
+  const eco = await import('../scripts/ecotoken.mjs');
+
+  // Bloquant vs consultatif (2026-09-22, second temps) — la leçon venue d'une vraie conversation,
+  // et non trouvée par l'outil seul : un mécanisme qui BLOQUE rend la consigne presque entièrement
+  // superflue (impossible de commiter sans), là où un mécanisme qui SIGNALE garde de la valeur.
+  const auto = eco.findAutomatedTools();
+  assert.ok(auto.bloquant.has('check-house'), 'check-house runs in the blocking pre-commit hook and must be graded as such');
+  assert.ok(auto.consultatif.has('check-argus') && auto.consultatif.has('clone-hunter'), 'the post-commit guardians are advisory, never blocking');
+  assert.ok(!auto.consultatif.has('check-house'), 'a tool present in both hooks counts as BLOCKING — the strongest level decides what the rule still adds, never the weakest');
+  assert.ok(eco.ENFORCEMENT.bloquant.compression < eco.ENFORCEMENT.consultatif.compression, 'a rule backed by a blocking mechanism must compress harder than one backed by a mere signal — that is the whole point of the distinction');
+  const graded = eco.findAlreadyMechanised('## S\n\nIl faut lancer check-house.mjs avant de commiter.\n\nPense à lancer check-argus.mjs de temps en temps.', auto);
+  assert.equal(graded.length, 2, 'both passages name an automated tool AND a manual trigger verb');
+  assert.equal(graded.find(g => /check-house/.test(g.outils.join())).niveau, 'bloquant');
+  assert.equal(graded.find(g => /argus/.test(g.outils.join())).niveau, 'consultatif');
+  assert.ok(graded.every(g => g.tokensApres < g.tokens && g.pourquoi), 'every graded passage must carry its compressed size AND the reason for that grade');
+  assert.deepEqual(eco.findAlreadyMechanised('## S\n\nARGUS surveille les champs morts.', auto), [], 'merely NAMING a tool is not enough — without a manual trigger verb there is no redundant procedure to compress');
+
+  // Coût réel = poids × fréquence. La métrique qui permet enfin de comparer deux documents entre
+  // eux, là où le poids seul ne compare que des tailles.
+  const cost = eco.realSessionCost(undefined, { messagesParSession: 50 });
+  assert.ok(cost.lignes.length >= 2 && cost.total > 0);
+  assert.equal(cost.lignes[0].chemin, 'CLAUDE.md', 'the always-reloaded charter must dominate the real cost ranking — that is what justifies attacking it first');
+  assert.ok(cost.lignes[0].partPct >= 50, 'CLAUDE.md must account for the majority of a session, otherwise the whole premise of this tool is wrong');
+  assert.equal(eco.CHARGEMENT.archive(99999, 50), 0, 'an archive nobody reopens costs nothing — its size is NOT a problem, contrary to what a raw weight ranking suggests');
+  assert.equal(eco.CHARGEMENT.toujours(100, 7), 700, 'an always-loaded document is paid once per message');
+  assert.equal(eco.CHARGEMENT.a_la_demande(100, 50, 3), 300, 'an on-demand document is paid per real read, never per message');
+
+  // Élargissement à n'importe quel document : trois stratégies sont génériques, deux ne le sont
+  // pas — et l'outil doit DIRE lesquelles il a écartées plutôt que laisser croire à une analyse
+  // complète.
+  const other = eco.analyzeDocument('docs/referentiel/principes.md');
+  assert.ok(other.tokens > 0 && other.nbSections > 0, 'a non-charter document must still be analysable');
+  assert.equal(other.strategiesApplicables.rendementParArticle, false, 'principes.md is not a numbered charter, so the per-article yield must be switched off rather than produce noise');
+  assert.ok(other.strategiesEcartees.length >= 1 && other.strategiesEcartees.every(e => /\(/.test(e)), 'every discarded strategy must state WHY it was discarded, never just disappear silently');
+  assert.deepEqual(eco.analyzeDocument('docs/ce-fichier-nexiste-pas.md'), { chemin: 'docs/ce-fichier-nexiste-pas.md', absent: true }, 'a missing document must report an honest absence rather than crash');
+  assert.ok(eco.analyzeDocument('CLAUDE.md').strategiesApplicables.rendementParArticle, 'the real charter IS a numbered charter — detected on its content, never on its filename');
+  assert.ok(eco.analyzeDocument('docs/regles-de-travail.md').gainTotal > 0, 'the working-rules document, full of procedures, must yield real findings — proof the tool genuinely works beyond CLAUDE.md');
 
   // Réveil conditionnel des Gardiens (2026-09-22, tâche #362). La distinction qui gouverne tout,
   // actée explicitement : ce qui GARANTIT le code (check-house + tsc, pre-commit) tourne sur CHAQUE
@@ -4064,6 +4100,159 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(eco.verifyNothingBroken('**Article 0 — x.**', {}, [{ outil: 'X', vers: null, cibleManquante: true }], () => null).some(f => f.check === 'cible-manquante'), 'content with nowhere to land must be refused before the section is removed, never dropped on the floor');
   // Vérifié en direct contre la vraie charte : aucun renvoi mort aujourd'hui.
   assert.deepEqual(eco.verifyNothingBroken(fs.readFileSync('CLAUDE.md', 'utf8'), eco.loadRepoFiles(), []), [], 'the real charter must have zero dead Article references right now');
+
+  // --- SÛRETÉ (2026-09-22, demande explicite : « un outil sans danger même s'il agit sur des
+  // parties ultra sensibles »). La garantie est structurelle, pas déclarative : ecotoken n'a aucun
+  // chemin d'écriture vers un document analysé. Deux assertions la tiennent — la fonction refuse,
+  // ET aucun appel d'écriture ne la contourne dans le fichier réel.
+  assert.throws(() => eco.assertSafeWriteTarget('CLAUDE.md'), /refuse d'écrire hors de son propre dossier/, 'ecotoken must structurally refuse to write to the very document it analyses — the whole safety claim rests on this, never on good intentions');
+  assert.throws(() => eco.assertSafeWriteTarget('docs/regles-de-travail.md'), /refuse/, 'the refusal must cover every analysed document, not just the charter');
+  assert.ok(eco.assertSafeWriteTarget('docs/ecotoken/scan-x.txt').endsWith('scan-x.txt'), 'its own report folder must remain writable, otherwise the tool could not archive anything');
+  const ecoSource = fs.readFileSync('scripts/ecotoken.mjs', 'utf8');
+  const ecritures = [...ecoSource.matchAll(/\bwriteFileSync\(([^,]+),/g)].map((m) => m[1].trim());
+  assert.ok(ecritures.length > 0, 'the guard below is only meaningful if real write calls exist to guard');
+  assert.ok(ecritures.every((a) => a.startsWith('assertSafeWriteTarget(')), `every writeFileSync in ecotoken must route through assertSafeWriteTarget — found unguarded: ${ecritures.filter((a) => !a.startsWith('assertSafeWriteTarget(')).join(', ')}`);
+
+  // --- CRITICITÉ. Elle doit FILTRER réellement, pas décorer : sur un document critique, une
+  // proposition à risque « moyen » sort des propositions applicables et part dans un bac à part
+  // (visible, jamais masquée — cacher un gain possible serait mentir).
+  const critCharte = eco.assessCriticality('CLAUDE.md');
+  assert.equal(critCharte.niveau, 'maitre', 'the master file is its own top level, above "critique" — reached categorically, never by accumulating points, because one fact suffices: everything the project does is governed by it');
+  assert.equal(critCharte.risqueMaxAutorise, 'faible', 'a critical document must never see a medium-risk proposal offered for application');
+  assert.ok(critCharte.validationHumaineObligatoire && critCharte.controlePerteObligatoire, 'both human validation and the reference-loss check must be mandatory at the critical level');
+  // La TUYAUTERIE : le second niveau catégoriel. Un crochet git ne contient presque aucun
+  // « jamais/toujours » et serait classé périphérique par la seule densité de règles — alors que
+  // le casser casse TOUT. C'était le vrai trou de la première version de cette mesure.
+  const critHook = eco.assessCriticality('scripts/hooks/pre-commit');
+  assert.equal(critHook.niveau, 'tuyauterie', 'a git hook run at every commit is plumbing and must reach the top tier on that fact alone, never on rule density it does not have');
+  const critFilet = eco.assessCriticality('scripts/check-house.mjs');
+  assert.equal(critFilet.niveau, 'tuyauterie', 'the safety net launched by the BLOCKING pre-commit hook is plumbing — classing it merely "sensible" was a real miscalibration found while calibrating this scale');
+  assert.ok(critFilet.filetDeSecuriteObligatoire && !critFilet.verificationDuFondObligatoire, 'plumbing owes the full safety net, not the protective-substance check: a reference audit says nothing useful about a hook');
+  assert.ok(critCharte.verificationDuFondObligatoire && !critCharte.filetDeSecuriteObligatoire, 'and symmetrically, the master file owes the substance check — each top tier carries the obligation that actually fits it, never both by default');
+  // Une MENTION n'est pas un LANCEMENT. Deux faux positifs réels trouvés en auditant la détection
+  // au lieu de la supposer bonne : le crochet pre-commit parle de `post-commit` et de
+  // `kpi-report.mjs` dans ses COMMENTAIRES, et les deux étaient annoncés « lancés par le crochet
+  // bloquant ». Une raison fausse dans un outil de mesure est aussi grave qu'un niveau faux.
+  const faussementMentionne = { 'scripts/hooks/pre-commit': '# on parle de outil-x.mjs ici\n# et encore de outil-x.mjs\nnode scripts/vrai.mjs' };
+  assert.equal(eco.assessPlumbing('scripts/outil-x.mjs', { repoFiles: faussementMentionne }).estTuyauterie, false, 'a script merely NAMED in a hook comment is not launched by it and must never be called plumbing');
+  assert.ok(eco.assessPlumbing('scripts/vrai.mjs', { repoFiles: faussementMentionne }).raisons.some((r) => /BLOQUANT/.test(r)), 'a script genuinely invoked on an executable line must be recognised, and the blocking hook named as such');
+  assert.equal(eco.assessPlumbing('scripts/kpi-report.mjs').estTuyauterie, false, 'checked live: kpi-report.mjs is only mentioned in a pre-commit comment, never launched — it must not be dressed up as plumbing');
+  // Tout ce qui vit dans scripts/hooks/ n'est pas un crochet : git n'exécute que les fichiers sans
+  // extension. install.mjs y habite mais est lancé par le gestionnaire de paquets.
+  const installe = eco.assessPlumbing('scripts/hooks/install.mjs');
+  assert.ok(installe.estTuyauterie && installe.raisons.some((r) => /gestionnaire de paquets/.test(r)) && !installe.raisons.some((r) => /à chaque commit/.test(r)), 'install.mjs is real plumbing but for the RIGHT reason — it is not a git hook and does not run at every commit');
+  assert.ok(eco.assessPlumbing('scripts/hooks/pre-commit').raisons.some((r) => /crochet git/.test(r)), 'an extensionless file in the hooks folder IS the git hook');
+
+  const critPeriph = eco.assessCriticality('docs/ecotoken/index.md');
+  assert.ok(['peripherique', 'ordinaire'].includes(critPeriph.niveau), 'a registry index nobody cites and that holds no rule must not be dressed up as sensitive — the scale has to discriminate, not flatter');
+  assert.ok(eco.assessCriticality('docs/referentiel/principes.md').score > critPeriph.score, 'the scale must genuinely separate a cited, rule-bearing reference document from an inert registry index');
+  // Les clés de loadRepoFiles sont RELATIVES : elles étaient absolues, et toute recherche par clé
+  // rendait silencieusement "rien trouvé" — un faux négatif parfait dans un outil de mesure.
+  const fichiers = eco.loadRepoFiles();
+  assert.ok(fichiers['scripts/check-house.mjs'], 'loadRepoFiles must key by repo-relative path, or every key lookup silently returns nothing');
+  assert.ok(fichiers['scripts/hooks/pre-commit'], 'extensionless git hooks must be loaded — they are exactly the plumbing this tool has to recognise');
+  const analyseCharte = eco.analyzeDocument('CLAUDE.md');
+  assert.ok(analyseCharte.propositions.every((p) => p.risque === 'faible'), 'on the real charter, every applicable proposal must be low-risk — the criticality filter must be wired into analyzeDocument(), not merely computed beside it');
+  assert.ok(Array.isArray(analyseCharte.retenuesParCriticite), 'proposals withheld by criticality must stay listed and visible, never silently dropped');
+
+  // --- FICHIER MAÎTRE. Il doit être reconnu à ce qui le REND maître (rechargé en permanence, cité
+  // partout, écrit en règles), jamais à son nom — sans quoi le blueprint ne porterait sur aucun
+  // autre projet, et un fichier anodin nommé CLAUDE.md serait pris pour la charte.
+  const maitre = eco.detectMasterFile();
+  assert.equal(maitre.chemin, 'CLAUDE.md', 'the real master file of this repository must be recognised');
+  assert.equal(maitre.confiance, 'certaine', 'when a document profile declares a permanently-reloaded file, that declaration is the strongest possible evidence and must be used directly');
+  const deduit = eco.detectMasterFile({ profiles: [] });
+  assert.equal(deduit.chemin, 'CLAUDE.md', 'with no declared profile at all — the situation in any other project this blueprint is exported to — the master file must still be DEDUCED from real evidence');
+  assert.equal(deduit.confiance, 'deduite', 'a deduction must be labelled as such, never passed off as a certainty');
+  assert.ok(deduit.raisons.some((r) => /formulations normatives/.test(r)) && deduit.raisons.some((r) => /cité par/.test(r)), 'the deduction must rest on rule density AND on being cited, never on the filename alone');
+  const aucun = eco.detectMasterFile({ profiles: [], repoFiles: { 'README.md': 'un readme ordinaire sans règles' }, root: '/nonexistent' });
+  assert.equal(aucun.chemin, null, 'a repository with no charter must get an honest "none", never a default candidate promoted for lack of a better one');
+  assert.ok(critCharte.estFichierMaitre && critCharte.verificationDuFondObligatoire, 'being the master file must by itself force the critical regime and make the substance check mandatory, whatever the other signals say');
+  assert.ok(/VIGILANCE MAXIMALE/.test(critCharte.consigne) && /verifyProtectiveSubstance/.test(critCharte.consigne), 'the heightened vigilance owed to the master file must be spelled out in the instruction — including the substance check it alone requires — never left implicit');
+  assert.ok(!eco.assessCriticality('docs/regles-de-travail.md').estFichierMaitre, 'a merely sensitive document must never be mistaken for the master file — there is exactly one');
+
+  // --- HARMONIE AVEC LES AUTRES ÉCHELLES DU PROJET (2026-09-22). Ce dépôt a quatre échelles qui ne
+  // mesurent PAS la même chose (effort de vérification / nœud du moteur / gravité d'une règle /
+  // criticité d'un fichier). Les fondre serait une fausse harmonie ; ce qui est exigé ici, ce sont
+  // des ponts réels et un garde-fou qui refuse qu'un désaccord passe inaperçu.
+  const clt = await import('../scripts/check-level-target.mjs');
+  assert.ok(Object.values(eco.CRITICITE_VERS_NIVEAU_DE_VERIFICATION).every((n) => clt.LEVEL_ORDER.includes(n)), 'the bridge must map onto CHECK-LEVEL-TARGET\'s REAL levels — inventing a fifth verification level is exactly the silent divergence Article 24 forbids');
+  assert.equal(eco.recommendCheckLevelFor('CLAUDE.md').niveauMinimal, 'exceptionnel', 'touching the master file can never be verified lightly');
+  assert.equal(eco.recommendCheckLevelFor('scripts/hooks/pre-commit').niveauMinimal, 'approfondi', 'touching the plumbing can never be verified lightly either');
+  // Le garde-fou a trouvé 4 désaccords réels à son premier lancement (lib/simulation.ts, story.ts,
+  // turn.ts, daynight.ts) : HARMONIA avait raison, ecotoken était aveugle aux nœuds du moteur. La
+  // correction a consisté à LIRE la déclaration existante, jamais à inventer un second jugement.
+  assert.deepEqual(eco.findCriticalityDisagreements(clt.SENSITIVE_NODES), [], 'checked live: no file declared a sensitive engine node may be rated "ordinaire"/"peripherique" by ecotoken — when two measures of the same repository disagree, one of them is wrong and the silence would let the laxer one win');
+  assert.ok(eco.assessCriticality('lib/simulation.ts').signaux.some((s) => /nœud sensible du moteur/.test(s.nom)), 'the engine-node signal must come from the existing declaration, read rather than recomputed');
+  const faux = eco.findCriticalityDisagreements([{ node: 'inventé', files: ['docs/ecotoken/index.md'] }]);
+  assert.equal(faux.length, 1, 'the guard must actually fire on a real disagreement — one that can only ever return empty guards nothing');
+  // Les socles dérivés : CHARTER-SPY classe déjà 6 Articles comme non négociables. Les recopier à la
+  // main en aurait fait une 2e liste divergente (Article 24) — ils sont dérivés.
+  const socles = eco.derivedSocles(fs.readFileSync('CLAUDE.md', 'utf8'));
+  assert.ok(socles.length >= 5 && socles.includes('Hiérarchie des lois'), 'the founding guard-rails must be DERIVED from the rule classification that already exists, Article 0 first, never hand-copied into a second list that would drift');
+
+  // --- LE FOND QUI PROTÈGE LE PROJET. La veille qui reposait sur ma relecture devient mécanique.
+  const charteAvant = fs.readFileSync('CLAUDE.md', 'utf8');
+  const identique = eco.verifyProtectiveSubstance(charteAvant, charteAvant);
+  assert.ok(identique.sur && identique.normatives.disparues === 0, 'comparing the real charter to itself must report a perfectly safe, empty result — a check that flags a no-op is a check nobody will trust');
+  const ampute = charteAvant.replace(/\*\*Article 0 — Hiérarchie des lois\.\*\*/, '**Article 0 — Autre chose.**');
+  const vAmpute = eco.verifyProtectiveSubstance(charteAvant, ampute);
+  assert.ok(!vAmpute.sur && vAmpute.articles.perdus.some((a) => /^0 —/.test(a)), 'renaming an Article must fail the check outright — Article titles are quoted verbatim across the whole repository');
+  // Sur texte synthétique, pour rester déterministe : dans le vrai fichier la phrase socle est
+  // coupée par un retour à la ligne, et c'est bien pour ça que la comparaison se fait sur un texte
+  // aplati — un simple repli de ligne ne doit ni déclencher une fausse alerte ni en masquer une vraie.
+  const avecSocle = 'bla bla la réponse par défaut est de NE PAS\ncouper. Et la suite.';
+  assert.ok(eco.verifyProtectiveSubstance(avecSocle, avecSocle).sur, 'a guard-rail sentence split across two lines must still be recognised as present');
+  assert.ok(!eco.verifyProtectiveSubstance(avecSocle, 'bla bla on verra au cas par cas. Et la suite.').sur, 'removing a founding guard-rail sentence must fail the check — this is precisely the substance an economy pass must never touch');
+  const vReel = eco.verifyProtectiveSubstance(fs.readFileSync('CLAUDE.md', 'utf8'), fs.readFileSync('CLAUDE.md', 'utf8'));
+  assert.ok(vReel.limite.includes('jamais qu\'elle a le même SENS'), 'the check must state its own honest limit rather than let a green verdict pass for a proof of preserved meaning');
+
+  // --- CONTRÔLE DE PERTE. Le garde-fou né d'une perte RÉELLE : le premier catalogue produit sur
+  // CLAUDE.md a fait disparaître six outils entiers, vu seulement en comparant à la main.
+  const perte = eco.findLostReferences('voir `scripts/a.mjs` et `docs/b.md`\n## Titre X', 'voir `docs/b.md`');
+  assert.ok(perte.perdues.includes('scripts/a.mjs'), 'a path that stops being mentioned must be reported — this is the exact failure mode that slipped through by hand');
+  assert.ok(perte.graves.includes('scripts/a.mjs') && perte.graves.includes('§ Titre X'), 'real paths and section titles are the grave losses, distinguished from incidental identifiers so the true alert is never drowned in noise');
+  const perteAttendue = eco.findLostReferences('## A — blueprint exportable\n## B — blueprint exportable', '## Catalogue', { attendues: [/^§ .+ — blueprint exportable/] });
+  assert.equal(perteAttendue.total, 0, 'declared, intentional losses must not be reported — a guard that cries wolf on every successful reduction gets ignored, and then guards nothing');
+
+  // --- PORTÉES. Le vocabulaire est IMPORTÉ de smart-conso-token (lui-même repris de
+  // THE-FINAL-JUDGE), jamais redéclaré : un cinquième vocabulaire serait la divergence
+  // silencieuse que l'Article 24 interdit.
+  const sct = await import('../scripts/smart-conso-token.mjs');
+  assert.strictEqual(eco.SCOPE_LEVELS, sct.SCOPE_LEVELS, 'ecotoken must reuse the very same SCOPE_LEVELS binding, never a copy that could drift');
+  assert.ok(eco.resolveScopeTargets('global').includes('CLAUDE.md'), 'the global scope must cover the watched landscape, charter first');
+  assert.deepEqual(eco.resolveScopeTargets('zoome', 'CLAUDE.md'), ['CLAUDE.md'], 'the zoomed scope is exactly one file');
+  assert.ok(eco.resolveScopeTargets('partiel', 'docs/referentiel').length > 20, 'the partial scope must walk a real folder, the "family of files" the user asked for');
+  assert.throws(() => eco.resolveScopeTargets('partiel', 'CLAUDE.md'), /n'est pas un dossier réel/, 'a file passed where a folder is expected must fail loudly, never be silently reinterpreted');
+  assert.throws(() => eco.resolveScopeTargets('nawak'), /Portée inconnue/, 'an unknown scope must be rejected against the shared vocabulary');
+  assert.throws(() => eco.scanScope('focus', 'CLAUDE.md'), /fichier.md#Titre/, 'the focus scope without a section is a caller mistake and must say so plainly');
+  assert.equal(eco.recommendScope(['lib/simulation.ts']).portee, null, 'a commit touching no budgeted document must recommend no scan at all — ecotoken applying its own conditional-wake medicine');
+  assert.equal(eco.recommendScope(['CLAUDE.md']).portee, 'zoome', 'one watched document changed means one document scanned, never the whole landscape');
+  assert.equal(eco.recommendScope(null).portee, 'global', 'not knowing what changed must fall back to the most prudent scope, exactly like the guardians do');
+
+  // --- DÉCLENCHEURS : déclarés vs réellement câblés, lus dans les vrais fichiers.
+  const trig = eco.auditTriggers();
+  assert.ok(trig.length >= 4 && trig.every((t) => t.cable), `every declared ecotoken trigger must be genuinely wired in its real file — not wired: ${trig.filter((t) => !t.cable).map((t) => `${t.id} (${t.fichier})`).join(', ')}`);
+  const trigFaux = eco.auditTriggers(undefined, () => 'un fichier qui ne câble rien');
+  assert.equal(eco.findTriggersNotWired(undefined, () => 'rien').length, trig.length, 'the audit must actually detect an uncabled trigger — a check that can only ever say yes checks nothing');
+  assert.ok(trigFaux.every((t) => t.ecart), 'each unwired trigger must name its own gap');
+
+  // --- CATALOGUE : les quatre défauts réels du tout premier tableau produit, chacun corrigé à la
+  // racine plutôt que retouché à la main dans la sortie.
+  const famSuffixe = eco.findHeadingFamilies([
+    { titre: 'A — blueprint exportable', texte: '`docs/a-blueprint.md`', nbLignes: 1, tokens: 1 },
+    { titre: 'B — blueprint exportable', texte: '`docs/b-blueprint.md`', nbLignes: 1, tokens: 1 },
+    { titre: 'C — blueprint exportable, l\'exception qui cible autre chose', texte: '`docs/c-blueprint.md`', nbLignes: 1, tokens: 1 },
+  ]);
+  assert.equal(famSuffixe[0].members.length, 3, 'a heading whose suffix merely CONTINUES after a comma belongs to the same family — memory-audit was really dropped from the first catalogue this way, and a member lost from a catalogue is information destroyed');
+  const factsFind = eco.extractCatalogFacts({ titre: 'find-booster — blueprint exportable', membre: 'find-booster', texte: 'voir `docs/referentiel/claude-md-asides-historique.md` puis `docs/referentiel/find-booster.md` et `docs/find-booster-blueprint.md`', nbLignes: 1, tokens: 1 });
+  assert.equal(factsFind.instanciation, 'docs/referentiel/find-booster.md', 'the catalogue must point at the member\'s OWN fiche, not merely the first referentiel path it meets — a catalogue sending readers to the wrong document is worse than no catalogue');
+  const factsResil = eco.extractCatalogFacts({ titre: 'Outil de résilience API — blueprint exportable', membre: 'Outil de résilience API', texte: '`docs/outil-resilience-api.md` documente l\'ARCHITECTURE de l\'outil', nbLignes: 1, tokens: 1 });
+  assert.equal(factsResil.architecture, 'docs/outil-resilience-api.md', 'a blueprint whose filename simply lacks the word "blueprint" must still be found, never shown as an empty dash');
+  assert.equal(eco.extractCatalogFacts({ titre: 'memory-audit — blueprint exportable', membre: 'memory-audit', texte: '`docs/memory-audit-blueprint.md` documente l\'ARCHITECTURE de memory-audit', nbLignes: 1, tokens: 1 }).role, null, 'a "role" that only echoes the member name teaches nothing and must be replaced by an honest "to be written by hand"');
+  assert.ok(eco.couperProprement('la combinaison d\'outils et de niveaux attendus pour cette vérification', 30).endsWith('…'), 'a truncated cell must be cut at a word boundary with an ellipsis, never mid-word');
+  assert.ok(!/`[^`]*$/.test(eco.couperProprement('veille au respect de `docs/philosophie-et-politique.md`', 30)), 'truncation must never leave a backtick open — the table would render broken');
+
   const NOW = Date.parse('2026-09-22T12:00:00Z');
   const fakeRows = [
     { n: 117, horodatage: '2026-09-22T11:00Z', sujet: 'Outillage de travail / ARGUS', sousSujet: 'a', detail: '', statusKey: 'terminee' },
@@ -4257,7 +4446,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   } = await import('../scripts/circle-tasks.mjs');
   const { walkDocsPaths } = await import('../scripts/lib-shell.mjs');
 
-  assert.equal(CIRCLE_ITEMS.length, 25, 'CIRCLE_ITEMS must list exactly the 22 free periodic items (profil, the-king-signal, référentiels, KPI, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, tool-brain-report, cassandra-rh-signal — added 2026-09-21 —, dream-team-photo, THE-SCREENER, ines-official-signal, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run, coordinateur-catalogue, chantier-preliminaire-signal, idee-a-trancher-signal — added 2026-09-21, second "Suivi des chantiers" signal, filet de sécurité mécanique du réflexe temps réel — clone-hunter-run removed 2026-09-22 and always-new-code-signal removed 2026-09-21, CLONE-HUNTER then ALWAYS-NEW-CODE (light layer) promoted to fifth and sixth Gardiens sacrés, both now run automatically at every commit) plus THE-FINAL-JUDGE, its cousin THE-DEEP-READER, and (2026-09-22) hyper-scan-checkpoint-light then check-tasks-report — the exact real drift found live by the new findStaleItemCountReferences() self-check tonight — never silently gaining or losing an entry');
+  assert.equal(CIRCLE_ITEMS.length, 25, 'CIRCLE_ITEMS must list exactly the 22 free periodic items (profil, the-king-signal, référentiels, KPI, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, tool-brain-report, cassandra-rh-signal — added 2026-09-21 —, dream-team-photo, THE-SCREENER, ines-official-signal, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, ecotoken-scan, profil-utilisateur-guard, network-check-run, coordinateur-catalogue, chantier-preliminaire-signal, idee-a-trancher-signal — added 2026-09-21, second "Suivi des chantiers" signal, filet de sécurité mécanique du réflexe temps réel — clone-hunter-run removed 2026-09-22 and always-new-code-signal removed 2026-09-21, CLONE-HUNTER then ALWAYS-NEW-CODE (light layer) promoted to fifth and sixth Gardiens sacrés, both now run automatically at every commit) plus THE-FINAL-JUDGE, its cousin THE-DEEP-READER, and (2026-09-22) hyper-scan-checkpoint-light then check-tasks-report — the exact real drift found live by the new findStaleItemCountReferences() self-check tonight — never silently gaining or losing an entry');
   const profilGuardItem = CIRCLE_ITEMS.find((i) => i.id === 'profil-utilisateur-guard');
   assert.ok(profilGuardItem && !profilGuardItem.costly && profilGuardItem.theme === 'Passages réels (smoke run)', '2026-09-21 addition: the real check-profil-utilisateur.mjs smoke run must be free and live in its own "smoke run" theme, distinct from the "profil" item which writes a new observation rather than verifying disk integrity');
   const networkCheckItem = CIRCLE_ITEMS.find((i) => i.id === 'network-check-run');
@@ -4301,8 +4490,8 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const inesOfficialIndexText = '| Version | Date | Périmètre | Fichiers | Taille |\n|---|---|---|---|---|\n| v1 | 2026-09-18 | code seul | 40 | 500 Ko |';
   const report = buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringReadFileImpl, suiviCategorized, claudeMdText: sampleClaudeMdText, philosophyText: samplePhilosophyText, philosophyFreshnessDaysValue: 3, inesOfficialIndexText }, now);
   assert.equal(report.length, 25, 'buildCircleReport() must return exactly one entry per CIRCLE_ITEMS item, in the same order, never dropping or reordering one — 25 since check-tasks-report joined CIRCLE_ITEMS on 2026-09-22, after hyper-scan-checkpoint-light the same day');
-  assert.equal(report.find((r) => r.id === 'claude-md-weight-signal').staleness, '66 tokens estimés, niveau "faible" — 2 aside(s) narrative(s) datée(s) encore réductible(s)', 'the CLAUDE.md weight signal must reuse the real SMART-CONSO-TOKEN scan functions live (never a second parser), reporting both the honest token estimate and the real count of still-reducible dated asides found in the actual text passed in');
-  assert.equal(buildCircleReport({}, now).find((r) => r.id === 'claude-md-weight-signal').staleness, 'pas de signal disponible (CLAUDE.md non fourni)', 'with no CLAUDE.md text supplied at all, the signal must report an honest absence rather than crash or fabricate a number');
+  assert.equal(report.find((r) => r.id === 'ecotoken-scan').staleness, '66 tokens estimés, niveau "faible" — 2 aside(s) narrative(s) datée(s) encore réductible(s)', 'the CLAUDE.md weight signal must reuse the real SMART-CONSO-TOKEN scan functions live (never a second parser), reporting both the honest token estimate and the real count of still-reducible dated asides found in the actual text passed in');
+  assert.equal(buildCircleReport({}, now).find((r) => r.id === 'ecotoken-scan').staleness, 'pas de signal disponible (CLAUDE.md non fourni)', 'with no CLAUDE.md text supplied at all, the signal must report an honest absence rather than crash or fabricate a number');
   assert.equal(report.find((r) => r.id === 'clean-dirty-old-signal').staleness, '1 jour(s) depuis le dernier passage journalisé', 'the CLEAN-DIRTY-OLD signal must compute its own staleness from its own real index text, distinct from every other source');
   assert.equal(report.find((r) => r.id === 'html-wiring-check').staleness, 'tous câblés', 'with every registry\'s producing script genuinely importing html-report.mjs, the item must honestly report full coverage, never a fabricated gap');
   // Un vrai mismatch ciblé, jamais la liste complète de REGISTRIES recopiée en dur (fragile face à
@@ -4581,7 +4770,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const realExistingPaths = walkDocsPaths('docs', '');
   assert.deepEqual(findRegistriesMissingFromCircle(realExistingPaths), [], 'checked live against this project\'s real docs/ tree: every real registry folder must already be covered by either a real CIRCLE_ITEMS entry or a documented exclusion — a guarantee that breaks the moment a new tool gets a docs/<slug>/index.md registry without either');
 
-  console.log('Passed: CIRCLE-TASKS lists exactly its 18 free periodic items (profil, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, dream-team-photo, THE-SCREENER, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, claude-md-weight-signal, profil-utilisateur-guard, network-check-run, coordinateur-catalogue, ines-official-signal, the-king-signal — clone-hunter-run REMOVED 2026-09-22, CLONE-HUNTER promoted to fifth Gardien sacré (Article 20), now wired directly into the real post-commit hook exactly like the other 4, never a periodic Ronde item anymore) joining profil-utilisateur-guard/network-check-run/coordinateur-catalogue in the "Passages réels (smoke run)" theme, distinct from Audit lourd\'s two costly agent-spawn items) plus THE-FINAL-JUDGE and its cousin THE-DEEP-READER (the two exceptions, always flagged costly with their real token cost — a fixed figure for THE-FINAL-JUDGE, an honestly variable one for THE-DEEP-READER — never a vague warning), every item carrying an honest order-of-magnitude Claude-token estimate in a column distinct from the Gemini/API cost column, THE-SCREENER correctly staying free (its capture mechanism costs zero Gemini calls) while explicitly warning against launching a fresh simulation just for a screenshot, computes an honest mechanical freshness signal from real index files for the items that have one (profil, KPI, the most-neglected ALWAYS-NEW-CODE zone, Smart Conso API scan, SMART-CONSO-TOKEN scan) and an honest absence for those that don\'t (referentiel, dream-team-photo, THE-SCREENER), correctly refuses to fabricate a negative day count from a future-dated entry (the exact real bug found tonight), renders the costly item in real ANSI red for genuine terminal output while never leaking escape codes into a plain-text rendering, and its post-commit reminder threshold fires at exactly the configured commit count, never early nor only after overshooting it. buildCircleRunSummaryText() renders an honest post-Ronde recap as plain text (never HTML — corrected 2026-09-21, this function predates the HTML-vs-text split decision and was never revisited against it) with real items in their real order, each with its own outcome and link, an honest empty-run message when nothing was ticked, and never a leaked "undefined" — the missing end-of-Ronde report the user pointed out tonight. findRegistriesMissingFromCircle() closes the matching gap on the OTHER end (no menu-freshness guard existed for CIRCLE_ITEMS the way findToolsMissingFromMenu() already protects PRESTATIONS): every real docs/<slug>/index.md registry must be covered by either a real CIRCLE_ITEMS entry or a documented CIRCLE_EXCLUDED_REGISTRIES reason, checked live against this project\'s real docs/ tree — a guarantee that breaks the day a new tool gets a registry without either.');
+  console.log('Passed: CIRCLE-TASKS lists exactly its 18 free periodic items (profil, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN scan, dream-team-photo, THE-SCREENER, clean-dirty-old-signal, html-wiring-check, suivi-open-tasks-signal, ecotoken-scan, profil-utilisateur-guard, network-check-run, coordinateur-catalogue, ines-official-signal, the-king-signal — clone-hunter-run REMOVED 2026-09-22, CLONE-HUNTER promoted to fifth Gardien sacré (Article 20), now wired directly into the real post-commit hook exactly like the other 4, never a periodic Ronde item anymore) joining profil-utilisateur-guard/network-check-run/coordinateur-catalogue in the "Passages réels (smoke run)" theme, distinct from Audit lourd\'s two costly agent-spawn items) plus THE-FINAL-JUDGE and its cousin THE-DEEP-READER (the two exceptions, always flagged costly with their real token cost — a fixed figure for THE-FINAL-JUDGE, an honestly variable one for THE-DEEP-READER — never a vague warning), every item carrying an honest order-of-magnitude Claude-token estimate in a column distinct from the Gemini/API cost column, THE-SCREENER correctly staying free (its capture mechanism costs zero Gemini calls) while explicitly warning against launching a fresh simulation just for a screenshot, computes an honest mechanical freshness signal from real index files for the items that have one (profil, KPI, the most-neglected ALWAYS-NEW-CODE zone, Smart Conso API scan, SMART-CONSO-TOKEN scan) and an honest absence for those that don\'t (referentiel, dream-team-photo, THE-SCREENER), correctly refuses to fabricate a negative day count from a future-dated entry (the exact real bug found tonight), renders the costly item in real ANSI red for genuine terminal output while never leaking escape codes into a plain-text rendering, and its post-commit reminder threshold fires at exactly the configured commit count, never early nor only after overshooting it. buildCircleRunSummaryText() renders an honest post-Ronde recap as plain text (never HTML — corrected 2026-09-21, this function predates the HTML-vs-text split decision and was never revisited against it) with real items in their real order, each with its own outcome and link, an honest empty-run message when nothing was ticked, and never a leaked "undefined" — the missing end-of-Ronde report the user pointed out tonight. findRegistriesMissingFromCircle() closes the matching gap on the OTHER end (no menu-freshness guard existed for CIRCLE_ITEMS the way findToolsMissingFromMenu() already protects PRESTATIONS): every real docs/<slug>/index.md registry must be covered by either a real CIRCLE_ITEMS entry or a documented CIRCLE_EXCLUDED_REGISTRIES reason, checked live against this project\'s real docs/ tree — a guarantee that breaks the day a new tool gets a registry without either.');
 }
 
 {

@@ -62,6 +62,7 @@ export const AGENT_CATEGORIES = {
   "smart-conso-api": "Membre — Suite Suivi-Conso",
   "smart-conso-token": "Membre — Suite Suivi-Conso",
   "objectifs-vs-resultats": "Membre — Suite Suivi-Conso",
+  "ecotoken": "Membre — Suite Suivi-Conso",
   // Suite Audit Simulation
   "el-professor": "Membre — Suite Audit Simulation",
   "the-screener": "Membre — Suite Audit Simulation",

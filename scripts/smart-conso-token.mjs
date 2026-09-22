@@ -432,11 +432,11 @@ export function renderClaudeMdRuleTable({ rows, redondances }) {
 // une action concrète et datée (les asides narratives déjà repérables mécaniquement) ; un document
 // à la demande reçoit explicitement l'absence d'action requise, pour ne jamais faire perdre du
 // temps sur un faux problème.
-// Branchement avec ecotoken-claude.md (2026-09-22, tâche #359) : ce scan MESURE le poids et
-// s'arrête là ; ecotoken-claude.md RÉDUIT (plan chiffré + texte de remplacement + budget
+// Branchement avec ecotoken (2026-09-22, tâche #359) : ce scan MESURE le poids et
+// s'arrête là ; ecotoken RÉDUIT (plan chiffré + texte de remplacement + budget
 // anti-regrossissement). Le lien se fait par le TEXTE de actionPossible, jamais par un import :
 // ecotoken importe déjà ce fichier, l'importer en retour créerait un cycle. Frontière nette —
-// SMART-CONSO-TOKEN dit combien ça coûte, ecotoken-claude.md dit quoi faire pour que ça coûte
+// SMART-CONSO-TOKEN dit combien ça coûte, ecotoken dit quoi faire pour que ça coûte
 // moins, et aucun des deux ne recalcule ce que l'autre sait déjà.
 export function scanDocumentWeight(text, filename = "document", { alwaysLoaded = false } = {}) {
   const weight = measureClaudeMdWeight(text);
@@ -453,8 +453,8 @@ export function scanDocumentWeight(text, filename = "document", { alwaysLoaded =
   } else {
     const markers = countDatedNarrativeMarkers(text);
     actionPossible = markers.occurrences
-      ? `Document TOUJOURS CHARGÉ (coût payé à chaque message) : ${markers.occurrences} aside(s) narrative(s) datée(s) repérée(s) mécaniquement (~${markers.tokens} tokens, candidates sûres car déjà explicitement historiques). Pour un PLAN DE RÉDUCTION chiffré et le texte de remplacement prêt à relire : \`node scripts/ecotoken-claude-md.mjs plan\` (ecotoken-claude.md). Le tri final reste manuel (Article 19, jamais automatique).`
-      : `Document TOUJOURS CHARGÉ (coût payé à chaque message), au-delà du repère, mais aucune aside narrative datée détectée mécaniquement. Le filon mécanique de CE scan est épuisé — ecotoken-claude.md (\`node scripts/ecotoken-claude-md.mjs\`) prend le relais avec ses autres stratégies (catalogue, extraction, doublons), jamais ce scan-ci.`;
+      ? `Document TOUJOURS CHARGÉ (coût payé à chaque message) : ${markers.occurrences} aside(s) narrative(s) datée(s) repérée(s) mécaniquement (~${markers.tokens} tokens, candidates sûres car déjà explicitement historiques). Pour un PLAN DE RÉDUCTION chiffré et le texte de remplacement prêt à relire : \`node scripts/ecotoken.mjs plan\` (ecotoken). Le tri final reste manuel (Article 19, jamais automatique).`
+      : `Document TOUJOURS CHARGÉ (coût payé à chaque message), au-delà du repère, mais aucune aside narrative datée détectée mécaniquement. Le filon mécanique de CE scan est épuisé — ecotoken (\`node scripts/ecotoken.mjs\`) prend le relais avec ses autres stratégies (catalogue, extraction, doublons), jamais ce scan-ci.`;
     urgence = "action_requise";
   }
   return {

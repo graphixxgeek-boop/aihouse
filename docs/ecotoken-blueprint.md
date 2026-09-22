@@ -1,9 +1,9 @@
-# ecotoken-claude.md — blueprint exportable
+# ecotoken — blueprint exportable
 
 Architecture générique d'un outil qui **réduit le coût permanent d'un document toujours chargé**.
 Réutilisable sur tout projet piloté par IA où un fichier de charte est rechargé à chaque message —
 jamais les sections exactes ni les seuils de ce projet-ci, qui vivent dans
-`docs/referentiel/ecotoken-claude-md.md`.
+`docs/referentiel/ecotoken.md`.
 
 ## Le problème qu'il traite
 
@@ -72,3 +72,53 @@ citations, apartés) ; celui-ci **réduit** (plan chiffré, texte de remplacemen
 importe les fonctions du premier ; le premier ne fait que **pointer vers** le second par un message
 texte — jamais un import en retour, qui créerait un cycle. Aucun des deux ne recalcule ce que
 l'autre sait déjà.
+
+## Criticité de la cible, et comportement adapté (générique)
+
+Un outil qui réduit du contenu doit savoir sur QUOI il agit avant d'agir. L'échelle générique :
+
+- **Deux niveaux catégoriels**, atteints par un seul fait et jamais par accumulation :
+  - *fichier maître* — le document qui gouverne le travail du projet. Reconnu à ce qui le rend
+    maître (rechargé en permanence, cité partout, écrit en règles), **jamais à son nom** : c'est la
+    condition pour que ce blueprint fonctionne dans un autre projet. Deux chemins de détection,
+    déclaration explicite puis déduction sur preuves, et une absence honnête si aucun candidat.
+  - *tuyauterie* — le code dont tout dépend (crochets, filet de sécurité, socle partagé). Sans ce
+    niveau, un crochet git est classé « périphérique » par la seule densité de règles, alors que le
+    casser casse tout. C'est le piège à éviter.
+- **Trois niveaux par cumul de signaux** (critique / sensible / ordinaire) et un plancher.
+
+La criticité doit **filtrer réellement**, jamais décorer : au-dessus d'un seuil, les propositions à
+risque moyen sortent des propositions applicables — mais restent **listées à part**, car masquer un
+gain possible serait mentir.
+
+## Sûreté structurelle
+
+La garantie n'est pas une promesse de bonne conduite : l'outil n'a **aucun chemin d'écriture** vers
+un document analysé. Toute écriture passe par une fonction qui refuse toute cible hors du dossier
+de l'outil, et un test vérifie les deux moitiés — que la fonction refuse, ET qu'aucun appel
+d'écriture ne la contourne. Même en cas de bug, le pire possible est un mauvais rapport chez soi.
+
+## Le contrôle de perte, et le fond protégé
+
+Deux contrôles distincts, tous deux nés d'une perte réelle :
+- *références perdues* — ce qui a cessé d'être mentionné (chemins, titres de section), avec les
+  pertes **déclarées comme attendues** filtrées : un garde-fou qui crie au loup à chaque réduction
+  réussie finit ignoré, et ne garde alors plus rien.
+- *fond protégé* — sur un fichier maître : les règles numérotées (nombre ET intitulé exact) et les
+  phrases socles doivent survivre. Les socles se **dérivent** de la classification de règles qui
+  existe déjà quand il y en a une, plutôt que d'être recopiés dans une seconde liste qui divergera.
+
+**Limite à ne jamais masquer** : ces contrôles vérifient qu'une règle est encore ÉCRITE, jamais
+qu'elle a le même SENS. C'est précisément pourquoi la validation humaine reste obligatoire au plus
+haut niveau.
+
+## Harmonie avec les autres échelles d'un projet
+
+Un projet mûr a déjà plusieurs échelles (effort de vérification, zones sensibles, gravité d'une
+règle). Elles ne mesurent pas le même objet : les fondre en un vocabulaire unique détruit de
+l'information. L'harmonie utile est faite de **ponts** là où les objets se rejoignent vraiment
+(criticité → niveau de vérification minimal, en réutilisant le vocabulaire d'arrivée existant), de
+**lectures** plutôt que de seconds jugements (une zone sensible déjà déclarée se lit, ne se
+recalcule pas), et d'un **garde-fou de désaccord** : quand deux mesures du même dépôt se
+contredisent sur un même fichier, l'une des deux est fausse — le signaler, sans trancher
+mécaniquement laquelle.

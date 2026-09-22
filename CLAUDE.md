@@ -757,382 +757,78 @@ créatif/narratif piloté par IA. Texte fondateur, révisé exceptionnellement, 
 générique réutilisable sur un autre projet, une instanciation propre à ce projet dans
 `docs/referentiel/`, un registre dans un dossier dédié avec index.)*
 
-## Outil de résilience API — blueprint exportable
+## Catalogue — blueprint exportable
 
-`docs/outil-resilience-api.md` documente l'ARCHITECTURE de l'outil de contournement de blocages de
-clé/quota API (`scripts/gemini-key-health.mjs`, `scripts/api-providers.mjs`,
-`scripts/check-gemini-quota.mjs`) sous une forme générique, réutilisable dans un autre projet
-appelant une API tierce à quota limité — jamais l'historique d'apprentissage propre à ce projet
-(`.gemini-key-health.json`, local, jamais committé), qui reste spécifique à ce déploiement. À
-mettre à jour quand la STRUCTURE de l'outil évolue, pas à chaque ajustement propre à Gemini.
+*(Condensé par ecotoken : ces 23 entrées avaient chacune leur propre section
+narrative, soit 377 lignes rechargées à CHAQUE message. Leur récit — genèse, arbitrages,
+limites honnêtes — n'est pas supprimé : il vit dans la fiche de chacune, lue à la demande. Ce
+tableau garde ce qui doit rester sous les yeux en permanence.)*
 
-## Tableau de bord interne (KPI) — blueprint exportable
+| Nom | Ce que c'est | Architecture | Instanciation |
+|---|---|---|---|
+| ALWAYS-NEW-CODE | l'outil qui rend concrète l'épreuve de la page blanche | `docs/always-new-code-blueprint.md` | `docs/referentiel/always-new-code.md` |
+| ARGUS | détecteur de trous logiques | `docs/argus-blueprint.md` | `docs/referentiel/argus.md` |
+| AXA-CHECK | l'outil de robustesse/fragilité RÉELLES par fonction | `docs/axa-check-blueprint.md` | `docs/referentiel/axa-check.md` |
+| CASSANDRA-RH | l'Agent Cadre RH de l'outillage de travail | `docs/cassandra-rh-blueprint.md` | `docs/referentiel/cassandra-rh.md` |
+| CHECK-LEVEL-TARGET | l'outil qui calcule, avant toute vérification, le niveau attendu et la combinaison… | `docs/check-level-target-blueprint.md` | `docs/referentiel/check-level-target.md` |
+| CHECK-TASKS-DETAILS | l'outil d'état des lieux des tâches à la demande | `docs/check-tasks-details-blueprint.md` | `docs/referentiel/check-tasks-details.md` |
+| CLEAN-DIRTY-OLD | détecteur de stagnation | `docs/clean-dirty-old-blueprint.md` | `docs/referentiel/clean-dirty-old.md` |
+| CLONE-HUNTER | détecteur de blocs de code dupliqués | `docs/clone-hunter-blueprint.md` | `docs/referentiel/clone-hunter.md` |
+| ecotoken | réduit le coût permanent en tokens des documents que l’agent recharge | `docs/ecotoken-blueprint.md` | `docs/referentiel/ecotoken.md` |
+| EL-PROFESSOR | l'outil de notation de fidélité à la charte | `docs/el-professor-blueprint.md` | `docs/referentiel/el-professor.md` |
+| find-booster | l'outil de navigation par concept dans un gros fichier | `docs/find-booster-blueprint.md` | `docs/referentiel/find-booster.md` |
+| HARMONIA | cousin d'ARGUS dédié à la cohérence des liens déjà existants | `docs/harmonia-blueprint.md` | `docs/referentiel/harmonia.md` |
+| HYPER-SCAN-CHECKPOINT | l'outil de vérification approfondie exceptionnelle | `docs/hyper-scan-checkpoint-blueprint.md` | `docs/referentiel/hyper-scan-checkpoint.md` |
+| INES-official | la « secrétaire » qui aplatit le dépôt en une édition consolidée et annotée | `docs/ines-official-blueprint.md` | `docs/referentiel/ines-official.md` |
+| memory-audit | *(à écrire à la main — non extractible mécaniquement)* | `docs/memory-audit-blueprint.md` | `docs/referentiel/memory-audit.md` |
+| objectifs-vs-resultats | un registre hand-maintained d'objectifs chiffrés par entité/période confronté à un… | `docs/objectifs-vs-resultats-blueprint.md` | `docs/referentiel/objectifs-vs-resultats.md` |
+| Outil de résilience API | l'outil de contournement de blocages de clé/quota API | `docs/outil-resilience-api.md` | — |
+| Smart Conso API | la petite sœur de Smart Breaker, dédiée à réguler le rythme de consommation d'une API… | `docs/smart-conso-api-blueprint.md` | `docs/referentiel/smart-conso-api.md` |
+| SMART-CONSO-TOKEN | pendant de Smart Conso API pour les TOKENS de l'agent lui-même | `docs/smart-conso-token-blueprint.md` | `docs/referentiel/smart-conso-token.md` |
+| Tableau de bord interne (KPI) | *(à écrire à la main — non extractible mécaniquement)* | `docs/tableau-de-bord-blueprint.md` | `docs/referentiel/tableau-de-bord.md` |
+| THE-FINAL-JUDGE | un audit indépendant de code et de produit | `docs/the-final-judge-blueprint.md` | `docs/referentiel/the-final-judge.md` |
+| THE-KING | l'Agent qui veille au respect de… | `docs/the-king-blueprint.md` | `docs/referentiel/the-king.md` |
+| THE-SCREENER | pendant graphique d'EL-PROFESSOR | `docs/the-screener-blueprint.md` | `docs/referentiel/the-screener.md` |
 
-`docs/tableau-de-bord-blueprint.md` documente l'ARCHITECTURE du tableau de bord interne (5
-familles génériques : performance runtime, robustesse du code, qualité de sortie, cohérence
-logique, variété/rejouabilité) — jamais les familles exactes ni les fichiers propres à ce projet,
-qui vivent dans `docs/referentiel/tableau-de-bord.md` (instanciation) et
-`docs/referentiel/points-fragiles.md` (registre vivant, exception au dossier dédié standard).
+**Six outils volontairement SANS blueprint ni instanciation séparés** — ils n'ont aucune
+connaissance propre au projet à documenter à part, leur valeur étant d'appeler et d'agréger ce que
+les autres disent déjà. Tous entièrement documentés dans `docs/regles-de-travail.md` §7ter, jamais
+dupliqués ici : **LE-COORDINATEUR** (`scripts/le-coordinateur.mjs`, orchestrateur des outils
+gratuits, calibré le 2026-09-19 : « juste là pour fiabiliser et fluidifier l'existant ») ;
+**CIRCLE-TASKS** (`scripts/circle-tasks.mjs`, la Ronde des tâches périodiques gratuites facilement
+oubliées — jamais un tout-en-un silencieux, toujours une vraie fenêtre à cocher ; THE-FINAL-JUDGE y
+reste visible mais toujours marqué ⚠️🔴 coûteux, jamais coché par défaut) ; **doc-HTML**
+(`scripts/html-report.mjs`, rend un rapport déjà produit en page HTML autonome — jamais le fichier
+de référence gardé dans `docs/`, qui reste texte relu par les outils) ; **le compteur d'usage**
+(`scripts/tool-usage.mjs`, journalise chaque sollicitation RÉELLE avec son taux de trouvaille,
+même discipline anti-vanity-metric que `rereadPerformance()`) ; **Doc-Report**
+(`scripts/doc-report.mjs`, gardien — jamais décideur — de la décision HTML/texte déjà actée par
+registre, vérifiée mécaniquement contre le vrai code plutôt que supposée ; inventorie aussi les
+journaux locaux jamais committés, dont `findJournalsMissingFromGitignore()` : un journal local
+absent de `.gitignore` est un vrai risque de fuite au prochain commit ; reste un pair de doc-HTML,
+jamais son importateur) ; et **find-deep-booster** (`scripts/route-booster.mjs`, points de coupe
+candidats pour découper une fonction géante).
 
-## ARGUS — blueprint exportable
-
-`docs/argus-blueprint.md` documente l'ARCHITECTURE du détecteur de trous logiques (cf. Article 20)
-— jamais le registre des trouvailles propre à ce projet, qui vit dans `docs/argus/` (dossier +
-index) et `docs/referentiel/argus.md` (instanciation).
-
-## HARMONIA — blueprint exportable
-
-`docs/harmonia-blueprint.md` documente l'ARCHITECTURE du cousin d'ARGUS dédié à la cohérence des
-liens déjà existants (cf. Article 20) — jamais la carte des dépendances propre à ce projet ni son
-registre de frictions, qui vivent dans `docs/referentiel/harmonia.md` (instanciation, carte par
-grand thème) et `docs/harmonia/` (dossier + index).
-
-## Smart Conso API — blueprint exportable
-
-`docs/smart-conso-api-blueprint.md` documente l'ARCHITECTURE de la petite sœur de Smart Breaker,
-dédiée à réguler le rythme de consommation d'une API tierce à quota limité (seuils souple/dur,
-apprentissage progressif, validation humaine explicite de chaque durcissement) — jamais les seuils
-exacts ni les fichiers propres à ce projet, qui vivent dans `docs/referentiel/smart-conso-api.md`
-(instanciation) et `docs/smart-conso-api/` (dossier + index).
-Frontière stricte avec l'Article 8 : cf. section Article 8 ci-dessus.
-
-## SMART-CONSO-TOKEN — blueprint exportable
-
-`docs/smart-conso-token-blueprint.md` documente l'ARCHITECTURE du pendant de Smart Conso API pour
-les TOKENS de l'agent lui-même (schémas connus coûteux plutôt qu'un quota sondable en direct,
-capacité de scan réutilisant l'échelle de portée de THE-FINAL-JUDGE) — jamais les seuils exacts ni
-les fichiers propres à ce projet, qui vivent dans `docs/referentiel/smart-conso-token.md`
-(instanciation) et `docs/smart-conso-token/` (dossier + index). Règle d'usage complète et
-obligation écrite : cf. section Article 22 ci-dessus, dont ce document reste le pendant plutôt
-qu'un Article séparé.
-
-## HYPER-SCAN-CHECKPOINT — blueprint exportable
-
-`docs/hyper-scan-checkpoint-blueprint.md` documente l'ARCHITECTURE de l'outil de vérification
-approfondie exceptionnelle (cf. Article 21) — jamais les cinq prompts historiques exacts ni les
-fichiers propres à ce projet, qui vivent dans
-`docs/referentiel/hyper-scan-checkpoint.md` (instanciation) et `docs/hyper-scan-checkpoint/`
-(dossier + index, y compris la mémoire du dernier passage).
-
-## CHECK-LEVEL-TARGET — blueprint exportable
-
-`docs/check-level-target-blueprint.md` documente l'ARCHITECTURE de l'outil qui calcule, avant toute
-vérification, le niveau attendu et la combinaison d'outils à déployer (Léger/Standard/Approfondi/
-Exceptionnel pour ce projet) — remplace la façon informelle, au cas par cas, de choisir les outils.
-Nommé par l'utilisateur lui-même. Jamais les niveaux exacts ni les
-fichiers propres à ce projet, qui vivent dans `docs/referentiel/check-level-target.md`
-(instanciation) et `docs/check-level-target/` (dossier + index des évolutions de la règle). Distinct
-de l'échelle qualitative d'effort général ⏱️/🔢 (`docs/regles-de-travail.md` §B.2bis), jamais
-fusionnés.
-
-## THE-KING — blueprint exportable
-
-`docs/the-king-blueprint.md` documente l'ARCHITECTURE de l'Agent qui veille au respect de
-`docs/philosophie-et-politique.md` dans les décisions à haut niveau (2026-09-21, demande explicite
-de l'utilisateur, rôle de « père »/« grand-père ») — rappel ciblé sur 6 catégories de déclenchement
-(architecture, mécanique de jeu à fort impact, nouvel outil, priorité de la feuille de route,
-décision généralisable, décision irréversible/coûteuse), fraîcheur du document (jamais un auto-edit),
-digest chronologique de son évolution et détection de tension possible entre deux principes (signal
-heuristique, jamais une contradiction prouvée) — sous une forme générique, réutilisable sur un autre
-projet gouverné par un document de philosophie séparé de sa charte de contenu. Jamais les catégories
-exactes ni les fichiers propres à ce projet, qui vivent dans `docs/referentiel/the-king.md`
-(instanciation) et `docs/the-king/` (dossier + index des évolutions constatées).
-
-## INES-official — blueprint exportable
-
-`docs/ines-official-blueprint.md` documente l'ARCHITECTURE de la « secrétaire » qui aplatit le
-dépôt en une édition consolidée et annotée (2026-09-21, nom capturé en session antérieure, jamais
-concrétisé avant ce soir) — MVP calibré explicitement : APLATIR + ANNOTER, jamais une réécriture
-réelle du code ; périmètre (code seul / code + documentation) choisi à chaque édition ; annotation
-qui réutilise les signaux déjà calculés ailleurs (CLEAN-DIRTY-OLD, AXA-CHECK) sans jamais fabriquer
-de lien avec ARGUS/HARMONIA (scans en texte libre, non indexés par fichier) ; table des matières et
-datage/versionnage dès la première version ; déclenchement PÉRIODIQUE via CIRCLE-TASKS, jamais
-seulement sur demande — sous une forme générique, réutilisable sur un autre projet de code. Jamais
-les racines/extensions exactes ni les fichiers propres à ce projet, qui vivent dans
-`docs/referentiel/ines-official.md` (instanciation) et `docs/ines-official/` (index léger des
-métadonnées d'édition — le corps de chaque édition reste local, jamais committé, pour ne pas
-grossir le dépôt sans fin).
-
-## ALWAYS-NEW-CODE — blueprint exportable
-
-`docs/always-new-code-blueprint.md` documente l'ARCHITECTURE de l'outil qui rend concrète
-l'épreuve de la page blanche (Article 7, formalisée en Article 23) : imaginer, zone par zone, la
-structure idéale d'un projet en repartant de zéro avec toute la connaissance actuelle, pour
-détecter la dette d'organisation. Jamais les 8 zones exactes ni les fichiers propres à ce projet, qui vivent dans
-`docs/referentiel/always-new-code.md` (instanciation, réutilise les thèmes d'HARMONIA) et
-`docs/always-new-code/` (dossier + index, mémoire de couverture pour la rotation).
-
-## memory-audit — blueprint exportable, l'exception qui cible les Personnages
-
-*(Genèse du nom : cf. `docs/referentiel/claude-md-asides-historique.md`.)*
-
-`docs/memory-audit-blueprint.md` documente l'ARCHITECTURE de memory-audit — un vrai script
-d'**Outillage de travail = Membre de l'équipe** (`scripts/memento.mjs`, nom de fichier technique
-inchangé), catégorie "audit de simulation" aux côtés d'EL-PROFESSOR. Son SUJET, en revanche, EST un
-personnage narratif (Lia/Noé, qui n'ont AUCUNE existence dans l'équipe de travail — jamais une
-catégorie de l'organigramme, cf. `PERSONNAGES`/`assertNotAPersonnage()` de `scripts/lib-shell.mjs`,
-un garde-fou d'exclusion, pas une case de plus) — c'est son SUJET qui est hors norme, jamais sa
-NATURE de code. Couvre une dette hors du domaine des outils de gouvernance de tokens existants
-(frontière écrite des deux côtés) : cohérence mécanique de la mémoire persistée d'un personnage dans
-le temps (ordre chronologique, remise à zéro suspecte d'un compteur, régression d'un indicateur à
-sens unique) — jamais un second appel au modèle de langage. Une investigation préalable dédiée
-(Article 19) est un prérequis non négociable avant toute conception, pour éviter de dupliquer un
-plafonnage de stockage déjà résolu ou de heurter une frontière déjà actée pour de bonnes raisons.
-Jamais les champs exacts ni les fichiers propres à ce projet, qui vivent dans
-`docs/referentiel/memory-audit.md` (instanciation) et `docs/memory-audit/` (dossier + index).
-
-**Voisin distinct, jamais le même statut : memento weight.** Un second besoin, de nature différente,
-est né avec la même investigation : mesurer le poids réel du contexte envoyé au modèle par tour —
-une observation PURE, ajoutée au point d'appel réseau réel, qui ne modifie jamais ce qui est envoyé
-(Article 0/8). Ce fragment vit dans le **Moteur du jeu** (`lib/memento-weight.ts`, `lib/`), jamais
-un membre, jamais un badge — exactement la même catégorie que `lib/gemini-keys.ts` (cf.
-`docs/regles-de-travail.md`, « Moteur du jeu vs Outillage de travail ») ; sa partie outillage
-(persistance + agrégation pour le rapport KPI) vit dans `scripts/memento-weight.mjs`, séparée le
-2026-09-21 de `scripts/memento.mjs` pour ne plus mélanger les deux rôles dans un seul fichier. Nom
-conservé tel quel (jamais rattaché à l'ombrelle retirée, qui ne le désignait déjà que par ce nom).
-Détail complet : `docs/referentiel/memento-weight.md`.
-
-## find-booster — blueprint exportable
-
-*(Genèse du nom et de la promotion en Membre complet : cf.
-`docs/referentiel/claude-md-asides-historique.md`.)*
-
-`docs/find-booster-blueprint.md` documente l'ARCHITECTURE de l'outil de navigation par concept dans
-un gros fichier — cinq motifs d'extraction réels reconnus (fonctions nommées, blocs anonymes
-commentés, commentaires denses non accolade-préfixés pour un code peu structuré, entrées de
-tableau titrées, titres Markdown, routés par extension/contexte, dédoublonnés explicitement entre
-motifs de code jamais mélangés), un tag thématique optionnel (indice de rapprochement vers les 8
-thèmes HARMONIA, jamais
-une classification certaine), et une recommandation d'usage (`recommendFindBooster()`, poids réel
-en tokens plutôt que nombre de lignes seul — `lib/reference.ts`, 132 lignes mais ~55 500 tokens, en
-est la preuve vivante) — jamais une application automatique. Son voisin **find-deep-booster**
-(surnom d'affichage, 2026-09-21, anciennement « route-booster » — `scripts/route-booster.mjs`, le
-fichier technique ne change jamais : préparation d'un découpage réel, points de coupe candidats +
-indice de risque lexical) reste lui un outil sans blueprint, documenté dans
-`docs/regles-de-travail.md` — il ne sert que rarement,
-contrairement à find-booster. **`scripts/find-brain.mjs`** (2026-09-21) unifie les deux : rend un
-jugement unique, jamais exclusif, sur lequel des deux (ou les deux) utiliser pour un fichier donné,
-sans rien recalculer lui-même. **`scripts/tool-brain.mjs`** (2026-09-21) généralise find-brain à
-TOUT le catalogue PRESTATIONS de LE-COORDINATEUR (description de tâche libre et/ou fichier ciblé),
-centralise en une seule bannière le rappel post-commit auparavant éparpillé en 3 blocs, et délivre
-un rapport de KPI d'usage réel (outils jamais sollicités) plus un auto-diagnostic borné à son propre
-périmètre — à chaque Ronde CIRCLE-TASKS et à la demande (`node scripts/tool-brain.mjs rapport`).
-**Un seul point d'entrée obligatoire : tool-brain, jamais un choix entre plusieurs outils
-(re-précisé le 2026-09-21, demande explicite de l'utilisateur : « je ne dois pas m'emmêler entre
-tool-brain et find-brain, find-booster et find-deep-booster [...] tool-brain doit m'aider
-systématiquement, c'est lui qui est plugué directement à moi »).** Hiérarchie stricte, à ne jamais
-recomposer soi-même au moment d'agir :
+**Un seul point d'entrée obligatoire pour choisir un outil : tool-brain, jamais un choix fait
+soi-même entre les couches.** *(Re-précisé le 2026-09-21 à la demande explicite de l'utilisateur :
+« tool-brain doit m'aider systématiquement, c'est lui qui est plugué directement à moi ».)*
+`scripts/tool-brain.mjs` généralise find-brain à TOUT le catalogue PRESTATIONS, centralise le
+rappel post-commit en une bannière unique, et délivre un KPI d'usage réel (outils jamais
+sollicités) à chaque Ronde et à la demande (`node scripts/tool-brain.mjs rapport`). Hiérarchie
+stricte, à ne jamais recomposer soi-même au moment d'agir :
 ```
 tool-brain (le SEUL réflexe à avoir — jamais choisir entre les couches ci-dessous)
- └─ find-brain (interne à tool-brain — décide find-booster et/ou find-deep-booster pour UN fichier)
-     ├─ find-booster       (index par concept dans un fichier déjà structuré)
-     └─ find-deep-booster  (surnom de route-booster.mjs — points de coupe d'une fonction géante)
- └─ suggestPrestationsForTask (interne à tool-brain — tout le catalogue PRESTATIONS, pas que la recherche)
+ └─ find-brain (interne — décide find-booster et/ou find-deep-booster pour UN fichier)
+ └─ suggestPrestationsForTask (interne — tout le catalogue PRESTATIONS, pas que la recherche)
 ```
-**Obligation écrite d'usage réel** (même limite honnête que SMART-CONSO-TOKEN, aucun mécanisme
+**Obligation écrite d'usage réel** (même limite honnête que SMART-CONSO-TOKEN : aucun mécanisme
 technique ne peut intercepter un `Read`/`Grep` avant qu'il n'ait lieu) : **avant toute recherche
-dans un fichier existant** (pas seulement une lecture intégrale ou un grep répété), consulter
-`node scripts/tool-brain.mjs "<tâche>" --file <fichier>` — **jamais** find-brain.mjs/find-booster.mjs/
-find-deep-booster(route-booster).mjs directement : `adviseToolBrain()` (tool-brain.mjs) appelle déjà
-`recommendFindBrain(filePath)` en interne, un appel séparé à find-brain serait redondant, jamais un
-second chemin légitime. Jamais seulement se fier au rappel automatique du dernier commit
-(`docs/regles-de-travail.md` §7ter), qui peut être périmé si le fichier a grossi depuis. Preuve
-honnête que ce réflexe n'était pas encore acquis avant ce renforcement : trouvé le soir même en
-lançant `find-booster.mjs` directement sur un fichier sans passer par tool-brain d'abord. Principe
-général associé (même soir, même demande) : **avant chaque commande, se demander si un outil déjà
-existant répondrait plus vite, plus efficacement, ou de façon plus complète (accès à un rapport
-déjà produit)** — cf. `docs/regles-de-travail.md` §7ter pour le détail. Jamais les motifs exacts ni
-les fichiers propres à ce projet, qui vivent dans `docs/referentiel/find-booster.md` (instanciation)
-et `docs/find-booster/` (dossier + index).
+dans un fichier existant**, consulter `node scripts/tool-brain.mjs "<tâche>" --file <fichier>` —
+**jamais** find-brain/find-booster/find-deep-booster directement, `adviseToolBrain()` appelant déjà
+`recommendFindBrain()` en interne. Jamais se fier au seul rappel du dernier commit, qui peut être
+périmé si le fichier a grossi depuis. Principe général associé : **avant chaque commande, se
+demander si un outil déjà existant répondrait plus vite ou plus complètement** (cf. §7ter).
 
-## CLONE-HUNTER — blueprint exportable
-
-*(2026-09-21, construit en réponse directe à une question de l'utilisateur : « est-ce qu'on a deja
-un outil qui traque les redondances, repetition, duplicatas, dans le code ? » — vérifié avant
-construction, en lisant les fonctions exportées d'ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD une par
-une (Article 19), qu'aucune ne fait ce métier. Membre complet dès la construction, décision
-explicite de l'utilisateur, jamais l'étape intermédiaire "sans blueprint" habituelle.)*
-
-`docs/clone-hunter-blueprint.md` documente l'ARCHITECTURE du détecteur de blocs de code dupliqués —
-v1 littérale (blocs de lignes identiques après normalisation d'espaces) ET v2 (2026-09-21, blocs
-structurellement identiques sous un renommage bijectif cohérent d'identifiants, jamais une
-ressemblance sémantique complète qui demanderait un vrai parseur AST), un diff de blocs qui étend la
-comparaison ligne par ligne plutôt qu'un fenêtrage à taille fixe (cœur partagé par les deux
-versions), un regroupement par union-find pour qu'un bloc dupliqué à N endroits ne produise jamais N
-alertes redondantes, et une exclusion vérifiée (jamais générique) du code vendu tel quel dont la
-duplication est assumée par design (`components/ui/`, le kit shadcn/Radix de ce projet).
-`clone-hunter-run` rejoint CIRCLE-TASKS en
-lancement RÉEL à chaque passage (thème "Passages réels (smoke run)", comme
-profil-utilisateur-guard/network-check-run) — jamais un simple signal de fraîcheur, la détection de
-duplication n'ayant aucune mémoire persistante à consulter. Jamais les seuils exacts ni les fichiers
-propres à ce projet, qui vivent dans `docs/referentiel/clone-hunter.md` (instanciation) et
-`docs/clone-hunter/` (dossier + index).
-
-## objectifs-vs-resultats — blueprint exportable
-
-*(Surnom, 2026-09-21 : « R/O-Guardian » — nom technique gardé comme nom principal partout où un
-slug en dépend, jamais renommé en tête de la table maîtresse, contrairement à route-booster/
-CLAUDE.MD.SPY qui n'avaient aucun registre/catégorie accroché à leur slug.)*
-
-`docs/objectifs-vs-resultats-blueprint.md` documente l'ARCHITECTURE d'un registre hand-maintained
-d'objectifs chiffrés par entité/période confronté à un résultat mesuré par des outils déjà
-existants (tâche #287, 2026-09-21) — jamais un second calcul divergent, jamais un audit
-indépendant, jamais un sous-agent d'un outil de gouvernance d'équipe. Jamais les sources exactes ni
-le registre propre à ce projet, qui vivent dans `docs/referentiel/objectifs-vs-resultats.md`
-(instanciation) et `docs/objectifs-vs-resultats/` (dossier + index).
-
-## CASSANDRA-RH — blueprint exportable
-
-`docs/cassandra-rh-blueprint.md` documente l'ARCHITECTURE de l'Agent Cadre RH de l'outillage de
-travail (tâche #184, noyau construit et fiabilisé le 2026-09-21) — NOTE l'équipe (constat chiffré,
-jamais un seuil auto-jugé), SUPERVISE le badge (lit le système de certification existant, jamais ne
-le recalcule), LIT le KPI (lit un historique déjà produit), signale les outils à retirer/refondre
-(réutilise des signaux déjà calculés ailleurs), squelette de recrutement en 3 étapes (décision
-humaine explicite à chaque étape) — jamais un décideur final. Récit complet des décisions de
-calibrage : `docs/cassandra-rh-conception.md` (archivé, conservé comme fondation). Jamais le
-mécanisme exact ni le registre propre à ce projet, qui vivent dans `docs/referentiel/cassandra-rh.md`
-(instanciation) et `docs/cassandra-rh/` (dossier + index).
-
-## AXA-CHECK — blueprint exportable
-
-`docs/axa-check-blueprint.md` documente l'ARCHITECTURE de l'outil de robustesse/fragilité RÉELLES
-par fonction (cf. Article 20, troisième membre "toujours déployé" aux côtés d'ARGUS et HARMONIA) —
-mesure de couverture de test via `NODE_V8_COVERAGE` (zéro nouvelle dépendance), granularité par
-fonction, fragilité enrichie (jamais un simple miroir de la robustesse) — sous une forme générique,
-réutilisable sur un autre projet qui a déjà un filet de sécurité mécanique. Jamais le mapping de
-fichiers exact ni le registre propre à ce projet, qui vivent dans `docs/referentiel/axa-check.md`
-(instanciation) et `docs/axa-check/` (dossier + index).
-
-**LE-COORDINATEUR — l'exception sans blueprint.** Contrairement à tous les autres outils ci-dessus,
-le petit orchestrateur `scripts/le-coordinateur.mjs` (nommé et calibré le 2026-09-19, à la demande
-explicite de l'utilisateur : « un coordinateur de fonctions existantes... juste là pour fiabiliser
-et fluidifier l'existant ») n'a volontairement ni blueprint ni instanciation ni registre séparés —
-il n'a aucune connaissance propre au projet à documenter à part, sa seule valeur étant de savoir
-appeler et agréger ce que les autres outils gratuits de ce paysage disent déjà. Entièrement
-documenté dans `docs/regles-de-travail.md` §7ter.
-
-**CIRCLE-TASKS — même exception, pour les tâches périodiques mal automatisées.** `scripts/circle-tasks.mjs` regroupe dans un seul menu à cocher les tâches
-périodiques gratuites facilement oubliées (mise à jour du profil utilisateur, relecture des
-référentiels, rapport KPI, signal ALWAYS-NEW-CODE, carnets de correctifs, scans Smart Conso
-API/SMART-CONSO-TOKEN, photo de la dream team, THE-SCREENER) — jamais un tout-en-un silencieux,
-toujours une vraie fenêtre à cocher ouverte par l'agent. THE-FINAL-JUDGE reste visible dans la même
-fenêtre mais toujours marqué ⚠️🔴 coûteux, jamais coché par défaut. Ni blueprint ni instanciation
-séparés, même principe que LE-COORDINATEUR ci-dessus — entièrement documenté dans
-`docs/regles-de-travail.md` §7ter.
-
-**doc-HTML (surnom, anciennement « gabarit HTML ») — pas un outil de vigilance, un simple rendu.**
-`scripts/html-report.mjs` rend n'importe quel rapport déjà produit (KPI, EL-PROFESSOR, THE-SCREENER,
-simulations, THE-FINAL-JUDGE, CIRCLE-TASKS...) en page HTML autonome, cohérente visuellement d'un
-rapport à l'autre — jamais le fichier de référence gardé dans `docs/` (qui reste texte/markdown,
-relu par les outils), seulement une copie de présentation générée à la remise. Encore plus mince que
-LE-COORDINATEUR/CIRCLE-TASKS. Importé directement par ~10 scripts (jamais par Doc-Report, qui reste
-un pair au même statut « Utilitaire nommé » — son rôle est d'AUDITER de l'extérieur que doc-HTML est
-bien utilisé où il devrait l'être, jamais de l'importer lui-même). Entièrement documenté dans
-`docs/regles-de-travail.md` §7ter.
-
-**Compteur d'utilisation des outils — le pendant "usage réel" de SMART-CONSO-TOKEN.**
-`scripts/tool-usage.mjs` (tâche #166, 2026-09-21) journalise chaque sollicitation RÉELLE d'un outil
-(`.tool-usage-history.json`, local, jamais committé, cumul permanent jamais remis à zéro) : l'origine
-(spontanée/demandée/automatique post-commit) et un taux de trouvaille (`foundSomething`), même
-discipline anti-vanity-metric que `rereadPerformance()`. Nourrit Doc-Report (ci-dessous) et la future
-CASSANDRA-RH. Même statut "sans blueprint" — entièrement documenté dans `docs/regles-de-travail.md`
-§7ter.
-
-**Doc-Report — le gardien de la décision HTML/texte, jamais celui qui la prend.** `scripts/doc-report.mjs`
-(tâche #165, 2026-09-21) relie les registres réels du réseau d'outils dans un index global : pour
-chaque registre, la décision HTML/texte déjà actée (remise HTML via `html-report.mjs`, archive HTML
-assumée, ou texte seul), vérifiée mécaniquement contre le vrai code (le script producteur importe-t-il
-réellement `html-report.mjs` ?) plutôt que supposée — a trouvé dès son premier lancement que
-THE-DEEP-READER et les Simulations n'avaient jamais reçu leur câblage HTML pourtant acté. Croisé avec
-l'âge du dernier rapport (`lastTouchDays()` de CLEAN-DIRTY-OLD) et le compteur d'usage
-(`toolsNeverUsed()` de `scripts/tool-usage.mjs`) pour signaler un outil dont les rapports ne sont
-jamais consultés. Étend aussi son inventaire aux JOURNAUX LOCAUX jamais committés
-(`.gemini-key-health.json`, `.smart-conso-token-history.json`, `.tool-usage-history.json`, etc. —
-réponse tranchée le 2026-09-21 à une question directe de l'utilisateur : le MÊME outil, jamais un
-jumeau, seul le type d'artefact diffère) : `LOCAL_JOURNALS`/`auditLocalJournals()` (fraîcheur par
-mtime du système de fichiers, jamais git) et `findJournalsMissingFromGitignore()` (un journal local
-absent de `.gitignore` est un vrai risque de fuite au prochain commit). Même statut "sans blueprint"
-que LE-COORDINATEUR/CIRCLE-TASKS/html-report.mjs — entièrement documenté dans
-`docs/regles-de-travail.md` §7ter.
-
-## CHECK-TASKS-DETAILS — blueprint exportable
-
-`docs/check-tasks-details-blueprint.md` documente l'ARCHITECTURE de l'outil d'état des lieux des
-tâches à la demande (2026-09-20, demandé explicitement par l'utilisateur pour répondre à ses
-demandes récurrentes « fais-moi l'état des tâches en cours » avec un gabarit fixe) — zoom (en
-cours/élargi/projet entier) × forme (liste/arborescence), rapport HTML, strictement en lecture
-seule sur `docs/suivi/` (qui reste l'unique source de vérité, jamais une seconde porte d'écriture),
-vérification croisée automatique contre son propre historique (régression/stagnation) — sous une
-forme générique, réutilisable sur tout projet suivi par un système de tâches durable. Statut
-**complet** (choix explicite de l'utilisateur, Article 16), contrairement à LE-COORDINATEUR/
-CIRCLE-TASKS/html-report.mjs. Jamais les colonnes exactes ni le registre propre à ce projet, qui
-vivent dans `docs/referentiel/check-tasks-details.md` (instanciation) et
-`docs/check-tasks-details/` (dossier + index). Consulte `le-coordinateur.mjs::suggestPrestationsForTask()`
-pour chaque tâche ouverte — premier usage concret d'un principe désormais général, documenté dans
-`docs/regles-de-travail.md` §7ter (« Consultation programmatique outil→LE-COORDINATEUR »).
-
-## CLEAN-DIRTY-OLD — blueprint exportable
-
-`docs/clean-dirty-old-blueprint.md` documente l'ARCHITECTURE du détecteur de stagnation (cf.
-Article 20, quatrième membre "toujours déployé" aux côtés d'ARGUS, HARMONIA et AXA-CHECK) — code
-ancien et peu retouché RELATIVEMENT au reste du projet (jamais un seuil de date fixe), qui repère
-seul et délègue toujours le vrai jugement (encore utile ? encore à jour ? profiterait d'une
-refonte ?) à ARGUS/HARMONIA/ALWAYS-NEW-CODE. Jamais les seuils exacts ni le registre propre à ce
-projet, qui vivent dans `docs/referentiel/clean-dirty-old.md` (instanciation) et
-`docs/clean-dirty-old/` (dossier + index).
-
-## EL-PROFESSOR — blueprint exportable
-
-`docs/el-professor-blueprint.md` documente l'ARCHITECTURE de l'outil de notation de fidélité à la
-charte (Article 18, étape 4bis) — une vraie lecture qualitative, jamais un calcul mécanique, notée
-par thème et plafonnée par la hiérarchie de la charte (un article suprême comme l'Article 0 ne peut
-jamais être compensé par une bonne moyenne sur les autres thèmes) — sous une forme générique,
-réutilisable sur un autre projet gouverné par une charte de contenu. Deux modes (2026-09-19,
-extension explicitement demandée) : **conversation entière** (une simulation ou session complète,
-comme ci-dessus) et **extrait isolé** (un test isolé, un scénario unique — chaque thème porte un
-palier de matière minimale pour être jugé honnêtement, un score jamais ramené à l'échelle /100 des
-simulations complètes). Jamais les 5 thèmes exacts, les paliers précis ni le registre propre à ce
-projet, qui vivent dans `docs/referentiel/el-professor.md` (instanciation) et `docs/el-professor/`
-(dossier + index). Distinct du carnet
-`docs/simulations/correctifs-a-revalider.md` (suivi de correctifs de CODE précis, jamais consulté
-par EL-PROFESSOR — cf. Article 18, étape 6, et `docs/referentiel/el-professor.md` pour
-l'articulation exacte entre les deux).
-
-## THE-SCREENER — blueprint exportable
-
-`docs/the-screener-blueprint.md` documente l'ARCHITECTURE du pendant graphique d'EL-PROFESSOR
-(Article 18, étape 4bis) — une note indicative de qualité visuelle, jamais un verdict qui prime sur
-l'appréciation de l'utilisateur, fondée sur 2 captures d'écran maximum (Playwright) et une charte
-graphique déjà écrite — sous une forme générique, réutilisable sur un autre projet visuel piloté
-par IA. Jamais les critères exacts ni le registre propres à ce projet, qui vivent dans
-`docs/referentiel/the-screener.md` (instanciation) et `docs/the-screener/` (dossier de rapports).
-Distinct d'un éventuel futur outil de gestion de la refonte graphique elle-même — décision
-explicite de l'utilisateur de garder les deux séparés.
-
-## THE-FINAL-JUDGE — blueprint exportable
-
-`docs/the-final-judge-blueprint.md` documente l'ARCHITECTURE d'un audit indépendant de code et de
-produit (2026-09-20, demandé explicitement par l'utilisateur) — un AGENT RÉELLEMENT SÉPARÉ, sans
-mémoire de l'historique du projet, qui incarne un professionnel senior au regard critique envisageant
-sérieusement de reprendre le projet, et rend un verdict opiniâtre (positifs, points à améliorer,
-pistes de développement) — jamais une vérification de fidélité aux décisions déjà prises (l'inverse
-exact de la double perspective d'HYPER-SCAN-CHECKPOINT), jamais un score calibré (l'inverse d'EL-
-PROFESSOR), jamais un exécutant (conseiller uniquement, aucun code écrit par lui-même). Deux axes
-indépendants et croisables librement : 6 paliers d'intensité (quantité lue, très léger à très lourd)
-et 4 paliers de périmètre (ce qui est audité, global à un sujet précis), toujours choisis par l'agent
-qui pilote au moment du déclenchement — jamais un palier par défaut figé par outil. Même dualité
-dev/production que THE-SCREENER, un mandat explicite incluant les risques de sécurité/production.
-Intégré à CHECK-LEVEL-TARGET en tendance générale (Approfondi → intensité basse à modérée,
-Exceptionnel → intensité approfondie à très lourde), jamais un verrou, et jamais à confondre avec les
-4 niveaux propres de CHECK-LEVEL-TARGET malgré deux mots partagés. Jamais les paliers exacts ni le
-registre propres à ce projet, qui vivent dans
-`docs/referentiel/the-final-judge.md` (instanciation) et `docs/the-final-judge/` (dossier de
-rapports) — ses conclusions retenues après réconciliation rejoignent les registres existants
-(`points-fragiles.md`, `correctifs-a-revalider.md`, la feuille de route), jamais un rapport isolé.
-**Règle durable (2026-09-20) : coûte cher en tokens** (~37 000 tokens de coût fixe par appel d'agent
-séparé, recherche réelle documentée dans `docs/referentiel/smart-conso-token.md`) — vigilance et
-parcimonie requises à chaque déclenchement, jamais un réflexe. Consultation obligatoire des DEUX
-conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs sections dédiées).
 
 ## Référentiel technique — la référence à jour
 
@@ -1256,6 +952,14 @@ conseillers avant lancement : Smart Conso API et SMART-CONSO-TOKEN (cf. leurs se
   `components/ui/`, la trouvaille réelle (`loadJson()` dupliqué entre smart-conso-api.mjs et
   smart-conso-token.mjs), l'item `clone-hunter-run` de CIRCLE-TASKS, le registre
   (`docs/clone-hunter/`). Cf. `docs/clone-hunter-blueprint.md` pour le principe générique.
+- `docs/referentiel/ecotoken.md` (2026-09-22, tâche #359) — instanciation d'ecotoken pour ce
+  projet : les budgets par document et la marge anti-regrossissement, les stratégies de réduction
+  réellement applicables ici, la mesure de CRITICITÉ (CLAUDE.md = critique : seules les
+  propositions à risque faible sont applicables, validation humaine et contrôle de perte de
+  références obligatoires), les 4 portées reprises telles quelles de THE-FINAL-JUDGE/
+  SMART-CONSO-TOKEN, les 4 déclencheurs et leur audit mécanique, la garantie de sûreté
+  (`assertSafeWriteTarget()` : l'outil n'écrit jamais dans ce qu'il analyse), le registre
+  (`docs/ecotoken/`). Cf. `docs/ecotoken-blueprint.md` pour le principe générique.
 - `docs/referentiel/objectifs-vs-resultats.md` (2026-09-21, tâche #287) — instanciation d'objectifs-
   vs-resultats pour ce projet : le registre hand-maintained (`docs/objectifs-vs-resultats/registre.md`),
   les deux sources supportées (usage-count/found-rate, lues dans `.tool-usage-history.json`, jamais

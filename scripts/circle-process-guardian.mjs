@@ -225,9 +225,16 @@ export function verifyHyperScanProcess({
 export const CIRCLE_ITEMS_CHANGELOG = [
   {
     date: "2026-09-22",
-    itemId: "claude-md-weight-signal",
+    itemId: "ecotoken-scan",
+    ancienId: "claude-md-weight-signal",
+    changement: "renommage",
+    pourquoi: "L'item ne portait plus son vrai périmètre. Il s'appelait « poids de CLAUDE.md » à une époque où c'était bien son seul sujet ; ecotoken ayant été élargi à n'importe quel document (portées global/partiel/zoome/focus, budgets sur trois documents et non plus un), garder un nom qui ne parle que de la charte aurait fait croire que rien d'autre n'est surveillé. Le contenu de l'item n'a pas changé, seulement son nom — d'où un renommage consigné comme tel, plutôt qu'une réécriture de KNOWN_ITEMS_BEFORE_CHANGELOG qui aurait effacé le fait que cet item existait bien avant ce registre.",
+  },
+  {
+    date: "2026-09-22",
+    itemId: "ecotoken-scan",
     changement: "modification",
-    pourquoi: "Harmonisation demandée explicitement par l'utilisateur au moment de construire ecotoken-claude.md : « je crois qu'il y a deja un rapport sur claude.md dans circle. vois comment tu peux tout harmoniser sur ce sujet. » Il y en avait bien un. Plutôt que d'ajouter un 26e item qui aurait dit la même chose en mieux, CET item lance désormais ecotoken-claude.md — un seul item de Ronde sur le sujet CLAUDE.md, jamais deux. Le signal n'a rien perdu (il relit toujours SMART-CONSO-TOKEN) et gagne le rendement par article, le plan de réduction chiffré, le budget anti-regrossissement et la mémoire des passages.",
+    pourquoi: "Harmonisation demandée explicitement par l'utilisateur au moment de construire ecotoken : « je crois qu'il y a deja un rapport sur claude.md dans circle. vois comment tu peux tout harmoniser sur ce sujet. » Il y en avait bien un. Plutôt que d'ajouter un 26e item qui aurait dit la même chose en mieux, CET item lance désormais ecotoken — un seul item de Ronde sur le sujet CLAUDE.md, jamais deux. Le signal n'a rien perdu (il relit toujours SMART-CONSO-TOKEN) et gagne le rendement par article, le plan de réduction chiffré, le budget anti-regrossissement et la mémoire des passages.",
   },
   {
     date: "2026-09-22",
@@ -252,6 +259,16 @@ export function findItemsMissingFromChangelog(items = CIRCLE_ITEMS, changelog = 
   // Seuls les AJOUTS rendent un item "consigné" : une modification documente un item qui existait
   // déjà, elle n'a jamais vocation à faire passer un item inconnu pour connu.
   const consigned = new Set(changelog.filter((e) => e.changement === "ajout").map((e) => e.itemId));
+  // Troisième cas, ajouté le 2026-09-22 en renommant réellement un item : un RENOMMAGE n'est ni un
+  // ajout (rien de neuf n'existe) ni une modification (l'id change). Sans ce cas, il fallait
+  // réécrire KNOWN_ITEMS_BEFORE_CHANGELOG — c'est-à-dire falsifier la liste figée de ce qui
+  // existait AVANT le registre. Un renommage n'est accepté que s'il nomme son ancien id et que
+  // celui-ci était réellement connu (ou lui-même consigné) : un id inventé ne se blanchit jamais
+  // en se déclarant "renommé".
+  for (const e of changelog) {
+    if (e.changement !== "renommage" || !e.ancienId) continue;
+    if (knownBefore.has(e.ancienId) || consigned.has(e.ancienId)) consigned.add(e.itemId);
+  }
   return items
     .filter((i) => !consigned.has(i.id) && !knownBefore.has(i.id))
     .map((i) => ({ check: "item-missing-from-changelog", message: `L'item "${i.id}" existe dans CIRCLE_ITEMS mais n'a jamais été consigné dans CIRCLE_ITEMS_CHANGELOG — son "pourquoi" est déjà perdu.` }));

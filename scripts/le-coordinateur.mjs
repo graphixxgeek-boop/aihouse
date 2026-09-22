@@ -52,7 +52,7 @@ import { classifyCheckLevel } from "./check-level-target.mjs";
 import { lastTouchDays, relativeStaleness } from "./clean-dirty-old.mjs";
 import { findUnconfirmedBursts } from "./smart-conso-api.mjs";
 import { summarizeHistory, findJudgeSpawnsWithoutConsultation, filterIndexRowsByVersion } from "./smart-conso-token.mjs";
-import { checkWeightBudget } from "./ecotoken-claude-md.mjs";
+import { checkWeightBudget } from "./ecotoken.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { loadJson, recordCliUsage } from "./tool-usage.mjs";
 
@@ -181,6 +181,7 @@ export const PRESTATIONS = [
   { nom: "Pack Cerveau central", description: "Généralise find-brain à tout le catalogue PRESTATIONS : à partir d'une description de tâche et/ou d'un fichier ciblé, indique quelle(s) prestation(s) et quel(s) outil(s) de recherche utiliser, sans rien recalculer soi-même. Délivre aussi le rapport de Ronde (outils jamais sollicités, auto-diagnostic borné à son propre périmètre).", demande: "Savoir quel outil ou quelle combinaison d'outils déjà existante utiliser pour une tâche donnée, sans avoir à y réfléchir soi-même", outils: ["tool-brain"], cout: "0 appel API", tokensEstimes: "faible" },
   { nom: "Pack Chasse aux clones", description: "Scanne lib/scripts/app/components (hors components/ui, vendored) à la recherche de blocs dupliqués — v1 littérale (lignes identiques après normalisation d'espaces) ET v2 (blocs structurellement identiques sous renommage bijectif cohérent d'identifiants) — regroupés par cluster et triés par impact réel.", demande: "Dette technique / code qui s'empile plutôt que d'être pensé — trouver un bloc de logique recopié plutôt que factorisé, même renommé", outils: ["clone-hunter"], cout: "0 appel API — heuristique texte, zéro parseur AST", tokensEstimes: "faible à modéré — sortie compacte des clusters trouvés" },
   { nom: "Pack Objectifs", description: "Confronte chaque objectif chiffré du registre (par entité/période) au résultat réel déjà mesuré par tool-usage.mjs, avec un statut atteint/en dessous/dépassé/pas de données. Surnom : R/O-Guardian (2026-09-21).", demande: "Vérifier si un objectif fixé sur un outil ou une entité a été atteint sur sa période", outils: ["objectifs-vs-resultats"], cout: "0 appel API — relit un historique déjà écrit, jamais un second calcul", tokensEstimes: "faible — sortie compacte, une ligne par objectif" },
+  { nom: "Pack Diète", description: "Mesure la pertinence réelle de chaque passage de CLAUDE.md (citations effectives ÷ lignes occupées), classe en règle/narration/inventaire, et rédige le texte de remplacement chiffré — jamais une coupe automatique. Repère aussi les consignes qu'un crochet applique déjà tout seul.", demande: "Réduire le coût en tokens de CLAUDE.md, le seul document rechargé à chaque message", outils: ["ecotoken"], cout: "0 appel API — relit la charte et le dépôt local", tokensEstimes: "faible — sortie compacte ; le plan détaillé ne se lit qu'à la demande" },
   { nom: "Pack Direction RH", description: "Constat chiffré de l'effectif de l'équipe par catégorie, supervision du badge (lit checkAgentOnboarding(), jamais ne le recalcule), tendance KPI lue depuis kpi-historique.csv, outils à retirer/refondre — jamais un jugement automatique, toujours l'utilisateur qui décide.", demande: "Bilan RH de l'équipe de l'Agence Codex, effectif, badges, tendance KPI, outils à reconsidérer", outils: ["CASSANDRA-RH"], cout: "0 appel API — relit ce que le reste du réseau d'outils sait déjà", tokensEstimes: "faible pour le signal léger, modéré pour le bilan HTML complet" },
 ];
 
@@ -538,8 +539,21 @@ export function checkAgentOnboarding(agentName, {
     if (!claudeMdText.includes(`docs/referentiel/${slug}.md`)) {
       gaps.push("absent de la section « Référentiel technique » de CLAUDE.md (bullet docs/referentiel/<slug>.md)");
     }
-    if (!cousinOf && !new RegExp(`^## .*${slug.replace(/-/g, "[- ]")}.*blueprint exportable`, "im").test(claudeMdText)) {
-      gaps.push(`absent de CLAUDE.md comme section "## ... — blueprint exportable" (attendu puisqu'il a un blueprint propre)`);
+    // Deux formes valent DÉCLARATION dans CLAUDE.md, jamais une seule (élargi le 2026-09-22) :
+    // la section dédiée historique, OU une ligne dans le tableau « ## Catalogue — blueprint
+    // exportable » qui les condense. Sans cette seconde forme, le jour où ecotoken remplace les 22
+    // sections par leur catalogue, les 22 outils perdraient leur badge d'un coup — une régression
+    // provoquée par un allègement, exactement ce que le garde-fou de la charte interdit. Ce qui est
+    // réellement exigé n'a jamais été « une section » mais « être déclaré ici », et le tableau le
+    // fait mieux, avec le renvoi vers le blueprint sur la même ligne.
+    const nomEnTitre = slug.replace(/-/g, "[- ]");
+    const aSaSection = new RegExp(`^## .*${nomEnTitre}.*blueprint exportable`, "im").test(claudeMdText);
+    // La ligne doit citer un vrai document : un nom seul dans une cellule ne déclare rien. On ne
+    // cherche PAS le mot « blueprint » dans la ligne — l'Outil de résilience API prouve qu'un
+    // blueprint peut s'appeler autrement (`docs/outil-resilience-api.md`).
+    const aSaLigneDeCatalogue = new RegExp(`^\\|\\s*${nomEnTitre}\\s*\\|.*\`docs/[^\`]+\\.md\``, "im").test(claudeMdText);
+    if (!cousinOf && !aSaSection && !aSaLigneDeCatalogue) {
+      gaps.push(`absent de CLAUDE.md, ni comme section "## ... — blueprint exportable" ni comme ligne du tableau « Catalogue — blueprint exportable » (attendu puisqu'il a un blueprint propre)`);
     }
   }
 
@@ -890,11 +904,11 @@ export function runNetworkCheck({ shImpl = sh } = {}) {
   const missingAgentFiles = findScriptsMissingFromAgentFiles(rulesMdText);
   rows.push({ name: "AXA-CHECK (Agents absents d'AGENT_SCRIPT_FILES)", result: missingAgentFiles.length ? `à regarder (${missingAgentFiles.join(", ")})` : "ok", when: now });
 
-  // ecotoken-claude.md (2026-09-22) : le poids de la charte est une donnée de réseau au même titre
+  // ecotoken (2026-09-22) : le poids de la charte est une donnée de réseau au même titre
   // que la couverture de test — c'est le seul document rechargé à chaque message. Lecture seule du
   // budget, jamais le plan complet (qui demande de lire tout le dépôt, trop cher pour une synthèse).
   const budgetCharte = checkWeightBudget(readFileSync(join(ROOT, "CLAUDE.md"), "utf8"));
-  rows.push({ name: "ecotoken-claude.md (poids de la charte)", result: budgetCharte.depasse ? `à regarder (${budgetCharte.tokens} tk, +${budgetCharte.depassement} au-dessus du budget)` : `ok (${budgetCharte.tokens} tk, marge ${budgetCharte.margePct} %)`, when: now });
+  rows.push({ name: "ecotoken (poids de la charte)", result: budgetCharte.depasse ? `à regarder (${budgetCharte.tokens} tk, +${budgetCharte.depassement} au-dessus du budget)` : `ok (${budgetCharte.tokens} tk, marge ${budgetCharte.margePct} %)`, when: now });
 
   // Doc-Report (2026-09-21, tâche #340, trouvaille réelle : 6 fichiers de scan ARGUS restés
   // orphelins avant d'être indexés rétroactivement) — vérifie qu'un registre à "un fichier par

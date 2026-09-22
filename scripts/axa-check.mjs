@@ -253,6 +253,7 @@ export const AGENT_SCRIPT_FILES = {
   "find-booster": "scripts/find-booster.mjs",
   "objectifs-vs-resultats": "scripts/objectifs-vs-resultats.mjs",
   "cassandra-rh": "scripts/cassandra-rh.mjs",
+  "ecotoken": "scripts/ecotoken.mjs",
 };
 
 export function collectScriptCoverage(covDir, { readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8") } = {}) {
