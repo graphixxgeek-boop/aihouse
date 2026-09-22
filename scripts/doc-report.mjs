@@ -416,3 +416,38 @@ function main() {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();
+
+// --- SECTIONS DEVENUES INTROUVABLES (2026-09-22) --------------------------------------------------
+// Apprentissage venu d'un travail fait à la main sur docs/regles-de-travail.md, volontairement gardé
+// HORS d'ecotoken : réduire le poids d'un document et le rendre utilisable sont deux métiers
+// différents, et le second est celui de Doc-Report (l'auditeur de la documentation), jamais celui
+// d'un outil d'économie de tokens.
+//
+// Le cas réel : §7ter pesait 64 % de tout le document (34 457 tk sur 53 955), avec 1 527 lignes,
+// 48 blocs de règles répartis sous 24 sous-titres — et AUCUN sommaire. Le poids n'était pas le
+// problème (c'est le manuel des procédures, ses procédures lui appartiennent) : le problème était
+// qu'on ne pouvait rien y trouver sans tout lire. Une section devient introuvable bien avant de
+// devenir trop lourde, et rien ne le signalait.
+export const SEUIL_SECTION_INTROUVABLE = { lignes: 300, sousTitres: 5 };
+
+export function findUnnavigableSections(markdown, seuils = SEUIL_SECTION_INTROUVABLE) {
+  const lignes = String(markdown ?? "").split("\n");
+  const debuts = [];
+  lignes.forEach((l, i) => { if (/^#{2} /.test(l)) debuts.push(i); });
+  const findings = [];
+  for (let k = 0; k < debuts.length; k++) {
+    const a = debuts[k], b = debuts[k + 1] ?? lignes.length;
+    const zone = lignes.slice(a, b);
+    const sousTitres = zone.filter((x) => /^#{3,4} /.test(x)).length;
+    // Un sommaire existe déjà si la section contient une liste à puces dans ses 40 premières lignes
+    // ET annonce qu'elle est un sommaire — jamais deviné sur la seule présence de puces.
+    const aUnSommaire = /\*\*Sommaire/i.test(zone.slice(0, 40).join("\n"));
+    if (zone.length < seuils.lignes || sousTitres < seuils.sousTitres || aUnSommaire) continue;
+    findings.push({
+      section: zone[0].replace(/^#+\s*/, ""), lignes: zone.length, sousTitres,
+      ecart: `${zone.length} lignes réparties sous ${sousTitres} sous-titres, sans sommaire — il faut tout lire pour y trouver quoi que ce soit`,
+      remede: "un sommaire en tête, généré depuis les vrais titres (jamais recopié), qui coûte quelques centaines de tokens et évite d'en lire des dizaines de milliers",
+    });
+  }
+  return findings;
+}

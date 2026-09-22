@@ -4248,6 +4248,26 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.ok(malRanges.every((x) => x.gain === 0), 'a mis-filing is never sold as a token saving — it is a structure correction, and saying otherwise would inflate the tool\'s own numbers');
   }
 
+  // --- 4e APPRENTISSAGE : sans destination EXISTANTE, une extraction est une QUESTION, pas un gain.
+  // Sur parametres.md, systeme-de-suivi.md et organisation-agence.md, l'outil proposait 7 extractions
+  // qui revenaient toutes à vider un document de référence de son propre contenu (« Besoins » hors du
+  // document des paramètres, « Les Agents Cadre » hors de l'organigramme). Le seuil de 3 % suffit à
+  // déclencher ça sur tout document court, où chaque vraie section le dépasse.
+  const sansDest = eco.planExtractions([{ titre: 'Besoins', texte: 'du contenu sans aucun renvoi', nbLignes: 40, tokens: 900 }], 1000);
+  assert.ok(sansDest[0].aExaminer && sansDest[0].cibleManquante, 'an extraction with no existing destination must be flagged as a question, never counted as a gain');
+  const paramsDoc = eco.analyzeDocument('docs/referentiel/parametres.md');
+  assert.equal(paramsDoc.gainTotal, 0, 'the parameters reference must yield ZERO automatic gain — its sections ARE its subject, and proposing to extract them would gut the document');
+  assert.ok(paramsDoc.extractionsAExaminer.length >= 1 && /corps étranger/.test(paramsDoc.extractionsAExaminer[0].question), 'those sections must still surface as an honest question the tool cannot answer alone, never vanish silently');
+
+  // --- Sections devenues INTROUVABLES (Doc-Report, pas ecotoken : réduire un document et le rendre
+  // utilisable sont deux métiers). §7ter pesait 64 % de son document, 1 527 lignes, 48 blocs sous
+  // 24 sous-titres, sans aucun sommaire — introuvable bien avant d'être trop lourd.
+  const docRep = await import('../scripts/doc-report.mjs');
+  const grosse = '## Grosse section\n' + Array.from({ length: 320 }, (_, i) => (i % 40 === 0 ? `### Sous-titre ${i}` : 'du texte')).join('\n');
+  assert.equal(docRep.findUnnavigableSections(grosse).length, 1, 'a long section split into many sub-headings with no table of contents must be flagged — you cannot find anything in it without reading all of it');
+  assert.equal(docRep.findUnnavigableSections(grosse.replace('## Grosse section', '## Grosse section\n\n**Sommaire de cette section**')).length, 0, 'once it has a table of contents it must stop being flagged');
+  assert.deepEqual(docRep.findUnnavigableSections(fs.readFileSync('docs/regles-de-travail.md', 'utf8')), [], 'checked live: §7ter has received its table of contents, and no other section of the working-rules document is unnavigable');
+
   // --- HARMONIE AVEC LES AUTRES ÉCHELLES DU PROJET (2026-09-22). Ce dépôt a quatre échelles qui ne
   // mesurent PAS la même chose (effort de vérification / nœud du moteur / gravité d'une règle /
   // criticité d'un fichier). Les fondre serait une fausse harmonie ; ce qui est exigé ici, ce sont

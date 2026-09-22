@@ -507,6 +507,37 @@ l'évolution de l'outil dans le temps ; l'Article 18 documente QUAND le consulte
 
 ## 7ter. Le paysage des outils de vigilance, et la consultation bidirectionnelle
 
+**Sommaire de cette section** — 1527 lignes, 24 sous-parties. Généré depuis les
+vrais titres du document, jamais recopié à la main. Il existe pour une seule raison : cette section
+est à la fois la plus longue et la plus consultée, et jusqu’ici il fallait la parcourir en entier
+pour y trouver quoi que ce soit — 48 blocs de règles sous 24 titres, sans aucun point d’entrée.
+
+  - La carte des outils, pour ne plus se perdre
+  - La consultation n'est jamais à sens unique
+  - Trois canaux de consultation pour THE-FINAL-JUDGE (et modèle pour tout futur outil-agent)
+  - Trois canaux de consultation pour THE-DEEP-READER, même modèle
+  - Consultation programmatique outil→LE-COORDINATEUR (pas seulement une lecture humaine)
+  - Moi (l'agent) → check-tasks-details, systématiquement avant toute lecture manuelle de l'état des tâches
+  - Recevoir une sortie d'outil n'est pas la même chose que la traiter
+  - Aucun de ces outils n'est autonome — l'agent reste toujours celui qui finalise
+  - Un outil n'est jamais « fini » tant que ses points d'intégration décidés ne sont pas câblés et testés
+  - Personnages (Lia, Noé) : hors de l'équipe, jamais une catégorie de l'organigramme
+  - Moteur du jeu vs Outillage de travail : deux natures de code, jamais confondues sous un même nom
+  - Une règle transversale ne compte que si elle est câblée DANS chaque checklist concrète qu'elle gouverne
+  - Veille hebdomadaire automatique du réseau
+  - Avant de créer quoi que ce soit de nouveau, vérifier la mutualisation — jamais un doublon
+  - LE-COORDINATEUR — l'exception volontairement mince, sans blueprint ni instanciation
+  - CIRCLE-TASKS — la « Ronde périodique », même exception volontairement mince
+    - Le menu des prestations — traduire les outils en demandes, jamais en noms internes
+  - THE-GHOST — l'orchestrateur du mode nocturne autonome, même exception volontairement mince
+  - doc-HTML (surnom, anciennement « gabarit HTML ») — un outil sans blueprint, encore plus mince que CIRCLE-TASKS
+  - find-deep-booster (surnom d'affichage, anciennement « route-booster » — le fichier `scripts/route-booster.mjs` ne change jamais) — outil sans blueprint
+  - find-brain — le cerveau unifié de find-booster et find-deep-booster
+  - Principe général — un réflexe outil avant chaque commande, sur 3 axes
+  - tool-brain — le cerveau central des rappels d'outils, généralise find-brain
+  - Reclarification de l'organigramme — « Membre certifié » couvre deux catégories
+
+
 *(Ajouté le 2026-09-19, après la construction dans la même session d'ARGUS, HARMONIA, Smart Conso
 API, HYPER-SCAN-CHECKPOINT, CHECK-LEVEL-TARGET et ALWAYS-NEW-CODE (en cours) — demande explicite de
 l'utilisateur : « mets à jour tes façons de travailler avec l'arrivée de tous ces outils [...] les

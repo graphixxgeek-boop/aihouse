@@ -348,7 +348,18 @@ export function planExtractions(sections, totalTokens, { seuilPct = 3 } = {}) {
       const candidats = [...s.texte.matchAll(/`(docs\/[^`]+?\.md)`/g)].map((m) => m[1]);
       const cible = candidats.map((c) => ({ c, score: affiniteChemin(c, s.titre) })).filter((x) => x.score > 0).sort((a, b) => b.score - a.score)[0]?.c ?? null;
       const stub = `## ${s.titre}\n\n${cible ? `Voir \`${cible}\`.` : "*(document d'accueil à CRÉER — aucun des documents cités dans la section ne traite réellement de son sujet ; renvoyer vers l'un d'eux serait une fausse adresse.)*"} Retiré de la charte par ecotoken : lu à la demande, jamais rechargé à chaque message.`;
-      return { section: s.titre, nature: classifySectionNature(s), tokensAvant: s.tokens, tokensApres: estimateTokens(stub), gain: s.tokens - estimateTokens(stub), cible, cibleManquante: !cible, stub, texte: s.texte };
+      // QUATRIÈME APPRENTISSAGE (2026-09-22, en passant aux fichiers suivants) : sans destination
+      // EXISTANTE, une extraction n'est pas un gain, c'est une question. Sur parametres.md,
+      // systeme-de-suivi.md et organisation-agence.md, l'outil proposait 7 extractions qui
+      // revenaient toutes à vider un document de référence de son propre contenu — « Besoins » hors
+      // du document des paramètres, « Les Agents Cadre » hors de l'organigramme. Le seuil de 3 %
+      // suffit à déclencher ça sur tout document court, où chaque vraie section dépasse 3 %.
+      // Le discriminant n'est pas la taille : c'est de savoir si la section est un CORPS ÉTRANGER
+      // dans ce document, et la preuve la plus solide qu'elle l'est, c'est qu'un autre document
+      // traite déjà son sujet. Sans cette preuve, l'outil pose la question au lieu de chiffrer un
+      // gain — exactement comme pour la feuille de route de CLAUDE.md, qui était bien un corps
+      // étranger, mais sur MON jugement, jamais sur un calcul.
+      return { section: s.titre, nature: classifySectionNature(s), tokensAvant: s.tokens, tokensApres: estimateTokens(stub), gain: s.tokens - estimateTokens(stub), cible, cibleManquante: !cible, aExaminer: !cible, stub, texte: s.texte };
     })
     .sort((a, b) => b.gain - a.gain);
 }
@@ -1256,6 +1267,13 @@ export const DOCUMENT_PROFILES = [
   { chemin: "docs/referentiel/principes.md", chargement: "a_la_demande", lectures: 1, note: "relu avant toute intervention sur le moteur du jeu" },
   { chemin: "docs/referentiel/parametres.md", chargement: "a_la_demande", lectures: 1, note: "relu lors d'un rééquilibrage" },
   { chemin: "docs/suivi/sessions", chargement: "a_la_demande", lectures: 3, note: "le suivi de la session en cours, relu à chaque mise à jour de tâche", dossier: true },
+  // Ajouté le 2026-09-22 après mesure : 83 000 tokens, le plus gros artefact du dépôt, dont 92 % de
+  // versions anciennes jamais relues. Il n'était dans AUCUN profil, donc totalement invisible aux
+  // mesures de coût — un angle mort de 4× CLAUDE.md. Déclaré ici pour qu'il cesse de l'être, PAS
+  // pour être découpé : c'est le référentiel affiché en jeu (panneau Admin) et un fichier du
+  // MOTEUR, pas de la documentation. Le restructurer changerait ce qu'un utilisateur voit — une
+  // décision qui appartient à l'utilisateur, jamais à l'outil ni à moi (garde-fou de la charte).
+  { chemin: "lib/reference.ts", chargement: "a_la_demande", lectures: 1, note: "référentiel affiché en jeu ; 171 versions, 92 % d'historique jamais relu — coûteux à ouvrir, rarement ouvert" },
 ];
 
 export function realSessionCost(profiles = DOCUMENT_PROFILES, { messagesParSession = 50, root = ROOT } = {}) {
@@ -1304,8 +1322,11 @@ export function analyzeDocument(path, { repoFiles = null, root = ROOT } = {}) {
   }
   const total = sections.reduce((a, b) => a + b.tokens, 0);
   const dejaVues = new Set(propositions.flatMap((p) => p.deplacements.map((d) => d.nom)));
+  const extractionsAExaminer = [];
   for (const e of planExtractions(sections, total)) {
     if (dejaVues.has(e.section)) continue;
+    // Sans destination existante : une question posée, jamais un gain annoncé.
+    if (e.aExaminer) { extractionsAExaminer.push({ section: e.section, tokens: e.tokensAvant, question: `« ${e.section} » pèse ${e.tokensAvant} tk. Est-ce un corps étranger dans ce document (alors il faut lui créer un domicile) ou son sujet même (alors il reste) ? Aucun document existant ne traite déjà ce sujet — l'outil ne peut pas trancher.` }); continue; }
     propositions.push({ strategie: "extraction", cible: e.section, tokensAvant: e.tokensAvant, tokensApres: e.tokensApres, gain: e.gain, risque: e.nature === "narration" ? "faible" : "moyen", remplacement: e.stub, deplacements: [{ nom: e.section, vers: e.cible, cibleManquante: e.cibleManquante, texte: e.texte }] });
   }
   const manuelRef = estLeManuelDesProcedures(path, repoFiles ?? loadRepoFiles(root));
@@ -1334,7 +1355,7 @@ export function analyzeDocument(path, { repoFiles = null, root = ROOT } = {}) {
   const retenuesParCriticite = toutes.filter((p) => !utiles.includes(p));
   return {
     chemin: path, tokens: estimateTokens(texte), nbSections: sections.length,
-    criticite, retenuesParCriticite, manuelsLoges, malRanges,
+    criticite, retenuesParCriticite, manuelsLoges, malRanges, extractionsAExaminer,
     // Dit honnêtement quelles stratégies ont été ÉCARTÉES et pourquoi, plutôt que de laisser croire
     // à une analyse complète là où deux angles n'étaient simplement pas applicables.
     strategiesApplicables: { catalogue: true, extraction: true, mecanise: donneDesConsignes, rendementParArticle: estUneCharte },
