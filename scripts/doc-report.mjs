@@ -25,7 +25,7 @@
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
-import { toolsNeverUsed } from "./tool-usage.mjs";
+import { toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
 import { recommendFindBooster } from "./find-booster.mjs";
 import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice } from "./lib-shell.mjs";
 import { parseToolsTable, slugifyAgentName } from "./le-coordinateur.mjs";
@@ -325,6 +325,18 @@ export function registryAge(registry) {
   return lastTouchDays(indexPath);
 }
 
+// Un script enregistre-t-il réellement son propre passage ? Lu dans le vrai fichier, jamais supposé
+// depuis une liste tenue à la main (Article 24). Un chemin absent ou illisible répond honnêtement
+// "non mesurable" plutôt que de trancher dans un sens ou dans l'autre.
+export function scriptRecordsItsUsage(scriptPath, readFileImpl = readFileSync) {
+  if (!scriptPath) return false;
+  try {
+    return /recordCliUsage\s*\(/.test(readFileImpl(join(ROOT, scriptPath), "utf8"));
+  } catch {
+    return false;
+  }
+}
+
 // Assemble l'index global, croisé avec le compteur d'usage (tâche #166) pour signaler un outil dont
 // les rapports ne sont jamais consultés (toolsNeverUsed()) — jamais un second calcul de "jamais
 // utilisé", toujours la même fonction que CASSANDRA-RH réutilisera plus tard.
@@ -335,6 +347,17 @@ export function buildDocReportIndex({ registries = REGISTRIES, usageHistory = { 
     ...r,
     ageDays: registryAge(r),
     neverSolicited: neverUsed.has(r.slug),
+    // « JAMAIS SOLLICITÉ » VEUT DIRE DEUX CHOSES TRÈS DIFFÉRENTES (2026-09-22, trouvé en lançant
+    // Doc-Report pendant la Ronde finale de la nuit autonome). Un outil peut n'avoir jamais été
+    // lancé — un vrai signal de désusage, qui mérite qu'on se demande s'il sert encore — ou bien
+    // n'avoir AUCUN point d'enregistrement dans son script, auquel cas le compteur ne pourrait
+    // rien voir même s'il tournait dix fois par jour. THE-FINAL-JUDGE et memory-audit sont dans ce
+    // second cas : ce sont des bibliothèques sans CLI, appelées autrement. Les confondre, c'est
+    // encore lire une absence de mesure comme une mesure — l'erreur récurrente de cette session.
+    // Deux outils du premier cas (Doc-Report lui-même et ecotoken) ont reçu leur enregistrement
+    // manquant le même soir ; ceux qui restent sans point d'enregistrement sont désormais nommés
+    // comme tels plutôt qu'accusés de désusage.
+    sansPointDEnregistrement: neverUsed.has(r.slug) && !scriptRecordsItsUsage(r.scriptPath, readFileImpl),
   }));
   const byFamily = new Map();
   for (const row of rows) {
@@ -353,6 +376,12 @@ function formatDays(days) {
 
 function main() {
   printReliabilityNotice("doc-report");
+  // Doc-Report se comptait lui-même comme « jamais sollicité » (2026-09-22, trouvé par la Ronde
+  // finale de la nuit autonome, en le lançant) : son CLI n'enregistrait jamais son propre passage,
+  // alors qu'il REPROCHE cette absence aux autres. Le signal n'était donc pas faux par erreur de
+  // calcul, il mesurait une absence d'instrumentation en croyant mesurer un désusage — encore la
+  // famille d'erreur de cette session.
+  recordCliUsage("doc-report");
   const usageHistoryPath = join(ROOT, ".tool-usage-history.json");
   let usageHistory = { events: [] };
   try {
@@ -367,7 +396,9 @@ function main() {
     for (const r of familyRows) {
       const decisionLabel = r.decision === "delivery_html" ? "remise HTML" : r.decision === "archived_html" ? "archive HTML" : "texte";
       const wiredLabel = r.wired === false ? " [ÉCART : non câblé]" : "";
-      const neverLabel = r.neverSolicited ? " [jamais sollicité selon tool-usage.mjs]" : "";
+      const neverLabel = r.sansPointDEnregistrement
+        ? " [aucun point d'enregistrement dans son script — le compteur ne peut rien voir, ce n'est PAS un constat de désusage]"
+        : r.neverSolicited ? " [jamais sollicité selon tool-usage.mjs]" : "";
       console.log(`  ${r.label} — ${decisionLabel}${wiredLabel} — dernier rapport : ${formatDays(r.ageDays)}${neverLabel}`);
     }
   }

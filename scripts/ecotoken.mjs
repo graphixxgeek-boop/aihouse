@@ -26,6 +26,7 @@ import { estimateTokens, measureClaudeMdWeight, buildClaudeMdRuleTable, listDate
 // sur la même chose divergerait tôt ou tard (règle anti-doublon du projet). Aucun cycle :
 // check-level-target n'importe pas ecotoken.
 import { SENSITIVE_NODES } from "./check-level-target.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -1619,6 +1620,9 @@ function lastCommitFilesSafe() {
 
 function main() {
   printReliabilityNotice("ecotoken");
+  // Même correctif que doc-report.mjs le même soir : sans cet enregistrement, ecotoken reste
+  // éternellement « jamais sollicité » quel que soit le nombre de fois où il tourne vraiment.
+  recordCliUsage("ecotoken");
   const sub = process.argv[2];
   const texte = readFileSync(CHARTER, "utf8");
   if (sub === "budget") {
