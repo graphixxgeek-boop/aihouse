@@ -189,6 +189,10 @@ export const PROCESSES = [
       { cle: "document", libelle: "le process est écrit quelque part, pas seulement codé", preuve: null },
       { cle: "sondes", libelle: "chaque étape déclare une preuve réelle, ou déclare honnêtement n'en avoir aucune", preuve: null },
       { cle: "tensions", libelle: "toute tension avec un process voisin est déclarée ET résolue", preuve: null },
+      // 2026-09-23, demande explicite : « inscris tout ce que tu fais en lien avec le process, dans
+      // le process : comme ça si tu mets le process à jour, tu n'oublies rien. Règle valable pour
+      // les autres process aussi. » Vérifiée mécaniquement par findMecanismesAbsentsDuProcess().
+      { cle: "mecanismes-inscrits", libelle: "tout mécanisme servant un process est écrit DANS son document, jamais seulement dans son code ou dans le suivi", preuve: { fichier: "scripts/god-of-all-process.mjs" } },
       { cle: "identite", libelle: "l'identité de session est déposée, sinon chaque rapport porte un trou", preuve: { fichier: SESSION_FILE } },
     ],
   },
@@ -220,6 +224,56 @@ export const PROCESSES = [
     ],
   },
 ];
+
+// ————————————————————————————————————————————————————————————————————————
+// TOUT MÉCANISME D'UN PROCESS S'ÉCRIT DANS SON PROCESS (2026-09-23)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Demande explicite de l'utilisateur : « inscris tout ce que tu fais en lien avec le process, dans
+// le process : comme ça si tu mets le process à jour, tu n'oublies rien. Règle valable pour les
+// autres process aussi. »
+//
+// CE QU'ELLE CORRIGE, ET L'EXEMPLE EST DE LA VEILLE. La barrière d'ouverture de la Ronde a été
+// construite, testée et committée le 2026-09-23 — et elle n'existait QUE dans le code et dans
+// docs/suivi/. Le document de process ne la mentionnait nulle part. Quiconque aurait relu ce
+// document pour mettre le process à jour l'aurait ignorée, et aurait pu la défaire sans le savoir.
+// C'est le mécanisme exact qui avait produit, vingt-quatre heures plus tôt, une Partie 4 annonçant
+// « INTÉGRATION FUTURE, rien codé » sur un protocole construit le jour même — un document périmé
+// qui m'a d'abord fait sauter une étape, puis défendre ce saut.
+//
+// LA DISTINCTION QUI TIENT TOUT : le SUIVI date ce qui a été fait ; le PROCESS dit ce qui EST. Un
+// mécanisme consigné seulement dans le suivi est une trace historique, pas une règle en vigueur —
+// et personne ne relit trois cents lignes de suivi avant de toucher à un process.
+//
+// CE QUE LE GARDE-FOU PEUT VRAIMENT VÉRIFIER, et il faut être honnête sur sa portée : aucune
+// mécanique ne peut juger si un document DÉCRIT BIEN un mécanisme. Ce qu'elle peut faire, c'est
+// vérifier que chaque fichier réellement invoqué par un process (son gardien, les fichiers-preuves
+// de ses étapes) est au moins CITÉ dans son document. Un fichier jamais nommé n'y est certainement
+// pas décrit ; un fichier nommé peut l'être mal. Le garde-fou attrape donc le cas grossier, pas le
+// cas subtil — et c'est déjà celui qui s'est produit deux fois en deux jours.
+export function findMecanismesAbsentsDuProcess({ processes = PROCESSES, root = ROOT, readFileImpl = readFileSync } = {}) {
+  const manques = [];
+  for (const p of processes) {
+    if (!p.doc) continue;
+    let texte;
+    try {
+      texte = readFileImpl(join(root, p.doc), "utf8");
+    } catch {
+      continue; // l'absence du document est déjà signalée par findProcessDocsMissing()
+    }
+    const attendus = new Set();
+    if (p.gardien) attendus.add(p.gardien);
+    for (const e of p.etapes ?? []) if (e.preuve?.fichier) attendus.add(e.preuve.fichier);
+    for (const chemin of attendus) {
+      // Le nom de base suffit : un document peut légitimement écrire « circle-tasks.mjs » sans son
+      // chemin complet. Exiger le chemin exact produirait des faux positifs sur une écriture
+      // parfaitement claire — et un garde-fou qui crie à tort finit par ne plus être lu.
+      const base = String(chemin).split("/").pop();
+      if (!texte.includes(base)) manques.push({ process: p.slug ?? p.nom, doc: p.doc, mecanisme: chemin });
+    }
+  }
+  return manques;
+}
 
 // ————————————————————————————————————————————————————————————————————————
 // LE RÉFLEXE : quel process gouverne ce que je m'apprête à faire ?

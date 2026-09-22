@@ -52,3 +52,15 @@ SMART-CONSO-TOKEN, et même raison : rien n'intercepte une action avant qu'elle 
 L'obligation vit dans l'entrée « Intégration d'un nouvel outil » de `PROCESSES`
 (`scripts/god-of-all-process.mjs`), surveillée par god-of-all-process — qui la signale, sans jamais
 bloquer (Article 26/28).
+
+## Ses tests
+
+Ses fonctions mécaniques (`findFaitsManquants` côté Ronde mis à part, qui appartient à CIRCLE-TASKS)
+sont couvertes par **`scripts/check-house.mjs`** : présence/absence dans un registre, fichier
+illisible rendu « non mesurable » plutôt qu'« absent », complétude du plan, et surtout
+`findLecteursCasses()` vérifié en direct contre les dix registres réels du dépôt — l'assertion qui a
+attrapé trois lecteurs cassés avant qu'ils ne produisent le moindre chiffre faux.
+
+C'est l'étape `tests` du process « Intégration d'un nouvel outil » (`PROCESSES`,
+`scripts/god-of-all-process.mjs`), et cette ligne existe parce que `findMecanismesAbsentsDuProcess()`
+a signalé le 2026-09-23 que le fichier de tests n'était cité nulle part ici.

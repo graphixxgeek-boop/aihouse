@@ -615,3 +615,105 @@ PREMIÈRE VRAIE TROUVAILLE DU RAPPORT, DÈS SON PREMIER LANCEMENT
 - 93 % des tâches tracées portent sur l'outillage de travail (87) contre 7 % sur le jeu lui-même
   (7). Constat, jamais un verdict : construire de l'outillage est un investissement légitime, et
   l'arbitrage reste entièrement humain.
+
+=====================================================================
+PARTIE 8 — MISE À JOUR DU 2026-09-23 : LA BARRIÈRE D'OUVERTURE
+=====================================================================
+
+RÈGLE D'ÉCRITURE QUI GOUVERNE CETTE PARTIE, et elle vaut pour TOUS les process du projet
+(demande explicite de l'utilisateur, 2026-09-23) : « inscris tout ce que tu fais en lien avec le
+process, dans le process : comme ça si tu mets le process à jour, tu n'oublies rien. Règle valable
+pour les autres process aussi. »
+
+Ce qu'elle corrige, et l'exemple est celui de cette partie même : la barrière décrite ci-dessous a
+été construite, testée et committée — et elle n'existait QUE dans le code et dans docs/suivi/. Le
+process, lui, ne la mentionnait nulle part. Quiconque aurait relu ce fichier pour mettre le process
+à jour l'aurait ignorée, et aurait pu la défaire sans le savoir. C'est exactement le mécanisme qui
+a produit le mensonge de la Partie 4 ci-dessus, vingt-quatre heures plus tôt.
+
+Formulation opérationnelle : le document de process est le SEUL endroit qui doit suffire. Un
+mécanisme qui sert le process (un garde-fou, une commande, un fichier d'état, un refus) s'écrit ICI
+au moment où il est construit, jamais seulement dans son code ou dans le suivi. Le suivi date ce
+qui a été fait ; le process dit ce qui EST. Les deux ne se remplacent jamais.
+
+---------------------------------------------------------------------
+CE QUI FORCE, ET CE QUI NE PEUT PAS FORCER
+---------------------------------------------------------------------
+
+Question posée : peut-on accrocher le process au crochet git pour se forcer à le respecter ?
+
+NON, et il faut le dire plutôt que construire quelque chose qui en aurait l'air :
+  - `post-commit` se déclenche APRÈS un commit. Quand il parle, la Ronde est finie depuis
+    longtemps. Il détecte, il n'empêche jamais.
+  - `pre-commit` bloque réellement, mais il bloque un COMMIT, pas le lancement d'une Ronde. Faire
+    échouer tous les commits du dépôt parce qu'une Ronde traîne serait absurde, et pousserait
+    surtout à contourner le crochet.
+
+OUI par l'outil lui-même, et c'est ce qui a été construit.
+
+---------------------------------------------------------------------
+LA BARRIÈRE (scripts/circle-tasks.mjs)
+---------------------------------------------------------------------
+
+Deux commandes, dans cet ordre :
+
+  1. OUVRIR — après avoir obtenu les réponses de l'utilisateur, et seulement après :
+       node scripts/circle-tasks.mjs ouvrir --q1=oui|non [--retour=avant|après] --mode=AUTO|PRIME|GOAT
+     Écrit docs/circle-tasks/ouverture.json.
+
+  2. CLÔTURER — à la toute fin de la Ronde :
+       node scripts/circle-tasks.mjs record-run
+     REFUSE de s'exécuter si aucune ouverture fraîche et complète n'existe.
+
+POURQUOI LE BLOCAGE EST PLACÉ À LA CLÔTURE ET PAS AU LANCEMENT : `record-run` est le geste qui
+remet à zéro le compteur « N commits sans Ronde ». Refuser là, c'est refuser qu'une Ronde mal
+ouverte COMPTE comme faite : le rappel post-commit continue de monter, de plus en plus fort, jusqu'à
+la question obligatoire. Le travail bâclé ne se solde pas. Bloquer au lancement n'aurait rien
+empêché — les 26 outils se lancent un par un à la main, et c'est précisément ce qui s'est passé le
+2026-09-22.
+
+LES QUATRE FAITS EXIGÉS (FAITS_D_OUVERTURE), dans l'ordre réel du process :
+  - changementModelePosee   — Q1 a bien été posée
+  - changementModeleReponse — sa réponse (oui/non)
+  - retourModeleQuand       — Q2, DÛ SEULEMENT si la réponse à Q1 est « oui »
+  - mode                    — AUTO / PRIME / GOAT
+
+La dépendance de Q2 (`requisSi`) n'est pas un détail : l'exiger toujours ferait échouer l'ouverture
+sur le cas de loin le plus fréquent (pas de changement de modèle), et un garde-fou qui crie sur le
+cas ordinaire apprend à être ignoré.
+
+FRAÎCHEUR : 24 h (OUVERTURE_VALIDE_HEURES). Une ouverture d'avant-hier ne sert jamais de
+laissez-passer indéfini — c'est comme ça qu'un garde-fou devient une formalité.
+
+MODE AUTONOME : `record-run --autonome` passe TOUJOURS, sans aucune ouverture. Ce n'est pas une
+tolérance qu'on pourrait resserrer, c'est la borne posée par l'utilisateur (« aucune fenêtre y
+compris GOAT/AUTO ne doit être bloquante pour le mode autonome ») : une barrière qui empêcherait une
+Ronde de nuit de se clôturer serait exactement le blocage qu'elle interdit.
+
+LA LIMITE, DÉCLARÉE PLUTÔT QUE TUE : rien n'empêchera jamais un agent de lancer les 26 scripts à la
+main sans rien ouvrir. Ce que la barrière change, c'est qu'un tel passage ne peut plus se CONCLURE,
+donc ne peut plus passer pour une Ronde faite. L'échec devient bruyant au lieu d'être invisible.
+Même honnêteté que tool-brain et SMART-CONSO-TOKEN : on ne prétend pas intercepter la conversation,
+on rend l'omission coûteuse.
+
+COUVERTURE DE TEST : 8 assertions dans scripts/check-house.mjs (faits manquants rendus comme une
+liste et jamais comme un booléen, dépendance de Q2, fraîcheur, refus sans ouverture, autorisation
+avec, et le mode autonome toujours autorisé).
+
+---------------------------------------------------------------------
+LES FICHIERS D'ÉTAT DE LA RONDE (inscrits ici le 2026-09-23)
+---------------------------------------------------------------------
+Ajoutés au moment où findMecanismesAbsentsDuProcess() les a signalés absents de ce document —
+première application de la règle d'écriture posée en tête de cette Partie 8, sur ce document même.
+
+  docs/circle-tasks/ouverture.json          — les réponses d'ouverture (Q1/Q2 + mode), écrites par
+                                              `ouvrir`, lues par `record-run` pour autoriser ou
+                                              refuser la clôture. Fraîcheur 24 h.
+  .circle-tasks-last-run.json               — le commit auquel la dernière Ronde a été clôturée.
+                                              C'est lui qui fait dire « N commits sans Ronde » au
+                                              crochet post-commit. Jamais committé (cf. .gitignore).
+  .circle-tasks-run-summary-latest.txt      — le récapitulatif de fin de Ronde rendu en texte
+                                              (buildCircleRunSummaryText). Fichier de travail local,
+                                              régénéré à chaque Ronde, jamais committé — le registre
+                                              durable, lui, vit dans les artefacts datés de chaque
+                                              item (recordCircleItemReport → docs/<outil>/).

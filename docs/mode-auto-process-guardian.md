@@ -109,3 +109,20 @@ Honnêtement : trois de ses cinq étapes ne laissent aucune trace vérifiable su
 plan dans l'ordre, respecter le périmètre sensible, préparer sans appliquer). `god-of-all-process`
 les déclare comme telles plutôt que de les compter faites. Leur respect repose aujourd'hui sur la
 discipline seule — c'est une limite réelle, pas une omission.
+
+## Les fichiers d'état du mode autonome (inscrits le 2026-09-23)
+
+*Ajoutés au moment où `findMecanismesAbsentsDuProcess()` (`scripts/god-of-all-process.mjs`) les a
+signalés absents de ce document — application de la règle posée le même jour : « inscris tout ce que
+tu fais en lien avec le process, dans le process ». Ils étaient invoqués par les sondes du process
+sans qu'aucune ligne d'ici ne dise ce qu'ils sont.*
+
+- **`.agent-session.json`** — l'identité de la session en cours (modèle, horodatage). Sans elle,
+  chaque rapport produit pendant la nuit porte un trou à la place de « qui a fait ça ». C'est la
+  preuve de l'étape `identite` du process maître. Jamais committé.
+- **`.circle-tasks-last-run.json`** — le commit de la dernière Ronde clôturée. Le mode autonome le
+  lit pour savoir si une Ronde est due, et l'écrit s'il en lance une (via `record-run --autonome`,
+  qui passe toujours : aucune ouverture n'est exigée sans personne à qui poser les questions).
+- **`.circle-tasks-run-summary-latest.txt`** — le récapitulatif texte de la dernière Ronde,
+  régénéré à chaque passage. Fichier de travail local, jamais committé ; le registre durable vit
+  dans les artefacts datés de chaque item.

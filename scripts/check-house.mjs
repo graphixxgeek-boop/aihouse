@@ -6880,6 +6880,20 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(autoriseCloture({ ouverture: complete, maintenant }).autorise, true, 'a complete, fresh opening authorises closing');
   assert.equal(autoriseCloture({ ouverture: null, nightAutonomousMode: true, maintenant }).autorise, true, 'autonomous mode is ALWAYS authorised with no opening at all: a barrier that stopped a night Ronde from closing would be the very blocking the user forbade ("aucune fenêtre y compris GOAT/AUTO ne doit être bloquante pour le mode autonome")');
 
+  // findMecanismesAbsentsDuProcess (2026-09-23) — « inscris tout ce que tu fais en lien avec le
+  // process, dans le process ». Le suivi DATE ce qui a été fait, le process dit ce qui EST : un
+  // mécanisme consigné seulement dans le suivi est une trace historique, pas une règle en vigueur,
+  // et personne ne relit trois cents lignes de suivi avant de toucher à un process.
+  const { findMecanismesAbsentsDuProcess } = await import('../scripts/god-of-all-process.mjs');
+  const procFaux = [{ slug: 'p1', doc: 'faux-doc.md', gardien: 'scripts/gardien-p1.mjs', etapes: [{ cle: 'a', preuve: { fichier: '.etat-p1.json' } }] }];
+  const litDoc = (chemin) => {
+    if (String(chemin).endsWith('faux-doc.md')) return 'Ce process est gardé par gardien-p1.mjs et rien d\'autre.';
+    throw new Error('introuvable');
+  };
+  assert.deepEqual(findMecanismesAbsentsDuProcess({ processes: procFaux, readFileImpl: litDoc }).map((x) => x.mecanisme), ['.etat-p1.json'], 'a state file the process leans on as proof, never named in its own document, is the exact gap this catches — the guardian script IS named, so it must not be flagged');
+  assert.deepEqual(findMecanismesAbsentsDuProcess({ processes: [{ slug: 'p2', doc: 'absent.md', gardien: 'scripts/x.mjs' }], readFileImpl: () => { throw new Error('nope'); } }), [], 'a missing document reports nothing here: its absence is already named by findProcessDocsMissing(), and two tools shouting the same thing teaches people to ignore both');
+  assert.deepEqual(findMecanismesAbsentsDuProcess(), [], 'checked live against the real repository: every file a real process leans on is at least named in its own document — this assertion found EIGHT genuine gaps on its very first run (four state files across the Ronde, the simulation and the night process, plus the test file of integration-outil), all of them mechanisms that existed only in code and in docs/suivi/');
+
   const fakeReadFile = (path) => {
     if (path.includes('tool-with-html')) return 'import { renderHtmlReport } from "./html-report.mjs";';
     if (path.includes('tool-plain-text')) return 'console.log("no html rendering here");';

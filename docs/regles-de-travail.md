@@ -2795,3 +2795,22 @@ mais une limite structurelle du harnais tel qu'il se présente à l'agent aujour
   jour d'avancement PENDANT un travail long et surveillable par lui (ex. une simulation en arrière-
   plan, cf. section 1) — mais ceci ne couvre pas le compactage lui-même, qui reste invisible à
   l'agent avant coup.
+
+## Les fichiers d'état cités par le process de simulation (inscrits le 2026-09-23)
+
+*Signalés absents de ce document par `findMecanismesAbsentsDuProcess()`
+(`scripts/god-of-all-process.mjs`) le jour où cette vérification a été construite — application de
+la règle posée le même jour : « inscris tout ce que tu fais en lien avec le process, dans le
+process ». Le process de simulation s'appuyait sur eux comme preuves d'étape, et aucune ligne d'ici
+ne disait ce qu'ils sont.*
+
+- **`.smart-conso-session.json`** — le journal des appels API réellement consommés dans la session
+  en cours. C'est la preuve mécanique de l'étape « consultation Smart Conso API avant lancement »
+  (Article 22) : sans lui, cette étape ne serait vérifiable que sur parole. Jamais committé.
+- **`.memento-history.json`** — l'historique du poids réel du contexte envoyé à Gemini tour par
+  tour (memento weight). Sert la vérification d'après-simulation : le contexte a-t-il enflé au fil
+  des tours, et de combien. Jamais committé.
+
+Les deux sont des journaux locaux déclarés dans `LOCAL_JOURNALS` (`scripts/doc-report.mjs`), qui
+vérifie notamment qu'un journal local ne manque jamais au `.gitignore` — un vrai risque de fuite au
+commit suivant.
