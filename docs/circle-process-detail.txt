@@ -916,3 +916,96 @@ rapports pris isolément ne peut la voir.
 Règle qui la garde honnête : une friction n'y entre que si les DEUX rapports portent réellement un
 constat sur elle. Une friction inventée pour remplir la section serait exactement la formalité que
 l'Article 28 interdit aux plans d'action.
+
+=====================================================================
+PARTIE 11 — MISE À JOUR DU 2026-09-23 : L'INVENTAIRE DES QUESTIONS
+=====================================================================
+
+Demandé explicitement : « note bien dans le process le nombre de questions, les variantes, les
+combinaisons possibles, je veux aussi que les réponses qui n'ont pas été répondues soient traquées,
+note tout dans le process par rapport aux questions aussi ».
+
+---------------------------------------------------------------------
+LE COMPTE COMPLET, PAR MOMENT
+---------------------------------------------------------------------
+
+  Moment                                              Questions    Conditionnel ?
+  ──────────────────────────────────────────────────  ──────────   ──────────────
+  OUVERTURE
+    Q1 — changement de modèle IA ?                        1        non, toujours posée
+    Q2 — revenir avant ou après les rapports ?             1        OUI, seulement si Q1 = oui
+    Mode AUTO / PRIME / GOAT                               1        non, toujours posée
+    Rythme d'enchaînement (facultatif)                   0-1        au choix de l'agent
+  ÉTAPE C — les questions qui ÉVALUENT L'AGENT           5-8        non, avant EVAL-IA
+  ÉTAPE F1 — les constats de l'analyse                  8-10        proportionnel aux constats
+  ÉTAPE F2 — calibrage des correctifs                   5-10        proportionnel aux correctifs
+  ÉTAPE F3 — celles qui mettent l'utilisateur en cause   5-8        proportionnel aux points durs
+  ÉTAPE F4 — la suite : instant / axe / projet             3        non, toujours les trois
+  ÉTAPE G — dernier rappel de modèle                     0-1        OUI, seulement si Q1 = oui
+  ──────────────────────────────────────────────────  ──────────
+  TOTAL                                                28 à 43
+
+CONTRAINTE DE FORME : quatre questions par fenêtre au maximum. 28 à 43 questions = 7 à 11 fenêtres
+successives. Ce n'est pas une limite du process, c'est une limite de l'outil de questions — elle se
+note ici parce qu'elle change la façon de grouper, jamais le nombre de questions à poser.
+
+REFUS ASSUMÉ DE VISER 50 : gonfler le nombre pour faire nombre est explicitement interdit par la
+charte (Article 16). Une question creuse au milieu de trente vraies les dévalue toutes. Le plancher
+de trois questions de l'Article 16 est un PLANCHER, jamais une cible ; le total ci-dessus est une
+fourchette dérivée du contenu réel, jamais un quota.
+
+---------------------------------------------------------------------
+LES COMBINAISONS POSSIBLES
+---------------------------------------------------------------------
+
+  A. RONDE ORDINAIRE, sans changement de modèle (le cas le plus fréquent)
+     Q1 = non → pas de Q2, pas d'étape G. Total : 27 à 41.
+
+  B. RONDE AVEC CHANGEMENT DE MODÈLE, retour APRÈS les rapports
+     Q1 = oui, Q2 = après → l'agent écrit tout sans attendre, et le DERNIER RAPPEL est la toute
+     dernière question de la Ronde (étape G). Total : 29 à 43.
+
+  C. RONDE AVEC CHANGEMENT DE MODÈLE, retour AVANT les rapports
+     Q1 = oui, Q2 = avant → UNE SEULE pause, après TOUS les scans et avant la rédaction (jamais
+     plusieurs pauses par lot). Q3 y est posée ; l'agent attend sans limite de temps ni relance
+     automatique. Pas d'étape G ensuite : le retour a déjà eu lieu. Total : 29 à 42.
+
+  D. RONDE NOCTURNE / AUTONOME, personne en face
+     AUCUNE question, sans exception — « aucune fenêtre y compris GOAT/AUTO ne doit être bloquante
+     pour le mode autonome ». Les points qui auraient dû être posés sont REPORTÉS au prochain
+     passage en présence (reporterPointsAuProchainPassage), jamais simplement sautés. Total : 0.
+
+---------------------------------------------------------------------
+LES QUESTIONS SANS RÉPONSE — traquées, jamais perdues
+---------------------------------------------------------------------
+
+TROIS ÉTATS, JAMAIS DEUX (ETATS_QUESTION, scripts/circle-tasks.mjs) :
+  · répondue      — l'utilisateur a choisi
+  · sans réponse  — posée, puis la fenêtre a été fermée
+  · jamais posée  — l'agent ne l'a pas posée
+
+POURQUOI LA DISTINCTION EST LE CŒUR DU MÉCANISME : une question posée puis fermée ressemble, dans
+la conversation comme dans les registres, à une question jamais posée. Les deux disparaissent de la
+même façon. Or ce sont des choses opposées — l'une dit « je n'ai pas voulu répondre maintenant »,
+l'autre « personne n'a demandé ». Les confondre fait perdre exactement les questions que
+l'utilisateur a jugées assez gênantes pour les éviter, donc les plus intéressantes.
+
+MÉCANIQUE : `enregistrerQuestionsSansReponse()` écrit dans
+`docs/circle-tasks/questions-sans-reponse.json` (question, série, première et dernière fois,
+compteur) ; `marquerRepondue()` l'en retire quand elle obtient enfin sa réponse ;
+`questionsAReposer()` les rend avec leur palier de relance.
+
+PALIERS DE RELANCE (PALIERS_QUESTION), même logique d'escalade que SAFE-EXPORT :
+  1 fois évitée  → reposée normalement, avec son âge
+  2 fois évitée  → reposée EN TÊTE de série, avant les nouvelles
+  3 fois évitée  → posée en la NOMMANT comme évitée trois fois, avec l'option explicite
+                   « je ne veux pas répondre, et c'est ma réponse »
+Une question évitée trois fois n'est plus un oubli : c'est un refus que personne n'a jamais
+formulé. On le formule alors, et le refus devient une vraie réponse.
+
+CE QUE LE MÉCANISME NE FAIT PAS : il ne juge jamais POURQUOI une question est restée sans réponse.
+Une fenêtre fermée par inadvertance et une fenêtre fermée par lassitude se ressemblent trop pour
+qu'une machine les distingue — prétendre le contraire serait inventer une mesure.
+
+PREMIER ENREGISTREMENT RÉEL : les trois questions d'ouverture de la Ronde du 2026-09-23, fermées
+par l'utilisateur juste avant qu'il demande ce mécanisme. La démonstration a précédé la demande.

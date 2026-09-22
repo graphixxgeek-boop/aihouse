@@ -1319,6 +1319,72 @@ function main() {
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// LES QUESTIONS SANS RÉPONSE (2026-09-23) — ce qui tombe entre les mailles
+// ————————————————————————————————————————————————————————————————————————
+//
+// Demande de l'utilisateur, faite juste après en avoir donné la démonstration : il a fermé une
+// fenêtre de trois questions d'ouverture, et RIEN dans le paysage ne l'a noté. Ses mots : « je veux
+// aussi que les réponses qui n'ont pas été répondues soient traquées ».
+//
+// POURQUOI C'EST UN VRAI TROU, et pas une coquetterie. Une question posée puis fermée ressemble,
+// dans la conversation comme dans les registres, à une question jamais posée. Les deux disparaissent
+// de la même façon. Or ce sont deux choses opposées : l'une signifie « je n'ai pas voulu répondre
+// maintenant », l'autre « personne n'a demandé ». Confondre les deux fait perdre exactement les
+// questions que l'utilisateur a jugées assez gênantes pour les éviter — donc les plus intéressantes.
+//
+// CE QUE LE MÉCANISME FAIT, et ce qu'il ne fait pas : il enregistre la question, sa série et sa
+// date, et la repose au passage suivant avec son âge. Il ne juge jamais pourquoi elle est restée
+// sans réponse — une fenêtre fermée par inadvertance et une fenêtre fermée par lassitude se
+// ressemblent trop pour qu'une machine les distingue, et prétendre le contraire serait inventer
+// une mesure.
+export const QUESTIONS_SANS_REPONSE_PATH = "docs/circle-tasks/questions-sans-reponse.json";
+
+// Trois états, jamais deux — le même principe que partout ailleurs dans ce paysage.
+export const ETATS_QUESTION = ["répondue", "sans réponse", "jamais posée"];
+
+export function loadQuestionsSansReponse({ root = ROOT, readFileImpl = readFileSync } = {}) {
+  try {
+    const b = JSON.parse(readFileImpl(join(root, QUESTIONS_SANS_REPONSE_PATH), "utf8"));
+    return Array.isArray(b) ? b : [];
+  } catch {
+    return [];
+  }
+}
+
+export function enregistrerQuestionsSansReponse(questions = [], { serie, root = ROOT, readFileImpl = readFileSync, writeFileImpl = writeFileSync, mkdirImpl = mkdirSync, date = new Date().toISOString().slice(0, 10) } = {}) {
+  const deja = loadQuestionsSansReponse({ root, readFileImpl });
+  // Une question reposée et de nouveau sans réponse n'est pas une nouvelle question : on incrémente
+  // son compteur plutôt que d'empiler des doublons qui rendraient le registre illisible.
+  const suivantes = [...deja];
+  for (const q of questions) {
+    const existante = suivantes.find((x) => x.question === q && x.serie === serie);
+    if (existante) { existante.fois = (existante.fois ?? 1) + 1; existante.derniereFois = date; }
+    else suivantes.push({ question: q, serie, premiereFois: date, derniereFois: date, fois: 1 });
+  }
+  try { mkdirImpl(join(root, "docs/circle-tasks"), { recursive: true }); } catch { /* existe déjà */ }
+  writeFileImpl(join(root, QUESTIONS_SANS_REPONSE_PATH), JSON.stringify(suivantes, null, 1), "utf8");
+  return suivantes;
+}
+
+export function marquerRepondue(question, { serie, root = ROOT, readFileImpl = readFileSync, writeFileImpl = writeFileSync } = {}) {
+  const restantes = loadQuestionsSansReponse({ root, readFileImpl }).filter((x) => !(x.question === question && (serie === undefined || x.serie === serie)));
+  writeFileImpl(join(root, QUESTIONS_SANS_REPONSE_PATH), JSON.stringify(restantes, null, 1), "utf8");
+  return restantes;
+}
+
+// PALIERS_QUESTION — même logique d'escalade que SAFE-EXPORT : une question évitée trois fois n'est
+// plus un oubli, c'est un refus que personne n'a jamais formulé. On le formule alors.
+export const PALIERS_QUESTION = [
+  { fois: 3, action: "à poser en la nommant comme évitée trois fois, avec l'option « je ne veux pas répondre, et c'est ma réponse »" },
+  { fois: 2, action: "à reposer en tête de série, avant les nouvelles" },
+  { fois: 1, action: "à reposer normalement, avec son âge" },
+];
+
+export function questionsAReposer(registre = [], { paliers = PALIERS_QUESTION } = {}) {
+  return (registre ?? []).map((q) => ({ ...q, ...(paliers.find((p) => (q.fois ?? 1) >= p.fois) ?? paliers[paliers.length - 1]) }));
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LA BARRIÈRE D'OUVERTURE (2026-09-23) — ce qui force VRAIMENT, et ce qui ne le peut pas
 // ————————————————————————————————————————————————————————————————————————
 //
