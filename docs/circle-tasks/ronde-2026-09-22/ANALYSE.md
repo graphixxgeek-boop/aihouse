@@ -53,6 +53,37 @@ rend LÉGITIME une présence double au lieu de la faire passer pour un oubli.
 
 ---
 
+## 2bis. Deux écarts de PROCESS, que vous avez relevés en direct
+
+Ni l'un ni l'autre n'était un défaut d'outil. Les deux étaient des défauts de ma conduite, et
+aucun mécanisme ne les voyait.
+
+**La livraison.** J'ai écrit les 26 rapports, committés, poussés — puis enchaîné sur l'analyse
+sans jamais vous les livrer. Le contrôle existant portait sur la SÉQUENCE (rapports avant analyse),
+que je pouvais honnêtement déclarer respectée : les fichiers étaient bien écrits avant. **Le fait
+manquant n'était pas l'ordre, c'était la livraison**, et rien ne la demandait. Un fichier écrit est
+une trace pour les outils ; un fichier livré est un document pour vous. Le second ne se déduit
+jamais du premier — c'est maintenant deux faits séparés, avec un comptage croisé (26 écrits contre
+13 livrés se voit ; « oui, livrés » ne se vérifie pas).
+
+**Le contenu.** Vous avez trouvé `check-tasks-details` vide et demandé si d'autres l'étaient.
+Mesure faite sur les 26, et il y a **trois causes qu'il ne faut surtout pas confondre** :
+1. le rapport **POINTE** vers sa donnée au lieu de la porter — `check-tasks-details` écrivait un
+   vrai rapport en HTML et n'imprimait que son chemin (4 lignes utiles, maintenant 69) ; INES
+   calculait un résumé complet qu'il n'affichait jamais. **Cinquième fois aujourd'hui** qu'une
+   donnée calculée ne sort pas de son script ;
+2. j'ai lancé la **mauvaise sous-commande** — `cassandra-rh` sans `rapport` rend son signal léger de
+   deux lignes au lieu de son bilan de 152. Je vous avais livré trois fichiers dont deux
+   redondants ;
+3. le rapport est **court parce qu'il n'y avait rien** — CLEAN-DIRTY-OLD : « aucune zone signalée ».
+   **C'est un vrai résultat**, et le signaler apprendrait aux outils à meubler pour avoir l'air
+   utiles, exactement la métrique de vanité que tout ce paysage combat.
+
+Le garde-fou ne détecte donc que le cas 1, par un signe précis : court **ET** nommant un autre
+fichier. Zéro rapport creux restant.
+
+---
+
 ## 3. PLAN D'ACTION — les constats restés ouverts
 
 ### RETENU (devient une tâche réelle)
