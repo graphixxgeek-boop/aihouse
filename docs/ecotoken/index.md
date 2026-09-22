@@ -11,3 +11,5 @@ reproposer en tête ce qui a déjà été refusé.)*
 | 2026-09-22 00:32 | 24357 | 8766 | à trancher | Plan d'origine (analyse Opus) — état d'avancement |
 | 2026-09-22 00:56 | 24536 | 8945 | à trancher | Plan d'origine (analyse Opus) — état d'avancement |
 | 2026-09-22 01:01 | 24536 | 8945 | à trancher | Plan d'origine (analyse Opus) — état d'avancement |
+| 2026-09-22 08:30 | 22338 | 2295 | APPLIQUÉE — Plan d'origine extrait vers docs/referentiel/feuille-de-route.md, texte intégral, 10/10 phrases normatives retrouvées mot pour mot dans le document d'accueil | Plan d'origine (analyse Opus) |
+| 2026-09-22 08:30 | 22338 | 980 | REFUSÉE après examen — les 5 passages « déjà mécanisé » étaient des faux positifs (obligation tool-brain incoercible, bloc des six outils sans blueprint, check-spirit qui n'est PAS automatisé, Article 18, SMART-CONSO-TOKEN). Cause corrigée dans l'outil, plus reproposés | 5 passages « déjà mécanisé » |

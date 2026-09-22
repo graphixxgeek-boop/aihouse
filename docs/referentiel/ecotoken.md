@@ -267,3 +267,30 @@ plutôt que de couronner ce fichier), et l'**ambiguïté est dite** — deux doc
 lieu d'être tranchés en silence. Le bonus accordé à un nom de charte connu est délibérément modeste :
 il départage deux candidats à égalité, il ne couronne jamais un fichier que les faits ne soutiennent
 pas — les seuils de règles et de citations s'appliquent avant lui.
+
+## Premier allègement réel du fichier maître (2026-09-22)
+
+**24 536 → 22 339 tokens.** Deux propositions applicables (la criticité `maitre` n'autorise que le
+risque « faible ») :
+
+- **APPLIQUÉE** — la section « Plan d'origine (analyse Opus) — état d'avancement » part dans
+  `docs/referentiel/feuille-de-route.md`, texte intégral, rien de résumé (−2 295 tk). Le contrôle
+  ne s'est pas contenté d'affirmer : les 10 phrases normatives retirées de la charte ont été
+  **retrouvées mot pour mot** dans le document d'accueil, et le renvoi résout. 25 Articles intacts
+  aux intitulés près, phrases socles présentes.
+- **REFUSÉE après examen** — les 5 passages « déjà mécanisé » étaient **tous** des faux positifs :
+  l'obligation d'usage de tool-brain (qui se déclare elle-même incoercible), le bloc des six outils
+  sans blueprint (que le premier catalogue avait déjà détruit une fois), le paragraphe
+  `check-spirit.mjs` (qui parle précisément de l'outil NON automatisé et ne cite `check-house.mjs`
+  que pour s'en distinguer), l'Article 18 et SMART-CONSO-TOKEN. Décision consignée dans la colonne
+  prévue pour ça : jamais reproposée.
+
+C'est exactement à ça que sert la validation humaine obligatoire au niveau `maitre` : sur ce
+fichier, elle a rejeté 5 propositions sur 7. Les trois causes racines ont été corrigées dans
+l'outil plutôt que refusées une fois (cible d'extraction choisie par affinité, passage
+auto-déclaré incoercible, outil automatisé qui doit être le sujet) — avec un test vérifiant que
+ces garde-fous n'aveuglent pas l'outil sur un vrai cas.
+
+Budgets après cette passe : `CLAUDE.md` 22 339/30 000 (marge 26 %) ·
+`docs/regles-de-travail.md` 55 746/60 000 (marge 7 %, le plus tendu) ·
+`docs/referentiel/principes.md` 24 413/28 000 (marge 13 %).

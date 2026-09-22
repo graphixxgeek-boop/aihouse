@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 264'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 265'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4100,6 +4100,24 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(eco.verifyNothingBroken('**Article 0 — x.**', {}, [{ outil: 'X', vers: null, cibleManquante: true }], () => null).some(f => f.check === 'cible-manquante'), 'content with nowhere to land must be refused before the section is removed, never dropped on the floor');
   // Vérifié en direct contre la vraie charte : aucun renvoi mort aujourd'hui.
   assert.deepEqual(eco.verifyNothingBroken(fs.readFileSync('CLAUDE.md', 'utf8'), eco.loadRepoFiles(), []), [], 'the real charter must have zero dead Article references right now');
+
+  // --- « DÉJÀ MÉCANISÉ » : deux garde-fous nés de 5 faux positifs réels sur le fichier maître
+  // (2026-09-22). L'heuristique se déclenchait dès qu'un paragraphe contenait un verbe de
+  // lancement ET le nom d'un outil automatisé — sans jamais vérifier que le passage décrit bien
+  // la procédure que cet outil remplace. Sur CLAUDE.md, les 5 propositions étaient toutes à
+  // refuser, dont l'obligation d'usage de tool-brain et le bloc des six outils sans blueprint que
+  // le premier catalogue avait déjà détruit une fois.
+  const autoFactice = { bloquant: new Set(['check-house']), consultatif: new Set(['check-argus']) };
+  assert.equal(eco.findAlreadyMechanised('## X\n\nAvant chaque commit, penser à lancer `scripts/check-house.mjs` pour vérifier que rien n\'est cassé.', autoFactice).length, 1, 'a genuine case — telling the reader to launch by hand what the hook already runs — must still be caught; guards that blind the tool are worse than no guards');
+  assert.equal(eco.findAlreadyMechanised('## Y\n\nAucun mécanisme technique ne peut intercepter ceci : il faut consulter `scripts/check-house.mjs` de sa propre discipline.', autoFactice).length, 0, 'a passage that states no mechanism can enforce it is never "already mechanised" — the written text IS the only protection, and cutting it would delete the rule while pretending a tool carries it');
+  assert.equal(eco.findAlreadyMechanised('## Z\n\n`scripts/check-spirit.mjs` se lance à la main, contrairement à `scripts/check-house.mjs`. Toujours lancer check-spirit.mjs après un changement, et le relancer ensuite.', autoFactice).length, 0, 'the automated tool must be the passage\'s SUBJECT, not a passing mention — the real check-spirit paragraph cites check-house only to contrast itself with it, and was flagged for that single mention');
+  // L'extraction choisit sa cible, elle ne prend pas le premier chemin venu : la section « Plan
+  // d'origine » se voyait renvoyée vers correctifs-a-revalider.md, un registre qui parle d'autre
+  // chose. Un renvoi faux est pire que pas de renvoi.
+  const extr = eco.planExtractions([{ titre: 'Feuille de route', texte: 'voir `docs/autre-chose.md` puis `docs/referentiel/feuille-de-route.md`', nbLignes: 40, tokens: 900 }], 1000);
+  assert.equal(extr[0].cible, 'docs/referentiel/feuille-de-route.md', 'the extraction target must share real words with the section title, never be the first docs/ path encountered');
+  const sansCible = eco.planExtractions([{ titre: 'Sujet sans document', texte: 'voir `docs/rien-a-voir.md`', nbLignes: 40, tokens: 900 }], 1000);
+  assert.ok(sansCible[0].cibleManquante && /à CRÉER/.test(sansCible[0].stub), 'with no genuinely related document, the tool must say the destination has to be created rather than invent a false address');
 
   // --- SÛRETÉ (2026-09-22, demande explicite : « un outil sans danger même s'il agit sur des
   // parties ultra sensibles »). La garantie est structurelle, pas déclarative : ecotoken n'a aucun

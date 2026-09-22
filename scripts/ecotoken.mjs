@@ -248,8 +248,16 @@ export function planExtractions(sections, totalTokens, { seuilPct = 3 } = {}) {
   return sections
     .filter((s) => classifySectionNature(s) !== "regle" && s.tokens / totalTokens * 100 >= seuilPct && !/^\(préambule\)$/.test(s.titre))
     .map((s) => {
-      const cible = (s.texte.match(/`(docs\/[^`]+?\.md)`/) || [])[1] ?? null;
-      const stub = `## ${s.titre}\n\n${cible ? `Voir \`${cible}\`.` : "*(cible à choisir — aucun document candidat cité dans la section.)*"} Retiré de la charte par ecotoken : lu à la demande, jamais rechargé à chaque message.`;
+      // La cible d'extraction se CHOISIT, elle ne se prend pas au premier chemin venu (corrigé le
+      // 2026-09-22, même classe de bug que le catalogue avant lui) : la section « Plan d'origine »
+      // se voyait renvoyée vers `docs/simulations/correctifs-a-revalider.md`, un registre qui parle
+      // d'autre chose, simplement parce que c'était le premier `docs/` cité. Un renvoi faux est pire
+      // que pas de renvoi : il envoie lire le mauvais document en croyant avoir la bonne adresse.
+      // On exige donc une vraie affinité entre le titre de la section et le nom du fichier ; sinon
+      // on dit franchement qu'il reste à créer.
+      const candidats = [...s.texte.matchAll(/`(docs\/[^`]+?\.md)`/g)].map((m) => m[1]);
+      const cible = candidats.map((c) => ({ c, score: affiniteChemin(c, s.titre) })).filter((x) => x.score > 0).sort((a, b) => b.score - a.score)[0]?.c ?? null;
+      const stub = `## ${s.titre}\n\n${cible ? `Voir \`${cible}\`.` : "*(document d'accueil à CRÉER — aucun des documents cités dans la section ne traite réellement de son sujet ; renvoyer vers l'un d'eux serait une fausse adresse.)*"} Retiré de la charte par ecotoken : lu à la demande, jamais rechargé à chaque message.`;
       return { section: s.titre, nature: classifySectionNature(s), tokensAvant: s.tokens, tokensApres: estimateTokens(stub), gain: s.tokens - estimateTokens(stub), cible, cibleManquante: !cible, stub, texte: s.texte };
     })
     .sort((a, b) => b.gain - a.gain);
@@ -335,6 +343,10 @@ export function findAutomatedTools(root = ROOT) {
 // la force du mécanisme. Un passage n'est signalé que s'il réunit les deux conditions : il nomme un
 // outil réellement automatisé ET il contient un verbe de déclenchement manuel. Nommer un outil ne
 // suffit pas — une règle peut légitimement citer ARGUS sans demander de le lancer.
+// Un passage qui dit lui-même qu'il ne peut PAS être mécanisé. Ce n'est pas une liste de mots
+// interdits mais la reconnaissance d'une affirmation précise : « c'est écrit parce que rien ne peut
+// le vérifier ». Ces règles-là sont les plus fragiles du document, jamais les plus superflues.
+const INCOERCIBLE = /(aucun mécanisme technique ne peut|obligation écrite|la seule protection possible|jamais un garde-fou vérifiable|aucun compteur externe)/i;
 const DECLENCHEMENT_MANUEL = /\b(lancer|lance|relancer|exécuter|exécute|appeler|appelle|consulter|consulte)\b/i;
 
 export function findAlreadyMechanised(charterText, automatedTools = findAutomatedTools()) {
@@ -350,8 +362,20 @@ export function findAlreadyMechanised(charterText, automatedTools = findAutomate
     const unites = section.texte.split(/\n\s*\n/).flatMap((bloc) => (/^\s*[-*]\s/m.test(bloc) ? bloc.split(/\n(?=\s*[-*]\s)/) : [bloc]));
     for (const para of unites) {
       if (!DECLENCHEMENT_MANUEL.test(para)) continue;
+      // GARDE-FOU 1 — un passage qui déclare lui-même qu'aucun mécanisme ne peut le faire respecter
+      // n'est JAMAIS « déjà mécanisé » : le texte écrit EST la seule protection qui existe. Le
+      // couper reviendrait à supprimer la règle en prétendant qu'un outil la porte déjà.
+      if (INCOERCIBLE.test(para)) continue;
       const cites = tous.filter((o) => new RegExp(`\\b${o.replace(/-/g, "[- ]?")}\\b`, "i").test(para) || para.includes(`scripts/${o}.mjs`));
       if (!cites.length) continue;
+      // GARDE-FOU 2 — l'outil automatisé doit être le SUJET du passage, pas une simple mention.
+      // Cas réel : le paragraphe sur `check-spirit.mjs` (qui coûte de vrais appels API et se lance
+      // à la main) cite `check-house.mjs` pour s'en distinguer — il était classé « déjà mécanisé »
+      // à cause de cette seule mention, alors qu'il parle précisément de l'outil qui ne l'est pas.
+      const autresScripts = [...para.matchAll(/`?scripts\/([a-z0-9-]+)\.mjs`?/g)].map((m) => m[1]).filter((n) => !tous.includes(n));
+      const occurrences = (nom) => (para.match(new RegExp(nom.replace(/-/g, "[- ]?"), "gi")) || []).length;
+      const pointeAutomatise = Math.max(...cites.map(occurrences));
+      if (autresScripts.length && Math.max(...autresScripts.map(occurrences)) >= pointeAutomatise) continue;
       // Le niveau le plus fort cité dans le passage décide de sa compression.
       const niveau = cites.some((o) => niveauDe(o) === "bloquant") ? "bloquant" : "consultatif";
       const tokens = estimateTokens(para);
