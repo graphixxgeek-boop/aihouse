@@ -6302,7 +6302,27 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.equal(cadre.slots.length, 2, 'the generic header slots must be filled automatically from the shared registries for a heuristic tool, without the calling tool having to think about it — the whole point of the slot');
   assert.ok(/inexacts/.test(cadre.slots[0]), 'the reliability warning must come first: what a reader needs before trusting the report outranks what merely situates it afterwards');
   assert.ok(/Version de Claude/.test(cadre.slots[1]) && /État du code/.test(cadre.slots[1]) && /Contexte de production/.test(cadre.slots[1]), 'the identity card must carry the model, the exact code state and the production context — a report that cannot be placed against a version of the project cannot be re-checked months later');
-  const { identityLines } = await import('../scripts/report-template.mjs');
+  const { identityLines, toolHealth, healthLine, gravityLine, GRAVITES } = await import('../scripts/report-template.mjs');
+  // LES DEUX NOTES (2026-09-22, demande de l'utilisateur, calibrées en DEUX notes séparées) : l'une
+  // dit comment va l'OUTIL, l'autre ce que vaut CE rapport-ci. Les fondre en un chiffre unique les
+  // rendrait toutes les deux illisibles.
+  assert.match(healthLine('tool-brain'), /2\/2/, 'a tool really solicited and carrying a real objective must score full marks — checked live against the project\'s own journals, never a fixture');
+  assert.match(healthLine('outil-qui-n-existe-pas'), /0\/2/, 'an unknown tool must score zero rather than be given the benefit of the doubt: a tool nobody can measure is not a healthy tool, it is an unmeasured one');
+  // TROIS ÉTATS POUR L'OBJECTIF, jamais deux (2026-09-22) : chiffré, absent-mais-assumé, ou vraiment
+  // absent. Vérifié en direct contre le vrai registre : argus est un Gardien automatique à chaque
+  // commit, son absence d'objectif est écrite comme une décision et ne doit donc rien lui coûter ;
+  // un outil sans ligne du tout, lui, reste signalé. Sans cette distinction, la note pousserait à
+  // inventer des objectifs creux pour verdir — exactement ce que le badge évite déjà par ailleurs.
+  assert.match(healthLine('argus'), /2\/2/, 'a Gardien whose absence of objective is a written decision must not be penalised for it — inventing a frequency target for a tool that runs at every commit would measure the number of commits, nothing else');
+  assert.ok(toolHealth('argus').signaux.some((sig) => /décision écrite/.test(sig.texte)), 'the deliberate absence must be NAMED as a decision in the signal, never silently counted as if an objective existed');
+  assert.match(healthLine('check-level-target'), /1\/2/, 'a tool with neither an objective nor a written decision must still be flagged — checked live, this is a real gap today and the note must keep showing it');
+  assert.ok(toolHealth('tool-brain').signaux.every((sig) => 'ok' in sig), 'every health signal must carry an explicit verdict, including the honest "undefined" of a signal that could not be read');
+  assert.match(healthLine('x', { health: { mesurable: true, signaux: [{ ok: undefined, texte: 'illisible' }], bons: 0, mesures: 0, nonMesures: 1 } }), /non mesuré/, 'a signal that could not be read must be counted apart, never as a failure nor as a success');
+  // La gravité vient de l'outil : la deviner serait le pire défaut possible sur un rapport d'alerte.
+  assert.match(gravityLine(undefined), /non renseignée par l'outil/, 'an unsupplied severity must say so: guessing "nothing to report" on a report that might announce a fire is the worst possible default');
+  assert.match(gravityLine('serieux'), /demande une décision/, 'a supplied severity must be rendered from the shared scale, never reworded by each tool');
+  assert.ok(Object.keys(GRAVITES).length >= 3, 'the severity scale must distinguish at least nothing / to watch / serious — two levels would collapse the useful middle');
+  assert.ok(identityLines({ tool: 'tool-brain' }).some((l) => /Santé de l'outil/.test(l)) && identityLines({ tool: 'tool-brain' }).some((l) => /Gravité/.test(l)), 'both notes must reach EVERY report through the shared identity card, with no tool having to think about it — the evolutivity requirement of Article 24');
   assert.ok(identityLines({ session: {}, repo: {} }).some((l) => /non renseignée/.test(l)), 'a missing Claude version must be written as missing, never guessed nor filled from the last one known — a stale version asserted confidently is exactly the "absence read as measurement" error this whole toolset fights');
   assert.ok(identityLines({ session: { model: 'x' }, repo: { commit: 'abc', branche: 'b', travauxNonEnregistres: true } }).some((l) => /travaux n'étaient pas enregistrés/.test(l)), 'a report produced over uncommitted work must say so: it describes a state nobody can retrieve later');
   assert.ok(identityLines({ session: { model: 'x' }, repo: { commit: 'abc', travauxNonEnregistres: undefined } }).every((l) => !/arbre propre/.test(l)), 'an unreadable repository must never be reported as clean — undefined and false are not the same answer');

@@ -112,7 +112,7 @@ export function reportOrigin({ origin, env = process.env } = {}) {
 // Assemble la carte d'identité en lignes prêtes à afficher. Chaque absence est NOMMÉE, jamais
 // silencieusement omise : une ligne manquante se lirait comme une information jugée sans intérêt,
 // alors qu'elle signale un trou à combler.
-export function identityLines({ tool, scriptPath, origin, session, repo, changedAt } = {}) {
+export function identityLines({ tool, scriptPath, origin, session, repo, changedAt, gravite, health } = {}) {
   const s = session ?? readAgentSession();
   const r = repo ?? repoState();
   const lignes = [];
@@ -124,6 +124,10 @@ export function identityLines({ tool, scriptPath, origin, session, repo, changed
   lignes.push(`Contexte de production : ${o ?? "non précisé"}`);
   const c = changedAt ?? toolLastChanged(scriptPath);
   if (tool || scriptPath) lignes.push(`Outil : ${tool ?? scriptPath}${c ? ` — inchangé depuis le ${c}` : " — date de dernière modification inconnue"}`);
+  // LES DEUX NOTES, toujours séparées (décision de l'utilisateur, 2026-09-22) : l'une dit comment va
+  // l'outil, l'autre ce que vaut ce rapport-ci. Les fondre en un seul chiffre les rendrait illisibles.
+  if (tool) lignes.push(healthLine(tool, { health }));
+  lignes.push(gravityLine(gravite));
   return lignes;
 }
 
@@ -139,17 +143,107 @@ export function genericSlots(tool, options = {}) {
 // Normalise ce qu'un outil fournit en un cadre complet, avec l'emplacement générique déjà rempli.
 // C'est le seul point de passage : les deux rendus consomment SON résultat, jamais les arguments
 // bruts de l'appelant — sans quoi l'un pourrait oublier une partie du gabarit que l'autre applique.
-export function buildReportFrame({ tool, title, subtitle, dateLabel, blocks = [], footer, scriptPath, origin, session, repo, changedAt } = {}) {
+export function buildReportFrame({ tool, title, subtitle, dateLabel, blocks = [], footer, scriptPath, origin, session, repo, changedAt, gravite, health } = {}) {
   if (!title) throw new Error("buildReportFrame() exige un titre — jamais un rapport sans titre (REPORT_CONTRACT)");
   return {
     tool,
     title,
     subtitle,
     dateLabel: dateLabel ?? new Date().toISOString(),
-    slots: genericSlots(tool, { scriptPath, origin, session, repo, changedAt }),
+    slots: genericSlots(tool, { scriptPath, origin, session, repo, changedAt, gravite, health }),
     blocks,
     footer,
   };
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// LES DEUX NOTES (2026-09-22, demande de l'utilisateur : « Les outils ont tous une "note" à chaque
+// rapport », calibrée le même jour en DEUX notes séparées, jamais mélangées)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Pourquoi deux et pas une : elles répondent à deux questions sans rapport, et les additionner en un
+// seul chiffre rendrait les deux illisibles.
+//   · SANTÉ DE L'OUTIL — est-ce que cet outil va bien ? Est-il sollicité pour de vrai, a-t-il un
+//     objectif, l'atteint-il ? C'est le domaine de CASSANDRA, gardienne des objectifs et des KPI.
+//   · GRAVITÉ DU CONTENU — ce que ce rapport-ci annonce est-il grave ? Seul l'outil qui l'écrit le
+//     sait, donc il la FOURNIT ; elle n'est jamais devinée depuis l'extérieur.
+//
+// ÉVOLUTIVITÉ (Article 24, précision du même jour) : la santé se calcule pour N'IMPORTE QUEL slug à
+// partir des registres partagés, sans aucune liste d'outils ici. Un outil qui rejoint l'équipe a
+// donc sa note le jour même, sans qu'on ait à penser à l'inscrire quelque part.
+
+export const GRAVITES = {
+  rien: { libelle: "rien à signaler", ordre: 0 },
+  attention: { libelle: "à regarder", ordre: 1 },
+  serieux: { libelle: "sérieux — demande une décision", ordre: 2 },
+};
+
+// La santé d'un outil, LUE dans ce que les autres savent déjà — jamais un second calcul. Chaque
+// signal absent est déclaré absent, jamais remplacé par une valeur neutre qui gonflerait la note :
+// un outil qu'on ne sait pas mesurer n'est pas un outil en bonne santé, c'est un outil non mesuré.
+export function toolHealth(slug, { root = ROOT } = {}) {
+  if (!slug) return { mesurable: false, raison: "aucun outil nommé" };
+  const signaux = [];
+  let sollicitations;
+  try {
+    const journal = JSON.parse(readFileSync(join(root, ".tool-usage-history.json"), "utf8"));
+    const evenements = Array.isArray(journal?.events) ? journal.events : [];
+    // Le champ réel du journal est `toolSlug` — vérifié en LISANT un vrai événement, pas supposé
+    // depuis le nom de la fonction qui l'écrit. La première version cherchait `tool`/`slug` et
+    // trouvait donc zéro pour tout le monde : chaque outil se serait affiché « jamais sollicité »
+    // dans son propre en-tête, une fausse mesure diffusée sur 29 rapports d'un coup. Les deux
+    // anciennes clés restent acceptées au cas où un journal plus ancien traînerait.
+    sollicitations = evenements.filter((e) => e?.toolSlug === slug || e?.tool === slug || e?.slug === slug).length;
+    signaux.push(sollicitations > 0
+      ? { clef: "usage", ok: true, texte: `${sollicitations} sollicitation(s) réelle(s) enregistrée(s)` }
+      : { clef: "usage", ok: false, texte: "jamais sollicité d'après le compteur — ou jamais instrumenté pour l'être" });
+  } catch {
+    signaux.push({ clef: "usage", ok: undefined, texte: "compteur d'usage illisible — non mesuré" });
+  }
+  try {
+    const registre = readFileSync(join(root, "docs/objectifs-vs-resultats/registre.md"), "utf8");
+    // TROIS ÉTATS, jamais deux (2026-09-22) : un objectif chiffré, une absence ASSUMÉE (la ligne
+    // existe, sa colonne Objectif vaut « — » et sa Note dit pourquoi), ou rien du tout. Sans le
+    // deuxième, la note pousserait à inventer un objectif creux pour un Gardien qui tourne à chaque
+    // commit — un chiffre qui ne mesurerait que le nombre de commits. Inventer un objectif pour
+    // verdir une note est exactement le travers que le badge évite déjà par ailleurs.
+    const ligne = registre.split("\n").find((l) => l.startsWith("|") && l.split("|")[1]?.trim() === slug);
+    const objectif = ligne ? ligne.split("|")[4]?.trim() : undefined;
+    const absenceAssumee = Boolean(ligne) && (objectif === "—" || objectif === "-" || objectif === "");
+    signaux.push(absenceAssumee
+      ? { clef: "objectif", ok: true, texte: "aucun objectif chiffré, et c'est une décision écrite — pas un oubli" }
+      : ligne
+        ? { clef: "objectif", ok: true, texte: "un objectif chiffré lui est fixé" }
+        : { clef: "objectif", ok: false, texte: "aucun objectif chiffré — rien à quoi comparer son résultat" });
+  } catch {
+    signaux.push({ clef: "objectif", ok: undefined, texte: "registre d'objectifs illisible — non mesuré" });
+  }
+  const mesures = signaux.filter((s) => s.ok !== undefined);
+  const bons = mesures.filter((s) => s.ok).length;
+  return {
+    mesurable: mesures.length > 0,
+    signaux,
+    // Le score porte sur ce qui a pu être mesuré, et le dénominateur est affiché : « 1/2 » dit
+    // quelque chose, « 50 % » sur un seul signal mesuré ne dirait rien.
+    bons,
+    mesures: mesures.length,
+    nonMesures: signaux.filter((s) => s.ok === undefined).length,
+  };
+}
+
+export function healthLine(slug, { root = ROOT, health } = {}) {
+  const h = health ?? toolHealth(slug, { root });
+  if (!h.mesurable) return `Santé de l'outil : non mesurable (${h.raison ?? "aucun signal lisible"})`;
+  const detail = h.signaux.filter((s) => s.ok === false).map((s) => s.texte);
+  return `Santé de l'outil : ${h.bons}/${h.mesures} signal(aux) au vert${h.nonMesures ? `, ${h.nonMesures} non mesuré(s)` : ""}${detail.length ? ` — ${detail.join(" ; ")}` : ""}`;
+}
+
+// La gravité vient de l'outil, jamais d'ailleurs. Non fournie, elle est dite non fournie : deviner
+// « rien à signaler » sur un rapport qui annonce peut-être un incendie serait le pire des défauts.
+export function gravityLine(gravite) {
+  if (!gravite) return "Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir";
+  const g = GRAVITES[gravite];
+  return `Gravité de ce rapport : ${g ? g.libelle : String(gravite)}`;
 }
 
 // L'EN-TÊTE PARTAGÉ, IMPRIMABLE (2026-09-22, ajouté pour rendre la migration des 18 outils non
@@ -164,8 +258,8 @@ export function buildReportFrame({ tool, title, subtitle, dateLabel, blocks = []
 // Elle remplace, chez l'appelant, le couple « printReliabilityNotice(slug) + console.log('=== TITRE
 // ===') » qui était jusqu'ici recopié à la main dans chaque script — exactement le genre de
 // duplication que le gabarit existe pour supprimer.
-export function printReportHeader({ tool, title, subtitle, scriptPath, origin, log = console.log } = {}) {
-  const frame = buildReportFrame({ tool, title, subtitle, scriptPath, origin, blocks: [] });
+export function printReportHeader({ tool, title, subtitle, scriptPath, origin, gravite, log = console.log } = {}) {
+  const frame = buildReportFrame({ tool, title, subtitle, scriptPath, origin, gravite, blocks: [] });
   for (const phrase of frame.slots) log(phrase + "\n");
   log(`=== ${frame.title} ===`);
   if (frame.subtitle) log(frame.subtitle);
