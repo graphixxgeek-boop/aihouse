@@ -23,7 +23,7 @@
 // fait simple et vérifiable : un outil peut avoir une mémoire et ne jamais la relire. CASSANDRA le
 // verrait équipé, TOOL-LEARNING le voit immobile. Mémoire ≠ apprentissage.
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
 import { printReliabilityNotice } from "./lib-shell.mjs";
@@ -379,6 +379,127 @@ export function tendancesApprentissage(options = {}) {
   return ["outils-apprenants", "archive-seulement", "diagnostics-ignores", "verdicts-refutes"].map((c) => detectTendance(serie, c, options));
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LE REGISTRE DES LEÇONS — l'apprentissage de l'AGENT, pas celui des outils
+// ————————————————————————————————————————————————————————————————————————
+//
+// POURQUOI CETTE PARTIE VIT ICI (2026-09-23, tâche #220). TOOL-LEARNING porte la moitié 2 de
+// l'évolutivité : devenir meilleur. Il vérifiait jusqu'ici que les OUTILS apprennent, et rien ne
+// vérifiait la même chose de mon côté — alors que c'est moi qui disparais à chaque fin de session.
+//
+// LA QUESTION QUI A CRÉÉ CE MÉCANISME, posée par l'utilisateur : « quand tu fais des trouvailles
+// bonnes à retenir [...] il faut que tu l'écrives quelque part, c'est déjà le cas ? » Réponse
+// honnête ce jour-là : non. Les leçons vivaient dans des commentaires de code, chacune locale à
+// l'outil qui l'avait apprise. `docs/referentiel/lecons.md` a été écrit pour ça.
+//
+// ET C'EST PRÉCISÉMENT LÀ QUE LE PIÈGE SE REFERME. Un registre de leçons que rien ne relit est un
+// cas de L2 (« un mécanisme qui ne sort pas du script est une intention ») et de L7 (« une
+// intention écrite n'a jamais empêché quoi que ce soit) — c'est-à-dire de deux leçons qu'il
+// contient lui-même. L'écrire sans le câbler aurait été la démonstration de son propre contenu.
+//
+// LE CÂBLAGE RETENU, et pourquoi celui-là. Chaque leçon déclare son PORTEUR : le mécanisme réel
+// qui la fait tenir quand plus personne ne se souvient d'elle. Trois états, jamais deux :
+//   · portée          — le porteur nommé existe vraiment dans le code ;
+//   · sans mécanisme  — déclaré noir sur blanc AVEC sa raison (ce que L7 prescrit explicitement
+//                       quand aucun mécanisme n'est possible : l'impossibilité se déclare) ;
+//   · porteur fantôme — un porteur est nommé et n'existe pas. C'est le pire des trois, et c'est
+//                       pour lui que cette fonction existe : une référence morte ressemble à une
+//                       garantie, donc elle rassure à tort. Même raison d'être que
+//                       `checkActionChain()` chez god-of-all-process, qui vérifie qu'une tâche
+//                       annoncée par un plan d'action existe pour de vrai.
+//
+// CE QU'IL NE VÉRIFIE PAS, et c'est déclaré plutôt que tu : aucune mécanique ne peut juger si un
+// porteur fait RÉELLEMENT respecter sa leçon — seulement s'il existe. Le cas grossier est attrapé
+// (la promesse sans code derrière), le subtil ne l'est pas.
+export const LECONS_PATH = "docs/referentiel/lecons.md";
+
+// Un identifiant de porteur est cité entre accents graves : `maFonction()` ou `MA_CONSTANTE`.
+// On dérive la liste du texte plutôt que de la tenir à côté (Article 24) : une leçon ajoutée
+// demain entre dans le champ de vision sans qu'une ligne ne bouge ici.
+const PORTEUR_IDENT_RE = /`([A-Za-z_][A-Za-z0-9_]*)(?:\(\))?`/g;
+
+export function parseLecons(texte = "") {
+  const lecons = [];
+  const sections = String(texte).split(/^## /m).slice(1);
+  for (const sec of sections) {
+    const titre = sec.split("\n")[0].trim();
+    const id = (titre.match(/^(L\d+)/) || [])[1];
+    if (!id) continue;
+    const ligne = (sec.match(/^\*\*Porté par\*\*\s*:\s*(.+)$/m) || [])[1] ?? null;
+    const porteurs = [];
+    if (ligne) for (const m of ligne.matchAll(PORTEUR_IDENT_RE)) porteurs.push(m[1]);
+    lecons.push({ id, titre, portePar: ligne, porteurs });
+  }
+  return lecons;
+}
+
+export function auditLecons({ root = ROOT, readFileImpl = readFileSync, existsImpl = existsSync, sourcesImpl } = {}) {
+  const chemin = join(root, LECONS_PATH);
+  // L5 appliquée à cet audit lui-même : un registre absent n'est pas un registre conforme.
+  if (!existsImpl(chemin)) return { mesure: "pas mesuré", raison: `${LECONS_PATH} est absent — aucune leçon à vérifier, et surtout aucune raison de rendre un vert`, lecons: [] };
+  let texte = "";
+  try { texte = readFileImpl(chemin, "utf8"); } catch { return { mesure: "pas mesuré", raison: `${LECONS_PATH} est illisible`, lecons: [] }; }
+  const lecons = parseLecons(texte);
+  if (!lecons.length) return { mesure: "pas mesuré", raison: `${LECONS_PATH} ne contient aucune leçon — un dénominateur vide ne rend jamais 100 %`, lecons: [] };
+
+  const sources = sourcesImpl ? sourcesImpl() : scriptSources(root, readFileImpl);
+  const juges = lecons.map((l) => {
+    if (!l.portePar) return { ...l, etat: "sans porteur", detail: "aucune ligne « Porté par » — la leçon ne tient qu'à la mémoire de qui l'a écrite" };
+    if (/^\*\*aucun mécanisme/i.test(l.portePar.trim())) return { ...l, etat: "sans mécanisme", detail: "impossibilité déclarée avec sa raison, jamais tue (ce que L7 prescrit)" };
+    if (!l.porteurs.length) return { ...l, etat: "sans porteur", detail: "ligne présente mais aucun mécanisme nommé entre accents graves" };
+    const vivants = l.porteurs.filter((n) => sources.some((src) => new RegExp(`\\b${n}\\b`).test(src)));
+    const morts = l.porteurs.filter((n) => !vivants.includes(n));
+    if (!vivants.length) return { ...l, etat: "porteur fantôme", morts, detail: `porteur(s) nommé(s) et introuvable(s) : ${morts.join(", ")} — une référence morte rassure à tort` };
+    return { ...l, etat: "portée", vivants, morts, detail: morts.length ? `portée par ${vivants.join(", ")} ; introuvable(s) : ${morts.join(", ")}` : `portée par ${vivants.join(", ")}` };
+  });
+
+  const compte = (e) => juges.filter((l) => l.etat === e).length;
+  return {
+    mesure: "mesuré",
+    lecons: juges,
+    total: juges.length,
+    portees: compte("portée"),
+    sansMecanisme: compte("sans mécanisme"),
+    sansPorteur: compte("sans porteur"),
+    fantomes: compte("porteur fantôme"),
+  };
+}
+
+function scriptSources(root, readFileImpl) {
+  const dir = join(root, "scripts");
+  const out = [];
+  let noms = [];
+  try { noms = readdirSync(dir).filter((f) => f.endsWith(".mjs")); } catch { return out; }
+  for (const n of noms) { try { out.push(readFileImpl(join(dir, n), "utf8")); } catch { /* un script illisible n'est pas un porteur absent */ } }
+  return out;
+}
+
+export function formatLecons(audit) {
+  const l = [];
+  if (audit.mesure !== "mesuré") { l.push(`· pas mesuré — ${audit.raison}`); return l; }
+  l.push(`${audit.total} leçon(s) — ${audit.portees} portée(s) par un mécanisme réel, ${audit.sansMecanisme} sans mécanisme possible (déclaré), ${audit.sansPorteur} sans porteur, ${audit.fantomes} porteur(s) fantôme(s).`);
+  for (const x of audit.lecons) {
+    const marque = x.etat === "portée" ? "✅" : x.etat === "sans mécanisme" ? "📄" : "⚠️";
+    l.push(`  ${marque} ${x.id} (${x.etat}) — ${x.detail}`);
+  }
+  return l;
+}
+
+// Les constats que cet audit verse au plan d'action. Une leçon « sans mécanisme » n'en produit
+// AUCUN : elle a déjà été tranchée, et la reprocher à chaque passage serait L6 commise dans
+// l'outil qui la publie.
+export function constatsLecons(audit) {
+  if (audit.mesure !== "mesuré") return [{ constat: `registre des leçons : ${audit.raison}`, etat: "retenu", tache: `rétablir ${LECONS_PATH}, ou retirer l'obligation qui le cite` }];
+  return [
+    ...audit.lecons.filter((x) => x.etat === "porteur fantôme").map((x) => ({
+      constat: `${x.id} annonce un porteur qui n'existe pas (${(x.morts ?? []).join(", ")}) — une référence morte ressemble à une garantie`,
+      etat: "retenu", tache: `nommer le vrai mécanisme de ${x.id} dans ${LECONS_PATH}, ou déclarer l'impossibilité avec sa raison` })),
+    ...audit.lecons.filter((x) => x.etat === "sans porteur").map((x) => ({
+      constat: `${x.id} ne tient à aucun mécanisme et ne le déclare pas — elle disparaît avec la session qui l'a écrite`,
+      etat: "retenu", tache: `donner un porteur à ${x.id}, ou écrire noir sur blanc qu'aucun n'est possible et pourquoi` })),
+  ];
+}
+
 function main() {
   // Cadre commun (pure-gold-unity, Ronde du 2026-09-22) : il datait sa sortie lui-même en plus
   // d'écrire son titre — deux informations que le cadre porte déjà, et qui divergeaient donc
@@ -405,6 +526,11 @@ function main() {
   console.log(`Gravité : ${surMoi.gravite.toUpperCase()} — ${surMoi.resume}`);
   for (const i of surMoi.ignores) console.log(`   ⚠️  ${i.outil} : jugé « ${i.verdict} » le ${i.depuis}, aucun commit sur son script depuis, revu ${i.passages} fois.`);
 
+  // LE REGISTRE DES LEÇONS, affiché AVANT le plan d'action parce qu'il l'alimente (tâche #220).
+  const auditL = auditLecons();
+  console.log("\n=== CE QUE J'AI APPRIS EN ME TROMPANT (docs/referentiel/lecons.md) ===");
+  for (const l of formatLecons(auditL)) console.log(l);
+
   // LE PLAN D'ACTION (2026-09-23, tâche #211). TOOL-LEARNING porte la MOITIÉ 2 de l'évolutivité
   // (devenir meilleur), et ses deux constats visent deux responsables différents — les mélanger
   // reviendrait à me dédouaner sur le dos des outils.
@@ -418,6 +544,7 @@ function main() {
       tache: `corriger le jugement de ${r.outil}, ou écrire pourquoi le verdict tenait quand même` })),
     ...surMoi.ignores.map((i) => ({ constat: `verdict ignoré PAR MOI : ${i.outil}, jugé « ${i.verdict} » le ${i.depuis}, revu ${i.passages} fois sans un seul commit depuis`, etat: "retenu",
       tache: `traiter ce que ${i.outil} dit depuis le ${i.depuis}, ou écarter son verdict explicitement — le revoir sans agir n'est ni l'un ni l'autre` })),
+    ...constatsLecons(auditL),
   ];
   const planAppr = buildPlanDaction(constatsApprentissage, { toolSlug: "tool-learning" });
   console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);

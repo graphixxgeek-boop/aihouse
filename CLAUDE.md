@@ -1108,6 +1108,19 @@ demander si un outil déjà existant répondrait plus vite ou plus complètement
 - `docs/referentiel/tool-learning.md` (2026-09-22) — vérifie que les outils apprennent et que
   l'agent les y aide. Porte la MOITIÉ 2 de l'évolutivité (devenir meilleur). Frontière avec
   CASSANDRA : elle juge l'état et les moyens, lui la trajectoire et l'usage.
+- `docs/referentiel/lecons.md` (2026-09-23) — le registre des LEÇONS TRANSVERSES : ce que le projet a
+  appris en se trompant, formulé pour resservir ailleurs que là où l'erreur a eu lieu. Distinct des
+  trois autres natures de document : la charte ORDONNE, le référentiel technique DÉCRIT le code, le
+  suivi TRACE l'avancement — celui-ci garde ce qu'on a payé pour comprendre. Créé après une question
+  directe de l'utilisateur (« quand tu fais des trouvailles bonnes à retenir [...] il faut que tu
+  l'écrives quelque part, c'est déjà le cas ? »), dont la réponse honnête était non : les leçons
+  vivaient dans des commentaires de code, chacune locale à l'outil qui l'avait apprise. Critère
+  d'entrée volontairement exigeant (payée par une erreur réelle ET valable au-delà du cas qui l'a
+  révélée) : un registre qui accueille tout devient un journal que personne ne relit. Chaque leçon
+  déclare son PORTEUR — le mécanisme réel qui la fait tenir quand plus personne ne s'en souvient —
+  ou déclare noir sur blanc qu'aucun n'est possible, avec sa raison (ce que la leçon L7 prescrit
+  elle-même) ; `auditLecons()` (`scripts/tool-learning.mjs`) vérifie à chaque passage que ce porteur
+  existe pour de vrai, un porteur fantôme étant pire qu'une absence assumée puisqu'il rassure à tort.
 - `docs/referentiel/points-fragiles.md` (2026-09-19) — registre vivant des points identifiés comme
   fragiles ou en attente d'une décision de conception (pas des bugs actifs, ceux-là se corrigent
   directement) ; compté par `scripts/kpi-report.mjs` comme un des indicateurs de robustesse du code.

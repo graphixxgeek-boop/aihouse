@@ -5535,6 +5535,53 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.equal(tl.tacheADeclencher(prop, { agentRetient: true }).cree, false, 'a proposal I can simply apply does not become a pending task — it becomes work');
     const lourde = tl.proposerAmelioration({ outil: 'e', verdict: 'immobile' }, { preuves: { 'relit-sa-memoire': true, 'faux-positifs-en-baisse': true } });
     assert.equal(tl.tacheADeclencher(lourde, { agentRetient: true }).cree, true, 'and only one genuinely needing his validation becomes a real task in the tracker');
+
+    // LE REGISTRE DES LEÇONS (2026-09-23, tâche #220) — l'apprentissage de l'AGENT, la moitié que
+    // cet outil ne couvrait pas. La question de l'utilisateur : « quand tu fais des trouvailles
+    // bonnes à retenir [...] il faut que tu l'écrives quelque part, c'est déjà le cas ? » Non.
+    // Le piège que ces assertions ferment : un registre de leçons que rien ne relit serait un cas
+    // de L2 et de L7, c'est-à-dire de deux leçons qu'il contient lui-même.
+    const leconsTexte = [
+      '## L1 — une leçon portée',
+      '**Porté par** : `parseLecons()` (`scripts/tool-learning.mjs`).',
+      '## L2 — une leçon dont le porteur n\'existe pas',
+      '**Porté par** : `fonctionQuiNExistePasDuTout()` (`scripts/nulle-part.mjs`).',
+      '## L3 — une leçon sans mécanisme possible',
+      '**Porté par** : **aucun mécanisme**, et voici pourquoi.',
+      '## L4 — une leçon qui ne dit rien',
+      'Du texte, mais aucune ligne « Porté par ».',
+    ].join('\n\n');
+    const auditL = tl.auditLecons({ readFileImpl: () => leconsTexte, existsImpl: () => true, sourcesImpl: () => ['export function parseLecons() {}'] });
+    assert.equal(auditL.mesure, 'mesuré', 'a readable, non-empty register is measured');
+    const etatDe = (id) => auditL.lecons.find((l) => l.id === id).etat;
+    assert.equal(etatDe('L1'), 'portée', 'a lesson whose named mechanism really exists in the code is carried');
+    // LE CAS QUI JUSTIFIE TOUT L'OUTIL : une référence morte ressemble à une garantie, donc elle
+    // rassure à tort — pire qu'une absence de porteur, qui elle ne promet rien.
+    assert.equal(etatDe('L2'), 'porteur fantôme', 'a lesson naming a mechanism that does not exist must be told apart from one genuinely carried: a dead reference reassures wrongly');
+    // L7 prescrit explicitement que l'impossibilité se déclare. Une leçon qui la déclare AVEC sa
+    // raison est en règle, et ne doit produire aucun constat à chaque passage (ce serait L6).
+    assert.equal(etatDe('L3'), 'sans mécanisme', 'an impossibility declared in writing with its reason is the protection L7 prescribes, never a failure');
+    assert.equal(etatDe('L4'), 'sans porteur', 'a lesson with no "Porté par" line at all holds only in the memory of whoever wrote it');
+    const constats = tl.constatsLecons(auditL);
+    assert.equal(constats.length, 2, 'only the phantom carrier and the silent lesson become findings — the declared impossibility is already settled, and reproaching it at every passage would be exactly the permanent-alarm defect (L6) committed by the tool that publishes it');
+    assert.ok(constats.every((c) => c.etat === 'retenu' && c.tache), 'each finding carries the task it calls for, per Article 28');
+
+    // L5 APPLIQUÉE À L'AUDIT LUI-MÊME : un registre absent ou vide n'est jamais un registre
+    // conforme, et un pourcentage sur un dénominateur vide n'est pas une mesure.
+    assert.equal(tl.auditLecons({ existsImpl: () => false }).mesure, 'pas mesuré', 'a missing register reports "pas mesuré", never a green');
+    assert.equal(tl.auditLecons({ existsImpl: () => true, readFileImpl: () => '# rien ici' }).mesure, 'pas mesuré', 'an empty register reports "pas mesuré" too');
+    assert.equal(tl.constatsLecons({ mesure: 'pas mesuré', raison: 'absent' }).length, 1, 'and an unmeasurable register is itself a finding, never a silence');
+
+    // LE VRAI REGISTRE DU DÉPÔT, jamais seulement des témoins synthétiques (L3 : un test ne doit
+    // pas dépendre d'un défaut réel, mais il doit quand même prouver que l'outil marche sur le
+    // vrai). On vérifie la SANTÉ, pas un compte figé : un nombre de leçons gravé ici se périmerait
+    // à la prochaine leçon apprise.
+    const reel = tl.auditLecons();
+    assert.equal(reel.mesure, 'mesuré', 'docs/referentiel/lecons.md must exist and hold at least one lesson');
+    assert.equal(reel.fantomes, 0, 'no lesson in the real register may name a mechanism that does not exist');
+    assert.equal(reel.sansPorteur, 0, 'and none may stay silent about what carries it: either a real mechanism, or the declared impossibility L7 asks for');
+
+    console.log(`Passed: the transverse lessons register (2026-09-23, task #220) is no longer a text nothing re-reads — the trap it documents twice over (L2, a mechanism that never leaves the script; L7, a written intention never prevented anything). Each lesson now names the mechanism that carries it when nobody remembers it, tool-learning prints that audit and feeds its findings into its own action plan, and the state that justifies the whole thing is told apart from the other two: a PHANTOM carrier — a mechanism named in writing that does not exist — reassures wrongly and is worse than a lesson that admits it has none, exactly the reason checkActionChain() verifies that a task announced by an action plan is real. A declared impossibility produces no finding at all, since reproaching a settled decision at every passage would be L6 committed by the tool publishing it. Real register right now: ${reel.total} lessons, ${reel.portees} mechanically carried, ${reel.sansMecanisme} declared impossible with its reason, 0 phantom, 0 silent.`);
   }
 
   // SÉRIE-TEMPORELLE (2026-09-22) — le mécanisme partagé d'historisation, demandé parce que « tous
