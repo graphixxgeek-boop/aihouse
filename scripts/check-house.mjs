@@ -8397,21 +8397,24 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   });
   assert.ok(badSequence.findings.some((f) => f.check === 'sequence-order'), 'building the analysis before the reports were delivered must be flagged — the strict Étape 5 sequencing rule (docs/circle-process-detail.txt Partie 7)');
 
-  const tooFewQuestions = verifyRondeProcess({
+  // LE CONTRÔLE « 5 À 10 QUESTIONS » A ÉTÉ RETIRÉ LE 2026-09-23, et son test avec lui. Ce n'est pas
+  // un assouplissement : c'est la correction d'une contradiction. Il comparait un TOTAL NU à une
+  // fourchette écrite le 2026-09-22, alors que la Partie 11 du process, écrite le lendemain,
+  // détaille un inventaire par étape totalisant 28 à 44 questions. Les deux règles ne pouvaient
+  // pas tenir ensemble — et c'est la restrictive qui était câblée : ce contrôle aurait signalé un
+  // écart si l'agent avait posé les questions réellement dues.
+  //
+  // L'utilisateur a RESSENTI l'écart avant que quoi que ce soit ne le mesure (« 14 seulement,
+  // alors qu'on aurait dû en avoir plus de 30 ; j'ai ressenti cet écart et ça m'a gêné »). Le
+  // remplacement est le contrôle par étape ci-dessus, qui refuse un total nu et nomme chaque
+  // étape sous-servie — deux avaient été entièrement sautées sans que rien ne le voie.
+  const trop = verifyRondeProcess({
     autoPrimeGoatAsked: true, checkedItemIds: [], executedItemIds: [],
-    analysisPointsFound: 8, questionsAsked: 1,
+    questionsParEtape: { ouverture: 3, 'evaluation-agent': 8, 'constats-analyse': 10, 'calibrage-correctifs': 10, 'mise-en-cause': 8, 'la-suite': 3 },
     findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
     shImpl: () => '100', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
   });
-  assert.ok(tooFewQuestions.findings.some((f) => f.check === 'forced-questions' && f.message.includes('attendu au moins')), 'fewer forced-choice questions than real problems found (capped at 5) must be flagged — the user\'s own explicit rule to force attention on every real problem');
-
-  const tooManyQuestions = verifyRondeProcess({
-    autoPrimeGoatAsked: true, checkedItemIds: [], executedItemIds: [],
-    analysisPointsFound: 3, questionsAsked: 12,
-    findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
-    shImpl: () => '100', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
-  });
-  assert.ok(tooManyQuestions.findings.some((f) => f.check === 'forced-questions' && f.message.includes('au-delà de la fourchette')), 'more than 10 forced-choice questions must also be flagged — never a question per insignificant detail');
+  assert.ok(!trop.findings.some((f) => f.check === 'questions-par-etape'), 'posing the full 42 questions the process actually demands must never be reported as an excess — the old 5-10 band would have flagged it, which is precisely why it was removed');
 
   const zeroPointsNoQuestions = verifyRondeProcess({
     autoPrimeGoatAsked: true, checkedItemIds: [], executedItemIds: [],
@@ -8483,6 +8486,11 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     // déclarer respectée. Écrire un fichier et le livrer sont deux faits distincts, et le second
     // ne se déduit jamais du premier.
     rapportsLivresIndividuellement: true, nombreDeRapportsEcrits: 26, nombreDeRapportsLivres: 26,
+    // Cinquième fois que ce test échoue à l'ajout d'une étape, et c'est encore voulu. L'utilisateur
+    // a RESSENTI un écart de questions (14 posées, 28 à 44 dues) avant qu'aucun mécanisme ne le
+    // voie — parce que le contrôle comparait un total nu à une fourchette de 5 à 10 écrite la
+    // veille, qui aurait signalé un écart si l'agent avait posé les questions dues.
+    questionsParEtape: { ouverture: 3, 'evaluation-agent': 6, 'constats-analyse': 9, 'calibrage-correctifs': 6, 'mise-en-cause': 6, 'la-suite': 3 },
   });
   assert.deepEqual(cleanResult, { ok: true, findings: [] }, 'a Ronde where every real fact checks out must report a genuinely clean ok:true with zero fabricated findings');
 
@@ -8519,6 +8527,38 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     rapportsLivresIndividuellement: true, nombreDeRapportsEcrits: 26, nombreDeRapportsLivres: 13,
   });
   assert.ok(livraisonPartielle.findings.some((f) => f.check === 'rapports-partiellement-livres' && f.message.includes('13')), 'a partial delivery is named with its real counts, never softened into a yes');
+
+  // L'INVENTAIRE DES QUESTIONS PAR ÉTAPE (2026-09-23) — l'utilisateur a senti l'écart avant tout
+  // mécanisme : 14 questions posées pour 28 à 44 dues. La cause n'était pas un oubli.
+  {
+    const ct = await import('../scripts/circle-tasks.mjs');
+    // LE DOCUMENT ET LE CODE DISENT LE MÊME CHIFFRE, et c'est ce garde-fou qui a trouvé que le
+    // document sous-comptait son PROPRE tableau d'une unité (28 à 43 annoncé, 44 additionné).
+    assert.deepEqual(ct.findEtapesDivergentesDuDocument(), [], 'the per-step inventory in the code and the total announced in the process document must agree — a figure nobody re-adds drifts silently');
+    // UN TOTAL NU EST REFUSÉ : 14 questions prises dans deux étapes et 14 réparties sur six ne
+    // décrivent pas le même travail, et c'est ce flou qui a laissé sauter deux étapes entières.
+    assert.equal(ct.findEtapesDeQuestionsManquantes(14, {})[0].etape, '(toutes)', 'a bare total cannot show whether six steps were covered or two');
+
+    // « #undefined » DANS UN RAPPORT (2026-09-23) — relevé par l'utilisateur. La donnée n'était
+    // pas cassée : 50 lignes du suivi portent volontairement « — » comme numéro. C'est l'affichage
+    // qui mentait, et « undefined » est la forme la plus nuisible d'une absence rendue comme une
+    // valeur : elle fait douter de tout le reste du rapport.
+    const ctd = await import('../scripts/check-tasks-details.mjs');
+    assert.equal(ctd.numeroTache(42), '#42');
+    assert.equal(ctd.numeroTache(undefined), 'sans numéro', 'an absent number says so, it never renders as "undefined"');
+    assert.equal(ctd.numeroTache('—'), 'sans numéro', 'the dash is the repository\'s own written convention for a task without a number, not a broken value');
+    // LA RONDE DU 2026-09-23, REJOUÉE : cinq étapes sous-servies, dont deux entièrement sautées.
+    const reel = ct.findEtapesDeQuestionsManquantes({ ouverture: 3, 'constats-analyse': 4, 'mise-en-cause': 2, 'la-suite': 2 }, { changementModeleReponse: 'non' });
+    assert.equal(reel.length, 5, 'replaying the real Ronde must name the five under-served steps');
+    assert.equal(reel.filter((e) => e.posees === 0).length, 2, 'two steps were skipped entirely — the ones that EVALUATE THE AGENT and the calibration of fixes');
+    // LES ÉTAPES CONDITIONNELLES ne sont jamais comptées comme manquantes quand leur condition ne
+    // tient pas : réclamer un rappel de retour de modèle alors qu'aucun changement n'a eu lieu
+    // ferait crier ce contrôle sur le cas le plus fréquent, donc l'apprendrait à s'ignorer.
+    assert.ok(!ct.findEtapesDeQuestionsManquantes({ ouverture: 3 }, { changementModeleReponse: 'non' }).some((e) => e.etape === 'rappel-modele'), 'a conditional step whose condition is not met is never a gap');
+    assert.ok(ct.findEtapesDeQuestionsManquantes({ ouverture: 3 }, { changementModeleReponse: 'oui' }).some((e) => e.etape === 'rappel-modele'), 'but it IS required once the model was actually changed');
+    // UNE SÉRIE EXPLICITEMENT PASSÉE par l'utilisateur ne compte pas comme un manque.
+    assert.ok(!ct.findEtapesDeQuestionsManquantes({ ouverture: 3 }, {}, { seriesPassees: ['mise-en-cause'] }).some((e) => e.etape === 'mise-en-cause'), 'a series the user explicitly chose to skip is a decision, never a gap');
+  }
 
   // Le mode autonome exempte TOUT ce qui suppose quelqu'un en face : la borne posée par
   // l'utilisateur (« aucune fenêtre y compris GOAT/AUTO ne doit être bloquante pour le mode

@@ -125,7 +125,7 @@ export function buildTree(rows) {
       children.push({
         label: `${sousTheme} (${tasks.length})`,
         children: tasks.map((t) => ({
-          label: `${STATUS_ICONS[t.statusKey] ?? "❓"} #${t.n ?? "—"} · [${t.sensibilite}] ${t.sousSujet} — ${t.statut}`,
+          label: `${STATUS_ICONS[t.statusKey] ?? "❓"} ${numeroTache(t.n)} · [${t.sensibilite}] ${t.sousSujet} — ${t.statut}`,
           statusKey: t.statusKey,
         })),
       });
@@ -169,7 +169,7 @@ export function suggestToolsForOpenTasks(rows, prestations = PRESTATIONS, onboar
     const matches = suggestPrestationsForTask(`${row.sujet} ${row.sousSujet}`, prestations, onboardingContext);
     if (!matches.length) continue;
     const warning = matches[0].badgeWarnings?.length ? ` — ⚠️ ${matches[0].badgeWarnings.join(" ; ")}` : "";
-    items.push(`#${row.n ?? "—"} « ${row.sousSujet} » → ${matches[0].outils.join(" + ")} (mots-clés : ${matches[0].matched.join(", ")})${warning}`);
+    items.push(`${numeroTache(row.n)} « ${row.sousSujet} » → ${matches[0].outils.join(" + ")} (mots-clés : ${matches[0].matched.join(", ")})${warning}`);
   }
   return items;
 }
@@ -797,7 +797,7 @@ export function criticalEye(rows, { stagnant = [], standing = [], figures = null
   const findings = [];
   const fig = figures ?? suiviFigures(rows, { now });
   for (const s of stagnant.filter((s) => (s.streak ?? 3) >= 3).sort((a, b) => (b.streak ?? 0) - (a.streak ?? 0))) {
-    findings.push({ gravite: (s.streak ?? 3) >= 5 ? "forte" : "moyenne", constat: `#${s.n} « ${s.sousSujet} » est ouverte et identique depuis ${s.streak ?? 3} rapports consécutifs.` });
+    findings.push({ gravite: (s.streak ?? 3) >= 5 ? "forte" : "moyenne", constat: `${numeroTache(s.n)} « ${s.sousSujet} » est ouverte et identique depuis ${s.streak ?? 3} rapports consécutifs.` });
   }
   for (const c of standing.filter((c) => c.jamaisCommence)) {
     findings.push({ gravite: "forte", constat: `Le chantier « ${c.chantier} » a un fichier de conception mais 0 tâche de suivi s'y rattache — annoncé, jamais commencé.` });
@@ -907,11 +907,11 @@ export function buildReport({ zoom = "en_cours", format = "liste", allRows, hist
   }
   if (regressions.length) {
     blocks.push({ type: "note", text: `⚠️ ${regressions.length} régression(s) de statut détectée(s) depuis le dernier rapport — à vérifier en priorité.` });
-    blocks.push({ type: "list", items: regressions.map((r) => `#${r.n} « ${r.sousSujet} » : ${r.before} → ${r.after}`) });
+    blocks.push({ type: "list", items: regressions.map((r) => `${numeroTache(r.n)} « ${r.sousSujet} » : ${r.before} → ${r.after}`) });
   }
   if (stagnant.length) {
     blocks.push({ type: "note", text: `${stagnant.length} tâche(s) ouverte(s) identiques depuis au moins 3 rapports consécutifs — possible oubli, à vérifier (jamais une certitude).` });
-    blocks.push({ type: "list", items: stagnant.map((s) => `#${s.n} « ${s.sousSujet} »`) });
+    blocks.push({ type: "list", items: stagnant.map((s) => `${numeroTache(s.n)} « ${s.sousSujet} »`) });
   }
   blocks.push(format === "arborescence" ? { type: "tree", nodes: buildTree(scoped) } : { type: "noop" });
   if (format === "liste") blocks.push(...buildListBlocks(scoped));
@@ -939,6 +939,23 @@ export function buildReport({ zoom = "en_cours", format = "liste", allRows, hist
     blocks: blocks.filter((b) => b.type !== "noop"),
     meta: { zoom, format, count: scoped.length, total: rows.length, regressions, stagnant, recommended, chantierFreshnessGaps },
   };
+}
+
+// LE NUMÉRO D'UNE TÂCHE, AFFICHÉ HONNÊTEMENT (2026-09-23)
+//
+// Relevé par l'utilisateur sur le rapport d'état de la Ronde : une tâche y apparaissait comme
+// « #undefined ». Vérification faite avant de corriger : la donnée n'est PAS cassée — 50 lignes du
+// suivi portent volontairement « — » comme numéro (des tâches antérieures à la numérotation, ou
+// des notes qui n'en méritent pas). La convention est légitime ; c'est l'AFFICHAGE qui mentait.
+//
+// « #undefined » est exactement le défaut que ce projet corrige partout ailleurs : une absence
+// rendue comme une valeur. Elle fait douter du reste du rapport — un lecteur qui voit « undefined »
+// se demande ce qui d'autre est faux — alors que « sans numéro » dit la vérité et n'inquiète pas.
+//
+// UN SEUL FORMATEUR plutôt que trois gardes recopiées : trois endroits affichaient ce numéro, deux
+// avec un garde et un sans. C'est précisément ainsi qu'un quatrième endroit naîtra sans garde.
+export function numeroTache(n) {
+  return n === undefined || n === null || n === "" || n === "—" ? "sans numéro" : `#${n}`;
 }
 
 function appendIndexRow({ file, zoom, format, count, total, regressions, stagnant }) {

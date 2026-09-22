@@ -49,3 +49,5 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 | 2026-09-22T19:25:21.560Z | en_cours | liste | 9 | 422 | 0 | 9 | /home/user/aihouse/docs/check-tasks-details/1790105121558-en_cours-liste.html |
 | 2026-09-22T19:25:28.350Z | en_cours | liste | 9 | 422 | 0 | 9 | /home/user/aihouse/docs/check-tasks-details/1790105128349-en_cours-liste.html |
 | 2026-09-22T20:01:00.253Z | en_cours | liste | 13 | 433 | 0 | 9 | /home/user/aihouse/docs/check-tasks-details/1790107260251-en_cours-liste.html |
+| 2026-09-22T20:11:39.269Z | en_cours | liste | 13 | 434 | 0 | 9 | /home/user/aihouse/docs/check-tasks-details/1790107899267-en_cours-liste.html |
+| 2026-09-22T20:11:40.903Z | en_cours | liste | 13 | 434 | 0 | 13 | /home/user/aihouse/docs/check-tasks-details/1790107900901-en_cours-liste.html |

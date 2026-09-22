@@ -1350,6 +1350,78 @@ function main() {
 // sans réponse — une fenêtre fermée par inadvertance et une fenêtre fermée par lassitude se
 // ressemblent trop pour qu'une machine les distingue, et prétendre le contraire serait inventer
 // une mesure.
+// ————————————————————————————————————————————————————————————————————————
+// L'INVENTAIRE DES QUESTIONS, RENDU VÉRIFIABLE (2026-09-23)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Constat de l'utilisateur à la clôture de la Ronde : « Pourquoi un tel écart dans le nombre de
+// questions : 14 seulement, alors qu'on aurait dû en avoir plus de 30 ? J'ai ressenti cet écart et
+// ça m'a gêné. Encore une fois : mieux vaut trop de questions que pas assez. »
+//
+// LA CAUSE, ET ELLE EST PIRE QU'UN OUBLI. La Partie 11 du process détaille depuis le 2026-09-23 un
+// inventaire par étape totalisant 28 à 43 questions. Le contrôleur, lui, ne vérifiait qu'un TOTAL
+// NU contre une fourchette de 5 à 10 — écrite la veille, avant que cet inventaire n'existe, et
+// jamais réconciliée avec lui. Deux règles en contradiction, et c'est la restrictive qui était
+// câblée : le contrôleur m'aurait signalé un écart si j'avais posé les 28 questions dues.
+//
+// Un total nu ne peut de toute façon rien garantir : 14 questions toutes prises dans deux étapes
+// et 14 réparties sur six ne décrivent pas le même travail. Deux étapes entières ont été sautées
+// ce jour-là (celles qui ÉVALUENT L'AGENT, et le calibrage des correctifs) sans que rien ne le
+// voie, parce que rien ne comptait PAR ÉTAPE.
+//
+// D'OÙ CET INVENTAIRE, lu depuis le code plutôt que depuis la mémoire de l'agent. Il porte les
+// mêmes chiffres que la Partie 11 — un écart entre les deux serait la dette que l'Article 24
+// interdit, et findEtapesDivergentesDuDocument() ci-dessous le vérifie sur le vrai document.
+export const INVENTAIRE_QUESTIONS = [
+  { etape: "ouverture", min: 2, max: 3, quoi: "changement de modèle et mode AUTO/PRIME/GOAT (obligatoires), rythme (facultatif)", requisSi: null },
+  { etape: "retour-modele", min: 1, max: 1, quoi: "revenir avant ou après les rapports", requisSi: (c) => c.changementModeleReponse === "oui" },
+  { etape: "evaluation-agent", min: 5, max: 8, quoi: "les questions qui ÉVALUENT L'AGENT, posées avant EVAL-IA", requisSi: null },
+  { etape: "constats-analyse", min: 8, max: 10, quoi: "les constats de l'analyse, proportionnel à ce qui a été trouvé", requisSi: null },
+  { etape: "calibrage-correctifs", min: 5, max: 10, quoi: "le calibrage des correctifs à appliquer", requisSi: null },
+  { etape: "mise-en-cause", min: 5, max: 8, quoi: "celles qui mettent l'utilisateur en cause", requisSi: null },
+  { etape: "la-suite", min: 3, max: 3, quoi: "l'instant, l'axe, le projet — toujours les trois", requisSi: null },
+  { etape: "rappel-modele", min: 1, max: 1, quoi: "dernier rappel de retour au modèle précédent", requisSi: (c) => c.changementModeleReponse === "oui" },
+];
+
+// Ce qui est DÛ dans le contexte réel de cette Ronde — les étapes conditionnelles tombent d'elles-
+// mêmes, elles ne sont jamais comptées comme manquantes quand leur condition n'est pas remplie.
+export function questionsDues(contexte = {}, { inventaire = INVENTAIRE_QUESTIONS, seriesPassees = [] } = {}) {
+  return inventaire.filter((e) => (!e.requisSi || e.requisSi(contexte)) && !seriesPassees.includes(e.etape));
+}
+
+// LES ÉTAPES SOUS-SERVIES, nommées une par une. Rend une LISTE et jamais un total : « il manque 17
+// questions » ne dit pas lesquelles, et c'est précisément ce flou qui a permis de sauter deux
+// étapes entières sans que rien ne le remarque.
+export function findEtapesDeQuestionsManquantes(poseesParEtape, contexte = {}, options = {}) {
+  if (!poseesParEtape || typeof poseesParEtape !== "object") {
+    // Un TOTAL NU est refusé, et c'est le cœur de la correction : il ne permet aucun contrôle réel.
+    return [{ etape: "(toutes)", manque: "le détail par étape n'a pas été fourni — un total nu ne dit pas si les questions couvrent six étapes ou deux, et c'est exactement ce flou qui a laissé sauter deux étapes entières" }];
+  }
+  return questionsDues(contexte, options)
+    .map((e) => ({ ...e, posees: poseesParEtape[e.etape] ?? 0 }))
+    .filter((e) => e.posees < e.min)
+    .map((e) => ({ etape: e.etape, posees: e.posees, attendu: `${e.min}-${e.max}`,
+      manque: e.posees === 0 ? `étape ENTIÈREMENT sautée (${e.quoi})` : `${e.min - e.posees} question(s) de moins que le plancher (${e.quoi})` }));
+}
+
+// GARDE-FOU D'ÉVOLUTIVITÉ (Article 24) : l'inventaire ci-dessus reflète un tableau écrit dans
+// docs/circle-process-detail.txt. Les deux doivent dire la même chose, et rien ne doit pouvoir
+// diverger en silence — c'est exactement le patron des autres registres du projet.
+export function findEtapesDivergentesDuDocument({ root = ROOT, readFileImpl = readFileSync, inventaire = INVENTAIRE_QUESTIONS } = {}) {
+  let texte;
+  try { texte = readFileImpl(join(root, "docs/circle-process-detail.txt"), "utf8"); } catch { return []; }
+  const total = inventaire.filter((e) => !e.requisSi).reduce((a, e) => ({ min: a.min + e.min, max: a.max + e.max }), { min: 0, max: 0 });
+  const annonce = texte.match(/TOTAL \(hors offres de passer[^)]*\)\s+(\d+) à (\d+)/);
+  if (!annonce) return [{ pourquoi: "le document n'annonce plus de total de questions — l'inventaire du code ne peut plus être confronté à rien" }];
+  const [, docMin, docMax] = annonce;
+  // Le document compte AUSSI les deux étapes conditionnelles dans sa fourchette haute.
+  const maxAvecConditionnelles = total.max + inventaire.filter((e) => e.requisSi).reduce((a, e) => a + e.max, 0);
+  if (Number(docMin) !== total.min || Number(docMax) !== maxAvecConditionnelles) {
+    return [{ pourquoi: `le document annonce ${docMin} à ${docMax} questions, l'inventaire du code en totalise ${total.min} à ${maxAvecConditionnelles} — l'un des deux a changé sans l'autre` }];
+  }
+  return [];
+}
+
 export const QUESTIONS_SANS_REPONSE_PATH = "docs/circle-tasks/questions-sans-reponse.json";
 
 // Trois états, jamais deux — le même principe que partout ailleurs dans ce paysage.

@@ -38,6 +38,7 @@ import {
   loadOuverture, findFaitsManquants, ouvertureEstFraiche, autoriseCloture, OUVERTURE_VALIDE_HEURES,
   loadQuestionsSansReponse, questionsAReposer, enAttenteProchaineRonde, prochaineAction,
   MAX_TENTATIVES_PAR_RONDE, loadSeriesPassees, effetDUneSeriePassee, HYPOTHESE_SILENCE,
+  findEtapesDeQuestionsManquantes,
 } from "./circle-tasks.mjs";
 import { findOrphanReportFiles, REGISTRIES } from "./doc-report.mjs";
 import { walkDocsPaths, sh, outilsHorsPortee, porteeDe } from "./lib-shell.mjs";
@@ -158,6 +159,8 @@ export function verifyRondeProcess({
   loadQuestionsSansReponseImpl = loadQuestionsSansReponse,
   loadSeriesPasseesImpl = loadSeriesPassees,
   seriesReellementPosees,
+  // Le DÉTAIL par étape, jamais un total : { ouverture: 3, "constats-analyse": 4, ... }
+  questionsParEtape,
   rapportsLivresIndividuellement,
   nombreDeRapportsEcrits,
   nombreDeRapportsLivres,
@@ -316,10 +319,25 @@ export function verifyRondeProcess({
       add("rapports-partiellement-livres", `${nombreDeRapportsEcrits} rapport(s) écrit(s) mais seulement ${nombreDeRapportsLivres} livré(s) — ${nombreDeRapportsEcrits - nombreDeRapportsLivres} rapport(s) n'existent que pour moi.`);
     }
   }
-  if ((analysisPointsFound ?? 0) > 0) {
-    const expectedMin = Math.min(5, analysisPointsFound);
-    if ((questionsAsked ?? 0) < expectedMin) add("forced-questions", `${analysisPointsFound} point(s) trouvé(s) mais seulement ${questionsAsked ?? 0} question(s) à choix forcé posée(s) — attendu au moins ${expectedMin} (jamais zéro question sur une analyse à plusieurs problèmes).`);
-    if ((questionsAsked ?? 0) > 10) add("forced-questions", `${questionsAsked} questions posées pour ${analysisPointsFound} point(s) trouvé(s) — au-delà de la fourchette 5-10 attendue, jamais une question par détail insignifiant.`);
+  // LE COMPTE DES QUESTIONS, PAR ÉTAPE (refondu le 2026-09-23 après un écart ressenti par
+  // l'utilisateur : « pourquoi un tel écart dans le nombre de questions : 14 seulement, alors
+  // qu'on aurait dû en avoir plus de 30 ? »).
+  //
+  // CE QUI ÉTAIT FAUX ICI, ET C'ÉTAIT PIRE QU'UN TROU. Ce contrôle comparait un TOTAL NU à une
+  // fourchette de 5 à 10 questions. Or la Partie 11 du process détaille un inventaire par étape
+  // totalisant 28 à 44. Les deux règles se contredisaient, et c'est la restrictive qui était
+  // câblée : le contrôleur aurait SIGNALÉ UN ÉCART si l'agent avait posé les 28 questions dues.
+  // Une règle écrite la veille, jamais réconciliée avec celle du lendemain.
+  //
+  // ET UN TOTAL NU NE PEUT RIEN GARANTIR : 14 questions prises dans deux étapes et 14 réparties
+  // sur six ne décrivent pas le même travail. Deux étapes entières ont été sautées ce jour-là sans
+  // que rien ne le voie, parce que rien ne comptait PAR ÉTAPE. Le détail est donc exigé, et un
+  // total seul est refusé — c'est la même discipline que partout : une mesure trop grossière pour
+  // distinguer deux situations différentes n'est pas une mesure.
+  if (!nightAutonomousMode) {
+    for (const e of findEtapesDeQuestionsManquantes(questionsParEtape, { changementModeleReponse }, { seriesPassees: (loadSeriesPasseesImpl() ?? []).map((x) => x.serie) })) {
+      add("questions-par-etape", `Questions — ${e.etape}${e.attendu ? ` (${e.posees}/${e.attendu})` : ""} : ${e.manque}`);
+    }
   }
 
   // 6. record-run — le compteur de fraîcheur doit être retombé à (quasi) 0 juste après la Ronde :
