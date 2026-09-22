@@ -648,6 +648,11 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // (Article 27 : le pourquoi vit à côté du quoi).
   "le-coordinateur": "c'est le MOTEUR de la Ronde, jamais un de ses items — lui donner une ligne à cocher dans la liste qu'il orchestre lui-même serait circulaire",
   "circle-tasks": "c'est la Ronde ELLE-MÊME — un item « lancer la Ronde » dans la Ronde ne veut rien dire",
+  // tasks-process-guardian (2026-09-22) : troisième gardien de process, même règle que ses deux
+  // frères. Son registre a d'ailleurs fait échouer le crochet pre-commit le jour de sa création,
+  // avant même que cette ligne n'existe — findRegistriesMissingFromCircle() a fait exactement son
+  // travail, et c'est cette exclusion-ci qui est la vraie réponse, jamais un item de plus.
+  "tasks-process-guardian": "gardien de process SECONDAIRE, même règle que process-simulation-guardian et angel-of-ia-process : god-of-all-process centralise et relaie son verdict (décision de l'utilisateur, 2026-09-22 — une seule voix à la Ronde, jamais une par gardien). Son déclencheur est l'état du suivi, pas le calendrier",
   "process-simulation-guardian": "gardien de process SECONDAIRE, même règle qu'angel-of-ia-process ci-dessus : god-of-all-process centralise et relaie son verdict (décision de l'utilisateur, 2026-09-22). Son vrai déclencheur est de toute façon une simulation, jamais le calendrier",
   "find-deep-booster": "outil de découpage à la demande sur UN fichier précis, jamais un balayage périodique de tout le dépôt — exactement la même raison que find-booster ci-dessus",
   "check-level-target": "outil de classification interne, jamais une routine à cocher soi-même",

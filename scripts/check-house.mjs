@@ -5226,6 +5226,59 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.equal(j[0].statut, 'vu, jamais corrigé — périmètre gelé', 'a frozen-scope observation is recorded with its status explicit, so nobody later mistakes it for something that was fixed');
   }
 
+  // TASKS.PROCESS.GUARDIAN (2026-09-22, nom donné par l'utilisateur) — troisième gardien de process.
+  // Le principe qu'il protège, dans ses mots : « une tache ou une idee perdue est une perte de
+  // valeur seche pour le projet ». Perte SÈCHE, pas un retard : une valeur produite puis détruite.
+  {
+    const t = await import('../scripts/tasks-process-guardian.mjs');
+
+    assert.equal(t.TROUS_GARDES.length, 4, 'the four gaps the user named one by one');
+    assert.ok(t.TROUS_GARDES.every((x) => x.trou && x.preuve && x.reponse), 'each gap must carry its PROOF — a guardian whose gaps are asserted rather than evidenced is a wish list; every one of these four was found on real data');
+
+    // LA VÉRIFICATION ASYMÉTRIQUE — une tâche faite et jamais close. Le détecteur est une
+    // SUSPICION, jamais un verdict : rien sur le disque ne prouve qu'une tâche est faite.
+    const vrai = t.findTachesFaitesJamaisCloses([{ numero: '999', sousSujet: 'construire le détecteur de duplication de code' }], ['construire le détecteur de duplication de code', 'améliorer le détecteur de duplication']);
+    assert.equal(vrai.length, 1, 'a task whose distinctive title really recurs in commits is flagged');
+    assert.ok(/jamais une certitude/.test(vrai[0].verdict), 'and it is phrased as an indication, never a verdict — a guardian that asserted here would be wrong one day and lose the right to be believed');
+
+    // DEUX FAUX POSITIFS STRUCTURELS, tous deux trouvés au PREMIER passage réel et corrigés par un
+    // principe, jamais par un filtre élargi mot à mot (corollaire de l'Article 17).
+    // 1. On croise le TITRE SPÉCIFIQUE, jamais la CATÉGORIE : croiser une catégorie avec des
+    //    messages de commit garantit un faux positif sur toute zone active — plus on travaille
+    //    AUTOUR d'un sujet, plus le détecteur croit chacune de ses tâches faite.
+    assert.equal(t.findTachesFaitesJamaisCloses([{ numero: '1', sujet: 'Conception / Nouvel outil (CASSANDRA-RH)', sousSujet: 'quelque chose de totalement different' }], ['cassandra conception nouvel outil', 'cassandra encore']).length, 0, 'the broad classification column must never be what is matched against commits');
+    // 2. LA MOITIÉ DES MOTS DANS LE MÊME COMMIT : des mots courants isolés dans des commits
+    //    différents ne disent rien. Les voir ensemble est un vrai signal.
+    assert.equal(t.findTachesFaitesJamaisCloses([{ numero: '2', sousSujet: 'objectifs de résultat score cible par membre équipe' }], ['travail sur les objectifs', 'un membre de plus']).length, 0, '"objectifs" in one commit and "membre" in another says nothing about a task about both — scattered common words are noise, co-occurrence is signal');
+
+    // UNE TÂCHE QUI ATTEND UNE DÉCISION N'EST JAMAIS FAITE EN SILENCE : c'est une décision qui
+    // manque, pas une exécution oubliée. Les deux se ressemblent dans le suivi et n'ont rien à voir.
+    assert.equal(t.findTachesFaitesJamaisCloses([{ numero: '3', sousSujet: 'construire le détecteur de duplication de code', detail: 'en attente de sa décision' }], ['construire le détecteur de duplication de code', 'détecteur de duplication de code fini']).length, 0, 'a task blocked on a human arbitration cannot have been silently done');
+
+    // « NE JAMAIS PERDRE DE VUE UNE TÂCHE EN SUSPENS » : le signal GROSSIT avec l'attente. Un rappel
+    // identique devient un meuble — ce projet en a la preuve, son rappel de Ronde ignoré plus de
+    // deux cents fois, mot pour mot le même à chaque commit.
+    const maintenant = Date.parse('2026-09-22T00:00Z');
+    // Les quatre paliers, un par bande réelle. Écrit après que ce test ait d'abord échoué sur une
+    // date de 12 jours attendue en 🟠 : c'était l'assertion qui se trompait de bande, pas l'outil —
+    // 12 jours est bien au-delà de 7 et en deçà de 14. Corrigé dans le test, jamais en déplaçant
+    // le seuil pour faire passer l'assertion.
+    const ages = t.ageDesTachesOuvertes([
+      { numero: 'a', horodatage: '2026-09-21T00:00Z' }, { numero: 'b', horodatage: '2026-09-12T00:00Z' },
+      { numero: 'c', horodatage: '2026-09-05T00:00Z' }, { numero: 'd', horodatage: '2026-08-01T00:00Z' },
+    ], { maintenant });
+    assert.ok(/^·/.test(ages[0].ton), 'a one-day-old task is just waiting');
+    assert.ok(/🟡/.test(ages[1].ton), 'past a week it starts to show');
+    assert.ok(/🟠/.test(ages[2].ton), 'past two weeks the message says what it really costs: the work depending on it has been stopped just as long');
+    assert.ok(/🔴/.test(ages[3].ton) && /qu'on évite/.test(ages[3].ton), 'and past a month it names the real thing — that is no longer a pending task, it is a decision being avoided');
+    assert.ok(/jamais compté comme récent/.test(t.ageDesTachesOuvertes([{ numero: 'd', horodatage: 'illisible' }])[0].ton), 'an unreadable date is never quietly treated as recent — that is how an old task disappears');
+
+    // LE FAIT DE CONVERSATION : une idée écrite ou non ne laisse aucune trace disque. Non déclaré
+    // ne vaut jamais « rien à signaler ».
+    assert.ok(t.verifyTasksProcess({}).findings.some((f) => f.check === 'idee-sans-fichier'), 'with nothing declared, the guardian says it cannot verify rather than passing silently');
+    assert.ok(!t.verifyTasksProcess({ ideeEnregistree: true }).findings.some((f) => f.check === 'idee-sans-fichier'), 'and a real declaration clears it');
+  }
+
   // SÉRIE-TEMPORELLE (2026-09-22) — le mécanisme partagé d'historisation, demandé parce que « tous
   // les rapports doivent etre historisés et comparés [...] sinon : grosse perte de valeurs ». Les
   // quatre garde-fous sont testés un par un : sans eux, historiser produirait des tendances
