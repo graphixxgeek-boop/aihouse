@@ -677,6 +677,12 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // ne plus lire la Ronde. Son moment est celui de l'intégration, et il est porté par le process
   // « Intégration d'un nouvel outil » (god-of-all-process), jamais par un calendrier.
   "integration-outil": "Répond à un événement (un outil qui arrive), jamais à un calendrier : hors d'une intégration il n'aurait rien à dire, et une Ronde qui répète « rien à signaler » s'apprend à être sautée. Son obligation vit dans PROCESSES, pas dans CIRCLE_ITEMS",
+  // eval-ia (2026-09-23) : registre créé avec EVAL-IA, le pendant d'EVAL-DEV. Couvert par l'item
+  // `recap-evaluations`, qui produit désormais LES DEUX rapports d'évaluation (étape D de la
+  // Partie 10 du process) — l'un juge celui qui décide, l'autre celui qui exécute, mais c'est un
+  // seul moment de la Ronde. Le crochet pre-commit a refusé le commit qui créait ce dossier sans
+  // cette ligne : le garde-fou a fonctionné exactement comme prévu.
+  "eval-ia": "Couvert par l'item CIRCLE_ITEMS `recap-evaluations`, qui produit les DEUX rapports d'évaluation (EVAL-DEV et EVAL-IA) au même moment de la Ronde — étape D de la Partie 10",
   // tableau-de-bord (2026-09-22) : registre créé le jour où l'item `kpi` a enfin reçu un dossier
   // d'artefacts. Il EST couvert par une vraie entrée CIRCLE_ITEMS — simplement sous un autre nom
   // (l'item s'appelle `kpi`, le registre `tableau-de-bord`), et le rapprochement par nom ne pouvait

@@ -790,3 +790,122 @@ non signalée serait redevenue une étape sautée :
   - la deuxième série de questions (les 5-10 sur l'analyse) — il n'avait nommé que celles sur son
     évaluation ; le process en prévoit deux, sur deux objets différents ;
   - la clôture record-run, qui reste la toute dernière étape.
+
+=====================================================================
+PARTIE 10 — MISE À JOUR DU 2026-09-23 : LA FIN DE RONDE CONSOLIDÉE
+=====================================================================
+
+Cette Partie CONSOLIDE et REMPLACE la séquence de fin de la Partie 9, qui n'avait que quatre jours
+d'avance sur elle. Rien n'y est perdu : tout ce que la Partie 9 posait est repris ici, complété des
+cinq points ajoutés par l'utilisateur le même jour. Elle est désormais LA référence de fin de Ronde.
+
+---------------------------------------------------------------------
+LA SÉQUENCE COMPLÈTE, DANS CET ORDRE EXACT
+---------------------------------------------------------------------
+
+  ÉTAPE A — LES RAPPORTS, EN FICHIERS TXT INDIVIDUELS, avant toute chose.
+     Un fichier par outil, sa sortie réelle et complète. JAMAIS un seul fichier concaténé : un
+     fichier par outil se parcourt, se rouvre, se cite ; un fichier de tout ne se lit pas.
+     EXCEPTION, et elle est la seule : les QUATRE outils qui parlent des tâches ne sont PAS livrés
+     ici. Cf. étape E.
+
+  ÉTAPE B — L'ANALYSE, en HTML aux normes (renderHtmlReport, scripts/html-report.mjs).
+     PAS un récapitulatif : une analyse, suivant la chaîne de l'Article 28 —
+        ANALYSE (constats, chacun avec son chiffre)
+          >> PLAN D'ACTION (chaque constat : RETENU / ÉCARTÉ avec raison / À TRANCHER)
+          >> TÂCHES (celles qui existent réellement dans docs/suivi/, jamais annoncées à vide)
+     Le récapitulatif des items y FUSIONNE, en annexe — plus un livrable séparé.
+     CHAQUE CORRECTIF EST CLASSÉ « OBLIGATOIRE » OU « RECOMMANDÉ » (2026-09-23). Deux critères,
+     le premier primant sur le second :
+        1. PRIORITAIRE — le correctif touche le JEU (Lia, Noé, l'expérience du visiteur) ;
+        2. le défaut fausse une mesure, viole une règle écrite, ou laisse un garde-fou inopérant.
+     Tout le reste est RECOMMANDÉ. Critère mécanique : l'agent l'applique seul, sans redemander.
+
+  ÉTAPE C — LES QUESTIONS D'ÉVALUATION DE L'AGENT, posées à l'utilisateur.
+     Elles viennent AVANT la livraison d'EVAL-IA, jamais après : ses réponses entrent dans le
+     rapport. « Comme toi tu as un jugement sur moi, j'en ai un sur toi, la relation est saine. »
+     C'est aussi ce qui empêche l'agent de corriger sa propre copie (cf. les trois garde-fous
+     ci-dessous).
+
+  ÉTAPE D — LES DEUX RAPPORTS D'ÉVALUATION, en HTML aux normes, livrés À PART l'un de l'autre :
+        ⭐⚖️ EVAL-DEV — l'évaluation de l'utilisateur
+        ⭐🤖 EVAL-IA  — l'évaluation de l'agent
+     Ils ne fusionnent jamais : l'un juge celui qui décide, l'autre celui qui exécute.
+
+  ÉTAPE E — LES QUATRE RAPPORTS DE TÂCHES, livrés ici et pas au début (exception à l'étape A).
+     Raison : ce sont eux qui nourrissent les questions de l'étape F, et un état des tâches lu une
+     heure plus tôt ne sert plus à décider la suite.
+        check-tasks-details      — l'ÉTAT des tâches (zoom et forme au choix)
+        check-suivi-fidelity     — la FIDÉLITÉ du système (clôtures non vérifiées, fichiers absents)
+        tasks-process-guardian   — le PROCESS des tâches (faites jamais closes, âge des ouvertes)
+        (THE-DEEP-READER reste hors Ronde ordinaire : coûteux, agent séparé, sur décision seulement)
+
+  ÉTAPE F — LES QUATRE SÉRIES DE QUESTIONS, dans cet ordre :
+     F1. Les questions forcées sur les points de l'ANALYSE (5 à 10, proportionnelles aux problèmes
+         réellement trouvés — jamais un nombre fixe indépendant du contenu).
+     F2. Les questions de CALIBRAGE sur les correctifs, selon leur classement obligatoire/recommandé.
+     F3. Les questions qui METTENT L'UTILISATEUR EN CAUSE (Étape 5bis, mécanique inchangée) :
+         un point problématique par question, quatre réponses qui n'ont pas la même suite —
+           « Je l'accepte et je vais le corriger »      → CRÉE UNE VRAIE TÂCHE dans docs/suivi/
+           « Je l'accepte, mais je ne corrigerai pas »  → le constat reste remonté, avec sa raison
+           « Je le conteste : le constat est faux »     → c'est LA MESURE qui est en cause, à revérifier
+           « C'est un choix assumé »                    → cesse d'être compté comme un défaut
+         Code : REPONSES_UTILISATEUR + pointsAInterroger() + findEngagementsSansTache()
+         (scripts/angel-of-ia-process.mjs) — findEngagementsSansTache() attrape l'engagement
+         « je corrige » qui ne devient jamais une tâche réelle.
+     F4. Les questions sur LA SUITE, à trois niveaux, construites APRÈS lecture des rapports de
+         l'étape E :
+           · « dans l'instant »  — quelle tâche on traite maintenant
+           · « l'axe »           — sur quel parcours de tâches on se trouve
+           · « le projet »       — où on en est globalement
+         L'AGENT PROPOSE SA LECTURE, L'UTILISATEUR LA CORRIGE (calibré le 2026-09-23) : trancher
+         sur du concret plutôt que sur une page blanche.
+
+  ÉTAPE G — LE DERNIER RAPPEL DE MODÈLE, si et seulement si la réponse à Q1 était « oui » et que la
+     branche choisie en Q2 était « après » : « Voulez-vous maintenant revenir au modèle précédent
+     (dernier rappel) ? » C'est alors LA TOUTE DERNIÈRE QUESTION de la Ronde. Une réponse négative
+     n'est jamais suivie d'insistance.
+
+  ÉTAPE H — LA CLÔTURE : record-run, en tout dernier.
+
+---------------------------------------------------------------------
+EVAL-IA — CE QUI LE COMPOSE, ET LE PIÈGE QU'IL FAUT NOMMER
+---------------------------------------------------------------------
+
+QUI JUGE L'AGENT (décidé le 2026-09-23 : « tout comme moi, avec bien sûr les spécificités qui te
+sont propres ») :
+  · LES 8 JUGES du socle commun, retournés vers lui — ils ne mesurent pas la même chose sur les
+    deux : objectifs-vs-resultats mesure chez l'utilisateur des arbitrages tenus, chez l'agent une
+    discipline tenue. Le socle sert à comparer, jamais à confondre.
+  · LES JUGES PROPRES À L'AGENT, la DISCIPLINE D'EXÉCUTION en tête (nommée explicitement comme
+    critère principal, sans être le seul) : étapes de process sautées, annonces prématurées,
+    corrections à la racine contre rustines, outils construits et jamais lancés.
+  · L'AGENT LUI-MÊME — son propre jugement sur son travail, déclaré comme tel.
+  · LE SYSTÈME DE CLAUDE — la suite de tests, les crochets git, le harnais. Le SEUL juge vraiment
+    neutre de la pièce : les tests passent ou non, le crochet bloque ou non, sans qu'aucun des deux
+    n'ait son mot à dire.
+  · L'UTILISATEUR — via les questions de l'étape C, recueillies avant l'écriture du rapport.
+
+LE PIÈGE, ÉCRIT NOIR SUR BLANC PLUTÔT QUE TU : si l'agent écrit son propre rapport, il corrige sa
+propre copie. Trois garde-fous le neutralisent, et c'est ce qui justifie l'ordre des étapes :
+  1. la moitié MESURABLE ne vient pas de lui (git, tests, gardiens de process) — il ne contrôle pas
+     ce qu'ils disent ;
+  2. la moitié JUGEMENT vient de l'utilisateur, recueillie AVANT qu'il écrive — les questions de
+     l'étape C ne sont pas une politesse dans l'ordre, elles sont ce qui empêche la complaisance ;
+  3. le système de Claude tranche sans aucun des deux.
+
+---------------------------------------------------------------------
+LA RELATION — troisième section courte, dans LES DEUX rapports
+---------------------------------------------------------------------
+
+Concept proposé par l'agent le 2026-09-23 et retenu. Elle ne contient qu'une chose : les frictions
+où les deux rapports pointent LE MÊME ÉVÉNEMENT PAR LES DEUX BOUTS.
+
+Exemple réel du jour : côté EVAL-DEV, « les trois objectifs ratés sont ceux à bénéfice différé » ;
+côté EVAL-IA, « l'agent a annoncé une conformité prématurée pour avancer plus vite ». Ce n'est pas
+deux défauts, c'est UN SEUL — une pression à aller vite, vue des deux côtés. Aucun des deux
+rapports pris isolément ne peut la voir.
+
+Règle qui la garde honnête : une friction n'y entre que si les DEUX rapports portent réellement un
+constat sur elle. Une friction inventée pour remplir la section serait exactement la formalité que
+l'Article 28 interdit aux plans d'action.
