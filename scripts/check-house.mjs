@@ -957,6 +957,36 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
+{
+  // LE CHEMIN PAR DÉFAUT DE waitForPlayback() (2026-09-23, tâche #213) — la dernière fonction non
+  // couverte du dépôt selon AXA-CHECK, et il a fallu la regarder pour comprendre laquelle :
+  // « wait() » n'est pas une fonction nommée, c'est la VALEUR PAR DÉFAUT du paramètre `wait`, la
+  // petite enveloppe autour de setTimeout. Les deux tests ci-dessus injectent chacun leur propre
+  // `wait` — ce qui est juste, un test ne doit pas dormir pour de vrai — et c'est précisément ce
+  // qui laissait le vrai minuteur ne jamais tourner une seule fois.
+  //
+  // CE QUE CE TROU COÛTAIT, et ce n'est pas théorique : c'est le SEUL chemin emprunté en
+  // production. Une faute de frappe dans `setTimeout(resolve, ms)` n'aurait été découverte par
+  // personne avant qu'un visiteur ne voie la maison se figer.
+  //
+  // Durée volontairement minuscule : la boucle décrémente du temps réellement écoulé, donc une
+  // seule itération suffit à l'épuiser. On mesure vraiment l'attente plutôt que de la supposer,
+  // sinon un `wait` qui rendrait immédiatement passerait ce test sans rien prouver.
+  const {waitForPlayback:waitReel}=await import('../.sites-runtime/test-playback.mjs');
+  const avant=Date.now();
+  await waitReel(3,{paused:()=>false,alive:()=>true});
+  const ecoule=Date.now()-avant;
+  assert.ok(ecoule>=1,`the DEFAULT wait must be the real setTimeout and must actually suspend (elapsed ${ecoule}ms): this is the only path production ever takes, and both other tests inject their own wait, so a typo in setTimeout(resolve, ms) would have been found by a visitor watching the house freeze rather than by this suite`);
+  assert.ok(ecoule<2000,`and it must terminate on its own (elapsed ${ecoule}ms): the loop decrements by real elapsed time, so one iteration exhausts a 3ms duration — an assertion that would hang instead of failing is not a test`);
+
+  // Le même chemin par défaut, mais interrompu : alive() faux doit sortir sans jamais attendre.
+  const avantMort=Date.now();
+  await waitReel(5000,{paused:()=>false,alive:()=>false});
+  assert.ok(Date.now()-avantMort<1000,'a dead playback must return immediately even with a huge duration and the real timer in place — the guard is on alive(), never on the clock');
+
+  console.log('Passed: waitForPlayback\'s DEFAULT wait — the real setTimeout wrapper, and the only path production ever takes — is finally executed by the suite (2026-09-23, task #213, the last uncovered function in the repository). AXA-CHECK named it "wait()", which took a read to understand: it is not a named function but the default value of the `wait` parameter, and both pre-existing tests rightly inject their own, which is exactly what left the real timer never running once. The test measures a genuine suspension rather than assuming it (a wait returning immediately would otherwise pass and prove nothing), bounds itself so a regression fails instead of hanging, and covers the dead-playback exit where alive() must win over the clock.');
+}
+
 const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 268'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
