@@ -88,7 +88,58 @@ export const LESSONS = [
 export const REQUIRED_BEATS = [
   "revelation", "dossier retourné", "négociation", "tirages de bonus distincts",
   "hostilité sévère", "humour noir", "désescalade", "bienveillance soutenue", "dispute",
+  // M10 ajouté le 2026-09-22 à la demande de l'utilisateur, en relisant les neuf : un moment
+  // d'intimité proposé par l'un des deux manquait, alors que c'est un des rares beats qui engage
+  // vraiment la relation plutôt que le conflit ou l'enquête.
+  "proposition intime de Noé ou Lia",
 ];
+
+// ————————————————————————————————————————————————————————————————————————
+// RENTABILISER LA SIMULATION — les agents qui peuvent la juger (2026-09-22)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Demande de l'utilisateur, et le constat derrière est juste : « je vois que tous les rapports qui
+// pourraient être présents ne le sont pas [...] que la simu soit bien rentabilisée (comme la ronde
+// est devenue) ».
+//
+// Une simulation coûte une heure de vrai quota. Elle produit un transcript, un journal d'actions,
+// un dossier, des instantanés de mémoire, un poids de contexte par tour, un rendu à l'écran — et
+// jusqu'ici DEUX agents seulement en tiraient quelque chose (EL-PROFESSOR et le KPI). Tout le
+// reste de cette matière, payée au prix fort, était jeté.
+//
+// LA RÈGLE ANTI-RÉPÉTITION que l'utilisateur demande : exactement le mécanisme de la Ronde. Une
+// table déclarée d'items, chacun avec son agent, ce qu'il produit et son coût — plus un garde-fou
+// qui signale tout agent capable de juger une simulation et absent de cette table. On ne
+// redécouvre donc plus à chaque fois « tiens, celui-là aussi aurait pu dire quelque chose ».
+export const SIMULATION_ITEMS = [
+  { id: "el-professor", agent: "EL-PROFESSOR", produit: "note de fidélité à la charte (Article 0) depuis le transcript", cout: "gratuit — relit un texte déjà produit", registre: "docs/el-professor/", existant: true },
+  { id: "kpi", agent: "Tableau de bord interne (KPI)", produit: "les indicateurs chiffrés de ce run, comparables aux précédents", cout: "gratuit", registre: "docs/referentiel/kpi-rapports/", existant: true },
+  { id: "resume-actions", agent: "summarize-simulation-log", produit: "le résumé compact des actions, extrait du journal brut avant de le jeter", cout: "gratuit", registre: "docs/simulations/", existant: true },
+  // LES QUATRE QUI MANQUAIENT — chacun peut réellement juger une simulation, et aucun n'était
+  // sollicité. C'est la réponse à « quels agents peuvent intervenir et produire un rapport ? ».
+  { id: "the-screener", agent: "THE-SCREENER", produit: "la qualité visuelle réelle du rendu pendant la partie", cout: "gratuit — capture Playwright locale", registre: "docs/the-screener/", existant: false, pourquoiManquait: "jamais câblé dans une vraie simulation (tâche #186, ouverte depuis des jours) — et la leçon L2 existe précisément parce que ses captures restaient bloquées sur la modale" },
+  { id: "memory-audit", agent: "memory-audit", produit: "la cohérence de la mémoire narrative persistée de Lia et Noé après la partie", cout: "gratuit — mécanique", registre: "docs/memory-audit/", existant: false, pourquoiManquait: "sa propre fiche dit qu'il n'est vérifiable QUE sur des instantanés réels de partie — donc exactement ici, et nulle part ailleurs" },
+  { id: "memento-weight", agent: "memento weight", produit: "le poids réel du contexte envoyé à Gemini, tour par tour", cout: "gratuit — il enregistre pendant la partie, il suffit de le relire", registre: ".memento-history.json", existant: false, pourquoiManquait: "il écrit pendant chaque simulation et rien ne relisait jamais ce qu'il avait écrit" },
+  { id: "cout-reel", agent: "Smart Conso API", produit: "ce que cette simulation a RÉELLEMENT coûté, à confronter à l'estimation d'avant lancement", cout: "gratuit — relit son propre journal", registre: ".smart-conso-session.json", existant: false, pourquoiManquait: "on consultait Smart Conso API AVANT pour décider, jamais APRÈS pour apprendre — donc l'estimation ne s'est jamais corrigée par l'expérience" },
+];
+
+// LE GARDE-FOU D'ÉVOLUTIVITÉ (Article 24) : un agent capable de juger une simulation et absent de
+// la table ci-dessus doit être signalé, jamais découvert par hasard six mois plus tard. Le critère
+// est déclaré plutôt que deviné — la leçon des trois détecteurs ratés de god le même jour : l'enjeu
+// et la capacité sont des jugements, pas des mesures tirées du texte d'un script.
+export const AGENTS_JUGEANT_UNE_SIMULATION = SIMULATION_ITEMS.map((i) => i.id);
+
+export function findSimulationItemsMissing(items = SIMULATION_ITEMS) {
+  return items.filter((i) => !i.existant);
+}
+
+export function simulationItemsLines(items = SIMULATION_ITEMS) {
+  const manquants = findSimulationItemsMissing(items);
+  const l = [`Agents pouvant juger cette simulation : ${items.length} — ${items.length - manquants.length} réellement sollicité(s).`];
+  for (const i of items) l.push(`  ${i.existant ? "✅" : "✗ "} ${i.agent} — ${i.produit}${i.existant ? "" : `\n        manquait parce que : ${i.pourquoiManquait}`}`);
+  if (manquants.length) l.push("", `⚠️ ${manquants.length} agent(s) capable(s) de juger cette heure de quota et jamais sollicité(s) : autant de matière payée puis jetée.`);
+  return l;
+}
 
 // ————————————————————————————————————————————————————————————————————————
 // CONTRÔLE PRÉALABLE — avant de brûler une heure de quota

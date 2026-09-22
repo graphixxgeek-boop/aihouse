@@ -60,14 +60,63 @@ export const PROCESSES = [
     motsCles: ["simulation", "simu", "full_sim", "article 18", "transcript", "dossier retourné"],
     doc: "docs/regles-de-travail.md",
     gardien: "scripts/process-simulation-guardian.mjs",
+    // ÉTAPES RÉVISÉES AVEC L'UTILISATEUR le 2026-09-22, sur le fichier qu'il a annoté. Chaque
+    // changement porte sa raison ; aucune n'est une initiative de l'agent.
     etapes: [
-      { cle: "conso", libelle: "consulter Smart Conso API avant de brûler du quota", preuve: { dossier: "docs/smart-conso-api/", motif: /\.md$|\.txt$/ } },
-      { cle: "lancement", libelle: "lancer contre un serveur à jour", preuve: null },
-      { cle: "livraison", libelle: "livrer le transcript en fichier joint", preuve: null },
+      // SONDE CORRIGÉE — bug confirmé sur pièces le 2026-09-22 (« vérifie en profondeur cette
+      // partie »). L'ancienne cherchait dans docs/smart-conso-api/, qui ne contient QUE des
+      // signaux de Ronde écrits par CIRCLE-TASKS : une simulation pouvait consulter correctement
+      // sans que la sonde voie rien, et une Ronde la faisait passer au vert sans qu'aucune
+      // simulation n'ait eu lieu. Smart Conso API enregistre ses vraies consultations dans
+      // .smart-conso-session.json — le journal existait, la sonde regardait ailleurs.
+      { cle: "conso", libelle: "consulter Smart Conso API avant de brûler du quota", preuve: { fichier: ".smart-conso-session.json" } },
+      // AJOUTÉE à la demande de l'utilisateur : « rédaction du script de simulation : doit être
+      // normé, à calibrer finement ». Sous-process à part entière, parce que c'est là que se
+      // décide la crédibilité de toute la simulation — notamment la partie où l'agent se fait
+      // passer pour un visiteur, qui doit tenir la route (une version passée répétait les mêmes
+      // phrases aux deux personnages, ce qui se voit immédiatement à la lecture).
+      { cle: "script", libelle: "rédiger le script de simulation selon la norme (sous-process dédié)", preuve: { dossier: "docs/simulations/scripts/", motif: /\.md$|\.mjs$/ } },
+      // LES QUATRE ÉTAPES QUI NE LAISSAIENT AUCUNE TRACE — solution demandée par l'utilisateur
+      // (« trouve une solution »), et elle n'est ni un contournement ni une promesse.
+      //
+      // Le constat de départ : lancer, livrer, sonder et calibrer se passent DANS LA CONVERSATION.
+      // Aucun fichier ne s'écrit, donc aucune sonde ne peut rien voir, donc la moitié du process
+      // reposait sur ma parole. Deux mauvaises réponses étaient tentantes : supprimer ces étapes
+      // (elles comptent parmi les plus importantes), ou les déclarer vérifiées sans l'être.
+      //
+      // La bonne : leur DONNER une trace, au lieu d'en chercher une qui n'existe pas. Chaque
+      // simulation écrit désormais son JOURNAL DE BORD (`<nom>_journal-de-bord.md`), où ces quatre
+      // moments laissent une ligne datée : le commit du serveur au lancement, le fait que le
+      // transcript a été livré et le profil diagnostiqué, les trois réponses au sondage, les
+      // questions de calibrage posées.
+      //
+      // Ce que ça change vraiment : ce n'est toujours pas une preuve que le geste a été BIEN fait
+      // — c'est une preuve qu'il a été fait, datée, et relisible des mois plus tard par un autre
+      // agent (Article 27). C'est exactement le saut qu'on demande partout ailleurs : passer d'une
+      // absence de mesure à une mesure imparfaite mais réelle.
+      { cle: "lancement", libelle: "lancer contre un serveur à jour", preuve: { dossier: "docs/simulations/", motif: /_journal-de-bord\.md$/ } },
+      // ÉTENDUE : le diagnostic du profil de l'utilisateur rejoint la livraison.
+      { cle: "livraison", libelle: "livrer le transcript en fichier joint + le diagnostic du profil de l'utilisateur", preuve: { dossier: "docs/simulations/", motif: /_journal-de-bord\.md$/ } },
       { cle: "archivage", libelle: "archiver transcript + dossier + résumé d'actions", preuve: { dossier: "docs/simulations/", motif: /_transcript\.txt$/ } },
       { cle: "note", libelle: "noter la fidélité à la charte (EL-PROFESSOR)", preuve: { dossier: "docs/el-professor/", motif: /^full_sim\d+\.md$/ } },
+      // UNE ÉTAPE PAR AGENT QUI PRODUIT UN RAPPORT (demande de l'utilisateur : « il faut une étape
+      // pour chaque agent qui va écrire un rapport »). Les quatre ci-dessous étaient capables de
+      // juger une simulation et n'étaient jamais sollicités — une heure de quota dont la matière
+      // était payée puis jetée.
+      { cle: "rendu", libelle: "noter la qualité visuelle réelle (THE-SCREENER)", preuve: { dossier: "docs/the-screener/", motif: /\.md$|\.txt$/ } },
+      { cle: "memoire", libelle: "contrôler la mémoire narrative persistée après la partie (memory-audit)", preuve: { dossier: "docs/memory-audit/", motif: /\.md$/ } },
+      { cle: "poids", libelle: "relire le poids réel du contexte envoyé à Gemini (memento weight)", preuve: { fichier: ".memento-history.json" } },
+      { cle: "cout-reel", libelle: "confronter le coût RÉEL à l'estimation d'avant lancement (Smart Conso API)", preuve: { fichier: ".smart-conso-session.json" } },
       { cle: "index", libelle: "écrire les deux lignes de jugement (simulations + KPI)", preuve: { fichier: "docs/simulations/index.md" } },
-      { cle: "calibrage", libelle: "poser les questions de calibrage avant toute correction", preuve: null },
+      // SONDAGE EN 3 QUESTIONS — écrit noir sur blanc dans l'Article 18 et absent du process
+      // jusqu'ici. Sa trace : la fenêtre de questions laisse une réponse, donc l'étape suivante
+      // (le calibrage) ne peut pas être franchie honnêtement sans lui.
+      { cle: "sondage", libelle: "poser le sondage en 3 questions juste après la livraison, avant toute analyse détaillée", preuve: { dossier: "docs/simulations/", motif: /_journal-de-bord\.md$/ } },
+      { cle: "calibrage", libelle: "poser les questions de calibrage avant toute correction", preuve: { dossier: "docs/simulations/", motif: /_journal-de-bord\.md$/ } },
+      // LA CHAÎNE DE L'ARTICLE 28, appliquée à la simulation : chaque rapport produit ci-dessus
+      // doit porter son plan d'action, et chaque constat retenu sa tâche. C'est ce qui transforme
+      // une heure de quota en travail, plutôt qu'en documents qu'on archive.
+      { cle: "chaine", libelle: "chaque rapport porte son plan d'action, et chaque constat retenu sa tâche (Article 28)", preuve: { dossier: "docs/suivi/sessions/", motif: /\.md$/ } },
     ],
   },
   {

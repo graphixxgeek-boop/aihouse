@@ -3245,8 +3245,16 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(!sansMeta.ok&&sansMeta.constats.some(c=>/ne se surveille plus lui-même/.test(c)),'removing the master process must be detected loudly, never pass silently');
   const gardienDetourne=selfCheck({processes:PROCESSES.map(p=>p.slug==='meta'?{...p,gardien:'scripts/autre.mjs'}:p)});
   assert.ok(!gardienDetourne.ok,'handing the master process to another guardian must be caught: god-of-all-process is the only tool that can honestly watch the dispositif it defines');
+  // LA DISTINCTION DOIT RESTER POSSIBLE, jamais forcément PRÉSENTE (corrigé le 2026-09-22).
+  // L'ancienne assertion exigeait que le process de simulation contienne réellement des étapes
+  // sans trace — vrai quand elle a été écrite (4 sur 7), faux depuis que ces quatre étapes ont
+  // reçu une vraie trace via le journal de bord. Exiger qu'un process garde des angles morts
+  // aurait transformé un test de qualité en frein à l'amélioration : c'est la CAPACITÉ à
+  // distinguer qui doit être garantie, jamais un quota d'ignorance.
   const avancement=processProgress('simulation');
-  assert.ok(avancement.verifiables>0&&avancement.sansTrace.length>0,'a real process must report both what it can verify and what it honestly cannot');
+  assert.ok(avancement.verifiables>0&&Array.isArray(avancement.sansTrace),'a real process must report what it can verify, and always carry the honest list of what it cannot — even when that list is empty');
+  assert.equal(avancement.sansTrace.length,0,'checked live: every step of the simulation process now carries a real trace. The four conversational ones (launch, delivery, survey, calibration) got one rather than being dropped or declared verified without being so — the whole point of the simulation logbook.');
+  assert.ok(processProgress('nuit').sansTrace.length>0,'the night process, by contrast, still has genuinely untraceable steps — and the tool must keep saying so rather than flattening the two cases');
   assert.ok(!checkAgentSessionDeclared({session:{}}).ok&&checkAgentSessionDeclared({session:{model:'x'}}).ok,'a missing session identity must be flagged, since every report produced then carries "Version de Claude : non renseignée"');
   const {preflight,gate,postflight,brief,LESSONS,REQUIRED_BEATS}=await import('../scripts/process-simulation-guardian.mjs');
   const planBon={phase2AutonomousTurns:true,sendsIdentify:true,baseUrl:'http://127.0.0.1:3000',handlesLocks:true,dossierCheckedOnWholeHistory:true,smartConsoConsulted:true,beats:REQUIRED_BEATS};
