@@ -188,6 +188,30 @@ export function buildReportFrame({ tool, title, subtitle, dateLabel, blocks = []
 export const ETATS_CONSTAT = ["retenu", "ecarte", "a-trancher"];
 export const PLAN_ACTION_TITRE = "Plan d'action";
 
+// LE NIVEAU D'UNE TÂCHE (2026-09-23, demande explicite : « chaque rapport suit la logique :
+// CONSTAT >> TÂCHES RECOMMANDÉES OU OBLIGATOIRES »).
+//
+// Deux critères, et le PREMIER PRIME — calibré le même jour, « 3 en priorité et 1 » :
+//   1. le correctif touche le JEU (Lia, Noé, l'expérience du visiteur) ;
+//   2. le défaut fausse une mesure, viole une règle écrite, ou laisse un garde-fou inopérant.
+// Tout le reste est RECOMMANDÉ. Critère mécanique : un outil l'applique seul, sans redemander.
+//
+// Pourquoi le jeu prime : l'Agence est un outil, le site est le produit. Un défaut qui abîme ce que
+// le visiteur voit ne se met jamais en file derrière un défaut d'outillage, si élégant soit-il.
+export const NIVEAUX_TACHE = ["obligatoire", "recommandee"];
+export const RAISONS_OBLIGATOIRE = [
+  { id: "touche-le-jeu", libelle: "touche le jeu (Lia, Noé, l'expérience du visiteur)", prime: true },
+  { id: "fausse-une-mesure", libelle: "fausse une mesure, viole une règle écrite, ou laisse un garde-fou inopérant", prime: false },
+];
+
+// niveauDeLaTache() — le classement, dérivé et jamais deviné. Un constat qui ne déclare aucune des
+// deux raisons est RECOMMANDÉ : l'obligation se justifie, elle ne se suppose pas.
+export function niveauDeLaTache({ toucheLeJeu = false, fausseUneMesure = false } = {}) {
+  if (toucheLeJeu) return { niveau: "obligatoire", raison: RAISONS_OBLIGATOIRE[0].libelle };
+  if (fausseUneMesure) return { niveau: "obligatoire", raison: RAISONS_OBLIGATOIRE[1].libelle };
+  return { niveau: "recommandee", raison: "ni l'un ni l'autre — l'obligation se justifie, elle ne se suppose pas" };
+}
+
 // Construit la section. `constats` : [{ constat, etat, pourquoi?, tache? }].
 export function buildPlanDaction(constats = [], { toolSlug } = {}) {
   const inconnus = constats.filter((c) => !ETATS_CONSTAT.includes(c.etat));
@@ -203,12 +227,76 @@ export function buildPlanDaction(constats = [], { toolSlug } = {}) {
     return { lignes, retenus: [], sansTache: [], vide: true };
   }
   for (const c of constats) {
-    if (c.etat === "retenu") lignes.push(`  → RETENU · ${c.constat}${c.tache ? ` — tâche : ${c.tache}` : " — ⚠️ aucune tâche associée"}`);
+    if (c.etat === "retenu") {
+      // Le NIVEAU accompagne toujours la tâche (2026-09-23) : une tâche sans niveau laisse à la
+      // lecture le soin de deviner si elle presse, et une lecture qui devine se trompe.
+      const n = c.tache ? niveauDeLaTache(c) : null;
+      const etiquette = n ? ` [${n.niveau.toUpperCase()}]` : "";
+      lignes.push(`  → RETENU · ${c.constat}${c.tache ? ` — tâche${etiquette} : ${c.tache}` : " — ⚠️ aucune tâche associée"}`);
+    }
     else if (c.etat === "ecarte") lignes.push(`  ✗ ÉCARTÉ · ${c.constat} — ${c.pourquoi ?? "⚠️ écarté sans raison écrite, ce qui n'est pas une décision"}`);
     else lignes.push(`  ? À TRANCHER · ${c.constat}${c.pourquoi ? ` — ${c.pourquoi}` : ""}`);
   }
   if (sansTache.length) lignes.push("", `⚠️ ${sansTache.length} constat(s) retenu(s) sans tâche associée — un constat retenu qui ne devient pas une tâche est un constat oublié.`);
   return { lignes, retenus, sansTache, vide: false, toolSlug };
+}
+
+// planDactionDepuisEcarts() (2026-09-23) — le raccourci qui rend le câblage tenable.
+//
+// POURQUOI IL EXISTE. La chaîne de l'Article 28 demandait à chaque outil de construire son plan
+// d'action à la main, et le résultat s'est vu : ZÉRO outil sur 65 en produisait un. Une obligation
+// dont le coût d'entrée est « écris vingt lignes » n'est pas respectée, elle est contournée.
+// Avec ceci, un outil qui a déjà une liste d'écarts n'a plus qu'UNE ligne à écrire.
+//
+// CE QU'IL NE FAIT PAS, et c'est délibéré : il ne DEVINE jamais l'état d'un constat. Tout écart
+// trouvé par un scan mécanique est « retenu » — c'est le seul état honnête pour une machine, qui
+// ne peut ni écarter avec raison ni renvoyer à une décision humaine. L'agent qui relit peut
+// requalifier ensuite ; l'outil, lui, ne s'autorise jamais à classer sans suite ce qu'il a trouvé.
+//
+// `toucheLeJeu` et `fausseUneMesure` sont DÉCLARÉS par l'outil appelant, jamais déduits d'un nom de
+// fichier : seul l'outil sait si ce qu'il mesure touche le produit ou la mesure elle-même.
+export function planDactionDepuisEcarts(ecarts = [], { toolSlug, tache, toucheLeJeu = false, fausseUneMesure = false, libelle = (e) => String(e?.message ?? e?.pourquoi ?? e) } = {}) {
+  const constats = (ecarts ?? []).map((e) => ({
+    constat: libelle(e),
+    etat: "retenu",
+    tache: typeof tache === "function" ? tache(e) : (tache ?? "à qualifier par l'agent à la lecture du rapport"),
+    toucheLeJeu,
+    fausseUneMesure,
+  }));
+  return buildPlanDaction(constats, { toolSlug });
+}
+
+// findOutilsSansPlanDaction() (2026-09-23) — le trou réel, et il est béant : la chaîne de
+// l'Article 28 existe en code depuis le 2026-09-22, et DEUX outils sur trente-deux s'en servent.
+// Le principe était posé, le mécanisme construit, et trente rapports continuaient de finir sur un
+// constat sans dire ce qu'il fallait en faire.
+//
+// Ce que cette fonction peut dire, et ce qu'elle ne peut pas : elle voit qu'un script n'appelle
+// jamais buildPlanDaction(), pas si son plan d'action est bon. Le cas grossier, comme toujours —
+// et ici le cas grossier est le cas général.
+//
+// EXEMPTION DÉCLARÉE, jamais devinée : un outil qui ne produit aucun CONSTAT n'a rien à conclure.
+// Un orchestrateur qui relaie ce que d'autres ont dit, un utilitaire de rendu, un compteur — leur
+// demander un plan d'action produirait une section vide à chaque passage, c'est-à-dire du bruit
+// qui apprend à ne plus lire les sections de plan d'action.
+export const SANS_CONSTAT_PROPRE = {
+  "le-coordinateur": "orchestrateur : il relaie ce que les autres ont trouvé, il ne trouve rien lui-même",
+  "circle-tasks": "orchestrateur de la Ronde : les constats appartiennent aux items qu'il lance",
+  "html-report": "utilitaire de rendu, aucun constat",
+  "report-template": "le gabarit lui-même",
+  "tool-usage": "compteur d'usage : il enregistre, il ne juge pas",
+  "tool-brain": "aiguilleur : il recommande un outil, il ne constate rien sur le code",
+  "find-booster": "outil de navigation dans un fichier, aucun verdict",
+  "route-booster": "idem, points de coupe proposés",
+  "ines-official": "aplatit le dépôt en une édition, aucun jugement",
+  "serie-temporelle": "mécanisme partagé d'historisation, aucun constat propre",
+  "integration-outil": "répond à une question posée, ne scanne rien de lui-même",
+};
+
+export function findOutilsSansPlanDaction(scripts = {}, { exemptes = SANS_CONSTAT_PROPRE } = {}) {
+  return Object.entries(scripts)
+    .filter(([slug, source]) => !(slug in exemptes) && !String(source ?? "").includes("buildPlanDaction"))
+    .map(([slug]) => slug);
 }
 
 // LE REPÉRAGE MÉCANIQUE, et c'est lui qui donne sa force au principe : un rapport sans section de

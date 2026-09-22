@@ -18,7 +18,7 @@ import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -361,6 +361,24 @@ function main() {
     console.log(`\n🔴 ${tri.aTrancherObligatoirement.length} écart(s) à vous poser en question OBLIGATOIRE — ce n'est plus à mon appréciation :`);
     for (const e of tri.aTrancherObligatoirement) console.log(`   ${e.fichier ?? e.outil} : ${e.defaut ?? e.pourquoi}`);
   }
+  // CONSTAT >> TÂCHES (2026-09-23) : chaque rapport dit désormais ce qu'il faut FAIRE de ce qu'il
+  // a trouvé, pas seulement ce qu'il a trouvé. `fausseUneMesure` déclaré ici parce qu'un blueprint
+  // qui fuit du jargon propre au projet rend faux ce qu'il prétend : être exportable.
+  const plan = planDactionDepuisEcarts(tri.gardes, { toolSlug: "safe-export", fausseUneMesure: true,
+    // Les trois détecteurs ne rendent pas la même forme : une FUITE porte une occurrence et sa
+    // ligne, un blueprint MAL CONSTRUIT porte un défaut nommé. Un libellé unique qui supposerait
+    // un seul champ affichait « undefined » sur quatre écarts sur onze — un rapport qui dit
+    // « undefined » ne se lit plus, il se survole.
+    libelle: (e) => {
+      const ou = e.fichier ?? e.outil ?? "(source inconnue)";
+      if (e.defaut) return `${ou} — ${e.defaut}${e.consequence ? ` (${e.consequence})` : ""}`;
+      if (e.exemple) return `${ou}:${e.ligne} — jargon propre au projet : « ${String(e.exemple).trim().slice(0, 90)} »`;
+      return `${ou} — ${e.pourquoi ?? "écart sans description : à regarder dans le corps du rapport"}`;
+    },
+    tache: (e) => `rendre ${e.fichier ?? e.outil} réellement exportable` });
+  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of plan.lignes) console.log(l);
+
   const sonde = proposerSondePoussee(tri.gardes);
   console.log(sonde.propose ? `\n🔍 Sonde profonde proposée : ${sonde.raison}` : `\n· Aucune sonde proposée : ${sonde.raison}`);
 

@@ -30,7 +30,7 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -392,6 +392,15 @@ function main() {
     for (const cluster of nearClusters.slice(0, 30)) console.log(`  - ${formatClusterSummary(cluster)}`);
     if (nearClusters.length > 30) console.log(`  ... et ${nearClusters.length - 30} de plus.`);
   }
+
+  // CONSTAT >> TÂCHES (2026-09-23). Ni `toucheLeJeu` ni `fausseUneMesure` : une duplication ne rend
+  // aucun chiffre faux et ne touche pas le produit — elle coûte en maintenance. Donc RECOMMANDÉE,
+  // et c'est la bonne réponse : classer tout en obligatoire viderait le mot de son sens.
+  const plan = planDactionDepuisEcarts([...clusters, ...nearClusters], { toolSlug: "clone-hunter",
+    libelle: (c) => formatClusterSummary(c),
+    tache: () => "factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte" });
+  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of plan.lignes) console.log(l);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) main();
