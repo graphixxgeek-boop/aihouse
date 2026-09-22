@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 267'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 268'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -6247,9 +6247,17 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(titledIndex[1].description.length, 201, 'a text field genuinely longer than the preview length (200 chars) must be truncated to exactly that length plus one real ellipsis character — never the full text, which would make a search result unreadable, and never silently truncated without the "…" marker');
   assert.ok(titledIndex[1].description.endsWith('…'), 'a truncated description must end with a real ellipsis marker so the truncation itself is never mistaken for the genuine end of the text');
 
+  // 2026-09-22 : cette assertion comptait 117 entrées versionnées dans lib/reference.ts. Le journal
+  // de bord ancien a été déplacé dans lib/reference-history.ts (décision explicite : le panneau
+  // Admin garde les vingt versions récentes et va chercher les 151 antérieures à la demande), donc
+  // la masse n'est plus là — elle est ailleurs, intacte. Le test suit le contenu réel plutôt que de
+  // figer un emplacement : les deux fichiers sont vérifiés, et leur SOMME doit rester au-dessus du
+  // seuil, ce qui casserait aussitôt si un déplacement perdait des entrées en route.
   const liveTitledIndex = buildIndex('lib/reference.ts');
-  assert.ok(liveTitledIndex.length >= 100, 'checked live against the real lib/reference.ts (117 real versioned entries counted live): buildIndex() must find the real bulk of them through its titled-array-extraction third code path, not just the function/block paths which find nothing real in this file');
-  assert.ok(liveTitledIndex.some((e) => e.name.includes('Version 1')), 'the real, already-existing "Version 1" entry (the earliest one still recorded) must be found by its real title text');
+  const liveHistoryIndex = buildIndex('lib/reference-history.ts');
+  assert.ok(liveTitledIndex.length + liveHistoryIndex.length >= 190, 'checked live against the two real files: buildIndex() must still find the full bulk of the titled entries through its titled-array-extraction third code path — the split moved them, it never removed any, and this sum is what proves it');
+  assert.ok(liveTitledIndex.length >= 20, 'the file still displayed immediately by the Admin panel must keep its own real entries (27 reference sections + the 20 most recent versions), never become a hollow shell pointing elsewhere');
+  assert.ok(liveHistoryIndex.some((e) => e.name.includes('Version 1')), 'the real, already-existing "Version 1" entry (the earliest one still recorded) must still be found by its real title text — in the history file, where it now lives');
 
   // recommendFindBooster() — répond à la vraie question de l'utilisateur (« est-ce que find-booster
   // pourrait détecter quand un fichier est trop lourd [...] ou c'est toi qui fait cette analyse

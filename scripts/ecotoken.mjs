@@ -615,6 +615,15 @@ export const BUDGETS = {
   "CLAUDE.md": 30_000,
   "docs/regles-de-travail.md": 60_000,
   "docs/referentiel/principes.md": 28_000,
+  // lib/reference.ts (2026-09-22, décision explicite de l'utilisateur : « un budget surveillé,
+  // comme pour la charte »). L'outil signalait depuis ce matin que ce fichier était profilé mais
+  // SANS plafond — donc libre de grossir sans qu'aucun avertissement ne se déclenche. Il avait
+  // atteint 83 000 tokens sans que personne ne s'en aperçoive, dont 89 % d'historique de versions,
+  // et il part entier dans le paquet déployé. Après séparation du journal de bord ancien
+  // (lib/reference-history.ts, chargé seulement à la demande) il retombe à ~15 000 : le plafond est
+  // posé à 25 000, une vraie marge pour les vingt versions glissantes sans laisser revenir la
+  // dérive. Ce qui dépasse se déplace vers le journal, jamais ne se résume ni ne se supprime.
+  "lib/reference.ts": 25_000,
 };
 
 export function checkWeightBudget(charterText, budget = DEFAULT_BUDGET_TOKENS) {
