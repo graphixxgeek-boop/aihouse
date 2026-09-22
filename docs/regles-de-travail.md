@@ -207,6 +207,57 @@ réelle plutôt que de livrer un geste creux. Ce test n'ajoute aucune bureaucrat
 case à cocher par tâche) : c'est une question de jugement à se poser à chaque décision, comme les
 autres principes de vigilance continue (cf. Article 14 de CLAUDE.md).
 
+## 3ter. Toute expérience vécue doit alimenter un outil, jamais rester dans la conversation
+
+*(2026-09-22, demande explicite de l'utilisateur : « pense bien à alimenter les outils dédiés avec
+ton expérience quand c'est pertinent — règle de travail à inscrire ».)*
+
+Une session produit en permanence de l'expérience réelle : un outil qui rend un faux positif, un
+angle mort qu'il ne voit pas, un jugement que l'agent a dû rendre à la main alors qu'un signal
+mécanique aurait suffi, une question posée par un outil dont la réponse vaut une fois pour toutes.
+Cette expérience est **périssable** : dite en conversation, elle disparaît à la session suivante et
+le même défaut se reproduit à l'identique — c'est exactement ce que l'Article 3 de la charte
+interdit (« une règle corrigée une fois ne doit plus jamais se reproduire ailleurs sous une autre
+forme »).
+
+**La règle** : dès qu'une expérience de ce type survient, elle est portée DANS l'outil concerné,
+dans le même commit que le travail qui l'a révélée — jamais notée pour plus tard, jamais laissée
+au seul compte rendu.
+
+**Où porter quoi** — la distinction est nette et se pose à chaque fois :
+
+- **Un signal mécanique, répétable, vérifiable sans jugement** → dans le CODE de l'outil, avec son
+  test. Exemples réels du 2026-09-22 : `findUnnavigableSections()` ne comptait que les sous-titres
+  en dièses, `principes.md` n'en a aucun → un second motif ajouté ; ecotoken demandait s'il fallait
+  déménager une section de 173 tokens → un plancher absolu ajouté.
+- **Un arbitrage, une décision, une raison** → dans le DOCUMENT de référence concerné
+  (`docs/referentiel/<outil>.md`, `points-fragiles.md`, ce document). Un outil n'a pas à porter une
+  décision humaine dans son code.
+- **Ni l'un ni l'autre : une observation isolée dont on ne sait pas encore quoi faire** → dans
+  `docs/referentiel/points-fragiles.md`, explicitement marquée en attente de décision. Jamais
+  perdue, jamais déguisée en règle qu'elle n'est pas encore.
+
+**Toujours un PRINCIPE, jamais un exemple de plus.** Même exigence que le corollaire de l'Article 17
+pour le registre des personnages : la correction cherche la règle que l'outil pourra s'appliquer à
+lui-même au prochain cas jamais rencontré, pas l'ajout d'une ligne à une énumération qui grandira
+indéfiniment sans jamais couvrir le cas suivant.
+
+**Le cas le plus important, et le plus facile à rater : un test qui épingle un défaut.** Quand un
+test échoue après une correction, la question n'est jamais « comment le faire repasser » mais
+« que pinçait-il exactement ». Trois fois le 2026-09-22, un test affirmait un comportement qui
+était en réalité le bug (un « OK 100 % » décerné à un outil que trois Gardiens n'avaient jamais
+regardé ; une question dont l'utilisateur avait déjà donné la réponse ; un comptage d'entrées qui
+suivait un emplacement plutôt qu'un contenu). Un test réécrit dans ces cas-là n'est pas une
+concession : c'est la correction elle-même, et le commentaire doit dire noir sur blanc qu'il
+épinglait un défaut, jamais une intention.
+
+**Limite honnête, à ne jamais masquer** : aucun mécanisme ne peut forcer cette règle — même limite
+que l'obligation tool-brain et que SMART-CONSO-TOKEN, rien n'intercepte une expérience avant qu'elle
+ne soit oubliée. La seule protection est écrite. Ce qui est vérifiable, en revanche, l'est : une
+tâche de `docs/suivi/` qui décrit une trouvaille d'outil doit nommer ce qui a été porté dans l'outil
+et où — un compte rendu qui raconte la trouvaille sans dire ce qu'elle a changé dans le code est le
+signal que la règle n'a pas été appliquée.
+
 ## 4. Git et livraison
 
 - **Commit dès qu'un morceau de travail cohérent passe les tests**, sans attendre une demande
