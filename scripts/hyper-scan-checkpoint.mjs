@@ -39,6 +39,7 @@ import { join } from "node:path";
 import { sh as shBase, printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { verifyRondeProcess } from "./circle-process-guardian.mjs";
+import { printReportHeader } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const INDEX_PATH = join(ROOT, "docs/hyper-scan-checkpoint/index.md");
@@ -118,10 +119,9 @@ export function mechanicalCircleFindings(verifyRondeProcessImpl = verifyRondePro
 }
 
 function main() {
-  printReliabilityNotice("hyper-scan-checkpoint");
   recordCliUsage("hyper-scan-checkpoint");
   const now = new Date().toISOString();
-  console.log("=== HYPER-SCAN-CHECKPOINT — version légère (zéro appel réseau) ===\n");
+  printReportHeader({ tool: "hyper-scan-checkpoint", title: "HYPER-SCAN-CHECKPOINT — version légère (zéro appel réseau)", scriptPath: "scripts/hyper-scan-checkpoint.mjs" });
 
   const indexText = existsSync(INDEX_PATH) ? readFileSync(INDEX_PATH, "utf8") : "";
   const lastCommit = lastCheckpointCommit(indexText);

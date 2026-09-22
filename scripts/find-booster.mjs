@@ -18,6 +18,7 @@ import { readFileSync } from "node:fs";
 import { estimateTokens } from "./smart-conso-token.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReportHeader } from "./report-template.mjs";
 
 const FUNCTION_RE = /^(?:export\s+)?(?:async\s+)?function\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*\(/;
 
@@ -285,7 +286,7 @@ export function recommendFindBooster(filePath, { tokenThreshold = 8000 } = {}) {
 }
 
 function main() {
-  printReliabilityNotice("find-booster");
+  printReportHeader({ tool: "find-booster", title: "find-booster — navigation par concept", scriptPath: "scripts/find-booster.mjs" });
   recordCliUsage("find-booster");
   const [, , target, ...keywordParts] = process.argv;
   if (!target) {

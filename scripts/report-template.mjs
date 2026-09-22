@@ -152,6 +152,27 @@ export function buildReportFrame({ tool, title, subtitle, dateLabel, blocks = []
   };
 }
 
+// L'EN-TÊTE PARTAGÉ, IMPRIMABLE (2026-09-22, ajouté pour rendre la migration des 18 outils non
+// unifiés réalisable sans réécrire leur corps). Beaucoup d'outils impriment leur rapport au fil de
+// l'eau dans le terminal plutôt que de construire un objet complet : leur demander de tout
+// restructurer d'un coup, c'est réécrire dix-huit sorties que quelqu'un lit vraiment, avec le risque
+// d'en abîmer une. Or ce que le gabarit apporte vraiment tient dans l'EN-TÊTE — l'avertissement de
+// fiabilité et la carte d'identité, tous deux venus des registres partagés. Cette fonction imprime
+// exactement cet en-tête en passant par buildReportFrame(), donc sans aucun second gabarit
+// concurrent ; le corps reste la voix de chaque outil.
+//
+// Elle remplace, chez l'appelant, le couple « printReliabilityNotice(slug) + console.log('=== TITRE
+// ===') » qui était jusqu'ici recopié à la main dans chaque script — exactement le genre de
+// duplication que le gabarit existe pour supprimer.
+export function printReportHeader({ tool, title, subtitle, scriptPath, origin, log = console.log } = {}) {
+  const frame = buildReportFrame({ tool, title, subtitle, scriptPath, origin, blocks: [] });
+  for (const phrase of frame.slots) log(phrase + "\n");
+  log(`=== ${frame.title} ===`);
+  if (frame.subtitle) log(frame.subtitle);
+  log("");
+  return frame;
+}
+
 // Rendu TEXTE — le pendant exact de renderHtmlReport(), même cadre, même ordre, même emplacement
 // générique. Volontairement sobre : un rapport texte se lit dans un terminal et se relit par un
 // autre outil, jamais une décoration qui gênerait l'un ou l'autre.

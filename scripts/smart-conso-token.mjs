@@ -23,6 +23,7 @@ import { fileURLToPath } from "node:url";
 import { countTasksSince, lastCoveredTaskNumber } from "./check-suivi-fidelity.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReportHeader } from "./report-template.mjs";
 
 const HISTORY_PATH = fileURLToPath(new URL("../.smart-conso-token-history.json", import.meta.url));
 
@@ -1097,7 +1098,6 @@ export function parseOutcomeArgs(argv) {
 }
 
 function main() {
-  printReliabilityNotice("smart-conso-token");
   // CHARTER-SPY vit dans ce même fichier (extension de SMART-CONSO-TOKEN) mais reste un outil
   // distinct au registre : sa propre phrase, jamais celle de son hôte (tâche #198).
   printReliabilityNotice("charter-spy");
@@ -1148,7 +1148,7 @@ function main() {
   } : undefined;
 
   const advice = assess({ actionType, context, history, now, agentIdentity, investment });
-  console.log("=== SMART-CONSO-TOKEN — avis avant action coûteuse en tokens ===\n");
+  printReportHeader({ tool: "smart-conso-token", title: "SMART-CONSO-TOKEN — avis avant action coûteuse en tokens", scriptPath: "scripts/smart-conso-token.mjs" });
   console.log(`Action envisagée : ${actionType} (destinataire : ${recipient})`);
   if (context) console.log(`Contexte : ${context}`);
   console.log(`Avis : [${advice.verdict}] ${advice.message}`);

@@ -528,7 +528,7 @@ export const RELIABILITY_SCRIPT_FILES = {
   "the-king": "scripts/the-king.mjs", "memory-audit": "scripts/memento.mjs",
   "find-deep-booster": "scripts/route-booster.mjs", "find-brain": "scripts/find-brain.mjs",
   "tool-brain": "scripts/tool-brain.mjs", "find-booster": "scripts/find-booster.mjs",
-  "god-of-all-process": "scripts/god-of-all-process.mjs", "process-simulation-guardian": "scripts/process-simulation-guardian.mjs",
+  "pure-gold-unity": "scripts/pure-gold-unity.mjs",   "god-of-all-process": "scripts/god-of-all-process.mjs", "process-simulation-guardian": "scripts/process-simulation-guardian.mjs",
   "clone-hunter": "scripts/clone-hunter.mjs", "cassandra-rh": "scripts/cassandra-rh.mjs",
   ecotoken: "scripts/ecotoken.mjs",
 };
@@ -547,7 +547,16 @@ export function findHeuristicToolsWithoutNotice(registry = TOOL_RELIABILITY, { s
     // erreur de fond que le reste de ce chantier corrige : une présence approximative lue comme une
     // conformité. Les deux formes comptent : printReliabilityNotice() pour un outil qui écrit en
     // console, reliabilityNotice() pour un outil dont le rapport est un document construit.
-    const attendu = new RegExp(`(print)?[rR]eliabilityNotice\\(\\s*["'\`]${slug}["'\`]`);
+    // TROISIÈME FORME ACCEPTÉE depuis le 2026-09-22 (migration pure-gold-unity) : un outil qui passe
+    // par l'en-tête partagé `printReportHeader({ tool: "<slug>" ... })` n'appelle plus
+    // printReliabilityNotice lui-même — c'est le gabarit qui pose l'avertissement, depuis le même
+    // registre. Le lecteur le voit donc toujours, et c'est la seule chose que ce garde-fou protège.
+    // L'élargissement reste STRICT : le slug doit être le même, exactement comme pour les deux
+    // autres formes — sans quoi un outil pourrait poser l'en-tête d'un voisin et passer pour couvert.
+    // Les quatre portes d'entrée du gabarit comptent : l'en-tête imprimé pour un outil qui écrit en
+    // console, et les trois constructeurs pour un outil dont le rapport est un document rendu
+    // (memory-audit est dans ce cas — une bibliothèque sans console.log, dont l'appelant imprime).
+    const attendu = new RegExp(`(print)?[rR]eliabilityNotice\\(\\s*["'\`]${slug}["'\`]|(printReportHeader|renderTextReport|renderHtmlReport|buildReportFrame)\\(\\s*\\{[^}]*tool:\\s*["'\`]${slug}["'\`]`);
     if (!attendu.test(source)) manques.push({ slug, file, raison: "classé heuristique mais n'affiche jamais son propre avertissement (aucun appel nommant ce slug)" });
   }
   return manques;

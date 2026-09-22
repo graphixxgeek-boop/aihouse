@@ -22,6 +22,7 @@ import { existsSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { sh } from "./lib-shell.mjs";
 import { loadLastRun } from "./circle-tasks.mjs";
+import { printReportHeader } from "./report-template.mjs";
 
 const STATE_PATH = fileURLToPath(new URL("../.the-ghost-session.json", import.meta.url));
 
@@ -103,7 +104,7 @@ function main() {
   const [, , cmd, ...rest] = process.argv;
   if (cmd === "start") {
     const { state, zoomOutputs } = enterAutonomousMode();
-    console.log(`=== THE-GHOST — entrée en mode nocturne autonome ===\n`);
+    printReportHeader({ tool: "the-ghost", title: "THE-GHOST — entrée en mode nocturne autonome", scriptPath: "scripts/the-ghost.mjs" });
     console.log(`Session démarrée à ${new Date(state.startedAt).toISOString()}.\n`);
     for (const zoom of ["en_cours", "elargi", "projet_entier"]) {
       console.log(`--- check-tasks-details : ${zoom} ---`);

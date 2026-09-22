@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { printReportHeader } from "./report-template.mjs";
 
 // CHECK-LEVEL-TARGET (2026-09-19, cf. docs/check-level-target-blueprint.md et
 // docs/referentiel/check-level-target.md). Calcule le niveau de vérification qu'une demande
@@ -207,7 +208,6 @@ export function recentlyChangedSensitiveNodes(changedFiles, nodes = SENSITIVE_NO
 }
 
 function main() {
-  printReliabilityNotice("check-level-target");
   recordCliUsage("check-level-target");
   const text = process.argv.slice(2).join(" ");
   if (!text) {
@@ -229,7 +229,7 @@ function main() {
       console.log("");
     }
   } catch {}
-  console.log("=== CHECK-LEVEL-TARGET ===\n");
+  printReportHeader({ tool: "check-level-target", title: "CHECK-LEVEL-TARGET", scriptPath: "scripts/check-level-target.mjs" });
   console.log(`Niveau retenu : ${result.level.toUpperCase()} (confiance : ${result.confidence})`);
   console.log(`Raison : ${result.reasoning}`);
   console.log(`Outils recommandés : ${result.tools.join(", ")}`);

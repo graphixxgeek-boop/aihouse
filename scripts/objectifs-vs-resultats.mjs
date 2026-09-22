@@ -33,6 +33,7 @@ import { dataRows } from "./lib-markdown-table.mjs";
 import { loadToolUsageHistory } from "./tool-brain.mjs";
 import { parseKpiHistoryCsv, KPI_HISTORY_PATH } from "./kpi-report.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { printReportHeader } from "./report-template.mjs";
 
 const REGISTRY_PATH = new URL("../docs/objectifs-vs-resultats/registre.md", import.meta.url);
 
@@ -187,7 +188,7 @@ function main() {
   const history = loadToolUsageHistory();
   const kpiRows = loadKpiHistoryRows();
   const rows = buildObjectifsReport(markdown, history, { kpiRows });
-  console.log("=== objectifs-vs-resultats — rapport ===\n");
+  printReportHeader({ tool: "objectifs-vs-resultats", title: "objectifs-vs-resultats — rapport", scriptPath: "scripts/objectifs-vs-resultats.mjs" });
   console.log(formatObjectifsReport(rows));
 }
 

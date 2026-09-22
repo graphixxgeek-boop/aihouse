@@ -28,6 +28,7 @@ import { estimateTokens, measureClaudeMdWeight, buildClaudeMdRuleTable, listDate
 import { SENSITIVE_NODES } from "./check-level-target.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReportHeader } from "./report-template.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 export const CHARTER = join(ROOT, "CLAUDE.md");
@@ -1619,7 +1620,13 @@ function lastCommitFilesSafe() {
 }
 
 function main() {
-  printReliabilityNotice("ecotoken");
+  // EN-TÊTE PARTAGÉ (2026-09-22, migration pure-gold-unity) — remplace le couple
+  // printReliabilityNotice + titre écrit à la main. Posé ICI, au point d'entrée, et jamais dans une
+  // sous-commande : la première tentative de migration, automatique, avait visé le titre de la
+  // sous-commande « cout » et transformé son gabarit de chaîne en texte brut, si bien que le script
+  // tournait sans erreur en affichant littéralement « ${...} ». Trouvé en RELISANT la sortie, jamais
+  // en la lançant — un script qui démarre n'est pas un script correct (Article 25).
+  printReportHeader({ tool: "ecotoken", title: "ecotoken — poids réel des documents rechargés", scriptPath: "scripts/ecotoken.mjs" });
   // Même correctif que doc-report.mjs le même soir : sans cet enregistrement, ecotoken reste
   // éternellement « jamais sollicité » quel que soit le nombre de fois où il tourne vraiment.
   recordCliUsage("ecotoken");

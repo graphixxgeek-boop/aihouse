@@ -33,6 +33,7 @@
 // qu'un tableau de nombres bruts (contacts) — même fonction, jamais deux vérifications séparées
 // pour une seule et même règle.
 import { reliabilityNotice } from "./lib-shell.mjs";
+import { renderTextReport } from "./report-template.mjs";
 
 export function checkChronologicalOrder(entries, getRound = (e) => (typeof e === "number" ? e : e?.round)) {
   const violations = [];
@@ -117,16 +118,24 @@ export function checkMemoryCoherence(life, previousLife = null) {
 // affirme et ce que le code sait faire, trouvé en câblant l'avertissement de fiabilité. Cette
 // fonction donne donc à memory-audit la même forme de rapport que ses pairs, avec l'emplacement
 // générique d'en-tête en premier : la phrase vient du registre partagé, jamais réécrite ici.
+// memory-audit est une BIBLIOTHÈQUE, pas un script en ligne de commande : zéro console.log dans
+// tout le fichier, son texte est construit ici puis imprimé par son appelant. C'est pour ça que
+// pure-gold-unity le voyait « non conforme sans aucun indice de rédaction manuelle » — un cas que
+// son propre message invitait à vérifier à la main plutôt qu'à trancher seul, et il avait raison de
+// ne pas trancher : la bonne conversion n'est pas un en-tête imprimé (personne ne l'imprimerait),
+// c'est le rendu partagé appliqué au texte produit (2026-09-22).
 export function buildMemoryAuditReport(findings = []) {
   const lignes = [];
-  const notice = reliabilityNotice("memory-audit");
-  if (notice) lignes.push(notice, "");
-  lignes.push("=== memory-audit — cohérence de la mémoire narrative persistée ===", "");
   if (!findings.length) {
     lignes.push("Aucune incohérence trouvée sur les champs audités — ce qui ne prouve pas qu'il n'y en a aucune (cf. l'avertissement ci-dessus), seulement qu'aucun des motifs surveillés ne s'est déclenché.");
   } else {
     lignes.push(`${findings.length} constat(s) à relire :`, "");
     for (const f of findings) lignes.push(`  · [${f.type}] champ "${f.champ}"${f.violations ? ` — ${f.violations.length} rupture(s) d'ordre` : ""}${f.resets ? ` — ${f.resets.length} remise(s) à zéro suspecte(s)` : ""}`);
   }
-  return lignes.join("\n");
+  return renderTextReport({
+    tool: "memory-audit",
+    scriptPath: "scripts/memento.mjs",
+    title: "memory-audit — cohérence de la mémoire narrative persistée",
+    blocks: [{ type: "note", text: lignes.join("\n") }],
+  });
 }

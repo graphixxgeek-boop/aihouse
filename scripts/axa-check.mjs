@@ -22,6 +22,7 @@ import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { SENSITIVE_NODES, LEVEL_ORDER } from "./check-level-target.mjs";
 import { THEME_PRIMARY_FILE, parseNumstat, churnSignal } from "./always-new-code.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { printReportHeader } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -307,7 +308,6 @@ function loadArchivedSimulationActions() {
 }
 
 function main() {
-  printReliabilityNotice("axa-check");
   recordCliUsage("axa-check");
   const args = process.argv.slice(2);
   if (args[0] === "record-check") {
@@ -331,7 +331,7 @@ function main() {
   const archivedActions = loadArchivedSimulationActions();
   const ledger = loadDepthChecks();
 
-  console.log("=== AXA-CHECK — robustesse et fragilité par fonction (zéro coût additionnel) ===\n");
+  printReportHeader({ tool: "axa-check", title: "AXA-CHECK — robustesse et fragilité par fonction (zéro coût additionnel)", scriptPath: "scripts/axa-check.mjs" });
   let totalFn = 0, totalCovered = 0;
   for (const [file, functions] of Object.entries(perFile)) {
     const score = robustnessScore(functions);

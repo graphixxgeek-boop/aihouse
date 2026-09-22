@@ -13,6 +13,7 @@ import { readFileSync, readdirSync, statSync, existsSync, mkdirSync, writeFileSy
 import { join, relative } from "node:path";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReportHeader } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -91,14 +92,13 @@ export function findTodoMarkers(files) {
 }
 
 function main() {
-  printReliabilityNotice("argus");
   recordCliUsage("argus");
   const lifeSource = readFileSync(join(ROOT, "lib/life.ts"), "utf8");
   const files = walk(join(ROOT, "lib")).concat(walk(join(ROOT, "app"))).concat(walk(join(ROOT, "components")).filter(f => existsSync(join(ROOT, "components"))));
   const dead = findDeadLifeFields(files, lifeSource);
   const todos = findTodoMarkers(walk(ROOT).filter(f => !f.includes("/scratchpad/")));
 
-  console.log("=== ARGUS — partie mécanique (zéro coût API) ===\n");
+  printReportHeader({ tool: "argus", title: "ARGUS — partie mécanique (zéro coût API)", scriptPath: "scripts/check-argus.mjs" });
   console.log(`Champs de life.ts potentiellement jamais lus ailleurs (${dead.length}) :`);
   if (!dead.length) console.log("  Aucun — tous les champs déclarés dans le type Life sont référencés au moins 5 fois dans le projet.");
   for (const d of dead) console.log(`  [${d.confidence}] ${d.field} (${d.uses} occurrence(s) trouvée(s) au total, déclaration + lecture éventuelle incluses)`);

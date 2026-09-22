@@ -30,6 +30,7 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReportHeader } from "./report-template.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -373,7 +374,7 @@ export function formatClusterSummary(cluster) {
 }
 
 function main() {
-  printReliabilityNotice("clone-hunter");
+  printReportHeader({ tool: "clone-hunter", title: "CLONE-HUNTER — blocs de code dupliqués", scriptPath: "scripts/clone-hunter.mjs" });
   recordCliUsage("clone-hunter");
   const clusters = buildDuplicateReport();
   if (!clusters.length) {

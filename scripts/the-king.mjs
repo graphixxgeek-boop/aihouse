@@ -17,6 +17,7 @@ import { recordCliUsage } from "./tool-usage.mjs";
 import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { printReportHeader } from "./report-template.mjs";
 
 const ROOT = process.cwd();
 
@@ -167,7 +168,7 @@ export function philosophyFreshnessDays() {
 // claude-md-weight-signal, cf. circle-tasks.mjs), jamais un second calcul divergent (Article 3).
 
 function main() {
-  printReliabilityNotice("the-king");
+  printReportHeader({ tool: "the-king", title: "THE-KING — veille philosophie et politique", scriptPath: "scripts/the-king.mjs" });
   recordCliUsage("the-king");
   const requestText = process.argv.slice(2).join(" ");
   if (requestText) {

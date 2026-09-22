@@ -16,6 +16,7 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReportHeader } from "./report-template.mjs";
 
 const HEALTH_PATH = fileURLToPath(new URL("../.gemini-key-health.json", import.meta.url));
 const SESSION_PATH = fileURLToPath(new URL("../.smart-conso-session.json", import.meta.url));
@@ -218,7 +219,6 @@ function reportUnconfirmedBursts(healthData, sessionLog) {
 }
 
 function main() {
-  printReliabilityNotice("smart-conso-api");
   recordCliUsage("smart-conso-api");
   const actionType = process.argv[2];
   const now = Date.now();
@@ -226,7 +226,7 @@ function main() {
   const sessionLog = loadJson(SESSION_PATH, { actions: [] });
 
   if (actionType === "scan") {
-    console.log("=== SMART CONSO API — scan des schémas de consommation réels ===\n");
+    printReportHeader({ tool: "smart-conso-api", title: "SMART CONSO API — scan des schémas de consommation réels", scriptPath: "scripts/smart-conso-api.mjs" });
     const findings = scanConsumptionPatterns(healthData, sessionLog, now);
     if (!findings.length) {
       console.log("Aucun schéma coûteux repéré dans l'historique réel accumulé.");

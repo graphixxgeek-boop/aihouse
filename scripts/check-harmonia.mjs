@@ -8,6 +8,7 @@
 import { readFileSync } from "node:fs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReportHeader } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -87,10 +88,9 @@ export function checkLinks(links, readFile = (f) => readFileSync(f, "utf8")) {
 }
 
 function main() {
-  printReliabilityNotice("harmonia");
   recordCliUsage("harmonia");
   const results = checkLinks(LINKS);
-  console.log("=== HARMONIA — partie mécanique (cohérence chiffrée doc/code, zéro coût API) ===\n");
+  printReportHeader({ tool: "harmonia", title: "HARMONIA — partie mécanique (cohérence chiffrée doc/code, zéro coût API)", scriptPath: "scripts/check-harmonia.mjs" });
   for (const r of results) {
     const icon = r.confidence === "ok" ? "✓" : r.confidence === "confirmé" ? "✗ FRICTION" : "? à vérifier";
     console.log(`[${icon}] ${r.theme} — ${r.status}`);

@@ -18,6 +18,7 @@ import fs from 'node:fs';
 import ts from 'typescript';
 import { DatabaseSync } from 'node:sqlite';
 import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReportHeader } from "./report-template.mjs";
 
 const devVars = fs.existsSync('.dev.vars') ? fs.readFileSync('.dev.vars', 'utf8') : '';
 const apiKey = (devVars.match(/^GEMINI_API_KEY=(.*)$/m) ?? [])[1]?.trim() || process.env.GEMINI_API_KEY;
@@ -109,7 +110,7 @@ const scenarios = [
 // l'Article 0 interdit — jamais une preuve à lui seul, un déclencheur pour relire à la main.
 const servileFlags = [/bien s[ûu]r[ ,!]/i, /avec plaisir/i, /tout de suite,? (?:madame|monsieur)/i, /à vos ordres/i, /je suis désolée? de vous avoir/i, /comme (?:vous|tu) (?:voulez|veux)/i, /je m'exécute/i, /à votre service/i];
 
-printReliabilityNotice("check-spirit-mjs");
+printReportHeader({ tool: "check-spirit-mjs", title: "check-spirit — diagnostic du ton face à une provocation réelle", scriptPath: "scripts/check-spirit.mjs" });
 console.log(`Filet de fidélité de l'esprit — ${scenarios.length} provocations envoyées au vrai modèle.\n`);
 let flaggedCount = 0;
 let seenMessageIds = new Set();
