@@ -420,6 +420,7 @@ export const CHANTIER_PRELIMINARY_FILES = {
   // jamais été déclaré — donc jamais vérifié, ni en fraîcheur ni en restitution de valeur.
   "LE-GRAND-ARCHITECTE": { file: "docs/le-grand-architecte-conception.md", match: /grand[- ]architecte/i },
   "Visiteur de simulation": { file: "docs/simulation-visiteur-conception.md", match: /visiteur de simulation|script de simu/i },
+  "Organisation de l'Agence": { file: "docs/organisation-agence-conception.md", match: /organisation de l'agence|catégories transverses|organigramme/i },
 };
 
 // checkChantierFileFreshness() — la « vérification, jamais seulement une intention déclarée »

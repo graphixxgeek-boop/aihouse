@@ -652,6 +652,10 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // frères. Son registre a d'ailleurs fait échouer le crochet pre-commit le jour de sa création,
   // avant même que cette ligne n'existe — findRegistriesMissingFromCircle() a fait exactement son
   // travail, et c'est cette exclusion-ci qui est la vraie réponse, jamais un item de plus.
+  // safe-export (2026-09-22) : septième Gardien sacré par sa COUCHE LÉGÈRE, donc câblé dans le
+  // crochet post-commit et jamais dans la Ronde — même règle que les six autres Gardiens. Son
+  // registre n'archive que les passages PROFONDS, qui eux restent exceptionnels (Article 23).
+  "safe-export": "Gardien sacré du code (couche légère) : tourne automatiquement à CHAQUE commit via le crochet post-commit, jamais un item de Ronde — même régime que les six autres Gardiens. Son scan profond, lui, est exceptionnel et se déclenche sur proposition, jamais sur calendrier",
   "tasks-process-guardian": "gardien de process SECONDAIRE, même règle que process-simulation-guardian et angel-of-ia-process : god-of-all-process centralise et relaie son verdict (décision de l'utilisateur, 2026-09-22 — une seule voix à la Ronde, jamais une par gardien). Son déclencheur est l'état du suivi, pas le calendrier",
   "process-simulation-guardian": "gardien de process SECONDAIRE, même règle qu'angel-of-ia-process ci-dessus : god-of-all-process centralise et relaie son verdict (décision de l'utilisateur, 2026-09-22). Son vrai déclencheur est de toute façon une simulation, jamais le calendrier",
   "find-deep-booster": "outil de découpage à la demande sur UN fichier précis, jamais un balayage périodique de tout le dépôt — exactement la même raison que find-booster ci-dessus",

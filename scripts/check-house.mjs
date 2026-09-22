@@ -5279,6 +5279,69 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.ok(!t.verifyTasksProcess({ ideeEnregistree: true }).findings.some((f) => f.check === 'idee-sans-fichier'), 'and a real declaration clears it');
   }
 
+  // SAFE-EXPORT (2026-09-22, nom donné par l'utilisateur) — septième Gardien sacré par sa COUCHE
+  // LÉGÈRE seulement, même précédent qu'ALWAYS-NEW-CODE : le critère d'appartenance est double,
+  // délivrer un vrai scan ET tourner gratuitement à chaque commit. Le jugement profond coûte du
+  // raisonnement ; ses INDICES sont mécaniques.
+  {
+    const se = await import('../scripts/safe-export.mjs');
+
+    // LES DEUX CIBLES sont deux QUESTIONS différentes, jamais deux périmètres de fichiers : un
+    // fichier peut être parfaitement reprenable et totalement non exportable.
+    assert.deepEqual(Object.keys(se.CIBLES), ['agence', 'projet'], 'the two targets exist');
+    assert.ok(se.CIBLES.agence.chercheFuites && !se.CIBLES.projet.chercheFuites, 'only the Agency target hunts project-specific leaks — asking the project not to mention Lia would be absurd');
+
+    // LA DÉCLARATION, et sa propriété auto-renforçante : un blueprint qui oublie de se déclarer est
+    // lui-même un écart, donc la règle se répare au lieu de se périmer.
+    assert.equal(se.declarationDuFichier('# X — blueprint exportable'), 'générique', 'the repository\'s REAL convention is read, not the one I first assumed: my initial marker looked for "blueprint générique" and declared 21 of 26 blueprints faulty — the number itself was the alarm, since a detector that accuses almost everything is almost always the one at fault');
+    assert.equal(se.declarationDuFichier("*(instanciation propre à ce projet)*"), 'spécifique', 'an instantiation declares itself specific');
+    assert.equal(se.declarationDuFichier('rien du tout'), 'non déclarée', 'and an undeclared file is named as such rather than assumed either way');
+
+    // LES QUATRE DÉTECTEURS, chacun sur son angle. On ne cherche les fuites QUE dans les fichiers
+    // déclarés génériques — « Lia » dans une fiche spécifique est normal, et le signaler noierait
+    // les vrais cas.
+    const lire = (t) => () => t;
+    assert.equal(se.findFuitesDeSpecificite(['x.md'], { readFileImpl: lire('# blueprint exportable\nLia dit bonjour') }).length, 1, 'a project name inside a file declared generic is a real leak — exactly the defect the user caught himself on a deliverable name');
+    assert.equal(se.findFuitesDeSpecificite(['x.md'], { readFileImpl: lire('*(instanciation propre à ce projet)*\nLia dit bonjour') }).length, 0, 'and the same words in a file declared specific are not');
+
+    assert.equal(se.findTermesNonDefinis(['ARGUS'], { exists: (p) => /argus/i.test(p) }).length, 0, 'a term with a real fiche is defined');
+    assert.equal(se.findTermesNonDefinis(['MACHIN-TRUC'], { exists: () => false }).length, 1, 'a proper noun with no reachable definition is a handover debt, exactly as Article 27 says');
+
+    assert.equal(se.findMecanismesSansRaison('export function nu() {}').length, 1, 'an exported function with no comment above it is flagged');
+    assert.equal(se.findMecanismesSansRaison('// la raison\nexport function explique() {}').length, 0, 'and one carrying its reason is not — the point being that a mechanism without its WHY gets deleted by the next agent who believes they are cleaning up');
+
+    // LA DISTINCTION QUI SAUVE CE DÉTECTEUR-LÀ : un outillage CITÉ POUR ÊTRE ÉCARTÉ n'est pas une
+    // dépendance. Le texte qui dit « une IA sans crochet git doit pouvoir travailler » nomme
+    // forcément le crochet git — sans cette nuance, le détecteur signalerait le plus fort des
+    // garde-fous d'exportabilité comme un défaut.
+    assert.equal(se.findDependancesOutillage(['x.md'], { readFileImpl: lire('# blueprint exportable\nil faut appeler TaskCreate') }).length, 1, 'a real dependency on a particular tooling is flagged');
+    assert.equal(se.findDependancesOutillage(['x.md'], { readFileImpl: lire('# blueprint exportable\nfonctionne sans TaskCreate, jamais requis') }).length, 0, 'but naming a tool in order to rule it out is the opposite of depending on it');
+
+    // L'ESCALADE EST INTELLIGENTE PARCE QU'ELLE EXIGE UNE CONCENTRATION. Proposer un scan payant à
+    // chaque avertissement reviendrait à le proposer toujours, donc à n'être jamais écouté.
+    assert.equal(se.proposerSondePoussee([{ fichier: 'a' }, { fichier: 'b' }, { fichier: 'c' }]).propose, false, 'three findings scattered across three files are ordinary noise, never a signal');
+    const concentre = se.proposerSondePoussee([{ fichier: 'a' }, { fichier: 'a' }, { fichier: 'a' }]);
+    assert.ok(concentre.propose && concentre.zone === 'a', 'three findings in the SAME file say something is going on there — that is where a paid scan has a chance of returning more than it costs');
+
+    // LE CHOIX DE ZONE — le mélange demandé : les indices décident, SAUF famine. Sans l'anti-famine,
+    // une zone silencieuse mais pourrie ne serait jamais regardée, puisque zéro indice mécanique ne
+    // veut pas dire zéro problème.
+    const maintenant = Date.parse('2026-09-22T00:00Z');
+    const parIndices = se.choisirZoneAScanner(['x', 'y'], { indices: { x: 5, y: 1 }, dernierScan: { x: '2026-09-20', y: '2026-09-20' }, maintenant });
+    assert.equal(parIndices.zone, 'x', 'with both zones recently scanned, the indices decide');
+    const famine = se.choisirZoneAScanner(['x', 'y'], { indices: { x: 5, y: 0 }, dernierScan: { x: '2026-09-20' }, maintenant });
+    assert.equal(famine.zone, 'y', 'but a zone never scanned jumps the queue even with zero indices — mechanical indices only see part of the problem');
+    assert.equal(se.choisirZoneAScanner(['x'], { indices: { x: 0 }, dernierScan: { x: '2026-09-21' }, maintenant }).zone, null, 'and with no indices anywhere and no starving zone, nothing justifies paying for a scan');
+
+    // LA MÉMOIRE — « écarté sciemment » est le plus utile des trois états : sans lui le rapport se
+    // remplit de bruit déjà tranché et on cesse de le lire, ce qui tue l'outil plus sûrement qu'un
+    // bug. Mais un CORRIGÉ qui réapparaît est une régression, et une régression doit se voir.
+    const memoire = [{ fichier: 'a', defaut: 'X', etat: 'écarté sciemment' }, { fichier: 'b', defaut: 'Y', etat: 'corrigé' }];
+    const filtre = se.filtrerDejaTranches([{ fichier: 'a', defaut: 'X' }, { fichier: 'b', defaut: 'Y' }], memoire);
+    assert.equal(filtre.gardes.length, 1, 'a finding explicitly set aside is not raised again');
+    assert.equal(filtre.regressions.length, 1, 'but a finding previously CORRECTED that came back is surfaced as a regression rather than silently filtered');
+  }
+
   // SÉRIE-TEMPORELLE (2026-09-22) — le mécanisme partagé d'historisation, demandé parce que « tous
   // les rapports doivent etre historisés et comparés [...] sinon : grosse perte de valeurs ». Les
   // quatre garde-fous sont testés un par un : sans eux, historiser produirait des tendances
