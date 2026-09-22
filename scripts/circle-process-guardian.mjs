@@ -90,9 +90,45 @@ export function verifyRondeProcess({
   voixUtilisateurPosee,
   pointsReportes,
   pointsAInterrogerCount = 0,
+  changementModelePosee,
+  changementModeleReponse,
+  retourModeleQuand,
+  retourModeleRappelPose,
 } = {}) {
   const findings = [];
   const add = (check, message) => findings.push({ check, message });
+
+  // 0. CHANGEMENT DE MODÈLE IA (Q1/Q2/Q3) — câblé le 2026-09-22 au soir, et il porte le numéro 0
+  // parce que sa place dans le process est AVANT la question AUTO/PRIME/GOAT, dans les 3 modes sans
+  // exception (docs/regles-de-travail.md, docs/circle-process-detail.txt Partie 4).
+  //
+  // POURQUOI IL EXISTE, ET CE QUI L'A DÉCLENCHÉ. Le protocole était construit depuis le 2026-09-22
+  // et déclarait lui-même sa limite : « aucun garde-fou mécanique ne peut vérifier que Q1/Q2/Q3 ont
+  // bien été posées ». Le soir même, j'ai lancé une Ronde sans poser Q1. Rien ne l'a attrapé — ni
+  // pendant, ni après — et quand l'utilisateur a demandé si cette partie n'avait pas été oubliée,
+  // j'ai d'abord répondu qu'elle n'était pas applicable, en m'appuyant sur une Partie 4 restée
+  // périmée. Un manquement invisible, puis défendu.
+  //
+  // La limite déclarée était vraie pour le mauvais objet : personne ne peut PROUVER mécaniquement
+  // qu'une question a été posée en conversation — mais on peut exiger que l'agent le DÉCLARE, et
+  // compter son silence comme un manquement plutôt que comme un blanc-seing. C'est exactement le
+  // patron de auto-prime-goat juste en dessous, qui vit avec la même impossibilité depuis toujours.
+  //
+  // LA BORNE, identique à celle de la fenêtre AUTO/PRIME/GOAT et pour la même raison : « aucune
+  // fenêtre y compris GOAT/AUTO ne doit être bloquante pour le mode autonome ». Q1 est intégralement
+  // sautée sans utilisateur présent — une question posée à personne n'est pas une vérification,
+  // c'est un blocage.
+  if (!nightAutonomousMode && changementModelePosee !== true) {
+    add("changement-de-modele", "La question Q1 (« Voulez-vous changer de modèle/agent IA pour exécuter cette Ronde ? ») n'a pas été posée avant la fenêtre AUTO/PRIME/GOAT. Elle est obligatoire dans les 3 modes, reposée à chaque Ronde et jamais mémorisée de l'une à l'autre — un « ne t'arrête pas » général ne vaut jamais dispense d'une étape précise. Seul le mode autonome en dispense.");
+  }
+  // Q3 n'est due que si l'utilisateur a réellement répondu « oui » à Q1 : la réclamer autrement
+  // ferait crier le gardien sur le cas le plus fréquent et de loin (pas de changement de modèle),
+  // ce qui apprend à ignorer ses alertes. Les deux branches de Q2 ont chacune leur rappel — « avant »
+  // une pause après les scans, « après » un dernier rappel une fois l'analyse écrite — mais
+  // l'obligation est la même : il est posé, ou il manque.
+  if (!nightAutonomousMode && changementModeleReponse === "oui" && retourModeleRappelPose !== true) {
+    add("retour-de-modele", `Le rappel de retour au modèle précédent (Q3, branche « ${retourModeleQuand ?? "non précisée"} ») n'a pas été posé. Il est systématique une fois le changement accepté, même si rien ne laisse penser à un oubli — et une réponse négative n'est jamais suivie d'insistance.`);
+  }
 
   // 1. AUTO/PRIME/GOAT — DURCI LE 2026-09-22, et la borne autonome élargie le même jour.
   //

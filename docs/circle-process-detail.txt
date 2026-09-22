@@ -310,13 +310,23 @@ circle-process-guardian doit donc distinguer 3 régimes différents, jamais 2 :
       Gardiens + les 15 items "signal" de CIRCLE_ITEMS)
 
 =====================================================================
-PARTIE 4 — INTÉGRATION FUTURE : LE CHANGEMENT DE MODÈLE IA
+PARTIE 4 — LE CHANGEMENT DE MODÈLE IA (ACTIF DEPUIS LE 2026-09-22)
 =====================================================================
 cf. docs/changement-de-modele-ia-conception.md pour le dossier de conception complet (20 questions
-de calibrage posées et répondues, idée mise de côté pour l'instant, rien codé).
+de calibrage posées et répondues).
 
-Résumé pour circle-process-guardian : un futur protocole en 3 questions doit s'insérer AVANT
-l'étape 1 ci-dessus (la question AUTO/PRIME/GOAT) :
+ATTENTION, CETTE PARTIE A MENTI PENDANT UNE JOURNÉE ENTIÈRE. Elle annonçait « INTÉGRATION FUTURE
+[...] idée mise de côté pour l'instant, rien codé » alors que le protocole avait été CONSTRUIT le
+2026-09-22 même (§4 du dossier de conception, et la règle complète dans docs/regles-de-travail.md,
+juste avant le garde-fou AUTO/PRIME/GOAT). Corrigé le 2026-09-22 au soir, après que l'utilisateur a
+demandé si cette partie n'avait pas été oubliée : en la relisant j'ai d'abord répondu qu'elle
+n'était pas applicable — c'était faux, et c'est ce document-ci qui m'avait induit en erreur.
+
+C'est exactement ce que l'Article 13 interdit : un document de référence devenu faux sans qu'aucun
+changement récent ne l'ait touché. Sa conséquence n'était pas théorique : elle m'a fait manquer une
+étape obligatoire à la Ronde du soir même, PUIS m'a fait défendre ce manquement.
+
+Le protocole en 3 questions s'insère AVANT l'étape 1 ci-dessus (la question AUTO/PRIME/GOAT) :
   Q1 — « Voulez-vous changer de modèle/agent IA pour exécuter la Ronde ? »
   Si oui, Q2 — « Voulez-vous revenir à votre modèle actuel, avant ou après l'édition des rapports
   et de l'analyse générale ? »
@@ -332,15 +342,25 @@ l'étape 1 ci-dessus (la question AUTO/PRIME/GOAT) :
   diagnostic de session) doit être utilisée pour repérer un désaccord avec la réponse de
   l'utilisateur, JAMAIS pour sauter l'étape de confirmation manuelle elle-même.
 
-circle-process-guardian devra donc, une fois ce mécanisme construit, vérifier une étape
-supplémentaire : que Q1 a bien été posée à l'étape 1 (sauf mode nocturne autonome), et que le
-rappel de retour (Q3) a bien été honoré avant l'étape 5 ou 6 selon la branche choisie.
+circle-process-guardian VÉRIFIE désormais cette étape (ajoutée le 2026-09-22 au soir) : que Q1 a
+bien été posée à l'étape 1 (sauf mode nocturne autonome), et que le rappel de retour (Q3) a bien
+été honoré selon la branche choisie en Q2.
+
+POURQUOI IL A FALLU LA CÂBLER, et c'est la vraie leçon : la règle déclarait elle-même « aucun
+garde-fou mécanique ne peut vérifier que Q1/Q2/Q3 ont bien été posées ». Cette limite était honnête
+mais elle n'était pas une fatalité — elle valait pour le FAIT de conversation (personne ne peut
+prouver mécaniquement qu'une question a été posée), pas pour l'OBLIGATION de le déclarer. Le même
+patron que auto-prime-goat règle le problème : l'agent qui pilote FOURNIT le fait, et son silence
+compte comme un manquement plutôt que comme un blanc-seing. Article 27 : « Aucune obligation ne
+repose sur la seule mémoire d'un agent. » Celle-ci y reposait, et elle est tombée au premier
+essai.
 
 =====================================================================
 PARTIE 5 — CE QUE circle-process-guardian DOIT VÉRIFIER, RÉCAPITULATIF
 =====================================================================
 1. La question AUTO/PRIME/GOAT a bien été posée (jamais sautée).
-2. (futur) La question de changement de modèle a bien été posée en premier, sauf mode nocturne.
+2. La question de changement de modèle (Q1) a bien été posée en PREMIER, avant AUTO/PRIME/GOAT,
+   sauf mode nocturne/autonome — vérifié depuis le 2026-09-22 au soir, plus « (futur) ».
 3. Chaque item coché a bien été exécuté (comparé à la liste réellement cochée en conversation —
    circle-process-guardian ne peut pas le déduire seul, l'agent doit lui fournir la liste réelle).
 4. Chaque item marqué producesReport:true a bien produit son artefact attendu (fichier existant,

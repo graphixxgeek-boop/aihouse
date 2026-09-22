@@ -1734,6 +1734,33 @@ CIRCLE_ITEMS est recommandé par défaut. Remplace le jugement refait à la main
 (#225/#231) par une règle codée, testée et ajustable si la pratique réelle diverge un jour — jamais
 gravée dans le marbre pour autant.
 
+**RÈGLE GÉNÉRALE DE LA RONDE, posée explicitement par l'utilisateur le 2026-09-22 au soir :
+« tu respectes tout le process quand je te dis de lancer la ronde, sauf indication explicite ou
+demande explicite de ma part ».**
+
+Ce qu'elle tranche, et pourquoi il a fallu la poser. La veille au soir, l'utilisateur m'avait
+demandé d'enchaîner sans m'arrêter. J'ai lu cette phrase comme une dispense et j'ai sauté DEUX
+étapes obligatoires : la question de changement de modèle (Q1, ci-dessous) et la fenêtre
+AUTO/PRIME/GOAT. Les deux existaient, les deux étaient écrites, aucune des deux n'avait été
+explicitement levée.
+
+**La distinction, et elle est stricte** : une consigne générale sur le RYTHME (« enchaîne », « ne
+t'arrête pas », « continue ») ne vaut JAMAIS dispense d'une étape précise du process. Seule une
+indication portant sur CETTE étape-là la lève (« pas besoin de me demander pour le modèle cette
+fois », « lance en AUTO directement »). Dans le doute, on pose la question : elle coûte un clic,
+une étape sautée coûte une Ronde dont personne ne sait plus ce qu'elle valait.
+
+**Corollaire sur ma propre latitude** : je n'ai pas le pouvoir de m'auto-dispenser en écrivant une
+raison. L'Article 26 autorise à sauter une étape « pour une raison qu'on écrit » — cette règle-ci
+retire ce droit pour les étapes de la Ronde en présence de l'utilisateur. Écrire ma raison reste
+obligatoire si je saute quand même quelque chose, mais ce n'est plus ce qui rend le saut légitime.
+
+**Et la borne, posée dans le même échange, qui ne bouge jamais** : rien de tout cela ne s'applique
+au mode autonome. « Aucune fenêtre y compris GOAT/AUTO ne doit être bloquante pour le mode
+autonome » — une question posée à personne n'est pas une vérification, c'est un arrêt. Les deux
+régimes se partagent le terrain sans recouvrement : présent, on demande TOUJOURS ; absent, on ne
+demande JAMAIS.
+
 **changement-de-modele-IA : le protocole en 3 questions est construit (2026-09-22).** Conception
 complète dans `docs/changement-de-modele-ia-conception.md` (20 questions de calibrage), reprise ce
 soir sur demande explicite de l'utilisateur (« on enchaine tout de suite »). Avant même la question
@@ -1759,10 +1786,21 @@ de Q1/Q3 : l'agent pose toujours la question, même s'il pense déjà connaître
 simple note ajoutée au récapitulatif nommant quel modèle a réellement exécuté la Ronde, jamais un
 champ obligatoire (silence total, comportement inchangé, si l'agent qui pilote ne le fournit pas).
 **Portée** : uniquement CIRCLE-TASKS pour l'instant, comme calibré — pas la simulation ni les audits
-coûteux (piste ouverte, jamais engagée). **Reste non construit, assumé** : aucun garde-fou mécanique
-ne peut vérifier que Q1/Q2/Q3 ont bien été posées en conversation (même limite honnête que le reste
-de ce paysage) — circle-process-guardian ne couvre pas ce protocole aujourd'hui, une extension
-future si le besoin s'en fait sentir.
+coûteux (piste ouverte, jamais engagée). **Garde-fou mécanique ajouté le 2026-09-22 au soir** (cette clause disait jusque-là
+« reste non construit, assumé : aucun garde-fou mécanique ne peut vérifier que Q1/Q2/Q3 ont bien été
+posées » — la limite était vraie pour le mauvais objet, et elle est tombée au premier essai) :
+personne ne peut PROUVER mécaniquement qu'une question a été posée en conversation, mais on peut
+exiger que l'agent le DÉCLARE, et compter son silence comme un manquement plutôt que comme un
+blanc-seing. C'est le patron d'AUTO/PRIME/GOAT, qui vit avec la même impossibilité depuis toujours.
+`verifyRondeProcess()` (`scripts/circle-process-guardian.mjs`) vérifie donc désormais deux faits :
+`changement-de-modele` (Q1 posée, sauf mode autonome) et `retour-de-modele` (le rappel Q3 posé, dû
+seulement si la réponse à Q1 était « oui » — le réclamer autrement ferait crier le gardien sur le
+cas le plus fréquent, ce qui apprend à ignorer ses alertes). CE QUI L'A RENDU NÉCESSAIRE : le soir
+même de sa construction, j'ai lancé une Ronde sans poser Q1 ; rien ne l'a attrapé, et quand
+l'utilisateur a demandé si cette partie n'avait pas été oubliée, j'ai d'abord répondu qu'elle
+n'était pas applicable — en m'appuyant sur une Partie 4 de `docs/circle-process-detail.txt` restée
+périmée. Un manquement invisible, puis défendu. Article 27 : « aucune obligation ne repose sur la
+seule mémoire d'un agent ».
 
 **Garde-fou en 3 modes AUTO/PRIME/GOAT, non négociable (2026-09-20, trouvé nécessaire après un vrai
 manquement : une Ronde entière exécutée sans jamais montrer de fenêtre à cocher — l'agent avait

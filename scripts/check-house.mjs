@@ -6847,6 +6847,23 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok((vrp({ autoPrimeGoatAsked: false, checkedItemIds: deuxItems, executedItemIds: deuxItems, nightAutonomousMode: false }).findings ?? []).some((f) => f.check === 'auto-prime-goat'), 'with the user present, skipping the AUTO/PRIME/GOAT window is a gap even when he asked not to be stopped — his own ruling on 2026-09-22');
   assert.ok(!(vrp({ autoPrimeGoatAsked: false, checkedItemIds: deuxItems, executedItemIds: deuxItems, nightAutonomousMode: true, pointsReportes: [], pointsAInterrogerCount: 0 }).findings ?? []).some((f) => f.check === 'auto-prime-goat'), 'in autonomous mode it must NEVER fire: "aucune fenêtre y compris GOAT/AUTO ne doit être bloquante pour le mode autonome" — a window put to nobody is not a check, it is a stall');
 
+  // changement-de-modele / retour-de-modele (2026-09-22, soir) — le protocole Q1/Q2/Q3 rendu
+  // vérifiable. Il était construit et déclarait lui-même qu'aucun garde-fou ne pourrait le couvrir ;
+  // il est tombé le soir même, sans que rien ne le signale. Les cinq assertions couvrent les cinq
+  // régimes réels, dont les deux qui doivent rester SILENCIEUX — un gardien qui crie sur le cas
+  // ordinaire (pas de changement de modèle) apprend à être ignoré.
+  const { verifyRondeProcess: vrp2 } = await import('../scripts/circle-process-guardian.mjs');
+  const deuxIds = ['profil', 'kpi'];
+  const socle = { checkedItemIds: deuxIds, executedItemIds: deuxIds, autoPrimeGoatAsked: true, voixUtilisateurPosee: true };
+  const aLeCheck = (r, c) => (r.findings ?? []).some((f) => f.check === c);
+  assert.ok(aLeCheck(vrp2({ ...socle, changementModelePosee: false }), 'changement-de-modele'), 'Q1 not asked with the user present is a gap: it is mandatory in all 3 modes, and a general "do not stop" never dispenses from a specific step — the user ruled this explicitly on 2026-09-22 after I had treated it as a dispensation');
+  assert.ok(!aLeCheck(vrp2({ ...socle, changementModelePosee: true, changementModeleReponse: 'non' }), 'changement-de-modele'), 'Q1 asked and answered no is the ordinary case and must stay silent');
+  assert.ok(!aLeCheck(vrp2({ ...socle, changementModelePosee: true, changementModeleReponse: 'non' }), 'retour-de-modele'), 'no model change means no return reminder is due — claiming one would make the guardian cry on the most frequent case of all, which teaches people to ignore it');
+  assert.ok(aLeCheck(vrp2({ ...socle, changementModelePosee: true, changementModeleReponse: 'oui', retourModeleQuand: 'après' }), 'retour-de-modele'), 'once a model change is accepted, the Q3 return reminder is systematic — posed even when nothing suggests a forgotten switch');
+  assert.ok(!aLeCheck(vrp2({ ...socle, changementModelePosee: true, changementModeleReponse: 'oui', retourModeleQuand: 'après', retourModeleRappelPose: true }), 'retour-de-modele'), 'and it clears once actually posed');
+  const autonomeRonde = vrp2({ ...socle, nightAutonomousMode: true, pointsReportes: [], pointsAInterrogerCount: 0 });
+  assert.ok(!aLeCheck(autonomeRonde, 'changement-de-modele') && !aLeCheck(autonomeRonde, 'retour-de-modele'), 'in autonomous mode NEITHER may fire: "aucune fenêtre y compris GOAT/AUTO ne doit être bloquante pour le mode autonome" — a question put to nobody is a stall, never a check');
+
   const fakeReadFile = (path) => {
     if (path.includes('tool-with-html')) return 'import { renderHtmlReport } from "./html-report.mjs";';
     if (path.includes('tool-plain-text')) return 'console.log("no html rendering here");';
@@ -8250,6 +8267,11 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     // l'ajout de l'étape, et c'était le comportement voulu — une Ronde n'est « parfaitement propre »
     // que si TOUS les faits sont fournis, jamais si le gardien en ignore un.
     voixUtilisateurPosee: true,
+    // Même histoire, même soir, et le test a de nouveau échoué à l'ajout — voulu. Le protocole
+    // Q1/Q2/Q3 (changement de modèle IA) rejoint les faits de conversation obligatoires : la réponse
+    // « non » est le cas ordinaire et ne déclenche AUCUN rappel de retour, c'est bien ce qu'on
+    // vérifie ici en la fournissant telle quelle plutôt qu'en omettant le champ.
+    changementModelePosee: true, changementModeleReponse: 'non',
     checkedItemIds: ['argus-scan'], executedItemIds: ['argus-scan'],
     circleItems: [{ id: 'argus-scan', producesReport: true }],
     reportFolders: { 'argus-scan': 'docs/argus' },
