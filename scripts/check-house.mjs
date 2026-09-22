@@ -6259,6 +6259,25 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 }
 
 {
+  // THE-SCREENER : UNE CAPTURE MASQUÉE N'EST PAS UNE CAPTURE RÉUSSIE (tâche #186, 2026-09-22 —
+  // premier déclenchement RÉEL du mécanisme contre une vraie partie, ce qui n'était jamais arrivé
+  // depuis sa construction malgré 4 simulations complètes). L'image ne montrait QUE la popup de
+  // pseudo, toute la scène floutée derrière, et l'outil annonçait « Capture réussie ». Pour un outil
+  // dont le rôle est de NOTER un rendu graphique, c'est un faux succès qui aurait fait poser une
+  // note sur une image sans rien à noter — la même famille d'erreur que tout le reste de la soirée.
+  const { buildScreenerCaptureHtml } = await import('../scripts/the-screener-capture.mjs');
+
+  const masquee = buildScreenerCaptureHtml({ ok: true, path: '/tmp/x.png', masque: true, raison: 'une modale couvre la scène' }, { url: 'http://x/' });
+  assert.ok(masquee.includes('MASQUÉE'), 'a capture blocked by a modal must be labelled as such in its own report — never delivered as an ordinary screenshot someone would then grade');
+  assert.ok(masquee.indexOf('MASQUÉE') < masquee.indexOf('<img'), 'the warning must come BEFORE the image: a reader must know the picture is worthless for grading before looking at it, never after');
+  const nette = buildScreenerCaptureHtml({ ok: true, path: '/tmp/x.png', masque: false }, { url: 'http://x/' });
+  assert.ok(!nette.includes('MASQUÉE') && nette.includes('<img'), 'a genuinely clear capture must carry no warning at all — the caveat appears only where it is true');
+  const ratee = buildScreenerCaptureHtml({ ok: false, error: 'timeout' }, { url: 'http://x/' });
+  assert.ok(ratee.includes('Échec') && ratee.includes('timeout') && !ratee.includes('<img'), 'a real failure must stay distinct from a masked capture — "no image at all" and "an image showing nothing" are two different facts, never merged into one');
+  console.log('Passed: THE-SCREENER (task #186) now tells a MASKED capture from a real one — the modal that covers the whole scene while the game has no observer yet, found the very first time the mechanism ran against a real session — and says so before the image rather than after, while keeping a genuine failure distinct from a picture that simply shows nothing worth grading.');
+}
+
+{
   // memory-audit (tâche #169, 2026-09-21 ; surnom retenu le même soir à la place de l'ombrelle
   // "MEMENTO", cf. docs/referentiel/memory-audit.md) — cible EXCLUSIVEMENT les Personnages (Lia/Noé),
   // jamais les membres de l'équipe. Testé contre les VRAIES formes de lib/life.ts trouvées par

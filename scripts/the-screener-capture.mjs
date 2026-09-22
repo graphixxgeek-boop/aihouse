@@ -30,8 +30,24 @@ export async function captureOnce(url, outPath) {
     // Laisse le temps au rendu Three.js de peindre au moins une frame réelle avant de capturer —
     // une capture prise trop tôt attraperait un canvas encore vide, jamais utile à noter.
     await page.waitForTimeout(1500);
+    // UNE CAPTURE MASQUÉE N'EST PAS UNE CAPTURE RÉUSSIE (2026-09-22, tâche #186, trouvé au tout
+    // premier lancement réel contre une vraie partie — le mécanisme n'avait jamais été déclenché
+    // pendant une simulation depuis sa construction). L'image rendue ne montrait QUE la popup de
+    // pseudo, toute la scène floutée derrière, et l'outil annonçait fièrement « Capture réussie ».
+    // Pour un outil dont le rôle est de NOTER un rendu graphique, c'est un faux succès : il aurait
+    // fait poser une note sur une image où il n'y a rien à noter. Même famille d'erreur que le reste
+    // de cette soirée — une absence de mesure lue comme une mesure.
+    //
+    // La cause n'est pas un bug d'affichage : la popup de pseudo reste ouverte tant que la partie
+    // n'a pas d'observateur (`story.observer`), donc pendant TOUTE la phase 1 d'une simulation. Le
+    // bon moment pour capturer est la phase 2, une fois l'observateur entré — ce que ce diagnostic
+    // dit désormais explicitement plutôt que de laisser l'appelant le deviner.
+    const overlay = await page.locator(".nickname-overlay").count().catch(() => 0);
     await page.screenshot({ path: outPath });
-    return { ok: true, path: outPath };
+    if (overlay > 0) {
+      return { ok: true, path: outPath, masque: true, raison: "une fenêtre modale (pseudo, avertissement ou reprise) couvre la scène — l'image est prise, mais il n'y a rien de graphique à y noter. La popup de pseudo reste ouverte tant que la partie n'a pas d'observateur : capturer pendant la phase 2 d'une simulation, jamais la phase 1." };
+    }
+    return { ok: true, path: outPath, masque: false };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   } finally {
@@ -46,7 +62,12 @@ export async function captureOnce(url, outPath) {
 // affiché comme un échec, jamais masqué par une image absente sans explication.
 export function buildScreenerCaptureHtml(result, { url } = {}) {
   const blocks = result.ok
-    ? [{ type: "image", src: basename(result.path), caption: `Capture de ${url ?? "?"}` }]
+    ? [
+        // L'avertissement AVANT l'image, jamais sous elle : une note posée sur une capture masquée
+        // ne vaut rien, et un lecteur doit le savoir avant de regarder.
+        ...(result.masque ? [{ type: "note", text: `⚠️ Capture MASQUÉE, inutilisable pour une note graphique : ${result.raison}` }] : []),
+        { type: "image", src: basename(result.path), caption: `Capture de ${url ?? "?"}` },
+      ]
     : [{ type: "note", text: `Échec de la capture : ${result.error ?? "raison inconnue"}.` }];
   return renderHtmlReport({
     title: "THE-SCREENER — capture",
@@ -67,7 +88,11 @@ async function main() {
   console.log(`=== THE-SCREENER — test du mécanisme de capture ===\n`);
   console.log(`Cible : ${url}`);
   const result = await captureOnce(url, outPath);
-  if (result.ok) {
+  if (result.ok && result.masque) {
+    console.log(`Capture prise mais MASQUÉE : ${result.path}`);
+    console.log(`  → ${result.raison}`);
+    console.log(`  → Aucune note graphique ne doit être posée sur cette image.`);
+  } else if (result.ok) {
     console.log(`Capture réussie : ${result.path}`);
   } else {
     console.log(`Échec de la capture : ${result.error}`);

@@ -1,14 +1,9 @@
-# THE-SCREENER — index des rapports
+# THE-SCREENER — registre des passages
 
-*(Cf. `docs/referentiel/the-screener.md` pour la méthode complète et `docs/the-screener-blueprint.md`
-pour le principe générique. Un fichier de notation par simulation, accompagné des images capturées
-associées (Playwright, 2 captures maximum) — une entrée par passage, dans l'ordre où les rapports
-sont produits. Registre créé le 2026-09-20 : ce dossier existait déjà comme cible de sortie du
-mécanisme de capture (`scripts/the-screener-capture.mjs`, créé lazily au premier vrai lancement),
-mais son `index.md` — le registre attendu par le statut Agent, cf. docs/regles-de-travail.md — était
-resté absent jusqu'ici, un écart réel trouvé par `checkAgentOnboarding()` en instituant le badge
-🎖️ ci-dessus.)*
+*(Une ligne par passage RÉEL. Longtemps vide malgré plusieurs simulations complètes : le mécanisme
+de capture était testé en isolation mais n'avait jamais été déclenché PENDANT une partie — trou
+process reconnu dans `docs/referentiel/points-fragiles.md`, fermé le 2026-09-22.)*
 
-Aucun passage archivé pour l'instant — la note reste strictement indicative (jamais un verdict qui
-prime sur l'appréciation de l'utilisateur, cf. `docs/referentiel/the-screener.md`) et un échec
-technique de capture ne bloque jamais le protocole de l'Article 18.
+| Date | Contexte | Capture | Note graphique | Ce qu'on a appris |
+|---|---|---|---|---|
+| 2026-09-22 | full_sim18, phase 1 (round ~23), mode nocturne autonome | `test-capture-1790054640386.png` | **aucune — capture MASQUÉE, rien à noter** | Premier déclenchement réel depuis la construction de l'outil. La capture ne montre QUE la popup « Comment vous appeler ? », toute la scène floutée derrière. Cause : cette popup reste ouverte tant que la partie n'a pas d'observateur (`story.observer`), donc pendant TOUTE la phase 1 d'une simulation. **Le bon moment de capture est la phase 2**, une fois l'observateur entré. L'outil annonçait « Capture réussie » sur cette image — corrigé le jour même : il distingue désormais une capture masquée d'une vraie, et refuse qu'on pose une note dessus. |
