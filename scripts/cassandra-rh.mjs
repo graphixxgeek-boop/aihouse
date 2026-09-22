@@ -15,7 +15,7 @@
 // n'est recalculée ici, jamais une seconde version qui pourrait diverger de l'originale.
 import { readFileSync, existsSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { parseToolsTable, slugifyAgentName, checkAgentOnboarding } from "./le-coordinateur.mjs";
+import { parseToolsTable, slugifyAgentName, checkAgentOnboarding, loadBadgeCeremonyHistory } from "./le-coordinateur.mjs";
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
 import { AGENT_CATEGORIES, assertNotAPersonnage, sh } from "./lib-shell.mjs";
 import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson } from "./tool-usage.mjs";
@@ -210,13 +210,39 @@ export function advanceRecruitmentStage(candidate, decision, now = Date.now()) {
 // checkAgentOnboarding(), le-coordinateur.mjs) — jamais un second appel à ces fonctions depuis ici,
 // exactement la décision actée le 2026-09-22 (« LE-COORDINATEUR garde ce rôle technique, CASSANDRA
 // supervise »).
-export function badgeOversightSummary(badgeResults) {
+// `etats` (2026-09-22) : l'état de badge retenu au dernier passage, tel que le journal local de la
+// cérémonie le garde (`.badge-ceremony-history.json`, champ `etats`). Sans lui, CASSANDRA ne voyait
+// que la PHOTO du jour — certifié / pas certifié — et ne pouvait donc jamais dire ce qui avait
+// BOUGÉ depuis la dernière fois. Un badge qui se dégrade (un outil qui perd une validation, une
+// couverture qui retombe) est pourtant exactement ce qu'une supervision RH doit remonter, et c'est
+// ce que la cérémonie annonce désormais de son côté : elle superviserait sans voir l'événement.
+// Jamais un second calcul — l'état comparé est celui que badgeState()/announceBadgeChange()
+// écrivent déjà, lu tel quel.
+export function badgeOversightSummary(badgeResults, etats = null) {
   const certified = badgeResults.filter((r) => r.complet);
   const notCertified = badgeResults.filter((r) => !r.complet);
+  const changements = [];
+  if (etats) {
+    for (const r of badgeResults) {
+      const avant = etats[r.slug];
+      if (!avant) continue; // jamais observé avant : une absence, jamais un changement
+      const apres = { badge: r.badge, tier: r.couverture?.tier, gaps: r.gaps?.length ?? 0 };
+      if (avant.badge !== apres.badge || avant.tier !== apres.tier || avant.gaps !== apres.gaps) {
+        // Une dégradation n'est pas seulement « une validation de plus qui manque » : perdre le
+        // palier « OK 100% » en est une aussi, même à nombre de validations constant. Les deux
+        // comptent, sinon la moitié des mauvaises nouvelles passerait pour un changement neutre.
+        const perdOK100 = avant.tier === "OK 100%" && apres.tier !== "OK 100%";
+        changements.push({ agentName: r.agentName, avant, apres, degradation: (apres.gaps ?? 0) > (avant.gaps ?? 0) || perdOK100 });
+      }
+    }
+  }
   return {
     total: badgeResults.length,
     certified: certified.length,
     notCertified: notCertified.map((r) => ({ agentName: r.agentName, gaps: r.gaps })),
+    // `null` (jamais d'états fournis) est distinct de `[]` (états fournis, rien n'a bougé) — la
+    // même discipline absence/mesure que partout ailleurs dans ce réseau d'outils.
+    changements: etats ? changements : null,
   };
 }
 
@@ -426,7 +452,7 @@ function collectRealCassandraData({ withCoverage = false } = {}) {
       lastVerifiedAt: new Date().toISOString().slice(0, 10),
     }
     : onboardingContext);
-  const badgeSummary = badgeOversightSummary(badgeResults);
+  const badgeSummary = badgeOversightSummary(badgeResults, loadBadgeCeremonyHistory().etats ?? null);
   const coverageGaps = perSlugCoverage ? computeCoverageGaps(roster, perSlugCoverage) : null;
 
   // Nouveaux visages (Phase 1) : jamais dans le signal léger, réservé au rapport complet — c'est là

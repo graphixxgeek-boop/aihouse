@@ -189,7 +189,11 @@ function main() {
   // La criticité passe AVANT tout le reste dans la lecture : savoir qu'on s'apprête à toucher un
   // fichier maître change la façon de mener l'action, pas seulement l'outil qu'on choisit.
   if (criticite && !criticite.absent) {
-    console.log(`\n⚖️  criticité : ${String(criticite.niveau).toUpperCase()} (score ${criticite.score}) — risque maximal applicable sans repasser par l'utilisateur : « ${criticite.risqueMaxAutorise} »`);
+    // Formulation corrigée le 2026-09-22 : « risque maximal applicable : faible » se lisait comme
+    // « ce fichier est peu risqué », soit l'inverse exact du sens. Le niveau classe le FICHIER ; la
+    // limite porte sur les ACTIONS qu'on y applique. Plus le fichier est critique, MOINS on a le
+    // droit d'y faire de choses risquées. La phrase le dit désormais dans cet ordre-là.
+    console.log(`\n⚖️  criticité du fichier : ${String(criticite.niveau).toUpperCase()} (score ${criticite.score}) — donc seules les modifications à RISQUE « ${criticite.risqueMaxAutorise.toUpperCase()} » peuvent y être appliquées directement ; au-delà, ça se propose, jamais ça ne s'applique.`);
     for (const sig of (criticite.signaux ?? []).slice(0, 4)) console.log(`     · ${typeof sig === "string" ? sig : `${sig.nom}${sig.detail ? ` — ${sig.detail}` : ""}`}`);
     if (["maitre", "tuyauterie", "critique"].includes(criticite.niveau)) {
       console.log("     ⚠️  Relecture humaine et contrôle de perte de références OBLIGATOIRES avant d'appliquer quoi que ce soit ici.");

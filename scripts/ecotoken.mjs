@@ -1540,7 +1540,7 @@ export function buildEcotokenReport({ charterText, repoFiles } = {}) {
   L.push("--- CRITICITÉ DE LA CIBLE ----------------------------------------------------------");
   L.push(`Niveau : ${criticite.niveau.toUpperCase()} (score ${criticite.score}) — ${criticite.consigne}`);
   for (const s of criticite.signaux) L.push(`  · ${s.nom} : ${s.detail}`);
-  L.push(`  → risque maximal des propositions retenues : « ${criticite.risqueMaxAutorise} »` +
+  L.push(`  → seules les propositions à risque « ${criticite.risqueMaxAutorise} » sont applicables ici ; les plus risquées restent visibles mais se proposent` +
     `${criticite.validationHumaineObligatoire ? " · validation humaine OBLIGATOIRE" : ""}` +
     `${criticite.controlePerteObligatoire ? " · contrôle de perte de références OBLIGATOIRE après application" : ""}`);
   L.push("  Sûreté : ecotoken n'écrit JAMAIS dans le document analysé (assertSafeWriteTarget) —");
@@ -1680,13 +1680,13 @@ function main() {
       for (const b of d.malRanges ?? []) signaux.push(`🗂️  rangement à trancher · « ${b.section} » — ${b.pourquoi ?? "cite un autre Article que celui sous lequel il vit"} (aucun token en jeu, c'est la structure)`);
       for (const e of d.extractionsAExaminer ?? []) signaux.push(`❓ à trancher · ${e.question}`);
       if (!signaux.length) continue;
-      console.log(`\n  ── ${d.chemin} · criticité ${d.criticite?.niveau?.toUpperCase() ?? "inconnue"} (risque max applicable : ${d.criticite?.risqueMaxAutorise ?? "?"})`);
+      console.log(`\n  ── ${d.chemin} · criticité du fichier : ${d.criticite?.niveau?.toUpperCase() ?? "inconnue"} — seules les actions à risque « ${d.criticite?.risqueMaxAutorise ?? "?"} » y sont applicables directement`);
       for (const s of signaux) console.log(`     ${s}`);
     }
     // La criticité seule mérite d'être dite même quand rien d'autre ne l'est : c'est elle qui
     // gouverne ce que l'agent a le droit d'appliquer sans repasser par l'utilisateur.
     if (!analyses.some((d) => (d.manuelsLoges?.length ?? 0) + (d.malRanges?.length ?? 0) + (d.extractionsAExaminer?.length ?? 0) > 0)) {
-      for (const d of analyses.slice(0, 6)) console.log(`  ── ${d.chemin} · criticité ${d.criticite?.niveau?.toUpperCase() ?? "inconnue"} · ${d.nbSections} section(s) · stratégies écartées : ${d.strategiesEcartees?.length ? d.strategiesEcartees.join(" ; ") : "aucune"}`);
+      for (const d of analyses.slice(0, 6)) console.log(`  ── ${d.chemin} · criticité du fichier : ${d.criticite?.niveau?.toUpperCase() ?? "inconnue"} · ${d.nbSections} section(s) · stratégies écartées : ${d.strategiesEcartees?.length ? d.strategiesEcartees.join(" ; ") : "aucune"}`);
     }
     console.log(`\n  Portées disponibles : ${SCOPE_LEVELS.join(" / ")} (vocabulaire partagé avec THE-FINAL-JUDGE et SMART-CONSO-TOKEN).`);
     return;

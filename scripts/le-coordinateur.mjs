@@ -758,7 +758,12 @@ export function checkAgentOnboarding(agentName, {
   // CONSTRUITE à partir de ce qui a été réellement vérifié — même discipline que le reste de la
   // fonction (`undefined`/`null` = jamais vérifié, jamais listé comme si ça l'avait été).
   const validations = ["table maîtresse (docs/regles-de-travail.md §7ter)"];
-  if (inMenu) validations.push("entrée PRESTATIONS (catalogue LE-COORDINATEUR)");
+  // Nommé « le-catalogue-du-coordinateur » le 2026-09-22 à la demande explicite de l'utilisateur :
+  // « je veux nommer ce catalogue [...] besoin de ce nom pour éviter les confusions ». Le surnom
+  // désigne la liste PRESTATIONS et elle seule — à ne jamais confondre avec le catalogue d'offres
+  // NOMMÉ et historisé (docs/coordinateur-catalogue/), qui en est une photo datée, ni avec la table
+  // maîtresse de docs/regles-de-travail.md §7ter, qui décrit les outils et non les prestations.
+  if (inMenu) validations.push("ajouté au catalogue du coordinateur (le-catalogue-du-coordinateur)");
   if (ownKnowledge) {
     validations.push(`instanciation (docs/referentiel/${slug}.md)`);
     validations.push(`registre (${registryPrefix})`);

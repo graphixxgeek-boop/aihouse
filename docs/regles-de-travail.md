@@ -272,13 +272,21 @@ fichier : il **fixe ce qu'on a le droit d'appliquer sans repasser par l'utilisat
 L'échelle est celle d'ecotoken, la seule du projet, jamais une seconde inventée à côté — six
 niveaux, dont les deux premiers sont catégoriels (un seul fait suffit à les atteindre) :
 
-| Niveau | Ce que ça veut dire | Ce que ça change |
+**Le sens exact, parce qu'il se lit facilement à l'envers** *(précision du 2026-09-22, après une
+incompréhension réelle : « risque faible pour le fichier le plus important ? »)* : le niveau classe
+le FICHIER, la limite porte sur les ACTIONS. Plus un fichier est critique, **moins** on a le droit
+d'y appliquer de choses risquées. « Risque faible » ne veut donc jamais dire « ce fichier est peu
+risqué » — il veut dire « ici, seules les modifications les moins risquées passent sans repasser par
+l'utilisateur ». Les propositions plus risquées ne disparaissent pas pour autant : elles restent
+affichées, mais comme des propositions, jamais comme des choses à appliquer.
+
+| Niveau du FICHIER | Ce que ça veut dire | Ce qu'on a le droit d'y APPLIQUER |
 |---|---|---|
-| `maitre` | le fichier qui gouverne tout le travail (ici `CLAUDE.md`) | vigilance maximale : risque « faible » seulement, relecture humaine ET contrôle de perte de références obligatoires |
+| `maitre` | le fichier qui gouverne tout le travail (ici `CLAUDE.md`) | seulement les actions à risque « faible » — plus relecture humaine ET contrôle de perte de références, obligatoires |
 | `tuyauterie` | lancé par un crochet, ou importé par beaucoup | idem : le casser casse le filet de sécurité lui-même |
-| `critique` (≥6) | rechargé souvent, très cité, dense en règles | mêmes obligations, le doute tranche toujours pour NE PAS couper |
-| `sensible` (≥4) | vraies conséquences en cas d'erreur | risque « faible » applicable, le reste se propose |
-| `ordinaire` (≥2) | fichier courant | risque « moyen » applicable |
+| `critique` (≥6) | rechargé souvent, très cité, dense en règles | idem, et le doute tranche toujours pour NE PAS couper |
+| `sensible` (≥4) | vraies conséquences en cas d'erreur | actions à risque « faible » ; le reste se propose |
+| `ordinaire` (≥2) | fichier courant | actions à risque « moyen » comprises |
 | `peripherique` (0) | sans dépendance connue | aucune contrainte particulière |
 
 **Où la mesure se prend** : dans `tool-brain`, le réflexe déjà obligatoire avant toute recherche
