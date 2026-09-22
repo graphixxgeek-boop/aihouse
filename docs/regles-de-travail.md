@@ -1565,6 +1565,27 @@ clone-hunter. Trois choix calibrés explicitement (jamais devinés) :
 - **Une fonction dédiée**, pas une habitude d'écriture non vérifiable — garantit un format identique
   à chaque fois, jamais dépendant de la mémoire de l'agent d'une session à l'autre.
 
+**Le journal retient le TEXTE du bloc, pas seulement le fait qu'il a existé (corrigé le
+2026-09-23, tâche #210).** Deux entrées distinctes, à ne jamais confondre : `certifications[slug]`
+garde UNE date, jamais mise à jour (c'est ce qui détecte mécaniquement la « première fois ») ;
+`aRelayer[slug]` garde `{ produiteLe, texte }` tant que la cérémonie n'a pas été acquittée.
+
+**Pourquoi cette seconde moitié a dû être ajoutée, et c'est une leçon à ne pas reperdre :** la règle
+exigeait d'afficher le bloc « TEL QUEL, jamais résumé en une phrase », alors que le journal ne
+retenait qu'un slug et une date. Le texte ne vivait que dans la valeur de retour, imprimée une fois
+par le crochet puis perdue. Une cérémonie non relayée le jour même devenait donc **définitivement
+non relayable** — et le rappel qui revenait à chaque commit réclamait quelque chose que plus
+personne ne pouvait produire. Deux cérémonies réelles ont été perdues ainsi (safe-export,
+tool-learning, 2026-09-22). Un rappel qui exige l'impossible n'est pas une exigence, c'est une
+alarme qu'on apprend à éteindre.
+
+La cause racine était l'ORDRE D'ÉCRITURE : la certification était enregistrée avant que le texte ne
+soit formé. Les deux voies (certification initiale ET mise à jour de badge, qui écrivent dans le
+même `aRelayer`) passent désormais par un point unique, `enregistrerARelayer()`, et le crochet
+**réimprime le bloc conservé** au lieu de citer son slug. Une entrée au format ancien déclare
+honnêtement que son texte n'est pas récupérable (`texteConserve: false`) : le dire est la seule
+réponse acceptable, jamais en reconstituer une plausible.
+
 **Qui délivre le "go" reste inchangé, cette cérémonie ne fait que le rendre VISIBLE** : LE-COORDINATEUR
 délivre le badge de fait aujourd'hui (`checkAgentOnboarding()`) ; CASSANDRA-RH, une fois construite,
 consultera/affichera ce même résultat, jamais un second calcul indépendant (cf. section "Le badge"

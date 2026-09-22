@@ -14,7 +14,7 @@ import { lastTouchDays, relativeStaleness } from "../clean-dirty-old.mjs";
 import { buildDuplicateReport, buildNearDuplicateReport } from "../clone-hunter.mjs";
 import { THEMES, THEME_PRIMARY_FILE, parseCoverage, recommendZone, countDatedAddenda, addendaSignal, parseNumstat, churnSignal, outillageZones } from "../always-new-code.mjs";
 import { findMissingNotes, findOrphanNotes } from "../el-professor.mjs";
-import { parseToolsTable, slugifyAgentName, checkAllAgentBadges, pendingCeremonies, saveBadgeSignals } from "../le-coordinateur.mjs";
+import { parseToolsTable, slugifyAgentName, checkAllAgentBadges, pendingCeremonies, formatPendingCeremonies, saveBadgeSignals } from "../le-coordinateur.mjs";
 import { formatToolBrainReminder } from "../tool-brain.mjs";
 import { summarizeHistory, computeInvestmentRatio, diagnoseAdviceAccuracy } from "../smart-conso-token.mjs";
 import { sh, AGENT_CATEGORIES, gardienShouldRun, lastCommitFiles, realCodeFilesChanged } from "../lib-shell.mjs";
@@ -274,7 +274,12 @@ if (reveille("always-new-code")) try {
 try {
   const enAttente = pendingCeremonies();
   if (enAttente.length) {
-    console.error(`\n🎖️  CÉRÉMONIE(S) NON RELAYÉE(S) : ${enAttente.map((c) => c.slug).join(", ")} — le bloc de certification a été produit mais jamais montré à l'utilisateur. L'afficher TEL QUEL dans la réponse (jamais résumé en une phrase), puis acquitter : node -e "import('./scripts/le-coordinateur.mjs').then(c=>c.markCeremonyRelayed('<slug>'))"\n`);
+    // ON RÉIMPRIME LE BLOC LUI-MÊME (2026-09-23, tâche #210), pas seulement son slug. Avant, ce
+    // rappel réclamait d'afficher « TEL QUEL » un texte que plus rien ne détenait : l'agent qui
+    // arrivait un commit trop tard ne pouvait pas obéir, quelle que soit sa bonne volonté. Un
+    // rappel qui exige l'impossible n'est pas une exigence, c'est une alarme qu'on apprend à
+    // éteindre — le contraire exact de ce que cette cérémonie cherche à obtenir.
+    console.error(formatPendingCeremonies(enAttente));
   }
 } catch { /* best-effort */ }
 

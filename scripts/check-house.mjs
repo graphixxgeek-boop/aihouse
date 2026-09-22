@@ -8780,3 +8780,56 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log('Passed: SAFE-EXPORT\'s two detectors tightened a second time (2026-09-23, task #212) — closing the exportability gaps revealed that five of the eleven were the guard\'s fault, not the documents\': a comma broke the generic declaration, the word "Instanciation" (proof a blueprint IS the generic half, since it points AT its instanciation) actively flipped three verdicts to "spécifique", and the problem-section motif graded the wording of a heading rather than the presence of the content. Each fix is bounded by its own counter-test — "générique" alone never promotes, a genuinely specific document stays specific, and a section describing the ROLE still does not count as stating the PROBLEM, which is what kept the two real gaps visible instead of widening the motif until everything passed.');
 }
+
+{
+  // LA CÉRÉMONIE GARDE ENFIN SON TEXTE (2026-09-23, tâche #210) — le crochet exigeait d'afficher le
+  // bloc « TEL QUEL », et le journal ne retenait qu'un slug et une date. Une cérémonie non relayée
+  // le jour même devenait donc définitivement non relayable : le rappel réclamait, à chaque commit,
+  // quelque chose que plus personne ne pouvait produire.
+  const lc = await import('../scripts/le-coordinateur.mjs');
+  const dirCer = fs.mkdtempSync(path.join(os.tmpdir(), 'ceremonie-texte-'));
+  const chemin = path.join(dirCer, 'histoire.json');
+  const faux = { agentName: 'OUTIL-TEST', slug: 'outil-test', complet: true, badge: '🎖️ Membre certifié',
+    couverture: { tier: 'OK', label: 'OK 100%' }, description: 'un outil de démonstration',
+    message: 'intégration complète vérifiée', companions: ['ARGUS'] };
+
+  // LE POINT CENTRAL : ce que le crochet reçoit et ce que le journal retient doivent être LE MÊME
+  // texte. S'ils divergeaient, on relaierait plus tard autre chose que ce qui avait été annoncé.
+  const retourne = lc.announceBadgeCeremony(faux, { historyPath: chemin });
+  const due = lc.pendingCeremonies(chemin)[0];
+  assert.equal(due.texteConserve, true, 'a freshly produced ceremony must keep its text, not merely the date it happened');
+  assert.equal(due.texte, retourne, 'the stored text must be byte-identical to what the hook was handed — otherwise a later relay would show something other than what was announced');
+  assert.ok(lc.formatPendingCeremonies(lc.pendingCeremonies(chemin)).includes('CERTIFICATION — OUTIL-TEST'), 'and it must be re-renderable verbatim hours later, which is the entire point: keeping the block without printing it would be worth exactly what printing it without keeping it was worth');
+
+  // L'ordre d'écriture était la cause racine : la certification était enregistrée AVANT que le
+  // texte ne soit formé, donc le journal ne pouvait rien en retenir.
+  lc.markCeremonyRelayed('outil-test', chemin);
+  assert.equal(lc.pendingCeremonies(chemin).length, 0, 'acknowledging a ceremony must clear it — the acknowledgement stays an explicit gesture, never automatic, or it would amount to signing one\'s own receipt');
+
+  // LA SECONDE VOIE, celle qu'il aurait été facile d'oublier : une MISE À JOUR de badge passe par le
+  // même mécanisme aRelayer et souffrait exactement du même trou.
+  const apresChangement = { ...faux, badge: '🎖️ Membre certifié (Platine)', couverture: { tier: 'OK+', label: 'OK 100% approfondi' }, gaps: [] };
+  const blocChangement = lc.announceBadgeChange(apresChangement, { historyPath: chemin });
+  assert.ok(blocChangement && blocChangement.includes('MISE À JOUR DE BADGE'), 'a real badge change must still produce its own block, distinct from an initial certification');
+  const dueChangement = lc.pendingCeremonies(chemin)[0];
+  assert.equal(dueChangement.texteConserve, true, 'the badge-CHANGE path must keep its text too: it writes into the very same aRelayer journal, so fixing only the certification path would have left half the hole open');
+  assert.equal(dueChangement.texte, blocChangement, 'and it must be the same text the hook received');
+
+  // LE FORMAT ANCIEN — la discipline des trois états. Une entrée écrite avant ce commit est une
+  // simple chaîne de date : son texte n'existe nulle part et aucune reconstruction n'est possible.
+  const ancienne = lc.ceremonieDue('vieux-slug', '2026-09-22T16:51:14.114Z');
+  assert.equal(ancienne.texteConserve, false, 'a legacy string entry must report that its text was NOT kept — never an undefined that a caller would print as "undefined"');
+  assert.equal(ancienne.produiteLe, '2026-09-22T16:51:14.114Z', 'while still keeping the one fact it does know');
+  assert.ok(lc.formatPendingCeremonies([ancienne]).includes("n'est pas récupérable"), 'and the rendering must SAY it is unrecoverable, plainly: the honest answer to a lost ceremony is to say it is lost, never to reconstruct a plausible-looking one');
+
+  // Le non-écrasement : la PREMIÈRE production fait foi, comme la date de première certification.
+  const dir2 = fs.mkdtempSync(path.join(os.tmpdir(), 'ceremonie-ecrase-'));
+  const chemin2 = path.join(dir2, 'h.json');
+  const h = { certifications: {}, aRelayer: {} };
+  lc.enregistrerARelayer(h, 'x', 'PREMIER TEXTE', Date.parse('2026-09-22T10:00:00Z'));
+  lc.enregistrerARelayer(h, 'x', 'SECOND TEXTE', Date.parse('2026-09-23T10:00:00Z'));
+  assert.equal(h.aRelayer.x.texte, 'PREMIER TEXTE', 'a ceremony already owed must never be overwritten by a later pass: relaying a newer block than the one announced would quietly change what was said');
+  assert.ok(chemin2, 'temp path created');
+
+  console.log('Passed: the certification ceremony finally keeps its TEXT, not just a slug and a date (2026-09-23, task #210) — the hook demanded the block be shown "TEL QUEL", while the journal retained nothing that could be shown, so a ceremony not relayed the same day became permanently unrelayable and the reminder kept demanding, at every commit, something nobody could produce (two real ones were lost this way). Root cause was the write ORDER: the certification was recorded before the text was ever formed. Both paths are fixed through one single recording point — the initial certification AND the badge-change path, which writes into the same journal and would otherwise have left half the hole open — the stored text is byte-identical to what the hook received, it is re-rendered verbatim by the hook itself rather than merely referenced, a first production is never overwritten by a later one, and a legacy entry honestly reports that its text is unrecoverable instead of printing an empty block that would read as the agent\'s own omission.');
+}

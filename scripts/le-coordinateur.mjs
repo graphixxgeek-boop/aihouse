@@ -859,7 +859,7 @@ export function hasBeenCertifiedBefore(slug, history) {
   return Boolean(history?.certifications?.[slug]);
 }
 
-export function recordCertification(slug, now = Date.now(), historyPath = BADGE_CEREMONY_HISTORY_PATH) {
+export function recordCertification(slug, now = Date.now(), historyPath = BADGE_CEREMONY_HISTORY_PATH, { texte } = {}) {
   const history = loadBadgeCeremonyHistory(historyPath);
   history.certifications = history.certifications ?? {};
   if (!history.certifications[slug]) history.certifications[slug] = new Date(now).toISOString();
@@ -870,17 +870,74 @@ export function recordCertification(slug, now = Date.now(), historyPath = BADGE_
   // aucun mécanisme : rien ne distinguait « bloc affiché dans un terminal » de « bloc arrivé dans
   // la conversation ». On marque donc chaque cérémonie NON RELAYÉE jusqu'à ce qu'elle le soit
   // explicitement ; tant qu'elle ne l'est pas, elle est rappelée à chaque passage réseau.
-  history.aRelayer = history.aRelayer ?? {};
-  if (!(slug in history.aRelayer)) history.aRelayer[slug] = new Date(now).toISOString();
+  enregistrerARelayer(history, slug, texte, now);
   writeFileSync(historyPath, JSON.stringify(history, null, 1));
   return history;
+}
+
+// enregistrerARelayer() — LE POINT UNIQUE où une cérémonie due est consignée (2026-09-23, tâche
+// #210). Avant ce jour, les deux voies (certification initiale, mise à jour de badge) faisaient
+// chacune le même geste en double, et toutes deux n'inscrivaient QU'UNE DATE.
+//
+// LE TROU, ET IL REND SA PROPRE RÈGLE IMPOSSIBLE À TENIR. Le crochet exige d'afficher le bloc
+// « TEL QUEL dans la réponse (jamais résumé en une phrase) ». Or ce qui était conservé — un slug et
+// une date — ne permet pas de réafficher quoi que ce soit : le texte ne vivait que dans la valeur
+// de retour, imprimée une fois par le crochet puis perdue. Une cérémonie non relayée le jour même
+// devenait donc définitivement non relayable, et le rappel qui revenait à chaque commit réclamait
+// quelque chose que plus personne ne pouvait produire.
+//
+// Constaté pour de vrai le 2026-09-22 : safe-export et tool-learning, produites à 16h51, réclamées
+// à chaque commit pendant des heures, et irrécupérables — `formatBadgeCeremonyAnnouncement()` exige
+// un objet `result` complet que `checkAllAgentBadges()` ne rend plus sans son contexte d'origine.
+//
+// C'est la même faute que partout ailleurs dans ce paysage, à un cran de plus : ailleurs un
+// mécanisme calculait sans rien imprimer ; ici il imprime une fois et ne garde rien. Ce qui doit
+// être relayé, c'est le TEXTE — on garde donc le texte, et la date à côté.
+export function enregistrerARelayer(history, slug, texte, now = Date.now()) {
+  history.aRelayer = history.aRelayer ?? {};
+  // Jamais d'écrasement : la PREMIÈRE production fait foi, comme la date de première certification.
+  // Réécrire à chaque passage ferait glisser la cérémonie due vers un état plus récent, et on
+  // relaierait autre chose que ce qui avait été annoncé.
+  if (slug in history.aRelayer) return history;
+  history.aRelayer[slug] = { produiteLe: new Date(now).toISOString(), texte };
+  return history;
+}
+
+// LECTURE TOLÉRANTE AU FORMAT ANCIEN, et surtout HONNÊTE sur ce qu'elle ne sait plus. Les entrées
+// écrites avant ce commit sont de simples chaînes de date : leur texte n'existe nulle part et
+// aucune reconstruction n'est possible. On le DIT (`texteConserve: false`) plutôt que de rendre un
+// `texte: undefined` que l'appelant afficherait en « undefined » — troisième état, jamais un vide
+// qui se ferait passer pour un contenu.
+export function ceremonieDue(slug, entree) {
+  if (typeof entree === "string") return { slug, produiteLe: entree, texte: undefined, texteConserve: false };
+  const texte = entree?.texte;
+  return { slug, produiteLe: entree?.produiteLe, texte, texteConserve: typeof texte === "string" && texte.trim().length > 0 };
 }
 
 // Les cérémonies produites mais jamais relayées à l'utilisateur. Une liste non vide est un
 // manquement en cours, jamais une information de confort.
 export function pendingCeremonies(historyPath = BADGE_CEREMONY_HISTORY_PATH) {
   const h = loadBadgeCeremonyHistory(historyPath);
-  return Object.entries(h.aRelayer ?? {}).map(([slug, date]) => ({ slug, produiteLe: date }));
+  return Object.entries(h.aRelayer ?? {}).map(([slug, entree]) => ceremonieDue(slug, entree));
+}
+
+// LE TEXTE DOIT SORTIR DU SCRIPT, sinon on n'a fait que déplacer le problème d'un cran : garder le
+// bloc sans l'afficher vaudrait exactement ce que valait le fait de l'afficher sans le garder.
+// Cette fonction rend le bloc prêt à être recopié tel quel dans la réponse.
+export function formatPendingCeremonies(enAttente = []) {
+  if (!enAttente.length) return "";
+  const lignes = ["", "🎖️  CÉRÉMONIE(S) NON RELAYÉE(S) — à afficher TEL QUEL dans la réponse, jamais résumé en une phrase :"];
+  for (const c of enAttente) {
+    lignes.push("");
+    if (c.texteConserve) {
+      lignes.push(c.texte);
+    } else {
+      // L'aveu explicite, plutôt qu'une ligne vide qui passerait pour un oubli de l'agent.
+      lignes.push(`⚠️  ${c.slug} — cérémonie produite le ${c.produiteLe}, mais son TEXTE n'a pas été conservé (entrée au format d'avant le 2026-09-23). Elle n'est pas récupérable : le dire est la seule réponse honnête, jamais en reconstituer une plausible.`);
+    }
+    lignes.push(`   → une fois affichée : node -e "import('./scripts/le-coordinateur.mjs').then(c=>c.markCeremonyRelayed('${c.slug}'))"`);
+  }
+  return lignes.join("\n");
 }
 
 // Marquer relayé n'est PAS automatique : ce serait se décerner l'acquittement à soi-même. C'est un
@@ -922,13 +979,13 @@ export function announceBadgeChange(result, { historyPath = BADGE_CEREMONY_HISTO
   history.etats = history.etats ?? {};
   history.etats[result.slug] = apres;
   const change = avant && (avant.badge !== apres.badge || avant.tier !== apres.tier || avant.gaps !== apres.gaps);
-  if (change) {
-    history.aRelayer = history.aRelayer ?? {};
-    if (!(result.slug in history.aRelayer)) history.aRelayer[result.slug] = new Date(now).toISOString();
-  }
+  // Le texte se compose AVANT l'écriture du journal, jamais après : c'est lui qu'on consigne.
+  // L'ordre inverse est précisément ce qui faisait perdre le bloc.
+  const texte = change ? formatBadgeChangeAnnouncement(result, avant, apres) : undefined;
+  if (change) enregistrerARelayer(history, result.slug, texte, now);
   writeFileSync(historyPath, JSON.stringify(history, null, 1));
   if (!change) return null;
-  return formatBadgeChangeAnnouncement(result, avant, apres);
+  return texte;
 }
 
 export function formatBadgeChangeAnnouncement(result, avant, apres) {
@@ -983,7 +1040,10 @@ export function announceBadgeCeremony(result, { historyPath = BADGE_CEREMONY_HIS
   if (!result?.complet) return null;
   const history = loadBadgeCeremonyHistory(historyPath);
   if (hasBeenCertifiedBefore(result.slug, history)) return null;
-  recordCertification(result.slug, now, historyPath);
+  // Même ordre qu'ci-dessus : on FORME le bloc, puis on le consigne. Avant ce commit, la
+  // certification était enregistrée d'abord et le texte produit en dernier, donc jamais retenu.
+  const texte = formatBadgeCeremonyAnnouncement(result);
+  recordCertification(result.slug, now, historyPath, { texte });
   // L'état de départ est enregistré ici même : sans ça, la toute première comparaison
   // d'announceBadgeChange() se ferait contre rien et le bloc « mise à jour » tomberait au commit
   // suivant sans qu'aucun changement réel n'ait eu lieu.
@@ -991,7 +1051,7 @@ export function announceBadgeCeremony(result, { historyPath = BADGE_CEREMONY_HIS
   h.etats = h.etats ?? {};
   h.etats[result.slug] = badgeState(result);
   writeFileSync(historyPath, JSON.stringify(h, null, 1));
-  return formatBadgeCeremonyAnnouncement(result);
+  return texte;
 }
 
 // checkAllAgentBadges() (2026-09-22, demande explicite de l'utilisateur : « tu crées un petit script
