@@ -419,8 +419,8 @@ export const CHANTIER_PRELIMINARY_FILES = {
 
 // checkChantierFileFreshness() — la « vérification, jamais seulement une intention déclarée »
 // demandée explicitement (docs/regles-de-travail.md) : compare, pour chaque chantier connu, la
-// tâche de suivi la plus récente qui le concerne (Sujet/Sous-sujet/Détail, jamais une nouvelle
-// classification inventée) à la dernière modification RÉELLE (git, `lastTouchDays()`,
+// tâche de suivi la plus récente qui le concerne (Sujet/Sous-sujet, les deux champs de classement
+// réels — jamais le Détail, cf. la note ci-dessous, ni une nouvelle classification inventée) à la dernière modification RÉELLE (git, `lastTouchDays()`,
 // clean-dirty-old.mjs — jamais un second calcul de fraîcheur divergent, Article 3) de son fichier
 // préliminaire dédié. Signale un ÉCART honnête (idée notée en suivi, jamais recopiée dans son
 // fichier), jamais une certitude d'oubli — l'idée a pu être jugée non pertinente après coup, ou
@@ -443,7 +443,17 @@ export function isStagedForCommit(file, shImpl = sh) {
 export function checkChantierFileFreshness(allRows, { lastTouch = lastTouchDays, isStaged = isStagedForCommit } = {}) {
   const findings = [];
   for (const [chantier, { file, match }] of Object.entries(CHANTIER_PRELIMINARY_FILES)) {
-    const matching = allRows.filter((r) => match.test(r.sujet) || match.test(r.sousSujet) || match.test(r.detail));
+    // CHAMPS DE CLASSEMENT SEULEMENT (2026-09-22, faux positif RÉEL trouvé en direct : la tâche
+    // #304, dont le Détail dit « continuer à enchaîner les tâches ouvertes sans s'arrêter (SAUF pour
+    // la refonte graphique) », était comptée comme une tâche DU chantier refonte graphique — le sens
+    // exactement inverse de ce qu'elle dit). Le Détail est un récit libre : un chantier peut y être
+    // cité en passant, en comparaison, ou justement pour être écarté. Sujet et Sous-sujet sont au
+    // contraire les deux champs de CLASSEMENT que l'agent choisit délibérément quand il note la
+    // tâche (cf. docs/systeme-de-suivi.md, les quatre attributs) — s'y tenir, c'est lire une
+    // intention déclarée plutôt que deviner un rattachement depuis une mention. Même racine que les
+    // corrections du même jour ailleurs dans ce projet : une MENTION n'est jamais une APPARTENANCE
+    // (Article 3 — la cause, jamais le symptôme).
+    const matching = allRows.filter((r) => match.test(r.sujet) || match.test(r.sousSujet));
     if (!matching.length) continue;
     const dated = matching.map((r) => ({ row: r, at: new Date(r.horodatage).getTime() })).filter((x) => Number.isFinite(x.at));
     if (!dated.length) continue;
@@ -462,7 +472,14 @@ export function checkChantierFileFreshness(allRows, { lastTouch = lastTouchDays,
       findings.push({ chantier, file, taskNumber: latest.row.n, message: `fichier "${file}" introuvable ou jamais commité, alors qu'une tâche de suivi (#${latest.row.n ?? "?"}) le concerne déjà` });
       continue;
     }
-    if (fileAgeDays > rowAgeDays + TOLERANCE_DAYS) {
+    // COMPARAISON EN JOURS ENTIERS (2026-09-22, second faux positif réel du même passage) : le
+    // message affiche « (1.0j) plus récente que ... (1.0j) » tout en déclenchant l'alerte — un
+    // verdict qui contredit sa propre phrase. La cause : la comparaison tournait sur des fractions
+    // non arrondies (1.03 > 0.004 + 1) là où le message, lui, arrondit à la décimale. Cette fraction
+    // n'est que du décalage d'horloge entre l'horodatage narratif du suivi et l'horloge système de
+    // git — exactement ce que TOLERANCE_DAYS existe pour absorber, jamais un vrai retard. On compare
+    // donc à la granularité du JOUR, la seule que la tolérance et le message expriment tous les deux.
+    if (Math.floor(fileAgeDays) > Math.floor(rowAgeDays) + TOLERANCE_DAYS) {
       findings.push({ chantier, file, taskNumber: latest.row.n, message: `tâche #${latest.row.n ?? "?"} « ${latest.row.sousSujet} » (${rowAgeDays.toFixed(1)}j) plus récente que "${file}" (${fileAgeDays.toFixed(1)}j) — vérifier que l'idée a bien été recopiée` });
     }
   }

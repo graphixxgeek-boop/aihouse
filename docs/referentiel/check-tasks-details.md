@@ -55,7 +55,8 @@ instantané archivé :
 La « vérification, jamais seulement une intention déclarée » demandée explicitement dans
 `docs/regles-de-travail.md` pour les fichiers préliminaires de « gros chantier » (CASSANDRA-RH,
 refonte graphique — `CHANTIER_PRELIMINARY_FILES`) : compare la tâche de suivi la plus récente qui
-concerne un chantier connu (mot-clé sur Sujet/Sous-sujet/Détail) à la dernière modification réelle
+concerne un chantier connu (mot-clé sur Sujet/Sous-sujet, **jamais le Détail** — cf. les deux faux
+positifs de 2026-09-22 plus bas) à la dernière modification réelle
 (git, `lastTouchDays()` de CLEAN-DIRTY-OLD, jamais un second calcul divergent) de son fichier
 dédié. Signale un écart honnête — idée notée en suivi, jamais recopiée — jamais une certitude
 d'oubli, avec une tolérance d'une journée pour un commit groupé le même tour. **Faux positif réel
@@ -65,6 +66,28 @@ peut courir devant l'horloge système réelle de plusieurs heures à une journé
 constaté : système à `2026-09-21 04h35 UTC` pendant qu'une ligne fraîchement écrite portait
 `2026-09-22T06:30Z`) — sans clamp, cet écart d'horloge produisait un âge de tâche négatif et donc un
 "retard" fabriqué. Corrigé en clampant l'âge d'une tâche à 0 minimum, jamais en dessous.
+
+
+**Deux autres faux positifs réels, trouvés le 2026-09-22 en faisant tomber le garde-fou live** (le
+test qui vérifie « aucun écart » contre le vrai dépôt a cassé la construction, exactement son rôle) :
+
+1. **Une MENTION n'est jamais une APPARTENANCE.** La tâche #304, dont le Détail dit « continuer à
+   enchaîner les tâches ouvertes sans s'arrêter (**sauf pour la refonte graphique**) », était comptée
+   comme une tâche DU chantier refonte graphique — le sens exactement inverse de ce qu'elle dit. Le
+   Détail est un récit libre : un chantier peut y être cité en passant, en comparaison, ou justement
+   pour être écarté. Le rattachement ne lit donc plus que **Sujet et Sous-sujet**, les deux champs de
+   CLASSEMENT que l'agent choisit délibérément en notant la tâche. Vérifié qu'on ne perd aucune vraie
+   détection : un chantier réellement traité est toujours classé, jamais seulement raconté.
+2. **Un verdict qui contredisait sa propre phrase.** Le message affichait « (1.0j) plus récente que
+   ... (1.0j) » — dans la tolérance — tout en déclenchant l'alerte, parce que la comparaison tournait
+   sur des fractions non arrondies (`1.03 > 0.004 + 1`). Cette fraction n'est que du décalage
+   d'horloge entre l'horodatage narratif du suivi et l'horloge système de git, exactement ce que
+   `TOLERANCE_DAYS` existe pour absorber. La comparaison se fait désormais à la granularité du
+   **jour entier**, la seule que la tolérance ET le message expriment tous les deux.
+
+Même racine que plusieurs autres corrections du même jour ailleurs dans le projet : **une absence de
+mesure, ou une mesure approchée, lue comme une mesure ferme** (Article 3 — la cause, jamais le
+symptôme).
 
 ## Idées à trancher (`detectPendingIdeaCandidates()`/`loadIdeaDecisions()`/`findIdeasNeedingDecision()`, 2026-09-21)
 

@@ -4499,6 +4499,26 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(missingResult.length, 1, 'a preliminary file that git has never touched at all, while a matching suivi task already exists, must be flagged just as loudly as a stale one — never silently skipped');
   assert.ok(missingResult[0].message.includes('introuvable'), 'the missing-file case must be worded distinctly from the stale-file case, never conflated');
 
+  // Cas 5 (2026-09-22) : une MENTION dans le Détail n'est jamais une APPARTENANCE au chantier. Faux
+  // positif réel qui a fait tomber le garde-fou live : la tâche #304, dont le récit dit « sauf pour
+  // la refonte graphique », était comptée comme une tâche DU chantier refonte graphique — le sens
+  // exactement inverse. Seuls Sujet et Sous-sujet, les deux champs de CLASSEMENT que l'agent choisit
+  // délibérément, rattachent une tâche à un chantier.
+  const rowsMentionOnly = [{ n: 4, horodatage: daysAgo(0), sujet: 'Charte / Outillage de travail', sousSujet: 'Autre chose entièrement', detail: 'continuer à enchaîner les tâches ouvertes sans s\'arrêter (sauf pour la refonte graphique)' }];
+  assert.deepEqual(checkChantierFileFreshness(rowsMentionOnly, { lastTouch: () => 30 }), [], 'a chantier merely NAMED in a task\'s free-text Détail — here to EXCLUDE it — must never be treated as a task belonging to that chantier, however stale its file is');
+  const rowsClassified = [{ n: 5, horodatage: daysAgo(0), sujet: 'Refonte graphique', sousSujet: 'Une vraie idée du chantier', detail: 'aucune mention ailleurs' }];
+  assert.equal(checkChantierFileFreshness(rowsClassified, { lastTouch: (f) => (f === refonteFile ? 30 : undefined) }).length, 1, 'the same restriction must never blind the guard: a task genuinely CLASSIFIED under the chantier is still caught, proving cas 5 narrows the false positives without losing the real detections');
+
+  // Cas 6 (2026-09-22) : la comparaison se fait en JOURS ENTIERS, la seule granularité que la
+  // tolérance ET le message expriment tous les deux. Second faux positif réel du même passage : le
+  // message affichait « (1.0j) plus récente que ... (1.0j) » tout en déclenchant l'alerte, parce que
+  // la comparaison tournait sur des fractions non arrondies (1.03 > 0.004 + 1) — un verdict qui
+  // contredisait sa propre phrase, pour un simple décalage d'horloge entre l'horodatage narratif du
+  // suivi et l'horloge système de git.
+  const rowsClockSkew = [{ n: 6, horodatage: daysAgo(0.004), sujet: 'Refonte graphique', sousSujet: 'Idée recopiée le jour même', detail: '' }];
+  assert.deepEqual(checkChantierFileFreshness(rowsClockSkew, { lastTouch: (f) => (f === refonteFile ? 1.03 : undefined) }), [], 'a sub-day clock skew between the suivi timestamp and git\'s own clock must never raise a finding whose own message reads as within tolerance — the comparison runs at the day granularity the tolerance is expressed in');
+  assert.equal(checkChantierFileFreshness(rowsClockSkew, { lastTouch: (f) => (f === refonteFile ? 2.03 : undefined) }).length, 1, 'rounding to whole days must not soften a genuinely late file: two full days past a same-day task is still flagged');
+
   // Cas 4bis (2026-09-21, faux positif réel trouvé en committant CE MÊME soir la toute première fois
   // qu'un fichier préliminaire de chantier a été introduit dans le MÊME commit que la tâche de suivi
   // qui le mentionne, exactement la discipline demandée par Article 13) : un fichier STAGÉ pour le
@@ -4529,7 +4549,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const futureResult = checkChantierFileFreshness(rowsFuture, { lastTouch: (f) => (f === cassandraFile ? 0 : undefined) });
   assert.equal(futureResult.length, 0, 'a suivi row dated slightly ahead of the real system clock (the exact real "today" vs git-clock skew found live) must never be flagged as overdue just because the raw subtraction goes negative — clamped to "just now", never a fabricated gap');
 
-  console.log('Passed: checkChantierFileFreshness() (task #185) correctly leaves a genuinely fresh preliminary file alone, flags a real gap by the exact task number and chantier responsible, tolerates a same-day grouped commit rather than a false positive, flags a preliminary file git has never touched at all just as loudly as a stale one, never fabricates a finding for a chantier with zero matching suivi activity, checks every known chantier (CASSANDRA-RH, refonte graphique) independently in the same pass, never flags a row whose narrative "today" timestamp runs ahead of git\'s real system clock as if it were overdue, and — the exact real pre-commit-hook time paradox found tonight introducing this project\'s own new chantier file — never confuses a file already staged for the commit currently being validated with one genuinely never written at all.');
+  console.log('Passed: checkChantierFileFreshness() (task #185) correctly leaves a genuinely fresh preliminary file alone, flags a real gap by the exact task number and chantier responsible, tolerates a same-day grouped commit rather than a false positive, flags a preliminary file git has never touched at all just as loudly as a stale one, never fabricates a finding for a chantier with zero matching suivi activity, checks every known chantier (CASSANDRA-RH, refonte graphique) independently in the same pass, never flags a row whose narrative "today" timestamp runs ahead of git\'s real system clock as if it were overdue, and — the exact real pre-commit-hook time paradox found tonight introducing this project\'s own new chantier file — never confuses a file already staged for the commit currently being validated with one genuinely never written at all. And (2026-09-22, the two real false positives that made this very guard fail live) it reads a chantier\'s membership ONLY from the Sujet/Sous-sujet classification fields — a chantier merely NAMED in a task\'s free-text Détail, here precisely to be EXCLUDED from it, is never counted as belonging to it, while a task genuinely classified under it is still caught — and it compares ages at the whole-day granularity its own tolerance and its own message both use, so a sub-day clock skew between the suivi timestamp and git\'s clock can never produce a finding whose message reads as within tolerance, without ever softening a genuinely late file.');
 }
 
 {
@@ -6011,7 +6031,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 {
   // THE-KING (tâche #167, 2026-09-21) : rappelle de consulter docs/philosophie-et-politique.md
   // avant une décision à haut niveau, jamais un décideur lui-même.
-  const { TRIGGER_CATEGORIES, classifyDecisionTriggers, reminderFor, extractPrincipleUnits, extractPrincipleDate, buildEvolutionDigest, findPossibleTensions, philosophyFreshnessDays } = await import('../scripts/the-king.mjs');
+  const { TRIGGER_CATEGORIES, classifyDecisionTriggers, reminderFor, extractPrincipleUnits, extractPrincipleDate, principleDateFromGit, principleDate, buildEvolutionDigest, findPossibleTensions, philosophyFreshnessDays } = await import('../scripts/the-king.mjs');
   assert.equal(TRIGGER_CATEGORIES.length, 6, 'the 6 trigger categories are the exact number confirmed with the user — never more (would dilute the signal) nor fewer (would miss a real category)');
 
   assert.deepEqual(classifyDecisionTriggers('on prépare une nouvelle architecture, réutilisable pour un futur projet').map((c) => c.key), ['architecture', 'generalisable'], 'a request text touching two real categories at once must surface both, never force a single pick');
@@ -6045,14 +6065,35 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(fakePrinciples.map((p) => `${p.partie}.${p.numero}`), ['1.1', '1.2', '2.1', '2.2'], 'principles must be extracted in real document order, each carrying its real Partie/numero pair');
   assert.equal(extractPrincipleDate(fakePrinciples[0]), undefined, 'a principle with no explicit date in its tag must report undefined honestly, never a fabricated date guessed from context');
   assert.equal(extractPrincipleDate(fakePrinciples[1]), '2026-09-10', 'a principle whose tag genuinely carries a date must have it extracted exactly');
-  assert.deepEqual(buildEvolutionDigest(fakePrinciples), ['2026-09-10 — 1.2 Un principe récent', '2026-09-11 — 2.2 Jamais de prudence budgétaire ambiante'], 'the evolution digest must list only dated principles, in real chronological order (oldest first), never document order nor an undated founding principle');
+  assert.deepEqual(buildEvolutionDigest(fakePrinciples, { avecGit: false }), ['2026-09-10 — 1.2 Un principe récent', '2026-09-11 — 2.2 Jamais de prudence budgétaire ambiante'], 'the evolution digest must list only dated principles, in real chronological order (oldest first), never document order nor an undated founding principle — avecGit:false isolates the declared-date layer so this test never depends on the real repository\'s history');
+
+  // RETROFIT HISTORIQUE DATÉ (2026-09-22, tâche #196). Le constat qui l'a motivé : sur les 19
+  // principes réels du document, 2 SEULEMENT portent une date déclarée — le digest ne racontait donc
+  // l'histoire que de 2 principes sur 19, et le document passait pour figé. shImpl est injecté ici
+  // pour que ces tests n'appellent JAMAIS le vrai git (un test qui dépend de l'état du dépôt se met
+  // à mentir le jour où quelqu'un renomme un principe).
+  const gitCalls = [];
+  const fakeSh = (cmd) => { gitCalls.push(cmd); return '2026-09-14\n2026-09-08\n'; };
+  assert.equal(principleDateFromGit(fakePrinciples[0], { shImpl: fakeSh }), '2026-09-08', 'a git-derived date must be the FIRST commit that introduced the principle\'s title (the last line of a reverse-chronological git log), never the most recent one — a reformulation is not a birth');
+  assert.ok(gitCalls[0].includes('--diff-filter=AM') && gitCalls[0].includes('"Principe fondateur"') && gitCalls[0].includes('docs/philosophie-et-politique.md'), 'the git lookup must search the real philosophy file for the real principle title, with the title properly quoted so a title containing a space or a quote can never break the command');
+  assert.equal(principleDateFromGit({ titre: '   ' }, { shImpl: () => { throw new Error('git must not be called'); } }), undefined, 'a principle with no usable title must report undefined honestly rather than shelling out to git with an empty search term (which would match everything)');
+  assert.equal(principleDateFromGit(fakePrinciples[0], { shImpl: () => '' }), undefined, 'a title git has never seen must report undefined, never an invented date — absence of measurement is never a measurement');
+
+  assert.deepEqual(principleDate(fakePrinciples[1], { shImpl: () => { throw new Error('git must not be called'); } }), { date: '2026-09-10', provenance: 'déclarée' }, 'a declared date must always win over a derived one — and git must not even be consulted, since what the author wrote is worth more than what git deduces');
+  assert.deepEqual(principleDate(fakePrinciples[0], { shImpl: () => '2026-09-08\n' }), { date: '2026-09-08', provenance: 'git' }, 'an undated principle must fall back to its real git birth date, and the provenance must always say so — a derived date is never presented as a declared one');
+  assert.deepEqual(principleDate(fakePrinciples[0], { shImpl: () => '' }), { date: undefined, provenance: undefined }, 'when neither source knows, both the date and its provenance must stay undefined — never a provenance claimed for a date that does not exist');
+
+  assert.deepEqual(buildEvolutionDigest(fakePrinciples, { shImpl: () => '2026-09-01\n' }), ['2026-09-01 — 1.1 Principe fondateur', '2026-09-01 — 2.1 Toujours prudence budgétaire ambiante', '2026-09-10 — 1.2 Un principe récent', '2026-09-11 — 2.2 Jamais de prudence budgétaire ambiante'], 'with the git layer on, the digest must tell the story of ALL the principles (4/4 here, 19/19 on the real document) instead of only the 2 that happen to carry a declared date — the exact blind spot task #196 was opened to close');
+  const realPrinciples = extractPrincipleUnits(fs.readFileSync('docs/philosophie-et-politique.md', 'utf8'));
+  const realDigest = buildEvolutionDigest(realPrinciples);
+  assert.equal(realDigest.length, realPrinciples.length, 'checked live against the real document: every single one of its principles must now be dated (declared or git-derived), never a digest that silently drops the undated ones — the guarantee that breaks the day a principle is added in a way git cannot date');
 
   const tensions = findPossibleTensions(fakePrinciples);
   assert.deepEqual(tensions.map((t) => `${t.a}-${t.b}`), ['2.1-2.2'], 'a real "always" vs "never" divergence over genuinely shared vocabulary must be flagged as a possible tension — but 1.1 vs 1.2 (no shared vocabulary, no polarity clash) must never be flagged, proving this is not a bare keyword scan');
   assert.deepEqual(findPossibleTensions([fakePrinciples[0], fakePrinciples[1]]), [], 'two principles sharing no real vocabulary overlap must never be flagged, however their polarity markers read — the Jaccard threshold is the real gate, never the polarity check alone');
 
   assert.ok(typeof philosophyFreshnessDays() === 'number', 'philosophyFreshnessDays() must report a real number of days for the actual committed docs/philosophie-et-politique.md file — reusing lastTouchDays() from CLEAN-DIRTY-OLD rather than a second divergent calculation');
-  console.log('Passed: THE-KING (task #167) reminds to consult docs/philosophie-et-politique.md before a high-stakes decision across exactly its 6 confirmed trigger categories (never a false positive on a low-stakes request), parses the real document into dated/undated principles without ever fabricating a date, builds an honest chronological evolution digest, and flags a possible tension between two principles only when BOTH real shared vocabulary AND a genuine "jamais"/"toujours" polarity clash are present — never a bare keyword or polarity scan alone.');
+  console.log('Passed: THE-KING (tasks #167, #196) reminds to consult docs/philosophie-et-politique.md before a high-stakes decision across exactly its 6 confirmed trigger categories (never a false positive on a low-stakes request), parses the real document into dated/undated principles without ever fabricating a date, builds an honest chronological evolution digest, and flags a possible tension between two principles only when BOTH real shared vocabulary AND a genuine "jamais"/"toujours" polarity clash are present — never a bare keyword or polarity scan alone. Its dated-history retrofit (#196) derives a real birth date from git for every principle that carries none, always taking the FIRST commit that introduced the title rather than the last, always saying whether a date is declared or derived, never inventing one when neither source knows — and, checked live against the real document, now dates 19/19 principles where the declared layer alone reached 2.');
 }
 
 {

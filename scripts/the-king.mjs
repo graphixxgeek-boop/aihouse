@@ -14,6 +14,11 @@
 import { significantWords } from "./le-coordinateur.mjs";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { sh } from "./lib-shell.mjs";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+const ROOT = process.cwd();
 
 const PHILOSOPHY_PATH = "docs/philosophie-et-politique.md";
 
@@ -70,12 +75,46 @@ export function extractPrincipleDate(principle) {
   return m ? m[1] : undefined;
 }
 
+// DATE RÉELLE D'ARRIVÉE, DÉRIVÉE DE GIT (2026-09-22, tâche #196 : « retrofit historique daté »).
+// Constat qui la motive : sur les 19 principes du document, 2 SEULEMENT portent une date explicite.
+// Le digest d'évolution ne racontait donc l'histoire que de 2 principes sur 19, et le document
+// passait pour figé alors qu'il ne l'est pas. Dater les 17 autres à la main aurait produit
+// exactement ce que l'Article 24 interdit : une liste recopiée qui se périme au prochain ajout.
+// On interroge donc l'historique réel du fichier — le PREMIER commit qui a introduit le titre du
+// principe, jamais le dernier qui l'a touché (une reformulation n'est pas une naissance).
+//
+// `provenance` dit toujours d'où vient la date : "déclarée" (le principe la porte), "git" (dérivée),
+// ou absente. Une date dérivée n'est jamais présentée comme une date déclarée.
+export function principleDateFromGit(principle, { shImpl = sh, fichier = PHILOSOPHY_PATH } = {}) {
+  const titre = String(principle?.titre ?? "").trim();
+  if (!titre) return undefined;
+  const out = shImpl(`git log --diff-filter=AM --format=%ad --date=short -S${JSON.stringify(titre)} -- ${fichier}`, { quiet: true });
+  const lignes = String(out ?? "").trim().split("\n").filter(Boolean);
+  return lignes.length ? lignes[lignes.length - 1] : undefined;
+}
+
+// Réunit les deux sources, la déclarée primant toujours sur la dérivée : ce que l'auteur a écrit
+// vaut plus que ce que git déduit. `provenance` reste exposée pour que le lecteur sache laquelle
+// il regarde — jamais un mélange silencieux des deux.
+export function principleDate(principle, options = {}) {
+  const declaree = extractPrincipleDate(principle);
+  if (declaree) return { date: declaree, provenance: "déclarée" };
+  const git = principleDateFromGit(principle, options);
+  return git ? { date: git, provenance: "git" } : { date: undefined, provenance: undefined };
+}
+
 // Digest chronologique de l'évolution du document — seulement les principes portant une date
 // explicite, triés du plus ancien au plus récent (jamais l'ordre d'apparition dans le fichier, qui
 // suit la numérotation des Parties/sections, pas la chronologie réelle d'ajout).
-export function buildEvolutionDigest(principles) {
+// `avecGit` (2026-09-22, tâche #196) : par défaut le digest interroge l'historique réel pour les
+// principes sans date déclarée — sans quoi il ne racontait l'histoire que de 2 principes sur 19.
+// Désactivable (`avecGit: false`) pour les tests, qui ne doivent jamais dépendre de l'état du dépôt.
+export function buildEvolutionDigest(principles, { avecGit = true, shImpl = sh } = {}) {
   return principles
-    .map((p) => ({ ...p, date: extractPrincipleDate(p) }))
+    .map((p) => {
+      const r = avecGit ? principleDate(p, { shImpl }) : { date: extractPrincipleDate(p), provenance: extractPrincipleDate(p) ? "déclarée" : undefined };
+      return { ...p, date: r.date, provenance: r.provenance };
+    })
     .filter((p) => p.date)
     .sort((a, b) => a.date.localeCompare(b.date))
     .map((p) => `${p.date} — ${p.partie}.${p.numero} ${p.titre}`);
@@ -135,6 +174,26 @@ function main() {
     console.log(reminder ?? "👑 THE-KING : aucune des 6 catégories de déclenchement détectée dans ce texte — consultation non signalée comme nécessaire (jamais une certitude, le jugement humain/agent reste final).");
   }
   console.log(`\n📅 Fraîcheur de ${PHILOSOPHY_PATH} : ${(() => { const d = philosophyFreshnessDays(); return d == null ? "jamais committé" : `dernière modification il y a ${Math.round(d)} j`; })()}`);
+
+  // HISTORIQUE AFFICHÉ (2026-09-22, tâche #196). Trou réel trouvé en finissant le retrofit daté :
+  // main() ne montrait QUE la fraîcheur — le digest et les tensions n'existaient que pour l'appelant
+  // CIRCLE-TASKS, jamais pour quelqu'un qui lance l'outil à la main. Un outil dont le cœur du rôle
+  // (« conserver un historique de l'évolution du document », demande d'origine) reste invisible
+  // depuis sa propre ligne de commande n'est pas un outil terminé.
+  const principles = extractPrincipleUnits(readFileSync(join(ROOT, PHILOSOPHY_PATH), "utf8"));
+  const digest = buildEvolutionDigest(principles);
+  const declarees = principles.filter((p) => extractPrincipleDate(p)).length;
+  console.log(`\n📜 Évolution du document — ${digest.length}/${principles.length} principes datés (${declarees} date(s) déclarée(s), ${digest.length - declarees} dérivée(s) de l'historique git) :`);
+  for (const ligne of digest) console.log(`   ${ligne}`);
+  if (digest.length < principles.length) {
+    console.log(`   ⚠️  ${principles.length - digest.length} principe(s) non daté(s) — ni date déclarée, ni trace dans l'historique git de ce fichier.`);
+  }
+
+  const tensions = findPossibleTensions(principles);
+  console.log(`\n⚖️  Tensions POSSIBLES entre principes : ${tensions.length === 0 ? "aucune détectée" : `${tensions.length} à relire humainement`}`);
+  for (const t of tensions) console.log(`   ${t.a} ↔ ${t.b} (vocabulaire partagé ${t.jaccard}) — un SIGNAL, jamais une contradiction prouvée.`);
+
+  console.log(`\n⚠️  THE-KING lit des titres et du vocabulaire, jamais le SENS réel de deux phrases : ses tensions sont des candidats à relire, ses dates dérivées sont des déductions git. Ses résultats peuvent être inexacts — jamais un verdict qui remplace la lecture humaine.`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

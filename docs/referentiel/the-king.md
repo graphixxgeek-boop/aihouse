@@ -37,11 +37,31 @@ date n'est extraite (`extractPrincipleDate()`) que lorsqu'elle est explicitement
 
 ## Digest de l'évolution
 
-`buildEvolutionDigest(principles)` liste, du plus ancien au plus récent, tous les principes portant
-une date explicite — la mémoire de l'évolution du document demandée par l'utilisateur. Sur le
-document actuel (19 principes), 2 portent une date explicite (1.9 et 1.10, ajoutés le 2026-09-19) ;
-les principes fondateurs (`[Explicite]`) n'en portent pas, honnêtement absents du digest plutôt que
-datés à tort du jour de leur première lecture.
+`buildEvolutionDigest(principles)` liste, du plus ancien au plus récent, tous les principes datés —
+la mémoire de l'évolution du document demandée par l'utilisateur.
+
+**Retrofit historique daté (tâche #196, 2026-09-22).** La version d'origine ne datait que les
+principes portant une date explicite dans leur tag : sur les 19 principes du document réel, **2
+seulement** (1.9 et 1.10). Le digest ne racontait donc l'histoire que de 2 principes sur 19, et le
+document passait pour figé alors qu'il ne l'est pas. Dater les 17 autres à la main aurait produit
+exactement ce que l'Article 24 interdit — une liste recopiée qui se périme au prochain ajout. La
+date manquante est donc **dérivée de l'historique git réel du fichier** (`principleDateFromGit()`,
+`git log --diff-filter=AM -S<titre>`), en prenant le **PREMIER** commit qui a introduit le titre du
+principe, jamais le dernier qui l'a touché : une reformulation n'est pas une naissance.
+
+`principleDate()` réunit les deux sources, la déclarée primant toujours sur la dérivée (ce que
+l'auteur a écrit vaut plus que ce que git déduit), et expose toujours une `provenance`
+(`"déclarée"` / `"git"` / absente) — une date dérivée n'est **jamais** présentée comme déclarée.
+Quand ni l'une ni l'autre source ne sait, la date reste `undefined` : jamais une date inventée.
+Résultat mesuré sur le document réel : **19/19 principes datés** (2 déclarées, 17 dérivées), là où
+la couche déclarée seule en atteignait 2. `avecGit: false` isole la couche déclarée pour les tests,
+qui ne doivent jamais dépendre de l'état du dépôt.
+
+Le digest, le décompte déclarée/dérivée et les tensions s'affichent désormais dans la sortie de
+`node scripts/the-king.mjs` lui-même — trou réel trouvé en finissant ce retrofit : `main()`
+n'affichait QUE la fraîcheur, le digest n'existant que pour l'appelant CIRCLE-TASKS. Un outil dont
+le cœur du rôle (« conserver un historique de l'évolution du document », demande d'origine) reste
+invisible depuis sa propre ligne de commande n'est pas un outil terminé.
 
 ## Détection de tension possible (enrichissement confirmé "oui maintenant")
 
