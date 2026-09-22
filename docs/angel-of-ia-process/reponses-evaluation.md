@@ -27,6 +27,18 @@ objection ne lui sera jamais soumis.
 `conteste` et `choix-assume` ressemblent tous deux à un refus et s'opposent pourtant : l'un dit que
 le constat est FAUX, l'autre qu'il est JUSTE mais délibéré.
 
+**Mode autonome — l'exemption est CONDITIONNELLE, jamais une dispense.** Une Ronde lancée la nuit ne
+peut évidemment pas lui poser de fenêtre, et le process nocturne prévaut. Mais exempter sans
+reporter serait une perte sèche : les points problématiques de chaque Ronde nocturne
+disparaîtraient en silence, et plus les nuits se multiplient, plus sa voix se réduit — jusqu'à un
+dispositif qui ne l'interroge plus jamais tout en paraissant tourner. Les points partent donc en
+attente (`reporterPointsAuProchainPassage`, registre `points-en-attente.json`), avec la date de la
+Ronde qui les a produits ; la Ronde suivante en sa présence les pose **en premier**, en plus des
+siens, étiquetés « en attente depuis le … ». Dédoublonnés sur l'identifiant, et c'est la date la
+plus ANCIENNE qui est conservée : c'est elle qui dit depuis combien de temps on attend sa réponse,
+qu'une date rafraîchie effacerait. Le gardien de la Ronde refuse une Ronde nocturne qui aurait des
+points à poser et n'aurait rien reporté.
+
 **Garde-fou** : `findEngagementsSansTache()` — un « je vais le corriger » jamais devenu une tâche
 ressemble exactement à un problème traité. C'est le mécanisme que l'Article 28 combat, appliqué ici
 à ses propres engagements.

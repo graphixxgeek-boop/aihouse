@@ -87,12 +87,29 @@ export function verifyRondeProcess({
   existingPaths,
   shImpl = sh,
   loadLastRunImpl = loadLastRun,
+  voixUtilisateurPosee,
+  pointsReportes,
+  pointsAInterrogerCount = 0,
 } = {}) {
   const findings = [];
   const add = (check, message) => findings.push({ check, message });
 
   // 1. AUTO/PRIME/GOAT
   if (!nightAutonomousMode && autoPrimeGoatAsked !== true) add("auto-prime-goat", "La question AUTO/PRIME/GOAT n'a pas été confirmée comme posée avant l'exécution de la Ronde.");
+
+  // 2bis. LA VOIX DE L'UTILISATEUR (2026-09-22) — et l'exemption nocturne est CONDITIONNELLE, ce
+  // qui la distingue de celle de la fenêtre AUTO/PRIME/GOAT juste au-dessus. Celle-là supprime
+  // vraiment l'obligation (une question de lancement n'a aucun sens sans personne pour y répondre) ;
+  // celle-ci ne fait que la DIFFÉRER. Exempter sans reporter perdrait les points problématiques de
+  // chaque Ronde nocturne en silence — et plus les nuits se multiplient, plus sa voix se réduit,
+  // jusqu'à un dispositif qui ne l'interroge plus jamais tout en paraissant fonctionner.
+  if (nightAutonomousMode) {
+    if (pointsReportes !== true && pointsAInterrogerCount > 0) {
+      add("voix-utilisateur", `Ronde nocturne : ${pointsAInterrogerCount} point(s) problématique(s) n'ont pas été reportés au prochain passage — l'absence de l'utilisateur diffère la question, elle ne l'efface jamais.`);
+    }
+  } else if (voixUtilisateurPosee !== true) {
+    add("voix-utilisateur", "La fenêtre de réponses sur les points problématiques de son évaluation n'a pas été confirmée comme posée avant la clôture de la Ronde.");
+  }
 
   // 3. Items cochés vs réellement exécutés
   if (checkedItemIds && executedItemIds) {

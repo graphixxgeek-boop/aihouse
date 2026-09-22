@@ -5146,6 +5146,38 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.equal(a.findEngagementsSansTache(rep, 'une tâche sur coherence-des-priorites existe').length, 0, 'and once the task really exists, nothing is reported');
   }
 
+  // LE MODE AUTONOME FACE À LA VOIX DE L'UTILISATEUR (2026-09-22) — « bien sur tu prends en compte
+  // le mode autonome ou je ne suis pas present, process mode autonome prevaut dans ce cas ». Le
+  // piège est de traiter ça comme la dispense AUTO/PRIME/GOAT, qui elle supprime vraiment
+  // l'obligation. Ici l'absence DIFFÈRE, elle n'efface pas : sans report, chaque nuit autonome
+  // mangerait ses points problématiques en silence, et plus les nuits se multiplient plus sa voix
+  // se réduit — jusqu'à un dispositif qui ne l'interroge plus jamais tout en paraissant tourner.
+  {
+    const a = await import('../scripts/angel-of-ia-process.mjs');
+    const g = await import('../scripts/circle-process-guardian.mjs');
+    let ecrit = null;
+    const write = (_p, contenu) => { ecrit = contenu; };
+    const lire = () => ecrit ?? '[]';
+
+    const pts = [{ id: 'p1', origine: 'note basse', resume: 'r' }];
+    a.reporterPointsAuProchainPassage(pts, { writeFileImpl: write, readFileImpl: lire, date: '2026-09-20' });
+    a.reporterPointsAuProchainPassage(pts, { writeFileImpl: write, readFileImpl: lire, date: '2026-09-21' });
+    const attente = JSON.parse(ecrit);
+    assert.equal(attente.length, 1, 'three nights on the same finding must not queue the same question three times');
+    assert.equal(attente[0].reporteDepuis, '2026-09-20', 'and the OLDEST date is the one kept — it is what tells him how long the answer has been waited for, which a refreshed date would erase');
+
+    const fusionne = a.pointsAInterroger({ evaluation: null, enAttente: attente });
+    assert.ok(/en attente depuis le 2026-09-20/.test(fusionne[0].origine), 'a deferred point must come back labelled with how long it waited, and FIRST — drowning it among the new ones would lose it a second time');
+
+    // LE GARDIEN : cinq cas, et l'exemption nocturne est conditionnelle.
+    const voix = (o) => (g.verifyRondeProcess(o).findings || []).filter((x) => x.check === 'voix-utilisateur');
+    assert.equal(voix({}).length, 1, 'in normal mode, not asking is a gap');
+    assert.equal(voix({ voixUtilisateurPosee: true }).length, 0, 'asking clears it');
+    assert.equal(voix({ nightAutonomousMode: true, pointsAInterrogerCount: 3 }).length, 1, 'a NIGHT round with problematic points and nothing deferred is still a gap — this is what separates a conditional exemption from a real dispensation');
+    assert.equal(voix({ nightAutonomousMode: true, pointsAInterrogerCount: 3, pointsReportes: true }).length, 0, 'deferring them properly clears it: the obligation moved, it did not vanish');
+    assert.equal(voix({ nightAutonomousMode: true }).length, 0, 'and a night round with nothing problematic to ask owes nothing at all');
+  }
+
   // SÉRIE-TEMPORELLE (2026-09-22) — le mécanisme partagé d'historisation, demandé parce que « tous
   // les rapports doivent etre historisés et comparés [...] sinon : grosse perte de valeurs ». Les
   // quatre garde-fous sont testés un par un : sans eux, historiser produirait des tendances
@@ -7920,6 +7952,11 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // Un passage entièrement propre doit rendre ok:true — jamais un findings vide par accident de logique.
   const cleanResult = verifyRondeProcess({
     autoPrimeGoatAsked: true,
+    // Ajouté le 2026-09-22 avec l'étape « voix de l'utilisateur » : un fait de conversation de plus
+    // à fournir, exactement comme autoPrimeGoatAsked juste au-dessus. Ce test a d'ailleurs échoué à
+    // l'ajout de l'étape, et c'était le comportement voulu — une Ronde n'est « parfaitement propre »
+    // que si TOUS les faits sont fournis, jamais si le gardien en ignore un.
+    voixUtilisateurPosee: true,
     checkedItemIds: ['argus-scan'], executedItemIds: ['argus-scan'],
     circleItems: [{ id: 'argus-scan', producesReport: true }],
     reportFolders: { 'argus-scan': 'docs/argus' },

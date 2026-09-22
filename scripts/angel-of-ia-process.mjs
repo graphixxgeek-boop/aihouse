@@ -24,7 +24,7 @@
 // le format de fenêtre). Il ne les devine JAMAIS : il les DEMANDE, et refuse de conclure tant
 // qu'elles ne sont pas fournies (même discipline que circle-process-guardian).
 
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
@@ -509,8 +509,10 @@ export const REPONSES_EVAL_FILE = "docs/angel-of-ia-process/reponses-evaluation.
 // un constat de pertinence dur sont trois choses différentes, et n'en interroger qu'une laisserait
 // passer les deux autres.
 export const SEUIL_NOTE_PROBLEMATIQUE = 2;
-export function pointsAInterroger({ evaluation = null, jury = [], evolutions = [], seuil = SEUIL_NOTE_PROBLEMATIQUE } = {}) {
-  const points = [];
+export function pointsAInterroger({ evaluation = null, jury = [], evolutions = [], seuil = SEUIL_NOTE_PROBLEMATIQUE, enAttente = [] } = {}) {
+  // Les points reportés d'une Ronde nocturne passent EN PREMIER : ils attendent depuis plus
+  // longtemps, et les noyer au milieu des nouveaux reviendrait à les perdre une seconde fois.
+  const points = enAttente.map((p) => ({ ...p, origine: `${p.origine} (en attente depuis le ${p.reporteDepuis})` }));
   for (const d of [...(evaluation?.mesurable ?? []), ...(evaluation?.jugement ?? [])]) {
     if (d.note && d.note.indice <= seuil) {
       points.push({ id: d.id, origine: "note basse", resume: `${d.libelle} : ${d.note.nom} (${d.note.indice}/5). ${d.justification ?? d.base}` });
@@ -528,6 +530,50 @@ export function pointsAInterroger({ evaluation = null, jury = [], evolutions = [
   // et lui poser deux fois la même question userait l'exercice pour rien.
   const vus = new Set();
   return points.filter((p) => (vus.has(p.id) ? false : vus.add(p.id)));
+}
+
+// LE MODE AUTONOME — et ce n'est PAS une simple exemption (2026-09-22).
+//
+// Rappel de la règle générale, posée par l'utilisateur : « bien sur tu prends en compte le mode
+// autonome ou je ne suis pas present, process mode autonome prevaut dans ce cas ». Une Ronde lancée
+// pendant la nuit ne peut évidemment pas lui poser une fenêtre de questions.
+//
+// MAIS EXEMPTER SANS REPORTER SERAIT UNE PERTE SÈCHE, et exactement celle qu'il combat : les points
+// problématiques d'une Ronde nocturne disparaîtraient en silence, et plus les nuits autonomes se
+// multiplient, plus sa voix se réduit — jusqu'à un dispositif qui ne l'interroge plus jamais tout en
+// paraissant fonctionner. L'exemption ne supprime donc pas l'obligation, elle la DIFFÈRE AVEC UNE
+// TRACE : les points partent en attente, et la Ronde suivante en sa présence les pose en plus des
+// siens.
+//
+// La même logique que le reste de ce paysage : ce qui n'est pas fait est nommé, jamais effacé.
+export const POINTS_EN_ATTENTE_FILE = "docs/angel-of-ia-process/points-en-attente.json";
+
+export function loadPointsEnAttente({ root = ROOT, readFileImpl = readFileSync } = {}) {
+  try {
+    const brut = JSON.parse(readFileImpl(join(root, POINTS_EN_ATTENTE_FILE), "utf8"));
+    return Array.isArray(brut) ? brut : [];
+  } catch {
+    return [];
+  }
+}
+
+// reporterPointsAuProchainPassage() — appelée à la place de la fenêtre quand la Ronde tourne sans
+// lui. Chaque point garde la date de la Ronde qui l'a produit : au réveil, il voit non seulement
+// QUOI, mais DEPUIS QUAND on attend sa réponse.
+export function reporterPointsAuProchainPassage(points = [], { root = ROOT, readFileImpl = readFileSync, writeFileImpl = writeFileSync, date = new Date().toISOString().slice(0, 10) } = {}) {
+  const attente = loadPointsEnAttente({ root, readFileImpl });
+  // Dédoublonné sur l'identifiant : trois nuits de suite sur le même défaut ne doivent pas produire
+  // trois fois la même question — la date CONSERVÉE reste la plus ancienne, c'est elle qui dit
+  // depuis combien de temps le point attend.
+  const connus = new Set(attente.map((p) => p.id));
+  const nouveaux = points.filter((p) => !connus.has(p.id)).map((p) => ({ ...p, reporteDepuis: date }));
+  const suivants = [...attente, ...nouveaux];
+  writeFileImpl(join(root, POINTS_EN_ATTENTE_FILE), JSON.stringify(suivants, null, 1));
+  return suivants;
+}
+
+export function viderPointsEnAttente({ root = ROOT, writeFileImpl = writeFileSync } = {}) {
+  writeFileImpl(join(root, POINTS_EN_ATTENTE_FILE), "[]");
 }
 
 export function loadReponsesEvaluation({ root = ROOT, readFileImpl = readFileSync } = {}) {

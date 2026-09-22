@@ -345,6 +345,16 @@ export const TENSIONS_CONNUES = [
     tension: "La Ronde exige une vraie fenêtre à cocher posée à l'utilisateur ; le mode nocturne se déroule en son absence.",
     resolution: "Une Ronde lancée en nuit autonome est explicitement dispensée de cette fenêtre — exemption déjà codée dans le gardien de la Ronde, jamais une entorse improvisée.",
   },
+  {
+    entre: ["nuit", "ronde"],
+    tension: "La Ronde doit poser à l'utilisateur une fenêtre de réponses sur les points problématiques de son évaluation ; le mode nocturne se déroule en son absence.",
+    // Tranchée le 2026-09-22, et c'est une résolution DIFFÉRENTE de celle de la fenêtre
+    // AUTO/PRIME/GOAT juste au-dessus, qui est une vraie dispense. Ici l'absence ne dispense pas,
+    // elle diffère : les points partent en attente avec leur date, et la Ronde suivante en sa
+    // présence les pose en plus des siens. Sans ça, chaque nuit autonome mangerait sa voix en
+    // silence, et le dispositif finirait par ne plus jamais l'interroger tout en paraissant tourner.
+    resolution: "L'exemption nocturne est CONDITIONNELLE : les points problématiques sont reportés au prochain passage en sa présence (reporterPointsAuProchainPassage), jamais simplement sautés. Le gardien de la Ronde refuse une Ronde nocturne qui aurait des points à poser et n'aurait rien reporté.",
+  },
 ];
 
 export function findTensionsOnUnknownProcess({ tensions = TENSIONS_CONNUES, processes = PROCESSES } = {}) {
