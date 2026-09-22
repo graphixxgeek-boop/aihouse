@@ -143,7 +143,7 @@ export function genericSlots(tool, options = {}) {
 // Normalise ce qu'un outil fournit en un cadre complet, avec l'emplacement générique déjà rempli.
 // C'est le seul point de passage : les deux rendus consomment SON résultat, jamais les arguments
 // bruts de l'appelant — sans quoi l'un pourrait oublier une partie du gabarit que l'autre applique.
-export function buildReportFrame({ tool, title, subtitle, dateLabel, blocks = [], footer, scriptPath, origin, session, repo, changedAt, gravite, health } = {}) {
+export function buildReportFrame({ tool, title, subtitle, dateLabel, blocks = [], footer, scriptPath, origin, session, repo, changedAt, gravite, health, planDaction = null } = {}) {
   if (!title) throw new Error("buildReportFrame() exige un titre — jamais un rapport sans titre (REPORT_CONTRACT)");
   return {
     tool,
@@ -151,9 +151,70 @@ export function buildReportFrame({ tool, title, subtitle, dateLabel, blocks = []
     subtitle,
     dateLabel: dateLabel ?? new Date().toISOString(),
     slots: genericSlots(tool, { scriptPath, origin, session, repo, changedAt, gravite, health }),
-    blocks,
+    // Le plan d'action ferme TOUJOURS le rapport, après les constats et jamais avant : on ne décide
+    // pas de ce qu'on fait d'une trouvaille avant de l'avoir exposée.
+    blocks: planDaction ? [...blocks, { type: "heading", text: PLAN_ACTION_TITRE }, { type: "note", text: planDaction.lignes.join("\n") }] : blocks,
+    planDaction,
     footer,
   };
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// LA CHAÎNE RAPPORT → PLAN D'ACTION → TÂCHES (2026-09-22, principe fondamental posé par
+// l'utilisateur, et qualifié par lui de TRÈS IMPORTANT)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Dans ses mots : « un rapport produit des infos qui sont traitées lors d'une analyse : de cette
+// analyse ressort un plan d'action correctif ou des ajustements/optimisation. De ce plan d'action
+// ressort des taches à inscrire dans check-list ».
+//
+// LE TROU QUE ÇA FERME, et il est béant : aujourd'hui un outil trouve quelque chose, l'écrit, et
+// c'est fini. Rien ne garantit que le constat devienne une action. Tout ce paysage d'outils existe
+// pour produire des trouvailles, et personne ne vérifiait qu'une seule d'entre elles soit suivie
+// d'effet — le plus gros gaspillage possible, et le plus discret, puisqu'un rapport produit
+// ressemble à un problème traité.
+//
+// OÙ VIT LE PLAN (tranché par l'utilisateur) : DANS LE RAPPORT LUI-MÊME, jamais dans un document à
+// part. Raison décisive : un plan qui voyage avec le rapport qui l'a motivé ne peut pas se perdre,
+// et son absence se repère mécaniquement. Un troisième endroit à tenir à jour se serait périmé.
+//
+// LES TROIS ÉTATS D'UN CONSTAT, jamais deux — c'est ce qui empêche le plan de devenir une formalité
+// qu'on remplit pour faire taire le gardien :
+//   · RETENU   — ça devient une tâche, et cette tâche doit exister pour de vrai ;
+//   · ÉCARTÉ   — on a regardé et on ne fait rien, avec la raison écrite ;
+//   · À TRANCHER — ça demande une décision qui n'est pas la mienne.
+// Un constat sans l'un de ces trois états est un constat dont personne ne répond.
+
+export const ETATS_CONSTAT = ["retenu", "ecarte", "a-trancher"];
+export const PLAN_ACTION_TITRE = "Plan d'action";
+
+// Construit la section. `constats` : [{ constat, etat, pourquoi?, tache? }].
+export function buildPlanDaction(constats = [], { toolSlug } = {}) {
+  const inconnus = constats.filter((c) => !ETATS_CONSTAT.includes(c.etat));
+  if (inconnus.length) throw new Error(`buildPlanDaction(): état inconnu "${inconnus[0].etat}" — attendu ${ETATS_CONSTAT.join(", ")}. Un constat sans état déclaré est un constat dont personne ne répond.`);
+  const retenus = constats.filter((c) => c.etat === "retenu");
+  const sansTache = retenus.filter((c) => !c.tache);
+  const lignes = [];
+  if (!constats.length) {
+    // Un rapport qui n'a rien trouvé a bel et bien un plan d'action : « rien à faire ». L'écrire
+    // noir sur blanc distingue « j'ai regardé, il n'y a rien » de « je n'ai pas conclu » — deux
+    // choses qu'une section absente confondrait.
+    lignes.push("Aucun constat retenu : ce passage n'a rien trouvé qui appelle une action.");
+    return { lignes, retenus: [], sansTache: [], vide: true };
+  }
+  for (const c of constats) {
+    if (c.etat === "retenu") lignes.push(`  → RETENU · ${c.constat}${c.tache ? ` — tâche : ${c.tache}` : " — ⚠️ aucune tâche associée"}`);
+    else if (c.etat === "ecarte") lignes.push(`  ✗ ÉCARTÉ · ${c.constat} — ${c.pourquoi ?? "⚠️ écarté sans raison écrite, ce qui n'est pas une décision"}`);
+    else lignes.push(`  ? À TRANCHER · ${c.constat}${c.pourquoi ? ` — ${c.pourquoi}` : ""}`);
+  }
+  if (sansTache.length) lignes.push("", `⚠️ ${sansTache.length} constat(s) retenu(s) sans tâche associée — un constat retenu qui ne devient pas une tâche est un constat oublié.`);
+  return { lignes, retenus, sansTache, vide: false, toolSlug };
+}
+
+// LE REPÉRAGE MÉCANIQUE, et c'est lui qui donne sa force au principe : un rapport sans section de
+// plan d'action se voit, donc on ne peut pas l'oublier discrètement.
+export function reportHasPlanDaction(texte) {
+  return typeof texte === "string" && texte.includes(PLAN_ACTION_TITRE);
 }
 
 // ————————————————————————————————————————————————————————————————————————

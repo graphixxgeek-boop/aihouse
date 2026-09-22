@@ -825,6 +825,55 @@ function appendIndexRow({ file, zoom, format, count, total, regressions, stagnan
 // check-tasks-details lui-même signalé "sans badge" alors que ses trois fichiers existent bien).
 // Extraite le 2026-09-21 vers lib-shell.mjs (circle-tasks.mjs en a aussi besoin pour son propre
 // garde-fou de fraîcheur ; l'importer directement d'ici créerait un cycle, cf. lib-shell.mjs).
+// suggestTaskTypesForPlan() (2026-09-22) — la moitié « check-list » du principe posé par
+// l'utilisateur : « je veux que check-list soit capable de dire : voici le type de tâches qui doit
+// être associé à ce plan d'action, pendant que god dit : il y a un plan d'action, il faut mettre
+// des tâches associées ».
+//
+// Les deux moitiés sont volontairement séparées, et c'est tout l'intérêt du dispositif : god
+// CONSTATE un manque (il ne sait pas quoi mettre à la place), check-list PROPOSE une forme (elle ne
+// sait pas si c'est obligatoire). Fusionner les deux donnerait un outil qui invente la tâche qu'il
+// réclame, donc un outil qui se satisfait tout seul.
+//
+// LES QUATRE NATURES, tirées de ce que ce projet produit réellement — jamais une taxonomie
+// importée. Chacune appelle un TRAVAIL différent, et se tromper de nature coûte cher : traiter une
+// décision comme un correctif, c'est coder une réponse que personne n'a choisie.
+export const NATURES_DE_TACHE = [
+  { nature: "correctif", quand: "le constat décrit quelque chose de cassé, faux ou incohérent", forme: "corriger à la racine puis un test qui épingle le défaut (Article 3)", indices: /\b(bug|faux|cassé|incohéren|erreur|manqu|absent|jamais lu|jamais écrit|régress)/i },
+  { nature: "investigation", quand: "le constat pose une question à laquelle le rapport ne répond pas", forme: "aller lire le vrai code ou les vraies données avant toute décision (Article 19)", indices: /\b(pourquoi|d'où|est-ce que|semble|possible|suspect|à vérifier|inexpliqu)/i },
+  { nature: "décision", quand: "deux options légitimes s'affrontent et le choix n'est pas technique", forme: "une question de calibrage à l'utilisateur, jamais une décision prise seul (Article 16)", indices: /\b(faut-il|choisir|arbitr|décid|trancher|ou bien|calibr|seuil)/i },
+  { nature: "documentation", quand: "le code et un document de référence ne disent plus la même chose", forme: "mettre à jour le document le jour même, jamais une note pour plus tard (Article 13)", indices: /\b(document|référentiel|charte|CLAUDE\.md|registre|blueprint|à jour|périmé)/i },
+];
+
+export function suggestTaskTypesForPlan(planDaction, { natures = NATURES_DE_TACHE } = {}) {
+  const retenus = planDaction?.retenus ?? [];
+  if (!retenus.length) return { mesurable: true, suggestions: [], message: "Aucun constat retenu — rien à transformer en tâche, et c'est un résultat, jamais un oubli." };
+  const suggestions = retenus.map((c) => {
+    const texte = String(c.constat ?? "");
+    const correspondances = natures.filter((n) => n.indices.test(texte));
+    return {
+      constat: texte,
+      dejaLiee: Boolean(c.tache),
+      // Aucune correspondance n'est PAS un défaut du constat : c'est l'aveu honnête que cette
+      // heuristique de vocabulaire ne sait pas classer celui-là. Inventer une nature par défaut
+      // enverrait vers le mauvais travail, ce qui est pire que de ne rien proposer.
+      naturesProposees: correspondances.length ? correspondances.map((n) => ({ nature: n.nature, forme: n.forme })) : [],
+      note: correspondances.length ? undefined : "nature non reconnue par le vocabulaire — à qualifier à la main plutôt que rangée d'office",
+    };
+  });
+  return { mesurable: true, suggestions, message: `${suggestions.length} constat(s) retenu(s) — ${suggestions.filter((s) => !s.dejaLiee).length} encore sans tâche.` };
+}
+
+export function formatTaskTypeSuggestions(res) {
+  const l = [res.message];
+  for (const s of res.suggestions) {
+    l.push(`  · ${s.constat}${s.dejaLiee ? " (déjà reliée)" : ""}`);
+    if (s.naturesProposees.length) for (const n of s.naturesProposees) l.push(`      type « ${n.nature} » → ${n.forme}`);
+    else l.push(`      ${s.note}`);
+  }
+  return l.join("\n");
+}
+
 export function buildRealOnboardingContext(root = ROOT.replace(/\/$/, "")) {
   const docsDir = join(root, "docs");
   const existingPaths = walkDocsPaths(docsDir, root);

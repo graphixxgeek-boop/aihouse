@@ -740,6 +740,53 @@ de ce dépôt, sans une ligne de notre conversation, pourrait-elle reprendre ce 
 défaire ce qui a été gagné ?* Un « non » quelque part est un écart à combler tout de suite
 (Article 3/13), jamais une note pour plus tard.
 
+**Article 28 — Un rapport n'est pas fini quand il est écrit : il l'est quand ses constats sont devenus des tâches.**
+*(2026-09-22, principe fondamental posé par l'utilisateur et qualifié par lui de TRÈS IMPORTANT :
+« un rapport produit des infos qui sont traitées lors d'une analyse : de cette analyse ressort un
+plan d'action correctif ou des ajustements/optimisation. De ce plan d'action ressort des taches à
+inscrire dans check-list ».)*
+
+**Le trou que cet Article ferme est le plus gros du projet, et le plus discret** : tout ce paysage
+d'outils existe pour produire des trouvailles, et rien ne vérifiait qu'une seule d'entre elles soit
+suivie d'effet. Un rapport produit ressemble à un problème traité — c'est exactement ce qui rend ce
+gaspillage invisible.
+
+**La chaîne, en quatre maillons, dont aucun ne peut manquer** :
+`rapport → analyse → plan d'action → tâches dans docs/suivi/`.
+
+**Où vit le plan d'action** : DANS LE RAPPORT LUI-MÊME, en dernière section, jamais dans un document
+séparé. Un plan qui voyage avec le rapport qui l'a motivé ne peut pas se perdre, et son absence se
+repère mécaniquement (`reportHasPlanDaction()`). Un troisième endroit à tenir à jour se serait
+périmé comme tous les autres.
+
+**Les trois états d'un constat, jamais deux** — c'est ce qui empêche le plan de devenir une
+formalité qu'on remplit pour faire taire le gardien :
+- **RETENU** — ça devient une tâche, et cette tâche doit exister pour de vrai dans `docs/suivi/` ;
+- **ÉCARTÉ** — on a regardé et on ne fait rien, **avec la raison écrite** (un écart sans raison
+  n'est pas une décision, c'est un abandon déguisé) ;
+- **À TRANCHER** — ça demande une décision qui n'est pas celle de l'agent (Article 16).
+
+**Les deux moitiés du dispositif, volontairement séparées** — et cette séparation est le cœur du
+mécanisme, pas un détail d'implémentation :
+- **check-tasks-details** PROPOSE une forme : « voici le type de tâche qu'appelle ce constat »
+  (correctif / investigation / décision / documentation, chacun renvoyant à l'Article qui le
+  gouverne). Il ne sait pas si c'est obligatoire.
+- **god-of-all-process** CONSTATE le manque : « il y a un plan d'action, il faut des tâches
+  associées ». Il ne sait pas quoi mettre à la place.
+
+Les fusionner donnerait un outil qui invente la tâche qu'il réclame — donc un outil qui se satisfait
+tout seul, et ne garantit plus rien.
+
+**L'autorité de god sur cette chaîne, tranchée explicitement : il SIGNALE FORT, il ne bloque
+JAMAIS.** Le manquement est nommé, le responsable désigné, et il reste visible tant qu'il n'est pas
+traité — donc impossible à oublier, mais rien ne s'arrête. Un gardien qui bloquerait sur un sujet
+sans rapport avec le travail en cours pousserait justement à le contourner.
+
+**Le cas le plus vicieux, et il est couvert** : un constat qui annonce une tâche *qui n'existe pas*.
+Une référence morte ressemble à un lien, ce qui est pire qu'une absence — `checkActionChain()`
+vérifie donc que la tâche annoncée existe réellement dans le suivi, jamais seulement qu'elle est
+citée.
+
 ## Règles de travail — collaboration avec l'utilisateur
 
 `docs/regles-de-travail.md` documente, séparément de la charte de contenu ci-dessus, la façon dont

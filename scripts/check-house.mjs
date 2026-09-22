@@ -3121,6 +3121,27 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // vérifiée avant de répondre : la réponse était non. checkAllAgentBadges() n'annonce QUE ce qui
   // change, donc un membre incomplet depuis des jours ne produisait rien — le silence d'un outil
   // d'annonce lu comme « tout va bien », encore une absence prise pour une mesure.
+  // ARTICLE 28 — la section de plan d'action, et la moitié « check-tasks-details » qui propose une
+  // FORME sans jamais savoir si elle est obligatoire. Les deux moitiés restent séparées : les
+  // fusionner donnerait un outil qui invente la tâche qu'il réclame, donc qui se satisfait seul.
+  const {buildPlanDaction,reportHasPlanDaction,ETATS_CONSTAT,buildReportFrame:brf}=await import('../scripts/report-template.mjs');
+  const {suggestTaskTypesForPlan,NATURES_DE_TACHE}=await import('../scripts/check-tasks-details.mjs');
+  {
+    assert.deepEqual(ETATS_CONSTAT,['retenu','ecarte','a-trancher'],'exactly three states, never two: a finding with no declared state is a finding nobody answers for, and "retained vs dismissed" alone would force a decision that is sometimes the user\'s to make');
+    assert.throws(()=>buildPlanDaction([{constat:'x',etat:'inconnu'}]),/état inconnu/,'an unrecognised state must fail loudly rather than silently sliding into a default that would misrepresent what was decided');
+    assert.ok(buildPlanDaction([]).vide&&buildPlanDaction([]).lignes[0].includes('rien trouvé'),'a report that found nothing still HAS an action plan — saying "nothing to do" in words distinguishes "I looked and there is nothing" from "I did not conclude", which an absent section would confuse');
+    const p=buildPlanDaction([{constat:'a',etat:'retenu'},{constat:'b',etat:'retenu',tache:'#1'},{constat:'c',etat:'ecarte'}]);
+    assert.equal(p.sansTache.length,1,'a retained finding with no task must be counted as such — retained means judged worth acting on, so nothing carrying it is a forgotten finding');
+    assert.ok(p.lignes.some(l=>l.includes('écarté sans raison écrite')),'a finding dismissed with no written reason must be called out in the plan itself: that is not a decision, it is an abandonment in disguise');
+    assert.ok(reportHasPlanDaction(brf({title:'t',planDaction:p}).blocks.map(b=>b.text).join('\n'))&&!reportHasPlanDaction('un rapport sans rien'),'a report carrying a plan must be mechanically distinguishable from one without — that detectability is the whole force of the principle');
+    assert.equal(brf({title:'t',planDaction:p}).blocks.at(-1).type,'note','the plan must CLOSE the report, never open it: one does not decide what to do with a finding before having laid it out');
+    const sug=suggestTaskTypesForPlan(p);
+    assert.ok(sug.suggestions.length===2&&sug.suggestions.every(s=>'naturesProposees' in s),'the suggester works from the retained findings only — a dismissed finding needs no task');
+    assert.ok(NATURES_DE_TACHE.every(n=>n.forme.includes('Article')),'each proposed task nature must point at the Article that governs that kind of work, so the suggestion carries its own justification to whoever reads it later (Article 27)');
+    const inconnu=suggestTaskTypesForPlan({retenus:[{constat:'le rendu 3D scintille'}]});
+    assert.ok(inconnu.suggestions[0].naturesProposees.length===0&&inconnu.suggestions[0].note.includes('non reconnue'),'a finding the vocabulary cannot classify must say so honestly — inventing a default nature would send the work in the wrong direction, which is worse than proposing nothing');
+    assert.ok(suggestTaskTypesForPlan(buildPlanDaction([])).message.includes('jamais un oubli'),'an empty plan must be reported as a result, never as an omission');
+  }
   const {integrationAudit,integrationAuditLines,findScriptsMissingFromAgentFiles:fsmaf,findToolsMissingFromMenu:ftmm}=await import('../scripts/le-coordinateur.mjs');
   {
     assert.equal(integrationAudit({}).mesurable,false,'without the master table the audit must report itself as IMPOSSIBLE, never return an empty clean-looking result — an empty list would read as "everyone is integrated" when in fact nobody was checked');
@@ -3190,9 +3211,34 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.match(avecVerdict.texte,/relayé par process\.simulation\.guardian/,'a relayed verdict must say which guardian produced it — god never claims someone else\'s finding as his own measurement');
   assert.ok(Object.keys(RESPONSABLES).includes('personne'),'an step no mechanism can verify must have its own category: blaming the agent for what nothing could check would make the whole report untrustworthy');
   assert.ok(!avecVerdict.texte.split('responsable')[1]?.startsWith(' : personne'),'a real fault must never be filed under "nobody" — that category exists for unverifiable steps only');
+  // LE DÉTECTEUR D'ACTIVITÉS À ENJEU — réécrit le 2026-09-22 après TROIS échecs successifs, et
+  // c'est le troisième qui a tranché la question de fond. (1) « plusieurs sous-commandes + écrit un
+  // fichier » → 12 candidats dont le filet de tests : ça décrit la forme d'un script mature, pas
+  // l'enjeu d'une activité. (2) « consomme + produit un livrable lu » → 19, PIRE, le marqueur du
+  // livrable attrapant renderHtmlReport que tous les outils importent. (3) « vrais appels sortants
+  // dans le texte » → check-spirit, qui fait SEIZE vrais appels Gemini, sort à zéro, pendant que
+  // check-house sort à 7 (ses bouchons de test).
+  // CONCLUSION, plus utile que l'outil cherché : l'enjeu est un JUGEMENT, pas une mesure. Rien dans
+  // le texte d'un script ne dit ce que son ratage coûte. La liste est donc déclarée (Article 24
+  // l'autorise pour un contenu curaté, à condition de l'écrire), et c'est le RÉEL qui la contrôle
+  // en sens inverse.
+  const {ACTIVITES_A_ENJEU,findActivitiesWithoutProcess,checkActionChain,actionChainLines,MANQUEMENTS_CHAINE}=await import('../scripts/god-of-all-process.mjs');
+  assert.ok(ACTIVITES_A_ENJEU.length>=4&&ACTIVITES_A_ENJEU.every(a=>a.id&&a.activite&&a.pourquoi&&a.pourquoi.length>40),'every declared high-stakes activity must carry a real written reason, long enough to be an argument rather than a label — a curated list without its reasoning is exactly the hand-copied list Article 24 forbids');
   const merite=findScriptsDeservingProcess();
-  assert.ok(Array.isArray(merite)&&merite.every(m=>m.indices.length>=2),'a script is only flagged as deserving a process on at least two real indices — one alone is too common to mean anything');
+  assert.ok(Array.isArray(merite)&&merite.length<ACTIVITES_A_ENJEU.length,'the detector must now flag only DECLARED activities genuinely lacking a process, never a broad sweep of scripts — three successive mechanical criteria produced 12, then 19, then a marker that missed the very tool it should have caught');
   assert.ok(!merite.some(m=>m.chemin==='scripts/god-of-all-process.mjs'),'a process guardian must never be told it needs a process of its own on top of the one it already guards');
+  assert.deepEqual(findActivitiesWithoutProcess({activites:[{id:'simulation',activite:'x',pourquoi:'y'}]}),[],'an activity already covered by a real process must never be flagged');
+  // LA CHAÎNE RAPPORT → PLAN D'ACTION → TÂCHES (Article 28), la moitié « god » : il CONSTATE le
+  // manque, il ne le comble jamais — et il signale fort sans jamais bloquer, l'autorité tranchée
+  // explicitement par l'utilisateur.
+  assert.ok(Object.keys(MANQUEMENTS_CHAINE).length===3,'the chain has exactly three ways of breaking, each named: a report with no plan, a retained finding with no task, and a finding dismissed without a written reason');
+  assert.equal(checkActionChain({rapportProduit:true,planDaction:null}).manquements[0].type,'rapport-sans-plan','a report produced without any action plan is the gravest break in the chain — a produced report looks exactly like a solved problem, which is what makes this waste invisible');
+  assert.deepEqual(checkActionChain({rapportProduit:false}).manquements,[],'no report means nothing to chain — never a fabricated fault');
+  const planOk={retenus:[{constat:'a',tache:'#428'}],sansTache:[]};
+  assert.deepEqual(checkActionChain({planDaction:planOk,suiviText:'| 428 | x |'}).manquements,[],'a retained finding whose announced task really exists in the tracker closes the chain');
+  assert.match(checkActionChain({planDaction:planOk,suiviText:'| 999 | x |'}).manquements[0].detail,/référence morte/,'the nastiest case must be covered: a finding announcing a task that does NOT exist — a dead reference looks like a link, which is worse than no link at all');
+  assert.equal(checkActionChain({planDaction:planOk}).mesurable,false,'without the tracker text the tool can see that a finding announces no task, never verify that an announced task is real — two different questions, and it must only answer the one it can actually settle');
+  assert.ok(actionChainLines([]).some(l=>l.includes('✅')),'a fully closed chain must say so explicitly rather than rendering an empty section that reads as "not run"');
   assert.ok(selfCheck().ok,'the real dispositif must be self-consistent: god-of-all-process watching itself, every process with a real guardian and a real document, no broken probe, no orphan tension');
   assert.ok(PROCESSES.some(p=>p.slug==='meta'&&p.gardien==='scripts/god-of-all-process.mjs'),'god-of-all-process must declare a master process watched by itself — a supervisor no rule supervises drifts without anything saying so, the exact pattern this whole toolset fights, applied at its top');
   const sansMeta=selfCheck({processes:PROCESSES.filter(p=>p.slug!=='meta')});

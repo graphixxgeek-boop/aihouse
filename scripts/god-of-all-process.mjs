@@ -276,42 +276,125 @@ const INDICES_MERITE_PROCESS = [
   { marqueur: /--confirm|--force|override/, indice: "prévoit un passage en force — donc une règle à respecter" },
 ];
 
-export function findScriptsDeservingProcess({ processes = PROCESSES, root = ROOT, scripts, readFileImpl = readFileSync } = {}) {
-  const gardiens = new Set(processes.map((p) => p.gardien));
-  const liste = scripts ?? (() => { try { return readdirSync(join(root, "scripts")).filter((f) => f.endsWith(".mjs")).map((f) => `scripts/${f}`); } catch { return []; } })();
-  const trouves = [];
-  for (const chemin of liste) {
-    if (gardiens.has(chemin)) continue; // un gardien de process n'a pas à en déclarer un de plus
-    let src;
-    try { src = readFileImpl(join(root, chemin), "utf8"); } catch { continue; }
-    const indices = INDICES_MERITE_PROCESS.filter((i) => i.marqueur.test(src)).map((i) => i.indice);
-    // Deux indices au moins : un seul est trop courant pour vouloir dire quelque chose.
-    if (indices.length >= 2) trouves.push({ chemin, indices });
-  }
-  return trouves;
+// findActivitiesDeservingProcess() — TROIS TENTATIVES, TROIS ÉCHECS, et c'est le troisième qui a
+// tranché la question (2026-09-22).
+//
+// L'utilisateur a choisi le bon critère : une activité mérite un process quand la rater COÛTE CHER
+// et se voit trop tard. Restait à le mesurer, et c'est là que tout a échoué :
+//   1. « plusieurs sous-commandes + écrit un fichier + passage en force » → 12 candidats, dont le
+//      filet de tests. Ça décrit la FORME d'un script mature, pas l'enjeu d'une activité.
+//   2. « consomme du quota + produit un livrable lu » → 19 candidats, PIRE. Le marqueur du livrable
+//      attrapait `renderHtmlReport`, que tous les outils importent depuis leur migration.
+//   3. « vrais appels sortants dans le texte » → check-spirit, l'outil qui fait SEIZE vrais appels
+//      Gemini, sort à ZÉRO (il passe par lib/), pendant que check-house sort à 7 (ses bouchons de
+//      test). Le marqueur rate exactement ce qu'il devait attraper.
+//
+// LA CONCLUSION, et elle est plus utile que l'outil qu'on cherchait : L'ENJEU EST UN JUGEMENT, PAS
+// UNE MESURE. Rien dans le texte d'un script ne dit ce que son ratage coûte. S'obstiner aurait
+// produit un quatrième marqueur adjacent, et un scan qui donne l'illusion d'une veille est pire
+// qu'un scan absent.
+//
+// D'où la forme retenue : la liste est DÉCLARÉE (l'Article 24 l'autorise explicitement pour un
+// contenu curaté à la main, à condition d'écrire noir sur blanc que c'est volontaire — ce que fait
+// ce commentaire), et c'est le RÉEL qui la contrôle en sens inverse : toute activité déclarée à
+// enjeu doit avoir un process, et findActivitiesWithoutProcess() le vérifie mécaniquement. Le
+// jugement est humain, la vérification est mécanique — jamais l'inverse.
+export const ACTIVITES_A_ENJEU = [
+  { id: "simulation", activite: "Lancer une simulation Article 18", pourquoi: "une heure de vrai quota Gemini ; un ratage se repaie intégralement, et les défauts se voient après coup dans le journal" },
+  { id: "ronde", activite: "Mener une Ronde CIRCLE-TASKS", pourquoi: "elle gouverne le déclenchement de tout le reste ; une Ronde bâclée laisse dormir des outils pendant des semaines sans que rien ne le dise" },
+  { id: "nuit", activite: "Travailler en autonomie sans l'utilisateur", pourquoi: "personne ne peut corriger le tir avant le lendemain ; une erreur de cadrage coûte une nuit entière" },
+  { id: "meta", activite: "Tenir le dispositif de process lui-même", pourquoi: "un surveillant qui dérive ne le dit jamais lui-même — c'est le seul point où l'absence de contrôle est structurellement invisible" },
+  { id: "diagnostic-api", activite: "Sonder le quota Gemini (Smart Breaker)", pourquoi: "consomme de vrais appels pour un diagnostic ; lancé au mauvais moment, il aggrave le blocage qu'il mesure (Article 22)" },
+  { id: "livraison-charte", activite: "Modifier CLAUDE.md ou un document de référence", pourquoi: "une règle affaiblie par erreur ne se voit pas — elle s'applique en silence pendant des semaines, et c'est le garde-fou non négociable de l'Article 13" },
+];
+
+// LE CONTRÔLE MÉCANIQUE, en sens inverse du jugement : chaque activité déclarée à enjeu a-t-elle
+// réellement un process ? C'est cette fonction-là qui est vérifiable, jamais la liste elle-même.
+export function findActivitiesWithoutProcess({ activites = ACTIVITES_A_ENJEU, processes = PROCESSES } = {}) {
+  const couverts = new Set(Object.values(processes).map((p) => p.id ?? p.slug).filter(Boolean));
+  const parNom = Object.values(processes).map((p) => String(p.nom ?? p.label ?? "").toLowerCase());
+  return activites.filter((a) => {
+    if (couverts.has(a.id)) return false;
+    return !parNom.some((n) => n.includes(a.id) || a.activite.toLowerCase().split(" ").some((mot) => mot.length > 5 && n.includes(mot)));
+  });
 }
 
-// ————————————————————————————————————————————————————————————————————————
-// LE RAPPORT DE RONDE — centralisé ici, et ici seulement
-// ————————————————————————————————————————————————————————————————————————
+// Ancien nom conservé : plusieurs appelants (le rapport de conformité, les tests) l'utilisent, et le
+// renommer sans raison casserait des renvois pour un gain nul. Il pointe désormais sur la version
+// déclarée, jamais sur l'ancien scan de forme.
+export function findScriptsDeservingProcess(opts = {}) {
+  return findActivitiesWithoutProcess(opts).map((a) => ({ chemin: a.activite, indices: [a.pourquoi] }));
+}
 
-// ARCHITECTURE FIXÉE PAR L'UTILISATEUR (2026-09-22) : « pour les process, c'est god of process qui
-// produit le rapport uniquement [...] Les rapports de process secondaires ne produisent pas de
-// rapport directement livrés à la ronde : ce serait trop : god of process centralise. » Les gardiens
-// secondaires (la Ronde, la simulation) gardent donc leur propre verdict, mais c'est god qui les lit
-// et qui livre LE rapport de process. Une seule voix à la Ronde, pas une par gardien.
-//
-// LE COUPABLE EST NOMMÉ, sans détour — demande explicite du même jour (« il designe le coupable »).
-// Dans les faits c'est presque toujours l'agent qui a sauté une étape, et le dire est le seul moyen
-// que ça change : c'est précisément ce qui manquait quand la règle des tours autonomes s'est perdue
-// entre deux simulations sans que personne ne soit responsable de rien.
 export const RESPONSABLES = {
   agent: "l'agent (moi) — étape prévue par le process et simplement pas faite",
   outil: "un outil — il devait produire quelque chose et ne l'a pas fait",
   personne: "personne — aucun mécanisme ne peut vérifier cette étape, elle repose sur la seule discipline",
 };
 
-export function buildProcessComplianceReport({ processes = PROCESSES, root = ROOT, verdictsSecondaires = [], sectionAngel } = {}) {
+// LA CHAÎNE RAPPORT → PLAN D'ACTION → TÂCHES (2026-09-22) — la moitié « god » du principe
+// fondamental posé par l'utilisateur, celle qui CONSTATE le manque sans jamais le combler :
+// « god dit : il y a un plan d'action, il faut mettre des tâches associées ».
+//
+// SON AUTORITÉ, tranchée explicitement : il SIGNALE FORT, il ne bloque JAMAIS. Le manquement est
+// nommé, le responsable désigné, et il reste visible tant que ce n'est pas traité — donc impossible
+// à oublier, mais rien ne s'arrête. Cohérent avec ce que god est : un référent qui constate, jamais
+// un verrou. Un gardien qui bloquerait sur un sujet sans rapport avec le travail en cours pousserait
+// justement à le contourner.
+//
+// LES TROIS MANQUEMENTS DE LA CHAÎNE, dans l'ordre où ils cassent le lien :
+export const MANQUEMENTS_CHAINE = {
+  "rapport-sans-plan": "un rapport a été produit et ne dit nulle part ce qu'on fait de ce qu'il a trouvé — le cas le plus grave, puisqu'un rapport produit ressemble à un problème traité",
+  "constat-sans-tache": "un constat a été RETENU dans un plan d'action, donc jugé digne d'action, et aucune tâche ne le porte",
+  "constat-ecarte-sans-raison": "un constat a été écarté sans raison écrite — ce n'est pas une décision, c'est un abandon déguisé",
+};
+
+// Vérifie la chaîne pour UN plan d'action, contre le vrai texte du suivi. Ne devine jamais : si le
+// suivi n'est pas fourni, il le dit plutôt que de conclure que rien n'existe.
+export function checkActionChain({ planDaction, suiviText, rapportProduit = true } = {}) {
+  if (!rapportProduit) return { mesurable: true, manquements: [], note: "aucun rapport produit — rien à chaîner" };
+  if (!planDaction) {
+    return { mesurable: true, manquements: [{ type: "rapport-sans-plan", detail: MANQUEMENTS_CHAINE["rapport-sans-plan"], responsable: "agent" }] };
+  }
+  if (suiviText == null) {
+    // Sans le texte du suivi, on peut voir qu'un constat n'a pas de tâche DÉCLARÉE, mais jamais
+    // vérifier qu'une tâche déclarée existe vraiment. Deux questions différentes, et on ne répond
+    // qu'à celle qu'on peut réellement trancher.
+    return {
+      mesurable: false,
+      raison: "texte du suivi non fourni — on peut voir qu'un constat n'annonce aucune tâche, jamais vérifier qu'une tâche annoncée existe pour de vrai",
+      manquements: (planDaction.sansTache ?? []).map((c) => ({ type: "constat-sans-tache", detail: `« ${c.constat} »`, responsable: "agent" })),
+    };
+  }
+  const manquements = [];
+  for (const c of planDaction.retenus ?? []) {
+    if (!c.tache) { manquements.push({ type: "constat-sans-tache", detail: `« ${c.constat} » — retenu, donc jugé digne d'action, et rien ne le porte`, responsable: "agent" }); continue; }
+    // La tâche annoncée existe-t-elle VRAIMENT dans le suivi ? Une référence à une tâche qui
+    // n'existe pas est pire qu'une absence : elle ressemble à un lien.
+    const numero = String(c.tache).match(/#?(\d+)/)?.[1];
+    const presente = numero ? new RegExp(`\\|\\s*${numero}\\s*\\|`).test(suiviText) : suiviText.includes(String(c.tache));
+    if (!presente) manquements.push({ type: "constat-sans-tache", detail: `« ${c.constat} » annonce la tâche ${c.tache}, qui n'existe pas dans le suivi — une référence morte ressemble à un lien, ce qui est pire qu'une absence`, responsable: "agent" });
+  }
+  return { mesurable: true, manquements };
+}
+
+export function actionChainLines(resultats = []) {
+  const tous = resultats.flatMap((r) => (r.manquements ?? []).map((m) => ({ ...m, source: r.source })));
+  const nonMesurables = resultats.filter((r) => r.mesurable === false);
+  const l = ["— Chaîne rapport → plan d'action → tâches (god-of-all-process) —"];
+  if (!tous.length && !nonMesurables.length) {
+    l.push("✅ Chaque rapport produit porte son plan d'action, et chaque constat retenu porte sa tâche.");
+    return l;
+  }
+  if (tous.length) {
+    l.push(`${tous.length} maillon(s) rompu(s) — signalés, jamais bloquants :`);
+    for (const m of tous) l.push(`  ✗ [${m.responsable}] ${m.source ? `${m.source} : ` : ""}${m.detail}`);
+  }
+  for (const r of nonMesurables) l.push(`  ? ${r.source ?? "chaîne"} — non vérifiable : ${r.raison}`);
+  return l;
+}
+
+export function buildProcessComplianceReport({ processes = PROCESSES, root = ROOT, verdictsSecondaires = [], sectionAngel, chainesAction = [] } = {}) {
   const lignes = [];
   const manquements = [];
   for (const p of processes) {
@@ -337,12 +420,15 @@ export function buildProcessComplianceReport({ processes = PROCESSES, root = ROO
   // sautées — ce sont deux natures différentes, et les fondre rendrait les deux illisibles. Relayé
   // depuis angel, jamais recalculé ici, exactement comme les verdicts des autres gardiens.
   if (sectionAngel && sectionAngel.length) lignes.push("", ...sectionAngel);
-  const merite = findScriptsDeservingProcess({ processes, root });
-  if (merite.length) {
-    lignes.push("", `${merite.length} script(s) qui mériteraient peut-être un process et n'en ont aucun (indice, jamais un reproche) :`);
-    for (const m of merite) lignes.push(`  · ${m.chemin} — ${m.indices.join(" ; ")}`);
+  // LA CHAÎNE RAPPORT → PLAN D'ACTION → TÂCHES, dans sa propre section (2026-09-22). Signalée fort,
+  // jamais bloquante : c'est l'autorité que l'utilisateur a explicitement donnée à god sur ce point.
+  lignes.push("", ...actionChainLines(chainesAction));
+  const sansProcess = findActivitiesWithoutProcess({ processes });
+  if (sansProcess.length) {
+    lignes.push("", `${sansProcess.length} activité(s) DÉCLARÉE(S) à enjeu et sans process :`);
+    for (const a of sansProcess) lignes.push(`  · ${a.activite} — ${a.pourquoi}`);
   }
-  return { lignes, manquements, fautes: fautes.length, scriptsSansProcess: merite.length, texte: lignes.join("\n") };
+  return { lignes, manquements, fautes: fautes.length, scriptsSansProcess: sansProcess.length, texte: lignes.join("\n") };
 }
 
 // ————————————————————————————————————————————————————————————————————————
