@@ -260,3 +260,41 @@ Reste à trancher, plus tard : le **relevé daté** archivé du coordinateur
 (`docs/le-coordinateur/`), qui porte encore « catalogue d'offres nommé » — celui-là appartient
 légitimement au coordinateur, donc le mot n'y est pas usurpé ; seule sa nature (une VERSION du
 catalogue, pas le catalogue) mériterait un mot à elle.
+
+### 7. Où vit un fichier ? — le problème des fichiers éparpillés
+
+*(Ajouté le 2026-09-23, sur demande explicite : « c'est typiquement une question d'organisation,
+notre prochain point après la nouvelle Ronde — note le point pour l'organisation : pour résoudre ce
+type de problème de fichiers éparpillés ».)*
+
+**Le cas qui l'a déclenché, et il est exemplaire.** EVAL-DEV était archivé chez
+`angel-of-ia-process`, EVAL-IA dans un `docs/eval-ia/` créé dix minutes plus tôt. Deux objets
+jumeaux — même moment de la Ronde, même mécanique, produits par la même fonction — rangés à deux
+endroits. Aucun des deux placements n'était absurde pris isolément : l'un suivait les données,
+l'autre créait un dossier au nom de l'objet. C'est justement ce qui rend le défaut invisible.
+
+**Le vrai problème n'est pas ce cas, c'est qu'AUCUNE RÈGLE ne dit où va un fichier qui arrive.**
+Chaque fois qu'un artefact nouveau apparaît, sa place est improvisée sur le moment, selon ce qui
+paraît naturel à cet instant — et ce qui paraît naturel dépend de ce qu'on vient de regarder.
+
+**Ce que le paysage sait déjà faire, et qui ne suffit pas.** Le crochet pre-commit a refusé DEUX
+fois de suite le commit qui créait `docs/eval-ia/`, parce qu'un registre non déclaré est détecté
+(`findRegistriesMissingFromCircle`). Le garde-fou fonctionne parfaitement — mais il vérifie qu'un
+dossier est DÉCLARÉ, jamais qu'il est au BON ENDROIT. On peut déclarer un dossier mal placé.
+
+**Les pistes, non tranchées :**
+
+- **Une règle de placement par NATURE d'objet**, sur le modèle de celle qui existe déjà pour les
+  registres d'outils (`docs/<outil>/` avec son `index.md`, énoncée une fois plutôt que recopiée
+  vingt-deux fois). Il en faudrait l'équivalent pour ce qui n'est pas un outil : une évaluation, un
+  transcript, un dossier de conception, un blueprint.
+- **Le critère « qui le produit » contre « de quoi ça parle ».** Les deux sont défendables et c'est
+  ce qui a produit l'éclatement : EVAL-DEV était rangé selon qui détient ses données, EVAL-IA selon
+  son sujet. Il faut trancher lequel prime, une fois, et l'écrire.
+- **Un garde-fou de PLACEMENT, pas seulement de déclaration** : un fichier dont la nature est connue
+  et dont l'emplacement ne correspond pas à la règle de sa nature se signale seul.
+- **Le lien avec le point 3 ci-dessus** (une organisation qui englobe TOUT) : une règle de placement
+  n'est utile que si toutes les natures d'objet sont couvertes. Une nature sans règle rouvre
+  l'improvisation.
+
+**À traiter au prochain point d'organisation**, après la Ronde en cours.
