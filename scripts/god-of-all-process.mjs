@@ -128,10 +128,31 @@ export const PROCESSES = [
     gardien: "scripts/god-of-all-process.mjs",
     etapes: [
       { cle: "identite", libelle: "déposer l'identité de session (version de Claude)", preuve: { fichier: SESSION_FILE } },
+      // AJOUTÉE (2026-09-22) : avant de reprendre le plan, savoir où on en est. Sans ça, une nuit
+      // passe à côté d'une tâche en attente parfaitement traitable pendant que personne ne dort
+      // dessus — et l'audit du jour a justement trouvé quatre tâches faites mais jamais closes.
+      { cle: "etat-taches", libelle: "analyser l'état des tâches (check-tasks-details) pour repérer ce qui peut être traité cette nuit", preuve: { dossier: "docs/check-tasks-details/", motif: /\.html$|\.txt$/ } },
       { cle: "plan", libelle: "reprendre le plan donné, sans en sauter une étape", preuve: null },
+      // LES DEUX GRANDES ACTIVITÉS DE LA NUIT, ajoutées à la demande de l'utilisateur. Chacune
+      // produit son PLAN D'ACTION, donc des tâches à traiter dans la MÊME nuit (Article 28) : c'est
+      // ce qui transforme un scan nocturne en travail, plutôt qu'en un rapport de plus.
+      { cle: "ronde-lourde", libelle: "faire tourner la Ronde en mode lourd, puis traiter son plan d'action dans la nuit", preuve: { fichier: ".circle-tasks-last-run.json" } },
+      { cle: "simulation-nuit", libelle: "faire tourner une simulation si la périodicité le justifie, puis traiter son plan d'action", preuve: { dossier: "docs/simulations/", motif: /_transcript\.txt$/ } },
       { cle: "sensible", libelle: "mettre de côté tout ce qui touche au périmètre sensible", preuve: null },
       { cle: "suivi", libelle: "documenter chaque tâche substantielle dans le suivi", preuve: { dossier: "docs/suivi/sessions/", motif: /\.md$/ } },
-      { cle: "rapport", libelle: "livrer le rapport de nuit en fichier texte", preuve: { dossier: "docs/rapports-de-nuit/", motif: /\.txt$/ } },
+      // LA BORNE, enfin (2026-09-22). L'utilisateur cherchait une limite de temps (« 3h, ou plus ? »)
+      // et hésitait à la fixer — à raison : une borne horaire coupe au milieu d'une tâche, ou invite
+      // à meubler jusqu'à l'heure dite. Ce qu'il a proposé juste après est meilleur, et c'est sa
+      // propre formulation : « une fois que tu as tout terminé, tu fais une dernière ronde. Aussi,
+      // tu vérifies toi-même tout ton travail [...] plus aucune action de ta part ne doit être faite
+      // au-delà de ce seuil ».
+      //
+      // Une ÉTAPE TERMINALE plutôt qu'une durée : elle se vérifie (elle laisse une trace), elle se
+      // limite d'elle-même (on ne la franchit qu'une fois le reste épuisé), et elle place la
+      // dernière action de la nuit sur une VÉRIFICATION plutôt que sur une production — donc sur le
+      // seul geste qui ne peut pas créer une nouvelle erreur à corriger.
+      { cle: "verification-finale", libelle: "dernière Ronde + relecture de son propre travail de la nuit — AUCUNE action au-delà de ce seuil", preuve: { fichier: ".circle-tasks-run-summary-latest.txt" } },
+      { cle: "rapport", libelle: "livrer le rapport de nuit en fichier texte, normé et archivé", preuve: { dossier: "docs/rapports-de-nuit/", motif: /\.txt$/ } },
     ],
   },
   {
@@ -268,6 +289,36 @@ export function checkAgentSessionDeclared({ session } = {}) {
 // l'exige pour ce cas : une contradiction entre deux textes ne se détecte pas mécaniquement, elle
 // se constate en les lisant. Ce que le code garantit, lui, c'est que chaque tension déclarée porte
 // bien sur deux process qui existent encore.
+// L'AUTONOMIE NOCTURNE ÉLARGIE — politique posée par l'utilisateur le 2026-09-22, et son
+// raisonnement mérite d'être conservé tel quel parce qu'il n'est pas évident :
+//
+//   « pourquoi te donner plus d'autonomie sur les choix de circle en mode lourd ? parce que c'est
+//   précisément le moment opportun pour faire tourner les scans lourds (selon argument
+//   périodicité) : en effet, ça prend du temps et moi je dors. »
+//
+// Autrement dit : le coût principal d'un scan lourd n'est pas son prix, c'est le TEMPS D'ATTENTE
+// qu'il impose à l'utilisateur. La nuit, ce coût-là vaut zéro. Un arbitrage déraisonnable en
+// journée devient donc le bon choix à trois heures du matin — ce n'est pas un relâchement de la
+// règle, c'est la même règle appliquée à des conditions différentes.
+//
+// LA FRONTIÈRE EST NETTE, et c'est elle qui empêche que ça devienne un blanc-seing : les choix de
+// CALIBRAGE SENSIBLES ne bougent pas d'un pouce. « Pour les choix sensibles de calibrage, on reste
+// sur : tu attends. » Et consulter la suite Smart Conso reste obligatoire : l'autorisation porte
+// sur le fait de CONSOMMER, jamais sur celui de sauter la consultation.
+export const AUTONOMIE_NOCTURNE = {
+  autorise: [
+    "lancer un outil coûteux quand la périodicité le justifie — le temps d'attente, principal coût en journée, vaut zéro la nuit",
+    "consommer de l'API réelle sans validation préalable, dans ce même cadre et ce cadre seul",
+    "corriger soi-même une erreur découverte dans son propre travail de la nuit",
+  ],
+  interdit: [
+    "tout choix de calibrage sensible — personnages, expérience du visiteur : ça attend, sans exception",
+    "consommer sans avoir consulté la suite Smart Conso : l'autorisation porte sur le fait de consommer, jamais sur celui de sauter la consultation",
+    "toute action après l'étape de vérification finale — ce seuil est terminal",
+  ],
+  pourquoi: "le coût principal d'un scan lourd est le temps d'attente qu'il impose à l'utilisateur ; la nuit ce coût vaut zéro, donc l'arbitrage change légitimement",
+};
+
 export const TENSIONS_CONNUES = [
   {
     entre: ["nuit", "simulation"],
