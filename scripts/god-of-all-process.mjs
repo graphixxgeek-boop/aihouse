@@ -50,6 +50,13 @@ export const PROCESSES = [
       { cle: "questionnaire", libelle: "poser la fenêtre à cocher (AUTO/PRIME/GOAT)", preuve: null },
       { cle: "execution", libelle: "exécuter les items cochés", preuve: { dossier: "docs/", motif: /circle-signal-/, recursif: true } },
       { cle: "rapport", libelle: "produire le rapport de fin de Ronde", preuve: { fichier: ".circle-tasks-run-summary-latest.txt" } },
+      // AJOUTÉE (2026-09-22) : la voix de l'utilisateur dans sa propre évaluation, et sa place est
+      // calibrée — APRÈS le récapitulatif (il répond en ayant vu les constats) et AVANT
+      // l'enregistrement (la Ronde n'est pas finie tant qu'il n'a pas répondu, donc l'étape ne peut
+      // pas se sauter par oubli). Une étape placée après la clôture serait facultative en pratique.
+      // Le trou qu'elle ferme, dans ses mots : « pour que ma voix ait un retour dans la mecanique
+      // d'evaluation ». L'évaluation était à sens unique — je jugeais, il lisait.
+      { cle: "voix-utilisateur", libelle: "poser la fenêtre de réponses sur les points problématiques de son évaluation, avant de clore", preuve: { fichier: "docs/angel-of-ia-process/reponses-evaluation.md" } },
       { cle: "enregistrement", libelle: "enregistrer la Ronde comme faite", preuve: { fichier: ".circle-tasks-last-run.json" } },
     ],
   },

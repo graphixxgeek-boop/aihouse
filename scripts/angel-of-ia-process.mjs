@@ -475,6 +475,85 @@ export function compareChiffresDuJury(courant, precedent) {
     .filter((x) => x.avant !== x.apres);
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LA VOIX DE L'UTILISATEUR DANS SA PROPRE ÉVALUATION (2026-09-22)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Demandé en ces termes : « lors de la fin de circle il y a une fenetre de questions par rapport à
+// mon evaluation : chaque question reprend un resumé de l'evaluation et m'interroge : est-ce que
+// j'ai une justification ? est-ce que je considere comme un point à corriger ? [...] pour que ma
+// voix ait un retour dans la mecanique d'evaluation, trou important je pense ».
+//
+// IL A RAISON SUR LE TROU, et il est plus grave qu'il n'y paraît. Jusqu'ici l'évaluation était à
+// SENS UNIQUE : je jugeais, il lisait. Le registre de désaccords existait mais il fallait qu'il
+// pense à l'alimenter tout seul — c'est-à-dire jamais. Une évaluation qu'on subit sans pouvoir
+// répondre dans le mécanisme lui-même n'est pas un outil de travail, c'est un bulletin.
+//
+// QUATRE RÉPONSES, ET ELLES NE VEULENT PAS DIRE LA MÊME CHOSE POUR LA SUITE. C'est le cœur du
+// calibrage : « je conteste » et « c'est un choix assumé » ressemblent tous les deux à un refus,
+// alors qu'ils s'opposent — l'un dit que le CONSTAT est faux (donc c'est MA mesure qui doit être
+// corrigée), l'autre dit que le constat est juste mais que le comportement est délibéré (donc
+// c'est le constat qui devra cesser d'être remonté comme un défaut).
+export const REPONSES_UTILISATEUR = [
+  { id: "accepte-corrige", libelle: "Je l'accepte et je vais le corriger", consequence: "une vraie tâche est créée dans docs/suivi/ — un engagement qui ne devient pas une tâche est exactement le trou que l'Article 28 ferme", creeUneTache: true },
+  { id: "accepte-sans-corriger", libelle: "Je l'accepte, mais je ne corrigerai pas — voici pourquoi", consequence: "le constat reste remonté aux Rondes suivantes, avec sa raison à côté ; ce n'est pas un classement sans suite, c'est un arbitrage assumé et daté", creeUneTache: false },
+  { id: "conteste", libelle: "Je le conteste : le constat est faux", consequence: "c'est MA mesure qui est en cause, pas son comportement — le juge concerné est à revérifier avant la prochaine Ronde", creeUneTache: false, remetEnCauseLaMesure: true },
+  { id: "choix-assume", libelle: "C'est un choix assumé, ce n'est pas un défaut", consequence: "le constat est juste mais cesse d'être compté comme un défaut ; il reste affiché en information, jamais en reproche", creeUneTache: false },
+];
+
+export const REPONSES_EVAL_FILE = "docs/angel-of-ia-process/reponses-evaluation.md";
+
+// pointsAInterroger() — SEULEMENT les points problématiques (son choix explicite). Le risque assumé
+// et écrit : un point qui va bien mais sur lequel il aurait une objection ne lui sera jamais soumis.
+// Trois sources de problème, jamais une seule — une note basse, une trajectoire qui se dégrade, et
+// un constat de pertinence dur sont trois choses différentes, et n'en interroger qu'une laisserait
+// passer les deux autres.
+export const SEUIL_NOTE_PROBLEMATIQUE = 2;
+export function pointsAInterroger({ evaluation = null, jury = [], evolutions = [], seuil = SEUIL_NOTE_PROBLEMATIQUE } = {}) {
+  const points = [];
+  for (const d of [...(evaluation?.mesurable ?? []), ...(evaluation?.jugement ?? [])]) {
+    if (d.note && d.note.indice <= seuil) {
+      points.push({ id: d.id, origine: "note basse", resume: `${d.libelle} : ${d.note.nom} (${d.note.indice}/5). ${d.justification ?? d.base}` });
+    }
+  }
+  for (const e of evolutions) {
+    if (e.evolution === "régression") points.push({ id: `evo-${e.id}`, origine: "régression", resume: `${e.id} est passé de ${e.avant}/5 à ${e.apres}/5 depuis la dernière Ronde.` });
+  }
+  for (const j of jury) {
+    if (j.pertinenceConstat && j.pertinenceCommentaire) {
+      points.push({ id: `pert-${j.id}`, origine: "constat de pertinence", resume: `${j.pertinenceConstat} — ${j.pertinenceCommentaire}` });
+    }
+  }
+  // Dédoublonné sur l'identifiant : un même domaine peut être à la fois mal noté ET en régression,
+  // et lui poser deux fois la même question userait l'exercice pour rien.
+  const vus = new Set();
+  return points.filter((p) => (vus.has(p.id) ? false : vus.add(p.id)));
+}
+
+export function loadReponsesEvaluation({ root = ROOT, readFileImpl = readFileSync } = {}) {
+  try {
+    return readFileImpl(join(root, REPONSES_EVAL_FILE), "utf8").split("\n")
+      .filter((l) => /^\|\s*\d{4}-\d{2}-\d{2}/.test(l))
+      .map((l) => l.split("|").map((c) => c.trim()).filter(Boolean))
+      .filter((c) => c.length >= 3)
+      .map(([date, point, reponse, raison]) => ({ date, point, reponse, raison: raison ?? null }));
+  } catch {
+    return [];
+  }
+}
+
+// findEngagementsSansTache() — LE garde-fou de ce dispositif, et sans lui tout le reste est
+// décoratif. Un « je vais le corriger » qui ne devient jamais une tâche ressemble exactement à un
+// problème traité : c'est le mécanisme même que l'Article 28 a été écrit pour empêcher, appliqué
+// ici à ses propres engagements. Une référence morte est pire qu'une absence, parce qu'elle a
+// l'air d'un lien.
+export function findEngagementsSansTache(reponses = [], lignesDeSuivi = "") {
+  return reponses
+    .filter((r) => r.reponse === "accepte-corrige")
+    .filter((r) => !lignesDeSuivi.includes(r.point))
+    .map((r) => ({ point: r.point, date: r.date, pourquoi: "engagement pris à la Ronde et jamais devenu une tâche réelle dans docs/suivi/" }));
+}
+
 export const DESACCORDS_FILE = "docs/angel-of-ia-process/desaccords.md";
 
 // Les objections de l'utilisateur, relues du disque. Le format est volontairement le plus simple

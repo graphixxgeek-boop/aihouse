@@ -61,6 +61,20 @@ PARTIE 1 — LE DÉROULEMENT COMPLET D'UNE RONDE, ÉTAPE PAR ÉTAPE
   tableau porte l'icône 📄 si l'item a réellement produit un rapport archivé (lu depuis le champ
   producesReport de l'item correspondant dans CIRCLE_ITEMS), rien sinon.
 
+Étape 5bis — La voix de l'utilisateur sur sa propre évaluation (ajoutée le 2026-09-22)
+  Une fois le récapitulatif livré ET le rapport EVAL-DEV remis, et AVANT la clôture technique,
+  l'agent ouvre une fenêtre de questions sur les points PROBLÉMATIQUES de l'évaluation de
+  l'utilisateur — notes basses, régressions, constats de pertinence durs (pointsAInterroger(),
+  angel-of-ia-process.mjs). Une seule question par point, à quatre réponses qui ne veulent pas dire
+  la même chose pour la suite : je l'accepte et je corrige / je l'accepte sans corriger, voici
+  pourquoi / je conteste, le constat est faux / c'est un choix assumé.
+  Placement calibré explicitement : après le récapitulatif pour qu'il réponde en ayant vu les
+  constats, avant la clôture pour que la Ronde ne soit pas considérée finie tant qu'il n'a pas
+  répondu — une étape placée après la fin serait facultative en pratique.
+  Une réponse « je corrige » DOIT produire une vraie tâche dans docs/suivi/ (Article 28) ;
+  findEngagementsSansTache() attrape l'engagement qui n'en devient jamais une.
+  Registre : docs/angel-of-ia-process/reponses-evaluation.md
+
 Étape 6 — Clôture obligatoire : record-run
   `node scripts/circle-tasks.mjs record-run` DOIT être appelé à la toute fin de CHAQUE Ronde, quel
   que soit le mode. Cette commande (ajoutée ce soir, tâche #337, après l'avoir oubliée lors de la

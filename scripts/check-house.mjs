@@ -5106,6 +5106,46 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.ok(t.some((x) => x.points >= 1), 'checked live: the real series really was written by the real tool, not simulated in a test');
   }
 
+  // LA VOIX DE L'UTILISATEUR DANS SA PROPRE ÉVALUATION (2026-09-22) — « pour que ma voix ait un
+  // retour dans la mecanique d'evaluation, trou important je pense ». Il a raison, et le trou est
+  // plus grave qu'il n'y paraît : l'évaluation était à SENS UNIQUE, je jugeais et il lisait. Le
+  // registre de désaccords existait mais il fallait qu'il pense à l'alimenter seul, donc jamais.
+  {
+    const a = await import('../scripts/angel-of-ia-process.mjs');
+
+    // LES QUATRE RÉPONSES NE VEULENT PAS DIRE LA MÊME CHOSE, et c'est le cœur du calibrage :
+    // « je conteste » et « c'est un choix assumé » ressemblent tous deux à un refus alors qu'ils
+    // s'opposent — l'un dit que le CONSTAT est faux (donc ma mesure est en cause), l'autre qu'il
+    // est juste mais délibéré (donc il cesse d'être compté comme un défaut).
+    assert.equal(a.REPONSES_UTILISATEUR.length, 4, 'exactly the four calibrated answers');
+    assert.ok(a.REPONSES_UTILISATEUR.every((r) => r.consequence), 'each answer must declare what it triggers, otherwise the window is a satisfaction survey rather than a mechanism');
+    assert.equal(a.REPONSES_UTILISATEUR.filter((r) => r.creeUneTache).length, 1, 'only "je corrige" creates a task — making every answer create one would flood the tracker and make the commitment meaningless');
+    assert.ok(a.REPONSES_UTILISATEUR.find((r) => r.id === 'conteste').remetEnCauseLaMesure, 'contesting a finding questions MY measurement, never his behaviour — that distinction is what separates it from "choix assumé", which accepts the finding and rejects the reproach');
+
+    // SEULEMENT LES POINTS PROBLÉMATIQUES (son choix), depuis TROIS sources distinctes : une note
+    // basse, une trajectoire qui se dégrade et un constat de pertinence dur sont trois choses
+    // différentes, et n'en interroger qu'une laisserait passer les deux autres.
+    const ev = a.evaluateUserParticipation({ jugements: {
+      'coherence-des-priorites': { note: 'fragile', justification: 'raison' },
+      'qualite-de-la-direction': { note: 'solide', justification: 'va bien' },
+    } });
+    const pts = a.pointsAInterroger({ evaluation: ev, evolutions: [{ id: 'x', evolution: 'régression', avant: 4, apres: 2 }], jury: [{ id: 'j', pertinenceConstat: '86,6 %', pertinenceCommentaire: 'dur' }] });
+    assert.equal(pts.length, 3, 'three problematic points from three different sources, and nothing else');
+    assert.ok(!pts.some((p) => p.id === 'qualite-de-la-direction'), 'a domain that is doing well is never put to him — the accepted cost, written down: a good point he would have objected to will never be submitted');
+    assert.deepEqual([...new Set(pts.map((p) => p.origine))].sort(), ['constat de pertinence', 'note basse', 'régression'], 'each of the three sources must really be represented, never one standing in for the others');
+    // Un même domaine mal noté ET en régression ne doit pas produire deux questions identiques :
+    // user l'exercice pour rien est le moyen le plus sûr de le faire bâcler.
+    const doublon = a.pointsAInterroger({ evaluation: ev, evolutions: [{ id: 'coherence-des-priorites', evolution: 'régression', avant: 4, apres: 2 }] });
+    assert.equal(doublon.filter((p) => p.id === 'coherence-des-priorites').length, 1, 'the same domain is never asked about twice in one round');
+
+    // LE GARDE-FOU QUI REND TOUT LE RESTE NON DÉCORATIF : un « je vais le corriger » qui ne devient
+    // jamais une tâche ressemble exactement à un problème traité. C'est le mécanisme même que
+    // l'Article 28 combat, appliqué ici à ses propres engagements.
+    const rep = [{ date: '2026-09-22', point: 'coherence-des-priorites', reponse: 'accepte-corrige' }, { date: '2026-09-22', point: 'autre', reponse: 'conteste' }];
+    assert.equal(a.findEngagementsSansTache(rep, 'rien dans le suivi').length, 1, 'a commitment to correct that never became a real task must be caught — and only that one: contesting a finding creates no obligation');
+    assert.equal(a.findEngagementsSansTache(rep, 'une tâche sur coherence-des-priorites existe').length, 0, 'and once the task really exists, nothing is reported');
+  }
+
   // SÉRIE-TEMPORELLE (2026-09-22) — le mécanisme partagé d'historisation, demandé parce que « tous
   // les rapports doivent etre historisés et comparés [...] sinon : grosse perte de valeurs ». Les
   // quatre garde-fous sont testés un par un : sans eux, historiser produirait des tendances
