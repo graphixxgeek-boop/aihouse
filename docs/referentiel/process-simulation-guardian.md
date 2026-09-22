@@ -60,3 +60,39 @@ Il ne livre jamais son rapport à la Ronde lui-même — god-of-all-process le r
 l'utilisateur, 2026-09-22 : « god of process centralise »). Exclusion de Ronde motivée, écrite dans
 `CIRCLE_AUTO_COVERED_REGISTRIES`. Son vrai déclencheur est de toute façon une simulation, jamais le
 calendrier.
+
+## Les rapports individuels des agents (2026-09-22)
+
+**GO donné par l'utilisateur** sur les quatre agents qui pouvaient juger une simulation sans jamais
+être sollicités : THE-SCREENER (qualité visuelle), memory-audit (mémoire narrative persistée),
+memento weight (poids réel du contexte par tour), Smart Conso API (coût réel). Calibrage exact :
+« chacun rend un rapport individuel, sous format txt normé, que tu dois lire avant de produire ton
+analyse, avec les autres rapports dispos », chacun produit « à son moment naturel, puis un
+récapitulatif ».
+
+**`moment` porte une contrainte technique, jamais une préférence d'organisation.** Trois des sept
+agents mesurent des choses qui **n'existent plus** une fois la partie finie — la capture visuelle,
+le coût réel, le poids du contexte tour par tour. Les relire après coup donnerait une approximation
+au mieux, un silence pris pour un zéro au pire.
+
+**Deux manques différents, jamais confondus** :
+- `findSimulationItemsMissing()` — un agent **pas encore câblé** dans le process (défaut de
+  conception) ;
+- `findSimulationReportsMissing(sim)` — un agent câblé qui **n'a rien produit sur CE run** (défaut
+  d'exécution).
+
+Les confondre laisserait croire qu'un process complet garantit un run complet.
+
+**`checkReportsReadBeforeAnalysis()` — l'exigence placée en dernier, et la plus facile à laisser
+tomber.** Sans elle, sept rapports peuvent exister sur le disque pendant que l'analyse s'écrit de
+mémoire, et tout le dispositif ne sert qu'à produire des fichiers que personne n'ouvre.
+
+Ce qui est observable et ce qui ne l'est pas, déclaré plutôt que confondu : l'EXISTENCE d'un rapport
+se lit sur le disque ; l'avoir LU ne se lit nulle part. L'agent déclare donc, et **un rapport présent
+mais non déclaré est un écart bloquant** — jamais une lecture supposée parce que le fichier était là.
+Une déclaration absente rend le contrôle `mesurable: false` et **jamais `ok`** : c'est exactement
+ainsi que sept rapports finissent produits et aucun lu. Cas distinct signalé à part, et le plus
+inquiétant des deux : un rapport **déclaré lu mais absent du disque**.
+
+**Étape de process correspondante** : `lecture-rapports` dans le process de simulation
+(`god-of-all-process.mjs`), placée AVANT le sondage et les questions de calibrage.

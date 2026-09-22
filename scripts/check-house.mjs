@@ -5042,6 +5042,36 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // CHANTIER_PRELIMINARY_FILES : aucun écart réel ne doit subsister aujourd'hui (les 2 nouveaux
   // fichiers préliminaires créés le même soir que leur tâche de suivi correspondante).
   assert.equal(report.find((r) => r.id === 'chantier-preliminaire-signal').staleness, 'aucun écart détecté', 'checked live against this project\'s real docs/suivi/ and CHANTIER_PRELIMINARY_FILES registry: every known chantier\'s preliminary file must currently be at least as fresh as its most recent matching suivi task — a guarantee that breaks the day an idea is logged in docs/suivi/ but never copied into its dedicated file');
+  // Les rapports individuels des 4 agents de simulation (2026-09-22, « GO pour construire les
+  // rapports de simu normés »). Trois exigences distinctes, testées séparément parce qu'elles
+  // échouent séparément.
+  {
+    const g = await import('../scripts/process-simulation-guardian.mjs');
+
+    // 1. LE MOMENT DE PRODUCTION porte une contrainte TECHNIQUE, jamais une préférence : deux
+    // agents mesurent des choses qui n'existent plus une fois la partie finie.
+    assert.ok(g.SIMULATION_ITEMS.every((i) => g.MOMENTS_DE_PRODUCTION.includes(i.moment)), 'every simulation reporter must declare when it produces — "pendant" is not a scheduling preference for the cost and context-weight agents, it is the only moment their data still exists; reading them afterwards would give an approximation at best, a silence mistaken for a zero at worst');
+    assert.equal(g.SIMULATION_ITEMS.filter((i) => i.moment === 'pendant').length, 3, 'exactly the three agents whose measurement disappears with the running game (the visual capture, the real cost, the per-turn context weight) produce during the run');
+
+    // 2. DEUX MANQUES DIFFÉRENTS, jamais confondus : un agent pas encore câblé dans le process
+    // (défaut de conception) et un agent câblé qui n'a rien produit sur CE run (défaut d'exécution).
+    const rienSurDisque = g.findSimulationReportsMissing('sim_test', { exists: () => false });
+    assert.equal(rienSurDisque.length, g.SIMULATION_ITEMS.length, 'with nothing on disk, every reporter is missing for that run');
+    assert.equal(g.findSimulationReportsMissing('sim_test', { exists: () => true }).length, 0, 'and none is missing once every file is there — this is about THIS run, never about whether the agent is wired at all, which findSimulationItemsMissing() answers separately');
+
+    // 3. LA LECTURE AVANT L'ANALYSE — l'exigence placée en dernier par l'utilisateur et la plus
+    // facile à laisser tomber. L'existence d'un rapport se lit sur le disque ; l'avoir lu ne se lit
+    // nulle part, donc ça se déclare et ne se suppose jamais.
+    const nonDeclare = g.checkReportsReadBeforeAnalysis('sim_test', { exists: () => true });
+    assert.equal(nonDeclare.mesurable, false, 'with no declaration at all, the check must report itself as not measurable rather than pass — a report sitting on disk is never proof that anyone opened it');
+    assert.equal(nonDeclare.ok, false, 'and "not measurable" must never resolve to ok: that is exactly how seven reports end up produced and none read');
+    const partiel = g.checkReportsReadBeforeAnalysis('sim_test', { exists: () => true, rapportsLus: ['el-professor'] });
+    assert.equal(partiel.nonLus.length, g.SIMULATION_ITEMS.length - 1, 'every report present but not declared read is a blocking gap, named one by one so the agent knows what is left to open');
+    const fantome = g.checkReportsReadBeforeAnalysis('sim_test', { exists: () => false, rapportsLus: ['kpi'] });
+    assert.deepEqual(fantome.lusFantomes, ['kpi'], 'a report declared read but absent from disk is flagged separately, and it is the more worrying of the two faults — believing you read something that does not exist');
+    assert.equal(g.checkReportsReadBeforeAnalysis('sim_test', { exists: () => true, rapportsLus: g.SIMULATION_ITEMS.map((i) => i.id) }).ok, true, 'only a full, honest declaration passes');
+  }
+
   // Le récapitulatif des évaluations (2026-09-22) — demandé mot pour mot par l'utilisateur, y
   // compris la note sur sa propre participation. Les assertions portent sur ce qui fait la valeur de
   // cet exercice et rien d'autre : les deux natures ne se mélangent pas, une absence ne se déguise

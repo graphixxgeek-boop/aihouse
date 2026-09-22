@@ -111,6 +111,14 @@ export const PROCESSES = [
       // SONDAGE EN 3 QUESTIONS — écrit noir sur blanc dans l'Article 18 et absent du process
       // jusqu'ici. Sa trace : la fenêtre de questions laisse une réponse, donc l'étape suivante
       // (le calibrage) ne peut pas être franchie honnêtement sans lui.
+      // AJOUTÉE (2026-09-22) : l'exigence que l'utilisateur a placée en dernier en validant les
+      // rapports individuels des agents, et la plus facile à laisser tomber — « que tu dois lire
+      // avant de produire ton analyse, avec les autres rapports dispos ». Sans cette étape, sept
+      // rapports peuvent exister sur le disque pendant que l'analyse s'écrit de mémoire, et tout le
+      // dispositif ne sert qu'à produire des fichiers que personne n'ouvre. La preuve disque ne
+      // prouve que l'EXISTENCE des rapports ; que l'agent les ait lus se déclare et se vérifie par
+      // checkReportsReadBeforeAnalysis() (process-simulation-guardian), jamais par supposition.
+      { cle: "lecture-rapports", libelle: "lire les rapports individuels des agents AVANT d'écrire l'analyse, jamais après", preuve: { dossier: "docs/simulations/", motif: /_(the-screener|memory-audit|memento-weight|cout-reel)\.txt$/ } },
       { cle: "sondage", libelle: "poser le sondage en 3 questions juste après la livraison, avant toute analyse détaillée", preuve: { dossier: "docs/simulations/", motif: /_journal-de-bord\.md$/ } },
       { cle: "calibrage", libelle: "poser les questions de calibrage avant toute correction", preuve: { dossier: "docs/simulations/", motif: /_journal-de-bord\.md$/ } },
       // LA CHAÎNE DE L'ARTICLE 28, appliquée à la simulation : chaque rapport produit ci-dessus

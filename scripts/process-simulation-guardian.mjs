@@ -112,16 +112,77 @@ export const REQUIRED_BEATS = [
 // qui signale tout agent capable de juger une simulation et absent de cette table. On ne
 // redécouvre donc plus à chaque fois « tiens, celui-là aussi aurait pu dire quelque chose ».
 export const SIMULATION_ITEMS = [
-  { id: "el-professor", agent: "EL-PROFESSOR", produit: "note de fidélité à la charte (Article 0) depuis le transcript", cout: "gratuit — relit un texte déjà produit", registre: "docs/el-professor/", existant: true },
-  { id: "kpi", agent: "Tableau de bord interne (KPI)", produit: "les indicateurs chiffrés de ce run, comparables aux précédents", cout: "gratuit", registre: "docs/referentiel/kpi-rapports/", existant: true },
-  { id: "resume-actions", agent: "summarize-simulation-log", produit: "le résumé compact des actions, extrait du journal brut avant de le jeter", cout: "gratuit", registre: "docs/simulations/", existant: true },
+  { id: "el-professor", moment: "après", agent: "EL-PROFESSOR", produit: "note de fidélité à la charte (Article 0) depuis le transcript", cout: "gratuit — relit un texte déjà produit", registre: "docs/el-professor/", existant: true },
+  { id: "kpi", moment: "après", agent: "Tableau de bord interne (KPI)", produit: "les indicateurs chiffrés de ce run, comparables aux précédents", cout: "gratuit", registre: "docs/referentiel/kpi-rapports/", existant: true },
+  { id: "resume-actions", moment: "après", agent: "summarize-simulation-log", produit: "le résumé compact des actions, extrait du journal brut avant de le jeter", cout: "gratuit", registre: "docs/simulations/", existant: true },
   // LES QUATRE QUI MANQUAIENT — chacun peut réellement juger une simulation, et aucun n'était
   // sollicité. C'est la réponse à « quels agents peuvent intervenir et produire un rapport ? ».
-  { id: "the-screener", agent: "THE-SCREENER", produit: "la qualité visuelle réelle du rendu pendant la partie", cout: "gratuit — capture Playwright locale", registre: "docs/the-screener/", existant: false, pourquoiManquait: "jamais câblé dans une vraie simulation (tâche #186, ouverte depuis des jours) — et la leçon L2 existe précisément parce que ses captures restaient bloquées sur la modale" },
-  { id: "memory-audit", agent: "memory-audit", produit: "la cohérence de la mémoire narrative persistée de Lia et Noé après la partie", cout: "gratuit — mécanique", registre: "docs/memory-audit/", existant: false, pourquoiManquait: "sa propre fiche dit qu'il n'est vérifiable QUE sur des instantanés réels de partie — donc exactement ici, et nulle part ailleurs" },
-  { id: "memento-weight", agent: "memento weight", produit: "le poids réel du contexte envoyé à Gemini, tour par tour", cout: "gratuit — il enregistre pendant la partie, il suffit de le relire", registre: ".memento-history.json", existant: false, pourquoiManquait: "il écrit pendant chaque simulation et rien ne relisait jamais ce qu'il avait écrit" },
-  { id: "cout-reel", agent: "Smart Conso API", produit: "ce que cette simulation a RÉELLEMENT coûté, à confronter à l'estimation d'avant lancement", cout: "gratuit — relit son propre journal", registre: ".smart-conso-session.json", existant: false, pourquoiManquait: "on consultait Smart Conso API AVANT pour décider, jamais APRÈS pour apprendre — donc l'estimation ne s'est jamais corrigée par l'expérience" },
+  { id: "the-screener", moment: "pendant", agent: "THE-SCREENER", produit: "la qualité visuelle réelle du rendu pendant la partie", cout: "gratuit — capture Playwright locale", registre: "docs/the-screener/", existant: false, pourquoiManquait: "jamais câblé dans une vraie simulation (tâche #186, ouverte depuis des jours) — et la leçon L2 existe précisément parce que ses captures restaient bloquées sur la modale" },
+  { id: "memory-audit", moment: "après", agent: "memory-audit", produit: "la cohérence de la mémoire narrative persistée de Lia et Noé après la partie", cout: "gratuit — mécanique", registre: "docs/memory-audit/", existant: false, pourquoiManquait: "sa propre fiche dit qu'il n'est vérifiable QUE sur des instantanés réels de partie — donc exactement ici, et nulle part ailleurs" },
+  { id: "memento-weight", moment: "pendant", agent: "memento weight", produit: "le poids réel du contexte envoyé à Gemini, tour par tour", cout: "gratuit — il enregistre pendant la partie, il suffit de le relire", registre: ".memento-history.json", existant: false, pourquoiManquait: "il écrit pendant chaque simulation et rien ne relisait jamais ce qu'il avait écrit" },
+  { id: "cout-reel", moment: "pendant", agent: "Smart Conso API", produit: "ce que cette simulation a RÉELLEMENT coûté, à confronter à l'estimation d'avant lancement", cout: "gratuit — relit son propre journal", registre: ".smart-conso-session.json", existant: false, pourquoiManquait: "on consultait Smart Conso API AVANT pour décider, jamais APRÈS pour apprendre — donc l'estimation ne s'est jamais corrigée par l'expérience" },
 ];
+
+// ————————————————————————————————————————————————————————————————————————
+// LES RAPPORTS INDIVIDUELS DE SIMULATION (2026-09-22)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Calibrage exact de l'utilisateur, en réponse à la question sur le moment de production :
+// « chacun rend un rapport individuel, sous format txt normé, que tu dois lire avant de produire
+// ton analyse, avec les autres rapports dispos », chacun produit « à son moment naturel, puis un
+// récapitulatif ».
+//
+// POURQUOI « À SON MOMENT NATUREL » N'EST PAS UN DÉTAIL DE CONFORT : deux des sept mesurent des
+// choses qui N'EXISTENT PLUS une fois la partie finie. Le coût réel et le poids du contexte
+// s'enregistrent pendant les tours ; les relire après coup donnerait au mieux une approximation,
+// au pire un silence pris pour un zéro. Le champ `moment` porte donc une contrainte technique
+// réelle, jamais une préférence d'organisation.
+export const MOMENTS_DE_PRODUCTION = ["pendant", "après"];
+
+export function simulationReportPath(sim, id) {
+  return `docs/simulations/${sim}_${id}.txt`;
+}
+
+// findSimulationReportsMissing() — quels rapports manquent réellement sur le disque pour un run
+// donné. Distinct de findSimulationItemsMissing() juste au-dessus, et la différence compte :
+// celui-là dit qu'un agent n'est PAS ENCORE CÂBLÉ dans le process (un manque de conception),
+// celui-ci dit qu'un agent câblé N'A PAS PRODUIT sur ce run précis (un manque d'exécution). Les
+// confondre laisserait croire qu'un process complet garantit un run complet.
+export function findSimulationReportsMissing(sim, { items = SIMULATION_ITEMS, exists = existsSync, root = ROOT } = {}) {
+  return items
+    .filter((i) => !exists(join(root, simulationReportPath(sim, i.id))))
+    .map((i) => ({ id: i.id, agent: i.agent, chemin: simulationReportPath(sim, i.id), moment: i.moment }));
+}
+
+// checkReportsReadBeforeAnalysis() — l'exigence que l'utilisateur a placée en dernier et qui est la
+// plus importante des trois : « que tu dois lire avant de produire ton analyse ». Sans elle, sept
+// rapports peuvent exister sur le disque pendant que l'analyse est écrite de mémoire, et le
+// dispositif entier ne sert qu'à produire des fichiers que personne n'ouvre.
+//
+// CE QUI EST OBSERVABLE ET CE QUI NE L'EST PAS, déclaré plutôt que confondu : l'EXISTENCE d'un
+// rapport se lit sur le disque ; le fait de l'avoir LU ne se lit nulle part. L'agent déclare donc
+// ce qu'il a lu, et un rapport présent mais non déclaré est un ÉCART BLOQUANT — jamais une lecture
+// supposée parce que le fichier était là. C'est la même discipline que le rapport de
+// check-tasks-details (docs/regles-de-travail.md) : lire le fichier en entier avant de répondre,
+// jamais résumer de mémoire ce qu'on croit avoir vu passer.
+export function checkReportsReadBeforeAnalysis(sim, { rapportsLus, items = SIMULATION_ITEMS, exists = existsSync, root = ROOT } = {}) {
+  const presents = items.filter((i) => exists(join(root, simulationReportPath(sim, i.id))));
+  if (rapportsLus === undefined) {
+    return {
+      mesurable: false,
+      raison: "l'agent n'a pas déclaré ce qu'il avait lu — la lecture ne laisse aucune trace sur le disque, elle ne se devine donc jamais",
+      presents: presents.map((i) => i.id),
+      nonLus: [],
+      ok: false,
+    };
+  }
+  const lus = new Set(rapportsLus);
+  const nonLus = presents.filter((i) => !lus.has(i.id)).map((i) => ({ id: i.id, agent: i.agent }));
+  // Un rapport DÉCLARÉ lu mais absent du disque est signalé à part : ce n'est pas la même faute, et
+  // c'est la plus inquiétante des deux (on croit avoir lu quelque chose qui n'existe pas).
+  const lusFantomes = [...lus].filter((id) => !presents.some((i) => i.id === id));
+  return { mesurable: true, presents: presents.map((i) => i.id), nonLus, lusFantomes, ok: nonLus.length === 0 && lusFantomes.length === 0 };
+}
 
 // LE GARDE-FOU D'ÉVOLUTIVITÉ (Article 24) : un agent capable de juger une simulation et absent de
 // la table ci-dessus doit être signalé, jamais découvert par hasard six mois plus tard. Le critère
