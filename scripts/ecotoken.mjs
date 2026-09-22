@@ -480,6 +480,21 @@ export function findAlreadyMechanised(charterText, automatedTools = findAutomate
   return trouvailles.sort((a, b) => (b.tokens - b.tokensApres) - (a.tokens - a.tokensApres));
 }
 
+// TROISIÈME APPRENTISSAGE (2026-09-22, en passant au fichier suivant) — une stratégie dépend du
+// RÔLE du document, pas seulement de son contenu. Sur `docs/regles-de-travail.md`, la stratégie
+// « déjà mécanisé » proposait 6 134 tk sur 32 passages : tous des règles et des décisions de
+// conception, aucun superflu. La cause n'est pas un mauvais réglage, elle est structurelle — ce
+// document EST le manuel des procédures du projet. Lui reprocher de décrire des procédures, c'est
+// lui reprocher d'exister. Quinze autres fichiers le désignent explicitement comme l'endroit où
+// une procédure est documentée : c'est le signal, mécanique et vérifiable, qu'il est le domicile
+// de référence et non un lieu où la procédure traîne par accident.
+export function estLeManuelDesProcedures(path, repoFiles, { seuil = 3 } = {}) {
+  const echappe = String(path).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const motif = new RegExp(`(documenté|documentée|détaillé|détaillée|décrit|décrite|entièrement)[^.]{0,40}${echappe}`, "i");
+  const renvois = Object.entries(repoFiles ?? {}).filter(([n, c]) => n !== path && motif.test(String(c))).length;
+  return { estLeManuel: renvois >= seuil, renvois, pourquoi: `${renvois} fichier(s) le désignent comme le lieu où une procédure est documentée` };
+}
+
 // --- LE PLAN COMPLET, toutes stratégies confondues -----------------------------------------------
 // C'est le livrable qui manquait à tout l'outillage existant : jusqu'ici un scan disait « ce
 // document est trop lourd » sans jamais produire la version allégée ni chiffrer le gain réel.
@@ -1293,7 +1308,8 @@ export function analyzeDocument(path, { repoFiles = null, root = ROOT } = {}) {
     if (dejaVues.has(e.section)) continue;
     propositions.push({ strategie: "extraction", cible: e.section, tokensAvant: e.tokensAvant, tokensApres: e.tokensApres, gain: e.gain, risque: e.nature === "narration" ? "faible" : "moyen", remplacement: e.stub, deplacements: [{ nom: e.section, vers: e.cible, cibleManquante: e.cibleManquante, texte: e.texte }] });
   }
-  if (donneDesConsignes) {
+  const manuelRef = estLeManuelDesProcedures(path, repoFiles ?? loadRepoFiles(root));
+  if (donneDesConsignes && !manuelRef.estLeManuel) {
     const meca = findAlreadyMechanised(texte).filter((m) => !dejaVues.has(m.section));
     if (meca.length) {
       const av = meca.reduce((a, b) => a + b.tokens, 0), ap = meca.reduce((a, b) => a + b.tokensApres, 0);
@@ -1322,7 +1338,11 @@ export function analyzeDocument(path, { repoFiles = null, root = ROOT } = {}) {
     // Dit honnêtement quelles stratégies ont été ÉCARTÉES et pourquoi, plutôt que de laisser croire
     // à une analyse complète là où deux angles n'étaient simplement pas applicables.
     strategiesApplicables: { catalogue: true, extraction: true, mecanise: donneDesConsignes, rendementParArticle: estUneCharte },
-    strategiesEcartees: [!donneDesConsignes && "mecanise (ce document ne donne pas de consignes à un agent)", !estUneCharte && "rendement par article (ce document n'est pas une charte numérotée)"].filter(Boolean),
+    strategiesEcartees: [
+      !donneDesConsignes && "mecanise (ce document ne donne pas de consignes à un agent)",
+      donneDesConsignes && manuelRef.estLeManuel && `mecanise (ce document EST le manuel de référence des procédures — ${manuelRef.pourquoi} ; lui reprocher d'en décrire serait lui reprocher d'exister)`,
+      !estUneCharte && "rendement par article (ce document n'est pas une charte numérotée)",
+    ].filter(Boolean),
     propositions: utiles, gainTotal: utiles.reduce((a, b) => a + b.gain, 0),
   };
 }

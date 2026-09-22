@@ -503,76 +503,7 @@ redémarrage du serveur, et ses résultats accompagnent le transcript/dossier da
 — jamais un rapport pensé comme secondaire ou fait "si on y pense". Cette section-ci documente
 l'évolution de l'outil dans le temps ; l'Article 18 documente QUAND le consulter à chaque cycle.
 
-**Historique des évolutions de l'outil quota/clé Gemini :**
-
-- *2026-09-18* — Ajout de la mémoire d'expérience (`gemini-key-health.mjs`) : les clés sondées sont
-  désormais ordonnées par fiabilité récente plutôt que testées dans un ordre fixe. Gain estimé :
-  évite de re-tester en premier une clé déjà connue épuisée à chaque exécution — sur une session
-  avec plusieurs clés, ça peut économiser la quasi-totalité des sondes inutiles sur la clé morte
-  (~50 % d'appels de diagnostic en moins quand une clé sur deux est à plat).
-- *2026-09-18* — Correction du biais `likelyStillDown` (paramètre `asKeySignal`) : une sonde
-  secondaire sur un modèle rarement utilisé (ex. `gemini-pro-latest`, presque toujours en quota
-  serré) ne fait plus passer une clé par ailleurs saine pour "encore à plat". Gain estimé : élimine
-  un faux-diagnostic qui, non corrigé, aurait fait ignorer à tort une clé pourtant viable à chaque
-  exécution de l'outil — donc un gain de fiabilité plus qu'un gain de vitesse, mais tout aussi
-  critique pour que l'outil reste digne de confiance.
-- *2026-09-18* — Support multi-fournisseurs (`api-providers.mjs`) : une clé de repli peut désormais
-  être d'un fournisseur différent de Gemini (préfixe `fournisseur:` dans `.dev.vars`), sondée avec
-  son propre format d'appel. Gain estimé : élargit le champ de diagnostic possible en cas
-  d'épuisement total de tous les projets Google Cloud disponibles, mais reste un gain de PORTÉE
-  diagnostique, pas encore un gain d'efficacité opérationnelle réel — aucun câblage en production
-  n'existe encore pour qu'un fournisseur non-Gemini serve de vrai repli de jeu (Article 0).
-- *2026-09-18* — Ajout de l'historique curaté (`describeKnownLessons()`) : les leçons empiriques
-  déjà comprises ensemble (nature du quota, piège du `retryDelay`, etc.) s'affichent désormais à
-  chaque exécution de l'outil, pas seulement dans `CLAUDE.md`. Gain estimé : réduit le risque de
-  re-découvrir la même leçon deux fois à des mois d'écart — gain de mémoire collective, pas de
-  vitesse d'exécution du script lui-même.
-- *2026-09-19* — Rotation des clés en PRODUCTION (`lib/gemini-keys.ts`, partagé par
-  `lib/lia.ts::think()` et `route.ts::generateDossierFragment()`), demande explicite de
-  l'utilisateur à l'ajout d'une 3e clé : remplace l'ancienne mémoire "collante" (`lastGoodKeyIndex`,
-  une clé encaissait tout le trafic tant qu'elle répondait) par un vrai round-robin parmi les clés
-  actuellement saines, plus un cooldown par clé dérivé du trafic réel (429→15 min, 503→60 s,
-  401/403→définitif), jamais un appel de sonde séparé. Gain estimé : avec 3 clés à 500 requêtes/jour
-  chacune, répartit la charge au lieu de vider une seule clé en premier — dans le pire cas (trafic
-  soutenu sur une seule clé auparavant), ça peut tripler la capacité journalière effective avant le
-  premier blocage, puisque les 3 paniers de quota (un par projet Google Cloud) se vident maintenant
-  en parallèle plutôt qu'en série. Testé (`scripts/check-house.mjs`) : preuve que 3 clés
-  simultanément saines sont TOUTES utilisées sur 4 appels indépendants, jamais une seule qui
-  absorbe tout le trafic ; les garanties déjà vérifiées (repli immédiat sur 429/503, mémoire
-  partagée entre les deux cerveaux d'un même tour) restent intactes.
-- *2026-09-19* — Diagnostic qualité poussé au maximum (`scripts/api-providers.mjs`,
-  `scripts/check-gemini-quota.mjs`), demande explicite de l'utilisateur : (1) une sonde "lourde"
-  supplémentaire, de taille comparable à un vrai tour de jeu (systemInstruction + sortie JSON
-  structurée), s'exécute désormais sur le modèle principal en plus de la sonde légère existante —
-  raison documentée dans CLAUDE.md : Google peut répondre différemment (OK vs 429/503) selon le
-  POIDS de la requête pour la même clé/modèle au même instant, donc une sonde uniquement légère
-  pouvait donner un faux "OK" ; l'outil signale maintenant explicitement cet écart quand il se
-  produit. (2) Une réponse HTTP 200 sans contenu exploitable (filtre de sécurité, coupure
-  prématurée) est désormais détectée et distinguée ("OK_VIDE") d'un vrai succès, au lieu d'être
-  comptée à tort comme "OK". (3) Le `retryDelay` renvoyé par Google sur un 429 est maintenant
-  affiché avec le rappel qu'il est trompeur pour un épuisement journalier. Gain estimé : referme
-  l'angle mort le plus concret déjà rencontré en simulation réelle (sonde légère "OK", vraie
-  requête en échec) — sans cette sonde lourde, l'outil pouvait donner un faux sentiment de sécurité
-  sur le modèle réellement utilisé par l'application ; gain de FIABILITÉ du diagnostic, pas de
-  vitesse (un appel de plus, coût négligeable, Article 8). Vérifié en conditions réelles le même
-  jour : sur les 3 clés configurées, 2 étaient en quota épuisé et 1 saine ; la sonde lourde sur
-  cette dernière a confirmé "OK" (pas d'écart détecté cette fois, mais le garde-fou est maintenant
-  en place pour la prochaine fois où il y en aura un).
-- *2026-09-19* — Recul adaptatif (`lib/gemini-keys.ts`), demande explicite de l'utilisateur : « fais
-  en sorte que la rotation [...] soit intelligente [...] ce systeme doit pouvoir s'ameliorer de
-  facon autonome dans le temps ». Chaque échec consécutif (429/503) sur une même clé double son
-  cooldown (plafonné à 4h pour 429, 20 min pour 503) sans intervention humaine ; un seul succès
-  remet le compteur à zéro. Parmi plusieurs clés en cooldown, la plus proche de se libérer est
-  désormais tentée en premier plutôt qu'un ordre arbitraire. Gain estimé : élimine les tentatives
-  répétées, toutes les 15 minutes, sur une clé réellement épuisée pour le reste de la journée (dans
-  un cas extrême de 20 tentatives/jour sur une clé morte, ça peut retomber à 3-4 tentatives grâce à
-  l'escalade) — jamais un blocage définitif, la clé reste toujours retentée avant la fin de la
-  journée. Testé (`scripts/check-house.mjs`) : le cooldown double bien à chaque échec consécutif et
-  retombe instantanément à sa valeur de base après un seul succès. Limite explicite, actée avec
-  l'utilisateur : seuls les PARAMÈTRES (cooldown, ordre) s'ajustent tout seuls à l'expérience réelle
-  — la logique elle-même (ce fichier) ne se réécrit jamais à l'exécution, toute évolution de la
-  logique reste une intervention délibérée et documentée, exactement comme pour l'outil de
-  diagnostic (cf. `docs/outil-resilience-api.md`, section 4).
+**Historique des évolutions de l’outil quota/clé Gemini** — récit complet (chaque évolution, sa date, la demande qui l’a motivée) dans `docs/referentiel/smart-breaker-historique.md`. Extrait d’ici le 2026-09-22 par ecotoken : un historique se lit quand on enquête sur cet outil, jamais à chaque relecture des règles de travail.
 
 ## 7ter. Le paysage des outils de vigilance, et la consultation bidirectionnelle
 
@@ -1403,23 +1334,7 @@ plutôt que d'écrire une 4e copie — CLONE-HUNTER venait de trouver cette exac
 occurrences déjà) le soir même de la construction de cette cérémonie ; jamais rouvrir un cas déjà
 signalé sous une forme légèrement différente (Article 3).
 
-**Même règle pour la narration « Nouveaux visages » de CASSANDRA-RH (Phase 1, 2026-09-21)** : le
-bloc `🆕 Nouveau visage à l'Agence Codex : X` produit par `narrateNewArrivals()` en tête du rapport
-complet (`node scripts/cassandra-rh.mjs rapport`) est exactement le même genre d'événement que la
-cérémonie de badge — un bloc qui n'existe, du point de vue de l'utilisateur, que s'il est
-effectivement recopié dans la réponse de l'agent (Article 15). Chaque fois que ce rapport est
-réellement lancé et affiche une section « Nouveaux visages à l'Agence Codex » non vide, l'agent la
-recopie dans son prochain message, jamais résumée en une phrase, exactement comme pour la
-certification de badge — les deux mécanismes cohabitent (présence vs complétude, cf.
-`docs/cassandra-rh-conception.md` §5) et suivent donc la même discipline de relais.
-
-Un membre de l'équipe (ligne « Agent » de la table maîtresse) durablement sans badge est donc bien,
-comme le suggérait l'utilisateur, le signe d'une anomalie à investiguer en priorité dans le process
-d'intégration ci-dessus — jamais un détail cosmétique. La colonne « 🎖️ Badge » de la table
-maîtresse ci-dessus reflète l'état constaté lors de la dernière vérification réelle (2026-09-20) ;
-seules les lignes de statut **Agent** en portent un — un Utilitaire nommé ou un script
-d'Infrastructure n'est pas un membre de l'équipe au sens de ce process, donc n'a jamais de badge à
-détenir ou à perdre.
+**Même règle pour la narration « Nouveaux visages » de CASSANDRA-RH** — le détail du calibrage et son récit vivent dans `docs/cassandra-rh-conception.md`. Extrait d’ici le 2026-09-22 par ecotoken : la RÈGLE (une narration ne se fabrique jamais sans arrivée réelle) reste ci-dessus ; seul son récit de conception part.
 
 **Frontière de portée, jamais à confondre (2026-09-20, précision explicite de l'utilisateur : « toi
 et moi avons notre badge ! mais nos 2 mascottes Noé et Lia n'ont pas de badge ! »)** : ce système de

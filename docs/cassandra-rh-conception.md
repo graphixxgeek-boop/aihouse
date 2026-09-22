@@ -382,3 +382,29 @@ construite** : régénérer cette même vue en relisant directement `AGENT_CATEG
 la table maîtresse et `checkAllAgentBadges()` plutôt qu'une transcription manuelle recopiée à la
 main comme ce soir — jamais une seconde source de vérité qui pourrait diverger de l'organigramme
 canonique.
+
+
+---
+
+## Narration « Nouveaux visages » de CASSANDRA-RH — extrait de docs/regles-de-travail.md le 2026-09-22
+
+*(Récit déplacé par ecotoken, texte intégral, rien de résumé. La règle correspondante reste dans regles-de-travail.md ; seul son historique vit ici.)*
+
+**Même règle pour la narration « Nouveaux visages » de CASSANDRA-RH (Phase 1, 2026-09-21)** : le
+bloc `🆕 Nouveau visage à l'Agence Codex : X` produit par `narrateNewArrivals()` en tête du rapport
+complet (`node scripts/cassandra-rh.mjs rapport`) est exactement le même genre d'événement que la
+cérémonie de badge — un bloc qui n'existe, du point de vue de l'utilisateur, que s'il est
+effectivement recopié dans la réponse de l'agent (Article 15). Chaque fois que ce rapport est
+réellement lancé et affiche une section « Nouveaux visages à l'Agence Codex » non vide, l'agent la
+recopie dans son prochain message, jamais résumée en une phrase, exactement comme pour la
+certification de badge — les deux mécanismes cohabitent (présence vs complétude, cf.
+`docs/cassandra-rh-conception.md` §5) et suivent donc la même discipline de relais.
+
+Un membre de l'équipe (ligne « Agent » de la table maîtresse) durablement sans badge est donc bien,
+comme le suggérait l'utilisateur, le signe d'une anomalie à investiguer en priorité dans le process
+d'intégration ci-dessus — jamais un détail cosmétique. La colonne « 🎖️ Badge » de la table
+maîtresse ci-dessus reflète l'état constaté lors de la dernière vérification réelle (2026-09-20) ;
+seules les lignes de statut **Agent** en portent un — un Utilitaire nommé ou un script
+d'Infrastructure n'est pas un membre de l'équipe au sens de ce process, donc n'a jamais de badge à
+détenir ou à perdre.
+
