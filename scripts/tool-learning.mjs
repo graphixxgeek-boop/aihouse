@@ -31,7 +31,14 @@ import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader } from "./report-template.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
 import { loadJsonArray } from "./lib-json.mjs";
-import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE, ETATS_CONSTAT } from "./report-template.mjs";
+
+// LES NOMS D'ÉTAT SE PRENNENT À LA SOURCE, ILS NE SE RECOPIENT PAS (2026-09-23). Je les ai écrits
+// à la main deux fois de suite avec un accent — « à trancher » au lieu de « a-trancher » — et les
+// deux fois le rapport a planté au lieu de se produire. C'est BP1 du registre des leçons, commise
+// dans le fichier qui publie ce registre : la valeur dérive de ETATS_CONSTAT, donc un renommage
+// futur là-bas ne peut plus laisser une orthographe morte ici.
+const [RETENU, , A_TRANCHER] = ETATS_CONSTAT;
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -418,19 +425,67 @@ export const LECONS_PATH = "docs/referentiel/lecons.md";
 // demain entre dans le champ de vision sans qu'une ligne ne bouge ici.
 const PORTEUR_IDENT_RE = /`([A-Za-z_][A-Za-z0-9_]*)(?:\(\))?`/g;
 
+// DEUX NATURES DANS UN SEUL DOCUMENT (2026-09-23, tranché par l'utilisateur). Une LEÇON a été payée
+// par une erreur réelle — c'est ce qui la rend crédible ; une BONNE PRATIQUE est un réflexe qui
+// marche, sans casse derrière. Deux fichiers séparés garantiraient qu'on n'en relise qu'un, une
+// seule liste ferait perdre ce qui distingue les deux. D'où : même document, sections distinctes,
+// et une nature dérivée du préfixe de l'identifiant plutôt que déclarée une seconde fois à côté.
+const NATURE_PAR_PREFIXE = [
+  { motif: /^L\d+$/, nature: "leçon" },
+  { motif: /^BP\d+$/, nature: "bonne pratique" },
+];
+
+export function natureDe(id) {
+  return NATURE_PAR_PREFIXE.find((n) => n.motif.test(String(id)))?.nature ?? null;
+}
+
+// LE TERRAIN — ce qui permet à une entrée d'ARRIVER AU BON MOMENT plutôt que d'attendre qu'on
+// pense à la relire. C'est le champ qui sert l'objectif principal fixé par l'utilisateur (« que tu
+// mettes en pratique ces leçons », pas seulement que tu les enregistres) : sans lui, on servirait
+// les huit à chaque fois, ce qui revient à n'en servir aucune.
+//
+// Les mots-clés sont DÉCLARÉS PAR L'ENTRÉE ELLE-MÊME, après le séparateur « · mots : », jamais
+// devinés par ressemblance de texte (Article 24 : une entrée ajoutée demain déclare son terrain et
+// entre dans le dispositif sans qu'une ligne ne bouge ici — et un rapprochement deviné à côté de la
+// plaque ferait de ce rappel un bruit qu'on apprend à ignorer, ce que L4 interdit).
+function motsDuTerrain(ligne) {
+  const apres = String(ligne ?? "").split("· mots :")[1];
+  if (!apres) return [];
+  return apres.split(",").map((m) => m.trim().toLowerCase()).filter(Boolean);
+}
+
 export function parseLecons(texte = "") {
   const lecons = [];
   const sections = String(texte).split(/^## /m).slice(1);
   for (const sec of sections) {
     const titre = sec.split("\n")[0].trim();
-    const id = (titre.match(/^(L\d+)/) || [])[1];
+    const id = (titre.match(/^(L\d+|BP\d+)/) || [])[1];
     if (!id) continue;
     const ligne = (sec.match(/^\*\*Porté par\*\*\s*:\s*(.+)$/m) || [])[1] ?? null;
+    const terrain = (sec.match(/^\*\*Terrain\*\*\s*:\s*(.+)$/m) || [])[1] ?? null;
     const porteurs = [];
     if (ligne) for (const m of ligne.matchAll(PORTEUR_IDENT_RE)) porteurs.push(m[1]);
-    lecons.push({ id, titre, portePar: ligne, porteurs });
+    lecons.push({ id, titre, nature: natureDe(id), portePar: ligne, porteurs, terrain, mots: motsDuTerrain(terrain) });
   }
   return lecons;
+}
+
+// CE QUI S'APPLIQUE À CE QUE JE M'APPRÊTE À FAIRE. Appelé par tool-brain avant une tâche et par le
+// crochet de commit après — les deux moments retenus par l'utilisateur, en connaissance du risque
+// qu'il a lui-même vu (« le plus à risque de devenir un bruit permanent »).
+//
+// LE GARDE-FOU CONTRE CE RISQUE, et il est la moitié du mécanisme : `max` plafonne strictement, et
+// une correspondance nulle rend une liste VIDE — jamais un repêchage « au cas où ». Un rappel qui
+// sort à chaque fois est un meuble, et le projet a déjà payé ce prix une fois (un rappel de Ronde
+// ignoré plus de deux cents fois, mot pour mot le même).
+export function leconsPourTache(tache, { lecons = [], max = 3 } = {}) {
+  const texte = String(tache ?? "").toLowerCase();
+  if (!texte.trim()) return [];
+  const notees = lecons
+    .map((l) => ({ l, score: l.mots.filter((m) => texte.includes(m)).length }))
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score || String(a.l.id).localeCompare(String(b.l.id)));
+  return notees.slice(0, max).map((x) => ({ ...x.l, correspondances: x.score }));
 }
 
 export function auditLecons({ root = ROOT, readFileImpl = readFileSync, existsImpl = existsSync, sourcesImpl } = {}) {
@@ -454,14 +509,23 @@ export function auditLecons({ root = ROOT, readFileImpl = readFileSync, existsIm
   });
 
   const compte = (e) => juges.filter((l) => l.etat === e).length;
+  // LE SECOND DÉFAUT, INDÉPENDANT DU PREMIER (2026-09-23) : une entrée peut être parfaitement portée
+  // par un mécanisme ET n'arriver jamais au bon moment, faute de terrain déclaré. Les deux se
+  // comptent donc à part — un registre 100 % porté mais 0 % applicable remplirait l'objectif de
+  // l'archivage en ratant entièrement celui de la mise en pratique, qui est le principal.
+  const sansTerrain = juges.filter((l) => !l.mots.length).map((l) => l.id);
   return {
     mesure: "mesuré",
     lecons: juges,
     total: juges.length,
+    lecons_: juges.filter((l) => l.nature === "leçon").length,
+    pratiques: juges.filter((l) => l.nature === "bonne pratique").length,
     portees: compte("portée"),
     sansMecanisme: compte("sans mécanisme"),
     sansPorteur: compte("sans porteur"),
     fantomes: compte("porteur fantôme"),
+    sansTerrain,
+    applicables: juges.length - sansTerrain.length,
   };
 }
 
@@ -474,10 +538,177 @@ function scriptSources(root, readFileImpl) {
   return out;
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LE JOURNAL DU PROCESS XP — ce qui a été capté, et ce que l'utilisateur en a dit
+// ————————————————————————————————————————————————————————————————————————
+//
+// NOM DU PROCESS : XP-IA-bonnes-pratiques-et-lecons (donné par l'utilisateur le 2026-09-23).
+//
+// TROIS NATURES D'ÉCRITURE, JAMAIS MÉLANGÉES, parce qu'elles n'ont ni le même auteur ni la même
+// autorité — et que les confondre ferait passer mon propre avis sur mon travail pour un verdict :
+//   · "captation"  — un moment déclencheur est passé et j'ai répondu (une entrée, ou « rien à
+//                    retenir », qui est une réponse pleine et entière et ne compte contre personne) ;
+//   · "conclusion" — ce que je tire de la période sur MA façon de travailler. C'est la seule partie
+//                    qu'aucune mécanique ne peut produire, donc la seule que j'écris à la main ;
+//   · "jugement"   — l'utilisateur dit si une entrée a été réellement APPLIQUÉE. Lui seul, et à la
+//                    Ronde : « c'est moi à la fin qui te dis si elle est propre ». Me déclarer
+//                    conforme sur mon propre travail serait le défaut que ce dispositif combat.
+export const XP_JOURNAL_PATH = "docs/tool-learning/xp-journal.json";
+export const NATURES_XP = ["captation", "conclusion", "jugement"];
+
+// Les moments où la question « y a-t-il quelque chose à retenir ? » se pose. Retenus explicitement
+// par l'utilisateur le 2026-09-23 ; celui qu'il n'a PAS retenu est déclaré plus bas plutôt que tu.
+export const DECLENCHEURS_XP = [
+  { cle: "garde-fou-bloque", libelle: "un garde-fou refuse mon commit, ou un test échoue pour une raison que je n'avais pas vue",
+    pourquoi: "de loin le moment le plus riche : la moitié des leçons actuelles y sont nées", mecanisable: true },
+  { cle: "fin-de-compte-rendu", libelle: "à la fin de chaque compte rendu de travail rendu à l'utilisateur",
+    pourquoi: "le rythme régulier ; le risque à surveiller est d'écrire pour remplir, d'où « rien à retenir » comme réponse valable", mecanisable: false },
+  { cle: "ronde-et-evaluation", libelle: "à chaque Ronde et à chaque évaluation",
+    pourquoi: "ces moments font déjà le bilan d'une période, donc on y voit ce qu'on ne voit pas tâche par tâche", mecanisable: true },
+];
+
+// CE QUI N'A PAS ÉTÉ RETENU, ÉCRIT PLUTÔT QUE TU (Article 27) : « quand je refais une erreur déjà
+// faite » a été proposé et NON coché. C'était pourtant le signal le plus fort du lot — mais aussi le
+// seul qu'aucune mécanique ne sait détecter, donc celui dont la protection aurait été la plus faible.
+// Noté ici pour qu'une reprise sache que c'est une décision, jamais un oubli.
+export const DECLENCHEUR_ECARTE = { cle: "erreur-repetee", raison: "proposé le 2026-09-23 et non retenu par l'utilisateur : non détectable mécaniquement, donc une obligation qui n'aurait reposé que sur ma mémoire" };
+
+export function loadJournalXp({ root = ROOT, readFileImpl = readFileSync } = {}) {
+  return loadJsonArray(XP_JOURNAL_PATH, { root, readFileImpl });
+}
+
+export function enregistrerXp(entree, { root = ROOT, readFileImpl = readFileSync, writeFileImpl = writeFileSync, date = new Date().toISOString() } = {}) {
+  if (!NATURES_XP.includes(entree?.nature)) throw new Error(`nature XP inconnue : ${entree?.nature} — les trois natures ne se mélangent pas`);
+  // Un jugement ne peut venir que de l'utilisateur, et le déclarer est la seule chose qui distingue
+  // son verdict du mien. Une mécanique ne peut pas le prouver ; elle peut refuser de l'inventer.
+  if (entree.nature === "jugement" && entree.parUtilisateur !== true) throw new Error("un jugement d'application n'est valable que s'il vient de l'utilisateur — jamais l'agent sur son propre travail");
+  const journal = loadJournalXp({ root, readFileImpl });
+  journal.push({ ...entree, date });
+  writeFileImpl(join(root, XP_JOURNAL_PATH), JSON.stringify(journal, null, 2) + "\n", "utf8");
+  return journal.length;
+}
+
+// L'ANALYSE DE LA PÉRIODE. Elle distingue les trois natures plutôt que de compter des lignes : un
+// journal plein de captations sans une seule conclusion décrit quelqu'un qui archive, pas quelqu'un
+// qui apprend — et c'est exactement la distinction que cet outil applique déjà aux autres.
+export function analyseXp(journal = [], audit = {}, { rondesSansConclusion = null } = {}) {
+  const par = (n) => journal.filter((e) => e.nature === n);
+  const captations = par("captation");
+  const conclusions = par("conclusion");
+  const jugements = par("jugement");
+  const derniereConclusion = conclusions.at(-1) ?? null;
+  const rienARetenir = captations.filter((c) => c.rienARetenir === true).length;
+  const constats = [];
+
+  // Le cas qui compte le plus, et il est volontairement le premier : aucune conclusion écrite, c'est
+  // le journal d'un archiviste. L'objectif posé était la mise en pratique, pas l'accumulation.
+  if (!derniereConclusion) constats.push({ constat: "aucune conclusion écrite sur ma façon de travailler — le journal accumule des captations et n'en tire rien, ce qui est précisément « archive seulement » appliqué à moi", etat: "retenu", tache: "écrire la conclusion de période à la prochaine Ronde (nature « conclusion »)" });
+  else if (Number.isFinite(rondesSansConclusion) && rondesSansConclusion >= 2) constats.push({ constat: `dernière conclusion il y a ${rondesSansConclusion} Ronde(s) — une conclusion par période perd son sens si elle saute des périodes`, etat: "retenu", tache: "écrire la conclusion de période à cette Ronde" });
+
+  // Un journal sans un seul jugement de l'utilisateur ne dit rien sur l'APPLICATION : il dit
+  // seulement que j'ai écrit. C'est la moitié qui manque, et elle ne m'appartient pas.
+  if (captations.length >= 3 && !jugements.length) constats.push({ constat: "aucune entrée n'a encore été jugée appliquée ou non par l'utilisateur — le registre grossit sans qu'on sache s'il change quoi que ce soit", etat: A_TRANCHER, tache: "présenter les entrées à la Ronde pour que l'utilisateur dise lesquelles ont été réellement appliquées" });
+
+  // « Rien à retenir » est une réponse valable ; mais uniquement des « rien à retenir » sur une
+  // longue série est un signal en soi — soit rien n'arrive, soit je ne regarde plus.
+  if (captations.length >= 5 && rienARetenir === captations.length) constats.push({ constat: `${captations.length} passages de suite sans une seule trouvaille — « rien à retenir » est une réponse valable, mais jamais ${captations.length} fois d'affilée`, etat: "retenu", tache: "relire les derniers déclencheurs et vérifier si je réponds vraiment à la question ou si je la coche" });
+
+  return {
+    captations: captations.length, rienARetenir, conclusions: conclusions.length, jugements: jugements.length,
+    derniereConclusion, appliquees: jugements.filter((j) => j.verdict === "appliquée").length,
+    nonAppliquees: jugements.filter((j) => j.verdict === "pas appliquée").length,
+    entrees: audit.total ?? null, constats,
+  };
+}
+
+export function formatXp(analyse, declencheurs = DECLENCHEURS_XP) {
+  const l = [`Journal XP : ${analyse.captations} captation(s) dont ${analyse.rienARetenir} « rien à retenir », ${analyse.conclusions} conclusion(s) sur ma façon de travailler, ${analyse.jugements} jugement(s) de l'utilisateur.`];
+  if (analyse.jugements) l.push(`Appliquées pour de vrai : ${analyse.appliquees} · pas appliquées : ${analyse.nonAppliquees} — verdict de l'utilisateur, jamais le mien.`);
+  else l.push("Aucun jugement d'application encore rendu : c'est l'utilisateur qui tranche, à la Ronde.");
+  if (analyse.derniereConclusion) l.push(`Dernière conclusion (${analyse.derniereConclusion.date?.slice(0, 10) ?? "?"}) : ${analyse.derniereConclusion.texte ?? "(vide)"}`);
+  else l.push("Aucune conclusion écrite pour l'instant — le journal archive sans rien en tirer.");
+  l.push("Moments où la question se pose : " + declencheurs.map((d) => d.cle).join(" · ") + ".");
+  return l;
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// LA CHAÎNE XP — quatre maillons, et la vérification qu'aucun n'est cassé
+// ————————————————————————————————————————————————————————————————————————
+//
+// LA QUESTION QUI A CRÉÉ CETTE FONCTION, posée par l'utilisateur le 2026-09-23 : « à toi de me dire
+// si toutes les connexions sont bien là pour l'objectif prévu. » Y répondre en prose aurait été une
+// intention (L7) : la réponse se lit donc dans le vrai dépôt, à chaque passage, jamais dans ma
+// mémoire de ce que j'ai câblé.
+//
+// LES QUATRE MAILLONS, dans ses mots : « 1/ tu découvres une leçon dans la conversation 2/ tu
+// l'enregistres 3/ tu l'analyses lors de circle 4/ elle ressort au moment opportun, comme un
+// réflexe mécanique ». Un seul maillon cassé et la valeur produite est perdue — c'est exactement la
+// chaîne de l'Article 28 (rapport → analyse → plan → tâches), appliquée à l'expérience plutôt qu'aux
+// constats.
+//
+// CHAQUE MAILLON EST VÉRIFIÉ PAR UNE PREUVE DANS UN FICHIER RÉEL, jamais par une déclaration. Même
+// patron que `etatConnexionProcessGardien()` et que `checkActionChain()` : ce qui est annoncé doit
+// exister pour de vrai, une référence morte étant pire qu'une absence assumée.
+export const MAILLONS_XP = [
+  { cle: "decouverte", libelle: "1/ Découvrir — quelque chose me relance aux moments déclencheurs",
+    fichier: "scripts/angel-of-ia-process.mjs", preuve: "xp-lecons",
+    sansQuoi: "rien ne me demande jamais si j'ai appris quelque chose : la découverte ne repose que sur ma mémoire, donc elle disparaît à la fin de la session" },
+  { cle: "enregistrement", libelle: "2/ Enregistrer — la trouvaille est écrite où on la retrouvera",
+    fichier: "scripts/tool-learning.mjs", preuve: "enregistrerXp",
+    sansQuoi: "la trouvaille reste dans la conversation et meurt avec elle" },
+  { cle: "analyse", libelle: "3/ Analyser à la Ronde — la période est relue et j'en tire une conclusion",
+    fichier: "scripts/circle-tasks.mjs", preuve: "tool-learning",
+    sansQuoi: "le registre grossit sans que personne ne regarde jamais ce qu'il dit de ma façon de travailler" },
+  { cle: "reflexe-avant", libelle: "4a/ Ressortir AVANT la tâche — tool-brain sert ce qui s'applique",
+    fichier: "scripts/tool-brain.mjs", preuve: "leconsPourTache",
+    sansQuoi: "la leçon reste archivée : elle est relue une fois par Ronde et ne change rien au travail du lendemain" },
+  { cle: "reflexe-commit", libelle: "4b/ Ressortir AU COMMIT — ce qui est passé quand même est rattrapé",
+    fichier: "scripts/hooks/check-last-commit.mjs", preuve: "leconsPourTache",
+    sansQuoi: "ce qui a échappé au rappel d'avant la tâche n'est jamais rattrapé" },
+];
+
+export function auditChaineXp({ root = ROOT, readFileImpl = readFileSync, existsImpl = existsSync, maillons = MAILLONS_XP } = {}) {
+  const etats = maillons.map((m) => {
+    const chemin = join(root, m.fichier);
+    // L5 : un fichier illisible n'est pas un maillon cassé, c'est une absence de mesure. Les deux se
+    // ressemblent dans un rapport et ne veulent pas du tout dire la même chose.
+    if (!existsImpl(chemin)) return { ...m, etat: "pas mesuré", detail: `${m.fichier} est introuvable` };
+    let code = "";
+    try { code = readFileImpl(chemin, "utf8"); } catch { return { ...m, etat: "pas mesuré", detail: `${m.fichier} est illisible` }; }
+    const branche = new RegExp(`\\b${m.preuve}\\b`).test(code);
+    return { ...m, etat: branche ? "branché" : "cassé", detail: branche ? `${m.preuve} est bien présent dans ${m.fichier}` : `${m.preuve} est absent de ${m.fichier} — ${m.sansQuoi}` };
+  });
+  const casses = etats.filter((e) => e.etat === "cassé");
+  const nonMesures = etats.filter((e) => e.etat === "pas mesuré");
+  return {
+    maillons: etats, branches: etats.filter((e) => e.etat === "branché").length, total: etats.length,
+    casses: casses.map((e) => e.cle), nonMesures: nonMesures.map((e) => e.cle),
+    // Une chaîne n'est complète que si TOUS les maillons tiennent : un maillon non mesuré la rend
+    // incomplète au même titre qu'un maillon cassé, jamais « probablement bonne ».
+    complete: casses.length === 0 && nonMesures.length === 0,
+  };
+}
+
+export function formatChaineXp(chaine) {
+  const l = [`Chaîne XP : ${chaine.branches}/${chaine.total} maillon(s) branché(s)${chaine.complete ? " — la chaîne est complète." : " — la chaîne est INCOMPLÈTE, la valeur produite se perd quelque part."}`];
+  for (const m of chaine.maillons) l.push(`  ${m.etat === "branché" ? "✅" : m.etat === "cassé" ? "🔴" : "⚪"} ${m.libelle} — ${m.detail}`);
+  return l;
+}
+
+export function constatsChaineXp(chaine) {
+  return chaine.maillons.filter((m) => m.etat !== "branché").map((m) => ({
+    constat: `maillon « ${m.cle} » ${m.etat} — sans lui, ${m.sansQuoi}`,
+    etat: m.etat === "cassé" ? RETENU : A_TRANCHER,
+    tache: m.etat === "cassé" ? `brancher ${m.preuve} dans ${m.fichier}` : `rendre ${m.fichier} lisible, ou retirer ce maillon de la chaîne s'il n'a plus lieu d'être`,
+  }));
+}
+
 export function formatLecons(audit) {
   const l = [];
   if (audit.mesure !== "mesuré") { l.push(`· pas mesuré — ${audit.raison}`); return l; }
-  l.push(`${audit.total} leçon(s) — ${audit.portees} portée(s) par un mécanisme réel, ${audit.sansMecanisme} sans mécanisme possible (déclaré), ${audit.sansPorteur} sans porteur, ${audit.fantomes} porteur(s) fantôme(s).`);
+  l.push(`${audit.total} entrée(s) — ${audit.lecons_} leçon(s) payée(s) par une erreur, ${audit.pratiques} bonne(s) pratique(s).`);
+  l.push(`Tenue : ${audit.portees} portée(s) par un mécanisme réel, ${audit.sansMecanisme} sans mécanisme possible (déclaré), ${audit.sansPorteur} sans porteur, ${audit.fantomes} porteur(s) fantôme(s).`);
+  l.push(`Mise en pratique : ${audit.applicables}/${audit.total} peuvent remonter au bon moment${audit.sansTerrain.length ? ` — sans terrain déclaré : ${audit.sansTerrain.join(", ")}` : ""}.`);
   for (const x of audit.lecons) {
     const marque = x.etat === "portée" ? "✅" : x.etat === "sans mécanisme" ? "📄" : "⚠️";
     l.push(`  ${marque} ${x.id} (${x.etat}) — ${x.detail}`);
@@ -497,6 +728,9 @@ export function constatsLecons(audit) {
     ...audit.lecons.filter((x) => x.etat === "sans porteur").map((x) => ({
       constat: `${x.id} ne tient à aucun mécanisme et ne le déclare pas — elle disparaît avec la session qui l'a écrite`,
       etat: "retenu", tache: `donner un porteur à ${x.id}, ou écrire noir sur blanc qu'aucun n'est possible et pourquoi` })),
+    ...(audit.sansTerrain ?? []).map((id) => ({
+      constat: `${id} ne déclare aucun terrain — elle ne remontera jamais au moment où elle s'applique, donc elle est archivée plutôt qu'appliquée`,
+      etat: "retenu", tache: `déclarer le terrain de ${id} dans ${LECONS_PATH} (les situations où elle mord, et les mots qui les signalent)` })),
   ];
 }
 
@@ -528,8 +762,15 @@ function main() {
 
   // LE REGISTRE DES LEÇONS, affiché AVANT le plan d'action parce qu'il l'alimente (tâche #220).
   const auditL = auditLecons();
-  console.log("\n=== CE QUE J'AI APPRIS EN ME TROMPANT (docs/referentiel/lecons.md) ===");
+  console.log("\n=== PROCESS XP-IA-bonnes-pratiques-et-lecons — LE REGISTRE (docs/referentiel/lecons.md) ===");
   for (const l of formatLecons(auditL)) console.log(l);
+  const journalXp = loadJournalXp();
+  const xp = analyseXp(journalXp, auditL);
+  console.log("");
+  for (const l of formatXp(xp)) console.log(l);
+  const chaine = auditChaineXp();
+  console.log("");
+  for (const l of formatChaineXp(chaine)) console.log(l);
 
   // LE PLAN D'ACTION (2026-09-23, tâche #211). TOOL-LEARNING porte la MOITIÉ 2 de l'évolutivité
   // (devenir meilleur), et ses deux constats visent deux responsables différents — les mélanger
@@ -545,6 +786,8 @@ function main() {
     ...surMoi.ignores.map((i) => ({ constat: `verdict ignoré PAR MOI : ${i.outil}, jugé « ${i.verdict} » le ${i.depuis}, revu ${i.passages} fois sans un seul commit depuis`, etat: "retenu",
       tache: `traiter ce que ${i.outil} dit depuis le ${i.depuis}, ou écarter son verdict explicitement — le revoir sans agir n'est ni l'un ni l'autre` })),
     ...constatsLecons(auditL),
+    ...xp.constats,
+    ...constatsChaineXp(chaine),
   ];
   const planAppr = buildPlanDaction(constatsApprentissage, { toolSlug: "tool-learning" });
   console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);

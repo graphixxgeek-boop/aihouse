@@ -76,3 +76,46 @@ déclarée sans mécanisme possible (L3, « un test ne doit jamais exiger qu'un 
 reconnaître automatiquement qu'une assertion s'appuie sur un défaut réel du dépôt demanderait de
 deviner son intention, et produirait du bruit sur les tests légitimes, donc précisément le défaut de
 L4), 0 fantôme, 0 muette.
+
+## Le process XP-IA-bonnes-pratiques-et-lecons (2026-09-23, tâche #221)
+
+**Nom donné par l'utilisateur.** Sixième process déclaré du projet, hébergé ici parce que TOOL-LEARNING
+porte la moitié 2 de l'évolutivité — devenir meilleur — et que l'apprentissage de l'AGENT en fait
+partie au même titre que celui des outils. Document complet : `docs/xp-ia-process-detail.md`.
+
+**Ce que la section précédente ne suffisait pas à garantir.** Le registre existait, il était audité,
+et il ne changeait rien à ma façon de travailler le lendemain — parce qu'une leçon relue une fois
+par Ronde n'atteint jamais le moment où elle s'applique. L'objectif posé par l'utilisateur est
+explicite : « que tu mettes en pratique ces leçons et bonnes pratiques, en plus de t'auto-analyser ».
+**Un registre qui n'a jamais changé une décision a échoué, même parfaitement tenu.**
+
+**Les cinq maillons, et `auditChaineXp()` qui les vérifie dans le VRAI dépôt :**
+
+| Maillon | Où il vit | Preuve cherchée |
+|---|---|---|
+| 1 Découvrir | `scripts/angel-of-ia-process.mjs` | la règle `xp-lecons` |
+| 2 Enregistrer | `scripts/tool-learning.mjs` | `enregistrerXp` |
+| 3 Analyser à la Ronde | `scripts/circle-tasks.mjs` | le poste `tool-learning` |
+| 4a Ressortir avant la tâche | `scripts/tool-brain.mjs` | `leconsPourTache` |
+| 4b Ressortir au commit | `scripts/hooks/check-last-commit.mjs` | `leconsPourTache` |
+
+**Au premier passage réel, le maillon 1 était cassé** — l'outil l'a dit, je l'ai branché, il est
+repassé au vert. C'est la démonstration que cette fonction ne se contente pas de confirmer ce que je
+crois avoir fait.
+
+**Les trois défenses contre le bruit**, parce que l'utilisateur a retenu les DEUX moments de
+remontée (avant la tâche ET au commit) en voyant lui-même le risque : le terrain est déclaré par
+chaque entrée et jamais deviné · aucune correspondance = rien d'affiché · le plafond est strict
+(3 avant la tâche, 2 au commit — après coup la marge de manœuvre est plus étroite).
+
+**Le journal `docs/tool-learning/xp-journal.json`, trois natures qui ne se mélangent pas** :
+`captation` (un déclencheur est passé, j'ai répondu — « rien à retenir » compris), `conclusion` (ce
+que je tire de la période sur ma façon de travailler, écrit à la main), `jugement` (l'utilisateur
+dit si une entrée a été réellement appliquée). `enregistrerXp()` **refuse** un jugement sans
+`parUtilisateur: true` : aucune mécanique ne peut prouver son origine, mais elle peut refuser de
+l'inventer.
+
+**Première conclusion de période inscrite le 2026-09-23**, et elle est sévère parce qu'elle est
+juste : mon travers dominant est de construire le mécanisme et de m'arrêter avant de le brancher —
+sept fois en une journée. Le défaut n'est pas l'oubli, c'est qu'un mécanisme construit RESSEMBLE à
+un problème traité, ce qui éteint la vigilance juste avant la dernière étape.

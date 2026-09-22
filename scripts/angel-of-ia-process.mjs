@@ -65,6 +65,18 @@ export const REGLES_SURVEILLEES = [
   // confier à la mémoire d'un agent qui changera de session (Article 27).
   { id: "resume-contextualise", cote: "agent", observable: false, regle: "Ouvrir chaque compte rendu final par les quatre rappels : le contexte, la demande de l'utilisateur résumée dans ses termes, l'étiquette de la tâche (numéro + intitulé), et un vocabulaire compréhensible par un non-développeur.", source: "CLAUDE.md Article 29" },
   { id: "decisions-en-attente", cote: "utilisateur", observable: true, regle: "Trancher les questions laissées en attente : une décision jamais prise bloque le travail qui en dépend.", source: "docs/regles-de-travail.md §2" },
+  // XP-LECONS (2026-09-23, process XP-IA-bonnes-pratiques-et-lecons, tâche #221). C'est le PREMIER
+  // maillon de la chaîne de l'expérience : sans quelqu'un pour poser la question aux moments qui
+  // comptent, la découverte d'une leçon ne repose que sur ma mémoire — donc elle disparaît à la fin
+  // de la session, et tout le reste de la chaîne (enregistrer, analyser, ressortir) n'a rien à
+  // transporter. `observable: false` est exact et non contournable : aucune mécanique ne peut voir
+  // qu'une trouvaille est passée dans une conversation ; angel DEMANDE et refuse d'être au vert
+  // sans réponse — le seul mécanisme possible quand la preuve n'existe pas, déjà éprouvé ici.
+  //
+  // « RIEN À RETENIR » EST UNE RÉPONSE PLEINE ET ENTIÈRE, et ce n'est pas une politesse : exiger une
+  // trouvaille à chaque passage ferait écrire pour se taire, ce qui remplirait le registre de bruit
+  // et le rendrait illisible — donc détruirait exactement ce qu'on essaie de construire.
+  { id: "xp-lecons", cote: "agent", observable: false, regle: "Aux trois moments déclencheurs (un garde-fou bloque un commit ou un test échoue de façon imprévue · la fin d'un compte rendu de travail · chaque Ronde et chaque évaluation), répondre à la question « y avait-il quelque chose à retenir ? » et inscrire la réponse au journal XP — « rien à retenir » compris, qui est une réponse valable et ne compte contre personne.", source: "docs/xp-ia-process-detail.md" },
 ];
 
 // ————————————————————————————————————————————————————————————————————————

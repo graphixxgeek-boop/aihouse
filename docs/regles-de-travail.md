@@ -302,6 +302,23 @@ de suivi, mettre à jour un chiffre) n'est pas une « action spécifique » au s
 une mesure de criticité pour chaque frappe la rendrait mécanique, donc invisible — exactement ce
 que l'Article 14 de la charte reproche à une vigilance qui coche des cases.
 
+### 3bis. Les dates du projet suivent l'heure de PARIS, jamais l'horloge UTC du serveur
+
+*(2026-09-23, tranché par l'utilisateur après que l'agent a cru avoir commis une erreur de date.)*
+Le serveur sur lequel l'agent travaille est à l'heure UTC ; l'utilisateur est en France. Passé 22h
+UTC, les deux ne sont plus le même jour — l'agent voit « 22 septembre, 22h13 » quand il est déjà
+« 23 septembre, 00h16 » chez la personne qui pilote le projet.
+
+**La date de référence est la sienne.** Un travail fait dans sa soirée porte la date de SA soirée.
+Ses mots ce jour-là : « c'est pas grave, mais note que pour moi actuellement, France, il est
+00h16 ».
+
+**Pourquoi c'est écrit ici plutôt que laissé au bon sens** (Article 27) : une future IA qui compare
+les dates du suivi à l'horodatage des commits git verra un décalage systématique d'un jour sur tout
+le travail de nuit, conclura à une erreur, et « corrigera » des centaines de dates justes. C'est
+précisément le genre de reprise qui défait ce qui a été gagné. Le décalage n'est pas un bug : il est
+la différence entre deux fuseaux, et la bonne référence est celle de l'utilisateur.
+
 ## 4. Git et livraison
 
 - **Commit dès qu'un morceau de travail cohérent passe les tests**, sans attendre une demande

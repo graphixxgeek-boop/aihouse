@@ -280,6 +280,37 @@ export const PROCESSES = [
       { cle: "suivi", libelle: "la tâche est documentée dans docs/suivi/ dans LE MÊME commit", preuve: null },
     ],
   },
+  {
+    // SIXIÈME PROCESS (2026-09-23, tâche #221). Nom donné par l'utilisateur. Il gouverne la seule
+    // chose que ce paysage ne surveillait pas : l'expérience de l'AGENT. Tous les autres process
+    // encadrent une activité ; celui-ci encadre ce qui reste d'une activité une fois qu'elle est
+    // finie — et c'est précisément ce qui disparaît à chaque fin de session, puisqu'un outil garde
+    // son registre et qu'un agent ne garde rien.
+    slug: "xp-ia",
+    nom: "XP-IA-bonnes-pratiques-et-lecons",
+    quand: "une leçon ou une bonne pratique apparaît dans le travail, et il faut qu'elle survive à la session puis qu'elle ressorte au moment où elle s'applique",
+    motsCles: ["leçon", "lecon", "bonne pratique", "expérience", "retenir", "apprendre", "registre des leçons", "xp"],
+    doc: "docs/xp-ia-process-detail.md",
+    // Le contrôleur est celui de la CONDUITE, jamais celui d'un déroulé : ce process ne décrit pas
+    // les étapes d'une activité, il décrit un comportement à tenir. C'est la définition même du
+    // périmètre d'angel (Article 26), et lui confier autre chose aurait brouillé les deux rôles.
+    gardien: "scripts/angel-of-ia-process.mjs",
+    // LES ÉTAPES PORTENT EXPLICITEMENT LES SIX MAILLONS DU SCHÉMA UNIFIÉ, et aucune n'est exemptée :
+    // les six s'appliquent réellement ici. C'est findMaillonsManquants() qui l'a exigé au premier
+    // passage, et la bonne réponse était de couvrir les maillons pour de vrai plutôt que de déclarer
+    // quatre exemptions de complaisance — une exemption est faite pour un maillon SANS OBJET, jamais
+    // pour un maillon qu'on n'a pas eu envie de construire.
+    etapes: [
+      { cle: "declencheur-questions", libelle: "aux trois moments déclencheurs, les QUESTIONS sont posées — « y avait-il quelque chose à retenir ? » — et reçoivent une réponse, « rien à retenir » comprise", preuve: null },
+      { cle: "enregistrement", libelle: "la réponse est inscrite au journal XP avec sa nature (captation / conclusion / jugement)", preuve: { fichier: "docs/tool-learning/xp-journal.json" } },
+      { cle: "scan-du-registre", libelle: "SCAN mécanique du registre : chaque entrée déclare-t-elle son TERRAIN et son PORTEUR, et les cinq maillons de la chaîne sont-ils branchés dans le vrai dépôt", preuve: { fichier: "docs/referentiel/lecons.md" } },
+      { cle: "rapports", libelle: "le RAPPORT de TOOL-LEARNING est produit à la Ronde et livré, jamais gardé pour l'agent seul", preuve: { fichier: "scripts/tool-learning.mjs" } },
+      { cle: "analyse-ronde", libelle: "ANALYSE de la période : une conclusion écrite sur MA façon de travailler — la seule partie qu'aucune mécanique ne produit", preuve: null },
+      { cle: "plan-action", libelle: "PLAN D'ACTION : chaque constat prend l'un des trois états (retenu / écarté avec sa raison / à trancher)", preuve: { fichier: "scripts/tool-learning.mjs" } },
+      { cle: "taches", libelle: "les constats retenus deviennent des TÂCHES réelles dans docs/suivi/, jamais une note pour plus tard", preuve: null },
+      { cle: "jugement-utilisateur", libelle: "à la Ronde, l'utilisateur dit quelles entrées ont été réellement APPLIQUÉES — jamais l'agent sur son propre travail", preuve: null },
+    ],
+  },
 ];
 
 // ————————————————————————————————————————————————————————————————————————

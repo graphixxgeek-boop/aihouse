@@ -951,6 +951,34 @@ jamais une source de vérité pour l'utilisateur — ne remplace aucune des vér
 3 »). La seule source de vérité durable, traversant les sessions et vérifiée par de vrais tests,
 reste `docs/suivi/`.
 
+## Le process XP-IA-bonnes-pratiques-et-lecons — l'expérience de l'agent
+
+*(2026-09-23, nom donné par l'utilisateur. Sixième process déclaré, aux côtés de la Ronde, de la
+simulation, de la nuit autonome, du méta-process et de l'intégration d'un outil. Document complet :
+`docs/xp-ia-process-detail.md` — jamais résumé ici.)*
+
+**Le problème qu'il ferme** : un outil garde son registre d'une session à l'autre, **un agent ne
+garde rien**. Ce qui n'est pas écrit ET rendu atteignable au bon moment n'existera plus demain. Les
+leçons du projet vivaient jusque-là dans des commentaires de code, chacune locale à l'outil qui
+l'avait apprise.
+
+**La chaîne, en cinq maillons, dont aucun ne peut manquer** : `découvrir → enregistrer → analyser à
+la Ronde → ressortir avant la tâche → ressortir au commit`. Elle est vérifiée **branchée dans le
+vrai dépôt** par `auditChaineXp()` à chaque passage, jamais déclarée : répondre « oui tout est
+connecté » en prose aurait été une intention, et une intention n'a jamais empêché quoi que ce soit.
+
+**Les trois moments où la question « y avait-il quelque chose à retenir ? » se pose** : un garde-fou
+bloque un commit ou un test échoue de façon imprévue · la fin d'un compte rendu de travail · chaque
+Ronde et chaque évaluation. `angel-of-ia-process` (règle `xp-lecons`) les surveille et refuse d'être
+au vert sans réponse. **« Rien à retenir » est une réponse pleine et entière** et ne compte contre
+personne : exiger une trouvaille à chaque passage ferait écrire pour se taire.
+
+**Deux jugements restent hors des mains de l'agent, et c'est délibéré** : la conclusion de période
+sur sa propre façon de travailler s'écrit à la main (aucune mécanique ne peut la produire), et
+**c'est l'utilisateur, à la Ronde, qui dit si une entrée a été réellement APPLIQUÉE** — cohérent
+avec « c'est moi à la fin qui te dis si elle est propre ». `enregistrerXp()` refuse un jugement qui
+ne porte pas `parUtilisateur: true`.
+
 ## Philosophie et politique — la boussole du projet
 
 `docs/philosophie-et-politique.md` extrait et généralise les valeurs et les principes d'arbitrage
@@ -1121,6 +1149,13 @@ demander si un outil déjà existant répondrait plus vite ou plus complètement
   ou déclare noir sur blanc qu'aucun n'est possible, avec sa raison (ce que la leçon L7 prescrit
   elle-même) ; `auditLecons()` (`scripts/tool-learning.mjs`) vérifie à chaque passage que ce porteur
   existe pour de vrai, un porteur fantôme étant pire qu'une absence assumée puisqu'il rassure à tort.
+  **DEUX SECTIONS** depuis le 2026-09-23 : les LEÇONS (payées par une erreur réelle — c'est ce qui
+  les rend crédibles) et les BONNES PRATIQUES (des réflexes qui marchent, sans casse derrière). Même
+  document, jamais la même liste. **L'OBJECTIF EST LA MISE EN PRATIQUE, PAS L'ARCHIVAGE** : chaque
+  entrée déclare aussi son TERRAIN (les situations où elle mord, et les mots qui les signalent), ce
+  qui lui permet de remonter au bon moment — un registre relu une fois par Ronde ne change rien au
+  travail du lendemain. Le process qui le fait vivre est **XP-IA-bonnes-pratiques-et-lecons**, décrit
+  juste en dessous.
 - `docs/referentiel/points-fragiles.md` (2026-09-19) — registre vivant des points identifiés comme
   fragiles ou en attente d'une décision de conception (pas des bugs actifs, ceux-là se corrigent
   directement) ; compté par `scripts/kpi-report.mjs` comme un des indicateurs de robustesse du code.

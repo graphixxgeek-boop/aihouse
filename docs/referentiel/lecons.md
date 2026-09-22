@@ -15,10 +15,42 @@ trouvaille écrite quelque part que rien ne fait relire.
 (qui décrit le code réel), ni le suivi (qui trace l'avancement). C'est ce qu'on a **appris en se
 trompant** — formulé pour être réutilisable, y compris sur un autre projet.
 
-**Critère d'entrée, volontairement exigeant** : une leçon n'entre ici que si elle a été payée par une
-erreur réelle et qu'elle vaut au-delà du cas qui l'a révélée. Une observation ponctuelle va dans le
-suivi ; une règle va dans la charte. Un registre de leçons qui accueille tout devient un journal que
-personne ne relit.
+**DEUX SECTIONS, JAMAIS UNE SEULE LISTE** *(2026-09-23, tranché par l'utilisateur : le registre
+couvre « les leçons, les bonnes pratiques »)*. Les deux vivent dans ce même document — les séparer en
+deux fichiers garantirait qu'on n'en relise qu'un — mais jamais dans la même liste :
+
+- **Les LEÇONS (L1, L2…)** ont été payées par une erreur réelle. C'est ce qui les rend crédibles, et
+  les diluer parmi des conseils sans casse derrière leur ferait perdre exactement ça.
+- **Les BONNES PRATIQUES (BP1, BP2…)** sont des réflexes qui marchent, sans qu'aucune erreur ne les
+  ait forcément provoqués. Elles n'ont pas à être payées pour valoir.
+
+**Critère d'entrée commun, volontairement exigeant** : l'entrée doit valoir **au-delà du cas qui l'a
+révélée**. Une observation ponctuelle va dans le suivi ; une règle qui ordonne va dans la charte. Un
+registre qui accueille tout devient un journal que personne ne relit — donc précisément le problème
+qu'il prétend résoudre.
+
+**LE BUT N'EST PAS D'ENREGISTRER, C'EST D'APPLIQUER** *(objectif principal posé par l'utilisateur :
+« que tu mettes en pratique ces leçons et bonnes pratiques, en plus de t'auto-analyser »)*. Un
+registre relu une fois par Ronde ne change pas la façon de travailler du mardi suivant. D'où les
+deux champs que porte chaque entrée, et qui ne sont pas décoratifs :
+
+- **Terrain** — dans quelles situations elle mord. C'est ce qui permet de la faire remonter AU BON
+  MOMENT (avant la tâche via tool-brain, et au commit) plutôt que de servir les huit à chaque fois,
+  ce qui reviendrait à n'en servir aucune.
+- **Porté par** — le mécanisme réel qui la fait tenir quand plus personne ne s'en souvient, ou la
+  déclaration écrite qu'aucun n'est possible, avec sa raison.
+
+**Le process qui fait vivre ce document** s'appelle **XP-IA-bonnes-pratiques-et-lecons** (nom donné
+par l'utilisateur) : il est enregistré chez god-of-all-process comme les cinq autres, décrit dans
+`docs/xp-ia-process-detail.md`, et sa conduite est surveillée par angel-of-ia-process — qui refuse
+d'être au vert tant que la question « y avait-il quelque chose à retenir ? » n'a pas reçu de réponse
+aux moments déclencheurs. **« Rien à retenir cette fois » est une réponse valable**, et ne compte
+jamais contre personne : exiger une trouvaille à chaque passage ferait écrire pour se taire.
+
+**Qui juge qu'une entrée a été réellement APPLIQUÉE, et pas seulement lue : l'utilisateur, à la
+Ronde.** Décision explicite, cohérente avec ce qu'il avait déjà posé sur la propreté d'une Ronde
+(« c'est moi à la fin qui te dis si elle est propre »). Me déclarer moi-même conforme sur mon propre
+travail serait le défaut que tout ce dispositif combat.
 
 ---
 
@@ -37,6 +69,8 @@ sens.*
 
 **Porté par** : `etatConnexionProcessGardien()` (`scripts/god-of-all-process.mjs`) — il parcourt chaque process dans les DEUX sens et nomme lequel des deux défauts il a trouvé.
 
+**Terrain** : quand j'écris une règle dans un document, ou un contrôle dans un outil · mots : règle, document, process, contrôleur, garde-fou, charte
+
 ## L2 — Un mécanisme qui ne sort pas du script est une intention
 
 Un détecteur qui calcule sans imprimer, un texte produit sans être gardé, un verdict gardé sans être
@@ -49,6 +83,8 @@ de l'utilisateur, faite le matin même.*
 
 **Porté par** : `findDetecteursMuets()` (`scripts/pure-gold-unity.mjs`) — tout détecteur qui n'est appelé de nulle part est nommé à chaque passage.
 
+**Terrain** : quand je construis un détecteur, un calcul ou un verdict · mots : détecteur, mécanisme, rapport, outil, vérification
+
 ## L3 — Un test ne doit jamais exiger qu'un défaut PERSISTE
 
 Un test écrit pour prouver qu'un outil trouve du vrai, en s'appuyant sur un défaut réel du dépôt,
@@ -59,6 +95,8 @@ l'outil, jamais l'état momentané du projet : implémentations injectées, tém
 Une leçon comprise n'est pas une leçon acquise.*
 
 **Porté par** : **aucun mécanisme, et cette impossibilité est déclarée ici plutôt que tue.** Reconnaître automatiquement « ce test s'appuie sur un défaut réel du dépôt » demanderait de deviner l'intention d'une assertion ; toute tentative produirait du bruit sur les tests légitimes, donc exactement le défaut de L4. Cette leçon ne tient qu'à ce texte — c'est la protection la plus faible du registre, et elle est la seule.
+
+**Terrain** : quand j'écris ou je modifie un test · mots : test, assertion, check-house, couverture
 
 ## L4 — Un garde-fou qui accuse à tort cesse d'être lu
 
@@ -73,6 +111,8 @@ déjà prise et documentée ailleurs**. Reprocher une décision assumée est la 
 
 **Porté par** : `SANS_BLUEPRINT_ASSUME` / `SANS_CONSTAT_PROPRE` (`scripts/safe-export.mjs`, `scripts/report-template.mjs`) — les exemptions décidées sont déclarées comme données, jamais reprochées à chaque passage.
 
+**Terrain** : quand je construis ou je resserre un garde-fou · mots : garde-fou, détecteur, faux positif, seuil, exemption
+
 ## L5 — Distinguer « je n'ai rien trouvé » de « je n'ai pas pu regarder »
 
 Les deux se ressemblent dans un rapport, et ne veulent pas du tout dire la même chose. Un outil
@@ -84,6 +124,8 @@ jamais être compté conforme — il casse le verdict.
 
 **Porté par** : `relanceCircleTasks()` (`scripts/circle-tasks.mjs`) — un compte illisible rend `mesurable: false`, jamais un retard de zéro.
 
+**Terrain** : quand un outil annonce un nombre, un pourcentage ou un verdict · mots : mesure, compteur, pourcentage, verdict, couverture, note
+
 ## L6 — Une alarme permanente ne se contente pas d'être ignorée, elle fait dépenser du travail
 
 Un avertissement qui revient à chaque passage sur des cas déjà tranchés finit par provoquer une
@@ -94,6 +136,8 @@ taire que sur ce qu'un humain a explicitement écarté, jamais de sa propre init
 *Trouvée le 2026-09-23 : un bandeau affiché pendant trois jours a fait rouvrir une enquête close.*
 
 **Porté par** : `filtrerDejaTranches()` + `loadMemoire()` (`scripts/safe-export.mjs`) — un cas qu'un humain a explicitement écarté ne redemande plus de travail.
+
+**Terrain** : quand un outil affiche un avertissement qui peut revenir · mots : alerte, bandeau, rappel, mémoire, signal, avertissement
 
 ## L7 — Une intention écrite n'a jamais empêché quoi que ce soit
 
@@ -108,6 +152,8 @@ chargeur, pendant que sept copies naissaient ailleurs.*
 
 **Porté par** : `findScriptsMissingFromAgentFiles()` (`scripts/axa-check.mjs`) — le garde-fou qui a remplacé un commentaire promettant de tenir une liste alignée à la main.
 
+**Terrain** : quand j'écris un commentaire qui promet quelque chose, ou une liste tenue à la main · mots : commentaire, intention, liste, synchronisation, aligné, à garder
+
 ## L8 — Ce qui est fragmenté paraît faux, même quand tout est vrai
 
 Un outil qui rapporte 29 alertes pour 14 problèmes réels n'a produit aucun faux positif — et sera
@@ -120,3 +166,59 @@ l'utilisateur sur la crédibilité de l'ensemble.*
 
 **Porté par** : `fusionnerClusters()` + `motifDuCluster()` (`scripts/clone-hunter.mjs`) — les alertes qui se recouvrent deviennent un problème compté une fois, avec son motif.
 
+**Terrain** : quand un outil compte des alertes ou des constats · mots : alerte, compte, regroupement, cluster, rapport, doublon
+
+---
+
+# Bonnes pratiques
+
+*(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne
+pratique n'a pas été payée par une erreur, et c'est la seule chose qui la distingue. Trois entrées
+au départ, toutes observées réellement sur ce projet — jamais des conseils génériques recopiés.)*
+
+## BP1 — La règle s'écrit à UN endroit et se dérive partout ailleurs
+
+Devant vingt endroits à corriger, le réflexe est de corriger les vingt. Le bon geste est de trouver
+l'endroit unique dont les vingt dépendent, et de ne toucher que celui-là. Les vingt suivants, ceux
+qui n'existent pas encore, en hériteront sans qu'on y pense.
+
+**Terrain** : quand la même correction doit s'appliquer à plusieurs endroits · mots : partout, tous
+les outils, chaque rapport, harmoniser, généraliser
+
+**Porté par** : l'Article 24 de la charte, et `findScriptsMissingFromAgentFiles()`
+(`scripts/axa-check.mjs`) pour le cas où une liste serait quand même recopiée.
+
+*Observée le 2026-09-23 : une seule fonction de date écrite dans le gabarit partagé a mis une
+trentaine de rapports à l'heure d'un coup, là où les corriger un par un aurait laissé le suivant
+naître faux.*
+
+## BP2 — Un test qui n'a jamais échoué ne prouve rien : le faire échouer exprès d'abord
+
+Un test écrit après coup passe du premier coup, et on en conclut qu'il protège. Il peut tout aussi
+bien ne rien vérifier du tout. Avant de croire un test, le voir échouer sur le défaut qu'il est censé
+attraper — puis seulement le voir passer une fois le défaut corrigé.
+
+**Terrain** : quand j'écris un test, ou quand je déclare une vérification en place · mots : test,
+assertion, vérification, couverture, protège
+
+**Porté par** : **aucun mécanisme** — rien ne peut constater qu'un test a échoué avant d'être écrit.
+Seule la discipline la porte, et cette impossibilité est déclarée ici plutôt que tue.
+
+*Le corollaire coûteux, vu plusieurs fois : un outil neuf qui n'a jamais tourné contre le vrai dépôt
+n'est pas un outil vérifié, c'est une intention (Article 25).*
+
+## BP3 — Quand un test et le code divergent, fournir le FAIT manquant, jamais assouplir l'assertion
+
+Un test qui échoue en ajoutant une étape à un process est presque toujours le test qui a raison :
+l'étape manquait vraiment. Baisser l'exigence de l'assertion fait passer le test et laisse le trou.
+Le bon geste est de fournir ce que le test réclame.
+
+**Terrain** : quand un test échoue après un changement · mots : test échoue, assertion, seuil,
+attendu, rouge
+
+**Porté par** : **aucun mécanisme** — la différence entre « l'assertion se trompait de bande » et
+« j'ai baissé l'exigence pour avoir vert » ne se lit que dans l'intention. Déclaré plutôt que tu.
+
+*Observée plusieurs fois : « le fait manquant a été fourni plutôt que l'assertion assouplie ». La
+seule exception légitime rencontrée était une assertion qui visait réellement le mauvais palier, et
+elle a été corrigée dans le test sans jamais déplacer le seuil qu'elle mesurait.*

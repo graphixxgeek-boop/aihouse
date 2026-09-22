@@ -89,3 +89,53 @@ journal que personne ne relit — donc exactement le problème qu'il prétend r�
 
 **Limite à déclarer, jamais à taire** : aucune mécanique ne peut juger si un porteur fait RÉELLEMENT
 respecter sa leçon, seulement s'il existe. Le cas grossier est attrapé, le subtil ne l'est pas.
+
+## La chaîne de l'expérience, et le maillon qu'on croit toujours avoir branché
+
+Un registre de leçons ne vaut que par la chaîne qui le traverse. Cinq maillons, et il suffit qu'un
+seul manque pour que toute la valeur produite en amont se perde :
+
+```
+découvrir  →  enregistrer  →  analyser périodiquement  →  ressortir avant la tâche  →  ressortir à la validation
+```
+
+| Maillon | Ce qu'on perd sans lui |
+|---|---|
+| **Découvrir** | la trouvaille dépend de la mémoire de l'agent, donc elle meurt avec la session |
+| **Enregistrer** | elle reste dans la conversation et disparaît avec elle |
+| **Analyser** | le registre grossit sans que personne ne regarde ce qu'il dit de la façon de travailler |
+| **Ressortir avant** | la leçon est archivée : relue une fois par période, elle ne change rien au travail du lendemain |
+| **Ressortir après** | ce qui a échappé au rappel d'amont n'est jamais rattrapé |
+
+**Le maillon qu'on oublie systématiquement est le quatrième**, et c'est le seul qui sert vraiment
+l'objectif : tout le monde construit le registre, presque personne ne branche la remontée. Un
+registre sans lui remplit parfaitement l'archivage en ratant entièrement l'application.
+
+**La chaîne se vérifie, elle ne se déclare pas.** Chaque maillon nomme le fichier où il vit et la
+preuve à y chercher, et l'outil constate à chaque passage qu'elle y est réellement. Affirmer « tout
+est connecté » en prose est une intention, et une intention n'a jamais empêché quoi que ce soit.
+
+## Ce qui fait remonter la bonne entrée au bon moment
+
+**Chaque entrée déclare son TERRAIN** : les situations où elle mord, avec les mots qui les
+signalent. Le tri vient de cette déclaration, jamais d'une ressemblance devinée entre la tâche et le
+texte de l'entrée — un rapprochement à côté de la plaque transformerait le rappel en bruit, et un
+garde-fou qui accuse à tort cesse d'être lu.
+
+**Trois défenses, et il faut les trois**, sans quoi un rappel affiché deux fois par cycle de travail
+devient un meuble qu'on apprend à ignorer :
+
+1. le tri par terrain déclaré ;
+2. **aucune correspondance = rien d'affiché**, jamais un repêchage « au cas où » ;
+3. un plafond strict sur le nombre d'entrées servies — en servir huit revient à n'en servir aucune.
+
+## Les deux jugements qu'un outil ne doit jamais rendre à la place des humains
+
+- **La conclusion de période** sur la façon de travailler de l'agent : l'outil sait compter les
+  captations, il ne sait pas dire quel travers revient. Elle s'écrit à la main, et l'outil se
+  contente de **refuser d'être complet sans elle**.
+- **« Cette entrée a-t-elle été réellement APPLIQUÉE ? »** : elle appartient à la personne qui
+  pilote le projet. Un agent qui se déclare conforme sur son propre travail commet exactement le
+  défaut que ce dispositif existe pour combattre. L'enregistrement **refuse** un verdict qui ne porte
+  pas la marque explicite qu'il vient d'elle : aucune mécanique ne peut prouver son origine, mais
+  elle peut refuser de l'inventer.

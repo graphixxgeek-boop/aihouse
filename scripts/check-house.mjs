@@ -4099,7 +4099,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 
   // adviseToolBrain() — relais, plus la criticité depuis le 2026-09-22 (règle de travail 3quater).
   const adviceNone = adviseToolBrain({});
-  assert.deepEqual(adviceNone, { prestations: [], fileAdvice: undefined, criticite: undefined }, 'with neither a task description nor a file, adviseToolBrain() must return empty/undefined signals, never fabricate a recommendation from nothing — criticality included: no file means no measurement, never a default level');
+  assert.deepEqual(adviceNone, { prestations: [], fileAdvice: undefined, criticite: undefined, experience: [] }, 'with neither a task description nor a file, adviseToolBrain() must return empty/undefined signals, never fabricate a recommendation from nothing — criticality included (no file means no measurement, never a default level), and the lessons register included since 2026-09-23: with nothing to match against, it serves nothing rather than falling back on the whole register, which would turn the pre-task reminder into the permanent noise L6 describes');
 
   // CRITICITÉ AVANT D'AGIR (2026-09-22, règle 3quater : « la criticité d'un fichier doit toujours
   // être évaluée avant d'y mener une action spécifique »). La mesure existait dans ecotoken depuis
@@ -5543,13 +5543,19 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     // de L2 et de L7, c'est-à-dire de deux leçons qu'il contient lui-même.
     const leconsTexte = [
       '## L1 — une leçon portée',
+      '**Terrain** : quand je teste · mots : test, seuil',
       '**Porté par** : `parseLecons()` (`scripts/tool-learning.mjs`).',
       '## L2 — une leçon dont le porteur n\'existe pas',
+      '**Terrain** : quand je teste · mots : test',
       '**Porté par** : `fonctionQuiNExistePasDuTout()` (`scripts/nulle-part.mjs`).',
       '## L3 — une leçon sans mécanisme possible',
+      '**Terrain** : quand je teste · mots : test',
       '**Porté par** : **aucun mécanisme**, et voici pourquoi.',
       '## L4 — une leçon qui ne dit rien',
+      '**Terrain** : quand je teste · mots : test',
       'Du texte, mais aucune ligne « Porté par ».',
+      '## BP1 — une bonne pratique sans terrain déclaré',
+      '**Porté par** : `parseLecons()` (`scripts/tool-learning.mjs`).',
     ].join('\n\n');
     const auditL = tl.auditLecons({ readFileImpl: () => leconsTexte, existsImpl: () => true, sourcesImpl: () => ['export function parseLecons() {}'] });
     assert.equal(auditL.mesure, 'mesuré', 'a readable, non-empty register is measured');
@@ -5562,9 +5568,28 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     // raison est en règle, et ne doit produire aucun constat à chaque passage (ce serait L6).
     assert.equal(etatDe('L3'), 'sans mécanisme', 'an impossibility declared in writing with its reason is the protection L7 prescribes, never a failure');
     assert.equal(etatDe('L4'), 'sans porteur', 'a lesson with no "Porté par" line at all holds only in the memory of whoever wrote it');
+    // LES DEUX NATURES, TENUES À PART : une leçon a été payée par une erreur, une bonne pratique non,
+    // et c'est la seule chose qui les distingue. Dérivée du préfixe plutôt que déclarée deux fois.
+    assert.equal(auditL.lecons.find((l) => l.id === 'L1').nature, 'leçon', 'an L-prefixed entry is a lesson paid for by a real mistake');
+    assert.equal(auditL.lecons.find((l) => l.id === 'BP1').nature, 'bonne pratique', 'a BP-prefixed entry is a practice that works, with no damage behind it');
+
+    // LE SECOND DÉFAUT, INDÉPENDANT DU PREMIER, et c'est celui qui sert l'objectif principal (mettre
+    // en pratique, pas seulement archiver) : une entrée peut être parfaitement portée par un
+    // mécanisme ET ne jamais remonter, faute de terrain. Un registre 100 % porté et 0 % applicable
+    // remplirait l'archivage en ratant entièrement l'application.
+    assert.deepEqual(auditL.sansTerrain, ['BP1'], 'an entry with no declared terrain is named apart: it can never surface at the moment it applies, so it is archived rather than applied');
+    assert.equal(auditL.applicables, auditL.total - 1, 'and the count of entries that CAN reach me at the right moment is reported, never assumed equal to the total');
+
     const constats = tl.constatsLecons(auditL);
-    assert.equal(constats.length, 2, 'only the phantom carrier and the silent lesson become findings — the declared impossibility is already settled, and reproaching it at every passage would be exactly the permanent-alarm defect (L6) committed by the tool that publishes it');
+    assert.equal(constats.length, 3, 'exactly three findings: the phantom carrier, the silent lesson, and the entry that can never surface — the declared impossibility is NOT among them, because reproaching a settled decision at every passage would be the permanent-alarm defect (L6) committed by the tool that publishes it');
     assert.ok(constats.every((c) => c.etat === 'retenu' && c.tache), 'each finding carries the task it calls for, per Article 28');
+
+    // LE TRI PAR TERRAIN — ce qui empêche le rappel de devenir un meuble. Deux garanties opposées,
+    // et il faut les deux : il sert ce qui correspond, et il se tait quand rien ne correspond.
+    assert.ok(tl.leconsPourTache('un test avec un seuil', { lecons: auditL.lecons }).length > 0, 'a task on a declared terrain gets the matching entries served to it');
+    assert.deepEqual(tl.leconsPourTache('ranger le salon', { lecons: auditL.lecons }), [], 'a task matching no terrain gets NOTHING — never a fallback on the whole register, which would make the reminder the permanent noise L6 describes');
+    assert.deepEqual(tl.leconsPourTache('', { lecons: auditL.lecons }), [], 'and an empty task description serves nothing either, rather than matching everything');
+    assert.ok(tl.leconsPourTache('un test avec un seuil', { lecons: auditL.lecons, max: 1 }).length === 1, 'the cap is strict: serving eight entries at once is the same as serving none');
 
     // L5 APPLIQUÉE À L'AUDIT LUI-MÊME : un registre absent ou vide n'est jamais un registre
     // conforme, et un pourcentage sur un dénominateur vide n'est pas une mesure.
@@ -5580,6 +5605,53 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.equal(reel.mesure, 'mesuré', 'docs/referentiel/lecons.md must exist and hold at least one lesson');
     assert.equal(reel.fantomes, 0, 'no lesson in the real register may name a mechanism that does not exist');
     assert.equal(reel.sansPorteur, 0, 'and none may stay silent about what carries it: either a real mechanism, or the declared impossibility L7 asks for');
+    assert.equal(reel.fantomes + reel.sansPorteur, 0, 'the real register stays clean on both carrier defects at once');
+    assert.deepEqual(reel.sansTerrain, [], 'and every real entry declares a terrain: an entry that can never surface at the right moment is archived, not applied — which misses the whole point of the register');
+
+    // LA CHAÎNE XP (2026-09-23, tâche #221) — la réponse mécanique à la question de l'utilisateur
+    // « à toi de me dire si toutes les connexions sont bien là pour l'objectif prévu ». Y répondre
+    // en prose aurait été une intention, et une intention n'a jamais rien empêché (L7).
+    assert.equal(tl.MAILLONS_XP.length, 5, 'five links: discover, record, analyse at the Ronde, and the reflex in its two moments — the user chose BOTH moments knowing the noise risk, so neither may quietly disappear');
+    assert.ok(tl.MAILLONS_XP.every((m) => m.fichier && m.preuve && m.sansQuoi), 'every link names the file it lives in, the proof to look for there, and what its absence costs — a chain that only lists names teaches nothing to the next agent');
+
+    // Chaque maillon est jugé contre un fichier RÉEL : c'est tout l'intérêt, et le test le prouve
+    // dans les deux sens plutôt que de faire confiance au cas vert.
+    const chaineCassee = tl.auditChaineXp({ readFileImpl: () => 'du code sans aucune des preuves attendues', existsImpl: () => true });
+    assert.equal(chaineCassee.complete, false, 'a chain whose files exist but carry none of the proofs is broken, never complete');
+    assert.equal(chaineCassee.casses.length, 5, 'and every missing link is named individually, so one can be fixed without guessing which');
+    // L5 encore : introuvable n'est pas cassé. Les deux se ressemblent dans un rapport et appellent
+    // deux gestes différents — brancher, ou rétablir le fichier.
+    const chaineAveugle = tl.auditChaineXp({ existsImpl: () => false });
+    assert.ok(chaineAveugle.maillons.every((m) => m.etat === 'pas mesuré'), 'an unreadable file is "pas mesuré", never "cassé": one calls for wiring, the other for restoring the file');
+    assert.equal(chaineAveugle.complete, false, 'and an unmeasured chain is never reported complete — "I could not look" is not "all is well"');
+    assert.ok(tl.constatsChaineXp(chaineCassee).every((c) => c.tache && c.etat), 'each broken link becomes a finding carrying its task, per Article 28');
+
+    // LA CHAÎNE RÉELLE, ici et maintenant. C'est l'assertion qui tombe le jour où quelqu'un
+    // débranche un maillon en croyant simplifier — précisément ce contre quoi elle existe.
+    const chaineReelle = tl.auditChaineXp();
+    assert.equal(chaineReelle.complete, true, `the real XP chain must stay complete end to end; broken: ${chaineReelle.casses.join(', ') || 'none'} / unmeasured: ${chaineReelle.nonMesures.join(', ') || 'none'}`);
+
+    // LE JOURNAL — trois natures qui ne se mélangent pas, et la seule que l'agent ne peut pas écrire.
+    assert.deepEqual(tl.NATURES_XP, ['captation', 'conclusion', 'jugement'], 'three natures, never merged: they have neither the same author nor the same authority');
+    assert.throws(() => tl.enregistrerXp({ nature: 'jugement', verdict: 'appliquée' }, { writeFileImpl: () => {} }), /utilisateur/, 'a verdict on whether a lesson was APPLIED is refused unless it comes from the user: no mechanism can prove it does, but it can refuse to invent it — the agent declaring itself compliant on its own work is the exact defect this whole process exists to fight');
+    assert.throws(() => tl.enregistrerXp({ nature: 'inventee' }, { writeFileImpl: () => {} }), /nature XP inconnue/, 'an unknown nature is refused rather than silently stored under a fourth category nobody reads');
+
+    // L'ANALYSE — elle juge ce que le journal dit de MOI, pas combien de lignes il compte.
+    assert.ok(tl.analyseXp([], {}).constats.some((c) => /conclusion/.test(c.constat)), 'a journal with no written conclusion is flagged: accumulating captations without concluding is "archive seulement" applied to me — the very verdict this tool renders on other tools');
+    const avecJugement = tl.analyseXp([{ nature: 'captation' }, { nature: 'captation' }, { nature: 'captation' }, { nature: 'conclusion', texte: 'x' }, { nature: 'jugement', verdict: 'appliquée', parUtilisateur: true }], {});
+    assert.equal(avecJugement.constats.length, 0, 'and a journal that captures, concludes AND has been judged by the user raises nothing: a report that always finds something to say stops being read');
+    assert.equal(avecJugement.appliquees, 1, 'applied entries are counted from the user verdicts, never inferred from my own activity');
+    const quePourRien = tl.analyseXp(Array.from({ length: 6 }, () => ({ nature: 'captation', rienARetenir: true })).concat([{ nature: 'conclusion', texte: 'x' }, { nature: 'jugement', verdict: 'appliquée', parUtilisateur: true }]), {});
+    assert.ok(quePourRien.constats.some((c) => /sans une seule trouvaille/.test(c.constat)), '"rien à retenir" is a full answer and never counts against anyone — but six of them in a row is itself a signal: either nothing happens, or I stopped looking');
+
+    // LE PROCESS lui-même, enregistré comme les cinq autres — sinon il n'existe que dans ma tête.
+    const godXp = await import('../scripts/god-of-all-process.mjs');
+    const xpProc = godXp.PROCESSES.find((p) => p.slug === 'xp-ia');
+    assert.ok(xpProc, 'the sixth process is declared alongside the five others, never a habit living only in the agent that invented it');
+    assert.equal(xpProc.gardien, 'scripts/angel-of-ia-process.mjs', 'its controller is the CONDUITE one: this process describes a behaviour to hold, not the steps of an activity — giving it to a déroulé controller would blur both roles (Article 26)');
+    const angelSrc = fs.readFileSync('scripts/angel-of-ia-process.mjs', 'utf8');
+    assert.match(angelSrc, /id: "xp-lecons"[\s\S]{0,400}observable: false/, 'and the rule it carries is declared non-observable: no mechanism can see a finding pass through a conversation, so angel ASKS and refuses to be green without an answer — the only mechanism available when the proof does not exist');
+    console.log(`Passed: the XP process (2026-09-23, task #221, named by the user) closes the loop the register alone could not: a lesson is discovered, recorded, analysed at the Ronde, and comes back at the moment it applies. The user's own question — "à toi de me dire si toutes les connexions sont bien là" — is answered by auditChaineXp() against the real repository rather than by a claim, and it found link 1 genuinely missing on its first run. Three defences keep the twice-a-day reminder from becoming the furniture L6 describes: the terrain is declared by each entry rather than guessed, no match means nothing printed, and the cap is strict. Two judgements are kept out of the agent's hands on purpose: the period conclusion is written by hand because no mechanism can produce it, and whether an entry was genuinely APPLIED belongs to the user alone. Real state: ${reel.total} entries (${reel.lecons_} lessons, ${reel.pratiques} practices), chain ${chaineReelle.branches}/${chaineReelle.total} wired.`);
 
     console.log(`Passed: the transverse lessons register (2026-09-23, task #220) is no longer a text nothing re-reads — the trap it documents twice over (L2, a mechanism that never leaves the script; L7, a written intention never prevented anything). Each lesson now names the mechanism that carries it when nobody remembers it, tool-learning prints that audit and feeds its findings into its own action plan, and the state that justifies the whole thing is told apart from the other two: a PHANTOM carrier — a mechanism named in writing that does not exist — reassures wrongly and is worse than a lesson that admits it has none, exactly the reason checkActionChain() verifies that a task announced by an action plan is real. A declared impossibility produces no finding at all, since reproaching a settled decision at every passage would be L6 committed by the tool publishing it. Real register right now: ${reel.total} lessons, ${reel.portees} mechanically carried, ${reel.sansMecanisme} declared impossible with its reason, 0 phantom, 0 silent.`);
   }

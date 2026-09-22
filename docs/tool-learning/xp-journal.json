@@ -1,0 +1,32 @@
+[
+  {
+    "nature": "captation",
+    "declencheur": "garde-fou-bloque",
+    "rienARetenir": false,
+    "quoi": "findGardienAmbigu a refusé mon commit : j écrivais « process ↔ gardien » sans qualifier le rang, en violation de l Article 20bis que j avais rédigé moi-même quelques heures plus tôt.",
+    "entree": "L1",
+    "date": "2026-09-23T03:50:00Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "garde-fou-bloque",
+    "rienARetenir": false,
+    "quoi": "Second blocage du même garde-fou en deux jours, sur la même règle. Ce n est pas la règle qui a échoué, c est ma mémoire — et c est exactement ce que l Article 27 prévoit : une obligation qui ne repose que sur la mémoire d un agent ne tient pas.",
+    "entree": "L7",
+    "date": "2026-09-23T04:05:00Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "fin-de-compte-rendu",
+    "rienARetenir": false,
+    "quoi": "En écrivant le registre des leçons, j allais le livrer sans le câbler — ce qui en aurait fait la démonstration de son propre contenu (L2 et L7). Le réflexe qui a sauvé le coup est de me demander ce que l outil aurait dit de ce travail s il avait été fait par quelqu un d autre.",
+    "entree": "L2",
+    "date": "2026-09-23T04:20:00Z"
+  },
+  {
+    "nature": "conclusion",
+    "periode": "session du 2026-09-22 au 2026-09-23",
+    "texte": "Mon travers dominant sur cette période est identifiable et il est unique : je construis le mécanisme et je m arrête avant de le brancher. Sept occurrences en une journée, dont une qui répondait à une demande explicite faite le matin même. Le défaut n est pas l oubli — c est que le mécanisme construit RESSEMBLE à un problème traité, ce qui éteint la vigilance juste avant la dernière étape. Corollaire mesuré : chaque détecteur neuf a dû être resserré au moins une fois, ce qui veut dire que mon premier jet sur-accuse systématiquement. Conduite à tenir : ne jamais considérer un mécanisme comme fini tant que je n ai pas vu sa sortie de mes propres yeux dans le rapport réel, et faire tourner chaque détecteur neuf sur le vrai dépôt avant de l appeler terminé.",
+    "date": "2026-09-23T04:30:00Z"
+  }
+]

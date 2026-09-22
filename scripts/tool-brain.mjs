@@ -28,6 +28,8 @@ import { toolUsageStats, toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs
 import { assessCriticality } from "./ecotoken.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 
+import { auditLecons, leconsPourTache } from "./tool-learning.mjs";
+
 export const TOOL_BRAIN_SLUG = "tool-brain";
 const USAGE_HISTORY_URL = new URL("../.tool-usage-history.json", import.meta.url);
 
@@ -57,7 +59,37 @@ export function adviseToolBrain({ taskDescription, filePath } = {}) {
   // quelle, l'unique source de cette échelle à 6 niveaux.
   let criticite;
   if (filePath) { try { criticite = assessCriticality(filePath); } catch { criticite = undefined; } }
-  return { prestations, fileAdvice, criticite };
+  // L'EXPÉRIENCE DÉJÀ PAYÉE (2026-09-23, process XP-IA-bonnes-pratiques-et-lecons, tâche #221).
+  //
+  // POURQUOI ICI, et pas dans un rapport à part. Le registre des leçons existait, il était audité à
+  // chaque Ronde, et il ne changeait rien à ma façon de travailler le mardi suivant — parce qu'une
+  // leçon relue une fois par période n'atteint jamais le moment où elle s'applique. Objectif posé
+  // par l'utilisateur : « que tu mettes en pratique ces leçons, en plus de t'auto-analyser ».
+  // tool-brain est le SEUL réflexe que l'agent a l'obligation d'avoir avant d'agir (« c'est lui qui
+  // est plugué directement à moi ») : c'est donc le seul endroit d'où une leçon peut arriver à
+  // temps. Même geste que la criticité juste au-dessus, pour la même raison exactement.
+  //
+  // JAMAIS LES ONZE À CHAQUE FOIS : le tri vient du TERRAIN que chaque entrée déclare elle-même, et
+  // une correspondance nulle rend une liste vide plutôt qu'un repêchage « au cas où ». Un rappel qui
+  // sort à chaque fois devient un meuble — c'est la leçon L6, appliquée au mécanisme qui la publie.
+  let experience = [];
+  if (taskDescription) {
+    try {
+      const audit = auditLecons();
+      if (audit.mesure === "mesuré") experience = leconsPourTache(taskDescription, { lecons: audit.lecons });
+    } catch { experience = []; }
+  }
+  return { prestations, fileAdvice, criticite, experience };
+}
+
+// Le rendu de ces entrées, gardé à côté de leur sélection pour qu'un appelant n'ait jamais à
+// réinventer la mise en forme — et silencieux quand rien ne correspond, ce qui est le cas normal.
+export function formatExperience(experience = []) {
+  if (!experience.length) return [];
+  const l = ["🧪 Expérience déjà payée — ce que ce projet a appris sur ce terrain :"];
+  for (const e of experience) l.push(`   ${e.id} (${e.nature}) — ${String(e.titre).replace(/^(L\d+|BP\d+)\s*—\s*/, "")}`);
+  l.push("   (registre complet : docs/referentiel/lecons.md — une entrée qui ne sert jamais est à supprimer ou à reformuler)");
+  return l;
 }
 
 // --- 2. Rappel centralisé post-commit (2026-09-21, remplace 3 blocs auparavant éparpillés dans
@@ -172,7 +204,7 @@ function main() {
   const fileFlagIndex = rest.indexOf("--file");
   const filePath = fileFlagIndex >= 0 ? rest[fileFlagIndex + 1] : undefined;
   const cleanDescription = fileFlagIndex >= 0 ? rest.slice(0, fileFlagIndex).join(" ") : taskDescription;
-  const { prestations, fileAdvice, criticite } = adviseToolBrain({ taskDescription: cleanDescription, filePath });
+  const { prestations, fileAdvice, criticite, experience } = adviseToolBrain({ taskDescription: cleanDescription, filePath });
 
   console.log(`tool-brain — pour : "${cleanDescription}"${filePath ? ` (fichier : ${filePath})` : ""}\n`);
   if (prestations.length) {
@@ -190,6 +222,11 @@ function main() {
   }
   // La criticité passe AVANT tout le reste dans la lecture : savoir qu'on s'apprête à toucher un
   // fichier maître change la façon de mener l'action, pas seulement l'outil qu'on choisit.
+  // Affichée AVANT le reste, et c'est délibéré : savoir quel outil prendre ne sert à rien si on
+  // reproduit le piège que le projet a déjà payé. Silencieuse quand rien ne correspond au terrain.
+  const expLignes = formatExperience(experience);
+  if (expLignes.length) { console.log(""); for (const l of expLignes) console.log(l); }
+
   if (criticite && !criticite.absent) {
     // Formulation corrigée le 2026-09-22 : « risque maximal applicable : faible » se lisait comme
     // « ce fichier est peu risqué », soit l'inverse exact du sens. Le niveau classe le FICHIER ; la

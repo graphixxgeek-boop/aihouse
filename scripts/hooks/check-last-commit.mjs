@@ -357,6 +357,35 @@ try {
 // intercepter un Read/Grep avant qu'il n'ait lieu) : ceci renforce le rappel, ne le remplace jamais.
 console.log(`\n${formatToolBrainReminder()}\n`);
 
+// L'EXPÉRIENCE DÉJÀ PAYÉE, SECOND MOMENT (2026-09-23, process XP-IA-bonnes-pratiques-et-lecons).
+//
+// LES DEUX MOMENTS, RETENUS ENSEMBLE PAR L'UTILISATEUR, et ils ne font pas le même travail : celui
+// d'AVANT (tool-brain, avant d'agir) oriente le travail ; celui-ci, APRÈS, attrape ce qui est passé
+// quand même. Le risque qu'il a lui-même nommé en les choisissant tous les deux — « le plus à
+// risque de devenir un bruit permanent » — est désamorcé de trois façons, jamais par une promesse :
+//   1. le tri vient du TERRAIN déclaré par chaque entrée, croisé avec les fichiers réellement
+//      touchés par CE commit et son message — pas de correspondance, pas une ligne affichée ;
+//   2. le plafond est strict (2 entrées ici, contre 3 avant la tâche : après coup, la marge de
+//      manœuvre est plus étroite, donc en servir plus ne ferait que du bruit) ;
+//   3. le bloc est muet en cas de doute, jamais « au cas où ».
+// Sans ces trois, ce rappel deviendrait le meuble que L6 décrit — dans le dispositif construit pour
+// faire appliquer L6, ce qui serait la pire des ironies et la fin de sa crédibilité.
+try {
+  const { auditLecons, leconsPourTache } = await import("../tool-learning.mjs");
+  const { formatExperience } = await import("../tool-brain.mjs");
+  const contexte = [lastCommitSubjectForXp(), ...(changedFiles ?? [])].join(" ");
+  const audit = auditLecons();
+  if (audit.mesure === "mesuré") {
+    const pertinentes = leconsPourTache(contexte, { lecons: audit.lecons, max: 2 });
+    const lignes = formatExperience(pertinentes);
+    if (lignes.length) { console.log(""); for (const l of lignes) console.log(l); console.log(""); }
+  }
+} catch { /* un registre illisible ne casse jamais un commit : il ne rappelle simplement rien */ }
+
+function lastCommitSubjectForXp() {
+  try { return String(sh("git log -1 --format=%s") ?? "").trim(); } catch { return ""; }
+}
+
 // Rythme récent SMART-CONSO-TOKEN (2026-09-20, demande explicite de l'utilisateur : « je ne me
 // rends pas compte que mon rythme de conso de token connaît un pic depuis 30min [...] aux moments
 // déjà existants »). Affiché juste à côté du menu ci-dessus — les deux vus ensemble, jamais l'un
