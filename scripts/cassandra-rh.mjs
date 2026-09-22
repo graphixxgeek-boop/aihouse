@@ -613,6 +613,16 @@ export function buildCassandraLightSignal({ teamSize, badgeSummary, kpiTrend }) 
 // l'a rendu. Personne ne centralise : angel PRODUIT sur la conduite, CASSANDRA ASSEMBLE et PUBLIE.
 // (Corrigé le même jour : un commentaire d'angel affirmait que CASSANDRA notait déjà l'utilisateur.
 // C'était faux, et jamais vérifié — elle note l'équipe d'outils, jamais l'humain.)
+// LE NOM DU FICHIER REMONTÉ EN CONVERSATION, fixé par l'utilisateur le 2026-09-22 : « je veux que
+// le fichier qui m'est remonté dans la conversation s'appelle : "EVAL-DH" en majuscules ».
+//
+// Il vit ici, en constante exportée et couverte par un test, plutôt que dans la mémoire de l'agent
+// qui livre : c'est exactement le cas de l'Article 27 — une obligation qu'aucun mécanisme ne porte
+// n'existera plus à la session suivante, et le nom d'un livrable est la première chose qu'une
+// reprise perd. Majuscules comprises : c'est la forme demandée, pas une approximation qui y
+// ressemble (docs/systeme-de-suivi.md, « conformité EXACTE à la forme demandée »).
+export const NOM_FICHIER_EVAL = "EVAL-DH";
+
 export function buildEvaluationRecapBlocks({ jury = [], evaluation = null, equipe = [], jugesSansOutil = [], desaccords = [] } = {}) {
   const blocks = [];
   blocks.push({ type: "note", text: "Comment lire ce rapport : chaque verdict est attribué à l'outil qui l'a rendu, avec la donnée exacte sur laquelle il se fonde. Un juge qui n'a rien rendu est affiché comme tel — jamais confondu avec un juge qui n'a rien trouvé." });
