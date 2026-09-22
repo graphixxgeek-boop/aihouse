@@ -3612,6 +3612,31 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(secondAnnouncement, null, 'the exact real requirement: the same tool reaching "complet" again later must never re-trigger the ceremony block — only the first time is a real moment');
   const notCompleteYet = { ...fakeCertified, slug: 'fake-ceremony-incomplete', complet: false };
   assert.equal(announceBadgeCeremony(notCompleteYet, { historyPath: ceremonyPath }), null, 'an agent that is not yet complet must never trigger a ceremony, whatever its slug');
+
+  // Le badge qui CHANGE (2026-09-22, manquement réel signalé par l'utilisateur : « tu n'as pas
+  // affiché le bloc badge »). La cérémonie ne se déclenchait qu'à la toute première certification :
+  // un outil déjà certifié dont le badge évolue réellement ne produisait plus aucun événement
+  // visible — le trou que la cérémonie devait fermer, simplement décalé d'un cran.
+  const { announceBadgeChange, badgeState } = await import('../scripts/le-coordinateur.mjs');
+  assert.deepEqual(badgeState(fakeCertified), { badge: fakeCertified.badge, tier: fakeCertified.couverture.tier, gaps: 0 }, 'the compared state is exactly the three things a reader cares about — the badge itself, the coverage tier and the number of missing validations — never the whole result object, whose incidental fields would fire a false "it changed" on every run');
+  assert.equal(announceBadgeChange(fakeCertified, { historyPath: ceremonyPath }), null, 'an already-certified agent whose badge is unchanged since the last look must stay silent, exactly as before — this mechanism adds an event, it never adds noise');
+  const degrade = { ...fakeCertified, couverture: { tier: 'partiel', label: 'partiel (KO AXA-CHECK 62%)' } };
+  const blocChangement = announceBadgeChange(degrade, { historyPath: ceremonyPath });
+  assert.ok(blocChangement && blocChangement.includes('MISE À JOUR DE BADGE'), 'a real change in an already-certified agent must produce its own block, headed differently from the initial certification — one does not re-certify someone who already is');
+  assert.ok(blocChangement.includes('couverture : OK 100% → partiel'), 'the block must state what actually changed, before and after, rather than merely re-printing the current state and leaving the reader to spot the difference');
+  assert.equal(announceBadgeChange(degrade, { historyPath: ceremonyPath }), null, 'the same state seen twice in a row must announce once only — the new state is persisted the moment it is announced');
+  // Bootstrap : le cas RÉEL de ce soir — les 26 Agents sont certifiés depuis des jours, aucun n'a
+  // d'état enregistré. Reproduit fidèlement (certification présente, `etats` absent) plutôt qu'avec
+  // un slug inconnu, qui sortirait dès la première garde et ne prouverait rien de ce cas-ci.
+  const bootstrapPath = path.join(os.tmpdir(), `ceremony-bootstrap-${Date.now()}.json`);
+  fs.writeFileSync(bootstrapPath, JSON.stringify({ certifications: { 'fake-ceremony': '2026-09-01T00:00:00.000Z' } }));
+  const ancienCertifie = { ...fakeCertified };
+  assert.equal(announceBadgeChange(ancienCertifie, { historyPath: bootstrapPath }), null, 'an agent certified long ago but whose state was never recorded must be recorded SILENTLY on the first look, never announced as a change: claiming "its badge changed" when nobody ever looked before is the same absence-vs-measurement confusion fixed elsewhere today — without this, the very first run after building this mechanism would have fired 26 bogus update blocks at once');
+  assert.deepEqual(JSON.parse(fs.readFileSync(bootstrapPath, 'utf8')).etats['fake-ceremony'], badgeState(ancienCertifie), 'that silent first look must genuinely persist the state, otherwise the bootstrap would repeat forever and a real later change would never be detected');
+  const apresBootstrap = { ...fakeCertified, badge: '⚠️ Pas encore certifié (Gardien sacré du code)', gaps: ['registre manquant'] };
+  const blocApresBootstrap = announceBadgeChange(apresBootstrap, { historyPath: bootstrapPath });
+  assert.ok(blocApresBootstrap && blocApresBootstrap.includes('statut : 🎖️ Membre certifié'), 'once the state is known, a real regression (a tool LOSING a validation) must be announced just as loudly as a gain — the alarming direction is exactly the one that must never pass silently');
+  assert.ok(blocApresBootstrap.includes('validations manquantes : 0 → 1'), 'the number of missing validations is part of the compared state, so a gap opening on an already-certified tool is a real event on its own');
   console.log('Passed: the badge certification ceremony (2026-09-21) renders a visually distinct block (never blended into surrounding prose) that reuses checkAgentOnboarding()\'s own message verbatim and always makes the badge icon/state and the coverage tier explicit — the exact gap the user found — fires exactly once per agent slug (the real first-certification moment), persisting that fact immediately so a later re-check of the same already-certified tool, or one still incomplete, never re-triggers it, reusing tool-usage.mjs\'s own loadJson() rather than writing a 4th copy of the exact duplication CLONE-HUNTER found earlier this same night.');
 }
 

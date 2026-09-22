@@ -833,6 +833,64 @@ export function markCeremonyRelayed(slug, historyPath = BADGE_CEREMONY_HISTORY_P
   return { slug, relayee: true };
 }
 
+// --- Le badge qui CHANGE, pas seulement le badge qui NAÎT (2026-09-22) --------------------------
+//
+// Manquement réel constaté par l'utilisateur (« tu n'as pas affiché le bloc badge ») : la cérémonie
+// ne se déclenche QUE la toute première fois qu'un Agent devient complet. Passé ce jour-là, son
+// badge est recalculé à chaque commit (photo instantanée, décision explicite) mais n'est plus jamais
+// MONTRÉ — même quand il change réellement. Un outil qui perd une validation, qui voit sa couverture
+// passer de « en cours » à 95 %, ou qui retombe à « pas encore certifié » ne produisait donc aucun
+// événement visible : exactement le trou que la cérémonie existait pour fermer, décalé d'un cran.
+//
+// On retient donc, à côté de la date de première certification, le DERNIER ÉTAT annoncé de chaque
+// badge. Un état différent produit un bloc « MISE À JOUR », distinct de la certification initiale
+// (jamais la même en-tête : on ne re-certifie pas quelqu'un qui l'est déjà), et passe par le même
+// mécanisme `aRelayer` — produire ne vaut jamais relayer.
+//
+// Bootstrap honnête : un Agent dont aucun état n'a encore été enregistré est enregistré EN SILENCE,
+// jamais annoncé comme un changement. Affirmer « son badge a changé » alors qu'on n'a simplement
+// jamais regardé avant serait la même confusion absence/mesure corrigée partout ailleurs.
+export function badgeState(result) {
+  return { badge: result.badge, tier: result.couverture?.tier, gaps: result.gaps?.length ?? 0 };
+}
+
+export function announceBadgeChange(result, { historyPath = BADGE_CEREMONY_HISTORY_PATH, now = Date.now() } = {}) {
+  const history = loadBadgeCeremonyHistory(historyPath);
+  if (!hasBeenCertifiedBefore(result.slug, history)) return null; // la certification initiale a sa propre voie
+  const avant = history.etats?.[result.slug];
+  const apres = badgeState(result);
+  history.etats = history.etats ?? {};
+  history.etats[result.slug] = apres;
+  const change = avant && (avant.badge !== apres.badge || avant.tier !== apres.tier || avant.gaps !== apres.gaps);
+  if (change) {
+    history.aRelayer = history.aRelayer ?? {};
+    if (!(result.slug in history.aRelayer)) history.aRelayer[result.slug] = new Date(now).toISOString();
+  }
+  writeFileSync(historyPath, JSON.stringify(history, null, 1));
+  if (!change) return null;
+  return formatBadgeChangeAnnouncement(result, avant, apres);
+}
+
+export function formatBadgeChangeAnnouncement(result, avant, apres) {
+  const border = "━".repeat(Math.max(20, result.agentName.length + 20));
+  const diffs = [];
+  if (avant.badge !== apres.badge) diffs.push(`statut : ${avant.badge} → ${apres.badge}`);
+  if (avant.tier !== apres.tier) diffs.push(`couverture : ${avant.tier} → ${apres.tier}`);
+  if (avant.gaps !== apres.gaps) diffs.push(`validations manquantes : ${avant.gaps} → ${apres.gaps}`);
+  return [
+    border,
+    `🔄 MISE À JOUR DE BADGE — ${result.agentName}`,
+    border,
+    `Ce qui a changé : ${diffs.join(" · ")}`,
+    `Description : ${result.description || "non renseignée (colonne « Ce qu'il détecte/régule » absente de la table maîtresse)"}`,
+    `Câblage : ${result.message}`,
+    `Statut : ${result.badge}`,
+    `Combine typiquement avec : ${result.companions?.length ? result.companions.join(", ") : "aucune combinaison connue dans le catalogue PRESTATIONS"}`,
+    `Couverture : ${result.couverture.label}`,
+    border,
+  ].join("\n");
+}
+
 // Le bloc lui-même : toujours visuellement séparé (bordures ASCII, jamais une phrase noyée dans un
 // paragraphe), reprend tel quel le `message` déjà produit par checkAgentOnboarding() (jamais une
 // seconde formulation qui pourrait diverger) plus le badge et la couverture en évidence.
@@ -866,6 +924,13 @@ export function announceBadgeCeremony(result, { historyPath = BADGE_CEREMONY_HIS
   const history = loadBadgeCeremonyHistory(historyPath);
   if (hasBeenCertifiedBefore(result.slug, history)) return null;
   recordCertification(result.slug, now, historyPath);
+  // L'état de départ est enregistré ici même : sans ça, la toute première comparaison
+  // d'announceBadgeChange() se ferait contre rien et le bloc « mise à jour » tomberait au commit
+  // suivant sans qu'aucun changement réel n'ait eu lieu.
+  const h = loadBadgeCeremonyHistory(historyPath);
+  h.etats = h.etats ?? {};
+  h.etats[result.slug] = badgeState(result);
+  writeFileSync(historyPath, JSON.stringify(h, null, 1));
   return formatBadgeCeremonyAnnouncement(result);
 }
 
@@ -904,7 +969,11 @@ export function checkAllAgentBadges(onboardingContext, { historyPath = BADGE_CER
     } catch {
       continue; // garde-fou Personnage ou nom malformé — jamais un balayage cassé pour un seul outil
     }
-    const announcement = announceBadgeCeremony(result, { historyPath, now });
+    // Deux voies, jamais confondues : la certification initiale (une fois dans la vie de l'Agent)
+    // ou, pour un Agent déjà certifié, un vrai changement d'état de son badge depuis la dernière
+    // fois qu'on l'a regardé. Un Agent stable ne produit rien, comme avant.
+    const announcement = announceBadgeCeremony(result, { historyPath, now })
+      ?? announceBadgeChange(result, { historyPath, now });
     if (announcement) announcements.push(announcement);
   }
   return announcements;
