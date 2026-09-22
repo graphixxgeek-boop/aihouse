@@ -4030,7 +4030,12 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(realCodeFilesChanged(['lib/reference.ts', 'lib/life.ts', 'docs/x.md']), ['lib/life.ts', 'docs/x.md'], 'lib/reference.ts lives in a code folder but is displayed narrative DATA — excluding it is the whole point, since it is bumped on nearly every commit and made every commit look like an engine change');
   assert.equal(gardienShouldRun('argus', ['docs/suivi/x.md']), false, 'a documentation-only commit must let ARGUS sleep — it can neither kill a life.ts field nor add a TODO marker');
   assert.equal(gardienShouldRun('harmonia', ['docs/suivi/x.md']), true, 'HARMONIA watches doc↔code links, so a documentation change IS its domain — it must stay awake where ARGUS sleeps');
-  assert.equal(gardienShouldRun('always-new-code', ['lib/reference.ts', 'scripts/x.mjs']), false, 'ALWAYS-NEW-CODE watches lib/app/components only — a reference.ts bump plus a tooling change is none of its business');
+  // Étendu le 2026-09-22 (demande explicite de l'utilisateur : « always new code doit agir sur tout
+  // le code on est d'accord ? »). Il ne couvrait que le moteur du jeu et dormait donc sur TOUT
+  // commit d'outillage, alors que la dette d'empilement y est réelle. Ses zones d'outillage se
+  // dérivent de AGENT_SCRIPT_FILES × AGENT_CATEGORIES, jamais d'une liste écrite à la main.
+  assert.equal(gardienShouldRun('always-new-code', ['scripts/ecotoken.mjs']), true, 'ALWAYS-NEW-CODE must now wake on a tooling commit — its zones cover the tool suites as well as the game engine');
+  assert.equal(gardienShouldRun('always-new-code', ['docs/referentiel/argus.md']), false, 'it must still sleep on a documentation-only commit — extending its reach is not making it fire on everything');
   assert.equal(gardienShouldRun('clone-hunter', ['scripts/x.mjs']), true, 'CLONE-HUNTER really does cover scripts/ — the earlier claim that all six were idle on tooling commits was an overstatement, and this test pins the correction');
   assert.equal(gardienShouldRun('axa-check', ['scripts/x.mjs']), true, 'AXA-CHECK measures coverage of scripts/ too, so a tooling commit genuinely concerns it');
   assert.equal(gardienShouldRun('argus', ['lib/life.ts']), true, 'a real engine change must always wake ARGUS');

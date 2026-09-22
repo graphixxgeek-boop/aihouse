@@ -718,8 +718,34 @@ export function recordCertification(slug, now = Date.now(), historyPath = BADGE_
   const history = loadBadgeCeremonyHistory(historyPath);
   history.certifications = history.certifications ?? {};
   if (!history.certifications[slug]) history.certifications[slug] = new Date(now).toISOString();
+  // PRODUITE ≠ REÇUE (2026-09-22, manquement réel : ecotoken a été certifié, le bloc a bien été
+  // imprimé par le crochet post-commit… et je l'ai filtré en lisant la sortie, puis résumé en une
+  // phrase — exactement ce que cette cérémonie existe pour empêcher, et exactement ce que
+  // l'utilisateur avait déjà signalé pour clone-hunter). La règle était écrite, précise, et sans
+  // aucun mécanisme : rien ne distinguait « bloc affiché dans un terminal » de « bloc arrivé dans
+  // la conversation ». On marque donc chaque cérémonie NON RELAYÉE jusqu'à ce qu'elle le soit
+  // explicitement ; tant qu'elle ne l'est pas, elle est rappelée à chaque passage réseau.
+  history.aRelayer = history.aRelayer ?? {};
+  if (!(slug in history.aRelayer)) history.aRelayer[slug] = new Date(now).toISOString();
   writeFileSync(historyPath, JSON.stringify(history, null, 1));
   return history;
+}
+
+// Les cérémonies produites mais jamais relayées à l'utilisateur. Une liste non vide est un
+// manquement en cours, jamais une information de confort.
+export function pendingCeremonies(historyPath = BADGE_CEREMONY_HISTORY_PATH) {
+  const h = loadBadgeCeremonyHistory(historyPath);
+  return Object.entries(h.aRelayer ?? {}).map(([slug, date]) => ({ slug, produiteLe: date }));
+}
+
+// Marquer relayé n'est PAS automatique : ce serait se décerner l'acquittement à soi-même. C'est un
+// geste explicite, fait une fois le bloc réellement écrit dans la réponse.
+export function markCeremonyRelayed(slug, historyPath = BADGE_CEREMONY_HISTORY_PATH) {
+  const h = loadBadgeCeremonyHistory(historyPath);
+  if (!h.aRelayer || !(slug in h.aRelayer)) return { slug, deja: true };
+  delete h.aRelayer[slug];
+  writeFileSync(historyPath, JSON.stringify(h, null, 1));
+  return { slug, relayee: true };
 }
 
 // Le bloc lui-même : toujours visuellement séparé (bordures ASCII, jamais une phrase noyée dans un

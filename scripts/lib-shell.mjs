@@ -173,7 +173,11 @@ export const GARDIEN_DOMAINS = {
   "axa-check": [/^lib\//, /^scripts\//],
   "clean-dirty-old": [/^lib\//, /^scripts\//],
   "clone-hunter": [/^lib\//, /^scripts\//, /^app\//, /^components\//],
-  "always-new-code": [/^lib\//, /^app\//, /^components\//],
+  // scripts/ ajouté le 2026-09-22 : ses zones ne couvraient que le moteur du jeu, si bien qu'il
+  // dormait sur TOUT commit d'outillage — alors que la dette d'empilement y est bien réelle
+  // (ecotoken.mjs dépasse 1 500 lignes après une soirée). Ses zones d'outillage se dérivent
+  // mécaniquement de AGENT_SCRIPT_FILES × AGENT_CATEGORIES (cf. outillageZones()).
+  "always-new-code": [/^lib\//, /^app\//, /^components\//, /^scripts\//],
 };
 
 export function realCodeFilesChanged(changedFiles, notReallyCode = NOT_REALLY_CODE) {

@@ -17,7 +17,7 @@
 // confiance (confirmé / probable / à surveiller), jamais une certitude absolue (confirmé
 // explicitement avec l'utilisateur le 2026-09-19).
 
-import { readFileSync, existsSync } from "node:fs";
+import { statSync, readFileSync, existsSync } from "node:fs";
 import { dataRows, numericColumn } from "./lib-markdown-table.mjs";
 import { join } from "node:path";
 import { sh } from "./lib-shell.mjs";
@@ -112,6 +112,31 @@ export function parseCoverage(indexText) {
 // ambiguë plutôt que silencieusement ignorée ou acceptée à l'aveugle — c'est exactement le signal
 // qui doit déclencher une question à l'utilisateur (cf. blueprint, consultation bidirectionnelle,
 // docs/regles-de-travail.md §7ter).
+// --- MISE À NIVEAU : L'OUTILLAGE AUSSI (2026-09-22) -----------------------------------------------
+// Constat de l'utilisateur, fondé : cet outil ne regardait QUE le moteur du jeu (lib/app/components).
+// Ses 8 zones sont les thèmes d'HARMONIA, tous narratifs — il n'avait littéralement aucune zone pour
+// un script d'outillage, et dormait donc sur tout commit de `scripts/`. Or la dette d'empilement y
+// est bien réelle : `scripts/ecotoken.mjs` dépasse les 1 500 lignes après une seule soirée.
+//
+// Les zones d'outillage ne sont PAS une nouvelle liste écrite à la main (Article 24) : elles se
+// DÉRIVENT du croisement de deux tables déjà maintenues et déjà protégées par leur propre garde-fou
+// — AGENT_SCRIPT_FILES (axa-check.mjs, gardé par findScriptsMissingFromAgentFiles) et
+// AGENT_CATEGORIES (lib-shell.mjs). Un outil ajouté demain à l'équipe rejoint donc sa zone tout
+// seul, sans qu'une ligne soit à recopier ici.
+export function outillageZones(agentScriptFiles, agentCategories) {
+  const suites = {};
+  for (const [slug, fichier] of Object.entries(agentScriptFiles ?? {})) {
+    const cat = agentCategories?.[slug] ?? "(sans catégorie)";
+    const suite = (/—\s*(.+)$/.exec(cat) || [, cat])[1].trim();
+    (suites[`Outillage · ${suite}`] ??= []).push(fichier);
+  }
+  // Le fichier principal d'une zone est le plus GROS de la suite : c'est là que l'empilement se voit.
+  return Object.fromEntries(Object.entries(suites).map(([zone, fichiers]) => [
+    zone,
+    [...fichiers].sort((a, b) => (existsSync(a) ? statSync(a).size : 0) - (existsSync(b) ? statSync(b).size : 0)).pop(),
+  ]));
+}
+
 export function recommendZone(themes, coverage, requestedZone, now = new Date()) {
   if (!themes.length) return undefined;
   if (requestedZone) {

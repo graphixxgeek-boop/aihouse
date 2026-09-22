@@ -12,9 +12,9 @@ import { checkLinks, LINKS } from "../check-harmonia.mjs";
 import { collectCoverage, robustnessScore, collectScriptCoverage, scriptRobustnessScore, LIB_MAP, AGENT_SCRIPT_FILES } from "../axa-check.mjs";
 import { lastTouchDays, relativeStaleness } from "../clean-dirty-old.mjs";
 import { buildDuplicateReport, buildNearDuplicateReport } from "../clone-hunter.mjs";
-import { THEMES, THEME_PRIMARY_FILE, parseCoverage, recommendZone, countDatedAddenda, addendaSignal, parseNumstat, churnSignal } from "../always-new-code.mjs";
+import { THEMES, THEME_PRIMARY_FILE, parseCoverage, recommendZone, countDatedAddenda, addendaSignal, parseNumstat, churnSignal, outillageZones } from "../always-new-code.mjs";
 import { findMissingNotes, findOrphanNotes } from "../el-professor.mjs";
-import { parseToolsTable, slugifyAgentName, checkAllAgentBadges } from "../le-coordinateur.mjs";
+import { parseToolsTable, slugifyAgentName, checkAllAgentBadges, pendingCeremonies } from "../le-coordinateur.mjs";
 import { formatToolBrainReminder } from "../tool-brain.mjs";
 import { summarizeHistory, computeInvestmentRatio, diagnoseAdviceAccuracy } from "../smart-conso-token.mjs";
 import { sh, AGENT_CATEGORIES, gardienShouldRun, lastCommitFiles, realCodeFilesChanged } from "../lib-shell.mjs";
@@ -197,8 +197,14 @@ if (reveille("clone-hunter")) try {
 if (reveille("always-new-code")) try {
   const alwaysNewCodeIndexText = readFileSync("docs/always-new-code/index.md", "utf8");
   const coverage = parseCoverage(alwaysNewCodeIndexText);
-  const zoneRec = recommendZone(THEMES, coverage, undefined, new Date());
-  const primaryFile = zoneRec?.zone ? THEME_PRIMARY_FILE[zoneRec.zone] : undefined;
+  // La rotation porte sur les 8 zones du MOTEUR + les 8 zones d'OUTILLAGE dérivées (2026-09-22) :
+  // ce Gardien ne voyait que le jeu et dormait sur tout commit de scripts/. Les secondes ne sont
+  // pas une liste écrite ici mais le croisement de deux tables déjà gardées ailleurs.
+  const zonesOutillage = outillageZones(AGENT_SCRIPT_FILES, AGENT_CATEGORIES);
+  const toutesZones = [...THEMES, ...Object.keys(zonesOutillage)];
+  const fichierDeZone = { ...THEME_PRIMARY_FILE, ...zonesOutillage };
+  const zoneRec = recommendZone(toutesZones, coverage, undefined, new Date());
+  const primaryFile = zoneRec?.zone ? fichierDeZone[zoneRec.zone] : undefined;
   let addenda, churn;
   if (primaryFile) {
     const fileText = readFileSync(primaryFile, "utf8");
@@ -227,6 +233,17 @@ if (reveille("always-new-code")) try {
 // ALWAYS-NEW-CODE qui dort sur un commit de `scripts/` n'est PAS un trou : ses 8 zones sont les
 // thèmes du MOTEUR DU JEU (lib/app/components), il n'a rien à dire d'un script d'outillage — une
 // décision assumée, vérifiée avant d'être prise pour un oubli (Article 23, garde-fou).
+// Une cérémonie de certification PRODUITE n'est pas une cérémonie REÇUE (2026-09-22, manquement
+// réel sur ecotoken : le bloc a bien été imprimé ici, je l'ai filtré en lisant la sortie, puis
+// résumé en une phrase — exactement ce que la règle existait pour empêcher). Tant qu'elle n'est pas
+// explicitement acquittée (`markCeremonyRelayed()`), elle est rappelée à chaque commit.
+try {
+  const enAttente = pendingCeremonies();
+  if (enAttente.length) {
+    console.error(`\n🎖️  CÉRÉMONIE(S) NON RELAYÉE(S) : ${enAttente.map((c) => c.slug).join(", ")} — le bloc de certification a été produit mais jamais montré à l'utilisateur. L'afficher TEL QUEL dans la réponse (jamais résumé en une phrase), puis acquitter : node -e "import('./scripts/le-coordinateur.mjs').then(c=>c.markCeremonyRelayed('<slug>'))"\n`);
+  }
+} catch { /* best-effort */ }
+
 {
   const etat = (gardien, eveille, trouvailles) => {
     if (!eveille) return `${gardien} 💤`;
