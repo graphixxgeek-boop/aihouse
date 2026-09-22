@@ -36,7 +36,7 @@ import { renderHtmlReport } from "./html-report.mjs";
 // le 2026-09-21 (cf. commentaire au-dessus de sa définition dans lib-shell.mjs).
 export { daysSince };
 import { extractPrincipleUnits, buildEvolutionDigest, findPossibleTensions, philosophyFreshnessDays } from "./the-king.mjs";
-import { recordCliUsage } from "./tool-usage.mjs";
+import { recordCliUsage, recordToolContribution } from "./tool-usage.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -1151,6 +1151,19 @@ export function recordCircleItemReport(itemId, contentText, { folders = CIRCLE_R
   const fileSlug = dateLabel.replace(/[:.]/g, "-");
   const fileName = `circle-signal-${fileSlug}.txt`;
   writeFileImpl(join(fullFolder, fileName), contentText ?? "", "utf8");
+
+  // LA CONTRIBUTION S'ENREGISTRE OÙ L'ÉCRITURE A LIEU (2026-09-23, demande de l'utilisateur :
+  // « pense à l'alimenter aux moments opportuns, sers-toi des process et de l'existant pour
+  // trouver des moments opportuns »). Le moment opportun est ICI, pas dans ma mémoire : chaque
+  // signal de Ronde écrit dans le registre d'un outil EST une alimentation de cet outil.
+  //
+  // POURQUOI PAS UN RAPPEL À L'AGENT, et c'est l'Article 27 mot pour mot : une obligation qui ne
+  // repose que sur la mémoire d'un agent n'existe plus à la session suivante. Le compteur a passé
+  // sa première journée à zéro précisément parce que je comptais m'en souvenir.
+  //
+  // JAMAIS BLOQUANT : même discipline que recordCliUsage() — un compteur qui ferait échouer
+  // l'écriture qu'il observe serait pire que pas de compteur.
+  try { recordToolContribution(itemId, `${folder}${fileName}`, { nature: "registre", now, par: "ronde" }); } catch { /* best-effort */ }
 
   const primaryIndexPath = join(fullFolder, "index.md");
   const hasPrimaryIndex = existsImpl(primaryIndexPath);

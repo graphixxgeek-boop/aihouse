@@ -20,7 +20,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync } from
 import { join } from "node:path";
 import { sh } from "./lib-shell.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
-import { recordCliUsage } from "./tool-usage.mjs";
+import { recordCliUsage, recordToolContribution } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 export const SIMULATIONS_DIR = join(ROOT, "docs/simulations");
@@ -89,6 +89,13 @@ export function renderDossierHtml(dossierText, { title = "Dossier retourné", da
   return renderHtmlReport({ title, dateLabel, blocks: parseDossierToBlocks(dossierText) });
 }
 
+// LE SECOND MOMENT OPPORTUN (2026-09-23) — l'archivage d'une simulation. Le premier est la Ronde
+// (recordCircleItemReport), celui-ci est la simulation : archiver un transcript, c'est alimenter
+// le registre docs/simulations/, donc nourrir les outils qui le relisent (HARMONIA vérifie
+// qu'une règle documentée s'est vraiment produite en jeu, EL-PROFESSOR note la fidélité).
+//
+// Même raison qu'ailleurs, et elle est de l'Article 27 : le compteur a passé sa première journée
+// à zéro parce que je comptais m'en souvenir. Le geste s'enregistre donc là où il a lieu.
 export function archiveSimulationFiles({ simName, transcriptPath, dossierPath }, fsImpl = defaultFs) {
   if (!simName || !transcriptPath) throw new Error("archiveSimulationFiles: simName et transcriptPath sont obligatoires — rien à archiver sans un nom et un transcript réel.");
   if (!fsImpl.existsSync(SIMULATIONS_DIR)) fsImpl.mkdirSync(SIMULATIONS_DIR, { recursive: true });
@@ -107,6 +114,7 @@ export function archiveSimulationFiles({ simName, transcriptPath, dossierPath },
     fsImpl.writeFileSync(dossierHtmlDest, renderDossierHtml(fsImpl.readFileSync(dossierPath, "utf8"), { title: `${simName} — dossier retourné` }));
     written.push(dossierHtmlDest);
   }
+  try { recordToolContribution("simulations", `docs/simulations/${simName}`, { nature: "registre", par: "simulation" }); } catch { /* best-effort, jamais bloquant */ }
   return { written };
 }
 
