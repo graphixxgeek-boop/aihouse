@@ -20,14 +20,16 @@ th{color:var(--muted);font-weight:500}
 .quote{font-style:italic;color:var(--muted);border-left:2px solid var(--line);padding-left:12px;margin:10px 0}
 footer{color:var(--muted);font-size:.85rem;margin-top:32px;border-top:1px solid var(--line);padding-top:14px}
 </style></head><body><div class="wrap">
-<h1>EVAL-IA — ma conduite sur cette Ronde</h1>
-<p class="sub">Ronde du 2026-09-23 · mode AUTO · 26 items · hébergée chez CASSANDRA-RH, à côté d'EVAL-DEV</p>
+<h1>EVAL-IA — ma conduite, en général</h1>
+<p class="sub">Arrêtée au 2026-09-23 · portée : toute ma conduite sur ce projet, pas seulement la Ronde du jour · hébergée chez CASSANDRA-RH, à côté d'EVAL-DEV</p>
+<div class="card"><h2>Portée de cette évaluation</h2>
+<p>Corrigée le 2026-09-23 sur remarque de l'utilisateur : <em>« pour le rapport eval-IA ce n'est pas seulement sur ta conduite pendant la Ronde mais ta conduite en général »</em>. La première version ne jugeait qu'une journée — ce qui rendait flatteur ce qui aurait dû être structurel. Les chiffres ci-dessous viennent du suivi durable, du compteur d'usage et des registres, jamais de mon souvenir de la session.</p></div>
 
 <div class="card"><h2>Note d'ensemble</h2>
 <p class="note warn">C+ <span>/ le travail tient, la discipline non</span></p>
 <p>Quatre bugs réels trouvés et corrigés, et <strong>cinq écarts de ma part</strong>, dont trois que vous avez dû relever vous-même. Une Ronde qui trouve beaucoup mais qu'il faut surveiller n'est pas une Ronde réussie.</p></div>
 
-<div class="card"><h2>Mes écarts, sans atténuation</h2>
+<div class="card"><h2>Mes écarts de la Ronde du 2026-09-23, sans atténuation</h2>
 
 <div class="crit"><strong>1. J'ai lancé un outil qui n'était pas dans la sélection.</strong>
 <p>memory-audit ne fait pas partie des 32 items. Je l'ai ajouté seul, et il est de portée SIMULATION — il n'avait rien à dire sur le dépôt. Aucun mécanisme ne l'a vu parce qu'aucun ne regardait ce qui tourne <em>en trop</em>.</p></div>
@@ -51,7 +53,30 @@ footer{color:var(--muted);font-size:.85rem;margin-top:32px;border-top:1px solid 
 <div class="good"><strong>Les faux positifs ont été corrigés à la racine, jamais tolérés.</strong> Une citation n'est pas un emploi ; une fonction déclarée est remontée ; une variable locale n'a pas de zone morte. Trois resserrements, trois raisons écrites.</div>
 </div>
 
-<div class="card"><h2>Le compte exact</h2>
+<div class="card"><h2>Ce que les chiffres durables disent de moi, au-delà d'une journée</h2>
+<table>
+<tr><th>Mesure</th><th>Chiffre réel</th><th>Ce que ça dit</th></tr>
+<tr><td>Tâches documentées dans le suivi</td><td>377 sur 3 fichiers de session</td><td>La discipline du suivi tient. C'est la règle la plus ancienne du projet et c'est celle que je n'ai jamais lâchée.</td></tr>
+<tr><td>Tâches ouvertes non closes</td><td>8</td><td>Peu, mais certaines traînent depuis des jours sans que je les rouvre de moi-même. J'ouvre plus facilement que je ne referme.</td></tr>
+<tr><td>Commits en 20 h</td><td>93</td><td>Le rythme tient et rien ne reste non poussé. Aucune session interrompue n'a perdu de travail.</td></tr>
+<tr><td>Sollicitations d'outils enregistrées</td><td>460</td><td>Dont <strong>402 en ligne de commande directe</strong> et seulement 5 déclarées « à la demande » — je lance beaucoup, je consulte rarement sur intention explicite.</td></tr>
+<tr><td>Usages par appel de fonction</td><td>1</td><td>Le compteur ne voyait pas ce type d'usage jusqu'à aujourd'hui : mes chiffres passés d'utilisation d'outils étaient donc sous-estimés, et je l'ai découvert seulement parce que l'utilisateur a posé la question.</td></tr>
+<tr><td>Contributions aux registres</td><td>0 jusqu'à ce soir</td><td><strong>Le constat le plus dur de ce document.</strong> J'ai construit ce compteur ce matin même, à sa demande, et je ne l'avais jamais alimenté. Un outil construit puis oublié par son propre constructeur : c'est exactement le reproche que TOOL-LEARNING est censé m'adresser, et il n'avait aucune donnée pour le faire.</td></tr>
+</table></div>
+
+<div class="card"><h2>Mes trois travers, vus sur la durée</h2>
+<div class="crit"><strong>Je construis plus volontiers que je ne me sers.</strong> Le paysage compte 33 membres certifiés ; 8 n'ont jamais été sollicités. Le compteur de contributions à zéro le jour de sa naissance en est la démonstration la plus nette. Une tâche ouverte depuis le 2026-09-19 porte d'ailleurs ce nom : « corriger mon biais vers les outils à retour immédiat ».</div>
+<div class="crit"><strong>Je livre sans relire ce que je livre.</strong> Vrai aujourd'hui (rapports creux transmis sans les ouvrir), vrai avant : la même famille d'écart a produit un rapport affichant « undefined », un outil sans commande, un résumé calculé jamais imprimé. Cinq occurrences du même motif en une seule journée.</div>
+<div class="crit"><strong>J'attends la deuxième occurrence pour poser le garde-fou.</strong> L'Article 3 demande l'inverse. Le lanceur mal placé, le rapport qui pointe, la donnée calculée non affichée : à chaque fois j'ai corrigé le cas, puis seulement au suivant j'ai cherché la classe.</div>
+</div>
+
+<div class="card"><h2>Ce qui tient, sur la durée aussi</h2>
+<div class="good"><strong>Je ne rends jamais une absence de mesure comme une mesure.</strong> C'est la faute historique du projet et elle a cessé. Chaque outil construit depuis porte ses trois états ; plusieurs de mes propres chiffres flatteurs ont été démolis par moi-même quand le dénominateur ne tenait pas.</div>
+<div class="good"><strong>Je dis ce que je n'ai pas fait.</strong> Y compris quand personne ne l'aurait vu : la déclaration de conduite enregistrée ce soir porte un « non » sur cinq règles, et la section ci-dessus nomme des écarts que l'utilisateur n'avait pas relevés.</div>
+<div class="good"><strong>Les corrections vont à la cause.</strong> 6 garde-fous mécaniques neufs ce jour-là, aucun correctif isolé laissé sans sa classe.</div>
+</div>
+
+<div class="card"><h2>Le compte exact de la Ronde du 2026-09-23</h2>
 <table>
 <tr><th>Ce qui est mesuré</th><th>Résultat</th></tr>
 <tr><td>Items exécutés</td><td>26 sur 26 de la sélection AUTO — plus 1 hors sélection (mon erreur)</td></tr>

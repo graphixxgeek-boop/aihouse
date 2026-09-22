@@ -30,6 +30,18 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+// LE RELAIS D'ANGEL, RENDU RÉEL (2026-09-23). Il existait depuis le 2026-09-22 comme un PARAMÈTRE
+// (`sectionAngel`) que god attendait qu'on lui tende — et personne ne le lui tendait jamais :
+// `grep sectionAngel` ne trouvait aucun appelant. L'Article 26 promet « une seule voix, jamais une
+// par contrôleur », mais god ne récupérait pas cette voix, il attendait qu'on la lui apporte.
+//
+// C'EST LA RÉPONSE À « POURQUOI ANGEL N'EST-IL JAMAIS UTILISÉ ? » (question de l'utilisateur à la
+// Ronde du 2026-09-23, avec son verdict : « c'est un vrai reproche je pense »). Il avait raison sur
+// le reproche, et la cause n'était pas mon oubli répété : le relais n'était pas câblé. Un paramètre
+// optionnel qui n'est jamais fourni ne produit aucune erreur — il produit simplement un rapport
+// silencieusement amputé de sa moitié conduite.
+import { auditWorkingRules, angelSectionLines } from "./angel-of-ia-process.mjs";
+import { recordFunctionUsage } from "./tool-usage.mjs";
 import { readAgentSession, SESSION_FILE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -787,6 +799,21 @@ export function buildGodReportBlocks({ processes = PROCESSES, root = ROOT, sessi
     return `· ${p.nom} — ${av.presentes}/${av.verifiables} étape(s) vérifiable(s) tracée(s)${av.manquantes.length ? ` — manque : ${av.manquantes.join(" ; ")}` : ""}${av.sansTrace.length ? ` — ${av.sansTrace.length} étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre` : ""}`;
   });
   blocks.push({ type: "note", text: `Process suivis (${processes.length}) :\n${lignes.join("\n")}` });
+
+  // La conduite, récupérée par god plutôt qu'attendue. `recordFunctionUsage` enregistre cet appel
+  // comme un usage RÉEL d'angel (origine « fonction », ajoutée le même jour) : jusqu'ici, seuls les
+  // lancements en ligne de commande étaient comptés, ce qui faisait afficher « 0 sollicitation »
+  // pour un outil qui aurait dû parler à chaque Ronde.
+  try {
+    const auditConduite = auditWorkingRules({ root });
+    recordFunctionUsage("angel-of-ia-process", "auditWorkingRules", { foundSomething: auditConduite.manquements?.length > 0 });
+    const section = angelSectionLines(auditConduite);
+    if (section?.length) blocks.push({ type: "note", text: section.join("\n") });
+  } catch (e) {
+    // Jamais bloquant, et jamais silencieux : un relais cassé se DIT, sinon god rendrait un rapport
+    // amputé qui a l'air complet — exactement le défaut qu'on vient de corriger.
+    blocks.push({ type: "note", text: `⚠️ Section conduite indisponible : angel-of-ia-process n'a pas pu être relayé (${e.message}). Le rapport est incomplet, il n'est pas vert.` });
+  }
 
   const sansGardien = findProcessesWithoutGuardian({ processes, root });
   const docsAbsents = findProcessDocsMissing({ processes, root });

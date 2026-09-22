@@ -24,10 +24,10 @@
 // le format de fenêtre). Il ne les devine JAMAIS : il les DEMANDE, et refuse de conclure tant
 // qu'elles ne sont pas fournies (même discipline que circle-process-guardian).
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 import { printReportHeader } from "./report-template.mjs";
 import { recordCliUsage, USAGE_ORIGINS } from "./tool-usage.mjs";
 // SÉRIE-TEMPORELLE (2026-09-22) : angel est le PREMIER outil branché sur le mécanisme partagé
@@ -158,8 +158,62 @@ export function checkConsultationOrder({ root = ROOT, evenements, commits, fenet
 
 // `faits` porte les réponses aux règles non observables. Une règle non fournie n'est jamais réputée
 // respectée : elle est comptée à part, et le verdict global refuse d'être vert tant qu'il en reste.
+// ————————————————————————————————————————————————————————————————————————
+// QUI DÉCLARE QUOI (2026-09-23) — « Je réponds pour moi, tu réponds pour toi »
+// ————————————————————————————————————————————————————————————————————————
+//
+// Décidé par l'utilisateur à la Ronde du 2026-09-23, après que ces huit règles soient restées sans
+// réponse depuis la construction d'angel : « Je réponds pour moi, tu réponds pour toi. »
+//
+// LE PARTAGE EXACT, dérivé du champ `cote` de chaque règle, jamais d'une liste recopiée : les
+// règles marquées `agent` sont déclarées par l'agent lui-même ; celles marquées `utilisateur` ou
+// `les-deux` lui sont posées en fin de Ronde. Cinq d'un côté, trois de l'autre.
+//
+// POURQUOI L'AUTO-DÉCLARATION DE L'AGENT N'EST PAS UN BLANC-SEING, et c'est la seule chose qui
+// rend ce partage acceptable : une déclaration DATÉE ne vaut que pour la Ronde qui l'a produite.
+// Un « oui » permanent deviendrait une conformité de façade dès la session suivante — exactement
+// le motif que tout ce paysage combat. Une déclaration périmée est donc traitée comme une absence,
+// jamais comme un acquis.
+//
+// ET LA DÉCLARATION HONNÊTE INCLUT LE NON. Le jour où ce mécanisme a été construit, j'avais déjà
+// manqué deux de ces cinq règles (livrer les rapports avant l'analyse, relire ce que je livre).
+// Un outil qui ne recueille que des « oui » de la part de celui qu'il surveille ne surveille rien.
+export const DECLARATIONS_AGENT_PATH = "docs/angel-of-ia-process/declarations-agent.json";
+export const DECLARATION_VALIDE_HEURES = 24;
+
+export function loadDeclarationsAgent({ root = ROOT, readFileImpl = readFileSync, maintenant = Date.now(), heures = DECLARATION_VALIDE_HEURES } = {}) {
+  let brut;
+  try { brut = JSON.parse(readFileImpl(join(root, DECLARATIONS_AGENT_PATH), "utf8")); } catch { return {}; }
+  if (!brut?.at || maintenant - Date.parse(brut.at) > heures * 3600 * 1000) return {}; // périmée = absente
+  return brut.faits ?? {};
+}
+
+export function declarerCoteAgent(faits = {}, { root = ROOT, writeFileImpl = writeFileSync, mkdirImpl = mkdirSync, maintenant = Date.now() } = {}) {
+  const chemin = join(root, DECLARATIONS_AGENT_PATH);
+  mkdirImpl(dirname(chemin), { recursive: true });
+  const contenu = { at: new Date(maintenant).toISOString(), faits };
+  writeFileImpl(chemin, JSON.stringify(contenu, null, 1), "utf8");
+  return contenu;
+}
+
+// Ce qui reste à POSER à l'utilisateur : les règles qui ne sont pas de son côté à lui sont exclues,
+// et celles que l'agent a déjà déclarées aussi. Rend la liste, jamais un simple compte — « il reste
+// 3 questions » et « voici lesquelles » ne sont pas la même information.
+export function reglesAPoserALUtilisateur({ regles = REGLES_SURVEILLEES, faits = {}, root = ROOT, auditImpl = null } = {}) {
+  // DÉRIVÉ DE L'AUDIT RÉEL, jamais d'un second filtre parallèle. Première version : je refiltrais
+  // moi-même sur `cote` et `observable`, et j'ai rendu 2 règles là où l'audit en constate 3 — un
+  // filtre recopié diverge de sa source, ce que l'Article 24 interdit précisément. Ce sont donc
+  // les règles que l'audit lui-même n'a pas pu résoudre qui font foi.
+  const audit = auditImpl ? auditImpl({ root, faits, regles }) : auditWorkingRules({ root, faits, regles });
+  return (audit.nonFournis ?? []).filter((r) => r.cote !== "agent");
+}
+
 export function auditWorkingRules({ root = ROOT, faits = {}, regles = REGLES_SURVEILLEES, ordre } = {}) {
   const o = ordre ?? checkConsultationOrder({ root });
+  // Les déclarations de l'agent sont LUES, jamais supposées : un appelant qui fournit `faits`
+  // explicitement reste prioritaire (tests, mode autonome), sinon on prend ce qui est sur disque
+  // et encore frais.
+  faits = { ...loadDeclarationsAgent({ root }), ...faits };
   const resultats = regles.map((r) => {
     if (r.id === "consultation-avant") {
       if (!o.mesurable) return { ...r, etat: "non mesurable", detail: o.raison };

@@ -1,0 +1,10 @@
+{
+ "at": "2026-09-22T19:42:26.267Z",
+ "faits": {
+  "suivi-meme-commit": true,
+  "push-au-fil-de-l-eau": true,
+  "questions-avant": true,
+  "point-par-point": false,
+  "fenetre-dediee": true
+ }
+}
