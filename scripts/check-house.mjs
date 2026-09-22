@@ -8887,3 +8887,61 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log('Passed: ARGUS finally remembers its own verdicts (2026-09-23, task #214) — it had been re-reporting six candidates investigated and CLOSED on 2026-09-19, the conclusions sitting in its own registry which it never read, producing three days of a permanent "⚠️6" banner whose real cost was not being ignored but making a full investigation be reopened on questions already settled. The mechanism is relayed from SAFE-EXPORT rather than copied, since two separate memories would soon have meant two different disciplines on the same question, and all three guards are verified here rather than assumed: only a dismissal carrying an explicit dated user agreement AND a written reason silences anything, a dismissal without that agreement silences nothing and is NAMED in the report as an attempt to quiet the alert, and a corrected finding that returns is flagged as a regression. The one genuinely never-read field keeps a dismissal that points at the documented decision justifying it and at the task that must pick it back up — set aside pending, never closed.');
 }
+
+{
+  // CLONE-HUNTER : UNE ALERTE PAR PROBLÈME, ET UN MOTIF DÉRIVÉ (2026-09-23, tâche #217, accord
+  // explicite de l'utilisateur). L'enquête #215 avait mesuré 29 alertes pour 14 problèmes réels.
+  const ch = await import('../scripts/clone-hunter.mjs');
+
+  // LE RISQUE RÉEL DE CE CHANTIER EST LE SUR-REGROUPEMENT : un Gardien sacré qui perdrait une
+  // trouvaille en fusionnant serait bien pire que celui qui en comptait deux fois. Ces bornes
+  // passent donc avant tout le reste.
+  const loin = [
+    { lines: 5, occurrences: [{ file: 'a.mjs', start: 10 }, { file: 'b.mjs', start: 10 }], preview: ['x'] },
+    { lines: 5, occurrences: [{ file: 'a.mjs', start: 200 }, { file: 'b.mjs', start: 200 }], preview: ['y'] },
+  ];
+  assert.equal(ch.fusionnerClusters(loin).length, 2, 'two genuinely DIFFERENT duplications between the same pair of files must stay two problems: only overlapping line ranges may merge, never the mere fact of sharing a file pair');
+  const fichiersDifferents = [
+    { lines: 5, occurrences: [{ file: 'a.mjs', start: 10 }, { file: 'b.mjs', start: 10 }], preview: ['x'] },
+    { lines: 5, occurrences: [{ file: 'a.mjs', start: 10 }, { file: 'c.mjs', start: 10 }], preview: ['x'] },
+  ];
+  assert.equal(ch.fusionnerClusters(fichiersDifferents).length, 2, 'clusters touching different SETS of files must never merge, even when one file and one line coincide');
+
+  // Le vrai cas qui a motivé la tâche : la même duplication trouvée depuis deux ancres décalées.
+  const memeProbleme = [
+    { lines: 11, occurrences: [{ file: 'doc.mjs', start: 323 }, { file: 'brain.mjs', start: 60 }], preview: ['a'], detecteur: 'identique' },
+    { lines: 9, occurrences: [{ file: 'doc.mjs', start: 325 }, { file: 'brain.mjs', start: 62 }], preview: ['b'], detecteur: 'renommage' },
+  ];
+  const fusion = ch.fusionnerClusters(memeProbleme);
+  assert.equal(fusion.length, 1, 'the SAME duplication found from two shifted anchors must collapse into one problem — this is the exact fragmentation that turned one pair of twin functions into three separate alerts');
+  assert.equal(fusion[0].lines, 11, 'the merged problem must keep the LARGEST span, which is the one that describes it most completely');
+  assert.deepEqual(fusion[0].detecteurs.sort(), ['identique', 'renommage'], 'and it must remember BOTH detectors: v2 promised it never re-counts what v1 found, which was true of its anchor and false of its region — merging on regions finally makes that promise exact');
+  assert.equal(fusion[0].fusionnes, 2, 'the number of raw alerts behind a problem must stay visible, so the regrouping can be audited rather than trusted');
+
+  assert.equal(ch.clustersSeRecouvrent(loin[0], loin[1]), false, 'the overlap predicate itself must be strict');
+  assert.equal(ch.clustersSeRecouvrent(memeProbleme[0], memeProbleme[1]), true, 'and must recognise a genuine overlap');
+
+  // LE MOTIF DÉRIVÉ — la phrase unique répétée 29 fois disait vrai et n'aidait personne.
+  const unSeulFichier = ch.motifDuCluster({ lines: 6, occurrences: [{ file: 'scripts/x.mjs', start: 1 }, { file: 'scripts/x.mjs', start: 40 }] });
+  assert.ok(unSeulFichier.motif.includes('jumeaux') && unSeulFichier.portee === 'un seul fichier', 'two twin blocks inside one file must be described as a local matter');
+  const repartiOutillage = ch.motifDuCluster({ lines: 6, occurrences: [{ file: 'scripts/a.mjs', start: 1 }, { file: 'scripts/b.mjs', start: 1 }, { file: 'scripts/c.mjs', start: 1 }] });
+  assert.ok(repartiOutillage.motif.includes('3 outils'), 'the same block spread across tools must say SO, and say how many');
+  assert.notEqual(repartiOutillage.tache, unSeulFichier.tache, 'the two must not end on the same task: a debt that recopies itself into every new tool is not the same problem as two twins in one file, and the single repeated phrase erased exactly that difference');
+  const moteur = ch.motifDuCluster({ lines: 6, occurrences: [{ file: 'lib/turn.ts', start: 1 }, { file: 'scripts/a.mjs', start: 1 }] });
+  assert.ok(moteur.portee.includes('moteur'), 'a duplication reaching the game engine must be named as such — a behaviour fix applied to one copy of two would produce two different rules inside the same playthrough');
+
+  // La taille change le motif, et elle seule : même portée, verdict différent.
+  const petit = ch.motifDuCluster({ lines: 5, occurrences: [{ file: 'scripts/x.mjs', start: 1 }, { file: 'scripts/x.mjs', start: 40 }] });
+  const gros = ch.motifDuCluster({ lines: 12, occurrences: [{ file: 'scripts/x.mjs', start: 1 }, { file: 'scripts/x.mjs', start: 40 }] });
+  assert.notEqual(petit.motif, gros.motif, 'block size must change the reason given: a large duplicated block is where a fix applied to one copy and not the other goes unnoticed, and a small one is mostly a reading nuisance');
+
+  // Vérifié live : le regroupement doit réellement réduire le compte sur ce dépôt, sans le vider.
+  const v1 = ch.buildDuplicateReport().map((c) => ({ ...c, detecteur: 'identique' }));
+  const v2 = ch.buildNearDuplicateReport().map((c) => ({ ...c, detecteur: 'renommage' }));
+  const reels = ch.fusionnerClusters([...v1, ...v2]);
+  assert.ok(reels.length > 0, 'real clusters must survive the regrouping — merging must never empty the report');
+  assert.ok(reels.length < v1.length + v2.length, 'and against this actual repository it must genuinely reduce the count, which is the whole point');
+  for (const c of reels) assert.ok(ch.motifDuCluster(c).tache.length > 20, 'every real problem must come out with a task of its own, derived from its own facts');
+
+  console.log('Passed: CLONE-HUNTER reports one alert per PROBLEM and gives each its own reason (2026-09-23, task #217) — it grouped by anchor, so the same duplication found from two shifted starts produced two alerts, which is how one pair of twin functions became three. Merging on overlapping REGIONS also makes v2\'s standing promise exact at last: "never already counted by v1" was true of its anchor and false of its region, since its block began one line earlier and enclosed v1\'s. The real risk here was over-merging, and it is bounded first: two genuinely different duplications between the same file pair stay two problems, clusters touching different file sets never merge, the merged problem keeps the largest span and remembers both detectors, and the raw alert count behind it stays visible so the regrouping can be audited instead of trusted. The single phrase repeated 29 times is replaced by a reason derived from what the tool already knew — same file versus spread across tools, and block size — because a debt that recopies itself into every new tool is not the same problem as two twins in one file, and one sentence for both erased exactly that difference.');
+}

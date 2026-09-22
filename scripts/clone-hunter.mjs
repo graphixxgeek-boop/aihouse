@@ -368,6 +368,98 @@ export function buildNearDuplicateReport(roots = DEFAULT_ROOTS, options = {}) {
   return clusterDuplicates(findNearDuplicateBlocks(fileLines, options));
 }
 
+
+// ————————————————————————————————————————————————————————————————————————
+// UNE ALERTE PAR PROBLÈME, PAS PAR CHEVAUCHEMENT DE LIGNES (2026-09-23, tâche #217, accord
+// explicite de l'utilisateur : « Oui, regrouper ET motiver chaque alerte »)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE DÉFAUT, mesuré par l'enquête #215 : 29 alertes pour 14 problèmes réels. La cause est
+// mécanique et sans malice — `clusterDuplicates()` regroupe par ANCRE (`fichier:ligne`), donc la
+// même duplication découverte à deux décalages différents donne deux nœuds qui ne se rejoignent
+// jamais. Exemple vécu : les jumelles `flagFindBoosterCandidates` / `flagFindDeepBoosterCandidates`
+// produisaient TROIS alertes, une par ligne d'ancrage (323, 324, 326), pour un seul problème.
+//
+// LE CAS QUI TRAVERSE v1 ET v2, et c'est le plus instructif : v2 annonce « jamais déjà comptés par
+// v1 ». C'est vrai de son ANCRE (elle exige un vrai renommage, que v1 ne verrait pas) et faux de sa
+// RÉGION — son bloc démarre une ligne plus haut et englobe celui de v1. La promesse portait sur le
+// mauvais objet. Fusionner sur le chevauchement des RÉGIONS la rend enfin exacte.
+//
+// CE QU'ON NE FAIT PAS : masquer. Rien ne disparaît, tout est regroupé, et chaque problème garde la
+// trace du ou des détecteurs qui l'ont vu. Un Gardien sacré qui perdrait une trouvaille en route
+// serait pire que celui qui en compte deux fois.
+
+// Deux clusters décrivent le même problème s'ils couvrent les MÊMES fichiers et que, dans chacun,
+// leurs plages de lignes se chevauchent. Exiger le chevauchement dans TOUS les fichiers communs
+// (jamais un seul suffisant) est volontairement strict : deux duplications distinctes entre la même
+// paire de fichiers doivent rester deux problèmes.
+export function clustersSeRecouvrent(a, b) {
+  const plages = (c) => new Map(c.occurrences.map((o) => [o.file, [o.start, o.start + c.lines]]));
+  const pa = plages(a), pb = plages(b);
+  const fichiersA = [...pa.keys()].sort().join("|");
+  const fichiersB = [...pb.keys()].sort().join("|");
+  if (fichiersA !== fichiersB) return false;
+  for (const [fichier, [debutA, finA]] of pa) {
+    const [debutB, finB] = pb.get(fichier);
+    if (debutA >= finB || debutB >= finA) return false;
+  }
+  return true;
+}
+
+export function fusionnerClusters(clusters = []) {
+  const fusionnes = [];
+  for (const c of clusters) {
+    const existant = fusionnes.find((f) => clustersSeRecouvrent(f, c));
+    if (!existant) { fusionnes.push({ ...c, detecteurs: [...new Set(c.detecteurs ?? [c.detecteur].filter(Boolean))], fusionnes: 1 }); continue; }
+    // On garde la plus GRANDE emprise : c'est elle qui décrit le problème le plus complètement.
+    if (c.lines > existant.lines) { existant.lines = c.lines; existant.preview = c.preview; existant.occurrences = c.occurrences; }
+    for (const d of c.detecteurs ?? [c.detecteur].filter(Boolean)) if (!existant.detecteurs.includes(d)) existant.detecteurs.push(d);
+    existant.fusionnes += 1;
+  }
+  return fusionnes.sort((x, y) => (y.lines * y.occurrences.length) - (x.lines * x.occurrences.length));
+}
+
+// LE MOTIF, DÉRIVÉ DES FAITS et jamais une phrase de plus recopiée (Article 24, et le corollaire de
+// l'Article 17 : on cherche un principe que l'outil s'applique à lui-même, pas un exemple de plus).
+//
+// POURQUOI LA PHRASE UNIQUE NE SUFFISAIT PAS : « factoriser si le bloc dépasse le seuil où la
+// factorisation rapporte plus qu'elle ne coûte » est vraie, et elle renvoie la décision au lecteur
+// sans lui donner de quoi la prendre. Or l'outil SAIT déjà de quoi la prendre — il connaît la
+// taille, le nombre de sites, et surtout s'ils sont dans un seul fichier ou répartis. Ce dernier
+// point change tout : deux jumelles dans un fichier sont une gêne locale, le même bloc recopié dans
+// sept outils est une dette qui se recopie une fois de plus à chaque nouveau membre de l'équipe.
+export function motifDuCluster(cluster) {
+  const fichiers = [...new Set(cluster.occurrences.map((o) => o.file))];
+  const sites = cluster.occurrences.length;
+  const gros = cluster.lines >= 8;
+
+  if (fichiers.length === 1) {
+    return {
+      portee: "un seul fichier",
+      motif: `${sites} blocs jumeaux dans ${fichiers[0]}${gros ? ", assez gros pour qu'une correction appliquée à l'un et pas à l'autre passe inaperçue" : " — gêne de lecture avant tout"}`,
+      tache: `relire ${fichiers[0]} : fondre les ${sites} blocs, ou écrire pourquoi ils restent séparés`,
+    };
+  }
+  const tousOutillage = fichiers.every((f) => f.startsWith("scripts/"));
+  if (tousOutillage) {
+    return {
+      portee: "réparti dans l'outillage",
+      motif: `le même bloc dans ${fichiers.length} outils différents — c'est la forme de dette qui se recopie une fois de plus à chaque outil qui rejoint l'équipe, et qu'un commentaire promettant « jamais une copie de plus » n'a jamais suffi à arrêter`,
+      tache: `sortir ce bloc dans un module partagé et y brancher les ${sites} sites`,
+    };
+  }
+  const toucheLeMoteur = fichiers.some((f) => f.startsWith("lib/") || f.startsWith("app/"));
+  return {
+    portee: toucheLeMoteur ? "traverse le moteur du jeu" : "réparti",
+    motif: toucheLeMoteur
+      ? `réparti entre ${fichiers.length} fichiers dont au moins un du moteur du jeu — une correction de comportement appliquée à une copie sur ${sites} produirait deux règles différentes dans la même partie`
+      : `réparti entre ${fichiers.length} fichiers`,
+    tache: toucheLeMoteur
+      ? `vérifier d'abord que les ${sites} copies doivent bien se comporter pareil, puis les unifier`
+      : `unifier les ${sites} sites`,
+  };
+}
+
 export function formatClusterSummary(cluster) {
   const where = cluster.occurrences.map((o) => `${o.file}:${o.start + 1}`).join(", ");
   return `${cluster.lines} ligne(s) dupliquée(s) × ${cluster.occurrences.length} endroit(s) — ${where} — aperçu: "${cluster.preview[0] ?? ""}"`;
@@ -393,12 +485,27 @@ function main() {
     if (nearClusters.length > 30) console.log(`  ... et ${nearClusters.length - 30} de plus.`);
   }
 
+  // LE REGROUPEMENT (2026-09-23, tâche #217). Les deux listes ci-dessus restent affichées telles
+  // quelles — elles portent une vraie information, littéral n'est pas renommage — mais le PLAN
+  // D'ACTION, lui, travaille sur les problèmes et non sur les ancres. C'est la partie qu'on lit
+  // pour agir : y répéter trois fois la même duplication la rend trois fois moins crédible.
+  const problemes = fusionnerClusters([
+    ...clusters.map((c) => ({ ...c, detecteur: "identique" })),
+    ...nearClusters.map((c) => ({ ...c, detecteur: "renommage" })),
+  ]);
+  const brutes = clusters.length + nearClusters.length;
+  console.log(`\n→ ${brutes} alerte(s) brute(s) = ${problemes.length} problème(s) distinct(s). L'écart n'est pas du bruit : la même duplication trouvée depuis deux ancres différentes (ou par les deux détecteurs) produisait deux alertes pour un seul problème.`);
+
   // CONSTAT >> TÂCHES (2026-09-23). Ni `toucheLeJeu` ni `fausseUneMesure` : une duplication ne rend
   // aucun chiffre faux et ne touche pas le produit — elle coûte en maintenance. Donc RECOMMANDÉE,
   // et c'est la bonne réponse : classer tout en obligatoire viderait le mot de son sens.
-  const plan = planDactionDepuisEcarts([...clusters, ...nearClusters], { toolSlug: "clone-hunter",
-    libelle: (c) => formatClusterSummary(c),
-    tache: () => "factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte" });
+  //
+  // LE MOTIF ET LA TÂCHE SONT DÉRIVÉS de chaque problème, jamais une phrase unique répétée : la
+  // précédente était vraie et n'aidait personne, puisqu'elle renvoyait au lecteur la décision que
+  // l'outil avait déjà de quoi éclairer.
+  const plan = planDactionDepuisEcarts(problemes, { toolSlug: "clone-hunter",
+    libelle: (c) => `[${c.detecteurs.join("+")}] ${formatClusterSummary(c)} — ${motifDuCluster(c).motif}`,
+    tache: (c) => motifDuCluster(c).tache });
   console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
   for (const l of plan.lignes) console.log(l);
 }

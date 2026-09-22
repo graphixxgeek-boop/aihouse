@@ -124,3 +124,40 @@ ET vérifiée live (6 trouvailles réelles inédites, même exclusion `component
 PRESTATIONS "Pack Chasse aux clones". Statut : 5e Gardien sacré du code depuis le 2026-09-22 (cf.
 section dédiée ci-dessus), plus d'item CIRCLE-TASKS. Registre : `docs/clone-hunter/` (dossier +
 index), deux constats consignés.
+
+
+## Une alerte par PROBLÈME, et un motif dérivé (2026-09-23, tâche #217)
+
+**Le défaut, mesuré par l'enquête #215** : 29 alertes pour 14 problèmes réels. `clusterDuplicates()`
+regroupe par ANCRE (`fichier:ligne`), donc la même duplication découverte à deux décalages produit
+deux nœuds qui ne se rejoignent jamais. Les jumelles `flagFindBoosterCandidates` /
+`flagFindDeepBoosterCandidates` donnaient ainsi **trois** alertes — une par ligne d'ancrage.
+
+**Le cas qui traverse v1 et v2, et c'est le plus instructif.** v2 annonce « jamais déjà comptés par
+v1 ». C'était vrai de son ANCRE (elle exige un vrai renommage, que v1 ne verrait pas) et faux de sa
+RÉGION : son bloc démarre une ligne plus haut et englobe celui de v1. **La promesse portait sur le
+mauvais objet.** Fusionner sur le chevauchement des régions la rend enfin exacte.
+
+**`fusionnerClusters()` / `clustersSeRecouvrent()`** — deux clusters décrivent le même problème
+s'ils couvrent les MÊMES fichiers et que, dans **chacun**, leurs plages de lignes se chevauchent.
+Exiger le chevauchement dans TOUS les fichiers communs est volontairement strict : deux duplications
+distinctes entre la même paire de fichiers restent deux problèmes.
+
+**Rien n'est masqué.** Les deux listes brutes (littéral, renommage) restent affichées — elles
+portent une vraie information. Le problème fusionné garde la plus grande emprise, la trace du ou des
+détecteurs qui l'ont vu, et le nombre d'alertes brutes derrière lui, pour que le regroupement
+s'audite au lieu de se croire. **Un Gardien sacré qui perdrait une trouvaille en route serait pire
+que celui qui en comptait deux fois.**
+
+**`motifDuCluster()` — le motif se DÉRIVE des faits** (Article 24). L'ancienne phrase unique
+(« factoriser si le bloc dépasse le seuil où la factorisation rapporte plus qu'elle ne coûte »)
+était vraie et n'aidait personne : elle renvoyait au lecteur la décision que l'outil avait déjà de
+quoi éclairer. Trois portées, jamais confondues :
+
+- **un seul fichier** — des blocs jumeaux : gêne de lecture, ou, si le bloc est gros, risque qu'une
+  correction appliquée à l'un et pas à l'autre passe inaperçue ;
+- **réparti dans l'outillage** — la forme de dette qui se recopie une fois de plus à **chaque outil
+  qui rejoint l'équipe** ; c'est celle du chargeur JSON (tâche #216), qu'un commentaire promettant
+  « jamais une 4e copie » n'a jamais suffi à arrêter ;
+- **traverse le moteur du jeu** — une correction de comportement appliquée à une copie sur N
+  produirait deux règles différentes dans la même partie.
