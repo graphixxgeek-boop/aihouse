@@ -4,11 +4,11 @@
   "methode": "v1",
   "mesures": {
    "fuites": {
-    "valeur": 4,
+    "valeur": 0,
     "sens": "plus bas = mieux"
    },
    "blueprints-mal-construits": {
-    "valeur": 7,
+    "valeur": 0,
     "sens": "plus bas = mieux"
    },
    "dependances-outillage": {

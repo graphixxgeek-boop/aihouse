@@ -1,16 +1,10 @@
 # THE-SCREENER — notation indicative de qualité graphique — blueprint exportable
 
-*(Créé le 2026-09-19, à la demande explicite de l'utilisateur : « le pendant de el-professor, c'est
-"the-screener" qui lui s'occupe de la partie graphique, donne une note sur la beauté de l'affichage
-de la maison, de l'interface, et une note globale [...] pour alimenter the-screener, on joue les
-economies de token en priorité [...] et ca n'est pas dans le coeur du projet, c'est juste une note
-indicative : mon appreciation primera ». Calibré avec l'utilisateur : deux outils séparés (jamais un
-outil de gestion de la refonte graphique elle-même, qui resterait un projet distinct), 2 captures
-d'écran maximum par simulation, méthode fondée sur une charte graphique déjà écrite (jamais un
-jugement esthétique inventé à la volée). Même logique architecturale que
-`docs/el-professor-blueprint.md` : ce document décrit le PATRON générique, réutilisable sur un
-autre projet visuel piloté par IA ; l'instanciation propre à *Maison IA vivante* vit dans
-`docs/referentiel/the-screener.md`. Nommé par l'utilisateur lui-même.)*
+*(Ce document décrit le PATRON générique, réutilisable sur tout projet visuel piloté par IA :
+une note indicative de qualité graphique, volontairement secondaire, fondée sur une charte déjà
+écrite plutôt que sur un jugement esthétique inventé à la volée. La genèse exacte — les mots de la
+personne qui l'a demandé, le calibrage retenu et le nom qu'elle a choisi — vit dans l'instanciation
+`docs/referentiel/the-screener.md`, jamais ici.)*
 
 ## Ce que ce patron résout, et en quoi il diffère du patron EL-PROFESSOR
 
@@ -41,7 +35,8 @@ l'économie MÊME AU PRIX DE LA PERFORMANCE, décision explicite de l'utilisateu
   à intervalle régulier aveugle (un intervalle fixe risquerait de manquer les moments qui comptent
   ou de gaspiller des captures sur des instants sans intérêt visuel).
 - **Aucune sollicitation de l'API du jeu lui-même** pour cette notation — la lecture des images est
-  un travail de raisonnement (vision), pas un appel Gemini supplémentaire ; seul le pilotage du
+  un travail de raisonnement (vision), jamais un appel supplémentaire au modèle du projet ; seul le
+  pilotage du
   navigateur (Playwright ou équivalent) a un coût, purement local, jamais un appel réseau facturé.
 
 ## Méthode : fondée sur une charte graphique déjà écrite, jamais un goût improvisé

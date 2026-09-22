@@ -84,3 +84,25 @@ Pas encore peuplé : en attente d'une simulation réelle relancée pour la premi
 - **Restant, à faire au moment de la prochaine simulation** : automatiser la fermeture des popups
   d'accueil ; raccorder les 2 déclencheurs (état courant / moment distinctif) à l'état réel de la
   partie plutôt qu'à un test isolé ; produire un premier vrai rapport de notation.
+
+
+## Genèse — les mots exacts de la demande (déplacés depuis le blueprint le 2026-09-23)
+
+Ce bloc vivait en tête de `docs/the-screener-blueprint.md`, où SAFE-EXPORT le signalait comme une
+fuite (il nomme la maison, l'interface, et l'outil lui-même). **Rien n'a été réécrit — la citation
+est déplacée, mot pour mot**, pour la même raison que ci-dessus : on ne réécrit pas les mots de
+quelqu'un dans son dos. Le calibrage qu'elle porte (deux outils séparés, 2 captures maximum par
+simulation, méthode fondée sur une charte déjà écrite, « mon appréciation primera ») reste donc
+intégralement disponible, à sa place.
+
+*(Créé le 2026-09-19, à la demande explicite de l'utilisateur : « le pendant de el-professor, c'est
+"the-screener" qui lui s'occupe de la partie graphique, donne une note sur la beauté de l'affichage
+de la maison, de l'interface, et une note globale [...] pour alimenter the-screener, on joue les
+economies de token en priorité [...] et ca n'est pas dans le coeur du projet, c'est juste une note
+indicative : mon appreciation primera ». Calibré avec l'utilisateur : deux outils séparés (jamais un
+outil de gestion de la refonte graphique elle-même, qui resterait un projet distinct), 2 captures
+d'écran maximum par simulation, méthode fondée sur une charte graphique déjà écrite (jamais un
+jugement esthétique inventé à la volée). Même logique architecturale que
+`docs/el-professor-blueprint.md` : ce document décrit le PATRON générique, réutilisable sur un
+autre projet visuel piloté par IA ; l'instanciation propre à *Maison IA vivante* vit dans
+`docs/referentiel/the-screener.md`. Nommé par l'utilisateur lui-même.)*

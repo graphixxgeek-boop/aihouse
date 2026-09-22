@@ -3,6 +3,25 @@
 L'Agent Cadre RH de l'outillage de travail — un rôle générique, réutilisable sur tout projet géré
 par un réseau d'outils/scripts nommés avec un système de badge/certification déjà existant.
 
+## Le problème qu'il résout
+
+Un outillage de travail qui grandit tout seul finit par n'être compris de personne. Les outils
+s'ajoutent un par un, chacun justifié sur le moment, et au bout de quelques dizaines plus personne
+ne sait dire combien il y en a, lesquels servent encore, lesquels n'ont jamais été sollicités une
+seule fois, ni lequel aurait dû être retiré depuis longtemps. Le paysage a l'air riche ; il est
+peut-être surtout encombré, et rien ne permet de trancher.
+
+Ce qui manque n'est pas un outil de plus : c'est quelqu'un dont le SUJET soit l'équipe elle-même.
+Une fonction RH, au sens strict — qui tient l'effectif, constate sans juger, et pose la question
+que personne ne pose parce qu'elle vise les outils plutôt que le produit : *celui-là, est-ce qu'il
+sert encore ?*
+
+**Le piège qu'il évite, et c'est sa contrainte la plus forte :** un outil RH est exactement celui
+qui serait tenté d'inventer ses chiffres. Il ne mesure donc JAMAIS lui-même — il lit ce que le
+reste du paysage a déjà mesuré (compteur d'usage réel, couverture de test, stagnation relative,
+historique de KPI). Un second calcul divergent, et son constat ne vaudrait plus rien : deux
+chiffres qui se contredisent ne font pas une vérité, ils font une discussion sans fin.
+
 ## Rôle et principe fondamental
 
 CASSANDRA-RH gère l'ÉQUIPE de l'outillage (postes, badges, recrutement, pertinence d'un membre) —

@@ -8749,3 +8749,34 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log('Passed: pure-gold-unity now carries the WHOLE report verdict (2026-09-23) rather than a third of it — answering "whose responsibility is this?" with a single place instead of three tools each holding one criterion and none saying the word: it relays content (findRapportsQuiPointent, which until today lived only inside check-house.mjs and was called by no main() anywhere), date (the shared gabarit) and plan d\'action (findOutilsSansPlanDaction) without reimplementing any of them, declares its criteria as data so a fourth joins at one place, and — the discipline that matters most — treats an unreadable script as a third state that BREAKS the verdict and gets printed, never as a silent pass and never as a fabricated accusation.');
 }
+
+{
+  // SAFE-EXPORT, DEUXIÈME RESSERRAGE (2026-09-23, tâche #212) — la correction des 11 écarts a fait
+  // remonter que 5 d'entre eux n'étaient pas des écarts du tout, mais des détecteurs trop étroits.
+  const se = await import('../scripts/safe-export.mjs');
+
+  // BUG 1 — une virgule suffisait à faire échouer la déclaration.
+  assert.equal(se.declarationDuFichier('*Document générique, réutilisable sur un autre projet.*'), 'générique', 'a header saying "Document générique, réutilisable sur un autre projet" must count as a generic declaration: requiring the two words glued together accused three compliant blueprints');
+  assert.equal(se.declarationDuFichier('# Titre\n\n*blueprint exportable*'), 'générique', 'the repository\'s own historical formula must keep working');
+
+  // BUG 2, le plus retors : le mot qui PROUVAIT la généricité la faisait nier.
+  assert.equal(se.declarationDuFichier('*Document générique, réutilisable. Instanciation : docs/referentiel/x.md.*'), 'générique', 'a generic blueprint POINTING AT its instanciation must be generic — the word "Instanciation" is evidence it is the generic half, yet MARQUEUR_SPECIFIQUE matched it and flipped the verdict to "spécifique"');
+  assert.equal(se.declarationDuFichier('*Instanciation propre à ce projet.*'), 'spécifique', 'a genuinely project-specific document must still be classified specific — the fix must not swallow the other side');
+  assert.equal(se.declarationDuFichier('un document qui ne dit rien de lui-même'), 'non déclarée', 'a header declaring nothing must stay "non déclarée", never be rounded up to generic');
+  // LE GARDE-FOU CONTRE L'ÉLARGISSEMENT EXCESSIF : ma clause n'accepte « générique » que FLANQUÉ
+  // d'une notion de réemploi. Formulé sans le mot « blueprint », et c'est volontaire : l'expression
+  // « blueprint générique » est une des formules historiques du dépôt, déjà reconnue par
+  // MARQUEUR_GENERIQUE avant ce commit. Une phrase qui la contient serait donc acceptée par l'ANCIENNE
+  // règle, pas par la mienne — tester ce cas-là ne dirait rien de ce que j'ai ajouté, et ferait
+  // passer une largesse préexistante pour une régression du jour.
+  assert.equal(se.declarationDuFichier('ce paragraphe est parfaitement générique et sans intérêt particulier'), 'non déclarée', 'the word "générique" ALONE must never be enough: without a reuse word beside it, ordinary prose that merely uses the adjective would promote itself to a declaration');
+
+  // BUG 3 — la section « problème » était notée sur la forme du titre, pas sur la présence du contenu.
+  const motifProbleme = se.SECTIONS_ATTENDUES.find((s) => s.cle === 'probleme').motif;
+  assert.ok(motifProbleme.test('## Ce que ce patron résout'), 'a section titled "Ce que ce patron résout" states the problem as plainly as the word "problème" does');
+  assert.ok(motifProbleme.test('## Quand un tel gardien se justifie'), 'so does "Quand un tel gardien se justifie"');
+  assert.ok(motifProbleme.test("## Le problème qu'il résout"), 'and the original formula must keep matching');
+  assert.ok(!motifProbleme.test('## Rôle et frontières'), 'but a section describing the ROLE must NOT count as a problem statement — that distinction is what left two REAL gaps visible behind the three false positives, and both were written by hand rather than papered over by widening the motif further');
+
+  console.log('Passed: SAFE-EXPORT\'s two detectors tightened a second time (2026-09-23, task #212) — closing the exportability gaps revealed that five of the eleven were the guard\'s fault, not the documents\': a comma broke the generic declaration, the word "Instanciation" (proof a blueprint IS the generic half, since it points AT its instanciation) actively flipped three verdicts to "spécifique", and the problem-section motif graded the wording of a heading rather than the presence of the content. Each fix is bounded by its own counter-test — "générique" alone never promotes, a genuinely specific document stays specific, and a section describing the ROLE still does not count as stating the PROBLEM, which is what kept the two real gaps visible instead of widening the motif until everything passed.');
+}

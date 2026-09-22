@@ -27,9 +27,10 @@ se demandant systématiquement ce qui MANQUE.
 
 1. **Trous mécaniques (gratuits, automatisables)** — repérables par une analyse structurelle du
    code, sans avoir besoin de comprendre le sens de ce qui est écrit :
-   - **Asymétrie entre deux entités censées être comparables** (dans ce projet : Lia/Noé) — une
-     règle, un champ de données ou une branche de code qui existe pour l'une et pas pour l'autre,
-     sans justification assumée à côté.
+   - **Asymétrie entre deux entités censées être comparables** (deux personnages, deux comptes,
+     deux environnements — tout couple que le projet traite comme symétrique) — une règle, un champ
+     de données ou une branche de code qui existe pour l'une et pas pour l'autre, sans
+     justification assumée à côté.
    - **Donnée calculée mais jamais lue** — un champ, une variable ou un état mis à jour quelque
      part dans le code mais dont aucune autre partie du projet ne lit jamais la valeur (le bouton
      jour/nuit manuel de ce projet en était un exemple réel : envoyé jusqu'au modèle de langage

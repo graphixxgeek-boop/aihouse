@@ -1,14 +1,11 @@
 # SMART CONSO API — régulation de la consommation — blueprint exportable
 
-*(Créé le 2026-09-19, à la demande explicite de l'utilisateur, juste après un vrai épisode
-d'épuisement total du quota Gemini pendant cette même session : « pour l'aider [Smart Breaker] à
-éviter cette situation, nous allons créer la petite sœur de Smart Breaker : Smart Conso API : son
-rôle, gérer la consommation des API, réguler la consommation des API et l'optimiser, pour que les
-API soient disponibles "tout le temps" [...] à l'image d'un conseiller en réduction de la
-consommation d'électricité ». Même logique déjà appliquée à `docs/argus-blueprint.md` et
-`docs/harmonia-blueprint.md` : ce document décrit le PATRON générique, réutilisable sur un autre
-projet appelant une API tierce à quota limité ; l'instanciation propre à *Maison IA vivante* vit
-dans `docs/referentiel/smart-conso-api.md`.)*
+*(Patron dégagé après un épisode réel d'épuisement total du quota d'une API tierce en cours de
+session. Ce document décrit le PATRON générique, réutilisable sur tout projet appelant une API
+tierce à quota limité. La genèse exacte — les mots de la personne qui l'a demandé, et le contexte
+outillage propre au projet d'origine — vit dans l'instanciation
+`docs/referentiel/smart-conso-api.md`, jamais ici : un blueprint qui cite le projet d'origine n'est
+pas exportable, et c'est précisément ce que SAFE-EXPORT vérifie.)*
 
 ## Le problème que ce patron résout, et sa place dans la famille des trois outils de vigilance
 

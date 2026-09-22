@@ -95,3 +95,23 @@ réelles accumulées pour évaluer si les avis donnés ont effectivement aidé �
 
 Pas encore raccordé au tableau de bord général — même raisonnement qu'ARGUS/HARMONIA, prématuré
 sur un outil qui vient de naître.
+
+
+## Genèse — les mots exacts de la demande (déplacés depuis le blueprint le 2026-09-23)
+
+Ce bloc vivait en tête de `docs/smart-conso-api-blueprint.md`, où SAFE-EXPORT le signalait comme une
+fuite : un blueprint générique qui nomme le quota Gemini et Smart Breaker n'est pas exportable vers
+un autre projet. **Rien n'a été réécrit — la citation est déplacée, mot pour mot.** On ne corrige
+pas les mots de quelqu'un dans son dos (même règle que le surnom R/O-Guardian, Article 20bis, et que
+les citations du schéma de référence). C'est sa place légitime : le blueprint porte le patron, cette
+fiche porte ce qui est propre à *Maison IA vivante*.
+
+*(Créé le 2026-09-19, à la demande explicite de l'utilisateur, juste après un vrai épisode
+d'épuisement total du quota Gemini pendant cette même session : « pour l'aider [Smart Breaker] à
+éviter cette situation, nous allons créer la petite sœur de Smart Breaker : Smart Conso API : son
+rôle, gérer la consommation des API, réguler la consommation des API et l'optimiser, pour que les
+API soient disponibles "tout le temps" [...] à l'image d'un conseiller en réduction de la
+consommation d'électricité ». Même logique déjà appliquée à `docs/argus-blueprint.md` et
+`docs/harmonia-blueprint.md` : ce document décrit le PATRON générique, réutilisable sur un autre
+projet appelant une API tierce à quota limité ; l'instanciation propre à *Maison IA vivante* vit
+dans `docs/referentiel/smart-conso-api.md`.)*

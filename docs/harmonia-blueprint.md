@@ -32,8 +32,8 @@ contradiction sont deux exercices mentaux différents).
 
 1. **Cartographier** — représenter, par grand thème plutôt que fichier par fichier, ce qui dépend
    de quoi dans le projet (cf. "Granularité" ci-dessous). Un thème est un concept qu'un humain
-   reconnaît sans lire le code ("la fatigue", "l'enquête", "la roulette de bonus"), pas un nom de
-   fonction.
+   reconnaît sans lire le code (« la facturation », « l'authentification », « le cache »), pas un
+   nom de fonction.
 2. **Vérifier** — reprendre chaque lien documenté et confirmer qu'il tient encore dans le code
    réel, pas seulement dans le document qui le décrit. Un lien qui n'a pas été revérifié récemment
    est un lien dont on ne peut plus garantir qu'il est vrai.
@@ -44,9 +44,9 @@ contradiction sont deux exercices mentaux différents).
 ## Granularité : par grand thème, jamais par fichier
 
 Une carte au niveau du fichier ou de la fonction devient vite plus longue que le code lui-même et
-diverge aussi vite que lui. HARMONIA travaille par CONCEPT reconnaissable (dans ce projet : la
-fatigue, le cycle jour/nuit, l'enquête, les jauges émotionnelles, la roulette de bonus,
-l'appréciation de l'observateur, les déplacements, le dossier retourné...), en indiquant pour
+diverge aussi vite que lui. HARMONIA travaille par CONCEPT reconnaissable — le genre de mot qu'un
+humain du projet emploie en réunion sans ouvrir un fichier (« la facturation », « les droits
+d'accès », « le cache », « les notifications »...) — en indiquant pour
 chaque thème quels autres thèmes il influence ou dont il dépend — suffisant pour tracer un arbre de
 conséquences utile à un humain qui doit décider si un changement est risqué, sans jamais prétendre
 remplacer la lecture du code pour le détail d'implémentation.

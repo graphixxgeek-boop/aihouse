@@ -8,6 +8,23 @@ Petit outil générique : un registre hand-maintained d'objectifs chiffrés (une
 entité, sur une période) confronté à un résultat mesuré par des outils DÉJÀ EXISTANTS dans le
 paysage — jamais un second calcul divergent, jamais un audit indépendant.
 
+## Le problème qu'il résout
+
+Un objectif qu'on ne confronte jamais à son résultat n'est pas un objectif, c'est une intention.
+Dans un paysage d'outils qui mesurent beaucoup, le manque est rarement la mesure — elle existe
+déjà, éparpillée dans des compteurs et des historiques que personne ne rapproche d'une cible. Il
+manque le geste, tout bête, de mettre les deux côte à côte et de dire *atteint* ou *en dessous*.
+
+Ce patron ne fait que ça, et son intérêt tient entièrement à ce qu'il REFUSE de faire. Il ne
+mesure rien lui-même : il lit un résultat déjà produit ailleurs. S'il mesurait, il produirait un
+second chiffre, qui divergerait un jour du premier, et l'écart entre les deux mesures ferait
+oublier l'écart qu'on voulait suivre.
+
+**Le cas qui le définit vraiment est celui où il n'y a pas de donnée.** Une cible sans aucun signal
+mesuré ne devient jamais un 0 % : elle est déclarée « pas de données », ce qui est une information
+différente et bien plus utile. Un faux zéro ressemble à un échec et déclenche des décisions ; une
+absence déclarée déclenche la seule bonne réaction — aller construire la mesure qui manque.
+
 ## Rôle et frontières
 
 1. **Fixer un objectif** — un petit registre (table hand-maintained, jamais générée) associant une

@@ -57,9 +57,29 @@ export const NIVEAUX = {
 export const MARQUEUR_GENERIQUE = /blueprint exportable|blueprint générique|générique réutilisable|réutilisable tel quel|gabarit générique/i;
 export const MARQUEUR_SPECIFIQUE = /instanciation|propre à ce projet|spécifique à ce/i;
 
+// DEUXIÈME RESSERRAGE (2026-09-23), et il corrige DEUX bugs qui se cachaient l'un l'autre.
+//
+// BUG 1 — le marqueur exigeait « générique réutilisable » collés. Trois blueprints écrivaient
+// « Document générique, réutilisable sur un autre projet » : une virgule les faisait échouer. Le
+// commentaire juste au-dessus raconte déjà ce resserrage une première fois ; la leçon n'avait pas
+// été poussée assez loin, et un détecteur trop étroit accuse les conformes — le même patron que
+// findOutilsSansPlanDaction() le même jour.
+//
+// BUG 2, et c'est le plus retors parce qu'il RETOURNE le verdict au lieu de l'affaiblir : une fois
+// le test générique échoué, le texte tombait sur MARQUEUR_SPECIFIQUE, qui contient /instanciation/.
+// Or ces en-têtes disent « Instanciation : docs/referentiel/x.md » — c'est-à-dire qu'ils POINTENT
+// vers leur instanciation, ce qui est la preuve même qu'ils sont le document générique. Le mot qui
+// prouvait leur généricité les faisait donc classer « spécifique ».
+//
+// La règle devient : un en-tête est générique s'il porte une des formules exactes du dépôt, OU s'il
+// dit « générique » ET une notion de réemploi — deux signaux ensemble, jamais un mot isolé qui
+// pourrait venir d'une phrase du genre « contrairement au blueprint générique... ».
+export const MOTS_DE_REEMPLOI = /réutilisable|exportable|autre projet|tout projet/i;
+
 export function declarationDuFichier(texte = "") {
   const entete = texte.slice(0, 2000);
   if (MARQUEUR_GENERIQUE.test(entete)) return "générique";
+  if (/\bgénérique\b/i.test(entete) && MOTS_DE_REEMPLOI.test(entete)) return "générique";
   if (MARQUEUR_SPECIFIQUE.test(entete)) return "spécifique";
   return "non déclarée";
 }
@@ -152,7 +172,14 @@ export function findDependancesOutillage(fichiers = [], { readFileImpl = readFil
 // décrit CE QUE fait l'outil sans dire QUEL PROBLÈME il résout n'est pas exportable : on ne saurait
 // pas s'il vaut la peine d'être repris.
 export const SECTIONS_ATTENDUES = [
-  { cle: "probleme", motif: /problème qu'il résout|le problème|pourquoi il existe|vocation/i, pourquoi: "sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris" },
+  // ÉLARGI le 2026-09-23 : deux blueprints portaient bel et bien leur section de problème, sous un
+  // titre que ce motif ne reconnaissait pas — « Ce que ce patron résout » et « Quand un tel gardien
+  // se justifie ». Les verbes « résout » et « se justifie » sont des énoncés de problème aussi
+  // clairs que le mot « problème » lui-même ; les exiger sous une seule formulation revenait à
+  // noter la forme du titre plutôt que la présence du contenu. Deux VRAIS manques subsistaient
+  // derrière ces deux faux positifs, et ils ont été écrits à la main : un blueprint qui décrit son
+  // RÔLE ne dit pas pour autant quel problème l'a fait naître.
+  { cle: "probleme", motif: /problème qu'il résout|le problème|pourquoi il existe|vocation|ce que ce patron résout|se justifie/i, pourquoi: "sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris" },
   { cle: "garde-fous", motif: /garde-fou|limite honnête|ce qu'il ne|jamais/i, pourquoi: "sans ses limites, l'outil sera cru au-delà de ce qu'il sait faire" },
 ];
 
