@@ -176,3 +176,9 @@ jamais dupliquée ici).
 (`docs/simulations/index.md`) à celles notées (`docs/el-professor/index.md`) et signale toute
 simulation archivée sans note, jamais une omission silencieuse. Zéro appel réseau, zéro coût API —
 même logique que la partie mécanique d'ARGUS.
+
+**Le carnet des correctifs n'est jamais consulté par EL-PROFESSOR lui-même** *(clause rapatriée
+depuis CLAUDE.md le 2026-09-22.)* `docs/simulations/correctifs-a-revalider.md` suit les correctifs
+de CODE en attente de confirmation par une simulation réelle. C'est un carnet **distinct**, tenu en
+parallèle : EL-PROFESSOR note la fidélité d'un texte à la charte et n'ouvre jamais ce carnet pour
+établir sa note — les deux mesurent des choses différentes, et les croiser fausserait la note.

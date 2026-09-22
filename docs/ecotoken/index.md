@@ -15,3 +15,4 @@ reproposer en tête ce qui a déjà été refusé.)*
 | 2026-09-22 08:30 | 22338 | 980 | REFUSÉE après examen — les 5 passages « déjà mécanisé » étaient des faux positifs (obligation tool-brain incoercible, bloc des six outils sans blueprint, check-spirit qui n'est PAS automatisé, Article 18, SMART-CONSO-TOKEN). Cause corrigée dans l'outil, plus reproposés | 5 passages « déjà mécanisé » |
 | 2026-09-22 02:26 | 20057 | 6202 | à trancher | 2 aparté(s) narratif(s) daté(s) |
 | 2026-09-22 02:26 | 20057 | 6202 | à trancher | 2 aparté(s) narratif(s) daté(s) |
+| 2026-09-22 02:39 | 18025 | 4174 | à trancher | 3 aparté(s) narratif(s) daté(s) |

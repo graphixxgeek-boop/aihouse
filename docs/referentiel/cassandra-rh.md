@@ -100,3 +100,10 @@ jamais devinés ni anticipés dans ce noyau.
 
 `docs/cassandra-rh/index.md` — trouvailles réelles (un écart de badge confirmé, un outil signalé à
 retirer et la décision prise) au fil des vrais passages, jamais un journal théorique.
+
+**Jamais un jugement automatique** *(clause rapatriée depuis CLAUDE.md le 2026-09-22, même raison
+que ci-dessus : elle n'était écrite que dans la charte.)* CASSANDRA-RH constate et rassemble —
+effectif chiffré, supervision du badge, lecture du KPI, outils à retirer ou refondre, squelette de
+recrutement en trois étapes. Elle ne PRONONCE jamais d'elle-même un verdict sur un membre de
+l'équipe : chacun de ses signaux est un élément porté à la décision de l'utilisateur, jamais la
+décision elle-même.

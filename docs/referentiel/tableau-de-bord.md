@@ -204,3 +204,10 @@ traité comme le bug documentaire qu'il est, pas laissé pour plus tard.)*
   est distinct des trois outils de vigilance créés le même jour (ARGUS, HARMONIA, Smart Conso API,
   cf. sections dédiées de CLAUDE.md) qui ont chacun leur propre registre, pas encore raccordés à ce
   tableau de bord général — prématuré tant que chacun n'a tourné qu'une poignée de fois.
+
+**Ce que ce tableau de bord n'est PAS** *(clause rapatriée depuis CLAUDE.md le 2026-09-22, en
+retirant de la charte un inventaire qui doublonnait le tableau Catalogue : la formulation
+n'existait qu'à cet endroit, elle est donc déplacée ici plutôt que perdue — Article 13.)* C'est un
+outil d'observation à destination de l'utilisateur et de l'agent, **strictement réservé à
+l'admin/créateur, jamais un mécanisme de jeu** : rien de ce qu'il affiche ne doit influencer ce que
+vivent Lia et Noé, ni apparaître à un visiteur.
