@@ -13,7 +13,7 @@ import { readFileSync, readdirSync, statSync, existsSync, mkdirSync, writeFileSy
 import { join, relative } from "node:path";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -105,6 +105,29 @@ function main() {
   console.log(`\nMarqueurs TODO/FIXME trouvés (${todos.length}) :`);
   if (!todos.length) console.log("  Aucun.");
   for (const t of todos) console.log(`  ${t.file}:${t.line} — ${t.text}`);
+
+  // LE PLAN D'ACTION, ABSENT JUSQU'AU 2026-09-23 (Article 28). Question de l'utilisateur après la
+  // Ronde : « et les plans d'action écrits dans ces rapports [...] des plans d'action avec des
+  // tâches en sortie ? » Non : ARGUS trouvait 6 champs potentiellement morts et s'arrêtait là.
+  //
+  // C'est le trou le plus cher du paysage, et le plus discret : un rapport produit RESSEMBLE à un
+  // problème traité. Cinq Gardiens sacrés sur sept n'émettaient aucun plan — mais trois d'entre eux
+  // n'avaient rien trouvé, ce qui est légitime. Les deux vrais écarts étaient ARGUS (6 constats
+  // réels sans suite) et ALWAYS-NEW-CODE. Celui-ci est corrigé ici.
+  //
+  // `fausseUneMesure: false` : un champ mort ne fausse aucune mesure, il alourdit le code — d'où
+  // des tâches RECOMMANDÉES, jamais obligatoires. Le niveau se dérive, il ne se décrète pas.
+  const ecartsArgus = [
+    ...dead.map((d) => ({ fichier: "lib/life.ts", defaut: `champ « ${d.field} » ${d.confidence === "probable" ? "probablement" : "possiblement"} jamais lu ailleurs`, consequence: `${d.uses} occurrence(s) au total, déclaration incluse — à confirmer à la main avant tout retrait (Article 19 : la leçon trottoirGranted)` })),
+    ...todos.map((t) => ({ fichier: `${t.file}:${t.line}`, defaut: "marqueur TODO/FIXME laissé dans le code", consequence: String(t.text).slice(0, 90) })),
+  ];
+  const planArgus = planDactionDepuisEcarts(ecartsArgus, { toolSlug: "argus", fausseUneMesure: false,
+    libelle: (e) => `${e.fichier} — ${e.defaut} (${e.consequence})`,
+    tache: (e) => e.defaut.startsWith("marqueur")
+      ? `trancher le TODO laissé en ${e.fichier} : le faire ou l'effacer`
+      : `confirmer à la main que ${e.fichier} n'a plus besoin de ce champ, puis le retirer` });
+  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of planArgus.lignes) console.log(l);
 
   const outDir = join(ROOT, "docs/argus");
   if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true });

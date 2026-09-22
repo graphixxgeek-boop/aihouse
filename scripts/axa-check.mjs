@@ -22,7 +22,7 @@ import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { SENSITIVE_NODES, LEVEL_ORDER } from "./check-level-target.mjs";
 import { THEME_PRIMARY_FILE, parseNumstat, churnSignal } from "./always-new-code.mjs";
 import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -347,6 +347,7 @@ function main() {
 
   printReportHeader({ tool: "axa-check", title: "AXA-CHECK — robustesse et fragilité par fonction (zéro coût additionnel)", scriptPath: "scripts/axa-check.mjs" });
   let totalFn = 0, totalCovered = 0;
+  const fragilesTousFichiers = [];
   for (const [file, functions] of Object.entries(perFile)) {
     const score = robustnessScore(functions);
     totalFn += functions.length;
@@ -367,6 +368,7 @@ function main() {
     }
     const fragile = fragileFunctions(functions, file, SENSITIVE_NODES, churn);
     for (const f of fragile) console.log(`   [détail] ${f.name} : ${f.reasons.join(", ")}`);
+    for (const f of fragile) fragilesTousFichiers.push({ ...f, fichier: file });
     if (fragile.length) {
       for (const zone of FILE_TO_ZONES[file] ?? []) {
         const n = corroboratedByArchivedSimulations(zone, archivedActions);
@@ -375,6 +377,19 @@ function main() {
     }
   }
   console.log(`\nRobustesse globale (fonctions couvertes) : ${totalFn ? Math.round((totalCovered / totalFn) * 100) + "%" : "N/A"} sur ${totalFn} fonction(s) analysée(s).`);
+  // LE PLAN D'ACTION (2026-09-23, Article 28). AXA-CHECK est un Gardien sacré, donc son plan est
+  // prioritaire par dérivation : une fonction fragile dans une zone sensible, c'est du code qui peut
+  // casser sans qu'aucun test ne le dise.
+  //
+  // `fausseUneMesure: true`, et ce n'est pas un détail de forme : une fonction non couverte gonfle
+  // silencieusement le score de robustesse global que TOUT le reste du paysage consulte comme un
+  // fait. Ce n'est pas seulement du code fragile, c'est un indicateur faux.
+  const planAxa = planDactionDepuisEcarts(fragilesTousFichiers, { toolSlug: "axa-check", fausseUneMesure: true,
+    libelle: (f) => `${f.fichier} — ${f.name}() : ${f.reasons.join(", ")}`,
+    tache: (f) => `écrire un test réel pour ${f.name}() dans ${f.fichier}, ou déclarer sa vérification via record-check si elle a été faite à la main` });
+  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of planAxa.lignes) console.log(l);
+
   console.log(`\nPour enregistrer un audit approfondi réellement effectué : node scripts/axa-check.mjs record-check <fichier> <leger|standard|approfondi|exceptionnel> [fonctions...]`);
 }
 

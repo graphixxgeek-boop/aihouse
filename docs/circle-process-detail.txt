@@ -1223,6 +1223,28 @@ Posé par l'utilisateur : « On a bien la logique SCAN >> RAPPORTS >> ANALYSE >>
 DE TRAVAIL, ou tout au moins un schéma proche de celui-ci ? Ce schéma est une référence dans les
 process, à enregistrer en tant que tel : un process respecte SOUVENT ce schéma. »
 
+L'ÉCRITURE QUI FAIT FOI, ET IL N'Y EN A PLUS QU'UNE (2026-09-23, demande explicite : « je veux un
+seul schéma unifié, complet, pour tout le monde : process, documents, etc. ») :
+
+    SCAN >> RAPPORTS >> ANALYSE >> PLAN D'ACTION >> QUESTIONS >> TÂCHES DE TRAVAIL
+
+Cette ligne n'est PAS à recopier ailleurs : elle est produite par `schemaUnifie()`
+(`scripts/god-of-all-process.mjs`), à partir de `SCHEMA_DE_REFERENCE` qui reste la seule source.
+Avant cette unification, trois documents en portaient trois variantes — deux se terminaient par
+« TÂCHES », une par « TÂCHES DE TRAVAIL », et AUCUNE ne citait le maillon PLAN D'ACTION pourtant
+ajouté le même jour. `findSchemaDivergent()` relit désormais les documents normatifs et signale
+toute phrase qui énumère le schéma sans correspondre à cette écriture-là. Il ne corrige jamais de
+lui-même : la citation ci-dessous est celle de l'utilisateur, et on ne réécrit pas les mots de
+quelqu'un dans son dos.
+
+CE QUE L'UNIFICATION NE REMET PAS EN CAUSE, et c'est l'utilisateur qui l'a posé lui-même : « sans
+remettre en cause les process lourds bien définis comme circle par ex, qui reprennent cette logique
+mais avec une dimension sur mesure suite aux différents calibrages que nous avons faits ensemble ».
+Un process lourd déjà calibré INSTANCIE ce schéma, il n'y déroge pas : la Ronde décrite dans tout ce
+document EST ce schéma, habillé de ses 44 étapes calibrées une à une. Un maillon qu'un process
+n'exécute pas se déclare avec sa raison (`maillonsSansObjet`) — une déclinaison, jamais une
+exception, jamais un oubli.
+
 SA LECTURE ÉTAIT JUSTE, ET LA RONDE DU JOUR L'A SUIVIE DE BOUT EN BOUT. Deux précisions sont
 sorties de la vérification, et aucune n'est un détail de vocabulaire.
 

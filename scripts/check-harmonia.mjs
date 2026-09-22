@@ -8,7 +8,7 @@
 import { readFileSync } from "node:fs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -97,6 +97,27 @@ function main() {
   }
   const frictions = results.filter((r) => r.confidence === "confirmé");
   console.log(`\n${frictions.length} friction(s) confirmée(s) sur ${results.length} lien(s) vérifié(s).`);
+
+  // LE PLAN D'ACTION (2026-09-23, Article 28). HARMONIA est un Gardien sacré : il rapporte sur la
+  // propreté du code, donc son plan est PRIORITAIRE par dérivation, jamais par décret — un écart
+  // doc/code fausse le référentiel lui-même, c'est-à-dire l'instrument avec lequel tout le reste se
+  // mesure. D'où `fausseUneMesure: true` sur les frictions confirmées.
+  //
+  // POURQUOI le constructeur complet ICI, et le raccourci `planDactionDepuisEcarts` ailleurs :
+  // HARMONIA est le seul Gardien qui distingue nativement trois degrés de certitude. Le raccourci
+  // classe tout en « retenu » — honnête pour un scan binaire, MENTEUR ici, puisqu'il promouvrait un
+  // « ? à vérifier » en constat établi. Les trois états de l'Article 28 existent précisément pour
+  // que cette nuance survive jusqu'à la lecture.
+  const constats = results
+    .filter((r) => r.confidence !== "ok")
+    .map((r) => r.confidence === "confirmé"
+      ? { constat: `${r.theme} — ${r.status}`, etat: "retenu", toucheLeJeu: true, fausseUneMesure: true,
+          tache: `réaligner ${r.theme} : corriger le chiffre faux, dans le code ou dans le référentiel selon lequel des deux a raison` }
+      : { constat: `${r.theme} — ${r.status}`, etat: "a-trancher",
+          pourquoi: "le lien n'a pas pu être vérifié mécaniquement : il faut un œil humain pour dire si c'est une vraie friction ou une lecture trop stricte" });
+  const plan = buildPlanDaction(constats, { toolSlug: "harmonia" });
+  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of plan.lignes) console.log(l);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

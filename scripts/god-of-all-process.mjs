@@ -515,13 +515,60 @@ export function etatConnexionProcessGardien({ processes = PROCESSES, root = ROOT
 //     évidemment pas encore ses tâches : ça ne dit rien du process, seulement qu'on est au milieu.
 //     Confondre les deux ferait reprocher à un travail en cours de ne pas être terminé — la même
 //     famille d'erreur que « lire une absence de mesure comme une mesure ».
+// LE SCHÉMA UNIFIÉ, ÉCRIT UNE SEULE FOIS (2026-09-23, demande explicite de l'utilisateur : « je veux
+// un seul schéma unifié, complet, pour tout le monde : process, documents, etc. »).
+//
+// LE PROBLÈME RÉEL, mesuré avant d'écrire ceci : le schéma existait en données depuis la veille,
+// mais chaque document le RECOPIAIT en prose, et les copies avaient déjà divergé — « ... QUESTIONS
+// >> TÂCHES » ici, « ... QUESTIONS >> TÂCHES DE TRAVAIL » là, et aucune des deux ne mentionnait le
+// maillon PLAN D'ACTION, pourtant ajouté le même jour. Trois écritures, trois vérités partielles :
+// exactement la liste recopiée à la main que l'Article 24 interdit.
+//
+// La correction n'est donc pas de choisir la bonne formule et de la recopier partout — ce serait le
+// même piège une génération plus tard. C'est de la DÉRIVER du seul endroit qui fait foi, pour qu'un
+// septième maillon ajouté un jour se propage sans que personne n'y pense.
+export const SCHEMA_SEPARATEUR = " >> ";
+
+export function schemaUnifie(schema = SCHEMA_DE_REFERENCE) {
+  return schema.map((m) => m.libelle ?? m.maillon.toUpperCase()).join(SCHEMA_SEPARATEUR);
+}
+
+// LA CLAUSE QUI ÉVITE LE CONTRESENS, et l'utilisateur l'a posée lui-même : unifier le schéma ne
+// remet JAMAIS en cause un process lourd déjà calibré (la Ronde en tête). Un tel process REPREND
+// cette logique et l'habille d'étapes sur mesure, issues de vrais calibrages — il n'y déroge pas,
+// il l'instancie. Un maillon qu'il n'exécute pas se déclare avec sa raison (`maillonsSansObjet`),
+// ce qui reste une déclinaison, jamais une exception.
+
+// findSchemaDivergent() — le garde-fou exigé par l'Article 24 : déclarer le schéma une fois ne sert
+// à rien si les documents continuent d'en écrire des variantes à la main. Il cherche, dans les
+// documents normatifs, toute phrase qui ÉNUMÈRE le schéma (reconnaissable à « >> » entre deux
+// maillons connus) et la compare à la seule écriture qui fasse foi.
+//
+// Ce qu'il ne fait pas, volontairement : corriger. Une de ces phrases est une CITATION de
+// l'utilisateur, et on ne réécrit pas les mots de quelqu'un dans son dos (même règle que le surnom
+// R/O-Guardian, Article 20bis/24). Il signale, l'agent tranche au cas par cas.
+export function findSchemaDivergent(documents = {}, { canonique = schemaUnifie() } = {}) {
+  const ecarts = [];
+  for (const [chemin, texte] of Object.entries(documents)) {
+    String(texte ?? "").split("\n").forEach((ligne, i) => {
+      if (!/\b(SCAN|RAPPORTS|ANALYSE|QUESTIONS)\b\s*>>\s*\b(RAPPORTS|ANALYSE|QUESTIONS|PLAN|TÂCHES|TACHES)\b/.test(ligne)) return;
+      if (ligne.includes(canonique)) return;
+      ecarts.push({ fichier: chemin, ligne: i + 1, extrait: ligne.trim().slice(0, 120),
+        citation: /«|»/.test(ligne) });
+    });
+  }
+  return ecarts;
+}
+
+export const SCHEMA_DECLINAISON = "Un process lourd déjà calibré (la Ronde, une simulation Article 18) INSTANCIE ce schéma avec ses étapes sur mesure plutôt que de le répéter tel quel : ses maillons sans objet se déclarent avec leur raison, jamais par omission.";
+
 export const SCHEMA_DE_REFERENCE = [
-  { maillon: "scan", quoi: "produire une mesure réelle sur l'état des choses", sansQuoi: "l'analyse porterait sur une impression" },
-  { maillon: "rapports", quoi: "écrire ET LIVRER ce que le scan a trouvé", sansQuoi: "seul l'agent sait ce qui a été vu (Partie 13 : écrire n'est pas livrer)" },
-  { maillon: "analyse", quoi: "trier ce qui compte de ce qui ne compte pas", sansQuoi: "un tas de constats bruts, que personne ne hiérarchise" },
-  { maillon: "plan-action", quoi: "donner à CHAQUE constat un des trois états : retenu / écarté avec sa raison / à trancher", sansQuoi: "un constat écarté disparaît sans trace — l'abandon déguisé de l'Article 28" },
-  { maillon: "questions", quoi: "poser à l'utilisateur les constats « à trancher », et eux seuls", sansQuoi: "l'agent décide à sa place, ou bloque tout en attendant", bifurcation: true },
-  { maillon: "taches", quoi: "inscrire dans docs/suivi/ les tâches réelles issues des constats retenus et des réponses", sansQuoi: "le rapport a coûté son temps et n'a rien changé" },
+  { maillon: "scan", libelle: "SCAN", quoi: "produire une mesure réelle sur l'état des choses", sansQuoi: "l'analyse porterait sur une impression" },
+  { maillon: "rapports", libelle: "RAPPORTS", quoi: "écrire ET LIVRER ce que le scan a trouvé", sansQuoi: "seul l'agent sait ce qui a été vu (Partie 13 : écrire n'est pas livrer)" },
+  { maillon: "analyse", libelle: "ANALYSE", quoi: "trier ce qui compte de ce qui ne compte pas", sansQuoi: "un tas de constats bruts, que personne ne hiérarchise" },
+  { maillon: "plan-action", libelle: "PLAN D'ACTION", quoi: "donner à CHAQUE constat un des trois états : retenu / écarté avec sa raison / à trancher", sansQuoi: "un constat écarté disparaît sans trace — l'abandon déguisé de l'Article 28" },
+  { maillon: "questions", libelle: "QUESTIONS", quoi: "poser à l'utilisateur les constats « à trancher », et eux seuls", sansQuoi: "l'agent décide à sa place, ou bloque tout en attendant", bifurcation: true },
+  { maillon: "taches", libelle: "TÂCHES DE TRAVAIL", quoi: "inscrire dans docs/suivi/ les tâches réelles issues des constats retenus et des réponses", sansQuoi: "le rapport a coûté son temps et n'a rien changé" },
 ];
 
 // Quels maillons un process porte-t-il réellement ? Dérivé de ses étapes déclarées (leur clé et

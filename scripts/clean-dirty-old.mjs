@@ -24,7 +24,7 @@ import { dataRows, numericColumn } from "./lib-markdown-table.mjs";
 import { SENSITIVE_NODES } from "./check-level-target.mjs";
 import { LIB_MAP, FILE_TO_ZONES, collectCoverage, robustnessScore } from "./axa-check.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const INDEX_PATH = join(ROOT, "docs/clean-dirty-old/index.md");
@@ -133,6 +133,11 @@ function main() {
 
   if (!staleEntries.length) {
     console.log("Aucune zone signalée cette fois — rien n'est nettement plus ancien que le reste du projet en ce moment.");
+    // La section de plan d'action s'affiche MÊME VIDE (2026-09-23) : un rapport qui s'arrête sans
+    // elle se lit comme un rapport qui a oublié de conclure. Dire « rien à faire » est un résultat.
+    const planVide = buildPlanDaction([], { toolSlug: "clean-dirty-old" });
+    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+    for (const l of planVide.lignes) console.log(l);
     return;
   }
 
@@ -145,6 +150,22 @@ function main() {
     console.log(`${entry.file}${sensitiveTag} : ${entry.days} jour(s) sans modification (${entry.ratioToMedian ?? "?"}× la médiane du projet)${coverageTag}`);
     for (const q of delegationQuestions(entry.file)) console.log(`   - ${q}`);
   }
+
+  // LE PLAN D'ACTION (2026-09-23, Article 28). Gardien sacré, donc plan prioritaire par dérivation.
+  //
+  // MAIS ses constats sont « À TRANCHER », jamais « retenus », et c'est le seul classement honnête :
+  // cet outil mesure une ANCIENNETÉ RELATIVE, pas une dette. Les trois lignes de rappel juste en
+  // dessous disent exactement cela depuis sa construction (« un code stagnant n'est pas
+  // automatiquement de la dette, la leçon trottoirGranted le rappelle »). Un plan qui classerait ces
+  // zones en « retenu » contredirait, dans le même rapport, l'avertissement imprimé trois lignes
+  // plus bas — et transformerait un calendrier en accusation.
+  const planCDO = buildPlanDaction(prioritized.map((entry) => ({
+    constat: `${entry.file} : ${entry.days} jour(s) sans modification (${entry.ratioToMedian ?? "?"}× la médiane)${sensitiveFiles.has(entry.file) ? " — proche d'un nœud sensible HARMONIA" : ""}${entry.coverageScore !== undefined && entry.coverageScore < 60 ? `, et faiblement testé (${Math.round(entry.coverageScore)} %)` : ""}`,
+    etat: "a-trancher",
+    pourquoi: "ancienneté relative, jamais une dette constatée : à confronter d'abord à une décision déjà assumée ailleurs (Article 19)",
+  })), { toolSlug: "clean-dirty-old" });
+  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of planCDO.lignes) console.log(l);
 
   console.log("\nRappel avant d'agir sur l'une de ces zones (Article 19) : vérifier d'abord que ce n'est pas déjà une");
   console.log("décision assumée et documentée ailleurs (docs/referentiel/parametres.md, points-fragiles.md) — un code");

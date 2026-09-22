@@ -22,7 +22,8 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { toolsBoundByReportTemplate } from "./doc-report.mjs";
+import { toolsBoundByReportTemplate, findRapportsQuiPointent, REGISTRIES } from "./doc-report.mjs";
+import { findOutilsSansPlanDaction, SANS_CONSTAT_PROPRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -113,11 +114,85 @@ export function formatUnityReport(scan) {
   return lignes.join("\n");
 }
 
+
+// ————————————————————————————————————————————————————————————————————————
+// LES TROIS CRITÈRES D'UN RAPPORT COMPLET (2026-09-23, demande explicite de l'utilisateur :
+// « vérifie encore que TOUS les rapports sont bien 1/ avec du contenu 2/ des dates [en toutes
+// lettres] 3/ une analyse avec plan d'action, le cas échéant [...] chez quel outil est cette
+// responsabilité ? »)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LA RÉPONSE HONNÊTE À SA QUESTION, telle qu'elle était avant ce commit : NULLE PART. Les trois
+// critères existaient bel et bien, mais chacun chez un outil différent et sans que personne ne
+// prononce le verdict d'ensemble :
+//   · le CONTENU  → findRapportsQuiPointent() (doc-report) — construite, testée, et JAMAIS APPELÉE
+//                   par aucun main() : elle ne vivait que dans check-house.mjs ;
+//   · la DATE     → le gabarit partagé, seul critère que cet outil mesurait déjà ;
+//   · le PLAN     → findOutilsSansPlanDaction() (report-template), constatée par god-of-all-process.
+//
+// Trois moitiés de réponse ne font pas une réponse. C'est le patron de la journée pour la sixième
+// fois : un mécanisme qui existe, que rien ne fait sortir. La responsabilité atterrit ICI parce que
+// c'est l'outil dont le nom dit exactement ça — les rapports sont-ils conformes — et qu'il n'en
+// vérifiait qu'un tiers.
+//
+// ANTI-DOUBLON (§7ter) : les trois détecteurs sont RELAYÉS, jamais réécrits. Cet outil ne sait rien
+// qu'un autre ne sache déjà ; sa valeur est de poser les trois questions au même endroit.
+export const CRITERES_RAPPORT = [
+  { clef: "contenu", question: "le rapport porte-t-il de la donnée, ou renvoie-t-il ailleurs ?" },
+  { clef: "date", question: "le rapport se date-t-il lui-même, en toutes lettres ?" },
+  { clef: "plan", question: "le rapport conclut-il par un plan d'action, le cas échéant ?" },
+];
+
+export function auditRapportsComplets({ registries = REGISTRIES, readFileImpl = readFileSync, listDirImpl, root = ROOT } = {}) {
+  const outils = toolsBoundByReportTemplate();
+  const sources = {};
+  for (const chemin of outils) {
+    const slug = String(chemin).replace(/^scripts\//, "").replace(/\.mjs$/, "");
+    try { sources[slug] = readFileImpl(join(root, chemin), "utf8"); } catch { sources[slug] = null; }
+  }
+  // Un script illisible n'est JAMAIS compté conforme : l'absence de mesure ne vaut pas mesure.
+  const illisibles = Object.entries(sources).filter(([, v]) => v === null).map(([k]) => k);
+  const sansPlan = findOutilsSansPlanDaction(Object.fromEntries(Object.entries(sources).filter(([, v]) => v !== null)));
+
+  const maigres = [];
+  for (const r of registries ?? []) {
+    if (!r?.path) continue;
+    const dossier = join(root, r.path);
+    if (!existsSync(dossier)) continue;
+    try {
+      for (const f of findRapportsQuiPointent({ dossier, ...(listDirImpl ? { listDirImpl } : {}) })) maigres.push({ ...f, outil: r.slug });
+    } catch { /* un registre illisible est signalé par ses propres garde-fous, jamais deux fois */ }
+  }
+
+  return {
+    outils: outils.length,
+    exemptesDePlan: Object.keys(SANS_CONSTAT_PROPRE).length,
+    sansPlan, maigres, illisibles,
+    conforme: sansPlan.length === 0 && maigres.length === 0 && illisibles.length === 0,
+  };
+}
+
+export function formatRapportsComplets(audit) {
+  const l = [];
+  l.push("");
+  l.push("--- Les trois critères d'un rapport complet (contenu / date / plan d'action) ---");
+  l.push(`Critère 2 (date en toutes lettres) : porté par le gabarit partagé, mesuré juste au-dessus.`);
+  l.push("");
+  l.push(`Critère 1 — du contenu, jamais un simple renvoi : ${audit.maigres.length === 0 ? "✅ aucun rapport archivé ne se contente de pointer ailleurs." : `⚠️ ${audit.maigres.length} rapport(s) trop maigre(s) qui renvoient ailleurs :`}`);
+  for (const m of audit.maigres.slice(0, 15)) l.push(`   · ${m.outil} — ${m.fichier ?? m.nom ?? "(fichier)"}`);
+  l.push("");
+  l.push(`Critère 3 — un plan d'action le cas échéant : ${audit.sansPlan.length === 0 ? "✅ tous les outils à constats concluent." : `⚠️ ${audit.sansPlan.length}/${audit.outils} outil(s) ne concluent jamais (${audit.exemptesDePlan} exemptés car sans constat propre) :`}`);
+  for (const o of audit.sansPlan) l.push(`   · ${o}`);
+  if (audit.illisibles.length) l.push(`\n⚠️ ${audit.illisibles.length} script(s) illisible(s), donc NON mesuré(s) — jamais comptés conformes : ${audit.illisibles.join(", ")}`);
+  return l.join("\n");
+}
+
 function main() {
   printReliabilityNotice("pure-gold-unity");
   recordCliUsage("pure-gold-unity");
   console.log("=== pure-gold-unity — unification réelle des rapports ===\n");
   console.log(formatUnityReport(scanUnity()));
+  console.log(formatRapportsComplets(auditRapportsComplets()));
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();

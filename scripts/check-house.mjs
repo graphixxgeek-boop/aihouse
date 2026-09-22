@@ -8655,3 +8655,97 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log('Passed: circle-process-guardian (2026-09-22) verifies the full CIRCLE-TASKS Ronde process mechanically wherever the facts are observable from disk (fresh report artifacts via the same circle-signal-*/snapshot-* filenames already used by recordCircleItemReport()/recordSnapshotIfChanged(), the record-run commit-count drift, orphan reports and registries missing from CIRCLE_ITEMS — both relayed from the already-existing functions rather than recomputed), honestly refuses to guess conversation-only facts (AUTO/PRIME/GOAT asked, items actually checked vs executed, the Étape 5 sequencing and forced-questions count) when they are not supplied, correctly exempts a genuine night-autonomous run from the AUTO/PRIME/GOAT requirement, enforces the 5-10 forced-choice-question range scaled to the real number of problems found without ever fabricating a question when zero problems exist, and reports a fully clean ok:true only when every one of these real facts checks out — and (same commit) verifyHyperScanProcess() extends this exact discipline to HYPER-SCAN-CHECKPOINT\'s own garde-fous (mandatory full CLAUDE.md reread even in the light version, Smart Conso API/SMART-CONSO-TOKEN consultation and the light-before-heavy order for a heavy pass, the non-negotiable 3-attempt iteration cap, the double-perspective requirement, and the index-entry memory check), despite HYPER-SCAN-CHECKPOINT never being a CIRCLE_ITEMS entry itself — verifyDoubleCommunication() makes the real point 3 ("double communication", alert console + report) genuinely checkable once both texts are supplied, catching a real substance divergence rather than only documenting it as a standing comment — and findCircleItemsMapDrift()/findStaleItemCountReferences() give circle-process-guardian a genuine "help + guard" dual role for maintaining CIRCLE_ITEMS itself, catching (live, the same night they were built) both a dangling-map class of bug and the exact stale-count regression this session\'s own hyper-scan-checkpoint-light addition had just introduced.');
 }
+
+{
+  // LA CHAÎNE DE L'ARTICLE 28 RENDUE VÉRIFIABLE (2026-09-23) — quatre demandes de l'utilisateur dans
+  // le même échange : les plans d'action des Gardiens sacrés d'abord, les dates en toutes lettres,
+  // un seul schéma unifié, et « vérifie encore que TOUS les rapports sont bien 1/ avec du contenu
+  // 2/ des dates 3/ une analyse avec plan d'action ».
+  const rt = await import('../scripts/report-template.mjs');
+  const god = await import('../scripts/god-of-all-process.mjs');
+  const { GARDIEN_DOMAINS } = await import('../scripts/lib-shell.mjs');
+  const { readFileSync: lireFichier } = await import('node:fs');
+
+  // 1. LES DATES EN TOUTES LETTRES, écrites en UN seul endroit pour atteindre les ~30 rapports.
+  assert.equal(rt.dateEnToutesLettres(new Date('2026-09-22T20:20:00Z'), { avecHeure: true }), 'mardi 22 septembre 2026 à 20h20 (UTC)', 'a full-letters date must read as a human sentence, never as an ISO timestamp that the same reports also print for scan ids');
+  assert.equal(rt.dateEnToutesLettres('2026-09-01'), 'mardi 1er septembre 2026', 'the first of the month takes "1er", never a bare "1" — the one French ordinal that is not optional');
+  assert.equal(rt.dateEnToutesLettres('pas-une-date'), 'pas-une-date', 'an unparseable value must come back untouched rather than as "Invalid Date": a report that cannot date itself says so, it never prints garbage');
+  // UTC et jamais l'heure locale : deux agents sur deux fuseaux doivent dater le même rapport pareil.
+  assert.equal(rt.dateEnToutesLettres(new Date('2026-09-22T23:30:00Z')).startsWith('mardi 22'), true, 'the date must be computed in UTC, so a late-evening run does not silently become the next day for an agent in another timezone');
+
+  // 2. LE DÉTECTEUR DE PLAN D'ACTION reconnaît les DEUX portes d'entrée. Le bug réel corrigé ce
+  // jour-là : il n'en connaissait qu'une et accusait donc les deux seuls outils en règle.
+  assert.deepEqual(rt.findOutilsSansPlanDaction({ a: 'buildPlanDaction(x)' }), [], 'the long form must count as compliant');
+  assert.deepEqual(rt.findOutilsSansPlanDaction({ a: 'planDactionDepuisEcarts(x)' }), [], 'the documented ONE-LINE shortcut must count as compliant too — the real bug of 2026-09-23, where the guard accused safe-export and check-argus, the only two tools that actually complied');
+  assert.deepEqual(rt.findOutilsSansPlanDaction({ a: 'rien du tout' }), ['a'], 'a tool that concludes nothing must still be named');
+  assert.deepEqual(rt.findOutilsSansPlanDaction({ 'tool-usage': 'rien' }), [], 'a tool declared as producing no finding of its own (a counter, a renderer) is exempt by declaration, never by guesswork');
+  assert.ok(rt.PORTES_PLAN_DACTION.length >= 2, 'the entry points are declared as data so a third one added later is recognised without touching the detector (Article 24)');
+
+  // 3. LA PRIORITÉ DES GARDIENS SACRÉS — dérivée du rang, jamais d'une seconde liste tenue à la main.
+  assert.equal(rt.prioriteDuPlan('argus').prioritaire, true, 'a Gardien sacré plan must be marked priority: scanning code quality is literally half the membership criterion (Article 20), so the premise holds for all seven without exception');
+  assert.equal(rt.prioriteDuPlan('kpi-report').prioritaire, false, 'a tool outside the rank must not inherit the priority — otherwise the mark stops meaning anything');
+  assert.equal(rt.prioriteDuPlan(undefined).prioritaire, false, 'a plan with no declared tool must never be promoted to priority by accident');
+  for (const g of Object.keys(GARDIEN_DOMAINS)) {
+    assert.equal(rt.prioriteDuPlan(g).prioritaire, true, `every Gardien sacré must inherit the priority automatically from GARDIEN_DOMAINS — an eighth one joining the rank gets it without anyone editing a list (the 2026-09-22 evolutivity requirement, where adding a member cost SIX manual registrations)`);
+  }
+  // La priorité doit SORTIR du script : un mécanisme qui ne s'imprime pas est une intention — la
+  // faute signature de cette journée, trouvée cinq fois.
+  assert.ok(rt.buildPlanDaction([], { toolSlug: 'argus' }).lignes.some((l) => l.includes('PRIORITAIRE')), 'the priority must be PRINTED, including on an empty plan: "the Gardien sacré found nothing" is priority information too, and a line that only ever shows in one branch teaches the reader to look for it only there');
+  assert.ok(!rt.buildPlanDaction([], { toolSlug: 'kpi-report' }).lignes.some((l) => l.includes('PRIORITAIRE')), 'a non-Gardien plan must stay unmarked');
+
+  // 4. LE SCHÉMA UNIFIÉ — une seule écriture, dérivée, et un garde-fou contre les copies en prose.
+  assert.equal(god.schemaUnifie(), "SCAN >> RAPPORTS >> ANALYSE >> PLAN D'ACTION >> QUESTIONS >> TÂCHES DE TRAVAIL", 'there must be exactly ONE canonical spelling, and it must include the PLAN D\'ACTION link that all three hand-written prose copies were missing');
+  assert.equal(god.schemaUnifie(), god.SCHEMA_DE_REFERENCE.map((m) => m.libelle).join(god.SCHEMA_SEPARATEUR), 'the canonical line must be DERIVED from SCHEMA_DE_REFERENCE, never a string typed twice — a seventh link added one day propagates on its own (Article 24)');
+  const faux = god.findSchemaDivergent({ 'doc.md': 'la logique SCAN >> RAPPORTS >> ANALYSE >> QUESTIONS >> TÂCHES' });
+  assert.equal(faux.length, 1, 'a prose copy that has drifted from the canonical spelling must be caught by file and line');
+  assert.deepEqual(god.findSchemaDivergent({ 'doc.md': `on suit ${god.schemaUnifie()} partout` }), [], 'a line that already carries the canonical spelling must never be flagged');
+  assert.deepEqual(god.findSchemaDivergent({ 'doc.md': 'un paragraphe sans schéma du tout' }), [], 'ordinary prose must not trip the detector');
+  assert.equal(god.findSchemaDivergent({ 'doc.md': 'Posé par l\'utilisateur : « SCAN >> RAPPORTS >> ANALYSE >> QUESTIONS »' })[0].citation, true, 'a drifted copy that is a VERBATIM CITATION of the user must be marked as such — the tool signals it but never rewrites someone\'s own words behind their back (same rule as the R/O-Guardian nickname, Article 20bis)');
+  assert.ok(god.SCHEMA_DECLINAISON.includes('INSTANCIE'), 'unifying the schema must explicitly NOT override a heavy calibrated process: the user posed this himself — the Ronde instantiates the schema with its bespoke steps rather than derogating from it');
+
+  // 5. LES QUATRE GARDIENS SACRÉS CÂBLÉS CE JOUR-LÀ produisent bien une section de plan.
+  const sourcesGardiens = Object.fromEntries(['check-argus', 'check-harmonia', 'axa-check', 'clean-dirty-old', 'clone-hunter', 'always-new-code', 'safe-export']
+    .map((f) => [f, lireFichier(new URL(`../scripts/${f}.mjs`, import.meta.url), 'utf8')]));
+  for (const [nom, src] of Object.entries(sourcesGardiens)) {
+    assert.ok(rt.PORTES_PLAN_DACTION.some((porte) => src.includes(porte)), `${nom} must emit a plan d'action: all seven Gardiens sacrés report on code cleanliness, and four of them concluded nothing at all until 2026-09-23 — ARGUS and ALWAYS-NEW-CODE were producing real findings that became no task whatsoever, the exact gap Article 28 exists to close`);
+  }
+  // Les deux Gardiens dont les constats ne sont JAMAIS « retenus », et c'est le seul classement
+  // honnête : ils mesurent une ancienneté ou une rotation, pas une dette constatée.
+  for (const nom of ['always-new-code', 'clean-dirty-old']) {
+    assert.ok(sourcesGardiens[nom].includes('a-trancher'), `${nom} must classify its findings as "à trancher", never "retenu": it measures relative staleness or a calendar rotation, and promoting that to an established finding would manufacture a problem out of a schedule — contradicting, in the same report, the Article 19 warning it prints itself`);
+  }
+
+  console.log("Passed: the Article 28 chain is now mechanically enforceable end to end (2026-09-23) — dates render in full letters from ONE shared place reaching every report (UTC-stable, \"1er\" handled, an unparseable value returned untouched rather than as \"Invalid Date\"), the plan-d'action detector recognises BOTH documented entry points after the real bug where it accused the only two compliant tools, Gardien sacré plans are marked PRIORITY derived live from GARDIEN_DOMAINS so an eighth member inherits it with zero manual registration (and the mark is PRINTED even on an empty plan, since a Gardien finding nothing is priority information too), the reference schema has exactly one canonical spelling derived from its own data — including the PLAN D'ACTION link all three hand-written prose copies had lost — with a guard that flags drifted copies while refusing to rewrite the user's own verbatim citations, and all seven Gardiens sacrés now conclude with a real plan where four of them previously concluded nothing, ARGUS and ALWAYS-NEW-CODE having been the two genuinely producing findings that became no task at all.");
+}
+
+{
+  // PURE-GOLD-UNITY porte désormais LE VERDICT D'ENSEMBLE sur les rapports (2026-09-23) — réponse à
+  // « chez quel outil est cette responsabilité ? ». Avant : nulle part. Les trois critères vivaient
+  // chez trois outils, et findRapportsQuiPointent() n'était appelée par aucun main().
+  const pgu = await import('../scripts/pure-gold-unity.mjs');
+  assert.equal(pgu.CRITERES_RAPPORT.length, 3, 'the three criteria must be declared as data, so a fourth one added later is asked at the same single place');
+
+  const auditPropre = pgu.auditRapportsComplets({
+    registries: [], readFileImpl: () => 'buildPlanDaction(x)', root: '/fake',
+  });
+  assert.equal(auditPropre.conforme, true, 'when every bound tool concludes with a plan and no archived report is a bare pointer, the verdict must be clean');
+  assert.deepEqual(auditPropre.illisibles, [], 'a fully readable set must report no unreadable script');
+
+  const auditMuet = pgu.auditRapportsComplets({ registries: [], readFileImpl: () => 'aucune conclusion ici', root: '/fake' });
+  assert.ok(auditMuet.sansPlan.length > 0 && auditMuet.conforme === false, 'tools that never conclude must break the verdict, never be rounded up to compliant');
+
+  // LE POINT QUI COMPTE LE PLUS ICI, et c'est la discipline des trois états du projet : une absence
+  // de mesure n'est JAMAIS une mesure. Un script illisible doit casser le verdict, pas passer.
+  const auditIllisible = pgu.auditRapportsComplets({
+    registries: [], root: '/fake',
+    readFileImpl: () => { throw new Error('ENOENT'); },
+  });
+  assert.ok(auditIllisible.illisibles.length > 0, 'a script that cannot be read must be listed as NOT MEASURED');
+  assert.equal(auditIllisible.conforme, false, 'and it must make the verdict fail: counting an unmeasurable script as compliant is exactly the "absence of measurement passing for a measurement" confusion this project keeps finding in its own guards');
+  assert.equal(auditIllisible.sansPlan.includes('argus'), false, 'an unreadable script must not ALSO be accused of having no plan — it is unmeasured, which is a third state, never a silent guilty verdict');
+
+  const rendu = pgu.formatRapportsComplets(auditIllisible);
+  assert.ok(rendu.includes('NON mesuré'), 'the unmeasured state must be PRINTED, not merely computed — a mechanism that never leaves the script is an intention, the signature defect found six times in a single day, the sixth being findRapportsQuiPointent() itself: fully built, fully tested, and called by no tool at all');
+
+  console.log('Passed: pure-gold-unity now carries the WHOLE report verdict (2026-09-23) rather than a third of it — answering "whose responsibility is this?" with a single place instead of three tools each holding one criterion and none saying the word: it relays content (findRapportsQuiPointent, which until today lived only inside check-house.mjs and was called by no main() anywhere), date (the shared gabarit) and plan d\'action (findOutilsSansPlanDaction) without reimplementing any of them, declares its criteria as data so a fourth joins at one place, and — the discipline that matters most — treats an unreadable script as a third state that BREAKS the verdict and gets printed, never as a silent pass and never as a fabricated accusation.');
+}

@@ -25,7 +25,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { reliabilityNotice } from "./lib-shell.mjs";
+import { reliabilityNotice, GARDIEN_DOMAINS } from "./lib-shell.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 // Où l'agent dépose l'identité de sa session. Un fichier local, jamais committé (cf. .gitignore) :
@@ -109,6 +109,30 @@ export function reportOrigin({ origin, env = process.env } = {}) {
   return REPORT_ORIGINS[clef] ?? (clef ? String(clef) : undefined);
 }
 
+// dateEnToutesLettres() (2026-09-23, demande explicite de l'utilisateur : « 2/ dates en toutes
+// lettres^^ »). Un rapport se lit par un humain, et « 2026-09-22 à 20:20 UTC » se déchiffre au lieu
+// de se lire — pire, il se confond avec les horodatages techniques que ces mêmes rapports affichent
+// par ailleurs (identifiants de scan, noms de fichiers archivés). Une date écrite en toutes lettres
+// ne peut être confondue avec rien.
+//
+// Écrite ICI et nulle part ailleurs : c'est l'exigence de l'Article 24 prise au sérieux — une
+// fonctionnalité nouvelle s'applique à TOUS les outils le jour où elle est écrite, jamais seulement
+// à ceux auxquels on a pensé sur le moment. Les ~30 rapports du paysage passent tous par ce gabarit.
+export const JOURS_FR = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+export const MOIS_FR = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+
+export function dateEnToutesLettres(d = new Date(), { avecHeure = false } = {}) {
+  const date = d instanceof Date ? d : new Date(String(d).length === 10 ? `${d}T00:00:00Z` : d);
+  if (Number.isNaN(date.getTime())) return String(d);
+  // UTC partout, jamais l'heure locale de la machine : deux agents sur deux fuseaux doivent écrire
+  // la même date pour le même rapport, sinon l'historique des scans devient impossible à recouper.
+  const jour = JOURS_FR[date.getUTCDay()];
+  const quantieme = date.getUTCDate();
+  const texte = `${jour} ${quantieme === 1 ? "1er" : quantieme} ${MOIS_FR[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
+  if (!avecHeure) return texte;
+  return `${texte} à ${String(date.getUTCHours()).padStart(2, "0")}h${String(date.getUTCMinutes()).padStart(2, "0")} (UTC)`;
+}
+
 // Assemble la carte d'identité en lignes prêtes à afficher. Chaque absence est NOMMÉE, jamais
 // silencieusement omise : une ligne manquante se lirait comme une information jugée sans intérêt,
 // alors qu'elle signale un trou à combler.
@@ -118,12 +142,12 @@ export function identityLines({ tool, scriptPath, origin, session, repo, changed
   const lignes = [];
   lignes.push(`Version de Claude : ${s.model ?? "non renseignée (à déposer par l'agent — cf. god-of-all-process)"}`);
   const d = new Date();
-  lignes.push(`Produit le : ${d.toISOString().slice(0, 10)} à ${d.toISOString().slice(11, 16)} UTC`);
+  lignes.push(`Produit le : ${dateEnToutesLettres(d, { avecHeure: true })}`);
   lignes.push(`État du code : ${r.commit ?? "inconnu"}${r.branche ? ` sur ${r.branche}` : ""}${r.travauxNonEnregistres === true ? " — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel" : r.travauxNonEnregistres === false ? " — arbre propre" : ""}`);
   const o = reportOrigin({ origin });
   lignes.push(`Contexte de production : ${o ?? "non précisé"}`);
   const c = changedAt ?? toolLastChanged(scriptPath);
-  if (tool || scriptPath) lignes.push(`Outil : ${tool ?? scriptPath}${c ? ` — inchangé depuis le ${c}` : " — date de dernière modification inconnue"}`);
+  if (tool || scriptPath) lignes.push(`Outil : ${tool ?? scriptPath}${c ? ` — inchangé depuis le ${dateEnToutesLettres(c)}` : " — date de dernière modification inconnue"}`);
   // LES DEUX NOTES, toujours séparées (décision de l'utilisateur, 2026-09-22) : l'une dit comment va
   // l'outil, l'autre ce que vaut ce rapport-ci. Les fondre en un seul chiffre les rendrait illisibles.
   if (tool) lignes.push(healthLine(tool, { health }));
@@ -213,18 +237,51 @@ export function niveauDeLaTache({ toucheLeJeu = false, fausseUneMesure = false }
 }
 
 // Construit la section. `constats` : [{ constat, etat, pourquoi?, tache? }].
+// LA PRIORITÉ D'UN PLAN (2026-09-23, demande explicite de l'utilisateur : « attention les plans
+// d'action délivrés par les Gardiens sacrés doivent être prioritaires : ce sont des rapports sur la
+// propreté du code la plupart du temps, non ? »).
+//
+// SA PRÉMISSE EST JUSTE, ET VÉRIFIÉE PLUTÔT QUE SUPPOSÉE : « scanner la qualité du code » est la
+// PREMIÈRE MOITIÉ du critère d'appartenance au rang (Article 20) — l'autre étant de tourner
+// gratuitement à chaque commit. Il n'y a donc pas de Gardien sacré qui ne parle pas de propreté du
+// code : c'est ce qui les définit.
+//
+// POURQUOI UN AXE SÉPARÉ DU NIVEAU, et c'est la distinction qui rend la règle utilisable :
+//   · le NIVEAU (obligatoire / recommandée) dit S'IL FAUT le faire ;
+//   · la PRIORITÉ dit DANS QUEL ORDRE le faire.
+// Les confondre casserait les deux. ALWAYS-NEW-CODE ne produit que des constats « à trancher », qui
+// ne sont donc jamais obligatoires — et restent pourtant prioritaires à REGARDER, parce qu'ils
+// portent sur la santé du code. Inversement, une tâche obligatoire venant d'un outil de confort
+// n'a aucune raison de passer devant.
+//
+// DÉRIVÉE, JAMAIS DÉCLARÉE (Article 24) : la source est GARDIEN_DOMAINS, l'unique source mécanique
+// du rang. Un huitième Gardien sacré hérite de cette priorité le jour où il rejoint l'équipe, sans
+// que personne n'ait à y penser — c'est exactement ce que la précision du 2026-09-22 exige d'une
+// équipe qui accueille un nouveau membre.
+export function prioriteDuPlan(toolSlug, { gardiens = GARDIEN_DOMAINS } = {}) {
+  const estGardien = Boolean(toolSlug && Object.prototype.hasOwnProperty.call(gardiens ?? {}, toolSlug));
+  return estGardien
+    ? { prioritaire: true, raison: "Gardien sacré : ce plan porte sur la propreté du code, il passe avant les plans des autres outils" }
+    : { prioritaire: false, raison: "outil hors du rang de Gardien sacré : plan à traiter dans l'ordre normal" };
+}
+
 export function buildPlanDaction(constats = [], { toolSlug } = {}) {
   const inconnus = constats.filter((c) => !ETATS_CONSTAT.includes(c.etat));
   if (inconnus.length) throw new Error(`buildPlanDaction(): état inconnu "${inconnus[0].etat}" — attendu ${ETATS_CONSTAT.join(", ")}. Un constat sans état déclaré est un constat dont personne ne répond.`);
   const retenus = constats.filter((c) => c.etat === "retenu");
   const sansTache = retenus.filter((c) => !c.tache);
   const lignes = [];
+  const prio = prioriteDuPlan(toolSlug);
+  // Elle s'affiche AUSSI quand le plan est vide : « le Gardien sacré n'a rien trouvé » est une
+  // information prioritaire elle aussi, et une ligne qui n'apparaît que dans le mauvais cas apprend
+  // à ne la chercher que là.
+  if (prio.prioritaire) lignes.push(`⏫ PLAN PRIORITAIRE — ${prio.raison}.`);
   if (!constats.length) {
     // Un rapport qui n'a rien trouvé a bel et bien un plan d'action : « rien à faire ». L'écrire
     // noir sur blanc distingue « j'ai regardé, il n'y a rien » de « je n'ai pas conclu » — deux
     // choses qu'une section absente confondrait.
     lignes.push("Aucun constat retenu : ce passage n'a rien trouvé qui appelle une action.");
-    return { lignes, retenus: [], sansTache: [], vide: true };
+    return { lignes, retenus: [], sansTache: [], vide: true, prioritaire: prio.prioritaire };
   }
   for (const c of constats) {
     if (c.etat === "retenu") {
@@ -238,7 +295,7 @@ export function buildPlanDaction(constats = [], { toolSlug } = {}) {
     else lignes.push(`  ? À TRANCHER · ${c.constat}${c.pourquoi ? ` — ${c.pourquoi}` : ""}`);
   }
   if (sansTache.length) lignes.push("", `⚠️ ${sansTache.length} constat(s) retenu(s) sans tâche associée — un constat retenu qui ne devient pas une tâche est un constat oublié.`);
-  return { lignes, retenus, sansTache, vide: false, toolSlug };
+  return { lignes, retenus, sansTache, vide: false, toolSlug, prioritaire: prio.prioritaire };
 }
 
 // planDactionDepuisEcarts() (2026-09-23) — le raccourci qui rend le câblage tenable.
@@ -293,9 +350,18 @@ export const SANS_CONSTAT_PROPRE = {
   "integration-outil": "répond à une question posée, ne scanne rien de lui-même",
 };
 
-export function findOutilsSansPlanDaction(scripts = {}, { exemptes = SANS_CONSTAT_PROPRE } = {}) {
+// LES PORTES D'ENTRÉE du plan d'action, déclarées plutôt qu'énumérées au fil du code (Article 24).
+// Corrigé le 2026-09-23 : le détecteur ne connaissait que `buildPlanDaction` et accusait donc
+// safe-export et check-argus — les deux SEULS outils réellement en règle, qui passaient par le
+// raccourci documenté juste au-dessus. Un garde-fou qui accuse les conformes cesse d'être lu ; c'est
+// la cinquième fois de la journée que ce patron se présente, d'où la déclaration explicite ici :
+// une troisième porte d'entrée ajoutée un jour à ce fichier rejoint cette liste, et le détecteur
+// la reconnaît sans qu'on y pense.
+export const PORTES_PLAN_DACTION = ["buildPlanDaction", "planDactionDepuisEcarts"];
+
+export function findOutilsSansPlanDaction(scripts = {}, { exemptes = SANS_CONSTAT_PROPRE, portes = PORTES_PLAN_DACTION } = {}) {
   return Object.entries(scripts)
-    .filter(([slug, source]) => !(slug in exemptes) && !String(source ?? "").includes("buildPlanDaction"))
+    .filter(([slug, source]) => !(slug in exemptes) && !portes.some((porte) => String(source ?? "").includes(porte)))
     .map(([slug]) => slug);
 }
 

@@ -22,7 +22,7 @@ import { dataRows, numericColumn } from "./lib-markdown-table.mjs";
 import { join } from "node:path";
 import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const INDEX_PATH = join(ROOT, "docs/always-new-code/index.md");
@@ -216,8 +216,9 @@ const HARMONIA_MD_PATH = join(ROOT, "docs/referentiel/harmonia.md");
 function main() {
   recordCliUsage("always-new-code");
   printReportHeader({ tool: "always-new-code", title: "ALWAYS-NEW-CODE — préparation (zéro coût, la couche raisonnement suit)", scriptPath: "scripts/always-new-code.mjs" });
+  let divergence = { missingFromThemes: [], missingFromHarmonia: [] };
   if (existsSync(HARMONIA_MD_PATH)) {
-    const divergence = findThemesDivergingFromHarmonia(readFileSync(HARMONIA_MD_PATH, "utf8"));
+    divergence = findThemesDivergingFromHarmonia(readFileSync(HARMONIA_MD_PATH, "utf8"));
     if (divergence.missingFromThemes.length || divergence.missingFromHarmonia.length) {
       console.log("⚠️  THEMES a divergé de harmonia.md (garde-fou de fraîcheur, 2026-09-21) :");
       if (divergence.missingFromThemes.length) console.log(`   présent dans harmonia.md, absent de THEMES : ${divergence.missingFromThemes.join(", ")}`);
@@ -229,6 +230,7 @@ function main() {
   const indexText = existsSync(INDEX_PATH) ? readFileSync(INDEX_PATH, "utf8") : "";
   const coverage = parseCoverage(indexText);
   const rec = recommendZone(THEMES, coverage, requested);
+  let signalChurn;
 
   if (!rec) {
     console.log("Aucun thème configuré.");
@@ -244,6 +246,7 @@ function main() {
       const numstat = sh(`git log --numstat --pretty=format:"" -- ${file}`, { cwd: ROOT });
       const stats = parseNumstat(numstat);
       const signal = churnSignal(stats);
+      signalChurn = signal;
       console.log(`\nIndice git (${file}) : ${stats ? `${stats.commits} commit(s), +${stats.insertions}/-${stats.deletions}` : "aucun historique"} — signal : ${signal ?? "aucun"}.`);
     }
   }
@@ -255,6 +258,35 @@ function main() {
   console.log("4. Vérifier qu'aucune fonctionnalité déjà couverte par check-house.mjs ne serait perdue par le changement proposé.");
   console.log("5. Classer chaque trouvaille par palier de confiance (confirmé / probable / à surveiller) — jamais une certitude absolue.");
   console.log("6. Proposer, jamais appliquer seul : préciser la portée exacte et le temps estimé, puis demander confirmation avant tout changement réel.");
+
+  // LE PLAN D'ACTION (2026-09-23, Article 28). ALWAYS-NEW-CODE était, avec ARGUS, l'un des deux
+  // vrais trous : il produisait une recommandation de zone — donc un constat réel — et s'arrêtait là.
+  //
+  // CE QUI REND SON PLAN PARTICULIER, et pourquoi il ne peut pas être « retenu » comme les autres :
+  // sa recommandation ne dit jamais qu'il Y A une dette, seulement que cette zone n'a pas été
+  // regardée depuis longtemps. Classer ça en « retenu » fabriquerait un problème à partir d'une
+  // rotation de calendrier — exactement le garde-fou non négociable de l'Article 23 (vérifier
+  // d'abord que ce n'est pas une décision déjà assumée). D'où « à trancher » : la zone est proposée,
+  // le zoom profond coûte de vrais tokens (SMART-CONSO-TOKEN), et c'est une décision humaine.
+  //
+  // La divergence THEMES/harmonia.md, elle, est un VRAI défaut mécanique : deux registres qui
+  // devraient dire la même chose ne la disent plus. Celle-là est « retenue », et fausse une mesure.
+  const constatsANC = [
+    ...divergence.missingFromThemes.map((t) => ({ constat: `thème « ${t} » présent dans harmonia.md mais absent de THEMES`, etat: "retenu", fausseUneMesure: true,
+      tache: `réaligner THEMES sur harmonia.md : ajouter « ${t} » ou retirer le thème côté HARMONIA` })),
+    ...divergence.missingFromHarmonia.map((t) => ({ constat: `thème « ${t} » présent dans THEMES mais absent de harmonia.md`, etat: "retenu", fausseUneMesure: true,
+      tache: `réaligner harmonia.md sur THEMES : documenter « ${t} » ou le retirer de la rotation` })),
+  ];
+  if (rec && !rec.ambiguous && rec.zone) {
+    constatsANC.push({
+      constat: `zone « ${rec.zone} » désignée par la rotation (${rec.source}${rec.daysSinceLastPass === undefined ? ", jamais examinée" : `, dernier passage il y a ${rec.daysSinceLastPass} jour(s)`})${signalChurn ? ` — indice d'empilement : ${signalChurn}` : ""}`,
+      etat: "a-trancher",
+      pourquoi: "une zone recommandée n'est pas une dette constatée : le vrai zoom « page blanche » coûte de vrais tokens (Article 22/SMART-CONSO-TOKEN) et ne se lance jamais tout seul (Article 23)",
+    });
+  }
+  const planANC = buildPlanDaction(constatsANC, { toolSlug: "always-new-code" });
+  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of planANC.lignes) console.log(l);
 
   const perf = alwaysNewCodePerformance(indexText);
   console.log("\n--- Performance de l'outil (KPI) ---");
