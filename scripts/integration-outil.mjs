@@ -28,6 +28,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { printReportHeader } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -182,9 +183,12 @@ export function findLecteursCasses({ root = ROOT, readFileImpl = readFileSync, r
 }
 
 function main() {
-  printReliabilityNotice("integration-outil");
+  // Cadre commun (pure-gold-unity, Ronde du 2026-09-22) : l'avertissement de fiabilité, le titre et
+  // l'horodatage passent par printReportHeader() plutôt que d'être réécrits ici. Un rapport qui
+  // fabrique son propre en-tête finit par diverger de tous les autres sans que personne ne le
+  // décide — trouvé sur ce fichier le soir même de sa construction, par la Ronde.
+  printReportHeader({ tool: "integration-outil", title: "INTEGRATION-OUTIL — faire entrer un outil dans l'Agence Codex", scriptPath: "scripts/integration-outil.mjs", origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
   const slug = process.argv[2];
-  console.log("=== INTEGRATION-OUTIL — faire entrer un outil dans l'Agence Codex ===\n");
   const casses = findLecteursCasses();
   if (casses.length) {
     console.log("⚠️  Lecteurs cassés — le rapport ci-dessous serait faux, à corriger AVANT de s'y fier :");

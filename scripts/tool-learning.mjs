@@ -28,6 +28,7 @@ import { join } from "node:path";
 import { execSync } from "node:child_process";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { printReportHeader } from "./report-template.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -382,8 +383,10 @@ export function tendancesApprentissage(options = {}) {
 }
 
 function main() {
-  printReliabilityNotice("tool-learning");
-  console.log("=== TOOL-LEARNING — l'apprentissage de l'outillage, et le mien à son égard ===\n");
+  // Cadre commun (pure-gold-unity, Ronde du 2026-09-22) : il datait sa sortie lui-même en plus
+  // d'écrire son titre — deux informations que le cadre porte déjà, et qui divergeaient donc
+  // silencieusement de celles de tous les autres rapports.
+  printReportHeader({ tool: "tool-learning", title: "TOOL-LEARNING — l'apprentissage de l'outillage, et le mien à son égard", scriptPath: "scripts/tool-learning.mjs", origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
   console.log("Évolutivité, moitié 1 (pouvoir partir)   → SAFE-EXPORT");
   console.log("Évolutivité, moitié 2 (devenir meilleur) → TOOL-LEARNING\n");
   console.log("Frontière avec CASSANDRA : elle juge l'ÉTAT et les MOYENS, lui la TRAJECTOIRE et l'USAGE.");

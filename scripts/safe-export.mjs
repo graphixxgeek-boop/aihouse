@@ -18,6 +18,7 @@ import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { printReportHeader } from "./report-template.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -328,7 +329,9 @@ export function tendancesExport(options = {}) {
 }
 
 function main() {
-  printReliabilityNotice("safe-export");
+  // Cadre commun (pure-gold-unity, Ronde du 2026-09-22) — même correction que ses deux voisins du
+  // même soir : l'en-tête n'est plus écrit à la main ici.
+  printReportHeader({ tool: "safe-export", title: "SAFE-EXPORT — exportabilité de l'Agence, lisibilité du projet", scriptPath: "scripts/safe-export.mjs", origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
   console.log("=== SAFE-EXPORT — exportabilité de l'Agence, lisibilité du projet ===\n");
   for (const [nom, c] of Object.entries(CIBLES)) console.log(`· cible « ${nom} » : ${c.question}`);
   console.log("");
