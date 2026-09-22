@@ -5072,6 +5072,84 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.equal(g.checkReportsReadBeforeAnalysis('sim_test', { exists: () => true, rapportsLus: g.SIMULATION_ITEMS.map((i) => i.id) }).ok, true, 'only a full, honest declaration passes');
   }
 
+  // LA CIRCULATION DE LA DATA « TENDANCES » (2026-09-22) — « un outil existant devrait s'assurer
+  // que la data "tendances" produite est bien partagée et exploitée par tous les outils concernés,
+  // par toi et par moi ». C'est data-archangel qui porte ça : il a été construit pour ces deux sens
+  // exactement, lui donner un surveillant à part aurait créé deux gardiens qui divergent.
+  {
+    const d = await import('../scripts/data-archangel.mjs');
+    const a = await import('../scripts/angel-of-ia-process.mjs');
+
+    assert.ok(d.CONSOMMATEURS_DE_TENDANCE.every((c) => c.pourquoi), 'every declared trend consumer must say WHY it needs a trajectory rather than a point — without that reason the table is just a list someone will prune the day it gets in the way');
+
+    // LE SENS 2 — un outil qui devrait exploiter une tendance et ignore le mécanisme. Vérifié sur
+    // le code réel (importe-t-il serie-temporelle ?), jamais sur une intention en commentaire.
+    assert.ok(!d.findOutilsPrivesDeTendance().some((p) => p.outil === 'angel-of-ia-process'), 'checked live: angel was wired to the shared mechanism the day it was built, and it was chosen first ON PURPOSE — it already had its own history, so wiring it proves the MIGRATION path rather than an easy new case');
+    assert.ok(d.findOutilsPrivesDeTendance({ consommateurs: [{ outil: 'x', script: 'scripts/lib-shell.mjs', pourquoi: 'test' }] }).length === 1, 'and a tool that genuinely does not import the mechanism is reported — the guard is verified by its failure, not only by its success');
+
+    // « PAR TOI ET PAR MOI » — le troisième sens, ajouté par l'utilisateur : ni lui ni moi ne
+    // pouvons exploiter une tendance qu'on ne nous montre pas.
+    const brief = d.tendanceBriefing();
+    const angel = brief.find((b) => b.outil === 'angel-of-ia-process');
+    assert.ok(angel.points >= 1, 'checked live against the real repository: angel has a real recorded series');
+    // « TROP JEUNE » ET « AUCUNE SÉRIE » sont deux états distincts, jamais fondus : l'un se corrige
+    // en attendant, l'autre en câblant. Les confondre ferait attendre une série qui n'arrivera
+    // jamais — la même famille d'erreur que "absence prise pour mesure", vue sous un autre angle.
+    assert.equal(angel.etat, 'trop jeune pour une tendance', 'a series that exists but is too short must say so, never read as "aucune série"');
+    assert.equal(d.tendanceBriefing({ consommateurs: [{ outil: 'fantome', script: 'x' }], exists: () => false })[0].etat, 'aucune série', 'and a tool with no series at all is a different state entirely: one is fixed by waiting, the other by wiring');
+
+    // Le branchement réel d'angel, vérifié bout en bout : la tendance REFUSE de conclure sur un
+    // seul point, et c'est le comportement correct — un mécanisme qui conclut au deuxième passage
+    // ne mesure rien.
+    const t = a.tendancesEval();
+    assert.ok(t.every((x) => ['pas assez de points', 'jamais mesuré', 'stable', 'en amélioration', 'en dégradation', 'en hausse (non jugée)', 'en baisse (non jugée)'].includes(x.tendance)), 'every trend verdict must be one of the declared states');
+    assert.ok(t.some((x) => x.points >= 1), 'checked live: the real series really was written by the real tool, not simulated in a test');
+  }
+
+  // SÉRIE-TEMPORELLE (2026-09-22) — le mécanisme partagé d'historisation, demandé parce que « tous
+  // les rapports doivent etre historisés et comparés [...] sinon : grosse perte de valeurs ». Les
+  // quatre garde-fous sont testés un par un : sans eux, historiser produirait des tendances
+  // FAUSSES, ce qui est pire que ne rien historiser — une tendance fausse est crue.
+  {
+    const st = await import('../scripts/serie-temporelle.mjs');
+
+    // GARDE-FOU 1 — les cinq états. Une mesure sans valeur n'entre pas dans la série du tout :
+    // l'enregistrer à null la ferait relire « stable » au passage suivant.
+    const p1 = st.buildPoint({ date: '2026-09-01', mesures: { poids: { valeur: 800, sens: st.SENS.BAS_MIEUX }, vide: { valeur: null } } });
+    assert.ok(!('vide' in p1.mesures), 'a measure with no finite value is never persisted: storing it as null would make the next run read it as "stable" instead of "première mesure"');
+    const p2 = st.buildPoint({ date: '2026-09-22', mesures: { poids: { valeur: 1059, sens: st.SENS.BAS_MIEUX } } });
+    assert.equal(st.comparerAuPrecedent(p2, null)[0].etat, 'première mesure', 'with no previous point there is an absence of past, never stability');
+    const disparue = st.comparerAuPrecedent(st.buildPoint({ mesures: {} }), p1);
+    assert.equal(disparue[0].etat, 'plus mesuré', 'a measure taken yesterday and absent today must be named as such — a measurement that stops looks exactly like a measurement that holds, and that is the most expensive of the five to miss');
+
+    // GARDE-FOU 2 — le sens est DÉCLARÉ. Une flèche posée automatiquement se tromperait une fois
+    // sur deux, et une flèche fausse est crue, contrairement à une absence de flèche.
+    assert.equal(st.comparerAuPrecedent(p2, p1)[0].etat, 'régression', 'a charter weight going UP is a regression because the measure declares "plus bas = mieux" — the direction alone never says whether a move is good');
+    const hausseNeutre = st.comparerAuPrecedent(
+      st.buildPoint({ mesures: { x: { valeur: 10, sens: st.SENS.NEUTRE } } }),
+      st.buildPoint({ mesures: { x: { valeur: 5, sens: st.SENS.NEUTRE } } }));
+    assert.equal(hausseNeutre[0].etat, 'hausse (non jugée)', 'on a neutral measure the tool names the movement and refuses to judge it, rather than guessing a direction it has no basis for');
+
+    // GARDE-FOU 3 — une tendance exige assez de points. Deux points forment un segment.
+    const quatre = [800, 850, 900, 1059].map((v, i) => st.buildPoint({ date: `2026-09-0${i + 1}`, mesures: { poids: { valeur: v, sens: st.SENS.BAS_MIEUX } } }));
+    assert.equal(st.detectTendance(quatre, 'poids').tendance, 'en dégradation', 'four real points rising on a "lower is better" measure is a genuine degradation');
+    assert.equal(st.detectTendance(quatre.slice(0, 2), 'poids').tendance, 'pas assez de points', 'two points are a segment, never a trend — and saying so is honest where "stable" would not be');
+    assert.equal(st.detectTendance(quatre, 'jamais-mesure').tendance, 'jamais mesuré', 'a key that was never recorded is named as never measured, never silently treated as flat');
+
+    // GARDE-FOU 4 — une rupture de méthode casse la série. Celui auquel personne ne pense, et le
+    // plus dangereux : une tendance calculée à travers un changement de méthode est une fiction
+    // d'autant plus crédible qu'elle s'appuie sur beaucoup de points.
+    const rompue = [...quatre.slice(0, 2), ...quatre.slice(2).map((p) => ({ ...p, methode: 'v2' }))];
+    const t = st.detectTendance(rompue, 'poids');
+    assert.equal(t.tendance, 'pas assez de points', 'a trend is never computed across a change of measurement method: the old points are simply not comparable to the new ones');
+    assert.equal(t.rompueA, '2026-09-03', 'and the break is dated rather than silently swallowed, so the reader knows why the history looks short');
+
+    // LE GARDE-FOU D'ÉVOLUTIVITÉ (Article 24) : un outil qui mesure puis jette est une perte de
+    // valeur silencieuse — il faut la nommer, pas la découvrir des mois plus tard.
+    assert.deepEqual(st.findOutilsSansSerie(['outil-fantome'], { exists: () => false }), ['outil-fantome'], 'a tool that produces a report and historises nothing must be named: it measures, then throws the measurement away');
+    assert.deepEqual(st.findOutilsSansSerie(['outil-reel'], { exists: () => true }), [], 'and a tool that does keep a series is not reported');
+  }
+
   // Le récapitulatif des évaluations (2026-09-22) — demandé mot pour mot par l'utilisateur, y
   // compris la note sur sa propre participation. Les assertions portent sur ce qui fait la valeur de
   // cet exercice et rien d'autre : les deux natures ne se mélangent pas, une absence ne se déguise

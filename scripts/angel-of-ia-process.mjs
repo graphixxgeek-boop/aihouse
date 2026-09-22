@@ -30,6 +30,14 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { printReportHeader } from "./report-template.mjs";
 import { recordCliUsage, USAGE_ORIGINS } from "./tool-usage.mjs";
+// SÉRIE-TEMPORELLE (2026-09-22) : angel est le PREMIER outil branché sur le mécanisme partagé
+// d'historisation, et ce n'est pas un hasard — il avait déjà construit son propre historique la
+// veille, donc le brancher prouve le chemin de migration plutôt qu'un cas neuf et facile. Son
+// historique propre (HISTORIQUE_EVAL_FILE) reste en place : il porte les INDICES de notes par
+// domaine, que la série ne sait pas représenter ; la série porte les CHIFFRES comparables dans la
+// durée. Deux besoins réels, jamais une duplication — et c'est écrit ici pour qu'on ne fusionne pas
+// les deux en croyant nettoyer.
+import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -387,6 +395,29 @@ export function findConstatsSansChiffre(verdictsCollectes = []) {
 //     passer pour « stable » — une note qui disparaît ressemble à une note qui tient.
 // Ce projet a déjà payé cette confusion plusieurs fois (une absence de mesure prise pour une
 // mesure rassurante) ; elle est nommée ici pour ne pas la repayer.
+// enregistrerTendanceEval() — branche l'évaluation sur le mécanisme PARTAGÉ, en plus de son
+// historique propre. Les mesures déclarent chacune leur sens, sans quoi une flèche automatique se
+// tromperait une fois sur deux (garde-fou 2 de serie-temporelle).
+export function enregistrerTendanceEval(mesures, options = {}) {
+  const point = buildPoint({
+    mesures: {
+      "jours-d-attente": { valeur: mesures?.["vitesse-de-decision"]?.valeur, sens: SENS.BAS_MIEUX },
+      "decisions-en-suspens": { valeur: mesures?.["decisions-en-suspens"]?.valeur, sens: SENS.BAS_MIEUX },
+      "idees-non-tranchees": { valeur: mesures?.["idees-jamais-tranchees"]?.valeur, sens: SENS.BAS_MIEUX },
+    },
+    ...options,
+  });
+  return recordPoint("angel-of-ia-process", point, options);
+}
+
+// tendancesEval() — ce que la série dit aujourd'hui, si elle a assez de points pour dire quelque
+// chose. Elle refusera longtemps, et c'est correct : un mécanisme qui conclut dès le deuxième
+// passage ne mesure rien.
+export function tendancesEval(options = {}) {
+  const serie = loadSerie("angel-of-ia-process", options);
+  return ["jours-d-attente", "decisions-en-suspens", "idees-non-tranchees"].map((c) => detectTendance(serie, c, options));
+}
+
 export const EVOLUTIONS = ["progression", "régression", "stable", "première mesure", "plus mesuré"];
 export const HISTORIQUE_EVAL_FILE = "docs/angel-of-ia-process/historique-evaluations.json";
 

@@ -248,6 +248,93 @@ export function criticalIgnoredData(briefing, { seuilFraicheurJours = 2 } = {}) 
 // LE RAPPORT
 // ————————————————————————————————————————————————————————————————————————
 
+// ————————————————————————————————————————————————————————————————————————
+// LA DATA « TENDANCES » — sa circulation, et c'est le métier même de cet outil
+// ————————————————————————————————————————————————————————————————————————
+//
+// Demandé le 2026-09-22 : « un outil existant devrait s'assurer que la data "tendances" produite
+// est bien partagée et exploitée par tous les outils concernés, par toi et par moi ».
+//
+// POURQUOI CELUI-CI ET PAS UN NOUVEAU : data-archangel a été construit pour exactement ces deux
+// questions, dans ces deux sens — une donnée produite que personne ne lit, et un outil qui devrait
+// lire quelque chose et ne le lit pas —, plus l'accès de l'agent lui-même à ce que l'équipe sait.
+// La data de tendance est une donnée comme une autre ; lui donner un surveillant à part aurait
+// créé deux gardiens de la circulation qui divergeraient (§7ter).
+//
+// LE RISQUE PRÉCIS QUE CECI COUVRE, et il est plus grand que celui des données ordinaires : une
+// série temporelle coûte à produire (un point à chaque passage, pendant des semaines) et ne rend
+// rien tant que personne ne la lit. Une donnée orpheline ordinaire est un gâchis ponctuel ; une
+// SÉRIE orpheline est un gâchis qui se répète à chaque Ronde, et dont la valeur perdue grandit
+// avec le temps — c'est le pire rapport coût/retour possible.
+export const NATURE_TENDANCE = "série temporelle (historique, évolutions, tendances)";
+
+// Qui DEVRAIT lire les tendances, et de quoi. Déclaré plutôt que deviné, avec le garde-fou
+// mécanique qui va avec (Article 24) : l'appartenance d'un outil à cette table est un jugement,
+// mais l'existence du fichier de série, elle, se vérifie.
+export const CONSOMMATEURS_DE_TENDANCE = [
+  { outil: "cassandra-rh", script: "scripts/cassandra-rh.mjs", pourquoi: "gardienne des objectifs et des KPI : un objectif se juge sur une trajectoire, jamais sur un point" },
+  { outil: "objectifs-vs-resultats", script: "scripts/objectifs-vs-resultats.mjs", pourquoi: "un objectif raté trois fois de suite n'est pas le même problème qu'un objectif raté une fois" },
+  { outil: "kpi-report", script: "scripts/kpi-report.mjs", pourquoi: "c'est le tableau de bord : montrer un chiffre sans sa pente, c'est montrer la moitié de l'information" },
+  { outil: "clean-dirty-old", script: "scripts/clean-dirty-old.mjs", pourquoi: "la stagnation EST une tendance — il la déduit aujourd'hui de dates de fichiers, jamais d'une série" },
+  { outil: "angel-of-ia-process", script: "scripts/angel-of-ia-process.mjs", pourquoi: "l'évaluation de l'utilisateur se lit en trajectoire, c'est sa demande explicite du 2026-09-22" },
+  { outil: "smart-conso-token", script: "scripts/smart-conso-token.mjs", pourquoi: "un rythme de consommation ne se juge que dans la durée" },
+];
+
+// findTendancesOrphelines() — une série produite et lue par personne. Le sens 1 du métier de cet
+// outil, appliqué aux séries.
+export function findTendancesOrphelines(carte, { consommateurs = CONSOMMATEURS_DE_TENDANCE, root = ROOT, readFileImpl = readFileSync, exists = existsSync } = {}) {
+  const orphelines = [];
+  for (const c of consommateurs) {
+    const chemin = join(root, `docs/${c.outil}/serie.json`);
+    if (!exists(chemin)) continue;
+    // Lue par quelqu'un ? On cherche une vraie référence à la série dans le code des autres outils,
+    // jamais une supposition tirée du fait qu'elle existe.
+    let lecteurs = 0;
+    for (const autre of consommateurs) {
+      if (autre.outil === c.outil) continue;
+      try {
+        const code = readFileImpl(join(root, autre.script), "utf8");
+        if (code.includes(c.outil) && /serie|tendance|Tendance/.test(code)) lecteurs++;
+      } catch { /* script illisible : compté comme non-lecteur, jamais comme lecteur */ }
+    }
+    if (lecteurs === 0) orphelines.push({ outil: c.outil, chemin: `docs/${c.outil}/serie.json`, pourquoi: "série produite à chaque passage et relue par aucun autre outil — un gâchis qui se répète, jamais ponctuel" });
+  }
+  return orphelines;
+}
+
+// findOutilsPrivesDeTendance() — le sens 2 : un outil qui DEVRAIT exploiter une tendance et ne
+// connaît même pas le mécanisme. Se vérifie sur le code réel (importe-t-il serie-temporelle ?),
+// jamais sur une intention déclarée en commentaire.
+export function findOutilsPrivesDeTendance({ consommateurs = CONSOMMATEURS_DE_TENDANCE, root = ROOT, readFileImpl = readFileSync } = {}) {
+  const prives = [];
+  for (const c of consommateurs) {
+    let code;
+    try { code = readFileImpl(join(root, c.script), "utf8"); } catch { continue; }
+    if (!code.includes("serie-temporelle")) prives.push({ outil: c.outil, pourquoi: c.pourquoi });
+  }
+  return prives;
+}
+
+// tendanceBriefing() — le troisième sens, celui que l'utilisateur a ajouté en disant « par toi et
+// par moi » : ni l'agent ni lui ne peuvent exploiter une tendance qu'on ne leur montre pas. Rend la
+// liste des séries réellement disponibles, avec leur nombre de points — donc ce qui est déjà
+// exploitable et ce qui est encore trop jeune pour dire quoi que ce soit.
+export function tendanceBriefing({ consommateurs = CONSOMMATEURS_DE_TENDANCE, root = ROOT, readFileImpl = readFileSync, exists = existsSync, minPoints = 4 } = {}) {
+  return consommateurs.map((c) => {
+    const rel = `docs/${c.outil}/serie.json`;
+    if (!exists(join(root, rel))) return { outil: c.outil, etat: "aucune série", points: 0, exploitable: false };
+    try {
+      const pts = JSON.parse(readFileImpl(join(root, rel), "utf8"));
+      const n = Array.isArray(pts) ? pts.length : 0;
+      // « Trop jeune » et « absente » sont deux états distincts, jamais fondus : l'un se corrige en
+      // attendant, l'autre en câblant. Les confondre ferait attendre une série qui n'arrivera jamais.
+      return { outil: c.outil, etat: n >= minPoints ? "exploitable" : "trop jeune pour une tendance", points: n, exploitable: n >= minPoints };
+    } catch {
+      return { outil: c.outil, etat: "série illisible", points: 0, exploitable: false };
+    }
+  });
+}
+
 export function buildDataArchangelReport({ root = ROOT, readFileImpl = readFileSync, now = Date.now() } = {}) {
   const carte = mapReaders({ root, readFileImpl });
   const orphelines = findOrphanData(carte, { root });

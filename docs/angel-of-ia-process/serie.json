@@ -1,0 +1,20 @@
+[
+ {
+  "date": "2026-09-22",
+  "methode": "v1",
+  "mesures": {
+   "jours-d-attente": {
+    "valeur": 2,
+    "sens": "plus bas = mieux"
+   },
+   "decisions-en-suspens": {
+    "valeur": 2,
+    "sens": "plus bas = mieux"
+   },
+   "idees-non-tranchees": {
+    "valeur": 1,
+    "sens": "plus bas = mieux"
+   }
+  }
+ }
+]
