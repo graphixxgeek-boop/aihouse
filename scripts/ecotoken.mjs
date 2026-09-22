@@ -318,12 +318,32 @@ export function findMisfiledBlocks(texte) {
       if (!cites.length) continue;
       const comptes = {};
       for (const n of cites) comptes[n] = (comptes[n] ?? 0) + 1;
-      const [meilleur, n] = Object.entries(comptes).sort((a, b) => b[1] - a[1])[0];
-      if (Number(meilleur) === articleCourant || n < 2) continue;
+      // HUITIÈME APPRENTISSAGE (2026-09-22, constaté en rangeant réellement la charte). Deux
+      // corrections, dont une qui change la NATURE de ce signal :
+      //
+      // 1. L'Article 0 est la hiérarchie des lois : il est cité partout par construction, c'est même
+      //    ce qu'on attend d'un bloc qui pèse une décision. Il ne peut être le domicile de rien.
+      // 2. Surtout : ce détecteur ne peut PAS distinguer « ce bloc appartient à l'Article X » de
+      //    « ce bloc renvoie à l'Article X ». Preuve faite sur pièces le même jour — « Format de
+      //    présentation » (qui traite du format des questions, Article 16, et cite l'Article 18
+      //    comme exemple d'occasion) et « Questions de calibrage après voici mes commentaires » (qui
+      //    traite bien du cycle post-simulation, Article 18) ont EXACTEMENT la même signature :
+      //    Article 18 deux fois, Article 16 une fois. Aucun comptage ne les sépare. Le premier devait
+      //    rester, le second devait partir.
+      //
+      // Un signal qui ne peut pas trancher ne doit pas prétendre trancher : il POSE LA QUESTION,
+      // exactement comme planExtractions() le fait quand aucune destination n'existe. Le verdict
+      // « accident de mise en page » devient une interrogation, et le choix revient à qui lit.
+      delete comptes[0];
+      const meilleurEntree = Object.entries(comptes).sort((a, b) => b[1] - a[1])[0];
+      if (!meilleurEntree) continue;
+      const [meilleur, n] = meilleurEntree;
+      const chezLui = comptes[articleCourant] ?? 0;
+      if (Number(meilleur) === articleCourant || n < 2 || n <= chezLui) continue;
       trouvailles.push({
         bloc: bloc.titre, tokens: bloc.tokens, rangeSous: articleCourant, appartientA: Number(meilleur),
-        pourquoi: `rangé sous l'Article ${articleCourant} mais cite ${n} fois l'Article ${meilleur} — accident de mise en page, jamais une décision`,
-        gain: 0, note: "aucun token gagné : c'est la structure qu'on corrige, pas le poids",
+        pourquoi: `rangé sous l'Article ${articleCourant}, mais il cite ${n} fois l'Article ${meilleur} et ${chezLui} fois son hôte — est-ce son SUJET (alors il est mal rangé) ou un simple RENVOI (alors il reste) ? L'outil ne peut pas trancher : les deux cas ont la même signature.`,
+        gain: 0, note: "aucun token en jeu — une question posée sur la structure, jamais un verdict",
       });
     }
   }
@@ -1532,7 +1552,7 @@ export function buildEcotokenReport({ charterText, repoFiles } = {}) {
     L.push("Le poids n'est pas la seule question : un contenu mal rangé coûte à chaque message sans");
     L.push("que personne ne le voie, parce qu'il se cache sous un titre qui parle d'autre chose.");
     for (const m of manuels) L.push(`  📦 MANUEL LOGÉ · « ${m.bloc.slice(0, 60)} » (${m.tokens} tk)\n     ${m.pourquoi}\n     Prudence : ${m.prudence}`);
-    for (const x of malRanges) L.push(`  🗂️  MAL RANGÉ · « ${x.bloc.slice(0, 60)} » (${x.tokens} tk) — ${x.pourquoi}\n     ${x.note}`);
+    for (const x of malRanges) L.push(`  🗂️  RANGEMENT À TRANCHER · « ${x.bloc.slice(0, 60)} » (${x.tokens} tk) — ${x.pourquoi}\n     ${x.note}`);
     L.push("");
   }
   L.push("--- DÉCLENCHEURS : ATTENDUS vs RÉELLEMENT CÂBLÉS -----------------------------------");
@@ -1657,7 +1677,7 @@ function main() {
     for (const d of analyses) {
       const signaux = [];
       for (const m of d.manuelsLoges ?? []) signaux.push(`📦 manuel logé · « ${m.section} » (${m.tokens} tk) — ${m.pourquoi ?? "un mode d'emploi d'outil dans un document de règles"}`);
-      for (const b of d.malRanges ?? []) signaux.push(`🗂️  mal rangé · « ${b.section} » — ${b.pourquoi ?? "cite un autre Article que celui sous lequel il vit"} (aucun token en jeu, c'est la structure)`);
+      for (const b of d.malRanges ?? []) signaux.push(`🗂️  rangement à trancher · « ${b.section} » — ${b.pourquoi ?? "cite un autre Article que celui sous lequel il vit"} (aucun token en jeu, c'est la structure)`);
       for (const e of d.extractionsAExaminer ?? []) signaux.push(`❓ à trancher · ${e.question}`);
       if (!signaux.length) continue;
       console.log(`\n  ── ${d.chemin} · criticité ${d.criticite?.niveau?.toUpperCase() ?? "inconnue"} (risque max applicable : ${d.criticite?.risqueMaxAutorise ?? "?"})`);

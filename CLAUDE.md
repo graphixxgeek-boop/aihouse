@@ -150,7 +150,9 @@ résolu et de ce qui reste ouvert. Ce rôle est rempli par ce fichier CLAUDE.md 
 2026-09-16, comme le proposait l'analyse d'Opus — voir plus bas). Les trois documents sont à
 maintenir à jour à chaque changement de comportement ou d'équilibrage.
 
-**Article 7 — L'épreuve de la page blanche.** Périodiquement, se demander : *si je ne disposais
+**Article 7 — L'épreuve de la page blanche.** *(Un outil la rend concrète : Article 23,
+ALWAYS-NEW-CODE — le renvoi n'existait que dans l'autre sens, qui lit celui-ci ignorait qu'il
+existait.)* Périodiquement, se demander : *si je ne disposais
 que du document de référence, comment reconstruirais-je ce système aujourd'hui ?* Cet exercice
 sert à repérer les lourdeurs accumulées par construction progressive et à les éliminer, sans
 jamais perdre de comportement observable.
@@ -308,44 +310,6 @@ l'utilisateur contient plusieurs demandes numérotées ou distinctes, la répons
 synthèse globale qui noie les points individuels. Cette exigence s'ajoute aux trois questions de
 vérification, elle ne les remplace pas.
 
-**Double lecture en parallèle.** Dès que le transcript est
-livré (étape 3), l'utilisateur le lit et rédige ses propres commentaires de son côté, en parallèle
-du travail de l'agent (étapes 4 à 7) — les deux lectures avancent en même temps, chacune de son
-côté, pas l'une après l'autre. Une fois son propre travail de mise à jour terminé (étape 7 close),
-l'agent le signale clairement, et le prochain message de l'utilisateur sera typiquement
-« voici mes commentaires » : l'agent doit s'y attendre et reconnaître ce signal comme l'ouverture
-d'un second passage de retours sur le MÊME transcript (déjà lu et déjà en partie corrigé), à traiter
-point par point comme tout retour annoté (cf. Article 16, complément du 2026-09-17). Pour rester
-synchronisé à chaque fois, l'agent rappelle explicitement ce déroulé (livraison → double lecture en
-parallèle → signal de fin de son côté → « voici mes commentaires » attendu de l'utilisateur) au
-moment où il livre le transcript d'une nouvelle simulation, pas seulement la première fois.
-
-**Questions de calibrage après « voici mes commentaires ».** L'exigence de l'étape 7 de l'Article 18 (au moins une dizaine de questions avant correction) ne
-s'applique pas seulement à l'analyse initiale de l'agent : elle s'applique de la même façon à ce
-second passage de retours annotés par l'utilisateur. Dès que « voici mes commentaires » arrive avec
-plusieurs points distincts, l'agent identifie lesquels sont des bugs à cause racine évidente
-(corrigeables directement, cf. Article 3) et lesquels impliquent un choix de conception réel
-(portée d'un nouveau mécanisme, calibrage d'un seuil, arbitrage entre deux comportements plausibles)
-— et pose ses questions de calibrage sur ces derniers avant d'implémenter quoi que ce soit dessus,
-exactement comme pour l'analyse initiale. Les deux temps (bugs clairs → correction directe après
-investigation ; conception ouverte → questions d'abord) peuvent cohabiter dans la même réponse,
-traités point par point (Article 16, complément du 2026-09-17).
-
-**Sondage rapide juste après la livraison des documents d'une simulation.** Dès que le
-transcript, le dossier et le rapport KPI d'une nouvelle simulation sont livrés (étapes 3 et 4 de
-l'Article 18), avant de se lancer dans l'analyse détaillée (étape 5), l'agent pose un petit
-questionnaire de calibrage en trois questions, via l'outil de questions dédié (format ci-dessus) :
-1. Est-ce que l'utilisateur va lire la conversation livrée entièrement, en diagonale, ou pas du
-   tout — pour savoir si l'analyse peut supposer une lecture déjà faite ou doit tout réexpliquer.
-2. Est-ce que l'utilisateur a besoin que l'agent cite des extraits précis de la conversation pour
-   illustrer chaque point remonté dans l'analyse, plutôt qu'une description sans citation.
-3. Une troisième question, construite par l'agent selon le contexte du moment (chantiers en cours,
-   urgence, autres demandes en attente), portant sur la façon d'enchaîner les tâches qui suivent.
-Les réponses obtenues doivent concrètement changer la façon dont l'agent répond ensuite (niveau de
-détail, présence ou non de citations, ordre des tâches) — jamais notées puis ignorées. Cette
-exigence est nouvelle : elle s'applique à partir de la simulation suivant son adoption, pas
-rétroactivement à une livraison déjà faite avant qu'elle n'existe.
-
 **Type de question précisé à chaque fois.** Chaque question posée à l'utilisateur (Article 16 et
 ses compléments) peut viser un calibrage, un alignement de compréhension, une enquête technique, ou
 tout autre besoin pertinent du moment — le type est toujours nommé en préfixe (« [Calibrage] »,
@@ -430,6 +394,49 @@ improvisé, jamais raccourci de sa propre initiative. **LE-RÉGISSEUR** (`script
 fichiers, extraction du résumé compact, rapport KPI) — jamais les deux index de jugement
 (`docs/simulations/index.md`, `docs/referentiel/kpi-index.md`), qui restent la plume de l'agent.
 
+**Double lecture en parallèle.** Dès que le transcript est
+livré (étape 3), l'utilisateur le lit et rédige ses propres commentaires de son côté, en parallèle
+du travail de l'agent (étapes 4 à 7) — les deux lectures avancent en même temps, chacune de son
+côté, pas l'une après l'autre. Une fois son propre travail de mise à jour terminé (étape 7 close),
+l'agent le signale clairement, et le prochain message de l'utilisateur sera typiquement
+« voici mes commentaires » : l'agent doit s'y attendre et reconnaître ce signal comme l'ouverture
+d'un second passage de retours sur le MÊME transcript (déjà lu et déjà en partie corrigé), à traiter
+point par point comme tout retour annoté (cf. Article 16, complément du 2026-09-17). Pour rester
+synchronisé à chaque fois, l'agent rappelle explicitement ce déroulé (livraison → double lecture en
+parallèle → signal de fin de son côté → « voici mes commentaires » attendu de l'utilisateur) au
+moment où il livre le transcript d'une nouvelle simulation, pas seulement la première fois.
+
+**Questions de calibrage après « voici mes commentaires ».** L'exigence de l'étape 7 de l'Article 18 (au moins une dizaine de questions avant correction) ne
+s'applique pas seulement à l'analyse initiale de l'agent : elle s'applique de la même façon à ce
+second passage de retours annotés par l'utilisateur. Dès que « voici mes commentaires » arrive avec
+plusieurs points distincts, l'agent identifie lesquels sont des bugs à cause racine évidente
+(corrigeables directement, cf. Article 3) et lesquels impliquent un choix de conception réel
+(portée d'un nouveau mécanisme, calibrage d'un seuil, arbitrage entre deux comportements plausibles)
+— et pose ses questions de calibrage sur ces derniers avant d'implémenter quoi que ce soit dessus,
+exactement comme pour l'analyse initiale. Les deux temps (bugs clairs → correction directe après
+investigation ; conception ouverte → questions d'abord) peuvent cohabiter dans la même réponse,
+traités point par point (Article 16, complément du 2026-09-17).
+
+**Sondage rapide juste après la livraison des documents d'une simulation.** Dès que le
+transcript, le dossier et le rapport KPI d'une nouvelle simulation sont livrés (étapes 3 et 4 de
+l'Article 18), avant de se lancer dans l'analyse détaillée (étape 5), l'agent pose un petit
+questionnaire de calibrage en trois questions, via l'outil de questions dédié (format ci-dessus) :
+1. Est-ce que l'utilisateur va lire la conversation livrée entièrement, en diagonale, ou pas du
+   tout — pour savoir si l'analyse peut supposer une lecture déjà faite ou doit tout réexpliquer.
+2. Est-ce que l'utilisateur a besoin que l'agent cite des extraits précis de la conversation pour
+   illustrer chaque point remonté dans l'analyse, plutôt qu'une description sans citation.
+3. Une troisième question, construite par l'agent selon le contexte du moment (chantiers en cours,
+   urgence, autres demandes en attente), portant sur la façon d'enchaîner les tâches qui suivent.
+Les réponses obtenues doivent concrètement changer la façon dont l'agent répond ensuite (niveau de
+détail, présence ou non de citations, ordre des tâches) — jamais notées puis ignorées. Cette
+exigence est nouvelle : elle s'applique à partir de la simulation suivant son adoption, pas
+rétroactivement à une livraison déjà faite avant qu'elle n'existe.
+
+*(Les trois blocs ci-dessus ont été déplacés ici le 2026-09-22 : ils vivaient sous l'Article 16
+(format des questions) alors qu'ils décrivent tous les trois ce qui se passe APRÈS la livraison
+d'une simulation — le sujet de l'Article 18, qu'ils citent d'ailleurs nommément. Aucun mot changé,
+seulement rangés sous l'Article dont ils parlent.)*
+
 **Article 19 — Comprendre avant de toucher.** Avant de modifier une ligne de code existante, comprendre la logique en place et
 la raison pour laquelle elle a été écrite ainsi — jamais un changement à l'aveugle sur la seule foi
 d'une hypothèse ou d'une intuition non vérifiée. Ceci sert notamment à **respecter le travail déjà
@@ -459,33 +466,8 @@ strict et non négociable : **d'abord on comprend le sens des choses, ensuite se
 toucher au code** — jamais l'inverse (coder puis chercher a posteriori une justification à ce qui
 vient d'être fait).
 
-**Blocage de quota Gemini — outil surnommé « Smart Breaker ».** Regroupe
-`scripts/check-gemini-quota.mjs` + `scripts/gemini-key-health.mjs` + `scripts/api-providers.mjs` +
-`lib/gemini-keys.ts`. **Toutes ses règles opérationnelles** (fait établi sur le quota journalier par
-modèle et par projet, repli de modèle et de clé, rotation et recul exponentiel, portée production,
-condition stricte avant toute activation d un modèle de repli, discrétion) vivent dans
-`docs/referentiel/smart-breaker-historique.md` — **à lire avant toute intervention sur ce sujet**.
-Blueprint générique réutilisable : `docs/outil-resilience-api.md`. Ce qui reste ci-dessous est la
-seule chose qui doit rester sous les yeux en permanence : la procédure à suivre le jour où ça bloque.
-
-**Procédure à suivre dès qu'une simulation (étape 1 du protocole ci-dessus) reste bloquée en HTTP
-429/503 répété :** (0) consulter Smart Conso API (`node scripts/smart-conso-api.mjs diagnostic
---confirm`, cf. Article 22) — `check-gemini-quota.mjs` sonde plusieurs modèles × plusieurs clés en
-quelques secondes, c'est bien une action coûteuse au sens de cet Article, jamais une exception parce
-que c'est un diagnostic plutôt qu'une simulation ; (1) `node scripts/check-gemini-quota.mjs` pour
-identifier les modèles réellement disponibles à cet instant ; (2) reporter la ligne suggérée dans
-`.dev.vars` (`GEMINI_FALLBACK_MODELS=modèle1,modèle2`) ; (3) si un second projet Google est
-disponible, ajouter sa clé à `GEMINI_API_KEY_FALLBACKS` — vérifier D'ABORD qu'il s'agit bien d'un
-projet distinct, pas une seconde clé du même projet (sonder avec `check-gemini-quota.mjs` en forçant
-`GEMINI_API_KEY` sur cette nouvelle clé) ; (4) redémarrer le serveur de développement pour que
-`.dev.vars` soit effectivement chargé (confirmé empiriquement : une variable d'environnement shell
-seule n'est PAS prise en compte par le runtime Cloudflare Workers en mode dev) — en vérifiant
-qu'aucun processus `workerd` orphelin ne survit à un `pkill` précédent (nom de processus différent
-de `vinext dev`/`node scripts/run-framework`, peut garder le port occupé) ; (5) relancer ou laisser
-reprendre la simulation.
-
-**Article 20 — ARGUS : aucun travail ne se termine sans passer par le détecteur de trous
-logiques.** ARGUS repère les trous logiques qu'aucun autre garde-fou de cette charte ne couvre
+**Article 20 — ARGUS : aucun travail ne se termine sans passer par le détecteur de trous logiques.**
+ARGUS repère les trous logiques qu'aucun autre garde-fou de cette charte ne couvre
 explicitement (combinaison de mécanismes jamais envisagée, cas limite oublié, conséquence
 logique manquée, lien discret non vu) — sur une idée neuve comme sur le code déjà écrit. **HARMONIA**
 (cousin d'ARGUS, cohérence des liens déjà existants), **AXA-CHECK** (troisième membre, robustesse/
@@ -555,6 +537,35 @@ déléguée), toute lecture exhaustive du dépôt, et tout passage de raisonneme
 coûteux, capacité de scan Global/Partiel/Zoomé/Focus, KPI) : `docs/smart-conso-token-blueprint.md`
 et `docs/referentiel/smart-conso-token.md`.
 
+**Blocage de quota Gemini — outil surnommé « Smart Breaker ».** Regroupe
+`scripts/check-gemini-quota.mjs` + `scripts/gemini-key-health.mjs` + `scripts/api-providers.mjs` +
+`lib/gemini-keys.ts`. **Toutes ses règles opérationnelles** (fait établi sur le quota journalier par
+modèle et par projet, repli de modèle et de clé, rotation et recul exponentiel, portée production,
+condition stricte avant toute activation d un modèle de repli, discrétion) vivent dans
+`docs/referentiel/smart-breaker-historique.md` — **à lire avant toute intervention sur ce sujet**.
+Blueprint générique réutilisable : `docs/outil-resilience-api.md`. Ce qui reste ci-dessous est la
+seule chose qui doit rester sous les yeux en permanence : la procédure à suivre le jour où ça bloque.
+
+**Procédure à suivre dès qu'une simulation (étape 1 du protocole ci-dessus) reste bloquée en HTTP
+429/503 répété :** (0) consulter Smart Conso API (`node scripts/smart-conso-api.mjs diagnostic
+--confirm`, cf. Article 22) — `check-gemini-quota.mjs` sonde plusieurs modèles × plusieurs clés en
+quelques secondes, c'est bien une action coûteuse au sens de cet Article, jamais une exception parce
+que c'est un diagnostic plutôt qu'une simulation ; (1) `node scripts/check-gemini-quota.mjs` pour
+identifier les modèles réellement disponibles à cet instant ; (2) reporter la ligne suggérée dans
+`.dev.vars` (`GEMINI_FALLBACK_MODELS=modèle1,modèle2`) ; (3) si un second projet Google est
+disponible, ajouter sa clé à `GEMINI_API_KEY_FALLBACKS` — vérifier D'ABORD qu'il s'agit bien d'un
+projet distinct, pas une seconde clé du même projet (sonder avec `check-gemini-quota.mjs` en forçant
+`GEMINI_API_KEY` sur cette nouvelle clé) ; (4) redémarrer le serveur de développement pour que
+`.dev.vars` soit effectivement chargé (confirmé empiriquement : une variable d'environnement shell
+seule n'est PAS prise en compte par le runtime Cloudflare Workers en mode dev) — en vérifiant
+qu'aucun processus `workerd` orphelin ne survit à un `pkill` précédent (nom de processus différent
+de `vinext dev`/`node scripts/run-framework`, peut garder le port occupé) ; (5) relancer ou laisser
+reprendre la simulation.
+
+*(Déplacé ici le 2026-09-22 : ce bloc vivait sous l'Article 19 « Comprendre avant de toucher »,
+sans aucun lien avec lui — un accident de mise en page, jamais une décision. Sa vraie famille est
+ici : l'étape (0) de sa procédure est précisément « consulter Smart Conso API ». Aucun mot changé.)*
+
 **Article 23 — ALWAYS-NEW-CODE : l'épreuve de la page blanche, rendue concrète.** L'Article 7
 demandait déjà, périodiquement, de se poser la question de la page blanche — cet Article lui donne
 un vrai outil. Sur UNE zone à la fois, ALWAYS-NEW-CODE imagine comment cette zone serait construite
@@ -569,8 +580,8 @@ sacré du code (Article 20) — les deux ne sont jamais confondues.
 vérifier d'abord que ce n'est pas déjà une décision assumée et documentée ailleurs (Article 19).
 Détail complet : `docs/always-new-code-blueprint.md` et `docs/referentiel/always-new-code.md`.
 
-**Article 24 — Toute construction doit être évolutive, jamais figée sur une liste copiée à la
-main.** *(2026-09-21, audit d'évolutivité demandé explicitement par l'utilisateur.)* Portée
+**Article 24 — Toute construction doit être évolutive, jamais figée sur une liste copiée à la main.**
+*(2026-09-21, audit d'évolutivité demandé explicitement par l'utilisateur.)* Portée
 strictement le CODE et l'OUTILLAGE de travail (les ~25 scripts de l'Agence Codex et leur
 documentation technique) — jamais le contenu narratif du jeu, déjà couvert séparément par le
 corollaire de l'Article 10 (variété de fond des répliques de secours) et celui de l'Article 17

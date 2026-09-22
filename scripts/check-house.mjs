@@ -4304,8 +4304,17 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.ok(manuels[0].prudence.includes('procédure d\'urgence'), 'the finding must carry the caution that came from doing it by hand: keep what must stay under the eyes on the day it breaks');
     // Un bloc rangé sous le mauvais Article : zéro token, mais la charte ment sur sa structure.
     const malRanges = eco.findMisfiledBlocks(charteAvant2);
-    assert.ok(malRanges.some((x) => /Format de présentation/.test(x.bloc) && x.appartientA === 18), 'a block filed under Article 19 but citing Article 18 twice must be reported as mis-filed');
+    assert.ok(malRanges.some((x) => /Format de présentation/.test(x.bloc) && x.appartientA === 18), 'a block citing another Article more often than its own host must still surface — the signal keeps its reach');
     assert.ok(malRanges.every((x) => x.gain === 0), 'a mis-filing is never sold as a token saving — it is a structure correction, and saying otherwise would inflate the tool\'s own numbers');
+    // 8e apprentissage (2026-09-22) : ce signal ne peut pas distinguer « appartient à » de « renvoie
+    // à ». Preuve faite sur pièces le même jour : deux blocs réels de signature IDENTIQUE (Article 18
+    // cité deux fois, Article 16 une fois) devaient recevoir des sorts opposés. Il pose donc une
+    // question au lieu de rendre un verdict, et l'Article 0 — la hiérarchie des lois, citée partout
+    // par construction — ne peut plus être désigné comme domicile de quoi que ce soit.
+    assert.ok(malRanges.every((x) => /est-ce son SUJET .* ou un simple RENVOI/.test(x.pourquoi)), 'the finding must be phrased as a question the reader answers, never as the verdict "accident de mise en page" the tool has no way to establish');
+    assert.ok(malRanges.every((x) => x.appartientA !== 0), 'Article 0 is the hierarchy-of-laws article, cited everywhere by design: it can never be proposed as a block\'s real home, or it would be the false home of everything');
+    const citeSonHote = eco.findMisfiledBlocks('## S\n\n**Article 5 — Test.** corps.\n\n**Bloc qui cite son hôte.** ' + 'Ce bloc relève de l\'Article 5 et renvoie à l\'Article 9, encore l\'Article 9. '.repeat(12));
+    assert.ok(citeSonHote.every((x) => !/cite son hôte/.test(x.bloc)) || citeSonHote.length === 0 || citeSonHote[0].pourquoi.includes('son hôte'), 'when a block names its own host Article, the finding must at least SAY how many times — the reader needs that number to answer the question the tool is asking');
   }
 
   // --- 4e APPRENTISSAGE : sans destination EXISTANTE, une extraction est une QUESTION, pas un gain.
