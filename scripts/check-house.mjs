@@ -3037,6 +3037,16 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(findProcessDocsMissing(),[],'every declared process must point at a document that really exists');
   assert.deepEqual(findTensionsOnUnknownProcess(),[],'a declared tension must never cite a process that no longer exists');
   assert.ok(TENSIONS_CONNUES.length>0&&TENSIONS_CONNUES.every(t=>t.resolution),'a declared tension without its resolution would leave the next agent to arbitrate it alone, in the middle of the night — never acceptable');
+  // LE PROCESS MAÎTRE (2026-09-22, question de l'utilisateur : god-of-all-process a-t-il son propre
+  // process, et le vérifie-t-il ?). La réponse était non, et c'était le seul point aveugle du
+  // dispositif : l'outil qui reproche aux autres de ne pas avoir de gardien n'en avait aucun.
+  const {selfCheck}=await import('../scripts/god-of-all-process.mjs');
+  assert.ok(selfCheck().ok,'the real dispositif must be self-consistent: god-of-all-process watching itself, every process with a real guardian and a real document, no broken probe, no orphan tension');
+  assert.ok(PROCESSES.some(p=>p.slug==='meta'&&p.gardien==='scripts/god-of-all-process.mjs'),'god-of-all-process must declare a master process watched by itself — a supervisor no rule supervises drifts without anything saying so, the exact pattern this whole toolset fights, applied at its top');
+  const sansMeta=selfCheck({processes:PROCESSES.filter(p=>p.slug!=='meta')});
+  assert.ok(!sansMeta.ok&&sansMeta.constats.some(c=>/ne se surveille plus lui-même/.test(c)),'removing the master process must be detected loudly, never pass silently');
+  const gardienDetourne=selfCheck({processes:PROCESSES.map(p=>p.slug==='meta'?{...p,gardien:'scripts/autre.mjs'}:p)});
+  assert.ok(!gardienDetourne.ok,'handing the master process to another guardian must be caught: god-of-all-process is the only tool that can honestly watch the dispositif it defines');
   const avancement=processProgress('simulation');
   assert.ok(avancement.verifiables>0&&avancement.sansTrace.length>0,'a real process must report both what it can verify and what it honestly cannot');
   assert.ok(!checkAgentSessionDeclared({session:{}}).ok&&checkAgentSessionDeclared({session:{model:'x'}}).ok,'a missing session identity must be flagged, since every report produced then carries "Version de Claude : non renseignée"');

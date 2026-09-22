@@ -72,10 +72,10 @@ export const PROCESSES = [
   },
   {
     slug: "nuit",
-    nom: "Travail autonome (mode nocturne)",
+    nom: "mode-auto-process-guardian — travail autonome (mode nocturne)",
     quand: "travailler seul pendant l'absence de l'utilisateur",
     motsCles: ["autonome", "nuit", "nocturne", "pendant que je dors", "seul"],
-    doc: "docs/process-autonome.md",
+    doc: "docs/mode-auto-process-guardian.md",
     gardien: "scripts/god-of-all-process.mjs",
     etapes: [
       { cle: "identite", libelle: "déposer l'identité de session (version de Claude)", preuve: { fichier: SESSION_FILE } },
@@ -83,6 +83,28 @@ export const PROCESSES = [
       { cle: "sensible", libelle: "mettre de côté tout ce qui touche au périmètre sensible", preuve: null },
       { cle: "suivi", libelle: "documenter chaque tâche substantielle dans le suivi", preuve: { dossier: "docs/suivi/sessions/", motif: /\.md$/ } },
       { cle: "rapport", libelle: "livrer le rapport de nuit en fichier texte", preuve: { dossier: "docs/rapports-de-nuit/", motif: /\.txt$/ } },
+    ],
+  },
+  {
+    // LE PROCESS MAÎTRE (2026-09-22, question de l'utilisateur : « the god of process a-t-il son
+    // propre process, et verifie-t-il son propre process ? »). La réponse était NON, et c'était le
+    // seul point aveugle du dispositif : l'outil qui reproche aux autres de ne pas avoir de gardien
+    // n'en avait aucun lui-même. Un surveillant qu'aucune règle ne surveille finit par dériver sans
+    // que rien ne le dise — exactement le motif que tout ce paysage combat, appliqué cette fois à
+    // son sommet. Il se surveille donc lui-même, et `selfCheck()` plus bas rend cette
+    // auto-surveillance réellement vérifiable plutôt que simplement déclarée ici.
+    slug: "meta",
+    nom: "Tenue du dispositif de process lui-même (process maître)",
+    quand: "ajouter, retirer ou modifier un process, un gardien de process, ou god-of-all-process",
+    motsCles: ["process", "gardien de process", "god-of-all-process", "dispositif"],
+    doc: "docs/mode-auto-process-guardian.md",
+    gardien: "scripts/god-of-all-process.mjs",
+    etapes: [
+      { cle: "registre", libelle: "le process est déclaré dans PROCESSES avec son document et son gardien", preuve: { fichier: "scripts/god-of-all-process.mjs" } },
+      { cle: "document", libelle: "le process est écrit quelque part, pas seulement codé", preuve: null },
+      { cle: "sondes", libelle: "chaque étape déclare une preuve réelle, ou déclare honnêtement n'en avoir aucune", preuve: null },
+      { cle: "tensions", libelle: "toute tension avec un process voisin est déclarée ET résolue", preuve: null },
+      { cle: "identite", libelle: "l'identité de session est déposée, sinon chaque rapport porte un trou", preuve: { fichier: SESSION_FILE } },
     ],
   },
 ];
@@ -215,12 +237,33 @@ export function findTensionsOnUnknownProcess({ tensions = TENSIONS_CONNUES, proc
   return tensions.flatMap((t) => t.entre.filter((s) => !connus.has(s)).map((s) => `${s} (cité dans une tension déclarée, mais n'est plus un process connu)`));
 }
 
+// L'AUTO-SURVEILLANCE, exécutable plutôt que promise. Un surveillant qui se contente de déclarer
+// qu'il se surveille ne se surveille pas : ces cinq contrôles portent sur SON propre état, et
+// tombent au rouge si le dispositif dérive — y compris s'il dérive par sa faute à lui.
+export function selfCheck({ processes = PROCESSES, root = ROOT, tensions = TENSIONS_CONNUES } = {}) {
+  const constats = [];
+  const meta = processes.find((p) => p.slug === "meta");
+  if (!meta) constats.push("god-of-all-process ne se surveille plus lui-même : le process maître a disparu de PROCESSES.");
+  if (meta && meta.gardien !== "scripts/god-of-all-process.mjs") constats.push("le process maître a été confié à un autre gardien que god-of-all-process lui-même.");
+  for (const m of findProcessesWithoutGuardian({ processes, root })) constats.push(`process sans gardien réel : ${m}`);
+  for (const m of findProcessDocsMissing({ processes, root })) constats.push(`process sans document réel : ${m}`);
+  for (const m of findBrokenProbes({ processes, root })) constats.push(`sonde cassée : ${m}`);
+  for (const m of findTensionsOnUnknownProcess({ tensions, processes })) constats.push(`tension orpheline : ${m}`);
+  // Une étape sans preuve est légitime ; une étape qui n'en déclare aucune ET dont personne ne dit
+  // qu'elle est invérifiable serait un trou muet. Ici les deux sont le même champ (`preuve: null`),
+  // donc rien à vérifier de plus — dit explicitement pour qu'un futur lecteur ne cherche pas en vain.
+  const sansGardienDeSoi = !processes.some((p) => p.gardien === "scripts/god-of-all-process.mjs" && p.slug === "meta");
+  return { ok: constats.length === 0 && !sansGardienDeSoi, constats };
+}
+
 // ————————————————————————————————————————————————————————————————————————
 // LE RAPPORT
 // ————————————————————————————————————————————————————————————————————————
 
 export function buildGodReportBlocks({ processes = PROCESSES, root = ROOT, session } = {}) {
   const blocks = [];
+  const auto = selfCheck({ processes, root });
+  blocks.push({ type: "note", text: auto.ok ? "✅ Process maître : god-of-all-process se surveille bien lui-même, et le dispositif est cohérent." : `⚠️ Process maître — ${auto.constats.length} constat(s) sur le dispositif lui-même :\n  ${auto.constats.join("\n  ")}` });
   const identite = checkAgentSessionDeclared({ session });
   blocks.push({ type: "note", text: `${identite.ok ? "✅" : "⚠️"} ${identite.message}` });
 

@@ -609,6 +609,30 @@ que cette nature volontairement manuelle est écrite noir sur blanc à côté. U
 tout le reste du paysage (au-delà des 12 outils déjà couverts par un garde-fou après cet audit) n'a
 pas été fait ce soir-là au-delà de ce qui précède — un futur passage complémentaire reste ouvert.
 
+**Article 25 — Vérifier régulièrement son propre travail, pas seulement le produire.**
+*(2026-09-22, demande explicite de l'utilisateur : « verifie régulièrement ton travail : à inscrire
+dans la charte : tu dois verifier regulierement ton travail, en utilisant si besoin les outils ».)*
+Produire un changement et le tester une fois ne suffit pas : l'agent revient périodiquement sur son
+propre travail déjà livré pour y chercher ses erreurs, **en sollicitant réellement les outils du
+paysage plutôt qu'en se relisant de mémoire**. Cet Article se distingue nettement de ses voisins :
+l'Article 14 demande une vigilance AU MOMENT d'agir, l'Article 20 fait passer chaque itération par
+les Gardiens, l'Article 21 déclenche une vérification exceptionnelle sur demande — celui-ci porte
+sur le retour, à froid, vers ce qu'on a soi-même déjà considéré comme terminé.
+
+**Pourquoi il existe, et ce n'est pas théorique.** Le 2026-09-22, une seule matinée de relecture de
+la nuit précédente a fait remonter : une phrase de documentation qui affirmait comme un absolu un
+comportement qui ne l'est que par défaut ; une ligne d'index KPI jamais écrite alors que la tâche
+était close ; trois sondes d'un outil neuf pointant vers des chemins inexistants ; et, dans le code
+même écrit pour empêcher qu'une absence de mesure passe pour une mesure, exactement cette
+confusion. Aucun de ces quatre écarts n'aurait été trouvé par une relecture de mémoire — chacun l'a
+été en relançant un outil réel contre l'état réel du dépôt.
+
+**Ce que ça veut dire concrètement** : après une vague de travail (une nuit autonome, un gros
+chantier, une série de commits), relancer les outils qui savent juger ce qui vient d'être touché
+plutôt que de supposer que le vert du dernier commit vaut encore. Et quand un outil neuf vient
+d'être construit, le lancer POUR DE VRAI sur des données réelles avant de le considérer terminé :
+un outil qui n'a jamais tourné contre le vrai dépôt n'est pas un outil vérifié, c'est une intention.
+
 ## Règles de travail — collaboration avec l'utilisateur
 
 `docs/regles-de-travail.md` documente, séparément de la charte de contenu ci-dessus, la façon dont
