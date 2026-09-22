@@ -298,3 +298,34 @@ dossier est DÉCLARÉ, jamais qu'il est au BON ENDROIT. On peut déclarer un dos
   l'improvisation.
 
 **À traiter au prochain point d'organisation**, après la Ronde en cours.
+
+## Idée n°8 — la fiche qui PRÉSENTE l'Agence, celle qui servirait à « la vendre »
+
+*(2026-09-23, idée consignée par l'utilisateur au lancement de la Ronde : « existence d'une fiche
+qui présente l'agence, sa vocation, à quoi elle sert, comme pour "vendre" son exportation. Chez qui
+est hébergé ce document ? Il doit être mis à jour régulièrement (circle). »)*
+
+**Le trou qu'elle nomme.** Tout ce que l'Agence possède aujourd'hui est tourné vers l'INTÉRIEUR :
+`organisation-agence.md` décrit son organigramme, `regles-de-travail.md` §7ter sa table maîtresse
+outil par outil, chaque blueprint son propre mécanisme. Rien ne répond à la question qu'un
+lecteur extérieur poserait en premier — *c'est quoi, à quoi ça sert, pourquoi je la prendrais ?*
+Or c'est exactement la question du second projet (cf. CLAUDE.md, « Les deux projets ») : l'Agence
+est faite pour partir, et un ensemble qui ne sait pas se présenter ne part pas.
+
+**Les trois questions ouvertes, à trancher avec l'utilisateur, jamais seul :**
+1. **Où vit ce document ?** Il n'est ni une instanciation (rien de propre à ce projet), ni un
+   blueprint (il ne décrit aucun outil), ni un référentiel de travail. Candidat naturel : la
+   racine de `docs/`, à côté de `agence-exportable-conception.md` — mais c'est précisément le
+   problème de fichiers éparpillés déjà noté (idée n°7), donc à trancher avec lui.
+2. **Qui le tient à jour ?** L'utilisateur demande explicitement une mise à jour régulière par la
+   Ronde. Un item CIRCLE_ITEMS suppose un garde-fou mécanique : que vérifierait-il ? Le plus
+   honnête serait la FRAÎCHETÉ relative — la fiche est-elle plus ancienne que le dernier
+   changement d'organigramme ou que l'arrivée du dernier outil ? Une fiche qui ne mentionne pas
+   les trois derniers arrivants est fausse sans que rien ne le dise.
+3. **Que contient-elle exactement ?** Une présentation qui recopierait la table maîtresse se
+   périmerait à chaque nouvel outil (Article 24). Elle doit donc dire la VOCATION et les
+   PRINCIPES — ce qui ne change pas — et LIRE le reste dynamiquement.
+
+**Ce que ça n'est pas** : ni un doublon de `organisation-agence.md` (qui dit COMMENT c'est
+organisé, pas POURQUOI ça vaut le coup), ni de `agence-exportable-conception.md` (qui prépare le
+projet suivant, pas la présentation de celui-ci).

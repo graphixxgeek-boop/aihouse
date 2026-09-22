@@ -1079,3 +1079,33 @@ reprendre le process exact en sautant les étapes citées uniquement ».
 QUESTIONS SUPPLÉMENTAIRES À COMPTER (le mécanisme en crée) :
   l'offre de passer, 1 par série concernée, au 2e échec  → 0 à 6 selon les séries touchées
   Le total de la Partie 11 devient donc 28 à 49.
+
+════════════════════════════════════════════════════════════════════════
+PARTIE 12 — FORME DES FENÊTRES DE QUESTIONS (2026-09-23)
+════════════════════════════════════════════════════════════════════════
+
+Correction apportée par l'utilisateur au moment même de l'ouverture de la Ronde du 2026-09-23 :
+« la bonne formulation est : "je réponds aux questions suivantes" ou "je réponds aux questions
+d'ouverture de la Ronde", MAIS tu ne peux pas dire "ci-dessous" car il n'y a rien ci-dessous. »
+
+CE QUE ÇA CORRIGE, ET POURQUOI C'EST UNE VRAIE ERREUR ET PAS UN DÉTAIL. J'avais rédigé l'option
+d'une question comme « Je réponds aux questions ci-dessous », en raisonnant depuis MA vue : les
+quatre questions sont écrites les unes sous les autres dans mon appel. Du côté de l'utilisateur,
+une fenêtre de questions présente chaque question SÉPARÉMENT — il n'y a pas de « ci-dessous », et
+une option qui renvoie à quelque chose d'invisible ne se comprend pas. C'est exactement ce que
+l'Article 15 demande de vérifier (se relire du point de vue de qui découvre l'écran sans le
+contexte de celui qui l'a écrit), appliqué cette fois à mes propres questions plutôt qu'au jeu.
+
+LA RÈGLE, VALABLE POUR TOUTE FENÊTRE DE QUESTIONS DE CE PROJET :
+  - Jamais de renvoi spatial entre questions d'une même fenêtre : ni « ci-dessous », ni
+    « ci-dessus », ni « la question précédente », ni « les trois suivantes ». Chaque question se
+    tient seule.
+  - Quand une question porte sur un GROUPE de questions (l'offre de passer une série, par
+    exemple), elle nomme la série par son SUJET (« les questions d'ouverture de la Ronde »), jamais
+    par sa position.
+  - Corollaire déjà écrit ailleurs et confirmé ici : un intitulé doit être complet et autonome,
+    compréhensible sans relire l'historique (charte, Article 16).
+
+CE QUE ÇA CHANGE POUR LES SÉRIES : l'option « je réponds » d'une offre de passer se formule
+« Je réponds aux questions d'ouverture de la Ronde », jamais « je réponds aux questions
+ci-dessous ».
