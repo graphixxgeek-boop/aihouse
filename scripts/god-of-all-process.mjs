@@ -499,6 +499,22 @@ export function etatConnexionProcessGardien({ processes = PROCESSES, root = ROOT
 // n'est donc jamais une faute en soi : il se DÉCLARE, avec sa raison, comme tout le reste ici. Un
 // process de consultation avant action (Smart Conso) n'a pas de rapport à produire ; le lui
 // reprocher apprendrait à ignorer ce contrôle.
+// DEUX BORNES POSÉES PAR L'UTILISATEUR DANS LA FOULÉE, et elles évitent chacune un contresens :
+//
+//   · « Attention, ça ne veut pas dire que ce schéma PRÉVAUT sur le process circle existant sur
+//     lequel on travaille depuis tout à l'heure. Mais il doit s'en rapprocher. » — Le schéma est
+//     une RESSEMBLANCE DE FAMILLE, jamais une loi. Là où un process écrit diffère du schéma, c'est
+//     le PROCESS qui fait foi : lui a été calibré étape par étape avec l'utilisateur, le schéma
+//     n'est qu'un repère commun. Ce que le schéma mesure, c'est une DISTANCE — « ce process
+//     s'éloigne-t-il de la forme habituelle, et l'a-t-on dit ? » — jamais une conformité à
+//     atteindre. Un process qui s'en écarte pour une raison écrite est en règle.
+//
+//   · « C'est normal que la Ronde actuelle ne contienne pas la fin du schéma, car elle n'est pas
+//     finie. » — Ce que ces fonctions lisent, ce sont les ÉTAPES DÉCLARÉES d'un process (sa
+//     conception), jamais l'état d'une exécution en cours. Une Ronde en train de se dérouler n'a
+//     évidemment pas encore ses tâches : ça ne dit rien du process, seulement qu'on est au milieu.
+//     Confondre les deux ferait reprocher à un travail en cours de ne pas être terminé — la même
+//     famille d'erreur que « lire une absence de mesure comme une mesure ».
 export const SCHEMA_DE_REFERENCE = [
   { maillon: "scan", quoi: "produire une mesure réelle sur l'état des choses", sansQuoi: "l'analyse porterait sur une impression" },
   { maillon: "rapports", quoi: "écrire ET LIVRER ce que le scan a trouvé", sansQuoi: "seul l'agent sait ce qui a été vu (Partie 13 : écrire n'est pas livrer)" },

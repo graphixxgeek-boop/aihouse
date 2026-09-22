@@ -1261,3 +1261,23 @@ ignorer le contrôle, et un contrôle qu'on apprend à ignorer ne garde plus rie
 VÉRIFIÉ MÉCANIQUEMENT : `findMaillonsManquants()` — 14 maillons manquants au premier passage,
 0 après avoir complété la Ronde et déclaré les exemptions. `etatDuSchema()` donne la vue lisible,
 process par process.
+
+DEUX BORNES, POSÉES PAR L'UTILISATEUR IMMÉDIATEMENT APRÈS — et chacune évite un contresens.
+
+BORNE 1 — LE SCHÉMA NE PRÉVAUT PAS SUR CE PROCESS.
+Ses mots : « Attention, ça ne veut pas dire que ce schéma prévaut sur le process circle existant
+sur lequel on travaille depuis tout à l'heure. Mais il doit s'en rapprocher. »
+Le schéma est une RESSEMBLANCE DE FAMILLE, jamais une loi. Ce process-ci a été calibré étape par
+étape avec lui, sur plusieurs jours et après de vrais écarts constatés ; le schéma n'est qu'un
+repère commun entre process. Là où les deux diffèrent, C'EST CE DOCUMENT QUI FAIT FOI. Ce que le
+schéma mesure est une DISTANCE — « ce process s'éloigne-t-il de la forme habituelle, et l'a-t-on
+dit ? » — jamais une conformité à atteindre. Un process qui s'en écarte pour une raison écrite est
+parfaitement en règle.
+
+BORNE 2 — LE SCHÉMA DÉCRIT UNE CONCEPTION, PAS UNE EXÉCUTION EN COURS.
+Ses mots : « C'est normal que la Ronde actuelle ne contienne pas la fin du schéma, car elle n'est
+pas finie. » Exact, et la distinction compte : `findMaillonsManquants()` lit les ÉTAPES DÉCLARÉES
+d'un process, jamais l'état d'une Ronde en train de se dérouler. Une Ronde au milieu de son
+déroulé n'a évidemment pas encore ses tâches — ça ne dit rien de sa conception, seulement qu'on
+n'est pas au bout. Confondre les deux ferait reprocher à un travail en cours de ne pas être
+terminé, qui est la même famille d'erreur que lire une absence de mesure comme une mesure.
