@@ -358,6 +358,22 @@ export const CIRCLE_ITEMS = [
   // jamais fusionné : celui-là juge l'équipe (badges, couverture, outils à reconsidérer), celui-ci
   // en montre seulement la STRUCTURE — qui est où, et qui n'est nulle part.
   {
+    // conformite-process (2026-09-22) — LE rapport de process de la Ronde, et le seul. Architecture
+    // fixée par l'utilisateur le jour même : « c'est god of process qui produit le rapport
+    // uniquement [...] Les rapports de process secondaires ne produisent pas de rapport directement
+    // livrés à la ronde : ce serait trop : god of process centralise. » Les gardiens secondaires
+    // (celui de la Ronde, celui de la simulation) gardent leur verdict ; god le RELAIE, jamais ne le
+    // recalcule. Thème « Suivi des chantiers » : il n'en portait que 3, et le respect d'un process
+    // est bien un suivi d'avancement, pas une mesure de qualité du code.
+    id: "god-of-all-process-conformite",
+    theme: "Suivi des chantiers",
+    label: "Conformité des process — god-of-all-process (rapport unique, coupable nommé)",
+    cout: "gratuit — relit les traces réelles sur le disque et relaie les verdicts des gardiens secondaires, zéro appel API",
+    tokensEstimes: "faible — un rapport texte court, une ligne par manquement réel",
+    execute: "Appeler buildProcessComplianceReport() (scripts/god-of-all-process.mjs) en lui passant les verdicts des gardiens secondaires déjà obtenus, puis écrire le résultat via recordCircleItemReport('god-of-all-process-conformite', texte). Le rapport nomme le responsable de chaque étape sautée, et liste séparément les étapes qu'aucun mécanisme ne peut vérifier — celles-là ne sont reprochées à personne.",
+    producesReport: true,
+  },
+  {
     id: "organigramme-signal",
     // Thème « Qualité du code » plutôt que « Qualité & fun » (corrigé le soir même par le test qui
     // garde la limite réelle de 4 options par fenêtre — « Qualité & fun » en avait déjà 4). Ce n'est
@@ -827,6 +843,7 @@ export function recordCircleTasksRun(totalCommitCount, now = Date.now()) {
 // cette table dynamiquement, jamais un chemin réinventé (Article 24).
 export const CIRCLE_REPORT_FOLDERS = {
   "the-king-signal": "docs/the-king/",
+  "god-of-all-process-conformite": "docs/god-of-all-process/",
   "organigramme-signal": "docs/cassandra-rh/organigramme/",
   "clean-dirty-old-signal": "docs/clean-dirty-old/",
   "smart-conso-api-scan": "docs/smart-conso-api/",

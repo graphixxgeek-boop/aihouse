@@ -609,6 +609,31 @@ que cette nature volontairement manuelle est écrite noir sur blanc à côté. U
 tout le reste du paysage (au-delà des 12 outils déjà couverts par un garde-fou après cet audit) n'a
 pas été fait ce soir-là au-delà de ce qui précède — un futur passage complémentaire reste ouvert.
 
+**Article 26 — Les process se respectent, et god-of-all-process en est le référent.**
+*(2026-09-22, demande explicite de l'utilisateur : « une regle qui t'oblige à respecter les process,
+à tenir compte des recommandations de god of process, à lire son rapport ».)* Un process écrit
+n'est pas une intention : c'est une suite d'étapes qui engage. L'agent les suit, il ne les
+réordonne pas de sa propre initiative, et il ne saute une étape que pour une raison qu'il écrit.
+
+**god-of-all-process (`scripts/god-of-all-process.mjs`) est LE référent de la discipline
+d'exécution**, et son rôle est triple :
+1. **Avant d'agir** — on lui demande quel process gouverne ce qu'on s'apprête à faire, plutôt que de
+   recomposer soi-même le choix entre plusieurs documents. Même réflexe unique que tool-brain pour
+   les outils.
+2. **À chaque Ronde** — il produit LE rapport de conformité des process, et lui seul : les gardiens
+   secondaires (celui de la Ronde, `process.simulation.guardian`) gardent leur verdict, mais c'est
+   god qui les relaie. Une seule voix, jamais une par gardien. Ce rapport **nomme le responsable**
+   de chaque étape sautée — presque toujours l'agent — et liste à part les étapes qu'aucun mécanisme
+   ne peut vérifier, qui ne sont reprochées à personne.
+3. **Il signale ce qui manque** — les scripts qui mériteraient un process et n'en ont aucun, un
+   process sans gardien, un document promis qui n'existe pas, une tension non résolue entre deux
+   process. Y compris sur lui-même : il porte son propre process maître et le vérifie
+   (`selfCheck()`), parce qu'un surveillant que personne ne surveille dérive sans que rien ne le dise.
+
+**Obligation de l'agent** : lire son rapport quand il tombe, et tenir compte de ses recommandations
+— jamais les enregistrer puis passer à autre chose. Il signale, il ne corrige jamais : la décision
+reste humaine, mais l'ignorer en silence n'en est pas une.
+
 **Article 25 — Vérifier régulièrement son propre travail, pas seulement le produire.**
 *(2026-09-22, demande explicite de l'utilisateur : « verifie régulièrement ton travail : à inscrire
 dans la charte : tu dois verifier regulierement ton travail, en utilisant si besoin les outils ».)*

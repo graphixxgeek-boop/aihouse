@@ -257,6 +257,90 @@ export function selfCheck({ processes = PROCESSES, root = ROOT, tensions = TENSI
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// QUELS SCRIPTS MÉRITERAIENT UN PROCESS ET N'EN ONT PAS
+// ————————————————————————————————————————————————————————————————————————
+
+// (2026-09-22, demande de l'utilisateur : « god of process devrait etre l'outil qui scanne si un
+// script qui le merite n'a pas de process ».) Le critère, calibré le même jour : un outil MÉRITE un
+// process quand son usage suit vraiment une suite d'étapes qu'on peut sauter — lancer une
+// simulation, tenir une Ronde. Un outil qu'on lance d'une commande et qui répond (chercher dans un
+// fichier, compter des tokens) n'a rien à déclarer, et ne doit jamais être puni pour ça.
+//
+// Ce que le code peut voir honnêtement : un script qui possède plusieurs SOUS-COMMANDES enchaînables
+// ou qui ÉCRIT un artefact durable a, presque toujours, une suite d'étapes autour de lui. C'est un
+// indice, jamais une preuve — d'où le mot « mériterait », et d'où le fait que rien ne se déclenche
+// tout seul : c'est une liste à regarder, pas un reproche.
+const INDICES_MERITE_PROCESS = [
+  { marqueur: /process\.argv\[2\]/, indice: "plusieurs sous-commandes — donc un ordre dans lequel on les lance" },
+  { marqueur: /writeFileSync\(/, indice: "écrit un artefact durable — donc un avant et un après" },
+  { marqueur: /--confirm|--force|override/, indice: "prévoit un passage en force — donc une règle à respecter" },
+];
+
+export function findScriptsDeservingProcess({ processes = PROCESSES, root = ROOT, scripts, readFileImpl = readFileSync } = {}) {
+  const gardiens = new Set(processes.map((p) => p.gardien));
+  const liste = scripts ?? (() => { try { return readdirSync(join(root, "scripts")).filter((f) => f.endsWith(".mjs")).map((f) => `scripts/${f}`); } catch { return []; } })();
+  const trouves = [];
+  for (const chemin of liste) {
+    if (gardiens.has(chemin)) continue; // un gardien de process n'a pas à en déclarer un de plus
+    let src;
+    try { src = readFileImpl(join(root, chemin), "utf8"); } catch { continue; }
+    const indices = INDICES_MERITE_PROCESS.filter((i) => i.marqueur.test(src)).map((i) => i.indice);
+    // Deux indices au moins : un seul est trop courant pour vouloir dire quelque chose.
+    if (indices.length >= 2) trouves.push({ chemin, indices });
+  }
+  return trouves;
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// LE RAPPORT DE RONDE — centralisé ici, et ici seulement
+// ————————————————————————————————————————————————————————————————————————
+
+// ARCHITECTURE FIXÉE PAR L'UTILISATEUR (2026-09-22) : « pour les process, c'est god of process qui
+// produit le rapport uniquement [...] Les rapports de process secondaires ne produisent pas de
+// rapport directement livrés à la ronde : ce serait trop : god of process centralise. » Les gardiens
+// secondaires (la Ronde, la simulation) gardent donc leur propre verdict, mais c'est god qui les lit
+// et qui livre LE rapport de process. Une seule voix à la Ronde, pas une par gardien.
+//
+// LE COUPABLE EST NOMMÉ, sans détour — demande explicite du même jour (« il designe le coupable »).
+// Dans les faits c'est presque toujours l'agent qui a sauté une étape, et le dire est le seul moyen
+// que ça change : c'est précisément ce qui manquait quand la règle des tours autonomes s'est perdue
+// entre deux simulations sans que personne ne soit responsable de rien.
+export const RESPONSABLES = {
+  agent: "l'agent (moi) — étape prévue par le process et simplement pas faite",
+  outil: "un outil — il devait produire quelque chose et ne l'a pas fait",
+  personne: "personne — aucun mécanisme ne peut vérifier cette étape, elle repose sur la seule discipline",
+};
+
+export function buildProcessComplianceReport({ processes = PROCESSES, root = ROOT, verdictsSecondaires = [] } = {}) {
+  const lignes = [];
+  const manquements = [];
+  for (const p of processes) {
+    const av = processProgress(p.slug, { processes, root });
+    for (const libelle of av.manquantes) manquements.push({ process: p.nom, etape: libelle, responsable: "agent" });
+    for (const libelle of av.sansTrace) manquements.push({ process: p.nom, etape: libelle, responsable: "personne" });
+  }
+  // Les verdicts des gardiens secondaires sont RELAYÉS, jamais recalculés : chacun sait juger son
+  // domaine mieux que god ne le ferait, et un second calcul divergerait tôt ou tard.
+  for (const v of verdictsSecondaires) {
+    if (v?.ok === false) manquements.push({ process: v.process ?? "process secondaire", etape: v.detail ?? "verdict négatif de son gardien", responsable: v.responsable ?? "outil", relaye: v.gardien });
+  }
+  const fautes = manquements.filter((m) => m.responsable !== "personne");
+  lignes.push(fautes.length ? `⚠️ ${fautes.length} manquement(s) réel(s) au process :` : "✅ Aucun manquement réel au process sur ce qui est vérifiable.");
+  for (const m of fautes) lignes.push(`  · ${m.process} — « ${m.etape} »\n      responsable : ${RESPONSABLES[m.responsable] ?? m.responsable}${m.relaye ? ` (relayé par ${m.relaye}, jamais recalculé ici)` : ""}`);
+  const nonVerifiables = manquements.filter((m) => m.responsable === "personne");
+  if (nonVerifiables.length) {
+    lignes.push("", `${nonVerifiables.length} étape(s) que rien ne peut vérifier — ni reprochées à personne, ni comptées comme faites :`);
+    for (const m of nonVerifiables) lignes.push(`  · ${m.process} — « ${m.etape} »`);
+  }
+  const merite = findScriptsDeservingProcess({ processes, root });
+  if (merite.length) {
+    lignes.push("", `${merite.length} script(s) qui mériteraient peut-être un process et n'en ont aucun (indice, jamais un reproche) :`);
+    for (const m of merite) lignes.push(`  · ${m.chemin} — ${m.indices.join(" ; ")}`);
+  }
+  return { lignes, manquements, fautes: fautes.length, scriptsSansProcess: merite.length, texte: lignes.join("\n") };
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LE RAPPORT
 // ————————————————————————————————————————————————————————————————————————
 
