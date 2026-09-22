@@ -415,6 +415,10 @@ export const CHANTIER_PRELIMINARY_FILES = {
   "Changement de modèle IA (CIRCLE-TASKS)": { file: "docs/changement-de-modele-ia-conception.md", match: /changement de mod[eè]le|changement-de-modele-ia/i },
   "circle-process-guardian": { file: "docs/circle-process-detail.txt", match: /circle-process-guardian/i },
   "Utilité des outils dans CLAUDE.md vs la Ronde": { file: "docs/claude-md-tool-listing-conception.md", match: /outils dans claude\.md|claude-md-tool-listing/i },
+  // Inscrit le 2026-09-22, trouvé par findConceptionFilesMissingFromRegistry() à sa toute première
+  // exécution : le fichier existait depuis des jours, suivait la convention de nommage, et n'avait
+  // jamais été déclaré — donc jamais vérifié, ni en fraîcheur ni en restitution de valeur.
+  "LE-GRAND-ARCHITECTE": { file: "docs/le-grand-architecte-conception.md", match: /grand[- ]architecte/i },
 };
 
 // checkChantierFileFreshness() — la « vérification, jamais seulement une intention déclarée »
@@ -440,6 +444,103 @@ const TOLERANCE_DAYS = 1;
 export function isStagedForCommit(file, shImpl = sh) {
   return shImpl(`git diff --cached --name-only -- ${file}`, { cwd: ROOT }).trim().length > 0;
 }
+// findChantierFilesMissingValueRestitution() (2026-09-22) — le garde-fou de « la restitution de la
+// valeur », la règle retrouvée ce jour-là dans l'historique de conversation après que l'utilisateur
+// ait demandé de la chercher, et qui n'était écrite NULLE PART dans le dépôt : « chaque idee que
+// j'ai et que je veux sauvegardé doit comporter mon idee (ma valeur) + ta/tes reponses (ta valeur),
+// de maniere synthetisé, suivant la derniere "version" de l'idee discuté ». Règle complète et sa
+// portée exacte : docs/systeme-de-suivi.md, « La restitution de la valeur d'une idée ».
+//
+// POURQUOI IL EXISTE, et c'est une distinction de fond avec checkChantierFileFreshness() juste
+// au-dessus : celui-là vérifie qu'une idée ne se PERD pas (elle a bien rejoint son fichier) ; il ne
+// regarde jamais ce que le fichier CONTIENT. Une idée consignée sous une seule voix est pourtant
+// déjà une perte : la formulation brute sans l'analyse perd ce que la discussion a apporté ;
+// l'analyse sans la formulation d'origine perd l'intention réelle, et le prochain agent qui
+// reprendra le fichier reconstruira une intention approchante au lieu de lire la vraie (Article 27).
+//
+// COMMENT LES DEUX VOIX SE DISTINGUENT — un principe, jamais une liste de titres autorisés (le
+// corollaire de l'Article 17 interdit exactement ça, et une liste de formulations de titres se
+// périmerait au premier fichier écrit autrement). Les deux voix se distinguent par ATTRIBUTION, pas
+// par vocabulaire : dans tout ce dépôt, la parole de l'utilisateur est rendue par une citation
+// verbatim entre guillemets français, et la parole de l'agent est la prose qui l'entoure. On mesure
+// donc ces deux matières-là, indépendamment des mots employés.
+//
+// LIMITE HONNÊTE, déclarée plutôt que tue (c'est le défaut récurrent traqué toute cette session :
+// une mesure ADJACENTE présentée comme la mesure visée) : ceci vérifie que la FORME est là. Jamais
+// que la synthèse est fidèle, jamais qu'elle reflète la dernière version discutée — seule une
+// lecture le dit. Un fichier au vert n'est donc PAS un fichier à jour ; un fichier au rouge est en
+// revanche un vrai manque, sans ambiguïté.
+// findConceptionFilesMissingFromRegistry() (2026-09-22) — le garde-fou du garde-fou, et il a trouvé
+// un vrai manque le jour même où il a été écrit.
+//
+// LE TROU, exactement celui que l'Article 24 vise : CHANTIER_PRELIMINARY_FILES est une liste tenue
+// à la main. Les deux vérifications ci-dessous et ci-dessus ne voient QUE ce qui y est déclaré —
+// donc un fichier de conception bien réel, écrit selon la convention de nommage du projet mais
+// jamais inscrit au registre, est invisible aux deux, silencieusement, pour toujours. C'est la même
+// cécité structurelle déjà rencontrée ailleurs dans ce projet (findRegistriesMissingFromCircle(),
+// aveugle à un outil qui n'a aucun registre) : le trou vivait À L'INTÉRIEUR du garde-fou.
+//
+// PREMIÈRE EXÉCUTION RÉELLE : docs/le-grand-architecte-conception.md, jamais déclaré. Ni sa
+// fraîcheur ni la restitution de sa valeur n'avaient donc jamais été vérifiées une seule fois.
+//
+// La convention de nommage est la SEULE chose lue ici, jamais un contenu deviné : un fichier nommé
+// `*-conception.md` dans docs/ annonce lui-même ce qu'il est.
+export function findConceptionFilesMissingFromRegistry({ readDir = readdirSync } = {}) {
+  const declares = new Set(Object.values(CHANTIER_PRELIMINARY_FILES).map((v) => v.file));
+  let entrees;
+  try {
+    entrees = readDir(join(ROOT, "docs"));
+  } catch {
+    return [];
+  }
+  return entrees
+    .filter((nom) => /-conception\.md$/.test(nom))
+    .map((nom) => `docs/${nom}`)
+    .filter((chemin) => !declares.has(chemin));
+}
+
+const CITATION_UTILISATEUR = /«([^»]{40,})»/g;
+// 400 caractères de prose hors citations : assez pour distinguer un vrai travail d'analyse d'un
+// fichier qui ne serait qu'un collage de citations avec deux lignes de liaison, assez bas pour ne
+// jamais réclamer de la longueur pour de la longueur (la règle dit « synthétisé », pas « long »).
+const PROSE_AGENT_MINIMUM = 400;
+export function findChantierFilesMissingValueRestitution({ readFileImpl = readFileSync, exists = existsSync } = {}) {
+  const findings = [];
+  for (const [chantier, { file }] of Object.entries(CHANTIER_PRELIMINARY_FILES)) {
+    const full = join(ROOT, file);
+    if (!exists(full)) {
+      findings.push({ chantier, file, etat: "fichier absent", citations: 0, proseAgent: 0 });
+      continue;
+    }
+    let texte;
+    try {
+      texte = readFileImpl(full, "utf8");
+    } catch {
+      findings.push({ chantier, file, etat: "fichier illisible", citations: 0, proseAgent: 0 });
+      continue;
+    }
+    const citations = [...texte.matchAll(CITATION_UTILISATEUR)];
+    // La prose de l'agent = tout ce qui n'est PAS une citation de l'utilisateur. On retire aussi les
+    // blocs de code, qui ne sont la voix de personne.
+    const proseAgent = texte
+      .replace(/```[\s\S]*?```/g, " ")
+      .replace(/«[^»]*»/g, " ")
+      .replace(/\s+/g, " ")
+      .trim().length;
+    const aLIdee = citations.length > 0;
+    const aLaReponse = proseAgent >= PROSE_AGENT_MINIMUM;
+    const etat = aLIdee && aLaReponse
+      ? "les deux voix présentes"
+      : aLIdee
+        ? "la voix de l'agent manque — l'idée est citée, jamais travaillée"
+        : aLaReponse
+          ? "la voix de l'utilisateur manque — aucune citation verbatim de sa formulation"
+          : "aucune des deux voix";
+    findings.push({ chantier, file, etat, citations: citations.length, proseAgent });
+  }
+  return findings;
+}
+
 export function checkChantierFileFreshness(allRows, { lastTouch = lastTouchDays, isStaged = isStagedForCommit } = {}) {
   const findings = [];
   for (const [chantier, { file, match }] of Object.entries(CHANTIER_PRELIMINARY_FILES)) {

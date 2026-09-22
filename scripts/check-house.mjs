@@ -5042,6 +5042,45 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // CHANTIER_PRELIMINARY_FILES : aucun écart réel ne doit subsister aujourd'hui (les 2 nouveaux
   // fichiers préliminaires créés le même soir que leur tâche de suivi correspondante).
   assert.equal(report.find((r) => r.id === 'chantier-preliminaire-signal').staleness, 'aucun écart détecté', 'checked live against this project\'s real docs/suivi/ and CHANTIER_PRELIMINARY_FILES registry: every known chantier\'s preliminary file must currently be at least as fresh as its most recent matching suivi task — a guarantee that breaks the day an idea is logged in docs/suivi/ but never copied into its dedicated file');
+  // findChantierFilesMissingValueRestitution() + findConceptionFilesMissingFromRegistry()
+  // (2026-09-22) — le garde-fou de « la restitution de la valeur », la règle retrouvée ce jour-là
+  // dans l'historique de conversation et qui n'était écrite nulle part (cf. docs/systeme-de-suivi.md).
+  // Les deux fonctions sont testées ensemble parce qu'elles ferment le même trou par les deux bouts :
+  // la première juge ce qu'un fichier déclaré contient, la seconde attrape un fichier jamais déclaré
+  // — et sans la seconde, la première serait structurellement aveugle à lui, exactement la cécité
+  // déjà rencontrée avec findRegistriesMissingFromCircle().
+  {
+    const { findChantierFilesMissingValueRestitution, findConceptionFilesMissingFromRegistry, CHANTIER_PRELIMINARY_FILES } = await import('../scripts/check-tasks-details.mjs');
+
+    // LES DEUX VOIX, testées par leur absence — un garde-fou qu'on n'a jamais vu échouer n'est pas
+    // un garde-fou vérifié. Chaque cas tombe sur un verdict DISTINCT : dire "il manque quelque chose"
+    // sans dire QUELLE voix manque ne servirait à rien à qui doit corriger le fichier.
+    const proseLongue = 'Analyse de l\'agent. '.repeat(40);
+    const citation = '« une citation verbatim de l\'utilisateur, assez longue pour compter comme une vraie formulation »';
+    const faux = (contenu) => findChantierFilesMissingValueRestitution({
+      exists: () => true,
+      readFileImpl: () => contenu,
+    })[0].etat;
+    assert.equal(faux(citation + ' ' + proseLongue), 'les deux voix présentes', 'a conception file carrying BOTH a real verbatim user quote and a real volume of agent prose is the only state that passes — the rule the user formulated is "mon idée (ma valeur) + ta réponse (ta valeur)", never one of the two alone');
+    assert.equal(faux(citation + ' court.'), 'la voix de l\'agent manque — l\'idée est citée, jamais travaillée', 'a file that only quotes the user, with no real analysis around it, loses exactly what the discussion added to the idea — and must say WHICH voice is missing, never a vague "incomplet"');
+    assert.equal(faux(proseLongue), 'la voix de l\'utilisateur manque — aucune citation verbatim de sa formulation', 'a file carrying only the agent\'s prose loses the real intention: the next AI reading it would rebuild an approximate intention instead of reading the true one (Article 27)');
+    assert.equal(faux('rien.'), 'aucune des deux voix', 'a file with neither voice must be named as such rather than collapsed into one of the two single-voice verdicts');
+    assert.equal(findChantierFilesMissingValueRestitution({ exists: () => false })[0].etat, 'fichier absent', 'a declared chantier whose file does not exist yet is an honest third state, never confused with a file that exists but is one-voiced');
+
+    // LA CITATION DOIT ÊTRE UNE VRAIE FORMULATION, pas n'importe quel mot entre guillemets : ce dépôt
+    // emploie constamment les guillemets français pour de courtes expressions ("les « Gardiens »"),
+    // qui ne sont la parole de personne. Sans ce seuil de longueur, le garde-fou passerait au vert
+    // sur un fichier qui ne cite l'utilisateur nulle part — une mesure ADJACENTE prise pour la mesure
+    // visée, le défaut exact que ce garde-fou est censé ne pas reproduire.
+    assert.equal(faux('Les « Gardiens » et le « badge ». ' + proseLongue), 'la voix de l\'utilisateur manque — aucune citation verbatim de sa formulation', 'short quoted expressions are this repository\'s ordinary typography, never the user speaking — counting them would turn this guard green on a file that quotes him nowhere');
+
+    // ÉTAT RÉEL DU DÉPÔT, vérifié live : les deux vérifications doivent être au vert aujourd'hui,
+    // le fichier LE-GRAND-ARCHITECTE ayant été inscrit au registre le jour même où la seconde
+    // fonction l'a trouvé orphelin à sa toute première exécution.
+    assert.deepEqual(findConceptionFilesMissingFromRegistry(), [], 'checked live against this repository: every real docs/*-conception.md file must be declared in CHANTIER_PRELIMINARY_FILES — an undeclared one is invisible to BOTH the freshness check and the value-restitution check, silently and forever (the real case found the day this was written: docs/le-grand-architecte-conception.md)');
+    assert.ok(CHANTIER_PRELIMINARY_FILES['LE-GRAND-ARCHITECTE'], 'the orphan file found by the new guard was registered rather than merely reported — Article 3: the cause, never the symptom');
+    assert.deepEqual(findChantierFilesMissingValueRestitution().filter((f) => f.etat !== 'les deux voix présentes'), [], 'checked live: every real declared conception file currently carries both voices — this assertion is what turns the rule from an intention into a mechanism (Article 24), and it will fail the day a new conception file is written with only one of them');
+  }
   // idee-a-trancher-signal (2026-09-21, filet de sécurité mécanique du réflexe temps réel) — vérifié
   // live contre le vrai docs/suivi/ et le vrai docs/idees-a-trancher.md : le plancher au NUMÉRO de
   // tâche (sinceTaskNumber, défaut 332) doit exclure la totalité des tâches "Nouvel outil"/

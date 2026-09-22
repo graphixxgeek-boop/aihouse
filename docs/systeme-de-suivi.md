@@ -301,3 +301,57 @@ verbatim de tout ce qui a précédé) — une relecture ne peut donc jamais gara
 intervention plus ancienne n'a été perdue avant la première compaction. Dit honnêtement à
 l'utilisateur si une portion de l'historique n'est plus accessible, jamais présenté comme un
 rattrapage complet quand ce n'en est qu'un partiel.
+
+## La restitution de la valeur d'une idée — sa FORME, pas seulement sa présence
+
+*(Retrouvée le 2026-09-22 dans l'historique de conversation, après que l'utilisateur ait demandé
+explicitement de la rechercher : « retrouve le passage où je dis... ». Formulée à l'origine le
+2026-09-21, jamais écrite nulle part dans le dépôt jusqu'à ce jour — ce qui est exactement l'ironie
+qu'il pointait : la règle qui protège les idées de la perte s'était elle-même perdue. Verbatim :)*
+
+> « chaque idee que j'ai et que je veux sauvegardé doit comporter **mon idee (ma valeur) + ta/tes
+> reponses (ta valeur)**, de maniere **synthetisé**, suivant la derniere "version" de l'idee
+> discuté. je veux juste que l'idee soit restituée de maniere optimale, tu me suis ? un systeme
+> intelligent, tu me suis ? avec les outils existants et surtout le dernier en date, ok ? »
+
+*(Reformulée par lui le 2026-09-22 en une phrase qui en donne le nom : « mon idée (ma valeur) + ta
+réponse (ta valeur) le tout synthétisé : c'est ça la **restitution de la valeur**. »)*
+
+**Ce que la règle dit, et c'est une exigence de FORME, jamais seulement de présence.** Le mécanisme
+déjà en place (une idée de gros chantier rejoint son fichier préliminaire dédié, cf.
+`CHANTIER_PRELIMINARY_FILES` et `checkChantierFileFreshness()`) garantit qu'une idée ne se PERD pas.
+Il ne garantissait rien sur ce que le fichier CONTIENT. Or une idée consignée sous une seule voix
+est déjà une perte de valeur : la formulation brute de l'utilisateur sans l'analyse qui l'a
+travaillée perd ce que la discussion lui a apporté ; l'analyse sans sa formulation d'origine perd
+l'intention réelle, et le prochain agent qui reprendra le fichier reconstruira une intention
+approchante au lieu de lire la vraie (Article 27).
+
+**Les trois exigences, dans cet ordre** :
+1. **Les deux voix.** La formulation de l'utilisateur, citée telle quelle, ET la réponse de l'agent
+   (analyse, calibrage, arbitrage). Jamais l'une sans l'autre.
+2. **Synthétisé.** Pas une transcription de tout l'échange — l'état utile de l'idée.
+3. **Dernière version discutée.** Ce point est le seul qui distingue vraiment ce document du reste
+   du suivi : ici on **réécrit**, on n'empile pas. Un fichier de conception doit refléter l'idée
+   telle qu'elle est aujourd'hui, pas son archéologie. C'est l'exception explicite à la discipline
+   d'ajout de `docs/suivi/`, qui reste elle strictement historique et jamais réécrite.
+
+**Portée exacte, tranchée par l'utilisateur lors du calibrage d'origine** : cette discipline
+s'applique aux **fichiers de conception de gros chantier** (`docs/*-conception.md` et les entrées de
+`CHANTIER_PRELIMINARY_FILES`), **jamais à `docs/suivi/`**. Les deux systèmes ont des natures
+opposées et ne doivent jamais converger : le suivi est un journal (on ajoute, on ne réécrit pas) ;
+un fichier de conception est un état courant (on réécrit, on n'empile pas).
+
+**La forme de référence existe déjà** dans `docs/changement-de-modele-ia-conception.md` — « §1. Idée
+de l'utilisateur (formulation d'origine) » puis « §2. Réponse synthétisée » — écrite avant que la
+règle ne soit formulée, jamais imitée ailleurs faute d'avoir été écrite quelque part. Elle sert
+désormais de modèle, sans être un gabarit obligatoire : ce qui compte est que les deux voix soient
+identifiables, pas que les titres soient recopiés.
+
+**Garde-fou mécanique** (Article 24 : jamais une promesse sans mécanisme) —
+`findChantierFilesMissingValueRestitution()` (`scripts/check-tasks-details.mjs`) vérifie, pour chaque
+fichier de chantier connu, que les DEUX voix y sont réellement présentes : la voix de l'utilisateur
+par une citation verbatim d'une vraie longueur (la convention de citation du dépôt, `« … »`), la
+voix de l'agent par un volume réel de prose hors citations. **Limite honnête, déclarée plutôt que
+tue** : il vérifie que la forme est là, jamais que la synthèse est fidèle ni qu'elle reflète la
+dernière version discutée — ça, seule une lecture le dit. Un fichier au vert n'est donc pas un
+fichier à jour ; un fichier au rouge est en revanche un vrai manque, sans ambiguïté.

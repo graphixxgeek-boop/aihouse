@@ -229,10 +229,16 @@ export const CIRCLE_ITEMS = [
   {
     id: "chantier-preliminaire-signal",
     theme: "Suivi des chantiers",
-    label: "Vérifier que les idées de gros chantier sont bien dans leur fichier préliminaire",
+    label: "Vérifier que les idées de gros chantier sont bien dans leur fichier préliminaire, et que leur valeur y est vraiment restituée",
     cout: "gratuit — relit docs/suivi/ et croise avec le registre CHANTIER_PRELIMINARY_FILES, aucun appel API",
     tokensEstimes: "faible — parcours mécanique de fichiers déjà en mémoire de travail",
-    execute: "Appeler checkChantierFileFreshness(loadAllTaskRows()) — sur un vrai écart (une tâche de suivi mentionne un chantier connu, plus récente que son fichier préliminaire), proposer explicitement de le mettre à jour tout de suite, jamais le laisser en suspens jusqu'à la prochaine Ronde. Écrire le signal via recordCircleItemReport('chantier-preliminaire-signal', ...).",
+    // ÉLARGI le 2026-09-22 aux deux vérifications ajoutées ce jour-là, plutôt qu'en faire deux items
+    // de plus (§7ter, anti-duplication) : elles portent sur les mêmes fichiers, par le même registre,
+    // et répondent à la même question posée sous trois angles — l'idée a-t-elle rejoint son fichier
+    // (fraîcheur), ce fichier restitue-t-il les DEUX voix (la règle « ma valeur + ta valeur »), et le
+    // registre connaît-il seulement tous les fichiers réels (sans quoi les deux premières sont
+    // aveugles à ce qu'il ignore).
+    execute: "Appeler checkChantierFileFreshness(loadAllTaskRows()), findChantierFilesMissingValueRestitution() et findConceptionFilesMissingFromRegistry() — sur un vrai écart (une tâche de suivi plus récente que son fichier préliminaire, un fichier qui ne porte qu'une seule des deux voix, ou un fichier de conception réel jamais déclaré au registre), proposer explicitement de le corriger tout de suite, jamais le laisser en suspens jusqu'à la prochaine Ronde. Écrire le signal via recordCircleItemReport('chantier-preliminaire-signal', ...).",
     producesReport: true,
   },
   // idee-a-trancher-signal (2026-09-21, demande explicite de l'utilisateur : « me demander
