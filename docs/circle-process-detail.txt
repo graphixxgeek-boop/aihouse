@@ -1286,3 +1286,34 @@ d'un process, jamais l'état d'une Ronde en train de se dérouler. Une Ronde au 
 déroulé n'a évidemment pas encore ses tâches — ça ne dit rien de sa conception, seulement qu'on
 n'est pas au bout. Confondre les deux ferait reprocher à un travail en cours de ne pas être
 terminé, qui est la même famille d'erreur que lire une absence de mesure comme une mesure.
+
+════════════════════════════════════════════════════════════════════════
+PARTIE 16 — LES 7 GARDIENS SACRÉS SONT RELAYÉS, JAMAIS ABSENTS (2026-09-23)
+════════════════════════════════════════════════════════════════════════
+
+Constat de l'utilisateur après la clôture de la Ronde : « Je ne vois pas les rapports d'ARGUS et
+HARMONIA dans les livraisons de la dernière Ronde, peux-tu voir cela ? »
+
+CE QUI EST NORMAL, ET IL FAUT LE DIRE AVANT DE CORRIGER. Leur absence des ITEMS de Ronde est
+délibérée et juste : les sept Gardiens sacrés tournent à CHAQUE commit — c'est la moitié de leur
+critère d'appartenance (Article 20) — donc les relancer pendant une Ronde ne mesurerait rien de
+neuf et coûterait du temps pour un verdict identique.
+
+CE QUI NE L'EST PAS : leurs verdicts n'arrivaient JAMAIS jusqu'à l'utilisateur. Il a lu 25
+rapports de Ronde sans une ligne des sept outils qui scannent réellement la qualité du code.
+Tourner sans être lu, c'est tourner pour rien. Et c'est lui qui l'a remarqué, ce qu'aucun
+mécanisme n'aurait dû laisser arriver.
+
+LA CORRECTION EST LE MÊME PATRON QUE POUR ANGEL quelques heures plus tôt, et cette répétition est
+elle-même un enseignement : on RELAIE au lieu de relancer. Le verdict existe déjà, il suffit de le
+faire parvenir.
+
+CE QUI EST EXIGÉ MAINTENANT (`findGardiensNonLivres`, `findGardiensSansRegistreDeclare`) :
+  · la liste des Gardiens sacrés RÉELLEMENT LIVRÉS est déclarée — ne pas la déclarer est un
+    manquement, jamais un laissez-passer (même règle que pour les rapports eux-mêmes, Partie 13) ;
+  · une livraison partielle nomme exactement qui manque, jamais un simple « incomplet » ;
+  · un huitième Gardien sacré ajouté à GARDIEN_DOMAINS sans registre déclaré se signale tout seul
+    (Article 24) — sans quoi il disparaîtrait silencieusement de la livraison, ce qui est
+    précisément le trou qu'on vient de corriger.
+
+Fichiers livrés sous le préfixe `gardien-<nom>.txt` dans le dossier de la Ronde.

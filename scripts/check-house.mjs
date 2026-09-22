@@ -8491,6 +8491,10 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     // voie — parce que le contrôle comparait un total nu à une fourchette de 5 à 10 écrite la
     // veille, qui aurait signalé un écart si l'agent avait posé les questions dues.
     questionsParEtape: { ouverture: 3, 'evaluation-agent': 6, 'constats-analyse': 9, 'calibrage-correctifs': 6, 'mise-en-cause': 6, 'la-suite': 3 },
+    // Sixième fois que ce test échoue à l'ajout d'une étape, et encore une fois c'est voulu. Les
+    // sept Gardiens sacrés tournent à chaque commit, donc la Ronde ne les relance pas — mais leurs
+    // verdicts n'arrivaient jamais à l'utilisateur, qui a dû remarquer lui-même leur absence.
+    gardiensLivres: ['argus', 'harmonia', 'axa-check', 'clean-dirty-old', 'clone-hunter', 'always-new-code', 'safe-export'],
   });
   assert.deepEqual(cleanResult, { ok: true, findings: [] }, 'a Ronde where every real fact checks out must report a genuinely clean ok:true with zero fabricated findings');
 
@@ -8547,6 +8551,16 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     assert.equal(ctd.numeroTache(42), '#42');
     assert.equal(ctd.numeroTache(undefined), 'sans numéro', 'an absent number says so, it never renders as "undefined"');
     assert.equal(ctd.numeroTache('—'), 'sans numéro', 'the dash is the repository\'s own written convention for a task without a number, not a broken value');
+
+    // LES 7 GARDIENS SACRÉS, RELAYÉS (2026-09-23) — l'utilisateur a remarqué que ni ARGUS ni
+    // HARMONIA n'apparaissaient dans les 25 rapports livrés. Leur absence des ITEMS est délibérée
+    // (ils tournent à chaque commit), leur absence de la LIVRAISON ne l'était pas : sept outils
+    // qui scannent la qualité du code tournaient sans que personne ne lise leur verdict.
+    const cpg = await import('../scripts/circle-process-guardian.mjs');
+    assert.deepEqual(cpg.findGardiensSansRegistreDeclare(), [], 'every tool holding the Gardien sacré rank must have a declared registry, otherwise its verdict can never be delivered at all');
+    assert.equal(cpg.findGardiensNonLivres({})[0].gardien, '(tous)', 'not declaring which Gardiens were delivered is a gap, never a pass — same pattern as the reports themselves');
+    assert.deepEqual(cpg.findGardiensNonLivres({ gardiensLivres: ['argus', 'harmonia', 'axa-check', 'clean-dirty-old', 'clone-hunter'] }).map((g) => g.gardien), ['always-new-code', 'safe-export'], 'a partial delivery names exactly who is missing');
+    assert.deepEqual(cpg.findGardiensNonLivres({ gardiensLivres: Object.keys(cpg.GARDIENS_SACRES_REGISTRES) }), [], 'and a complete one reports nothing');
     // LA RONDE DU 2026-09-23, REJOUÉE : cinq étapes sous-servies, dont deux entièrement sautées.
     const reel = ct.findEtapesDeQuestionsManquantes({ ouverture: 3, 'constats-analyse': 4, 'mise-en-cause': 2, 'la-suite': 2 }, { changementModeleReponse: 'non' });
     assert.equal(reel.length, 5, 'replaying the real Ronde must name the five under-served steps');

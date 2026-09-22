@@ -41,7 +41,7 @@ import {
   findEtapesDeQuestionsManquantes,
 } from "./circle-tasks.mjs";
 import { findOrphanReportFiles, REGISTRIES } from "./doc-report.mjs";
-import { walkDocsPaths, sh, outilsHorsPortee, porteeDe } from "./lib-shell.mjs";
+import { walkDocsPaths, sh, outilsHorsPortee, porteeDe, GARDIEN_DOMAINS } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -161,6 +161,8 @@ export function verifyRondeProcess({
   seriesReellementPosees,
   // Le DÉTAIL par étape, jamais un total : { ouverture: 3, "constats-analyse": 4, ... }
   questionsParEtape,
+  // Les Gardiens sacrés dont le verdict a été LIVRÉ à l'utilisateur avec la Ronde.
+  gardiensLivres,
   rapportsLivresIndividuellement,
   nombreDeRapportsEcrits,
   nombreDeRapportsLivres,
@@ -363,6 +365,12 @@ export function verifyRondeProcess({
   const missingFromCircle = findRegistriesMissingFromCircleImpl(realExistingPaths);
   if (missingFromCircle.length) add("registries-missing-from-circle", `${missingFromCircle.length} registre(s) réel(s) sans entrée CIRCLE_ITEMS ni exclusion documentée : ${missingFromCircle.join(", ")}.`);
 
+  // 8bis. LES 7 GARDIENS SACRÉS — relayés, jamais relancés (cf. bloc dédié plus bas).
+  if (!nightAutonomousMode) {
+    for (const g of findGardiensNonLivres({ gardiensLivres })) add("gardiens-non-livres", `Gardien sacré ${g.gardien} : ${g.pourquoi}.`);
+  }
+  for (const g of findGardiensSansRegistreDeclare()) add("gardien-sans-registre", `${g} est déclaré Gardien sacré mais aucun registre n'est déclaré pour lui — son verdict ne peut donc jamais être livré.`);
+
   // 9. LA BARRIÈRE D'OUVERTURE (docs/circle-process-detail.txt Partie 8). Elle bloque déjà
   // `record-run` côté circle-tasks.mjs ; ici elle est VÉRIFIÉE plutôt que subie, pour que le
   // rapport du gardien dise POURQUOI une Ronde ne pourra pas se clore, au lieu de laisser
@@ -411,6 +419,49 @@ export function verifyRondeProcess({
   }
 
   return { ok: findings.length === 0, findings };
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// LES 7 GARDIENS SACRÉS, RELAYÉS PLUTÔT QU'ABSENTS (2026-09-23)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Constat de l'utilisateur après la clôture : « Je ne vois pas les rapports d'ARGUS et HARMONIA
+// dans les livraisons de la dernière Ronde, peux-tu voir cela ? »
+//
+// CE QUI EST NORMAL, ET CE QUI NE L'EST PAS. Leur absence des items de Ronde est DÉLIBÉRÉE : les
+// sept Gardiens sacrés tournent à CHAQUE commit (c'est la moitié de leur critère d'appartenance,
+// Article 20), donc les relancer pendant une Ronde ne mesurerait rien de neuf. Ça, c'est juste.
+//
+// CE QUI NE L'EST PAS : leurs verdicts n'arrivaient JAMAIS jusqu'à l'utilisateur. Il lisait 25
+// rapports de Ronde sans une ligne des sept outils qui scannent réellement la qualité du code.
+// Tourner sans être lu, c'est tourner pour rien — et il a fallu qu'il le remarque lui-même, ce
+// qu'aucun mécanisme n'aurait dû laisser arriver.
+//
+// LA CORRECTION EST LE MÊME PATRON QUE POUR ANGEL, quelques heures plus tôt : on RELAIE au lieu
+// de relancer. Un Gardien sacré dont le registre n'a produit aucun signal récent est signalé —
+// il tourne à chaque commit, donc un registre muet veut dire qu'il ne tourne plus vraiment.
+export const GARDIENS_SACRES_REGISTRES = {
+  argus: "docs/argus/", harmonia: "docs/harmonia/", "axa-check": "docs/axa-check/",
+  "clean-dirty-old": "docs/clean-dirty-old/", "clone-hunter": "docs/clone-hunter/",
+  "always-new-code": "docs/always-new-code/", "safe-export": "docs/safe-export/",
+};
+
+// GARDE-FOU D'ÉVOLUTIVITÉ (Article 24) : cette table reflète GARDIEN_DOMAINS, la source unique du
+// rang. Un huitième Gardien sacré qui y serait ajouté sans registre déclaré ici se signalerait
+// plutôt que de disparaître silencieusement de la livraison — exactement le trou qu'on corrige.
+export function findGardiensSansRegistreDeclare({ domains = GARDIEN_DOMAINS, registres = GARDIENS_SACRES_REGISTRES } = {}) {
+  return Object.keys(domains).filter((g) => !registres[g]);
+}
+
+// Les Gardiens sacrés dont le verdict n'a pas été livré avec la Ronde. `gardiensLivres` est fourni
+// par l'agent : livrer un fichier n'est pas observable depuis le disque (Partie 13, même leçon).
+export function findGardiensNonLivres({ gardiensLivres, domains = GARDIEN_DOMAINS } = {}) {
+  if (gardiensLivres === undefined) {
+    return [{ gardien: "(tous)", pourquoi: `la liste des Gardiens sacrés réellement livrés n'a pas été déclarée — ils tournent à chaque commit, mais un verdict que personne ne lit ne sert à rien, et c'est l'utilisateur qui a dû remarquer leur absence` }];
+  }
+  return Object.keys(domains)
+    .filter((g) => !gardiensLivres.includes(g))
+    .map((g) => ({ gardien: g, pourquoi: `${g} tourne à chaque commit mais son verdict n'a pas été livré avec la Ronde` }));
 }
 
 // verifyHyperScanProcess() (2026-09-22, demande explicite : « l'outil process.circle doit aussi

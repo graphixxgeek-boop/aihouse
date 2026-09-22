@@ -1,0 +1,44 @@
+⚠️  Attention, mes résultats peuvent être inexacts : une absence d'explication n'est pas une absence de raison, et un terme sans fiche n'est pas forcément mal défini — ses détecteurs sont des indices, jamais des preuves. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : 2026-09-22 à 20:14 UTC
+État du code : 52be7c7 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : demande directe
+Outil : safe-export — inchangé depuis le 2026-09-22
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== SAFE-EXPORT — exportabilité de l'Agence, lisibilité du projet ===
+
+=== SAFE-EXPORT — exportabilité de l'Agence, lisibilité du projet ===
+
+· cible « agence » : l'outillage de travail est-il exportable vers un autre projet ?
+· cible « projet » : une autre IA reprendrait-elle ce code sans le casser ?
+
+29 blueprint(s) trouvé(s).
+  fuites de spécificité : 4
+  blueprints mal construits : 7
+  dépendances à un outillage particulier : 0
+
+11 écart(s) à regarder (0 écarté(s) avec votre accord explicite, jamais reposé(s)).
+
+📖 VOCABULAIRE — mesuré sur 47 document(s) normatif(s) : 0 emploi(s) ambigu(s).
+
+=== Plan d'action ===
+  → RETENU · docs/argus-blueprint.md:30 — jargon propre au projet : « - **Asymétrie entre deux entités censées être comparables** (dans ce projet : Lia/Noé) — u » — tâche [OBLIGATOIRE] : rendre docs/argus-blueprint.md réellement exportable
+  → RETENU · docs/harmonia-blueprint.md:35 — jargon propre au projet : « reconnaît sans lire le code ("la fatigue", "l'enquête", "la roulette de bonus"), pas un no » — tâche [OBLIGATOIRE] : rendre docs/harmonia-blueprint.md réellement exportable
+  → RETENU · docs/smart-conso-api-blueprint.md:4 — jargon propre au projet : « d'épuisement total du quota Gemini pendant cette même session : « pour l'aider [Smart Brea » — tâche [OBLIGATOIRE] : rendre docs/smart-conso-api-blueprint.md réellement exportable
+  → RETENU · docs/the-screener-blueprint.md:5 — jargon propre au projet : « de la maison, de l'interface, et une note globale [...] pour alimenter the-screener, on jo » — tâche [OBLIGATOIRE] : rendre docs/the-screener-blueprint.md réellement exportable
+  → RETENU · docs/angel-of-ia-process-blueprint.md — ne se déclare pas générique (aucun détecteur de fuite ne le regardera — il pourra contenir n'importe quoi sans que rien ne le dise) — tâche [OBLIGATOIRE] : rendre docs/angel-of-ia-process-blueprint.md réellement exportable
+  → RETENU · docs/cassandra-rh-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/cassandra-rh-blueprint.md réellement exportable
+  → RETENU · docs/data-archangel-blueprint.md — ne se déclare pas générique (aucun détecteur de fuite ne le regardera — il pourra contenir n'importe quoi sans que rien ne le dise) — tâche [OBLIGATOIRE] : rendre docs/data-archangel-blueprint.md réellement exportable
+  → RETENU · docs/objectifs-vs-resultats-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/objectifs-vs-resultats-blueprint.md réellement exportable
+  → RETENU · docs/process-simulation-guardian-blueprint.md — ne se déclare pas générique (aucun détecteur de fuite ne le regardera — il pourra contenir n'importe quoi sans que rien ne le dise) — tâche [OBLIGATOIRE] : rendre docs/process-simulation-guardian-blueprint.md réellement exportable
+  → RETENU · docs/process-simulation-guardian-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/process-simulation-guardian-blueprint.md réellement exportable
+  → RETENU · docs/the-screener-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/the-screener-blueprint.md réellement exportable
+
+· Aucune sonde proposée : aucun fichier ne concentre 3 écarts ou plus — des écarts éparpillés sont du bruit ordinaire, jamais un signal
+  fuites : pas assez de points
+  blueprints-mal-construits : pas assez de points
+  dependances-outillage : pas assez de points
+  blueprints-total : pas assez de points
