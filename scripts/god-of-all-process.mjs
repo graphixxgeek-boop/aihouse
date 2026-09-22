@@ -417,31 +417,21 @@ export function mecanismesDuProcess(p, { root = ROOT, readFileImpl = readFileSyn
   return { sources: [...sources], mecanismes, docTexte, gardienTexte };
 }
 
+// LES DEUX SENS DE L'ÉCART, dérivés du calcul unique ci-dessous plutôt que recalculés (corrigé le
+// 2026-09-23, tâche #218). Ils refaisaient chacun la même traversée que `etatConnexionProcessGardien()`
+// — trois fonctions pour une seule vérité, et CLONE-HUNTER l'aurait signalé tôt ou tard.
+
 // SENS 1 — écrit dans le process, ignoré du gardien. Le cas réel du 2026-09-23.
-export function findMecanismesAbsentsDuGardien({ processes = PROCESSES, root = ROOT, readFileImpl = readFileSync } = {}) {
-  const manques = [];
-  for (const p of processes) {
-    if (!p.doc || !p.gardien) continue;
-    const { mecanismes } = mecanismesDuProcess(p, { root, readFileImpl });
-    for (const m of mecanismes) {
-      if (m.dansDoc && !m.dansGardien) manques.push({ process: p.slug ?? p.nom, gardien: p.gardien, mecanisme: m.nom, fichier: m.fichier });
-    }
-  }
-  return manques;
+export function findMecanismesAbsentsDuGardien(options = {}) {
+  return etatConnexionProcessGardien(options)
+    .flatMap((e) => e.docSeul.map((nom) => ({ process: e.process, gardien: e.gardien, mecanisme: nom })));
 }
 
 // SENS 2 — câblé dans le gardien, absent du document. Une règle qu'on fait respecter sans l'avoir
 // écrite : elle tient tant que l'agent qui l'a posée est là, et pas une session de plus.
-export function findMecanismesAbsentsDuDocument({ processes = PROCESSES, root = ROOT, readFileImpl = readFileSync } = {}) {
-  const manques = [];
-  for (const p of processes) {
-    if (!p.doc || !p.gardien) continue;
-    const { mecanismes } = mecanismesDuProcess(p, { root, readFileImpl });
-    for (const m of mecanismes) {
-      if (m.dansGardien && !m.dansDoc) manques.push({ process: p.slug ?? p.nom, doc: p.doc, mecanisme: m.nom, fichier: m.fichier });
-    }
-  }
-  return manques;
+export function findMecanismesAbsentsDuDocument(options = {}) {
+  return etatConnexionProcessGardien(options)
+    .flatMap((e) => e.gardienSeul.map((nom) => ({ process: e.process, doc: e.doc, mecanisme: nom })));
 }
 
 // LE VERDICT LISIBLE, process par process : combien de mécanismes des deux côtés, combien d'un seul.
@@ -1051,6 +1041,38 @@ export function buildGodReportBlocks({ processes = PROCESSES, root = ROOT, sessi
   blocks.push({ type: "note", text: auto.ok ? "✅ Process maître : god-of-all-process se surveille bien lui-même, et le dispositif est cohérent." : `⚠️ Process maître — ${auto.constats.length} constat(s) sur le dispositif lui-même :\n  ${auto.constats.join("\n  ")}` });
   const identite = checkAgentSessionDeclared({ session });
   blocks.push({ type: "note", text: `${identite.ok ? "✅" : "⚠️"} ${identite.message}` });
+
+  // LA CONNEXION PROCESS ↔ GARDIEN, ENFIN LIVRÉE (2026-09-23, tâche #218).
+  //
+  // Ce mécanisme répond à une demande explicite de l'utilisateur du 2026-09-23 : « assure-toi qu'un
+  // mécanisme vérifie que tout est toujours bien présent dans le process ET chez son gardien ». Il
+  // a été construit ce matin-là, il fonctionne… et il n'était appelé par personne. Pire : un
+  // commentaire de circle-process-guardian.mjs affirmait « Il est VÉRIFIÉ, jamais déclaratif », une
+  // vérification revendiquée par écrit avec rien derrière.
+  //
+  // C'est la forme la plus coûteuse du défaut traqué toute cette journée : non pas un mécanisme
+  // oublié, mais un mécanisme demandé, construit, documenté, revendiqué — et muet.
+  //
+  // LES DEUX SENS NE SE VALENT PAS, et les confondre ferait perdre l'essentiel :
+  //   · écrit dans le DOCUMENT, absent du GARDIEN → une règle qu'on croit tenue et que rien ne fait
+  //     respecter ;
+  //   · câblé dans le GARDIEN, absent du DOCUMENT → une règle qu'on fait respecter sans l'avoir
+  //     écrite : elle tient tant que l'agent qui l'a posée est là, et pas une session de plus
+  //     (Article 27).
+  const connexions = etatConnexionProcessGardien({ processes, root });
+  const nonMesures = connexions.filter((c) => c.mesure !== "mesuré");
+  const ecarts = connexions.filter((c) => c.mesure === "mesuré" && (c.docSeul.length || c.gardienSeul.length));
+  blocks.push({
+    type: "note",
+    text: ecarts.length === 0 && nonMesures.length === 0
+      ? "✅ Connexion process ↔ gardien : chaque mécanisme écrit dans un document est câblé chez son gardien, et réciproquement."
+      : [
+          `⚠️ Connexion process ↔ gardien — ${ecarts.length} process avec des écarts sur ${connexions.length} :`,
+          ...ecarts.map((c) => `  · ${c.process} : ${c.docSeul.length} mécanisme(s) écrit(s) dans ${c.doc} que ${c.gardien} ne fait PAS respecter${c.docSeul.length ? ` (${c.docSeul.slice(0, 4).join(", ")}${c.docSeul.length > 4 ? "…" : ""})` : ""} ; ${c.gardienSeul.length} câblé(s) chez le gardien et jamais écrit(s)${c.gardienSeul.length ? ` (${c.gardienSeul.slice(0, 4).join(", ")}${c.gardienSeul.length > 4 ? "…" : ""})` : ""}.`),
+          // L'absence de mesure se DIT, elle ne se rend jamais comme une conformité.
+          ...nonMesures.map((c) => `  · ${c.process} : PAS MESURÉ — ${c.mesure}. Ce silence ne dit rien sur la connexion, il dit qu'on n'a pas pu la regarder.`),
+        ].join("\n"),
+  });
 
   const lignes = processes.map((p) => {
     const av = processProgress(p.slug, { processes, root });

@@ -199,8 +199,46 @@ export function findBlueprintsMalConstruits(blueprints = [], { readFileImpl = re
   return defauts;
 }
 
-export function findOutilsSansBlueprint(outils = [], { root = ROOT, exists = existsSync } = {}) {
-  return outils.filter((o) => !exists(join(root, `docs/${o}-blueprint.md`))).map((o) => ({ outil: o, pourquoi: "aucun blueprint : cet outil ne partira pas avec l'Agence le jour de l'export" }));
+// EXEMPTIONS DÉCLARÉES, reprises MOT POUR MOT de CLAUDE.md et jamais devinées (2026-09-23, tâche
+// #218). La charte énonce déjà « Six outils volontairement SANS blueprint ni instanciation séparés
+// — ils n'ont aucune connaissance propre au projet à documenter à part, leur valeur étant d'appeler
+// et d'agréger ce que les autres disent déjà ». Les accuser reviendrait à reprocher une décision
+// documentée, exactement ce que le garde-fou trottoirGranted interdit (Article 19).
+//
+// Les dossiers de docs/ qui ne sont pas des outils (registres de contenu, dossiers de travail) sont
+// exclus pour la même raison : ils n'ont jamais eu vocation à partir avec l'Agence.
+export const SANS_BLUEPRINT_ASSUME = {
+  "le-coordinateur": "orchestrateur des outils gratuits — CLAUDE.md le déclare sans blueprint",
+  "le-coordinateur-catalogue": "registre du catalogue de LE-COORDINATEUR, pas un outil",
+  "circle-tasks": "la Ronde — CLAUDE.md la déclare sans blueprint",
+  "html-report": "rend un rapport déjà produit — CLAUDE.md le déclare sans blueprint",
+  "tool-usage": "compteur d'usage — CLAUDE.md le déclare sans blueprint",
+  "doc-report": "veilleur de la décision HTML/texte — CLAUDE.md le déclare sans blueprint",
+  "route-booster": "find-deep-booster — CLAUDE.md le déclare sans blueprint",
+  "html-wiring-check": "vérification interne de la Ronde, jamais un outil autonome",
+  "chantier-preliminaire": "dossier de travail, pas un outil",
+  "idee-a-trancher": "registre de décisions en attente, pas un outil",
+};
+
+// BLUEPRINTS DONT LE NOM DE FICHIER DIFFÈRE DU NOM DE L'OUTIL. Un seul cas aujourd'hui, et la
+// charte l'explique : « Smart Breaker | … | docs/outil-resilience-api.md (le blueprint garde son
+// nom d'avant le surnom) ». Déclaré ici plutôt que deviné, et le jour où un second surnom apparaît
+// il rejoint cette table au lieu de produire une fausse accusation.
+export const BLUEPRINT_SOUS_UN_AUTRE_NOM = {
+  "smart-breaker": "docs/outil-resilience-api.md",
+};
+
+// UN DOSSIER docs/X/ N'EST LE REGISTRE D'UN OUTIL QUE SI scripts/X.mjs EXISTE (Article 24 : on
+// DÉRIVE au lieu d'énumérer). Sans cette règle il fallait tenir à la main la liste des dossiers qui
+// sont des registres de CONTENU — profil-utilisateur, suivi-open-tasks, relecture-correctifs… —
+// une liste qui se serait périmée au premier dossier créé. Un registre de contenu n'a jamais eu
+// vocation à partir avec l'Agence : lui réclamer un blueprint serait un contresens.
+export function findOutilsSansBlueprint(outils = [], { root = ROOT, exists = existsSync, exemptes = SANS_BLUEPRINT_ASSUME, alias = BLUEPRINT_SOUS_UN_AUTRE_NOM } = {}) {
+  return outils
+    .filter((o) => !(o in exemptes))
+    .filter((o) => exists(join(root, `scripts/${o}.mjs`)) || o in alias)
+    .filter((o) => !exists(join(root, alias[o] ?? `docs/${o}-blueprint.md`)))
+    .map((o) => ({ outil: o, pourquoi: "aucun blueprint : cet outil ne partira pas avec l'Agence le jour de l'export" }));
 }
 
 // ————————————————————————————————————————————————————————————————————————
@@ -368,6 +406,22 @@ function main() {
   const fuites = findFuitesDeSpecificite(blueprints);
   const defauts = findBlueprintsMalConstruits(blueprints);
   const deps = findDependancesOutillage(blueprints);
+
+  // LE TROISIÈME SENS, ENFIN BRANCHÉ (2026-09-23, tâche #218). Les trois détecteurs ci-dessus
+  // examinent les blueprints QUI EXISTENT. Celui-ci pose la question inverse, et c'est la plus
+  // importante pour la MOITIÉ 1 de l'évolutivité (pouvoir partir) : quels outils n'en ont AUCUN ?
+  //
+  // Un blueprint mal écrit se corrige ; un outil sans blueprint ne partira tout simplement pas avec
+  // l'Agence le jour de l'export. Le détecteur était construit, exporté, et appelé par personne —
+  // donc le seul angle mort qui comptait vraiment restait ouvert.
+  //
+  // La liste des outils est DÉRIVÉE des registres réels de docs/ (convention `docs/<outil>/`, sans
+  // exception dans ce projet), jamais recopiée à la main : un outil créé demain entre dans ce scan
+  // sans que personne n'ait à y penser (Article 24).
+  const outilsAvecRegistre = readdirSync(join(ROOT, "docs"), { withFileTypes: true })
+    .filter((d) => d.isDirectory() && !["referentiel", "suivi", "simulations", "contexte-projet", "plans", "rapports-de-nuit"].includes(d.name))
+    .map((d) => d.name);
+  const sansBlueprint = findOutilsSansBlueprint(outilsAvecRegistre);
   console.log(`  fuites de spécificité : ${fuites.length}`);
   console.log(`  blueprints mal construits : ${defauts.length}`);
   console.log(`  dépendances à un outillage particulier : ${deps.length}`);
@@ -379,7 +433,7 @@ function main() {
   // sacrés doivent répéter une alerte si je ne la prends pas en compte ») était calculée par
   // filtrerDejaTranches() et n'atteignait AUCUN lecteur. Un mécanisme qui ne sort pas du script ne
   // protège rien — c'est une intention, pas un garde-fou (Article 25).
-  const tri = filtrerDejaTranches([...fuites, ...defauts, ...deps], memoire);
+  const tri = filtrerDejaTranches([...fuites, ...defauts, ...deps, ...sansBlueprint.map((o) => ({ outil: o.outil, defaut: "aucun blueprint", consequence: o.pourquoi }))], memoire);
   console.log(`\n${tri.gardes.length} écart(s) à regarder (${tri.ecartesAvecAccord} écarté(s) avec votre accord explicite, jamais reposé(s)).`);
   for (const e of tri.ecartesSansAccord) console.log(`   ⚠️  ${e.fichier} : ${e.pourquoi}`);
   for (const r of tri.regressions) console.log(`   🔁 ${r.fichier ?? r.outil} : déjà corrigé une fois, revenu depuis — une règle corrigée ne doit jamais se reproduire (Article 3).`);

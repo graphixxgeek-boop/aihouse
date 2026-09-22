@@ -9017,3 +9017,37 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log('Passed: pure-gold-unity gained a fourth criterion — does the report say everything the tool already knows how to detect? (2026-09-23, task #211). It came out of an unavoidable question: no honest plan d\'action can be written for twenty tools without knowing what each one computes, and looking revealed 27 exported detectors that no tool\'s main() ever calls. The measurement was narrowed twice before it was fair, and both errors are worth keeping: a declaration sitting after main() counted as its own caller (hiding nine at once), and a helper called outside main() was wrongly accused. The rule that survived cannot produce a false positive — flagged only if the name appears nowhere but at its own declaration — and it under-reports rather than over-accuses, which is the right direction for a guard whose whole capital is being believed. A third state was added after it nearly convicted an innocent: a detector called by the test suite alone genuinely protects, since the pre-commit hook runs it at every commit, and one such detector had refused one of my own commits that very day.');
 }
+
+{
+  // LES TROIS DÉTECTEURS MUETS, CÂBLÉS (2026-09-23, tâche #218) — trouvés par le critère 4 construit
+  // la veille au soir. Le plus grave des trois répondait à une demande explicite de l'utilisateur.
+  const god = await import('../scripts/god-of-all-process.mjs');
+  const se = await import('../scripts/safe-export.mjs');
+
+  // LES DEUX SENS DE L'ÉCART PROCESS ↔ GARDIEN dérivent désormais d'UN seul calcul, au lieu de
+  // refaire chacun la même traversée — trois fonctions pour une seule vérité.
+  const etat = god.etatConnexionProcessGardien();
+  assert.ok(etat.length > 0, 'the process↔guardian connection must actually be computed against this repository');
+  const absentsGardien = god.findMecanismesAbsentsDuGardien();
+  const absentsDoc = god.findMecanismesAbsentsDuDocument();
+  assert.equal(absentsGardien.length, etat.reduce((n, e) => n + e.docSeul.length, 0), 'sens 1 must be derived from the single traversal, never recomputed: a second computation is a second truth waiting to diverge');
+  assert.equal(absentsDoc.length, etat.reduce((n, e) => n + e.gardienSeul.length, 0), 'and sens 2 likewise');
+  // LES DEUX SENS NE DISENT PAS LA MÊME CHOSE, et c'est tout l'intérêt de les garder séparés.
+  assert.ok(absentsGardien.every((m) => m.gardien) && absentsDoc.every((m) => m.doc), 'each direction must name the side that is MISSING the mechanism: a rule written but never enforced is not the same defect as a rule enforced but never written — the second only holds as long as the agent who wired it is around (Article 27)');
+  // L'absence de mesure reste un troisième état, jamais une conformité.
+  assert.ok(etat.some((e) => e.mesure === 'mesuré') && etat.every((e) => e.mesure === 'mesuré' || e.mesure.startsWith('pas mesuré')), 'a process whose document and guardian share no source file must report "pas mesuré", never a green count computed on an empty denominator');
+
+  // Le verdict doit SORTIR : il était calculable depuis le matin même et n'atteignait personne,
+  // pendant qu'un commentaire affirmait « Il est VÉRIFIÉ, jamais déclaratif ».
+  const blocs = god.buildGodReportBlocks();
+  assert.ok(blocs.some((b) => b.text.includes('Connexion process ↔ gardien')), 'the verdict must reach the report: built, documented and claimed in a comment is not the same as delivered — this one answered an explicit user request and ran for nobody');
+
+  // findOutilsSansBlueprint : les exemptions sont DÉCLARÉES, et la notion d'outil est DÉRIVÉE.
+  assert.deepEqual(se.findOutilsSansBlueprint(['le-coordinateur']), [], 'a tool the charter explicitly declares as having no blueprint must never be accused — that would be reproaching a documented decision (Article 19)');
+  assert.deepEqual(se.findOutilsSansBlueprint(['un-registre-de-contenu']), [], 'a docs/ folder with no matching script is a CONTENT registry, not a tool: deriving this from the filesystem replaces a hand-kept list of folder names that would have gone stale at the very next folder');
+  assert.deepEqual(se.findOutilsSansBlueprint(['smart-breaker']), [], 'a blueprint filed under a different filename must be found through the declared alias, never counted missing — the charter says so: "le blueprint garde son nom d\'avant le surnom"');
+  const vraisManques = se.findOutilsSansBlueprint(['tool-brain']);
+  assert.equal(vraisManques.length, 1, 'and a real tool with a script, a registry and no blueprint anywhere must still be caught — narrowing the detector must not empty it');
+
+  console.log('Passed: the three mute detectors are wired (2026-09-23, task #218), and the worst of them answered an explicit user request — "assure-toi qu\'un mécanisme vérifie que tout est toujours bien présent dans le process ET chez son gardien". It was built that same morning, it worked, and it ran for nobody; worse, a comment elsewhere asserted "Il est VÉRIFIÉ, jamais déclaratif", a verification claimed in writing with nothing behind it. The two directions now derive from one traversal instead of each redoing it, they keep naming which side is missing the mechanism (a rule written but unenforced is not the defect a rule enforced but unwritten is), and a process sharing no source file reports "pas mesuré" rather than a green count on an empty denominator. findOutilsSansBlueprint was narrowed twice without being emptied: charter-declared exemptions are honoured rather than reproached, and "is this folder a tool?" is derived from whether a matching script exists — replacing a hand-kept list of folder names that would have gone stale at the next folder created.');
+}
