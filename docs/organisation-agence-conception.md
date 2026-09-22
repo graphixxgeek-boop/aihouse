@@ -132,3 +132,124 @@ ne pouvait aller nulle part ailleurs.
 Conception ouverte, aucune décision actée. Le schéma d'organisation complet est à produire — l'ordre
 fixé par l'utilisateur le 2026-09-22 place ce chantier **après** la création du nouvel outil
 d'exportabilité et la Ronde, et **avant** CASSANDRA.
+
+---
+
+## Vague d'idées du 2026-09-22 (soir) — six points, consignés avant la Ronde
+
+*Demandés explicitement par l'utilisateur en amont du chantier d'organisation : « consigne bien,
+enregistre les idees pour l'organisation, que ca nous serve juste apres ». Aucune décision actée
+ici — ce sont des angles à trancher au moment du schéma.*
+
+### 1. « Être dans CIRCLE » est un critère TRANSVERSE, pas une propriété de l'outil
+
+Idée telle qu'elle a été posée : *« etre dans cricle est un criteres transverse (icone ?) »*.
+
+Ce que ça vise, et pourquoi c'est juste. L'organigramme actuel classe sur deux axes (statut de
+documentation, rôle) — deux axes qui répondent à « qui est cet outil ? ». Or « est-il dans la
+Ronde ? » ne répond pas à ça du tout : c'est une propriété de son **rythme de sollicitation**, et
+elle se croise avec les deux autres sans s'y réduire. Un Gardien n'y est jamais (il tourne à chaque
+commit), un Membre peut y être ou non, un Agent aussi.
+
+Le paysage compte déjà d'autres critères de cette nature, tous invisibles dans l'organigramme :
+
+- **rythme** : à chaque commit (Gardiens) / périodique (Ronde) / sur événement (integration-outil) /
+  à la demande seulement ;
+- **coût** : gratuit / coûteux en appels API / coûteux en tokens d'agent ;
+- **mémoire** : en tient une / n'en tient pas / en tient une et ne la relit jamais (le verdict
+  « archive seulement » de TOOL-LEARNING) ;
+- **apprentissage** : apprend seul / enseigné par l'agent / immobile ;
+- **tendance** : tient une série temporelle / n'en tient pas.
+
+Piste (non tranchée) : plutôt qu'un troisième axe de classification, une **grille de drapeaux**
+lisible d'un coup d'œil, chaque drapeau ayant sa définition atteignable. Question ouverte : une
+icône par critère devient vite illisible à cinq critères × trente outils — à calibrer.
+
+### 2. Une classification alternative serait-elle meilleure aujourd'hui ?
+
+Idée : *« avec toutes les evolutions, est-ce qu'une organisation alternative peut etre meilleure ?
+je parle de classification. »*
+
+C'est exactement l'épreuve de la page blanche (Article 7) appliquée à l'organigramme plutôt qu'au
+code — et l'outil qui la rend concrète existe déjà : **ALWAYS-NEW-CODE**, dont le zoom profond
+demande « comment construirait-on cette zone aujourd'hui, avec toute la connaissance actuelle ? ».
+L'organigramme n'a jamais été une de ses zones.
+
+Le soupçon est fondé : les deux axes actuels ont été posés quand le paysage comptait une douzaine
+d'outils. Il en compte aujourd'hui près de trente, dont plusieurs (LE-COORDINATEUR, CIRCLE-TASKS,
+tool-brain, integration-outil) n'ont **aucun domaine propre** — ils orchestrent ou aiguillent. Les
+ranger comme « Membres » à côté d'ARGUS dit très peu.
+
+Piste : un axe **« qui produit un jugement » / « qui orchestre » / « qui aiguille » /
+« qui exécute »**, orthogonal au rang. Non tranché.
+
+### 3. Une organisation qui englobe TOUT type de script
+
+Idée : *« je voudrais dans l'organisation etre capable de situer TOUT type de scripts, une
+organisation qui englobe TOUT, meme si elle ne precise pas tout ».*
+
+**C'est le point le plus important des six**, parce qu'il pointe un trou réel et mesurable :
+l'organigramme actuel ne couvre PAS tout. `docs/referentiel/organisation-agence.md` §5 déclare
+trois catégories « définitivement hors de l'agence » (Personnages, Moteur du jeu, code tiers) et un
+3e rang « Infrastructure » sans dossier individuel — c'est-à-dire que plusieurs dizaines de fichiers
+réels n'ont aucune place nommée. Quand quelqu'un demande « où vit `check-house.mjs` ? », la réponse
+est « Infrastructure », ce qui n'est pas une place, c'est un fourre-tout.
+
+Ce que la demande exige, formulée comme une règle : **toute exhaustivité doit être totale, quitte à
+être grossière**. Mieux vaut une case large et honnête (« Infrastructure — socle exécuté par
+d'autres, jamais sollicité directement ») qu'une absence de case. Et surtout : le garde-fou doit
+être **mécanique** — un script du dépôt qui n'appartient à aucune catégorie doit se signaler tout
+seul, sur le patron déjà prouvé huit fois ici (`findScriptsMissingFromAgentFiles()` et ses cousins).
+
+### 4. Harmoniser CASSANDRA avec l'organisation — que peut-elle apporter de plus ?
+
+Idée : *« comment harmoniser le role de cassandra avec l'organisation : qu'est-ce qu'elle peut
+apporter de plus ? cree une tache pour mettre avec la serie qui vient sur cassandra »*.
+
+État factuel : `organisation-agence.md` est un texte **tenu à la main**, et sa propre fiche le
+reconnaît (« la tenue à jour de ce document à chaque changement d'organigramme reste manuelle »).
+CASSANDRA reconstruit déjà l'organigramme à chaque passage depuis le code réel. Les deux coexistent
+sans que rien ne vérifie qu'ils disent la même chose — un écart silencieux de la famille que
+l'Article 24 interdit.
+
+Ce qu'elle pourrait apporter, à trancher : (a) devenir la **source** de l'organigramme, le document
+n'en étant qu'un rendu ; (b) rester un miroir, mais avec un garde-fou qui compare les deux et
+signale toute divergence ; (c) porter les critères transverses du point 1, qu'elle est la seule à
+pouvoir mesurer sur tout l'effectif d'un coup.
+
+→ **Tâche créée** pour la série CASSANDRA à venir.
+
+### 5. Ce qui manque à notre agence face à une vraie agence
+
+→ Fichier dédié créé : **`docs/agence-exportable-conception.md`**. Ce sujet ne concerne pas
+l'organisation du projet en cours mais la conception du **projet suivant** (l'agence exportable,
+après la maison) — le mélanger ici aurait noyé les deux.
+
+### 6. Combien de « catalogues », et pourquoi ce mot revient partout
+
+Question de l'utilisateur : *« il y a plusieurs "catalogues" dans le projet en dehors de celui du
+coordinateur ? tu parles du catalogue de la charte ? pourquoi ? »*
+
+**Réponse : oui, et c'est une vraie dette de vocabulaire, pas une commodité de langage.** Le mot
+désigne aujourd'hui quatre choses différentes :
+
+| Ce qu'on appelle « catalogue » | Où | Ce que c'est vraiment |
+|---|---|---|
+| le catalogue du coordinateur | `PRESTATIONS`, `scripts/le-coordinateur.mjs` | ce que l'équipe peut FAIRE pour moi — des offres de service |
+| le catalogue de la charte | tableau « Catalogue — blueprint exportable », `CLAUDE.md` | quels DOCUMENTS chaque outil possède |
+| le catalogue d'offres nommé | `docs/le-coordinateur/`, tâche #154 | une version DATÉE et archivée du premier |
+| « le catalogue du paysage » | usages épars dans les commentaires | rien de précis — une façon de dire « la liste des outils » |
+
+Pourquoi j'ai employé « catalogue-charte » : en construisant `integration-outil`, il fallait nommer
+les dix registres, et celui de `CLAUDE.md` s'appelle littéralement « Catalogue — blueprint
+exportable ». J'ai repris son nom — ce qui a **ajouté une cinquième occurrence** au lieu de résoudre
+l'ambiguïté.
+
+L'Article 27 tranche déjà le principe : « Le vocabulaire se définit là où il s'emploie [...] Un nom
+propre sans définition atteignable est une dette de reprise, au même titre qu'un chemin cassé. »
+Une IA qui reprend le projet et lit « consulter le catalogue » ne peut pas savoir lequel des quatre.
+
+Piste : garder **« catalogue » pour les offres de service** (le seul sens qui corresponde au mot
+courant) et renommer les autres — le tableau de la charte est un **inventaire documentaire**, la
+version archivée est un **relevé daté**. Non tranché : un renommage touche plusieurs fichiers et
+mérite d'être fait en une fois, pendant le chantier d'organisation.
