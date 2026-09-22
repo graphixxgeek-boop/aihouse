@@ -334,9 +334,29 @@ export function findMisfiledBlocks(texte) {
 // dans un document lu à la demande, en laissant un renvoi de deux lignes. Le seuil est relatif au
 // fichier (une section qui pèse plus de 3 % du total), jamais un nombre de lignes absolu qui
 // deviendrait faux dès que la charte change de taille.
-export function planExtractions(sections, totalTokens, { seuilPct = 3 } = {}) {
+// SIXIÈME APPRENTISSAGE (2026-09-22, constaté dès que le rapport de scan s'est mis à parler) : le
+// seuil relatif de 3 % n'a aucun plancher absolu, et le quatrième apprentissage ci-dessous a
+// transformé chaque petite section en QUESTION posée à l'agent. Sur organisation-agence.md, l'outil
+// demandait sérieusement s'il fallait déménager « Les Agents Cadre » — 173 tokens, 3,5 % du
+// document. Une question coûte de l'attention à lire ; quand elle porte sur moins de tokens qu'elle
+// n'en fait dépenser, c'est du bruit produit par l'outil même qui prêche la sobriété. On exige donc
+// les DEUX : une vraie part du document (relatif, inchangé) ET assez de matière pour qu'un
+// déménagement en vaille la peine (absolu). Le seul cas réel que ce plancher garde est justement le
+// bon : « Référentiel technique » de CLAUDE.md, 4 414 tk sur 20 057.
+// SEPTIÈME APPRENTISSAGE (2026-09-22, même passage) : restaient deux questions posées sur
+// parametres.md — « Besoins (`lib/simulation.ts`) » et « Attirance et attachement
+// (`lib/relationship.ts`…) », assez lourdes pour passer le plancher, et pourtant absurdes : ce sont
+// les entrées mêmes du document des paramètres. Le signal mécanique qui le dit sans ambiguïté est
+// dans le TITRE : une section dont l'intitulé nomme le fichier de code qu'elle documente est une
+// entrée par module dans un document de référence, jamais un corps étranger — la déplacer voudrait
+// dire déplacer toutes ses sœurs, c'est-à-dire vider le document. Discriminant volontairement
+// étroit (le chemin doit être dans le titre, pas dans le corps) : « Référentiel technique » de
+// CLAUDE.md, la seule vraie extraction restante, n'en cite aucun et reste donc posée.
+const TITRE_NOMME_UN_FICHIER_SOURCE = /`[^`]*\.(ts|tsx|mjs|js)`/;
+
+export function planExtractions(sections, totalTokens, { seuilPct = 3, seuilTokens = 400 } = {}) {
   return sections
-    .filter((s) => classifySectionNature(s) !== "regle" && s.tokens / totalTokens * 100 >= seuilPct && !/^\(préambule\)$/.test(s.titre))
+    .filter((s) => classifySectionNature(s) !== "regle" && s.tokens / totalTokens * 100 >= seuilPct && s.tokens >= seuilTokens && !/^\(préambule\)$/.test(s.titre) && !TITRE_NOMME_UN_FICHIER_SOURCE.test(s.titre))
     .map((s) => {
       // La cible d'extraction se CHOISIT, elle ne se prend pas au premier chemin venu (corrigé le
       // 2026-09-22, même classe de bug que le catalogue avant lui) : la section « Plan d'origine »
@@ -1068,7 +1088,14 @@ export function scanScope(portee, cible, { root = ROOT, repoFiles = null } = {})
     // zéro honnête est une information (cf. principes.md scanné sans trouvaille), jamais une ligne
     // de remplissage dans un palmarès.
     avecGain: documents.filter((d) => d.gainTotal > 0).sort((a, b) => b.gainTotal - a.gainTotal),
-    sansGain: documents.filter((d) => d.gainTotal === 0).map((d) => d.chemin),
+    // 5e apprentissage (2026-09-22) : `sansGain` ne gardait QUE le chemin — toute l'analyse déjà
+    // calculée pour ces documents (criticité, manuel logé, bloc mal rangé, extraction à examiner)
+    // était jetée, précisément pour les documents où elle est la SEULE chose à dire. Résultat
+    // constaté en direct : `scan zoome docs/referentiel/principes.md`, 24 413 tokens, rendait six
+    // lignes vides de sens. Un outil qui a évolué dont le rapport est resté basique — exactement ce
+    // que le réseau reproche aux autres. On garde donc le document entier ; c'est l'affichage qui
+    // choisit quoi en dire.
+    sansGain: documents.filter((d) => d.gainTotal === 0),
   };
 }
 
@@ -1611,7 +1638,27 @@ function main() {
       console.log(`  ~${String(d.gainTotal).padStart(6)} tk · ${d.chemin} (${d.tokens} tk, ${d.propositions.length} proposition(s))`);
       for (const p of d.propositions.slice(0, 3)) console.log(`             [${p.risque}] ${p.strategie} — ${p.cible} (~${p.gain} tk)`);
     }
-    if (r.sansGain.length) console.log(`\n  Aucun gain mécanique détecté sur ${r.sansGain.length} document(s) — un zéro honnête, jamais une ligne de remplissage : ${r.sansGain.slice(0, 6).join(", ")}${r.sansGain.length > 6 ? "…" : ""}`);
+    if (r.sansGain.length) console.log(`\n  Aucun gain mécanique détecté sur ${r.sansGain.length} document(s) — un zéro honnête, jamais une ligne de remplissage : ${r.sansGain.slice(0, 6).map((d) => d.chemin).join(", ")}${r.sansGain.length > 6 ? "…" : ""}`);
+    // Tout ce que l'analyse a VRAIMENT trouvé, gain ou pas (5e apprentissage, 2026-09-22) : la
+    // criticité de la cible, un manuel d'outil logé dans un document de règles, un bloc rangé sous
+    // le mauvais titre, une section trop lourde dont l'outil ne peut pas décider seul. Aucun de ces
+    // signaux ne se chiffre en tokens gagnés — c'est exactement pour ça qu'ils disparaissaient d'un
+    // rapport qui ne savait parler que de gain.
+    const analyses = [...r.avecGain, ...r.sansGain].slice(0, 12);
+    for (const d of analyses) {
+      const signaux = [];
+      for (const m of d.manuelsLoges ?? []) signaux.push(`📦 manuel logé · « ${m.section} » (${m.tokens} tk) — ${m.pourquoi ?? "un mode d'emploi d'outil dans un document de règles"}`);
+      for (const b of d.malRanges ?? []) signaux.push(`🗂️  mal rangé · « ${b.section} » — ${b.pourquoi ?? "cite un autre Article que celui sous lequel il vit"} (aucun token en jeu, c'est la structure)`);
+      for (const e of d.extractionsAExaminer ?? []) signaux.push(`❓ à trancher · ${e.question}`);
+      if (!signaux.length) continue;
+      console.log(`\n  ── ${d.chemin} · criticité ${d.criticite?.niveau?.toUpperCase() ?? "inconnue"} (risque max applicable : ${d.criticite?.risqueMaxAutorise ?? "?"})`);
+      for (const s of signaux) console.log(`     ${s}`);
+    }
+    // La criticité seule mérite d'être dite même quand rien d'autre ne l'est : c'est elle qui
+    // gouverne ce que l'agent a le droit d'appliquer sans repasser par l'utilisateur.
+    if (!analyses.some((d) => (d.manuelsLoges?.length ?? 0) + (d.malRanges?.length ?? 0) + (d.extractionsAExaminer?.length ?? 0) > 0)) {
+      for (const d of analyses.slice(0, 6)) console.log(`  ── ${d.chemin} · criticité ${d.criticite?.niveau?.toUpperCase() ?? "inconnue"} · ${d.nbSections} section(s) · stratégies écartées : ${d.strategiesEcartees?.length ? d.strategiesEcartees.join(" ; ") : "aucune"}`);
+    }
     console.log(`\n  Portées disponibles : ${SCOPE_LEVELS.join(" / ")} (vocabulaire partagé avec THE-FINAL-JUDGE et SMART-CONSO-TOKEN).`);
     return;
   }

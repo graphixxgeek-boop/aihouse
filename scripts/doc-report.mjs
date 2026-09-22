@@ -439,7 +439,13 @@ export function findUnnavigableSections(markdown, seuils = SEUIL_SECTION_INTROUV
   for (let k = 0; k < debuts.length; k++) {
     const a = debuts[k], b = debuts[k + 1] ?? lignes.length;
     const zone = lignes.slice(a, b);
-    const sousTitres = zone.filter((x) => /^#{3,4} /.test(x)).length;
+    // Deuxième forme de sous-titre, trouvée le 2026-09-22 sur docs/referentiel/principes.md : ce
+    // document n'a AUCUN `###` — ses 94 sous-parties sont numérotées en début de ligne (« 8.1. »,
+    // « 8.1bis. »). Ne compter que les dièses le déclarait donc parfaitement navigable alors que sa
+    // section 8 fait 522 lignes d'un bloc. Même angle mort, même correction que le 5e motif de
+    // find-booster (un commentaire dense n'est pas moins un titre parce qu'il n'a pas d'accolade) :
+    // c'est la FONCTION de titre qui compte, jamais sa syntaxe.
+    const sousTitres = zone.filter((x) => /^#{3,4} /.test(x) || /^\d+\.\d+[a-z]*\.\s/.test(x)).length;
     // Un sommaire existe déjà si la section contient une liste à puces dans ses 40 premières lignes
     // ET annonce qu'elle est un sommaire — jamais deviné sur la seule présence de puces.
     const aUnSommaire = /\*\*Sommaire/i.test(zone.slice(0, 40).join("\n"));

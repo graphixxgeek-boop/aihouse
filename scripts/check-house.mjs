@@ -4304,7 +4304,17 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(sansDest[0].aExaminer && sansDest[0].cibleManquante, 'an extraction with no existing destination must be flagged as a question, never counted as a gain');
   const paramsDoc = eco.analyzeDocument('docs/referentiel/parametres.md');
   assert.equal(paramsDoc.gainTotal, 0, 'the parameters reference must yield ZERO automatic gain — its sections ARE its subject, and proposing to extract them would gut the document');
-  assert.ok(paramsDoc.extractionsAExaminer.length >= 1 && /corps étranger/.test(paramsDoc.extractionsAExaminer[0].question), 'those sections must still surface as an honest question the tool cannot answer alone, never vanish silently');
+  // 2026-09-22, 6e et 7e apprentissages : cette assertion exigeait que parametres.md produise
+  // ENCORE la question « corps étranger ? ». Elle épinglait un comportement auquel l'utilisateur
+  // avait déjà répondu une fois pour toutes (« toutes restent, ce sont les sujets mêmes de leurs
+  // documents ») — une question dont la réponse est connue d'avance n'est pas une honnêteté, c'est
+  // du bruit facturé à l'attention du lecteur. Deux discriminants mécaniques la suppriment
+  // désormais : un plancher absolu (une question sur 173 tokens coûte plus cher à lire qu'elle ne
+  // peut rapporter) et un titre qui nomme le fichier de code qu'il documente (entrée par module
+  // dans un document de référence, jamais un corps étranger).
+  assert.equal(paramsDoc.extractionsAExaminer.length, 0, 'the parameters reference must no longer ask anything at all: every one of its heavy sections is titled after the source file it documents, which is the mechanical proof that it is this document\'s own subject rather than a foreign body');
+  const charte = eco.analyzeDocument('CLAUDE.md');
+  assert.ok(charte.extractionsAExaminer.some((e) => /Référentiel technique/.test(e.section)), 'the one genuine remaining candidate must survive both new filters — heavy enough (4 400+ tk) and titled after no source file — otherwise the filters would have silenced the real question along with the noise');
 
   // --- Sections devenues INTROUVABLES (Doc-Report, pas ecotoken : réduire un document et le rendre
   // utilisable sont deux métiers). §7ter pesait 64 % de son document, 1 527 lignes, 48 blocs sous

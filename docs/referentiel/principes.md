@@ -630,6 +630,35 @@ provisions.
 
 ## 8. Révélation et canal humain
 
+**Sommaire de la section** *(généré depuis les vrais titres le 2026-09-22, jamais recopié à la main —
+cette section fait 522 lignes d'un bloc, c'est la plus longue du document et la seule qu'on ne
+pouvait pas parcourir sans la lire en entier. Signalée par `findUnnavigableSections()`, Doc-Report.)*
+
+  - **8.1** — ouverture du canal humain (cinq preuves + appel explicite)
+  - **8.1bis** — certitude progressive d'être observé
+  - **8.2** — priorité de réponse au message de l'observateur
+  - **8.3** — la relation Lia/Noé continue après la révélation
+  - **8.4** — dossier retourné
+  - **8.5** — jauge d'appréciation de l'observateur, PAR personnage
+  - **8.6** — négociation
+  - **8.7** — colère réelle et registre
+  - **8.8** — esprit, au-delà de la colère
+  - **8.9** — cohérence entre jauges, visage et décisions
+  - **8.10** — roulement sans répétition de la roulette des bonus
+  - **8.11** — insistance sur la roulette, jamais un harcèlement
+  - **8.12** — bonus « pouvoir » : mute de l'observateur, caméra masquée
+  - **8.13** — description d'apparence non écrasée par un texte scripté
+  - **8.14** — bougie / attirance implicite
+  - **8.15** — pensée de validation après une décision affectueuse
+  - **8.16** — doute d'humanité au tout premier réveil
+  - **8.17** — doute amoureux privé, puis discutable à voix haute
+  - **8.18** — capacités constatées sur soi-même
+  - **8.19** — trois « trous » corrigés en audit du 2026-09-19
+  - **8.20** — rééquilibrage du rythme avant/après révélation
+  - **8.21** — bouton « passer à la révélation »
+  - **8.22** — cycle jour/nuit
+
+
 8.1. Le canal de discussion avec l'observateur ne s'ouvre qu'après la découverte des cinq preuves
 ET l'appel explicite des deux habitants à un observateur (la révélation finale). Avant cela,
 aucun message humain n'atteint les personnages en jeu (mode `chat` refusé). `finaleReveal()`
