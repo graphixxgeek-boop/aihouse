@@ -8,6 +8,11 @@
 import { readFileSync, readdirSync, rmSync } from "node:fs";
 import { recentCommits, findCommitsMissingSuiviUpdate, findTaskNumberIssues, nextTaskNumber } from "../check-suivi-fidelity.mjs";
 import { walk, findDeadLifeFields, findTodoMarkers } from "../check-argus.mjs";
+// La mémoire d'ARGUS doit atteindre LE BANDEAU, pas seulement le CLI (2026-09-23) : c'est cette
+// ligne-ci que l'agent lit à chaque commit, jamais le rapport complet. Un filtrage qui n'arriverait
+// pas jusqu'ici laisserait « ⚠️6 » s'afficher pour toujours — le mécanisme existerait dans l'outil
+// sans rien changer là où ça compte, très exactement la faute qu'on vient de corriger ailleurs.
+import { loadMemoire } from "../safe-export.mjs";
 import { checkLinks, LINKS } from "../check-harmonia.mjs";
 import { collectCoverage, robustnessScore, collectScriptCoverage, scriptRobustnessScore, LIB_MAP, AGENT_SCRIPT_FILES } from "../axa-check.mjs";
 import { lastTouchDays, relativeStaleness } from "../clean-dirty-old.mjs";
@@ -72,8 +77,14 @@ if (changedFiles && !realCodeFilesChanged(changedFiles).some((f) => /^(lib|app|c
 if (reveille("argus") || reveille("harmonia")) try {  // ce bloc porte les DEUX gardiens
   const lifeSource = readFileSync("lib/life.ts", "utf8");
   const files = walk("lib").concat(walk("app"));
-  const dead = findDeadLifeFields(files, lifeSource);
   const todos = findTodoMarkers(walk(".").filter((f) => !f.includes("/scratchpad/")));
+  // Les champs déjà tranchés AVEC accord explicite de l'utilisateur ne comptent plus. Le filtrage
+  // porte sur le nom du champ, extrait de la même façon que dans check-argus.mjs.
+  const tranches = new Set(loadMemoire({ fichier: "docs/argus/memoire.json" })
+    .filter((m) => m.etat === "écarté sciemment" && m.accordUtilisateur)
+    .map((m) => String(m.defaut ?? "").match(/«\s*(\w+)\s*»/)?.[1])
+    .filter(Boolean));
+  const dead = findDeadLifeFields(files, lifeSource).filter((d) => !tranches.has(d.field));
   argusFindingsCount = dead.length + todos.length;
   if (dead.length || todos.length) {
     console.error(
