@@ -217,6 +217,35 @@ if (reveille("always-new-code")) try {
   }
 } catch { /* best-effort, jamais bloquant */ }
 
+// BILAN DES SIX GARDIENS — une seule ligne, toujours affichée (2026-09-22, question de
+// l'utilisateur : « seulement 3 gardiens sacrés ont été déclenchés, c'était volontaire ? »).
+// Réponse trouvée en vérifiant : CINQ s'étaient bien réveillés sur ce commit, mais deux d'entre eux
+// n'avaient RIEN trouvé — et un Gardien qui ne trouve rien ne disait rien du tout. Impossible, en
+// lisant la sortie, de distinguer « a dormi » de « a tourné et n'a rien vu » : le silence voulait
+// dire deux choses opposées. C'est un défaut d'observabilité, pas de couverture — corrigé ici, et
+// pas en rendant les Gardiens plus bavards : une ligne unique, à la fin, qui donne l'état des six.
+// ALWAYS-NEW-CODE qui dort sur un commit de `scripts/` n'est PAS un trou : ses 8 zones sont les
+// thèmes du MOTEUR DU JEU (lib/app/components), il n'a rien à dire d'un script d'outillage — une
+// décision assumée, vérifiée avant d'être prise pour un oubli (Article 23, garde-fou).
+{
+  const etat = (gardien, eveille, trouvailles) => {
+    if (!eveille) return `${gardien} 💤`;
+    if (trouvailles === undefined) return `${gardien} ⚪`;   // réveillé mais mesure indisponible
+    return trouvailles > 0 ? `${gardien} ⚠️${trouvailles}` : `${gardien} ✅`;
+  };
+  const bilan = [
+    etat("ARGUS", reveille("argus"), argusFindingsCount),
+    etat("HARMONIA", reveille("harmonia"), harmoniaFindingsCount),
+    etat("AXA-CHECK", reveille("axa-check"), undefined),
+    etat("CLEAN-DIRTY-OLD", reveille("clean-dirty-old"), cleanDirtyOldFlagged === undefined ? undefined : (cleanDirtyOldFlagged ? 1 : 0)),
+    etat("CLONE-HUNTER", reveille("clone-hunter"), cloneHunterFindingsCount),
+    etat("ALWAYS-NEW-CODE", reveille("always-new-code"), alwaysNewCodeFlagged === undefined ? undefined : (alwaysNewCodeFlagged ? 1 : 0)),
+  ];
+  const dorment = [["argus"], ["harmonia"], ["axa-check"], ["clean-dirty-old"], ["clone-hunter"], ["always-new-code"]].filter(([g]) => !reveille(g)).length;
+  console.log(`\n🛡️  Gardiens : ${bilan.join(" · ")}`);
+  console.log(`   ✅ = a tourné, rien trouvé · ⚠️n = a trouvé n chose(s) · ⚪ = a tourné, mesure non chiffrable ici · 💤 = hors de son domaine (${dorment}/6 sur ce commit, cf. GARDIEN_DOMAINS)\n`);
+}
+
 // EL-PROFESSOR — garde-fou de couverture réel (2026-09-22, trouvé par l'utilisateur : « tu ne m'as
 // pas livré de rapport à part le transcript [...] normalement tu dois me faire livrer les
 // rapports »). Root-cause confirmée : `findMissingNotes()`/`findOrphanNotes()` (el-professor.mjs)

@@ -294,3 +294,54 @@ ces garde-fous n'aveuglent pas l'outil sur un vrai cas.
 Budgets après cette passe : `CLAUDE.md` 22 339/30 000 (marge 26 %) ·
 `docs/regles-de-travail.md` 55 746/60 000 (marge 7 %, le plus tendu) ·
 `docs/referentiel/principes.md` 24 413/28 000 (marge 13 %).
+
+## Ce que la première passe réelle a appris à l'outil (2026-09-22)
+
+L'outil découpait par titre `##`. Or CLAUDE.md n'a que **12 sections** : sa vraie structure est
+faite de **blocs en gras** à l'intérieur de celles-ci. Conséquence mesurée : la section « Charte de
+qualité » pesait 12 346 tk d'un bloc, et **l'Article 19 à lui seul 5 351 tk — 43 % de la charte** —
+sans qu'aucune proposition ne puisse jamais viser cette masse, parce qu'elle n'était pas une
+« section ». L'outil était aveugle à l'endroit précis où se trouvait le gros du poids.
+
+Le raisonnement qu'il a fallu faire à la main, désormais encodé :
+
+1. **`splitBoldBlocks()`** — descendre au niveau du bloc en gras, pas du titre `##`.
+2. Se demander non pas « ce texte est-il long ? » mais **« ce texte est-il à sa place ? »**. Les
+   deux trouvailles réelles sont venues de cette question, jamais de la taille.
+
+**`findLodgedManuals()` — un manuel d'exploitation logé dans la charte.** Trois conditions
+cumulatives, toutes vérifiables : le bloc est gros (≥400 tk), il décrit l'exploitation d'un outil
+(≥2 commandes `scripts/*.mjs` citées), et cet outil a **déjà** un document dédié qui existe sur le
+disque. C'est le motif le plus rentable trouvé sur le fichier maître et le seul sans arbitrage
+douteux : le contenu a déjà un domicile. Chaque trouvaille porte sa **prudence** — garder dans la
+charte ce qu'il faut avoir sous les yeux le jour d'une panne, jamais le renvoi seul.
+
+**`findMisfiledBlocks()` — un bloc rangé sous le mauvais Article.** Zéro token à gagner, et le
+champ `gain: 0` le dit explicitement : gonfler ses propres chiffres avec une correction de
+structure serait malhonnête. Ça compte quand même, pour deux raisons vécues : un agent qui cherche
+une règle sous son Article ne la trouve pas, et tout outil qui découpe par Article voit une masse
+aberrante qu'il attribue à la mauvaise règle. Signal mécanique : le bloc cite un AUTRE Article plus
+souvent que celui sous lequel il est rangé.
+
+Ces deux signaux ne rejoignent **pas** `propositions` : un manuel logé demande un vrai arbitrage
+humain (que garder sous les yeux ?) et un bloc mal rangé ne fait gagner aucun token. Les mélanger
+aux propositions chiffrées laisserait croire à un gain automatique là où il y a une décision.
+
+## Deuxième passe réelle sur le fichier maître (2026-09-22)
+
+**22 338 → 20 056 tokens**, après validation explicite de l'utilisateur sur les deux points :
+
+- le manuel Smart Breaker (2 820 tk, 13 % du fichier) rejoint
+  `docs/referentiel/smart-breaker-historique.md` — texte intégral. **La procédure d'urgence en
+  5 étapes reste dans la charte** : c'est ce qu'il faut avoir sous les yeux le jour où l'API bloque.
+- les 8 blocs de règles vivantes (format des questions, double lecture, sondage, traçabilité) sont
+  rangés sous l'Article 16 auquel ils appartiennent, au lieu d'être logés dans l'Article 19 par
+  accident de mise en page. Zéro token gagné, structure enfin honnête.
+
+Contrôle : 25 Articles intacts aux intitulés près, phrases socles présentes, **23/23 phrases
+normatives retirées retrouvées mot pour mot** dans le document d'accueil.
+
+**Audit de pertinence des règles** fait à cette occasion : 135 des 138 chemins cités par la charte
+existent réellement (les 3 autres sont des motifs génériques `lib/*.ts`, pas des renvois). Aucune
+règle morte, aucun renvoi cassé — le problème de la charte était un **rangement**, jamais une
+péremption.

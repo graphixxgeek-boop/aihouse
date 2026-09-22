@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 265'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 266'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -4214,6 +4214,25 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const controle = eco.verifyAgainstSnapshot();
   assert.ok(controle.possible && controle.inchange, 'with a fresh snapshot the before/after check must be possible and report no change — the obligation the criticality declares is now genuinely executable, not just written');
   assert.ok(eco.buildEcotokenReport().text.includes('CRITICITÉ DE LA CIBLE'), 'the report must carry the criticality block before any gain figure — knowing what you risk comes before knowing what you gain');
+
+  // --- CE QUE LA PREMIÈRE PASSE RÉELLE A APPRIS À L'OUTIL (2026-09-22). Il découpait par titre
+  // `##` ; or CLAUDE.md n'en a que 12, et sa vraie structure est faite de blocs en gras. L'Article
+  // 19 pesait 5 351 tk — 43 % de la charte — sans qu'aucune proposition ne puisse le viser.
+  const charteAvant2 = fs.readFileSync('/tmp/claude-0/-home-user-aihouse/b96a7cb6-ab2b-5738-adad-b787dab23b16/scratchpad/avant-restructure.md', 'utf8');
+  if (charteAvant2) {
+    const blocs = eco.splitBoldBlocks({ texte: '**Un titre en gras.** du corps\n\n**Un autre.** encore du corps', debut: 1 });
+    assert.equal(blocs.filter((b) => /^Un/.test(b.titre)).length, 2, 'the sub-splitter must see bold blocks — the level at which this charter is really structured');
+    // Le motif le plus rentable : un manuel d'exploitation logé dans une section de RÈGLES alors
+    // qu'une fiche dédiée existe déjà. Trouvé à la main d'abord, encodé ensuite.
+    const manuels = eco.findLodgedManuals(charteAvant2);
+    assert.ok(manuels.some((m) => /Blocage de quota/.test(m.bloc)), 'the tool must now find on its own the 2 820-token tool manual lodged inside Article 19 — the single biggest recoverable block of the master file, which a section-level splitter could never see');
+    assert.ok(manuels.every((m) => m.fiches.length && m.commandes >= 2), 'a lodged manual is only flagged when a real destination exists AND the block genuinely describes tool operation — never merely because it is long');
+    assert.ok(manuels[0].prudence.includes('procédure d\'urgence'), 'the finding must carry the caution that came from doing it by hand: keep what must stay under the eyes on the day it breaks');
+    // Un bloc rangé sous le mauvais Article : zéro token, mais la charte ment sur sa structure.
+    const malRanges = eco.findMisfiledBlocks(charteAvant2);
+    assert.ok(malRanges.some((x) => /Format de présentation/.test(x.bloc) && x.appartientA === 18), 'a block filed under Article 19 but citing Article 18 twice must be reported as mis-filed');
+    assert.ok(malRanges.every((x) => x.gain === 0), 'a mis-filing is never sold as a token saving — it is a structure correction, and saying otherwise would inflate the tool\'s own numbers');
+  }
 
   // --- HARMONIE AVEC LES AUTRES ÉCHELLES DU PROJET (2026-09-22). Ce dépôt a quatre échelles qui ne
   // mesurent PAS la même chose (effort de vérification / nœud du moteur / gravité d'une règle /

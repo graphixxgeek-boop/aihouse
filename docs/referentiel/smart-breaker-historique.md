@@ -194,3 +194,133 @@ prise en compte par le runtime Cloudflare Workers en mode dev) — en vérifiant
 `workerd` orphelin ne survit à un `pkill` précédent (nom de processus différent de `vinext dev`/
 `node scripts/run-framework`, peut garder le port occupé) ; (5) relancer ou laisser reprendre la
 simulation.
+
+
+---
+
+## Règles opérationnelles complètes, extraites de CLAUDE.md le 2026-09-22
+
+*(Ces 118 lignes vivaient dans la charte, rechargées à CHAQUE message, alors qu elles ne servent
+qu en cas de panne réelle de l API — quelques fois par mois au plus. Décision explicite de
+l utilisateur. Rien n est supprimé ni résumé : texte intégral. La charte garde la PROCÉDURE
+D URGENCE en 5 étapes, celle qu il faut avoir sous les yeux le jour où ça bloque, plus un renvoi
+vers ce document pour tout le reste.)*
+
+**Blocage de quota Gemini — diagnostic et repli, outil surnommé « Smart Breaker ».** Regroupe
+`scripts/check-gemini-quota.mjs` + `scripts/gemini-key-health.mjs` + `scripts/api-providers.mjs` +
+`lib/gemini-keys.ts` (noms techniques inchangés). Blueprint générique : `docs/outil-resilience-api.md`.
+Récit complet du diagnostic d'origine (premier blocage, reproduction de la requête exacte,
+historique des évolutions de l'outil) : `docs/referentiel/smart-breaker-historique.md` — cette
+charte garde ici les règles opérationnelles, pas leur genèse (Article 6/13).
+
+Fait établi : le quota gratuit Gemini est **journalier, PAR MODÈLE et PAR PROJET Google Cloud**
+(`GenerateRequestsPerDayPerProjectPerModel-FreeTier`), jamais global au projet ni à la clé seule.
+Le `retryDelay` renvoyé par Google dans un 429 (souvent "30s") est trompeur pour ce type
+d'épuisement : il ne redevient pas disponible après ce délai, il se renouvelle le lendemain.
+
+Câblé dans les deux seuls points d'appel réseau réels à Gemini (`lib/lia.ts::think()` et
+`app/api/lia/route.ts::generateDossierFragment()`), en production comme en dev/simulation :
+
+- **`scripts/check-gemini-quota.mjs`** — sonde plusieurs modèles candidats avec un appel minimal
+  réel (jamais à l'aveugle) et suggère une ligne `GEMINI_FALLBACK_MODELS=...` sans jamais l'écrire
+  lui-même dans `.dev.vars`. Sonde aussi "lourde" (taille comparable à un vrai tour de jeu) sur le
+  modèle principal, pour détecter l'écart où une sonde légère répond "OK" alors que la vraie charge
+  échoue au même instant sur la même clé/modèle (réponse HTTP 200 sans contenu exploitable signalée
+  "OK_VIDE", jamais confondue avec un vrai succès). Principe fondateur de l'outil : accumuler une
+  connaissance fine de chaque clé configurée (`.gemini-key-health.json`, local, jamais committé) —
+  par modèle, dans le temps, épisode par épisode — pour choisir en connaissance de cause plutôt qu'à
+  l'aveugle, jamais réagir à l'aveugle à un blocage isolé. Support multi-fournisseurs
+  (`scripts/api-providers.mjs`) : strictement pour le diagnostic outillage, jamais câblé comme vrai
+  repli de production (resterait soumis à la même validation qualité intégrale que tout changement
+  de modèle, Article 0). Affiche à chaque exécution `describeKnownLessons()` — historique curaté à
+  la main, distinct de l'expérience automatique, mis à jour seulement après un nouveau blocage réel
+  diagnostiqué et compris.
+- **Repli de modèle** — si `GEMINI_FALLBACK_MODELS` (liste séparée par virgules) est configuré, la
+  même requête est rejouée contre le modèle suivant, uniquement sur 429 ou 503 (Google répond
+  parfois 503 plutôt que 429 pour un modèle pourtant confirmé épuisé par sonde directe au même
+  instant — même cause, même traitement). Jamais sur 401/403/404/erreur réseau, qu'un autre modèle
+  ne résoudrait pas.
+- **Repli de clé** — `GEMINI_API_KEY_FALLBACKS` : chaque clé essaie tous ses modèles avant de passer
+  à la clé suivante, sur 429/503 ; une clé invalide (401/403) passe directement à la suivante sans
+  gaspiller de tentatives sur ses autres modèles. Deux clés du même projet Google Cloud partagent le
+  même panier de quota (confirmé empiriquement) — seule une clé d'un projet distinct apporte un
+  quota indépendant.
+- **Rotation + disponibilité des clés** — module partagé `lib/gemini-keys.ts` (utilisé par les deux
+  cerveaux, jamais deux états séparés) : round-robin parmi les clés actuellement saines à chaque
+  appel, plutôt qu'une mémoire "collante" qui laissait une seule clé encaisser tout le trafic tant
+  qu'elle répondait. Une clé qui vient d'échouer est mise en cooldown (429 → base 15 min ; 503 →
+  base 60 s ; 401/403 → définitif pour la durée du process) et sautée par la rotation tant que ce
+  délai n'est pas écoulé, jamais via un appel de sonde séparé (zéro coût API additionnel).
+  **Recul exponentiel** : un échec répété sur la même clé double le délai à chaque fois (plafond 4h
+  pour 429, 20 min pour 503), remis instantanément à la base au premier succès suivant. Une clé en
+  cooldown n'est jamais RETIRÉE de la rotation, seulement reléguée en dernier recours si toutes le
+  sont. Mémoire best-effort au niveau du process/isolate : jamais une garantie inter-redémarrage,
+  jamais écrite en base. Portée limitée aux CLÉS (strictement interchangeables) : jamais aux
+  MODÈLES, qui restent toujours tentés dans l'ordre configuré, le principal en premier (Article 0 —
+  un modèle de repli n'est pas équivalent en qualité). Le second cerveau d'un même tour bénéficie
+  immédiatement de la découverte du premier au sein du même tour (cooldown partagé).
+
+**Trafic réel persisté dans l'historique partagé.** Chaque tentative réelle journalise, en mémoire
+process, le MODÈLE essayé sous une empreinte de clé jamais la clé en clair (`fingerprint()`,
+identique à `keyLabel()` du diagnostic). Toujours **aucune écriture disque** dans
+`lib/gemini-keys.ts`/`route.ts` eux-mêmes (Cloudflare Workers n'a pas de système de fichiers
+persistant) : ce trafic est exposé via l'API admin déjà protégée, puis persisté après coup par
+`kpi-report.mjs` (étape 4 de l'Article 18, avant redémarrage du serveur) en réutilisant directement
+`recordOutcomeByLabel()` de `scripts/gemini-key-health.mjs` — jamais un second mécanisme d'écriture.
+
+**Inactif par défaut** dans tous les cas : listes absentes ou vides reproduisent exactement le
+comportement antérieur, zéro appel supplémentaire, zéro changement de modèle ou de clé silencieux
+sur le jeu réel — une bascule de modèle peut influer sur la qualité/le ton des réponses (Article 0),
+donc elle reste une décision volontaire, jamais un défaut de production.
+
+**Portée production, pas seulement développement.** Ces mécanismes sont câblés dans les deux seuls
+points d'appel réseau réels de l'application, pas un chemin de simulation séparé — un vrai
+visiteur, une simulation, ou `check-spirit.mjs`/`check-profile.mjs` en bénéficient de la même
+façon. À la mise en ligne (déploiement `wrangler` sur Cloudflare Workers), `GEMINI_FALLBACK_MODELS`
+et `GEMINI_API_KEY_FALLBACKS` sont des bindings d'environnement au même titre que `GEMINI_API_KEY`
+déjà utilisé en production, configurables via `wrangler secret put` sans changement de code.
+`scripts/check-gemini-quota.mjs` reste aussi pertinent après le lancement : le quota Google est lié
+au projet/à la clé, pas à l'environnement dev/prod.
+
+**Condition stricte avant toute activation de `GEMINI_FALLBACK_MODELS` en production** (le risque
+réel n'est pas nul — un modèle de repli suit le même prompt mais rien ne garantit qu'il respecte
+l'esprit des personnages avec la même fidélité que le modèle principal, jamais testé sur ce prompt
+précis ; l'utilisateur ne doit rien détecter) — `GEMINI_API_KEY_FALLBACKS` n'est pas concerné par
+cette condition, puisqu'il ne change jamais le modèle donc jamais la qualité :
+- **Consulter Smart Conso API avant de lancer cette validation** (`node scripts/smart-conso-api.mjs
+  check-spirit --confirm`, cf. Article 22) — cette validation multiplie le coût réel par le nombre de
+  modèles candidats, jamais une exception au principe général.
+- Validation qualité **intégrale**, jamais un échantillonnage : lire TOUTES les réponses de
+  `scripts/check-spirit.mjs` et TOUS les profils de `scripts/check-profile.mjs` pour CHAQUE modèle
+  candidat, avec ce modèle comme `GEMINI_MODEL` effectif.
+- **Refaite entièrement** à chaque changement de la liste de modèles de repli ET à chaque
+  modification substantielle du prompt de `lib/lia.ts` — un modèle validé sur un prompt passé
+  n'est pas validé sur un prompt qui a changé depuis.
+- **Limite honnête, à ne jamais masquer** : aucun test automatique ne peut PROUVER l'absence de
+  toute dérive détectable — ces deux scripts ne détectent que les dérives les plus grossières
+  (Article 13). La vraie garantie reste la lecture humaine avant activation.
+- **Portes de sortie déjà en place, à ne jamais retirer, qui protègent l'expérience quel que soit
+  le modèle ou la clé qui répond** : `groundTruncation()`/`groundRegister()` (`lib/dialogue.ts`)
+  s'appliquent à CHAQUE réplique et pensée en aval, indépendamment du producteur. La validation
+  stricte du schéma JSON (`decisionSchema.parse`, `lib/lia.ts`) rejette tout tour mal formé. Une
+  exception réseau ne tente JAMAIS le repli (`catch` immédiat) : une panne réseau touche
+  l'hébergeur entier, pas un modèle en particulier.
+- **Interrupteur d'urgence** : désactiver un repli en production ne demande aucun changement de
+  code, juste retirer la valeur du secret Cloudflare concerné — réversible en un geste.
+- **Ce qui n'est actuellement PAS un risque réel** : `GEMINI_FALLBACK_MODELS` et
+  `GEMINI_API_KEY_FALLBACKS` ne sont configurés que dans `.dev.vars` (jamais commité, jamais en
+  production) — aucun vrai visiteur n'a jamais reçu de réponse d'un modèle/clé de repli à ce jour.
+  Tant que la validation ci-dessus n'a pas été faite pour `gemini-flash-latest`/
+  `gemini-3-flash-preview` (les deux seuls candidats identifiés à ce jour), `GEMINI_FALLBACK_MODELS`
+  reste réservé au dev/simulation.
+
+**Discrétion.** Limite honnête actée avec l'utilisateur : le code fonctionnel (`lib/lia.ts`,
+`route.ts`, `scripts/check-gemini-quota.mjs`) doit rester en clair pour fonctionner — n'importe qui
+le lisant verra immédiatement qu'il s'agit de Gemini avec un mécanisme de repli, rien ne peut cacher
+ça sans casser le code. Une tentative d'encoder cette section elle-même a été refusée par le
+classificateur de sécurité automatique de l'environnement — abandonnée, jamais retentée sous une
+autre forme d'encodage sans nouvelle demande explicite. La discrétion réellement appliquée :
+`lib/reference.ts` (référentiel affiché en jeu, panneau Admin — la seule surface que l'application
+rend visiblement à un tiers) ne décrit ce chantier que par une phrase générique, sans nom de modèle,
+chiffre de quota ni explication du mécanisme.
+

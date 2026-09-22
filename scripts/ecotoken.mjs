@@ -240,6 +240,96 @@ export function buildCatalogueReplacement(famille, facts) {
   return L.join("\n");
 }
 
+// --- CE QUE LA PREMIÈRE PASSE RÉELLE M'A APPRIS (2026-09-22) ------------------------------------
+// L'outil découpait par titre `##`. Or CLAUDE.md n'a que 12 sections `##` : sa VRAIE structure est
+// faite de blocs en gras à l'intérieur de celles-ci. Conséquence mesurée : la section « Charte de
+// qualité » pesait 12 346 tokens d'un bloc, et l'Article 19 à lui seul 5 351 — soit 43 % de la
+// charte — sans qu'aucune proposition ne puisse jamais viser cette masse, parce qu'elle n'était pas
+// une « section ». L'outil était aveugle à l'endroit précis où se trouvait le gros du poids.
+//
+// Le raisonnement que j'ai dû faire à la main, et qu'il faut lui donner :
+//   1. descendre au niveau du BLOC EN GRAS, pas du titre `##` ;
+//   2. se demander non pas « ce texte est-il long ? » mais « ce texte est-il À SA PLACE ? ».
+// Les deux trouvailles réelles sont venues de la question 2, jamais de la taille :
+//   • un MANUEL D'EXPLOITATION d'outil (Smart Breaker, 2 820 tk) logé dans un Article qui parle de
+//     tout autre chose, alors que deux fiches dédiées existaient déjà — 13 % du fichier ;
+//   • huit blocs de RÈGLES VIVANTES rangés sous le mauvais Article par accident de mise en page :
+//     aucun token à gagner, mais la charte mentait sur sa propre structure.
+export function splitBoldBlocks(section) {
+  const lignes = String(section.texte ?? "").split("\n");
+  const blocs = [];
+  let courant = { titre: "(entête de section)", lignes: [], debut: section.debut ?? 1 };
+  lignes.forEach((l, i) => {
+    const m = /^\*\*(.{4,120}?)\.?\*\*/.exec(l);
+    if (m) { blocs.push(courant); courant = { titre: m[1].trim(), lignes: [], debut: (section.debut ?? 1) + i }; }
+    courant.lignes.push(l);
+  });
+  blocs.push(courant);
+  return blocs.filter((b) => b.lignes.join("").trim()).map((b) => {
+    const texte = b.lignes.join("\n");
+    return { ...b, texte, nbLignes: b.lignes.length, tokens: estimateTokens(texte) };
+  });
+}
+
+// TROUVAILLE 1 — un MANUEL logé dans la charte. Trois conditions cumulatives, toutes vérifiables :
+// le bloc est gros, il décrit l'exploitation d'un outil nommé, et cet outil a DÉJÀ un document
+// dédié qui existe sur le disque. C'est le motif le plus rentable trouvé sur le fichier maître, et
+// le seul qui ne demande aucun arbitrage douteux : le contenu a déjà un domicile.
+export function findLodgedManuals(texte, { root = ROOT, seuilTokens = 400 } = {}) {
+  const trouvailles = [];
+  for (const section of splitSections(texte)) {
+    if (classifySectionNature(section) !== "regle") continue;
+    for (const bloc of splitBoldBlocks(section)) {
+      if (bloc.tokens < seuilTokens) continue;
+      // Les documents que le bloc cite et qui existent réellement, hors renvois génériques.
+      const fiches = [...new Set([...bloc.texte.matchAll(/`(docs\/[^`\s]+?\.md)`/g)].map((m) => m[1]))]
+        .filter((f) => existsSync(join(root, f)) && affiniteChemin(f, bloc.titre) > 0);
+      if (!fiches.length) continue;
+      // Un bloc qui EST une règle de la charte (il énonce un devoir général) n'est pas un manuel,
+      // même s'il cite une fiche. Un manuel décrit un OUTIL : il nomme des scripts, des commandes.
+      const commandes = (bloc.texte.match(/`(?:node )?scripts\/[a-z0-9-]+\.mjs/g) || []).length;
+      if (commandes < 2) continue;
+      trouvailles.push({
+        section: section.titre, bloc: bloc.titre, tokens: bloc.tokens, nbLignes: bloc.nbLignes,
+        fiches, commandes,
+        pourquoi: `${bloc.tokens} tk d'exploitation d'outil (${commandes} commandes citées) logés dans une section de RÈGLES, alors que ${fiches.join(" et ")} traite(nt) déjà le sujet`,
+        prudence: "avant de sortir : garder dans la charte la partie qu'il faut avoir sous les yeux le jour d'une panne (la procédure d'urgence), jamais le renvoi seul",
+      });
+    }
+  }
+  return trouvailles.sort((a, b) => b.tokens - a.tokens);
+}
+
+// TROUVAILLE 2 — un bloc RANGÉ SOUS LE MAUVAIS ARTICLE. Zéro token à gagner : ce n'est pas une
+// économie, c'est une correction de structure. Elle compte quand même, pour deux raisons vécues :
+// un agent qui cherche une règle sous son Article ne la trouve pas, et tout outil qui découpe par
+// Article voit une masse aberrante (ici un Article 19 huit fois trop gros) qu'il attribue à la
+// mauvaise règle. Le signal est mécanique : le bloc cite un AUTRE Article plus souvent que celui
+// sous lequel il est rangé.
+export function findMisfiledBlocks(texte) {
+  const trouvailles = [];
+  for (const section of splitSections(texte)) {
+    let articleCourant = null;
+    for (const bloc of splitBoldBlocks(section)) {
+      const entete = /^Article (\d+) —/.exec(bloc.titre);
+      if (entete) { articleCourant = Number(entete[1]); continue; }
+      if (articleCourant === null || bloc.tokens < 80) continue;
+      const cites = [...bloc.texte.matchAll(/\bArticle (\d+)\b/g)].map((m) => Number(m[1]));
+      if (!cites.length) continue;
+      const comptes = {};
+      for (const n of cites) comptes[n] = (comptes[n] ?? 0) + 1;
+      const [meilleur, n] = Object.entries(comptes).sort((a, b) => b[1] - a[1])[0];
+      if (Number(meilleur) === articleCourant || n < 2) continue;
+      trouvailles.push({
+        bloc: bloc.titre, tokens: bloc.tokens, rangeSous: articleCourant, appartientA: Number(meilleur),
+        pourquoi: `rangé sous l'Article ${articleCourant} mais cite ${n} fois l'Article ${meilleur} — accident de mise en page, jamais une décision`,
+        gain: 0, note: "aucun token gagné : c'est la structure qu'on corrige, pas le poids",
+      });
+    }
+  }
+  return trouvailles.sort((a, b) => b.tokens - a.tokens);
+}
+
 // STRATÉGIE 2 — extraction. Une section longue dont la nature n'est PAS une règle part en entier
 // dans un document lu à la demande, en laissant un renvoi de deux lignes. Le seuil est relatif au
 // fichier (une section qui pèse plus de 3 % du total), jamais un nombre de lignes absolu qui
@@ -1215,6 +1305,12 @@ export function analyzeDocument(path, { repoFiles = null, root = ROOT } = {}) {
   // l'application — elle reste VISIBLE, listée à part, parce que la masquer serait mentir sur le
   // gain possible ; elle cesse seulement d'être une chose qu'on applique sans y réfléchir.
   const criticite = assessCriticality(path, { root, repoFiles });
+  // Les deux signaux venus de la première passe réelle. Ils ne rejoignent PAS `propositions` :
+  // un manuel logé demande un vrai arbitrage humain (que garder sous les yeux ?) et un bloc mal
+  // rangé ne fait gagner aucun token. Les mélanger aux propositions chiffrées laisserait croire
+  // à un gain automatique là où il y a une décision à prendre.
+  const manuelsLoges = findLodgedManuals(texte, { root });
+  const malRanges = findMisfiledBlocks(texte);
   const rangRisque = { faible: 0, moyen: 1, élevé: 2, eleve: 2 };
   const plafond = rangRisque[criticite.risqueMaxAutorise] ?? 1;
   const toutes = propositions.filter((p) => p.gain > 0).sort((a, b) => b.gain - a.gain);
@@ -1222,7 +1318,7 @@ export function analyzeDocument(path, { repoFiles = null, root = ROOT } = {}) {
   const retenuesParCriticite = toutes.filter((p) => !utiles.includes(p));
   return {
     chemin: path, tokens: estimateTokens(texte), nbSections: sections.length,
-    criticite, retenuesParCriticite,
+    criticite, retenuesParCriticite, manuelsLoges, malRanges,
     // Dit honnêtement quelles stratégies ont été ÉCARTÉES et pourquoi, plutôt que de laisser croire
     // à une analyse complète là où deux angles n'étaient simplement pas applicables.
     strategiesApplicables: { catalogue: true, extraction: true, mecanise: donneDesConsignes, rendementParArticle: estUneCharte },
@@ -1353,6 +1449,15 @@ export function buildEcotokenReport({ charterText, repoFiles } = {}) {
   L.push("  Sûreté : ecotoken n'écrit JAMAIS dans le document analysé (assertSafeWriteTarget) —");
   L.push("  ses seules écritures vont dans docs/ecotoken/. Tout allègement est appliqué à la main.");
   L.push("");
+  const manuels = findLodgedManuals(texte), malRanges = findMisfiledBlocks(texte);
+  if (manuels.length || malRanges.length) {
+    L.push("--- STRUCTURE : CE QUI N'EST PAS À SA PLACE ----------------------------------------");
+    L.push("Le poids n'est pas la seule question : un contenu mal rangé coûte à chaque message sans");
+    L.push("que personne ne le voie, parce qu'il se cache sous un titre qui parle d'autre chose.");
+    for (const m of manuels) L.push(`  📦 MANUEL LOGÉ · « ${m.bloc.slice(0, 60)} » (${m.tokens} tk)\n     ${m.pourquoi}\n     Prudence : ${m.prudence}`);
+    for (const x of malRanges) L.push(`  🗂️  MAL RANGÉ · « ${x.bloc.slice(0, 60)} » (${x.tokens} tk) — ${x.pourquoi}\n     ${x.note}`);
+    L.push("");
+  }
   L.push("--- DÉCLENCHEURS : ATTENDUS vs RÉELLEMENT CÂBLÉS -----------------------------------");
   for (const t of declencheurs) L.push(`  ${t.cable ? "✅" : "❌"} ${t.id} — ${t.quand}${t.ecart ? ` [${t.ecart}]` : ""}`);
   L.push(`  ${declencheurs.filter((t) => t.cable).length}/${declencheurs.length} vérifiés en lisant les fichiers, jamais sur promesse.`);
