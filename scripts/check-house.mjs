@@ -6908,6 +6908,22 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   st.recordPoint('x', st.buildPoint({ date: '2026-09-24', mesures: { a: { valeur: 9, sens: st.SENS.BAS_MIEUX } } }), io);
   assert.equal(serieFausse.length, 2, 'a genuinely new day adds a genuinely new point — the fix must not flatten the series into a single value forever');
 
+  // recap-absent / sequence-non-declaree (2026-09-23) — le gardien rendait ok:true quand les faits
+  // de l'Étape 5 n'étaient pas fournis DU TOUT. J'ai clôturé une Ronde sans récapitulatif ni
+  // fenêtre 5bis, il l'a déclarée conforme, et j'ai relayé ce verdict à l'utilisateur. Une absence
+  // de mesure rendue comme une réussite, dans l'outil même chargé de mesurer la conformité.
+  const { verifyRondeProcess: vrp3 } = await import('../scripts/circle-process-guardian.mjs');
+  const deuxIds3 = ['profil', 'kpi'];
+  const socle3 = { autoPrimeGoatAsked: true, voixUtilisateurPosee: true, changementModelePosee: true, changementModeleReponse: 'non', checkedItemIds: deuxIds3, executedItemIds: deuxIds3 };
+  const aussi = (r, c) => (r.findings ?? []).some((f) => f.check === c);
+  const scansSeuls = vrp3(socle3);
+  assert.ok(aussi(scansSeuls, 'recap-absent'), 'scans done but no recap supplied is NOT a pass: not providing a fact and not needing it are two different things, and conflating them is how a Ronde got declared conformant while half its process was still pending');
+  assert.ok(aussi(scansSeuls, 'sequence-non-declaree'), 'an undeclared ordering is not a respected ordering');
+  const complet3 = vrp3({ ...socle3, recapHtml: '<!DOCTYPE html><html><body>ok</body></html>', reportsDeliveredBeforeAnalysis: true });
+  assert.ok(!aussi(complet3, 'recap-absent') && !aussi(complet3, 'sequence-non-declaree'), 'both clear once the facts are genuinely supplied');
+  const autonome3 = vrp3({ ...socle3, nightAutonomousMode: true, pointsReportes: [], pointsAInterrogerCount: 0 });
+  assert.ok(!aussi(autonome3, 'recap-absent') && !aussi(autonome3, 'sequence-non-declaree'), 'autonomous mode is exempt like every step that presupposes someone to deliver to');
+
   const fakeReadFile = (path) => {
     if (path.includes('tool-with-html')) return 'import { renderHtmlReport } from "./html-report.mjs";';
     if (path.includes('tool-plain-text')) return 'console.log("no html rendering here");';

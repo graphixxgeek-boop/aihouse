@@ -438,7 +438,9 @@ PARTIE 7 — MISE À JOUR DU 2026-09-22 (nouvelle règle de séquençage + quest
 Demande explicite de l'utilisateur, à écrire noir sur blanc et à prévoir pour circle-process-guardian
 (cf. point 5ter, PARTIE 5 ci-dessus) :
 
-1. SÉQUENCE OBLIGATOIRE de l'Étape 5 (jamais réordonnée) : livraison de tous les rapports txt de la
+1. SÉQUENCE OBLIGATOIRE de l'Étape 5 — ATTENTION, REMPLACÉE PAR LA PARTIE 9 (2026-09-23) sur les
+   livrables et leur ordre ; seul son PRINCIPE reste en vigueur et il est rappelé là-bas. Texte
+   d'origine conservé pour l'historique : livraison de tous les rapports txt de la
    Ronde dans la conversation → lecture de tous les fichiers par l'agent → construction de l'analyse
    → livraison du récapitulatif HTML → question de calibrage forcée. Raison explicite : l'utilisateur
    doit pouvoir lire les rapports AVANT l'analyse de l'agent, pour proposer une lecture différente —
@@ -717,3 +719,74 @@ première application de la règle d'écriture posée en tête de cette Partie 8
                                               régénéré à chaque Ronde, jamais committé — le registre
                                               durable, lui, vit dans les artefacts datés de chaque
                                               item (recordCircleItemReport → docs/<outil>/).
+
+=====================================================================
+PARTIE 9 — MISE À JOUR DU 2026-09-23 : L'ORDRE DE FIN DE RONDE, REFONDU
+=====================================================================
+
+Posé par l'utilisateur, mot pour mot : « je veux d'abord les rapports en fichier txt individuels,
+avant toute chose, ensuite tu me livres ton ANALYSE pas un récapitulatif. L'analyse suit la logique
+>> PLAN D'ACTION >> TÂCHES. Ensuite tu me donnes EVAL-DEV à part, et les questions. »
+
+Cette Partie REMPLACE la séquence de la Partie 7, point 1, sur les livrables et leur ordre. Le
+principe qui la fondait reste intact et n'a jamais été remis en cause : l'utilisateur lit les
+rapports AVANT l'analyse de l'agent, pour pouvoir en proposer une lecture différente.
+
+---------------------------------------------------------------------
+LA SÉQUENCE, DANS CET ORDRE EXACT
+---------------------------------------------------------------------
+
+  1. LES RAPPORTS, EN FICHIERS TXT INDIVIDUELS — avant toute chose.
+     Un fichier par outil, sa sortie réelle et complète. JAMAIS un seul fichier concaténé : la
+     première livraison de cette Ronde regroupait tout en un fichier, et l'utilisateur l'a refusée.
+     Un fichier par outil se parcourt, se rouvre, se cite ; un fichier de tout ne se lit pas.
+
+  2. L'ANALYSE — en HTML aux normes du projet (renderHtmlReport, scripts/html-report.mjs).
+     PAS un récapitulatif : une analyse. Elle suit la chaîne de l'Article 28, dans l'ordre :
+        ANALYSE (les constats, chacun avec son chiffre)
+          >> PLAN D'ACTION (chaque constat classé RETENU / ÉCARTÉ avec raison / À TRANCHER)
+          >> TÂCHES (celles qui existent réellement dans docs/suivi/, jamais annoncées à vide)
+     LE RÉCAPITULATIF DES ITEMS Y FUSIONNE, en annexe (tranché le 2026-09-23 : « il fusionne dans
+     l'analyse »). Il n'est plus un livrable séparé — un document de moins à ouvrir, rien de perdu.
+
+  3. EVAL-DEV — en HTML aux normes, livré À PART.
+     Jamais fondu dans l'analyse : l'analyse juge la Ronde, EVAL-DEV juge l'utilisateur. Deux objets
+     différents, deux documents.
+
+  4. LES QUESTIONS — les deux séries, jamais une seule :
+       a) les 5 à 10 questions forcées sur les points de l'ANALYSE (Partie 7, point 2 — inchangé) ;
+       b) l'Étape 5bis sur les points problématiques de SON évaluation (Partie 1 — inchangée).
+
+  5. LA CLÔTURE — record-run, en tout dernier, jamais avant les étapes ci-dessus.
+
+MARQUAGE DANS LA CONVERSATION : les deux documents de l'étape 2 et 3 portent une étoile et une
+icône dans leur légende (⭐📊 pour l'analyse, ⭐⚖️ pour EVAL-DEV), à la demande explicite de
+l'utilisateur, pour être repérables d'un coup d'œil au milieu des fichiers de rapports.
+
+---------------------------------------------------------------------
+QUI DÉCIDE QU'UNE RONDE EST PROPRE
+---------------------------------------------------------------------
+
+L'UTILISATEUR. Jamais l'agent, jamais un verdict d'outil.
+
+Posé le 2026-09-23 après un vrai manquement : j'avais annoncé « première Ronde intégralement
+conforme » en relayant un `ok: true` de circle-process-guardian, alors que la moitié du process
+restait à faire — le gardien considérait qu'un fait non fourni était un fait sans problème. Sa
+formulation : « c'est moi à la fin qui te dis si elle est propre pour que tu comprennes bien ce que
+j'attends ».
+
+CE QUE ÇA CHANGE POUR LA SUITE, et c'est une séquence d'apprentissage, pas une punition : tant
+qu'aucune Ronde n'a été validée propre par l'utilisateur, l'agent ne code AUCUN critère de propreté
+dans l'outil — il coderait sa propre supposition. Une fois une Ronde validée, et seulement alors,
+ce qui a été validé peut être transmis à l'outil. Sa formulation : « là, c'est moi qui vous
+apprend ». C'est très exactement la preuve « enseigné » de TOOL-LEARNING, appliquée à l'agent puis
+répercutée sur l'outil.
+
+---------------------------------------------------------------------
+CE QUE L'UTILISATEUR AVAIT OMIS EN ÉNONÇANT CETTE SÉQUENCE
+---------------------------------------------------------------------
+Noté ici parce qu'il a demandé explicitement une vérification de complétude, et qu'une omission
+non signalée serait redevenue une étape sautée :
+  - la deuxième série de questions (les 5-10 sur l'analyse) — il n'avait nommé que celles sur son
+    évaluation ; le process en prévoit deux, sur deux objets différents ;
+  - la clôture record-run, qui reste la toute dernière étape.

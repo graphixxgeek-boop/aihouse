@@ -181,6 +181,26 @@ export function verifyRondeProcess({
   }
 
   // 5/5bis/5ter. Récapitulatif HTML, analyse mise en évidence, séquence et questions forcées.
+  // ÉTAPE 5 / 5bis NON FOURNIES = ÉCART, JAMAIS UN LAISSEZ-PASSER (corrigé le 2026-09-23).
+  //
+  // CE QUI N'ALLAIT PAS. Tout ce bloc était gardé par `!== undefined` : ne rien fournir suffisait à
+  // rendre ok:true. J'ai clôturé une Ronde sans récapitulatif ni fenêtre 5bis, et le gardien l'a
+  // déclarée conforme — j'ai relayé ce verdict à l'utilisateur, qui a corrigé : « je préfère que tu
+  // dises 1ère Ronde conforme une fois que les analyses et tout ce qui doit se passer dans le
+  // process est terminé ». Il avait raison sur le fond ET la cause était mécanique.
+  //
+  // C'est le défaut récurrent de ce projet dans sa forme la plus coûteuse : une absence de mesure
+  // rendue comme une réussite. Un fait qu'on ne peut pas observer depuis le disque se DEMANDE, et
+  // son silence compte comme un manquement — exactement le patron déjà retenu pour
+  // auto-prime-goat, voix-utilisateur et changement-de-modele.
+  //
+  // Exempté en mode autonome, comme toutes les étapes qui supposent quelqu'un en face.
+  if (!nightAutonomousMode && recapHtml === undefined) {
+    add("recap-absent", "Le récapitulatif de fin de Ronde (Étape 5) n'a pas été fourni. Ne pas le fournir n'est pas la même chose que ne pas en avoir besoin : tant qu'il manque, la Ronde n'est pas terminée, quoi que disent les autres vérifications.");
+  }
+  if (!nightAutonomousMode && reportsDeliveredBeforeAnalysis === undefined) {
+    add("sequence-non-declaree", "La séquence de l'Étape 5 (rapports livrés AVANT la construction de l'analyse) n'a pas été déclarée. Un ordre non déclaré n'est pas un ordre respecté.");
+  }
   if (recapHtml !== undefined) {
     if (!/<!DOCTYPE html>/i.test(recapHtml)) add("recap-format", "Le récapitulatif fourni n'est pas un vrai document HTML.");
     if ((analysisPointsFound ?? 0) > 0 && !/class="highlight"/.test(recapHtml)) add("recap-highlight", "Des points ont été trouvés mais le récapitulatif ne porte aucun bloc d'analyse mis en évidence (class=\"highlight\").");
