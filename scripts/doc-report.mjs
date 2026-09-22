@@ -128,6 +128,10 @@ export const REGISTRIES = [
   // ici au moment de cette promotion, exactement le genre d'écart entre deux registres que
   // l'Article 2/13 interdit de laisser traîner une fois trouvé.
   { slug: "clone-hunter", label: "CLONE-HUNTER", family: "Équipe noyau (Article 20)", path: "docs/clone-hunter/", decision: "texte", scriptPath: "scripts/clone-hunter.mjs" },
+  // 2026-09-22 : septième Gardien. Son registre n'archive que les passages PROFONDS (exceptionnels,
+  // Article 23) — la couche légère, elle, ne produit qu'un avertissement post-commit sans fichier.
+  { slug: "safe-export", label: "SAFE-EXPORT", family: "Équipe noyau (Article 20)", path: "docs/safe-export/", decision: "texte", scriptPath: "scripts/safe-export.mjs" },
+  { slug: "tool-learning", label: "TOOL-LEARNING", family: "Suite Dette & Structure du code", path: "docs/tool-learning/", decision: "texte", scriptPath: "scripts/tool-learning.mjs" },
   { slug: "objectifs-vs-resultats", label: "objectifs-vs-resultats", family: "Gouvernance interne", path: "docs/objectifs-vs-resultats/", decision: "texte", scriptPath: "scripts/objectifs-vs-resultats.mjs" },
   { slug: "cassandra-rh", label: "CASSANDRA-RH", family: "Gouvernance interne", path: "docs/cassandra-rh/", decision: "delivery_html", scriptPath: "scripts/cassandra-rh.mjs" },
   { slug: "ecotoken", label: "ecotoken", family: "Gouvernance interne", path: "docs/ecotoken/", decision: "texte", scriptPath: "scripts/ecotoken.mjs" },
@@ -516,6 +520,12 @@ export function findToolsMissingReliability(toolsTableMarkdown, registry = TOOL_
 // `scriptFor` associe un slug à son fichier ; un outil dont le script est introuvable est signalé
 // comme tel plutôt que silencieusement passé (une absence n'est jamais une conformité).
 export const RELIABILITY_SCRIPT_FILES = {
+  // 2026-09-22 — SEPTIÈME registre à inscrire à la main pour les deux mêmes outils, et le dernier
+  // de la série. Chacun des sept a fait échouer un test l'un après l'autre : les garde-fous ont
+  // tous fonctionné, et c'est justement ce qui rend le diagnostic de l'Article 24 imparable — ils
+  // DÉTECTENT l'oubli, ils ne l'ÉVITENT pas. Sept registres pour un outil qui arrive, c'est la
+  // mesure exacte de ce qu'il reste à automatiser.
+  "safe-export": "scripts/safe-export.mjs", "tool-learning": "scripts/tool-learning.mjs",
   "check-spirit-mjs": "scripts/check-spirit.mjs", argus: "scripts/check-argus.mjs", harmonia: "scripts/check-harmonia.mjs",
   "smart-conso-api": "scripts/smart-conso-api.mjs", "check-level-target": "scripts/check-level-target.mjs",
   "hyper-scan-checkpoint": "scripts/hyper-scan-checkpoint.mjs", "always-new-code": "scripts/always-new-code.mjs",

@@ -47,6 +47,7 @@ export const AGENT_CATEGORIES = {
   "le-coordinateur": "Agent Cadre",
   // Les Gardiens sacrés du code (Article 20 — tourne automatiquement à chaque commit)
   argus: "Gardien sacré du code",
+  "safe-export": "Gardien sacré du code",
   harmonia: "Gardien sacré du code",
   "axa-check": "Gardien sacré du code",
   "clean-dirty-old": "Gardien sacré du code",
@@ -74,6 +75,11 @@ export const AGENT_CATEGORIES = {
   // Suite Dette & Structure du code (ALWAYS-NEW-CODE en est retiré le 2026-09-21 — promu Gardien
   // sacré du code ci-dessus, jamais listé deux fois)
   "find-booster": "Membre — Suite Dette & Structure du code",
+  // tool-learning (2026-09-22) : rangé dans la Suite Dette & Structure du code parce que c'est de
+  // la dette qu'il parle — la dette d'un outil qui n'apprend pas. Volontairement PAS un Gardien :
+  // il juge une TRAJECTOIRE, et une trajectoire ne se mesure pas à chaque commit (trois passages
+  // minimum avant de conclure), donc il a sa place dans un rythme périodique.
+  "tool-learning": "Membre — Suite Dette & Structure du code",
   // La Cour du Roi
   "ines-official": "Membre — La Cour du Roi",
   "the-king": "Membre — La Cour du Roi",
@@ -191,6 +197,11 @@ export const GARDIEN_DOMAINS = {
   // (ecotoken.mjs dépasse 1 500 lignes après une soirée). Ses zones d'outillage se dérivent
   // mécaniquement de AGENT_SCRIPT_FILES × AGENT_CATEGORIES (cf. outillageZones()).
   "always-new-code": [/^lib\//, /^app\//, /^components\//, /^scripts\//],
+  // safe-export (2026-09-22) : SEPTIÈME Gardien sacré, couche légère seulement. Ses zones sont
+  // docs/ et scripts/ et PAS le moteur du jeu — sa question est l'exportabilité de l'outillage et
+  // la lisibilité par une autre IA, or lib/ et app/ ne partiront jamais avec l'Agence. L'y réveiller
+  // à chaque commit du jeu lui ferait brûler du temps sur des fichiers qu'il n'a rien à dire.
+  "safe-export": [/^docs\//, /^scripts\//],
 };
 
 export function realCodeFilesChanged(changedFiles, notReallyCode = NOT_REALLY_CODE) {
@@ -288,6 +299,13 @@ export const TOOL_RELIABILITY = {
   "tool-brain": { nature: "heuristique", pourquoi: "associe une tâche à des outils par mots-clés — il peut passer à côté de l'outil réellement utile" },
   "find-booster": { nature: "heuristique", pourquoi: "retrouve un concept par proximité de vocabulaire, jamais par compréhension du code" },
   "clone-hunter": { nature: "heuristique", pourquoi: "deux blocs qui se ressemblent ne sont pas toujours deux blocs à factoriser" },
+  // 2026-09-22 — SIXIÈME et SEPTIÈME inscription manuelle pour ces deux outils, et c'est exactement
+  // le défaut d'évolutivité que l'Article 24 nomme depuis le 2026-09-22 : chacun des garde-fous a
+  // DÉTECTÉ l'oubli au lieu de l'ÉVITER, un registre après l'autre, en faisant échouer un test à
+  // chaque fois. Ils font leur travail — mais l'agent reste le mécanisme d'intégration, et c'est
+  // ce que la précision de l'Article 24 juge insuffisant. Constat gardé ici, à côté du symptôme.
+  "safe-export": { nature: "heuristique", pourquoi: "une absence d'explication n'est pas une absence de raison, et un terme sans fiche n'est pas forcément mal défini — ses détecteurs sont des indices, jamais des preuves" },
+  "tool-learning": { nature: "heuristique", pourquoi: "il juge une trajectoire : sous trois passages il refuse de conclure, et une baisse de trouvailles peut venir d'un code qui s'est amélioré plutôt que d'un outil qui régresse" },
   "cassandra-rh": { nature: "heuristique", pourquoi: "relaie et recoupe ce que les autres outils estiment — elle hérite de leurs approximations" },
   ecotoken: { nature: "heuristique", pourquoi: "le poids en tokens est estimé et le rangement d'un bloc se devine — un bloc qui cite un fichier n'y appartient pas forcément" },
 };

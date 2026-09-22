@@ -83,7 +83,51 @@ confiée à un existant. Trois raisons, dans l'ordre de force :
 qu'un outil a appris ? Sans réponse à ça, un agent de l'apprentissage produirait un avis, pas une
 mesure. À trancher avec l'utilisateur.
 
-## 6. Statut
+## 6. La déduction du 2026-09-22 — le septième axe transverse, et c'est le plus utile
+
+**Constat de départ, posé par l'utilisateur** : « tool-learning semble etre un pont entre cassandra
+et safe export. Interessant, qu'est-ce qu'on peut en penser ? en deduire ? »
+
+**Ce n'est pas un pont, et la nuance change tout** : TOOL-LEARNING n'est pas *entre* les deux, il est
+**au-dessus des deux, sur un autre axe**.
+
+- CASSANDRA juge l'état de l'équipe **à un instant**.
+- SAFE-EXPORT juge la transposabilité du code **à un instant**.
+- TOOL-LEARNING est le seul des trois à avoir un **axe de temps** — c'est leur **dérivée**.
+
+Ça se vérifie par ses entrées naturelles : un membre que CASSANDRA déclare « équipé » trois mois de
+suite sans qu'il progresse est un constat TOOL-LEARNING ; un écart SAFE-EXPORT qui revient passage
+après passage aussi.
+
+### Ce qu'on en déduit pour l'organisation
+
+**1. La bonne catégorie transverse n'est pas « apprentissage » — c'est « a-t-il un axe de temps ? »**
+Les six coupes du §4 décrivent ce qu'un outil EST ou FAIT. Celle-ci décrit s'il sait dire **où ça
+va**. C'est la seule qui sépare un outil qui photographie d'un outil qui mesure une trajectoire, et
+elle englobe proprement les deux critères que l'utilisateur voulait (mémoire, apprentissage) sans
+les confondre : avoir une mémoire est une condition, avoir un axe de temps est un usage.
+
+**2. Une dépendance à nommer maintenant plutôt qu'à découvrir dans trois semaines.** TOOL-LEARNING
+ne vaudra que ce que valent les historiques de ses deux fournisseurs — or **ni CASSANDRA ni
+SAFE-EXPORT ne tiennent aujourd'hui de série comparable**, tous deux dans les 5 outils nommés par
+`findOutilsPrivesDeTendance()` (tâche #445). Les brancher n'est donc plus une amélioration parmi
+d'autres : c'est ce qui conditionne la valeur du troisième.
+
+**3. Pourquoi l'agent séparé se justifiait, sur un point que j'avais sous-estimé.** Sa vocation
+unique n'est pas de juger les outils — c'est de juger **l'agent**, sur sa capacité à les faire
+progresser. Aucun autre outil du paysage ne regarde ça : c'est un angle mort entier, et le seul qui
+ne pouvait aller nulle part ailleurs.
+
+### État acté du 2026-09-22 (déjà dans le code, plus une intention)
+
+- **7 Gardiens sacrés** depuis l'arrivée de SAFE-EXPORT (couche légère seulement) : ARGUS, HARMONIA,
+  ALWAYS-NEW-CODE, AXA-CHECK, CLEAN-DIRTY-OLD, CLONE-HUNTER, SAFE-EXPORT.
+- **TOOL-LEARNING** rangé dans la Suite Dette & Structure du code — c'est bien de dette qu'il parle,
+  celle d'un outil qui n'apprend pas. Volontairement PAS un Gardien : une trajectoire ne se mesure
+  pas à chaque commit.
+- Effectifs réels mesurés : 2 socle · 2 Agents Cadre · 7 Gardiens · 24 Membres · 6 Émetteurs.
+
+## 7. Statut
 
 Conception ouverte, aucune décision actée. Le schéma d'organisation complet est à produire — l'ordre
 fixé par l'utilisateur le 2026-09-22 place ce chantier **après** la création du nouvel outil

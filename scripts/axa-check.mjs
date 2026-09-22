@@ -229,6 +229,13 @@ export function collectCoverage(covDir, { readDir = readdirSync, readFile = (f) 
 // à retrouver. Nommage non uniforme constaté (ARGUS → check-argus.mjs, THE-SCREENER →
 // the-screener-capture.mjs) : une correspondance explicite, jamais déduite d'un slug.
 export const AGENT_SCRIPT_FILES = {
+  // 2026-09-22 : les deux derniers arrivants. Leur absence a fait échouer l'audit d'intégration
+  // avant même le commit — findScriptsMissingFromAgentFiles() a fait exactement son travail, et
+  // c'est la SIXIÈME inscription manuelle que l'utilisateur pointe comme le vrai défaut
+  // d'évolutivité restant (Article 24, précision du 2026-09-22) : le garde-fou DÉTECTE l'oubli au
+  // lieu de l'ÉVITER. Constat gardé ici, à côté du symptôme.
+  "safe-export": "scripts/safe-export.mjs",
+  "tool-learning": "scripts/tool-learning.mjs",
   argus: "scripts/check-argus.mjs",
   harmonia: "scripts/check-harmonia.mjs",
   "smart-conso-api": "scripts/smart-conso-api.mjs",

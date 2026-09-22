@@ -305,7 +305,7 @@ export function filtrerDejaTranches(ecarts = [], memoire = []) {
 }
 
 function main() {
-  printReliabilityNotice("ses détecteurs sont des indices mécaniques : une absence d'explication n'est pas une absence de raison, et un terme sans fiche n'est pas forcément mal défini. À lire, jamais à croire sur parole.");
+  printReliabilityNotice("safe-export");
   console.log("=== SAFE-EXPORT — exportabilité de l'Agence, lisibilité du projet ===\n");
   for (const [nom, c] of Object.entries(CIBLES)) console.log(`· cible « ${nom} » : ${c.question}`);
   console.log("");

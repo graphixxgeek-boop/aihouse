@@ -865,6 +865,8 @@ tableau garde ce qui doit rester sous les yeux en permanence.)*
 | memory-audit | *(à écrire à la main — non extractible mécaniquement)* | `docs/memory-audit-blueprint.md` | `docs/referentiel/memory-audit.md` | `scripts/memento.mjs` |
 | objectifs-vs-resultats | un registre hand-maintained d'objectifs chiffrés par entité/période confronté à un… | `docs/objectifs-vs-resultats-blueprint.md` | `docs/referentiel/objectifs-vs-resultats.md` | `scripts/objectifs-vs-resultats.mjs` |
 | process-simulation-guardian | gardien du protocole de simulation, consulté AVANT le lancement et pouvant le bloquer | `docs/process-simulation-guardian-blueprint.md` | `docs/referentiel/process-simulation-guardian.md` | `scripts/process-simulation-guardian.mjs` |
+| SAFE-EXPORT | septième Gardien sacré (couche légère) : l'Agence est-elle exportable, le code reprenable par une autre IA ? | `docs/safe-export-blueprint.md` | `docs/referentiel/safe-export.md` | `scripts/safe-export.mjs` |
+| TOOL-LEARNING | vérifie que les outils apprennent — et que l'agent les aide vraiment à progresser | `docs/tool-learning-blueprint.md` | `docs/referentiel/tool-learning.md` | `scripts/tool-learning.mjs` |
 | Smart Breaker | l'outil de contournement de blocages de clé/quota API *(le blueprint garde son nom d'avant le surnom)* | `docs/outil-resilience-api.md` | `docs/referentiel/smart-breaker.md` | `scripts/check-gemini-quota.mjs` |
 | Smart Conso API | la petite sœur de Smart Breaker, dédiée à réguler le rythme de consommation d'une API… | `docs/smart-conso-api-blueprint.md` | `docs/referentiel/smart-conso-api.md` | `scripts/smart-conso-api.mjs` |
 | SMART-CONSO-TOKEN | pendant de Smart Conso API pour les TOKENS de l'agent lui-même | `docs/smart-conso-token-blueprint.md` | `docs/referentiel/smart-conso-token.md` | `scripts/smart-conso-token.mjs` |
@@ -967,6 +969,12 @@ demander si un outil déjà existant répondrait plus vite ou plus complètement
   CASSANDRA-RH** (`docs/referentiel/cassandra-rh.md`, noyau construit le 2026-09-21) — la tenue à
   jour de ce document à chaque changement d'organigramme reste manuelle pour l'instant, une future
   vague de construction, jamais encore automatisée par le noyau actuel.
+- `docs/referentiel/safe-export.md` (2026-09-22) — septième Gardien sacré par sa couche légère :
+  exportabilité de l'Agence et lisibilité du code par une autre IA. Porte la MOITIÉ 1 de
+  l'évolutivité (pouvoir partir).
+- `docs/referentiel/tool-learning.md` (2026-09-22) — vérifie que les outils apprennent et que
+  l'agent les y aide. Porte la MOITIÉ 2 de l'évolutivité (devenir meilleur). Frontière avec
+  CASSANDRA : elle juge l'état et les moyens, lui la trajectoire et l'usage.
 - `docs/referentiel/points-fragiles.md` (2026-09-19) — registre vivant des points identifiés comme
   fragiles ou en attente d'une décision de conception (pas des bugs actifs, ceux-là se corrigent
   directement) ; compté par `scripts/kpi-report.mjs` comme un des indicateurs de robustesse du code.

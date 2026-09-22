@@ -164,6 +164,16 @@ function main() {
   const cloneHunterOut = sh("node scripts/clone-hunter.mjs");
   console.log(cloneHunterOut.trim());
 
+  // SAFE-EXPORT (2026-09-22) — SEPTIÈME Gardien sacré, ajouté ici le jour même de sa promotion.
+  // L'assertion de check-house qui l'exigeait avait été écrite en prévoyant exactement ce moment
+  // (« un futur 7e Gardien oublié ici échoue dès le commit suivant, au lieu de n'être remarqué que
+  // par une relecture manuelle ») — et elle a effectivement échoué avant ce commit. Le garde-fou a
+  // fonctionné comme annoncé, ce qui vaut d'être noté : il a été écrit pour un cas qui n'existait
+  // pas encore, et il l'a attrapé.
+  console.log("\n--- SAFE-EXPORT (exportabilité de l'Agence, lisibilité par une autre IA) ---");
+  const safeExportOut = sh("node scripts/safe-export.mjs");
+  console.log(safeExportOut.trim());
+
   // circle-process-guardian (2026-09-22, mise en phase avec le paysage actuel des outils) : le plus
   // jeune outil du réseau, jamais consulté ici jusqu'à ce soir. Sous-ensemble mécanique seulement
   // (record-run, orphan-reports, registries-missing-from-circle) — HYPER-SCAN-CHECKPOINT ne pilote

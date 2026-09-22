@@ -4430,7 +4430,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // Les deux chemins de prudence : ne jamais se taire par ignorance.
   assert.equal(gardienShouldRun('argus', undefined), true, 'when git does not say what changed, every guardian runs — not knowing never authorises silence');
   assert.equal(gardienShouldRun('un-gardien-inconnu', ['docs/x.md']), true, 'an unlisted guardian always runs — forgetting an entry must never create a silent blind spot');
-  assert.ok(Object.keys(GARDIEN_DOMAINS).length === 6 && NOT_REALLY_CODE.length >= 1, 'all six Gardiens must declare a domain, and the not-really-code list must not be empty');
+  assert.ok(Object.keys(GARDIEN_DOMAINS).length === 7 && NOT_REALLY_CODE.length >= 1, 'all SEVEN Gardiens must declare a domain (SAFE-EXPORT joined 2026-09-22, and its domain is docs/ + scripts/ rather than the game engine: its question is the Agency\'s exportability, and lib/ will never leave with the Agency), and the not-really-code list must not be empty');
   assert.equal(typeof lastCommitFiles, 'function');
   // Vérifié en direct contre le vrai dépôt : la liste du dernier commit est lisible, et elle
   // contient bien des fichiers.
@@ -6788,7 +6788,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // every Gardien sacré du code known to AGENT_CATEGORIES today is genuinely called from
   // hyper-scan-checkpoint.mjs's real source, not just from a fabricated fixture.
   const realHyperScanSource = fs.readFileSync(new URL('../scripts/hyper-scan-checkpoint.mjs', import.meta.url), 'utf8');
-  assert.deepEqual(findGardiensMissingFromSource(realHyperScanSource), [], 'checked live against the real hyper-scan-checkpoint.mjs and the real AGENT_CATEGORIES/REGISTRIES: every current Gardien sacré du code (ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD/CLONE-HUNTER/ALWAYS-NEW-CODE, the last promoted 2026-09-21 as a light-layer-only Gardien) must genuinely be called from its light-version sub-process list — a future 7th Gardien forgotten here now fails this test on the very next commit, instead of only being noticed by a manual re-read');
+  assert.deepEqual(findGardiensMissingFromSource(realHyperScanSource), [], 'checked live against the real hyper-scan-checkpoint.mjs and the real AGENT_CATEGORIES/REGISTRIES: every current Gardien sacré du code (ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD/CLONE-HUNTER/ALWAYS-NEW-CODE/SAFE-EXPORT, the last two promoted as light-layer-only Gardiens on 2026-09-21 and 2026-09-22 — and this assertion caught the seventh the very day it arrived, exactly as its own message had predicted before that case existed) must genuinely be called from its light-version sub-process list — a future 7th Gardien forgotten here now fails this test on the very next commit, instead of only being noticed by a manual re-read');
 
   const fakeReadFile = (path) => {
     if (path.includes('tool-with-html')) return 'import { renderHtmlReport } from "./html-report.mjs";';
@@ -7139,7 +7139,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const org = buildOrganigramme({ toolsTableMarkdown: vraieTable });
   assert.deepEqual(org.sansCategorie, [], 'checked live against the real master table: no certified member may be left without a suite — an org chart that silently loses people is worth nothing, and this is the exact real gap (CIRCLE-TASKS, tool-brain, find-deep-booster) found the night this was built');
   assert.equal(org.effectifs.certifiesTotal, org.effectifs.cadres + org.effectifs.gardiens + org.effectifs.membres, 'every certified member must be placed in exactly one rank — the totals must add up, never a member counted twice nor dropped between two ranks');
-  assert.equal(org.effectifs.gardiens, 6, 'the six Gardiens sacrés must be derived from GARDIEN_DOMAINS, their real mechanical source of truth, never from a second hand-kept list (Article 24)');
+  assert.equal(org.effectifs.gardiens, 7, 'the SEVEN Gardiens sacrés must be derived from GARDIEN_DOMAINS, their real mechanical source of truth, never from a second hand-kept list (Article 24) — SAFE-EXPORT joined on 2026-09-22 and this count moved on its own, which is exactly what deriving rather than listing buys');
   assert.ok(org.cadres.includes('CASSANDRA-RH') && org.cadres.includes('LE-COORDINATEUR'), 'both real Agents Cadre must appear as such — the user placed LE-COORDINATEUR there alongside CASSANDRA, and the code already carried it');
   assert.ok(org.socle.some((n) => n.startsWith('check-house')), 'check-house must appear at the socle, visible at the top rather than silently absent from every rank — the user\'s explicit choice, so a reader never mistakes "outside the ranks" for "counts less"');
 

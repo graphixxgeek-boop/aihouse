@@ -183,7 +183,7 @@ export function tacheADeclencher(proposition, { agentRetient = false } = {}) {
 }
 
 function main() {
-  printReliabilityNotice("il juge une TRAJECTOIRE : en dessous de trois passages réels il refuse de conclure, et une baisse de trouvailles peut venir d'un code qui s'est amélioré plutôt que d'un outil qui régresse.");
+  printReliabilityNotice("tool-learning");
   console.log("=== TOOL-LEARNING — l'apprentissage de l'outillage, et le mien à son égard ===\n");
   console.log("Évolutivité, moitié 1 (pouvoir partir)   → SAFE-EXPORT");
   console.log("Évolutivité, moitié 2 (devenir meilleur) → TOOL-LEARNING\n");
