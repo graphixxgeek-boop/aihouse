@@ -355,6 +355,16 @@ questions peuvent, selon les cas, s'agréger et influencer la formulation des qu
 le même sujet, ou rester indépendantes quand les sous-sujets n'ont pas de lien logique entre eux —
 c'est à l'agent de juger au cas par cas, jamais un enchaînement mécanique obligatoire.
 
+**Mieux vaut trop de questions que pas assez** *(2026-09-22, demande explicite de l'utilisateur :
+« pose des questions, beaucoup de questions si besoin, mieux vaut trop de questions que pas
+assez »)*. Le minimum de trois questions posé plus haut est un PLANCHER, jamais un plafond ni une
+cible : quand un sujet comporte cinq décisions réelles, on pose cinq questions, pas trois. Le
+travers à éviter n'est pas d'en poser trop, c'est d'en poser trop peu et de combler le reste par une
+supposition — une supposition fausse coûte un chantier entier, une question de plus coûte trente
+secondes. Cette règle ne rouvre jamais la porte aux questions creuses interdites plus haut : ce qui
+est encouragé, c'est de décomposer un sujet complexe en autant de vraies questions qu'il contient de
+vraies décisions, jamais de gonfler le nombre pour faire nombre.
+
 **Traçabilité visible des vérifications.** Chaque fois qu'une réponse à l'utilisateur s'appuie sur
 la charte pour valider un choix (« ceci respecte l'Article 0 », « vérifié contre l'Article 11 »,
 etc.), le mentionner explicitement accompagné de 📜✅ directement à côté de la mention — jamais une
@@ -601,7 +611,30 @@ même (`findThemesDivergingFromHarmonia()`, `findSensitiveNodesDivergingFromHarm
 `findScriptsMissingFromAgentFiles()`, `findUndeclaredLocalJournals()`), sur le même patron déjà
 prouvé ailleurs dans le projet (`findToolsMissingFromMenu()`, `findRegistriesMissingFromCircle()`,
 `findRegistriesMissingDecision()`, `findGardiensMissingFromSource()` — 8 outils protégés de cette
-façon avant même cet audit). **Ce que cet Article n'exige PAS** : un vocabulaire fermé et stable par
+façon avant même cet audit).
+
+**Précision du 2026-09-22, à la demande explicite de l'utilisateur** (« si un nouveau script arrive,
+toutes les fonctionnalités et parametres/certifications sont appliquées au nouvel outil qui rejoint
+l'équipe. Tous les outils et scripts sont bien calibrés pour accueillir des evolutions, jamais de
+listes ou fonctionnalités figées ») : l'évolutivité ne s'arrête pas à « aucune liste recopiée sans
+garde-fou ». Elle exige qu'un outil qui REJOINT l'équipe hérite de tout ce que l'équipe sait déjà
+faire, sans qu'on ait à y penser un registre après l'autre.
+
+**État réel mesuré ce jour-là, et il est en dessous de cette exigence** : ajouter
+`god-of-all-process` puis `pure-gold-unity` a demandé SIX inscriptions manuelles — classification de
+fiabilité, catégorie d'équipe, chemin de script pour l'avertissement, couverture AXA-CHECK,
+catalogue du coordinateur, table maîtresse — chacune signalée par son garde-fou uniquement APRÈS
+avoir échoué. Les garde-fous font donc bien leur travail (rien ne passe en silence), mais ils
+DÉTECTENT l'oubli au lieu de l'ÉVITER : l'agent reste le mécanisme d'intégration, ce qui est
+exactement ce que cette précision juge insuffisant. L'écart est nommé ici plutôt que passé sous
+silence ; le combler est un chantier ouvert, jamais une case cochée.
+
+**Ce que la règle impose en attendant** : toute nouvelle construction se conçoit pour accueillir un
+membre de plus sans modification de sa propre logique — un registre se LIT, il ne s'énumère pas ; un
+seuil se DÉRIVE, il ne se recopie pas ; une fonctionnalité nouvelle s'applique à TOUS les outils
+existants le jour où elle est écrite, jamais seulement à ceux auxquels on a pensé sur le moment.
+
+**Ce que cet Article n'exige PAS** : un vocabulaire fermé et stable par
 nature (les états d'une machine à états, une énumération de paliers) n'a rien à synchroniser et
 n'est jamais concerné ; un contenu explicitement curaté à la main par décision humaine documentée
 (ex. `KNOWN_LESSONS` du Smart Breaker, `SMART_BREAKER_CAPABILITIES`) reste légitime tel quel, tant
