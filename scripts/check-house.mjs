@@ -5330,6 +5330,20 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     // sains rend ses vraies trouvailles indiscernables du bruit.
     assert.equal(dr.findLanceursPrematures({ listDirImpl: () => ['x.mjs'], readFileImpl: () => lanceurSain }).length, 0, 'a hoisted function and a local variable are never a dead-zone risk, and flagging them would make the real finding indistinguishable from noise');
     assert.deepEqual(dr.findLanceursPrematures(), [], 'no script in the repository launches main() before its own module-level declarations exist');
+
+    // UN RAPPORT QUI POINTE AU LIEU DE DIRE (2026-09-23) — constat de l'utilisateur sur les
+    // rapports livrés : « check-detail est vide de contenu data et analytique [...] à chaque fois
+    // je dois avoir un contenu intéressant non ? ». Il l'était : l'outil produisait un vrai
+    // rapport en HTML et n'imprimait que le chemin de ce fichier.
+    const maigreQuiPointe = "=== titre ===\nRapport généré : docs/x/y.html\n3 tâche(s).\n";
+    const courtSansPointeur = "=== titre ===\nAucune zone signalée cette fois — rien à corriger.\n";
+    const longQuiPointe = "=== titre ===\n" + Array.from({ length: 40 }, (_, i) => `ligne de contenu ${i}`).join("\n") + "\nMême rapport en HTML : docs/x/y.html\n";
+    assert.equal(dr.findRapportsQuiPointent({ dossier: 'x', listDirImpl: () => ['a.txt'], readFileImpl: () => maigreQuiPointe }).length, 1, 'a short report that names another file points at its data instead of carrying it');
+    // LES DEUX FAUX CAS, et les confondre coûterait cher : un rapport court PARCE QU'IL N'Y AVAIT
+    // RIEN est un vrai résultat, et le signaler pousserait les outils à meubler pour avoir l'air
+    // utiles — la métrique de vanité que tout ce paysage combat.
+    assert.equal(dr.findRapportsQuiPointent({ dossier: 'x', listDirImpl: () => ['a.txt'], readFileImpl: () => courtSansPointeur }).length, 0, '"nothing to report" is a real result, never an empty report');
+    assert.equal(dr.findRapportsQuiPointent({ dossier: 'x', listDirImpl: () => ['a.txt'], readFileImpl: () => longQuiPointe }).length, 0, 'a full report that ALSO offers an HTML version is the normal case here, never a finding');
     // LA GÉNÉRALISATION (Article 24) : un futur terme ambigu rejoint le registre, il ne demande
     // aucune réécriture de la logique.
     assert.ok(se.VOCABULAIRE_RESERVE.every((v) => v.motif && v.definition && v.pourquoi), 'every reserved term states its pattern, where it is defined, and why it exists');
@@ -8423,6 +8437,13 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     loadQuestionsSansReponseImpl: () => [],
     loadSeriesPasseesImpl: () => [],
     seriesReellementPosees: ['ouverture'],
+    // Quatrième fois que ce test échoue à l'ajout d'une étape, et la quatrième fois c'est voulu.
+    // Celle-ci vient d'un écart réel : j'ai écrit les 26 rapports de la Ronde du 2026-09-23, je les
+    // ai committés, et je ne les ai jamais LIVRÉS — j'ai enchaîné sur l'analyse. Le contrôle
+    // existant portait sur la séquence (rapports avant analyse), que je pouvais honnêtement
+    // déclarer respectée. Écrire un fichier et le livrer sont deux faits distincts, et le second
+    // ne se déduit jamais du premier.
+    rapportsLivresIndividuellement: true, nombreDeRapportsEcrits: 26, nombreDeRapportsLivres: 26,
   });
   assert.deepEqual(cleanResult, { ok: true, findings: [] }, 'a Ronde where every real fact checks out must report a genuinely clean ok:true with zero fabricated findings');
 
@@ -8446,6 +8467,19 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     loadSeriesPasseesImpl: () => [], seriesReellementPosees: ['ouverture'],
   });
   assert.ok(questionsEnAttente.findings.some((f) => f.check === 'questions-a-reposer'), 'an unanswered series is never left behind by a closing Ronde — the hypothesis stays "accident", never "refusal"');
+
+  // LIVRAISON PARTIELLE — le comptage croisé rend l'écart visible là où un simple « oui » ne dirait
+  // rien. 26 écrits et 13 livrés se voit ; « les rapports ont été livrés » ne se vérifie pas.
+  const livraisonPartielle = verifyRondeProcess({
+    autoPrimeGoatAsked: true, voixUtilisateurPosee: true, changementModelePosee: true, changementModeleReponse: 'non',
+    checkedItemIds: [], executedItemIds: [], recapHtml: '<!DOCTYPE html><html></html>', reportsDeliveredBeforeAnalysis: true,
+    findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
+    shImpl: () => '101', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
+    loadOuvertureImpl: () => ({ changementModelePosee: true, changementModeleReponse: 'non', mode: 'AUTO', at: new Date().toISOString() }),
+    loadQuestionsSansReponseImpl: () => [], loadSeriesPasseesImpl: () => [], seriesReellementPosees: ['ouverture'],
+    rapportsLivresIndividuellement: true, nombreDeRapportsEcrits: 26, nombreDeRapportsLivres: 13,
+  });
+  assert.ok(livraisonPartielle.findings.some((f) => f.check === 'rapports-partiellement-livres' && f.message.includes('13')), 'a partial delivery is named with its real counts, never softened into a yes');
 
   // Le mode autonome exempte TOUT ce qui suppose quelqu'un en face : la borne posée par
   // l'utilisateur (« aucune fenêtre y compris GOAT/AUTO ne doit être bloquante pour le mode

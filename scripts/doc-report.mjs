@@ -770,4 +770,58 @@ export function findLanceursPrematures({ root = ROOT, listDirImpl = readdirSync,
 // le motif dangereux — il ne se manifeste que le jour où quelqu'un ajoute un appel, et le lien
 // avec la mise en page du fichier est alors invisible. findLanceursPrematures() ci-dessus le
 // signale désormais avant ce jour-là, plutôt qu'après.
+
+// ————————————————————————————————————————————————————————————————————————
+// UN RAPPORT QUI POINTE AU LIEU DE DIRE (2026-09-23)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Constat de l'utilisateur sur les rapports livrés de la Ronde du 2026-09-23 : « check-detail est
+// vide de contenu data et analytique : est-ce que c'est le cas pour d'autres rapports ? À chaque
+// fois je dois avoir un contenu intéressant non ? »
+//
+// LE DÉFAUT EXACT, et il n'est pas celui qu'on croit. check-tasks-details produisait un vrai
+// rapport — en HTML — et n'imprimait sur sa sortie que le CHEMIN de ce fichier plus trois
+// compteurs. Le fichier texte livré dans le dossier de la Ronde faisait quatre lignes utiles : il
+// pointait vers une donnée au lieu d'en porter une. Or un rapport de Ronde se lit DANS son fichier
+// texte, qu'on parcourt et qu'on cite ; un pointeur y est un cul-de-sac.
+//
+// TROIS CAUSES À NE JAMAIS CONFONDRE, mesurées sur les 26 rapports de cette Ronde :
+//   1. le rapport POINTE au lieu de dire (check-tasks-details) — c'est le seul vrai défaut, corrigé ;
+//   2. l'agent a lancé la MAUVAISE sous-commande (cassandra-rh sans `rapport` rend son signal léger
+//      de deux lignes au lieu de son bilan de 152) — défaut de conduite, pas d'outil ;
+//   3. le rapport est COURT PARCE QU'IL N'Y AVAIT RIEN (CLEAN-DIRTY-OLD : « aucune zone signalée »)
+//      — et ça, c'est un vrai résultat, jamais un rapport vide. Le confondre avec les deux autres
+//      pousserait les outils à meubler pour avoir l'air utiles, exactement la métrique de vanité
+//      que ce paysage combat.
+//
+// CE QUE LE GARDE-FOU PEUT VRAIMENT VOIR : le cas 1 seul, et par un signe précis — un rapport
+// court QUI NOMME un autre fichier. Court sans pointer, c'est le cas 3 ; long en pointant, c'est
+// un rapport complet qui offre en plus une version HTML (cas légitime, très répandu ici).
+export const SEUIL_RAPPORT_MAIGRE = 12;
+
+export function findRapportsQuiPointent({ dossier, listDirImpl = readdirSync, readFileImpl = readFileSync, seuil = SEUIL_RAPPORT_MAIGRE } = {}) {
+  let fichiers = [];
+  try { fichiers = listDirImpl(dossier).filter((f) => f.endsWith(".txt")); } catch { return []; }
+  const ecarts = [];
+  for (const f of fichiers) {
+    let texte;
+    try { texte = readFileImpl(join(dossier, f), "utf8"); } catch { continue; }
+    // Les lignes d'en-tête communes à tous les rapports (avertissement de fiabilité, identité de
+    // session, état du code) ne sont pas du contenu : elles sont identiques partout.
+    const utiles = texte.split("\n").filter((l) => {
+      const t = l.trim();
+      if (!t) return false;
+      return !/^(⚠️\s+Attention|Version de Claude|Produit le|État du code|Contexte de production|Outil :|Santé de l'outil|Gravité|=+$|-{3,}$)/.test(t);
+    }).length;
+    const pointe = /Rapport généré|Rapport HTML|écrit dans|\.html\b/.test(texte);
+    if (utiles < seuil && pointe) {
+      ecarts.push({
+        fichier: f, lignesUtiles: utiles,
+        pourquoi: `${utiles} ligne(s) de contenu et une référence vers un autre fichier : ce rapport POINTE vers sa donnée au lieu de la porter. Un rapport de Ronde se lit dans son fichier texte — un pointeur y est un cul-de-sac.`,
+      });
+    }
+  }
+  return ecarts;
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) main();

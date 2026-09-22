@@ -158,6 +158,9 @@ export function verifyRondeProcess({
   loadQuestionsSansReponseImpl = loadQuestionsSansReponse,
   loadSeriesPasseesImpl = loadSeriesPassees,
   seriesReellementPosees,
+  rapportsLivresIndividuellement,
+  nombreDeRapportsEcrits,
+  nombreDeRapportsLivres,
 } = {}) {
   const findings = [];
   const add = (check, message) => findings.push({ check, message });
@@ -287,6 +290,32 @@ export function verifyRondeProcess({
     if ((analysisPointsFound ?? 0) > 0 && !/class="highlight"/.test(recapHtml)) add("recap-highlight", "Des points ont été trouvés mais le récapitulatif ne porte aucun bloc d'analyse mis en évidence (class=\"highlight\").");
   }
   if (reportsDeliveredBeforeAnalysis === false) add("sequence-order", "La séquence stricte de l'Étape 5 n'a pas été respectée : les rapports doivent être livrés AVANT que l'agent ne construise son analyse.");
+
+  // ÉCRIRE UN FICHIER N'EST PAS LE LIVRER (2026-09-23, écart réel de la Ronde du jour, relevé par
+  // l'utilisateur : « erreur dans le process : tu dois d'abord me livrer tous les rapports en
+  // fichier txt. Consolide le respect du process stp », puis « n'oublie pas les livraisons de
+  // fichier, consolide le process »).
+  //
+  // CE QUI S'EST PASSÉ, ET POURQUOI LE CONTRÔLE EXISTANT NE POUVAIT PAS L'ATTRAPER. J'ai écrit les
+  // 26 rapports sur le disque, je les ai committés, puis j'ai enchaîné sur l'analyse. De mon point
+  // de vue les rapports « existaient » ; du sien, il n'avait rien reçu. `reportsDeliveredBeforeAnalysis`
+  // portait sur l'ORDRE (rapports avant analyse) et je pouvais honnêtement le déclarer vrai — les
+  // fichiers étaient bien écrits avant. Le fait manquant n'était pas l'ordre, c'était la LIVRAISON.
+  //
+  // Deux faits distincts, donc, et c'est la distinction qui fait le mécanisme : un fichier écrit
+  // est une trace pour les outils, un fichier livré est un document pour l'utilisateur. Le second
+  // ne se déduit jamais du premier. Le comptage croisé rend l'écart visible plutôt que déclaratif :
+  // 26 écrits et 13 livrés se voit, là où un simple « oui » ne dirait rien.
+  if (!nightAutonomousMode) {
+    if (rapportsLivresIndividuellement === undefined) {
+      add("rapports-non-livres", "La livraison des rapports individuels à l'utilisateur n'a pas été déclarée. Écrire un fichier sur le disque et le committer n'est PAS le livrer : le premier est une trace pour les outils, le second un document pour lui. Tant que ce fait manque, l'étape de livraison est réputée non faite.");
+    } else if (rapportsLivresIndividuellement === false) {
+      add("rapports-non-livres", "Les rapports individuels n'ont pas été livrés avant l'analyse. L'utilisateur lit les rapports pendant que l'agent construit son analyse — livrer après, c'est lui retirer cette lecture parallèle et lui demander de croire la synthèse sur parole.");
+    }
+    if (Number.isFinite(nombreDeRapportsEcrits) && Number.isFinite(nombreDeRapportsLivres) && nombreDeRapportsLivres < nombreDeRapportsEcrits) {
+      add("rapports-partiellement-livres", `${nombreDeRapportsEcrits} rapport(s) écrit(s) mais seulement ${nombreDeRapportsLivres} livré(s) — ${nombreDeRapportsEcrits - nombreDeRapportsLivres} rapport(s) n'existent que pour moi.`);
+    }
+  }
   if ((analysisPointsFound ?? 0) > 0) {
     const expectedMin = Math.min(5, analysisPointsFound);
     if ((questionsAsked ?? 0) < expectedMin) add("forced-questions", `${analysisPointsFound} point(s) trouvé(s) mais seulement ${questionsAsked ?? 0} question(s) à choix forcé posée(s) — attendu au moins ${expectedMin} (jamais zéro question sur une analyse à plusieurs problèmes).`);

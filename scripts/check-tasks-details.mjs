@@ -35,6 +35,7 @@ import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { PRESTATIONS, suggestPrestationsForTask, significantWords, badgeSignalsAsContext } from "./le-coordinateur.mjs";
 import { daysSince, printReliabilityNotice } from "./lib-shell.mjs";
+import { renderTextReport } from "./report-template.mjs";
 import { walkDocsPaths } from "./lib-shell.mjs";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { sh } from "./lib-shell.mjs";
@@ -1094,7 +1095,25 @@ function main() {
   appendSnapshot(allRows);
   appendIndexRow({ file: outFile, zoom, format, ...report.meta });
 
-  console.log(`Rapport généré : ${outFile}`);
+  // LE CONTENU, PAS SEULEMENT LE CHEMIN (2026-09-23, constat de l'utilisateur sur la Ronde du
+  // jour : « check-detail est vide de contenu data et analytique [...] à chaque fois je dois avoir
+  // un contenu intéressant non ? »). Il avait raison et le défaut était réel : ce chemin de sortie
+  // n'imprimait QUE le nom du fichier HTML produit et trois compteurs. Livré tel quel dans le
+  // dossier de la Ronde, le rapport ne portait aucune donnée — il pointait vers une donnée.
+  //
+  // Un rapport de Ronde est LU DANS SON FICHIER TEXTE, jamais rouvert ailleurs : un pointeur y est
+  // un cul-de-sac. La version HTML reste produite (elle est plus agréable à parcourir), mais elle
+  // s'ajoute au contenu au lieu de le remplacer. Même patron que partout ailleurs ici : un
+  // mécanisme qui ne sort pas du script est une intention.
+  console.log(renderTextReport({
+    tool: "check-tasks-details",
+    title: report.title,
+    subtitle: report.subtitle,
+    dateLabel: new Date().toISOString(),
+    blocks: report.blocks,
+    footer: "check-tasks-details — lecture seule, docs/suivi/ reste l'unique source de vérité du projet.",
+  }));
+  console.log(`\nMême rapport en HTML : ${outFile}`);
   console.log(`Zoom : ${ZOOM_LABELS[zoom]} — Forme : ${FORMAT_LABELS[format]}`);
   console.log(`${report.meta.count} tâche(s) affichée(s) sur ${report.meta.total} au total.`);
   if (report.meta.regressions.length) console.log(`⚠️ ${report.meta.regressions.length} régression(s) détectée(s).`);

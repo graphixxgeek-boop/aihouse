@@ -1109,3 +1109,46 @@ LA RÈGLE, VALABLE POUR TOUTE FENÊTRE DE QUESTIONS DE CE PROJET :
 CE QUE ÇA CHANGE POUR LES SÉRIES : l'option « je réponds » d'une offre de passer se formule
 « Je réponds aux questions d'ouverture de la Ronde », jamais « je réponds aux questions
 ci-dessous ».
+
+════════════════════════════════════════════════════════════════════════
+PARTIE 13 — ÉCRIRE UN FICHIER N'EST PAS LE LIVRER (2026-09-23)
+════════════════════════════════════════════════════════════════════════
+
+Écart réel commis pendant la Ronde du 2026-09-23, relevé par l'utilisateur au moment où il se
+produisait : « erreur dans le process : tu dois d'abord me livrer tous les rapports en fichier txt.
+Consolide le respect du process stp », puis, l'oubli se répétant : « n'oublie pas les livraisons de
+fichier, consolide le process ».
+
+CE QUI S'EST PASSÉ. J'ai exécuté les 26 items, écrit un rapport individuel par outil dans
+docs/circle-tasks/ronde-<date>/, committé et poussé — puis enchaîné directement sur l'analyse. De
+mon point de vue, les rapports « existaient ». Du sien, il n'avait rien reçu.
+
+POURQUOI AUCUN CONTRÔLE NE L'A VU, et c'est le vrai enseignement. Le gardien vérifiait
+`reportsDeliveredBeforeAnalysis` — la SÉQUENCE (rapports avant analyse). Je pouvais honnêtement la
+déclarer respectée : les fichiers étaient bien écrits avant que je n'écrive un mot d'analyse. Le
+fait qui manquait n'était pas l'ordre, c'était la LIVRAISON elle-même, et rien ne la demandait.
+
+LA DISTINCTION, désormais tenue par deux faits séparés :
+  · un fichier ÉCRIT est une trace pour les outils (elle se vérifie sur le disque) ;
+  · un fichier LIVRÉ est un document pour l'utilisateur (elle ne se déduit JAMAIS de la première).
+
+Un fichier écrit et committé n'a rien livré : il attend dans un dépôt que quelqu'un pense à
+l'ouvrir. La lecture parallèle prévue par le process (l'utilisateur lit les rapports pendant que
+l'agent construit son analyse) suppose qu'il les AIT — sans livraison, il ne lui reste qu'à croire
+la synthèse sur parole, ce qui est exactement ce que la livraison individuelle existe pour éviter.
+
+CE QUE LE GARDIEN EXIGE MAINTENANT (`verifyRondeProcess`, contrôles `rapports-non-livres` et
+`rapports-partiellement-livres`) — trois cas, jamais deux :
+  · fait NON DÉCLARÉ → manquement, jamais un laissez-passer (même patron que l'Étape 5) ;
+  · livraison PARTIELLE → le comptage croisé (écrits vs livrés) la rend visible, là où un simple
+    « oui » ne dirait rien : 26 écrits et 13 livrés se voit ;
+  · livraison COMPLÈTE → rien à signaler.
+Exempté en mode autonome, comme toute étape qui suppose quelqu'un en face.
+
+ORDRE NON NÉGOCIABLE DE LA FIN DE RONDE, rappelé ici parce que c'est lui que j'ai enfreint :
+  1. exécution des items ;
+  2. écriture des rapports individuels ;
+  3. **LIVRAISON de tous les rapports individuels à l'utilisateur** ;
+  4. seulement ensuite : l'analyse, puis le plan d'action, puis les tâches ;
+  5. puis EVAL-DEV et EVAL-IA ;
+  6. puis les séries de questions.

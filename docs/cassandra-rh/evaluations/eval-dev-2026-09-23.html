@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><title>EVAL-DEV — Ronde du 2026-09-23</title>
+<style>
+:root{--bg:#f7f6f3;--fg:#1c1b19;--muted:#6b6862;--card:#fff;--line:#e2ded6;--ok:#2e7d4f;--warn:#b8860b;--bad:#a33a2e;--accent:#2f4858}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14161a;--fg:#e8e6e1;--muted:#9a978f;--card:#1c1f24;--line:#2c3037;--ok:#5fb98a;--warn:#d9a441;--bad:#d9705f;--accent:#8fb3c9}}
+:root[data-theme="dark"]{--bg:#14161a;--fg:#e8e6e1;--muted:#9a978f;--card:#1c1f24;--line:#2c3037;--ok:#5fb98a;--warn:#d9a441;--bad:#d9705f;--accent:#8fb3c9}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:0 16px}
+.wrap{max-width:820px;margin:0 auto;padding:40px 0 80px}
+h1{font-size:1.75rem;margin:0 0 4px;letter-spacing:-.02em}.sub{color:var(--muted);margin:0 0 32px;font-size:.95rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin:0 0 18px}
+h2{font-size:1.05rem;margin:0 0 12px;color:var(--accent);letter-spacing:.01em}
+.note{display:inline-block;font-size:2.4rem;font-weight:600;line-height:1}.note span{font-size:1rem;color:var(--muted);font-weight:400}
+.crit{border-left:3px solid var(--warn);padding-left:14px;margin:14px 0}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+ul{margin:8px 0;padding-left:20px}li{margin:6px 0}
+.quote{font-style:italic;color:var(--muted);border-left:2px solid var(--line);padding-left:12px;margin:10px 0}
+footer{color:var(--muted);font-size:.85rem;margin-top:32px;border-top:1px solid var(--line);padding-top:14px}
+</style></head><body><div class="wrap">
+<h1>EVAL-DEV — votre conduite sur cette Ronde</h1>
+<p class="sub">Ronde du 2026-09-23 · mode AUTO · 26 items · évaluation hébergée chez CASSANDRA-RH</p>
+
+<div class="card"><h2>Note d'ensemble</h2>
+<p class="note ok">A <span>/ excellente</span></p>
+<p>Trois interventions ont changé le résultat de cette Ronde, et aucune n'était un détail de confort.</p></div>
+
+<div class="card"><h2>Ce qui a été déterminant</h2>
+<div class="crit"><strong>Vous avez attrapé une erreur que trois contrôleurs de process avaient laissée passer.</strong>
+<p class="quote">« memory-audit n'a rien à dire pour la ronde, il intervient en fin de simu, c'est une erreur de le trouver ici. »</p>
+<p>Vous aviez raison sur le fond, et la cause était pire que ce que vous supposiez : l'outil n'était pas mal placé dans la Ronde, je l'avais lancé sans qu'il y soit. Aucun mécanisme ne regardait ce qui tourne hors sélection.</p></div>
+
+<div class="crit"><strong>Votre distinction a produit un mécanisme, pas une note.</strong>
+<p class="quote">« Certains outils peuvent peut-être faire les 2, ce qui explique si on les retrouve aux 2 endroits. »</p>
+<p>C'est cette phrase qui rend l'attribut utilisable. Sans la troisième valeur, une présence double aurait toujours ressemblé à un oubli, et le garde-fou aurait crié à tort sur les outils mixtes — donc aurait fini ignoré.</p></div>
+
+<div class="crit"><strong>Deux corrections de forme qui portent sur le fond.</strong>
+<p class="quote">« "gardien" ou "guardian" en anglais, c'est pareil » — « tu ne peux pas dire "ci-dessous" car il n'y a rien ci-dessous »</p>
+<p>La première a doublé la portée du garde-fou de vocabulaire. La seconde est l'Article 15 appliqué à mes propres questions : je rédigeais depuis ma vue, où les questions sont l'une sous l'autre, alors que de votre côté chacune est isolée.</p></div>
+</div>
+
+<div class="card"><h2>Le point à surveiller, et il est réel</h2>
+<p class="warn"><strong>Trois fenêtres de questions fermées sans réponse.</strong></p>
+<p>Le mécanisme a tenu : les questions ont été enregistrées, reposées, et l'hypothèse de l'accident a été maintenue jusqu'au bout — jamais un refus supposé. Mais il a fallu trois passages pour obtenir trois réponses qui ont pris dix secondes. Le plafond anti-boucle allait s'appliquer au quatrième, et la Ronde serait partie sur des valeurs par défaut que vous n'aviez pas choisies.</p>
+<p>Rien à corriger de votre côté si c'étaient bien des accidents. Mais si les fenêtres arrivent à un mauvais moment, dites-le : il vaut mieux une série explicitement passée qu'une série qui s'évapore.</p></div>
+
+<div class="card"><h2>Décisions que vous seul pouviez prendre</h2>
+<ul>
+<li><strong>Trois portées plutôt qu'une marque binaire</strong> — la solution la plus juste des trois proposées, et la seule qui traite les outils mixtes.</li>
+<li><strong>Fermer le trou « exécuté hors sélection »</strong> — vous auriez pu le juger inoffensif, vous avez tranché l'inverse.</li>
+<li><strong>Garder ma correction de memory-audit ET la rendre explicite</strong> — la nuance compte : le correctif était bon, mais une commande qui marche invite à s'en servir. Sans la mention de portée, la prochaine IA referait mon erreur.</li>
+</ul></div>
+
+<footer>CASSANDRA-RH évalue la conduite, jamais la personne. Une note n'est jamais un jugement acquis : elle porte sur cette Ronde-ci, et se rejoue entièrement à la suivante.</footer>
+</div></body></html>

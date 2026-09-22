@@ -193,7 +193,25 @@ function main() {
   const result = recordEdition(scope, { indexText });
   console.log(`Édition v${result.version} (${result.date}, ${scope}) : ${result.fileCount} fichier(s), ${result.sizeBytes} octets.`);
   console.log(`Corps écrit dans ${result.latestPath} (local, jamais committé).`);
-  console.log(`Ligne d'index à ajouter à ${indexPath} :`);
+  // LE RÉSUMÉ, ENFIN IMPRIMÉ (2026-09-23). `buildEdition()` calculait déjà `summary` — nombre de
+  // fichiers par extension, fichiers jamais committés, le plus ancien, ancienneté moyenne, KPI
+  // repris de CASSANDRA — et rien ne l'affichait. Le rapport livré ne portait donc que deux
+  // chiffres et un chemin, ce que l'utilisateur a relevé sur la Ronde du 2026-09-23 : « à chaque
+  // fois je dois avoir un contenu intéressant non ? ».
+  //
+  // C'est le CINQUIÈME cas du même motif trouvé en une journée : une donnée calculée qui ne sort
+  // jamais du script. Le corps de l'édition reste local (3,9 Mo, décision assumée), mais ce qui la
+  // DÉCRIT n'a aucune raison de rester invisible.
+  const s = result.summary ?? {};
+  if (s.fileCount !== undefined) {
+    console.log(`\nContenu de l'édition :`);
+    for (const [ext, n] of Object.entries(s.byExtension ?? {}).sort((a, b) => b[1] - a[1])) console.log(`  ${ext.padEnd(8)} ${n} fichier(s)`);
+    if (s.neverCommittedCount !== undefined) console.log(`  jamais committé(s) : ${s.neverCommittedCount}`);
+    if (s.oldestFile) console.log(`  le plus ancien : ${s.oldestFile.path} (${Math.round(s.oldestFile.days)} j)`);  // objet {path, days} : l'imprimer brut rendait « [object Object] », le même défaut d'affichage que safe-export portait ce matin
+    if (s.averageStaleDays !== undefined) console.log(`  ancienneté moyenne : ${Math.round(s.averageStaleDays)} jour(s)`);
+    if (s.kpiFromCassandra) console.log(`  KPI repris de CASSANDRA-RH : ${JSON.stringify(s.kpiFromCassandra)}`);
+  }
+  console.log(`\nLigne d'index à ajouter à ${indexPath} :`);
   console.log(result.row);
 }
 
