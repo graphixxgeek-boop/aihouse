@@ -16,7 +16,7 @@ import { loadMemoire } from "../safe-export.mjs";
 import { checkLinks, LINKS } from "../check-harmonia.mjs";
 import { collectCoverage, robustnessScore, collectScriptCoverage, scriptRobustnessScore, LIB_MAP, AGENT_SCRIPT_FILES } from "../axa-check.mjs";
 import { lastTouchDays, relativeStaleness } from "../clean-dirty-old.mjs";
-import { buildDuplicateReport, buildNearDuplicateReport } from "../clone-hunter.mjs";
+import { buildDuplicateReport, buildNearDuplicateReport, fusionnerClusters } from "../clone-hunter.mjs";
 import { THEMES, THEME_PRIMARY_FILE, parseCoverage, recommendZone, countDatedAddenda, addendaSignal, parseNumstat, churnSignal, outillageZones } from "../always-new-code.mjs";
 import { findMissingNotes, findOrphanNotes } from "../el-professor.mjs";
 import { parseToolsTable, slugifyAgentName, checkAllAgentBadges, pendingCeremonies, formatPendingCeremonies, saveBadgeSignals } from "../le-coordinateur.mjs";
@@ -183,13 +183,20 @@ if (reveille("clean-dirty-old")) try {
 if (reveille("clone-hunter")) try {
   const literalClusters = buildDuplicateReport();
   const nearClusters = buildNearDuplicateReport();
-  cloneHunterFindingsCount = literalClusters.length + nearClusters.length;
-  if (literalClusters.length || nearClusters.length) {
+  // LE BANDEAU COMPTE DES PROBLÈMES, PAS DES ANCRES (2026-09-23, tâche #217). Le regroupement
+  // devait atteindre CETTE ligne, qui est celle qu'on lit à chaque commit : la même correction que
+  // pour ARGUS le même jour, et pour la même raison — un mécanisme qui s'arrête avant le bandeau
+  // n'a rien changé là où ça compte.
+  const problemes = fusionnerClusters([
+    ...literalClusters.map((c) => ({ ...c, detecteur: "identique" })),
+    ...nearClusters.map((c) => ({ ...c, detecteur: "renommage" })),
+  ]);
+  cloneHunterFindingsCount = problemes.length;
+  if (problemes.length) {
+    const brutes = literalClusters.length + nearClusters.length;
     console.error(
-      "\n🔎 CLONE-HUNTER (balayage réel post-commit) : " +
-      (literalClusters.length ? `${literalClusters.length} cluster(s) dupliqué(s) identique(s)` : "") +
-      (literalClusters.length && nearClusters.length ? " ; " : "") +
-      (nearClusters.length ? `${nearClusters.length} cluster(s) structurellement dupliqué(s) (renommage)` : "") +
+      `\n🔎 CLONE-HUNTER (balayage réel post-commit) : ${problemes.length} problème(s) distinct(s) de duplication` +
+      (brutes !== problemes.length ? ` (${brutes} alerte(s) brute(s) regroupée(s) : la même duplication vue depuis deux ancres ne compte qu'une fois)` : "") +
       " — jamais une factorisation acquise, un signal à vérifier (cf. docs/clone-hunter/index.md).\n",
     );
   }
