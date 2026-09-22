@@ -94,8 +94,24 @@ export function verifyRondeProcess({
   const findings = [];
   const add = (check, message) => findings.push({ check, message });
 
-  // 1. AUTO/PRIME/GOAT
-  if (!nightAutonomousMode && autoPrimeGoatAsked !== true) add("auto-prime-goat", "La question AUTO/PRIME/GOAT n'a pas été confirmée comme posée avant l'exécution de la Ronde.");
+  // 1. AUTO/PRIME/GOAT — DURCI LE 2026-09-22, et la borne autonome élargie le même jour.
+  //
+  // Ce qui a changé, et pourquoi. À la Ronde du 2026-09-22 j'avais choisi AUTO tout seul, en
+  // écrivant ma raison, parce que l'utilisateur venait de demander qu'on ne l'arrête plus. Je lui
+  // ai posé la question à la clôture : était-ce la bonne conduite ? Réponse : NON, « demande
+  // toujours ». La fenêtre coûte un clic et détermine tout le reste de la Ronde — elle n'est donc
+  // jamais ce qu'on sacrifie pour aller plus vite, et ma latitude de la sauter en écrivant une
+  // raison est retirée. Un « ne t'arrête pas » ne vaut plus dispense.
+  //
+  // LA BORNE, posée explicitement dans le même échange : « attention, aucune fenêtre y compris
+  // GOAT/AUTO ne doit être bloquante pour le mode autonome ». L'exemption `nightAutonomousMode`
+  // ci-dessous n'est donc pas une tolérance qu'on pourrait resserrer plus tard : c'est une
+  // garantie. Une fenêtre posée à personne n'est pas une vérification, c'est un blocage — et un
+  // travail autonome qui s'arrête devant une question sans répondant ne produit rien du tout.
+  //
+  // Les deux règles ne s'opposent pas, elles se partagent le terrain sans recouvrement : présent,
+  // on demande TOUJOURS ; absent, on ne demande JAMAIS et le mode AUTO s'applique seul.
+  if (!nightAutonomousMode && autoPrimeGoatAsked !== true) add("auto-prime-goat", "La question AUTO/PRIME/GOAT n'a pas été posée avant l'exécution de la Ronde. Depuis le 2026-09-22 elle est obligatoire en présence de l'utilisateur, même s'il a demandé de ne pas être arrêté — elle coûte un clic et détermine toute la Ronde. Seul le mode autonome en dispense, et cette dispense est une garantie, jamais une tolérance.");
 
   // 2bis. LA VOIX DE L'UTILISATEUR (2026-09-22) — et l'exemption nocturne est CONDITIONNELLE, ce
   // qui la distingue de celle de la fenêtre AUTO/PRIME/GOAT juste au-dessus. Celle-là supprime

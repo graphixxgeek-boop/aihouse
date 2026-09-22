@@ -337,3 +337,57 @@ export function printReliabilityNotice(slug, registry = TOOL_RELIABILITY, log = 
   if (notice) log(notice);
   return notice;
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// UN VERT NON REPRÉSENTATIF EST UNE ALERTE (2026-09-22)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Décision explicite de l'utilisateur, à la fenêtre de clôture de la Ronde du 2026-09-22, en
+// réponse à trois chiffres verts de cette Ronde même : « 100 % d'investissement réel » calculé sur
+// 2 actions sur 18 ; « 0 tension » trouvée par THE-KING sur un texte fondateur enrichi cinq fois en
+// quatre jours ; « 100 % de robustesse » affiché à côté de 39 commits sans Ronde. Question posée :
+// faut-il traiter un vert bâti sur un échantillon minuscule comme une alerte ? Réponse : OUI.
+//
+// Ce que ça coûte, et c'est assumé : plusieurs tableaux deviendront moins flatteurs. C'est
+// exactement le but — un pourcentage parfait porté par trois cas n'est pas un succès, c'est une
+// mesure qui ne couvre presque rien et qui se présente comme rassurante. C'est la forme la plus
+// polie du défaut que ce projet combat depuis le début : une mesure adjacente ou absente servie à
+// la place de la mesure visée.
+//
+// Le seuil est bas et volontairement grossier : en dessous de 30 % de la population, aucun taux ne
+// conclut. Un seuil plus fin donnerait une fausse impression de rigueur sur une règle qui vise
+// justement à refuser la fausse précision.
+export const REPRESENTATIVITE_MINIMUM = 0.3;
+export const PLANCHER_ABSOLU_CAS = 4;
+
+// qualifierIndicateur() — rend un troisième état, jamais deux. « non concluant » n'est ni un succès
+// ni un échec : c'est le refus de conclure, et c'est une information à part entière.
+//
+// `mesures` = le nombre de cas réellement mesurés ; `population` = le nombre de cas qui AURAIENT dû
+// l'être. Une population inconnue (null) renvoie « non concluant » elle aussi : ne pas savoir sur
+// combien porte un taux est pire que de savoir qu'il porte sur peu.
+export function qualifierIndicateur({ taux, mesures, population, seuil = REPRESENTATIVITE_MINIMUM, plancher = PLANCHER_ABSOLU_CAS } = {}) {
+  if (population == null || mesures == null) {
+    return { etat: "non concluant", assiette: "inconnue", pourquoi: "on ignore sur combien de cas ce taux porte — une assiette inconnue ne se lit jamais comme une assiette complète" };
+  }
+  const couverture = population > 0 ? mesures / population : 0;
+  const assiette = `${mesures} cas sur ${population}`;
+  if (mesures < plancher) {
+    return { etat: "non concluant", assiette, couverture, pourquoi: `moins de ${plancher} cas mesurés : aucun taux ne tient sur si peu, quelle que soit la part que ça représente` };
+  }
+  if (couverture < seuil) {
+    return { etat: "non concluant", assiette, couverture, pourquoi: `${Math.round(couverture * 100)} % de la population mesurée, sous le seuil de ${Math.round(seuil * 100)} % — le taux décrit l'échantillon, jamais le paysage` };
+  }
+  return { etat: typeof taux === "number" && taux >= 1 ? "vert" : "mesuré", assiette, couverture, pourquoi: null };
+}
+
+// formatIndicateur() — l'assiette voyage TOUJOURS avec le taux, y compris quand il est concluant.
+// C'était la seconde option proposée à l'utilisateur ; il a choisi la première (l'alerte), mais
+// afficher l'assiette reste vrai dans les deux cas et ne coûte rien — un taux sans son assiette est
+// une phrase incomplète.
+export function formatIndicateur(label, taux, { mesures, population } = {}) {
+  const q = qualifierIndicateur({ taux, mesures, population });
+  const pct = typeof taux === "number" ? `${Math.round(taux * 100)} %` : String(taux ?? "—");
+  if (q.etat === "non concluant") return `${label} : ⚠️ NON CONCLUANT (${pct} affiché, ${q.assiette}) — ${q.pourquoi}`;
+  return `${label} : ${pct} (${q.assiette})`;
+}

@@ -27,7 +27,7 @@ l'ÉVITER : l'agent reste le mécanisme d'intégration ».
 | `catalogue-coordinateur` | `scripts/le-coordinateur.mjs` | ce que tool-brain peut me recommander |
 | `ronde` | `scripts/circle-tasks.mjs` | item périodique **ou** exclusion écrite si déjà câblé au commit |
 | `table-maitresse` | `docs/regles-de-travail.md` §7ter | la description détaillée outil par outil |
-| `catalogue-charte` | `CLAUDE.md` | le tableau « Catalogue — blueprint exportable » |
+| `inventaire-charte` | `CLAUDE.md` | le tableau « Inventaire documentaire des outils » |
 
 ## Ce qu'il a trouvé à sa première exécution réelle
 

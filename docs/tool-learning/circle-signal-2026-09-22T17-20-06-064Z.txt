@@ -1,0 +1,1 @@
+Registre de verdicts vide → PAS ENCORE MESURABLE, jamais rendu comme un blanc-seing (bug attrapé sur lui-même le jour de sa construction). Coût de laide mesuré : médiane 3 300 tokens par outil, le frein étant le test (273 000 tokens).

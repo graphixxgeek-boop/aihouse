@@ -1,0 +1,1 @@
+KPI : robustesse du code 100 %, 14 points fragiles ouverts et suivis, 2/2 familles mesurables réellement mesurées (4 hors de portée sans serveur de jeu — jamais compté comme un défaut).

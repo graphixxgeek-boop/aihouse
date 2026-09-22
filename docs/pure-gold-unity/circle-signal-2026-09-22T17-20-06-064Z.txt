@@ -1,0 +1,1 @@
+TROUVAILLE : 3 outils créés le jour même (integration-outil, safe-export, tool-learning) écrivaient leur en-tête hors du cadre commun ; tool-learning datait même sa sortie lui-même. Corrigés dans la foulée — 32/32 conformes (100 %).

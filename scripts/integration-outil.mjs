@@ -97,7 +97,10 @@ export const REGISTRES_D_INTEGRATION = [
     forme: (s) => `| ${s} | ... | \`scripts/${s}.mjs\` |  — ligne de la table maîtresse §7ter`,
   },
   {
-    cle: "catalogue-charte", fichier: "CLAUDE.md", quoi: "catalogue « blueprint exportable » de la charte (blueprint + instanciation + script)",
+    // Renommé le 2026-09-22 (« je veux réserver tant que possible le nom catalogue pour le
+    // catalogue du coordinateur ») : en le baptisant « catalogue-charte » la veille, j'avais ajouté
+    // une cinquième occurrence d'un mot qui en désignait déjà quatre, au lieu de lever l'ambiguïté.
+    cle: "inventaire-charte", fichier: "CLAUDE.md", quoi: "inventaire documentaire de la charte (blueprint + instanciation + script)",
     extrait: (t) => new Set([...t.matchAll(/scripts\/([a-z0-9-]+)\.mjs/g)].map((m) => m[1])),
     forme: (s) => `| ${s} | ... | \`docs/${s}-blueprint.md\` | \`docs/referentiel/${s}.md\` | \`scripts/${s}.mjs\` |`,
   },

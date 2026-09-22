@@ -658,7 +658,7 @@ export function checkAgentOnboarding(agentName, {
     // blueprint peut s'appeler autrement (`docs/outil-resilience-api.md`).
     const aSaLigneDeCatalogue = new RegExp(`^\\|\\s*${nomEnTitre}\\s*\\|.*\`docs/[^\`]+\\.md\``, "im").test(claudeMdText);
     if (!cousinOf && !aSaSection && !aSaLigneDeCatalogue) {
-      gaps.push(`absent de CLAUDE.md, ni comme section "## ... — blueprint exportable" ni comme ligne du tableau « Catalogue — blueprint exportable » (attendu puisqu'il a un blueprint propre)`);
+      gaps.push(`absent de CLAUDE.md, ni comme section "## ... — blueprint exportable" ni comme ligne du tableau « Inventaire documentaire des outils » (attendu puisqu'il a un blueprint propre)`);
     }
   }
 

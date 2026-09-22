@@ -22,7 +22,7 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { countTasksSince, lastCoveredTaskNumber } from "./check-suivi-fidelity.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReliabilityNotice, qualifierIndicateur } from "./lib-shell.mjs";
 import { printReportHeader } from "./report-template.mjs";
 
 const HISTORY_PATH = fileURLToPath(new URL("../.smart-conso-token-history.json", import.meta.url));
@@ -937,19 +937,40 @@ export function diagnoseAdviceAccuracy(history, now, { hardThresholdReactionWind
 // des actions passées qui n'en portaient pas encore. Rapporte un fait mesuré, jamais un jugement
 // moral : un fort taux de "sans_retour" est un signal à regarder, pas une faute automatiquement
 // reprochée (même honnêteté que le reste de cet outil).
+// CORRIGÉ LE 2026-09-22 — cause racine d'un chiffre qui mentait depuis sa construction.
+//
+// Ce que cette fonction affichait : « 2/2 action(s) classifiée(s) comme investissement réel », soit
+// 100 %. Ce que la période contenait réellement : 18 actions coûteuses, dont 16 sans aucune
+// classification. Le dénominateur ÉTAIT DÉJÀ FILTRÉ sur `a.classification` — le taux décrivait donc
+// le sous-ensemble classé, jamais l'activité, et il se présentait comme un bilan de l'activité.
+//
+// C'est la forme la plus polie du défaut que ce projet combat depuis le début : une mesure
+// adjacente servie à la place de la mesure visée. Et ici elle était flatteuse, ce qui la rendait
+// invisible — personne ne va vérifier un 100 %.
+//
+// L'utilisateur a tranché à la fenêtre de clôture de la Ronde du même jour : « un vert non
+// représentatif est une alerte ». La population est désormais TOUTE l'activité de la fenêtre, et
+// qualifierIndicateur() (lib-shell.mjs) refuse de conclure sous le seuil de représentativité.
 export function computeInvestmentRatio(history, now, windowDays = 7) {
   const windowMs = windowDays * 24 * 60 * 60 * 1000;
-  const recent = (history?.actions ?? []).filter((a) => a.classification && now - a.at <= windowMs && now - a.at >= 0);
+  const dansLaFenetre = (history?.actions ?? []).filter((a) => now - a.at <= windowMs && now - a.at >= 0);
+  const recent = dansLaFenetre.filter((a) => a.classification);
+  const nonClassees = dansLaFenetre.length - recent.length;
   if (!recent.length) {
-    return { total: 0, investissement: 0, sansRetour: 0, aEvaluer: 0, message: "Aucune action classifiée récemment — rien à mesurer pour l'instant." };
+    return { total: 0, population: dansLaFenetre.length, nonClassees, investissement: 0, sansRetour: 0, aEvaluer: 0, message: dansLaFenetre.length ? `${dansLaFenetre.length} action(s) coûteuse(s) sur ${windowDays} jours, AUCUNE classifiée — rien à conclure, et ce n'est jamais un bon résultat.` : "Aucune action coûteuse récente — rien à mesurer pour l'instant." };
   }
   const investissement = recent.filter((a) => a.classification === "investissement").length;
   const sansRetour = recent.filter((a) => a.classification === "sans_retour").length;
   const aEvaluer = recent.filter((a) => a.classification === "a_evaluer").length;
+  const qualite = qualifierIndicateur({ taux: investissement / recent.length, mesures: recent.length, population: dansLaFenetre.length });
+  const base = `${investissement}/${recent.length} action(s) classifiée(s) comme investissement réel (${sansRetour} sans retour, ${aEvaluer} à évaluer)`;
   return {
-    total: recent.length, investissement, sansRetour, aEvaluer,
+    total: recent.length, population: dansLaFenetre.length, nonClassees, investissement, sansRetour, aEvaluer,
     pctInvestissement: Math.round((investissement / recent.length) * 1000) / 10,
-    message: `${investissement}/${recent.length} action(s) coûteuse(s) classifiée(s) comme investissement réel sur ${windowDays} jours (${sansRetour} sans retour, ${aEvaluer} à évaluer).`,
+    qualite: qualite.etat,
+    message: qualite.etat === "non concluant"
+      ? `⚠️ NON CONCLUANT — ${base}, mais ${nonClassees} des ${dansLaFenetre.length} actions de la période n'ont JAMAIS été classées : ${qualite.pourquoi}.`
+      : `${base}, sur ${dansLaFenetre.length} action(s) coûteuse(s) de la période (${windowDays} jours).`,
   };
 }
 

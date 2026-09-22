@@ -1,0 +1,1 @@
+Câblage HTML/texte vérifié contre les scripts producteurs réels — aucune divergence.

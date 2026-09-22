@@ -249,7 +249,14 @@ L'Article 27 tranche déjà le principe : « Le vocabulaire se définit là où 
 propre sans définition atteignable est une dette de reprise, au même titre qu'un chemin cassé. »
 Une IA qui reprend le projet et lit « consulter le catalogue » ne peut pas savoir lequel des quatre.
 
-Piste : garder **« catalogue » pour les offres de service** (le seul sens qui corresponde au mot
-courant) et renommer les autres — le tableau de la charte est un **inventaire documentaire**, la
-version archivée est un **relevé daté**. Non tranché : un renommage touche plusieurs fichiers et
-mérite d'être fait en une fois, pendant le chantier d'organisation.
+**TRANCHÉ ET APPLIQUÉ le 2026-09-22 même**, sur sa décision explicite : « je veux réserver tant que
+possible le nom catalogue pour le catalogue du coordinateur ». Le tableau de `CLAUDE.md` est
+désormais l'**Inventaire documentaire des outils** ; la clé de `integration-outil` est passée de
+`catalogue-charte` à `inventaire-charte`. Les cinq emplacements vivants ont été renommés en une
+fois ; les lignes de `docs/suivi/` gardent l'ancien nom, parce qu'elles DATENT ce qui a été dit à
+un moment donné et qu'une archive réécrite n'est plus une archive.
+
+Reste à trancher, plus tard : le **relevé daté** archivé du coordinateur
+(`docs/le-coordinateur/`), qui porte encore « catalogue d'offres nommé » — celui-là appartient
+légitimement au coordinateur, donc le mot n'y est pas usurpé ; seule sa nature (une VERSION du
+catalogue, pas le catalogue) mériterait un mot à elle.

@@ -1,0 +1,1 @@
+EVAL-DEV première édition : 8 juges sur 8 ont rendu un verdict chiffré. Premier essai rendu à vide (clés ne correspondant pas aux identifiants du jury), corrigé. Archivé : docs/angel-of-ia-process/EVAL-DEV-2026-09-22.md.

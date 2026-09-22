@@ -1,0 +1,1 @@
+check-tasks-details : 9 tâches en cours sur 395, 5 en stagnation. 86,6 % des tâches ne touchent pas au jeu.

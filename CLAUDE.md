@@ -20,6 +20,37 @@ vérité découverte, un canal de dialogue s'ouvre avec l'observateur (le visite
 agents ne sont **pas dociles** : ils contestent, refusent, répliquent avec sarcasme et cynisme.
 C'est l'exact opposé de l'agent conversationnel consensuel habituel.
 
+## Les deux projets, et pourquoi ils n'en font qu'un
+
+*(Posé explicitement par l'utilisateur le 2026-09-22, et noté ici plutôt qu'ailleurs parce que
+c'est le cadre qui rend intelligible tout le reste du fichier.)*
+
+**Il y a deux projets menés en parallèle : le site et l'Agence.** Sa formulation exacte :
+« L'agence est un prétexte pour construire le site, le site est un prétexte pour construire
+l'agence. Quand le site sera fini, l'agence sera aussi potentiellement finie : il suffira de
+l'exporter, de prendre en compte toutes les idées retenues, et sa finalisation sera rapide. »
+
+**Ce que ça change pour tout agent qui reprend ce projet, et il faut le comprendre avant de juger
+quoi que ce soit ici :** le temps consacré à l'outillage n'est PAS une digression, un sur-équipement
+ou une dérive à corriger. C'est le second projet, mené en filigrane. Le chiffre qui le montre —
+86,6 % des tâches (323 sur 373, mesuré le 2026-09-22) ne touchent pas au jeu — n'est donc pas
+l'anomalie qu'il paraît être si on ne lit que la première ligne de ce fichier. Il reste un chiffre à
+surveiller, parce qu'un des deux projets pourrait étouffer l'autre ; il n'est jamais, à lui seul,
+un reproche.
+
+**Les deux exigences qui en découlent, et elles sont permanentes :**
+
+1. **Chaque outil construit ici doit pouvoir partir.** C'est la raison d'être des blueprints
+   génériques (un par outil, systématiquement), de l'Article 27 (reprenable par une autre IA) et de
+   SAFE-EXPORT (septième Gardien sacré). Un outil qui ne fonctionne que sur ce dépôt-ci a raté la
+   moitié de sa mission, même s'il rend parfaitement service ici.
+2. **Le site reste le juge de dernier ressort.** L'Agence se valide en servant un vrai produit ;
+   c'est ce qui la distingue d'un outillage théorique. Un outil qui n'a jamais rien trouvé sur ce
+   projet-ci n'emportera rien d'éprouvé vers le suivant.
+
+Les idées de conception du projet suivant vivent dans `docs/agence-exportable-conception.md` — pas
+ici, et jamais mélangées au travail en cours.
+
 ## Stack technique
 
 Next.js 16 / React 19, rendu 3D via Three.js (`components/house-view.tsx`), base de données
@@ -837,7 +868,13 @@ créatif/narratif piloté par IA. Texte fondateur, révisé exceptionnellement, 
 générique réutilisable sur un autre projet, une instanciation propre à ce projet dans
 `docs/referentiel/`, un registre dans un dossier dédié avec index.)*
 
-## Catalogue — blueprint exportable
+## Inventaire documentaire des outils
+
+*(Renommé le 2026-09-22, à la demande explicite de l'utilisateur : « je veux réserver tant que
+possible le nom catalogue pour le catalogue du coordinateur ». Ce tableau ne catalogue pas des
+offres de service, il inventorie les DOCUMENTS que chaque outil possède — deux choses différentes
+qui portaient le même nom, au point qu'une IA lisant « consulter le catalogue » ne pouvait pas
+savoir laquelle. Dette de reprise au sens exact de l'Article 27, corrigée plutôt que notée.)*
 
 *(Condensé par ecotoken : ces 23 entrées avaient chacune leur propre section
 narrative, soit 377 lignes rechargées à CHAQUE message. Leur récit — genèse, arbitrages,
@@ -992,7 +1029,7 @@ demander si un outil déjà existant répondrait plus vite ou plus complètement
 
 **Les fiches des 22 outils de l'Agence Codex ne sont plus répétées ici** *(2026-09-22)* :
 leur chemin `docs/referentiel/<outil>.md` figure déjà, ligne par ligne, dans la colonne
-« Instanciation » du tableau « Catalogue — blueprint exportable » ci-dessus, et ce que chacune
+« Instanciation » du tableau « Inventaire documentaire des outils » ci-dessus, et ce que chacune
 contient est décrit dans la fiche elle-même. Les garder en double coûtait ~2 500 tokens à CHAQUE
 message pour redire deux fois les mêmes chemins — la seule redondance de fond trouvée dans cette
 charte, invisible à la mesure mécanique (chaque inventaire, pris seul, était parfaitement légitime).

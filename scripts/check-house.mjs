@@ -6829,6 +6829,24 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(findLecteursCasses(), [], 'checked live against the real repository: every one of the ten integration registries is still readable in its current shape — this assertion caught three broken readers on the very first real run (an anchor landing in a comment, "id:" taken for "slug:", and a registry naming its tools in plain words), before any of them had produced a single wrong figure');
   assert.deepEqual(planDIntegration('integration-outil').restant.map((e) => e.cle), [], 'checked live: the tool built to make integration complete is itself completely integrated — the one case where failing would have been its own refutation');
 
+  // qualifierIndicateur (2026-09-22) — « un vert non représentatif est une alerte », tranché par
+  // l'utilisateur à la clôture de la Ronde, sur trois chiffres verts de cette Ronde même.
+  const { qualifierIndicateur, formatIndicateur } = await import('../scripts/lib-shell.mjs');
+  assert.equal(qualifierIndicateur({ taux: 1, mesures: 2, population: 18 }).etat, 'non concluant', 'a perfect 100% resting on 2 of 18 cases is the exact figure that motivated this rule — it must never render as a success');
+  assert.equal(qualifierIndicateur({ taux: 1, mesures: 33, population: 33 }).etat, 'vert', 'a rate measured on its whole population stays green — the rule sharpens greens, it does not abolish them');
+  assert.equal(qualifierIndicateur({ taux: 0, mesures: null, population: null }).etat, 'non concluant', 'an unknown denominator is worse than a small one: not knowing what a rate covers never reads as covering everything');
+  assert.equal(qualifierIndicateur({ taux: 1, mesures: 5, population: 100 }).etat, 'non concluant', 'enough cases but too small a share still refuses to conclude — the rate describes the sample, never the landscape');
+  assert.match(formatIndicateur('x', 1, { mesures: 2, population: 18 }), /NON CONCLUANT/, 'the rendering carries the alert, not just the computation — a mechanism that never leaves the script protects nothing');
+  assert.match(formatIndicateur('x', 1, { mesures: 33, population: 33 }), /33 cas sur 33/, 'the base travels with the rate even when the rate is conclusive: a percentage without its denominator is an incomplete sentence');
+
+  // AUTO/PRIME/GOAT : obligatoire en présence, JAMAIS bloquant en autonome (2026-09-22, les deux
+  // décisions du même échange). Les deux assertions vivent ensemble parce que c'est leur
+  // cohabitation qui est la règle — durcir l'une sans garantir l'autre casserait le travail de nuit.
+  const { verifyRondeProcess: vrp } = await import('../scripts/circle-process-guardian.mjs');
+  const deuxItems = ['profil', 'kpi'];
+  assert.ok((vrp({ autoPrimeGoatAsked: false, checkedItemIds: deuxItems, executedItemIds: deuxItems, nightAutonomousMode: false }).findings ?? []).some((f) => f.check === 'auto-prime-goat'), 'with the user present, skipping the AUTO/PRIME/GOAT window is a gap even when he asked not to be stopped — his own ruling on 2026-09-22');
+  assert.ok(!(vrp({ autoPrimeGoatAsked: false, checkedItemIds: deuxItems, executedItemIds: deuxItems, nightAutonomousMode: true, pointsReportes: [], pointsAInterrogerCount: 0 }).findings ?? []).some((f) => f.check === 'auto-prime-goat'), 'in autonomous mode it must NEVER fire: "aucune fenêtre y compris GOAT/AUTO ne doit être bloquante pour le mode autonome" — a window put to nobody is not a check, it is a stall');
+
   const fakeReadFile = (path) => {
     if (path.includes('tool-with-html')) return 'import { renderHtmlReport } from "./html-report.mjs";';
     if (path.includes('tool-plain-text')) return 'console.log("no html rendering here");';

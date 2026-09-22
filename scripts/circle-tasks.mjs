@@ -677,6 +677,12 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // ne plus lire la Ronde. Son moment est celui de l'intégration, et il est porté par le process
   // « Intégration d'un nouvel outil » (god-of-all-process), jamais par un calendrier.
   "integration-outil": "Répond à un événement (un outil qui arrive), jamais à un calendrier : hors d'une intégration il n'aurait rien à dire, et une Ronde qui répète « rien à signaler » s'apprend à être sautée. Son obligation vit dans PROCESSES, pas dans CIRCLE_ITEMS",
+  // tableau-de-bord (2026-09-22) : registre créé le jour où l'item `kpi` a enfin reçu un dossier
+  // d'artefacts. Il EST couvert par une vraie entrée CIRCLE_ITEMS — simplement sous un autre nom
+  // (l'item s'appelle `kpi`, le registre `tableau-de-bord`), et le rapprochement par nom ne pouvait
+  // pas le deviner. Exclusion écrite plutôt que renommage : renommer l'un des deux casserait des
+  // renvois existants pour un gain nul.
+  "tableau-de-bord": "Couvert par l'item CIRCLE_ITEMS `kpi`, qui dépose ses artefacts dans ce dossier — seuls les NOMS diffèrent, jamais la couverture",
   "safe-export": "Gardien sacré du code (couche légère) : tourne automatiquement à CHAQUE commit via le crochet post-commit, jamais un item de Ronde — même régime que les six autres Gardiens. Son scan profond, lui, est exceptionnel et se déclenche sur proposition, jamais sur calendrier",
   "tasks-process-guardian": "gardien de process SECONDAIRE, même règle que process-simulation-guardian et angel-of-ia-process : god-of-all-process centralise et relaie son verdict (décision de l'utilisateur, 2026-09-22 — une seule voix à la Ronde, jamais une par gardien). Son déclencheur est l'état du suivi, pas le calendrier",
   "process-simulation-guardian": "gardien de process SECONDAIRE, même règle qu'angel-of-ia-process ci-dessus : god-of-all-process centralise et relaie son verdict (décision de l'utilisateur, 2026-09-22). Son vrai déclencheur est de toute façon une simulation, jamais le calendrier",
@@ -1052,6 +1058,26 @@ export function recordCircleTasksRun(totalCommitCount, now = Date.now()) {
 // fourre-tout par Ronde) — jamais recopié en dur ailleurs : circle-process-guardian devra lire
 // cette table dynamiquement, jamais un chemin réinventé (Article 24).
 export const CIRCLE_REPORT_FOLDERS = {
+  // 2026-09-22 — QUATORZE items sur 32 déclaraient `producesReport: true` sans qu'aucun dossier ne
+  // les attende ici. Trouvé en écrivant, pour la première fois, les artefacts d'une Ronde réelle :
+  // 10 des 26 items exécutés ont levé « aucun dossier connu ». Personne ne l'avait vu parce que
+  // rien ne comparait les deux tables — le registre ne savait pas qu'il lui manquait quelqu'un,
+  // exactement le défaut que l'Article 24 nomme. `findItemsPromisingReportWithoutFolder()`
+  // ci-dessous ferme le trou pour de bon.
+  //
+  // Les quatre derniers restent volontairement absents et c'est écrit plus bas
+  // (ITEMS_SANS_DOSSIER_ASSUME) : deux sont coûteux et tiennent déjà leur propre registre daté,
+  // deux produisent un artefact qui n'est pas un rapport texte.
+  profil: "docs/profil-utilisateur/",
+  kpi: "docs/tableau-de-bord/",
+  "pure-gold-unity-scan": "docs/pure-gold-unity/",
+  "tool-learning": "docs/tool-learning/",
+  "recap-evaluations": "docs/angel-of-ia-process/",
+  "smart-conso-token-scan": "docs/smart-conso-token/",
+  "cassandra-rh-signal": "docs/cassandra-rh/",
+  "data-archangel-scan": "docs/data-archangel/",
+  "integration-audit": "docs/integration-outil/",
+  "coordinateur-catalogue": "docs/le-coordinateur/",
   "the-king-signal": "docs/the-king/",
   "god-of-all-process-conformite": "docs/god-of-all-process/",
   "organigramme-signal": "docs/cassandra-rh/organigramme/",
@@ -1071,6 +1097,36 @@ export const CIRCLE_REPORT_FOLDERS = {
   "correctifs": "docs/relecture-correctifs/",
   "hyper-scan-checkpoint-light": "docs/hyper-scan-checkpoint/",
 };
+
+// ITEMS_SANS_DOSSIER_ASSUME — les seuls items qui promettent un rapport sans dossier ici, chacun
+// avec sa raison. Sans cette table, le garde-fou ci-dessous serait obligé de choisir entre crier
+// sur quatre cas légitimes ou se taire sur tous : l'exception écrite est ce qui permet à l'alerte
+// de rester crédible.
+export const ITEMS_SANS_DOSSIER_ASSUME = {
+  "the-final-judge": "coûteux (agent séparé) : tient déjà son propre registre daté dans docs/the-final-judge/index.md, jamais un artefact de Ronde en plus",
+  "the-deep-reader": "coûteux (agent séparé) : même régime, son registre vit dans docs/suivi/relectures-lourdes/",
+  "dream-team-photo": "son artefact est une image, jamais un rapport texte — un fichier .txt daté n'aurait rien à contenir",
+  "the-screener": "ses artefacts sont des captures d'écran, déposées par son propre mécanisme de capture",
+};
+
+// findItemsPromisingReportWithoutFolder() (2026-09-22) — le garde-fou qui manquait, sur le patron
+// déjà prouvé neuf fois dans ce dépôt (findToolsMissingFromMenu, findGardiensMissingFromSource...).
+// Deux tables tenues à la main disaient des choses différentes et rien ne les confrontait : un item
+// pouvait promettre un rapport pendant des semaines sans qu'aucun dossier ne puisse le recevoir, et
+// l'erreur ne se révélait qu'au moment d'écrire réellement l'artefact — c'est-à-dire pendant une
+// Ronde, au pire moment.
+export function findItemsPromisingReportWithoutFolder(items = CIRCLE_ITEMS, folders = CIRCLE_REPORT_FOLDERS, assumes = ITEMS_SANS_DOSSIER_ASSUME) {
+  return items.filter((i) => i.producesReport && !folders[i.id] && !(i.id in assumes)).map((i) => i.id);
+}
+
+// findFoldersWithoutItem() — le sens inverse, celui qui pourrit en silence : un dossier déclaré pour
+// un item qui n'existe plus. Il ne casse rien, donc rien ne le signale, et il fait croire que la
+// table est à jour.
+export function findFoldersWithoutItem(items = CIRCLE_ITEMS, folders = CIRCLE_REPORT_FOLDERS) {
+  const ids = new Set(items.map((i) => i.id));
+  return Object.keys(folders).filter((k) => !ids.has(k));
+}
+
 
 // recordCircleItemReport() — écrit un fichier .txt daté (la preuve d'exécution minimale exigée)
 // dans le dossier de l'item, puis journalise cette écriture dans un index que la fonction possède
