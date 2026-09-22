@@ -169,7 +169,7 @@ export const CIRCLE_ITEMS = [
     label: "Vérifier le poids en tokens de CLAUDE.md (allègement périodique)",
     cout: "gratuit — relit CLAUDE.md et applique les fonctions déjà exportées par SMART-CONSO-TOKEN, aucun appel API",
     tokensEstimes: "faible — un seul fichier local relu par le script, pas par l'agent",
-    execute: "Lire CLAUDE.md et appeler scanDocumentWeight()/listDatedNarrativeMarkers() (docs/referentiel/smart-conso-token.md) — si le niveau remonte à \"élevé\" ou que de nouvelles asides datées apparaissent, proposer une passe d'allègement selon la procédure formalisée, jamais l'exécuter seul. Écrire le résultat via recordCircleItemReport('claude-md-weight-signal', ...). Appeler ensuite recordSnapshotIfChanged('claude-md-weight-signal', contenu actuel de CLAUDE.md, ...) — copie texte de CLAUDE.md, historique local daté, une nouvelle snapshot seulement sur un vrai changement (2026-09-22, demande explicite de l'utilisateur).",
+    execute: "Lancer `node scripts/ecotoken-claude-md.mjs` (ecotoken-claude.md) — il relit lui-même scanDocumentWeight()/listDatedNarrativeMarkers() de SMART-CONSO-TOKEN, jamais un second calcul, et ajoute ce que ce signal ne savait pas faire : le rendement par article (citations réelles ÷ lignes), le plan de réduction chiffré avec son texte de remplacement prêt à relire, le budget anti-regrossissement, et ce que l'outil a retenu des passages précédents. Écrire son rapport via recordCircleItemReport('claude-md-weight-signal', ...), puis recordSnapshotIfChanged('claude-md-weight-signal', contenu actuel de CLAUDE.md, ...) — copie texte datée, une nouvelle snapshot seulement sur un vrai changement. Remplir ENSUITE à la main la colonne « Décision » de docs/ecotoken-claude-md/index.md : c'est la seule chose que l'outil ne peut pas deviner, et c'est ce qui l'empêche de reproposer indéfiniment une piste déjà refusée. HARMONISATION (2026-09-22) : un seul item de Ronde sur CLAUDE.md, jamais deux — ecotoken-claude.md a absorbé ce signal plutôt que de s'ajouter à côté.",
     producesReport: true,
   },
   {
@@ -497,6 +497,11 @@ export function mostRecentDate(text) {
 // (check-tasks-details.mjs), jamais un second parcours de disque réinventé (walkDocsPaths(),
 // extraite dans lib-shell.mjs pour éviter un cycle d'import entre les deux fichiers).
 export const CIRCLE_EXCLUDED_REGISTRIES = {
+  // ecotoken-claude.md (2026-09-22) : son registre existe, mais il n'a PAS d'item propre — c'est
+  // `claude-md-weight-signal` qui le lance, harmonisation explicitement demandée par l'utilisateur
+  // (« je crois qu'il y a deja un rapport sur claude.md dans circle. vois comment tu peux tout
+  // harmoniser sur ce sujet »). Un second item aurait dit la même chose deux fois.
+  "ecotoken-claude-md": "couvert par l'item claude-md-weight-signal, qui lance ecotoken-claude.md — un seul item de Ronde sur le sujet CLAUDE.md, jamais deux",
   argus: "tourne déjà à chaque commit (Article 20), jamais une routine manuelle en plus",
   harmonia: "tourne déjà à chaque commit (Article 20), jamais une routine manuelle en plus",
   "axa-check": "tourne déjà à chaque commit (Article 20), jamais une routine manuelle en plus",

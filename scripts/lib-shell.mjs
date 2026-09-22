@@ -135,3 +135,67 @@ export function daysSince(dateStr, now = Date.now()) {
 export function shouldSnapshotText(lastSnapshotText, currentText) {
   return lastSnapshotText == null || lastSnapshotText !== currentText;
 }
+
+// =============================================================================================
+// RÉVEIL CONDITIONNEL DES GARDIENS (2026-09-22, tâche #362).
+//
+// LE CONSTAT QUI A MOTIVÉ CECI. Les six Gardiens tournaient intégralement à CHAQUE commit, sans
+// jamais regarder ce que le commit contenait. Mesuré sur les 20 derniers commits : deux ne
+// touchaient aucun fichier de code, et les dix-huit autres ne touchaient `lib/` QUE par
+// `lib/reference.ts`. ARGUS a donc rescanné les champs de `lib/life.ts` vingt fois d'affilée sur un
+// fichier qui n'avait pas bougé, remontant les six mêmes candidats — avec, ce soir-là, deux
+// fichiers de scan archivés identiques octet pour octet hors horodatage.
+//
+// LA DISTINCTION QUI GOUVERNE TOUT (actée explicitement avec l'utilisateur le 2026-09-22) :
+//   • Ce qui GARANTIT le code = check-house.mjs + tsc, dans le crochet pre-commit, BLOQUANTS.
+//     Ceux-là tournent sur CHAQUE commit, sans condition, et cette fonction ne les concerne pas.
+//   • Ce qui RENFORCE = les six Gardiens, dans le post-commit, qui n'ont jamais rien bloqué.
+//     Eux seuls sont soumis au réveil conditionnel ci-dessous.
+// Confondre les deux étages serait le vrai danger : conditionner les tests créerait un trou de
+// surveillance, conditionner les Gardiens ne fait qu'éteindre du bruit.
+export const NOT_REALLY_CODE = [
+  // `lib/reference.ts` vit dans un dossier de code mais n'en est pas : c'est le référentiel
+  // AFFICHÉ en jeu (panneau Admin), de la donnée narrative versionnée section par section. Il est
+  // incrémenté à presque chaque commit, ce qui faisait passer tout commit pour un changement de
+  // moteur — la cause racine du gaspillage mesuré. Aucun champ de life.ts ne peut mourir, aucun
+  // bloc ne peut se dupliquer, aucune couverture de test ne peut bouger parce qu'il a changé.
+  /^lib\/reference\.ts$/,
+];
+
+// Ce que chaque Gardien surveille RÉELLEMENT — lu dans leur code, jamais supposé (Article 19).
+// ARGUS et CLONE-HUNTER balaient large (marqueurs TODO partout, duplication dans quatre racines) ;
+// les autres sont plus ciblés. Un Gardien absent de cette table tourne toujours, par prudence :
+// l'oubli d'une entrée ne doit jamais créer un angle mort silencieux.
+export const GARDIEN_DOMAINS = {
+  argus: [/^lib\//, /^app\//, /^components\//, /^scripts\//],
+  harmonia: [/^lib\//, /^scripts\//, /^docs\//],
+  "axa-check": [/^lib\//, /^scripts\//],
+  "clean-dirty-old": [/^lib\//, /^scripts\//],
+  "clone-hunter": [/^lib\//, /^scripts\//, /^app\//, /^components\//],
+  "always-new-code": [/^lib\//, /^app\//, /^components\//],
+};
+
+export function realCodeFilesChanged(changedFiles, notReallyCode = NOT_REALLY_CODE) {
+  return (changedFiles ?? []).filter((f) => !notReallyCode.some((re) => re.test(f)));
+}
+
+// Un Gardien se réveille si au moins un fichier RÉELLEMENT de code, dans son domaine, a changé.
+// Répond toujours `true` pour un Gardien inconnu (prudence) et pour une liste de fichiers non
+// fournie (on ne devine pas : ne pas savoir ce qui a changé n'autorise jamais à se taire).
+export function gardienShouldRun(gardien, changedFiles, domains = GARDIEN_DOMAINS) {
+  if (!changedFiles) return true;
+  const domain = domains[gardien];
+  if (!domain) return true;
+  return realCodeFilesChanged(changedFiles).some((f) => domain.some((re) => re.test(f)));
+}
+
+// Les fichiers du dernier commit, tels que git les rapporte. Retourne `undefined` plutôt qu'une
+// liste vide si git ne répond pas : une absence d'information doit faire tourner les Gardiens,
+// jamais les endormir (même principe d'absence honnête que le reste du paysage).
+export function lastCommitFiles(shImpl = sh, cwd = undefined) {
+  try {
+    const out = shImpl("git show --name-only --format= HEAD", cwd ? { cwd } : {});
+    const files = String(out).split("\n").map((l) => l.trim()).filter(Boolean);
+    return files.length ? files : undefined;
+  } catch { return undefined; }
+}

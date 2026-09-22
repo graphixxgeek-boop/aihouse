@@ -17,7 +17,7 @@ import { findMissingNotes, findOrphanNotes } from "../el-professor.mjs";
 import { parseToolsTable, slugifyAgentName, checkAllAgentBadges } from "../le-coordinateur.mjs";
 import { formatToolBrainReminder } from "../tool-brain.mjs";
 import { summarizeHistory, computeInvestmentRatio, diagnoseAdviceAccuracy } from "../smart-conso-token.mjs";
-import { sh, AGENT_CATEGORIES } from "../lib-shell.mjs";
+import { sh, AGENT_CATEGORIES, gardienShouldRun, lastCommitFiles, realCodeFilesChanged } from "../lib-shell.mjs";
 import { loadLastRun, shouldRemindCircleTasks } from "../circle-tasks.mjs";
 import { buildRealOnboardingContext } from "../check-tasks-details.mjs";
 
@@ -59,7 +59,17 @@ if (numberIssues.length) {
 // dehors des try ci-dessous (mêmes blocs, valeurs déjà calculées) pour nourrir le badge automatique
 // plus bas — jamais un second balayage rien que pour ce signal (règle anti-doublon, §7ter).
 let argusFindingsCount, harmoniaFindingsCount, cleanDirtyOldFlagged, cloneHunterFindingsCount, alwaysNewCodeFlagged;
-try {
+// Réveil conditionnel (2026-09-22, tâche #362) : un Gardien ne se réveille que si le commit a
+// réellement touché ce qu'il surveille. Voir lib-shell.mjs pour la mesure qui l'a motivé (20
+// commits d'affilée sans que le moteur du jeu ne bouge) et pour la distinction non négociable
+// entre l'étage qui GARANTIT (check-house + tsc, pre-commit, bloquants, jamais conditionnés) et
+// l'étage qui RENFORCE (ces six-là). Si git ne dit pas ce qui a changé, tout tourne.
+const changedFiles = lastCommitFiles();
+const reveille = (g) => gardienShouldRun(g, changedFiles);
+if (changedFiles && !realCodeFilesChanged(changedFiles).some((f) => /^(lib|app|components|scripts)\//.test(f))) {
+  console.log("\n💤 Commit sans changement de code réel — les Gardiens qui n'ont rien à vérifier se taisent (cf. lib-shell.mjs, GARDIEN_DOMAINS).");
+}
+if (reveille("argus") || reveille("harmonia")) try {  // ce bloc porte les DEUX gardiens
   const lifeSource = readFileSync("lib/life.ts", "utf8");
   const files = walk("lib").concat(walk("app"));
   const dead = findDeadLifeFields(files, lifeSource);
@@ -98,7 +108,7 @@ try {
 // perSlugScriptCoverage capturé ici (avant le rmSync) pour nourrir le badge automatique plus bas
 // (axaCoveragePct par outil) — même dossier de couverture déjà ouvert, jamais un second lancement.
 let perSlugScriptCoverage;
-try {
+if (reveille("axa-check")) try {
   const covDir = ".sites-runtime/axa-check-postcommit-cov";
   const perFile = collectCoverage(covDir);
   const score = robustnessScore(Object.values(perFile).flat());
@@ -114,7 +124,7 @@ try {
 // fraîcheur (depuis quand son carnet n'a pas été relu, clean-dirty-old-signal) rejoignait la Ronde
 // CIRCLE-TASKS ; son vrai calcul de stagnation relative n'avait jamais tourné qu'à la main via
 // runNetworkCheck().
-try {
+if (reveille("clean-dirty-old")) try {
   const lastTouchByFile = Object.fromEntries(Object.values(LIB_MAP).map((f) => [f, lastTouchDays(f)]));
   const staleness = relativeStaleness(lastTouchByFile);
   const staleFiles = Object.entries(staleness).filter(([, s]) => s.stale).map(([f]) => f);
@@ -134,7 +144,7 @@ try {
 // aucune instrumentation lourde) — même famille de coût que CLEAN-DIRTY-OLD ci-dessus, jamais un
 // frein réel à un commit. v1 (littérale) et v2 (renommage bijectif cohérent) tournent toutes les
 // deux — jamais un doublon entre elles, v2 ignore déjà tout bloc que v1 aurait signalé (Article 3).
-try {
+if (reveille("clone-hunter")) try {
   const literalClusters = buildDuplicateReport();
   const nearClusters = buildNearDuplicateReport();
   cloneHunterFindingsCount = literalClusters.length + nearClusters.length;
@@ -159,7 +169,7 @@ try {
 // niveau Exceptionnel ou sur demande explicite). Calcule le signal SEULEMENT sur le fichier principal
 // de la zone actuellement recommandée par la rotation (THEME_PRIMARY_FILE) — jamais un balayage de
 // tout le dépôt à chaque commit, coût minime comme CLEAN-DIRTY-OLD ci-dessus.
-try {
+if (reveille("always-new-code")) try {
   const alwaysNewCodeIndexText = readFileSync("docs/always-new-code/index.md", "utf8");
   const coverage = parseCoverage(alwaysNewCodeIndexText);
   const zoneRec = recommendZone(THEMES, coverage, undefined, new Date());

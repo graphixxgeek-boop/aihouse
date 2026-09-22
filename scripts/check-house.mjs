@@ -948,7 +948,7 @@ const {waitForPlayback}=await import('../.sites-runtime/test-playback.mjs');let 
 // ratio global se retrouvait dilué sous le seuil de 90 %.
 assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche pas comme ça. On n’est pas des interrupteurs qu’on bascule à la demande.','Commander un sentiment depuis cet écran, ça ne marche pas comme ça.'));const {investigationCounts}=await import('../.sites-runtime/test-evidence.mjs');assert.deepEqual(investigationCounts(['Dans un livre du bureau','Dans un livre du bureau'],['fausse plante bleue et enceinte activée','Les textures sont trop lisses.'],false,[{actor:1,round:4,content:'Une grille lumineuse'},{actor:1,round:4,content:'Une grille lumineuse'}]),{indices:1,observations:4});assert.ok(stockResult.memories.some(m=>m.kind==='réaction'&&m.agent_id===1&&m.content.startsWith('[cuisine|')&&m.content.includes(stockThought(1,0))));console.log('Passed: active playback clock freezes and disposes, route metadata cannot bypass public duplicates, conservative echo guard, object/dream counts and causal stock memories.');
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 262'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 263'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3234,7 +3234,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // de portée de la suite de tests.
   const fakeShImpl = (cmd) => (cmd.includes('check-house') ? 'OK — suite verte.' : '');
   const networkResult = runNetworkCheck({ shImpl: fakeShImpl });
-  assert.equal(networkResult.rows.length, 13, 'runNetworkCheck() must genuinely produce all 13 rows of the real network synthesis (8 original + the 2026-09-21 findJudgeSpawnsWithoutConsultation() rows for THE-FINAL-JUDGE/THE-DEEP-READER + the 2026-09-21 évolutivité audit AGENT_SCRIPT_FILES row + the 2026-09-21 Doc-Report findOrphanReportFiles() row + the 2026-09-22 HYPER-SCAN-CHECKPOINT row), never crash partway through nor silently drop one');
+  assert.equal(networkResult.rows.length, 14, 'runNetworkCheck() must genuinely produce all 14 rows of the real network synthesis (8 original + the 2026-09-21 findJudgeSpawnsWithoutConsultation() rows for THE-FINAL-JUDGE/THE-DEEP-READER + the 2026-09-21 évolutivité audit AGENT_SCRIPT_FILES row + the 2026-09-21 Doc-Report findOrphanReportFiles() row + the 2026-09-22 HYPER-SCAN-CHECKPOINT row + the 2026-09-22 ecotoken-claude.md charter-weight row), never crash partway through nor silently drop one');
   assert.ok(networkResult.rows.every((r) => typeof r.name === 'string' && typeof r.result === 'string' && r.result.length > 0), 'every row must carry a real name and a real, non-empty result string — never an undefined value leaking from a broken sub-computation');
   assert.ok(networkResult.rows.some((r) => r.name.includes('SMART-CONSO-TOKEN')), 'the SMART-CONSO-TOKEN rhythm row specifically (the exact one that crashed tonight) must be genuinely present and computed, not skipped');
   // Tâche #137 (2026-09-21, question directe de l'utilisateur sur les priorités de scan de l'équipe
@@ -3970,6 +3970,100 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // un mauvais nom de champ de statut, un thème lu au mauvais endroit, un plancher de numérotation
   // à 1 qui inventait 116 trous, et un âge négatif affiché « il y a -1 j ». D'où ces tests.
   const { suiviFigures, projectStanding, criticalEye, buildRondeTextReport } = await import('../scripts/check-tasks-details.mjs');
+
+  // ecotoken-claude.md (2026-09-22, tâche #359) — réduire le coût PERMANENT de la charte, le seul
+  // document rechargé à chaque message. Il ne recalcule rien de ce que CHARTER-SPY sait déjà : les
+  // tests portent donc sur ce qu'il ajoute vraiment (découpage, nature, rendement, stratégies
+  // génériques, budget, mémoire) — jamais sur ce qu'il se contente de relayer.
+  const eco = await import('../scripts/ecotoken-claude-md.mjs');
+
+  // Réveil conditionnel des Gardiens (2026-09-22, tâche #362). La distinction qui gouverne tout,
+  // actée explicitement : ce qui GARANTIT le code (check-house + tsc, pre-commit) tourne sur CHAQUE
+  // commit sans condition et n'est PAS concerné ici ; seuls les six Gardiens (post-commit, qui
+  // n'ont jamais rien bloqué) se réveillent selon ce qui a réellement changé.
+  const { gardienShouldRun, realCodeFilesChanged, GARDIEN_DOMAINS, NOT_REALLY_CODE, lastCommitFiles } = await import('../scripts/lib-shell.mjs');
+  assert.deepEqual(realCodeFilesChanged(['lib/reference.ts', 'lib/life.ts', 'docs/x.md']), ['lib/life.ts', 'docs/x.md'], 'lib/reference.ts lives in a code folder but is displayed narrative DATA — excluding it is the whole point, since it is bumped on nearly every commit and made every commit look like an engine change');
+  assert.equal(gardienShouldRun('argus', ['docs/suivi/x.md']), false, 'a documentation-only commit must let ARGUS sleep — it can neither kill a life.ts field nor add a TODO marker');
+  assert.equal(gardienShouldRun('harmonia', ['docs/suivi/x.md']), true, 'HARMONIA watches doc↔code links, so a documentation change IS its domain — it must stay awake where ARGUS sleeps');
+  assert.equal(gardienShouldRun('always-new-code', ['lib/reference.ts', 'scripts/x.mjs']), false, 'ALWAYS-NEW-CODE watches lib/app/components only — a reference.ts bump plus a tooling change is none of its business');
+  assert.equal(gardienShouldRun('clone-hunter', ['scripts/x.mjs']), true, 'CLONE-HUNTER really does cover scripts/ — the earlier claim that all six were idle on tooling commits was an overstatement, and this test pins the correction');
+  assert.equal(gardienShouldRun('axa-check', ['scripts/x.mjs']), true, 'AXA-CHECK measures coverage of scripts/ too, so a tooling commit genuinely concerns it');
+  assert.equal(gardienShouldRun('argus', ['lib/life.ts']), true, 'a real engine change must always wake ARGUS');
+  // Les deux chemins de prudence : ne jamais se taire par ignorance.
+  assert.equal(gardienShouldRun('argus', undefined), true, 'when git does not say what changed, every guardian runs — not knowing never authorises silence');
+  assert.equal(gardienShouldRun('un-gardien-inconnu', ['docs/x.md']), true, 'an unlisted guardian always runs — forgetting an entry must never create a silent blind spot');
+  assert.ok(Object.keys(GARDIEN_DOMAINS).length === 6 && NOT_REALLY_CODE.length >= 1, 'all six Gardiens must declare a domain, and the not-really-code list must not be empty');
+  assert.equal(typeof lastCommitFiles, 'function');
+  // Vérifié en direct contre le vrai dépôt : la liste du dernier commit est lisible, et elle
+  // contient bien des fichiers.
+  assert.ok((lastCommitFiles() ?? []).length > 0, 'the real last commit must expose its changed files — if git goes silent the fallback keeps every guardian awake, which the test above already covers');
+  const fakeCharter = [
+    '# Titre', 'intro', '',
+    '## ARGUS — blueprint exportable', '', '`docs/argus-blueprint.md` documente l\'ARCHITECTURE du détecteur de trous — voir `docs/referentiel/argus.md`.', '',
+    '## HARMONIA — blueprint exportable', '', '`docs/harmonia-blueprint.md` documente l\'ARCHITECTURE du cousin d\'ARGUS — voir `docs/referentiel/harmonia.md`.', '',
+    '## AXA-CHECK — blueprint exportable', '', '`docs/axa-check-blueprint.md` documente l\'ARCHITECTURE de la couverture — voir `docs/referentiel/axa-check.md`.', '',
+    '## Charte de qualité — à appliquer', '', '**Article 0 — Hiérarchie.** Le ton ne doit jamais dériver, toujours vérifié, obligatoire.', '',
+  ].join('\n');
+  const secs = eco.splitSections(fakeCharter);
+  assert.equal(secs[0].titre, '(préambule)', 'the text before the first heading is a section like any other — it weighs, so it counts');
+  assert.equal(secs.length, 5, 'every ## heading must open exactly one section, never merge two or drop one');
+  assert.ok(secs.every(x => x.tokens > 0 && x.nbLignes > 0), 'every section must carry its own real weight, never a placeholder');
+  assert.equal(eco.classifySectionNature(secs.find(x => /ARGUS/.test(x.titre))), 'inventaire', 'a blueprint section enumerates what lives elsewhere — an inventory, the nature that may be condensed');
+  assert.equal(eco.classifySectionNature(secs.find(x => /Charte/.test(x.titre))), 'regle', 'the charter section governs behaviour — a rule, which stays whatever it weighs');
+  assert.equal(eco.classifySectionNature({ titre: 'Section inconnue', texte: 'Ceci ne doit jamais arriver, cela doit toujours être vérifié, obligatoire.' }), 'regle', 'an unknown section dense in behavioural imperatives defaults to RULE — the doubt must always favour keeping, never cutting (the charter\'s own guard-rail)');
+  assert.equal(eco.classifySectionNature({ titre: 'Section inconnue', texte: 'Un simple récit de ce qui est arrivé un jour.' }), 'narration', 'an unknown section with no imperative is narration, read on demand');
+
+  // La famille de titres est détectée sur le MOTIF réel, jamais sur une liste codée en dur — c'est
+  // ce qui rend l'outil utile à toute famille future, pas seulement aux blueprints d'aujourd'hui.
+  const fams = eco.findHeadingFamilies(secs);
+  assert.equal(fams.length, 1, 'the three sections sharing the same heading suffix must form exactly one family');
+  assert.equal(fams[0].members.length, 3, 'all three members must be caught, never two');
+  assert.deepEqual(eco.findHeadingFamilies(secs.slice(0, 3)).length, 0, 'fewer than three sections is not a family — a table would cost more in headers than it saves');
+  const facts = fams[0].members.map(eco.extractCatalogFacts);
+  assert.ok(facts.every(f => f.architecture && f.instanciation), 'both real paths must be extracted from the text, never guessed');
+  assert.ok(facts.every(f => f.role && f.role.length > 3), 'the role must be extracted from the real sentence, never invented');
+  const repl = eco.buildCatalogueReplacement(fams[0].famille, facts);
+  for (const f of facts) assert.ok(repl.includes(f.membre) && repl.includes(f.architecture), `the catalogue must keep ${f.membre}'s name and path — condensing is not losing`);
+  // Un catalogue qui ALOURDIT ne doit jamais être proposé : sur une petite famille, l'en-tête du
+  // tableau coûte plus cher que les sections qu'il remplace. Bug réel attrapé par ce test même —
+  // le seuil de 3 membres ne suffit pas, c'est le gain mesuré qui décide.
+  assert.ok(eco.planReduction(fakeCharter, {}).propositions.every(p => p.gain > 0), 'no proposal may ever have a non-positive gain — a "reduction" that makes the file heavier is not a reduction');
+
+  // Anti-double-comptage : le bug réel trouvé au premier lancement, où AXA-CHECK était proposé à la
+  // fois en catalogue et en extraction, gonflant le gain d'environ 2 200 tokens inencaissables.
+  const plan = eco.planReduction(fakeCharter, {});
+  const cibles = plan.propositions.flatMap(p => p.deplacements.map(d => d.nom));
+  assert.equal(new Set(cibles).size, cibles.length, 'no section may appear in two strategies at once — a plan whose gains do not add up honestly is worthless');
+  assert.ok(plan.gainTotal >= 0 && plan.propositions.every(p => p.gain === p.tokensAvant - p.tokensApres), 'every gain must be the real measured difference, never an estimate');
+  assert.ok(plan.propositions.every(p => ['faible','moyen','élevé'].includes(p.risque)), 'every proposal must carry its risk so the user never arbitrates blind between payoff and danger');
+
+  // Budget : une alerte, jamais un blocage (choix explicite de l'utilisateur).
+  const sous = eco.checkWeightBudget('a'.repeat(400), 10_000);
+  assert.equal(sous.depasse, false, 'a light charter must stay under budget');
+  assert.ok(sous.margePct > 0 && sous.plusLourdes.length >= 1, 'the budget must always name the heaviest section, so the alert says WHERE it grew');
+  const sur = eco.checkWeightBudget('a'.repeat(200_000), 1_000);
+  assert.ok(sur.depasse && sur.depassement > 0, 'a charter over budget must report by how much, never a bare boolean');
+
+  // Mémoire : ce que l'outil retient réellement d'un passage à l'autre.
+  const hist = [
+    { date: '2026-09-20 10:00', poids: 31000, gainPropose: 5000, decision: 'refusé', cible: 'Référentiel technique' },
+    { date: '2026-09-21 10:00', poids: 30000, gainPropose: 5000, decision: 'accepté', cible: 'apartés' },
+  ];
+  const appris = eco.learnFromHistory(hist, 28000);
+  assert.ok(appris.refusees.has('Référentiel technique'), 'a refused target must be remembered so it is never re-proposed at the top forever');
+  assert.equal(appris.nbAcceptees, 1);
+  assert.equal(appris.efficaciteReelle.delta, 2000, 'real efficacy compares the previously MEASURED weight to today\'s, never a promised gain to itself');
+  assert.ok(/réellement maigri/.test(appris.efficaciteReelle.verdict));
+  assert.ok(/REGROSSI/.test(eco.learnFromHistory(hist, 32000).efficaciteReelle.verdict), 'a charter that grew back must be named as such — that is the whole point of the budget');
+  assert.equal(eco.learnFromHistory([], 29000).efficaciteReelle, null, 'with no history there is no efficacy to claim — an honest absence, never a fabricated zero');
+
+  // Vérifier qu'un allègement n'a rien cassé.
+  const broken = eco.verifyNothingBroken('**Article 0 — Hiérarchie.**', { 'x.mjs': 'cf. Article 0 et Article 7' }, [], () => null);
+  assert.ok(broken.some(f => f.check === 'article-disparu' && /Article 7/.test(f.message)), 'an Article cited elsewhere but absent from the slimmed charter is a dead reference and must be caught');
+  assert.ok(!broken.some(f => /Article 0/.test(f.message)), 'an Article still present must never be flagged');
+  assert.ok(eco.verifyNothingBroken('**Article 0 — x.**', {}, [{ outil: 'X', vers: null, cibleManquante: true }], () => null).some(f => f.check === 'cible-manquante'), 'content with nowhere to land must be refused before the section is removed, never dropped on the floor');
+  // Vérifié en direct contre la vraie charte : aucun renvoi mort aujourd'hui.
+  assert.deepEqual(eco.verifyNothingBroken(fs.readFileSync('CLAUDE.md', 'utf8'), eco.loadRepoFiles(), []), [], 'the real charter must have zero dead Article references right now');
   const NOW = Date.parse('2026-09-22T12:00:00Z');
   const fakeRows = [
     { n: 117, horodatage: '2026-09-22T11:00Z', sujet: 'Outillage de travail / ARGUS', sousSujet: 'a', detail: '', statusKey: 'terminee' },

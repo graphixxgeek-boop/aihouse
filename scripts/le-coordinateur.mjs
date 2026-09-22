@@ -52,6 +52,7 @@ import { classifyCheckLevel } from "./check-level-target.mjs";
 import { lastTouchDays, relativeStaleness } from "./clean-dirty-old.mjs";
 import { findUnconfirmedBursts } from "./smart-conso-api.mjs";
 import { summarizeHistory, findJudgeSpawnsWithoutConsultation, filterIndexRowsByVersion } from "./smart-conso-token.mjs";
+import { checkWeightBudget } from "./ecotoken-claude-md.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { loadJson, recordCliUsage } from "./tool-usage.mjs";
 
@@ -888,6 +889,12 @@ export function runNetworkCheck({ shImpl = sh } = {}) {
   const rulesMdText = existsSync(rulesMdPath) ? readFileSync(rulesMdPath, "utf8") : "";
   const missingAgentFiles = findScriptsMissingFromAgentFiles(rulesMdText);
   rows.push({ name: "AXA-CHECK (Agents absents d'AGENT_SCRIPT_FILES)", result: missingAgentFiles.length ? `à regarder (${missingAgentFiles.join(", ")})` : "ok", when: now });
+
+  // ecotoken-claude.md (2026-09-22) : le poids de la charte est une donnée de réseau au même titre
+  // que la couverture de test — c'est le seul document rechargé à chaque message. Lecture seule du
+  // budget, jamais le plan complet (qui demande de lire tout le dépôt, trop cher pour une synthèse).
+  const budgetCharte = checkWeightBudget(readFileSync(join(ROOT, "CLAUDE.md"), "utf8"));
+  rows.push({ name: "ecotoken-claude.md (poids de la charte)", result: budgetCharte.depasse ? `à regarder (${budgetCharte.tokens} tk, +${budgetCharte.depassement} au-dessus du budget)` : `ok (${budgetCharte.tokens} tk, marge ${budgetCharte.margePct} %)`, when: now });
 
   // Doc-Report (2026-09-21, tâche #340, trouvaille réelle : 6 fichiers de scan ARGUS restés
   // orphelins avant d'être indexés rétroactivement) — vérifie qu'un registre à "un fichier par

@@ -1,0 +1,52 @@
+=== ecotoken-claude.md — réduire le coût permanent de la charte ===
+Date : 2026-09-21 23:47
+
+CLAUDE.md pèse 29606 tokens sur 1471 lignes, et c'est le SEUL document rechargé
+à chaque message — son poids se paie en boucle, jamais une seule fois.
+
+--- RÉPARTITION PAR NATURE ---------------------------------------------------------
+Une RÈGLE gouverne le comportement et reste quoi qu'elle pèse. Une NARRATION raconte
+quand et pourquoi — précieuse, mais lue à la demande. Un INVENTAIRE énumère ce qui
+existe ailleurs — un tableau suffit.
+  regle         5 section(s)  ~ 15160 tokens
+  inventaire   25 section(s)  ~ 11882 tokens
+  narration     3 section(s)  ~  2559 tokens
+
+--- RENDEMENT DES ARTICLES (citations réelles ÷ lignes occupées) --------------------
+Un rendement bas n'est JAMAIS un ordre de couper — seulement un article à regarder.
+    0.7 | Art.19  251 l. | 170 citation(s) | Comprendre avant de toucher
+    1.6 | Art.14   15 l. | 24 citation(s) | Vigilance permanente, à chaque tour et à chaqu
+    1.7 | Art.12    3 l. | 5 citation(s) | Le sens avant la forme
+    1.8 | Art.1     4 l. | 7 citation(s) | La conversation prime sur tout le reste
+    1.8 | Art.13   58 l. | 106 citation(s) | Les outils de travail vivent avec le code
+    1.8 | Art.23   13 l. | 23 citation(s) | ALWAYS-NEW-CODE : l'épreuve de la page blanche
+  … les 19 autres articles ont un meilleur rendement.
+
+--- CE QUE L'OUTIL A RETENU DES PASSAGES PRÉCÉDENTS --------------------------------
+  Premier passage — aucune mémoire encore, rien à retenir. Ce n'est pas un défaut : c'est une absence honnête.
+
+--- PLAN DE RÉDUCTION — toutes stratégies, la plus rentable et la moins risquée d'abord ---
+  Gain cumulé si tout était appliqué : ~12091 tokens, payés à CHAQUE message.
+
+  [faible] Sections répétitives → un seul tableau
+            cible : 21 sections « … — blueprint exportable »
+            ~6410 tk → ~891 tk   GAIN ~5519 tk
+            ⚠️ 1 sans document d'accueil : Outil de résilience API
+  [faible] Section longue lue à la demande → déplacée, un renvoi reste
+            cible : Plan d'origine (analyse Opus) — état d'avancement
+            ~2343 tk → ~50 tk   GAIN ~2293 tk
+  [faible] Apartés narratifs datés → fichier d'historique
+            cible : 3 aparté(s) narratif(s) daté(s)
+            ~89 tk → ~0 tk   GAIN ~89 tk
+  [moyen ] Section longue lue à la demande → déplacée, un renvoi reste
+            cible : Référentiel technique — la référence à jour
+            ~4235 tk → ~45 tk   GAIN ~4190 tk
+
+--- BUDGET ANTI-REGROSSISSEMENT ----------------------------------------------------
+  ✅ 29606 tokens sous le budget de 30000 (marge 1 %).
+     la plus lourde : Charte de qualité — à appliquer à chaque itération (~12346 tk)
+     la plus lourde : Référentiel technique — la référence à jour (~4235 tk)
+     la plus lourde : Plan d'origine (analyse Opus) — état d'avancement (~2343 tk)
+
+--- APARTÉS NARRATIFS DATÉS restants : 3 (~89 tokens) ---
+  (le filon mécanique est épuisé — la suite du tri est manuelle, Article 19.)

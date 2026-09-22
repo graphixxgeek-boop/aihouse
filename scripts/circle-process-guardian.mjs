@@ -225,6 +225,12 @@ export function verifyHyperScanProcess({
 export const CIRCLE_ITEMS_CHANGELOG = [
   {
     date: "2026-09-22",
+    itemId: "claude-md-weight-signal",
+    changement: "modification",
+    pourquoi: "Harmonisation demandée explicitement par l'utilisateur au moment de construire ecotoken-claude.md : « je crois qu'il y a deja un rapport sur claude.md dans circle. vois comment tu peux tout harmoniser sur ce sujet. » Il y en avait bien un. Plutôt que d'ajouter un 26e item qui aurait dit la même chose en mieux, CET item lance désormais ecotoken-claude.md — un seul item de Ronde sur le sujet CLAUDE.md, jamais deux. Le signal n'a rien perdu (il relit toujours SMART-CONSO-TOKEN) et gagne le rendement par article, le plan de réduction chiffré, le budget anti-regrossissement et la mémoire des passages.",
+  },
+  {
+    date: "2026-09-22",
     itemId: "check-tasks-report",
     changement: "ajout",
     pourquoi: "Demande explicite de l'utilisateur : un rapport txt de check-tasks-details dans les Rondes, en plusieurs parties traitant de sujets différents — chiffres vérifiés du suivi, où en est le projet vu de haut, œil critique, et l'état détaillé aux trois zooms dans un seul fichier. Calibré par quatre questions (parties retenues, zooms, format, questions forcées).",
@@ -243,7 +249,9 @@ export const CIRCLE_ITEMS_CHANGELOG = [
 // l'histoire des 23 items qui existaient déjà (absence honnête, jamais un faux historique
 // fabriqué après coup pour faire nombre).
 export function findItemsMissingFromChangelog(items = CIRCLE_ITEMS, changelog = CIRCLE_ITEMS_CHANGELOG, knownBefore = KNOWN_ITEMS_BEFORE_CHANGELOG) {
-  const consigned = new Set(changelog.map((e) => e.itemId));
+  // Seuls les AJOUTS rendent un item "consigné" : une modification documente un item qui existait
+  // déjà, elle n'a jamais vocation à faire passer un item inconnu pour connu.
+  const consigned = new Set(changelog.filter((e) => e.changement === "ajout").map((e) => e.itemId));
   return items
     .filter((i) => !consigned.has(i.id) && !knownBefore.has(i.id))
     .map((i) => ({ check: "item-missing-from-changelog", message: `L'item "${i.id}" existe dans CIRCLE_ITEMS mais n'a jamais été consigné dans CIRCLE_ITEMS_CHANGELOG — son "pourquoi" est déjà perdu.` }));
