@@ -255,30 +255,35 @@ export const JURY = [
     quoi: "Combien de ses demandes ont produit un vrai retour, et combien ont consommé sans rien rendre.",
     base: "le journal des actions coûteuses, chacune déjà classée investissement réel / sans retour / à évaluer",
     pertinence: "c'est la seule mesure qui distingue une redirection qui a fait gagner du temps d'une qui en a coûté — et elle existait sans jamais lui être montrée",
+    jugePertinence: "Ses arbitrages coûteux ont-ils produit quelque chose, ou a-t-il dépensé pour explorer puis abandonné ?",
   },
   {
     id: "rythme-impose", juge: "smart-conso-api", script: "scripts/smart-conso-api.mjs",
     quoi: "Le rythme de consommation d'API que ses demandes imposent réellement.",
     base: "le trafic Gemini réel enregistré, pas une estimation",
     pertinence: "il décide quand lancer une simulation ou un diagnostic sans jamais voir le cumul que ça fait sur une semaine",
+    jugePertinence: "Lance-t-il ses actions coûteuses au bon moment, ou par salves quand il y pense ?",
   },
   {
     id: "poids-de-ses-regles", juge: "ecotoken", script: "scripts/ecotoken.mjs",
     quoi: "Ce que pèsent, en tokens rechargés à CHAQUE message, les règles qu'il a lui-même ajoutées.",
     base: "le poids mesuré de CLAUDE.md et des documents toujours chargés",
     pertinence: "le plus utile des huit, et le plus invisible : une règle ajoutée en trois lignes se paie à chaque message, pour toujours. Il n'a jamais vu ce prix, donc il ne peut pas l'arbitrer.",
+    jugePertinence: "Ce qu'il fait payer à chaque message mérite-t-il d'y être, ou accumule-t-il des règles sans jamais en retirer ?",
   },
   {
     id: "objectifs-tenus", juge: "objectifs-vs-resultats", script: "scripts/objectifs-vs-resultats.mjs",
     quoi: "Les objectifs chiffrés qu'il a fixés lui-même, confrontés aux résultats réels.",
     base: "le registre d'objectifs tenu à la main, croisé avec les mesures réelles de la période",
     pertinence: "un objectif qu'on fixe puis qu'on ne regarde plus n'est pas un objectif ; c'est lui qui les pose, donc c'est à lui que l'écart revient",
+    jugePertinence: "Les objectifs qu'il rate sont-ils les mêmes à chaque fois, et disent-ils quelque chose sur ce qu'il évite ?",
   },
   {
     id: "fidelite-a-sa-philosophie", juge: "the-king", script: "scripts/the-king.mjs",
     quoi: "Si ses propres décisions respectent les valeurs qu'il a lui-même écrites.",
     base: "docs/philosophie-et-politique.md, le texte fondateur qu'il a posé, confronté aux arbitrages réellement rendus",
     pertinence: "personne d'autre ne peut lui opposer son propre texte — et c'est exactement le service qu'il demande en acceptant d'être noté",
+    jugePertinence: "Ses décisions récentes servent-elles les valeurs qu'il a écrites, ou les contournent-elles en douceur ?",
   },
   {
     id: "taches-qui-trainent", juge: "check-tasks-details", script: "scripts/check-tasks-details.mjs",
@@ -292,18 +297,22 @@ export const JURY = [
     quoi: "Ce qui attend sa décision et depuis quand, le rythme entre ce qu'il ouvre et ce qu'il clôt, et les tâches transverses qui dérivent faute d'appartenir à un chantier.",
     base: "docs/suivi/ : les lignes bloquées sur un arbitrage qui n'appartient qu'à lui, l'âge de la plus ancienne, et celles qu'aucun chantier ne réclame",
     pertinence: "une décision jamais prise bloque en silence tout ce qui en dépend — et une tâche transverse sans chantier d'accueil est celle qu'il a lui-même identifiée comme la plus facile à perdre",
+    // C'est l'exemple qu'il a donné lui-même pour expliquer ce qu'il attend d'un juge de pertinence.
+    jugePertinence: "Sur quoi travaille-t-il réellement ? Quelle part de ses tâches touche le jeu que le visiteur verra, et quelle part l'outillage qui le construit ?",
   },
   {
     id: "rondes-jamais-lancees", juge: "circle-tasks", script: "scripts/circle-tasks.mjs",
     quoi: "Le nombre de commits écoulés sans qu'une Ronde soit lancée.",
     base: "le compteur réel de commits depuis le dernier passage enregistré",
     pertinence: "la Ronde est le seul moment où tout le paysage se prononce ; la sauter longtemps, c'est travailler sans retour — et le rappel a déjà été ignoré plus de deux cents fois",
+    jugePertinence: "Construit-il plus vite qu'il ne vérifie ? Le retard de Ronde le dit plus honnêtement que n'importe quelle intention déclarée.",
   },
   {
     id: "couverture-de-ce-qu-il-demande", juge: "axa-check", script: "scripts/axa-check.mjs",
     quoi: "Si le code écrit à sa demande est réellement couvert par un test, ou seulement livré.",
     base: "la couverture réelle par fonction, jamais une estimation globale",
     pertinence: "il arbitre souvent pour la vitesse ; ceci lui montre ce que cet arbitrage laisse derrière lui, chiffre à l'appui",
+    jugePertinence: "Ce qu'il fait écrire vite est-il ensuite couvert, ou la dette s'accumule-t-elle sur les zones qu'il rouvre le plus ?",
   },
 ];
 
@@ -327,11 +336,36 @@ export function collectJuryVerdicts({ verdicts = {}, jury = JURY } = {}) {
       etat: v === undefined ? "pas de verdict" : "rendu",
       resultat: v?.resultat ?? null,
       chiffre: v?.chiffre ?? null,
+      // LA PERTINENCE (2026-09-22, demande explicite) : un juge ne doit pas seulement rapporter un
+      // chiffre, il doit dire ce que ce chiffre révèle des CHOIX de l'utilisateur. « Je veux plus
+      // d'evaluation de pertinence sur mes choix, je veux que ce rapport soit un peu plus acerbe à
+      // mon egard, sans me menager, je veux des infos, pas des angles arrondis. »
+      pertinenceConstat: v?.pertinenceConstat ?? null,
+      pertinenceCommentaire: v?.pertinenceCommentaire ?? null,
       // Un juge peut légitimement n'avoir rien à dire cette fois-ci : il le DIT, au lieu de se
       // taire. Les deux se distinguent, toujours.
       rienASignaler: v?.rienASignaler === true,
     };
   });
+}
+
+// LE GARDE-FOU DE L'ACERBITÉ (2026-09-22) — et il protège contre l'écueil INVERSE de celui qu'on
+// vient de corriger.
+//
+// La demande était : « sans me menager, je veux des infos, pas des angles arrondis ». Le risque
+// évident est d'arrondir. Le risque moins évident, et plus grave, est de confondre dureté et
+// information : un commentaire cinglant qui ne repose sur aucun chiffre n'est pas plus honnête
+// qu'un commentaire complaisant, il est seulement plus désagréable — et il détruit la confiance
+// qu'on accordera au prochain, celui qui tiendra debout.
+//
+// La règle est donc : un constat de pertinence DOIT porter un chiffre, sinon il n'est pas publié.
+// C'est ce qui rend l'acerbité utilisable plutôt que blessante. « 86,6 % de tes tâches ne touchent
+// pas le jeu » se discute ; « tu te disperses » ne se discute pas, donc ne sert à rien.
+const CHIFFRE_DANS_LE_CONSTAT = /\d/;
+export function findConstatsSansChiffre(verdictsCollectes = []) {
+  return verdictsCollectes
+    .filter((v) => v.pertinenceConstat && !CHIFFRE_DANS_LE_CONSTAT.test(v.pertinenceConstat))
+    .map((v) => ({ id: v.id, constat: v.pertinenceConstat }));
 }
 
 export const DESACCORDS_FILE = "docs/angel-of-ia-process/desaccords.md";

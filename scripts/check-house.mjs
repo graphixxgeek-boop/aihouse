@@ -5081,6 +5081,19 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.equal(conteste.objections.length, 1, 'the objection must be attached to the remark it contests');
     assert.equal(conteste.justification, 'raison', 'and the contested remark must still be there, unchanged — the objection sits beside it, it never replaces or softens it');
 
+    // LA PERTINENCE (2026-09-22) — « je veux plus d'evaluation de pertinence sur mes choix, je veux
+    // que ce rapport soit un peu plus acerbe à mon egard, sans me menager, je veux des infos, pas
+    // des angles arrondis ». Deux exigences opposées à tenir ensemble, et c'est la seconde qui est
+    // contre-intuitive : ne pas arrondir, ET ne pas confondre dureté et information.
+    assert.ok(a.JURY.every((j) => j.jugePertinence), 'every judge must carry the relevance QUESTION it can answer about his choices, not only the metric it reports — a number without a reading is not yet information');
+    const pert = a.collectJuryVerdicts({ verdicts: {
+      'taches-qui-trainent': { pertinenceConstat: '86,6 % des tâches ne touchent pas le jeu', pertinenceCommentaire: 'commentaire' },
+      'rondes-jamais-lancees': { pertinenceConstat: 'tu te disperses' },
+    } });
+    assert.deepEqual(a.findConstatsSansChiffre(pert), [{ id: 'rondes-jamais-lancees', constat: 'tu te disperses' }], 'a relevance finding with no figure behind it must be refused: "tu te disperses" is not more honest than a compliment, it is only more unpleasant — and it burns the credit of the next finding, the one that would have held up. "86,6 % des tâches ne touchent pas le jeu" can be argued with; the other cannot, so it is useless');
+    const blocsPert = c.buildEvaluationRecapBlocks({ jury: pert, evaluation: ev, jugesSansOutil: [], desaccords: [] });
+    assert.ok(blocsPert.some((b) => b.type === 'heading' && /choix/.test(b.text)), 'the relevance findings must live in their OWN section, never mixed into the metrics table — what is measured and what that measurement reveals about his choices are two different things, and merging them would drown the second, which is the harder one to hear and the more useful');
+
     const blocks = c.buildEvaluationRecapBlocks({ jury: verdicts, evaluation: ev, jugesSansOutil: [], desaccords: [{ date: '2026-09-22', domaine: 'clarte-des-demandes', texte: 'pas d\'accord' }] });
     const titres = blocks.filter((b) => b.type === 'heading').map((b) => b.text);
     assert.equal(titres.length, 4, 'the recap must carry its four real separated sections (who judges you / the facts / my opinion / your disagreements) — "tout est clair et bien presenté, avec des separations" was the literal request');

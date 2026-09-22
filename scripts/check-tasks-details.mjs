@@ -445,6 +445,36 @@ const TOLERANCE_DAYS = 1;
 export function isStagedForCommit(file, shImpl = sh) {
   return shImpl(`git diff --cached --name-only -- ${file}`, { cwd: ROOT }).trim().length > 0;
 }
+// repartitionJeuVsOutillage() (2026-09-22) — la mesure que l'utilisateur a lui-même suggérée en
+// demandant que les juges évaluent la PERTINENCE de ses choix et pas seulement un chiffre : « check
+// circle peut evaluer la pertinence du type de taches et me dire : il y a plus de 80% des taches qui
+// concernent l'outillage ».
+//
+// Elle vit ici parce que c'est ici qu'on lit docs/suivi/ — jamais un second lecteur de suivi ailleurs
+// (Article 3). Le partage se fait sur le Sujet ET le Sous-sujet, les deux champs de CLASSEMENT que
+// l'agent choisit délibérément, jamais sur le Détail qui est un récit libre où un mot peut apparaître
+// en passant (même racine de faux positif que checkChantierFileFreshness() a déjà corrigée une fois).
+//
+// LE CRITÈRE : une tâche « touche le jeu » si elle parle de ce que le visiteur verra un jour — les
+// personnages, le moteur, l'enquête, le dialogue, les graphismes, une simulation. Tout le reste est
+// de l'outillage ou de la méthode : utile, souvent nécessaire, mais invisible pour qui ouvrira le
+// site. La frontière est celle de l'organigramme de l'Agence, qui range déjà « Personnages » et
+// « Moteur du jeu » hors de l'outillage.
+const MOTS_DU_JEU = /lia|no[ée]|personnage|dialogue|enqu[êe]te|moteur|jauge|graphis|simulation|jeu|maison|dossier|r[ée]v[ée]lation|sommeil|attirance|r[êe]ve/i;
+export function repartitionJeuVsOutillage(rows) {
+  const total = rows.length;
+  const jeu = rows.filter((r) => MOTS_DU_JEU.test(`${r.sujet} ${r.sousSujet}`)).length;
+  const outillage = total - jeu;
+  return {
+    total,
+    jeu,
+    outillage,
+    // Arrondi à une décimale : assez précis pour être cité, jamais assez pour faire croire à une
+    // exactitude que le classement par mots-clés n'a pas.
+    partOutillage: total ? Math.round((outillage / total) * 1000) / 10 : 0,
+  };
+}
+
 // findChantierFilesMissingValueRestitution() (2026-09-22) — le garde-fou de « la restitution de la
 // valeur », la règle retrouvée ce jour-là dans l'historique de conversation après que l'utilisateur
 // ait demandé de la chercher, et qui n'était écrite NULLE PART dans le dépôt : « chaque idee que

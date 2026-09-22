@@ -621,12 +621,30 @@ export function buildEvaluationRecapBlocks({ jury = [], evaluation = null, equip
   blocks.push({ type: "paragraph", text: `${jury.length} outil(s) détiennent de la donnée qui parle de toi. Chacun lit une mesure réelle déjà collectée — jamais un chiffre produit pour l'occasion.` });
   blocks.push({
     type: "table",
-    headers: ["Juge", "Ce qu'il juge", "Sur quelle base", "Pourquoi ça vaut d'être remonté", "Résultat"],
+    headers: ["Juge", "Ce qu'il juge", "Sur quelle base", "Résultat"],
     rows: jury.map((j) => [
-      j.juge, j.quoi, j.base, j.pertinence,
+      j.juge, j.quoi, j.base,
       j.etat === "pas de verdict" ? "— pas de verdict rendu cette fois" : (j.rienASignaler ? "rien à signaler (le juge s'est prononcé)" : [j.resultat, j.chiffre].filter(Boolean).join(" · ")),
     ]),
   });
+
+  // LA PERTINENCE, dans sa propre section (2026-09-22) : « je veux plus d'evaluation de pertinence
+  // sur mes choix, je veux que ce rapport soit un peu plus acerbe à mon egard, sans me menager, je
+  // veux des infos, pas des angles arrondis ». Séparée du tableau ci-dessus parce que les deux ne
+  // disent pas la même chose : au-dessus, ce qui est mesuré ; ici, ce que la mesure révèle de ses
+  // CHOIX. Mélanger les deux noierait le second, qui est le plus dur à entendre et le plus utile.
+  const avecPertinence = jury.filter((j) => j.pertinenceConstat);
+  if (avecPertinence.length) {
+    blocks.push({ type: "heading", text: "1bis. Ce que ces chiffres disent de tes choix" });
+    blocks.push({ type: "note", text: "Section volontairement sans ménagement, à sa demande. Règle qui la tient honnête plutôt que seulement désagréable : aucun constat n'est publié ici sans un chiffre qui le porte. Un commentaire cinglant sans donnée n'est pas plus vrai qu'un commentaire complaisant — il est juste plus pénible, et il brûle la confiance du prochain constat, celui qui tiendra debout." });
+    blocks.push({
+      type: "table",
+      headers: ["Juge", "La question qu'il pose sur tes choix", "Le constat, chiffré", "Le commentaire, sans arrondi"],
+      rows: avecPertinence.map((j) => [j.juge, j.jugePertinence ?? "—", j.pertinenceConstat, j.pertinenceCommentaire ?? "—"]),
+    });
+    const muetsSurPertinence = jury.filter((j) => j.etat === "rendu" && !j.pertinenceConstat);
+    if (muetsSurPertinence.length) blocks.push({ type: "note", text: `${muetsSurPertinence.length} juge(s) ont rendu un chiffre sans se prononcer sur sa pertinence : ${muetsSurPertinence.map((j) => j.juge).join(", ")}. Un chiffre sans lecture n'est pas encore une information.` });
+  }
   const muets = jury.filter((j) => j.etat === "pas de verdict");
   if (muets.length) blocks.push({ type: "note", text: `${muets.length} juge(s) n'ont rendu aucun verdict : ${muets.map((j) => j.juge).join(", ")}. Ce n'est PAS « rien à signaler » — c'est une absence de mesure, et les confondre est l'erreur que ce paysage combat depuis le début.` });
   if (jugesSansOutil.length) blocks.push({ type: "highlight", heading: "Un juge a perdu son outil", paragraphs: [`${jugesSansOutil.map((j) => `${j.id} → ${j.script}`).join(" ; ")}. Le rapport paraîtrait complet en ayant perdu un témoin — à corriger avant de se fier à ce récapitulatif.`] });
