@@ -352,6 +352,26 @@ export const CIRCLE_ITEMS = [
     execute: "Lancer node scripts/cassandra-rh.mjs rapport (mode complet, plus le signal léger) à CHAQUE Ronde — livrer le HTML via html-report.mjs/SendUserFile et mettre à jour docs/cassandra-rh/index.md selon son format déjà établi, jamais recordCircleItemReport (réservé aux signaux texte simples).",
     producesReport: true,
   },
+  // organigramme-signal (2026-09-22, tâches #171/#172/#179 — calibrage explicite : l'organigramme
+  // « fait partie des rapports produits à chaque ronde et analysé par tes soins », et « quand il
+  // sort depuis la ronde : dans un fichier en txt bien présenté ». Distinct du bilan RH ci-dessus,
+  // jamais fusionné : celui-là juge l'équipe (badges, couverture, outils à reconsidérer), celui-ci
+  // en montre seulement la STRUCTURE — qui est où, et qui n'est nulle part.
+  {
+    id: "organigramme-signal",
+    // Thème « Qualité du code » plutôt que « Qualité & fun » (corrigé le soir même par le test qui
+    // garde la limite réelle de 4 options par fenêtre — « Qualité & fun » en avait déjà 4). Ce n'est
+    // pas un placement par défaut faute de place : l'organigramme mesure la STRUCTURE de l'outillage,
+    // exactement comme ses trois voisins de ce thème mesurent la dette, le câblage HTML et le poids
+    // de la charte — un membre certifié sans suite assignée est une dette d'organisation, pas un
+    // divertissement.
+    theme: "Qualité du code",
+    label: "Organigramme de l'Agence Codex, reconstruit depuis les données réelles — CASSANDRA-RH",
+    cout: "gratuit — dérive la table maîtresse, AGENT_CATEGORIES, GARDIEN_DOMAINS et les émetteurs de rapport, zéro appel API",
+    tokensEstimes: "faible — un rapport texte court (~2 000 caractères), jamais une relecture de fichiers entiers",
+    execute: "Appeler buildOrganigramme() puis renderOrganigrammeReport() (scripts/cassandra-rh.mjs) et écrire le résultat via recordCircleItemReport('organigramme-signal', ...). LIRE le rapport avant de passer à la suite : un membre certifié sans suite assignée, ou un émetteur de rapport qui devrait être certifié, sont de vrais constats à traiter, jamais un fichier produit puis ignoré.",
+    producesReport: true,
+  },
   // profil-utilisateur-guard (2026-09-21, trouvaille : « il y a certainement de petits scripts peu
   // coûteux [...] qui peuvent être exécutés, simplement parce qu'ils sont très peu coûteux et que
   // ça garantit la fraîcheur du code » — scripts/check-profil-utilisateur.mjs existait déjà,
@@ -800,6 +820,7 @@ export function recordCircleTasksRun(totalCommitCount, now = Date.now()) {
 // cette table dynamiquement, jamais un chemin réinventé (Article 24).
 export const CIRCLE_REPORT_FOLDERS = {
   "the-king-signal": "docs/the-king/",
+  "organigramme-signal": "docs/cassandra-rh/organigramme/",
   "clean-dirty-old-signal": "docs/clean-dirty-old/",
   "smart-conso-api-scan": "docs/smart-conso-api/",
   "ines-official-signal": "docs/ines-official/",

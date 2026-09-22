@@ -1,0 +1,51 @@
+⚠️  Attention, mes résultats peuvent être inexacts : relaie et recoupe ce que les autres outils estiment — elle hérite de leurs approximations. À vérifier avant d'agir, jamais un verdict acquis.
+
+=== CASSANDRA-RH — organigramme de l'Agence Codex ===
+Effectif total : 26 membres certifiés (dont 6 Gardiens et 2 Cadres), 2 au socle, 7 émetteurs non certifiés. Reconstruit depuis les données réelles à chaque exécution — jamais une liste recopiée.
+Date : 2026-09-22T05:01:47.466Z
+
+🧱 Socle — n'est pas membre de l'équipe : c'est le sol sur lequel tout le monde marche
+
+  · check-house.mjs
+  · check-spirit.mjs
+
+🎖️ Agents Cadre — dirigent — une fonction dans l'organigramme, jamais un badge de qualité en plus
+
+  · LE-COORDINATEUR
+  · CASSANDRA-RH
+
+🛡️ Gardiens sacrés du code (6) — délivrent un vrai scan de qualité ET tournent automatiquement à CHAQUE commit
+
+  · ARGUS
+  · HARMONIA
+  · ALWAYS-NEW-CODE
+  · AXA-CHECK
+  · CLEAN-DIRTY-OLD
+  · CLONE-HUNTER
+
+🎖️ Membres certifiés par suite (18 hors Gardiens et Cadres) — câblage complet vérifié : table maîtresse, menu, instanciation, registre, blueprint
+
+  Suite                            Membres                                                             
+  -------------------------------  --------------------------------------------------------------------
+  Suite Suivi-Conso                Smart Conso API, SMART-CONSO-TOKEN, objectifs-vs-resultats, ecotoken
+  Agent Spécial                    CHECK-LEVEL-TARGET                                                  
+  Suite Audit lourd                HYPER-SCAN-CHECKPOINT, THE-FINAL-JUDGE, THE-DEEP-READER             
+  Suite Audit Simulation           EL-PROFESSOR, THE-SCREENER, memory-audit                            
+  Suite Orientation                CIRCLE-TASKS, find-deep-booster, tool-brain                         
+  La Cour du Roi                   check-tasks-details, THE-KING, INES-official                        
+  Suite Dette & Structure du code  find-booster                                                        
+
+📝 Émetteurs de rapport non certifiés (7) — produisent un vrai rapport lu par un humain sans être membres — rang en attente de nommage
+
+  · CHARTER-SPY
+  · Compteur d'utilisation des outils
+  · Doc-Report
+  · Smart Breaker
+  · doc-HTML
+  · find-brain
+  · the-ghost
+
+✅ Aucun membre certifié sans suite assignée.
+
+---
+CASSANDRA-RH constate l'organisation, elle ne la décide jamais — un changement de rang reste une décision humaine.

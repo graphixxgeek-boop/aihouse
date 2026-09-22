@@ -1,5 +1,18 @@
 # L'Agence Codex — organisation et organigramme
 
+> **⚠️ CE DOCUMENT N'EST PLUS LA SOURCE DE VÉRITÉ DE LA LISTE** *(2026-09-22, tâches #171/#172/#179)*.
+> L'organigramme se **reconstruit désormais depuis les données réelles** à chaque exécution —
+> `buildOrganigramme()` / `renderOrganigrammeReport()` (`scripts/cassandra-rh.mjs`), item de Ronde
+> `organigramme-signal`, rapport texte archivé dans `docs/cassandra-rh/organigramme/`.
+> Ce document garde ce qu'aucun calcul ne peut produire : **le POURQUOI** de chaque rang, les
+> arbitrages tranchés, les frontières. Il ne doit plus jamais recopier la liste elle-même.
+> Preuve que la tenue manuelle ne tenait pas : au moment de construire ce mécanisme, **trois membres
+> certifiés** (CIRCLE-TASKS, tool-brain, find-deep-booster) n'appartenaient à aucune suite depuis leur
+> certification, sans que personne — ni ce document, ni aucun outil — ne l'ait jamais remarqué.
+> Ils forment depuis la **Suite Orientation** (calibrage explicite de l'utilisateur) : ceux qui disent
+> QUOI faire ensuite et AVEC QUOI, jamais ce qu'il faut en penser.
+
+
 *(2026-09-22, demande explicite de l'utilisateur : « consolidons toute cette partie, livre moi
 l'organisation complète, bien définie [...] ce doc sera mis dans le référentiel à l'usage de
 CASSANDRA qui devra le remettre à jour régulièrement : l'info est chez elle, logique [...] c'est

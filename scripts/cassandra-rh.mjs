@@ -15,15 +15,16 @@
 // n'est recalculée ici, jamais une seconde version qui pourrait diverger de l'originale.
 import { readFileSync, existsSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { parseToolsTable, slugifyAgentName, checkAgentOnboarding, loadBadgeCeremonyHistory } from "./le-coordinateur.mjs";
+import { parseToolsTable, slugifyAgentName, toolIdentitySlug, checkAgentOnboarding, loadBadgeCeremonyHistory, CERTIFIABLE_STATUTS, CLASSIQUE_STATUT } from "./le-coordinateur.mjs";
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
-import { AGENT_CATEGORIES, assertNotAPersonnage, sh, printReliabilityNotice } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, GARDIEN_DOMAINS, assertNotAPersonnage, sh, printReliabilityNotice } from "./lib-shell.mjs";
+import { renderTextReport } from "./report-template.mjs";
 import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson } from "./tool-usage.mjs";
 import { relativeStaleness, lastTouchDays } from "./clean-dirty-old.mjs";
 import { AGENT_SCRIPT_FILES, collectScriptCoverage, scriptRobustnessScore } from "./axa-check.mjs";
 import { KPI_HISTORY_COLUMNS, KPI_HISTORY_PATH, parseKpiHistoryCsv } from "./kpi-report.mjs";
 import { loadObjectifsRegistry, buildObjectifsReport, loadKpiHistoryRows } from "./objectifs-vs-resultats.mjs";
-import { buildDocReportIndex, REGISTRIES as DOC_REPORT_REGISTRIES } from "./doc-report.mjs";
+import { buildDocReportIndex, REGISTRIES as DOC_REPORT_REGISTRIES, FILE_WRITER_NATURES } from "./doc-report.mjs";
 // Ré-exportée telle quelle (jamais une redéfinition) : cassandra-rh.mjs reste le point d'import déjà
 // utilisé par check-house.mjs pour cette fonction, même après son déplacement vers kpi-report.mjs.
 export { parseKpiHistoryCsv };
@@ -490,3 +491,138 @@ function main() {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();
+
+// --- L'ORGANIGRAMME, RECONSTRUIT À CHAQUE FOIS (2026-09-22, tâches #171/#172/#179, calibrage
+// explicite de l'utilisateur : « CASSANDRA le reconstruit à chaque fois »).
+//
+// CE QUI EXISTAIT AVANT, ET POURQUOI ÇA NE SUFFISAIT PAS. `docs/referentiel/organisation-agence.md`
+// décrit bien l'organisation — mais c'est un texte tenu À LA MAIN, dont sa propre fiche reconnaît
+// que « la tenue à jour de ce document à chaque changement d'organigramme reste manuelle ». Trois
+// tâches de suivi demandaient depuis des jours que CASSANDRA tienne réellement cette liste
+// (#171 « CASSANDRA-RH doit tenir la liste de l'équipe à jour », #172 « liste de tous les employés,
+// puis organigramme », #179 « connaissance parfaite de chaque membre »). Preuve directe que la
+// tenue manuelle ne tenait pas : en construisant ceci, TROIS membres certifiés (CIRCLE-TASKS,
+// tool-brain, find-deep-booster) n'appartenaient à aucune suite depuis leur certification, sans que
+// personne ne l'ait jamais remarqué.
+//
+// TOUT EST DÉRIVÉ, RIEN N'EST RECOPIÉ (Article 24) : les rangs viennent de la table maîtresse réelle
+// et d'AGENT_CATEGORIES, les Gardiens de GARDIEN_DOMAINS (leur source de vérité mécanique, jamais
+// une seconde liste), les émetteurs de rapport de FILE_WRITER_NATURES. Un organigramme qui se
+// recalcule ne peut pas se périmer — c'était tout le point du calibrage.
+//
+// LES LIBELLÉS DE RANG VIVENT EN UN SEUL ENDROIT (`ORG_RANKS`) : le renommage calibré le même soir
+// (Scribes 🥈 / Premium 🥇 / Platine noir ⬛) est mis de côté en attente de validation explicite —
+// quand il viendra, il se fera ICI, jamais en repassant sur tout le paysage.
+export const ORG_RANKS = {
+  socle: { label: "Socle", emoji: "🧱", sens: "n'est pas membre de l'équipe : c'est le sol sur lequel tout le monde marche" },
+  cadre: { label: "Agents Cadre", emoji: "🎖️", sens: "dirigent — une fonction dans l'organigramme, jamais un badge de qualité en plus" },
+  gardien: { label: "Gardiens sacrés du code", emoji: "🛡️", sens: "délivrent un vrai scan de qualité ET tournent automatiquement à CHAQUE commit" },
+  membre: { label: "Membres certifiés", emoji: "🎖️", sens: "câblage complet vérifié : table maîtresse, menu, instanciation, registre, blueprint" },
+  emetteur: { label: "Émetteurs de rapport non certifiés", emoji: "📝", sens: "produisent un vrai rapport lu par un humain sans être membres — rang en attente de nommage" },
+};
+
+export function buildOrganigramme({
+  toolsTableMarkdown,
+  categories = AGENT_CATEGORIES,
+  gardienDomains = GARDIEN_DOMAINS,
+  fileWriterNatures = FILE_WRITER_NATURES,
+  registries = DOC_REPORT_REGISTRIES,
+} = {}) {
+  const rows = parseToolsTable(toolsTableMarkdown);
+  const nomPrincipal = (row) => row.tool.split(/[/(]/)[0].trim();
+  const gardienSlugs = new Set(Object.keys(gardienDomains));
+
+  const socle = rows.filter((r) => r.statut === "Infrastructure").map(nomPrincipal);
+  const certifies = rows.filter((r) => CERTIFIABLE_STATUTS.includes(r.statut))
+    .map((r) => ({ nom: nomPrincipal(r), slug: slugifyAgentName(nomPrincipal(r)), classique: r.statut === CLASSIQUE_STATUT }));
+
+  const parRang = { cadre: [], gardien: [], membre: [] };
+  const suites = {};
+  const sansCategorie = [];
+  for (const m of certifies) {
+    const cat = categories[m.slug];
+    if (!cat) { sansCategorie.push(m.nom); continue; }
+    if (gardienSlugs.has(m.slug)) { parRang.gardien.push(m); continue; }
+    if (cat === "Agent Cadre") { parRang.cadre.push(m); continue; }
+    parRang.membre.push(m);
+    (suites[cat] ??= []).push(m);
+  }
+
+  // Les émetteurs de rapport hors certification : ceux de la table maîtresse qui n'y sont pas
+  // éligibles, PLUS tout script classé "rapport" qui ne correspond à aucun membre certifié. C'est
+  // exactement le périmètre que l'utilisateur a choisi pour le futur rang 🥈 — dérivé, jamais listé.
+  // DÉDOUBLONNÉ PAR SLUG, JAMAIS PAR LIBELLÉ (corrigé à la première lecture du rendu réel, ce même
+  // soir) : la table maîtresse nomme un outil « Doc-Report » et son fichier s'appelle
+  // `doc-report.mjs` — deux libellés, un seul outil, qui apparaissait deux fois. Même cause pour
+  // check-spirit, listé au socle ET chez les émetteurs. Un organigramme où quelqu'un figure deux
+  // fois n'est pas un organigramme. Chaque outil est placé à UN rang et un seul : un placement déjà
+  // fait (socle, certifié) gagne toujours — émettre un rapport est une propriété, jamais un rang.
+  const dejaPlaces = new Set([...socle, ...certifies.map((m) => m.nom)].map(toolIdentitySlug));
+  const scriptsDeCertifies = new Set(registries.filter((r) => r.scriptPath).map((r) => r.scriptPath));
+  const emetteursParSlug = new Map();
+  const ajouterEmetteur = (nom) => {
+    const slug = toolIdentitySlug(nom);
+    if (dejaPlaces.has(slug) || emetteursParSlug.has(slug)) return;
+    emetteursParSlug.set(slug, nom);
+  };
+  for (const r of rows) {
+    if (CERTIFIABLE_STATUTS.includes(r.statut) || r.statut === "Infrastructure") continue;
+    ajouterEmetteur(nomPrincipal(r));
+  }
+  for (const [chemin, n] of Object.entries(fileWriterNatures)) {
+    if (n.nature !== "rapport" || scriptsDeCertifies.has(chemin)) continue;
+    ajouterEmetteur(chemin.replace(/^scripts\/|\.mjs$/g, ""));
+  }
+  const emetteurs = [...emetteursParSlug.values()];
+
+  return {
+    socle,
+    cadres: parRang.cadre.map((m) => m.nom),
+    gardiens: parRang.gardien.map((m) => m.nom),
+    suites: Object.fromEntries(Object.entries(suites).map(([k, v]) => [k, v.map((m) => m.nom)])),
+    emetteurs: emetteurs.sort(),
+    sansCategorie,
+    effectifs: {
+      socle: socle.length,
+      cadres: parRang.cadre.length,
+      gardiens: parRang.gardien.length,
+      membres: parRang.membre.length,
+      certifiesTotal: certifies.length,
+      emetteurs: emetteurs.length,
+    },
+  };
+}
+
+// Le garde-fou qui rend l'organigramme digne de confiance (Article 24) : un membre certifié sans
+// catégorie est invisible dans toutes les suites — exactement le trou réel trouvé ce soir sur trois
+// membres. Un organigramme qui perd silencieusement des gens ne vaut rien.
+export function findMembersWithoutCategory(toolsTableMarkdown, categories = AGENT_CATEGORIES) {
+  return buildOrganigramme({ toolsTableMarkdown, categories }).sansCategorie;
+}
+
+// Rendu TEXTE via le gabarit commun (report-template.mjs) — la forme demandée pour la sortie de
+// Ronde. Jamais une mise en page réinventée ici : l'organigramme est un rapport comme les autres.
+export function renderOrganigrammeReport(org, { dateLabel } = {}) {
+  const blocks = [];
+  blocks.push({ type: "note", text: `${ORG_RANKS.socle.emoji} ${ORG_RANKS.socle.label} — ${ORG_RANKS.socle.sens}` });
+  blocks.push({ type: "list", items: org.socle });
+  blocks.push({ type: "note", text: `${ORG_RANKS.cadre.emoji} ${ORG_RANKS.cadre.label} — ${ORG_RANKS.cadre.sens}` });
+  blocks.push({ type: "list", items: org.cadres });
+  blocks.push({ type: "note", text: `${ORG_RANKS.gardien.emoji} ${ORG_RANKS.gardien.label} (${org.effectifs.gardiens}) — ${ORG_RANKS.gardien.sens}` });
+  blocks.push({ type: "list", items: org.gardiens });
+  blocks.push({ type: "note", text: `${ORG_RANKS.membre.emoji} ${ORG_RANKS.membre.label} par suite (${org.effectifs.membres} hors Gardiens et Cadres) — ${ORG_RANKS.membre.sens}` });
+  blocks.push({ type: "table", headers: ["Suite", "Membres"], rows: Object.entries(org.suites).map(([suite, noms]) => [suite.replace(/^Membre — /, ""), noms.join(", ")]) });
+  blocks.push({ type: "note", text: `${ORG_RANKS.emetteur.emoji} ${ORG_RANKS.emetteur.label} (${org.effectifs.emetteurs}) — ${ORG_RANKS.emetteur.sens}` });
+  blocks.push({ type: "list", items: org.emetteurs });
+  blocks.push({ type: "note", text: org.sansCategorie.length
+    ? `⚠️ ${org.sansCategorie.length} membre(s) certifié(s) sans suite assignée : ${org.sansCategorie.join(", ")} — invisibles dans l'organigramme tant que ce n'est pas tranché.`
+    : "✅ Aucun membre certifié sans suite assignée." });
+  return renderTextReport({
+    tool: "cassandra-rh",
+    title: "CASSANDRA-RH — organigramme de l'Agence Codex",
+    subtitle: `Effectif total : ${org.effectifs.certifiesTotal} membres certifiés (dont ${org.effectifs.gardiens} Gardiens et ${org.effectifs.cadres} Cadres), ${org.effectifs.socle} au socle, ${org.effectifs.emetteurs} émetteurs non certifiés. Reconstruit depuis les données réelles à chaque exécution — jamais une liste recopiée.`,
+    dateLabel,
+    blocks,
+    footer: "CASSANDRA-RH constate l'organisation, elle ne la décide jamais — un changement de rang reste une décision humaine.",
+  });
+}

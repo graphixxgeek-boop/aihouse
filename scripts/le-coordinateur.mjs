@@ -511,6 +511,21 @@ export function slugifyAgentName(name) {
   return String(name ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
+// toolIdentitySlug() (2026-09-22) — RECONNAÎTRE LE MÊME OUTIL VU DE DEUX ENDROITS, ce qui n'est pas
+// la même question que slugifyAgentName(). Cette dernière construit un CHEMIN de documentation
+// (`docs/referentiel/<slug>.md`) et ne doit donc jamais changer : les fichiers existent sous ces
+// noms. Celle-ci construit une IDENTITÉ pour comparer deux mentions du même outil entre sources
+// différentes, où les conventions divergent honnêtement : la table maîtresse écrit « Doc-Report »
+// et « check-spirit.mjs », le disque écrit `scripts/doc-report.mjs`, le registre écrit
+// « check-spirit ». Trouvé en lisant le premier rendu réel de l'organigramme, où Doc-Report
+// apparaissait deux fois et check-spirit à deux rangs différents. Retire donc le complément entre
+// parenthèses ou après une barre oblique, PUIS l'extension de fichier, avant de slugifier — jamais
+// une troisième règle de nommage inventée à côté, toujours slugifyAgentName() au bout.
+export function toolIdentitySlug(name) {
+  const principal = String(name ?? "").split(/[/(]/)[0].trim().replace(/\.(mjs|js|ts|tsx)$/i, "");
+  return slugifyAgentName(principal);
+}
+
 // CLASSIQUE_STATUT (2026-09-21, reclarification explicite : « membre certifié couvre les deux
 // catégories ») : la valeur exacte attendue dans la colonne Statut de la table maîtresse pour un
 // « Membre certifié (classique) » — LE-COORDINATEUR, CIRCLE-TASKS, route-booster, tool-brain.

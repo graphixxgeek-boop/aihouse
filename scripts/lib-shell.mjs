@@ -78,6 +78,14 @@ export const AGENT_CATEGORIES = {
   "ines-official": "Membre — La Cour du Roi",
   "the-king": "Membre — La Cour du Roi",
   "check-tasks-details": "Membre — La Cour du Roi",
+  // Suite Orientation (2026-09-22, calibrage explicite de l'utilisateur). Trois membres certifiés
+  // n'appartenaient à AUCUNE suite depuis leur certification — un vrai trou trouvé en construisant
+  // l'organigramme de CASSANDRA, jamais une décision : ils ressortaient en « catégorie non
+  // répertoriée ». Ils forment bien une famille cohérente, distincte de celles qui produisent un
+  // constat : ceux qui disent QUOI faire ensuite et AVEC QUOI, jamais ce qu'il faut en penser.
+  "circle-tasks": "Membre — Suite Orientation",
+  "tool-brain": "Membre — Suite Orientation",
+  "find-deep-booster": "Membre — Suite Orientation",
   // Les Agents Spéciaux
   "check-level-target": "Agent Spécial",
   "smart-breaker": "Agent Spécial",
