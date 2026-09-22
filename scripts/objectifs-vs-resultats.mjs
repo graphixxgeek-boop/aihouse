@@ -126,6 +126,24 @@ export function computeResultat(row, history, now = Date.now(), kpiRows = []) {
     const trouve = events.filter((e) => e.foundSomething === true).length;
     return { valeur: Math.round((trouve / events.length) * 100), hasData: true };
   }
+  // "contribution-count" (2026-09-23, demande explicite de l'utilisateur : « si tu alimentes un
+  // fichier de data appartenant à un outil membre, ça ne compte pas comme une utilisation de
+  // l'outil, mais c'est un bon réflexe qui mérite d'être comptabilisé et inclus dans le calcul du
+  // KPI correspondant avec objectifs »). Une TROISIÈME source, jamais un usage-count élargi : ce
+  // sont deux gestes différents, et les additionner rendrait un total qui ne décrit ni l'un ni
+  // l'autre. Un outil peut être beaucoup alimenté et jamais consulté — c'est justement ce que ce
+  // chiffre doit pouvoir dire.
+  if (row.source === "contribution-count") {
+    const contributions = (history?.contributions ?? []).filter(
+      (e) => e.toolSlug === row.entite && Date.parse(row.debut) <= e.at && e.at <= finBorne
+    );
+    // hasData:false tant qu'aucune contribution n'existe : « zéro contribution » et « on ne mesure
+    // pas encore » sont deux informations différentes, et rendre la seconde comme un zéro ferait
+    // exactement la faute que ce projet corrige depuis des semaines.
+    return contributions.length
+      ? { valeur: contributions.length, hasData: true }
+      : { valeur: null, hasData: false };
+  }
   // "usage-count" par défaut — jamais une troisième source devinée pour une valeur inconnue.
   return { valeur: events.length, hasData: true };
 }

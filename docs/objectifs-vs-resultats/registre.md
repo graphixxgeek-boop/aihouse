@@ -5,8 +5,20 @@ slug d'outil connu de `.tool-usage-history.json`) sur une période donnée. `scr
 ne modifie jamais ce fichier lui-même — il le lit et calcule l'écart avec le résultat réel.
 
 Colonnes : `Source` dit quel signal déjà existant mesure le résultat réel (jamais un second calcul
-divergent) — `usage-count` (nombre de sollicitations réelles sur la période) ou `found-rate` (%
-de sollicitations ayant réellement trouvé quelque chose). Les dates sont au format `AAAA-MM-JJ` ;
+divergent) — `usage-count` (nombre de sollicitations réelles sur la période), `found-rate` (%
+de sollicitations ayant réellement trouvé quelque chose) ou `contribution-count` (nombre de fois où
+l'outil a été ALIMENTÉ — une ligne versée dans son registre, un journal enrichi).
+
+**`contribution-count` n'est jamais un `usage-count` élargi** *(2026-09-23, demande explicite de
+l'utilisateur : « si tu alimentes un fichier de data appartenant à un outil membre, ça ne compte pas
+comme une utilisation de l'outil, mais c'est un bon réflexe qui mérite d'être comptabilisé »).*
+Alimenter un outil ne prouve rien sur son utilité — l'additionner au nombre de sollicitations
+gonflerait le taux d'usage avec des gestes qui n'ont produit aucun verdict. Mais ne pas le compter
+du tout rendrait invisible le geste qui empêche un outil de mourir de faim : un outil qu'on
+n'alimente jamais rend des verdicts sur des données qui vieillissent, et rien ne distinguait
+« jamais alimenté » d'« alimenté hier ». Les deux chiffres vivent donc côte à côte et ne
+s'additionnent jamais. Un outil très alimenté et jamais consulté est un constat en soi, pas une
+moyenne à lisser. Les dates sont au format `AAAA-MM-JJ` ;
 aucune cadence calendaire fixe n'est imposée — chaque objectif choisit librement son début/fin.
 
 

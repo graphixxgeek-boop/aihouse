@@ -34,7 +34,23 @@ const HISTORY_PATH = fileURLToPath(new URL("../.tool-usage-history.json", import
 // lieu. Déclarée par la variable d'environnement TOOL_USAGE_ORIGIN au moment du lancement ; les
 // outils qui mesurent la DISCIPLINE (angel) doivent l'exclure, ceux qui mesurent l'USAGE réel
 // (tool-brain, Doc-Report) la comptent normalement — un test reste un vrai lancement.
-export const USAGE_ORIGINS = ["spontane", "demande", "automatique_post_commit", "cli_direct", "verification"];
+// "fonction" (2026-09-23, définition posée par l'utilisateur : « utiliser un outil = utiliser une
+// de ses fonctionnalités, on est ok ? » — oui). Cette définition a une conséquence que le compteur
+// ne voyait pas : jusqu'ici, SEULE la ligne de commande était enregistrée (recordCliUsage() est
+// câblé dans le main() de chaque outil). Appeler `prochaineAction()` ou `autoriseCloture()` en
+// important le module — ce que je fais constamment — était un usage réel, invisible au compteur.
+//
+// L'erreur était donc symétrique de celle que l'utilisateur vient de corriger sur les
+// contributions : là il fallait ne PAS compter un geste qui n'est pas un usage, ici il faut
+// compter un usage que rien ne voyait. Dans les deux cas le total décrivait autre chose que ce
+// qu'il prétendait.
+//
+// LA LIMITE HONNÊTE, déclarée plutôt que tue (même famille que tool-brain et SMART-CONSO-TOKEN) :
+// aucun mécanisme ne peut intercepter un `import` avant qu'il n'ait lieu. Instrumenter chaque
+// fonction exportée du paysage coûterait plus que ce que la mesure vaut, et une seule oubliée
+// rendrait le total faux en se taisant. C'est donc une origine DÉCLARÉE par l'appelant — une
+// obligation écrite, comme les deux autres impossibilités de ce projet.
+export const USAGE_ORIGINS = ["spontane", "demande", "automatique_post_commit", "cli_direct", "verification", "fonction"];
 
 // Exportée (2026-09-21) pour que le-coordinateur.mjs::formatBadgeCeremonyAnnouncement() la
 // réutilise verbatim plutôt que d'écrire une 4e copie identique — CLONE-HUNTER venait de trouver
@@ -94,6 +110,90 @@ export function toolUsageStats(history, toolSlug) {
     foundSomethingCount,
     foundSomethingRate: withVerdict.length ? Math.round((foundSomethingCount / withVerdict.length) * 1000) / 10 : undefined,
   };
+}
+
+// recordFunctionUsage() — un outil sollicité par l'une de ses fonctions, sans passer par sa ligne
+// de commande. Nomme TOUJOURS la fonction : « argus a été utilisé » et « findFaitsManquants() a été
+// appelée » ne portent pas la même information, et la seconde est la seule vérifiable.
+export function recordFunctionUsage(toolSlug, fonction, { now = Date.now(), foundSomething = undefined } = {}) {
+  if (!fonction) throw new Error("recordFunctionUsage: fonction obligatoire — « l'outil a servi » sans dire par quoi n'est pas une mesure vérifiable.");
+  try {
+    const history = loadJson(HISTORY_PATH, { events: [] });
+    history.events = history.events ?? [];
+    history.events.push({ toolSlug, origin: "fonction", fonction, at: now, ...(typeof foundSomething === "boolean" ? { foundSomething } : {}) });
+    writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 1));
+    return history;
+  } catch { return null; /* best-effort, jamais bloquant — même discipline que recordCliUsage() */ }
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// ALIMENTER UN OUTIL N'EST PAS LE SOLLICITER (2026-09-23)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Demande explicite de l'utilisateur : « si tu alimentes un fichier de data appartenant à un outil
+// membre, ça ne compte pas comme une utilisation de l'outil, mais c'est un bon réflexe qui mérite
+// d'être comptabilisé et inclus dans le calcul du KPI correspondant avec objectifs. »
+//
+// LES DEUX MOITIÉS DE LA RÈGLE, ET AUCUNE NE VA SANS L'AUTRE :
+//   - « ça ne compte PAS comme une utilisation » : verser une ligne dans le registre d'un outil ne
+//     prouve rien sur son utilité. Le compter comme un usage gonflerait le taux de sollicitation
+//     avec des gestes qui n'ont produit aucun verdict — exactement la métrique de vanité que ce
+//     fichier combat depuis son premier jour (cf. foundSomethingRate, qui refuse déjà de compter
+//     un lancement comme une trouvaille).
+//   - « mais ça mérite d'être comptabilisé » : c'est le geste qui empêche un outil de mourir de
+//     faim. Un outil dont personne n'alimente jamais les données rend des verdicts sur du vide, et
+//     rien aujourd'hui ne distingue « jamais alimenté » de « alimenté hier ». Ne pas le compter du
+//     tout laisserait ce réflexe invisible, donc non tenu.
+//
+// D'OÙ UN COMPTEUR SÉPARÉ, jamais un champ de plus sur un événement d'usage : deux natures
+// différentes dans une même série produiraient un total qui ne décrit ni l'une ni l'autre. Même
+// discipline que partout ailleurs ici — un chiffre dit ce qu'il mesure, ou il ne se rend pas.
+export const CONTRIBUTION_NATURES = ["registre", "journal", "donnee-de-reference", "correction"];
+
+// Une contribution nomme TOUJOURS le fichier réellement touché. Sans lui, la trace dirait qu'un
+// geste a eu lieu sans permettre de vérifier lequel — une mesure invérifiable n'en est pas une.
+export function recordToolContribution(toolSlug, fichier, { nature = "registre", now = Date.now(), par = "agent" } = {}) {
+  if (!toolSlug) throw new Error("recordToolContribution: toolSlug obligatoire — une contribution ne peut jamais être anonyme.");
+  if (!fichier) throw new Error("recordToolContribution: fichier obligatoire — une contribution qui ne nomme pas ce qu'elle a alimenté n'est pas vérifiable.");
+  if (!CONTRIBUTION_NATURES.includes(nature)) throw new Error(`recordToolContribution: nature inconnue "${nature}" — attendu l'une de ${CONTRIBUTION_NATURES.join(", ")}`);
+  const history = loadJson(HISTORY_PATH, { events: [] });
+  history.contributions = history.contributions ?? [];
+  history.contributions.push({ toolSlug, fichier, nature, par, at: now });
+  writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 1));
+  return history;
+}
+
+// Le pendant de toolUsageStats(), et volontairement bâti sur la même forme pour que les deux se
+// lisent côte à côte sans se confondre. `dernier` est ce qui manquait réellement : savoir QUAND un
+// outil a été alimenté pour la dernière fois, puisque c'est la famine qui rend ses verdicts creux.
+export function toolContributionStats(history, toolSlug) {
+  const events = (history?.contributions ?? []).filter((e) => e.toolSlug === toolSlug);
+  if (!events.length) return { total: 0, dernier: null, parNature: {}, fichiers: [] };
+  const parNature = {};
+  for (const nature of CONTRIBUTION_NATURES) parNature[nature] = events.filter((e) => e.nature === nature).length;
+  return {
+    total: events.length,
+    dernier: Math.max(...events.map((e) => e.at)),
+    parNature,
+    fichiers: [...new Set(events.map((e) => e.fichier))],
+  };
+}
+
+// LA FAMINE, nommée plutôt que déduite. Un outil sans contribution depuis longtemps n'est pas
+// forcément en faute — certains lisent le dépôt et n'ont aucun registre à nourrir. La fonction rend
+// donc les trois états habituels : alimenté, jamais alimenté, et « rien à alimenter » pour un outil
+// dont l'appelant déclare qu'il ne tient aucun registre. Confondre les deux derniers accuserait à
+// tort la moitié du paysage.
+export const CONTRIBUTION_FAMINE_JOURS = 30;
+export function toolsNeverFed(history, knownToolSlugs, { sansRegistre = [], famineJours = CONTRIBUTION_FAMINE_JOURS, now = Date.now() } = {}) {
+  const seuil = now - famineJours * 24 * 60 * 60 * 1000;
+  return knownToolSlugs.map((slug) => {
+    if (sansRegistre.includes(slug)) return { slug, etat: "rien à alimenter", pourquoi: "cet outil ne tient aucun registre — l'absence de contribution n'est pas un manquement" };
+    const { total, dernier } = toolContributionStats(history, slug);
+    if (!total) return { slug, etat: "jamais alimenté", pourquoi: "aucune contribution enregistrée depuis la création du compteur" };
+    if (dernier < seuil) return { slug, etat: "en famine", pourquoi: `dernière contribution il y a plus de ${famineJours} jours — ses verdicts portent sur des données qui vieillissent` };
+    return { slug, etat: "alimenté", dernier };
+  });
 }
 
 // Un outil "jamais réellement sollicité" (utile à Doc-Report/#165 et à la future CASSANDRA-RH) :

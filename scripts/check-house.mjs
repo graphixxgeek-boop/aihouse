@@ -6736,11 +6736,40 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // vraies trouvailles produites). Testé contre le vrai fichier local avec sauvegarde/restauration
   // complète (même discipline que recordAction()/computeAdoptionKpi() ce soir), puisque
   // recordToolUsage() n'a pas de fs injectable, comme le reste des historiques auto-déclarés.
-  const { recordToolUsage, recordCliUsage, toolUsageStats, toolsNeverUsed, USAGE_ORIGINS } = await import('../scripts/tool-usage.mjs');
-  assert.deepEqual(USAGE_ORIGINS, ['spontane', 'demande', 'automatique_post_commit', 'cli_direct', 'verification'], 'the three original real origins must stay exactly as the user asked, plus (2026-09-21) the honest "cli_direct" origin — a tool knows it was launched via its own command line, never why — plus (2026-09-22) "verification", a tool relaunched only to check it still works after a migration: a test is not a consultation, and angel-of-ia-process accused 6 tools wrongly the day this distinction did not exist yet');
-  assert.ok(USAGE_ORIGINS.indexOf('verification') === USAGE_ORIGINS.length - 1 && !['spontane', 'demande'].includes('verification'), 'the "verification" origin must stay appended at the end and never merge into the two judgment-based origins — a relaunch done to prove a tool still runs can never be counted as a real consultation by the discipline auditors');
+  const { recordToolUsage, recordCliUsage, toolUsageStats, toolsNeverUsed, USAGE_ORIGINS, recordFunctionUsage, recordToolContribution, toolContributionStats, toolsNeverFed, CONTRIBUTION_NATURES } = await import('../scripts/tool-usage.mjs');
+  assert.deepEqual(USAGE_ORIGINS, ['spontane', 'demande', 'automatique_post_commit', 'cli_direct', 'verification', 'fonction'], 'the three original real origins must stay exactly as the user asked, plus (2026-09-21) the honest "cli_direct" origin — a tool knows it was launched via its own command line, never why — plus (2026-09-22) "verification", a tool relaunched only to check it still works after a migration: a test is not a consultation, and angel-of-ia-process accused 6 tools wrongly the day this distinction did not exist yet — plus (2026-09-23) "fonction", from the user\'s own definition ("utiliser un outil = utiliser une de ses fonctionnalités"): until then only CLI launches were counted, so importing a module and calling one of its functions was a real use that the counter simply never saw');
+  assert.ok(USAGE_ORIGINS.indexOf('verification') === USAGE_ORIGINS.length - 2 && !['spontane', 'demande'].includes('verification'), 'the "verification" origin must stay appended at the end and never merge into the two judgment-based origins — a relaunch done to prove a tool still runs can never be counted as a real consultation by the discipline auditors');
   assert.throws(() => recordToolUsage(undefined, 'demande'), /toolSlug/, 'a usage event can never be anonymous — a missing toolSlug must fail loudly rather than silently recording a meaningless entry');
   assert.throws(() => recordToolUsage('argus', 'origine-inconnue'), /origin inconnue/, 'an unrecognized origin must fail loudly rather than silently accepting a typo that would corrupt the honest byOrigin breakdown later');
+  // ALIMENTER N'EST PAS SOLLICITER (2026-09-23) — les deux moitiés de la règle de l'utilisateur,
+  // et aucune ne vaut sans l'autre : ça ne compte pas comme un usage, ET ça mérite d'être compté.
+  assert.throws(() => recordToolContribution('argus'), /fichier obligatoire/, 'a contribution that does not name what it fed is not verifiable, so it must fail loudly rather than record an unfalsifiable gesture');
+  assert.throws(() => recordToolContribution('argus', 'docs/argus/index.md', { nature: 'inventee' }), /nature inconnue/, 'an unknown contribution nature fails rather than silently corrupting the breakdown, exactly as an unknown usage origin already does');
+  assert.ok(CONTRIBUTION_NATURES.length >= 4 && !CONTRIBUTION_NATURES.includes('usage'), 'contributions have their own vocabulary and never borrow the usage one — two natures in one series would produce a total describing neither');
+  assert.throws(() => recordFunctionUsage('argus'), /fonction obligatoire/, '"the tool was used" without saying through what is not a verifiable measure');
+  {
+    const h = { events: [], contributions: [
+      { toolSlug: 'argus', fichier: 'docs/argus/index.md', nature: 'registre', at: Date.parse('2026-09-23') },
+      { toolSlug: 'argus', fichier: 'docs/argus/index.md', nature: 'registre', at: Date.parse('2026-09-20') },
+    ] };
+    const stats = toolContributionStats(h, 'argus');
+    assert.equal(stats.total, 2, 'contributions are counted on their own series');
+    assert.equal(stats.dernier, Date.parse('2026-09-23'), 'the LAST feeding date is what famine depends on — a total alone cannot tell a fresh registry from a stale one');
+    assert.deepEqual(stats.fichiers, ['docs/argus/index.md'], 'the same file fed twice is one file, not two');
+    assert.deepEqual(toolContributionStats(h, 'jamais-vu'), { total: 0, dernier: null, parNature: {}, fichiers: [] }, 'a never-fed tool reports a null last-date rather than a zero that would read like a measured value');
+    // LES TROIS ÉTATS, jamais deux : confondre « rien à alimenter » avec « jamais alimenté »
+    // accuserait à tort la moitié du paysage — beaucoup d'outils lisent le dépôt sans tenir de registre.
+    const famine = toolsNeverFed(h, ['argus', 'harmonia', 'clone-hunter'], { sansRegistre: ['clone-hunter'], now: Date.parse('2026-09-24') });
+    assert.equal(famine.find((f) => f.slug === 'argus').etat, 'alimenté');
+    assert.equal(famine.find((f) => f.slug === 'harmonia').etat, 'jamais alimenté');
+    assert.equal(famine.find((f) => f.slug === 'clone-hunter').etat, 'rien à alimenter', 'a tool that keeps no registry is never reproached for an absence that is not a failure');
+    assert.ok(famine.every((f) => f.pourquoi || f.dernier), 'every state states its reason or its evidence — never a bare verdict');
+    // ET DANS LE KPI À OBJECTIFS, puisque c'est là que l'utilisateur l'a demandé : une troisième
+    // source, jamais un usage-count élargi.
+    const ovr = await import('../scripts/objectifs-vs-resultats.mjs');
+    assert.deepEqual(ovr.computeResultat({ entite: 'argus', source: 'contribution-count', debut: '2026-09-01', fin: '2026-09-30' }, h, Date.parse('2026-09-25')), { valeur: 2, hasData: true }, 'contribution-count reads the contributions series, never the usage one');
+    assert.deepEqual(ovr.computeResultat({ entite: 'harmonia', source: 'contribution-count', debut: '2026-09-01', fin: '2026-09-30' }, h, Date.parse('2026-09-25')), { valeur: null, hasData: false }, '"zero contribution" and "not measured yet" are two different facts — rendering the second as a zero is the exact mistake this project keeps correcting');
+  }
   {
     const histPath = new URL('../.tool-usage-history.json', import.meta.url);
     const { existsSync: exU, readFileSync: rdU, writeFileSync: wrU, unlinkSync: unU } = await import('node:fs');
@@ -6753,7 +6782,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
       const history = JSON.parse(rdU(histPath, 'utf8'));
       const statsArgus = toolUsageStats(history, 'test-tool-usage-argus');
       assert.equal(statsArgus.total, 2, 'both real events for this tool must be counted, cumulatively, never reset within the same history');
-      assert.deepEqual(statsArgus.byOrigin, { spontane: 0, demande: 1, automatique_post_commit: 1, cli_direct: 0, verification: 0 }, 'each origin must be counted separately and honestly — the real ask was to tell a tool that only ever runs automatically apart from one genuinely chosen — and every declared origin must appear in the breakdown even at zero, so a missing key never gets read as "not measured"');
+      assert.deepEqual(statsArgus.byOrigin, { spontane: 0, demande: 1, automatique_post_commit: 1, cli_direct: 0, verification: 0, fonction: 0 }, 'each origin must be counted separately and honestly — the real ask was to tell a tool that only ever runs automatically apart from one genuinely chosen — and every declared origin must appear in the breakdown even at zero, so a missing key never gets read as "not measured"');
       assert.equal(statsArgus.foundSomethingRate, 50, 'foundSomethingRate must reflect the real ratio of confirmed-useful calls among those with a verdict at all (1 of 2 here), the exact "usage vs utility" distinction the user asked for');
       const statsNeverSeen = toolUsageStats(history, 'test-tool-usage-never-recorded');
       assert.deepEqual(statsNeverSeen, { total: 0, byOrigin: {}, foundSomethingCount: 0, foundSomethingRate: undefined }, 'a tool with zero recorded events must report an honest all-zero/undefined result, never a fabricated rate or a crash');
