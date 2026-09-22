@@ -47,6 +47,36 @@ d'être au vert tant que la question « y avait-il quelque chose à retenir ? »
 aux moments déclencheurs. **« Rien à retenir cette fois » est une réponse valable**, et ne compte
 jamais contre personne : exiger une trouvaille à chaque passage ferait écrire pour se taire.
 
+**REGROUPER ET FUSIONNER, SANS JAMAIS PERDRE** *(2026-09-23, demande de l'utilisateur : « la
+capacité de l'outil à regrouper les leçons si elles sont équivalentes, à les fusionner si besoin,
+sans perdre la valeur, TOUJOURS, mais pour rendre les choses plus efficaces »)*. Un registre grossit
+entrée par entrée, chacune écrite le jour où son erreur a fait mal — donc sans vue d'ensemble. Deux
+entrées finissent par dire la même chose sous deux angles, et **le coût n'est pas l'encombrement :
+c'est que le rappel en sert DEUX là où une seule suffirait**, ce qui consomme le plafond et évince
+une entrée vraiment différente.
+
+L'outil `groupesEquivalents()` repère ces doublons — il faut que le TERRAIN se recouvre **et** que la
+formulation se recouvre, parce que deux entrées peuvent parler des tests sans rien avoir en commun
+(L3 interdit de dépendre d'un défaut, BP3 interdit d'assouplir une assertion). Il **propose**, il ne
+fusionne jamais tout seul. Trois garanties, vérifiées par des tests et non promises :
+
+1. **La fusion est une UNION**, jamais un choix entre deux textes : les deux terrains, les deux
+   porteurs, les deux provenances survivent.
+2. **L'identifiant absorbé ne disparaît pas.** Il garde sa section, réduite à un renvoi
+   (`**Fusionnée dans** : L4`), pour qu'un commentaire de code ou une ligne de suivi qui le cite
+   mène encore quelque part. Un identifiant supprimé serait une **référence morte** — exactement le
+   « porteur fantôme » que ce registre traque par ailleurs.
+3. **Fusionner une leçon avec une bonne pratique déclenche un avertissement** : ce qui les distingue
+   (l'une a été payée, l'autre non) est précisément ce que la fusion effacerait.
+
+**SORTIR DU REGISTRE EST POSSIBLE, ET MESURÉ** *(2026-09-23)*. Chaque remontée est comptée. Une
+entrée jamais remontée après assez d'occasions est du **poids mort** ; une entrée qui remonte souvent
+et n'est jamais jugée appliquée **ne sert visiblement à rien telle qu'elle est écrite**. Les deux
+sont signalées comme « à trancher », jamais corrigées d'office : retirer ou fusionner une entrée est
+une décision sur ce que le projet garde. Le compteur ne juge jamais une entrée avant qu'elle ait eu
+assez d'occasions **depuis sa propre arrivée** — sinon une entrée écrite ce matin hériterait du passé
+de toutes les autres et serait condamnée avant d'avoir vécu.
+
 **Qui juge qu'une entrée a été réellement APPLIQUÉE, et pas seulement lue : l'utilisateur, à la
 Ronde.** Décision explicite, cohérente avec ce qu'il avait déjà posé sur la propreté d'une Ronde
 (« c'est moi à la fin qui te dis si elle est propre »). Me déclarer moi-même conforme sur mon propre
@@ -69,7 +99,7 @@ sens.*
 
 **Porté par** : `etatConnexionProcessGardien()` (`scripts/god-of-all-process.mjs`) — il parcourt chaque process dans les DEUX sens et nomme lequel des deux défauts il a trouvé.
 
-**Terrain** : quand j'écris une règle dans un document, ou un contrôle dans un outil · mots : règle, document, process, contrôleur, garde-fou, charte
+**Terrain** : quand j'écris une règle dans un document, ou un contrôle dans un outil · mots : règle, document, process, contrôleur, garde-fou, charte · fichiers : docs/*-process-detail*, scripts/*-process-guardian.mjs, scripts/god-of-all-process.mjs, CLAUDE.md
 
 ## L2 — Un mécanisme qui ne sort pas du script est une intention
 
@@ -83,7 +113,7 @@ de l'utilisateur, faite le matin même.*
 
 **Porté par** : `findDetecteursMuets()` (`scripts/pure-gold-unity.mjs`) — tout détecteur qui n'est appelé de nulle part est nommé à chaque passage.
 
-**Terrain** : quand je construis un détecteur, un calcul ou un verdict · mots : détecteur, mécanisme, rapport, outil, vérification
+**Terrain** : quand je construis un détecteur, un calcul ou un verdict · mots : détecteur, mécanisme, rapport, outil, vérification · fichiers : scripts/*.mjs
 
 ## L3 — Un test ne doit jamais exiger qu'un défaut PERSISTE
 
@@ -96,7 +126,7 @@ Une leçon comprise n'est pas une leçon acquise.*
 
 **Porté par** : **aucun mécanisme, et cette impossibilité est déclarée ici plutôt que tue.** Reconnaître automatiquement « ce test s'appuie sur un défaut réel du dépôt » demanderait de deviner l'intention d'une assertion ; toute tentative produirait du bruit sur les tests légitimes, donc exactement le défaut de L4. Cette leçon ne tient qu'à ce texte — c'est la protection la plus faible du registre, et elle est la seule.
 
-**Terrain** : quand j'écris ou je modifie un test · mots : test, assertion, check-house, couverture
+**Terrain** : quand j'écris ou je modifie un test · mots : test, assertion, check-house, couverture · fichiers : scripts/check-house.mjs
 
 ## L4 — Un garde-fou qui accuse à tort cesse d'être lu
 
@@ -111,7 +141,7 @@ déjà prise et documentée ailleurs**. Reprocher une décision assumée est la 
 
 **Porté par** : `SANS_BLUEPRINT_ASSUME` / `SANS_CONSTAT_PROPRE` (`scripts/safe-export.mjs`, `scripts/report-template.mjs`) — les exemptions décidées sont déclarées comme données, jamais reprochées à chaque passage.
 
-**Terrain** : quand je construis ou je resserre un garde-fou · mots : garde-fou, détecteur, faux positif, seuil, exemption
+**Terrain** : quand je construis ou je resserre un garde-fou · mots : garde-fou, détecteur, faux positif, seuil, exemption · fichiers : scripts/*.mjs
 
 ## L5 — Distinguer « je n'ai rien trouvé » de « je n'ai pas pu regarder »
 
@@ -124,7 +154,7 @@ jamais être compté conforme — il casse le verdict.
 
 **Porté par** : `relanceCircleTasks()` (`scripts/circle-tasks.mjs`) — un compte illisible rend `mesurable: false`, jamais un retard de zéro.
 
-**Terrain** : quand un outil annonce un nombre, un pourcentage ou un verdict · mots : mesure, compteur, pourcentage, verdict, couverture, note
+**Terrain** : quand un outil annonce un nombre, un pourcentage ou un verdict · mots : mesure, compteur, pourcentage, verdict, couverture, note · fichiers : scripts/*.mjs
 
 ## L6 — Une alarme permanente ne se contente pas d'être ignorée, elle fait dépenser du travail
 
@@ -137,7 +167,7 @@ taire que sur ce qu'un humain a explicitement écarté, jamais de sa propre init
 
 **Porté par** : `filtrerDejaTranches()` + `loadMemoire()` (`scripts/safe-export.mjs`) — un cas qu'un humain a explicitement écarté ne redemande plus de travail.
 
-**Terrain** : quand un outil affiche un avertissement qui peut revenir · mots : alerte, bandeau, rappel, mémoire, signal, avertissement
+**Terrain** : quand un outil affiche un avertissement qui peut revenir · mots : alerte, bandeau, rappel, mémoire, signal, avertissement · fichiers : scripts/hooks/*.mjs
 
 ## L7 — Une intention écrite n'a jamais empêché quoi que ce soit
 
@@ -152,7 +182,7 @@ chargeur, pendant que sept copies naissaient ailleurs.*
 
 **Porté par** : `findScriptsMissingFromAgentFiles()` (`scripts/axa-check.mjs`) — le garde-fou qui a remplacé un commentaire promettant de tenir une liste alignée à la main.
 
-**Terrain** : quand j'écris un commentaire qui promet quelque chose, ou une liste tenue à la main · mots : commentaire, intention, liste, synchronisation, aligné, à garder
+**Terrain** : quand j'écris un commentaire qui promet quelque chose, ou une liste tenue à la main · mots : commentaire, intention, liste, synchronisation, aligné, à garder · fichiers : scripts/*.mjs
 
 ## L8 — Ce qui est fragmenté paraît faux, même quand tout est vrai
 
@@ -166,7 +196,7 @@ l'utilisateur sur la crédibilité de l'ensemble.*
 
 **Porté par** : `fusionnerClusters()` + `motifDuCluster()` (`scripts/clone-hunter.mjs`) — les alertes qui se recouvrent deviennent un problème compté une fois, avec son motif.
 
-**Terrain** : quand un outil compte des alertes ou des constats · mots : alerte, compte, regroupement, cluster, rapport, doublon
+**Terrain** : quand un outil compte des alertes ou des constats · mots : alerte, compte, regroupement, cluster, rapport, doublon · fichiers : scripts/clone-hunter.mjs, scripts/hooks/*.mjs
 
 ---
 
@@ -184,6 +214,8 @@ qui n'existent pas encore, en hériteront sans qu'on y pense.
 
 **Terrain** : quand la même correction doit s'appliquer à plusieurs endroits · mots : partout, tous
 les outils, chaque rapport, harmoniser, généraliser
+*(Aucun terrain par FICHIER déclaré, volontairement : « la même correction à plusieurs endroits » ne se
+lit dans aucun chemin en particulier, et un motif large l'attacherait à tout — donc à rien.)*
 
 **Porté par** : l'Article 24 de la charte, et `findScriptsMissingFromAgentFiles()`
 (`scripts/axa-check.mjs`) pour le cas où une liste serait quand même recopiée.
@@ -198,7 +230,7 @@ Un test écrit après coup passe du premier coup, et on en conclut qu'il protèg
 bien ne rien vérifier du tout. Avant de croire un test, le voir échouer sur le défaut qu'il est censé
 attraper — puis seulement le voir passer une fois le défaut corrigé.
 
-**Terrain** : quand j'écris un test, ou quand je déclare une vérification en place · mots : test,
+**Terrain** : quand j'écris un test, ou quand je déclare une vérification en place · mots : test, · fichiers : scripts/check-house.mjs
 assertion, vérification, couverture, protège
 
 **Porté par** : **aucun mécanisme** — rien ne peut constater qu'un test a échoué avant d'être écrit.
@@ -213,7 +245,7 @@ Un test qui échoue en ajoutant une étape à un process est presque toujours le
 l'étape manquait vraiment. Baisser l'exigence de l'assertion fait passer le test et laisse le trou.
 Le bon geste est de fournir ce que le test réclame.
 
-**Terrain** : quand un test échoue après un changement · mots : test échoue, assertion, seuil,
+**Terrain** : quand un test échoue après un changement · mots : test échoue, assertion, seuil, · fichiers : scripts/check-house.mjs
 attendu, rouge
 
 **Porté par** : **aucun mécanisme** — la différence entre « l'assertion se trompait de bande » et

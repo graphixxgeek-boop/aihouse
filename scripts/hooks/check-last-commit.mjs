@@ -371,14 +371,20 @@ console.log(`\n${formatToolBrainReminder()}\n`);
 // Sans ces trois, ce rappel deviendrait le meuble que L6 décrit — dans le dispositif construit pour
 // faire appliquer L6, ce qui serait la pire des ironies et la fin de sa crédibilité.
 try {
-  const { auditLecons, leconsPourTache } = await import("../tool-learning.mjs");
+  const { auditLecons, leconsPourTache, enregistrerRemontee } = await import("../tool-learning.mjs");
   const { formatExperience } = await import("../tool-brain.mjs");
-  const contexte = [lastCommitSubjectForXp(), ...(changedFiles ?? [])].join(" ");
   const audit = auditLecons();
   if (audit.mesure === "mesuré") {
-    const pertinentes = leconsPourTache(contexte, { lecons: audit.lecons, max: 2 });
+    // Le message du commit donne les MOTS, les fichiers touchés donnent le TERRAIN — les deux
+    // signaux comptent, et c'est le fichier qui rattrape une tâche formulée autrement (amélioration
+    // ③ de la tâche #222 : un chemin ne ment pas sur ce qu'on vient de toucher).
+    const pertinentes = leconsPourTache(lastCommitSubjectForXp(), { lecons: audit.lecons, max: 2, fichiers: changedFiles ?? [] });
     const lignes = formatExperience(pertinentes);
     if (lignes.length) { console.log(""); for (const l of lignes) console.log(l); console.log(""); }
+    // L'occasion est comptée même quand rien ne remonte : c'est exactement ce silence qui rend une
+    // entrée « jamais servie » interprétable plus tard. Ne compter que les succès rendrait toute
+    // entrée parfaite par construction.
+    enregistrerRemontee(pertinentes.map((e) => e.id), { toutes: audit.lecons });
   }
 } catch { /* un registre illisible ne casse jamais un commit : il ne rappelle simplement rien */ }
 

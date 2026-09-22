@@ -28,7 +28,7 @@ import { toolUsageStats, toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs
 import { assessCriticality } from "./ecotoken.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 
-import { auditLecons, leconsPourTache } from "./tool-learning.mjs";
+import { auditLecons, leconsPourTache, enregistrerRemontee } from "./tool-learning.mjs";
 
 export const TOOL_BRAIN_SLUG = "tool-brain";
 const USAGE_HISTORY_URL = new URL("../.tool-usage-history.json", import.meta.url);
@@ -72,11 +72,16 @@ export function adviseToolBrain({ taskDescription, filePath } = {}) {
   // JAMAIS LES ONZE À CHAQUE FOIS : le tri vient du TERRAIN que chaque entrée déclare elle-même, et
   // une correspondance nulle rend une liste vide plutôt qu'un repêchage « au cas où ». Un rappel qui
   // sort à chaque fois devient un meuble — c'est la leçon L6, appliquée au mécanisme qui la publie.
+  //
+  // LE FICHIER COMPTE AUTANT QUE LA PHRASE (2026-09-23, amélioration ③). Une même tâche se formule
+  // de dix façons : si je dis « je reprends ce bout de code » sans employer le mot « test », la
+  // leçon sur les tests ne remontait pas alors qu'elle s'applique. Le chemin du fichier, lui, ne
+  // ment pas sur ce qu'on s'apprête à toucher.
   let experience = [];
-  if (taskDescription) {
+  if (taskDescription || filePath) {
     try {
       const audit = auditLecons();
-      if (audit.mesure === "mesuré") experience = leconsPourTache(taskDescription, { lecons: audit.lecons });
+      if (audit.mesure === "mesuré") experience = leconsPourTache(taskDescription, { lecons: audit.lecons, fichiers: filePath ? [filePath] : [] });
     } catch { experience = []; }
   }
   return { prestations, fileAdvice, criticite, experience };
@@ -226,6 +231,15 @@ function main() {
   // reproduit le piège que le projet a déjà payé. Silencieuse quand rien ne correspond au terrain.
   const expLignes = formatExperience(experience);
   if (expLignes.length) { console.log(""); for (const l of expLignes) console.log(l); }
+  // On compte l'OCCASION ici, dans le CLI, et jamais dans adviseToolBrain() : cette fonction-là est
+  // appelée par la suite de tests et par des appelants qui n'affichent rien, et compter leurs appels
+  // remplirait la mesure de bruit d'outillage — la rendant inutilisable pour juger quoi que ce soit.
+  if (taskDescription || filePath) {
+    try {
+      const audit = auditLecons();
+      if (audit.mesure === "mesuré") enregistrerRemontee(experience.map((e) => e.id), { toutes: audit.lecons });
+    } catch { /* un compteur illisible ne casse jamais une consultation */ }
+  }
 
   if (criticite && !criticite.absent) {
     // Formulation corrigée le 2026-09-22 : « risque maximal applicable : faible » se lisait comme

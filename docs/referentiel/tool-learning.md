@@ -119,3 +119,39 @@ l'inventer.
 juste : mon travers dominant est de construire le mécanisme et de m'arrêter avant de le brancher —
 sept fois en une journée. Le défaut n'est pas l'oubli, c'est qu'un mécanisme construit RESSEMBLE à
 un problème traité, ce qui éteint la vigilance juste avant la dernière étape.
+
+## Les quatre améliorations du 2026-09-23 (tâche #222)
+
+Demandées une fois la chaîne en place, parce que la chaîne garantissait le transport de la valeur
+sans rien garantir de son **efficacité**.
+
+**③ Le terrain par fichier.** Une même tâche se formule de dix façons : si je dis « je reprends ce
+bout de code » sans employer le mot « test », la leçon sur les tests ne remontait pas alors qu'elle
+s'applique. Le chemin, lui, ne ment pas. Segment facultatif `· fichiers :` dans le Terrain, joker `*`
+qui **ne traverse jamais un séparateur de dossier** (un motif large qui avale les sous-dossiers finit
+par tout attraper). Les deux signaux s'additionnent : l'entrée que le mot ET le fichier désignent
+remonte en premier. 10 entrées sur 11 déclarent désormais un terrain par fichier ; BP1 n'en déclare
+aucun **volontairement** — « la même correction à plusieurs endroits » ne se lit dans aucun chemin.
+
+**④ Regrouper et fusionner les équivalentes, sans jamais perdre.** `groupesEquivalents()` exige un
+double recouvrement (terrain **et** formulation) parce que le terrain seul fusionnerait L3 et BP3,
+qui parlent toutes deux des tests en enseignant des choses différentes. Regroupement **transitif**
+(patron repris de `fusionnerClusters()` chez CLONE-HUNTER). `propositionDeFusion()` rend l'**union**
+— terrains, porteurs, formulations — plus le **renvoi obligatoire** sur chaque identifiant absorbé :
+une citation de L8 faite il y a un mois doit encore mener quelque part, sans quoi la fusion
+fabriquerait la référence morte que cet outil traque. Natures mélangées → avertissement.
+**Sur le vrai registre : 0 groupe**, et c'est vérifié dans les deux sens (le détecteur mord sur des
+doublons synthétiques, et laisse tranquille une entrée de sujet différent sur le même terrain).
+
+**① Mesurer si ressortir sert.** `docs/tool-learning/xp-remontees.json` compte les occasions et les
+remontées, alimenté aux deux points réels (tool-brain, crochet de commit) et **jamais dans
+`adviseToolBrain()`** — que la suite de tests appelle, et dont le comptage noierait la mesure sous du
+bruit d'outillage. Une entrée remontée souvent et jamais jugée appliquée est nommée.
+
+**② La sortie du registre.** Une entrée jamais remontée après assez d'occasions est du poids mort.
+Les deux verdicts sont **« à trancher »**, jamais « retenu » : retirer ou fusionner est une décision
+sur ce que le projet garde. Les occasions se comptent **depuis l'arrivée de l'entrée** — sinon une
+entrée écrite ce matin serait condamnée pour un passé qui n'est pas le sien (L4).
+
+**Limite honnête** : le compteur mesure des remontées, jamais une application. Douze remontées ne
+disent pas qu'une décision a changé — d'où le verdict d'application laissé à l'utilisateur.

@@ -5644,6 +5644,76 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     const quePourRien = tl.analyseXp(Array.from({ length: 6 }, () => ({ nature: 'captation', rienARetenir: true })).concat([{ nature: 'conclusion', texte: 'x' }, { nature: 'jugement', verdict: 'appliquée', parUtilisateur: true }]), {});
     assert.ok(quePourRien.constats.some((c) => /sans une seule trouvaille/.test(c.constat)), '"rien à retenir" is a full answer and never counts against anyone — but six of them in a row is itself a signal: either nothing happens, or I stopped looking');
 
+    // ③ LE TERRAIN PAR FICHIER (2026-09-23, tâche #222). Les mots de la phrase ne suffisent pas :
+    // une même tâche se formule de dix façons, et le chemin du fichier ne ment pas sur ce qu'on
+    // touche. Le joker reste volontairement pauvre — une vraie grammaire de motifs se paierait en
+    // faux rapprochements, donc en garde-fou qu'on cesse de lire (L4).
+    assert.equal(tl.cheminCorrespond('scripts/check-house.mjs', 'scripts/*.mjs'), true, 'a simple wildcard matches inside one directory');
+    assert.equal(tl.cheminCorrespond('scripts/hooks/x.mjs', 'scripts/*.mjs'), false, 'and never crosses a directory separator: a broad pattern that quietly swallows subdirectories would end up matching everything');
+    assert.equal(tl.cheminCorrespond('docs/a.md', '.md'), true, 'a pattern with no wildcard is a plain fragment match');
+    assert.equal(tl.cheminCorrespond('', 'scripts/*.mjs'), false, 'an empty path matches nothing rather than everything');
+    const parFichier = [{ id: 'L1', titre: 'L1 — x', nature: 'leçon', mots: ['test'], fichiers: ['scripts/check-house.mjs'] }, { id: 'L2', titre: 'L2 — y', nature: 'leçon', mots: ['jauge'], fichiers: ['lib/*.ts'] }];
+    assert.deepEqual(tl.leconsPourTache('', { lecons: parFichier, fichiers: ['scripts/check-house.mjs'] }).map((e) => e.id), ['L1'], 'a file alone, with no words at all, is enough to surface the entry whose terrain that file signals — the whole point of improvement ③');
+    assert.deepEqual(tl.leconsPourTache('', { lecons: parFichier, fichiers: ['README.md'] }), [], 'and an unrelated file still surfaces nothing: adding a second signal must not become a way to always match');
+    assert.equal(tl.leconsPourTache('un test', { lecons: parFichier, fichiers: ['scripts/check-house.mjs'] })[0].correspondances, 2, 'both signals add up, so the entry that word AND file both point at ranks first — the most certainly relevant one');
+
+    // ④ LES ENTRÉES ÉQUIVALENTES (2026-09-23, demandé en cours de tâche : « regrouper les leçons si
+    // elles sont équivalentes, les fusionner si besoin, SANS PERDRE LA VALEUR, toujours »).
+    const proches = [
+      { id: 'L1', titre: 'L1 — Un mécanisme qui ne sort pas du script est une intention', nature: 'leçon', mots: ['détecteur', 'mécanisme', 'rapport'], fichiers: ['scripts/*.mjs'], porteurs: ['findDetecteursMuets'] },
+      { id: 'L2', titre: 'L2 — Un mécanisme qui ne sort jamais du script reste une intention', nature: 'leçon', mots: ['détecteur', 'mécanisme', 'outil'], fichiers: ['scripts/*.mjs'], porteurs: ['findMuets'] },
+      { id: 'L3', titre: 'L3 — Une alarme permanente fait dépenser du travail', nature: 'leçon', mots: ['alerte', 'bandeau'], fichiers: ['scripts/hooks/*.mjs'], porteurs: ['loadMemoire'] },
+    ];
+    const groupes = tl.groupesEquivalents(proches);
+    assert.equal(groupes.length, 1, 'two entries saying the same thing on the same terrain form exactly one group');
+    assert.deepEqual(groupes[0].ids, ['L1', 'L2'], 'and it is the right pair');
+    assert.ok(groupes[0].raisons[0].includes('%'), 'the reason travels with the verdict: a merge proposal without its evidence forces the reasoning to be redone by hand, so it will not be followed');
+    // LE FAUX POSITIF QUI COMPTE : même terrain ne veut pas dire même leçon. L3 et BP3 du vrai
+    // registre parlent toutes deux des tests et n'ont rien à voir — le contenu doit trancher aussi.
+    assert.ok(!groupes.some((g) => g.ids.includes('L3')), 'an entry on a different subject is never absorbed just because something else is nearby');
+    const memeTerrainAutreSujet = tl.similariteLecons(
+      { titre: 'Un test ne doit jamais exiger qu\'un défaut persiste', mots: ['test'], fichiers: ['scripts/check-house.mjs'] },
+      { titre: 'Fournir le fait manquant plutôt qu\'assouplir l\'assertion', mots: ['test'], fichiers: ['scripts/check-house.mjs'] });
+    assert.equal(memeTerrainAutreSujet.equivalentes, false, 'identical terrain with a genuinely different lesson is NOT a duplicate: terrain alone would merge two rules that contradict nothing and teach different things');
+
+    // « SANS PERDRE LA VALEUR » EST VÉRIFIÉ, PAS PROMIS : la proposition est une UNION stricte.
+    const fusion = tl.propositionDeFusion(groupes[0], proches);
+    assert.equal(fusion.accueil, 'L1', 'the OLDEST entry hosts the merge: it is the one already cited elsewhere, so fewer references need following');
+    assert.deepEqual(fusion.absorbees, ['L2'], 'and the newer one is absorbed');
+    assert.ok(['détecteur', 'mécanisme', 'rapport', 'outil'].every((m) => fusion.conserver.mots.includes(m)), 'every terrain word of BOTH entries survives — a merge is a union, never a choice between two texts');
+    assert.deepEqual(fusion.conserver.porteurs.sort(), ['findDetecteursMuets', 'findMuets'], 'and both carriers survive: dropping one would silently unhook the rule it was holding');
+    assert.equal(fusion.conserver.titres.length, 2, 'both original wordings are kept for the human who writes the merged text');
+    // LE POINT LE PLUS IMPORTANT DU MÉCANISME : un identifiant absorbé ne disparaît JAMAIS. Une
+    // ligne de suivi ou un commentaire qui cite L2 doit continuer de mener quelque part — sinon la
+    // fusion fabrique exactement la référence morte que cet outil traque par ailleurs.
+    assert.equal(fusion.renvoiObligatoire.length, 1, 'the absorbed id keeps a section of its own');
+    assert.match(fusion.renvoiObligatoire[0], /## L2 —[\s\S]*Fusionnée dans\*\* : L1/, 'and that section is a redirect, so an existing citation of L2 still resolves instead of becoming the dead reference this very tool hunts elsewhere');
+    assert.equal(fusion.avertissement, null, 'two entries of the same nature merge without reservation');
+    const melange = tl.propositionDeFusion({ ids: ['L1', 'BP9'], raisons: ['x'] }, [...proches, { id: 'BP9', titre: 'BP9 — Un mécanisme muet dans le script est une simple intention', nature: 'bonne pratique', mots: ['mécanisme'], fichiers: [], porteurs: [] }]);
+    assert.ok(melange.avertissement, 'merging a lesson paid for by a mistake with a practice that cost nothing is warned about, never silently done: what distinguishes them is exactly what would be lost');
+    // Le document sait lire un renvoi, sinon le mécanisme ne survivrait pas à sa propre application.
+    const avecRenvoi = tl.parseLecons('## L9 — ancienne\n\n**Fusionnée dans** : L1\n');
+    assert.equal(avecRenvoi[0].fusionneeDans, 'L1', 'a merged entry is parsed as a redirect rather than as a live entry');
+    assert.deepEqual(tl.groupesEquivalents([...proches, { ...proches[1], id: 'L4', fusionneeDans: 'L1' }]).length, 1, 'and a redirect never joins a group again: it is already merged, re-proposing it would be a loop');
+
+    // ①② LE COMPTEUR DE REMONTÉES — « est-ce que ressortir sert ? » et « que faut-il retirer ? ».
+    const lecCompteur = [{ id: 'L1' }, { id: 'L2' }, { id: 'L3' }, { id: 'L4', fusionneeDans: 'L1' }];
+    const compteur = { occasions: 40, entrees: { L1: { remontees: 0, occasionsALObservation: 0 }, L2: { remontees: 12, occasionsALObservation: 0 }, L3: { remontees: 12, occasionsALObservation: 38 } } };
+    const an = tl.analyseRemontees(compteur, lecCompteur, [{ nature: 'jugement', verdict: 'appliquée', entree: 'L2', parUtilisateur: true }]);
+    const etatDeId = (id) => an.etats.find((e) => e.id === id).etat;
+    assert.equal(etatDeId('L1'), 'jamais servie', 'an entry that never surfaced across enough occasions is dead weight — improvement ②, the register finally has an exit');
+    assert.equal(etatDeId('L2'), 'vivante', 'an entry that surfaces AND has been judged applied is doing its job');
+    // LE GARDE-FOU CONTRE L'ACCUSATION PRÉMATURÉE (L4) : les occasions se comptent depuis l'ARRIVÉE
+    // de l'entrée, jamais depuis le début du compteur — sinon une entrée écrite ce matin hériterait
+    // du passé de toutes les autres et serait condamnée avant d'avoir vécu.
+    assert.equal(etatDeId('L3'), 'trop tôt', 'a freshly added entry is never judged on occasions that predate it');
+    assert.equal(etatDeId('L4'), 'renvoi', 'a merged entry is not judged at all: no longer surfacing is precisely what it is for');
+    const sansJugement = tl.analyseRemontees(compteur, lecCompteur, []);
+    assert.equal(sansJugement.etats.find((e) => e.id === 'L2').etat, 'sert sans effet connu', 'and an entry that surfaces a lot while never being judged applied is named — improvement ①, the only measure of the stated goal: putting entries into practice rather than filing them');
+    assert.ok(tl.constatsRemontees(sansJugement, groupes, lecCompteur).every((c) => c.etat === 'a-trancher'), 'all of these are À TRANCHER, never RETENU: removing or merging an entry is a decision about what the project keeps, and the tool proposes it rather than settling it');
+    // L5 une fois de plus : un compteur vide ne condamne personne.
+    assert.ok(tl.analyseRemontees({ occasions: 0, entrees: {} }, lecCompteur, []).etats.every((e) => ['jamais observée', 'renvoi'].includes(e.etat)), 'an empty counter reports "not yet observed" for everyone rather than convicting the whole register of being useless');
+
     // LE PROCESS lui-même, enregistré comme les cinq autres — sinon il n'existe que dans ma tête.
     const godXp = await import('../scripts/god-of-all-process.mjs');
     const xpProc = godXp.PROCESSES.find((p) => p.slug === 'xp-ia');
@@ -5652,6 +5722,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     const angelSrc = fs.readFileSync('scripts/angel-of-ia-process.mjs', 'utf8');
     assert.match(angelSrc, /id: "xp-lecons"[\s\S]{0,400}observable: false/, 'and the rule it carries is declared non-observable: no mechanism can see a finding pass through a conversation, so angel ASKS and refuses to be green without an answer — the only mechanism available when the proof does not exist');
     console.log(`Passed: the XP process (2026-09-23, task #221, named by the user) closes the loop the register alone could not: a lesson is discovered, recorded, analysed at the Ronde, and comes back at the moment it applies. The user's own question — "à toi de me dire si toutes les connexions sont bien là" — is answered by auditChaineXp() against the real repository rather than by a claim, and it found link 1 genuinely missing on its first run. Three defences keep the twice-a-day reminder from becoming the furniture L6 describes: the terrain is declared by each entry rather than guessed, no match means nothing printed, and the cap is strict. Two judgements are kept out of the agent's hands on purpose: the period conclusion is written by hand because no mechanism can produce it, and whether an entry was genuinely APPLIED belongs to the user alone. Real state: ${reel.total} entries (${reel.lecons_} lessons, ${reel.pratiques} practices), chain ${chaineReelle.branches}/${chaineReelle.total} wired.`);
+    console.log(`Passed: the four improvements asked for once the chain worked (2026-09-23, task #222). ③ A file path now counts as much as the words of the sentence, because the same task gets phrased ten ways while a path does not lie about what is being touched — and the wildcard stays deliberately poor, never crossing a directory separator, since a broad pattern that swallows subdirectories ends up matching everything. ④ Equivalent entries are grouped transitively and a merge is PROPOSED, never performed: the promise "sans perdre la valeur, toujours" is verified rather than stated — the union of terrains, carriers and wordings must survive, mixed natures are warned about, and the absorbed id keeps a redirect section so an existing citation still resolves instead of becoming the dead reference this same tool hunts elsewhere. The false positive that matters is covered: identical terrain with a genuinely different lesson is not a duplicate. ① Surfacings are counted so the only real question can be asked — an entry that surfaces a lot and is never judged applied is named. ② Which finally gives the register an exit: an entry that never surfaced across enough occasions is dead weight. Both are À TRANCHER and never RETENU, because removing or merging is a decision about what the project keeps. Occasions count from an entry's own arrival, so a fresh one is never condemned for a past it did not have.`);
 
     console.log(`Passed: the transverse lessons register (2026-09-23, task #220) is no longer a text nothing re-reads — the trap it documents twice over (L2, a mechanism that never leaves the script; L7, a written intention never prevented anything). Each lesson now names the mechanism that carries it when nobody remembers it, tool-learning prints that audit and feeds its findings into its own action plan, and the state that justifies the whole thing is told apart from the other two: a PHANTOM carrier — a mechanism named in writing that does not exist — reassures wrongly and is worse than a lesson that admits it has none, exactly the reason checkActionChain() verifies that a task announced by an action plan is real. A declared impossibility produces no finding at all, since reproaching a settled decision at every passage would be L6 committed by the tool publishing it. Real register right now: ${reel.total} lessons, ${reel.portees} mechanically carried, ${reel.sansMecanisme} declared impossible with its reason, 0 phantom, 0 silent.`);
   }

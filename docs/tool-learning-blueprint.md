@@ -139,3 +139,58 @@ devient un meuble qu'on apprend à ignorer :
   défaut que ce dispositif existe pour combattre. L'enregistrement **refuse** un verdict qui ne porte
   pas la marque explicite qu'il vient d'elle : aucune mécanique ne peut prouver son origine, mais
   elle peut refuser de l'inventer.
+
+## Garder le registre efficace, sinon il cesse de protéger
+
+Un registre qui ne fait que grossir finit par ne plus être lu. L'efficacité n'est donc pas du
+confort : c'est la condition de survie du dispositif. Trois mécanismes, et le même principe les
+gouverne — **l'outil propose, il ne décide jamais**, parce que retirer ou fusionner une entrée est
+une décision sur ce que le projet garde.
+
+### Regrouper les entrées équivalentes
+
+Un registre se remplit entrée par entrée, chacune écrite le jour où son erreur a fait mal, donc sans
+vue d'ensemble. Deux entrées finissent par dire la même chose sous deux angles. **Le coût n'est pas
+l'encombrement : c'est que le rappel en sert DEUX là où une seule suffirait**, ce qui consomme le
+plafond et évince une entrée réellement différente.
+
+La détection exige **deux recouvrements simultanés**, jamais un seul : le TERRAIN *et* la
+formulation. Le terrain seul produirait des fusions absurdes — deux entrées peuvent porter sur le
+même sujet en enseignant des choses opposées. Le regroupement est **transitif** : si A ressemble à B
+et B à C, les trois forment un groupe, sinon on annoncerait trois problèmes là où il y en a un.
+
+### Fusionner sans jamais perdre
+
+La contrainte « sans perdre la valeur » est dure, et elle dicte toute la forme du mécanisme :
+
+1. **La fusion est une UNION, jamais un arbitrage** entre deux textes : les terrains, les mécanismes
+   porteurs et les formulations d'origine survivent tous.
+2. **L'identifiant absorbé ne disparaît pas.** Il garde une section réduite à un renvoi, pour qu'une
+   citation faite ailleurs — un commentaire de code, une ligne de suivi — mène encore quelque part.
+   Un identifiant supprimé fabriquerait une **référence morte**, exactement le défaut que ce genre
+   d'outil traque par ailleurs.
+3. **La proposition ne rédige pas le texte fusionné.** Elle rend ce qui doit survivre. Un texte
+   rédigé automatiquement serait relu en diagonale et perdrait justement ce qu'on promet de garder.
+4. **Fusionner deux entrées de natures différentes déclenche un avertissement** : ce qui les
+   distingue est précisément ce que la fusion effacerait.
+
+### Compter les remontées, pour pouvoir sortir du registre
+
+Sans compteur, on ne sait ni si une entrée sert, ni laquelle retirer. Deux verdicts en découlent :
+
+- **jamais remontée** après assez d'occasions → poids mort ;
+- **remontée souvent et jamais jugée appliquée** → elle ne sert à rien telle qu'elle est écrite.
+
+**Deux garde-fous sans lesquels ce compteur ferait plus de mal que de bien :**
+
+- Les occasions se comptent **depuis l'arrivée de l'entrée**, jamais depuis le début du compteur —
+  sinon une entrée écrite ce matin hériterait du passé de toutes les autres et serait condamnée
+  avant d'avoir vécu. Accuser à tort une entrée utile la ferait retirer, et on repaierait l'erreur
+  qui l'avait fait naître.
+- **L'occasion se compte même quand rien ne remonte.** Ne compter que les succès rendrait chaque
+  entrée parfaite par construction, et c'est précisément ce silence-là qui rend un « jamais servie »
+  interprétable.
+
+**Limite à déclarer** : un compteur mesure des REMONTÉES, jamais une application réelle. Savoir
+qu'une entrée est ressortie douze fois ne dit pas qu'elle a changé une décision — d'où le verdict
+d'application laissé à l'humain, et d'où la formulation en question plutôt qu'en condamnation.

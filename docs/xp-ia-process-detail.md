@@ -102,6 +102,43 @@ révélée**. Une observation ponctuelle va dans le suivi ; une règle qui ordon
   possible, avec sa raison. Un **porteur fantôme** (nommé, introuvable) est le pire des cas : une
   référence morte ressemble à une garantie, donc elle rassure à tort.
 
+**Le terrain se déclare sur DEUX signaux** *(2026-09-23, amélioration ③)* : les mots (`· mots : …`)
+et, facultativement, les fichiers (`· fichiers : …`, un fragment de chemin avec `*` comme seul
+joker, qui ne traverse jamais un séparateur de dossier). Les deux comptent à égalité et s'ajoutent,
+de sorte que l'entrée désignée par les DEUX signaux remonte en premier. La raison d'être du second :
+une même tâche se formule de dix façons, alors qu'un chemin ne ment pas sur ce qu'on touche.
+
+---
+
+## Partie 4bis — Le registre reste efficace : regrouper, fusionner, sortir
+
+*(2026-09-23, tâche #222 — trois améliorations demandées une fois la chaîne en place.)*
+
+**Le problème que ces trois règlent est le même** : un registre qui ne fait que grossir finit par ne
+plus être lu, donc par ne plus rien protéger. L'efficacité n'est pas du confort ici, c'est la
+condition de survie du dispositif.
+
+| Mécanisme | Ce qu'il repère | Ce qu'il en fait |
+|---|---|---|
+| `groupesEquivalents()` | deux entrées qui disent la même chose sur le même terrain | **propose** une fusion, avec ses preuves chiffrées |
+| `propositionDeFusion()` | ce qui doit survivre à cette fusion | rend l'**union** des terrains, porteurs et formulations, plus le renvoi obligatoire |
+| `analyseRemontees()` | une entrée jamais remontée, ou remontée sans jamais être appliquée | la **nomme**, en état « à trancher » |
+
+**« Sans perdre la valeur, toujours » est une contrainte dure**, et elle dicte toute la forme :
+l'outil propose sans jamais fusionner lui-même ; la fusion est une union et jamais un arbitrage ;
+et **l'identifiant absorbé garde sa section comme renvoi**, parce qu'une citation faite il y a un
+mois doit continuer de mener quelque part. Un identifiant supprimé fabriquerait une référence morte,
+c'est-à-dire exactement le défaut que ce paysage traque partout ailleurs.
+
+**Le garde-fou contre l'accusation prématurée** : une entrée n'est jamais jugée avant d'avoir eu
+assez d'occasions de servir, et ces occasions se comptent **depuis son arrivée à elle**. Accuser à
+tort une entrée utile la ferait retirer, et on repaierait l'erreur qui l'avait fait naître.
+
+**La limite honnête** : le compteur mesure les REMONTÉES, jamais l'application réelle. Savoir qu'une
+entrée est ressortie douze fois ne dit pas qu'elle a changé une décision — c'est pourquoi le verdict
+d'application reste celui de l'utilisateur, et pourquoi « remontée souvent, jamais jugée appliquée »
+est formulé comme une question et non comme une condamnation.
+
 ---
 
 ## Partie 5 — Qui juge, et cette répartition ne bouge pas
@@ -126,6 +163,8 @@ Tout ce process est atteignable depuis les documents seuls, sans une ligne de co
 - **Le code** : `scripts/tool-learning.mjs`, dont chaque fonction porte en commentaire le POURQUOI
   de sa forme, jamais seulement le QUOI.
 - **Le journal** : `docs/tool-learning/xp-journal.json`, trois natures jamais mélangées.
+- **Le compteur** : `docs/tool-learning/xp-remontees.json`, les occasions et les remontées par
+  entrée. Données de mesure, jamais de jugement — le verdict d'application reste humain.
 - **Le contrôleur** : `scripts/angel-of-ia-process.mjs`, qui porte la règle `xp-lecons` et refuse
   d'être au vert tant qu'elle n'a pas reçu de réponse. C'est le contrôleur de la CONDUITE, jamais
   d'un déroulé : ce process décrit un comportement à tenir, pas les étapes d'une activité.

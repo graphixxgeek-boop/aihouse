@@ -451,7 +451,34 @@ export function natureDe(id) {
 function motsDuTerrain(ligne) {
   const apres = String(ligne ?? "").split("· mots :")[1];
   if (!apres) return [];
+  // Le segment « · fichiers : » peut suivre celui des mots : on ne garde que ce qui précède.
+  return apres.split("· fichiers :")[0].split(",").map((m) => m.trim().toLowerCase()).filter(Boolean);
+}
+
+// LE TERRAIN PAR FICHIER (2026-09-23, amélioration ③ de la tâche #222). Les mots de la phrase ne
+// suffisent pas : une même tâche se formule de dix façons, et si je dis « je reprends ce bout de
+// code » sans employer le mot « test », la leçon sur les tests ne remonte pas alors qu'elle
+// s'applique. Le FICHIER, lui, ne ment pas sur ce qu'on est en train de toucher.
+//
+// La syntaxe est volontairement pauvre — un fragment de chemin, avec `*` comme seul joker — parce
+// qu'une vraie grammaire de motifs se paierait en faux rapprochements, et qu'un garde-fou qui
+// accuse à tort cesse d'être lu (L4). Segment facultatif : une entrée qui ne déclare que des mots
+// continue de fonctionner exactement comme avant.
+function fichiersDuTerrain(ligne) {
+  const apres = String(ligne ?? "").split("· fichiers :")[1];
+  if (!apres) return [];
   return apres.split(",").map((m) => m.trim().toLowerCase()).filter(Boolean);
+}
+
+export function cheminCorrespond(chemin, motif) {
+  const c = String(chemin ?? "").toLowerCase();
+  const m = String(motif ?? "").toLowerCase().trim();
+  if (!c || !m) return false;
+  if (!m.includes("*")) return c.includes(m);
+  // Un `*` ne traverse jamais un séparateur de dossier : `scripts/*.mjs` ne doit pas attraper
+  // `scripts/hooks/x.mjs`, sinon un motif large finirait par tout attraper sans qu'on s'en aperçoive.
+  const re = new RegExp(m.split("*").map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("[^/]*"));
+  return re.test(c);
 }
 
 export function parseLecons(texte = "") {
@@ -463,11 +490,136 @@ export function parseLecons(texte = "") {
     if (!id) continue;
     const ligne = (sec.match(/^\*\*Porté par\*\*\s*:\s*(.+)$/m) || [])[1] ?? null;
     const terrain = (sec.match(/^\*\*Terrain\*\*\s*:\s*(.+)$/m) || [])[1] ?? null;
+    // Un identifiant absorbé par une fusion reste une entrée du document — il ne disparaît jamais,
+    // il RENVOIE. C'est ce qui permet à une citation de L8 faite il y a un mois de mener quelque part.
+    const fusionneeDans = (sec.match(/^\*\*Fusionnée dans\*\*\s*:\s*(\S+)/m) || [])[1] ?? null;
     const porteurs = [];
     if (ligne) for (const m of ligne.matchAll(PORTEUR_IDENT_RE)) porteurs.push(m[1]);
-    lecons.push({ id, titre, nature: natureDe(id), portePar: ligne, porteurs, terrain, mots: motsDuTerrain(terrain) });
+    lecons.push({ id, titre, nature: natureDe(id), portePar: ligne, porteurs, terrain, mots: motsDuTerrain(terrain), fichiers: fichiersDuTerrain(terrain), fusionneeDans });
   }
   return lecons;
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// LES ENTRÉES ÉQUIVALENTES — regrouper, proposer une fusion, ne JAMAIS perdre
+// ————————————————————————————————————————————————————————————————————————
+//
+// DEMANDE DE L'UTILISATEUR (2026-09-23, tâche #222) : « la capacité de l'outil à regrouper les
+// leçons si elles sont équivalentes, à les fusionner si besoin, sans perdre la valeur, TOUJOURS,
+// mais pour rendre les choses plus efficaces ».
+//
+// LE PROBLÈME EST RÉEL ET IL ARRIVE VITE. Un registre grossit entrée par entrée, chacune écrite le
+// jour où son erreur a fait mal — donc sans vue d'ensemble. Deux entrées finissent par dire la même
+// chose sous deux angles, et le coût n'est pas l'encombrement : c'est que le rappel en sert DEUX là
+// où une seule suffirait, ce qui consomme le plafond et évince une entrée vraiment différente.
+//
+// « SANS PERDRE LA VALEUR, TOUJOURS » est une contrainte dure, pas une précaution de style, et elle
+// dicte toute la forme de ce mécanisme :
+//   · l'outil PROPOSE, il ne fusionne jamais tout seul — même frontière que partout ailleurs ici ;
+//   · la proposition est une UNION, jamais un choix entre deux textes : les deux provenances, les
+//     deux terrains, les deux porteurs survivent dans l'entrée fusionnée ;
+//   · l'identifiant absorbé ne disparaît PAS. Il reste dans le document comme renvoi
+//     (« **Fusionnée dans** : L4 »), parce qu'un commentaire de code ou une ligne de suivi qui cite
+//     L8 doit continuer de mener quelque part. Un identifiant supprimé serait une référence morte —
+//     exactement le « porteur fantôme » que ce même outil traque par ailleurs.
+export const SEUILS_EQUIVALENCE = {
+  // Deux entrées ne sont candidates que si elles mordent sur LE MÊME terrain ET disent la même
+  // chose. Le terrain seul ne suffit pas : L3 et BP3 parlent toutes deux des tests et n'ont rien à
+  // voir (l'une interdit de dépendre d'un défaut, l'autre interdit d'assouplir une assertion).
+  terrain: 0.5,
+  contenu: 0.34,
+};
+
+// Mots trop courants pour dire quoi que ce soit d'une ressemblance. Liste fermée par nature (la
+// grammaire du français ne bouge pas), donc hors du champ de l'Article 24 — écrit ici plutôt que tu.
+const MOTS_VIDES = new Set("un une le la les des de du d l et ou a à au aux en dans par pour sur ce cette ces qui que quoi dont où est sont être avoir jamais toujours plus moins pas ne n s se sa son ses il elle on nous vous ils elles y c qu'".split(/\s+/));
+
+function motsSignifiants(texte) {
+  return new Set(String(texte ?? "").toLowerCase().replace(/[^a-zà-ÿ0-9\s]/g, " ").split(/\s+/)
+    .filter((m) => m.length > 3 && !MOTS_VIDES.has(m)));
+}
+
+function jaccard(a, b) {
+  if (!a.size || !b.size) return 0;
+  let communs = 0;
+  for (const x of a) if (b.has(x)) communs += 1;
+  return communs / (a.size + b.size - communs);
+}
+
+export function similariteLecons(a, b, { seuils = SEUILS_EQUIVALENCE } = {}) {
+  const terrain = jaccard(new Set([...(a.mots ?? []), ...(a.fichiers ?? [])]), new Set([...(b.mots ?? []), ...(b.fichiers ?? [])]));
+  const motsA = motsSignifiants(a.titre);
+  const motsB = motsSignifiants(b.titre);
+  const contenu = jaccard(motsA, motsB);
+  const communs = [...motsA].filter((m) => motsB.has(m));
+  return {
+    terrain: Number(terrain.toFixed(2)), contenu: Number(contenu.toFixed(2)), communs,
+    equivalentes: terrain >= seuils.terrain && contenu >= seuils.contenu,
+    // La RAISON voyage avec le verdict : une proposition de fusion sans ses preuves demande de
+    // refaire le raisonnement à la main, donc ne sera pas suivie.
+    pourquoi: `terrains proches à ${Math.round(terrain * 100)} %, formulations proches à ${Math.round(contenu * 100)} %${communs.length ? ` (mots partagés : ${communs.join(", ")})` : ""}`,
+  };
+}
+
+// Le regroupement est TRANSITIF, sur le patron déjà éprouvé de fusionnerClusters() chez
+// CLONE-HUNTER : si A ressemble à B et B à C, les trois forment un seul groupe. Les rendre par
+// paires ferait apparaître trois problèmes là où il y en a un — c'est la leçon L8, appliquée ici.
+export function groupesEquivalents(lecons = [], { seuils = SEUILS_EQUIVALENCE } = {}) {
+  const vivantes = lecons.filter((l) => !l.fusionneeDans);
+  const groupes = [];
+  const place = new Map();
+  for (let i = 0; i < vivantes.length; i += 1) {
+    for (let j = i + 1; j < vivantes.length; j += 1) {
+      const sim = similariteLecons(vivantes[i], vivantes[j], { seuils });
+      if (!sim.equivalentes) continue;
+      const gi = place.get(vivantes[i].id); const gj = place.get(vivantes[j].id);
+      if (gi !== undefined && gj !== undefined) {
+        if (gi === gj) { groupes[gi].raisons.push(sim.pourquoi); continue; }
+        groupes[gi].ids.push(...groupes[gj].ids);
+        groupes[gi].raisons.push(...groupes[gj].raisons, sim.pourquoi);
+        for (const id of groupes[gj].ids) place.set(id, gi);
+        groupes[gj].ids = [];
+      } else if (gi !== undefined) { groupes[gi].ids.push(vivantes[j].id); groupes[gi].raisons.push(sim.pourquoi); place.set(vivantes[j].id, gi); }
+      else if (gj !== undefined) { groupes[gj].ids.push(vivantes[i].id); groupes[gj].raisons.push(sim.pourquoi); place.set(vivantes[i].id, gj); }
+      else {
+        groupes.push({ ids: [vivantes[i].id, vivantes[j].id], raisons: [sim.pourquoi] });
+        place.set(vivantes[i].id, groupes.length - 1); place.set(vivantes[j].id, groupes.length - 1);
+      }
+    }
+  }
+  return groupes.filter((g) => g.ids.length > 1).map((g) => ({ ids: [...new Set(g.ids)].sort(), raisons: [...new Set(g.raisons)] }));
+}
+
+// LA PROPOSITION DE FUSION. Elle ne rend jamais un texte à recopier tel quel : elle rend ce qui doit
+// SURVIVRE, pour que la rédaction finale reste un geste humain conscient. Une fusion rédigée
+// automatiquement serait relue en diagonale et perdrait justement ce qu'on promet de garder.
+export function propositionDeFusion(groupe, lecons = []) {
+  const membres = groupe.ids.map((id) => lecons.find((l) => l.id === id)).filter(Boolean);
+  if (membres.length < 2) return null;
+  // L'entrée qui accueille est la PLUS ANCIENNE (identifiant le plus petit) : elle est déjà citée
+  // ailleurs, et faire porter la fusion par la plus récente multiplierait les renvois à suivre.
+  const parNumero = [...membres].sort((a, b) => (parseInt(String(a.id).replace(/\D/g, ""), 10) || 0) - (parseInt(String(b.id).replace(/\D/g, ""), 10) || 0));
+  const accueil = parNumero[0];
+  const absorbees = parNumero.slice(1);
+  return {
+    accueil: accueil.id, absorbees: absorbees.map((l) => l.id), raisons: groupe.raisons,
+    // Ce que l'entrée fusionnée DOIT contenir. Union stricte, jamais un arbitrage entre deux textes.
+    conserver: {
+      titres: membres.map((l) => l.titre),
+      mots: [...new Set(membres.flatMap((l) => l.mots ?? []))],
+      fichiers: [...new Set(membres.flatMap((l) => l.fichiers ?? []))],
+      porteurs: [...new Set(membres.flatMap((l) => l.porteurs ?? []))],
+      natures: [...new Set(membres.map((l) => l.nature))],
+    },
+    // LE RENVOI EST OBLIGATOIRE, et c'est la garantie « sans perdre la valeur » rendue vérifiable :
+    // sans lui, une citation de l'identifiant absorbé ne mènerait plus nulle part.
+    renvoiObligatoire: absorbees.map((l) => `## ${l.id} — ${String(l.titre).replace(/^\S+\s*—\s*/, "")}\n\n**Fusionnée dans** : ${accueil.id}`),
+    // Un avertissement plutôt qu'un blocage : deux natures différentes dans un même groupe (une
+    // leçon payée et une bonne pratique) fusionnent mal — ce qui distingue les deux se perdrait.
+    avertissement: new Set(membres.map((l) => l.nature)).size > 1
+      ? "natures différentes dans le groupe : fusionner une leçon payée par une erreur avec une bonne pratique effacerait précisément ce qui les distingue — à ne faire qu'en connaissance de cause"
+      : null,
+  };
 }
 
 // CE QUI S'APPLIQUE À CE QUE JE M'APPRÊTE À FAIRE. Appelé par tool-brain avant une tâche et par le
@@ -478,14 +630,24 @@ export function parseLecons(texte = "") {
 // une correspondance nulle rend une liste VIDE — jamais un repêchage « au cas où ». Un rappel qui
 // sort à chaque fois est un meuble, et le projet a déjà payé ce prix une fois (un rappel de Ronde
 // ignoré plus de deux cents fois, mot pour mot le même).
-export function leconsPourTache(tache, { lecons = [], max = 3 } = {}) {
+export function leconsPourTache(tache, { lecons = [], max = 3, fichiers = [] } = {}) {
   const texte = String(tache ?? "").toLowerCase();
-  if (!texte.trim()) return [];
+  const chemins = (Array.isArray(fichiers) ? fichiers : [fichiers]).filter(Boolean);
+  // Ni phrase ni fichier : on ne sert RIEN. Un repêchage « au cas où » rendrait le rappel permanent,
+  // donc invisible — c'est la moitié du dispositif, pas une protection accessoire.
+  if (!texte.trim() && !chemins.length) return [];
   const notees = lecons
-    .map((l) => ({ l, score: l.mots.filter((m) => texte.includes(m)).length }))
+    .map((l) => {
+      // Les deux signaux comptent à égalité : un mot reconnu dans la phrase vaut un fichier reconnu
+      // parmi ceux qu'on touche. Les additionner plutôt que choisir l'un des deux fait remonter en
+      // premier l'entrée que les DEUX signaux désignent, qui est la plus sûrement pertinente.
+      const parMots = texte.trim() ? l.mots.filter((m) => texte.includes(m)).length : 0;
+      const parFichiers = chemins.length ? (l.fichiers ?? []).filter((motif) => chemins.some((c) => cheminCorrespond(c, motif))).length : 0;
+      return { l, score: parMots + parFichiers, parMots, parFichiers };
+    })
     .filter((x) => x.score > 0)
     .sort((a, b) => b.score - a.score || String(a.l.id).localeCompare(String(b.l.id)));
-  return notees.slice(0, max).map((x) => ({ ...x.l, correspondances: x.score }));
+  return notees.slice(0, max).map((x) => ({ ...x.l, correspondances: x.score, parMots: x.parMots, parFichiers: x.parFichiers }));
 }
 
 export function auditLecons({ root = ROOT, readFileImpl = readFileSync, existsImpl = existsSync, sourcesImpl } = {}) {
@@ -703,6 +865,103 @@ export function constatsChaineXp(chaine) {
   }));
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LE COMPTEUR DE REMONTÉES — est-ce que ressortir sert réellement à quelque chose ?
+// ————————————————————————————————————————————————————————————————————————
+//
+// DEUX AMÉLIORATIONS D'UN SEUL MÉCANISME (2026-09-23, tâche #222, pistes ① et ②) — elles sont
+// séparées dans l'intention et indissociables dans la mesure, parce que les deux ont besoin de la
+// même donnée : combien de fois une entrée est REMONTÉE, et sur combien d'occasions.
+//
+// ① « Ressortir sert-il à quelque chose ? » Jusqu'ici l'entrée s'affichait et personne ne savait si
+//    ça changeait quoi que ce soit. Une entrée remontée vingt fois et JAMAIS jugée appliquée par
+//    l'utilisateur est soit inutile, soit mal formulée — dans les deux cas c'est une information, et
+//    c'est la seule qui mesure l'objectif principal (mettre en pratique, pas archiver).
+// ② « Le registre n'a pas de sortie. » Rien n'en retirait jamais rien. Une entrée qui ne correspond
+//    à rien pendant des dizaines d'occasions est du poids mort, et un registre qui ne fait que
+//    grossir finit par ne plus être lu — donc par ne plus rien protéger.
+//
+// LE GARDE-FOU CONTRE L'ACCUSATION PRÉMATURÉE (L4, qui est elle-même dans le registre) : une entrée
+// n'est jamais jugée avant d'avoir eu assez d'occasions de servir, et ces occasions se comptent
+// DEPUIS SA PROPRE ARRIVÉE, jamais depuis le début du compteur — sinon une entrée écrite ce matin
+// hériterait du passé de toutes les autres et serait condamnée avant d'avoir vécu.
+export const REMONTEES_PATH = "docs/tool-learning/xp-remontees.json";
+export const SEUILS_REMONTEES = {
+  // Assez d'occasions pour qu'un silence veuille dire quelque chose. Volontairement haut : accuser
+  // une entrée utile de ne servir à rien la ferait retirer, et on repaierait son erreur d'origine.
+  occasionsAvantDeJuger: 25,
+  // Assez de remontées pour que l'absence de jugement d'application devienne une question.
+  remonteesAvantDeDouter: 8,
+};
+
+export function loadRemontees({ root = ROOT, readFileImpl = readFileSync } = {}) {
+  try {
+    const brut = JSON.parse(readFileImpl(join(root, REMONTEES_PATH), "utf8"));
+    return { occasions: Number(brut.occasions) || 0, entrees: brut.entrees && typeof brut.entrees === "object" ? brut.entrees : {} };
+  } catch { return { occasions: 0, entrees: {} }; }
+}
+
+// Appelée par les points de remontée RÉELS (tool-brain et le crochet de commit), jamais par
+// leconsPourTache() elle-même : cette fonction-là est consultée par les tests et par des appelants
+// qui ne « voient » rien, et compter leurs appels fausserait la mesure avec du bruit d'outillage.
+export function enregistrerRemontee(idsServis = [], { toutes = [], root = ROOT, readFileImpl = readFileSync, writeFileImpl = writeFileSync, date = new Date().toISOString().slice(0, 10) } = {}) {
+  const c = loadRemontees({ root, readFileImpl });
+  c.occasions += 1;
+  for (const l of toutes) {
+    const e = c.entrees[l.id] ?? (c.entrees[l.id] = { remontees: 0, premiereObservation: date, occasionsALObservation: c.occasions - 1, derniere: null });
+    // Une entrée déjà connue garde sa date d'arrivée : c'est elle qui rend son silence interprétable.
+    if (!e.premiereObservation) { e.premiereObservation = date; e.occasionsALObservation = c.occasions - 1; }
+  }
+  for (const id of idsServis) {
+    const e = c.entrees[id] ?? (c.entrees[id] = { remontees: 0, premiereObservation: date, occasionsALObservation: c.occasions - 1, derniere: null });
+    e.remontees += 1; e.derniere = date;
+  }
+  writeFileImpl(join(root, REMONTEES_PATH), JSON.stringify(c, null, 2) + "\n", "utf8");
+  return c;
+}
+
+export function analyseRemontees(compteur = { occasions: 0, entrees: {} }, lecons = [], jugements = [], { seuils = SEUILS_REMONTEES } = {}) {
+  const appliquees = new Set(jugements.filter((j) => j.verdict === "appliquée" && j.entree).map((j) => j.entree));
+  const etats = lecons.map((l) => {
+    // Une entrée absorbée par une fusion n'est plus jugée : elle ne sert plus, c'est le but.
+    if (l.fusionneeDans) return { id: l.id, etat: "renvoi", detail: `fusionnée dans ${l.fusionneeDans} — conservée comme renvoi pour que les citations existantes mènent quelque part` };
+    const e = compteur.entrees[l.id];
+    if (!e) return { id: l.id, etat: "jamais observée", detail: "le compteur ne l'a pas encore vue passer — aucune conclusion possible" };
+    const occasions = Math.max(0, compteur.occasions - (e.occasionsALObservation ?? 0));
+    if (occasions < seuils.occasionsAvantDeJuger) return { id: l.id, etat: "trop tôt", remontees: e.remontees, occasions, detail: `${occasions} occasion(s) depuis son arrivée, il en faut ${seuils.occasionsAvantDeJuger} pour qu'un silence veuille dire quelque chose` };
+    if (!e.remontees) return { id: l.id, etat: "jamais servie", remontees: 0, occasions, detail: `jamais remontée en ${occasions} occasions — soit son terrain est mal déclaré, soit elle n'a plus lieu d'être` };
+    if (e.remontees >= seuils.remonteesAvantDeDouter && !appliquees.has(l.id)) return { id: l.id, etat: "sert sans effet connu", remontees: e.remontees, occasions, detail: `remontée ${e.remontees} fois et jamais jugée appliquée — soit elle ne sert à rien telle qu'elle est écrite, soit personne n'a encore tranché` };
+    return { id: l.id, etat: "vivante", remontees: e.remontees, occasions, detail: `remontée ${e.remontees} fois${appliquees.has(l.id) ? ", et jugée appliquée au moins une fois" : ""}` };
+  });
+  return { occasions: compteur.occasions, etats, aRetirer: etats.filter((e) => e.etat === "jamais servie").map((e) => e.id), sansEffet: etats.filter((e) => e.etat === "sert sans effet connu").map((e) => e.id) };
+}
+
+export function formatRemontees(analyse, groupes = []) {
+  const l = [`Remontées : ${analyse.occasions} occasion(s) mesurée(s) depuis la mise en place du compteur.`];
+  const parEtat = {};
+  for (const e of analyse.etats) (parEtat[e.etat] ??= []).push(e.id);
+  for (const [etat, ids] of Object.entries(parEtat)) l.push(`  · ${etat} : ${ids.join(", ")}`);
+  if (groupes.length) {
+    l.push(`  · ${groupes.length} groupe(s) d'entrées équivalentes — une fusion rendrait le rappel plus efficace sans rien perdre :`);
+    for (const g of groupes) l.push(`      ${g.ids.join(" + ")} (${g.raisons[0]})`);
+  } else l.push("  · aucune entrée équivalente à une autre : le registre ne dit pas deux fois la même chose.");
+  return l;
+}
+
+export function constatsRemontees(analyse, groupes = [], lecons = []) {
+  return [
+    ...analyse.aRetirer.map((id) => ({
+      constat: `${id} n'est jamais remontée en ${analyse.etats.find((e) => e.id === id)?.occasions} occasions — poids mort dans un registre qui ne cesse de grossir`,
+      etat: A_TRANCHER, tache: `reformuler le terrain de ${id} pour qu'elle atteigne enfin les situations où elle s'applique, ou la retirer du registre` })),
+    ...analyse.sansEffet.map((id) => ({
+      constat: `${id} remonte souvent et n'a jamais été jugée appliquée — ressortir ne suffit visiblement pas`,
+      etat: A_TRANCHER, tache: `à la Ronde, juger si ${id} a été appliquée ; si non, la réécrire pour qu'elle dise un geste concret plutôt qu'un principe` })),
+    ...groupes.map((g) => ({
+      constat: `${g.ids.join(" et ")} disent la même chose (${g.raisons[0]}) — elles occupent deux places du plafond de remontée là où une suffirait`,
+      etat: A_TRANCHER, tache: `fusionner ${g.ids.join(" + ")} en gardant l'union des terrains, des porteurs et des provenances, et laisser un renvoi sur chaque identifiant absorbé` })),
+  ];
+}
+
 export function formatLecons(audit) {
   const l = [];
   if (audit.mesure !== "mesuré") { l.push(`· pas mesuré — ${audit.raison}`); return l; }
@@ -771,6 +1030,11 @@ function main() {
   const chaine = auditChaineXp();
   console.log("");
   for (const l of formatChaineXp(chaine)) console.log(l);
+  // L'EFFET RÉEL DU DISPOSITIF (tâche #222) : est-ce que ressortir sert, et que faut-il retirer.
+  const remontees = analyseRemontees(loadRemontees(), auditL.mesure === "mesuré" ? auditL.lecons : [], journalXp.filter((e) => e.nature === "jugement"));
+  const groupes = auditL.mesure === "mesuré" ? groupesEquivalents(auditL.lecons) : [];
+  console.log("");
+  for (const l of formatRemontees(remontees, groupes)) console.log(l);
 
   // LE PLAN D'ACTION (2026-09-23, tâche #211). TOOL-LEARNING porte la MOITIÉ 2 de l'évolutivité
   // (devenir meilleur), et ses deux constats visent deux responsables différents — les mélanger
@@ -788,6 +1052,7 @@ function main() {
     ...constatsLecons(auditL),
     ...xp.constats,
     ...constatsChaineXp(chaine),
+    ...constatsRemontees(remontees, groupes, auditL.lecons ?? []),
   ];
   const planAppr = buildPlanDaction(constatsApprentissage, { toolSlug: "tool-learning" });
   console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
