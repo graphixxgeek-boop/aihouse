@@ -943,7 +943,7 @@ LE COMPTE COMPLET, PAR MOMENT
   ÉTAPE F4 — la suite : instant / axe / projet             3        non, toujours les trois
   ÉTAPE G — dernier rappel de modèle                     0-1        OUI, seulement si Q1 = oui
   ──────────────────────────────────────────────────  ──────────
-  TOTAL                                                28 à 43
+  TOTAL (hors offres de passer, cf. plus bas)          28 à 43
 
 CONTRAINTE DE FORME : quatre questions par fenêtre au maximum. 28 à 43 questions = 7 à 11 fenêtres
 successives. Ce n'est pas une limite du process, c'est une limite de l'outil de questions — elle se
@@ -1035,3 +1035,47 @@ qu'une machine les distingue — prétendre le contraire serait inventer une mes
 
 PREMIER ENREGISTREMENT RÉEL : les trois questions d'ouverture de la Ronde du 2026-09-23, fermées
 par l'utilisateur juste avant qu'il demande ce mécanisme. La démonstration a précédé la demande.
+
+---------------------------------------------------------------------
+LE PLAFOND ANTI-BOUCLE, et ce qu'une série passée NE fait PAS sauter
+---------------------------------------------------------------------
+
+PLAFOND (MAX_TENTATIVES_PAR_RONDE = 3), demandé le 2026-09-23 : « la fenêtre de question ne doit
+pas non plus réapparaître en boucle de façon intempestive ». Au-delà de trois tentatives DANS LA
+MÊME RONDE, on arrête de reposer. Une fenêtre qui revient une quatrième fois ne recueille plus une
+réponse, elle recueille un agacement — et un agacement rend les réponses suivantes moins bonnes,
+pas plus.
+
+CE N'EST PAS UN ABANDON : la série n'est ni répondue ni passée, elle reste au registre avec son
+compteur et revient à la Ronde suivante (`enAttenteProchaineRonde()`). Ce qui s'arrête, c'est
+l'insistance — jamais le suivi. Sans cette seconde moitié, les questions au-delà du plafond
+disparaîtraient du rapport, ce qui est exactement le défaut que tout ce mécanisme corrige.
+
+CE QU'UNE SÉRIE PASSÉE NE FAIT PAS SAUTER — précisé par l'utilisateur au moment même où il
+choisissait l'autre option : « consolide bien l'ordre des choses si j'avais répondu 2 : tu dois
+reprendre le process exact en sautant les étapes citées uniquement ».
+
+  LE RISQUE DÉSAMORCÉ : « passer cette série » pourrait glisser vers « passer ce moment de la
+  Ronde », puis vers « abréger la fin ». Une permission ponctuelle deviendrait une dispense
+  générale, par le seul effet de l'ambiguïté.
+
+  LA RÈGLE : passer une série saute EXACTEMENT ses questions, et rien d'autre. Toutes les étapes
+  continuent dans le même ordre, y compris celle qui suit immédiatement.
+
+  LES DÉFAUTS SONT DÉCLARÉS, jamais improvisés au moment (DEFAUTS_SERIE_PASSEE) :
+    ouverture             → pas de changement de modèle, mode AUTO, enchaînement d'une traite
+                            (les valeurs les moins engageantes)
+    evaluation-agent      → EVAL-IA produit SANS la moitié jugement, et LE DIT dans le rapport
+    constats-analyse      → les constats restent RETENUS ; écarter demande une raison, et le
+                            silence n'en est pas une
+    calibrage-correctifs  → les correctifs gardent leur niveau calculé, aucun n'est déclassé
+    mise-en-cause         → les points problématiques sont REPORTÉS, jamais effacés
+    la-suite              → ma lecture des trois niveaux est livrée telle quelle, présentée comme
+                            non validée
+
+  UNE SÉRIE INCONNUE DE CETTE TABLE NE PREND AUCUN DÉFAUT : elle se signale et l'agent demande.
+  Improviser une valeur pour une série non prévue est précisément la dérive que la table empêche.
+
+QUESTIONS SUPPLÉMENTAIRES À COMPTER (le mécanisme en crée) :
+  l'offre de passer, 1 par série concernée, au 2e échec  → 0 à 6 selon les séries touchées
+  Le total de la Partie 11 devient donc 28 à 49.

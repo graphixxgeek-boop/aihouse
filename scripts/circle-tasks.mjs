@@ -1392,8 +1392,27 @@ export const PALIERS_QUESTION = [
   { fois: 1, immediat: true, offrirDePasser: false, action: "reposée immédiatement, telle quelle : une fenêtre fermée est d'abord un accident, et un accident se rattrape sans cérémonie" },
 ];
 
-export function questionsAReposer(registre = [], { paliers = PALIERS_QUESTION } = {}) {
-  return (registre ?? []).map((q) => ({ ...q, ...(paliers.find((p) => (q.fois ?? 1) >= p.fois) ?? paliers[paliers.length - 1]) }));
+// LE PLAFOND ANTI-BOUCLE (2026-09-23, demande explicite : « la fenêtre de question ne doit pas non
+// plus réapparaître en boucle de façon intempestive »). Au-delà de trois tentatives DANS LA MÊME
+// RONDE, on arrête de reposer — la série est mise en attente pour la Ronde suivante.
+//
+// POURQUOI CE N'EST PAS UN ABANDON : la série n'est ni répondue ni passée, elle reste au registre
+// avec son compteur. Ce qui s'arrête, c'est l'insistance, pas le suivi. Une fenêtre qui revient une
+// quatrième fois ne recueille plus une réponse, elle recueille un agacement — et un agacement rend
+// les réponses suivantes moins bonnes, pas plus.
+export const MAX_TENTATIVES_PAR_RONDE = 3;
+
+export function questionsAReposer(registre = [], { paliers = PALIERS_QUESTION, max = MAX_TENTATIVES_PAR_RONDE } = {}) {
+  return (registre ?? [])
+    .filter((q) => (q.fois ?? 1) <= max)
+    .map((q) => ({ ...q, ...(paliers.find((p) => (q.fois ?? 1) >= p.fois) ?? paliers[paliers.length - 1]) }));
+}
+
+// enAttenteProchaineRonde() — l'autre moitié du plafond, et elle est indispensable : sans elle, les
+// questions au-delà du plafond disparaîtraient du rapport, ce qui est exactement le défaut que tout
+// ce mécanisme existe pour corriger. Elles sont retirées de l'insistance, jamais de la vue.
+export function enAttenteProchaineRonde(registre = [], { max = MAX_TENTATIVES_PAR_RONDE } = {}) {
+  return (registre ?? []).filter((q) => (q.fois ?? 1) > max);
 }
 
 // SERIES_PASSEES_PATH — les séries que l'utilisateur a EXPLICITEMENT choisi de ne pas traiter. Un
@@ -1424,12 +1443,52 @@ export function passerLaSerie(serie, { pourquoi = null, root = ROOT, readFileImp
   return { passees, restantes };
 }
 
+// CE QU'UNE SÉRIE PASSÉE NE FAIT PAS SAUTER (2026-09-23, précision de l'utilisateur au moment même
+// où il choisissait l'autre option : « consolide bien l'ordre des choses si j'avais répondu 2 : tu
+// dois reprendre le process exact en sautant les étapes citées uniquement »).
+//
+// LE RISQUE QU'IL DÉSAMORCE, et il est réel : « passer cette série » pourrait glisser vers « passer
+// ce moment de la Ronde », puis vers « abréger la fin ». Une permission ponctuelle deviendrait une
+// dispense générale, par le seul effet de l'ambiguïté.
+//
+// LA RÈGLE : passer une série saute EXACTEMENT ses questions, et rien d'autre. Toutes les étapes du
+// process continuent dans le même ordre, y compris celles qui suivent immédiatement la série passée.
+// Les valeurs manquantes sont prises aux défauts DÉCLARÉS ci-dessous, jamais improvisées au moment.
+export const DEFAUTS_SERIE_PASSEE = {
+  ouverture: { changementModeleReponse: "non", mode: "AUTO", rythme: "d'une traite", pourquoi: "les valeurs les moins engageantes : aucun changement de modèle, la sélection calibrée sans action coûteuse" },
+  "evaluation-agent": { effet: "EVAL-IA est produit SANS la moitié jugement de l'utilisateur, et le dit explicitement dans le rapport — jamais un rapport qui ferait comme si la question n'avait pas été prévue" },
+  "constats-analyse": { effet: "les constats restent RETENUS dans le plan d'action, aucun n'est écarté par défaut : écarter demande une raison, et le silence n'en est pas une" },
+  "calibrage-correctifs": { effet: "les correctifs gardent le niveau calculé mécaniquement (obligatoire/recommandé), aucun n'est déclassé" },
+  "mise-en-cause": { effet: "les points problématiques sont REPORTÉS au prochain passage (reporterPointsAuProchainPassage), jamais effacés" },
+  "la-suite": { effet: "ma lecture des trois niveaux est livrée telle quelle, présentée comme non validée" },
+};
+
+export function effetDUneSeriePassee(serie, { defauts = DEFAUTS_SERIE_PASSEE } = {}) {
+  const d = defauts[serie];
+  return {
+    serie,
+    connu: Boolean(d),
+    // Une série inconnue ne prend JAMAIS de défaut inventé : elle se signale. Improviser une valeur
+    // pour une série qu'on n'a pas prévue est exactement la dérive que cette table existe pour
+    // empêcher.
+    effet: d ?? null,
+    etapesSautees: d ? [serie] : [],
+    reste: "toutes les autres étapes du process continuent dans le même ordre, sans exception",
+    avertissement: d ? null : `série « ${serie} » inconnue de DEFAUTS_SERIE_PASSEE : aucun défaut n'est improvisé, l'agent doit demander`,
+  };
+}
+
 // prochaineAction() — ce que l'agent doit faire MAINTENANT, en une réponse plutôt qu'en une lecture
 // de registre. Rend toujours l'un des trois cas, jamais un silence.
 export function prochaineAction({ registre = [], serie = null } = {}) {
   const concernees = questionsAReposer(registre).filter((q) => serie === null || q.serie === serie);
-  if (!concernees.length) return { quoi: "rien", pourquoi: "aucune question en attente" };
-  const pire = concernees.reduce((max, q) => ((q.fois ?? 1) > (max.fois ?? 1) ? q : max), concernees[0]);
+  const reportees = enAttenteProchaineRonde(registre).filter((q) => serie === null || q.serie === serie);
+  if (!concernees.length) {
+    return reportees.length
+      ? { quoi: "arreter-de-reposer", pourquoi: `${reportees.length} question(s) au-delà du plafond de ${MAX_TENTATIVES_PAR_RONDE} tentatives : reportées à la prochaine Ronde, retirées de l'insistance et jamais de la vue`, questions: reportees.map((q) => q.question) }
+      : { quoi: "rien", pourquoi: "aucune question en attente" };
+  }
+  const pire = concernees.reduce((m, q) => ((q.fois ?? 1) > (m.fois ?? 1) ? q : m), concernees[0]);
   return {
     quoi: pire.offrirDePasser ? "reposer-et-offrir-de-passer" : "reposer",
     questions: concernees.map((q) => q.question),
