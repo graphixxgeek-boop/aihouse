@@ -259,6 +259,9 @@ export const AGENT_SCRIPT_FILES = {
   // statut — le garde-fou de l'Article 24 faisant exactement ce pour quoi il a été écrit.
   // Point d'entrée réel de l'ensemble (4 fichiers), jamais un second chemin inventé.
   "smart-breaker": "scripts/check-gemini-quota.mjs",
+  // Nom donné par l'utilisateur (« process.simulation.guardian »), d'où le slug en tirets qui en
+  // dérive ; le fichier, lui, garde l'ordre habituel des noms de scripts de ce dépôt.
+  "process-simulation-guardian": "scripts/process-simulation-guardian.mjs",
 };
 
 export function collectScriptCoverage(covDir, { readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8") } = {}) {

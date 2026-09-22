@@ -2997,6 +2997,53 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(events.find(e=>e.type==='move').detail,'acteur 1 : salon → cuisine','a room change must report the real previous and new room for the real actor, never a generic or wrong one');
   assert.deepEqual(summarizeActions([{label:'r1',response:{story:{round:1,life:{bonusLog:[{bonus:'food'}]},evidence:[]}}}]).map(e=>e.type),['bonus'],'an entry with no decisions array must never crash the extraction');
   assert.deepEqual(summarizeActions([]),[],'an empty log must report zero events, never throw');
+  // GOD-OF-ALL-PROCESS et PROCESS.SIMULATION.GUARDIAN (2026-09-22) — les deux outils de process
+  // demandés par l'utilisateur le matin suivant la nuit autonome. Le premier est le tool-brain des
+  // process (quel process gouverne cette tâche, où en est-on) ; le second est le référent de
+  // discipline d'exécution des simulations, consulté AVANT de brûler une heure de quota.
+  const {whichProcess,processProgress,etapeTrace,findProcessesWithoutGuardian,findProcessDocsMissing,findBrokenProbes,findTensionsOnUnknownProcess,checkAgentSessionDeclared,PROCESSES,TENSIONS_CONNUES}=await import('../scripts/god-of-all-process.mjs');
+  assert.deepEqual(whichProcess('je lance une simulation intégrale').map(p=>p.slug),['simulation'],'a task must be matched to the process that really governs it, so the agent never has to recompose the choice between three documents by hand');
+  assert.deepEqual(whichProcess(''),[],'an empty task must match nothing rather than returning every process indiscriminately');
+  assert.deepEqual(whichProcess('repeindre la cuisine'),[],'a task no written process governs must return nothing — which says a process may be missing, never that one applies');
+  assert.ok(whichProcess('la ronde de simulation').length>=2,'a task straddling two processes must surface both, ranked, never silently pick one');
+  // Les trois réponses de etapeTrace ne se confondent jamais : tracée, non tracée, non vérifiable.
+  assert.deepEqual(etapeTrace({preuve:null}),{verifiable:false},'a step that leaves no verifiable trace must say so, never be counted as done or as missing');
+  assert.deepEqual(etapeTrace({preuve:{fichier:'package.json'}}),{verifiable:true,presente:true},'a real file must be read as a real trace');
+  assert.deepEqual(etapeTrace({preuve:{fichier:'jamais-cree.json'}}),{verifiable:true,presente:false},'a genuinely missing file must be reported missing');
+  // UNE SONDE CASSÉE N'EST PAS UNE ÉTAPE MANQUANTE — la distinction qui a fait rater trois étapes
+  // au tout premier lancement réel de l'outil, alors qu'elles avaient parfaitement eu lieu.
+  const cassee=etapeTrace({preuve:{dossier:'docs/dossier-qui-nexiste-pas/',motif:/./}});
+  assert.ok(cassee.verifiable===false&&typeof cassee.sondeCassee==='string','a probe aimed at a folder that does not exist must be reported as a broken probe, never as a missing step — confusing the two is the exact error this whole toolset exists to prevent');
+  assert.deepEqual(findBrokenProbes(),[],'no probe of the real registry may point at nothing — a broken probe is a defect of THIS tool, never a reproach to the work it watches');
+  assert.deepEqual(findProcessesWithoutGuardian(),[],'every declared process must have a guardian that really exists on disk');
+  assert.deepEqual(findProcessDocsMissing(),[],'every declared process must point at a document that really exists');
+  assert.deepEqual(findTensionsOnUnknownProcess(),[],'a declared tension must never cite a process that no longer exists');
+  assert.ok(TENSIONS_CONNUES.length>0&&TENSIONS_CONNUES.every(t=>t.resolution),'a declared tension without its resolution would leave the next agent to arbitrate it alone, in the middle of the night — never acceptable');
+  const avancement=processProgress('simulation');
+  assert.ok(avancement.verifiables>0&&avancement.sansTrace.length>0,'a real process must report both what it can verify and what it honestly cannot');
+  assert.ok(!checkAgentSessionDeclared({session:{}}).ok&&checkAgentSessionDeclared({session:{model:'x'}}).ok,'a missing session identity must be flagged, since every report produced then carries "Version de Claude : non renseignée"');
+  const {preflight,gate,postflight,brief,LESSONS,REQUIRED_BEATS}=await import('../scripts/process-simulation-guardian.mjs');
+  const planBon={phase2AutonomousTurns:true,sendsIdentify:true,baseUrl:'http://127.0.0.1:3000',handlesLocks:true,dossierCheckedOnWholeHistory:true,smartConsoConsulted:true,beats:REQUIRED_BEATS};
+  assert.ok(preflight(planBon).ok,'a plan that satisfies every lesson already paid for must be allowed through without friction');
+  const planSim18={...planBon,phase2AutonomousTurns:false,sendsIdentify:false};
+  const v18=preflight(planSim18);
+  assert.deepEqual(v18.echecs.map(e=>e.id),['tours-autonomes','identify'],'the two real defects of full_sim18 must both be caught BEFORE launch — they were visible in the scenario, and nobody looked because nothing asked');
+  assert.ok(!gate(v18).autorise,'a plan failing the pre-flight must be blocked by default, since a simulation costs a real hour of Gemini quota');
+  const force=gate(v18,{override:'Scénario volontairement tronqué pour reproduire un bug précis.'});
+  assert.ok(force.autorise&&force.force&&force.raisonForce.includes('tronqué'),'an override must stay possible but must carry a written reason, kept with the archive so that months later one knows why the check was ignored');
+  assert.ok(!gate(v18,{override:'bof'}).autorise,'a token override too short to be a real reason must not unlock anything');
+  assert.ok(!preflight({...planBon,smartConsoConsulted:false}).ok,'skipping Smart Conso API before a costly action must fail the pre-flight (Article 22)');
+  assert.deepEqual(preflight({...planBon,beats:['revelation']}).beatsManquants.length>0,true,'a scenario that forgets required beats must be caught before the run, not discovered while reading the transcript');
+  // Un champ absent n'est jamais lu comme un "non" : il est nommé comme non renseigné.
+  const partiel=preflight({smartConsoConsulted:true,beats:REQUIRED_BEATS});
+  assert.ok(partiel.echecs.length===0&&partiel.nonRenseignes.length===LESSONS.length&&!partiel.ok,'an unfilled field must be named as unfilled, never silently treated as a failure — and must still stop the verdict from being green');
+  const journalSim18=[{payload:{mode:'autonomous'},status:200,round:1},{payload:{mode:'chat'},status:200,round:2}];
+  const apres=postflight(journalSim18,{simName:'full_sim18'});
+  assert.ok(apres.observateur.identifie===false&&!apres.ok,'the after-check must reuse the real journal reading, never a second divergent calculation');
+  assert.ok(postflight(journalSim18,{}).nonVerifiables.length>0,'without the simulation name the follow-up steps are not verifiable, and that must be said rather than assumed done');
+  assert.ok(LESSONS.every(l=>l.vecu&&l.pourquoi&&l.champ),'every lesson must carry the real simulation it cost and why it matters — a rule without its story gets deleted by the next agent who finds it puzzling');
+  assert.ok(brief().includes('Smart Conso API'),'the referent brief must remind the costly-action consultation, since that is the step most easily skipped at 3am');
+  console.log('Passed: god-of-all-process is the tool-brain of processes — it matches a task to the process that really governs it (and honestly matches nothing when none does), derives progress from real traces on disk rather than a counter that could drift, never confuses a step with no verifiable trace with a step not done, and never confuses a BROKEN PROBE with a missing step (the exact mistake its own first real run made on three of its own probes); its Article 24 guards confirm every declared process still has a real guardian and a real document, every declared tension still names real processes and carries its resolution, and a missing session identity is flagged since every report then carries an unfilled Claude version. And process.simulation.guardian is the execution-discipline referent: it catches BOTH real defects of full_sim18 before launch rather than after an hour of quota is spent, blocks by default while allowing a written override that is archived with the simulation, refuses a token override, enforces the Smart Conso API consultation and the required narrative beats, names an unfilled field as unfilled instead of treating it as a failure, reuses the real journal reading for the after-check instead of a second divergent calculation, and carries with each lesson the real simulation it already cost.');
   // DEUX FORMES DE JOURNAL (2026-09-22) : le script de simulation, réécrit à chaque fois et jamais
   // committé, a fini par produire un journal à plat ({payload,status,round,evidence,decisions}) que
   // l'extraction écrite pour la forme imbriquée ne savait plus lire — et qui annonçait alors
@@ -6205,8 +6252,25 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.throws(() => buildReportFrame({ blocks: [] }), /jamais un rapport sans titre/, 'the contract must refuse a report with no title at all, in text exactly as the HTML renderer already refused it — never two different strictnesses for the same gabarit');
   const cadre = buildReportFrame({ tool: 'ecotoken', title: 'T' });
   assert.ok(cadre.dateLabel, 'a report with no date supplied must still get one — REPORT_CONTRACT makes the date mandatory because a report that cannot be placed in time compares to nothing');
-  assert.equal(cadre.slots.length, 1, 'the generic header slot must be filled automatically from the shared registry for a heuristic tool, without the calling tool having to think about it — the whole point of the slot');
-  assert.deepEqual(buildReportFrame({ tool: 'check-house-mjs', title: 'T' }).slots, [], 'a mechanical tool gets an EMPTY slot, never an empty-but-present line: the gabarit adds the phrase only where it is true');
+  // Deux locataires depuis le 2026-09-22 : l'avertissement de fiabilité, puis la carte d'identité du
+  // rapport (version de Claude, date/heure, état exact du code, contexte de production, fraîcheur de
+  // l'outil). L'assertion est RENFORCÉE plutôt que relâchée : elle vérifie maintenant que les deux
+  // arrivent seuls, dans cet ordre — ce qu'on doit lire avant de faire confiance au rapport passe
+  // avant ce qui sert à le situer plus tard.
+  assert.equal(cadre.slots.length, 2, 'the generic header slots must be filled automatically from the shared registries for a heuristic tool, without the calling tool having to think about it — the whole point of the slot');
+  assert.ok(/inexacts/.test(cadre.slots[0]), 'the reliability warning must come first: what a reader needs before trusting the report outranks what merely situates it afterwards');
+  assert.ok(/Version de Claude/.test(cadre.slots[1]) && /État du code/.test(cadre.slots[1]) && /Contexte de production/.test(cadre.slots[1]), 'the identity card must carry the model, the exact code state and the production context — a report that cannot be placed against a version of the project cannot be re-checked months later');
+  const { identityLines } = await import('../scripts/report-template.mjs');
+  assert.ok(identityLines({ session: {}, repo: {} }).some((l) => /non renseignée/.test(l)), 'a missing Claude version must be written as missing, never guessed nor filled from the last one known — a stale version asserted confidently is exactly the "absence read as measurement" error this whole toolset fights');
+  assert.ok(identityLines({ session: { model: 'x' }, repo: { commit: 'abc', branche: 'b', travauxNonEnregistres: true } }).some((l) => /travaux n'étaient pas enregistrés/.test(l)), 'a report produced over uncommitted work must say so: it describes a state nobody can retrieve later');
+  assert.ok(identityLines({ session: { model: 'x' }, repo: { commit: 'abc', travauxNonEnregistres: undefined } }).every((l) => !/arbre propre/.test(l)), 'an unreadable repository must never be reported as clean — undefined and false are not the same answer');
+  // L'intention d'origine tient toujours, et elle est vérifiée plus précisément qu'avant : un outil
+  // MÉCANIQUE ne reçoit PAS l'avertissement de fiabilité (il n'a rien d'incertain à annoncer), mais
+  // il reçoit bien la carte d'identité — celle-ci n'est pas un aveu d'incertitude, c'est la
+  // provenance du rapport, et l'utilisateur l'a demandée pour CHAQUE rapport sans exception.
+  const cadreMecanique = buildReportFrame({ tool: 'check-house-mjs', title: 'T' }).slots;
+  assert.equal(cadreMecanique.length, 1, 'a mechanical tool gets the identity card but no reliability warning: the gabarit adds the warning only where it is true, while provenance belongs on every report');
+  assert.ok(!/inexacts/.test(cadreMecanique[0]) && /Version de Claude/.test(cadreMecanique[0]), 'a mechanical tool must never be made to announce an uncertainty it does not have, and must still carry its provenance');
   assert.deepEqual(buildReportFrame({ title: 'T' }).slots, [], 'a caller that supplies no tool at all keeps its report exactly as before — the ~10 existing HTML callers must never break because the gabarit arrived');
   assert.deepEqual(genericSlots(undefined), [], 'genericSlots() must answer an honest empty list rather than crash when no tool is named');
 

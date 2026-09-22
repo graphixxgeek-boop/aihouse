@@ -44,6 +44,7 @@ export const LOCAL_JOURNALS = [
   { path: ".smart-conso-session.json", owner: "Smart Conso API", purpose: "état de session en cours (consultations récentes)" },
   { path: ".smart-conso-token-history.json", owner: "SMART-CONSO-TOKEN", purpose: "historique des actions coûteuses classifiées" },
   { path: ".tool-usage-history.json", owner: "tool-usage.mjs (tâche #166)", purpose: "compteur d'utilisation réelle des outils" },
+  { path: ".agent-session.json", owner: "report-template.mjs (2026-09-22)", purpose: "identité de la session de l'agent (version de Claude) — déposée en début de session, reprise en tête de chaque rapport ; jamais committée, elle décrit qui produit un rapport à un instant donné, pas un état du projet" },
   { path: ".le-coordinateur-last-run.json", owner: "LE-COORDINATEUR", purpose: "anti-doublon du dernier passage réseau" },
   { path: ".circle-tasks-last-run.json", owner: "CIRCLE-TASKS", purpose: "anti-doublon de la dernière Ronde" },
   { path: ".kpi-report-latest.html", owner: "kpi-report.mjs", purpose: "copie de remise HTML du dernier rapport KPI" },
@@ -527,6 +528,7 @@ export const RELIABILITY_SCRIPT_FILES = {
   "the-king": "scripts/the-king.mjs", "memory-audit": "scripts/memento.mjs",
   "find-deep-booster": "scripts/route-booster.mjs", "find-brain": "scripts/find-brain.mjs",
   "tool-brain": "scripts/tool-brain.mjs", "find-booster": "scripts/find-booster.mjs",
+  "god-of-all-process": "scripts/god-of-all-process.mjs", "process-simulation-guardian": "scripts/process-simulation-guardian.mjs",
   "clone-hunter": "scripts/clone-hunter.mjs", "cassandra-rh": "scripts/cassandra-rh.mjs",
   ecotoken: "scripts/ecotoken.mjs",
 };

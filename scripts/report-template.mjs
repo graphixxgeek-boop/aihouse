@@ -22,7 +22,15 @@
 // premier locataire est l'avertissement de fiabilité (TOOL_RELIABILITY, tâche #198) ; une mention
 // légale, un rappel de contexte ou un statut de chantier s'y ajouteraient de la même façon.
 
+import { execFileSync } from "node:child_process";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { reliabilityNotice } from "./lib-shell.mjs";
+
+const ROOT = new URL("..", import.meta.url).pathname;
+// Où l'agent dépose l'identité de sa session. Un fichier local, jamais committé (cf. .gitignore) :
+// il décrit QUI a produit un rapport à un instant donné, pas un état du projet.
+export const SESSION_FILE = ".agent-session.json";
 
 // Ce que TOUT rapport porte, dans cet ordre — la partie « contenu » du gabarit, celle qui vaut
 // autant pour un .txt que pour un .html. Exportée pour être vérifiable mécaniquement plutôt que
@@ -36,24 +44,109 @@ export const REPORT_CONTRACT = [
   { cle: "footer", obligatoire: false, role: "la limite de l'outil — ce qu'il ne prétend pas faire" },
 ];
 
+// CARTE D'IDENTITÉ DU RAPPORT (2026-09-22, demande explicite de l'utilisateur : « la version de
+// claude utilisée au moment de la conception du rapport, avec aussi en plus les infos generiques du
+// rapport : date, heure, etc. + infos pertinentes à conserver »). Elle occupe l'emplacement
+// générique déjà prévu, jamais réécrite à la main dans chaque outil — c'était tout l'objet du
+// gabarit.
+//
+// POURQUOI CES CHAMPS-LÀ, et pas seulement la date. Un rapport se relit des semaines plus tard, et
+// la seule question qui compte alors est : « est-ce que ce constat est encore vrai ? ». Y répondre
+// exige de savoir de quel état du projet il parlait (version du code, branche), si cet état était
+// seulement retrouvable (du travail non enregistré traînait-il ?), dans quel cadre il a été produit
+// (Ronde, nuit autonome, demande directe), et si l'outil qui l'a écrit avait lui-même bougé depuis.
+// Les quatre ont été choisis par l'utilisateur ce jour-là ; la version du modèle s'y ajoute.
+
+// LE MODÈLE NE SE DEVINE PAS. Un script ne peut pas savoir quel modèle fait tourner l'agent : il
+// faut que l'agent le dépose. D'où la règle, tranchée avec l'utilisateur le 2026-09-22 : en son
+// absence le rapport écrit « non renseignée », JAMAIS un nom deviné ni le dernier connu — une
+// version périmée affirmée avec aplomb serait exactement l'erreur que tout ce paysage combat (une
+// absence de mesure présentée comme une mesure). L'utilisateur a ajouté le corollaire : veiller à ce
+// que ce cas n'arrive jamais est le travail du gardien de process, pas celui du rapport.
+export function recordAgentSession({ model, sessionId, root = ROOT } = {}) {
+  const payload = { model: model ?? null, sessionId: sessionId ?? null, recordedAt: new Date().toISOString() };
+  writeFileSync(join(root, SESSION_FILE), JSON.stringify(payload, null, 1));
+  return payload;
+}
+
+export function readAgentSession({ root = ROOT, readFileImpl = readFileSync } = {}) {
+  try {
+    const raw = JSON.parse(readFileImpl(join(root, SESSION_FILE), "utf8"));
+    return { model: raw?.model ?? undefined, sessionId: raw?.sessionId ?? undefined, recordedAt: raw?.recordedAt ?? undefined };
+  } catch {
+    return {};
+  }
+}
+
+// L'état réel du dépôt, LU au moment du rapport (Article 24 : jamais une valeur recopiée). Un dépôt
+// illisible répond par des absences, jamais par des valeurs inventées.
+export function repoState({ shImpl } = {}) {
+  const run = shImpl ?? ((args) => execFileSync("git", args, { cwd: ROOT, encoding: "utf8" }).trim());
+  const safe = (args) => { try { return run(args) || undefined; } catch { return undefined; } };
+  const dirtyRaw = safe(["status", "--porcelain"]);
+  return {
+    commit: safe(["rev-parse", "--short", "HEAD"]),
+    branche: safe(["rev-parse", "--abbrev-ref", "HEAD"]),
+    // `undefined` (dépôt illisible) et `false` (arbre propre) ne veulent pas dire la même chose et
+    // ne sont jamais confondus : seul le second autorise à écrire que l'état était retrouvable.
+    travauxNonEnregistres: dirtyRaw === undefined ? undefined : dirtyRaw.length > 0,
+  };
+}
+
+// Depuis quand l'outil qui écrit ce rapport n'a pas changé — un constat rassurant produit par un
+// outil figé depuis des semaines ne vaut pas celui d'un outil à jour.
+export function toolLastChanged(scriptPath, { shImpl } = {}) {
+  if (!scriptPath) return undefined;
+  const run = shImpl ?? ((args) => execFileSync("git", args, { cwd: ROOT, encoding: "utf8" }).trim());
+  try { return run(["log", "-1", "--format=%ad", "--date=short", "--", scriptPath]) || undefined; } catch { return undefined; }
+}
+
+// D'où vient le rapport. Déposé par l'appelant (la Ronde, le mode nocturne) ou, à défaut, lu dans
+// l'environnement — jamais supposé : sans indication, on écrit que ce n'est pas précisé.
+export const REPORT_ORIGINS = { ronde: "Ronde périodique", nuit: "nuit autonome", demande: "demande directe" };
+export function reportOrigin({ origin, env = process.env } = {}) {
+  const clef = origin ?? env.REPORT_ORIGIN;
+  return REPORT_ORIGINS[clef] ?? (clef ? String(clef) : undefined);
+}
+
+// Assemble la carte d'identité en lignes prêtes à afficher. Chaque absence est NOMMÉE, jamais
+// silencieusement omise : une ligne manquante se lirait comme une information jugée sans intérêt,
+// alors qu'elle signale un trou à combler.
+export function identityLines({ tool, scriptPath, origin, session, repo, changedAt } = {}) {
+  const s = session ?? readAgentSession();
+  const r = repo ?? repoState();
+  const lignes = [];
+  lignes.push(`Version de Claude : ${s.model ?? "non renseignée (à déposer par l'agent — cf. god-of-all-process)"}`);
+  const d = new Date();
+  lignes.push(`Produit le : ${d.toISOString().slice(0, 10)} à ${d.toISOString().slice(11, 16)} UTC`);
+  lignes.push(`État du code : ${r.commit ?? "inconnu"}${r.branche ? ` sur ${r.branche}` : ""}${r.travauxNonEnregistres === true ? " — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel" : r.travauxNonEnregistres === false ? " — arbre propre" : ""}`);
+  const o = reportOrigin({ origin });
+  lignes.push(`Contexte de production : ${o ?? "non précisé"}`);
+  const c = changedAt ?? toolLastChanged(scriptPath);
+  if (tool || scriptPath) lignes.push(`Outil : ${tool ?? scriptPath}${c ? ` — inchangé depuis le ${c}` : " — date de dernière modification inconnue"}`);
+  return lignes;
+}
+
 // Les phrases transverses disponibles pour l'emplacement générique. Une seule aujourd'hui ; le point
 // de la demande est qu'une seconde s'ajoute ICI et atteigne tous les rapports d'un coup.
-export function genericSlots(tool) {
+export function genericSlots(tool, options = {}) {
   if (!tool) return [];
-  return [reliabilityNotice(tool)].filter(Boolean);
+  // La carte d'identité vient APRÈS l'avertissement de fiabilité : ce qu'on doit lire avant de faire
+  // confiance au rapport passe avant ce qui sert à le situer plus tard.
+  return [reliabilityNotice(tool), identityLines({ tool, ...options }).join("\n")].filter(Boolean);
 }
 
 // Normalise ce qu'un outil fournit en un cadre complet, avec l'emplacement générique déjà rempli.
 // C'est le seul point de passage : les deux rendus consomment SON résultat, jamais les arguments
 // bruts de l'appelant — sans quoi l'un pourrait oublier une partie du gabarit que l'autre applique.
-export function buildReportFrame({ tool, title, subtitle, dateLabel, blocks = [], footer } = {}) {
+export function buildReportFrame({ tool, title, subtitle, dateLabel, blocks = [], footer, scriptPath, origin, session, repo, changedAt } = {}) {
   if (!title) throw new Error("buildReportFrame() exige un titre — jamais un rapport sans titre (REPORT_CONTRACT)");
   return {
     tool,
     title,
     subtitle,
     dateLabel: dateLabel ?? new Date().toISOString(),
-    slots: genericSlots(tool),
+    slots: genericSlots(tool, { scriptPath, origin, session, repo, changedAt }),
     blocks,
     footer,
   };

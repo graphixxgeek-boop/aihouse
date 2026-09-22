@@ -141,7 +141,8 @@ export function summarizeFlatActions(entries) {
 // pourrait être posé — le jeu ne peut structurellement pas répondre, et l'archive montre un dossier
 // vide qu'on relit ensuite comme une régression du jeu. C'est arrivé deux fois (full_sim16, puis
 // full_sim18 après que #143 eut conclu à tort que le budget de tours était en cause). Le vrai
-// joueur, lui, n'a jamais ce trou : app/page.tsx relance un tour autonome toutes les 21 secondes,
+// joueur, lui, n'a pas ce trou : app/page.tsx relance un tour autonome toutes les 21 secondes PAR
+// DÉFAUT (interrompu s'il met en pause, reprend une partie sauvegardée, ou après une erreur réseau),
 // en parallèle de ce qu'il tape. Ce contrôle dit donc, mécaniquement, si la simulation a reproduit
 // cette condition ou si elle a testé une maison à laquelle on avait coupé la parole.
 export function checkPhase2Autonomy(entries) {
