@@ -8761,7 +8761,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // « chez quel outil est cette responsabilité ? ». Avant : nulle part. Les trois critères vivaient
   // chez trois outils, et findRapportsQuiPointent() n'était appelée par aucun main().
   const pgu = await import('../scripts/pure-gold-unity.mjs');
-  assert.equal(pgu.CRITERES_RAPPORT.length, 3, 'the three criteria must be declared as data, so a fourth one added later is asked at the same single place');
+  assert.equal(pgu.CRITERES_RAPPORT.length, 4, 'the criteria are declared as data so a new one joins at a single place — and a fourth genuinely did, the day after: "does the report say everything the tool already knows how to detect?"');
 
   const auditPropre = pgu.auditRapportsComplets({
     registries: [], readFileImpl: () => 'buildPlanDaction(x)', root: '/fake',
@@ -8974,4 +8974,46 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   for (const c of reels) assert.ok(ch.motifDuCluster(c).tache.length > 20, 'every real problem must come out with a task of its own, derived from its own facts');
 
   console.log('Passed: CLONE-HUNTER reports one alert per PROBLEM and gives each its own reason (2026-09-23, task #217) — it grouped by anchor, so the same duplication found from two shifted starts produced two alerts, which is how one pair of twin functions became three. Merging on overlapping REGIONS also makes v2\'s standing promise exact at last: "never already counted by v1" was true of its anchor and false of its region, since its block began one line earlier and enclosed v1\'s. The real risk here was over-merging, and it is bounded first: two genuinely different duplications between the same file pair stay two problems, clusters touching different file sets never merge, the merged problem keeps the largest span and remembers both detectors, and the raw alert count behind it stays visible so the regrouping can be audited instead of trusted. The single phrase repeated 29 times is replaced by a reason derived from what the tool already knew — same file versus spread across tools, and block size — because a debt that recopies itself into every new tool is not the same problem as two twins in one file, and one sentence for both erased exactly that difference.');
+}
+
+{
+  // LE QUATRIÈME CRITÈRE : LE RAPPORT SORT-IL TOUT CE QUE L'OUTIL SAIT ? (2026-09-23, tâche #211)
+  //
+  // Né d'une question qu'on ne pouvait pas éviter : impossible d'écrire un plan d'action honnête
+  // pour 20 outils sans savoir ce que chacun calcule — et en regardant, 27 détecteurs exportés
+  // n'étaient appelés par le main() d'aucun outil.
+  const pgu = await import('../scripts/pure-gold-unity.mjs');
+
+  assert.deepEqual(pgu.detecteursDe('export function findX(){}\nexport function detectY(){}\nexport function autreChose(){}'), ['findX', 'detectY'], 'only find*/detect* exports count as detectors — an ordinary exported helper is not a finding-producer');
+
+  const sources = {
+    'scripts/a.mjs': 'export function findSeul() {}\nfunction main(){ console.log(1); }',
+    'scripts/b.mjs': 'export function findAppele() {}\nfunction main(){ findAppele(); }',
+    'scripts/c.mjs': 'import { findRelaye } from "./d.mjs";\nfunction main(){ findRelaye(); }',
+    'scripts/d.mjs': 'export function findRelaye() {}',
+  };
+  const lire = (chemin) => { const clef = Object.keys(sources).find((k) => chemin.endsWith(k)); if (!clef) throw new Error('ENOENT'); return sources[clef]; };
+  const lister = (dir) => (String(dir).endsWith('/hooks') ? [] : ['a.mjs', 'b.mjs', 'c.mjs', 'd.mjs']);
+  const trouves = pgu.findDetecteursMuets({ root: '/fake', listDirImpl: lister, readFileImpl: lire, exemptes: {} });
+
+  assert.deepEqual(trouves.map((t) => t.detecteur), ['findSeul'], 'a detector named nowhere but at its own declaration is the only one flagged: one called by its own main() is fine, and one RELAYED by another tool is the project\'s own idiom, not a defect — 12 of the 27 initially suspected turned out to be exactly that');
+
+  // LE TROISIÈME ÉTAT, et il a failli me faire accuser à tort : un détecteur appelé par la SEULE
+  // suite de tests protège réellement, puisque le crochet pre-commit la lance à chaque commit.
+  // findGardienAmbigu() est dans ce cas — et c'est lui qui a refusé un de mes commits le jour même.
+  const avecTests = pgu.findDetecteursMuets({
+    root: '/fake', listDirImpl: lister, exemptes: {},
+    readFileImpl: (chemin) => (String(chemin).endsWith('check-house.mjs') ? 'assert.ok(findSeul())' : lire(chemin)),
+  });
+  assert.equal(avecTests[0].porteParLesTests, true, 'a detector called only by the test suite must be told apart from one called by nobody: it genuinely protects, it merely says nothing in its own report');
+  assert.ok(avecTests[0].pourquoi.includes('protège'), 'and the distinction must be SPELLED OUT, not left to a boolean nobody reads — counting a working guard as a defect would produce exactly the misleading figure this guard exists to hunt');
+
+  // Un mécanisme partagé n'a pas de main() à lui : l'absence d'appel local y est normale.
+  assert.deepEqual(pgu.findDetecteursMuets({ root: '/fake', listDirImpl: lister, readFileImpl: lire, exemptes: { a: 'mécanisme partagé' } }), [], 'a declared shared mechanism must be exempt — by declaration with a written reason, never by guesswork');
+
+  // Le verdict d'ensemble : un détecteur muet le casse, un détecteur porté par les tests non.
+  const auditMuet = pgu.auditRapportsComplets({ registries: [], root: '/fake', readFileImpl: () => 'buildPlanDaction(x)\nexport function findOrphelin(){}' });
+  assert.ok(auditMuet.muets.length === 0 || auditMuet.conforme === false, 'a genuinely mute detector must break the overall verdict: we paid for its construction, its tests and its documentation, and it will never find anything for anyone');
+
+  console.log('Passed: pure-gold-unity gained a fourth criterion — does the report say everything the tool already knows how to detect? (2026-09-23, task #211). It came out of an unavoidable question: no honest plan d\'action can be written for twenty tools without knowing what each one computes, and looking revealed 27 exported detectors that no tool\'s main() ever calls. The measurement was narrowed twice before it was fair, and both errors are worth keeping: a declaration sitting after main() counted as its own caller (hiding nine at once), and a helper called outside main() was wrongly accused. The rule that survived cannot produce a false positive — flagged only if the name appears nowhere but at its own declaration — and it under-reports rather than over-accuses, which is the right direction for a guard whose whole capital is being believed. A third state was added after it nearly convicted an innocent: a detector called by the test suite alone genuinely protects, since the pre-commit hook runs it at every commit, and one such detector had refused one of my own commits that very day.');
 }
