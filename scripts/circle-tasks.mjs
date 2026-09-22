@@ -27,7 +27,7 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { scanDocumentWeight, listDatedNarrativeMarkers, extractRuleUnits, findRedundantRulePairs } from "./smart-conso-token.mjs";
-import { walkDocsPaths, daysSince, sh, shouldSnapshotText, printReliabilityNotice } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, walkDocsPaths, daysSince, sh, shouldSnapshotText, printReliabilityNotice } from "./lib-shell.mjs";
 import { checkChantierFileFreshness, loadAllTaskRows, detectPendingIdeaCandidates, loadIdeaDecisions, findIdeasNeedingDecision, IDEES_REGISTRY_PATH } from "./check-tasks-details.mjs";
 import { auditHtmlDecisions, REGISTRIES as DOC_REPORT_REGISTRIES } from "./doc-report.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
@@ -133,6 +133,25 @@ export const CIRCLE_ITEMS = [
   // est donc honnêtement plus modeste : depuis quand ce carnet n'a-t-il pas été relu, jamais une
   // fausse "zone la plus négligée" inventée sans le vrai balayage (git log par fichier) que
   // CLEAN-DIRTY-OLD effectue réellement une fois lancé.
+  // pure-gold-unity (2026-09-22) — ABSENT de la Ronde jusqu'à ce que l'utilisateur pose la question
+  // (« pour pure gold que tu viens de creer : il est bien dans circle ? »). Il ne l'était pas, et
+  // AUCUN garde-fou ne pouvait le dire : findRegistriesMissingFromCircle() ne regarde que les outils
+  // ayant déjà un registre sur le disque, or pure-gold n'en avait aucun. Un outil sans registre
+  // était donc invisible à la vérification censée repérer les outils oubliés — le trou vivait dans
+  // le garde-fou lui-même (cf. findReportingToolsMissingFromCircle(), écrit le même jour).
+  //
+  // Sa place ici est celle d'un DÉTECTEUR DE RÉGRESSION, jamais d'un rattrapage : son chantier est
+  // clos (29/29), et un chiffre qui remonterait signalerait un nouvel outil écrivant son rapport à
+  // la main. C'est précisément le genre de chose qu'on ne pense jamais à vérifier soi-même.
+  {
+    id: "pure-gold-unity-scan",
+    theme: "Qualité du code",
+    label: "Vérifier qu'aucun nouveau rapport n'échappe au gabarit partagé",
+    cout: "gratuit — relit le code des outils tenus par le gabarit, aucun appel API",
+    tokensEstimes: "faible — un chiffre et, le cas échéant, la liste des outils à migrer",
+    execute: "Lancer node scripts/pure-gold-unity.mjs et reporter le ratio réel de conformité. Un chiffre inférieur à 100 % signale une RÉGRESSION (un outil récent écrit son rapport à la main), jamais un retard à rattraper — le chantier initial est clos depuis le 2026-09-22. Écrire le signal via recordCircleItemReport('pure-gold-unity-scan', ...).",
+    producesReport: true,
+  },
   {
     id: "clean-dirty-old-signal",
     theme: "Qualité du code",
@@ -532,6 +551,10 @@ export function mostRecentDate(text) {
 // propre raison plutôt qu'un silence. `existingPaths` : même Set que buildRealOnboardingContext()
 // (check-tasks-details.mjs), jamais un second parcours de disque réinventé (walkDocsPaths(),
 // extraite dans lib-shell.mjs pour éviter un cycle d'import entre les deux fichiers).
+// ÉLARGI le 2026-09-22 : cette carte servait findRegistriesMissingFromCircle() seul ; elle sert
+// désormais aussi findReportingToolsMissingFromCircle() ci-dessus. Les deux posent la MÊME question
+// (« cet outil apparaît-il quelque part, ou a-t-on écrit pourquoi il n'apparaît pas ? ») en partant
+// de deux bouts différents — une seule liste de raisons, jamais deux qui divergeraient.
 export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // ecotoken (2026-09-22) : son registre existe, mais il n'a PAS d'item propre — c'est
   // `ecotoken-scan` qui le lance, harmonisation explicitement demandée par l'utilisateur
@@ -557,6 +580,15 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // de la Ronde. Lui donner son propre item dirait la même chose deux fois, et casserait la voix
   // unique que l'utilisateur a explicitement demandée.
   "angel-of-ia-process": "gardien de process SECONDAIRE : son verdict est relayé par god-of-all-process dans le rapport unique de la Ronde (décision de l'utilisateur, 2026-09-22 : god centralise) — jamais un second item qui doublerait cette voix",
+  // LES QUATRE TROUVÉS PAR findReportingToolsMissingFromCircle() À SON PREMIER PASSAGE (2026-09-22).
+  // Les quatre sont des exclusions parfaitement légitimes — et aucune n'était écrite nulle part.
+  // C'est exactement ce que ce garde-fou devait produire : pas des fautes, des DÉCISIONS restées
+  // implicites, qu'un prochain agent aurait pu défaire sans savoir qu'il défaisait quelque chose
+  // (Article 27 : le pourquoi vit à côté du quoi).
+  "le-coordinateur": "c'est le MOTEUR de la Ronde, jamais un de ses items — lui donner une ligne à cocher dans la liste qu'il orchestre lui-même serait circulaire",
+  "circle-tasks": "c'est la Ronde ELLE-MÊME — un item « lancer la Ronde » dans la Ronde ne veut rien dire",
+  "process-simulation-guardian": "gardien de process SECONDAIRE, même règle qu'angel-of-ia-process ci-dessus : god-of-all-process centralise et relaie son verdict (décision de l'utilisateur, 2026-09-22). Son vrai déclencheur est de toute façon une simulation, jamais le calendrier",
+  "find-deep-booster": "outil de découpage à la demande sur UN fichier précis, jamais un balayage périodique de tout le dépôt — exactement la même raison que find-booster ci-dessus",
   "check-level-target": "outil de classification interne, jamais une routine à cocher soi-même",
   "memory-audit": "cible la mémoire narrative de Lia/Noé en jeu, jamais un scan de repo — vérifiable seulement sur des instantanés réels de partie (pendant/après une simulation) ; son voisin memento weight est déjà rapporté via kpi-report.mjs (reportMementoWeight), jamais une routine CIRCLE-TASKS séparée",
   "check-tasks-details": "état des lieux à la demande, pas une routine périodique mal automatisée",
@@ -565,6 +597,27 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   simulations: "l'archive elle-même, pas un outil à relancer périodiquement",
   "objectifs-vs-resultats": "registre hand-maintained consulté quand un objectif précis intéresse quelqu'un, pas une routine mécanique qui aurait toujours quelque chose de neuf à dire à chaque Ronde (contrairement à tool-brain-report, pensé pour construire une habitude) — même logique que check-tasks-details ci-dessus",
 };
+// findReportingToolsMissingFromCircle() (2026-09-22) — LE TROU DANS LE GARDE-FOU LUI-MÊME, trouvé
+// par une question de l'utilisateur et non par un test : « pour pure gold que tu viens de creer :
+// il est bien dans circle ? ». Il ne l'était pas. Et findRegistriesMissingFromCircle() ci-dessous,
+// écrit précisément pour repérer les outils oubliés de la Ronde, ne pouvait PAS le voir : il part
+// des registres présents sur le disque, donc un outil qui n'a pas encore de registre lui est
+// invisible. Le garde-fou protégeait exactement l'espace où l'oubli ne se produit pas.
+//
+// Celui-ci prend le problème par l'autre bout, le seul qui ne dépende d'aucun fichier déjà créé :
+// il part des MEMBRES CERTIFIÉS de l'équipe (AGENT_CATEGORIES, tenu à jour d'office à chaque
+// arrivée) et vérifie que chacun apparaît quelque part — un item de Ronde, ou une exclusion
+// motivée. Les deux fonctions sont complémentaires et aucune ne remplace l'autre : celle-ci voit
+// l'outil neuf sans registre, celle-là voit le registre orphelin dont l'outil n'est plus certifié.
+export function findReportingToolsMissingFromCircle(categories = AGENT_CATEGORIES, items = CIRCLE_ITEMS, couverts = CIRCLE_AUTO_COVERED_REGISTRIES) {
+  return Object.keys(categories).filter((slug) => {
+    if (slug in couverts) return false;
+    // Même comparaison bidirectionnelle que ci-dessous : un id d'item peut être plus long que le
+    // slug ("pure-gold-unity" ⊂ "pure-gold-unity-scan") ou l'inverse.
+    return !items.some((i) => slug.includes(i.id) || i.id.includes(slug));
+  });
+}
+
 export function findRegistriesMissingFromCircle(existingPaths, items = CIRCLE_ITEMS) {
   const registrySlugs = [...new Set(
     [...(existingPaths || [])]
@@ -690,11 +743,34 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApi
 // chantier-preliminaire-signal en est le premier membre, d'autres signaux liés aux gros chantiers
 // pourront le rejoindre plus tard sans avoir à re-scinder un thème déjà plein.
 export const THEME_ORDER = ["Suivi & référentiels", "Suivi des chantiers", "KPI & scans", "Qualité du code", "Passages réels (smoke run)", "Qualité & fun", "Audit lourd"];
-export function groupCircleReportByTheme(report) {
-  const groups = THEME_ORDER.map((theme) => ({ theme, items: report.filter((r) => r.theme === theme) }));
+// LIMITE DE FENÊTRE, JAMAIS LIMITE DE THÈME (2026-09-22). Jusqu'ici un thème = une fenêtre, donc
+// un thème plein interdisait d'y ranger un outil de plus — et le 5e arrivant (pure-gold-unity-scan,
+// « Qualité du code ») posait un vrai dilemme : le mal ranger pour tenir, ou casser la contrainte.
+// Les deux sont mauvais, et le second aurait cassé une contrainte d'INTERFACE réelle (4 options par
+// question) pour un problème qui n'en est pas un : rien n'a jamais exigé qu'un thème tienne dans UNE
+// fenêtre, seulement qu'une fenêtre ne dépasse pas 4 options. Un thème trop rempli se présente donc
+// désormais en fenêtres successives « Thème (1/2) », « (2/2) », dans l'ordre, sans qu'aucun outil
+// n'ait à déménager dans une catégorie qui n'est pas la sienne.
+//
+// Le cas qui a forcé cette correction est instructif : organigramme-signal vivait dans « Qualité du
+// code » par une décision RÉFLÉCHIE et écrite (il mesure la structure de l'outillage, comme ses
+// voisins mesurent la dette et le poids) — le déplacer pour faire de la place aurait défait un
+// arbitrage documenté au profit d'une contrainte d'affichage (Article 19).
+export const MAX_OPTIONS_PAR_FENETRE = 4;
+export function groupCircleReportByTheme(report, maxParFenetre = MAX_OPTIONS_PAR_FENETRE) {
+  const groups = [];
+  for (const theme of THEME_ORDER) {
+    const items = report.filter((r) => r.theme === theme);
+    if (!items.length) continue;
+    if (items.length <= maxParFenetre) { groups.push({ theme, baseTheme: theme, items }); continue; }
+    const total = Math.ceil(items.length / maxParFenetre);
+    for (let n = 0; n < total; n += 1) {
+      groups.push({ theme: `${theme} (${n + 1}/${total})`, baseTheme: theme, items: items.slice(n * maxParFenetre, (n + 1) * maxParFenetre) });
+    }
+  }
   const untagged = report.filter((r) => !THEME_ORDER.includes(r.theme));
-  if (untagged.length) groups.push({ theme: "Autre", items: untagged });
-  return groups.filter((g) => g.items.length > 0);
+  if (untagged.length) groups.push({ theme: "Autre", baseTheme: "Autre", items: untagged });
+  return groups;
 }
 
 // recommendCircleSelection() — tâche #155 (2026-09-21, « calibrer une sélection recommandée par

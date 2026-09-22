@@ -28,6 +28,7 @@ import { buildDocReportIndex, REGISTRIES as DOC_REPORT_REGISTRIES, FILE_WRITER_N
 // Ré-exportée telle quelle (jamais une redéfinition) : cassandra-rh.mjs reste le point d'import déjà
 // utilisé par check-house.mjs pour cette fonction, même après son déplacement vers kpi-report.mjs.
 export { parseKpiHistoryCsv };
+import { estimateTokens } from "./smart-conso-token.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
@@ -430,6 +431,159 @@ export function objectivesCoverageLines(couverture) {
   return l;
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// RECENSEMENT DES FONCTIONNALITÉS — le tableau que CASSANDRA tient à jour
+// ————————————————————————————————————————————————————————————————————————
+//
+// Demandé le 2026-09-22 : « un document qui fait la liste des scripts agents classés par leur
+// nombre de fonctionnalités [...] cette information aide CASSANDRA dans son travail : trouve
+// comment ». Réponse à ce « trouve comment », et c'est ce qui justifie les TROIS colonnes plutôt
+// qu'un seul chiffre — l'utilisateur a tranché les trois explicitement :
+//
+//   · POIDS + FONCTIONS = un indicateur technique. Il dit la charge réelle d'un membre. Un gros
+//     effectif de fonctions sur un petit poids est dense ; l'inverse est dilué. CASSANDRA s'en sert
+//     comme un DRH lit une fiche de poste : est-ce que ce membre porte trop, ou trop peu ?
+//   · PARTAGÉES = ce qu'un AUTRE outil peut réutiliser. C'est la mesure de contribution à l'équipe.
+//     Un membre à zéro capacité partagée travaille seul — légitime pour certains, alarmant pour un
+//     Gardien censé nourrir les autres. C'est le chiffre qui trahit un silo.
+//   · INVOCABLES = ce que l'AGENT peut lancer lui-même depuis une ligne de commande. Distinct du
+//     précédent, et pas redondant : une capacité peut être partagée entre outils sans que je puisse
+//     jamais la déclencher moi-même, et inversement. C'est la mesure de MON accès réel au membre.
+//
+// Ce que CASSANDRA en fait concrètement, en plus du tableau : elle croise ces trois chiffres avec
+// ce qu'elle sait déjà par ailleurs, et c'est là que le recensement gagne sa place dans son rapport
+// plutôt que dans un document isolé (cf. censusSignals()).
+//
+// ANTI-DOUBLON : le poids passe par estimateTokens() (SMART-CONSO-TOKEN), la seule formule de poids
+// du projet — jamais une seconde qui divergerait. La liste des scripts vient d'AGENT_SCRIPT_FILES
+// (axa-check.mjs), déjà protégé par son propre garde-fou de fraîcheur : un nouvel outil y entre
+// d'office, ce tableau n'a aucune liste à tenir (Article 24).
+
+// Heuristique assumée, jamais un vrai analyseur de code : on lit le TEXTE du script. Déclaré ici
+// plutôt que caché, et repris dans l'avertissement de fiabilité de l'outil.
+export function countFunctionalities(source) {
+  const sansCommentaires = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  const fonctions = (sansCommentaires.match(/^\s*(export\s+)?(async\s+)?function\s+[A-Za-z_$]/gm) || []).length;
+  const partagees = new Set([
+    ...(sansCommentaires.match(/^export\s+(async\s+)?function\s+([A-Za-z_$][\w$]*)/gm) || []),
+    ...(sansCommentaires.match(/^export\s+const\s+([A-Za-z_$][\w$]*)/gm) || []),
+  ]).size;
+  // CE QUE JE PEUX LANCER MOI-MÊME — et la première version comptait ZÉRO pour ecotoken,
+  // smart-conso-token, axa-check et CASSANDRA elle-même, quatre outils que je lance couramment.
+  // Cause racine, vérifiée sur le vrai code avant de corriger (Article 19) : j'avais écrit le
+  // détecteur d'après la forme que j'IMAGINAIS, jamais d'après les formes réellement employées
+  // ici. Il y en a deux, et aucune ne ressemblait à ma supposition.
+  //
+  //   · point d'entrée : `import.meta.url === \`file://${process.argv[1]}\`` (22 scripts) ou
+  //     `process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]` (les plus récents) ;
+  //   · sous-commande : presque jamais comparée directement à `argv[2]` — elle passe d'abord par une
+  //     variable (`const sub = process.argv[2]`), puis c'est CETTE variable qu'on compare.
+  //
+  // D'où le principe retenu plutôt qu'un motif de plus : on cherche le NOM que le script donne à son
+  // premier argument, quel qu'il soit, et on compte les littéraux auxquels ce nom est comparé. Un
+  // script qui inventerait demain un troisième nom serait couvert sans rien changer ici.
+  const nomsDArgument = new Set();
+  for (const m of sansCommentaires.matchAll(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*process\.argv\[2\]/g)) nomsDArgument.add(m[1]);
+  const sousCommandes = new Set();
+  for (const m of sansCommentaires.matchAll(/process\.argv\[2\]\s*===\s*["'`]([\w:-]+)["'`]/g)) sousCommandes.add(m[1]);
+  for (const nom of nomsDArgument) {
+    for (const m of sansCommentaires.matchAll(new RegExp(`\\b${nom}\\s*===\\s*["'\`]([\\w:-]+)["'\`]`, "g"))) sousCommandes.add(m[1]);
+    for (const m of sansCommentaires.matchAll(new RegExp(`case\\s+["'\`]([\\w:-]+)["'\`]\\s*:`, "g"))) sousCommandes.add(m[1]);
+  }
+  // Un script sans aucune sous-commande reste invocable par sa commande nue — d'où le plancher à 1
+  // dès qu'un point d'entrée existe, jamais 0, qui laisserait croire qu'il m'est fermé.
+  // TROISIÈME correction du même détecteur dans la même heure, et la bonne cette fois — parce que
+  // c'est la première qui cherche un PRINCIPE au lieu d'un motif. J'ai d'abord écrit la forme
+  // imaginée (0 trouvé), puis les deux formes réelles observées (clone-hunter est tombé à tort à
+  // zéro : il écrit la même garde dans l'ORDRE INVERSE). Ajouter un troisième motif aurait raté le
+  // quatrième — exactement la liste qui grandit sans jamais couvrir le cas suivant, que le
+  // corollaire de l'Article 17 interdit.
+  //
+  // L'invariant réel, indifférent à l'ordre et à la syntaxe : une garde de point d'entrée cite
+  // FORCÉMENT `process.argv[1]` et `import.meta.url` sur la même ligne, puisque son travail est de
+  // comparer les deux. C'est ça qu'on cherche, plus jamais une écriture particulière.
+  const aUneGarde = sansCommentaires.split("\n").some((l) => l.includes("process.argv[1]") && l.includes("import.meta.url"));
+  // Cas réel trouvé en vérifiant les zéros un par un : check-gemini-quota.mjs n'a AUCUNE garde — il
+  // exécute son corps au niveau racine. Il est donc bel et bien lançable, et le compter à zéro
+  // aurait été faux. Un `console.log` en colonne 0 est la trace de cette exécution immédiate.
+  const sExecuteALImport = /^console\.log\(/m.test(sansCommentaires);
+  // Les trois qui restent à zéro après ça (memory-audit, THE-DEEP-READER, THE-FINAL-JUDGE) le sont
+  // VRAIMENT : ce sont des bibliothèques qu'un autre appelant pilote, je ne peux pas les lancer
+  // moi-même. C'est un vrai constat RH, pas un trou de mesure — d'où le signal "injoignable".
+  const invocables = aUneGarde || sExecuteALImport ? Math.max(1, sousCommandes.size) : 0;
+  return { fonctions, partagees, invocables, poidsTokens: estimateTokens(source) };
+}
+
+export function functionalityCensus({ root = ROOT, readFileImpl = readFileSync, scripts = AGENT_SCRIPT_FILES } = {}) {
+  const lignes = [];
+  const nonMesurables = [];
+  for (const [slug, chemin] of Object.entries(scripts)) {
+    let source;
+    try {
+      source = readFileImpl(join(root, chemin), "utf8");
+    } catch {
+      // Un script illisible n'est PAS un membre à zéro fonctionnalité : c'est une mesure
+      // impossible. Les confondre ferait exactement l'erreur que ce paysage corrige sans arrêt.
+      nonMesurables.push({ slug, chemin, raison: "fichier introuvable ou illisible" });
+      continue;
+    }
+    lignes.push({ slug, chemin, ...countFunctionalities(source) });
+  }
+  lignes.sort((a, b) => b.fonctions - a.fonctions || a.slug.localeCompare(b.slug));
+  const total = lignes.reduce((n, l) => n + l.fonctions, 0);
+  return {
+    lignes,
+    nonMesurables,
+    membresMesures: lignes.length,
+    totalFonctions: total,
+    // Moyenne calculée sur les seuls membres RÉELLEMENT mesurés, jamais sur le total déclaré : un
+    // script illisible ne doit ni tirer la moyenne vers le bas ni disparaître du compte rendu.
+    moyenneFonctions: lignes.length ? Math.round(total / lignes.length) : undefined,
+  };
+}
+
+// CE QUE LE RECENSEMENT APPORTE AU TRAVAIL DE CASSANDRA — la réponse au « trouve comment ».
+// Trois lectures RH qu'aucun autre signal du rapport ne donne, chacune tirée d'un croisement réel
+// avec ce qu'elle sait déjà, jamais d'un chiffre contemplé pour lui-même.
+export function censusSignals(census, { neverUsed = [], roster = [] } = {}) {
+  const signaux = [];
+  const rangDe = (slug) => roster.find((m) => m.slug === slug)?.rang ?? roster.find((m) => m.slug === slug)?.statut;
+  // (1) LE SILO : beaucoup de fonctions, rien de partagé. Un membre qui a beaucoup construit et
+  // dont personne ne peut rien réutiliser — le contraire de ce que l'Agence attend d'un membre.
+  const silos = census.lignes.filter((l) => l.fonctions >= 10 && l.partagees <= 1);
+  for (const s of silos) signaux.push({ type: "silo", slug: s.slug, texte: `${s.slug} porte ${s.fonctions} fonctions et n'en partage que ${s.partagees} — beaucoup de travail dont aucun autre membre ne peut se servir` });
+  // (2) LE MEMBRE HORS DE PORTÉE : rien que je puisse lancer. Ce n'est pas une faute en soi (une
+  // bibliothèque interne est légitime), mais c'en est une pour un membre que le catalogue présente
+  // comme un service — d'où le croisement avec l'usage réel plutôt qu'un reproche sec.
+  const injoignables = census.lignes.filter((l) => l.invocables === 0);
+  for (const s of injoignables) signaux.push({ type: "injoignable", slug: s.slug, texte: `${s.slug} n'expose aucune commande que je puisse lancer moi-même${neverUsed.includes(s.slug) ? " — et le compteur ne lui connaît aucune sollicitation, ce qui n'a rien d'un hasard" : ""}` });
+  // (3) LE POIDS SANS CONTREPARTIE : lourd et jamais sollicité. Le croisement qui fait la valeur du
+  // tableau — un gros investissement dont rien ne prouve le retour.
+  const lourdsInutilises = census.lignes.filter((l) => l.poidsTokens >= 8000 && neverUsed.includes(l.slug));
+  for (const s of lourdsInutilises) signaux.push({ type: "poids-sans-retour", slug: s.slug, texte: `${s.slug} pèse ${s.poidsTokens} tokens${rangDe(s.slug) ? ` (${rangDe(s.slug)})` : ""} et n'a jamais été sollicité — le plus gros investissement sans retour connu du recensement` });
+  return signaux;
+}
+
+export function censusLines(census, signaux = []) {
+  const l = [`Recensement des fonctionnalités — ${census.membresMesures} script(s) mesuré(s), ${census.totalFonctions} fonctions au total, ${census.moyenneFonctions ?? "?"} en moyenne.`];
+  l.push("");
+  l.push("| Script | Fonctions | Partagées | Invocables | Poids (tokens) |");
+  l.push("|---|---|---|---|---|");
+  for (const r of census.lignes) l.push(`| ${r.slug} | ${r.fonctions} | ${r.partagees} | ${r.invocables} | ${r.poidsTokens} |`);
+  if (census.nonMesurables.length) {
+    l.push("", `⚠️ ${census.nonMesurables.length} script(s) non mesurable(s) — jamais comptés comme zéro :`);
+    for (const n of census.nonMesurables) l.push(`  · ${n.slug} (${n.chemin}) — ${n.raison}`);
+  }
+  l.push("", "Lecture : « Fonctions » = charge technique du membre · « Partagées » = ce qu'un autre outil peut réutiliser · « Invocables » = ce que l'agent peut lancer lui-même.");
+  if (signaux.length) {
+    l.push("", `Ce que j'en tire (${signaux.length} constat(s)) :`);
+    for (const s of signaux) l.push(`  · ${s.texte}`);
+  } else {
+    l.push("", "Aucun silo, aucun membre hors de portée, aucun poids sans retour — l'équipe est équilibrée sur ces trois angles.");
+  }
+  return l;
+}
+
 export function buildCassandraLightSignal({ teamSize, badgeSummary, kpiTrend }) {
   const parts = [`${teamSize.total} membre(s) actif(s)`];
   parts.push(badgeSummary.notCertified.length ? `${badgeSummary.notCertified.length} sans badge` : "tous certifiés");
@@ -440,7 +594,7 @@ export function buildCassandraLightSignal({ teamSize, badgeSummary, kpiTrend }) 
 
 // --- Rapport complet, en HTML dès cette première version (2026-09-22, demande explicite) -------
 
-export function buildCassandraReportBlocks({ teamSize, badgeSummary, kpiTrend, reconsider, recruitmentCandidates = [], coverageGaps = null, newArrivalsNarration = [], objectifs = null }) {
+export function buildCassandraReportBlocks({ teamSize, badgeSummary, kpiTrend, reconsider, recruitmentCandidates = [], coverageGaps = null, newArrivalsNarration = [], objectifs = null, census = null, censusSignaux = [] }) {
   const blocks = [];
 
   // GARDIENNE DES OBJECTIFS ET DES KPI (2026-09-22, demande de l'utilisateur). Placé haut dans le
@@ -457,6 +611,15 @@ export function buildCassandraReportBlocks({ teamSize, badgeSummary, kpiTrend, r
   if (newArrivalsNarration.length) {
     blocks.push({ type: "heading", text: "Nouveaux visages à l'Agence Codex" });
     blocks.push({ type: "list", items: newArrivalsNarration });
+  }
+
+  // RECENSEMENT DES FONCTIONNALITÉS (2026-09-22, demande de l'utilisateur : « à tout moment, je peux
+  // demander à voir ce document mis à jour »). Logé juste avant l'effectif, et c'est délibéré :
+  // l'effectif dit COMBIEN de membres, le recensement dit CE QUE chacun porte — la question
+  // suivante que se pose forcément quiconque vient de lire un nombre de têtes.
+  if (census) {
+    blocks.push({ type: "heading", text: "Recensement des fonctionnalités" });
+    blocks.push({ type: "note", text: censusLines(census, censusSignaux).join("\n") });
   }
 
   blocks.push({ type: "heading", text: "Effectif de l'équipe" });
@@ -556,7 +719,13 @@ function collectRealCassandraData({ withCoverage = false } = {}) {
     recordKnownMembers(knownToolSlugs);
   }
 
-  return { teamSize, badgeSummary, kpiTrend: trend, reconsider, coverageGaps, newArrivalsNarration };
+  // Recensement des fonctionnalités : gratuit (lecture de fichiers déjà sur le disque, aucune
+  // commande lancée), donc calculé à chaque rapport complet. Ses signaux croisent le recensement
+  // avec l'usage réel et l'organigramme — jamais un chiffre contemplé pour lui-même.
+  const census = functionalityCensus();
+  const censusSignaux = censusSignals(census, { neverUsed: toolsNeverUsed(usageHistory, knownToolSlugs), roster });
+
+  return { teamSize, badgeSummary, kpiTrend: trend, reconsider, coverageGaps, newArrivalsNarration, census, censusSignaux };
 }
 
 function main() {

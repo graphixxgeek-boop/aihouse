@@ -663,9 +663,25 @@ d'exécution**, et son rôle est triple :
    process. Y compris sur lui-même : il porte son propre process maître et le vérifie
    (`selfCheck()`), parce qu'un surveillant que personne ne surveille dérive sans que rien ne le dise.
 
-**Obligation de l'agent** : lire son rapport quand il tombe, et tenir compte de ses recommandations
+**angel-of-ia-process (`scripts/angel-of-ia-process.mjs`) est son pendant pour la CONDUITE.**
+*(Ajouté le 2026-09-22 : cet Article nommait god et god seul, alors que la moitié de la discipline
+qu'il prétend garantir ne porte pas sur le déroulé d'une activité mais sur le comportement de ceux
+qui travaillent. Un Article sur la discipline d'exécution qui laissait sa moitié conduite hors de
+tout texte n'était pas une discipline, c'était une intention.)* god surveille des ÉTAPES, angel
+surveille des RÈGLES DE TRAVAIL — et les deux côtés, l'agent comme l'utilisateur, sont notés pareil.
+Son seul verdict mécanique croise les horodatages du compteur d'usage avec ceux de git : les outils
+à consulter AVANT d'agir l'ont-ils été avant. Les règles qui ne se jouent que dans la conversation,
+il les DEMANDE et refuse d'être vert sans réponse — jamais une conformité supposée.
+
+**Une seule voix, jamais deux** : angel ne livre pas son rapport lui-même, god le relaie dans une
+section clairement à part. Ce qui vaut pour god ci-dessous vaut donc pour lui.
+
+**Obligation de l'agent** : lire ce rapport quand il tombe, et tenir compte de ses recommandations
 — jamais les enregistrer puis passer à autre chose. Il signale, il ne corrige jamais : la décision
-reste humaine, mais l'ignorer en silence n'en est pas une.
+reste humaine, mais l'ignorer en silence n'en est pas une. Concrètement, deux moments : **avant**
+un gros travail, demander à god quel process s'applique ; **après** une vague de travail, lire ce
+que le couple god/angel a relevé — et traiter un manquement nommé comme un bug (Article 3), jamais
+comme une remarque.
 
 **Article 25 — Vérifier régulièrement son propre travail, pas seulement le produire.**
 *(2026-09-22, demande explicite de l'utilisateur : « verifie régulièrement ton travail : à inscrire
@@ -690,6 +706,39 @@ chantier, une série de commits), relancer les outils qui savent juger ce qui vi
 plutôt que de supposer que le vert du dernier commit vaut encore. Et quand un outil neuf vient
 d'être construit, le lancer POUR DE VRAI sur des données réelles avant de le considérer terminé :
 un outil qui n'a jamais tourné contre le vrai dépôt n'est pas un outil vérifié, c'est une intention.
+
+**Article 27 — Le projet doit rester reprenable par une AUTRE IA, à tout moment.**
+*(2026-09-22, demande explicite de l'utilisateur : « à tout moment le projet peut etre repris par un
+autre modele de claude ou une autre ia : notre travail doit s'adapter en consequence ».)* Rien ne
+garantit que l'agent qui lira ce fichier demain soit celui qui l'a écrit : ni le même modèle, ni la
+même famille, ni même le même éditeur. Tout ce qui n'est vrai que dans la tête de l'agent en cours
+est donc perdu d'avance, et le travail se conçoit en conséquence — jamais après coup, quand la
+reprise a déjà mal commencé.
+
+**Ce que ça impose concrètement**, et chacun de ces points est déjà un réflexe du projet que cet
+Article rend obligatoire plutôt que coutumier :
+
+- **Le POURQUOI vit à côté du QUOI.** Un mécanisme qui semble redondant ou trop prudent se fait
+  supprimer par le prochain agent s'il ne porte pas la raison qui l'a fait naître (Article 19, pris
+  ici par l'autre bout : l'Article 19 oblige à chercher cette raison, celui-ci oblige à la laisser).
+- **Aucune obligation ne repose sur la seule mémoire d'un agent.** Une règle qu'aucun test, aucun
+  garde-fou et aucun rappel automatique ne porte n'existera plus à la session suivante. Quand un
+  mécanisme est impossible (cf. la limite honnête de tool-brain et de SMART-CONSO-TOKEN), l'écrire
+  noir sur blanc EST la protection — et cette impossibilité se déclare, elle ne se tait pas.
+- **Jamais de dépendance à un outillage particulier dans ce qui fait loi.** Les blueprints
+  génériques et la séparation charte/référentiel/règles de travail existent pour ça : une IA qui
+  arrive sans le gestionnaire de tâches de Claude Code, sans ses crochets git ou sans ses fenêtres
+  de questions doit pouvoir travailler avec les documents seuls. Le suivi durable vit dans
+  `docs/suivi/`, jamais dans un outil de session — distinction déjà écrite, désormais fondée.
+- **Le vocabulaire se définit là où il s'emploie.** Un surnom d'outil, un nom de rang, une
+  catégorie : chacun renvoie à l'endroit qui le définit. Un nom propre sans définition atteignable
+  est une dette de reprise, au même titre qu'un chemin cassé.
+
+**Test de reprise, à se poser périodiquement** (même esprit que l'épreuve de la page blanche de
+l'Article 7, mais sur la transmission plutôt que sur l'architecture) : *une IA qui ne dispose que
+de ce dépôt, sans une ligne de notre conversation, pourrait-elle reprendre ce chantier sans
+défaire ce qui a été gagné ?* Un « non » quelque part est un écart à combler tout de suite
+(Article 3/13), jamais une note pour plus tard.
 
 ## Règles de travail — collaboration avec l'utilisateur
 
