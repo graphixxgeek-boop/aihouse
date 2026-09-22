@@ -671,6 +671,12 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // tool-learning (2026-09-22) : lui a bien un item de Ronde (« intégré à circle pour un suivi au
   // top, comme le reste » — sa demande), donc pas d'exclusion. Cette ligne existe uniquement pour
   // que la prochaine relecture ne se demande pas s'il a été oublié : il est DANS la Ronde.
+  // integration-outil (2026-09-22) : jamais un item de Ronde, et ce n'est pas un oubli. Il répond à
+  // une QUESTION posée au moment où un outil arrive — le relancer tous les quinze jours sans qu'un
+  // outil arrive produirait invariablement « rien à signaler », c'est-à-dire du bruit qui apprend à
+  // ne plus lire la Ronde. Son moment est celui de l'intégration, et il est porté par le process
+  // « Intégration d'un nouvel outil » (god-of-all-process), jamais par un calendrier.
+  "integration-outil": "Répond à un événement (un outil qui arrive), jamais à un calendrier : hors d'une intégration il n'aurait rien à dire, et une Ronde qui répète « rien à signaler » s'apprend à être sautée. Son obligation vit dans PROCESSES, pas dans CIRCLE_ITEMS",
   "safe-export": "Gardien sacré du code (couche légère) : tourne automatiquement à CHAQUE commit via le crochet post-commit, jamais un item de Ronde — même régime que les six autres Gardiens. Son scan profond, lui, est exceptionnel et se déclenche sur proposition, jamais sur calendrier",
   "tasks-process-guardian": "gardien de process SECONDAIRE, même règle que process-simulation-guardian et angel-of-ia-process : god-of-all-process centralise et relaie son verdict (décision de l'utilisateur, 2026-09-22 — une seule voix à la Ronde, jamais une par gardien). Son déclencheur est l'état du suivi, pas le calendrier",
   "process-simulation-guardian": "gardien de process SECONDAIRE, même règle qu'angel-of-ia-process ci-dessus : god-of-all-process centralise et relaie son verdict (décision de l'utilisateur, 2026-09-22). Son vrai déclencheur est de toute façon une simulation, jamais le calendrier",

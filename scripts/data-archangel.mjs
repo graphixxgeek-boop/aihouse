@@ -278,6 +278,14 @@ export const CONSOMMATEURS_DE_TENDANCE = [
   { outil: "clean-dirty-old", script: "scripts/clean-dirty-old.mjs", pourquoi: "la stagnation EST une tendance — il la déduit aujourd'hui de dates de fichiers, jamais d'une série" },
   { outil: "angel-of-ia-process", script: "scripts/angel-of-ia-process.mjs", pourquoi: "l'évaluation de l'utilisateur se lit en trajectoire, c'est sa demande explicite du 2026-09-22" },
   { outil: "smart-conso-token", script: "scripts/smart-conso-token.mjs", pourquoi: "un rythme de consommation ne se juge que dans la durée" },
+  // 2026-09-22 — les deux derniers arrivés, absents de ce registre par simple antériorité : il a été
+  // écrit avant leur naissance et rien ne l'a rouvert à leur arrivée. C'est exactement le diagnostic
+  // de l'Article 24 pris sur le fait : les sept registres d'intégration ont chacun réclamé leur
+  // inscription en échouant, celui-ci n'a rien réclamé du tout — parce qu'aucun test ne dit ce qui
+  // DEVRAIT consommer une tendance, seulement ce qui est déclaré la consommer. Un registre qui ne
+  // sait pas qu'il lui manque quelqu'un est muet, pas vert.
+  { outil: "safe-export", script: "scripts/safe-export.mjs", pourquoi: "l'exportabilité n'a aucun sens en instantané : 4 fuites aujourd'hui est un chiffre creux tant qu'on ne sait pas si on en réparait 10 le mois dernier ou 1" },
+  { outil: "tool-learning", script: "scripts/tool-learning.mjs", pourquoi: "il juge des TRAJECTOIRES par définition (c'est sa frontière déclarée avec CASSANDRA) — un outil qui juge des pentes sans tenir de série se jugerait lui-même immobile" },
 ];
 
 // findTendancesOrphelines() — une série produite et lue par personne. Le sens 1 du métier de cet

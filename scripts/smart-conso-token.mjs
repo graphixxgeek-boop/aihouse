@@ -200,6 +200,10 @@ export const KNOWN_COSTLY_PATTERNS = {
     poids: "modéré",
     raison: "Lire un transcript de simulation complet ou un journal JSON brut (plusieurs Mo possibles) — coût proportionnel à la taille du fichier, jamais fixe.",
   },
+  tool_learning_assist: {
+    poids: "faible à modéré — mais son TEST peut être très élevé",
+    raison: "Aider un outil de l'Agence à apprendre (le relire, corriger son critère, lui faire relire sa mémoire) coûte l'équivalent de son script : médiane mesurée le 2026-09-22 sur les 64 scripts réels = ~3 300 tokens, quartile haut ~5 900 — soit environ un dixième d'un agent séparé (~37 000). Ce n'est donc PAS le geste coûteux qu'on suppose, et le supposer coûteux est exactement ce qui empêche de le faire. Le vrai coût est ailleurs et il est massif : le TEST qui accompagne le correctif vit dans check-house.mjs, mesuré à ~273 000 tokens — 44 % du poids de tout scripts/ à lui seul. Lu en entier, il coûte sept agents séparés pour une assertion de trois lignes. D'où la règle qui suit, non négociable : on ne lit JAMAIS check-house.mjs en entier pour ajouter un test, on passe par tool-brain --file (qui délègue à find-booster) pour n'ouvrir que le bloc concerné.",
+  },
   progressive_disclosure_violation: {
     poids: "variable (cf. scanDocumentWeight)",
     raison: "Un document toujours chargé (CLAUDE.md) qui mélange consignes universelles et contenu narratif/historique consultable à la demande paie ce contenu à CHAQUE session — le patron recommandé (déjà appliqué dans ce projet via docs/referentiel/) : ne garder dans le fichier toujours chargé que ce qui est vraiment nécessaire à chaque fois.",

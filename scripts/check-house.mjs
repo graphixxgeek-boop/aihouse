@@ -6757,7 +6757,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // (docs/suivi #230), jamais celui qui la prend. Testé avec un readFileImpl injecté et un
   // sous-ensemble isolé de registres — jamais dépendant du contenu réel des scripts du dépôt, qui
   // peut changer indépendamment de ce test.
-  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex, LOCAL_JOURNALS, auditLocalJournals, findJournalsMissingFromGitignore, findUndeclaredLocalJournals, findEngineCodeInRegistries, findGardiensMissingFromSource, flagFindBoosterCandidates, checkHtmlReportTheme, findOrphanReportFiles, REPORT_PER_RUN_REGISTRIES } = await import('../scripts/doc-report.mjs');
+  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex, LOCAL_JOURNALS, auditLocalJournals, findJournalsMissingFromGitignore, findUndeclaredLocalJournals, findEngineCodeInRegistries, findGardiensMissingFromSource, findAppelsNonDeclaresDansHyperScan, findDeclarationsSansAppel, findDeclarationsSansRaison, flagFindBoosterCandidates, checkHtmlReportTheme, findOrphanReportFiles, REPORT_PER_RUN_REGISTRIES } = await import('../scripts/doc-report.mjs');
   assert.ok(REGISTRIES.length >= 15, 'the registry table must cover every real tool registry of the network, never a partial or forgotten subset');
   assert.ok(REGISTRIES.every((r) => r.slug && r.label && r.family && r.path && r.decision), 'every registry entry must be fully specified — a half-filled row would silently break the family grouping or the decision audit');
 
@@ -6789,6 +6789,45 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // hyper-scan-checkpoint.mjs's real source, not just from a fabricated fixture.
   const realHyperScanSource = fs.readFileSync(new URL('../scripts/hyper-scan-checkpoint.mjs', import.meta.url), 'utf8');
   assert.deepEqual(findGardiensMissingFromSource(realHyperScanSource), [], 'checked live against the real hyper-scan-checkpoint.mjs and the real AGENT_CATEGORIES/REGISTRIES: every current Gardien sacré du code (ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD/CLONE-HUNTER/ALWAYS-NEW-CODE/SAFE-EXPORT, the last two promoted as light-layer-only Gardiens on 2026-09-21 and 2026-09-22 — and this assertion caught the seventh the very day it arrived, exactly as its own message had predicted before that case existed) must genuinely be called from its light-version sub-process list — a future 7th Gardien forgotten here now fails this test on the very next commit, instead of only being noticed by a manual re-read');
+
+  // findAppelsNonDeclaresDansHyperScan / findDeclarationsSansAppel / findDeclarationsSansRaison
+  // (2026-09-22) — l'autre moitié de la même question, restée sans garde-fou jusqu'ici : la moitié
+  // « tous les Gardiens » était garantie ci-dessus, la moitié « et seulement eux » ne l'était par
+  // rien. Trois assertions pour trois façons distinctes de pourrir — un appel jamais justifié, une
+  // justification dont l'appel a disparu, une justification qui n'explique rien.
+  const fakeCats2 = { 'gardien-un': 'Gardien sacré du code', membre: 'Membre' };
+  const fakeRegs2 = [{ slug: 'gardien-un', scriptPath: 'scripts/gardien-un.mjs' }, { slug: 'membre', scriptPath: 'scripts/membre.mjs' }];
+  assert.deepEqual(findAppelsNonDeclaresDansHyperScan('sh("node scripts/gardien-un.mjs");', { categories: fakeCats2, registries: fakeRegs2, declares: [] }), [], 'a source calling only Gardiens declares nothing extra — never a false positive on the normal case');
+  assert.deepEqual(findAppelsNonDeclaresDansHyperScan('sh("node scripts/gardien-un.mjs"); sh("node scripts/membre.mjs");', { categories: fakeCats2, registries: fakeRegs2, declares: [] }), ['scripts/membre.mjs'], 'a non-Gardien script invoked with no written reason is exactly the gap this function exists to name — it never says the call is wrong, only that nobody decided it');
+  assert.deepEqual(findAppelsNonDeclaresDansHyperScan('sh("node scripts/gardien-un.mjs"); sh("node scripts/membre.mjs");', { categories: fakeCats2, registries: fakeRegs2, declares: [{ scriptPath: 'scripts/membre.mjs', raison: 'x'.repeat(80) }] }), [], 'the same non-Gardien call, once declared with a reason, is no longer a gap — the registry is what turns an invocation into a decision');
+  assert.deepEqual(findDeclarationsSansAppel('sh("node scripts/membre.mjs");', { declares: [{ scriptPath: 'scripts/membre.mjs', raison: 'y'.repeat(80) }, { scriptPath: 'scripts/parti.mjs', raison: 'z'.repeat(80) }] }), ['scripts/parti.mjs'], 'a reason written for a call that no longer exists is worse than no reason at all: it makes the question look recently settled (same family as Article 28 checkActionChain)');
+  assert.deepEqual(findDeclarationsSansRaison([{ scriptPath: 'scripts/a.mjs', raison: 'parce que' }, { scriptPath: 'scripts/b.mjs', raison: 'w'.repeat(80) }]), ['scripts/a.mjs'], 'an entry whose reason is too short to explain anything turns the guard into a formality filled in to silence it — the exact drift Article 28 names for action plans');
+  assert.deepEqual(findAppelsNonDeclaresDansHyperScan(realHyperScanSource), [], 'checked live: every script hyper-scan-checkpoint.mjs actually runs is either a current Gardien sacré or carries a written reason in APPELS_NON_GARDIENS_HYPER_SCAN');
+  assert.deepEqual(findDeclarationsSansAppel(realHyperScanSource), [], 'checked live: no orphan justification — this assertion failed on its very first run, catching a header comment that had claimed since 2026-09-19 that hyper-scan aggregates kpi-report.mjs when the name appeared nowhere else in the file; wired for real rather than quietly downgrading the promise');
+  assert.deepEqual(findDeclarationsSansRaison(), [], 'checked live: every declared non-Gardien call in the real registry explains itself');
+
+  // integration-outil (2026-09-22) — le process d'intégration rendu actif. Les trois classes
+  // d'assertion correspondent aux trois façons dont il pourrait mentir : dire présent pour un absent,
+  // dire absent pour un fichier illisible, ou se taire parce que son lecteur ne reconnaît plus la
+  // forme de son registre (le cas le plus grave : un rapport spectaculaire et entièrement faux).
+  const { REGISTRES_D_INTEGRATION, etatIntegration, planDIntegration, findLecteursCasses } = await import('../scripts/integration-outil.mjs');
+  const fauxFichiers = { 'scripts/faux.mjs': 'export const REG = [ { slug: "un" }, { slug: "deux" } ];' };
+  const lireFaux = (chemin) => {
+    const cle = Object.keys(fauxFichiers).find((k) => String(chemin).endsWith(k));
+    if (!cle) throw new Error('introuvable');
+    return fauxFichiers[cle];
+  };
+  const regFaux = [{ cle: 'test', fichier: 'scripts/faux.mjs', quoi: 'registre de test', extrait: (t) => new Set([...t.matchAll(/slug: "([a-z]+)"/g)].map((m) => m[1])), forme: (s) => `slug: "${s}"` }];
+  assert.deepEqual(etatIntegration('un', { readFileImpl: lireFaux, registres: regFaux }).map((e) => e.present), [true], 'a tool genuinely declared in a registry reports present — never a false alarm sending me to rewrite a line that is already there');
+  assert.deepEqual(etatIntegration('trois', { readFileImpl: lireFaux, registres: regFaux }).map((e) => e.present), [false], 'a tool absent from the registry is the gap this tool exists to name before the commit, not after the red test');
+  const regCasse = [{ cle: 'absent', fichier: 'scripts/nexistepas.mjs', quoi: 'x', extrait: () => new Set(), forme: () => '' }];
+  assert.equal(etatIntegration('un', { readFileImpl: lireFaux, registres: regCasse })[0].mesurable, false, 'an unreadable file reports "not measurable", never "absent": an absence of measurement is not an absence of registration, and confusing the two sends me to duplicate an existing line');
+  assert.equal(planDIntegration('trois', { readFileImpl: lireFaux, registres: regFaux }).complet, false, 'planDIntegration is only complet when every mandatory registry is filled');
+  assert.equal(planDIntegration('un', { readFileImpl: lireFaux, registres: regFaux }).complet, true, 'and it says so plainly once they are');
+  assert.equal(findLecteursCasses({ readFileImpl: lireFaux, registres: regFaux, minimum: 2 }).length, 0, 'a reader that extracts two tools from a two-tool registry is working');
+  assert.equal(findLecteursCasses({ readFileImpl: lireFaux, registres: regFaux, minimum: 5 }).length, 1, 'a reader extracting fewer tools than a real registry can hold is the reader breaking, never the registry emptying — the exact class of failure SAFE-EXPORT produced on 2026-09-22 when its marker sought the wrong word and declared 25 blueprints faulty');
+  assert.deepEqual(findLecteursCasses(), [], 'checked live against the real repository: every one of the ten integration registries is still readable in its current shape — this assertion caught three broken readers on the very first real run (an anchor landing in a comment, "id:" taken for "slug:", and a registry naming its tools in plain words), before any of them had produced a single wrong figure');
+  assert.deepEqual(planDIntegration('integration-outil').restant.map((e) => e.cle), [], 'checked live: the tool built to make integration complete is itself completely integrated — the one case where failing would have been its own refutation');
 
   const fakeReadFile = (path) => {
     if (path.includes('tool-with-html')) return 'import { renderHtmlReport } from "./html-report.mjs";';

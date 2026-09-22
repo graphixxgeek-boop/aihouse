@@ -192,6 +192,33 @@ export const PROCESSES = [
       { cle: "identite", libelle: "l'identité de session est déposée, sinon chaque rapport porte un trou", preuve: { fichier: SESSION_FILE } },
     ],
   },
+  // INTÉGRATION D'UN NOUVEL OUTIL (2026-09-22, demande explicite : « ecris quelque part le process
+  // integration ou renforce le si deja existant, pour le rendre plus efficace et te permettre
+  // d'integrer plus facilement un outil »). Il n'en existait aucun, alors que c'est l'activité la
+  // plus répétée du paysage : vingt-huit outils sont entrés, chacun par une série d'oublis rattrapés
+  // à coups de tests rouges.
+  //
+  // Les étapes sont volontairement dans CET ordre, et il n'est pas décoratif : consulter d'abord
+  // (sinon l'outil arrive trop tard, quand les oublis sont déjà des échecs), les dix registres
+  // ensuite, la documentation, puis la vérification par le lancement réel. La dernière étape est
+  // celle qu'on saute le plus volontiers et celle qui compte le plus (Article 25) : un outil qui n'a
+  // jamais tourné contre le vrai dépôt n'est pas un outil, c'est une intention.
+  {
+    slug: "integration-outil",
+    nom: "Intégration d'un nouvel outil dans l'Agence",
+    quand: "créer un nouvel outil, le faire entrer dans l'équipe, lui donner un rang ou un badge",
+    motsCles: ["nouvel outil", "intégrer", "intégration", "registre", "équipe", "badge", "arrivée"],
+    doc: "docs/referentiel/integration-outil.md",
+    gardien: "scripts/integration-outil.mjs",
+    etapes: [
+      { cle: "consultation", libelle: "consulter integration-outil AVANT de commencer, pas après le premier test rouge", preuve: { fichier: "scripts/integration-outil.mjs" } },
+      { cle: "registres", libelle: "les dix registres obligatoires sont renseignés (planDIntegration le dit, registre par registre)", preuve: { fichier: "scripts/integration-outil.mjs" } },
+      { cle: "documents", libelle: "blueprint générique + instanciation + registre avec index existent réellement", preuve: null },
+      { cle: "lancement-reel", libelle: "l'outil a TOURNÉ contre le vrai dépôt avant d'être considéré fini (Article 25)", preuve: null },
+      { cle: "tests", libelle: "ses fonctions mécaniques sont couvertes par check-house.mjs", preuve: { fichier: "scripts/check-house.mjs" } },
+      { cle: "suivi", libelle: "la tâche est documentée dans docs/suivi/ dans LE MÊME commit", preuve: null },
+    ],
+  },
 ];
 
 // ————————————————————————————————————————————————————————————————————————

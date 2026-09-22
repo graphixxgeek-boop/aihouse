@@ -132,6 +132,7 @@ export const REGISTRIES = [
   // Article 23) — la couche légère, elle, ne produit qu'un avertissement post-commit sans fichier.
   { slug: "safe-export", label: "SAFE-EXPORT", family: "Équipe noyau (Article 20)", path: "docs/safe-export/", decision: "texte", scriptPath: "scripts/safe-export.mjs" },
   { slug: "tool-learning", label: "TOOL-LEARNING", family: "Suite Dette & Structure du code", path: "docs/tool-learning/", decision: "texte", scriptPath: "scripts/tool-learning.mjs" },
+  { slug: "integration-outil", label: "integration-outil", family: "Suite Dette & Structure du code", path: "docs/integration-outil/", decision: "texte", scriptPath: "scripts/integration-outil.mjs" },
   { slug: "objectifs-vs-resultats", label: "objectifs-vs-resultats", family: "Gouvernance interne", path: "docs/objectifs-vs-resultats/", decision: "texte", scriptPath: "scripts/objectifs-vs-resultats.mjs" },
   { slug: "cassandra-rh", label: "CASSANDRA-RH", family: "Gouvernance interne", path: "docs/cassandra-rh/", decision: "delivery_html", scriptPath: "scripts/cassandra-rh.mjs" },
   { slug: "ecotoken", label: "ecotoken", family: "Gouvernance interne", path: "docs/ecotoken/", decision: "texte", scriptPath: "scripts/ecotoken.mjs" },
@@ -225,6 +226,69 @@ export function findGardiensMissingFromSource(sourceText, { categories = AGENT_C
     const scriptPath = registries.find((r) => r.slug === slug)?.scriptPath;
     return !scriptPath || !String(sourceText ?? "").includes(scriptPath);
   });
+}
+
+// APPELS_NON_GARDIENS_HYPER_SCAN (2026-09-22) — le pendant exact de findGardiensMissingFromSource()
+// ci-dessus, né d'une question de l'utilisateur qui a mis le doigt sur un trou réel : « la connexion
+// avec hyper check (sauf erreur : tous les gardiens sacrés mais seulement eux) ». La moitié « tous »
+// était bien garantie mécaniquement depuis la tâche #290 ; la moitié « seulement eux » ne l'était
+// par RIEN — et elle est fausse dans les faits, pour de bonnes raisons documentées ci-dessous.
+//
+// Le trou n'était donc pas « HYPER-SCAN appelle trop de choses » mais « personne ne sait dire quelles
+// non-Gardiens il appelle, ni pourquoi ». Un appel ajouté là un soir de fatigue aurait ressemblé en
+// tout point à un appel décidé : même ligne, même forme. Ce registre rend la différence visible —
+// chaque non-Gardien appelé doit porter sa raison écrite, et tout NOUVEL appel non déclaré est
+// signalé au commit suivant. Il ne dit jamais qu'un appel est mauvais : il dit qu'il n'a pas été
+// décidé.
+//
+// Volontairement une liste tenue à la main (l'exception explicitement permise par l'Article 24 :
+// « un contenu explicitement curaté à la main par décision humaine documentée reste légitime tant
+// que cette nature volontairement manuelle est écrite noir sur blanc à côté ») — parce que ce qu'elle
+// porte n'est pas un état observable ailleurs dans le dépôt, mais une RAISON, qu'aucun scan ne peut
+// dériver. Le garde-fou mécanique exigé par ce même Article porte sur l'autre bout : findAppels...()
+// détecte tout écart entre cette liste et la réalité du fichier.
+export const APPELS_NON_GARDIENS_HYPER_SCAN = [
+  {
+    scriptPath: "scripts/check-house.mjs",
+    raison: "Infrastructure, jamais un Gardien (cf. organisation-agence.md §5) : la suite de tests est le socle sur lequel tout verdict repose — un scan rendu sur un dépôt dont les tests sont rouges ne vaut rien, et HYPER-SCAN doit pouvoir le dire dans son propre rapport plutôt que laisser le lecteur le supposer.",
+  },
+  {
+    scriptPath: "scripts/kpi-report.mjs",
+    raison: "Membre, pas Gardien : fournit les chiffres de contexte (points fragiles ouverts, couverture) sans lesquels les constats des Gardiens n'ont pas d'échelle. Lu, jamais recalculé ici.",
+  },
+];
+
+// findAppelsNonDeclaresDansHyperScan() — l'autre moitié de la question. Extrait tous les
+// `sh("node scripts/X.mjs")` réellement présents dans le texte source, retire les Gardiens (dérivés
+// d'AGENT_CATEGORIES, jamais recopiés) et les non-Gardiens déclarés ci-dessus : ce qui reste est un
+// appel que personne n'a justifié. Les imports directs (verifyRondeProcess depuis
+// circle-process-guardian.mjs) ne sont pas des sh() et ne sont pas concernés — un import expose une
+// fonction précise, un sh() relance un outil entier, ce ne sont pas les mêmes enjeux de coût.
+export function findAppelsNonDeclaresDansHyperScan(sourceText, { categories = AGENT_CATEGORIES, registries = REGISTRIES, declares = APPELS_NON_GARDIENS_HYPER_SCAN } = {}) {
+  const appeles = [...String(sourceText ?? "").matchAll(/sh\(\s*"node (scripts\/[a-z0-9-]+\.mjs)/g)].map((m) => m[1]);
+  const gardienPaths = Object.entries(categories)
+    .filter(([, cat]) => cat === "Gardien sacré du code")
+    .map(([slug]) => registries.find((r) => r.slug === slug)?.scriptPath)
+    .filter(Boolean);
+  const declaresPaths = declares.map((d) => d.scriptPath);
+  return [...new Set(appeles)].filter((p) => !gardienPaths.includes(p) && !declaresPaths.includes(p));
+}
+
+// findDeclarationsSansAppel() — le sens inverse, celui qui pourrit toujours en silence : une raison
+// écrite pour un appel qui n'existe plus. Une justification orpheline est pire qu'une absence, elle
+// fait croire que la question a été tranchée récemment (même famille que checkActionChain() de
+// l'Article 28, qui vérifie qu'une tâche annoncée existe vraiment).
+export function findDeclarationsSansAppel(sourceText, { declares = APPELS_NON_GARDIENS_HYPER_SCAN } = {}) {
+  const texte = String(sourceText ?? "");
+  return declares.filter((d) => !texte.includes(`sh("node ${d.scriptPath}`)).map((d) => d.scriptPath);
+}
+
+// findDeclarationsSansRaison() — une entrée du registre qui n'explique rien ne protège rien : elle
+// transforme le garde-fou en formalité qu'on remplit pour le faire taire (exactement la dérive que
+// l'Article 28 nomme pour les plans d'action). Seuil bas et assumé : 60 caractères, de quoi exclure
+// « parce que » sans imposer une dissertation.
+export function findDeclarationsSansRaison(declares = APPELS_NON_GARDIENS_HYPER_SCAN) {
+  return declares.filter((d) => String(d.raison ?? "").trim().length < 60).map((d) => d.scriptPath);
 }
 
 function readScriptSource(scriptPath, readFileImpl = readFileSync) {
@@ -526,6 +590,7 @@ export const RELIABILITY_SCRIPT_FILES = {
   // DÉTECTENT l'oubli, ils ne l'ÉVITENT pas. Sept registres pour un outil qui arrive, c'est la
   // mesure exacte de ce qu'il reste à automatiser.
   "safe-export": "scripts/safe-export.mjs", "tool-learning": "scripts/tool-learning.mjs",
+  "integration-outil": "scripts/integration-outil.mjs",
   "check-spirit-mjs": "scripts/check-spirit.mjs", argus: "scripts/check-argus.mjs", harmonia: "scripts/check-harmonia.mjs",
   "smart-conso-api": "scripts/smart-conso-api.mjs", "check-level-target": "scripts/check-level-target.mjs",
   "hyper-scan-checkpoint": "scripts/hyper-scan-checkpoint.mjs", "always-new-code": "scripts/always-new-code.mjs",

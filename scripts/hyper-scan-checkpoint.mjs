@@ -5,8 +5,9 @@
 //
 // Rôle : ORCHESTRATEUR, jamais un réimplémenteur. Version LÉGÈRE (celle-ci, zéro appel réseau) :
 // agrège tout ce qu'ARGUS, HARMONIA, AXA-CHECK, CLEAN-DIRTY-OLD, CLONE-HUNTER, ALWAYS-NEW-CODE
-// (préparation — les 6 Gardiens sacrés du code au complet, Article 20, cf.
-// docs/referentiel/organisation-agence.md §3), check-house.mjs, kpi-report.mjs et tous les
+// (préparation) et SAFE-EXPORT — les 7 Gardiens sacrés du code au complet, Article 20, cf.
+// docs/referentiel/organisation-agence.md §3 —, plus check-house.mjs, kpi-report.mjs,
+// circle-process-guardian.mjs et tous les
 // registres/historiques déjà accumulés savent dire
 // MÉCANIQUEMENT, détermine ce qui a changé depuis le dernier passage (mémoire automatique via
 // docs/hyper-scan-checkpoint/index.md, jamais un fichier d'état séparé), puis produit une
@@ -185,6 +186,20 @@ function main() {
     ? circleFindings.map((f) => `[${f.check}] ${f.message}`)
     : ["Aucun écart mécanique détecté (record-run, orphan-reports, registries-missing-from-circle)."];
   for (const line of circleSummaryLines) console.log(line);
+
+  // kpi-report.mjs (2026-09-22) — l'en-tête de ce fichier affirmait depuis sa création (2026-09-19)
+  // qu'il agrège « ce que [...] kpi-report.mjs [...] sai[t] dire MÉCANIQUEMENT ». C'était faux : le
+  // nom n'apparaissait nulle part ailleurs que dans cette phrase. Trouvé par
+  // findDeclarationsSansAppel() (doc-report.mjs) le jour même de sa construction, en réponse à la
+  // question de l'utilisateur sur « tous les gardiens sacrés mais seulement eux ».
+  // Câblé pour de vrai plutôt que retiré de la promesse : sans échelle (combien de points fragiles
+  // ouverts, quelle couverture), les constats des Gardiens ci-dessus sont des faits sans grandeur —
+  // « 4 écarts » ne veut rien dire tant qu'on ne sait pas sur combien. Seule la synthèse compacte est
+  // reprise ici, jamais le rapport entier : HYPER-SCAN agrège, il ne recopie pas.
+  console.log("\n--- KPI (échelle des constats ci-dessus) ---");
+  const kpiOut = sh("node scripts/kpi-report.mjs");
+  const kpiCompact = kpiOut.split("== SYNTHÈSE COMPACTE")[1];
+  console.log(kpiCompact ? `== SYNTHÈSE COMPACTE${kpiCompact.split("Historique complet")[0].trim()}` : kpiOut.trim());
 
   console.log("\n--- Suite de tests (check-house.mjs) ---");
   const testOut = sh("node scripts/check-house.mjs 2>&1");

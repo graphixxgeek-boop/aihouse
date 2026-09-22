@@ -20,6 +20,7 @@ import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
 import { AGENT_CATEGORIES, GARDIEN_DOMAINS, assertNotAPersonnage, sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { renderTextReport } from "./report-template.mjs";
 import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson } from "./tool-usage.mjs";
+import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
 import { relativeStaleness, lastTouchDays } from "./clean-dirty-old.mjs";
 import { AGENT_SCRIPT_FILES, collectScriptCoverage, scriptRobustnessScore } from "./axa-check.mjs";
 import { KPI_HISTORY_COLUMNS, KPI_HISTORY_PATH, parseKpiHistoryCsv } from "./kpi-report.mjs";
@@ -884,6 +885,35 @@ function collectRealCassandraData({ withCoverage = false } = {}) {
   return { teamSize, badgeSummary, kpiTrend: trend, reconsider, coverageGaps, newArrivalsNarration, census, censusSignaux };
 }
 
+// --- SÉRIE TEMPORELLE PARTAGÉE (2026-09-22) ---------------------------------------------------
+//
+// data-archangel la désignait depuis sa construction comme la PREMIÈRE consommatrice légitime de
+// tendance (« un objectif se juge sur une trajectoire, jamais sur un point »), et elle était
+// pourtant l'une des six à l'ignorer. Le reproche était écrit, daté, et sans effet — exactement le
+// cas que TOOL-LEARNING vient d'apprendre à me reprocher, à deux heures près.
+//
+// Ce qu'elle historise, et ce qu'elle n'historise PAS : quatre chiffres RH, jamais la couverture de
+// test (c'est la série d'AXA-CHECK, et deux séries pour un même chiffre divergeraient au premier
+// changement de méthode) ni les KPI (kpiTrend a déjà la sienne, qu'elle LIT — jamais un second
+// calcul, la règle constante de ce fichier).
+export function enregistrerTendanceRH(data, options = {}) {
+  const point = buildPoint({
+    mesures: {
+      "membres-certifies": { valeur: data?.badgeSummary?.certified ?? data?.badgeSummary?.total - (data?.badgeSummary?.notCertified?.length ?? 0), sens: SENS.HAUT_MIEUX },
+      "effectif": { valeur: data?.teamSize?.total ?? null, sens: SENS.NEUTRE },
+      "outils-a-reconsiderer": { valeur: data?.reconsider?.length ?? null, sens: SENS.BAS_MIEUX },
+      "trous-de-couverture": { valeur: data?.coverageGaps?.length ?? null, sens: SENS.BAS_MIEUX },
+    },
+    ...options,
+  });
+  return recordPoint("cassandra-rh", point, options);
+}
+
+export function tendancesRH(options = {}) {
+  const serie = loadSerie("cassandra-rh", options);
+  return ["membres-certifies", "effectif", "outils-a-reconsiderer", "trous-de-couverture"].map((c) => detectTendance(serie, c, options));
+}
+
 function main() {
   printReliabilityNotice("cassandra-rh");
   recordCliUsage("cassandra-rh");
@@ -894,6 +924,13 @@ function main() {
     console.log(CASSANDRA_PERSONA);
     console.log("");
     console.log(buildCassandraReportHtml(data));
+    // Le point n'est enregistré que depuis le RAPPORT COMPLET, jamais le signal léger : celui-ci
+    // n'a pas la couverture ni les trous, et une série qui mélange deux profondeurs de mesure
+    // produit une pente qui décrit la profondeur, pas le paysage (garde-fou « rupture de méthode »
+    // de serie-temporelle, pris ici à la source plutôt que constaté après coup).
+    enregistrerTendanceRH(data);
+    console.log("\n=== TENDANCES RH (mécanisme partagé) ===");
+    for (const t of tendancesRH()) console.log(`  ${t.cle} : ${t.tendance ?? t.etat ?? "pas encore de tendance"}`);
     return;
   }
   const data = collectRealCassandraData();

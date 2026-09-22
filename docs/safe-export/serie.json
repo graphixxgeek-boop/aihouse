@@ -1,0 +1,24 @@
+[
+ {
+  "date": "2026-09-22",
+  "methode": "v1",
+  "mesures": {
+   "fuites": {
+    "valeur": 4,
+    "sens": "plus bas = mieux"
+   },
+   "blueprints-mal-construits": {
+    "valeur": 7,
+    "sens": "plus bas = mieux"
+   },
+   "dependances-outillage": {
+    "valeur": 0,
+    "sens": "plus bas = mieux"
+   },
+   "blueprints-total": {
+    "valeur": 28,
+    "sens": "neutre — la lecture humaine tranche"
+   }
+  }
+ }
+]

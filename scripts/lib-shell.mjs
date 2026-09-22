@@ -80,6 +80,10 @@ export const AGENT_CATEGORIES = {
   // il juge une TRAJECTOIRE, et une trajectoire ne se mesure pas à chaque commit (trois passages
   // minimum avant de conclure), donc il a sa place dans un rythme périodique.
   "tool-learning": "Membre — Suite Dette & Structure du code",
+  // integration-outil (2026-09-22) : Membre, jamais Gardien. Il ne scanne pas la qualité du code et
+  // ne tourne pas à chaque commit — les deux volets du critère d'appartenance, dont aucun n'est
+  // facultatif (Article 20). Il répond à la demande, avant de faire entrer un outil.
+  "integration-outil": "Membre — Suite Dette & Structure du code",
   // La Cour du Roi
   "ines-official": "Membre — La Cour du Roi",
   "the-king": "Membre — La Cour du Roi",
@@ -305,6 +309,12 @@ export const TOOL_RELIABILITY = {
   // chaque fois. Ils font leur travail — mais l'agent reste le mécanisme d'intégration, et c'est
   // ce que la précision de l'Article 24 juge insuffisant. Constat gardé ici, à côté du symptôme.
   "safe-export": { nature: "heuristique", pourquoi: "une absence d'explication n'est pas une absence de raison, et un terme sans fiche n'est pas forcément mal défini — ses détecteurs sont des indices, jamais des preuves" },
+  // Mécanique et pas heuristique : il LIT les registres réels et rapporte présent/absent, sans
+  // jamais interpréter. Sa seule vraie faiblesse est ailleurs et elle a son propre garde-fou
+  // (findLecteursCasses) : un registre reformaté rendrait son lecteur muet, et un lecteur muet
+  // déclarerait tout le monde absent — d'où un chiffre spectaculaire et faux, comme SAFE-EXPORT en a
+  // produit un le même jour.
+  "integration-outil": { nature: "mécanique", pourquoi: "il lit les registres réels et rapporte présent/absent, jamais une interprétation — findLecteursCasses() refuse de conclure quand un lecteur ne reconnaît plus la forme de son registre" },
   "tool-learning": { nature: "heuristique", pourquoi: "il juge une trajectoire : sous trois passages il refuse de conclure, et une baisse de trouvailles peut venir d'un code qui s'est amélioré plutôt que d'un outil qui régresse" },
   "cassandra-rh": { nature: "heuristique", pourquoi: "relaie et recoupe ce que les autres outils estiment — elle hérite de leurs approximations" },
   ecotoken: { nature: "heuristique", pourquoi: "le poids en tokens est estimé et le rangement d'un bloc se devine — un bloc qui cite un fichier n'y appartient pas forcément" },

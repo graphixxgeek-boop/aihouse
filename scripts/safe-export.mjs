@@ -18,6 +18,7 @@ import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -304,6 +305,28 @@ export function filtrerDejaTranches(ecarts = [], memoire = []) {
   };
 }
 
+// Série temporelle partagée — SAFE-EXPORT n'en avait aucune à sa naissance (2026-09-22), et il
+// n'était même pas inscrit au registre des consommateurs de tendance : celui-ci avait été écrit
+// avant lui et rien ne l'a rouvert à son arrivée. Sept registres ont réclamé leur inscription en
+// échouant ; celui-là n'a rien réclamé, faute de test disant ce qui DEVRAIT consommer une tendance.
+export function enregistrerTendanceExport(mesures = {}, options = {}) {
+  const point = buildPoint({
+    mesures: {
+      fuites: { valeur: mesures.fuites, sens: SENS.BAS_MIEUX },
+      "blueprints-mal-construits": { valeur: mesures.blueprintsMalConstruits, sens: SENS.BAS_MIEUX },
+      "dependances-outillage": { valeur: mesures.dependances, sens: SENS.BAS_MIEUX },
+      "blueprints-total": { valeur: mesures.blueprints, sens: SENS.NEUTRE },
+    },
+    ...options,
+  });
+  return recordPoint("safe-export", point, options);
+}
+
+export function tendancesExport(options = {}) {
+  const serie = loadSerie("safe-export", options);
+  return ["fuites", "blueprints-mal-construits", "dependances-outillage", "blueprints-total"].map((c) => detectTendance(serie, c, options));
+}
+
 function main() {
   printReliabilityNotice("safe-export");
   console.log("=== SAFE-EXPORT — exportabilité de l'Agence, lisibilité du projet ===\n");
@@ -318,10 +341,33 @@ function main() {
   console.log(`  blueprints mal construits : ${defauts.length}`);
   console.log(`  dépendances à un outillage particulier : ${deps.length}`);
   const memoire = loadMemoire();
-  const { gardes, ecartesSilencieusement } = filtrerDejaTranches([...fuites, ...defauts, ...deps], memoire);
-  console.log(`\n${gardes.length} écart(s) à regarder (${ecartesSilencieusement} déjà écarté(s) sciemment, jamais reposé(s)).`);
-  const sonde = proposerSondePoussee(gardes);
+  // 2026-09-22, corrigé au premier vrai passage post-intégration : ce bloc destructurait
+  // `ecartesSilencieusement`, un nom qui n'existe plus depuis la correction du garde-fou
+  // anti-auto-silence — d'où un « undefined déjà écarté(s) » affiché en clair. Le vrai problème
+  // n'était pas ce mot : c'est que TOUTE l'escalade réclamée par l'utilisateur (« les gardiens
+  // sacrés doivent répéter une alerte si je ne la prends pas en compte ») était calculée par
+  // filtrerDejaTranches() et n'atteignait AUCUN lecteur. Un mécanisme qui ne sort pas du script ne
+  // protège rien — c'est une intention, pas un garde-fou (Article 25).
+  const tri = filtrerDejaTranches([...fuites, ...defauts, ...deps], memoire);
+  console.log(`\n${tri.gardes.length} écart(s) à regarder (${tri.ecartesAvecAccord} écarté(s) avec votre accord explicite, jamais reposé(s)).`);
+  for (const e of tri.ecartesSansAccord) console.log(`   ⚠️  ${e.fichier} : ${e.pourquoi}`);
+  for (const r of tri.regressions) console.log(`   🔁 ${r.fichier ?? r.outil} : déjà corrigé une fois, revenu depuis — une règle corrigée ne doit jamais se reproduire (Article 3).`);
+  const relances = tri.gardes.filter((e) => e.passages > 0);
+  for (const e of relances) console.log(`   ${e.ton ?? "·"} ${e.fichier ?? e.outil} : vu ${e.passages} fois → ${e.relance}`);
+  if (tri.aTrancherObligatoirement.length) {
+    console.log(`\n🔴 ${tri.aTrancherObligatoirement.length} écart(s) à vous poser en question OBLIGATOIRE — ce n'est plus à mon appréciation :`);
+    for (const e of tri.aTrancherObligatoirement) console.log(`   ${e.fichier ?? e.outil} : ${e.defaut ?? e.pourquoi}`);
+  }
+  const sonde = proposerSondePoussee(tri.gardes);
   console.log(sonde.propose ? `\n🔍 Sonde profonde proposée : ${sonde.raison}` : `\n· Aucune sonde proposée : ${sonde.raison}`);
+
+  // Série temporelle partagée (2026-09-22) — « l'exportabilité en instantané ne veut rien dire ».
+  // Chaque mesure déclare son sens : sans quoi la flèche se tromperait une fois sur deux. Le nombre
+  // de blueprints est NEUTRE et c'est important : 28 au lieu de 26 n'est ni bon ni mauvais, c'est
+  // l'assiette sur laquelle les trois autres chiffres se lisent — une baisse des fuites qui
+  // accompagne une baisse des blueprints ne prouve rien.
+  enregistrerTendanceExport({ fuites: fuites.length, blueprintsMalConstruits: defauts.length, dependances: deps.length, blueprints: blueprints.length });
+  for (const t of tendancesExport()) console.log(`  ${t.cle} : ${t.tendance ?? t.etat ?? "pas encore de tendance"}${t.pourquoi ? ` — ${t.pourquoi}` : ""}`);
   recordCliUsage("safe-export", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
 }
 

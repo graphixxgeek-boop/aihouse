@@ -862,6 +862,7 @@ tableau garde ce qui doit rester sous les yeux en permanence.)*
 | HARMONIA | cousin d'ARGUS dédié à la cohérence des liens déjà existants | `docs/harmonia-blueprint.md` | `docs/referentiel/harmonia.md` | `scripts/check-harmonia.mjs` |
 | HYPER-SCAN-CHECKPOINT | l'outil de vérification approfondie exceptionnelle | `docs/hyper-scan-checkpoint-blueprint.md` | `docs/referentiel/hyper-scan-checkpoint.md` | `scripts/hyper-scan-checkpoint.mjs` |
 | INES-official | la « secrétaire » qui aplatit le dépôt en une édition consolidée et annotée | `docs/ines-official-blueprint.md` | `docs/referentiel/ines-official.md` | `scripts/ines-official.mjs` |
+| integration-outil | le process d'intégration d'un nouvel outil, rendu ACTIF plutôt qu'écrit | `docs/integration-outil-blueprint.md` | `docs/referentiel/integration-outil.md` | `scripts/integration-outil.mjs` |
 | memory-audit | *(à écrire à la main — non extractible mécaniquement)* | `docs/memory-audit-blueprint.md` | `docs/referentiel/memory-audit.md` | `scripts/memento.mjs` |
 | objectifs-vs-resultats | un registre hand-maintained d'objectifs chiffrés par entité/période confronté à un… | `docs/objectifs-vs-resultats-blueprint.md` | `docs/referentiel/objectifs-vs-resultats.md` | `scripts/objectifs-vs-resultats.mjs` |
 | process-simulation-guardian | gardien du protocole de simulation, consulté AVANT le lancement et pouvant le bloquer | `docs/process-simulation-guardian-blueprint.md` | `docs/referentiel/process-simulation-guardian.md` | `scripts/process-simulation-guardian.mjs` |
