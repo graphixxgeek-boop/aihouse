@@ -1427,3 +1427,41 @@ création de la Ronde. Son voisin `docs/relecture-correctifs/` existe, lui.
 CE QUI N'A PAS ÉTÉ FAIT, ET SURTOUT PAS : créer le dossier vide pour verdir le test. Ç'aurait
 produit exactement la preuve satisfaite par son propre registre vide (leçon L13, trouvée la veille
 sur memory-audit). L'écart reste vivant dans l'outil et inscrit au suivi comme une tâche.
+
+=====================================================================
+PARTIE 18 — 2026-09-23 : LA TENDANCE DES SIGNAUX, LE LECTEUR QUI MANQUAIT À DOUZE REGISTRES
+=====================================================================
+Issu de la tâche #490 (« 18 données fraîches que personne ne lit »). Douze des dix-huit étaient des
+registres d'items de Ronde : écrits à chaque passage, lus par un humain le jour même, et jamais
+relus ensuite par quoi que ce soit.
+
+CE QU'AUCUNE LECTURE PONCTUELLE NE PEUT DONNER. Un item qui signale EXACTEMENT LA MÊME CHOSE depuis
+plusieurs Rondes d'affilée. Pris un par un, ces signaux sont tous normaux — c'est leur répétition
+qui est l'information : personne n'a agi entre-temps, et la Ronde re-constate un problème installé
+au lieu d'en trouver un nouveau. Comme data-archangel le dit lui-même : ce qu'aucun humain ne fera
+jamais, c'est comparer trente passages.
+
+UN SEUL LECTEUR POUR LES DOUZE ET TOUS LES SUIVANTS. `tendanceDesSignauxDeRonde()` parcourt
+CIRCLE_REPORT_FOLDERS, la table réelle. Un treizième registre est couvert le jour où il rejoint la
+Ronde, sans qu'une ligne bouge. C'était la CONDITION du chantier : recopier douze chemins en dur
+aurait créé exactement la dette que l'Article 24 interdit, uniquement pour verdir un compteur.
+
+QUATRE ÉTATS, ET LE TROISIÈME A ÉTÉ AJOUTÉ APRÈS UNE ERREUR RÉELLE :
+  · « jamais écrit »       — le dossier ne contient que son index
+  · « dossier absent »     — il n'existe pas du tout
+  · « produit hors Ronde » — le dossier a ses PROPRES rapports, mais aucun signal de Ronde
+  · « varie » / « répété » — la tendance proprement dite
+
+Le troisième vient de la toute première sortie réelle : `docs/hyper-scan-checkpoint/` contient cinq
+rapports bien réels sous un autre motif de nom (`scan-*`). Le libellé « n'a jamais rien écrit »
+l'aurait fait passer pour mort alors qu'il travaille. Ce n'est pas forcément un défaut — c'est une
+question à trancher : cet item doit-il vraiment passer par le mécanisme de signal de la Ronde ?
+
+DEUX RÈGLES QUI ÉVITENT DE CRIER À TORT :
+  · trois passages, jamais deux (deux Rondes rapprochées trouvent légitimement la même chose) ;
+  · TOUTES les paires doivent se ressembler — une séquence A-B-A est un aller-retour, pas une
+    stagnation.
+
+CE QU'IL A TROUVÉ À SON PREMIER PASSAGE : deux items n'ont jamais écrit un seul signal — `a-niveau`
+(l'outil construit dans la nuit, inscrit à la Ronde mais jamais passé dedans) et `referentiel`
+(déjà connu, tâche #556). Aucun item ne se répète : chaque Ronde trouve donc du neuf.

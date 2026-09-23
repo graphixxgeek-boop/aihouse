@@ -8890,7 +8890,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // Ronde CIRCLE-TASKS a bien été suivi (docs/circle-process-detail.txt Parties 5 et 7). Testé avec
   // toutes les implémentations injectées — jamais un vrai `git rev-list`/scan disque dans ce test,
   // qui serait lent et dépendant de l'état réel du dépôt au moment du test.
-  const { hasFreshReportFile, verifyRondeProcess, verifyHyperScanProcess, verifyDoubleCommunication, findCircleItemsMapDrift, findStaleItemCountReferences, findItemsMissingFromChangelog, RACCORDEMENTS_RONDE, etatRaccordementRonde, planRaccordementRonde, formatPlanRaccordementRonde, SEUIL_ALERTE_OUVERTURE_HEURES } = await import('../scripts/circle-process-guardian.mjs');
+  const { hasFreshReportFile, verifyRondeProcess, verifyHyperScanProcess, verifyDoubleCommunication, findCircleItemsMapDrift, findStaleItemCountReferences, findItemsMissingFromChangelog, RACCORDEMENTS_RONDE, etatRaccordementRonde, planRaccordementRonde, formatPlanRaccordementRonde, seuilAlerteOuvertureHeures, tendanceDesSignauxDeRonde, formatTendanceSignaux, PASSAGES_AVANT_REPETITION } = await import('../scripts/circle-process-guardian.mjs');
 
   const fakeFolders = { 'argus-scan': 'docs/argus', 'cassandra-rh-signal': undefined };
   assert.equal(hasFreshReportFile('cassandra-rh-signal', { folders: fakeFolders }), undefined, 'an item with no known report folder (cassandra-rh-signal never uses this mechanism) must report an honest undefined, never a guessed true/false');
@@ -9077,6 +9077,11 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     findEtapesDivergentesDuDocumentImpl: () => [],
     findEcrivainsDeRegistreSansContributionImpl: () => [],
     registries: [],
+    // Huitième ajout, même raison que le septième : ce test décrit un SCÉNARIO propre, pas l'état
+    // du dépôt. La tendance des signaux lit le vrai disque, donc elle s'injecte ici comme toutes
+    // les autres lectures. Les deux items réellement muets (a-niveau, referentiel) restent
+    // signalés par l'outil réel et inscrits au suivi — jamais étouffés par cette injection.
+    tendanceDesSignauxDeRondeImpl: () => [],
   });
   assert.deepEqual(cleanResult, { ok: true, findings: [] }, 'a Ronde where every real fact checks out must report a genuinely clean ok:true with zero fabricated findings');
 
@@ -9326,8 +9331,18 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     'an opening with under a quarter of its window left must be flagged BEFORE it expires — detecting an expired opening at the closing gesture costs the whole Ronde, which is exactly the lesson of the 2026-09-23 night');
   assert.ok(!checksDe(verifyRondeProcess({ ...baseMuettes, now: maintenantTest, loadOuvertureImpl: () => ouvertureDe(20) })).includes('ouverture-bientot-perimee'),
     'night-autonomous mode never needs an opening at all, so it must never be warned about one expiring — the user\'s standing boundary, not an exception invented here');
-  assert.equal(SEUIL_ALERTE_OUVERTURE_HEURES, 6,
+  assert.equal(seuilAlerteOuvertureHeures(), 6,
     'the warning threshold must be DERIVED from the real window (a quarter of 24h), never a second hand-copied number that could drift the day the window changes (Article 24)');
+  assert.equal(seuilAlerteOuvertureHeures(48), 12, 'and it must genuinely follow the window rather than return a frozen 6 — otherwise it is a hand-copied number wearing a derivation costume');
+  // LE BUG RÉEL QUE CE TEST FERME (2026-09-23, trouvé par hasard le jour même où je l'avais
+  // introduit). C'était une CONSTANTE de module. circle-tasks.mjs et circle-process-guardian.mjs
+  // s'importent mutuellement, et une constante s'évalue au chargement : `OUVERTURE_VALIDE_HEURES / 4`
+  // levait « Cannot access before initialization » dès qu'on chargeait circle-tasks.mjs EN PREMIER.
+  // La suite de tests ne pouvait pas le voir — elle charge toujours dans l'autre ordre. D'où ce
+  // test-ci, qui reproduit exactement l'ordre qui cassait.
+  await import('../scripts/circle-tasks.mjs');
+  const guardianApresCircle = await import('../scripts/circle-process-guardian.mjs');
+  assert.equal(typeof guardianApresCircle.seuilAlerteOuvertureHeures, 'function', 'importing circle-tasks BEFORE its guardian must not throw: deriving a value from a module that imports you back can never happen at load time, only at first call');
 
   // RÈGLE 13 — un registre déclaré dont le dossier n'existe pas.
   const registresTest = [{ slug: 'x', label: 'Outil X', path: 'docs/outil-x/', decision: 'texte', scriptPath: 'scripts/x.mjs' }];
@@ -9349,6 +9364,53 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     'two pending questions at different paliers call for different gestures; reporting only the worst applies the most insistent action to both, which throws away the very information the palier system exists to produce');
   assert.ok(!checksDe(verifyRondeProcess({ ...baseMuettes, loadQuestionsSansReponseImpl: () => [{ serie: 'A', question: 'q1', fois: 1 }, { serie: 'B', question: 'q2', fois: 1 }] })).includes('questions-paliers-melanges'),
     'questions all at the same palier need no extra warning — prochaineAction() already says the right thing for them');
+
+  // ————————————————————————————————————————————————————————————————————————
+  // LA TENDANCE DES SIGNAUX DE RONDE (2026-09-23, tâche #490) — le lecteur des douze registres
+  // ————————————————————————————————————————————————————————————————————————
+  //
+  // Douze registres d'items de Ronde étaient écrits à chaque passage sans qu'aucun outil ne les
+  // relise. UN seul lecteur les couvre tous, en parcourant CIRCLE_REPORT_FOLDERS : un treizième
+  // registre est couvert le jour où il rejoint la Ronde, sans qu'une ligne bouge (Article 24). Sans
+  // ça, ce chantier aurait consisté à recopier douze chemins en dur — la dette exacte que
+  // l'Article 24 interdit, créée pour verdir un compteur.
+  const foldersTest = { alpha: 'docs/alpha/', beta: 'docs/beta/', gamma: 'docs/gamma/', delta: 'docs/delta/' };
+  const contenusTest = {
+    'docs/alpha/': ['index.md'],
+    'docs/beta/': ['index.md', 'scan-2026-09-20.txt'],
+    'docs/gamma/': ['index.md', 'circle-signal-1.txt', 'circle-signal-2.txt', 'circle-signal-3.txt'],
+    'docs/delta/': ['index.md', 'circle-signal-1.txt', 'circle-signal-2.txt', 'circle-signal-3.txt'],
+  };
+  const textesTest = {
+    'docs/gamma/circle-signal-1.txt': 'registre de verdicts toujours vide, rien mesurable pour aucun outil',
+    'docs/gamma/circle-signal-2.txt': 'registre de verdicts toujours vide, rien mesurable pour aucun outil',
+    'docs/gamma/circle-signal-3.txt': 'registre de verdicts toujours vide, rien mesurable pour aucun outil',
+    'docs/delta/circle-signal-1.txt': 'quatre écarts trouvés sur les blueprints exportables',
+    'docs/delta/circle-signal-2.txt': 'aucun problème détecté pendant ce passage complet',
+    'docs/delta/circle-signal-3.txt': 'deux nouvelles fonctions sans couverture de test réelle',
+  };
+  const tendances = tendanceDesSignauxDeRonde({
+    folders: foldersTest, root: '',
+    listDirImpl: (dir) => contenusTest[dir.replace(/^\//, '')] ?? [],
+    readFileImpl: (f) => textesTest[f.replace(/^\//, '')] ?? '',
+  });
+  const etatDe = (item) => tendances.find((t) => t.item === item).etat;
+  assert.equal(etatDe('alpha'), 'jamais écrit', 'a folder holding nothing but its index means the Ronde item never wrote anything — the step passes for done at every Ronde and nothing attests it');
+  assert.equal(etatDe('beta'), 'produit hors Ronde', 'THREE situations, never two: a folder with its OWN reports but no Ronde signal is not a dead tool. Found on the very first real run — docs/hyper-scan-checkpoint/ holds five real reports, and calling it "never wrote anything" would have accused it wrongly');
+  assert.equal(etatDe('gamma'), 'répété', 'three consecutive signals saying the same thing IS the information: each one is normal alone, their repetition means nobody acted between Rondes');
+  assert.equal(etatDe('delta'), 'varie', 'genuinely different signals must stay silent — a guard that fires on the healthy case teaches everyone to ignore it');
+  assert.equal(PASSAGES_AVANT_REPETITION, 3, 'two would be noise (two close Rondes legitimately find the same thing); three is the first count where "nobody acted" beats "it just happened"');
+
+  // La règle anti-aller-retour : deux passages identiques encadrant un troisième différent ne sont
+  // pas une stagnation. Toutes les paires doivent se ressembler, jamais seulement la première.
+  const allerRetour = tendanceDesSignauxDeRonde({
+    folders: { z: 'docs/z/' }, root: '',
+    listDirImpl: () => ['circle-signal-1.txt', 'circle-signal-2.txt', 'circle-signal-3.txt'],
+    readFileImpl: (f) => (f.endsWith('2.txt') ? 'tout autre chose entierement differente ici' : 'registre de verdicts toujours vide partout'),
+  });
+  assert.equal(allerRetour[0].etat, 'varie', 'an A-B-A sequence is a round trip, never a stagnation: requiring EVERY pair to match is what tells them apart');
+
+  assert.match(formatTendanceSignaux([{ item: 'x', dossier: 'docs/x/', etat: 'varie' }]), /aucun muet et aucun qui se répète/, 'a clean result must say so in words rather than print an empty block a reader would take for a crash');
 
   console.log('Passed: the five written-but-unenforced rules of circle-process-guardian (2026-09-23) are now genuinely wired and covered — each of the five was IMPORTED and never CALLED, which is also exactly why none of them had a test (an uninvoked mechanism never breaks, so nothing ever demands its coverage): the question inventory is now confronted with the process document it is supposed to match, an opening is flagged BEFORE it expires rather than refused at the closing gesture (the night of 2026-09-23 lesson that detecting is not preventing, applied), a declared registry whose folder does not exist is reported instead of silently reassuring, a tool feeding a registry without recording its contribution no longer counts as unused while it works, and pending questions sitting at different paliers are no longer collapsed under the most insistent one\'s action; night-autonomous mode is exempted only where a human would have to answer, never from a check that reads the disk by itself.');
 

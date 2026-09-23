@@ -41,17 +41,31 @@ import {
   findEtapesDeQuestionsManquantes, findEtapesDivergentesDuDocument,
 } from "./circle-tasks.mjs";
 import { findOrphanReportFiles, REGISTRIES, findEcrivainsDeRegistreSansContribution } from "./doc-report.mjs";
-import { walkDocsPaths, sh, outilsHorsPortee, porteeDe, GARDIEN_DOMAINS } from "./lib-shell.mjs";
+import { walkDocsPaths, sh, outilsHorsPortee, porteeDe, GARDIEN_DOMAINS, pairesParJaccard } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
-// SEUIL_ALERTE_OUVERTURE_HEURES — combien d'heures avant l'expiration de l'ouverture le gardien
+// seuilAlerteOuvertureHeures() — combien d'heures avant l'expiration de l'ouverture le gardien
 // commence à prévenir. DÉRIVÉ de OUVERTURE_VALIDE_HEURES, jamais un second chiffre recopié qui
 // pourrait diverger le jour où la fenêtre change (Article 24) : un quart de la fenêtre, soit 6 h
 // sur 24. Assez tôt pour qu'il reste le temps de rouvrir, assez tard pour ne pas crier à chaque
 // passage — un avertissement permanent n'avertit plus de rien.
-export const SEUIL_ALERTE_OUVERTURE_HEURES = OUVERTURE_VALIDE_HEURES / 4;
+//
+// UNE FONCTION ET PAS UNE CONSTANTE, et ce n'est pas un détail de style : c'était une constante
+// jusqu'au 2026-09-23, et elle a introduit un VRAI BUG le jour même. circle-tasks.mjs et ce fichier
+// s'importent mutuellement ; une constante de module s'évalue au chargement, donc
+// `OUVERTURE_VALIDE_HEURES / 4` explosait (« Cannot access before initialization ») dès qu'on
+// chargeait circle-tasks.mjs EN PREMIER. La suite de tests ne l'a pas vu parce qu'elle charge
+// toujours dans l'autre ordre — un bug invisible au vert, trouvé par hasard en important les deux
+// modules pour une mesure sans rapport.
+//
+// LA LEÇON, générale : dériver une valeur d'un module qui vous importe en retour ne se fait jamais
+// au chargement. Une fonction diffère le calcul jusqu'au premier appel, quand tout est initialisé —
+// on garde la dérivation (Article 24) sans payer le cycle.
+export function seuilAlerteOuvertureHeures(fenetre = OUVERTURE_VALIDE_HEURES) {
+  return fenetre / 4;
+}
 
 // Un item produit-il bien un fichier daté d'AUJOURD'HUI dans son dossier ? Réutilise le même
 // motif de nom que recordCircleItemReport()/recordSnapshotIfChanged() (circle-signal-*/snapshot-*),
@@ -184,6 +198,7 @@ export function verifyRondeProcess({
   findEcrivainsDeRegistreSansContributionImpl = findEcrivainsDeRegistreSansContribution,
   registries = REGISTRIES,
   existsImpl = (chemin) => existsSync(join(ROOT, chemin)),
+  tendanceDesSignauxDeRondeImpl = tendanceDesSignauxDeRonde,
 } = {}) {
   const findings = [];
   const add = (check, message) => findings.push({ check, message });
@@ -484,7 +499,7 @@ export function verifyRondeProcess({
     const ouvertureFraicheur = loadOuvertureImpl();
     if (ouvertureEstFraiche(ouvertureFraicheur, now)) {
       const heuresRestantes = OUVERTURE_VALIDE_HEURES - (now - new Date(ouvertureFraicheur.at).getTime()) / 3600000;
-      if (heuresRestantes <= SEUIL_ALERTE_OUVERTURE_HEURES) {
+      if (heuresRestantes <= seuilAlerteOuvertureHeures()) {
         add("ouverture-bientot-perimee", `L'ouverture de cette Ronde expire dans ${heuresRestantes.toFixed(1)} h (fenêtre de ${OUVERTURE_VALIDE_HEURES} h). Passé ce délai, record-run refusera la clôture et toute la Ronde devra être rouverte — le dire maintenant, jamais au dernier geste.`);
       }
     }
@@ -499,6 +514,14 @@ export function verifyRondeProcess({
     add("registre-declare-absent", `${r.label} déclare écrire dans ${r.path}, qui n'existe pas. Son verdict ne peut atterrir nulle part, et un dossier absent ne contredira jamais personne : l'outil passera pour muet plutôt que pour cassé.`);
   }
 
+  // 15. LA TENDANCE DES SIGNAUX DE RONDE — le seul contrôle de ce fichier qui regarde PLUSIEURS
+  // passages plutôt qu'un seul. Un item muet depuis toujours, ou qui redit la même chose depuis
+  // trois Rondes, ne se voit dans aucune Ronde prise isolément.
+  for (const t of tendanceDesSignauxDeRondeImpl()) {
+    if (t.etat === "jamais écrit" || t.etat === "dossier absent") add("item-sans-signal", `L'item « ${t.item} » n'a jamais écrit un seul signal dans ${t.dossier} — son étape passe pour faite à chaque Ronde et rien ne l'atteste.`);
+    if (t.etat === "répété") add("item-qui-se-repete", `L'item « ${t.item} » : ${t.pourquoi}`);
+  }
+
   // 14. LES OUTILS QUI ALIMENTENT UN REGISTRE SANS LE DÉCLARER. Le compteur d'usage sert à répondre
   // à une question que la Ronde pose vraiment (« quels outils ne servent jamais ? »). Un outil qui
   // écrit son registre sans enregistrer sa contribution est compté comme inutilisé alors qu'il
@@ -509,6 +532,113 @@ export function verifyRondeProcess({
   }
 
   return { ok: findings.length === 0, findings };
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// LA TENDANCE DES SIGNAUX DE RONDE (2026-09-23, tâche #490) — le lecteur qui manquait à douze registres
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE CONSTAT DE DÉPART, mesuré par data-archangel : douze registres d'items de Ronde sont écrits à
+// chaque passage et AUCUN outil ne les relit. Chacun est lu par un humain le jour où il est produit,
+// et jamais après. Or, comme data-archangel le dit lui-même : « ce qu'aucun humain ne fera jamais,
+// c'est comparer trente passages pour en tirer une tendance ».
+//
+// CE QUE CE LECTEUR EXPLOITE, ET QU'AUCUNE LECTURE PONCTUELLE NE PEUT DONNER : un item qui signale
+// EXACTEMENT LA MÊME CHOSE depuis plusieurs Rondes d'affilée. Pris un par un, ces signaux sont
+// tous « normaux » — c'est leur répétition qui est l'information : personne n'a agi entre-temps, et
+// la Ronde est en train de re-constater un problème installé au lieu d'en trouver un nouveau.
+//
+// UN SEUL LECTEUR POUR LES DOUZE, ET POUR TOUS LES SUIVANTS (Article 24). Il parcourt
+// CIRCLE_REPORT_FOLDERS, la table réelle des items ; un treizième registre est couvert le jour où
+// il rejoint la Ronde, sans qu'une ligne bouge ici. C'était la condition pour que ce chantier ne
+// consiste pas à recopier douze chemins en dur — ce qui aurait créé la dette que l'Article 24
+// interdit, juste pour verdir le compteur de data-archangel.
+//
+// TROIS ÉTATS, JAMAIS DEUX : « jamais écrit » (l'item n'a produit aucun signal — c'est le cas de
+// docs/relecture-referentiel/, tâche #556), « répété » (même substance sur plusieurs passages) et
+// « varie » (des signaux différents, donc une Ronde qui trouve du neuf). Confondre le premier et le
+// troisième ferait passer un item muet pour un item sain, ce que tout ce paysage refuse.
+
+// Combien de passages identiques d'affilée avant de le dire. Deux serait du bruit (deux Rondes
+// rapprochées trouvent légitimement la même chose) ; trois est le premier chiffre où « personne n'a
+// agi » devient une lecture plus probable que « ça vient de se produire ».
+export const PASSAGES_AVANT_REPETITION = 3;
+
+// Le seuil de « même substance ». Volontairement haut : on cherche un signal REDIT, jamais deux
+// signaux du même domaine. En dessous, deux constats différents sur le même outil se ressembleraient
+// assez pour être confondus — et un garde-fou qui crie à tort finit par ne plus être lu (leçon L4).
+export const SEUIL_MEME_SUBSTANCE = 0.6;
+
+const motsDuSignal = (texte) => new Set(String(texte ?? "").toLowerCase().match(/[a-zà-ÿ]{4,}/g) ?? []);
+
+export function tendanceDesSignauxDeRonde({
+  folders = CIRCLE_REPORT_FOLDERS,
+  root = ROOT,
+  listDirImpl = (dir) => (existsSync(dir) ? readdirSync(dir) : []),
+  readFileImpl = readFileSync,
+  passages = PASSAGES_AVANT_REPETITION,
+  seuil = SEUIL_MEME_SUBSTANCE,
+} = {}) {
+  const resultats = [];
+  for (const [item, dossier] of Object.entries(folders)) {
+    if (!dossier) continue; // un item sans dossier déclaré n'utilise pas ce mécanisme (cf. son propre execute)
+    // Les signaux, du plus ancien au plus récent : le nom de fichier porte l'horodatage, donc
+    // l'ordre alphabétique EST l'ordre chronologique — jamais une date de fichier, qui bouge à
+    // chaque copie de dépôt.
+    // MÊMES MOTIFS DE NOM QUE hasFreshReportFile() ci-dessus, jamais un troisième inventé ici :
+    // recordCircleItemReport() écrit `circle-signal-*`, recordSnapshotIfChanged() écrit `snapshot-*`.
+    const contenu = listDirImpl(join(root, dossier));
+    const fichiers = contenu.filter((f) => f.startsWith("circle-signal-") || f.startsWith("snapshot-")).sort();
+    if (!fichiers.length) {
+      // TROIS SITUATIONS QUI N'ONT PAS LE MÊME SENS, et les confondre ferait accuser à tort.
+      // Trouvé en vérifiant la toute première sortie : docs/hyper-scan-checkpoint/ contient bien des
+      // rapports (`scan-*`), simplement aucun SIGNAL DE RONDE — écrire « n'a jamais rien écrit »
+      // aurait été faux et l'aurait fait passer pour mort alors qu'il travaille.
+      const autresFichiers = contenu.filter((f) => f !== "index.md" && !f.endsWith("-index.md"));
+      const etat = !contenu.length ? "dossier absent" : autresFichiers.length ? "produit hors Ronde" : "jamais écrit";
+      resultats.push({ item, dossier, etat, passages: 0, autresFichiers: autresFichiers.length });
+      continue;
+    }
+    const derniers = fichiers.slice(-passages);
+    if (derniers.length < passages) { resultats.push({ item, dossier, etat: "varie", passages: derniers.length, pourquoi: `seulement ${derniers.length} passage(s) enregistré(s) : il en faut ${passages} pour qu'une répétition veuille dire quelque chose` }); continue; }
+    const ensembles = derniers.map((f) => { try { return motsDuSignal(readFileImpl(join(root, dossier, f), "utf8")); } catch { return new Set(); } });
+    // Une répétition n'en est une que si TOUTES les paires se ressemblent : deux passages identiques
+    // encadrant un troisième différent ne sont pas une stagnation, c'est un aller-retour.
+    const pairesAttendues = (passages * (passages - 1)) / 2;
+    const semblables = pairesParJaccard(ensembles, { seuil });
+    if (semblables.length === pairesAttendues) {
+      resultats.push({ item, dossier, etat: "répété", passages, fichiers: derniers, pourquoi: `les ${passages} derniers signaux disent la même chose — la Ronde re-constate au lieu de trouver, donc personne n'a agi entre-temps` });
+    } else {
+      resultats.push({ item, dossier, etat: "varie", passages: fichiers.length });
+    }
+  }
+  return resultats;
+}
+
+export function formatTendanceSignaux(resultats = []) {
+  const jamais = resultats.filter((r) => r.etat === "jamais écrit" || r.etat === "dossier absent");
+  const horsRonde = resultats.filter((r) => r.etat === "produit hors Ronde");
+  const repetes = resultats.filter((r) => r.etat === "répété");
+  const l = [];
+  if (!jamais.length && !horsRonde.length && !repetes.length) {
+    l.push(`Tendance des signaux de Ronde : ${resultats.length} item(s) suivi(s), aucun muet et aucun qui se répète — chaque passage trouve du neuf.`);
+    return l.join("\n");
+  }
+  if (jamais.length) {
+    l.push(`🔇 ${jamais.length} item(s) de Ronde n'ont JAMAIS écrit un signal — l'étape passe pour faite à chaque Ronde et rien ne l'atteste :`);
+    for (const r of jamais) l.push(`  · ${r.item} (${r.dossier})${r.etat === "dossier absent" ? " — le dossier lui-même n'existe pas" : " — le dossier ne contient que son index"}`);
+  }
+  if (horsRonde.length) {
+    if (l.length) l.push("");
+    l.push(`📄 ${horsRonde.length} item(s) produisent des rapports mais AUCUN signal de Ronde — ce n'est pas forcément un défaut, c'est une question à trancher : l'item doit-il vraiment passer par le mécanisme de la Ronde ?`);
+    for (const r of horsRonde) l.push(`  · ${r.item} (${r.dossier}) — ${r.autresFichiers} fichier(s) produits hors du mécanisme de signal`);
+  }
+  if (repetes.length) {
+    if (l.length) l.push("");
+    l.push(`🔁 ${repetes.length} item(s) redisent la même chose depuis ${PASSAGES_AVANT_REPETITION} passages — pris isolément chacun est normal, c'est leur répétition qui est l'information :`);
+    for (const r of repetes) l.push(`  · ${r.item} — ${r.pourquoi}`);
+  }
+  return l.join("\n");
 }
 
 // ————————————————————————————————————————————————————————————————————————
