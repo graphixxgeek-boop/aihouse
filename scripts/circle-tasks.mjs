@@ -830,7 +830,7 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApi
     if (item.id === "idee-a-trancher-signal") {
       const decisions = loadIdeaDecisions(ideesATrancherText || "");
       const pending = findIdeasNeedingDecision(detectPendingIdeaCandidates(loadAllTaskRows()), decisions);
-      return { ...item, staleness: pending.length ? `${pending.length} idée(s) en attente d'une décision — ${pending.map((r) => `#${r.n}`).join(", ")} — poser la question à 3 voies maintenant` : "aucune idée en attente" };
+      return { ...item, staleness: pending.length ? `${pending.length} idée(s) en attente d'une décision — ${pending.map((r) => `#${r.numero}`).join(", ")} — poser la question à 3 voies maintenant` : "aucune idée en attente" };
     }
     if (item.id === "ecotoken-scan") {
       if (!claudeMdText) return { ...item, staleness: "pas de signal disponible (CLAUDE.md non fourni)" };

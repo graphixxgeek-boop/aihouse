@@ -155,7 +155,7 @@ export function findMotsClesEnCollision(taches = []) {
     const m = String(t.motCle ?? "").trim().toLowerCase();
     if (!m) continue;
     if (!par.has(m)) par.set(m, []);
-    par.get(m).push(t.n ?? t.numero ?? "?");
+    par.get(m).push(t.numero ?? "?");
   }
   return [...par.entries()].filter(([, ns]) => ns.length > 1)
     .map(([mot, numeros]) => ({ mot, numeros, pourquoi: `${numeros.length} tâches ouvertes portent « ${mot} » (${numeros.join(", ")}) — citer ce mot ne dira plus laquelle` }));
@@ -166,8 +166,8 @@ export function findMotsClesEnCollision(taches = []) {
 // ————————————————————————————————————————————————————————————————————————
 
 export function etiquetteDeLaTache(row = {}, { jours, signaux = [] } = {}) {
-  const clePalier = PALIERS_PAR_CLE.has(String(row.sensibilite ?? "").trim())
-    ? String(row.sensibilite).trim()
+  const clePalier = PALIERS_PAR_CLE.has(String(row.criticite ?? "").trim())
+    ? String(row.criticite).trim()
     : calculerPalier(signaux).palier;
   const criticite = criticiteDuPalier(clePalier);
   return {
@@ -186,19 +186,22 @@ export function etiquetteDeLaTache(row = {}, { jours, signaux = [] } = {}) {
 // format standart, à renseigner dans les process »). Déclaré ici, en données, pour qu'un contrôleur
 // puisse le vérifier au lieu qu'il vive dans une phrase de documentation que personne ne relit.
 export const FORMAT_TACHE = [
-  // LES DEUX `alias` SONT UNE DETTE NOMMÉE, jamais un confort (2026-09-23, Ronde). Les lignes
-  // réelles que produit check-tasks-details portent encore `n` et `sensibilite` — les noms d'avant
-  // la séparation criticité/urgence. Le format déclare donc le nom CIBLE et le nom HISTORIQUE, et
-  // findChampsManquants() accepte l'un ou l'autre : sans ça, ce garde-fou accusait les 31 tâches
-  // ouvertes d'un coup de manquer deux champs qu'elles portent réellement — un garde-fou qui accuse
-  // à tort cesse d'être lu (L4). Renommer pour de bon touche 32 sites dans 5 fichiers : c'est une
-  // tâche à part (#584), pas un effet de bord à glisser dans une Ronde.
-  { champ: "numero", alias: "n", obligatoire: true, quoi: "le numéro, unique et jamais réutilisé" },
+  // UN SEUL NOM PAR CHAMP, depuis le 2026-09-23 (tâche #584). Pendant quelques heures ce format a
+  // porté des `alias` (`n` pour numero, `sensibilite` pour criticite), parce que les lignes réelles
+  // portaient encore les noms d'avant la séparation criticité/urgence : sans eux, le garde-fou
+  // accusait les 31 tâches ouvertes d'un coup de manquer deux champs qu'elles portaient réellement
+  // (L4). Les alias ont fait leur travail — tenir pendant la migration — puis ils ont été retirés
+  // avec le renommage, parce que deux noms pour un champ sont une dette, jamais une solution.
+  //
+  // Un mot sur ce qui n'a PAS été renommé : `sensibilite` existe toujours dans smart-conso-token.mjs
+  // et ecotoken.mjs, où il désigne la sensibilité d'une RÈGLE de la charte — un tout autre sujet.
+  // Renommer par recherche de texte l'aurait emporté avec le reste.
+  { champ: "numero", obligatoire: true, quoi: "le numéro, unique et jamais réutilisé" },
   { champ: "horodatage", obligatoire: true, quoi: "quand elle a été ouverte — c'est lui qui rend l'urgence calculable" },
   { champ: "motCle", obligatoire: true, quoi: "UN mot qui la rappelle six semaines plus tard, unique parmi les tâches ouvertes" },
   { champ: "sujet", obligatoire: true, quoi: "le domaine (« Process / Ronde »), pour regrouper" },
   { champ: "sousSujet", obligatoire: true, quoi: "ce dont il s'agit, en une phrase lisible sans contexte" },
-  { champ: "criticite", alias: "sensibilite", obligatoire: true, quoi: "un des quatre niveaux — jamais un mot de retard, qui appartient à la vignette" },
+  { champ: "criticite", obligatoire: true, quoi: "un des quatre niveaux — jamais un mot de retard, qui appartient à la vignette" },
   { champ: "detail", obligatoire: false, quoi: "le pourquoi : ce qui l'a déclenchée, ce qui a été décidé, ce qui reste" },
   { champ: "statut", obligatoire: true, quoi: "à faire / en cours / terminée / écartée avec sa raison (Article 28)" },
 ];
@@ -206,7 +209,7 @@ export const FORMAT_TACHE = [
 const champVide = (v) => v === undefined || v === null || String(v).trim() === "";
 
 export function findChampsManquants(row = {}, { format = FORMAT_TACHE } = {}) {
-  return format.filter((f) => f.obligatoire && champVide(row[f.champ]) && (f.alias === undefined || champVide(row[f.alias])))
+  return format.filter((f) => f.obligatoire && champVide(row[f.champ]))
     .map((f) => ({ champ: f.champ, quoi: f.quoi }));
 }
 

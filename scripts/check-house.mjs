@@ -4268,15 +4268,15 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const readFile = (p) => fakeDir.find((f) => p.endsWith(f.name)).text;
   const rows = loadAllTaskRows('/fake', readDir, readFile, () => true);
   assert.equal(rows.length, 4, 'loadAllTaskRows() must flatten every bucket from every session file into one list, losing no row');
-  assert.deepEqual(new Set(rows.map((r) => r.n)), new Set([10, 11, 12, 13]), 'each row must carry its real N° (first column), read as a number, never left as the raw string or lost');
-  assert.deepEqual(rows.find((r) => r.n === 11).statusKey, 'enCours', 'a row categorized as "en cours" by categorizeAllSessions() must keep that same status key once flattened, never relabeled');
+  assert.deepEqual(new Set(rows.map((r) => r.numero)), new Set([10, 11, 12, 13]), 'each row must carry its real N° (first column), read as a number, never left as the raw string or lost');
+  assert.deepEqual(rows.find((r) => r.numero === 11).statusKey, 'enCours', 'a row categorized as "en cours" by categorizeAllSessions() must keep that same status key once flattened, never relabeled');
 
   const openOnly = filterByZoom(rows, 'en_cours');
-  assert.deepEqual(new Set(openOnly.map((r) => r.n)), new Set([10, 11]), 'zoom "en_cours" must keep exactly the ouverte/en cours rows, never a terminée row and never dropping an open one');
+  assert.deepEqual(new Set(openOnly.map((r) => r.numero)), new Set([10, 11]), 'zoom "en_cours" must keep exactly the ouverte/en cours rows, never a terminée row and never dropping an open one');
   const everything = filterByZoom(rows, 'projet_entier');
   assert.equal(everything.length, 4, 'zoom "projet_entier" must return every row untouched, the identity case');
   const elargi = filterByZoom(rows, 'elargi', { latestTaskNumber: 13 });
-  assert.deepEqual(new Set(elargi.map((r) => r.n)), new Set([10, 11, 12, 13]), 'zoom "elargi" with a small task-number range must include every open row plus every recently-numbered row (here all four, since none exceed the 20-task lookback window)');
+  assert.deepEqual(new Set(elargi.map((r) => r.numero)), new Set([10, 11, 12, 13]), 'zoom "elargi" with a small task-number range must include every open row plus every recently-numbered row (here all four, since none exceed the 20-task lookback window)');
   assert.throws(() => filterByZoom(rows, 'pas-un-zoom'), /zoom inconnu/, 'an unknown zoom value must fail loudly rather than silently defaulting to some arbitrary scope');
 
   const tree = buildTree(rows);
@@ -4293,12 +4293,12 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(!listBlocks.some((b) => b.type === 'heading' && /Autre statut/.test(b.text)), 'a status group with zero real rows (here "autre") must never appear in the output — an honest report shows only what actually exists');
 
   const suggestions = suggestToolsForOpenTasks(
-    [{ n: 42, sujet: 'Charte / Outillage', sousSujet: 'Vérifier qu\'aucune tâche du suivi n\'a été oubliée', statusKey: 'ouverte' }],
+    [{ numero: 42, sujet: 'Charte / Outillage', sousSujet: 'Vérifier qu\'aucune tâche du suivi n\'a été oubliée', statusKey: 'ouverte' }],
     [{ demande: 'Vérifier qu\'aucune idée/tâche n\'a été oubliée dans le suivi', outils: ['THE-DEEP-READER'], cout: 'réel' }],
   );
   assert.equal(suggestions.length, 1, 'an open task whose label genuinely overlaps a real prestation\'s demande must produce exactly one suggestion line');
   assert.ok(suggestions[0].includes('#42') && suggestions[0].includes('THE-DEEP-READER'), 'the suggestion line must name both the real task number and the real matched tool, never a vague pointer');
-  assert.deepEqual(suggestToolsForOpenTasks([{ n: 1, sujet: 'X', sousSujet: 'sans rapport du tout', statusKey: 'ouverte' }], [{ demande: 'Qualité visuelle du rendu', outils: ['THE-SCREENER'], cout: 'réel' }]), [], 'an open task with no real keyword overlap with any prestation must produce zero suggestions, never a forced guess');
+  assert.deepEqual(suggestToolsForOpenTasks([{ numero: 1, sujet: 'X', sousSujet: 'sans rapport du tout', statusKey: 'ouverte' }], [{ demande: 'Qualité visuelle du rendu', outils: ['THE-SCREENER'], cout: 'réel' }]), [], 'an open task with no real keyword overlap with any prestation must produce zero suggestions, never a forced guess');
 
   // Câblage du badge (2026-09-20, trouvaille réelle : check-tasks-details.mjs était l'UNIQUE
   // appelant réel de suggestPrestationsForTask() en production, et il ne passait jamais
@@ -4308,13 +4308,13 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const fakeBadgeTable = '| Outil | Statut | Ce qu\'il détecte/régule | Coût | Déclenchement |\n|---|---|---|---|---|\n| THE-DEEP-READER | Agent | relecture lourde | réel | sur demande |';
   const uncertifiedCtx = { toolsTableMarkdown: fakeBadgeTable, existingPaths: new Set() };
   const withWarning = suggestToolsForOpenTasks(
-    [{ n: 42, sujet: 'Charte / Outillage', sousSujet: 'Vérifier qu\'aucune tâche du suivi n\'a été oubliée', statusKey: 'ouverte' }],
+    [{ numero: 42, sujet: 'Charte / Outillage', sousSujet: 'Vérifier qu\'aucune tâche du suivi n\'a été oubliée', statusKey: 'ouverte' }],
     [{ demande: 'Vérifier qu\'aucune idée/tâche n\'a été oubliée dans le suivi', outils: ['THE-DEEP-READER'], cout: 'réel' }],
     uncertifiedCtx,
   );
   assert.ok(withWarning[0].includes('⚠️') && withWarning[0].includes('THE-DEEP-READER'), 'when an onboardingContext is supplied and the matched tool has zero real wiring, the suggestion line must carry a visible badge warning naming that tool — the real alert wired into check-tasks-details.mjs\'s own real production call');
   const noContextSuggestions = suggestToolsForOpenTasks(
-    [{ n: 42, sujet: 'Charte / Outillage', sousSujet: 'Vérifier qu\'aucune tâche du suivi n\'a été oubliée', statusKey: 'ouverte' }],
+    [{ numero: 42, sujet: 'Charte / Outillage', sousSujet: 'Vérifier qu\'aucune tâche du suivi n\'a été oubliée', statusKey: 'ouverte' }],
     [{ demande: 'Vérifier qu\'aucune idée/tâche n\'a été oubliée dans le suivi', outils: ['THE-DEEP-READER'], cout: 'réel' }],
   );
   assert.ok(!noContextSuggestions[0].includes('⚠️'), 'without an onboardingContext (the default, backward-compatible call), the suggestion line must never carry a badge warning — full compatibility with every pre-existing caller');
@@ -4329,20 +4329,20 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(realCtx.claudeMdText.includes('Article 0'), 'the real CLAUDE.md text must be genuinely loaded, not an empty fallback, when the file exists');
   assert.ok(realCtx.agentOverrides['THE-DEEP-READER']?.cousinOf === 'THE-FINAL-JUDGE', 'the one known, documented Agent deviation (THE-DEEP-READER, cousinOf THE-FINAL-JUDGE + its own registry path) must be declared here, otherwise the real badge check would wrongly flag it as uncertified in every real report');
 
-  const snap1 = { at: 't1', rows: [{ n: 10, statusKey: 'ouverte' }, { n: 11, statusKey: 'terminee' }] };
-  const snap2 = { at: 't2', rows: [{ n: 10, statusKey: 'ouverte' }, { n: 11, statusKey: 'terminee' }] };
-  const regressed = compareSnapshots([snap1], [{ n: 10, sousSujet: 'X', statusKey: 'ouverte' }, { n: 11, sousSujet: 'Y', statusKey: 'ouverte' }]);
+  const snap1 = { at: 't1', rows: [{ numero: 10, statusKey: 'ouverte' }, { numero: 11, statusKey: 'terminee' }] };
+  const snap2 = { at: 't2', rows: [{ numero: 10, statusKey: 'ouverte' }, { numero: 11, statusKey: 'terminee' }] };
+  const regressed = compareSnapshots([snap1], [{ numero: 10, sousSujet: 'X', statusKey: 'ouverte' }, { numero: 11, sousSujet: 'Y', statusKey: 'ouverte' }]);
   assert.equal(regressed.regressions.length, 1, 'a task that was terminée in the last snapshot but reads as ouverte now must be flagged as exactly one regression, never silently accepted as normal');
-  assert.equal(regressed.regressions[0].n, 11, 'the regression must name the real task number that actually regressed, never the wrong one');
-  const stagnated = compareSnapshots([snap1, snap2], [{ n: 10, sousSujet: 'X', statusKey: 'ouverte' }, { n: 11, sousSujet: 'Y', statusKey: 'terminee' }]);
+  assert.equal(regressed.regressions[0].numero, 11, 'the regression must name the real task number that actually regressed, never the wrong one');
+  const stagnated = compareSnapshots([snap1, snap2], [{ numero: 10, sousSujet: 'X', statusKey: 'ouverte' }, { numero: 11, sousSujet: 'Y', statusKey: 'terminee' }]);
   assert.equal(stagnated.stagnant.length, 1, 'a task open and identical across the two most recent snapshots plus the current one must be flagged as stagnant exactly once, never for a task that has since closed');
-  assert.equal(stagnated.stagnant[0].n, 10, 'the stagnation signal must name the real still-open task, never a task that has already progressed');
+  assert.equal(stagnated.stagnant[0].numero, 10, 'the stagnation signal must name the real still-open task, never a task that has already progressed');
   assert.equal(stagnated.stagnant[0].streak, 3, 'a task open in exactly the last 2 archived snapshots plus the current report must carry a real streak of 3, never a bare boolean flag (2026-09-20, user request: a finer scale for comparing tasks)');
   // Une série plus longue (4 instantanés archivés + le rapport courant = 5) doit produire un
   // streak réellement plus grand, jamais plafonné en amont à 2/3 comme avant ce changement.
-  const snap0 = { at: 't0', rows: [{ n: 10, statusKey: 'ouverte' }] };
-  const snap3 = { at: 't3', rows: [{ n: 10, statusKey: 'ouverte' }] };
-  const longStagnation = compareSnapshots([snap0, snap1, snap2, snap3], [{ n: 10, sousSujet: 'X', statusKey: 'ouverte' }]);
+  const snap0 = { at: 't0', rows: [{ numero: 10, statusKey: 'ouverte' }] };
+  const snap3 = { at: 't3', rows: [{ numero: 10, statusKey: 'ouverte' }] };
+  const longStagnation = compareSnapshots([snap0, snap1, snap2, snap3], [{ numero: 10, sousSujet: 'X', statusKey: 'ouverte' }]);
   assert.equal(longStagnation.stagnant[0].streak, 5, 'consecutiveOpenStreak() must count the real full run of consecutive open appearances (here 4 archived + the current report), never stop early at the minimum-3 threshold used only to decide whether to flag stagnation at all');
   assert.deepEqual(compareSnapshots([], rows), { regressions: [], stagnant: [] }, 'with no prior snapshot history at all (the very first run), both checks must report an honest empty result, never crash for lack of history to compare against');
 
@@ -4393,44 +4393,44 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // séparément, puis leur combinaison, jamais un seul test fourre-tout qui masquerait un critère
   // cassé derrière un score global qui semble plausible.
   const now = new Date('2026-09-20T12:00:00Z').getTime();
-  const critiqueOld = { n: 1, sousSujet: 'Tâche critique ancienne', sensibilite: 'critique', detail: '', statusKey: 'ouverte', horodatage: '2026-09-01-1200' };
-  const normalFresh = { n: 2, sousSujet: 'Tâche normale récente', sensibilite: 'normal', detail: '', statusKey: 'ouverte', horodatage: '2026-09-20-1100' };
-  const closedRow = { n: 3, sousSujet: 'Tâche déjà fermée', sensibilite: 'critique', detail: '', statusKey: 'terminee', horodatage: '2026-09-01-1200' };
-  const noSignalRow = { n: 4, sousSujet: 'Tâche sans aucun signal', sensibilite: 'autre', detail: '', statusKey: 'ouverte', horodatage: undefined };
+  const critiqueOld = { numero: 1, sousSujet: 'Tâche critique ancienne', criticite: 'critique', detail: '', statusKey: 'ouverte', horodatage: '2026-09-01-1200' };
+  const normalFresh = { numero: 2, sousSujet: 'Tâche normale récente', criticite: 'normal', detail: '', statusKey: 'ouverte', horodatage: '2026-09-20-1100' };
+  const closedRow = { numero: 3, sousSujet: 'Tâche déjà fermée', criticite: 'critique', detail: '', statusKey: 'terminee', horodatage: '2026-09-01-1200' };
+  const noSignalRow = { numero: 4, sousSujet: 'Tâche sans aucun signal', criticite: 'autre', detail: '', statusKey: 'ouverte', horodatage: undefined };
   const basic = recommendNextTasks([critiqueOld, normalFresh, closedRow, noSignalRow], { now });
-  assert.ok(!basic.some((r) => r.n === 3), 'recommendNextTasks() must never propose an already-closed task, whatever its sensitivity or age — only genuinely open tasks are real candidates');
-  assert.ok(!basic.some((r) => r.n === 4), 'a task with zero real signal on any of the 5 criteria must be excluded entirely, never padded into the list with an empty or fabricated reason');
-  assert.ok(basic[0].n === 1, 'a critical, weeks-old task must outrank a normal, same-day task — the combination of sensitivity + age must genuinely drive the ranking, not just list order');
+  assert.ok(!basic.some((r) => r.numero === 3), 'recommendNextTasks() must never propose an already-closed task, whatever its sensitivity or age — only genuinely open tasks are real candidates');
+  assert.ok(!basic.some((r) => r.numero === 4), 'a task with zero real signal on any of the 5 criteria must be excluded entirely, never padded into the list with an empty or fabricated reason');
+  assert.ok(basic[0].numero === 1, 'a critical, weeks-old task must outrank a normal, same-day task — the combination of sensitivity + age must genuinely drive the ranking, not just list order');
   assert.ok(basic[0].reasons.some((r) => r.includes('sensibilité déclarée : critique')), 'the top recommendation must carry an honest, readable reason naming its real declared sensitivity, never a bare opaque number');
 
   // Stagnation progressive : une tâche stagnante depuis 8 rapports doit dépasser une stagnante
   // depuis 3, jamais le même forfait fixe pour les deux (2026-09-20, l'affinage demandé).
-  const rowA = { n: 5, sousSujet: 'Stagnante depuis longtemps', sensibilite: 'normal', detail: '', statusKey: 'ouverte', horodatage: undefined };
-  const rowB = { n: 6, sousSujet: 'Stagnante depuis peu', sensibilite: 'normal', detail: '', statusKey: 'ouverte', horodatage: undefined };
-  const stagnationRanked = recommendNextTasks([rowA, rowB], { now, stagnant: [{ n: 5, sousSujet: rowA.sousSujet, streak: 8 }, { n: 6, sousSujet: rowB.sousSujet, streak: 3 }] });
-  assert.ok(stagnationRanked[0].n === 5, 'a task stagnant for 8 consecutive reports must score higher than one stagnant for only 3 — the streak must genuinely drive the score, never a flat bonus regardless of how long the stagnation has lasted');
+  const rowA = { numero: 5, sousSujet: 'Stagnante depuis longtemps', criticite: 'normal', detail: '', statusKey: 'ouverte', horodatage: undefined };
+  const rowB = { numero: 6, sousSujet: 'Stagnante depuis peu', criticite: 'normal', detail: '', statusKey: 'ouverte', horodatage: undefined };
+  const stagnationRanked = recommendNextTasks([rowA, rowB], { now, stagnant: [{ numero: 5, sousSujet: rowA.sousSujet, streak: 8 }, { numero: 6, sousSujet: rowB.sousSujet, streak: 3 }] });
+  assert.ok(stagnationRanked[0].numero === 5, 'a task stagnant for 8 consecutive reports must score higher than one stagnant for only 3 — the streak must genuinely drive the score, never a flat bonus regardless of how long the stagnation has lasted');
   assert.ok(stagnationRanked[0].reasons.some((r) => r.includes('8 rapports')), 'the reason must state the real streak count, never a vague "stagnante depuis plusieurs rapports" that hides the actual number');
-  const cappedStagnation = recommendNextTasks([{ ...rowA, n: 7 }], { now, stagnant: [{ n: 7, sousSujet: rowA.sousSujet, streak: 500 }] });
+  const cappedStagnation = recommendNextTasks([{ ...rowA, numero: 7 }], { now, stagnant: [{ numero: 7, sousSujet: rowA.sousSujet, streak: 500 }] });
   assert.ok(cappedStagnation[0].score <= 6 + 3, 'an absurdly large streak (e.g. a data anomaly) must still be capped, never let a single criterion alone dwarf every other real signal in the score');
 
   // Priorité explicite à deux paliers : "priorité absolue" doit peser plus lourd qu'un simple "en
   // priorité" (2026-09-20, affinage demandé, calibré explicitement par l'utilisateur).
-  const absolutePriorityRow = { n: 8, sousSujet: 'Urgence vraie', sensibilite: 'normal', detail: 'priorité absolue pour la suite', statusKey: 'ouverte', horodatage: undefined };
-  const explicitPriorityRow = { n: 9, sousSujet: 'Demande notée en priorité', sensibilite: 'normal', detail: 'à faire en priorité la prochaine fois', statusKey: 'ouverte', horodatage: undefined };
+  const absolutePriorityRow = { numero: 8, sousSujet: 'Urgence vraie', criticite: 'normal', detail: 'priorité absolue pour la suite', statusKey: 'ouverte', horodatage: undefined };
+  const explicitPriorityRow = { numero: 9, sousSujet: 'Demande notée en priorité', criticite: 'normal', detail: 'à faire en priorité la prochaine fois', statusKey: 'ouverte', horodatage: undefined };
   const priorityRanked = recommendNextTasks([absolutePriorityRow, explicitPriorityRow], { now });
-  assert.ok(priorityRanked[0].n === 8, 'a task marked "priorité absolue" must outrank one merely marked "en priorité" — the two formulations must never score identically now that they are meant to express different urgency');
+  assert.ok(priorityRanked[0].numero === 8, 'a task marked "priorité absolue" must outrank one merely marked "en priorité" — the two formulations must never score identically now that they are meant to express different urgency');
   assert.ok(priorityRanked[0].reasons.some((r) => r.includes('absolue')), 'the top reason must name the real "priorité absolue" wording actually found in the suivi, never a generic priority label that hides which tier matched');
 
   // Corroboration progressive : une tâche confirmée par 2 vigies distinctes doit dépasser une
   // confirmée par une seule (2026-09-20, affinage demandé).
-  const doubleCorroborated = { n: 10, sousSujet: 'Trottoir 3D pathable jardin chemin', sensibilite: 'normal', detail: '', statusKey: 'ouverte', horodatage: undefined };
-  const singleCorroborated = { n: 11, sousSujet: 'Trottoir 3D pathable', sensibilite: 'normal', detail: '', statusKey: 'ouverte', horodatage: undefined };
+  const doubleCorroborated = { numero: 10, sousSujet: 'Trottoir 3D pathable jardin chemin', criticite: 'normal', detail: '', statusKey: 'ouverte', horodatage: undefined };
+  const singleCorroborated = { numero: 11, sousSujet: 'Trottoir 3D pathable', criticite: 'normal', detail: '', statusKey: 'ouverte', horodatage: undefined };
   const twoRegistryFindings = [
     { source: 'ARGUS', date: '2026-09-19', text: 'trottoir pathable jamais implémenté' },
     { source: 'HARMONIA', date: '2026-09-19', text: 'trottoir jardin incohérent chemin' },
   ];
   const corroborationRanked = recommendNextTasks([doubleCorroborated, singleCorroborated], { now, findings: twoRegistryFindings });
-  assert.ok(corroborationRanked.find((r) => r.n === 10).score > corroborationRanked.find((r) => r.n === 11).score, 'a task genuinely matching findings from 2 distinct vigies must outscore one matching only 1, never the same flat bonus regardless of how many independent tools actually corroborate it');
+  assert.ok(corroborationRanked.find((r) => r.numero === 10).score > corroborationRanked.find((r) => r.numero === 11).score, 'a task genuinely matching findings from 2 distinct vigies must outscore one matching only 1, never the same flat bonus regardless of how many independent tools actually corroborate it');
   assert.ok(corroborationRanked[0].reasons.some((r) => r.includes('2 vigie')), 'the reason must state the real number of corroborating vigies, never hide that count behind a vague "corroborée" with no real number');
 
   const limited = recommendNextTasks([critiqueOld, normalFresh, { ...critiqueOld, n: 20 }, { ...critiqueOld, n: 21 }, { ...critiqueOld, n: 22 }], { now, limit: 2 });
@@ -4452,13 +4452,13 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(reportWithRecommendation.meta.recommended.length > 0, 'buildReport() must surface a real recommended-order list in meta whenever at least one open task carries a genuine signal — here #10 (sensibilité "important") and #11 (sensibilité "normal") both genuinely qualify');
   assert.ok(reportWithRecommendation.meta.recommended.every((r) => r.reasons.length > 0), 'every task surfaced through buildReport() must carry its own real reasons, never an entry justified only by having made the cut');
   assert.ok(reportWithRecommendation.blocks.some((b) => b.type === 'heading' && /Ordre recommandé/.test(b.text)), 'when a real recommendation exists, buildReport() must include its own visible heading in the report, never a silent meta-only field the reader would never see');
-  const reportWithoutSignal = buildReport({ zoom: 'en_cours', format: 'liste', allRows: [{ n: 99, sousSujet: 'Rien de signalé', sensibilite: 'autre', detail: '', statusKey: 'ouverte', horodatage: undefined }], history: [], registryFindings: [] });
+  const reportWithoutSignal = buildReport({ zoom: 'en_cours', format: 'liste', allRows: [{ numero: 99, sousSujet: 'Rien de signalé', criticite: 'autre', detail: '', statusKey: 'ouverte', horodatage: undefined }], history: [], registryFindings: [] });
   assert.ok(!reportWithoutSignal.blocks.some((b) => b.type === 'heading' && /Ordre recommandé/.test(b.text)), 'when zero open task carries any real signal, the recommendation heading must never appear — an honest empty report, never a heading over an empty or fabricated list');
   // Bug réel trouvé le 2026-09-20 en lisant le tout premier rapport produit en conditions réelles
   // (protocole "lire le rapport en entier avant de répondre") : une tâche sans N° réel (le cas
   // fréquent d'une note "en cours" jamais numérotée dans le suivi) s'affichait "#undefined" dans le
   // bloc recommandé, alors que buildTree()/buildListBlocks() utilisent déjà "—" pour ce même cas.
-  const undefinedNRow = { n: undefined, sousSujet: 'Note sans numéro', sensibilite: 'critique', detail: '', statusKey: 'ouverte', horodatage: undefined };
+  const undefinedNRow = { numero: undefined, sousSujet: 'Note sans numéro', criticite: 'critique', detail: '', statusKey: 'ouverte', horodatage: undefined };
   const reportWithUndefinedN = buildReport({ zoom: 'en_cours', format: 'liste', allRows: [undefinedNRow], history: [], registryFindings: [] });
   const recommendedHeadingIndex = reportWithUndefinedN.blocks.findIndex((b) => b.type === 'heading' && /Ordre recommandé/.test(b.text));
   assert.ok(reportWithUndefinedN.blocks[recommendedHeadingIndex + 1].items[0].startsWith('1. #— '), 'a recommended task with no real N° must render the same "—" placeholder already used everywhere else in the report, never a literal "#undefined" leaking a raw JavaScript value to the reader');
@@ -4482,7 +4482,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const dedupedResult = appendSnapshot(rows, { file: tmpFile, dir: tmpDir, now: () => 'fixed-time-2' });
   assert.equal(loadSnapshotHistory(tmpFile).length, 1, 'a second appendSnapshot() call with the exact same row-set (n + statusKey unchanged) must be a no-op, never a fabricated new observation that inflates the stagnation signal');
   assert.equal(dedupedResult.skipped, true, 'a deduplicated call must honestly report that it was skipped, never pretend a real new snapshot was recorded');
-  const changedRows = rows.map((r) => (r.n === 10 ? { ...r, statusKey: 'terminee' } : r));
+  const changedRows = rows.map((r) => (r.numero === 10 ? { ...r, statusKey: 'terminee' } : r));
   appendSnapshot(changedRows, { file: tmpFile, dir: tmpDir, now: () => 'fixed-time-3' });
   assert.equal(loadSnapshotHistory(tmpFile).length, 2, 'a genuinely different row-set (even a single status change) must still append a real new line — the dedup guard must never swallow a real change');
   fs.rmSync(tmpDir, { recursive: true, force: true });
@@ -4903,9 +4903,9 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 
   const NOW = Date.parse('2026-09-22T12:00:00Z');
   const fakeRows = [
-    { n: 117, horodatage: '2026-09-22T11:00Z', sujet: 'Outillage de travail / ARGUS', sousSujet: 'a', detail: '', statusKey: 'terminee' },
-    { n: 118, horodatage: '2026-09-20T10:00Z', sujet: 'Jeu / Dialogue', sousSujet: 'b', detail: 'refonte graphique du salon', statusKey: 'ouverte' },
-    { n: 120, horodatage: '2026-09-15T10:00Z', sujet: 'Outillage de travail / CASSANDRA-RH', sousSujet: 'c', detail: 'cassandra', statusKey: 'enCours' },
+    { numero: 117, horodatage: '2026-09-22T11:00Z', sujet: 'Outillage de travail / ARGUS', sousSujet: 'a', detail: '', statusKey: 'terminee' },
+    { numero: 118, horodatage: '2026-09-20T10:00Z', sujet: 'Jeu / Dialogue', sousSujet: 'b', detail: 'refonte graphique du salon', statusKey: 'ouverte' },
+    { numero: 120, horodatage: '2026-09-15T10:00Z', sujet: 'Outillage de travail / CASSANDRA-RH', sousSujet: 'c', detail: 'cassandra', statusKey: 'enCours' },
   ];
   const fig = suiviFigures(fakeRows, { now: NOW });
   assert.deepEqual(fig.byStatus, { terminee: 1, enCours: 1, ouverte: 1, autre: 0 }, 'statuses must be counted from statusKey — the real field name loadAllTaskRows() produces, never an invented one (the first live run reported 0 everywhere)');
@@ -4917,8 +4917,8 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(fig.byTheme['Outillage de travail'] && fig.byTheme['Outillage de travail'].total === 2, 'the theme must be read through splitSujet() (the « Thème / Sous-thème » convention already in docs/suivi), never from a non-existent r.theme field');
   assert.equal(fig.byTheme['Outillage de travail'].ouvertes, 1, 'only the non-terminee row of a theme counts as still open');
   // Une numérotation parfaitement continue ne doit produire AUCUNE incohérence.
-  assert.deepEqual(suiviFigures([{ n: 5, horodatage: '2026-09-22T11:00Z', sujet: 'A / B', statusKey: 'terminee' }, { n: 6, horodatage: '2026-09-22T11:00Z', sujet: 'A / B', statusKey: 'terminee' }], { now: NOW }).incoherences, [], 'a continuous, duplicate-free numbering must report zero incoherence, never a cosmetic warning');
-  assert.ok(suiviFigures([{ n: 7, sujet: 'A / B', statusKey: 'terminee' }, { n: 7, sujet: 'A / B', statusKey: 'terminee' }], { now: NOW }).incoherences.some(i => /double/.test(i)), 'two rows sharing one task number must be reported — a real identity collision, never tolerated silently');
+  assert.deepEqual(suiviFigures([{ numero: 5, horodatage: '2026-09-22T11:00Z', sujet: 'A / B', statusKey: 'terminee' }, { numero: 6, horodatage: '2026-09-22T11:00Z', sujet: 'A / B', statusKey: 'terminee' }], { now: NOW }).incoherences, [], 'a continuous, duplicate-free numbering must report zero incoherence, never a cosmetic warning');
+  assert.ok(suiviFigures([{ numero: 7, sujet: 'A / B', statusKey: 'terminee' }, { numero: 7, sujet: 'A / B', statusKey: 'terminee' }], { now: NOW }).incoherences.some(i => /double/.test(i)), 'two rows sharing one task number must be reported — a real identity collision, never tolerated silently');
 
   const standing = projectStanding(fakeRows, { now: NOW, chantiers: {
     'Refonte graphique': { file: 'x', match: /refonte graphique/i },
@@ -4932,7 +4932,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(byName['CASSANDRA-RH'].dernierMouvementJours, 7, 'the age must be computed from the most RECENT matching task, never the oldest');
   assert.ok(standing.every(c => c.dernierMouvementJours === null || c.dernierMouvementJours >= 0), 'an age can never be negative — a row timestamped slightly ahead must read « just now », never « il y a -1 j » as the first live run displayed');
 
-  const crit = criticalEye(fakeRows, { stagnant: [{ n: 118, sousSujet: 'b', streak: 6 }, { n: 120, sousSujet: 'c', streak: 3 }], standing, figures: fig, now: NOW });
+  const crit = criticalEye(fakeRows, { stagnant: [{ numero: 118, sousSujet: 'b', streak: 6 }, { numero: 120, sousSujet: 'c', streak: 3 }], standing, figures: fig, now: NOW });
   assert.ok(crit.some(f => /#118/.test(f.constat) && f.gravite === 'forte'), 'a task stuck for 6 consecutive reports must be graded severe');
   assert.ok(crit.some(f => /#120/.test(f.constat) && f.gravite === 'moyenne'), 'a task stuck for exactly 3 reports must be graded moderate — the scale must actually distinguish, never one flat verdict');
   assert.ok(crit.some(f => /Chantier fantôme/.test(f.constat)), 'the never-started chantier must reach the critical eye, not stay buried in part 2');
@@ -4950,18 +4950,18 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const refonteFile = CHANTIER_PRELIMINARY_FILES['Refonte graphique'].file;
 
   // Cas 1 : le fichier a été retouché APRÈS la dernière tâche de suivi qui le concerne — aucun écart.
-  const rowsFresh = [{ n: 1, horodatage: daysAgo(5), sujet: 'Conception / Nouvel outil (CASSANDRA-RH)', sousSujet: 'Une idée quelconque', detail: '' }];
+  const rowsFresh = [{ numero: 1, horodatage: daysAgo(5), sujet: 'Conception / Nouvel outil (CASSANDRA-RH)', sousSujet: 'Une idée quelconque', detail: '' }];
   const freshResult = checkChantierFileFreshness(rowsFresh, { lastTouch: (f) => (f === cassandraFile ? 1 : undefined) });
   assert.equal(freshResult.length, 0, 'a preliminary file touched more recently than the newest matching suivi task must never be flagged — the file is genuinely up to date');
 
   // Cas 2 : une idée plus récente que le fichier — écart réel signalé, jamais silencieux.
-  const rowsStale = [{ n: 2, horodatage: daysAgo(1), sujet: 'Conception / Nouvel outil (CASSANDRA-RH)', sousSujet: 'Idée pas encore recopiée', detail: '' }];
+  const rowsStale = [{ numero: 2, horodatage: daysAgo(1), sujet: 'Conception / Nouvel outil (CASSANDRA-RH)', sousSujet: 'Idée pas encore recopiée', detail: '' }];
   const staleResult = checkChantierFileFreshness(rowsStale, { lastTouch: (f) => (f === cassandraFile ? 30 : undefined) });
   assert.equal(staleResult.length, 1, 'a suivi task genuinely newer than its chantier\'s preliminary file must be flagged — the exact real gap this tool exists to catch');
   assert.ok(staleResult[0].message.includes('#2') && staleResult[0].chantier === 'CASSANDRA-RH', 'the finding must name the real task number and chantier responsible, never a vague unattributed warning');
 
   // Cas 3 : tolérance d'une journée pour un commit groupé le même jour — jamais un faux positif.
-  const rowsSameDay = [{ n: 3, horodatage: daysAgo(2), sujet: 'Conception / Nouvel outil (CASSANDRA-RH)', sousSujet: 'Idée committée le même jour', detail: '' }];
+  const rowsSameDay = [{ numero: 3, horodatage: daysAgo(2), sujet: 'Conception / Nouvel outil (CASSANDRA-RH)', sousSujet: 'Idée committée le même jour', detail: '' }];
   const sameDayResult = checkChantierFileFreshness(rowsSameDay, { lastTouch: (f) => (f === cassandraFile ? 2.5 : undefined) });
   assert.equal(sameDayResult.length, 0, 'a preliminary file committed within the same grouped commit (a fraction of a day apart) must never be flagged as stale — the explicit tolerance exists for exactly this frequent real case');
 
@@ -4976,9 +4976,9 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // la refonte graphique », était comptée comme une tâche DU chantier refonte graphique — le sens
   // exactement inverse. Seuls Sujet et Sous-sujet, les deux champs de CLASSEMENT que l'agent choisit
   // délibérément, rattachent une tâche à un chantier.
-  const rowsMentionOnly = [{ n: 4, horodatage: daysAgo(0), sujet: 'Charte / Outillage de travail', sousSujet: 'Autre chose entièrement', detail: 'continuer à enchaîner les tâches ouvertes sans s\'arrêter (sauf pour la refonte graphique)' }];
+  const rowsMentionOnly = [{ numero: 4, horodatage: daysAgo(0), sujet: 'Charte / Outillage de travail', sousSujet: 'Autre chose entièrement', detail: 'continuer à enchaîner les tâches ouvertes sans s\'arrêter (sauf pour la refonte graphique)' }];
   assert.deepEqual(checkChantierFileFreshness(rowsMentionOnly, { lastTouch: () => 30 }), [], 'a chantier merely NAMED in a task\'s free-text Détail — here to EXCLUDE it — must never be treated as a task belonging to that chantier, however stale its file is');
-  const rowsClassified = [{ n: 5, horodatage: daysAgo(0), sujet: 'Refonte graphique', sousSujet: 'Une vraie idée du chantier', detail: 'aucune mention ailleurs' }];
+  const rowsClassified = [{ numero: 5, horodatage: daysAgo(0), sujet: 'Refonte graphique', sousSujet: 'Une vraie idée du chantier', detail: 'aucune mention ailleurs' }];
   assert.equal(checkChantierFileFreshness(rowsClassified, { lastTouch: (f) => (f === refonteFile ? 30 : undefined) }).length, 1, 'the same restriction must never blind the guard: a task genuinely CLASSIFIED under the chantier is still caught, proving cas 5 narrows the false positives without losing the real detections');
 
   // Cas 6 (2026-09-22) : la comparaison se fait en JOURS ENTIERS, la seule granularité que la
@@ -4987,7 +4987,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // la comparaison tournait sur des fractions non arrondies (1.03 > 0.004 + 1) — un verdict qui
   // contredisait sa propre phrase, pour un simple décalage d'horloge entre l'horodatage narratif du
   // suivi et l'horloge système de git.
-  const rowsClockSkew = [{ n: 6, horodatage: daysAgo(0.004), sujet: 'Refonte graphique', sousSujet: 'Idée recopiée le jour même', detail: '' }];
+  const rowsClockSkew = [{ numero: 6, horodatage: daysAgo(0.004), sujet: 'Refonte graphique', sousSujet: 'Idée recopiée le jour même', detail: '' }];
   assert.deepEqual(checkChantierFileFreshness(rowsClockSkew, { lastTouch: (f) => (f === refonteFile ? 1.03 : undefined) }), [], 'a sub-day clock skew between the suivi timestamp and git\'s own clock must never raise a finding whose own message reads as within tolerance — the comparison runs at the day granularity the tolerance is expressed in');
   assert.equal(checkChantierFileFreshness(rowsClockSkew, { lastTouch: (f) => (f === refonteFile ? 2.03 : undefined) }).length, 1, 'rounding to whole days must not soften a genuinely late file: two full days past a same-day task is still flagged');
 
@@ -5001,14 +5001,14 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(stagedResult.length, 0, 'a preliminary file already staged for the commit currently being validated must never be flagged as missing — it is about to land with this very commit, never a real gap');
 
   // Cas 5 : aucune tâche de suivi ne concerne un chantier donné — aucun signal fabriqué.
-  const rowsUnrelated = [{ n: 4, horodatage: daysAgo(1), sujet: 'Autre chose entièrement', sousSujet: 'Rien à voir', detail: '' }];
+  const rowsUnrelated = [{ numero: 4, horodatage: daysAgo(1), sujet: 'Autre chose entièrement', sousSujet: 'Rien à voir', detail: '' }];
   const unrelatedResult = checkChantierFileFreshness(rowsUnrelated, { lastTouch: () => undefined, isStaged: () => false });
   assert.equal(unrelatedResult.length, 0, 'a chantier with zero matching suivi rows must never be flagged — no fabricated finding from the mere absence of activity');
 
   // Cas 6 : les deux chantiers connus sont bien couverts indépendamment, jamais un seul testé au hasard.
   const rowsBoth = [
-    { n: 5, horodatage: daysAgo(1), sujet: 'Conception / Nouvel outil (CASSANDRA-RH)', sousSujet: 'x', detail: '' },
-    { n: 6, horodatage: daysAgo(1), sujet: 'Refonte graphique', sousSujet: 'y', detail: '' },
+    { numero: 5, horodatage: daysAgo(1), sujet: 'Conception / Nouvel outil (CASSANDRA-RH)', sousSujet: 'x', detail: '' },
+    { numero: 6, horodatage: daysAgo(1), sujet: 'Refonte graphique', sousSujet: 'y', detail: '' },
   ];
   const bothResult = checkChantierFileFreshness(rowsBoth, { lastTouch: (f) => (f === cassandraFile ? 30 : f === refonteFile ? 30 : undefined) });
   assert.equal(bothResult.length, 2, 'both known chantiers must be checked independently in the same pass, never only the first one found');
@@ -5017,7 +5017,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // ligne de suivi horodatée dans le "futur" relatif à l'horloge système réelle (le décalage entre
   // la date "aujourd'hui" donnée en tête de session et l'horloge réelle utilisée par git) ne doit
   // jamais produire un écart fabriqué à cause d'une soustraction négative.
-  const rowsFuture = [{ n: 7, horodatage: new Date(now + 26 * 3600000).toISOString(), sujet: 'Conception / Nouvel outil (CASSANDRA-RH)', sousSujet: 'Idée notée avec l\'horodatage "aujourd\'hui" du début de session', detail: '' }];
+  const rowsFuture = [{ numero: 7, horodatage: new Date(now + 26 * 3600000).toISOString(), sujet: 'Conception / Nouvel outil (CASSANDRA-RH)', sousSujet: 'Idée notée avec l\'horodatage "aujourd\'hui" du début de session', detail: '' }];
   const futureResult = checkChantierFileFreshness(rowsFuture, { lastTouch: (f) => (f === cassandraFile ? 0 : undefined) });
   assert.equal(futureResult.length, 0, 'a suivi row dated slightly ahead of the real system clock (the exact real "today" vs git-clock skew found live) must never be flagged as overdue just because the raw subtraction goes negative — clamped to "just now", never a fabricated gap');
 
@@ -5034,20 +5034,20 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const { detectPendingIdeaCandidates, loadIdeaDecisions, findIdeasNeedingDecision, IDEES_REGISTRY_PATH } = await import('../scripts/check-tasks-details.mjs');
 
   const rows = [
-    { n: 10, sujet: 'Nouvel outil / Quelque chose', sousSujet: 'x', statusKey: 'ouverte' },
-    { n: 340, sujet: 'Nouvel outil / Idée neuve', sousSujet: 'y', statusKey: 'ouverte' },
-    { n: 341, sujet: 'Conception / Autre idée neuve', sousSujet: 'z', statusKey: 'enCours' },
-    { n: 342, sujet: 'Correctif de code', sousSujet: 'jamais une idée', statusKey: 'ouverte' },
-    { n: 343, sujet: 'Nouvel outil / Idée déjà construite et close le même tour', sousSujet: 'w', statusKey: 'terminee' },
+    { numero: 10, sujet: 'Nouvel outil / Quelque chose', sousSujet: 'x', statusKey: 'ouverte' },
+    { numero: 340, sujet: 'Nouvel outil / Idée neuve', sousSujet: 'y', statusKey: 'ouverte' },
+    { numero: 341, sujet: 'Conception / Autre idée neuve', sousSujet: 'z', statusKey: 'enCours' },
+    { numero: 342, sujet: 'Correctif de code', sousSujet: 'jamais une idée', statusKey: 'ouverte' },
+    { numero: 343, sujet: 'Nouvel outil / Idée déjà construite et close le même tour', sousSujet: 'w', statusKey: 'terminee' },
   ];
-  assert.deepEqual(detectPendingIdeaCandidates(rows, 332).map((r) => r.n), [340, 341], 'detectPendingIdeaCandidates() must match only rows whose Sujet starts with "Nouvel outil"/"Conception" (never an unrelated row like a plain correctif) AND whose task number is genuinely above the floor — task #10, though it matches the label, must never resurface as if it were new, exactly the real false-positive class found live against this project\'s own docs/suivi/ before this floor existed');
+  assert.deepEqual(detectPendingIdeaCandidates(rows, 332).map((r) => r.numero), [340, 341], 'detectPendingIdeaCandidates() must match only rows whose Sujet starts with "Nouvel outil"/"Conception" (never an unrelated row like a plain correctif) AND whose task number is genuinely above the floor — task #10, though it matches the label, must never resurface as if it were new, exactly the real false-positive class found live against this project\'s own docs/suivi/ before this floor existed');
   assert.equal(detectPendingIdeaCandidates(rows, 341).length, 0, 'raising the floor must correctly exclude a row exactly at the floor number, never an off-by-one that still includes it');
   // Second garde-fou trouvé EN TESTANT en direct, le jour même du câblage réel de cette fonction dans
   // CIRCLE-TASKS : la tâche de suivi documentant ce mécanisme lui-même (#333, construite et close dans
   // le même tour sur ordre explicite de l'utilisateur) s'est retrouvée signalée à tort comme "idée en
   // attente d'une décision" au tout premier passage réel — une tâche déjà "terminée" documente un
   // travail déjà livré, la question ne se pose plus quel que soit le libellé de son Sujet.
-  assert.ok(!detectPendingIdeaCandidates(rows, 332).some((r) => r.n === 343), 'a "terminee" row must never resurface as a pending idea even when its Sujet matches and its number is past the floor — the exact real false positive found live the day this function was first wired into CIRCLE-TASKS, via this project\'s own docs/suivi/ row documenting this very mechanism');
+  assert.ok(!detectPendingIdeaCandidates(rows, 332).some((r) => r.numero === 343), 'a "terminee" row must never resurface as a pending idea even when its Sujet matches and its number is past the floor — the exact real false positive found live the day this function was first wired into CIRCLE-TASKS, via this project\'s own docs/suivi/ row documenting this very mechanism');
 
   const registryText = [
     '| Tâche(s) | Idée | Décision | Fichier |',
@@ -5063,9 +5063,9 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(loadIdeaDecisions('| #1 | idée | pas une vraie décision | x |'), {}, 'an unrecognized 4th-column value must never be mistaken for a real decision — only the 4 known decision words count');
 
   const candidates = detectPendingIdeaCandidates(rows, 332);
-  assert.deepEqual(findIdeasNeedingDecision(candidates, decisions).map((r) => r.n), [341], 'a "fichier créé" decision (#340) must never resurface, but an "entre-deux" decision (#341) is never final — it must keep resurfacing at every Ronde until it becomes "fichier créé" or "abandonnée", exactly the explicit user request ("L\'alerte remontera alors une deuxieme fois [...] tant qu\'aucun fichier n\'a été créé")');
-  assert.deepEqual(findIdeasNeedingDecision(candidates, { '340': 'fichier créé' }).map((r) => r.n), [341], 'a candidate genuinely absent from the decisions map (never yet asked about) must resurface — task #341 here — while an already-resolved one (#340) must not, the exact "ask again next Ronde until decided" behavior the user asked for');
-  assert.deepEqual(findIdeasNeedingDecision(candidates, { '340': 'fichier créé', '341': 'entre-deux' }).map((r) => r.n), [341], 'an explicit "entre-deux" decision must keep resurfacing at every Ronde until it becomes "fichier créé" or "abandonnée" — never silently treated as final the way "fichier créé"/"abandonnée" are');
+  assert.deepEqual(findIdeasNeedingDecision(candidates, decisions).map((r) => r.numero), [341], 'a "fichier créé" decision (#340) must never resurface, but an "entre-deux" decision (#341) is never final — it must keep resurfacing at every Ronde until it becomes "fichier créé" or "abandonnée", exactly the explicit user request ("L\'alerte remontera alors une deuxieme fois [...] tant qu\'aucun fichier n\'a été créé")');
+  assert.deepEqual(findIdeasNeedingDecision(candidates, { '340': 'fichier créé' }).map((r) => r.numero), [341], 'a candidate genuinely absent from the decisions map (never yet asked about) must resurface — task #341 here — while an already-resolved one (#340) must not, the exact "ask again next Ronde until decided" behavior the user asked for');
+  assert.deepEqual(findIdeasNeedingDecision(candidates, { '340': 'fichier créé', '341': 'entre-deux' }).map((r) => r.numero), [341], 'an explicit "entre-deux" decision must keep resurfacing at every Ronde until it becomes "fichier créé" or "abandonnée" — never silently treated as final the way "fichier créé"/"abandonnée" are');
   assert.equal(IDEES_REGISTRY_PATH, 'docs/idees-a-trancher.md', 'the registry path constant must point at the real committed file, never a stale or renamed path');
 
   // Vérifié LIVE contre le vrai docs/suivi/ + le vrai docs/idees-a-trancher.md (jamais seulement des
@@ -5826,9 +5826,9 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.ok(ctd.RESPONSABLE_ORGANISATION_TACHES.detient.length >= 4 && ctd.RESPONSABLE_ORGANISATION_TACHES.regles && ctd.RESPONSABLE_ORGANISATION_TACHES.process, 'and it names WHAT it holds and WHERE, so "responsible" is a perimeter rather than a title');
 
     // LE PALIER D'UNE LIGNE : ce que la ligne DIT, jamais ce qu'on imagine d'elle.
-    assert.equal(ctd.palierDeLaLigne({ sensibilite: 'URGENT-RETARD' }).origine, 'déjà posé dans le suivi', 'a tier already written in the row is read, never recomputed over it');
-    assert.match(ctd.palierDeLaLigne({ sensibilite: 'critique' }).origine, /converti/, 'a legacy value is converted rather than treated as unknown');
-    assert.equal(ctd.palierDeLaLigne({ sensibilite: 'critique' }).palier, 'PRIORITAIRE-OBLIGATOIRE', 'and it lands where the conversion table says, not one tier higher');
+    assert.equal(ctd.palierDeLaLigne({ criticite: 'URGENT-RETARD' }).origine, 'déjà posé dans le suivi', 'a tier already written in the row is read, never recomputed over it');
+    assert.match(ctd.palierDeLaLigne({ criticite: 'critique' }).origine, /converti/, 'a legacy value is converted rather than treated as unknown');
+    assert.equal(ctd.palierDeLaLigne({ criticite: 'critique' }).palier, 'PRIORITAIRE-OBLIGATOIRE', 'and it lands where the conversion table says, not one tier higher');
     assert.equal(ctd.palierDeLaLigne({ sousSujet: 'un travail quelconque' }).mesure, 'pas mesuré', 'a row carrying no signal at all is "pas mesuré" — the absence propagates instead of being flattened into a verdict');
 
     // LES SIGNAUX SE LISENT DANS LE TEXTE DE LA LIGNE, jamais dans une appréciation.
@@ -5839,11 +5839,11 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     // LA FILE : l'ordre vient du PALIER seul. La nature décide QUAND, jamais dans quel ordre —
     // sinon une tâche critique créative passerait derrière une technique mineure parce qu'il fait nuit.
     const file = ctd.fileOrdonnee([
-      { n: '1', sensibilite: 'NORMAL-UTILE', sousSujet: 'refactor du test', statut: 'à faire' },
-      { n: '2', sensibilite: 'CRITIQUE-RISQUES', sousSujet: 'le ton de Noé', statut: 'à faire' },
-      { n: '3', sensibilite: 'RECOMMANDE-NECESSAIRE', sousSujet: 'quelque chose', statut: 'terminée' },
+      { numero: '1', criticite: 'NORMAL-UTILE', sousSujet: 'refactor du test', statut: 'à faire' },
+      { numero: '2', criticite: 'CRITIQUE-RISQUES', sousSujet: 'le ton de Noé', statut: 'à faire' },
+      { numero: '3', criticite: 'RECOMMANDE-NECESSAIRE', sousSujet: 'quelque chose', statut: 'terminée' },
     ]);
-    assert.deepEqual(file.map((t) => t.n), ['2', '1'], 'the queue is ordered by tier alone, and closed tasks are out of it');
+    assert.deepEqual(file.map((t) => t.numero), ['2', '1'], 'the queue is ordered by tier alone, and closed tasks are out of it');
     assert.equal(file[0].nature, 'CREATIF', 'a creative task keeps its nature at the top of the queue');
     assert.match(file[0].nuit.jusquou, /avant le choix/, 'and being creative changes only how far the night may take it, never where it sits');
     console.log('Passed: check-tasks-details is promoted responsable de l\'organisation des tâches (2026-09-23), and the promotion lives in code rather than only in the conversation that granted it — a role that lives nowhere does not survive the session. It holds the rules; the rules themselves live in a separate module because tool-brain, consulted before touching this file as the rule requires, classes it SENSIBLE (1164 lines, cited by 16 files, read by the safety net): pouring a whole new scale into a central node would have been a high-risk change for no gain in clarity. The queue orders by tier ALONE — the nature flag decides when a task is done, never where it sits, because otherwise a critical creative task would fall behind a minor technical one simply because it is night.');
@@ -7468,20 +7468,20 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // findMotsClesEnCollision y était même IMPORTÉ sans jamais être appelé : un fil branché des deux
   // côtés sauf au milieu. Défaut introduit le matin même, en documentant sans brancher (L1).
   const { auditFormatDesTaches, formatAuditFormatLines } = await import('../scripts/check-tasks-details.mjs');
-  const tache = (over = {}) => ({ n: 1, horodatage: '2026-09-23T10:00Z', motCle: 'archangel', sujet: 'S', sousSujet: 's', sensibilite: 'NORMAL-UTILE', detail: 'd', statut: 'à faire', statusKey: 'autre', ...over });
+  const tache = (over = {}) => ({ numero: 1, horodatage: '2026-09-23T10:00Z', motCle: 'archangel', sujet: 'S', sousSujet: 's', criticite: 'NORMAL-UTILE', detail: 'd', statut: 'à faire', statusKey: 'autre', ...over });
   const propre = auditFormatDesTaches([tache()], { motsClesManquantsImpl: () => [] });
   assert.deepEqual([propre.manquants.length, propre.collisions.length, propre.champs.length], [0, 0, 0], 'a well-formed open task reports nothing on all three counts');
   assert.match(formatAuditFormatLines(propre)[0], /conforme aux 8 champs/, 'the clean case still PRINTS a line: a section that only appears on failure never says "this was checked", it says nothing');
-  // LES DEUX ALIAS, et pourquoi ils existent : les lignes réelles portent encore `n` et
-  // `sensibilite`, les noms d'avant la séparation criticité/urgence. Sans eux ce garde-fou accusait
-  // les 31 tâches ouvertes de manquer deux champs qu'elles portent réellement (L4).
-  assert.equal(auditFormatDesTaches([tache()], { motsClesManquantsImpl: () => [] }).champs.length, 0, 'a row carrying the HISTORICAL field names (n, sensibilite) is complete — the format declares both the target name and the legacy one rather than inventing a second vocabulary');
-  assert.equal(auditFormatDesTaches([tache({ n: '', sensibilite: '' })], { motsClesManquantsImpl: () => [] }).champs[0].absents.length, 2, 'a row missing BOTH the target name and its alias is genuinely incomplete and must be flagged — the alias forgives a rename, never an absence');
-  const collision = auditFormatDesTaches([tache({ n: 1 }), tache({ n: 2 })], { motsClesManquantsImpl: () => [] });
+  // UN SEUL NOM PAR CHAMP (#584) : les alias de transition (`n`, `sensibilite`) ont vécu quelques
+  // heures, le temps du renommage, puis ils ont été retirés — deux noms pour un champ sont la
+  // dette, jamais la solution.
+  const incomplet = auditFormatDesTaches([tache({ numero: '', criticite: '' })], { motsClesManquantsImpl: () => [] });
+  assert.deepEqual(incomplet.champs[0].absents.map((a) => a.champ), ['numero', 'criticite'], 'a row missing its number and its criticality is flagged, and named exactly as the format declares them — no legacy spelling still accepted in the shadows');
+  const collision = auditFormatDesTaches([tache({ numero: 1 }), tache({ numero: 2 })], { motsClesManquantsImpl: () => [] });
   assert.equal(collision.collisions.length, 1, 'two open tasks sharing a keyword are reported HERE too, where the report is actually read — the import existed for this and called nothing');
-  assert.equal(auditFormatDesTaches([tache({ statusKey: 'terminee' }), tache({ statusKey: 'terminee', n: 2 })], { motsClesManquantsImpl: () => [] }).collisions.length, 0, 'closed tasks sharing a keyword stay unreported, same deliberate limit as everywhere else');
+  assert.equal(auditFormatDesTaches([tache({ statusKey: 'terminee' }), tache({ statusKey: 'terminee', numero: 2 })], { motsClesManquantsImpl: () => [] }).collisions.length, 0, 'closed tasks sharing a keyword stay unreported, same deliberate limit as everywhere else');
   assert.match(formatAuditFormatLines(collision).join(' '), /tâches ouvertes portent/, 'the printed line carries the reason, not just a count');
-  console.log('Passed: check-tasks-details, the declared guardian of the etat-des-taches process, now really enforces the four mechanisms its own document promises — one of which (findMotsClesEnCollision) was imported and never called, a wire connected at both ends and not in the middle. The clean case still prints a line rather than falling silent, and the two format aliases are covered in both directions: a row on the historical field names is complete, a row missing both a name and its alias is not.');
+  console.log('Passed: check-tasks-details, the declared guardian of the etat-des-taches process, now really enforces the four mechanisms its own document promises — one of which (findMotsClesEnCollision) was imported and never called, a wire connected at both ends and not in the middle. The clean case still prints a line rather than falling silent, and and the format names one spelling per field (#584), a row missing its number and its criticality being flagged by those exact names.');
 
   // LES TROIS NATURES D'UN SCRIPT (2026-09-23) — integration-outil répondait « 0/11, 10 inscriptions
   // manquantes » pour N'IMPORTE QUEL nom, y compris les quatre modules de règles du dépôt. Le suivre
@@ -9555,8 +9555,8 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.equal(crit.motCleValide('outil').ok, false, 'a word that fits almost every task in the project distinguishes nothing');
   assert.equal(crit.motCleValide('').ok, false, 'an empty keyword recalls nothing, which is the entire purpose of the field');
   const collisions = crit.findMotsClesEnCollision([
-    { n: 10, motCle: 'memoire', statut: 'à faire' }, { n: 11, motCle: 'memoire', statut: 'à faire' },
-    { n: 12, motCle: 'ceremonies', statut: 'à faire' }, { n: 13, motCle: 'memoire', statut: 'terminée' },
+    { numero: 10, motCle: 'memoire', statut: 'à faire' }, { numero: 11, motCle: 'memoire', statut: 'à faire' },
+    { numero: 12, motCle: 'ceremonies', statut: 'à faire' }, { numero: 13, motCle: 'memoire', statut: 'terminée' },
   ]);
   assert.equal(collisions.length, 1, 'two OPEN tasks sharing a keyword is the collision the user was warned about; a closed one sharing it is not, since nobody cites it any more');
   assert.deepEqual(collisions[0].numeros, [10, 11], 'and the guard must name WHICH tasks collide, never just report that some do');

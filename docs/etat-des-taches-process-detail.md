@@ -200,6 +200,15 @@ décalage qui, pendant la migration, a fait afficher « UTILE » à 26 tâches d
 sujet, sous-sujet, criticité, détail, statut. `findChampsManquants()` les vérifie et nomme ce qui
 manque — un format qui se contrôle, jamais une phrase dans un document que personne ne relit.
 
+**Un seul nom par champ, depuis le 2026-09-23 (tâche #584).** Les lignes réelles portaient encore
+`n` et `sensibilite`, les noms d'avant la séparation criticité/urgence. Pendant quelques heures le
+format a déclaré les deux orthographes — sans quoi le garde-fou accusait les 31 tâches ouvertes d'un
+coup de manquer deux champs qu'elles portaient réellement (L4). Les alias ont tenu pendant la
+migration, puis ils ont été retirés avec elle : **deux noms pour un champ sont la dette, jamais la
+solution**. Ce qui n'a pas été renommé et ne devait pas l'être : `sensibilite` désigne aussi, dans
+`smart-conso-token.mjs` et `ecotoken.mjs`, la sensibilité d'une RÈGLE de la charte — un tout autre
+sujet, qu'un renommage par recherche de texte aurait emporté avec le reste.
+
 ### Où vivent les règles
 
 > « les regles de priorité [...] doivent etre hebergé dans l'equipe process »

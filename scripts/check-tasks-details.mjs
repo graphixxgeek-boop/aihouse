@@ -78,10 +78,10 @@ export const RESPONSABLE_ORGANISATION_TACHES = {
 // j'imagine d'elle : la valeur déjà posée si elle existe, sinon le calcul à partir des signaux que
 // la ligne porte réellement.
 export function palierDeLaLigne(row = {}) {
-  const dejaPose = PALIERS_PAR_CLE.has(String(row.sensibilite ?? "").trim()) ? String(row.sensibilite).trim() : null;
+  const dejaPose = PALIERS_PAR_CLE.has(String(row.criticite ?? "").trim()) ? String(row.criticite).trim() : null;
   if (dejaPose) return { palier: dejaPose, origine: "déjà posé dans le suivi", mesure: "mesuré" };
-  const converti = convertirAncienneGravite(row.sensibilite);
-  if (converti) return { palier: converti, origine: `converti depuis l'ancienne échelle (« ${row.sensibilite} »)`, mesure: "mesuré" };
+  const converti = convertirAncienneGravite(row.criticite);
+  if (converti) return { palier: converti, origine: `converti depuis l'ancienne échelle (« ${row.criticite} »)`, mesure: "mesuré" };
   const calcul = calculerPalier(signauxDeLaLigne(row));
   return { ...calcul, origine: "calculé depuis les signaux de la ligne" };
 }
@@ -116,14 +116,14 @@ export function fileOrdonnee(rows = [], { ouvertesSeulement = true } = {}) {
       const n = natureDeLaTache(`${r.sujet ?? ""} ${r.sousSujet ?? ""}`);
       return { ...r, palier: p.palier, originePalier: p.origine, nature: n.nature, nuit: traitableLaNuit(p.palier, n.nature) };
     });
-  return lignes.sort((a, b) => rangDe(b.palier) - rangDe(a.palier) || String(a.n ?? "").localeCompare(String(b.n ?? "")));
+  return lignes.sort((a, b) => rangDe(b.palier) - rangDe(a.palier) || String(a.numero ?? "").localeCompare(String(b.numero ?? "")));
 }
 
 export function formatFile(file = []) {
   const l = [`File ordonnée — ${file.length} tâche(s) ouverte(s), par palier décroissant :`];
   for (const t of file) {
     const p = PALIERS_PAR_CLE.get(t.palier);
-    l.push(`  ${p?.icone ?? "·"} ${t.palier.padEnd(24)} ${t.nature ? `[${t.nature}]`.padEnd(12) : "[nature ?]".padEnd(12)} #${t.n ?? "—"} ${String(t.sousSujet ?? "").slice(0, 70)}`);
+    l.push(`  ${p?.icone ?? "·"} ${t.palier.padEnd(24)} ${t.nature ? `[${t.nature}]`.padEnd(12) : "[nature ?]".padEnd(12)} #${t.numero ?? "—"} ${String(t.sousSujet ?? "").slice(0, 70)}`);
   }
   const sansNature = file.filter((t) => !t.nature).length;
   if (sansNature) l.push(`  · ${sansNature} tâche(s) sans nature déterminée — jamais routées automatiquement vers la nuit, par refus de deviner`);
@@ -165,16 +165,16 @@ export function loadAllTaskRows(sessionsDir, readDir, readFile, exists) {
       const motCle = aMotCle ? c[2] : "";
       const sujet = c[aMotCle ? 3 : 2];
       const sousSujet = c[aMotCle ? 4 : 3];
-      const sensibilite = c[aMotCle ? 5 : 4];
+      const criticite = c[aMotCle ? 5 : 4];
       const detail = c[c.length - 2];
       const statut = c[c.length - 1];
       rows.push({
-        n: Number(n) || undefined,
+        numero: Number(n) || undefined,
         horodatage,
         motCle: (motCle ?? "").trim(),
         sujet: sujet ?? "?",
         sousSujet: sousSujet ?? "?",
-        sensibilite: sensibilite ?? "?",
+        criticite: criticite ?? "?",
         detail: detail ?? "",
         statut: statut ?? entry.statut,
         statusKey,
@@ -203,8 +203,8 @@ export function filterByZoom(rows, zoom, { latestTaskNumber } = {}) {
   // "elargi" : tout ce qui reste ouvert + les 20 dernières tâches numérotées (terminées incluses),
   // jamais une fenêtre de temps — un numéro de tâche est strictement croissant et sans ambiguïté de
   // fuseau horaire, même principe que countTasksSince() (check-suivi-fidelity.mjs).
-  const threshold = (latestTaskNumber ?? Math.max(0, ...rows.map((r) => r.n || 0))) - 20;
-  return rows.filter((r) => isOpen(r) || (r.n ?? 0) > threshold);
+  const threshold = (latestTaskNumber ?? Math.max(0, ...rows.map((r) => r.numero || 0))) - 20;
+  return rows.filter((r) => isOpen(r) || (r.numero ?? 0) > threshold);
 }
 
 // Arborescence thème > sous-thème > tâche — chaque feuille porte son N°, sa sensibilité et son
@@ -233,7 +233,7 @@ export function buildTree(rows) {
       children.push({
         label: `${sousTheme} (${tasks.length})`,
         children: tasks.map((t) => ({
-          label: `${STATUS_ICONS[t.statusKey] ?? "❓"} ${numeroTache(t.n)} · [${t.sensibilite}] ${t.sousSujet} — ${t.statut}`,
+          label: `${STATUS_ICONS[t.statusKey] ?? "❓"} ${numeroTache(t.numero)} · [${t.criticite}] ${t.sousSujet} — ${t.statut}`,
           statusKey: t.statusKey,
         })),
       });
@@ -268,7 +268,7 @@ export function buildListBlocks(rows) {
       rows: tasks.map((t) => {
         const jours = t.horodatage ? Math.floor((Date.now() - new Date(t.horodatage).getTime()) / 86400000) : undefined;
         const e = etiquetteDeLaTache(t, { jours });
-        return [t.n ?? "—", t.motCle || "—", `${e.icone} ${e.criticite}`, e.vignette, t.sujet, t.sousSujet, t.statut, e.palierSource];
+        return [t.numero ?? "—", t.motCle || "—", `${e.icone} ${e.criticite}`, e.vignette, t.sujet, t.sousSujet, t.statut, e.palierSource];
       }),
     });
   }
@@ -296,7 +296,7 @@ export function auditFormatDesTaches(rows, { motsClesManquantsImpl = findMotsCle
   const champs = [];
   for (const r of ouvertes) {
     const absents = findChampsManquants(r);
-    if (absents.length) champs.push({ n: r.n, absents });
+    if (absents.length) champs.push({ numero: r.numero, absents });
   }
   return { manquants, collisions, champs, formatDeReference: FORMAT_TACHE.map((c) => c.champ) };
 }
@@ -307,9 +307,9 @@ export function formatAuditFormatLines(audit) {
     lignes.push(`Format des tâches ouvertes : conforme aux ${audit.formatDeReference.length} champs déclarés, chaque mot-clé valide et unique.`);
     return lignes;
   }
-  for (const h of audit.manquants) lignes.push(`Mot-clé — n°${h.n} : ${h.pourquoi}`);
+  for (const h of audit.manquants) lignes.push(`Mot-clé — n°${h.numero} : ${h.pourquoi}`);
   for (const c of audit.collisions) lignes.push(`Mot-clé — ${c.pourquoi}`);
-  for (const c of audit.champs) lignes.push(`Format — n°${c.n} : champ(s) absent(s) : ${c.absents.map((a) => a.champ).join(", ")}`);
+  for (const c of audit.champs) lignes.push(`Format — n°${c.numero} : champ(s) absent(s) : ${c.absents.map((a) => a.champ).join(", ")}`);
   return lignes;
 }
 
@@ -327,7 +327,7 @@ export function suggestToolsForOpenTasks(rows, prestations = PRESTATIONS, onboar
     const matches = suggestPrestationsForTask(`${row.sujet} ${row.sousSujet}`, prestations, onboardingContext);
     if (!matches.length) continue;
     const warning = matches[0].badgeWarnings?.length ? ` — ⚠️ ${matches[0].badgeWarnings.join(" ; ")}` : "";
-    items.push(`${numeroTache(row.n)} « ${row.sousSujet} » → ${matches[0].outils.join(" + ")} (mots-clés : ${matches[0].matched.join(", ")})${warning}`);
+    items.push(`${numeroTache(row.numero)} « ${row.sousSujet} » → ${matches[0].outils.join(" + ")} (mots-clés : ${matches[0].matched.join(", ")})${warning}`);
   }
   return items;
 }
@@ -339,7 +339,7 @@ export function suggestToolsForOpenTasks(rows, prestations = PRESTATIONS, onboar
 function consecutiveOpenStreak(previousSnapshots, n) {
   let streak = 0;
   for (let i = previousSnapshots.length - 1; i >= 0; i--) {
-    const row = previousSnapshots[i].rows.find((r) => r.n === n);
+    const row = previousSnapshots[i].rows.find((r) => r.numero === n);
     if (row && OPEN_KEYS.has(row.statusKey)) streak++;
     else break;
   }
@@ -354,23 +354,23 @@ export function compareSnapshots(previousSnapshots, currentRows) {
   if (!previousSnapshots.length) return { regressions, stagnant };
   const rank = { ouverte: 0, autre: 0, enCours: 1, terminee: 2 };
   const last = previousSnapshots[previousSnapshots.length - 1];
-  const lastByN = new Map(last.rows.map((r) => [r.n, r]));
+  const lastByN = new Map(last.rows.map((r) => [r.numero, r]));
   for (const row of currentRows) {
-    const prev = lastByN.get(row.n);
+    const prev = lastByN.get(row.numero);
     if (prev && (rank[row.statusKey] ?? 0) < (rank[prev.statusKey] ?? 0)) {
-      regressions.push({ n: row.n, sousSujet: row.sousSujet, before: prev.statusKey, after: row.statusKey });
+      regressions.push({ numero: row.numero, sousSujet: row.sousSujet, before: prev.statusKey, after: row.statusKey });
     }
   }
   const recent = previousSnapshots.slice(-2);
   if (recent.length === 2) {
     for (const row of currentRows) {
       if (!OPEN_KEYS.has(row.statusKey)) continue;
-      const seenInBoth = recent.every((snap) => snap.rows.some((r) => r.n === row.n && OPEN_KEYS.has(r.statusKey)));
+      const seenInBoth = recent.every((snap) => snap.rows.some((r) => r.numero === row.numero && OPEN_KEYS.has(r.statusKey)));
       // +1 : le nombre de rapports PRÉCÉDENTS où la tâche apparaît déjà ouverte, plus le rapport
       // courant lui-même — un vrai décompte de rapports consécutifs (2026-09-20, demande explicite
       // de l'utilisateur : « l'echelle dvrait s'affiner [...] permettre une meilleure comparaisone
       // netre les taches »), jamais seulement un booléen "stagnante oui/non".
-      if (seenInBoth) stagnant.push({ n: row.n, sousSujet: row.sousSujet, streak: consecutiveOpenStreak(previousSnapshots, row.n) + 1 });
+      if (seenInBoth) stagnant.push({ numero: row.numero, sousSujet: row.sousSujet, streak: consecutiveOpenStreak(previousSnapshots, row.numero) + 1 });
     }
   }
   return { regressions, stagnant };
@@ -472,20 +472,20 @@ const ABSOLUTE_PRIORITY_PATTERN = /\bpriorit[ée]\s+absolue\b/i;
 const EXPLICIT_PRIORITY_PATTERN = /\ben\s+priorit[ée]\b|\bpriorit[ée]\s+explicite\b/i;
 
 export function recommendNextTasks(rows, { stagnant = [], findings = [], limit = 4, now = Date.now() } = {}) {
-  const stagnantStreakByN = new Map(stagnant.map((s) => [s.n, s.streak ?? 3]));
+  const stagnantStreakByN = new Map(stagnant.map((s) => [s.numero, s.streak ?? 3]));
   const openRows = rows.filter((r) => OPEN_KEYS.has(r.statusKey));
   const scored = openRows.map((row) => {
     const reasons = [];
     let score = 0;
 
-    const sensScore = SENSITIVITY_SCORE[row.sensibilite] ?? 0;
-    if (sensScore > 0) { score += sensScore; reasons.push(`sensibilité déclarée : ${row.sensibilite}`); }
+    const sensScore = SENSITIVITY_SCORE[row.criticite] ?? 0;
+    if (sensScore > 0) { score += sensScore; reasons.push(`sensibilité déclarée : ${row.criticite}`); }
 
     // Stagnation progressive : le score grimpe avec le nombre RÉEL de rapports consécutifs où la
     // tâche est restée identique, jamais un forfait unique dès le seuil de 3 (une tâche immobile
     // depuis 12 rapports doit clairement dépasser une immobile depuis 3, plafonné à 6 pour éviter
     // qu'une tâche très ancienne écrase à elle seule tous les autres critères).
-    const streak = stagnantStreakByN.get(row.n);
+    const streak = stagnantStreakByN.get(row.numero);
     if (streak != null) {
       const stagnationScore = Math.min(6, streak);
       score += stagnationScore;
@@ -519,7 +519,7 @@ export function recommendNextTasks(rows, { stagnant = [], findings = [], limit =
       reasons.push(`corroborée par ${corroborations.length} vigie(s) (${sources}) : liens réels avec des trouvailles déjà confirmées`);
     }
 
-    return { n: row.n, sousSujet: row.sousSujet, sensibilite: row.sensibilite, statusKey: row.statusKey, score, reasons };
+    return { numero: row.numero, sousSujet: row.sousSujet, criticite: row.criticite, statusKey: row.statusKey, score, reasons };
   });
 
   return scored
@@ -536,7 +536,7 @@ export function loadSnapshotHistory(file = SNAPSHOTS_FILE, readFile = (f) => rea
 // Signature stable d'un jeu de lignes (n + statutKey, dans l'ordre) — jamais l'horodatage, qui
 // varie toujours et rendrait toute comparaison inutile.
 function rowsSignature(rows) {
-  return JSON.stringify(rows.map((r) => [r.n, r.statusKey]));
+  return JSON.stringify(rows.map((r) => [r.numero, r.statusKey]));
 }
 
 // Dé-doublonnage des instantanés consécutifs identiques (2026-09-20, bug réel trouvé en analysant
@@ -558,7 +558,7 @@ export function appendSnapshot(rows, { file = SNAPSHOTS_FILE, dir = OUT_DIR, now
   if (lastSnapshot && rowsSignature(lastSnapshot.rows) === newSignature) {
     return { ...lastSnapshot, skipped: true };
   }
-  const snapshot = { at: now(), rows: rows.map((r) => ({ n: r.n, statusKey: r.statusKey })) };
+  const snapshot = { at: now(), rows: rows.map((r) => ({ numero: r.numero, statusKey: r.statusKey })) };
   writeFileSync(file, prior + JSON.stringify(snapshot) + "\n", "utf8");
   return snapshot;
 }
@@ -762,7 +762,7 @@ export function checkChantierFileFreshness(allRows, { lastTouch = lastTouchDays,
     const fileAgeDays = lastTouch(file);
     if (fileAgeDays === undefined) {
       if (isStaged(file)) continue;
-      findings.push({ chantier, file, taskNumber: latest.row.n, message: `fichier "${file}" introuvable ou jamais commité, alors qu'une tâche de suivi (#${latest.row.n ?? "?"}) le concerne déjà` });
+      findings.push({ chantier, file, taskNumber: latest.row.numero, message: `fichier "${file}" introuvable ou jamais commité, alors qu'une tâche de suivi (#${latest.row.numero ?? "?"}) le concerne déjà` });
       continue;
     }
     // COMPARAISON EN JOURS ENTIERS (2026-09-22, second faux positif réel du même passage) : le
@@ -773,7 +773,7 @@ export function checkChantierFileFreshness(allRows, { lastTouch = lastTouchDays,
     // git — exactement ce que TOLERANCE_DAYS existe pour absorber, jamais un vrai retard. On compare
     // donc à la granularité du JOUR, la seule que la tolérance et le message expriment tous les deux.
     if (Math.floor(fileAgeDays) > Math.floor(rowAgeDays) + TOLERANCE_DAYS) {
-      findings.push({ chantier, file, taskNumber: latest.row.n, message: `tâche #${latest.row.n ?? "?"} « ${latest.row.sousSujet} » (${rowAgeDays.toFixed(1)}j) plus récente que "${file}" (${fileAgeDays.toFixed(1)}j) — vérifier que l'idée a bien été recopiée` });
+      findings.push({ chantier, file, taskNumber: latest.row.numero, message: `tâche #${latest.row.numero ?? "?"} « ${latest.row.sousSujet} » (${rowAgeDays.toFixed(1)}j) plus récente que "${file}" (${fileAgeDays.toFixed(1)}j) — vérifier que l'idée a bien été recopiée` });
     }
   }
   return findings;
@@ -809,7 +809,7 @@ export function checkChantierFileFreshness(allRows, { lastTouch = lastTouchDays,
 // Sujet (exactement le même principe que le balayage rétrospectif manuel, qui n'a jamais recensé de
 // décision pour les dizaines de "Nouvel outil" déjà closes).
 export function detectPendingIdeaCandidates(allRows, sinceTaskNumber = 332) {
-  return allRows.filter((r) => /^(Nouvel outil|Conception)/i.test(r.sujet ?? "") && (r.n ?? 0) > sinceTaskNumber && r.statusKey !== "terminee");
+  return allRows.filter((r) => /^(Nouvel outil|Conception)/i.test(r.sujet ?? "") && (r.numero ?? 0) > sinceTaskNumber && r.statusKey !== "terminee");
 }
 
 export const IDEES_REGISTRY_PATH = "docs/idees-a-trancher.md";
@@ -846,7 +846,7 @@ export function loadIdeaDecisions(registryText) {
 // la première fois.
 export function findIdeasNeedingDecision(candidates, decisions) {
   return candidates.filter((r) => {
-    const known = decisions[String(r.n)];
+    const known = decisions[String(r.numero)];
     return known === undefined || known === "entre-deux";
   });
 }
@@ -876,8 +876,8 @@ export function suiviFigures(rows, { now = Date.now() } = {}) {
   const total = rows.length;
   const byStatus = { terminee: 0, enCours: 0, ouverte: 0, autre: 0 };
   for (const r of rows) byStatus[r.statusKey] = (byStatus[r.statusKey] ?? 0) + 1;
-  const numbered = rows.filter((r) => Number.isFinite(r.n) && r.n > 0);
-  const numbers = numbered.map((r) => r.n);
+  const numbered = rows.filter((r) => Number.isFinite(r.numero) && r.numero > 0);
+  const numbers = numbered.map((r) => r.numero);
   const highest = numbers.length ? Math.max(...numbers) : 0;
   // Trous de numérotation : un numéro absent signale une tâche perdue lors d'un découpage de
   // fichier, ou jamais écrite. Le balayage part du PLUS PETIT numéro réellement présent, jamais de
@@ -955,7 +955,7 @@ export function criticalEye(rows, { stagnant = [], standing = [], figures = null
   const findings = [];
   const fig = figures ?? suiviFigures(rows, { now });
   for (const s of stagnant.filter((s) => (s.streak ?? 3) >= 3).sort((a, b) => (b.streak ?? 0) - (a.streak ?? 0))) {
-    findings.push({ gravite: (s.streak ?? 3) >= 5 ? "forte" : "moyenne", constat: `${numeroTache(s.n)} « ${s.sousSujet} » est ouverte et identique depuis ${s.streak ?? 3} rapports consécutifs.` });
+    findings.push({ gravite: (s.streak ?? 3) >= 5 ? "forte" : "moyenne", constat: `${numeroTache(s.numero)} « ${s.sousSujet} » est ouverte et identique depuis ${s.streak ?? 3} rapports consécutifs.` });
   }
   for (const c of standing.filter((c) => c.jamaisCommence)) {
     findings.push({ gravite: "forte", constat: `Le chantier « ${c.chantier} » a un fichier de conception mais 0 tâche de suivi s'y rattache — annoncé, jamais commencé.` });
@@ -1038,7 +1038,7 @@ export function buildRondeTextReport({ rows, history = [], now = Date.now() } = 
     L.push(`### ${ZOOM_LABELS[zoom]} — ${scoped.length} tâche(s)`);
     for (const t of scoped) {
       const icone = t.statusKey === "terminee" ? "✔" : t.statusKey === "enCours" ? "▶" : t.statusKey === "ouverte" ? "○" : "?";
-      L.push(`  ${icone} #${pad(t.n ?? "—", 4)} ${pad(splitSujet(t.sujet).theme.slice(0, 26), 28)} ${String(t.sousSujet ?? "").slice(0, 96)}`);
+      L.push(`  ${icone} #${pad(t.numero ?? "—", 4)} ${pad(splitSujet(t.sujet).theme.slice(0, 26), 28)} ${String(t.sousSujet ?? "").slice(0, 96)}`);
     }
   }
   L.push("");
@@ -1053,7 +1053,7 @@ export function buildReport({ zoom = "en_cours", format = "liste", allRows, hist
   if (!FORMATS.includes(format)) throw new Error(`format inconnu : ${format}`);
   const rows = allRows ?? loadAllTaskRows();
   const findings = registryFindings ?? loadRegistryFindings();
-  const latestTaskNumber = Math.max(0, ...rows.map((r) => r.n || 0));
+  const latestTaskNumber = Math.max(0, ...rows.map((r) => r.numero || 0));
   const scoped = filterByZoom(rows, zoom, { latestTaskNumber });
   const { regressions, stagnant } = compareSnapshots(history, rows);
   const chantierFreshnessGaps = checkChantierFileFreshness(rows);
@@ -1065,11 +1065,11 @@ export function buildReport({ zoom = "en_cours", format = "liste", allRows, hist
   }
   if (regressions.length) {
     blocks.push({ type: "note", text: `⚠️ ${regressions.length} régression(s) de statut détectée(s) depuis le dernier rapport — à vérifier en priorité.` });
-    blocks.push({ type: "list", items: regressions.map((r) => `${numeroTache(r.n)} « ${r.sousSujet} » : ${r.before} → ${r.after}`) });
+    blocks.push({ type: "list", items: regressions.map((r) => `${numeroTache(r.numero)} « ${r.sousSujet} » : ${r.before} → ${r.after}`) });
   }
   if (stagnant.length) {
     blocks.push({ type: "note", text: `${stagnant.length} tâche(s) ouverte(s) identiques depuis au moins 3 rapports consécutifs — possible oubli, à vérifier (jamais une certitude).` });
-    blocks.push({ type: "list", items: stagnant.map((s) => `${numeroTache(s.n)} « ${s.sousSujet} »`) });
+    blocks.push({ type: "list", items: stagnant.map((s) => `${numeroTache(s.numero)} « ${s.sousSujet} »`) });
   }
   blocks.push(format === "arborescence" ? { type: "tree", nodes: buildTree(scoped) } : { type: "noop" });
   if (format === "liste") blocks.push(...buildListBlocks(scoped));
@@ -1096,7 +1096,7 @@ export function buildReport({ zoom = "en_cours", format = "liste", allRows, hist
   const recommended = recommendNextTasks(rows, { stagnant });
   if (recommended.length) {
     blocks.push({ type: "heading", text: "Ordre recommandé des prochaines tâches (signal, jamais une décision)" });
-    blocks.push({ type: "list", items: recommended.map((r, i) => `${i + 1}. #${r.n ?? "—"} « ${r.sousSujet} » — ${r.reasons.join(" ; ")}`) });
+    blocks.push({ type: "list", items: recommended.map((r, i) => `${i + 1}. #${r.numero ?? "—"} « ${r.sousSujet} » — ${r.reasons.join(" ; ")}`) });
   }
 
   return {
