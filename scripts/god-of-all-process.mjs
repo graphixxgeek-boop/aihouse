@@ -178,6 +178,41 @@ export const PROCESSES = [
     ],
   },
   {
+    // NEUVIÈME PROCESS DÉCLARÉ (2026-09-23). Il tient dans une phrase de l'utilisateur : « c'est
+    // comme le mode autonome, sauf que je suis present et je peux repondre aux questions ». Ce qui
+    // l'a rendu nécessaire : le projet ne savait exprimer que « présent » OU « non bloquant », par
+    // un seul booléen qui confondait les deux. Détail complet : docs/mode-semi-autonome-process-detail.md.
+    slug: "semi-autonome",
+    // LES QUATRE MAILLONS SANS OBJET, et leur raison est la même : un MODE n'est pas une activité
+    // qui produit des constats, c'est une manière de conduire les activités des autres. Les trois
+    // maillons de la chaîne de l'Article 28 (rapport → analyse → plan d'action) sont portés par
+    // CHAQUE tâche enchaînée, jamais par le mode qui les enchaîne — un rapport « sur le mode »
+    // serait un rapport sur rien. Le déclarer ici plutôt que de le laisser manquer, c'est
+    // exactement ce que le schéma unifié exige : porter le maillon, ou écrire pourquoi il n'a pas
+    // d'objet. Jamais le troisième choix, qui est de le laisser vide en espérant que ça passe.
+    maillonsSansObjet: {
+      scan: "ce process ne mesure rien de son côté : il ORCHESTRE le travail sur d'autres process, comme son voisin nocturne",
+      rapports: "un mode ne produit aucun rapport propre — chaque tâche enchaînée produit le sien, et l'Article 29 exige déjà un compte rendu par tâche",
+      analyse: "rien à trier ici : les constats appartiennent au process réellement exécuté, jamais à la manière dont on l'exécute",
+      "plan-action": "un mode ne fait aucun constat, donc n'a rien à retenir ni à écarter — le plan d'action vit dans le rapport de chaque tâche enchaînée (Article 28)",
+    },
+    nom: "mode semi-autonome — travailler seul pendant que l'utilisateur est là",
+    quand: "l'utilisateur est présent mais pas devant l'écran : il répondra, plus tard",
+    motsCles: ["semi-autonome", "semi autonome", "tu peux enchainer", "je suis là mais", "sans t'arrêter"],
+    doc: "docs/mode-semi-autonome-process-detail.md",
+    gardien: "scripts/god-of-all-process.mjs",
+    etapes: [
+      { cle: "mode-declare", libelle: "déclarer le mode sur disque plutôt que le supposer (node scripts/modes-de-travail.mjs semi-autonome)", preuve: { fichier: ".mode-de-travail.json" } },
+      { cle: "file-reelle", libelle: "travailler sur une file de tâches tirée du suivi durable, jamais d'une liste improvisée", preuve: { dossier: "docs/suivi/sessions/", motif: /\.md$/ } },
+      // LES TROIS QUI N'ONT AUCUNE PREUVE POSSIBLE, et le dire est la seule honnêteté disponible :
+      // elles ne se jouent que dans la conversation. angel-of-ia-process les DEMANDE et refuse
+      // d'être au vert sans réponse — même patron que l'Article 29.
+      { cle: "sans-arret", libelle: "enchaîner sans s'arrêter : un message court, une question ou une remarque ne sont JAMAIS une demande d'arrêt", preuve: null },
+      { cle: "fenetre-dediee", libelle: "toute question passe par une fenêtre dédiée, jamais une phrase interrogative en texte libre", preuve: null },
+      { cle: "question-non-bloquante", libelle: "une question posée ne bloque rien : prendre une tâche de réserve plutôt qu'attendre ou décider à sa place", preuve: null },
+    ],
+  },
+  {
     slug: "nuit",
     maillonsSansObjet: {
       scan: "la nuit ORCHESTRE d'autres process (Ronde, simulation) qui scannent eux-mêmes — elle n'a pas de mesure propre",
