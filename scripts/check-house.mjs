@@ -7462,6 +7462,27 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 
   // qualifierIndicateur (2026-09-22) — « un vert non représentatif est une alerte », tranché par
   // l'utilisateur à la clôture de la Ronde, sur trois chiffres verts de cette Ronde même.
+  // auditFormatDesTaches() (2026-09-23, Ronde) — le gardien du process `etat-des-taches` fait enfin
+  // ce que son document promet. god-of-all-process a nommé les quatre mécanismes écrits dans
+  // docs/etat-des-taches-process-detail.md que check-tasks-details.mjs ne faisait PAS respecter, et
+  // findMotsClesEnCollision y était même IMPORTÉ sans jamais être appelé : un fil branché des deux
+  // côtés sauf au milieu. Défaut introduit le matin même, en documentant sans brancher (L1).
+  const { auditFormatDesTaches, formatAuditFormatLines } = await import('../scripts/check-tasks-details.mjs');
+  const tache = (over = {}) => ({ n: 1, horodatage: '2026-09-23T10:00Z', motCle: 'archangel', sujet: 'S', sousSujet: 's', sensibilite: 'NORMAL-UTILE', detail: 'd', statut: 'à faire', statusKey: 'autre', ...over });
+  const propre = auditFormatDesTaches([tache()], { motsClesManquantsImpl: () => [] });
+  assert.deepEqual([propre.manquants.length, propre.collisions.length, propre.champs.length], [0, 0, 0], 'a well-formed open task reports nothing on all three counts');
+  assert.match(formatAuditFormatLines(propre)[0], /conforme aux 8 champs/, 'the clean case still PRINTS a line: a section that only appears on failure never says "this was checked", it says nothing');
+  // LES DEUX ALIAS, et pourquoi ils existent : les lignes réelles portent encore `n` et
+  // `sensibilite`, les noms d'avant la séparation criticité/urgence. Sans eux ce garde-fou accusait
+  // les 31 tâches ouvertes de manquer deux champs qu'elles portent réellement (L4).
+  assert.equal(auditFormatDesTaches([tache()], { motsClesManquantsImpl: () => [] }).champs.length, 0, 'a row carrying the HISTORICAL field names (n, sensibilite) is complete — the format declares both the target name and the legacy one rather than inventing a second vocabulary');
+  assert.equal(auditFormatDesTaches([tache({ n: '', sensibilite: '' })], { motsClesManquantsImpl: () => [] }).champs[0].absents.length, 2, 'a row missing BOTH the target name and its alias is genuinely incomplete and must be flagged — the alias forgives a rename, never an absence');
+  const collision = auditFormatDesTaches([tache({ n: 1 }), tache({ n: 2 })], { motsClesManquantsImpl: () => [] });
+  assert.equal(collision.collisions.length, 1, 'two open tasks sharing a keyword are reported HERE too, where the report is actually read — the import existed for this and called nothing');
+  assert.equal(auditFormatDesTaches([tache({ statusKey: 'terminee' }), tache({ statusKey: 'terminee', n: 2 })], { motsClesManquantsImpl: () => [] }).collisions.length, 0, 'closed tasks sharing a keyword stay unreported, same deliberate limit as everywhere else');
+  assert.match(formatAuditFormatLines(collision).join(' '), /tâches ouvertes portent/, 'the printed line carries the reason, not just a count');
+  console.log('Passed: check-tasks-details, the declared guardian of the etat-des-taches process, now really enforces the four mechanisms its own document promises — one of which (findMotsClesEnCollision) was imported and never called, a wire connected at both ends and not in the middle. The clean case still prints a line rather than falling silent, and the two format aliases are covered in both directions: a row on the historical field names is complete, a row missing both a name and its alias is not.');
+
   // LES TROIS NATURES D'UN SCRIPT (2026-09-23) — integration-outil répondait « 0/11, 10 inscriptions
   // manquantes » pour N'IMPORTE QUEL nom, y compris les quatre modules de règles du dépôt. Le suivre
   // aurait produit quatre blueprints pour quatre modules qui n'ont rien en propre à documenter.

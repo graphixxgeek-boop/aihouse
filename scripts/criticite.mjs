@@ -186,18 +186,27 @@ export function etiquetteDeLaTache(row = {}, { jours, signaux = [] } = {}) {
 // format standart, à renseigner dans les process »). Déclaré ici, en données, pour qu'un contrôleur
 // puisse le vérifier au lieu qu'il vive dans une phrase de documentation que personne ne relit.
 export const FORMAT_TACHE = [
-  { champ: "numero", obligatoire: true, quoi: "le numéro, unique et jamais réutilisé" },
+  // LES DEUX `alias` SONT UNE DETTE NOMMÉE, jamais un confort (2026-09-23, Ronde). Les lignes
+  // réelles que produit check-tasks-details portent encore `n` et `sensibilite` — les noms d'avant
+  // la séparation criticité/urgence. Le format déclare donc le nom CIBLE et le nom HISTORIQUE, et
+  // findChampsManquants() accepte l'un ou l'autre : sans ça, ce garde-fou accusait les 31 tâches
+  // ouvertes d'un coup de manquer deux champs qu'elles portent réellement — un garde-fou qui accuse
+  // à tort cesse d'être lu (L4). Renommer pour de bon touche 32 sites dans 5 fichiers : c'est une
+  // tâche à part (#584), pas un effet de bord à glisser dans une Ronde.
+  { champ: "numero", alias: "n", obligatoire: true, quoi: "le numéro, unique et jamais réutilisé" },
   { champ: "horodatage", obligatoire: true, quoi: "quand elle a été ouverte — c'est lui qui rend l'urgence calculable" },
   { champ: "motCle", obligatoire: true, quoi: "UN mot qui la rappelle six semaines plus tard, unique parmi les tâches ouvertes" },
   { champ: "sujet", obligatoire: true, quoi: "le domaine (« Process / Ronde »), pour regrouper" },
   { champ: "sousSujet", obligatoire: true, quoi: "ce dont il s'agit, en une phrase lisible sans contexte" },
-  { champ: "criticite", obligatoire: true, quoi: "un des quatre niveaux — jamais un mot de retard, qui appartient à la vignette" },
+  { champ: "criticite", alias: "sensibilite", obligatoire: true, quoi: "un des quatre niveaux — jamais un mot de retard, qui appartient à la vignette" },
   { champ: "detail", obligatoire: false, quoi: "le pourquoi : ce qui l'a déclenchée, ce qui a été décidé, ce qui reste" },
   { champ: "statut", obligatoire: true, quoi: "à faire / en cours / terminée / écartée avec sa raison (Article 28)" },
 ];
 
+const champVide = (v) => v === undefined || v === null || String(v).trim() === "";
+
 export function findChampsManquants(row = {}, { format = FORMAT_TACHE } = {}) {
-  return format.filter((f) => f.obligatoire && (row[f.champ] === undefined || row[f.champ] === null || String(row[f.champ]).trim() === ""))
+  return format.filter((f) => f.obligatoire && champVide(row[f.champ]) && (f.alias === undefined || champVide(row[f.alias])))
     .map((f) => ({ champ: f.champ, quoi: f.quoi }));
 }
 

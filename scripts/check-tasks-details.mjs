@@ -35,7 +35,8 @@ import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { PRESTATIONS, suggestPrestationsForTask, significantWords, badgeSignalsAsContext } from "./le-coordinateur.mjs";
 // L'étiquette criticité/urgence/mot-clé — lue chez son propriétaire, jamais recalculée ici.
-import { etiquetteDeLaTache, findMotsClesEnCollision } from "./criticite.mjs";
+import { etiquetteDeLaTache, findMotsClesEnCollision, findChampsManquants, FORMAT_TACHE } from "./criticite.mjs";
+import { findMotsClesManquants } from "./check-suivi-fidelity.mjs";
 import { daysSince, printReliabilityNotice } from "./lib-shell.mjs";
 import { renderTextReport } from "./report-template.mjs";
 import { recordRegistryWrite } from "./tool-usage.mjs";
@@ -272,6 +273,44 @@ export function buildListBlocks(rows) {
     });
   }
   return blocks;
+}
+
+// auditFormatDesTaches() (2026-09-23, Ronde) — LE GARDIEN DU PROCESS FAIT ENFIN CE QUE SON
+// DOCUMENT PROMET. god-of-all-process l'a dit le matin même : `docs/etat-des-taches-process-detail.md`
+// annonçait quatre mécanismes (findMotsClesManquants, findMotsClesEnCollision, FORMAT_TACHE,
+// findChampsManquants) que son gardien déclaré, ce fichier-ci, ne faisait PAS respecter. Pire que
+// l'oubli : `findMotsClesEnCollision` y était IMPORTÉ et jamais appelé — un fil branché des deux
+// côtés sauf au milieu.
+//
+// C'est la leçon L1 à la lettre (une règle écrite que rien ne fait respecter), et elle a été
+// introduite le matin même, en documentant un mécanisme sans le brancher là où on le lit. Le
+// rapport d'état des tâches est exactement l'endroit : qui le lit veut savoir quelles tâches
+// ouvertes n'ont pas de mot-clé, pas seulement qu'un test quelque part y veille.
+export function auditFormatDesTaches(rows, { motsClesManquantsImpl = findMotsClesManquants } = {}) {
+  const ouvertes = rows.filter((r) => OPEN_KEYS.has(r.statusKey));
+  const manquants = motsClesManquantsImpl();
+  const collisions = findMotsClesEnCollision(ouvertes);
+  // findChampsManquants() porte le format à huit champs : on le lui applique tâche par tâche
+  // plutôt que de recompter les colonnes ici, sinon deux définitions du format cohabiteraient et
+  // une seule serait tenue à jour (Article 24).
+  const champs = [];
+  for (const r of ouvertes) {
+    const absents = findChampsManquants(r);
+    if (absents.length) champs.push({ n: r.n, absents });
+  }
+  return { manquants, collisions, champs, formatDeReference: FORMAT_TACHE.map((c) => c.champ) };
+}
+
+export function formatAuditFormatLines(audit) {
+  const lignes = [];
+  if (!audit.manquants.length && !audit.collisions.length && !audit.champs.length) {
+    lignes.push(`Format des tâches ouvertes : conforme aux ${audit.formatDeReference.length} champs déclarés, chaque mot-clé valide et unique.`);
+    return lignes;
+  }
+  for (const h of audit.manquants) lignes.push(`Mot-clé — n°${h.n} : ${h.pourquoi}`);
+  for (const c of audit.collisions) lignes.push(`Mot-clé — ${c.pourquoi}`);
+  for (const c of audit.champs) lignes.push(`Format — n°${c.n} : champ(s) absent(s) : ${c.absents.map((a) => a.champ).join(", ")}`);
+  return lignes;
 }
 
 // Pour chaque tâche encore ouverte, un signal de correspondance possible avec une prestation du
@@ -1046,6 +1085,14 @@ export function buildReport({ zoom = "en_cours", format = "liste", allRows, hist
   // recommendNextTasks() ci-dessus). Jamais exécuté seul : l'agent doit lire ce rapport en entier,
   // évaluer la pertinence réelle de cet ordre, et ouvrir une fenêtre de questions à l'utilisateur
   // avant de trancher quoi que ce soit (protocole ajouté le 2026-09-20, cf. docs/regles-de-travail.md).
+  // LE FORMAT DES TÂCHES, dans le rapport et pas seulement dans un test (2026-09-23, Ronde) —
+  // c'est ici que le gardien déclaré du process `etat-des-taches` tient enfin les quatre mécanismes
+  // que son document promet. Toujours affiché, y compris quand tout va bien : une section qui
+  // n'apparaît qu'en cas de problème ne dit jamais « c'est vérifié », seulement rien.
+  const auditFormat = auditFormatDesTaches(rows);
+  blocks.push({ type: "heading", text: "Format et mot-clé des tâches ouvertes (garde-fou du process)" });
+  blocks.push({ type: "list", items: formatAuditFormatLines(auditFormat) });
+
   const recommended = recommendNextTasks(rows, { stagnant });
   if (recommended.length) {
     blocks.push({ type: "heading", text: "Ordre recommandé des prochaines tâches (signal, jamais une décision)" });
@@ -1056,7 +1103,7 @@ export function buildReport({ zoom = "en_cours", format = "liste", allRows, hist
     title: `État des tâches — ${ZOOM_LABELS[zoom]}`,
     subtitle: `Forme : ${FORMAT_LABELS[format]} · ${scoped.length} tâche(s) affichée(s) sur ${rows.length} au total`,
     blocks: blocks.filter((b) => b.type !== "noop"),
-    meta: { zoom, format, count: scoped.length, total: rows.length, regressions, stagnant, recommended, chantierFreshnessGaps },
+    meta: { zoom, format, count: scoped.length, total: rows.length, regressions, stagnant, recommended, chantierFreshnessGaps, auditFormat },
   };
 }
 
