@@ -10911,6 +10911,19 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const viaAbraham = ab.natureProposee({ numero: 9, lignes: 4, citations: 2, texte: 'Chaque session doit pouvoir raconter une histoire différente.' });
   assert.equal(viaMoise.nature, viaAbraham.nature, 'and the specific agent must return exactly what the master returns, its adapters translating vocabulary only — the day they diverge, one of the two has quietly grown a second implementation');
 
+  // 7. LE SEUIL EST PARTAGÉ POUR DE VRAI, pas promis en commentaire (Article 24). THE-KING
+  // employait la même valeur recopiée chez lui, sous un commentaire jurant qu'elle resterait
+  // alignée sur « findRedundantRulePairs() de CLAUDE.MD.SPY » — une fonction qui avait entre-temps
+  // changé deux fois de nom ET de fichier.
+  const tk = await import('../scripts/the-king.mjs');
+  assert.equal(typeof ab.SEUIL_JACCARD_STRICT, 'number', 'the strict Jaccard threshold must be exported as a single named constant rather than typed twice in two files');
+  const principes = [
+    { partie: 1, numero: 1, texte: 'consommation quota modele appel budget mesure rythme economie diagnostic simulation, jamais autrement' },
+    { partie: 1, numero: 2, texte: 'consommation quota modele appel budget mesure rythme economie diagnostic simulation, toujours ainsi' },
+  ];
+  assert.equal(tk.findPossibleTensions(principes).length, 1, 'THE-KING must still find its tensions with the imported threshold — sharing a constant must not change what either tool reports, or the refactor moved behaviour rather than removing a copy');
+  assert.equal(tk.findPossibleTensions(principes, { threshold: 0.99 }).length, 0, 'and the threshold must remain overridable per call, since the shared default is a default and not a ceiling');
+
   console.log('Passed: ABRAHAM-LES-REFERENCES is the master tool for ANY numbered-rule document (2026-09-23, task #619), and it exists because of a slicing error the user named better than I did: building the charter\'s agent first, I locked thirty generic functions inside the agent of ONE document, and measurement confirmed it — 30 of Moïse\'s 40 functions depended on no particularity of the charter whatsoever. What makes it generic is that the numbering FORM is derived rather than declared: three real documents in this repository write their rules three different ways, and a tool demanding to be told the pattern would only serve those who already knew it. The opposite direction matters as much: a document where no form stands out returns "not measurable" with every attempt listed, because an analyser that guesses skips in silence (leçon L12) and invented figures look exactly as trustworthy as real ones. The citation pattern treats the space after a prefix as optional, a detail that had cost a whole pass — all eighteen sections of the working rules came back "never cited" while §7ter is cited 168 times, purely because the pattern required a space nobody writes. And the red line the user drew stays enforced in the master rather than in each caller: the state of a pertinence finding has exactly one value, so no descendant can soften it into a verdict.');
 }
 

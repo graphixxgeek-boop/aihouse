@@ -33,12 +33,32 @@ chose :
 
 | Outil | Ce qu'il fait de comparable | Verdict |
 |---|---|---|
-| **THE-KING** | découpe `docs/philosophie-et-politique.md` en règles numérotées — **son propre commentaire l'avoue** : « même principe que `CLAUDE.MD.SPY::extractRuleUnits()` mais jamais la même fonction » | **vrai doublon de fonction**, à brancher sur Abraham |
+| **THE-KING** | découpe `docs/philosophie-et-politique.md` en règles numérotées — **son propre commentaire l'avoue** : « même principe que `CLAUDE.MD.SPY::extractRuleUnits()` mais jamais la même fonction » | **le doublon était plus étroit que je ne l'ai d'abord dit** — voir juste en dessous |
 | `decouperEnUnites()` / `pairesParJaccard()` (`lib-shell`) | le découpage BRUT et la comparaison de vocabulaire | **primitives, pas doublons** — Abraham les APPELLE, il ne les réécrit pas |
 | ecotoken | le poids en tokens d'un document | frontière nette : lui mesure le COÛT, Abraham mesure la STRUCTURE |
 | INES-official | aplatit le dépôt en une édition annotée | frontière nette : lui assemble, Abraham analyse |
 
-Le branchement de THE-KING reste une tâche ouverte, déclarée plutôt que faite en silence.
+**CE QUE LA RELECTURE DE THE-KING A RÉELLEMENT TROUVÉ, et j'avais d'abord surestimé la trouvaille.**
+En le lisant vraiment avant d'y toucher (Article 19), son découpage s'est révélé **déjà partagé** :
+il appelle `decouperEnUnites()` de `lib-shell` comme tout le monde, et ce qui lui reste en propre est
+un vrai besoin — un principe porte quatre champs (partie, numéro, titre, tag) là où un Article en
+porte deux. Son commentaire dit d'ailleurs pourquoi un partage plus poussé fragiliserait les deux
+analyseurs pour un gain illusoire. **Il n'y avait donc pas de découpage à reprendre.**
+
+**Ce qu'il y avait, en revanche, et c'est exactement ce que l'Article 24 interdit** : les deux outils
+employaient le même seuil de similarité `0.22`, écrit deux fois, sous un commentaire de THE-KING
+jurant qu'il resterait aligné sur « `findRedundantRulePairs()` de CLAUDE.MD.SPY ». **Deux choses
+avaient déjà cédé sans bruit** : cette fonction avait changé deux fois de nom ET de fichier — la
+promesse désignait une adresse morte — et rien n'aurait signalé qu'une des deux valeurs bouge. Un
+commentaire qui promet une synchronisation n'est jamais une protection, c'est une intention. Le seuil
+est désormais **une constante unique exportée** (`SEUIL_JACCARD_STRICT`) que THE-KING importe, et un
+test vérifie dans les deux sens que le partage n'a rien changé à ce que chacun rapporte.
+
+**Ce qui n'a PAS été fait, et c'est dit plutôt que tu** : donner à THE-KING la couche d'analyse
+d'Abraham (porteur, pertinence). La mesure dit pourquoi — les 19 principes de la philosophie sont
+tous « sans porteur », ce qui est la bonne réponse pour un texte fondateur dont la prose EST le
+mécanisme. Le brancher produirait le même constat à chaque passage, et un signal qui accuse tout le
+monde n'accuse plus personne (leçon L4).
 
 ## Ce qu'il sert déjà, mesuré et non supposé
 

@@ -15,6 +15,7 @@ import { significantWords } from "./le-coordinateur.mjs";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { sh, printReliabilityNotice, decouperEnUnites, pairesParJaccard } from "./lib-shell.mjs";
+import { SEUIL_JACCARD_STRICT } from "./abraham-les-references.mjs";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { printReportHeader } from "./report-template.mjs";
@@ -124,12 +125,15 @@ const ABSOLUTE_MARKER = /\btoujours\b/i;
 // Détection de tension possible entre deux principes — un SIGNAL heuristique, jamais une
 // contradiction prouvée (aucun outil mécanique de ce projet ne peut lire le sens réel de deux
 // phrases). Deux conditions cumulatives, toutes deux nécessaires pour limiter les faux positifs :
-// (1) un vocabulaire significatif fortement partagé (même seuil de similarité de Jaccard que
-// findRedundantRulePairs() de CLAUDE.MD.SPY, jamais un second seuil arbitraire) — les deux
-// principes parlent bien du même terrain ; (2) une polarité normative divergente sur ce terrain
+// (1) un vocabulaire significatif fortement partagé — les deux principes parlent bien du même
+// terrain. Le seuil est IMPORTÉ d'Abraham-les-references (`SEUIL_JACCARD_STRICT`), jamais recopié :
+// il l'était jusqu'au 2026-09-23, avec un commentaire promettant qu'il resterait aligné sur
+// « findRedundantRulePairs() de CLAUDE.MD.SPY » — une fonction qui avait entre-temps changé deux
+// fois de nom ET de fichier, de sorte que la promesse désignait une adresse morte et que rien
+// n'aurait dit qu'une des deux valeurs bouge (Article 24) ; (2) une polarité normative divergente sur ce terrain
 // partagé (l'un affirme "jamais", l'autre "toujours") — le candidat le plus honnête qu'une regex
 // puisse produire pour une vraie lecture humaine, jamais un remplacement de cette lecture.
-export function findPossibleTensions(principles, { threshold = 0.22 } = {}) {
+export function findPossibleTensions(principles, { threshold = SEUIL_JACCARD_STRICT } = {}) {
   // Comparaison partagée (lib-shell), interprétation propre à cet outil : ici une paire au-dessus du
   // seuil n'est PAS une redondance, c'est le terrain commun sur lequel une divergence de polarité
   // (« jamais » d'un côté, « toujours » de l'autre) devient une vraie tension à lire.

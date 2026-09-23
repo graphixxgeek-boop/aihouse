@@ -35,7 +35,8 @@ import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from ".
 
 // --- 1. LE BALAYAGE DU DÉPÔT ----------------------------------------------------------------
 // Fait UNE fois et passé en paramètre : c'est la partie coûteuse de tout ce qui suit, et la
-// refaire par unité est la différence entre une seconde et une minute.
+// refaire par unité est la différence entre une seconde et une minute (mesuré : 30 Articles ×
+// 2 balayages, c'est ce que mes greps à la main coûtaient le 2026-09-23).
 
 const EXT_CODE = new Set([".mjs", ".ts", ".tsx", ".js"]);
 const IGNORE_DIR = new Set(["node_modules", ".git", ".next", "dist", "build", ".wrangler"]);
@@ -157,6 +158,16 @@ export function natureProposee(mesure, { horsPerimetre = new Set() } = {}) {
 }
 
 // --- 5. LA PERTINENCE ET LA LOGIQUE ---------------------------------------------------------
+// (2026-09-23, question directe de l'utilisateur : « est-ce que l'outil Moïse est bien capable de
+// détecter si un article n'a rien à faire ici ou s'il n'est pas utile ? [...] est-ce que Moïse
+// analyse la pertinence ? la logique ? ».)
+//
+// LA RÉPONSE HONNÊTE ÉTAIT NON, et c'est ce qui a motivé cette partie. On mesurait un poids, des
+// citations, un porteur, une nature. Aucune de ces quatre mesures ne dit si une règle MÉRITE
+// d'être là, ni si deux règles se contredisent. Un outil qui dit tout du COMBIEN et rien du
+// POURQUOI laisse la seule question qui compte à la mémoire de l'agent — donc perdue à la session
+// suivante (Article 27).
+//
 // LA LIGNE ROUGE, POSÉE PAR L'UTILISATEUR : aucun signal ne conclut jamais. Il OUVRE une question.
 // Le code lui-même refuse de produire un verdict — `etat` ne prend qu'une seule valeur. Ce n'est
 // pas une précaution de style : un outil capable d'écrire « cette règle est inutile » finirait par
@@ -198,7 +209,17 @@ export function motsSignificatifs(texte) {
 
 // Seuil STRICT par défaut (choix explicite de l'utilisateur : « remonter étroit ») — mieux vaut
 // manquer une redondance subtile que noyer chaque passage sous des paires qui ne mènent à rien.
-export function findPairesRedondantes(unites, { threshold = 0.22 } = {}) {
+//
+// IL EST EXPORTÉ, ET C'EST LE POINT (2026-09-23) : THE-KING employait la même valeur pour ses
+// tensions, recopiée chez lui, avec un commentaire promettant qu'elle resterait alignée sur
+// « findRedundantRulePairs() de CLAUDE.MD.SPY ». Deux choses avaient déjà cédé sans bruit : cette
+// fonction avait changé deux fois de nom et de fichier (donc la promesse désignait une adresse
+// morte), et rien n'aurait signalé que l'une des deux valeurs bouge. Un commentaire qui promet une
+// synchronisation n'est jamais une protection, c'est une intention (Article 24) — la seule
+// protection est que les deux lisent la MÊME constante.
+export const SEUIL_JACCARD_STRICT = 0.22;
+
+export function findPairesRedondantes(unites, { threshold = SEUIL_JACCARD_STRICT } = {}) {
   const ensembles = unites.map((u) => motsSignificatifs(u.texte));
   return pairesParJaccard(ensembles, { seuil: threshold })
     .map(({ i, j, jaccard, motsPartages }) => ({ a: unites[i].numero, b: unites[j].numero, jaccard, motsPartages }))
@@ -249,7 +270,7 @@ export function mesurerSections(texte = "", { motifSection = /^## /, motifUnite 
 
 // --- 7. LE DOCUMENT D'ACCUEIL -----------------------------------------------------------------
 // Un renvoi ne part JAMAIS vers un document qui n'existe pas, ni vers un document qui existe mais
-// ne contient pas encore ce qu'on lui confie. Preuve de besoin, mesurée : sur huit destinations
+// ne contient pas encore ce qu'on lui confie. Preuve de besoin, mesurée le 2026-09-23 : sur huit destinations
 // d'un plan d'allègement réel, CINQ ne portaient pas le contenu, et rien ne le disait.
 
 export function verifierDocumentDAccueil(chemin, sujets = [], { racine = ".", lire = (p) => readFileSync(p, "utf8") } = {}) {
