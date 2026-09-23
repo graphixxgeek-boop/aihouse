@@ -142,7 +142,63 @@ export const CRITERES_RAPPORT = [
   { clef: "date", question: "le rapport se date-t-il lui-même, en toutes lettres ?" },
   { clef: "plan", question: "le rapport conclut-il par un plan d'action, le cas échéant ?" },
   { clef: "complet", question: "le rapport sort-il TOUT ce que l'outil sait déjà détecter ?" },
+  { clef: "faux-vert", question: "le rapport peut-il dire « tout va bien » alors qu'il n'a rien pu mesurer ?" },
 ];
+
+// ———————————————————————————————————————————————————————
+// CINQUIÈME CRITÈRE : LE VERT OBTENU EN NE REGARDANT RIEN (2026-09-23, tâche #206)
+// ———————————————————————————————————————————————————————
+//
+// D'OÙ IL VIENT. La tâche est ancienne et tient en une phrase de l'utilisateur : « les gardiens
+// peuvent-ils dire tout va bien sur des données absentes ? » Plusieurs outils se protègent déjà
+// de ce piège, chacun dans son coin et en le nommant dans leurs propres commentaires — « un faux
+// vert serait pire que l'erreur qu'il surveille », « un vert obtenu en ne regardant rien ». Mais
+// PERSONNE ne mesurait la population : combien d'outils, sur l'ensemble du paysage, n'ont aucune
+// façon déclarée de dire « je n'ai pas pu mesurer » ?
+//
+// CE QU'IL MESURE, ET RIEN DE PLUS : un outil qui affiche un signe de réussite (✅, « aucun
+// écart », « 0 écart ») sans porter nulle part dans son code une branche d'ABSENCE DE DONNÉE
+// (« pas mesuré », « mesurable: false », « aucune donnée »…). Ce n'est pas la preuve qu'il ment :
+// c'est le constat qu'il n'a, dans son vocabulaire, aucun moyen de l'éviter. La différence compte
+// et le rapport la dit.
+//
+// POURQUOI C'EST UN CRITÈRE DE RAPPORT : les quatre premiers demandent si le rapport a du
+// contenu, une date, une conclusion, et s'il dit tout. Celui-ci demande si ce qu'il dit peut être
+// FAUX dans le sens le plus coûteux — rassurant. Un rapport qui alerte à tort se fait corriger ;
+// un rapport qui rassure à tort ne se fait jamais corriger, puisque personne ne va voir.
+//
+// LE VOCABULAIRE EST CELUI DU PROJET, pas un lexique inventé pour l'occasion : ces formulations
+// sont celles que les outils emploient déjà quand ils refusent de conclure. Un outil qui invente
+// la sienne échappe à la mesure — limite déclarée, et c'est pour ça que ce critère rend un SIGNAL
+// à relire, jamais un verdict.
+export const MARQUEURS_VERT = /✅|aucun[e]? (?:écart|constat|manquement|détecteur|anomalie)|0 écart|tout va bien|rien trouvé/i;
+export const MARQUEURS_ABSENCE = /pas mesuré|pas mesurable|non mesurable|mesurable:\s*false|aucune donnée|jamais mesuré|faute de données|rien à mesurer|sans données|non conclua|rien n'a été mesuré|n'a été mesuré|porte(?:nt)? sur z[ée]ro/i;
+
+export function peutDireVertSansRienMesurer(source = "") {
+  const texte = String(source);
+  return MARQUEURS_VERT.test(texte) && !MARQUEURS_ABSENCE.test(texte);
+}
+
+// Le paysage se PARCOURT (Article 24) : un outil neuf entre dans la mesure le jour où il est
+// écrit, sans qu'une liste soit tenue à jour quelque part.
+// RENDRE UNE LISTE VIDE QUAND ON N'A RIEN PU LIRE SERAIT EXACTEMENT LE DÉFAUT MESURÉ ICI, et le
+// premier jet le faisait : un dossier illisible faisait planter, et l'attraper aurait rendu
+// « aucun outil en faute ». Ce détecteur-là, plus que tout autre, se doit de distinguer « rien
+// trouvé » de « rien regardé » — sans quoi il annoncerait zéro faux vert en étant lui-même un.
+export function findVertsSansMesure({ root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync } = {}) {
+  const trouves = [];
+  let fichiers;
+  try { fichiers = listDirImpl(join(root, "scripts")).filter((f) => f.endsWith(".mjs")); }
+  catch { return { outils: [], mesurable: false, pourquoi: "le dossier scripts/ n'a pas pu être lu — rien n'a été mesuré, ce qui n'est jamais la même chose que rien trouvé" }; }
+  for (const fichier of fichiers) {
+    let texte;
+    try { texte = readFileImpl(join(root, "scripts", fichier), "utf8"); } catch { continue; }
+    // Un script sans `main()` ne rend aucun verdict à personne : il n'a rien à dire de vert.
+    if (!/function main\s*\(/.test(texte)) continue;
+    if (peutDireVertSansRienMesurer(texte)) trouves.push(fichier);
+  }
+  return { outils: trouves.sort(), mesurable: true };
+}
 
 
 // ————————————————————————————————————————————————————————————————————————
@@ -273,7 +329,8 @@ export function auditRapportsComplets({ registries = REGISTRIES, readFileImpl = 
   const muets = detecteurs.filter((d) => !d.porteParLesTests);
   const silencieux = detecteurs.filter((d) => d.porteParLesTests);
 
-  return {
+  const vertsSansMesure = findVertsSansMesure({ root, listDirImpl, readFileImpl });
+  return { vertsSansMesure,
     outils: outils.length,
     exemptesDePlan: Object.keys(SANS_CONSTAT_PROPRE).length,
     sansPlan, maigres, illisibles, muets, silencieux,
@@ -297,6 +354,7 @@ export function formatRapportsComplets(audit) {
   for (const o of audit.sansPlan) l.push(`   · ${o}`);
   l.push("");
   l.push(`Critère 4 — le rapport sort-il TOUT ce que l'outil sait détecter : ${audit.muets.length === 0 ? "✅ aucun détecteur sans effet." : `⚠️ ${audit.muets.length} détecteur(s) construit(s), exporté(s), et appelé(s) par PERSONNE — pas même par les tests :`}`);
+  l.push(`Critère 5 — le rapport peut-il dire « tout va bien » sans rien avoir mesuré : ${!audit.vertsSansMesure.mesurable ? `⚪ non mesuré — ${audit.vertsSansMesure.pourquoi}` : audit.vertsSansMesure.outils.length === 0 ? "✅ chaque outil à verdict porte au moins une façon déclarée de dire qu'il n'a pas pu mesurer." : `⚠️ ${audit.vertsSansMesure.outils.length} outil(s) affichent un signe de réussite sans porter nulle part la moindre formulation d'absence de donnée — ${audit.vertsSansMesure.outils.join(", ")}. Ce n'est pas la preuve qu'ils mentent : c'est le constat qu'ils n'ont, dans leur vocabulaire, aucun moyen de l'éviter.`}`);
   for (const d of audit.muets) l.push(`   ⚠️ ${d.outil} :: ${d.detecteur}() — ${d.pourquoi}`);
   if (audit.silencieux.length) {
     l.push("");

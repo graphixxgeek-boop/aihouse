@@ -203,6 +203,23 @@ export function auditAllSessions(sessionsDir = SESSIONS_DIR, readDir = readdirSy
   return results;
 }
 
+// LE DÉNOMINATEUR, MESURÉ POUR DE VRAI (2026-09-23, tâche #206) — et cette fonction existe parce
+// que le premier jet de la correction a reproduit le défaut qu'il corrigeait. Il réutilisait
+// `auditAllSessions()` pour compter « les fichiers lus », alors que celle-ci ne rend QUE les
+// sessions PORTANT un écart : elle affichait donc « 3 fichiers lus » là où il fallait lire « 3
+// fichiers en défaut », et aurait affiché « aucun fichier lu » sur un registre parfait. Compter ce
+// qu'on a lu et compter ce qui cloche sont deux mesures différentes, et les confondre est
+// exactement la confusion que cette tâche traque.
+export function sessionsLues(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+  if (!exists(sessionsDir)) return { fichiers: [], lignes: 0, dossierAbsent: true };
+  const fichiers = readDir(sessionsDir).filter((f) => f.endsWith(".md"));
+  let lignes = 0;
+  for (const f of fichiers) {
+    try { lignes += readFile(join(sessionsDir, f)).split("\n").filter((l) => /^\|\s*\d+\s*\|/.test(l)).length; } catch { /* un fichier illisible ne se compte pas comme lu */ }
+  }
+  return { fichiers, lignes, dossierAbsent: false };
+}
+
 // Description courte d'une entrée de tableau pour l'affichage — Sujet + Sous-sujet (colonnes 3 et
 // 4 depuis l'ajout de la colonne N° en tête, 2026-09-20), jamais la ligne brute entière (illisible)
 // ni seulement l'horodatage (pas assez parlant).
@@ -451,6 +468,20 @@ function main() {
   } else {
     console.log(`${motsCles.length} tâche(s) ouverte(s) sans mot-clé exploitable :`);
     for (const h of motsCles) console.log(`   - n°${h.n} : ${h.pourquoi}`);
+  }
+
+  // DÉNOMINATEUR AFFICHÉ AVANT TOUT VERT (2026-09-23, tâche #206). Ce rapport rendait exactement
+  // le même « tout va bien » sur un registre PARFAIT et sur un registre INTROUVABLE : sur zéro
+  // session, chaque garde-fou rend une liste vide, et une liste vide se lit comme « aucun écart ».
+  // Un rapport qui alerte à tort se fait corriger ; un rapport qui rassure à tort ne se fait jamais
+  // corriger, puisque personne ne va voir. Le compte de ce qui a RÉELLEMENT été lu est donc affiché
+  // avant les verdicts, et un registre vide le dit au lieu de se taire.
+  const lu = sessionsLues();
+  if (!lu.fichiers.length || !lu.lignes) {
+    console.log(`\n⚠️  ${lu.dossierAbsent ? "Le dossier docs/suivi/sessions/ est introuvable" : "Aucune tâche lue dans docs/suivi/sessions/"} — tous les verdicts ci-dessous portent sur ZÉRO tâche.`);
+    console.log("   Ce n'est pas « rien à signaler », c'est « rien n'a été mesuré ». Les deux se ressemblent à l'écran, et c'est précisément ce qui rend ce cas dangereux.");
+  } else {
+    console.log(`\n${lu.fichiers.length} fichier(s) de session lu(s), ${lu.lignes} tâche(s) au total — c'est le dénominateur des verdicts qui suivent.`);
   }
 
   console.log("\n=== Garde-fou numérotation durable des tâches (docs/suivi/) ===\n");
