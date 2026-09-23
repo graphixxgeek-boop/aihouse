@@ -16,7 +16,7 @@
 // fichiers et les rapports bruts ; c'est toujours l'agent qui rédige la ligne de jugement dans ces
 // deux index, jamais ce script à sa place.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { sh } from "./lib-shell.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
@@ -26,7 +26,7 @@ const ROOT = new URL("..", import.meta.url).pathname;
 export const SIMULATIONS_DIR = join(ROOT, "docs/simulations");
 export const KPI_RAPPORTS_DIR = join(ROOT, "docs/referentiel/kpi-rapports");
 
-const defaultFs = { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync };
+const defaultFs = { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, readdirSync };
 
 // Étape 3bis (archivage transcript + dossier) — copie pure, zéro jugement. `transcriptPath`/
 // `dossierPath` sont les fichiers déjà produits par le script de simulation (le dossier est
@@ -46,18 +46,38 @@ const defaultFs = { existsSync, mkdirSync, readFileSync, writeFileSync, copyFile
 // qualificatif "· pensée"/"· déplacement"/"· rêve"), icône de pièce, heure, contenu. Le qualificatif
 // est extrait pour que `speaker` reste exactement "Lia"/"Noé" (nécessaire pour que la coloration par
 // personnage de html-report.mjs s'applique), jamais perdu pour autant : reporté en préfixe du texte.
+// DEUX FORMES RÉELLES, ET IL A FALLU UN TRANSCRIPT VIDE POUR S'EN APERCEVOIR (2026-09-23,
+// tâche #590). Le commentaire ci-dessus décrivait « des groupes de 4 lignes : acteur, pièce, heure,
+// contenu », et l'ancien code refusait tout groupe plus court. Or les scripts de simulation
+// produisent depuis full_sim18 des groupes de TROIS lignes — acteur, pièce, contenu, sans heure.
+// Résultat : chaque groupe était sauté, et le rendu HTML de full_sim18 comme de full_sim19 est un
+// `<main></main>` parfaitement vide, feuille de style comprise.
+//
+// POURQUOI PERSONNE NE L'A VU PENDANT DEUX SIMULATIONS : le fichier EXISTE, et pèse presque 5 ko.
+// Toute vérification qui teste sa présence le compte comme fait. Et le test de cette fonction
+// fabriquait son propre transcript AU FORMAT QUE LA FONCTION ATTEND — un test qui invente son
+// entrée ne peut pas voir un désaccord avec le vrai producteur (leçon L16).
+//
+// LA FORME SE DÉDUIT, elle ne se suppose plus : l'heure est reconnue à sa forme (`12:34`) et non à
+// sa position. Un groupe sans heure garde sa pièce et son texte, un groupe avec heure les garde
+// tous les deux. Les deux formats réels rendent donc, et un troisième qui arriverait sans heure
+// rendrait aussi — au lieu de disparaître en silence.
+const HEURE_SEULE = /^\d{1,2}:\d{2}$/;
+
 export function parseTranscriptToDialogueBlocks(transcriptText) {
   const chunks = String(transcriptText ?? "").split(/\n\s*\n/).map((c) => c.trim()).filter(Boolean);
   const blocks = [];
   for (const chunk of chunks) {
     const lines = chunk.split("\n");
-    if (lines.length < 4) continue;
-    const [actorLine, roomLine, timeLine, ...rest] = lines;
-    const text = rest.join(" ").trim();
+    if (lines.length < 3) continue;
+    const [actorLine, roomLine, troisieme, ...suite] = lines;
+    const avecHeure = HEURE_SEULE.test(troisieme.trim());
+    const text = (avecHeure ? suite : [troisieme, ...suite]).join(" ").trim();
     if (!text) continue;
     const [speaker, qualifier] = actorLine.split("·").map((s) => s.trim());
     const prefix = qualifier ? `(${qualifier}) ` : "";
-    blocks.push({ type: "dialogue", speaker, text: `[${roomLine} · ${timeLine}] ${prefix}${text}` });
+    const situation = avecHeure ? `${roomLine} · ${troisieme.trim()}` : roomLine;
+    blocks.push({ type: "dialogue", speaker, text: `[${situation}] ${prefix}${text}` });
   }
   return blocks;
 }
@@ -65,6 +85,24 @@ export function parseTranscriptToDialogueBlocks(transcriptText) {
 // Zoom 150% (2026-09-22) : généralisé depuis le 2026-09-22 à TOUS les rapports HTML directement
 // dans THEME_CSS (html-report.mjs) — plus un traitement spécial ici, jamais deux mécanismes qui
 // pourraient un jour diverger.
+// findTranscriptsSteriles() (2026-09-23, tâche #590) — LE PORTEUR DE LA LEÇON L16, et une vraie
+// fonction plutôt qu'une assertion perdue dans la suite de tests : une leçon dont le porteur n'a pas
+// de nom ne peut pas être vérifiée comme existante.
+//
+// Il parcourt les transcripts RÉELLEMENT archivés et nomme ceux dont le parseur ne tire aucun bloc.
+// C'est le contrôle que les cinq assertions existantes ne pouvaient pas faire : elles fabriquaient
+// leur propre transcript au format attendu, pendant que les scripts de simulation en produisaient un
+// autre. Deux moitiés cohérentes avec elles-mêmes, en désaccord l'une avec l'autre, et personne pour
+// regarder l'espace entre les deux.
+//
+// Il grandit tout seul à chaque nouvelle simulation : aucune liste à tenir (Article 24).
+export function findTranscriptsSteriles({ dossier = SIMULATIONS_DIR, fsImpl = defaultFs } = {}) {
+  let fichiers;
+  try { fichiers = fsImpl.readdirSync(dossier).filter((f) => f.endsWith("_transcript.txt")); } catch { return { mesure: "pas mesuré", raison: `${dossier} illisible — aucune conclusion, et surtout pas « tout va bien »` }; }
+  const steriles = fichiers.filter((f) => parseTranscriptToDialogueBlocks(fsImpl.readFileSync(join(dossier, f), "utf8")).length === 0);
+  return { mesure: "mesuré", examines: fichiers.length, steriles };
+}
+
 export function renderTranscriptHtml(transcriptText, { title = "Transcript de simulation", dateLabel = new Date().toISOString() } = {}) {
   return renderHtmlReport({ title, dateLabel, blocks: parseTranscriptToDialogueBlocks(transcriptText) });
 }

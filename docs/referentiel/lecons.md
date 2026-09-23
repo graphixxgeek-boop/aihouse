@@ -402,6 +402,37 @@ ne pouvait voir.*
 
 **Terrain** : après un renommage, une extraction ou un changement de signature partagée · mots : renommage, champ, transverse, refactor, signature, appelants · fichiers : scripts/criticite.mjs, scripts/check-tasks-details.mjs, scripts/check-suivi-fidelity.mjs, scripts/circle-tasks.mjs
 
+## L16 — Un test qui invente son entrée ne peut pas voir un désaccord avec le vrai producteur
+
+Le rendu HTML des transcripts de simulation était couvert par cinq assertions, toutes vertes. Il
+produisait pourtant, depuis deux simulations, une page parfaitement vide : feuille de style
+complète, `<main></main>`, pas une réplique.
+
+**Le test fabriquait son propre transcript au format que la fonction attend** — quatre lignes avec
+une heure. Les scripts de simulation, eux, en produisaient trois, sans heure, depuis full_sim18. Le
+parseur sautait donc chaque groupe. Les deux moitiés étaient cohérentes avec elles-mêmes et en
+désaccord l'une avec l'autre, et aucun test ne regardait l'espace entre les deux.
+
+**Ce qui a rendu la panne invisible pendant deux simulations** : le fichier EXISTE, et pèse presque
+5 ko. Toute vérification qui teste sa présence le compte comme fait. C'est L13 sous une autre forme
+— une preuve satisfaite par une coquille — mais le mécanisme est différent et mérite son entrée : là
+c'était un registre vide, ici c'est un test qui se parle à lui-même.
+
+**La règle** : quand une fonction consomme ce qu'un autre morceau du système produit, au moins une
+assertion doit lire la VRAIE production, pas une reconstitution. Une fixture reste utile pour les
+cas limites, jamais pour prouver que le contrat tient.
+
+*Payée le 2026-09-23 : deux transcripts HTML archivés vides (full_sim18, full_sim19), trouvés en
+ouvrant le fichier pour noter une simulation, jamais par un test.*
+
+**Porté par** : `findTranscriptsSteriles()` (`scripts/le-regisseur.mjs`) — il parcourt les
+`_transcript.txt` réellement archivés et nomme ceux dont le parseur ne tire aucun bloc. Une vraie
+fonction plutôt qu'une assertion perdue dans la suite de tests : une leçon dont le porteur n'a pas
+de nom ne peut pas être vérifiée comme existante. Il grandit tout seul à chaque nouvelle simulation,
+sans liste à tenir, et rend « pas mesuré » plutôt que zéro si le dossier devient illisible.
+
+**Terrain** : quand j'écris un parseur, un convertisseur, un lecteur de format, ou un test avec une fixture inventée · mots : parser, format, fixture, rendu, convertir, consommer, producteur · fichiers : scripts/le-regisseur.mjs, scripts/html-report.mjs, scripts/summarize-simulation-log.mjs
+
 ## BP1 — La règle s'écrit à UN endroit et se dérive partout ailleurs
 
 Devant vingt endroits à corriger, le réflexe est de corriger les vingt. Le bon geste est de trouver

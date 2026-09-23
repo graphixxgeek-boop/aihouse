@@ -7304,6 +7304,25 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(transcriptHtml.includes('<p class="dialogue speaker-lia"><strong>Lia</strong>')&&transcriptHtml.includes('<p class="dialogue speaker-noe"><strong>Noé</strong>'),'the rendered HTML must apply the real per-character CSS classes already defined in html-report.mjs (speaker-lia/speaker-noe), the exact reason the speaker field must stay clean');
   assert.match(transcriptHtml,/body\s*\{[^}]*zoom:\s*1\.5/,'every HTML report (not just the transcript) must open at 150% zoom, per the shared THEME_CSS rule');
 
+  // LE TEST QUI AURAIT DÛ ATTRAPER LE TRANSCRIPT VIDE, et qui ne pouvait pas (2026-09-23, #590).
+  // Les assertions ci-dessus fabriquent leur propre transcript AU FORMAT QUE LA FONCTION ATTEND
+  // (4 lignes, avec heure). Elles passaient au vert pendant que les scripts de simulation
+  // produisaient, depuis full_sim18, des groupes de TROIS lignes sans heure — chaque groupe était
+  // donc sauté, et deux rendus HTML archivés étaient un `<main></main>` vide, feuille de style
+  // comprise. Un test qui invente son entrée ne peut pas voir un désaccord avec le vrai
+  // producteur : celui-ci lit les VRAIS transcripts archivés (leçon L16).
+  const {findTranscriptsSteriles}=await import('../scripts/le-regisseur.mjs');
+  const sterilite=findTranscriptsSteriles();
+  assert.equal(sterilite.mesure,'mesuré','the guard must actually read the real archive — an unreadable folder reports "not measured", never a green on nothing (L5)');
+  assert.ok(sterilite.examines>=5,'and it needs real archived transcripts to be worth anything');
+  assert.deepEqual(sterilite.steriles,[],'every real archived transcript must produce at least one dialogue block: a parser that silently yields none renders a styled page with an empty body, and the file existing is exactly what stops anyone from noticing');
+  assert.equal(findTranscriptsSteriles({fsImpl:{readdirSync:()=>{throw new Error('nope');}}}).mesure,'pas mesuré','and an unreadable archive says so rather than reporting zero sterile transcripts');
+  // LES DEUX FORMES RÉELLES, chacune pinnée : la forme se DÉDUIT de la ligne, jamais de sa position.
+  const troisLignes=parseTranscriptToDialogueBlocks('Lia · pensée\n◈ SAL\nSans heure, format réel depuis full_sim18.');
+  assert.deepEqual(troisLignes,[{type:'dialogue',speaker:'Lia',text:'[◈ SAL] (pensée) Sans heure, format réel depuis full_sim18.'}],'a three-line chunk (no time) must render, keeping its room and its qualifier — this is the shape the real scripts emit today');
+  assert.equal(parseTranscriptToDialogueBlocks('Noé\n⌂ BUR\n02:08\nAvec heure, format des simulations plus anciennes.')[0].text,'[⌂ BUR · 02:08] Avec heure, format des simulations plus anciennes.','and the older four-line shape must keep rendering too: fixing one format by breaking the other would just move the empty page to the archive');
+  assert.equal(parseTranscriptToDialogueBlocks('Lia\n◈ SAL\n12:34')[0]?.text,undefined,'a chunk whose only remaining line IS the time has no content at all, and must be skipped rather than rendered as an empty bubble');
+
   const fakeDossier='=== VOIX DE LIA ===\nTexte de Lia.\n\n=== VOIX DE NOÉ ===\nTexte de Noé.\n\n=== SYNTHÈSE ===\nTexte de synthèse.';
   const dossierBlocks=parseDossierToBlocks(fakeDossier);
   assert.deepEqual(dossierBlocks,[{type:'heading',text:'VOIX DE LIA'},{type:'paragraph',text:'Texte de Lia.'},{type:'heading',text:'VOIX DE NOÉ'},{type:'paragraph',text:'Texte de Noé.'},{type:'heading',text:'SYNTHÈSE'},{type:'paragraph',text:'Texte de synthèse.'}],'the dossier\'s real 3-section prose structure (never a tour-by-tour dialogue) must become a heading+paragraph pair per section, in order, never the dialogue template which would make no sense here');
