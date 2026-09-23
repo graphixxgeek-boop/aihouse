@@ -85,3 +85,35 @@ CHARTER-SPY ou dans ce nouvel outil).
 - Un seul script à deux modes, ou deux scripts complémentaires (comme find-booster/find-deep-booster
   sous find-brain) ?
 - Périmètre exact de la couche « concordance » : quels couples de fichiers surveiller en priorité ?
+
+## 8. Deux mesures nouvelles du même défaut, payées le 2026-09-23 (arrivée de MOÏSE-TABLES-DE-LOI)
+
+*(Recopié ici depuis `docs/referentiel/lecons.md` L18 et L19 : ces deux leçons décrivent exactement
+le terrain de ce chantier, et les laisser dans le seul registre des leçons aurait été l'écart que
+ce fichier existe pour empêcher — une idée consignée dans le suivi et jamais versée à son chantier.)*
+
+**CHARTER-SPY a migré.** Ses sept fonctions vivent désormais dans `scripts/moise-tables-de-loi.mjs`,
+l'agent du seul périmètre de la charte. Les §5 et §6 ci-dessus restent valides au mot près, mais
+leurs renvois pointent vers l'ancienne adresse : toute suite donnée à ce chantier doit lire le
+nouveau fichier. **Premier cas concret, pour ce chantier-ci, de ce qu'il cherche à mesurer** : un
+document de conception que rien ne relie mécaniquement au code qu'il décrit se périme au premier
+déménagement, sans bruit.
+
+**L18 — un guide qui dicte une forme précise et FAUSSE coûte plus cher que pas de guide.**
+`integration-outil` donne, pour chaque registre à remplir, la ligne exacte à écrire. Celle qu'il
+dictait pour `TOOL_RELIABILITY` (`niveau`/`raison`) est refusée par la suite de tests, qui attend
+`nature`/`pourquoi`. Un outil dont le métier est d'éviter qu'on découvre les oublis « un test après
+l'autre » faisait donc échouer le test qu'il promettait d'éviter. **Ce que ça dit de ce chantier** :
+une forme recopiée à la main dans un texte d'aide est une COPIE au sens de l'Article 24, et c'est la
+pire espèce — rien ne compare jamais un texte d'aide à la structure qu'il décrit. Candidat direct
+pour la couche « concordance » : vérifier que chaque `forme()` d'`integration-outil` correspond aux
+clés réellement présentes dans son registre.
+
+**L19 — une dérivation ne supporte que l'alphabet qu'on lui a donné par hasard.**
+`slugifyAgentName()` filtrait sur `[^a-z0-9]` : « MOÏSE-TABLES-DE-LOI » donnait `mo-se-tables-de-loi`,
+et l'audit d'intégration réclamait six fichiers qui n'existeraient jamais. Trente-cinq outils avant
+lui avaient des noms sans accent, par hasard. **Ce que ça dit de ce chantier** : une dérivation qui
+n'a jamais rencontré son entrée difficile n'est pas robuste, elle est chanceuse — et le piège dans
+le piège est qu'il a fallu corriger LES DEUX côtés de la comparaison (le slug ET la recherche dans
+les documents), sans quoi la même règle réapparaissait ailleurs sous une autre forme. Normalisation
+unique et partagée : `sansAccents()` (`scripts/lib-shell.mjs`).
