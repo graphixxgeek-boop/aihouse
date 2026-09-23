@@ -3223,7 +3223,39 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // relues, 100 % ». Cause : le catalogue du paysage (doc-report) cite 52 des 53 sources parce
   // qu'il les DÉCLARE. Déclarer n'est pas lire, et compter l'un pour l'autre rendait tout le réseau
   // parfaitement branché alors que rien ne circulait.
-  const {listDataSources,mapReaders,findOrphanData,suggestMissingConnections,criticalIgnoredData,stripExportedConstantBodies,agentDataBriefing,buildDataArchangelReport}=await import('../scripts/data-archangel.mjs');
+  const {listDataSources,mapReaders,findOrphanData,suggestMissingConnections,criticalIgnoredData,stripExportedConstantBodies,agentDataBriefing,buildDataArchangelReport,registresIndirects,ETATS_LECTURE}=await import('../scripts/data-archangel.mjs');
+
+  // ————————————————————————————————————————————————————————————————————————
+  // LA LECTURE PAR TABLE (2026-09-23, tâche #490) — annotation, jamais absolution
+  // ————————————————————————————————————————————————————————————————————————
+  //
+  // Trouvé en voulant traiter les « 18 données que personne ne lit » : avant de câbler dix-huit
+  // lecteurs, regarder comment l'outil décide qu'une donnée est lue. Il cherche la CITATION
+  // LITTÉRALE du chemin — alors que l'Article 24 exige l'inverse (un registre se LIT, il ne
+  // s'énumère pas). La mesure récompensait donc la liste recopiée et punissait la conception
+  // évolutive, et « corriger » les 18 aurait voulu dire écrire dix-huit chemins en dur : dégrader
+  // le code pour verdir un compteur.
+  assert.deepEqual(ETATS_LECTURE, ['lue directement', 'lue via un registre', 'jamais lue'], 'three states, never two: reaching a path through a declared table proves you handle the FAMILY, never that you exploit THIS content');
+  const srcsFictives = [{ id: 'docs/alpha/' }, { id: 'docs/beta/' }, { id: 'docs/gamma/' }];
+  const declaration = ['export const TABLE = [', '  { path: "docs/alpha/" },', '  { path: "docs/beta/" },', '];', '', 'export function lire() { return TABLE.map((r) => r.path); }'].join('\n');
+  const trouvees = registresIndirects(declaration, srcsFictives);
+  assert.deepEqual(trouvees.get('TABLE'), ['docs/alpha/', 'docs/beta/'], 'a registry table is DISCOVERED by its content (it holds known data paths), never from a hand-kept list of table names — a table created tomorrow is recognised the same day, which is the minimum for a guard whose subject IS evolutivity');
+  assert.equal(trouvees.has('AUTRE'), false, 'only constants genuinely carrying data paths become intermediaries');
+  assert.equal(registresIndirects('export const VIDE = [];', srcsFictives).size, 0, 'a table holding no known path is not an intermediary, and must never be counted as one');
+
+  // LE CONTRE-EXEMPLE QUI A BORNÉ LA RÈGLE, vérifié sur le vrai dépôt avant d'écrire ce test :
+  // find-brain.mjs importe REGISTRIES pour en tirer les chemins de SCRIPTS (`scriptPath`), jamais
+  // pour ouvrir les registres. Crédité comme lecteur, il rendait « 0 donnée jamais lue » sur 59 —
+  // le « trop propre, et faux » que ce fichier dénonce déjà ailleurs. D'où la règle finale :
+  // l'atteinte par table est une ANNOTATION du rapport, elle ne bouge aucun ratio et ne retire
+  // aucune ligne de l'alerte.
+  const carteReelle = mapReaders();
+  const briefingReel = agentDataBriefing(carteReelle);
+  const critiquesReelles = criticalIgnoredData(briefingReel);
+  assert.ok(critiquesReelles.length > 0, 'the fresh-and-unread alert must SURVIVE the new annotation: if adding it emptied the alert, the annotation would have become an absolution, which is exactly the failure mode being fixed');
+  assert.ok(critiquesReelles.every((c) => c.lecteurs === 0), 'and every alerted source must still have zero REAL readers — the annotation never promotes a source out of the alert');
+  assert.ok(critiquesReelles.some((c) => (c.atteinteParTable ?? []).length > 0), 'the annotation must actually carry information on real data, otherwise it is decoration');
+
   {
     assert.ok(listDataSources().length>=40&&new Set(listDataSources().map(s=>s.id)).size===listDataSources().length,'the inventory must derive every source from the real shared registries (never a hand-kept list, Article 24) and must de-duplicate a path declared twice, since a doubled path would silently falsify every ratio built on it');
     // LE PRINCIPE qui a remplacé la liste d'exceptions : on retire le CORPS des constantes

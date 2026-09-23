@@ -81,6 +81,50 @@ export function stripExportedConstantBodies(code) {
   return code.replace(/^export const\s+[A-Z_][A-Z0-9_]*\s*=\s*[[{][\s\S]*?^[\]}];?$/gm, "/* déclaration retirée */");
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LA LECTURE INDIRECTE (2026-09-23, tâche #490) — la faille de mesure qui punissait le bon design
+// ————————————————————————————————————————————————————————————————————————
+//
+// CE QUI A ÉTÉ TROUVÉ EN VOULANT TRAITER LES « 18 DONNÉES QUE PERSONNE NE LIT ». Avant de câbler
+// dix-huit lecteurs, j'ai regardé comment cet outil décide qu'une donnée est lue : il cherche la
+// CITATION LITTÉRALE du chemin dans le code. Or l'Article 24 exige précisément l'inverse — un
+// registre se LIT, il ne s'énumère pas. Un outil qui atteint dix registres en parcourant une table
+// déclarée (`CIRCLE_REPORT_FOLDERS`, `GARDIENS_SACRES_REGISTRES`, `REGISTRIES`...) ne cite aucun
+// chemin, et passait donc pour ne rien lire du tout.
+//
+// LA MESURE RÉCOMPENSAIT DONC LA LISTE RECOPIÉE À LA MAIN ET PUNISSAIT LA CONCEPTION ÉVOLUTIVE. Et
+// le piège était refermé : pour « corriger » les 18, il aurait fallu écrire dix-huit chemins en dur
+// — c'est-à-dire créer exactement la dette que l'Article 24 interdit, pour verdir un compteur.
+// Un indicateur qui ne peut être amélioré qu'en dégradant le code n'est pas un indicateur.
+//
+// CE QUI EST FAIT ICI. Une constante exportée qui CONTIENT des chemins de données devient un
+// intermédiaire reconnu : le script qui l'emploie (hors sa propre déclaration) est compté comme
+// lecteur des chemins qu'elle porte. La déclaration elle-même ne compte toujours pas — déclarer
+// n'est pas lire, c'est la règle d'origine et elle reste entière.
+//
+// TROIS ÉTATS, JAMAIS DEUX, parce que les deux lectures n'ont pas la même force : une citation
+// directe prouve qu'on vise CETTE donnée-là ; une lecture par registre prouve qu'on traite la
+// FAMILLE à laquelle elle appartient. La seconde est plus solide pour l'évolutivité (un registre de
+// plus est couvert sans rien changer) et plus faible pour l'intention (personne n'a pensé à ce
+// registre en particulier). Les confondre ferait perdre cette nuance, donc elles restent séparées
+// dans le rapport.
+export const ETATS_LECTURE = ["lue directement", "lue via un registre", "jamais lue"];
+
+// Les constantes exportées qui portent des chemins de données, découvertes plutôt qu'énumérées :
+// on relit chaque déclaration `export const NOM = [...]` ou `= {...}` et on retient celles dont le
+// corps contient au moins un chemin de source connu. Aucune liste à tenir — une table de registres
+// créée demain est reconnue le jour même, ce qui est le minimum pour un garde-fou dont le sujet
+// EST l'évolutivité.
+export function registresIndirects(texte, sources) {
+  const trouvees = new Map();
+  for (const m of String(texte ?? "").matchAll(/^export const\s+([A-Z_][A-Z0-9_]*)\s*=\s*[[{][\s\S]*?^[\]}];?$/gm)) {
+    const [corps, nom] = [m[0], m[1]];
+    const chemins = sources.filter((s) => corps.includes(s.id)).map((s) => s.id);
+    if (chemins.length) trouvees.set(nom, chemins);
+  }
+  return trouvees;
+}
+
 // Le second cas, distinct et volontairement séparé : un chemin cité dans la SUITE DE TESTS est une
 // vérification, jamais une exploitation de la donnée. Une source que seul le filet de sécurité
 // mentionne ne circule pas davantage qu'une source citée nulle part.
@@ -97,12 +141,30 @@ export function mapReaders({ root = ROOT, readFileImpl = readFileSync, sources, 
   const srcs = sources ?? listDataSources();
   const fichiers = scripts ?? scriptFiles(root);
   const lecteursPar = new Map(srcs.map((s) => [s.id, []]));
+  const indirectsPar = new Map(srcs.map((s) => [s.id, []]));
   const verifPar = new Map(srcs.map((s) => [s.id, []]));
   const sourcesPar = new Map();
   const illisibles = [];
+
+  // PREMIER PASSAGE — les registres qui portent des chemins, tous fichiers confondus. Il faut les
+  // connaître TOUS avant de juger un seul fichier : un script peut employer une table déclarée
+  // ailleurs, et l'ordre alphabétique du dossier ne garantit rien.
+  const textes = new Map();
+  const registres = new Map();
   for (const f of fichiers) {
-    let texte;
-    try { texte = readFileImpl(join(root, f), "utf8"); } catch { illisibles.push(f); continue; }
+    let brut;
+    try { brut = readFileImpl(join(root, f), "utf8"); } catch { illisibles.push(f); continue; }
+    textes.set(f, brut);
+    for (const [nom, chemins] of registresIndirects(brut, srcs)) {
+      // Deux fichiers qui exportent le même nom de constante : on cumule leurs chemins plutôt que
+      // de laisser le dernier lu écraser le premier, ce qui ferait disparaître des lectures réelles.
+      registres.set(nom, [...new Set([...(registres.get(nom) ?? []), ...chemins])]);
+    }
+  }
+
+  for (const f of fichiers) {
+    const texte = textes.get(f);
+    if (texte === undefined) continue;
     // On retire les commentaires : un chemin cité dans une explication n'est pas une lecture. Sans
     // ça, ce fichier-ci passerait pour le lecteur universel de tout le dépôt.
     const sansCommentaires = texte.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
@@ -117,9 +179,23 @@ export function mapReaders({ root = ROOT, readFileImpl = readFileSync, sources, 
       (estVerification ? verifPar.get(s.id) : lecteursPar.get(s.id)).push(f);
       if (!estVerification) lues.push(s.id);
     }
+    // LA LECTURE PAR REGISTRE. Le nom de la table doit apparaître dans le CODE (déclarations et
+    // commentaires déjà retirés) : l'employer, jamais seulement la déclarer ou en parler. Un chemin
+    // déjà cité directement ne compte pas deux fois — la citation directe est la plus forte des deux
+    // et reste celle qui s'affiche.
+    if (!estVerification) {
+      for (const [nom, chemins] of registres) {
+        if (!new RegExp(`\\b${nom}\\b`).test(code)) continue;
+        for (const chemin of chemins) {
+          if (lecteursPar.get(chemin)?.includes(f)) continue;
+          const liste = indirectsPar.get(chemin);
+          if (liste && !liste.some((e) => e.fichier === f)) liste.push({ fichier: f, via: nom });
+        }
+      }
+    }
     sourcesPar.set(f, lues);
   }
-  return { lecteursPar, verifPar, sourcesPar, illisibles, sources: srcs, scripts: fichiers };
+  return { lecteursPar, indirectsPar, verifPar, sourcesPar, illisibles, sources: srcs, scripts: fichiers };
 }
 
 // ————————————————————————————————————————————————————————————————————————
@@ -231,6 +307,20 @@ export function agentDataBriefing(carte, { root = ROOT, now = Date.now() } = {})
       // ferait passer une donnée inexistante pour une donnée toute fraîche.
       ageJours,
       lecteurs: (carte.lecteursPar.get(s.id) ?? []).filter((f) => f !== s.scriptPath).length,
+      // ATTEINTE PAR UNE TABLE — une ANNOTATION, jamais une absolution (2026-09-23, tâche #490).
+      //
+      // Ce champ ne compte PAS comme un lecteur et ne bouge aucun ratio : une donnée atteinte par
+      // une table reste dans l'alerte tant que personne ne la lit pour de vrai. Le distinguer sert
+      // à décider, pas à se rassurer — l'issue « un vrai lecteur » ou « une absence assumée » se
+      // tranche bien mieux en sachant qui frôle déjà la donnée.
+      //
+      // POURQUOI PAS PLUS FORT, ET C'EST MESURÉ : crédité comme une lecture, ce signal rendait
+      // « 0 donnée jamais lue » sur 59 — le « trop propre, et faux » que ce fichier dénonce déjà
+      // plus haut. Contre-exemple trouvé en vérifiant : find-brain importe REGISTRIES pour en tirer
+      // les chemins de SCRIPTS (`scriptPath`), jamais pour ouvrir les registres — il passait pour
+      // lecteur de seize registres dont il n'ouvre aucun. Passer par la table prouve qu'on touche
+      // la FAMILLE, jamais qu'on exploite CE contenu-là.
+      atteinteParTable: (carte.indirectsPar?.get(s.id) ?? []).filter((e) => e.fichier !== s.scriptPath),
     });
   }
   return lignes.sort((a, b) => (a.ageJours ?? 1e9) - (b.ageJours ?? 1e9));
@@ -368,7 +458,17 @@ export function formatDataArchangelReport(r) {
   l.push(`Sources de données inventoriées : ${r.total} — ${r.branchees} réellement relues par un autre outil (${r.pourcentage} %).`);
   if (r.critiques.length) {
     l.push("", `🚨 ${r.critiques.length} donnée(s) FRAÎCHE(S) que personne ne lit — écrite il y a peu, donc elle a quelque chose à dire, et aucun outil ne l'écoute :`);
-    for (const c of r.critiques) l.push(`  · ${c.id} (${c.producteur}, ${c.ageJours} j) — ${c.contenu}`);
+    for (const c of r.critiques) {
+      // L'annotation dit à quoi ressemble la décision à prendre : un outil qui frôle déjà la donnée
+      // est un candidat évident pour la lire vraiment ; personne à proximité oriente plutôt vers
+      // l'absence assumée. Elle ne retire JAMAIS la ligne de l'alerte.
+      const frolent = [...new Set((c.atteinteParTable ?? []).map((e) => e.fichier.replace("scripts/", "")))];
+      const via = [...new Set((c.atteinteParTable ?? []).map((e) => e.via))];
+      const annotation = frolent.length
+        ? ` — ⚠️ atteinte par table (${via.join(", ")}) chez ${frolent.length} outil(s) : ${frolent.slice(0, 4).join(", ")}${frolent.length > 4 ? "…" : ""}. Passer par le chemin n'est PAS exploiter le contenu : ils sont candidats à devenir de vrais lecteurs, ils n'en sont pas.`
+        : " — personne ne la frôle, même par une table : l'absence assumée est ici l'issue la plus probable.";
+      l.push(`  · ${c.id} (${c.producteur}, ${c.ageJours} j) — ${c.contenu}${annotation}`);
+    }
   }
   const jamaisEcrites = r.orphelines.filter((o) => !o.existe);
   const dejaAlertees = new Set(r.critiques.map((c) => c.id));
