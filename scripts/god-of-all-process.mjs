@@ -1517,10 +1517,198 @@ export function buildGodReportBlocks({ processes = PROCESSES, root = ROOT, sessi
   return blocks;
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LA PLANCHE DES SCHÉMAS (2026-09-23, demande explicite de l'utilisateur)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA DEMANDE, mot pour mot : « quels schémas sont incomplets, ou peuvent etre etendus au debut ou
+// à la fin, quels schemas integrent d'autres schemas, quel est le schema global, quels sont les
+// schemas maitres », puis « je veux que tu me partages les schemas pertinents sur lesquels je peux
+// travailler tout seul, de mon coté » et « il doit etre chez god la ou les schemas qui
+// m'interessent se cachent surement ».
+//
+// LE DÉFAUT QU'ELLE FERME, et il était réel : le schéma maître existait en DONNÉE depuis la veille
+// (SCHEMA_DE_REFERENCE) et se dérivait correctement via schemaUnifie() — mais AUCUN document ne le
+// MONTRAIT. L'utilisateur l'a cherché et ne l'a pas trouvé : « je n'ai pas trouvé mon bonheur ».
+// Une donnée juste que personne ne peut lire vaut, pour qui la cherche, exactement une donnée
+// absente. C'est la même famille que la Partie 13 du process XP-IA : écrire n'est pas livrer.
+//
+// POURQUOI ÇA VIT ICI ET PAS DANS UN DOCUMENT ÉCRIT À LA MAIN : c'est son choix explicite, et il
+// est conforme à l'Article 24. Une planche recopiée à la main aurait divergé au premier process
+// ajouté — exactement ce qui était déjà arrivé aux trois recopies en prose du schéma unifié.
+
+// LES EMBOÎTEMENTS ENTRE PROCESS (déclarés, parce qu'ils ne sont déductibles d'aucun diff).
+//
+// DEUX MÉCANIQUES QUI NE SE CONFONDENT JAMAIS, et c'est la distinction utile :
+//   · ORCHESTRE — le process A lance le process B en entier, du début à la fin. B garde sa forme.
+//   · GREFFE    — le process A s'insère à des MOMENTS à l'intérieur de B, sans lancer B ni en
+//                 faire partie. Plus fragile : une greffe dépend d'un moment qui arrive, pas d'une
+//                 étape qu'on coche — c'est pour ça qu'angel doit la DEMANDER faute de pouvoir la lire.
+//   · SURVEILLE — le process A vérifie la tenue de B sans jamais l'exécuter.
+export const EMBOITEMENTS = [
+  { de: "meta", type: "surveille", vers: ["ronde", "analyse-charte", "simulation", "semi-autonome", "nuit", "meta", "integration-outil", "integration-ronde", "xp-ia", "etat-des-taches"],
+    pourquoi: "le process maître vérifie que chaque process a son document, son contrôleur et ses sondes — y compris lui-même (selfCheck), parce qu'un surveillant que personne ne surveille dérive sans que rien ne le dise." },
+  { de: "nuit", type: "orchestre", vers: ["ronde", "simulation"],
+    pourquoi: "la nuit n'a aucune mesure propre : elle fait tourner la Ronde en mode lourd et, si la périodicité le justifie, une simulation — puis traite leurs plans d'action." },
+  { de: "semi-autonome", type: "orchestre", vers: ["ronde", "analyse-charte", "simulation", "integration-outil", "integration-ronde", "etat-des-taches"],
+    pourquoi: "un MODE n'est pas un travail : il décide de la façon d'enchaîner des process qui, eux, produisent quelque chose. D'où ses quatre maillons sans objet." },
+  { de: "ronde", type: "contient", vers: ["xp-ia"],
+    pourquoi: "l'analyse de période du process XP-IA se fait À la Ronde, et c'est là que l'utilisateur dit quelles leçons ont été réellement APPLIQUÉES." },
+  { de: "xp-ia", type: "greffe", vers: ["ronde", "analyse-charte", "simulation", "semi-autonome", "nuit", "integration-outil", "integration-ronde", "etat-des-taches"],
+    pourquoi: "ses trois moments déclencheurs (un garde-fou bloque, la fin d'un compte rendu, chaque Ronde) surviennent PENDANT n'importe quel autre process, jamais à sa place." },
+  { de: "integration-outil", type: "appele-depuis", vers: ["semi-autonome", "nuit"],
+    pourquoi: "jamais lancé pour lui-même : il se déclenche au milieu d'un travail, quand un outil neuf rejoint l'équipe." },
+  { de: "integration-ronde", type: "appele-depuis", vers: ["ronde", "integration-outil"],
+    pourquoi: "même nature : il se déclenche quand un item entre dans la Ronde, typiquement parce qu'un outil vient d'être intégré." },
+];
+
+// GARDE-FOU (Article 24, même patron que findTensionsOnUnknownProcess) : un emboîtement qui nomme
+// un process disparu est une carte fausse, et une carte fausse rassure à tort.
+export function findEmboitementsSurProcessInconnu({ emboitements = EMBOITEMENTS, processes = PROCESSES } = {}) {
+  const connus = new Set(processes.map((p) => p.slug));
+  const ecarts = [];
+  for (const e of emboitements) {
+    if (!connus.has(e.de)) ecarts.push(`${e.de} → (source inconnue)`);
+    for (const v of e.vers) if (!connus.has(v)) ecarts.push(`${e.de} ${e.type} ${v} (cible inconnue)`);
+  }
+  return ecarts;
+}
+
+// LES DEUX EXTENSIONS CANDIDATES DU SCHÉMA MAÎTRE — À TRANCHER, jamais appliquées d'office.
+//
+// CE QU'ELLES SONT : le schéma maître va de SCAN à TÂCHES. Les huit maillons ci-dessous existent
+// DÉJÀ dans le travail réel et sont DÉJÀ exigés par des Articles — ils ne sont simplement pas dans
+// le schéma, donc rien ne vérifie qu'ils sont branchés. Les inscrire ici les rend visibles sans
+// les imposer : l'état « à trancher » de l'Article 28, tenu plutôt que raconté.
+//
+// LE CONSTAT QUI LES MOTIVE, et il est du même type que celui qui a créé l'Article 28 un cran plus
+// tôt : cet Article a fermé « un rapport écrit ressemble à un problème traité ». Personne n'a
+// fermé la suite — UNE TÂCHE CRÉÉE RESSEMBLE À UN PROBLÈME TRAITÉ. La chaîne s'arrête au moment
+// où elle inscrit la tâche dans docs/suivi/, et ce qu'elle devient ensuite n'est porté par aucun schéma.
+export const EXTENSIONS_CANDIDATES = {
+  statut: "À TRANCHER — proposées le 2026-09-23, jamais appliquées sans l'arbitrage de l'utilisateur",
+  amont: [
+    { maillon: "declencheur", libelle: "DÉCLENCHEUR", quoi: "ce qui fait partir ce process", dejaExigePar: "le gabarit de process (EXIGENCES_GABARIT_PROCESS), mais pas le schéma" },
+    { maillon: "cadrage", libelle: "CADRAGE", quoi: "demander quel process gouverne ce qu'on s'apprête à faire", dejaExigePar: "Article 26 — « avant un gros travail, demander à god quel process s'applique »" },
+    { maillon: "budget", libelle: "BUDGET", quoi: "consulter Smart Conso API / SMART-CONSO-TOKEN avant toute action coûteuse", dejaExigePar: "Article 22" },
+    { maillon: "memoire", libelle: "MÉMOIRE", quoi: "ressortir les leçons applicables et la mémoire des opérations AVANT d'agir", dejaExigePar: "process XP-IA (maillon 4) ; le process analyse-charte porte déjà l'étape `memoire`" },
+  ],
+  aval: [
+    { maillon: "execution", libelle: "EXÉCUTION", quoi: "la tâche est FAITE, pas seulement créée", dejaExigePar: "RIEN — c'est le trou" },
+    { maillon: "verification", libelle: "VÉRIFICATION", quoi: "y revenir à froid, avec les outils, pas de mémoire", dejaExigePar: "Article 25" },
+    { maillon: "jugement", libelle: "JUGEMENT PAR L'UTILISATEUR", quoi: "« c'est moi à la fin qui te dis si elle est propre »", dejaExigePar: "process XP-IA (jugement-utilisateur, parUtilisateur: true)" },
+    { maillon: "capitalisation", libelle: "CAPITALISATION", quoi: "« y avait-il quelque chose à retenir ? » — « rien à retenir » étant une réponse pleine", dejaExigePar: "process XP-IA, trois moments déclencheurs" },
+  ],
+};
+
+// LA PLANCHE ELLE-MÊME. Tout y est DÉRIVÉ : ajouter un process, un maillon ou un emboîtement le
+// fait apparaître sans que personne n'ait à toucher cette fonction.
+export function planchesDesSchemas({ processes = PROCESSES, schema = SCHEMA_DE_REFERENCE, emboitements = EMBOITEMENTS, extensions = EXTENSIONS_CANDIDATES, tensions = TENSIONS_CONNUES, root = ROOT } = {}) {
+  const L = [];
+  const etats = etatDuSchema({ processes, schema });
+  const parSlug = new Map(etats.map((e) => [e.process, e]));
+
+  L.push("# La planche des schémas de process", "");
+  L.push("*Générée par `node scripts/god-of-all-process.mjs schemas` — dérivée des données de god,");
+  L.push("jamais recopiée à la main. Un process ajouté demain y apparaît sans que personne n'y pense.*", "");
+
+  L.push("## 1. Le schéma maître — la FORME", "");
+  L.push("```", schemaUnifie(schema), "```", "");
+  for (const m of schema) {
+    L.push(`- **${m.libelle ?? m.maillon.toUpperCase()}**${m.bifurcation ? " *(bifurcation, pas une étape de la file)*" : ""} — ${m.quoi}.`);
+    L.push(`  - *Sans lui :* ${m.sansQuoi}`);
+  }
+  L.push("");
+  L.push("**Ce qu'il est, et ce qu'il n'est pas.** Une ressemblance de famille, jamais une loi : là où un");
+  L.push("process écrit diffère du schéma, c'est LE PROCESS qui fait foi — lui a été calibré étape par");
+  L.push("étape. Un maillon absent n'est jamais une faute en soi, il se DÉCLARE avec sa raison.", "");
+
+  L.push("## 2. Les trois « maîtres », qui ne sont pas la même chose", "");
+  L.push("| | Quoi | Où | Ce qu'il gouverne |");
+  L.push("|---|---|---|---|");
+  L.push("| **Le schéma maître** | la FORME | `SCHEMA_DE_REFERENCE` | une ressemblance de famille |");
+  L.push("| **Le process maître** | la TENUE du dispositif | process `meta` | que chaque process ait document, contrôleur, sondes |");
+  L.push("| **La chaîne maîtresse** | l'OBLIGATION | Article 28 | `rapport → analyse → plan d'action → tâches` |");
+  L.push("");
+
+  L.push(`## 3. Les ${processes.length} process, et leur distance au schéma`, "");
+  for (const p of processes) {
+    const e = parSlug.get(p.slug);
+    const absents = (e?.maillons ?? []).filter((m) => m.etat !== "présent");
+    L.push(`### \`${p.slug}\` — ${p.nom}`, "");
+    L.push(`- **Écrit dans** : \`${p.doc}\` · **surveillé par** : \`${p.gardien}\``);
+    L.push(`- **Déclencheur** : ${p.quand ?? "non déclaré"}`);
+    L.push(`- **${p.etapes.length} étapes** : ${p.etapes.map((s) => s.cle).join(" → ")}`);
+    if (!absents.length) L.push("- **Schéma maître** : ✅ les six maillons sont présents.");
+    else {
+      L.push(`- **Schéma maître** : ${absents.length} maillon(s) absent(s), tous déclarés :`);
+      for (const a of absents) L.push(`  - **${a.maillon}** — *${a.pourquoi ?? "sans raison déclarée — c'est un écart"}*`);
+    }
+    L.push("");
+  }
+
+  L.push("## 4. Les emboîtements — quel schéma en contient un autre", "");
+  L.push("Trois mécaniques, jamais confondues : **orchestre** (lance l'autre en entier) ·");
+  L.push("**greffe** (s'insère à des moments à l'intérieur de l'autre) · **surveille** (vérifie sans exécuter).", "");
+  L.push("```");
+  for (const e of emboitements) {
+    const fleche = { surveille: "surveille", orchestre: "ORCHESTRE", contient: "contient", greffe: "SE GREFFE SUR", "appele-depuis": "appelé depuis" }[e.type] ?? e.type;
+    L.push(`${e.de.padEnd(18)} ── ${fleche} ──> ${e.vers.join(", ")}`);
+  }
+  L.push("```", "");
+  for (const e of emboitements) L.push(`- **${e.de}** ${e.type} — ${e.pourquoi}`);
+  L.push("");
+
+  L.push("## 5. Les deux extensions candidates — À TRANCHER, jamais appliquées d'office", "");
+  L.push(`*Statut : ${extensions.statut}*`, "");
+  L.push("Le schéma maître va de SCAN à TÂCHES. Les huit maillons ci-dessous **existent déjà dans le");
+  L.push("travail réel** et sont **déjà exigés par des Articles** — ils ne sont simplement pas dans le");
+  L.push("schéma, donc rien ne vérifie qu'ils sont branchés.", "");
+  L.push("**AMONT** — avant SCAN :", "");
+  L.push("| Maillon | Ce que c'est | Déjà exigé par |", "|---|---|---|");
+  for (const m of extensions.amont) L.push(`| **${m.libelle}** | ${m.quoi} | ${m.dejaExigePar} |`);
+  L.push("", "**AVAL** — après TÂCHES :", "");
+  L.push("| Maillon | Ce que c'est | Déjà exigé par |", "|---|---|---|");
+  for (const m of extensions.aval) L.push(`| **${m.libelle}** | ${m.quoi} | ${m.dejaExigePar} |`);
+  L.push("");
+  L.push("**Le constat qui les motive.** L'Article 28 a fermé « un rapport écrit ressemble à un problème");
+  L.push("traité ». Personne n'a fermé la suite : **une tâche créée ressemble à un problème traité.**");
+  L.push("La chaîne s'arrête au moment où elle inscrit la tâche, et ce qu'elle devient ensuite n'est");
+  L.push("porté par aucun schéma.", "");
+  L.push("**Le schéma étendu, si les deux bouts étaient retenus** *(14 maillons)* :", "");
+  L.push("```");
+  L.push([...extensions.amont.map((m) => m.libelle), ...schema.map((m) => m.libelle ?? m.maillon.toUpperCase()), ...extensions.aval.map((m) => m.libelle)].join(SCHEMA_SEPARATEUR));
+  L.push("```", "");
+
+  L.push("## 6. Les activités à enjeu qui n'ont AUCUN process", "");
+  const sans = findActivitiesWithoutProcess({ processes });
+  if (!sans.length) L.push("Aucune.", "");
+  else { for (const a of sans) L.push(`- **${a.activite}** (\`${a.id}\`) — ${a.pourquoi}`); L.push(""); }
+
+  L.push("## 7. Les tensions déclarées entre process", "");
+  for (const t of tensions) { L.push(`- **${t.entre.join(" ↔ ")}** — ${t.tension}`); L.push(`  - *Résolution :* ${t.resolution}`); }
+  L.push("");
+
+  const ecarts = findEmboitementsSurProcessInconnu({ emboitements, processes });
+  L.push("## 8. Auto-contrôle de cette planche", "");
+  L.push(ecarts.length ? `⚠️ ${ecarts.length} emboîtement(s) nommant un process inconnu :\n  - ${ecarts.join("\n  - ")}` : "✅ Tout process nommé dans un emboîtement existe réellement.");
+  L.push("");
+  L.push("**Ce que cette planche ne dit PAS** : si un process est BON. Elle décrit des formes et des");
+  L.push("liens ; juger qu'un process sert vraiment à quelque chose se lit, et se tranche avec l'utilisateur.");
+  return L.join("\n");
+}
+
 function main() {
   printReliabilityNotice("god-of-all-process");
   recordCliUsage("god-of-all-process");
   const tache = process.argv.slice(2).filter((a) => !a.startsWith("--")).join(" ");
+  // LA PLANCHE DES SCHÉMAS, à la demande. Sortie sur la sortie standard plutôt qu'écrite d'office :
+  // un fichier généré à chaque appel se périmerait dès que quelqu'un oublierait de le relancer, et
+  // l'utilisateur a demandé qu'elle vive CHEZ GOD, pas dans une copie de plus (Article 24).
+  if (tache === "schemas") {
+    console.log(planchesDesSchemas());
+    return;
+  }
   if (tache) {
     const trouves = whichProcess(tache);
     console.log(`=== god-of-all-process — pour : "${tache}" ===\n`);

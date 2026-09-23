@@ -3685,6 +3685,21 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(!sansMeta.ok&&sansMeta.constats.some(c=>/ne se surveille plus lui-même/.test(c)),'removing the master process must be detected loudly, never pass silently');
   const gardienDetourne=selfCheck({processes:PROCESSES.map(p=>p.slug==='meta'?{...p,gardien:'scripts/autre.mjs'}:p)});
   assert.ok(!gardienDetourne.ok,'handing the master process to another guardian must be caught: god-of-all-process is the only tool that can honestly watch the dispositif it defines');
+  // LA PLANCHE DES SCHÉMAS (2026-09-23). L'utilisateur cherchait les schémas de process et ne les a
+  // pas trouvés : ils existaient en DONNÉE, dérivés correctement, mais aucun document ne les
+  // MONTRAIT. Une donnée juste que personne ne peut lire vaut, pour qui la cherche, exactement une
+  // donnée absente. Ces assertions vérifient que la planche reste DÉRIVÉE : un process, un maillon
+  // ou un emboîtement ajouté demain doit y apparaître sans que personne ne touche au générateur.
+  const {planchesDesSchemas,findEmboitementsSurProcessInconnu,EMBOITEMENTS,EXTENSIONS_CANDIDATES,SCHEMA_DE_REFERENCE:SCHEMA_REF}=await import('../scripts/god-of-all-process.mjs');
+  assert.deepEqual(findEmboitementsSurProcessInconnu(),[],'every process named in an EMBOITEMENTS entry must really exist in PROCESSES — a nesting map that names a vanished process is a false map, and a false map reassures wrongly (same guard pattern as findTensionsOnUnknownProcess)');
+  assert.ok(findEmboitementsSurProcessInconnu({emboitements:[{de:'ronde',type:'orchestre',vers:['fantome']}]}).length===1,'the guard must actually bite on an unknown target, never only on an unknown source');
+  const planche=planchesDesSchemas();
+  for(const p2 of PROCESSES) assert.ok(planche.includes('`'+p2.slug+'`'),`the plate must render EVERY declared process (${p2.slug} missing) — derived, never a hand-copied list that would go stale at the next process added (Article 24)`);
+  for(const m of SCHEMA_REF) assert.ok(planche.includes(m.libelle??m.maillon.toUpperCase()),'the plate must render every link of the master schema, taken from the single source of truth rather than retyped');
+  assert.ok(planche.includes('À TRANCHER'),'the eight candidate links (four upstream, four downstream) must be rendered as À TRANCHER and never as applied: proposing an extension of the master schema is the agent\'s job, deciding it is the user\'s (Article 28 third state)');
+  assert.ok(EXTENSIONS_CANDIDATES.amont.length===4&&EXTENSIONS_CANDIDATES.aval.length===4,'both ends of the candidate extension must stay declared: the downstream one carries the real finding — a task CREATED looks like a problem SOLVED, the same illusion Article 28 closed one notch earlier for reports');
+  for(const m of [...EXTENSIONS_CANDIDATES.amont,...EXTENSIONS_CANDIDATES.aval]) assert.ok(m.dejaExigePar&&m.dejaExigePar.length>3,`candidate link ${m.maillon} must declare WHAT already requires it — a link nothing else demands would be an invention, not a gap`);
+  assert.ok(planche.includes('ne dit PAS'),'the plate must declare its own limit: it describes shapes and links, it never says whether a process is GOOD — a control believed stronger than it is beats an honest one');
   // LA DISTINCTION DOIT RESTER POSSIBLE, jamais forcément PRÉSENTE (corrigé le 2026-09-22).
   // L'ancienne assertion exigeait que le process de simulation contienne réellement des étapes
   // sans trace — vrai quand elle a été écrite (4 sur 7), faux depuis que ces quatre étapes ont
