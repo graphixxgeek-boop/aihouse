@@ -1095,6 +1095,50 @@ export function resolveScopeTargets(portee, cible, { root = ROOT, budgets = BUDG
   return [fichier];
 }
 
+// BUDGET D'INSTRUCTIONS (2026-09-23, tâche #208) — LA MESURE QUI MANQUAIT, et qui change le sujet.
+//
+// CE QUE CET OUTIL MESURAIT JUSQU'ICI : des tokens. C'est le coût. Mais le coût n'est pas le vrai
+// risque d'un document rechargé à chaque message — l'OBSERVANCE l'est. Un fichier de 25 000 tokens
+// qu'on suit à la lettre vaut mieux qu'un fichier de 5 000 qu'on lit en diagonale.
+//
+// CE QUE DIT L'ÉTAT DE L'ART, convergent sur deux points (recherche réelle du 2026-09-23) : un
+// modèle de pointe suit fiablement de l'ordre de 150 à 200 instructions simultanées, et le système
+// de Claude Code en consomme déjà une cinquantaine avant que la charte ne parle ; et la
+// dégradation n'est pas un mur mais une PENTE — décrite comme linéaire pour la famille Claude, ce
+// qui veut dire que chaque instruction ajoutée grignote un peu l'observance de TOUTES les autres.
+//
+// LA CONSÉQUENCE, ET C'EST ELLE QUI JUSTIFIE LE CHANTIER : au-delà du budget, ajouter une règle
+// n'ajoute plus une règle — elle dilue les précédentes. Un article écrit peut donc cesser de
+// s'appliquer sans que personne ne l'ait retiré : exactement la panne que ce projet traque partout
+// ailleurs sous le nom de « règle écrite que rien ne fait respecter » (leçon L1).
+//
+// CE QUE CETTE MESURE N'EST PAS : une autorisation de couper. Elle dit COMBIEN d'obligations le
+// document porte, jamais LESQUELLES méritent de rester — ce jugement appartient à l'utilisateur, et
+// l'Article 13 tranche pour NE PAS couper en cas de doute.
+export const BUDGET_INSTRUCTIONS = { suivablesParLeModele: 175, dejaPrisesParLeSysteme: 50 };
+const MOTIF_OBLIGATION = /\b(doit|doivent|jamais|toujours|obligatoire|interdit|il faut|exige|impose|ne peut)\b/i;
+
+export function compterInstructions(texte = "") {
+  const blocs = String(texte).split(/(?<=[.!?])\s+|\n\n/).map((b) => b.trim()).filter(Boolean);
+  return { blocs: blocs.length, instructions: blocs.filter((b) => MOTIF_OBLIGATION.test(b)).length };
+}
+
+export function budgetInstructions(texte = "", budget = BUDGET_INSTRUCTIONS) {
+  const { blocs, instructions } = compterInstructions(texte);
+  if (!blocs) return { mesurable: false, pourquoi: "document vide ou illisible — rien n'a été mesuré, ce qui n'est jamais la même chose que rien trouvé" };
+  const disponible = Math.max(0, budget.suivablesParLeModele - budget.dejaPrisesParLeSysteme);
+  const depassement = instructions - disponible;
+  return {
+    mesurable: true, instructions, blocs, disponible, depassement,
+    verdict: depassement > 0 ? "au-delà du budget" : depassement > -disponible * 0.2 ? "à la limite" : "dans le budget",
+    // Le pourcentage se lit dans le bon sens : ce n'est PAS « on peut couper tant », c'est « tant
+    // d'obligations se partagent une attention qui n'en porte que tant ».
+    pourquoi: depassement > 0
+      ? `${instructions} obligations pour ${disponible} réellement suivables (${budget.suivablesParLeModele} au total, moins ~${budget.dejaPrisesParLeSysteme} déjà prises par le système) — au-delà, une règle ajoutée ne s'ajoute pas, elle dilue les autres`
+      : `${instructions} obligations pour ${disponible} suivables — la marge existe, mais elle se consomme à chaque ajout`,
+  };
+}
+
 export function scanScope(portee, cible, { root = ROOT, repoFiles = null } = {}) {
   const cibles = resolveScopeTargets(portee, cible, { root });
   // Le dépôt est lu UNE fois pour tout le scan (corrigé le 2026-09-22) : sans ça, chaque document
