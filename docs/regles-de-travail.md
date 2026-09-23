@@ -172,6 +172,55 @@ Ici, seuls les points **spécifiques à la méthode de questionnement elle-même
   plutôt que de dupliquer, pour ne jamais désynchroniser deux versions du même protocole (même
   logique que les Articles 6/7 de la charte de contenu).
 
+
+### 2bis. La FORME d'une question — rapatriée de la charte le 2026-09-23 (tâche #632)
+
+*(Ces trois blocs vivaient dans l'Article 16 de `CLAUDE.md`, rechargé à chaque message, alors que
+la §2 ci-dessus déclare depuis toujours accueillir « seuls les points spécifiques à la méthode de
+questionnement elle-même ». C'était leur domicile, ils étaient juste ailleurs. **Déplacés mot pour
+mot, pas une syllabe reformulée** — paraphraser en déplaçant suffit à perdre la raison qui a fait
+naître la règle, et ce projet l'a déjà payé deux fois (leçon L20). La charte garde l'OBLIGATION
+de poser les questions ; ce document dit COMMENT elles se posent.)*
+
+**Format de présentation — toujours une fenêtre dédiée.** Toute question relevant de l'Article 16
+(y compris l'étape 7 de l'Article 18 et le second passage après « voici mes commentaires ») passe
+par l'outil dédié de questions à choix, jamais une simple phrase interrogative en texte libre —
+même quand une seule question suffit. Format attendu : le type en préfixe ; un intitulé complet et
+autonome, compréhensible sans relire tout l'historique ; entre deux et quatre options concrètes,
+chacune avec un libellé court et une description de ce que ce choix implique réellement (jamais un
+simple « oui »/« non » sans contexte) ; l'utilisateur garde toujours la possibilité de répondre
+autre chose que les options proposées. Plusieurs questions sur le même sujet peuvent être groupées
+dans une même fenêtre plutôt que d'en ouvrir une par question ; si leur nombre dépasse la capacité
+d'une seule fenêtre (par exemple la dizaine de questions de calibrage de l'étape 7 de l'Article 18),
+elles se répartissent sur plusieurs fenêtres successives, jamais compressées en texte libre pour
+tenir dans une seule.
+
+**Clarté pour un non-développeur — l'enjeu de chaque réponse doit être compréhensible sans
+jargon.** L'utilisateur n'est pas développeur : une question qui suppose de comprendre un nom de
+variable, une fonction ou un mécanisme interne pour choisir entre les options n'est pas une question
+claire, même si elle respecte le format ci-dessus. L'intitulé et les descriptions se lisent sans
+connaissance du code — jamais un nom de fonction, de fichier ou de variable comme seule explication
+d'un choix (« active X » ne suffit pas ; il faut dire ce que ça change concrètement pour
+l'utilisateur ou pour ce qu'il voit/vit dans la maison). Chaque option explique sa CONSÉQUENCE
+réelle et concrète plutôt qu'une description technique de la solution envisagée ; un terme
+technique réellement nécessaire (parce que l'utilisateur l'a lui-même employé, ou qu'aucune
+reformulation ne le remplace sans perdre en précision) est immédiatement expliqué en une incise
+simple, jamais laissé sans traduction. Le but est d'éviter toute erreur de compréhension qui
+mènerait l'utilisateur à choisir une option sans en avoir vraiment saisi la portée — la
+responsabilité de rendre l'enjeu clair revient entièrement à l'agent qui pose la question, jamais à
+l'utilisateur de deviner ou de se renseigner.
+
+**Une question = une seule idée simple ; décortiquer les sujets complexes en plusieurs
+questions.** Jamais empiler plusieurs décisions ou plusieurs sous-sujets dans une seule question
+sous prétexte d'aller plus vite : une question qui demande de trancher deux choses à la fois (par
+exemple « on fait X, et pour la durée on prend Y ou Z ? ») doit être scindée en deux questions
+distinctes, chacune portant sur une seule idée simple à comprendre d'un coup. Pour un sujet complexe,
+l'agent le décompose lui-même en plusieurs questions successives ou groupées dans une même fenêtre,
+jamais en faisant porter cette décomposition à l'utilisateur. Les réponses obtenues au fil de ces
+questions peuvent, selon les cas, s'agréger et influencer la formulation des questions suivantes sur
+le même sujet, ou rester indépendantes quand les sous-sujets n'ont pas de lien logique entre eux —
+c'est à l'agent de juger au cas par cas, jamais un enchaînement mécanique obligatoire.
+
 ## 3. Rigueur variable, jamais uniforme
 
 La rigueur de vérification (tests, documentation, relecture) se resserre sur les points que
