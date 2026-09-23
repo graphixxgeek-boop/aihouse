@@ -2778,7 +2778,26 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(checkpointPerformance(emptyIndex),undefined,'zero recorded passages must report an absence, never a disguised 0%');
   const perf=checkpointPerformance(twoRowIndex);
   assert.equal(perf.passages,2);assert.equal(perf.totalFindings,2);assert.equal(perf.findingsPerPassage,1);assert.equal(perf.hitRate,50,'exactly one of the two recorded passages found something real, so the hit rate — the tool\'s actual vocation per the user\'s explicit framing — must read 50%, not an average that would hide it');
-  assert.deepEqual(summarizeArgusOutput('[confirmé] a\n[probable] b\nMarqueurs TODO/FIXME trouvés (3) :'),{candidatsDetectes:2,todos:3});
+  assert.deepEqual(summarizeArgusOutput('[confirmé] a\n[probable] b\nMarqueurs TODO/FIXME trouvés (3) :'),{candidatsDetectes:2,todos:3,ecartsARegarder:undefined,ecartesAvecAccord:0});
+
+  // LE RÉSUMÉ COMPTE CE QU'ARGUS COMPTE, PAS CE QU'IL AFFICHE (2026-09-23, trouvé en lançant Pack
+  // Panorama pour de vrai). ARGUS écrivait « 0 écart(s) à regarder (6 écarté(s) avec votre accord
+  // explicite) » pendant que la synthèse du réseau annonçait « à regarder (6 candidat(s)) » : elle
+  // comptait les étiquettes [probable] de six lignes que le rapport annote lui-même « déjà tranché
+  // avec votre accord ». Un résumé qui contredit l'outil qu'il résume rouvre une décision déjà prise.
+  const sortieReelle = '[probable] trottoirGranted — déjà tranché avec votre accord, ne compte plus comme un écart\n[probable] ambientSeen — déjà tranché avec votre accord, ne compte plus comme un écart\nMarqueurs TODO/FIXME trouvés (0) :\n0 écart(s) à regarder (2 écarté(s) avec votre accord explicite, jamais reposé(s)).';
+  const resume = summarizeArgusOutput(sortieReelle);
+  assert.equal(resume.ecartsARegarder, 0, 'a settled finding must not come back as work: ARGUS states its own count and the summary must read THAT, never re-tally the labels it prints for transparency');
+  assert.equal(resume.ecartesAvecAccord, 2, 'while the number settled with the user stays visible, so hiding the noise never turns into a blind spot');
+  assert.equal(resume.candidatsDetectes, 2, 'and the raw label count remains available for whoever wants the underlying material');
+
+  // L'AUTRE SENS (BP4) : un vrai écart doit toujours remonter, sinon ce correctif aurait échangé un
+  // signal trop bruyant contre un détecteur muet.
+  const avecVraiEcart = '[confirmé] quelqueChose\nMarqueurs TODO/FIXME trouvés (0) :\n1 écart(s) à regarder (0 écarté(s) avec votre accord explicite, jamais reposé(s)).';
+  assert.equal(summarizeArgusOutput(avecVraiEcart).ecartsARegarder, 1, 'a genuine gap must still surface — quieting a false alarm must never quiet the true one');
+
+  // ET « PAS MESURÉ » N'EST PAS « RIEN À SIGNALER » : sans la ligne de compte, on ne prétend pas à zéro.
+  assert.equal(summarizeArgusOutput('sortie tronquée, aucune ligne de compte').ecartsARegarder, undefined, 'an ARGUS output with no count line must report "not measured" rather than zero, since a zero computed on a missing measurement reads exactly like a clean bill of health');
 
   // indexArgusScan() (2026-09-22, Ronde CIRCLE-TASKS en mode AUTO) : check-argus.mjs écrivait son
   // rapport sans jamais ajouter la ligne d'index correspondante, alors que TROIS chemins l'appellent

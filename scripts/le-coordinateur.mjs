@@ -1300,7 +1300,16 @@ export function runNetworkCheck({ shImpl = sh } = {}) {
 
   const argusOut = shImpl("node scripts/check-argus.mjs", { cwd: ROOT });
   const argusSummary = summarizeArgusOutput(argusOut);
-  rows.push({ name: "ARGUS (mécanique)", result: argusSummary.candidatsDetectes > 0 ? `à regarder (${argusSummary.candidatsDetectes} candidat(s))` : "ok", when: now });
+  // On lit le compte d'ARGUS, jamais ses étiquettes : les candidats déjà tranchés avec l'utilisateur
+  // ne doivent pas remonter comme du travail (cf. summarizeArgusOutput, 2026-09-23).
+  const argusResultat = argusSummary.ecartsARegarder === undefined
+    ? `pas mesuré (ARGUS n'a pas écrit sa ligne de compte — ${argusSummary.candidatsDetectes} étiquette(s) brute(s) vues)`
+    : argusSummary.ecartsARegarder > 0
+      ? `à regarder (${argusSummary.ecartsARegarder} écart(s))`
+      : argusSummary.ecartesAvecAccord > 0
+        ? `ok (${argusSummary.ecartesAvecAccord} déjà tranché(s) avec vous, jamais reposé(s))`
+        : "ok";
+  rows.push({ name: "ARGUS (mécanique)", result: argusResultat, when: now });
 
   const harmoniaOut = shImpl("node scripts/check-harmonia.mjs", { cwd: ROOT });
   const harmoniaSummary = summarizeHarmoniaOutput(harmoniaOut);
@@ -1391,7 +1400,24 @@ function main() {
   recordCliUsage("le-coordinateur");
   // Sous-commande "catalogue" (tâche #154) : sur demande seulement, jamais mêlée à la synthèse
   // gratuite ci-dessous — `node scripts/le-coordinateur.mjs catalogue`.
-  if (process.argv[2] === "catalogue") {
+  // UN ARGUMENT INCONNU REFUSE, il ne retombe pas en silence sur la synthèse (2026-09-23).
+  // Trouvé en lançant Pack Panorama pour de vrai sur demande de l'utilisateur : `le-coordinateur.mjs
+  // panorama` — le nom exact que le catalogue donne à ce pack — a exécuté la synthèse par défaut
+  // sans un mot. Le résultat était le bon par hasard, et c'est précisément ce qui rend le défaut
+  // méchant : le jour où un nom de pack ne correspondra PAS au comportement par défaut, on lira une
+  // sortie en croyant en avoir demandé une autre. Même forme que la leçon L21 — un nom qui existe
+  // dans le monde d'un lecteur et pas dans celui d'un autre.
+  const sousCommande = process.argv[2];
+  const SOUS_COMMANDES = ["catalogue"];
+  if (sousCommande && !SOUS_COMMANDES.includes(sousCommande)) {
+    console.log(`❌ « ${sousCommande} » n'est pas une sous-commande de cet outil.`);
+    console.log(`   Sous-commandes réelles : ${SOUS_COMMANDES.join(", ")}`);
+    console.log(`   Sans argument : la synthèse gratuite du réseau — c'est elle que le catalogue appelle « Pack Panorama ».`);
+    console.log(`   Un nom de PACK n'est pas une commande : un pack nomme une COMBINAISON d'outils, il ne s'exécute pas d'un seul mot.`);
+    process.exitCode = 1;
+    return;
+  }
+  if (sousCommande === "catalogue") {
     const result = recordCatalog();
     console.log("=== LE-COORDINATEUR — catalogue d'offres nommé ===\n");
     console.log(renderNamedCatalog());

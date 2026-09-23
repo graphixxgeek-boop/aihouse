@@ -93,10 +93,34 @@ export function checkpointPerformance(indexText) {
   };
 }
 
+// LE RÉSUMÉ DOIT COMPTER CE QU'ARGUS COMPTE, pas ce qu'il AFFICHE (corrigé le 2026-09-23, trouvé en
+// lançant Pack Panorama pour de vrai à la demande de l'utilisateur).
+//
+// LE DÉFAUT, ET IL EST DU GENRE QUI USE LA CONFIANCE : ARGUS écrivait noir sur blanc « 0 écart(s) à
+// regarder (6 écarté(s) avec votre accord explicite, jamais reposé(s)) », et la synthèse du réseau
+// affichait juste au-dessus « ARGUS : à regarder (6 candidat(s)) ». Elle comptait les étiquettes
+// `[probable]` des six lignes que le rapport annote pourtant « déjà tranché avec votre accord, ne
+// compte plus comme un écart » (tâche #214). Un résumé qui contredit l'outil qu'il résume ROUVRE une
+// décision déjà prise par l'utilisateur — exactement ce qu'il a demandé qu'on ne fasse jamais
+// (« ne jamais écarter une zone sciemment laissée de côté par moi », pris ici par l'autre bout) — et
+// un signal qui crie sur une chose réglée finit par ne plus être lu du tout (leçon L4).
+//
+// LES DEUX NOMBRES SONT RENDUS, jamais l'un à la place de l'autre : `ecartsARegarder` est ce qui
+// appelle une action, `candidatsDetectes` reste disponible pour qui veut la matière brute. Masquer
+// le second aurait remplacé un signal trop bruyant par un angle mort.
 export function summarizeArgusOutput(output) {
   const dead = (output.match(/\[(confirmé|probable)\]/g) || []).length;
   const todos = /Marqueurs TODO\/FIXME trouvés \((\d+)\)/.exec(output);
-  return { candidatsDetectes: dead, todos: todos ? Number(todos[1]) : 0 };
+  const ecarts = /(\d+) écart\(s\) à regarder/.exec(output);
+  const tranches = /\((\d+) écarté\(s\) avec votre accord/.exec(output);
+  return {
+    candidatsDetectes: dead,
+    todos: todos ? Number(todos[1]) : 0,
+    // Pas de verdict inventé quand ARGUS n'a pas écrit sa ligne de compte : `undefined` dit « pas
+    // mesuré » là où un 0 dirait « rien à signaler », et les deux ne sont pas la même phrase.
+    ecartsARegarder: ecarts ? Number(ecarts[1]) : undefined,
+    ecartesAvecAccord: tranches ? Number(tranches[1]) : 0,
+  };
 }
 
 export function summarizeHarmoniaOutput(output) {
