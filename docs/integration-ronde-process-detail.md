@@ -60,6 +60,16 @@ dans `scripts/check-house.mjs`. Le contrôleur, lui, ne définit rien — il com
    **ou** une dispense écrite dans `ITEMS_SANS_DOSSIER_ASSUME` (les deux dans
    `scripts/circle-tasks.mjs`, où `recordCircleItemReport` viendra chercher le dossier). Sans l'un des deux, l'erreur ne se
    révèle qu'en écrivant réellement l'artefact, c'est-à-dire pendant une Ronde, au pire moment.
+   **Cette entrée fait plus qu'ouvrir un dossier** (précisé le 2026-09-23, dette documentaire
+   signalée par god-of-all-process) : `tendanceDesSignauxDeRonde()`, dans
+   `scripts/circle-process-guardian.mjs`, parcourt cette même table pour comparer les passages
+   successifs et dire si un signal varie ou se répète à l'identique. Un item inscrit ici gagne donc
+   cette surveillance sans qu'une seule ligne bouge ailleurs — c'était la condition du chantier :
+   recopier les chemins un à un aurait créé la dette que l'Article 24 interdit, uniquement pour
+   verdir un compteur. Le contrôleur DÉCLARE cette lecture (`LECTEUR_DE_TABLE`), parce qu'un accès
+   dérivé d'une table ne se voit pas de l'extérieur et faisait compter ces dossiers comme écrits
+   pour personne ; et la déclaration n'est jamais crue sur parole — data-archangel ne la crédite
+   qu'après avoir vérifié que le fichier lit réellement le disque.
 4. **Le changelog** — une entrée dans `CIRCLE_ITEMS_CHANGELOG` disant POURQUOI cet item existe. Le
    pourquoi n'est déductible d'aucun diff : sans cette ligne, il est perdu le jour même.
 5. **Les comptes figés** — deux assertions de `check-house.mjs` citent le nombre d'items. Elles
