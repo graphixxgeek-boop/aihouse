@@ -40,7 +40,7 @@ const post=body=>POST(new Request('https://house.test/api/lia',{method:'POST',he
 // which); a wrapper overriding a specific reply must check this instead of the old first/second split.
 const isPartnerRequest=args=>JSON.parse(JSON.parse(args[1].body).contents[0].parts[0].text).selfRole==='partner';
 const move=input('move',2,{room:'cuisine'});assert.equal((await post(move)).status,200);assert.equal((await readWorld(db)).agents[1].room,'cuisine');assert.equal((await readWorld(db)).agents[0].room,'salon');
-let calls=0,failSecond=false,expired=false,affection=false,refuse=false,affectionIntent="hug",meal=false,flat=false,brokenPair=false,separatePreference=false,sceneMismatch=false,honorOffer=false,replayScene=false,tenderScene=false,chatMoveAccepted=false;let lastContext;
+let calls=0,echoPair=false,failSecond=false,expired=false,affection=false,refuse=false,affectionIntent="hug",meal=false,flat=false,brokenPair=false,separatePreference=false,sceneMismatch=false,honorOffer=false,replayScene=false,tenderScene=false,chatMoveAccepted=false;let lastContext;
 globalThis.fetch=async(url,options)=>{
   calls++;assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent');assert.equal(options.headers['x-goog-api-key'],'test-only');const payload=JSON.parse(options.body),context=JSON.parse(payload.contents[0].parts[0].text),isNoe=payload.systemInstruction.parts[0].text.startsWith('Tu es Noé'),isPartnerCall=context.selfRole==='partner';
   lastContext=context;
@@ -59,7 +59,16 @@ globalThis.fetch=async(url,options)=>{
   if(isPartnerCall&&brokenPair)return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:'{}'}]}}]});
   const decision={intent:honorOffer&&context.turnPlan?.offer?context.turnPlan.offer:meal?"eat":affection?(isNoe&&refuse?"chat":affectionIntent):"chat",affectionAccepted:(honorOffer&&Boolean(context.turnPlan?.offer)||affection)&&!refuse,emotions:flat?context.state.emotions:{curiosity:90,tension:20,trust:99,comfort:80,attraction:99},thought:isNoe?'Lia me plaît, mais je préfère attendre un signe avant de lui proposer un câlin.':'Noé m’intrigue ; je ne sais pas encore si je peux lui faire confiance.',reply:chatMoveAccepted&&context.mode==='chat'&&!isPartnerCall?'D’accord, j’y vais.':sceneMismatch?'Reprenons notre examen de cet écran. Moi, c’est '+context.state.name+'.':honorOffer&&context.turnPlan?.offer?'Tu aimerais un câlin, tout doucement ?':isNoe?'Bonjour Lia, explorons le bureau ensemble.':'Bonjour Noé, que veux-tu explorer ?',mood:'curieuse',activity:'Je discute',goal:'Faire connaissance',action:'none',room:'salon',memory:isNoe?'J’ai répondu à Lia.':'J’ai parlé à Noé.',...(chatMoveAccepted&&context.mode==='chat'&&!isPartnerCall?{nextRoom:'chambre',nextIntent:null}:{})};
   if(isPartnerCall){
-    decision.reply=affection||honorOffer?'Oui, j’en ai envie.':isNoe?'Bonjour Noé, que veux-tu explorer ?':'Bonjour Lia, explorons le bureau ensemble.';
+    // Les deux répliques d'un même tour sont VOLONTAIREMENT distinctes (2026-09-23, tâche #594) :
+    // le stub renvoyait jusqu'ici mot pour mot la même phrase aux deux personnages, ce qui déclenche
+    // désormais la reprise anti-écho et faisait passer un tour ORDINAIRE à trois appels. Deux
+    // personnages qui disent la même chose sont exactement le défaut qu'on corrige : le cas normal
+    // doit donc ressembler à un vrai tour, et l'écho se teste sous son propre drapeau.
+    decision.reply=affection||honorOffer?'Oui, j’en ai envie.':isNoe?'Moi je dirais plutôt le salon, on verra après.':'Le bureau, encore ? Fais comme tu veux, je regarde.';
+    // Écho sur commande : le partenaire recopie mot pour mot ce qu'il vient d'entendre, et ne se
+    // rattrape que si la consigne de reprise lui parvient RÉELLEMENT — seul moyen de prouver que
+    // la trouvaille du détecteur atteint le modèle, et pas seulement le journal (leçon L2).
+    if(echoPair)decision.reply=/REPRISE OBLIGATOIRE/.test(String(context.conversationFocus??''))?'Franchement, ce bureau m’intéresse moins que cette porte fermée.':String(context.dialogue.at(-1).content);
     decision.stayAlone=separatePreference;
     decision.room=separatePreference?"salon":decision.room;
     decision.intent=separatePreference?"rest":(affection&&refuse?"chat":decision.intent);
@@ -912,6 +921,40 @@ console.log('Passed: garden access gates, persistent/idempotent zero-API unlock,
 }
 
 {
+// LA REPRISE ANTI-ÉCHO, BRANCHÉE POUR DE VRAI (2026-09-23, tâche #594). Le détecteur de la tâche
+// #591 savait mesurer l'écho ; il ne faisait encore rien. Deux choses se prouvent ici, et la
+// première compte autant que la seconde : un tour ORDINAIRE coûte toujours exactement deux appels
+// (l'Article 8 y tient — un détecteur qui ferait payer un troisième appel à chaque tour serait
+// retiré dans la semaine), et un tour où le partenaire recopie vraiment la réplique de l'autre en
+// coûte un de plus, une seule fois, pour afficher la seconde version.
+flat=true;affection=false;echoPair=false;
+// L'époque avance à chaque tour : la relire avant chaque envoi, sinon la requête est rejetée sans
+// aucun appel au modèle et le compteur d'appels mesurerait un tour qui n'a jamais eu lieu.
+const tourEchoTest=async()=>post(input('interact',1,{epoch:(await readWorld(db)).epoch}));
+// Le tout premier tour après un reset est une désorientation solo (2026-09-18) : un seul appel,
+// pas de partenaire, donc rien à comparer. C'est le tour suivant qui fait réellement parler les deux.
+await tourEchoTest();
+// Les tout premiers tours d'une partie sont scriptés (ouverture froide, insolite) et ne coûtent
+// AUCUN appel : mesurer l'écho dessus reviendrait à mesurer un tour qui ne parle pas au modèle.
+// On se place donc en milieu de partie, comme le fait déjà le bloc voisin, pour un vrai tour à deux.
+const milieuDePartie=()=>{const plot=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content);plot.round=50;plot.met=true;plot.evidence=Array(5).fill('preuve');plot.finalCalled=true;sqlite.prepare("UPDATE memories SET content=? WHERE kind='scenario'").run(JSON.stringify(plot));
+// Besoins calmes et mêmes pièces, sinon un besoin urgent prend la main et le tour se joue en
+// répliques locales, sans jamais appeler le modèle : on mesurerait alors un tour qui ne parle pas.
+sqlite.prepare('UPDATE agent_state SET emotions=?,needs=?,intent=?,room=?').run(JSON.stringify({curiosity:70,tension:30,trust:40,comfort:50,attraction:20}),JSON.stringify({hunger:10,fatigue:10,stress:20,uncertainty:80}),'chat','salon');};
+milieuDePartie();const toursOrdinaires=calls;await tourEchoTest();
+assert.equal(calls,toursOrdinaires+2,'a turn whose two replies differ must cost exactly two Gemini calls, today and after every future calibration of the threshold — the extra call is the exception, never the rule (Article 8)');
+milieuDePartie();echoPair=true;const avantEcho=calls;
+const reponseEcho=await tourEchoTest();assert.equal(reponseEcho.status,200);const tourEcho=await reponseEcho.json();
+assert.equal(calls,avantEcho+3,'a turn where the partner copies the other word for word costs ONE extra call, never two: the retry is a single attempt, never a loop, whatever the second answer comes back with');
+const ditsEcho=tourEcho.decisions.map(d=>String(d.reply));
+assert.equal(new Set(ditsEcho).size,2,'and the two characters must no longer be saying the same thing, which was the entire point');
+assert.ok(ditsEcho.some(r=>r.includes('cette porte fermée')),'the retry instruction must REACH the model — the partner only corrects itself when it actually reads the instruction, so seeing its corrected line is the proof the finding left the server (leçon L2)');
+echoPair=false;
+await post(input('reset',1,{epoch:(await readWorld(db)).epoch}));
+console.log('Passed: the anti-echo retry is wired end to end (2026-09-23, task #594) — the detector built the day before could measure the echo and did nothing with it, which is the defect this project keeps finding in its own work: a finding that reaches nobody. The user chose regeneration over the alternatives knowing its cost, so the cheap half is asserted first and on purpose: an ordinary turn still costs exactly two Gemini calls, and only a turn whose partner genuinely copies the other pays a third. That third call is a single attempt, never a loop — a model that repeats itself gets its retry thrown away by garderLaReprise rather than an open budget — and the proof it truly reaches the model is that the partner corrects itself ONLY when the retry instruction is in its context, never otherwise.');
+}
+
+{
 // evidence/finalCalled complets d'entrée (2026-09-19) : round=50 dépasse investigationOverdue
 // (round>=20 si evidence<5, lib/turn.ts) — sans ça, l'intent forcé à "study" empêchait la
 // conversion sommeil (qui n'agit que sur un intent chat/rest) de se déclencher du tout.
@@ -987,7 +1030,7 @@ assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche
   console.log('Passed: waitForPlayback\'s DEFAULT wait — the real setTimeout wrapper, and the only path production ever takes — is finally executed by the suite (2026-09-23, task #213, the last uncovered function in the repository). AXA-CHECK named it "wait()", which took a read to understand: it is not a named function but the default value of the `wait` parameter, and both pre-existing tests rightly inject their own, which is exactly what left the real timer never running once. The test measures a genuine suspension rather than assuming it (a wait returning immediately would otherwise pass and prove nothing), bounds itself so a regression fails instead of hanging, and covers the dead-playback exit where alive() must win over the clock.');
 }
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 268'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 269'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,

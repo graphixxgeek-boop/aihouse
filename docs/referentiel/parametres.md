@@ -620,6 +620,15 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
 - Historique transmis au modèle pour éviter les répétitions littérales : 24 dernières répliques
   échangées (`dialogueContext`), plus le registre complet des empreintes de la session
   (`dialogue_fingerprints`, sans limite).
+- `ECHO_RUN_THRESHOLD` (`lib/dialogue.ts`, 2026-09-23) : **6 mots consécutifs**. Au-delà, les deux
+  répliques d'un MÊME tour sont jugées en écho et le second personnage est refait parler une fois.
+  Calibré sur des cas réels plutôt que choisi rond : la paire de full_sim19 en partageait onze,
+  tandis que les paires légitimes des mêmes transcripts (deux personnages répondant à la même
+  menace, ou reprenant un mot de l'observateur) plafonnent bien en dessous. Mesuré sur le corpus
+  archivé : 23 paires signalées sur 2820, soit 0,8 % des tours — c'est aussi la part de tours qui
+  coûtent un appel Gemini de plus (Article 8, coût pesé et accepté par l'utilisateur). Le seuil se
+  règle à cet unique endroit ; il est un paramètre de `echoesPartnerLine`, jamais une constante
+  recopiée ailleurs (Article 24).
 - `looksLikeEcho` : deux répliques sont jugées être un écho si elles partagent au moins 90 % de
   leurs mots significatifs (hors mots vides), à condition d'avoir chacune au moins 7 mots
   significatifs.

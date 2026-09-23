@@ -122,6 +122,22 @@ vocabulaire ou ton, quel que soit leur niveau d'attirance ou d'attachement l'un 
 Aucun des deux ne doit jamais se répéter mot pour mot dans une session, ni faire écho aux mots de
 l'autre.
 
+4.1ter. **L'écho entre les deux répliques d'un même tour est VÉRIFIÉ, jamais seulement demandé**
+(2026-09-23, tâches #591/#594). Le prompt du second personnage lui disait déjà, mot pour mot, de
+changer d'angle « sur le FOND » et de « ne jamais recopier la charpente de sa phrase » — et il l'a
+ignoré sur onze mots d'affilée dans full_sim19, noté 4/20 sur ce seul défaut au lendemain d'un
+3/20 identique. Le câblage n'avait aucun trou : l'instruction était là, précise. Ce qui manquait
+était une mesure. `echoesPartnerLine` (`lib/dialogue.ts`) compare désormais les deux répliques du
+tour et mesure la plus longue suite de MOTS CONSÉCUTIFS commune ; au-delà du seuil, le moteur fait
+REPARLER le second personnage avec une consigne qui cite la suite recopiée et exige un changement
+de fond (choix de l'utilisateur en fenêtre dédiée, contre les deux autres options envisagées :
+n'écrire qu'une alerte, ou couper la réplique). La mesure est volontairement étroite : un thème
+partagé, une idée proche, une même colère face à la même provocation sont une vraie conversation
+et ne sont jamais punis — seule une suite de mots qu'aucun hasard n'explique déclenche la reprise.
+La seconde tentative n'est gardée que si elle fait réellement mieux (`garderLaReprise`), et il n'y
+en a jamais qu'une : un modèle qui s'entête laisse sa reprise de côté plutôt qu'ouvrir un budget
+d'appels.
+
 4.1bis. L'esprit rugueux (Article 0 de CLAUDE.md) n'est jamais un mode déclenché par la pression :
 il est présent en permanence, même dans une scène calme sans provocation. Sa texture diffère par
 personnage, pas par situation : Lia est froide et coupante (contrôle, ironie mordante, jamais de

@@ -342,25 +342,34 @@ export function dialogueProgress(history:DialogueLine[],contributions:readonly s
 // vraie conversation (leçon L4 : un garde-fou qui accuse à tort cesse d'être lu).
 const MOTS = /[a-zàâäéèêëïîôöùûüÿœæç']+/gi;
 
-export function sharedRunLength(a: string, b: string): number {
+// Une seule implémentation de la mesure, jamais deux : sharedRunLength() n'en garde que la
+// longueur, la consigne de reprise en a besoin des MOTS eux-mêmes pour pouvoir les citer au
+// modèle. Deux boucles identiques à un `return` près seraient exactement le doublon que
+// CLONE-HUNTER traque.
+function plusLongueSuiteCommune(a: string, b: string): { longueur: number; mots: string[] } {
   const x = (String(a ?? "").toLowerCase().match(MOTS) ?? []);
   const y = (String(b ?? "").toLowerCase().match(MOTS) ?? []);
-  if (!x.length || !y.length) return 0;
+  if (!x.length || !y.length) return { longueur: 0, mots: [] };
   // Plus longue sous-chaîne commune, en mots. Table roulante : deux lignes suffisent, et la
   // longueur d'une réplique rend le coût négligeable.
   let best = 0;
+  let finBest = 0;
   let precedent = new Array(y.length + 1).fill(0);
   for (let i = 1; i <= x.length; i++) {
     const courant = new Array(y.length + 1).fill(0);
     for (let j = 1; j <= y.length; j++) {
       if (x[i - 1] === y[j - 1]) {
         courant[j] = precedent[j - 1] + 1;
-        if (courant[j] > best) best = courant[j];
+        if (courant[j] > best) { best = courant[j]; finBest = i; }
       }
     }
     precedent = courant;
   }
-  return best;
+  return { longueur: best, mots: x.slice(finBest - best, finBest) };
+}
+
+export function sharedRunLength(a: string, b: string): number {
+  return plusLongueSuiteCommune(a, b).longueur;
 }
 
 // SEUIL À SIX, et il est calibré sur des cas réels plutôt que choisi rond : les deux répliques de
@@ -370,6 +379,44 @@ export function sharedRunLength(a: string, b: string): number {
 export const ECHO_RUN_THRESHOLD = 6;
 
 export function echoesPartnerLine(reply: string, partnerReply: string, seuil = ECHO_RUN_THRESHOLD) {
-  const run = sharedRunLength(reply, partnerReply);
-  return { echo: run >= seuil, run, seuil };
+  const { longueur: run, mots } = plusLongueSuiteCommune(reply, partnerReply);
+  return { echo: run >= seuil, run, seuil, extrait: mots.join(" ") };
+}
+
+// echoRetryFocus() / garderLaReprise() (2026-09-23, tâche #594) — CE QUE LE MOTEUR FAIT QUAND LE
+// DÉTECTEUR MORD, tranché par l'utilisateur en fenêtre dédiée : « Refaire parler le deuxième »,
+// et « Garde six mots » pour le seuil. Le coût est assumé en connaissance de cause (Article 8) :
+// un appel Gemini de plus, mais SEULEMENT quand l'écho est avéré — mesuré à 23 paires sur 2820
+// dans les transcripts réels, soit 0,8 % des tours.
+//
+// POURQUOI CES DEUX FONCTIONS VIVENT ICI ET PAS DANS route.ts : une décision enfermée dans le
+// corps d'un handler ne peut être vérifiée que par une vraie requête, donc en pratique jamais
+// (leçon L2 — un mécanisme qui ne sort pas du script est une intention). Ici, les deux se testent
+// dans les deux sens, et route.ts ne garde que la plomberie de l'appel.
+//
+// LA CONSIGNE N'EST PAS UNE LISTE DE MOTS INTERDITS, et le corollaire de l'Article 17 l'exige :
+// elle cite la suite recopiée comme CONSTAT, puis demande un changement de FOND — en disant
+// explicitement que reformuler la même idée serait le même défaut. C'est un principe que le
+// modèle peut s'appliquer à n'importe quelle réplique future, pas un exemple de plus.
+export function echoRetryFocus(params: {
+  reply: string;
+  partnerReply: string;
+  partnerName: string;
+  focusDeBase?: string;
+  seuil?: number;
+}): string | null {
+  const { echo, run, extrait } = echoesPartnerLine(params.reply, params.partnerReply, params.seuil ?? ECHO_RUN_THRESHOLD);
+  if (!echo) return null;
+  return `REPRISE OBLIGATOIRE, AVANT TOUT LE RESTE : ta première version recopiait ${run} mots d'affilée de ce que ${params.partnerName} vient de dire — « ${extrait} ». Recommence ta réplique en entier. Ce n'est pas une affaire de synonymes : redire la même chose avec d'autres mots serait exactement le même défaut. Change ce que tu APPORTES — objecte à ce qu'il/elle vient de dire, relève l'aspect qu'il/elle a laissé de côté, adresse-toi à lui/elle plutôt qu'à l'humain, ou laisse tomber ce qui a déjà été dit et n'ajoute que ce qui manque. Si son angle ne t'inspire rien de neuf, dis-le dans ton propre registre et parle de ce qui t'occupe vraiment, toi. ${params.focusDeBase ?? ""}`.trim();
+}
+
+// GARDE-FOU DE LA REPRISE : une seconde tentative n'est jamais gardée par principe, seulement si
+// elle fait RÉELLEMENT mieux. Sans cette comparaison, un modèle qui s'entête produirait un
+// deuxième écho aussi long, payé un appel de plus — et on afficherait le pire des deux en croyant
+// avoir corrigé. Une seule reprise, jamais une boucle : si la seconde n'est pas meilleure, on
+// garde la première et le défaut passe. C'est une limite assumée, écrite plutôt que tue
+// (Article 27) — mieux vaut un défaut connu qu'un budget d'appels ouvert.
+export function garderLaReprise(repriseReply: string, premiereReply: string, partnerReply: string): boolean {
+  if (!String(repriseReply ?? "").trim()) return false;
+  return sharedRunLength(repriseReply, partnerReply) < sharedRunLength(premiereReply, partnerReply);
 }
