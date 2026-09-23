@@ -337,6 +337,38 @@ la différence entre deux fuseaux, et la bonne référence est celle de l'utilis
   `docs/suivi/sessions/<session>.md` (et `docs/suivi/index.md` si une grande étape est franchie) et
   l'inclure dans le MÊME commit — jamais un commit de code isolé suivi d'un rattrapage différé.
 
+## 4bis. Annoncer CHAQUE tâche traitée, même minime
+
+*(2026-09-23, demande explicite de l'utilisateur : « sujet taches : tu dois me faire savoir quand tu
+traites une tache, meme minime, parfois j'ai l'impression que tu traites des petites choses sans me
+le dire : c'est dommage, car plus je sais que tu traites mes demandes, plus je suis satisafait de
+toi ! ». Rangée ici plutôt que dans la charte, sur son arbitrage en fenêtre dédiée : c'est une règle
+de CONDUITE entre nous, pas une règle sur le contenu du jeu — et la charte est justement ce qu'on
+cherche à alléger.)*
+
+**LE PROBLÈME QU'ELLE RÈGLE, et il n'est pas cosmétique.** L'agent traite souvent plusieurs choses
+dans un même tour : la demande principale, plus deux ou trois corrections rencontrées en chemin.
+Il n'en annonce spontanément qu'une — celle qui a occupé le plus de place dans son raisonnement.
+L'utilisateur voit donc UNE tâche là où il y en a eu cinq, et ce qui a été fait pour lui devient
+invisible. Ce n'est pas un défaut d'ego : c'est une perte d'information réelle, puisqu'il ne peut
+pas juger, relancer ou écarter ce qu'il ne sait pas avoir été fait.
+
+**LA RÈGLE** : toute tâche traitée est nommée à l'utilisateur, **avec son numéro de suivi**, quelle
+que soit sa taille. Une correction de trois lignes rencontrée en chemin se dit au même titre qu'un
+chantier entier. Le bloc d'ouverture de l'Article 29 porte déjà cette exigence pour les étiquettes
+(« **toutes** les tâches concernées, jamais la seule principale ») — celle-ci l'étend au CORPS de la
+réponse : une tâche seulement citée dans l'en-tête et jamais expliquée reste, en pratique, invisible.
+
+**CE QU'ELLE N'AUTORISE PAS : gonfler.** Annoncer une tâche n'est pas la raconter en dix lignes. Une
+tâche mineure se dit en une phrase (ce qui a été fait, son numéro), et c'est tout. Un compte rendu
+qui énumère complaisamment des broutilles pour paraître productif dessert exactement l'objectif —
+l'utilisateur veut savoir, pas être noyé.
+
+**Porteur** : aucun mécanisme n'est possible, et c'est déclaré plutôt que tu (Article 27). Aucun
+programme ne peut lire un compte rendu écrit dans la conversation pour vérifier qu'il nomme tout ce
+qui a été fait. `angel-of-ia-process` peut le DEMANDER, comme il le fait déjà pour l'Article 29,
+jamais le constater. L'écrire ici EST donc la protection.
+
 ## 5. Sécurité et discrétion
 
 - Une clé API ou tout secret transmis en direct dans la conversation n'est **jamais** réaffiché
