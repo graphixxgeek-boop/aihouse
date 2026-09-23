@@ -297,6 +297,42 @@ export function nextTaskNumber(sessionsDir = SESSIONS_DIR, readDir = readdirSync
 // inférieur ou égal au précédent DANS UN MÊME fichier — les lignes s'ajoutent toujours dans l'ordre
 // chronologique au sein d'un fichier de session) — jamais un jugement sur le contenu des tâches,
 // seulement sur la cohérence de la numérotation elle-même.
+// findHorodatagesFuturs() (2026-09-23, Ronde GOAT MAX) — UNE LIGNE DATÉE DEMAIN N'EST PAS UNE TRACE.
+//
+// CE QUE LA RONDE A TROUVÉ, et le chiffre dit tout : check-tasks-details signalait UNE tâche à date
+// future. Un balayage de TOUTES les lignes en a rendu 44 sur 526 — dont les deux écrites dix
+// minutes plus tôt. L'écart n'était pas un oubli du garde-fou existant : il ne regarde que les
+// tâches encore OUVERTES, et 43 des 44 étaient déjà « terminée », donc structurellement invisibles.
+// Un contrôle qui ne voit qu'une tranche rend un chiffre juste sur cette tranche et faux sur le tout.
+//
+// POURQUOI C'EST UN VRAI DÉFAUT et pas une coquetterie d'horodatage : tout le paysage calcule des
+// FRAÎCHEURS à partir de ces dates (« tâche ouverte depuis 3 jours », « dernier passage il y a
+// 4 jours », la stagnation de CLEAN-DIRTY-OLD, la périodicité des items coûteux de la Ronde). Une
+// date future rend un âge NÉGATIF, qu'aucun de ces calculs n'attend — et un âge négatif se lit
+// comme « tout frais », c'est-à-dire exactement l'inverse d'une alerte.
+//
+// LA CAUSE RACINE, écrite ici parce qu'aucune mécanique ne peut l'empêcher (Article 27) : ces dates
+// sont TAPÉES par l'agent, jamais lues sur une horloge. Un agent qui extrapole une heure de session
+// plausible au lieu de lire l'heure réelle fabrique une valeur qui ressemble à une mesure — le
+// défaut que ce projet chasse partout ailleurs, appliqué à sa propre trace.
+export function findHorodatagesFuturs(sessionsDir = SESSIONS_DIR, now = new Date(), readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+  if (!exists(sessionsDir)) return [];
+  const limite = now instanceof Date ? now : new Date(now);
+  const futurs = [];
+  for (const file of readDir(sessionsDir).filter((f) => f.endsWith(".md"))) {
+    for (const ligne of readFile(join(sessionsDir, file)).split("\n")) {
+      const m = /^\|\s*(\d+)\s*\|\s*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})Z?\s*\|/.exec(ligne);
+      if (!m) continue;
+      const quand = new Date(`${m[2]}:00Z`);
+      if (!Number.isFinite(quand.getTime()) || quand <= limite) continue;
+      const avanceMin = Math.round((quand - limite) / 60000);
+      futurs.push({ numero: Number(m[1]), horodatage: m[2] + "Z", file, avanceMinutes: avanceMin,
+        pourquoi: `datée ${avanceMin} minute(s) dans le futur — toute fraîcheur calculée dessus rend un âge négatif, qui se lit comme « tout frais » au lieu de déclencher une alerte` });
+    }
+  }
+  return futurs.sort((a, b) => a.numero - b.numero);
+}
+
 export function findTaskNumberIssues(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
   if (!exists(sessionsDir)) return [];
   const files = readDir(sessionsDir).filter((f) => f.endsWith(".md"));
@@ -544,6 +580,17 @@ function main() {
     console.log(`Numérotation cohérente sur tout le registre. Prochain numéro à utiliser : ${nextTaskNumber()}.`);
   } else {
     for (const i of numberIssues) console.log(`   - [${i.type}] n°${i.number} dans ${i.file}`);
+  }
+
+  console.log("\n=== Garde-fou horodatages dans le futur (docs/suivi/) ===\n");
+  const futurs = findHorodatagesFuturs();
+  if (!futurs.length) {
+    console.log("Aucune ligne datée dans le futur — toutes les fraîcheurs calculées sur ce registre rendent un âge positif.");
+  } else {
+    console.log(`${futurs.length} ligne(s) datée(s) dans le futur. Une date à venir rend un âge NÉGATIF, qui se lit comme « tout frais » au lieu de déclencher une alerte — tous les signaux de fraîcheur du paysage s'appuient dessus.`);
+    for (const f of futurs.slice(0, 12)) console.log(`   - n°${f.numero} — ${f.horodatage} (+${f.avanceMinutes} min) — ${f.file}`);
+    if (futurs.length > 12) console.log(`   … et ${futurs.length - 12} autre(s).`);
+    console.log("   Cause racine, qu'aucune mécanique ne peut empêcher : ces dates sont TAPÉES, jamais lues sur une horloge. Lire l'heure réelle avant d'écrire une ligne, jamais extrapoler une heure de session plausible.");
   }
 
   console.log("\n=== Garde-fou fraîcheur du suivi (commits récents sans mise à jour docs/suivi/) ===\n");

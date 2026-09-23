@@ -3029,7 +3029,20 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // garantir l'execution de ce numérotage dans le prolongement de celui actuel et jusqu'à nouvel
   // ordre ? »). Contrairement au gestionnaire de tâches interne de Claude Code (TaskCreate/
   // TaskUpdate, propre à la session), ce numéro vit dans docs/suivi/ et doit être vérifiable.
-  const {extractTaskNumbers,nextTaskNumber,findTaskNumberIssues}=await import('../scripts/check-suivi-fidelity.mjs');
+  const {extractTaskNumbers,nextTaskNumber,findTaskNumberIssues,findHorodatagesFuturs}=await import('../scripts/check-suivi-fidelity.mjs');
+  // UNE LIGNE DATÉE DEMAIN N'EST PAS UNE TRACE (2026-09-23, Ronde GOAT MAX).
+  // Trouvaille RÉELLE : check-tasks-details signalait UNE tâche à date future ; un balayage de
+  // TOUTES les lignes en a rendu 44 sur 526 — dont deux écrites dix minutes plus tôt. L'écart
+  // n'était pas un oubli : ce contrôle-là ne regarde que les tâches encore OUVERTES, et 43 des 44
+  // étaient déjà « terminée », donc structurellement invisibles. Un contrôle qui ne voit qu'une
+  // tranche rend un chiffre juste sur cette tranche et faux sur le tout.
+  const futurFake={'s.md':'| 10 | 2026-09-23T10:00Z | a | b | c | d | e | terminée |\n| 11 | 2099-01-01T00:00Z | a | b | c | d | e | terminée |\n'};
+  const litFutur=(chemin)=>futurFake[Object.keys(futurFake).find(k=>chemin.endsWith(k))];
+  const futurs=findHorodatagesFuturs('/fake',new Date('2026-09-23T12:00:00Z'),()=>Object.keys(futurFake),litFutur,()=>true);
+  assert.equal(futurs.length,1,'the guard must scan EVERY dated row, whatever its status — the defect it closes is precisely that the existing check only looked at OPEN tasks and therefore missed 43 of the 44 real cases');
+  assert.equal(futurs[0].numero,11,'it must name the future row, never the legitimate past one');
+  assert.ok(futurs[0].avanceMinutes>0&&/âge négatif/.test(futurs[0].pourquoi),'it must say WHY a future date matters — every freshness signal in this landscape computes an age from these dates, and a negative age reads as "brand new" instead of raising an alert');
+  assert.deepEqual(findHorodatagesFuturs(),[],'and the real registry must carry no future timestamp at all: the 44 found on 2026-09-23 were re-anchored on the commit that introduced each row, since a commit date is measured where a typed one is invented');
   const withNumbers='| N° | h | S | s | normal | d1 | terminée |\n| — | h | S | s | normal | d2 | terminée |\n| 118 | h | S | s | normal | d3 | terminée |\n|---|---|---|---|---|---|---|';
   assert.deepEqual(extractTaskNumbers(withNumbers),[118],'extractTaskNumbers() must extract only real numeric values, skip the header, the "—" placeholder for pre-numbering rows, and the separator line entirely');
   assert.deepEqual(extractTaskNumbers('| N° | h | S | s | normal | d1 | terminée |'),[],'a session with no real numbers yet must report an empty list, never crash');
