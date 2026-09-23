@@ -240,7 +240,7 @@ export const AGENT_SCRIPT_FILES = {
   // lieu de l'ÉVITER. Constat gardé ici, à côté du symptôme.
   "safe-export": "scripts/safe-export.mjs",
   "tool-learning": "scripts/tool-learning.mjs",
-  "a-niveau": "scripts/a-niveau.mjs",
+  "the-equalizer": "scripts/the-equalizer.mjs",
   "integration-outil": "scripts/integration-outil.mjs",
   argus: "scripts/check-argus.mjs",
   harmonia: "scripts/check-harmonia.mjs",

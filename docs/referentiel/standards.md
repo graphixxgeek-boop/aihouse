@@ -20,7 +20,7 @@ et que chacune dit **qui la vérifie** — ou déclare honnêtement que personne
 ## Les quatre niveaux, tous retenus
 
 **POURQUOI CES TITRES SONT ÉCRITS `NIVEAU n — NOM : explication`, ET POURQUOI IL NE FAUT PAS Y
-TOUCHER.** A-NIVEAU lit ce document à l'exécution plutôt que de recopier ses exigences dans son code
+TOUCHER.** THE-EQUALIZER lit ce document à l'exécution plutôt que de recopier ses exigences dans son code
 (Article 24) : le NOM en majuscules avant les deux-points est ce qui rattache chaque tableau à un
 domaine de verdict. Le premier jet de ces titres était en prose (« NIVEAU 2 — SES PROPRES
 documents ») et l'outil devait deviner le nom du niveau en cherchant le premier mot en majuscules :

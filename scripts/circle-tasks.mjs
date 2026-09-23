@@ -260,12 +260,12 @@ export const CIRCLE_ITEMS = [
   // touché trois lignes, c'est une question de période. À chaque commit elle produirait le même
   // verdict des dizaines de fois d'affilée, et un signal qui ne change jamais cesse d'être lu.
   {
-    id: "a-niveau",
+    id: "the-equalizer",
     theme: "Qualité & fun",
     label: "Tout est-il à niveau ? — un verdict par domaine, et ce que personne ne vérifie",
     cout: "gratuit — relit le référentiel des standards et relaie des verdicts déjà calculés",
     tokensEstimes: "faible — un document et un audit d'intégration déjà existant",
-    execute: "Lancer node scripts/a-niveau.mjs. Lire les quatre verdicts de domaine, puis regarder d'abord les deux catégories que RIEN d'autre ne remonte : les exigences déclarées que personne ne vérifie (elles sont attendues, elles doivent rester peu nombreuses et assumées) et les vérificateurs FANTÔMES (une exigence qui annonce une fonction inexistante — jamais toléré, c'est une promesse creuse, à corriger le jour même). Le retard outil par outil vient d'integrationAudit() et se traite comme d'habitude. Un niveau ORPHELIN signalé veut dire que le référentiel a gagné une section que le verdict ne compte nulle part : la rattacher dans DOMAINES ou la renommer, jamais la laisser.",
+    execute: "Lancer node scripts/the-equalizer.mjs. Lire les quatre verdicts de domaine, puis regarder d'abord les deux catégories que RIEN d'autre ne remonte : les exigences déclarées que personne ne vérifie (elles sont attendues, elles doivent rester peu nombreuses et assumées) et les vérificateurs FANTÔMES (une exigence qui annonce une fonction inexistante — jamais toléré, c'est une promesse creuse, à corriger le jour même). Le retard outil par outil vient d'integrationAudit() et se traite comme d'habitude. Un niveau ORPHELIN signalé veut dire que le référentiel a gagné une section que le verdict ne compte nulle part : la rattacher dans DOMAINES ou la renommer, jamais la laisser.",
     producesReport: true,
   },
   // recap-evaluations (2026-09-22, demande explicite de l'utilisateur : « je veux lors de la ronde le
@@ -1100,7 +1100,7 @@ export const CIRCLE_REPORT_FOLDERS = {
   kpi: "docs/tableau-de-bord/",
   "pure-gold-unity-scan": "docs/pure-gold-unity/",
   "tool-learning": "docs/tool-learning/",
-  "a-niveau": "docs/a-niveau/",
+  "the-equalizer": "docs/the-equalizer/",
   "recap-evaluations": "docs/angel-of-ia-process/",
   "smart-conso-token-scan": "docs/smart-conso-token/",
   "cassandra-rh-signal": "docs/cassandra-rh/",

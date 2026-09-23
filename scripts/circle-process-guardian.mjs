@@ -820,7 +820,7 @@ export const CIRCLE_ITEMS_CHANGELOG = [
     pourquoi: "Reconstitué après coup, sur demande explicite : « intégré à circle pour un suivi au top, comme le reste ». Seconde moitié de l'évolutivité (SAFE-EXPORT porte la première). Il juge une TRAJECTOIRE, donc il appartient à un rythme périodique et pas au commit : sous trois passages il refuse de conclure.",
   },
   {
-    date: "2026-09-23", itemId: "a-niveau", changement: "ajout",
+    date: "2026-09-23", itemId: "the-equalizer", changement: "ajout",
     pourquoi: "Le verdict d'ensemble contre le référentiel des standards. À la Ronde plutôt qu'au commit pour une raison de fond : « tout est-il à niveau ? » est une question de période — répétée à chaque commit elle rendrait le même verdict des dizaines de fois d'affilée, et un signal qui ne change jamais cesse d'être lu.",
   },
 ];
@@ -908,7 +908,7 @@ export function findStaleItemCountReferences(text, realCount) {
 //
 // SÉPARATION DEMANDÉE EXPLICITEMENT par l'utilisateur : « je veux un process propre pour intégration
 // d'un outil et un process séparé propre pour intégration à circle ». Il avait raison, et la preuve
-// est arrivée le soir même : en faisant entrer A-NIVEAU, `integration-outil` a annoncé « tous les
+// est arrivée le soir même : en faisant entrer THE-EQUALIZER, `integration-outil` a annoncé « tous les
 // registres renseignés » alors qu'il manquait QUATRE raccordements propres à la Ronde. Rejoindre
 // l'Agence et rejoindre la Ronde ne sont pas la même chose — l'un donne un rang et des documents,
 // l'autre donne une place dans un rythme périodique, avec ses tables satellites à lui.
@@ -919,7 +919,7 @@ export function findStaleItemCountReferences(text, realCount) {
 // deux pour une seule question.
 //
 // CE QUE CE RACCORDEMENT EXIGE RÉELLEMENT — établi non pas en théorie mais en relevant, une par
-// une, les choses qu'il a fallu faire à la main pour A-NIVEAU alors qu'aucun outil ne les demandait.
+// une, les choses qu'il a fallu faire à la main pour THE-EQUALIZER alors qu'aucun outil ne les demandait.
 export const RACCORDEMENTS_RONDE = [
   {
     cle: "item",
@@ -1031,7 +1031,7 @@ function main() {
   console.log("\n=== Raccordement d'un item à la Ronde (process séparé de l'intégration à l'Agence) ===");
   const cible = process.argv[2];
   if (!cible) {
-    console.log("Passer un id d'item en argument pour obtenir son plan de raccordement (ex. : node scripts/circle-process-guardian.mjs a-niveau).");
+    console.log("Passer un id d'item en argument pour obtenir son plan de raccordement (ex. : node scripts/circle-process-guardian.mjs the-equalizer).");
   } else {
     let checkHouseText = null;
     try { checkHouseText = readFileSync(join(ROOT, "scripts/check-house.mjs"), "utf8"); } catch { /* best-effort */ }

@@ -341,7 +341,7 @@ export const PROCESSES = [
     // SÉPARÉ de "integration-outil" sur demande explicite de l'utilisateur (« je veux un process
     // propre pour intégration d'un outil et un process séparé propre pour intégration à circle »),
     // et la preuve est arrivée le soir même : integration-outil a annoncé « tous les registres
-    // renseignés » pour A-NIVEAU pendant qu'il manquait des raccordements de Ronde qu'il ne connaît
+    // renseignés » pour THE-EQUALIZER pendant qu'il manquait des raccordements de Ronde qu'il ne connaît
     // pas. Ce ne sont pas deux étapes d'une même arrivée — un Gardien sacré est intégré à l'Agence
     // et volontairement absent de la Ronde, et un item de Ronde peut ne porter aucun outil.
     maillonsSansObjet: {

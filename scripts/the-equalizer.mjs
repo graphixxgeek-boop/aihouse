@@ -1,4 +1,4 @@
-// A-NIVEAU (2026-09-23, chantier 5 du plan de nuit) — le vérificateur « tout est-il à niveau ? ».
+// THE-EQUALIZER (2026-09-23, chantier 5 du plan de nuit) — le vérificateur « tout est-il à niveau ? ».
 //
 // SA VOCATION, dans les mots de l'utilisateur : « qui se charge de vérifier par ailleurs que tout
 // est à niveau [...] je parle de tout mettre à niveau aussi par rapport aux standards, aux formats,
@@ -18,7 +18,7 @@
 //
 // SA SOURCE DE VÉRITÉ EST UN DOCUMENT, JAMAIS UNE LISTE DANS CE FICHIER (Article 24). Les exigences
 // vivent dans `docs/referentiel/standards.md` et sont LUES à l'exécution. Ajouter une ligne au
-// tableau de ce document suffit à ce que A-NIVEAU la prenne en compte — aucune modification de code.
+// tableau de ce document suffit à ce que THE-EQUALIZER la prenne en compte — aucune modification de code.
 // Le jour où ce fichier-ci énumérerait les exigences, il deviendrait la copie manuelle que
 // l'Article 24 interdit, et il se périmerait au premier standard ajouté.
 //
@@ -183,20 +183,20 @@ export function verdictParDomaine(exigences = [], { domaines = DOMAINES, fantome
 // outil qui REJOINT l'équipe hérite de tout ce que l'équipe sait déjà faire » — aujourd'hui les
 // garde-fous DÉTECTENT l'oubli au lieu de l'ÉVITER, un registre à la fois.
 //
-// A-NIVEAU ne comble pas ce trou (il ne corrige rien), mais il le rend VISIBLE d'un coup d'œil, ce
+// THE-EQUALIZER ne comble pas ce trou (il ne corrige rien), mais il le rend VISIBLE d'un coup d'œil, ce
 // que personne ne faisait : `checkAgentOnboarding()` répond pour UN outil quand on l'interroge,
 // jamais pour l'équipe entière sans qu'on le lui demande outil par outil.
 //
 // Il délègue intégralement : le classement des écarts reste celui de LE-COORDINATEUR, jamais un
 // second jugement recalculé ici qui pourrait diverger du premier.
-// A-NIVEAU NE REFAIT PAS CETTE BOUCLE, IL L'APPELLE. `integrationAudit()` (LE-COORDINATEUR) parcourt
+// THE-EQUALIZER NE REFAIT PAS CETTE BOUCLE, IL L'APPELLE. `integrationAudit()` (LE-COORDINATEUR) parcourt
 // déjà la table maîtresse membre par membre et rend, pour chacun, la liste de ses écarts — avec deux
 // choses qu'une seconde boucle écrite ici aurait perdues : un `mesurable: false` explicite quand la
 // table est illisible (jamais un « tout va bien » fabriqué par une liste vide), et la distinction
 // entre un membre incomplet et un membre non vérifiable. Mon premier jet réécrivait cette boucle et
 // a immédiatement produit dix-sept faux écarts.
 //
-// Ce que A-NIVEAU ajoute par-dessus, et c'est tout : le rattacher aux exigences du référentiel, pour
+// Ce que THE-EQUALIZER ajoute par-dessus, et c'est tout : le rattacher aux exigences du référentiel, pour
 // qu'un retard d'intégration cesse d'être une liste à part et devienne un domaine en défaut.
 
 // ————————————————————————————————————————————————————————————————————————
@@ -247,7 +247,7 @@ export function formatANiveau({ exigences = [], verdicts = [], fantomes = [], in
   const orphelins = [...new Set(exigences.map((e) => e.niveau))].filter((n) => !rattaches.has(n));
   if (orphelins.length) {
     l.push("");
-    l.push(`🔴 NIVEAUX ORPHELINS — ${orphelins.join(", ")} : ces exigences ne sont rattachées à aucun domaine de verdict, donc comptées nulle part. À rattacher dans DOMAINES (scripts/a-niveau.mjs) ou à renommer dans le référentiel.`);
+    l.push(`🔴 NIVEAUX ORPHELINS — ${orphelins.join(", ")} : ces exigences ne sont rattachées à aucun domaine de verdict, donc comptées nulle part. À rattacher dans DOMAINES (scripts/the-equalizer.mjs) ou à renommer dans le référentiel.`);
   }
 
   l.push("");
@@ -265,9 +265,9 @@ export function formatANiveau({ exigences = [], verdicts = [], fantomes = [], in
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  recordCliUsage("a-niveau");
-  printReportHeader({ tool: "A-NIVEAU", title: "Tout est-il à niveau ?", subtitle: "un verdict par domaine, et ce que personne ne vérifie", scriptPath: "scripts/a-niveau.mjs" });
-  printReliabilityNotice("a-niveau");
+  recordCliUsage("the-equalizer");
+  printReportHeader({ tool: "THE-EQUALIZER", title: "Tout est-il à niveau ?", subtitle: "un verdict par domaine, et ce que personne ne vérifie", scriptPath: "scripts/the-equalizer.mjs" });
+  printReliabilityNotice("the-equalizer");
 
   const exigences = loadStandards();
   const fantomes = findVerificateursFantomes(exigences, exportsDuDepot());
@@ -302,5 +302,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const constats = constatsANiveau({ verdicts, fantomes, integration });
   console.log("");
   console.log(`## ${PLAN_ACTION_TITRE}`);
-  console.log(planDactionDepuisEcarts(constats, { toolSlug: "a-niveau", tache: "mettre l'Agence à niveau" }).lignes.join("\n"));
+  console.log(planDactionDepuisEcarts(constats, { toolSlug: "the-equalizer", tache: "mettre l'Agence à niveau" }).lignes.join("\n"));
 }

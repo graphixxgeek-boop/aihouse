@@ -69,7 +69,7 @@ export const REGISTRES_D_INTEGRATION = [
   },
   {
     // objectif-chiffre (2026-09-23) — ONZIÈME REGISTRE, ajouté après un écart réel : en intégrant
-    // A-NIVEAU, cet outil a annoncé « 10/10 registres renseignés » pendant que la suite de tests
+    // THE-EQUALIZER, cet outil a annoncé « 10/10 registres renseignés » pendant que la suite de tests
     // REFUSAIT le commit, faute d'une ligne dans le registre des objectifs. Un outil d'intégration
     // qui déclare une intégration complète alors qu'il manque une inscription obligatoire est
     // exactement le faux vert que tout ce paysage combat — et il est pire ici qu'ailleurs, puisque

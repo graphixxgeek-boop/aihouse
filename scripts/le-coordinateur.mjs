@@ -255,11 +255,11 @@ export const PRESTATIONS = [
   // celui-ci n'avait personne. Trouvé au premier vrai passage d'integration-outil.mjs, qui existe
   // précisément pour rendre la liste des registres DEMANDABLE avant de commencer.
   { nom: "Pack Départ", description: "Vérifie si l'outillage et le code sont exportables : jargon propre au projet resté dans un blueprint, terme employé sans fiche qui le définisse, mécanisme sans sa raison écrite.", demande: "Exportabilité de l'Agence, reprise par une autre IA (Article 27)", outils: ["SAFE-EXPORT"], cout: "0 appel API — couche légère mécanique", tokensEstimes: "nul en couche légère ; la sonde profonde, elle, se propose et se valide avant" },
-  // A-NIVEAU (2026-09-23) — la prestation que personne ne rendait : un verdict d'ENSEMBLE. Chaque
+  // THE-EQUALIZER (2026-09-23) — la prestation que personne ne rendait : un verdict d'ENSEMBLE. Chaque
   // pack ci-dessous répond de sa part ; celui-ci répond de la question que l'utilisateur a posée
   // telle quelle (« qui se charge de vérifier que tout est à niveau »), et surtout nomme ce que
   // personne ne vérifie — ce qu'aucun contrôleur ne peut dire de lui-même.
-  { nom: "Pack Niveau", description: "Rend UN verdict par domaine (l'Agence, les documents, le code, le jeu) contre les exigences écrites du référentiel des standards, et nomme les exigences que personne ne vérifie ainsi que les outils restés en retard sur l'équipe.", demande: "Est-ce que tout est à niveau ? (standards, formats, gabarits)", outils: ["A-NIVEAU"], cout: "0 appel API", tokensEstimes: "nul — relit un document et relaie des verdicts déjà calculés" },
+  { nom: "Pack Niveau", description: "Rend UN verdict par domaine (l'Agence, les documents, le code, le jeu) contre les exigences écrites du référentiel des standards, et nomme les exigences que personne ne vérifie ainsi que les outils restés en retard sur l'équipe.", demande: "Est-ce que tout est à niveau ? (standards, formats, gabarits)", outils: ["THE-EQUALIZER"], cout: "0 appel API", tokensEstimes: "nul — relit un document et relaie des verdicts déjà calculés" },
   { nom: "Pack Trajectoire", description: "Juge si chaque outil PROGRESSE vraiment (relit-il sa mémoire, se trompe-t-il moins) ou s'il archive sans rien apprendre — et me juge, moi, sur les diagnostics que j'ai laissés sans suite.", demande: "Apprentissage réel de l'outillage, et mon apport à cet apprentissage", outils: ["TOOL-LEARNING"], cout: "0 appel API", tokensEstimes: "nul — lecture de registres déjà sur le disque" },
   { nom: "Pack Accueil", description: "Dit, registre par registre, ce qui reste à renseigner pour faire entrer un nouvel outil dans l'Agence — lu dans les fichiers réels, jamais une liste recopiée.", demande: "Intégrer un nouvel outil sans découvrir les oublis un test après l'autre", outils: ["integration-outil"], cout: "0 appel API", tokensEstimes: "nul — lecture de fichiers déjà sur le disque" },
   { nom: "Pack Empreinte", description: "Note la fidélité d'un texte déjà écrit (transcript, extrait) à l'esprit rugueux des personnages.", demande: "Fidélité de l'esprit des personnages (Article 0)", outils: ["EL-PROFESSOR"], cout: "0 appel API — relit un texte déjà produit", tokensEstimes: "variable — proportionnel à la taille du texte relu" },
@@ -574,7 +574,7 @@ export function findScriptsMissingFromAgentFiles(toolsTableMarkdown, agentScript
 // primaryToolName() (2026-09-23) — LE NOM PRINCIPAL D'UNE CELLULE DE LA TABLE MAÎTRESSE, isolé ici
 // parce que le même découpage était recopié à l'identique dans trois fonctions de ce fichier
 // (`badgeWarningsForOutils`, `findToolsMissingFromMenu`, `findScriptsMissingFromAgentFiles`) et
-// OUBLIÉ dans un quatrième appelant écrit le même jour (A-NIVEAU), qui a aussitôt fabriqué
+// OUBLIÉ dans un quatrième appelant écrit le même jour (THE-EQUALIZER), qui a aussitôt fabriqué
 // dix-sept faux écarts : la cellule entière, parenthèse de précision comprise, devenait le slug
 // (« docs/referentiel/cassandra-rh-scripts-cassandra-rh-mjs.md »), donc tout manquait.
 //

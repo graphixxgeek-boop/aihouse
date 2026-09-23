@@ -135,10 +135,10 @@ export const REGISTRIES = [
   // Article 23) — la couche légère, elle, ne produit qu'un avertissement post-commit sans fichier.
   { slug: "safe-export", label: "SAFE-EXPORT", family: "Équipe noyau (Article 20)", path: "docs/safe-export/", decision: "texte", scriptPath: "scripts/safe-export.mjs" },
   { slug: "tool-learning", label: "TOOL-LEARNING", family: "Suite Dette & Structure du code", path: "docs/tool-learning/", decision: "texte", scriptPath: "scripts/tool-learning.mjs" },
-  // A-NIVEAU : texte, comme ses voisins de suite. Son verdict est relu par des outils (god,
+  // THE-EQUALIZER : texte, comme ses voisins de suite. Son verdict est relu par des outils (god,
   // la Ronde), jamais seulement par un humain devant un navigateur — un HTML le rendrait plus
   // joli et moins lisible par les autres.
-  { slug: "a-niveau", label: "A-NIVEAU", family: "Suite Dette & Structure du code", path: "docs/a-niveau/", decision: "texte", scriptPath: "scripts/a-niveau.mjs" },
+  { slug: "the-equalizer", label: "THE-EQUALIZER", family: "Suite Dette & Structure du code", path: "docs/the-equalizer/", decision: "texte", scriptPath: "scripts/the-equalizer.mjs" },
   { slug: "integration-outil", label: "integration-outil", family: "Suite Dette & Structure du code", path: "docs/integration-outil/", decision: "texte", scriptPath: "scripts/integration-outil.mjs" },
   { slug: "objectifs-vs-resultats", label: "objectifs-vs-resultats", family: "Gouvernance interne", path: "docs/objectifs-vs-resultats/", decision: "texte", scriptPath: "scripts/objectifs-vs-resultats.mjs" },
   { slug: "cassandra-rh", label: "CASSANDRA-RH", family: "Gouvernance interne", path: "docs/cassandra-rh/", decision: "delivery_html", scriptPath: "scripts/cassandra-rh.mjs" },
@@ -608,7 +608,7 @@ export const RELIABILITY_SCRIPT_FILES = {
   // DÉTECTENT l'oubli, ils ne l'ÉVITENT pas. Sept registres pour un outil qui arrive, c'est la
   // mesure exacte de ce qu'il reste à automatiser.
   "safe-export": "scripts/safe-export.mjs", "tool-learning": "scripts/tool-learning.mjs",
-  "a-niveau": "scripts/a-niveau.mjs",
+  "the-equalizer": "scripts/the-equalizer.mjs",
   "integration-outil": "scripts/integration-outil.mjs",
   "check-spirit-mjs": "scripts/check-spirit.mjs", argus: "scripts/check-argus.mjs", harmonia: "scripts/check-harmonia.mjs",
   "smart-conso-api": "scripts/smart-conso-api.mjs", "check-level-target": "scripts/check-level-target.mjs",

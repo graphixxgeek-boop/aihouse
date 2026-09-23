@@ -1,4 +1,4 @@
-# Registre A-NIVEAU — les verdicts « tout est-il à niveau ? »
+# Registre THE-EQUALIZER — les verdicts « tout est-il à niveau ? »
 
 Un passage par ligne. Ce registre garde ce qu'aucun rapport isolé ne montre : **l'évolution de la
 couverture**. Une exigence non vérifiée qui traîne de Ronde en Ronde n'est plus une absence, c'est

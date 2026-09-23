@@ -1006,7 +1006,7 @@ tableau garde ce qui doit rester sous les yeux en permanence.)*
 
 | Nom | Ce que c'est | Architecture | Instanciation | Script |
 |---|---|---|---|---|
-| A-NIVEAU | le rassembleur de verdicts : tout est-il à niveau, et que ne vérifie personne ? | `docs/a-niveau-blueprint.md` | `docs/referentiel/a-niveau.md` | `scripts/a-niveau.mjs` |
+| THE-EQUALIZER | le rassembleur de verdicts : tout est-il à niveau, et que ne vérifie personne ? | `docs/the-equalizer-blueprint.md` | `docs/referentiel/the-equalizer.md` | `scripts/the-equalizer.mjs` |
 | ALWAYS-NEW-CODE | l'outil qui rend concrète l'épreuve de la page blanche | `docs/always-new-code-blueprint.md` | `docs/referentiel/always-new-code.md` | `scripts/always-new-code.mjs` |
 | angel-of-ia-process | contrôleur de process pour la CONDUITE (respect des règles de travail), jamais du déroulé d'une activité | `docs/angel-of-ia-process-blueprint.md` | `docs/referentiel/angel-of-ia-process.md` | `scripts/angel-of-ia-process.mjs` |
 | ARGUS | détecteur de trous logiques | `docs/argus-blueprint.md` | `docs/referentiel/argus.md` | `scripts/check-argus.mjs` |
@@ -1137,7 +1137,7 @@ demander si un outil déjà existant répondrait plus vite ou plus complètement
 - `docs/referentiel/tool-learning.md` (2026-09-22) — vérifie que les outils apprennent et que
   l'agent les y aide. Porte la MOITIÉ 2 de l'évolutivité (devenir meilleur). Frontière avec
   CASSANDRA : elle juge l'état et les moyens, lui la trajectoire et l'usage.
-- `docs/referentiel/a-niveau.md` (2026-09-23) — le RASSEMBLEUR de verdicts : un verdict par domaine
+- `docs/referentiel/the-equalizer.md` (2026-09-23) — le RASSEMBLEUR de verdicts : un verdict par domaine
   (l'Agence, les documents, le code, le jeu) contre les exigences écrites de
   `docs/referentiel/standards.md`, et le nom de ce que PERSONNE ne vérifie. Il n'a aucun détecteur
   propre — vingt contrôleurs qui disent « ma part va bien » ne disent jamais « tout va bien »,

@@ -1,6 +1,6 @@
-# A-NIVEAU — instanciation propre à ce projet
+# THE-EQUALIZER — instanciation propre à ce projet
 
-*Blueprint générique : `docs/a-niveau-blueprint.md`. Ce document-ci ne répète pas le principe, il
+*Blueprint générique : `docs/the-equalizer-blueprint.md`. Ce document-ci ne répète pas le principe, il
 dit comment il est instancié ici et ce que ce projet en a appris.*
 
 ## D'où il vient
@@ -22,7 +22,7 @@ vérificateur. Le document a été écrit AVANT l'outil, délibérément : sans 
 n'aurait été qu'une opinion.
 
 Le tableau est **lu à l'exécution** (Article 24). Ajouter une ligne au référentiel suffit à ce que
-A-NIVEAU la prenne en compte — aucune modification de code, jamais une liste recopiée qui se
+THE-EQUALIZER la prenne en compte — aucune modification de code, jamais une liste recopiée qui se
 périmerait au premier standard ajouté.
 
 ## Les quatre domaines, et le vide assumé
@@ -77,11 +77,11 @@ oubliée ici.
 
 Membre (Suite Dette & Structure du code), **jamais Gardien sacré** : il ne remplit aucun des deux
 volets du critère — il ne scanne rien par lui-même, et il ne tourne pas à chaque commit. Item de
-Ronde `a-niveau`, fiabilité **mécanique** (il n'estime rien), registre `docs/a-niveau/`,
+Ronde `a-niveau`, fiabilité **mécanique** (il n'estime rien), registre `docs/the-equalizer/`,
 prestation « Pack Niveau » au catalogue.
 
 **Frontière avec ses deux voisins**, tranchée pour qu'elle ne se rediscute pas : CASSANDRA-RH juge
-l'ÉTAT et les MOYENS d'un outil, TOOL-LEARNING sa TRAJECTOIRE — A-NIVEAU ne juge aucun outil, il
+l'ÉTAT et les MOYENS d'un outil, TOOL-LEARNING sa TRAJECTOIRE — THE-EQUALIZER ne juge aucun outil, il
 juge la **couverture des exigences elles-mêmes**.
 
 ## Ce qui reste ouvert, et c'est dit plutôt que tu

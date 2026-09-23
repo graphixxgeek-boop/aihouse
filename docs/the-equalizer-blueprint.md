@@ -1,7 +1,7 @@
 # Blueprint exportable — LE RASSEMBLEUR DE VERDICTS (« tout est-il à niveau ? »)
 
 *Blueprint générique, réutilisable tel quel sur un autre projet. L'instanciation propre à ce
-projet-ci vit dans `docs/referentiel/a-niveau.md` — rien de spécifique à une maison, à des
+projet-ci vit dans `docs/referentiel/the-equalizer.md` — rien de spécifique à une maison, à des
 personnages ou à un jeu ne doit apparaître ci-dessous.*
 
 ## Le problème qu'il résout, et pourquoi il n'est visible d'aucun autre poste

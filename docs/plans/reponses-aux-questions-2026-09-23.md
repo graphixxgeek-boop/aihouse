@@ -54,7 +54,7 @@ héberge pas.
 
 ## 3. « Qui se charge de vérifier par ailleurs que tout est à niveau ? »
 
-**Personne ne le faisait. Maintenant si : A-NIVEAU.**
+**Personne ne le faisait. Maintenant si : THE-EQUALIZER.**
 
 Le problème était réel et invisible : vingt outils vérifient chacun leur part et répondent « ma part
 va bien ». Aucun ne peut répondre « tout va bien », parce que pour ça il faudrait détenir la liste de

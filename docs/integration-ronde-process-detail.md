@@ -25,7 +25,7 @@ qu'un test rouge aurait dit de toute façon.
 Demande explicite de l'utilisateur, en ces termes : « je veux un process propre pour intégration
 d'un outil et un process séparé propre pour intégration à circle ».
 
-**La preuve est arrivée le soir même où il l'a demandé.** En faisant entrer A-NIVEAU dans l'Agence,
+**La preuve est arrivée le soir même où il l'a demandé.** En faisant entrer THE-EQUALIZER dans l'Agence,
 `integration-outil` a annoncé « tous les registres renseignés » — et la suite de tests a refusé le
 commit, parce qu'il manquait des raccordements que ce process-là ne connaît pas.
 
@@ -45,7 +45,7 @@ aurait obligé chacun à porter les exceptions de l'autre.
 
 ## Les cinq raccordements
 
-Ils ne sont pas théoriques : chacun est une chose qu'il a fallu faire **à la main** pour A-NIVEAU
+Ils ne sont pas théoriques : chacun est une chose qu'il a fallu faire **à la main** pour THE-EQUALIZER
 alors qu'aucun outil ne la demandait.
 
 Les quatre premiers se jouent dans `scripts/circle-tasks.mjs`, qui DÉFINIT la Ronde ; le cinquième

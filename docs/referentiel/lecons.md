@@ -139,7 +139,7 @@ déjà prise et documentée ailleurs**. Reprocher une décision assumée est la 
 
 *Trouvée cinq fois le 2026-09-23 : chaque nouveau détecteur a dû être resserré, certains deux fois.*
 
-**Enrichie le** : 2026-09-23 — un signal qui permet de s'en apercevoir AVANT de publier (trouvé en construisant A-NIVEAU ; la leçon d'origine et sa trace ci-dessus restent intactes).
+**Enrichie le** : 2026-09-23 — un signal qui permet de s'en apercevoir AVANT de publier (trouvé en construisant THE-EQUALIZER ; la leçon d'origine et sa trace ci-dessus restent intactes).
 
 Ce signal : **quand un détecteur accuse presque tout, c'est
 presque toujours lui qui a tort.** Un premier jet accusait 17 outils sur 33 ; le chiffre lui-même
@@ -315,7 +315,7 @@ classification (un domaine, une famille, un rang), **tout élément qui ne se ra
 *Payée le 2026-09-23 : un titre en prose (« NIVEAU 2 — SES PROPRES documents ») a fait lire « SES »
 comme nom de niveau, et 7 exigences sur 29 ont disparu du rapport sans le moindre signe extérieur.*
 
-**Porté par** : `MOTIF_NIVEAU` et l'erreur levée par `parseStandards()` (`scripts/a-niveau.mjs`), plus la ligne « NIVEAUX ORPHELINS » de `formatANiveau()` — un titre illisible arrête l'outil, un niveau non rattaché est crié.
+**Porté par** : `MOTIF_NIVEAU` et l'erreur levée par `parseStandards()` (`scripts/the-equalizer.mjs`), plus la ligne « NIVEAUX ORPHELINS » de `formatANiveau()` — un titre illisible arrête l'outil, un niveau non rattaché est crié.
 
 **Terrain** : quand un outil lit un document normatif pour en tirer une structure · mots : parser, analyser, lire le document, titre, section, rattacher, classification, catalogue · fichiers : scripts/*.mjs, docs/referentiel/*.md
 
