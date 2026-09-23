@@ -177,6 +177,82 @@ export function findMecanismesSansRaison(code = "", { fichier = "" } = {}) {
 // pas n'importe quelle fonction : elle vise les GARDE-FOUS. Un garde-fou ressemble toujours à du
 // zèle tant qu'on ignore le bug qu'il a coûté. C'est donc sur eux, et eux seuls, que l'absence
 // d'explication est un vrai risque — 38 cas réels, un nombre qu'on peut regarder.
+// 3ter. LA RAISON SUPPRIMÉE — le porteur mécanique de l'Article 19 (2026-09-23, tâche #616).
+//
+// POURQUOI ICI ET PAS AILLEURS. X6 ci-dessus compte les garde-fous qui n'ont PAS d'explication.
+// C'est la moitié du sujet. L'Article 19 en nomme l'autre, et en des termes très précis : « le
+// retirer ou le simplifier sans avoir d'abord compris cette raison risque de réintroduire un bug
+// déjà résolu une fois ». Ce que craint l'Article 19 n'est donc pas une explication manquante,
+// c'est une explication qui DISPARAÎT — et rien ne regardait ça. Les deux détecteurs vivent
+// ensemble parce qu'ils gardent la même chose (le POURQUOI à côté du QUOI) par ses deux bouts.
+//
+// LA DIFFÉRENCE QUI FAIT TOUT : « déplacée » n'est pas « supprimée ». Le jour même où ce détecteur
+// a été écrit, sept blocs de commentaires avaient migré d'un fichier à un autre avec le code
+// qu'ils expliquaient — une version naïve aurait hurlé sept fois sur un déménagement parfaitement
+// propre, et un garde-fou qui accuse à tort cesse d'être lu (leçon L4). On cherche donc l'empreinte
+// du texte supprimé dans le dépôt APRÈS le commit : s'il est encore quelque part, rien n'est perdu.
+//
+// POURQUOI DES MARQUEURS STRICTS plutôt que « tout commentaire supprimé » : un commentaire
+// ordinaire qui disparaît avec le code qu'il décrivait est un nettoyage normal, pas une perte.
+// Quatre marqueurs, et eux seuls, signalent qu'un commentaire porte une RAISON qu'aucun diff ne
+// redonnera : une date, une demande de l'utilisateur, une leçon déjà payée, une tâche du suivi.
+// Strict par choix : mieux vaut manquer une perte que crier sur un ménage (même calibrage que la
+// version resserrée de X6 juste au-dessus).
+export const MARQUEURS_DE_RAISON = [
+  [/\b20\d\d-\d\d-\d\d\b/, "porte une date — donc le moment et le contexte d'une décision"],
+  [/demande explicite/i, "cite une demande de l'utilisateur — jamais redéductible d'un diff"],
+  [/le\u00e7on L\d+/i, "cite une leçon déjà payée par une erreur réelle"],
+  [/t\u00e2che #\d+/i, "renvoie à une tâche du suivi durable"],
+];
+
+const EST_UN_COMMENTAIRE = /^\s*(\/\/|\*|\/\*|#)/;
+
+// Empreinte volontairement grossière : on enlève les marqueurs de commentaire, on écrase les
+// espaces et la casse, et on garde les dix premiers mots. Un texte réindenté ou recollé autrement
+// reste reconnu ; deux commentaires différents ne partagent pas dix mots consécutifs.
+export function empreinteDeRaison(texte = "") {
+  // Les marqueurs se retirent en BOUCLE, jamais une seule fois : une puce dans un commentaire
+  // (« // * un point ») en empile deux, et l'astérisque restant devenait un mot de l'empreinte —
+  // donc deux écritures du même texte ne se reconnaissaient plus. Trouvé par un test qui l'a
+  // refusé, jamais à la relecture.
+  const mots = String(texte)
+    .replace(/^(?:\s*(?:\/\/+|\/\*+|\*+|#+))+/, " ")
+    .replace(/\*\//g, " ")
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
+  return mots.slice(0, 10);
+}
+
+export const MOTS_MINIMUM_EMPREINTE = 5;
+
+export function findRaisonsPerdues(diff = "", { contenuActuel = "", minimumMots = MOTS_MINIMUM_EMPREINTE } = {}) {
+  // Trois états, jamais deux : un diff absent ne dit pas « aucune raison perdue », il dit qu'on
+  // n'a pas pu regarder (leçon L13).
+  if (!String(diff).trim()) {
+    return { mesurable: false, perdues: [], pourquoi: "aucun diff fourni — ce silence ne dit rien sur les raisons perdues, seulement qu'on n'a pas pu les chercher" };
+  }
+  const apres = String(contenuActuel).toLowerCase().replace(/\s+/g, " ");
+  const perdues = [];
+  let fichier = "";
+  for (const ligne of String(diff).split("\n")) {
+    const entete = ligne.match(/^\+\+\+ b\/(.+)$/);
+    if (entete) { fichier = entete[1]; continue; }
+    if (!ligne.startsWith("-") || ligne.startsWith("---")) continue;
+    const texte = ligne.slice(1);
+    if (!EST_UN_COMMENTAIRE.test(texte)) continue;
+    const marqueur = MARQUEURS_DE_RAISON.find(([motif]) => motif.test(texte));
+    if (!marqueur) continue;
+    const empreinte = empreinteDeRaison(texte);
+    // Trop court pour être identifié sans risque de confusion : on s'abstient plutôt que d'accuser
+    // sur une empreinte que n'importe quel autre commentaire pourrait porter.
+    if (empreinte.length < minimumMots) continue;
+    if (apres.includes(empreinte.join(" "))) continue; // DÉPLACÉE, pas supprimée
+    perdues.push({ fichier, texte: texte.trim().slice(0, 140), pourquoi: marqueur[1] });
+  }
+  return { mesurable: true, perdues };
+}
+
 export const PREFIXES_GARDE_FOU = /^(?:find|check|audit|verif)/i;
 
 

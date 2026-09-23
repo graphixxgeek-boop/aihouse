@@ -507,6 +507,14 @@ strict et non négociable : **d'abord on comprend le sens des choses, ensuite se
 toucher au code** — jamais l'inverse (coder puis chercher a posteriori une justification à ce qui
 vient d'être fait).
 
+**Son porteur mécanique, depuis le 2026-09-23 :** `findRaisonsPerdues()` (`scripts/safe-export.mjs`),
+câblé au crochet post-commit. Aucun programme ne peut vérifier qu'on a COMPRIS ; celui-ci vérifie ce
+que cet Article redoute en toutes lettres — qu'une raison écrite DISPARAISSE. Il compare le texte
+supprimé par un commit à l'état actuel du dépôt : une raison **déplacée** ne déclenche rien, une
+raison introuvable est nommée avec son fichier. Il a mordu à son premier passage réel, sur un commit
+vieux d'une heure. Ce qui reste hors de toute mécanique — avoir réellement lu et compris avant
+d'agir — n'a pas de porteur possible, et le déclarer ici EST la protection (Article 27).
+
 **Article 20 — ARGUS : aucun travail ne se termine sans passer par le détecteur de trous logiques.**
 ARGUS repère les trous logiques qu'aucun autre garde-fou de cette charte ne couvre
 explicitement (combinaison de mécanismes jamais envisagée, cas limite oublié, conséquence

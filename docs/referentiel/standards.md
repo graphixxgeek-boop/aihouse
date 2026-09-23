@@ -80,7 +80,7 @@ arrivé ? » C'est le niveau que l'Article 24 nomme et que personne ne mesurait 
 | X3 | Aucun bloc dupliqué non justifié | CLONE-HUNTER | ✅ mécanique |
 | X4 | Aucune zone en stagnation non examinée | CLEAN-DIRTY-OLD | ✅ mécanique |
 | X5 | Aucune liste recopiée à la main sans garde-fou (Article 24) | les 12 garde-fous dédiés | ✅ mécanique |
-| X6 | Le POURQUOI vit à côté du QUOI (Article 27) | SAFE-EXPORT · `findGardeFousSansRaison()` | ⚠️ **partiel** — l'ABSENCE d'explication est comptée ; la QUALITÉ d'une explication reste hors mécanique |
+| X6 | Le POURQUOI vit à côté du QUOI (Article 27) | SAFE-EXPORT · `findGardeFousSansRaison()` + `findRaisonsPerdues()` | ⚠️ **partiel** — les deux bouts sont désormais couverts : l'ABSENCE d'explication est comptée, et depuis le 2026-09-23 sa DISPARITION aussi (une raison supprimée d'un commit et introuvable ailleurs, « déplacée » étant distinguée de « supprimée »). Reste hors mécanique : la QUALITÉ d'une explication, qu'aucun programme ne peut juger |
 | X7 | Le code applique les leçons déjà apprises | TOOL-LEARNING · `auditLecons()` + `analyseRemontees()` | ⚠️ **partiel** — le porteur est vérifié réel et la leçon vérifiée remontée au bon moment ; l'APPLICATION est jugée par l'utilisateur à la Ronde |
 
 ---

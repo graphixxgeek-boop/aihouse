@@ -86,6 +86,29 @@ const lire = (chemin, root = ROOT) => {
 // portent des calibrages réels qu'aucun diff ne redonnerait (Article 19).
 // ---------------------------------------------------------------------------------------------
 
+// LA GENÈSE DE CES SEPT FONCTIONS, restaurée le 2026-09-23 — et c'est le détecteur de raisons
+// perdues qui l'a réclamée, une heure après que je l'aie moi-même effacée en les déplaçant ici.
+// L'ironie vaut d'être gardée : en migrant CHARTER-SPY j'ai remplacé son en-tête par une note de
+// déménagement, et la demande d'origine de l'utilisateur — le POURQUOI de leur existence — n'a
+// voyagé nulle part. Exactement ce que l'Article 19 redoute, commis en construisant l'outil qui
+// l'empêche. Texte d'origine, mot pour mot :
+//
+// « CLAUDE.MD.SPY (2026-09-20, demande explicite de l'utilisateur : "une extension de suivi-conso-
+//   token... évalue chaque règle de CLAUDE.md, lui donne un indice de sensibilité, mesure son
+//   importance... classifie les règles... détecte les doublons/redondances"). PAS un membre de
+//   l'équipe (choix explicite de l'utilisateur, confirmé) : une capacité de plus de
+//   SMART-CONSO-TOKEN [...] — consulté avec LE-COORDINATEUR avant construction
+//   (suggestPrestationsForTask() : liste vide, aucune prestation existante ne couvrait ce besoin).
+//   S'intègre à l'étape 2 ("Identifier les candidats") de la procédure formalisée d'allègement
+//   comme une TROISIÈME famille de candidats, aux côtés des gros blocs narratifs (lecture humaine)
+//   et des asides datées (listDatedNarrativeMarkers). »
+//
+// CE QUI A CHANGÉ DEPUIS, et il faut le lire avec : le statut « PAS un membre de l'équipe » était
+// vrai tant que ces fonctions vivaient DANS smart-conso-token. Elles appartiennent désormais à un
+// Membre certifié à part entière, sur décision explicite de l'utilisateur du 2026-09-23. La
+// citation reste telle quelle parce qu'elle explique pourquoi elles ont été écrites ; cette note
+// dit ce qui a bougé depuis, sans réécrire ce qu'il a demandé.
+
 // Granularité choisie : l'ARTICLE entier (« Article N — Titre. » et tout son corps jusqu'à
 // l'article suivant), jamais chaque puce individuellement — plus robuste à ancrer, et une
 // comparaison de redondance a plus de sens entre deux blocs de taille comparable qu'entre deux

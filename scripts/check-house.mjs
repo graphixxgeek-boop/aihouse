@@ -10741,3 +10741,53 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log('Passed: MOÏSE-TABLES-DE-LOI (2026-09-23, task #613) owns the charter perimeter and nothing else. Its porteur measure is the one worth keeping: the first version counted "cited by code" and answered "porté" for all thirty Articles, because this project cites "Article N" throughout its comments and a mention is not a mechanism — the honest measure asks the rule to NAME its mechanism and then checks that the mechanism exists, yielding three states where the ghost (named, missing) is the worst, since it reassures wrongly where a declared absence keeps vigilance awake. A human decision survives regeneration while a merely proposed nature does not, so the machine never freezes a guess nobody made. A renvoi is refused both when its destination is missing and when it exists but does not yet carry the content, naming which subjects are absent. The memory is kept at the grain of the ARTICLE, because a line per pass can say how many tokens were saved and cannot say that this exact gesture was already tried here and cancelled; an unknown geste, an unknown résultat and a missing reason are all refused rather than recorded. Sections are measured alongside Articles after the first real run announced "INVENTAIRE: aucun Article" — exact and misleading, since the two largest inventories are level-two sections — and the diagnostic now declares what share of the document it actually covered. Both freshness guards report "pas mesuré" on an absent document rather than zero absences, and the process declares the six steps no program can verify instead of counting them green. Its four rendering functions are covered too, at the user\'s explicit request before leaning on this tool to decide about the most sensitive document in the project: what is checked there is not cosmetics but that none of the three honest states is crushed on the way out — the statut column survives so a human decision does not silently revert to a machine guess, a ghost porteur reaches the short summary the user actually reads rather than the technical dossier he never opens, the declared coverage share is printed rather than implied, and an absent memory prints "PAS MESURÉ" instead of "rien à signaler", since only one of those two is true.');
 }
+
+{
+  // LE PORTEUR MÉCANIQUE DE L'ARTICLE 19 (2026-09-23, tâche #616) — « comprendre avant de toucher ».
+  //
+  // CE QU'IL NE PRÉTEND PAS FAIRE : vérifier qu'on a compris. Aucun programme ne peut lire une
+  // compréhension. Ce qu'il vérifie est ce que l'Article 19 redoute CONCRÈTEMENT et nomme en toutes
+  // lettres — « le retirer ou le simplifier sans avoir d'abord compris cette raison risque de
+  // réintroduire un bug déjà résolu une fois » : une raison écrite qui DISPARAÎT. X6 comptait déjà
+  // les garde-fous sans explication ; personne ne regardait les explications qui s'en vont.
+  const { findRaisonsPerdues, empreinteDeRaison, MARQUEURS_DE_RAISON } = await import('../scripts/safe-export.mjs');
+
+  const diffSupprime = ['+++ b/lib/a.ts', '-// 2026-09-20 : ce seuil vient d\'un vrai bug de quota, ne pas le baisser', '-const SEUIL = 4;', '+const SEUIL = 9;'].join('\n');
+  const perdue = findRaisonsPerdues(diffSupprime, { contenuActuel: 'du code sans aucun rapport' });
+  assert.equal(perdue.perdues.length, 1, 'a dated comment deleted and found nowhere else must be reported — that is the whole point');
+  assert.equal(perdue.perdues[0].fichier, 'lib/a.ts', 'and it must name the file, since a reason without its location cannot be put back');
+
+  // LA DISTINCTION QUI FAIT TOUT, ET QUI A FAILLI MANQUER : déplacée n'est pas supprimée. Le jour
+  // même où ce détecteur est né, sept blocs de commentaires ont migré d'un fichier vers un autre
+  // AVEC le code qu'ils expliquaient. Une version naïve aurait crié sept fois sur un déménagement
+  // parfaitement propre — et un garde-fou qui accuse à tort cesse d'être lu (leçon L4).
+  assert.deepEqual(findRaisonsPerdues(diffSupprime, { contenuActuel: '// 2026-09-20 : ce seuil vient d\'un vrai bug de quota, ne pas le baisser' }).perdues, [], 'a reason that MOVED must never be reported: the text still exists in the repository, so nothing was lost');
+  assert.deepEqual(findRaisonsPerdues(diffSupprime, { contenuActuel: '   //2026-09-20 :   ce seuil vient d\'un vrai bug de quota,  ne pas le baisser  ' }).perdues, [], 'and a reason that moved AND was reindented must still be recognised — a fingerprint that broke on whitespace would accuse on every reformat');
+
+  // LES TROIS FAÇONS DE NE PAS ACCUSER À TORT, chacune fermant un faux positif plausible.
+  assert.deepEqual(findRaisonsPerdues(['+++ b/lib/a.ts', '-// on incrémente le compteur ici', '-count++;'].join('\n'), { contenuActuel: '' }).perdues, [], 'an ordinary comment carrying no reason marker must never be reported — a comment that disappears with the code it described is normal housekeeping, not a loss');
+  assert.deepEqual(findRaisonsPerdues(['+++ b/lib/a.ts', '-const DATE_LIMITE = "2026-09-20";'].join('\n'), { contenuActuel: '' }).perdues, [], 'a deleted line of CODE containing a date is not a deleted reason — only comments carry the POURQUOI');
+  assert.deepEqual(findRaisonsPerdues(['+++ b/lib/a.ts', '-// 2026-09-20 court'].join('\n'), { contenuActuel: '' }).perdues, [], 'a comment too short to fingerprint must be skipped rather than judged on two words any other comment could share — the guard abstains rather than accuses');
+
+  // LES QUATRE MARQUEURS, chacun testé : ce sont les seules formes qu'aucun diff ne redonne.
+  const marqueurs = [
+    ['// ajouté le 2026-09-20 parce que le quota sautait toutes les nuits', 'une date'],
+    ['// demande explicite de l\'utilisateur : ne jamais fusionner les deux cerveaux ici', 'une demande'],
+    ['// leçon L4 : un garde-fou qui accuse à tort finit par ne plus être lu du tout', 'une leçon'],
+    ['// tâche #585 : ce seuil a été calibré contre le vrai dépôt, pas choisi au hasard', 'une tâche'],
+  ];
+  for (const [ligne, quoi] of marqueurs) {
+    assert.equal(findRaisonsPerdues(`+++ b/x.mjs\n-${ligne}`, { contenuActuel: '' }).perdues.length, 1, `a deleted comment carrying ${quoi} must be reported — these four markers are exactly what no diff ever gives back`);
+  }
+  assert.equal(MARQUEURS_DE_RAISON.length, 4, 'the marker list stays deliberately short: strict by choice, since it is better to miss a loss than to shout at a cleanup (same calibration as the narrowed X6 above)');
+  assert.ok(MARQUEURS_DE_RAISON.every(([, pourquoi]) => pourquoi && pourquoi.length > 20), 'and each marker carries its own reason, so a report says WHY this line mattered rather than only that it vanished');
+
+  // TROIS ÉTATS, JAMAIS DEUX : une absence de diff ne vaut pas une absence de perte (leçon L13).
+  assert.equal(findRaisonsPerdues('').mesurable, false, 'an empty diff must report "pas mesuré", never zero losses — zero computed on nothing is the emptiest of clean bills');
+  assert.ok(findRaisonsPerdues('').pourquoi.includes('on n\'a pas pu'), 'and it must say so in words, so a reader cannot mistake the silence for an all-clear');
+  assert.equal(findRaisonsPerdues('+++ b/x.mjs\n+// un ajout').mesurable, true, 'a real diff that adds rather than removes is genuinely measured, and genuinely finds nothing');
+
+  assert.deepEqual(empreinteDeRaison('   // *  Ceci est un commentaire avec des espaces '), ['ceci', 'est', 'un', 'commentaire', 'avec', 'des', 'espaces'], 'the fingerprint must strip comment markers and collapse whitespace, so the same sentence is recognised wherever it lands');
+
+  console.log('Passed: the Article 19 guard exists at last (2026-09-23, task #616) — "comprendre avant de toucher" had 287 citations across this repository, the highest count of any rule, and nothing whatsoever enforced it. The guard does not claim to verify understanding, which no program can read; it verifies what the Article names in so many words, that a written reason must not DISAPPEAR, since removing one risks reintroducing a bug already solved once. X6 already counted guards with no explanation, and nobody watched explanations leaving. The distinction that makes it honest is moved-versus-deleted: the very day it was written, seven comment blocks migrated between files alongside the code they explained, and a naive version would have shouted seven times at a perfectly clean move — so the fingerprint of the removed text is looked for in the repository as it stands, whitespace-insensitive, before anything is reported. It abstains three ways rather than accuse: an ordinary comment carrying no marker, a deleted line of code that merely contains a date, and a comment too short to fingerprint. Its first real run over thirty commits bit exactly once, on a commit one hour old: the user\'s original request explaining why CHARTER-SPY was built had not travelled with the code I had just moved — the Article 19 failure committed while building the tool that prevents it, now restored word for word where the functions live.');
+}

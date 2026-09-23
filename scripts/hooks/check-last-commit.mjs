@@ -218,6 +218,29 @@ if (reveille("clone-hunter")) try {
 // une vraie question. « Les gardiens sacrés doivent repeter une alerte si je ne la prends pas en
 // compte, pour etre sur que je la traite ou l'ignore VOLONTAIREMENT. » Un gardien qui peut se taire
 // de sa propre initiative ne garde plus rien.
+// LE PORTEUR DE L'ARTICLE 19 (2026-09-23, tâche #616) — « comprendre avant de toucher ».
+// Il ne peut pas vérifier qu'on a COMPRIS ; il vérifie ce que l'Article 19 redoute concrètement :
+// qu'une raison écrite ait DISPARU du dépôt. Déplacée ≠ supprimée, donc on cherche l'empreinte du
+// texte retiré dans l'état actuel avant d'accuser (leçon L4). Il a mordu à son premier vrai
+// passage, sur un commit vieux d'une heure : la demande d'origine de l'utilisateur pour CHARTER-SPY
+// n'avait pas suivi le code qu'elle expliquait.
+if (reveille("safe-export")) try {
+  const { findRaisonsPerdues } = await import("../safe-export.mjs");
+  const diff = sh("git show HEAD --unified=0 -- '*.mjs' '*.ts' '*.tsx'", { verbose: false }) || "";
+  // `walk` (check-argus) plutôt qu'un second parcours réinventé : une seule façon de traverser le
+  // dépôt, déjà éprouvée, déjà testée.
+  let contenuActuel = "";
+  for (const dossier of ["scripts", "lib", "app"]) {
+    try { for (const f of walk(dossier)) { try { contenuActuel += readFileSync(f, "utf8") + "\n"; } catch { /* illisible */ } } } catch { /* dossier absent */ }
+  }
+  const raisons = findRaisonsPerdues(diff, { contenuActuel });
+  if (raisons.mesurable && raisons.perdues.length) {
+    console.error(`\n🧠 ARTICLE 19 — ${raisons.perdues.length} raison(s) écrite(s) ont disparu du dépôt dans ce commit, et aucun diff ne les redonnera :`);
+    for (const r of raisons.perdues.slice(0, 5)) console.error(`   ${r.fichier} — ${r.texte}\n      (${r.pourquoi})`);
+    console.error("   Si le déplacement était voulu, refaire voyager l'explication AVEC le code qu'elle explique.");
+  }
+} catch { /* le détecteur de raisons ne doit jamais faire échouer un commit */ }
+
 if (reveille("safe-export")) try {
   const { findFuitesDeSpecificite, findBlueprintsMalConstruits, findDependancesOutillage, filtrerDejaTranches, loadMemoire, proposerSondePoussee } = await import("../safe-export.mjs");
   const blueprints = readdirSync("docs").filter((f) => f.endsWith("-blueprint.md")).map((f) => `docs/${f}`);

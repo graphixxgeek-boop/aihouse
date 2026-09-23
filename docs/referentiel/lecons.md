@@ -533,6 +533,37 @@ disparaissait — c'est lui qui a trouvé la faute.
 
 **Terrain** : quand une dérivation mécanique (slug, identifiant, chemin) rencontre pour la première fois un nom accentué, ou quand je corrige une normalisation d'un seul côté d'une comparaison · mots : slug, normalisation, accent, dérivation, identifiant dérivé · fichiers : scripts/lib-shell.mjs, scripts/le-coordinateur.mjs
 
+## L20 — En déplaçant du code, on emporte la fonction et on oublie sa raison
+
+Sept blocs de commentaires ont migré d'un fichier à un autre avec les fonctions qu'ils expliquaient.
+Un seul ne les a pas suivies : l'en-tête, remplacé par une note de déménagement. Ce qu'il portait —
+la demande d'origine de l'utilisateur, en ses propres mots, expliquant POURQUOI ces fonctions
+existaient — n'a atterri nulle part et n'existait plus dans le dépôt.
+
+**Ce qui rend le cas exemplaire plutôt qu'anecdotique** : la migration était soignée. Les fonctions
+ont été déplacées telles quelles, leurs tests n'ont pas bougé d'une assertion, un renvoi a été
+laissé à l'ancienne adresse. Tout ce qu'on sait vérifier était vérifié. Ce qui est parti est
+précisément ce qu'aucun test ne regarde — et ce qu'aucun diff ne redonne, puisqu'un diff montre que
+le texte a disparu, jamais ce qu'il voulait dire.
+
+**Le moment du risque est identifiable, et il n'est pas celui qu'on croit.** Ce n'est pas la
+suppression franche, qu'on se pose la question d'écrire. C'est le DÉPLACEMENT : on se concentre sur
+ce qui doit continuer de fonctionner, et l'en-tête, qui ne fait rien fonctionner, se réécrit
+naturellement pour décrire le déménagement plutôt que la raison d'être.
+
+**La règle** : quand du code change de domicile, la raison déménage avec lui, pas le récit du
+déménagement. Les deux peuvent coexister — mais si l'un des deux doit rester, c'est la raison.
+
+*Payée le 2026-09-23 en migrant CHARTER-SPY vers MOÏSE-TABLES-DE-LOI, et trouvée une heure plus
+tard par le détecteur écrit pour empêcher exactement ça — sur son tout premier passage réel, en
+mordant sur son propre auteur.*
+
+**Porté par** : `findRaisonsPerdues()` (`scripts/safe-export.mjs`), câblé dans le crochet
+post-commit. Il compare le texte supprimé à l'état actuel du dépôt : une raison déplacée ne
+déclenche rien, une raison introuvable est nommée avec son fichier.
+
+**Terrain** : quand je déplace, extrais ou renomme du code d'un fichier vers un autre, et quand je réécris un en-tête de fichier · mots : migrer, déplacer, extraire, factoriser, déménager, renommer un module · fichiers : scripts/safe-export.mjs, scripts/hooks/check-last-commit.mjs
+
 ## BP1 — La règle s'écrit à UN endroit et se dérive partout ailleurs
 
 Devant vingt endroits à corriger, le réflexe est de corriger les vingt. Le bon geste est de trouver
