@@ -14,6 +14,13 @@
 import { writeFileSync, mkdirSync, appendFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
+// LA PHOTO DE MÉMOIRE À CHAQUE TOUR (2026-09-23, décision explicite de l'utilisateur en fenêtre de
+// calibrage : « photo à chaque tour », contre ma recommandation d'une version minimale début/fin).
+// La MÉCANIQUE vit dans memory-audit, jamais ici, et c'est délibéré : ce fichier ne peut pas être
+// testé sans serveur, donc tout ce qu'on y met devient non testable (la leçon ④ de la nuit du
+// 2026-09-23, qui a laissé un même défaut survivre trois simulations). Ici, on se contente de
+// tendre l'état à chaque tour — trois lignes, rien à vérifier.
+import { creerSuiviMemoire, ecrireConstatMemoire, formatSuiviMemoire } from "./memento.mjs";
 
 const BASE = process.env.SIM_BASE_URL ?? "http://127.0.0.1:5173";
 const OUT_DIR = process.env.SIM_OUT_DIR ?? "/tmp/ronde/sim";
@@ -108,10 +115,14 @@ async function main() {
   log("\n=== PHASE 1 — autonome jusqu'à la révélation (5 preuves + appel lancé) ===");
   let actor = 1, revealed = false, round = 0;
   const t0 = Date.now();
+  // Un suivi PAR PARTIE, jamais un état global : deux simulations lancées dans le même processus
+  // ne doivent pas mélanger leurs photos.
+  const suiviMemoire = creerSuiviMemoire();
   for (let turn = 0; turn < MAX_PHASE1_ROUNDS && !revealed; turn++) {
     const world = await call({ actor, mode: "autonomous" });
     if (!world) { log("❌ Tour autonome définitivement en échec — arrêt de la phase 1."); break; }
     captureMessages(world);
+    suiviMemoire.observer(world?.story?.life);
     round = world.story?.round ?? round;
     const evidence = world.story?.evidence?.length ?? 0;
     revealed = Boolean(world.story?.humanUnlocked);
@@ -184,14 +195,14 @@ async function main() {
       if (doitIntercalerUnTourAutonome(i)) {
         await sleep(AUTO_THROTTLE_MS);
         const respire = await call({ actor: (i % 2) + 1, mode: "autonomous" });
-        if (respire) { captureMessages(respire); log("     ↻ tour autonome intercalé (le piège du dossier ne peut s'armer que là)"); }
+        if (respire) { captureMessages(respire); suiviMemoire.observer(respire?.story?.life); log("     ↻ tour autonome intercalé (le piège du dossier ne peut s'armer que là)"); }
         else log("     ⚠️  tour autonome intercalé sans réponse — le dossier retourné restera hors d'atteinte ce tour-ci");
       }
       // Trois tirages de bonus distincts, répartis dans la phase 2 plutôt que groupés, pour que la
       // rejouabilité (Article 9) soit exercée dans des états émotionnels différents.
       if (i === 4 || i === 11 || i === 16) {
         const spin = await call({ actor: 1, mode: "spin_bonus" });
-        if (spin) { captureMessages(spin); log(`     🎲 bonus tiré : ${spin.bonus ?? "(aucun)"}`); }
+        if (spin) { captureMessages(spin); suiviMemoire.observer(spin?.story?.life); log(`     🎲 bonus tiré : ${spin.bonus ?? "(aucun)"}`); }
       }
     }
   } else {
@@ -206,7 +217,20 @@ async function main() {
   const finalWorld = await call({ actor: 1, mode: "mark_dossier_seen" }, { retries: 0 })
     ?? await (async () => { try { return await (await fetch(`${BASE}/api/world`)).json(); } catch { return {}; } })();
   captureMessages(finalWorld);
+  suiviMemoire.observer(finalWorld?.story?.life);
   const dossier = finalWorld?.story?.life?.dossierText ?? "(aucun dossier retourné dans cette session)";
+
+  // LE CONSTAT DE MÉMOIRE, ÉCRIT ICI ET PAS AILLEURS. Il part dans son propre registre sous un nom
+  // de fichier qui porte la simulation et la date — jamais `index.md`, jamais un nom que l'index du
+  // dossier pourrait imiter. C'est ce qui rend la preuve du process vraiment probante : l'étape
+  // « contrôler la mémoire » était validée par n'importe quel `.md` du dossier, y compris le
+  // registre vide qu'elle est censée remplir (leçon L13). Une copie part aussi à côté du transcript,
+  // pour que l'archive de la simulation soit complète sans aller chercher ailleurs.
+  const bilanMemoire = suiviMemoire.resultat();
+  writeFileSync(join(OUT_DIR, `${NAME}_memory-audit.txt`), formatSuiviMemoire(bilanMemoire));
+  let cheminConstat = null;
+  try { cheminConstat = ecrireConstatMemoire(bilanMemoire, { nomSimulation: NAME }); }
+  catch (err) { log(`⚠️  Constat mémoire non écrit dans le registre : ${err.message} — le fichier local reste disponible.`); }
 
   writeFileSync(join(OUT_DIR, `${NAME}_transcript.txt`), transcript.join("\n"));
   writeFileSync(join(OUT_DIR, `${NAME}_dossier.txt`), String(dossier));
@@ -216,6 +240,8 @@ async function main() {
   log(`Dossier    : ${join(OUT_DIR, `${NAME}_dossier.txt`)}`);
   log(`Journal    : ${journal.length} requête(s) — ${join(OUT_DIR, `${NAME}_journal.json`)}`);
   log(`Round final : ${finalWorld?.story?.round ?? "?"} · révélation : ${revealed ? "oui" : "non"}`);
+  log(`Mémoire    : ${bilanMemoire.comparaisonsFaites} comparaison(s) sur ${bilanMemoire.tours} tour(s) · ${bilanMemoire.constats.length} constat(s)${bilanMemoire.toursSansEtat ? ` · ⚠️ ${bilanMemoire.toursSansEtat} tour(s) sans état lisible` : ""}`);
+  if (cheminConstat) log(`             constat daté écrit dans ${cheminConstat}`);
 }
 
 // LE GARDE D'ENTRÉE, ajouté le 2026-09-23 : ce fichier lançait une VRAIE simulation dès qu'on

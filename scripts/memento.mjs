@@ -32,6 +32,9 @@
 // lui-même. `getRound` accepte aussi bien un tableau d'objets `{round}` (bonusLog, negotiationLog)
 // qu'un tableau de nombres bruts (contacts) — même fonction, jamais deux vérifications séparées
 // pour une seule et même règle.
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { reliabilityNotice } from "./lib-shell.mjs";
 import { renderTextReport } from "./report-template.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
@@ -141,6 +144,122 @@ export function buildMemoryAuditReport(findings = []) {
     blocks: [{ type: "note", text: lignes.join("\n") }],
   });
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// LE SUIVI TOUR PAR TOUR (2026-09-23) — ce qui manquait pour que cet outil puisse tourner
+// ————————————————————————————————————————————————————————————————————————
+//
+// DÉCISION DE L'UTILISATEUR, en fenêtre de calibrage, contre ma recommandation : « photo à chaque
+// tour ». Je proposais la version minimale (début et fin de partie) ; il a tranché la version
+// complète, qui dit à quel TOUR précis une anomalie apparaît, et pas seulement qu'elle a eu lieu.
+//
+// LE TROU QUE ÇA FERME, ET IL ÉTAIT STRUCTUREL, PAS UN OUBLI. checkMemoryCoherence(life, avant) a
+// besoin de DEUX états — c'est le principe même d'une vérification de cohérence dans le temps. Le
+// script de simulation lisait bien l'état final, et ne gardait AUCUNE photo de l'état précédent, à
+// aucun tour. Personne n'avait « oublié d'appeler l'outil » : on ne POUVAIT pas l'appeler, faute de
+// la moitié de ce dont il a besoin. Trois vérifications existaient, testées, et ne protégeaient
+// rien depuis leur écriture.
+//
+// POURQUOI LA MÉCANIQUE VIT ICI ET PAS DANS LE SCRIPT DE SIMULATION. C'est la leçon ④ de la nuit du
+// 2026-09-23, appliquée volontairement : le script de simulation lançait une vraie partie dès qu'on
+// l'importait, donc il ne POUVAIT pas être testé — et c'est exactement pour ça qu'il n'avait aucun
+// test et qu'un même défaut y a survécu trois fois. Mettre le suivi dans le script aurait reproduit
+// ce piège. Ici, il se teste avec deux objets en mémoire, sans serveur, sans partie, sans quota.
+
+// L'état d'un suivi, en trois valeurs jamais deux — même discipline que partout ailleurs dans ce
+// paysage : « rien trouvé » et « rien regardé » ne sont pas le même verdict, et les confondre est
+// précisément ce qui a laissé cet outil passer pour vérifié pendant des semaines.
+export const ETATS_SUIVI_MEMOIRE = ["mesuré", "pas mesuré", "pas mesurable"];
+
+// creerSuiviMemoire() — une fabrique, jamais un état global : deux simulations lancées dans le même
+// processus ne doivent pas mélanger leurs photos. Elle garde la mémoire du tour précédent et rend
+// les constats de CHAQUE tour, avec son numéro.
+export function creerSuiviMemoire({ checkImpl = checkMemoryCoherence } = {}) {
+  let precedent = null;
+  let tour = 0;
+  const constats = [];
+  let toursMesures = 0;
+  let toursSansEtat = 0;
+  return {
+    // observer(life) — à appeler une fois par tour, avec l'état de mémoire renvoyé par le serveur.
+    // Un tour dont l'état est absent (appel en échec, réponse tronquée) est COMPTÉ comme non mesuré
+    // plutôt que sauté en silence : un trou dans la mesure doit rester visible dans le verdict,
+    // sinon « 40 tours propres » peut vouloir dire « 3 tours propres et 37 jamais regardés ».
+    observer(life) {
+      tour += 1;
+      if (!life || typeof life !== "object") { toursSansEtat += 1; return []; }
+      const trouves = checkImpl(life, precedent) ?? [];
+      toursMesures += 1;
+      // LE PREMIER TOUR NE PEUT PAS TOUT VOIR, et le dire vaut mieux que le laisser croire : sans
+      // état précédent, seul l'ordre chronologique interne est vérifiable — les remises à zéro et
+      // les régressions de gravité exigent un « avant » qui n'existe pas encore.
+      for (const f of trouves) constats.push({ tour, premierTour: precedent === null, ...f });
+      precedent = life;
+      return trouves;
+    },
+    resultat() {
+      return {
+        etat: toursMesures === 0 ? "pas mesuré" : "mesuré",
+        tours: tour,
+        toursMesures,
+        toursSansEtat,
+        // Un seul tour mesuré ne permet AUCUNE comparaison : le dire explicitement plutôt que de
+        // rendre « 0 constat », qui se lirait comme un feu vert.
+        comparaisonsFaites: Math.max(0, toursMesures - 1),
+        constats,
+      };
+    },
+  };
+}
+
+// formatSuiviMemoire() — le rapport du suivi, à la même forme que les autres rapports de l'outil.
+// Il DIT toujours combien de comparaisons ont réellement eu lieu : un rapport qui annonce « aucune
+// incohérence » sans ce chiffre ne distingue pas une partie saine d'une partie jamais regardée.
+export function formatSuiviMemoire(resultat) {
+  const r = resultat ?? { etat: "pas mesuré", tours: 0, toursMesures: 0, toursSansEtat: 0, comparaisonsFaites: 0, constats: [] };
+  const lignes = [];
+  if (r.etat !== "mesuré" || r.comparaisonsFaites === 0) {
+    lignes.push("PAS MESURÉ, et ce n'est pas un vert.");
+    lignes.push(`${r.tours} tour(s) traversé(s), ${r.toursMesures} avec un état de mémoire lisible, donc ${r.comparaisonsFaites} comparaison(s) réellement faite(s).`);
+    lignes.push("Une comparaison exige deux états : en dessous de deux tours lisibles, ce silence ne dit rien sur la santé de la mémoire.");
+  } else {
+    lignes.push(`${r.comparaisonsFaites} comparaison(s) d'un tour au suivant, sur ${r.tours} tour(s) traversé(s).`);
+    if (r.toursSansEtat > 0) lignes.push(`⚠️  ${r.toursSansEtat} tour(s) sans état lisible : ces tours-là n'ont PAS été vérifiés, et l'absence de constat sur eux ne veut rien dire.`);
+    if (!r.constats.length) {
+      lignes.push("Aucune incohérence sur les champs audités — ce qui ne prouve pas qu'il n'y en a aucune, seulement qu'aucun motif surveillé ne s'est déclenché.");
+    } else {
+      lignes.push(`${r.constats.length} constat(s), avec le tour exact où chacun apparaît :`, "");
+      for (const c of r.constats) {
+        const detail = c.violations ? `${c.violations.length} rupture(s) d'ordre` : c.resets ? `${c.resets.length} remise(s) à zéro suspecte(s)` : "régression de gravité";
+        lignes.push(`  · tour ${c.tour} — [${c.type}] champ "${c.champ}" — ${detail}`);
+      }
+    }
+  }
+  return renderTextReport({
+    tool: "memory-audit",
+    scriptPath: "scripts/memento.mjs",
+    title: "memory-audit — suivi de la mémoire, tour par tour",
+    blocks: [{ type: "note", text: lignes.join("\n") }],
+  });
+}
+
+export const MEMORY_AUDIT_REGISTRE = "docs/memory-audit/";
+
+// ecrireConstatMemoire() — écrit un fichier de CONSTAT daté dans le registre, jamais l'index.
+// C'est la moitié qui rend la correction « C » de l'enquête vraiment effective : l'étape du process
+// était prouvée par « un fichier .md dans ce dossier », et le dossier ne contenait que son propre
+// index d'inauguration. Une preuve qu'un registre vide satisfait ne prouve rien (leçon L13). Le nom
+// du fichier porte donc la simulation et la date, et ne peut jamais être confondu avec `index.md`.
+export function ecrireConstatMemoire(resultat, { nomSimulation, root = ROOT_MEMENTO, date = new Date(), writeFileImpl = writeFileSync, mkdirImpl = mkdirSync } = {}) {
+  if (!nomSimulation) throw new Error("ecrireConstatMemoire : le nom de la simulation est obligatoire — un constat qu'on ne peut pas rattacher à une partie n'est pas un constat.");
+  const horodatage = date.toISOString().slice(0, 19).replace(/[:T]/g, "-");
+  const chemin = join(MEMORY_AUDIT_REGISTRE, `constat-${nomSimulation}-${horodatage}.md`);
+  mkdirImpl(join(root, MEMORY_AUDIT_REGISTRE), { recursive: true });
+  writeFileImpl(join(root, chemin), formatSuiviMemoire(resultat), "utf8");
+  return chemin;
+}
+
+const ROOT_MEMENTO = fileURLToPath(new URL("..", import.meta.url));
 
 // LE POINT D'ENTRÉE, ABSENT JUSQU'AU 2026-09-23 — trouvé par la Ronde, et il ne s'agissait pas
 // d'un détail de confort : `node scripts/memento.mjs` n'affichait RIEN DU TOUT. L'outil était

@@ -107,7 +107,15 @@ export const PROCESSES = [
       // décide la crédibilité de toute la simulation — notamment la partie où l'agent se fait
       // passer pour un visiteur, qui doit tenir la route (une version passée répétait les mêmes
       // phrases aux deux personnages, ce qui se voit immédiatement à la lecture).
-      { cle: "script", libelle: "rédiger le script de simulation selon la norme (sous-process dédié)", preuve: { dossier: "docs/simulations/scripts/", motif: /\.md$|\.mjs$/ } },
+      // MÊME RESSERREMENT, MÊME JOUR, MÊME RAISON (2026-09-23). C'était la SECONDE étape du
+      // paysage prouvée par son propre index : le dossier ne contenait que `index.md`, et le motif
+      // `/\.md$|\.mjs$/` l'acceptait. L'enquête de la veille avait trouvé les deux cas ensemble ;
+      // les corriger séparément aurait laissé la moitié du trou ouvert.
+      //
+      // L'EXCLUSION EST FORMULÉE EN RÈGLE, JAMAIS EN LISTE (Article 24) : « tout fichier qui n'est
+      // pas l'index ». Une fiche de script future y entre sans qu'on touche à ce motif, et aucun
+      // nom n'a besoin d'être recopié quelque part.
+      { cle: "script", libelle: "rédiger le script de simulation selon la norme (sous-process dédié)", preuve: { dossier: "docs/simulations/scripts/", motif: /^(?!index\.md$).+\.(md|mjs)$/ } },
       // LES QUATRE ÉTAPES QUI NE LAISSAIENT AUCUNE TRACE — solution demandée par l'utilisateur
       // (« trouve une solution »), et elle n'est ni un contournement ni une promesse.
       //
@@ -136,7 +144,17 @@ export const PROCESSES = [
       // juger une simulation et n'étaient jamais sollicités — une heure de quota dont la matière
       // était payée puis jetée.
       { cle: "rendu", libelle: "noter la qualité visuelle réelle (THE-SCREENER)", preuve: { dossier: "docs/the-screener/", motif: /\.md$|\.txt$/ } },
-      { cle: "memoire", libelle: "contrôler la mémoire narrative persistée après la partie (memory-audit)", preuve: { dossier: "docs/memory-audit/", motif: /\.md$/ } },
+      // MOTIF RESSERRÉ LE 2026-09-23 (correction « C » de l'enquête memory-audit). Il valait
+      // `/\.md$/`, donc l'index d'inauguration du dossier — le SEUL fichier qu'il ait jamais
+      // contenu — satisfaisait la preuve. L'étape passait pour tracée depuis la création du
+      // registre, sans qu'un seul contrôle de mémoire ait jamais eu lieu. Le registre était
+      // honnête, ce contrôleur était honnête : c'est leur COMBINAISON qui mentait, et aucune
+      // relecture de l'un ou de l'autre ne pouvait le voir (leçon L13).
+      //
+      // Le motif exige maintenant un fichier de CONSTAT daté, celui qu'écrit ecrireConstatMemoire()
+      // à la fin d'une vraie partie. Un index ne peut pas le contrefaire, et un dossier vide ne
+      // peut plus rien prouver.
+      { cle: "memoire", libelle: "contrôler la mémoire narrative persistée après la partie (memory-audit)", preuve: { dossier: "docs/memory-audit/", motif: /^constat-.+-\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}\.md$/ } },
       { cle: "poids", libelle: "relire le poids réel du contexte envoyé à Gemini (memento weight)", preuve: { fichier: ".memento-history.json" } },
       { cle: "cout-reel", libelle: "confronter le coût RÉEL à l'estimation d'avant lancement (Smart Conso API)", preuve: { fichier: ".smart-conso-session.json" } },
       { cle: "index", libelle: "écrire les deux lignes de jugement (simulations + KPI)", preuve: { fichier: "docs/simulations/index.md" } },

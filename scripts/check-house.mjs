@@ -7927,7 +7927,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // "MEMENTO", cf. docs/referentiel/memory-audit.md) — cible EXCLUSIVEMENT les Personnages (Lia/Noé),
   // jamais les membres de l'équipe. Testé contre les VRAIES formes de lib/life.ts trouvées par
   // l'investigation Article 19 (bonusLog/negotiationLog/contacts/wordFrequency/themeFrequency/worstMoment).
-  const { checkChronologicalOrder, detectSuspiciousCounterReset, detectWorstMomentRegression, checkMemoryCoherence } = await import('../scripts/memento.mjs');
+  const { checkChronologicalOrder, detectSuspiciousCounterReset, detectWorstMomentRegression, checkMemoryCoherence, creerSuiviMemoire, formatSuiviMemoire, ecrireConstatMemoire, ETATS_SUIVI_MEMOIRE } = await import('../scripts/memento.mjs');
   const { estimateContextWeight } = await import('../scripts/memento-weight.mjs');
 
   assert.deepEqual(checkChronologicalOrder([{ round: 3 }, { round: 5 }, { round: 4 }, { round: 8 }]), [{ index: 2, previousRound: 5, currentRound: 4 }], 'a real bonusLog/negotiationLog-shaped array must flag exactly the one genuine out-of-order entry, by its real index and real round numbers, never a false positive on the two entries that stay correctly ordered');
@@ -7953,9 +7953,66 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.deepEqual(checkMemoryCoherence({ bonusLog: [{ round: 1 }, { round: 2 }] }), [], 'a genuinely healthy single snapshot (no prior snapshot supplied, real chronological order respected) must report zero findings, never a fabricated one');
   assert.deepEqual(checkMemoryCoherence({}), [], 'an empty or minimal Life object (fields genuinely absent) must never crash and must report zero findings, never a fabricated one from missing data');
 
+  // ————————————————————————————————————————————————————————————————————————
+  // LE SUIVI TOUR PAR TOUR (2026-09-23) — la moitié qui manquait pour que cet outil puisse tourner
+  // ————————————————————————————————————————————————————————————————————————
+  //
+  // Décision de l'utilisateur, contre ma recommandation d'une version minimale : « photo à chaque
+  // tour ». Ces tests sont volontairement écrits AVEC DEUX OBJETS EN MÉMOIRE, sans serveur et sans
+  // partie : c'est tout l'intérêt d'avoir mis la mécanique dans memory-audit plutôt que dans le
+  // script de simulation, qui est intestable par construction (leçon ④ de la nuit du 2026-09-23).
+  assert.deepEqual(ETATS_SUIVI_MEMOIRE, ['mesuré', 'pas mesuré', 'pas mesurable'], 'three states, never two — "nothing found" and "nothing looked at" are not the same verdict, and conflating them is exactly what let this tool pass for verified for weeks');
+
+  const suiviVide = creerSuiviMemoire();
+  assert.equal(suiviVide.resultat().etat, 'pas mesuré', 'a tracker that never observed anything must report "pas mesuré", never a clean green');
+  assert.match(formatSuiviMemoire(suiviVide.resultat()), /PAS MESURÉ/, 'the report of an empty run must SAY it measured nothing rather than reporting zero findings, which would read as a pass');
+
+  const unSeulTour = creerSuiviMemoire();
+  unSeulTour.observer({ bonusLog: [{ round: 1 }, { round: 2 }] });
+  assert.equal(unSeulTour.resultat().comparaisonsFaites, 0, 'one readable turn allows ZERO comparisons — a comparison needs two states, and reporting "0 finding" on a single snapshot would be a green earned on nothing');
+  assert.match(formatSuiviMemoire(unSeulTour.resultat()), /PAS MESURÉ/, 'a single-turn run must still say "pas mesuré": it is the exact case this whole mechanism exists to stop passing for verified');
+
+  const suiviReel = creerSuiviMemoire();
+  suiviReel.observer({ wordFrequency: { menace: 40 }, worstMoment: { severity: 9 } });
+  suiviReel.observer({ wordFrequency: { menace: 40 }, worstMoment: { severity: 9 } });
+  suiviReel.observer({ wordFrequency: { menace: 0 }, worstMoment: { severity: 9 } });
+  const bilan = suiviReel.resultat();
+  assert.equal(bilan.comparaisonsFaites, 2, 'three readable turns produce exactly two comparisons, never three — the first turn has no "before" to compare against');
+  assert.equal(bilan.constats.length, 1, 'only the turn where the counter actually collapsed must produce a finding; the identical turn before it must produce none');
+  assert.equal(bilan.constats[0].tour, 3, 'the finding must carry the EXACT turn it appeared on — that precision is the whole reason the user chose per-turn snapshots over a start/end comparison');
+
+  const suiviTroue = creerSuiviMemoire();
+  suiviTroue.observer({ wordFrequency: { a: 5 } });
+  suiviTroue.observer(null);
+  suiviTroue.observer(undefined);
+  const troue = suiviTroue.resultat();
+  assert.equal(troue.tours, 3, 'a turn whose state could not be read is still a turn traversed — dropping it silently would let "3 clean turns" mean "1 clean turn and 2 never looked at"');
+  assert.equal(troue.toursSansEtat, 2, 'turns with no readable state must be COUNTED, so a hole in the measurement stays visible in the verdict');
+  assert.match(formatSuiviMemoire({ ...troue, etat: 'mesuré', comparaisonsFaites: 1 }), /n'ont PAS été vérifiés/, 'the report must name unverified turns explicitly: the absence of a finding on a turn nobody looked at means nothing, and the reader must not have to infer that');
+
+  // LA PREUVE DU PROCESS, resserrée le même jour (correction « C » de l'enquête). Le nom du fichier
+  // de constat est ce qui distingue un vrai contrôle de l'index d'inauguration du registre.
+  let ecrit = null;
+  const cheminConstat = ecrireConstatMemoire(bilan, {
+    nomSimulation: 'full_sim99', root: '/tmp', date: new Date('2026-09-23T20:15:00Z'),
+    writeFileImpl: (chemin, contenu) => { ecrit = { chemin, contenu }; }, mkdirImpl: () => {},
+  });
+  assert.equal(cheminConstat, 'docs/memory-audit/constat-full_sim99-2026-09-23-20-15-00.md', 'the constat filename must carry both the simulation and the timestamp, so it can never be confused with the registry index that used to satisfy the process proof all by itself');
+  assert.ok(ecrit.contenu.includes('tour 3'), 'the written constat must contain the real per-turn findings, not just a header — a file that exists but says nothing would rebuild the very defect this fixes');
+  assert.throws(() => ecrireConstatMemoire(bilan, { writeFileImpl: () => {}, mkdirImpl: () => {} }), /nom de la simulation/, 'a constat that cannot be tied back to a specific game is not a constat, and must be refused rather than written under a vague name');
+
+  const { PROCESSES: PROC_SIM } = await import('../scripts/god-of-all-process.mjs');
+  const etapesSim = PROC_SIM.find((p) => /simulation/.test(p.slug ?? p.nom)).etapes;
+  const preuveMemoire = etapesSim.find((e) => e.cle === 'memoire').preuve.motif;
+  assert.ok(!preuveMemoire.test('index.md'), 'the memory step must no longer be proved by the registry index — that index was the ONLY file the folder ever held, so the step counted as done from the day the registry was created (lesson L13)');
+  assert.ok(preuveMemoire.test('constat-full_sim99-2026-09-23-20-15-00.md'), 'a genuine dated constat must satisfy the proof, otherwise tightening it would only have replaced a false pass with a false failure');
+  const preuveScript = etapesSim.find((e) => e.cle === 'script').preuve.motif;
+  assert.ok(!preuveScript.test('index.md'), 'the second step with the same defect (the simulation-script registry, also holding nothing but its index) must be tightened in the same pass — fixing one and leaving the other would have left half the hole open');
+  assert.ok(preuveScript.test('run-simulation-2026-09-22.md'), 'a real script fiche must satisfy it, and the rule is stated as "anything that is not the index" so a future fiche joins with no list to update (Article 24)');
+
   assert.equal(estimateContextWeight({ a: 'x'.repeat(400) }), Math.round(JSON.stringify({ a: 'x'.repeat(400) }).length / 4), 'estimateContextWeight() must reuse SMART-CONSO-TOKEN\'s own estimateTokens() heuristic verbatim (4 chars ≈ 1 token) applied to the real JSON.stringify(context) payload — the same object shape lib/lia.ts actually sends to Gemini — never a second, divergent estimation formula');
   assert.equal(estimateContextWeight(undefined), 1, 'a missing/undefined context must fall back to measuring an empty object ("{}", 2 chars) rather than crashing on JSON.stringify(undefined) — never a fabricated zero unrelated to what would actually be measured');
-  console.log('Passed: memory-audit (task #169) — role (a) mechanically detects a real chronological break in any round-numbered memory log (object-shaped like bonusLog/negotiationLog or bare-number like contacts, same function for both), a suspicious silent reset of a persisted word/theme counter above a real significance threshold (never flagging noise below it), and a real severity regression of worstMoment (the exact invariant the game\'s own write logic is supposed to enforce) — surfacing all three at once from a realistic pair of Life snapshots, and staying silent on a genuinely healthy one; role (b) reuses SMART-CONSO-TOKEN\'s own token-estimation heuristic verbatim on the real Gemini payload shape, never a second divergent formula.');
+  console.log('Passed: memory-audit (task #169) — role (a) mechanically detects a real chronological break in any round-numbered memory log (object-shaped like bonusLog/negotiationLog or bare-number like contacts, same function for both), a suspicious silent reset of a persisted word/theme counter above a real significance threshold (never flagging noise below it), and a real severity regression of worstMoment (the exact invariant the game\'s own write logic is supposed to enforce) — surfacing all three at once from a realistic pair of Life snapshots, and staying silent on a genuinely healthy one; role (b) reuses SMART-CONSO-TOKEN\'s own token-estimation heuristic verbatim on the real Gemini payload shape, never a second divergent formula — and (2026-09-23, user\'s explicit calibration "photo à chaque tour", chosen over my own minimal start/end proposal) role (a) can finally RUN: creerSuiviMemoire() keeps the previous turn\'s memory so the comparison this tool is built on becomes possible at all, which it never was before, since the simulation script kept no earlier snapshot and the tool therefore could not be called rather than merely not being called. The mechanic lives here and not in the simulation script deliberately — that script cannot be imported without playing a real game, which is precisely why it had no test and why one same defect survived three simulations — so all of this is verified with two in-memory objects, no server, no quota. It reports three states rather than two (a single readable turn allows ZERO comparisons and says "pas mesuré" instead of a green earned on nothing), it COUNTS turns whose state could not be read so a hole in the measurement stays visible, each finding carries the exact turn it appeared on (the whole point of per-turn over start/end), and the dated constat it writes cannot be confused with the registry index — which closes the real defect behind all this: the process step "check the characters\' memory" was proved by any .md in a folder that had only ever held its own inauguration index, so it counted as done from the day the registry was created (lesson L13). The second step with the identical defect, the simulation-script registry, is tightened in the same pass and by a RULE ("anything that is not the index") rather than a list, so a future fiche joins with nothing to update.');
 
   // lib/memento-weight.ts — le point d'observation réel câblé dans lib/lia.ts::think() (jamais
   // utilisé pour modifier le contexte envoyé, Article 8/0). Même patron de test que

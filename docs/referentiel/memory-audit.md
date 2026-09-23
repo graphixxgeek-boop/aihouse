@@ -75,3 +75,57 @@ brièvement porté la famille "Hors équipe", avant la clarification finale de l
 Testé contre les vraies formes de `lib/life.ts` trouvées par l'investigation Article 19. Menu
 PRESTATIONS : "Pack Memory-Audit". Registre : `docs/memory-audit/` (dossier + index), vide à la
 création — se remplira au premier vrai constat de cohérence après une simulation.
+
+## Le suivi tour par tour (2026-09-23) — ce qui a rendu cet outil réellement utilisable
+
+**Décision explicite de l'utilisateur, en fenêtre de calibrage, contre la recommandation de
+l'agent** : « photo à chaque tour ». L'agent proposait la version minimale (comparer le début et la
+fin d'une partie) ; l'utilisateur a tranché la version complète, qui dit à quel **tour précis** une
+anomalie apparaît, et pas seulement qu'elle a eu lieu.
+
+### Le trou que ça ferme, et il était structurel
+
+`checkMemoryCoherence(life, avant)` a besoin de **deux** états — c'est le principe même d'une
+vérification de cohérence dans le temps. Le pilote de simulation lisait bien l'état final et ne
+gardait **aucune** photo de l'état précédent, à aucun tour.
+
+Personne n'avait « oublié d'appeler l'outil » : **on ne pouvait pas l'appeler**, faute de la moitié
+de ce dont il a besoin. Trois vérifications existaient, testées, et ne protégeaient rien depuis leur
+écriture.
+
+### Pourquoi la mécanique vit ici et pas dans le pilote de simulation
+
+C'est la leçon ④ de la nuit du 2026-09-23, appliquée volontairement. Le pilote lançait une vraie
+partie dès qu'on l'importait : il ne **pouvait** pas être testé, et c'est exactement pour ça qu'il
+n'avait aucun test, donc exactement pour ça qu'un même défaut y a survécu trois simulations.
+Mettre le suivi là-bas aurait reproduit le piège. Ici, il se teste avec deux objets en mémoire —
+sans serveur, sans partie, sans quota.
+
+### Les trois fonctions, et la discipline de chacune
+
+| Fonction | Ce qu'elle garantit |
+|---|---|
+| `creerSuiviMemoire()` | une fabrique, jamais un état global : deux parties dans le même processus ne mélangent pas leurs photos |
+| `formatSuiviMemoire()` | dit TOUJOURS combien de comparaisons ont réellement eu lieu |
+| `ecrireConstatMemoire()` | un fichier de constat **daté**, jamais l'index, et jamais sans nom de simulation |
+
+**Trois états, jamais deux** (`ETATS_SUIVI_MEMOIRE`). Un seul tour lisible autorise **zéro**
+comparaison : le rapport dit alors « pas mesuré » plutôt que « 0 constat », qui se lirait comme un
+feu vert. Un tour dont l'état n'a pas pu être lu est **compté** plutôt que sauté en silence —
+sinon « 40 tours propres » pourrait vouloir dire « 3 tours propres et 37 jamais regardés ».
+
+### La preuve du process, resserrée le même jour
+
+L'étape « contrôler la mémoire narrative persistée » était validée par n'importe quel `.md` du
+registre — et le registre n'avait **jamais** contenu autre chose que son index d'inauguration.
+L'étape passait donc pour tracée depuis la création du registre. Le registre était honnête, le
+contrôleur était honnête : c'est leur **combinaison** qui mentait, et aucune relecture de l'un ou de
+l'autre ne pouvait le voir (leçon L13).
+
+Le motif exige désormais un fichier `constat-<simulation>-<horodatage>.md`, celui qu'écrit
+`ecrireConstatMemoire()` à la fin d'une vraie partie. Un index ne peut pas le contrefaire.
+
+**La seconde étape atteinte du même défaut** — « rédiger le script de simulation selon la norme »,
+dont le registre ne contenait lui aussi que son index — a été resserrée dans la même passe, et par
+une **règle** (« tout fichier qui n'est pas l'index ») plutôt qu'une liste de noms : une fiche
+future y entre sans qu'on touche au motif (Article 24). Sa fiche manquante a été écrite.
