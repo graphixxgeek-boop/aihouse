@@ -18,9 +18,12 @@ le disque ?**
 Il n'y est pas, et l'historique git entier ne le contient à aucun commit. Les trois autres fichiers
 de ce dossier sont bien là, ce qui rend l'absence d'autant plus invisible.
 C'est le plus grave des trois : une IA qui reprend le projet suit cette piste et ne trouve rien.
-**Corrigé** : la ligne dit maintenant que le fichier est absent, avec la vérification qui l'établit.
-Si l'utilisateur le possède encore, l'ajouter comble un vrai trou de contexte ; sinon la ligne se
-retire.
+**TRANCHÉ LE JOUR MÊME par l'utilisateur**, à qui la question a été posée : il possède encore le
+fichier, et il a choisi de **retirer la ligne** plutôt que de l'ajouter — « je ne pense pas que ce
+soit encore utile ». Le jugement se tient : ce que ce document aurait apporté, le pourquoi d'une
+décision de conception, est aujourd'hui porté par `docs/referentiel/` et `docs/suivi/`, qui eux sont
+tenus à jour. La charte garde une note expliquant le retrait, pour qu'un futur audit ne reparte pas
+chercher ce fichier.
 
 **2. TOOL-LEARNING annonçait son journal sous un chemin qui n'a jamais existé.**
 Sa fiche disait `docs/tool-learning/xp-remontees.json`. Le code écrit `.xp-remontees.json`, à la
@@ -58,5 +61,7 @@ garde-fou qui accuse à tort cesse d'être lu (leçon L4).
 - **RETENU** — les trois chemins morts : corrigés dans le même passage, rien à reporter.
 - **RETENU** — la moitié « le sens, pas le chemin » n'est pas couverte : c'est la tâche #585
   (exigences X6/X7 du domaine code, que personne ne vérifie), déjà inscrite au suivi.
-- **À TRANCHER** — le fichier `historique-prompts-codex.txt` : l'utilisateur l'a-t-il encore ?
-  L'ajouter, ou retirer la ligne. Personne d'autre ne peut répondre.
+- **TRANCHÉ** — le fichier `historique-prompts-codex.txt` : l'utilisateur l'a encore, et a choisi de
+  retirer la ligne. Fait le jour même, avec une note de retrait dans la charte plutôt qu'une
+  suppression muette : une IA qui reprend le projet doit savoir que ce document a existé, qu'il n'a
+  jamais été versionné, et que son rôle est repris ailleurs.

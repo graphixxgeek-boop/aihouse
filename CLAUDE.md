@@ -1244,12 +1244,14 @@ contenu :
 - `analyse-opus-initiale.txt` — diagnostic technique et artistique produit par Claude Opus avant
   la reprise du projet ; base du plan de travail (séparation des deux cerveaux, désaturation
   visuelle, rééquilibrage des jauges, mise en scène de la révélation finale, etc.).
-- `historique-prompts-codex.txt` — **ANNONCÉ ICI MAIS ABSENT DU DÉPÔT**, et jamais committé une
-  seule fois (vérifié dans tout l'historique git le 2026-09-23, première relecture périodique de
-  l'Article 13). Il devait contenir l'historique des échanges avec Codex ayant produit le code
-  actuel. Le dire vaut mieux que de laisser une IA qui reprend le projet le chercher : les trois
-  autres fichiers ci-dessus sont, eux, bien présents. Si l'utilisateur possède encore ce fichier,
-  l'ajouter comble un vrai trou de contexte ; sinon cette ligne se retire.
+*(Une quatrième entrée a vécu ici : `historique-prompts-codex.txt`, l'historique des échanges avec
+Codex. La relecture périodique de l'Article 13 du 2026-09-23 a établi qu'il n'avait JAMAIS été
+committé, à aucun commit — la charte promettait donc depuis toujours une piste qui ne menait nulle
+part. L'utilisateur, à qui la question a été posée, l'a encore mais a tranché de retirer la ligne
+plutôt que d'ajouter le fichier : ce que ce document aurait apporté — pourquoi une décision de
+conception a été prise — est désormais porté par `docs/referentiel/` et par `docs/suivi/`, qui
+eux sont tenus à jour. La trace de ce retrait vit ici plutôt que nulle part, pour qu'une IA qui
+reprend le projet ne reparte pas chercher ce fichier au prochain audit.)*
 
 ## Plan d’origine (analyse Opus) — état d’avancement
 

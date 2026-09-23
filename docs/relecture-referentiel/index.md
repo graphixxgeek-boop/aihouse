@@ -17,4 +17,4 @@ laisser croire que le vert mécanique couvre tout.
 
 | Date | Passage | Chemins vérifiés | Morts | Absences déclarées | Corrigé |
 |---|---|---|---|---|---|
-| 2026-09-23 | [Premier passage](2026-09-23-premier-passage.md) | 1136 | 3 → 0 | 3 | 3 documents, dont la charte |
+| 2026-09-23 | [Premier passage](2026-09-23-premier-passage.md) | 1136 | 3 → 0 | 2 | 3 documents, dont la charte (+ 1 ligne retirée sur décision de l'utilisateur) |

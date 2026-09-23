@@ -18,8 +18,8 @@ l'organisation complète, bien définie [...] ce doc sera mis dans le référent
 CASSANDRA qui devra le remettre à jour régulièrement : l'info est chez elle, logique [...] c'est
 son domaine ». Ce document est le référentiel CANONIQUE de l'organisation de l'outillage de
 travail — « l'Agence Codex » (nom choisi par l'utilisateur, en souvenir de Codex, l'IA qui a
-initialement produit le code de ce projet avant la reprise par Claude Code, cf.
-`docs/contexte-projet/historique-prompts-codex.txt` — fichier annoncé par la charte mais absent du dépôt, cf. sa note), à distinguer du jeu lui-même (la « maison »
+initialement produit le code de ce projet avant la reprise par Claude Code), à distinguer du jeu
+lui-même (la « maison »
 où vivent Lia et Noé). Calibré en 4 questions le soir de sa création, consolidant des décisions déjà
 prises séparément dans `docs/cassandra-rh-conception.md` §4 et `docs/regles-de-travail.md` §7ter —
 jamais une réinvention, une mise en ordre. Renommages complémentaires actés le même soir, une
