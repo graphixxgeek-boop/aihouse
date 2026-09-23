@@ -9273,6 +9273,25 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     assert.ok(reelles.filter((l) => l.nature === 'leçon' && !l.fusionneeDans).every((l) => l.dateOrigine), 'checked live: every real LESSON must carry a dated origin trace — one had none, and a lesson without the cost that produced it reads as advice rather than as a lesson');
   }
 
+  // 4quinquies. L'ALERTE « RÉDIGE TON PROMPT À PART » (2026-09-23, chantier 8) — conseil donné par
+  // l'utilisateur lui-même, rangé chez SMART-CONSO-TOKEN parce que c'est une question de coût en
+  // tokens de l'agent.
+  {
+    const sct = await import('../scripts/smart-conso-token.mjs');
+    const now = Date.parse('2026-09-23T14:00:00Z');
+    const tour = (minutesAvant, longueur) => ({ date: new Date(now - minutesAvant * 60000).toISOString(), longueur });
+    const rafale = sct.detecterRafale([tour(30, 2000), tour(9, 20), tour(7, 30), tour(5, 15), tour(2, 40)], { maintenant: now });
+    assert.equal(rafale.consecutifs, 4, 'only the consecutive short messages count, and the long one before them ends the run — a long message is exactly what the alert wants, so it must close the burst rather than be counted into it');
+    assert.ok(rafale.alerte, 'four short messages in a row is the calibrated threshold, taken from the real series that motivated the advice');
+    assert.equal(sct.detecterRafale([tour(9, 20), tour(5, 3000), tour(2, 40)], { maintenant: now }).consecutifs, 1, 'a substantial message in the middle resets the count: the run is what comes after it, never the total of the session');
+    assert.ok(!sct.detecterRafale([tour(90, 20), tour(85, 30), tour(80, 15), tour(2, 40)], { maintenant: now }).alerte, 'messages separated by more than the time window are two sessions, not one burst — gluing them together would fire the alert on a quiet morning');
+    assert.equal(sct.detecterRafale([]).mesurable, false, 'with nothing recorded the detector must say so, never report "no burst" — that is the absence-of-measurement-read-as-green this whole landscape fights');
+    const texte = sct.formatAlerteRafale(rafale);
+    assert.match(texte, /pas un reproche/, "the alert must state plainly that it is not a reproach: cutting one's thinking into short messages is a legitimate way to think, and an alert that reads as a scolding gets switched off");
+    assert.match(texte, /document à part/, 'it must carry the concrete alternative, not just the diagnosis — naming the cost without naming the fix leaves the reader with nothing to do');
+    assert.match(sct.formatAlerteRafale(sct.detecterRafale([tour(2, 40)], { maintenant: now })), /rien à signaler/, 'below the threshold it must stay quiet and say so in one line, never repeat the whole advice');
+  }
+
   // 4bis. LE GABARIT DE PROCESS (2026-09-23) — le modèle et son contrôle, demandés ensemble.
   //
   // IL VÉRIFIE UNE RÉPONSE, JAMAIS UN TITRE, et c'est le choix qui décide de tout : les huit process

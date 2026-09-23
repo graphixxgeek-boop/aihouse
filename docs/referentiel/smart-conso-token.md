@@ -487,3 +487,30 @@ simple avis — appelle `detectTaskMomentum()` et affiche le bloc s'il se décle
 lui-même le marqueur. Correction au passage : `main()` utilisait encore l'historique chargé AVANT
 `recordAction()` pour le résumé de rythme affiché juste après, jamais rafraîchi avec l'action qui vient
 d'être confirmée — corrigé en réutilisant directement la valeur de retour de `recordAction()`.
+
+
+## L'alerte « rédige ton prompt à part » (2026-09-23, chantier 8)
+
+*(Conseil donné par l'utilisateur lui-même dans le prompt de nuit, et rangé ici plutôt qu'ailleurs
+parce que c'est une question de coût en TOKENS DE L'AGENT — le domaine exact de cet outil.)*
+
+**Pourquoi une rafale de messages courts coûte cher, et ce n'est pas intuitif.** Chaque message,
+même de trois mots, relance un tour complet : tout le contexte est rechargé — la charte, les
+documents ouverts, l'historique — pour traiter « ok continue ». Dix précisions envoyées une par une
+coûtent dix rechargements ; la même demande rédigée d'un bloc n'en coûte qu'un.
+
+**Ce que l'alerte dit, et ce qu'elle ne dit pas.** Elle ne reproche jamais à l'utilisateur d'écrire
+comme il écrit : découper sa pensée en messages courts est une façon parfaitement légitime de
+réfléchir à voix haute, et c'est souvent comme ça qu'une idée se précise. Elle signale le MOMENT où
+ça devient cher, et propose l'alternative concrète : rédiger dans un document à part, puis coller
+d'un coup. Une alerte qui se lirait comme un reproche se ferait éteindre.
+
+**Les seuils**, calibrés sur ce qui s'est réellement passé plutôt que sur une intuition : un message
+est « court » en dessous de 240 caractères, la rafale se déclare à 4 messages courts consécutifs,
+et une coupure de plus de 20 minutes sépare deux séries plutôt que de les coller ensemble. Un
+message substantiel CLÔT la rafale — c'est précisément ce que l'alerte cherchait à obtenir.
+
+**Sa limite, déclarée** : aucun mécanisme ne peut lire les messages. C'est l'agent qui enregistre la
+longueur de chaque tour (`enregistrerTour()`, journal local `.conso-tours.json`), donc la mesure
+dépend de sa discipline — la même limite honnête que tool-brain et que le reste de cet outil.
+L'écrire noir sur blanc est la seule protection possible (Article 27).

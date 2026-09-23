@@ -54,6 +54,7 @@ export const LOCAL_JOURNALS = [
   { path: ".ines-official-latest-code.txt", owner: "INES-official", purpose: "corps de la dernière édition (périmètre code)" },
   { path: ".ines-official-latest-code_et_docs.txt", owner: "INES-official", purpose: "corps de la dernière édition (périmètre code + documentation)" },
   { path: ".xp-remontees.json", owner: "TOOL-LEARNING (process XP-IA-bonnes-pratiques-et-lecons)", purpose: "occasions et remontées par entrée du registre des leçons — mesure locale du rythme de travail de l'agent, jamais un état du projet ; écrit par le crochet post-commit, donc structurellement incommittable par le commit qui le met à jour" },
+  { path: ".conso-tours.json", owner: "SMART-CONSO-TOKEN (alerte « rédige ton prompt à part »)", purpose: "longueur de chaque tour de conversation, pour repérer une rafale de messages courts — une mesure du rythme d'échange, jamais un état du projet, et elle n'aurait aucun sens partagée entre deux machines" },
   { path: ".badge-ceremony-history.json", owner: "LE-COORDINATEUR (cérémonie de certification)", purpose: "date de première certification de chaque Agent, pour n'annoncer le badge qu'une seule fois" },
   { path: ".cassandra-rh-known-members.json", owner: "CASSANDRA-RH (nouveaux visages, Phase 1)", purpose: "slugs déjà vus au moins une fois par CASSANDRA, pour n'accueillir un nouveau membre qu'une seule fois" },
   // Deux entrées trouvées le 2026-09-21 par le nouveau garde-fou findUndeclaredLocalJournals() (audit

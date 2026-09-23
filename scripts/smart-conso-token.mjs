@@ -687,6 +687,81 @@ export function formatChantierComparison(result) {
 // en tête de fichier. Le `existsSync` qu'elle faisait en plus ne changeait rien : le try/catch
 // attrape déjà le fichier absent.
 
+// ————————————————————————————————————————————————————————————————————————
+// L'ALERTE « RÉDIGE TON PROMPT À PART » (2026-09-23, chantier 8)
+// ————————————————————————————————————————————————————————————————————————
+//
+// CONSEIL DONNÉ PAR L'UTILISATEUR LUI-MÊME, dans le prompt de nuit, et rangé ici parce que c'est
+// une question de COÛT EN TOKENS de l'agent — le domaine exact de cet outil.
+//
+// POURQUOI UNE RAFALE DE MESSAGES COURTS COÛTE CHER, et ce n'est pas intuitif : chaque message,
+// même de trois mots, relance un tour complet. Tout le contexte est rechargé — la charte, les
+// documents ouverts, l'historique — pour traiter « ok continue ». Dix précisions envoyées une par
+// une coûtent donc dix rechargements ; la même demande rédigée d'un bloc n'en coûte qu'un.
+//
+// CE QUE L'ALERTE DIT, ET CE QU'ELLE NE DIT PAS. Elle ne reproche jamais à l'utilisateur d'écrire
+// comme il écrit : découper sa pensée en messages courts est une façon parfaitement légitime de
+// réfléchir à voix haute, et c'est souvent comme ça qu'une bonne idée se précise. Elle signale
+// seulement le MOMENT où ça devient cher, et propose l'alternative concrète : rédiger dans un
+// document à part, puis coller d'un coup.
+//
+// SA LIMITE, DÉCLARÉE : aucun mécanisme ne peut lire les messages. C'est l'AGENT qui enregistre la
+// longueur de chaque tour, donc la mesure dépend de sa discipline — exactement la même limite
+// honnête que tool-brain et que SMART-CONSO-TOKEN lui-même. L'écrire est la seule protection
+// possible (Article 27).
+export const TOURS_PATH = ".conso-tours.json";
+
+// SEUILS, calibrés sur ce qui s'est réellement passé plutôt que sur une intuition : la série qui a
+// motivé ce conseil comptait une dizaine de messages de quelques mots à la suite. En dessous de 4,
+// on est dans l'échange normal ; à 4 messages courts consécutifs, le motif est net.
+export const SEUILS_RAFALE = {
+  court: 240,        // caractères — en dessous, un message est une précision, pas une demande
+  consecutifs: 4,    // le nombre de messages courts d'affilée qui fait basculer
+  fenetreMinutes: 20, // au-delà, ce ne sont plus des messages « à la suite » mais deux sessions
+};
+
+export function loadTours({ root = ROOT, readFileImpl = readFileSync } = {}) {
+  try { return JSON.parse(readFileImpl(join(root, TOURS_PATH), "utf8")); } catch { return []; }
+}
+
+export function enregistrerTour(longueur, { root = ROOT, readFileImpl = readFileSync, writeFileImpl = writeFileSync, date = new Date().toISOString(), max = 60 } = {}) {
+  const tours = [...loadTours({ root, readFileImpl }), { date, longueur: Number(longueur) || 0 }].slice(-max);
+  writeFileImpl(join(root, TOURS_PATH), JSON.stringify(tours, null, 2), "utf8");
+  return tours;
+}
+
+// detecterRafale() — compte les messages courts CONSÉCUTIFS les plus récents, et s'arrête au
+// premier message long : un message substantiel clôt la rafale, puisque c'est précisément ce qu'on
+// voulait obtenir. La fenêtre de temps évite de coller ensemble deux séries séparées par une nuit.
+export function detecterRafale(tours = [], { seuils = SEUILS_RAFALE, maintenant = Date.now() } = {}) {
+  if (!tours.length) return { mesurable: false, raison: "aucun tour enregistré — c'est une absence de mesure, jamais « pas de rafale »" };
+  let consecutifs = 0;
+  let caracteres = 0;
+  for (let i = tours.length - 1; i >= 0; i--) {
+    const t = tours[i];
+    const ageMinutes = (maintenant - Date.parse(t.date)) / 60000;
+    if (!Number.isFinite(ageMinutes) || ageMinutes > seuils.fenetreMinutes) break;
+    if (t.longueur > seuils.court) break;
+    consecutifs += 1;
+    caracteres += t.longueur;
+  }
+  return { mesurable: true, consecutifs, caracteres, seuil: seuils.consecutifs, alerte: consecutifs >= seuils.consecutifs };
+}
+
+export function formatAlerteRafale(rafale) {
+  if (!rafale?.mesurable) return `Rafale de messages courts : ${rafale?.raison ?? "pas mesurée"}.`;
+  if (!rafale.alerte) return `Rafale de messages courts : ${rafale.consecutifs}/${rafale.seuil} — rien à signaler.`;
+  return [
+    `💬 ${rafale.consecutifs} messages courts d'affilée (${rafale.caracteres} caractères en tout).`,
+    "Ce n'est pas un reproche : découper sa pensée est une façon normale de réfléchir. C'est juste le",
+    "moment où ça devient cher — chaque message, même de trois mots, relance un tour complet et",
+    "recharge tout le contexte. Les mêmes précisions rédigées d'un bloc coûteraient un tour au lieu de",
+    `${rafale.consecutifs}.`,
+    "Proposition : garder un document à part (un simple bloc-notes), y écrire la demande tranquillement,",
+    "puis la coller d'un coup. Rien ne se perd, et on repart avec un contexte entier plutôt qu'émietté.",
+  ].join("\n");
+}
+
 export function countRecentActions(history, actionType, now, windowHours) {
   const windowMs = windowHours * 60 * 60 * 1000;
   return (history?.actions ?? []).filter((a) => a.type === actionType && now - a.at <= windowMs && now - a.at >= 0).length;
