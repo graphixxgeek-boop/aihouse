@@ -542,11 +542,6 @@ toujours. `findGardienAmbigu()` (`scripts/safe-export.mjs`) le vérifie mécaniq
 documents normatifs — cette charte et `docs/referentiel/` — plutôt que de compter sur la mémoire
 d'un agent (Article 27).
 
-**Ce qui N'A PAS été fait, et c'est dit plutôt que taire** : les 67 fichiers qui citent les trois noms
-`*-process-guardian` n'ont pas été renommés. Le rang y est déjà non ambigu (`process` est dans le
-nom), et un renommage massif juste avant une Ronde risquait de casser des registres pour un gain
-de clarté nul. Tâche ouverte, jamais un abandon silencieux (Article 28).
-
 **Article 21 — HYPER-SCAN-CHECKPOINT : la vérification approfondie exceptionnelle.** Contrairement
 à ARGUS et HARMONIA (Article 20, toujours déployés), HYPER-SCAN-CHECKPOINT ne se déclenche jamais
 automatiquement, jamais en continu — seulement sur demande explicite de l'utilisateur, ou proposé
@@ -649,15 +644,6 @@ listes ou fonctionnalités figées ») : l'évolutivité ne s'arrête pas à « 
 garde-fou ». Elle exige qu'un outil qui REJOINT l'équipe hérite de tout ce que l'équipe sait déjà
 faire, sans qu'on ait à y penser un registre après l'autre.
 
-**État réel mesuré ce jour-là, et il est en dessous de cette exigence** : ajouter
-`god-of-all-process` puis `pure-gold-unity` a demandé SIX inscriptions manuelles — classification de
-fiabilité, catégorie d'équipe, chemin de script pour l'avertissement, couverture AXA-CHECK,
-catalogue du coordinateur, table maîtresse — chacune signalée par son garde-fou uniquement APRÈS
-avoir échoué. Les garde-fous font donc bien leur travail (rien ne passe en silence), mais ils
-DÉTECTENT l'oubli au lieu de l'ÉVITER : l'agent reste le mécanisme d'intégration, ce qui est
-exactement ce que cette précision juge insuffisant. L'écart est nommé ici plutôt que passé sous
-silence ; le combler est un chantier ouvert, jamais une case cochée.
-
 **Ce que la règle impose en attendant** : toute nouvelle construction se conçoit pour accueillir un
 membre de plus sans modification de sa propre logique — un registre se LIT, il ne s'énumère pas ; un
 seuil se DÉRIVE, il ne se recopie pas ; une fonctionnalité nouvelle s'applique à TOUS les outils
@@ -677,33 +663,14 @@ pas été fait ce soir-là au-delà de ce qui précède — un futur passage com
 n'est pas une intention : c'est une suite d'étapes qui engage. L'agent les suit, il ne les
 réordonne pas de sa propre initiative, et il ne saute une étape que pour une raison qu'il écrit.
 
-**god-of-all-process (`scripts/god-of-all-process.mjs`) est LE référent de la discipline
-d'exécution**, et son rôle est triple :
-1. **Avant d'agir** — on lui demande quel process gouverne ce qu'on s'apprête à faire, plutôt que de
-   recomposer soi-même le choix entre plusieurs documents. Même réflexe unique que tool-brain pour
-   les outils.
-2. **À chaque Ronde** — il produit LE rapport de conformité des process, et lui seul : les contrôleurs
-   secondaires (celui de la Ronde, `process.simulation.guardian`) gardent leur verdict, mais c'est
-   god qui les relaie. Une seule voix, jamais une par contrôleur. Ce rapport **nomme le responsable**
-   de chaque étape sautée — presque toujours l'agent — et liste à part les étapes qu'aucun mécanisme
-   ne peut vérifier, qui ne sont reprochées à personne.
-3. **Il signale ce qui manque** — les scripts qui mériteraient un process et n'en ont aucun, un
-   process sans contrôleur, un document promis qui n'existe pas, une tension non résolue entre deux
-   process. Y compris sur lui-même : il porte son propre process maître et le vérifie
-   (`selfCheck()`), parce qu'un surveillant que personne ne surveille dérive sans que rien ne le dise.
-
-**angel-of-ia-process (`scripts/angel-of-ia-process.mjs`) est son pendant pour la CONDUITE.**
-*(Ajouté le 2026-09-22 : cet Article nommait god et god seul, alors que la moitié de la discipline
-qu'il prétend garantir ne porte pas sur le déroulé d'une activité mais sur le comportement de ceux
-qui travaillent. Un Article sur la discipline d'exécution qui laissait sa moitié conduite hors de
-tout texte n'était pas une discipline, c'était une intention.)* god surveille des ÉTAPES, angel
-surveille des RÈGLES DE TRAVAIL — et les deux côtés, l'agent comme l'utilisateur, sont notés pareil.
-Son seul verdict mécanique croise les horodatages du compteur d'usage avec ceux de git : les outils
-à consulter AVANT d'agir l'ont-ils été avant. Les règles qui ne se jouent que dans la conversation,
-il les DEMANDE et refuse d'être vert sans réponse — jamais une conformité supposée.
-
-**Une seule voix, jamais deux** : angel ne livre pas son rapport lui-même, god le relaie dans une
-section clairement à part. Ce qui vaut pour god ci-dessous vaut donc pour lui.
+**god-of-all-process** (`scripts/god-of-all-process.mjs`) est LE référent de la discipline
+d'EXÉCUTION, **angel-of-ia-process** (`scripts/angel-of-ia-process.mjs`) son pendant pour la
+CONDUITE : god surveille des ÉTAPES, angel surveille des RÈGLES DE TRAVAIL, et les deux côtés —
+l'agent comme l'utilisateur — y sont notés pareil. **Une seule voix, jamais deux** : angel ne livre
+pas son rapport lui-même, god le relaie dans une section clairement à part. Ce que chacun fait
+exactement (le rôle triple de god et son `selfCheck()`, le croisement d'horodatages d'angel et son
+refus d'être au vert sans réponse) vit dans `docs/god-of-all-process-blueprint.md` et
+`docs/referentiel/angel-of-ia-process.md`, lus quand on les sollicite.
 
 **Obligation de l'agent** : lire ce rapport quand il tombe, et tenir compte de ses recommandations
 — jamais les enregistrer puis passer à autre chose. Il signale, il ne corrige jamais : la décision

@@ -209,6 +209,36 @@ export function documentsOrphelins({ candidats = [], pointDentree = "", dossiers
   return { mesurable: true, sauts, atteints: [...atteints], orphelins: candidats.filter((c) => !atteints.has(c)) };
 }
 
+// LA QUESTION QU'ON DOIT POUVOIR PROUVER APRÈS CHAQUE DÉPLACEMENT (2026-09-23, tâche #634) :
+// les obligations qui ont quitté un document sont-elles ARRIVÉES dans l'autre, ou ont-elles
+// simplement disparu ? Les deux se ressemblent parfaitement dans le document source.
+//
+// POURQUOI C'EST ICI PLUTÔT QUE DANS MA TÊTE : je l'ai fait DEUX FOIS à la main pendant cette
+// campagne, et les deux fois c'était la seule réponse acceptable à la question que le garde-fou de
+// la charte venait de poser. « Elles ont migré » est une affirmation ; +12 arrivées pour 11 parties
+// est une mesure. La différence entre les deux est exactement ce que ce projet passe son temps à
+// corriger chez les autres — il n'y avait aucune raison de se l'épargner à soi-même.
+//
+// LE VERDICT EST À TROIS ÉTATS, jamais deux : « migré » (le compte arrive), « écart » (il en
+// manque, à retrouver avant de valider), et « rien n'a bougé » — qui n'est ni bon ni mauvais, juste
+// autre chose, et qu'un booléen aurait écrasé sur l'un des deux camps.
+export function migrationVerifiee({ sourceAvant = "", sourceApres = "", destAvant = "", destApres = "" }) {
+  const parti = compterObligations(sourceAvant) - compterObligations(sourceApres);
+  const arrive = compterObligations(destApres) - compterObligations(destAvant);
+  if (parti <= 0) return { mesurable: true, etat: "rien n'a quitté la source", parti, arrive };
+  // La tolérance d'UNE unité est assumée : la phrase d'aiguillage qui remplace le bloc déplacé
+  // porte elle-même une obligation, et la compter comme un écart ferait crier le contrôle à chaque
+  // déplacement correct — un garde-fou qui accuse à tort cesse d'être lu (leçon L4).
+  const manquantes = parti - arrive;
+  return {
+    mesurable: true, parti, arrive, manquantes,
+    etat: manquantes <= 1 ? "migré" : "ÉCART",
+    pourquoi: manquantes <= 1
+      ? `${parti} obligation(s) parties, ${arrive} arrivées — elles ont migré, elles n'ont pas disparu`
+      : `${parti} parties mais seulement ${arrive} arrivées : ${manquantes} obligation(s) ne sont nulle part, à retrouver AVANT de valider la coupe`,
+  };
+}
+
 // --- 4. LES QUATRE NATURES ------------------------------------------------------------------
 // Ce ne sont pas des catégories de rangement : chacune commande un GESTE différent, et c'est pour
 // ça qu'elles existent.
