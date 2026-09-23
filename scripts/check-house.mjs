@@ -3151,6 +3151,16 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(oo.estTerminee({ statut: 'terminé le 2026-09-23' }), true, 'a closed task counts as done');
   assert.equal(oo.estTerminee({ statut: 'à faire' }), false, 'an open one never does');
   assert.equal(oo.estTerminee({ statut: 'à faire — reste à faire une fois terminé' }), false, 'and a status merely CONTAINING the word is not a closure: the word is read at the start, never hunted anywhere in the cell');
+  // LES GRANDS DOMAINES (2026-09-23, choix de l'utilisateur après une erreur de présentation :
+  // 71 domaines bruts dont 40 à une seule tâche, et « Outillage de travail » à côté d'« Outillage »).
+  assert.equal(oo.domaineDe({ sujet: 'Jeu / Article 11' }), 'Le jeu', 'a game task lands in the game');
+  assert.equal(oo.domaineDe({ sujet: 'CIRCLE-TASKS + LE-COORDINATEUR' }), 'Outillage', 'a tool NAME is recognised by its SHAPE — capitals and hyphens — rather than by a list of proper nouns that a new tool would make stale on its first day');
+  assert.equal(oo.domaineDe({ sujet: 'Rapports / lisibilité' }), 'Outillage', 'and the word-based patterns ignore case, which the first version did not: « Rapports » with a capital fell through a pattern written for « rapport »');
+  assert.equal(oo.domaineDe({ sujet: '' }), 'Non classé', 'an empty subject is never forced into a domain');
+  assert.equal(oo.domaineDe({ sujet: 'Quelque chose de tout à fait inédit' }), 'Non classé', 'and neither is an unknown one — it goes to the catch-all, where the guard below names it');
+  // LE GARDE-FOU DE LA TABLE : sans lui, un sujet non rangé disparaîtrait dans une case fourre-tout
+  // que personne ne regarde, et la table se périmerait en silence (Article 24).
+  assert.deepEqual(oo.findDomainesNonRanges([{ sujet: 'Jeu / x' }, { sujet: 'Truc inconnu' }, { sujet: 'Truc inconnu' }]), [{ sujet: 'Truc inconnu', taches: 2 }], 'every subject the table fails to place is named with its count — a closed vocabulary is only legitimate while something says when it stops covering the ground');
   console.log('Passed: « Où on en est » carries a freshness fingerprint, born of a real mistake made the very hour the tool was built (2026-09-23) — the report was generated, five tasks were added after it, and it was DELIVERED without being regenerated, announcing 249 of 485 where the truth was 252 of 490. The defect was never inattention: nothing linked "I am delivering this report" to "this report is current", and a wrong figure in a steering document spreads into every decision it informs. The fingerprint is the COUNT of tasks read rather than a date, since two reports generated in the same minute on two different registries must still be told apart. It survives the real rendering, which the first attempt did not: it was written between quotes, the HTML renderer escaped them, and the reader never found its own mark — caught only by wiring it to the real output, never by a test on an invented string.');
   console.log('Passed: a green obtained by looking at nothing is finally measurable (2026-09-23, task #206). Several tools already guarded against it, each in its own corner and naming it in their own comments — nobody measured how many could not. Five still print a success sign while carrying no declared way of saying "I could not measure": that is not proof they lie, it is the finding that they have no vocabulary to avoid it, and the report says the difference. The signal was then checked against the costliest case in the landscape rather than trusted: the whole project task discipline rests on check-suivi-fidelity, and it returned the same verdict on a perfect registry and on a missing one. Its denominator is now counted and printed before any verdict. The first attempt at that fix reproduced the very defect it was correcting, reusing a function that returns only the sessions CARRYING a gap as if it counted the sessions READ — counting what one read and counting what is wrong are two different measures, and a test now pins the difference.');
   console.log('Passed: THE-SCREENER may clear exactly one window, by name (2026-09-23, task #186). What blocked a phase-2 capture was not the pseudonym window, already handled, but the "Reprendre la maison ?" one, which depends on neither game state nor browser memory and therefore opens on EVERY load during a simulation. The earlier attempt clicked and reported that clicking did not help — it did not help because it did not WAIT: that window only exists once the first server answer has arrived, usually after the first look. The click is now awaited, and above all it is aimed: the window carries two buttons and the second one calls reset, so a tool clicking "the first button" during a real run would destroy it. The label is matched to the word, and anything unrecognised makes the tool give up rather than try its luck.');
@@ -7817,11 +7827,11 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const deuxIds = ['profil', 'kpi'];
   const socle = { checkedItemIds: deuxIds, executedItemIds: deuxIds, autoPrimeGoatAsked: true, voixUtilisateurPosee: true };
   const aLeCheck = (r, c) => (r.findings ?? []).some((f) => f.check === c);
-  assert.ok(aLeCheck(vrp2({ ...socle, changementModelePosee: false }), 'changement-de-modele'), 'Q1 not asked with the user present is a gap: it is mandatory in all 3 modes, and a general "do not stop" never dispenses from a specific step — the user ruled this explicitly on 2026-09-22 after I had treated it as a dispensation');
-  assert.ok(!aLeCheck(vrp2({ ...socle, changementModelePosee: true, changementModeleReponse: 'non' }), 'changement-de-modele'), 'Q1 asked and answered no is the ordinary case and must stay silent');
-  assert.ok(!aLeCheck(vrp2({ ...socle, changementModelePosee: true, changementModeleReponse: 'non' }), 'retour-de-modele'), 'no model change means no return reminder is due — claiming one would make the guardian cry on the most frequent case of all, which teaches people to ignore it');
-  assert.ok(aLeCheck(vrp2({ ...socle, changementModelePosee: true, changementModeleReponse: 'oui', retourModeleQuand: 'après' }), 'retour-de-modele'), 'once a model change is accepted, the Q3 return reminder is systematic — posed even when nothing suggests a forgotten switch');
-  assert.ok(!aLeCheck(vrp2({ ...socle, changementModelePosee: true, changementModeleReponse: 'oui', retourModeleQuand: 'après', retourModeleRappelPose: true }), 'retour-de-modele'), 'and it clears once actually posed');
+  assert.ok(aLeCheck(vrp2({ ...socle, changementModelePosee: false, modeReponduPar: 'utilisateur' }), 'changement-de-modele'), 'Q1 not asked with the user present is a gap: it is mandatory in all 3 modes, and a general "do not stop" never dispenses from a specific step — the user ruled this explicitly on 2026-09-22 after I had treated it as a dispensation');
+  assert.ok(!aLeCheck(vrp2({ ...socle, changementModelePosee: true, changementModeleReponse: 'non', modeReponduPar: 'utilisateur' }), 'changement-de-modele'), 'Q1 asked and answered no is the ordinary case and must stay silent');
+  assert.ok(!aLeCheck(vrp2({ ...socle, changementModelePosee: true, changementModeleReponse: 'non', modeReponduPar: 'utilisateur' }), 'retour-de-modele'), 'no model change means no return reminder is due — claiming one would make the guardian cry on the most frequent case of all, which teaches people to ignore it');
+  assert.ok(aLeCheck(vrp2({ ...socle, changementModelePosee: true, changementModeleReponse: 'oui', retourModeleQuand: 'après', modeReponduPar: 'utilisateur' }), 'retour-de-modele'), 'once a model change is accepted, the Q3 return reminder is systematic — posed even when nothing suggests a forgotten switch');
+  assert.ok(!aLeCheck(vrp2({ ...socle, changementModelePosee: true, changementModeleReponse: 'oui', retourModeleQuand: 'après', retourModeleRappelPose: true, modeReponduPar: 'utilisateur' }), 'retour-de-modele'), 'and it clears once actually posed');
   const autonomeRonde = vrp2({ ...socle, nightAutonomousMode: true, pointsReportes: [], pointsAInterrogerCount: 0 });
   assert.ok(!aLeCheck(autonomeRonde, 'changement-de-modele') && !aLeCheck(autonomeRonde, 'retour-de-modele'), 'in autonomous mode NEITHER may fire: "aucune fenêtre y compris GOAT/AUTO ne doit être bloquante pour le mode autonome" — a question put to nobody is a stall, never a check');
 
@@ -7831,12 +7841,12 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // ouverture, donc ne remet plus le compteur à zéro, donc ne compte pas comme faite.
   const { findFaitsManquants, ouvertureEstFraiche, autoriseCloture, OUVERTURE_VALIDE_HEURES } = await import('../scripts/circle-tasks.mjs');
   assert.ok(findFaitsManquants(null).length >= 3, 'no opening record at all means every mandatory fact is missing — returned as a LIST, never a bare false: "the mode is missing" and "nothing is missing" are two pieces of information, false is neither');
-  assert.deepEqual(findFaitsManquants({ changementModelePosee: true, changementModeleReponse: 'non', mode: 'AUTO' }), [], 'a no to Q1 with a mode chosen is a complete opening — the ordinary case must not be obstructed');
-  assert.deepEqual(findFaitsManquants({ changementModelePosee: true, changementModeleReponse: 'oui', mode: 'AUTO' }), ['Q2 : retour avant ou après les rapports'], 'saying yes to Q1 makes Q2 mandatory — a dependency, never a flat requirement that would fail on the most frequent case');
+  assert.deepEqual(findFaitsManquants({ changementModelePosee: true, changementModeleReponse: 'non', mode: 'AUTO', modeReponduPar: 'utilisateur' }), [], 'a no to Q1 with a mode chosen is a complete opening — the ordinary case must not be obstructed');
+  assert.deepEqual(findFaitsManquants({ changementModelePosee: true, changementModeleReponse: 'oui', mode: 'AUTO', modeReponduPar: 'utilisateur' }), ['Q2 : retour avant ou après les rapports'], 'saying yes to Q1 makes Q2 mandatory — a dependency, never a flat requirement that would fail on the most frequent case');
   const maintenant = Date.UTC(2026, 8, 23, 12, 0, 0);
   assert.ok(ouvertureEstFraiche({ at: new Date(maintenant - 3600 * 1000).toISOString() }, maintenant), 'an opening from an hour ago covers today Ronde');
   assert.ok(!ouvertureEstFraiche({ at: new Date(maintenant - (OUVERTURE_VALIDE_HEURES + 1) * 3600 * 1000).toISOString() }, maintenant), 'a stale opening must never serve as an indefinite pass — that is exactly how a guard turns into a formality');
-  const complete = { changementModelePosee: true, changementModeleReponse: 'non', mode: 'AUTO', at: new Date(maintenant).toISOString() };
+  const complete = { changementModelePosee: true, changementModeleReponse: 'non', mode: 'AUTO', at: new Date(maintenant).toISOString(), modeReponduPar: 'utilisateur' };
   assert.equal(autoriseCloture({ ouverture: null, maintenant }).autorise, false, 'closing a Ronde that was never opened is refused — record-run resets the "N commits without a Ronde" counter, so refusing here means a badly-opened Ronde simply does not count as done');
   assert.equal(autoriseCloture({ ouverture: complete, maintenant }).autorise, true, 'a complete, fresh opening authorises closing');
   assert.equal(autoriseCloture({ ouverture: null, nightAutonomousMode: true, maintenant }).autorise, true, 'autonomous mode is ALWAYS authorised with no opening at all: a barrier that stopped a night Ronde from closing would be the very blocking the user forbade ("aucune fenêtre y compris GOAT/AUTO ne doit être bloquante pour le mode autonome")');
@@ -7875,7 +7885,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // de mesure rendue comme une réussite, dans l'outil même chargé de mesurer la conformité.
   const { verifyRondeProcess: vrp3 } = await import('../scripts/circle-process-guardian.mjs');
   const deuxIds3 = ['profil', 'kpi'];
-  const socle3 = { autoPrimeGoatAsked: true, voixUtilisateurPosee: true, changementModelePosee: true, changementModeleReponse: 'non', checkedItemIds: deuxIds3, executedItemIds: deuxIds3 };
+  const socle3 = { autoPrimeGoatAsked: true, voixUtilisateurPosee: true, changementModelePosee: true, changementModeleReponse: 'non', checkedItemIds: deuxIds3, executedItemIds: deuxIds3, modeReponduPar: 'utilisateur' };
   const aussi = (r, c) => (r.findings ?? []).some((f) => f.check === c);
   const scansSeuls = vrp3(socle3);
   assert.ok(aussi(scansSeuls, 'recap-absent'), 'scans done but no recap supplied is NOT a pass: not providing a fact and not needing it are two different things, and conflating them is how a Ronde got declared conformant while half its process was still pending');
@@ -9396,7 +9406,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     // Ronde « parfaitement propre » doit tous présenter. Les deux premiers se LISENT sur disque
     // (une ouverture et un registre laissent une trace, donc on les injecte ici plutôt que de les
     // croire sur parole) ; le troisième est un fait de conversation, fourni comme les autres.
-    loadOuvertureImpl: () => ({ changementModelePosee: true, changementModeleReponse: 'non', mode: 'AUTO', rythme: "d'une traite", at: new Date().toISOString() }),
+    loadOuvertureImpl: () => ({ changementModelePosee: true, changementModeleReponse: 'non', mode: 'AUTO', rythme: "d'une traite", at: new Date().toISOString(), modeReponduPar: 'utilisateur' }),
     loadQuestionsSansReponseImpl: () => [],
     loadSeriesPasseesImpl: () => [],
     seriesReellementPosees: ['ouverture'],
@@ -9455,7 +9465,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     checkedItemIds: [], executedItemIds: [], recapHtml: '<!DOCTYPE html><html></html>', reportsDeliveredBeforeAnalysis: true,
     findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
     shImpl: () => '101', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
-    loadOuvertureImpl: () => ({ changementModelePosee: true, changementModeleReponse: 'non', mode: 'AUTO', rythme: "d'une traite", at: new Date().toISOString() }),
+    loadOuvertureImpl: () => ({ changementModelePosee: true, changementModeleReponse: 'non', mode: 'AUTO', rythme: "d'une traite", at: new Date().toISOString(), modeReponduPar: 'utilisateur' }),
     loadQuestionsSansReponseImpl: () => [{ serie: 'ouverture', question: 'Changer de modèle ?', fois: 2 }],
     loadSeriesPasseesImpl: () => [], seriesReellementPosees: ['ouverture'],
   });
@@ -9468,7 +9478,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     checkedItemIds: [], executedItemIds: [], recapHtml: '<!DOCTYPE html><html></html>', reportsDeliveredBeforeAnalysis: true,
     findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
     shImpl: () => '101', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
-    loadOuvertureImpl: () => ({ changementModelePosee: true, changementModeleReponse: 'non', mode: 'AUTO', at: new Date().toISOString() }),
+    loadOuvertureImpl: () => ({ changementModelePosee: true, changementModeleReponse: 'non', mode: 'AUTO', at: new Date().toISOString(), modeReponduPar: 'utilisateur' }),
     loadQuestionsSansReponseImpl: () => [], loadSeriesPasseesImpl: () => [], seriesReellementPosees: ['ouverture'],
     rapportsLivresIndividuellement: true, nombreDeRapportsEcrits: 26, nombreDeRapportsLivres: 13,
   });

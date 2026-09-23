@@ -1646,7 +1646,24 @@ export const FAITS_D_OUVERTURE = [
   { cle: "changementModeleReponse", libelle: "réponse à Q1 (oui/non)", requis: true },
   { cle: "retourModeleQuand", libelle: "Q2 : retour avant ou après les rapports", requisSi: (o) => o.changementModeleReponse === "oui" },
   { cle: "mode", libelle: "mode choisi (AUTO / PRIME / GOAT)", requis: true },
+  // LA FENÊTRE A-T-ELLE ÉTÉ RÉELLEMENT POSÉE ? (2026-09-23, tâche #609, après une infraction
+  // réelle de l'agent.) L'utilisateur avait tranché « non, demande TOUJOURS », en retirant
+  // explicitement la dispense du « ne t'arrête pas ». L'agent a malgré tout lancé la Ronde en AUTO,
+  // se justifiant par « même question qu'avant-hier, décision déjà prise » — précisément la
+  // dispense retirée. Et le contrôleur n'a rien dit : il acceptait le mode en ARGUMENT, donc il
+  // enregistrait une DÉCLARATION sans jamais constater un FAIT.
+  //
+  // CE QU'AUCUN MÉCANISME NE PEUT FAIRE, et c'est déclaré plutôt que tu : aucun outil ne lit une
+  // conversation, donc rien ne peut prouver qu'une fenêtre a été affichée. Ce champ ne rend donc
+  // pas le mensonge impossible — il le rend EXPLICITE. Passer `--repondu-par=utilisateur` sans
+  // avoir posé la question devient une affirmation fausse écrite noir sur blanc, là où l'omission
+  // ne laissait aucune trace. Même patron exactement que `enregistrerXp()`, qui refuse un jugement
+  // ne portant pas `parUtilisateur: true`, et pour la même raison (Article 27).
+  { cle: "modeReponduPar", libelle: "qui a répondu à la fenêtre AUTO/PRIME/GOAT (--repondu-par=utilisateur, la seule valeur acceptée hors mode autonome)", requis: true },
 ];
+// La seule réponse valable : l'utilisateur lui-même. « agent » est refusé par construction — c'est
+// tout l'objet de la règle qu'il a posée.
+export const REPONDANT_VALIDE = "utilisateur";
 
 export function loadOuverture({ root = ROOT, readFileImpl = readFileSync } = {}) {
   try {
@@ -1661,9 +1678,14 @@ export function loadOuverture({ root = ROOT, readFileImpl = readFileSync } = {})
 // « false » n'en est aucune.
 export function findFaitsManquants(ouverture, faits = FAITS_D_OUVERTURE) {
   if (!ouverture) return faits.filter((f) => f.requis).map((f) => f.libelle);
-  return faits
+  const manquants = faits
     .filter((f) => (f.requis || (f.requisSi && f.requisSi(ouverture))) && (ouverture[f.cle] === undefined || ouverture[f.cle] === null || ouverture[f.cle] === ""))
     .map((f) => f.libelle);
+  // Un champ RENSEIGNÉ avec la mauvaise valeur est pire qu'un champ vide : il a l'air complet.
+  if (ouverture.modeReponduPar && ouverture.modeReponduPar !== REPONDANT_VALIDE) {
+    manquants.push(`la fenêtre AUTO/PRIME/GOAT doit être répondue par l'utilisateur lui-même (reçu : « ${ouverture.modeReponduPar} ») — « il a déjà répondu une autre fois » n'est pas une réponse, c'est la dispense qu'il a retirée`);
+  }
+  return manquants;
 }
 
 // ouvertureEstFraiche() — une ouverture d'il y a trois jours ne couvre pas la Ronde d'aujourd'hui.
@@ -1721,7 +1743,7 @@ function recordRunCli() {
     console.error("  puis la fenêtre AUTO / PRIME / GOAT.");
     console.error("");
     console.error("Une fois ces réponses obtenues de l'utilisateur :");
-    console.error("  node scripts/circle-tasks.mjs ouvrir --q1=oui|non [--retour=avant|après] --mode=AUTO|PRIME|GOAT");
+    console.error("  node scripts/circle-tasks.mjs ouvrir --q1=oui|non [--retour=avant|après] --mode=AUTO|PRIME|GOAT --repondu-par=utilisateur");
     console.error("");
     console.error("Mode autonome (personne à qui demander) : node scripts/circle-tasks.mjs record-run --autonome");
     process.exitCode = 1;
@@ -1745,11 +1767,13 @@ function ouvrirCli() {
     changementModeleReponse: q1,
     retourModeleQuand: arg("retour"),
     mode: (arg("mode") ?? "").toUpperCase(),
+    modeReponduPar: arg("repondu-par"),
   };
   const res = ouvrirRonde(faits);
   if (!res.ok) {
     console.error(`❌ Ouverture refusée — il manque : ${res.manquants.join(", ")}.`);
-    console.error("Usage : node scripts/circle-tasks.mjs ouvrir --q1=oui|non [--retour=avant|après] --mode=AUTO|PRIME|GOAT");
+    console.error("Usage : node scripts/circle-tasks.mjs ouvrir --q1=oui|non [--retour=avant|après] --mode=AUTO|PRIME|GOAT --repondu-par=utilisateur");
+    console.error("  --repondu-par : qui a répondu à la fenêtre. Seul « utilisateur » est accepté — l'agent ne peut pas répondre à sa place, et une réponse donnée une autre fois ne vaut pas pour celle-ci.");
     process.exitCode = 1;
     return;
   }

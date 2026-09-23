@@ -81,15 +81,56 @@ export function periode(taches = [], joursVoulus = 2) {
 // Le SUJET du registre est déjà l'axe de regroupement du projet (« Jeu / Article 11 »,
 // « Agence / Article 25 »…). On le coupe sur son premier séparateur : le grand domaine suffit ici,
 // le détail vit dans la tâche elle-même.
+// LES GRANDS DOMAINES (2026-09-23, choix de l'utilisateur : « normaliser : une liste de grands
+// domaines »). Le premier jet rangeait les tâches par le Sujet brut du registre : 71 domaines
+// distincts, dont 40 n'en portaient qu'UNE. Les pourcentages qui en sortaient étaient exacts au mot
+// et trompeurs au sens — « Outillage de travail » (30) coexistait avec « Outillage » (16), le même
+// sujet coupé en deux, et le compte rendu suggérait une répartition que la donnée ne portait pas.
+//
+// C'EST UN VOCABULAIRE FERMÉ, pas une liste qui grandira (Article 24 l'exempte explicitement) :
+// ces six domaines couvrent la totalité de ce que ce projet fait, et n'ont rien à synchroniser avec
+// un autre système. Ce qui pourrait se périmer, en revanche, c'est leur CAPACITÉ À TOUT RANGER —
+// d'où findDomainesNonRanges() juste en dessous, qui nomme tout Sujet réel qu'aucun motif
+// n'attrape. Une liste sans ce garde-fou serait exactement la dette que l'Article 24 interdit.
+//
+// L'ORDRE COMPTE : le premier motif qui matche gagne, donc le plus spécifique passe en premier.
+// « Nouvel outil (construction de circle-tasks) » doit tomber dans Outillage, pas dans Ronde.
+export const GRANDS_DOMAINES = [
+  ["Le jeu", /jeu|personnage|dialogue|moteur|enqu[êe]te|simulation|graphis|r[ée]v[ée]lation|maison|lia|no[ée]/i],
+  ["Charte et référentiels", /charte|r[ée]f[ée]rentiel|article|principe|param[èe]tre|documentation|vocabulaire|\bdoc\b/i],
+  ["Process et méthode", /process|m[ée]thode|conduite|ronde|[ée]valuation|organisation|agence|r[èe]gles? de travail|mode autonome|d[ée]cision/i],
+  ["Outillage", /outil|outillage|script|agent|gardien|kpi|tableau de bord|correctif de code|\bcode\b|rapport|infrastructure/i],
+  // DERNIER FILET, STRUCTUREL PLUTÔT QU'ÉNUMÉRÉ, et il est SENSIBLE À LA CASSE exprès : dans ce
+  // projet, un nom d'outil s'écrit en capitales avec des tirets (SAFE-EXPORT, CIRCLE-TASKS,
+  // EVAL-DEV, TOOL-LEARNING…). Les reconnaître à leur FORME évite d'allonger indéfiniment une
+  // liste de noms propres — le travers que la charte interdit, et qu'un outil neuf ferait revenir
+  // dès le premier jour. Séparé des motifs ci-dessus parce qu'eux doivent ignorer la casse et que
+  // celui-ci en dépend entièrement : les fusionner rendrait « rapport » et « RAPPORT » identiques
+  // et ferait matcher n'importe quel mot de quatre lettres.
+  ["Outillage", /\b[A-Z][A-Z-]{3,}\b/],
+  ["Suivi des tâches", /suivi|t[âa]che|chantier|\bplan\b/i],
+  ["Conso et tokens", /conso|token|quota|\bapi\b/i],
+];
+export const DOMAINE_PAR_DEFAUT = "Non classé";
+
+// Le garde-fou de la liste ci-dessus : tout Sujet réel qu'aucun motif n'attrape est NOMMÉ, plutôt
+// que rangé en silence dans « Non classé » où personne ne le verrait jamais.
+export function findDomainesNonRanges(taches = []) {
+  const orphelins = new Map();
+  for (const t of taches) {
+    const brut = String(t?.sujet ?? "").trim();
+    if (!brut) continue;
+    if (GRANDS_DOMAINES.some(([, motif]) => motif.test(brut))) continue;
+    orphelins.set(brut, (orphelins.get(brut) ?? 0) + 1);
+  }
+  return [...orphelins.entries()].map(([sujet, n]) => ({ sujet, taches: n })).sort((a, b) => b.taches - a.taches);
+}
+
 export function domaineDe(tache) {
   const brut = String(tache?.sujet ?? "").trim();
-  if (!brut) return "Non classé";
-  // Le séparateur est « Jeu / Article 11 » — une barre ENTOURÉE d'espaces, jamais une barre nue.
-  // Premier jet corrigé le jour même : couper sur toute barre découpait « Correctif (règle
-  // générale : tous les items de la Ronde CIRCLE / … » en plein milieu d'une phrase, produisant
-  // une dizaine de faux domaines à une tâche chacun. Un séparateur se reconnaît à sa forme exacte.
-  const coupe = brut.split(" / ")[0].trim();
-  return coupe || "Non classé";
+  if (!brut) return DOMAINE_PAR_DEFAUT;
+  const trouve = GRANDS_DOMAINES.find(([, motif]) => motif.test(brut));
+  return trouve ? trouve[0] : DOMAINE_PAR_DEFAUT;
 }
 
 export function bilan(taches = [], { joursVoulus = 2 } = {}) {
@@ -106,6 +147,7 @@ export function bilan(taches = [], { joursVoulus = 2 } = {}) {
     faitesPeriode: faites,
     ouvertesTotal: ouvertes,
     parDomaine: Object.entries(parDomaine).sort((a, b) => b[1].length - a[1].length),
+    nonRanges: findDomainesNonRanges(taches),
   };
 }
 
@@ -160,6 +202,11 @@ export function buildOuOnEnEstHtml(b, { dateLabel = new Date().toISOString().sli
   for (const [domaine, liste] of b.parDomaine) {
     blocks.push({ type: "heading", text: `${domaine} — ${liste.length} tâche(s)` });
     blocks.push({ type: "list", items: liste.sort((a, c) => a.numero - c.numero).map((t) => `#${t.numero} — ${t.sousSujet} · ${resumeCourt(t.description)}`) });
+  }
+  if (b.nonRanges?.length) {
+    blocks.push({ type: "heading", text: "Ce que le rangement n'attrape pas" });
+    blocks.push({ type: "paragraph", text: `${b.nonRanges.length} sujet(s) du registre ne tombent dans aucun grand domaine et sont comptés « Non classé ». Ce n'est pas un défaut du registre : c'est la limite de la table de rangement, nommée plutôt que masquée — sans cette liste, ces tâches disparaîtraient dans une case fourre-tout que personne ne regarde.` });
+    blocks.push({ type: "list", items: b.nonRanges.slice(0, 12).map((o) => `${o.sujet} (${o.taches} tâche(s))`) });
   }
   blocks.push({ type: "heading", text: "Ce qui reste ouvert" });
   blocks.push({ type: "list", items: b.ouvertesTotal.sort((a, c) => a.numero - c.numero).map((t) => `#${t.numero} — ${t.sousSujet} (${t.sensibilite})`) });
