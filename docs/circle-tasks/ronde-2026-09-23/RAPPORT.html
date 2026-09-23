@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CIRCLE-TASKS — récapitulatif de la Ronde</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-23 (Ronde GOAT MAX, 33 items sur 34)</div>
+    <h1>CIRCLE-TASKS — récapitulatif de la Ronde</h1>
+    
+  </header>
+  <div class="divider"></div>
+  <main><p>Index léger : ce qui a tourné et un pointeur vers la sortie déjà produite par chaque item, jamais son contenu dupliqué ici. 📄 = produit un vrai rapport archivé et indexé — depuis le 2026-09-21, tous les items de la Ronde le font.</p>
+<table><thead><tr><th>Item exécuté</th><th>Résultat</th><th>Lien</th></tr></thead><tbody><tr><td>📄 Mettre à jour le profil utilisateur</td><td>1 j depuis la dernière fiche</td><td>docs/profil-utilisateur/</td></tr><tr><td>📄 Relire tous les documents de référence</td><td>Article 13 : 1153 chemins vérifiés, 0 mort — le seul faux positif venait d une notation ambiguë DANS le document, corrigée à la source</td><td>docs/referentiel/</td></tr><tr><td>📄 Digest THE-KING : fraîcheur et tensions possibles de la philosophie</td><td>19/19 principes datés, 0 tension détectée</td><td>docs/the-king/</td></tr><tr><td>📄 Lancer le rapport KPI (familles gratuites)</td><td>relancé — ALERTE : le KPI Qualité serait une tautologie (#226)</td><td>docs/tableau-de-bord/</td></tr><tr><td>📄 Vérifier qu'aucun nouveau rapport n'échappe au gabarit partagé</td><td>36/36 conformes · 1 outil ne conclut jamais · 4 peuvent dire ok sans avoir mesuré</td><td>docs/pure-gold-unity/</td></tr><tr><td>📄 Vérifier depuis quand CLEAN-DIRTY-OLD n'a pas été consulté</td><td>4 j depuis le dernier passage</td><td>docs/clean-dirty-old/</td></tr><tr><td>📄 Vérifier que tous les rapports produisent bien leur copie HTML</td><td>tous câblés</td><td>docs/doc-report/</td></tr><tr><td>📄 Vérifier le poids en tokens de CLAUDE.md (allègement périodique)</td><td>21593 tk, criticité MAITRE — ALERTE : parametres.md profilé SANS budget</td><td>docs/ecotoken/</td></tr><tr><td>📄 Relire les carnets de correctifs et points fragiles</td><td>carnets relus</td><td>docs/simulations/</td></tr><tr><td>📄 Signaler la tâche ouverte la plus ancienne (docs/suivi)</td><td>la plus ancienne : 3 j</td><td>docs/suivi/</td></tr><tr><td>📄 Vérifier que les idées de gros chantier sont bien dans leur fichier préliminaire, et que leur valeur y est vraiment restituée</td><td>0 écart au lancement — mais a BLOQUÉ le commit de clôture : un dossier mentait depuis 2 jours, corrigé</td><td>docs/suivi/</td></tr><tr><td>📄 Vérifier que les outils apprennent — et que je les aide vraiment à progresser</td><td>14 constats À TRANCHER, tous pour vous : aucune leçon jamais jugée APPLIQUÉE</td><td>docs/tool-learning/</td></tr><tr><td>📄 Tout est-il à niveau ? — un verdict par domaine, et ce que personne ne vérifie</td><td>Agence 15/15 · documents 7/7 · code 5/7 (X6, X7 partielles)</td><td>docs/the-equalizer/</td></tr><tr><td>📄 Récapitulatif complet des évaluations — qui juge qui, sur quelles bases, avec quel résultat</td><td>produit</td><td>docs/angel-of-ia-process/</td></tr><tr><td>📄 Vérifier qu'aucune idée nouvelle n'attend encore une décision (fichier / abandon / entre-deux)</td><td>0 idée en attente — mais registre JAMAIS alimenté en 2 jours (#234)</td><td>docs/suivi/</td></tr><tr><td>📄 Scanner les schémas de consommation API (Smart Conso API)</td><td>1 relancement après épuisement réel — RETENU</td><td>docs/smart-conso-api/</td></tr><tr><td>📄 Scanner le poids des documents de travail (SMART-CONSO-TOKEN)</td><td>bilan investissement NON CONCLUANT (2/20 classées)</td><td>docs/smart-conso-token/</td></tr><tr><td>📄 Où on en est — ce qui a été fait, et ce que le projet y a gagné</td><td>bilan de période produit</td><td>docs/etat-des-taches/</td></tr><tr><td>📄 check-tasks-details — rapport de Ronde (chiffres vérifiés, état du projet, œil critique, 3 zooms)</td><td>ALERTE #566 future — le balayage complet a montré 44 lignes sur 526, 43 invisibles à ce contrôle</td><td>docs/check-tasks-details/</td></tr><tr><td>📄 Rapport tool-brain (usage réel des outils + auto-diagnostic)</td><td>usage réel produit</td><td>docs/tool-brain/</td></tr><tr><td>📄 Régénérer la « photo » de la dream team (récap des outils nommés)</td><td>régénérée</td><td>docs/</td></tr><tr><td>📄 Proposer une nouvelle édition INES-official si l'ancienne date</td><td>édition v1 : 172 fichiers, 4,9 Mo, 0 jamais committé</td><td>docs/ines-official/</td></tr><tr><td>📄 Bilan RH complet de l'équipe (effectif, badges, tendance KPI) — CASSANDRA-RH</td><td>36 membres, tous certifiés, KPI +8,4 pt</td><td>docs/cassandra-rh/</td></tr><tr><td>📄 Conformité des process — god-of-all-process (rapport unique, coupable nommé)</td><td>4 dettes IMPAYÉES nommées → PAYÉES, vérifié : 0 manquement · 6/10 process avec écarts de connexion</td><td>docs/god-of-all-process/</td></tr><tr><td>📄 La donnée produite par l'équipe est-elle exploitée, ou écrite pour rien ?</td><td>registres atteints par TABLE mais jamais lus pour leur contenu</td><td>docs/data-archangel/</td></tr><tr><td>📄 Chaque membre est-il RÉELLEMENT intégré partout (badge, docs, catalogue, Ronde) ?</td><td>aucun membre incomplet</td><td>docs/cassandra-rh/</td></tr><tr><td>📄 Organigramme de l'Agence Codex, reconstruit depuis les données réelles — CASSANDRA-RH</td><td>reconstruit depuis les données réelles</td><td>docs/cassandra-rh/</td></tr><tr><td>📄 Lancer le vrai garde-fou du dossier profil-utilisateur (fiches orphelines, liens morts)</td><td>11 fiches, 0 lien mort</td><td>docs/profil-utilisateur/</td></tr><tr><td>📄 Lancer une vraie synthèse LE-COORDINATEUR (runNetworkCheck)</td><td>synthèse relancée</td><td>docs/le-coordinateur/</td></tr><tr><td>📄 Mettre à jour le catalogue d'offres nommé (LE-COORDINATEUR)</td><td>catalogue régénéré</td><td>docs/le-coordinateur-catalogue/</td></tr><tr><td>📄 THE-FINAL-JUDGE — audit indépendant</td><td>⚠️🔴 très lourd × global — 20 constats, 2 P0 vérifiés à la main</td><td>docs/the-final-judge/2026-09-23-tres-lourd-global.md</td></tr><tr><td>📄 THE-DEEP-READER — relecture lourde du suivi (conversation vs docs/suivi)</td><td>⚠️🔴 200 interventions depuis #178 — 8 écarts, 8 tâches ouvertes</td><td>docs/suivi/relectures-lourdes/2026-09-23-ronde-goat-max.md</td></tr><tr><td>📄 HYPER-SCAN-CHECKPOINT — version légère (couche mécanique)</td><td>1 constat À TRANCHER (zone Cycle jour/nuit, rotation)</td><td>docs/hyper-scan-checkpoint/</td></tr><tr><td>📄 Capturer et noter 2 captures d'écran (THE-SCREENER)</td><td>état initial capturé : l esprit tient dans le dialogue, s effondre dans le cadre</td><td>docs/the-screener/2026-09-23-ronde-goat-max.md</td></tr></tbody></table>
+<p class="note">Modèle ayant exécuté cette Ronde : claude-opus-5.</p>
+<p class="note">CIRCLE-TASKS — la sélection des items reste toujours confirmée par une fenêtre à cocher avant exécution, jamais un tout-en-un silencieux.</p></main>
+  
+</div>
+</body>
+</html>

@@ -1,0 +1,1 @@
+Ronde GOAT MAX du 2026-09-23 — Aucun ecart au lancement. MAIS le meme controle a BLOQUE le commit de cloture apres correction des horodatages : docs/changement-de-modele-ia-conception.md mentait depuis deux jours (titre non construit, aucun code ecrit, et une impossibilite mecanique declaree alors que son garde-fou existait). Corrige a la source.

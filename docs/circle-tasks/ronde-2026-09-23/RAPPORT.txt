@@ -1,0 +1,44 @@
+=== CIRCLE-TASKS — récapitulatif de la Ronde ===
+Date : 2026-09-23 (Ronde GOAT MAX, 33 items sur 34)
+Index léger : ce qui a tourné et un pointeur vers la sortie déjà produite par chaque item, jamais son contenu dupliqué ici. 📄 = produit un vrai rapport archivé et indexé ; sans icône = signal console seulement, rien écrit sur disque.
+
+| Item exécuté | Résultat | Lien |
+|---|---|---|
+| 📄 Mettre à jour le profil utilisateur | 1 j depuis la dernière fiche | docs/profil-utilisateur/ |
+| 📄 Relire tous les documents de référence | Article 13 : 1153 chemins vérifiés, 0 mort — le seul faux positif venait d une notation ambiguë DANS le document, corrigée à la source | docs/referentiel/ |
+| 📄 Digest THE-KING : fraîcheur et tensions possibles de la philosophie | 19/19 principes datés, 0 tension détectée | docs/the-king/ |
+| 📄 Lancer le rapport KPI (familles gratuites) | relancé — ALERTE : le KPI Qualité serait une tautologie (#226) | docs/tableau-de-bord/ |
+| 📄 Vérifier qu'aucun nouveau rapport n'échappe au gabarit partagé | 36/36 conformes · 1 outil ne conclut jamais · 4 peuvent dire ok sans avoir mesuré | docs/pure-gold-unity/ |
+| 📄 Vérifier depuis quand CLEAN-DIRTY-OLD n'a pas été consulté | 4 j depuis le dernier passage | docs/clean-dirty-old/ |
+| 📄 Vérifier que tous les rapports produisent bien leur copie HTML | tous câblés | docs/doc-report/ |
+| 📄 Vérifier le poids en tokens de CLAUDE.md (allègement périodique) | 21593 tk, criticité MAITRE — ALERTE : parametres.md profilé SANS budget | docs/ecotoken/ |
+| 📄 Relire les carnets de correctifs et points fragiles | carnets relus | docs/simulations/ |
+| 📄 Signaler la tâche ouverte la plus ancienne (docs/suivi) | la plus ancienne : 3 j | docs/suivi/ |
+| 📄 Vérifier que les idées de gros chantier sont bien dans leur fichier préliminaire, et que leur valeur y est vraiment restituée | 0 écart au lancement — mais a BLOQUÉ le commit de clôture : un dossier mentait depuis 2 jours, corrigé | docs/suivi/ |
+| 📄 Vérifier que les outils apprennent — et que je les aide vraiment à progresser | 14 constats À TRANCHER, tous pour vous : aucune leçon jamais jugée APPLIQUÉE | docs/tool-learning/ |
+| 📄 Tout est-il à niveau ? — un verdict par domaine, et ce que personne ne vérifie | Agence 15/15 · documents 7/7 · code 5/7 (X6, X7 partielles) | docs/the-equalizer/ |
+| 📄 Récapitulatif complet des évaluations — qui juge qui, sur quelles bases, avec quel résultat | produit | docs/angel-of-ia-process/ |
+| 📄 Vérifier qu'aucune idée nouvelle n'attend encore une décision (fichier / abandon / entre-deux) | 0 idée en attente — mais registre JAMAIS alimenté en 2 jours (#234) | docs/suivi/ |
+| 📄 Scanner les schémas de consommation API (Smart Conso API) | 1 relancement après épuisement réel — RETENU | docs/smart-conso-api/ |
+| 📄 Scanner le poids des documents de travail (SMART-CONSO-TOKEN) | bilan investissement NON CONCLUANT (2/20 classées) | docs/smart-conso-token/ |
+| 📄 Où on en est — ce qui a été fait, et ce que le projet y a gagné | bilan de période produit | docs/etat-des-taches/ |
+| 📄 check-tasks-details — rapport de Ronde (chiffres vérifiés, état du projet, œil critique, 3 zooms) | ALERTE #566 future — le balayage complet a montré 44 lignes sur 526, 43 invisibles à ce contrôle | docs/check-tasks-details/ |
+| 📄 Rapport tool-brain (usage réel des outils + auto-diagnostic) | usage réel produit | docs/tool-brain/ |
+| 📄 Régénérer la « photo » de la dream team (récap des outils nommés) | régénérée | docs/ |
+| 📄 Proposer une nouvelle édition INES-official si l'ancienne date | édition v1 : 172 fichiers, 4,9 Mo, 0 jamais committé | docs/ines-official/ |
+| 📄 Bilan RH complet de l'équipe (effectif, badges, tendance KPI) — CASSANDRA-RH | 36 membres, tous certifiés, KPI +8,4 pt | docs/cassandra-rh/ |
+| 📄 Conformité des process — god-of-all-process (rapport unique, coupable nommé) | 4 dettes IMPAYÉES nommées → PAYÉES, vérifié : 0 manquement · 6/10 process avec écarts de connexion | docs/god-of-all-process/ |
+| 📄 La donnée produite par l'équipe est-elle exploitée, ou écrite pour rien ? | registres atteints par TABLE mais jamais lus pour leur contenu | docs/data-archangel/ |
+| 📄 Chaque membre est-il RÉELLEMENT intégré partout (badge, docs, catalogue, Ronde) ? | aucun membre incomplet | docs/cassandra-rh/ |
+| 📄 Organigramme de l'Agence Codex, reconstruit depuis les données réelles — CASSANDRA-RH | reconstruit depuis les données réelles | docs/cassandra-rh/ |
+| 📄 Lancer le vrai garde-fou du dossier profil-utilisateur (fiches orphelines, liens morts) | 11 fiches, 0 lien mort | docs/profil-utilisateur/ |
+| 📄 Lancer une vraie synthèse LE-COORDINATEUR (runNetworkCheck) | synthèse relancée | docs/le-coordinateur/ |
+| 📄 Mettre à jour le catalogue d'offres nommé (LE-COORDINATEUR) | catalogue régénéré | docs/le-coordinateur-catalogue/ |
+| 📄 THE-FINAL-JUDGE — audit indépendant | ⚠️🔴 très lourd × global — 20 constats, 2 P0 vérifiés à la main | docs/the-final-judge/2026-09-23-tres-lourd-global.md |
+| 📄 THE-DEEP-READER — relecture lourde du suivi (conversation vs docs/suivi) | ⚠️🔴 200 interventions depuis #178 — 8 écarts, 8 tâches ouvertes | docs/suivi/relectures-lourdes/2026-09-23-ronde-goat-max.md |
+| 📄 HYPER-SCAN-CHECKPOINT — version légère (couche mécanique) | 1 constat À TRANCHER (zone Cycle jour/nuit, rotation) | docs/hyper-scan-checkpoint/ |
+| 📄 Capturer et noter 2 captures d'écran (THE-SCREENER) | état initial capturé : l esprit tient dans le dialogue, s effondre dans le cadre | docs/the-screener/2026-09-23-ronde-goat-max.md |
+
+Modèle ayant exécuté cette Ronde : claude-opus-5.
+
+CIRCLE-TASKS — la sélection des items reste toujours confirmée par une fenêtre à cocher avant exécution, jamais un tout-en-un silencieux.
