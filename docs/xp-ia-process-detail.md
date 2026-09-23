@@ -190,3 +190,82 @@ construction. Les défaire ramènerait exactement les défauts qu'elles écarten
   tension se résout toujours dans ce sens, jamais l'inverse.
 - **Il ne couvre pas ce que l'agent a appris SUR LE JEU** (le ton, les personnages) : c'est le
   domaine de la charte et d'EL-PROFESSOR. Ce registre ne parle que de la façon de travailler.
+
+## Partie 8 — Le schéma de revue, et la remise à niveau du code (2026-09-23, chantier 7)
+
+*(Demande de l'utilisateur : « est-ce que tout le code bénéficie de la leçon que tu as apprise ? »,
+et « le schéma de revue à présenter ».)*
+
+### Le schéma, en une vue
+
+```
+       UNE ERREUR RÉELLE
+              │
+              ▼
+   ┌──────────────────────┐
+   │ 1. CAPTER            │  aux trois moments déclencheurs (Partie 3)
+   │    enregistrerXp()   │  « rien à retenir » est une réponse pleine
+   └──────────┬───────────┘
+              ▼
+   ┌──────────────────────┐
+   │ 2. ÉCRIRE            │  docs/referentiel/lecons.md
+   │    porteur + terrain │  auditLecons() refuse un porteur fantôme
+   └──────────┬───────────┘
+              ▼
+   ┌──────────────────────┐
+   │ 3. RESSORTIR         │  avant la tâche (tool-brain) et au commit
+   │    leconsPourTache() │  enregistrerRemontee() compte si ça sert
+   └──────────┬───────────┘
+              ▼
+   ┌──────────────────────────────────────────────┐
+   │ 4. REMETTRE LE CODE À NIVEAU                 │
+   │    ├─ MÉCANIQUE, continue, gratuite :        │
+   │    │  zonesARemettreANiveau() — quels        │
+   │    │  fichiers du terrain ont bougé DEPUIS   │
+   │    │  la leçon ? Elle POSE la question.      │
+   │    └─ PROFONDE, sur demande, payante :       │
+   │       un vrai jugement « ce fichier porte-t-il│
+   │       le défaut ? ». Jamais automatique.     │
+   └──────────┬───────────────────────────────────┘
+              ▼
+   ┌──────────────────────┐
+   │ 5. JUGER             │  à la Ronde, PAR L'UTILISATEUR
+   │    parUtilisateur    │  « est-elle réellement APPLIQUÉE ? »
+   └──────────────────────┘
+```
+
+### Pourquoi l'étape 4 est coupée en deux, et pourquoi cette coupe ne bougera pas
+
+C'est la même frontière qu'ALWAYS-NEW-CODE, pour la même raison. La couche **mécanique** ne peut pas
+juger si un fichier porte le défaut : ça demande de lire le sens du code. Elle peut dire quelque
+chose de plus modeste et de vérifiable — **ces fichiers-là ont été touchés après que la leçon a été
+apprise** — et c'est précisément là que la question se pose vraiment. Elle pose la question ; elle
+n'affirme jamais le défaut.
+
+Lister TOUT le terrain d'une leçon plutôt que ce qui a bougé rendrait des dizaines de fichiers à
+chaque entrée, dont la plupart dormants depuis des semaines : un relevé qui accuse presque tout a
+tort presque toujours (leçon L4), et il cesserait d'être lu.
+
+### La leçon qui s'étoffe garde LES DEUX traces
+
+Une entrée peut gagner un angle sans perdre celui qui l'a fait naître. Le format est fixe et lu
+mécaniquement : `**Enrichie le** : <date> — <ce que l'ajout apporte>`, sur une ligne à elle, à côté
+de la trace d'origine qui reste **intacte**.
+
+Ce que la mécanique vérifie : que la trace d'origine est toujours là après un enrichissement, et
+qu'elle porte une date. Un enrichissement qui aurait remplacé l'original se voit donc tout de suite
+— et c'est le seul vrai risque de cette opération.
+
+**La trace d'origine se reconnaît à sa FORME, jamais à son verbe** : le premier paragraphe en
+italique de l'entrée qui porte une date. Le premier jet cherchait « Trouvée » ou « Payée » ; une
+entrée écrivait « Apprise » et se retrouvait déclarée sans date. Allonger la liste des verbes aurait
+rejoué exactement ce que le corollaire de l'Article 17 interdit — un tableau qui ne couvre jamais le
+prochain cas.
+
+### Ce que ce chantier a trouvé en tournant pour de vrai
+
+- **Une leçon sur seize n'avait aucune trace d'origine** (L5). Elle a été écrite depuis, à partir
+  d'une décision réelle et datée, jamais inventée.
+- **`--since=<date>` seul ne veut pas dire « depuis minuit »** : git y ajoute l'heure courante, si
+  bien qu'un commit du matin passe pour antérieur à sa propre date. Le relevé rendait 0 fichier sur
+  9 leçons — un zéro parfaitement plausible, donc invisible sans vérification (Article 25).

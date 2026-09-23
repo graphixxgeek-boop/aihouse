@@ -9220,6 +9220,59 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(typeof gitFaux === 'function', 'the command shape is asserted inside gitFaux, kept here so the check is not silently dropped');
   assert.deepEqual(god.findChangementsIndirectsSansMiseAJour({ processes: procFaux, shImpl: gitFaux }).map((e) => e.rattrape), ['cccc222'], 'and the same verdict holds when the history comes through a stub that also verifies the git command actually issued');
 
+  // 4quater. LA REMISE À NIVEAU DU CODE (2026-09-23, chantier 7) — « est-ce que tout le code
+  // bénéficie de la leçon que tu as apprise ? », posé tel quel par l'utilisateur.
+  {
+    const tl = await import('../scripts/tool-learning.mjs');
+    const registreEssai = [
+      '## L1 — une leçon',
+      '',
+      "*Apprise le 2026-09-10 en cassant quelque chose.*",
+      '',
+      '**Porté par** : `unePorteuse()` (`scripts/faux.mjs`).',
+      '',
+      '**Terrain** : quand je touche X · mots : x · fichiers : scripts/*.mjs',
+      '',
+      '**Enrichie le** : 2026-09-20 — un angle de plus, la trace d\'origine reste intacte.',
+      '',
+      '## L2 — une leçon sans terrain de fichiers',
+      '',
+      '*Payée le 2026-09-11.*',
+      '',
+      '**Porté par** : **aucun mécanisme**, parce que rien ne peut le voir.',
+      '',
+      '**Terrain** : partout · mots : y',
+    ].join('\n');
+    const lues = tl.parseLecons(registreEssai);
+    // LES DEUX TRACES, et c'est le cœur de la demande : une leçon qui s'étoffe garde l'originale.
+    assert.equal(lues[0].dateOrigine, '2026-09-10', 'the origin trace must still be read after an enrichment — an enrichment that ate the original would turn a lesson back into a piece of advice');
+    assert.deepEqual(lues[0].enrichissements, [{ date: '2026-09-20', quoi: "un angle de plus, la trace d'origine reste intacte." }], 'a dated enrichment must be read as its own trace, alongside the original and never in its place');
+    assert.deepEqual(lues[1].enrichissements, [], 'a lesson never enriched must report none, not an empty-looking one');
+    // La trace se reconnaît à sa FORME (un italique portant une date), jamais à son verbe : le
+    // premier jet cherchait « Trouvée » ou « Payée », et « Apprise » passait à travers.
+    assert.equal(lues[1].dateOrigine, '2026-09-11', 'any verb must work: listing them one by one is the frozen word list the charter forbids, and it would miss the next one');
+    assert.equal(tl.parseLecons('## L9 — sans date\n\n*Une incise de style, sans date.*\n\n**Terrain** : x · mots : y')[0].dateOrigine, null, 'an italic WITHOUT a date is an aside, never an origin trace — reading it as one would fabricate a measurement');
+
+    // Le relevé pose une question sur les fichiers touchés depuis la leçon, jamais sur tout le terrain.
+    const zones = tl.zonesARemettreANiveau(lues, { execImpl: (cmd) => {
+      assert.match(cmd, /--since=2026-09-10T00:00:00Z/, 'the date must carry an explicit midnight: `--since=<date>` alone makes git add the CURRENT time, so a commit from this morning passes for older than its own date — the real bug that returned 0 files across 9 lessons');
+      return 'scripts/touche.mjs\nscripts/touche.mjs\nscripts/autre.mjs\n';
+    } });
+    assert.deepEqual(zones[0].fichiers, ['scripts/autre.mjs', 'scripts/touche.mjs'], 'each file must be listed once whatever the number of commits touching it — a count inflated by commits would read as a bigger debt than it is');
+    assert.equal(zones[1].mesurable, false, 'a lesson whose terrain declares no file pattern must report "not measurable", never an empty list: measuring nothing is not the same as finding nothing');
+    assert.match(zones[1].raison, /aucun motif de fichier/, 'and it must say WHICH of the two things was missing, since a missing date and a missing terrain call for different fixes');
+    assert.match(tl.formatRemiseANiveau(zones), /pose une QUESTION/, 'the rendering must state plainly that it asks rather than accuses: it cannot know whether those files carry the defect, and claiming otherwise would be a guard that accuses at large');
+    assert.match(tl.formatRemiseANiveau([]), /jamais « rien à revoir »/, 'with nothing measurable at all, the report must refuse to read as a clean bill of health');
+
+    // En direct contre le vrai registre.
+    const reelles = tl.parseLecons(fs.readFileSync('docs/referentiel/lecons.md', 'utf8'));
+    // LES LEÇONS SEULEMENT, et la distinction n'est pas une facilité : une BONNE PRATIQUE est par
+    // définition un réflexe qui marche « sans casse derrière » (docs/referentiel/lecons.md), donc
+    // sans coût à raconter. Exiger d'elle une trace d'origine reviendrait à lui demander d'inventer
+    // une erreur — ma première version le faisait, et accusait deux entrées parfaitement correctes.
+    assert.ok(reelles.filter((l) => l.nature === 'leçon' && !l.fusionneeDans).every((l) => l.dateOrigine), 'checked live: every real LESSON must carry a dated origin trace — one had none, and a lesson without the cost that produced it reads as advice rather than as a lesson');
+  }
+
   // 4bis. LE GABARIT DE PROCESS (2026-09-23) — le modèle et son contrôle, demandés ensemble.
   //
   // IL VÉRIFIE UNE RÉPONSE, JAMAIS UN TITRE, et c'est le choix qui décide de tout : les huit process

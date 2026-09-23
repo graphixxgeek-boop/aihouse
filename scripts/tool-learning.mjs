@@ -495,9 +495,86 @@ export function parseLecons(texte = "") {
     const fusionneeDans = (sec.match(/^\*\*Fusionnée dans\*\*\s*:\s*(\S+)/m) || [])[1] ?? null;
     const porteurs = [];
     if (ligne) for (const m of ligne.matchAll(PORTEUR_IDENT_RE)) porteurs.push(m[1]);
-    lecons.push({ id, titre, nature: natureDe(id), portePar: ligne, porteurs, terrain, mots: motsDuTerrain(terrain), fichiers: fichiersDuTerrain(terrain), fusionneeDans });
+    // LA TRACE D'ORIGINE — la ligne en italique qui dit ce que cette entrée a coûté, sous ses deux
+    // formes réelles dans ce registre (« Trouvée le… », « Payée le… »). C'est elle qui rend une
+    // leçon crédible : sans la casse qui l'a produite, on lit un conseil, pas une leçon.
+    // Sur PLUSIEURS lignes : la trace d'origine est un paragraphe en italique, et la moitié des
+    // entrées la font tenir sur deux ou trois lignes. Un motif ancré sur une seule ligne en ratait
+    // sept sur seize et les déclarait « sans date » — une absence fabriquée par le lecteur, pas par
+    // le document (L11 : un motif qui ne PEUT pas matcher ressemble à un motif qui ne matche pas).
+    // RECONNUE PAR SA FORME, JAMAIS PAR SON VERBE. Le premier jet cherchait « Trouvée » ou
+    // « Payée » ; une entrée écrivait « Apprise » et se retrouvait déclarée sans date. Allonger la
+    // liste des verbes aurait rejoué exactement ce que le corollaire de l'Article 17 interdit — un
+    // tableau qui ne couvre jamais le prochain cas. La règle retenue est une PROPRIÉTÉ : la trace
+    // d'origine est le premier paragraphe en italique de l'entrée QUI PORTE UNE DATE. N'importe
+    // quel verbe passe, et un italique sans date (une incise de style) n'est jamais pris pour elle.
+    const origine = [...sec.matchAll(/^\*[^*][^*]*\*/gm)].map((m) => m[0]).find((bloc) => /\d{4}-\d{2}-\d{2}/.test(bloc)) ?? null;
+    const dateOrigine = (origine?.match(/(\d{4}-\d{2}-\d{2})/) || [])[1] ?? null;
+    // LES ENRICHISSEMENTS — une leçon qui s'étoffe garde LES DEUX traces : l'originale intacte, et
+    // l'ajout daté à côté. Le format est fixe et lu, jamais deviné (leçon L12).
+    const enrichissements = [...sec.matchAll(/^\*\*Enrichie le\*\*\s*:\s*(\d{4}-\d{2}-\d{2})\s*[—-]\s*(.+)$/gm)]
+      .map((m) => ({ date: m[1], quoi: m[2].trim() }));
+    lecons.push({ id, titre, nature: natureDe(id), portePar: ligne, porteurs, terrain, mots: motsDuTerrain(terrain), fichiers: fichiersDuTerrain(terrain), fusionneeDans, origine, dateOrigine, enrichissements });
   }
   return lecons;
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// « EST-CE QUE TOUT LE CODE BÉNÉFICIE DE LA LEÇON ? » (2026-09-23, chantier 7)
+// ————————————————————————————————————————————————————————————————————————
+//
+// QUESTION POSÉE TELLE QUELLE PAR L'UTILISATEUR. Elle est plus dure qu'elle n'en a l'air : une leçon
+// est apprise à UN endroit — celui où l'erreur a fait mal — et corrigée à cet endroit-là. Rien ne dit
+// que les dix autres fichiers du même terrain en ont bénéficié. C'est même le contraire par défaut.
+//
+// CE QUE LA COUCHE MÉCANIQUE PEUT DIRE, ET ELLE NE PRÉTEND À RIEN DE PLUS : quels fichiers du
+// terrain d'une leçon ont été modifiés APRÈS qu'elle a été apprise. Ce sont les endroits où la
+// question « celui-ci a-t-il été relu à la lumière de cette leçon ? » se pose vraiment. Elle ne dit
+// PAS que le défaut y est présent — juger ça demande de lire le sens du code, ce qui est le passage
+// PROFOND, sur demande et payant (même frontière qu'ALWAYS-NEW-CODE : couche légère gratuite et
+// mécanique d'un côté, vrai raisonnement de l'autre, jamais confondus).
+//
+// POURQUOI « APRÈS », et pas « tous les fichiers du terrain » : lister tout le terrain rendrait des
+// dizaines de fichiers à chaque leçon, dont la plupart n'ont pas bougé depuis des semaines — un
+// détecteur qui accuse presque tout a tort presque toujours (L4). Un fichier touché après coup est
+// un vrai candidat : quelqu'un y a travaillé en ayant, ou non, la leçon en tête.
+export function zonesARemettreANiveau(lecons = [], { root = ROOT, execImpl = (cmd) => execSync(cmd, { cwd: String(root).replace(/\/$/, ""), encoding: "utf8" }), depuis = null } = {}) {
+  const zones = [];
+  for (const l of lecons) {
+    if (l.fusionneeDans) continue;
+    const date = depuis ?? l.dateOrigine;
+    // Pas de date lisible ⇒ « pas mesuré », jamais « rien à revoir » : la confusion entre les deux
+    // est le défaut que ce projet corrige le plus souvent.
+    if (!date || !l.fichiers?.length) { zones.push({ id: l.id, titre: l.titre, mesurable: false, raison: !date ? "aucune date d'origine lisible dans l'entrée" : "aucun motif de fichier déclaré dans son terrain" }); continue; }
+    const touches = new Set();
+    for (const motif of l.fichiers) {
+      let sortie = "";
+      // `--since=2026-09-23` SEUL ne veut pas dire « depuis minuit ce jour-là » : git y ajoute
+      // l'heure courante, si bien qu'un commit du matin passe pour antérieur à sa propre date. Le
+      // relevé rendait 0 fichier sur 9 leçons — un zéro parfaitement plausible, donc invisible sans
+      // vérification. L'heure est donc écrite explicitement.
+      try { sortie = execImpl(`git log --since=${date}T00:00:00Z --name-only --pretty=format: -- '${motif}'`) ?? ""; }
+      catch { /* un motif illisible ne vaut jamais un terrain vide */ }
+      for (const f of String(sortie).split("\n").map((x) => x.trim()).filter(Boolean)) touches.add(f);
+    }
+    zones.push({ id: l.id, titre: l.titre, mesurable: true, depuis: date, fichiers: [...touches].sort(), porteurs: l.porteurs ?? [] });
+  }
+  return zones;
+}
+
+export function formatRemiseANiveau(zones = [], { max = 6 } = {}) {
+  const mesurees = zones.filter((z) => z.mesurable);
+  const avec = mesurees.filter((z) => z.fichiers.length).sort((a, b) => b.fichiers.length - a.fichiers.length);
+  const l = [`Remise à niveau du code — ${avec.length}/${mesurees.length} leçon(s) ont des fichiers de leur terrain touchés depuis qu'elles ont été apprises.`];
+  if (!mesurees.length) return `${l[0]}\nAucune leçon mesurable : ce n'est jamais « rien à revoir », c'est « on n'a pas pu regarder ».`;
+  for (const z of avec.slice(0, max)) {
+    l.push(`  · ${z.id} — ${z.fichiers.length} fichier(s) touché(s) depuis le ${z.depuis} : ${z.fichiers.slice(0, 4).join(", ")}${z.fichiers.length > 4 ? "…" : ""}`);
+  }
+  if (avec.length > max) l.push(`  … et ${avec.length - max} autre(s).`);
+  l.push("Ce relevé pose une QUESTION (« ces fichiers ont-ils été relus à la lumière de la leçon ? »), il n'affirme aucun défaut — le juger demande le passage profond, sur demande.");
+  const nonMesurees = zones.filter((z) => !z.mesurable);
+  if (nonMesurees.length) l.push(`  ${nonMesurees.length} leçon(s) non mesurable(s) : ${nonMesurees.slice(0, 3).map((z) => `${z.id} (${z.raison})`).join(" ; ")}`);
+  return l.join("\n");
 }
 
 // ————————————————————————————————————————————————————————————————————————
@@ -1060,6 +1137,14 @@ function main() {
   const groupes = auditL.mesure === "mesuré" ? groupesEquivalents(auditL.lecons) : [];
   console.log("");
   for (const l of formatRemontees(remontees, groupes)) console.log(l);
+
+  // LA REMISE À NIVEAU DU CODE (2026-09-23, chantier 7) — « est-ce que tout le code bénéficie de la
+  // leçon que tu as apprise ? ». Couche MÉCANIQUE et continue : elle pose la question sur les
+  // fichiers réellement touchés depuis chaque leçon. Le jugement, lui, reste le passage profond.
+  if (auditL.mesure === "mesuré") {
+    console.log("");
+    console.log(formatRemiseANiveau(zonesARemettreANiveau(auditL.lecons)));
+  }
 
   // LE PLAN D'ACTION (2026-09-23, tâche #211). TOOL-LEARNING porte la MOITIÉ 2 de l'évolutivité
   // (devenir meilleur), et ses deux constats visent deux responsables différents — les mélanger

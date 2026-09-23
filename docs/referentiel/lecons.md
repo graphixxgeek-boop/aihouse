@@ -139,8 +139,9 @@ déjà prise et documentée ailleurs**. Reprocher une décision assumée est la 
 
 *Trouvée cinq fois le 2026-09-23 : chaque nouveau détecteur a dû être resserré, certains deux fois.*
 
-**Le signal qui permet de s'en apercevoir AVANT de publier** *(ajouté le 2026-09-23, A-NIVEAU —
-la leçon d'origine ci-dessus reste telle quelle)* : **quand un détecteur accuse presque tout, c'est
+**Enrichie le** : 2026-09-23 — un signal qui permet de s'en apercevoir AVANT de publier (trouvé en construisant A-NIVEAU ; la leçon d'origine et sa trace ci-dessus restent intactes).
+
+Ce signal : **quand un détecteur accuse presque tout, c'est
 presque toujours lui qui a tort.** Un premier jet accusait 17 outils sur 33 ; le chiffre lui-même
 était l'alerte, bien avant le détail. Vérifier avant de rapporter coûte deux minutes, publier un
 rapport entièrement faux coûte la confiance qu'on met dans l'outil — et cette confiance est tout
@@ -158,6 +159,16 @@ Corollaire : jamais un pourcentage calculé sur un dénominateur vide.
 
 Troisième état à ne pas oublier non plus : un élément **non mesurable** (illisible, absent) ne doit
 jamais être compté conforme — il casse le verdict.
+
+*Payée le 2026-09-22, à la fenêtre de clôture de la Ronde, sur TROIS chiffres verts de cette Ronde
+même : « 100 % d'investissement réel » calculé sur 2 actions parmi 18, « 0 tension » trouvée sur un
+texte fondateur enrichi cinq fois, et une couverture annoncée alors que trois
+Gardiens sacrés du code n'avaient pas regardé. Aucun des trois n'était un mensonge ; les trois étaient des verts non
+représentatifs, ce qui est pire, parce qu'on ne les vérifie pas.*
+
+*(Trace ajoutée le 2026-09-23 : cette entrée était la seule du registre à n'avoir aucune trace
+d'origine, et l'absence a été trouvée par la couche de remise à niveau — une leçon sans le coût qui
+l'a produite se lit comme un conseil, pas comme une leçon.)*
 
 **Porté par** : `relanceCircleTasks()` (`scripts/circle-tasks.mjs`) — un compte illisible rend `mesurable: false`, jamais un retard de zéro.
 
