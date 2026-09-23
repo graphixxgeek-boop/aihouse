@@ -88,6 +88,9 @@ export const PROCESSES = [
     quand: "lancer une simulation complète de bout en bout et l'analyser",
     motsCles: ["simulation", "simu", "full_sim", "article 18", "transcript", "dossier retourné"],
     doc: "docs/regles-de-travail.md",
+    // Ce fichier est aussi la référence maîtresse du paysage entier : sans cette section, tout
+    // mécanisme qu'il nomme au passage comptait comme une règle de la simulation.
+    docSection: "## 6bis. Protocole de simulation complète (Article 18 de CLAUDE.md)",
     gardien: "scripts/process-simulation-guardian.mjs",
     // ÉTAPES RÉVISÉES AVEC L'UTILISATEUR le 2026-09-22, sur le fichier qu'il a annoté. Chaque
     // changement porte sa raison ; aucune n'est une initiative de l'agent.
@@ -520,8 +523,32 @@ function lireTexte(chemin, readFileImpl) {
 // déduisent de deux endroits, jamais déclarés à la main : ce que le gardien importe localement, et
 // ce que le document nomme. Un mécanisme n'est retenu que s'il est cité quelque part — un export
 // interne que ni le doc ni le gardien ne nomme n'est pas une règle de process, c'est du code.
+// extraireSection() — du titre donné jusqu'au prochain titre de MÊME niveau, jamais jusqu'à la fin
+// du fichier. Un titre introuvable rend `null` plutôt que le document entier : se rabattre
+// silencieusement sur tout le fichier ramènerait exactement le bruit qu'on vient d'enlever, sans
+// que personne ne s'en aperçoive.
+export function extraireSection(texte, titre) {
+  const source = String(texte ?? "");
+  const debut = source.indexOf(titre);
+  if (debut === -1) return null;
+  const niveau = (titre.match(/^#+/) ?? ["##"])[0];
+  const suite = source.slice(debut + titre.length);
+  const fin = suite.search(new RegExp(`^${niveau} `, "m"));
+  return fin === -1 ? source.slice(debut) : source.slice(debut, debut + titre.length + fin);
+}
+
 export function mecanismesDuProcess(p, { root = ROOT, readFileImpl = readFileSync } = {}) {
-  const docTexte = p.doc ? lireTexte(join(root, p.doc), readFileImpl) : null;
+  // UN PROCESS PEUT VIVRE DANS UNE SECTION, PAS DANS TOUT UN FICHIER (2026-09-23). Le process de
+  // simulation déclare `docs/regles-de-travail.md` comme document — or ce fichier est AUSSI la
+  // référence maîtresse de tout le paysage, et il nomme au passage des dizaines de mécanismes qui
+  // n'ont rien à voir avec une simulation. Résultat : dix « règles écrites que le gardien n'applique
+  // pas » dont pas une seule n'était une règle de ce process (`PERSONNAGES`, `walkDocsPaths`…).
+  //
+  // `docSection` permet donc de dire QUELLE PARTIE du document fait loi pour ce process. Sans elle,
+  // le fichier entier compte — comportement inchangé pour les sept autres, qui ont chacun leur
+  // document propre.
+  const docEntier = p.doc ? lireTexte(join(root, p.doc), readFileImpl) : null;
+  const docTexte = p.docSection && docEntier ? extraireSection(docEntier, p.docSection) : docEntier;
   const gardienTexte = p.gardien ? lireTexte(join(root, p.gardien), readFileImpl) : null;
   if (!docTexte || !gardienTexte) return { sources: [], mecanismes: [], docTexte, gardienTexte };
 

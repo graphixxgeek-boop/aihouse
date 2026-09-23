@@ -9409,6 +9409,23 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     assert.ok(cible.docSeul.includes('mecanismeEcrit'), 'a rule written in the document that the guardian never enforces must still be reported — that is the serious half, and the whole reason for tightening the other one was to stop it from drowning');
   }
 
+  // 4nonies. UN PROCESS PEUT VIVRE DANS UNE SECTION (2026-09-23, chantier 13). Le process de
+  // simulation déclare docs/regles-de-travail.md — qui est AUSSI la référence maîtresse du paysage,
+  // et nomme au passage des dizaines de mécanismes étrangers à toute simulation. Dix « règles
+  // écrites et non appliquées » en sortaient, dont pas une n'était une règle de ce process.
+  {
+    const doc = '# Titre\n\n## 5. Autre sujet\nparle de mecanismeEtranger.\n\n## 6bis. Le protocole\nparle de mecanismePropre.\n\n## 7. Encore autre\nparle de mecanismeSuivant.\n';
+    const section = god.extraireSection(doc, '## 6bis. Le protocole');
+    assert.ok(section.includes('mecanismePropre'), 'the declared section must be returned');
+    assert.ok(!section.includes('mecanismeEtranger') && !section.includes('mecanismeSuivant'), 'it must stop at the next heading of the SAME level, never run to the end of the file — running on is exactly what produced the ten false gaps');
+    assert.equal(god.extraireSection(doc, '## Section inexistante'), null, 'an unfindable heading must return null, never fall back silently on the whole document: falling back would bring the noise straight back with nobody noticing');
+    assert.ok(god.extraireSection(doc, '## 7. Encore autre').includes('mecanismeSuivant'), 'the last section must still be returned in full when no heading follows it');
+    // En direct : le process de simulation doit déclarer sa section, sinon la correction se perd
+    // au premier agent qui recopie l'entrée sans ce champ.
+    const simulation = god.PROCESSES.find((p) => p.slug === 'simulation');
+    assert.ok(simulation.docSection && god.extraireSection(fs.readFileSync(simulation.doc, 'utf8'), simulation.docSection), 'checked live: the simulation process must declare a section of its shared master document, and that section must actually be findable in the real file');
+  }
+
   // 4bis. LE GABARIT DE PROCESS (2026-09-23) — le modèle et son contrôle, demandés ensemble.
   //
   // IL VÉRIFIE UNE RÉPONSE, JAMAIS UN TITRE, et c'est le choix qui décide de tout : les huit process
