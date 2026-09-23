@@ -5740,6 +5740,68 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     console.log(`Passed: the transverse lessons register (2026-09-23, task #220) is no longer a text nothing re-reads — the trap it documents twice over (L2, a mechanism that never leaves the script; L7, a written intention never prevented anything). Each lesson now names the mechanism that carries it when nobody remembers it, tool-learning prints that audit and feeds its findings into its own action plan, and the state that justifies the whole thing is told apart from the other two: a PHANTOM carrier — a mechanism named in writing that does not exist — reassures wrongly and is worse than a lesson that admits it has none, exactly the reason checkActionChain() verifies that a task announced by an action plan is real. A declared impossibility produces no finding at all, since reproaching a settled decision at every passage would be L6 committed by the tool publishing it. Real register right now: ${reel.total} lessons, ${reel.portees} mechanically carried, ${reel.sansMecanisme} declared impossible with its reason, 0 phantom, 0 silent.`);
   }
 
+  // PRIORITÉS DES TÂCHES (2026-09-23, nuit autonome, chantier 1) — l'échelle à six paliers qui
+  // REMPLACE l'ancien champ de gravité, calibrée en 32 questions avant le coucher de l'utilisateur.
+  {
+    const pr = await import('../scripts/priorites.mjs');
+
+    // Les libellés sont figés par décision explicite (« ces paliers doivent être conservés tels
+    // quels ») : cette assertion est là pour qu'un renommage bien intentionné échoue au commit.
+    assert.deepEqual(pr.PALIERS.map((p) => p.cle), ['CRITIQUE-RISQUES', 'URGENT-RETARD', 'PRIORITAIRE-OBLIGATOIRE', 'RECOMMANDE-NECESSAIRE', 'NORMAL-UTILE', 'MEMOIRE-NEXT'], 'the six labels are frozen by explicit decision — a well-meaning rename must fail here rather than quietly break every task already labelled');
+    assert.ok(pr.PALIERS.every((p) => p.coutDeLAttente && p.quoi && p.exemple), 'every tier states what waiting costs, what it means, and an example: the single question "what does waiting cost?" is what makes the scale usable, and a tier without it would be classified by feel');
+    // Le rang, jamais la position dans le tableau : un remaniement de l'ordre ne doit pas changer
+    // silencieusement la sévérité.
+    assert.ok(pr.rangDe('CRITIQUE-RISQUES') > pr.rangDe('URGENT-RETARD') && pr.rangDe('MEMOIRE-NEXT') < pr.rangDe('NORMAL-UTILE'), 'severity comes from an explicit rank, never from the position in the array');
+
+    // LE CLIQUET, et il ne porte QUE sur les trois paliers hauts (calibrage explicite).
+    assert.equal(pr.transitionAutorisee('PRIORITAIRE-OBLIGATOIRE', 'NORMAL-UTILE').autorise, false, 'a high tier never comes back down: what usually motivates a downgrade is not a new fact, it is the fatigue of seeing the task drag on — the ratchet removes that exit');
+    assert.equal(pr.transitionAutorisee('CRITIQUE-RISQUES', 'URGENT-RETARD').autorise, false, 'and that holds for all three high tiers');
+    assert.equal(pr.transitionAutorisee('NORMAL-UTILE', 'MEMOIRE-NEXT').autorise, true, 'the three low tiers move freely, so a "normal" task that turns out useless is not frozen forever');
+    assert.equal(pr.transitionAutorisee('RECOMMANDE-NECESSAIRE', 'CRITIQUE-RISQUES').autorise, true, 'and climbing is always allowed, from any tier');
+    assert.equal(pr.transitionAutorisee(null, 'CRITIQUE-RISQUES').autorise, true, 'a first label is never blocked by a ratchet that has nothing to hold');
+
+    // LE CALCUL : il peut aller jusqu'à CRITIQUE, mais il doit MONTRER ce qui l'y a mené.
+    const fort = pr.calculerPalier(['zone-maitresse', 'sans-couverture-de-test', 'signale-par-un-controleur']);
+    assert.equal(fort.palier, 'URGENT-RETARD', 'measurable signals add up to a tier');
+    assert.ok(fort.signaux.length === 3 && fort.pourquoi.includes('zone-maitresse'), 'and the label always carries the signals that produced it — without them it is neither contestable nor credible, and a machine allowed to cry fire must show the fire');
+    // LE RACCOURCI DÉLIBÉRÉ : un dégât qui s'aggrave EST critique, quel que soit le total. Passer
+    // par un score ferait dépendre le seul cas où il ne faut pas se tromper d'autres signaux
+    // sans rapport.
+    assert.equal(pr.calculerPalier(['degat-qui-saggrave']).palier, 'CRITIQUE-RISQUES', 'a damage that worsens is CRITIQUE by definition, never by reaching a score threshold');
+    // L5, appliquée au calcul lui-même.
+    const rien = pr.calculerPalier([]);
+    assert.equal(rien.mesure, 'pas mesuré', 'no observed signal is an ABSENCE of measurement, never a score of zero');
+    assert.match(rien.pourquoi, /jamais parce que la t\u00e2che a \u00e9t\u00e9 jug\u00e9e peu urgente/, 'and the default tier says so explicitly, so "I did not look" is never read as "I looked and it is not urgent"');
+    assert.deepEqual(pr.calculerPalier(['signal-invente']).inconnus, ['signal-invente'], 'an unknown signal is reported rather than silently ignored');
+
+    // LA CONVERSION de l'ancienne échelle : sûre parce que toutes ces lignes sont terminées.
+    assert.equal(pr.convertirAncienneGravite('critique'), 'PRIORITAIRE-OBLIGATOIRE', 'legacy "critique" becomes PRIORITAIRE, never CRITIQUE-RISQUES: those rows are all CLOSED, so translating them as critical would fill the history with retroactive false alarms');
+    assert.equal(pr.convertirAncienneGravite('important'), 'RECOMMANDE-NECESSAIRE', 'and "important" maps one tier below');
+    assert.equal(pr.convertirAncienneGravite('inconnu'), null, 'an unknown value converts to nothing rather than being forced into a tier');
+    // Ces deux-là ont été trouvées PENDANT la conversion, parce que le script comptait ce qu'il ne
+    // savait pas traduire au lieu de le laisser filer : 35 lignes seraient sinon restées dans
+    // l'ancien vocabulaire au milieu du nouveau.
+    assert.equal(pr.convertirAncienneGravite('sensible'), 'RECOMMANDE-NECESSAIRE', 'the legacy values found in the wild during the conversion are in the table too, not just the ones I expected');
+    assert.equal(pr.convertirAncienneGravite('mineur'), 'NORMAL-UTILE', 'both of them');
+
+    // LA NATURE — trois valeurs, et le refus de deviner.
+    assert.equal(pr.natureDeLaTache('corriger la duplication de test').nature, 'TECHNIQUE', 'technical words give a technical nature');
+    assert.equal(pr.natureDeLaTache('ajuster le ton de Noé').nature, 'CREATIF', 'and creative words a creative one');
+    assert.equal(pr.natureDeLaTache('corriger le test du dialogue de Lia').nature, 'MIXTE', 'a task that is honestly both gets the third value — forcing it into a binary would make the flag unreliable, therefore ignored');
+    assert.equal(pr.natureDeLaTache('faire le truc').nature, null, 'and with no clue at all the nature is NOT guessed: an invented nature would send a creative task into the autonomous night, which is the one case this flag exists to prevent');
+
+    // CE QUE LA NATURE DÉCIDE, ET CE QU'ELLE NE DÉCIDE PAS.
+    assert.equal(pr.traitableLaNuit('CRITIQUE-RISQUES', 'CREATIF').traitable, true, 'a critical creative task is not set aside at night');
+    assert.match(pr.traitableLaNuit('CRITIQUE-RISQUES', 'CREATIF').jusquou, /avant le choix/, 'it is instructed up to the edge of the decision and stops there — the urgency is served without the agent deciding a matter of taste in the user\'s place');
+    assert.equal(pr.traitableLaNuit('NORMAL-UTILE', null).traitable, false, 'and an undetermined nature is never routed automatically');
+
+    // LA BONNE NOUVELLE.
+    assert.equal(pr.marqueDeVictoire('URGENT-RETARD', 'terminée'), '🎉', 'resolving a task that was at least PRIORITAIRE is good news and says so');
+    assert.equal(pr.marqueDeVictoire('NORMAL-UTILE', 'terminée'), '', 'a routine task resolving is not an event — marking everything would empty the mark of meaning');
+    assert.equal(pr.marqueDeVictoire('CRITIQUE-RISQUES', 'en cours'), '', 'and an unresolved critical task is not a victory yet');
+    console.log('Passed: the six-tier priority scale (2026-09-23, night chantier 1, 32 calibrations) REPLACES the old gravity field rather than joining it — the old one said how serious it had been, the new one says when to do it, and keeping both would force a choice at every read about which commands the work order. The boundary between tiers rests on one question, "what does waiting cost?", chosen over grading the subject (which would have recreated the field being replaced) and over crossing the two (which would be argued at every task, slowing exactly the moment meant to be fast). The calculation may reach CRITIQUE on its own, and that authority comes with its counterweight: every label carries the measurable signals that produced it, no signal is an appreciation, and a damage that worsens is CRITIQUE by definition rather than by score — the one case where being wrong is unaffordable must not depend on unrelated signals adding up. The ratchet binds only the three high tiers, because what usually motivates a downgrade is the fatigue of seeing a task drag on, not a new fact. The nature flag has three values and refuses to guess a fourth time, and it decides WHEN a task is done, never in which order: otherwise a critical creative task would fall behind a minor technical one simply because it is night.');
+  }
+
   // SÉRIE-TEMPORELLE (2026-09-22) — le mécanisme partagé d'historisation, demandé parce que « tous
   // les rapports doivent etre historisés et comparés [...] sinon : grosse perte de valeurs ». Les
   // quatre garde-fous sont testés un par un : sans eux, historiser produirait des tendances
