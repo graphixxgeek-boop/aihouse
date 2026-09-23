@@ -162,3 +162,38 @@ déjà : « je le ferai après » est la forme que prend l'oubli.
   crie toujours n'est plus lu.
 
 **Premier passage réel : 5 écarts, tous les miens, tous du 2026-09-23.**
+
+## Le seuil d'arrêt : UN SEUL, et ce n'est pas un compte rendu
+
+*(Ajouté le 2026-09-23, après une perte de temps réelle et conséquente — l'agent s'est arrêté au
+milieu de la nuit pour rendre un point d'étape, et l'utilisateur, réveillé, a dû relancer. Ses mots :
+« tu t'es arrêté ? tu aurais dû continuer sans t'arrêter [...] la perte de temps est conséquente ».)*
+
+**LE DÉFAUT ÉTAIT DANS LE PROCESS, PAS SEULEMENT DANS L'AGENT.** Rien ici n'interdisait de s'arrêter
+pour rendre compte, et un compte rendu intermédiaire *ressemble* à du travail sérieux : il est écrit,
+il est honnête, il est même bien fait. C'est exactement ce qui le rend coûteux — il donne à
+l'interruption l'apparence de la rigueur. En mode autonome, **un point d'étape n'est pas un livrable,
+c'est une nuit qui s'arrête**, parce que personne n'est là pour dire « continue ».
+
+**LA RÈGLE, sans exception :** pendant une nuit autonome, l'agent n'a **qu'un seul seuil d'arrêt** —
+la vérification finale de l'étape 8. Tant qu'il reste une tâche traitable dans le plan, il enchaîne.
+
+**Ce qui n'est PAS un motif d'arrêt**, et chacun s'est présenté comme tel au moins une fois :
+
+| Ce qui arrive | Ce qu'on fait | Ce qu'on ne fait pas |
+|---|---|---|
+| Un chantier est fini | on commite et on prend le suivant | rendre un point d'étape |
+| Un résultat est intéressant | on l'écrit dans le suivi | le raconter et attendre |
+| Une décision dépasse le mandat | on instruit jusqu'au bord et on passe à la suite | s'arrêter en attendant la réponse |
+| Un outil trouve quelque chose de grave | on le traite ou on le met en tête du rapport | réveiller l'utilisateur |
+| Le plan semble terminé | on relit le plan **en entier** avant de conclure | conclure de mémoire |
+
+**Où le compte rendu a le droit d'exister** : dans le rapport de nuit, à la fin, et nulle part
+ailleurs. Tout ce qui mériterait d'être dit en cours de route s'écrit dans `docs/suivi/` au fil de
+l'eau — c'est fait pour ça, et l'utilisateur le lit au réveil.
+
+**Le garde-fou mécanique** : `findArretPremature()` (`scripts/god-of-all-process.mjs`) compare, pour
+une nuit donnée, le nombre de chantiers du plan au nombre de chantiers réellement clos dans le
+suivi. Une nuit qui s'achève avec des chantiers traitables non entamés et sans raison écrite est un
+manquement nommé, avec son responsable — l'agent. Il signale, il ne bloque jamais.
+

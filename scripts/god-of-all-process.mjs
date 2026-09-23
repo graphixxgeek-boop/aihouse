@@ -314,6 +314,68 @@ export const PROCESSES = [
 ];
 
 // ————————————————————————————————————————————————————————————————————————
+// L'ARRÊT PRÉMATURÉ D'UNE NUIT AUTONOME (2026-09-23)
+// ————————————————————————————————————————————————————————————————————————
+//
+// POURQUOI CE GARDE-FOU EXISTE, et il a été payé : l'agent s'est arrêté au milieu d'une nuit
+// autonome pour rendre un point d'étape. L'utilisateur, qui dormait, a dû se réveiller et relancer.
+// Ses mots : « tu t'es arrêté ? [...] la perte de temps est conséquente ».
+//
+// CE QUI REND CE DÉFAUT DIFFICILE À VOIR : un compte rendu intermédiaire RESSEMBLE à du travail
+// sérieux. Il est écrit, honnête, souvent bien fait — et c'est précisément ce qui lui donne
+// l'apparence de la rigueur. En mode autonome, un point d'étape n'est pas un livrable : c'est une
+// nuit qui s'arrête, parce que personne n'est là pour dire « continue ».
+//
+// CE QU'IL MESURE, et la limite est déclarée : il compare les chantiers ANNONCÉS dans le plan de
+// nuit aux chantiers réellement CLOS dans le suivi. Il ne peut pas savoir pourquoi un chantier n'a
+// pas été fait — seulement qu'il ne l'a pas été et qu'aucune raison n'est écrite. C'est le cas
+// grossier, pas le subtil, et c'est celui qui s'est produit.
+export const MOTIF_CHANTIER_PLAN = /^\*\*(\d+)\.\s+(.+?)\*\*/gm;
+
+// PREMIÈRE VERSION RESSERRÉE IMMÉDIATEMENT (le soir même). Elle cherchait les mots du titre dans le
+// suivi et rendait « 13 chantiers sur 15 touchés » alors qu'UN SEUL était fait : les titres
+// partagent trop de vocabulaire courant avec des lignes de suivi qui parlent d'autre chose. Un
+// garde-fou qui sur-crédite est aussi inutile qu'un garde-fou absent — il dit « tout va bien »
+// précisément quand ça ne va pas, ce qui est pire que de se taire (L4, et L5 par l'autre bout).
+//
+// LA VERSION QUI TIENT repose sur une CONVENTION vérifiable plutôt que sur une ressemblance : toute
+// ligne de suivi qui clôt un chantier de nuit cite son numéro sous la forme « chantier N du plan de
+// nuit ». Une convention se respecte ou ne se respecte pas ; une ressemblance se discute.
+export const MOTIF_CHANTIER_CLOS = /chantier\s+(\d+)\s+du\s+plan(?:\s+de\s+nuit)?/gi;
+
+
+// Le plan de nuit le plus récent et le suivi qui va avec, LUS sur le disque plutôt que déclarés :
+// un chemin recopié se périmerait à la nuit suivante (Article 24).
+function latestNightPlan({ root = ROOT } = {}) {
+  try {
+    const plans = readdirSync(join(root, "docs/plans")).filter((f) => /^nuit-\d{4}-\d{2}-\d{2}-plan\.md$/.test(f)).sort();
+    if (!plans.length) return null;
+    const sessions = readdirSync(join(root, "docs/suivi/sessions")).filter((f) => f.endsWith(".md"));
+    const suivi = sessions.map((f) => { try { return readFileSync(join(root, "docs/suivi/sessions", f), "utf8"); } catch { return ""; } }).join("\n");
+    return { chemin: `docs/plans/${plans.at(-1)}`, suivi };
+  } catch { return null; }
+}
+
+export function findArretPremature({ planPath, suiviTexte = "", readFileImpl = readFileSync, root = ROOT } = {}) {
+  if (!planPath) return { mesure: "pas mesuré", raison: "aucun plan de nuit fourni — sans plan, « prématuré » n'a pas de sens", chantiers: [] };
+  let plan = "";
+  try { plan = readFileImpl(join(root, planPath), "utf8"); } catch { return { mesure: "pas mesuré", raison: `${planPath} est illisible`, chantiers: [] }; }
+  const chantiers = [...plan.matchAll(MOTIF_CHANTIER_PLAN)].map((m) => ({ numero: m[1], titre: m[2].trim() }));
+  if (!chantiers.length) return { mesure: "pas mesuré", raison: `aucun chantier numéroté trouvé dans ${planPath}`, chantiers: [] };
+  const cites = new Set([...String(suiviTexte).matchAll(MOTIF_CHANTIER_CLOS)].map((m) => m[1]));
+  const juges = chantiers.map((c) => ({ ...c, clos: cites.has(c.numero) }));
+  const restants = juges.filter((c) => !c.clos);
+  return {
+    mesure: "mesuré", chantiers: juges, total: juges.length, clos: juges.length - restants.length,
+    restants: restants.map((c) => `${c.numero}. ${c.titre}`),
+    // Il SIGNALE, il ne bloque jamais — même autorité que le reste de god.
+    verdict: restants.length
+      ? `${restants.length} chantier(s) du plan pas encore clos — s'arrêter maintenant serait un arrêt prématuré, sauf raison écrite`
+      : "tous les chantiers du plan sont clos : le seuil de vérification finale est atteint",
+  };
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // TOUT MÉCANISME D'UN PROCESS S'ÉCRIT DANS SON PROCESS (2026-09-23)
 // ————————————————————————————————————————————————————————————————————————
 //
@@ -1072,6 +1134,18 @@ export function buildGodReportBlocks({ processes = PROCESSES, root = ROOT, sessi
   blocks.push({ type: "note", text: auto.ok ? "✅ Process maître : god-of-all-process se surveille bien lui-même, et le dispositif est cohérent." : `⚠️ Process maître — ${auto.constats.length} constat(s) sur le dispositif lui-même :\n  ${auto.constats.join("\n  ")}` });
   const identite = checkAgentSessionDeclared({ session });
   blocks.push({ type: "note", text: `${identite.ok ? "✅" : "⚠️"} ${identite.message}` });
+
+  // L'ARRÊT PRÉMATURÉ, affiché dans le rapport de god et pas seulement calculable (2026-09-23).
+  // Sans cette sortie, le garde-fou construit contre l'arrêt prématuré serait lui-même muet —
+  // L2 commise dans le mécanisme écrit pour l'empêcher.
+  const planDeNuit = latestNightPlan();
+  if (planDeNuit) {
+    const arret = findArretPremature({ planPath: planDeNuit.chemin, suiviTexte: planDeNuit.suivi });
+    if (arret.mesure === "mesuré") {
+      blocks.push({ type: "note", text: `${arret.restants.length ? "⚠️" : "✅"} Nuit autonome (${planDeNuit.chemin}) — ${arret.clos}/${arret.total} chantier(s) clos. ${arret.verdict}` });
+      for (const r of arret.restants.slice(0, 20)) blocks.push({ type: "note", text: `     · reste : ${r}` });
+    }
+  }
 
   // LA CONNEXION PROCESS ↔ GARDIEN, ENFIN LIVRÉE (2026-09-23, tâche #218).
   //

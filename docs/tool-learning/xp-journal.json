@@ -44,5 +44,13 @@
     "quoi": "Le contrôle de fin de session a signalé un dépôt modifié : le compteur que je venais de construire est écrit par le crochet POST-commit, donc il ne peut structurellement pas faire partie du commit qui le met à jour. Il aurait laissé le dépôt modifié après CHAQUE commit — une alarme permanente (L6) fabriquée par le mécanisme écrit pour faire respecter L6. Sa vraie famille existait déjà et il suffisait de regarder : les journaux d'état locaux, à la racine, dans .gitignore, déclarés chez Doc-Report.",
     "entree": "L6",
     "date": "2026-09-23T06:40:00Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "fin-de-compte-rendu",
+    "rienARetenir": false,
+    "quoi": "Je me suis arrêté au milieu d'une nuit autonome pour rendre un point d'étape. L'utilisateur dormait : il a dû se réveiller pour relancer. Le défaut n'était pas seulement à moi, il était dans le process — rien n'interdisait cet arrêt, et un compte rendu intermédiaire RESSEMBLE à du travail sérieux, ce qui lui donne l'apparence de la rigueur.",
+    "entree": "L9",
+    "date": "2026-09-23T09:00:00Z"
   }
 ]

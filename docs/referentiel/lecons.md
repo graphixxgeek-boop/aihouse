@@ -198,6 +198,26 @@ l'utilisateur sur la crédibilité de l'ensemble.*
 
 **Terrain** : quand un outil compte des alertes ou des constats · mots : alerte, compte, regroupement, cluster, rapport, doublon · fichiers : scripts/clone-hunter.mjs, scripts/hooks/*.mjs
 
+## L9 — Un livrable intermédiaire peut coûter plus cher que pas de livrable du tout
+
+Rendre compte est un réflexe de rigueur. Dans un contexte où personne ne peut répondre, c'est
+l'inverse : **le compte rendu arrête le travail, et il l'arrête en ayant l'air sérieux.** C'est ce
+qui le rend difficile à repérer — il est écrit, honnête, souvent bien fait, et rien dans sa forme ne
+dit qu'il vient de coûter des heures.
+
+Le test qui tranche : *est-ce que quelqu'un peut répondre à ce que je m'apprête à écrire ?* Si non,
+ça ne se dit pas, ça **s'écrit dans le suivi** et le travail continue.
+
+**Terrain** : quand je m'apprête à rendre compte sans qu'on me l'ait demandé · mots : point d'étape,
+rendre compte, résumé, bilan, autonome, nuit · fichiers : docs/mode-auto-process-guardian.md
+
+**Porté par** : `findArretPremature()` (`scripts/god-of-all-process.mjs`) — il compare les chantiers
+du plan aux chantiers réellement clos et nomme l'arrêt prématuré, avec son responsable.
+
+*Payée le 2026-09-23 : arrêt au milieu d'une nuit autonome, utilisateur réveillé pour relancer,
+perte de temps qualifiée par lui de « conséquente ». Le défaut était dans le process autant que dans
+l'agent — rien n'interdisait cet arrêt.*
+
 ---
 
 # Bonnes pratiques

@@ -5740,6 +5740,33 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     console.log(`Passed: the transverse lessons register (2026-09-23, task #220) is no longer a text nothing re-reads — the trap it documents twice over (L2, a mechanism that never leaves the script; L7, a written intention never prevented anything). Each lesson now names the mechanism that carries it when nobody remembers it, tool-learning prints that audit and feeds its findings into its own action plan, and the state that justifies the whole thing is told apart from the other two: a PHANTOM carrier — a mechanism named in writing that does not exist — reassures wrongly and is worse than a lesson that admits it has none, exactly the reason checkActionChain() verifies that a task announced by an action plan is real. A declared impossibility produces no finding at all, since reproaching a settled decision at every passage would be L6 committed by the tool publishing it. Real register right now: ${reel.total} lessons, ${reel.portees} mechanically carried, ${reel.sansMecanisme} declared impossible with its reason, 0 phantom, 0 silent.`);
   }
 
+  // L'ARRÊT PRÉMATURÉ D'UNE NUIT AUTONOME (2026-09-23) — payé par une vraie perte de temps :
+  // l'agent s'est arrêté au milieu d'une nuit pour rendre un point d'étape, et l'utilisateur, qui
+  // dormait, a dû se réveiller pour relancer.
+  {
+    const g2 = await import('../scripts/god-of-all-process.mjs');
+    const plan = '**1. Premier chantier**\n**2. Deuxième chantier**\n**3. Troisième chantier**\n';
+    const lu = () => plan;
+    // LA PREMIÈRE VERSION CHERCHAIT LES MOTS DU TITRE DANS LE SUIVI, et rendait « 13 sur 15 » quand
+    // un seul chantier était fait : les titres partagent trop de vocabulaire courant avec des lignes
+    // qui parlent d'autre chose. Un garde-fou qui sur-crédite dit « tout va bien » exactement quand
+    // ça ne va pas — pire que se taire. D'où une CONVENTION vérifiable plutôt qu'une ressemblance.
+    const partiel = g2.findArretPremature({ planPath: 'x.md', readFileImpl: lu, suiviTexte: 'travail fait sur le chantier 1 du plan de nuit' });
+    assert.equal(partiel.clos, 1, 'only the chantier whose number is explicitly cited counts as closed');
+    assert.equal(partiel.restants.length, 2, 'and the others are named individually, so stopping now can be called what it is');
+    assert.match(partiel.verdict, /arr\u00eat pr\u00e9matur\u00e9/, 'the verdict says the word rather than reporting a neutral count');
+    // Le vocabulaire courant du suivi ne doit RIEN créditer : c'est tout le défaut de la v1.
+    const sansConvention = g2.findArretPremature({ planPath: 'x.md', readFileImpl: lu, suiviTexte: 'un long texte qui parle de premier, de deuxième et de chantier sans jamais citer la convention' });
+    assert.equal(sansConvention.clos, 0, 'prose that merely shares words with the titles credits nothing — that over-crediting was the exact flaw of the first version, found the same evening');
+    const tout = g2.findArretPremature({ planPath: 'x.md', readFileImpl: lu, suiviTexte: 'chantier 1 du plan · chantier 2 du plan · chantier 3 du plan' });
+    assert.equal(tout.restants.length, 0, 'and when every chantier is closed the guard says the final-verification threshold is reached, rather than nagging');
+    // L5 : pas de plan, pas de verdict — « prématuré » n'a aucun sens sans plan.
+    assert.equal(g2.findArretPremature({}).mesure, 'pas mesuré', 'with no plan there is no verdict at all, rather than a green one');
+    assert.equal(g2.findArretPremature({ planPath: 'absent.md', readFileImpl: () => { throw new Error('nope'); } }).mesure, 'pas mesuré', 'an unreadable plan reports "pas mesuré" too');
+    assert.equal(g2.findArretPremature({ planPath: 'x.md', readFileImpl: () => 'un plan sans aucun chantier numéroté' }).mesure, 'pas mesuré', 'and a plan with no numbered chantier is unmeasurable rather than perfectly complete');
+    console.log('Passed: the premature-stop guard (2026-09-23) closes a defect that was in the PROCESS, not just in the agent: nothing forbade stopping mid-night to file a progress report, and a progress report LOOKS like serious work — written, honest, often well made — which is exactly what lends the interruption an air of rigour. In autonomous mode a progress report is not a deliverable, it is a night that stops, because nobody is there to say carry on. The first version of this guard over-credited (13 of 15 "touched" when one chantier was done) because it matched words from the titles against ordinary suivi prose; a guard that says all-is-well precisely when it is not is worse than silence, so it now rests on a verifiable convention — the chantier number cited explicitly — rather than on resemblance.');
+  }
+
   // PRIORITÉS DES TÂCHES (2026-09-23, nuit autonome, chantier 1) — l'échelle à six paliers qui
   // REMPLACE l'ancien champ de gravité, calibrée en 32 questions avant le coucher de l'utilisateur.
   {
