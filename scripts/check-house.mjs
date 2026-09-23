@@ -10850,6 +10850,71 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 }
 
 {
+  // ABRAHAM-LES-REFERENCES (2026-09-23, tâche #619) — l'outil MAÎTRE, né d'une erreur de découpage
+  // que l'utilisateur a nommée mieux que moi : « selon le decoupage demandé, c'est charter spy qui
+  // aurait du etre étoffé, et moise qui peut l'appeler et completer avec ses propres fonctions
+  // utiles à claude.md specifiquement ». Ces assertions couvrent ce qui fait sa généricité, et
+  // surtout ce qui l'empêche de la perdre : la forme se DÉRIVE, elle ne se déclare pas.
+  const ab = await import('../scripts/abraham-les-references.mjs');
+
+  // 1. LA DÉTECTION DE FORME, VÉRIFIÉE DANS LES DEUX SENS (BP4). Un détecteur qu'on ne teste que
+  // sur ce qu'il doit trouver ne prouve rien : il pourrait tout trouver.
+  const commeUneCharte = '**Article 1 — Un titre.**\ntexte\n**Article 2 — Un autre.**\ntexte\n**Article 3 — Encore.**\ntexte';
+  assert.equal(ab.detecterForme(commeUneCharte).nom, 'Article N — Titre.', 'the charter form must be recognised without anyone declaring it — that derivation is the whole reason this tool can serve a document nobody has configured it for');
+  const commeUnePhilo = '### 1.1 Premier\ntexte\n### 1.2 Deuxième\ntexte\n### 2.1 Troisième\ntexte';
+  assert.equal(ab.detecterForme(commeUnePhilo).nom, '### N.N Titre', 'and so must the two-level numbering of the philosophy document, which THE-KING re-implements in its own corner to this day');
+  const commeDesRegles = '## 1. Premier\ntexte\n## 2. Deuxième\ntexte\n## 7ter. Troisième\ntexte';
+  assert.equal(ab.detecterForme(commeDesRegles).nom, '## N. Titre', 'and the single-level form of the working rules, whose sections carry suffixes like 7ter that a numeric-only pattern would silently drop');
+
+  // L'AUTRE SENS, ET C'EST LA LEÇON L12 : un analyseur qui DEVINE saute en silence.
+  const prose = 'Un document de prose ordinaire.\n\nIl a des paragraphes, et pas la moindre numérotation.\n\nRien à découper ici.';
+  const refus = ab.detecterForme(prose);
+  assert.equal(refus.mesurable, false, 'a document with no numbering at all must be declared NOT MEASURABLE rather than cut up anyway — inventing a structure produces figures that look exactly as trustworthy as real ones');
+  assert.ok(refus.pourquoi.includes('reconnue'), 'and the refusal must say why, naming the best attempt, so the reader can tell a genuinely unstructured document from a form nobody has taught it yet');
+  assert.ok(Array.isArray(refus.essais) && refus.essais.length === ab.FORMES_CONNUES.length, 'listing every form it tried, because "I found nothing" and "I only looked for one thing" are not the same statement');
+
+  // 2. LES CITATIONS : l'espace après le préfixe est FACULTATIF. Ce détail a coûté un passage
+  // entier — les 18 sections de regles-de-travail.md ressortaient « jamais citées » alors que §7ter
+  // l'est 168 fois, simplement parce que le motif exigeait un espace que personne n'écrit.
+  const fichiers = { 'a.mjs': 'voir §7ter et aussi § 7ter deux fois', 'b.md': 'cf. §7ter' };
+  assert.equal(ab.citationsDeLUnite('7ter', '§', fichiers).citations, 3, 'a citation must be counted whether or not a space follows the prefix: nobody writes "§ 7ter", and requiring that space made an entire document look uncited');
+  assert.equal(ab.citationsDeLUnite('7', '§', fichiers).citations, 0, 'but §7 must not be credited with §7ter\'s citations — a prefix match that swallows its own suffixes would make every short number look popular');
+
+  // 3. LE PORTEUR EN TROIS ÉTATS, dont le troisième est le seul qui vaille vraiment.
+  const depot = { 'scripts/existe.mjs': 'export function jeSuisLa() {}' };
+  assert.equal(ab.porteursDeclares('rien de nommé ici', depot).etat, 'sans porteur', 'a rule naming no mechanism is "sans porteur", which is legitimate when assumed — its prose IS the mechanism (Article 27)');
+  assert.equal(ab.porteursDeclares('vérifié par `jeSuisLa()`', depot).etat, 'porté', 'a rule naming a mechanism that exists is carried');
+  const fantome = ab.porteursDeclares('vérifié par `nExistePasDuTout()`', depot);
+  assert.equal(fantome.etat, 'fantôme', 'and a rule naming a mechanism that cannot be found must be FANTÔME rather than counted as carried — an announced protection that does not exist is worse than an absence, because it reassures wrongly');
+  assert.ok(fantome.fantomes.includes('nExistePasDuTout'), 'naming the missing mechanism, since "something is wrong somewhere" is not a finding anyone can act on');
+
+  // 4. LA COUVERTURE SE DÉCLARE. Une analyse qui ne voit que les unités numérotées peut manquer la
+  // moitié d'un document en ayant l'air complète — exactement ce qui est arrivé à Moïse, dont le
+  // premier diagnostic annonçait « INVENTAIRE : aucun Article », parfaitement exact et trompeur.
+  const mixte = '## Une section hors numérotation\n' + 'du texte\n'.repeat(40) + '\n**Article 1 — Court.**\npetit\n**Article 2 — Court.**\npetit\n**Article 3 — Court.**\npetit\n';
+  const analyse = ab.analyserDocument({ texte: mixte, fichiers: {} });
+  assert.ok(analyse.mesurable, 'a document mixing numbered rules and plain sections must still be analysable');
+  assert.ok(analyse.couverture.part < 100, 'and its declared coverage must fall below 100 % rather than imply the numbered rules are the whole document');
+  assert.ok(analyse.couverture.tokensDocument > analyse.couverture.tokensUnites, 'the two weights being reported side by side, so the gap is visible rather than deducible');
+
+  // 5. LA LIGNE ROUGE, HÉRITÉE ET VÉRIFIÉE CHEZ LE MAÎTRE AUSSI. Elle ne doit pas exister
+  // seulement chez l'appelant : c'est ici que le vocabulaire est défini.
+  assert.ok(ab.SIGNAUX_DE_PERTINENCE.every((s) => s.question.trim().endsWith('?')), 'every pertinence signal must be phrased as a question here too — the wording lives in the master, so a caller cannot soften it');
+  const pert = ab.analyserPertinence([{ numero: 1, titre: 'x', lignes: 40, citations: 0, porteur: 'sans porteur', porteurFantomes: [], texte: 'Cela doit être fait.' }]);
+  assert.ok(pert.questions.every((q) => q.etat === 'à trancher'), 'and the single state must be enforced by the master, since a type that cannot express a verdict is a mechanism where a sentence saying "never conclude" is only an intention');
+
+  // 6. LA DÉLÉGATION EST RÉELLE, pas déclarée : Moïse doit rendre les mêmes chiffres qu'avant le
+  // refactor. Un écart signifierait que déplacer la mesure l'a modifiée (leçon L20).
+  const mtl2 = await import('../scripts/moise-tables-de-loi.mjs');
+  assert.ok(mtl2.analyserPertinence === undefined || typeof mtl2.analyserPertinence === 'function', 'Moïse keeps its own entry points');
+  const viaMoise = mtl2.natureProposee({ article: 9, lignes: 4, citations: 2, texte: 'Chaque session doit pouvoir raconter une histoire différente.' });
+  const viaAbraham = ab.natureProposee({ numero: 9, lignes: 4, citations: 2, texte: 'Chaque session doit pouvoir raconter une histoire différente.' });
+  assert.equal(viaMoise.nature, viaAbraham.nature, 'and the specific agent must return exactly what the master returns, its adapters translating vocabulary only — the day they diverge, one of the two has quietly grown a second implementation');
+
+  console.log('Passed: ABRAHAM-LES-REFERENCES is the master tool for ANY numbered-rule document (2026-09-23, task #619), and it exists because of a slicing error the user named better than I did: building the charter\'s agent first, I locked thirty generic functions inside the agent of ONE document, and measurement confirmed it — 30 of Moïse\'s 40 functions depended on no particularity of the charter whatsoever. What makes it generic is that the numbering FORM is derived rather than declared: three real documents in this repository write their rules three different ways, and a tool demanding to be told the pattern would only serve those who already knew it. The opposite direction matters as much: a document where no form stands out returns "not measurable" with every attempt listed, because an analyser that guesses skips in silence (leçon L12) and invented figures look exactly as trustworthy as real ones. The citation pattern treats the space after a prefix as optional, a detail that had cost a whole pass — all eighteen sections of the working rules came back "never cited" while §7ter is cited 168 times, purely because the pattern required a space nobody writes. And the red line the user drew stays enforced in the master rather than in each caller: the state of a pertinence finding has exactly one value, so no descendant can soften it into a verdict.');
+}
+
+{
   // LES COMBINAISONS D'OUTILS (2026-09-23) — question directe de l'utilisateur : « est-ce que tu
   // utilises les COMBINAISONS d'outils AUSSI, celles du catalogue du coordinateur ? ». La réponse
   // honnête était que PERSONNE N'EN SAVAIT RIEN : sur 1 184 événements enregistrés, pas un seul ne

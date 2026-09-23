@@ -1015,6 +1015,7 @@ tableau garde ce qui doit rester sous les yeux en permanence.)*
 | Nom | Ce que c'est | Architecture | Instanciation | Script |
 |---|---|---|---|---|
 | THE-EQUALIZER | le rassembleur de verdicts : tout est-il à niveau, et que ne vérifie personne ? | `docs/the-equalizer-blueprint.md` | `docs/referentiel/the-equalizer.md` | `scripts/the-equalizer.mjs` |
+| Abraham-les-references | l'outil MAÎTRE des documents à règles numérotées : découpage en unités, porteur réel, citations, pertinence, redondances, mémoire des opérations — sur N'IMPORTE quel document, jamais un seul | `docs/abraham-les-references-blueprint.md` | `docs/referentiel/abraham-les-references.md` | `scripts/abraham-les-references.mjs` |
 | ALWAYS-NEW-CODE | l'outil qui rend concrète l'épreuve de la page blanche | `docs/always-new-code-blueprint.md` | `docs/referentiel/always-new-code.md` | `scripts/always-new-code.mjs` |
 | angel-of-ia-process | contrôleur de process pour la CONDUITE (respect des règles de travail), jamais du déroulé d'une activité | `docs/angel-of-ia-process-blueprint.md` | `docs/referentiel/angel-of-ia-process.md` | `scripts/angel-of-ia-process.mjs` |
 | ARGUS | détecteur de trous logiques | `docs/argus-blueprint.md` | `docs/referentiel/argus.md` | `scripts/check-argus.mjs` |

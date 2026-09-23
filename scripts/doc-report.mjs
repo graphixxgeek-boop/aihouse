@@ -143,6 +143,7 @@ export const REGISTRIES = [
   // la Ronde), jamais seulement par un humain devant un navigateur — un HTML le rendrait plus
   // joli et moins lisible par les autres.
   { slug: "the-equalizer", label: "THE-EQUALIZER", family: "Suite Dette & Structure du code", path: "docs/the-equalizer/", decision: "texte", scriptPath: "scripts/the-equalizer.mjs" },
+  { slug: "abraham-les-references", label: "ABRAHAM-LES-REFERENCES", family: "Suite Dette & Structure du code", path: "docs/abraham-les-references/", decision: "texte", scriptPath: "scripts/abraham-les-references.mjs" },
   { slug: "moise-tables-de-loi", label: "MOÏSE-TABLES-DE-LOI", family: "Suite Dette & Structure du code", path: "docs/moise-tables-de-loi/", decision: "texte", scriptPath: "scripts/moise-tables-de-loi.mjs" },
   { slug: "integration-outil", label: "integration-outil", family: "Suite Dette & Structure du code", path: "docs/integration-outil/", decision: "texte", scriptPath: "scripts/integration-outil.mjs" },
   { slug: "objectifs-vs-resultats", label: "objectifs-vs-resultats", family: "Gouvernance interne", path: "docs/objectifs-vs-resultats/", decision: "texte", scriptPath: "scripts/objectifs-vs-resultats.mjs" },
@@ -615,6 +616,7 @@ export const RELIABILITY_SCRIPT_FILES = {
   "safe-export": "scripts/safe-export.mjs", "tool-learning": "scripts/tool-learning.mjs",
   "the-equalizer": "scripts/the-equalizer.mjs",
   "moise-tables-de-loi": "scripts/moise-tables-de-loi.mjs",
+  "abraham-les-references": "scripts/abraham-les-references.mjs",
   "integration-outil": "scripts/integration-outil.mjs",
   "check-spirit-mjs": "scripts/check-spirit.mjs", argus: "scripts/check-argus.mjs", harmonia: "scripts/check-harmonia.mjs",
   "smart-conso-api": "scripts/smart-conso-api.mjs", "check-level-target": "scripts/check-level-target.mjs",

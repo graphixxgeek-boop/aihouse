@@ -107,6 +107,8 @@ export function outilsHorsPortee(slugsLances = [], contexte = "agence", { regist
 export const AGENT_CATEGORIES = {
   // Membre, jamais Gardien sacré : il scanne un DOCUMENT, pas la qualité du code — le premier
   // volet du critère double n'est donc pas rempli, même si le second (gratuit à chaque commit) l'est.
+  // Membre, jamais Gardien sacré : il analyse un DOCUMENT, pas la qualité du code.
+  "abraham-les-references": "Membre",
   "moise-tables-de-loi": "Membre",
   // Les Agents Cadre (Direction/CODIR) — nom acté le 2026-09-22
   "cassandra-rh": "Agent Cadre",
@@ -398,6 +400,8 @@ export const TOOL_RELIABILITY = {
   // THE-EQUALIZER : mécanique par construction — il ne produit aucune estimation propre. Chaque ligne
   // de son verdict est soit une lecture littérale du référentiel, soit un chiffre rendu par un
   // contrôleur qui porte déjà, lui, son propre avertissement s'il en a besoin.
+
+  "abraham-les-references": { nature: "heuristique", pourquoi: "la forme de numérotation d'un document est DÉRIVÉE par essais successifs, le poids en tokens est estimé, et une règle dont le mécanisme est décrit en prose sans être nommé compte comme sans porteur — il sous-déclare plutôt qu'il n'invente, et refuse de découper un document dont aucune forme ne ressort" },
   "moise-tables-de-loi": { nature: "heuristique", pourquoi: "le poids en tokens est estimé, la nature d'un Article est PROPOSÉE depuis des signaux mécaniques, et un porteur décrit en prose sans être nommé compte comme absent — elle sous-déclare plutôt qu'elle n'invente, mais ne remplace jamais une lecture" },
   "the-equalizer": { nature: "mecanique", pourquoi: "il n'estime rien : il relit le référentiel des standards et relaie des verdicts déjà calculés ailleurs" },
   "tool-learning": { nature: "heuristique", pourquoi: "il juge une trajectoire : sous trois passages il refuse de conclure, et une baisse de trouvailles peut venir d'un code qui s'est amélioré plutôt que d'un outil qui régresse" },

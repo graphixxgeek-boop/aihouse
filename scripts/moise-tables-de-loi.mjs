@@ -51,7 +51,8 @@
 
 import { readFileSync, existsSync, writeFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
-import { printReliabilityNotice, decouperEnUnites, pairesParJaccard } from "./lib-shell.mjs";
+import { printReliabilityNotice, decouperEnUnites } from "./lib-shell.mjs";
+import * as A from "./abraham-les-references.mjs";
 import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 import { estimateTokens } from "./smart-conso-token.mjs";
@@ -134,10 +135,7 @@ export function extractRuleUnits(text) {
 // le texte cite trivialement son propre numéro) — un proxy honnête de combien le reste du projet
 // dépend réellement de cette règle précise, jamais une lecture de son contenu.
 export function countArticleCrossReferences(articleNumber, otherFilesText = {}) {
-  const pattern = new RegExp(`Article\\s+${articleNumber}\\b`, "g");
-  let count = 0;
-  for (const content of Object.values(otherFilesText)) count += (content.match(pattern) || []).length;
-  return count;
+  return A.citationsDeLUnite(articleNumber, "Article", otherFilesText).citations;
 }
 
 const SELF_FLAGGED_SENSITIVE_PATTERN = /non[- ]négociable|garde-fou non négociable|\binterdit\b/i;
@@ -159,32 +157,9 @@ export function classifyRuleImportance(crossRefCount) {
   return "faible";
 }
 
-const RULE_STOPWORDS_FR = new Set([
-  "le", "la", "les", "de", "des", "du", "un", "une", "et", "ou", "à", "au", "aux", "pour", "sur",
-  "dans", "en", "avec", "sans", "que", "qui", "ne", "pas", "est", "être", "ce", "cette", "son", "sa",
-  "ses", "tout", "toute", "tous", "toutes", "plus", "déjà", "jamais", "cet", "article", "jusqu",
-]);
-
-function ruleSignificantWords(texte) {
-  return new Set(
-    String(texte ?? "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[̀-ͯ]/g, "")
-      .split(/[^a-z0-9]+/)
-      .filter((w) => w.length > 4 && !RULE_STOPWORDS_FR.has(w)),
-  );
-}
-
-// Redondance entre deux règles : similarité de Jaccard sur les mots significatifs. Seuil STRICT par
-// défaut (choix explicite de l'utilisateur : « remonter étroit ») — mieux vaut manquer une
-// redondance subtile que noyer chaque passage sous des paires qui ne mènent à rien.
-export function findRedundantRulePairs(rules, { threshold = 0.22 } = {}) {
-  const wordSets = rules.map((r) => ruleSignificantWords(r.texte));
-  return pairesParJaccard(wordSets, { seuil: threshold })
-    .map(({ i, j, jaccard, motsPartages }) => ({ a: rules[i].article, b: rules[j].article, jaccard, motsPartages }))
-    .sort((x, y) => y.jaccard - x.jaccard);
-}
+// Le découpage des mots significatifs et la comparaison de Jaccard vivaient ici en double :
+// Abraham les porte pour tous ses clients (`motsSignificatifs`, `findPairesRedondantes`). La
+// spécialisation « Article » est ré-exportée plus bas ; le corps a déménagé avec ses raisons.
 
 export function buildClaudeMdRuleTable(claudeMdText, otherFilesText = {}) {
   const rules = extractRuleUnits(claudeMdText);
@@ -225,188 +200,98 @@ export function renderClaudeMdRuleTable({ rows, redondances }) {
 // PARTIE 2 — ce que Moïse APPORTE, et que rien ne faisait avant lui.
 // ---------------------------------------------------------------------------------------------
 
-const EXT_CODE = new Set([".mjs", ".ts", ".tsx", ".js"]);
-const IGNORE_DIR = new Set(["node_modules", ".git", ".next", "dist", "build", ".wrangler"]);
-
-// Balaye le dépôt une SEULE fois et rend le texte de chaque fichier. Ce balayage est la partie
-// coûteuse de tout ce qui suit : le faire une fois et le passer en paramètre, plutôt que de le
-// refaire par Article, est la différence entre une seconde et une minute (mesuré : 30 Articles ×
-// 2 balayages, c'est ce que mes greps à la main coûtaient le 2026-09-23).
-export function fichiersDuDepot({ root = ROOT, exclure = new Set([CHARTE]) } = {}) {
-  const out = {};
-  const walk = (dir) => {
-    let entrees;
-    try { entrees = readdirSync(dir, { withFileTypes: true }); } catch { return; }
-    for (const e of entrees) {
-      if (IGNORE_DIR.has(e.name)) continue;
-      const p = join(dir, e.name);
-      if (e.isDirectory()) { walk(p); continue; }
-      const rel = relative(root, p);
-      if (exclure.has(rel)) continue;
-      if (!/\.(mjs|ts|tsx|js|md|txt)$/.test(e.name)) continue;
-      try { if (statSync(p).size > 2_000_000) continue; out[rel] = readFileSync(p, "utf8"); } catch { /* illisible : ignoré */ }
-    }
-  };
-  walk(root);
-  return out;
-}
-
-const estDuCode = (chemin) => EXT_CODE.has(chemin.slice(chemin.lastIndexOf(".")));
-
-// LE PORTEUR, ET POURQUOI « CITÉ PAR DU CODE » NE SUFFISAIT PAS. Première version de cette mesure :
-// un Article cité par au moins un fichier .mjs/.ts avait un porteur mécanique. Lancée pour de vrai
-// sur le dépôt (Article 25), elle a répondu « oui » pour les TRENTE Articles — donc elle ne
-// distinguait rien. La cause est simple et elle vaut d'être écrite : ce projet cite « Article N »
-// abondamment dans ses commentaires, et une MENTION dans un commentaire n'est pas un mécanisme.
-// C'était exactement le défaut que cette session a traqué toute la journée — une déclaration prise
-// pour un fait.
+// TOUT CE QUI SUIT EST DÉLÉGUÉ À ABRAHAM-LES-REFERENCES (2026-09-23, tâche #619).
 //
-// LA MESURE HONNÊTE qui la remplace tient en deux temps, et aucun des deux ne devine :
-//   1. l'Article NOMME-t-il lui-même son porteur ? (`maFonction()` ou `scripts/mon-outil.mjs`)
-//   2. ce porteur nommé EXISTE-t-il réellement dans le dépôt ?
-// Trois états en sortent, jamais deux : porté (nommé et trouvé) · sans porteur (rien de nommé — sa
-// prose EST le mécanisme, Article 27) · FANTÔME (nommé et introuvable). Le troisième est le pire
-// des trois et c'est pour lui que la mesure existe : un porteur fantôme rassure à tort, là où une
-// absence assumée laisse au moins la vigilance en éveil.
-const MOTIF_FONCTION_CITEE = /`([a-zA-Z][a-zA-Z0-9_]{3,})\(\)`/g;
-const MOTIF_SCRIPT_CITE = /`(scripts\/[a-z0-9-]+\.mjs)`/g;
+// POURQUOI CE FICHIER NE CONTIENT PLUS CES FONCTIONS : elles ne dépendaient d'aucune particularité
+// de la charte. Les garder ici faisait de l'agent d'UN document le propriétaire d'un savoir-faire
+// qui vaut pour TOUS — exactement l'erreur de découpage que l'utilisateur a nommée : « c'est
+// charter-spy qui aurait dû être étoffé, et moïse qui peut l'appeler et compléter avec ses propres
+// fonctions utiles à claude.md spécifiquement ».
+//
+// LES COMMENTAIRES ONT VOYAGÉ AVEC LE CODE, pas le récit du déménagement (leçon L20, payée ce
+// matin même) : l'histoire du porteur en trois états, du seuil dérivé, de la ligne rouge sur la
+// pertinence vit désormais dans `scripts/abraham-les-references.mjs`, là où le code vit.
+//
+// CE QUE MOÏSE GARDE EN PROPRE, et c'est tout ce qui suit dans ce fichier : le motif de titre des
+// Articles, l'exception de l'Article 0, les seuils calibrés sur CETTE charte, ses trois chemins de
+// documents, ses deux garde-fous de fraîcheur, et son process. Rien d'autre.
 
-export function porteursDeclares(texteArticle = "", fichiers = {}) {
-  const nommes = new Set();
-  for (const m of String(texteArticle).matchAll(MOTIF_FONCTION_CITEE)) nommes.add({ type: "fonction", nom: m[1] });
-  for (const m of String(texteArticle).matchAll(MOTIF_SCRIPT_CITE)) nommes.add({ type: "script", nom: m[1] });
-  const trouves = []; const fantomes = [];
-  for (const n of nommes) {
-    const existe = n.type === "script"
-      ? Object.prototype.hasOwnProperty.call(fichiers, n.nom)
-      : Object.entries(fichiers).some(([chemin, contenu]) => estDuCode(chemin) && new RegExp(`function\\s+${n.nom}\\b|const\\s+${n.nom}\\s*=`).test(contenu));
-    (existe ? trouves : fantomes).push(n.nom);
-  }
-  if (!nommes.size) return { etat: "sans porteur", trouves: [], fantomes: [], pourquoi: "l'Article ne nomme aucun mécanisme — sa prose est son seul mécanisme (Article 27)" };
-  if (fantomes.length) return { etat: "fantôme", trouves, fantomes, pourquoi: `nomme ${fantomes.length} mécanisme(s) INTROUVABLE(S) : ${fantomes.join(", ")} — pire qu'une absence, puisque ça rassure à tort` };
-  return { etat: "porté", trouves, fantomes: [], pourquoi: `nomme ${trouves.length} mécanisme(s) et tous existent : ${trouves.slice(0, 3).join(", ")}${trouves.length > 3 ? "…" : ""}` };
-}
+// Ré-exports SPÉCIALISÉS : même nom qu'avant pour que rien ne casse chez les appelants, mais le
+// corps vit chez Abraham. Les tests n'ont pas changé d'une assertion — c'est la preuve que c'était
+// un déplacement et pas une réécriture.
+export const NATURES = A.NATURES;
+export const GESTES = A.GESTES;
+export const RESULTATS = A.RESULTATS;
+export const SIGNAUX_DE_PERTINENCE = A.SIGNAUX_DE_PERTINENCE;
+export const seuilRendementFaible = A.seuilRendementFaible;
+export const porteursDeclares = A.porteursDeclares;
+export const empreinteDeRaison = A.empreinteDeRaison;
 
-// LA MESURE QUI MANQUAIT. Trois colonnes par Article, dont la troisième est la seule qui réponde à
-// « cette règle a-t-elle un porteur mécanique ? » : un Article cité par des FICHIERS DE CODE est
-// tenu par un mécanisme ; un Article cité seulement par des documents n'est tenu que par sa prose,
-// et l'Article 27 en fait alors une règle intouchable en substance.
-export function mesurerArticles(claudeMdText, fichiers = {}) {
-  const unites = extractRuleUnits(claudeMdText);
-  return unites.map((u) => {
-    const motif = new RegExp(`Article\\s+${u.article}\\b`, "g");
-    let citations = 0; const fichiersCitants = []; const fichiersDeCode = [];
-    for (const [chemin, contenu] of Object.entries(fichiers)) {
-      const n = (contenu.match(motif) || []).length;
-      if (!n) continue;
-      citations += n; fichiersCitants.push(chemin);
-      if (estDuCode(chemin)) fichiersDeCode.push(chemin);
-    }
-    const lignes = u.texte.split("\n").length;
-    const porteur = porteursDeclares(u.texte, fichiers);
-    return {
-      article: u.article,
-      titre: u.titre,
-      lignes,
-      tokens: estimateTokens(u.texte),
-      citations,
-      fichiersCitants: fichiersCitants.length,
-      fichiersDeCode: fichiersDeCode.length,
-      porteur: porteur.etat,
-      porteurPourquoi: porteur.pourquoi,
-      porteurFantomes: porteur.fantomes,
-      porteurMecanique: porteur.etat === "porté",
-      sensibilite: classifyRuleSensitivity(u),
-      texte: u.texte,
-    };
-  });
-}
+export const fichiersDuDepot = ({ root = ROOT } = {}) => A.fichiersDuDepot({ racine: root, exclure: new Set([CHARTE]) });
 
-// LE HORS-ARTICLES, ET POURQUOI IL A FALLU L'AJOUTER. Premier vrai passage du diagnostic
-// (Article 25) : la nature INVENTAIRE ressortait à « aucun Article ». C'était exact et trompeur —
-// les deux plus gros inventaires de la charte ne sont pas des Articles mais des SECTIONS de niveau
-// deux, donc invisibles à un découpage qui ne connaît que « **Article N — …** ». Un diagnostic qui
-// couvre 19 876 tokens sur 25 771 et ne le dit pas laisse croire qu'il a tout regardé : c'est
-// précisément le défaut que cet outil existe pour empêcher.
-const SECTION_HEADING_PATTERN = /^## (.+)$/gm;
-
-export function mesurerSections(claudeMdText = "") {
-  const lignes = String(claudeMdText).split("\n");
-  const bornes = [];
-  lignes.forEach((l, i) => { if (/^## /.test(l)) bornes.push({ titre: l.slice(3).trim(), debut: i }); });
-  if (!bornes.length) return [];
-  return bornes.map((b, k) => {
-    const fin = k + 1 < bornes.length ? bornes[k + 1].debut : lignes.length;
-    const texte = lignes.slice(b.debut, fin).join("\n");
-    const lignesTableau = texte.split("\n").filter((l) => l.trim().startsWith("|")).length;
-    const articles = (texte.match(/\*\*Article \d+ — /g) || []).length;
-    return {
-      titre: b.titre,
-      lignes: fin - b.debut,
-      tokens: estimateTokens(texte),
-      articles,
-      lignesTableau,
-      // Une section est un INVENTAIRE quand elle est faite de lignes de tableau ou de puces citant
-      // des chemins, et qu'elle ne porte aucun Article. Le critère est mécanique et se trompe vers
-      // la prudence : une section qui contient ne serait-ce qu'un Article n'est jamais classée
-      // inventaire, parce qu'un inventaire ne porte jamais de règle.
-      nature: articles > 0
-        ? "contient des Articles — voir le détail Article par Article"
-        : (lignesTableau > 4 || (texte.match(/`(docs|scripts|lib)\//g) || []).length > 8)
-          ? NATURES.INVENTAIRE.cle
-          : "prose de cadrage",
-    };
-  });
-}
-
-// LES QUATRE NATURES. Elles ne sont pas des catégories de rangement : chacune commande un geste
-// différent, et c'est pour ça qu'elles existent.
-export const NATURES = {
-  LOI: { cle: "LOI", geste: "intouchable — doit rester sous les yeux en permanence" },
-  OUTIL: { cle: "MODE D'EMPLOI D'OUTIL", geste: "réductible à un aiguillage : le déclencheur + un renvoi vérifié" },
-  DISCIPLINE: { cle: "DISCIPLINE SANS PORTEUR", geste: "substance intouchable (la prose EST le mécanisme, Article 27) ; seule la genèse datée peut partir" },
-  INVENTAIRE: { cle: "INVENTAIRE", geste: "remplaçable par une convention, à condition d'un garde-fou mécanique (Article 24)" },
-};
-
-// Articles que l'utilisateur a placés hors périmètre, nommément et définitivement. Ce n'est PAS une
-// liste figée au sens de l'Article 24 (rien à synchroniser avec un autre système) : c'est une
+// Articles que l'utilisateur a placés hors périmètre, nommément et définitivement. Ce n'est PAS
+// une liste figée au sens de l'Article 24 (rien à synchroniser avec un autre système) : c'est une
 // décision humaine écrite, et l'Article 24 dispense explicitement le contenu curaté à la main dont
 // la nature manuelle est déclarée à côté. Elle l'est, ici même.
 export const ARTICLES_HORS_PERIMETRE = new Set([0]);
 
-const MOTIF_CITE_UN_OUTIL = /`scripts\/[a-z0-9-]+\.mjs`|docs\/referentiel\/[a-z0-9-]+\.md/i;
-const MOTIF_INVENTAIRE = /^\s*\|.*\|.*\|/m;
+// L'ADAPTATEUR, ET IL TIENT EN UNE LIGNE DE PLUS QUE LA DÉLÉGATION : Abraham parle de `numero`
+// parce qu'il ne sait pas ce qu'il compte ; cette charte parle d'`article`. On traduit ici, une
+// seule fois, plutôt que d'imposer le vocabulaire de la charte à tous ses futurs clients.
+const enArticle = (m) => ({ ...m, article: m.numero });
 
-// Proposition mécanique, jamais un verdict. La décision finale est humaine et elle SURVIT à la
-// régénération (cf. naturesDejaDecidees ci-dessous) : un outil qui écraserait un arbitrage de
-// l'utilisateur à chaque passage serait pire qu'inutile, il serait nuisible.
-export function natureProposee(mesure) {
-  if (ARTICLES_HORS_PERIMETRE.has(mesure.article)) return { nature: NATURES.LOI.cle, pourquoi: "hors périmètre par décision explicite de l'utilisateur" };
-  if (MOTIF_INVENTAIRE.test(mesure.texte) && mesure.texte.split("\n").filter((l) => l.trim().startsWith("|")).length > 4) {
-    return { nature: NATURES.INVENTAIRE.cle, pourquoi: "contient un tableau de plus de quatre lignes — un inventaire, pas une règle" };
-  }
-  if (MOTIF_CITE_UN_OUTIL.test(mesure.texte) && mesure.porteurMecanique) {
-    return { nature: NATURES.OUTIL.cle, pourquoi: `nomme un outil et ${mesure.porteurPourquoi} — la règle est déjà servie ailleurs` };
-  }
-  if (mesure.lignes <= 8 && mesure.citations >= 30) {
-    return { nature: NATURES.LOI.cle, pourquoi: `court (${mesure.lignes} lignes) et très cité (${mesure.citations}) — le rendement d'une loi` };
-  }
-  if (!mesure.porteurMecanique) {
-    return { nature: NATURES.DISCIPLINE.cle, pourquoi: "aucun fichier de code ne le cite — sa prose est son seul mécanisme" };
-  }
-  return { nature: NATURES.DISCIPLINE.cle, pourquoi: "aucun signal net — à trancher à la lecture, jamais par défaut" };
+export function mesurerArticles(claudeMdText, fichiers = {}) {
+  return A.mesurerUnites({
+    texte: claudeMdText,
+    motifUnite: ARTICLE_HEADING_PATTERN,
+    motifBorneSuperieure: TOP_HEADING_PATTERN,
+    champs: (m) => ({ numero: Number(m[1]), titre: m[2].trim() }),
+    prefixeCitation: "Article",
+    fichiers,
+    estimerTokens: estimateTokens,
+  }).map((m) => ({ ...enArticle(m), sensibilite: classifyRuleSensitivity({ article: m.numero, texte: m.texte }) }));
 }
 
-// La décision humaine survit à la régénération. C'est le point qui sépare un document généré utile
-// d'un document généré qui efface le travail : on relit l'ancienne cartographie AVANT d'en écrire
-// une neuve, et toute nature marquée « décidé » y est reprise telle quelle.
-export function naturesDejaDecidees(texteExistant = "") {
-  const decidees = new Map();
-  for (const ligne of String(texteExistant).split("\n")) {
-    const m = ligne.match(/^\|\s*(\d+)\s*\|[^|]*\|[^|]*\|[^|]*\|[^|]*\|[^|]*\|\s*([^|]+?)\s*\|\s*décidé\s*\|/i);
-    if (m) decidees.set(Number(m[1]), m[2].trim());
-  }
-  return decidees;
+export const natureProposee = (mesure) => A.natureProposee({ ...mesure, numero: mesure.article ?? mesure.numero }, { horsPerimetre: ARTICLES_HORS_PERIMETRE });
+// Même traduction que pour la mémoire : Abraham dit « règles », la charte dit « Articles ». Le
+// libellé rendu à l'appelant reste celui du document qu'il lit, jamais celui de l'outil générique.
+export const mesurerSections = (texte) => A.mesurerSections(texte, { motifUnite: /\*\*Article \d+ — /, estimerTokens: estimateTokens })
+  .map((s) => ({ ...s, articles: s.unites, nature: s.nature.replace("contient des règles", "contient des Articles") }));
+export const naturesDejaDecidees = (texte) => A.naturesDejaDecidees(texte);
+export const verifierDocumentDAccueil = (chemin, sujets = [], { root = ROOT } = {}) => A.verifierDocumentDAccueil(chemin, sujets, { racine: root });
+export const analyserPertinence = (mesures = []) => {
+  const r = A.analyserPertinence(mesures.map((m) => ({ ...m, numero: m.article ?? m.numero })), { horsPerimetre: ARTICLES_HORS_PERIMETRE });
+  return { ...r, questions: r.questions.map((q) => ({ ...q, article: q.numero })) };
+};
+export const findRecouvrementsNonDeclares = (mesures = [], opts = {}) =>
+  A.findRecouvrementsNonDeclares(mesures.map((m) => ({ ...m, numero: m.article ?? m.numero })), { prefixe: "Article", ...opts });
+export const findRedundantRulePairs = (rules, opts = {}) =>
+  A.findPairesRedondantes(rules.map((r) => ({ ...r, numero: r.article ?? r.numero })), opts);
+// Même traduction qu'ailleurs, et elle est sans risque : la lecture d'une opération se fait par
+// POSITION de colonne, jamais par son intitulé — changer l'en-tête n'a donc aucun effet sur le
+// parseur, seulement sur ce que lit un humain.
+export const enteteOperations = () => A.enteteOperations("Mémoire des opérations sur la charte (CLAUDE.md)").replace("| Date | Règle |", "| Date | Article |");
+export const lireOperations = ({ root = ROOT } = {}) => A.lireOperations(lire(OPERATIONS_PATH, root));
+// L'ADAPTATEUR TRADUIT LE VOCABULAIRE DANS LES DEUX SENS. Abraham dit « règle » parce qu'il ne
+// sait pas ce qu'il compte ; cette charte dit « Article ». Une mémoire lue du disque porte donc
+// `regle`, une mémoire fournie par un appelant de Moïse peut porter `article` — les deux sont
+// légitimes, et c'est ici, au point de contact, que la traduction se fait. La faire chez Abraham
+// lui imposerait le vocabulaire d'un seul de ses clients.
+export const commentOnAFaitLaDerniereFois = (article, { root = ROOT, operations = null } = {}) => {
+  const memoire = operations ?? A.lireOperations(lire(OPERATIONS_PATH, root));
+  const normalisee = memoire?.mesurable
+    ? { ...memoire, operations: memoire.operations.map((o) => ({ ...o, regle: o.regle ?? o.article })) }
+    : memoire;
+  const r = A.commentOnAFaitLaDerniereFois(article, normalisee);
+  return r.connu ? { ...r, operations: r.operations.map((o) => ({ ...o, article: o.regle })) } : r;
+};
+
+export function enregistrerOperation(op, { root = ROOT, ecrire = writeFileSync } = {}) {
+  const ligne = A.ligneOperation({ ...op, regle: op.regle ?? op.article });
+  const existant = lire(OPERATIONS_PATH, root) ?? enteteOperations();
+  ecrire(join(root, OPERATIONS_PATH), `${existant.replace(/\n+$/, "")}\n${ligne}\n`, "utf8");
+  recordRegistryWrite(OPERATIONS_PATH, { par: "moise-tables-de-loi" });
+  return ligne;
 }
 
 export function buildCartographie({ root = ROOT, fichiers = null, mesurerObligations = null } = {}) {
@@ -424,15 +309,19 @@ export function buildCartographie({ root = ROOT, fichiers = null, mesurerObligat
     mesurable: true,
     lignesCharte: charte.split("\n").length,
     tokens: estimateTokens(charte),
-    // Jamais un zéro déguisé en mesure : sans compteur fourni, on le DIT (même discipline
-    // « mesuré / pas mesuré / pas mesurable » que le reste du paysage).
+    // Jamais un zéro déguisé en mesure : sans compteur fourni, on le DIT.
     obligations: mesurerObligations ? mesurerObligations(charte) : { mesurable: false, pourquoi: "compteur d'obligations non fourni par l'appelant (ecotoken)", instructions: "?", disponible: "?", verdict: "pas mesuré" },
     articles: lignes,
     sections: mesurerSections(charte),
-    redondances: findRedundantRulePairs(extractRuleUnits(charte)),
+    redondances: findRedundantRulePairs(mesures),
   };
 }
 
+
+// LE RENDU DE LA CARTOGRAPHIE reste ici, et c'est délibéré : c'est le seul endroit du système qui
+// parle « Articles », « charte » et « CLAUDE.md » à un lecteur humain. Abraham ne doit jamais
+// apprendre le vocabulaire d'un de ses clients — sinon il cesse d'être générique au premier
+// document servi.
 export function renderCartographie(carto, { date = new Date().toISOString().slice(0, 10) } = {}) {
   if (!carto.mesurable) return `# Cartographie de la charte (CLAUDE.md)\n\nPAS MESURÉ — ${carto.pourquoi}.\n`;
   const out = [
@@ -460,177 +349,6 @@ export function renderCartographie(carto, { date = new Date().toISOString().slic
   } else out.push("Aucune au seuil strict.");
   out.push("", "*Pour faire d'une nature « proposé » une nature « décidé » : remplacer le mot dans la colonne Statut. La régénération la conservera.*", "");
   return out.join("\n");
-}
-
-// ---------------------------------------------------------------------------------------------
-// PARTIE 2bis — LA PERTINENCE ET LA LOGIQUE (2026-09-23, question directe de l'utilisateur :
-// « est-ce que l'outil Moïse est bien capable de détecter si un article n'a rien à faire ici ou
-// s'il n'est pas utile ? [...] est-ce que Moïse analyse la pertinence ? la logique ? »).
-//
-// LA RÉPONSE HONNÊTE ÉTAIT NON, et c'est ce qui a motivé cette partie. Moïse mesurait un poids,
-// des citations, un porteur, une nature. Aucune de ces quatre mesures ne dit si une règle MÉRITE
-// d'être là, ni si deux règles se contredisent. Un outil qui dit tout du COMBIEN et rien du
-// POURQUOI laisse la seule question qui compte à la mémoire de l'agent — donc perdue à la session
-// suivante (Article 27).
-//
-// LA LIGNE ROUGE, POSÉE PAR L'UTILISATEUR LUI-MÊME DANS LA MÊME PHRASE : « sur ce type de choix,
-// toujours me consulter, process ». Aucun signal de pertinence ne conclut jamais. Il OUVRE une
-// question, il ne la tranche pas, et le code lui-même refuse de produire un verdict : `etat` ne
-// prend qu'une seule valeur, « à trancher ». Ce n'est pas une précaution de style — un outil
-// capable d'écrire « cet Article est inutile » finirait par voir ce jugement appliqué sans que
-// personne ne l'ait porté.
-//
-// POURQUOI DES SIGNAUX ET PAS UN SCORE : un score agrège, donc il cache. Cinq signaux nommés
-// séparément laissent voir POURQUOI la question se pose, et un seul d'entre eux suffit rarement —
-// c'est leur accumulation qui mérite qu'on s'arrête.
-// ---------------------------------------------------------------------------------------------
-
-export const SIGNAUX_DE_PERTINENCE = [
-  {
-    cle: "jamais-cite",
-    question: "Est-ce que quelque chose, dans ce projet, s'appuie réellement sur cette règle ?",
-    detecte: (m) => m.citations <= 3,
-    dire: (m) => `cité ${m.citations} fois seulement dans tout le dépôt — la charte est le seul endroit qui en parle`,
-  },
-  {
-    cle: "sans-porteur-et-long",
-    question: "Une règle que rien ne fait respecter et que personne ne relit tient-elle encore debout ?",
-    detecte: (m) => m.porteur === "sans porteur" && m.lignes >= 20,
-    dire: (m) => `${m.lignes} lignes sans aucun mécanisme nommé — beaucoup de texte pour une règle qui ne repose que sur la mémoire de qui la lit`,
-  },
-  {
-    cle: "sans-obligation",
-    question: "Est-ce une règle, ou une explication rangée au mauvais endroit ?",
-    // Une section de la charte qui ne prescrit RIEN n'est pas une règle : c'est du contexte, et le
-    // contexte se lit à la demande plutôt qu'à chaque message.
-    detecte: (m) => !/\b(doit|doivent|jamais|toujours|obligatoire|interdit|il faut|exige|impose|ne peut)\b/i.test(m.texte),
-    dire: () => "ne contient aucune formulation d'obligation — c'est une explication, pas une prescription",
-  },
-  {
-    cle: "porteur-fantome",
-    question: "La règle annonce-t-elle une protection qui n'existe pas ?",
-    detecte: (m) => m.porteur === "fantôme",
-    dire: (m) => `nomme ${m.porteurFantomes.length} mécanisme(s) introuvable(s) : ${m.porteurFantomes.join(", ")}`,
-  },
-  {
-    cle: "poids-sans-retour",
-    question: "Ce que cette règle coûte à chaque message est-il en rapport avec ce qu'elle rend ?",
-    // Le seuil n'est pas rond par hasard : il est DÉRIVÉ de la distribution réelle (cf.
-    // seuilRendementFaible), jamais choisi à la main — sinon il se périmerait au premier Article
-    // ajouté (Article 24).
-    detecte: (m, { seuilRendement }) => m.lignes >= 20 && m.citations / m.lignes < seuilRendement,
-    dire: (m) => `${m.lignes} lignes pour ${m.citations} citations, soit ${(m.citations / m.lignes).toFixed(1)} par ligne`,
-  },
-];
-
-// Le seuil de rendement se DÉRIVE de la charte elle-même : la médiane des rendements, divisée par
-// trois. Un Article qui rend trois fois moins que la moitié de ses pairs est un vrai décrochage ;
-// un seuil écrit en dur aurait cessé d'être vrai au premier remaniement.
-export function seuilRendementFaible(mesures = []) {
-  const rendements = mesures.map((m) => m.citations / Math.max(1, m.lignes)).sort((a, b) => a - b);
-  if (!rendements.length) return 0;
-  const mediane = rendements[Math.floor(rendements.length / 2)];
-  return mediane / 3;
-}
-
-export function analyserPertinence(mesures = []) {
-  const seuilRendement = seuilRendementFaible(mesures);
-  const questions = [];
-  for (const m of mesures) {
-    if (ARTICLES_HORS_PERIMETRE.has(m.article)) continue; // l'Article 0 ne se discute pas
-    const touches = SIGNAUX_DE_PERTINENCE.filter((s) => s.detecte(m, { seuilRendement }));
-    if (!touches.length) continue;
-    questions.push({
-      article: m.article,
-      titre: m.titre,
-      // UN SEUL ÉTAT POSSIBLE, et c'est le mécanisme de la ligne rouge : ce champ ne peut pas
-      // valoir « à retirer ». L'outil n'a aucun vocabulaire pour conclure.
-      etat: "à trancher",
-      signaux: touches.map((s) => ({ cle: s.cle, question: s.question, constat: s.dire(m) })),
-    });
-  }
-  return { mesurable: true, seuilRendement, questions: questions.sort((a, b) => b.signaux.length - a.signaux.length) };
-}
-
-// LA LOGIQUE : deux Articles qui se recouvrent SANS le dire. Le recouvrement de vocabulaire seul
-// est un signal faible — deux règles peuvent légitimement parler du même sujet, et la charte en
-// contient plusieurs paires qui DÉCLARENT leur frontière (« Frontière avec l'Article 8 »,
-// « Distinct de ses voisins »). Ce qui mérite une question, c'est un recouvrement fort ET aucune
-// frontière écrite : là, deux règles gouvernent le même terrain sans que rien ne dise laquelle
-// prime, et c'est exactement le trou logique que l'Article 20 cherche ailleurs.
-export function findRecouvrementsNonDeclares(mesures = [], { seuil = 0.18 } = {}) {
-  const parNumero = new Map(mesures.map((m) => [m.article, m]));
-  const paires = findRedundantRulePairs(mesures.map((m) => ({ article: m.article, texte: m.texte })), { threshold: seuil });
-  return paires
-    .map(({ a, b, jaccard, motsPartages }) => {
-      const ta = parNumero.get(a)?.texte ?? "";
-      const tb = parNumero.get(b)?.texte ?? "";
-      const declare = new RegExp(`(?:fronti\u00e8re|distinct|jamais confondu|\u00e0 ne pas confondre)[^.]{0,80}Article\\s+${b}\\b`, "i").test(ta)
-        || new RegExp(`(?:fronti\u00e8re|distinct|jamais confondu|\u00e0 ne pas confondre)[^.]{0,80}Article\\s+${a}\\b`, "i").test(tb);
-      return { a, b, jaccard, motsPartages, frontiereDeclaree: declare };
-    })
-    .filter((p) => !p.frontiereDeclaree);
-}
-
-// ---------------------------------------------------------------------------------------------
-// PARTIE 3 — la mémoire, au grain de l'Article (calibrage explicite de l'utilisateur).
-// ---------------------------------------------------------------------------------------------
-
-export const GESTES = ["allègement", "aiguillage", "déplacement", "ajout", "réorganisation", "annulation"];
-export const RESULTATS = ["tenu", "annulé", "à revoir"];
-
-export function lireOperations({ root = ROOT } = {}) {
-  const texte = lire(OPERATIONS_PATH, root);
-  if (texte == null) return { mesurable: false, operations: [], pourquoi: `${OPERATIONS_PATH} n'existe pas encore` };
-  const operations = [];
-  for (const ligne of texte.split("\n")) {
-    const cells = ligne.split("|").map((c) => c.trim());
-    if (cells.length < 9 || !/^\d{4}-\d{2}-\d{2}/.test(cells[1] ?? "")) continue;
-    operations.push({ date: cells[1], article: cells[2], geste: cells[3], avant: cells[4], apres: cells[5], decidePar: cells[6], resultat: cells[7], pourquoi: cells[8] });
-  }
-  return { mesurable: true, operations };
-}
-
-// LA QUESTION QU'IL FAUT POUVOIR POSER, dans les mots de l'utilisateur : « comment nous avons fait
-// la dernière fois ? ». Une mémoire qui ne sait pas y répondre est une mémoire pour le plaisir.
-export function commentOnAFaitLaDerniereFois(article, { root = ROOT, operations = null } = {}) {
-  const m = operations ?? lireOperations({ root });
-  if (!m.mesurable) return { mesurable: false, pourquoi: m.pourquoi };
-  const miennes = m.operations.filter((o) => String(o.article) === String(article));
-  if (!miennes.length) return { mesurable: true, connu: false, resume: `Aucune opération enregistrée sur l'Article ${article} — terrain neuf.` };
-  const derniere = miennes[miennes.length - 1];
-  const annulees = miennes.filter((o) => o.resultat === "annulé");
-  const resume = [
-    `Article ${article} : ${miennes.length} opération(s) enregistrée(s).`,
-    `Dernière — ${derniere.date}, ${derniere.geste}, ${derniere.avant} → ${derniere.apres}, décidé par ${derniere.decidePar}, résultat « ${derniere.resultat} ».`,
-    annulees.length ? `⚠️ ${annulees.length} opération(s) ANNULÉE(S) sur cet Article : ${annulees.map((o) => `${o.date} (${o.pourquoi})`).join(" · ")} — ne pas refaire le même geste sans savoir pourquoi il n'a pas tenu.` : "Aucune annulation : les gestes passés ont tenu.",
-  ].join("\n");
-  return { mesurable: true, connu: true, operations: miennes, derniere, annulees, resume };
-}
-
-export function enregistrerOperation(op, { root = ROOT, ecrire = writeFileSync } = {}) {
-  const manquants = ["date", "article", "geste", "decidePar", "resultat", "pourquoi"].filter((c) => !op?.[c]);
-  if (manquants.length) throw new Error(`enregistrerOperation : champ(s) obligatoire(s) manquant(s) : ${manquants.join(", ")}`);
-  if (!GESTES.includes(op.geste)) throw new Error(`enregistrerOperation : geste inconnu « ${op.geste} » (attendus : ${GESTES.join(", ")})`);
-  if (!RESULTATS.includes(op.resultat)) throw new Error(`enregistrerOperation : résultat inconnu « ${op.resultat} » (attendus : ${RESULTATS.join(", ")})`);
-  const chemin = join(root, OPERATIONS_PATH);
-  const existant = lire(OPERATIONS_PATH, root) ?? enteteOperations();
-  const ligne = `| ${op.date} | ${op.article} | ${op.geste} | ${op.avant ?? "—"} | ${op.apres ?? "—"} | ${op.decidePar} | ${op.resultat} | ${op.pourquoi} |`;
-  ecrire(chemin, `${existant.replace(/\n+$/, "")}\n${ligne}\n`, "utf8");
-  recordRegistryWrite(OPERATIONS_PATH, { par: "moise-tables-de-loi" });
-  return ligne;
-}
-
-export function enteteOperations() {
-  return [
-    "# Mémoire des opérations sur la charte (CLAUDE.md)",
-    "",
-    "*(Tenu par moise-tables-de-loi — `enregistrerOperation()`. Grain : l'ARTICLE TOUCHÉ, calibrage explicite de l'utilisateur le 2026-09-23. Une ligne par passe d'ensemble saurait dire combien on a gagné ; seule une ligne par Article sait dire qu'un geste précis a déjà été tenté sur CET Article et n'a pas tenu. C'est la seconde qui empêche de refaire une erreur.)*",
-    "",
-    "| Date | Article | Geste | Avant | Après | Décidé par | Résultat | Pourquoi |",
-    "|---|---|---|---|---|---|---|---|",
-    "",
-  ].join("\n");
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -675,17 +393,8 @@ export function cartographiePerimee({ root = ROOT } = {}) {
   return { mesurable: true, perimee: false, pourquoi: `les ${attendus.length} Articles de la charte sont dans la cartographie` };
 }
 
-// VERROU N°4 DU PLAN D'ATTAQUE, rendu mécanique. Un renvoi ne part JAMAIS vers un document qui
-// n'existe pas, ni vers un document qui existe mais ne contient pas encore ce qu'on lui confie.
-// Preuve de besoin, mesurée le 2026-09-23 : la plus grosse proposition d'allègement au catalogue
-// (2 914 tokens) renvoyait vers un document inexistant, et rien ne le disait.
-export function verifierDocumentDAccueil(chemin, sujets = [], { root = ROOT } = {}) {
-  const texte = lire(chemin, root);
-  if (texte == null) return { peutPartir: false, existe: false, pourquoi: `${chemin} n'existe pas — le contenu partirait dans le vide` };
-  const absents = sujets.filter((s) => !texte.toLowerCase().includes(String(s).toLowerCase()));
-  if (absents.length) return { peutPartir: false, existe: true, absents, pourquoi: `${chemin} existe mais ne contient pas encore : ${absents.join(" · ")}` };
-  return { peutPartir: true, existe: true, pourquoi: `${chemin} existe et porte déjà les ${sujets.length} sujet(s) vérifié(s)` };
-}
+// Le verrou « document d'accueil » vit chez Abraham avec sa preuve de besoin : il vaut pour
+// n'importe quel document qui reçoit un renvoi, pas seulement pour la charte.
 
 // ---------------------------------------------------------------------------------------------
 // PARTIE 5 — les deux sorties, volontairement séparées (calibrage explicite de l'utilisateur :

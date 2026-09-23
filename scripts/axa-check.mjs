@@ -242,6 +242,7 @@ export const AGENT_SCRIPT_FILES = {
   "tool-learning": "scripts/tool-learning.mjs",
   "the-equalizer": "scripts/the-equalizer.mjs",
   "moise-tables-de-loi": "scripts/moise-tables-de-loi.mjs",
+  "abraham-les-references": "scripts/abraham-les-references.mjs",
   "integration-outil": "scripts/integration-outil.mjs",
   argus: "scripts/check-argus.mjs",
   harmonia: "scripts/check-harmonia.mjs",

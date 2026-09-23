@@ -661,6 +661,10 @@ export function mostRecentDate(text) {
 // (« cet outil apparaît-il quelque part, ou a-t-on écrit pourquoi il n'apparaît pas ? ») en partant
 // de deux bouts différents — une seule liste de raisons, jamais deux qui divergeraient.
 export const CIRCLE_AUTO_COVERED_REGISTRIES = {
+  // abraham-les-references (2026-09-23) : couvert PAR ÉVÉNEMENT — on l'appelle quand on analyse
+  // un document précis, jamais sur un rythme. Un passage périodique analyserait des documents que
+  // personne n'a demandé à regarder, et la tâche #612 cherche justement à REDUIRE les rapports.
+  "abraham-les-references": "couvert PAR ÉVÉNEMENT : on l'appelle sur un document précis quand on décide de l'analyser, jamais par calendrier — et un item de plus contredirait la tâche #612",
   // moise-tables-de-loi (2026-09-23) : EXCLUSION MOTIVÉE, et elle applique deux décisions de
   // l'utilisateur prises le même jour. (1) Ses deux garde-fous de fraîcheur sont déjà gratuits à
   // CHAQUE commit — calibrage explicite : « une alerte gratuite à chaque commit, le reste sur
