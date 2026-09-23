@@ -9496,6 +9496,41 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(crit.findChampsManquants({ numero: 1 }).some((c) => c.champ === 'motCle'), 'and a missing mandatory field is NAMED, so the format is a check rather than a sentence in a document nobody rereads');
   console.log('Passed: criticality and urgency are separated (2026-09-23) — the user was right and the proof was in the scale itself: URGENT-RETARD, a DELAY level, sat at rank 5 above PRIORITAIRE-OBLIGATOIRE at rank 4, so a merely late task outranked a genuinely more important one. The four levels are derived from each palier\'s declared COST OF WAITING rather than from its rank (the first version, written and thrown away the same day, divided the six ranks into four equal slices — clean arithmetic, wrong result, since it put URGENT-RETARD back at the top and reproduced the very mixing being removed; a test now pins that abandoned approach so nobody rebuilds it). Urgency loses nothing in the calculation — the time-related signals keep their full weight, which is the promise easiest to betray in the whole request — it simply moves to a vignette carrying both the notch AND the day count, where a negative age reads as a timestamp error rather than as the most reassuring notch on the scale, and an unknown palier says "NON CLASSÉE" instead of landing on a comfortable middle.');
 
+  // ————————————————————————————————————————————————————————————————————————
+  // MESSAGES COURTS (2026-09-23, tâche #572) — ne jamais s'arrêter pour un message en passant
+  // ————————————————————————————————————————————————————————————————————————
+  const mc = await import('../scripts/messages-courts.mjs');
+  assert.equal(mc.reactionAuMessage('ok super').continuer, true, 'THE DEFAULT IS TO CONTINUE — a short message is not a stop request, and this is the whole rule: "tu dois continuer la tache en cours et pas t\'arreter, sauf demande explicite"');
+  assert.equal(mc.reactionAuMessage('arrête tout').continuer, false, 'only an EXPLICIT stop request interrupts');
+  assert.equal(mc.reactionAuMessage('attends, laisse tomber').nature, 'arret', 'several forms of an explicit stop are recognised');
+  // LE POINT DE CONCEPTION QUI COMPTE : la liste de formes ne peut qu'AJOUTER un arrêt. Un mot
+  // d'arrêt qu'elle ne connaît pas fait donc CONTINUER, le côté sûr de l'erreur — c'est ce qui
+  // permet d'écrire cette règle sans tomber dans la liste de mots figée que le corollaire de
+  // l'Article 17 interdit : ici la liste ne peut jamais CAUSER le défaut, seulement le corriger.
+  assert.equal(mc.reactionAuMessage('cesse immédiatement').continuer, true, 'an unrecognised stop wording CONTINUES — the safe side of the error, and the reason this rule can be written as forms without becoming a frozen word list');
+
+  // LA TROISIÈME NATURE, ajoutée de ma propre initiative en réponse à sa question « tu vois autre
+  // chose à ajouter ? ». Traiter tout message court comme du bruit serait l'erreur symétrique de
+  // s'arrêter à chaque fois : un message court peut REDIRIGER le travail, et celui-là compte.
+  const redir = mc.reactionAuMessage('fais plutôt le renommage');
+  assert.equal(redir.nature, 'redirection', 'a short message that names ANOTHER task is not noise to ignore: it IS the new task, and confusing it with a passing comment would miss a real instruction');
+  assert.equal(redir.continuer, true, 'and it still does not stop anything — it switches, without waiting for confirmation');
+  assert.equal(redir.rappel, null, 'a redirection never carries a cost reminder: it is real work being given, not a fragmented message');
+
+  // LES DEUX PALIERS, exactement comme demandés : rien au premier, léger au deuxième, fort au
+  // cinquième. Le premier est volontairement muet — compter le coût dès le premier message ferait
+  // passer l'agent pour comptable de la conversation.
+  assert.equal(mc.reactionAuMessage('ok', { messagesCourtsPrecedents: 0 }).rappel, null, 'nothing on the first short message: a cost reminder from the very first one would be tiresome');
+  assert.equal(mc.reactionAuMessage('ok', { messagesCourtsPrecedents: 1 }).rappel, 'leger', '"un rappel leger dès le 2e message court" — his words, his threshold');
+  assert.equal(mc.reactionAuMessage('ok', { messagesCourtsPrecedents: 4 }).rappel, 'fort', '"une alerte plus forte quand ca devient couteux"');
+  assert.match(mc.texteDuRappel(mc.reactionAuMessage('ok', { messagesCourtsPrecedents: 4 }), { toursRecharges: 5 }), /5 rechargements/, 'the strong alert must NAME the real cost rather than say "it is costly" — an alert advancing no figure reads as a vague reproach, and one learns to skip it');
+  assert.match(mc.texteDuRappel(mc.reactionAuMessage('ok', { messagesCourtsPrecedents: 4 })), /je continue quand m[êe]me/, 'and even the strong alert must say the work continues: the reminder is about cost, never about stopping');
+
+  const long = 'x'.repeat(200) + ' attends';
+  assert.equal(mc.natureDuMessage(long).nature, 'accompagnement', 'a LONG message is never "in passing", so a stop word buried mid-sentence in real content must not read as an order to halt — this rule comes first for exactly that reason');
+  assert.ok(mc.LIMITE_DECLAREE.includes('aucun mécanisme ne lit une conversation'), 'the honest limit is declared rather than left implied: nothing can count a conversation from disk, so what is guaranteed is the RULE and the thresholds, never their application (Article 27)');
+  console.log('Passed: short messages never stop the work (2026-09-23, task #572) — the default is to CONTINUE and only an explicit stop request interrupts, which is written as forms that can only ADD a stop, so an unrecognised stop wording continues: the safe side of the error, and the only way to express this rule without the frozen word list the Article 17 corollary forbids. A third nature was added beyond what was asked, because treating every short message as noise is the symmetric error of stopping at each one: a short message that names another task is not noise, it IS the new task. The two thresholds are his (light from the 2nd, strong from the 5th), the first is deliberately silent, the strong alert names the real cost rather than calling it costly, and even it says the work continues. A long message is never "in passing", so a stop word buried in real content cannot read as an order to halt.');
+
   console.log('Passed: the three work modes are a read registry rather than a boolean copied 31 times (2026-09-23) — the old nightAutonomousMode answered two unrelated questions at once ("is the user there?" and "may a window block?"), which is precisely why the semi-autonomous mode could not be expressed: it is the combination the boolean could not hold, present AND non-blocking. The mode is persisted rather than guessed (an agent resuming mid-session must know without asking, since its own memory does not survive), an unknown mode is refused loudly rather than silently defaulted, a corrupted file falls back to the one mode that can never overreach, a tool comparing against a vanished mode name is flagged so a fourth mode leaves no dead comparisons, and the whole thing is a declared PROCESS whose three conversation-only steps admit having no mechanical proof instead of pretending otherwise.');
 
   console.log('Passed: the five written-but-unenforced rules of circle-process-guardian (2026-09-23) are now genuinely wired and covered — each of the five was IMPORTED and never CALLED, which is also exactly why none of them had a test (an uninvoked mechanism never breaks, so nothing ever demands its coverage): the question inventory is now confronted with the process document it is supposed to match, an opening is flagged BEFORE it expires rather than refused at the closing gesture (the night of 2026-09-23 lesson that detecting is not preventing, applied), a declared registry whose folder does not exist is reported instead of silently reassuring, a tool feeding a registry without recording its contribution no longer counts as unused while it works, and pending questions sitting at different paliers are no longer collapsed under the most insistent one\'s action; night-autonomous mode is exempted only where a human would have to answer, never from a check that reads the disk by itself.');
