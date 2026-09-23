@@ -27,7 +27,7 @@ import { join } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
 import { recommendFindBooster } from "./find-booster.mjs";
-import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, balayerScriptsDesRegistres } from "./lib-shell.mjs";
 import { parseToolsTable, slugifyAgentName } from "./le-coordinateur.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
@@ -328,20 +328,9 @@ export function checkHtmlWiring(scriptPath, readFileImpl = readFileSync) {
 // injectable (même patron que `readFileImpl` ailleurs dans ce fichier) pour rester testable sans
 // dépendre des vrais fichiers du dépôt.
 export function flagFindBoosterCandidates(registries = REGISTRIES, recommendImpl = recommendFindBooster) {
-  const seen = new Set();
-  const candidates = [];
-  for (const r of registries) {
-    if (!r.scriptPath || seen.has(r.scriptPath)) continue;
-    seen.add(r.scriptPath);
-    let verdict;
-    try {
-      verdict = recommendImpl(join(ROOT, r.scriptPath));
-    } catch {
-      continue; // absence honnête : script introuvable, jamais un faux positif fabriqué.
-    }
-    if (verdict?.worthwhile) candidates.push({ label: r.label, scriptPath: r.scriptPath, tokens: verdict.tokens, entryCount: verdict.entryCount });
-  }
-  return candidates;
+  // Parcours partagé (lib-shell), extraction propre à cet outil : `tokens`/`entryCount` sont ce que
+  // find-booster mesure, et ce ne sont PAS les mêmes grandeurs que chez son voisin find-brain.
+  return balayerScriptsDesRegistres(registries, recommendImpl, (v) => ({ tokens: v.tokens, entryCount: v.entryCount }), { root: ROOT });
 }
 
 // Compare la décision actée à la réalité du code — le seul rôle de "gardien" de ce module. Ne

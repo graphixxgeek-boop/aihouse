@@ -22,7 +22,7 @@ import { recommendFindBooster } from "./find-booster.mjs";
 import { proposeDecomposition } from "./route-booster.mjs";
 import { REGISTRIES } from "./doc-report.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReliabilityNotice, balayerScriptsDesRegistres } from "./lib-shell.mjs";
 
 // Racine du dépôt dérivée du fichier lui-même (jamais process.cwd(), qui dépendrait de l'endroit
 // d'où node est lancé) — même patron que ROOT dans doc-report.mjs.
@@ -58,20 +58,9 @@ export function recommendFindDeepBooster(filePath, { lineThreshold = MONOLITH_LI
 // distincts (lineCount/cutPointCount, pas tokens/entryCount) : les deux outils mesurent des choses
 // réellement différentes, jamais forcées dans un même vocabulaire pour paraître uniformes.
 export function flagFindDeepBoosterCandidates(registries = REGISTRIES, recommendImpl = recommendFindDeepBooster) {
-  const seen = new Set();
-  const candidates = [];
-  for (const r of registries) {
-    if (!r.scriptPath || seen.has(r.scriptPath)) continue;
-    seen.add(r.scriptPath);
-    let verdict;
-    try {
-      verdict = recommendImpl(join(ROOT, r.scriptPath));
-    } catch {
-      continue; // absence honnête : script introuvable, jamais un faux positif fabriqué.
-    }
-    if (verdict?.worthwhile) candidates.push({ label: r.label, scriptPath: r.scriptPath, lineCount: verdict.lineCount, cutPointCount: verdict.cutPointCount });
-  }
-  return candidates;
+  // Même parcours partagé que son voisin, extraction différente et c'est voulu : `lineCount`/
+  // `cutPointCount` mesurent la découpabilité d'un fichier, jamais son poids.
+  return balayerScriptsDesRegistres(registries, recommendImpl, (v) => ({ lineCount: v.lineCount, cutPointCount: v.cutPointCount }), { root: ROOT });
 }
 
 // Le jugement unifié, pour UN fichier précis — jamais un tri-état exclusif (cf. commentaire des

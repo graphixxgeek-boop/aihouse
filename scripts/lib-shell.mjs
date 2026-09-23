@@ -462,3 +462,92 @@ export function formatIndicateur(label, taux, { mesures, population } = {}) {
   if (q.etat === "non concluant") return `${label} : ⚠️ NON CONCLUANT (${pct} affiché, ${q.assiette}) — ${q.pourquoi}`;
   return `${label} : ${pct} (${q.assiette})`;
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// LE BALAYAGE DES SCRIPTS D'UN REGISTRE (2026-09-23, chantier 13)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SORTI DE DEUX COPIES LITTÉRALES, signalées par CLONE-HUNTER comme sa plus grosse duplication
+// (12 lignes × 2 outils) : `flagFindBoosterCandidates()` (doc-report) et
+// `flagFindDeepBoosterCandidates()` (find-brain). Le parcours était identique au caractère près ;
+// seuls les CHAMPS retenus au bout différaient, et cette différence-là est légitime — les deux
+// outils mesurent réellement des choses différentes (poids en tokens contre points de coupe), et
+// les forcer dans un même vocabulaire pour paraître uniformes aurait été pire que la duplication.
+//
+// D'OÙ LA FORME : le parcours est partagé, l'extraction reste à l'appelant. C'est la seule façon de
+// factoriser sans effacer une distinction que les deux outils avaient raison de faire.
+//
+// POURQUOI ICI, et pas chez l'un des deux : `find-brain` importe déjà `REGISTRIES` de `doc-report`,
+// donc l'inverse créerait un cycle d'imports. Ce fichier-ci est l'infrastructure partagée, il
+// n'importe rien du paysage — c'est exactement le rôle pour lequel il existe.
+//
+// LES DEUX SILENCES SONT VOLONTAIRES, et ils viennent du code d'origine : un script sans chemin ou
+// déjà vu est sauté (jamais compté deux fois), et un script introuvable est sauté AUSSI — une
+// absence honnête plutôt qu'un faux candidat fabriqué à partir d'une erreur de lecture.
+export function balayerScriptsDesRegistres(registries = [], recommendImpl, extraire, { root = "." } = {}) {
+  const seen = new Set();
+  const candidates = [];
+  for (const r of registries) {
+    if (!r.scriptPath || seen.has(r.scriptPath)) continue;
+    seen.add(r.scriptPath);
+    let verdict;
+    try {
+      verdict = recommendImpl(join(root, r.scriptPath));
+    } catch {
+      continue; // absence honnête : script introuvable, jamais un faux positif fabriqué.
+    }
+    if (verdict?.worthwhile) candidates.push({ label: r.label, scriptPath: r.scriptPath, ...extraire(verdict) });
+  }
+  return candidates;
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// DEUX MÉCANIQUES DE LECTURE DE DOCUMENT, PARTAGÉES (2026-09-23, chantier 13)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SORTIES DE DEUX COPIES CROISÉES entre SMART-CONSO-TOKEN et THE-KING, signalées par CLONE-HUNTER.
+// Les deux outils lisent un document normatif différent (la charte pour l'un, le texte fondateur
+// pour l'autre) et en tirent des conclusions sans rapport — mais ils le DÉCOUPENT de la même façon
+// et comparent leurs unités de la même façon. Ce sont ces deux mécaniques-là qui sont partagées,
+// jamais les jugements qu'elles nourrissent.
+
+// decouperEnUnites() — découpe un document en unités délimitées par un motif de titre, chaque unité
+// s'arrêtant au PLUS PROCHE de deux bornes : le titre suivant de même niveau, ou le prochain titre
+// de niveau supérieur. Cette seconde borne est la partie subtile, et elle est indispensable : sans
+// elle, la dernière unité d'une section avalerait tout le reste du document.
+export function decouperEnUnites(texte, motifUnite, { motifBorneSuperieure = /^## /gm, champs = () => ({}) } = {}) {
+  const source = String(texte ?? "");
+  const unites = [...source.matchAll(motifUnite)];
+  const bornes = [...source.matchAll(motifBorneSuperieure)].map((m) => m.index ?? source.length);
+  return unites.map((m, i) => {
+    const start = m.index ?? 0;
+    const suivante = i + 1 < unites.length ? (unites[i + 1].index ?? source.length) : source.length;
+    const borne = bornes.find((h) => h > start) ?? source.length;
+    return { ...champs(m), texte: source.slice(start, Math.min(suivante, borne)).trim() };
+  });
+}
+
+// pairesParJaccard() — compare toutes les paires d'ensembles de mots et rend celles qui dépassent un
+// seuil de similarité de Jaccard.
+//
+// POURQUOI JACCARD ET PAS UN COMPTE DE MOTS PARTAGÉS, raison reprise du code d'origine : un simple
+// compte favoriserait les textes les plus longs, qui partagent mécaniquement plus de mots avec tout
+// le monde. Le rapport intersection/union corrige exactement ce biais.
+//
+// CE QU'ELLE NE FAIT PAS : conclure. Deux appelants tirent des conclusions opposées du même chiffre
+// — l'un y voit une redondance à alléger, l'autre le TERRAIN COMMUN sur lequel chercher une tension.
+// Le seuil et la suite restent donc entièrement à l'appelant.
+export function pairesParJaccard(ensembles = [], { seuil = 0.22 } = {}) {
+  const paires = [];
+  for (let i = 0; i < ensembles.length; i++) {
+    for (let j = i + 1; j < ensembles.length; j++) {
+      const a = ensembles[i], b = ensembles[j];
+      if (!a?.size || !b?.size) continue;
+      const intersection = [...a].filter((w) => b.has(w)).length;
+      const union = new Set([...a, ...b]).size;
+      const jaccard = union ? intersection / union : 0;
+      if (jaccard >= seuil) paires.push({ i, j, jaccard, motsPartages: intersection });
+    }
+  }
+  return paires;
+}

@@ -556,7 +556,17 @@ export function mecanismesDuProcess(p, { root = ROOT, readFileImpl = readFileSyn
       // garde-fou crierait à tort, et un garde-fou qui crie à tort finit par ne plus être lu.
       if (nom.length < 5) continue;
       const cible = new RegExp(`\\b${nom}\\b`);
-      mecanismes.push({ nom, fichier: src, dansDoc: cible.test(docTexte), dansGardien: cible.test(gardienTexte) });
+      // « CÂBLÉ » VEUT DIRE EMPLOYÉ, JAMAIS SEULEMENT IMPORTÉ (resserré le 2026-09-23). Sans cette
+      // distinction, tout nom figurant dans la ligne d'import d'un gardien comptait comme un
+      // mécanisme qu'il fait respecter — et le rapport annonçait 66 « mécanismes câblés et jamais
+      // écrits », dont l'immense majorité n'étaient que des symboles d'infrastructure traversant
+      // l'import. Le vrai signal, lui, tient en douze lignes (des règles ÉCRITES et non appliquées)
+      // et se noyait dedans : un garde-fou qui crie à tort finit par ne plus être lu (leçon L4).
+      //
+      // On retire donc les lignes d'import avant de chercher l'emploi réel. Un mécanisme importé
+      // ET appelé reste évidemment compté — c'est le cas normal.
+      const gardienHorsImports = gardienTexte.replace(/^import\s[^;]*;$/gm, "");
+      mecanismes.push({ nom, fichier: src, dansDoc: cible.test(docTexte), dansGardien: cible.test(gardienHorsImports) });
     }
   }
   return { sources: [...sources], mecanismes, docTexte, gardienTexte };
@@ -583,11 +593,25 @@ export function findMecanismesAbsentsDuDocument(options = {}) {
 // Jamais un pourcentage vert sur un dénominateur vide — zéro mécanisme trouvé se DIT (« pas
 // mesuré »), il ne se rend jamais comme une conformité.
 export function etatConnexionProcessGardien({ processes = PROCESSES, root = ROOT, readFileImpl = readFileSync } = {}) {
+  // UN GARDIEN PEUT SERVIR PLUSIEURS PROCESS, et sans cette précaution chacun se voit reprocher les
+  // mécanismes de l'autre. Cas réel du 2026-09-23 : circle-process-guardian garde la Ronde ET
+  // l'intégration d'un item à la Ronde ; les 33 mécanismes de la première étaient comptés comme
+  // « câblés et jamais écrits » pour la seconde, alors qu'ils sont écrits — dans le document de sa
+  // voisine. Un mécanisme documenté chez un process FRÈRE (même gardien) n'est donc pas un
+  // mécanisme non écrit : il est écrit ailleurs, et c'est légitime.
+  const docsParGardien = new Map();
+  for (const p of processes) {
+    if (!p.doc || !p.gardien) continue;
+    if (!docsParGardien.has(p.gardien)) docsParGardien.set(p.gardien, []);
+    docsParGardien.get(p.gardien).push(lireTexte(join(root, p.doc), readFileImpl) ?? "");
+  }
   return processes.filter((p) => p.doc && p.gardien).map((p) => {
     const { sources, mecanismes } = mecanismesDuProcess(p, { root, readFileImpl });
+    const textesFreres = docsParGardien.get(p.gardien) ?? [];
+    const ecritChezUnFrere = (nom) => textesFreres.some((t) => new RegExp(`\\b${nom}\\b`).test(t));
     const partages = mecanismes.filter((m) => m.dansDoc && m.dansGardien);
     const docSeul = mecanismes.filter((m) => m.dansDoc && !m.dansGardien);
-    const gardienSeul = mecanismes.filter((m) => !m.dansDoc && m.dansGardien);
+    const gardienSeul = mecanismes.filter((m) => !m.dansDoc && m.dansGardien && !ecritChezUnFrere(m.nom));
     return {
       process: p.slug ?? p.nom,
       doc: p.doc,

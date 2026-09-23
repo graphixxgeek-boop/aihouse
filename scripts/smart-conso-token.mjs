@@ -22,7 +22,7 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { countTasksSince, lastCoveredTaskNumber } from "./check-suivi-fidelity.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReliabilityNotice, qualifierIndicateur } from "./lib-shell.mjs";
+import { printReliabilityNotice, qualifierIndicateur, decouperEnUnites, pairesParJaccard } from "./lib-shell.mjs";
 import { printReportHeader } from "./report-template.mjs";
 import { loadJson } from "./lib-json.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
@@ -297,15 +297,11 @@ const ARTICLE_HEADING_PATTERN = /\*\*Article (\d+) — ([^*]+?)\.\*\*/g;
 const TOP_HEADING_PATTERN = /^## /gm;
 
 export function extractRuleUnits(text) {
-  const source = String(text ?? "");
-  const articleMatches = [...source.matchAll(ARTICLE_HEADING_PATTERN)];
-  const headingStarts = [...source.matchAll(TOP_HEADING_PATTERN)].map((m) => m.index ?? source.length);
-  return articleMatches.map((m, i) => {
-    const start = m.index ?? 0;
-    const nextArticleStart = i + 1 < articleMatches.length ? (articleMatches[i + 1].index ?? source.length) : source.length;
-    const nextHeadingStart = headingStarts.find((h) => h > start) ?? source.length;
-    const end = Math.min(nextArticleStart, nextHeadingStart);
-    return { article: Number(m[1]), titre: m[2].trim(), texte: source.slice(start, end).trim() };
+  // Découpage partagé (lib-shell) ; ce qui reste ici est ce qui est propre à la charte : un article
+  // porte un NUMÉRO et un titre, là où le texte fondateur porte une partie, un numéro et un tag.
+  return decouperEnUnites(text, ARTICLE_HEADING_PATTERN, {
+    motifBorneSuperieure: TOP_HEADING_PATTERN,
+    champs: (m) => ({ article: Number(m[1]), titre: m[2].trim() }),
   });
 }
 
@@ -368,19 +364,13 @@ function ruleSignificantWords(texte) {
 // défaut (choix explicite de l'utilisateur : « remonter étroit ») — mieux vaut manquer une
 // redondance subtile que noyer chaque passage sous des paires qui ne mènent à rien.
 export function findRedundantRulePairs(rules, { threshold = 0.22 } = {}) {
+  // Comparaison partagée (lib-shell) ; l'INTERPRÉTATION reste ici — pour cet outil, une paire
+  // au-dessus du seuil est une redondance à alléger. THE-KING lit le même chiffre comme un terrain
+  // commun où chercher une tension : même mesure, conclusions opposées.
   const wordSets = rules.map((r) => ruleSignificantWords(r.texte));
-  const pairs = [];
-  for (let i = 0; i < rules.length; i++) {
-    for (let j = i + 1; j < rules.length; j++) {
-      const a = wordSets[i], b = wordSets[j];
-      if (!a.size || !b.size) continue;
-      const intersection = [...a].filter((w) => b.has(w)).length;
-      const union = new Set([...a, ...b]).size;
-      const jaccard = union ? intersection / union : 0;
-      if (jaccard >= threshold) pairs.push({ a: rules[i].article, b: rules[j].article, jaccard, motsPartages: intersection });
-    }
-  }
-  return pairs.sort((x, y) => y.jaccard - x.jaccard);
+  return pairesParJaccard(wordSets, { seuil: threshold })
+    .map(({ i, j, jaccard, motsPartages }) => ({ a: rules[i].article, b: rules[j].article, jaccard, motsPartages }))
+    .sort((x, y) => y.jaccard - x.jaccard);
 }
 
 // Assemble le tableau de référence complet — jamais un calcul séparé de ce qui précède, seulement

@@ -8237,8 +8237,16 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(liveRoute.lineCount > MONOLITH_LINE_THRESHOLD, 'checked live against the real app/api/lia/route.ts (the exact file route-booster was built for): its real line count must exceed the monolith threshold');
   assert.ok(liveRoute.cutPointCount >= MIN_CUT_POINTS, 'checked live: the real file must have enough real candidate cut points (route-booster already found 24 live) to be flagged worthwhile');
   assert.equal(liveRoute.worthwhile, true, 'a real monolith with real cut points must be flagged worthwhile, never silently ignored');
-  const liveSmallFile = recommendFindDeepBooster('scripts/lib-shell.mjs');
-  assert.equal(liveSmallFile.worthwhile, false, 'checked live against a genuinely small real file: it must never be flagged worthwhile just because it happens to contain a branch or two — both real signals (length AND cut points) are required together, never either alone');
+  // LE PETIT FICHIER EST CHOISI À L'EXÉCUTION, jamais nommé en dur — et ce n'est pas une
+  // préférence de style. La version d'avant citait `scripts/lib-shell.mjs` comme exemple de « petit
+  // fichier » ; le jour où on y a ajouté trente lignes, il a franchi le seuil et le test a échoué
+  // sur un fichier devenu grand, pas sur un défaut de l'outil. Un jeu d'essai qui désigne un
+  // fichier réel par son nom vieillit avec ce fichier (Article 24).
+  const plusPetitScript = fs.readdirSync('scripts').filter((f) => f.endsWith('.mjs'))
+    .map((f) => ({ f, n: fs.readFileSync(`scripts/${f}`, 'utf8').split('\n').length }))
+    .sort((a, b) => a.n - b.n)[0];
+  const liveSmallFile = recommendFindDeepBooster(`scripts/${plusPetitScript.f}`);
+  assert.equal(liveSmallFile.worthwhile, false, `checked live against the genuinely smallest real script (${plusPetitScript.f}, ${plusPetitScript.n} lines): it must never be flagged worthwhile just because it happens to contain a branch or two — both real signals (length AND cut points) are required together, never either alone`);
 
   // flagFindDeepBoosterCandidates() — même forme que flagFindBoosterCandidates() (doc-report.mjs),
   // jamais une seconde liste de fichiers à maintenir : balaie REGISTRIES tel quel.
@@ -9316,6 +9324,89 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     // En direct contre le vrai dépôt : le motif dominant doit rester visible.
     const reelle = harmonia.cartographieCriteresTransverses();
     assert.ok(reelle.carte[0].outils.length >= 5, 'checked live: the dominant motif of this landscape must show up across several tools — a map that found everything isolated would mean the reader stopped working');
+  }
+
+  // 4septies. LES TROIS MÉCANIQUES PARTAGÉES sorties de l'arriéré CLONE-HUNTER (2026-09-23,
+  // chantier 13). Chacune remplace deux copies littérales réelles, et chacune garde à l'appelant
+  // ce qui le distingue vraiment de son voisin.
+  {
+    const ls = await import('../scripts/lib-shell.mjs');
+
+    // balayerScriptsDesRegistres — le parcours est partagé, l'EXTRACTION reste à l'appelant : les
+    // deux outils d'origine mesurent des grandeurs différentes (poids contre points de coupe), et
+    // les forcer dans un même vocabulaire aurait été pire que la duplication.
+    const registres = [
+      { label: 'A', scriptPath: 'scripts/a.mjs' },
+      { label: 'A bis', scriptPath: 'scripts/a.mjs' },
+      { label: 'B', scriptPath: 'scripts/b.mjs' },
+      { label: 'C', scriptPath: 'scripts/introuvable.mjs' },
+      { label: 'sans chemin' },
+    ];
+    const recommande = (chemin) => {
+      if (chemin.endsWith('introuvable.mjs')) throw new Error('ENOENT');
+      return { worthwhile: chemin.endsWith('a.mjs'), tokens: 42, lineCount: 900 };
+    };
+    const vus = ls.balayerScriptsDesRegistres(registres, recommande, (v) => ({ tokens: v.tokens }), { root: '' });
+    assert.deepEqual(vus, [{ label: 'A', scriptPath: 'scripts/a.mjs', tokens: 42 }], 'a script listed twice must be scanned once, a script below the threshold must not be flagged, a script that cannot be read must be skipped rather than fabricated into a candidate, and an entry with no path must be ignored');
+    assert.deepEqual(ls.balayerScriptsDesRegistres(registres, recommande, (v) => ({ lineCount: v.lineCount }), { root: '' })[0].lineCount, 900, 'the caller decides which fields survive: that is the whole reason this traversal could be shared without erasing what the two tools genuinely measure differently');
+
+    // decouperEnUnites — la borne supérieure est la partie subtile : sans elle, la dernière unité
+    // d'une section avalerait tout le reste du document.
+    const doc = '## Partie A\n### 1 Un\ntexte un\n### 2 Deux\ntexte deux\n## Partie B\nhors sujet\n';
+    const unites = ls.decouperEnUnites(doc, /^### (\d+) (.+)$/gm, { champs: (m) => ({ n: Number(m[1]), titre: m[2] }) });
+    assert.deepEqual(unites.map((u) => u.n), [1, 2], 'every unit matching the pattern must be returned with its own fields');
+    assert.ok(!unites[1].texte.includes('hors sujet'), "the LAST unit of a section must stop at the next top-level heading, never swallow the rest of the document — that boundary is the only reason this function is not a one-liner");
+    assert.ok(unites[0].texte.includes('texte un') && !unites[0].texte.includes('texte deux'), 'a unit must stop at its sibling too, never run into it');
+
+    // pairesParJaccard — la mesure est partagée, la CONCLUSION jamais : un appelant y lit une
+    // redondance à alléger, l'autre le terrain commun d'une tension. Même chiffre, sens opposés.
+    const ens = [new Set(['a', 'b', 'c', 'd']), new Set(['a', 'b', 'c', 'e']), new Set(['x', 'y', 'z']), new Set()];
+    const paires = ls.pairesParJaccard(ens, { seuil: 0.3 });
+    assert.deepEqual(paires.map((p) => [p.i, p.j]), [[0, 1]], 'only pairs above the threshold come back, and an empty set is never compared at all');
+    assert.equal(paires[0].motsPartages, 3, 'the raw overlap count must travel with the ratio: a caller that only sees 0.6 cannot tell three shared words from thirty');
+    assert.ok(Math.abs(paires[0].jaccard - 3 / 5) < 1e-9, 'the ratio must be intersection over UNION — a plain shared-word count would favour the longest texts, which mechanically share more with everyone');
+    assert.deepEqual(ls.pairesParJaccard(ens, { seuil: 0.9 }), [], 'a strict threshold must return nothing rather than the least-bad pair');
+  }
+
+  // 4octies. LES DEUX RESSERREMENTS DE LA CONNEXION PROCESS ↔ CONTRÔLEUR (2026-09-23, chantier 13).
+  // Le rapport annonçait 66 « mécanismes câblés et jamais écrits ». Les regarder un par un a montré
+  // que l'immense majorité n'en étaient pas, et qu'ils NOYAIENT le vrai signal — une quinzaine de
+  // règles écrites et non appliquées, qui est la moitié vraiment grave (leçon L1).
+  {
+    const docFrere = 'le document de la Ronde parle de mecanismePartage en détail.';
+    const docCible = "le document de l'intégration ne parle que de mecanismeEcrit.";
+    const gardien = [
+      'import { mecanismeImporteSeulement, mecanismePartage, mecanismeEmploye } from "./source.mjs";',
+      'export function garder() { return mecanismePartage() + mecanismeEmploye(); }',
+    ].join('\n');
+    const source = ['export function mecanismeImporteSeulement() {}', 'export function mecanismePartage() {}', 'export function mecanismeEmploye() {}', 'export function mecanismeEcrit() {}'].join('\n');
+    const lire = (chemin) => {
+      if (chemin.endsWith('doc-frere.md')) return docFrere;
+      if (chemin.endsWith('doc-cible.md')) return docCible;
+      if (chemin.endsWith('gardien.mjs')) return gardien;
+      if (chemin.endsWith('source.mjs')) return source;
+      throw new Error(`ENOENT ${chemin}`);
+    };
+    const faux = [
+      { slug: 'frere', doc: 'doc-frere.md', gardien: 'scripts/gardien.mjs', etapes: [] },
+      { slug: 'cible', doc: 'doc-cible.md', gardien: 'scripts/gardien.mjs', etapes: [] },
+    ];
+    // Le document doit nommer le fichier-source pour que l'intersection le retienne.
+    const lire2 = (chemin) => (chemin.endsWith('.md') ? `${lire(chemin)} Voir source.mjs.` : lire(chemin));
+    const etat = god.etatConnexionProcessGardien({ processes: faux, root: '/', readFileImpl: lire2 });
+    const cible = etat.find((e) => e.process === 'cible');
+
+    // RESSERREMENT 1 — importé n'est pas câblé.
+    assert.ok(!cible.gardienSeul.includes('mecanismeImporteSeulement'), "a name that only crosses the guardian's import line is not a mechanism it enforces: counting it turned every shared infrastructure symbol into a false gap");
+    assert.ok(cible.gardienSeul.includes('mecanismeEmploye'), 'a mechanism genuinely CALLED by the guardian and written in no document must still be reported — that gap is real and is the whole point of this direction');
+
+    // RESSERREMENT 2 — un mécanisme écrit chez un process FRÈRE (même gardien) est écrit.
+    assert.ok(!cible.gardienSeul.includes('mecanismePartage'), "a guardian can serve several processes: a mechanism documented in a SIBLING process's document is written, just not here — blaming this process for it produced 33 false gaps in one go");
+    const frere = etat.find((e) => e.process === 'frere');
+    assert.ok(frere.partages >= 1 && !frere.docSeul.includes('mecanismePartage') && !frere.gardienSeul.includes('mecanismePartage'), 'and the sibling that DOES document it must count it as properly shared — neither written-only nor wired-only — otherwise the exchange would lose it on both sides');
+
+    // Le sens le plus grave reste intact : une règle écrite et non appliquée.
+    assert.ok(cible.docSeul.includes('mecanismeEcrit'), 'a rule written in the document that the guardian never enforces must still be reported — that is the serious half, and the whole reason for tightening the other one was to stop it from drowning');
   }
 
   // 4bis. LE GABARIT DE PROCESS (2026-09-23) — le modèle et son contrôle, demandés ensemble.

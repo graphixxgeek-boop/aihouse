@@ -14,7 +14,7 @@
 import { significantWords } from "./le-coordinateur.mjs";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { sh, printReliabilityNotice } from "./lib-shell.mjs";
+import { sh, printReliabilityNotice, decouperEnUnites, pairesParJaccard } from "./lib-shell.mjs";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { printReportHeader } from "./report-template.mjs";
@@ -57,15 +57,11 @@ const SECTION_HEADING_PATTERN = /^### (\d+)\.(\d+) (.+?)\s*\*\*\[([^\]]+)\]\*\*\
 const TOP_HEADING_PATTERN = /^## /gm;
 
 export function extractPrincipleUnits(text) {
-  const source = String(text ?? "");
-  const matches = [...source.matchAll(SECTION_HEADING_PATTERN)];
-  const headingStarts = [...source.matchAll(TOP_HEADING_PATTERN)].map((m) => m.index ?? source.length);
-  return matches.map((m, i) => {
-    const start = m.index ?? 0;
-    const nextSectionStart = i + 1 < matches.length ? (matches[i + 1].index ?? source.length) : source.length;
-    const nextHeadingStart = headingStarts.find((h) => h > start) ?? source.length;
-    const end = Math.min(nextSectionStart, nextHeadingStart);
-    return { partie: Number(m[1]), numero: Number(m[2]), titre: m[3].trim(), tag: m[4].trim(), texte: source.slice(start, end).trim() };
+  // Découpage partagé (lib-shell) ; ce qui reste ici est propre au texte fondateur : un principe
+  // porte une partie, un numéro, un titre ET un tag — quatre champs là où la charte en a deux.
+  return decouperEnUnites(text, SECTION_HEADING_PATTERN, {
+    motifBorneSuperieure: TOP_HEADING_PATTERN,
+    champs: (m) => ({ partie: Number(m[1]), numero: Number(m[2]), titre: m[3].trim(), tag: m[4].trim() }),
   });
 }
 
@@ -134,23 +130,18 @@ const ABSOLUTE_MARKER = /\btoujours\b/i;
 // partagé (l'un affirme "jamais", l'autre "toujours") — le candidat le plus honnête qu'une regex
 // puisse produire pour une vraie lecture humaine, jamais un remplacement de cette lecture.
 export function findPossibleTensions(principles, { threshold = 0.22 } = {}) {
+  // Comparaison partagée (lib-shell), interprétation propre à cet outil : ici une paire au-dessus du
+  // seuil n'est PAS une redondance, c'est le terrain commun sur lequel une divergence de polarité
+  // (« jamais » d'un côté, « toujours » de l'autre) devient une vraie tension à lire.
   const wordSets = principles.map((p) => new Set(significantWords(p.texte).filter((w) => w.length > 4)));
   const tensions = [];
-  for (let i = 0; i < principles.length; i++) {
-    for (let j = i + 1; j < principles.length; j++) {
-      const a = wordSets[i], b = wordSets[j];
-      if (!a.size || !b.size) continue;
-      const intersection = [...a].filter((w) => b.has(w)).length;
-      const union = new Set([...a, ...b]).size;
-      const jaccard = union ? intersection / union : 0;
-      if (jaccard < threshold) continue;
-      const aNeg = NEGATION_MARKER.test(principles[i].texte);
-      const bNeg = NEGATION_MARKER.test(principles[j].texte);
-      const aAbs = ABSOLUTE_MARKER.test(principles[i].texte);
-      const bAbs = ABSOLUTE_MARKER.test(principles[j].texte);
-      if ((aNeg && bAbs) || (aAbs && bNeg)) {
-        tensions.push({ a: `${principles[i].partie}.${principles[i].numero}`, b: `${principles[j].partie}.${principles[j].numero}`, jaccard: Math.round(jaccard * 1000) / 1000 });
-      }
+  for (const { i, j, jaccard } of pairesParJaccard(wordSets, { seuil: threshold })) {
+    const aNeg = NEGATION_MARKER.test(principles[i].texte);
+    const bNeg = NEGATION_MARKER.test(principles[j].texte);
+    const aAbs = ABSOLUTE_MARKER.test(principles[i].texte);
+    const bAbs = ABSOLUTE_MARKER.test(principles[j].texte);
+    if ((aNeg && bAbs) || (aAbs && bNeg)) {
+      tensions.push({ a: `${principles[i].partie}.${principles[i].numero}`, b: `${principles[j].partie}.${principles[j].numero}`, jaccard: Math.round(jaccard * 1000) / 1000 });
     }
   }
   return tensions.sort((x, y) => y.jaccard - x.jaccard);
