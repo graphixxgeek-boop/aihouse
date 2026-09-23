@@ -58,6 +58,19 @@ async function readEpoch() {
   } catch { return null; }
 }
 
+// estRefusLegitime() — exporté et testable, comme doitIntercalerUnTourAutonome() juste en dessous,
+// et pour la même raison : ce fichier ne peut pas être importé sans jouer une vraie partie, donc
+// tout jugement laissé à l'intérieur de call() est un jugement que personne ne vérifiera jamais.
+// C'est la leçon ④ de la nuit du 2026-09-23, appliquée au moment où j'allais la reproduire.
+//
+// CE QU'IL DISTINGUE : une panne (« ça a raté, réessaie ») d'une RÉPONSE du jeu (« personne ne peut
+// répondre, et c'est le scénario »). Les deux arrivent par un code HTTP d'erreur, et les confondre
+// fait réessayer cinq fois un refus qui ne bougera pas — puis efface du transcript la seule
+// information qui expliquait le silence.
+export function estRefusLegitime(status) {
+  return status === 423;
+}
+
 async function call(body, { retries = 4 } = {}) {
   for (let attempt = 0; attempt <= retries; attempt++) {
     const payload = { requestId: randomUUID(), epoch, night: false, gender: "masculin", ...body };
@@ -77,6 +90,29 @@ async function call(body, { retries = 4 } = {}) {
     if (json?.code === "auto_throttled") { await sleep(AUTO_THROTTLE_MS); continue; }
     if (json?.code === "world_busy") { await sleep(4000); continue; }
     if (res.status === 409 && typeof json?.epoch === "number") { epoch = json.epoch; continue; }
+    // 423 = « personne ne peut répondre » (les deux dorment, ou les deux sont muselés). C'est une
+    // RÉPONSE DÉFINITIVE ET LÉGITIME du jeu, jamais une panne — et la traiter comme une panne
+    // coûtait deux choses, toutes les deux constatées sur full_sim19 (2026-09-23).
+    //
+    // (1) CINQ TENTATIVES POUR RIEN, avec des attentes qui montent : 75 secondes brûlées par
+    //     message, sur un refus qui ne changera pas pendant ce tour.
+    // (2) BIEN PIRE, LE TRANSCRIPT PERDAIT L'INFORMATION. Le transcript est censé reproduire ce
+    //     qu'un visiteur VOIT à l'écran — et un vrai visiteur, lui, VOIT ce message : l'interface
+    //     l'affiche (`setError(data.error)`, app/page.tsx). La règle du jeu était donc déjà celle
+    //     que l'utilisateur a validée en fenêtre de calibrage (« il reste endormi, mais tu le
+    //     vois ») ; c'est le transcript, et lui seul, qui rendait cinq messages muets sans dire
+    //     pourquoi. L'analyse qui l'a lu a donc cherché un défaut de dialogue là où il n'y avait
+    //     qu'un trou de restitution.
+    //
+    // On écrit donc la ligne dans le transcript, à la place exacte où le visiteur l'aurait lue.
+    if (estRefusLegitime(res.status)) {
+      transcript.push(`la maison
+
+${json?.error ?? "Personne ne peut répondre pour le moment."}
+`);
+      log(`  💤 ${json?.error ?? "Personne ne peut répondre pour le moment."} — refus légitime, jamais réessayé`);
+      return null;
+    }
     log(`  ⚠️  HTTP ${res.status} — ${json?.error ?? "(sans message)"} (tentative ${attempt + 1}/${retries + 1})`);
     await sleep(5000 * (attempt + 1));
   }

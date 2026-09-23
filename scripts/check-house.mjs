@@ -7927,7 +7927,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // "MEMENTO", cf. docs/referentiel/memory-audit.md) — cible EXCLUSIVEMENT les Personnages (Lia/Noé),
   // jamais les membres de l'équipe. Testé contre les VRAIES formes de lib/life.ts trouvées par
   // l'investigation Article 19 (bonusLog/negotiationLog/contacts/wordFrequency/themeFrequency/worstMoment).
-  const { checkChronologicalOrder, detectSuspiciousCounterReset, detectWorstMomentRegression, checkMemoryCoherence, creerSuiviMemoire, formatSuiviMemoire, ecrireConstatMemoire, ETATS_SUIVI_MEMOIRE } = await import('../scripts/memento.mjs');
+  const { checkChronologicalOrder, detectSuspiciousCounterReset, detectWorstMomentRegression, checkMemoryCoherence, creerSuiviMemoire, formatSuiviMemoire, ecrireConstatMemoire, buildMemoryAuditReport, ETATS_SUIVI_MEMOIRE } = await import('../scripts/memento.mjs');
   const { estimateContextWeight } = await import('../scripts/memento-weight.mjs');
 
   assert.deepEqual(checkChronologicalOrder([{ round: 3 }, { round: 5 }, { round: 4 }, { round: 8 }]), [{ index: 2, previousRound: 5, currentRound: 4 }], 'a real bonusLog/negotiationLog-shaped array must flag exactly the one genuine out-of-order entry, by its real index and real round numbers, never a false positive on the two entries that stay correctly ordered');
@@ -8000,6 +8000,15 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.equal(cheminConstat, 'docs/memory-audit/constat-full_sim99-2026-09-23-20-15-00.md', 'the constat filename must carry both the simulation and the timestamp, so it can never be confused with the registry index that used to satisfy the process proof all by itself');
   assert.ok(ecrit.contenu.includes('tour 3'), 'the written constat must contain the real per-turn findings, not just a header — a file that exists but says nothing would rebuild the very defect this fixes');
   assert.throws(() => ecrireConstatMemoire(bilan, { writeFileImpl: () => {}, mkdirImpl: () => {} }), /nom de la simulation/, 'a constat that cannot be tied back to a specific game is not a constat, and must be refused rather than written under a vague name');
+
+  // buildMemoryAuditReport() — signalée par AXA-CHECK comme jamais exécutée par un test, sur un
+  // fichier qui venait d'être retouché. Elle l'était déjà avant ce chantier ; la couvrir maintenant
+  // plutôt que « plus tard » est exactement ce que le signal de fin de chantier sert à provoquer.
+  assert.match(buildMemoryAuditReport([]), /Aucune incohérence trouvée/, 'an empty finding list must produce a report that says so in words, never an empty report a reader would take for a crash');
+  assert.match(buildMemoryAuditReport([]), /ne prouve pas qu'il n'y en a aucune/, 'and it must keep saying that finding nothing is not the same as there being nothing — the one sentence that stops a clean report from being read as a guarantee');
+  const rapportPlein = buildMemoryAuditReport([{ type: 'ordre_chronologique', champ: 'bonusLog', violations: [{}, {}] }]);
+  assert.match(rapportPlein, /1 constat\(s\) à relire/, 'a real finding must be counted in the report');
+  assert.match(rapportPlein, /bonusLog/, 'and the affected field must be NAMED — a count without the field sends the reader hunting through every memory field there is');
 
   const { PROCESSES: PROC_SIM } = await import('../scripts/god-of-all-process.mjs');
   const etapesSim = PROC_SIM.find((p) => /simulation/.test(p.slug ?? p.nom)).etapes;
@@ -9571,9 +9580,20 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // intercaler de vrais tours autonomes »), il a été lu, et le défaut s'est produit une TROISIÈME
   // fois — parce que le rappel s'adressait à l'agent pendant qu'un script faisait le travail.
   {
-    const { doitIntercalerUnTourAutonome } = await import('../scripts/run-simulation.mjs');
+    const { doitIntercalerUnTourAutonome, estRefusLegitime } = await import('../scripts/run-simulation.mjs');
     assert.deepEqual([0, 1, 2, 3, 4, 5].map(doitIntercalerUnTourAutonome), [false, true, false, true, false, true], 'one human message in two must be followed by a real autonomous turn: without any, the dossier trap cannot arm at all, and with one after every message the phase would grow by seven minutes for nothing');
     assert.deepEqual([0, 1, 2, 3].map((i) => doitIntercalerUnTourAutonome(i, { cadence: 3 })), [false, false, true, false], 'the cadence is a parameter, not a magic number — a future calibration changes it without rewriting the loop');
+
+    // estRefusLegitime() (2026-09-23) — la décision de l'utilisateur en fenêtre de calibrage était
+    // « il reste endormi, mais tu le vois ». Le jeu la tenait DÉJÀ : le serveur répond 423 avec un
+    // message clair, et l'interface l'affiche au visiteur. C'est le transcript de simulation, et
+    // lui seul, qui perdait l'information — il traitait ce refus comme une panne, le réessayait
+    // cinq fois (75 s brûlées par message) et n'en gardait aucune trace. Les cinq derniers messages
+    // de full_sim19 paraissaient donc sans réponse, sans qu'aucune ligne ne dise pourquoi, et
+    // l'analyse a cherché un défaut de dialogue là où il n'y avait qu'un trou de restitution.
+    assert.equal(estRefusLegitime(423), true, 'a 423 is the game ANSWERING ("nobody can reply, and that is the scenario"), never a failure — retrying it five times cannot change it');
+    assert.equal(estRefusLegitime(500), false, 'a genuine server failure must still be retried: widening the rule until everything counts as a legitimate refusal would silence real breakage');
+    assert.equal(estRefusLegitime(429), false, 'a throttle is a "not yet", not a "never" — it keeps its own waiting path and must not be swallowed here');
     assert.ok([0, 1, 2, 3, 4].some(doitIntercalerUnTourAutonome), 'and it must fire at least once in a short phase: a carrier that never triggers would leave lesson L14 unprotected while looking protected');
   }
 
