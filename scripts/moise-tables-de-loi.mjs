@@ -514,6 +514,15 @@ export function renderDiagnostic(d) {
     L.push(`    Geste : ${n.geste}`);
   }
   L.push("");
+  // LA CARTE DES OBLIGATIONS, dans le diagnostic plutôt que dans une commande à part : c'est elle
+  // qui dit OÙ FRAPPER, et une mesure qu'il faut penser à demander n'est demandée qu'une fois.
+  const carteObl = obligationsParArticle();
+  if (carteObl.mesurable) {
+    L.push("--- Où vivent les obligations (la cible se juge en obligations, jamais en tokens) ---");
+    L.push(`${carteObl.total} au total : ${carteObl.dansLesArticles} dans les Articles, ${carteObl.horsArticles} dans des sections que le découpage par Article ne voit pas.`);
+    L.push(`Les 5 plus gros gisements : ${carteObl.articles.slice(0, 5).map((a) => `Art.${a.numero} (${a.obligations})`).join(" · ")}`);
+    L.push("");
+  }
   L.push("--- Le hors-Articles, que le découpage par Article ne voit pas ---");
   L.push(`Les Articles portent ~${d.couverture.tokensArticles} tokens sur ~${d.couverture.tokensDocument} (${d.couverture.part} %). Le reste vit dans des sections.`);
   if (d.inventaires.length) {
@@ -574,6 +583,43 @@ export function renderDiagnostic(d) {
 // ---------------------------------------------------------------------------------------------
 
 export const PROCESS_DOC = "docs/analyse-charte-process-detail.md";
+
+// LA CARTE DES OBLIGATIONS, Article par Article puis section par section (2026-09-23, tâche #628).
+//
+// POURQUOI ELLE EST ICI PLUTÔT QUE DANS UN SCRIPT JETABLE : je l'ai écrite trois fois en ligne de
+// commande pendant une seule analyse, et à chaque fois elle m'a dit où frapper — les deux plus gros
+// gisements de la charte ne sont PAS ceux qu'on devine (l'Article 16 à lui seul en porte 17, et
+// 56 obligations vivent hors de tout Article, dans des sections que personne n'avait mesurées).
+// Une mesure qui change la décision et qui disparaît avec la commande qui l'a produite est une
+// perte sèche : l'utilisateur l'a dit en une phrase — « pense bien à injecter toute la donnée
+// intéressante dans tes analyses dans moïse et abraham, pour que tes exploits soient rentabilisés
+// encore une prochaine fois ».
+//
+// Elle rend les DEUX vues, jamais une seule : le total par Article ne dit rien des 56 obligations
+// qui vivent ailleurs, et un allègement qui ne regarde que les Articles passe à côté de 29 % du
+// problème en ayant l'air complet (même piège que la couverture déclarée, cf. `mesurerSections`).
+export function obligationsParArticle({ root = ROOT } = {}) {
+  const texte = lire(CHARTE, root);
+  if (!texte) return { mesurable: false, pourquoi: `${CHARTE} illisible — rien n'a été mesuré` };
+  const articles = [];
+  const positions = [...texte.matchAll(/\*\*Article (\d+(?:bis)?) — ([^*]+?)\.\*\*/g)];
+  const finDesArticles = texte.indexOf("## Règles de travail");
+  for (let i = 0; i < positions.length; i++) {
+    const debut = positions[i].index;
+    const fin = i + 1 < positions.length ? positions[i + 1].index : (finDesArticles > 0 ? finDesArticles : texte.length);
+    const bloc = texte.slice(debut, fin);
+    articles.push({ numero: positions[i][1], titre: positions[i][2].trim(), obligations: A.compterObligations(bloc), lignes: bloc.split("\n").length });
+  }
+  articles.sort((a, b) => b.obligations - a.obligations);
+  const dansLesArticles = articles.reduce((n, a) => n + a.obligations, 0);
+  const total = A.compterObligations(texte);
+  return {
+    mesurable: true, articles, dansLesArticles, total,
+    horsArticles: total - dansLesArticles,
+    // Jamais un verdict : c'est une carte pour décider où frapper, et la décision reste humaine.
+    pourquoi: `${total} obligations au total, dont ${dansLesArticles} dans les Articles et ${total - dansLesArticles} dans des sections — la cible se juge en obligations, jamais en tokens`,
+  };
+}
 
 export const ETAPES_ANALYSE = [
   { cle: "memoire", libelle: "relire la mémoire des opérations — qu'a-t-on déjà tenté sur ces Articles, et qu'est-ce qui n'a pas tenu ?", preuve: OPERATIONS_PATH },

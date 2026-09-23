@@ -10980,6 +10980,47 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.equal(tk.findPossibleTensions(principes).length, 1, 'THE-KING must still find its tensions with the imported threshold — sharing a constant must not change what either tool reports, or the refactor moved behaviour rather than removing a copy');
   assert.equal(tk.findPossibleTensions(principes, { threshold: 0.99 }).length, 0, 'and the threshold must remain overridable per call, since the shared default is a default and not a ceiling');
 
+  // 8. CE QUE TROIS SCRIPTS JETABLES SAVAIENT (2026-09-23, tâche #628). Écrits en ligne de commande
+  // pendant une seule analyse de la charte, ils ont trouvé des choses réelles et allaient
+  // disparaître avec la commande qui les portait. L'utilisateur l'a dit en une phrase : « pense
+  // bien à injecter toute la donnée interessante dans tes analyses dans moise et abraham, pour que
+  // tes exploits soient rentabilisés encore une prochaine fois ».
+
+  // LA BONNE UNITÉ DE MESURE, ET CE N'EST PAS LE TOKEN. La recherche publique du même jour le
+  // confirme : un modèle suit de façon fiable 150 à 200 instructions, au-delà une règle ajoutée
+  // dilue les autres. Couper du récit ne libère aucune attention ; retirer un ordre, si.
+  assert.equal(ab.compterObligations('Il doit le faire. Ceci est neutre. Jamais autrement.'), 2, 'only the blocks carrying an actual order count as obligations — a narrative sentence costs tokens but consumes none of the attention budget, and confusing the two is what makes a lightening pass feel productive while changing nothing');
+  assert.equal(ab.compterObligations('Une phrase sans la moindre prescription.'), 0, 'and a document that orders nothing must score zero rather than a floor value, so "nothing to cut here" stays distinguishable from "not measured"');
+  assert.equal(ab.compterObligations(''), 0, 'an empty text must not crash');
+
+  // CE QU'UN ALLÈGEMENT NE DOIT JAMAIS FAIRE PERDRE, vérifié dans les deux sens (BP4). Ce contrôle
+  // a mordu à son premier usage réel : en condensant la liste du référentiel, trois chemins ont
+  // quitté la charte — tous les trois rattrapés par un document encore cité, ce qui est le BUT du
+  // renvoi, pas une régression. Les deux états doivent donc rester distincts.
+  const relais = { 'docs/b.md': 'ce document cite `docs/a.md`' };
+  const perdu = ab.cheminsPerdus('voir `docs/a.md` et `docs/b.md`', 'voir `docs/b.md`', { lire: (d) => relais[d] ?? '' });
+  assert.equal(perdu[0].etat, 'atteignable en un saut', 'a path dropped from the text but still cited by a document the text keeps is NOT lost — it is exactly what a renvoi means, and reporting it as a regression would block every legitimate compression');
+  const vraimentPerdu = ab.cheminsPerdus('voir `docs/a.md` et `docs/b.md`', 'voir `docs/b.md`', { lire: () => '' });
+  assert.equal(vraimentPerdu[0].etat, 'PERDU', 'but a path nothing else reaches must be reported as lost — that is the regression the check exists for');
+  assert.deepEqual(ab.cheminsPerdus('voir `docs/a.md`', 'voir `docs/a.md`'), [], 'and a compression that keeps every path must report nothing at all');
+
+  // UN VERDICT RENDU SUR UN PÉRIMÈTRE TROP ÉTROIT EST UN VERDICT FAUX, jamais un verdict prudent
+  // (leçon L5). Le premier passage a nommé trois documents orphelins qui ne l'étaient pas : ils
+  // étaient cités depuis un dossier que le balayage n'explorait pas.
+  const faux = { 'r/a.md': 'je cite r/b.md', 'r/b.md': 'je ne cite personne', 'r/seul.md': 'personne ne me cite' };
+  const o = ab.documentsOrphelins({ candidats: ['r/a.md', 'r/b.md', 'r/seul.md'], pointDentree: 'la charte cite r/a.md', lire: (f) => faux[f], sauts: 3 });
+  assert.deepEqual(o.orphelins, ['r/seul.md'], 'a document nothing reaches must be named, and one reached through an intermediary must NOT be — a renvoi passing through a relay is legitimate, which is the whole point of progressive disclosure');
+  assert.ok(o.atteints.includes('r/b.md'), 'the walk must follow more than one hop, or every legitimate relay would be reported as an orphan');
+  assert.equal(ab.documentsOrphelins({ candidats: ['x'] }).mesurable, false, 'and with no file reader it must declare NOT MEASURED rather than return an empty orphan list, which would read exactly like a clean bill of health');
+
+  // CÔTÉ MOÏSE : la carte qui dit OÙ FRAPPER, sur la vraie charte.
+  const carte = mtl2.obligationsParArticle();
+  assert.ok(carte.mesurable && carte.total > 0, 'the obligation map must run against the real charter, since a tool never run against the real repository is an intention rather than a verified tool (Article 25)');
+  assert.ok(carte.horsArticles > 0, 'and it must report the obligations living OUTSIDE any Article — 49 of them on the day it was written, in sections nobody had ever measured, which a per-Article count alone hides completely while looking exhaustive');
+  assert.ok(carte.articles[0].obligations >= carte.articles[carte.articles.length - 1].obligations, 'sorted heaviest first, because the map exists to answer "where do I strike", not "what is the average"');
+
+  console.log('Passed: the three throwaway scripts of one charter analysis now live in the tools (2026-09-23, task #628) — counting obligations per rule, checking that no path is lost in a compression, and finding documents nothing reaches. Each had found something real and each would have vanished with the command that carried it. The obligation counter matters most: public guidance and this project\'s own measurement independently agree that a frontier model reliably follows 150 to 200 instructions, so a lightening pass is judged in ORDERS REMOVED, never in tokens saved — cutting three thousand tokens of narrative frees no attention at all. The path check keeps two states rather than one, because a path dropped from a document but still reached through another is exactly what a renvoi means, and calling that a regression would block every legitimate compression; only a path nothing reaches is a loss. The orphan walk follows several hops for the same reason, and refuses to answer at all without a file reader, since an empty orphan list reads exactly like a clean bill of health.');
+
   console.log('Passed: ABRAHAM-LES-REFERENCES is the master tool for ANY numbered-rule document (2026-09-23, task #619), and it exists because of a slicing error the user named better than I did: building the charter\'s agent first, I locked thirty generic functions inside the agent of ONE document, and measurement confirmed it — 30 of Moïse\'s 40 functions depended on no particularity of the charter whatsoever. What makes it generic is that the numbering FORM is derived rather than declared: three real documents in this repository write their rules three different ways, and a tool demanding to be told the pattern would only serve those who already knew it. The opposite direction matters as much: a document where no form stands out returns "not measurable" with every attempt listed, because an analyser that guesses skips in silence (leçon L12) and invented figures look exactly as trustworthy as real ones. The citation pattern treats the space after a prefix as optional, a detail that had cost a whole pass — all eighteen sections of the working rules came back "never cited" while §7ter is cited 168 times, purely because the pattern required a space nobody writes. And the red line the user drew stays enforced in the master rather than in each caller: the state of a pertinence finding has exactly one value, so no descendant can soften it into a verdict.');
 }
 

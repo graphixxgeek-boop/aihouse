@@ -1080,106 +1080,33 @@ demander si un outil déjà existant répondrait plus vite ou plus complètement
 
 
 ## Référentiel technique — la référence à jour
-- `docs/referentiel/principes.md` — les règles invariantes du comportement de la maison, telles
-  qu'elles sont réellement codées aujourd'hui. À lire avant toute intervention sur le moteur.
-- `docs/referentiel/parametres.md` — tous les chiffres réglables (besoins, émotions, attirance,
-  enquête, sommeil, rejouabilité, timing, géométrie), avec leur fichier source. Un rééquilibrage
-  ne devrait jamais toucher un fichier sans passer par ce document, et inversement.
-- `docs/referentiel/regles-du-temps.md` (2026-09-19) — traverse les deux documents ci-dessus par
-  l'axe du temps plutôt que par sous-système : les deux horloges du jeu (tour narratif contre temps
-  réel, jamais interchangeables), la chronologie théorique complète tour par tour, les trois états
-  distincts du canal humain (preuves trouvées, appel lancé, canal réellement ouvert), et une
-  checklist de cohérence temporelle pour tout nouveau seuil. À consulter avant d'ajouter ou modifier
-  tout mécanisme sensible au temps, et à utiliser pour vérifier qu'un nouveau seuil ne chevauche pas
-  imprévisiblement un mécanisme voisin.
-- `docs/referentiel/regles-de-l-espace.md` (2026-09-19) — traverse les mêmes documents par l'axe de
-  l'espace/des déplacements plutôt que par sous-système, sur le modèle de `regles-du-temps.md` :
-  comment un personnage passe d'une intention narrative à une destination physique (ancres,
-  `destinationAnchor`/`residentDestination`), le partage serveur (décide la pièce)/client (calcule
-  le chemin BFS et anime la marche), le cas particulier du couloir (`exitInspection`, une scène hors
-  modèle de pièces), et une checklist de cohérence spatiale. Créé pour vérifier, lors de l'analyse
-  d'une simulation, ce que l'utilisateur ne voit pas lui-même (déplacements, gestion de l'espace) et
-  pour préparer silencieusement la refonte graphique à venir.
-- `docs/referentiel/regles-des-graphismes.md` (2026-09-19) — traverse le même ensemble par l'axe du
-  graphisme, en préparation directe de la refonte : ce qui existe déjà factuellement (rendu,
-  palette, éclairage, caméra fixe), le périmètre décidé (scène 3D ET interface web autour, hors
-  identité de marque du site), et les décisions calibrées (vignette fixe, mode Observation/
-  Instruments à la barre espace, caméra dynamique, transitions animées, contraste jour/nuit,
-  trottoir à l'identité propre, détail réservé aux objets d'enquête). Base de jugement de
-  THE-SCREENER une fois cet outil construit.
-- `docs/referentiel/regles-de-la-memoire.md` (2026-09-21, tâche #175) — traverse les mêmes documents
-  par l'axe de la mémoire, sur le modèle de `regles-du-temps.md`/`regles-de-l-espace.md` : les trois
-  natures de mémoire à ne jamais confondre (persistée dans `Life`, technique anti-répétition,
-  narrative méta), le plafonnage de chaque champ de `Life`, la règle transversale qu'aucune mémoire
-  de personnage ne survit à un `reset`, et l'articulation avec memory-audit (l'outil qui la vérifie)
-  et memento weight (qui mesure son poids, jamais son contenu). Comble le trou de nommage laissé par
-  le retrait de l'ombrelle "MEMENTO" (cf. sections dédiées ci-dessous).
-- `docs/referentiel/organisation-agence.md` (2026-09-22) — le référentiel CANONIQUE de
-  l'organisation de l'outillage de travail, « l'Agence Codex » (nom choisi par l'utilisateur, en
-  souvenir de Codex, l'IA qui a initialement produit le code de ce projet, à distinguer du jeu
-  lui-même) : les deux axes jamais confondus (Statut de documentation Agent/Utilitaire nommé/
-  Infrastructure ; Rôle dans l'organigramme Les Agents Cadre/Gardiens sacrés du code/Membre/VIP), les
-  Gardiens sacrés du code (renommage de l'Équipe noyau, critère double exact — délivre un vrai scan
-  de qualité ET tourne automatiquement à CHAQUE commit, jamais un seul des deux volets pris isolément
-  — 6 membres depuis l'arrivée d'ALWAYS-NEW-CODE (couche légère seulement) le 2026-09-21, après
-  CLONE-HUNTER le 2026-09-22), les 6 suites de travail parmi les
-  Membres ordinaires (Suivi-Conso, Suite Audit Simulation, Suite Audit lourd, Dette & Structure du
-  code, La Cour du Roi, plus Les Agents Spéciaux — Smart Breaker/CHECK-LEVEL-TARGET), les 3
-  catégories définitivement hors de l'agence (Personnages, Moteur du jeu, code tiers vendu tel
-  quel), et l'Infrastructure comme 3e rang d'employés sans dossier individuel. Consolide ce qui
-  était dispersé entre `docs/cassandra-rh-conception.md` §4 (qui le référence désormais plutôt que
-  de le dupliquer) et `docs/regles-de-travail.md` §7ter (qui reste la
-  table maîtresse détaillée outil par outil, jamais dupliquée ici non plus). **C'est le domaine de
-  CASSANDRA-RH** (`docs/referentiel/cassandra-rh.md`, noyau construit le 2026-09-21) — la tenue à
-  jour de ce document à chaque changement d'organigramme reste manuelle pour l'instant, une future
-  vague de construction, jamais encore automatisée par le noyau actuel.
-- `docs/referentiel/safe-export.md` (2026-09-22) — septième Gardien sacré par sa couche légère :
-  exportabilité de l'Agence et lisibilité du code par une autre IA. Porte la MOITIÉ 1 de
-  l'évolutivité (pouvoir partir).
-- `docs/referentiel/tool-learning.md` (2026-09-22) — vérifie que les outils apprennent et que
-  l'agent les y aide. Porte la MOITIÉ 2 de l'évolutivité (devenir meilleur). Frontière avec
-  CASSANDRA : elle juge l'état et les moyens, lui la trajectoire et l'usage.
-- `docs/referentiel/the-equalizer.md` (2026-09-23) — le RASSEMBLEUR de verdicts : un verdict par domaine
-  (l'Agence, les documents, le code, le jeu) contre les exigences écrites de
-  `docs/referentiel/standards.md`, et le nom de ce que PERSONNE ne vérifie. Il n'a aucun détecteur
-  propre — vingt contrôleurs qui disent « ma part va bien » ne disent jamais « tout va bien »,
-  faute que l'un d'eux détienne la liste de ce qui devrait être vérifié. Frontière avec CASSANDRA-RH
-  et TOOL-LEARNING : elles jugent un outil, lui juge la couverture des exigences elles-mêmes.
-- `docs/referentiel/standards.md` (2026-09-23) — sa source de vérité : les 29 exigences de
-  « être à niveau », chacune nommant son vérificateur ou déclarant que personne ne la vérifie.
-- `docs/referentiel/lecons.md` (2026-09-23) — le registre des LEÇONS TRANSVERSES : ce que le projet a
-  appris en se trompant, formulé pour resservir ailleurs que là où l'erreur a eu lieu. Distinct des
-  trois autres natures de document : la charte ORDONNE, le référentiel technique DÉCRIT le code, le
-  suivi TRACE l'avancement — celui-ci garde ce qu'on a payé pour comprendre. Créé après une question
-  directe de l'utilisateur (« quand tu fais des trouvailles bonnes à retenir [...] il faut que tu
-  l'écrives quelque part, c'est déjà le cas ? »), dont la réponse honnête était non : les leçons
-  vivaient dans des commentaires de code, chacune locale à l'outil qui l'avait apprise. Critère
-  d'entrée volontairement exigeant (payée par une erreur réelle ET valable au-delà du cas qui l'a
-  révélée) : un registre qui accueille tout devient un journal que personne ne relit. Chaque leçon
-  déclare son PORTEUR — le mécanisme réel qui la fait tenir quand plus personne ne s'en souvient —
-  ou déclare noir sur blanc qu'aucun n'est possible, avec sa raison (ce que la leçon L7 prescrit
-  elle-même) ; `auditLecons()` (`scripts/tool-learning.mjs`) vérifie à chaque passage que ce porteur
-  existe pour de vrai, un porteur fantôme étant pire qu'une absence assumée puisqu'il rassure à tort.
-  **DEUX SECTIONS** depuis le 2026-09-23 : les LEÇONS (payées par une erreur réelle — c'est ce qui
-  les rend crédibles) et les BONNES PRATIQUES (des réflexes qui marchent, sans casse derrière). Même
-  document, jamais la même liste. **L'OBJECTIF EST LA MISE EN PRATIQUE, PAS L'ARCHIVAGE** : chaque
-  entrée déclare aussi son TERRAIN (les situations où elle mord, et les mots qui les signalent), ce
-  qui lui permet de remonter au bon moment — un registre relu une fois par Ronde ne change rien au
-  travail du lendemain. Le process qui le fait vivre est **XP-IA-bonnes-pratiques-et-lecons**, décrit
-  juste en dessous.
-- `docs/referentiel/points-fragiles.md` (2026-09-19) — registre vivant des points identifiés comme
-  fragiles ou en attente d'une décision de conception (pas des bugs actifs, ceux-là se corrigent
-  directement) ; compté par `scripts/kpi-report.mjs` comme un des indicateurs de robustesse du code.
-- `docs/referentiel/memento-weight.md` (2026-09-21) — instanciation du voisin "memento weight" :
-  poids réel du contexte envoyé à Gemini par tour, le patron de persistance réutilisé de
-  `lib/gemini-keys.ts`, les deux fichiers séparés (`lib/memento-weight.ts` +
-  `scripts/memento-weight.mjs`, ce dernier extrait le même soir de `scripts/memento.mjs`).
-- `docs/referentiel/the-deep-reader.md` (2026-09-20) — instanciation de THE-DEEP-READER, cousin de
-  THE-FINAL-JUDGE (même mécanique d'agent séparé, personas et règles d'entrée opposées : reçoit la
-  conversation, jamais le code/produit) dédié à la relecture lourde du système de suivi
-  (`docs/suivi/`) contre l'historique complet de la conversation. Coût variable (jamais fixe,
-  contrairement à THE-FINAL-JUDGE), mêmes deux conseillers obligatoires avant lancement, registre
-  dans `docs/suivi/relectures-lourdes/`. Aucun blueprint séparé (même statut que LE-COORDINATEUR).
+
+*(Condensé le 2026-09-23, tâche #628, même geste que l'Article 19 et sur la même preuve : la
+littérature publique appelle ça « progressive disclosure » — le document principal garde le
+DÉCLENCHEUR, le contenu vit dans le document lui-même, lu au moment où il sert. Ces 15 entrées
+pesaient 135 lignes et 14 obligations pour redire en prose ce que chaque fiche dit déjà mieux.
+**Aucun chemin n'a été retiré** : six d'entre eux ne sont atteignables que d'ici, vérifié avant
+de toucher.)*
+
+| Document | À lire quand | Rang |
+|---|---|---|
+| `docs/referentiel/principes.md` | avant toute intervention sur le moteur du jeu | source de vérité du comportement |
+| `docs/referentiel/parametres.md` | avant tout rééquilibrage — un chiffre changé dans le code et pas ici est une dette | source de vérité des chiffres |
+| `docs/referentiel/regles-du-temps.md` | avant d'ajouter ou de modifier un mécanisme sensible au temps, et pour vérifier qu'un nouveau seuil n'en chevauche pas un autre | traversée par l'axe du temps |
+| `docs/referentiel/regles-de-l-espace.md` | avant de toucher aux déplacements, aux ancres ou au partage serveur/client du chemin | traversée par l'axe de l'espace |
+| `docs/referentiel/regles-des-graphismes.md` | avant la refonte graphique, et comme base de jugement de THE-SCREENER | traversée par l'axe du graphisme |
+| `docs/referentiel/regles-de-la-memoire.md` | avant de toucher à `lib/life.ts` ou à une mémoire de personnage | traversée par l'axe de la mémoire |
+| `docs/referentiel/organisation-agence.md` | avant tout changement d'organigramme de l'outillage — c'est le domaine de CASSANDRA-RH, et sa tenue à jour reste manuelle | référentiel CANONIQUE de l'Agence Codex |
+| `docs/referentiel/standards.md` | quand on se demande si quelque chose est « à niveau » — les 29 exigences, chacune nommant son vérificateur ou déclarant que personne ne la vérifie | source de vérité de THE-EQUALIZER |
+| `docs/referentiel/lecons.md` | quand une erreur vient d'être payée, et à chaque Ronde | ce que le projet a appris en se trompant |
+| `docs/referentiel/points-fragiles.md` | avant de toucher une zone réputée fragile, ou en attente d'une décision de conception | registre vivant, compté par le KPI |
+| `docs/referentiel/memento-weight.md` | quand le poids du contexte envoyé à Gemini par tour est en cause | instanciation du voisin de memory-audit |
+| `docs/referentiel/the-deep-reader.md` | avant une relecture lourde du suivi contre l'historique de conversation (coût variable, deux conseillers obligatoires) | cousin de THE-FINAL-JUDGE |
+| `docs/referentiel/safe-export.md` · `tool-learning.md` · `the-equalizer.md` | fiches d'outils — déjà dans l'inventaire ci-dessus, rappelées ici parce qu'elles portent les deux moitiés de l'évolutivité (pouvoir partir / devenir meilleur) et la couverture des exigences | aussi dans le tableau des outils |
+
+**La règle qui remplace l'énumération** *(Article 24 : un registre se LIT, il ne se recopie pas)* :
+tout document de référence de ce projet vit dans `docs/referentiel/`, et la liste ci-dessus se
+vérifie contre la table des matières réelle de ce dossier — jamais recopiée de mémoire.
 
 **Les fiches des 22 outils de l'Agence Codex ne sont plus répétées ici** *(2026-09-22)* :
 leur chemin `docs/referentiel/<outil>.md` figure déjà, ligne par ligne, dans la colonne

@@ -123,9 +123,90 @@ export function mesurerUnites({ texte, motifUnite, motifBorneSuperieure, champs,
       porteurPourquoi: porteur.pourquoi,
       porteurFantomes: porteur.fantomes,
       porteurMecanique: porteur.etat === "porté",
+      obligations: compterObligations(u.texte),
       texte: u.texte,
     };
   });
+}
+
+// --- 3bis. COMPTER LES OBLIGATIONS -----------------------------------------------------------
+// LA BONNE UNITÉ DE MESURE, ET CE N'EST PAS LE TOKEN (2026-09-23, tâche #628).
+//
+// On a longtemps mesuré ces documents en tokens, parce que c'est ce qui coûte. Mais ce qui CASSE
+// n'est pas le coût : c'est le nombre d'ordres. La recherche publique menée ce jour-là à la demande
+// de l'utilisateur le dit en clair — un modèle de pointe ne suit de façon fiable que **150 à 200
+// instructions**, dont une cinquantaine déjà consommées par le prompt système de l'outil ; au-delà,
+// une règle ajoutée ne s'ajoute pas, elle DILUE les autres (le phénomène est nommé « context rot »).
+// Le projet avait mesuré 191 obligations pour 125 suivables AVANT de connaître ce chiffre : deux
+// méthodes indépendantes trouvent le même mur, ce qui est la meilleure raison de le croire.
+//
+// Conséquence pratique : un allègement se juge en OBLIGATIONS RETIRÉES, jamais en tokens gagnés.
+// Couper 3 000 tokens de récit ne libère aucune attention ; retirer dix ordres redondants, si.
+//
+// Le motif est celui d'ecotoken, délibérément : deux compteurs d'obligations qui divergeraient
+// rendraient deux verdicts sur le même document (Article 24). Il est passé en paramètre pour
+// qu'un autre projet, dans une autre langue, fournisse le sien sans toucher à ce fichier.
+export const MOTIF_OBLIGATION_FR = /\b(doit|doivent|jamais|toujours|obligatoire|interdit|il faut|exige|impose|ne peut)\b/i;
+
+export function compterObligations(texte = "", motif = MOTIF_OBLIGATION_FR) {
+  return String(texte)
+    .split(/(?<=[.!?])\s+|\n\n/)
+    .map((b) => b.trim())
+    .filter((b) => b && motif.test(b)).length;
+}
+
+// --- 3ter. CE QU'UN ALLÈGEMENT NE DOIT JAMAIS FAIRE PERDRE ------------------------------------
+// Écrit après trois scripts jetables (2026-09-23), sur cette remarque de l'utilisateur : « pense
+// bien à injecter toute la donnée interessante dans tes analyses dans moise et abraham, pour que
+// tes exploits soient rentabilisés encore une prochaine fois ». Il avait raison : ces vérifications
+// avaient TROUVÉ des choses réelles — trois chemins sur le point de devenir inatteignables — et
+// elles allaient disparaître avec la commande qui les portait.
+
+// Tous les chemins de fichiers qu'un texte rend atteignables.
+export function cheminsCites(texte = "") {
+  return new Set(String(texte).match(/`(?:docs|scripts|lib|app|components)\/[^`\s]+`/g)?.map((c) => c.slice(1, -1)) ?? []);
+}
+
+// LA VÉRIFICATION À FAIRE AVANT DE VALIDER UNE COUPE, et elle a mordu dès son premier usage : en
+// condensant la liste du référentiel, trois chemins ont quitté la charte. Deux états, jamais un
+// seul verdict — « perdu » et « atteignable en un saut de plus » ne sont pas la même chose : le
+// second EST le but recherché (le renvoi), le premier est une régression.
+export function cheminsPerdus(avant = "", apres = "", { lire = null } = {}) {
+  const dedans = cheminsCites(apres);
+  const partis = [...cheminsCites(avant)].filter((c) => !dedans.has(c));
+  return partis.map((chemin) => {
+    // Atteignable en un saut : un document encore cité par le texte allégé le cite, lui.
+    const relais = lire ? [...dedans].filter((d) => { try { return (lire(d) ?? "").includes(chemin); } catch { return false; } }) : [];
+    return { chemin, etat: relais.length ? "atteignable en un saut" : "PERDU", relais };
+  });
+}
+
+// L'INVERSE DE LA QUESTION PRÉCÉDENTE : quel document n'est atteignable de NULLE PART ?
+// Un document orphelin ne se signale jamais tout seul — il continue d'exister, d'être à jour même,
+// et personne ne le lit plus. Le parcours se fait en N sauts depuis un point d'entrée, parce qu'un
+// renvoi légitime peut passer par un intermédiaire (c'est tout l'intérêt du renvoi).
+//
+// LIMITE HONNÊTE, ET ELLE A FAILLI ME FAIRE RENDRE UN FAUX VERDICT : si on ne lui donne à explorer
+// qu'un seul dossier, il déclarera orphelins des documents cités depuis AILLEURS. Le premier
+// passage a nommé trois orphelins qui n'en étaient pas — ils étaient cités depuis `docs/`, hors du
+// périmètre exploré. Le paramètre `dossiersExplorés` existe pour ça, et un verdict rendu sur un
+// périmètre trop étroit est un verdict faux, jamais un verdict prudent (leçon L5).
+export function documentsOrphelins({ candidats = [], pointDentree = "", dossiersExplores = [], lire, sauts = 3 }) {
+  if (!lire) return { mesurable: false, pourquoi: "aucun lecteur de fichier fourni — rien n'a été exploré, ce qui n'est jamais la même chose que rien trouvé" };
+  const atteints = new Set();
+  let frontiere = [pointDentree];
+  for (let n = 0; n < sauts && frontiere.length; n++) {
+    const suivante = [];
+    for (const texte of frontiere) {
+      for (const c of [...candidats, ...dossiersExplores]) {
+        if (atteints.has(c) || !String(texte).includes(c)) continue;
+        atteints.add(c);
+        try { suivante.push(lire(c) ?? ""); } catch { /* illisible : atteint quand même, juste pas exploré */ }
+      }
+    }
+    frontiere = suivante;
+  }
+  return { mesurable: true, sauts, atteints: [...atteints], orphelins: candidats.filter((c) => !atteints.has(c)) };
 }
 
 // --- 4. LES QUATRE NATURES ------------------------------------------------------------------
