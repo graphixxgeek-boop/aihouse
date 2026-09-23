@@ -11151,6 +11151,39 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log('Passed: the three throwaway scripts of one charter analysis now live in the tools (2026-09-23, task #628) — counting obligations per rule, checking that no path is lost in a compression, and finding documents nothing reaches. Each had found something real and each would have vanished with the command that carried it. The obligation counter matters most: public guidance and this project\'s own measurement independently agree that a frontier model reliably follows 150 to 200 instructions, so a lightening pass is judged in ORDERS REMOVED, never in tokens saved — cutting three thousand tokens of narrative frees no attention at all. The path check keeps two states rather than one, because a path dropped from a document but still reached through another is exactly what a renvoi means, and calling that a regression would block every legitimate compression; only a path nothing reaches is a loss. The orphan walk follows several hops for the same reason, and refuses to answer at all without a file reader, since an empty orphan list reads exactly like a clean bill of health.');
 
+  // LA CLASSIFICATION DES RÈGLES (2026-09-24, chantier 1 du plan de nuit) — deux axes croisés,
+  // force de garantie × gravité, calibrés explicitement par l'utilisateur.
+  const ab2 = await import('../scripts/abraham-les-references.mjs');
+  assert.equal(ab2.NIVEAUX_GARANTIE.length, 6, 'the guarantee scale has six levels and each one names a mechanism that EXISTS in this repository — an invented scale would go stale at the first new mechanism (Article 24)');
+  for (const n of ab2.NIVEAUX_GARANTIE) assert.ok(n.quoi && n.cequecoute, 'every level states what it guarantees AND what it still costs: a level presented as complete protection would be the false green this whole toolset hunts');
+  for (const n of ab2.NIVEAUX_GRAVITE) assert.ok(n.signal, 'gravity is derived from a SIGNAL the text carries, never from a judgement on what a broken rule would cost — no program knows that, and the classification says so');
+  // Le niveau 5 se VÉRIFIE en lisant, jamais en supposant d'après le nom (leçon L5).
+  const sansLecteur = ab2.niveauGarantie({ etat: 'porté', trouves: ['maFonction'] }, 'texte');
+  assert.ok(sansLecteur.niveau <= 4, 'without a file reader the classifier must NOT claim level 5: it cannot check whether the mechanism is wired to the safety net, and claiming it would be exactly "I could not look" read as "I found nothing"');
+  // LE FAUX ROUGE QUE LE PREMIER PASSAGE RÉEL A PRODUIT, et sa correction (leçon L4).
+  // Le fixture reproduit la forme RÉELLE de la charte : l'Article 13 nomme `check-spirit.mjs` et
+  // cite « l'Article 0 » dans le MÊME paragraphe — c'est ce voisinage qui fait le prêt, et l'avoir
+  // d'abord écrit sur deux paragraphes a fait échouer le test pour la bonne raison.
+  const unites = [
+    { numero: 0, titre: 'Hiérarchie des lois', texte: "L'esprit des personnages est la loi suprême." },
+    { numero: 13, titre: 'Les outils', texte: "`scripts/check-spirit.mjs` envoie de vraies provocations au vrai modèle. C'est l'outil de référence pour vérifier l'Article 0 avant et après tout ajustement de personnalité." },
+  ];
+  const fichiersFaux = { 'scripts/check-spirit.mjs': 'export function x(){}' };
+  const classe0 = ab2.classerUnite(unites[0], fichiersFaux, { toutesLesUnites: unites, prefixe: 'Article' });
+  assert.ok(classe0.porteurExterne, 'a rule protected by a mechanism named in ANOTHER rule must be credited for it: Article 0 came out "no protection at all" on the first real run while check-spirit.mjs guards it from Article 13, and a guard that accuses wrongly stops being read (leçon L4)');
+  const isole = ab2.classerUnite(unites[0], fichiersFaux, { toutesLesUnites: [unites[0]], prefixe: 'Article' });
+  assert.equal(isole.porteurExterne, null, 'and with no other rule to look at, no external carrier is invented — the credit comes from a real citation, never from generosity');
+  // LA MAILLE EST LE PARAGRAPHE, et les deux extrêmes ont été essayés sur le vrai document : à la
+  // PHRASE l'Article 0 restait faussement rouge, à l'UNITÉ ENTIÈRE n'importe quelle citation aurait
+  // prêté tous les mécanismes du citant — un faux vert bien pire que le faux rouge qu'il remplace.
+  const eloignes = [unites[0], { numero: 98, titre: 'x', texte: "`scripts/check-spirit.mjs` envoie de vraies provocations.\n\nTout autre sujet, et ici seulement on cite l'Article 0." }];
+  assert.equal(ab2.classerUnite(unites[0], fichiersFaux, { toutesLesUnites: eloignes, prefixe: 'Article' }).porteurExterne, null, 'a mechanism named in one paragraph and a citation of the rule in another lend nothing: the paragraph is the grain where an author speaks of one thing at a time, and crediting across paragraphs would hand every citing rule the whole toolbox of the rule it cites');
+  const memeUniteSansCitation = [unites[0], { numero: 99, titre: 'x', texte: "`scripts/check-spirit.mjs` existe et rien ici ne parle de la règle fondatrice." }];
+  assert.equal(ab2.classerUnite(unites[0], fichiersFaux, { toutesLesUnites: memeUniteSansCitation, prefixe: 'Article' }).porteurExterne, null, 'and a rule that merely names a mechanism lends it to nobody without citing the protected rule at all — the credit follows a real sentence, never a proximity');
+  const vraiDoc = ab2.classerDocument(ab2.analyserDocument({ texte: fs.readFileSync('CLAUDE.md','utf8'), fichiers: ab2.fichiersDuDepot() }).unites, ab2.fichiersDuDepot(), { lire: (p2) => fs.readFileSync(p2,'utf8') });
+  assert.ok(vraiDoc.total >= 30 && vraiDoc.carte.length === 4, 'run against the REAL charter it classifies every Article and renders the four gravity rows of the map — a tool that never ran against the real repository is an intention, not a tool (Article 25)');
+  assert.ok(vraiDoc.horsPortee.includes('jamais'), 'and it declares what it does NOT know: gravity is a derived signal, it is re-read, never believed');
+
   console.log('Passed: ABRAHAM-LES-REFERENCES is the master tool for ANY numbered-rule document (2026-09-23, task #619), and it exists because of a slicing error the user named better than I did: building the charter\'s agent first, I locked thirty generic functions inside the agent of ONE document, and measurement confirmed it — 30 of Moïse\'s 40 functions depended on no particularity of the charter whatsoever. What makes it generic is that the numbering FORM is derived rather than declared: three real documents in this repository write their rules three different ways, and a tool demanding to be told the pattern would only serve those who already knew it. The opposite direction matters as much: a document where no form stands out returns "not measurable" with every attempt listed, because an analyser that guesses skips in silence (leçon L12) and invented figures look exactly as trustworthy as real ones. The citation pattern treats the space after a prefix as optional, a detail that had cost a whole pass — all eighteen sections of the working rules came back "never cited" while §7ter is cited 168 times, purely because the pattern required a space nobody writes. And the red line the user drew stays enforced in the master rather than in each caller: the state of a pertinence finding has exactly one value, so no descendant can soften it into a verdict.');
 }
 

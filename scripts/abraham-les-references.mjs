@@ -88,6 +88,165 @@ export function porteursDeclares(texteUnite = "", fichiers = {}) {
   return { etat: "porté", trouves, fantomes: [], pourquoi: `nomme ${trouves.length} mécanisme(s) et tous existent : ${trouves.slice(0, 3).join(", ")}${trouves.length > 3 ? "…" : ""}` };
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LA CLASSIFICATION DES RÈGLES (2026-09-24, chantier 1 du plan de nuit)
+// ————————————————————————————————————————————————————————————————————————
+//
+// DEMANDE DE L'UTILISATEUR, et elle commande tout le reste du plan : « je voudrais qu'on crée une
+// classification des RÈGLES cette fois-ci, et du niveau de protection et de garantie de
+// déclenchement qu'elle comporte. Une classification qu'on va appliquer à la charte mais aussi à
+// d'autres docs comme règles de travail par ex. » Calibré la même nuit : DEUX AXES CROISÉS —
+// force de garantie **et** gravité —, et l'outil est **Abraham étendu**, jamais un outil neuf.
+//
+// POURQUOI ICI ET PAS DANS UN OUTIL NEUF : mesuré avant d'écrire une ligne, comme l'utilisateur
+// l'a lui-même demandé en citant l'expérience MOÏSE/THE-KING. Zéro fonction de même nom entre les
+// trois outils, et zéro paire de corps de fonction dépassant 0,55 de similarité de structure — la
+// redondance a déjà été purgée. Ce qui manquait n'était donc pas un découpeur de plus : c'est la
+// couche qui CLASSE au-dessus de `porteursDeclares()`, lequel mesure déjà le porteur réel, qui EST
+// la garantie de déclenchement.
+//
+// CE QUI REND CETTE ÉCHELLE DÉRIVABLE PLUTÔT QU'INVENTÉE, et c'est sa seule valeur : chacun de ses
+// six niveaux correspond à un mécanisme qui EXISTE dans ce dépôt et qu'on peut constater. Une
+// échelle inventée à la main se serait périmée au premier mécanisme nouveau (Article 24).
+
+export const NIVEAUX_GARANTIE = [
+  { niveau: 0, cle: "aucune", libelle: "AUCUNE",
+    quoi: "rien ne la porte : ni test, ni garde-fou, ni rappel, ni même une impossibilité déclarée",
+    cequecoute: "elle n'existera plus à la session suivante — c'est exactement ce que l'Article 27 interdit" },
+  { niveau: 1, cle: "declarative", libelle: "DÉCLARATIVE",
+    quoi: "écrite seulement, mais l'impossibilité d'un mécanisme est DÉCLARÉE avec sa raison",
+    cequecoute: "repose sur la lecture, donc sur la mémoire d'un agent — mais le déclarer EST la protection (Article 27)" },
+  { niveau: 2, cle: "rappelee", libelle: "RAPPELÉE",
+    quoi: "un outil la fait remonter au bon moment (terrain d'une leçon, tool-brain, bannière post-commit)",
+    cequecoute: "elle passe sous les yeux, rien ne vérifie qu'elle a été suivie" },
+  { niveau: 3, cle: "demandee", libelle: "DEMANDÉE",
+    quoi: "un contrôleur exige une DÉCLARATION et refuse d'être au vert sans elle (angel-of-ia-process)",
+    cequecoute: "ne rend pas le mensonge impossible — il le rend EXPLICITE, ce qui est déjà beaucoup" },
+  { niveau: 4, cle: "constatee", libelle: "CONSTATÉE",
+    quoi: "un garde-fou lit une TRACE RÉELLE sur le disque et compare au dû",
+    cequecoute: "ne voit que ce qui laisse une trace — une étape faite sans trace lui reste invisible" },
+  { niveau: 5, cle: "bloquante", libelle: "BLOQUANTE",
+    quoi: "un test ou un crochet git BLOQUE le commit quand elle est enfreinte",
+    cequecoute: "rien, sinon son propre périmètre : elle ne protège que ce qu'elle sait regarder" },
+];
+
+// LA GRAVITÉ NE SE DÉRIVE PAS AUSSI PROPREMENT, et le dire est plus utile que de le masquer.
+// Aucun programme ne sait ce que coûte vraiment une règle enfreinte. Ce qui est dérivable, ce sont
+// des SIGNAUX que le document porte lui-même — et ils sont assez nets dans ce projet-ci pour
+// classer sans inventer. Chaque niveau nomme donc son signal, jamais un jugement.
+export const NIVEAUX_GRAVITE = [
+  { niveau: 3, cle: "vitale", libelle: "VITALE",
+    signal: "invoque l'Article 0, l'esprit des personnages, la loi suprême, ou une perte de données/d'idées",
+    motif: /article 0|loi suprême|esprit des personnages|non négociable|jamais perdre|perte de valeur|ligne rouge/i },
+  { niveau: 2, cle: "haute", libelle: "HAUTE",
+    signal: "fausse une mesure, casse un renvoi, ou porte une interdiction absolue (« jamais », « interdit »)",
+    motif: /\bjamais\b|\binterdit\b|fausse une mesure|obligatoire|renvoi cassé|dette/i },
+  { niveau: 1, cle: "moyenne", libelle: "MOYENNE",
+    signal: "prescrit sans interdire : une manière de faire, un confort de travail, une discipline",
+    motif: /\bdoit\b|\bdoivent\b|il faut|toujours/i },
+  { niveau: 0, cle: "basse", libelle: "BASSE",
+    signal: "n'ordonne rien de vérifiable — du récit, un rappel historique, une précision de vocabulaire",
+    motif: null },
+];
+
+export function niveauGarantie(porteur = {}, texte = "", { lire = null } = {}) {
+  const t = String(texte);
+  // BLOQUANTE : le mécanisme nommé est-il lu par la suite de tests ou par un crochet git ?
+  // Vérifié en LISANT, jamais supposé d'après le nom (leçon L5 : ne pas confondre « rien trouvé »
+  // et « pas pu regarder » — sans lecteur, on ne prétend pas au niveau 5).
+  const nommes = porteur.trouves ?? [];
+  if (nommes.length && typeof lire === "function") {
+    const cibles = ["scripts/check-house.mjs", "scripts/hooks/pre-commit", "scripts/hooks/post-commit"];
+    for (const c of cibles) {
+      let contenu = null;
+      try { contenu = lire(c); } catch { continue; }
+      if (contenu && nommes.some((n) => contenu.includes(n))) {
+        return { ...NIVEAUX_GARANTIE[5], porteur: nommes, pourquoi: `« ${nommes.find((n) => contenu.includes(n))} » est lu par ${c}` };
+      }
+    }
+  }
+  if (porteur.etat === "porté") return { ...NIVEAUX_GARANTIE[4], porteur: nommes, pourquoi: `nomme ${nommes.length} mécanisme(s) réel(s), non branché(s) au filet de sécurité` };
+  if (porteur.etat === "fantôme") return { ...NIVEAUX_GARANTIE[0], porteur: [], pourquoi: `nomme un mécanisme INTROUVABLE (${(porteur.fantomes ?? []).join(", ")}) — pire qu'une absence, ça rassure à tort` };
+  if (/\bDEMANDE\b|refuse d'être (au )?vert|angel-of-ia-process/i.test(t)) return { ...NIVEAUX_GARANTIE[3], porteur: [], pourquoi: "sa conformité est DEMANDÉE et le silence compte comme un manquement" };
+  if (/terrain\s*:|remont(e|ée) au bon moment|tool-brain|post-commit/i.test(t)) return { ...NIVEAUX_GARANTIE[2], porteur: [], pourquoi: "un outil la fait remonter, sans vérifier qu'elle est suivie" };
+  if (/aucun mécanisme|aucun programme ne peut|impossible.*mécaniquement|limite honnête/i.test(t)) return { ...NIVEAUX_GARANTIE[1], porteur: [], pourquoi: "l'impossibilité d'un mécanisme est déclarée avec sa raison (Article 27)" };
+  return { ...NIVEAUX_GARANTIE[0], porteur: [], pourquoi: "ne nomme aucun mécanisme et ne déclare aucune impossibilité — sa prose est sa seule protection" };
+}
+
+export function niveauGravite(texte = "") {
+  const t = String(texte);
+  for (const n of NIVEAUX_GRAVITE) if (n.motif && n.motif.test(t)) return { ...n };
+  return { ...NIVEAUX_GRAVITE[NIVEAUX_GRAVITE.length - 1] };
+}
+
+// LE CROISEMENT — c'est lui qui rend la classification actionnable, jamais les deux axes séparés.
+// Une règle vitale mal protégée n'est pas « une règle de plus à améliorer » : c'est la seule case
+// qui doit sauter aux yeux, et c'est pour ça que l'utilisateur a demandé une carte visuelle.
+// UN PORTEUR PEUT VIVRE DANS UNE AUTRE RÈGLE, et l'ignorer produit un faux rouge (leçon L4 : un
+// garde-fou qui accuse à tort cesse d'être lu). Trouvé au PREMIER passage réel sur la charte :
+// l'Article 0 sortait « aucune protection » alors que `check-spirit.mjs` le protège — simplement,
+// c'est l'Article 13 qui le nomme, en citant explicitement « vérifier l'Article 0 ». Un mécanisme
+// qui déclare quelle règle il protège compte pour cette règle, où qu'il soit écrit.
+export function porteurExterne(numero, prefixe, toutesLesUnites = [], fichiers = {}) {
+  if (numero === undefined || numero === null) return null;
+  const moi = String(numero);
+  for (const u of toutesLesUnites) {
+    if (String(u.numero) === moi) continue;
+    const t = u.texte ?? "";
+    // LA BONNE MAILLE EST LE PARAGRAPHE, ni la phrase ni l'unité entière — et les deux extrêmes
+    // ont été essayés avant de trancher, sur le vrai document. À la PHRASE, l'Article 0 restait
+    // faussement rouge : l'Article 13 écrit « c'est l'outil de référence pour vérifier l'Article 0 »
+    // une phrase après avoir nommé `check-spirit.mjs`. À l'UNITÉ ENTIÈRE, n'importe quel Article
+    // citant un autre lui prêterait tous ses mécanismes — un faux vert bien pire qu'un faux rouge.
+    // Le paragraphe est la maille où un auteur parle d'une seule chose à la fois.
+    const phrases = t.split(/\n\s*\n/);
+    for (const ph of phrases) {
+      if (!new RegExp(`${prefixe}\\s*${moi}\\b`, "i").test(ph)) continue;
+      const p = porteursDeclares(ph, fichiers);
+      if (p.etat === "porté") return { depuis: u.numero, mecanismes: p.trouves, phrase: ph.slice(0, 120) };
+    }
+  }
+  return null;
+}
+
+export function classerUnite(unite = {}, fichiers = {}, { lire = null, toutesLesUnites = [], prefixe = "Article" } = {}) {
+  const texte = unite.texte ?? "";
+  let porteur = porteursDeclares(texte, fichiers);
+  let externe = null;
+  if (porteur.etat === "sans porteur") {
+    externe = porteurExterne(unite.numero, prefixe, toutesLesUnites, fichiers);
+    if (externe) porteur = { etat: "porté", trouves: externe.mecanismes, fantomes: [], pourquoi: `porté depuis ${prefixe} ${externe.depuis}` };
+  }
+  const g = niveauGarantie(porteur, texte, { lire });
+  const grav = niveauGravite(texte);
+  const ecart = grav.niveau * 2 - g.niveau;   // vitale(3)×2=6 contre bloquante(5) ⇒ 1 : presque à niveau
+  return {
+    numero: unite.numero, titre: (unite.titre ?? "").slice(0, 90),
+    porteurExterne: externe ? `${prefixe} ${externe.depuis} (${externe.mecanismes.join(", ")})` : null,
+    garantie: g.cle, garantieNiveau: g.niveau, garantiePourquoi: g.pourquoi,
+    gravite: grav.cle, graviteNiveau: grav.niveau, graviteSignal: grav.signal,
+    obligations: unite.obligations, porteurs: g.porteur,
+    ecart,
+    verdict: ecart >= 5 ? "🔴 CRITIQUE — vitale et sans protection"
+      : ecart >= 3 ? "🟠 À NIVELER — la garantie est loin de l'enjeu"
+      : ecart >= 1 ? "🟡 correcte — un cran manque"
+      : "🟢 à niveau",
+  };
+}
+
+export function classerDocument(unites = [], fichiers = {}, { lire = null, prefixe = "Article" } = {}) {
+  const lignes = unites.map((u) => classerUnite(u, fichiers, { lire, toutesLesUnites: unites, prefixe }));
+  const parVerdict = {};
+  for (const l of lignes) parVerdict[l.verdict] = (parVerdict[l.verdict] ?? 0) + 1;
+  // LA CARTE : gravité en lignes, garantie en colonnes. Le coin haut-gauche est le danger.
+  const carte = NIVEAUX_GRAVITE.map((gr) => ({
+    gravite: gr.libelle,
+    cases: NIVEAUX_GARANTIE.map((ga) => lignes.filter((l) => l.graviteNiveau === gr.niveau && l.garantieNiveau === ga.niveau).length),
+  }));
+  return { lignes, parVerdict, carte, total: lignes.length,
+    horsPortee: "la GRAVITÉ est dérivée de signaux que le texte porte lui-même, jamais d'un jugement sur ce qu'une règle enfreinte coûterait vraiment — aucun programme ne sait ça. Elle se relit, elle ne se croit pas." };
+}
+
 // --- 3. LA MESURE D'UNE UNITÉ -------------------------------------------------------------
 // `prefixe` est ce par quoi le document se cite lui-même ailleurs — « Article » pour une charte,
 // autre chose ailleurs. Il est passé, jamais deviné.
