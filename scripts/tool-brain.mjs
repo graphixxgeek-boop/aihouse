@@ -164,6 +164,50 @@ export function outilsCouvertsParLeCrochet(sourceCrochet = "", slugs = []) {
   });
 }
 
+// LES COMBINAISONS, ET POURQUOI ON MESURE LE FAIT PLUTÔT QUE LA DÉCLARATION (2026-09-23, question
+// directe de l'utilisateur : « est-ce que tu utilises les COMBINAISONS d'outils AUSSI : celles du
+// catalogue du coordinateur ? »).
+//
+// LA RÉPONSE HONNÊTE ÉTAIT : PERSONNE N'EN SAVAIT RIEN. Le compteur n'enregistre qu'un `toolSlug`
+// à la fois — sur 1 184 événements, aucun ne mentionne un pack. Cinq packs du catalogue nomment
+// pourtant une vraie combinaison, de deux à huit outils.
+//
+// LA MAUVAISE SOLUTION aurait été d'ajouter un champ « pack » que l'agent remplit en lançant le
+// pack. On aurait alors mesuré une DÉCLARATION — « j'ai pensé au pack » — et pas un fait. Ce projet
+// a déjà payé pour cette confusion plusieurs fois dans la même journée.
+//
+// CE QU'ON MESURE À LA PLACE : la combinaison A-T-ELLE EU LIEU. Si tous les outils d'un pack ont
+// été sollicités dans une même fenêtre de temps, le pack a été réalisé — que l'agent l'ait nommé
+// ou même qu'il en ait eu conscience. C'est plus honnête et c'est plus intéressant : ça distingue
+// « le pack existe et personne ne le fait » de « le pack se fait tout seul, le nommer n'apporterait
+// rien ». Deux diagnostics opposés qu'un champ déclaratif aurait confondus.
+export const FENETRE_COMBINAISON_MINUTES = 30;
+
+export function packsRealises(history, prestations = PRESTATIONS, { fenetreMinutes = FENETRE_COMBINAISON_MINUTES } = {}) {
+  const evenements = (history?.events ?? []).filter((e) => e.at).sort((a, b) => a.at - b.at);
+  const fenetre = fenetreMinutes * 60 * 1000;
+  const multi = prestations.filter((p) => p.outils.length > 1);
+  return multi.map((p) => {
+    const slugs = p.outils
+      .filter((o) => !EST_UN_CHEMIN.test(String(o).trim()))
+      .map((o) => slugifyAgentName(o.split(/[/(]/)[0].trim()));
+    let realisations = 0;
+    // Pour chaque événement, on regarde si la fenêtre qui s'ouvre là contient tous les outils du
+    // pack. Fenêtre glissante simple : un pack réalisé deux fois de suite compte deux fois, mais
+    // jamais une fois par outil.
+    for (let i = 0; i < evenements.length; i++) {
+      const fin = evenements[i].at + fenetre;
+      const vus = new Set();
+      for (let j = i; j < evenements.length && evenements[j].at <= fin; j++) vus.add(evenements[j].toolSlug);
+      if (slugs.every((sl) => vus.has(sl))) { realisations++; i += slugs.length - 1; }
+    }
+    // MOINS DE DEUX OUTILS APRÈS FILTRAGE = ce n'est pas une combinaison. « Pack Décollage »
+    // nomme deux entrées dont l'une est un DOCUMENT (un carnet de correctifs), pas un outil : le
+    // compter comme une combinaison réalisée 157 fois aurait été un chiffre flatteur et faux.
+    return { pack: p.nom, outils: slugs, taille: slugs.length, realisations, estUneCombinaison: slugs.length >= 2 };
+  }).sort((a, b) => a.realisations - b.realisations);
+}
+
 export function buildToolBrainUsageReport(history, prestations = PRESTATIONS, { sourceCrochet = "" } = {}) {
   const slugs = knownToolSlugsFromPrestations(prestations);
   const perTool = slugs
@@ -218,6 +262,11 @@ export function formatToolBrainReport({ history, prestations = PRESTATIONS, chec
     "",
     neverUsed.length ? `${neverUsed.length} outil(s) du catalogue jamais sollicité(s) : ${neverUsed.join(", ")}.` : "Tous les outils connus du catalogue ont déjà été sollicités au moins une fois.",
     couvertsParLeCrochet.length ? `${couvertsParLeCrochet.length} outil(s) n'apparaissent pas au compteur mais tournent à CHAQUE commit via le crochet : ${couvertsParLeCrochet.join(", ")} — leur silence n'est pas une inaction.` : "",
+    "",
+    "COMBINAISONS du catalogue — réalisées en FAIT, jamais déclarées :",
+    ...packsRealises(history, prestations).map((p) => (p.estUneCombinaison
+      ? `- ${p.pack} (${p.taille} outils) : ${p.realisations === 0 ? "JAMAIS réalisé" : `${p.realisations} fois`}`
+      : `- ${p.pack} : PAS une combinaison — une de ses entrées est un document, pas un outil`)),
     "",
     "Outils les moins sollicités (total cumulé, jamais remis à zéro) :",
     ...perTool.slice(0, 10).map((t) => `- ${t.slug} : ${t.total} sollicitation(s)${t.foundSomethingRate != null ? `, ${t.foundSomethingRate}% de trouvailles confirmées` : ""}`),

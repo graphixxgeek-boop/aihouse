@@ -564,6 +564,38 @@ déclenche rien, une raison introuvable est nommée avec son fichier.
 
 **Terrain** : quand je déplace, extrais ou renomme du code d'un fichier vers un autre, et quand je réécris un en-tête de fichier · mots : migrer, déplacer, extraire, factoriser, déménager, renommer un module · fichiers : scripts/safe-export.mjs, scripts/hooks/check-last-commit.mjs
 
+## L21 — Satisfaire un garde-fou avec une chaîne qu'un autre lit autrement déplace le défaut au lieu de le corriger
+
+Un lecteur d'intégration refusait de reconnaître un outil au nom accentué. Plutôt que de corriger
+sa lecture, j'ai glissé dans le catalogue une seconde entrée — le chemin du script — qui, elle,
+passait son filtre. Le registre est devenu vert immédiatement.
+
+**Un second lecteur découpait ce même catalogue sur le caractère « / ».** Il en a tiré un outil
+nommé « scripts », qu'il a ensuite reproché à tout le monde de n'avoir jamais sollicité. Le
+garde-fou satisfait en avait fabriqué un autre, faux, dans un fichier que je ne regardais pas.
+
+**Ce qui rend le cas général plutôt qu'anecdotique** : dès qu'un même registre a DEUX lecteurs, une
+donnée ajoutée pour contenter l'un devient une entrée à interpréter pour l'autre. Et le second ne
+proteste pas : il travaille, calmement, sur une donnée qui n'a aucun sens pour lui. Un vert obtenu
+en nourrissant un lecteur est donc une information sur ce lecteur, jamais sur le système.
+
+**Le signe qui aurait dû alerter, et il est reconnaissable** : la correction n'a demandé aucune
+compréhension. Je n'ai pas eu à savoir POURQUOI le lecteur refusait — j'ai trouvé une forme qu'il
+accepte. Une correction qui n'explique rien ne corrige rien ; elle trouve un angle.
+
+**La règle** : quand un garde-fou refuse, corriger sa LECTURE, jamais la donnée qu'on lui donne à
+lire. Et avant d'ajouter une entrée dans un registre partagé, se demander qui d'autre le lit — la
+réponse est presque toujours « quelqu'un ».
+
+*Payée le 2026-09-23, et trouvée une heure plus tard en répondant à une question de l'utilisateur
+sur les outils jamais sollicités : sur sept signalés, quatre étaient faux, et celui-là était le mien.*
+
+**Porté par** : `knownToolSlugsFromPrestations()` (`scripts/tool-brain.mjs`), qui écarte désormais
+les chemins de fichiers, et `nomsOuScripts()` (`scripts/integration-outil.mjs`), qui normalise les
+accents — la vraie correction, celle qui n'a plus besoin qu'on nourrisse personne.
+
+**Terrain** : quand un garde-fou refuse et que je cherche une forme qui passe plutôt que la raison du refus · quand j'ajoute une entrée dans un registre partagé par plusieurs outils · mots : satisfaire le test, faire passer le garde-fou, le registre est vert, contourner · fichiers : scripts/le-coordinateur.mjs, scripts/tool-brain.mjs, scripts/integration-outil.mjs
+
 ## BP1 — La règle s'écrit à UN endroit et se dérive partout ailleurs
 
 Devant vingt endroits à corriger, le réflexe est de corriger les vingt. Le bon geste est de trouver

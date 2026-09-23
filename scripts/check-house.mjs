@@ -10848,3 +10848,41 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log('Passed: MOÏSE-TABLES-DE-LOI now analyses PERTINENCE and LOGIC (2026-09-23), answering a direct question whose honest answer had been no — it measured weight, citations, porteur and nature, and none of those four says whether a rule DESERVES to be there. Five named signals replace a score, because a score aggregates and therefore hides: never cited, long with no mechanism, prescribes nothing at all, announces a protection that does not exist, and costs far more lines than it returns in citations — that last threshold derived from the charter\'s own median rather than written by hand, so it cannot go stale. The red line the user drew in the same sentence is enforced in the code rather than promised in prose: every finding carries the single state "à trancher", every signal is phrased as a question, and the tool owns no vocabulary that could conclude — a tool able to write "this article is useless" would eventually have that judgement applied by nobody in particular. Article 0 is never questioned whatever its numbers. On the logic side, vocabulary overlap alone is a weak signal since this charter deliberately holds several pairs that declare their frontier; what raises a question is overlap plus silence, two rules governing the same ground with nothing saying which one wins.');
 }
+
+{
+  // LES COMBINAISONS D'OUTILS (2026-09-23) — question directe de l'utilisateur : « est-ce que tu
+  // utilises les COMBINAISONS d'outils AUSSI, celles du catalogue du coordinateur ? ». La réponse
+  // honnête était que PERSONNE N'EN SAVAIT RIEN : sur 1 184 événements enregistrés, pas un seul ne
+  // mentionnait un pack, alors que cinq packs en nomment un.
+  const tbp = await import('../scripts/tool-brain.mjs');
+  const min = 60 * 1000;
+  const t0 = 1_700_000_000_000;
+  const prest = [
+    { nom: 'Duo', demande: 'x', outils: ['ARGUS', 'HARMONIA'], cout: 'gratuit' },
+    { nom: 'Solo avec un document', demande: 'x', outils: ['ARGUS', 'docs/un-carnet.md'], cout: 'gratuit' },
+  ];
+
+  // MESURER LE FAIT, JAMAIS LA DÉCLARATION. La mauvaise solution aurait été un champ « pack » que
+  // l'agent remplit : on aurait mesuré « j'ai pensé au pack », pas « la combinaison a eu lieu ».
+  const ensemble = { events: [{ toolSlug: 'argus', at: t0 }, { toolSlug: 'harmonia', at: t0 + 5 * min }] };
+  assert.equal(tbp.packsRealises(ensemble, prest).find((p) => p.pack === 'Duo').realisations, 1, 'two tools of a pack used within the window must count as the combination HAVING HAPPENED, whether or not the agent named the pack or even knew it existed');
+
+  const eparpille = { events: [{ toolSlug: 'argus', at: t0 }, { toolSlug: 'harmonia', at: t0 + 300 * min }] };
+  assert.equal(tbp.packsRealises(eparpille, prest).find((p) => p.pack === 'Duo').realisations, 0, 'the same two tools five hours apart are not a combination, they are two separate uses — otherwise every pack would read as permanently realised and the measure would say nothing');
+
+  assert.equal(tbp.packsRealises({ events: [{ toolSlug: 'argus', at: t0 }] }, prest).find((p) => p.pack === 'Duo').realisations, 0, 'half a pack is never a pack');
+
+  // UNE ENTRÉE QUI EST UN DOCUMENT NE FAIT PAS UNE COMBINAISON.
+  const soloDoc = tbp.packsRealises(ensemble, prest).find((p) => p.pack === 'Solo avec un document');
+  assert.equal(soloDoc.estUneCombinaison, false, 'a pack whose second entry is a document rather than a tool must be reported as NOT a combination — counting it as one realised hundreds of times would be a flattering number and a false one');
+  assert.equal(soloDoc.taille, 1, 'and its real size after filtering must be visible, so the reason is legible rather than asserted');
+
+  // Branché sur le VRAI catalogue et le VRAI historique (Article 25).
+  const { readFileSync: rf } = await import('node:fs');
+  const vraiHist = JSON.parse(rf(new URL('../.tool-usage-history.json', import.meta.url), 'utf8'));
+  const vrais = tbp.packsRealises(vraiHist);
+  assert.ok(vrais.length >= 4, 'the real catalogue must actually be scanned for combinations');
+  assert.ok(vrais.some((p) => p.estUneCombinaison && p.realisations === 0), 'and the real answer must be allowed to be uncomfortable: at least one genuine combination of this catalogue has never once happened, which is precisely what the user was asking about and what nothing could tell him before');
+
+  console.log('Passed: tool combinations are measured at last (2026-09-23), answering a question nobody could answer — the counter recorded one toolSlug at a time, and across 1 184 events not one mentioned a pack while five packs name a real combination. The design choice is the whole point: a "pack" field filled in by the agent would have measured a declaration, "I thought of the pack", rather than a fact, and this project has paid for that confusion more than once in a single day. What is measured instead is whether the combination HAPPENED — all of a pack\'s tools used inside one window — which is both more honest and more interesting, since it separates "the pack exists and nobody does it" from "the pack happens by itself and naming it would add nothing", two opposite diagnoses a declarative field would have merged. A pack whose second entry is a document is reported as not being a combination at all, rather than as one realised a hundred and fifty-seven times. Run against the real catalogue, the answer is uncomfortable and useful: two of the four genuine combinations have never once occurred, including the eight-tool one meant to give a cross-cutting view before a prioritisation decision.');
+}
