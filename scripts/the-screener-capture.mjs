@@ -22,6 +22,34 @@ import { printReliabilityNotice } from "./lib-shell.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
+// CE QU'ON A LE DROIT DE CLIQUER POUR DÉGAGER LA VUE, ET RIEN D'AUTRE (2026-09-23, tâche #186).
+//
+// LE RISQUE EST RÉEL ET IL EST DESTRUCTEUR : la fenêtre « Reprendre la maison ? » porte DEUX
+// boutons. Le premier est purement local — il referme la fenêtre, point. Le second appelle `reset`
+// et efface la partie en cours. Un outil de capture qui cliquerait « le premier bouton venu »
+// pendant une vraie simulation la détruirait. Le libellé est donc vérifié au mot près, et tout ce
+// qui n'est pas reconnu fait RENONCER plutôt que tenter sa chance : une capture honnêtement
+// déclarée masquée vaut infiniment mieux qu'une partie perdue.
+//
+// POURQUOI CETTE FENÊTRE-LÀ ET PAS LES AUTRES : elle ne dépend d'aucun état du jeu ni de la
+// mémoire du navigateur, seulement du fait que la maison a déjà vécu (des messages, ou un
+// personnage qui a déjà bougé). Elle s'ouvre donc à CHAQUE chargement pendant une simulation, et
+// c'est elle qui bloquait encore une capture de phase 2 une fois le pseudo posé. Les trois autres
+// fenêtres disent quelque chose du jeu ou du visiteur : les refermer serait mentir sur l'état réel.
+//
+// LA DÉCISION EST SORTIE DU NAVIGATEUR, exprès : enfermée dans le corps de la capture, elle
+// n'aurait été vérifiable qu'en lançant un vrai navigateur contre un vrai serveur, donc en
+// pratique jamais (leçon L2). Ici elle se teste dans les deux sens, y compris le refus de cliquer.
+export const BOUTON_CONSERVATION = "Conserver l’histoire";
+export const TITRE_REPRISE = "Reprendre la maison ?";
+export function quePeutOnDegager(titre, libelles = []) {
+  const t = String(titre ?? "").trim();
+  if (t !== TITRE_REPRISE) return { action: "renoncer", raison: `la fenêtre « ${t || "?"} » dit quelque chose du jeu ou du visiteur — la refermer mentirait sur l'état réel` };
+  const cible = libelles.map((l) => String(l).trim()).find((l) => l === BOUTON_CONSERVATION);
+  if (!cible) return { action: "renoncer", raison: `la fenêtre de reprise ne porte plus de bouton « ${BOUTON_CONSERVATION} » — cliquer à l'aveugle risquerait de tomber sur celui qui efface la partie` };
+  return { action: "cliquer", libelle: cible };
+}
+
 export async function captureOnce(url, outPath) {
   const browser = await chromium.launch();
   try {
@@ -64,7 +92,23 @@ export async function captureOnce(url, outPath) {
     // qu'un outil qui prétend avoir dégagé la vue sans l'avoir fait. Reste à trancher avec
     // l'utilisateur (cf. rapport de nuit) : la bonne réponse est peut-être côté APPLICATION — un
     // paramètre d'URL d'observation qui n'ouvre aucune fenêtre modale — plutôt que côté capture.
-    const overlay = await page.locator(".nickname-overlay").count().catch(() => 0);
+    // On tente d'abord de dégager la seule fenêtre qu'on ait le droit de refermer, puis on
+    // re-regarde. Le clic précédent (retiré en 2026-09-22 parce qu'il « ne suffisait pas ») ne
+    // suffisait pas parce qu'il ne l'ATTENDAIT pas : cette fenêtre n'existe qu'une fois la
+    // première réponse du serveur arrivée, donc souvent après le premier coup d'œil.
+    let overlay = await page.locator(".nickname-overlay").count().catch(() => 0);
+    if (overlay > 0) {
+      const titre = await page.locator(".nickname-overlay h2").first().textContent().catch(() => null);
+      const libelles = await page.locator(".nickname-overlay button").allTextContents().catch(() => []);
+      const quoi = quePeutOnDegager(titre, libelles);
+      if (quoi.action === "cliquer") {
+        await page.getByRole("button", { name: quoi.libelle, exact: true }).first().click().catch(() => {});
+        await page.locator(".nickname-overlay").first().waitFor({ state: "detached", timeout: 4000 }).catch(() => {});
+        // La scène 3D reprend la main une fois la fenêtre partie : on lui laisse peindre.
+        await page.waitForTimeout(1200);
+        overlay = await page.locator(".nickname-overlay").count().catch(() => 0);
+      }
+    }
     await page.screenshot({ path: outPath });
     if (overlay > 0) {
       // Le diagnostic NOMME la fenêtre trouvée plutôt que de lister les trois possibles : la
