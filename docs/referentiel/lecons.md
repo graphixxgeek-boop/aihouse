@@ -374,6 +374,34 @@ acte du jeu n'a jamais pu se produire — pas « ne s'est pas produit », n'a pa
 
 **Terrain** : quand un contrôleur me rappelle une règle avant une action exécutée par un script · mots : rappel, avant lancement, leçon, contrôleur, script, phase 2, simulation · fichiers : scripts/run-simulation.mjs, scripts/process-simulation-guardian.mjs
 
+## L15 — Une suite de tests verte ne prouve pas qu'un outil tourne encore
+
+Le 2026-09-23, le renommage d'un champ lu partout (`n` → `numero`, `sensibilite` → `criticite` dans
+les lignes de tâche) a demandé **neuf passages de tests successifs**. Chacun a révélé un endroit de
+plus où le numéro était lu sous son ancien nom — jamais deux fois le même, aucun trouvable par
+relecture. C'est déjà un enseignement : un renommage « simple » sur un champ lu partout ne l'est pas.
+
+**Mais le vrai piège est après le neuvième passage.** La suite était verte, et ça ne disait rien des
+outils : un script dont aucun test ne traverse le `main()` peut planter au premier lancement réel
+pendant que 202 assertions restent au vert. Le seul contrôle qui valait quelque chose a été de
+relancer les sept outils qui lisent ces lignes, un par un, contre le vrai dépôt.
+
+Le même piège avait déjà mordu ce jour-là, dans l'autre sens : une constante introduite en haut d'un
+module levait une `ReferenceError` selon l'ORDRE d'import des modules. Les tests chargeaient
+toujours l'ordre qui marche ; l'outil, lui, chargeait l'autre.
+
+**La règle** : après une modification transverse, la suite verte est le point de départ de la
+vérification, jamais sa conclusion. Relancer les consommateurs réels fait partie du changement, pas
+du zèle. C'est la version « après coup » de BP4 (un détecteur qui n'a jamais mordu ne prouve rien) et
+la contrepartie de l'Article 25 : vérifier son travail veut dire lancer les outils, jamais se relire.
+
+*Payée le 2026-09-23 sur le renommage #584, et le même jour par un bug d'ordre d'import qu'aucun test
+ne pouvait voir.*
+
+**Porté par** : **aucun mécanisme possible, et cette impossibilité est déclarée ici plutôt que tue** (ce que L7 prescrit). Rien ne peut lancer « tous les consommateurs réels » d'un changement : la liste dépend de ce qui vient d'être touché, un outil qui la devinerait se tromperait dans les deux sens, et lancer tous les scripts à chaque commit coûterait plus que le défaut. La protection est l'obligation écrite, même limite honnête que tool-brain et SMART-CONSO-TOKEN.
+
+**Terrain** : après un renommage, une extraction ou un changement de signature partagée · mots : renommage, champ, transverse, refactor, signature, appelants · fichiers : scripts/criticite.mjs, scripts/check-tasks-details.mjs, scripts/check-suivi-fidelity.mjs, scripts/circle-tasks.mjs
+
 ## BP1 — La règle s'écrit à UN endroit et se dérive partout ailleurs
 
 Devant vingt endroits à corriger, le réflexe est de corriger les vingt. Le bon geste est de trouver
