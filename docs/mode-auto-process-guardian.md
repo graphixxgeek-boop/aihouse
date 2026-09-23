@@ -198,6 +198,34 @@ encore) ; rattraper un document sur deux ne rattrape rien non plus, quand deux p
 même code (un demi-rattrapage affiché comme un rattrapage est pire qu'aucun) ; et le cas « code et
 document dans le même commit » reste ce qu'il a toujours été — jamais un écart.
 
+## Ce que « un mécanisme du process » veut dire, exactement (2026-09-23)
+
+*(Trois resserrements de la mesure `process ↔ contrôleur`, faits la même nuit. Ils ne corrigent
+aucun écart — ils cessent d'en inventer, et c'est ce qui rend les vrais enfin lisibles.)*
+
+Le rapport annonçait **66 « mécanismes câblés et jamais écrits »**. Les regarder un par un a montré
+que l'immense majorité n'en étaient pas, et surtout qu'ils NOYAIENT le signal grave : une quinzaine
+de règles écrites que personne n'applique. Un garde-fou qui accuse à tort cesse d'être lu (leçon L4),
+donc le bruit ne coûte pas seulement de l'attention : il coûte les vraies trouvailles.
+
+1. **Importé ≠ câblé.** Un nom qui ne fait que traverser la ligne d'import d'un contrôleur n'est pas
+   un mécanisme qu'il fait respecter. Sans cette distinction, tout symbole d'infrastructure partagé
+   comptait comme une règle de process.
+2. **Un contrôleur peut servir plusieurs process.** Un mécanisme documenté chez un process FRÈRE
+   (même contrôleur) est écrit — simplement ailleurs. Le reprocher au voisin produisait 33 faux
+   écarts d'un seul coup, `circle-process-guardian` gardant à la fois la Ronde et l'intégration
+   d'un item à la Ronde.
+3. **Un process peut vivre dans une SECTION, pas dans tout un fichier.** Le process de simulation
+   déclare `docs/regles-de-travail.md`, qui est aussi la référence maîtresse du paysage entier et
+   nomme au passage des dizaines de mécanismes étrangers à toute simulation. Le champ `docSection`
+   dit quelle partie fait loi ; l'extraction s'arrête au prochain titre de même niveau et rend
+   `null` sur un titre introuvable — se rabattre silencieusement sur le fichier entier ramènerait
+   le bruit sans que personne ne s'en aperçoive.
+
+**Résultat : 66 → 22 dans un sens, 15 → 5 dans l'autre.** Les 5 restants sont réels et ont été
+vérifiés un par un : deux mécanismes que le contrôleur de la Ronde IMPORTE sans jamais les appeler,
+pendant que son document en décrit la règle.
+
 ## Le seuil d'arrêt : UN SEUL, et ce n'est pas un compte rendu
 
 *(Ajouté le 2026-09-23, après une perte de temps réelle et conséquente — l'agent s'est arrêté au
