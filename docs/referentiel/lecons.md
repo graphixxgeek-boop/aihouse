@@ -139,6 +139,13 @@ déjà prise et documentée ailleurs**. Reprocher une décision assumée est la 
 
 *Trouvée cinq fois le 2026-09-23 : chaque nouveau détecteur a dû être resserré, certains deux fois.*
 
+**Le signal qui permet de s'en apercevoir AVANT de publier** *(ajouté le 2026-09-23, A-NIVEAU —
+la leçon d'origine ci-dessus reste telle quelle)* : **quand un détecteur accuse presque tout, c'est
+presque toujours lui qui a tort.** Un premier jet accusait 17 outils sur 33 ; le chiffre lui-même
+était l'alerte, bien avant le détail. Vérifier avant de rapporter coûte deux minutes, publier un
+rapport entièrement faux coûte la confiance qu'on met dans l'outil — et cette confiance est tout
+son capital.
+
 **Porté par** : `SANS_BLUEPRINT_ASSUME` / `SANS_CONSTAT_PROPRE` (`scripts/safe-export.mjs`, `scripts/report-template.mjs`) — les exemptions décidées sont déclarées comme données, jamais reprochées à chaque passage.
 
 **Terrain** : quand je construis ou je resserre un garde-fou · mots : garde-fou, détecteur, faux positif, seuil, exemption · fichiers : scripts/*.mjs
@@ -273,6 +280,33 @@ a été faite le jour même : le seul autre résultat était du texte narratif, 
 *(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne
 pratique n'a pas été payée par une erreur, et c'est la seule chose qui la distingue. Trois entrées
 au départ, toutes observées réellement sur ce projet — jamais des conseils génériques recopiés.)*
+
+## L12 — Un analyseur qui DEVINE saute en silence ; il doit refuser à la place
+
+Quand un outil lit un document pour en tirer une structure, la tentation est de déduire ce dont il
+a besoin de la prose (« le premier mot en majuscules du titre »). Ça marche sur les cas d'écriture
+du jour, puis un titre légèrement différent arrive : l'outil ne reconnaît rien, **saute la section,
+et rend un rapport d'apparence parfaitement normale auquel il manque une partie**.
+
+C'est plus grave qu'une erreur bruyante, parce que rien ne distingue le rapport amputé du rapport
+complet. Deux règles, ensemble et jamais l'une sans l'autre :
+
+1. **Le document porte un marqueur explicite** à un emplacement fixe, que l'outil LIT — jamais une
+   forme qu'il doit interpréter. Un marqueur oublié devient alors lui-même un écart signalé.
+2. **L'analyseur refuse bruyamment** ce qu'il ne sait pas nommer. Sur un outil dont le métier est
+   justement de repérer ce que personne ne vérifie, sauter une section en silence est le pire
+   défaut possible.
+
+Corollaire, qui ferme l'autre moitié du trou : quand une structure lue se rattache à une
+classification (un domaine, une famille, un rang), **tout élément qui ne se rattache à rien doit
+être crié**. Sans ça il n'est pas « en défaut », il n'est nulle part — donc jamais manquant.
+
+*Payée le 2026-09-23 : un titre en prose (« NIVEAU 2 — SES PROPRES documents ») a fait lire « SES »
+comme nom de niveau, et 7 exigences sur 29 ont disparu du rapport sans le moindre signe extérieur.*
+
+**Porté par** : `MOTIF_NIVEAU` et l'erreur levée par `parseStandards()` (`scripts/a-niveau.mjs`), plus la ligne « NIVEAUX ORPHELINS » de `formatANiveau()` — un titre illisible arrête l'outil, un niveau non rattaché est crié.
+
+**Terrain** : quand un outil lit un document normatif pour en tirer une structure · mots : parser, analyser, lire le document, titre, section, rattacher, classification, catalogue · fichiers : scripts/*.mjs, docs/referentiel/*.md
 
 ## BP1 — La règle s'écrit à UN endroit et se dérive partout ailleurs
 

@@ -1006,6 +1006,7 @@ tableau garde ce qui doit rester sous les yeux en permanence.)*
 
 | Nom | Ce que c'est | Architecture | Instanciation | Script |
 |---|---|---|---|---|
+| A-NIVEAU | le rassembleur de verdicts : tout est-il à niveau, et que ne vérifie personne ? | `docs/a-niveau-blueprint.md` | `docs/referentiel/a-niveau.md` | `scripts/a-niveau.mjs` |
 | ALWAYS-NEW-CODE | l'outil qui rend concrète l'épreuve de la page blanche | `docs/always-new-code-blueprint.md` | `docs/referentiel/always-new-code.md` | `scripts/always-new-code.mjs` |
 | angel-of-ia-process | contrôleur de process pour la CONDUITE (respect des règles de travail), jamais du déroulé d'une activité | `docs/angel-of-ia-process-blueprint.md` | `docs/referentiel/angel-of-ia-process.md` | `scripts/angel-of-ia-process.mjs` |
 | ARGUS | détecteur de trous logiques | `docs/argus-blueprint.md` | `docs/referentiel/argus.md` | `scripts/check-argus.mjs` |
@@ -1136,6 +1137,14 @@ demander si un outil déjà existant répondrait plus vite ou plus complètement
 - `docs/referentiel/tool-learning.md` (2026-09-22) — vérifie que les outils apprennent et que
   l'agent les y aide. Porte la MOITIÉ 2 de l'évolutivité (devenir meilleur). Frontière avec
   CASSANDRA : elle juge l'état et les moyens, lui la trajectoire et l'usage.
+- `docs/referentiel/a-niveau.md` (2026-09-23) — le RASSEMBLEUR de verdicts : un verdict par domaine
+  (l'Agence, les documents, le code, le jeu) contre les exigences écrites de
+  `docs/referentiel/standards.md`, et le nom de ce que PERSONNE ne vérifie. Il n'a aucun détecteur
+  propre — vingt contrôleurs qui disent « ma part va bien » ne disent jamais « tout va bien »,
+  faute que l'un d'eux détienne la liste de ce qui devrait être vérifié. Frontière avec CASSANDRA-RH
+  et TOOL-LEARNING : elles jugent un outil, lui juge la couverture des exigences elles-mêmes.
+- `docs/referentiel/standards.md` (2026-09-23) — sa source de vérité : les 29 exigences de
+  « être à niveau », chacune nommant son vérificateur ou déclarant que personne ne la vérifie.
 - `docs/referentiel/lecons.md` (2026-09-23) — le registre des LEÇONS TRANSVERSES : ce que le projet a
   appris en se trompant, formulé pour resservir ailleurs que là où l'erreur a eu lieu. Distinct des
   trois autres natures de document : la charte ORDONNE, le référentiel technique DÉCRIT le code, le

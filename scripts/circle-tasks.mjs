@@ -255,6 +255,19 @@ export const CIRCLE_ITEMS = [
     execute: "Lancer node scripts/tool-learning.mjs, juger chaque outil concerné (jugerUnOutil), proposer l'amélioration la moins coûteuse là où une preuve manque (proposerAmelioration), et NE créer une tâche que si l'agent retient la proposition ET qu'elle exige une validation de l'utilisateur (tacheADeclencher). Vérifier aussi ses propres verdicts passés (verifierSesPropresVerdicts) — un outil jugé immobile qui a progressé sans mon intervention réfute le critère, pas l'outil. Écrire le signal via recordCircleItemReport('tool-learning', ...). PROCESS XP-IA-bonnes-pratiques-et-lecons (2026-09-23, docs/xp-ia-process-detail.md) — ce poste porte aussi les DEUX étapes de Ronde de ce process, et ce sont les seules que la mécanique ne peut pas produire à ma place : (1) ÉCRIRE LA CONCLUSION DE PÉRIODE sur MA façon de travailler (enregistrerXp avec nature 'conclusion'), à partir du journal XP et du registre des leçons — l'outil sait compter les captations, il ne sait pas dire quel travers revient chez moi ; (2) PRÉSENTER LES ENTRÉES À L'UTILISATEUR pour qu'il dise lesquelles ont été réellement APPLIQUÉES (enregistrerXp avec nature 'jugement', parUtilisateur: true) — jamais l'agent sur son propre travail, c'est une décision explicite du 2026-09-23. Et la Ronde est elle-même un des trois moments déclencheurs : répondre à « y avait-il quelque chose à retenir ? », « rien à retenir » compris.",
     producesReport: true,
   },
+  // a-niveau (2026-09-23) — LE VERDICT D'ENSEMBLE, et il a sa place ici plutôt qu'au commit pour une
+  // raison de fond : « tout est-il à niveau ? » n'est pas une question qu'on se pose après avoir
+  // touché trois lignes, c'est une question de période. À chaque commit elle produirait le même
+  // verdict des dizaines de fois d'affilée, et un signal qui ne change jamais cesse d'être lu.
+  {
+    id: "a-niveau",
+    theme: "Qualité & fun",
+    label: "Tout est-il à niveau ? — un verdict par domaine, et ce que personne ne vérifie",
+    cout: "gratuit — relit le référentiel des standards et relaie des verdicts déjà calculés",
+    tokensEstimes: "faible — un document et un audit d'intégration déjà existant",
+    execute: "Lancer node scripts/a-niveau.mjs. Lire les quatre verdicts de domaine, puis regarder d'abord les deux catégories que RIEN d'autre ne remonte : les exigences déclarées que personne ne vérifie (elles sont attendues, elles doivent rester peu nombreuses et assumées) et les vérificateurs FANTÔMES (une exigence qui annonce une fonction inexistante — jamais toléré, c'est une promesse creuse, à corriger le jour même). Le retard outil par outil vient d'integrationAudit() et se traite comme d'habitude. Un niveau ORPHELIN signalé veut dire que le référentiel a gagné une section que le verdict ne compte nulle part : la rattacher dans DOMAINES ou la renommer, jamais la laisser.",
+    producesReport: true,
+  },
   // recap-evaluations (2026-09-22, demande explicite de l'utilisateur : « je veux lors de la ronde le
   // détail des KPI et/ou evaluations, notes qui sont produites par certains outils, dans un fichier
   // HTML normé bien mis en evidence [...] qui me juge comment, de quelle maniere, sur quelles bases,
@@ -1087,6 +1100,7 @@ export const CIRCLE_REPORT_FOLDERS = {
   kpi: "docs/tableau-de-bord/",
   "pure-gold-unity-scan": "docs/pure-gold-unity/",
   "tool-learning": "docs/tool-learning/",
+  "a-niveau": "docs/a-niveau/",
   "recap-evaluations": "docs/angel-of-ia-process/",
   "smart-conso-token-scan": "docs/smart-conso-token/",
   "cassandra-rh-signal": "docs/cassandra-rh/",

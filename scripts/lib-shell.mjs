@@ -143,6 +143,10 @@ export const AGENT_CATEGORIES = {
   // il juge une TRAJECTOIRE, et une trajectoire ne se mesure pas à chaque commit (trois passages
   // minimum avant de conclure), donc il a sa place dans un rythme périodique.
   "tool-learning": "Membre — Suite Dette & Structure du code",
+  // A-NIVEAU (2026-09-23) : Membre, jamais Gardien sacré. Il ne remplit AUCUN des deux volets du
+  // critère — il ne scanne rien par lui-même (il rassemble ce que les contrôleurs ont déjà dit) et
+  // il ne tourne pas à chaque commit (un verdict d'ensemble à chaque commit serait du bruit).
+  "a-niveau": "Membre — Suite Dette & Structure du code",
   // integration-outil (2026-09-22) : Membre, jamais Gardien. Il ne scanne pas la qualité du code et
   // ne tourne pas à chaque commit — les deux volets du critère d'appartenance, dont aucun n'est
   // facultatif (Article 20). Il répond à la demande, avant de faire entrer un outil.
@@ -378,6 +382,10 @@ export const TOOL_RELIABILITY = {
   // déclarerait tout le monde absent — d'où un chiffre spectaculaire et faux, comme SAFE-EXPORT en a
   // produit un le même jour.
   "integration-outil": { nature: "mécanique", pourquoi: "il lit les registres réels et rapporte présent/absent, jamais une interprétation — findLecteursCasses() refuse de conclure quand un lecteur ne reconnaît plus la forme de son registre" },
+  // A-NIVEAU : mécanique par construction — il ne produit aucune estimation propre. Chaque ligne
+  // de son verdict est soit une lecture littérale du référentiel, soit un chiffre rendu par un
+  // contrôleur qui porte déjà, lui, son propre avertissement s'il en a besoin.
+  "a-niveau": { nature: "mecanique", pourquoi: "il n'estime rien : il relit le référentiel des standards et relaie des verdicts déjà calculés ailleurs" },
   "tool-learning": { nature: "heuristique", pourquoi: "il juge une trajectoire : sous trois passages il refuse de conclure, et une baisse de trouvailles peut venir d'un code qui s'est amélioré plutôt que d'un outil qui régresse" },
   "cassandra-rh": { nature: "heuristique", pourquoi: "relaie et recoupe ce que les autres outils estiment — elle hérite de leurs approximations" },
   ecotoken: { nature: "heuristique", pourquoi: "le poids en tokens est estimé et le rangement d'un bloc se devine — un bloc qui cite un fichier n'y appartient pas forcément" },

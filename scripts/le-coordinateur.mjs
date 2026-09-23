@@ -207,6 +207,11 @@ export const PRESTATIONS = [
   // celui-ci n'avait personne. Trouvé au premier vrai passage d'integration-outil.mjs, qui existe
   // précisément pour rendre la liste des registres DEMANDABLE avant de commencer.
   { nom: "Pack Départ", description: "Vérifie si l'outillage et le code sont exportables : jargon propre au projet resté dans un blueprint, terme employé sans fiche qui le définisse, mécanisme sans sa raison écrite.", demande: "Exportabilité de l'Agence, reprise par une autre IA (Article 27)", outils: ["SAFE-EXPORT"], cout: "0 appel API — couche légère mécanique", tokensEstimes: "nul en couche légère ; la sonde profonde, elle, se propose et se valide avant" },
+  // A-NIVEAU (2026-09-23) — la prestation que personne ne rendait : un verdict d'ENSEMBLE. Chaque
+  // pack ci-dessous répond de sa part ; celui-ci répond de la question que l'utilisateur a posée
+  // telle quelle (« qui se charge de vérifier que tout est à niveau »), et surtout nomme ce que
+  // personne ne vérifie — ce qu'aucun contrôleur ne peut dire de lui-même.
+  { nom: "Pack Niveau", description: "Rend UN verdict par domaine (l'Agence, les documents, le code, le jeu) contre les exigences écrites du référentiel des standards, et nomme les exigences que personne ne vérifie ainsi que les outils restés en retard sur l'équipe.", demande: "Est-ce que tout est à niveau ? (standards, formats, gabarits)", outils: ["A-NIVEAU"], cout: "0 appel API", tokensEstimes: "nul — relit un document et relaie des verdicts déjà calculés" },
   { nom: "Pack Trajectoire", description: "Juge si chaque outil PROGRESSE vraiment (relit-il sa mémoire, se trompe-t-il moins) ou s'il archive sans rien apprendre — et me juge, moi, sur les diagnostics que j'ai laissés sans suite.", demande: "Apprentissage réel de l'outillage, et mon apport à cet apprentissage", outils: ["TOOL-LEARNING"], cout: "0 appel API", tokensEstimes: "nul — lecture de registres déjà sur le disque" },
   { nom: "Pack Accueil", description: "Dit, registre par registre, ce qui reste à renseigner pour faire entrer un nouvel outil dans l'Agence — lu dans les fichiers réels, jamais une liste recopiée.", demande: "Intégrer un nouvel outil sans découvrir les oublis un test après l'autre", outils: ["integration-outil"], cout: "0 appel API", tokensEstimes: "nul — lecture de fichiers déjà sur le disque" },
   { nom: "Pack Empreinte", description: "Note la fidélité d'un texte déjà écrit (transcript, extrait) à l'esprit rugueux des personnages.", demande: "Fidélité de l'esprit des personnages (Article 0)", outils: ["EL-PROFESSOR"], cout: "0 appel API — relit un texte déjà produit", tokensEstimes: "variable — proportionnel à la taille du texte relu" },
@@ -457,7 +462,7 @@ function badgeWarningsForOutils(outils, onboardingContext) {
   const rows = parseToolsTable(onboardingContext.toolsTableMarkdown);
   const warnings = [];
   for (const outil of outils) {
-    const primaryName = outil.split(/[/(]/)[0].trim();
+    const primaryName = primaryToolName(outil);
     const row = rows.find((r) => r.tool.toLowerCase().includes(primaryName.toLowerCase()) || primaryName.toLowerCase().includes(r.tool.toLowerCase()));
     if (!row || !CERTIFIABLE_STATUTS.includes(row.statut)) continue;
     const overrides = onboardingContext.agentOverrides?.[row.tool] ?? {};
@@ -483,7 +488,7 @@ export function findToolsMissingFromMenu(toolsTableMarkdown, prestations = PREST
   const menuText = prestations.map((p) => p.outils.join(" ")).join(" ").toLowerCase();
   return parseToolsTable(toolsTableMarkdown)
     .filter(isMenuWorthy)
-    .map((row) => row.tool.split(/[/(]/)[0].trim())
+    .map((row) => primaryToolName(row.tool))
     .filter((primaryName) => !menuText.includes(primaryName.toLowerCase()));
 }
 
@@ -498,7 +503,7 @@ export function findScriptsMissingFromAgentFiles(toolsTableMarkdown, agentScript
   const known = new Set(Object.keys(agentScriptFiles));
   return parseToolsTable(toolsTableMarkdown)
     .filter((row) => row.statut === "Agent")
-    .map((row) => row.tool.split(/[/(]/)[0].trim())
+    .map((row) => primaryToolName(row.tool))
     .map((primaryName) => slugifyAgentName(primaryName))
     .filter((slug) => !known.has(slug));
 }
@@ -518,6 +523,21 @@ export function findScriptsMissingFromAgentFiles(toolsTableMarkdown, agentScript
 // (`docs/<slug>-blueprint.md`) — sauf si l'agent est explicitement déclaré `cousinOf` un autre
 // (seul cas actuel : THE-DEEP-READER, cousin de THE-FINAL-JUDGE). Jamais une vérification des
 // TESTS eux-mêmes (check-house.mjs le fait déjà à chaque commit, aucune raison de le refaire ici).
+// primaryToolName() (2026-09-23) — LE NOM PRINCIPAL D'UNE CELLULE DE LA TABLE MAÎTRESSE, isolé ici
+// parce que le même découpage était recopié à l'identique dans trois fonctions de ce fichier
+// (`badgeWarningsForOutils`, `findToolsMissingFromMenu`, `findScriptsMissingFromAgentFiles`) et
+// OUBLIÉ dans un quatrième appelant écrit le même jour (A-NIVEAU), qui a aussitôt fabriqué
+// dix-sept faux écarts : la cellule entière, parenthèse de précision comprise, devenait le slug
+// (« docs/referentiel/cassandra-rh-scripts-cassandra-rh-mjs.md »), donc tout manquait.
+//
+// LA RAISON DU DÉCOUPAGE, pour qui la modifierait : une cellule de la table maîtresse porte le nom
+// de l'outil, puis une précision entre parenthèses ou après une barre oblique (le fichier de
+// script, un ancien nom, un surnom). Seul ce qui précède fait identité — c'est la convention de la
+// table elle-même, pas une heuristique.
+export function primaryToolName(tool) {
+  return String(tool ?? "").split(/[/(]/)[0].trim();
+}
+
 export function slugifyAgentName(name) {
   return String(name ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
@@ -533,7 +553,7 @@ export function slugifyAgentName(name) {
 // parenthèses ou après une barre oblique, PUIS l'extension de fichier, avant de slugifier — jamais
 // une troisième règle de nommage inventée à côté, toujours slugifyAgentName() au bout.
 export function toolIdentitySlug(name) {
-  const principal = String(name ?? "").split(/[/(]/)[0].trim().replace(/\.(mjs|js|ts|tsx)$/i, "");
+  const principal = primaryToolName(name).replace(/\.(mjs|js|ts|tsx)$/i, "");
   return slugifyAgentName(principal);
 }
 
@@ -1105,7 +1125,7 @@ export function integrationAudit(onboardingContext, { scriptsNonDeclares = [], a
   const incomplets = [];
   const nonVerifiables = [];
   for (const row of rows) {
-    const primaryName = row.tool.split(/[/(]/)[0].trim();
+    const primaryName = primaryToolName(row.tool);
     const overrides = onboardingContext.agentOverrides?.[primaryName] ?? {};
     let res;
     try {
@@ -1155,7 +1175,7 @@ export function checkAllAgentBadges(onboardingContext, { historyPath = BADGE_CER
   const rows = parseToolsTable(onboardingContext.toolsTableMarkdown).filter((r) => CERTIFIABLE_STATUTS.includes(r.statut));
   const announcements = [];
   for (const row of rows) {
-    const primaryName = row.tool.split(/[/(]/)[0].trim();
+    const primaryName = primaryToolName(row.tool);
     const overrides = onboardingContext.agentOverrides?.[primaryName] ?? {};
     let result;
     try {
