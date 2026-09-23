@@ -90,3 +90,34 @@ compte des occurrences brutes et un champ lu une seule fois passe sous son seuil
 `trottoirGranted`, est le seul champ réellement jamais lu : son écart est **écarté EN ATTENTE**,
 jamais clos, rattaché à la décision documentée de `docs/referentiel/parametres.md:306` et à la
 tâche #92 (refonte graphique) qui devra le reprendre.
+
+## Ce qu'est un TROU LOGIQUE, et pourquoi ce mot ne se laisse pas remplacer
+
+*(Section ajoutée le 2026-09-23, lot 1 du chantier CLAUDE.md. Sa raison d'être est mécanique :
+MOÏSE-TABLES-DE-LOI a refusé qu'on réduise l'Article 20 à un renvoi vers cette fiche, parce que la
+fiche ne définissait nulle part le mot qui fait tout le métier d'ARGUS. Un renvoi vers un document
+qui ne porte pas ce qu'on lui confie ressemble à un lien et n'en est pas un — c'est pire qu'une
+absence.)*
+
+**Le trou logique est ce qu'aucun autre garde-fou de la charte ne couvre.** C'est sa définition en
+creux, et elle est volontaire : chaque autre article protège une chose nommée — l'esprit des
+personnages, la cohérence des jauges, la non-répétition, la robustesse du code. ARGUS s'occupe de
+ce qui tombe ENTRE ces protections.
+
+Quatre formes, et elles ne se recouvrent pas :
+
+1. **La combinaison jamais envisagée** — deux mécanismes corrects chacun de son côté, dont personne
+   n'a examiné la rencontre. Exemple réel de ce projet : un personnage endormi recevant un bonus qui
+   suppose qu'il parle.
+2. **Le cas limite oublié** — la valeur extrême, la liste vide, le premier tour, le dernier.
+3. **La conséquence logique manquée** — une règle A implique une règle B que personne n'a écrite.
+4. **Le lien discret non vu** — deux endroits du code qui dépendent l'un de l'autre sans qu'aucun
+   commentaire, aucun import, aucun test ne le dise.
+
+**Ce qui le distingue d'un bug** : un bug est un comportement qui ne fait pas ce qui est écrit. Un
+trou logique est un comportement dont personne n'a jamais écrit ce qu'il devrait faire. Le premier
+se corrige, le second se DÉCIDE — et c'est pourquoi ARGUS signale plutôt qu'il ne corrige.
+
+**Ce qui le distingue d'une incohérence HARMONIA** : HARMONIA compare deux choses qui existent
+toutes les deux et devraient s'accorder (un chiffre dans un document, le même chiffre dans le code).
+ARGUS cherche ce qui n'existe NULLE PART. L'un vérifie un lien, l'autre son absence.

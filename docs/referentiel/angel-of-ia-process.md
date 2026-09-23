@@ -192,3 +192,30 @@ un jugement automatique dessus serait une interprétation déguisée en mesure.
 photographie, et c'est la première chose qu'il regardera. Registre :
 `docs/angel-of-ia-process/historique-evaluations.json`. On compare **avant** d'enregistrer, sinon on
 comparerait le passage à lui-même.
+
+## `resume-contextualise` — la règle de conduite qu'aucun programme ne peut lire
+
+*(Section ajoutée le 2026-09-23, lot 1 du chantier CLAUDE.md. MOÏSE-TABLES-DE-LOI a refusé de
+réduire l'Article 29 à un renvoi vers cette fiche : la charte y désigne nommément son porteur, et le
+nom n'apparaissait nulle part ici. La charte promettait donc une adresse qui ne répondait pas —
+exactement ce que l'Article 27 appelle une dette de reprise.)*
+
+**Ce que la règle demande** : tout compte rendu de travail s'ouvre sur un bloc visuellement séparé
+rappelant le contexte, la demande de l'utilisateur dans ses mots à lui, l'étiquette de la ou des
+tâches concernées, et un vocabulaire compréhensible sans être développeur.
+
+**Ce qu'aucun mécanisme ne peut faire, et pourquoi c'est déclaré plutôt que tu** : un compte rendu
+n'existe pas sur le disque. Il est écrit dans la conversation, lu, puis il disparaît. Aucun script
+ne peut aller vérifier qu'il portait ses quatre rappels. C'est la limite honnête de tout ce qui
+relève de la CONDUITE, par opposition au déroulé d'une activité que god-of-all-process peut suivre
+à la trace.
+
+**La seule protection possible, et elle est appliquée ici** : la règle est INTERROGÉE plutôt que
+constatée. `resume-contextualise` figure dans `REGLES_SURVEILLEES` avec une clé de réponse
+obligatoire ; sans réponse, angel refuse d'être au vert — il ne suppose jamais la conformité, il
+déclare « pas mesuré ». Une règle qu'on suppose respectée est une règle qui a cessé de l'être sans
+que personne ne le sache (leçon L1).
+
+**Ce que ça implique pour une autre IA qui reprend le projet** : cette règle ne survivra que parce
+qu'elle est écrite à deux endroits et qu'on vous la redemandera. Il n'y a pas de test à faire
+passer, et il n'y en aura jamais.

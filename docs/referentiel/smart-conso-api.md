@@ -115,3 +115,32 @@ consommation d'électricité ». Même logique déjà appliquée à `docs/argus-
 `docs/harmonia-blueprint.md` : ce document décrit le PATRON générique, réutilisable sur un autre
 projet appelant une API tierce à quota limité ; l'instanciation propre à *Maison IA vivante* vit
 dans `docs/referentiel/smart-conso-api.md`.)*
+
+## Les deux seuils et `assess()` — le mécanisme, en toutes lettres
+
+*(Section ajoutée le 2026-09-23, lot 1 du chantier CLAUDE.md, pour la même raison mécanique que sa
+jumelle dans `argus.md` : MOÏSE-TABLES-DE-LOI a refusé de réduire l'Article 22 à un renvoi vers
+cette fiche tant qu'elle ne portait ni le mot « seuil souple » ni le nom de la fonction consultée.
+Les sections « Seuil dur » et « Avertissement souple » ci-dessus décrivaient chacune SON seuil ; ce
+qui manquait était le geste qui les réunit et le nom sous lequel on le demande.)*
+
+**`assess({ actionType, context, history, now, agentIdentity, investment })`
+(`scripts/smart-conso-api.mjs`) est le point d'entrée unique**, et « consulter Smart Conso API »
+ne veut jamais dire autre chose que l'appeler. Ce n'est pas un détail de vocabulaire : une consigne
+qui dit « consulter » sans nommer la fonction se satisfait d'un coup d'œil au quota, ce qui n'est
+pas la même chose et ne laisse aucune trace.
+
+**Les deux verdicts, et leur différence d'autorité :**
+
+- **Seuil SOUPLE** — un avertissement. Il reste négociable : l'agent peut passer outre en écrivant
+  pourquoi. Il existe pour que la consommation ne dérive pas sans que personne ne s'en aperçoive,
+  jamais pour empêcher un travail légitime.
+- **Seuil DUR** — non négociable. Il exige une validation humaine explicite avant toute action
+  coûteuse. Aucune urgence, aucun « je suis presque fini », aucune instruction antérieure de
+  l'utilisateur ne vaut dispense : c'est précisément parce qu'on est pressé qu'on grille un quota.
+
+**La frontière avec l'Article 8, qui est la chose à ne jamais confondre** : cet outil régule le
+RYTHME des actions de l'agent pendant le développement. Il ne touche jamais à l'architecture du jeu
+en production, et son expérience INFORME l'Article 8 sans jamais le trancher. Un verdict de Smart
+Conso API ne peut donc pas servir d'argument pour fusionner les deux cerveaux, baisser la qualité
+d'un appel, ou modifier quoi que ce soit que l'Article 0 protège.

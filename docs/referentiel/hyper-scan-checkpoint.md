@@ -119,3 +119,31 @@ La partie mécanique du script a été validée (exécutions de test lors de la 
 consignées dans l'index puisqu'elles ne couvraient pas la checklist qualitative). Le premier VRAI
 passage — mécanique + checklist qualitative traitée par l'agent — reste à faire, à la demande de
 l'utilisateur.
+
+## Pourquoi il est EXCEPTIONNEL, et ce que ce mot interdit
+
+*(Section ajoutée le 2026-09-23, lot 1 du chantier CLAUDE.md. MOÏSE-TABLES-DE-LOI a refusé de
+réduire l'Article 21 à un renvoi vers cette fiche : elle décrivait tout de l'outil sauf la seule
+chose que l'Article dit de lui — qu'il est exceptionnel. Une fiche qui documente le comment et omet
+le quand ne peut pas recevoir la règle.)*
+
+**Il ne se déclenche jamais tout seul.** Ni à chaque commit comme les Gardiens sacrés, ni à chaque
+Ronde comme les items périodiques, ni au bout de N jours. Deux déclencheurs, et deux seulement :
+une demande explicite de l'utilisateur, ou une proposition de l'agent après une grosse vague de
+changements — proposition qui attend toujours une confirmation, jamais un lancement d'office.
+
+**Ce que « exceptionnel » interdit concrètement**, et chaque interdit ferme une dérive réelle :
+
+- **Jamais dans une routine automatique.** Un scan approfondi qui tourne tout seul devient un
+  rapport qu'on ne lit plus au bout de trois passages, et il coûte alors exactement ce qu'il ne
+  rapporte plus.
+- **Jamais « pendant qu'on y est ».** Sa version complète fait de vrais appels API (Article 8), donc
+  elle passe par Smart Conso API comme toute action coûteuse, sans exception au motif qu'il s'agit
+  d'un diagnostic.
+- **Jamais comme preuve que tout va bien.** Son seul critère de succès est le nombre de bugs
+  réellement inconnus qu'il a fait remonter — jamais « il a tourné sans erreur ». Un passage qui ne
+  trouve rien n'est pas un bon passage, c'est un passage qui n'a rien trouvé, et deux de suite
+  posent la question de son réglage plutôt que celle de la santé du code.
+
+**La conséquence pour qui reprend ce projet** : si vous hésitez à le lancer, ne le lancez pas. Son
+utilité vient de sa rareté ; banalisé, il devient un coût fixe déguisé en vigilance.

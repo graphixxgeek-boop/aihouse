@@ -68,3 +68,29 @@ travail, la façon de rendre compte, la qualité des échanges. Ce domaine appel
 distinct, dont ce référent relaie le verdict dans une section clairement à part. Les mélanger
 produirait un rapport où « une étape a été sautée » et « la personne a mal expliqué son travail »
 auraient le même poids, alors qu'ils n'appellent ni la même correction ni le même interlocuteur.
+
+## `selfCheck()` — le surveillant qui se surveille
+
+*(Section ajoutée le 2026-09-23, lot 1 du chantier CLAUDE.md. MOÏSE-TABLES-DE-LOI a refusé de
+réduire l'Article 26 à un renvoi vers ce blueprint tant qu'il ne décrivait pas le mécanisme que la
+charte lui attribue nommément.)*
+
+**Le problème qu'il ferme est structurel, pas accidentel.** Un référent de la discipline
+d'exécution porte son PROPRE process — celui qui dit comment il produit son rapport, qui il relaie,
+ce qu'il vérifie. Ce process-là n'a, par construction, personne au-dessus de lui. Et un surveillant
+que personne ne surveille dérive exactement comme les autres, avec cette différence qu'il continue
+pendant ce temps à distribuer des verdicts qui font autorité.
+
+**Ce que `selfCheck()` vérifie sur le référent lui-même**, avec la même exigence qu'il applique aux
+autres : son process maître est-il déclaré au même endroit que ceux des autres · chacune de ses
+propres étapes a-t-elle une preuve vérifiable ou une déclaration honnête de non-mesurabilité · les
+documents qu'il promet existent-ils réellement · les contrôleurs secondaires dont il relaie la voix
+sont-ils tous déclarés.
+
+**Le parti pris qui le rend crédible** : son auto-vérification ne bénéficie d'aucun traitement de
+faveur. Elle utilise le MÊME code que les vérifications ordinaires, appliqué à sa propre entrée.
+Une auto-vérification écrite à part serait une seconde vérité, et la seconde vérité d'un
+surveillant est toujours la plus indulgente.
+
+**Sa limite honnête, déclarée** : il vérifie la STRUCTURE de son process, jamais la JUSTESSE de ses
+verdicts. Savoir si une étape signalée manquante l'était vraiment reste un jugement humain.
