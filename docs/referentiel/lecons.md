@@ -319,6 +319,30 @@ comme nom de niveau, et 7 exigences sur 29 ont disparu du rapport sans le moindr
 
 **Terrain** : quand un outil lit un document normatif pour en tirer une structure · mots : parser, analyser, lire le document, titre, section, rattacher, classification, catalogue · fichiers : scripts/*.mjs, docs/referentiel/*.md
 
+## L13 — Une preuve satisfaite par le registre vide qu'elle doit remplir ne prouve rien
+
+Quand une étape déclare pour preuve « un fichier existe dans tel dossier », et que ce dossier
+contient déjà son propre `index.md` d'inauguration, **l'étape est comptée comme faite le jour de sa
+création** — avant que quoi que ce soit n'ait eu lieu.
+
+Ce qui rend ce défaut particulièrement discret : les deux pièces sont irréprochables prises
+séparément. Le registre est honnête (il écrit noir sur blanc « aucun constat encore produit »), le
+contrôleur est honnête (il cherche bien un fichier réel sur le disque). C'est leur COMBINAISON qui
+ment, et aucune relecture de l'un ou de l'autre ne peut le voir.
+
+La règle : une preuve doit exiger un **artefact de travail** (daté, nommé par ce qu'il rapporte),
+jamais un fichier quelconque du dossier. Corollaire du même esprit : un registre qui n'a jamais rien
+reçu doit rester reconnaissable comme tel, parce que c'est cette reconnaissance-là qui distingue le
+premier jour du centième.
+
+*Payée le 2026-09-23 : memory-audit était compté comme exécuté à chaque simulation depuis sa
+création, sans avoir jamais tourné une seule fois. Vérification faite ensuite sur les onze étapes
+prouvées de cette façon — deux étaient dans ce cas, pas une.*
+
+**Porté par** : **aucun mécanisme pour l'instant, et c'est déclaré plutôt que tu.** Resserrer les preuves demanderait de toucher aux étapes de process, ce que l'enquête de chantier 11 s'était explicitement interdit (aucun changement). La correction est proposée à l'utilisateur dans `docs/plans/memory-audit-enquete-2026-09-23.md` (option C) ; tant qu'elle n'est pas tranchée, cette leçon ne tient qu'à ce texte.
+
+**Terrain** : quand je déclare la preuve d'une étape de process, ou quand je crée un registre neuf · mots : preuve, étape, process, registre, index, dossier, tracée · fichiers : scripts/god-of-all-process.mjs, docs/*-process-detail*
+
 ## BP1 — La règle s'écrit à UN endroit et se dérive partout ailleurs
 
 Devant vingt endroits à corriger, le réflexe est de corriger les vingt. Le bon geste est de trouver
