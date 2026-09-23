@@ -122,6 +122,10 @@ export const REGISTRIES = [
   { slug: "the-final-judge", label: "THE-FINAL-JUDGE", family: "Audit indépendant", path: "docs/the-final-judge/", decision: "delivery_html", scriptPath: "scripts/the-final-judge.mjs" },
   { slug: "the-deep-reader", label: "THE-DEEP-READER", family: "Audit indépendant", path: "docs/suivi/relectures-lourdes/", decision: "delivery_html", scriptPath: "scripts/the-deep-reader.mjs" },
   { slug: "check-tasks-details", label: "check-tasks-details", family: "Coordination", path: "docs/check-tasks-details/", decision: "archived_html", scriptPath: "scripts/check-tasks-details.mjs" },
+  // OÙ ON EN EST (2026-09-23) — troisième angle sur les mêmes tâches, à côté de la Ronde (rien
+  // n'a-t-il dérivé ?) et de l'état des tâches (qu'est-ce qu'on fait maintenant ?) : celui-ci dit
+  // ce qui a été FAIT et ce que le projet y a gagné. HTML archivé, comme ses deux voisins.
+  { slug: "ou-on-en-est", label: "Où on en est", family: "Coordination", path: "docs/ou-on-en-est/", decision: "archived_html", scriptPath: "scripts/ou-on-en-est.mjs" },
   { slug: "le-coordinateur-catalogue", label: "Catalogue LE-COORDINATEUR", family: "Coordination", path: "docs/le-coordinateur-catalogue/", decision: "delivery_html", scriptPath: "scripts/le-coordinateur.mjs" },
   { slug: "dream-team-photo", label: "Photo de la dream team", family: "Coordination", path: "docs/profil-utilisateur/", decision: "delivery_html", scriptPath: "scripts/le-coordinateur.mjs" },
   { slug: "find-booster", label: "find-booster", family: "Outillage de navigation", path: "docs/find-booster/", decision: "texte", scriptPath: "scripts/find-booster.mjs" },
@@ -617,7 +621,7 @@ export const RELIABILITY_SCRIPT_FILES = {
   "el-professor": "scripts/el-professor.mjs", "the-screener": "scripts/the-screener-capture.mjs",
   "the-final-judge": "scripts/the-final-judge.mjs", "the-deep-reader": "scripts/the-deep-reader.mjs",
   "smart-breaker": "scripts/check-gemini-quota.mjs", "smart-conso-token": "scripts/smart-conso-token.mjs",
-  "circle-tasks": "scripts/circle-tasks.mjs", "check-tasks-details": "scripts/check-tasks-details.mjs",
+  "circle-tasks": "scripts/circle-tasks.mjs", "check-tasks-details": "scripts/check-tasks-details.mjs", "ou-on-en-est": "scripts/ou-on-en-est.mjs",
   "charter-spy": "scripts/smart-conso-token.mjs", "doc-report": "scripts/doc-report.mjs",
   "the-king": "scripts/the-king.mjs", "memory-audit": "scripts/memento.mjs",
   "find-deep-booster": "scripts/route-booster.mjs", "find-brain": "scripts/find-brain.mjs",

@@ -178,3 +178,107 @@ C'est le point sur lequel j'attendrais ton arbitrage en priorité : déplacer ce
 rappels avant l'action plutôt qu'après. Le crochet pre-commit existe déjà et il
 bloque, donc c'est faisable — mais ça changerait le rythme de travail, et ce
 genre de décision est la tienne.
+
+
+===================================================================
+TES TROIS NOUVELLES QUESTIONS — 2026-09-23, fin de journée
+===================================================================
+
+Même règle que plus haut : tout est MESURÉ sur le vrai dépôt. Quand je ne sais
+pas, je l'écris.
+
+
+-------------------------------------------------------------------
+5. « est-ce que EL-PROFESSOR est devenu le responsable des
+    simulations ? (notamment /transcript) éclaire-moi »
+-------------------------------------------------------------------
+
+RÉPONSE COURTE : NON. Et le transcript ne lui appartient pas du tout.
+
+Il y a TROIS rôles distincts autour d'une simulation, et les confondre est
+facile parce qu'ils travaillent tous sur le même transcript :
+
+  1. process.simulation.guardian — LE CONTRÔLEUR DU DÉROULÉ.
+     C'est lui qu'on consulte AVANT de lancer, et lui seul peut BLOQUER un
+     lancement (preflight / gate / postflight). Il ne juge jamais la qualité
+     du texte produit : il vérifie que les étapes ont été faites.
+
+  2. LE-RÉGISSEUR — L'EXÉCUTANT MÉCANIQUE. C'est LUI le propriétaire du
+     transcript : il l'archive (archiveSimulationFiles), le rend en HTML
+     (renderTranscriptHtml), résume le journal brut avant de le jeter
+     (summarizeAndArchiveJournal), produit le rapport KPI. Il ne juge rien
+     non plus — il range.
+
+  3. EL-PROFESSOR — LE CORRECTEUR. Il NOTE la fidélité à la charte d'un texte
+     DÉJÀ produit. Il lit le transcript ; il ne le fabrique pas, ne l'archive
+     pas, ne le rend pas en HTML. Ses seules fonctions mécaniques sont des
+     contrôles de couverture : quelles simulations n'ont pas encore de note
+     (findMissingNotes), quelles notes ne correspondent à aucune simulation
+     (findOrphanNotes).
+
+D'OÙ VIENT LA CONFUSION, et elle est légitime : EL-PROFESSOR est le seul des
+trois dont tu vois le RÉSULTAT (une note sur 100, des constats). Les deux
+autres travaillent en coulisses. Ce qui est visible passe pour ce qui commande.
+
+CE QUE JE NE PEUX PAS AFFIRMER : que cette répartition soit écrite noir sur
+blanc quelque part d'une seule pièce. Elle se déduit du code et de l'Article 18,
+elle n'a pas de page qui la dise en trois lignes. Si la question t'est venue,
+c'est probablement que ça manque — je l'ai inscrit en tâche.
+
+
+-------------------------------------------------------------------
+6. « pure-gold et equalizer ne sont pas des doublons ? explique-moi »
+-------------------------------------------------------------------
+
+RÉPONSE COURTE : NON, et la frontière est nette — mais ta question est fondée,
+parce que les deux répondent à une phrase qui se ressemble beaucoup.
+
+  · pure-gold-unity juge LES RAPPORTS QUE LES OUTILS PRODUISENT.
+    Ses cinq critères portent tous sur un rapport : a-t-il du contenu, se
+    date-t-il, conclut-il par un plan d'action, dit-il TOUT ce que l'outil
+    sait détecter, et (depuis aujourd'hui) peut-il dire « tout va bien » sans
+    avoir rien mesuré ? Son objet, c'est la PAROLE des outils.
+
+  · THE-EQUALIZER juge LA COUVERTURE DES EXIGENCES ÉCRITES.
+    Il lit docs/referentiel/standards.md — 29 exigences réparties en quatre
+    domaines — et dit, pour chacune, qui la vérifie, ou que personne ne la
+    vérifie. Son objet, c'est la CARTE de ce qui devrait être surveillé.
+
+LA DIFFÉRENCE EN UNE IMAGE : pure-gold demande « ce que cet outil dit est-il
+bien dit ? ». THE-EQUALIZER demande « y a-t-il une exigence dont personne ne
+parle ? ». Le premier peut donner un vert parfait à vingt outils pendant que
+le second trouve un trou béant — c'est d'ailleurs exactement ce qui est arrivé
+aujourd'hui : tous les rapports étaient conformes, et deux exigences du code
+n'avaient aucun vérificateur.
+
+CE QUI LES REND COMPLÉMENTAIRES PLUTÔT QUE REDONDANTS : THE-EQUALIZER ne
+possède AUCUN détecteur propre. Il relaie des verdicts calculés ailleurs. Il ne
+pourrait pas remplacer pure-gold sans réimplémenter ses cinq critères ; et
+pure-gold ne saurait jamais qu'une exigence manque, puisqu'il ne lit pas le
+référentiel des standards.
+
+VÉRIFIÉ, PAS SUPPOSÉ : aucun des deux n'appelle une fonction de l'autre, et
+leurs sorties n'ont aucune ligne en commun.
+
+
+-------------------------------------------------------------------
+7. « revoir process mode auto/semi-auto : à consolider ensemble »
+-------------------------------------------------------------------
+
+Ce n'est pas une question mais un chantier, et il demande TA présence — je l'ai
+donc inscrit en tâche plutôt que de le trancher seul.
+
+CE QUI EXISTE AUJOURD'HUI, pour que tu arrives avec le contexte :
+les trois modes de travail (autonome / semi-autonome / accompagné) sont un
+registre lu, pas un drapeau recopié. Le mode est PERSISTÉ (un agent qui reprend
+en cours de session doit le savoir sans demander, sa mémoire ne survivant pas),
+un mode inconnu est refusé bruyamment plutôt que remplacé en silence, et un
+fichier corrompu retombe sur le seul mode qui ne peut jamais outrepasser.
+
+CE QUI RESTE FLOU, et c'est probablement ce que tu veux consolider : le
+semi-autonome se définit aujourd'hui par une combinaison (tu es présent ET
+aucune fenêtre ne doit bloquer), pas par une liste de ce que j'ai le droit de
+faire seul. Les bornes existent — « pas d'action sensible sans ma validation »,
+« tu t'arrêtes à la refonte graphique » — mais elles vivent dans notre
+conversation, pas dans un document. C'est exactement le genre de règle que
+l'Article 27 dit de ne jamais laisser à la mémoire d'un agent.

@@ -774,6 +774,12 @@ export function verifyHyperScanProcess({
 // apparaisse sans jamais avoir été consigné.
 export const CIRCLE_ITEMS_CHANGELOG = [
   {
+    date: "2026-09-23",
+    itemId: "ou-on-en-est",
+    changement: "ajout",
+    pourquoi: "Demande explicite de l'utilisateur, dans ses mots : « peux-tu me faire un compte rendu global de ce qui a été fait dernièrement ? me dire comment le projet a évolué, avec quelles améliorations ? […] est-ce que ce récap peut être fait à chaque Ronde ? » — et il a posé lui-même la question de l'harmonisation avec les deux autres dispositifs qui lisent les mêmes tâches. La réponse tient à l'angle : la Ronde demande « rien n'a-t-il DÉRIVÉ ? », l'état des tâches demande « qu'est-ce qu'on FAIT maintenant ? », celui-ci demande « qu'est-ce qui a été FAIT, et qu'est-ce que ça a changé ? ». Les deux premiers regardent la FILE, le troisième le CHEMIN PARCOURU. Les fusionner perdrait un angle à chaque fois : une surveillance qui réclame une décision cesse d'être une surveillance, et un bilan de progression noyé dans une file de tâches ne se lit jamais.",
+  },
+  {
     date: "2026-09-22",
     itemId: "ecotoken-scan",
     ancienId: "claude-md-weight-signal",

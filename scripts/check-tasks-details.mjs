@@ -772,6 +772,14 @@ export function checkChantierFileFreshness(allRows, { lastTouch = lastTouchDays,
     // n'est que du décalage d'horloge entre l'horodatage narratif du suivi et l'horloge système de
     // git — exactement ce que TOLERANCE_DAYS existe pour absorber, jamais un vrai retard. On compare
     // donc à la granularité du JOUR, la seule que la tolérance et le message expriment tous les deux.
+    // LE MÊME PARADOXE TEMPOREL, SUR L'AUTRE BRANCHE (2026-09-23, faux positif réel qui a bloqué un
+    // commit en boucle). `isStaged()` ne couvrait que le fichier ABSENT ; un fichier qui EXISTE,
+    // que `git log` voit vieux, et qui porte justement la mise à jour demandée DANS CE COMMIT était
+    // tout de même signalé. L'impasse est complète : le garde-fou réclame une mise à jour, on
+    // l'écrit, il la refuse parce que git ne la voit pas encore — et git ne la verra jamais puisque
+    // le commit est bloqué. Un fichier stagé est un fichier en train d'être mis à jour : c'est
+    // exactement ce que le garde-fou demandait.
+    if (isStaged(file)) continue;
     if (Math.floor(fileAgeDays) > Math.floor(rowAgeDays) + TOLERANCE_DAYS) {
       findings.push({ chantier, file, taskNumber: latest.row.numero, message: `tâche #${latest.row.numero ?? "?"} « ${latest.row.sousSujet} » (${rowAgeDays.toFixed(1)}j) plus récente que "${file}" (${fileAgeDays.toFixed(1)}j) — vérifier que l'idée a bien été recopiée` });
     }

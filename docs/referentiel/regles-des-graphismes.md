@@ -215,3 +215,32 @@ approchante (sujet nom/domaine/logo distinct, cf. section "Périmètre de cette 
 Chaque décision visuelle prise pendant l'implémentation (détails de la caméra, palette définitive,
 règles précises des transitions) doit être ajoutée ici au moment où elle est tranchée — jamais
 après coup (Article 13 de `CLAUDE.md`).
+
+## Report décidé le 2026-09-23, et le premier point de comparaison chiffré
+
+**Décision de l'utilisateur, dans ses mots** : « les tâches liées à la refonte graphique : à
+reporter, on fait le reste en priorité ». Rien n'est supprimé, rien n'est abandonné — le chantier
+attend son tour. Tracé ici plutôt que tenu de mémoire, pour qu'une reprise ultérieure ne prenne pas
+ce silence pour un oubli (Article 27).
+
+**Ce que le report emporte avec lui** : la tâche #92 (trottoir 3D réellement praticable) et les
+conséquences du premier passage réel de THE-SCREENER, le même jour.
+
+**LE PREMIER ÉTAT CHIFFRÉ AVANT REFONTE, et il vaut d'être gardé** (registre complet :
+`docs/the-screener/index.md`). THE-SCREENER a enfin produit une image notable — la première depuis
+sa construction — sur une partie au round 51, de jour. Note **12/20** :
+
+- **Lisibilité 14/20** — la scène se comprend sans connaître le code. Deux réserves : l'identité des
+  personnages ne tient QU'à la couleur d'une pastille, et la légende qui l'explique est coupée par
+  le bas du cadre.
+- **Cohérence dystopique 7/20 — le vrai écart, et il est frontal.** La palette n'est pas désaturée :
+  pelouse vert vif, chambre magenta saturée, pièces bleu franc, beige chaud. Ça se lit comme une
+  maquette d'architecte avenante, pas comme un huis clos. Les « décisions calibrées » plus haut
+  demandent exactement l'inverse.
+- **Défaut technique 13/20** — rien de cassé, mais le cadrage coupe la route en haut et la légende
+  en bas à 1280×800.
+- **Contraste jour/nuit : pas mesuré.** Une seule image, prise de jour — déclaré plutôt que deviné.
+
+**Ce que ce chiffre sert** : il donne à la refonte son point de départ mesuré. Une refonte qui ne
+sait pas d'où elle part ne peut pas démontrer ce qu'elle a gagné.
+

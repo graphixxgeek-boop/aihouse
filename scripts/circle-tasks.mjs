@@ -346,6 +346,20 @@ export const CIRCLE_ITEMS = [
   // faire choisir un angle reviendrait à perdre les deux autres. Ses constats rejoignent la série
   // de questions à choix forcé de l'Étape 5, jamais un rapport qu'on peut ne pas ouvrir.
   {
+    // OÙ ON EN EST (2026-09-23, demande explicite de l'utilisateur : « est-ce que ce récap peut
+    // être fait à chaque Ronde ? »). TROISIÈME angle sur les mêmes tâches, et l'utilisateur a
+    // lui-même posé la question de l'harmonisation : les deux autres regardent la FILE (rien n'a
+    // dérivé ? / qu'est-ce qu'on fait maintenant ?), celui-ci regarde le CHEMIN PARCOURU (qu'est-ce
+    // qui a été fait, et qu'est-ce que ça a changé ?). Aucun des deux ne répondait à ça.
+    id: "ou-on-en-est",
+    theme: "Suivi des chantiers",
+    label: "Où on en est — ce qui a été fait, et ce que le projet y a gagné",
+    cout: "gratuit — relecture seule de docs/suivi/, zéro appel API",
+    tokensEstimes: "faible — un bilan chiffré par domaine, jamais la relecture de chaque tâche",
+    execute: "Appeler buildOuOnEnEstHtml(bilan(...)) (scripts/ou-on-en-est.mjs) — jamais un second calcul des chiffres du suivi — et écrire le HTML via recordCircleItemReport('ou-on-en-est', ...).",
+    producesReport: true,
+  },
+  {
     id: "check-tasks-report",
     // Thème « Suivi des chantiers » plutôt que « Suivi & référentiels » : le second était déjà à 4
     // items, soit exactement la limite réelle de 4 options par question de la fenêtre à cocher — un
@@ -1120,6 +1134,7 @@ export const CIRCLE_REPORT_FOLDERS = {
   "chantier-preliminaire-signal": "docs/chantier-preliminaire/",
   "idee-a-trancher-signal": "docs/idee-a-trancher/",
   "check-tasks-report": "docs/check-tasks-details/",
+  "ou-on-en-est": "docs/ou-on-en-est/",
   "tool-brain-report": "docs/tool-brain/",
   "network-check-run": "docs/network-check/",
   "referentiel": "docs/relecture-referentiel/",
