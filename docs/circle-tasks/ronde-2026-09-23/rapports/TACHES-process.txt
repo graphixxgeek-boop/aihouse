@@ -1,0 +1,24 @@
+=== tasks.process.guardian — le process de suivi des tâches et des idées ===
+
+Principe protégé : « une tâche ou une idée perdue est une perte de valeur sèche pour le projet ».
+
+· verification-asymetrique
+    trou    : La vérification ne marchait que dans UN sens : une clôture sans mention « fidèle » ou « écart » était attrapée, mais une tâche RÉELLEMENT FAITE et jamais close ne l'était pas.
+    preuve  : quatre tâches terminées depuis deux jours et jamais fermées, trouvées à la main le 2026-09-22 — donc invisibles à tout mécanisme
+    réponse : croiser les tâches encore ouvertes avec les commits récents : une tâche dont le sujet apparaît dans un commit postérieur à son ouverture est probablement faite et jamais close
+
+· tache-sans-rapport
+    trou    : Une tâche née d'un rapport ne pointait jamais vers ce rapport — donc impossible de savoir, plus tard, POURQUOI elle existait.
+    preuve  : la chaîne de l'Article 28 va du rapport vers la tâche, jamais l'inverse
+    réponse : vérifier qu'une tâche issue d'un plan d'action cite le rapport dont elle vient
+
+· tache-en-suspens-oubliee
+    trou    : Une tâche qui reste en suspens longtemps finit par se fondre dans le décor — « l'objectif : ne jamais perdre de vue une tache qui reste en suspens ».
+    preuve  : deux tâches bloquées sur une décision depuis le 2026-09-20, toujours ouvertes
+    réponse : un âge en jours par tâche ouverte, et un signal qui grossit avec l'attente plutôt qu'un rappel identique qu'on finit par ne plus voir
+
+· idee-sans-fichier
+    trou    : Une idée dite en passant se perd si elle ne rejoint pas un fichier — et c'est arrivé à la règle qui protège les idées elle-même.
+    preuve  : « ma valeur + ta valeur » formulée le 2026-09-21, introuvable dans le dépôt le 2026-09-22
+    réponse : déléguer à check-tasks-details (registre des chantiers, idées à trancher) plutôt que recompter — et vérifier que la délégation est réelle
+

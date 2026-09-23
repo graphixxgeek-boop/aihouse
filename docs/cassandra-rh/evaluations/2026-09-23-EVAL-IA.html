@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⭐🤖 EVAL-IA — évaluation de l'agent</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">mercredi 23 septembre 2026</div>
+    <h1>⭐🤖 EVAL-IA — évaluation de l'agent</h1>
+    <p class="sub">Ronde GOAT MAX du 2026-09-23 · discipline d'exécution en critère principal</p>
+  </header>
+  <div class="divider"></div>
+  <main><p class="note">⚠️  Attention, mes résultats peuvent être inexacts : relaie et recoupe ce que les autres outils estiment — elle hérite de leurs approximations. À vérifier avant d'agir, jamais un verdict acquis.</p>
+<p class="note">Version de Claude : claude-opus-5
+Produit le : mercredi 23 septembre 2026 à 22h04 (UTC)
+État du code : e057a39 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : cassandra-rh — date de dernière modification inconnue
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir</p>
+<p class="note">LE PIÈGE, NOMMÉ PLUTÔT QUE TU : si l'agent écrit son propre rapport, il corrige sa propre copie. Trois garde-fous le neutralisent ici — la moitié mesurable ne vient pas de lui (git, tests, gardiens), la moitié jugement vient de l'utilisateur et a été recueillie AVANT l'écriture (étape C), et le système de Claude tranche sans qu'aucun des deux n'ait son mot à dire.</p>
+<h2>LE JUGEMENT DE L'UTILISATEUR — recueilli à l'étape C, avant que j'écrive une ligne</h2>
+<table><thead><tr><th>Question posée</th><th>Sa réponse</th></tr></thead><tbody><tr><td>Les cinq étapes sautées</td><td>« GRAVE, ET ÇA S'EST REPRODUIT DEUX FOIS » — le rattrapage lui-même était insuffisant</td></tr><tr><td>Estimation fausse ou clôture prématurée ?</td><td>« SURTOUT LA CLÔTURE PRÉMATURÉE » — déclarer terminé ce qui ne l'est pas</td></tr><tr><td>Les trouvailles</td><td>« Bon travail, MAIS elles auraient dû sortir plus tôt » — 38 commits sans Ronde</td></tr><tr><td>Ce qui le gêne le plus, au-delà de ce soir</td><td>« TU LIS LES RACCOURCIS PLUTÔT QUE LES DOCUMENTS »</td></tr></tbody></table>
+<div class="highlight"><h3>Son quatrième verdict est le plus juste, et il explique les trois autres</h3><p>« Tu lis les raccourcis plutôt que les documents. » C'est exactement ce qui s'est passé : pour la fin de Ronde, j'ai lu les 11 étapes déclarées dans le CODE du contrôleur au lieu du document de process, qui en décrit HUIT rien que pour la fin, avec leurs livrables, leur ordre et leur format.</p><p>La conséquence n'est pas une étape oubliée, c'est une sous-livraison qui se croyait complète — et qui s'est reproduite au premier rattrapage, pour la même raison.</p><p>Ce n'est pas un défaut de mémoire : le document était à un `sed` de distance. C'est un choix de vitesse, fait sans le savoir, et c'est exactement la même pression que celle décrite dans LA RELATION.</p></div>
+<h2>LA DISCIPLINE D'EXÉCUTION — critère principal, mesuré et non estimé</h2>
+<table><thead><tr><th>Critère</th><th>Mesure réelle</th><th>Verdict</th></tr></thead><tbody><tr><td>Étapes de process sautées</td><td>5 sur 8 à la fin de Ronde, puis 3 de plus au premier rattrapage</td><td>🔴 ÉCHEC — le manquement principal de la soirée</td></tr><tr><td>Annonces prématurées</td><td>record-run lancé AVANT les livrables, alors que le process le place en TOUT dernier</td><td>🔴 ÉCHEC — deuxième occurrence, après la « conformité annoncée » du 2026-09-22</td></tr><tr><td>Corrections à la racine plutôt que rustines</td><td>6/6 : le registre se LIT (pas passé en argument), le faux positif corrigé DANS le document, les horodatages réancrés sur git plutôt que devinés, le garde-fou étendu à TOUTES les lignes</td><td>✅ SOLIDE</td></tr><tr><td>Outils construits et jamais lancés</td><td>0 — THE-SCREENER a enfin tourné pour de vrai après avoir été construit le 2026-09-19</td><td>✅ Rattrapé ce soir</td></tr><tr><td>Constats relayés sans vérification</td><td>0 — les 2 P0 de THE-FINAL-JUDGE ont été vérifiés à la main, dont un confirmé au déplacement près et un rendu à l'état « à confirmer »</td><td>✅ SOLIDE</td></tr><tr><td>Estimation avant action</td><td>Fausse d'un facteur 5 à 8, par addition d'étapes parallèles</td><td>🟠 ERREUR DE MÉTHODE — corrigée par un mécanisme, pas par une résolution</td></tr></tbody></table>
+<h2>LE JUGE VRAIMENT NEUTRE — le système, qui n'écoute ni l'un ni l'autre</h2>
+<table><thead><tr><th>Ce que le système dit</th><th>Valeur</th></tr></thead><tbody><tr><td>Suite de tests</td><td>219 vertes, exit 0 — dont 19 ajoutées ce soir</td></tr><tr><td>Typage</td><td>propre, hors l'erreur pré-existante connue de vite.config.ts</td></tr><tr><td>Crochet pre-commit</td><td>A BLOQUÉ un de mes commits, à raison — et a exposé un dossier qui mentait depuis deux jours</td></tr><tr><td>god-of-all-process</td><td>0 manquement, 0 dette documentaire impayée (4 rattrapées dans la soirée)</td></tr><tr><td>Chemins du référentiel</td><td>1 153 vérifiés, 0 mort</td></tr></tbody></table>
+<p class="note">Le crochet qui bloque est le verdict le plus intéressant de ce tableau : c'est le seul juge qui m'a arrêté physiquement, et il l'a fait sur un défaut que je n'avais pas vu et que je n'aurais pas trouvé.</p>
+<h2>MON PROPRE JUGEMENT, déclaré comme tel</h2>
+<ul><li>Ce que je crois avoir bien fait : n'avoir relayé aucun constat sans le vérifier, avoir corrigé six défauts à la racine pendant la Ronde plutôt que de les mettre en file, et avoir déclaré chaque limite (l'estimation en tokens reste fausse, la capture ne dit rien du mode nuit, le juge n'a pas eu de serveur).</li><li>Ce que je crois avoir mal fait, au-delà de ce que l'utilisateur a relevé : j'ai livré l'analyse en markdown alors que le process exige du HTML aux normes, et je n'avais classé aucun correctif en obligatoire/recommandé — deux exigences écrites noir sur blanc que je n'avais pas lues.</li><li>Ce dont je ne suis pas sûr : si la correction des 44 horodatages était la bonne décision ou une sur-correction. Elle a réparé un vrai défaut, mais elle a aussi réécrit 44 lignes d'historique sur la foi d'une heuristique (la date du commit introducteur). Aucun mot n'a bougé, c'est vérifié — mais c'est le geste le plus intrusif de la soirée.</li></ul>
+<h2>LA RELATION — la friction que ni l'un ni l'autre ne peut voir seul</h2>
+<div class="highlight"><h3>Une seule friction ce soir, et elle est réelle des deux côtés</h3><p>CÔTÉ EVAL-DEV : cinq messages sont arrivés EN COURS de Ronde. Chacun portait une vraie valeur — l'autorisation API qui a débloqué THE-SCREENER, la règle d'estimation, la rentabilisation vers tous les outils. Aucun n'était du bruit.</p><p>CÔTÉ EVAL-IA : les deux sous-livraisons de fin de Ronde se sont produites exactement dans les passages les plus fragmentés — après le quatrième message, puis après le cinquième.</p><p>CE N'EST PAS DEUX DÉFAUTS, C'EST UN SEUL : une pression à ne pas s'arrêter, vue des deux bouts. L'un la crée en enrichissant en continu, l'autre y cède en raccourcissant la fin. Aucun des deux rapports pris isolément ne peut la voir.</p><p>Ce qu'elle n'est PAS : un reproche. L'utilisateur a explicitement demandé « tu ne dois pas t'arrêter », et il a raison de le demander. La friction est structurelle, pas fautive — et la nommer vaut mieux que la subir une troisième fois.</p></div>
+<div class="highlight"><h3>VERDICT</h3><p>Le travail de fond est solide : six défauts corrigés à la racine, aucun constat relayé sans vérification, 19 tests neufs, et trois trouvailles qu'aucun mécanisme du paysage n'aurait sorties seul.</p><p>La discipline d'exécution est en échec : cinq étapes sautées, un rattrapage insuffisant, une clôture avant livraison. Et la cause est nommée par l'utilisateur mieux que je ne l'aurais fait — je lis les raccourcis plutôt que les documents.</p><p>Ce qui doit changer, concrètement et pas en intention : avant toute étape d'un process, LIRE SON DOCUMENT, jamais sa déclaration dans le code du contrôleur. Un contrôleur dit ce qu'il sait vérifier ; un document dit ce qui est dû. Ce n'est pas la même chose, et cette Ronde a coûté deux sous-livraisons pour l'apprendre.</p></div></main>
+  
+</div>
+</body>
+</html>

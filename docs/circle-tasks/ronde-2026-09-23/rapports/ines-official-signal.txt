@@ -1,0 +1,23 @@
+Version de Claude : claude-opus-5
+Produit le : mercredi 23 septembre 2026 à 21h26 (UTC)
+État du code : 9f22036 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : ines-official — inchangé depuis le mardi 22 septembre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== INES-official — édition consolidée du dépôt ===
+
+Édition v1 (2026-09-23, code) : 172 fichier(s), 4946677 octets.
+Corps écrit dans .ines-official-latest-code.txt (local, jamais committé).
+
+Contenu de l'édition :
+  .mjs     76 fichier(s)
+  .tsx     66 fichier(s)
+  .ts      30 fichier(s)
+  jamais committé(s) : 0
+  le plus ancien : scripts/sites-env.mjs (7 j)
+  ancienneté moyenne : 4 jour(s)
+
+Ligne d'index à ajouter à docs/ines-official/index.md :
+| v1 | 2026-09-23 | code seul | 172 | 4.9 Mo |

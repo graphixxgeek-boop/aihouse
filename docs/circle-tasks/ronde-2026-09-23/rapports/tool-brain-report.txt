@@ -1,0 +1,28 @@
+⚠️  Attention, mes résultats peuvent être inexacts : associe une tâche à des outils par mots-clés — il peut passer à côté de l'outil réellement utile. À vérifier avant d'agir, jamais un verdict acquis.
+=== tool-brain — rapport de Ronde ===
+Date : 2026-09-23T21:19:00.245Z
+
+3 outil(s) du catalogue jamais sollicité(s) : check-spirit-mjs, the-final-judge, the-deep-reader.
+1 outil(s) n'apparaissent pas au compteur mais tournent à CHAQUE commit via le crochet : check-house-mjs — leur silence n'est pas une inaction.
+
+COMBINAISONS du catalogue — réalisées en FAIT, jamais déclarées :
+- Pack Sentinelle (3 outils) : JAMAIS réalisé
+- Pack Panorama (8 outils) : JAMAIS réalisé
+- Pack Éclaireur (3 outils) : 29 fois
+- Pack Rénovation (2 outils) : 55 fois
+- Pack Décollage : PAS une combinaison — une de ses entrées est un document, pas un outil
+
+Outils les moins sollicités (total cumulé, jamais remis à zéro) :
+- check-spirit-mjs : 0 sollicitation(s)
+- the-final-judge : 0 sollicitation(s)
+- the-deep-reader : 0 sollicitation(s)
+- check-house-mjs : 0 sollicitation(s)
+- find-deep-booster : 1 sollicitation(s)
+- smart-breaker : 2 sollicitation(s)
+- process-simulation-guardian : 2 sollicitation(s)
+- find-brain : 3 sollicitation(s)
+- hyper-scan-checkpoint : 4 sollicitation(s)
+- abraham-les-references : 5 sollicitation(s)
+
+Auto-diagnostic (périmètre tool-brain uniquement, jamais un audit du paysage entier) :
+- tool-brain a été sollicité 56 fois, mais jamais spontanément — signe que le réflexe n'est pas encore acquis, seulement le rappel mécanique.

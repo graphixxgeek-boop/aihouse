@@ -1,0 +1,79 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il associe une tâche à un process par mots-clés, et ne voit d'une étape que la trace qu'elle laisse sur le disque — une étape faite sans trace lui reste invisible. À vérifier avant d'agir, jamais un verdict acquis.
+=== god-of-all-process — état du dispositif ===
+
+✅ Process maître : god-of-all-process se surveille bien lui-même, et le dispositif est cohérent. 
+
+✅ Identité de session déposée : claude-opus-5 (le 2026-09-22). 
+
+⚠️ Nuit autonome (docs/plans/nuit-2026-09-23-plan.md) — 11/15 chantier(s) clos. 4 chantier(s) du plan pas encore clos — s'arrêter maintenant serait un arrêt prématuré, sauf raison écrite 
+
+     · reste : 0. Ouverture 
+
+     · reste : 10. Mes réponses à tes 8 questions 
+
+     · reste : 11. memory-audit 
+
+     · reste : 14. Rapport de nuit 
+
+⚠️ Connexion process ↔ gardien — 6 process avec des écarts sur 10 :
+  · ronde : 0 mécanisme(s) écrit(s) dans docs/circle-process-detail.txt que scripts/circle-process-guardian.mjs ne fait PAS respecter ; 10 câblé(s) chez le gardien et jamais écrit(s) (loadLastRun, recordSnapshotIfChanged, findEtapesDeQuestionsManquantes, loadQuestionsSansReponse…).
+  · simulation : 0 mécanisme(s) écrit(s) dans docs/regles-de-travail.md que scripts/process-simulation-guardian.mjs ne fait PAS respecter ; 1 câblé(s) chez le gardien et jamais écrit(s) (detectJournalShape).
+  · semi-autonome : 0 mécanisme(s) écrit(s) dans docs/mode-semi-autonome-process-detail.md que scripts/god-of-all-process.mjs ne fait PAS respecter ; 3 câblé(s) chez le gardien et jamais écrit(s) (auditWorkingRules, reporterPointsAuProchainPassage, angelSectionLines).
+  · integration-outil : 1 mécanisme(s) écrit(s) dans docs/referentiel/integration-outil.md que scripts/integration-outil.mjs ne fait PAS respecter (findMecanismesAbsentsDuProcess) ; 4 câblé(s) chez le gardien et jamais écrit(s) (AGENT_CATEGORIES, sansAccents, GARDIEN_DOMAINS, TOOL_RELIABILITY).
+  · integration-ronde : 0 mécanisme(s) écrit(s) dans docs/integration-ronde-process-detail.md que scripts/circle-process-guardian.mjs ne fait PAS respecter ; 10 câblé(s) chez le gardien et jamais écrit(s) (loadLastRun, recordSnapshotIfChanged, findEtapesDeQuestionsManquantes, loadQuestionsSansReponse…).
+  · etat-des-taches : 0 mécanisme(s) écrit(s) dans docs/etat-des-taches-process-detail.md que scripts/check-tasks-details.mjs ne fait PAS respecter ; 13 câblé(s) chez le gardien et jamais écrit(s) (splitTableRow, findClaimedFilesMissing, categorizeAllSessions, countTasksSince…).
+  · analyse-charte : PAS MESURÉ — pas mesuré — aucun fichier-source commun trouvé entre le document et le gardien. Ce silence ne dit rien sur la connexion, il dit qu'on n'a pas pu la regarder.
+  · nuit : PAS MESURÉ — pas mesuré — aucun fichier-source commun trouvé entre le document et le gardien. Ce silence ne dit rien sur la connexion, il dit qu'on n'a pas pu la regarder.
+  · meta : PAS MESURÉ — pas mesuré — aucun fichier-source commun trouvé entre le document et le gardien. Ce silence ne dit rien sur la connexion, il dit qu'on n'a pas pu la regarder.
+  · xp-ia : PAS MESURÉ — pas mesuré — aucun fichier-source commun trouvé entre le document et le gardien. Ce silence ne dit rien sur la connexion, il dit qu'on n'a pas pu la regarder. 
+
+Process suivis (10) :
+· Ronde périodique (CIRCLE-TASKS) — 8/8 étape(s) vérifiable(s) tracée(s) — 1 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· Analyse et plan d'action de la charte (MOÏSE-TABLES-DE-LOI) — 5/5 étape(s) vérifiable(s) tracée(s) — 7 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· Simulation intégrale (Article 18) — 9/15 étape(s) vérifiable(s) tracée(s) — manque : lancer contre un serveur à jour ; livrer le transcript en fichier joint + le diagnostic du profil de l'utilisateur ; contrôler la mémoire narrative persistée après la partie (memory-audit) ; lire les rapports individuels des agents AVANT d'écrire l'analyse, jamais après ; poser le sondage en 3 questions juste après la livraison, avant toute analyse détaillée ; poser les questions de calibrage avant toute correction
+· mode semi-autonome — travailler seul pendant que l'utilisateur est là — 2/2 étape(s) vérifiable(s) tracée(s) — 3 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· mode-auto-process-guardian — travail autonome (mode nocturne) — 7/7 étape(s) vérifiable(s) tracée(s) — 2 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· Tenue du dispositif de process lui-même (process maître) — 4/4 étape(s) vérifiable(s) tracée(s) — 3 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· Intégration d'un nouvel outil dans l'Agence — 3/3 étape(s) vérifiable(s) tracée(s) — 3 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· Intégration d'un item à la Ronde périodique — 4/4 étape(s) vérifiable(s) tracée(s) — 1 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· XP-IA-bonnes-pratiques-et-lecons — 4/4 étape(s) vérifiable(s) tracée(s) — 4 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· État des lieux des tâches (faites / en cours / à faire) — 1/1 étape(s) vérifiable(s) tracée(s) — 7 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre 
+
+— Discipline d'exécution (angel-of-ia-process) —
+0 manquement(s), 11 règle(s) non vérifiable(s) sans réponse.
+  ? [agent] Documenter chaque tâche substantielle dans docs/suivi/ DANS LE MÊME commit que le travail décrit. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Pousser au fil de l'eau : ce qui n'est pas poussé n'existe pas si la session s'interrompt. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Poser au moins trois questions de vérification AVANT ou PENDANT l'exécution, jamais après coup — et plus si le sujet contient plus de décisions réelles. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Traiter point par point une demande qui en contient plusieurs, sans jamais noyer les points dans une synthèse. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Poser les questions dans une vraie fenêtre à choix, avec leur contexte rappelé, jamais en texte libre. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [les deux] Après la livraison d'un transcript : l'utilisateur le lit pendant que l'agent travaille, en parallèle et non l'un après l'autre. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [utilisateur] Le signal « voici mes commentaires » ouvre un second passage sur le même transcript, que l'agent doit attendre et reconnaître. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Ouvrir chaque compte rendu final par les quatre rappels : le contexte, la demande de l'utilisateur résumée dans ses termes, l'étiquette de la tâche (numéro + intitulé), et un vocabulaire compréhensible par un non-développeur. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [utilisateur] Trancher les questions laissées en attente : une décision jamais prise bloque le travail qui en dépend. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Aux trois moments déclencheurs (un garde-fou bloque un commit ou un test échoue de façon imprévue · la fin d'un compte rendu de travail · chaque Ronde et chaque évaluation), répondre à la question « y avait-il quelque chose à retenir ? » et inscrire la réponse au journal XP — « rien à retenir » compris, qui est une réponse valable et ne compte contre personne. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Ne jamais s'arrêter sur un message court : seule une demande explicite interrompt le travail en cours. Tenir le compte de la série en cours, et sortir le rappel léger dès le 2e message court, l'alerte plus forte dès le 5e — les seuils sont ceux que l'utilisateur a demandés, pas les miens. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer 
+
+⚠️ 4 dette(s) documentaire(s) IMPAYÉE(S) :
+  51997b5e — scripts/god-of-all-process.mjs a changé sans que docs/mode-semi-autonome-process-detail.md ni docs/mode-auto-process-guardian.md ne soit mis à jour dans le même commit — le document décrit désormais un process qui n'existe plus tel quel (process concernés : semi-autonome, nuit, meta)
+  fa3a275d — scripts/moise-tables-de-loi.mjs a changé sans que docs/analyse-charte-process-detail.md ne soit mis à jour dans le même commit — le document décrit désormais un process qui n'existe plus tel quel (process concerné : analyse-charte)
+  15fe3ddb — scripts/moise-tables-de-loi.mjs a changé sans que docs/analyse-charte-process-detail.md ne soit mis à jour dans le même commit — le document décrit désormais un process qui n'existe plus tel quel (process concerné : analyse-charte)
+  7637f848 — scripts/moise-tables-de-loi.mjs a changé sans que docs/analyse-charte-process-detail.md ne soit mis à jour dans le même commit — le document décrit désormais un process qui n'existe plus tel quel (process concerné : analyse-charte) 
+
+✅ Gabarit de process : chaque document déclaré répond aux cinq questions du modèle (ce qu'il empêche, son déclencheur, ses étapes et leurs preuves, son contrôleur nommé, ses limites). Présence vérifiée, jamais la qualité de la réponse. 
+
+✅ Process sans gardien : aucun. 
+
+✅ Process dont le document déclaré n'existe pas : aucun. 
+
+✅ Tensions déclarées sur un process disparu : aucun. 
+
+✅ Sondes cassées (défaut de CET outil, jamais du travail surveillé) : aucun. 
+
+Tensions connues entre process (3), déclarées à la main et résolues :
+· nuit ↔ simulation — Le mode nocturne autorise à consommer de l'API sans validation ; le protocole de simulation exige une consultation préalable de Smart Conso API.
+  → Les deux tiennent ensemble : l'autorisation nocturne porte sur le fait de consommer, jamais sur le fait de sauter la consultation. Tranché par l'utilisateur le 2026-09-22 (« tu es quand meme autorisé à consommer des api, tout en respectant les conseils de smart conso api »).
+· nuit ↔ ronde — La Ronde exige une vraie fenêtre à cocher posée à l'utilisateur ; le mode nocturne se déroule en son absence.
+  → Une Ronde lancée en nuit autonome est explicitement dispensée de cette fenêtre — exemption déjà codée dans le gardien de la Ronde, jamais une entorse improvisée.
+· nuit ↔ ronde — La Ronde doit poser à l'utilisateur une fenêtre de réponses sur les points problématiques de son évaluation ; le mode nocturne se déroule en son absence.
+  → L'exemption nocturne est CONDITIONNELLE : les points problématiques sont reportés au prochain passage en sa présence (reporterPointsAuProchainPassage), jamais simplement sautés. Le gardien de la Ronde refuse une Ronde nocturne qui aurait des points à poser et n'aurait rien reporté. 
+

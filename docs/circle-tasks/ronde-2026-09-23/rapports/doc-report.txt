@@ -1,0 +1,95 @@
+⚠️  Attention, mes résultats peuvent être inexacts : ses seuils de navigabilité et de fraîcheur sont des repères choisis, jamais des vérités. À vérifier avant d'agir, jamais un verdict acquis.
+=== Doc-Report — index global des rapports (gardien HTML/texte, tâche #165) ===
+
+-- Équipe noyau (Article 20) --
+  ARGUS — texte — dernier rapport : aujourd'hui
+  HARMONIA — texte — dernier rapport : 2 j
+  AXA-CHECK — texte — dernier rapport : 4 j
+  CLEAN-DIRTY-OLD — texte — dernier rapport : 4 j
+  CLONE-HUNTER — texte — dernier rapport : aujourd'hui
+  SAFE-EXPORT — texte — dernier rapport : jamais committé
+-- Exceptionnel (page blanche / audit lourd) --
+  ALWAYS-NEW-CODE — texte — dernier rapport : 2 j
+  HYPER-SCAN-CHECKPOINT — texte — dernier rapport : 4 j
+  INES-official — texte — dernier rapport : 3 j
+-- Gouvernance interne --
+  CHECK-LEVEL-TARGET — texte — dernier rapport : 4 j
+  THE-KING — texte — dernier rapport : 3 j
+  Smart Conso API — texte — dernier rapport : 4 j
+  SMART-CONSO-TOKEN — texte — dernier rapport : 2 j
+  objectifs-vs-resultats — texte — dernier rapport : 2 j
+  CASSANDRA-RH — remise HTML — dernier rapport : 2 j
+  ecotoken — texte — dernier rapport : aujourd'hui
+-- Simulation & qualité narrative --
+  Tableau de bord / KPI — remise HTML — dernier rapport : jamais committé
+  EL-PROFESSOR — remise HTML — dernier rapport : aujourd'hui
+  memory-audit — texte — dernier rapport : 3 j
+  THE-SCREENER — remise HTML — dernier rapport : aujourd'hui
+  Simulations (Article 18) — remise HTML — dernier rapport : aujourd'hui
+-- Audit indépendant --
+  THE-FINAL-JUDGE — remise HTML — dernier rapport : 4 j [aucun point d'enregistrement dans son script — le compteur ne peut rien voir, ce n'est PAS un constat de désusage]
+  THE-DEEP-READER — remise HTML — dernier rapport : 3 j [aucun point d'enregistrement dans son script — le compteur ne peut rien voir, ce n'est PAS un constat de désusage]
+-- Coordination --
+  check-tasks-details — archive HTML — dernier rapport : aujourd'hui
+  Où on en est — archive HTML — dernier rapport : aujourd'hui [aucun point d'enregistrement dans son script — le compteur ne peut rien voir, ce n'est PAS un constat de désusage]
+  Catalogue LE-COORDINATEUR — remise HTML — dernier rapport : aujourd'hui [jamais sollicité selon tool-usage.mjs]
+  Photo de la dream team — remise HTML — dernier rapport : 2 j [jamais sollicité selon tool-usage.mjs]
+  html-wiring-check (Ronde) — texte — dernier rapport : 2 j [jamais sollicité selon tool-usage.mjs]
+  Scan ecotoken produit pendant une Ronde (item ecotoken-scan) — texte — dernier rapport : 2 j [jamais sollicité selon tool-usage.mjs]
+  Tâche ouverte la plus ancienne (Ronde) — texte — dernier rapport : 2 j [jamais sollicité selon tool-usage.mjs]
+  Fraîcheur fichiers préliminaires (Ronde) — texte — dernier rapport : 2 j [jamais sollicité selon tool-usage.mjs]
+  Idées en attente de décision (Ronde) — texte — dernier rapport : 2 j [jamais sollicité selon tool-usage.mjs]
+  tool-brain (Ronde) — texte — dernier rapport : 2 j
+  network-check-run (Ronde) — texte — dernier rapport : 2 j [jamais sollicité selon tool-usage.mjs]
+  Relecture référentiel (Ronde) — texte — dernier rapport : aujourd'hui [jamais sollicité selon tool-usage.mjs]
+  Relecture correctifs (Ronde) — texte — dernier rapport : 2 j [jamais sollicité selon tool-usage.mjs]
+-- Outillage de navigation --
+  find-booster — texte — dernier rapport : 3 j
+-- Suite Dette & Structure du code --
+  TOOL-LEARNING — texte — dernier rapport : 1 j
+  THE-EQUALIZER — texte — dernier rapport : aujourd'hui
+  ABRAHAM-LES-REFERENCES — texte — dernier rapport : aujourd'hui
+  MOÏSE-TABLES-DE-LOI — texte — dernier rapport : aujourd'hui
+  integration-outil — texte — dernier rapport : 1 j
+
+⚠️  Dossier(s) sous docs/ sans décision HTML/texte enregistrée : docs/angel-of-ia-process, docs/circle-tasks, docs/data-archangel, docs/etat-des-taches, docs/gabarits, docs/god-of-all-process, docs/le-coordinateur, docs/plans, docs/process-simulation-guardian, docs/pure-gold-unity, docs/rapports-de-nuit, docs/smart-breaker, docs/tableau-de-bord, docs/tasks-process-guardian
+
+🧭 Script(s) assez lourd(s) pour bénéficier de find-booster avant toute lecture intégrale : SMART-CONSO-TOKEN (~20977 tokens), Tableau de bord / KPI (~13797 tokens), check-tasks-details (~21862 tokens), Catalogue LE-COORDINATEUR (~29519 tokens), SAFE-EXPORT (~13916 tokens), TOOL-LEARNING (~20782 tokens), ABRAHAM-LES-REFERENCES (~9540 tokens), MOÏSE-TABLES-DE-LOI (~16467 tokens), CASSANDRA-RH (~19061 tokens), ecotoken (~33013 tokens), html-wiring-check (Ronde) (~37285 tokens)
+
+=== Journaux locaux (jamais committés, état/cache par outil) ===
+
+  .gemini-key-health.json (Smart Breaker) — historique de santé des clés/modèles Gemini — modifié aujourd'hui
+  .smart-conso-session.json (Smart Conso API) — état de session en cours (consultations récentes) — modifié aujourd'hui
+  .smart-conso-token-history.json (SMART-CONSO-TOKEN) — historique des actions coûteuses classifiées — modifié aujourd'hui
+  .tool-usage-history.json (tool-usage.mjs (tâche #166)) — compteur d'utilisation réelle des outils — modifié aujourd'hui
+  .agent-session.json (report-template.mjs (2026-09-22)) — identité de la session de l'agent (version de Claude) — déposée en début de session, reprise en tête de chaque rapport ; jamais committée, elle décrit qui produit un rapport à un instant donné, pas un état du projet — modifié aujourd'hui
+  .le-coordinateur-last-run.json (LE-COORDINATEUR) — anti-doublon du dernier passage réseau — modifié aujourd'hui
+  .circle-tasks-last-run.json (CIRCLE-TASKS) — anti-doublon de la dernière Ronde — modifié aujourd'hui
+  .kpi-report-latest.html (kpi-report.mjs) — copie de remise HTML du dernier rapport KPI — modifié aujourd'hui
+  .el-professor-coverage-latest.html (el-professor.mjs) — copie de remise HTML de la couverture EL-PROFESSOR — modifié aujourd'hui
+  .circle-tasks-run-summary-latest.txt (CIRCLE-TASKS) — récap texte de la dernière Ronde exécutée — modifié il y a 1 j
+  .ines-official-latest-code.txt (INES-official) — corps de la dernière édition (périmètre code) — modifié aujourd'hui
+  .ines-official-latest-code_et_docs.txt (INES-official) — corps de la dernière édition (périmètre code + documentation) — jamais encore écrit
+  .xp-remontees.json (TOOL-LEARNING (process XP-IA-bonnes-pratiques-et-lecons)) — occasions et remontées par entrée du registre des leçons — mesure locale du rythme de travail de l'agent, jamais un état du projet ; écrit par le crochet post-commit, donc structurellement incommittable par le commit qui le met à jour — modifié aujourd'hui
+  .conso-tours.json (SMART-CONSO-TOKEN (alerte « rédige ton prompt à part »)) — longueur de chaque tour de conversation, pour repérer une rafale de messages courts — une mesure du rythme d'échange, jamais un état du projet, et elle n'aurait aucun sens partagée entre deux machines — jamais encore écrit
+  .badge-ceremony-history.json (LE-COORDINATEUR (cérémonie de certification)) — date de première certification de chaque Agent, pour n'annoncer le badge qu'une seule fois — modifié aujourd'hui
+  .cassandra-rh-known-members.json (CASSANDRA-RH (nouveaux visages, Phase 1)) — slugs déjà vus au moins une fois par CASSANDRA, pour n'accueillir un nouveau membre qu'une seule fois — modifié il y a 1 j
+  .memento-history.json (memory-audit (memento weight)) — historique du poids réel du contexte envoyé à Gemini par tour/personnage — modifié aujourd'hui
+  .the-ghost-session.json (THE-GHOST) — état minimal de la session nocturne autonome en cours (heure de début, compteur de tâches enchaînées) — jamais encore écrit
+  .badge-signals-snapshot.json (LE-COORDINATEUR (relevé des 6 signaux de Gardien)) — les 6 signaux mesurés au dernier commit (couverture AXA-CHECK par outil + les 5 drapeaux de Gardien), pour que tout afficheur de badge lise la même vérité sans relancer check-house.mjs — modifié aujourd'hui
+
+=== Plan d'action ===
+  → RETENU · docs/angel-of-ia-process — dossier sous docs/ sans décision HTML/texte enregistrée — tâche [RECOMMANDEE] : trancher la décision HTML/texte de docs/angel-of-ia-process et l'inscrire au registre
+  → RETENU · docs/circle-tasks — dossier sous docs/ sans décision HTML/texte enregistrée — tâche [RECOMMANDEE] : trancher la décision HTML/texte de docs/circle-tasks et l'inscrire au registre
+  → RETENU · docs/data-archangel — dossier sous docs/ sans décision HTML/texte enregistrée — tâche [RECOMMANDEE] : trancher la décision HTML/texte de docs/data-archangel et l'inscrire au registre
+  → RETENU · docs/etat-des-taches — dossier sous docs/ sans décision HTML/texte enregistrée — tâche [RECOMMANDEE] : trancher la décision HTML/texte de docs/etat-des-taches et l'inscrire au registre
+  → RETENU · docs/gabarits — dossier sous docs/ sans décision HTML/texte enregistrée — tâche [RECOMMANDEE] : trancher la décision HTML/texte de docs/gabarits et l'inscrire au registre
+  → RETENU · docs/god-of-all-process — dossier sous docs/ sans décision HTML/texte enregistrée — tâche [RECOMMANDEE] : trancher la décision HTML/texte de docs/god-of-all-process et l'inscrire au registre
+  → RETENU · docs/le-coordinateur — dossier sous docs/ sans décision HTML/texte enregistrée — tâche [RECOMMANDEE] : trancher la décision HTML/texte de docs/le-coordinateur et l'inscrire au registre
+  → RETENU · docs/plans — dossier sous docs/ sans décision HTML/texte enregistrée — tâche [RECOMMANDEE] : trancher la décision HTML/texte de docs/plans et l'inscrire au registre
+  → RETENU · docs/process-simulation-guardian — dossier sous docs/ sans décision HTML/texte enregistrée — tâche [RECOMMANDEE] : trancher la décision HTML/texte de docs/process-simulation-guardian et l'inscrire au registre
+  → RETENU · docs/pure-gold-unity — dossier sous docs/ sans décision HTML/texte enregistrée — tâche [RECOMMANDEE] : trancher la décision HTML/texte de docs/pure-gold-unity et l'inscrire au registre
+  → RETENU · docs/rapports-de-nuit — dossier sous docs/ sans décision HTML/texte enregistrée — tâche [RECOMMANDEE] : trancher la décision HTML/texte de docs/rapports-de-nuit et l'inscrire au registre
+  → RETENU · docs/smart-breaker — dossier sous docs/ sans décision HTML/texte enregistrée — tâche [RECOMMANDEE] : trancher la décision HTML/texte de docs/smart-breaker et l'inscrire au registre
+  → RETENU · docs/tableau-de-bord — dossier sous docs/ sans décision HTML/texte enregistrée — tâche [RECOMMANDEE] : trancher la décision HTML/texte de docs/tableau-de-bord et l'inscrire au registre
+  → RETENU · docs/tasks-process-guardian — dossier sous docs/ sans décision HTML/texte enregistrée — tâche [RECOMMANDEE] : trancher la décision HTML/texte de docs/tasks-process-guardian et l'inscrire au registre

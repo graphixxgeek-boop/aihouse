@@ -1,0 +1,120 @@
+⚠️  Attention, mes résultats peuvent être inexacts : mesure ce que le SUIVI dit du projet, jamais ce qui a réellement été fait. À vérifier avant d'agir, jamais un verdict acquis.
+⚠️  Attention, mes résultats peuvent être inexacts : mesure ce que le SUIVI dit du projet, jamais ce qui a réellement été fait. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : mercredi 23 septembre 2026 à 21h58 (UTC)
+État du code : e057a39 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : check-tasks-details — date de dernière modification inconnue
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== État des tâches — Tâches en cours actuellement ===
+Forme : liste rapide · 33 tâche(s) affichée(s) sur 580 au total
+Date : 2026-09-23T21:58:26.901Z
+
+24 tâche(s) ouverte(s) identiques depuis au moins 3 rapports consécutifs — possible oubli, à vérifier (jamais une certitude).
+
+  · #566 « #490 : un seul lecteur pour les douze registres d'items de Ronde, et un treizième entrera sans rien changer »
+  · #580 « A-NIVEAU devient THE-EQUALIZER — renommage complet, fichier compris (volet 1 de #571) »
+  · #147 « Extension proposée : objectifs de résultat / score cible par membre d'équipe »
+  · #179 « Décision : CASSANDRA-RH doit avoir une connaissance parfaite de chaque membre de l'équipe pour servir de point de consultation sur les fonctions/description d'un agent ou script »
+  · #436 « Relire tout le travail de process avec les outils, une fois les process terminés »
+  · #439 « Le « jury » n'est pas un rang, c'est une catégorie transverse — et il y en a d'autres »
+  · #445 « Un mécanisme branché sur un seul outil ne dégage aucune tendance transverse »
+  · #451 « Un septième Gardien sur le papier n'en est pas un tant qu'il ne tourne pas à chaque commit »
+  · #490 « 18 données fraîches que personne ne lit — brancher un lecteur réel ou déclarer l'absence assumée »
+  · #491 « 11 écarts d'exportabilité — purger le jargon projet de 3 blueprints, compléter 7 sections »
+  · #492 « Classer les actions SMART-CONSO-TOKEN au moment où elles ont lieu »
+  · #493 « Un relancement confirmé dans les 10 min après épuisement de quota — vérifier la cause »
+  · #510 « La cérémonie enregistre qu'elle a eu lieu, jamais ce qu'elle disait »
+  · #514 « Le compte « 11 écarts » est un plancher, pas un total »
+  · #558 « 67 cérémonies de badge en attente, dont 34 « partiel → en cours » et 33 « en cours → partiel » — sur les MÊMES outils »
+  · #567 « `semi-autonome` : créer le troisième mode de travail, et le consolider comme process »
+  · #571 « THE-EQUALIZER devient THE-EQUALIZER, et on revoit toute cette partie ensemble »
+  · #572 « Ne jamais s'arrêter sur un message court, et alerter sur le coût des prompts fragmentés »
+  · #573 « Le système de leçons et bonnes pratiques : est-ce qu'il sert vraiment ? »
+  · #574 « Prochaine Ronde : produire un exemplaire du code via INES-official »
+  · #575 « tool-brain est-il vraiment devenu le point d'entrée, et fonctionne-t-il ? »
+  · #576 « Les outils apprennent-ils seuls, et est-ce que je leur apprends vraiment quelque chose ? »
+  · #577 « THE-EQUALIZER est-il à sa place : Ronde, rang, process d'intégration ? »
+  · #390 « Imprécision résiduelle consignée : ARGUS et CLONE-HUNTER sont mesurés à l'échelle du dépôt, pas de l'outil »
+
+🔄 En cours (4)
+
+  N°   Mot-clé                Criticité     Urgence  Sujet                               Sous-sujet                                                                                                                Statut    Palier d'origine       
+  ---  ---------------------  ------------  -------  ----------------------------------  ------------------------------------------------------------------------------------------------------------------------  --------  -----------------------
+  566  lecteurs               🟠 IMPORTANT  🟢 0 j   Ronde / lecteur générique           #490 : un seul lecteur pour les douze registres d'items de Ronde, et un treizième entrera sans rien changer               en cours  PRIORITAIRE-OBLIGATOIRE
+  580  renommage              🔵 UTILE      🟢 0 j   Outillage / renommage               A-NIVEAU devient THE-EQUALIZER — renommage complet, fichier compris (volet 1 de #571)                                     en cours  RECOMMANDE-NECESSAIRE  
+  624  article-19-allegement  🟠 IMPORTANT  🟢 0 j   Charte / CLAUDE.md (chantier #208)  Le avant/après complet de l'Article 19, produit et prêt — EN ATTENTE DE SON ACCORD, rien d'appliqué                       EN COURS  PRIORITAIRE-OBLIGATOIRE
+  642  ronde-goat-max         🟠 IMPORTANT  🟢 0 j   Ronde / THE-FINAL-JUDGE (GOAT MAX)  Deux constats P0 du juge, vérifiés à la main avant d'être retenus — dont un défaut visible sur un déplacement sur quatre  en cours  PRIORITAIRE-OBLIGATOIRE
+
+📋 Ouvertes (29)
+
+  N°   Mot-clé                          Criticité     Urgence  Sujet                                                      Sous-sujet                                                                                                                                                                         Statut                           Palier d'origine       
+  ---  -------------------------------  ------------  -------  ---------------------------------------------------------  ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------  -------------------------------  -----------------------
+  147  objectifs                        🔵 UTILE      🟢 3 j   Conception / Nouvel outil (CASSANDRA-RH)                   Extension proposée : objectifs de résultat / score cible par membre d'équipe                                                                                                       ouverte                          NORMAL-UTILE           
+  179  omniscience                      🔵 UTILE      🟢 3 j   Conception / Nouvel outil (CASSANDRA-RH)                   Décision : CASSANDRA-RH doit avoir une connaissance parfaite de chaque membre de l'équipe pour servir de point de consultation sur les fonctions/description d'un agent ou script  ouverte                          NORMAL-UTILE           
+  436  froid-process                    🟠 IMPORTANT  🟢 0 j   Process / vérification à froid                             Relire tout le travail de process avec les outils, une fois les process terminés                                                                                                   à faire                          PRIORITAIRE-OBLIGATOIRE
+  439  jury                             🔵 UTILE      🟢 0 j   Organisation de l'Agence / catégories transverses          Le « jury » n'est pas un rang, c'est une catégorie transverse — et il y en a d'autres                                                                                              à faire                          RECOMMANDE-NECESSAIRE  
+  445  tendances                        🔵 UTILE      🟢 0 j   Tendances / brancher les 5 outils restants                 Un mécanisme branché sur un seul outil ne dégage aucune tendance transverse                                                                                                        à faire                          RECOMMANDE-NECESSAIRE  
+  451  safe-export                      🔵 UTILE      🟢 0 j   SAFE-EXPORT / intégration complète de Gardien sacré        Un septième Gardien sur le papier n'en est pas un tant qu'il ne tourne pas à chaque commit                                                                                         à faire                          RECOMMANDE-NECESSAIRE  
+  490  fraiches                         🟠 IMPORTANT  🟢 1 j   Ronde / plan d'action R1                                   18 données fraîches que personne ne lit — brancher un lecteur réel ou déclarer l'absence assumée                                                                                   à faire                          PRIORITAIRE-OBLIGATOIRE
+  491  jargon                           🟠 IMPORTANT  🟢 1 j   Ronde / plan d'action R2                                   11 écarts d'exportabilité — purger le jargon projet de 3 blueprints, compléter 7 sections                                                                                          à faire                          PRIORITAIRE-OBLIGATOIRE
+  492  classement                       🔵 UTILE      🟢 1 j   Ronde / plan d'action R3                                   Classer les actions SMART-CONSO-TOKEN au moment où elles ont lieu                                                                                                                  à faire                          NORMAL-UTILE           
+  493  relancement                      🔵 UTILE      🟢 1 j   Ronde / plan d'action R4                                   Un relancement confirmé dans les 10 min après épuisement de quota — vérifier la cause                                                                                              à faire                          NORMAL-UTILE           
+  510  ceremonie                        🟠 IMPORTANT  🟢 1 j   Cérémonie / trou de mécanisme                              La cérémonie enregistre qu'elle a eu lieu, jamais ce qu'elle disait                                                                                                                à faire                          PRIORITAIRE-OBLIGATOIRE
+  514  plancher                         🔵 UTILE      🟢 1 j   SAFE-EXPORT / limite honnête                               Le compte « 11 écarts » est un plancher, pas un total                                                                                                                              à faire                          NORMAL-UTILE           
+  558  oscillation                      🟠 IMPORTANT  🟢 0 j   Cérémonie / mesure qui oscille                             67 cérémonies de badge en attente, dont 34 « partiel → en cours » et 33 « en cours → partiel » — sur les MÊMES outils                                                              à faire                          PRIORITAIRE-OBLIGATOIRE
+  567  semi-auto                        🟠 IMPORTANT  🟢 0 j   Process / mode de travail                                  `semi-autonome` : créer le troisième mode de travail, et le consolider comme process                                                                                               à faire                          PRIORITAIRE-OBLIGATOIRE
+  571  equalizer                        🟠 IMPORTANT  🟢 0 j   Outillage / renommage + revue                              THE-EQUALIZER devient THE-EQUALIZER, et on revoit toute cette partie ensemble                                                                                                      à faire                          PRIORITAIRE-OBLIGATOIRE
+  572  messages-courts                  🟠 IMPORTANT  🟢 0 j   Conduite / prompt intempestif                              Ne jamais s'arrêter sur un message court, et alerter sur le coût des prompts fragmentés                                                                                            à faire                          PRIORITAIRE-OBLIGATOIRE
+  573  lecons                           🔵 UTILE      🟢 0 j   Apprentissage / audit                                      Le système de leçons et bonnes pratiques : est-ce qu'il sert vraiment ?                                                                                                            à faire                          RECOMMANDE-NECESSAIRE  
+  574  ines                             🔵 UTILE      🟢 0 j   Ronde / paramètre de lancement                             Prochaine Ronde : produire un exemplaire du code via INES-official                                                                                                                 à faire                          NORMAL-UTILE           
+  575  tool-brain                       🔵 UTILE      🟢 0 j   Outillage / audit d'usage                                  tool-brain est-il vraiment devenu le point d'entrée, et fonctionne-t-il ?                                                                                                          à faire                          RECOMMANDE-NECESSAIRE  
+  576  apprentissage                    🔵 UTILE      🟢 0 j   Apprentissage / audit croisé                               Les outils apprennent-ils seuls, et est-ce que je leur apprends vraiment quelque chose ?                                                                                           à faire                          RECOMMANDE-NECESSAIRE  
+  577  intronisation                    🔵 UTILE      🟢 0 j   THE-EQUALIZER / intégration                                THE-EQUALIZER est-il à sa place : Ronde, rang, process d'intégration ?                                                                                                             à faire                          RECOMMANDE-NECESSAIRE  
+  601  faux-vert-reste                  🔵 UTILE      🟢 0 j   Agence / Article 25                                        Les 4 outils restants qui peuvent dire vert sans avoir rien mesuré                                                                                                                 à faire                          RECOMMANDE-NECESSAIRE  
+  603  modes-travail                    🟠 IMPORTANT  🟢 0 j   Process / conduite                                         Consolider ensemble le process des modes auto / semi-auto                                                                                                                          à faire — nécessite sa présence  PRIORITAIRE-OBLIGATOIRE
+  604  roles-simulation                 🔵 UTILE      🟢 0 j   Référentiel / Article 18                                   Écrire d'une seule pièce qui fait quoi autour d'une simulation                                                                                                                     à faire                          RECOMMANDE-NECESSAIRE  
+  612  circle-trop-de-rapports          🔵 UTILE      🟢 0 j   Outillage / CIRCLE-TASKS                                   La Ronde produit trop de rapports : trouver ce qui est doublon, fusionnable ou synthétisable, plafond 10 fichiers txt                                                              À FAIRE                          RECOMMANDE-NECESSAIRE  
+  623  recouvrements-regles-de-travail  🔵 UTILE      🟢 0 j   Documentation / docs/regles-de-travail.md (chantier #208)  3 recouvrements sans frontière déclarée dans les règles de travail — NOTÉS, jamais touchés                                                                                         À FAIRE                          RECOMMANDE-NECESSAIRE  
+  629  orphelins-referentiel            🔵 UTILE      🟢 0 j   Documentation / docs/referentiel (chantier #208)           3 documents du référentiel possiblement orphelins — à vérifier sur le bon périmètre                                                                                                À FAIRE                          RECOMMANDE-NECESSAIRE  
+  636  renommage-process-guardian       🔵 UTILE      🟢 0 j   Organisation / vocabulaire (chantier #208)                 Les 67 fichiers citant les trois noms `*-process-guardian` n'ont pas été renommés                                                                                                  À FAIRE                          RECOMMANDE-NECESSAIRE  
+  390  imprecision                      🔵 UTILE      🟢 1 j   Outillage / badge                                          Imprécision résiduelle consignée : ARGUS et CLONE-HUNTER sont mesurés à l'échelle du dépôt, pas de l'outil                                                                         en attente de décision           RECOMMANDE-NECESSAIRE  
+
+Outils du coordinateur pouvant aider (correspondance de mots-clés, à vérifier)
+
+  · #624 « Le avant/après complet de l'Article 19, produit et prêt — EN ATTENTE DE SON ACCORD, rien d'appliqué » → Smart Conso API + docs/simulations/correctifs-a-revalider.md (mots-clés : complet, attente)
+  · #642 « Deux constats P0 du juge, vérifiés à la main avant d'être retenus — dont un défaut visible sur un déplacement sur quatre » → find-brain (mots-clés : deux, avant)
+  · #147 « Extension proposée : objectifs de résultat / score cible par membre d'équipe » → integration-outil (mots-clés : nouvel, outil)
+  · #179 « Décision : CASSANDRA-RH doit avoir une connaissance parfaite de chaque membre de l'équipe pour servir de point de consultation sur les fonctions/description d'un agent ou script » → Doc-Report (mots-clés : chaque, outil, decision)
+  · #445 « Un mécanisme branché sur un seul outil ne dégage aucune tendance transverse » → tool-brain (mots-clés : outil, outils) — ⚠️ tool-brain (scripts/tool-brain.mjs) n'a pas son badge (absent du menu PRESTATIONS (scripts/le-coordinateur.mjs) ; aucune mention trouvée dans docs/suivi/ — sa construction ne serait pas tracée dans le système de suivi durable)
+  · #493 « Un relancement confirmé dans les 10 min après épuisement de quota — vérifier la cause » → process.simulation.guardian (mots-clés : quota, verifier) — ⚠️ process.simulation.guardian (scripts/process-simulation-guardian.mjs) n'a pas son badge (absent du menu PRESTATIONS (scripts/le-coordinateur.mjs) ; instanciation manquante (docs/referentiel/process-simulation-guardian-scripts-process-simulation-guardian-mjs.md) ; registre manquant (docs/process-simulation-guardian-scripts-process-simulation-guardian-mjs/) ; blueprint manquant (docs/process-simulation-guardian-scripts-process-simulation-guardian-mjs-blueprint.md) — si c'est volontaire (cousin d'un autre Agent), le déclarer via l'option cousinOf plutôt que de laisser ce point sans réponse ; absent de la section « Référentiel technique » de CLAUDE.md (bullet docs/referentiel/<slug>.md) ; absent de CLAUDE.md, ni comme section "## ... — blueprint exportable" ni comme ligne du tableau « Inventaire documentaire des outils » (attendu puisqu'il a un blueprint propre) ; aucune mention trouvée dans docs/suivi/ — sa construction ne serait pas tracée dans le système de suivi durable)
+  · #572 « Ne jamais s'arrêter sur un message court, et alerter sur le coût des prompts fragmentés » → ecotoken (mots-clés : cout, message) — ⚠️ ecotoken (scripts/ecotoken.mjs) n'a pas son badge (absent du menu PRESTATIONS (scripts/le-coordinateur.mjs) ; instanciation manquante (docs/referentiel/ecotoken-scripts-ecotoken-mjs.md) ; registre manquant (docs/ecotoken-scripts-ecotoken-mjs/) ; blueprint manquant (docs/ecotoken-scripts-ecotoken-mjs-blueprint.md) — si c'est volontaire (cousin d'un autre Agent), le déclarer via l'option cousinOf plutôt que de laisser ce point sans réponse ; absent de la section « Référentiel technique » de CLAUDE.md (bullet docs/referentiel/<slug>.md) ; absent de CLAUDE.md, ni comme section "## ... — blueprint exportable" ni comme ligne du tableau « Inventaire documentaire des outils » (attendu puisqu'il a un blueprint propre) ; aucune mention trouvée dans docs/suivi/ — sa construction ne serait pas tracée dans le système de suivi durable)
+  · #601 « Les 4 outils restants qui peuvent dire vert sans avoir rien mesuré » → SAFE-EXPORT (mots-clés : agence, article) — ⚠️ SAFE-EXPORT (scripts/safe-export.mjs) n'a pas son badge (instanciation manquante (docs/referentiel/safe-export-scripts-safe-export-mjs.md) ; registre manquant (docs/safe-export-scripts-safe-export-mjs/) ; blueprint manquant (docs/safe-export-scripts-safe-export-mjs-blueprint.md) — si c'est volontaire (cousin d'un autre Agent), le déclarer via l'option cousinOf plutôt que de laisser ce point sans réponse ; absent de la section « Référentiel technique » de CLAUDE.md (bullet docs/referentiel/<slug>.md) ; absent de CLAUDE.md, ni comme section "## ... — blueprint exportable" ni comme ligne du tableau « Inventaire documentaire des outils » (attendu puisqu'il a un blueprint propre) ; aucune mention trouvée dans docs/suivi/ — sa construction ne serait pas tracée dans le système de suivi durable)
+  · #623 « 3 recouvrements sans frontière déclarée dans les règles de travail — NOTÉS, jamais touchés » → angel-of-ia-process (mots-clés : regles, travail) — ⚠️ angel-of-ia-process (scripts/angel-of-ia-process.mjs) n'a pas son badge (absent du menu PRESTATIONS (scripts/le-coordinateur.mjs) ; instanciation manquante (docs/referentiel/angel-of-ia-process-scripts-angel-of-ia-process-mjs.md) ; registre manquant (docs/angel-of-ia-process-scripts-angel-of-ia-process-mjs/) ; blueprint manquant (docs/angel-of-ia-process-scripts-angel-of-ia-process-mjs-blueprint.md) — si c'est volontaire (cousin d'un autre Agent), le déclarer via l'option cousinOf plutôt que de laisser ce point sans réponse ; absent de la section « Référentiel technique » de CLAUDE.md (bullet docs/referentiel/<slug>.md) ; absent de CLAUDE.md, ni comme section "## ... — blueprint exportable" ni comme ligne du tableau « Inventaire documentaire des outils » (attendu puisqu'il a un blueprint propre) ; aucune mention trouvée dans docs/suivi/ — sa construction ne serait pas tracée dans le système de suivi durable)
+  · #636 « Les 67 fichiers citant les trois noms `*-process-guardian` n'ont pas été renommés » → angel-of-ia-process (mots-clés : ont, ete) — ⚠️ angel-of-ia-process (scripts/angel-of-ia-process.mjs) n'a pas son badge (absent du menu PRESTATIONS (scripts/le-coordinateur.mjs) ; instanciation manquante (docs/referentiel/angel-of-ia-process-scripts-angel-of-ia-process-mjs.md) ; registre manquant (docs/angel-of-ia-process-scripts-angel-of-ia-process-mjs/) ; blueprint manquant (docs/angel-of-ia-process-scripts-angel-of-ia-process-mjs-blueprint.md) — si c'est volontaire (cousin d'un autre Agent), le déclarer via l'option cousinOf plutôt que de laisser ce point sans réponse ; absent de la section « Référentiel technique » de CLAUDE.md (bullet docs/referentiel/<slug>.md) ; absent de CLAUDE.md, ni comme section "## ... — blueprint exportable" ni comme ligne du tableau « Inventaire documentaire des outils » (attendu puisqu'il a un blueprint propre) ; aucune mention trouvée dans docs/suivi/ — sa construction ne serait pas tracée dans le système de suivi durable)
+
+Format et mot-clé des tâches ouvertes (garde-fou du process)
+
+  · Format des tâches ouvertes : conforme aux 8 champs déclarés, chaque mot-clé valide et unique.
+
+Ordre recommandé des prochaines tâches (signal, jamais une décision)
+
+  · 1. #147 « Extension proposée : objectifs de résultat / score cible par membre d'équipe » — signalée stagnante depuis 3 rapports consécutifs ; ouverte depuis 3 jour(s)
+  · 2. #179 « Décision : CASSANDRA-RH doit avoir une connaissance parfaite de chaque membre de l'équipe pour servir de point de consultation sur les fonctions/description d'un agent ou script » — signalée stagnante depuis 3 rapports consécutifs ; ouverte depuis 3 jour(s)
+  · 3. #566 « #490 : un seul lecteur pour les douze registres d'items de Ronde, et un treizième entrera sans rien changer » — signalée stagnante depuis 3 rapports consécutifs
+  · 4. #580 « A-NIVEAU devient THE-EQUALIZER — renommage complet, fichier compris (volet 1 de #571) » — signalée stagnante depuis 3 rapports consécutifs
+
+---
+check-tasks-details — lecture seule, docs/suivi/ reste l'unique source de vérité du projet.
+
+
+Même rapport en HTML : /home/user/aihouse/docs/check-tasks-details/1790200706899-en_cours-liste.html
+Zoom : Tâches en cours actuellement — Forme : liste rapide
+33 tâche(s) affichée(s) sur 580 au total.
+24 tâche(s) possiblement oubliée(s) (stagnation).
+
+=== Plan d'action ===
+Aucun constat retenu : ce passage n'a rien trouvé qui appelle une action.

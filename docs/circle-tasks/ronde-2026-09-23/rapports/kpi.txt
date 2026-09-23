@@ -1,0 +1,81 @@
+Tableau de bord — rapport KPI complet (cf. docs/referentiel/tableau-de-bord.md pour les règles).
+
+**🔧 Performance globale du Smart Breaker : N/A (serveur non joignable)**
+**📈 Améliorations réalisées sur l’outil : 88%** (7/8 capacités prévues, implémentées et testées)
+→ Action : Validation qualité intégrale de GEMINI_FALLBACK_MODELS avant activation en production
+
+== Robustesse du code : tsc --noEmit ==
+OK — 0 erreur.
+
+== Robustesse du code : check-house.mjs ==
+OK — 219/216 bloc(s) de test passés, suite verte.
+
+== Robustesse du code : points fragiles ouverts ==
+14 point(s) fragile(s) ouvert(s) — détail dans docs/referentiel/points-fragiles.md.
+
+=== Plan d'action ===
+  ? À TRANCHER · 14 point(s) fragile(s) ouvert(s) dans docs/referentiel/points-fragiles.md — un point fragile est une zone identifiée EN ATTENTE d'une décision de conception, jamais un bug actif — le traiter comme une tâche automatique reviendrait à trancher à la place de l'utilisateur
+
+== Robustesse du code : taille et densité ==
+lib/lia.ts : 191 lignes (prompt géant, à surveiller — pas un défaut en soi).
+lib/dialogue.ts : 470 lignes.
+lib/ : 26 fichiers.
+
+== KPI global — Robustesse du code ==
+100% (moyenne : propreté tsc 100%, suite de tests 100%, couverture réelle par fonction (AXA-CHECK) 100%). Points fragiles et taille de code restent affichés en compteurs bruts ci-dessus (pas de plafond naturel pour un %).
+→ Lecture : code sain, rien à faire ici pour l’instant.
+
+== Performance runtime — Smart Breaker (détail) ==
+Tours réels (appels Gemini nécessaires) : 0.
+Clé principale déjà indisponible au départ du tour : 0 fois sur 0 (0%).
+Tentatives individuelles (clé × modèle) : 0 — 0 réussies, 0 bloquées par quota (429), 0 erreurs transitoires (503), 0 clés invalides (401/403).
+
+== KPI — Mémoire des personnages (memento weight) ==
+Pas de mesure disponible cette fois (serveur non joignable, ou aucun tour joué).
+
+== Qualité de sortie ==
+Pas de tour enregistré cette session — rien à mesurer (normal si le serveur vient de démarrer ou si aucune simulation n’a encore tourné).
+
+== Cohérence logique ==
+Pas de tour enregistré cette session — rien à mesurer.
+
+== Rejouabilité (signal partiel — diversité récente des bonus) ==
+KPI global Rejouabilité (partiel) : 22% des 9 bonus possibles vus parmi les 12 derniers tirages (2/9).
+Limite honnête : bonusLog ne garde que les 12 derniers tirages (app/api/lia/route.ts) — ce chiffre reflète la diversité RÉCENTE, pas garantie sur toute la session si plus de 12 tirages ont eu lieu. Un historique inter-sessions réel (tours jusqu’à révélation, nombre de disputes, variété des ouvertures) reste à construire (chantier 2, cf. docs/referentiel/tableau-de-bord.md).
+→ Action : plusieurs bonus n’ont pas été tirés récemment — vérifier que la roulette n’a pas de biais de tirage avant de conclure à un simple hasard défavorable.
+
+== KPI global — Performance runtime ==
+N/A cette fois.
+
+== Smart Conso — détail (Smart Conso API + SMART-CONSO-TOKEN) ==
+Conformité API (salves confirmées avant d'agir) : 100% (7/7 salve(s))
+Adoption SMART-CONSO-TOKEN : 1 proposition(s) réellement appliquée(s), réduction moyenne mesurée 13%.
+Fraîcheur des schémas connus : Registre validé pour "claude" (recherche du 2026-09-20) — cohérent avec l'identité déclarée "claude-sonnet-5".
+
+== KPI global — Smart Conso ==
+71% (moyenne des composantes réellement mesurées cette fois — jamais un chiffre fabriqué pour une composante absente).
+
+== KPI général — Couverture du tableau de bord lui-même (à surveiller en priorité) ==
+50% des familles ATTEIGNABLES dans ce contexte ont produit une vraie mesure (3/6).
+→ Action : une famille pourtant ATTEIGNABLE n’a renvoyé aucune mesure — c’est le signal qui compte, un branchement du tableau de bord lui-même est probablement cassé. À vérifier avant de faire confiance à la synthèse ci-dessous.
+
+== Synthèse ==
+🚨 ALERTE TABLEAU DE BORD — couverture du tableau de bord à 50% (3/6 familles pourtant atteignables ici).
+
+== SYNTHÈSE COMPACTE (à relayer telle quelle dans la conversation) ==
+Run : manuel-2026-09-23T21:15
+| Famille | KPI global |
+|---|---|
+| 🔧 Smart Breaker — performance | N/A |
+| 📈 Smart Breaker — améliorations | 88% |
+| Robustesse du code | 100% |
+| Qualité de sortie | N/A |
+| Cohérence logique | N/A |
+| Rejouabilité (partiel) | 22% |
+| Smart Conso | 71% |
+| Couverture du tableau de bord | 50% |
+
+🚨 Points d'attention : couverture du tableau de bord à 50% (3/6 familles pourtant atteignables ici).
+
+Historique complet (toutes les exécutions, tous les chiffres) : docs/referentiel/kpi-historique.csv — à envoyer en pièce jointe, jamais collé dans la conversation.
+Copie de présentation HTML régénérée : .kpi-report-latest.html (jamais committée — cf. .gitignore).

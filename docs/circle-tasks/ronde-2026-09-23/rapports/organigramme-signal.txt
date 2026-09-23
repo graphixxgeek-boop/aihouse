@@ -1,0 +1,65 @@
+⚠️  Attention, mes résultats peuvent être inexacts : relaie et recoupe ce que les autres outils estiment — elle hérite de leurs approximations. À vérifier avant d'agir, jamais un verdict acquis.
+CASSANDRA-RH est une directrice des ressources humaines exigeante mais juste. Elle ne flatte jamais un outil pour lui faire plaisir, et ne descend jamais un outil sans donner le chiffre exact qui le justifie. Elle parle avec l'assurance calme de quelqu'un qui connaît chaque dossier de l'équipe par cœur — jamais de sur-jugement moral, jamais de mise en scène, juste le constat, net, et la conséquence concrète qu'il implique. Un outil qui mérite un badge l'obtient sans effusion ; un outil à retirer se voit nommé sans détour, jamais euphémisé.
+
+⚠️  Attention, mes résultats peuvent être inexacts : relaie et recoupe ce que les autres outils estiment — elle hérite de leurs approximations. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : mercredi 23 septembre 2026 à 21h19 (UTC)
+État du code : 51997b5 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : cassandra-rh — date de dernière modification inconnue
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== CASSANDRA-RH — organigramme de l'Agence Codex ===
+Effectif total : 36 membres certifiés (dont 7 Gardiens et 2 Cadres), 2 au socle, 7 émetteurs non certifiés. Reconstruit depuis les données réelles à chaque exécution — jamais une liste recopiée.
+Date : 2026-09-23T21:19:00.097Z
+
+🧱 Socle — n'est pas membre de l'équipe : c'est le sol sur lequel tout le monde marche
+
+  · check-house.mjs
+  · check-spirit.mjs
+
+🎖️ Agents Cadre — dirigent — une fonction dans l'organigramme, jamais un badge de qualité en plus
+
+  · LE-COORDINATEUR
+  · CASSANDRA-RH
+
+🛡️ Gardiens sacrés du code (7) — délivrent un vrai scan de qualité ET tournent automatiquement à CHAQUE commit
+
+  · ARGUS
+  · HARMONIA
+  · ALWAYS-NEW-CODE
+  · AXA-CHECK
+  · CLEAN-DIRTY-OLD
+  · CLONE-HUNTER
+  · SAFE-EXPORT
+
+🎖️ Membres certifiés par suite (27 hors Gardiens et Cadres) — câblage complet vérifié : table maîtresse, menu, instanciation, registre, blueprint
+
+  Suite                            Membres                                                                                             
+  -------------------------------  ----------------------------------------------------------------------------------------------------
+  Suite Suivi-Conso                Smart Conso API, SMART-CONSO-TOKEN, objectifs-vs-resultats, ecotoken                                
+  Agent Spécial                    CHECK-LEVEL-TARGET, Smart Breaker                                                                   
+  Suite Audit lourd                HYPER-SCAN-CHECKPOINT, THE-FINAL-JUDGE, THE-DEEP-READER                                             
+  Suite Audit Simulation           EL-PROFESSOR, THE-SCREENER, memory-audit, process.simulation.guardian                               
+  Suite Orientation                CIRCLE-TASKS, find-deep-booster, god-of-all-process, angel-of-ia-process, data-archangel, tool-brain
+  La Cour du Roi                   check-tasks-details, THE-KING, INES-official                                                        
+  Suite Dette & Structure du code  find-booster, TOOL-LEARNING, THE-EQUALIZER                                                          
+  Membre                           MOÏSE-TABLES-DE-LOI, Abraham-les-references                                                         
+
+📝 Émetteurs de rapport non certifiés (7) — produisent un vrai rapport lu par un humain sans être membres — rang en attente de nommage
+
+  · CHARTER-SPY *
+  · Compteur d'utilisation des outils
+  · Doc-Report
+  · doc-HTML
+  · find-brain
+  · integration-outil
+  · the-ghost
+
+✅ Aucun membre certifié sans suite assignée.
+
+---
+CASSANDRA-RH constate l'organisation, elle ne la décide jamais — un changement de rang reste une décision humaine.
+

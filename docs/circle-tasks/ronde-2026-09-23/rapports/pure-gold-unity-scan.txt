@@ -1,0 +1,31 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il reconnaît une conversion au gabarit à la présence d'un appel dans le code, jamais en lisant le rapport produit — un outil qui appellerait le cadre sans s'en servir passerait pour conforme. À vérifier avant d'agir, jamais un verdict acquis.
+=== pure-gold-unity — unification réelle des rapports ===
+
+Outils tenus par le gabarit : 36
+Conformes : 36/36 (100 %)
+✅ Tous les rapports mesurables passent par le gabarit partagé.
+
+--- Les trois critères d'un rapport complet (contenu / date / plan d'action) ---
+Critère 2 (date en toutes lettres) : porté par le gabarit partagé, mesuré juste au-dessus.
+
+Critère 1 — du contenu, jamais un simple renvoi : ✅ aucun rapport archivé ne se contente de pointer ailleurs.
+
+Critère 3 — un plan d'action le cas échéant : ⚠️ 1/36 outil(s) ne concluent jamais (17 exemptés car sans constat propre) :
+   · ou-on-en-est
+
+Critère 4 — le rapport sort-il TOUT ce que l'outil sait détecter : ✅ aucun détecteur sans effet.
+Critère 5 — le rapport peut-il dire « tout va bien » sans rien avoir mesuré : ⚠️ 4 outil(s) affichent un signe de réussite sans porter nulle part la moindre formulation d'absence de donnée — check-argus.mjs, check-harmonia.mjs, data-archangel.mjs, hyper-scan-checkpoint.mjs. Ce n'est pas la preuve qu'ils mentent : c'est le constat qu'ils n'ont, dans leur vocabulaire, aucun moyen de l'éviter.
+
+   (12 autre(s) détecteur(s) sont portés par la SEULE suite de tests : ils protègent pour de vrai — le crochet pre-commit la lance à chaque commit — mais ne disent jamais rien dans le rapport de leur outil. Signalés, jamais comptés en faute.)
+   · angel-of-ia-process :: findConstatsSansChiffre()
+   · cassandra-rh :: findMembersWithoutCategory()
+   · criticite :: findPaliersSansFamille()
+   · doc-report :: findUnnavigableSections()
+   · doc-report :: findToolsMissingReliability()
+   · doc-report :: findHeuristicToolsWithoutNotice()
+   · ecotoken :: findTriggersNotWired()
+   · god-of-all-process :: findMecanismesAbsentsDuGardien()
+   · god-of-all-process :: findMecanismesAbsentsDuDocument()
+   · god-of-all-process :: findScriptsDeservingProcess()
+   · modes-de-travail :: findModesInconnusCites()
+   · safe-export :: findTermesNonDefinis()

@@ -1,0 +1,31 @@
+Version de Claude : claude-opus-5
+Produit le : mercredi 23 septembre 2026 à 21h15 (UTC)
+État du code : 51997b5 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : THE-EQUALIZER — inchangé depuis le mercredi 23 septembre 2026
+Santé de l'outil : 0/2 signal(aux) au vert — jamais sollicité d'après le compteur — ou jamais instrumenté pour l'être ; aucun objectif chiffré — rien à quoi comparer son résultat
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== Tout est-il à niveau ? ===
+un verdict par domaine, et ce que personne ne vérifie
+
+SCAN >> RAPPORTS >> ANALYSE >> PLAN D'ACTION >> QUESTIONS >> TÂCHES DE TRAVAIL
+
+Référentiel lu : docs/referentiel/standards.md — 29 exigences déclarées.
+Relevé du mercredi 23 septembre 2026.
+
+— UN VERDICT PAR DOMAINE —
+✅ l'Agence (ce que les outils produisent et ce qu'ils savent faire) : 15/15 exigences vérifiées mécaniquement
+✅ les documents (ce que chaque outil possède comme documentation) : 7/7 exigences vérifiées mécaniquement
+⚠️ le code (l'état du code lui-même) : 5/7 exigences vérifiées mécaniquement
+   ⚠️  X6 — Le POURQUOI vit à côté du QUOI (Article 27) (vérifiée en partie)
+   ⚠️  X7 — Le code applique les leçons déjà apprises (vérifiée en partie)
+➖ le jeu (la qualité narrative) : aucune exigence déclarée dans ce domaine
+   hors périmètre assumé — relève de la charte et d'EL-PROFESSOR, jamais d'un standard d'outillage
+
+— LE RETARD OUTIL PAR OUTIL (délégué à integrationAudit, LE-COORDINATEUR) —
+36/36 membres certifiables sans aucun écart d'intégration.
+
+## Plan d'action
+  → RETENU · X6 (le code) — « Le POURQUOI vit à côté du QUOI (Article 27) » n'est vérifiée qu'en partie : **partiel** — les deux bouts sont désormais couverts : l'ABSENCE d'explication est comptée, et depuis le 2026-09-23 sa DISPARITION aussi (une raison supprimée d'un commit et introuvable ailleurs, « déplacée » étant distinguée de « supprimée »). Reste hors mécanique : la QUALITÉ d'une explication, qu'aucun programme ne peut juger — tâche [RECOMMANDEE] : mettre l'Agence à niveau
+  → RETENU · X7 (le code) — « Le code applique les leçons déjà apprises » n'est vérifiée qu'en partie : **partiel** — le porteur est vérifié réel et la leçon vérifiée remontée au bon moment ; l'APPLICATION est jugée par l'utilisateur à la Ronde — tâche [RECOMMANDEE] : mettre l'Agence à niveau

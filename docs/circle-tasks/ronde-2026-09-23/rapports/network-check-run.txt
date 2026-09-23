@@ -1,0 +1,68 @@
+=== LE-COORDINATEUR — synthèse gratuite du réseau d'outils ===
+
+| Outil | Résultat | Dernier passage |
+|---|---|---|
+| check-house.mjs (suite de tests) | ok | 2026-09-23T21:25:46.766Z |
+| AXA-CHECK (couverture réelle par fonction) | 100% | 2026-09-23T21:25:46.766Z |
+| ARGUS (mécanique) | ok (6 déjà tranché(s) avec vous, jamais reposé(s)) | 2026-09-23T21:25:46.766Z |
+| HARMONIA (mécanique) | ok | 2026-09-23T21:25:46.766Z |
+| ALWAYS-NEW-CODE (préparation) | zone recommandée : Cycle jour/nuit | 2026-09-23T21:25:46.766Z |
+| CLEAN-DIRTY-OLD (repérage seul) | ok | 2026-09-23T21:25:46.766Z |
+| Smart Conso API (salves jamais confirmées) | ok | 2026-09-23T21:25:46.766Z |
+| SMART-CONSO-TOKEN (rythme 7 derniers jours) | 20 action(s) — {"scan":4,"charter_size_tax":3,"agent_subagent_spawn":2,"full_repo_scope":5,"proposition_appliquee":1,"assess":4,"long_task_signal":1} | 2026-09-23T21:25:46.766Z |
+| SMART-CONSO-TOKEN (spawns THE-FINAL-JUDGE sans consultation confirmée) | ok | 2026-09-23T21:25:46.766Z |
+| SMART-CONSO-TOKEN (spawns THE-DEEP-READER sans consultation confirmée) | ok | 2026-09-23T21:25:46.766Z |
+| SMART-CONSO-TOKEN (passages HYPER-SCAN-CHECKPOINT complets sans consultation confirmée) | ok | 2026-09-23T21:25:46.766Z |
+| AXA-CHECK (Agents absents d'AGENT_SCRIPT_FILES) | ok | 2026-09-23T21:25:46.766Z |
+| ecotoken (poids de la charte) | ok (21593 tk, marge 28 %) | 2026-09-23T21:25:46.766Z |
+| Doc-Report (rapports orphelins jamais indexés) | ok | 2026-09-23T21:25:46.766Z |
+
+Ceci reste un tableau de synthèse, jamais un verdict : relire la sortie complète de l'outil concerné avant d'agir sur une ligne "à regarder" (cf. docs/regles-de-travail.md, aucun de ces outils n'est autonome).
+Jamais déclenché ici : HYPER-SCAN-CHECKPOINT (version complète), Smart Conso API, ou une simulation — toujours une décision explicite séparée, jamais une initiative du coordinateur.
+
+=== Menu des prestations disponibles via le réseau d'outils ===
+
+| Si tu veux... | Ça déclenche | Coût |
+|---|---|---|
+| Exportabilité de l'Agence, reprise par une autre IA (Article 27) | SAFE-EXPORT | 0 appel API — couche légère mécanique |
+| Analyser un document de règles autre que la charte | ABRAHAM-LES-REFERENCES | 0 appel API |
+| Analyser la charte du projet en profondeur, ou préparer une décision qui la touche | MOÏSE-TABLES-DE-LOI | 0 appel API |
+| Est-ce que tout est à niveau ? (standards, formats, gabarits) | THE-EQUALIZER | 0 appel API |
+| Apprentissage réel de l'outillage, et mon apport à cet apprentissage | TOOL-LEARNING | 0 appel API |
+| Intégrer un nouvel outil sans découvrir les oublis un test après l'autre | integration-outil | 0 appel API |
+| Fidélité de l'esprit des personnages (Article 0) | EL-PROFESSOR | 0 appel API — relit un texte déjà produit |
+| Diagnostic direct du ton face à une provocation réelle | check-spirit.mjs | réel — 16 vrais appels Gemini, consulter Smart Conso API avant |
+| Qualité visuelle du rendu | THE-SCREENER | 0 appel API — capture Playwright locale |
+| Robustesse et couverture de test réelle | AXA-CHECK | 0 appel API |
+| Chasse aux bugs cachés avant une étape importante | HYPER-SCAN-CHECKPOINT | version légère : 0 appel API ; version complète : appels Gemini réels — consulter Smart Conso API avant |
+| Audit global indépendant (code + produit + reprise potentielle) | THE-FINAL-JUDGE | 0 appel API — agent séparé, jamais de Gemini |
+| Sécurité et préparation à la mise en production | THE-FINAL-JUDGE (mandat sécurité inclus) | 0 appel API — agent séparé, jamais de Gemini |
+| Vérifier qu'aucune idée/tâche n'a été oubliée dans le suivi (relecture lourde, agent séparé) | THE-DEEP-READER | 0 appel API — agent séparé, jamais de Gemini |
+| Diagnostiquer un blocage/quota Gemini épuisé (429/503 répétés) | Smart Breaker (check-gemini-quota.mjs) | réel — quelques appels Gemini minimaux de diagnostic |
+| Réguler ma propre consommation de tokens avant une action coûteuse | SMART-CONSO-TOKEN | 0 appel API |
+| Lancer la ronde périodique des tâches gratuites mal automatisées | CIRCLE-TASKS | 0 appel API — sauf si THE-FINAL-JUDGE (⚠️🔴) est explicitement coché |
+| État des lieux des tâches en cours | check-tasks-details | 0 appel API — lecture seule de docs/suivi/ |
+| Préparer un allègement de la charte en identifiant les vrais candidats | MOÏSE-TABLES-DE-LOI | 0 appel API — relit le document ciblé et le reste du dépôt |
+| Vérifier que chaque outil livre ses rapports comme prévu (décision HTML/texte, fraîcheur, usage réel) | Doc-Report | 0 appel API — relit les registres et le code local |
+| Vérifier qu'une décision de fond respecte la philosophie et la politique du projet | THE-KING | 0 appel API — relit un document local |
+| Obtenir une version de référence unique et lisible du code (ou code + docs) du projet | INES-official | 0 appel API — relit les fichiers locaux |
+| Dette technique / code qui s'empile plutôt que d'être pensé | ALWAYS-NEW-CODE + CLEAN-DIRTY-OLD | 0 appel API — raisonnement, pas de Gemini |
+| Contrôle pré-simulation complet (quota + correctifs en attente de confirmation) | Smart Conso API + docs/simulations/correctifs-a-revalider.md | 0 appel API pour le contrôle lui-même — la simulation qui suit, elle, en fera beaucoup |
+| Vérification rapide après un changement de code | check-house.mjs + ARGUS (mécanique) + HARMONIA (mécanique) | 0 appel API, déjà automatique à chaque commit |
+| Contrôle pré-modification d'un fichier précis avant un changement risqué | AXA-CHECK + CLEAN-DIRTY-OLD + HARMONIA (nœuds sensibles) | 0 appel API |
+| Vue d'ensemble croisée et gratuite de tout le réseau d'outils avant une décision de priorisation | check-house.mjs + ARGUS + HARMONIA + AXA-CHECK + CLEAN-DIRTY-OLD + ALWAYS-NEW-CODE (préparation) + Smart Conso API + SMART-CONSO-TOKEN | 0 appel API |
+| Contrôle de la mémoire narrative des personnages après une simulation, ou suspicion d'un bug de sauvegarde de type loveRealized | memory-audit | 0 appel API — mécanique, jamais un second appel Gemini |
+| Avant/pendant un chantier de découpage d'un fichier fourre-tout (ex. route.ts) | find-deep-booster | 0 appel API — heuristique texte, jamais un vrai parseur |
+| Retrouver rapidement où se trouve une logique précise dans un gros fichier déjà structuré | find-booster | 0 appel API |
+| Savoir lequel des deux outils de recherche (ou les deux) utiliser avant de lire un fichier potentiellement volumineux ou complexe | find-brain | 0 appel API |
+| Savoir quel process encadre ce que je m'apprête à faire, et où on en est dedans | god-of-all-process | 0 appel API |
+| Savoir si les règles de travail ont été respectées, et par qui | angel-of-ia-process | 0 appel API |
+| Savoir ce que l'équipe sait déjà sur un sujet, ou repérer une donnée produite que rien n'exploite | data-archangel | 0 appel API |
+| Lancer une simulation sans refaire une erreur qui a déjà coûté une heure de quota, et vérifier ensuite que rien n'a été sauté | process.simulation.guardian | 0 appel API pour le contrôle lui-même — la simulation qui suit, elle, en fera beaucoup |
+| Savoir quel outil ou quelle combinaison d'outils déjà existante utiliser pour une tâche donnée, sans avoir à y réfléchir soi-même | tool-brain | 0 appel API |
+| Dette technique / code qui s'empile plutôt que d'être pensé — trouver un bloc de logique recopié plutôt que factorisé, même renommé | clone-hunter | 0 appel API — heuristique texte, zéro parseur AST |
+| Vérifier si un objectif fixé sur un outil ou une entité a été atteint sur sa période | objectifs-vs-resultats | 0 appel API — relit un historique déjà écrit, jamais un second calcul |
+| Réduire le coût en tokens de CLAUDE.md, le seul document rechargé à chaque message | ecotoken | 0 appel API — relit la charte et le dépôt local |
+| Bilan RH de l'équipe de l'Agence Codex, effectif, badges, tendance KPI, outils à reconsidérer | CASSANDRA-RH | 0 appel API — relit ce que le reste du réseau d'outils sait déjà |
+
+Rappel ouvert à chaque passage automatique (demande explicite de l'utilisateur) : ce menu n'exécute rien tout seul — il rappelle ce qui PEUT être commandé, à l'agent comme à l'utilisateur à travers lui.

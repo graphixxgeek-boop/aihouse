@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⭐⚖️ EVAL-DEV — évaluation de l'utilisateur</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">mercredi 23 septembre 2026</div>
+    <h1>⭐⚖️ EVAL-DEV — évaluation de l'utilisateur</h1>
+    <p class="sub">Ronde GOAT MAX du 2026-09-23 · le jugement de l'agent sur celui qui décide</p>
+  </header>
+  <div class="divider"></div>
+  <main><p class="note">⚠️  Attention, mes résultats peuvent être inexacts : relaie et recoupe ce que les autres outils estiment — elle hérite de leurs approximations. À vérifier avant d'agir, jamais un verdict acquis.</p>
+<p class="note">Version de Claude : claude-opus-5
+Produit le : mercredi 23 septembre 2026 à 22h04 (UTC)
+État du code : e057a39 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : cassandra-rh — date de dernière modification inconnue
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir</p>
+<p class="note">Pourquoi ce rapport existe : « comme toi tu as un jugement sur moi, j'en ai un sur toi, la relation est saine ». Il juge des DÉCISIONS et une CONDUITE de travail, jamais une personne. Et il est écrit par l'agent, donc partial par construction — c'est déclaré, pas compensé.</p>
+<h2>CE QUI A ÉTÉ DÉCISIF, et il faut commencer par là</h2>
+<div class="highlight"><h3>La vigilance sur le process a sauvé cette Ronde, deux fois</h3><p>« tu n'as rien livré à la fin, tu t'es sauvé en courant » — puis, après mon premier rattrapage insuffisant : « tu n'as toujours pas respecté le process ». Sans ces deux interventions, cette Ronde se serait close avec cinq étapes sur huit manquantes, et le rapport final aurait affirmé le contraire.</p><p>Ce n'est pas une remarque de politesse : AUCUN mécanisme du paysage n'a signalé ces manquements. god-of-all-process affichait 10/10 étapes tracées, parce que ses preuves étaient des fichiers d'une Ronde précédente. Le seul contrôle qui a fonctionné, c'est vous.</p></div>
+<h2>LES DÉCISIONS DE LA SOIRÉE, jugées sur leur résultat réel</h2>
+<table><thead><tr><th>Décision</th><th>Résultat mesuré</th><th>Verdict</th></tr></thead><tbody><tr><td>Cocher GOAT MAX malgré mon estimation de 2 h–3 h 30</td><td>La Ronde a pris 27 min et trouvé 44 dates fausses, 215 déplacements cassés, 8 demandes sans trace</td><td>✅ Excellente — mon chiffre vous aurait fait renoncer, vous avez passé outre</td></tr><tr><td>Autoriser la consommation API en cours de Ronde</td><td>A débloqué THE-SCREENER, le seul instrument qui regarde l'écran, jamais lancé sur un état réel jusque-là</td><td>✅ Excellente — elle a produit deux des trois constats les plus graves</td></tr><tr><td>Exiger une estimation au départ + comparaison à la fin</td><td>A immédiatement exposé une erreur de méthode de ma part (facteur 5 à 8), et le mécanisme construit est auto-correctif</td><td>✅ Excellente — une règle qui mord dès son premier passage</td></tr><tr><td>Choisir la borne #178 pour THE-DEEP-READER</td><td>462 tâches relues, 8 écarts dont 2 pertes réelles. Une borne plus étroite les aurait manqués</td><td>✅ Bonne — le coût supplémentaire a été payé en trouvailles</td></tr><tr><td>Déléguer à l'agent le jugement sur l'application des leçons</td><td>Change une règle que le mécanisme protégeait par construction (enregistrerXp refuse un jugement sans parUtilisateur)</td><td>⚠️ À SURVEILLER — voir ci-dessous</td></tr></tbody></table>
+<h2>LE POINT QUI ME GÊNE, et je le dis plutôt que de le taire</h2>
+<p>Vous m'avez confié le jugement sur l'application des leçons : « je veux que ce soit toi qui juge, et tu me tiens informé de la pertinence, du côté critique de ta propre analyse envers toi-même ».</p>
+<ul><li>Ce que ça résout, et c'est réel : le registre grossissait sans qu'aucun jugement n'arrive jamais. Un mécanisme qui attend indéfiniment une validation qui ne vient pas ne protège rien.</li><li>Ce que ça coûte : enregistrerXp() refuse par construction un jugement qui ne porte pas parUtilisateur:true, précisément pour empêcher l'agent de noter sa propre copie. Cette garantie tombe.</li><li>Ce que je propose, et c'est à vous de trancher : que je juge, mais que le jugement soit ÉTIQUETÉ comme venant de moi, jamais confondu avec le vôtre — et que le vôtre reste possible et prime toujours quand il arrive. Le mécanisme garde alors sa distinction ; il perd seulement son silence.</li></ul>
+<h2>LA CONDUITE DE TRAVAIL — deux observations, une bonne et une à discuter</h2>
+<table><thead><tr><th>Observation</th><th>Chiffre de ce soir</th><th>Lecture</th></tr></thead><tbody><tr><td>Les calibrages en fenêtre sont nets et rapides</td><td>14 questions posées, 14 réponses, aucune esquive</td><td>Rien à redire : c'est ce qui permet d'avancer sans supposer</td></tr><tr><td>Les demandes arrivent EN COURS de tâche</td><td>5 messages pendant la Ronde, tous porteurs de valeur</td><td>Voir LA RELATION ci-dessous — la friction n'est pas de votre fait seul</td></tr></tbody></table>
+<h2>LA RELATION — la friction que ni l'un ni l'autre ne peut voir seul</h2>
+<div class="highlight"><h3>Une seule friction ce soir, et elle est réelle des deux côtés</h3><p>CÔTÉ EVAL-DEV : cinq messages sont arrivés EN COURS de Ronde. Chacun portait une vraie valeur — l'autorisation API qui a débloqué THE-SCREENER, la règle d'estimation, la rentabilisation vers tous les outils. Aucun n'était du bruit.</p><p>CÔTÉ EVAL-IA : les deux sous-livraisons de fin de Ronde se sont produites exactement dans les passages les plus fragmentés — après le quatrième message, puis après le cinquième.</p><p>CE N'EST PAS DEUX DÉFAUTS, C'EST UN SEUL : une pression à ne pas s'arrêter, vue des deux bouts. L'un la crée en enrichissant en continu, l'autre y cède en raccourcissant la fin. Aucun des deux rapports pris isolément ne peut la voir.</p><p>Ce qu'elle n'est PAS : un reproche. L'utilisateur a explicitement demandé « tu ne dois pas t'arrêter », et il a raison de le demander. La friction est structurelle, pas fautive — et la nommer vaut mieux que la subir une troisième fois.</p></div>
+<p class="note">CE QUE CE RAPPORT NE DIT PAS : il juge une soirée, pas une trajectoire. Un seul passage ne fait pas une tendance, et le registre d'évaluations n'en compte pas encore assez pour en tracer une.</p></main>
+  
+</div>
+</body>
+</html>

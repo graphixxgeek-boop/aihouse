@@ -633,6 +633,50 @@ vérifient les trois cas, dont celui où un vrai écart doit toujours remonter (
 
 **Terrain** : quand un outil agrège le résultat d'un autre · quand je lis un compteur produit à partir d'un texte plutôt que d'une valeur · quand un tableau de synthèse contredit la sortie complète de l'outil qu'il cite · mots : synthèse, résumé, tableau croisé, candidats, à regarder · fichiers : scripts/le-coordinateur.mjs, scripts/hyper-scan-checkpoint.mjs, scripts/check-argus.mjs
 
+## L23 — Un contrôleur dit ce qu'il SAIT VÉRIFIER ; le document dit ce qui est DÛ
+
+Pour livrer la fin d'une Ronde, j'ai lu les **onze étapes déclarées dans le code** de
+`god-of-all-process`. Le document de process, lui, en décrit **huit rien que pour la fin**, avec
+leurs livrables, leur ordre exact, leur format et leur archivage.
+
+**Les onze étaient exactes.** Le contrôleur ne mentait pas : il déclare ce dont il peut constater la
+trace sur disque. Ce qu'il ne déclare pas, c'est tout ce qu'aucun fichier ne prouve — un rapport
+livré en HTML aux normes plutôt qu'en markdown, un correctif classé obligatoire ou recommandé, deux
+évaluations séparées plutôt qu'une, quatre séries de questions plutôt qu'une, une clôture placée en
+tout dernier.
+
+**Ce que ça a produit, et c'est le point** : une sous-livraison qui se croyait complète. J'ai coché
+mentalement « 10/10 étapes tracées » et déclaré la Ronde close — avec trois cinquièmes des livrables
+manquants. **Puis je l'ai refait au premier rattrapage**, en relisant les mêmes onze étapes.
+
+**Ce qui rend le cas général, et il dépasse largement les process** : partout où une règle existe en
+DEUX formes — un document qui l'énonce et un mécanisme qui en vérifie une partie — le mécanisme est
+toujours le plus rapide à consulter et toujours le plus incomplet. Sa complétude apparente vient de
+ce qu'il ne déclare jamais ce qu'il ignore. Un vert y signifie « rien de ce que je sais regarder
+n'est cassé », jamais « tout est fait ». C'est la même famille que L5 et que le fil rouge de la
+Ronde du 2026-09-23 : **un contrôle qui regarde une tranche rend un chiffre juste sur sa tranche et
+faux sur le tout.**
+
+**La règle** : avant d'exécuter une étape d'un process, LIRE SON DOCUMENT. Le contrôleur sert à
+vérifier après coup qu'on n'a rien laissé tomber de ce qu'il sait voir — jamais à savoir ce qu'il y
+avait à faire. Et quand les deux divergent, c'est le document qui fait foi : lui a été calibré avec
+l'utilisateur, le mécanisme n'en est qu'une projection partielle.
+
+*Payée le 2026-09-23, deux fois dans la même soirée, et trouvée par l'utilisateur et non par un
+outil : « tu ne m'as rien livré à la fin, tu t'es sauvé en courant », puis « tu n'as toujours pas
+respecté le process ». Son diagnostic, plus juste que le mien : « tu lis les raccourcis plutôt que
+les documents ».*
+
+**Porté par** : **aucun mécanisme n'est possible**, et c'est déclaré plutôt que tu (Article 27) —
+aucun programme ne peut constater qu'un document a été LU avant d'agir, exactement la limite honnête
+déjà reconnue à tool-brain et à SMART-CONSO-TOKEN. Ce qui existe en revanche, et qui rend la lecture
+possible plutôt qu'obligatoire : `findProcessHorsGabarit()` (`scripts/god-of-all-process.mjs`)
+vérifie que chaque document de process répond aux cinq questions du modèle, donc qu'il y a bien
+quelque chose à lire ; et `angel-of-ia-process` DEMANDE la déclaration plutôt que de la supposer.
+Le porteur réel de cette leçon est son inscription ici, et sa remontée par son Terrain.
+
+**Terrain** : avant d'exécuter une étape d'un process · quand un contrôleur affiche un vert et que je m'apprête à conclure · quand je consulte une liste d'étapes dans du code plutôt que dans un document · mots : process, étapes, contrôleur de process, garde-fou mécanique, conformité, tracé, livrable · fichiers : scripts/god-of-all-process.mjs, docs/circle-process-detail.txt, docs/regles-de-travail.md, scripts/circle-tasks.mjs
+
 ## BP1 — La règle s'écrit à UN endroit et se dérive partout ailleurs
 
 Devant vingt endroits à corriger, le réflexe est de corriger les vingt. Le bon geste est de trouver

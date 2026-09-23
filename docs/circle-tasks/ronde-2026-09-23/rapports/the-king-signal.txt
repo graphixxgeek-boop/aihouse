@@ -1,0 +1,40 @@
+⚠️  Attention, mes résultats peuvent être inexacts : lit des titres et du vocabulaire, jamais le sens réel de deux principes ; ses dates dérivées sont des déductions git. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : mercredi 23 septembre 2026 à 21h14 (UTC)
+État du code : 51997b5 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : the-king — inchangé depuis le mercredi 23 septembre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== THE-KING — veille philosophie et politique ===
+
+
+📅 Fraîcheur de docs/philosophie-et-politique.md : dernière modification il y a 3 j
+
+📜 Évolution du document — 19/19 principes datés (2 date(s) déclarée(s), 17 dérivée(s) de l'historique git) :
+   2026-09-18 — 1.1 L'authenticité prime sur l'agrément
+   2026-09-18 — 1.2 La crédibilité prime sur la nouveauté ou l'esthétisme
+   2026-09-18 — 1.3 Double vue : l'observateur externe ET l'acteur interne
+   2026-09-18 — 1.4 La qualité se protège par des structures, pas seulement par la vigilance
+   2026-09-18 — 1.5 La rejouabilité et la variété sont une forme de respect
+   2026-09-18 — 1.6 La preuve prime sur l'affirmation
+   2026-09-18 — 1.7 La documentation est un organe vivant, pas une trace administrative
+   2026-09-18 — 1.8 Corriger la cause, jamais le symptôme
+   2026-09-18 — 2.1 Une hiérarchie de valeurs explicite, invoquée en cas de conflit
+   2026-09-18 — 2.2 Le doute se lève par la question, jamais par la supposition silencieuse
+   2026-09-18 — 2.3 Une double validation protège la valeur fondatrice, même contre son propre auteur
+   2026-09-18 — 2.4 La dette ne s'accumule jamais « pour plus tard »
+   2026-09-18 — 2.5 La rigueur se concentre là où la valeur centrale est le plus exposée
+   2026-09-18 — 2.6 Un problème constaté n'est jamais tû
+   2026-09-18 — 2.7 La cohérence se vérifie de bout en bout, de la philosophie au code
+   2026-09-19 — 1.9 Une mesure n'a de valeur que si elle peut se tromper visiblement
+   2026-09-19 — 1.10 Organiser la documentation par nature du contenu, pas seulement par sous-système
+   2026-09-19 — 2.8 Une interruption ne doit jamais coûter une idée
+   2026-09-20 — 2.9 Un outil fiable allège une règle, mais ne la remplace jamais par association
+
+⚖️  Tensions POSSIBLES entre principes : aucune détectée
+
+=== Plan d'action ===
+Aucun constat retenu : ce passage n'a rien trouvé qui appelle une action.

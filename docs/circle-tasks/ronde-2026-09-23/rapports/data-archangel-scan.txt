@@ -1,0 +1,73 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il mesure une lecture à la citation d'un chemin dans le code — une mention, jamais la preuve que la donnée est réellement exploitée, et un chemin construit dynamiquement lui échappe complètement. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : mercredi 23 septembre 2026 à 21h15 (UTC)
+État du code : 51997b5 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : data-archangel — inchangé depuis le mercredi 23 septembre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== data-archangel — circulation des données dans l'Agence Codex ===
+Ce que l'équipe produit, qui le relit, et ce que l'agent lui-même n'exploite pas encore.
+
+Sources de données inventoriées : 62 — 40 réellement relues par un autre outil (65 %).
+
+🚨 10 donnée(s) FRAÎCHE(S) que personne ne lit — écrite il y a peu, donc elle a quelque chose à dire, et aucun outil ne l'écoute :
+  · .circle-tasks-last-run.json (CIRCLE-TASKS, 0 j) — anti-doublon de la dernière Ronde — ⚠️ atteinte par table (LOCAL_JOURNALS, PROCESSES) chez 4 outil(s) : data-archangel.mjs, doc-report.mjs, god-of-all-process.mjs, integration-outil.mjs. Passer par le chemin n'est PAS exploiter le contenu : ils sont candidats à devenir de vrais lecteurs, ils n'en sont pas.
+  · docs/the-screener/ (THE-SCREENER, 0 j) — registre Simulation & qualité narrative — ⚠️ atteinte par table (REGISTRIES, PROCESSES, SIMULATION_ITEMS) chez 10 outil(s) : cassandra-rh.mjs, circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs…. Passer par le chemin n'est PAS exploiter le contenu : ils sont candidats à devenir de vrais lecteurs, ils n'en sont pas.
+  · docs/le-coordinateur-catalogue/ (Catalogue LE-COORDINATEUR, 0 j) — registre Coordination — ⚠️ atteinte par table (REGISTRIES) chez 7 outil(s) : cassandra-rh.mjs, circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs…. Passer par le chemin n'est PAS exploiter le contenu : ils sont candidats à devenir de vrais lecteurs, ils n'en sont pas.
+  · docs/safe-export/ (SAFE-EXPORT, 0 j) — registre Équipe noyau (Article 20) — ⚠️ atteinte par table (REGISTRIES, GARDIENS_SACRES_REGISTRES) chez 7 outil(s) : cassandra-rh.mjs, circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs…. Passer par le chemin n'est PAS exploiter le contenu : ils sont candidats à devenir de vrais lecteurs, ils n'en sont pas.
+  · docs/abraham-les-references/ (ABRAHAM-LES-REFERENCES, 0 j) — registre Suite Dette & Structure du code — ⚠️ atteinte par table (REGISTRIES) chez 7 outil(s) : cassandra-rh.mjs, circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs…. Passer par le chemin n'est PAS exploiter le contenu : ils sont candidats à devenir de vrais lecteurs, ils n'en sont pas.
+  · docs/moise-tables-de-loi/ (MOÏSE-TABLES-DE-LOI, 0 j) — registre Suite Dette & Structure du code — ⚠️ atteinte par table (REGISTRIES) chez 7 outil(s) : cassandra-rh.mjs, circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs…. Passer par le chemin n'est PAS exploiter le contenu : ils sont candidats à devenir de vrais lecteurs, ils n'en sont pas.
+  · docs/ecotoken/ (ecotoken, 0 j) — registre Gouvernance interne — ⚠️ atteinte par table (REGISTRIES, CIRCLE_ITEMS) chez 7 outil(s) : cassandra-rh.mjs, circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs…. Passer par le chemin n'est PAS exploiter le contenu : ils sont candidats à devenir de vrais lecteurs, ils n'en sont pas.
+  · docs/tool-brain/ (tool-brain (Ronde), 1 j) — registre Coordination — ⚠️ atteinte par table (REGISTRIES, CIRCLE_ITEMS, SANS_BLUEPRINT_ASSUME) chez 7 outil(s) : cassandra-rh.mjs, circle-process-guardian.mjs, data-archangel.mjs, doc-report.mjs…. Passer par le chemin n'est PAS exploiter le contenu : ils sont candidats à devenir de vrais lecteurs, ils n'en sont pas.
+  · docs/network-check/ (network-check-run (Ronde), 1 j) — registre Coordination — ⚠️ atteinte par table (REGISTRIES, CIRCLE_ITEMS) chez 6 outil(s) : cassandra-rh.mjs, circle-process-guardian.mjs, data-archangel.mjs, doc-report.mjs…. Passer par le chemin n'est PAS exploiter le contenu : ils sont candidats à devenir de vrais lecteurs, ils n'en sont pas.
+  · docs/referentiel/kpi-rapports/ (Tableau de bord / KPI, 2 j) — registre Simulation & qualité narrative — ⚠️ atteinte par table (REGISTRIES, SIMULATION_ITEMS, HARD_THRESHOLDS) chez 9 outil(s) : cassandra-rh.mjs, circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs…. Passer par le chemin n'est PAS exploiter le contenu : ils sont candidats à devenir de vrais lecteurs, ils n'en sont pas.
+
+✅ 12 donnée(s) fraîche(s) sans lecteur direct, mais lue(s) par un lecteur de table DÉCLARÉ et corroboré — jamais un trou :
+  · docs/check-tasks-details/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs, circle-tasks.mjs
+  · docs/ou-on-en-est/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs, circle-tasks.mjs
+  · docs/tool-learning/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs, circle-tasks.mjs
+  · docs/the-equalizer/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs, circle-tasks.mjs
+  · docs/relecture-referentiel/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs
+  · docs/integration-outil/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs, circle-tasks.mjs
+  · docs/html-wiring-check/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs
+  · docs/ecotoken/ronde/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs
+  · docs/suivi-open-tasks/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs
+  · docs/chantier-preliminaire/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs
+  · docs/idee-a-trancher/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs
+  · docs/relecture-correctifs/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs
+  (Un chemin DÉRIVÉ d'un registre plutôt que recopié est ce que l'Article 24 exige : le compter comme non lu punirait la bonne conception. La déclaration n'est pas crue sur parole — le fichier qui la porte doit vraiment lire le disque.)
+
+12 autre(s) donnée(s) écrite(s) que seul leur producteur relit :
+  · [registre] docs/check-tasks-details/ — check-tasks-details : registre Coordination
+  · [registre] docs/ou-on-en-est/ — Où on en est : registre Coordination
+  · [registre] docs/tool-learning/ — TOOL-LEARNING : registre Suite Dette & Structure du code
+  · [registre] docs/the-equalizer/ — THE-EQUALIZER : registre Suite Dette & Structure du code
+  · [registre] docs/integration-outil/ — integration-outil : registre Suite Dette & Structure du code
+  · [registre] docs/html-wiring-check/ — html-wiring-check (Ronde) : registre Coordination
+  · [registre] docs/ecotoken/ronde/ — Scan ecotoken produit pendant une Ronde (item ecotoken-scan) : registre Coordination
+  · [registre] docs/suivi-open-tasks/ — Tâche ouverte la plus ancienne (Ronde) : registre Coordination
+  · [registre] docs/chantier-preliminaire/ — Fraîcheur fichiers préliminaires (Ronde) : registre Coordination
+  · [registre] docs/idee-a-trancher/ — Idées en attente de décision (Ronde) : registre Coordination
+  · [registre] docs/relecture-referentiel/ — Relecture référentiel (Ronde) : registre Coordination
+  · [registre] docs/relecture-correctifs/ — Relecture correctifs (Ronde) : registre Coordination
+
+Branchements suggérés (5 outil(s)) — une suggestion, jamais un manquement :
+  · scripts/circle-tasks.mjs pourrait gagner à lire docs/argus/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/circle-tasks.mjs pourrait gagner à lire docs/harmonia/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/circle-tasks.mjs pourrait gagner à lire docs/axa-check/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/check-tasks-details.mjs pourrait gagner à lire docs/hyper-scan-checkpoint/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/check-tasks-details.mjs pourrait gagner à lire docs/ines-official/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/check-tasks-details.mjs pourrait gagner à lire docs/smart-conso-api/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/le-coordinateur.mjs pourrait gagner à lire docs/clean-dirty-old/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/le-coordinateur.mjs pourrait gagner à lire docs/ines-official/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/le-coordinateur.mjs pourrait gagner à lire docs/smart-conso-api/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/clean-dirty-old.mjs pourrait gagner à lire docs/harmonia/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/clean-dirty-old.mjs pourrait gagner à lire docs/axa-check/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/clean-dirty-old.mjs pourrait gagner à lire docs/suivi/relectures-lourdes/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/smart-conso-api.mjs pourrait gagner à lire .smart-conso-token-history.json — 2 outil(s) travaillant sur le même terrain le font déjà
+
+Comment lire ce qui précède : un registre destiné à l'œil humain n'a pas besoin d'un lecteur-outil. Ce qu'aucun humain ne fera jamais, c'est comparer trente passages pour en tirer une tendance — c'est cette exploitation-là qui manque, jamais forcément une lecture.
+Méthode : « lire » se mesure à la citation du chemin dans le code, commentaires et déclarations retirés — une mention, jamais une preuve de lecture effective. Un catalogue qui DÉCLARE une source (doc-report) n'en est pas un lecteur, et la suite de tests qui la VÉRIFIE non plus.
