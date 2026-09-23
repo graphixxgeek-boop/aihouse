@@ -27,11 +27,12 @@
 // de ses appelants lui passe SON motif de titre, SES exceptions et SES chemins ; lui ne sait rien
 // d'eux. C'est la condition pour qu'il parte vers un autre projet (Article 27).
 
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import { decouperEnUnites, pairesParJaccard, printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { renderHtmlReport } from "./html-report.mjs";
 
 // --- 1. LE BALAYAGE DU DÉPÔT ----------------------------------------------------------------
 // Fait UNE fois et passé en paramètre : c'est la partie coûteuse de tout ce qui suit, et la
@@ -149,23 +150,70 @@ export const NIVEAUX_GRAVITE = [
     motif: null },
 ];
 
+// ÊTRE NOMMÉ N'EST PAS ÊTRE EXÉCUTÉ, et la première version de cette classification confondait
+// exactement les deux — le défaut que toute cette soirée poursuivait, reproduit dans l'outil écrit
+// pour le traquer. Elle accordait le niveau BLOQUANTE dès que le nom du mécanisme APPARAISSAIT
+// quelque part dans `check-house.mjs`. Or ce fichier fait onze mille lignes et cite presque tous
+// les scripts du dépôt : dans ses commentaires, dans les `console.log('Passed: …')` qui racontent
+// ce qu'un test a prouvé, dans les fixtures d'autres outils. Résultat mesuré sur la vraie charte :
+// treize Articles sur trente déclarés « bloquants », dont l'Article 0 — alors que `check-spirit.mjs`
+// qui le protège N'EST JAMAIS LANCÉ par le filet de sécurité, la charte elle-même écrivant qu'il
+// « coûte de vrais appels API, donc à lancer à la main, pas en continu ». Pire encore : une de ces
+// mentions venait de la fixture de test que je venais d'écrire pour CETTE fonction. L'outil se
+// décernait sa propre protection.
+//
+// La mesure honnête demande une POSITION D'APPEL, jamais une occurrence. Les chaînes de caractères
+// et les commentaires sont retirés du fichier avant la recherche, parce que c'est précisément là
+// que vivent les mentions qui ne font rien. Un script, lui, ne compte que si un crochet git le
+// LANCE (`node scripts/x.mjs`) ou si le filet de sécurité l'IMPORTE — et l'import étant lui-même
+// une chaîne, il se cherche séparément, sur le texte brut.
+export function sansChainesNiCommentaires(code = "") {
+  return String(code)
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/(^|[^:])\/\/[^\n]*/g, "$1 ")
+    .replace(/`(?:\\[\s\S]|[^\\`])*`/g, '""')
+    .replace(/'(?:\\.|[^\\'])*'/g, '""')
+    .replace(/"(?:\\.|[^\\"])*"/g, '""');
+}
+
+export function mecanismeExerce(nom, code = "", { chemin = "" } = {}) {
+  if (!nom) return false;
+  const estScript = nom.startsWith("scripts/");
+  if (estScript) {
+    // Un crochet LANCE le script ; le filet de sécurité l'IMPORTE. Les deux se cherchent sur le
+    // texte brut, l'un comme l'autre vivant dans une chaîne par nature.
+    const base = nom.slice(nom.lastIndexOf("/") + 1);
+    const echappe = base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (new RegExp(`node\\s+[^\\n]*${echappe}`).test(code)) return true;
+    return new RegExp(`(?:import\\s*\\(|from)\\s*['"][^'"]*${echappe}['"]`).test(code);
+  }
+  // Une fonction : appelée, directement ou via un espace de noms (`mtl2.protegerLaCharte(…)`).
+  const nu = sansChainesNiCommentaires(code);
+  const echappe = nom.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(?:^|[^a-zA-Z0-9_$])${echappe}\\s*\\(`, "m").test(nu) && chemin !== null;
+}
+
 export function niveauGarantie(porteur = {}, texte = "", { lire = null } = {}) {
   const t = String(texte);
-  // BLOQUANTE : le mécanisme nommé est-il lu par la suite de tests ou par un crochet git ?
-  // Vérifié en LISANT, jamais supposé d'après le nom (leçon L5 : ne pas confondre « rien trouvé »
-  // et « pas pu regarder » — sans lecteur, on ne prétend pas au niveau 5).
+  // BLOQUANTE : le mécanisme nommé est-il réellement EXÉCUTÉ par la suite de tests ou par un
+  // crochet git ? Vérifié en LISANT, jamais supposé d'après le nom (leçon L5 : ne pas confondre
+  // « rien trouvé » et « pas pu regarder » — sans lecteur, on ne prétend pas au niveau 5).
   const nommes = porteur.trouves ?? [];
   if (nommes.length && typeof lire === "function") {
     const cibles = ["scripts/check-house.mjs", "scripts/hooks/pre-commit", "scripts/hooks/post-commit"];
     for (const c of cibles) {
       let contenu = null;
       try { contenu = lire(c); } catch { continue; }
-      if (contenu && nommes.some((n) => contenu.includes(n))) {
-        return { ...NIVEAUX_GARANTIE[5], porteur: nommes, pourquoi: `« ${nommes.find((n) => contenu.includes(n))} » est lu par ${c}` };
-      }
+      if (!contenu) continue;
+      const exerce = nommes.find((n) => mecanismeExerce(n, contenu, { chemin: c }));
+      if (exerce) return { ...NIVEAUX_GARANTIE[5], porteur: nommes, pourquoi: `« ${exerce} » est réellement exécuté par ${c}` };
     }
   }
-  if (porteur.etat === "porté") return { ...NIVEAUX_GARANTIE[4], porteur: nommes, pourquoi: `nomme ${nommes.length} mécanisme(s) réel(s), non branché(s) au filet de sécurité` };
+  // Le niveau 4 est celui que la correction ci-dessus a rendu atteignable, et il porte désormais la
+  // moitié de la charte : un mécanisme qui EXISTE mais que rien ne lance à chaque commit. C'est la
+  // vérité la plus utile de toute cette classification, et c'était exactement celle que la version
+  // mention-vaut-mécanisme effaçait.
+  if (porteur.etat === "porté") return { ...NIVEAUX_GARANTIE[4], porteur: nommes, pourquoi: `nomme ${nommes.length} mécanisme(s) qui existe(nt) vraiment, mais qu'aucun test ni crochet n'exécute : ${nommes.slice(0, 2).join(", ")}` };
   if (porteur.etat === "fantôme") return { ...NIVEAUX_GARANTIE[0], porteur: [], pourquoi: `nomme un mécanisme INTROUVABLE (${(porteur.fantomes ?? []).join(", ")}) — pire qu'une absence, ça rassure à tort` };
   if (/\bDEMANDE\b|refuse d'être (au )?vert|angel-of-ia-process/i.test(t)) return { ...NIVEAUX_GARANTIE[3], porteur: [], pourquoi: "sa conformité est DEMANDÉE et le silence compte comme un manquement" };
   if (/terrain\s*:|remont(e|ée) au bon moment|tool-brain|post-commit/i.test(t)) return { ...NIVEAUX_GARANTIE[2], porteur: [], pourquoi: "un outil la fait remonter, sans vérifier qu'elle est suivie" };
@@ -239,9 +287,14 @@ export function classerDocument(unites = [], fichiers = {}, { lire = null, prefi
   const parVerdict = {};
   for (const l of lignes) parVerdict[l.verdict] = (parVerdict[l.verdict] ?? 0) + 1;
   // LA CARTE : gravité en lignes, garantie en colonnes. Le coin haut-gauche est le danger.
+  // La carte porte les NUMÉROS et pas seulement leur compte : un « 2 » dans une case dit qu'il y a
+  // un problème, il ne dit pas lequel aller lire — et c'est exactement le pas que personne ne fait
+  // quand le rapport s'arrête au chiffre.
   const carte = NIVEAUX_GRAVITE.map((gr) => ({
     gravite: gr.libelle,
+    graviteNiveau: gr.niveau,
     cases: NIVEAUX_GARANTIE.map((ga) => lignes.filter((l) => l.graviteNiveau === gr.niveau && l.garantieNiveau === ga.niveau).length),
+    numeros: NIVEAUX_GARANTIE.map((ga) => lignes.filter((l) => l.graviteNiveau === gr.niveau && l.garantieNiveau === ga.niveau).map((l) => l.numero)),
   }));
   return { lignes, parVerdict, carte, total: lignes.length,
     horsPortee: "la GRAVITÉ est dérivée de signaux que le texte porte lui-même, jamais d'un jugement sur ce qu'une règle enfreinte coûterait vraiment — aucun programme ne sait ça. Elle se relit, elle ne se croit pas." };
@@ -674,8 +727,126 @@ export function analyserDocument({ texte, fichiers = {}, horsPerimetre = new Set
 // se DÉRIVE. C'est ce qui le rend utilisable le jour où un document nouveau arrive, sans qu'une
 // ligne de code bouge (Article 24).
 
+// --- LA PAGE HTML ET LA CARTE VISUELLE ------------------------------------------------------
+// FORME CALIBRÉE EXPLICITEMENT PAR L'UTILISATEUR (2026-09-24, fenêtre dédiée, sur la question de
+// savoir sous quelle forme livrer la classification) : « Une page HTML + une carte visuelle ».
+// Les deux, et pas l'un à la place de l'autre — la page dit règle par règle ce qui manque, la
+// carte dit d'un coup d'œil OÙ se trouve le danger. Un tableau de trente lignes ne le montre pas :
+// il faut le lire en entier pour s'apercevoir que deux cases seulement comptent.
+//
+// La carte se lit en diagonale : le coin HAUT-GAUCHE (gravité maximale, garantie nulle) est le
+// seul endroit où une case pleine est une urgence. Le coin BAS-DROITE (gravité faible, garantie
+// bloquante) est l'autre excès — du contrôle dépensé là où il ne servait à rien.
+
+export const REGISTRE_CLASSIFICATION = "docs/abraham-les-references";
+
+export function tonDeLaCase(graviteNiveau, garantieNiveau) {
+  // L'ÉCART, jamais la gravité seule : une règle vitale correctement protégée n'est pas un
+  // problème, et une règle mineure sans aucun porteur non plus. C'est le DÉCALAGE entre l'enjeu et
+  // la protection qui se colore — sinon la carte redirait simplement sa propre première colonne.
+  const ecart = graviteNiveau * 2 - garantieNiveau;
+  if (ecart >= 5) return "critique";
+  if (ecart >= 3) return "alerte";
+  if (ecart >= 1) return "correct";
+  return "bon";
+}
+
+export function renderClassificationHtml(classement, { document = "", couverture = null, prefixe = "Article" } = {}) {
+  const colonnes = NIVEAUX_GARANTIE.map((n) => n.libelle);
+  const rows = classement.carte.map((ligne, i) => ({
+    label: ligne.gravite,
+    cells: ligne.numeros.map((nums, j) => ({
+      items: nums.map((n) => `${prefixe.slice(0, 3)}.${n}`),
+      tone: nums.length ? tonDeLaCase(classement.carte[i].graviteNiveau, NIVEAUX_GARANTIE[j].niveau) : "neutre",
+    })),
+  }));
+
+  const critiques = classement.lignes.filter((l) => l.verdict.startsWith("🔴"));
+  const aNiveler = classement.lignes.filter((l) => l.verdict.startsWith("🟠"));
+
+  const blocks = [
+    { type: "heading", text: "La carte — gravité en lignes, force de garantie en colonnes" },
+    { type: "matrix", corner: "gravité ↓ / garantie →", columns: colonnes, rows,
+      legend: "La couleur porte l'ÉCART entre l'enjeu et la protection, jamais la gravité seule : une règle vitale correctement portée n'est pas un problème, et une règle mineure sans porteur non plus. Le coin haut-gauche est le seul où une case pleine est une urgence ; le coin bas-droite est l'autre excès, du contrôle dépensé là où il ne servait à rien." },
+    { type: "heading", text: "Ce que la carte montre en premier" },
+  ];
+
+  if (critiques.length) {
+    blocks.push({ type: "highlight", heading: `${critiques.length} règle(s) CRITIQUES — vitales et sans protection`,
+      paragraphs: critiques.map((l) => `${prefixe} ${l.numero} — ${l.titre} · ${l.garantiePourquoi}`) });
+  } else {
+    blocks.push({ type: "paragraph", text: "Aucune règle critique : aucune règle vitale n'est laissée sans le moindre porteur. C'est un constat, pas un blanc." });
+  }
+
+  blocks.push({ type: "heading", text: "Le détail, règle par règle" });
+  blocks.push({ type: "table",
+    headers: [prefixe, "Titre", "Gravité", "Garantie", "Ce qui la porte", "Verdict"],
+    rows: classement.lignes.map((l) => [
+      String(l.numero), l.titre, l.gravite, l.garantie,
+      l.porteurExterne ? `emprunté à ${l.porteurExterne}` : (l.porteurs?.length ? l.porteurs.join(", ") : "—"),
+      l.verdict,
+    ]) });
+
+  blocks.push({ type: "heading", text: "Les six niveaux de garantie, et ce que chacun ne couvre toujours pas" });
+  blocks.push({ type: "table", headers: ["Niveau", "Ce qu'il garantit", "Ce qu'il coûte encore"],
+    rows: NIVEAUX_GARANTIE.map((n) => [`${n.niveau} — ${n.libelle}`, n.quoi, n.cequecoute]) });
+
+  blocks.push({ type: "note", text: classement.horsPortee });
+  if (couverture) blocks.push({ type: "note", text: `Couverture déclarée : ${couverture} % du document est réellement découpé en règles numérotées — le reste est de la prose d'encadrement, que cette classification ne juge pas.` });
+  if (aNiveler.length) blocks.push({ type: "note", text: `${aNiveler.length} règle(s) « à niveler » : la garantie existe mais reste loin de l'enjeu. C'est la matière du nivellement, pas une urgence.` });
+
+  return renderHtmlReport({
+    tool: "abraham-les-references",
+    title: `Classification des règles — ${document}`,
+    subtitle: "Deux axes croisés : la GRAVITÉ que le texte porte lui-même, et la FORCE DE GARANTIE que le dépôt lui donne réellement. Ni l'une ni l'autre n'est une opinion de l'outil.",
+    dateLabel: new Date().toISOString(),
+    blocks,
+    footer: "ABRAHAM-LES-REFERENCES — il classe, il ne tranche jamais : ce qu'une règle enfreinte coûterait vraiment ne se lit dans aucun fichier.",
+  });
+}
+
+export function classerEtEcrire(chemin, { prefixe = "Article", sortie = null, ecrire = writeFileSync } = {}) {
+  let texte;
+  try { texte = readFileSync(chemin, "utf8"); } catch { return { mesurable: false, pourquoi: `${chemin} est illisible ou n'existe pas` }; }
+  const fichiers = fichiersDuDepot({ racine: ".", exclure: new Set([chemin]) });
+  const r = analyserDocument({ texte, fichiers });
+  if (!r.mesurable) return { mesurable: false, pourquoi: r.pourquoi, essais: r.essais };
+  const classement = classerDocument(r.unites, fichiers, { lire: (f) => readFileSync(f, "utf8"), prefixe });
+  const nom = chemin.replace(/[/\\]/g, "-").replace(/\.md$/, "");
+  const cible = sortie ?? `${REGISTRE_CLASSIFICATION}/classification-${nom}.html`;
+  try { mkdirSync(REGISTRE_CLASSIFICATION, { recursive: true }); } catch { /* déjà là */ }
+  ecrire(cible, renderClassificationHtml(classement, { document: chemin, couverture: r.couverture?.part, prefixe }), "utf8");
+  return { mesurable: true, classement, cible, forme: r.forme, couverture: r.couverture?.part };
+}
+
 function main() {
-  const [, , chemin] = process.argv;
+  const [, , arg1, arg2] = process.argv;
+  // « classer » est une COMMANDE séparée et non un ajout au rapport par défaut : elle ÉCRIT un
+  // fichier, et un outil de lecture qui se met soudain à écrire est exactement le genre d'effet de
+  // bord qu'on ne remarque qu'une fois le dépôt sali.
+  if (arg1 === "classer") {
+    printReportHeader({ tool: "abraham-les-references", title: "ABRAHAM-LES-REFERENCES — classification des règles (gravité × garantie)", scriptPath: "scripts/abraham-les-references.mjs" });
+    printReliabilityNotice("abraham-les-references");
+    recordCliUsage("abraham-les-references");
+    if (!arg2) { console.log("\nUsage : node scripts/abraham-les-references.mjs classer <chemin-du-document>"); return; }
+    const res = classerEtEcrire(arg2, { prefixe: arg2.endsWith("regles-de-travail.md") ? "§" : "Article" });
+    if (!res.mesurable) { console.log(`\nPAS MESURÉ — ${res.pourquoi}`); return; }
+    const c = res.classement;
+    console.log(`\n=== ${arg2} · forme « ${res.forme} » · ${c.total} règles · couverture ${res.couverture} % ===\n`);
+    for (const [verdict, n] of Object.entries(c.parVerdict).sort()) console.log(`  ${verdict} : ${n}`);
+    console.log("\n--- LA CARTE (gravité ↓ × garantie →) ---");
+    console.log(`${"".padEnd(12)}${NIVEAUX_GARANTIE.map((g) => g.libelle.slice(0, 7).padStart(9)).join("")}`);
+    for (const ligne of c.carte) console.log(`${ligne.gravite.slice(0, 11).padEnd(12)}${ligne.cases.map((n) => String(n || "·").padStart(9)).join("")}`);
+    const critiques = c.lignes.filter((l) => l.verdict.startsWith("🔴"));
+    if (critiques.length) {
+      console.log(`\n--- 🔴 ${critiques.length} CRITIQUE(S) : vitale(s) et sans protection ---`);
+      for (const l of critiques) console.log(`· ${l.numero} — ${l.titre}`);
+    }
+    console.log(`\nPage HTML + carte visuelle : ${res.cible}`);
+    console.log(`\nHORS PORTÉE : ${c.horsPortee}`);
+    return;
+  }
+  const chemin = arg1;
   printReportHeader({ tool: "abraham-les-references", title: "ABRAHAM-LES-REFERENCES — analyser un document de règles, quel qu'il soit", scriptPath: "scripts/abraham-les-references.mjs" });
   printReliabilityNotice("abraham-les-references");
   recordCliUsage("abraham-les-references");

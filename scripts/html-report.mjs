@@ -100,6 +100,30 @@ export function renderBlock(block) {
           .join("")}</ul>`;
       return renderNodes(block.nodes);
     }
+    // { type: 'matrix', columns: [...], rows: [{ label, cells: [{ items, tone }] }] } (2026-09-24,
+    // chantier 1 du plan de nuit — la « carte visuelle » que l'utilisateur a explicitement
+    // demandée à côté de la page HTML : « Une page HTML + une carte visuelle »). Le type 'table'
+    // existant ne pouvait pas la rendre : une carte croise DEUX axes et colore chaque case selon
+    // ce que le croisement vaut, là où un tableau aligne des valeurs sans que la position dise
+    // quoi que ce soit. Même règle que les quatre types précédents : enrichir le vocabulaire
+    // commun plutôt que forker une page à part, pour que la carte suivante, quel qu'en soit le
+    // sujet, arrive par le même chemin.
+    case "matrix": {
+      const cols = block.columns || [];
+      const thead = `<tr><th class="matrix-corner">${escapeHtml(block.corner || "")}</th>${cols.map((c) => `<th>${escapeHtml(c)}</th>`).join("")}</tr>`;
+      const tbody = (block.rows || []).map((r) => {
+        const cells = (r.cells || []).map((cell) => {
+          const items = cell?.items || [];
+          // Une case VIDE et une case pleine ne se lisent pas pareil, et le vide est souvent
+          // l'information : « aucune règle vitale n'est bloquante » est un constat, pas un blanc.
+          const contenu = items.length ? items.map((i) => `<span class="matrix-chip">${escapeHtml(String(i))}</span>`).join("") : `<span class="matrix-empty">·</span>`;
+          return `<td class="matrix-cell matrix-${escapeHtml(cell?.tone || "neutre")}">${contenu}</td>`;
+        }).join("");
+        return `<tr><th class="matrix-row-label">${escapeHtml(r.label)}</th>${cells}</tr>`;
+      }).join("");
+      const legende = block.legend ? `<p class="note">${escapeHtml(block.legend)}</p>` : "";
+      return `<table class="matrix"><thead>${thead}</thead><tbody>${tbody}</tbody></table>${legende}`;
+    }
     default:
       return "";
   }
@@ -184,6 +208,25 @@ export const THEME_CSS = `
   main p.dialogue.speaker-noe { border-left-color: var(--noe); }
   main p.dialogue.speaker-noe strong { color: var(--noe); }
   main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
   footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
 `;
 
