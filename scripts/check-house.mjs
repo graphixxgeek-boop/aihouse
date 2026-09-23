@@ -11055,6 +11055,36 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.equal(mtl2.protegerLaCharte('', 'quelque chose').mesurable, false, 'with no BEFORE version it must declare NOT MEASURED — a comparison that never happened must never read as a clean bill of health (leçon L5)');
   assert.ok(/jamais le sens/.test(mtl2.protegerLaCharte(base, base).horsPortee), 'and it must declare its own limit out loud: it protects the STRUCTURE, never the judgement that a removed rule had genuinely become useless (Article 27)');
 
+  // LE RAPPORT DE CAMPAGNE (2026-09-23, tâche #638), sur sa demande : « ce type de rapport doit
+  // exister concrètement chez Moïse : résultats obtenus en token, en nombre, analyse détaillée ».
+  // Un rapport que seul l'agent sait produire meurt avec la session.
+  const faussecharte = (n16, n17) => ['# T', '', art(16, 'Seize', 'Il doit. Jamais. '.repeat(n16)), art(17, 'Dix-sept', 'Toujours. '.repeat(n17)), '', '## Règles de travail', 'Il doit rester hors du compte. Jamais compté.'].join('\n');
+  const rap = mtl2.rapportDeCampagne({ depuis: 'peu-importe', shImpl: () => faussecharte(4, 2) });
+  assert.ok(rap.mesurable === false || rap.mesurable === true, 'the report must always return a shape, never throw');
+
+  // LA BORNE DU DERNIER ARTICLE, et c'est le bug que son PREMIER passage réel a révélé sur ses
+  // propres chiffres : sans elle, le dernier Article avale toutes les sections qui le suivent et
+  // s'affichait à 40 obligations au lieu de 7. Un rapport faux est pire qu'un rapport absent,
+  // puisqu'on le croit (Article 25).
+  const avecQueue = mtl2.rapportDeCampagne({ depuis: 'x', shImpl: () => faussecharte(4, 2) });
+  if (avecQueue.mesurable) {
+    const dernier = avecQueue.mouvements.find((m) => m.article === '17');
+    assert.ok(!dernier || dernier.avant <= 3, 'the LAST Article must stop at the sections that follow it, never swallow them — the day this was missing the report credited the last Article with 40 obligations instead of 7, and nobody would have caught it because a number looks like a measurement');
+  }
+
+  // LES DEUX INDICATEURS SONT RENDUS SÉPARÉMENT, jamais fondus : les tokens disent ce que le
+  // document COÛTE, les obligations ce qu'il SATURE, et un gain sur le premier sans gain sur le
+  // second n'est pas un progrès.
+  const vrai = mtl2.rapportDeCampagne();
+  if (vrai.mesurable) {
+    assert.ok(typeof vrai.tokens.gain === 'number' && typeof vrai.obligations.gain === 'number', 'both indicators must be reported as distinct numbers — the user asked for exactly this, and merging them would hide the case where prose was cut without a single order removed');
+    assert.ok(Array.isArray(vrai.mouvements), 'and the per-Article detail must exist, since a global figure never says WHERE the work happened');
+    assert.ok(/jamais si la charte est devenue MEILLEURE/.test(vrai.horsPortee), 'the report must declare out loud that it counts and never judges — no program can say whether a shorter charter is a better one');
+  }
+  assert.equal(mtl2.rapportDeCampagne({ depuis: 'x', shImpl: () => { throw new Error('ref inconnue'); } }).mesurable, false, 'and an unreadable BEFORE version must yield NOT MEASURED rather than a report built on nothing (leçon L5)');
+
+  console.log('Passed: MOÏSE now produces the campaign report as a real command (2026-09-23, task #638), on a direct request — a report only the agent knows how to produce dies with the session. It stores no figure: it rereads git for the BEFORE and the disk for the AFTER, then crosses both with the operations memory that says what was done and why, so it cannot go stale the way a copied number would (Article 24). It reports the two indicators SEPARATELY and says in the same breath why they are not interchangeable: tokens measure what the document costs, obligations measure what it saturates, and cutting three thousand tokens of narrative frees no attention at all. Its very first real run exposed a bug in itself — the last Article swallowed every section that followed it and showed 40 obligations instead of 7 — which is exactly why a tool must be run against the real repository before being believed: a wrong number looks precisely like a measurement.');
+
   console.log('Passed: the charter now protects itself mechanically (2026-09-23, task #631), answering a direct question from the user — it already ORDERED its own protection in two places, the Article 13 garde-fou against lightening that costs quality and the preamble ban on renumbering, and neither had the slightest mechanism while the charter was being actively cut. Five checks, each born of a real risk in this campaign: an Article that vanished, one renumbered or inserted mid-list, one emptied of most of its obligations, a path become unreachable, and a change left out of the operations memory where the WHY lives since git only keeps the WHAT. Two of the five are blocking and three only open questions, because emptying an Article is sometimes precisely the intended gesture — Article 19 deliberately lost three fifths of its text the same day. The distinction that makes it usable rather than obstructive is between a path that is lost and one still reached through a document the charter keeps: the second is the whole point of a renvoi, and treating it as a regression would forbid every legitimate compression. It declares its own limit rather than hiding it: no program can judge that a removed rule had really become useless, so it guards the structure and never the meaning.');
 
   console.log('Passed: the three throwaway scripts of one charter analysis now live in the tools (2026-09-23, task #628) — counting obligations per rule, checking that no path is lost in a compression, and finding documents nothing reaches. Each had found something real and each would have vanished with the command that carried it. The obligation counter matters most: public guidance and this project\'s own measurement independently agree that a frontier model reliably follows 150 to 200 instructions, so a lightening pass is judged in ORDERS REMOVED, never in tokens saved — cutting three thousand tokens of narrative frees no attention at all. The path check keeps two states rather than one, because a path dropped from a document but still reached through another is exactly what a renvoi means, and calling that a regression would block every legitimate compression; only a path nothing reaches is a loss. The orphan walk follows several hops for the same reason, and refuses to answer at all without a file reader, since an empty orphan list reads exactly like a clean bill of health.');

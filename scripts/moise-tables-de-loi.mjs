@@ -686,6 +686,100 @@ export function protegerLaCharte(avant = "", apres = "", { lire: lireFichier = n
   };
 }
 
+// --- LE RAPPORT DE CAMPAGNE (2026-09-23, tâche #638) ------------------------------------------
+//
+// DEMANDE EXPLICITE DE L'UTILISATEUR : « ce type de rapport doit exister concrètement chez Moïse :
+// résultats obtenus en token, en nombre, analyse détaillée des résultats ». Il avait déjà posé la
+// règle des DEUX indicateurs plus tôt le même jour — « les 2 indicateurs doivent toujours
+// apparaître (process) » — et un rapport que seul l'agent sait produire meurt avec la session.
+//
+// CE QU'IL LIT, ET C'EST TOUT L'INTÉRÊT : il ne stocke aucun chiffre. Il relit git pour l'état
+// d'AVANT et le disque pour l'état d'APRÈS, puis croise avec la mémoire des opérations qui dit ce
+// qui a été fait et POURQUOI. Un rapport qui recopierait ses propres chiffres se périmerait au
+// commit suivant, ce qui est exactement ce que l'Article 24 interdit.
+//
+// LES DEUX INDICATEURS NE SONT PAS INTERCHANGEABLES, et le rapport le dit à chaque passage : les
+// TOKENS mesurent ce que le document coûte, les OBLIGATIONS mesurent ce qu'il sature. Couper trois
+// mille tokens de récit ne libère aucune attention ; retirer dix ordres redondants, si. Un rapport
+// qui n'afficherait que le premier laisserait croire à un progrès qui n'a pas eu lieu.
+export function rapportDeCampagne({ depuis = null, root = ROOT, shImpl = sh } = {}) {
+  const apres = lire(CHARTE, root);
+  if (!apres) return { mesurable: false, pourquoi: `${CHARTE} illisible — rien n'a été mesuré` };
+  // La borne se DÉRIVE : le premier commit où la mémoire des opérations enregistre un geste, sinon
+  // celle qu'on donne. Recopier une date de départ en dur l'aurait périmée à la campagne suivante.
+  let ref = depuis;
+  if (!ref) {
+    try { ref = shImpl(`git log --format=%h --reverse -- ${OPERATIONS_PATH}`).trim().split("\n")[0] + "~1"; }
+    catch { return { mesurable: false, pourquoi: "impossible de dériver la borne de départ depuis git — rien n'a été comparé" }; }
+  }
+  let avant = "";
+  try { avant = shImpl(`git show ${ref}:${CHARTE}`); }
+  catch (e) { return { mesurable: false, pourquoi: `impossible de lire ${CHARTE} à ${ref} : ${e.message.split("\n")[0]}` }; }
+
+  const mesure = (txt) => ({ lignes: txt.split("\n").length, tokens: estimateTokens(txt), obligations: A.compterObligations(txt) });
+  const av = mesure(avant), ap = mesure(apres);
+  const delta = (k) => ({ avant: av[k], apres: ap[k], gain: av[k] - ap[k], pct: av[k] ? Math.round(((av[k] - ap[k]) / av[k]) * 1000) / 10 : 0 });
+
+  // Le détail par Article : ce qui a fondu, ce qui n'a pas bougé, ce qui a grossi — les trois sont
+  // dits, parce qu'un Article qui GROSSIT pendant une campagne d'allègement est l'information la
+  // plus utile du rapport et la plus facile à ne pas voir.
+  // LA BORNE DU DERNIER ARTICLE EST EXPLICITE, et l'oublier fait MENTIR le rapport : sans elle, le
+  // dernier Article avale toutes les sections qui le suivent et s'affiche à 40 obligations au lieu
+  // de 7. Trouvé au premier passage réel de ce rapport, sur ses propres chiffres — un rapport faux
+  // est pire qu'un rapport absent, puisqu'on le croit (Article 25).
+  const parArticle = (txt) => {
+    const finDesArticles = txt.indexOf("## Règles de travail");
+    const borne = finDesArticles > 0 ? finDesArticles : txt.length;
+    return new Map([...txt.matchAll(/\*\*Article (\d+(?:bis)?) — ([^*]+?)\.\*\*/g)]
+      .map((m, i, tous) => [m[1], A.compterObligations(txt.slice(m.index, i + 1 < tous.length ? tous[i + 1].index : borne))]));
+  };
+  const oAv = parArticle(avant), oAp = parArticle(apres);
+  const mouvements = [];
+  for (const [n, o] of oAv) {
+    const apresO = oAp.get(n);
+    if (apresO === undefined) { mouvements.push({ article: n, avant: o, apres: null, sens: "DISPARU" }); continue; }
+    if (apresO !== o) mouvements.push({ article: n, avant: o, apres: apresO, gain: o - apresO, sens: apresO < o ? "allégé" : "GROSSI" });
+  }
+  mouvements.sort((a, b) => (b.gain ?? 0) - (a.gain ?? 0));
+
+  const memoire = A.lireOperations(lire(OPERATIONS_PATH, root));
+  const gestes = memoire?.mesurable ? memoire.operations : [];
+  return {
+    mesurable: true, ref,
+    lignes: delta("lignes"), tokens: delta("tokens"), obligations: delta("obligations"),
+    mouvements,
+    intouches: [...oAv.keys()].filter((n) => oAp.get(n) === oAv.get(n)).length,
+    gestes: gestes.length,
+    annules: gestes.filter((g) => /annul/i.test(g.resultat ?? "")).length,
+    // JAMAIS UN VERDICT DE RÉUSSITE : le rapport compte, il ne juge pas si c'était assez.
+    horsPortee: "ce rapport compte ce qui a bougé ; il ne dit jamais si la charte est devenue MEILLEURE — ça se lit, et ça se tranche avec l'utilisateur",
+  };
+}
+
+export function renderRapportDeCampagne(r) {
+  if (!r.mesurable) return [`PAS MESURÉ — ${r.pourquoi}.`];
+  const L = [`=== RAPPORT DE CAMPAGNE SUR LA CHARTE — depuis ${r.ref} ===`, ""];
+  L.push("LES DEUX INDICATEURS, jamais l'un sans l'autre :");
+  L.push(`  Lignes      : ${r.lignes.avant} → ${r.lignes.apres}   (${r.lignes.gain >= 0 ? "-" : "+"}${Math.abs(r.lignes.gain)}, ${r.lignes.pct} %)`);
+  L.push(`  TOKENS      : ${r.tokens.avant} → ${r.tokens.apres}   (${r.tokens.gain >= 0 ? "-" : "+"}${Math.abs(r.tokens.gain)}, ${r.tokens.pct} %)   ← ce que le document COÛTE`);
+  L.push(`  OBLIGATIONS : ${r.obligations.avant} → ${r.obligations.apres}   (${r.obligations.gain >= 0 ? "-" : "+"}${Math.abs(r.obligations.gain)}, ${r.obligations.pct} %)   ← ce qu'il SATURE`);
+  L.push("");
+  L.push("Les deux ne sont pas interchangeables : couper du récit fait tomber les tokens sans libérer");
+  L.push("la moindre attention. Un gain en tokens sans gain en obligations n'est pas un progrès.");
+  L.push("");
+  L.push(`--- Détail par Article : ${r.mouvements.length} ont bougé, ${r.intouches} sont restés identiques ---`);
+  for (const m of r.mouvements) {
+    if (m.sens === "DISPARU") { L.push(`  ⛔ Art.${m.article} A DISPARU (${m.avant} obligations perdues)`); continue; }
+    L.push(`  ${m.sens === "GROSSI" ? "⚠️ " : "  "}Art.${m.article} : ${m.avant} → ${m.apres} obligation(s) — ${m.sens}`);
+  }
+  L.push("");
+  L.push(`--- Mémoire des opérations : ${r.gestes} geste(s) enregistré(s), dont ${r.annules} annulé(s) ---`);
+  L.push(`(chacun porte sa raison et son résultat — git garde le QUOI, cette mémoire garde le POURQUOI)`);
+  L.push("");
+  L.push(`HORS PORTÉE : ${r.horsPortee}`);
+  return L;
+}
+
 export const ETAPES_ANALYSE = [
   { cle: "memoire", libelle: "relire la mémoire des opérations — qu'a-t-on déjà tenté sur ces Articles, et qu'est-ce qui n'a pas tenu ?", preuve: OPERATIONS_PATH },
   { cle: "fraicheur", libelle: "vérifier que l'instrument n'est pas périmé avant de mesurer avec lui", preuve: null },
@@ -789,6 +883,13 @@ async function main() {
   // « protection » — la charte relue contre son état d'AVANT, automatiquement à chaque commit qui
   // la touche. Sans argument elle compare au commit précédent : c'est le cas qui sert vraiment,
   // et un contrôle qu'il faut penser à paramétrer n'est lancé qu'une fois (leçon L2).
+  if (commande === "rapport") {
+    const r = rapportDeCampagne({ depuis: process.argv[3] || null });
+    console.log("");
+    for (const l of renderRapportDeCampagne(r)) console.log(l);
+    return;
+  }
+
   if (commande === "protection") {
     const ref = process.argv[3] || "HEAD~1";
     let avant = "";

@@ -596,10 +596,6 @@ qu'aucun processus `workerd` orphelin ne survit à un `pkill` précédent (nom d
 de `vinext dev`/`node scripts/run-framework`, peut garder le port occupé) ; (5) relancer ou laisser
 reprendre la simulation.
 
-*(Déplacé ici le 2026-09-22 : ce bloc vivait sous l'Article 19 « Comprendre avant de toucher »,
-sans aucun lien avec lui — un accident de mise en page, jamais une décision. Sa vraie famille est
-ici : l'étape (0) de sa procédure est précisément « consulter Smart Conso API ». Aucun mot changé.)*
-
 **Article 23 — ALWAYS-NEW-CODE : l'épreuve de la page blanche, rendue concrète.** L'Article 7
 demandait déjà, périodiquement, de se poser la question de la page blanche — cet Article lui donne
 un vrai outil. Sur UNE zone à la fois, ALWAYS-NEW-CODE imagine comment cette zone serait construite
@@ -845,30 +841,15 @@ suivi des tâches (dossier `docs/suivi/`, un fichier par session, un fichier d'i
 `docs/suivi/index.md`, quatre attributs par tâche — horodatage, sujet, sous-sujet, degré de
 sensibilité). Démarre à la création du système, sans reconstruire l'historique antérieur.
 
-**La mise à jour en temps réel de ce suivi est OBLIGATOIRE et est un point central de l'organisation
-du travail sur ce projet, pas un outil secondaire parmi d'autres.** Aucune exception : toute tâche substantielle (code, charte,
-documentation de référence, nouvel outil) DOIT être documentée dans `docs/suivi/`, sans quoi elle
-n'est pas considérée terminée au sens de cette charte, au même titre qu'un test qui ne passerait pas.
-Concrètement : chaque tâche substantielle se documente dans `docs/suivi/` DANS LE
-MÊME commit que le travail qu'elle décrit (jamais après coup, cf. `docs/regles-de-travail.md` §4) ;
-un crochet git tracké (`scripts/hooks/post-commit`, auto-installé à chaque `pnpm install` via le
-script `prepare` de `package.json`) avertit en temps réel — pas au bout de plusieurs heures — dès
-qu'un commit touche du code ou la charte sans mettre à jour le suivi. Des tests fiables doivent
-TOUJOURS garantir le bon fonctionnement de ce système, exactement comme c'est le cas aujourd'hui :
-`scripts/check-suivi-fidelity.mjs` (clôtures non vérifiées, tâches ouvertes même à statut vide,
-validation que les fichiers cités dans une tâche "terminée" existent réellement, vue temps réel
-terminé/en cours/à faire) et ses fonctions mécaniques (`recentCommits`, `findCommitsMissingSuiviUpdate`,
-`categorizeTasks`, etc.) sont couvertes par `scripts/check-house.mjs`, lui-même exécuté automatiquement
-avant chaque commit par le crochet `pre-commit` (bloquant). Un écart dans ce système se corrige donc
-avec la même rigueur qu'un bug de dialogue (Article 3), jamais traité comme une fonctionnalité annexe
-qu'on laisserait se dégrader. **Précision, en réponse à une question explicite sur le gestionnaire de
-tâches numéroté (`TaskCreate`/`TaskUpdate`) que l'agent utilise pendant la session** : cette
-numérotation (#1, #2, ...) est volontaire mais N'EST PAS le système de suivi durable décrit ci-dessus
-— c'est un aide-mémoire interne à l'outil Claude Code, propre à la session en cours, déjà documenté
-comme tel dans `docs/regles-de-travail.md` §B.1 (« n'est qu'un aide-mémoire pour l'agent lui-même,
-jamais une source de vérité pour l'utilisateur — ne remplace aucune des vérifications de la section
-3 »). La seule source de vérité durable, traversant les sessions et vérifiée par de vrais tests,
-reste `docs/suivi/`.
+**La mise à jour en temps réel de ce suivi est OBLIGATOIRE**, et c'est un point central de
+l'organisation du travail, pas un outil secondaire : toute tâche substantielle (code, charte,
+documentation, nouvel outil) DOIT être documentée dans `docs/suivi/` **dans le même commit que le
+travail qu'elle décrit** — sans quoi elle n'est pas terminée au sens de cette charte, au même titre
+qu'un test qui ne passerait pas. Un écart dans ce système se corrige avec la rigueur d'un bug
+(Article 3), jamais comme une fonctionnalité annexe qu'on laisserait se dégrader. Le détail des
+mécanismes qui le font tenir — le crochet git qui avertit en temps réel, les tests qui couvrent
+`check-suivi-fidelity.mjs`, et pourquoi la numérotation de session de l'outil n'est PAS ce suivi —
+vit dans `docs/systeme-de-suivi.md`.
 
 ## Le process XP-IA-bonnes-pratiques-et-lecons — l'expérience de l'agent
 
@@ -958,24 +939,12 @@ tableau garde ce qui doit rester sous les yeux en permanence.)*
 | THE-KING | l'Agent qui veille au respect de… | `docs/the-king-blueprint.md` | `docs/referentiel/the-king.md` | `scripts/the-king.mjs` |
 | THE-SCREENER | pendant graphique d'EL-PROFESSOR | `docs/the-screener-blueprint.md` | `docs/referentiel/the-screener.md` | `scripts/the-screener-capture.mjs` |
 
-**Six outils volontairement SANS blueprint ni instanciation séparés** — ils n'ont aucune
+**Six outils n'ont volontairement NI blueprint NI instanciation séparés** — ils n'ont aucune
 connaissance propre au projet à documenter à part, leur valeur étant d'appeler et d'agréger ce que
-les autres disent déjà. Tous entièrement documentés dans `docs/regles-de-travail.md` §7ter, jamais
-dupliqués ici : **LE-COORDINATEUR** (`scripts/le-coordinateur.mjs`, orchestrateur des outils
-gratuits, calibré le 2026-09-19 : « juste là pour fiabiliser et fluidifier l'existant ») ;
-**CIRCLE-TASKS** (`scripts/circle-tasks.mjs`, la Ronde des tâches périodiques gratuites facilement
-oubliées — jamais un tout-en-un silencieux, toujours une vraie fenêtre à cocher ; THE-FINAL-JUDGE y
-reste visible mais toujours marqué ⚠️🔴 coûteux, jamais coché par défaut) ; **doc-HTML**
-(`scripts/html-report.mjs`, rend un rapport déjà produit en page HTML autonome — jamais le fichier
-de référence gardé dans `docs/`, qui reste texte relu par les outils) ; **le compteur d'usage**
-(`scripts/tool-usage.mjs`, journalise chaque sollicitation RÉELLE avec son taux de trouvaille,
-même discipline anti-vanity-metric que `rereadPerformance()`) ; **Doc-Report**
-(`scripts/doc-report.mjs`, veilleur — jamais décideur — de la décision HTML/texte déjà actée par
-registre, vérifiée mécaniquement contre le vrai code plutôt que supposée ; inventorie aussi les
-journaux locaux jamais committés, dont `findJournalsMissingFromGitignore()` : un journal local
-absent de `.gitignore` est un vrai risque de fuite au prochain commit ; reste un pair de doc-HTML,
-jamais son importateur) ; et **find-deep-booster** (`scripts/route-booster.mjs`, points de coupe
-candidats pour découper une fonction géante).
+les autres disent déjà : **LE-COORDINATEUR**, **CIRCLE-TASKS**, **doc-HTML**, **le compteur
+d'usage**, **Doc-Report** et **find-deep-booster**. Ce que chacun fait exactement, et pourquoi
+chacun est resté sans fiche, vit dans `docs/regles-de-travail.md` §7ter — la table maîtresse
+détaillée outil par outil.
 
 **Un seul point d'entrée obligatoire pour choisir un outil : tool-brain, jamais un choix fait
 soi-même entre les couches.** *(Re-précisé le 2026-09-21 à la demande explicite de l'utilisateur :
@@ -1076,30 +1045,13 @@ nouvelle simulation.
 
 ## Documentation de contexte disponible
 
-Le dossier `docs/contexte-projet/` contient les archives historiques transmises par
-l'utilisateur, à consulter en cas de doute sur une décision de conception, jamais comme source de
-vérité sur le comportement actuel. **Précision du 2026-09-19** : ce dossier contenait par erreur un
-sous-dossier `simulations/` (full_sim4, dupliqué au moment d'archiver les autres simulations) —
-retiré et consolidé dans `docs/simulations/` ci-dessus, le seul endroit désormais pour ce type de
-contenu :
-
-- `referentiel-maison-v34-origine.txt` — référentiel fonctionnel d'origine (version 34, produit
-  par Codex). **Document historique uniquement**, superseded par `docs/referentiel/` ci-dessus :
-  il contient des incohérences connues (numérotation de sections dupliquée, règles contradictoires
-  par sédimentation) que la restructuration a justement corrigées.
-- `journal-dialogue-exemple.txt` — extrait réel d'une session de jeu, référence de ton et de
-  qualité déjà atteinte à préserver (cf. Article fondateur et Article 1).
-- `analyse-opus-initiale.txt` — diagnostic technique et artistique produit par Claude Opus avant
-  la reprise du projet ; base du plan de travail (séparation des deux cerveaux, désaturation
-  visuelle, rééquilibrage des jauges, mise en scène de la révélation finale, etc.).
-*(Une quatrième entrée a vécu ici : `historique-prompts-codex.txt`, l'historique des échanges avec
-Codex. La relecture périodique de l'Article 13 du 2026-09-23 a établi qu'il n'avait JAMAIS été
-committé, à aucun commit — la charte promettait donc depuis toujours une piste qui ne menait nulle
-part. L'utilisateur, à qui la question a été posée, l'a encore mais a tranché de retirer la ligne
-plutôt que d'ajouter le fichier : ce que ce document aurait apporté — pourquoi une décision de
-conception a été prise — est désormais porté par `docs/referentiel/` et par `docs/suivi/`, qui
-eux sont tenus à jour. La trace de ce retrait vit ici plutôt que nulle part, pour qu'une IA qui
-reprend le projet ne reparte pas chercher ce fichier au prochain audit.)*
+`docs/contexte-projet/` contient les archives historiques transmises par l'utilisateur, à consulter
+en cas de doute sur une décision de conception, **jamais comme source de vérité sur le comportement
+actuel** : le référentiel d'origine v34 produit par Codex (document historique, avec des
+incohérences connues que la restructuration a corrigées), un extrait réel de session servant de
+référence de ton déjà atteinte (Article 0 et Article 1), et le diagnostic initial de Claude Opus qui
+a servi de base au plan de travail. Le détail de chacun, et la trace du fichier retiré de cette
+liste le 2026-09-23, vivent dans `docs/referentiel/claude-md-asides-historique.md`.
 
 ## Plan d’origine (analyse Opus) — état d’avancement
 

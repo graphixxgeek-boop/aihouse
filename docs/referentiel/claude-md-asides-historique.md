@@ -253,3 +253,35 @@ validé par l'utilisateur (les 26 candidats mécaniquement sûrs) :
 
 Un futur passage de SMART-CONSO-TOKEN pourrait affiner `DATED_ASIDE_PATTERN` pour couvrir les
 parenthèses imbriquées — proposé ici comme piste, jamais appliqué sans une nouvelle demande.
+
+
+## La section « Documentation de contexte » de la charte, dans sa version longue (rapatriée le 2026-09-23, tâche #637)
+
+*(La charte garde désormais les trois archives et leur règle d'usage en six lignes ; le détail de chacune vit ici. Déplacé mot pour mot, y compris la trace du retrait de `historique-prompts-codex.txt` — une trace supprimée en déménageant est exactement ce que la leçon L20 interdit.)*
+
+## Documentation de contexte disponible
+
+Le dossier `docs/contexte-projet/` contient les archives historiques transmises par
+l'utilisateur, à consulter en cas de doute sur une décision de conception, jamais comme source de
+vérité sur le comportement actuel. **Précision du 2026-09-19** : ce dossier contenait par erreur un
+sous-dossier `simulations/` (full_sim4, dupliqué au moment d'archiver les autres simulations) —
+retiré et consolidé dans `docs/simulations/` ci-dessus, le seul endroit désormais pour ce type de
+contenu :
+
+- `referentiel-maison-v34-origine.txt` — référentiel fonctionnel d'origine (version 34, produit
+  par Codex). **Document historique uniquement**, superseded par `docs/referentiel/` ci-dessus :
+  il contient des incohérences connues (numérotation de sections dupliquée, règles contradictoires
+  par sédimentation) que la restructuration a justement corrigées.
+- `journal-dialogue-exemple.txt` — extrait réel d'une session de jeu, référence de ton et de
+  qualité déjà atteinte à préserver (cf. Article fondateur et Article 1).
+- `analyse-opus-initiale.txt` — diagnostic technique et artistique produit par Claude Opus avant
+  la reprise du projet ; base du plan de travail (séparation des deux cerveaux, désaturation
+  visuelle, rééquilibrage des jauges, mise en scène de la révélation finale, etc.).
+*(Une quatrième entrée a vécu ici : `historique-prompts-codex.txt`, l'historique des échanges avec
+Codex. La relecture périodique de l'Article 13 du 2026-09-23 a établi qu'il n'avait JAMAIS été
+committé, à aucun commit — la charte promettait donc depuis toujours une piste qui ne menait nulle
+part. L'utilisateur, à qui la question a été posée, l'a encore mais a tranché de retirer la ligne
+plutôt que d'ajouter le fichier : ce que ce document aurait apporté — pourquoi une décision de
+conception a été prise — est désormais porté par `docs/referentiel/` et par `docs/suivi/`, qui
+eux sont tenus à jour. La trace de ce retrait vit ici plutôt que nulle part, pour qu'une IA qui
+reprend le projet ne reparte pas chercher ce fichier au prochain audit.)*
