@@ -701,6 +701,14 @@ export function formatChantierComparison(result) {
 // possible (Article 27).
 export const TOURS_PATH = ".conso-tours.json";
 
+// ROOT — AJOUTÉ LE 2026-09-23, ET IL MANQUAIT DEPUIS LE DÉBUT. `loadTours()` et `enregistrerTour()`
+// déclarent `root = ROOT` en valeur par défaut, et cette constante n'existait nulle part dans ce
+// fichier : tout appel sans `root` explicite levait une ReferenceError. Comme les seuls appels
+// existants venaient des tests, qui injectent toujours leur propre racine, personne ne l'a jamais
+// vu — le mécanisme d'alerte sur les rafales de messages courts n'aurait donc JAMAIS pu tourner en
+// vrai. Trouvé en le branchant pour de bon, jamais en le relisant : c'est exactement la leçon L15.
+const ROOT = new URL("..", import.meta.url).pathname;
+
 // SEUILS, calibrés sur ce qui s'est réellement passé plutôt que sur une intuition : la série qui a
 // motivé ce conseil comptait une dizaine de messages de quelques mots à la suite. En dessous de 4,
 // on est dans l'échange normal ; à 4 messages courts consécutifs, le motif est net.

@@ -55,7 +55,19 @@ const FORMES_REDIRECTION = [
   /\bavant (?:tout|[çc]a|le reste)\b/i,
 ];
 
-export const SEUIL_MESSAGE_COURT = 180; // caractères — en dessous, c'est un message « en passant »
+// DEUX DÉFINITIONS DU MÊME MOT, trouvées le 2026-09-23 en branchant les volets (b) et (c) : ce
+// module déclarait « court = 180 caractères » et « alerte au 5e », pendant que SMART-CONSO-TOKEN
+// comptait déjà la même chose avec « court = 240 » et « alerte au 4e » — deux compteurs de messages
+// courts, deux seuils, aucun des deux au courant de l'autre. C'est exactement BP1 (« la règle
+// s'écrit à UN endroit et se dérive partout ailleurs »), et j'ai écrit le second le matin même.
+//
+// QUI GARDE QUOI, et la répartition n'est pas arbitraire : SMART-CONSO-TOKEN possède la MESURE
+// (il tient le journal des tours, et ses chiffres sont calibrés sur une vraie série observée, pas
+// sur mon intuition) ; ce module possède la RÈGLE (que faire d'un message court). On DÉRIVE donc la
+// mesure de chez lui plutôt que d'en garder une copie qui divergerait au premier réglage.
+import { SEUILS_RAFALE, loadTours, detecterRafale } from "./smart-conso-token.mjs";
+
+export const SEUIL_MESSAGE_COURT = SEUILS_RAFALE.court;
 
 export function natureDuMessage(texte, { seuilCourt = SEUIL_MESSAGE_COURT } = {}) {
   const t = String(texte ?? "");
@@ -71,8 +83,23 @@ export function natureDuMessage(texte, { seuilCourt = SEUIL_MESSAGE_COURT } = {}
 // LA RÉACTION, calculée depuis l'historique réel de la session plutôt que de mémoire. C'est la
 // partie testable ; la partie que rien ne peut forcer (l'agent DOIT enregistrer chaque message)
 // est déclarée plus bas, honnêtement, comme partout ailleurs dans ce paysage.
-export const SEUIL_RAPPEL_LEGER = 2;   // « un rappel leger dès le 2e message court »
-export const SEUIL_ALERTE_FORTE = 5;   // « une alerte plus forte quand ca devient couteux »
+export const SEUIL_RAPPEL_LEGER = 2;   // « un rappel leger dès le 2e message court » — le seul chiffre que l'utilisateur ait donné lui-même
+// « une alerte plus forte quand ca devient couteux » : il n'a jamais dit à partir de combien. J'avais
+// écrit 5 au jugé ; SMART-CONSO-TOKEN avait déjà 4, calibré sur la série réelle qui a motivé le
+// conseil (« une dizaine de messages de quelques mots à la suite »). Un chiffre mesuré bat un chiffre
+// choisi, donc on prend le sien — et on le DÉRIVE, pour qu'un futur réglage n'ait qu'un endroit.
+export const SEUIL_ALERTE_FORTE = SEUILS_RAFALE.consecutifs;
+
+// rangDepuisLeJournal() — LE VOLET (b) DE LA DEMANDE, et il ne crée aucun compteur : le journal des
+// tours existe déjà (`.conso-tours.json`, tenu par SMART-CONSO-TOKEN), avec sa fenêtre de temps qui
+// évite de coller ensemble deux séries séparées par une nuit. On lui demande le rang, on ne le
+// recompte pas. Sa limite est la sienne : si l'agent n'a pas enregistré les tours, il rend « pas
+// mesuré » — jamais zéro, qui se lirait comme « aucun message court » (leçon L5).
+export function rangDepuisLeJournal({ loadToursImpl = loadTours, detecterRafaleImpl = detecterRafale, maintenant = Date.now() } = {}) {
+  const rafale = detecterRafaleImpl(loadToursImpl(), { maintenant });
+  if (!rafale.mesurable) return { mesure: "pas mesuré", raison: rafale.raison };
+  return { mesure: "mesuré", rang: rafale.consecutifs };
+}
 
 export function reactionAuMessage(texte, { messagesCourtsPrecedents = 0 } = {}) {
   const { nature, court, pourquoi } = natureDuMessage(texte);

@@ -77,6 +77,20 @@ export const REGLES_SURVEILLEES = [
   // trouvaille à chaque passage ferait écrire pour se taire, ce qui remplirait le registre de bruit
   // et le rendrait illisible — donc détruirait exactement ce qu'on essaie de construire.
   { id: "xp-lecons", cote: "agent", observable: false, regle: "Aux trois moments déclencheurs (un garde-fou bloque un commit ou un test échoue de façon imprévue · la fin d'un compte rendu de travail · chaque Ronde et chaque évaluation), répondre à la question « y avait-il quelque chose à retenir ? » et inscrire la réponse au journal XP — « rien à retenir » compris, qui est une réponse valable et ne compte contre personne.", source: "docs/xp-ia-process-detail.md" },
+  // MESSAGES-COURTS (2026-09-23, volets (b) et (c) de la tâche #572). La règle elle-même — continuer
+  // par défaut, s'arrêter seulement sur une demande explicite — est portée par
+  // `scripts/messages-courts.mjs` et testée. Ce qui ne peut PAS l'être : qu'elle ait été appliquée.
+  //
+  // Aucun mécanisme ne lit une conversation, donc rien ne peut compter les messages courts à ma
+  // place ni constater que je n'ai pas lâché ma tâche en cours. Deux moitiés, et une seule se
+  // garantit : la DÉCISION (quels seuils, quelle réaction) est mécanique et vérifiée ; son
+  // APPLICATION dépend de moi. angel demande donc, et refuse d'être au vert sans réponse — même
+  // patron que resume-contextualise et xp-lecons, pour la même raison exactement.
+  //
+  // Le rappel du 2e message court et l'alerte du 5e sont des demandes explicites de l'utilisateur
+  // (« un rappel leger dès le 2e », « une alerte plus forte quand ca devient couteux ») : les taire
+  // parce qu'elles sont gênantes à dire serait décider à sa place de ce qu'il veut savoir.
+  { id: "messages-courts", cote: "agent", observable: false, regle: "Ne jamais s'arrêter sur un message court : seule une demande explicite interrompt le travail en cours. Tenir le compte de la série en cours, et sortir le rappel léger dès le 2e message court, l'alerte plus forte dès le 5e — les seuils sont ceux que l'utilisateur a demandés, pas les miens.", source: "docs/mode-semi-autonome-process-detail.md + scripts/messages-courts.mjs" },
 ];
 
 // ————————————————————————————————————————————————————————————————————————

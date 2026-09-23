@@ -97,9 +97,26 @@ forte au 5ᵉ, tous deux calibrés pour nommer le coût sans le reprocher — et
 travail CONTINUE. Le premier message court est volontairement muet : compter dès le premier ferait
 passer l'agent pour comptable de la conversation.
 
+**Les seuils ne sont plus les siens** (2026-09-23, volets (b) et (c)). En branchant le comptage, on
+a découvert que SMART-CONSO-TOKEN mesurait DÉJÀ la même chose — les rafales de messages courts —
+avec d'autres chiffres : « court » à 240 caractères contre 180 ici, alerte au 4ᵉ contre 5ᵉ. Deux
+compteurs de la même chose, aucun au courant de l'autre. La répartition retenue n'est pas
+arbitraire : **SMART-CONSO-TOKEN garde la MESURE** (il tient le journal des tours, et ses chiffres
+sont calibrés sur une série réellement observée), **ce module garde la RÈGLE** (que faire d'un
+message court). Les seuils se DÉRIVENT donc de chez lui, ils ne s'y recopient pas — et le rappel du
+2ᵉ message reste le chiffre que l'utilisateur a donné lui-même.
+
+**Ce que ce branchement a révélé, et c'est le vrai gain** : les deux fonctions qui lisent et
+écrivent ce journal déclaraient une racine de dépôt qui n'existait nulle part dans leur fichier.
+Seuls les tests les appelaient, en injectant la leur. **L'alerte sur les rafales n'aurait donc
+jamais pu tourner en vrai, pas une fois depuis sa construction.** Corrigé, et couvert par un test
+qui appelle le chemin de production — celui qui n'avait jamais été exercé (leçon L15).
+
 **Sa limite, déclarée plutôt que tue** (Article 27) : aucun mécanisme ne lit une conversation, donc
-le comptage dépend de l'agent. Ce qui est garanti mécaniquement, c'est la RÈGLE et les seuils,
-jamais leur application. Même honnêteté que tool-brain et SMART-CONSO-TOKEN.
+l'enregistrement des tours dépend de l'agent. Ce qui est garanti mécaniquement, c'est la RÈGLE, les
+seuils et la lecture du journal — jamais que le journal soit tenu. `angel-of-ia-process` porte la
+règle de conduite `messages-courts` et refuse d'être au vert sans réponse : même honnêteté que
+tool-brain et que `resume-contextualise`.
 
 ## Son contrôleur
 

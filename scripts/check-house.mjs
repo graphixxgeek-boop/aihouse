@@ -9614,7 +9614,28 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.match(mc.texteDuRappel(mc.reactionAuMessage('ok', { messagesCourtsPrecedents: 4 }), { toursRecharges: 5 }), /5 rechargements/, 'the strong alert must NAME the real cost rather than say "it is costly" — an alert advancing no figure reads as a vague reproach, and one learns to skip it');
   assert.match(mc.texteDuRappel(mc.reactionAuMessage('ok', { messagesCourtsPrecedents: 4 })), /je continue quand m[êe]me/, 'and even the strong alert must say the work continues: the reminder is about cost, never about stopping');
 
-  const long = 'x'.repeat(200) + ' attends';
+  // LA LONGUEUR SE DÉRIVE DU SEUIL, jamais recopiée : cette fixture disait 200 caractères, ce qui
+  // était long quand ce module déclarait son propre seuil à 180 et est devenu court le jour où il
+  // a cessé d'en déclarer un (2026-09-23). Un test qui fige un nombre que le code dérive casse au
+  // premier réglage, et fait croire à une régression là où il n'y a qu'un chiffre recopié.
+  const long = 'x'.repeat(mc.SEUIL_MESSAGE_COURT + 20) + ' attends';
+  // UN SEUL COMPTEUR DE MESSAGES COURTS, depuis le 2026-09-23 : ce module en déclarait un
+  // (court=180, alerte au 5e) pendant que SMART-CONSO-TOKEN en tenait déjà un autre (court=240,
+  // alerte au 4e) — deux mesures de la même chose, aucune au courant de l'autre, et j'avais écrit
+  // la seconde le matin même. Les deux assertions ci-dessous cassent le jour où quelqu'un redéclare
+  // un chiffre au lieu de le dériver, ce qui est tout leur intérêt (BP1).
+  const sct = await import('../scripts/smart-conso-token.mjs');
+  assert.equal(mc.SEUIL_MESSAGE_COURT, sct.SEUILS_RAFALE.court, '"short message" must have ONE definition in the repository, held by the tool that owns the measurement');
+  assert.equal(mc.SEUIL_ALERTE_FORTE, sct.SEUILS_RAFALE.consecutifs, 'and the strong-alert threshold is the CALIBRATED one (measured on a real observed run), never the number I picked by judgement');
+  // Le journal des tours existe déjà : on lui demande le rang, on n'en tient pas un second.
+  assert.equal(mc.rangDepuisLeJournal({ loadToursImpl: () => [], detecterRafaleImpl: sct.detecterRafale }).mesure, 'pas mesuré', 'an empty journal reports "not measured", never a rank of zero that would read as "no short message" (L5)');
+  const troisCourts = [{ date: new Date().toISOString(), longueur: 10 }, { date: new Date().toISOString(), longueur: 12 }, { date: new Date().toISOString(), longueur: 8 }];
+  assert.equal(mc.rangDepuisLeJournal({ loadToursImpl: () => troisCourts, detecterRafaleImpl: sct.detecterRafale }).rang, 3, 'and a real run is read from the shared journal rather than counted a second time here');
+  // LE BUG QUE CE BRANCHEMENT A RÉVÉLÉ, et il datait de la construction : loadTours()/enregistrerTour()
+  // déclaraient `root = ROOT` alors que ROOT n'existait nulle part dans leur fichier. Seuls les tests
+  // les appelaient, en injectant leur racine — donc l'alerte sur les rafales n'aurait jamais pu
+  // tourner en vrai, pas une fois.
+  assert.doesNotThrow(() => sct.loadTours(), 'loadTours() must work with NO injected root — the production path, the only one that was never exercised');
   assert.equal(mc.natureDuMessage(long).nature, 'accompagnement', 'a LONG message is never "in passing", so a stop word buried mid-sentence in real content must not read as an order to halt — this rule comes first for exactly that reason');
   assert.ok(mc.LIMITE_DECLAREE.includes('aucun mécanisme ne lit une conversation'), 'the honest limit is declared rather than left implied: nothing can count a conversation from disk, so what is guaranteed is the RULE and the thresholds, never their application (Article 27)');
   console.log('Passed: short messages never stop the work (2026-09-23, task #572) — the default is to CONTINUE and only an explicit stop request interrupts, which is written as forms that can only ADD a stop, so an unrecognised stop wording continues: the safe side of the error, and the only way to express this rule without the frozen word list the Article 17 corollary forbids. A third nature was added beyond what was asked, because treating every short message as noise is the symmetric error of stopping at each one: a short message that names another task is not noise, it IS the new task. The two thresholds are his (light from the 2nd, strong from the 5th), the first is deliberately silent, the strong alert names the real cost rather than calling it costly, and even it says the work continues. A long message is never "in passing", so a stop word buried in real content cannot read as an order to halt.');
