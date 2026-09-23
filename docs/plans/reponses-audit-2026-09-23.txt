@@ -1,0 +1,180 @@
+===================================================================
+RÉPONSES À TES QUATRE QUESTIONS D'AUDIT — 2026-09-23
+===================================================================
+
+Toutes les réponses ci-dessous sont MESURÉES sur le vrai dépôt, jamais données
+de mémoire. Quand un chiffre manque, c'est écrit.
+
+
+-------------------------------------------------------------------
+1. « tool-brain : c'est devenu ton point d'entrée ? tu utilises ? »
+-------------------------------------------------------------------
+
+RÉPONSE COURTE : NON. Et l'outil le dit lui-même, sans que j'aie à l'admettre.
+
+LA MESURE, sortie de son propre rapport :
+
+    « tool-brain a été sollicité 41 fois, mais JAMAIS SPONTANÉMENT — signe que
+      le réflexe n'est pas encore acquis, seulement le rappel mécanique. »
+
+41 sollicitations, zéro à mon initiative. Autrement dit : il tourne parce que le
+crochet post-commit le lance, jamais parce que j'y pense. La règle écrite dit
+« avant toute recherche dans un fichier existant, consulter tool-brain » — je ne
+l'applique pas, et le compteur le prouve.
+
+CE QUE ÇA COÛTE CONCRÈTEMENT. Son rappel post-commit m'annonce à chaque fois que
+neuf fichiers mériteraient une recherche par concept avant lecture intégrale. Je
+lis quand même ces fichiers en direct, avec des `grep` improvisés. Ça marche,
+mais c'est exactement le gaspillage que l'outil existe pour éviter.
+
+CE QUI NE MARCHE PAS DANS LE DISPOSITIF, et ce n'est pas qu'une question de
+discipline : le rappel arrive APRÈS le commit. Il me dit ce que j'aurais dû
+faire, jamais ce que je vais faire. Un rappel qui arrive après l'action ne peut
+pas changer l'action.
+
+AUSSI MESURÉ : 6 outils du catalogue n'ont JAMAIS été sollicités —
+check-spirit, THE-FINAL-JUDGE, THE-DEEP-READER, CHARTER-SPY, docs,
+check-house.mjs (celui-ci tourne en réalité à chaque commit, mais via le crochet,
+donc son compteur ne le voit pas : une mesure fausse à corriger).
+
+
+-------------------------------------------------------------------
+2. « le système de leçons : tu l'utilises concrètement ? ça fonctionne ? »
+-------------------------------------------------------------------
+
+RÉPONSE COURTE : il REMONTE bien, et personne ne referme jamais la boucle.
+
+CE QUI MARCHE, et c'est réel : à chaque commit, deux leçons du registre
+s'affichent, choisies selon le terrain touché. Aujourd'hui j'ai vu remonter L1
+(une règle écrite que rien ne fait respecter), L13 (une preuve satisfaite par son
+propre registre vide), L12, L5, BP2, BP3. Elles étaient pertinentes à chaque fois.
+
+CE QUI NE MARCHE PAS, mesuré par l'outil lui-même :
+
+  · AUCUNE entrée n'a jamais été jugée appliquée ou non par toi. Le registre
+    grossit sans que personne ne sache s'il change quoi que ce soit. Et c'est
+    VOULU : `enregistrerXp()` refuse un jugement qui ne vient pas de toi
+    (`parUtilisateur: true`). Donc ce maillon attend une action de ta part, et
+    seulement de la tienne.
+
+  · 6 entrées ne sont JAMAIS remontées, en 30 à 40 occasions :
+    L3, L6, L7, L9, BP1, BP4. Du poids mort dans un registre qui grossit.
+
+  · 4 entrées remontent souvent ET n'ont jamais été jugées appliquées :
+    L1, L12, BP2, BP3. L'outil en tire la bonne conclusion : « ressortir ne
+    suffit visiblement pas ».
+
+  · Le registre de verdicts est VIDE, donc aucune tendance n'existe. L'outil
+    refuse d'en tracer une : « un point à zéro sur un registre vide serait une
+    fausse courbe plate, jamais une mesure. »
+
+LE DÉFAUT STRUCTUREL QUE JE VOIS, ET QU'AUCUN OUTIL NE DIT : les leçons
+s'affichent APRÈS le commit. Elles commentent le travail qui vient d'être fait,
+donc elles ne peuvent pas l'avoir influencé. Elles ne servent qu'au coup suivant,
+et seulement si je m'en souviens. C'est le même défaut que tool-brain, et ce
+n'est pas un hasard : les deux vivent dans le crochet post-commit.
+
+COMMENT L'OPTIMISER, concrètement :
+  (a) Déplacer le rappel AVANT l'action plutôt qu'après. Techniquement possible
+      via le crochet pre-commit, qui existe déjà et qui bloque.
+  (b) Retirer ou reformuler les 6 entrées mortes — l'outil le dit lui-même :
+      « une entrée qui ne sert jamais est à supprimer ou à reformuler ».
+  (c) Te donner un moyen simple de juger « appliquée / pas appliquée » en une
+      ligne, parce que ce maillon n'avancera jamais sans toi.
+
+
+-------------------------------------------------------------------
+3. « les outils apprennent-ils seuls ? est-ce que je leur apprends ? »
+-------------------------------------------------------------------
+
+Trois questions, une seule mesure — les traiter séparément produirait trois fois
+le même chiffre.
+
+CE QUI EST MESURÉ ET VRAI : 13 leçons sur 13 ont vu des fichiers de leur terrain
+touchés depuis qu'elles ont été apprises. L5 : 61 fichiers. L12 : 32. L2, L4, L7,
+L10 : 25 chacune.
+
+MAIS — et l'outil est honnête là-dessus, ce qui est à son crédit :
+
+    « Ce relevé pose une QUESTION ("ces fichiers ont-ils été relus à la lumière
+      de la leçon ?"), il n'affirme aucun défaut. »
+
+Donc : je touche beaucoup de fichiers concernés par des leçons. Rien ne prouve
+que je les ai relus à leur lumière. C'est une corrélation, jamais une preuve
+d'apprentissage.
+
+EST-CE QUE J'ENSEIGNE AUX OUTILS ? Oui, et c'est le volet qui marche le mieux.
+Aujourd'hui seulement, j'ai ajouté des leçons DANS le code de six outils, sous la
+forme de commentaires qui portent le pourquoi à côté du quoi — et trois fois, ces
+commentaires ont empêché une erreur que j'allais refaire (le libellé
+« n'a jamais rien écrit » sur hyper-scan-checkpoint, la dérivation par rang, le
+crédit de lecture indirecte). Ça, ça fonctionne.
+
+EST-CE QUE LES OUTILS APPRENNENT SEULS ? Non, et ce n'est pas un défaut : ils
+n'apprennent pas, ils MÉMORISENT. ARGUS se souvient de ses verdicts écartés,
+SAFE-EXPORT aussi, le compteur d'usage accumule. Aucun ne modifie son propre
+comportement à partir de ce qu'il a vu — et c'est délibéré, un outil qui
+s'ajusterait seul deviendrait imprévisible.
+
+TOOL-LEARNING FONCTIONNE-T-IL ? Oui, et il vient de me le prouver en produisant
+cette réponse. Il mesure, il refuse de conclure sur des données absentes, et son
+plan d'action nomme onze points « à trancher » plutôt que de les régler tout
+seul. Sa limite est celle de tout le dispositif : il constate que la boucle n'est
+jamais refermée, et il n'a aucun moyen de la refermer.
+
+
+-------------------------------------------------------------------
+4. « THE-EQUALIZER est-il bien à sa place ? est-ce un gardien sacré ? »
+-------------------------------------------------------------------
+
+TROIS RÉPONSES NETTES, toutes mesurées :
+
+  · CE N'EST PAS UN GARDIEN SACRÉ, et ce n'est pas un oubli. Les sept sont :
+    ARGUS, HARMONIA, AXA-CHECK, CLEAN-DIRTY-OLD, CLONE-HUNTER, ALWAYS-NEW-CODE,
+    SAFE-EXPORT. Le critère d'appartenance est double et non négociable : un vrai
+    scan de qualité du code ET tourner gratuitement à CHAQUE commit.
+    THE-EQUALIZER remplit le premier, jamais le second — et délibérément : son
+    verdict ne bouge que si le référentiel des standards ou la couverture réelle
+    a bougé. Lancé à chaque commit, il rendrait le même verdict des dizaines de
+    fois d'affilée, et un signal qui ne change jamais cesse d'être lu.
+    Son rang réel : « Membre — Suite Dette & Structure du code ».
+
+  · IL EST BIEN INSCRIT À LA RONDE. L'item existe, avec son libellé.
+
+  · MAIS IL N'Y EST JAMAIS PASSÉ. Trouvé aujourd'hui par le nouveau lecteur de
+    tendance : son dossier de registre ne contient QUE son index — aucun signal
+    de Ronde, depuis sa création. L'étape passe pour faite à chaque Ronde et rien
+    ne l'atteste. C'est exactement le même défaut que la relecture du référentiel
+    (tâche #556), trouvé deux fois en deux jours par deux chemins différents.
+
+  · FONCTIONNE-T-IL ? Oui, vérifié à l'instant : 15/15 sur l'Agence, 7/7 sur les
+    documents, 5/7 sur le code (deux exigences sans vérificateur), 0 vérificateur
+    fantôme, 0 niveau orphelin, 33/33 outils audités. Sa couverture de test est de
+    100 % sur ses 8 fonctions.
+
+CE QU'IL FAUT EN CONCLURE : l'outil est à sa place et il marche. Ce qui ne marche
+pas, c'est qu'il n'a jamais tourné DANS une Ronde — et la prochaine Ronde le
+corrigera d'elle-même, puisque son item y est.
+
+
+-------------------------------------------------------------------
+LE FIL COMMUN DES QUATRE RÉPONSES
+-------------------------------------------------------------------
+
+Les quatre disent la même chose sous quatre angles : **le dispositif produit
+correctement, et la boucle n'est jamais refermée.**
+
+  · tool-brain rappelle, et je n'y vais jamais de moi-même.
+  · Les leçons remontent, et aucune n'a jamais été jugée appliquée.
+  · Les outils mémorisent, et rien ne dit que j'en tiens compte.
+  · THE-EQUALIZER est inscrit à la Ronde, et n'y est jamais passé.
+
+Et deux de ces quatre ont la même cause mécanique, que je n'avais pas vue avant
+de mesurer : **le rappel arrive après le commit**. Il commente un travail déjà
+fait. Un rappel post-action ne peut pas changer l'action — au mieux la suivante,
+et seulement si je m'en souviens.
+
+C'est le point sur lequel j'attendrais ton arbitrage en priorité : déplacer ces
+rappels avant l'action plutôt qu'après. Le crochet pre-commit existe déjà et il
+bloque, donc c'est faisable — mais ça changerait le rythme de travail, et ce
+genre de décision est la tienne.
