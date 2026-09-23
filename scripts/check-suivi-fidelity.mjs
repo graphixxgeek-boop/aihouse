@@ -297,6 +297,61 @@ export function lastCoveredTaskNumber(indexText) {
   return max > 0 ? max : undefined;
 }
 
+// findCheminsMortsDansReferentiel() (2026-09-23, tâche #556) — LA PARTIE MÉCANIQUE DE LA
+// RELECTURE PÉRIODIQUE DE L'ARTICLE 13.
+//
+// Ce que l'Article 13 demande vraiment : que les documents de référence disent la vérité sur le
+// code. La partie qui exige un jugement (une règle décrite est-elle encore celle qui s'applique ?)
+// ne s'automatise pas. Celle-ci, si : un document qui cite un fichier disparu ment sur le dépôt,
+// et c'est vérifiable sans lire une ligne de prose.
+//
+// TROIS CAS RÉELS TROUVÉS AU PREMIER PASSAGE, sur 657 chemins cités : le journal de TOOL-LEARNING
+// annoncé sous un chemin qui n'a jamais existé, la fiche `memento.md` encore citée un jour après
+// son renommage en `memory-audit.md`, et — celui-là dans la charte elle-même — un document de
+// contexte présenté comme disponible alors qu'il n'a JAMAIS été committé une seule fois.
+//
+// LES DEUX EXCLUSIONS, et elles sont la différence entre un garde-fou lu et un garde-fou ignoré
+// (L4) : un chemin qui sert d'EXEMPLE de gabarit (`docs/X-blueprint.md`) ne désigne aucun fichier,
+// et un chemin cité dans une PROPOSITION (« un document séparé allégerait… ») décrit ce qui
+// n'existe pas encore, volontairement. Les deux produiraient un reproche sur une phrase juste.
+const CHEMIN_CITE = /`((?:docs|lib|app|scripts|components)\/[A-Za-z0-9_.\-/]+\.[A-Za-z0-9]+)`/g;
+const CHEMIN_GABARIT = /(^|\/)X(\.|-|$)/;
+const TOURNURE_DE_PROPOSITION = /(all[ée]gerait|pourrait|serait|à cr[ée]er|envisag|un futur|proposition)/i;
+// LE TROISIÈME ÉTAT, et sans lui ce garde-fou serait rouge à vie sur trois lignes parfaitement
+// honnêtes : un document peut citer un chemin absent EN DISANT qu'il est absent — la charte le fait
+// pour un fichier de contexte jamais committé, THE-EQUALIZER cite un chemin erroné qu'un outil avait
+// produit, et TOOL-LEARNING rappelle l'ancien chemin faux à côté du bon. Trois états, jamais deux :
+// le chemin existe · il est absent et personne ne le dit · il est absent ET le document le déclare.
+// Le dernier n'est pas un défaut, c'est précisément ce que l'Article 27 demande de faire.
+// La déclaration est LUE dans la phrase, jamais supposée d'après le ton.
+const ABSENCE_DECLAREE = /(n'existe pas|n'a jamais existé|jamais committé|absent du dépôt|introuvable|disparue? avec)/i;
+
+export function findCheminsMortsDansReferentiel({ root = ROOT, fichiers, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync } = {}) {
+  const cibles = fichiers ?? [
+    ...readdirSync(join(root, "docs/referentiel")).filter((f) => f.endsWith(".md")).map((f) => `docs/referentiel/${f}`),
+    "CLAUDE.md", "docs/regles-de-travail.md", "docs/systeme-de-suivi.md", "docs/philosophie-et-politique.md",
+  ];
+  const morts = [];
+  const declarees = [];
+  let verifies = 0;
+  for (const rel of cibles) {
+    let texte;
+    try { texte = readFile(join(root, rel)); } catch { morts.push({ document: rel, chemin: rel, pourquoi: "le document de référence lui-même est illisible" }); continue; }
+    for (const ligne of texte.split("\n")) {
+      for (const m of ligne.matchAll(CHEMIN_CITE)) {
+        const chemin = m[1];
+        if (CHEMIN_GABARIT.test(chemin)) continue;
+        verifies++;
+        if (exists(join(root, chemin))) continue;
+        if (TOURNURE_DE_PROPOSITION.test(ligne)) continue;
+        if (ABSENCE_DECLAREE.test(ligne)) { declarees.push({ document: rel, chemin }); continue; }
+        morts.push({ document: rel, chemin, pourquoi: `« ${rel} » cite ${chemin}, qui n'existe pas sur le disque` });
+      }
+    }
+  }
+  return { verifies, morts, declarees };
+}
+
 // findMotsClesManquants() (2026-09-23, tâche #569) : une tâche OUVERTE doit porter un mot-clé
 // valide et unique. Le garde-fou existe parce que la colonne, seule, ne suffit pas : un champ
 // facultatif qu'aucun mécanisme ne réclame se remplit trois fois puis plus jamais, et le jour où
@@ -378,6 +433,16 @@ function main() {
     }
   }
   if (!anyMissingFile) console.log("Aucun fichier cité dans une tâche terminée ne manque sur disque.");
+
+  console.log("\n=== Relecture périodique Article 13 — chemins cités par les documents de référence ===\n");
+  const relecture = findCheminsMortsDansReferentiel();
+  if (!relecture.morts.length) {
+    console.log(`${relecture.verifies} chemin(s) cité(s) vérifié(s) : tous existent réellement sur le disque.`);
+    if (relecture.declarees.length) console.log(`   (${relecture.declarees.length} chemin(s) absent(s) mais DÉCLARÉS comme tels par le document qui les cite — jamais un défaut : c'est ce que l'Article 27 demande.)`);
+  } else {
+    console.log(`${relecture.morts.length} chemin(s) mort(s) sur ${relecture.verifies} vérifié(s) :`);
+    for (const m of relecture.morts) console.log(`   - ${m.pourquoi}`);
+  }
 
   console.log("\n=== Garde-fou mot-clé unique par tâche ouverte (docs/suivi/) ===\n");
   const motsCles = findMotsClesManquants();

@@ -61,7 +61,8 @@ niveau rattaché à aucun domaine.
 **2. La boucle réécrite qui fabrique dix-sept faux écarts.** Le premier jet parcourait la table
 maîtresse lui-même et appelait `checkAgentOnboarding()` avec la cellule BRUTE — parenthèse de
 précision comprise. Le slug devenait
-`docs/referentiel/cassandra-rh-scripts-cassandra-rh-mjs.md`, donc tout manquait, pour presque tous
+`docs/referentiel/cassandra-rh-scripts-cassandra-rh-mjs.md` — un chemin qui n'existe pas et n'a
+jamais existé, c'est tout le bug —, donc tout manquait, pour presque tous
 les outils. Deux enseignements : ce découpage était déjà écrit trois fois dans le même fichier
 (devenu `primaryToolName()` à cette occasion), et `integrationAudit()` faisait déjà exactement ce
 travail, en mieux. **Le signal qui a sauvé le rapport : quand un détecteur accuse presque tout,

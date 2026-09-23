@@ -2947,6 +2947,25 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   console.log('Passed: extractTaskNumbers() reads only real numeric task numbers (skipping headers, separators, and "—" pre-numbering placeholders), nextTaskNumber() returns the true global maximum plus one across every session file (seeding at 117, the exact continuation point, when none exist yet), and findTaskNumberIssues() flags a real cross-file duplicate and a real within-file regression — the mechanical guarantee behind the durable task numbering the user asked for.');
 }
 {
+  // findCheminsMortsDansReferentiel() (2026-09-23, tâche #556) — la partie MÉCANIQUE de la relecture
+  // périodique de l'Article 13, qui n'avait jamais écrit un seul rapport depuis la création de la
+  // Ronde. Elle a trouvé trois vrais mensonges dès son premier passage sur 1136 chemins cités.
+  const {findCheminsMortsDansReferentiel}=await import('../scripts/check-suivi-fidelity.mjs');
+  const lireDoc=(table)=>(chemin)=>{const cle=Object.keys(table).find((k)=>chemin.endsWith(k));if(cle===undefined)throw new Error('absent');return table[cle];};
+  const scan=(texte,fichiersExistants=[])=>findCheminsMortsDansReferentiel({fichiers:['d.md'],readFile:lireDoc({'d.md':texte}),exists:(p)=>fichiersExistants.some((f)=>p.endsWith(f))});
+  assert.equal(scan('voir `scripts/reel.mjs` pour la suite',['scripts/reel.mjs']).morts.length,0,'a cited path that really exists reports nothing');
+  assert.equal(scan('voir `scripts/fantome.mjs` pour la suite').morts.length,1,'a cited path that does not exist is a document lying about the repository, and must be flagged');
+  // LES TROIS EXCLUSIONS, chacune sur une phrase PARFAITEMENT JUSTE qu'un garde-fou naïf punirait —
+  // et un garde-fou qui accuse à tort cesse d'être lu (L4).
+  assert.equal(scan('chaque outil a son `docs/X-blueprint.md` et son `docs/referentiel/X.md`').morts.length,0,'a template example naming no real file is never a dead path');
+  assert.equal(scan('un `docs/referentiel/index-outils.md` séparé allégerait la charte').morts.length,0,'a path inside a PROPOSAL describes what does not exist yet, deliberately');
+  assert.equal(scan("la charte annonce `docs/contexte-projet/absent.txt`, qui n'existe pas").morts.length,0,'a document that cites an absent path AND SAYS SO is doing exactly what Article 27 asks — never a defect');
+  assert.equal(scan("la charte annonce `docs/contexte-projet/absent.txt`, qui n'existe pas").declarees.length,1,'but it is counted apart rather than ignored: three states, never two — exists, absent and unsaid, absent and declared');
+  const illisible=findCheminsMortsDansReferentiel({fichiers:['manquant.md'],readFile:()=>{throw new Error('nope');},exists:()=>true});
+  assert.equal(illisible.morts.length,1,'a reference document that cannot even be read is itself the finding, never a silent zero');
+  console.log('Passed: the mechanical half of the Article 13 periodic re-read flags a reference document citing a file that is not on disk, and holds its three states apart — the path exists, it is absent and nobody says so, or it is absent and the document declares it, which is what Article 27 asks rather than a defect. It stays silent on a template placeholder and on a path named inside a proposal, the two phrasings a naive check would punish while being perfectly true, and it treats an unreadable reference document as the finding itself rather than as zero paths to check. On its first real run over 1136 cited paths it found three genuine lies, one of them in the charter.');
+}
+{
   // findMotsClesManquants() (2026-09-23, tâche #569) : le mot-clé unique par tâche ouverte.
   // CE QUE CES ASSERTIONS PROTÈGENT VRAIMENT : lancé sur le vrai suivi le jour de sa création, ce
   // garde-fou a rendu « 0 écart » — exactement la forme de preuve creuse traquée toute cette

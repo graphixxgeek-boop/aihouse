@@ -143,7 +143,7 @@ fabriquerait la référence morte que cet outil traque. Natures mélangées → 
 **Sur le vrai registre : 0 groupe**, et c'est vérifié dans les deux sens (le détecteur mord sur des
 doublons synthétiques, et laisse tranquille une entrée de sujet différent sur le même terrain).
 
-**① Mesurer si ressortir sert.** `docs/tool-learning/xp-remontees.json` compte les occasions et les
+**① Mesurer si ressortir sert.** `.xp-remontees.json` (journal local à la racine, jamais committé — corrigé le 2026-09-23, la fiche annonçait `docs/tool-learning/xp-remontees.json`, un chemin qui n'a jamais existé) compte les occasions et les
 remontées, alimenté aux deux points réels (tool-brain, crochet de commit) et **jamais dans
 `adviseToolBrain()`** — que la suite de tests appelle, et dont le comptage noierait la mesure sous du
 bruit d'outillage. Une entrée remontée souvent et jamais jugée appliquée est nommée.

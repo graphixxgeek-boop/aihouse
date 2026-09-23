@@ -1257,8 +1257,10 @@ Outillage porte désormais le surnom **memory-audit** (fichier technique inchang
 côtés d'EL-PROFESSOR ; la facette Moteur du jeu garde son nom d'origine **memento weight**, séparée
 le même soir dans son propre fichier outillage (`scripts/memento-weight.mjs`, distinct de
 `scripts/memento.mjs`) pour ne plus mélanger les deux rôles dans un seul script.
-`docs/referentiel/memory-audit.md`/`memento-weight.md` (qui remplacent l'ancien
-`docs/referentiel/memento.md`) nomment cette distinction explicitement.
+`docs/referentiel/memory-audit.md`/`memento-weight.md` (qui remplacent l'ancienne fiche unique
+`memento.md`, disparue avec le renommage de la tâche #172 — ce chemin était encore cité ici le
+2026-09-23, corrigé par la relecture périodique de l'Article 13) nomment cette distinction
+explicitement.
 
 **Garde-fou mécanique ajouté** (`scripts/doc-report.mjs::findEngineCodeInRegistries()`) : vérifie
 que le champ `scriptPath` de chaque entrée `REGISTRIES` (le seul des trois catalogues — PRESTATIONS,

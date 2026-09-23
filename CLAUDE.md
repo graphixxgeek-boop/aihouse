@@ -1244,8 +1244,12 @@ contenu :
 - `analyse-opus-initiale.txt` — diagnostic technique et artistique produit par Claude Opus avant
   la reprise du projet ; base du plan de travail (séparation des deux cerveaux, désaturation
   visuelle, rééquilibrage des jauges, mise en scène de la révélation finale, etc.).
-- `historique-prompts-codex.txt` — historique complet des échanges avec Codex ayant produit le
-  code actuel ; utile pour comprendre pourquoi une décision de conception a été prise.
+- `historique-prompts-codex.txt` — **ANNONCÉ ICI MAIS ABSENT DU DÉPÔT**, et jamais committé une
+  seule fois (vérifié dans tout l'historique git le 2026-09-23, première relecture périodique de
+  l'Article 13). Il devait contenir l'historique des échanges avec Codex ayant produit le code
+  actuel. Le dire vaut mieux que de laisser une IA qui reprend le projet le chercher : les trois
+  autres fichiers ci-dessus sont, eux, bien présents. Si l'utilisateur possède encore ce fichier,
+  l'ajouter comble un vrai trou de contexte ; sinon cette ligne se retire.
 
 ## Plan d’origine (analyse Opus) — état d’avancement
 
