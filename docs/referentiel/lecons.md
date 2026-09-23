@@ -425,6 +425,17 @@ cas limites, jamais pour prouver que le contrat tient.
 *Payée le 2026-09-23 : deux transcripts HTML archivés vides (full_sim18, full_sim19), trouvés en
 ouvrant le fichier pour noter une simulation, jamais par un test.*
 
+**LA SECONDE CONSÉQUENCE, TROUVÉE LE 2026-09-23 (tâche #585), et elle est pire que la première** :
+un test qui invente son entrée ne rate pas seulement un désaccord — il CERTIFIE À TORT qu'un
+détecteur est branché. `pure-gold-unity` excuse à juste titre un détecteur que seule la suite de
+tests appelle, puisque le crochet pre-commit la lance à chaque commit : il protège vraiment. Cette
+excuse ne vaut que si le test le fait tourner CONTRE LE DÉPÔT. `findMecanismesSansRaison()` n'avait
+que deux assertions sur deux chaînes littérales : elle comptait donc comme protégée, n'était appelée
+par aucun `main()`, et l'exigence qu'elle servait était déclarée « vérifiée par personne » à côté
+sans que rien ne rapproche les deux. **La question à se poser n'est donc jamais « ce détecteur
+est-il appelé ? » mais « qu'est-ce qu'on lui donne à manger ? »** — une fixture prouve qu'il
+fonctionne, seul le vrai dépôt prouve qu'il sert.
+
 **Porté par** : `findTranscriptsSteriles()` (`scripts/le-regisseur.mjs`) — il parcourt les
 `_transcript.txt` réellement archivés et nomme ceux dont le parseur ne tire aucun bloc. Une vraie
 fonction plutôt qu'une assertion perdue dans la suite de tests : une leçon dont le porteur n'a pas
