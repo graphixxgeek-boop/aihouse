@@ -119,6 +119,32 @@ export function resumeCourt(description = "", max = 240) {
   return phrase.length > max ? `${phrase.slice(0, max).replace(/\s+\S*$/, "")}…` : phrase;
 }
 
+// UN RAPPORT LIVRÉ PÉRIMÉ EST PIRE QU'UN RAPPORT ABSENT (2026-09-23, erreur réelle commise
+// l'heure même où cet outil a été construit). Le rapport a été généré, cinq tâches ont été
+// ajoutées ensuite, et il a été LIVRÉ sans être régénéré : 249/485 annoncés là où la vérité était
+// 252/490. Le défaut n'est pas l'inattention — c'est qu'AUCUN mécanisme ne reliait « je livre ce
+// rapport » à « ce rapport est à jour ». Un chiffre faux dans un document de pilotage se propage
+// dans toutes les décisions qu'il éclaire.
+//
+// L'EMPREINTE EST LE NOMBRE DE TÂCHES LUES, pas une date : deux rapports générés à la même minute
+// sur deux registres différents doivent se distinguer, et une date ne le dirait pas.
+// LE MARQUEUR N'UTILISE AUCUN GUILLEMET, et ce détail est payé : la première version écrivait
+// `data-taches-lues="490"`, que le rendu HTML échappe en `&quot;490&quot;` — le lecteur ne
+// retrouvait donc jamais sa propre empreinte et déclarait tout rapport « sans empreinte ».
+// Trouvé en le branchant sur la VRAIE sortie ; un test sur une chaîne inventée serait passé
+// (leçon L16, second volet). Deux-points : rien à échapper, rien à casser.
+export const MARQUEUR_EMPREINTE = "data-taches-lues:";
+export function empreinteDuRapport(html = "") {
+  const m = String(html).match(new RegExp(`${MARQUEUR_EMPREINTE}(\\d+)`));
+  return m ? Number(m[1]) : null;
+}
+export function rapportPerime(html, tachesActuelles) {
+  const lues = empreinteDuRapport(html);
+  if (lues === null) return { perime: true, mesurable: false, pourquoi: "le rapport ne porte aucune empreinte — impossible de savoir sur quoi il a été calculé, ce qui n'est jamais la même chose que savoir qu'il est à jour" };
+  if (lues !== tachesActuelles) return { perime: true, mesurable: true, pourquoi: `calculé sur ${lues} tâche(s), le registre en porte ${tachesActuelles} — à régénérer avant toute livraison` };
+  return { perime: false, mesurable: true, pourquoi: `à jour : ${lues} tâche(s), les mêmes que le registre` };
+}
+
 export function buildOuOnEnEstHtml(b, { dateLabel = new Date().toISOString().slice(0, 10) } = {}) {
   const blocks = [];
   if (!b.mesurable) {
@@ -138,6 +164,8 @@ export function buildOuOnEnEstHtml(b, { dateLabel = new Date().toISOString().sli
   blocks.push({ type: "heading", text: "Ce qui reste ouvert" });
   blocks.push({ type: "list", items: b.ouvertesTotal.sort((a, c) => a.numero - c.numero).map((t) => `#${t.numero} — ${t.sousSujet} (${t.sensibilite})`) });
   blocks.push({ type: "note", text: "Limite déclarée : ce bilan lit le registre durable, jamais le code. Une tâche mal décrite y sera mal résumée — il dit ce qui a été ÉCRIT comme fait, et c'est une mesure de la discipline de suivi autant que du travail." });
+  // L'empreinte voyage AVEC le rapport, jamais dans un fichier à côté qui se perdrait.
+  blocks.push({ type: "note", text: `Empreinte de ce rapport (${MARQUEUR_EMPREINTE}${b.total}) : calculé sur ${b.total} tâche(s) lues. Un rapport dont l'empreinte diffère du registre est périmé, et se régénère avant d'être livré.` });
   return renderHtmlReport({ tool: "Où on en est", title: "Où on en est", subtitle: "ce qui a été fait, et ce que le projet y a gagné", dateLabel, blocks });
 }
 
