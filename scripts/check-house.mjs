@@ -3926,7 +3926,29 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // post-commit était le SEUL appelant à fournir ces signaux, donc CASSANDRA-RH et
   // check-tasks-details affichaient « en cours (jamais scanné) » pour des outils mesurés trente
   // secondes plus tôt. Le relevé rend la mesure lisible par tous sans relancer check-house.mjs.
-  const { saveBadgeSignals: saveSignals, loadBadgeSignals: loadSignals, badgeSignalsAsContext } = await import('../scripts/le-coordinateur.mjs');
+  const { saveBadgeSignals: saveSignals, loadBadgeSignals: loadSignals, badgeSignalsAsContext, mergeBadgeSignals, CLEFS_SIGNAUX_GARDIEN } = await import('../scripts/le-coordinateur.mjs');
+  // ————————————————————————————————————————————————————————————————————————
+  // mergeBadgeSignals() (2026-09-23, tâche #558) — la mémoire des six signaux, qui n'existait pas
+  // ————————————————————————————————————————————————————————————————————————
+  //
+  // Le relevé était ÉCRASÉ à chaque commit avec les seules valeurs mesurées ce commit-là. Un
+  // Gardien qui ne tournait pas perdait sa dernière mesure connue, le badge retombait sur « non
+  // consulté », et remontait au commit suivant : 67 cérémonies en attente pour zéro franchissement
+  // réel, 34 dans un sens et 33 dans l'autre sur les mêmes outils. Le palier mesurait le relevé,
+  // jamais l'outil — et la règle « afficher la cérémonie TEL QUEL » devenait inapplicable, donc
+  // contournable, ce qui est pire qu'une règle absente.
+  const jour1 = mergeBadgeSignals(null, { argusFindingsCount: 0, harmoniaFindingsCount: 3 }, { date: '2026-09-21' });
+  assert.equal(jour1.harmoniaFindingsCount, 3, 'a first measurement must simply be recorded');
+  assert.equal(jour1.mesureLe.harmoniaFindingsCount, '2026-09-21', 'and each key must remember WHEN it was measured, one date per signal rather than one for the whole snapshot');
+  const jour2 = mergeBadgeSignals(jour1, { argusFindingsCount: 2 }, { date: '2026-09-23' });
+  assert.equal(jour2.harmoniaFindingsCount, 3, 'THE FIX ITSELF: a Gardien that did not run at this commit must KEEP its last known value — losing it is what made the tier flip back and forth on tools nobody had touched');
+  assert.equal(jour2.argusFindingsCount, 2, 'a fresh measurement always wins over the remembered one, never the reverse');
+  assert.equal(jour2.mesureLe.harmoniaFindingsCount, '2026-09-21', 'and the remembered value keeps ITS OWN date — refreshing it in passing would date a measurement from two days ago as today, which is the dishonest half of the easy fix');
+  assert.equal(jour2.mesureLe.argusFindingsCount, '2026-09-23', 'while the freshly measured one takes today');
+  assert.equal(mergeBadgeSignals(null, {}, { date: '2026-09-23' }).argusFindingsCount, undefined, 'a signal never measured stays ABSENT — a badge must be able to say "nobody looked", and a fabricated zero would forbid it');
+  assert.equal(badgeSignalsAsContext(jour2).lastVerifiedAt, '2026-09-21', '"vérifié le" must report the OLDEST measurement actually used, never the most recent: a verdict resting half on a two-day-old value was not verified today, and showing the fresh date would lend the whole verdict a freshness half of it does not have');
+  assert.ok(CLEFS_SIGNAUX_GARDIEN.includes('coverageBySlug'), 'the six measurable signals are declared ONCE and read everywhere — a seventh Gardien joins by adding its key here, never by editing the three places that each listed them separately (Article 24)');
+
   assert.deepEqual(badgeSignalsAsContext(null), {}, 'no snapshot at all (fresh container, first run) must yield an EMPTY context — never fabricated zeros, which would silently turn "nobody measured" into "everything is green"');
   assert.deepEqual(badgeSignalsAsContext({ date: '2026-09-22', argusFindingsCount: 0, harmoniaFindingsCount: 3, cleanDirtyOldFlagged: false, cloneHunterFindingsCount: 0, alwaysNewCodeFlagged: false, coverageBySlug: { 'fake-agent-complet': 82 } }), { argusFindingsCount: 0, harmoniaFindingsCount: 3, cleanDirtyOldFlagged: false, cloneHunterFindingsCount: 0, alwaysNewCodeFlagged: false, axaCoverageBySlug: { 'fake-agent-complet': 82 }, lastVerifiedAt: '2026-09-22' }, 'a real snapshot must translate one-to-one into the context fields checkAgentOnboarding already understands — never a second interpretation of the same data at each caller');
   assert.deepEqual(badgeSignalsAsContext({ date: '2026-09-22', argusFindingsCount: 0 }), { argusFindingsCount: 0, lastVerifiedAt: '2026-09-22' }, 'a partial snapshot (a Gardien asleep at that commit, so never recorded) must carry ONLY what was really measured — a missing key stays missing, so the badge still says that Gardien was not consulted');

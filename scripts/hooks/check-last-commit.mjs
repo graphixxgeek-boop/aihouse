@@ -19,7 +19,7 @@ import { lastTouchDays, relativeStaleness } from "../clean-dirty-old.mjs";
 import { buildDuplicateReport, buildNearDuplicateReport, fusionnerClusters } from "../clone-hunter.mjs";
 import { THEMES, THEME_PRIMARY_FILE, parseCoverage, recommendZone, countDatedAddenda, addendaSignal, parseNumstat, churnSignal, outillageZones } from "../always-new-code.mjs";
 import { findMissingNotes, findOrphanNotes } from "../el-professor.mjs";
-import { parseToolsTable, slugifyAgentName, checkAllAgentBadges, pendingCeremonies, formatPendingCeremonies, saveBadgeSignals } from "../le-coordinateur.mjs";
+import { parseToolsTable, slugifyAgentName, checkAllAgentBadges, pendingCeremonies, formatPendingCeremonies, saveBadgeSignals, loadBadgeSignals, mergeBadgeSignals, badgeSignalsAsContext } from "../le-coordinateur.mjs";
 import { formatToolBrainReminder } from "../tool-brain.mjs";
 import { summarizeHistory, computeInvestmentRatio, diagnoseAdviceAccuracy } from "../smart-conso-token.mjs";
 import { sh, AGENT_CATEGORIES, gardienShouldRun, lastCommitFiles, realCodeFilesChanged } from "../lib-shell.mjs";
@@ -453,9 +453,14 @@ try {
 // gratuitement (rien n'est relancé), plutôt que de laisser chaque appelant relancer check-house.mjs
 // ou afficher une inconnue. Écrit AVANT la cérémonie et hors de son try : un badge raté ne doit
 // jamais emporter le relevé avec lui.
-saveBadgeSignals({
+// FUSIONNÉ, JAMAIS ÉCRASÉ (2026-09-23, tâche #558). Ce relevé était réécrit entièrement à chaque
+// commit avec les seules valeurs mesurées CE commit-là : un Gardien qui ne tournait pas perdait sa
+// dernière mesure connue, le badge retombait sur « non consulté », et remontait au commit suivant.
+// 67 cérémonies en attente pour zéro franchissement réel — le palier mesurait le relevé, pas
+// l'outil. mergeBadgeSignals() garde chaque mesure avec SA date, sans jamais la rafraîchir au
+// passage : une valeur d'avant-hier reste datée d'avant-hier.
+saveBadgeSignals(mergeBadgeSignals(loadBadgeSignals(), {
   commit: sh("git rev-parse HEAD", { quiet: true })?.trim() || undefined,
-  date: new Date().toISOString().slice(0, 10),
   argusFindingsCount,
   harmoniaFindingsCount,
   cleanDirtyOldFlagged,
@@ -468,7 +473,7 @@ saveBadgeSignals({
         .filter(([, pct]) => pct !== undefined),
     )
     : undefined,
-});
+}));
 
 try {
   const onboardingContext = buildRealOnboardingContext();
@@ -503,13 +508,23 @@ try {
   const mergedOverrides = { ...onboardingContext.agentOverrides };
   for (const [tool, extra] of Object.entries(gardienOverrides)) mergedOverrides[tool] = { ...mergedOverrides[tool], ...extra };
 
+  // LE RELEVÉ PERSISTÉ SERT DE SOCLE, la mesure fraîche passe par-dessus (2026-09-23, tâche #558).
+  // Le traducteur badgeSignalsAsContext() existait, le relevé était écrit à chaque commit — et le
+  // seul appelant qui en avait vraiment besoin ne le lisait pas. C'est la même forme de défaut que
+  // les cinq règles muettes de la veille : un mécanisme construit, alimenté, et qui n'atteint
+  // personne. Sans ce socle, une valeur non mesurée à ce commit-ci vaut « non consulté » et fait
+  // basculer le palier, alors qu'on SAIT ce qu'elle valait au commit précédent.
+  //
+  // L'ORDRE COMPTE, et il est dans ce sens-là exprès : une vraie mesure d'aujourd'hui doit toujours
+  // écraser une mémoire d'hier, jamais l'inverse.
+  const fraisMesures = {};
+  for (const [clef, valeur] of Object.entries({ argusFindingsCount, harmoniaFindingsCount, cleanDirtyOldFlagged, cloneHunterFindingsCount, alwaysNewCodeFlagged })) {
+    if (valeur !== undefined && valeur !== null) fraisMesures[clef] = valeur;
+  }
   const announcements = checkAllAgentBadges({
     ...onboardingContext,
-    argusFindingsCount,
-    harmoniaFindingsCount,
-    cleanDirtyOldFlagged,
-    cloneHunterFindingsCount,
-    alwaysNewCodeFlagged,
+    ...badgeSignalsAsContext(),
+    ...fraisMesures,
     agentOverrides: mergedOverrides,
   });
   for (const announcement of announcements) console.log("\n" + announcement + "\n");

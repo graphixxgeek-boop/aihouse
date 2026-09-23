@@ -90,6 +90,46 @@ export function saveBadgeSignals(signals, path = BADGE_SIGNALS_PATH) {
   try { writeFileSync(path, JSON.stringify(signals, null, 1)); } catch { /* best-effort, jamais bloquant */ }
 }
 
+// LES SIX SIGNAUX QUI PEUVENT ÊTRE MESURÉS. Déclarés une fois, lus partout — un septième Gardien
+// rejoint l'équipe en ajoutant sa clé ici, jamais en retouchant les trois endroits qui les listaient
+// chacun de leur côté (Article 24).
+export const CLEFS_SIGNAUX_GARDIEN = ["argusFindingsCount", "harmoniaFindingsCount", "cleanDirtyOldFlagged", "cloneHunterFindingsCount", "alwaysNewCodeFlagged", "coverageBySlug"];
+
+// mergeBadgeSignals() (2026-09-23, tâche #558) — LE CŒUR DE LA CORRECTION, et le défaut qu'elle
+// ferme méritait son nom.
+//
+// CE QUI SE PASSAIT. Le relevé était ÉCRASÉ à chaque commit avec les seules valeurs mesurées CE
+// commit-là. Un Gardien qui ne tournait pas (le crochet ne les lance pas tous à chaque fois)
+// perdait donc sa dernière mesure connue, et le badge retombait sur « non consulté ». Au commit
+// suivant il retournait, et le badge remontait. Résultat mesuré le 2026-09-23 : 67 cérémonies en
+// attente, dont 34 « partiel → en cours » et 33 « en cours → partiel », sur les MÊMES outils, dont
+// aucun n'avait changé. Le palier affiché ne mesurait pas l'outil, il mesurait le relevé.
+//
+// CE QUE ÇA CASSAIT VRAIMENT, au-delà du bruit : la cérémonie existe pour marquer un franchissement
+// réel, et la règle « à afficher TEL QUEL, jamais résumé » suppose qu'il y en ait peu. Soixante-sept
+// blocs identiques rendent cette règle inapplicable — donc contournable, ce qui est pire qu'une
+// règle absente.
+//
+// LA RÈGLE, ET SON HONNÊTETÉ. Une mesure fraîche l'emporte toujours et prend la date du jour. Une
+// clé non mesurée ce commit-ci garde sa valeur précédente ET SA PROPRE DATE — jamais rafraîchie au
+// passage, ce qui reviendrait à dater d'aujourd'hui une mesure d'avant-hier. Une clé jamais mesurée
+// reste absente : un badge doit pouvoir dire « personne n'a regardé », et des zéros fabriqués le
+// lui interdiraient.
+export function mergeBadgeSignals(precedent, frais, { date = new Date().toISOString().slice(0, 10), clefs = CLEFS_SIGNAUX_GARDIEN } = {}) {
+  const fusion = { ...(precedent ?? {}), ...(frais ?? {}) };
+  const mesureLe = { ...(precedent?.mesureLe ?? {}) };
+  for (const clef of clefs) {
+    const valeurFraiche = frais?.[clef];
+    if (valeurFraiche !== undefined && valeurFraiche !== null) { fusion[clef] = valeurFraiche; mesureLe[clef] = date; }
+    else if (precedent?.[clef] !== undefined && precedent?.[clef] !== null) fusion[clef] = precedent[clef];
+    else delete fusion[clef];
+  }
+  for (const clef of Object.keys(mesureLe)) if (fusion[clef] === undefined) delete mesureLe[clef];
+  fusion.mesureLe = mesureLe;
+  fusion.date = date;
+  return fusion;
+}
+
 export function loadBadgeSignals(path = BADGE_SIGNALS_PATH, readFile = (f) => readFileSync(f, "utf8")) {
   try {
     const data = JSON.parse(readFile(path));
@@ -104,11 +144,19 @@ export function loadBadgeSignals(path = BADGE_SIGNALS_PATH, readFile = (f) => re
 export function badgeSignalsAsContext(snapshot = loadBadgeSignals()) {
   if (!snapshot) return {};
   const contexte = {};
-  for (const clef of ["argusFindingsCount", "harmoniaFindingsCount", "cleanDirtyOldFlagged", "cloneHunterFindingsCount", "alwaysNewCodeFlagged"]) {
-    if (snapshot[clef] !== undefined && snapshot[clef] !== null) contexte[clef] = snapshot[clef];
+  const datesUtilisees = [];
+  for (const clef of CLEFS_SIGNAUX_GARDIEN) {
+    if (snapshot[clef] === undefined || snapshot[clef] === null) continue;
+    if (clef === "coverageBySlug") contexte.axaCoverageBySlug = snapshot.coverageBySlug;
+    else contexte[clef] = snapshot[clef];
+    if (snapshot.mesureLe?.[clef]) datesUtilisees.push(snapshot.mesureLe[clef]);
   }
-  if (snapshot.coverageBySlug) contexte.axaCoverageBySlug = snapshot.coverageBySlug;
-  if (snapshot.date) contexte.lastVerifiedAt = snapshot.date;
+  // « Vérifié le » prend la date la PLUS ANCIENNE parmi les mesures réellement utilisées, jamais la
+  // plus récente ni celle du dernier passage. Un verdict qui s'appuie sur une mesure d'avant-hier
+  // n'a pas été vérifié aujourd'hui, même si une autre de ses six entrées l'a été — afficher la
+  // date fraîche donnerait au verdict entier une fraîcheur que sa moitié n'a pas.
+  const plusAncienne = datesUtilisees.length ? datesUtilisees.slice().sort()[0] : null;
+  if (plusAncienne ?? snapshot.date) contexte.lastVerifiedAt = plusAncienne ?? snapshot.date;
   return contexte;
 }
 
