@@ -91,3 +91,24 @@ juge la **couverture des exigences elles-mêmes**.
 périmètre la nuit de sa construction (réservé à la tâche #208, à traiter avec l'utilisateur).
 `integration-outil.mjs` le signale donc à chaque passage (9/10 registres) — un manque visible,
 jamais un oubli silencieux.
+
+
+## Trois états d'exigence, jamais deux (2026-09-23, tâche #585)
+
+L'échelle en portait deux — vérifiée mécaniquement, ou pas — pendant que le commentaire de son
+propre verdict en promettait trois. L'écart n'était pas cosmétique : une exigence dont la moitié
+mécanisable EST vérifiée et dont l'autre moitié ne peut pas l'être se faisait annoncer « vérifiée
+par personne ». C'est faux, et c'est coûteux dans les deux sens — ça pousse soit à reconstruire ce
+qui existe déjà, soit à cesser de lire l'alerte.
+
+**Les trois états** : `mecanique` (✅) · `partielle` (⚠️ + le mot « partiel ») · `non-verifiee`
+(⚠️ sans ce mot). Les deux derniers gardent la même icône, et c'est volontaire : dans les deux cas
+l'exigence n'est pas entièrement tenue. C'est le QUALIFICATIF écrit à côté qui tranche — on lit ce
+que le référentiel dit, plutôt que d'exiger une icône de plus que le prochain rédacteur oublierait.
+
+**Ce que le constat dit désormais** : une exigence partielle est nommée avec la moitié qui EST
+couverte, reprise mot pour mot du référentiel. C'est la seule information qui compte, et la version
+binaire l'effaçait entièrement.
+
+Même discipline que partout ailleurs dans ce projet : mesuré / pas mesuré / pas mesurable ne se
+confondent jamais.

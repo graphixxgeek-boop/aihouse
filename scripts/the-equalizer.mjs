@@ -55,10 +55,22 @@ export const DOMAINES = {
 // trois branches que partout ailleurs dans ce projet (retenu/écarté/à trancher ;
 // mesuré/pas mesuré/pas mesurable) : « pas vérifié » et « partiellement vérifié » ne se confondent
 // jamais avec « vérifié », parce que c'est précisément cette confusion qui fabrique les faux verts.
+// TROIS ÉTATS, JAMAIS DEUX — et cette table en portait deux pendant que le commentaire du verdict
+// promettait trois (corrigé le 2026-09-23, tâche #585). L'écart n'était pas cosmétique : une
+// exigence dont la moitié mécanisable EST vérifiée et dont l'autre moitié ne peut pas l'être se
+// faisait dire « vérifiée par personne », ce qui est faux, et pousse soit à reconstruire ce qui
+// existe déjà, soit à cesser de lire l'alerte. C'est la même discipline que partout ailleurs dans
+// ce projet : mesuré / pas mesuré / pas mesurable ne se confondent jamais.
+//
+// L'ICÔNE NE SUFFIT PAS À DISTINGUER les deux derniers, et c'est volontaire : les deux méritent le
+// même ⚠️ puisque, dans les deux cas, l'exigence n'est pas entièrement tenue. C'est le QUALIFICATIF
+// écrit à côté qui tranche — on lit ce que le référentiel dit, plutôt que d'exiger une icône de
+// plus que le prochain rédacteur oublierait.
 export const ETATS_EXIGENCE = {
   "✅": "mecanique",
   "⚠️": "non-verifiee",
 };
+export const MOTIF_PARTIEL = /partiel/i;
 
 // parseStandards() — lit les tableaux d'exigences du référentiel.
 //
@@ -93,7 +105,10 @@ export function parseStandards(markdown = "") {
     if (!/^[A-Z]\d+$/.test(id)) return;
     exigences.push({
       id, niveau, exigence, verificateur,
-      etat: ETATS_EXIGENCE[[...Object.keys(ETATS_EXIGENCE)].find((c) => etat.startsWith(c))] ?? "non-verifiee",
+      etat: (() => {
+        const base = ETATS_EXIGENCE[[...Object.keys(ETATS_EXIGENCE)].find((c) => etat.startsWith(c))] ?? "non-verifiee";
+        return base === "non-verifiee" && MOTIF_PARTIEL.test(etat) ? "partielle" : base;
+      })(),
       etatBrut: etat,
     });
   });
@@ -148,7 +163,7 @@ export function findVerificateursFantomes(exigences = [], exports = new Set()) {
 // c'est une exigence dont on ignore l'état. Le verdict distingue donc trois cas, jamais deux.
 export const VERDICTS = {
   couvert: { icone: "✅", phrase: "toutes les exigences ont un vérificateur mécanique" },
-  partiel: { icone: "⚠️", phrase: "des exigences déclarées ne sont vérifiées par personne" },
+  partiel: { icone: "⚠️", phrase: "des exigences déclarées ne sont pas entièrement vérifiées — certaines par personne, d'autres à moitié seulement" },
   fantome: { icone: "🔴", phrase: "une exigence annonce un vérificateur qui n'existe pas" },
   vide: { icone: "➖", phrase: "aucune exigence déclarée dans ce domaine" },
 };
@@ -157,16 +172,18 @@ export function verdictParDomaine(exigences = [], { domaines = DOMAINES, fantome
   const idsFantomes = new Set(fantomes.map((f) => f.id));
   return Object.entries(domaines).map(([cle, d]) => {
     const miennes = exigences.filter((e) => d.niveaux.includes(e.niveau));
-    const nonVerifiees = miennes.filter((e) => e.etat !== "mecanique");
+    const nonVerifiees = miennes.filter((e) => e.etat === "non-verifiee");
+    const partielles = miennes.filter((e) => e.etat === "partielle");
     const aFantome = miennes.some((e) => idsFantomes.has(e.id));
     const verdict = aFantome ? "fantome"
       : miennes.length === 0 ? "vide"
-      : nonVerifiees.length ? "partiel"
+      : nonVerifiees.length || partielles.length ? "partiel"
       : "couvert";
     return {
       cle, libelle: d.libelle, quoi: d.quoi, horsPerimetre: d.horsPerimetre ?? null,
-      total: miennes.length, verifiees: miennes.length - nonVerifiees.length,
+      total: miennes.length, verifiees: miennes.length - nonVerifiees.length - partielles.length,
       nonVerifiees: nonVerifiees.map((e) => ({ id: e.id, exigence: e.exigence })),
+      partielles: partielles.map((e) => ({ id: e.id, exigence: e.exigence, etatBrut: e.etatBrut })),
       fantomes: miennes.filter((e) => idsFantomes.has(e.id)).map((e) => e.id),
       verdict,
     };
@@ -208,6 +225,12 @@ export function constatsANiveau({ verdicts = [], fantomes = [], integration = nu
     constats.push({ message: `${f.id} annonce ${f.manquantes.map((n) => `\`${n}\``).join(", ")} comme vérificateur — cette fonction n'existe nulle part dans scripts/`, pourquoi: "un vérificateur fantôme rassure à tort, ce qui est pire qu'une absence déclarée" });
   }
   for (const v of verdicts.filter((v) => v.verdict === "partiel")) {
+    // Une exigence PARTIELLEMENT vérifiée n'est pas un trou : c'est une couverture connue et bornée.
+    // La confondre avec un trou ferait reconstruire ce qui existe déjà — et ferait perdre la seule
+    // information qui compte ici, à savoir QUELLE moitié manque.
+    for (const e of v.partielles) {
+      constats.push({ message: `${e.id} (${v.libelle}) — « ${e.exigence} » n'est vérifiée qu'en partie : ${e.etatBrut.replace(/^⚠️\s*/, "")}`, pourquoi: "une couverture partielle déclarée vaut mieux qu'un trou, mais la moitié non couverte reste à la charge d'une relecture humaine — jamais d'un compteur" });
+    }
     for (const e of v.nonVerifiees) {
       constats.push({ message: `${e.id} (${v.libelle}) — « ${e.exigence} » n'est vérifiée par personne`, pourquoi: "une exigence sans vérificateur n'est pas tenue, elle est seulement espérée" });
     }
@@ -236,7 +259,8 @@ export function formatANiveau({ exigences = [], verdicts = [], fantomes = [], in
     const { icone, phrase } = VERDICTS[v.verdict];
     l.push(`${icone} ${v.libelle} (${v.quoi}) : ${v.total ? `${v.verifiees}/${v.total} exigences vérifiées mécaniquement` : phrase}`);
     if (v.horsPerimetre) l.push(`   hors périmètre assumé — ${v.horsPerimetre}`);
-    for (const e of v.nonVerifiees) l.push(`   ⚠️  ${e.id} — ${e.exigence}`);
+    for (const e of v.nonVerifiees) l.push(`   ⚠️  ${e.id} — ${e.exigence} (personne)`);
+    for (const e of v.partielles ?? []) l.push(`   ⚠️  ${e.id} — ${e.exigence} (vérifiée en partie)`);
     for (const id of v.fantomes) l.push(`   🔴 ${id} — vérificateur annoncé introuvable`);
   }
 

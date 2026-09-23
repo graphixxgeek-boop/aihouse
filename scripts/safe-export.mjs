@@ -139,10 +139,116 @@ export function findMecanismesSansRaison(code = "", { fichier = "" } = {}) {
   for (let i = 0; i < lignes.length; i++) {
     const m = lignes[i].match(/^export (?:async )?function (\w+)/);
     if (!m) continue;
-    const avant = lignes.slice(Math.max(0, i - 3), i).join("\n");
-    if (!/\/\/|\/\*|\*/.test(avant)) sans.push({ fichier, fonction: m[1], ligne: i + 1 });
+    // LA FENÊTRE DE TROIS LIGNES LAISSAIT FUIR LE COMMENTAIRE DU VOISIN (corrigé le 2026-09-23,
+    // trouvé en écrivant une fixture qui devait la faire rougir, tâche #585) : dans un fichier
+    // dense, les trois lignes qui précèdent une fonction contiennent souvent la fin du commentaire
+    // de la fonction PRÉCÉDENTE — et celle-ci passait alors pour expliquée. On remonte donc
+    // jusqu'à la première ligne non vide, et on exige qu'elle soit un commentaire : l'explication
+    // doit toucher la fonction qu'elle explique, ce qui est exactement ce que l'Article 27 demande
+    // (« le POURQUOI vit À CÔTÉ du QUOI »).
+    let j = i - 1;
+    while (j >= 0 && lignes[j].trim() === "") j--;
+    const explique = j >= 0 && /^\s*(\/\/|\/\*|\*)/.test(lignes[j]);
+    if (!explique) sans.push({ fichier, fonction: m[1], ligne: i + 1 });
   }
   return sans;
+}
+
+// 3bis. LE MÊME DÉTECTEUR, MAIS BRANCHÉ — ET RESSERRÉ SUR CE QUE L'ARTICLE 27 CRAINT VRAIMENT
+// (2026-09-23, tâche #585).
+//
+// CE QU'ON A TROUVÉ EN OUVRANT LE SUJET, et c'est le défaut que ce projet n'arrête pas de se
+// trouver à lui-même : `findMecanismesSansRaison` existait, fonctionnait, était testée — et
+// n'était APPELÉE PAR AUCUN main(). Elle avait été écrite pour l'exigence X6 du référentiel des
+// standards, qui déclarait dans le même temps que X6 n'était vérifiée par « personne ». Les deux
+// affirmations étaient vraies séparément et fausses ensemble. Le détecteur échappait même au
+// chasseur de détecteurs muets, parce qu'une fonction appelée par la suite de tests compte comme
+// protégée — ce qui est juste quand le test la fait tourner CONTRE LE DÉPÔT, et faux ici : les
+// deux assertions ne lui donnaient que deux chaînes littérales. Un test qui se parle à lui-même
+// (leçon L16) ne branche rien.
+//
+// POURQUOI ON NE CÂBLE PAS LA VERSION LARGE : mesurée sur le vrai dépôt, elle rend 298 fonctions
+// exportées sans explication sur 74 fichiers. Ce n'est pas un signal, c'est un mur — et un
+// garde-fou qui accuse à tort cesse d'être lu (leçon L4). La plupart de ces fonctions portent leur
+// raison dans leur nom : `formatXp`, `loadVerdicts` n'ont aucun POURQUOI à écrire.
+//
+// CE QUE L'ARTICLE 27 CRAINT, LUI, EST PRÉCIS : « un mécanisme qui semble redondant ou trop
+// prudent se fait supprimer par le prochain agent qui croit nettoyer ». Cette description ne vise
+// pas n'importe quelle fonction : elle vise les GARDE-FOUS. Un garde-fou ressemble toujours à du
+// zèle tant qu'on ignore le bug qu'il a coûté. C'est donc sur eux, et eux seuls, que l'absence
+// d'explication est un vrai risque — 38 cas réels, un nombre qu'on peut regarder.
+export const PREFIXES_GARDE_FOU = /^(?:find|check|audit|verif)/i;
+
+
+// LE PÉRIMÈTRE NE SE DEVINE PAS AU NOM : IL SE LIT (Article 24, et la première version de ce bloc
+// s'est fait prendre en flagrant délit). Le filtre par convention de nommage ci-dessus a été écrit
+// d'abord, puis confronté aux registres réels — qui ont immédiatement rendu huit garde-fous bien
+// vivants que ce filtre ratait en silence : `doitIntercalerUnTourAutonome`, `filtrerDejaTranches`,
+// `relanceCircleTasks`, `etatConnexionProcessGardien`... La convention était donc DÉJÀ périmée au
+// moment où on s'apprêtait à s'appuyer dessus, ce qui est exactement la panne que l'Article 24
+// décrit : une liste recopiée qui cesse d'être vraie sans prévenir.
+//
+// LE PÉRIMÈTRE RÉEL est donc l'UNION de trois sources, dont deux sont lues à l'exécution :
+//   · les fonctions que le référentiel des standards nomme comme VÉRIFICATEUR d'une exigence ;
+//   · les fonctions que le registre des leçons nomme comme PORTEUR d'une leçon ;
+//   · celles dont le nom suit la convention (le filet, pour un garde-fou qu'aucun registre ne cite
+//     encore — il en naît à chaque chantier).
+// Un garde-fou nouveau rejoint ce périmètre le jour où un registre le cite, sans qu'une ligne
+// bouge ici. C'est la différence entre lire et recopier.
+const PORTEUR_DE_LECON = /\*\*Port[ée] par\*\*\s*:([^\n]*)/g;
+export const REGISTRES_CITANT_DES_GARDE_FOUS = ["docs/referentiel/standards.md", "docs/referentiel/lecons.md"];
+export function gardeFousCitesParLesRegistres({ root = ROOT, readFileImpl = readFileSync, registres = REGISTRES_CITANT_DES_GARDE_FOUS } = {}) {
+  const cites = new Set();
+  const ajouter = (fragment) => { for (const m of String(fragment).matchAll(/`(\w+)\(\)`/g)) cites.add(m[1]); };
+  for (const r of registres) {
+    let texte;
+    try { texte = readFileImpl(join(root, r), "utf8"); } catch { continue; }
+    // Un PORTEUR : la ligne qui le déclare, jamais une mention en passant ailleurs dans la fiche.
+    for (const m of texte.matchAll(PORTEUR_DE_LECON)) ajouter(m[1]);
+    // Un VÉRIFICATEUR : la 3e colonne d'une ligne de tableau, jamais le texte qui l'entoure.
+    for (const ligne of texte.split("\n")) {
+      if (!ligne.startsWith("|")) continue;
+      const colonnes = ligne.split("|").map((c) => c.trim());
+      if (colonnes.length >= 5) ajouter(colonnes[3]);
+    }
+  }
+  return cites;
+}
+
+// EST UN GARDE-FOU ce qu'un registre déclare tel, ou ce que la convention de nommage désigne.
+export function estUnGardeFou(nom, cites = new Set()) {
+  return cites.has(nom) || PREFIXES_GARDE_FOU.test(nom);
+}
+
+export function findGardeFousSansRaison(fichiers = [], { readFileImpl = readFileSync, root = ROOT, cites } = {}) {
+  const perimetre = cites ?? gardeFousCitesParLesRegistres({ root, readFileImpl });
+  const sans = [];
+  for (const f of fichiers) {
+    let texte;
+    try { texte = readFileImpl(join(root, f), "utf8"); } catch { continue; }
+    for (const m of findMecanismesSansRaison(texte, { fichier: f })) if (estUnGardeFou(m.fonction, perimetre)) sans.push(m);
+  }
+  return sans;
+}
+
+// Les fichiers source du projet, PARCOURUS plutôt qu'énumérés (Article 24) : un fichier neuf entre
+// dans le périmètre le jour où il est écrit, sans qu'une liste soit tenue à jour quelque part.
+const DOSSIERS_SOURCE = ["scripts", "lib", "app"];
+const IGNORES = /node_modules|\.next|\.sites-runtime|\.git/;
+export function fichiersSourcesDuProjet({ root = ROOT, listDirImpl = readdirSync, dossiers = DOSSIERS_SOURCE } = {}) {
+  const trouves = [];
+  const parcourir = (relatif) => {
+    let entrees;
+    try { entrees = listDirImpl(join(root, relatif), { withFileTypes: true }); } catch { return; }
+    for (const e of entrees) {
+      const chemin = `${relatif}/${e.name}`;
+      if (IGNORES.test(chemin)) continue;
+      if (e.isDirectory()) parcourir(chemin);
+      else if (/\.(mjs|ts|tsx)$/.test(e.name)) trouves.push(chemin);
+    }
+  };
+  for (const d of dossiers) parcourir(d);
+  return trouves;
 }
 
 // 4. CE QUI DÉPEND D'UN OUTIL PARTICULIER. L'Article 27 l'interdit explicitement dans ce qui fait
@@ -459,6 +565,18 @@ function main() {
   for (const e of voc.ecarts.slice(0, 12)) console.log(`   • ${e.fichier} — « ${e.terme} » sans son rang : « ${e.phrase} » (définition : ${e.definition})`);
   if (voc.ecarts.length > 12) console.log(`   … +${voc.ecarts.length - 12} autre(s).`);
   for (const g of findGuardiansHorsProcess()) console.log(`   ⚠️  ${g}`);
+
+  // X6 — LE POURQUOI À CÔTÉ DU QUOI, ENFIN BRANCHÉ (2026-09-23, tâche #585). Le détecteur existait
+  // depuis sa création sans qu'aucun main() ne l'appelle, pendant que le référentiel des standards
+  // déclarait X6 « vérifiée par personne ». Les deux étaient vrais séparément.
+  const sourcesProjet = fichiersSourcesDuProjet();
+  const citesParRegistres = gardeFousCitesParLesRegistres();
+  const sansRaison = findGardeFousSansRaison(sourcesProjet, { cites: citesParRegistres });
+  console.log(`\n🧭 X6 — ${sansRaison.length} garde-fou(s) exporté(s) sans une ligne d'explication, sur ${sourcesProjet.length} fichier(s) source et ${citesParRegistres.size} garde-fou(s) nommé(s) par un registre réel.`);
+  console.log("   Ce que ce chiffre dit, et rien de plus : une absence d'EXPLICATION, jamais une absence de RAISON — juger si un commentaire explique vraiment reste hors de portée d'une mécanique.");
+  console.log("   Pourquoi ce périmètre et pas toutes les fonctions : la version large rend 298 cas, un mur plutôt qu'un signal. L'Article 27 craint précisément le garde-fou, qui ressemble toujours à du zèle tant qu'on ignore le bug qu'il a coûté.");
+  for (const e of sansRaison.slice(0, 10)) console.log(`   • ${e.fichier}:${e.ligne} — ${e.fonction}()`);
+  if (sansRaison.length > 10) console.log(`   … +${sansRaison.length - 10} autre(s).`);
 
   // CONSTAT >> TÂCHES (2026-09-23) : chaque rapport dit désormais ce qu'il faut FAIRE de ce qu'il
   // a trouvé, pas seulement ce qu'il a trouvé. `fausseUneMesure` déclaré ici parce qu'un blueprint

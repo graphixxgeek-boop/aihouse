@@ -80,19 +80,31 @@ arrivé ? » C'est le niveau que l'Article 24 nomme et que personne ne mesurait 
 | X3 | Aucun bloc dupliqué non justifié | CLONE-HUNTER | ✅ mécanique |
 | X4 | Aucune zone en stagnation non examinée | CLEAN-DIRTY-OLD | ✅ mécanique |
 | X5 | Aucune liste recopiée à la main sans garde-fou (Article 24) | les 12 garde-fous dédiés | ✅ mécanique |
-| X6 | Le POURQUOI vit à côté du QUOI (Article 27) | **personne** | ⚠️ **non vérifié** |
-| X7 | Le code applique les leçons déjà apprises | TOOL-LEARNING (porteurs) | ⚠️ **partiel** — seulement pour les leçons qui ont un porteur |
+| X6 | Le POURQUOI vit à côté du QUOI (Article 27) | SAFE-EXPORT · `findGardeFousSansRaison()` | ⚠️ **partiel** — l'ABSENCE d'explication est comptée ; la QUALITÉ d'une explication reste hors mécanique |
+| X7 | Le code applique les leçons déjà apprises | TOOL-LEARNING · `auditLecons()` + `analyseRemontees()` | ⚠️ **partiel** — le porteur est vérifié réel et la leçon vérifiée remontée au bon moment ; l'APPLICATION est jugée par l'utilisateur à la Ronde |
 
 ---
 
 ## Ce que ce référentiel déclare NE PAS couvrir
 
-**Trois exigences n'ont aucun vérificateur, et le dire est la seule protection possible :**
+**Ce que personne ne vérifie, ou ne vérifie qu'à moitié — et le dire est la seule protection possible :**
 
-- **X6 — le POURQUOI à côté du QUOI.** Aucune mécanique ne peut juger si un commentaire explique
-  vraiment la raison d'être d'un mécanisme, ou s'il paraphrase le code. Seule une relecture humaine
-  ou un agent de raisonnement le peut.
-- **X7, en partie.** Une leçon sans porteur mécanique ne peut pas être vérifiée dans le code.
+- **X6, en partie** *(corrigé le 2026-09-23, tâche #585 — cette ligne disait « aucun vérificateur »
+  alors qu'un détecteur écrit pour elle dormait dans SAFE-EXPORT sans qu'aucun `main()` ne l'appelle ;
+  les deux affirmations étaient vraies séparément et fausses ensemble)*. Ce qui est désormais
+  mécanique : le nombre de garde-fous exportés sans une ligne d'explication, sur un périmètre LU
+  plutôt qu'énuméré — les fonctions que ce référentiel nomme comme vérificateurs, celles que
+  `lecons.md` nomme comme porteurs, plus la convention de nommage comme filet. Ce qui ne l'est
+  toujours pas, et ne le sera pas : juger si un commentaire explique vraiment la raison d'être d'un
+  mécanisme ou s'il paraphrase le code. Seule une relecture humaine ou un agent de raisonnement le
+  peut. Le chiffre est donc un signal pour cette relecture, jamais un verdict.
+- **X7, en partie.** Deux des trois maillons sont mécaniques : le porteur d'une leçon est vérifié
+  RÉEL (`auditLecons`, un porteur fantôme étant pire qu'une absence assumée) et la leçon est
+  vérifiée REMONTÉE aux moments où elle s'applique (`analyseRemontees` : une entrée jamais remontée
+  en N occasions est nommée comme poids mort). Le troisième — la leçon a-t-elle été APPLIQUÉE —
+  n'est jamais mécanique, et c'est délibéré : `enregistrerXp()` refuse un jugement qui ne porte pas
+  `parUtilisateur: true`, parce que c'est l'utilisateur qui dit, à la Ronde, si le travail est
+  propre.
 - **La qualité du jeu lui-même** (le ton, le naturel des dialogues, la cohérence narrative) n'est pas
   dans ce référentiel : elle relève de la charte et d'EL-PROFESSOR, jamais d'un standard d'outillage.
 

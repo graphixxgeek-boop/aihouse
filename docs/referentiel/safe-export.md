@@ -43,3 +43,46 @@ Un écart marqué « écarté » sans accord est lui-même signalé dans le rapp
 
 `docs/safe-export/memoire.json`, trois états : **vu**, **corrigé**, **écarté sciemment** (ce dernier
 exigeant l'accord). Un **corrigé** qui réapparaît ressort en régression, jamais filtré.
+
+
+## X6 — le POURQUOI à côté du QUOI, branché le 2026-09-23 (tâche #585)
+
+**Ce qu'on a trouvé en ouvrant le sujet.** `findMecanismesSansRaison()` existait depuis la création
+de cet outil, fonctionnait, était testée — et n'était appelée par **aucun `main()`**. Elle avait été
+écrite pour l'exigence X6 du référentiel des standards, qui déclarait dans le même temps que X6
+n'était vérifiée par « personne ». Les deux affirmations étaient vraies séparément et fausses
+ensemble. Le détecteur échappait même au chasseur de détecteurs muets, parce qu'une fonction appelée
+par la suite de tests compte comme protégée — ce qui est juste quand le test la fait tourner CONTRE
+LE DÉPÔT, et faux ici : les deux assertions ne lui donnaient que deux chaînes littérales (leçon L16).
+
+**Pourquoi la version large n'a pas été câblée.** Mesurée sur le vrai dépôt, elle rend **298**
+fonctions exportées sans explication sur 74 fichiers. Ce n'est pas un signal, c'est un mur — et un
+garde-fou qui accuse à tort cesse d'être lu (leçon L4). La plupart de ces fonctions portent leur
+raison dans leur nom : `formatXp`, `loadVerdicts` n'ont aucun POURQUOI à écrire.
+
+**Ce qui est câblé, et pourquoi ce périmètre.** L'Article 27 est précis sur ce qu'il craint : « un
+mécanisme qui semble redondant ou trop prudent se fait supprimer par le prochain agent qui croit
+nettoyer ». Cette description vise les GARDE-FOUS — un garde-fou ressemble toujours à du zèle tant
+qu'on ignore le bug qu'il a coûté. `findGardeFousSansRaison()` s'y limite, et **le périmètre se LIT
+plutôt qu'il ne se devine** : les fonctions que `standards.md` nomme comme vérificateurs, celles que
+`lecons.md` nomme comme porteurs, plus la convention de nommage comme filet pour un garde-fou
+qu'aucun registre ne cite encore.
+
+**Le filtre par nom était DÉJÀ périmé, et c'est le contrôle qui l'a prouvé.** La première version ne
+reposait que sur la convention (`find…`, `check…`, `audit…`, `verif…`). Confrontée aux registres,
+elle ratait en silence huit garde-fous bien vivants — `doitIntercalerUnTourAutonome`,
+`filtrerDejaTranches`, `relanceCircleTasks`, `etatConnexionProcessGardien`… C'est exactement la
+panne que l'Article 24 décrit : une liste recopiée qui cesse d'être vraie sans prévenir. D'où la
+lecture des registres plutôt que la confiance en la convention.
+
+**Une seconde correction, trouvée en écrivant une fixture qui devait faire rougir le test.** La
+fenêtre de trois lignes laissait fuir le commentaire du VOISIN : dans un fichier dense, les trois
+lignes qui précèdent une fonction contiennent souvent la fin du commentaire de la fonction
+précédente, et celle-ci passait alors pour expliquée. La correction remonte jusqu'à la première
+ligne non vide et exige qu'elle soit un commentaire — l'explication doit toucher la fonction qu'elle
+explique, ce qui est littéralement ce que l'Article 27 demande. Le compte réel passe de 42 à **59** :
+dix-sept garde-fous étaient couverts par le commentaire d'un autre.
+
+**La limite, déclarée plutôt que tue.** Ce chiffre dit une absence d'EXPLICATION, jamais une absence
+de RAISON. Juger si un commentaire explique vraiment ou paraphrase le code reste hors de portée
+d'une mécanique : c'est un signal pour une relecture humaine, jamais un verdict.

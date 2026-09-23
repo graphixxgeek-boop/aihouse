@@ -3074,6 +3074,27 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // transcript réel. Un registre gonflé par précaution accuserait des tournures innocentes.
   assert.ok(TOURNURES.length>=1,'the register holds at least the one frame actually measured — it grows only when a simulation proves a new tic, never by guesswork');
   console.log('Passed: a tic that is neither a word nor a theme is finally measurable (2026-09-23, task #592) — Lia built nine replies of full_sim19 on one frame, "X ne fera pas Y", with a different verb each time. wordFrequency counts words and every verb differed; themeFrequency counts themes and the nine sentences were about nine subjects. What repeated was the GRAMMATICAL FRAME, a dimension nothing in the engine looked at. The measure is a construction of the language rather than a vocabulary, so it covers every French verb including the ones nobody thought of — which is exactly what an enumeration cannot do, and what the Article 17 corollary forbids answering with. Adjacency is what makes it safe: the future verb must sit BETWEEN the "ne" and the "pas", a place no noun ending in -ra ever takes, and the seven real lines are caught with zero false positives on ordinary speech. Measured across every archived transcript it fires on 0.94% of lines, which is what makes four in one session a signal rather than noise.');
+}
+{
+  // TROIS ÉTATS, JAMAIS DEUX (2026-09-23, tâche #585) — THE-EQUALIZER en portait deux, pendant que
+  // le commentaire de son propre verdict en promettait trois. Une exigence à moitié couverte se
+  // faisait donc annoncer « vérifiée par personne », ce qui est faux et pousse à reconstruire ce
+  // qui existe déjà.
+  const eq = await import('../scripts/the-equalizer.mjs');
+  const tableau = ['### NIVEAU 4 — CODE : ce que le code doit tenir', '| # | exigence | vérifiée par | état |', '|---|---|---|---|',
+    '| Y1 | entièrement tenue | `machin()` | ✅ mécanique |',
+    '| Y2 | à moitié tenue | `truc()` | ⚠️ **partiel** — la moitié mesurable est comptée |',
+    '| Y3 | pas tenue du tout | **personne** | ⚠️ **non vérifié** |'].join('\n');
+  const ex = eq.parseStandards(tableau);
+  assert.deepEqual(ex.map((e) => e.etat), ['mecanique', 'partielle', 'non-verifiee'], 'the three states are told apart by what the row SAYS, not by a third icon somebody would forget to use');
+  const verdicts = eq.verdictParDomaine(ex, { domaines: { code: { libelle: 'le code', quoi: 'x', niveaux: ['CODE'] } } });
+  assert.equal(verdicts[0].verifiees, 1, 'a half-covered requirement is never counted as fully verified — that would be the comfortable lie');
+  assert.deepEqual(verdicts[0].partielles.map((e) => e.id), ['Y2'], 'and it is not counted as a hole either: it is named for what it is');
+  assert.deepEqual(verdicts[0].nonVerifiees.map((e) => e.id), ['Y3'], 'the genuine hole stays a hole');
+  const constats = eq.constatsANiveau({ verdicts });
+  assert.ok(constats.some((c) => /Y3/.test(c.message) && /par personne/.test(c.message)), 'the real hole is still reported as verified by nobody');
+  assert.ok(constats.some((c) => /Y2/.test(c.message) && /qu'en partie/.test(c.message) && /la moitié mesurable est comptée/.test(c.message)), 'and the half-covered one says WHICH half is covered — that is the only information worth having, and the binary version erased it');
+  console.log('Passed: X6 is wired and the requirement scale tells three states apart (2026-09-23, task #585). The detector for X6 had been written, tested and never called by any main(), while the standards page declared the requirement verified by nobody — both true separately, false together, and invisible to the mute-detector hunter because a function the test suite calls counts as protected (right when the test runs it against the repo, wrong here where two assertions handed it string literals). Wiring the wide version would have been the other mistake: 298 unexplained exported functions is a wall, not a signal, and most of them carry their reason in their name. What Article 27 actually fears is precise — a guard looks like zeal until you know the bug it cost — so the perimeter is guards, and it is READ from the registries that name verifiers and porteurs rather than guessed from a naming convention, which the very first cross-check proved already stale on eight live guards. THE-EQUALIZER now separates a hole from a half-covered requirement, because telling an author that something is verified by nobody when half of it is verified makes them rebuild what exists.');
   console.log('Passed: the echo between Lia and Noé is measurable at last — the shared run of consecutive words catches the real full_sim19 pair (the first words exchanged with the observer) while staying silent on two genuinely different replies to the same provocation and on a character picking up the observer\'s own word, which is answering rather than echoing. Measured across every archived transcript: 23 pairs flagged out of 2820, 0.8%, and each one read back as a real defect — the prompt instruction against this already existed, was explicit, and was ignored, so what was missing was never another sentence but a check nobody was running.');
 }
 {
@@ -5690,6 +5711,24 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.equal(se.findTermesNonDefinis(['ARGUS'], { exists: (p) => /argus/i.test(p) }).length, 0, 'a term with a real fiche is defined');
     assert.equal(se.findTermesNonDefinis(['MACHIN-TRUC'], { exists: () => false }).length, 1, 'a proper noun with no reachable definition is a handover debt, exactly as Article 27 says');
 
+    // X6 ENFIN BRANCHÉE (2026-09-23, tâche #585). Le détecteur ci-dessous existait, marchait, était
+    // testé — et n'était appelé par aucun main(), pendant que le référentiel déclarait X6 « vérifiée
+    // par personne ». Les deux étaient vrais séparément et faux ensemble. Il échappait même au
+    // chasseur de détecteurs muets, qui excuse une fonction appelée par la suite de tests : une
+    // excuse juste quand le test la fait tourner CONTRE LE DÉPÔT, fausse ici où deux assertions ne
+    // lui donnaient que des chaînes littérales (leçon L16, un test qui se parle à lui-même).
+    const litFaux = (table) => (chemin) => { const cle = Object.keys(table).find((k) => chemin.endsWith(k)); if (cle === undefined) throw new Error('absent'); return table[cle]; };
+    const registreFaux = { 'docs/referentiel/standards.md': '| X1 | une exigence | ARGUS · `relanceCircleTasks()` | ✅ |', 'docs/referentiel/lecons.md': '**Porté par** : `doitIntercalerUnTourAutonome()` (`scripts/run-simulation.mjs`)' };
+    const cites = se.gardeFousCitesParLesRegistres({ root: '/faux', readFileImpl: litFaux(registreFaux) });
+    assert.ok(cites.has('relanceCircleTasks') && cites.has('doitIntercalerUnTourAutonome'), 'the guard perimeter is READ from the real registries, never guessed from a naming convention: both of these are live guards whose names match no prefix, and the first version of this filter missed eight of them in silence');
+    assert.equal(cites.has('main'), false, 'and only the names cited IN THE ROLE of verifier or porteur count — a function merely mentioned elsewhere in a page is not a guard, or the perimeter would swell until it means nothing');
+    const codeFaux = { 'a.mjs': '// la raison, écrite\nexport function findExplique() {}\n\nexport function findMuet() {}\n\nexport function formatOrdinaire() {}\n\nexport function doitIntercalerUnTourAutonome() {}' };
+    const sansRaison = se.findGardeFousSansRaison(['a.mjs'], { root: '/faux', readFileImpl: litFaux(codeFaux), cites });
+    assert.deepEqual(sansRaison.map((x) => x.fonction), ['findMuet', 'doitIntercalerUnTourAutonome'], 'a guard with no explanation is named — whether the convention designates it or a registry does; a guard that carries its reason is left alone, and an ordinary helper whose name IS its reason is never accused (leçon L4: the wide version returns 298 cases, a wall rather than a signal)');
+    // LE PÉRIMÈTRE SE PARCOURT, IL NE S'ÉNUMÈRE PAS (Article 24) : un fichier neuf y entre le jour
+    // où il est écrit, sans qu'une liste soit tenue à jour quelque part.
+    const sources = se.fichiersSourcesDuProjet();
+    assert.ok(sources.length > 50 && sources.includes('lib/dialogue.ts') && sources.includes('scripts/safe-export.mjs'), 'the source inventory is walked from disk, so it covers files nobody thought to list');
     assert.equal(se.findMecanismesSansRaison('export function nu() {}').length, 1, 'an exported function with no comment above it is flagged');
     assert.equal(se.findMecanismesSansRaison('// la raison\nexport function explique() {}').length, 0, 'and one carrying its reason is not — the point being that a mechanism without its WHY gets deleted by the next agent who believes they are cleaning up');
 
