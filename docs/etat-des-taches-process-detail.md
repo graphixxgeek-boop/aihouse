@@ -111,3 +111,79 @@ Les règles de priorité elles-mêmes vivent à part (`scripts/priorites.mjs`) e
 check-tasks-details est classé SENSIBLE par tool-brain (plus de mille lignes, seize dépendants), et
 y coudre une échelle de six paliers aurait ajouté de la surface à un fichier déjà lourd. Le
 responsable LIT les règles, il ne les héberge pas.
+
+---
+
+## 2026-09-23 — Criticité et urgence séparées, mot-clé unique, format standard
+
+*(Trois demandes de l'utilisateur, tâches #568, #569 et #570, traitées ensemble parce qu'elles
+décrivent le même objet : à quoi ressemble une tâche.)*
+
+### Le défaut, et il était visible dans l'échelle elle-même
+
+> « la classification melange le crtiere de criticité avec le retard : pas bon »
+
+Il avait raison, et la preuve était sous les yeux : **`URGENT-RETARD` (rang 5) est un niveau de
+RETARD assis au-dessus de `PRIORITAIRE-OBLIGATOIRE` (rang 4)**, un niveau d'IMPORTANCE. Une tâche
+simplement en retard passait donc devant une tâche plus importante, et l'étiquette ne disait plus
+laquelle compte vraiment.
+
+### Ce qui remplace, exactement comme demandé
+
+> « un indicateur de criticité seul, qui combine tous les autres critères, y compris le
+> "retard/delai". L'etiquette affiche seulement le resultat du calcul : la criticité, pendant
+> qu'une petite vignette collé à côté, indique le niveau d'urgence. »
+
+| | Étiquette | Vignette |
+|---|---|---|
+| **Montre** | la criticité seule | l'urgence, cran + jours |
+| **Exemple** | `🟠 IMPORTANT` | `🔴 31 j` |
+| **Niveaux** | VITAL / IMPORTANT / UTILE / CONFORT | 🟢 ≤ 6 j · 🟠 ≤ 20 j · 🔴 au-delà |
+
+### La promesse la plus facile à trahir, et elle est tenue
+
+> « le critere d'urgence n'est pas diminué dans le calcul : il est simplement plus visible »
+
+Les signaux liés au temps (`stagnation-confirmee`, `cout-repete`) gardent **exactement** leur poids
+dans le score de criticité. Rien n'est retiré du calcul : c'est un mot de retard qui quitte
+l'étiquette, pas un critère qui quitte la balance. Un test le verrouille explicitement.
+
+### Comment les quatre niveaux sont obtenus — et l'erreur qui a précédé
+
+Ils dérivent du champ `coutDeLAttente` que chaque palier déclare déjà : *attendre abîme* → VITAL,
+*attendre coûte / retarde le reste* → IMPORTANT, *attendre ne coûte rien mais faire rapporte* →
+UTILE, le reste → CONFORT.
+
+**La première version dérivait du RANG** — quatre tranches égales sur six. Calcul propre, résultat
+faux : `URGENT-RETARD` (5 sur 6) remontait en VITAL, c'est-à-dire le mélange à supprimer, reproduit
+par l'arithmétique. **Un rang porte déjà la confusion qu'on répare ; s'appuyer dessus la recopie.**
+Un test conserve cette version abandonnée pour que personne ne la reconstruise en la croyant plus
+simple.
+
+### Le mot-clé unique, et le garde-fou que ce choix impose
+
+Calibré en fenêtre : **un seul mot**, choisi contre la recommandation de deux à quatre mots.
+L'utilisateur a été prévenu du risque au moment de choisir — deux tâches finissant sur le même mot
+ramèneraient la confusion par une autre porte. Ce risque n'est donc **pas laissé à son attention** :
+`findMotsClesEnCollision()` refuse deux tâches OUVERTES portant le même mot, et nomme lesquelles.
+
+La limite aux tâches ouvertes est volontaire : deux tâches closes qui partagent un mot ne gênent
+personne, et l'imposer sur tout l'historique rendrait le champ impraticable au bout de cent tâches —
+le genre de règle trop stricte qu'on finit par contourner.
+
+### Le format standard
+
+`FORMAT_TACHE` déclare les huit champs en **données**, pas en prose : numéro, horodatage, mot-clé,
+sujet, sous-sujet, criticité, détail, statut. `findChampsManquants()` les vérifie et nomme ce qui
+manque — un format qui se contrôle, jamais une phrase dans un document que personne ne relit.
+
+### Où vivent les règles
+
+> « les regles de priorité [...] doivent etre hebergé dans l'equipe process »
+
+Elles y sont : `scripts/priorites.mjs` héberge l'échelle et le calcul depuis le 2026-09-23,
+`scripts/criticite.mjs` héberge la lecture (criticité, urgence, mot-clé, format), et ce document est
+le process qui les gouverne. **Sur la question ouverte** (« un process peut éventuellement remplacer
+ces regles ? ») : non, et c'est mieux ainsi — un process décrit un DÉROULÉ, une échelle est une
+DONNÉE. Les fondre donnerait un document qu'on ne peut plus exécuter et un code qu'on ne peut plus
+lire. Ils restent deux, reliés : le process pointe les règles, les règles citent le process.

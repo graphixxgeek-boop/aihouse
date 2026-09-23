@@ -9441,6 +9441,61 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(procSemi, 'the mode is not only a registry entry: it is a declared PROCESS, so god-of-all-process watches its steps like any other activity');
   assert.ok(procSemi.etapes.some((e) => e.cle === 'sans-arret' && e.preuve === null), 'and the step "never stop" honestly declares it has NO mechanical proof — no mechanism can read a conversation, and saying so beats trusting an agent\'s memory (Article 27)');
   assert.equal(horsGabarit({ processes: [procSemi] }).length, 0, 'its document must satisfy the process template like every other: what it prevents, its trigger, its steps, its controller and its limits');
+  // ————————————————————————————————————————————————————————————————————————
+  // CRITICITÉ vs URGENCE (2026-09-23) — l'étiquette de retard assise dans l'échelle d'importance
+  // ————————————————————————————————————————————————————————————————————————
+  //
+  // Constat de l'utilisateur : « la classification melange le crtiere de criticité avec le retard :
+  // pas bon ». Vérifiable dans l'échelle elle-même : URGENT-RETARD (rang 5) est un niveau de RETARD
+  // placé AU-DESSUS de PRIORITAIRE-OBLIGATOIRE (rang 4), donc une tâche simplement en retard passait
+  // devant une tâche plus importante.
+  const crit = await import('../scripts/criticite.mjs');
+  assert.equal(crit.NIVEAUX_CRITICITE.length, 4, 'four named levels, calibrated by the user against a 0-100 score and against a 3-level scale');
+  assert.equal(crit.criticiteDuPalier('CRITIQUE-RISQUES').cle, 'VITAL', 'only "waiting DAMAGES something" is vital — the one level where time destroys rather than delays');
+  assert.equal(crit.criticiteDuPalier('URGENT-RETARD').cle, 'IMPORTANT', 'THE CORRECTION ITSELF: a delay level must land on its real weight, never above a genuinely more important task. Its cost is real and repeated; it damages nothing');
+  assert.equal(crit.criticiteDuPalier('PRIORITAIRE-OBLIGATOIRE').cle, 'IMPORTANT', 'and it lands beside the level it used to sit under, which is the whole point');
+  assert.equal(crit.criticiteDuPalier('MEMOIRE-NEXT').cle, 'CONFORT', 'the declared floor of the scale keeps its floor');
+
+  // LA PREMIÈRE VERSION, ÉCRITE PUIS JETÉE LE JOUR MÊME, et le test qui empêche d'y revenir :
+  // quatre tranches égales sur les six rangs. Le calcul était propre et le résultat faux —
+  // URGENT-RETARD (5 sur 6) remontait en VITAL, c'est-à-dire le mélange à supprimer, reproduit par
+  // l'arithmétique. Un rang porte déjà la confusion qu'on répare ; s'appuyer dessus la recopie.
+  const parRang = (rang, rangMax = 6, niveaux = 4) => Math.ceil((rang / rangMax) * niveaux);
+  assert.equal(parRang(5), 4, 'proof the abandoned approach really did put URGENT-RETARD at the top level — this test exists so nobody rebuilds it thinking it is simpler');
+  assert.notEqual(crit.criticiteDuPalier('URGENT-RETARD').rang, 4, 'and proof the shipped one does not');
+
+  assert.deepEqual(crit.findPaliersSansFamille(), [], 'checked live: every real palier is recognised by a cost family — a seventh one falling through would be DOWNGRADED to CONFORT in silence, the worst defect a priority scale can have');
+  assert.equal(crit.criticiteDuPalier('INEXISTANT').cle, 'NON CLASSÉE', 'an unknown palier must say so rather than land on a reassuring middle — found while testing on the real tracking file with a column offset: EVERY task came back UTILE and nothing said the palier had simply not been read');
+
+  // L'URGENCE : une vignette à côté, qui ne retire RIEN au calcul. « le critere d'urgence n'est pas
+  // diminué dans le calcul : il est simplement plus visible » — la phrase la plus facile à trahir de
+  // toute la demande, et celle que ce test garde.
+  const { SIGNAUX: SIG } = await import('../scripts/priorites.mjs');
+  for (const cle of ['stagnation-confirmee', 'cout-repete']) {
+    assert.ok(SIG.some((s) => s.cle === cle && s.poids > 0), `the time-related signal "${cle}" must KEEP its full weight in the criticality score: the user asked for urgency to be more visible, never for it to count less`);
+  }
+  assert.equal(crit.vignetteUrgence(31), '🔴 31 j', 'the vignette shows the notch AND the day count — calibrated against both simpler forms, because a colour alone hides the fact behind it and a number alone asks for a judgement on every line');
+  assert.equal(crit.vignetteUrgence(3), '🟢 3 j', 'a recent task reads as recent');
+  assert.match(crit.vignetteUrgence(-1), /date future/, 'a negative age is NOT a very fresh task, it is a timestamp in the future — a data error. Found on the real tracking file: "🟢 -1 j" displayed as the most reassuring notch of the scale, on rows I had mis-dated minutes earlier');
+  assert.equal(crit.vignetteUrgence(undefined), '⚫ âge inconnu', 'and not knowing the age is a third thing again: it asks for a date, where the future one asks for a correction');
+
+  // LE MOT-CLÉ UNIQUE, et le garde-fou que ce choix impose. L'utilisateur a pris cette option en
+  // ayant été prévenu du risque de collision : le risque n'est donc pas laissé à son attention.
+  assert.equal(crit.motCleValide('memoire').ok, true, 'a real single keyword passes');
+  assert.equal(crit.motCleValide('photo memoire').ok, false, 'two words is not the calibrated format');
+  assert.equal(crit.motCleValide('outil').ok, false, 'a word that fits almost every task in the project distinguishes nothing');
+  assert.equal(crit.motCleValide('').ok, false, 'an empty keyword recalls nothing, which is the entire purpose of the field');
+  const collisions = crit.findMotsClesEnCollision([
+    { n: 10, motCle: 'memoire', statut: 'à faire' }, { n: 11, motCle: 'memoire', statut: 'à faire' },
+    { n: 12, motCle: 'ceremonies', statut: 'à faire' }, { n: 13, motCle: 'memoire', statut: 'terminée' },
+  ]);
+  assert.equal(collisions.length, 1, 'two OPEN tasks sharing a keyword is the collision the user was warned about; a closed one sharing it is not, since nobody cites it any more');
+  assert.deepEqual(collisions[0].numeros, [10, 11], 'and the guard must name WHICH tasks collide, never just report that some do');
+
+  assert.deepEqual(crit.findChampsManquants({ numero: 1, horodatage: 'x', motCle: 'y', sujet: 'z', sousSujet: 'w', criticite: 'UTILE', statut: 'à faire' }), [], 'a complete task satisfies the declared standard format');
+  assert.ok(crit.findChampsManquants({ numero: 1 }).some((c) => c.champ === 'motCle'), 'and a missing mandatory field is NAMED, so the format is a check rather than a sentence in a document nobody rereads');
+  console.log('Passed: criticality and urgency are separated (2026-09-23) — the user was right and the proof was in the scale itself: URGENT-RETARD, a DELAY level, sat at rank 5 above PRIORITAIRE-OBLIGATOIRE at rank 4, so a merely late task outranked a genuinely more important one. The four levels are derived from each palier\'s declared COST OF WAITING rather than from its rank (the first version, written and thrown away the same day, divided the six ranks into four equal slices — clean arithmetic, wrong result, since it put URGENT-RETARD back at the top and reproduced the very mixing being removed; a test now pins that abandoned approach so nobody rebuilds it). Urgency loses nothing in the calculation — the time-related signals keep their full weight, which is the promise easiest to betray in the whole request — it simply moves to a vignette carrying both the notch AND the day count, where a negative age reads as a timestamp error rather than as the most reassuring notch on the scale, and an unknown palier says "NON CLASSÉE" instead of landing on a comfortable middle.');
+
   console.log('Passed: the three work modes are a read registry rather than a boolean copied 31 times (2026-09-23) — the old nightAutonomousMode answered two unrelated questions at once ("is the user there?" and "may a window block?"), which is precisely why the semi-autonomous mode could not be expressed: it is the combination the boolean could not hold, present AND non-blocking. The mode is persisted rather than guessed (an agent resuming mid-session must know without asking, since its own memory does not survive), an unknown mode is refused loudly rather than silently defaulted, a corrupted file falls back to the one mode that can never overreach, a tool comparing against a vanished mode name is flagged so a fourth mode leaves no dead comparisons, and the whole thing is a declared PROCESS whose three conversation-only steps admit having no mechanical proof instead of pretending otherwise.');
 
   console.log('Passed: the five written-but-unenforced rules of circle-process-guardian (2026-09-23) are now genuinely wired and covered — each of the five was IMPORTED and never CALLED, which is also exactly why none of them had a test (an uninvoked mechanism never breaks, so nothing ever demands its coverage): the question inventory is now confronted with the process document it is supposed to match, an opening is flagged BEFORE it expires rather than refused at the closing gesture (the night of 2026-09-23 lesson that detecting is not preventing, applied), a declared registry whose folder does not exist is reported instead of silently reassuring, a tool feeding a registry without recording its contribution no longer counts as unused while it works, and pending questions sitting at different paliers are no longer collapsed under the most insistent one\'s action; night-autonomous mode is exempted only where a human would have to answer, never from a check that reads the disk by itself.');
