@@ -268,29 +268,15 @@ humaine. Toute passe d'allègement suit la procédure formalisée de
 jamais un retrait à l'aveugle.
 
 **Vérification périodique de TOUS les documents de référence, pas seulement au fil des changements.**
-Le paragraphe
-ci-dessus impose une mise à jour « le jour même » d'un changement — nécessaire mais pas suffisant :
-un document peut aussi devenir faux sans qu'aucun changement récent ne l'ait directement touché
-(exemple réel trouvé ce jour-là : le plan d'origine ci-dessous affirmait que le visage restait un
-emoji, alors qu'il avait été remplacé onze versions plus tôt — personne n'avait pensé à revenir sur
-cette phrase après coup). L'ensemble des documents de référence de ce projet ET DE SES OUTILS —
-ce fichier (`CLAUDE.md`, y compris sa propre section « Plan d'origine » ci-dessous), tout le
-contenu de `docs/referentiel/` (`principes.md`, `parametres.md`, `regles-du-temps.md`,
-`regles-de-l-espace.md`, `tableau-de-bord.md`, `points-fragiles.md`, `argus.md`, `harmonia.md`,
-`smart-conso-api.md`), tous les blueprints exportables (`docs/outil-resilience-api.md`,
-`docs/tableau-de-bord-blueprint.md`, `docs/argus-blueprint.md`, `docs/harmonia-blueprint.md`,
-`docs/smart-conso-api-blueprint.md`), `docs/regles-de-travail.md`, `docs/systeme-de-suivi.md`,
-`docs/philosophie-et-politique.md` et le référentiel affiché en jeu `lib/reference.ts` — doit donc
-aussi être relu PÉRIODIQUEMENT dans son ensemble, pas seulement document par document au moment
-d'un changement qui le concerne (corrigé le 2026-09-19 : cette liste elle-même était devenue
-incomplète, exactement l'écart que ce paragraphe interdit — nouvelle discipline à partir de
-maintenant : plutôt qu'une liste figée qui se périme à chaque nouvel outil créé, la vérifier contre
-la table des matières réelle de `docs/referentiel/` et la racine de `docs/` à chaque relecture
-périodique, jamais recopier cette liste de mémoire). Cette relecture périodique se fait à
-l'occasion de toute revue de fond demandée par l'utilisateur (bilan, audit, planification de
-chantiers), jamais comme une tâche qu'on renvoie indéfiniment à plus tard faute d'occasion dédiée.
-Un écart trouvé lors de cette relecture se corrige immédiatement (Article 3), jamais seulement
-signalé pour plus tard.
+Le paragraphe ci-dessus impose une mise à jour « le jour même » — nécessaire, pas suffisant : un
+document devient aussi faux sans qu'aucun changement récent ne l'ait touché (exemple réel : le plan
+d'origine affirmait que le visage restait un emoji, onze versions après son remplacement — personne
+n'était revenu sur cette phrase). **La liste des documents à relire ne s'écrit pas ici** : elle se
+lit sur la table des matières réelle de `docs/referentiel/` et la racine de `docs/`, jamais recopiée
+de mémoire — une liste figée se périme au premier outil créé, et celle qui vivait ici en citait neuf
+quand le dossier en comptait cinquante-trois. Cette relecture se fait à l'occasion de toute revue de
+fond demandée par l'utilisateur (bilan, audit, planification), jamais renvoyée à plus tard faute
+d'occasion dédiée. Un écart trouvé se corrige immédiatement (Article 3), jamais seulement signalé.
 
 `scripts/check-spirit.mjs` a un statut particulier : contrairement à `check-house.mjs` (déterministe,
 zéro coût API, exécuté à chaque changement), il envoie de vraies provocations (ordres autoritaires,
