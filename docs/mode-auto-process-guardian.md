@@ -260,3 +260,52 @@ une nuit donnée, le nombre de chantiers du plan au nombre de chantiers réellem
 suivi. Une nuit qui s'achève avec des chantiers traitables non entamés et sans raison écrite est un
 manquement nommé, avec son responsable — l'agent. Il signale, il ne bloque jamais.
 
+
+## La planche des schémas (2026-09-23, dette documentaire payée à la Ronde GOAT MAX)
+
+*(Inscrite ici parce que `angel-of-ia-process` a nommé son absence : le commit `51997b5e` a changé
+`scripts/god-of-all-process.mjs` — qui porte les process `semi-autonome`, `nuit` et `meta` — sans
+mettre à jour leur document dans le même commit. C'est exactement la règle posée plus haut dans ce
+fichier, enfreinte par l'agent qui l'avait écrite.)*
+
+**Ce qu'elle ferme, et le défaut était réel.** L'utilisateur cherchait les schémas de process du
+projet — « quels schémas sont incomplets, quels schémas intègrent d'autres schémas, quel est le
+schéma global, quels sont les schémas maîtres » — et ne les a pas trouvés : « je n'ai pas trouvé
+mon bonheur ». Le schéma maître existait pourtant en DONNÉE depuis la veille
+(`SCHEMA_DE_REFERENCE`) et se dérivait correctement via `schemaUnifie()`. **Une donnée juste que
+personne ne peut lire vaut, pour qui la cherche, exactement une donnée absente** — même famille que
+la Partie 13 du process XP-IA : écrire n'est pas livrer.
+
+**Commande** : `node scripts/god-of-all-process.mjs schemas`. Huit sections, toutes DÉRIVÉES — un
+process, un maillon ou un emboîtement ajouté demain y apparaît sans que personne ne touche au
+générateur (Article 24).
+
+**`EMBOITEMENTS` — trois mécaniques qui ne se confondent jamais.** Déclarées en données, parce
+qu'elles ne sont déductibles d'aucun diff :
+- **ORCHESTRE** — le process A lance le process B en entier. C'est le cas de `nuit` (qui lance la
+  Ronde et la simulation) et de `semi-autonome`. Un MODE n'est pas un travail : il décide de la
+  façon d'enchaîner des process qui, eux, produisent quelque chose — d'où leurs maillons sans objet.
+- **GREFFE** — le process A s'insère à des MOMENTS à l'intérieur de B, sans le lancer ni en faire
+  partie. `xp-ia` est la seule, et c'est ce qui la rend fragile : une greffe dépend d'un moment qui
+  arrive, pas d'une étape qu'on coche. C'est précisément pourquoi angel doit la DEMANDER plutôt que
+  de la lire sur le disque.
+- **SURVEILLE** — `meta` vérifie la tenue des dix process, lui-même compris.
+
+Garde-fou `findEmboitementsSurProcessInconnu()`, sur le patron déjà prouvé de
+`findTensionsOnUnknownProcess()` : une carte qui nomme un process disparu est une carte fausse, et
+une carte fausse rassure à tort.
+
+**`EXTENSIONS_CANDIDATES` — huit maillons À TRANCHER, jamais appliqués.** Le schéma maître va de
+SCAN à TÂCHES. Quatre maillons en amont (DÉCLENCHEUR, CADRAGE, BUDGET, MÉMOIRE) et quatre en aval
+(EXÉCUTION, VÉRIFICATION, JUGEMENT PAR L'UTILISATEUR, CAPITALISATION) existent déjà dans le travail
+réel et sont déjà exigés par des Articles — ils ne sont simplement pas dans le schéma, donc rien ne
+vérifie qu'ils sont branchés. Chacun déclare CE QUI L'EXIGE DÉJÀ : un maillon que rien d'autre ne
+réclame serait une invention, pas un trou.
+
+**Le constat qui les motive, et il est du même type que celui qui a créé l'Article 28 un cran plus
+tôt** : cet Article a fermé « un rapport écrit ressemble à un problème traité ». Personne n'a fermé
+la suite — **une tâche CRÉÉE ressemble à un problème TRAITÉ**. La chaîne s'arrête au moment où elle
+inscrit la tâche dans `docs/suivi/`, et ce qu'elle devient ensuite n'est porté par aucun schéma.
+
+**Ce que la planche ne dit PAS** : si un process est BON. Elle décrit des formes et des liens ;
+juger qu'un process sert vraiment à quelque chose se lit, et se tranche avec l'utilisateur.

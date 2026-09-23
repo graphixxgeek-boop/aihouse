@@ -125,3 +125,27 @@ tool-brain et que `resume-contextualise`.
 conversation, donc aucun mécanisme ne peut les lire sur disque : angel les **demande** et refuse
 d'être au vert sans réponse. C'est la seule protection possible pour une règle de ce genre, et la
 déclarer ainsi vaut mieux que de la confier à la mémoire d'un agent.
+
+## Ce que la planche des schémas dit de ce mode (2026-09-23)
+
+*(Inscrit ici par la même dette documentaire que celle payée dans `docs/mode-auto-process-guardian.md` :
+le commit `51997b5e` a changé `scripts/god-of-all-process.mjs`, qui porte ce process, sans toucher
+ce document. Le détail complet de la planche vit dans l'autre fichier — jamais dupliqué ici, seul
+ce qui concerne CE mode figure ci-dessous.)*
+
+`node scripts/god-of-all-process.mjs schemas` classe ce mode comme **ORCHESTRATEUR** : il lance
+d'autres process en entier (la Ronde, l'analyse de la charte, une simulation, l'état des tâches),
+il n'en est jamais un lui-même. C'est ce qui explique ses **quatre maillons sans objet** au schéma
+maître, et ces absences sont des déclarations, jamais des trous :
+
+- **SCAN** — un mode ne mesure rien de son côté ; le process réellement exécuté scanne pour lui.
+- **RAPPORTS** — un mode ne produit aucun rapport propre ; chaque tâche enchaînée produit le sien,
+  et l'Article 29 exige déjà un compte rendu par tâche.
+- **ANALYSE** — les constats appartiennent au process exécuté, jamais à la manière de l'exécuter.
+- **PLAN D'ACTION** — sans constat propre, rien à retenir ni à écarter ; le plan vit dans le rapport
+  de chaque tâche enchaînée (Article 28).
+
+Les deux maillons qu'il GARDE, en revanche, sont le cœur de ce mode : **QUESTIONS** (toute question
+passe par une fenêtre dédiée, et une question posée ne bloque rien — on prend une tâche de réserve
+plutôt que d'attendre ou de décider à sa place) et **TÂCHES DE TRAVAIL** (la file vient du suivi
+durable, jamais d'une liste improvisée).

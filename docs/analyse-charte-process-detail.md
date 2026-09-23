@@ -98,3 +98,45 @@ QUESTIONS, la 9 les TÂCHES DE TRAVAIL dans `docs/suivi/`, la 11 la trace de ce 
 - **Il ne juge pas si une règle MÉRITE de rester.** Il dit ce qu'elle pèse, qui la tient, et ce
   qu'on a déjà tenté dessus.
 - **Il ne bloque rien.** Comme god-of-all-process : il signale.
+
+## Les deux mécanismes ajoutés le 2026-09-23 (dette documentaire payée à la Ronde GOAT MAX)
+
+*(Inscrits ici parce que le contrôleur `angel-of-ia-process` a nommé leur absence : trois commits
+avaient changé `scripts/moise-tables-de-loi.mjs` sans toucher ce document, qui décrivait donc un
+process qui n'existait plus tel quel. La règle qu'ils enfreignaient vit dans
+`docs/mode-auto-process-guardian.md` § « Toute modification INDIRECTE d'un process se solde par une
+mise à jour DIRECTE de son document ».)*
+
+**`protegerLaCharte(avant, apres)` — la charte se protège d'elle-même pendant qu'on la découpe.**
+Lancée automatiquement à chaque commit qui touche `CLAUDE.md`, et seulement ceux-là : un contrôle
+qui parle pour rien cesse d'être lu. Cinq contrôles, chacun né d'un risque réel de la campagne du
+2026-09-23 :
+
+| Contrôle | Verdict | Pourquoi ce niveau |
+|---|---|---|
+| un Article a DISPARU | BLOQUANT | une règle retirée par accident s'applique en silence pendant des semaines |
+| un Article inséré AU MILIEU de la numérotation | BLOQUANT | casse les renvois de 181 fichiers (interdit dès le préambule de la charte) |
+| un chemin cité devenu INATTEIGNABLE | BLOQUANT | distinction stricte entre « perdu » et « atteignable en un saut » : le second EST le but d'un renvoi, le traiter en régression interdirait toute compression légitime |
+| un Article VIDÉ de plus de la moitié de ses obligations | QUESTION | vider est parfois le geste voulu — l'Article 19 a perdu trois cinquièmes de son texte le même jour, délibérément |
+| un changement absent de la MÉMOIRE DES OPÉRATIONS | QUESTION | git garde le QUOI, `docs/referentiel/charte-operations.md` garde le POURQUOI |
+
+**Sa limite, déclarée plutôt que découverte** : il protège la STRUCTURE, jamais le SENS. Aucun
+programme ne peut juger qu'une règle retirée était vraiment devenue inutile — ça reste une décision
+humaine, et c'est ce que dit son champ `horsPortee`.
+
+**`rapportDeCampagne(depuis)` — l'étape « synthèse » rendue reproductible.**
+Le process exigeait déjà de livrer une synthèse à l'utilisateur ; elle n'existait que dans la tête
+de l'agent qui l'écrivait, donc elle mourait avec la session. Cette commande
+(`node scripts/moise-tables-de-loi.mjs rapport [depuis]`) la produit à la demande.
+
+**Elle ne STOCKE aucun chiffre** — elle relit git pour l'état AVANT, le disque pour l'APRÈS, et
+croise les deux avec la mémoire des opérations. Un nombre recopié se serait périmé au commit
+suivant (Article 24). Elle rend **les deux indicateurs séparément, jamais l'un sans l'autre** : les
+TOKENS (ce que le document coûte) et les OBLIGATIONS (ce qu'il sature) — et dit dans la même phrase
+pourquoi ils ne sont pas interchangeables, puisque couper du récit fait tomber les tokens sans
+libérer la moindre attention.
+
+**Ce que son premier vrai lancement a trouvé, et c'est pour ça qu'on lance un outil neuf contre le
+vrai dépôt (Article 25)** : un bug dans elle-même — le dernier Article avalait toutes les sections
+qui le suivaient et affichait 40 obligations au lieu de 7. Un chiffre faux ressemble exactement à
+une mesure. Borne explicite posée, verrouillée par un test.

@@ -491,8 +491,35 @@ export function classifyRereadVolume(taskCount) {
 // fenêtre de calibrage. `deepReaderIndexText` : le texte déjà lu du registre ; `sessionsDir`/`readDir`/
 // `readFile`/`exists` : mêmes paramètres injectables que countTasksSince(), pour rester testable sans
 // toucher au vrai disque.
+// LE REGISTRE SE LIT, IL NE SE PASSE PAS (2026-09-23, Ronde GOAT MAX — leçon L5).
+//
+// CE QUI S'EST RÉELLEMENT PASSÉ, et c'est pour ça que ce chemin existe : appelée sans argument
+// pendant la Ronde, cette fonction a répondu « Aucun passage THE-DEEP-READER encore enregistré »
+// — avec aplomb, alors que le registre en contenait un depuis trois jours (dernière tâche
+// couverte #178). Elle n'avait pas lu un registre vide : elle n'avait RIEN lu du tout, et rendait
+// l'absence de données comme une donnée. C'est exactement la leçon L5 du projet, et la réponse
+// fausse qu'elle produisait était la PLUS CHÈRE de toutes — « relis tout depuis le début ».
+//
+// DEUX CORRECTIONS, jamais une seule :
+//   1. le registre se LIT par défaut (Article 24 : un registre se lit, il ne se recopie ni ne
+//      s'attend d'un appelant qui peut l'oublier) — le texte reste passable pour les tests ;
+//   2. « je n'ai pas pu lire » cesse d'être confondu avec « il n'y a rien » : un registre
+//      introuvable rend `mesurable: false`, jamais une borne inventée.
+export const REGISTRE_DEEP_READER = "docs/suivi/relectures-lourdes/index.md";
+
 export function recommendRereadBoundary(deepReaderIndexText, sessionsDir, readDir, readFile, exists) {
-  const lastCovered = lastCoveredTaskNumber(deepReaderIndexText);
+  let texte = deepReaderIndexText;
+  if (texte === undefined || texte === null) {
+    try { texte = readFileSync(`${ROOT}${REGISTRE_DEEP_READER}`, "utf8"); }
+    catch {
+      return {
+        mesurable: false,
+        borne: "inconnue",
+        raison: `Registre ${REGISTRE_DEEP_READER} introuvable — je n'ai pas pu REGARDER, ce qui n'est jamais la même chose que n'avoir RIEN TROUVÉ. Aucune borne proposée : en inventer une reviendrait à recommander « tout depuis le début », la relecture la plus chère possible, sur une absence de mesure.`,
+      };
+    }
+  }
+  const lastCovered = lastCoveredTaskNumber(texte);
   if (lastCovered === undefined) {
     return { borne: "debut", raison: "Aucun passage THE-DEEP-READER encore enregistré — première relecture, forcément depuis le début (aucun ordre de grandeur mesurable pour l'instant)." };
   }

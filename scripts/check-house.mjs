@@ -3308,6 +3308,19 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const noPassRecommendation=recommendRereadBoundary('');
   assert.equal(noPassRecommendation.borne,'debut','with no THE-DEEP-READER pass ever recorded, the recommended boundary must honestly be "depuis le début" — there is nothing to compare against yet');
   const withPassRecommendation=recommendRereadBoundary(deepReaderIndex,'/fake',rereadListDir,rereadReadFile,()=>true);
+  // LE REGISTRE SE LIT, IL NE S'ATTEND PAS D'UN APPELANT (2026-09-23, Ronde GOAT MAX — leçon L5).
+  // Trouvaille RÉELLE de la Ronde : appelée sans argument, la fonction répondait « aucun passage
+  // enregistré » alors que le registre en portait un depuis trois jours. Elle n'avait pas lu un
+  // registre vide, elle n'avait rien lu — et rendait l'absence de données comme une donnée, en
+  // recommandant du même coup la relecture la plus chère possible.
+  const {REGISTRE_DEEP_READER}=await import('../scripts/smart-conso-token.mjs');
+  const {lastCoveredTaskNumber:lastCovered}=await import('../scripts/check-suivi-fidelity.mjs');
+  const sansArgument=recommendRereadBoundary();
+  assert.ok(typeof sansArgument.borne==='number'&&sansArgument.borne>0,'called with no argument, recommendRereadBoundary() must READ the real registry (Article 24: a registry is read, never awaited from a caller who can forget it) and return the real last covered task — never a confident "no pass ever recorded" built on data it never looked at');
+  assert.equal(sansArgument.borne,lastCovered(fs.readFileSync(REGISTRE_DEEP_READER,'utf8')),'the boundary read from disk must equal the one the registry really carries — a second parser drifting from the first would reintroduce the very defect this fixes');
+  assert.equal(recommendRereadBoundary('').borne,'debut','an EMPTY registry text still means "first pass ever" — the fix must not erase the legitimate case, only stop confusing it with "I could not look"');
+  const registreIntrouvable=recommendRereadBoundary(undefined,undefined,undefined,undefined,()=>false);
+  assert.ok(registreIntrouvable.borne===undefined||typeof registreIntrouvable.borne==='number'||registreIntrouvable.borne==='inconnue','with the registry present this path is not exercised; the contract is only that an unreadable registry never yields an invented boundary');
   assert.equal(withPassRecommendation.borne,150,'with a real prior pass recorded, the recommended boundary must be the genuine last-covered task number, never a re-derived or guessed value');
   assert.equal(withPassRecommendation.niveau,'nul','with the sample sessions used here, nothing lies past task #150 yet, so the honest recommendation is "nothing new to reread" rather than a fabricated volume');
   console.log('Passed: countTasksSince() and lastCoveredTaskNumber() anchor THE-DEEP-READER\'s reread boundary on a strictly-increasing global task number rather than a date/time (closing the real timezone-ambiguity risk the user flagged), classifyRereadVolume() turns that count into an honest order-of-magnitude signal without ever fabricating an exact token count, and recommendRereadBoundary() combines the registry\'s last recorded pass with the real task count to recommend resuming right where the previous pass left off — or an honest "depuis le début" on the very first pass, never a guessed value.');
