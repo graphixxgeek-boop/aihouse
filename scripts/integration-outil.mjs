@@ -27,7 +27,7 @@
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { PROCESSES } from "./god-of-all-process.mjs";
 import { join } from "node:path";
-import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReliabilityNotice, sansAccents } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader } from "./report-template.mjs";
 
@@ -143,10 +143,17 @@ function blocApres(texte, nom) {
 function slugsDansBloc(texte, nom) {
   return new Set([...blocApres(texte, nom).matchAll(/["'{\s]slug:\s*["']([a-z0-9-]+)["']|^\s*["']([a-z0-9-]+)["']\s*:/gm)].map((m) => m[1] ?? m[2]).filter(Boolean));
 }
+// Les noms sont NORMALISÉS avant comparaison (2026-09-23) : sans ça, « MOÏSE-TABLES-DE-LOI » ne
+// pouvait jamais correspondre à son slug sans accent, et le contournement trouvé sur le moment —
+// glisser un chemin de script dans le catalogue pour que ce lecteur-ci le voie — a créé un outil
+// FANTÔME nommé « scripts » chez un autre lecteur, qui découpe sur le « / ». Satisfaire un
+// garde-fou en lui donnant une chaîne qu'un second lecteur interprète autrement n'est pas une
+// correction, c'est un déplacement du défaut (Article 3).
 function nomsOuScripts(texte, nom) {
   const bloc = blocApres(texte, nom);
   const parScript = [...bloc.matchAll(/scripts\/([a-z0-9-]+)\.mjs/g)].map((m) => m[1]);
-  const parNom = [...bloc.matchAll(/["']([A-Za-z][A-Za-z0-9-]{2,})["']/g)].map((m) => m[1].toLowerCase());
+  const parNom = [...sansAccents(bloc).matchAll(/["']([A-Za-z][A-Za-z0-9 -]{2,})["']/g)]
+    .map((m) => m[1].trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""));
   return new Set([...parScript, ...parNom]);
 }
 function chemin_scripts(texte, nom) {

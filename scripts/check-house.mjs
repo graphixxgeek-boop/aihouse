@@ -10791,3 +10791,60 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log('Passed: the Article 19 guard exists at last (2026-09-23, task #616) — "comprendre avant de toucher" had 287 citations across this repository, the highest count of any rule, and nothing whatsoever enforced it. The guard does not claim to verify understanding, which no program can read; it verifies what the Article names in so many words, that a written reason must not DISAPPEAR, since removing one risks reintroducing a bug already solved once. X6 already counted guards with no explanation, and nobody watched explanations leaving. The distinction that makes it honest is moved-versus-deleted: the very day it was written, seven comment blocks migrated between files alongside the code they explained, and a naive version would have shouted seven times at a perfectly clean move — so the fingerprint of the removed text is looked for in the repository as it stands, whitespace-insensitive, before anything is reported. It abstains three ways rather than accuse: an ordinary comment carrying no marker, a deleted line of code that merely contains a date, and a comment too short to fingerprint. Its first real run over thirty commits bit exactly once, on a commit one hour old: the user\'s original request explaining why CHARTER-SPY was built had not travelled with the code I had just moved — the Article 19 failure committed while building the tool that prevents it, now restored word for word where the functions live.');
 }
+
+{
+  // PERTINENCE ET LOGIQUE (2026-09-23) — la réponse à une question directe de l'utilisateur :
+  // « est-ce que Moïse est capable de détecter si un article n'a rien à faire ici ? est-ce qu'il
+  // analyse la pertinence ? la logique ? ». La réponse honnête était NON : il mesurait un poids,
+  // des citations, un porteur, une nature — aucune de ces quatre mesures ne dit si une règle MÉRITE
+  // d'être là. Ces assertions couvrent ce qu'il sait désormais faire, et surtout la ligne rouge
+  // posée dans la même phrase : « sur ce type de choix, toujours me consulter ».
+  const mtl = await import('../scripts/moise-tables-de-loi.mjs');
+
+  const faux = [
+    { article: 1, titre: 'Bien cité, court, porté', lignes: 5, citations: 90, porteur: 'porté', porteurFantomes: [], texte: 'Il doit toujours en être ainsi.' },
+    { article: 2, titre: 'Long sans porteur', lignes: 40, citations: 60, porteur: 'sans porteur', porteurFantomes: [], texte: 'Cette règle exige quelque chose et ne nomme aucun mécanisme.' },
+    { article: 3, titre: 'Pure explication', lignes: 10, citations: 40, porteur: 'porté', porteurFantomes: [], texte: 'Ceci raconte une histoire, sans rien prescrire du tout.' },
+    { article: 4, titre: 'Fantôme', lignes: 6, citations: 50, porteur: 'fantôme', porteurFantomes: ['nExistePas'], texte: 'Cette règle doit être tenue.' },
+  ];
+  const pert = mtl.analyserPertinence(faux);
+  const parArticle = new Map(pert.questions.map((q) => [q.article, q.signaux.map((s) => s.cle)]));
+  assert.equal(parArticle.has(1), false, 'an article that is short, heavily cited and carries a real mechanism must raise NO question — a signal that fires on a healthy rule teaches everyone to ignore it (leçon L4)');
+  assert.ok(parArticle.get(2).includes('sans-porteur-et-long'), 'a long rule with no named mechanism must raise the question of what actually holds it up');
+  assert.ok(parArticle.get(3).includes('sans-obligation'), 'a section that prescribes nothing must be flagged as an explanation misfiled among rules — context belongs in a document read on demand, not in one reloaded at every message');
+  assert.ok(parArticle.get(4).includes('porteur-fantome'), 'a rule announcing a protection that does not exist must always raise a question');
+
+  // LA LIGNE ROUGE, VÉRIFIÉE DANS LE CODE ET PAS SEULEMENT PROMISE EN PROSE.
+  assert.ok(pert.questions.every((q) => q.etat === 'à trancher'), 'every pertinence finding must carry the single state "à trancher" — the tool has no vocabulary to conclude, which is the mechanism behind the user\'s instruction that this kind of choice always comes back to him');
+  assert.ok(mtl.SIGNAUX_DE_PERTINENCE.every((s) => s.question.trim().endsWith('?')), 'and each signal must be phrased as a QUESTION rather than a verdict: a tool that could write "this article is useless" would eventually see that judgement applied by nobody in particular');
+  assert.equal(mtl.analyserPertinence([{ article: 0, titre: 'loi suprême', lignes: 90, citations: 1, porteur: 'sans porteur', porteurFantomes: [], texte: 'rien' }]).questions.length, 0, 'Article 0 is never questioned, whatever its measurements say — it is out of scope by the user\'s explicit decision, and a signal firing on it would be an error every single time');
+
+  // LE SEUIL SE DÉRIVE, IL NE SE RECOPIE PAS (Article 24).
+  const bas = mtl.seuilRendementFaible([{ lignes: 10, citations: 10 }, { lignes: 10, citations: 30 }, { lignes: 10, citations: 50 }]);
+  assert.ok(bas > 0 && bas < 3, 'the yield threshold must be derived from the charter\'s own distribution (median divided by three), never a round number written by hand that would stop being true at the first article added');
+  assert.equal(mtl.seuilRendementFaible([]), 0, 'and an empty charter must yield zero rather than crash or invent a threshold out of nothing');
+
+  // LA LOGIQUE : un recouvrement DÉCLARÉ n'est pas un problème, un recouvrement TU en est un.
+  const proches = [
+    { article: 7, texte: 'consommation quota modèle appel budget mesure rythme économie diagnostic simulation' },
+    { article: 8, texte: 'consommation quota modèle appel budget mesure rythme économie diagnostic simulation' },
+  ];
+  assert.equal(mtl.findRecouvrementsNonDeclares(proches).length, 1, 'two rules sharing their whole vocabulary without either naming the other must raise a logic question: two rules governing the same ground, and nothing says which one wins');
+  const declares = [
+    { article: 7, texte: 'consommation quota modèle appel budget mesure rythme économie diagnostic simulation. Frontière avec l\'Article 8, jamais confondus.' },
+    { article: 8, texte: 'consommation quota modèle appel budget mesure rythme économie diagnostic simulation' },
+  ];
+  assert.deepEqual(mtl.findRecouvrementsNonDeclares(declares), [], 'but a pair that explicitly declares its frontier must never be reported — this charter deliberately contains several such pairs, and flagging them would bury the one case that matters');
+
+  // Branché sur le VRAI dépôt, parce qu'un outil qui n'a jamais tourné contre lui n'est pas
+  // vérifié, c'est une intention (Article 25).
+  const { budgetInstructions: bi } = await import('../scripts/ecotoken.mjs');
+  const vrai = mtl.diagnosticComplet({ mesurerObligations: bi });
+  assert.ok(vrai.pertinence.questions.length > 0, 'the real charter must actually produce pertinence questions — a detector that finds nothing on a 1264-line document has not been calibrated, it has been switched off');
+  assert.ok(vrai.pertinence.questions.every((q) => q.signaux.length >= 1), 'and every question must name at least one concrete finding rather than a bare suspicion');
+  assert.ok(Array.isArray(vrai.recouvrements), 'the logic pass must run against the real charter too, reporting an empty list honestly rather than not running at all');
+
+  assert.ok(mtl.ETAPES_ANALYSE.some((e) => e.cle === 'pertinence'), 'and the process must carry the step, so the questions reach the user instead of dying inside a report (Article 28)');
+
+  console.log('Passed: MOÏSE-TABLES-DE-LOI now analyses PERTINENCE and LOGIC (2026-09-23), answering a direct question whose honest answer had been no — it measured weight, citations, porteur and nature, and none of those four says whether a rule DESERVES to be there. Five named signals replace a score, because a score aggregates and therefore hides: never cited, long with no mechanism, prescribes nothing at all, announces a protection that does not exist, and costs far more lines than it returns in citations — that last threshold derived from the charter\'s own median rather than written by hand, so it cannot go stale. The red line the user drew in the same sentence is enforced in the code rather than promised in prose: every finding carries the single state "à trancher", every signal is phrased as a question, and the tool owns no vocabulary that could conclude — a tool able to write "this article is useless" would eventually have that judgement applied by nobody in particular. Article 0 is never questioned whatever its numbers. On the logic side, vocabulary overlap alone is a weak signal since this charter deliberately holds several pairs that declare their frontier; what raises a question is overlap plus silence, two rules governing the same ground with nothing saying which one wins.');
+}

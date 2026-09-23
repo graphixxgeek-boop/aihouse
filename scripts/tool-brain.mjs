@@ -128,17 +128,56 @@ export function formatToolBrainReminder({ prestations = PRESTATIONS } = {}) {
 // le même outil comme "jamais sollicité" sous deux identités différentes. Même découpage déjà
 // établi ailleurs dans ce fichier (`badgeWarningsForOutils()`, `findToolsMissingFromMenu()`) —
 // jamais une troisième règle divergente.
+// UN CHEMIN DE FICHIER N'EST PAS UN OUTIL (2026-09-23). Deux entrées de PRESTATIONS nomment un
+// document ou un script en guise d'outil (« docs/simulations/correctifs-a-revalider.md »,
+// « scripts/... »). Le découpage sur « / » en tirait alors le premier segment — « docs »,
+// « scripts » — et fabriquait des outils FANTÔMES, comptés comme « jamais sollicités » alors
+// qu'ils n'existent pas et ne pourront jamais l'être. Un compteur qui reproche une inaction sur
+// une entité inexistante use la crédibilité de tous ses autres reproches (leçon L4).
+// La distinction est un CHEMIN (avec un dossier devant) contre un NOM DE FICHIER NU. Ce projet
+// nomme réellement certains outils par leur fichier — « check-house.mjs » est son nom, pas une
+// référence. Couper sur l'extension seule les effaçait tous les deux, ce qui remplaçait un faux
+// positif par un angle mort : un outil disparu du compteur n'est pas un outil dont le compteur
+// dit la vérité. Seul un chemin comportant un dossier est écarté.
+const EST_UN_CHEMIN = /^(?:docs|scripts|lib|app|components)\//i;
+
 export function knownToolSlugsFromPrestations(prestations = PRESTATIONS) {
-  return [...new Set(prestations.flatMap((p) => p.outils.map((o) => slugifyAgentName(o.split(/[/(]/)[0].trim()))))];
+  return [...new Set(
+    prestations
+      .flatMap((p) => p.outils)
+      .filter((o) => !EST_UN_CHEMIN.test(String(o).trim()))
+      .map((o) => slugifyAgentName(o.split(/[/(]/)[0].trim())),
+  )];
 }
 
-export function buildToolBrainUsageReport(history, prestations = PRESTATIONS) {
+// COUVERT PAR LE CROCHET ≠ JAMAIS SOLLICITÉ (2026-09-23). `check-house.mjs` tourne à CHAQUE commit,
+// avant et après, et n'a jamais enregistré une sollicitation de sa vie : le compteur ne voit que
+// les appels qui passent par lui. Le déclarer « jamais sollicité » était exact au sens du registre
+// et faux au sens de la réalité — la pire espèce d'indicateur, celui qui a techniquement raison.
+// La liste ne s'énumère pas : elle se DÉRIVE du code du crochet lui-même (Article 24), donc un
+// outil câblé demain y entrera sans qu'une ligne bouge ici.
+export function outilsCouvertsParLeCrochet(sourceCrochet = "", slugs = []) {
+  const texte = String(sourceCrochet);
+  return slugs.filter((slug) => {
+    const script = slug.replace(/-mjs$/, ".mjs");
+    return texte.includes(`${script}`) || texte.includes(`"${slug}"`) || texte.includes(`'${slug}'`);
+  });
+}
+
+export function buildToolBrainUsageReport(history, prestations = PRESTATIONS, { sourceCrochet = "" } = {}) {
   const slugs = knownToolSlugsFromPrestations(prestations);
   const perTool = slugs
     .map((slug) => ({ slug, ...toolUsageStats(history, slug) }))
     .sort((a, b) => a.total - b.total);
-  const neverUsed = toolsNeverUsed(history, slugs);
-  return { perTool, neverUsed };
+  const bruts = toolsNeverUsed(history, slugs);
+  // Trois états, jamais deux : réellement jamais sollicité · couvert par le crochet (donc sollicité
+  // à chaque commit sans passer par le compteur) · sollicité.
+  const couverts = new Set(outilsCouvertsParLeCrochet(sourceCrochet, bruts));
+  return {
+    perTool,
+    neverUsed: bruts.filter((s) => !couverts.has(s)),
+    couvertsParLeCrochet: [...couverts],
+  };
 }
 
 // --- 4. Auto-diagnostic borné au périmètre de tool-brain lui-même (2026-09-21, précision explicite
@@ -168,13 +207,17 @@ export function diagnoseToolBrainSelf(history, { checkLastCommitSource } = {}) {
 // apporter sur le systeme global "tool-brain" »). Disponible aux deux déclenchements demandés : à
 // chaque Ronde (cf. circle-tasks.mjs, item "tool-brain-report") ET à la demande (CLI ci-dessous).
 export function formatToolBrainReport({ history, prestations = PRESTATIONS, checkLastCommitSource, now = Date.now() } = {}) {
-  const { perTool, neverUsed } = buildToolBrainUsageReport(history, prestations);
+  // `checkLastCommitSource` sert deux fois : à l'auto-diagnostic (est-ce que tool-brain est câblé ?)
+  // et désormais à distinguer « jamais sollicité » de « couvert par le crochet ». Un seul fichier
+  // lu, deux questions répondues — jamais une seconde lecture pour la même source.
+  const { perTool, neverUsed, couvertsParLeCrochet } = buildToolBrainUsageReport(history, prestations, { sourceCrochet: checkLastCommitSource ?? "" });
   const self = diagnoseToolBrainSelf(history, { checkLastCommitSource });
   const lines = [
     "=== tool-brain — rapport de Ronde ===",
     `Date : ${new Date(now).toISOString()}`,
     "",
     neverUsed.length ? `${neverUsed.length} outil(s) du catalogue jamais sollicité(s) : ${neverUsed.join(", ")}.` : "Tous les outils connus du catalogue ont déjà été sollicités au moins une fois.",
+    couvertsParLeCrochet.length ? `${couvertsParLeCrochet.length} outil(s) n'apparaissent pas au compteur mais tournent à CHAQUE commit via le crochet : ${couvertsParLeCrochet.join(", ")} — leur silence n'est pas une inaction.` : "",
     "",
     "Outils les moins sollicités (total cumulé, jamais remis à zéro) :",
     ...perTool.slice(0, 10).map((t) => `- ${t.slug} : ${t.total} sollicitation(s)${t.foundSomethingRate != null ? `, ${t.foundSomethingRate}% de trouvailles confirmées` : ""}`),

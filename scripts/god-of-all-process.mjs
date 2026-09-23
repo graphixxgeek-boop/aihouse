@@ -98,6 +98,12 @@ export const PROCESSES = [
       { cle: "cartographie", libelle: "régénérer la cartographie (poids, citations, porteur, nature)", preuve: { fichier: "docs/referentiel/charte-cartographie.md" } },
       { cle: "table-regles", libelle: "régénérer la table de classification", preuve: { fichier: "docs/referentiel/claude-md-regles.md" } },
       { cle: "accueil", libelle: "vérifier chaque document d'accueil avant de proposer un renvoi", preuve: null },
+      // AJOUTÉE le 2026-09-23, sur une consigne explicite de l'utilisateur posée dans la même
+      // phrase que la question qui a créé l'analyse de pertinence : « sur ce type de choix,
+      // toujours me consulter, process ». L'étape ne dit pas « décider si un Article reste » — elle
+      // dit « porter la question ». La nuance est le mécanisme : un process qui autoriserait à
+      // conclure laisserait un jour appliquer un retrait que personne n'a validé.
+      { cle: "pertinence", libelle: "passer les signaux de pertinence et de logique, et porter chacun à l'utilisateur comme une QUESTION", preuve: null },
       { cle: "analyse", libelle: "l'analyse elle-même — produite par l'agent, jamais par l'outil", preuve: null },
       { cle: "plan-action", libelle: "le plan d'action, chaque constat portant son état (Article 28)", preuve: null },
       { cle: "questions", libelle: "poser les questions de calibrage en fenêtre dédiée avant toute application (Article 16)", preuve: null },

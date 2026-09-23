@@ -30,7 +30,7 @@ Le poids qui grossit n'est PAS un déclencheur : le filon mécanique est épuis�
 (31 passages ecotoken, une seule proposition jamais acceptée), et relancer le process pour gratter
 quelques centaines de tokens coûterait plus qu'il ne rend.
 
-## Les onze étapes, dans cet ordre, et l'ordre n'est pas décoratif
+## Les douze étapes, dans cet ordre, et l'ordre n'est pas décoratif
 
 | # | Étape | Preuve vérifiable |
 |---|---|---|
@@ -39,6 +39,7 @@ quelques centaines de tokens coûterait plus qu'il ne rend.
 | 3 | **Régénérer la cartographie** (poids, citations, porteur, nature) | `docs/referentiel/charte-cartographie.md` |
 | 4 | **Régénérer la table de classification** (sensibilité, importance, redondances) | `docs/referentiel/claude-md-regles.md` |
 | 5 | **Vérifier chaque document d'accueil** avant de proposer le moindre renvoi | — |
+| 5bis | **Les signaux de PERTINENCE et de LOGIQUE** — portés à l'utilisateur comme des QUESTIONS | — |
 | 6 | **L'analyse** — produite par l'agent, jamais par l'outil | — |
 | 7 | **Le plan d'action** — chaque constat porte son état : retenu / écarté avec sa raison / à trancher (Article 28) | — |
 | 8 | **Les questions de calibrage** en fenêtre dédiée, AVANT toute application (Article 16) | — |
@@ -56,6 +57,12 @@ Articles.
 
 **Pourquoi 5 avant 7.** Un plan qui propose un renvoi vers un document inexistant est un plan qu'on
 ne peut pas exécuter. Le cas est réel, pas théorique.
+
+**Pourquoi 5bis n'autorise pas à conclure, et c'est tout son intérêt.** L'utilisateur a posé la
+consigne dans la phrase même qui demandait cette capacité : « sur ce type de choix, toujours me
+consulter, process ». L'outil produit donc des signaux nommés, jamais un score et jamais un verdict —
+son seul état possible est « à trancher », et il n'a aucun vocabulaire pour écrire « à retirer ». Un
+outil capable de conclure verrait un jour sa conclusion appliquée sans que personne ne l'ait portée.
 
 **Pourquoi 9 existe, et il a fallu se le faire refuser pour l'écrire.** La première version de ce
 process passait du plan d'action directement à la livraison. Le garde-fou de la chaîne de

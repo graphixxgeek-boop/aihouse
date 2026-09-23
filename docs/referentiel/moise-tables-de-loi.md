@@ -93,6 +93,50 @@ légitime et faire passer une reconstitution pour un enregistrement ne l'est pas
 que décorative : elle remonte l'historique de CET Article et met en évidence les opérations
 **annulées**, qui sont l'information la plus chère du registre.
 
+## La PERTINENCE et la LOGIQUE — et la ligne rouge qui les encadre
+
+*(Ajoutées le 2026-09-23 après une question directe de l'utilisateur : « est-ce que l'outil Moïse
+est bien capable de détecter si un article n'a rien à faire ici ou s'il n'est pas utile ? [...]
+est-ce que Moïse analyse la pertinence ? la logique ? ». **La réponse honnête était non**, et
+c'est ce qui a motivé cette partie.)*
+
+Moïse mesurait un poids, des citations, un porteur, une nature. **Aucune de ces quatre mesures ne
+dit si une règle MÉRITE d'être là**, ni si deux règles se contredisent. Un outil qui dit tout du
+COMBIEN et rien du POURQUOI laisse la seule question qui compte à la mémoire de l'agent — donc
+perdue à la session suivante (Article 27).
+
+**LA LIGNE ROUGE, posée par l'utilisateur dans la même phrase** : « sur ce type de choix, toujours
+me consulter, process ». Elle n'est pas une précaution de style, elle est **écrite dans le code** :
+`etat` ne prend qu'une seule valeur, « à trancher », et chaque signal est formulé comme une
+QUESTION. L'outil n'a aucun vocabulaire pour conclure. Un outil capable d'écrire « cet Article est
+inutile » verrait un jour ce jugement appliqué sans que personne ne l'ait porté.
+
+**Cinq signaux nommés plutôt qu'un score** — un score agrège, donc il cache ; cinq signaux séparés
+laissent voir POURQUOI la question se pose :
+
+| Signal | La question qu'il ouvre |
+|---|---|
+| jamais cité | est-ce que quelque chose s'appuie réellement sur cette règle ? |
+| long sans porteur | une règle que rien ne fait respecter et que personne ne relit tient-elle debout ? |
+| sans obligation | est-ce une règle, ou une explication rangée au mauvais endroit ? |
+| porteur fantôme | la règle annonce-t-elle une protection qui n'existe pas ? |
+| poids sans retour | ce que ça coûte à chaque message est-il en rapport avec ce que ça rend ? |
+
+Le seuil du dernier se **DÉRIVE** de la charte elle-même (la médiane des rendements divisée par
+trois), jamais écrit en dur : un seuil recopié cesserait d'être vrai au premier Article ajouté
+(Article 24). **L'Article 0 est exclu de toute analyse de pertinence**, quels que soient ses
+chiffres.
+
+**Côté LOGIQUE** : `findRecouvrementsNonDeclares()`. Le recouvrement de vocabulaire seul est un
+signal faible — cette charte contient plusieurs paires qui déclarent explicitement leur frontière
+(« Frontière avec l'Article 8 », « Distinct de ses voisins »). Ce qui mérite une question, c'est un
+recouvrement fort **ET** aucune frontière écrite : là, deux règles gouvernent le même terrain sans
+que rien ne dise laquelle prime.
+
+**Premier passage réel** : 8 Articles ouvrent une question, aucun n'en cumule deux, et zéro
+recouvrement non déclaré. Un résultat honnête et plutôt rassurant — la charte est plus saine que
+lourde.
+
 ## Ses cinq sorties
 
 | Commande | Pour qui | Ce qu'elle rend |

@@ -463,6 +463,116 @@ export function renderCartographie(carto, { date = new Date().toISOString().slic
 }
 
 // ---------------------------------------------------------------------------------------------
+// PARTIE 2bis — LA PERTINENCE ET LA LOGIQUE (2026-09-23, question directe de l'utilisateur :
+// « est-ce que l'outil Moïse est bien capable de détecter si un article n'a rien à faire ici ou
+// s'il n'est pas utile ? [...] est-ce que Moïse analyse la pertinence ? la logique ? »).
+//
+// LA RÉPONSE HONNÊTE ÉTAIT NON, et c'est ce qui a motivé cette partie. Moïse mesurait un poids,
+// des citations, un porteur, une nature. Aucune de ces quatre mesures ne dit si une règle MÉRITE
+// d'être là, ni si deux règles se contredisent. Un outil qui dit tout du COMBIEN et rien du
+// POURQUOI laisse la seule question qui compte à la mémoire de l'agent — donc perdue à la session
+// suivante (Article 27).
+//
+// LA LIGNE ROUGE, POSÉE PAR L'UTILISATEUR LUI-MÊME DANS LA MÊME PHRASE : « sur ce type de choix,
+// toujours me consulter, process ». Aucun signal de pertinence ne conclut jamais. Il OUVRE une
+// question, il ne la tranche pas, et le code lui-même refuse de produire un verdict : `etat` ne
+// prend qu'une seule valeur, « à trancher ». Ce n'est pas une précaution de style — un outil
+// capable d'écrire « cet Article est inutile » finirait par voir ce jugement appliqué sans que
+// personne ne l'ait porté.
+//
+// POURQUOI DES SIGNAUX ET PAS UN SCORE : un score agrège, donc il cache. Cinq signaux nommés
+// séparément laissent voir POURQUOI la question se pose, et un seul d'entre eux suffit rarement —
+// c'est leur accumulation qui mérite qu'on s'arrête.
+// ---------------------------------------------------------------------------------------------
+
+export const SIGNAUX_DE_PERTINENCE = [
+  {
+    cle: "jamais-cite",
+    question: "Est-ce que quelque chose, dans ce projet, s'appuie réellement sur cette règle ?",
+    detecte: (m) => m.citations <= 3,
+    dire: (m) => `cité ${m.citations} fois seulement dans tout le dépôt — la charte est le seul endroit qui en parle`,
+  },
+  {
+    cle: "sans-porteur-et-long",
+    question: "Une règle que rien ne fait respecter et que personne ne relit tient-elle encore debout ?",
+    detecte: (m) => m.porteur === "sans porteur" && m.lignes >= 20,
+    dire: (m) => `${m.lignes} lignes sans aucun mécanisme nommé — beaucoup de texte pour une règle qui ne repose que sur la mémoire de qui la lit`,
+  },
+  {
+    cle: "sans-obligation",
+    question: "Est-ce une règle, ou une explication rangée au mauvais endroit ?",
+    // Une section de la charte qui ne prescrit RIEN n'est pas une règle : c'est du contexte, et le
+    // contexte se lit à la demande plutôt qu'à chaque message.
+    detecte: (m) => !/\b(doit|doivent|jamais|toujours|obligatoire|interdit|il faut|exige|impose|ne peut)\b/i.test(m.texte),
+    dire: () => "ne contient aucune formulation d'obligation — c'est une explication, pas une prescription",
+  },
+  {
+    cle: "porteur-fantome",
+    question: "La règle annonce-t-elle une protection qui n'existe pas ?",
+    detecte: (m) => m.porteur === "fantôme",
+    dire: (m) => `nomme ${m.porteurFantomes.length} mécanisme(s) introuvable(s) : ${m.porteurFantomes.join(", ")}`,
+  },
+  {
+    cle: "poids-sans-retour",
+    question: "Ce que cette règle coûte à chaque message est-il en rapport avec ce qu'elle rend ?",
+    // Le seuil n'est pas rond par hasard : il est DÉRIVÉ de la distribution réelle (cf.
+    // seuilRendementFaible), jamais choisi à la main — sinon il se périmerait au premier Article
+    // ajouté (Article 24).
+    detecte: (m, { seuilRendement }) => m.lignes >= 20 && m.citations / m.lignes < seuilRendement,
+    dire: (m) => `${m.lignes} lignes pour ${m.citations} citations, soit ${(m.citations / m.lignes).toFixed(1)} par ligne`,
+  },
+];
+
+// Le seuil de rendement se DÉRIVE de la charte elle-même : la médiane des rendements, divisée par
+// trois. Un Article qui rend trois fois moins que la moitié de ses pairs est un vrai décrochage ;
+// un seuil écrit en dur aurait cessé d'être vrai au premier remaniement.
+export function seuilRendementFaible(mesures = []) {
+  const rendements = mesures.map((m) => m.citations / Math.max(1, m.lignes)).sort((a, b) => a - b);
+  if (!rendements.length) return 0;
+  const mediane = rendements[Math.floor(rendements.length / 2)];
+  return mediane / 3;
+}
+
+export function analyserPertinence(mesures = []) {
+  const seuilRendement = seuilRendementFaible(mesures);
+  const questions = [];
+  for (const m of mesures) {
+    if (ARTICLES_HORS_PERIMETRE.has(m.article)) continue; // l'Article 0 ne se discute pas
+    const touches = SIGNAUX_DE_PERTINENCE.filter((s) => s.detecte(m, { seuilRendement }));
+    if (!touches.length) continue;
+    questions.push({
+      article: m.article,
+      titre: m.titre,
+      // UN SEUL ÉTAT POSSIBLE, et c'est le mécanisme de la ligne rouge : ce champ ne peut pas
+      // valoir « à retirer ». L'outil n'a aucun vocabulaire pour conclure.
+      etat: "à trancher",
+      signaux: touches.map((s) => ({ cle: s.cle, question: s.question, constat: s.dire(m) })),
+    });
+  }
+  return { mesurable: true, seuilRendement, questions: questions.sort((a, b) => b.signaux.length - a.signaux.length) };
+}
+
+// LA LOGIQUE : deux Articles qui se recouvrent SANS le dire. Le recouvrement de vocabulaire seul
+// est un signal faible — deux règles peuvent légitimement parler du même sujet, et la charte en
+// contient plusieurs paires qui DÉCLARENT leur frontière (« Frontière avec l'Article 8 »,
+// « Distinct de ses voisins »). Ce qui mérite une question, c'est un recouvrement fort ET aucune
+// frontière écrite : là, deux règles gouvernent le même terrain sans que rien ne dise laquelle
+// prime, et c'est exactement le trou logique que l'Article 20 cherche ailleurs.
+export function findRecouvrementsNonDeclares(mesures = [], { seuil = 0.18 } = {}) {
+  const parNumero = new Map(mesures.map((m) => [m.article, m]));
+  const paires = findRedundantRulePairs(mesures.map((m) => ({ article: m.article, texte: m.texte })), { threshold: seuil });
+  return paires
+    .map(({ a, b, jaccard, motsPartages }) => {
+      const ta = parNumero.get(a)?.texte ?? "";
+      const tb = parNumero.get(b)?.texte ?? "";
+      const declare = new RegExp(`(?:fronti\u00e8re|distinct|jamais confondu|\u00e0 ne pas confondre)[^.]{0,80}Article\\s+${b}\\b`, "i").test(ta)
+        || new RegExp(`(?:fronti\u00e8re|distinct|jamais confondu|\u00e0 ne pas confondre)[^.]{0,80}Article\\s+${a}\\b`, "i").test(tb);
+      return { a, b, jaccard, motsPartages, frontiereDeclaree: declare };
+    })
+    .filter((p) => !p.frontiereDeclaree);
+}
+
+// ---------------------------------------------------------------------------------------------
 // PARTIE 3 — la mémoire, au grain de l'Article (calibrage explicite de l'utilisateur).
 // ---------------------------------------------------------------------------------------------
 
@@ -654,6 +764,8 @@ export function diagnosticComplet({ root = ROOT, fichiers = null, mesurerObligat
   // La couverture se DÉCLARE, elle ne se suppose pas : dire quelle part du document le diagnostic a
   // réellement regardée est ce qui distingue « j'ai tout vu » de « j'ai vu les Articles ».
   const tokensArticles = carto.articles.reduce((n, a) => n + a.tokens, 0);
+  const pertinence = analyserPertinence(carto.articles);
+  const recouvrements = findRecouvrementsNonDeclares(carto.articles);
 
   return {
     mesurable: true,
@@ -662,6 +774,8 @@ export function diagnosticComplet({ root = ROOT, fichiers = null, mesurerObligat
     sections: carto.sections ?? [],
     inventaires,
     couverture: { tokensArticles, tokensDocument: carto.tokens, part: carto.tokens ? Math.round((tokensArticles / carto.tokens) * 100) : 0 },
+    pertinence,
+    recouvrements,
     fantomes,
     sansPorteur,
     aTrancher,
@@ -722,6 +836,22 @@ export function renderDiagnostic(d) {
   if (d.redondances.length) for (const p of d.redondances) L.push(`· Article ${p.a} ↔ Article ${p.b} — ${(p.jaccard * 100).toFixed(0)}% de vocabulaire commun`);
   else L.push("Aucune au seuil strict.");
   L.push("");
+  L.push("--- PERTINENCE : les Articles qui OUVRENT UNE QUESTION (jamais un verdict) ---");
+  L.push("Aucun de ces signaux ne conclut. Chacun pose une question dont la réponse appartient à");
+  L.push("l'utilisateur, et à lui seul — l'outil n'a aucun vocabulaire pour dire « à retirer ».");
+  if (!d.pertinence?.questions.length) L.push("Aucun Article ne déclenche de signal de pertinence.");
+  else {
+    L.push(`Seuil de rendement DÉRIVÉ de la charte elle-même : ${d.pertinence.seuilRendement.toFixed(2)} citation(s) par ligne.`);
+    for (const q of d.pertinence.questions) {
+      L.push(`· Art.${q.article} — ${q.titre.replace(/\n/g, " ").slice(0, 55)} [${q.etat}, ${q.signaux.length} signal/aux]`);
+      for (const sg of q.signaux) L.push(`    ${sg.question}\n      constat : ${sg.constat}`);
+    }
+  }
+  L.push("");
+  L.push("--- LOGIQUE : deux Articles qui se recouvrent SANS déclarer leur frontière ---");
+  if (!d.recouvrements?.length) L.push("Aucun : chaque paire au vocabulaire proche déclare explicitement sa frontière.");
+  else for (const r of d.recouvrements) L.push(`· Article ${r.a} ↔ Article ${r.b} — ${(r.jaccard * 100).toFixed(0)}% de vocabulaire commun, ${r.motsPartages} mots partagés, et AUCUN des deux ne dit lequel prime`);
+  L.push("");
   L.push(`--- Ce qui attend une décision humaine : ${d.aTrancher.length} Article(s) ---`);
   L.push("Leur nature est PROPOSÉE par la mesure, jamais tranchée. Aucun geste ne part d'une nature proposée.");
   return L;
@@ -742,6 +872,7 @@ export const ETAPES_ANALYSE = [
   { cle: "cartographie", libelle: "régénérer la cartographie (poids, citations, porteur mécanique, nature)", preuve: CARTOGRAPHIE_PATH },
   { cle: "table-regles", libelle: "régénérer la table de classification (sensibilité, importance, redondances)", preuve: TABLE_REGLES_PATH },
   { cle: "accueil", libelle: "vérifier chaque document d'accueil avant de proposer le moindre renvoi", preuve: null },
+  { cle: "pertinence", libelle: "passer les signaux de PERTINENCE et de LOGIQUE — et porter chacun à l'utilisateur comme une QUESTION, jamais comme un constat à appliquer (« sur ce type de choix, toujours me consulter »)", preuve: null },
   { cle: "analyse", libelle: "l'analyse elle-même — produite par l'agent, jamais par l'outil", preuve: null },
   { cle: "plan-action", libelle: "le plan d'action, avec l'état de chaque constat : retenu / écarté avec sa raison / à trancher (Article 28)", preuve: null },
   { cle: "questions", libelle: "poser les questions de calibrage en fenêtre dédiée avant toute application (Article 16)", preuve: null },
@@ -832,6 +963,24 @@ async function main() {
     const plan = planDactionDepuisEcarts(ecarts, { toolSlug: "moise-tables-de-loi", fausseUneMesure: true, tache: "traiter avant de décider quoi que ce soit sur la charte" });
     console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
     for (const l of plan.lignes) console.log(l);
+    return;
+  }
+
+  if (commande === "pertinence") {
+    const carto = buildCartographie({ mesurerObligations: budgetInstructions });
+    if (!carto.mesurable) { console.log(`\nPAS MESURÉ — ${carto.pourquoi}.`); return; }
+    const p = analyserPertinence(carto.articles);
+    const r = findRecouvrementsNonDeclares(carto.articles);
+    console.log(`\n=== PERTINENCE — ${p.questions.length} Article(s) ouvrent une question ===\n`);
+    console.log("RIEN ICI N'EST UN VERDICT. Chaque ligne ouvre une question dont la réponse appartient");
+    console.log("à l'utilisateur (calibrage explicite : « sur ce type de choix, toujours me consulter »).\n");
+    for (const q of p.questions) {
+      console.log(`Art.${q.article} — ${q.titre.replace(/\n/g, " ").slice(0, 60)} [${q.etat}]`);
+      for (const sg of q.signaux) console.log(`   ${sg.question}\n     constat : ${sg.constat}`);
+    }
+    console.log(`\n=== LOGIQUE — recouvrements non déclarés : ${r.length} ===`);
+    for (const x of r) console.log(`· Article ${x.a} ↔ ${x.b} — ${(x.jaccard * 100).toFixed(0)}% de vocabulaire commun sans frontière écrite`);
+    if (!r.length) console.log("Aucun : chaque paire proche déclare sa frontière.");
     return;
   }
 
