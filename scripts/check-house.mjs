@@ -7086,11 +7086,16 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     listDatedNarrativeMarkers, checkToolConnections, EXPECTED_CONNECTIONS, trackWeightTrend,
     classifyConsumption, computeInvestmentRatio, diagnoseAdviceAccuracy, parseOutcomeArgs,
     extractNormativeMarkers, diffNormativeMarkers,
-    extractRuleUnits, countArticleCrossReferences, classifyRuleSensitivity, classifyRuleImportance,
-    findRedundantRulePairs, buildClaudeMdRuleTable, renderClaudeMdRuleTable,
     ARCHIVE_FIRST_REMINDER, compareChantiers, formatChantierComparison, recordAction,
     detectTaskMomentum, formatTaskMomentumBlock, TASK_MOMENTUM_THRESHOLDS,
   } = await import('../scripts/smart-conso-token.mjs');
+  // CHARTER-SPY a migré vers moise-tables-de-loi le 2026-09-23 (tâche #613) : les sept fonctions
+  // propres à CLAUDE.md s'importent désormais de là, et ces tests les suivent sans changer d'une
+  // assertion — c'est ce qui prouve que la migration était un DÉPLACEMENT et pas une réécriture.
+  const {
+    extractRuleUnits, countArticleCrossReferences, classifyRuleSensitivity, classifyRuleImportance,
+    findRedundantRulePairs, buildClaudeMdRuleTable, renderClaudeMdRuleTable,
+  } = await import('../scripts/moise-tables-de-loi.mjs');
 
   assert.equal(estimateTokens('abcd'), 1, 'the ~4-characters-per-token heuristic must round to the nearest whole token, never a fractional or wildly inaccurate estimate');
   assert.equal(estimateTokens(''), 0, 'an empty or missing text must estimate to exactly zero tokens, never crash or return NaN');
@@ -10590,4 +10595,111 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(vraisManques[0].pourquoi.includes("ne partira pas"), 'and it must say what the gap COSTS — not that a file is missing, but that this tool would be left behind on the day the toolkit moves to another project');
 
   console.log('Passed: the three mute detectors are wired (2026-09-23, task #218), and the worst of them answered an explicit user request — "assure-toi qu\'un mécanisme vérifie que tout est toujours bien présent dans le process ET chez son gardien". It was built that same morning, it worked, and it ran for nobody; worse, a comment elsewhere asserted "Il est VÉRIFIÉ, jamais déclaratif", a verification claimed in writing with nothing behind it. The two directions now derive from one traversal instead of each redoing it, they keep naming which side is missing the mechanism (a rule written but unenforced is not the defect a rule enforced but unwritten is), and a process sharing no source file reports "pas mesuré" rather than a green count on an empty denominator. findOutilsSansBlueprint was narrowed twice without being emptied: charter-declared exemptions are honoured rather than reproached, and "is this folder a tool?" is derived from whether a matching script exists — replacing a hand-kept list of folder names that would have gone stale at the next folder created.');
+}
+
+{
+  // MOÏSE-TABLES-DE-LOI (2026-09-23, tâche #613) — l'agent dédié au seul périmètre de la charte.
+  // Ces tests couvrent ce qu'il APPORTE ; les sept fonctions migrées de CHARTER-SPY gardent leurs
+  // assertions d'origine plus haut, sans qu'une virgule change, ce qui est la preuve que la
+  // migration était un déplacement et pas une réécriture.
+  const m = await import('../scripts/moise-tables-de-loi.mjs');
+
+  // LE PORTEUR EN TROIS ÉTATS. La première version de cette mesure comptait « cité par du code » et
+  // répondait « porté » pour les trente Articles : ce projet cite « Article N » dans ses
+  // commentaires, et une mention n'est pas un mécanisme. Les trois cas ci-dessous verrouillent la
+  // mesure honnête — nommer ET exister.
+  const fichiers = { 'scripts/x.mjs': 'export function maGarde() { return 1; }' };
+  assert.equal(m.porteursDeclares('Cette règle est tenue par `maGarde()`.', fichiers).etat, 'porté', 'a rule naming a mechanism that genuinely exists in the repository must report "porté"');
+  assert.equal(m.porteursDeclares('Cette règle ne nomme aucun mécanisme, elle se contente de prescrire.', fichiers).etat, 'sans porteur', 'a rule naming nothing must report "sans porteur" — its prose IS the mechanism (Article 27), which makes it untouchable in substance rather than well protected');
+  const fantome = m.porteursDeclares('Cette règle est vérifiée par `garantieImaginaire()`.', fichiers);
+  assert.equal(fantome.etat, 'fantôme', 'a rule naming a mechanism that does NOT exist must report "fantôme" — the worst of the three states, since it reassures wrongly where a declared absence at least keeps vigilance awake');
+  assert.deepEqual(fantome.fantomes, ['garantieImaginaire'], 'and it must NAME the missing mechanism, never just count it: an unnamed ghost cannot be chased');
+  assert.equal(m.porteursDeclares('Voir `scripts/x.mjs` pour le détail.', fichiers).etat, 'porté', 'a script path is a valid porteur too, verified against the real file list rather than assumed');
+
+  // LA DÉCISION HUMAINE SURVIT À LA RÉGÉNÉRATION. Un générateur qui écraserait un arbitrage à
+  // chaque passage serait pire qu'inutile : il ferait perdre le seul travail que la machine ne
+  // sait pas refaire.
+  const carto = [
+    '| Art. | Titre | Lignes | Tokens | Citations | Porteur | Nature | Statut | Pourquoi |',
+    '| 7 | Un titre | 10 | 200 | 30 | porté | LOI | décidé | tranché par l\'utilisateur |',
+    '| 8 | Un autre | 12 | 250 | 20 | sans porteur | INVENTAIRE | proposé | signal mécanique |',
+  ].join('\n');
+  const decidees = m.naturesDejaDecidees(carto);
+  assert.equal(decidees.get(7), 'LOI', 'a nature marked "décidé" must be read back and preserved across regenerations');
+  assert.equal(decidees.has(8), false, 'a nature still merely "proposé" must NOT be preserved — the mechanical proposal is recomputed every time, and freezing it would turn a guess into a decision nobody made');
+
+  // LE DOCUMENT D'ACCUEIL. Verrou n°4 du plan d'attaque, rendu mécanique : la plus grosse
+  // proposition d'allègement au catalogue renvoyait vers un document inexistant, et rien ne le
+  // disait. Les trois états sont distincts parce qu'ils appellent trois gestes différents.
+  const absent = m.verifierDocumentDAccueil('docs/ce-fichier-nexiste-pas.md', ['sujet']);
+  assert.equal(absent.peutPartir, false, 'a renvoi toward a file that does not exist must be refused outright');
+  assert.equal(absent.existe, false, 'and the report must distinguish "the file is missing" from "the file is there but incomplete" — they are not the same repair');
+  const incomplet = m.verifierDocumentDAccueil('CLAUDE.md', ['Article 0', 'un sujet qui ne figure nulle part dans la charte']);
+  assert.equal(incomplet.peutPartir, false, 'a file that exists but does not yet carry the content must also be refused — moving text into it would lose that text');
+  assert.ok(incomplet.absents.length === 1, 'and it must name WHICH subjects are missing, so the fix is actionable rather than a vague "incomplete"');
+  assert.equal(m.verifierDocumentDAccueil('CLAUDE.md', ['Article 0']).peutPartir, true, 'a file that exists and already carries the subject may receive the renvoi');
+
+  // LA MÉMOIRE, AU GRAIN DE L'ARTICLE. Le grain décide tout : une ligne par passe sait dire combien
+  // on a gagné, elle ne sait pas dire qu'un geste précis a déjà échoué sur CET Article.
+  const faux = { mesurable: true, operations: [
+    { date: '2026-09-01', article: '18', geste: 'aiguillage', avant: 'a', apres: 'b', decidePar: 'agent', resultat: 'annulé', pourquoi: 'le renvoi pointait dans le vide' },
+    { date: '2026-09-10', article: '18', geste: 'allègement', avant: 'b', apres: 'c', decidePar: 'utilisateur', resultat: 'tenu', pourquoi: 'ok' },
+  ] };
+  const histoire = m.commentOnAFaitLaDerniereFois('18', { operations: faux });
+  assert.equal(histoire.connu, true, 'an article with recorded history must be reported as known');
+  assert.equal(histoire.derniere.date, '2026-09-10', 'the LAST operation is the one that describes the current state, never the first');
+  assert.equal(histoire.annulees.length, 1, 'and a cancelled operation must be surfaced separately — it is the most expensive information in the registry, since it says a plausible gesture was already tried and did not hold');
+  assert.ok(histoire.resume.includes('ANNULÉE'), 'the human-readable summary must carry that warning rather than bury it in a field nobody reads');
+  assert.equal(m.commentOnAFaitLaDerniereFois('99', { operations: faux }).connu, false, 'an article with no history must say so plainly — "terrain neuf" is an answer, never a silence');
+  assert.equal(m.commentOnAFaitLaDerniereFois('18', { operations: { mesurable: false, pourquoi: 'pas de registre' } }).mesurable, false, 'and an ABSENT registry must report "pas mesuré" rather than "rien à signaler": an absence of measurement is never a clean bill of health (leçon L13)');
+
+  // Un enregistrement refuse ce qu'il ne comprend pas plutôt que de l'écrire quand même : un
+  // registre qui accepte n'importe quel verbe cesse d'être interrogeable au bout de trois entrées.
+  assert.throws(() => m.enregistrerOperation({ date: '2026-09-23', article: '1', geste: 'bricolage', decidePar: 'agent', resultat: 'tenu', pourquoi: 'x' }, { ecrire: () => {} }), /geste inconnu/, 'an unknown geste must be refused, never silently recorded');
+  assert.throws(() => m.enregistrerOperation({ date: '2026-09-23', article: '1', geste: 'allègement', decidePar: 'agent', resultat: 'peut-être', pourquoi: 'x' }, { ecrire: () => {} }), /résultat inconnu/, 'and an unknown résultat likewise — "tenu / annulé / à revoir" is the whole point of the column');
+  assert.throws(() => m.enregistrerOperation({ date: '2026-09-23', article: '1', geste: 'allègement', decidePar: 'agent', resultat: 'tenu' }, { ecrire: () => {} }), /manquant/, 'and a missing "pourquoi" must be refused: an operation without its reason is exactly the debt this registry exists to prevent (Article 27)');
+
+  // LE HORS-ARTICLES. Ajouté APRÈS le premier vrai passage du diagnostic, qui annonçait
+  // « INVENTAIRE : aucun Article » — exact et trompeur, puisque les deux plus gros inventaires de la
+  // charte sont des sections de niveau deux, invisibles à un découpage qui ne connaît que les
+  // Articles.
+  const charteFictive = [
+    '## Une section de prose', 'du texte ordinaire sans tableau ni chemin.', '',
+    '## Un inventaire', '| a | b |', '| c | d |', '| e | f |', '| g | h |', '| i | j |', '| k | l |', '',
+    '## Une section de règles', '**Article 1 — Un titre.** du corps.',
+  ].join('\n');
+  const sections = m.mesurerSections(charteFictive);
+  assert.equal(sections.length, 3, 'every "## " section must be measured, never only those carrying Articles');
+  assert.equal(sections.find((s) => s.titre === 'Un inventaire').nature, m.NATURES.INVENTAIRE.cle, 'a section made of table rows and carrying no Article must be classified INVENTAIRE — that is the nature whose gesture is "replaceable by a convention plus a mechanical guard" (Article 24)');
+  assert.ok(sections.find((s) => s.titre === 'Une section de règles').nature.includes('Articles'), 'a section that carries even one Article is never called an inventory: an inventory never holds a rule, so the classifier errs toward caution rather than toward a tidy answer');
+  assert.equal(sections.find((s) => s.titre === 'Une section de prose').nature, 'prose de cadrage', 'and prose that is neither a rule nor a list must have its own honest label rather than falling into whichever bucket is nearest');
+
+  // LES GARDE-FOUS DE FRAÎCHEUR. Le défaut qu'ils ferment est constaté : la table servant à décider
+  // quoi alléger a tourné trois jours en ignorant six Articles. Un instrument périmé ne rend pas une
+  // erreur, il rend des chiffres qui ont l'air justes.
+  const fraicheur = m.cartographiePerimee();
+  assert.equal(fraicheur.mesurable, true, 'freshness must be computed against the real charter, not asserted');
+  assert.equal(fraicheur.perimee, false, 'and the cartography shipped with this commit must actually cover every Article currently in the charter — a tool that ships stale on day one would prove nothing');
+  const table = m.findArticlesAbsentsDeLaTable();
+  assert.equal(table.mesurable, true, 'the classification table must likewise be compared, never assumed fresh');
+  const sansTable = m.findArticlesAbsentsDeLaTable({ cheminTable: 'docs/table-qui-nexiste-pas.md' });
+  assert.equal(sansTable.mesurable, false, 'and a MISSING table must report "pas mesuré" rather than zero missing articles — zero absences computed on an empty document is the emptiest of clean bills (leçon L13)');
+
+  // LE DIAGNOSTIC lui-même, branché sur le vrai dépôt : c'est son métier, et un outil qui n'a jamais
+  // tourné contre le vrai dépôt n'est pas un outil vérifié, c'est une intention (Article 25).
+  const { budgetInstructions } = await import('../scripts/ecotoken.mjs');
+  const diag = m.diagnosticComplet({ mesurerObligations: budgetInstructions });
+  assert.equal(diag.mesurable, true, 'the full diagnostic must run against this repository');
+  assert.ok(diag.couverture.part > 0 && diag.couverture.part < 100, 'it must DECLARE what share of the document it actually covered — a diagnostic that looks at the Articles alone while sounding complete is precisely the defect this tool exists to prevent');
+  assert.ok(Object.keys(diag.parNature).length >= 2, 'and group the Articles by nature, since the nature is what commands the gesture');
+  assert.ok(diag.inventaires.length > 0, 'the inventory sections must be surfaced even though they carry no Article — they were the blind spot found on the first real run');
+  assert.ok(diag.gainTheorique.aiguillages > 0 && diag.gainTheorique.pourquoi.length > 20, 'the theoretical gain must be bounded and must carry its own caveat: announcing the raw total would be a true number and a false piece of advice');
+
+  // LE PROCESS déclaré, et son honnêteté sur ce qu'il ne peut pas vérifier.
+  const etapes = m.etatDuProcess();
+  assert.equal(etapes.length, m.ETAPES_ANALYSE.length, 'every declared step must be reported on');
+  assert.ok(etapes.some((e) => e.mesurable === false), 'and a step that leaves no trace on disk must be DECLARED non-measurable rather than counted green — the same honesty angel-of-ia-process practises for conduct rules, and the only protection available for a step that only happens in conversation (Article 27)');
+  assert.ok(etapes.some((e) => e.cle === 'taches'), 'the TÂCHES link must be part of the process: a plan d\'action that never becomes tasks dies inside the report that carries it (Article 28) — this very step was missing from the first draft and the chain guard refused the commit over it');
+
+  console.log('Passed: MOÏSE-TABLES-DE-LOI (2026-09-23, task #613) owns the charter perimeter and nothing else. Its porteur measure is the one worth keeping: the first version counted "cited by code" and answered "porté" for all thirty Articles, because this project cites "Article N" throughout its comments and a mention is not a mechanism — the honest measure asks the rule to NAME its mechanism and then checks that the mechanism exists, yielding three states where the ghost (named, missing) is the worst, since it reassures wrongly where a declared absence keeps vigilance awake. A human decision survives regeneration while a merely proposed nature does not, so the machine never freezes a guess nobody made. A renvoi is refused both when its destination is missing and when it exists but does not yet carry the content, naming which subjects are absent. The memory is kept at the grain of the ARTICLE, because a line per pass can say how many tokens were saved and cannot say that this exact gesture was already tried here and cancelled; an unknown geste, an unknown résultat and a missing reason are all refused rather than recorded. Sections are measured alongside Articles after the first real run announced "INVENTAIRE: aucun Article" — exact and misleading, since the two largest inventories are level-two sections — and the diagnostic now declares what share of the document it actually covered. Both freshness guards report "pas mesuré" on an absent document rather than zero absences, and the process declares the six steps no program can verify instead of counting them green.');
 }

@@ -15,3 +15,11 @@ node scripts/hooks/check-last-commit.mjs || true
 # seulement que ça ne se fasse plus sans le savoir. La charte a déjà maigri deux fois et regrossi
 # les deux fois : sans ce rappel au moment du commit, on ne s'en aperçoit qu'à la Ronde suivante.
 node scripts/ecotoken.mjs budget || true
+# MOÏSE-TABLES-DE-LOI (2026-09-23, tâche #613) — alerte NON BLOQUANTE de FRAÎCHEUR des instruments
+# de la charte, calibrage explicite de l'utilisateur : « une alerte gratuite à chaque commit, le
+# reste sur demande ». Distincte de la ligne ecotoken ci-dessus, qui surveille le POIDS : celle-ci
+# surveille si les instruments SERVANT À DÉCIDER sont encore à jour. Le défaut qu'elle ferme est
+# constaté, pas craint : la table de classification servant à décider quoi alléger a tourné trois
+# jours en ignorant six Articles, et un instrument périmé ne rend pas une erreur — il rend des
+# chiffres qui ont l'air justes.
+node scripts/moise-tables-de-loi.mjs || true

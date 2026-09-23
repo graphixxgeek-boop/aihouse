@@ -105,6 +105,9 @@ export function outilsHorsPortee(slugsLances = [], contexte = "agence", { regist
 }
 
 export const AGENT_CATEGORIES = {
+  // Membre, jamais Gardien sacré : il scanne un DOCUMENT, pas la qualité du code — le premier
+  // volet du critère double n'est donc pas rempli, même si le second (gratuit à chaque commit) l'est.
+  "moise-tables-de-loi": "Membre",
   // Les Agents Cadre (Direction/CODIR) — nom acté le 2026-09-22
   "cassandra-rh": "Agent Cadre",
   "le-coordinateur": "Agent Cadre",
@@ -172,6 +175,16 @@ export const AGENT_CATEGORIES = {
   "check-level-target": "Agent Spécial",
   "smart-breaker": "Agent Spécial",
 };
+
+// sansAccents() (2026-09-23) — une SEULE normalisation, partagée, jamais deux qui divergeraient.
+// Née d'un bug en deux moitiés : « MOÏSE-TABLES-DE-LOI » donnait le slug `mo-se-tables-de-loi`
+// (le « ï » tombait dans un filtre `[^a-z0-9]`), et corriger la dérivation du slug sans corriger la
+// RECHERCHE dans les documents aurait laissé la moitié du défaut en place — la même règle qui
+// réapparaît ailleurs sous une autre forme, ce que l'Article 3 interdit. Le projet travaille en
+// français : ce n'est pas un cas limite, c'est le cas normal à partir du prochain outil nommé.
+export function sansAccents(texte) {
+  return String(texte ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
 
 export function assertNotAPersonnage(name, callerLabel) {
   if (PERSONNAGES.has(name)) {
@@ -385,6 +398,7 @@ export const TOOL_RELIABILITY = {
   // THE-EQUALIZER : mécanique par construction — il ne produit aucune estimation propre. Chaque ligne
   // de son verdict est soit une lecture littérale du référentiel, soit un chiffre rendu par un
   // contrôleur qui porte déjà, lui, son propre avertissement s'il en a besoin.
+  "moise-tables-de-loi": { nature: "heuristique", pourquoi: "le poids en tokens est estimé, la nature d'un Article est PROPOSÉE depuis des signaux mécaniques, et un porteur décrit en prose sans être nommé compte comme absent — elle sous-déclare plutôt qu'elle n'invente, mais ne remplace jamais une lecture" },
   "the-equalizer": { nature: "mecanique", pourquoi: "il n'estime rien : il relit le référentiel des standards et relaie des verdicts déjà calculés ailleurs" },
   "tool-learning": { nature: "heuristique", pourquoi: "il juge une trajectoire : sous trois passages il refuse de conclure, et une baisse de trouvailles peut venir d'un code qui s'est amélioré plutôt que d'un outil qui régresse" },
   "cassandra-rh": { nature: "heuristique", pourquoi: "relaie et recoupe ce que les autres outils estiment — elle hérite de leurs approximations" },

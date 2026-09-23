@@ -20,7 +20,13 @@ import { readFileSync, readdirSync, statSync, existsSync, writeFileSync, mkdirSy
 import { join, dirname } from "node:path";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { estimateTokens, measureClaudeMdWeight, buildClaudeMdRuleTable, listDatedNarrativeMarkers, SCOPE_LEVELS } from "./smart-conso-token.mjs";
+import { estimateTokens, measureClaudeMdWeight, listDatedNarrativeMarkers, SCOPE_LEVELS } from "./smart-conso-token.mjs";
+// `buildClaudeMdRuleTable` a migré vers moise-tables-de-loi le 2026-09-23 (tâche #613) : tout ce qui
+// ne sert qu'à CLAUDE.md appartient à cet agent-là. ecotoken reste l'outil du POIDS des documents
+// rechargés, question vraie pour n'importe lequel d'entre eux, et il APPELLE Moïse pour la part
+// qui relève de la charte. Le sens inverse n'existe pas : Moïse injecte le compteur
+// d'obligations plutôt que d'importer ce fichier, pour qu'aucun cycle ne s'installe.
+import { buildClaudeMdRuleTable } from "./moise-tables-de-loi.mjs";
 // Les nœuds sensibles du moteur sont DÉJÀ déclarés et maintenus ailleurs (CHECK-LEVEL-TARGET, carte
 // HARMONIA). ecotoken les LIT plutôt que de prétendre les mesurer de son côté — un second jugement
 // sur la même chose divergerait tôt ou tard (règle anti-doublon du projet). Aucun cycle :

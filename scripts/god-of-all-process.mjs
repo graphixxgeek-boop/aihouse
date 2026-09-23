@@ -83,6 +83,34 @@ export const PROCESSES = [
     ],
   },
   {
+    // AJOUTÉ le 2026-09-23 (tâche #613). Ce process est l'un des rares à porter les six maillons du
+    // schéma unifié sans qu'aucun soit sans objet — c'est normal : une analyse de la charte EST une
+    // enquête, là où une intégration d'outil est une liste de cases à cocher.
+    slug: "analyse-charte",
+    nom: "Analyse et plan d'action de la charte (MOÏSE-TABLES-DE-LOI)",
+    quand: "analyser la charte du projet en profondeur et en tirer un plan d'action",
+    motsCles: ["claude.md", "charte", "cartographie", "allègement", "article", "obligation", "moïse", "moise"],
+    doc: "docs/analyse-charte-process-detail.md",
+    gardien: "scripts/moise-tables-de-loi.mjs",
+    etapes: [
+      { cle: "memoire", libelle: "relire la mémoire des opérations avant de mesurer quoi que ce soit", preuve: { fichier: "docs/referentiel/charte-operations.md" } },
+      { cle: "fraicheur", libelle: "vérifier que l'instrument n'est pas périmé AVANT de mesurer avec lui", preuve: null },
+      { cle: "cartographie", libelle: "régénérer la cartographie (poids, citations, porteur, nature)", preuve: { fichier: "docs/referentiel/charte-cartographie.md" } },
+      { cle: "table-regles", libelle: "régénérer la table de classification", preuve: { fichier: "docs/referentiel/claude-md-regles.md" } },
+      { cle: "accueil", libelle: "vérifier chaque document d'accueil avant de proposer un renvoi", preuve: null },
+      { cle: "analyse", libelle: "l'analyse elle-même — produite par l'agent, jamais par l'outil", preuve: null },
+      { cle: "plan-action", libelle: "le plan d'action, chaque constat portant son état (Article 28)", preuve: null },
+      { cle: "questions", libelle: "poser les questions de calibrage en fenêtre dédiée avant toute application (Article 16)", preuve: null },
+      // Maillon TÂCHES — il manquait à la première écriture de ce process, et c'est le garde-fou de
+      // la chaîne de l'Article 28 qui l'a refusé au commit, pas une relecture. Sans lui, le plan
+      // d'action aurait pu vivre et mourir dans le rapport : « le rapport a coûté son temps et n'a
+      // rien changé », dans les mots exacts du contrôleur.
+      { cle: "taches", libelle: "inscrire dans docs/suivi/ les tâches issues des constats retenus", preuve: { dossier: "docs/suivi/sessions/", motif: /\.md$/ } },
+      { cle: "synthese", libelle: "livrer la vision stratégique à l'utilisateur, jamais le dossier technique", preuve: null },
+      { cle: "enregistrement", libelle: "enregistrer chaque geste appliqué, Article par Article", preuve: { fichier: "docs/referentiel/charte-operations.md" } },
+    ],
+  },
+  {
     slug: "simulation",
     nom: "Simulation intégrale (Article 18)",
     quand: "lancer une simulation complète de bout en bout et l'analyser",

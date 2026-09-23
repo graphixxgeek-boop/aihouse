@@ -43,7 +43,7 @@
 import { existsSync, mkdtempSync, rmSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { sh, assertNotAPersonnage, AGENT_CATEGORIES } from "./lib-shell.mjs";
+import { sh, assertNotAPersonnage, AGENT_CATEGORIES, sansAccents } from "./lib-shell.mjs";
 import { collectCoverage, robustnessScore, LIB_MAP, AGENT_SCRIPT_FILES } from "./axa-check.mjs";
 import { findOrphanReportFiles } from "./doc-report.mjs";
 import { summarizeArgusOutput, summarizeHarmoniaOutput } from "./hyper-scan-checkpoint.mjs";
@@ -259,6 +259,11 @@ export const PRESTATIONS = [
   // pack ci-dessous répond de sa part ; celui-ci répond de la question que l'utilisateur a posée
   // telle quelle (« qui se charge de vérifier que tout est à niveau »), et surtout nomme ce que
   // personne ne vérifie — ce qu'aucun contrôleur ne peut dire de lui-même.
+  // MOÏSE-TABLES-DE-LOI (2026-09-23) — la prestation du périmètre de la charte, et d'elle seule.
+  // Elle ne recouvre pas le Pack Token : celui-ci pèse N'IMPORTE QUEL document rechargé, celle-là
+  // ne parle que de la charte et répond à des questions qu'aucun autre pack ne pose — qui tient
+  // réellement cette règle, et qu'a-t-on déjà tenté dessus.
+  { nom: "Pack Tables de Loi", description: "Diagnostic complet de la charte : ce que pèse chaque règle, qui la tient réellement (porté / sans porteur / fantôme), quelle nature elle a donc et quel geste elle appelle, ce qui a déjà été tenté dessus et qui n'a pas tenu, et si l'instrument de mesure lui-même est encore à jour.", demande: "Analyser la charte du projet en profondeur, ou préparer une décision qui la touche", outils: ["MOÏSE-TABLES-DE-LOI", "scripts/moise-tables-de-loi.mjs"], cout: "0 appel API", tokensEstimes: "nul — relit la charte et le dépôt local, et appelle les outils existants plutôt que de recalculer" },
   { nom: "Pack Niveau", description: "Rend UN verdict par domaine (l'Agence, les documents, le code, le jeu) contre les exigences écrites du référentiel des standards, et nomme les exigences que personne ne vérifie ainsi que les outils restés en retard sur l'équipe.", demande: "Est-ce que tout est à niveau ? (standards, formats, gabarits)", outils: ["THE-EQUALIZER"], cout: "0 appel API", tokensEstimes: "nul — relit un document et relaie des verdicts déjà calculés" },
   { nom: "Pack Trajectoire", description: "Juge si chaque outil PROGRESSE vraiment (relit-il sa mémoire, se trompe-t-il moins) ou s'il archive sans rien apprendre — et me juge, moi, sur les diagnostics que j'ai laissés sans suite.", demande: "Apprentissage réel de l'outillage, et mon apport à cet apprentissage", outils: ["TOOL-LEARNING"], cout: "0 appel API", tokensEstimes: "nul — lecture de registres déjà sur le disque" },
   { nom: "Pack Accueil", description: "Dit, registre par registre, ce qui reste à renseigner pour faire entrer un nouvel outil dans l'Agence — lu dans les fichiers réels, jamais une liste recopiée.", demande: "Intégrer un nouvel outil sans découvrir les oublis un test après l'autre", outils: ["integration-outil"], cout: "0 appel API", tokensEstimes: "nul — lecture de fichiers déjà sur le disque" },
@@ -586,8 +591,18 @@ export function primaryToolName(tool) {
   return String(tool ?? "").split(/[/(]/)[0].trim();
 }
 
+// Les accents sont TRANSLITÉRÉS avant d'être filtrés, jamais jetés (2026-09-23). Sans cette
+// normalisation, « MOÏSE-TABLES-DE-LOI » donnait le slug `mo-se-tables-de-loi` : le « ï » tombait
+// dans le filtre `[^a-z0-9]` et coupait le mot en deux, si bien que l'audit d'intégration cherchait
+// six fichiers qui n'existeraient jamais et déclarait l'outil incomplet alors qu'il était complet.
+// Le premier outil au nom français a suffi à le révéler — et le projet travaille EN FRANÇAIS, donc
+// le prochain l'aurait heurté aussi. C'est un défaut d'évolutivité au sens exact de l'Article 24 :
+// la dérivation ne supportait qu'un alphabet qu'on avait eu jusque-là par hasard.
 export function slugifyAgentName(name) {
-  return String(name ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return sansAccents(name)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 // toolIdentitySlug() (2026-09-22) — RECONNAÎTRE LE MÊME OUTIL VU DE DEUX ENDROITS, ce qui n'est pas
@@ -720,11 +735,14 @@ export function checkAgentOnboarding(agentName, {
     // réellement exigé n'a jamais été « une section » mais « être déclaré ici », et le tableau le
     // fait mieux, avec le renvoi vers le blueprint sur la même ligne.
     const nomEnTitre = slug.replace(/-/g, "[- ]");
-    const aSaSection = new RegExp(`^## .*${nomEnTitre}.*blueprint exportable`, "im").test(claudeMdText);
+    // Le texte cherché est normalisé comme l'est le slug : sans ça, un nom accentué dans le tableau
+    // ne serait jamais reconnu par un slug qui, lui, ne porte plus d'accent (cf. sansAccents()).
+    const charteSansAccents = sansAccents(claudeMdText);
+    const aSaSection = new RegExp(`^## .*${nomEnTitre}.*blueprint exportable`, "im").test(charteSansAccents);
     // La ligne doit citer un vrai document : un nom seul dans une cellule ne déclare rien. On ne
     // cherche PAS le mot « blueprint » dans la ligne — l'Outil de résilience API prouve qu'un
     // blueprint peut s'appeler autrement (`docs/outil-resilience-api.md`).
-    const aSaLigneDeCatalogue = new RegExp(`^\\|\\s*${nomEnTitre}\\s*\\|.*\`docs/[^\`]+\\.md\``, "im").test(claudeMdText);
+    const aSaLigneDeCatalogue = new RegExp(`^\\|\\s*${nomEnTitre}\\s*\\|.*\`docs/[^\`]+\\.md\``, "im").test(charteSansAccents);
     if (!cousinOf && !aSaSection && !aSaLigneDeCatalogue) {
       gaps.push(`absent de CLAUDE.md, ni comme section "## ... — blueprint exportable" ni comme ligne du tableau « Inventaire documentaire des outils » (attendu puisqu'il a un blueprint propre)`);
     }
@@ -733,7 +751,7 @@ export function checkAgentOnboarding(agentName, {
   // docs/suivi/ (réel si le texte est fourni, jamais un chemin deviné en son absence) — un Agent
   // construit sans une seule ligne de suivi violerait la règle "toute tâche substantielle DOIT être
   // documentée dans docs/suivi/" (docs/systeme-de-suivi.md), au même titre qu'un test manquant.
-  if (suiviText != null && !suiviText.toLowerCase().includes(nameLower)) {
+  if (suiviText != null && !sansAccents(suiviText).toLowerCase().includes(sansAccents(nameLower))) {
     gaps.push("aucune mention trouvée dans docs/suivi/ — sa construction ne serait pas tracée dans le système de suivi durable");
   }
 

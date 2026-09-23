@@ -26,7 +26,10 @@ import { readFileSync, existsSync, writeFileSync, mkdirSync, readdirSync } from 
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
-import { scanDocumentWeight, listDatedNarrativeMarkers, extractRuleUnits, findRedundantRulePairs } from "./smart-conso-token.mjs";
+import { scanDocumentWeight, listDatedNarrativeMarkers } from "./smart-conso-token.mjs";
+// extractRuleUnits/findRedundantRulePairs ont migré vers moise-tables-de-loi le 2026-09-23 (tâche
+// #613) — elles ne servent qu'à CLAUDE.md, donc elles appartiennent à l'agent de ce périmètre.
+import { extractRuleUnits, findRedundantRulePairs } from "./moise-tables-de-loi.mjs";
 import { AGENT_CATEGORIES, walkDocsPaths, daysSince, sh, shouldSnapshotText, printReliabilityNotice } from "./lib-shell.mjs";
 import { checkChantierFileFreshness, loadAllTaskRows, detectPendingIdeaCandidates, loadIdeaDecisions, findIdeasNeedingDecision, IDEES_REGISTRY_PATH } from "./check-tasks-details.mjs";
 import { auditHtmlDecisions, REGISTRIES as DOC_REPORT_REGISTRIES } from "./doc-report.mjs";
@@ -658,6 +661,15 @@ export function mostRecentDate(text) {
 // (« cet outil apparaît-il quelque part, ou a-t-on écrit pourquoi il n'apparaît pas ? ») en partant
 // de deux bouts différents — une seule liste de raisons, jamais deux qui divergeraient.
 export const CIRCLE_AUTO_COVERED_REGISTRIES = {
+  // moise-tables-de-loi (2026-09-23) : EXCLUSION MOTIVÉE, et elle applique deux décisions de
+  // l'utilisateur prises le même jour. (1) Ses deux garde-fous de fraîcheur sont déjà gratuits à
+  // CHAQUE commit — calibrage explicite : « une alerte gratuite à chaque commit, le reste sur
+  // demande ». (2) Il venait de demander l'inverse d'un rapport de plus : « on doit trouver une
+  // solution par rapport au nombre de rapports produits [...] pour que au final je reçoive un max
+  // de 10 rapports txt » (tâche #612). Ajouter un item ici pendant qu'on cherche à en retirer
+  // aurait été une contradiction dans le même geste. Son vrai déclencheur est un ÉVÉNEMENT : une
+  // demande d'analyse de fond, ou une alerte de péremption.
+  "moise-tables-de-loi": "couvert PAR COMMIT pour sa partie gratuite (alerte de fraîcheur) et PAR ÉVÉNEMENT pour le reste — jamais par calendrier ; et un item de plus contredirait la tâche #612, qui cherche à RÉDUIRE le nombre de rapports de Ronde",
   // ecotoken (2026-09-22) : son registre existe, mais il n'a PAS d'item propre — c'est
   // `ecotoken-scan` qui le lance, harmonisation explicitement demandée par l'utilisateur
   // (« je crois qu'il y a deja un rapport sur claude.md dans circle. vois comment tu peux tout

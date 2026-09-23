@@ -270,150 +270,23 @@ export function listDatedNarrativeMarkers(text) {
   return results;
 }
 
-// CLAUDE.MD.SPY (2026-09-20, demande explicite de l'utilisateur : « une extension de suivi-conso-
-// token... évalue chaque règle de CLAUDE.md, lui donne un indice de sensibilité, mesure son
-// importance... classifie les règles... détecte les doublons/redondances »). PAS un membre de
-// l'équipe (choix explicite de l'utilisateur, confirmé) : une capacité de plus de SMART-CONSO-TOKEN,
-// même statut que scanDocumentWeight()/CLAUDE_MD_INCLUDE_EXCLUDE ci-dessus — consulté avec
-// LE-COORDINATEUR avant construction (suggestPrestationsForTask() : liste vide, aucune prestation
-// existante ne couvrait ce besoin). S'intègre à l'étape 2 ("Identifier les candidats") de la
-// procédure formalisée d'allègement (section dédiée plus bas) comme une TROISIÈME famille de
-// candidats, aux côtés des gros blocs narratifs (lecture humaine) et des asides datées
-// (listDatedNarrativeMarkers ci-dessus).
+// CHARTER-SPY A DÉMÉNAGÉ (2026-09-23, tâche #613, décision explicite de l'utilisateur en fenêtre
+// de calibrage : « migrer ces sept fonctions dans Moïse »).
 //
-// Granularité choisie : l'ARTICLE entier (« Article N — Titre. » et tout son corps jusqu'à
-// l'article suivant), jamais chaque puce individuellement — plus robuste à ancrer, et une
-// comparaison de redondance a plus de sens entre deux blocs de taille comparable qu'entre deux
-// fragments courts qui partageraient trivialement des mots comme « jamais »/« toujours ». Limite
-// honnête assumée : le contenu intercalé entre deux Articles (ex. le bloc "Smart Breaker" entre
-// l'Article 19 et l'Article 20) est rattaché à l'article PRÉCÉDENT dans cette découpe — un signal
-// approximatif, jamais une vérité absolue, cohérent avec l'honnêteté déjà pratiquée par
-// ARGUS/ALWAYS-NEW-CODE (confirmé/probable/à surveiller, jamais une certitude).
-const ARTICLE_HEADING_PATTERN = /\*\*Article (\d+) — ([^*]+?)\.\*\*/g;
-// Un article se termine aussi au prochain titre de niveau 1 ("## ...") — trouvaille réelle en
-// calibrant sur le vrai CLAUDE.md : sans cette borne, le DERNIER article (23) avalait tout le reste
-// du fichier (« Règles de travail », « Plan d'origine »...), 510 lignes hors-sujet qui faussaient
-// totalement son signal de redondance/importance.
-const TOP_HEADING_PATTERN = /^## /gm;
-
-export function extractRuleUnits(text) {
-  // Découpage partagé (lib-shell) ; ce qui reste ici est ce qui est propre à la charte : un article
-  // porte un NUMÉRO et un titre, là où le texte fondateur porte une partie, un numéro et un tag.
-  return decouperEnUnites(text, ARTICLE_HEADING_PATTERN, {
-    motifBorneSuperieure: TOP_HEADING_PATTERN,
-    champs: (m) => ({ article: Number(m[1]), titre: m[2].trim() }),
-  });
-}
-
-// Compte les citations de "Article N" AILLEURS dans le dépôt (jamais dans CLAUDE.md lui-même, dont
-// le texte cite trivialement son propre numéro) — un proxy honnête de combien le reste du projet
-// dépend réellement de cette règle précise, jamais une lecture de son contenu.
-export function countArticleCrossReferences(articleNumber, otherFilesText = {}) {
-  const pattern = new RegExp(`Article\\s+${articleNumber}\\b`, "g");
-  let count = 0;
-  for (const content of Object.values(otherFilesText)) count += (content.match(pattern) || []).length;
-  return count;
-}
-
-const SELF_FLAGGED_SENSITIVE_PATTERN = /non[- ]négociable|garde-fou non négociable|\binterdit\b/i;
-
-// Sensibilité : un SIGNAL, jamais une certitude — sauf l'Article 0, qui reçoit une étiquette FIXE
-// et automatique (choix explicite de l'utilisateur), cohérente avec la double confirmation déjà
-// exigée ailleurs dans la charte pour tout ce qui touche l'esprit des personnages : jamais soumis
-// au même calcul que les autres règles, qui pourrait à tort le sous-évaluer.
-export function classifyRuleSensitivity(rule) {
-  if (rule.article === 0) return "très sensible (Article 0, fixe — jamais recalculée)";
-  if (SELF_FLAGGED_SENSITIVE_PATTERN.test(rule.texte)) return "sensible (se déclare non négociable)";
-  return "normale";
-}
-
-// Seuils calibrés empiriquement (2026-09-20) contre le vrai CLAUDE.md de ce projet, pas des chiffres
-// ronds arbitraires : sur les 24 Articles réels, les comptes de référence croisée s'étalent de 3 à
-// 81, avec un premier tiers sous 15 et un dernier tiers au-dessus de 36 — cette habitude du projet
-// de citer abondamment "Article N" dans les commentaires rend un seuil bas (ex. ≥5) inutile, presque
-// tout le dépasse. À recalibrer si la distribution réelle change significativement (Article 19).
-export function classifyRuleImportance(crossRefCount) {
-  if (crossRefCount > 36) return "élevée";
-  if (crossRefCount >= 15) return "moyenne";
-  return "faible";
-}
-
-// Mots significatifs propres à cette fonction — copie locale volontairement séparée de
-// significantWords() (le-coordinateur.mjs) : le-coordinateur.mjs importe déjà depuis ce fichier
-// (summarizeHistory), un import dans l'autre sens créerait une dépendance circulaire entre les deux
-// modules. Un tokenizer aussi simple ne justifie pas un troisième module partagé rien que pour lui.
-const RULE_STOPWORDS_FR = new Set([
-  "le", "la", "les", "de", "des", "du", "un", "une", "et", "ou", "à", "au", "aux", "pour", "sur",
-  "dans", "en", "avec", "sans", "que", "qui", "ne", "pas", "est", "être", "ce", "cette", "son", "sa",
-  "ses", "tout", "toute", "tous", "toutes", "plus", "déjà", "jamais", "cet", "article", "jusqu",
-]);
-
-function ruleSignificantWords(texte) {
-  return new Set(
-    String(texte ?? "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[̀-ͯ]/g, "")
-      .split(/[^a-z0-9]+/)
-      .filter((w) => w.length > 4 && !RULE_STOPWORDS_FR.has(w)),
-  );
-}
-
-// Redondance entre deux règles : similarité de Jaccard sur les mots significatifs (jamais un simple
-// compte de mots partagés, qui favoriserait à tort les articles les plus longs). Seuil STRICT par
-// défaut (choix explicite de l'utilisateur : « remonter étroit ») — mieux vaut manquer une
-// redondance subtile que noyer chaque passage sous des paires qui ne mènent à rien.
-export function findRedundantRulePairs(rules, { threshold = 0.22 } = {}) {
-  // Comparaison partagée (lib-shell) ; l'INTERPRÉTATION reste ici — pour cet outil, une paire
-  // au-dessus du seuil est une redondance à alléger. THE-KING lit le même chiffre comme un terrain
-  // commun où chercher une tension : même mesure, conclusions opposées.
-  const wordSets = rules.map((r) => ruleSignificantWords(r.texte));
-  return pairesParJaccard(wordSets, { seuil: threshold })
-    .map(({ i, j, jaccard, motsPartages }) => ({ a: rules[i].article, b: rules[j].article, jaccard, motsPartages }))
-    .sort((x, y) => y.jaccard - x.jaccard);
-}
-
-// Assemble le tableau de référence complet — jamais un calcul séparé de ce qui précède, seulement
-// leur agrégation. `otherFilesText` : tous les fichiers du dépôt SAUF CLAUDE.md (cf.
-// countArticleCrossReferences ci-dessus).
-export function buildClaudeMdRuleTable(claudeMdText, otherFilesText = {}) {
-  const rules = extractRuleUnits(claudeMdText);
-  const rows = rules.map((r) => {
-    const crossRefs = countArticleCrossReferences(r.article, otherFilesText);
-    return {
-      article: r.article,
-      titre: r.titre,
-      sensibilite: classifyRuleSensitivity(r),
-      importance: classifyRuleImportance(crossRefs),
-      referencesCroisees: crossRefs,
-      lignes: r.texte.split("\n").length,
-    };
-  });
-  const redondances = findRedundantRulePairs(rules);
-  return { rows, redondances };
-}
-
-// Rend le tableau en markdown — texte pur, jamais d'écriture disque ici (même convention que
-// formatMenu()/describeKnownLessons() : cette fonction ne fait que produire le texte, c'est
-// toujours l'agent qui décide de l'écrire dans docs/referentiel/claude-md-regles.md, jamais un
-// effet de bord caché dans smart-conso-token.mjs).
-export function renderClaudeMdRuleTable({ rows, redondances }) {
-  const lines = [
-    "| Article | Titre | Sensibilité | Importance | Réf. croisées | Lignes |",
-    "|---|---|---|---|---|---|",
-  ];
-  for (const r of rows) {
-    lines.push(`| ${r.article} | ${r.titre.replace(/\n/g, " ")} | ${r.sensibilite} | ${r.importance} | ${r.referencesCroisees} | ${r.lignes} |`);
-  }
-  lines.push("");
-  if (redondances.length) {
-    lines.push("**Redondances possibles détectées (à vérifier, jamais une certitude) :**");
-    for (const p of redondances) lines.push(`- Article ${p.a} ↔ Article ${p.b} (similarité ${(p.jaccard * 100).toFixed(0)}%, ${p.motsPartages} mots partagés)`);
-  } else {
-    lines.push("Aucune redondance forte détectée à ce passage (seuil strict — cf. `findRedundantRulePairs`).");
-  }
-  return lines.join("\n");
-}
+// Les sept fonctions propres à CLAUDE.md — extractRuleUnits, countArticleCrossReferences,
+// classifyRuleSensitivity, classifyRuleImportance, findRedundantRulePairs, buildClaudeMdRuleTable,
+// renderClaudeMdRuleTable — vivent désormais dans `scripts/moise-tables-de-loi.mjs`, l'agent dédié au
+// seul périmètre CLAUDE.md. Elles ont été DÉPLACÉES telles quelles, commentaires de calibrage
+// compris : un déplacement ne pouvait rien casser au passage, là où une réécriture l'aurait pu.
+//
+// POURQUOI ELLES SONT PARTIES. Elles ne servaient qu'à un document, alors que ce fichier-ci
+// gouverne une question générique : combien coûte une action, quel qu'en soit le sujet. Les garder
+// ici faisait de SMART-CONSO-TOKEN le co-responsable d'un périmètre dont il n'a pas la charge —
+// exactement le chevauchement que l'utilisateur a demandé de supprimer.
+//
+// CE QUI RESTE ICI, ET C'EST VOULU : `scanDocumentWeight()`, `listDatedNarrativeMarkers()` et
+// `estimateTokens()` ci-dessus valent pour N'IMPORTE QUEL document toujours chargé. moise-tables-de-loi
+// les APPELLE plutôt que de les recopier.
 
 // Généralise measureClaudeMdWeight() à N'IMPORTE QUEL document toujours chargé ou fréquemment relu
 // (2026-09-20, demande explicite : « il est capable de réaliser un scan du code et proposer des

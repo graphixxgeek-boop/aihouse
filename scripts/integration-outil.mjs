@@ -41,7 +41,11 @@ export const REGISTRES_D_INTEGRATION = [
   {
     cle: "fiabilite", fichier: "scripts/lib-shell.mjs", quoi: "classification de fiabilité (l'avertissement d'inexactitude affiché en tête de rapport)",
     extrait: (t) => slugsDansBloc(t, "TOOL_RELIABILITY"),
-    forme: (s) => `  "${s}": { niveau: "...", raison: "..." },  // dans TOOL_RELIABILITY`,
+    // La forme donnée ici était FAUSSE jusqu'au 2026-09-23 : elle dictait `niveau`/`raison` quand le
+    // registre et son test attendent `nature`/`pourquoi`. Un outil dont le métier est d'éviter qu'on
+    // découvre les oublis un test après l'autre dictait donc une inscription que le test refusait —
+    // le pire cas pour un guide : un conseil précis et faux. Trouvé en l'appliquant pour de vrai.
+    forme: (s) => `  "${s}": { nature: "mecanique|heuristique", pourquoi: "..." },  // dans TOOL_RELIABILITY`,
   },
   {
     cle: "categorie", fichier: "scripts/lib-shell.mjs", quoi: "rôle dans l'organigramme (Agent / Gardien sacré / Membre)",

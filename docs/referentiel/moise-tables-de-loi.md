@@ -1,0 +1,124 @@
+# MOÏSE-TABLES-DE-LOI — instanciation sur ce projet
+
+*(Blueprint générique : `docs/moise-tables-de-loi-blueprint.md`. Script :
+`scripts/moise-tables-de-loi.mjs`. Registre : `docs/moise-tables-de-loi/index.md`. Créé le
+2026-09-23, tâche #613.)*
+
+## Sa vocation, dans les mots de l'utilisateur
+
+« Je veux que tu crées un outil dédié […] Cet agent outil appelle les autres outils dont il a
+besoin pour fonctionner. Il centralise pour les opérations propres à claude.md. Il est dédié à ce
+qui est UNIQUEMENT DÉDIÉ à Claude.md : pas de chevauchement. Ce qui peut être utile de manière
+générale est destiné à d'autres agents existants. »
+
+Et, dans le même échange : « cet agent est aussi le responsable de la maintenance de claude.md et
+de garder la mémoire des opérations réalisées sur claude.md », « une mémoire (pour l'exploiter :
+ex : comment nous avons fait la dernière fois ?) utile et exploitée (pas une mémoire pour le
+plaisir) », « les docs sont pour toi, pas pour moi. Moi j'ai besoin d'avoir une vision résumée,
+stratégique sur les points sensibles », « vérifie que Moïse t'aide à faire un diagnostic complet et
+utile : ça fait partie de son boulot ! ».
+
+## Son nom, et pourquoi le premier a été refusé
+
+Il s'est d'abord appelé d'après un modèle d'IA précis. L'utilisateur l'a refusé en deux mots :
+**« pas exportable »**. La remarque était juste et dépasse le nom : l'Agence Codex existe pour
+partir vers un autre projet (SAFE-EXPORT, Article 27), et un outil baptisé d'après un fournisseur
+ne peut pas voyager. « Moïse-tables-de-loi » nomme la FONCTION — celui qui porte les tables de la
+loi — et reste vrai sur n'importe quel projet ayant une charte.
+
+Les documents qu'il produit suivent la même règle : `charte-cartographie.md`,
+`charte-operations.md`. Seul `claude-md-regles.md` garde son nom historique, parce qu'il existait
+avant et que le renommer casserait des renvois pour un gain nul.
+
+## La frontière avec les outils voisins — le sujet central
+
+| Outil | Sa question | Pourquoi ce n'est pas celle de Moïse |
+|---|---|---|
+| **ecotoken** | combien coûte un document rechargé à chaque message ? | générique : vraie pour `CLAUDE.md` comme pour n'importe quel document toujours chargé |
+| **SMART-CONSO-TOKEN** | cette action coûteuse vaut-elle ses tokens ? | générique : ne parle pas de la charte, mais de mon rythme |
+| **THE-KING** | cette décision respecte-t-elle la philosophie du projet ? | autre document, autre question |
+| **SAFE-EXPORT** | le vocabulaire des documents normatifs est-il non ambigu ? | porte sur TOUS les documents normatifs, pas sur la charte seule |
+| **Moïse** | cette RÈGLE-CI : que pèse-t-elle, qui la tient, qu'a-t-on déjà tenté dessus ? | ne vaut que pour la charte — donc son périmètre, et le sien seul |
+
+**Ce qui a réellement migré le 2026-09-23** : les sept fonctions de CHARTER-SPY (`extractRuleUnits`,
+`countArticleCrossReferences`, `classifyRuleSensitivity`, `classifyRuleImportance`,
+`findRedundantRulePairs`, `buildClaudeMdRuleTable`, `renderClaudeMdRuleTable`) vivaient dans
+`scripts/smart-conso-token.mjs`. Elles ont été **déplacées telles quelles**, commentaires de
+calibrage compris — jamais réécrites : un déplacement ne peut rien casser au passage, une
+réécriture le peut. Leurs tests n'ont pas changé d'une assertion, et c'est la preuve.
+
+**Le cycle d'import évité, et c'est un choix documenté** : ecotoken a besoin de
+`buildClaudeMdRuleTable` (propre à la charte, donc ici) et Moïse a besoin du compteur d'obligations
+d'ecotoken (générique, donc là-bas). Un import statique dans les deux sens créerait un cycle. Node
+le tolère tant que l'usage est dans une fonction, mais un cycle toléré est une dette qui explose au
+premier déplacement de ligne. Le compteur est donc **injecté par l'appelant**
+(`mesurerObligations`) — ce qui rend en prime `buildCartographie()` testable sans disque ni autre
+outil.
+
+## Ce qu'il apporte, avec la preuve de besoin de chaque capacité
+
+Les six capacités sont exactement les gestes que j'ai dû faire à la main, en scripts jetables, pour
+produire le plan d'attaque du 2026-09-23.
+
+1. **`mesurerArticles()`** — poids, citations, et surtout le PORTEUR. Obtenu ce jour-là par soixante
+   `grep` successifs.
+2. **`porteursDeclares()`** — les trois états. **Première version fausse, et la trouvaille vaut
+   d'être gardée** : « cet Article est-il cité par du code ? » répondait *oui* pour les TRENTE
+   Articles, parce que ce projet cite abondamment « Article N » dans ses commentaires. Une mention
+   n'est pas un mécanisme. La mesure honnête demande à l'Article de NOMMER son porteur, puis vérifie
+   que ce porteur existe. Résultat réel au premier passage : **8 Articles portés, 22 sans porteur,
+   0 fantôme**.
+3. **`natureProposee()`** — les quatre natures. Proposition mécanique, décision humaine, et la
+   décision survit à la régénération (`naturesDejaDecidees()`).
+4. **`verifierDocumentDAccueil()`** — le verrou n°4 du plan d'attaque, rendu mécanique. Preuve de
+   besoin immédiate : la plus grosse proposition d'allègement encore au catalogue d'ecotoken
+   (2 914 tokens) renvoie vers un document **inexistant**, et rien ne le disait.
+5. **`findArticlesAbsentsDeLaTable()` / `cartographiePerimee()`** — les deux garde-fous gratuits.
+   Preuve de besoin constatée le jour même : `claude-md-regles.md`, la table servant à décider quoi
+   alléger, datait du 2026-09-20 et **s'arrêtait à l'Article 23** — six Articles, dont trois des dix
+   plus lourds, invisibles à l'instrument.
+6. **`mesurerSections()`** — ajouté après le PREMIER vrai passage du diagnostic (Article 25), qui
+   annonçait « INVENTAIRE : aucun Article ». C'était exact et trompeur : les deux plus gros
+   inventaires de la charte ne sont pas des Articles mais des sections de niveau deux. Le diagnostic
+   déclare désormais sa couverture réelle — **59 % du document vit dans les Articles**.
+
+## La mémoire
+
+`docs/referentiel/charte-operations.md`, au grain de l'ARTICLE TOUCHÉ (calibrage explicite).
+Amorcée le 2026-09-23 avec **quatre opérations reconstituées** depuis les tâches #122, #162, #171 et
+le registre ecotoken — chacune déclarant « RECONSTITUÉ » dans sa raison, parce que reconstituer est
+légitime et faire passer une reconstitution pour un enregistrement ne l'est pas.
+
+`commentOnAFaitLaDerniereFois(article)` est la fonction qui rend cette mémoire exploitable plutôt
+que décorative : elle remonte l'historique de CET Article et met en évidence les opérations
+**annulées**, qui sont l'information la plus chère du registre.
+
+## Ses cinq sorties
+
+| Commande | Pour qui | Ce qu'elle rend |
+|---|---|---|
+| `node scripts/moise-tables-de-loi.mjs` | l'agent, à chaque commit | les deux garde-fous de fraîcheur + plan d'action |
+| `… diagnostic` | l'agent | le diagnostic complet : natures, porteurs, hors-Articles, mémoire, gain borné, redondances |
+| `… cartographie` | l'agent | régénère `charte-cartographie.md` |
+| `… memoire [article]` | l'agent | « comment on a fait la dernière fois ? » |
+| `… synthese` | **l'utilisateur** | les points sensibles, et eux seuls |
+| `… process` | l'agent | l'état des dix étapes du process |
+
+## Ce qu'il ne fait jamais
+
+Il ne modifie pas la charte (classée MAITRE par tool-brain, score 12, citée par 169 fichiers :
+au-delà du risque faible, ça se propose, jamais ça ne s'applique). Il n'écrit ni l'analyse ni le
+plan d'action — il rassemble les faits et nomme ce qui appelle une décision. Il ne tranche jamais
+une nature. Il ne bloque rien.
+
+## Limites honnêtes
+
+- L'estimation en tokens est une **heuristique** (≈3,6 caractères/token), jamais le tokenizer réel.
+- `natureProposee()` est une proposition depuis des signaux mécaniques : elle se trompera, et c'est
+  pour ça que la colonne « Statut » existe.
+- Le découpage rattache le contenu intercalé entre deux Articles à l'Article **précédent** — limite
+  héritée de CHARTER-SPY, assumée et non corrigée.
+- `porteursDeclares()` ne reconnaît qu'un porteur nommé en `` `maFonction()` `` ou
+  `` `scripts/mon-outil.mjs` ``. Un mécanisme réel décrit en prose sans être nommé compte comme
+  « sans porteur » : la mesure sous-déclare plutôt qu'elle n'invente, ce qui est la bonne direction
+  pour un garde-fou dont tout le capital est d'être cru.

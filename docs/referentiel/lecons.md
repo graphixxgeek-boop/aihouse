@@ -479,6 +479,60 @@ que lue au bon moment — d'où le terrain ci-dessous.
 
 **Terrain** : quand un nouveau garde-fou fait rougir un test qui n'était pas son sujet, ou quand j'ajuste une assertion pour faire passer la suite · mots : stub, fixture, faux modèle, jeu de test, assertion qui casse, ajuster le test · fichiers : scripts/check-house.mjs
 
+## L18 — Un guide qui dicte une forme précise et fausse coûte plus cher que pas de guide du tout
+
+`integration-outil` existe pour une raison écrite noir sur blanc dans son propre en-tête : éviter
+qu'on découvre les oublis « un test après l'autre ». Pour chaque registre à remplir, il donne la
+LIGNE EXACTE à écrire. En l'appliquant pour de vrai, la ligne qu'il dictait pour le registre de
+fiabilité — `{ niveau: "...", raison: "..." }` — a été refusée par la suite de tests, qui attend
+`{ nature: "...", pourquoi: "..." }` depuis toujours.
+
+**Ce qui rend le cas coûteux plutôt qu'anecdotique** : une forme précise inspire confiance. Sans
+guide, on serait allé lire le registre et on aurait copié la ligne du voisin, ce qui marche. Avec
+un guide faux, on écrit ce qu'il dit, on commit, et le test refuse — exactement le scénario que
+l'outil promettait d'éviter, aggravé par le fait qu'on ne soupçonne pas la source.
+
+**La règle** : un outil qui dicte une forme doit la DÉRIVER du registre réel, ou être vérifié
+contre lui. Une forme recopiée à la main dans un guide est une copie au sens de l'Article 24, et
+elle se périme comme toutes les autres — sauf que celle-ci se périme en silence, puisque rien ne
+compare un texte d'aide à la structure qu'il décrit.
+
+*Payée le 2026-09-23 en intégrant MOÏSE-TABLES-DE-LOI : onze registres à remplir, un seul dicté
+dans la mauvaise forme, et c'est celui-là qui a fait échouer la suite.*
+
+**Porté par** : `check-house.mjs`, dont l'assertion sur `TOOL_RELIABILITY` exige `nature` et
+`pourquoi` — elle a mordu, c'est ainsi que la faute a été trouvée. Le guide lui-même n'est pas
+encore dérivé du registre : c'est une dette déclarée plutôt que tue, et le prochain registre dont
+la forme changera la rouvrira.
+
+**Terrain** : quand j'applique la ligne exacte donnée par un outil d'aide plutôt que de copier un voisin réel · mots : integration-outil, forme à écrire, registre à renseigner, inscription manuelle · fichiers : scripts/integration-outil.mjs, scripts/lib-shell.mjs
+
+## L19 — Une dérivation ne supporte que l'alphabet qu'on lui a donné par hasard
+
+Le premier outil au nom français de l'Agence a suffi à révéler un défaut présent depuis le début :
+`slugifyAgentName()` filtrait sur `[^a-z0-9]`, si bien que « MOÏSE-TABLES-DE-LOI » donnait le slug
+`mo-se-tables-de-loi`. Le « ï » ne devenait pas « i », il devenait un séparateur. L'audit
+d'intégration cherchait alors six fichiers qui n'existeraient jamais et déclarait l'outil
+incomplet — alors qu'il était complet.
+
+**Ce qui rend le cas instructif** : le projet travaille EN FRANÇAIS depuis toujours. Ce n'est pas
+un cas limite exotique, c'est le cas normal, et il n'avait jamais mordu uniquement parce que les
+trente-cinq outils précédents portaient par hasard des noms sans accent. Une dérivation qui n'a
+jamais rencontré son entrée difficile n'est pas robuste, elle est chanceuse.
+
+**Le piège dans le piège** : corriger la dérivation du slug ne suffisait pas. La RECHERCHE dans
+les documents comparait toujours un slug sans accent à un texte qui en portait — la même règle
+réapparue ailleurs sous une autre forme, ce que l'Article 3 interdit explicitement. Il a fallu une
+normalisation unique et partagée (`sansAccents()`, `lib-shell.mjs`) pour fermer les deux moitiés.
+
+*Payée le 2026-09-23 : quatre écarts d'intégration fantômes, signalés comme réels.*
+
+**Porté par** : `sansAccents()` (`scripts/lib-shell.mjs`), appelée des deux côtés de la
+comparaison, plus l'audit d'intégration lui-même qui redeviendrait rouge si la normalisation
+disparaissait — c'est lui qui a trouvé la faute.
+
+**Terrain** : quand une dérivation mécanique (slug, identifiant, chemin) rencontre pour la première fois un nom accentué, ou quand je corrige une normalisation d'un seul côté d'une comparaison · mots : slug, normalisation, accent, dérivation, identifiant dérivé · fichiers : scripts/lib-shell.mjs, scripts/le-coordinateur.mjs
+
 ## BP1 — La règle s'écrit à UN endroit et se dérive partout ailleurs
 
 Devant vingt endroits à corriger, le réflexe est de corriger les vingt. Le bon geste est de trouver

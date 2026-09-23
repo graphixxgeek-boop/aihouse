@@ -241,6 +241,7 @@ export const AGENT_SCRIPT_FILES = {
   "safe-export": "scripts/safe-export.mjs",
   "tool-learning": "scripts/tool-learning.mjs",
   "the-equalizer": "scripts/the-equalizer.mjs",
+  "moise-tables-de-loi": "scripts/moise-tables-de-loi.mjs",
   "integration-outil": "scripts/integration-outil.mjs",
   argus: "scripts/check-argus.mjs",
   harmonia: "scripts/check-harmonia.mjs",
