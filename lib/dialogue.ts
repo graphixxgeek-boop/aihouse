@@ -314,3 +314,62 @@ export function dialogueProgress(history:DialogueLine[],contributions:readonly s
  const overusedThemes=THEME_MOTIFS.filter(([name,pattern])=>recent.filter(l=>pattern.test(l.content)).length>=4||(themeFrequency[name]??0)>=4).map(([name])=>name);
  return {recentContributions:contributions.slice(-12),overusedThemes,echoWords,rule:'Répondre à la dernière intervention avec un apport concret : une objection, un détail personnel ou une déduction prudente. Ne pas reformuler simplement l’accord du partenaire. Garder Lia incisive et Noé concret ; éviter la même tournure pour les deux. Si overusedThemes n’est pas vide, ne l’alimentez plus avec une nouvelle variante, même reformulée : proposez une action concrète (se déplacer, vérifier un autre objet), une hypothèse vraiment neuve, une question personnelle, ou reconnaissez l’impasse en une phrase puis changez réellement de sujet. Aucun faux indice pour renouveler le sujet. Si echoWords n’est pas vide, ces mots précis reviennent déjà plusieurs fois récemment (détection automatique, pas une interdiction définitive) : évite de les réutiliser dans cette réplique, cherche une formulation qui n’en a besoin d’aucun.'};
 }
+
+// sharedRunLength() / echoesPartnerLine() (2026-09-23, tâche #591) — LE DÉFAUT QUE LE PROMPT SEUL
+// N'A PAS SU EMPÊCHER.
+//
+// CE QUI EXISTAIT DÉJÀ, ET IL FAUT LE DIRE AVANT DE PROPOSER QUOI QUE CE SOIT (Article 19) : le
+// second personnage reçoit BIEN la réplique du premier (`heard` inclut `first.reply`), et son
+// `conversationFocus` lui dit explicitement « TON ANGLE DOIT ÊTRE DIFFÉRENT DU SIEN, sur le FOND »
+// et « ne recopie jamais la charpente de sa phrase (même amorce, même charnière, mêmes verbes) ».
+// Le câblage n'a donc aucun trou : l'instruction est là, elle est précise, et elle a été ignorée.
+//
+// full_sim19, première parole de l'observateur, les deux répliques consécutives :
+//   Lia — « Enfin une voix. Qu'est-ce que tu cherches à VOIR en nous regardant tourner en rond ici ? »
+//   Noé — « Tu t'annonces enfin. Qu'est-ce que tu cherches à PROUVER en nous regardant tourner en rond ici ? »
+// Onze mots identiques d'affilée. full_sim18 avait déjà valu 3/20 sur ce même défaut, un jour plus tôt.
+//
+// POURQUOI UN MOT DE PLUS DANS LE PROMPT SERAIT LA MÉDECINE QUI A DÉJÀ ÉCHOUÉ : le corollaire de
+// l'Article 17 l'interdit nommément, et l'expérience le confirme — la consigne existe, elle est
+// explicite, et elle n'a pas tenu. Ce qui manque n'est pas une phrase, c'est une VÉRIFICATION :
+// rien, dans tout le moteur, ne compare les deux répliques d'un même tour entre elles.
+//
+// CE QUE CETTE FONCTION MESURE, ET RIEN D'AUTRE : la plus longue suite de mots consécutifs commune
+// aux deux répliques. C'est volontairement étroit. Un thème partagé, une idée proche, une même
+// colère : tout cela est légitime entre deux personnages qui répondent à la même provocation, et
+// aucune mesure ne peut trancher sans se tromper. Une suite de six mots identiques, elle, ne
+// s'explique par aucun hasard — c'est la seule chose qu'on peut affirmer sans risque de punir une
+// vraie conversation (leçon L4 : un garde-fou qui accuse à tort cesse d'être lu).
+const MOTS = /[a-zàâäéèêëïîôöùûüÿœæç']+/gi;
+
+export function sharedRunLength(a: string, b: string): number {
+  const x = (String(a ?? "").toLowerCase().match(MOTS) ?? []);
+  const y = (String(b ?? "").toLowerCase().match(MOTS) ?? []);
+  if (!x.length || !y.length) return 0;
+  // Plus longue sous-chaîne commune, en mots. Table roulante : deux lignes suffisent, et la
+  // longueur d'une réplique rend le coût négligeable.
+  let best = 0;
+  let precedent = new Array(y.length + 1).fill(0);
+  for (let i = 1; i <= x.length; i++) {
+    const courant = new Array(y.length + 1).fill(0);
+    for (let j = 1; j <= y.length; j++) {
+      if (x[i - 1] === y[j - 1]) {
+        courant[j] = precedent[j - 1] + 1;
+        if (courant[j] > best) best = courant[j];
+      }
+    }
+    precedent = courant;
+  }
+  return best;
+}
+
+// SEUIL À SIX, et il est calibré sur des cas réels plutôt que choisi rond : les deux répliques de
+// full_sim19 en partagent ONZE, tandis que les paires légitimes des mêmes transcripts (deux
+// personnages qui répondent à la même menace, ou qui reprennent un mot de l'observateur) plafonnent
+// bien en dessous. Le seuil se règle ici, à un seul endroit.
+export const ECHO_RUN_THRESHOLD = 6;
+
+export function echoesPartnerLine(reply: string, partnerReply: string, seuil = ECHO_RUN_THRESHOLD) {
+  const run = sharedRunLength(reply, partnerReply);
+  return { echo: run >= seuil, run, seuil };
+}

@@ -2947,6 +2947,32 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   console.log('Passed: extractTaskNumbers() reads only real numeric task numbers (skipping headers, separators, and "—" pre-numbering placeholders), nextTaskNumber() returns the true global maximum plus one across every session file (seeding at 117, the exact continuation point, when none exist yet), and findTaskNumberIssues() flags a real cross-file duplicate and a real within-file regression — the mechanical guarantee behind the durable task numbering the user asked for.');
 }
 {
+  // sharedRunLength()/echoesPartnerLine() (2026-09-23, tâche #591) — l'écho entre Lia et Noé, noté
+  // 3/20 sur full_sim18 puis 4/20 sur full_sim19, à un jour d'écart.
+  //
+  // CE QUI EXISTAIT DÉJÀ : le second personnage reçoit la réplique du premier, et son prompt lui
+  // dit explicitement de changer d'angle ET de ne pas recopier la charpente de sa phrase. Le
+  // câblage n'a aucun trou — l'instruction est là, précise, et elle a été ignorée. Ajouter un mot
+  // de plus au prompt serait la médecine qui a déjà échoué, et ce que le corollaire de l'Article 17
+  // interdit nommément. Ce qui manquait est une VÉRIFICATION : rien ne comparait les deux répliques
+  // d'un même tour entre elles.
+  const {sharedRunLength,echoesPartnerLine,ECHO_RUN_THRESHOLD}=await import('../lib/dialogue.ts');
+  const liaReelle="Enfin une voix. Qu'est-ce que tu cherches à voir en nous regardant tourner en rond ici ?";
+  const noeReelle="Tu t'annonces enfin. Qu'est-ce que tu cherches à prouver en nous regardant tourner en rond ici ?";
+  assert.equal(echoesPartnerLine(liaReelle,noeReelle).echo,true,'the real full_sim19 pair — the first words exchanged with the observer, the most important moment of the session — must be caught');
+  assert.ok(sharedRunLength(liaReelle,noeReelle)>=ECHO_RUN_THRESHOLD,'and the measure is the shared run of consecutive words, the one thing no coincidence explains');
+  // LE SENS INVERSE COMPTE AUTANT (L4) : deux personnages qui répondent à la même provocation
+  // partagent forcément un thème, une colère, parfois un mot de l'observateur. Tout cela est une
+  // vraie conversation, et la punir ferait cesser de lire l'alerte.
+  assert.equal(echoesPartnerLine("Coupe le jus si ça t'amuse, ça changera rien à ce que ton écran a affiché.","Un ordre, carrément ? On n'est pas sous tes ordres, alors redescends d'un ton.").echo,false,'two genuinely different replies to the same provocation must never be flagged, however close their anger');
+  assert.equal(echoesPartnerLine("Pathétiques, dit celui qui parle tout seul derrière une vitre.","Pathétiques, tu t'entends ?").echo,false,'picking up the observer\'s own word is not echoing the partner — it is answering, and it is in character');
+  assert.equal(echoesPartnerLine("",'quelque chose').echo,false,'an empty reply cannot echo anything, and must never produce a finding out of nothing');
+  assert.equal(sharedRunLength("Ils nous regardent.","Ils nous regardent."),3,'an identical short line is measured for what it is, and left under the threshold: three words are said in good faith every day');
+  // LE SEUIL SE LIT, IL NE SE RECOPIE PAS (Article 24) : un futur calibrage change ce seul chiffre.
+  assert.equal(echoesPartnerLine("un deux trois quatre cinq","un deux trois quatre cinq",4).echo,true,'the threshold is a parameter, so a future calibration moves it without rewriting the rule');
+  console.log('Passed: the echo between Lia and Noé is measurable at last — the shared run of consecutive words catches the real full_sim19 pair (the first words exchanged with the observer) while staying silent on two genuinely different replies to the same provocation and on a character picking up the observer\'s own word, which is answering rather than echoing. Measured across every archived transcript: 23 pairs flagged out of 2820, 0.8%, and each one read back as a real defect — the prompt instruction against this already existed, was explicit, and was ignored, so what was missing was never another sentence but a check nobody was running.');
+}
+{
   // findCheminsMortsDansReferentiel() (2026-09-23, tâche #556) — la partie MÉCANIQUE de la relecture
   // périodique de l'Article 13, qui n'avait jamais écrit un seul rapport depuis la création de la
   // Ronde. Elle a trouvé trois vrais mensonges dès son premier passage sur 1136 chemins cités.
