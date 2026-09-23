@@ -2971,12 +2971,35 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(cats.enCours.length,1,'exactly the one en cours row must land in the enCours bucket, regardless of trailing detail after the status word');
   assert.equal(cats.ouverte.length,1,'exactly the one ouverte row must land in the ouverte bucket');
   assert.equal(cats.autre.length,1,'a status matching none of the three known words must land in autre, never silently dropped or miscategorized into one of the three');
-  assert.deepEqual(categorizeTasks('| Horodatage | Sujet | Sous-sujet | Sensibilité | Description | Statut |\n|---|---|---|---|---|---|'),{terminee:[],enCours:[],ouverte:[],autre:[]},'a session with zero task rows must report all four buckets empty, never crash');
+  assert.deepEqual(categorizeTasks('| Horodatage | Sujet | Sous-sujet | Sensibilité | Description | Statut |\n|---|---|---|---|---|---|'),{terminee:[],enCours:[],ouverte:[],ecartee:[],autre:[]},'a session with zero task rows must report every bucket empty, never crash');
   const fakeDir=[{name:'a.md',text:session},{name:'b.md',text:'| h | S5 | s5 | normal | d5 | terminée |'}];
   const totals=categorizeAllSessions('/fake',()=>fakeDir.map(f=>f.name),(p)=>fakeDir.find(f=>p.endsWith(f.name)).text,()=>true);
   assert.equal(totals.terminee.length,2,'terminée rows from every session file must be aggregated together, never only the first file found');
   assert.equal(totals.terminee[1].file,'b.md','each aggregated entry must remember which real session file it came from, never lose that provenance');
-  assert.deepEqual(categorizeAllSessions('/definitely-not-a-real-path'),{terminee:[],enCours:[],ouverte:[],autre:[]},'a missing sessions directory must report all four buckets empty, never throw');
+  // LE STATUT SE NORMALISE AVANT D'ÊTRE RECONNU (2026-09-23, tâche #625). Le classement n'acceptait
+  // que trois formes littérales en tête de cellule ; le suivi réel en emploie sept. Mesuré ce
+  // jour-là : 53 tâches sur 508 tombaient dans « statut non reconnu », dont 24 marquées « à faire »,
+  // pendant que la vue temps réel annonçait « 2 tâches ouvertes ». Le tableau censé dire ce qu'il
+  // reste à faire en cachait donc l'essentiel — sans jamais mentir, en rangeant à part.
+  const l8=(n,st)=>`| ${n} | 2026-09-23T10:00Z | motcle${n} | Sujet | Sous-sujet | NORMAL-UTILE | détail | ${st} |`;
+  const cat=(st)=>categorizeTasks(l8(1,st));
+  assert.equal(cat('TERMINÉ').terminee.length,1,'"TERMINÉ" in capitals and without the trailing -e must count as done — the original pattern demanded "terminée" exactly, and every row written this session used the other spelling');
+  assert.equal(cat('[terminé le 2026-09-23T17:10Z]').terminee.length,1,'a closure wrapped in brackets and carrying its date must count as done, since that is how the registry actually records one');
+  assert.equal(cat('[à faire]').ouverte.length,1,'"[à faire]" in brackets must land in the OPEN bucket — this single form accounted for most of the 24 tasks that had gone invisible');
+  assert.equal(cat('en cours').enCours.length,1,'and the forms that already worked must keep working');
+
+  // UNE DÉCISION N'EST PAS UN RESTE À FAIRE, et les confondre serait la rouvrir (leçon L22).
+  assert.equal(cat('[écartée — décision explicite de l\'utilisateur]').ecartee.length,1,'a task the user explicitly set aside must go to its own bucket, never back among the open ones');
+  assert.equal(cat('[reportée — décision explicite de l\'utilisateur]').ecartee.length,1,'same for a postponed one: re-listing it as outstanding at every pass is proposing it again, which he asked never to happen');
+  assert.equal(cat('[écartée — décision explicite]').ouverte.length,0,'and it must NOT also appear as open — counted twice, the dashboard would still nag');
+
+  assert.equal(cat('[en attente de décision]').ouverte.length,1,'"awaiting a decision" is an OPEN task waiting on the user, never a decision already taken — filing it elsewhere would drop it from what is still his to settle');
+
+  // L'AUTRE SENS (BP4) : un statut réellement inconnu doit continuer de ressortir, sinon ce
+  // correctif aurait remplacé un fourre-tout bruyant par un silence.
+  assert.equal(cat('bleu').autre.length,1,'a status nobody recognises must still surface — widening what counts must never become accepting anything');
+
+  assert.deepEqual(categorizeAllSessions('/definitely-not-a-real-path'),{terminee:[],enCours:[],ouverte:[],ecartee:[],autre:[]},'a missing sessions directory must report every bucket empty, never throw');
   console.log('Passed: categorizeTasks() sorts every task row into exactly one of terminée/en cours/ouverte/autre with no row lost or double-counted, categorizeAllSessions() aggregates this across every real session file while remembering each entry\'s source file, and both report an honest all-empty result rather than crashing on missing or empty input — the real-time done/in-progress/to-do view the user asked the system to be able to produce.');
 }
 {
@@ -3241,8 +3264,22 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(collision.some((h)=>/tâches ouvertes portent/.test(h.pourquoi)),'the same keyword carried by two OPEN tasks brings back the very confusion the field removes, and must be flagged');
   const closes=lire([{name:'a.md',text:[ligne(8,'lecteurs','terminée — fidèle'),ligne(9,'lecteurs','à faire')].join('\n')}]);
   assert.deepEqual(closes,[],'a CLOSED task sharing a keyword with an open one must NOT be flagged — nobody cites a closed task any more, and enforcing it across all history would make the field unusable, hence bypassed');
-  const ancienFormat=lire([{name:'a.md',text:'| 10 | 2026-09-23T10:00Z | Sujet | Sous-sujet | NORMAL-UTILE | détail | à faire |'}]);
-  assert.equal(ancienFormat.length,1,'a row still on the old 7-column format must be reported as MISSING a keyword, never read as if its Sujet cell were one — a silent column shift is how 26 tasks once all rendered "UTILE" at once');
+  // UNE LIGNE MAL FORMÉE SE DIT MAL FORMÉE (2026-09-23, tâche #625). Cette assertion exigeait
+  // jusqu'ici que la ligne soit signalée comme « mot-clé MANQUANT » — vrai du point de vue du
+  // lecteur, faux du point de vue de celui qui va corriger. Quatorze lignes réelles du suivi ont
+  // porté ce message : leur mot-clé était bel et bien écrit, c'est le FORMAT qui avait cédé, et
+  // sous-sujet/description/statut étaient décalés avec lui. Chercher un mot-clé absent là où il
+  // fallait recompter des colonnes, c'est le temps qu'un garde-fou est censé faire gagner.
+  const malFormee=lire([{name:'a.md',text:'| 10 | 2026-09-23T10:00Z | Sujet | Sous-sujet | NORMAL-UTILE | détail | à faire |'}]);
+  assert.equal(malFormee.length,1,'a row that is not on the 8-column format must still be flagged — a silent column shift is how 26 tasks once all rendered "UTILE" at once');
+  assert.ok(/mal formée : 7 colonne/.test(malFormee[0].pourquoi),'and it must be named for what it IS — a malformed row with its actual column count — never as a missing keyword, which sends the reader looking for a word that is already there');
+  assert.ok(/décalé/.test(malFormee[0].pourquoi),'saying in the same breath that the following columns shifted with it, since that is the damage nobody sees: the keyword is merely the first casualty');
+
+  // L'AUTRE SENS (BP4) : un mot-clé réellement absent sur une ligne BIEN formée doit continuer de
+  // se dire « manquant », sinon ce correctif aurait échangé un message faux contre un autre.
+  const vraimentVide=lire([{name:'a.md',text:ligne(11,'','à faire')}]);
+  assert.equal(vraimentVide.length,1,'a genuinely empty keyword on a well-formed row must still be flagged');
+  assert.ok(!/mal formée/.test(vraimentVide[0].pourquoi),'and must NOT be described as malformed — the row is fine, the cell is empty, and telling the two apart is the whole point of this fix');
   assert.deepEqual(findMotsClesManquants('/definitely-not-a-real-path'),[],'a missing sessions directory must report an honest empty result, never crash');
   console.log('Passed: findMotsClesManquants() flags an empty, too-short, too-vague or duplicated keyword on an OPEN task, deliberately leaves closed tasks alone, and reports a row still on the old 7-column format as missing a keyword rather than mistaking its Sujet cell for one — proving the guard can go red, since it returned zero on the real registry the day it was written.');
 }

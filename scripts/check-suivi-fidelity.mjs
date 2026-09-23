@@ -117,23 +117,56 @@ export function categorizeTasks(sessionText) {
   const rows = sessionText
     .split("\n")
     .filter((l) => l.startsWith("|") && !/^\|\s*-+\s*\|/.test(l) && !l.includes("Horodatage"));
-  const buckets = { terminee: [], enCours: [], ouverte: [], autre: [] };
+  const buckets = { terminee: [], enCours: [], ouverte: [], ecartee: [], autre: [] };
   for (const row of rows) {
     const cells = splitTableRow(row);
     const statut = cells[cells.length - 1] ?? "";
-    const entry = { row: row.trim(), statut, cells };
-    if (/^termin[ée]e/i.test(statut)) buckets.terminee.push(entry);
-    else if (/^en cours/i.test(statut)) buckets.enCours.push(entry);
-    else if (/^ouverte/i.test(statut)) buckets.ouverte.push(entry);
+    const entry = { row: row.trim(), statut, cells, statutNormalise: normaliserStatut(statut) };
+    const s = entry.statutNormalise;
+    if (/^termin[ée]/.test(s) || /^fait\b/.test(s)) buckets.terminee.push(entry);
+    else if (/^en cours/.test(s)) buckets.enCours.push(entry);
+    // « en attente de décision » est une tâche OUVERTE qui attend l'utilisateur, jamais une
+    // décision déjà prise : la ranger ailleurs la ferait disparaître de ce qu'il reste à trancher.
+    else if (/^ouverte/.test(s) || /^a faire/.test(s) || /^a traiter/.test(s) || /^en attente/.test(s)) buckets.ouverte.push(entry);
+    // ÉCARTÉE/REPORTÉE EST UNE DÉCISION DE L'UTILISATEUR, jamais un reste à faire : la ranger
+    // avec les tâches ouvertes la lui re-proposerait à chaque passage, exactement ce qu'il a
+    // demandé qu'on ne fasse jamais (« ne jamais écarter une zone sciemment laissée de côté par
+    // moi » — pris par l'autre bout : ne jamais rouvrir ce qu'il a fermé, cf. leçon L22).
+    else if (/^ecart/.test(s) || /^report/.test(s) || /^abandon/.test(s)) buckets.ecartee.push(entry);
     else buckets.autre.push(entry);
   }
   return buckets;
 }
 
+// LE STATUT SE NORMALISE AVANT D'ÊTRE RECONNU (2026-09-23, tâche #625).
+//
+// POURQUOI, ET LE CHIFFRE EST LE VRAI SUJET : le classement d'origine n'acceptait que trois
+// formes littérales (« terminée », « en cours », « ouverte ») en tête de cellule. Le suivi réel en
+// emploie sept, entre les crochets (« [à faire] », « [terminé le 2026-09-23] ») et la majuscule
+// sans -e final (« TERMINÉ »). Résultat mesuré le jour de ce correctif : **53 tâches sur 508
+// tombaient dans « statut non reconnu »**, dont une vingtaine marquées « à faire » — et la vue
+// temps réel annonçait « 2 tâches ouvertes ». Le tableau qui sert à savoir ce qu'il reste à faire
+// en cachait donc l'essentiel, sans jamais mentir explicitement : il rangeait à part, et personne
+// ne lisait la catégorie fourre-tout.
+//
+// Ce n'est pas une liste de formes tolérées qui grandira indéfiniment (Article 24) : on retire la
+// décoration (crochets, gras, horodatage de clôture) puis on compare sur un texte sans accent ni
+// casse — un PRINCIPE, pas une énumération.
+export function normaliserStatut(statut = "") {
+  return String(statut)
+    .replace(/^[\s*_`]+/, "")
+    .replace(/^\[\s*/, "")
+    .replace(/\s*\]\s*$/, "")
+    .replace(/\s+le\s+\d{4}-\d{2}-\d{2}.*$/i, "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 export function categorizeAllSessions(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
-  if (!exists(sessionsDir)) return { terminee: [], enCours: [], ouverte: [], autre: [] };
+  if (!exists(sessionsDir)) return { terminee: [], enCours: [], ouverte: [], ecartee: [], autre: [] };
   const files = readDir(sessionsDir).filter((f) => f.endsWith(".md"));
-  const total = { terminee: [], enCours: [], ouverte: [], autre: [] };
+  const total = { terminee: [], enCours: [], ouverte: [], ecartee: [], autre: [] };
   for (const file of files) {
     const cats = categorizeTasks(readFile(join(sessionsDir, file)));
     for (const key of Object.keys(total)) for (const entry of cats[key]) total[key].push({ ...entry, file });
@@ -380,6 +413,11 @@ export function findCheminsMortsDansReferentiel({ root = ROOT, fichiers, readFil
 //
 // Ce module ne connaît pas les règles du mot-clé : elles vivent dans criticite.mjs, avec le
 // format de tâche qu'elles servent. On les LIT (Article 24), on ne les recopie pas ici.
+// Le format de tâche du suivi : 8 colonnes, ni plus ni moins (docs/systeme-de-suivi.md).
+// Nommé une fois plutôt que comparé à un 8 nu à trois endroits — un chiffre nu ne dit pas de quoi
+// il parle le jour où quelqu'un le lit sans contexte.
+export const COLONNES_ATTENDUES = 8;
+
 export function findMotsClesManquants(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
   const buckets = categorizeAllSessions(sessionsDir, readDir, readFile, exists);
   const ouvertes = [...buckets.enCours, ...buckets.ouverte, ...buckets.autre];
@@ -387,10 +425,23 @@ export function findMotsClesManquants(sessionsDir = SESSIONS_DIR, readDir = read
   const taches = [];
   for (const entry of ouvertes) {
     const c = entry.cells;
+    const n = (c[0] ?? "").trim();
     // Même lecture ancrée qu'ailleurs : Mot-clé en 3e position du format à 8 colonnes, absent
     // d'une ligne restée à l'ancien format — jamais un décalage silencieux des colonnes suivantes.
-    const motCle = c.length >= 8 ? (c[2] ?? "").trim() : "";
-    const n = (c[0] ?? "").trim();
+    //
+    // MAIS UNE LIGNE MAL FORMÉE SE DIT COMME TELLE (2026-09-23, tâche #625). Avant ce jour, une
+    // ligne qui n'avait pas ses 8 colonnes rendait un mot-clé vide, et le garde-fou annonçait
+    // « un mot-clé vide ne rappelle rien » — alors que le mot-clé était bel et bien écrit, et que
+    // la vraie panne était structurelle. Quatorze lignes d'affilée ont porté ce message faux :
+    // elles faisaient croire à une négligence de saisie là où c'était le FORMAT qui avait cédé,
+    // et TOUTES les colonnes suivantes (sous-sujet, description, statut) étaient décalées avec.
+    // Un garde-fou qui nomme la mauvaise cause envoie chercher au mauvais endroit — c'est la même
+    // famille que la leçon L22, où un résumé recomptait au lieu de lire.
+    if (c.length !== COLONNES_ATTENDUES) {
+      hits.push({ n, motCle: "", pourquoi: `ligne mal formée : ${c.length} colonne(s) au lieu de ${COLONNES_ATTENDUES} — le mot-clé n'est pas manquant, il est illisible, et sous-sujet/description/statut sont décalés avec lui`, file: entry.file });
+      continue;
+    }
+    const motCle = (c[2] ?? "").trim();
     taches.push({ n, motCle, statut: c[c.length - 1] ?? "" });
     const verdict = motCleValide(motCle);
     if (!verdict.ok) hits.push({ n, motCle, pourquoi: verdict.pourquoi, file: entry.file });
@@ -411,9 +462,12 @@ function main() {
   for (const e of all.enCours) console.log(`   - ${describe(e)}`);
   console.log(`📋 Ouvertes / à faire : ${all.ouverte.length}`);
   for (const e of all.ouverte) console.log(`   - ${describe(e)}`);
+  // Écartées et reportées comptées À PART et sans détail : ce sont des décisions déjà prises,
+  // les relister ligne à ligne à chaque passage revient à les reproposer (cf. leçon L22).
+  if (all.ecartee.length) console.log(`🚫 Écartées / reportées par décision explicite : ${all.ecartee.length} (jamais reproposées ici)`);
   if (all.autre.length) {
-    console.log(`⚠️ Statut non reconnu (ni terminée/en cours/ouverte) : ${all.autre.length}`);
-    for (const e of all.autre) console.log(`   - [${e.statut}] ${describe(e)}`);
+    console.log(`⚠️ Statut vraiment non reconnu : ${all.autre.length} — à corriger, pas à ignorer`);
+    for (const e of all.autre) console.log(`   - [${e.statut.slice(0, 60)}] ${describe(e)}`);
   }
 
   console.log("\n=== Détail des tâches encore ouvertes (docs/suivi/) ===\n");
