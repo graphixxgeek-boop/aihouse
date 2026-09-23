@@ -2947,6 +2947,31 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   console.log('Passed: extractTaskNumbers() reads only real numeric task numbers (skipping headers, separators, and "—" pre-numbering placeholders), nextTaskNumber() returns the true global maximum plus one across every session file (seeding at 117, the exact continuation point, when none exist yet), and findTaskNumberIssues() flags a real cross-file duplicate and a real within-file regression — the mechanical guarantee behind the durable task numbering the user asked for.');
 }
 {
+  // findMotsClesManquants() (2026-09-23, tâche #569) : le mot-clé unique par tâche ouverte.
+  // CE QUE CES ASSERTIONS PROTÈGENT VRAIMENT : lancé sur le vrai suivi le jour de sa création, ce
+  // garde-fou a rendu « 0 écart » — exactement la forme de preuve creuse traquée toute cette
+  // session (un vert obtenu parce que rien n'a été regardé). Les fixtures ci-dessous existent donc
+  // pour prouver qu'il SAIT ÊTRE ROUGE, jamais pour constater qu'il est vert.
+  const {findMotsClesManquants}=await import('../scripts/check-suivi-fidelity.mjs');
+  const ligne=(n,mot,statut)=>`| ${n} | 2026-09-23T10:00Z | ${mot} | Sujet | Sous-sujet | NORMAL-UTILE | détail | ${statut} |`;
+  const lire=(sessions)=>findMotsClesManquants('/fake',()=>sessions.map(f=>f.name),(p)=>sessions.find(f=>p.endsWith(f.name)).text,()=>true);
+  assert.deepEqual(lire([{name:'a.md',text:[ligne(1,'archangel','à faire'),ligne(2,'equalizer','en cours')].join('\n')}]),[],'two open tasks with valid, distinct keywords must report zero gap');
+  const vide=lire([{name:'a.md',text:ligne(3,'','à faire')}]);
+  assert.equal(vide.length,1,'an open task with an EMPTY keyword must be flagged — the column exists precisely so that "#490" means something six weeks later');
+  const court=lire([{name:'a.md',text:ligne(4,'api','à faire')}]);
+  assert.equal(court.length,1,'a keyword too short to recall anything must be flagged, not accepted because the cell is non-empty');
+  const vague=lire([{name:'a.md',text:ligne(5,'outil','à faire')}]);
+  assert.equal(vague.length,1,'a keyword that fits almost every task in the project distinguishes nothing and must be flagged');
+  const collision=lire([{name:'a.md',text:[ligne(6,'lecteurs','à faire'),ligne(7,'lecteurs','en cours')].join('\n')}]);
+  assert.ok(collision.some((h)=>/tâches ouvertes portent/.test(h.pourquoi)),'the same keyword carried by two OPEN tasks brings back the very confusion the field removes, and must be flagged');
+  const closes=lire([{name:'a.md',text:[ligne(8,'lecteurs','terminée — fidèle'),ligne(9,'lecteurs','à faire')].join('\n')}]);
+  assert.deepEqual(closes,[],'a CLOSED task sharing a keyword with an open one must NOT be flagged — nobody cites a closed task any more, and enforcing it across all history would make the field unusable, hence bypassed');
+  const ancienFormat=lire([{name:'a.md',text:'| 10 | 2026-09-23T10:00Z | Sujet | Sous-sujet | NORMAL-UTILE | détail | à faire |'}]);
+  assert.equal(ancienFormat.length,1,'a row still on the old 7-column format must be reported as MISSING a keyword, never read as if its Sujet cell were one — a silent column shift is how 26 tasks once all rendered "UTILE" at once');
+  assert.deepEqual(findMotsClesManquants('/definitely-not-a-real-path'),[],'a missing sessions directory must report an honest empty result, never crash');
+  console.log('Passed: findMotsClesManquants() flags an empty, too-short, too-vague or duplicated keyword on an OPEN task, deliberately leaves closed tasks alone, and reports a row still on the old 7-column format as missing a keyword rather than mistaking its Sujet cell for one — proving the guard can go red, since it returned zero on the real registry the day it was written.');
+}
+{
   // countTasksSince() / lastCoveredTaskNumber() (2026-09-20, THE-DEEP-READER) : la borne de relecture
   // est toujours un numéro de tâche, jamais une date/heure (risque de fuseau horaire explicitement
   // signalé par l'utilisateur).

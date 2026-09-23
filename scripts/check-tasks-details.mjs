@@ -34,6 +34,8 @@ import { join } from "node:path";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { PRESTATIONS, suggestPrestationsForTask, significantWords, badgeSignalsAsContext } from "./le-coordinateur.mjs";
+// L'étiquette criticité/urgence/mot-clé — lue chez son propriétaire, jamais recalculée ici.
+import { etiquetteDeLaTache, findMotsClesEnCollision } from "./criticite.mjs";
 import { daysSince, printReliabilityNotice } from "./lib-shell.mjs";
 import { renderTextReport } from "./report-template.mjs";
 import { recordRegistryWrite } from "./tool-usage.mjs";
@@ -147,10 +149,28 @@ export function loadAllTaskRows(sessionsDir, readDir, readFile, exists) {
   const rows = [];
   for (const [statusKey, entries] of Object.entries(buckets)) {
     for (const entry of entries) {
-      const [n, horodatage, sujet, sousSujet, sensibilite, detail, statut] = entry.cells;
+      // Lecture ANCRÉE AUX DEUX BOUTS, jamais un compte de colonnes supposé fixe : Statut est
+      // toujours la dernière cellule et Description l'avant-dernière (même principe que
+      // findClaimedFilesMissing() dans check-suivi-fidelity.mjs, qui l'avait appris en 2026-09-20
+      // quand la colonne N° est arrivée en tête). La colonne « Mot-clé » ajoutée le 2026-09-23 en
+      // position 3 est lue par sa position de TÊTE, et son absence sur une ligne restée à
+      // l'ancien format à 7 colonnes ne casse rien — elle vaut alors "" plutôt que de décaler
+      // Sujet/Sous-sujet/Sensibilité d'un cran, ce qui aurait rendu toute la ligne fausse en
+      // silence (c'est exactement ce décalage qui, pendant la migration, faisait lire « UTILE »
+      // à 26 tâches d'un coup).
+      const c = entry.cells;
+      const aMotCle = c.length >= 8;
+      const [n, horodatage] = c;
+      const motCle = aMotCle ? c[2] : "";
+      const sujet = c[aMotCle ? 3 : 2];
+      const sousSujet = c[aMotCle ? 4 : 3];
+      const sensibilite = c[aMotCle ? 5 : 4];
+      const detail = c[c.length - 2];
+      const statut = c[c.length - 1];
       rows.push({
         n: Number(n) || undefined,
         horodatage,
+        motCle: (motCle ?? "").trim(),
         sujet: sujet ?? "?",
         sousSujet: sousSujet ?? "?",
         sensibilite: sensibilite ?? "?",
@@ -235,8 +255,20 @@ export function buildListBlocks(rows) {
     blocks.push({ type: "heading", text: `${label} (${tasks.length})` });
     blocks.push({
       type: "table",
-      headers: ["N°", "Sensibilité", "Sujet", "Sous-sujet", "Statut"],
-      rows: tasks.map((t) => [t.n ?? "—", t.sensibilite, t.sujet, t.sousSujet, t.statut]),
+      // LA NOUVELLE ÉTIQUETTE (2026-09-23, tâche #568). L'ancienne colonne « Sensibilité » mélangeait
+      // la criticité et le retard : `URGENT-RETARD` y siégeait au-dessus de tâches plus importantes.
+      // Elle est remplacée par TROIS colonnes qui disent chacune une seule chose — le mot-clé qui
+      // rappelle de quoi il s'agit, la criticité seule, et l'urgence dans sa vignette à côté.
+      //
+      // L'ANCIEN PALIER RESTE VISIBLE en fin de ligne, et ce n'est pas de la nostalgie : c'est lui
+      // qui porte l'explication détaillée (« attendre coûte à chaque tour »). Le retirer perdrait le
+      // pourquoi au profit du quoi, et rendrait la migration irréversible au premier coup d'œil.
+      headers: ["N°", "Mot-clé", "Criticité", "Urgence", "Sujet", "Sous-sujet", "Statut", "Palier d'origine"],
+      rows: tasks.map((t) => {
+        const jours = t.horodatage ? Math.floor((Date.now() - new Date(t.horodatage).getTime()) / 86400000) : undefined;
+        const e = etiquetteDeLaTache(t, { jours });
+        return [t.n ?? "—", t.motCle || "—", `${e.icone} ${e.criticite}`, e.vignette, t.sujet, t.sousSujet, t.statut, e.palierSource];
+      }),
     });
   }
   return blocks;

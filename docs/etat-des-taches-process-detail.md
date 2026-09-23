@@ -171,6 +171,29 @@ La limite aux tâches ouvertes est volontaire : deux tâches closes qui partagen
 personne, et l'imposer sur tout l'historique rendrait le champ impraticable au bout de cent tâches —
 le genre de règle trop stricte qu'on finit par contourner.
 
+**La colonne existe pour de vrai dans le suivi depuis le 2026-09-23**, et c'est la moitié qui
+manquait : une règle sur un champ que le registre ne porte pas est une intention. Les 515 lignes de
+`docs/suivi/sessions/` ont reçu la colonne `Mot-clé` en 3e position, et les 32 tâches alors ouvertes
+ont reçu leur mot.
+
+**Le garde-fou qui la fait tenir** : `findMotsClesManquants()`
+(`scripts/check-suivi-fidelity.mjs`) refuse une tâche OUVERTE dont le mot-clé est vide, trop court,
+trop vague ou déjà porté par une autre — il ne recopie aucune de ces règles, il les lit dans
+`criticite.mjs` (Article 24). Sans lui, un champ facultatif se remplit trois fois puis plus jamais,
+et le jour où « #490 » ne dit plus rien à personne, la colonne est là, vide, à prouver qu'on y avait
+pensé.
+
+**Deux défauts trouvés en le branchant, et ni l'un ni l'autre par relecture** : (1) lancé sur le
+vrai suivi, il a rendu « 0 écart » — la forme de preuve creuse traquée toute cette session ; les
+fixtures de `check-house.mjs` existent donc pour prouver qu'il SAIT ÊTRE ROUGE, et c'est la première
+qui a révélé (2) que sa branche de collision plantait sur un nom de champ inventé, jamais exécutée
+jusque-là.
+
+**La lecture du tableau est ancrée aux deux bouts** (Statut dernier, Détail avant-dernier), jamais
+un compte de colonnes supposé fixe : une ligne restée à l'ancien format à 7 colonnes se lit comme
+« sans mot-clé » plutôt que de décaler Sujet/Sous-sujet/Criticité d'un cran. C'est exactement ce
+décalage qui, pendant la migration, a fait afficher « UTILE » à 26 tâches d'un coup.
+
 ### Le format standard
 
 `FORMAT_TACHE` déclare les huit champs en **données**, pas en prose : numéro, horodatage, mot-clé,

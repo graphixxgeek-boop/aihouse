@@ -14,6 +14,7 @@
 
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { motCleValide, findMotsClesEnCollision } from "./criticite.mjs";
 import { sh } from "./lib-shell.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -296,6 +297,40 @@ export function lastCoveredTaskNumber(indexText) {
   return max > 0 ? max : undefined;
 }
 
+// findMotsClesManquants() (2026-09-23, tâche #569) : une tâche OUVERTE doit porter un mot-clé
+// valide et unique. Le garde-fou existe parce que la colonne, seule, ne suffit pas : un champ
+// facultatif qu'aucun mécanisme ne réclame se remplit trois fois puis plus jamais, et le jour où
+// « #490 » ne dit plus rien à personne, la colonne est là, vide, à prouver qu'on y avait pensé.
+// C'est la leçon L7 prise au mot : une règle sans porteur n'existera plus à la session suivante
+// (Article 27). Portée volontairement limitée aux tâches OUVERTES, pour la même raison que
+// findMotsClesEnCollision() : une tâche close n'est plus citée, lui réclamer un mot-clé
+// rétroactivement rendrait la règle impraticable, donc contournée.
+//
+// Ce module ne connaît pas les règles du mot-clé : elles vivent dans criticite.mjs, avec le
+// format de tâche qu'elles servent. On les LIT (Article 24), on ne les recopie pas ici.
+export function findMotsClesManquants(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+  const buckets = categorizeAllSessions(sessionsDir, readDir, readFile, exists);
+  const ouvertes = [...buckets.enCours, ...buckets.ouverte, ...buckets.autre];
+  const hits = [];
+  const taches = [];
+  for (const entry of ouvertes) {
+    const c = entry.cells;
+    // Même lecture ancrée qu'ailleurs : Mot-clé en 3e position du format à 8 colonnes, absent
+    // d'une ligne restée à l'ancien format — jamais un décalage silencieux des colonnes suivantes.
+    const motCle = c.length >= 8 ? (c[2] ?? "").trim() : "";
+    const n = (c[0] ?? "").trim();
+    taches.push({ n, motCle, statut: c[c.length - 1] ?? "" });
+    const verdict = motCleValide(motCle);
+    if (!verdict.ok) hits.push({ n, motCle, pourquoi: verdict.pourquoi, file: entry.file });
+  }
+  for (const collision of findMotsClesEnCollision(taches)) {
+    // La raison vient de criticite.mjs telle quelle : la reformuler ici ferait vivre deux
+    // explications du même refus, dont une seule serait tenue à jour (Article 24).
+    hits.push({ n: collision.numeros.join(", "), motCle: collision.mot, pourquoi: collision.pourquoi });
+  }
+  return hits;
+}
+
 function main() {
   console.log("=== État des tâches, en temps réel (docs/suivi/) ===\n");
   const all = categorizeAllSessions();
@@ -343,6 +378,15 @@ function main() {
     }
   }
   if (!anyMissingFile) console.log("Aucun fichier cité dans une tâche terminée ne manque sur disque.");
+
+  console.log("\n=== Garde-fou mot-clé unique par tâche ouverte (docs/suivi/) ===\n");
+  const motsCles = findMotsClesManquants();
+  if (!motsCles.length) {
+    console.log("Chaque tâche ouverte porte un mot-clé valide, et aucun n'est porté par deux tâches à la fois.");
+  } else {
+    console.log(`${motsCles.length} tâche(s) ouverte(s) sans mot-clé exploitable :`);
+    for (const h of motsCles) console.log(`   - n°${h.n} : ${h.pourquoi}`);
+  }
 
   console.log("\n=== Garde-fou numérotation durable des tâches (docs/suivi/) ===\n");
   const numberIssues = findTaskNumberIssues();
