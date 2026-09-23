@@ -204,8 +204,19 @@ async function main() {
       const [palier, message] = PHASE2[i];
       const world = await call({ actor: (i % 2) + 1, mode: "chat", message });
       if (!world) { log(`  ⚠️  message ${i + 1} (${palier}) sans réponse — on continue.`); continue; }
+      // LE MESSAGE HUMAIN EST DÉJÀ DANS LE TRANSCRIPT ICI, et l'y repousser le dupliquait
+      // (2026-09-23, tâche #589, trouvé en notant full_sim19). Le serveur l'ajoute lui-même au
+      // monde — `addLine("vous", input.message, "haut-parleurs")` dans app/api/lia/route.ts — donc
+      // captureMessages() juste au-dessus le récupère AVEC sa pièce, et au bon endroit : avant les
+      // réponses. La ligne qui suivait le repoussait une seconde fois, sans pièce, APRÈS les
+      // réponses : 17 messages, 34 affichages, et un lecteur qui voit l'observateur se répéter
+      // systématiquement puis les réponses arriver avant la question.
+      //
+      // CE QUE L'ENQUÊTE A ÉTABLI, et c'est ce qui comptait avant de corriger quoi que ce soit :
+      // le défaut était dans l'ARCHIVE, jamais dans le jeu. Une seule ligne du serveur produit le
+      // message humain, et la partie qu'un vrai visiteur voit ne l'a jamais affiché deux fois.
+      // Corriger sans avoir tranché aurait touché le mauvais fichier (Article 19).
       captureMessages(world);
-      transcript.push(`vous\n\n${message}\n`);
       log(`  ${i + 1}/${PHASE2.length} · ${palier}`);
       await sleep(1500);
 

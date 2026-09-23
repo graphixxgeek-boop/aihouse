@@ -9958,6 +9958,21 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     // l'analyse a cherché un défaut de dialogue là où il n'y avait qu'un trou de restitution.
     assert.equal(estRefusLegitime(423), true, 'a 423 is the game ANSWERING ("nobody can reply, and that is the scenario"), never a failure — retrying it five times cannot change it');
     assert.equal(estRefusLegitime(500), false, 'a genuine server failure must still be retried: widening the rule until everything counts as a legitimate refusal would silence real breakage');
+
+    // LE MESSAGE HUMAIN, UNE SEULE FOIS (2026-09-23, tâche #589). Le script repoussait dans le
+    // transcript un message que le serveur y avait déjà mis : 17 messages, 34 affichages, la
+    // seconde copie APRÈS les réponses et sans sa pièce. Un lecteur neutre voyait l'observateur se
+    // répéter à chaque tour (Article 15).
+    //
+    // CE QUE CETTE ASSERTION VAUT, ET CE QU'ELLE NE VAUT PAS : c'est une lecture de SOURCE, pas
+    // l'exécution d'une simulation — elle ne peut pas prouver qu'un transcript réel est propre,
+    // seulement que ce script ne fabrique plus lui-même la ligne que le serveur produit. C'est le
+    // seul contrôle possible à coût nul ici, et le déclarer vaut mieux que de laisser croire à une
+    // garantie de bout en bout.
+    const sourceSimu = fs.readFileSync(new URL('../scripts/run-simulation.mjs', import.meta.url), 'utf8');
+    const poussesHumaines = [...sourceSimu.matchAll(/transcript\.push\(`vous/g)].length;
+    assert.equal(poussesHumaines, 0, 'the simulation script must never push the human line itself: the server already adds it, with its room and before the replies — pushing it again is exactly the duplication found on full_sim19');
+    assert.ok(/addLine\("vous", input\.message,"haut-parleurs"\)/.test(fs.readFileSync(new URL('../app/api/lia/route.ts', import.meta.url), 'utf8')), 'and the one real producer is still the server: if this line ever moves, the assertion above stops meaning anything and must be revisited rather than silently kept green');
     assert.equal(estRefusLegitime(429), false, 'a throttle is a "not yet", not a "never" — it keeps its own waiting path and must not be swallowed here');
     assert.ok([0, 1, 2, 3, 4].some(doitIntercalerUnTourAutonome), 'and it must fire at least once in a short phase: a carrier that never triggers would leave lesson L14 unprotected while looking protected');
   }
