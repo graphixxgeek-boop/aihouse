@@ -5740,6 +5740,36 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     console.log(`Passed: the transverse lessons register (2026-09-23, task #220) is no longer a text nothing re-reads — the trap it documents twice over (L2, a mechanism that never leaves the script; L7, a written intention never prevented anything). Each lesson now names the mechanism that carries it when nobody remembers it, tool-learning prints that audit and feeds its findings into its own action plan, and the state that justifies the whole thing is told apart from the other two: a PHANTOM carrier — a mechanism named in writing that does not exist — reassures wrongly and is worse than a lesson that admits it has none, exactly the reason checkActionChain() verifies that a task announced by an action plan is real. A declared impossibility produces no finding at all, since reproaching a settled decision at every passage would be L6 committed by the tool publishing it. Real register right now: ${reel.total} lessons, ${reel.portees} mechanically carried, ${reel.sansMecanisme} declared impossible with its reason, 0 phantom, 0 silent.`);
   }
 
+  // CHECK-TASKS-DETAILS PROMU RESPONSABLE DE L'ORGANISATION DES TÂCHES (2026-09-23, chantier 3).
+  {
+    const ctd = await import('../scripts/check-tasks-details.mjs');
+    assert.equal(ctd.RESPONSABLE_ORGANISATION_TACHES.outil, 'check-tasks-details', 'the promotion is declared in code, not only agreed in conversation — a role that lives nowhere does not survive the session that granted it');
+    assert.ok(ctd.RESPONSABLE_ORGANISATION_TACHES.detient.length >= 4 && ctd.RESPONSABLE_ORGANISATION_TACHES.regles && ctd.RESPONSABLE_ORGANISATION_TACHES.process, 'and it names WHAT it holds and WHERE, so "responsible" is a perimeter rather than a title');
+
+    // LE PALIER D'UNE LIGNE : ce que la ligne DIT, jamais ce qu'on imagine d'elle.
+    assert.equal(ctd.palierDeLaLigne({ sensibilite: 'URGENT-RETARD' }).origine, 'déjà posé dans le suivi', 'a tier already written in the row is read, never recomputed over it');
+    assert.match(ctd.palierDeLaLigne({ sensibilite: 'critique' }).origine, /converti/, 'a legacy value is converted rather than treated as unknown');
+    assert.equal(ctd.palierDeLaLigne({ sensibilite: 'critique' }).palier, 'PRIORITAIRE-OBLIGATOIRE', 'and it lands where the conversion table says, not one tier higher');
+    assert.equal(ctd.palierDeLaLigne({ sousSujet: 'un travail quelconque' }).mesure, 'pas mesuré', 'a row carrying no signal at all is "pas mesuré" — the absence propagates instead of being flattened into a verdict');
+
+    // LES SIGNAUX SE LISENT DANS LE TEXTE DE LA LIGNE, jamais dans une appréciation.
+    assert.ok(ctd.signauxDeLaLigne({ detail: 'ce mécanisme écrit faux et le dégât s\'aggrave' }).includes('degat-qui-saggrave'), 'a worsening damage is detected from what the row says');
+    assert.ok(ctd.signauxDeLaLigne({ detail: 'coûte à chaque commit' }).includes('cout-repete'), 'and so is a cost paid at every pass');
+    assert.deepEqual(ctd.signauxDeLaLigne({ detail: 'un texte neutre' }), [], 'a neutral row yields no signal at all rather than a default one');
+
+    // LA FILE : l'ordre vient du PALIER seul. La nature décide QUAND, jamais dans quel ordre —
+    // sinon une tâche critique créative passerait derrière une technique mineure parce qu'il fait nuit.
+    const file = ctd.fileOrdonnee([
+      { n: '1', sensibilite: 'NORMAL-UTILE', sousSujet: 'refactor du test', statut: 'à faire' },
+      { n: '2', sensibilite: 'CRITIQUE-RISQUES', sousSujet: 'le ton de Noé', statut: 'à faire' },
+      { n: '3', sensibilite: 'RECOMMANDE-NECESSAIRE', sousSujet: 'quelque chose', statut: 'terminée' },
+    ]);
+    assert.deepEqual(file.map((t) => t.n), ['2', '1'], 'the queue is ordered by tier alone, and closed tasks are out of it');
+    assert.equal(file[0].nature, 'CREATIF', 'a creative task keeps its nature at the top of the queue');
+    assert.match(file[0].nuit.jusquou, /avant le choix/, 'and being creative changes only how far the night may take it, never where it sits');
+    console.log('Passed: check-tasks-details is promoted responsable de l\'organisation des tâches (2026-09-23), and the promotion lives in code rather than only in the conversation that granted it — a role that lives nowhere does not survive the session. It holds the rules; the rules themselves live in a separate module because tool-brain, consulted before touching this file as the rule requires, classes it SENSIBLE (1164 lines, cited by 16 files, read by the safety net): pouring a whole new scale into a central node would have been a high-risk change for no gain in clarity. The queue orders by tier ALONE — the nature flag decides when a task is done, never where it sits, because otherwise a critical creative task would fall behind a minor technical one simply because it is night.');
+  }
+
   // L'ARRÊT PRÉMATURÉ D'UNE NUIT AUTONOME (2026-09-23) — payé par une vraie perte de temps :
   // l'agent s'est arrêté au milieu d'une nuit pour rendre un point d'étape, et l'utilisateur, qui
   // dormait, a dû se réveiller pour relancer.

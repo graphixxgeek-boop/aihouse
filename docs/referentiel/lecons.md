@@ -242,6 +242,30 @@ hypothèse. Seule la discipline de vérifier depuis un autre angle le porte. Dé
 restante ; il en restait 50, dont une ligne à qui il manquait carrément une colonne depuis trois
 jours, ce qui la comptait comme ouverte sans que personne ne le sache.*
 
+## L11 — Un motif qui ne peut PAS matcher ressemble à un motif qui ne matche pas
+
+Une recherche de texte qui ne trouve jamais rien a deux causes indiscernables à la lecture : soit le
+cas ne se présente pas, soit **le motif est impossible**. La seconde est silencieuse par nature —
+le code paraît juste, il tourne, il ne signale rien.
+
+Le cas concret : en JavaScript, la frontière de mot `\b` se calcule sur l'alphabet anglais. Devant un
+caractère accenté, elle ne peut jamais s'ouvrir. `\bà chaque commit` est donc un motif **mort à
+l'écriture** — et il avait toutes les apparences d'un motif soigné.
+
+**Le geste qui l'attrape** : tout motif neuf se vérifie sur un exemple qui DOIT matcher, avant d'être
+considéré comme écrit. C'est BP2 appliquée aux expressions régulières — un motif qu'on n'a jamais vu
+mordre ne prouve rien.
+
+**Terrain** : quand j'écris une recherche de texte, surtout en français · mots : motif, regex, expression, détecter, chercher, frontière, accent · fichiers : scripts/*.mjs, lib/*.ts
+
+**Porté par** : **aucun mécanisme général** — reconnaître qu'un motif est impossible demanderait de
+l'exécuter sur un échantillon qu'on n'a pas. Un garde-fou ponctuel existe cependant : un `grep` sur
+`\\b` suivi d'un accent trouve la forme exacte de ce bug, et il a été passé sur tout le dépôt le jour
+de sa découverte — zéro autre occurrence.
+
+*Payée le 2026-09-23, attrapée par un test écrit dans la foulée. La remise à niveau du reste du code
+a été faite le jour même : le seul autre résultat était du texte narratif, jamais un motif.*
+
 ---
 
 # Bonnes pratiques

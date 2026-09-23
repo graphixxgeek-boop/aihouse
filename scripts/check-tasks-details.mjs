@@ -43,6 +43,92 @@ import { sh } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
+// ————————————————————————————————————————————————————————————————————————
+// RESPONSABLE DE L'ORGANISATION DES TÂCHES (2026-09-23, chantier 3 du plan de nuit)
+// ————————————————————————————————————————————————————————————————————————
+//
+// PROMOTION EXPLICITE de l'utilisateur, après la question « comme pour l'organisation de l'agence,
+// il nous faut un responsable de l'organisation des tâches : c'est check-detail le bon candidat ? ».
+// Réponse retenue : oui, promu. Il connaissait déjà toutes les tâches et produisait déjà le
+// rapport ; lui confier en plus les RÈGLES DE CLASSEMENT évite d'inventer une coordination entre
+// deux outils qui liraient la même chose.
+//
+// CE QUE « RESPONSABLE » VEUT DIRE ICI, et ce n'est pas un titre : il détient les règles (l'échelle
+// à six paliers, le calcul par signaux mesurables, le cliquet, la nature technique/créative) et il
+// est le contrôleur déclaré du process « état des tâches ». Les règles elles-mêmes vivent dans
+// `scripts/priorites.mjs` — un module, jamais un second décideur : il ne s'exécute pas seul et ne
+// produit aucun rapport de son côté.
+//
+// POURQUOI LES RÈGLES NE SONT PAS DANS CE FICHIER : tool-brain, consulté avant d'y toucher, le
+// classe SENSIBLE (1164 lignes, cité par 16 fichiers, lu par le filet de sécurité) — « seules les
+// modifications à risque faible peuvent y être appliquées directement ». Y verser une échelle neuve
+// entière aurait été un risque élevé sur un nœud central, pour zéro gain de clarté.
+export const RESPONSABLE_ORGANISATION_TACHES = {
+  outil: "check-tasks-details",
+  depuis: "2026-09-23",
+  detient: ["l'échelle à six paliers", "le calcul de priorité par signaux mesurables", "le cliquet des trois paliers hauts", "la nature technique/créative/mixte", "le process « état des tâches »"],
+  regles: "scripts/priorites.mjs",
+  process: "docs/etat-des-taches-process-detail.md",
+};
+
+// L'ÉCHELLE APPLIQUÉE À UNE LIGNE RÉELLE DU SUIVI. Elle lit ce que la ligne DIT, jamais ce que
+// j'imagine d'elle : la valeur déjà posée si elle existe, sinon le calcul à partir des signaux que
+// la ligne porte réellement.
+export function palierDeLaLigne(row = {}) {
+  const dejaPose = PALIERS_PAR_CLE.has(String(row.sensibilite ?? "").trim()) ? String(row.sensibilite).trim() : null;
+  if (dejaPose) return { palier: dejaPose, origine: "déjà posé dans le suivi", mesure: "mesuré" };
+  const converti = convertirAncienneGravite(row.sensibilite);
+  if (converti) return { palier: converti, origine: `converti depuis l'ancienne échelle (« ${row.sensibilite} »)`, mesure: "mesuré" };
+  const calcul = calculerPalier(signauxDeLaLigne(row));
+  return { ...calcul, origine: "calculé depuis les signaux de la ligne" };
+}
+
+// LES SIGNAUX QU'UNE LIGNE DE SUIVI PORTE RÉELLEMENT. Chacun se lit dans le texte ou dans une date,
+// jamais dans une appréciation — c'est la condition que l'utilisateur a posée pour autoriser le
+// calcul à aller jusqu'à CRITIQUE.
+export function signauxDeLaLigne(row = {}, { stagnante = false, signaleParUnControleur = false } = {}) {
+  const texte = `${row.sujet ?? ""} ${row.sousSujet ?? ""} ${row.detail ?? ""}`.toLowerCase();
+  const signaux = [];
+  // PAS DE `\b` DEVANT UN CARACTÈRE ACCENTUÉ (corrigé le 2026-09-23, attrapé par un test) : en
+  // JavaScript, `\b` se calcule sur l'alphabet ASCII, donc « à » n'est pas une lettre pour lui et
+  // `\bà chaque commit` ne peut JAMAIS matcher. Le motif paraissait juste et ne déclenchait jamais —
+  // un signal muet par construction, exactement le genre de détecteur qui rassure sans rien voir.
+  if (/priorit[ée]\s+absolue/.test(texte)) signaux.push("priorite-absolue-demandee");
+  if (/s'aggrave|dégât|degat|perte de données|écrit faux|ecrit faux/.test(texte)) signaux.push("degat-qui-saggrave");
+  if (/bloqu|en attente de|dépend de|depend de/.test(texte)) signaux.push("bloque-autre-chose");
+  if (/réponse due|reponse due|te répondre|te repondre|dette envers/.test(texte)) signaux.push("dette-envers-utilisateur");
+  if (/sans test|non couvert|aucune couverture/.test(texte)) signaux.push("sans-couverture-de-test");
+  if (/[àa] chaque (commit|passage|tour)/.test(texte)) signaux.push("cout-repete");
+  if (stagnante) signaux.push("stagnation-confirmee");
+  if (signaleParUnControleur) signaux.push("signale-par-un-controleur");
+  return signaux;
+}
+
+// LA VUE QUE LE RESPONSABLE DOIT SAVOIR RENDRE : la file, dans l'ordre réel de traitement.
+// L'ordre vient du PALIER seul — jamais de la nature, qui décide QUAND et pas dans quel ordre.
+export function fileOrdonnee(rows = [], { ouvertesSeulement = true } = {}) {
+  const lignes = (ouvertesSeulement ? rows.filter((r) => !/termin|clos|résolu|resolu/i.test(String(r.statut ?? ""))) : rows)
+    .map((r) => {
+      const p = palierDeLaLigne(r);
+      const n = natureDeLaTache(`${r.sujet ?? ""} ${r.sousSujet ?? ""}`);
+      return { ...r, palier: p.palier, originePalier: p.origine, nature: n.nature, nuit: traitableLaNuit(p.palier, n.nature) };
+    });
+  return lignes.sort((a, b) => rangDe(b.palier) - rangDe(a.palier) || String(a.n ?? "").localeCompare(String(b.n ?? "")));
+}
+
+export function formatFile(file = []) {
+  const l = [`File ordonnée — ${file.length} tâche(s) ouverte(s), par palier décroissant :`];
+  for (const t of file) {
+    const p = PALIERS_PAR_CLE.get(t.palier);
+    l.push(`  ${p?.icone ?? "·"} ${t.palier.padEnd(24)} ${t.nature ? `[${t.nature}]`.padEnd(12) : "[nature ?]".padEnd(12)} #${t.n ?? "—"} ${String(t.sousSujet ?? "").slice(0, 70)}`);
+  }
+  const sansNature = file.filter((t) => !t.nature).length;
+  if (sansNature) l.push(`  · ${sansNature} tâche(s) sans nature déterminée — jamais routées automatiquement vers la nuit, par refus de deviner`);
+  return l;
+}
+
+import { PALIERS, PALIERS_PAR_CLE, rangDe, transitionAutorisee, calculerPalier, natureDeLaTache, traitableLaNuit, marqueDeVictoire, convertirAncienneGravite, formatPalier, expliquerEchelle } from "./priorites.mjs";
+
 const ROOT = new URL("..", import.meta.url).pathname;
 export const OUT_DIR = join(ROOT, "docs/check-tasks-details");
 export const SNAPSHOTS_FILE = join(OUT_DIR, "historique.jsonl");
