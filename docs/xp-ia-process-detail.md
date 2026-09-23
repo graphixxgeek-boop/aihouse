@@ -165,6 +165,17 @@ Tout ce process est atteignable depuis les documents seuls, sans une ligne de co
 - **Le journal** : `docs/tool-learning/xp-journal.json`, trois natures jamais mélangées.
 - **Le compteur** : `docs/tool-learning/xp-remontees.json`, les occasions et les remontées par
   entrée. Données de mesure, jamais de jugement — le verdict d'application reste humain.
+- **Les règles voisines portées par le même contrôleur** (2026-09-23, dette documentaire signalée
+  par god-of-all-process et réglée le jour où elle a été nommée) : `angel-of-ia-process` ne porte
+  pas que `xp-lecons`. Il porte aussi `resume-contextualise` (les quatre rappels d'ouverture d'un
+  compte rendu, Article 29) et, depuis le 2026-09-23, `messages-courts` — ne jamais s'arrêter sur
+  un message court, seule une demande explicite interrompt le travail en cours, avec un rappel léger
+  dès le 2e message court et une alerte plus forte dès le 5e (seuils demandés par l'utilisateur,
+  jamais choisis par l'agent). Les trois partagent exactement le même patron, et c'est ce qui les
+  rend cohérentes : la DÉCISION est mécanique et testée ailleurs (`scripts/messages-courts.mjs`
+  pour celle-ci), son APPLICATION ne peut être observée par aucun mécanisme — aucun outil ne lit
+  une conversation. angel DEMANDE donc, et refuse d'être au vert sans réponse, plutôt que de
+  supposer une conformité.
 - **Le contrôleur** : `scripts/angel-of-ia-process.mjs`, qui porte la règle `xp-lecons` et refuse
   d'être au vert tant qu'elle n'a pas reçu de réponse. C'est le contrôleur de la CONDUITE, jamais
   d'un déroulé : ce process décrit un comportement à tenir, pas les étapes d'une activité.
