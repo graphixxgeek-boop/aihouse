@@ -571,6 +571,21 @@ export const SEUIL_MEME_SUBSTANCE = 0.6;
 
 const motsDuSignal = (texte) => new Set(String(texte ?? "").toLowerCase().match(/[a-zà-ÿ]{4,}/g) ?? []);
 
+// LECTEUR_DE_TABLE — déclaration lue par data-archangel (2026-09-23, tâche #564).
+//
+// `tendanceDesSignauxDeRonde()` ci-dessous OUVRE réellement chaque dossier de signaux de Ronde, à
+// chaque passage, pour comparer les passes et en tirer une tendance. Il ne cite aucun de ces
+// chemins : il itère `CIRCLE_REPORT_FOLDERS` et les dérive, comme l'Article 24 l'exige.
+//
+// Conséquence mesurée avant cette déclaration : data-archangel comptait ces dix-neuf dossiers
+// « données fraîches que personne ne lit », parce qu'il mesure la lecture à la citation d'un
+// chemin. La bonne conception était punie, et vingt chemins recopiés à la main auraient été
+// récompensés. La déclaration corrige la mesure sans affaiblir la règle : data-archangel ne la
+// croit pas sur parole, il vérifie que ce fichier lit vraiment le disque avant de la créditer.
+export const LECTEUR_DE_TABLE = [
+  { table: "CIRCLE_REPORT_FOLDERS", quoi: "ouvre le contenu de chaque dossier de signaux pour comparer les passes et en tirer une tendance — jamais seulement le chemin" },
+];
+
 export function tendanceDesSignauxDeRonde({
   folders = CIRCLE_REPORT_FOLDERS,
   root = ROOT,

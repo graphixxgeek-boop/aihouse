@@ -3268,6 +3268,25 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // qu'il les DÉCLARE. Déclarer n'est pas lire, et compter l'un pour l'autre rendait tout le réseau
   // parfaitement branché alors que rien ne circulait.
   const {listDataSources,mapReaders,findOrphanData,suggestMissingConnections,criticalIgnoredData,stripExportedConstantBodies,agentDataBriefing,buildDataArchangelReport,registresIndirects,ETATS_LECTURE}=await import('../scripts/data-archangel.mjs');
+  // LE QUATRIÈME ÉTAT (2026-09-23, tâche #564) : une donnée lue par un lecteur de table DÉCLARÉ et
+  // CORROBORÉ. Sans lui, cet outil comptait 19 dossiers de signaux « que personne ne lit » alors que
+  // tendanceDesSignauxDeRonde() les ouvre tous à chaque passage — il ne les CITE pas, il itère la
+  // table et dérive les chemins, ce que l'Article 24 exige. La mesure punissait la bonne conception
+  // et aurait récompensé vingt chemins recopiés à la main.
+  const {lecteursDeTableDeclares,readViaDeclaredTable}=await import('../scripts/data-archangel.mjs');
+  const lireSrc=(t)=>(chemin)=>{const cle=Object.keys(t).find((k)=>chemin.endsWith(k));if(cle===undefined)throw new Error('absent');return t[cle];};
+  const declare='export const LECTEUR_DE_TABLE = [\n  { table: "MA_TABLE", quoi: "ouvre chaque dossier" },\n];\nreadFileSync(x);';
+  assert.deepEqual(lecteursDeTableDeclares({readFileImpl:lireSrc({'a.mjs':declare}),scripts:['a.mjs']}),[{fichier:'a.mjs',table:'MA_TABLE',corrobore:true}],'a file declaring it reads a table AND really touching the filesystem is credited');
+  // UNE DÉCLARATION CRUE SUR PAROLE EST UN PORTEUR FANTÔME (L7) : elle doit se corroborer.
+  const sansLecture='export const LECTEUR_DE_TABLE = [\n  { table: "MA_TABLE", quoi: "prétend lire" },\n];\nconst x = 1;';
+  assert.equal(lecteursDeTableDeclares({readFileImpl:lireSrc({'b.mjs':sansLecture}),scripts:['b.mjs']})[0].corrobore,false,'a file that DECLARES without ever touching the filesystem is reported as not corroborated, never believed');
+  assert.deepEqual(lecteursDeTableDeclares({readFileImpl:lireSrc({'c.mjs':'const rien = 1;'}),scripts:['c.mjs']}),[],'a file with no declaration claims nothing');
+  const ligne=(over)=>({id:'docs/x/',ageJours:0,lecteurs:0,lueParTableDeclaree:[],...over});
+  assert.equal(criticalIgnoredData([ligne({lueParTableDeclaree:[{via:'MA_TABLE',fichier:'scripts/a.mjs'}]})]).length,0,'a fresh source read through a declared, corroborated table reader is NOT a gap — crediting it is the whole point');
+  assert.equal(criticalIgnoredData([ligne()]).length,1,'and a fresh source nobody reaches at all is still the alarm it always was');
+  assert.equal(readViaDeclaredTable([ligne({lueParTableDeclaree:[{via:'MA_TABLE',fichier:'scripts/a.mjs'}]})]).length,1,'it is shown apart rather than silenced: knowing WHO reads it beats no longer seeing it');
+  console.log('Passed: data-archangel tells apart a source nobody reaches from one read through a table reader that DECLARES it and is corroborated by a real filesystem call — the state its own measurement could not see, because deriving paths from a registry (what Article 24 requires) leaves no path to cite. It cut a 19-strong alarm to its 8 genuine cases without weakening the rule: a declaration is never believed on its word, and the credited sources are shown apart rather than silenced.');
+
 
   // ————————————————————————————————————————————————————————————————————————
   // LA LECTURE PAR TABLE (2026-09-23, tâche #490) — annotation, jamais absolution

@@ -72,3 +72,33 @@ donc à « personne n'exploite la série ? », jamais à « personne ne lit ce f
 `heuristique` : une lecture se mesure à la citation d'un chemin dans le code — une mention, jamais
 la preuve que la donnée est réellement exploitée, et un chemin construit dynamiquement lui échappe
 complètement.
+
+## Le quatrième état : lue par un lecteur de table déclaré (2026-09-23, tâche #564)
+
+**Le défaut, et il était mesurable.** Dix-neuf dossiers de signaux de Ronde étaient comptés
+« données fraîches que personne ne lit », alors que `tendanceDesSignauxDeRonde()`
+(`scripts/circle-process-guardian.mjs`) les ouvre tous, à chaque passage, pour comparer les passes et
+en tirer une tendance. Il ne les cite simplement pas : il **itère** `CIRCLE_REPORT_FOLDERS` et dérive
+les chemins — exactement ce que l'Article 24 exige (« un registre se LIT, il ne s'énumère pas »).
+
+La mesure punissait donc la bonne conception, et aurait récompensé vingt chemins recopiés à la main.
+C'est le reproche que l'utilisateur a formulé lui-même.
+
+**Pourquoi ne pas simplement créditer l'accès par table** : déjà tranché, contre-exemple à l'appui —
+`find-brain` importe un registre pour en tirer des chemins de SCRIPTS, jamais pour ouvrir les
+registres ; le créditer rendait « 0 donnée jamais lue » sur 59, un vert obtenu en ne regardant rien.
+Passer par la table prouve qu'on touche la famille, jamais qu'on exploite ce contenu-là.
+
+**La solution : une déclaration, et elle ne se croit pas sur parole.** Le lecteur déclare dans son
+propre fichier `export const LECTEUR_DE_TABLE = [{ table, quoi }]`, et `lecteursDeTableDeclares()`
+ne le crédite que si **le fichier lit vraiment le disque**. Une déclaration sans lecture est
+signalée comme non corroborée — un porteur fantôme est pire qu'une absence (L7).
+
+**Quatre états désormais, jamais deux** : lue directement (le chemin est cité) · lue via un lecteur
+de table déclaré et corroboré · seulement frôlée par une table (candidat, jamais lecteur) · jamais
+atteinte.
+
+**Résultat mesuré** : l'alarme passe de 19 à **8 cas réels**, et les 11 crédités sont montrés à
+part plutôt que rendus invisibles — savoir QUI les lit vaut mieux que ne plus les voir. Les 8 qui
+restent sont de vrais trous : des registres écrits par leur outil et jamais comparés d'un passage à
+l'autre.

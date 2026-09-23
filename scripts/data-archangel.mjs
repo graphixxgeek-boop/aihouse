@@ -134,6 +134,43 @@ export function registresIndirects(texte, sources) {
 // les deux fichiers d'infrastructure de vérification du dépôt, stables par nature.
 export const FICHIERS_DE_VERIFICATION = ["scripts/check-house.mjs", "scripts/check-suivi-fidelity.mjs"];
 
+// LE CAS QUE LA CONCEPTION ÉVOLUTIVE REND INVISIBLE (2026-09-23, tâche #564).
+//
+// LE DÉFAUT, mesuré : dix-neuf dossiers de signaux de Ronde étaient comptés « personne ne les lit »
+// alors que `tendanceDesSignauxDeRonde()` ouvre RÉELLEMENT chacun d'eux, à chaque passage, pour en
+// tirer une tendance. Il ne les cite simplement pas : il ITÈRE la table `CIRCLE_REPORT_FOLDERS` et
+// dérive les chemins. C'est exactement ce que l'Article 24 exige (« un registre se LIT, il ne
+// s'énumère pas ») — et la mesure punissait la bonne conception pendant qu'elle aurait récompensé
+// vingt chemins recopiés à la main.
+//
+// POURQUOI PAS SIMPLEMENT CRÉDITER L'ACCÈS PAR TABLE : c'est déjà tranché plus haut, contre-exemple
+// à l'appui (find-brain importe une table pour en tirer des chemins de SCRIPTS, jamais pour ouvrir
+// les registres). Passer par la table prouve qu'on touche la famille, jamais qu'on exploite ce
+// contenu-là. Le crédit ne peut donc venir que d'une DÉCLARATION — et une déclaration qu'on croit
+// sur parole est un porteur fantôme (L7), donc elle se corrobore.
+//
+// LA DOUBLE CONDITION, et aucune des deux ne suffit seule : le fichier déclare
+// `export const LECTEUR_DE_TABLE = [{ table, quoi }]`, ET son code contient vraiment une lecture de
+// système de fichiers. Un fichier qui déclare sans lire est signalé, jamais cru.
+const MARQUEUR_LECTEUR_TABLE = /^export\s+const\s+LECTEUR_DE_TABLE\s*=\s*\[([\s\S]*?)^\];/m;
+const LECTURE_DISQUE = /(readFileSync|readdirSync|existsSync|readFile\(|readdir\()/;
+
+export function lecteursDeTableDeclares({ root = ROOT, readFileImpl = readFileSync, scripts } = {}) {
+  const fichiers = scripts ?? scriptFiles(root);
+  const declares = [];
+  for (const f of fichiers) {
+    let brut;
+    try { brut = readFileImpl(join(root, f), "utf8"); } catch { continue; }
+    const m = brut.match(MARQUEUR_LECTEUR_TABLE);
+    if (!m) continue;
+    const tables = [...m[1].matchAll(/table:\s*["'`]([A-Z_][A-Z0-9_]*)["'`]/g)].map((x) => x[1]);
+    if (!tables.length) continue;
+    const corrobore = LECTURE_DISQUE.test(brut);
+    for (const table of tables) declares.push({ fichier: f, table, corrobore });
+  }
+  return declares;
+}
+
 // QUI LIT QUOI, mesuré sur le vrai code plutôt que déclaré. Un outil "lit" une source s'il en cite
 // le chemin hors déclaration — heuristique assumée : c'est une mention, jamais une preuve de
 // lecture effective. Déclarée comme telle dans l'avertissement de fiabilité.
@@ -281,9 +318,10 @@ export function suggestMissingConnections(carte, { minCommun = 2, maxParOutil = 
 // problème réel, de mon côté, n'a jamais été l'autorisation : c'est qu'il faut SAVOIR qu'un fichier
 // existe pour aller le lire. Rien ne me présente spontanément ce que l'équipe a accumulé, donc je
 // lis ce dont je me souviens — c'est-à-dire ce que j'ai touché récemment, et rien d'autre.
-export function agentDataBriefing(carte, { root = ROOT, now = Date.now() } = {}) {
+export function agentDataBriefing(carte, { root = ROOT, now = Date.now(), lecteursDeclares } = {}) {
   const lignes = [];
   for (const s of carte.sources) {
+  const declaresCorrobores = (lecteursDeclares ?? lecteursDeTableDeclares()).filter((d) => d.corrobore);
     const chemin = join(root, s.id);
     let ageJours;
     try {
@@ -321,6 +359,12 @@ export function agentDataBriefing(carte, { root = ROOT, now = Date.now() } = {})
       // lecteur de seize registres dont il n'ouvre aucun. Passer par la table prouve qu'on touche
       // la FAMILLE, jamais qu'on exploite CE contenu-là.
       atteinteParTable: (carte.indirectsPar?.get(s.id) ?? []).filter((e) => e.fichier !== s.scriptPath),
+      // LE QUATRIÈME ÉTAT (2026-09-23, tâche #564) : atteinte par une table dont un lecteur DÉCLARÉ
+      // et CORROBORÉ ouvre vraiment le contenu. Ce n'est plus un candidat, c'est un lecteur — et
+      // c'est le seul moyen de ne pas punir la dérivation de chemins que l'Article 24 exige.
+      lueParTableDeclaree: (carte.indirectsPar?.get(s.id) ?? [])
+        .filter((e) => e.fichier !== s.scriptPath)
+        .filter((e) => declaresCorrobores.some((d) => d.table === e.via && d.fichier !== s.scriptPath)),
     });
   }
   return lignes.sort((a, b) => (a.ageJours ?? 1e9) - (b.ageJours ?? 1e9));
@@ -331,7 +375,15 @@ export function agentDataBriefing(carte, { root = ROOT, now = Date.now() } = {})
 // soit à la fois FRAÎCHE (quelqu'un vient de l'écrire, donc elle a quelque chose à dire) et SANS
 // AUCUN LECTEUR. Une donnée ancienne et ignorée est une question d'hygiène, pas une urgence.
 export function criticalIgnoredData(briefing, { seuilFraicheurJours = 2 } = {}) {
-  return briefing.filter((l) => l.ageJours !== undefined && l.ageJours <= seuilFraicheurJours && l.lecteurs === 0);
+  return briefing.filter((l) => l.ageJours !== undefined && l.ageJours <= seuilFraicheurJours && l.lecteurs === 0 && !(l.lueParTableDeclaree ?? []).length);
+}
+
+// LA MÊME POPULATION, MAIS L'AUTRE MOITIÉ : fraîche, sans lecteur direct, et lue par un lecteur de
+// table déclaré et corroboré. Elle est montrée à part plutôt que fondue dans le silence — savoir
+// QUI la lit vaut mieux que ne plus la voir du tout, et c'est ce qui permettra un jour de vérifier
+// que ce lecteur-là fait vraiment son travail.
+export function readViaDeclaredTable(briefing, { seuilFraicheurJours = 2 } = {}) {
+  return briefing.filter((l) => l.ageJours !== undefined && l.ageJours <= seuilFraicheurJours && l.lecteurs === 0 && (l.lueParTableDeclaree ?? []).length);
 }
 
 // ————————————————————————————————————————————————————————————————————————
@@ -439,6 +491,7 @@ export function buildDataArchangelReport({ root = ROOT, readFileImpl = readFileS
   const suggestions = suggestMissingConnections(carte);
   const briefing = agentDataBriefing(carte, { root, now });
   const critiques = criticalIgnoredData(briefing);
+  const parTableDeclaree = readViaDeclaredTable(briefing);
   const branchees = carte.sources.length - orphelines.length;
   return {
     carte,
@@ -446,6 +499,7 @@ export function buildDataArchangelReport({ root = ROOT, readFileImpl = readFileS
     suggestions,
     briefing,
     critiques,
+    parTableDeclaree,
     total: carte.sources.length,
     branchees,
     // Le pourcentage porte sur les sources réellement inventoriées, jamais sur un total supposé.
@@ -469,6 +523,14 @@ export function formatDataArchangelReport(r) {
         : " — personne ne la frôle, même par une table : l'absence assumée est ici l'issue la plus probable.";
       l.push(`  · ${c.id} (${c.producteur}, ${c.ageJours} j) — ${c.contenu}${annotation}`);
     }
+  }
+  if (r.parTableDeclaree?.length) {
+    l.push("", `✅ ${r.parTableDeclaree.length} donnée(s) fraîche(s) sans lecteur direct, mais lue(s) par un lecteur de table DÉCLARÉ et corroboré — jamais un trou :`);
+    for (const c of r.parTableDeclaree) {
+      const qui = [...new Set(c.lueParTableDeclaree.map((e) => e.fichier.replace("scripts/", "")))].join(", ");
+      l.push(`  · ${c.id} — lue via ${[...new Set(c.lueParTableDeclaree.map((e) => e.via))].join(", ")} par ${qui}`);
+    }
+    l.push("  (Un chemin DÉRIVÉ d'un registre plutôt que recopié est ce que l'Article 24 exige : le compter comme non lu punirait la bonne conception. La déclaration n'est pas crue sur parole — le fichier qui la porte doit vraiment lire le disque.)");
   }
   const jamaisEcrites = r.orphelines.filter((o) => !o.existe);
   const dejaAlertees = new Set(r.critiques.map((c) => c.id));
