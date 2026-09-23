@@ -309,3 +309,39 @@ inscrit la tâche dans `docs/suivi/`, et ce qu'elle devient ensuite n'est porté
 
 **Ce que la planche ne dit PAS** : si un process est BON. Elle décrit des formes et des liens ;
 juger qu'un process sert vraiment à quelque chose se lit, et se tranche avec l'utilisateur.
+
+## LE DISPOSITIF ANTI-ARRÊT, RENFORCÉ (2026-09-24, demande explicite de l'utilisateur)
+
+*(Sa question avant d'aller dormir : « tu respectes le process du mode auto en renforçant la règle
+de ne pas t'arrêter c'est bien ça ? ». Et, plus tôt dans le calibrage : « je veux une très faible
+(voire nulle) probabilité que ça arrive ».)*
+
+**CE QUI EXISTAIT NE SUFFISAIT PAS, et il faut le dire.** Le seuil d'arrêt unique était écrit, et
+`findArretPremature()` comptait les chantiers non entamés — mais les deux sont des mécanismes
+d'APRÈS COUP. Ils constatent qu'une nuit s'est arrêtée ; aucun ne la redémarre. Une règle écrite,
+aussi bien écrite soit-elle, ne descend jamais à une probabilité nulle : elle décourage, elle ne
+rattrape pas.
+
+**LE DISPOSITIF EST DÉSORMAIS À QUATRE COUCHES, et la quatrième est la seule qui RATTRAPE :**
+
+| Couche | Ce qu'elle fait | Ce qu'elle ne fait pas |
+|---|---|---|
+| 1. La règle du seuil unique | décourage l'arrêt, nomme les cinq faux motifs | n'empêche rien |
+| 2. `findArretPremature()` | compte les chantiers traitables non entamés sans raison écrite | constate, ne relance pas |
+| 3. Le compteur dans le rapport de nuit | rend l'arrêt visible au réveil (entamés / finis / laissés) | arrive trop tard |
+| 4. **LE RÉVEIL PROGRAMMÉ** | **relance l'agent toutes les 45 minutes sur le plan, à l'endroit où il en était** | ne peut pas empêcher l'arrêt, seulement le rendre court |
+
+**La quatrième change la nature du problème.** Avant elle, un arrêt à 1 h du matin coûtait six heures.
+Avec elle, il coûte au plus quarante-cinq minutes — et le message de relance dit explicitement que
+rendre un point d'étape n'est pas un livrable. Ce n'est pas zéro ; c'est un ordre de grandeur en
+moins, et c'est ce qui est réellement atteignable.
+
+**Sa mise en place, en une ligne** : un rappel programmé (`send_later`) dont le message rappelle le
+plan, les bornes, et le seuil d'arrêt unique. Il se reprogramme à chaque réveil tant que la nuit
+dure, et cesse à la vérification finale.
+
+**LA LIMITE, DÉCLARÉE PLUTÔT QUE TUE (Article 27)** : aucune de ces quatre couches ne peut
+m'empêcher d'écrire un message à 3 h du matin. Ce qui est mécaniquement possible est de rendre
+l'arrêt court et visible, jamais impossible. Le déclarer vaut mieux que de laisser croire à une
+garantie qui n'existe pas — c'est exactement ce que l'Article 27 demande quand aucun mécanisme
+complet n'est atteignable.
