@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Article 19 — avant / après</title>
+<style>
+  :root{
+    --bg:#f6f5f1; --card:#fff; --ink:#1d1b16; --muted:#6b6459; --line:#ddd8cd;
+    --keep:#2f6b45; --keep-bg:#eaf4ee; --cut:#9a3b2f; --cut-bg:#fbeeeb; --move:#8a6a12; --move-bg:#fbf4e2;
+  }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+    --bg:#16150f; --card:#1f1e17; --ink:#eceadf; --muted:#a49b8b; --line:#39352b;
+    --keep:#7fd0a0; --keep-bg:#16291e; --cut:#f09a8a; --cut-bg:#2e1a16; --move:#e6c463; --move-bg:#2c2313;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#16150f; --card:#1f1e17; --ink:#eceadf; --muted:#a49b8b; --line:#39352b;
+    --keep:#7fd0a0; --keep-bg:#16291e; --cut:#f09a8a; --cut-bg:#2e1a16; --move:#e6c463; --move-bg:#2c2313;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.65 "Iowan Old Style",Georgia,"Times New Roman",serif;padding:0 16px 80px}
+  .wrap{max-width:1100px;margin:0 auto}
+  header{padding:48px 0 8px;border-bottom:1px solid var(--line);margin-bottom:32px}
+  h1{font-size:clamp(26px,4.4vw,40px);margin:0 0 10px;line-height:1.15;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:15px;margin:0}
+  .stats{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 0}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;flex:1 1 150px}
+  .stat b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+  .stat span{color:var(--muted);font-size:12.5px;text-transform:uppercase;letter-spacing:.06em}
+  h2{font-size:22px;margin:40px 0 6px;letter-spacing:-.01em}
+  h2 .tag{font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:99px;vertical-align:middle;margin-left:10px;font-family:system-ui,sans-serif;font-weight:600}
+  .t-keep{background:var(--keep-bg);color:var(--keep)} .t-cut{background:var(--cut-bg);color:var(--cut)} .t-move{background:var(--move-bg);color:var(--move)}
+  .why{color:var(--muted);margin:0 0 16px;font-size:15px}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:760px){ .pair{grid-template-columns:1fr} }
+  .col{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+  .col h3{margin:0 0 12px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:system-ui,sans-serif}
+  .col p{margin:0 0 12px} .col p:last-child{margin-bottom:0}
+  .col.after{border-left:3px solid var(--keep)}
+  del{background:var(--cut-bg);color:var(--cut);text-decoration:line-through;text-decoration-thickness:1px;padding:1px 2px;border-radius:3px}
+  mark{background:var(--move-bg);color:var(--move);padding:1px 3px;border-radius:3px}
+  .gone{color:var(--muted);font-style:italic;font-size:14.5px;font-family:system-ui,sans-serif}
+  .note{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--move);
+    border-radius:10px;padding:16px 20px;margin:18px 0;font-size:15px}
+  .note b{color:var(--move)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:15px;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:system-ui,sans-serif;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  tr:last-child td{border-bottom:none}
+  td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .verdict{background:var(--keep-bg);border:1px solid var(--keep);border-radius:12px;padding:20px 24px;margin:32px 0}
+  .verdict h2{margin-top:0;color:var(--keep)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;background:var(--bg);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14px;font-family:system-ui,sans-serif}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Article 19 — le texte actuel, et ce qu'il deviendrait</h1>
+  <p class="sub">Rien n'a été modifié dans <code>CLAUDE.md</code>. Ce document est une <strong>proposition à juger sur pièce</strong> : à gauche ce qui est écrit aujourd'hui, à droite ce que je propose, avec en rouge barré ce qui partirait et pourquoi.</p>
+  <div class="stats">
+    <div class="stat"><b>~904</b><span>tokens aujourd'hui</span></div>
+    <div class="stat"><b>650</b><span>tokens proposés</span></div>
+    <div class="stat"><b>−28 %</b><span>de poids à chaque message</span></div>
+    <div class="stat"><b>0</b><span>obligation perdue</span></div>
+  </div>
+</header>
+
+<div class="note">
+  <b>Pourquoi cet Article est allégeable aujourd'hui alors qu'il ne l'était pas hier.</b><br>
+  Jusqu'au 2026-09-23, rien au monde ne faisait respecter « comprendre avant de toucher » : sa prose ÉTAIT le seul mécanisme, et on ne touche pas à un texte qui est lui-même la protection. Depuis, un vrai garde-fou existe (<code>findRaisonsPerdues()</code>, lancé à chaque commit) et il a déjà mordu deux fois — sur moi les deux fois. Ce que ce code vérifie n'a plus besoin d'être expliqué en prose rechargée à chaque message : il suffit de le nommer. <strong>Ce que le code ne peut PAS vérifier reste écrit mot pour mot.</strong>
+</div>
+
+<h2>Paragraphe 1 — la règle elle-même <span class="tag t-keep">gardé presque entier</span></h2>
+<p class="why">C'est l'obligation. Elle ne bouge pas. Une seule chose part : la généalogie qui explique le lien avec les Articles 0 et 7 — quatre lignes qui ne prescrivent rien et qu'on peut lire dans les Articles 0 et 7 eux-mêmes.</p>
+<div class="pair">
+  <div class="col">
+    <h3>Aujourd'hui — 412 tk</h3>
+    <p><strong>Article 19 — Comprendre avant de toucher.</strong> Avant de modifier une ligne de code existante, comprendre la logique en place et la raison pour laquelle elle a été écrite ainsi — jamais un changement à l'aveugle sur la seule foi d'une hypothèse ou d'une intuition non vérifiée. Ceci sert notamment à <strong>respecter le travail déjà fait</strong> : un mécanisme qui semble redondant, verbeux, trop prudent ou étrange a le plus souvent une raison précise (un retour utilisateur explicite, un bug déjà rencontré et corrigé, un cas limite déjà couvert) — documentée en commentaire, dans <code>docs/referentiel/</code> ou dans l'historique de conversation. Le retirer ou le simplifier sans avoir d'abord compris cette raison risque de réintroduire un bug déjà résolu une fois <del>(cf. Article 3 : « une règle corrigée une fois ne doit plus jamais se reproduire ailleurs sous une autre forme » — cela vaut aussi en sens inverse, ne pas la faire réapparaître en défaisant sans le savoir le correctif qui l'empêchait)</del>.</p>
+    <p><del>Cette exigence n'est pas entièrement nouvelle : l'Article 0 l'imposait déjà spécifiquement pour l'esprit des personnages (« comprendre comment cet esprit a émergé techniquement avant de toucher au code ») et l'Article 7 pour l'architecture d'ensemble (l'épreuve de la page blanche) — l'Article 19 la rend explicite et générale,</del> <mark>applicable à TOUT changement de code, aussi petit ou isolé paraisse-t-il</mark><del>, pas seulement ceux qui touchent la personnalité des personnages ou la structure globale du moteur</del>.</p>
+  </div>
+  <div class="col after">
+    <h3>Proposé — 239 tk</h3>
+    <p><strong>Article 19 — Comprendre avant de toucher.</strong> Avant de modifier une ligne de code existante, comprendre la logique en place et la raison pour laquelle elle a été écrite ainsi — jamais un changement à l'aveugle sur la seule foi d'une hypothèse ou d'une intuition non vérifiée. Ceci sert notamment à <strong>respecter le travail déjà fait</strong> : un mécanisme qui semble redondant, verbeux, trop prudent ou étrange a le plus souvent une raison précise (un retour utilisateur explicite, un bug déjà rencontré et corrigé, un cas limite déjà couvert) — documentée en commentaire, dans <code>docs/referentiel/</code> ou dans l'historique de conversation. Le retirer ou le simplifier sans avoir d'abord compris cette raison risque de réintroduire un bug déjà résolu une fois (Article 3, pris en sens inverse). <strong>Applicable à TOUT changement de code</strong>, aussi petit ou isolé paraisse-t-il.</p>
+  </div>
+</div>
+<p class="gone">Ce qui part : 4 lignes de généalogie (le lien avec les Art. 0 et 7) et la citation intégrale de l'Article 3, qui est deux écrans plus haut dans le même fichier. L'obligation, elle, est reprise mot pour mot.</p>
+
+<h2>Paragraphe 2 — ta précision du 2026-09-19 <span class="tag t-keep">gardé INTÉGRALEMENT</span></h2>
+<p class="why">Je ne touche pas à ce paragraphe. Tu l'as écrit toi-même pour dire ce que « comprendre » veut dire concrètement, et c'est exactement la partie qu'<strong>aucun programme ne peut vérifier</strong> — donc exactement celle que sa prose doit continuer de porter. La couper serait échanger la seule protection existante contre du poids en moins.</p>
+<div class="pair">
+  <div class="col">
+    <h3>Aujourd'hui — 301 tk</h3>
+    <p><strong>Précision apportée le 2026-09-19, en réponse à une clarification explicite de l'utilisateur sur ce que « comprendre » recouvre concrètement ici :</strong> ce n'est pas seulement lire le code qui va être modifié — c'est comprendre <strong>le sens</strong> de son fonctionnement, <strong>le pourquoi du comment</strong>, <strong>l'esprit dans lequel cette partie a été codée</strong>, et rassembler les <strong>éléments de contexte et de motivation</strong> qui l'expliquent avant d'agir. […] L'ordre est strict et non négociable : <strong>d'abord on comprend le sens des choses, ensuite seulement on peut toucher au code</strong> — jamais l'inverse.</p>
+  </div>
+  <div class="col after">
+    <h3>Proposé — 301 tk, identique</h3>
+    <p><strong>Précision apportée le 2026-09-19, en réponse à une clarification explicite de l'utilisateur sur ce que « comprendre » recouvre concrètement ici :</strong> ce n'est pas seulement lire le code qui va être modifié — c'est comprendre <strong>le sens</strong> de son fonctionnement, <strong>le pourquoi du comment</strong>, <strong>l'esprit dans lequel cette partie a été codée</strong>, et rassembler les <strong>éléments de contexte et de motivation</strong> qui l'expliquent avant d'agir. […] L'ordre est strict et non négociable : <strong>d'abord on comprend le sens des choses, ensuite seulement on peut toucher au code</strong> — jamais l'inverse.</p>
+  </div>
+</div>
+<p class="gone">Zéro mot retiré. C'est le cœur non mécanisable de l'Article.</p>
+
+<h2>Paragraphe 3 — le porteur <span class="tag t-move">condensé, jamais supprimé</span></h2>
+<p class="why">Ce paragraphe raconte comment le garde-fou fonctionne. Cette explication vit désormais dans le code lui-même et dans sa fiche — où on la lit au moment où on en a besoin, pas à chaque message. Il reste ici ce qu'il faut pour savoir qu'il existe et où aller.</p>
+<div class="pair">
+  <div class="col">
+    <h3>Aujourd'hui — 189 tk</h3>
+    <p><strong>Son porteur mécanique, depuis le 2026-09-23 :</strong> <code>findRaisonsPerdues()</code> (<code>scripts/safe-export.mjs</code>), câblé au crochet post-commit. <del>Aucun programme ne peut vérifier qu'on a COMPRIS ; celui-ci vérifie ce que cet Article redoute en toutes lettres — qu'une raison écrite DISPARAISSE. Il compare le texte supprimé par un commit à l'état actuel du dépôt : une raison déplacée ne déclenche rien, une raison introuvable est nommée avec son fichier. Il a mordu à son premier passage réel, sur un commit vieux d'une heure.</del> Ce qui reste hors de toute mécanique — avoir réellement lu et compris avant d'agir — n'a pas de porteur possible, et le déclarer ici EST la protection (Article 27).</p>
+  </div>
+  <div class="col after">
+    <h3>Proposé — 110 tk</h3>
+    <p><strong>Son porteur mécanique, depuis le 2026-09-23 :</strong> <code>findRaisonsPerdues()</code> (<code>scripts/safe-export.mjs</code>), câblé au crochet post-commit — il alerte quand une raison écrite DISPARAÎT du dépôt (détail : <code>docs/referentiel/safe-export.md</code>). Ce qui reste hors de toute mécanique — avoir réellement lu et compris avant d'agir — n'a pas de porteur possible, et le déclarer ici EST la protection (Article 27).</p>
+  </div>
+</div>
+<p class="gone">Ce qui part : la description du fonctionnement interne (ce qu'il compare, ce qui le déclenche, son premier passage). Elle est déjà écrite dans le code, dans sa fiche, et dans le suivi — trois endroits qu'on lit quand on travaille dessus.</p>
+
+<div class="verdict">
+  <h2>Ce que ça donne au total</h2>
+  <table>
+    <tr><th>Partie</th><th class="num">Avant</th><th class="num">Après</th><th>Ce qui justifie</th></tr>
+    <tr><td>P1 — la règle</td><td class="num">412 tk</td><td class="num">239 tk</td><td>l'obligation reste mot pour mot ; part la généalogie qui ne prescrit rien</td></tr>
+    <tr><td>P2 — ta précision</td><td class="num">301 tk</td><td class="num">301 tk</td><td><strong>intouchée</strong> — c'est la part qu'aucun programme ne peut vérifier</td></tr>
+    <tr><td>P3 — le porteur</td><td class="num">189 tk</td><td class="num">110 tk</td><td>le fonctionnement est déjà écrit dans le code et sa fiche</td></tr>
+    <tr><td><strong>Total</strong></td><td class="num"><strong>904 tk</strong></td><td class="num"><strong>650 tk</strong></td><td><strong>−28 %, zéro obligation perdue</strong></td></tr>
+  </table>
+  <p><strong>Un mot sur ce chiffre, parce qu'il est plus modeste qu'annoncé.</strong> Le diagnostic de Moïse parlait de 651 tokens « passés de la colonne intouchable à la colonne réductible ». C'est vrai au niveau du classement, mais ce n'est pas la même chose que 651 tokens de coupe possible : une fois qu'on refuse de toucher à ta précision du 2026-09-19 — et il faut la refuser, c'est la part non vérifiable — le gain réel tombe à 254 tokens. <em>J'ai d'abord écrit −58 % dans ce document avant de mesurer ; le chiffre juste est −28 %.</em></p>
+  <p style="margin-bottom:0"><strong>Le test que j'applique à chaque phrase avant de la couper :</strong> est-ce qu'elle <em>ordonne</em> quelque chose ? Si oui, elle reste. Si elle explique, raconte ou cite ce qui est écrit ailleurs, elle peut partir — à condition que cet « ailleurs » existe vraiment et porte déjà le contenu, ce qui a été vérifié pour les trois destinations citées.</p>
+</div>
+
+<div class="note">
+  <b>Ce que je ne fais pas sans ton accord.</b> Rien n'est modifié dans <code>CLAUDE.md</code>. Si tu valides, j'applique exactement ce qui est à droite, et j'enregistre l'opération dans la mémoire de Moïse — pour que le jour où quelqu'un se demande pourquoi l'Article 19 est plus court, la réponse soit atteignable au lieu d'être perdue.
+</div>
+
+<footer>
+  Produit le 2026-09-23 · tâches #616 et #624 · Aucune modification appliquée à ce jour.
+</footer>
+
+</div>
+</body>
+</html>
