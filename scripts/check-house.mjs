@@ -9426,6 +9426,18 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     assert.ok(simulation.docSection && god.extraireSection(fs.readFileSync(simulation.doc, 'utf8'), simulation.docSection), 'checked live: the simulation process must declare a section of its shared master document, and that section must actually be findable in the real file');
   }
 
+  // 4decies. LE TOUR AUTONOME INTERCALÉ (2026-09-23, après full_sim19) — porteur de la leçon L14.
+  //
+  // Le contrôleur du process affichait l'avertissement AVANT chaque lancement (« la phase 2 doit
+  // intercaler de vrais tours autonomes »), il a été lu, et le défaut s'est produit une TROISIÈME
+  // fois — parce que le rappel s'adressait à l'agent pendant qu'un script faisait le travail.
+  {
+    const { doitIntercalerUnTourAutonome } = await import('../scripts/run-simulation.mjs');
+    assert.deepEqual([0, 1, 2, 3, 4, 5].map(doitIntercalerUnTourAutonome), [false, true, false, true, false, true], 'one human message in two must be followed by a real autonomous turn: without any, the dossier trap cannot arm at all, and with one after every message the phase would grow by seven minutes for nothing');
+    assert.deepEqual([0, 1, 2, 3].map((i) => doitIntercalerUnTourAutonome(i, { cadence: 3 })), [false, false, true, false], 'the cadence is a parameter, not a magic number — a future calibration changes it without rewriting the loop');
+    assert.ok([0, 1, 2, 3, 4].some(doitIntercalerUnTourAutonome), 'and it must fire at least once in a short phase: a carrier that never triggers would leave lesson L14 unprotected while looking protected');
+  }
+
   // 4bis. LE GABARIT DE PROCESS (2026-09-23) — le modèle et son contrôle, demandés ensemble.
   //
   // IL VÉRIFIE UNE RÉPONSE, JAMAIS UN TITRE, et c'est le choix qui décide de tout : les huit process

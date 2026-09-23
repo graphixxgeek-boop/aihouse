@@ -24,6 +24,14 @@ const NAME = process.argv[2] ?? "full_sim18";
 const AUTO_THROTTLE_MS = 20_500;
 const MAX_PHASE1_ROUNDS = Number(process.env.SIM_MAX_ROUNDS ?? 90);
 
+// doitIntercalerUnTourAutonome() — porteuse de la leçon L14, et NOMMÉE pour cette raison : un
+// porteur de leçon doit être une chose qui existe et se vérifie, jamais une ligne noyée dans une
+// boucle. Un tour sur deux : assez pour armer le piège du dossier retourné, pas assez pour rallonger
+// la phase 2 de sept minutes (le serveur impose 20,5 s entre deux tours autonomes).
+export function doitIntercalerUnTourAutonome(indexDuMessage, { cadence = 2 } = {}) {
+  return indexDuMessage % cadence === cadence - 1;
+}
+
 const transcript = [];
 const journal = [];
 let epoch = 0;
@@ -153,6 +161,32 @@ async function main() {
       transcript.push(`vous\n\n${message}\n`);
       log(`  ${i + 1}/${PHASE2.length} · ${palier}`);
       await sleep(1500);
+
+      // UN VRAI TOUR AUTONOME ENTRE DEUX MESSAGES HUMAINS (2026-09-23, après full_sim19).
+      //
+      // POURQUOI CETTE LIGNE EXISTE, ET POURQUOI ELLE A MIS TROIS SIMULATIONS À ARRIVER. Le
+      // contrôleur du process l'annonce en tête de sa sortie depuis full_sim16 : « la phase 2 doit
+      // intercaler de vrais tours autonomes entre les messages humains — le second acte du jeu n'a
+      // jamais eu lieu ». La leçon était écrite, lue avant chaque lancement… et le script, lui,
+      // enchaînait toujours vingt messages `chat` d'affilée. full_sim19 l'a refait une TROISIÈME
+      // fois : 17 tours humains, zéro tour autonome, et le dossier retourné structurellement
+      // incapable de se déclencher. Une leçon sans porteur dans le code n'empêche rien (L7).
+      //
+      // CE QUE ÇA DÉBLOQUE CONCRÈTEMENT : le piège du dossier retourné exige un tour
+      // interact/autonomous pour s'armer (`dossierGateEligible`). Sans lui, le deuxième acte du jeu
+      // ne peut pas avoir lieu — ce n'est pas un résultat de jeu, c'est un scénario qui ne l'a
+      // jamais laissé se produire.
+      //
+      // UN TOUR SUR DEUX, ET PAS PLUS : le serveur impose 20,5 s entre deux tours autonomes (garde-
+      // fou de rythme réel, jamais à contourner). Un tour après CHAQUE message rallongerait la
+      // phase 2 de sept minutes pour rien ; un sur deux suffit à armer le piège tout en gardant
+      // une conversation qui se lit comme un vrai échange.
+      if (doitIntercalerUnTourAutonome(i)) {
+        await sleep(AUTO_THROTTLE_MS);
+        const respire = await call({ actor: (i % 2) + 1, mode: "autonomous" });
+        if (respire) { captureMessages(respire); log("     ↻ tour autonome intercalé (le piège du dossier ne peut s'armer que là)"); }
+        else log("     ⚠️  tour autonome intercalé sans réponse — le dossier retourné restera hors d'atteinte ce tour-ci");
+      }
       // Trois tirages de bonus distincts, répartis dans la phase 2 plutôt que groupés, pour que la
       // rejouabilité (Article 9) soit exercée dans des états émotionnels différents.
       if (i === 4 || i === 11 || i === 16) {
@@ -184,4 +218,11 @@ async function main() {
   log(`Round final : ${finalWorld?.story?.round ?? "?"} · révélation : ${revealed ? "oui" : "non"}`);
 }
 
-main().catch((err) => { log(`❌ ${err.stack ?? err}`); process.exit(1); });
+// LE GARDE D'ENTRÉE, ajouté le 2026-09-23 : ce fichier lançait une VRAIE simulation dès qu'on
+// l'importait. La suite de tests, en important `doitIntercalerUnTourAutonome()` pour vérifier le
+// porteur de la leçon L14, a donc réinitialisé la maison et tenté de jouer une partie — puis s'est
+// arrêtée sur `process.exit(1)` faute de serveur. Un module qui AGIT à l'import ne peut pas être
+// testé, et c'est précisément ce qui l'avait laissé sans test jusqu'ici.
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((err) => { log(`❌ ${err.stack ?? err}`); process.exit(1); });
+}

@@ -343,6 +343,37 @@ prouvées de cette façon — deux étaient dans ce cas, pas une.*
 
 **Terrain** : quand je déclare la preuve d'une étape de process, ou quand je crée un registre neuf · mots : preuve, étape, process, registre, index, dossier, tracée · fichiers : scripts/god-of-all-process.mjs, docs/*-process-detail*
 
+## L14 — Une leçon rappelée à chaque lancement, et jamais portée par le code, ne protège de rien
+
+Le contrôleur du process de simulation affiche, en tête de sa sortie et AVANT chaque lancement :
+« la phase 2 doit intercaler de vrais tours autonomes entre les messages humains — le second acte du
+jeu n'a jamais eu lieu, deux fois ». Cette phrase a été lue, à voix haute, juste avant le lancement.
+**Le défaut s'est reproduit exactement.**
+
+Parce que le rappel s'adressait à un humain (ou à un agent) pendant qu'un SCRIPT faisait le travail.
+Le script, lui, enchaînait vingt messages d'affilée depuis toujours — et aucun rappel, si bien placé
+soit-il, ne change ce qu'un script exécute.
+
+**Pire : un garde-fou mécanique existait bel et bien** (`checkPhase2Autonomy()`, écrit après
+full_sim18). Il a parfaitement fonctionné — il a signalé le défaut. APRÈS la simulation, sur son
+journal. Détecter n'est pas empêcher, et quand l'action détectée coûte une heure de simulation, la
+différence entre les deux est la simulation entière.
+
+**La règle** : quand une leçon porte sur ce que fait un MÉCANISME, elle doit vivre DANS ce mécanisme.
+Un avertissement au moment de lancer ne protège que ce qui est décidé à ce moment-là ; tout ce que le
+code décide tout seul lui échappe. C'est L7 (« une intention écrite n'a jamais empêché quoi que ce
+soit ») dans sa version la plus coûteuse, parce qu'ici l'intention était écrite, affichée, et LUE.
+
+Corollaire opérationnel : devant un rappel avant action, se demander « qui l'exécute réellement,
+moi ou un script ? ». Si c'est un script, le rappel est au mauvais endroit.
+
+*Payée trois fois, la dernière le 2026-09-23 : full_sim16, full_sim18, full_sim19. Trois simulations complètes dont le deuxième
+acte du jeu n'a jamais pu se produire — pas « ne s'est pas produit », n'a pas PU.*
+
+**Porté par** : `doitIntercalerUnTourAutonome()` (`scripts/run-simulation.mjs`) — la leçon vit désormais DANS le mécanisme qu'elle concerne, jamais seulement dans le rappel qui le précède, et elle porte un nom pour qu'on puisse vérifier qu'elle existe encore.
+
+**Terrain** : quand un contrôleur me rappelle une règle avant une action exécutée par un script · mots : rappel, avant lancement, leçon, contrôleur, script, phase 2, simulation · fichiers : scripts/run-simulation.mjs, scripts/process-simulation-guardian.mjs
+
 ## BP1 — La règle s'écrit à UN endroit et se dérive partout ailleurs
 
 Devant vingt endroits à corriger, le réflexe est de corriger les vingt. Le bon geste est de trouver
