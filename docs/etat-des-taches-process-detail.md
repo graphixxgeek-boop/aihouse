@@ -92,3 +92,22 @@ impossible de dire « il y a deux semaines on avait 11 tâches ouvertes, aujourd
 - **Il ne réordonne rien tout seul.** Il produit la matière, pose la question, et applique la
   réponse. Réorganiser la file sur le seul jugement de l'agent viderait de son sens l'étape qui est
   le but du process.
+
+## Partie 6 — Le responsable, inscrit dans le code (ajoutée le 2026-09-23)
+
+La promotion de check-tasks-details en **responsable de l'organisation des tâches** ne vit pas
+seulement dans cette conversation : elle est écrite dans son code
+(`RESPONSABLE_ORGANISATION_TACHES`, `scripts/check-tasks-details.mjs`). C'était délibéré — un rôle
+qui n'existe que dans un échange ne survit pas à la session qui l'a accordé (Article 27).
+
+Ce que ce rôle lui donne concrètement, et qui n'existait pas avant :
+
+- **`palierDeLaLigne()` / `signauxDeLaLigne()`** — lire, sur une ligne de suivi réelle, le palier de
+  priorité et les signaux mesurables qui le justifient, au lieu de les deviner à la lecture.
+- **`fileOrdonnee()` / `formatFile()`** — rendre la file des tâches ouvertes dans l'ordre que les
+  paliers imposent, jamais dans l'ordre d'écriture.
+
+Les règles de priorité elles-mêmes vivent à part (`scripts/priorites.mjs`) et non dans ce fichier :
+check-tasks-details est classé SENSIBLE par tool-brain (plus de mille lignes, seize dépendants), et
+y coudre une échelle de six paliers aurait ajouté de la surface à un fichier déjà lourd. Le
+responsable LIT les règles, il ne les héberge pas.

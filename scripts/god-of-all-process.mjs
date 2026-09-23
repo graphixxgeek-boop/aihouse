@@ -873,10 +873,39 @@ export function findChangementsIndirectsSansMiseAJour({ processes = PROCESSES, s
       }
     }
   }
-  // Deux process peuvent partager le même document (nuit et meta) : le nommer deux fois donnerait
-  // « docs/x.md ni docs/x.md », ce qui se lit comme un bug du message et fait douter du reste.
-  return [...parCle.values()].map((e) => ({ ...e, docs: [...new Set(e.docs)] })).map((e) => ({ ...e,
-    pourquoi: `${e.fichier} a changé sans que ${e.docs.join(" ni ")} ne soit mis à jour dans le même commit — le document décrit désormais un process qui n'existe plus tel quel (process concerné${e.processes.length > 1 ? "s" : ""} : ${e.processes.join(", ")})` }));
+  // LE RATTRAPAGE (2026-09-23) — une dette PAYÉE plus tard cesse d'être une dette impayée, sans
+  // cesser d'avoir été un retard.
+  //
+  // POURQUOI CETTE DISTINCTION EXISTE, et elle est payée par un cas réel de ce soir : quatre écarts
+  // légitimes ont été trouvés, les quatre documents ont été mis à jour dans l'heure — et le
+  // détecteur a continué d'afficher les mêmes sept lignes, parce qu'il ne regarde que le commit
+  // fautif. Un signal qu'aucune action ne peut éteindre devient du décor en deux passages, et on
+  // cesse de lire la liste où se cachent les vrais impayés (leçon L6).
+  //
+  // CE QU'IL NE FAIT PAS : absoudre. Le rattrapage est NOMMÉ avec le commit qui l'a payé — la règle
+  // reste « dans le même commit », et le rapport continue de dire qu'elle n'a pas été tenue. Il
+  // sépare seulement « en retard, réglé » de « toujours dû », ce que le compte unique mélangeait.
+  //
+  // Un document mis à jour AVANT le commit fautif ne compte jamais : il ne pouvait pas décrire un
+  // changement qui n'existait pas encore. L'ordre de `git log` (du plus récent au plus ancien) rend
+  // la comparaison directe — un commit rattrapeur est simplement plus haut dans la liste.
+  const rangDuCommit = new Map(commits.map((c, i) => [c.hash, i]));
+  const docsMisAJour = new Map();
+  for (const c of commits) {
+    for (const f of c.fichiers) {
+      if (!docsMisAJour.has(f)) docsMisAJour.set(f, []);
+      docsMisAJour.get(f).push(c.hash);
+    }
+  }
+  return [...parCle.values()].map((e) => ({ ...e, docs: [...new Set(e.docs)] })).map((e) => {
+    const rangFautif = rangDuCommit.get(e.commit);
+    const rattrapeurs = e.docs.map((d) => (docsMisAJour.get(d) ?? []).find((h) => rangDuCommit.get(h) < rangFautif)).filter(Boolean);
+    // Rattrapé seulement si TOUS les documents concernés l'ont été : en rattraper un sur deux laisse
+    // l'autre faux, et un demi-rattrapage affiché comme un rattrapage est pire qu'aucun.
+    const rattrape = rattrapeurs.length === e.docs.length ? rattrapeurs[0] : null;
+    return { ...e, rattrape,
+      pourquoi: `${e.fichier} a changé sans que ${e.docs.join(" ni ")} ne soit mis à jour dans le même commit${rattrape ? ` — RATTRAPÉ depuis, par ${rattrape} : la règle n'a pas été tenue, la dette documentaire l'est` : " — le document décrit désormais un process qui n'existe plus tel quel"} (process concerné${e.processes.length > 1 ? "s" : ""} : ${e.processes.join(", ")})` };
+  });
 }
 
 // ————————————————————————————————————————————————————————————————————————
@@ -1320,8 +1349,9 @@ export function buildGodReportBlocks({ processes = PROCESSES, root = ROOT, sessi
   // LA MODIFICATION INDIRECTE NON SUIVIE (2026-09-23) — sort dans le rapport, sinon le mécanisme
   // resterait une intention, ce que ce fichier a déjà appris à ses dépens.
   const indirects = findChangementsIndirectsSansMiseAJour({ processes, root });
+  const impayes = indirects.filter((e) => !e.rattrape);
   blocks.push({ type: "note", text: indirects.length
-    ? `⚠️ ${indirects.length} modification(s) INDIRECTE(S) d'un process non suivie(s) d'une mise à jour de son document :\n  ${indirects.map((e) => `${e.commit} — ${e.pourquoi}`).join("\n  ")}`
+    ? `${impayes.length ? "⚠️" : "🟡"} ${impayes.length} dette(s) documentaire(s) IMPAYÉE(S)${indirects.length > impayes.length ? `, ${indirects.length - impayes.length} rattrapée(s) depuis (en retard, mais réglée)` : ""} :\n  ${indirects.map((e) => `${e.commit} — ${e.pourquoi}`).join("\n  ")}`
     : "✅ Modifications indirectes : chaque changement du code d'un process a bien mis à jour son document dans le même commit." });
 
   // LE GABARIT (2026-09-23) — sort dans le rapport pour la même raison que le bloc ci-dessus : un

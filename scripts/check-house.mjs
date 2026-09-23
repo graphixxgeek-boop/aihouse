@@ -9192,6 +9192,34 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.equal(god.findSchemaDivergent({ 'doc.md': 'Posé par l\'utilisateur : « SCAN >> RAPPORTS >> ANALYSE >> QUESTIONS »' })[0].citation, true, 'a drifted copy that is a VERBATIM CITATION of the user must be marked as such — the tool signals it but never rewrites someone\'s own words behind their back (same rule as the R/O-Guardian nickname, Article 20bis)');
   assert.ok(god.SCHEMA_DECLINAISON.includes('INSTANCIE'), 'unifying the schema must explicitly NOT override a heavy calibrated process: the user posed this himself — the Ronde instantiates the schema with its bespoke steps rather than derogating from it');
 
+  // 4ter. LA DETTE DOCUMENTAIRE RATTRAPÉE (2026-09-23) — un détecteur qu'aucune action ne peut
+  // éteindre devient du décor en deux passages, et on cesse de lire la liste où se cachent les vrais
+  // impayés (leçon L6). Cas réel du soir : quatre écarts légitimes trouvés, les quatre documents mis
+  // à jour dans l'heure, et le détecteur affichait toujours les mêmes sept lignes.
+  const gitFaux = (cmd) => {
+    assert.match(cmd, /git log/, 'the detector must read real git history, never guess');
+    // Du plus récent au plus ancien, comme git log : cccc222 (le rattrapage) vient donc APRÈS
+    // cccc333 (le fautif) dans le temps, même s'il apparaît avant dans la sortie.
+    return ['cccc222\trattrapage', 'docs/faux-process.md', 'cccc333\tfautif', 'scripts/faux-gardien.mjs', 'cccc111\tvieux', 'README.md'].join('\n');
+  };
+  const procFaux = [{ slug: 'fp', nom: 'faux process', doc: 'docs/faux-process.md', gardien: 'scripts/faux-gardien.mjs', etapes: [] }];
+  // ATTENTION À L'ORDRE : git log rend le plus RÉCENT en premier, donc « c3 puis c2 » dans la sortie
+  // veut dire que c2 est venu APRÈS c3. Écrit ici parce que l'inverse se lit tout aussi bien et
+  // produirait un rattrapage par un commit antérieur — c'est-à-dire par un document qui ne pouvait
+  // pas décrire un changement pas encore fait.
+  const histoire = ['cccc222\trattrapage', 'docs/faux-process.md', 'cccc333\tfautif', 'scripts/faux-gardien.mjs'].join('\n');
+  const rattrapes = god.findChangementsIndirectsSansMiseAJour({ processes: procFaux, shImpl: () => histoire });
+  assert.equal(rattrapes.length, 1, 'the breach itself must still be reported: being late is not the same as never having been late');
+  assert.equal(rattrapes[0].rattrape, 'cccc222', 'a later commit updating the document must be named as the one that paid the debt, so the reader can check it rather than trust it');
+  assert.match(rattrapes[0].pourquoi, /RATTRAPÉ depuis/, 'the message must say plainly that the documentation debt is settled while the rule was still broken');
+  // Un document mis à jour AVANT le commit fautif ne rattrape rien.
+  const avant = ['cccc333\tfautif', 'scripts/faux-gardien.mjs', 'cccc222\tavant', 'docs/faux-process.md'].join('\n');
+  assert.equal(god.findChangementsIndirectsSansMiseAJour({ processes: procFaux, shImpl: () => avant })[0].rattrape, null, 'a document updated BEFORE the offending commit cannot have described a change that did not exist yet — counting it would forgive every breach for free');
+  // Le même commit reste, comme avant, jamais un écart du tout.
+  assert.deepEqual(god.findChangementsIndirectsSansMiseAJour({ processes: procFaux, shImpl: () => 'cccc333\tok\nscripts/faux-gardien.mjs\ndocs/faux-process.md' }), [], 'the rule itself is unchanged: code and document in the same commit is never a finding');
+  assert.ok(typeof gitFaux === 'function', 'the command shape is asserted inside gitFaux, kept here so the check is not silently dropped');
+  assert.deepEqual(god.findChangementsIndirectsSansMiseAJour({ processes: procFaux, shImpl: gitFaux }).map((e) => e.rattrape), ['cccc222'], 'and the same verdict holds when the history comes through a stub that also verifies the git command actually issued');
+
   // 4bis. LE GABARIT DE PROCESS (2026-09-23) — le modèle et son contrôle, demandés ensemble.
   //
   // IL VÉRIFIE UNE RÉPONSE, JAMAIS UN TITRE, et c'est le choix qui décide de tout : les huit process
