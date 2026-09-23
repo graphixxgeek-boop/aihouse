@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>État des tâches — Tâches en cours actuellement</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-23T10:34:19.401Z</div>
+    <h1>État des tâches — Tâches en cours actuellement</h1>
+    <p class="sub">Forme : liste rapide · 14 tâche(s) affichée(s) sur 488 au total</p>
+  </header>
+  <div class="divider"></div>
+  <main><p class="note">12 tâche(s) ouverte(s) identiques depuis au moins 3 rapports consécutifs — possible oubli, à vérifier (jamais une certitude).</p>
+<ul><li>#147 « Extension proposée : objectifs de résultat / score cible par membre d'équipe »</li><li>#179 « Décision : CASSANDRA-RH doit avoir une connaissance parfaite de chaque membre de l'équipe pour servir de point de consultation sur les fonctions/description d'un agent ou script »</li><li>#279 « Tâche #171 (passe manuelle d'allègement CLAUDE.md) : reportée explicitement, pas abandonnée »</li><li>#436 « Relire tout le travail de process avec les outils, une fois les process terminés »</li><li>#439 « Le « jury » n'est pas un rang, c'est une catégorie transverse — et il y en a d'autres »</li><li>#445 « Un mécanisme branché sur un seul outil ne dégage aucune tendance transverse »</li><li>#451 « Un septième Gardien sur le papier n'en est pas un tant qu'il ne tourne pas à chaque commit »</li><li>#490 « 18 données fraîches que personne ne lit — brancher un lecteur réel ou déclarer l'absence assumée »</li><li>#491 « 11 écarts d'exportabilité — purger le jargon projet de 3 blueprints, compléter 7 sections »</li><li>#492 « Classer les actions SMART-CONSO-TOKEN au moment où elles ont lieu »</li><li>#493 « Un relancement confirmé dans les 10 min après épuisement de quota — vérifier la cause »</li><li>#390 « Imprécision résiduelle consignée : ARGUS et CLONE-HUNTER sont mesurés à l'échelle du dépôt, pas de l'outil »</li></ul>
+<h2>📋 Ouvertes (2)</h2>
+<table><thead><tr><th>N°</th><th>Sensibilité</th><th>Sujet</th><th>Sous-sujet</th><th>Statut</th></tr></thead><tbody><tr><td>147</td><td>NORMAL-UTILE</td><td>Conception / Nouvel outil (CASSANDRA-RH)</td><td>Extension proposée : objectifs de résultat / score cible par membre d'équipe</td><td>ouverte</td></tr><tr><td>179</td><td>NORMAL-UTILE</td><td>Conception / Nouvel outil (CASSANDRA-RH)</td><td>Décision : CASSANDRA-RH doit avoir une connaissance parfaite de chaque membre de l'équipe pour servir de point de consultation sur les fonctions/description d'un agent ou script</td><td>ouverte</td></tr></tbody></table>
+<h2>❓ Autre statut (à vérifier) (12)</h2>
+<table><thead><tr><th>N°</th><th>Sensibilité</th><th>Sujet</th><th>Sous-sujet</th><th>Statut</th></tr></thead><tbody><tr><td>279</td><td>NORMAL-UTILE</td><td>Méthode de travail / Feuille de route</td><td>Tâche #171 (passe manuelle d'allègement CLAUDE.md) : reportée explicitement, pas abandonnée</td><td>reportée — décision explicite de l'utilisateur, aucune régression</td></tr><tr><td>436</td><td>PRIORITAIRE-OBLIGATOIRE</td><td>Process / vérification à froid</td><td>Relire tout le travail de process avec les outils, une fois les process terminés</td><td>à faire</td></tr><tr><td>439</td><td>RECOMMANDE-NECESSAIRE</td><td>Organisation de l'Agence / catégories transverses</td><td>Le « jury » n'est pas un rang, c'est une catégorie transverse — et il y en a d'autres</td><td>à faire</td></tr><tr><td>445</td><td>RECOMMANDE-NECESSAIRE</td><td>Tendances / brancher les 5 outils restants</td><td>Un mécanisme branché sur un seul outil ne dégage aucune tendance transverse</td><td>à faire</td></tr><tr><td>451</td><td>RECOMMANDE-NECESSAIRE</td><td>SAFE-EXPORT / intégration complète de Gardien sacré</td><td>Un septième Gardien sur le papier n'en est pas un tant qu'il ne tourne pas à chaque commit</td><td>à faire</td></tr><tr><td>490</td><td>PRIORITAIRE-OBLIGATOIRE</td><td>Ronde / plan d'action R1</td><td>18 données fraîches que personne ne lit — brancher un lecteur réel ou déclarer l'absence assumée</td><td>à faire</td></tr><tr><td>491</td><td>PRIORITAIRE-OBLIGATOIRE</td><td>Ronde / plan d'action R2</td><td>11 écarts d'exportabilité — purger le jargon projet de 3 blueprints, compléter 7 sections</td><td>à faire</td></tr><tr><td>492</td><td>NORMAL-UTILE</td><td>Ronde / plan d'action R3</td><td>Classer les actions SMART-CONSO-TOKEN au moment où elles ont lieu</td><td>à faire</td></tr><tr><td>493</td><td>NORMAL-UTILE</td><td>Ronde / plan d'action R4</td><td>Un relancement confirmé dans les 10 min après épuisement de quota — vérifier la cause</td><td>à faire</td></tr><tr><td>510</td><td>PRIORITAIRE-OBLIGATOIRE</td><td>Cérémonie / trou de mécanisme</td><td>La cérémonie enregistre qu'elle a eu lieu, jamais ce qu'elle disait</td><td>à faire</td></tr><tr><td>514</td><td>NORMAL-UTILE</td><td>SAFE-EXPORT / limite honnête</td><td>Le compte « 11 écarts » est un plancher, pas un total</td><td>à faire</td></tr><tr><td>390</td><td>RECOMMANDE-NECESSAIRE</td><td>Outillage / badge</td><td>Imprécision résiduelle consignée : ARGUS et CLONE-HUNTER sont mesurés à l'échelle du dépôt, pas de l'outil</td><td>en attente de décision</td></tr></tbody></table>
+<h2>Outils du coordinateur pouvant aider (correspondance de mots-clés, à vérifier)</h2>
+<ul><li>#147 « Extension proposée : objectifs de résultat / score cible par membre d'équipe » → integration-outil (mots-clés : nouvel, outil)</li><li>#179 « Décision : CASSANDRA-RH doit avoir une connaissance parfaite de chaque membre de l'équipe pour servir de point de consultation sur les fonctions/description d'un agent ou script » → Doc-Report (mots-clés : chaque, outil, decision)</li><li>#279 « Tâche #171 (passe manuelle d'allègement CLAUDE.md) : reportée explicitement, pas abandonnée » → CHARTER-SPY (anciennement CLAUDE.MD.SPY, extension de SMART-CONSO-TOKEN) (mots-clés : allegement, claude, travail)</li><li>#445 « Un mécanisme branché sur un seul outil ne dégage aucune tendance transverse » → tool-brain (mots-clés : outil, outils) — ⚠️ tool-brain (scripts/tool-brain.mjs) n'a pas son badge (absent du menu PRESTATIONS (scripts/le-coordinateur.mjs) ; aucune mention trouvée dans docs/suivi/ — sa construction ne serait pas tracée dans le système de suivi durable)</li><li>#493 « Un relancement confirmé dans les 10 min après épuisement de quota — vérifier la cause » → process.simulation.guardian (mots-clés : quota, verifier) — ⚠️ process.simulation.guardian (scripts/process-simulation-guardian.mjs) n'a pas son badge (absent du menu PRESTATIONS (scripts/le-coordinateur.mjs) ; instanciation manquante (docs/referentiel/process-simulation-guardian-scripts-process-simulation-guardian-mjs.md) ; registre manquant (docs/process-simulation-guardian-scripts-process-simulation-guardian-mjs/) ; blueprint manquant (docs/process-simulation-guardian-scripts-process-simulation-guardian-mjs-blueprint.md) — si c'est volontaire (cousin d'un autre Agent), le déclarer via l'option cousinOf plutôt que de laisser ce point sans réponse ; absent de la section « Référentiel technique » de CLAUDE.md (bullet docs/referentiel/&lt;slug&gt;.md) ; absent de CLAUDE.md, ni comme section &quot;## ... — blueprint exportable&quot; ni comme ligne du tableau « Inventaire documentaire des outils » (attendu puisqu'il a un blueprint propre) ; aucune mention trouvée dans docs/suivi/ — sa construction ne serait pas tracée dans le système de suivi durable)</li></ul>
+<h2>Ordre recommandé des prochaines tâches (signal, jamais une décision)</h2>
+<ul><li>1. #147 « Extension proposée : objectifs de résultat / score cible par membre d'équipe » — signalée stagnante depuis 36 rapports consécutifs ; ouverte depuis 3 jour(s)</li><li>2. #179 « Décision : CASSANDRA-RH doit avoir une connaissance parfaite de chaque membre de l'équipe pour servir de point de consultation sur les fonctions/description d'un agent ou script » — signalée stagnante depuis 36 rapports consécutifs</li><li>3. #279 « Tâche #171 (passe manuelle d'allègement CLAUDE.md) : reportée explicitement, pas abandonnée » — signalée stagnante depuis 24 rapports consécutifs</li><li>4. #436 « Relire tout le travail de process avec les outils, une fois les process terminés » — signalée stagnante depuis 9 rapports consécutifs</li></ul></main>
+  <div class="divider"></div><footer><p>check-tasks-details — lecture seule, docs/suivi/ reste l'unique source de vérité du projet.</p></footer>
+</div>
+</body>
+</html>

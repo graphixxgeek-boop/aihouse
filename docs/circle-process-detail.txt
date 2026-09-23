@@ -1367,3 +1367,63 @@ se perde pas — n'avait AUCUN appelant. Ni le main() de son propre fichier, ni 
 personne. Huit items avaient rejoint la Ronde sans leur pourquoi pendant qu'il veillait dans le
 vide. Il est désormais appelé aux deux endroits, et les huit entrées ont été reconstituées depuis
 les commentaires réels, chacune déclarant qu'elle l'est.
+
+=====================================================================
+PARTIE 17 — 2026-09-23 : LES CINQ RÈGLES QUI ÉTAIENT ÉCRITES ET QUE PERSONNE N'APPLIQUAIT
+=====================================================================
+Décision explicite de l'utilisateur, en fenêtre de calibrage : « les cinq d'un coup » — contre ma
+recommandation, qui proposait de les brancher une par une en observant. Les cinq sont donc câblées
+le même jour, et le risque assumé avec : un déluge d'alertes simultanées qu'on n'aurait pas le temps
+de traiter. Ce qui s'est réellement passé au premier passage figure plus bas.
+
+LE DÉFAUT, ET IL PORTE UN NOM MAINTENANT. Ces cinq mécanismes étaient IMPORTÉS par
+circle-process-guardian.mjs et pas un n'était APPELÉ. Un import n'est pas un câblage. C'est la
+cinquième occurrence, en une seule nuit, de la même forme : un mécanisme qui existe, qui fonctionne,
+et qui n'atteint personne. Et il y a pire que l'inertie : aucune des cinq n'avait de test, PARCE QUE
+personne ne les appelait — un mécanisme jamais invoqué ne casse jamais, donc rien ne réclame sa
+couverture. Le vert général ne bronchait pas, et c'est pour ça qu'elles ont pu rester muettes.
+
+LES CINQ, ET CE QU'ELLES GARDENT VRAIMENT :
+
+11. `findEtapesDivergentesDuDocument()` — l'inventaire des questions dues, dans le code, contre le
+    total annoncé par ce document. Si l'un bouge sans l'autre, le contrôle « questions par étape »
+    (bloc 5) mesure contre un barème dont plus personne ne sait lequel fait foi. Ce n'est pas
+    théorique : les deux se sont déjà contredits une fois, et c'est la règle restrictive qui était
+    câblée — le contrôleur aurait signalé un écart si l'agent avait posé les questions dues.
+
+12. `OUVERTURE_VALIDE_HEURES` — via un seuil DÉRIVÉ, `SEUIL_ALERTE_OUVERTURE_HEURES` (un quart de la
+    fenêtre, jamais un second chiffre recopié, Article 24). `autoriseCloture()` refusait déjà une
+    ouverture périmée, mais au DERNIER geste de la Ronde, quand tout le travail est fait. C'est
+    exactement la leçon ③ de la nuit du 2026-09-23 : détecter n'est pas empêcher, et la différence
+    se paie en travail déjà fourni. Une Ronde ouverte il y a 20 h est maintenant prévenue qu'il lui
+    reste 4 h.
+
+13. `REGISTRIES` — un registre déclaré dont le dossier n'existe pas. `findOrphanReportFiles()`
+    (bloc 7) garde le sens inverse : des rapports sans index. Celui-ci garde le registre annoncé
+    dont le dossier a disparu — son outil tourne, son verdict n'atterrit nulle part, et un dossier
+    absent ne contredit jamais personne : il rassure à tort.
+
+14. `findEcrivainsDeRegistreSansContribution()` — un outil qui écrit son registre sans enregistrer
+    sa contribution. Le compteur d'usage le compte alors comme inutilisé pendant qu'il travaille, et
+    le KPI de la Ronde dit le contraire de la vérité, ce qui est pire que de ne rien dire.
+
+15. `questionsAReposer()` — le détail par palier. `prochaineAction()` (bloc 10) ne retient QUE le
+    pire palier et applique son action à toute la liste : une question à sa première tentative se
+    retrouve annoncée sous l'action d'une question à sa troisième. Les deux ne demandent pourtant
+    pas le même geste. Agréger perd exactement l'information que le système de paliers produit.
+
+AUCUNE N'EST EXEMPTÉE EN MODE AUTONOME, sauf la 12, et la distinction est la bonne : la borne de
+l'utilisateur (« aucune fenêtre y compris GOAT/AUTO ne doit être bloquante pour le mode autonome »)
+protège les questions posées à un humain absent. Une vérification qui lit le disque toute seule
+n'a jamais rien demandé à personne. La 12 est exemptée parce qu'en mode autonome il n'y a PAS
+d'ouverture à faire expirer, pas parce qu'elle dérangerait.
+
+CE QUE LE PREMIER PASSAGE A TROUVÉ, ET C'EST UN VRAI ÉCART. `registre-declare-absent` a signalé,
+dès sa première exécution sur le vrai dépôt, que `docs/relecture-referentiel/` n'existe pas. L'item
+« relecture du référentiel » de la Ronde — celui qui applique l'Article 13, la vérification
+périodique de TOUS les documents de référence — n'a donc jamais écrit un seul rapport depuis la
+création de la Ronde. Son voisin `docs/relecture-correctifs/` existe, lui.
+
+CE QUI N'A PAS ÉTÉ FAIT, ET SURTOUT PAS : créer le dossier vide pour verdir le test. Ç'aurait
+produit exactement la preuve satisfaite par son propre registre vide (leçon L13, trouvée la veille
+sur memory-audit). L'écart reste vivant dans l'outil et inscrit au suivi comme une tâche.

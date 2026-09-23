@@ -1,0 +1,345 @@
+===================================================================
+MES RÉPONSES À TOUTES TES QUESTIONS EN ATTENTE — 2026-09-23
+===================================================================
+
+Ce fichier réunit DEUX séries de questions en un seul endroit, parce que tu m'as
+demandé « un fichier txt où tu réponds à tout » :
+
+  SÉRIE A — les huit questions de ton gros prompt (déjà répondues cette nuit, reprises
+            ici intégralement pour que tu n'aies pas à ouvrir un second fichier)
+  SÉRIE B — les deux questions que tu m'as renvoyées dans la fenêtre de calibrage
+            d'aujourd'hui, auxquelles je n'avais pas encore répondu
+
+Écrit sans jargon. Quand un nom technique est inévitable, il est traduit à côté.
+
+
+###################################################################
+# SÉRIE A — LES HUIT QUESTIONS DU GROS PROMPT
+###################################################################
+
+== Mes réponses à tes questions — nuit du 2026-09-23
+
+*(Chantier 10 du plan de nuit. Tu m'as posé huit questions dans le gros prompt ; voici les réponses,
+préparées pendant la nuit pour que tu les aies au réveil. Écrit sans jargon : quand un nom technique
+est inévitable, il est traduit juste à côté.)*
+
+---
+
+--- 1. « BP3, BP4, c'est quoi ces trucs ?? »
+
+Réponse courte : ce sont des étiquettes que j'ai inventées, et ta réaction montre qu'elles sont
+mal nommées.
+
+Il existe un carnet, docs/referentiel/lecons.md, où j'écris ce que le projet a appris en se
+trompant. Il a deux parties :
+
+- les leçons (L1, L2, L3…) — chacune a été payée par une vraie erreur ;
+- les bonnes pratiques (BP1, BP2, BP3…) — des réflexes qui marchent, sans casse derrière.
+
+Donc « BP3 » veut juste dire « bonne pratique numéro 3 ». En clair :
+
+| | Ce que ça dit, en français simple |
+|---|---|
+| BP1 | Une règle s'écrit à UN seul endroit, et tout le reste va la lire là. Recopiée à deux endroits, elle finit par dire deux choses différentes. |
+| BP2 | Un test qui n'a jamais échoué ne prouve rien. Avant de le croire, je le fais échouer exprès une fois. |
+| BP3 | Quand un test dit non et que le code dit oui, je cherche ce qui manque au code — je n'assouplis jamais le test pour qu'il passe. |
+| BP4 | Un détecteur qui n'a jamais rien trouvé ne prouve rien non plus. Je lui donne un faux problème pour vérifier qu'il mord. |
+
+Ce que je retiens de ta question : je t'ai écrit « BP3 » comme si tu avais le carnet sous les
+yeux. C'est exactement le travers que l'Article 29 vise — un nom propre sans définition atteignable.
+À l'avenir j'écris la chose, pas l'étiquette : « je n'assouplis pas le test », pas « BP3 ».
+
+---
+
+--- 2. « Il nous faut un responsable de l'organisation des tâches : c'est check-detail le bon candidat ? »
+
+Oui, et c'est fait. check-tasks-details est désormais inscrit dans le code comme responsable
+de l'organisation des tâches — pas seulement convenu entre nous, parce qu'un rôle qui n'existe que
+dans une conversation ne survit pas à la session qui l'a accordé.
+
+Concrètement, il sait maintenant faire deux choses qu'il ne faisait pas :
+
+- lire le niveau de priorité d'une tâche et les signaux qui le justifient, au lieu que je les
+  devine à la lecture ;
+- rendre la file des tâches dans l'ordre que les priorités imposent, au lieu de l'ordre
+  d'écriture.
+
+Une nuance qui compte : les règles de priorité elles-mêmes vivent dans un fichier à part. Ce
+n'est pas une coquetterie — check-tasks-details est déjà un très gros fichier dont seize autres
+dépendent, et y coudre l'échelle des priorités l'aurait encore alourdi. Il LIT les règles, il ne les
+héberge pas.
+
+---
+
+--- 3. « Qui se charge de vérifier par ailleurs que tout est à niveau ? »
+
+Personne ne le faisait. Maintenant si : A-NIVEAU.
+
+Le problème était réel et invisible : vingt outils vérifient chacun leur part et répondent « ma part
+va bien ». Aucun ne peut répondre « tout va bien », parce que pour ça il faudrait détenir la liste de
+ce qui DEVRAIT être vérifié — et personne ne la détenait. Un oubli dans cette liste ne déclenche
+aucune alerte : il n'a simplement pas de voyant.
+
+Deux choses ont été construites, dans cet ordre :
+
+1. Un document qui écrit les exigences (docs/referentiel/standards.md) — 29 exigences réparties
+   sur quatre niveaux, chacune nommant qui la vérifie, ou déclarant que personne ne la vérifie. Sans
+   ce document, « ce n'est pas à niveau » n'est qu'une opinion, et une opinion se discute au lieu de
+   se corriger.
+2. Un outil qui le lit et rend un verdict par domaine. Il ne scanne rien lui-même — c'est la
+   forme que tu avais choisie en fenêtre : il appelle les contrôleurs existants et rassemble.
+
+Le verdict au moment où j'écris : l'Agence 15/15, les documents 7/7, le code 5/7, le jeu hors
+périmètre (il relève de la charte, pas d'un standard d'outillage). Les deux exigences non couvertes
+sont déclarées comme telles, pas découvertes par surprise.
+
+---
+
+--- 4. « Est-ce que tout le code bénéficie de la leçon que tu as apprise ? »
+
+Honnêtement : pas automatiquement, non — et c'est maintenant visible.
+
+Une leçon est apprise à UN endroit, celui où l'erreur a fait mal, et corrigée à cet endroit-là. Rien
+ne garantissait que les dix autres fichiers du même genre en profitent. C'était même le contraire par
+défaut.
+
+Il y a maintenant deux niveaux, et la séparation est volontaire :
+
+- Le niveau mécanique, gratuit, en continu : il dit quels fichiers concernés par une leçon ont
+  été modifiés APRÈS qu'elle a été apprise. Ce sont les endroits où la question se pose vraiment.
+  Il POSE la question, il n'affirme jamais qu'il y a un défaut.
+- Le niveau profond, sur demande, coûteux : un vrai jugement « ce fichier porte-t-il le
+  défaut ? ». Ça demande de lire le sens du code, donc ça ne peut pas être automatique.
+
+Pourquoi pas « tous les fichiers concernés » plutôt que « ceux qui ont bougé » : ça rendrait des
+dizaines de fichiers dormants par leçon. Un relevé qui accuse presque tout a tort presque toujours,
+et on cesse de le lire.
+
+---
+
+--- 5. « Le conseil "rédige ton prompt à part" — qui devrait le porter ? »
+
+SMART-CONSO-TOKEN, l'outil qui surveille ce que MA façon de travailler coûte en tokens. C'est
+son domaine exact.
+
+Pourquoi une rafale de messages courts coûte cher, et ce n'est pas intuitif : chaque message,
+même de trois mots, relance un tour complet. Tout le contexte est rechargé — la charte, les
+documents ouverts, l'historique — pour traiter « ok continue ». Dix précisions envoyées une par une
+coûtent dix rechargements ; la même demande rédigée d'un bloc n'en coûte qu'un.
+
+Ce que l'alerte dit, et ce qu'elle ne dira jamais : ce n'est pas un reproche. Découper sa pensée
+en messages courts est une façon parfaitement légitime de réfléchir à voix haute, et c'est souvent
+comme ça qu'une bonne idée se précise. L'alerte signale seulement le moment où ça devient cher, et
+propose l'alternative concrète — un bloc-notes à côté, collé d'un coup.
+
+Elle se déclenche à quatre messages courts d'affilée, et un message un peu long la referme
+aussitôt, puisque c'est précisément ce qu'elle cherchait à obtenir.
+
+---
+
+--- 6. « Les six étiquettes de priorité »
+
+Faites, avec la frontière que tu avais posée : ce qui distingue un palier du suivant, c'est
+ce que coûte l'attente, jamais l'impression du moment.
+
+Un point que tu avais tranché et qui est bien dans le code : un dégât qui S'AGGRAVE tant qu'on
+n'agit pas passe directement au palier le plus haut, sans passer par les intermédiaires.
+
+Les 470 anciennes lignes de suivi ont été converties. Un incident vaut d'être mentionné : ma
+première vérification de cette conversion partageait le même filtre que la conversion elle-même —
+les deux exigeaient un numéro de tâche — donc les deux ont sauté les mêmes 50 lignes, et le contrôle
+a annoncé « zéro valeur ancienne restante » en toute bonne foi. C'est une des leçons de la nuit :
+une vérification qui partage l'angle mort de ce qu'elle vérifie ne vérifie rien.
+
+---
+
+--- 7. « Le vocabulaire "gardien" »
+
+Corrigé, et la règle est dans la charte (Article 20bis). Le mot désignait quatre rôles qui n'ont
+ni le même objet ni la même autorité :
+
+- Gardien sacré du code — les sept qui scannent vraiment la qualité du code ET tournent
+  gratuitement à chaque enregistrement. L'expression reste réservée à ce rang.
+- Contrôleur de process — surveille le DÉROULÉ d'une activité à étapes, jamais la qualité du
+  code. Il signale, il ne corrige jamais.
+- Veilleur — surveille UN document ou UNE décision déjà prise.
+- Garde-fou mécanique — jamais un outil, toujours une fonction à l'intérieur d'un outil.
+
+Un mécanisme vérifie maintenant qu'aucun document normatif n'emploie « gardien » tout seul. Et
+il m'a déjà attrapé, sur une phrase que je venais d'écrire.
+
+Ce qui n'a pas été fait, et je le dis plutôt que de le taire : les 67 fichiers qui citent les
+trois scripts nommés *-process-guardian n'ont pas été renommés. Le rang y est déjà clair (le mot
+process est dans le nom), et un renommage massif juste avant une revue risquait de casser des
+registres pour zéro clarté gagnée. C'est une tâche ouverte, pas un abandon.
+
+---
+
+--- 8. « memory-audit sur les scripts de simulation »
+
+C'est le chantier 11, une enquête sans aucun changement — tu avais été clair là-dessus. Le
+résultat vit dans un document séparé (docs/plans/memory-audit-enquete-2026-09-23.md) pour ne pas
+noyer ces réponses-ci.
+
+---
+
+--- Ce que je n'ai PAS décidé à ta place
+
+Trois choses attendent ton arbitrage, et je n'y ai pas touché :
+
+- Le renommage des rangs (Scribes / Premium / Platine noir) — c'est ton appel.
+- Les cinq tâches en stagnation — je te les présente, je ne les ferme pas.
+- Le travail de fond sur la charte — tu voulais le faire ensemble. Je n'y ai touché que pour
+  DEUX inscriptions strictement mécaniques (une ligne de tableau et une puce) qu'un test refusait
+  de laisser passer ; aucune règle n'a bougé.
+
+
+###################################################################
+# SÉRIE B — LES DEUX QUESTIONS D'AUJOURD'HUI
+###################################################################
+
+
+-------------------------------------------------------------------
+QUESTION B1 — « #200 : si on ne fait rien, quels sont les impacts ? »
+-------------------------------------------------------------------
+
+D'ABORD, LE CHIFFRE QUE J'AI DONNÉ ÉTAIT FAUX, ET JE LE CORRIGE.
+
+Je t'ai parlé de « soixante-sept fichiers ». J'ai remesuré aujourd'hui sur le vrai dépôt :
+c'est 39 fichiers, et 164 occurrences du mot. Le 67 venait d'un comptage antérieur que
+j'ai répété sans le revérifier. C'est exactement le travers que l'Article 25 vise, et il
+vaut mieux te le dire que de laisser passer.
+
+CE DONT ON PARLE EXACTEMENT. Trois scripts portent le mot anglais « guardian » dans leur
+nom de fichier :
+  - circle-process-guardian
+  - process-simulation-guardian
+  - tasks-process-guardian
+
+Notre vocabulaire actuel distingue quatre rangs : Gardien sacré du code, contrôleur de
+process, veilleur, garde-fou mécanique. Ces trois-là sont des CONTRÔLEURS DE PROCESS.
+
+LES IMPACTS RÉELS SI ON NE FAIT RIEN, du plus petit au plus gros :
+
+1. AUCUN IMPACT TECHNIQUE. Rien ne casse, rien ne ralentit, aucune vérification ne
+   s'affaiblit. Le mot dans un nom de fichier n'a aucun effet sur ce que le fichier fait.
+
+2. AUCUNE AMBIGUÏTÉ DE RANG NON PLUS, et c'est le point important. Les trois portent DÉJÀ
+   le mot « process » dans leur nom. Lire « process-guardian », c'est lire « contrôleur de
+   process » — le rang est donné par le nom lui-même. Il n'existe aucun Gardien sacré qui
+   s'appelle « guardian », et un garde-fou mécanique est toujours une fonction, jamais un
+   fichier. Une IA qui reprend le projet ne peut donc pas se tromper de rang sur ces trois.
+
+3. LE SEUL VRAI RISQUE, ET IL EST DÉJÀ COUVERT : qu'un futur script s'appelle
+   « quelque-chose-guardian » SANS « process » dans son nom. Là, le rang deviendrait
+   vraiment ambigu. Mais ce cas est déjà interdit par écrit dans la charte (Article 20bis)
+   ET vérifié mécaniquement par findGardienAmbigu(), qui contrôle les documents normatifs
+   à chaque passage. Le trou est bouché en amont, pas en aval.
+
+4. CE QU'ON PERD VRAIMENT EN NE FAISANT RIEN : une gêne esthétique. Le mot anglais reste
+   dans trois noms de fichiers d'un projet écrit en français, et il faut une phrase
+   d'explication (celle qui est déjà dans la charte) pour dire pourquoi.
+
+5. CE QU'ON RISQUE EN LE FAISANT, en face : renommer un fichier veut dire mettre à jour
+   chaque endroit qui le cite — imports entre scripts, chemins écrits en dur dans les
+   registres, références dans la documentation, entrées historiques dans le suivi. Un
+   seul lien manqué et une vérification tombe en silence. Sur 39 fichiers, la probabilité
+   d'un oubli n'est pas nulle, et le bénéfice en face est nul.
+
+MA RECOMMANDATION, ET ELLE EST NETTE : on ferme #200 comme une décision assumée, pas comme
+un oubli. Les trois noms sont l'orthographe historique du rang, le rang est non ambigu dans
+le nom lui-même, et le seul cas qui poserait vraiment problème est déjà interdit et vérifié.
+Je l'écris comme ça dans le suivi, avec la raison, pour qu'une future IA ne rouvre pas le
+sujet en croyant trouver une négligence.
+
+Si tu préfères quand même le faire un jour, l'Article 28 impose que la tâche reste ouverte
+avec sa raison — dis-le et je la garde telle quelle.
+
+
+-------------------------------------------------------------------
+QUESTION B2 — « #209 : détaille-moi les tâches figées »
+-------------------------------------------------------------------
+
+D'ABORD UNE CORRECTION, ENCORE. Je t'ai parlé de CINQ tâches en stagnation. Ce chiffre
+datait de la Ronde. Mesuré aujourd'hui sur le vrai suivi : il y en a DOUZE. La différence
+n'est pas une aggravation mystérieuse — six d'entre elles sont nées du plan d'action de la
+Ronde elle-même, donc elles ont rejoint la liste après que le chiffre « cinq » a été écrit.
+
+LES QUATRE QUE L'OUTIL PLACE EN TÊTE (il les classe, il ne décide pas) :
+
+  #147 — « Objectifs chiffrés par membre de l'équipe »
+         Signalée figée depuis 36 rapports consécutifs. Ouverte depuis 3 jours.
+         DE QUOI IL S'AGIT : donner à chaque outil de l'Agence un objectif de résultat
+         chiffré, pour pouvoir dire s'il tient sa promesse au lieu de juste tourner.
+         POURQUOI ELLE NE BOUGE PAS : elle demande de décider CE QU'ON MESURE pour chacun,
+         et ce n'est pas une décision d'agent.
+
+  #179 — « CASSANDRA-RH doit tout savoir de chaque membre de l'équipe »
+         Signalée figée depuis 36 rapports consécutifs.
+         DE QUOI IL S'AGIT : faire de CASSANDRA le point unique où l'on demande « à quoi
+         sert cet outil, que fait-il exactement », plutôt que d'aller lire chaque fiche.
+         POURQUOI ELLE NE BOUGE PAS : c'est un gros chantier de construction, jamais
+         commencé, et il chevauche en partie ce que tool-brain fait déjà.
+
+  #279 — « Allègement manuel de CLAUDE.md »
+         Signalée figée depuis 24 rapports.
+         ELLE N'EST PAS OUBLIÉE : tu l'as REPORTÉE explicitement, et c'est écrit. Elle
+         apparaît comme figée parce que l'outil compte le temps, pas la raison. C'est
+         d'ailleurs la tâche que ta décision d'aujourd'hui sur #208 va rouvrir.
+
+  #436 — « Relire tout le travail de process avec les outils, une fois les process finis »
+         Signalée figée depuis 9 rapports. Étiquetée PRIORITAIRE-OBLIGATOIRE.
+         DE QUOI IL S'AGIT : une vérification à froid de tout le travail de process, une
+         fois qu'ils sont tous écrits. Ils le sont maintenant (8 process déclarés).
+         C'est donc la seule des quatre qui soit réellement mûre pour être faite.
+
+LES HUIT AUTRES, plus brièvement :
+
+  #390 — imprécision assumée : ARGUS et CLONE-HUNTER mesurent à l'échelle du dépôt, pas de
+         l'outil. Déjà « en attente de décision », pas oubliée.
+  #439 — le « jury » n'est pas un rang mais une catégorie transverse, et il y en a d'autres.
+  #445 — un mécanisme branché sur un seul outil ne dégage aucune tendance : 5 outils restent
+         à brancher.
+  #451 — SAFE-EXPORT est septième Gardien sacré sur le papier ; il faut vérifier qu'il tourne
+         vraiment à chaque commit.
+  #490 — 18 données fraîches que personne ne lit : brancher un lecteur réel, ou déclarer
+         l'absence comme assumée. PRIORITAIRE-OBLIGATOIRE.
+  #491 — 11 écarts d'exportabilité : purger le jargon de 3 blueprints, compléter 7 sections.
+         PRIORITAIRE-OBLIGATOIRE. (Partiellement traitée cette nuit.)
+  #510 — la cérémonie de certification enregistre qu'elle a eu lieu, jamais ce qu'elle disait.
+         PRIORITAIRE-OBLIGATOIRE. (Traitée cette nuit — à reclasser.)
+  #514 — le compte « 11 écarts » est un plancher, pas un total : honnêteté à préserver.
+
+CE QUE J'EN PENSE, SI TU VEUX UN AVIS PLUTÔT QU'UNE LISTE :
+  - #436 est mûre et prioritaire : les process sont finis, la relecture à froid a du sens
+    maintenant et pas avant.
+  - #279 va se résoudre d'elle-même avec le travail sur CLAUDE.md que tu viens de lancer.
+  - #147 et #179 attendent une décision de ta part, pas du travail — elles resteront figées
+    tant qu'on ne tranche pas, et les laisser figées est un choix légitime.
+  - #510 et #491 devraient être reclassées : j'ai travaillé dessus cette nuit et le suivi
+    ne l'a pas enregistré. C'est un écart de suivi, pas de travail — je le corrige.
+
+
+-------------------------------------------------------------------
+UN ÉCART TROUVÉ EN TRAVAILLANT, QUE TU N'AS PAS DEMANDÉ
+-------------------------------------------------------------------
+
+En branchant les cinq règles muettes (ta décision « les cinq d'un coup »), la règle n°13 a
+trouvé, dès son tout premier passage, quelque chose de réel :
+
+L'ÉTAPE DE LA RONDE QUI RELIT TOUS LES DOCUMENTS DE RÉFÉRENCE — celle qui applique
+l'Article 13, la vérification périodique — N'A JAMAIS ÉCRIT UN SEUL RAPPORT depuis que la
+Ronde existe. Son dossier de registre n'existe tout simplement pas sur le disque. Son
+voisin, celui de la relecture des correctifs, existe bien.
+
+Autrement dit : à chaque Ronde, cette étape a été annoncée faite, et rien ne l'a jamais
+prouvée. Je ne peux pas dire si la relecture a eu lieu sans trace ou pas du tout — je peux
+seulement dire que rien ne l'atteste.
+
+CE QUE JE N'AI PAS FAIT, ET SURTOUT PAS : créer le dossier vide pour que le contrôle passe
+au vert. Ç'aurait été exactement le défaut qu'on a trouvé hier sur un autre outil — une
+preuve satisfaite par le registre vide qu'elle est censée remplir. L'écart reste donc
+visible, et il est inscrit comme une tâche.
+
+Ta décision « les cinq d'un coup » plutôt que ma recommandation prudente « une par une » a
+donc rapporté quelque chose dès la première heure. C'est noté.

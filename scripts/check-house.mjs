@@ -8770,7 +8770,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // Ronde CIRCLE-TASKS a bien été suivi (docs/circle-process-detail.txt Parties 5 et 7). Testé avec
   // toutes les implémentations injectées — jamais un vrai `git rev-list`/scan disque dans ce test,
   // qui serait lent et dépendant de l'état réel du dépôt au moment du test.
-  const { hasFreshReportFile, verifyRondeProcess, verifyHyperScanProcess, verifyDoubleCommunication, findCircleItemsMapDrift, findStaleItemCountReferences, findItemsMissingFromChangelog, RACCORDEMENTS_RONDE, etatRaccordementRonde, planRaccordementRonde, formatPlanRaccordementRonde } = await import('../scripts/circle-process-guardian.mjs');
+  const { hasFreshReportFile, verifyRondeProcess, verifyHyperScanProcess, verifyDoubleCommunication, findCircleItemsMapDrift, findStaleItemCountReferences, findItemsMissingFromChangelog, RACCORDEMENTS_RONDE, etatRaccordementRonde, planRaccordementRonde, formatPlanRaccordementRonde, SEUIL_ALERTE_OUVERTURE_HEURES } = await import('../scripts/circle-process-guardian.mjs');
 
   const fakeFolders = { 'argus-scan': 'docs/argus', 'cassandra-rh-signal': undefined };
   assert.equal(hasFreshReportFile('cassandra-rh-signal', { folders: fakeFolders }), undefined, 'an item with no known report folder (cassandra-rh-signal never uses this mechanism) must report an honest undefined, never a guessed true/false');
@@ -8941,6 +8941,22 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     // sept Gardiens sacrés tournent à chaque commit, donc la Ronde ne les relance pas — mais leurs
     // verdicts n'arrivaient jamais à l'utilisateur, qui a dû remarquer lui-même leur absence.
     gardiensLivres: ['argus', 'harmonia', 'axa-check', 'clean-dirty-old', 'clone-hunter', 'always-new-code', 'safe-export'],
+    // Septième fois que ce test échoue à l'ajout d'une étape, et c'est encore voulu — mais cette
+    // fois pour une raison différente des six précédentes, et elle mérite d'être dite. Les quatre
+    // règles câblées le 2026-09-23 lisent le DÉPÔT RÉEL. Ce test décrit un SCÉNARIO propre, pas
+    // l'état du dépôt : toutes ses autres lectures de disque sont déjà injectées ici, exactement
+    // pour qu'il ne devienne pas rouge le jour où un fichier bouge ailleurs. Les quatre nouvelles
+    // suivent la même discipline, ni plus ni moins.
+    //
+    // CE QUI N'EST PAS FAIT ICI, ET SURTOUT PAS : faire taire la trouvaille. Dès son premier
+    // passage sur le vrai dépôt, `registre-declare-absent` a trouvé que docs/relecture-referentiel/
+    // n'existe pas — l'item « relecture du référentiel » de la Ronde (Article 13) n'a donc jamais
+    // écrit un seul rapport depuis sa création. Créer le dossier vide pour verdir le test aurait
+    // produit exactement la preuve satisfaite par son propre registre vide (leçon L13). L'écart
+    // reste donc VIVANT dans l'outil réel, et il est inscrit au suivi comme une tâche.
+    findEtapesDivergentesDuDocumentImpl: () => [],
+    findEcrivainsDeRegistreSansContributionImpl: () => [],
+    registries: [],
   });
   assert.deepEqual(cleanResult, { ok: true, findings: [] }, 'a Ronde where every real fact checks out must report a genuinely clean ok:true with zero fabricated findings');
 
@@ -9150,6 +9166,72 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(planRaccordementRonde('a-niveau', { checkHouseText: fs.readFileSync('scripts/check-house.mjs', 'utf8') }).complet, 'checked live: the most recently integrated Ronde item must be wired on all five points — the exact check that was missing the night it was integrated');
 
   console.log("Passed: the « intégration à la Ronde » process (2026-09-23) exists separately from « intégration d'un outil », as the user required — and the night he asked for it, integration-outil reported every registry filled for A-NIVEAU while the test suite refused the commit over wirings it does not know about. Its five raccordements are the ones actually done by hand that night, each biting on its own fixture: an undeclared item is flagged on exactly the three points that depend on its declaration and never on a report folder it never promised, a theme carried by one single item is flagged, a written dispense counts as wired (reproaching a documented decision being the worst kind of false positive), a stale hardcoded count appears in the plan BEFORE the suite refuses the commit, and an unreadable check-house.mjs reports nothing rather than a gap it never observed. Every missing wiring hands over the exact line to write. And findItemsMissingFromChangelog() is finally CALLED: built the day before with its Article 24 guard, it had zero callers anywhere while eight items joined the Ronde without their « pourquoi » — two of them added by the agent itself — hidden from the mute-detector scan because its own name appeared in a neighbouring comment.");
+  // ————————————————————————————————————————————————————————————————————————
+  // LES CINQ RÈGLES MUETTES, CÂBLÉES LE 2026-09-23 (décision de l'utilisateur : « les cinq d'un coup »)
+  // ————————————————————————————————————————————————————————————————————————
+  //
+  // Chaque test ci-dessous vérifie qu'une règle qui était IMPORTÉE SANS ÊTRE APPELÉE fait désormais
+  // vraiment son travail. Le point commun des cinq : aucune n'avait de test, précisément parce
+  // qu'aucune n'était appelée — un mécanisme jamais invoqué ne casse jamais, donc rien ne réclame
+  // sa couverture. C'est la forme la plus discrète de la dette, et la raison pour laquelle ces
+  // règles ont pu rester muettes si longtemps sans que le vert général ne bronche.
+  const baseMuettes = {
+    findOrphanReportFilesImpl: () => [],
+    findRegistriesMissingFromCircleImpl: () => [],
+    existingPaths: [],
+    shImpl: () => { throw new Error('git indisponible dans ce test'); },
+    nightAutonomousMode: true,
+    findEtapesDivergentesDuDocumentImpl: () => [],
+    findEcrivainsDeRegistreSansContributionImpl: () => [],
+    registries: [],
+    existsImpl: () => true,
+    loadOuvertureImpl: () => ({}),
+    loadQuestionsSansReponseImpl: () => [],
+    loadSeriesPasseesImpl: () => [],
+  };
+  const checksDe = (r) => r.findings.map((f) => f.check);
+
+  // RÈGLE 11 — l'inventaire des questions contre le document.
+  assert.ok(!checksDe(verifyRondeProcess(baseMuettes)).includes('inventaire-questions-divergent'),
+    'with a matching question inventory, the guardian must stay silent — a guard that fires on the healthy case teaches everyone to ignore it');
+  assert.ok(checksDe(verifyRondeProcess({ ...baseMuettes, findEtapesDivergentesDuDocumentImpl: () => [{ pourquoi: 'le document annonce 28 à 44, le code en totalise 30 à 46' }] })).includes('inventaire-questions-divergent'),
+    'a divergence between the code inventory and the process document must now be reported — it was detectable since the day it was written, and nobody was calling it');
+
+  // RÈGLE 12 — l'ouverture qui va expirer, dite AVANT qu'elle expire.
+  const maintenantTest = new Date('2026-09-23T12:00:00Z').getTime();
+  const ouvertureDe = (heuresEcoulees) => ({ at: new Date(maintenantTest - heuresEcoulees * 3600000).toISOString(), mode: 'AUTO', items: 'tous', pourquoi: 'test' });
+  assert.ok(!checksDe(verifyRondeProcess({ ...baseMuettes, nightAutonomousMode: false, now: maintenantTest, loadOuvertureImpl: () => ouvertureDe(1) })).includes('ouverture-bientot-perimee'),
+    'a one-hour-old opening has the whole window ahead of it — warning about it would be noise, and permanent noise warns of nothing');
+  assert.ok(checksDe(verifyRondeProcess({ ...baseMuettes, nightAutonomousMode: false, now: maintenantTest, loadOuvertureImpl: () => ouvertureDe(20) })).includes('ouverture-bientot-perimee'),
+    'an opening with under a quarter of its window left must be flagged BEFORE it expires — detecting an expired opening at the closing gesture costs the whole Ronde, which is exactly the lesson of the 2026-09-23 night');
+  assert.ok(!checksDe(verifyRondeProcess({ ...baseMuettes, now: maintenantTest, loadOuvertureImpl: () => ouvertureDe(20) })).includes('ouverture-bientot-perimee'),
+    'night-autonomous mode never needs an opening at all, so it must never be warned about one expiring — the user\'s standing boundary, not an exception invented here');
+  assert.equal(SEUIL_ALERTE_OUVERTURE_HEURES, 6,
+    'the warning threshold must be DERIVED from the real window (a quarter of 24h), never a second hand-copied number that could drift the day the window changes (Article 24)');
+
+  // RÈGLE 13 — un registre déclaré dont le dossier n'existe pas.
+  const registresTest = [{ slug: 'x', label: 'Outil X', path: 'docs/outil-x/', decision: 'texte', scriptPath: 'scripts/x.mjs' }];
+  assert.ok(!checksDe(verifyRondeProcess({ ...baseMuettes, registries: registresTest, existsImpl: () => true })).includes('registre-declare-absent'),
+    'a declared registry whose folder exists is the normal case and must stay silent');
+  assert.ok(checksDe(verifyRondeProcess({ ...baseMuettes, registries: registresTest, existsImpl: () => false })).includes('registre-declare-absent'),
+    'a declared registry whose folder does not exist must be reported — its tool can run forever and its verdict lands nowhere, and an absent folder contradicts nobody, so it reassures wrongly');
+
+  // RÈGLE 14 — un outil qui alimente un registre sans déclarer sa contribution.
+  assert.ok(checksDe(verifyRondeProcess({ ...baseMuettes, findEcrivainsDeRegistreSansContributionImpl: () => [{ fichier: 'scripts/y.mjs', pourquoi: 'écrit sans enregistrer' }] })).includes('ecrivain-sans-contribution'),
+    'a tool writing its registry without recording the contribution must be reported: the usage counter then calls it unused while it works, and a KPI that says the opposite of the truth is worse than no KPI');
+
+  // RÈGLE 15 (la cinquième) — le détail par palier, que prochaineAction() écrase en ne gardant que le pire.
+  const registreMixte = [
+    { serie: 'A', question: 'q1', fois: 1 },
+    { serie: 'B', question: 'q2', fois: 3 },
+  ];
+  assert.ok(checksDe(verifyRondeProcess({ ...baseMuettes, loadQuestionsSansReponseImpl: () => registreMixte })).includes('questions-paliers-melanges'),
+    'two pending questions at different paliers call for different gestures; reporting only the worst applies the most insistent action to both, which throws away the very information the palier system exists to produce');
+  assert.ok(!checksDe(verifyRondeProcess({ ...baseMuettes, loadQuestionsSansReponseImpl: () => [{ serie: 'A', question: 'q1', fois: 1 }, { serie: 'B', question: 'q2', fois: 1 }] })).includes('questions-paliers-melanges'),
+    'questions all at the same palier need no extra warning — prochaineAction() already says the right thing for them');
+
+  console.log('Passed: the five written-but-unenforced rules of circle-process-guardian (2026-09-23) are now genuinely wired and covered — each of the five was IMPORTED and never CALLED, which is also exactly why none of them had a test (an uninvoked mechanism never breaks, so nothing ever demands its coverage): the question inventory is now confronted with the process document it is supposed to match, an opening is flagged BEFORE it expires rather than refused at the closing gesture (the night of 2026-09-23 lesson that detecting is not preventing, applied), a declared registry whose folder does not exist is reported instead of silently reassuring, a tool feeding a registry without recording its contribution no longer counts as unused while it works, and pending questions sitting at different paliers are no longer collapsed under the most insistent one\'s action; night-autonomous mode is exempted only where a human would have to answer, never from a check that reads the disk by itself.');
+
   console.log('Passed: circle-process-guardian (2026-09-22) verifies the full CIRCLE-TASKS Ronde process mechanically wherever the facts are observable from disk (fresh report artifacts via the same circle-signal-*/snapshot-* filenames already used by recordCircleItemReport()/recordSnapshotIfChanged(), the record-run commit-count drift, orphan reports and registries missing from CIRCLE_ITEMS — both relayed from the already-existing functions rather than recomputed), honestly refuses to guess conversation-only facts (AUTO/PRIME/GOAT asked, items actually checked vs executed, the Étape 5 sequencing and forced-questions count) when they are not supplied, correctly exempts a genuine night-autonomous run from the AUTO/PRIME/GOAT requirement, enforces the 5-10 forced-choice-question range scaled to the real number of problems found without ever fabricating a question when zero problems exist, and reports a fully clean ok:true only when every one of these real facts checks out — and (same commit) verifyHyperScanProcess() extends this exact discipline to HYPER-SCAN-CHECKPOINT\'s own garde-fous (mandatory full CLAUDE.md reread even in the light version, Smart Conso API/SMART-CONSO-TOKEN consultation and the light-before-heavy order for a heavy pass, the non-negotiable 3-attempt iteration cap, the double-perspective requirement, and the index-entry memory check), despite HYPER-SCAN-CHECKPOINT never being a CIRCLE_ITEMS entry itself — verifyDoubleCommunication() makes the real point 3 ("double communication", alert console + report) genuinely checkable once both texts are supplied, catching a real substance divergence rather than only documenting it as a standing comment — and findCircleItemsMapDrift()/findStaleItemCountReferences() give circle-process-guardian a genuine "help + guard" dual role for maintaining CIRCLE_ITEMS itself, catching (live, the same night they were built) both a dangling-map class of bug and the exact stale-count regression this session\'s own hyper-scan-checkpoint-light addition had just introduced.');
 }
 

@@ -38,13 +38,20 @@ import {
   loadOuverture, findFaitsManquants, ouvertureEstFraiche, autoriseCloture, OUVERTURE_VALIDE_HEURES,
   loadQuestionsSansReponse, questionsAReposer, enAttenteProchaineRonde, prochaineAction,
   MAX_TENTATIVES_PAR_RONDE, loadSeriesPassees, effetDUneSeriePassee, HYPOTHESE_SILENCE,
-  findEtapesDeQuestionsManquantes,
+  findEtapesDeQuestionsManquantes, findEtapesDivergentesDuDocument,
 } from "./circle-tasks.mjs";
-import { findOrphanReportFiles, REGISTRIES } from "./doc-report.mjs";
+import { findOrphanReportFiles, REGISTRIES, findEcrivainsDeRegistreSansContribution } from "./doc-report.mjs";
 import { walkDocsPaths, sh, outilsHorsPortee, porteeDe, GARDIEN_DOMAINS } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
+
+// SEUIL_ALERTE_OUVERTURE_HEURES — combien d'heures avant l'expiration de l'ouverture le gardien
+// commence à prévenir. DÉRIVÉ de OUVERTURE_VALIDE_HEURES, jamais un second chiffre recopié qui
+// pourrait diverger le jour où la fenêtre change (Article 24) : un quart de la fenêtre, soit 6 h
+// sur 24. Assez tôt pour qu'il reste le temps de rouvrir, assez tard pour ne pas crier à chaque
+// passage — un avertissement permanent n'avertit plus de rien.
+export const SEUIL_ALERTE_OUVERTURE_HEURES = OUVERTURE_VALIDE_HEURES / 4;
 
 // Un item produit-il bien un fichier daté d'AUJOURD'HUI dans son dossier ? Réutilise le même
 // motif de nom que recordCircleItemReport()/recordSnapshotIfChanged() (circle-signal-*/snapshot-*),
@@ -166,6 +173,17 @@ export function verifyRondeProcess({
   rapportsLivresIndividuellement,
   nombreDeRapportsEcrits,
   nombreDeRapportsLivres,
+  // LES CINQ RÈGLES MUETTES (câblées le 2026-09-23, décision explicite de l'utilisateur : « les
+  // cinq d'un coup »). Elles étaient écrites dans docs/circle-process-detail.txt et importées ici,
+  // et pas une seule n'était APPELÉE : le contrôleur portait leur nom sans faire leur travail.
+  // Un import n'est pas un câblage — c'est exactement la forme de défaut que la nuit du 2026-09-23
+  // a trouvée quatre fois, et celle-ci en est la cinquième. Injectables pour les tests, lues sur
+  // disque par défaut : ces faits-là Y vivent réellement, les demander à l'agent reviendrait à
+  // préférer sa parole à la preuve.
+  findEtapesDivergentesDuDocumentImpl = findEtapesDivergentesDuDocument,
+  findEcrivainsDeRegistreSansContributionImpl = findEcrivainsDeRegistreSansContribution,
+  registries = REGISTRIES,
+  existsImpl = (chemin) => existsSync(join(ROOT, chemin)),
 } = {}) {
   const findings = [];
   const add = (check, message) => findings.push({ check, message });
@@ -399,6 +417,23 @@ export function verifyRondeProcess({
     if (suite.quoi === "reposer" || suite.quoi === "reposer-et-offrir-de-passer") {
       add("questions-a-reposer", `${suite.questions.length} question(s) en attente au palier ${suite.fois} : ${suite.action}. Hypothèse en vigueur : ${suite.hypothese}. La Ronde ne se clôt pas en les laissant derrière elle.`);
     }
+    // LE DÉTAIL PAR PALIER (câblé le 2026-09-23, cinquième des règles muettes). prochaineAction()
+    // ci-dessus retient LE PIRE palier et applique son action à toute la liste : une question qui
+    // en est à sa première tentative se retrouve annoncée sous l'action d'une question qui en est
+    // à sa troisième. Les deux ne demandent pourtant pas le même geste — l'une se repose telle
+    // quelle, l'autre s'accompagne d'une offre de passer. Agréger les deux fait perdre exactement
+    // l'information que le système de paliers existe pour produire.
+    const parPalier = new Map();
+    for (const q of questionsAReposer(registre)) {
+      const cle = q.fois ?? 1;
+      if (!parPalier.has(cle)) parPalier.set(cle, []);
+      parPalier.get(cle).push(q);
+    }
+    if (parPalier.size > 1) {
+      const detail = [...parPalier.entries()].sort((a, b) => b[0] - a[0])
+        .map(([fois, qs]) => `${qs.length} au palier ${fois} (${qs[0].action})`).join(" ; ");
+      add("questions-paliers-melanges", `Les questions en attente ne sont pas toutes au même palier : ${detail}. Le geste attendu diffère d'un palier à l'autre — les traiter d'un bloc applique à chacune l'action de la plus insistante, ce qui revient à perdre le palier.`);
+    }
     const reportees = enAttenteProchaineRonde(registre);
     if (reportees.length) {
       add("questions-reportees", `${reportees.length} question(s) au-delà du plafond de ${MAX_TENTATIVES_PAR_RONDE} tentatives : l'insistance s'arrête, le suivi non — elles doivent apparaître dans le rapport de fin de Ronde, jamais disparaître.`);
@@ -416,6 +451,61 @@ export function verifyRondeProcess({
     if (!nightAutonomousMode && seriesReellementPosees === undefined) {
       add("series-non-declarees", `La liste des séries de questions réellement posées pendant cette Ronde n'a pas été déclarée. Sans elle, une série oubliée est indiscernable d'une série répondue — et l'hypothèse en vigueur reste « ${HYPOTHESE_SILENCE} ».`);
     }
+  }
+
+  // ————————————————————————————————————————————————————————————————————————
+  // 11 à 14 — LES RÈGLES QUI ÉTAIENT ÉCRITES ET QUE PERSONNE N'APPLIQUAIT (2026-09-23)
+  // ————————————————————————————————————————————————————————————————————————
+  //
+  // Chacune de ces quatre vérifications (la cinquième est le resserrement du bloc 10 juste
+  // au-dessus) porte sur un mécanisme que ce fichier IMPORTAIT sans jamais l'appeler. Le détecteur
+  // de god-of-all-process les a nommées une par une ; elles sont câblées ici plutôt que retirées,
+  // parce qu'aucune n'a jamais eu l'occasion de montrer ce qu'elle trouverait.
+  //
+  // AUCUNE N'EST EXEMPTÉE EN MODE AUTONOME, et c'est délibéré : les quatre lisent des faits
+  // observables sur le disque, sans jamais rien demander à personne. La borne de l'utilisateur
+  // (« aucune fenêtre ne doit être bloquante pour le mode autonome ») protège les questions posées
+  // à un humain absent — elle n'a jamais dispensé d'une vérification qui se fait seule.
+
+  // 11. L'INVENTAIRE DES QUESTIONS CONTRE LE DOCUMENT (Article 24). Le code totalise une fourchette
+  // de questions dues par étape ; le document en annonce une. Les deux doivent dire la même chose.
+  // Si l'un des deux bouge sans l'autre, le contrôle du bloc 5 ci-dessus mesure contre un barème
+  // périmé — et ce barème périmé avait déjà, une fois, contredit le process qu'il vérifiait.
+  for (const e of findEtapesDivergentesDuDocumentImpl()) {
+    add("inventaire-questions-divergent", `Inventaire des questions : ${e.pourquoi}. Tant que les deux ne concordent pas, le contrôle « questions par étape » mesure contre un barème dont on ne sait plus lequel fait foi.`);
+  }
+
+  // 12. L'OUVERTURE QUI VA EXPIRER, dite AVANT qu'elle expire. autoriseCloture() (bloc 9) refuse
+  // déjà une ouverture périmée — mais elle le refuse au dernier geste de la Ronde, quand tout le
+  // travail est fait. C'est exactement la leçon de la nuit : détecter n'est pas empêcher, et la
+  // différence se paie en travail déjà fourni. Une Ronde ouverte il y a 22 h se clôturera dans deux
+  // heures ou jamais ; le dire maintenant coûte une ligne, le découvrir à la clôture coûte la Ronde.
+  if (!nightAutonomousMode) {
+    const ouvertureFraicheur = loadOuvertureImpl();
+    if (ouvertureEstFraiche(ouvertureFraicheur, now)) {
+      const heuresRestantes = OUVERTURE_VALIDE_HEURES - (now - new Date(ouvertureFraicheur.at).getTime()) / 3600000;
+      if (heuresRestantes <= SEUIL_ALERTE_OUVERTURE_HEURES) {
+        add("ouverture-bientot-perimee", `L'ouverture de cette Ronde expire dans ${heuresRestantes.toFixed(1)} h (fenêtre de ${OUVERTURE_VALIDE_HEURES} h). Passé ce délai, record-run refusera la clôture et toute la Ronde devra être rouverte — le dire maintenant, jamais au dernier geste.`);
+      }
+    }
+  }
+
+  // 13. LES REGISTRES DÉCLARÉS QUI N'EXISTENT PLUS. findOrphanReportFiles() (bloc 7) attrape le
+  // sens inverse — des rapports sans index. Celui-ci attrape un registre annoncé dans REGISTRIES
+  // dont le dossier a disparu : son outil a beau tourner, son verdict n'atterrit nulle part et
+  // personne ne le saura jamais. Un registre absent ne contredit rien, donc il rassure à tort —
+  // c'est le même défaut que la preuve satisfaite par son propre registre vide.
+  for (const r of registries.filter((r) => !existsImpl(r.path))) {
+    add("registre-declare-absent", `${r.label} déclare écrire dans ${r.path}, qui n'existe pas. Son verdict ne peut atterrir nulle part, et un dossier absent ne contredira jamais personne : l'outil passera pour muet plutôt que pour cassé.`);
+  }
+
+  // 14. LES OUTILS QUI ALIMENTENT UN REGISTRE SANS LE DÉCLARER. Le compteur d'usage sert à répondre
+  // à une question que la Ronde pose vraiment (« quels outils ne servent jamais ? »). Un outil qui
+  // écrit son registre sans enregistrer sa contribution est compté comme inutilisé alors qu'il
+  // travaille — le KPI de la Ronde dit alors le contraire de la vérité, ce qui est pire que de ne
+  // rien dire.
+  for (const e of findEcrivainsDeRegistreSansContributionImpl()) {
+    add("ecrivain-sans-contribution", `${e.fichier} : ${e.pourquoi}`);
   }
 
   return { ok: findings.length === 0, findings };
