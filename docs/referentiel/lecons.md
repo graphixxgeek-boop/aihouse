@@ -433,6 +433,41 @@ sans liste à tenir, et rend « pas mesuré » plutôt que zéro si le dossier d
 
 **Terrain** : quand j'écris un parseur, un convertisseur, un lecteur de format, ou un test avec une fixture inventée · mots : parser, format, fixture, rendu, convertir, consommer, producteur · fichiers : scripts/le-regisseur.mjs, scripts/html-report.mjs, scripts/summarize-simulation-log.mjs
 
+## L17 — Le filet de sécurité peut porter en lui le défaut qu'on vient corriger
+
+Le détecteur d'écho branché, la suite de tests est passée au rouge sur une assertion qui n'avait
+rien demandé : un tour de chat ORDINAIRE coûtait soudain trois appels au modèle au lieu de deux.
+Le détecteur avait raison. **Le stub de test renvoyait, depuis toujours, mot pour mot la même
+phrase aux deux personnages** — exactement le défaut que la journée entière servait à corriger,
+installé au cœur du mécanisme censé garantir qu'il n'arrive pas.
+
+Personne ne l'avait vu parce que rien ne le regardait : les assertions portaient sur le nombre
+d'appels, les intentions, les pièces, jamais sur le fait que les deux répliques du faux modèle
+étaient identiques. Le filet vérifiait tout sauf la chose qu'il incarnait.
+
+**Ce qui rend le cas vicieux** : la tentation immédiate était de corriger l'assertion (2 → 3
+appels), ce qui aurait été doublement faux — on aurait entériné un surcoût permanent à chaque tour
+(Article 8) ET gardé le stub menteur. La bonne correction était à l'autre bout : rendre au stub un
+comportement de vrai tour, puis tester l'écho sous son propre drapeau.
+
+**La règle** : quand un nouveau contrôle passe au rouge sur un test qui n'était pas son sujet,
+regarder d'abord si le test avait raison. Un faux modèle, une fixture, un jeu de données de test
+sont du contenu comme un autre : ils vieillissent, ils mentent, et ils échappent à toutes les
+relectures parce qu'on les prend pour de l'échafaudage. C'est le pendant de L16 — là un test qui
+invente son entrée, ici un test dont l'entrée inventée porte le bug.
+
+*Payée le 2026-09-23 en câblant la reprise anti-écho (#594) : le stub de `check-house.mjs` faisait
+dire la même phrase à Lia et à Noé depuis la création du fichier.*
+
+**Porté par** : **aucun mécanisme possible, et cette impossibilité est déclarée ici plutôt que tue** (ce que L7 prescrit). Aucun outil ne peut
+juger qu'une donnée de test est réaliste — cela demande de connaître ce que le vrai producteur
+fait, ce qui est précisément ce que le test remplace. Ce qui EST mécanique est déjà couvert
+ailleurs : l'assertion « un tour ordinaire coûte exactement deux appels » (`check-house.mjs`)
+mordra à nouveau si quelqu'un rend les deux répliques du stub identiques. La leçon, elle, ne vaut
+que lue au bon moment — d'où le terrain ci-dessous.
+
+**Terrain** : quand un nouveau garde-fou fait rougir un test qui n'était pas son sujet, ou quand j'ajuste une assertion pour faire passer la suite · mots : stub, fixture, faux modèle, jeu de test, assertion qui casse, ajuster le test · fichiers : scripts/check-house.mjs
+
 ## BP1 — La règle s'écrit à UN endroit et se dérive partout ailleurs
 
 Devant vingt endroits à corriger, le réflexe est de corriger les vingt. Le bon geste est de trouver
