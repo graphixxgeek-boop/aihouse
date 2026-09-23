@@ -760,6 +760,28 @@ async function main() {
     return;
   }
 
+  if (commande === "table") {
+    // LA COMMANDE QUI MANQUAIT, et son absence est la CAUSE du défaut trouvé la veille. Régénérer
+    // cette table demandait jusqu'ici une incantation écrite à la main (un `node -e` de quinze
+    // lignes recopié depuis un document) : personne ne la relance, et elle a tourné trois jours en
+    // ignorant six Articles. Un geste qui n'a pas de commande n'est pas un geste, c'est une
+    // intention — corriger l'instrument sans lui donner de bouton aurait laissé la cause intacte
+    // (Article 3).
+    const charte = lire(CHARTE);
+    if (charte == null) { console.log(`\nPAS MESURÉ — ${CHARTE} introuvable.`); return; }
+    const table = buildClaudeMdRuleTable(charte, fichiersDuDepot());
+    const entete = [
+      "# Référentiel des règles de la charte (CHARTER-SPY, porté par MOÏSE-TABLES-DE-LOI)",
+      "",
+      `*(Régénéré le ${new Date().toISOString().slice(0, 10)} par \`node scripts/moise-tables-de-loi.mjs table\`. Fichier de référence UNIQUE tenu à jour — jamais un dossier+index séparé (calibrage explicite du 2026-09-20). À régénérer AVANT toute décision d'allègement : la version précédente datait du 2026-09-20 et s'arrêtait à l'Article 23, six Articles derrière la réalité, et un instrument périmé ne rend pas une erreur — il rend des chiffres qui ont l'air justes.)*`,
+      "",
+    ].join("\n");
+    writeFileSync(join(ROOT, TABLE_REGLES_PATH), `${entete}${renderClaudeMdRuleTable(table)}\n`, "utf8");
+    recordRegistryWrite(TABLE_REGLES_PATH, { par: "moise-tables-de-loi" });
+    console.log(`\nTable de classification régénérée : ${TABLE_REGLES_PATH} (${table.rows.length} Articles, ${table.redondances.length} redondance(s) possible(s)).`);
+    return;
+  }
+
   if (commande === "memoire") {
     const article = args[0];
     if (article) { console.log(`\n${commentOnAFaitLaDerniereFois(article).resume ?? "PAS MESURÉ"}`); return; }
