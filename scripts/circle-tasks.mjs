@@ -654,6 +654,14 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // god-of-all-process (buildProcessComplianceReport, paramètre sectionAngel) dans le rapport unique
   // de la Ronde. Lui donner son propre item dirait la même chose deux fois, et casserait la voix
   // unique que l'utilisateur a explicitement demandée.
+  // etat-des-taches (2026-09-23, chantier 2 du plan de nuit) : registre produit À LA DEMANDE, quand
+  // l'utilisateur réclame un état des lieux — jamais sur un rythme. Lui donner un item de Ronde
+  // produirait un état des lieux que personne n'a demandé, donc que personne n'ouvrirait, et
+  // surtout : la Ronde a DÉJÀ `check-tasks-report`, qui dit l'essentiel des mêmes chiffres. Un
+  // second item dirait deux fois la même chose, ce que l'utilisateur a explicitement refusé ailleurs
+  // (« ce serait trop »). L'harmonisation entre les deux fait l'objet d'un livrable séparé : il veut
+  // voir l'existant AVANT de décider s'il faut fusionner, remplacer, ou garder les deux.
+  "etat-des-taches": "registre produit À LA DEMANDE et jamais par calendrier : la Ronde porte déjà check-tasks-report sur les mêmes chiffres, et un second item dirait deux fois la même chose — l'harmonisation entre les deux est un livrable séparé, en attente de la décision de l'utilisateur",
   "angel-of-ia-process": "gardien de process SECONDAIRE : son verdict est relayé par god-of-all-process dans le rapport unique de la Ronde (décision de l'utilisateur, 2026-09-22 : god centralise) — jamais un second item qui doublerait cette voix",
   // LES QUATRE TROUVÉS PAR findReportingToolsMissingFromCircle() À SON PREMIER PASSAGE (2026-09-22).
   // Les quatre sont des exclusions parfaitement légitimes — et aucune n'était écrite nulle part.

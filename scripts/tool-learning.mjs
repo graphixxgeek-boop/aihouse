@@ -676,6 +676,12 @@ export function auditLecons({ root = ROOT, readFileImpl = readFileSync, existsIm
   // comptent donc à part — un registre 100 % porté mais 0 % applicable remplirait l'objectif de
   // l'archivage en ratant entièrement celui de la mise en pratique, qui est le principal.
   const sansTerrain = juges.filter((l) => !l.mots.length).map((l) => l.id);
+  // LE DIAGNOSTIC, pas seulement le constat (2026-09-23) : une entrée qui DÉCLARE un terrain sans
+  // qu'aucun mot n'en soit extrait a presque toujours la même cause — le champ Terrain a été écrit
+  // sur DEUX lignes, et seule la première est lue. Le garde-fou attrapait bien le cas, mais laissait
+  // chercher la cause ; un garde-fou qui dit « c'est cassé » sans dire « voilà pourquoi » fait
+  // perdre le temps qu'il prétend faire gagner.
+  const terrainCoupe = juges.filter((l) => !l.mots.length && l.terrain).map((l) => l.id);
   return {
     mesure: "mesuré",
     lecons: juges,
@@ -686,7 +692,7 @@ export function auditLecons({ root = ROOT, readFileImpl = readFileSync, existsIm
     sansMecanisme: compte("sans mécanisme"),
     sansPorteur: compte("sans porteur"),
     fantomes: compte("porteur fantôme"),
-    sansTerrain,
+    sansTerrain, terrainCoupe,
     applicables: juges.length - sansTerrain.length,
   };
 }
@@ -1003,8 +1009,12 @@ export function constatsLecons(audit) {
       constat: `${x.id} ne tient à aucun mécanisme et ne le déclare pas — elle disparaît avec la session qui l'a écrite`,
       etat: "retenu", tache: `donner un porteur à ${x.id}, ou écrire noir sur blanc qu'aucun n'est possible et pourquoi` })),
     ...(audit.sansTerrain ?? []).map((id) => ({
-      constat: `${id} ne déclare aucun terrain — elle ne remontera jamais au moment où elle s'applique, donc elle est archivée plutôt qu'appliquée`,
-      etat: "retenu", tache: `déclarer le terrain de ${id} dans ${LECONS_PATH} (les situations où elle mord, et les mots qui les signalent)` })),
+      constat: (audit.terrainCoupe ?? []).includes(id)
+        ? `${id} déclare un terrain dont AUCUN mot n'est lu — cause la plus probable : le champ « Terrain » est écrit sur deux lignes, et seule la première est prise en compte`
+        : `${id} ne déclare aucun terrain — elle ne remontera jamais au moment où elle s'applique, donc elle est archivée plutôt qu'appliquée`,
+      etat: "retenu", tache: (audit.terrainCoupe ?? []).includes(id)
+        ? `remettre le terrain de ${id} sur UNE SEULE ligne dans ${LECONS_PATH}`
+        : `déclarer le terrain de ${id} dans ${LECONS_PATH} (les situations où elle mord, et les mots qui les signalent)` })),
   ];
 }
 

@@ -311,6 +311,30 @@ export const PROCESSES = [
       { cle: "jugement-utilisateur", libelle: "à la Ronde, l'utilisateur dit quelles entrées ont été réellement APPLIQUÉES — jamais l'agent sur son propre travail", preuve: null },
     ],
   },
+  {
+    // SEPTIÈME PROCESS (2026-09-23, chantier 2 du plan de nuit). Schéma donné étape par étape par
+    // l'utilisateur. Son BUT ULTIME, écrit dans ses mots, est de réorganiser la file : « il y a une
+    // logique de déroulement des tâches, mais j'ai tendance à souvent la perturber en intercalant
+    // de nouvelles tâches ». Une file ne se dégrade pas en perdant des tâches, elle se dégrade en
+    // perdant son ordre — et un état des lieux qui ne se solde par aucun réordonnancement a échoué,
+    // même exact.
+    slug: "etat-des-taches",
+    nom: "État des lieux des tâches (faites / en cours / à faire)",
+    quand: "l'utilisateur demande un état des lieux des tâches, ou une expression équivalente",
+    motsCles: ["état des tâches", "etat des taches", "état des lieux", "etat des lieux", "où on en est", "ou on en est", "file", "priorité des tâches", "flagger", "étiqueter"],
+    doc: "docs/etat-des-taches-process-detail.md",
+    gardien: "scripts/check-tasks-details.mjs",
+    etapes: [
+      { cle: "branche", libelle: "demander laquelle des deux branches : l'état complet, ou l'état rapide en conversation", preuve: null },
+      { cle: "scan-recuperation", libelle: "SCAN : récupérer la donnée sur les tâches partout où elle est, via check-tasks-details en priorité — l'outil dédié, jamais un second calcul", preuve: { fichier: "scripts/check-tasks-details.mjs" } },
+      { cle: "analyse", libelle: "ANALYSE aux trois échelles : à l'instant, plus généralement, au niveau du projet entier", preuve: null },
+      { cle: "rapports", libelle: "livrer le RAPPORT et l'archiver — 1re partie de quoi décider VITE, 2e partie le détail complet", preuve: { dossier: "docs/etat-des-taches", motif: {}, recursif: false } },
+      { cle: "questions", libelle: "QUESTIONS : la fenêtre de flagage, reportée et jamais supprimée quand l'utilisateur n'est pas là", preuve: null },
+      { cle: "plan-action", libelle: "PLAN D'ACTION : analyser ses réponses, commenter, et produire la mini-frise de l'ordre retenu", preuve: null },
+      { cle: "taches", libelle: "le plan est mis à jour partout où c'est nécessaire — la file réellement réorganisée, jamais seulement décrite", preuve: null },
+      { cle: "enchainement", libelle: "proposer d'enchaîner sur la prochaine tâche prévue", preuve: null },
+    ],
+  },
 ];
 
 // ————————————————————————————————————————————————————————————————————————

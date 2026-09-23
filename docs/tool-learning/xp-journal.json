@@ -52,5 +52,13 @@
     "quoi": "Je me suis arrêté au milieu d'une nuit autonome pour rendre un point d'étape. L'utilisateur dormait : il a dû se réveiller pour relancer. Le défaut n'était pas seulement à moi, il était dans le process — rien n'interdisait cet arrêt, et un compte rendu intermédiaire RESSEMBLE à du travail sérieux, ce qui lui donne l'apparence de la rigueur.",
     "entree": "L9",
     "date": "2026-09-23T09:00:00Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "garde-fou-bloque",
+    "rienARetenir": false,
+    "quoi": "Mon contrôle de conversion partageait le filtre du script de conversion : il a dit « 0 valeur ancienne restante » alors qu'il en restait 50. Le contrôle qui a dit la vérité était un grep brut, ignorant tout des colonnes.",
+    "entree": "L10",
+    "date": "2026-09-23T09:40:00Z"
   }
 ]

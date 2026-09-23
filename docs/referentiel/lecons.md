@@ -218,6 +218,30 @@ du plan aux chantiers réellement clos et nomme l'arrêt prématuré, avec son r
 perte de temps qualifiée par lui de « conséquente ». Le défaut était dans le process autant que dans
 l'agent — rien n'interdisait cet arrêt.*
 
+## L10 — Une vérification qui partage le filtre de ce qu'elle vérifie ne vérifie rien
+
+Le piège est invisible parce que les deux moitiés sont écrites dans la foulée, par la même personne,
+avec la même idée en tête. Le script de conversion ne traitait que les lignes dont le numéro était
+un chiffre ; le contrôle a compté les valeurs restantes **avec le même filtre**. Il a donc annoncé
+« zéro valeur ancienne » en toute bonne foi, alors que 50 lignes n'avaient jamais été regardées.
+
+**Une vérification doit venir d'un autre angle que le travail qu'elle contrôle.** Compter ce qu'on
+vient d'écrire avec la règle qui l'a écrit ne mesure que la cohérence interne du script, jamais la
+réalité. Le contrôle qui a fini par dire la vérité était un simple `grep` sur tout le dossier,
+ignorant tout des colonnes et des numéros.
+
+Corollaire : **compter ce qu'on ne sait pas traiter** est ce qui sauve. C'est ce comptage, et lui
+seul, qui a révélé les valeurs inconnues puis les lignes mal formées.
+
+**Terrain** : quand j'écris un script qui transforme des données ET le contrôle qui le valide · mots : conversion, migration, vérification, contrôle, compter, filtre, restant · fichiers : scripts/*.mjs
+
+**Porté par** : **aucun mécanisme** — rien ne peut constater que deux bouts de code partagent une
+hypothèse. Seule la discipline de vérifier depuis un autre angle le porte. Déclaré plutôt que tu.
+
+*Payée le 2026-09-23 : conversion de l'échelle de priorité. Le premier contrôle disait 0 valeur
+restante ; il en restait 50, dont une ligne à qui il manquait carrément une colonne depuis trois
+jours, ce qui la comptait comme ouverte sans que personne ne le sache.*
+
 ---
 
 # Bonnes pratiques
