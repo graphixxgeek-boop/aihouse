@@ -620,6 +620,19 @@ fois côté serveur (`Math.random`) et protégé par l'idempotence par requestId
 - Historique transmis au modèle pour éviter les répétitions littérales : 24 dernières répliques
   échangées (`dialogueContext`), plus le registre complet des empreintes de la session
   (`dialogue_fingerprints`, sans limite).
+- `SEUIL_SURUSAGE` (`lib/dialogue.ts`, 2026-09-23) : **4**. Seuil UNIQUE de surusage pour toute la
+  famille — mots (`wordFrequency`), thèmes (`themeFrequency`) et tournures (`tournureFrequency`).
+  Il existait auparavant en trois exemplaires littéraux ; la mesure des tournures en aurait fait un
+  quatrième. Un recalibrage se fait désormais à cet unique endroit (Article 24).
+- `TOURNURES` (`lib/dialogue.ts`, 2026-09-23) : registre des CHARPENTES de phrase surutilisées,
+  compté sur toute la session et par personnage. Une seule entrée à ce jour, « refus au futur nié
+  (X ne fera pas Y) », mesurée à 0,94 % des lignes sur l'ensemble des transcripts archivés — ce qui
+  rend quatre occurrences dans une même session significatives. Trois simulations en portaient sans
+  qu'on le sache : full_sim16 (38 lignes), full_sim17 (23), full_sim19 (8). Le registre ne
+  s'enrichit que d'un tic réellement mesuré, jamais d'une construction ajoutée par précaution.
+- `life.moveReasons` (`lib/life.ts`, 2026-09-23) : **6 derniers motifs de déplacement affichés, par
+  personnage** (140 caractères max chacun, 4 personnages max). Rendus au personnage concerné sous
+  `motifsDejaDonnes`. Plafonné parce qu'il voyage dans chaque prompt (cf. memento weight).
 - `ECHO_RUN_THRESHOLD` (`lib/dialogue.ts`, 2026-09-23) : **6 mots consécutifs**. Au-delà, les deux
   répliques d'un MÊME tour sont jugées en écho et le second personnage est refait parler une fois.
   Calibré sur des cas réels plutôt que choisi rond : la paire de full_sim19 en partageait onze,

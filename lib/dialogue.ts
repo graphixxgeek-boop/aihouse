@@ -266,6 +266,11 @@ export function groundRoomSpeech(reply:string,room:string,history:DialogueLine[]
 // un historique tronqué) qui couvre réellement toute la session — jamais un mot précis en dur,
 // seulement une fréquence, avec un seuil plus haut (4) puisqu'il porte sur une fenêtre bien plus
 // longue : un mot qui revient 2 fois de suite OU 4 fois ou plus sur toute la session est un tic.
+// UN SEUL 4 POUR TOUTE LA FAMILLE (2026-09-23, tâche #592). Ce chiffre gouvernait déjà, en trois
+// exemplaires littéraux, les mots surutilisés et les thèmes épuisés ; la mesure des tournures qui
+// arrive plus bas en aurait fait un quatrième. Un seuil se DÉRIVE, il ne se recopie pas
+// (Article 24) : un recalibrage futur se fait ici, jamais en cherchant les occurrences à la main.
+export const SEUIL_SURUSAGE=4;
 function recentEchoWords(recent:DialogueLine[],wordFrequency:Record<string,number>):string[]{
   const counts=new Map<string,number>();
   for(const line of recent){
@@ -274,7 +279,7 @@ function recentEchoWords(recent:DialogueLine[],wordFrequency:Record<string,numbe
   }
   const flagged=new Set<string>();
   for(const [w,n] of counts)if(n>=2)flagged.add(w);
-  for(const [w,n] of Object.entries(wordFrequency))if(n>=4)flagged.add(w);
+  for(const [w,n] of Object.entries(wordFrequency))if(n>=SEUIL_SURUSAGE)flagged.add(w);
   return [...flagged].slice(0,8);
 }
 // Chaque motif détecte un THÈME qui tourne à vide, pas seulement une phrase répétée mot pour
@@ -300,7 +305,45 @@ export const THEME_MOTIFS=[['repos et confort du salon',/canapé|calme|souffl|re
 export function matchedThemes(text:string):string[]{
  return THEME_MOTIFS.filter(([,pattern])=>pattern.test(text)).map(([name])=>name);
 }
-export function dialogueProgress(history:DialogueLine[],contributions:readonly string[],wordFrequency:Record<string,number> = {},themeFrequency:Record<string,number> = {}){
+// TOURNURES (2026-09-23, tâche #592) — LE TIC QUI N'EST NI UN MOT NI UN THÈME.
+//
+// Dans full_sim19, Lia enchaîne neuf répliques bâties sur la même mécanique : « Rester ici ne
+// nous dira pas qui tient la loupe », « s'asseoir ne remplira pas nos mémoires », « Changer de
+// pièce n'effacera pas les cloisons », « ça ne règlera pas tes questions ». Chacune est juste
+// dans sa voix. Les neuf ensemble sont un tic : elle ne fait que nier, jamais dévier.
+//
+// POURQUOI AUCUN DES DEUX COMPTEURS EXISTANTS NE POUVAIT LE VOIR, et c'est le vrai constat :
+// `wordFrequency` compte des MOTS, or le verbe change à chaque fois (dira, remplira, effacera,
+// règlera, viendra) ; `themeFrequency` compte des THÈMES, or ces neuf phrases parlent de neuf
+// sujets différents. Ce qui se répète n'est ni le vocabulaire ni le sujet, c'est la CHARPENTE
+// GRAMMATICALE de la phrase — une dimension qu'aucune mesure du moteur ne regardait.
+//
+// CE QUI DISTINGUE CETTE MESURE D'UNE LISTE DE MOTS INTERDITS (corollaire de l'Article 17, qui
+// interdit nommément la liste) : une entrée ici ne nomme aucun mot de vocabulaire. Elle décrit une
+// CONSTRUCTION de la langue, donc elle couvre d'avance tous les verbes du français, y compris ceux
+// auxquels personne n'a pensé — c'est exactement ce qui manquait à l'approche par énumération, qui
+// « grandit indéfiniment sans jamais couvrir le prochain cas ». La grammaire française est par
+// ailleurs un vocabulaire fermé et stable : rien à synchroniser avec le reste du dépôt (Article 24
+// le dispense explicitement).
+//
+// ADJACENCE OBLIGATOIRE DANS CHAQUE MOTIF, et c'est ce qui protège de l'accusation à tort (leçon
+// L4) : le verbe au futur doit se trouver ENTRE le « ne » et le « pas ». Un nom qui finit en -ra
+// (caméra, opéra) ne se place jamais là dans une phrase française. Le motif ne peut donc pas
+// confondre une vraie négation au futur avec autre chose.
+//
+// UNE SEULE ENTRÉE POUR L'INSTANT, ET C'EST VOLONTAIRE : ce registre n'accueille que des tics
+// RÉELLEMENT MESURÉS sur un transcript archivé, jamais des constructions ajoutées par précaution.
+// Un registre pré-rempli à l'intuition accuserait des tournures qui ne posent aucun problème, et
+// un garde-fou qui accuse à tort cesse d'être lu. Il grandit quand une simulation le prouve.
+export const TOURNURES=[
+ ['refus au futur nié (« X ne fera pas Y »)',/\b(?:ne|n['’])\s*(?:\S+\s+){0,3}\S+(?:rai|ras|ra|rons|rez|ront)\b[^.?!]{0,40}\bpas\b/i],
+] as const;
+// Même patron que matchedThemes juste au-dessus, et pour la même raison : route.ts alimente le
+// compteur persisté sans jamais dupliquer les motifs (Article 3/24).
+export function matchedTournures(text:string):string[]{
+ return TOURNURES.filter(([,pattern])=>pattern.test(text)).map(([name])=>name);
+}
+export function dialogueProgress(history:DialogueLine[],contributions:readonly string[],wordFrequency:Record<string,number> = {},themeFrequency:Record<string,number> = {},tournureFrequency:Record<string,number> = {}){
  const recent=history.slice(-16);
  const echoWords=recentEchoWords(history.slice(-30),wordFrequency);
  // Fenêtre récente (>=4 sur les 16 dernières lignes, inchangé) CROISÉE avec un compteur persisté
@@ -311,8 +354,12 @@ export function dialogueProgress(history:DialogueLine[],contributions:readonly s
  // raisonnement) — un thème qui revient une fois toutes les 15-20 répliques ne se voit jamais 4
  // fois dans une fenêtre de 16 lignes, quelle que soit sa fréquence réelle sur toute la partie.
  // Même seuil (4) que wordFrequency sur sa fenêtre longue, pour la même raison de cohérence.
- const overusedThemes=THEME_MOTIFS.filter(([name,pattern])=>recent.filter(l=>pattern.test(l.content)).length>=4||(themeFrequency[name]??0)>=4).map(([name])=>name);
- return {recentContributions:contributions.slice(-12),overusedThemes,echoWords,rule:'Répondre à la dernière intervention avec un apport concret : une objection, un détail personnel ou une déduction prudente. Ne pas reformuler simplement l’accord du partenaire. Garder Lia incisive et Noé concret ; éviter la même tournure pour les deux. Si overusedThemes n’est pas vide, ne l’alimentez plus avec une nouvelle variante, même reformulée : proposez une action concrète (se déplacer, vérifier un autre objet), une hypothèse vraiment neuve, une question personnelle, ou reconnaissez l’impasse en une phrase puis changez réellement de sujet. Aucun faux indice pour renouveler le sujet. Si echoWords n’est pas vide, ces mots précis reviennent déjà plusieurs fois récemment (détection automatique, pas une interdiction définitive) : évite de les réutiliser dans cette réplique, cherche une formulation qui n’en a besoin d’aucun.'};
+ const overusedThemes=THEME_MOTIFS.filter(([name,pattern])=>recent.filter(l=>pattern.test(l.content)).length>=SEUIL_SURUSAGE||(themeFrequency[name]??0)>=SEUIL_SURUSAGE).map(([name])=>name);
+ // Tournures surutilisées : compteur de session uniquement, jamais une fenêtre courte. Une
+ // charpente de phrase qui revient une fois tous les dix tours ne se verra JAMAIS sur seize
+ // lignes, et c'est précisément comme ça que ce tic a traversé toute une simulation sans être vu.
+ const overusedTournures=TOURNURES.filter(([name])=>(tournureFrequency[name]??0)>=SEUIL_SURUSAGE).map(([name])=>name);
+ return {recentContributions:contributions.slice(-12),overusedThemes,overusedTournures,echoWords,rule:'Répondre à la dernière intervention avec un apport concret : une objection, un détail personnel ou une déduction prudente. Ne pas reformuler simplement l’accord du partenaire. Garder Lia incisive et Noé concret ; éviter la même tournure pour les deux. Si overusedThemes n’est pas vide, ne l’alimentez plus avec une nouvelle variante, même reformulée : proposez une action concrète (se déplacer, vérifier un autre objet), une hypothèse vraiment neuve, une question personnelle, ou reconnaissez l’impasse en une phrase puis changez réellement de sujet. Aucun faux indice pour renouveler le sujet. Si echoWords n’est pas vide, ces mots précis reviennent déjà plusieurs fois récemment (détection automatique, pas une interdiction définitive) : évite de les réutiliser dans cette réplique, cherche une formulation qui n’en a besoin d’aucun. Si overusedTournures n’est pas vide, c’est la CHARPENTE de tes phrases qui devient un tic, pas ton vocabulaire : tu as déjà construit plusieurs répliques sur ce même moule, avec des mots différents à chaque fois. Changer les mots ne changerait rien — c’est le geste qui se répète. Pour cette réplique, fais autre chose que ce que ce moule te fait faire : au lieu de nier ce que l’autre propose, accepte-le et ajoute ta condition, pose une question, raconte un détail concret, ou tais-toi sur ce point et parle d’autre chose. Le test à te poser avant d’écrire : « est-ce que ma phrase fait le même geste que les précédentes ? » — si oui, recommence, même si elle sonne bien.'};
 }
 
 // sharedRunLength() / echoesPartnerLine() (2026-09-23, tâche #591) — LE DÉFAUT QUE LE PROMPT SEUL

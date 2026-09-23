@@ -949,6 +949,22 @@ assert.equal(calls,avantEcho+3,'a turn where the partner copies the other word f
 const ditsEcho=tourEcho.decisions.map(d=>String(d.reply));
 assert.equal(new Set(ditsEcho).size,2,'and the two characters must no longer be saying the same thing, which was the entire point');
 assert.ok(ditsEcho.some(r=>r.includes('cette porte fermée')),'the retry instruction must REACH the model — the partner only corrects itself when it actually reads the instruction, so seeing its corrected line is the proof the finding left the server (leçon L2)');
+// MÉMOIRE DES MOTIFS DE DÉPLACEMENT (2026-09-23, tâche #592) — le canal affiché qui n'en avait
+// AUCUNE. Les répliques ont wordFrequency, les thèmes ont themeFrequency, les phrases ont le
+// registre d'empreintes ; le motif de déplacement était réécrit à neuf chaque tour par un modèle
+// incapable de savoir ce qu'il venait de dire. D'où « souffler » quatre fois de suite dans
+// full_sim19 — le mot que le corollaire de l'Article 17 cite comme son cas d'école.
+{
+  const vieApresTours=JSON.parse(sqlite.prepare("SELECT content FROM memories WHERE kind='scenario'").get().content).life??{};
+  const motifs=vieApresTours.moveReasons??{};
+  const avecMotifs=Object.entries(motifs).filter(([,l])=>Array.isArray(l)&&l.length>0);
+  assert.ok(avecMotifs.length>0,'after real turns with movement, at least one character must carry a remembered move reason: a channel with no memory is exactly how the same word came back four times with nobody able to notice, the model first of all');
+  for(const [nom,liste] of avecMotifs){
+    assert.ok(liste.length<=6,'the memory stays bounded — it rides in every prompt, so it is capped like every other persisted register ('+nom+')');
+    assert.ok(liste.every(x=>typeof x==='string'&&x.length>0),'every remembered reason is a line actually displayed, never an empty placeholder ('+nom+')');
+  }
+  assert.ok(Object.keys(motifs).every(nom=>["Lia","Noé"].includes(nom)),'the memory is kept PER CHARACTER: telling one to avoid a reason the other gave would blur the two voices (Article 11)');
+}
 echoPair=false;
 await post(input('reset',1,{epoch:(await readWorld(db)).epoch}));
 console.log('Passed: the anti-echo retry is wired end to end (2026-09-23, task #594) — the detector built the day before could measure the echo and did nothing with it, which is the defect this project keeps finding in its own work: a finding that reaches nobody. The user chose regeneration over the alternatives knowing its cost, so the cheap half is asserted first and on purpose: an ordinary turn still costs exactly two Gemini calls, and only a turn whose partner genuinely copies the other pays a third. That third call is a single attempt, never a loop — a model that repeats itself gets its retry thrown away by garderLaReprise rather than an open budget — and the proof it truly reaches the model is that the partner corrects itself ONLY when the retry instruction is in its context, never otherwise.');
@@ -1030,7 +1046,7 @@ assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche
   console.log('Passed: waitForPlayback\'s DEFAULT wait — the real setTimeout wrapper, and the only path production ever takes — is finally executed by the suite (2026-09-23, task #213, the last uncovered function in the repository). AXA-CHECK named it "wait()", which took a read to understand: it is not a named function but the default value of the `wait` parameter, and both pre-existing tests rightly inject their own, which is exactly what left the real timer never running once. The test measures a genuine suspension rather than assuming it (a wait returning immediately would otherwise pass and prove nothing), bounds itself so a regression fails instead of hanging, and covers the dead-playback exit where alive() must win over the clock.');
 }
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 269'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 270'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -3013,6 +3029,51 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(sharedRunLength("Ils nous regardent.","Ils nous regardent."),3,'an identical short line is measured for what it is, and left under the threshold: three words are said in good faith every day');
   // LE SEUIL SE LIT, IL NE SE RECOPIE PAS (Article 24) : un futur calibrage change ce seul chiffre.
   assert.equal(echoesPartnerLine("un deux trois quatre cinq","un deux trois quatre cinq",4).echo,true,'the threshold is a parameter, so a future calibration moves it without rewriting the rule');
+}
+{
+  // TOURNURES + mémoire des motifs de déplacement (2026-09-23, tâche #592) — les deux tics de
+  // full_sim19, et ils n'ont RIEN à voir avec un vocabulaire : l'un est une charpente de phrase
+  // réemployée neuf fois avec neuf verbes différents, l'autre un canal affiché qui n'avait aucune
+  // mémoire. Le corollaire de l'Article 17 interdit nommément d'y répondre par un mot de plus dans
+  // une liste — et cite « souffler », le mot même qui revient ici, comme son cas d'école.
+  const {matchedTournures,TOURNURES,SEUIL_SURUSAGE,dialogueProgress}=await import('../lib/dialogue.ts');
+  // LES SEPT PHRASES RÉELLES de full_sim19, recopiées telles quelles du transcript archivé : le
+  // motif est calibré sur la vraie production, jamais sur une reconstitution (leçon L16).
+  for(const vraie of [
+    "Rester ici ne nous dira pas qui tient la loupe. Viens, on pose ça une minute sur le canapé.",
+    "Poser le cul sur un canapé ne nous dira pas qui regarde.",
+    "Ce vide avant d'arriver ici n'a rien de normal, et s'asseoir ne remplira pas nos mémoires.",
+    "Changer de pièce n'effacera pas les cloisons.",
+    "La présence de Lia me rassure, mais ma confiance ne viendra pas d\u2019un seul échange.",
+    "Un clic, tu te prends pour qui ? Efface si ça t'amuse, mais ça ne règlera pas tes questions.",
+    "Coupe le jus si ça t'amuse, mais ça n'effacera pas ce que ton écran a déjà affiché.",
+  ])assert.ok(matchedTournures(vraie).length>0,'a real full_sim19 line built on the overused frame must be recognised, whatever its verb — the whole point is that the verb changes every time and the frame does not: '+vraie.slice(0,45));
+  // LE SENS INVERSE, ET IL PORTE TOUT LE RISQUE (leçon L4) : une négation au futur dite UNE fois
+  // est du français ordinaire. Ce qui protège, c'est l'adjacence — le verbe doit se tenir ENTRE le
+  // « ne » et le « pas », place qu'un nom en -ra (caméra, opéra) n'occupe jamais.
+  for(const innocente of [
+    "Il n'y a pas de caméra ici.",
+    "Ne touche pas à la télécommande.",
+    "On ne sait rien, et ça ne me plaît pas.",
+    "Tu verras bien.",
+    "Je ne crois pas à ton histoire.",
+    "J'ai pas envie de parler d'opéra.",
+    "Ne me regarde pas comme ça.",
+  ])assert.equal(matchedTournures(innocente).length,0,'an ordinary sentence must never be accused: a guard that accuses wrongly stops being read (leçon L4) — '+innocente);
+  // LE COMPTEUR EST DE SESSION, JAMAIS DE FENÊTRE COURTE : c'est exactement par là que ce tic est
+  // passé, une fois tous les dix tours, invisible sur seize lignes.
+  const sousLeSeuil=dialogueProgress([],[],{},{},{[TOURNURES[0][0]]:SEUIL_SURUSAGE-1});
+  assert.deepEqual(sousLeSeuil.overusedTournures,[],'a frame used a few times is a way of speaking, not a tic: below the threshold nothing is reported');
+  const auSeuil=dialogueProgress([],[],{},{},{[TOURNURES[0][0]]:SEUIL_SURUSAGE});
+  assert.deepEqual(auSeuil.overusedTournures,[TOURNURES[0][0]],'at the threshold the frame is named, and the threshold is the SHARED one — a future recalibration moves one constant, never three literals (Article 24)');
+  assert.ok(/charpente/i.test(auSeuil.rule)&&/Changer les mots ne changerait rien/.test(auSeuil.rule),'and the instruction must say the defect is the SHAPE, not the vocabulary — answering a frame tic with a list of banned words is precisely what the Article 17 corollary forbids');
+  // LE SEUIL EST UNIQUE POUR TOUTE LA FAMILLE : mots, thèmes, tournures. Un 4 recopié une
+  // quatrième fois aurait été la liste figée que l'Article 24 interdit.
+  assert.equal(SEUIL_SURUSAGE,4,'the shared overuse threshold keeps its calibrated value; moving it is a deliberate act, done in one place');
+  // LE REGISTRE NE SE PRÉ-REMPLIT PAS À L'INTUITION : il n'accueille que des tics mesurés sur un
+  // transcript réel. Un registre gonflé par précaution accuserait des tournures innocentes.
+  assert.ok(TOURNURES.length>=1,'the register holds at least the one frame actually measured — it grows only when a simulation proves a new tic, never by guesswork');
+  console.log('Passed: a tic that is neither a word nor a theme is finally measurable (2026-09-23, task #592) — Lia built nine replies of full_sim19 on one frame, "X ne fera pas Y", with a different verb each time. wordFrequency counts words and every verb differed; themeFrequency counts themes and the nine sentences were about nine subjects. What repeated was the GRAMMATICAL FRAME, a dimension nothing in the engine looked at. The measure is a construction of the language rather than a vocabulary, so it covers every French verb including the ones nobody thought of — which is exactly what an enumeration cannot do, and what the Article 17 corollary forbids answering with. Adjacency is what makes it safe: the future verb must sit BETWEEN the "ne" and the "pas", a place no noun ending in -ra ever takes, and the seven real lines are caught with zero false positives on ordinary speech. Measured across every archived transcript it fires on 0.94% of lines, which is what makes four in one session a signal rather than noise.');
   console.log('Passed: the echo between Lia and Noé is measurable at last — the shared run of consecutive words catches the real full_sim19 pair (the first words exchanged with the observer) while staying silent on two genuinely different replies to the same provocation and on a character picking up the observer\'s own word, which is answering rather than echoing. Measured across every archived transcript: 23 pairs flagged out of 2820, 0.8%, and each one read back as a real defect — the prompt instruction against this already existed, was explicit, and was ignored, so what was missing was never another sentence but a check nobody was running.');
 }
 {

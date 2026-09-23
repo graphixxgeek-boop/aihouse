@@ -138,6 +138,35 @@ La seconde tentative n'est gardée que si elle fait réellement mieux (`garderLa
 en a jamais qu'une : un modèle qui s'entête laisse sa reprise de côté plutôt qu'ouvrir un budget
 d'appels.
 
+
+4.1quater. **Un tic peut n'être NI un mot NI un thème — la CHARPENTE de la phrase compte aussi**
+(2026-09-23, tâche #592). Dans full_sim19, Lia bâtit neuf répliques sur un même moule
+(« X ne fera pas Y ») avec un verbe différent à chaque fois. Aucun compteur ne pouvait le voir :
+`wordFrequency` compte des mots et tous les verbes différaient, `themeFrequency` compte des thèmes
+et les neuf phrases parlaient de neuf sujets. `TOURNURES`/`matchedTournures` (`lib/dialogue.ts`)
+ajoutent cette troisième dimension, comptée sur TOUTE la session (`life.tournureFrequency`, clé
+préfixée par le nom du personnage : un tic appartient à une voix, et le reprocher à l'autre
+brouillerait les deux — Article 11). Ce n'est pas une liste de mots interdits, ce que le corollaire
+de l'Article 17 interdit nommément : une entrée décrit une CONSTRUCTION de la langue, donc couvre
+d'avance tous les verbes du français, y compris ceux auxquels personne n'a pensé. Chaque motif
+impose une ADJACENCE (le verbe au futur doit se tenir entre le « ne » et le « pas »), ce qui rend
+l'accusation à tort pratiquement impossible — un nom en -ra n'occupe jamais cette place. Le registre
+n'accueille que des tics RÉELLEMENT mesurés sur un transcript archivé, jamais des constructions
+ajoutées par précaution.
+
+4.1quinquies. **Le motif de déplacement est une parole comme une autre, et il a enfin une mémoire**
+(2026-09-23, même tâche). C'était le seul canal affiché à l'écran sans aucune protection contre la
+répétition : les répliques ont `wordFrequency`, les thèmes ont `themeFrequency`, les phrases ont le
+registre d'empreintes — le motif, lui, était réécrit à neuf chaque tour par un modèle qui ne pouvait
+pas savoir ce qu'il venait de dire. Résultat mesuré : « souffler » quatre fois dans quatre motifs
+successifs, précisément le mot que le corollaire de l'Article 17 cite comme son cas d'école.
+`life.moveReasons` retient les six derniers motifs RÉELLEMENT AFFICHÉS par personnage (jamais celui
+que le modèle a proposé : entre les deux il y a le garde-fou de cohérence de destination et le filet
+de secours) et les lui rend au tour suivant via `motifsDejaDonnes`. La consigne associée demande une
+RAISON neuve, jamais une autre formulation de la même — et ne bannit aucun mot. Par la même occasion,
+les deux formules données en exemple dans cette consigne ont disparu : citer des formules à éviter
+était exactement l'énumération que le corollaire proscrit.
+
 4.1bis. L'esprit rugueux (Article 0 de CLAUDE.md) n'est jamais un mode déclenché par la pression :
 il est présent en permanence, même dans une scène calme sans provocation. Sa texture diffère par
 personnage, pas par situation : Lia est froide et coupante (contrôle, ironie mordante, jamais de
