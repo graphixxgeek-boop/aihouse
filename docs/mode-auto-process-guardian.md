@@ -17,6 +17,21 @@ s'exécutent quand personne ne regarde. En cas de tension avec un autre process,
 « Tensions » plus bas — elles sont déclarées et résolues, jamais laissées à l'improvisation du
 moment.
 
+**Ce que ce process existe pour empêcher**, formulé en défauts concrets plutôt qu'en intention —
+les trois se sont réellement produits :
+
+1. **La nuit part en questions au moment du coucher.** Deux fois de suite, les mêmes questions au
+   dernier moment sur ce que « sensible » veut dire : du temps de travail perdu, et une fatigue
+   imposée à quelqu'un qui allait dormir.
+2. **L'agent s'arrête au milieu de la nuit** pour faire un compte rendu que personne ne lira avant
+   le matin, et laisse des heures inutilisées. Arrivé une fois, coût réel important (voir « Le seuil
+   d'arrêt » plus bas).
+3. **Une zone sensible est touchée sans validation** parce que le périmètre n'était écrit nulle
+   part et que l'agent, seul, a tranché à la place de l'utilisateur.
+
+Ce document ferme les trois : le cadre est écrit avant la nuit, le seuil d'arrêt est unique et
+explicite, et le périmètre sensible est nommé.
+
 ## Ce que l'utilisateur donne au départ
 
 Un plan numéroté, dans son ordre à lui. Le plan **se suit dans cet ordre**, sans en sauter une

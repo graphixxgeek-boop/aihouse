@@ -14,7 +14,17 @@ Le constat chiffré derrière la demande : faire entrer SAFE-EXPORT puis TOOL-LE
 mot le diagnostic ouvert de l'Article 24 : « les garde-fous [...] DÉTECTENT l'oubli au lieu de
 l'ÉVITER : l'agent reste le mécanisme d'intégration ».
 
-## Les dix registres, et ce que chacun gouverne
+## Son déclencheur
+
+Un ÉVÉNEMENT, jamais un calendrier : **un outil arrive**. C'est pour cette raison qu'il n'est pas un
+item de Ronde — un rythme périodique lui ferait poser la même question à vide pendant des semaines,
+puis la ferait sauter le jour où elle compte.
+
+Il se consulte **avant** de commencer. Consulté après le premier test rouge, il ne fait plus que
+confirmer ce que le test vient de dire : les onze garde-fous continuent d'échouer si l'inscription
+manque, cet outil n'existe que pour inverser le MOMENT où on l'apprend.
+
+## Les onze registres, et ce que chacun gouverne
 
 | Clé | Fichier | Ce que ça change concrètement |
 |---|---|---|
@@ -58,7 +68,7 @@ bloquer (Article 26/28).
 Ses fonctions mécaniques (`findFaitsManquants` côté Ronde mis à part, qui appartient à CIRCLE-TASKS)
 sont couvertes par **`scripts/check-house.mjs`** : présence/absence dans un registre, fichier
 illisible rendu « non mesurable » plutôt qu'« absent », complétude du plan, et surtout
-`findLecteursCasses()` vérifié en direct contre les dix registres réels du dépôt — l'assertion qui a
+`findLecteursCasses()` vérifié en direct contre les onze registres réels du dépôt — l'assertion qui a
 attrapé trois lecteurs cassés avant qu'ils ne produisent le moindre chiffre faux.
 
 C'est l'étape `tests` du process « Intégration d'un nouvel outil » (`PROCESSES`,

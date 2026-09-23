@@ -251,7 +251,7 @@ export const PROCESSES = [
   // à coups de tests rouges.
   //
   // Les étapes sont volontairement dans CET ordre, et il n'est pas décoratif : consulter d'abord
-  // (sinon l'outil arrive trop tard, quand les oublis sont déjà des échecs), les dix registres
+  // (sinon l'outil arrive trop tard, quand les oublis sont déjà des échecs), les onze registres
   // ensuite, la documentation, puis la vérification par le lancement réel. La dernière étape est
   // celle qu'on saute le plus volontiers et celle qui compte le plus (Article 25) : un outil qui n'a
   // jamais tourné contre le vrai dépôt n'est pas un outil, c'est une intention.
@@ -273,10 +273,38 @@ export const PROCESSES = [
     gardien: "scripts/integration-outil.mjs",
     etapes: [
       { cle: "consultation", libelle: "consulter integration-outil AVANT de commencer, pas après le premier test rouge", preuve: { fichier: "scripts/integration-outil.mjs" } },
-      { cle: "registres", libelle: "les dix registres obligatoires sont renseignés (planDIntegration le dit, registre par registre)", preuve: { fichier: "scripts/integration-outil.mjs" } },
+      { cle: "registres", libelle: "les onze registres obligatoires sont renseignés (planDIntegration le dit, registre par registre)", preuve: { fichier: "scripts/integration-outil.mjs" } },
       { cle: "documents", libelle: "blueprint générique + instanciation + registre avec index existent réellement", preuve: null },
       { cle: "lancement-reel", libelle: "l'outil a TOURNÉ contre le vrai dépôt avant d'être considéré fini (Article 25)", preuve: null },
       { cle: "tests", libelle: "ses fonctions mécaniques sont couvertes par check-house.mjs", preuve: { fichier: "scripts/check-house.mjs" } },
+      { cle: "suivi", libelle: "la tâche est documentée dans docs/suivi/ dans LE MÊME commit", preuve: null },
+    ],
+  },
+  {
+    slug: "integration-ronde",
+    // SÉPARÉ de "integration-outil" sur demande explicite de l'utilisateur (« je veux un process
+    // propre pour intégration d'un outil et un process séparé propre pour intégration à circle »),
+    // et la preuve est arrivée le soir même : integration-outil a annoncé « tous les registres
+    // renseignés » pour A-NIVEAU pendant qu'il manquait des raccordements de Ronde qu'il ne connaît
+    // pas. Ce ne sont pas deux étapes d'une même arrivée — un Gardien sacré est intégré à l'Agence
+    // et volontairement absent de la Ronde, et un item de Ronde peut ne porter aucun outil.
+    maillonsSansObjet: {
+      scan: "rien à mesurer : le contrôleur LIT les tables réelles de la Ronde et dit quels raccordements manquent",
+      rapports: "sa sortie EST le plan de raccordement — il n'y a pas de rapport séparé à livrer",
+      analyse: "aucun tri à faire : un raccordement est fait ou il ne l'est pas",
+      "plan-action": "chaque manque appelle exactement un geste, jamais un arbitrage",
+      questions: "rien à trancher — les cinq raccordements sont obligatoires dès lors que l'item entre dans la Ronde",
+    },
+    nom: "Intégration d'un item à la Ronde périodique",
+    quand: "ajouter, renommer ou retirer un item de la Ronde — jamais la même chose que faire entrer un outil dans l'Agence",
+    motsCles: ["ronde", "circle", "item périodique", "raccorder", "circle_items", "changelog"],
+    doc: "docs/integration-ronde-process-detail.md",
+    gardien: "scripts/circle-process-guardian.mjs",
+    etapes: [
+      { cle: "consultation", libelle: "consulter circle-process-guardian AVANT de toucher CIRCLE_ITEMS, pas après le test rouge", preuve: { fichier: "scripts/circle-process-guardian.mjs" } },
+      { cle: "raccordements", libelle: "les cinq raccordements sont faits (planRaccordementRonde le dit, raccordement par raccordement)", preuve: { fichier: "scripts/circle-process-guardian.mjs" } },
+      { cle: "pourquoi", libelle: "le POURQUOI de l'item est consigné dans CIRCLE_ITEMS_CHANGELOG — il n'est déductible d'aucun diff", preuve: { fichier: "scripts/circle-process-guardian.mjs" } },
+      { cle: "tests", libelle: "les deux comptes figés de check-house.mjs sont remis à jour", preuve: { fichier: "scripts/check-house.mjs" } },
       { cle: "suivi", libelle: "la tâche est documentée dans docs/suivi/ dans LE MÊME commit", preuve: null },
     ],
   },
@@ -645,6 +673,71 @@ export function schemaUnifie(schema = SCHEMA_DE_REFERENCE) {
 // cette logique et l'habille d'étapes sur mesure, issues de vrais calibrages — il n'y déroge pas,
 // il l'instancie. Un maillon qu'il n'exécute pas se déclare avec sa raison (`maillonsSansObjet`),
 // ce qui reste une déclinaison, jamais une exception.
+
+// ————————————————————————————————————————————————————————————————————————
+// LE GABARIT D'UN DOCUMENT DE PROCESS (2026-09-23)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Demande de l'utilisateur : « le modèle de process et son contrôle + les gabarits ». Le modèle vit
+// dans docs/gabarits/process.md ; ceci en est le contrôle.
+//
+// CE QU'IL VÉRIFIE EST UNE RÉPONSE, JAMAIS UN TITRE, et ce choix décide de tout le reste. Les huit
+// process déclarés ont des structures franchement différentes — « Partie 1…6 » chez l'un, des
+// titres parlants chez l'autre — et c'est légitime : un process de simulation et un process
+// d'intégration n'ont pas la même forme naturelle. Imposer des intitulés identiques aurait recalé
+// les huit au premier passage, et un garde-fou qui accuse tout le monde cesse d'être lu (leçon L4).
+//
+// SA LIMITE, DÉCLARÉE PLUTÔT QUE DÉCOUVERTE : il détecte une PRÉSENCE, jamais une qualité. Il ne
+// peut pas juger si le défaut décrit est un vrai défaut, ni si le déclencheur est le bon. Un
+// contrôle qu'on croit plus fort qu'il n'est vaut moins qu'un contrôle honnête.
+export const EXIGENCES_GABARIT_PROCESS = [
+  {
+    cle: "empeche",
+    quoi: "ce que ce process existe pour EMPÊCHER — un défaut concret, jamais une intention générale",
+    // Le motif cherche la formulation de l'empêchement sous ses formes réelles dans ce dépôt, pas
+    // un titre exact : « existe pour empêcher », « le problème qu'il ferme », « le trou que ».
+    motif: /existe pour empêcher|problème qu'il (?:ferme|règle|résout)|trou que ce|ce qu'il empêche|pourquoi il existe/i,
+  },
+  {
+    cle: "declencheur",
+    quoi: "son DÉCLENCHEUR — l'événement, le calendrier ou la demande qui le met en route",
+    motif: /déclencheur|se déclenche|quand (?:s'applique|l'utilisateur demande|on)|à chaque Ronde|au moment où/i,
+  },
+  {
+    cle: "etapes",
+    quoi: "ses ÉTAPES, chacune avec sa preuve — ou l'aveu écrit qu'elle n'en a aucune",
+    motif: /étapes?|maillons?|raccordements?|registres?/i,
+  },
+  {
+    cle: "controleur",
+    quoi: "son CONTRÔLEUR nommé par son chemin, ou la raison écrite qu'aucun n'est possible",
+    // Vérifié contre le gardien RÉELLEMENT déclaré, jamais contre « un script est cité quelque
+    // part » : citer n'importe quel script laisserait passer un document qui nomme le mauvais.
+    motifDepuisProcess: (p) => new RegExp(String(p.gardien ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"),
+  },
+  {
+    cle: "limites",
+    quoi: "ce qu'il NE fait PAS — ses limites, et les tensions avec les process voisins",
+    motif: /ne fait pas|NE fait PAS|sa limite|ses limites|hors périmètre|n'a jamais prétendu|ce qu'il n'est pas/i,
+  },
+];
+
+export function findProcessHorsGabarit({ processes = PROCESSES, root = ROOT, readFileImpl = readFileSync, exigences = EXIGENCES_GABARIT_PROCESS } = {}) {
+  const ecarts = [];
+  for (const p of processes) {
+    if (!p.doc) continue;
+    let texte;
+    // Un document illisible n'est PAS un document non conforme : le dire, jamais le compter comme
+    // un écart de gabarit (même discipline « pas mesuré ≠ mesuré vert » que partout ailleurs).
+    try { texte = readFileImpl(join(root, p.doc), "utf8"); }
+    catch { ecarts.push({ process: p.slug ?? p.nom, doc: p.doc, cle: "document", quoi: "document introuvable — le gabarit n'a pas pu être vérifié, ce n'est jamais un document conforme" }); continue; }
+    for (const e of exigences) {
+      const motif = e.motifDepuisProcess ? e.motifDepuisProcess(p) : e.motif;
+      if (!motif.test(texte)) ecarts.push({ process: p.slug ?? p.nom, doc: p.doc, cle: e.cle, quoi: e.quoi });
+    }
+  }
+  return ecarts;
+}
 
 // findSchemaDivergent() — le garde-fou exigé par l'Article 24 : déclarer le schéma une fois ne sert
 // à rien si les documents continuent d'en écrire des variantes à la main. Il cherche, dans les
@@ -1230,6 +1323,15 @@ export function buildGodReportBlocks({ processes = PROCESSES, root = ROOT, sessi
   blocks.push({ type: "note", text: indirects.length
     ? `⚠️ ${indirects.length} modification(s) INDIRECTE(S) d'un process non suivie(s) d'une mise à jour de son document :\n  ${indirects.map((e) => `${e.commit} — ${e.pourquoi}`).join("\n  ")}`
     : "✅ Modifications indirectes : chaque changement du code d'un process a bien mis à jour son document dans le même commit." });
+
+  // LE GABARIT (2026-09-23) — sort dans le rapport pour la même raison que le bloc ci-dessus : un
+  // modèle qu'on écrit sans jamais confronter les documents à lui n'est qu'une préférence de mise en
+  // page. À sa première exécution il a trouvé 8 réponses manquantes dans 5 documents, dont 3 dans un
+  // document de process écrit vingt minutes plus tôt.
+  const horsGabarit = findProcessHorsGabarit({ processes, root });
+  blocks.push({ type: "note", text: horsGabarit.length
+    ? `⚠️ ${horsGabarit.length} réponse(s) manquante(s) au gabarit de process (docs/gabarits/process.md) :\n  ${horsGabarit.map((e) => `${e.process} (${e.doc}) — ${e.quoi}`).join("\n  ")}`
+    : "✅ Gabarit de process : chaque document déclaré répond aux cinq questions du modèle (ce qu'il empêche, son déclencheur, ses étapes et leurs preuves, son contrôleur nommé, ses limites). Présence vérifiée, jamais la qualité de la réponse." });
 
   const sansGardien = findProcessesWithoutGuardian({ processes, root });
   const docsAbsents = findProcessDocsMissing({ processes, root });

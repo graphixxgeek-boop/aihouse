@@ -68,6 +68,22 @@ export const REGISTRES_D_INTEGRATION = [
     forme: (s) => `  "scripts/${s}.mjs",  // dans RELIABILITY_SCRIPT_FILES`,
   },
   {
+    // objectif-chiffre (2026-09-23) — ONZIÈME REGISTRE, ajouté après un écart réel : en intégrant
+    // A-NIVEAU, cet outil a annoncé « 10/10 registres renseignés » pendant que la suite de tests
+    // REFUSAIT le commit, faute d'une ligne dans le registre des objectifs. Un outil d'intégration
+    // qui déclare une intégration complète alors qu'il manque une inscription obligatoire est
+    // exactement le faux vert que tout ce paysage combat — et il est pire ici qu'ailleurs, puisque
+    // c'est LUI qu'on consulte pour ne rien oublier.
+    //
+    // Ce registre n'est pas dans un script mais dans un document, et c'est normal : l'objectif
+    // chiffré d'un outil est une décision humaine, pas une donnée dérivable (cf. l'exigence C4 de
+    // docs/referentiel/standards.md, et le garde-fou vivant de scripts/objectifs-vs-resultats.mjs
+    // qui refuse tout membre branché sur rien).
+    cle: "objectif-chiffre", fichier: "docs/objectifs-vs-resultats/registre.md", quoi: "objectif chiffré, OU décision écrite de ne pas en avoir (sans quoi rien ne peut juger son résultat)",
+    extrait: (t) => new Set([...t.matchAll(/^\|\s*([a-z0-9-]+)\s*\|/gm)].map((m) => m[1])),
+    forme: (s) => `| ${s} | <début> | <échéance> | <cible> | <unité> | <source> | <la raison du chiffre, ou la raison de ne pas en avoir> |`,
+  },
+  {
     cle: "catalogue-coordinateur", fichier: "scripts/le-coordinateur.mjs", quoi: "catalogue des prestations (ce que tool-brain peut me recommander)",
     // PRESTATIONS ne porte pas de slug : ses entrées nomment les outils en toutes lettres
     // (« SAFE-EXPORT ») ou par leur script. On lit donc les deux formes, en minuscules — jamais une

@@ -8762,7 +8762,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // Ronde CIRCLE-TASKS a bien été suivi (docs/circle-process-detail.txt Parties 5 et 7). Testé avec
   // toutes les implémentations injectées — jamais un vrai `git rev-list`/scan disque dans ce test,
   // qui serait lent et dépendant de l'état réel du dépôt au moment du test.
-  const { hasFreshReportFile, verifyRondeProcess, verifyHyperScanProcess, verifyDoubleCommunication, findCircleItemsMapDrift, findStaleItemCountReferences } = await import('../scripts/circle-process-guardian.mjs');
+  const { hasFreshReportFile, verifyRondeProcess, verifyHyperScanProcess, verifyDoubleCommunication, findCircleItemsMapDrift, findStaleItemCountReferences, findItemsMissingFromChangelog, RACCORDEMENTS_RONDE, etatRaccordementRonde, planRaccordementRonde, formatPlanRaccordementRonde } = await import('../scripts/circle-process-guardian.mjs');
 
   const fakeFolders = { 'argus-scan': 'docs/argus', 'cassandra-rh-signal': undefined };
   assert.equal(hasFreshReportFile('cassandra-rh-signal', { folders: fakeFolders }), undefined, 'an item with no known report folder (cassandra-rh-signal never uses this mechanism) must report an honest undefined, never a guessed true/false');
@@ -9091,6 +9091,57 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.deepEqual(findStaleItemCountReferences(fakeStaleProse, 24).length, 1, 'the free-prose phrasing ("les N items de la Ronde") must be caught too, never only the code-literal form');
   assert.deepEqual(findStaleItemCountReferences('rien de pertinent ici', 24), [], 'text with no item-count reference at all must report zero findings, never a false positive');
 
+
+  // ————————————————————————————————————————————————————————————————————————
+  // LE PROCESS « INTÉGRATION À LA RONDE » (2026-09-23) — séparé de l'intégration à l'Agence
+  // ————————————————————————————————————————————————————————————————————————
+  //
+  // findItemsMissingFromChangelog() EST VÉRIFIÉ ICI EN DIRECT, et c'est tout l'objet de ce bloc : il
+  // existait depuis le 2026-09-22 avec son garde-fou d'Article 24 et n'avait AUCUN appelant. Huit
+  // items ont rejoint la Ronde sans leur « pourquoi » pendant qu'il veillait dans le vide. Le
+  // rebrancher dans le main() de son fichier ne suffisait pas : c'est ici, dans la suite exécutée à
+  // chaque commit, qu'il devient impossible de l'oublier à nouveau.
+  assert.deepEqual(findItemsMissingFromChangelog(), [], 'checked live against the real CIRCLE_ITEMS: every Ronde item must carry its "pourquoi" in CIRCLE_ITEMS_CHANGELOG — this guard existed for a full day with zero callers while eight items joined the Ronde without one');
+
+  // Les cinq raccordements mordent chacun pour de vrai (BP4), sur des fixtures qui reproduisent
+  // exactement les manques rencontrés en intégrant A-NIVEAU.
+  const faux = {
+    items: [{ id: 'deja-la', theme: 'Commun', producesReport: true }, { id: 'voisin', theme: 'Commun' }, { id: 'solo', theme: 'Thème inventé', producesReport: false }],
+    folders: { 'deja-la': 'docs/deja-la/' },
+    assumes: {},
+    changelog: [{ itemId: 'deja-la', changement: 'ajout', pourquoi: 'parce que' }],
+    knownBefore: new Set(),
+    // Construite par concaténation, jamais écrite en clair : ce fichier est LUI-MÊME lu par
+    // findStaleItemCountReferences() quelques lignes plus bas, et une fixture littérale y devient une
+    // vraie référence périmée. Un jeu d'essai posé à l'intérieur de ce que l'outil scanne cesse
+    // d'être un jeu d'essai — il devient une donnée de production.
+    checkHouseText: `les ${3} items de la Ronde`,
+  };
+  const complet = planRaccordementRonde('deja-la', faux);
+  assert.ok(complet.complet, 'an item wired on all five points must come back complete — otherwise the plan would cry wolf on correct work');
+  const inconnu = planRaccordementRonde('jamais-declare', faux);
+  assert.deepEqual(inconnu.manquants.map((m) => m.cle).sort(), ['changelog', 'item', 'theme-connu'], 'an item that exists nowhere must be flagged on the three points that depend on its declaration — and NOT on dossier-de-rapport, since an item that does not exist promises no report either');
+  const soloPlan = planRaccordementRonde('solo', faux);
+  assert.ok(soloPlan.manquants.some((m) => m.cle === 'theme-connu'), 'a theme carried by one single item must be flagged: inventing a heading for one item adds a box to tick for zero clarity gained');
+  assert.ok(!soloPlan.manquants.some((m) => m.cle === 'dossier-de-rapport'), 'an item that promises no report must never be asked for a report folder — that would be exactly the kind of false positive that gets a guard ignored');
+  const sansDossier = planRaccordementRonde('deja-la', { ...faux, folders: {} });
+  assert.ok(sansDossier.manquants.some((m) => m.cle === 'dossier-de-rapport'), 'an item promising a report with nowhere to put it must be caught here, not when a Ronde actually tries to write the artefact');
+  assert.ok(planRaccordementRonde('deja-la', { ...faux, folders: {}, assumes: { 'deja-la': 'son artefact est une image' } }).complet, 'a written dispense counts as wired: the decision IS the answer, and reproaching a documented decision is the worst kind of false positive');
+  const compteFige = planRaccordementRonde('deja-la', { ...faux, checkHouseText: `les ${99} items de la Ronde` });
+  assert.ok(compteFige.manquants.some((m) => m.cle === 'comptes-figes'), 'a stale hardcoded item count must appear in the plan BEFORE the test suite refuses the commit — the point of a plan is to come first');
+  assert.ok(planRaccordementRonde('deja-la', { ...faux, checkHouseText: null }).complet, 'when check-house.mjs could not be read, the count check must not fabricate a gap it never observed');
+
+  // Chaque manque donne la ligne à écrire, jamais seulement un reproche.
+  assert.ok(inconnu.manquants.every((m) => m.forme && m.forme.length > 10), 'every missing wiring must hand over the exact line to write — that is where the "faire plus facilement" of the request is actually won');
+  assert.match(formatPlanRaccordementRonde(inconnu), /3 raccordement\(s\) manquant\(s\)/, 'the rendered plan must state how many wirings are missing');
+  assert.match(formatPlanRaccordementRonde(complet), /Tous les raccordements de Ronde sont faits/, 'a complete plan must say so plainly rather than print an empty list');
+  assert.equal(RACCORDEMENTS_RONDE.length, 5, 'the five wirings are the ones actually needed by hand when A-NIVEAU joined the Ronde — a sixth must be added deliberately, never silently');
+  assert.ok(etatRaccordementRonde('deja-la', faux).every((e) => e.quoi && e.cle), 'every wiring must name itself and say what it is, so the plan reads without opening the code');
+
+  // Et en direct contre la vraie Ronde : le dernier item intégré doit être complet.
+  assert.ok(planRaccordementRonde('a-niveau', { checkHouseText: fs.readFileSync('scripts/check-house.mjs', 'utf8') }).complet, 'checked live: the most recently integrated Ronde item must be wired on all five points — the exact check that was missing the night it was integrated');
+
+  console.log("Passed: the « intégration à la Ronde » process (2026-09-23) exists separately from « intégration d'un outil », as the user required — and the night he asked for it, integration-outil reported every registry filled for A-NIVEAU while the test suite refused the commit over wirings it does not know about. Its five raccordements are the ones actually done by hand that night, each biting on its own fixture: an undeclared item is flagged on exactly the three points that depend on its declaration and never on a report folder it never promised, a theme carried by one single item is flagged, a written dispense counts as wired (reproaching a documented decision being the worst kind of false positive), a stale hardcoded count appears in the plan BEFORE the suite refuses the commit, and an unreadable check-house.mjs reports nothing rather than a gap it never observed. Every missing wiring hands over the exact line to write. And findItemsMissingFromChangelog() is finally CALLED: built the day before with its Article 24 guard, it had zero callers anywhere while eight items joined the Ronde without their « pourquoi » — two of them added by the agent itself — hidden from the mute-detector scan because its own name appeared in a neighbouring comment.");
   console.log('Passed: circle-process-guardian (2026-09-22) verifies the full CIRCLE-TASKS Ronde process mechanically wherever the facts are observable from disk (fresh report artifacts via the same circle-signal-*/snapshot-* filenames already used by recordCircleItemReport()/recordSnapshotIfChanged(), the record-run commit-count drift, orphan reports and registries missing from CIRCLE_ITEMS — both relayed from the already-existing functions rather than recomputed), honestly refuses to guess conversation-only facts (AUTO/PRIME/GOAT asked, items actually checked vs executed, the Étape 5 sequencing and forced-questions count) when they are not supplied, correctly exempts a genuine night-autonomous run from the AUTO/PRIME/GOAT requirement, enforces the 5-10 forced-choice-question range scaled to the real number of problems found without ever fabricating a question when zero problems exist, and reports a fully clean ok:true only when every one of these real facts checks out — and (same commit) verifyHyperScanProcess() extends this exact discipline to HYPER-SCAN-CHECKPOINT\'s own garde-fous (mandatory full CLAUDE.md reread even in the light version, Smart Conso API/SMART-CONSO-TOKEN consultation and the light-before-heavy order for a heavy pass, the non-negotiable 3-attempt iteration cap, the double-perspective requirement, and the index-entry memory check), despite HYPER-SCAN-CHECKPOINT never being a CIRCLE_ITEMS entry itself — verifyDoubleCommunication() makes the real point 3 ("double communication", alert console + report) genuinely checkable once both texts are supplied, catching a real substance divergence rather than only documenting it as a standing comment — and findCircleItemsMapDrift()/findStaleItemCountReferences() give circle-process-guardian a genuine "help + guard" dual role for maintaining CIRCLE_ITEMS itself, catching (live, the same night they were built) both a dangling-map class of bug and the exact stale-count regression this session\'s own hyper-scan-checkpoint-light addition had just introduced.');
 }
 
@@ -9140,6 +9191,27 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.deepEqual(god.findSchemaDivergent({ 'doc.md': 'un paragraphe sans schéma du tout' }), [], 'ordinary prose must not trip the detector');
   assert.equal(god.findSchemaDivergent({ 'doc.md': 'Posé par l\'utilisateur : « SCAN >> RAPPORTS >> ANALYSE >> QUESTIONS »' })[0].citation, true, 'a drifted copy that is a VERBATIM CITATION of the user must be marked as such — the tool signals it but never rewrites someone\'s own words behind their back (same rule as the R/O-Guardian nickname, Article 20bis)');
   assert.ok(god.SCHEMA_DECLINAISON.includes('INSTANCIE'), 'unifying the schema must explicitly NOT override a heavy calibrated process: the user posed this himself — the Ronde instantiates the schema with its bespoke steps rather than derogating from it');
+
+  // 4bis. LE GABARIT DE PROCESS (2026-09-23) — le modèle et son contrôle, demandés ensemble.
+  //
+  // IL VÉRIFIE UNE RÉPONSE, JAMAIS UN TITRE, et c'est le choix qui décide de tout : les huit process
+  // déclarés ont des structures franchement différentes (« Partie 1…6 » chez l'un, des titres
+  // parlants chez l'autre), et imposer des intitulés identiques les aurait tous recalés — un
+  // garde-fou qui accuse tout le monde cesse d'être lu (leçon L4).
+  const gabaritOk = { slug: 'p', doc: 'ok.md', gardien: 'scripts/faux-gardien.mjs' };
+  const docComplet = "Ce process existe pour empêcher X.\nSon déclencheur : un événement.\nSes étapes sont trois.\nContrôleur : scripts/faux-gardien.mjs\nCe qu'il ne fait pas : Y.";
+  assert.deepEqual(god.findProcessHorsGabarit({ processes: [gabaritOk], readFileImpl: () => docComplet }), [], 'a document answering all five questions passes whatever its headings — imposing identical section titles would have failed all eight real process documents at once');
+  const manquant = god.findProcessHorsGabarit({ processes: [gabaritOk], readFileImpl: () => "Ce process existe pour empêcher X. Ses étapes sont trois. Contrôleur : scripts/faux-gardien.mjs" });
+  assert.deepEqual(manquant.map((e) => e.cle).sort(), ['declencheur', 'limites'], 'the two genuinely absent answers must be named individually — a bare "non conforme" tells nobody what to write');
+  assert.ok(manquant.every((e) => e.quoi && e.quoi.length > 20), 'each gap must say what the missing answer IS, so it can be written without opening the template');
+  // Le contrôleur est vérifié contre celui RÉELLEMENT déclaré, jamais « un script est cité ».
+  assert.ok(god.findProcessHorsGabarit({ processes: [gabaritOk], readFileImpl: () => docComplet.replace('scripts/faux-gardien.mjs', 'scripts/un-autre.mjs') }).some((e) => e.cle === 'controleur'), 'naming SOME script must never satisfy the controller requirement: a document pointing at the wrong guardian sends the next agent to the wrong file, which is worse than naming none');
+  // Un document illisible n'est pas un document non conforme.
+  const illisible = god.findProcessHorsGabarit({ processes: [gabaritOk], readFileImpl: () => { throw new Error('nope'); } });
+  assert.deepEqual(illisible.map((e) => e.cle), ['document'], 'an unreadable document must report exactly that, never be counted as five separate template violations — an absence of measurement is not a measurement');
+  // Et en direct contre les vrais documents de process.
+  assert.deepEqual(god.findProcessHorsGabarit(), [], "checked live against every real process document: each must answer the five questions of docs/gabarits/process.md — this assertion found 8 missing answers across 5 documents on its first run, three of them in a process document written twenty minutes earlier");
+  assert.ok(fs.existsSync('docs/gabarits/process.md'), 'the template itself must exist on disk: a control that checks against a model nobody can read is a control nobody can satisfy');
 
   // 5. LES QUATRE GARDIENS SACRÉS CÂBLÉS CE JOUR-LÀ produisent bien une section de plan.
   const sourcesGardiens = Object.fromEntries(['check-argus', 'check-harmonia', 'axa-check', 'clean-dirty-old', 'clone-hunter', 'always-new-code', 'safe-export']

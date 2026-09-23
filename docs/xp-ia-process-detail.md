@@ -175,3 +175,18 @@ Tout ce process est atteignable depuis les documents seuls, sans une ligne de co
 sections, le refus de compter « rien à retenir » comme un échec, et le refus que l'agent juge sa
 propre application sont **trois décisions tranchées avec l'utilisateur**, pas des accidents de
 construction. Les défaire ramènerait exactement les défauts qu'elles écartent.
+
+## Partie 7 — Ce que ce process NE fait pas
+
+- **Il ne juge pas la QUALITÉ d'une leçon.** Le critère d'entrée (payée par une erreur réelle ET
+  valable au-delà du cas qui l'a révélée) se vérifie à la main ; aucune mécanique ne sait dire si
+  une leçon est profonde ou creuse. `auditLecons()` vérifie qu'elle a un porteur et un terrain,
+  jamais qu'elle vaut d'être retenue.
+- **Il ne garantit pas qu'une leçon soit APPLIQUÉE.** Il la fait ressortir au bon moment ; c'est
+  l'utilisateur qui dit, à la Ronde, si elle l'a réellement été (`parUtilisateur: true`). La
+  remontée est un rappel, jamais une preuve d'effet.
+- **Il ne remplace pas la charte.** La charte ORDONNE, ce registre garde ce qu'on a payé pour
+  comprendre. Une leçon qui deviendrait une règle a sa place dans CLAUDE.md, pas ici — et la
+  tension se résout toujours dans ce sens, jamais l'inverse.
+- **Il ne couvre pas ce que l'agent a appris SUR LE JEU** (le ton, les personnages) : c'est le
+  domaine de la charte et d'EL-PROFESSOR. Ce registre ne parle que de la façon de travailler.

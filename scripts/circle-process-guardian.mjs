@@ -28,7 +28,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import {
-  CIRCLE_ITEMS, CIRCLE_REPORT_FOLDERS, NOT_RECOMMENDED_BY_DEFAULT, COSTLY_SUBSTITUTES, loadLastRun, findRegistriesMissingFromCircle,
+  CIRCLE_ITEMS, CIRCLE_REPORT_FOLDERS, ITEMS_SANS_DOSSIER_ASSUME, NOT_RECOMMENDED_BY_DEFAULT, COSTLY_SUBSTITUTES, loadLastRun, findRegistriesMissingFromCircle,
   // LA BARRIÈRE D'OUVERTURE ET LE SUIVI DES QUESTIONS (câblés ici le 2026-09-23). Ces mécanismes
   // vivaient dans circle-tasks.mjs et dans docs/circle-process-detail.txt (Parties 8 et 11) — le
   // gardien du process, lui, n'en savait rien : `grep` n'en trouvait pas une seule mention. Un
@@ -563,6 +563,46 @@ export const CIRCLE_ITEMS_CHANGELOG = [
     changement: "ajout",
     pourquoi: "Rentabiliser une erreur de compréhension : verifyHyperScanProcess() avait été construit sur une mauvaise lecture d'une demande, et vérifiait la discipline d'un outil qui ne faisait pas partie de la Ronde. Plutôt que de retirer ce travail, l'utilisateur a demandé d'y faire entrer HYPER-SCAN-CHECKPOINT pour que la vérification ait un sens.",
   },
+
+  // LES HUIT ENTRÉES CI-DESSOUS ONT ÉTÉ ÉCRITES LE 2026-09-23, APRÈS COUP, et il faut le dire :
+  // `findItemsMissingFromChangelog()` existait depuis le 2026-09-22 mais n'avait AUCUN appelant. Il
+  // a veillé dans le vide pendant que huit items rejoignaient la Ronde sans leur « pourquoi » —
+  // dont deux que j'ai ajoutés moi-même les deux jours suivants. Chaque « pourquoi » ci-dessous est
+  // reconstitué depuis le commentaire réel de l'item dans circle-tasks.mjs ou depuis sa ligne de
+  // suivi, jamais inventé : là où la trace ne disait pas tout, la ligne le déclare plutôt que de
+  // combler. C'est la valeur qu'on récupère ; celle qui a été perdue entre-temps ne revient pas.
+  {
+    date: "2026-09-22", itemId: "organigramme-signal", changement: "ajout",
+    pourquoi: "Reconstitué après coup. CASSANDRA reconstruit l'organigramme depuis les données réelles (tâches #171/#172/#179). Délibérément PAS fusionné avec cassandra-rh-signal : celui-là juge l'équipe, celui-ci ne fait que montrer sa structure et qui n'y figure nulle part — deux questions que le même item aurait mélangées.",
+  },
+  {
+    date: "2026-09-22", itemId: "god-of-all-process-conformite", changement: "ajout",
+    pourquoi: "Reconstitué après coup. god-of-all-process livre LE rapport de process de la Ronde, et lui seul : les contrôleurs secondaires gardent leur verdict mais ne le livrent jamais eux-mêmes, god les relaie. Architecture tranchée explicitement par l'utilisateur ce jour-là pour garder UNE voix plutôt qu'une par contrôleur.",
+  },
+  {
+    date: "2026-09-22", itemId: "pure-gold-unity-scan", changement: "ajout",
+    pourquoi: "Reconstitué après coup. Ajouté après une simple QUESTION de l'utilisateur (« pour pure gold que tu viens de créer : il est bien dans circle ? ») — il ne l'était pas, et findRegistriesMissingFromCircle() ne pouvait structurellement pas le dire, puisqu'il part des registres présents sur le disque et que cet outil n'en avait aucun. Le trou vivait à l'intérieur du garde-fou censé le trouver.",
+  },
+  {
+    date: "2026-09-22", itemId: "integration-audit", changement: "ajout",
+    pourquoi: "Reconstitué après coup. Même forme de trouvaille, même origine : l'utilisateur a simplement DEMANDÉ si la Ronde vérifie que chaque nouvel outil est réellement intégré et certifié. Elle ne le faisait pas — checkAllAgentBadges() n'annonce que les badges qui CHANGENT, donc un membre incomplet depuis trois jours ne produit rien du tout.",
+  },
+  {
+    date: "2026-09-22", itemId: "data-archangel-scan", changement: "ajout",
+    pourquoi: "Reconstitué après coup. Le rattrapage périodique de la veille sur la circulation des données — la troisième de ses trois livraisons calibrées, aux côtés de la commande à la demande et de l'alerte rare de fraîcheur.",
+  },
+  {
+    date: "2026-09-22", itemId: "recap-evaluations", changement: "ajout",
+    pourquoi: "Reconstitué après coup. Le récapitulatif complet des évaluations, demandé par l'utilisateur en toutes lettres, Y COMPRIS l'évaluation de SA PROPRE participation, qu'il a réclamée lui-même pour que le projet reste la priorité même au prix de frictions. CASSANDRA le publie, angel produit la partie utilisateur, personne ne centralise.",
+  },
+  {
+    date: "2026-09-22", itemId: "tool-learning", changement: "ajout",
+    pourquoi: "Reconstitué après coup, sur demande explicite : « intégré à circle pour un suivi au top, comme le reste ». Seconde moitié de l'évolutivité (SAFE-EXPORT porte la première). Il juge une TRAJECTOIRE, donc il appartient à un rythme périodique et pas au commit : sous trois passages il refuse de conclure.",
+  },
+  {
+    date: "2026-09-23", itemId: "a-niveau", changement: "ajout",
+    pourquoi: "Le verdict d'ensemble contre le référentiel des standards. À la Ronde plutôt qu'au commit pour une raison de fond : « tout est-il à niveau ? » est une question de période — répétée à chaque commit elle rendrait le même verdict des dizaines de fois d'affilée, et un signal qui ne change jamais cesse d'être lu.",
+  },
 ];
 
 // Garde-fou mécanique du registre ci-dessus (Article 24) : un item réel jamais consigné est une
@@ -642,6 +682,101 @@ export function findStaleItemCountReferences(text, realCount) {
   return findings;
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LE PROCESS D'INTÉGRATION À LA RONDE (2026-09-23) — SÉPARÉ de l'intégration à l'Agence
+// ————————————————————————————————————————————————————————————————————————
+//
+// SÉPARATION DEMANDÉE EXPLICITEMENT par l'utilisateur : « je veux un process propre pour intégration
+// d'un outil et un process séparé propre pour intégration à circle ». Il avait raison, et la preuve
+// est arrivée le soir même : en faisant entrer A-NIVEAU, `integration-outil` a annoncé « tous les
+// registres renseignés » alors qu'il manquait QUATRE raccordements propres à la Ronde. Rejoindre
+// l'Agence et rejoindre la Ronde ne sont pas la même chose — l'un donne un rang et des documents,
+// l'autre donne une place dans un rythme périodique, avec ses tables satellites à lui.
+//
+// POURQUOI CE PROCESS VIT ICI, chez le contrôleur de la Ronde, et pas dans un nouvel outil :
+// circle-tasks.mjs DÉFINIT les items, il n'est pas son propre vérificateur ; ce fichier-ci compare
+// déjà CIRCLE_ITEMS à ses tables satellites. Un outil de plus aurait fait trois endroits au lieu de
+// deux pour une seule question.
+//
+// CE QUE CE RACCORDEMENT EXIGE RÉELLEMENT — établi non pas en théorie mais en relevant, une par
+// une, les choses qu'il a fallu faire à la main pour A-NIVEAU alors qu'aucun outil ne les demandait.
+export const RACCORDEMENTS_RONDE = [
+  {
+    cle: "item",
+    quoi: "une entrée dans CIRCLE_ITEMS (id, thème, libellé, coût, tokens estimés, execute)",
+    verifie: ({ items, id }) => items.some((i) => i.id === id),
+    forme: (id) => `  { id: "${id}", theme: "...", label: "...", cout: "...", tokensEstimes: "...", execute: "...", producesReport: true },  // dans CIRCLE_ITEMS`,
+  },
+  {
+    cle: "theme-connu",
+    quoi: "son thème est un thème DÉJÀ existant, jamais une catégorie inventée pour un seul item",
+    // Un thème neuf pour un item unique ajoute une rubrique à cocher pour zéro clarté gagnée — la
+    // décision est ancienne et documentée, elle se vérifie plutôt que de se rappeler.
+    verifie: ({ items, id }) => {
+      const item = items.find((i) => i.id === id);
+      if (!item) return false;
+      return items.filter((i) => i.theme === item.theme).length > 1;
+    },
+    forme: () => `  theme: "<un thème déjà porté par au moins un autre item>"  — ou assumer par écrit pourquoi celui-ci mérite le sien`,
+  },
+  {
+    cle: "dossier-de-rapport",
+    quoi: "un dossier où déposer son artefact (CIRCLE_REPORT_FOLDERS), OU une dispense écrite (ITEMS_SANS_DOSSIER_ASSUME)",
+    verifie: ({ items, id, folders, assumes }) => {
+      const item = items.find((i) => i.id === id);
+      if (!item?.producesReport) return true;
+      return Boolean(folders[id]) || id in assumes;
+    },
+    forme: (id) => `  "${id}": "docs/${id}/",  // dans CIRCLE_REPORT_FOLDERS — ou une dispense écrite dans ITEMS_SANS_DOSSIER_ASSUME`,
+  },
+  {
+    cle: "changelog",
+    quoi: "une entrée dans CIRCLE_ITEMS_CHANGELOG disant POURQUOI cet item existe",
+    // Le « pourquoi » n'est déductible d'aucun diff : sans cette ligne il est perdu le jour même.
+    verifie: ({ id, changelog, knownBefore }) =>
+      knownBefore.has(id) || changelog.some((e) => e.itemId === id && (e.changement === "ajout" || e.changement === "renommage")),
+    forme: (id) => `  { date: "...", itemId: "${id}", changement: "ajout", pourquoi: "..." },  // dans CIRCLE_ITEMS_CHANGELOG`,
+  },
+  {
+    cle: "comptes-figes",
+    quoi: "les comptes d'items cités en dur dans check-house.mjs sont remis à jour",
+    // Deux assertions citent le nombre d'items ; toutes deux refusent le commit tant qu'elles n'ont
+    // pas été mises à jour. Elles sont donc déjà protégées — ce raccordement existe pour que le
+    // plan le DISE avant la première exécution rouge, plutôt qu'après.
+    verifie: ({ items, checkHouseText }) => checkHouseText == null || findStaleItemCountReferences(checkHouseText, items.length).length === 0,
+    forme: () => `  mettre à jour les deux assertions de check-house.mjs qui citent le nombre d'items (findStaleItemCountReferences les nomme)`,
+  },
+];
+
+// etatRaccordementRonde() — l'état réel, raccordement par raccordement. Même forme de retour que
+// `etatIntegration()` (integration-outil) à dessein : deux process séparés, une même lecture, pour
+// qu'un agent qui connaît l'un sache lire l'autre sans réapprendre.
+export function etatRaccordementRonde(id, {
+  items = CIRCLE_ITEMS,
+  folders = CIRCLE_REPORT_FOLDERS,
+  assumes = ITEMS_SANS_DOSSIER_ASSUME,
+  changelog = CIRCLE_ITEMS_CHANGELOG,
+  knownBefore = KNOWN_ITEMS_BEFORE_CHANGELOG,
+  checkHouseText = null,
+  raccordements = RACCORDEMENTS_RONDE,
+} = {}) {
+  const contexte = { items, id, folders, assumes, changelog, knownBefore, checkHouseText };
+  return raccordements.map((r) => ({ cle: r.cle, quoi: r.quoi, fait: Boolean(r.verifie(contexte)), forme: r.forme(id) }));
+}
+
+export function planRaccordementRonde(id, options = {}) {
+  const etat = etatRaccordementRonde(id, options);
+  return { id, faits: etat.filter((e) => e.fait), manquants: etat.filter((e) => !e.fait), complet: etat.every((e) => e.fait) };
+}
+
+export function formatPlanRaccordementRonde(plan) {
+  const l = [`Item de Ronde : ${plan.id}`, `${plan.faits.length}/${plan.faits.length + plan.manquants.length} raccordement(s) déjà faits${plan.faits.length ? ` : ${plan.faits.map((e) => e.cle).join(", ")}` : ""}`, ""];
+  if (plan.complet) { l.push("Tous les raccordements de Ronde sont faits."); return l.join("\n"); }
+  l.push(`${plan.manquants.length} raccordement(s) manquant(s) — à faire AVANT le commit, pas après l'échec du test :`, "");
+  for (const m of plan.manquants) l.push(`· ${m.quoi}`, `  ${m.forme}`, "");
+  return l.join("\n");
+}
+
 function main() {
   recordCliUsage("circle-process-guardian");
   console.log("=== circle-process-guardian — vérification mécanique du processus de Ronde ===\n");
@@ -663,7 +798,25 @@ function main() {
     countDrift = findStaleItemCountReferences(checkHouseText, CIRCLE_ITEMS.length);
     for (const f of countDrift) console.log(`- [${f.check}] ${f.message}`);
   } catch { /* best-effort, jamais bloquant */ }
-  if (!mapDrift.length && !countDrift.length) console.log("Aucun écart de maintenance détecté (tables associées cohérentes, aucun compte figé obsolète trouvé dans check-house.mjs).");
+  // findItemsMissingFromChangelog() — CÂBLÉ ICI LE 2026-09-23, et il ne l'était pas. Construit le
+  // 2026-09-22 sur demande explicite (« que process.circle soit là pour consigner ce changement »),
+  // avec son garde-fou d'Article 24, il n'avait AUCUN appelant : ni ce main(), ni check-house, ni
+  // personne. Huit items avaient rejoint la Ronde sans leur « pourquoi » pendant qu'il veillait dans
+  // le vide — la leçon L2 dans sa forme la plus pure, et trouvée cette fois-ci chez un détecteur que
+  // le scan des détecteurs muets ne voyait pas, son nom apparaissant dans un commentaire voisin.
+  const sansChangelog = findItemsMissingFromChangelog();
+  for (const f of sansChangelog) console.log(`- [${f.check}] ${f.message}`);
+  if (!mapDrift.length && !countDrift.length && !sansChangelog.length) console.log("Aucun écart de maintenance détecté (tables associées cohérentes, aucun compte figé obsolète, aucun item sans son pourquoi).");
+
+  console.log("\n=== Raccordement d'un item à la Ronde (process séparé de l'intégration à l'Agence) ===");
+  const cible = process.argv[2];
+  if (!cible) {
+    console.log("Passer un id d'item en argument pour obtenir son plan de raccordement (ex. : node scripts/circle-process-guardian.mjs a-niveau).");
+  } else {
+    let checkHouseText = null;
+    try { checkHouseText = readFileSync(join(ROOT, "scripts/check-house.mjs"), "utf8"); } catch { /* best-effort */ }
+    console.log(formatPlanRaccordementRonde(planRaccordementRonde(cible, { checkHouseText })));
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

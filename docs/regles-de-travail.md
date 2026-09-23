@@ -367,6 +367,18 @@ qu'un stub de 3 phrases sous l'Article 18, pointant ici — les nombreux renvois
 18, étape N » ailleurs dans CLAUDE.md restent valides puisque la numérotation ci-dessous n'a pas
 changé.)*
 
+**Ce que ce process existe pour empêcher** *(formulé le 2026-09-23, quand le contrôle du gabarit de
+process a constaté que ce document décrivait très bien SES ÉTAPES sans jamais dire ce qu'il évite —
+et un process dont on ne sait plus ce qu'il empêche devient une formalité, puis se fait sauter)* :
+
+1. **Une simulation lancée pour rien.** Sans consultation préalable du quota et sans serveur à
+   jour, elle brûle des appels API et produit un transcript qui ne teste pas le code actuel.
+2. **Un transcript livré puis jamais exploité.** Sans archivage, sans note de fidélité et sans les
+   deux lignes d'index, la simulation coûte son quota et ne change rien — c'est déjà arrivé, onze
+   simulations n'ont un temps existé que dans un scratchpad éphémère.
+3. **Des corrections décidées sur une impression.** Sans les questions de calibrage avant
+   correction, l'agent tranche à la place de l'utilisateur sur des choix qui sont les siens.
+
 Quand l'utilisateur demande de « lancer une simulation » (ou toute formulation équivalente —
 simulation complète, intégrale, de bout en bout), l'agent reproduit systématiquement le même
 enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redemande à chaque fois :
