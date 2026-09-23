@@ -1,9 +1,24 @@
-# Changement de modèle IA pour CIRCLE-TASKS — dossier de conception (préliminaire, non construit)
+# Changement de modèle IA pour CIRCLE-TASKS — dossier de conception (CONSTRUIT)
 
 *(2026-09-21, idée formulée en conversation pendant la première Ronde CIRCLE-TASKS en mode AUTO,
 consignée le même soir sur demande explicite de l'utilisateur — protocole complet de calibrage à
-20 questions suivi avant tout enregistrement, cf. `docs/regles-de-travail.md`. Aucun code écrit :
-statut choisi explicitement par l'utilisateur — « décrire et mettre de côté pour l'instant ».)*
+20 questions suivi avant tout enregistrement, cf. `docs/regles-de-travail.md`. À sa création, aucun
+code écrit — statut choisi explicitement par l'utilisateur : « décrire et mettre de côté pour
+l'instant ». **Construit depuis, le 2026-09-22 ; l'en-tête disait encore le contraire au 2026-09-23,
+corrigé ce jour-là.**)*
+
+> **Ce document a menti pendant deux jours, et voici comment il s'est fait prendre.** Son titre
+> annonçait « préliminaire, non construit », son en-tête « aucun code écrit », son §3 « ce qui reste
+> entièrement à faire » et son §4 « aucun garde-fou ne peut vérifier que Q1/Q2/Q3 ont bien été
+> posées » — alors que le protocole était construit depuis le 2026-09-22 ET que son garde-fou
+> mécanique existait depuis le 2026-09-23. Rien de récent ne l'avait touché, donc la règle « mettre
+> à jour le jour même » ne pouvait rien : c'est exactement l'écart que la **relecture périodique**
+> de l'Article 13 est faite pour attraper. Ce qui l'a attrapé le 2026-09-23 est mécanique :
+> `check-house.mjs` bloque un commit quand une tâche du suivi est plus récente que le fichier
+> préliminaire de son chantier. Le déclencheur est anecdotique — la correction de 44 horodatages
+> dans le futur a rendu la tâche #468 « plus récente » que ce fichier — mais le défaut qu'il a
+> exposé était réel et vieux de deux jours. Un garde-fou qui mord pour une mauvaise raison et
+> trouve une vraie faute reste un bon garde-fou.
 
 ## 1. Idée de l'utilisateur (formulation d'origine)
 
@@ -92,10 +107,16 @@ une demande de switch à n'importe quel moment.
 - **Nom retenu** : « changement-de-modele-IA » (confirmé par l'utilisateur comme désignant bien ce
   chantier).
 
-## 3. Ce qui reste entièrement à faire (aucun code écrit)
+## 3. Ce qu'il restait à faire au 2026-09-21 — TOUT A ÉTÉ FAIT DEPUIS
 
-- Écrire la vraie logique des 3 questions dans le flux de lancement de CIRCLE-TASKS (actuellement,
-  l'agent ouvre directement la fenêtre AUTO/PRIME/GOAT sans cette étape préalable).
+*(Section conservée telle quelle plutôt que supprimée : elle dit ce qui était ouvert à l'origine, et
+l'effacer ferait disparaître le POURQUOI de ce qui a été construit ensuite (Article 27). Chaque
+point ci-dessous est aujourd'hui clos — voir §4.)*
+
+- ~~Écrire la vraie logique des 3 questions dans le flux de lancement de CIRCLE-TASKS (actuellement,
+  l'agent ouvre directement la fenêtre AUTO/PRIME/GOAT sans cette étape préalable).~~ **FAIT** : Q1
+  se pose désormais AVANT AUTO/PRIME/GOAT, et `FAITS_D_OUVERTURE` (`scripts/circle-tasks.mjs`)
+  refuse d'ouvrir une Ronde sans elle.
 - Décider du mécanisme exact de « vérification technique » à utiliser (quel outil de diagnostic de
   session, à quel moment de la conversation l'appeler, comment formuler un désaccord détecté).
 - Décider comment la trace de journalisation (quel modèle a exécuté quelle Ronde) s'intègre au
@@ -115,6 +136,24 @@ traitée comme un « non », question intégralement sautée en mode nocturne/au
 codée : la journalisation (`executedByModel`, nouveau paramètre optionnel de
 `buildCircleRunSummaryText()`/`buildCircleRunSummaryHtml()`, `scripts/circle-tasks.mjs`) — une note
 ajoutée au récapitulatif de fin de Ronde nommant le modèle réellement utilisé, jamais un champ
-obligatoire. Testé (`scripts/check-house.mjs`). Reste honnêtement hors de portée mécanique : aucun
-garde-fou ne peut vérifier que Q1/Q2/Q3 ont bien été posées en conversation — circle-process-guardian
-ne couvre pas ce protocole aujourd'hui (extension future possible, jamais engagée maintenant).
+obligatoire. Testé (`scripts/check-house.mjs`).
+
+**CE PARAGRAPHE DÉCLARAIT UNE IMPOSSIBILITÉ QUI A ÉTÉ LEVÉE LE 2026-09-23** *(tâche #468 ;
+formulation d'origine conservée ci-dessous parce qu'une impossibilité levée est plus instructive
+qu'une impossibilité jamais écrite)* :
+
+> « Reste honnêtement hors de portée mécanique : aucun garde-fou ne peut vérifier que Q1/Q2/Q3 ont
+> bien été posées en conversation — circle-process-guardian ne couvre pas ce protocole aujourd'hui. »
+
+**C'était vrai pour le mauvais objet.** Personne ne peut PROUVER qu'une question a été posée en
+conversation — c'est exact et ça le restera. Mais on peut exiger que l'agent le DÉCLARE, et compter
+son silence comme un manquement : exactement le patron d'AUTO/PRIME/GOAT, qui vit avec la même
+impossibilité depuis toujours. `verifyRondeProcess()` vérifie donc `changement-de-modele` (Q1) et
+`retour-de-modele` (Q3, dû UNIQUEMENT si la réponse à Q1 était « oui » — le réclamer autrement
+ferait crier le contrôleur sur le cas de loin le plus fréquent, ce qui apprend à l'ignorer). Cinq
+assertions couvrent les cinq régimes réels, dont les deux qui doivent rester silencieux.
+
+**La leçon, et elle vaut au-delà de ce document** : « aucun mécanisme n'est possible » mérite d'être
+réexaminé avant d'être recopié. Ici, l'impossibilité portait sur la PREUVE ; le mécanisme possible
+portait sur la DÉCLARATION. Confondre les deux avait laissé une obligation reposer sur la seule
+mémoire de l'agent — ce que l'Article 27 interdit — et elle est tombée au premier essai réel.

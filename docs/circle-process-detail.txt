@@ -1476,3 +1476,47 @@ DEUX RÈGLES QUI ÉVITENT DE CRIER À TORT :
 CE QU'IL A TROUVÉ À SON PREMIER PASSAGE : deux items n'ont jamais écrit un seul signal — `a-niveau`
 (l'outil construit dans la nuit, inscrit à la Ronde mais jamais passé dedans) et `referentiel`
 (déjà connu, tâche #556). Aucun item ne se répète : chaque Ronde trouve donc du neuf.
+
+================================================================================
+ESTIMER AVANT, COMPARER APRÈS (2026-09-23)
+================================================================================
+
+Demande explicite de l'utilisateur, en deux temps : « donne moi une estimation de temps à chaque
+fois en debut de ronde selon le programme choisi », « compare à la fin ton estimation avec le temps
+reel et consigne le pour la prochaine fois, pour ajuster tes estimations », puis « estimation de
+temps + estimation de consommations ».
+
+CE QUE CES DEUX ÉTAPES EMPÊCHENT, et la première mesure suffit à le montrer. À l'ouverture de la
+Ronde GOAT MAX du 2026-09-23, l'agent a annoncé « 2 h à 3 h 30 » à la main. La Ronde complète,
+33 items et deux agents séparés compris, a pris VINGT-SEPT MINUTES. Un facteur 5 à 8.
+
+La cause est une erreur de MÉTHODE, pas de calibrage, et elle est écrite ici pour ne pas se
+reproduire : l'agent estimait en heures humaines, sur un travail qui s'exécute à vitesse machine et
+dont les deux morceaux les plus lourds tournent EN PARALLÈLE. Additionner des durées d'étapes
+parallèles donne toujours un chiffre faux — estimerRonde() prend donc le MAXIMUM entre le travail
+séquentiel et le plus long agent, jamais leur somme.
+
+UNE SUR-ESTIMATION N'EST PAS LE CÔTÉ PRUDENT DE L'ERREUR. Annoncer 3 h 30 pour 27 minutes de
+travail fait renoncer à un programme complet qu'on aurait eu le temps de mener. L'utilisateur a
+coché GOAT MAX malgré ce chiffre ; un autre jour, il aurait coupé — et la Ronde qui a trouvé
+44 horodatages faux, 215 déplacements cassés et 8 demandes sans trace n'aurait pas eu lieu.
+
+ÉTAPE « estimation » — juste après la fenêtre à cocher, jamais avant (le programme doit être connu),
+jamais après le lancement (une estimation donnée en cours de route ne sert plus à décider). Elle
+annonce DEUX chiffres, jamais un seul : la durée et la consommation. Elle se dérive des items
+réellement cochés via estimerRonde() (scripts/circle-tasks.mjs), et elle DÉCLARE si elle a été
+corrigée par un ratio observé ou si c'est une première — une estimation jamais confrontée au réel
+se présente comme telle, jamais comme une prévision.
+
+ÉTAPE « comparaison » — en fin de Ronde. comparerEstimationEtReel() classe l'écart (SUR-ESTIMÉE /
+juste / SOUS-ESTIMÉE) et la ligne rejoint docs/circle-tasks/estimations.md. Ce ratio est ce qui
+corrige l'estimation SUIVANTE : c'est le seul mécanisme du paysage qui apprend d'un chiffre mesuré
+plutôt que d'une intention. Un écart n'est jamais une faute — ce qui serait une faute, c'est de ne
+pas l'écrire.
+
+LA LIMITE, DÉCLARÉE PLUTÔT QUE DÉCOUVERTE AU PROCHAIN PASSAGE : l'estimation en TOKENS est
+aujourd'hui fausse dans l'autre sens. Elle applique le plancher fixe d'un agent séparé (~37 000
+tokens), or le plancher n'est pas le coût — THE-DEEP-READER a consommé 346 000 tokens le 2026-09-23,
+neuf fois son plancher, parce qu'il LIT ce qu'on lui donne. Tant que l'estimation d'un agent ne
+dépendra pas du VOLUME qu'on s'apprête à lui confier, la colonne « tokens estimés » est un plancher
+et doit être lue comme tel.

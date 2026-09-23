@@ -60,6 +60,11 @@ export const PROCESSES = [
     gardien: "scripts/circle-process-guardian.mjs",
     etapes: [
       { cle: "questionnaire", libelle: "poser la fenêtre à cocher (AUTO/PRIME/GOAT)", preuve: null },
+      // ESTIMER AVANT, COMPARER APRÈS (2026-09-23, demande explicite de l'utilisateur, câblée dans
+      // le process plutôt que confiée à la mémoire de l'agent). La première mesure justifie à elle
+      // seule les deux étapes : « 2 h à 3 h 30 » annoncées à la main pour une Ronde de 27 MINUTES.
+      { cle: "estimation", libelle: "annoncer la durée ET la consommation estimées du programme réellement coché, avant de lancer quoi que ce soit", preuve: { fichier: "docs/circle-tasks/estimations.md" } },
+      { cle: "comparaison", libelle: "en fin de Ronde, confronter l'estimation au réel et consigner l'écart — c'est lui qui corrige l'estimation suivante, jamais une nouvelle intuition", preuve: { fichier: "docs/circle-tasks/estimations.md" } },
       { cle: "execution", libelle: "exécuter les items cochés", preuve: { dossier: "docs/", motif: /circle-signal-/, recursif: true } },
       { cle: "rapport", libelle: "produire le rapport de fin de Ronde", preuve: { fichier: ".circle-tasks-run-summary-latest.txt" } },
       // AJOUTÉE (2026-09-22) : la voix de l'utilisateur dans sa propre évaluation, et sa place est

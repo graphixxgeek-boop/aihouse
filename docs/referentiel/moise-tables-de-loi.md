@@ -163,6 +163,10 @@ une nature. Il ne bloque rien.
 - Le découpage rattache le contenu intercalé entre deux Articles à l'Article **précédent** — limite
   héritée de CHARTER-SPY, assumée et non corrigée.
 - `porteursDeclares()` ne reconnaît qu'un porteur nommé en `` `maFonction()` `` ou
-  `` `scripts/mon-outil.mjs` ``. Un mécanisme réel décrit en prose sans être nommé compte comme
+  `` `scripts/<nom-du-script>.mjs` `` *(chevrons délibérés : ce sont des exemples de FORME, pas des
+  chemins réels — écrits comme des chemins, ils faisaient crier le garde-fou de chemins morts de
+  `check-suivi-fidelity.mjs`, seul faux positif sur 1 154 chemins vérifiés le 2026-09-23. La cause
+  était dans l'écriture, pas dans le lecteur : la même notation servait pour un vrai chemin et pour
+  un espace réservé)*. Un mécanisme réel décrit en prose sans être nommé compte comme
   « sans porteur » : la mesure sous-déclare plutôt qu'elle n'invente, ce qui est la bonne direction
   pour un garde-fou dont tout le capital est d'être cru.

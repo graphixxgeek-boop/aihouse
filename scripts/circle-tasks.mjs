@@ -949,6 +949,86 @@ export const NOT_RECOMMENDED_BY_DEFAULT = {
   "the-deep-reader": "coûteux (agent séparé), jamais coché par défaut — déjà établi",
   "hyper-scan-checkpoint-light": "jamais automatique (Article 21) — la couche mécanique est gratuite mais la checklist qualitative qui suit reste un vrai coût de raisonnement, jamais recommandée par défaut",
 };
+// ————————————————————————————————————————————————————————————————————————
+// ESTIMER AVANT, COMPARER APRÈS (2026-09-23, demande explicite de l'utilisateur)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SES MOTS : « pour l'estimation du temps, compare à la fin ton estimation avec le temps reel et
+// consigne le pour la prochaine fois, pour ajuster tes estimations. et donne moi une estimation de
+// temps à chaque fois en debut de ronde selon le programme choisi », puis « estimation de temps +
+// estimation de consommations ».
+//
+// POURQUOI ÇA NE POUVAIT PAS RESTER DANS LA TÊTE DE L'AGENT, et la première mesure le prouve :
+// à l'ouverture de la Ronde GOAT MAX du 2026-09-23, j'ai annoncé « 2 h à 3 h 30 ». Elle a pris
+// 27 MINUTES, agents séparés compris. Un facteur 5 à 8. Une estimation fausse dans ce sens n'est
+// pas anodine : elle fait renoncer à un programme complet qu'on aurait eu le temps de mener.
+//
+// LA CAUSE, écrite plutôt que devinée la prochaine fois : j'estimais en heures humaines, sur un
+// travail qui s'exécute à vitesse machine et dont les deux morceaux les plus lourds tournent EN
+// PARALLÈLE. Additionner des durées d'étapes parallèles est une erreur de méthode, pas de calibrage.
+//
+// CE QUI REND CE MÉCANISME AUTO-CORRECTIF, et c'est tout son intérêt : l'estimation suivante n'est
+// jamais une nouvelle intuition — elle est l'estimation brute CORRIGÉE par le ratio réellement
+// observé aux passages précédents. Sans registre, la même erreur se répéterait indéfiniment avec
+// la même assurance.
+export const REGISTRE_ESTIMATIONS = "docs/circle-tasks/estimations.md";
+
+// Le coût brut se DÉRIVE des items eux-mêmes (leur champ `tokensEstimes`, déjà écrit item par item),
+// jamais d'une table recopiée à côté qui se périmerait au premier item ajouté (Article 24).
+const POIDS_TOKENS = { faible: 1500, "faible à modéré": 4000, modéré: 8000, "modéré à élevé": 18000, élevé: 40000 };
+const MINUTES_PAR_ITEM = { faible: 0.4, "faible à modéré": 0.8, modéré: 1.5, "modéré à élevé": 3, élevé: 6 };
+const COUT_FIXE_AGENT_TOKENS = 37000;   // plancher mesuré, cf. docs/referentiel/smart-conso-token.md
+
+function palier(tokensEstimes = "") {
+  const t = String(tokensEstimes).toLowerCase();
+  for (const cle of ["modéré à élevé", "faible à modéré", "élevé", "modéré", "faible"]) if (t.includes(cle)) return cle;
+  return "modéré";
+}
+
+// ratioObserve : la moyenne des (réel / estimé) des passages déjà enregistrés. Absent ⇒ 1, et on le
+// DIT (« jamais corrigée ») plutôt que de laisser croire que l'estimation s'appuie sur du vécu.
+export function estimerRonde(selection = [], { ratioObserve = null } = {}) {
+  const coches = selection.filter((r) => r.recommande);
+  let tokens = 0, minutes = 0, agents = 0;
+  for (const item of coches) {
+    const p = palier(item.tokensEstimes);
+    tokens += POIDS_TOKENS[p] ?? POIDS_TOKENS["modéré"];
+    minutes += MINUTES_PAR_ITEM[p] ?? MINUTES_PAR_ITEM["modéré"];
+    if (item.costly) { agents += 1; tokens += COUT_FIXE_AGENT_TOKENS; }
+  }
+  // LES AGENTS SÉPARÉS TOURNENT EN PARALLÈLE du reste — l'erreur exacte du 2026-09-23 était de les
+  // additionner. On prend donc le MAXIMUM entre le travail séquentiel et le plus long agent,
+  // jamais la somme.
+  const minutesAgents = agents ? 12 + 6 * (agents - 1) : 0;
+  const brut = { minutes: Math.round(Math.max(minutes, minutesAgents)), tokens, items: coches.length, agents };
+  const r = Number.isFinite(ratioObserve) && ratioObserve > 0 ? ratioObserve : null;
+  return {
+    ...brut,
+    minutesCorrigees: r ? Math.round(brut.minutes * r) : brut.minutes,
+    ratioApplique: r,
+    note: r
+      ? `corrigée par le ratio réellement observé sur les passages précédents (×${r.toFixed(2)})`
+      : "JAMAIS corrigée : aucun passage enregistré, cette estimation ne s'appuie sur aucun vécu — à lire comme un ordre de grandeur, pas comme une prévision",
+  };
+}
+
+// comparerEstimationEtReel() — la moitié qui donne son sens à l'autre. Un écart n'est jamais une
+// faute : c'est la donnée qui rend la prochaine estimation moins fausse.
+export function comparerEstimationEtReel(estimeeMinutes, reelleMinutes) {
+  if (!(estimeeMinutes > 0) || !(reelleMinutes >= 0)) {
+    return { mesurable: false, pourquoi: "estimation ou durée réelle absente — un écart ne se calcule pas sur une valeur manquante, et l'inventer ferait exactement le contraire de ce que ce registre sert à corriger" };
+  }
+  const ratio = reelleMinutes / estimeeMinutes;
+  const sens = ratio > 1.25 ? "SOUS-ESTIMÉE" : ratio < 0.8 ? "SUR-ESTIMÉE" : "juste";
+  return { mesurable: true, estimeeMinutes, reelleMinutes, ratio,
+    sens,
+    consequence: sens === "SUR-ESTIMÉE"
+      ? "une sur-estimation fait renoncer à un programme complet qu'on aurait eu le temps de mener — jamais anodine"
+      : sens === "SOUS-ESTIMÉE"
+        ? "une sous-estimation fait commencer un programme qu'on abandonne en route, et un travail abandonné en route coûte plus qu'un travail non commencé"
+        : "écart dans la marge : l'estimation a tenu" };
+}
+
 export function recommendCircleSelection(report) {
   return report.map((r) => ({
     ...r,
