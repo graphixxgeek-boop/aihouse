@@ -5,7 +5,8 @@
 // friction ici signifie : soit le code a changé sans que la doc suive (dette réelle, Article 13),
 // soit la doc s'est trompée dès le départ — dans les deux cas, un signal utile.
 
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
@@ -42,6 +43,91 @@ export const LINKS = [
     docs: [{ file: "docs/referentiel/parametres.md", pattern: /abaissé de 85 à\s+(\d+)/ }],
   },
 ];
+
+// ————————————————————————————————————————————————————————————————————————
+// LA CARTOGRAPHIE DES CRITÈRES TRANSVERSES (2026-09-23, chantier 9)
+// ————————————————————————————————————————————————————————————————————————
+//
+// DEMANDE DE L'UTILISATEUR, avec son calibrage exact : « montrer, ne rien supprimer ». Ce n'est
+// donc PAS un détecteur de doublons — CLONE-HUNTER fait déjà ça sur le code littéral. C'est une
+// carte : quels CRITÈRES le paysage vérifie-t-il, et depuis combien d'endroits ?
+//
+// POURQUOI MONTRER SUFFIT, ET POURQUOI SUPPRIMER SERAIT UNE ERREUR. Deux outils qui vérifient « ce
+// qui est déclaré existe-t-il vraiment ? » ne font pas forcément doublon : l'un le vérifie sur les
+// blueprints, l'autre sur les porteurs de leçons, et fusionner les deux donnerait un outil qui
+// scanne tout et n'appartient à personne. Ce qui est utile, c'est de VOIR que ce critère est
+// devenu un motif du projet — parce qu'un motif porté par dix endroits mérite une formulation
+// commune, et parce qu'un critère porté par UN SEUL endroit est un point de fragilité.
+//
+// COMMENT ELLE EST CONSTRUITE, et c'est ce qui la rend évolutive (Article 24) : elle LIT les noms
+// des fonctions exportées du dépôt et les découpe en mots. Les motifs ci-dessous ne sont pas une
+// liste de critères recopiée à la main — ce sont les MOTS que ce dépôt emploie réellement pour
+// nommer ce qu'il cherche, et un nouvel outil qui les emploie rejoint la carte sans qu'on y touche.
+//
+// SA LIMITE, DÉCLARÉE : elle regroupe par VOCABULAIRE, pas par sens. Deux fonctions qui cherchent
+// la même chose sous deux noms différents restent séparées, et deux fonctions qui partagent un mot
+// sans partager l'intention se retrouvent ensemble. C'est une carte à lire, jamais un verdict.
+export const CRITERES_TRANSVERSES = [
+  { cle: "declare-mais-absent", mots: ["missing", "manquant", "manquante", "manquants", "absent", "absents", "absente", "absentes", "sans"], question: "quelque chose est DÉCLARÉ quelque part et n'existe pas vraiment" },
+  { cle: "existe-mais-non-declare", mots: ["undeclared", "nondeclare", "orphelin", "orphelines", "orphan"], question: "quelque chose EXISTE et n'est déclaré nulle part" },
+  { cle: "deux-sources-divergent", mots: ["diverging", "divergent", "divergentes", "drift", "stale", "perimee"], question: "deux endroits décrivent la même chose et ne disent plus pareil" },
+  { cle: "mecanisme-muet", mots: ["muets", "muet", "casses", "casse", "unread", "ignores"], question: "un mécanisme existe et n'atteint personne" },
+  { cle: "promesse-creuse", mots: ["fantome", "fantomes", "phantom", "promised", "promis"], question: "une promesse est faite et rien ne la tient" },
+  { cle: "duplication", mots: ["duplicate", "doublon", "doublons", "equivalents", "redundant", "redondant", "redondantes"], question: "la même chose est dite ou écrite deux fois" },
+  { cle: "stagnation", mots: ["stagnation", "ancienne", "oldest", "neglig", "jamais"], question: "quelque chose n'a pas bougé depuis trop longtemps" },
+];
+
+export function fonctionsExporteesParOutil({ root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync } = {}) {
+  const parOutil = new Map();
+  for (const fichier of listDirImpl(join(root, "scripts")).filter((f) => f.endsWith(".mjs"))) {
+    const texte = readFileImpl(join(root, "scripts", fichier), "utf8");
+    const noms = [...texte.matchAll(/^export\s+(?:async\s+)?function\s+([A-Za-z_][A-Za-z0-9_]*)/gm)].map((m) => m[1]);
+    if (noms.length) parOutil.set(fichier.replace(/\.mjs$/, ""), noms);
+  }
+  return parOutil;
+}
+
+// Découpe un nom en mots, en minuscules et sans accents : `findGardiensSansRegistreDeclare` devient
+// [find, gardiens, sans, registre, declare]. Écrit ainsi plutôt qu'avec une liste de préfixes à
+// reconnaître — un nom qui n'entre dans aucun critère n'est simplement pas classé, jamais forcé.
+export function motsDuNom(nom = "") {
+  return String(nom).replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .split(/[^a-z0-9]+/).filter(Boolean);
+}
+
+export function cartographieCriteresTransverses({ parOutil = null, criteres = CRITERES_TRANSVERSES, ...options } = {}) {
+  const source = parOutil ?? fonctionsExporteesParOutil(options);
+  const carte = criteres.map((c) => ({ ...c, occurrences: [] }));
+  const nonClassees = [];
+  for (const [outil, noms] of source) {
+    for (const nom of noms) {
+      const mots = new Set(motsDuNom(nom));
+      const touches = carte.filter((c) => c.mots.some((m) => mots.has(m)));
+      if (!touches.length) { nonClassees.push({ outil, nom }); continue; }
+      for (const c of touches) c.occurrences.push({ outil, nom });
+    }
+  }
+  for (const c of carte) c.outils = [...new Set(c.occurrences.map((o) => o.outil))].sort();
+  return { carte: carte.sort((a, b) => b.outils.length - a.outils.length), nonClassees };
+}
+
+export function formatCartographie({ carte = [], nonClassees = [] } = {}, { maxOutils = 8 } = {}) {
+  const l = ["— CARTE DES CRITÈRES TRANSVERSES (montrer, ne rien supprimer) —", ""];
+  for (const c of carte) {
+    if (!c.occurrences.length) { l.push(`➖ ${c.cle} — « ${c.question} » : aucun endroit ne le vérifie sous ce vocabulaire.`); continue; }
+    const seul = c.outils.length === 1;
+    l.push(`${seul ? "⚠️" : "●"} ${c.cle} — « ${c.question} »`);
+    l.push(`   ${c.occurrences.length} fonction(s) réparties sur ${c.outils.length} outil(s) : ${c.outils.slice(0, maxOutils).join(", ")}${c.outils.length > maxOutils ? "…" : ""}`);
+    // UN SEUL PORTEUR EST UN SIGNAL, pas un compliment : ce critère disparaît du paysage le jour où
+    // cet outil-là change. C'est l'information que la carte apporte et qu'aucun outil ne voit seul.
+    if (seul) l.push("   un seul outil porte ce critère — il disparaît du paysage le jour où celui-là change.");
+  }
+  l.push("");
+  l.push(`${nonClassees.length} fonction(s) exportée(s) n'entrent dans aucun critère : ce n'est jamais un défaut, la plupart ne cherchent rien (elles calculent, formatent ou enregistrent).`);
+  l.push("Cette carte regroupe par VOCABULAIRE, jamais par sens : deux fonctions qui cherchent la même chose sous deux noms différents y restent séparées. À lire, jamais un verdict.");
+  return l.join("\n");
+}
 
 export function checkLinks(links, readFile = (f) => readFileSync(f, "utf8")) {
   const results = [];
@@ -115,6 +201,12 @@ function main() {
           tache: `réaligner ${r.theme} : corriger le chiffre faux, dans le code ou dans le référentiel selon lequel des deux a raison` }
       : { constat: `${r.theme} — ${r.status}`, etat: "a-trancher",
           pourquoi: "le lien n'a pas pu être vérifié mécaniquement : il faut un œil humain pour dire si c'est une vraie friction ou une lecture trop stricte" });
+  // LA CARTE DES CRITÈRES TRANSVERSES sort ici, avant le plan : elle ne produit aucun constat à
+  // trancher (l'utilisateur a tranché « montrer, ne rien supprimer »), mais elle appartient au même
+  // regard — celui qui compare des endroits différents entre eux plutôt que chacun à lui-même.
+  console.log("");
+  console.log(formatCartographie(cartographieCriteresTransverses()));
+
   const plan = buildPlanDaction(constats, { toolSlug: "harmonia" });
   console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
   for (const l of plan.lignes) console.log(l);

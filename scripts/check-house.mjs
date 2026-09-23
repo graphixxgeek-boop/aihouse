@@ -9292,6 +9292,32 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     assert.match(sct.formatAlerteRafale(sct.detecterRafale([tour(2, 40)], { maintenant: now })), /rien à signaler/, 'below the threshold it must stay quiet and say so in one line, never repeat the whole advice');
   }
 
+  // 4sexies. LA CARTE DES CRITÈRES TRANSVERSES (2026-09-23, chantier 9) — « montrer, ne rien
+  // supprimer », calibrage exact de l'utilisateur. Ce n'est donc pas un détecteur de doublons
+  // (CLONE-HUNTER fait ça sur le code littéral), c'est une carte des motifs du paysage.
+  {
+    const harmonia = await import('../scripts/check-harmonia.mjs');
+    assert.deepEqual(harmonia.motsDuNom('findGardiensSansRegistreDeclare'), ['find', 'gardiens', 'sans', 'registre', 'declare'], 'a camelCase name must split into real words, lowercased and unaccented, so the grouping works on what the repository actually writes');
+    assert.deepEqual(harmonia.motsDuNom('findRegistresPérimés'), ['find', 'registres', 'perimes'], 'accents must be folded: half this repository writes "périmé" and the other half "perime", and a map that split them would show one motif as two');
+    const faux = new Map([
+      ['outil-a', ['findBlueprintManquant', 'formatRapport']],
+      ['outil-b', ['findPorteurFantome', 'findBlueprintManquant']],
+      ['outil-c', ['calculerTotal']],
+    ]);
+    const { carte, nonClassees } = harmonia.cartographieCriteresTransverses({ parOutil: faux });
+    const parCle = Object.fromEntries(carte.map((c) => [c.cle, c]));
+    assert.deepEqual(parCle['declare-mais-absent'].outils, ['outil-a', 'outil-b'], 'a criterion checked from two tools must name both — that IS the information the map exists to give');
+    assert.equal(parCle['promesse-creuse'].outils.length, 1, 'a criterion carried by one single tool must be counted as such rather than blended into the rest');
+    assert.deepEqual(nonClassees.map((x) => x.nom).sort(), ['calculerTotal', 'formatRapport'], 'a function that searches for nothing must fall outside every criterion rather than be forced into the nearest one');
+    const texte = harmonia.formatCartographie({ carte, nonClassees });
+    assert.match(texte, /un seul outil porte ce critère/, 'a single-carrier criterion must be flagged: it disappears from the landscape the day that one tool changes, and no tool can see that about itself');
+    assert.match(texte, /jamais par sens/, 'the map must declare that it groups by VOCABULARY: two functions seeking the same thing under different names stay apart, and claiming otherwise would make it a verdict');
+    assert.match(texte, /jamais un défaut/, 'the unclassified functions must be stated as normal, never as a backlog — most of them compute or format and search for nothing');
+    // En direct contre le vrai dépôt : le motif dominant doit rester visible.
+    const reelle = harmonia.cartographieCriteresTransverses();
+    assert.ok(reelle.carte[0].outils.length >= 5, 'checked live: the dominant motif of this landscape must show up across several tools — a map that found everything isolated would mean the reader stopped working');
+  }
+
   // 4bis. LE GABARIT DE PROCESS (2026-09-23) — le modèle et son contrôle, demandés ensemble.
   //
   // IL VÉRIFIE UNE RÉPONSE, JAMAIS UN TITRE, et c'est le choix qui décide de tout : les huit process
