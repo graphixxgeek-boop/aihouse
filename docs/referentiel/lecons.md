@@ -596,6 +596,43 @@ accents — la vraie correction, celle qui n'a plus besoin qu'on nourrisse perso
 
 **Terrain** : quand un garde-fou refuse et que je cherche une forme qui passe plutôt que la raison du refus · quand j'ajoute une entrée dans un registre partagé par plusieurs outils · mots : satisfaire le test, faire passer le garde-fou, le registre est vert, contourner · fichiers : scripts/le-coordinateur.mjs, scripts/tool-brain.mjs, scripts/integration-outil.mjs
 
+## L22 — Un résumé qui RECOMPTE au lieu de LIRE le verdict rouvre une décision déjà prise
+
+ARGUS écrivait, en toutes lettres, la conclusion de son propre passage : « 0 écart(s) à regarder
+(6 écarté(s) avec votre accord explicite, jamais reposé(s)) ». La synthèse du réseau affichait juste
+au-dessus : « ARGUS : à regarder (6 candidat(s)) ».
+
+**Elle ne lisait pas cette conclusion. Elle recomptait les étiquettes du rapport.** Les six lignes
+que le rapport imprime par transparence — chacune annotée « déjà tranché avec votre accord, ne
+compte plus comme un écart » — portaient une étiquette `[probable]`, et le résumé les additionnait.
+
+**Ce que ça produisait concrètement, et c'est pire qu'un chiffre faux** : à chaque passage, depuis
+des semaines, le tableau rouvrait une décision que l'utilisateur avait explicitement prise et que le
+détecteur avait explicitement enregistrée. L'inverse exact de sa consigne « ne jamais écarter une
+zone sciemment laissée de côté par moi », pris par l'autre bout : ne jamais RE-OUVRIR une zone qu'il
+a sciemment fermée.
+
+**Ce qui rend le cas général** : un outil qui AFFICHE sa matière brute et CONCLUT séparément offre
+deux surfaces de lecture, et la brute est toujours la plus facile à parser. Un agrégateur pressé
+prend donc systématiquement la mauvaise — et son chiffre a l'air d'un résultat, pas d'une
+interprétation. Le détecteur n'a rien fait de mal ; c'est le résumé qui a refusé de l'écouter.
+
+**La règle** : un résumé lit le VERDICT que l'outil résumé a écrit, jamais les signes qu'il a
+imprimés pour se rendre lisible. Et quand ce verdict manque, il rend « pas mesuré » — jamais zéro,
+qui se lit exactement comme « rien à signaler ». Rendre la matière brute à côté reste bon : ce qui
+ne l'est pas, c'est de la faire passer pour la conclusion.
+
+*Payée le 2026-09-23, trouvée en lançant Pack Panorama POUR DE VRAI sur décision de l'utilisateur
+(« Je la lance pour de vrai, une fois, et on juge »). Aucune relecture de code ne l'aurait montrée :
+il fallait voir les deux phrases se contredire dans la même sortie.*
+
+**Porté par** : `summarizeArgusOutput()` (`scripts/hyper-scan-checkpoint.mjs`), qui lit désormais la
+ligne de compte d'ARGUS et rend `ecartsARegarder` / `ecartesAvecAccord` / `candidatsDetectes`
+séparément, avec `undefined` quand la ligne manque — et quatre assertions de `check-house.mjs` qui
+vérifient les trois cas, dont celui où un vrai écart doit toujours remonter (BP4).
+
+**Terrain** : quand un outil agrège le résultat d'un autre · quand je lis un compteur produit à partir d'un texte plutôt que d'une valeur · quand un tableau de synthèse contredit la sortie complète de l'outil qu'il cite · mots : synthèse, résumé, tableau croisé, candidats, à regarder · fichiers : scripts/le-coordinateur.mjs, scripts/hyper-scan-checkpoint.mjs, scripts/check-argus.mjs
+
 ## BP1 — La règle s'écrit à UN endroit et se dérive partout ailleurs
 
 Devant vingt endroits à corriger, le réflexe est de corriger les vingt. Le bon geste est de trouver
