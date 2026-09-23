@@ -178,6 +178,26 @@ déjà : « je le ferai après » est la forme que prend l'oubli.
 
 **Premier passage réel : 5 écarts, tous les miens, tous du 2026-09-23.**
 
+**IMPAYÉ ou RATTRAPÉ — la distinction ajoutée le soir même, et le défaut qui l'a rendue nécessaire.**
+Le détecteur ne regardait que le commit fautif. Conséquence immédiate : quatre écarts trouvés à la
+Ronde n°2, les quatre documents mis à jour dans l'heure — et il affichait toujours les mêmes sept
+lignes. **Aucune action ne pouvait l'éteindre**, ce qui en fait du décor en deux passages, et on
+cesse alors de lire la liste où se cachent les vrais impayés (leçon L6 ; même défaut déjà corrigé
+chez ARGUS, qui re-signalait des candidats clos depuis trois jours).
+
+Il sépare désormais deux états, et n'en absout aucun :
+
+- **IMPAYÉ** — le document n'a toujours pas été mis à jour. C'est ce que le rapport compte en tête.
+- **RATTRAPÉ** — un commit ULTÉRIEUR a mis le document à jour. Le manquement reste NOMMÉ (la règle
+  est « dans le même commit », elle n'a pas été tenue) et le commit qui a payé est cité, pour être
+  vérifié plutôt que cru.
+
+Trois garde-fous, chacun contre une façon de se rattraper à bon compte : un document mis à jour
+AVANT le commit fautif ne rattrape rien (il ne pouvait pas décrire un changement qui n'existait pas
+encore) ; rattraper un document sur deux ne rattrape rien non plus, quand deux process partagent le
+même code (un demi-rattrapage affiché comme un rattrapage est pire qu'aucun) ; et le cas « code et
+document dans le même commit » reste ce qu'il a toujours été — jamais un écart.
+
 ## Le seuil d'arrêt : UN SEUL, et ce n'est pas un compte rendu
 
 *(Ajouté le 2026-09-23, après une perte de temps réelle et conséquente — l'agent s'est arrêté au
