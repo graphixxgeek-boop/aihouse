@@ -7462,6 +7462,29 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 
   // qualifierIndicateur (2026-09-22) — « un vert non représentatif est une alerte », tranché par
   // l'utilisateur à la clôture de la Ronde, sur trois chiffres verts de cette Ronde même.
+  // LES TROIS NATURES D'UN SCRIPT (2026-09-23) — integration-outil répondait « 0/11, 10 inscriptions
+  // manquantes » pour N'IMPORTE QUEL nom, y compris les quatre modules de règles du dépôt. Le suivre
+  // aurait produit quatre blueprints pour quatre modules qui n'ont rien en propre à documenter.
+  const { natureDuScript, findModulesDeReglesOrphelins, findModulesNonCitesParLeurProcess, NATURES_DE_SCRIPT } = await import('../scripts/integration-outil.mjs');
+  assert.deepEqual(Object.keys(NATURES_DE_SCRIPT).sort(), ['membre','module-de-regles','non-decide'], 'exactly three natures, and the third is the point: a script nobody has classified is not silently a tool to integrate');
+  const lireFauxNature = (table) => (chemin) => { const cle = Object.keys(table).find((k) => chemin.endsWith(k)); if (cle === undefined) throw new Error('absent'); return table[cle]; };
+  const regFauxNature = [{ cle: 'r1', fichier: 'scripts/r.mjs', quoi: 'q', extrait: (t) => new Set(t.split(',')), forme: (x) => x }];
+  const moduleMarqueNature = { 'scripts/m.mjs': 'export const PROCESS_HOTE = "ronde";', 'scripts/r.mjs': 'a,b' };
+  assert.equal(natureDuScript('m', { readFileImpl: lireFauxNature(moduleMarqueNature), registres: regFauxNature }).nature, 'module-de-regles', 'a file declaring its own host process is a rule module — the nature is read from the file, never from a list kept here that would go stale at the next module');
+  assert.equal(natureDuScript('a', { readFileImpl: lireFauxNature({ 'scripts/a.mjs': 'rien', 'scripts/r.mjs': 'a,b' }), registres: regFauxNature }).nature, 'membre', 'a script already declared in at least one tool registry is a member whose integration is merely incomplete');
+  assert.equal(natureDuScript('z', { readFileImpl: lireFauxNature({ 'scripts/z.mjs': 'rien', 'scripts/r.mjs': 'a,b' }), registres: regFauxNature }).nature, 'non-decide', 'no marker AND no registry means nobody has ruled on what this script is — the loud third state, never a silent fallback to "tool"');
+  assert.equal(natureDuScript('introuvable', { readFileImpl: lireFauxNature({}), registres: regFauxNature }).mesurable, false, 'a missing script yields "not measurable", never a nature guessed from its name');
+  // LE FAUX POSITIF QUI S'EST PRODUIT POUR DE VRAI : sans l'ancre ^, integration-outil se déclarait
+  // lui-même rattaché au process « <slug> » — il matchait l'EXEMPLE de son propre commentaire.
+  assert.equal(natureDuScript('doc', { readFileImpl: lireFauxNature({ 'scripts/doc.mjs': '// exemple : export const PROCESS_HOTE = "<slug>"\nexport const x = 1;', 'scripts/r.mjs': 'a,b' }), registres: regFauxNature }).nature, 'non-decide', 'the marker only counts at the START of a line: a detector fooled by its own documentation is the first false positive to close (L4)');
+  const procFauxNature = [{ slug: 'ronde', doc: 'docs/ronde.md' }];
+  assert.deepEqual(findModulesDeReglesOrphelins({ readFileImpl: lireFauxNature(moduleMarqueNature), listeScripts: ['m'], processConnus: ['ronde'] }), [], 'a module whose declared host really exists reports nothing');
+  assert.equal(findModulesDeReglesOrphelins({ readFileImpl: lireFauxNature({ 'scripts/m.mjs': 'export const PROCESS_HOTE = "fantome";' }), listeScripts: ['m'], processConnus: ['ronde'] }).length, 1, 'a host process that does not exist is flagged — a phantom host reassures wrongly, exactly what lesson L7 forbids');
+  assert.deepEqual(findModulesNonCitesParLeurProcess({ readFileImpl: lireFauxNature({ 'scripts/m.mjs': 'export const PROCESS_HOTE = "ronde";', 'docs/ronde.md': 'le module scripts/m.mjs fait ceci' }), listeScripts: ['m'], processus: procFauxNature }), [], 'a module its host document really cites is properly attached');
+  assert.equal(findModulesNonCitesParLeurProcess({ readFileImpl: lireFauxNature({ 'scripts/m.mjs': 'export const PROCESS_HOTE = "ronde";', 'docs/ronde.md': 'ce document ne cite rien' }), listeScripts: ['m'], processus: procFauxNature }).length, 1, 'a module attached on paper only — declared by the file, ignored by the process document — is the real gap found on messages-courts the day it was built (L2: a mechanism that never leaves the script is an intention)');
+  assert.equal(findModulesNonCitesParLeurProcess({ readFileImpl: lireFauxNature({ 'scripts/m.mjs': 'export const PROCESS_HOTE = "fantome";' }), listeScripts: ['m'], processus: procFauxNature }).length, 0, 'a phantom host is reported ONCE, by the orphan check — never twice for a single defect');
+  console.log('Passed: integration-outil tells apart the three natures of a scripts/*.mjs file instead of answering the same 10-registry plan to every name (which it did for all four rule modules), reads that nature from the file itself rather than a list kept here, refuses to guess one for a missing script, is no longer fooled by the marker written in its own documentation, flags a host process that does not exist, and flags a module its host document never cites — the real gap messages-courts carried the day it was built: declared, tested, and reached by no workflow.');
+
   const { qualifierIndicateur, formatIndicateur } = await import('../scripts/lib-shell.mjs');
   assert.equal(qualifierIndicateur({ taux: 1, mesures: 2, population: 18 }).etat, 'non concluant', 'a perfect 100% resting on 2 of 18 cases is the exact figure that motivated this rule — it must never render as a success');
   assert.equal(qualifierIndicateur({ taux: 1, mesures: 33, population: 33 }).etat, 'vert', 'a rate measured on its whole population stays green — the rule sharpens greens, it does not abolish them');

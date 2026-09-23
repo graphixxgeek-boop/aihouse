@@ -20,6 +20,12 @@
 // LES QUATRE NIVEAUX SONT DÉRIVÉS DES RANGS EXISTANTS, jamais recopiés (Article 24) : un septième
 // palier ajouté à PALIERS tombe dans le bon niveau sans qu'une ligne ne bouge ici.
 
+// CE FICHIER EST UN MODULE DE RÈGLES, PAS UN OUTIL DE L'AGENCE (2026-09-23).
+// L'échelle de criticité, l'urgence, le mot-clé et le format d'une tâche sont les données que le process d'état des tâches exécute — « les regles de priorité doivent etre hebergé dans l'equipe process ».
+// Sans ce marqueur, integration-outil réclamait pour lui un blueprint, une fiche et une place
+// au catalogue — dix inscriptions pour un module qui n'a rien en propre à documenter.
+export const PROCESS_HOTE = "etat-des-taches";
+
 import { PALIERS, PALIERS_PAR_CLE, calculerPalier, rangDe } from "./priorites.mjs";
 
 // LES QUATRE NIVEAUX, calibrés par l'utilisateur en fenêtre le 2026-09-23 (« 4 niveaux nommés »,

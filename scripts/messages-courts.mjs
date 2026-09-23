@@ -18,6 +18,12 @@
 // sans tomber dans la liste de mots figée que le corollaire de l'Article 17 interdit : ici, la liste
 // ne peut jamais causer le défaut qu'on répare, seulement le corriger dans le sens sûr.
 
+// CE FICHIER EST UN MODULE DE RÈGLES, PAS UN OUTIL DE L'AGENCE (2026-09-23).
+// La règle « ne jamais s'arrêter sur un message court » ne gouverne aucun outil : elle gouverne la conduite de l'agent pendant le mode semi-autonome, qui l'héberge.
+// Sans ce marqueur, integration-outil réclamait pour lui un blueprint, une fiche et une place
+// au catalogue — dix inscriptions pour un module qui n'a rien en propre à documenter.
+export const PROCESS_HOTE = "semi-autonome";
+
 // LES TROIS NATURES D'UN MESSAGE COURT, jamais deux — et la troisième est celle que j'ajoute de
 // moi-même en réponse à sa question « tu vois autre chose à ajouter ? ».
 //

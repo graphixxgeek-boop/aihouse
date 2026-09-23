@@ -20,6 +20,12 @@
 // point c'était grave, la nouvelle échelle dit QUAND il faut le faire. Garder les deux aurait
 // obligé à trancher, à chaque lecture, laquelle des deux commande l'ordre de travail.
 
+// CE FICHIER EST UN MODULE DE RÈGLES, PAS UN OUTIL DE L'AGENCE (2026-09-23).
+// Même hébergement que criticite.mjs : l'échelle et son calcul appartiennent au process qui s'en sert.
+// Sans ce marqueur, integration-outil réclamait pour lui un blueprint, une fiche et une place
+// au catalogue — dix inscriptions pour un module qui n'a rien en propre à documenter.
+export const PROCESS_HOTE = "etat-des-taches";
+
 import { readFileSync } from "node:fs";
 
 // ————————————————————————————————————————————————————————————————————————

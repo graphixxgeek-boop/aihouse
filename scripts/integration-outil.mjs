@@ -24,7 +24,8 @@
 // demandée est exacte et complète ; que je la demande reste une obligation écrite, portée par
 // l'entrée « Intégration d'un nouvel outil » de PROCESSES et surveillée par god-of-all-process.
 
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
+import { PROCESSES } from "./god-of-all-process.mjs";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
@@ -151,6 +152,69 @@ function chemin_scripts(texte, nom) {
 // etatIntegration() — où en est CET outil, registre par registre. Un fichier illisible rapporte
 // `mesurable: false` plutôt que « absent » : une absence de mesure n'est pas une absence
 // d'inscription, et les confondre enverrait réécrire une ligne déjà présente.
+// LES TROIS NATURES D'UN FICHIER `scripts/*.mjs`, jamais deux (2026-09-23).
+//
+// LE DÉFAUT RÉEL, trouvé en demandant l'intégration de `messages-courts` : cet outil répondait
+// « 0/11, 10 inscriptions manquantes » pour N'IMPORTE QUEL nom de script — y compris
+// `criticite`, `priorites` et `modes-de-travail`, qui ne sont pas des membres de l'Agence mais des
+// MODULES DE RÈGLES hébergés par un process. Suivre son plan aurait produit quatre blueprints et
+// quatre registres pour quatre modules qui n'ont rien en propre à documenter : exactement ce que la
+// charte interdit en réservant six outils « volontairement SANS blueprint ni instanciation ».
+//
+// Un outil qui répond la même chose à toutes les questions ne répond à aucune. La nature se DÉCLARE
+// donc dans le fichier lui-même (`export const PROCESS_HOTE = "<slug>"`), jamais dans une liste
+// tenue ici qui se périmerait au module suivant (Article 24), et jamais devinée d'après le nom.
+//
+// LE TROISIÈME ÉTAT EST LE PLUS IMPORTANT, et c'est le bruyant : un script sans marqueur ET absent
+// de tous les registres n'est pas « un outil à intégrer », c'est un script dont PERSONNE n'a encore
+// dit ce qu'il est. Le ranger d'office en outil à intégrer serait deviner — et deviner en silence
+// est précisément le défaut que la moitié de ce paysage existe pour empêcher.
+export const NATURES_DE_SCRIPT = {
+  membre: "un outil de l'Agence Codex : il doit renseigner tous les registres obligatoires",
+  "module-de-regles": "un module de règles hébergé par un process : rien à inscrire dans les registres d'outils, mais son process hôte doit exister",
+  "non-decide": "personne n'a encore dit ce que c'est — à trancher AVANT de l'intégrer ou de l'ignorer",
+};
+
+// ANCRÉ EN DÉBUT DE LIGNE (`^` en mode multiligne), et ce n'est pas un détail de style : sans
+// l'ancre, ce fichier-ci se déclarait lui-même module de règles rattaché au process « <slug> » —
+// il matchait l'EXEMPLE écrit dans son propre commentaire, deux blocs plus haut. Un détecteur qui
+// se fait piéger par sa propre documentation est le premier faux positif à corriger (leçon L4 :
+// un garde-fou qui accuse à tort cesse d'être lu), et il a été trouvé en le lançant pour de vrai
+// sur le dépôt entier, jamais en le relisant.
+const MARQUEUR_PROCESS_HOTE = /^export\s+const\s+PROCESS_HOTE\s*=\s*["'`]([^"'`]+)["'`]/m;
+
+// Lit la nature dans le fichier réel, jamais dans une liste. Un script introuvable rend
+// « pas mesurable » plutôt qu'une nature par défaut : ne pas savoir n'autorise jamais à conclure.
+export function natureDuScript(slug, { root = ROOT, readFileImpl = readFileSync, registres = REGISTRES_D_INTEGRATION } = {}) {
+  let source;
+  try {
+    source = readFileImpl(join(root, `scripts/${slug}.mjs`), "utf8");
+  } catch {
+    return { nature: null, mesurable: false, pourquoi: `scripts/${slug}.mjs est introuvable — aucune nature déduite, et surtout aucune supposée` };
+  }
+  const hote = source.match(MARQUEUR_PROCESS_HOTE)?.[1];
+  if (hote) return { nature: "module-de-regles", mesurable: true, processHote: hote, pourquoi: `le fichier déclare lui-même son process hôte (« ${hote} ») : ce n'est pas un membre de l'Agence` };
+  const inscrit = etatIntegration(slug, { root, readFileImpl, registres }).some((e) => e.mesurable && e.present);
+  if (inscrit) return { nature: "membre", mesurable: true, pourquoi: "déjà déclaré dans au moins un registre d'outils : c'est un membre, son intégration est simplement incomplète" };
+  return { nature: "non-decide", mesurable: true, pourquoi: "aucun marqueur de process hôte, et aucun registre ne le connaît — sa nature n'a jamais été tranchée" };
+}
+
+// findModulesDeReglesOrphelins() — un module qui déclare un process hôte INEXISTANT. Un hôte
+// fantôme est pire qu'une absence d'hôte : il rassure à tort, exactement comme le porteur fantôme
+// que la leçon L7 interdit. Les process sont lus chez god-of-all-process, jamais recopiés ici.
+export function findModulesDeReglesOrphelins({ root = ROOT, readFileImpl = readFileSync, listeScripts, processConnus } = {}) {
+  const scripts = listeScripts ?? readdirSync(join(root, "scripts")).filter((f) => f.endsWith(".mjs")).map((f) => f.replace(/\.mjs$/, ""));
+  const connus = new Set(processConnus ?? PROCESSES.map((p) => p.slug));
+  const orphelins = [];
+  for (const slug of scripts) {
+    let source;
+    try { source = readFileImpl(join(root, `scripts/${slug}.mjs`), "utf8"); } catch { continue; }
+    const hote = source.match(MARQUEUR_PROCESS_HOTE)?.[1];
+    if (hote && !connus.has(hote)) orphelins.push({ slug, processHote: hote, pourquoi: `« ${slug} » se déclare rattaché au process « ${hote} », qui n'existe dans aucun process déclaré — un hôte fantôme rassure à tort` });
+  }
+  return orphelins;
+}
+
 export function etatIntegration(slug, { root = ROOT, readFileImpl = readFileSync, registres = REGISTRES_D_INTEGRATION } = {}) {
   return registres.map((r) => {
     let texte;
@@ -201,6 +265,35 @@ export function findLecteursCasses({ root = ROOT, readFileImpl = readFileSync, r
   return casses;
 }
 
+// findModulesNonCitesParLeurProcess() — l'ÉQUIVALENT, pour un module de règles, des onze registres
+// qu'un membre doit renseigner. Sans lui, la branche « module de règles » ci-dessus se contenterait
+// d'IMPRIMER une consigne (« vérifie que le process hôte le cite »), et une consigne imprimée est
+// exactement l'intention que la leçon L7 refuse : personne ne la lit deux fois.
+//
+// Ce que ça attrape concrètement, et le cas est réel : `messages-courts` s'est déclaré rattaché au
+// process semi-autonome le jour de sa construction, alors que le document de ce process ne le
+// citait nulle part. Le module existait, il était testé, et aucun déroulé n'y menait — un rattachement
+// sur le papier, qui est précisément la forme que prend ici « un mécanisme qui ne sort pas du
+// script » (L2).
+export function findModulesNonCitesParLeurProcess({ root = ROOT, readFileImpl = readFileSync, listeScripts, processus = PROCESSES } = {}) {
+  const scripts = listeScripts ?? readdirSync(join(root, "scripts")).filter((f) => f.endsWith(".mjs")).map((f) => f.replace(/\.mjs$/, ""));
+  const parSlug = new Map(processus.map((p) => [p.slug, p]));
+  const hits = [];
+  for (const slug of scripts) {
+    let source;
+    try { source = readFileImpl(join(root, `scripts/${slug}.mjs`), "utf8"); } catch { continue; }
+    const hote = source.match(MARQUEUR_PROCESS_HOTE)?.[1];
+    if (!hote) continue;
+    const proc = parSlug.get(hote);
+    if (!proc) continue; // déjà signalé comme orphelin — jamais deux reproches pour un seul défaut
+    if (!proc.doc) { hits.push({ slug, processHote: hote, pourquoi: `le process « ${hote} » n'a aucun document de détail : impossible d'y rattacher quoi que ce soit` }); continue; }
+    let doc;
+    try { doc = readFileImpl(join(root, proc.doc), "utf8"); } catch { hits.push({ slug, processHote: hote, pourquoi: `${proc.doc} est illisible — le rattachement n'est pas vérifiable, donc pas acquis` }); continue; }
+    if (!doc.includes(`scripts/${slug}.mjs`)) hits.push({ slug, processHote: hote, pourquoi: `« ${slug} » se dit hébergé par le process « ${hote} », mais ${proc.doc} ne le cite nulle part : un rattachement sur le papier, aucun déroulé n'y mène` });
+  }
+  return hits;
+}
+
 function main() {
   // Cadre commun (pure-gold-unity, Ronde du 2026-09-22) : l'avertissement de fiabilité, le titre et
   // l'horodatage passent par printReportHeader() plutôt que d'être réécrits ici. Un rapport qui
@@ -220,6 +313,40 @@ function main() {
     console.log("\nUsage : node scripts/integration-outil.mjs <slug-de-l-outil>");
     recordCliUsage("integration-outil", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
     return;
+  }
+  // LA NATURE D'ABORD, le plan ensuite — sans quoi l'outil répond la même chose à toutes les
+  // questions, ce qu'il a fait jusqu'au 2026-09-23 pour les quatre modules de règles du dépôt.
+  const orphelins = findModulesDeReglesOrphelins();
+  if (orphelins.length) {
+    console.log("⚠️  Module(s) de règles rattaché(s) à un process qui n'existe pas — un hôte fantôme rassure à tort :");
+    for (const o of orphelins) console.log(`   ${o.pourquoi}`);
+    console.log("");
+  }
+  const nonCites = findModulesNonCitesParLeurProcess();
+  if (nonCites.length) {
+    console.log("⚠️  Module(s) de règles que leur process hôte ne cite pas — rattachés sur le papier, sans déroulé qui y mène :");
+    for (const h of nonCites) console.log(`   ${h.pourquoi}`);
+    console.log("");
+  }
+  const nature = natureDuScript(slug);
+  if (!nature.mesurable) {
+    console.log(`${slug} : ${nature.pourquoi}`);
+    recordCliUsage("integration-outil", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
+    return;
+  }
+  if (nature.nature === "module-de-regles") {
+    console.log(`${slug} — ${NATURES_DE_SCRIPT["module-de-regles"]}\n`);
+    console.log(`Process hôte déclaré : « ${nature.processHote} ».`);
+    console.log("Aucun registre d'outil à renseigner : ce module n'a rien en propre à documenter, sa place est dans le process qui l'héberge.");
+    console.log("Ce qui reste à vérifier, et c'est tout : (1) le process hôte le cite dans son document de détail ; (2) ses fonctions sont couvertes par check-house.mjs.");
+    recordCliUsage("integration-outil", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
+    return;
+  }
+  if (nature.nature === "non-decide") {
+    console.log(`⚠️  ${slug} — ${NATURES_DE_SCRIPT["non-decide"]}\n`);
+    console.log("Aucun marqueur `export const PROCESS_HOTE` dans le fichier, et aucun registre ne le connaît.");
+    console.log("Deux issues, jamais un silence : en faire un MEMBRE (le plan ci-dessous s'applique), ou déclarer son process hôte dans le fichier lui-même.");
+    console.log("Le plan est donné quand même, mais il ne vaut que si la première issue est la bonne :\n");
   }
   const plan = planDIntegration(slug);
   console.log(`Outil : ${slug}\n${plan.fait.length}/${REGISTRES_D_INTEGRATION.length} registre(s) déjà renseigné(s) : ${plan.fait.join(", ") || "aucun"}\n`);

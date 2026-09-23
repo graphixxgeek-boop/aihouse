@@ -13,6 +13,12 @@
 // un `if (mode === "...")` recopié. Le garde-fou qui va avec est plus bas : un outil qui teste un
 // mode inconnu se signale.
 
+// CE FICHIER EST UN MODULE DE RÈGLES, PAS UN OUTIL DE L'AGENCE (2026-09-23).
+// Les trois modes de travail sont le sujet de ce process : le module en porte la donnée, le process en porte le déroulé.
+// Sans ce marqueur, integration-outil réclamait pour lui un blueprint, une fiche et une place
+// au catalogue — dix inscriptions pour un module qui n'a rien en propre à documenter.
+export const PROCESS_HOTE = "semi-autonome";
+
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";

@@ -71,8 +71,35 @@ Les deux options écartées, et pourquoi elles l'ont été :
 > « tu ne dois pas t'arreter (fiabilise) sauf demande explicite de ma part »
 
 Un message court, une question, une remarque en passant **ne sont pas** une demande d'arrêt. Seule
-une demande explicite l'est. Cette règle est le sujet de la tâche #572, qui la rend surveillée
-plutôt que simplement écrite.
+une demande explicite l'est.
+
+### Le module qui porte cette règle : `scripts/messages-courts.mjs`
+
+Le process héberge la règle ; le module en porte la DONNÉE, testée plutôt que laissée au jugement du
+moment. Il n'est pas un outil de l'Agence et n'a rien en propre à documenter — il le déclare
+lui-même (`export const PROCESS_HOTE = "semi-autonome"`), ce qui dispense de lui réclamer un
+blueprint, une fiche et une place au catalogue.
+
+**Trois natures d'un message court, jamais deux.** `arret` (la seule qui interrompt), `redirection`
+(ce n'est pas du bruit, c'est la nouvelle tâche), `accompagnement` (on en tient compte sans lâcher).
+La deuxième est l'ajout venu de la question « tu vois autre chose à ajouter ? » : traiter TOUT
+message court comme du bruit serait l'erreur symétrique de s'arrêter à chaque fois, et personne ne
+l'avait nommée.
+
+**Le principe est dans le défaut, jamais dans la liste.** Continuer est la réponse normale ; les
+formes reconnues ne servent qu'à AJOUTER un arrêt, jamais à en retirer un. Un mot d'arrêt inconnu
+fait donc continuer — le côté sûr de l'erreur. C'est la seule façon d'écrire cette règle sans la
+liste de mots figée que le corollaire de l'Article 17 interdit : ici, la liste ne peut jamais causer
+le défaut qu'on répare.
+
+**Les deux rappels, et ce qu'ils ne font pas.** Rappel léger dès le 2ᵉ message court, alerte plus
+forte au 5ᵉ, tous deux calibrés pour nommer le coût sans le reprocher — et dans les deux cas, le
+travail CONTINUE. Le premier message court est volontairement muet : compter dès le premier ferait
+passer l'agent pour comptable de la conversation.
+
+**Sa limite, déclarée plutôt que tue** (Article 27) : aucun mécanisme ne lit une conversation, donc
+le comptage dépend de l'agent. Ce qui est garanti mécaniquement, c'est la RÈGLE et les seuils,
+jamais leur application. Même honnêteté que tool-brain et SMART-CONSO-TOKEN.
 
 ## Son contrôleur
 

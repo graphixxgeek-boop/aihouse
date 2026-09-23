@@ -74,3 +74,44 @@ attrapé trois lecteurs cassés avant qu'ils ne produisent le moindre chiffre fa
 C'est l'étape `tests` du process « Intégration d'un nouvel outil » (`PROCESSES`,
 `scripts/god-of-all-process.mjs`), et cette ligne existe parce que `findMecanismesAbsentsDuProcess()`
 a signalé le 2026-09-23 que le fichier de tests n'était cité nulle part ici.
+
+## Les trois natures d'un script (2026-09-23)
+
+**Le défaut réel, et il rendait l'outil inutilisable sur un quart des scripts du dépôt.** Demander
+l'intégration de `messages-courts` a produit « 0/11, 10 inscriptions manquantes » — la même réponse
+que pour n'importe quel nom, y compris `criticite`, `priorites` et `modes-de-travail`. Ces quatre-là
+ne sont pas des membres de l'Agence : ce sont des **modules de règles hébergés par un process**.
+Suivre le plan aurait produit quatre blueprints et quatre fiches pour quatre modules qui n'ont rien
+en propre à documenter, exactement ce que la charte refuse en réservant six outils « volontairement
+SANS blueprint ni instanciation ». Un outil qui répond la même chose à toutes les questions ne
+répond à aucune.
+
+| Nature | Ce que ça veut dire | Ce qu'on lui demande |
+|---|---|---|
+| `membre` | un outil de l'Agence Codex | les onze registres |
+| `module-de-regles` | une donnée/une règle qu'un process exécute | que son process hôte existe **et** le cite |
+| `non-decide` | personne n'a encore dit ce que c'est | trancher, avant toute intégration |
+
+**La nature se DÉCLARE dans le fichier** (`export const PROCESS_HOTE = "<slug>"`), jamais dans une
+liste tenue ici qui se périmerait au module suivant (Article 24), et jamais devinée d'après le nom.
+Le troisième état est le plus important parce qu'il est bruyant : ranger d'office un script inconnu
+en « outil à intégrer » serait deviner, et deviner en silence est le défaut que la moitié de ce
+paysage existe pour empêcher.
+
+**Deux garde-fous, et aucun n'est décoratif** — sans eux la branche « module de règles » se
+contenterait d'IMPRIMER une consigne, et une consigne imprimée est l'intention que la leçon L7
+refuse :
+
+- `findModulesDeReglesOrphelins()` — un module rattaché à un process qui n'existe pas. Un hôte
+  fantôme rassure à tort, comme le porteur fantôme de L7.
+- `findModulesNonCitesParLeurProcess()` — un module que le document de son process hôte ne cite
+  nulle part. **Cas réel, trouvé le jour même** : `messages-courts` se déclarait rattaché au process
+  semi-autonome dont le document l'ignorait. Le module existait, il était testé, et aucun déroulé
+  n'y menait — la forme exacte de « un mécanisme qui ne sort pas du script » (L2). Corrigé le même
+  soir, section dédiée dans `docs/mode-semi-autonome-process-detail.md`.
+
+**Le faux positif que l'outil s'est infligé à lui-même** : sans ancre de début de ligne, le marqueur
+matchait l'EXEMPLE écrit dans le propre commentaire d'`integration-outil.mjs`, qui se déclarait donc
+module de règles rattaché au process « `<slug>` ». Trouvé en le lançant pour de vrai sur le dépôt
+entier, jamais en le relisant (Article 25) — et c'est la leçon L4 prise au mot : un garde-fou qui
+accuse à tort cesse d'être lu.
