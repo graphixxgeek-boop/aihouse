@@ -11019,6 +11019,44 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(carte.horsArticles > 0, 'and it must report the obligations living OUTSIDE any Article — 49 of them on the day it was written, in sections nobody had ever measured, which a per-Article count alone hides completely while looking exhaustive');
   assert.ok(carte.articles[0].obligations >= carte.articles[carte.articles.length - 1].obligations, 'sorted heaviest first, because the map exists to answer "where do I strike", not "what is the average"');
 
+  // LA CHARTE SE PROTÈGE ELLE-MÊME (2026-09-23, tâche #631), sur la question de l'utilisateur :
+  // « un article dans la charte devrait protéger la charte elle-même tu penses pas ? ». Elle
+  // l'ordonnait déjà (Article 13 : « un allègement ne doit JAMAIS entamer la qualité » ; préambule :
+  // « les numéros d'Article ne doivent jamais être renumérotés ») et RIEN ne le vérifiait — pendant
+  // qu'on l'allégeait activement. Chacune de ces assertions doit être vue ROUGE avant d'être crue.
+  const art = (n, titre, corps) => `**Article ${n} — ${titre}.** ${corps}`;
+  const quatreObl = 'Il doit être fait. Toujours ainsi. Jamais autrement. Il faut le voir.';
+  const base = [art(1, 'Premier', quatreObl), art(2, 'Deuxième', 'voir `docs/x.md`'), art(9, 'Dernier', 'rien')].join('\n');
+  const garde = (apres, opts = {}) => mtl2.protegerLaCharte(base, apres, opts);
+
+  assert.equal(garde(base).alertes.length, 0, 'an identical charter must raise nothing at all — a guard that fires on a no-op teaches everyone to ignore it (leçon L4)');
+
+  const supprime = garde([art(1, 'Premier', quatreObl), art(9, 'Dernier', 'rien')].join('\n'), { lire: () => '' });
+  assert.ok(supprime.alertes.some((a) => a.gravite === 'BLOQUANT' && /Article 2.*DISPARU/.test(a.quoi)), 'a vanished Article must be BLOCKING — its number is cited verbatim across the repository, and losing it breaks every reference at once');
+  assert.ok(supprime.alertes.some((a) => /docs\/x\.md/.test(a.quoi)), 'and the path it alone carried must be reported as unreachable in the same breath');
+
+  const insere = garde([base, art(5, 'Inséré au milieu', 'rien')].join('\n'));
+  assert.ok(insere.alertes.some((a) => a.gravite === 'BLOQUANT' && /AU MILIEU/.test(a.quoi)), 'a new Article inserted in the middle of the numbering must be BLOCKING — the preamble says a new one always joins the END of the list, precisely because inserting renumbers its neighbours');
+  const ajoute = garde([base, art(10, 'Ajouté à la fin', 'rien')].join('\n'));
+  assert.equal(ajoute.bloquants, 0, 'but an Article appended after the last number is the legitimate way to add one, and must pass silently');
+
+  const vide = garde([art(1, 'Premier', 'Plus rien ici.'), art(2, 'Deuxième', 'voir `docs/x.md`'), art(9, 'Dernier', 'rien')].join('\n'));
+  assert.ok(vide.alertes.some((a) => a.gravite === 'QUESTION' && /perd 4 de ses 4/.test(a.quoi)), 'an Article emptied of most of its obligations must open a QUESTION — never a verdict, since that is sometimes exactly the intended gesture (Article 19 deliberately lost three fifths of its text)');
+
+  const renomme = garde([art(1, 'Un tout autre sujet', quatreObl), art(2, 'Deuxième', 'voir `docs/x.md`'), art(9, 'Dernier', 'rien')].join('\n'));
+  assert.ok(renomme.alertes.some((a) => /changé de titre/.test(a.quoi)), 'a number that keeps its place while its title changes must be questioned: either it was meant, or the number slid onto different content');
+
+  // « ATTEIGNABLE EN UN SAUT » N'EST PAS UNE PERTE — c'est le BUT du renvoi, et confondre les deux
+  // bloquerait toute compression légitime. Vérifié sur le vrai dépôt juste après.
+  const relaye = garde([art(1, 'Premier', quatreObl), art(2, 'Deuxième', 'voir `docs/relais.md`'), art(9, 'Dernier', 'rien')].join('\n'), { lire: (f) => (f === 'docs/relais.md' ? 'je cite `docs/x.md`' : '') });
+  assert.equal(relaye.bloquants, 0, 'a path dropped from the charter but still cited by a document the charter keeps must NOT block — that is exactly what progressive disclosure means');
+  assert.ok(relaye.cheminsRattrapes.includes('docs/x.md'), 'and it must be listed as caught, so the reader can check the relay rather than take it on trust');
+
+  assert.equal(mtl2.protegerLaCharte('', 'quelque chose').mesurable, false, 'with no BEFORE version it must declare NOT MEASURED — a comparison that never happened must never read as a clean bill of health (leçon L5)');
+  assert.ok(/jamais le sens/.test(mtl2.protegerLaCharte(base, base).horsPortee), 'and it must declare its own limit out loud: it protects the STRUCTURE, never the judgement that a removed rule had genuinely become useless (Article 27)');
+
+  console.log('Passed: the charter now protects itself mechanically (2026-09-23, task #631), answering a direct question from the user — it already ORDERED its own protection in two places, the Article 13 garde-fou against lightening that costs quality and the preamble ban on renumbering, and neither had the slightest mechanism while the charter was being actively cut. Five checks, each born of a real risk in this campaign: an Article that vanished, one renumbered or inserted mid-list, one emptied of most of its obligations, a path become unreachable, and a change left out of the operations memory where the WHY lives since git only keeps the WHAT. Two of the five are blocking and three only open questions, because emptying an Article is sometimes precisely the intended gesture — Article 19 deliberately lost three fifths of its text the same day. The distinction that makes it usable rather than obstructive is between a path that is lost and one still reached through a document the charter keeps: the second is the whole point of a renvoi, and treating it as a regression would forbid every legitimate compression. It declares its own limit rather than hiding it: no program can judge that a removed rule had really become useless, so it guards the structure and never the meaning.');
+
   console.log('Passed: the three throwaway scripts of one charter analysis now live in the tools (2026-09-23, task #628) — counting obligations per rule, checking that no path is lost in a compression, and finding documents nothing reaches. Each had found something real and each would have vanished with the command that carried it. The obligation counter matters most: public guidance and this project\'s own measurement independently agree that a frontier model reliably follows 150 to 200 instructions, so a lightening pass is judged in ORDERS REMOVED, never in tokens saved — cutting three thousand tokens of narrative frees no attention at all. The path check keeps two states rather than one, because a path dropped from a document but still reached through another is exactly what a renvoi means, and calling that a regression would block every legitimate compression; only a path nothing reaches is a loss. The orphan walk follows several hops for the same reason, and refuses to answer at all without a file reader, since an empty orphan list reads exactly like a clean bill of health.');
 
   console.log('Passed: ABRAHAM-LES-REFERENCES is the master tool for ANY numbered-rule document (2026-09-23, task #619), and it exists because of a slicing error the user named better than I did: building the charter\'s agent first, I locked thirty generic functions inside the agent of ONE document, and measurement confirmed it — 30 of Moïse\'s 40 functions depended on no particularity of the charter whatsoever. What makes it generic is that the numbering FORM is derived rather than declared: three real documents in this repository write their rules three different ways, and a tool demanding to be told the pattern would only serve those who already knew it. The opposite direction matters as much: a document where no form stands out returns "not measurable" with every attempt listed, because an analyser that guesses skips in silence (leçon L12) and invented figures look exactly as trustworthy as real ones. The citation pattern treats the space after a prefix as optional, a detail that had cost a whole pass — all eighteen sections of the working rules came back "never cited" while §7ter is cited 168 times, purely because the pattern required a space nobody writes. And the red line the user drew stays enforced in the master rather than in each caller: the state of a pertinence finding has exactly one value, so no descendant can soften it into a verdict.');

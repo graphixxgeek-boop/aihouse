@@ -51,7 +51,7 @@
 
 import { readFileSync, existsSync, writeFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
-import { printReliabilityNotice, decouperEnUnites } from "./lib-shell.mjs";
+import { printReliabilityNotice, decouperEnUnites, sh } from "./lib-shell.mjs";
 import * as A from "./abraham-les-references.mjs";
 import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
@@ -621,6 +621,71 @@ export function obligationsParArticle({ root = ROOT } = {}) {
   };
 }
 
+// --- LA CHARTE SE PROTÈGE ELLE-MÊME (2026-09-23, tâche #631) ------------------------------------
+//
+// LA QUESTION DE L'UTILISATEUR, ET ELLE TOMBAIT JUSTE : « un article dans la charte devrait
+// protéger la charte elle-même tu penses pas ? ». La réponse honnête était : ça existe à MOITIÉ.
+// L'Article 13 porte déjà le garde-fou en toutes lettres — « un allègement de CLAUDE.md ne doit
+// JAMAIS entamer la qualité ou les fonctionnalités du projet [...] en cas de doute, NE PAS
+// couper » — et le préambule interdit de renuméroter un Article. **Aucun des deux n'avait le
+// moindre mécanisme.** La charte ordonnait sa propre protection et rien ne la vérifiait, pendant
+// qu'on l'allégeait activement : la seule chose entre une règle perdue et le dépôt était la
+// vigilance d'un agent, c'est-à-dire exactement ce que l'Article 27 dit de ne jamais supposer.
+//
+// CE QUE CETTE FONCTION EST, ET CE QU'ELLE N'EST PAS : elle compare un AVANT à un APRÈS et ouvre
+// des questions. Elle ne bloque rien (même posture que god-of-all-process) et ne juge jamais
+// qu'une coupe est bonne — aucun programme ne sait lire le sens d'une règle. Elle vérifie ce qui
+// est VÉRIFIABLE, et déclare le reste hors de sa portée plutôt que de le passer sous silence.
+//
+// LES CINQ CONTRÔLES, chacun né d'un risque réel de cette campagne :
+//   1. un Article DISPARU — son numéro est cité dans ~169 fichiers, le perdre les casse tous ;
+//   2. un Article RENUMÉROTÉ — le préambule l'interdit, et rien ne le vérifiait ;
+//   3. un Article VIDÉ de plus de la moitié de ses obligations — une QUESTION, jamais un verdict :
+//      c'est parfois exactement le geste voulu (l'Article 19 en a perdu 60 % à dessein) ;
+//   4. un CHEMIN devenu inatteignable — délégué à Abraham, qui sait distinguer « perdu » de
+//      « atteignable en un saut » ;
+//   5. l'opération NON ENREGISTRÉE dans la mémoire — le quoi survit dans git, le POURQUOI non.
+export function protegerLaCharte(avant = "", apres = "", { lire: lireFichier = null, operations = null } = {}) {
+  if (!avant || !apres) return { mesurable: false, pourquoi: "il faut les deux versions pour comparer — sans l'avant, rien n'a été vérifié, ce qui n'est jamais la même chose que rien trouvé" };
+  const lireArticles = (txt) => new Map([...txt.matchAll(/\*\*Article (\d+(?:bis)?) — ([^*]+?)\.\*\*/g)]
+    .map((m, i, tous) => {
+      const fin = i + 1 < tous.length ? tous[i + 1].index : txt.length;
+      return [m[1], { titre: m[2].trim(), obligations: A.compterObligations(txt.slice(m.index, fin)) }];
+    }));
+  const av = lireArticles(avant), ap = lireArticles(apres);
+  const alertes = [];
+
+  for (const [num, a] of av) {
+    if (!ap.has(num)) { alertes.push({ gravite: "BLOQUANT", quoi: `Article ${num} (« ${a.titre} ») a DISPARU`, pourquoi: "son numéro est cité tel quel dans tout le dépôt — le retirer casse chaque renvoi, et le préambule l'interdit" }); continue; }
+    const n = ap.get(num);
+    if (n.titre !== a.titre) alertes.push({ gravite: "QUESTION", quoi: `Article ${num} a changé de titre`, pourquoi: `« ${a.titre} » → « ${n.titre} » — voulu, ou le numéro a-t-il glissé sur un autre contenu ?` });
+    if (a.obligations >= 4 && n.obligations < a.obligations / 2) alertes.push({ gravite: "QUESTION", quoi: `Article ${num} perd ${a.obligations - n.obligations} de ses ${a.obligations} obligations`, pourquoi: "parfois exactement le geste voulu, parfois une règle partie sans qu'on le veuille — à relire avant de valider" });
+  }
+  // Un numéro NOUVEAU au milieu de la suite est un signe de renumérotation, jamais un ajout : un
+  // Article neuf rejoint toujours la fin de la liste (règle du préambule).
+  const maxAvant = Math.max(0, ...[...av.keys()].map((k) => parseInt(k, 10)));
+  for (const num of ap.keys()) if (!av.has(num) && parseInt(num, 10) < maxAvant) alertes.push({ gravite: "BLOQUANT", quoi: `Article ${num} apparaît AU MILIEU de la numérotation`, pourquoi: "un nouvel Article rejoint toujours la fin de la liste — inséré au milieu, il a renuméroté ses voisins et cassé leurs renvois" });
+
+  const chemins = A.cheminsPerdus(avant, apres, { lire: lireFichier });
+  for (const c of chemins.filter((x) => x.etat === "PERDU")) alertes.push({ gravite: "BLOQUANT", quoi: `${c.chemin} n'est plus atteignable`, pourquoi: "aucun document encore cité par la charte ne le mentionne — un renvoi qui ne mène nulle part est pire qu'une absence" });
+
+  const memoire = operations ?? A.lireOperations(lire(OPERATIONS_PATH));
+  const nbAvant = memoire?.mesurable ? memoire.operations.length : 0;
+  if (A.compterObligations(avant) !== A.compterObligations(apres) && !nbAvant) alertes.push({ gravite: "QUESTION", quoi: "la charte a changé et la mémoire des opérations est vide", pourquoi: "git garde le QUOI, jamais le POURQUOI — sans cette ligne, la raison du changement est perdue dès demain" });
+
+  return {
+    mesurable: true,
+    alertes,
+    bloquants: alertes.filter((a) => a.gravite === "BLOQUANT").length,
+    questions: alertes.filter((a) => a.gravite === "QUESTION").length,
+    cheminsRattrapes: chemins.filter((x) => x.etat === "atteignable en un saut").map((x) => x.chemin),
+    // LA LIMITE, DÉCLARÉE PLUTÔT QUE TUE (Article 27) : rien ici ne dit qu'une coupe est BONNE.
+    // Qu'une règle retirée soit vraiment devenue inutile ne se lit pas mécaniquement — ça se lit,
+    // et ça se valide avec l'utilisateur.
+    horsPortee: "aucun programme ne peut juger qu'une règle retirée était devenue inutile — ce contrôle protège la STRUCTURE, jamais le sens",
+  };
+}
+
 export const ETAPES_ANALYSE = [
   { cle: "memoire", libelle: "relire la mémoire des opérations — qu'a-t-on déjà tenté sur ces Articles, et qu'est-ce qui n'a pas tenu ?", preuve: OPERATIONS_PATH },
   { cle: "fraicheur", libelle: "vérifier que l'instrument n'est pas périmé avant de mesurer avec lui", preuve: null },
@@ -718,6 +783,26 @@ async function main() {
     const plan = planDactionDepuisEcarts(ecarts, { toolSlug: "moise-tables-de-loi", fausseUneMesure: true, tache: "traiter avant de décider quoi que ce soit sur la charte" });
     console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
     for (const l of plan.lignes) console.log(l);
+    return;
+  }
+
+  // « protection » — la charte relue contre son état d'AVANT, automatiquement à chaque commit qui
+  // la touche. Sans argument elle compare au commit précédent : c'est le cas qui sert vraiment,
+  // et un contrôle qu'il faut penser à paramétrer n'est lancé qu'une fois (leçon L2).
+  if (commande === "protection") {
+    const ref = process.argv[3] || "HEAD~1";
+    let avant = "";
+    // UN CATCH MUET EST UN FAUX VERT (leçon L5) : sans cette ligne, une erreur de lecture se serait
+    // présentée comme « pas d'avant à comparer », et le contrôle aurait eu l'air d'avoir tourné.
+    try { avant = sh(`git show ${ref}:${CHARTE}`); }
+    catch (e) { console.log(`\nPAS MESURÉ — impossible de lire ${CHARTE} à la révision ${ref} : ${e.message.split("\n")[0]}`); return; }
+    const r = protegerLaCharte(avant, lire(CHARTE), { lire: (f) => lire(f) });
+    if (!r.mesurable) { console.log(`\nPAS MESURÉ — ${r.pourquoi}.`); return; }
+    console.log(`\n=== LA CHARTE RELUE CONTRE ${ref} — ${r.bloquants} bloquant(s), ${r.questions} question(s) ===\n`);
+    if (!r.alertes.length) console.log("Rien à signaler : aucun Article disparu, renuméroté ou vidé, aucun chemin devenu inatteignable.");
+    for (const a of r.alertes) console.log(`[${a.gravite}] ${a.quoi}\n   → ${a.pourquoi}`);
+    if (r.cheminsRattrapes.length) console.log(`\nℹ️  ${r.cheminsRattrapes.length} chemin(s) sortis de la charte mais rattrapés en un saut — c'est le BUT du renvoi : ${r.cheminsRattrapes.join(", ")}`);
+    console.log(`\nHORS PORTÉE : ${r.horsPortee}`);
     return;
   }
 

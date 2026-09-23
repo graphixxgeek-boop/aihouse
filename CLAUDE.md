@@ -256,9 +256,14 @@ plutôt que mêlée à la règle elle-même — jamais l'information perdue, seu
 coûte moins cher (lu à la demande, pas à chaque message).
 
 **Garde-fou non négociable : un allègement de CLAUDE.md ne doit JAMAIS entamer la qualité ou les
-fonctionnalités du projet.** Le poids en tokens n'est jamais un critère qui l'emporte sur le
-contenu — en cas de doute sur si un retrait affaiblit une règle réelle, la réponse par défaut est
-de NE PAS couper. Toute passe d'allègement suit la procédure formalisée de
+fonctionnalités du projet.** Le poids en tokens n'est jamais le bon critère — ce qui sature n'est
+pas le coût mais le NOMBRE D'OBLIGATIONS, et en cas de doute sur si un retrait affaiblit une règle
+réelle, la réponse par défaut est de NE PAS couper. **Son porteur mécanique depuis le 2026-09-23 :**
+`protegerLaCharte()` (`scripts/moise-tables-de-loi.mjs`), lancé à chaque commit qui touche ce
+fichier — il refuse un Article disparu, renuméroté ou inséré au milieu, un chemin devenu
+inatteignable, et interroge un Article vidé de ses obligations. Il protège la STRUCTURE ; qu'une
+règle retirée soit vraiment devenue inutile ne se lit pas mécaniquement et reste une décision
+humaine. Toute passe d'allègement suit la procédure formalisée de
 `docs/referentiel/smart-conso-token.md` (scanner/identifier/trier/archiver/vérifier/documenter),
 jamais un retrait à l'aveugle.
 
