@@ -11303,6 +11303,22 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     assert.ok(typeof ex.sApplique === 'function' && ex.exige && ex.pourquoi, 'an exigence is data, never an if buried in a function: it says WHO it applies to, WHICH class is owed and WHAT it costs not to have it — the three ifs it replaces were exactly the frozen list Article 24 forbids, and a fourth would have required reopening the function');
     assert.ok(crh2.CLASSES_TRANSVERSES.some((c) => c.cle === ex.exige), 'and every exigence points at a class that really exists: an exigence owed to a class nobody measures would be unsatisfiable forever, which reads like a permanent failure rather than a missing probe');
   }
+  // SAFE-EXPORT MUSCLÉ (2026-09-24, chantier 3.5) — « si on perd l'exportabilité, on perd TOUT UN PROJET ».
+  const se2 = await import('../scripts/safe-export.mjs');
+  // LE MOTIF PEUT-IL SEULEMENT MATCHER ? (leçon L11) — la question posée AVANT de croire un zéro.
+  const fautif = se2.findScriptsNonPortables(['scripts/faux.mjs'], { portee: () => 'agence', readFileImpl: () => 'const x = lire("lib/life.ts");' });
+  assert.equal(fautif.length, 1, 'the probe must be able to fire at all: its first real run returned "0 non-portable", which read as a healthy repository and was in fact "I examined nothing" — it asked the raw TOOL_PORTEE table, which only declares the EXCEPTIONS, while "agence" is the deliberate default served by porteeDe(). Reading a slice instead of the real answer, for the fifth time in one night');
+  assert.equal(se2.findScriptsNonPortables(['scripts/faux.mjs'], { portee: () => 'simulation', readFileImpl: () => 'const x = lire("lib/life.ts");' }).length, 0, 'and a SIMULATION tool naming a game module is doing its job, never a defect — without that distinction memory-audit and EL-PROFESSOR would be denounced for existing');
+  assert.equal(se2.findScriptsNonPortables(['scripts/faux.mjs'], { portee: () => 'agence', readFileImpl: () => 'export function f({ root = ROOT, dossiers = D }) { return lire("lib/life.ts"); }' }).length, 0, 'a tool whose targets are PARAMETRABLE leaves as it is — you simply give it other targets. Forgetting that accused twenty-six tools including ARGUS and the safety net itself, for doing exactly their job');
+  assert.ok(se2.NE_PART_PAS_ET_C_EST_NORMAL['check-house'], 'and the scripts that ARE this project carry a written exemption rather than a silent one: reproaching the test suite for knowing the game would be reproaching it for existing');
+  for (const n of se2.findScriptsNonPortables(['scripts/faux.mjs'], { portee: () => 'agence', readFileImpl: () => 'const x = lire("lib/life.ts");' })) assert.ok(n.pourquoi.includes('?'), 'every finding is a QUESTION: whether a coupling to the game is a defect or the tool\'s very nature requires reading what it does');
+  // LE MANIFESTE — SAFE-EXPORT disait si un outil AVAIT L'AIR exportable, jamais QUOI emporter.
+  const manif = se2.manifesteDExport('the-king');
+  assert.ok(manif.mesurable && manif.scripts.includes('scripts/the-king.mjs') && manif.scripts.length > 1, 'the manifest follows the real import graph: taking a tool without the shared vocabulary it calls is taking a tool that does not start');
+  assert.ok(manif.documents.some((d) => d.role === 'blueprint'), 'it names the blueprint that must travel');
+  assert.ok(/ne s'emporte PAS/.test(manif.horsPortee), "and says out loud that the INSTANCIATION does not travel: it describes what the tool does on THIS project, and confusing it with the blueprint would carry this project into the next one");
+  assert.equal(se2.manifesteDExport('outil-inexistant').mesurable, false, 'an unknown tool yields no manifest rather than an empty one that would read as "nothing to take"');
+
   // TOUTE FONCTION EXPORTÉE, pas seulement les détecteurs (2026-09-24, chantier 3.6).
   const pgu2 = await import('../scripts/pure-gold-unity.mjs');
   assert.deepEqual(pgu2.fonctionsExporteesDe('export function findX(){}\nexport function aiderY(){}\nfunction interne(){}'), ['findX', 'aiderY'], 'the wide extractor takes every EXPORTED function and no internal one — an internal helper is nobody\'s public surface and being unused there is a different question');

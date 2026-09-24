@@ -16,7 +16,7 @@
 
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReliabilityNotice, porteeDe } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
@@ -348,6 +348,151 @@ export function findDependancesOutillage(fichiers = [], { readFileImpl = readFil
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// LE CODE PARTIRAIT-IL VRAIMENT ? (2026-09-24, chantier 3.5 du plan de nuit)
+// ————————————————————————————————————————————————————————————————————————
+//
+// DEMANDE DE L'UTILISATEUR, et il l'a soulignée plus fort que le reste : « SAFE-EXPORT doit se
+// muscler — si on perd l'exportabilité, on perd TOUT UN PROJET. »
+//
+// LE TROU, ET IL ÉTAIT ENTIER : tout ce que cet outil savait vérifier, ce sont des DOCUMENTS. Un
+// blueprint générique, un terme défini, une raison écrite, une dépendance au gestionnaire de
+// tâches. Rien, absolument rien, ne vérifiait que le CODE tournerait ailleurs. Un outil pouvait
+// donc avoir un blueprint parfait, un vocabulaire impeccable, et planter à la première seconde
+// dans un dépôt neuf parce qu'il lit un fichier qui n'existe que dans celui-ci. La charte le dit
+// pourtant en toutes lettres : « un outil qui ne fonctionne que sur ce dépôt-ci a raté la moitié
+// de sa mission ».
+//
+// CE QUI REND LA MESURE JUSTE PLUTÔT QUE BRUYANTE — et c'est tout le travail : un outil de l'Agence
+// qui nomme un artefact du JEU n'est pas portable ; un outil DU JEU qui le fait est à sa place.
+// La frontière n'est donc pas devinée, elle est LUE dans `TOOL_PORTEE` (lib-shell), le registre qui
+// déclare déjà ce que chaque outil analyse. Sans cette distinction, memory-audit et EL-PROFESSOR
+// seraient dénoncés pour faire exactement leur métier.
+
+export const ARTEFACTS_DU_JEU = [
+  { motif: /\blib\/(life|lia|perception|simulation|playback)\.ts\b/, quoi: "un module du moteur de jeu" },
+  { motif: /\bapp\/(page|api)\b/, quoi: "une page ou une route du site" },
+  { motif: /docs\/simulations\//, quoi: "les archives de simulation" },
+  { motif: /\bLia\b|\bNo[ée]\b/, quoi: "un personnage du jeu" },
+  { motif: /loveRealized|attirance|dossier retourn/i, quoi: "une mécanique narrative" },
+];
+
+// Un chemin en dur vers un document de CE projet, dans un outil censé partir. Le remède n'est
+// jamais de retirer la lecture — c'est de la rendre paramétrable, comme le reste du paysage le
+// fait déjà (`{ root = ROOT }`, `{ registres = ... }`).
+export const MOTIF_CHEMIN_PROJET = /["'`](docs\/[a-z0-9/-]+\.md|CLAUDE\.md|docs\/regles-de-travail\.md)["'`]/g;
+
+// LA PORTÉE SE DEMANDE À `porteeDe()`, JAMAIS À LA TABLE BRUTE — et c'est encore la même erreur
+// que cette nuit entière poursuit, commise une fois de plus. La table `TOOL_PORTEE` ne déclare que
+// les EXCEPTIONS (simulation, les-deux) ; « agence » est le DÉFAUT, délibérément, pour qu'un outil
+// nouveau hérite du cas majoritaire sans inscription (Article 24). En lisant la table plutôt que la
+// fonction, ce détecteur n'a trouvé AUCUN outil de portée « agence » — donc il n'a rien examiné du
+// tout, et a rendu « 0 non portable », qui se lit comme un dépôt sain. C'était « je n'ai pas pu
+// regarder » déguisé en « je n'ai rien trouvé » (leçon L5), pour la cinquième fois de la nuit.
+// EXEMPTIONS DÉCLARÉES, jamais devinées — même patron que `SANS_MAIN_PROPRE` et
+// `SANS_BLUEPRINT_ASSUME` ailleurs dans ce fichier. Ces scripts SONT ce projet : les reprocher de
+// le connaître serait leur reprocher d'exister.
+export const NE_PART_PAS_ET_C_EST_NORMAL = {
+  "check-house": "la suite de tests DE ce projet : elle teste le jeu, donc elle le nomme. Elle ne s'exporte pas, elle se réécrit.",
+  "check-profile": "vérifie les profils des personnages du jeu : son sujet EST le jeu.",
+  "check-spirit": "envoie de vraies provocations aux personnages : son sujet EST le jeu.",
+  "run-simulation": "lance une simulation du jeu.",
+  "simulation-visiteur": "joue le visiteur du jeu.",
+  "summarize-simulation-log": "résume un journal de simulation du jeu.",
+  "the-ghost": "intervient dans une partie en cours.",
+  "run-framework": "lance le serveur de CE site.",
+  "sites-env": "charge l'environnement de CE site.",
+};
+
+export function findScriptsNonPortables(scripts = [], { readFileImpl = readFileSync, root = ROOT, portee = porteeDe, exemptes = NE_PART_PAS_ET_C_EST_NORMAL } = {}) {
+  const trouves = [];
+  for (const f of scripts) {
+    const slug = f.replace(/^scripts\//, "").replace(/\.mjs$/, "");
+    // La portée se LIT ; un outil dont personne n'a déclaré la portée n'est PAS jugé, parce que
+    // deviner qu'il appartient à l'Agence pour ensuite le condamner serait accuser sur une
+    // supposition (leçon L5 : ne pas pouvoir regarder n'autorise aucune conclusion).
+    if (slug in exemptes) continue;
+    const p = portee(slug);
+    if (p !== "agence") continue;
+    let texte;
+    try { texte = readFileImpl(join(root, f), "utf8"); } catch { continue; }
+    // Les commentaires racontent souvent l'histoire du projet (« trouvé en simulant Lia ») sans que
+    // le CODE en dépende. On ne juge donc que le code, chaînes et identifiants — jamais le récit.
+    const code = texte.split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
+    const fuites = [];
+    for (const a of ARTEFACTS_DU_JEU) if (a.motif.test(code)) fuites.push(a.quoi);
+    const cheminsDurs = [...code.matchAll(MOTIF_CHEMIN_PROJET)].map((m) => m[1]);
+    // Un chemin en dur n'est un défaut que s'il n'est PAS paramétrable : tout ce paysage passe ses
+    // chemins en option avec une valeur par défaut, et c'est exactement la forme portable.
+    const parametrables = /\{\s*(root|registres?|fichiers?|chemin|dossiers?)\s*=/.test(code);
+    // LA PARAMÉTRABILITÉ VAUT POUR LES DEUX, et l'oublier accusait vingt-six outils dont ARGUS et
+    // le filet de sécurité lui-même. Un outil de l'Agence a parfaitement le droit de SCANNER le
+    // jeu — c'est le métier d'ARGUS, de HARMONIA, de check-house. Ce qui n'est pas portable, c'est
+    // une CIBLE écrite en dur sans aucun moyen de la pointer ailleurs. Un outil qui reçoit ses
+    // dossiers, ses fichiers ou sa racine en option part tel quel : il suffit de lui donner
+    // d'autres cibles. Sans cette distinction, le détecteur dénonçait le paysage entier pour faire
+    // son travail, et un garde qui accuse tout le monde n'accuse plus personne (leçon L4).
+    if (parametrables) continue;
+    if (!fuites.length && !cheminsDurs.length) continue;
+    trouves.push({
+      fichier: f, portee: p, fuites,
+      cheminsDurs: parametrables ? [] : [...new Set(cheminsDurs)].slice(0, 5),
+      // UNE QUESTION, JAMAIS UN VERDICT : savoir si un couplage au jeu est un défaut ou la nature
+      // même de l'outil demande de lire ce qu'il fait. Ce détecteur montre où regarder.
+      pourquoi: fuites.length
+        ? `nomme un artefact du JEU en dur et n'offre aucune cible paramétrable (${[...new Set(fuites)].join(", ")}) — partirait-il tel quel sur un autre projet, ou faut-il rendre ses cibles paramétrables ?`
+        : `chemins de CE projet écrits en dur et non paramétrables (${[...new Set(cheminsDurs)].slice(0, 3).join(", ")}) : à passer en option avec une valeur par défaut, comme le reste du paysage`,
+    });
+  }
+  return trouves;
+}
+
+// LE MANIFESTE D'EXPORT — la seconde moitié du muscle, et la plus utile le jour où ça sert
+// vraiment. Jusqu'ici SAFE-EXPORT disait si un outil AVAIT L'AIR exportable ; il ne disait jamais
+// CE QU'IL FAUDRAIT EMPORTER. Une exportabilité qu'on ne sait pas exécuter n'est pas une
+// exportabilité, c'est une opinion sur du code.
+export function manifesteDExport(slug, { root = ROOT, readFileImpl = readFileSync, exists = existsSync } = {}) {
+  const script = `scripts/${slug}.mjs`;
+  let source;
+  try { source = readFileImpl(join(root, script), "utf8"); } catch {
+    return { mesurable: false, pourquoi: `${script} est introuvable — aucun manifeste, et surtout aucun inventé` };
+  }
+  // Les dépendances se lisent dans les imports réels, récursivement : emporter un outil sans le
+  // vocabulaire commun qu'il appelle, c'est emporter un outil qui ne démarre pas.
+  const vus = new Set();
+  const aVisiter = [script];
+  while (aVisiter.length) {
+    const courant = aVisiter.pop();
+    if (vus.has(courant)) continue;
+    vus.add(courant);
+    let src;
+    try { src = readFileImpl(join(root, courant), "utf8"); } catch { continue; }
+    for (const m of src.matchAll(/from\s+["']\.\/([a-z0-9-]+\.mjs)["']/g)) aVisiter.push(`scripts/${m[1]}`);
+  }
+  const candidats = {
+    blueprint: `docs/${slug}-blueprint.md`,
+    instanciation: `docs/referentiel/${slug}.md`,
+    registre: `docs/${slug}/index.md`,
+  };
+  const emporter = [...vus].sort();
+  const documents = []; const manquants = [];
+  for (const [role, chemin] of Object.entries(candidats)) {
+    if (exists(join(root, chemin))) documents.push({ role, chemin });
+    else manquants.push({ role, chemin });
+  }
+  return {
+    mesurable: true, slug,
+    scripts: emporter,
+    documents,
+    // CE QUI MANQUE EST LA VRAIE INFORMATION : un outil sans blueprint part sans mode d'emploi, et
+    // c'est précisément la moitié de mission que la charte lui reproche.
+    manquants,
+    // L'INSTANCIATION NE PART PAS, ET C'EST VOULU : elle décrit ce que l'outil fait SUR CE
+    // PROJET-CI. La confondre avec le blueprint emporterait ce projet dans le suivant.
+    horsPortee: "l'instanciation (`docs/referentiel/<outil>.md`) est listée pour mémoire mais ne s'emporte PAS : elle décrit ce que l'outil fait sur CE projet. Seul le blueprint part. Et ce manifeste dit ce qu'il faut COPIER, jamais que le résultat tournera — ça, seul un vrai essai sur un dépôt neuf le dira.",
+  };
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LES BLUEPRINTS — « il detecte aussi une absence de blueprint ou un blueprint mal construit »
 // ————————————————————————————————————————————————————————————————————————
 
@@ -595,6 +740,13 @@ function main() {
   console.log(`${blueprints.length} blueprint(s) trouvé(s).`);
   const fuites = findFuitesDeSpecificite(blueprints);
   const defauts = findBlueprintsMalConstruits(blueprints);
+  // LE CODE PARTIRAIT-IL ? (2026-09-24) — la moitié que cet outil ne regardait pas.
+  const nonPortables = findScriptsNonPortables(fichiersSourcesDuProjet().filter((f) => f.startsWith("scripts/") && f.endsWith(".mjs")));
+  console.log(`\n--- LE CODE PARTIRAIT-IL ? ${nonPortables.length} candidat(s) ---`);
+  console.log("Jusqu'ici SAFE-EXPORT ne vérifiait que des DOCUMENTS : un outil pouvait avoir un blueprint parfait et");
+  console.log("planter à la première seconde dans un dépôt neuf. Ces lignes posent une QUESTION, jamais un verdict —");
+  console.log("savoir si un couplage au jeu est un défaut ou la nature même de l'outil demande de lire ce qu'il fait.");
+  for (const n of nonPortables) console.log(`· ${n.fichier} — ${n.pourquoi}`);
   const deps = findDependancesOutillage(blueprints);
 
   // LE TROISIÈME SENS, ENFIN BRANCHÉ (2026-09-23, tâche #218). Les trois détecteurs ci-dessus
