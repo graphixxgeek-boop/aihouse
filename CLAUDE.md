@@ -828,6 +828,50 @@ compte rendu sur disque : angel DEMANDE donc si la règle a été tenue, et refu
 réponse. C'est la seule protection possible pour une règle qui ne se joue que dans la conversation,
 et la déclarer ainsi vaut mieux que de la confier à la mémoire d'un agent (Article 27).
 
+**Article 30 — Aucun chantier ne s'ouvre avant d'avoir repris les notes.**
+*(2026-09-24, règle posée par l'utilisateur et qualifiée par lui d'IMPORTANTE : « avant de débuter
+n'importe quel autre chantier : on reprend d'abord les notes. règle importante [...] c'est donc un
+process à établir fermement ».)*
+
+**IL L'A DÉMONTRÉE PLUTÔT QUE SUPPOSÉE, et c'est ce qui la rend incontestable.** Il avait demandé
+quelle longueur donner au code de nomenclature d'un outil ; la réponse a été « trois caractères »,
+calculée sur les CINQ axes de classification que l'agent avait en tête — le dépôt en portait TREIZE.
+Et la même question avait déjà été posée trois jours plus tôt sous une autre forme : un code de
+NIVEAU DE MATURITÉ 0/1/2/3, pas un code de classes, idée depuis effacée du dépôt sans qu'aucune
+tâche ne le mentionne. La réponse n'était donc pas imprécise : **elle répondait à une autre
+question, et rien dans la façon de la produire ne pouvait le révéler.**
+
+**La règle, en une phrase** : aucun chantier ne s'ouvre avant d'avoir cherché ce que le dépôt sait
+déjà sur son sujet. Pas « en cas de doute » — **systématiquement**, parce que le doute est
+précisément ce qui manque quand on ignore qu'on ignore.
+
+**Le geste, une seule commande** : `node scripts/data-archangel.mjs notes <sujet>`. Elle balaie les
+cinq lieux où vivent les notes — décisions (`docs/suivi/`), plans, référentiel, conception, et les
+commentaires de tête des outils, ce dernier comptant parce que ce projet écrit le POURQUOI à côté
+du QUOI (Article 27). Elle dit OÙ le sujet a déjà été traité ; elle ne lit pas à la place de
+l'agent.
+
+**Ne jamais la confondre avec `briefing`, et la confusion a un coût mesuré** : `briefing` ne regarde
+que les SOURCES DE DONNÉES déclarées. Lancée sur « classification » elle rend ZÉRO là où `notes` en
+trouve 52. « Que produisons-nous ? » et « qu'avons-nous décidé ? » sont deux questions différentes.
+
+**Un zéro n'est jamais la preuve qu'il n'y a rien à savoir** : c'est la preuve que CE MOT-LÀ ne
+ressort pas. On réessaie avec le vocabulaire du sujet avant de conclure qu'on part de zéro.
+
+**Ce qui doit sortir de la reprise, avant la première ligne de code** : ce qui a déjà été DÉCIDÉ (et
+ne se rediscute pas), ce qui a déjà été MESURÉ (et ne se remesure pas), ce qui a déjà été ÉCARTÉ
+avec sa raison, et — le plus précieux — **l'ÉCART entre ce que l'agent croyait savoir et ce que les
+notes disent**. Cet écart se dit explicitement dans le compte rendu, jamais corrigé en silence.
+
+**Où il vit, en plus d'ici** : `docs/regles-de-travail.md` §0bis pour le détail, et
+`scripts/angel-of-ia-process.mjs` comme règle de conduite surveillée (`reprise-des-notes`). Même
+domicile et même limite honnête que l'Article 29 : aucun mécanisme ne peut savoir qu'un chantier
+vient de s'ouvrir dans une conversation, donc angel DEMANDE et refuse d'être au vert sans réponse.
+
+**Premier usage réel, le jour même** : la commande a rendu une idée de l'utilisateur effacée d'un
+document trois jours plus tôt, signalée alors par THE-DEEP-READER et restée ouverte depuis. Un
+outil qui trouve quelque chose à son premier passage n'est pas une intention (leçon L2).
+
 ## Règles de travail — collaboration avec l'utilisateur
 
 `docs/regles-de-travail.md` documente, séparément de la charte de contenu ci-dessus, la façon dont
