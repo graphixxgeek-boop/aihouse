@@ -1200,6 +1200,113 @@ export function recenserLesScripts({ root = ROOT, lireDossier = readdirSync, lir
 // documents et elle vaut ici (un outil capable d'écrire « ce script est inutile » verrait un jour ce
 // jugement appliqué par personne en particulier).
 // ————————————————————————————————————————————————————————————————————————
+// LA CONVOCATION (2026-09-24, chantier 3.2 du plan de nuit)
+// ————————————————————————————————————————————————————————————————————————
+//
+// DEMANDE DE L'UTILISATEUR, et elle est précise : « un outil qui échoue, stagne ou ne progresse pas
+// est convoqué ; alerte poussée à l'utilisateur sous forme de question, plan d'action, tâches.
+// L'agent et l'utilisateur peuvent aussi être convoqués, et l'agent ne doit pas faire taire
+// l'alerte. »
+//
+// TROIS CHOSES DANS CETTE PHRASE, ET CHACUNE CHANGE LA CONCEPTION :
+//
+// 1. « L'AGENT ET L'UTILISATEUR PEUVENT AUSSI ÊTRE CONVOQUÉS. » C'est ce qui empêche la convocation
+//    de devenir un tribunal à sens unique où l'outillage porte seul la responsabilité de tout. Un
+//    outil jamais sollicité n'est pas forcément un mauvais outil : c'est peut-être l'agent qui ne
+//    l'appelle pas. Une question restée sans réponse n'est pas un défaut d'outil non plus.
+//
+// 2. « L'AGENT NE DOIT PAS FAIRE TAIRE L'ALERTE. » Un agent qui écrit lui-même « traité » sur une
+//    convocation la fait disparaître sans que personne d'autre l'ait vue — et c'est très exactement
+//    le geste que la charte interdit ailleurs (`enregistrerXp()` refuse déjà un jugement qui ne
+//    porte pas `parUtilisateur: true`). Même discipline ici : une convocation ne se clôt QUE avec
+//    un accord daté de l'utilisateur ET une raison écrite. Toute autre tentative est relayée
+//    NOMMÉMENT comme une tentative de faire taire l'alerte, jamais silencieusement ignorée.
+//
+// 3. « QUESTION, PLAN D'ACTION, TÂCHES. » Les trois, pas l'un à la place des autres — c'est la
+//    chaîne de l'Article 28 appliquée à une personne ou à un outil plutôt qu'à un rapport.
+//
+// ELLE NE RECALCULE RIEN : CASSANDRA relaie ce que le réseau sait déjà (`toolsToReconsider`,
+// la stagnation, les objectifs, la couverture), son principe fondateur depuis sa naissance.
+
+export const MOTIFS_DE_CONVOCATION = {
+  echoue: "il rend un résultat faux, ou refuse de tourner",
+  stagne: "il n'a pas bougé quand tout le reste bougeait",
+  "ne-progresse-pas": "il tourne, mais ne trouve plus rien de neuf depuis longtemps",
+  "jamais-sollicite": "il existe et personne ne l'appelle — un outil qui n'a jamais rien trouvé sur ce projet-ci n'emportera rien d'éprouvé vers le suivant",
+  "objectif-manque": "son objectif chiffré n'est pas atteint sur sa période",
+};
+
+export const CONVOCABLES = {
+  outil: "un membre de l'Agence Codex",
+  agent: "l'agent qui pilote — un outil jamais appelé peut être son manquement, jamais celui de l'outil",
+  utilisateur: "l'utilisateur lui-même, à sa demande explicite : « je veux être jugé aussi »",
+};
+
+export const REGISTRE_CONVOCATIONS = "docs/cassandra-rh/convocations.md";
+
+// LA CONVOCATION SE DÉRIVE DES SIGNAUX EXISTANTS, jamais d'un jugement neuf. Chaque règle dit
+// QUI est convoqué et POURQUOI — et le « qui » n'est pas toujours l'outil, c'est tout l'intérêt.
+export function convoquer({ reconsider = [], nivellement = null, objectifsRows = [], neverUsed = [] } = {}) {
+  const convocations = [];
+  for (const f of reconsider) {
+    const jamaisSollicite = f.reasons.some((r) => /jamais sollicité/.test(r));
+    const stagnant = f.reasons.some((r) => /stagnant/.test(r));
+    // LE RETOURNEMENT QUI COMPTE : « jamais sollicité » convoque l'AGENT, pas l'outil. Un outil ne
+    // peut pas se faire appeler tout seul, et le reprocher à l'outil serait accuser la victime.
+    if (jamaisSollicite) {
+      convocations.push({
+        qui: "agent", sujet: f.slug, motif: "jamais-sollicite",
+        question: `pourquoi « ${f.slug} » n'a-t-il jamais été appelé ? Est-il inutile, mal nommé, mal placé dans le catalogue, ou est-ce moi qui ne pense pas à lui ?`,
+        raisons: f.reasons,
+      });
+    }
+    if (stagnant && !jamaisSollicite) {
+      convocations.push({
+        qui: "outil", sujet: f.slug, motif: "stagne",
+        question: `« ${f.slug} » n'a pas bougé quand le reste du projet bougeait : est-il fini, oublié, ou dépassé ?`,
+        raisons: f.reasons,
+      });
+    }
+  }
+  for (const r of objectifsRows) {
+    if (r.statut !== "en dessous") continue;
+    convocations.push({
+      qui: "outil", sujet: r.entite, motif: "objectif-manque",
+      question: `l'objectif chiffré de « ${r.entite} » n'est pas atteint sur sa période : l'objectif était-il mal calibré, ou l'outil ne sert-il pas ?`,
+      raisons: [`objectif en dessous (objectifs-vs-resultats)`],
+    });
+  }
+  // L'UTILISATEUR est convoqué sur ce qui ne dépend que de lui : une exigence qu'il a posée et que
+  // seule une décision humaine peut lever. Jamais sur une exécution, qui n'est pas son travail.
+  if (nivellement?.mesurable) {
+    for (const l of nivellement.lignes) {
+      if (l.part !== null && l.part < 50) {
+        convocations.push({
+          qui: "utilisateur", sujet: l.cle, motif: "ne-progresse-pas",
+          question: `moins de la moitié des outils concernés (${l.atteignent}/${l.concernes}) tiennent l'exigence « ${l.exige} » : faut-il la niveler partout, ou l'exigence est-elle trop large ?`,
+          raisons: [l.pourquoi],
+        });
+      }
+    }
+  }
+  return convocations;
+}
+
+// LA CLÔTURE — le cœur de « l'agent ne doit pas faire taire l'alerte ».
+export function cloreConvocation(convocation = {}, cloture = {}) {
+  const { parUtilisateur = false, date = null, raison = null } = cloture;
+  if (!parUtilisateur) {
+    return { close: false, relayee: true,
+      pourquoi: `TENTATIVE DE CLÔTURE SANS L'UTILISATEUR sur « ${convocation.sujet} » — une convocation ne se clôt qu'avec son accord daté. L'alerte reste ouverte ET cette tentative est nommée, jamais avalée : un agent qui écrit lui-même « traité » fait disparaître l'alerte sans que personne d'autre l'ait vue.` };
+  }
+  if (!date || !raison) {
+    return { close: false, relayee: true,
+      pourquoi: `clôture refusée sur « ${convocation.sujet} » : ${!date ? "aucune date" : "aucune raison écrite"}. Un écart sans raison n'est pas une décision, c'est un abandon déguisé (Article 28).` };
+  }
+  return { close: true, relayee: false, date, raison, pourquoi: `close le ${date} par l'utilisateur : ${raison}` };
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LE NIVELLEMENT — ce que chaque CLASSE exige (2026-09-24, chantier 2.1 du plan de nuit)
 // ————————————————————————————————————————————————————————————————————————
 //
@@ -1350,6 +1457,45 @@ function main() {
     const plan = buildPlanDaction(
       constats.map((e) => ({ pourquoi: `${e.chemin} : ${e.question}` })),
       { toolSlug: "cassandra-rh", tache: "porter chaque constat à une tâche de docs/suivi/ (Article 28) ; les questions montent à l'utilisateur, jamais tranchées ici" },
+    );
+    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+    for (const l of plan.lignes) console.log(l);
+    return;
+  }
+  // CONVOCATION (2026-09-24) — la commande existe le jour même où les fonctions sont écrites.
+  if (sub === "convocation") {
+    console.log(CASSANDRA_PERSONA);
+    const data = collectRealCassandraData({ withCoverage: false });
+    const niv = nivellementParClasse(recenserLesScripts());
+    const convocations = convoquer({
+      reconsider: data.reconsider ?? [],
+      nivellement: niv,
+      objectifsRows: data.objectifs?.rows ?? [],
+    });
+    console.log(`\n=== CONVOCATIONS — ${convocations.length} ===\n`);
+    if (!convocations.length) {
+      console.log("Personne n'est convoqué. Ce n'est pas rien à dire : ça veut dire qu'aucun outil ne stagne, qu'aucun n'est resté sans être appelé, et qu'aucune exigence n'est tenue par moins de la moitié de ceux qu'elle concerne.");
+    }
+    for (const q of Object.keys(CONVOCABLES)) {
+      const lot = convocations.filter((c) => c.qui === q);
+      if (!lot.length) continue;
+      console.log(`--- CONVOQUÉ : ${q.toUpperCase()} (${CONVOCABLES[q]}) — ${lot.length} ---`);
+      for (const c of lot) {
+        console.log(`· ${c.sujet} [${c.motif}]`);
+        console.log(`    QUESTION : ${c.question}`);
+        for (const r of c.raisons) console.log(`    · ${r}`);
+      }
+      console.log("");
+    }
+    console.log("RÈGLE DE CLÔTURE, non négociable : une convocation ne se clôt QUE avec un accord daté de l'utilisateur ET une raison écrite.");
+    console.log("Toute autre tentative est relayée nommément comme une tentative de faire taire l'alerte — un agent qui écrit lui-même « traité » la fait disparaître sans que personne d'autre l'ait vue.");
+    console.log(`Registre : ${REGISTRE_CONVOCATIONS}`);
+    const plan = buildPlanDaction(
+      // « à trancher » par nature, jamais « retenu » : une convocation POSE une question dont la
+      // réponse n'appartient pas à l'agent. La marquer retenue reviendrait à la traiter seul, ce
+      // que la règle de clôture interdit précisément.
+      convocations.map((c) => ({ etat: "a-trancher", constat: `${c.qui.toUpperCase()} convoqué sur « ${c.sujet} » [${c.motif}]`, pourquoi: c.question })),
+      { toolSlug: "cassandra-rh", tache: "porter chaque convocation à l'utilisateur en question ouverte, et n'en clore aucune sans son accord daté et sa raison écrite" },
     );
     console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
     for (const l of plan.lignes) console.log(l);

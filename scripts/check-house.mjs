@@ -11303,6 +11303,20 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     assert.ok(typeof ex.sApplique === 'function' && ex.exige && ex.pourquoi, 'an exigence is data, never an if buried in a function: it says WHO it applies to, WHICH class is owed and WHAT it costs not to have it — the three ifs it replaces were exactly the frozen list Article 24 forbids, and a fourth would have required reopening the function');
     assert.ok(crh2.CLASSES_TRANSVERSES.some((c) => c.cle === ex.exige), 'and every exigence points at a class that really exists: an exigence owed to a class nobody measures would be unsatisfiable forever, which reads like a permanent failure rather than a missing probe');
   }
+  // LA CONVOCATION (2026-09-24, chantier 3.2) — et le retournement qui l'empêche d'être un tribunal.
+  const conv = crh2.convoquer({ reconsider: [{ slug: 'outil-x', reasons: ['jamais sollicité (tool-usage.mjs)'] }] });
+  assert.equal(conv[0].qui, 'agent', 'a tool nobody ever called convokes the AGENT, never the tool: a tool cannot call itself, and blaming it for that would be blaming the victim — this is the retournement that keeps the convocation from becoming a one-way tribunal where the toolset carries the blame for everything');
+  const convStagne = crh2.convoquer({ reconsider: [{ slug: 'outil-y', reasons: ['stagnant relativement au reste du projet (40 j)'] }] });
+  assert.equal(convStagne[0].qui, 'outil', 'while a tool that stopped moving while everything else moved really is the tool\'s own question');
+  const convUser = crh2.convoquer({ nivellement: { mesurable: true, lignes: [{ cle: 'x', exige: 'y', part: 20, atteignent: 2, concernes: 10, pourquoi: 'z' }] } });
+  assert.equal(convUser[0].qui, 'utilisateur', 'and an exigence held by fewer than half the tools it concerns convokes the USER, because only a human decides whether to level it everywhere or narrow the exigence — he asked to be judged too, and this is what that means in practice');
+  for (const c of [...conv, ...convStagne, ...convUser]) assert.ok(c.question.includes('?') && c.motif && crh2.MOTIFS_DE_CONVOCATION[c.motif], 'every convocation asks a real question and names a declared motive, never a verdict');
+  // « L'AGENT NE DOIT PAS FAIRE TAIRE L'ALERTE » — la règle de clôture, mot pour mot.
+  const tentative = crh2.cloreConvocation({ sujet: 'x' }, { raison: 'je considère que c\'est traité' });
+  assert.ok(!tentative.close && tentative.relayee && /SANS L'UTILISATEUR/.test(tentative.pourquoi), 'an agent closing a convocation by itself does NOT close it, and the attempt is RELAYED BY NAME rather than swallowed — same discipline as enregistrerXp(), which already refuses a judgement not carrying parUtilisateur: true');
+  assert.equal(crh2.cloreConvocation({ sujet: 'x' }, { parUtilisateur: true, date: '2026-09-24' }).close, false, 'even with the user\'s agreement, a closure with no written reason is refused: a dismissal without a reason is not a decision, it is an abandonment in disguise (Article 28)');
+  assert.equal(crh2.cloreConvocation({ sujet: 'x' }, { parUtilisateur: true, date: '2026-09-24', raison: 'outil fusionné dans son unique client' }).close, true, 'and a dated agreement with a written reason really closes it');
+
   const niv = crh2.nivellementParClasse(rec);
   assert.ok(niv.mesurable && niv.lignes.length === crh2.EXIGENCES_PAR_CLASSE.length, 'the levelling answers the second half of the question — who does NOT reach it — for every exigence, never only the ones that happen to fail');
   for (const l of niv.lignes) {
