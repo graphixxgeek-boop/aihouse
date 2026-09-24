@@ -677,6 +677,47 @@ Le porteur réel de cette leçon est son inscription ici, et sa remontée par so
 
 **Terrain** : avant d'exécuter une étape d'un process · quand un contrôleur affiche un vert et que je m'apprête à conclure · quand je consulte une liste d'étapes dans du code plutôt que dans un document · mots : process, étapes, contrôleur de process, garde-fou mécanique, conformité, tracé, livrable · fichiers : scripts/god-of-all-process.mjs, docs/circle-process-detail.txt, docs/regles-de-travail.md, scripts/circle-tasks.mjs
 
+## L24 — Ce qui dit à quoi sert un outil, c'est son OFFRE DÉCLARÉE, jamais son code
+
+L'utilisateur demande un partage des outils entre ceux qui servent le jeu et ceux qui servent
+l'Agence. Premier crible : chercher dans le CODE de chaque script s'il touche `app/`, `lib/`,
+`components/`, le référentiel du jeu ou les personnages. Résultat : **45 outils sur 65 classés
+« pour le jeu »**, dont CASSANDRA-RH, MOÏSE-TABLES-DE-LOI, doc-report, ecotoken et SAFE-EXPORT —
+tous des outils purement internes à l'Agence, qui n'ont jamais rien eu à voir avec Lia ni Noé.
+
+**La cause est simple et elle est générale** : ils MENTIONNENT `lib/` ou `Lia` dans un commentaire,
+dans une liste de chemins à parcourir, dans un exemple. Un outil qui ANALYSE tout le dépôt cite
+forcément le dépôt entier. Chercher la finalité dans le code revient à confondre **ce qu'un outil
+touche** avec **ce à quoi il sert** — et un outil transverse touche tout par construction.
+
+**La seconde source, et elle a immédiatement tenu debout** : l'OFFRE DÉCLARÉE. Le catalogue dit,
+pour chaque prestation, à quelle DEMANDE elle répond : « Fidélité de l'esprit des personnages » est
+du jeu, « Bilan RH de l'équipe » est de l'Agence. Ce n'est pas une heuristique sur une forme, c'est
+une déclaration d'intention écrite par quelqu'un. Résultat du même partage, refait sur cette
+source : **6 outils pour le jeu, 39 pour l'Agence, 1 pour les deux** — crédible du premier coup,
+sans un seul cas aberrant.
+
+**Ce qui rend le cas général, et il dépasse ce partage-là** : dès qu'on cherche la FINALITÉ d'un
+composant, le code est la mauvaise source. Le code dit ce qu'une chose TOUCHE, ce qu'elle IMPORTE,
+ce qu'elle PARCOURT — jamais pourquoi elle existe. La finalité ne vit que là où quelqu'un l'a
+écrite : un catalogue, une fiche, un contrat d'interface, une ligne de suivi. Même famille que L11
+et L12 : le motif tournait très bien, il répondait simplement à une autre question que celle posée.
+
+**La règle** : avant de classer, se demander OÙ la réponse est ÉCRITE plutôt que où elle pourrait se
+deviner. Si personne ne l'a écrite nulle part, le vrai travail est de la faire écrire — pas de la
+déduire d'un fichier source.
+
+*Payée le 2026-09-24, troisième sonde de la même soirée à matcher sur une mention plutôt que sur une
+fonction, et la seule des trois que l'utilisateur ait vue passer : « ce qui dit à quoi sert un outil,
+c'est son offre déclarée, pas son code : leçon à apprendre typiquement ».*
+
+**Porté par** : le catalogue LE-COORDINATEUR est la source déclarée, et `findRegistriesMissingFromCircle()`
+plus le garde-fou d'outil muet de #714 garantissent qu'un outil sans offre écrite est SIGNALÉ plutôt
+que classé au jugé. Ce qui reste hors mécanique — choisir la bonne source avant de coder une
+sonde — n'a pas de porteur possible, et le déclarer ici EST la protection (Article 27).
+
+**Terrain** : quand je classe, range ou catégorise des composants · quand j'écris une sonde qui cherche une INTENTION plutôt qu'un FAIT · quand un résultat de classement contient un cas manifestement absurde · mots : classification, finalité, à quoi ça sert, partage, catégorie, iceberg, jeu vs outillage · fichiers : scripts/le-coordinateur.mjs, scripts/cassandra-rh.mjs, CLAUDE.md
+
 ## BP1 — La règle s'écrit à UN endroit et se dérive partout ailleurs
 
 Devant vingt endroits à corriger, le réflexe est de corriger les vingt. Le bon geste est de trouver
