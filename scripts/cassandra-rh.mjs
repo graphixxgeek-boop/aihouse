@@ -1695,6 +1695,129 @@ export const MOTS_VIDES_REDONDANCE = new Set([
   "quoi", "quel", "quelle", "quels", "faire", "fait", "appel", "appels",
 ]);
 
+// ===========================================================================================
+// L'ICEBERG — trois groupes, et une frontière qui se DÉRIVE (2026-09-24, tâche #707)
+// ===========================================================================================
+// LA DEMANDE, dans ses mots : « je veux faire un partage iceberg entre ce qui est visible : ce qui
+// porte un nom, ce qu'on a créé ensemble, ce qui fait partie des membres, et ce qui est invisible :
+// la tuyauterie, la plomberie, l'infrastructure ».
+//
+// LE TERRAIN QUI L'A MOTIVÉ, mesuré le soir même : 75 scripts, dont 30 que la charte ne mentionne
+// nulle part. Et ces 30 ne sont pas homogènes — une bonne moitié sont de vrais outils avec un nom
+// et une fonction, que rien ne présente. Ce ne sont pas des tuyaux, ce sont des membres de l'équipe
+// dont personne n'a jamais fait les présentations.
+//
+// TROIS GROUPES, et le deuxième est TEMPORAIRE PAR CONSTRUCTION — il doit se vider :
+//   · MEMBRE       — l'utilisateur peut le convoquer, et quelque chose le lui présente
+//   · OUBLIÉ       — il peut le convoquer, mais RIEN ne le lui présente. À faire passer par le
+//                    process primitif, un par un. Un groupe qui ne se vide jamais est un aveu.
+//   · PLOMBERIE    — appelé par d'autres outils, jamais convoqué. Organisé a minima, pas de fiche.
+//   · INFRASTRUCTURE — lancé par la MACHINE (package.json, crochet git), jamais par l'utilisateur.
+//
+// LE TROISIÈME SIGNAL, et c'est lui qui a demandé une vraie décision. Sans lui, `pnpm-install` et
+// `install-ci` ressortaient « convocables » : ils s'exécutent, donc le test les prenait pour des
+// outils. Or personne ne les convoque — la machine les lance. L'utilisateur a tranché le critère :
+// « est-ce MOI qui le lance, ou la machine ? ». Il se DÉRIVE de package.json et des crochets git
+// réels, jamais d'une liste de noms écrite à la main qui se périmerait au premier script ajouté
+// (Article 24).
+export const GROUPES_ICEBERG = {
+  membre: { rang: 3, quoi: "l'utilisateur peut le convoquer, et quelque chose le lui présente" },
+  oublie: { rang: 2, quoi: "convocable, mais rien ne le présente — groupe TEMPORAIRE, il doit se vider par le process primitif" },
+  infrastructure: { rang: 1, quoi: "lancé par la machine (package.json, crochet git), jamais par l'utilisateur" },
+  plomberie: { rang: 0, quoi: "appelé par d'autres outils, jamais convoqué — organisé a minima" },
+};
+
+// La MENTION que chaque fichier porte en tête, comparée ensuite à ce qui est dérivé. Deux sources
+// qui doivent dire la même chose : un désaccord est signalé plutôt que tranché en silence — c'est
+// le patron le plus sûr, et l'utilisateur l'a choisi en connaissant son coût (75 fichiers à annoter).
+export const MOTIF_MENTION_ICEBERG = /^\s*\/\/\s*ICEBERG\s*:\s*(membre|oublie|oublié|plomberie|infrastructure)\b/mi;
+
+export function mentionIceberg(source) {
+  const m = String(source ?? "").match(MOTIF_MENTION_ICEBERG);
+  return m ? m[1].toLowerCase().replace("oublié", "oublie") : null;
+}
+
+// Ce que la MACHINE lance, lu dans package.json et dans les crochets git — jamais devine.
+export function lanceParLaMachine({ packageJson = "", crochets = [] } = {}) {
+  const dedans = [packageJson, ...crochets].join("\n");
+  const noms = new Set();
+  for (const m of dedans.matchAll(/scripts\/([a-z0-9._/-]+)\.(?:mjs|sh)/gi)) noms.add(m[1].replace(/^hooks\//, ""));
+  return noms;
+}
+
+// PREMIER PASSAGE RÉEL, ET IL A ÉCHOUÉ SUR LES DEUX SIGNAUX — les deux échecs sont gardés ici.
+//
+// (1) « lancé par la machine » rangeait check-house, ecotoken, kpi-report et moise-tables-de-loi en
+// INFRASTRUCTURE. C'est faux : le crochet git les lance, ET l'utilisateur peut les appeler. Être
+// lancé par un automatisme n'empêche pas d'être convocable — il faut la CONJONCTION : lancé par la
+// machine ET présenté nulle part.
+//
+// (2) « a un point d'entrée » rangeait check-spirit, the-final-judge et check-gemini-quota en
+// PLOMBERIE, alors que la charte donne littéralement leur commande. Ce sont des scripts à effet de
+// bord au niveau racine, sans garde `import.meta.url` — le motif ne pouvait pas les voir.
+//
+// D'OÙ LE SIGNAL LE PLUS VRAI, qui remplace la devinette : une COMMANDE DOCUMENTÉE. Si un document
+// écrit `node scripts/X.mjs`, alors X est convocable — c'est une preuve, pas une heuristique sur la
+// forme du fichier. Le point d'entrée ne sert plus que de repli quand aucune commande n'est écrite.
+export const MOTIF_COMMANDE = (slug) => new RegExp(`node\\\\s+scripts/${slug.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}\\\\.mjs`, "i");
+
+export function classerIceberg(fichiers = [], { lire, offert = "", machine = new Set() } = {}) {
+  const lignes = [];
+  for (const f of fichiers) {
+    const slug = f.replace(/\.mjs$/, "");
+    let src = "";
+    try { src = lire(f); } catch { /* illisible : declare non mesurable plus bas */ }
+    if (!src) { lignes.push({ slug, groupe: null, mesurable: false, pourquoi: "fichier illisible — jamais classé au jugé" }); continue; }
+
+    const commande = MOTIF_COMMANDE(slug).test(offert);
+    const pointDentree = (src.includes("import.meta.url") && src.includes("process.argv")) || src.startsWith("#!");
+    const convocable = commande || pointDentree;
+    const presente = commande || new RegExp(`\\b${slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(offert);
+    const parLaMachine = machine.has(slug) || machine.has(f.replace(/\.mjs$/, ""));
+
+    const derive = presente ? "membre"
+      : parLaMachine ? "infrastructure"
+      : convocable ? "oublie"
+      : "plomberie";
+    const declare = mentionIceberg(src);
+    lignes.push({ slug, groupe: derive, declare, mesurable: true,
+      desaccord: declare !== null && declare !== derive,
+      pourquoi: presente ? (commande ? "sa commande est écrite quelque part — preuve de convocabilité" : "présenté quelque part")
+        : parLaMachine ? "lancé par la machine, et présenté nulle part — personne ne le convoque"
+        : convocable ? "convocable, mais RIEN ne le présente"
+        : "aucun point d'entrée, aucune commande écrite — appelé par un autre outil" });
+  }
+  return lignes;
+}
+
+export function formatIcebergLines(lignes = []) {
+  const par = (g) => lignes.filter((l) => l.groupe === g);
+  const L = [];
+  const illisibles = lignes.filter((l) => !l.mesurable);
+  for (const [g, def] of Object.entries(GROUPES_ICEBERG).sort((a, b) => b[1].rang - a[1].rang)) {
+    const liste = par(g);
+    L.push(`${g.toUpperCase()} — ${liste.length} — ${def.quoi}`);
+    if (g !== "membre") for (const l of liste) L.push(`   · ${l.slug} — ${l.pourquoi}`);
+  }
+  const sansMention = lignes.filter((l) => l.mesurable && !l.declare);
+  const desaccords = lignes.filter((l) => l.desaccord);
+  L.push("");
+  L.push(`Mentions en tête : ${lignes.length - sansMention.length - illisibles.length}/${lignes.length - illisibles.length} posée(s).`);
+  if (desaccords.length) {
+    L.push(`🔴 ${desaccords.length} DÉSACCORD(S) entre ce que le fichier déclare et ce qui se dérive — jamais tranché en silence :`);
+    for (const d of desaccords) L.push(`   · ${d.slug} : déclare « ${d.declare} », dérive « ${d.groupe} »`);
+  }
+  if (illisibles.length) L.push(`⚠️ ${illisibles.length} fichier(s) illisible(s) — non classés, jamais rangés au jugé.`);
+  // Le groupe OUBLIÉ est le seul dont le nombre est une MAUVAISE nouvelle : il mesure ce que
+  // personne ne présente. Un zéro ici est un vrai succès, et il faut donc le dire aussi.
+  const oublies = par("oublie").length;
+  L.push("");
+  L.push(oublies === 0
+    ? "✅ Aucun oublié : tout ce qui est convocable est présenté quelque part."
+    : `⚠️ ${oublies} outil(s) convocables que RIEN ne présente. Ce groupe est temporaire par construction : chacun passe par le process primitif, un par un, jusqu'à ce qu'il soit vide.`);
+  return L;
+}
+
 export function redondanceEntreOutils(prestations = [], { seuil = SEUIL_REDONDANCE } = {}) {
   const reelles = prestations.filter((p) => p?.demande && (p.outils ?? []).length);
   if (reelles.length < 2) {
@@ -1953,6 +2076,22 @@ function main() {
   // RECENSEMENT (2026-09-24) — la même leçon que l'organigramme a déjà coûtée une fois : un
   // mécanisme qui ne sort pas du script est une intention, pas un outil. La commande existe donc
   // le jour même où les fonctions sont écrites, jamais « plus tard ».
+  // Sous-commande `iceberg` (2026-09-24, tâche #707) : le partage visible / invisible calibré avec
+  // l'utilisateur le soir même. Sous-commande à part et non un bloc du bilan RH, parce qu'elle ne
+  // juge personne — elle RANGE. Confondre les deux ferait lire un classement comme un verdict.
+  if (sub === "iceberg") {
+    const fichiers = readdirSync(join(ROOT, "scripts")).filter((f) => f.endsWith(".mjs")).sort();
+    const lu = (f) => { try { return readFileSync(join(ROOT, f), "utf8"); } catch { return ""; } };
+    const offert = ["CLAUDE.md", "docs/regles-de-travail.md", "scripts/le-coordinateur.mjs",
+      "scripts/circle-tasks.mjs", "scripts/tool-brain.mjs"].map(lu).join("\n");
+    const machine = lanceParLaMachine({ packageJson: lu("package.json"),
+      crochets: ["scripts/hooks/post-commit", "scripts/hooks/pre-commit", "scripts/hooks/install.mjs"].map(lu) });
+    const lignes = classerIceberg(fichiers, { lire: (f) => lu(join("scripts", f)), offert, machine });
+    console.log(`\n=== L'ICEBERG — ${fichiers.length} scripts, quatre groupes ===\n`);
+    for (const l of formatIcebergLines(lignes)) console.log(l);
+    console.log(`\nHORS PORTÉE : ce classement dit où RANGER un script, jamais s'il est BON — c'est le travail des Gardiens, et les deux ne se remplacent pas.`);
+    return;
+  }
   if (sub === "recensement") {
     console.log(CASSANDRA_PERSONA);
     const rec = recenserLesScripts();
