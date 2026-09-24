@@ -645,6 +645,118 @@ export function obligationsParArticle({ root = ROOT } = {}) {
 //   4. un CHEMIN devenu inatteignable — délégué à Abraham, qui sait distinguer « perdu » de
 //      « atteignable en un saut » ;
 //   5. l'opération NON ENREGISTRÉE dans la mémoire — le quoi survit dans git, le POURQUOI non.
+// ===========================================================================================
+// LE DIAGNOSTIC COMPLET DE LA CHARTE  (2026-09-24, demande explicite de l'utilisateur)
+// ===========================================================================================
+//
+// SA DEMANDE : « pour la charte je veux plus de contrôles au moment de son scan que simplement son
+// poids [...] un diagnostic complet à chaque ronde, pour que tu puisses le lire [...] une fois que
+// tu as lu ce rapport tu es capable d'analyser si une révision de CLAUDE.md est envisageable,
+// nécessaire, importante ou critique ».
+//
+// CE QUI EXISTAIT, ET POURQUOI C'ÉTAIT INSUFFISANT : la Ronde n'appelait qu'UN contrôle sur la
+// charte — son poids en tokens. Or le poids est le moins informatif des signaux : une charte légère
+// peut avoir une règle vitale sans protection, un Article que rien ne cite, deux règles qui se
+// contredisent. Tout cela était déjà mesurable par les outils ; rien ne l'appelait au bon moment.
+//
+// RIEN N'EST RECALCULÉ ICI : chaque signal vient de la fonction qui le détient déjà (Article 24 —
+// un registre se LIT, il ne se recopie pas). Cette fonction ne fait qu'ASSEMBLER et CONCLURE.
+//
+// LES QUATRE NIVEAUX SONT LES SIENS, mot pour mot. Un cinquième, « aucune », a été ajouté pour une
+// raison que toute cette nuit a illustrée : sans lui, une charte en parfait état sortirait quand
+// même « révision envisageable », ce qui est un signal faux dans l'autre sens. Une échelle dont le
+// plancher n'est jamais atteint ne mesure rien.
+export const NIVEAUX_REVISION = [
+  { cle: "critique", rang: 4, icone: "🔴", quoi: "à traiter avant tout autre chantier" },
+  { cle: "importante", rang: 3, icone: "🟠", quoi: "à programmer dans les jours qui viennent" },
+  { cle: "nécessaire", rang: 2, icone: "🟡", quoi: "à faire, sans urgence particulière" },
+  { cle: "envisageable", rang: 1, icone: "🟢", quoi: "rien ne l'oblige — à faire si l'occasion se présente" },
+  { cle: "aucune", rang: 0, icone: "⚪", quoi: "rien ne l'appelle aujourd'hui" },
+];
+
+// CHAQUE SIGNAL DÉCLARE LE NIVEAU QU'IL APPELLE, et le verdict final est le PLUS HAUT des niveaux
+// atteints. Jamais une moyenne : une seule règle vitale sans protection ne se compense pas par
+// trente Articles en bon état.
+export const SIGNAUX_DE_REVISION = [
+  { cle: "regle-vitale-sans-porteur", niveau: "critique",
+    pourquoi: "une règle que le texte déclare vitale, et que rien dans le dépôt ne fait respecter : elle ne tiendra pas à la prochaine session" },
+  { cle: "chemin-mort", niveau: "critique",
+    pourquoi: "la charte renvoie vers un document qui n'existe plus : la règle pointe dans le vide, et personne ne s'en apercevra en la lisant" },
+  { cle: "recouvrement-non-declare", niveau: "importante",
+    pourquoi: "deux règles se chevauchent sans qu'on ait dit laquelle prime : au premier conflit réel, c'est l'humeur du moment qui tranchera" },
+  { cle: "saturation-obligations", niveau: "importante",
+    pourquoi: "le nombre d'obligations dépasse ce qu'un modèle suit de façon fiable : au-delà, ce ne sont plus les règles qui décident, c'est l'attention disponible" },
+  { cle: "cartographie-perimee", niveau: "nécessaire",
+    pourquoi: "la table qui décrit la charte ne correspond plus à la charte : qui lit la table lit un document qui n'existe pas" },
+  { cle: "article-jamais-cite", niveau: "envisageable",
+    pourquoi: "un Article que rien ne cite nulle part : peut-être inutile, peut-être simplement jamais appliqué — ça se regarde, ça ne se tranche pas seul" },
+  { cle: "poids-eleve", niveau: "envisageable",
+    pourquoi: "le document coûte cher à recharger — le moins grave des signaux, et c'était pourtant le seul mesuré jusqu'ici" },
+];
+
+// Le seuil d'obligations. Il n'est pas choisi : la littérature publique ET la mesure propre à ce
+// projet s'accordent sur 150 à 200 instructions suivies de façon fiable par un modèle de pointe.
+// C'est le chiffre déjà retenu par l'allègement de la charte, lu ici plutôt que recopié.
+export const SEUIL_OBLIGATIONS = 200;
+
+export function verdictDeRevision(signauxTrouves = [], catalogue = SIGNAUX_DE_REVISION) {
+  const connus = new Map(catalogue.map((s) => [s.cle, s]));
+  const retenus = signauxTrouves.map((c) => connus.get(c)).filter(Boolean);
+  const rangs = new Map(NIVEAUX_REVISION.map((n) => [n.cle, n.rang]));
+  const haut = retenus.reduce((max, s) => Math.max(max, rangs.get(s.niveau) ?? 0), 0);
+  const niveau = NIVEAUX_REVISION.find((n) => n.rang === haut) ?? NIVEAUX_REVISION.at(-1);
+  return { niveau: niveau.cle, icone: niveau.icone, quoi: niveau.quoi, signaux: retenus,
+    pourquoi: retenus.length
+      ? `le plus haut des ${retenus.length} signal(aux) trouvé(s) — jamais une moyenne : une règle vitale sans protection ne se compense pas par trente Articles en bon état`
+      : "aucun des sept signaux ne s'est déclenché" };
+}
+
+// LE DIAGNOSTIC LUI-MÊME. Il prend des MESURES DÉJÀ FAITES plutôt que de les refaire, et il rend
+// `mesurable: false` quand il n'a rien pu lire — la distinction qui a coûté huit corrections dans
+// la nuit du 2026-09-24 : un contrôle qui n'a pas pu regarder ne doit jamais ressembler à un
+// contrôle qui n'a rien trouvé.
+export function diagnosticCharte({ classement = null, obligations = null, jamaisCites = [],
+  recouvrements = [], cheminsMorts = [], cartoPerimee = false, tokens = null,
+  seuilObligations = SEUIL_OBLIGATIONS, seuilTokens = 25000 } = {}) {
+  // LA CONDITION SE LIT SUR LE NOMBRE DE RÈGLES RÉELLEMENT CLASSÉES, jamais sur la présence d'un
+  // champ (corrigé au premier vrai passage, 2026-09-24). Mon premier jet testait `classement.mesurable`,
+  // un champ que `classerDocument()` ne rend pas — il refusait donc TOUJOURS, pour la mauvaise
+  // raison. Écrit dans l'autre sens (`!== false`), il aurait rendu un verdict « aucune révision »
+  // sur zéro règle lue : le faux vert parfait. Ce qui compte est qu'il y ait des règles classées.
+  const reglesClassees = classement?.lignes ?? [];
+  if (!reglesClassees.length) {
+    return { mesurable: false, verdict: null,
+      pourquoi: "aucune règle n'a pu être classée : sans classification, aucun verdict de révision n'a de sens, et en rendre un quand même serait exactement le faux vert que ce projet traque" };
+  }
+  const faits = [];
+  const vitalesSansPorteur = reglesClassees.filter((u) => String(u.verdict ?? "").startsWith("🔴"));
+  if (vitalesSansPorteur.length) faits.push({ cle: "regle-vitale-sans-porteur", combien: vitalesSansPorteur.length,
+    lesquels: vitalesSansPorteur.map((u) => u.numero) });
+  if (cheminsMorts.length) faits.push({ cle: "chemin-mort", combien: cheminsMorts.length, lesquels: cheminsMorts });
+  if (recouvrements.length) faits.push({ cle: "recouvrement-non-declare", combien: recouvrements.length });
+  if (Number.isFinite(obligations) && obligations > seuilObligations) faits.push({ cle: "saturation-obligations", combien: obligations });
+  if (cartoPerimee) faits.push({ cle: "cartographie-perimee", combien: 1 });
+  if (jamaisCites.length) faits.push({ cle: "article-jamais-cite", combien: jamaisCites.length, lesquels: jamaisCites });
+  if (Number.isFinite(tokens) && tokens > seuilTokens) faits.push({ cle: "poids-eleve", combien: tokens });
+  const verdict = verdictDeRevision(faits.map((f) => f.cle));
+  return { mesurable: true, faits, verdict,
+    horsPortee: "ce diagnostic dit si la charte APPELLE une révision, jamais ce qu'il faudrait y changer : ça se lit, et ça se tranche avec l'utilisateur (Article 16)." };
+}
+
+export function formatDiagnosticCharte(d) {
+  if (!d?.mesurable) return [`Diagnostic charte : NON MESURÉ — ${d?.pourquoi ?? "raison inconnue"}`];
+  const L = [`${d.verdict.icone} RÉVISION DE LA CHARTE : ${d.verdict.niveau.toUpperCase()} — ${d.verdict.quoi}`, ""];
+  if (!d.faits.length) { L.push("Aucun des sept signaux ne s'est déclenché. La charte n'appelle aucune révision aujourd'hui."); return L; }
+  L.push(`${d.faits.length} signal(aux) sur 7 :`);
+  for (const f of d.faits) {
+    const s = SIGNAUX_DE_REVISION.find((x) => x.cle === f.cle);
+    L.push(`  ${NIVEAUX_REVISION.find((n) => n.cle === s.niveau)?.icone ?? "·"} ${f.cle} (${f.combien})${f.lesquels ? ` — ${f.lesquels.slice(0, 8).join(", ")}` : ""}`);
+    L.push(`      ${s.pourquoi}`);
+  }
+  L.push("", `Verdict : ${d.verdict.pourquoi}.`);
+  return L;
+}
+
 export function protegerLaCharte(avant = "", apres = "", { lire: lireFichier = null, operations = null } = {}) {
   if (!avant || !apres) return { mesurable: false, pourquoi: "il faut les deux versions pour comparer — sans l'avant, rien n'a été vérifié, ce qui n'est jamais la même chose que rien trouvé" };
   const lireArticles = (txt) => new Map([...txt.matchAll(/\*\*Article (\d+(?:bis)?) — ([^*]+?)\.\*\*/g)]
