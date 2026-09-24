@@ -24,7 +24,7 @@
 // le format de fenêtre). Il ne les devine JAMAIS : il les DEMANDE, et refuse de conclure tant
 // qu'elles ne sont pas fournies (même discipline que circle-process-guardian).
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
@@ -50,6 +50,10 @@ const ROOT = new URL("..", import.meta.url).pathname;
 // trace existe sur le disque. Une règle non observable n'est pas hors de portée : elle passe par
 // `faits` que l'appelant fournit — et son absence est signalée, jamais comblée par une supposition.
 export const REGLES_SURVEILLEES = [
+  // 2026-09-24 — « GROS WARNING » de l'utilisateur : l'évaluation ne doit pas porter que sur la
+  // Ronde, et il précise que c'est une erreur QUI SE RÉPÈTE. Une règle surveillée plutôt qu'une
+  // bonne intention : angel refuse d'être au vert sans réponse, donc l'oubli devient visible.
+  { id: "eval-hors-ronde", cote: "agent", observable: false, regle: "Faire évaluer le travail fait ENTRE deux Rondes — une nuit autonome, une vague de correctifs, une simulation — et jamais seulement ce qu'une Ronde a couvert.", source: "demande explicite du 2026-09-23, marquée « GROS WARNING » : « les EVAL-DEV/EVAL-IA ne doivent pas porter que sur la ronde »" },
   { id: "consultation-avant", cote: "agent", observable: true, regle: "Consulter l'outil obligatoire AVANT d'agir, jamais après coup (tool-brain, Smart Conso API, check-tasks-details).", source: "docs/regles-de-travail.md §7ter et §1001" },
   { id: "suivi-meme-commit", cote: "agent", observable: true, regle: "Documenter chaque tâche substantielle dans docs/suivi/ DANS LE MÊME commit que le travail décrit.", source: "docs/regles-de-travail.md §4" },
   { id: "push-au-fil-de-l-eau", cote: "agent", observable: true, regle: "Pousser au fil de l'eau : ce qui n'est pas poussé n'existe pas si la session s'interrompt.", source: "docs/regles-de-travail.md §4" },
@@ -583,6 +587,55 @@ export const REPONSES_UTILISATEUR = [
   { id: "choix-assume", libelle: "C'est un choix assumé, ce n'est pas un défaut", consequence: "le constat est juste mais cesse d'être compté comme un défaut ; il reste affiché en information, jamais en reproche", creeUneTache: false },
 ];
 
+// ————————————————————————————————————————————————————————————————————————
+// L'ÉVALUATION NE PORTE PAS QUE SUR LA RONDE (2026-09-24, chantier 5 du plan de nuit)
+// ————————————————————————————————————————————————————————————————————————
+//
+// DEMANDE DE L'UTILISATEUR, et il l'a marquée « GROS WARNING » en ajoutant que **c'est une erreur
+// qui se répète** : EVAL-DEV et EVAL-IA ne doivent PAS porter seulement sur la Ronde.
+//
+// LE DÉFAUT, ET IL EST STRUCTUREL PLUTÔT QU'ACCIDENTEL : l'évaluation n'existait qu'en tant
+// qu'ITEM de Ronde (`recap-evaluations`), et sa période implicite était « depuis la dernière
+// Ronde ». Tout ce qui se faisait entre deux Rondes — une nuit entière de travail, une vague de
+// correctifs, une simulation — n'était donc jugé par personne. Pire : l'absence d'évaluation ne
+// produisait AUCUN signal, parce qu'un rapport qu'on ne lance pas ne se plaint jamais. C'est
+// exactement pour ça que l'erreur se répétait : rien ne la nommait.
+//
+// CE QUI LA FAIT CESSER, et c'est la seule chose qui compte : un mécanisme qui compare le TRAVAIL
+// RÉELLEMENT FAIT à la dernière évaluation, et qui parle quand l'écart se creuse. La période n'est
+// plus « depuis la dernière Ronde » mais « depuis la dernière ÉVALUATION », ce qui est la vraie
+// question — et le seuil est mécanique (Article 27 : une obligation qui ne repose que sur la
+// mémoire d'un agent n'existe plus à la session suivante).
+export const TRAVAIL_SANS_EVAL_SEUIL = 10;
+
+// `luAvecSucces` N'EST PAS UN DÉTAIL, et l'oublier a produit ce défaut à la seconde même où cette
+// fonction a été branchée : deux `readdirSync`/`sh` non importés, deux `catch` qui avalent, deux
+// compteurs restés à zéro — et le rapport a affiché « ✅ aucun travail enregistré » la nuit où
+// dix-neuf tâches venaient d'être écrites. Un zéro qu'on n'a pas pu mesurer se lit exactement
+// comme un zéro mesuré. Sixième fois de la nuit que ce défaut se présente, et la première fois
+// qu'il se présente DANS le mécanisme censé empêcher une erreur de se répéter.
+export function findTravailNonEvalue({ derniereEval = null, tachesDepuis = 0, commitsDepuis = 0, seuil = TRAVAIL_SANS_EVAL_SEUIL, luAvecSucces = true } = {}) {
+  if (!luAvecSucces) {
+    return { mesurable: false, alerte: false,
+      pourquoi: "le suivi ou l'historique git n'ont pas pu être lus — AUCUN volume mesuré, ce qui n'est jamais la même chose que zéro travail. Un « rien à juger » rendu sur une lecture ratée est précisément le faux vert que cette fonction existe pour empêcher (leçon L5)." };
+  }
+  // Aucune évaluation JAMAIS faite et aucun travail : rien à dire, et surtout pas une alerte.
+  if (!tachesDepuis && !commitsDepuis) {
+    return { mesurable: true, alerte: false, pourquoi: "aucun travail enregistré depuis la dernière évaluation — rien à juger, ce qui n'est pas un manquement" };
+  }
+  const volume = Math.max(tachesDepuis, commitsDepuis);
+  if (volume < seuil) {
+    return { mesurable: true, alerte: false, volume, derniereEval,
+      pourquoi: `${volume} unité(s) de travail depuis la dernière évaluation, sous le seuil de ${seuil} — une évaluation à chaque commit ne mesurerait plus rien` };
+  }
+  return {
+    mesurable: true, alerte: true, volume, derniereEval,
+    pourquoi: `${volume} unité(s) de travail (${tachesDepuis} tâche(s), ${commitsDepuis} commit(s)) depuis ${derniereEval ?? "TOUJOURS — aucune évaluation n'a jamais eu lieu"}, et aucune évaluation ne les couvre`,
+    // LE POINT QUI FERME L'ERREUR : l'évaluation se produit sur DEMANDE, pas seulement à la Ronde.
+    remede: "lancer l'évaluation maintenant, sans attendre une Ronde : `node scripts/cassandra-rh.mjs rapport` pour le côté DEV et `node scripts/angel-of-ia-process.mjs` pour le côté CONDUITE. Une évaluation qui n'existe qu'à la Ronde laisse hors de tout jugement ce qui se fait entre deux Rondes — une nuit entière de travail, par exemple.",
+  };
+}
+
 export const REPONSES_EVAL_FILE = "docs/angel-of-ia-process/reponses-evaluation.md";
 
 // pointsAInterroger() — SEULEMENT les points problématiques (son choix explicite). Le risque assumé
@@ -778,6 +831,40 @@ function main() {
   const o = checkConsultationOrder();
   const audit = auditWorkingRules({ ordre: o });
   console.log(angelSectionLines(audit, o).join("\n"));
+
+  // LE TRAVAIL QUE PERSONNE N'A ÉVALUÉ (2026-09-24) — placé EN TÊTE du reste parce que c'est une
+  // erreur que l'utilisateur a vue se répéter, et qu'un signal enterré en bas de rapport se répète
+  // encore. Les deux volumes sont LUS (le suivi et git), jamais estimés.
+  let tachesDepuis = 0; let commitsDepuis = 0; let derniereEval = null;
+  let lectureOk = true;
+  try {
+    const hist = loadEvaluationHistory();
+    derniereEval = hist.length ? hist[hist.length - 1].date : null;
+  } catch { /* pas d'historique : derniereEval reste null, et c'est le cas le plus alarmant */ }
+  try {
+    // execFileSync et non un shell : ce fichier n'importe pas `sh`, et l'avoir appelé quand même
+    // est exactement ce qui a produit le faux vert ci-dessus. Le lanceur se vérifie, il ne se
+    // suppose pas présent parce qu'il l'est ailleurs.
+    const args = ["log", "--oneline"];
+    if (derniereEval) args.push(`--since=${derniereEval}`);
+    commitsDepuis = execFileSync("git", args, { encoding: "utf8" }).split("\n").filter(Boolean).length;
+  } catch { lectureOk = false; }
+  try {
+    const dir = join(ROOT, "docs/suivi/sessions");
+    for (const f of readdirSync(dir)) {
+      if (!f.endsWith(".md")) continue;
+      const texte = readFileSync(join(dir, f), "utf8");
+      for (const l of texte.split("\n")) {
+        if (!l.trim().startsWith("|")) continue;
+        const cells = l.split("|").slice(1, -1).map((c) => c.trim());
+        if (derniereEval && cells[1] && cells[1] >= derniereEval) tachesDepuis += 1;
+      }
+    }
+  } catch { lectureOk = false; }
+  const nonEvalue = findTravailNonEvalue({ derniereEval, tachesDepuis, commitsDepuis, luAvecSucces: lectureOk });
+  console.log("\n=== LE TRAVAIL QUE PERSONNE N'A ÉVALUÉ ===");
+  console.log(!nonEvalue.mesurable ? `❓ PAS MESURÉ — ${nonEvalue.pourquoi}` : (nonEvalue.alerte ? `⚠️  ${nonEvalue.pourquoi}` : `✅ ${nonEvalue.pourquoi}`));
+  if (nonEvalue.alerte) console.log(`   REMÈDE : ${nonEvalue.remede}`);
   if (o.mesurable) {
     console.log(`\nCroisement des horodatages : ${o.commitsExamines} commit(s) examiné(s), ${o.constats.length} consultation(s) de jugement faite(s) après coup, ${o.signaux.length} signal(aux) non concluant(s).`);
     console.log("Limite honnête : une consultation dans une session sans commit reste invisible, et un commit groupant plusieurs heures élargit la fenêtre — c'est un signal daté, jamais une preuve.");

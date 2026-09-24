@@ -11303,6 +11303,16 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     assert.ok(typeof ex.sApplique === 'function' && ex.exige && ex.pourquoi, 'an exigence is data, never an if buried in a function: it says WHO it applies to, WHICH class is owed and WHAT it costs not to have it — the three ifs it replaces were exactly the frozen list Article 24 forbids, and a fourth would have required reopening the function');
     assert.ok(crh2.CLASSES_TRANSVERSES.some((c) => c.cle === ex.exige), 'and every exigence points at a class that really exists: an exigence owed to a class nobody measures would be unsatisfiable forever, which reads like a permanent failure rather than a missing probe');
   }
+  // L'ÉVALUATION NE PORTE PAS QUE SUR LA RONDE (2026-09-24, chantier 5) — « GROS WARNING ».
+  const ang2 = await import('../scripts/angel-of-ia-process.mjs');
+  assert.equal(ang2.findTravailNonEvalue({ luAvecSucces: false }).mesurable, false, 'a volume that could not be READ yields NOT MEASURED, never zero — and this is not hypothetical: wired in without its imports, the function printed "✅ aucun travail enregistré" on the very night nineteen tasks had just been written. A zero one could not measure reads exactly like a measured zero, and it happened INSIDE the mechanism built to stop an error from repeating');
+  assert.equal(ang2.findTravailNonEvalue({ tachesDepuis: 0, commitsDepuis: 0 }).alerte, false, 'genuinely no work since the last evaluation is not a failing, and must not raise an alert');
+  assert.equal(ang2.findTravailNonEvalue({ tachesDepuis: 2, commitsDepuis: 1 }).alerte, false, 'nor does a handful of commits: an evaluation at every commit would stop measuring anything');
+  const trop = ang2.findTravailNonEvalue({ derniereEval: '2026-09-22', tachesDepuis: 19, commitsDepuis: 12 });
+  assert.ok(trop.alerte && trop.remede.includes('sans attendre une Ronde'), 'but a night\'s worth of work uncovered by any evaluation does raise one, and the remedy says the thing that closes the error: the evaluation is produced ON DEMAND, not only at a Ronde. Its implicit period was "since the last Ronde", so everything done between two Rondes was judged by nobody — and the absence of an evaluation produced no signal at all, because a report one never launches never complains. That is exactly why the user saw this error repeat');
+  assert.ok(ang2.findTravailNonEvalue({ tachesDepuis: 50, commitsDepuis: 3 }).pourquoi.includes('TOUJOURS'), 'and work with NO evaluation ever recorded says so in the clearest terms rather than hiding behind a date that does not exist');
+  assert.ok(ang2.REGLES_SURVEILLEES.some((r) => r.id === 'eval-hors-ronde'), 'the rule is WATCHED rather than merely intended: angel refuses to be green without an answer, so forgetting it becomes visible (Article 27)');
+
   // SAFE-EXPORT MUSCLÉ (2026-09-24, chantier 3.5) — « si on perd l'exportabilité, on perd TOUT UN PROJET ».
   const se2 = await import('../scripts/safe-export.mjs');
   // LE MOTIF PEUT-IL SEULEMENT MATCHER ? (leçon L11) — la question posée AVANT de croire un zéro.
