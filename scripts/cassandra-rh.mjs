@@ -13,7 +13,7 @@
 // (le-coordinateur.mjs), le KPI vient de kpi-historique.csv (kpi-report.mjs), l'usage réel vient de
 // tool-usage.mjs, la stagnation relative vient de clean-dirty-old.mjs — aucune de ces quatre choses
 // n'est recalculée ici, jamais une seconde version qui pourrait diverger de l'originale.
-import { readFileSync, existsSync, rmSync, writeFileSync } from "node:fs";
+import { readFileSync, existsSync, rmSync, writeFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { parseToolsTable, slugifyAgentName, toolIdentitySlug, checkAgentOnboarding, loadBadgeCeremonyHistory, CERTIFIABLE_STATUTS, CLASSIQUE_STATUT } from "./le-coordinateur.mjs";
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
@@ -915,6 +915,307 @@ export function tendancesRH(options = {}) {
   return ["membres-certifies", "effectif", "outils-a-reconsiderer", "trous-de-couverture"].map((c) => detectTendance(serie, c, options));
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LES TYPES DE SCRIPTS ET LES CLASSES TRANSVERSES (2026-09-24, chantier 1.3 et 1.4 du plan de nuit)
+// ————————————————————————————————————————————————————————————————————————
+//
+// DEMANDE DE L'UTILISATEUR, en deux morceaux du même prompt : « distinguons les types de scripts »
+// comme support de la classification, et la notion de CLASSE TRANSVERSE dont il donne un exemple
+// (« tous les outils qui scannent »), en précisant : « Sont déclarés pertinents d'office les
+// gardiens sacrés ».
+//
+// POURQUOI ICI, CHEZ CASSANDRA, ET PAS DANS UN VINGT-SIXIÈME SCRIPT : c'est elle qui tient déjà
+// l'effectif (`teamRoster`), le recensement de fonctionnalités (`functionalityCensus`) et
+// l'organigramme. Un script de plus pour une seconde vue de la même population aurait été exactement
+// ce que l'utilisateur demande d'arrêter dans le même prompt (« réduire le nombre d'outils »). Et la
+// convocation qu'il demande par ailleurs a besoin de savoir DE QUEL TYPE est ce qu'elle convoque.
+//
+// LA DIFFÉRENCE AVEC CE QUI EXISTAIT, parce qu'elle n'est pas évidente et qu'un doublon aurait été
+// le vrai risque : `AGENT_CATEGORIES` donne le RANG (qui est Gardien sacré, qui est Membre) et
+// `TOOL_PORTEE` donne ce qu'un outil ANALYSE (le dépôt ou une simulation). Ni l'un ni l'autre ne dit
+// ce qu'un fichier EST (une bibliothèque n'a pas de rang et n'analyse rien) ni ce qu'il SAIT FAIRE.
+// Ce sont donc deux axes neufs, pas une troisième copie des deux premiers.
+//
+// TOUT SE DÉRIVE, RIEN NE S'ÉNUMÈRE (Article 24) : le type se lit dans le fichier lui-même (a-t-il
+// une porte d'entrée en ligne de commande ? vit-il dans les crochets ? qui l'importe ?), et chaque
+// classe transverse est une SONDE sur le source. Un script ajouté demain reçoit son type et ses
+// classes sans que personne y pense, et une classe nouvelle s'écrit en UN endroit pour TOUS.
+
+export const MOTIF_PORTE_CLI = /import\.meta\.url\s*===\s*`file:\/\/\$\{process\.argv\[1\]\}`/;
+
+export const TYPES_DE_SCRIPT = {
+  crochet: "s'exécute automatiquement à un moment de git, jamais appelé à la main",
+  "filet-de-securite": "la suite de tests elle-même — ce que le crochet lance et qui peut refuser un commit",
+  outil: "un membre de l'Agence : une porte d'entrée réelle (ligne de commande, package.json, crochet ou commande écrite) ET au moins un document qui le nomme",
+  "utilitaire-sans-fiche": "lançable mais nommé par aucun document du dépôt : soit un outil qu'on a oublié de documenter, soit un script jetable qui a survécu",
+  "bibliotheque-partagee": "aucune porte d'entrée, importée par plusieurs — le vocabulaire commun de l'Agence",
+  "bibliotheque-solitaire": "aucune porte d'entrée et importée par un seul : à fusionner dans son unique client, ou bien il lui manque des clients",
+  "infrastructure-shell": "script shell d'installation ou de construction, hors de l'Agence",
+  "execution-directe-non-documentee": "personne ne l'importe et aucune commande de lancement n'est écrite nulle part : il ne peut être lancé qu'à la main, par quelqu'un qui sait déjà",
+};
+
+// Chaque classe est une SONDE, jamais une liste de noms. Une classe nouvelle s'ajoute ici et
+// s'applique immédiatement à TOUS les scripts, y compris ceux écrits avant elle.
+export const CLASSES_TRANSVERSES = [
+  { cle: "scanne-le-depot", libelle: "scanne le dépôt",
+    quoi: "parcourt des fichiers pour y chercher quelque chose — la classe que l'utilisateur a nommée lui-même",
+    sonde: (src) => /readdirSync|walk\s*\(|globSync/.test(src) },
+  { cle: "rend-du-html", libelle: "rend un rapport HTML",
+    quoi: "produit une page, donc quelque chose que l'utilisateur LIT vraiment",
+    sonde: (src) => /renderHtmlReport/.test(src) },
+  { cle: "tient-un-registre", libelle: "tient un registre",
+    quoi: "écrit une mémoire durable sur le disque — ce qui lui permet de se souvenir d'un passage à l'autre",
+    sonde: (src) => /writeFileSync|appendFileSync/.test(src) },
+  { cle: "coute-des-appels-api", libelle: "coûte de vrais appels API",
+    quoi: "consulte un modèle ou un service distant : jamais lancé sans passer par Smart Conso API (Article 22)",
+    sonde: (src) => /generativelanguage|fetch\s*\(\s*[`'"]https/.test(src) },
+  { cle: "declare-sa-fiabilite", libelle: "déclare sa marge d'erreur",
+    quoi: "avertit qu'il peut se tromper avant de rendre un chiffre — l'exigence transverse de tous les outils heuristiques",
+    sonde: (src) => /printReliabilityNotice/.test(src) },
+  { cle: "conclut-en-plan-daction", libelle: "conclut par un plan d'action",
+    quoi: "transforme ses constats en gestes (Article 28) au lieu de s'arrêter au rapport",
+    sonde: (src) => /PLAN_ACTION_TITRE|buildPlanDaction|planDactionDepuisEcarts/.test(src) },
+  { cle: "compte-son-usage", libelle: "enregistre son propre usage",
+    quoi: "sait dire s'il a servi — sans quoi personne ne peut constater qu'un outil n'est jamais sollicité",
+    sonde: (src) => /recordCliUsage/.test(src) },
+  { cle: "refuse-de-mesurer", libelle: "sait répondre « pas mesuré »",
+    quoi: "distingue « je n'ai rien trouvé » de « je n'ai pas pu regarder » (leçon L5) — la classe la plus discrète et la plus importante",
+    sonde: (src) => /PAS MESURÉ|pas mesuré|mesurable\s*:\s*false/.test(src) },
+];
+
+// DEUX FAUX VERDICTS, TROUVÉS AU PREMIER PASSAGE RÉEL — et les garder écrits vaut mieux que de
+// les refaire, parce que les deux venaient de la même paresse : mesurer ce qui était facile à
+// mesurer plutôt que ce que la question posait.
+//
+// (1) « SANS FICHE », 22 FOIS, dont presque toutes à tort. Je cherchais `docs/referentiel/<nom du
+// fichier>.md`, or la fiche d'un outil porte le nom de L'OUTIL, pas celui de son script :
+// `check-argus.mjs` est documenté dans `argus.md`, `check-harmonia.mjs` dans `harmonia.md`. Et six
+// outils n'ont DÉLIBÉRÉMENT aucune fiche, la charte le déclare noir sur blanc. Le rattachement se
+// fait donc par la TABLE MAÎTRESSE, le registre qui dit déjà quel script appartient à quel outil —
+// lu, jamais recopié (Article 24).
+//
+// (2) « ORPHELINE », 6 FOIS, toutes fausses. Je ne comptais qu'une seule façon d'atteindre un
+// script — être importé par un autre — alors qu'il en existe quatre dans ce dépôt : la porte en
+// ligne de commande, `package.json`, un crochet git, et la documentation qui écrit `node
+// scripts/x.mjs` pour un outil lancé à la main. `check-spirit.mjs` tombait ainsi en « plus rien ne
+// l'atteint » alors que la charte le cite comme l'outil de référence de l'Article 0. Un garde qui
+// accuse à tort cesse d'être lu (leçon L4) : les quatre portes se cherchent, et l'orphelin n'est
+// déclaré qu'une fois les quatre fermées.
+
+export function fichesParScript(tableMaitresse = "", lignesInventaire = []) {
+  // Deux sources, parce qu'aucune des deux seule ne couvre : la table maîtresse dit quel outil
+  // existe, l'inventaire de la charte dit quel script et quelle fiche il porte.
+  const parScript = {};
+  for (const l of lignesInventaire) if (l.script && l.instanciation) parScript[l.script] = l.instanciation;
+  return { parScript, outils: new Set((tableMaitresse.match(/\|\s*\*{0,2}`?([a-zA-Z0-9-]+\.mjs)`?/g) || []).map((m) => m.replace(/[|*`\s]/g, ""))) };
+}
+
+export function inventaireDeLaCharte(charteMarkdown = "") {
+  // L'inventaire documentaire de CLAUDE.md : une ligne par outil, avec sa colonne Script et sa
+  // colonne Instanciation. Il se LIT, il ne se recopie pas — un outil ajouté demain y sera.
+  const out = [];
+  for (const ligne of String(charteMarkdown).split("\n")) {
+    if (!ligne.trim().startsWith("|")) continue;
+    const cells = ligne.split("|").slice(1, -1).map((c) => c.trim().replace(/`/g, ""));
+    const script = cells.find((c) => /^scripts\/[a-z0-9-]+\.mjs$/.test(c));
+    const instanciation = cells.find((c) => /^docs\/referentiel\/[a-z0-9-]+\.md$/.test(c));
+    if (script) out.push({ script, instanciation: instanciation ?? null });
+  }
+  return out;
+}
+
+// CINQ PORTES, PAS QUATRE — et la cinquième est arrivée par un troisième faux verdict. Après la
+// correction précédente, `check-spirit.mjs` restait « orphelin » : la charte le cite abondamment,
+// mais elle n'écrit nulle part `node scripts/check-spirit.mjs`, seulement la commande de Smart
+// Conso API qu'il faut lancer AVANT lui. Être nommé par un document normatif est donc une porte à
+// part entière — et le vrai constat, celui qui sert, est ailleurs : un outil que la charte dit de
+// lancer à la main sans jamais écrire comment se lance mal. C'est devenu un écart nommé plutôt
+// qu'une accusation d'inexistence (BP3 : fournir le FAIT qui manque, jamais adoucir le constat).
+export function portesDEntree(chemin, source = "", { importeurs = 0, packageJson = "", sourcesCrochets = "", documentation = "", instructions = null } = {}) {
+  const base = chemin.replace(/^scripts\//, "");
+  const echappe = base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const motifLancement = new RegExp(`(?:node|bash|--import)\\s+[^\\n|]*${echappe}`);
+  const motifCitation = new RegExp(`scripts/${echappe}`);
+  const portes = [];
+  if (MOTIF_PORTE_CLI.test(source)) portes.push("ligne de commande");
+  if (motifLancement.test(packageJson)) portes.push("package.json");
+  if (motifLancement.test(sourcesCrochets)) portes.push("crochet git");
+  // LA COMMANDE SE CHERCHE DANS LES INSTRUCTIONS, JAMAIS DANS L'HISTORIQUE — troisième
+  // sur-correction, attrapée en vérifiant un verdict plutôt qu'en le croyant. `check-spirit.mjs`
+  // ressortait « une commande est écrite » grâce à une ligne de SUIVI, c'est-à-dire le récit d'un
+  // travail passé. Une commande pour lancer quelque chose vit dans un document qui dit quoi faire,
+  // jamais dans un journal de ce qui a été fait — et la confondre effaçait précisément le constat
+  // utile : la charte ordonne de lancer cet outil à la main sans jamais écrire comment.
+  if (motifLancement.test(instructions ?? documentation)) portes.push("une commande de lancement est écrite");
+  else if (motifCitation.test(documentation)) portes.push("nommé par la documentation, sans commande de lancement écrite");
+  if (importeurs > 0) portes.push(`importé par ${importeurs} fichier(s)`);
+  return portes;
+}
+
+export function typeDeScript(chemin, source = "", { fiches = new Set(), importeurs = 0, portes = null, scriptsDeLInventaire = new Set(), documente = false } = {}) {
+  if (/^scripts\/hooks\//.test(chemin)) return "crochet";
+  if (/\.sh$/.test(chemin)) return "infrastructure-shell";
+  if (chemin === "scripts/check-house.mjs") return "filet-de-securite";
+  // ÊTRE NOMMÉ PAR UN DOCUMENT N'EST PAS UNE PORTE D'EXÉCUTION — la sur-correction immédiate de la
+  // correction précédente, et elle valait d'être attrapée : en comptant la mention documentaire
+  // comme une porte, `html-report.mjs`, importé par dix-huit fichiers et lançable par aucun, est
+  // sorti « outil ». Les deux questions sont distinctes et se posent séparément : peut-on le
+  // LANCER (sinon c'est une bibliothèque), et reste-t-il ATTEIGNABLE par quoi que ce soit (sinon
+  // c'est du code mort).
+  const lancePar = (portes ?? []).filter((p) => p === "ligne de commande" || p === "package.json" || p === "crochet git" || p === "une commande de lancement est écrite");
+  // Un .mjs que PERSONNE n'importe et qui n'expose aucune porte ne peut faire quelque chose que
+  // lancé directement — c'est le cas de `check-spirit.mjs`, qui travaille au niveau du module sans
+  // garde `import.meta.url`. Le déduire par élimination vaut mieux que de le déclarer mort.
+  const executableParElimination = importeurs === 0 && /\.mjs$/.test(chemin);
+  if (lancePar.length || executableParElimination) {
+    if (!lancePar.length) return "execution-directe-non-documentee";
+    // Appartenir à l'inventaire de la charte VAUT documentation, même sans fiche séparée : six
+    // outils y figurent en déclarant explicitement n'en avoir aucune, et les traiter en oubliés
+    // serait reprocher une décision écrite (Article 19).
+    if (fiches.has(chemin) || scriptsDeLInventaire.has(chemin)) return "outil";
+    return documente ? "outil" : "utilitaire-sans-fiche";
+  }
+  return importeurs >= 2 ? "bibliotheque-partagee" : "bibliotheque-solitaire";
+}
+
+export function classesDuScript(source = "", classes = CLASSES_TRANSVERSES) {
+  return classes.filter((c) => c.sonde(String(source))).map((c) => c.cle);
+}
+
+// LE RECENSEMENT COMPLET. Il refuse de répondre plutôt que de rendre un tableau vide quand il n'a
+// rien pu lire (leçon L5) : une population de zéro script se lit exactement comme un dépôt propre.
+export function recenserLesScripts({ root = ROOT, lireDossier = readdirSync, lire = readFileSync, classes = CLASSES_TRANSVERSES } = {}) {
+  let noms = [];
+  try { noms = lireDossier(join(root, "scripts")); } catch { return { mesurable: false, pourquoi: "le dossier scripts/ est illisible — aucune population mesurée, ce qui n'est jamais la même chose qu'une population vide" }; }
+  const chemins = [];
+  for (const n of noms) {
+    if (/\.(mjs|sh)$/.test(n)) chemins.push(`scripts/${n}`);
+    else if (n === "hooks") {
+      let sousNoms = [];
+      try { sousNoms = lireDossier(join(root, "scripts/hooks")); } catch { continue; }
+      for (const sn of sousNoms) chemins.push(`scripts/hooks/${sn}`);
+    }
+  }
+  if (!chemins.length) return { mesurable: false, pourquoi: "aucun script trouvé dans scripts/ — un dépôt sans outillage serait une anomalie, pas un résultat" };
+
+  const sources = {};
+  for (const c of chemins) { try { sources[c] = lire(join(root, c), "utf8"); } catch { sources[c] = null; } }
+
+  // Le rattachement script → fiche se LIT dans l'inventaire de la charte (colonne Script ×
+  // colonne Instanciation), jamais déduit du nom du fichier — c'est l'erreur qui accusait 22 outils.
+  let inventaire = [];
+  try { inventaire = inventaireDeLaCharte(lire(join(root, "CLAUDE.md"), "utf8")); } catch { /* sans inventaire : tout exécutable sera « sans fiche », et le recensement le dit */ }
+  const fiches = new Set(inventaire.filter((l) => l.instanciation).map((l) => l.script));
+  const scriptsDeLInventaire = new Set(inventaire.map((l) => l.script));
+
+  // Les quatre portes d'entrée réelles de ce dépôt, lues là où elles vivent.
+  let packageJson = ""; try { packageJson = lire(join(root, "package.json"), "utf8"); } catch { /* absent */ }
+  let sourcesCrochets = "";
+  for (const c of chemins) if (/^scripts\/hooks\//.test(c) && sources[c]) sourcesCrochets += sources[c];
+  // TOUTE la documentation, jamais deux fichiers choisis à la main : un outil documenté par son
+  // seul blueprint (god-of-all-process, tool-brain) sortait « sans fiche » alors qu'il est décrit
+  // en long et en large — l'accusation portait sur l'endroit où j'avais regardé, pas sur le dépôt.
+  let documentation = "";
+  try { documentation += lire(join(root, "CLAUDE.md"), "utf8"); } catch { /* absent */ }
+  const lireDocs = (dossier, profondeur = 0) => {
+    if (profondeur > 2) return;
+    let entrees = [];
+    try { entrees = lireDossier(join(root, dossier), { withFileTypes: true }); } catch { return; }
+    for (const e of entrees) {
+      const nom = e.name ?? e;
+      const estDossier = typeof e.isDirectory === "function" ? e.isDirectory() : false;
+      if (estDossier) { lireDocs(`${dossier}/${nom}`, profondeur + 1); continue; }
+      if (!/\.(md|txt)$/.test(nom)) continue;
+      try { documentation += lire(join(root, `${dossier}/${nom}`), "utf8"); } catch { /* illisible */ }
+    }
+  };
+  lireDocs("docs");
+  // Le corpus d'INSTRUCTIONS : ce qui dit quoi faire, par opposition à ce qui raconte ce qui a été
+  // fait. La frontière se dérive du chemin — un registre d'outil et le suivi sont de l'historique.
+  let instructions = "";
+  try { instructions += lire(join(root, "CLAUDE.md"), "utf8"); } catch { /* absent */ }
+  try { instructions += lire(join(root, "package.json"), "utf8"); } catch { /* absent */ }
+  const lireInstructions = (dossier, profondeur = 0) => {
+    if (profondeur > 1) return;
+    let entrees = [];
+    try { entrees = lireDossier(join(root, dossier), { withFileTypes: true }); } catch { return; }
+    for (const e of entrees) {
+      const nom = e.name ?? e;
+      const estDossier = typeof e.isDirectory === "function" ? e.isDirectory() : false;
+      if (estDossier) { if (dossier === "docs" && nom === "referentiel") lireInstructions(`${dossier}/${nom}`, profondeur + 1); continue; }
+      if (!/\.(md|txt)$/.test(nom)) continue;
+      try { instructions += lire(join(root, `${dossier}/${nom}`), "utf8"); } catch { /* illisible */ }
+    }
+  };
+  lireInstructions("docs");
+
+  // Qui importe qui — dérivé des imports réels, jamais d'une carte tenue à la main.
+  const importeurs = {};
+  for (const [, src] of Object.entries(sources)) {
+    if (!src) continue;
+    for (const m of String(src).matchAll(/from\s+["']\.\/([a-z0-9-]+\.mjs)["']|import\(["']\.\.\/scripts\/([a-z0-9-]+\.mjs)["']/g)) {
+      const cible = `scripts/${m[1] ?? m[2]}`;
+      importeurs[cible] = (importeurs[cible] ?? 0) + 1;
+    }
+  }
+
+  const lignes = chemins.map((c) => {
+    const src = sources[c];
+    const nb = importeurs[c] ?? 0;
+    const portes = src === null ? [] : portesDEntree(c, src, { importeurs: nb, packageJson, sourcesCrochets, documentation, instructions });
+    return {
+      chemin: c,
+      illisible: src === null,
+      type: src === null ? "illisible" : typeDeScript(c, src, { fiches, importeurs: nb, portes, scriptsDeLInventaire, documente: new RegExp(`scripts/${c.replace(/^scripts\//, "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test(documentation) }),
+      fiche: fiches.has(c) ? "fiche dédiée" : (scriptsDeLInventaire.has(c) ? "à l'inventaire de la charte" : null),
+      classes: src === null ? [] : classesDuScript(src, classes),
+      importeurs: nb,
+      portes,
+    };
+  });
+
+  const parType = {};
+  for (const l of lignes) (parType[l.type] ??= []).push(l.chemin);
+  const parClasse = {};
+  for (const cl of classes) parClasse[cl.cle] = lignes.filter((l) => l.classes.includes(cl.cle)).map((l) => l.chemin);
+
+  return { mesurable: true, lignes, parType, parClasse, total: lignes.length,
+    illisibles: lignes.filter((l) => l.illisible).map((l) => l.chemin),
+    horsPortee: "le TYPE se dérive de la forme du fichier et les CLASSES de sondes sur son texte : un outil qui scanne le dépôt sans jamais appeler readdirSync échappe à sa classe, et aucune sonde ne sait ce qu'un script fait VRAIMENT. Ce recensement dit ce qui se voit, jamais ce qui se comprend." };
+}
+
+// LES ÉCARTS QUE CE RECENSEMENT REND VISIBLES — et c'est là qu'il sert à quelque chose, pas dans le
+// tableau lui-même. Chacun est une question, jamais un verdict : Abraham a posé cette règle pour les
+// documents et elle vaut ici (un outil capable d'écrire « ce script est inutile » verrait un jour ce
+// jugement appliqué par personne en particulier).
+// DEUX NATURES D'ÉCART, ET LES CONFONDRE ÉTAIT UNE ERREUR QU'UN TEST A ATTRAPÉE. J'avais écrit que
+// tout écart devait être une question, en reprenant la règle qu'Abraham applique à la pertinence
+// d'une règle. Elle ne vaut pas ici telle quelle : « cet outil n'appelle jamais
+// printReliabilityNotice » est un FAIT mécaniquement vérifié, pas un avis, et le déguiser en
+// question l'affaiblirait sans rien protéger. « Reste-t-il une raison que ce script existe » est en
+// revanche un jugement que l'outil n'a pas à rendre. Le CONSTAT se mesure, la QUESTION se pose —
+// et c'est exactement la frontière de l'Article 28 entre ce qui devient une tâche et ce qui monte
+// à l'arbitrage.
+export function ecartsDuRecensement(recensement) {
+  if (!recensement?.mesurable) return [];
+  const out = [];
+  for (const l of recensement.lignes) {
+    if (l.type === "execution-directe-non-documentee") {
+      const cite = l.portes?.includes("nommé par la documentation, sans commande de lancement écrite");
+      out.push(cite
+        ? { chemin: l.chemin, nature: "constat", question: "la documentation en parle mais n'écrit nulle part la commande pour le lancer — un outil « à lancer à la main » dont la main ne sait pas quoi taper" }
+        : { chemin: l.chemin, nature: "question", question: "personne ne l'importe, aucun document ne le nomme, aucune commande ne le lance : reste-t-il une raison qu'il existe ?" });
+    }
+    if (l.type === "bibliotheque-solitaire") out.push({ chemin: l.chemin, nature: "question", question: "importée par un seul fichier : à fusionner dans son unique client, ou bien il lui manque les clients qu'elle attendait ?" });
+    if (l.type === "utilitaire-sans-fiche") out.push({ chemin: l.chemin, nature: "question", question: "exécutable et nommé par AUCUN document du dépôt : outil qu'on a oublié de documenter, ou script jetable qui a survécu ?" });
+
+    if (l.type === "outil" && !l.classes.includes("declare-sa-fiabilite")) out.push({ chemin: l.chemin, nature: "constat", question: "outil qui ne déclare jamais sa marge d'erreur — ses chiffres se lisent comme des certitudes" });
+    if (l.type === "outil" && l.classes.includes("scanne-le-depot") && !l.classes.includes("refuse-de-mesurer")) out.push({ chemin: l.chemin, nature: "constat", question: "scanne le dépôt sans jamais savoir répondre « pas mesuré » : que rend-il le jour où il ne peut pas regarder ? (leçon L5)" });
+    if (l.type === "outil" && l.classes.includes("coute-des-appels-api") && !/smart-conso/i.test(l.chemin) && !l.classes.includes("declare-sa-fiabilite")) out.push({ chemin: l.chemin, nature: "constat", question: "coûte de vrais appels API sans déclarer sa marge — l'Article 22 demande une consultation avant, la déclaration après" });
+  }
+  return out;
+}
+
 function main() {
   printReliabilityNotice("cassandra-rh");
   recordCliUsage("cassandra-rh");
@@ -942,6 +1243,38 @@ function main() {
   //
   // Un mécanisme qui ne sort pas du script est une intention, pas un outil — la même leçon que
   // safe-export.mjs avait déjà apprise en calculant toute son escalade sans jamais l'imprimer.
+  // RECENSEMENT (2026-09-24) — la même leçon que l'organigramme a déjà coûtée une fois : un
+  // mécanisme qui ne sort pas du script est une intention, pas un outil. La commande existe donc
+  // le jour même où les fonctions sont écrites, jamais « plus tard ».
+  if (sub === "recensement") {
+    console.log(CASSANDRA_PERSONA);
+    const rec = recenserLesScripts();
+    if (!rec.mesurable) { console.log(`\nPAS MESURÉ — ${rec.pourquoi}`); return; }
+    console.log(`\n=== RECENSEMENT DES SCRIPTS — ${rec.total} fichiers ===\n`);
+    console.log("--- PAR TYPE (ce qu'un fichier EST) ---");
+    for (const [t, l] of Object.entries(rec.parType).sort((a, b) => b[1].length - a[1].length)) {
+      console.log(`${String(l.length).padStart(3)}  ${t} — ${TYPES_DE_SCRIPT[t] ?? "type non décrit"}`);
+    }
+    console.log("\n--- PAR CLASSE TRANSVERSE (ce qu'un fichier SAIT FAIRE) ---");
+    for (const c of CLASSES_TRANSVERSES) {
+      console.log(`${String((rec.parClasse[c.cle] ?? []).length).padStart(3)}  ${c.libelle} — ${c.quoi}`);
+    }
+    const ecarts = ecartsDuRecensement(rec);
+    const constats = ecarts.filter((e) => e.nature === "constat");
+    const questions = ecarts.filter((e) => e.nature === "question");
+    console.log(`\n--- ${constats.length} CONSTAT(S) : mesurés, ils tiennent tels quels ---`);
+    for (const e of constats) console.log(`· ${e.chemin} — ${e.question}`);
+    console.log(`\n--- ${questions.length} QUESTION(S) : un jugement que cet outil ne rend pas ---`);
+    for (const e of questions) console.log(`· ${e.chemin} — ${e.question}`);
+    console.log(`\nHORS PORTÉE : ${rec.horsPortee}`);
+    const plan = buildPlanDaction(
+      constats.map((e) => ({ pourquoi: `${e.chemin} : ${e.question}` })),
+      { toolSlug: "cassandra-rh", tache: "porter chaque constat à une tâche de docs/suivi/ (Article 28) ; les questions montent à l'utilisateur, jamais tranchées ici" },
+    );
+    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+    for (const l of plan.lignes) console.log(l);
+    return;
+  }
   if (sub === "organigramme") {
     console.log(CASSANDRA_PERSONA);
     console.log("");
