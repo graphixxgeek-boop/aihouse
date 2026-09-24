@@ -68,5 +68,14 @@
     "quoi": "Un motif regex avec \\b devant un caractère accenté ne peut jamais matcher en JavaScript. Le signal 'coût répété' était donc muet par construction, avec toutes les apparences d'un motif soigné. Attrapé par un test, puis remise à niveau du dépôt entier : zéro autre occurrence.",
     "entree": "L11",
     "date": "2026-09-23T10:20:00Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "garde-fou-bloque",
+    "quoi": "findHorodatagesFuturs() a refusé mon commit pour la DEUXIÈME fois la même nuit, sur exactement la même cause : j'ai tapé une heure au lieu de la lire, alors qu'AGENT-DU-TEMPS — construit six heures plus tôt précisément pour ça — était à une commande de distance.",
+    "cequejenretiens": "Construire l'outil ne crée pas le réflexe de l'appeler. C'est la limite honnête déjà écrite pour tool-brain et SMART-CONSO-TOKEN, vérifiée sur moi : aucune mécanique ne peut intercepter un geste AVANT qu'il ait lieu, seulement le refuser après. Le garde-fou en aval a fonctionné les deux fois ; c'est lui qui porte la règle, pas ma mémoire.",
+    "portee": "Et ça touche une décision déjà prise : le déclencheur « quand je refais une erreur déjà faite » avait été PROPOSÉ à l'utilisateur le 2026-09-23 et écarté par lui, au motif qu'aucune mécanique ne sait le détecter (DECLENCHEUR_ECARTE). Ce cas-ci montre qu'un sous-ensemble EST détectable : quand la répétition est refusée par le même garde-fou, celui-ci sait qu'il a déjà refusé la même chose. À reposer à l'utilisateur, jamais à rouvrir seul — c'est sa décision.",
+    "rienARetenir": false,
+    "date": "2026-09-24T02:12:32.743Z"
   }
 ]

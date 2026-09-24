@@ -1646,6 +1646,113 @@ export function redondanceEntreOutils(prestations = [], { seuil = SEUIL_REDONDAN
 // vaut) reste écrit à la main, et il le déclare au lieu de le simuler.
 export const AGENCE_HTML_PATH = "docs/referentiel/agence.html";
 
+// ===========================================================================================
+// L'HISTORIQUE D'EVAL-IA : est-ce que l'agent progresse ?  (2026-09-24, chantier 5.7)
+// ===========================================================================================
+//
+// La demande de l'utilisateur : « l'auto-évaluation engendre des tâches, et l'historique des
+// EVAL-IA se consulte pour mesurer une progression ». Deux moitiés, et la seconde est la seule
+// qui donne son sens à la première : une évaluation qui ne se compare à rien note une humeur.
+//
+// CE QUI A MOTIVÉ LE MÉCANISME plutôt qu'une bonne intention : l'édition du 2026-09-23 existe bien
+// sur le disque (deux fichiers HTML) et ne s'est JAMAIS inscrite dans son propre tableau
+// d'historique, qui affiche toujours « première édition à la prochaine Ronde ». Un registre qui se
+// déclare vide alors que ses éditions sont là est le même faux vert que partout ailleurs cette
+// nuit-là — et le laisser en tâche ouverte (#670) revenait à compter sur quelqu'un pour y penser.
+// Il est désormais CONSTATÉ mécaniquement, en comparant les fichiers réels au tableau réel.
+
+export const EVAL_IA_REGISTRE = "docs/cassandra-rh/evaluations/eval-ia.md";
+export const EVAL_DOSSIER = "docs/cassandra-rh/evaluations";
+export const MOTIF_EDITION_EVAL = /^(?:(\d{4}-\d{2}-\d{2})-)?eval-ia(?:-(\d{4}-\d{2}-\d{2}))?\.(?:md|html)$/i;
+
+// Le tableau « Historique » du registre, lu tel qu'il est écrit. Une ligne de gabarit (celle qui
+// annonce la première édition à venir) n'est PAS une édition : la compter ferait dire au registre
+// qu'il contient déjà quelque chose.
+export function lireHistoriqueEvalIa(markdown = "") {
+  const lignes = String(markdown).split("\n");
+  const debut = lignes.findIndex((l) => /^##\s+Historique/i.test(l));
+  if (debut === -1) return { editions: [], mesurable: false, pourquoi: "le registre ne porte aucune section « Historique » : il n'y a rien à lire, ce qui n'est pas la même chose qu'un historique vide" };
+  const editions = [];
+  for (const l of lignes.slice(debut + 1)) {
+    if (/^##\s/.test(l)) break;
+    if (!/^\|/.test(l) || /^\|\s*-+/.test(l) || /^\|\s*Date\s*\|/i.test(l)) continue;
+    const cellules = l.split("|").slice(1, -1).map((c) => c.trim());
+    const [date, edition, constat, taches] = cellules;
+    if (!date || date === "—" || /première édition/i.test(String(edition))) continue;
+    editions.push({ date, edition, constat, taches, tachesCitees: [...String(taches ?? "").matchAll(/#(\d{1,5})/g)].map((m) => Number(m[1])) });
+  }
+  return { editions, mesurable: true, pourquoi: `${editions.length} édition(s) réellement inscrite(s)` };
+}
+
+// LE CONSTAT MÉCANIQUE qui remplace la tâche #670 : une édition présente sur le disque et absente
+// du tableau. Rendue par fichier, jamais en un compte global — un compte ne dit pas laquelle
+// manque, donc ne se corrige pas.
+export function findEditionsEvalNonInscrites({ fichiers = [], historique = [] } = {}) {
+  const datesInscrites = new Set(historique.map((e) => String(e.date).trim()));
+  const manquantes = [];
+  for (const f of fichiers) {
+    const m = String(f).match(MOTIF_EDITION_EVAL);
+    if (!m) continue;
+    const date = m[1] ?? m[2];
+    if (!date || datesInscrites.has(date)) continue;
+    if (manquantes.some((x) => x.date === date)) continue;
+    manquantes.push({ date, fichier: f,
+      pourquoi: "l'édition existe sur le disque et ne figure pas dans le tableau d'historique de son propre registre",
+      consequence: "le registre se déclare vide alors qu'il ne l'est pas — une progression ne peut pas se mesurer sur un historique qui s'ignore" });
+  }
+  return manquantes;
+}
+
+// COMBIEN D'ÉDITIONS AVANT DE PARLER DE PROGRESSION. Trois, le même plancher qu'AGENT-DU-TEMPS
+// pour ses estimations, et pour la même raison écrite là-bas : sur deux points, une tendance
+// ressemble déjà à une statistique alors qu'elle n'en est pas une.
+export const MINIMUM_EDITIONS_PROGRESSION = 3;
+
+export function progressionEvalIa(historique = [], { minimum = MINIMUM_EDITIONS_PROGRESSION } = {}) {
+  const editions = [...historique].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  if (editions.length < minimum) {
+    return { mesurable: false, editions: editions.length, tendance: null,
+      pourquoi: `${editions.length} édition(s) sur ${minimum} requises — en dessous, une tendance ressemble à une mesure sans en être une` };
+  }
+  // Ce qui se mesure sans juger : le NOMBRE de tâches que chaque édition a réellement produites.
+  // C'est le seul chiffre dur d'un rapport d'évaluation — le reste est du texte, et noter du texte
+  // mécaniquement reviendrait à inventer une note.
+  const serie = editions.map((e) => ({ date: e.date, taches: e.tachesCitees?.length ?? 0 }));
+  const premiere = serie.slice(0, Math.ceil(serie.length / 2)).reduce((n, x) => n + x.taches, 0);
+  const derniere = serie.slice(Math.ceil(serie.length / 2)).reduce((n, x) => n + x.taches, 0);
+  return { mesurable: true, editions: editions.length, serie,
+    tendance: derniere > premiere ? "plus de tâches produites qu'au début" : derniere < premiere ? "moins de tâches produites qu'au début" : "stable",
+    horsPortee: "le nombre de tâches produites n'est PAS une note : plus de tâches peut vouloir dire une évaluation plus lucide comme un travail plus bâclé. C'est un indicateur à lire, jamais un verdict à afficher." };
+}
+
+// LA CHAÎNE DE L'ARTICLE 28, APPLIQUÉE À L'ÉVALUATION : une tâche annoncée comme acceptée doit
+// exister pour de vrai dans le suivi. Une référence morte ressemble à un lien, ce qui est pire
+// qu'une absence.
+export function findTachesEvalFantomes(historique = [], numerosDuSuivi = []) {
+  const connus = new Set(numerosDuSuivi.map(Number));
+  const fantomes = [];
+  for (const e of historique) {
+    for (const n of e.tachesCitees ?? []) {
+      if (!connus.has(n)) fantomes.push({ edition: e.date, numero: n,
+        pourquoi: "l'évaluation dit avoir accepté cette tâche, et aucune ligne du suivi ne la porte" });
+    }
+  }
+  return fantomes;
+}
+
+export function formatEvaluationsLines({ historique, nonInscrites = [], progression, fantomes = [] } = {}) {
+  const L = [];
+  if (!historique?.mesurable) { L.push(`Historique EVAL-IA : ${historique?.pourquoi ?? "illisible"}`); return L; }
+  L.push(`Historique EVAL-IA : ${historique.editions.length} édition(s) inscrite(s).`);
+  for (const m of nonInscrites) L.push(`  ⚠️ ${m.date} — ${m.pourquoi}. ${m.consequence}`);
+  L.push(progression.mesurable
+    ? `Progression : ${progression.tendance} (${progression.serie.map((x) => `${x.date}:${x.taches}`).join(" → ")}).`
+    : `Progression : NON MESURABLE — ${progression.pourquoi}`);
+  if (progression.mesurable) L.push(`  · ${progression.horsPortee}`);
+  for (const f of fantomes) L.push(`  ⚠️ ${f.edition} — tâche #${f.numero} : ${f.pourquoi}`);
+  return L;
+}
+
 export function buildDocumentAgence({ recensement, nivellement, couches, convocations = [], roster = [], dateLabel = new Date().toISOString() } = {}) {
   const blocks = [];
   blocks.push({ type: "paragraph", text: "Ce document est REGÉNÉRÉ depuis les registres réels du dépôt à chaque passage. Il ne se met pas à jour : il se recalcule. Un document central écrit à la main se périme, et un document central faux est pire qu'aucun — on le croit, et il occupe la place." });
@@ -1821,6 +1928,31 @@ function main() {
     for (const q of r.paires) console.log(`· ${q.proximite}  ${q.question}`);
     if (!r.paires.length) console.log("Aucune paire au-dessus du seuil. Ce n'est pas rien à dire : le catalogue ne rend pas deux fois le même service.");
     console.log(`\nHORS PORTÉE : ${r.horsPortee}`);
+    return;
+  }
+  // Sous-commande `evaluations` (2026-09-24, chantier 5.7) : l'historique d'EVAL-IA, ce qu'il dit
+  // d'une progression, et les deux façons dont il peut mentir — une édition qui ne s'est pas
+  // inscrite, une tâche acceptée qui n'existe nulle part.
+  if (sub === "evaluations") {
+    console.log(CASSANDRA_PERSONA);
+    let registre = "";
+    try { registre = readFileSync(join(ROOT, EVAL_IA_REGISTRE), "utf8"); } catch { /* absent */ }
+    const historique = lireHistoriqueEvalIa(registre);
+    let fichiers = [];
+    try { fichiers = readdirSync(join(ROOT, EVAL_DOSSIER)); } catch { /* absent */ }
+    const nonInscrites = findEditionsEvalNonInscrites({ fichiers, historique: historique.editions });
+    const progression = progressionEvalIa(historique.editions);
+    let numeros = [];
+    try {
+      const dir = join(ROOT, "docs/suivi/sessions");
+      for (const f of readdirSync(dir)) {
+        for (const m of readFileSync(join(dir, f), "utf8").matchAll(/^\|\s*(\d{1,5})\s*\|/gm)) numeros.push(Number(m[1]));
+      }
+    } catch { /* absent */ }
+    const fantomes = findTachesEvalFantomes(historique.editions, numeros);
+    console.log(`\n=== ÉVALUATIONS DE L'AGENT — l'historique, et ce qu'il permet de mesurer ===\n`);
+    for (const l of formatEvaluationsLines({ historique, nonInscrites, progression, fantomes })) console.log(l);
+    console.log(`\nHORS PORTÉE : je lis ce que le registre DIT de lui-même. Je ne relis pas les rapports eux-mêmes et je ne juge jamais la qualité d'une évaluation — seulement qu'elle s'est inscrite, et que ce qu'elle a promis existe.`);
     return;
   }
   if (sub === "agence") {

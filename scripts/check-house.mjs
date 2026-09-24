@@ -7969,6 +7969,33 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(lignes5.some((l) => /registre entier/.test(l)) && lignes5.some((l) => /OUVERTE/.test(l)), 'the printed weight line names BOTH perimeters: the first real run mixed 609 registry rows and 43 open tasks three lines apart without saying so, and "40 heavy" read as 40 pending chantiers when there were none');
   console.log('Passed: a task now carries its WEIGHT, its VIGNETTE, its head summary and its ORIGIN (2026-09-24, chantier 5) — the three the user asked for read on the same suivi row, so they live together rather than in three registries that would diverge. The weight exists to answer one binary question, split or not, which is why it has three tiers and not six, and why it never reorders anything: the order comes from the priority tier and the two do not replace each other. The split proposes only the pieces the row already names, and returns nothing at all for a heavy row that enumerates none — a tool that invented subtasks from prose would be one that satisfies its own requirement. The head summary answers a risk the user named precisely: a suivi row is a single markdown table line of several thousand characters, and a misplaced pipe cuts its end silently; 39 of the 343 long rows would say nothing about themselves if truncated today. And the origin has three states because the absence of "demande de l’utilisateur" proves only that the row is silent — reading that silence as an admission would be the night’s false greens taken the other way round. Which is exactly what the sixth one did: the real registry answered "agent 0", a clean bill of health, from a mark invented ten minutes earlier that no row could carry.');
 
+  // L'HISTORIQUE D'EVAL-IA ET LA PROGRESSION (2026-09-24, chantier 5.7). La demande : « l'auto-
+  // évaluation engendre des tâches, et l'historique des EVAL-IA se consulte pour mesurer une
+  // progression ». Le défaut réel qui a motivé la mécanique : l'édition du 2026-09-23 existait sur
+  // le disque pendant que son propre tableau d'historique annonçait « première édition à venir ».
+  const { lireHistoriqueEvalIa, findEditionsEvalNonInscrites, progressionEvalIa, findTachesEvalFantomes,
+          formatEvaluationsLines, MINIMUM_EDITIONS_PROGRESSION } = await import('../scripts/cassandra-rh.mjs');
+  assert.equal(lireHistoriqueEvalIa('rien du tout').mesurable, false, 'a registry with no Historique section is NOT MEASURABLE, never an empty history — the two read the same and mean opposite things');
+  const gabarit = '## Historique\n\n| Date | Édition | Constat | Tâches |\n|---|---|---|---|\n| — | *(première édition à la prochaine Ronde)* | — | — |\n';
+  assert.equal(lireHistoriqueEvalIa(gabarit).editions.length, 0, 'the placeholder row announcing a future first edition is NOT an edition: counting it would make the registry claim it already holds something');
+  const vrai = '## Historique\n\n| Date | Édition | Constat | Tâches |\n|---|---|---|---|\n| 2026-09-23 | Ronde | dur | #679 et #672 |\n';
+  const h = lireHistoriqueEvalIa(vrai);
+  assert.deepEqual(h.editions[0].tachesCitees, [679, 672], 'the task numbers an edition claims to have accepted are read out, because they are what must be verified');
+  assert.equal(findEditionsEvalNonInscrites({ fichiers: ['2026-09-23-EVAL-IA.html'], historique: h.editions }).length, 0, 'an edition present on disk AND in the table is in order');
+  const manque = findEditionsEvalNonInscrites({ fichiers: ['2026-09-22-EVAL-IA.html', 'index.md'], historique: h.editions });
+  assert.equal(manque.length, 1, 'THE REAL DEFECT, now mechanical: an edition on disk and absent from its own history table is reported — it had been left as open task #670, which meant counting on someone to remember');
+  assert.match(manque[0].consequence, /historique qui s'ignore/, 'and the consequence is spelled out: a progression cannot be measured on a history that ignores itself');
+  assert.equal(progressionEvalIa(h.editions).mesurable, false, `one edition is not a trend — the floor is ${MINIMUM_EDITIONS_PROGRESSION}, the same one AGENT-DU-TEMPS uses for its estimates and for the same written reason`);
+  const trois = [{ date: '2026-09-01', tachesCitees: [1] }, { date: '2026-09-15', tachesCitees: [2] }, { date: '2026-09-23', tachesCitees: [3, 4, 5] }];
+  const prog = progressionEvalIa(trois);
+  assert.equal(prog.mesurable, true, 'three editions make a readable series');
+  assert.match(prog.horsPortee, /n'est PAS une note/, 'and the series is explicitly declared NOT to be a grade: more tasks can mean a more lucid evaluation or sloppier work, and the tool refuses to decide which');
+  assert.equal(findTachesEvalFantomes(h.editions, [679, 672]).length, 0, 'tasks that really exist in the suivi raise nothing');
+  assert.equal(findTachesEvalFantomes(h.editions, [679]).length, 1, 'ARTICLE 28 AT THE LAST LINK: an evaluation claiming to have accepted a task that exists nowhere is reported — a dead reference looks like a link, which is worse than an absence');
+  assert.ok(formatEvaluationsLines({ historique: lireHistoriqueEvalIa('rien'), progression: progressionEvalIa([]) }).join(' ').includes('Historique EVAL-IA'), 'the unmeasurable case still prints a line rather than falling silent');
+  console.log('Passed: the EVAL-IA history is now readable, and it can no longer lie in the two ways it was already lying (2026-09-24, chantier 5.7). The user asked that self-evaluation produce tasks and that the history be consulted to measure progression; the second is what gives the first its meaning, since an evaluation compared to nothing grades a mood. Both halves were broken in the same place: the 2026-09-23 edition sat on disk for a day while its own table still announced a first edition to come, and that edition had produced NO task at all — its written conclusion, read the document rather than the controller that declares it, existed nowhere but in its own last paragraph. The registry now carries that edition and the two tasks it should have opened, and the tool verifies both facts mechanically rather than trusting anyone to remember. Progression refuses to speak below three editions, for the reason written beside AGENT-DU-TEMPS: on two points a trend already looks like a statistic. And the one number it does render is declared explicitly not to be a grade.');
+
+
 
   // LES TROIS NATURES D'UN SCRIPT (2026-09-23) — integration-outil répondait « 0/11, 10 inscriptions
   // manquantes » pour N'IMPORTE QUEL nom, y compris les quatre modules de règles du dépôt. Le suivre

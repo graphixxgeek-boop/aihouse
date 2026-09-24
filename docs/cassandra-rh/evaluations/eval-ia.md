@@ -34,6 +34,22 @@ que l'Article 28 interdit aux plans d'action.
 
 ## Historique
 
+*(Une édition qui ne s'inscrit pas ici n'existe pas pour la mesure de progression. Ce n'est pas une
+formalité : le 2026-09-24, `findEditionsEvalNonInscrites()` a trouvé que l'édition du 23 était sur
+le disque depuis la veille pendant que ce tableau annonçait encore « première édition à la
+prochaine Ronde » — un registre qui se déclare vide alors qu'il ne l'est pas. La ligne ci-dessous a
+été écrite ce jour-là, à partir du rapport réel, jamais de mémoire. Le constat est désormais
+mécanique : `node scripts/cassandra-rh.mjs evaluations`.)*
+
 | Date | Édition | Constat le plus dur | Tâches acceptées |
 |---|---|---|---|
-| — | *(première édition à la prochaine Ronde)* | — | — |
+| 2026-09-23 | Ronde GOAT MAX — discipline d'exécution en critère principal | 🔴 **« Tu lis les raccourcis plutôt que les documents »** (verdict de l'utilisateur) : 5 étapes de fin de Ronde sautées sur 8, puis 3 de plus au premier rattrapage, pour avoir lu les étapes déclarées dans le CODE du contrôleur au lieu du document de process. Deuxième occurrence d'une annonce prématurée après celle du 2026-09-22. | #679 (forcer la lecture du DOCUMENT avant l'étape — leçon L23, restée sans porteur) · #672 (une Ronde ne peut plus se clore avec son process non déroulé — fait le 2026-09-24) |
+
+**Ce que l'inscription rétroactive a révélé, et c'est le vrai constat** : ce rapport n'avait produit
+AUCUNE tâche. Sa conclusion — « avant toute étape d'un process, LIRE SON DOCUMENT, jamais sa
+déclaration dans le code du contrôleur » — était écrite noir sur blanc et n'existait nulle part
+ailleurs. Une évaluation qui se termine sur une résolution ne change rien : c'est exactement la
+chaîne que l'Article 28 impose (`rapport → analyse → plan → tâches`), rompue au dernier maillon par
+le rapport qui juge l'agent. `findTachesEvalFantomes()` vérifie désormais que chaque tâche citée
+ici existe pour de vrai dans `docs/suivi/` — une référence morte ressemble à un lien, ce qui est
+pire qu'une absence.
