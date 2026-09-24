@@ -8021,6 +8021,30 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(planFaux.find((c) => c.etat === 'a-trancher').pourquoi, 'and an ecarte/a-trancher finding carries its reason, never a bare label');
   console.log('Passed: the census subcommand can no longer crash on its own findings (2026-09-24) — it built its plan from objects carrying neither a state nor a constat, which the shared plan builder refuses, and refuses rightly. What makes this worth a counter-test rather than a one-line fix is WHY it survived: the code path only exists when the census finds something, so as long as the repository was clean the subcommand ran green and the plan was simply never built. It is the night’s false green in its most literal form. The fix moved the mapping out of the CLI into an exported function, because a mechanism locked inside a subcommand is verifiable only by a real run, that is by nobody (leçon L2) — and while moving it, the QUESTIONS joined the plan as a-trancher, the state Article 28 defines for exactly them; they had been dropped entirely, which made every judgement the tool refuses to make invisible to the chain that checks findings become tasks.');
 
+  // L'UNIFORMISATION PAR FAMILLE (2026-09-24, chantier 2.2). Elle n'est PAS le nivellement : le
+  // nivellement compare à une exigence écrite d'avance, celle-ci à ce que la famille fait déjà.
+  // La seconde trouve ce que la première ne peut pas voir — une habitude que personne n'a jamais
+  // écrite en règle et à laquelle presque tous se conforment sauf deux.
+  const { uniformisationParFamille, formatUniformisationLines, MAJORITE_FAMILLE, TAILLE_MIN_FAMILLE } = await import('../scripts/cassandra-rh.mjs');
+  assert.equal(uniformisationParFamille({ mesurable: false, pourquoi: 'rien lu' }).mesurable, false, 'no census, no uniformity measure — and it repeats why rather than rendering zero gaps');
+  const fam = (type, n, classes) => Array.from({ length: n }, (_, k) => ({ chemin: `scripts/${type}${k}.mjs`, type, classes: classes(k) }));
+  const petite = { mesurable: true, lignes: fam('rare', 2, (k) => (k === 0 ? ['x'] : [])) };
+  assert.equal(uniformisationParFamille(petite).familles[0].mesurable, false, `a family under ${TAILLE_MIN_FAMILLE} members is NOT measured: a "majority" of two says nothing, and the rate drawn from it would still look like a measurement`);
+  const dixDontNeuf = { mesurable: true, lignes: fam('outil', 10, (k) => (k === 9 ? [] : ['compte-son-usage'])) };
+  const u9 = uniformisationParFamille(dixDontNeuf);
+  assert.equal(u9.totalEcarts, 1, 'nine out of ten carrying a habit makes the tenth an exception worth asking about');
+  assert.deepEqual(u9.familles[0].ecarts[0].chemins, ['scripts/outil9.mjs'], 'and it names WHICH one, never just a count — a count cannot be acted on');
+  assert.match(u9.familles[0].ecarts[0].question, /une raison assumée, ou un oubli \?/, 'each gap is a QUESTION: a tool can have an excellent reason to differ from its peers (Article 19)');
+  const dixDontDeux = { mesurable: true, lignes: fam('outil', 10, (k) => (k < 2 ? ['rare'] : [])) };
+  assert.equal(uniformisationParFamille(dixDontDeux).totalEcarts, 0, `two out of ten is a MINORITY, not a family habit: reporting it would accuse the other eight, which is exactly how a guard stops being read (leçon L4). The bar is ${MAJORITE_FAMILLE * 100}%`);
+  const unanime = { mesurable: true, lignes: fam('outil', 5, () => ['partout']) };
+  assert.equal(uniformisationParFamille(unanime).totalEcarts, 0, 'a unanimous habit produces no gap: there is nothing to uniformise');
+  assert.match(formatUniformisationLines(uniformisationParFamille(unanime)).join(' '), /toutes unanimes/, 'and the unanimous family is described as such');
+  const rienDeCommun = { mesurable: true, lignes: fam('lib', 5, () => []) };
+  assert.match(formatUniformisationLines(uniformisationParFamille(rienDeCommun)).join(' '), /ne partage rien de mesurable/, 'THE WORDING THAT WAS FIXED ON SIGHT: a family sharing NO habit at all has nothing to deviate from, which is the opposite of being uniform. The first draft printed "0 habitudes de famille, toutes unanimes" — a sentence that contradicts itself and reads as a green');
+  console.log('Passed: uniformity is now measured family by family, against what the family already does (2026-09-24, chantier 2.2). This is deliberately not the levelling built for 2.1: levelling compares each tool to a requirement written in advance and answers "is the rule kept?", while this derives the norm from the population itself and answers "why does this one differ from its peers?". The second finds what the first structurally cannot — a habit nobody ever wrote down as a rule, followed by almost everyone. Three guards keep it from accusing wrongly: a family under three members is not measured at all, a practice held by less than a majority is a minority rather than a norm, and a unanimous practice yields nothing. The real run found exactly one gap across 82 scripts, which is itself the answer to whether the landscape is uneven. And the tool states its own blind spot plainly: a family can be uniformly bad without a single gap appearing, because it only ever finds exceptions.');
+
+
 
 
 

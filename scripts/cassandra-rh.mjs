@@ -1532,6 +1532,97 @@ export function nivellementParClasse(recensement, exigences = EXIGENCES_PAR_CLAS
     horsPortee: "une exigence dit ce qu'une classe APPELLE, jamais ce qu'un fichier précis devrait faire : un outil peut légitimement n'avoir aucun chiffre heuristique à nuancer. La liste est un point de départ, jamais une liste de coupables (Article 19)." };
 }
 
+// ===========================================================================================
+// L'UNIFORMISATION PAR FAMILLE  (2026-09-24, chantier 2.2 du plan de nuit)
+// ===========================================================================================
+//
+// La demande : « uniformiser par couche / groupe / famille ». Elle vient APRÈS le nivellement
+// (2.1) et ce n'est pas la même mesure, malgré l'apparence — la différence est le cœur du
+// mécanisme, pas un détail :
+//
+//   · Le NIVELLEMENT compare chaque outil à une exigence DÉCLARÉE, écrite d'avance dans
+//     EXIGENCES_PAR_CLASSE. Il répond : « la règle est-elle tenue ? »
+//   · L'UNIFORMISATION ne connaît aucune règle. Elle regarde ce qu'une famille FAIT DÉJÀ
+//     majoritairement, et signale les membres qui s'en écartent. Elle répond : « pourquoi celui-ci
+//     fait-il autrement que ses semblables ? »
+//
+// La seconde trouve ce que la première ne peut pas voir : une habitude que personne n'a jamais
+// écrite en règle, et à laquelle presque tout le monde se conforme sauf deux. C'est exactement
+// l'Article 24 appliqué au seuil lui-même — la norme est DÉRIVÉE de la population, jamais recopiée.
+//
+// TROIS GARDE-FOUS CONTRE L'ACCUSATION À TORT (leçon L4 : un garde-fou qui accuse à tort cesse
+// d'être lu) :
+//   1. Une famille de moins de trois membres n'est PAS mesurée — une « majorité » de deux ne dit
+//      rien, et le taux qu'on en tirerait ressemblerait pourtant à une mesure.
+//   2. Une habitude portée par moins de la majorité n'est pas une habitude : ce n'est pas un écart
+//      que deux outils sur dix fassent quelque chose, c'est une minorité, et la signaler
+//      reviendrait à accuser les huit autres.
+//   3. Une habitude UNANIME ne produit aucun écart : rien à uniformiser.
+//
+// Et le résultat est une QUESTION, jamais un verdict : un outil peut avoir une raison excellente de
+// s'écarter de sa famille (Article 19), et cet outil ne la connaît pas.
+
+export const MAJORITE_FAMILLE = 0.6;
+export const TAILLE_MIN_FAMILLE = 3;
+
+export function uniformisationParFamille(recensement, { majorite = MAJORITE_FAMILLE, tailleMin = TAILLE_MIN_FAMILLE } = {}) {
+  if (!recensement?.mesurable) return { mesurable: false, pourquoi: recensement?.pourquoi ?? "aucun recensement à uniformiser" };
+  const parFamille = new Map();
+  for (const l of recensement.lignes) {
+    const f = l.type ?? "type-inconnu";
+    if (!parFamille.has(f)) parFamille.set(f, []);
+    parFamille.get(f).push(l);
+  }
+  const toutesLesClasses = [...new Set(recensement.lignes.flatMap((l) => l.classes ?? []))];
+  const familles = [];
+  for (const [nom, membres] of parFamille) {
+    if (membres.length < tailleMin) {
+      familles.push({ famille: nom, membres: membres.length, mesurable: false, habitudes: [], ecarts: [],
+        pourquoi: `${membres.length} membre(s) : en dessous de ${tailleMin}, une « majorité » ne veut rien dire et le taux qu'on en tirerait ressemblerait pourtant à une mesure` });
+      continue;
+    }
+    const habitudes = []; const ecarts = [];
+    for (const classe of toutesLesClasses) {
+      const porteurs = membres.filter((m) => (m.classes ?? []).includes(classe));
+      const part = porteurs.length / membres.length;
+      if (part < majorite) continue;              // pas une habitude de famille
+      habitudes.push({ classe, part: Math.round(part * 100), porteurs: porteurs.length, sur: membres.length });
+      if (porteurs.length === membres.length) continue;   // unanime : rien à uniformiser
+      const absents = membres.filter((m) => !(m.classes ?? []).includes(classe));
+      ecarts.push({ classe, part: Math.round(part * 100),
+        chemins: absents.map((m) => m.chemin),
+        question: `${absents.length} membre(s) de la famille « ${nom} » ne portent pas « ${classe} », que ${Math.round(part * 100)} % de leurs semblables portent : une raison assumée, ou un oubli ?` });
+    }
+    familles.push({ famille: nom, membres: membres.length, mesurable: true, habitudes, ecarts });
+  }
+  familles.sort((a, b) => b.membres - a.membres);
+  const totalEcarts = familles.reduce((n, f) => n + f.ecarts.length, 0);
+  return { mesurable: true, familles, totalEcarts,
+    horsPortee: "la norme est DÉRIVÉE de ce que la famille fait déjà, jamais d'une règle écrite ailleurs — ce qui veut dire qu'une famille entière peut être uniformément mauvaise sans qu'un seul écart apparaisse. Cette mesure trouve les exceptions, jamais les habitudes qui mériteraient d'être changées : pour ça, c'est le nivellement (2.1) qui parle. Et chaque écart est une QUESTION : un outil peut avoir une excellente raison de s'écarter de ses semblables (Article 19)." };
+}
+
+export function formatUniformisationLines(u) {
+  if (!u?.mesurable) return [`Uniformisation : NON MESURÉE — ${u?.pourquoi ?? "pas de recensement"}`];
+  const L = [`${u.totalEcarts} écart(s) d'uniformité, sur ${u.familles.filter((f) => f.mesurable).length} famille(s) mesurable(s).`];
+  for (const f of u.familles) {
+    if (!f.mesurable) { L.push(`· ${f.famille} — non mesurée : ${f.pourquoi}`); continue; }
+    // DEUX FAÇONS DE N'AVOIR AUCUN ÉCART, et les dire pareil serait un faux vert de plus : une
+    // famille dont toutes les habitudes sont unanimes est effectivement uniforme ; une famille qui
+    // n'a AUCUNE habitude commune n'a rien dont s'écarter, ce qui est l'exact contraire d'un
+    // bulletin de santé. Le premier jet écrivait « 0 habitude de famille, toutes unanimes » —
+    // une phrase qui se contredit elle-même et se lit comme un vert.
+    if (!f.ecarts.length) {
+      L.push(f.habitudes.length
+        ? `· ${f.famille} (${f.membres}) — ${f.habitudes.length} habitude(s) de famille, toutes unanimes : rien à uniformiser.`
+        : `· ${f.famille} (${f.membres}) — AUCUNE habitude commune : pas une seule classe portée par la majorité, donc rien dont s'écarter. Ce n'est pas « cette famille est uniforme », c'est « cette famille ne partage rien de mesurable ».`);
+      continue;
+    }
+    L.push(`· ${f.famille} (${f.membres} membres) :`);
+    for (const e of f.ecarts) L.push(`    ? ${e.question}\n      ${e.chemins.join(", ")}`);
+  }
+  return L;
+}
+
 // DEUX NATURES D'ÉCART, ET LES CONFONDRE ÉTAIT UNE ERREUR QU'UN TEST A ATTRAPÉE. J'avais écrit que
 // tout écart devait être une question, en reprenant la règle qu'Abraham applique à la pertinence
 // d'une règle. Elle ne vaut pas ici telle quelle : « cet outil n'appelle jamais
@@ -1951,6 +2042,26 @@ function main() {
   // Sous-commande `evaluations` (2026-09-24, chantier 5.7) : l'historique d'EVAL-IA, ce qu'il dit
   // d'une progression, et les deux façons dont il peut mentir — une édition qui ne s'est pas
   // inscrite, une tâche acceptée qui n'existe nulle part.
+  // Sous-commande `uniformisation` (2026-09-24, chantier 2.2). Distincte de `recensement`, qui
+  // porte le nivellement : là on compare à une règle écrite, ici à ce que la famille fait déjà.
+  if (sub === "uniformisation") {
+    console.log(CASSANDRA_PERSONA);
+    const rec = recenserLesScripts();
+    const u = uniformisationParFamille(rec);
+    console.log(`\n=== UNIFORMISATION PAR FAMILLE — ce que les semblables font, et qui s'en écarte ===\n`);
+    for (const l of formatUniformisationLines(u)) console.log(l);
+    console.log(`\nHORS PORTÉE : ${u.horsPortee ?? "—"}`);
+    if (u.mesurable) {
+      const plan = buildPlanDaction(
+        u.familles.flatMap((f) => f.ecarts.map((e) => ({ constat: e.question, etat: "a-trancher",
+          pourquoi: "l'écart est mesuré, la raison ne l'est pas — un outil peut s'écarter de ses semblables à bon droit (Article 19)" }))),
+        { toolSlug: "cassandra-rh" },
+      );
+      console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+      for (const l of plan.lignes) console.log(l);
+    }
+    return;
+  }
   if (sub === "evaluations") {
     console.log(CASSANDRA_PERSONA);
     let registre = "";

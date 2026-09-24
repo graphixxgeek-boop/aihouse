@@ -128,3 +128,39 @@ son biais nommé · tes désaccords · et de l'autre côté, qui juge l'équipe 
 
 **Item de Ronde** : `recap-evaluations`, thème « KPI & scans » — jamais un thème neuf pour un seul
 item (la première tentative en avait créé un, attrapé le jour même par le garde-fou de thèmes).
+
+## Sous-commande `uniformisation` — ce que la famille fait déjà, et qui s'en écarte
+
+*(2026-09-24, chantier 2.2 du plan de nuit. `node scripts/cassandra-rh.mjs uniformisation`.)*
+
+**La distinction avec le nivellement est le mécanisme lui-même, pas une nuance de vocabulaire :**
+
+| | Nivellement (2.1, sous-commande `recensement`) | Uniformisation (2.2) |
+|---|---|---|
+| La norme vient de | `EXIGENCES_PAR_CLASSE`, écrite d'avance | la population elle-même, mesurée à l'instant |
+| La question posée | « la règle est-elle tenue ? » | « pourquoi celui-ci fait-il autrement que ses semblables ? » |
+| Ce qu'elle trouve | un manquement à une exigence déclarée | une habitude que personne n'a jamais écrite en règle |
+| Son angle mort | rien de ce qui n'est pas déclaré | une famille uniformément mauvaise : aucun écart n'apparaît |
+
+La seconde existe parce que la première est structurellement aveugle à l'habitude non écrite —
+et c'est l'Article 24 appliqué au seuil lui-même : la norme est **dérivée**, jamais recopiée.
+
+**Les trois garde-fous contre l'accusation à tort** (leçon L4 : un garde-fou qui accuse à tort
+cesse d'être lu) :
+
+1. **Famille de moins de trois membres : pas mesurée.** Une « majorité » de deux ne dit rien, et le
+   taux qu'on en tirerait ressemblerait pourtant à une mesure.
+2. **Pratique portée par moins de 60 % : pas une habitude.** Deux outils sur dix qui font quelque
+   chose sont une minorité ; le signaler accuserait les huit autres.
+3. **Pratique unanime : aucun écart.** Il n'y a rien à uniformiser.
+
+**Et la sortie distingue deux zéros**, parce que les confondre était un faux vert de plus : une
+famille dont toutes les habitudes sont unanimes est réellement uniforme ; une famille qui n'a
+**aucune** habitude commune n'a rien dont s'écarter, ce qui est l'exact contraire d'un bulletin de
+santé. Le premier jet écrivait « 0 habitude de famille, toutes unanimes » — une phrase qui se
+contredit elle-même et se lit comme un vert.
+
+**Premier passage réel (2026-09-24, 82 scripts, 7 familles)** : **un seul écart** — 11 outils sur 47
+ne comptent pas leur usage, là où 77 % de leurs semblables le font. Les autres familles
+(bibliothèques, crochets, infrastructure shell) ne partagent aucune habitude mesurable, ce qui est
+dit comme tel et non comme une bonne nouvelle.
