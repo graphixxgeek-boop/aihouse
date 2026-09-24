@@ -92,6 +92,21 @@ export const CIRCLE_ITEMS = [
     execute: "Suivre la procédure de docs/regles-de-travail.md §9 (Historisation du profil) : comparer les signaux de la session en cours à la dernière fiche, écrire une nouvelle observation datée, mettre à jour l'index. Écraser ensuite docs/profil-utilisateur/profil-actuel.txt avec cette même observation à jour (2026-09-21, demande explicite : « mon profil utilisateur à part, dans un fichier txt ») — un seul fichier toujours à jour, séparé de l'historique daté, jamais un second calcul divergent.",
     producesReport: true,
   },
+  // sauvegarde (2026-09-24, tâche #700) : l'item que l'utilisateur a demandé le soir même, et sa
+  // raison est la seule du registre à ne pas porter sur la qualité du code — elle porte sur ce
+  // qu'il perdrait s'il perdait l'accès. Sa formulation : « si demain il y a un quelconque gros
+  // bug, ou que je n'ai plus du tout accès à toi ou à git, je veux avoir une copie qui me permette
+  // de continuer comme si rien ne s'était passé ». Deuxième déclencheur hors Ronde, tranché avec
+  // lui : après chaque gros chantier. Signale fort, ne bloque jamais.
+  {
+    id: "sauvegarde",
+    theme: "Suivi & référentiels",
+    label: "Produire et LIVRER la sauvegarde du projet",
+    cout: "gratuit — une archive git et une lecture de fichiers, zéro appel API",
+    tokensEstimes: "quasi nul pour l'agent : les deux fichiers sont écrits sur disque et livrés tels quels, jamais relus dans le contexte — c'est justement l'intérêt d'un livrable plutôt que d'un rapport",
+    execute: "Lancer `node scripts/sauvegarde-projet.mjs`, puis LIVRER les deux fichiers à l'utilisateur (SendUserFile) — un coffre `.zip` du dépôt entier et une notice `.txt` calibrée pour tenir dans la mémoire d'une IA. La livraison N'EST PAS optionnelle : une sauvegarde qui reste dans le dépôt qu'elle sauvegarde ne protège de rien, et c'est le seul point du dispositif qui décide s'il sert vraiment. L'outil garde les 3 derniers de chaque et écrit la date dans docs/sauvegardes/index.md — l'historisation du projet étant faite de fichiers du projet, le coffre le plus récent contient déjà tout ce que les précédents contenaient. Écrire ensuite la trace via recordCircleItemReport('sauvegarde', ...).",
+    producesReport: true,
+  },
   {
     id: "referentiel",
     theme: "Suivi & référentiels",

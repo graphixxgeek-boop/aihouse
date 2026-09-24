@@ -77,5 +77,13 @@
     "portee": "Et ça touche une décision déjà prise : le déclencheur « quand je refais une erreur déjà faite » avait été PROPOSÉ à l'utilisateur le 2026-09-23 et écarté par lui, au motif qu'aucune mécanique ne sait le détecter (DECLENCHEUR_ECARTE). Ce cas-ci montre qu'un sous-ensemble EST détectable : quand la répétition est refusée par le même garde-fou, celui-ci sait qu'il a déjà refusé la même chose. À reposer à l'utilisateur, jamais à rouvrir seul — c'est sa décision.",
     "rienARetenir": false,
     "date": "2026-09-24T02:12:32.743Z"
+  },
+  {
+    "nature": "captation",
+    "quoi": "Troisième horodatage TAPÉ au lieu d'être LU en une seule soirée (2026-09-24) — les trois refusés par findHorodatagesFuturs().",
+    "pourquoi": "Le réflexe qui échoue n'est pas la connaissance de la règle, c'est le geste : au moment d'écrire une ligne de suivi, l'agent estime l'heure depuis la dernière qu'il a vue passer plutôt que d'aller la chercher. Une IA n'a pas d'horloge, elle a une dernière heure connue, et cette inférence dérive à chaque minute de travail. La règle est sue, l'outil existe (AGENT-DU-TEMPS), et l'erreur se reproduit quand même.",
+    "quoiFaire": "N'écrire AUCUNE ligne de suivi sans avoir lancé agent-du-temps dans la même commande. Concrètement : H=$(node scripts/agent-du-temps.mjs | grep -oE ...) puis utiliser $H, jamais un horodatage écrit à la main. Le garde-fou rattrape, mais il coûte un commit bloqué à chaque fois.",
+    "rienARetenir": false,
+    "date": "2026-09-24T21:12:27.136Z"
   }
 ]

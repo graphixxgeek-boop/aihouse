@@ -74,3 +74,5 @@ docs/ecotoken/.dernier-fichier-maitre.local.txt
 .agent-session.json
 .xp-remontees.json
 .conso-tours.json
+docs/sauvegardes/*.zip
+docs/sauvegardes/notice-*.txt

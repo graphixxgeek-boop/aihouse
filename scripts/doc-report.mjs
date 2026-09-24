@@ -704,6 +704,11 @@ export const FILE_WRITER_NATURES = {
   // figure dans REGISTRIES qu'en tant que PROPRIÉTAIRE d'autres registres, jamais comme émetteur.
   // Un gardien qui ne se surveille pas lui-même laisserait exactement le trou qu'il traque ailleurs.
   "scripts/doc-report.mjs": { nature: "rapport", pourquoi: "produit l'index global des rapports du projet, destiné à être lu" },
+  // Deux arrivants du 2026-09-24, signalés par ce garde-fou le soir même de leur création — et
+  // c'est exactement son travail : un script qui écrit sans être classé est un angle mort, jamais
+  // une décision.
+  "scripts/rapport-gros-prompt.mjs": { nature: "rapport", pourquoi: "produit LE rapport de gros prompt, destiné à être lu point par point par l'utilisateur et répondu de la même façon" },
+  "scripts/sauvegarde-projet.mjs": { nature: "rapport", pourquoi: "produit le coffre et la notice de sauvegarde, tous deux livrés à l'utilisateur — la notice est même faite pour être lue par une autre IA" },
   "scripts/report-template.mjs": { nature: "infrastructure", pourquoi: "c'est la définition du gabarit elle-même — il décrit la forme des rapports des autres, il n'en a aucun" },
   "scripts/pnpm-install.mjs": { nature: "infrastructure", pourquoi: "installation des dépendances et des crochets git — aucun constat à présenter" },
   "scripts/run-simulation.mjs": { nature: "infrastructure", pourquoi: "lance une simulation et écrit son journal brut ; le rapport lisible, lui, est produit ensuite par LE-RÉGISSEUR et EL-PROFESSOR" },

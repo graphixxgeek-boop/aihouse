@@ -1,0 +1,77 @@
+TABLEAU DES VERSIONS ET DE LA RICHESSE DES OUTILS DE L'AGENCE CODEX
+Produit le 2026-09-24 par CASSANDRA-RH (node scripts/cassandra-rh.mjs versions)
+
+COMMENT LIRE CE TABLEAU
+-----------------------
+Deux echelles SEPAREES, et la separation est volontaire :
+  - la VERSION dit ce qui S'EST PASSE : combien de fois l'outil a change de capacites.
+    Le chiffre apres le point compte les retouches mineures.
+  - la RICHESSE dit ce que l'outil EST AUJOURD'HUI, sur 7 aptitudes mesurees dans son code.
+
+Un outil ecrit d'un seul jet et jamais retouche aura une VERSION basse et peut etre
+tres riche. Un outil repris vingt fois peut rester pauvre. Confondre les deux ferait
+passer l'agitation pour du progres.
+
+LES 7 APTITUDES MESUREES
+------------------------
+  surface           : l'outil expose plusieurs fonctions utilisables, pas une seule
+  refuse-de-mesurer : il sait dire "je n'ai pas pu regarder" au lieu de rendre un zero
+  declare-sa-marge  : il annonce lui-meme que ses resultats peuvent etre inexacts
+  conclut           : il ne s'arrete pas au constat, il propose une suite
+  memoire           : il garde un registre de ses passages
+  rend-du-html      : il sait livrer une version lisible, pas seulement du texte brut
+  deux-couches      : il a une couche gratuite/mecanique et une couche plus profonde
+
+OUTIL                         VERSION   RICHESSE
+cassandra-rh                  v26.8     7/7  surface, refuse-de-mesurer, declare-sa-marge, conclut, memoire, rend-du-html, deux-couches
+check-tasks-details           v15.20    7/7  surface, refuse-de-mesurer, declare-sa-marge, conclut, memoire, rend-du-html, deux-couches
+abraham-les-references        v7.0      6/7  surface, refuse-de-mesurer, declare-sa-marge, conclut, memoire, rend-du-html
+axa-check                     v5.19     6/7  surface, refuse-de-mesurer, declare-sa-marge, conclut, memoire, deux-couches
+circle-tasks                  v31.43    6/7  surface, refuse-de-mesurer, declare-sa-marge, memoire, rend-du-html, deux-couches
+ecotoken                      v6.11     6/7  surface, refuse-de-mesurer, declare-sa-marge, conclut, memoire, deux-couches
+moise-tables-de-loi           v7.2      6/7  surface, refuse-de-mesurer, declare-sa-marge, conclut, memoire, deux-couches
+smart-conso-token             v17.14    6/7  surface, refuse-de-mesurer, declare-sa-marge, conclut, memoire, deux-couches
+agent-du-temps                v1.0      5/7  surface, refuse-de-mesurer, declare-sa-marge, conclut, memoire
+doc-report                    v16.30    5/7  surface, declare-sa-marge, conclut, memoire, rend-du-html
+el-professor                  v2.3      5/7  surface, declare-sa-marge, conclut, memoire, rend-du-html
+god-of-all-process            v15.18    5/7  surface, refuse-de-mesurer, declare-sa-marge, memoire, rend-du-html
+hyper-scan-checkpoint         v2.12     5/7  surface, declare-sa-marge, conclut, memoire, deux-couches
+kpi-report                    v8.9      5/7  surface, conclut, memoire, rend-du-html, deux-couches
+le-coordinateur               v20.49    5/7  surface, refuse-de-mesurer, memoire, rend-du-html, deux-couches
+le-regisseur                  v3.4      5/7  surface, refuse-de-mesurer, memoire, rend-du-html, deux-couches
+ou-on-en-est                  v3.0      5/7  surface, refuse-de-mesurer, memoire, rend-du-html, deux-couches
+smart-conso-api               v4.5      5/7  surface, declare-sa-marge, conclut, memoire, deux-couches
+always-new-code               v3.6      4/7  surface, declare-sa-marge, conclut, deux-couches
+objectifs-vs-resultats        v2.4      4/7  surface, refuse-de-mesurer, conclut, deux-couches
+the-equalizer                 v2.1      4/7  surface, refuse-de-mesurer, declare-sa-marge, conclut
+the-screener-capture          v3.4      4/7  declare-sa-marge, memoire, rend-du-html, deux-couches
+angel-of-ia-process           v9.4      3/7  surface, refuse-de-mesurer, memoire
+check-argus                   v3.5      3/7  declare-sa-marge, conclut, memoire
+check-harmonia                v3.4      3/7  surface, declare-sa-marge, conclut
+check-level-target            v5.8      3/7  surface, declare-sa-marge, conclut
+circle-process-guardian       v11.12    3/7  surface, refuse-de-mesurer, deux-couches
+clean-dirty-old               v1.4      3/7  surface, declare-sa-marge, conclut
+find-brain                    v1.4      3/7  surface, declare-sa-marge, deux-couches
+ines-official                 v2.3      3/7  surface, memoire, deux-couches
+modes-de-travail              v2.0      3/7  surface, memoire, deux-couches
+the-king                      v5.5      3/7  surface, declare-sa-marge, conclut
+criticite                     v2.2      2/7  surface, refuse-de-mesurer
+data-archangel                v4.1      2/7  surface, deux-couches
+find-booster                  v4.4      2/7  surface, declare-sa-marge
+messages-courts               v4.0      2/7  surface, refuse-de-mesurer
+route-booster                 v1.2      2/7  declare-sa-marge, deux-couches
+run-simulation                v2.3      2/7  memoire, deux-couches
+summarize-simulation-log      v2.1      2/7  surface, deux-couches
+the-ghost                     v1.1      2/7  surface, memoire
+tool-brain                    v4.6      2/7  surface, declare-sa-marge
+tool-usage                    v7.0      2/7  surface, memoire
+check-gemini-quota            v0.6      1/7  declare-sa-marge
+check-suivi-fidelity          v12.1     1/7  surface
+check-profil-utilisateur      v1.0      0/7  
+run-framework                 v0.1      0/7  
+sites-env                     v1.0      0/7  
+
+HORS PORTÉE : la richesse dit ce qu'un outil PORTE, jamais ce qu'il VAUT : un outil qui fait une seule chose et la fait bien sort pauvre et n'a rien à corriger. Aucun seuil n'est posé, et c'est délibéré.
+Le MAJEUR ne compte pas les commits : il compte ceux qui ont touché la surface exportée, c'est-à-dire
+les fois où l'outil a gagné ou perdu une capacité. Compter tous les commits aurait rendu un numéro qui
+grandit avec l'agitation plutôt qu'avec les capacités — et un chiffre pareil se lit pourtant comme une mesure.

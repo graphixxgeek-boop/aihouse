@@ -1,0 +1,164 @@
+Version de Claude : claude-opus-5
+Produit le : jeudi 24 septembre 2026 à 21h08 (UTC)
+État du code : 7901d7a sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : demande directe
+Outil : rapport-gros-prompt — date de dernière modification inconnue
+Santé de l'outil : 0/2 signal(aux) au vert — jamais sollicité d'après le compteur — ou jamais instrumenté pour l'être ; aucun objectif chiffré — rien à quoi comparer son résultat
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== RAPPORT DE GROS PROMPT — saisine du 2026-09-24 (soirée) ===
+Saisine du 2026-09-24 · 25 point(s) · 22 tâche(s) associée(s)
+Date : 2026-09-24T23:20 (Paris)
+
+Ton prompt du 2026-09-24 contient 25 point(s) distinct(s). Ils sont repris ci-dessous RÉORGANISÉS par sujet — jamais dans l'ordre où ils sont arrivés, qui est l'ordre où tu y as pensé, pas celui où ils se traitent.
+🟢 24 retenu(s) · ⚪ 0 écarté(s) · 🟠 1 à trancher par toi.
+
+Sauvegarde et reprise
+
+🟢 [P1] RETENU — #697
+   TA DEMANDE : « je veux que tu enregistres le doc 'DOSSIER de...' que je viens de te donner chez Cassandra »
+   OÙ ÇA EN EST : Déposé texte intégral en docs/cassandra-rh/gouvernance/. CASSANDRA est l'Agent Cadre RH de l'outillage, donc le domicile naturel d'un modèle d'organisation d'agents. Archivé plutôt que seulement lu : une IA qui reprend demain peut retrouver l'original et vérifier ce qui en a été retenu.
+
+🟢 [P2] RETENU — #700
+   TA DEMANDE : « Je dois sauvegarder le projet de mon côté, c'est une securité obligatoire, non ? mets ca en place proprement »
+   OÙ ÇA EN EST : Oui, et ce n'est pas redondant avec GitHub : une copie chez toi survit à un compte fermé ou une branche écrasée. Calibré : un .zip du dépôt entier (6,1 Mo mesurés) + un livre texte de ~150 000 mots, 3 derniers de chaque, à chaque Ronde et après chaque gros chantier, livrés dans la conversation avec un registre des dates. L'historisation est déjà DANS le zip, donc écraser ne perd rien.
+
+🟢 [P3] RETENU — #718
+   TA DEMANDE : « il y a eu un compactage de session en plein milieu : est-ce que les outils t'accompagnent à 100% à ce moment là ? une tache à ajouter ? »
+   OÙ ÇA EN EST : NON, ils ne m'accompagnaient pas du tout. Ce qui m'a sauvé est un résumé fabriqué par l'outil Claude Code, pas par l'Agence : s'il avait laissé tomber une de tes demandes, aucun de nos 75 scripts ne l'aurait remarqué. C'est l'Article 27 appliqué à moi en pleine session, et il n'était couvert nulle part. docs/carnet-de-bord.md créé ce soir, tenu au fil de l'eau.
+
+Le process gros prompt
+
+🟢 [P4] RETENU — #701
+   TA DEMANDE : « on va creer le process gros prompt [...] Comment on pourrait faire pour que ce process ne reste pas à dormir »
+   OÙ ÇA EN EST : Trois volets calibrés : une notice d'accueil régénérée automatiquement PLUS un rappel au moment où une règle s'applique ; l'invitation à deux moments (quand tu annonces une nuit, et quand des messages courts s'enchaînent) ; un compteur « depuis quand ce process n'a pas servi », sur le patron du « 39 commits sans Ronde » qui fonctionne déjà.
+
+🟢 [P5] RETENU — #702
+   TA DEMANDE : « Ce que je n'ai pas aimé : les [FAIT-Q] car des taches pouvaient etre associés, et ce n'est pas fait »
+   OÙ ÇA EN EST : Corrigé mécaniquement, pas par bonne volonté : scripts/rapport-gros-prompt.mjs REFUSE de produire le rapport si un point RETENU ne porte aucune tâche, et si un point ÉCARTÉ n'a pas de raison d'au moins 40 caractères. Ce rapport-ci est le premier produit par cet outil — s'il s'affiche, c'est que chaque point porte son numéro.
+
+🟢 [P6] RETENU — #701
+   TA DEMANDE : « les rapports de gros prompts sont enregistrés et utilisés dans l'interet du projet ; trouve lesquels et dis moi c'est quel agent »
+   OÙ ÇA EN EST : Six. CASSANDRA-RH : le domicile, et elle note que tu as corrigé ce défaut de ta propre façon de travailler. L'outil des tâches : chaque point devient une tâche ou une raison écrite. angel-of-ia-process : les règles de travail ont-elles été tenues. god-of-all-process : les étapes. L'historisation de ton profil : comment tu formules, ce sur quoi tu reviens. data-archangel : un rapport que personne n'exploite est un gaspillage.
+
+Les mots d'ordre
+
+🟢 [P7] RETENU — #703
+   TA DEMANDE : « OPTIMISER et FIABILISER [...] insufflées à chaque etape et chaque endroit du projet + on ajoute harmonise »
+   OÙ ÇA EN EST : Tu m'as toi-même attrapé : ils étaient ÉCRITS et rien ne les imposait. Calibré : trois questions obligatoires à la clôture de chaque tâche, avec un garde-fou qui refuse une clôture sans réponse. Trois et pas quatre : le seul autre candidat sérieux est déjà tenu par l'Article 27 et SAFE-EXPORT, et une question rituelle à quatre devient une case qu'on coche sans penser.
+
+🟢 [P8] RETENU — #704
+   TA DEMANDE : « fichier txt et conso de token [...] propose moi regulierement de repondre avec un fichier texte »
+   OÙ ÇA EN EST : Au-delà d'un certain volume, je te demande : conversation ou fichier ? Tu choisis au cas par cas, et la règle entre dans les process. Porteurs : ecotoken et Smart Conso API.
+
+Organisation
+
+🟢 [P9] RETENU — #707
+   TA DEMANDE : « je veux faire un partage iceberg entre ce qui est visible et ce qui est invisible : la tuyauterie, la plomberie »
+   OÙ ÇA EN EST : Mesuré : 75 scripts, 41 nommés dans la charte, 30 jamais mentionnés — dont ~17 de vraie plomberie et ~13 de VRAIS OUTILS invisibles (the-deep-reader, pure-gold-unity, find-brain, memento-weight, tool-usage, route-booster, ou-on-en-est, the-ghost, messages-courts...). Trois groupes retenus, frontière « est-ce que je peux le convoquer ? », plomberie organisée a minima, process primitif qui décide puis déclenche l'intégration existante.
+
+🟢 [P10] RETENU — #706
+   TA DEMANDE : « je dois toujours choisir les noms d'outil ou de process ou de rapports, et l'outil veille à ce que cette regle soit respecté »
+   OÙ ÇA EN EST : Portée : outils, process et rapports, pas les fonctions. Je construis sous un nom marqué provisoire et tu tranches après, pour que rien ne bloque la nuit pendant que tu dors. Garde-fou : un contrôle refuse tout nom provisoire oublié, plus un registre de qui a nommé quoi. Le rattrapage du passé attend l'outil et le classement, comme tu l'as demandé.
+
+🟢 [P11] RETENU — #710
+   TA DEMANDE : « il nous faudra un doc ou TOUT est consigné [...] Un document dynamique qui se met à jour tout seul »
+   OÙ ÇA EN EST : Une page web régénérée automatiquement depuis le dépôt réel : organigramme, chaque outil avec ses capacités et ses derniers résultats, les process et leurs étapes. Pas un document texte — 80 outils à la suite, on ne le parcourt pas. La notice d'accueil en devient la première page.
+
+🟢 [P12] RETENU — #711
+   TA DEMANDE : « peut-on verifier que l'outil dedié sait distinguer les fichiers qui doivent se mettre à jour tout seul des fichiers qui doivent etre historisés en l'etat »
+   OÙ ÇA EN EST : Trois natures déclarées PAR LE FICHIER lui-même (AUTO / FIGÉ / MIXTE) plutôt que dans une liste centrale qui se périmerait — l'Article 24. Le cas MIXTE est celui qui n'a nulle part où aller aujourd'hui. Un contrôle refuse le silence : c'est l'absence de mention qui crée l'accident, pas la mauvaise nature.
+
+🟢 [P13] RETENU — #705
+   TA DEMANDE : « gestion des taches : je pense que ce serait bien de scinder l'outil en 2 ou 3 »
+   OÙ ÇA EN EST : Oui, en DEUX. 1 770 lignes aujourd'hui. Coupure : « Où on en est » d'un côté, « Qu'est-ce qui cloche » de l'autre — deux questions qu'on ne se pose jamais au même moment ni dans le même état d'esprit.
+
+🟢 [P14] RETENU — #708
+   TA DEMANDE : « si je m'interesse à une tache en particulier, sors moi la fiche de la tache »
+   OÙ ÇA EN EST : Mini-fiche immédiate dans la conversation dès que tu demandes des infos sur une tâche, suivie de « voulez-vous la fiche complète ? » — comme les cérémonies de badge. Toutes les pièces existent déjà séparément, il s'agit de les rassembler.
+
+🟢 [P15] RETENU — #709
+   TA DEMANDE : « CONVOCATION chez Cassandra : tout fonctionne bien ? detaille le fonctionnement »
+   OÙ ÇA EN EST : Elle fonctionne, mais elle produit un compte rendu et s'arrête là — exactement le défaut des 35 constats sans suite. Corrigé : elle se termine obligatoirement par une décision (corrigé / en sursis avec échéance / retiré) plus une tâche si besoin, et se re-convoque automatiquement si rien n'a bougé à l'échéance.
+
+Mesure et suite
+
+🟢 [P16] RETENU — #698, #699
+   TA DEMANDE : « tu as fait la mesure, ok. Mais du coup la tache est accomplie et on n'en reparle jamais ? Refais un check la dessus stp, et equipe l'outil pour qu'il t'aide »
+   OÙ ÇA EN EST : Tu avais raison avant l'outillage. Sur 577 tâches terminées, 35 portent un constat chiffré, et 35 ne concluent rien — dont « 24 outils sur 32 ne concluaient jamais », « 26 outils sans recordCircleItemReport », « 10 outils jamais sollicités ». Mécanique construite : deux marques obligatoires, une sous-commande `suites`, le cas de la référence morte couvert. Deux échecs du premier passage gardés en contre-test.
+
+🟢 [P17] RETENU — #712
+   TA DEMANDE : « donne moi des exemples pour les numéros de serie : je veux un tableau dans un fichier texte »
+   OÙ ÇA EN EST : Livré : docs/cassandra-rh/versions-outils-2026-09-24.txt, 50 outils. Deux échelles séparées volontairement — la VERSION dit ce qui s'est passé, la RICHESSE dit ce que l'outil EST aujourd'hui sur 7 aptitudes lues dans son code.
+
+🟢 [P18] RETENU — #713
+   TA DEMANDE : « QUi surveille qu'un outil evolue constamment, ne reste pas à l'etat 1 toute sa vie ? »
+   OÙ ÇA EN EST : Personne aujourd'hui : la mesure existe, rien ne s'alarme. CASSANDRA le fera — elle tient déjà le tableau. Le signal sera le CROISEMENT (n'a pas bougé depuis longtemps ET souvent sollicité), jamais l'ancienneté seule : un outil qui fait une chose et la fait bien n'a aucune raison de bouger.
+
+Catalogue et combinaisons
+
+🟢 [P19] RETENU — #714
+   TA DEMANDE : « est-ce que le catalogue du coordinateur se met à jour en auto ? »
+   OÙ ÇA EN EST : NON. Il se regénère à la demande (dernier : 2026-09-23 21h26) et la liste des packs est écrite à la main dans le code — c'est exactement pour ça que 13 outils sont invisibles. Correction : chaque outil déclare son offre, le catalogue la lit, et un garde-fou signale tout outil muet au lieu de le laisser disparaître.
+
+🟢 [P20] RETENU — #715
+   TA DEMANDE : « je veux un calcul complexe pour imaginer des combinaisons pertinentes [...] c'est une vocation du catalogue que je n'ai jamais reussi à mettre en place : HELP ! »
+   OÙ ÇA EN EST : Je crois savoir pourquoi ça n'a jamais marché : tu partais des OUTILS. Une combinaison utile se déduit d'une question sans réponse, pas d'un stock disponible. Et le calcul exhaustif est un piège : 2 775 paires, 67 525 trios, un classement qui aurait l'air intelligent et serait du bruit sans moyen de faire la différence. Trois générateurs mécaniques retenus, dont le plus précieux part des exigences que personne ne vérifie.
+
+Gouvernance
+
+🟢 [P21] RETENU — #696
+   TA DEMANDE : « plutot 30 questions pour voir comment on s'inspire concretement de ce doc »
+   OÙ ÇA EN EST : 36 questions posées ce soir en fenêtres. Tranché : 8 rangs (nos 4 + 4 des tiens) · contrats d'interface sur les liens qui comptent seulement · la vue EXPLOITATION adoptée, c'est elle qui manquait au gros prompt · définition de fini fusionnée avec le badge · les 15 règles confrontées à la charte une par une · les contrôles relus par MOMENT (révélateur probable : « avant de décider » et « après livraison » sont vides chez nous) · et par NATURE (on est presque tout en détectif, presque rien n'empêche) · trois conditions d'arrêt et pas plus · gabarit = l'existant plus ce que ton document ajoute · ADMIN-CONTROL vérifie tout · RACI oui, KPI fusionnés.
+
+🟠 [P22] À TRANCHER
+   TA DEMANDE : « dans le prompt je demande à ce que cet agent soit capable de faire beaucoup plus [...] j'espere que tu n'as pas perdu la valeur »
+   OÙ ÇA EN EST : Je ne peux pas encore répondre honnêtement : je n'ai pas relu ton cahier des charges d'AGENT-DU-TEMPS ligne à ligne contre ce qui a été construit.
+   ❓ CE QUE J'ATTENDS DE TOI : L'outil existe (version 1.0, 5 aptitudes sur 7) et sait donner l'heure en déclarant sa source, plus garder la mémoire des estimations. Mais affirmer que rien n'a été perdu sans avoir fait la comparaison serait exactement le genre d'assurance que ce projet traque. VEUX-TU que je fasse cette comparaison cette nuit, point par point, ce que tu avais demandé en face de ce qui existe ?
+
+Te connaître
+
+🟢 [P23] RETENU — #717
+   TA DEMANDE : « est-ce que j'ai bien reussi à me faire connaitre ? est-ce que l'utilisateur a les moyens de se faire connaitre (sujet export) ? »
+   OÙ ÇA EN EST : Réponse honnête : partiellement, et le mécanisme a décroché. 11 observations, la dernière avant-hier, un profil de 59 lignes — et la séance d'aujourd'hui, la plus riche en signal depuis longtemps, n'y a rien déposé. Le vrai trou touche l'export : le mécanisme est à SENS UNIQUE, tu ne peux pas te déclarer, seulement espérer être remarqué. Calibré : tu remplis un document qui fait autorité, j'observe en second, et je te montre périodiquement ton portrait pour que tu corriges ce qui est faux.
+
+La suite immédiate
+
+🟢 [P24] RETENU — #700
+   TA DEMANDE : « on fait une ronde rapide avec edition des documents de sauvegarde »
+   OÙ ÇA EN EST : Version rapide retenue : tous les contrôles gratuits plus la production du zip et du livre. Lancée juste après ce rapport.
+
+🟢 [P25] RETENU — #718
+   TA DEMANDE : « Je veux que tu me poses maintenant TOUTES LES QUESTIONS EN ATTENTE, meme s'il y'en a 60 »
+   OÙ ÇA EN EST : 36 posées ce soir, en 9 fenêtres de 4. Les questions restantes portent sur du détail de construction et non sur des orientations : la seule qui demande vraiment ton arbitrage est P22 ci-dessus. Les autres arriveront au fil des chantiers, sous la règle que tu as fixée — « tout ce qui est difficile à défaire, plus les noms ».
+
+Plan d'action
+
+  → RETENU · undefined — tâche [RECOMMANDEE] : 697
+  → RETENU · undefined — tâche [RECOMMANDEE] : 700
+  → RETENU · undefined — tâche [RECOMMANDEE] : 718
+  → RETENU · undefined — tâche [RECOMMANDEE] : 701
+  → RETENU · undefined — tâche [RECOMMANDEE] : 702
+  → RETENU · undefined — tâche [RECOMMANDEE] : 701
+  → RETENU · undefined — tâche [RECOMMANDEE] : 703
+  → RETENU · undefined — tâche [RECOMMANDEE] : 704
+  → RETENU · undefined — tâche [RECOMMANDEE] : 707
+  → RETENU · undefined — tâche [RECOMMANDEE] : 706
+  → RETENU · undefined — tâche [RECOMMANDEE] : 710
+  → RETENU · undefined — tâche [RECOMMANDEE] : 711
+  → RETENU · undefined — tâche [RECOMMANDEE] : 705
+  → RETENU · undefined — tâche [RECOMMANDEE] : 708
+  → RETENU · undefined — tâche [RECOMMANDEE] : 709
+  → RETENU · undefined — tâche [RECOMMANDEE] : 698
+  → RETENU · undefined — tâche [RECOMMANDEE] : 712
+  → RETENU · undefined — tâche [RECOMMANDEE] : 713
+  → RETENU · undefined — tâche [RECOMMANDEE] : 714
+  → RETENU · undefined — tâche [RECOMMANDEE] : 715
+  → RETENU · undefined — tâche [RECOMMANDEE] : 696
+  ? À TRANCHER · undefined
+  → RETENU · undefined — tâche [RECOMMANDEE] : 717
+  → RETENU · undefined — tâche [RECOMMANDEE] : 700
+  → RETENU · undefined — tâche [RECOMMANDEE] : 718
+
+---
+HORS PORTÉE : ce rapport dit ce qui a été fait de chaque point ; il ne dit jamais si c'était la bonne chose à faire — ça se lit, et ça se tranche avec toi, point par point.
