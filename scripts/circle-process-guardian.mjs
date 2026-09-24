@@ -562,6 +562,64 @@ export function verifyRondeProcess({
 // Combien de passages identiques d'affilée avant de le dire. Deux serait du bruit (deux Rondes
 // rapprochées trouvent légitimement la même chose) ; trois est le premier chiffre où « personne n'a
 // agi » devient une lecture plus probable que « ça vient de se produire ».
+// ————————————————————————————————————————————————————————————————————————
+// LA CLÔTURE NE PEUT PAS SE PRENDRE POUR ACQUISE (2026-09-24, chantier 4 du plan de nuit)
+// ————————————————————————————————————————————————————————————————————————
+//
+// DEMANDE DE L'UTILISATEUR : « une Ronde ne doit pas pouvoir se clore si le process n'a pas été
+// entièrement déroulé ».
+//
+// CE QUI L'A FAIT ÉCRIRE, ET C'EST MOI : le 2026-09-23, j'ai clos une Ronde GOAT MAX en sautant
+// CINQ des huit étapes de fin. Sa phrase : « tu n'as rien livré à la fin, tu t'es sauvé en
+// courant ! ». Mon premier rattrapage était lui-même incomplet, et il a dû le redire : « tu n'as
+// toujours pas respecté le process ». La cause, qu'il a nommée mieux que moi : « tu lis les
+// raccourcis plutôt que les documents » — j'avais lu la liste d'étapes du contrôleur, qui en
+// décrit onze pour toute la Ronde, au lieu du document, qui en décrit HUIT rien que pour la fin.
+//
+// POURQUOI `verifyRondeProcess()` NE POUVAIT PAS L'ATTRAPER, et c'est la vraie leçon : il est
+// DÉCLARATIF. On lui passe `questionsAsked`, `recapHtml`, `analysisPointsFound` — c'est-à-dire ce
+// que l'agent AFFIRME avoir fait. Un agent qui saute une étape ne le déclare pas, par définition.
+// Un contrôle qui demande à celui qu'il surveille de s'auto-déclarer ne surveille rien.
+//
+// CE QUI CHANGE ICI : chaque étape est vérifiée contre la TRACE qu'elle laisse sur le disque.
+// Un rapport écrit existe ou n'existe pas ; une analyse HTML existe ou n'existe pas. Le disque ne
+// se souvient pas de ce qu'on avait l'intention de faire.
+export const ETAPES_DE_CLOTURE = [
+  { cle: "A", quoi: "les rapports individuels, en fichiers txt, AVANT toute chose", trace: (d) => (d.rapportsIndividuels ?? 0) > 0 },
+  { cle: "B", quoi: "l'analyse, en HTML aux normes", trace: (d) => !!d.analyseHtml },
+  { cle: "C", quoi: "les questions qui évaluent l'agent, posées AVANT EVAL-IA", trace: (d) => !!d.questionsEvaluationPosees },
+  { cle: "D", quoi: "les deux rapports d'évaluation, livrés À PART l'un de l'autre", trace: (d) => !!d.evalDev && !!d.evalIa },
+  { cle: "E", quoi: "les quatre rapports de tâches, livrés ici et pas au début", trace: (d) => (d.rapportsDeTaches ?? 0) >= 4 },
+  { cle: "F", quoi: "les quatre séries de questions, dans l'ordre", trace: (d) => (d.seriesDeQuestions ?? 0) >= 4 },
+  { cle: "G", quoi: "le dernier rappel de modèle, si et seulement si la réponse à Q1 l'appelait", trace: (d) => d.rappelModeleRequis === false || !!d.rappelModeleFait },
+  { cle: "H", quoi: "record-run, EN TOUT DERNIER", trace: (d) => !!d.recordRunFait },
+];
+
+export function verifyClotureDeRonde(faits = {}, { etapes = ETAPES_DE_CLOTURE } = {}) {
+  // Aucun fait fourni : on ne conclut RIEN. Un contrôle de clôture qui rend « conforme » sur une
+  // absence de données serait précisément le vert le plus dangereux de tout ce paysage (leçon L5).
+  if (!faits || Object.keys(faits).length === 0) {
+    return { mesurable: false, peutClore: false, pourquoi: "aucun fait de clôture fourni — rien n'est vérifié, donc rien n'autorise à clore. Un contrôle qui rend « conforme » sur une absence de données est pire qu'aucun contrôle." };
+  }
+  const manquantes = etapes.filter((e) => !e.trace(faits));
+  // L'ORDRE COMPTE POUR H, ET SEULEMENT POUR H : record-run scelle la Ronde. Le lancer avant que
+  // les autres étapes soient faites est exactement l'erreur commise le 2026-09-23, et elle est
+  // irréversible — une Ronde enregistrée comme close ne se rouvre pas.
+  const hAvantLesAutres = !!faits.recordRunFait && manquantes.some((e) => e.cle !== "H");
+  return {
+    mesurable: true,
+    peutClore: manquantes.length === 0,
+    manquantes: manquantes.map((e) => ({ cle: e.cle, quoi: e.quoi })),
+    hAvantLesAutres,
+    pourquoi: manquantes.length === 0
+      ? "les huit étapes de fin ont laissé leur trace : la Ronde peut se clore"
+      : `${manquantes.length} étape(s) de fin sans trace sur le disque : ${manquantes.map((e) => e.cle).join(", ")} — la Ronde ne peut pas se clore`,
+    grave: hAvantLesAutres
+      ? "record-run (étape H) a été lancé alors que des étapes précédentes manquent encore. C'est l'erreur exacte du 2026-09-23, et elle est IRRÉVERSIBLE : une Ronde enregistrée comme close ne se rouvre pas."
+      : null,
+  };
+}
+
 export const PASSAGES_AVANT_REPETITION = 3;
 
 // Le seuil de « même substance ». Volontairement haut : on cherche un signal REDIT, jamais deux

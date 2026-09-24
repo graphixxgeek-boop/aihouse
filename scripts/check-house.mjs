@@ -11352,6 +11352,17 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(riche.manquants.every((m) => m.quoi), 'and every missing point says what it would have meant, so the list is actionable rather than a grade');
   assert.ok(/jamais ce qu'il VAUT/.test(crh2.richesse({}).horsPortee), 'with no threshold anywhere, deliberately: a poor tool is not a bad tool — find-booster does one thing and does it well, and comes out poor with nothing to fix');
 
+  // UNE RONDE NE PEUT PAS SE CLORE SI LE PROCESS N'EST PAS DÉROULÉ (2026-09-24, chantier 4).
+  const cpg2 = await import('../scripts/circle-process-guardian.mjs');
+  assert.equal(cpg2.ETAPES_DE_CLOTURE.length, 8, 'eight closing steps, as the DOCUMENT describes them — not the eleven the controller lists for the whole Ronde. Reading the shortcut instead of the document is exactly the mistake the user named on 2026-09-23: "tu lis les raccourcis plutôt que les documents"');
+  const clotureVide = cpg2.verifyClotureDeRonde({});
+  assert.ok(!clotureVide.mesurable && !clotureVide.peutClore, 'with no closing facts at all, nothing is verified and therefore nothing authorises closing: a closure check returning "conforme" on an absence of data would be the most dangerous green in this whole landscape');
+  const partiel = cpg2.verifyClotureDeRonde({ rapportsIndividuels: 21, analyseHtml: true, recordRunFait: true });
+  assert.ok(!partiel.peutClore && partiel.hAvantLesAutres && /IRRÉVERSIBLE/.test(partiel.grave), 'record-run launched while earlier steps are still missing is flagged as GRAVE and irreversible — a Ronde recorded as closed does not reopen, and this is the exact error committed on 2026-09-23');
+  const complet = cpg2.verifyClotureDeRonde({ rapportsIndividuels: 21, analyseHtml: true, questionsEvaluationPosees: true, evalDev: true, evalIa: true, rapportsDeTaches: 4, seriesDeQuestions: 4, rappelModeleRequis: false, recordRunFait: true });
+  assert.ok(complet.peutClore && !complet.grave, 'and a genuinely complete closing passes, so the guard is usable rather than obstructive');
+  assert.ok(cpg2.verifyClotureDeRonde({ rapportsIndividuels: 1 }).manquantes.some((m) => m.cle === 'D'), "each missing step is NAMED with what it was for: the previous guard was DECLARATIVE — it was handed questionsAsked and recapHtml, that is what the agent CLAIMS to have done, and an agent that skips a step does not declare it by definition. A control that asks the one it watches to self-declare watches nothing. Here each step is checked against the trace it leaves on disk, and the disk does not remember intentions");
+
   // LES TROIS NIVEAUX DE SCAN (2026-09-24, chantier 3.3) — light / target / warrior.
   assert.deepEqual(Object.keys(crh2.NIVEAUX_DE_SCAN), ['light', 'target', 'warrior'], 'the three levels the user named, and what separates them is the COST rather than any felt depth: a free layer can run at every commit, a paid one cannot, and that frontier decides everything else (Articles 8 and 22)');
   // (1) Tourner à travers le filet de sécurité EST tourner à chaque commit.
