@@ -67,6 +67,13 @@ export const REGLES_SURVEILLEES = [
   // la DEMANDE donc, et refuse d'être vert sans réponse — c'est la seule protection possible pour
   // une règle qui ne se joue que dans la conversation, et l'écrire ainsi vaut mieux que de la
   // confier à la mémoire d'un agent qui changera de session (Article 27).
+  // reprise-des-notes (2026-09-24, règle qualifiée d'IMPORTANTE par l'utilisateur). Même patron
+  // et même raison que resume-contextualise : aucun mécanisme ne peut savoir qu'un chantier vient
+  // de s'ouvrir dans une conversation, donc angel DEMANDE plutôt que de supposer. Ce qui l'a fait
+  // naître est mesuré, pas craint : une réponse sur la longueur d'un code de nomenclature donnée
+  // en comptant cinq axes, quand le dépôt en portait treize — et la question avait déjà été posée
+  // trois jours plus tôt sous une autre forme, effacée depuis.
+  { id: "reprise-des-notes", cote: "agent", observable: false, regle: "Avant d'ouvrir un chantier, avoir lancé `node scripts/data-archangel.mjs notes <sujet>` et lu ce que le dépôt sait déjà — puis DIRE explicitement l'écart entre ce qu'on croyait savoir et ce que les notes disent.", source: "docs/regles-de-travail.md §0bis" },
   { id: "resume-contextualise", cote: "agent", observable: false, regle: "Ouvrir chaque compte rendu final par les quatre rappels : le contexte, la demande de l'utilisateur résumée dans ses termes, l'étiquette de la tâche (numéro + intitulé), et un vocabulaire compréhensible par un non-développeur.", source: "CLAUDE.md Article 29" },
   { id: "decisions-en-attente", cote: "utilisateur", observable: true, regle: "Trancher les questions laissées en attente : une décision jamais prise bloque le travail qui en dépend.", source: "docs/regles-de-travail.md §2" },
   // XP-LECONS (2026-09-23, process XP-IA-bonnes-pratiques-et-lecons, tâche #221). C'est le PREMIER

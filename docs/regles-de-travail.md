@@ -43,6 +43,54 @@ signal à ne pas ignorer : l'agent s'oblige alors à les rouvrir et à les relir
 le travail en cours reste effectivement dans la bonne direction plutôt que de dériver
 progressivement sur la seule base d'un souvenir qui s'estompe.
 
+## 0bis. AVANT D'OUVRIR UN CHANTIER : on reprend d'abord les notes
+
+*(2026-09-24, règle posée par l'utilisateur et qualifiée par lui d'IMPORTANTE : « avant de débuter
+n'importe quel autre chantier : on reprend d'abord les notes. règle importante. [...] Moi je
+raisonne comme si tu consultais les notes avant de commencer un chantier : c'est donc un process à
+établir fermement. »)*
+
+**Ce que la règle ferme, et il l'a démontré lui-même plutôt que supposé.** Le 2026-09-24 il a
+demandé quelle longueur donner au code de nomenclature d'un outil. J'ai répondu « trois
+caractères », en comptant les CINQ axes de classification que j'avais en tête. Les notes en
+portaient **treize**. Pire : la question avait déjà été posée trois jours plus tôt, sous une autre
+forme — un code de **niveau de maturité 0/1/2/3**, pas un code de classes — et cette idée avait été
+EFFACÉE du dépôt sans qu'aucune tâche ne le mentionne. Ma réponse n'était donc pas imprécise, elle
+répondait à une autre question. **Rien dans ma façon de répondre ne pouvait me le dire.**
+
+**La règle, en une phrase** : aucun chantier ne s'ouvre avant d'avoir cherché ce que le dépôt sait
+déjà sur son sujet. Pas « si j'ai un doute » — **systématiquement**, parce que le doute est
+justement ce qui manque quand on ignore qu'on ignore.
+
+**Le geste concret, une seule commande** :
+
+```
+node scripts/data-archangel.mjs notes <sujet>
+```
+
+Elle balaie les cinq lieux où vivent les notes de ce projet — les décisions (`docs/suivi/`), les
+plans (`docs/plans/`), le référentiel, les documents de conception, et les commentaires de tête des
+outils — et dit **où** le sujet a déjà été traité. Elle ne lit pas à votre place.
+
+**À ne pas confondre avec `briefing`, et la confusion a un coût mesuré** : `briefing` ne regarde que
+les SOURCES DE DONNÉES déclarées (registres, journaux, séries chiffrées). Lancée sur
+« classification », elle a rendu **zéro** alors que `notes` en trouve **52**. « Que produisons-nous
+comme données ? » et « qu'avons-nous déjà décidé ? » sont deux questions différentes.
+
+**Un zéro n'est jamais une preuve qu'il n'y a rien à savoir** : c'est la preuve que CE MOT-LÀ ne
+ressort pas. Réessayer avec le vocabulaire du sujet avant de conclure qu'on part de zéro.
+
+**Ce qui doit sortir de la reprise, avant la première ligne de code** : ce qui a déjà été DÉCIDÉ
+(et ne se rediscute pas), ce qui a déjà été MESURÉ (et ne se remesure pas), ce qui a déjà été
+ÉCARTÉ avec sa raison, et — le plus précieux — **l'écart entre ce que je croyais savoir et ce que
+les notes disent**. Cet écart se dit explicitement dans le compte rendu, jamais corrigé en silence.
+
+**Son porteur** : `angel-of-ia-process` (règle `reprise-des-notes`), comme pour l'Article 29. Aucun
+mécanisme ne peut savoir qu'un chantier vient de s'ouvrir dans une conversation : angel DEMANDE
+donc si la reprise a eu lieu, et refuse d'être au vert sans réponse. C'est la seule protection
+possible pour une règle qui ne se joue pas sur le disque, et la déclarer ainsi vaut mieux que de la
+confier à la mémoire d'un agent (Article 27).
+
 ## 1. Rythme et intégration des demandes
 
 L'utilisateur spécifie rarement une fonctionnalité en un seul message complet : il la construit

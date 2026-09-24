@@ -374,6 +374,97 @@ export function agentDataBriefing(carte, { root = ROOT, now = Date.now(), lecteu
 // une donnée devient VRAIMENT critique et ignorée »). Rare par construction : il faut qu'une donnée
 // soit à la fois FRAÎCHE (quelqu'un vient de l'écrire, donc elle a quelque chose à dire) et SANS
 // AUCUN LECTEUR. Une donnée ancienne et ignorée est une question d'hygiène, pas une urgence.
+// ============================================================================================
+// LA REPRISE DES NOTES — avant de commencer n'importe quel chantier (2026-09-24, tâche #759)
+// ============================================================================================
+// SA RÈGLE, dans ses mots : « avant de débuter n'importe quel autre chantier : on reprend d'abord
+// les notes. règle importante. [...] Moi je raisonne comme si tu consultais les notes avant de
+// commencer un chantier : c'est donc un process à établir fermement. »
+//
+// POURQUOI ÇA VIT ICI PLUTÔT QUE DANS UN 79e SCRIPT : data-archangel répond déjà à « que sait
+// l'équipe sur ce sujet ? », mais sa commande `briefing` ne regarde que les SOURCES DE DONNÉES
+// déclarées — les registres, les journaux, les séries chiffrées. Lancée sur « classification »
+// elle a rendu ZÉRO, alors que le dépôt porte treize classifications et cinq documents sur le
+// sujet. La question « qu'avons-nous DÉCIDÉ ? » n'est pas la question « quelles DONNÉES
+// produisons-nous ? », et confondre les deux est ce qui a laissé le trou.
+//
+// LE TROU QU'IL A LUI-MÊME DÉMONTRÉ, et c'est une preuve, pas un exemple : il m'a demandé quelle
+// longueur donner au code de nomenclature. J'ai répondu « trois caractères » en comptant CINQ
+// axes, parce que c'est tout ce que j'avais en tête. Les notes en portaient TREIZE. La réponse
+// était fausse, et rien dans ma façon de répondre ne pouvait me le dire.
+//
+// CE QU'IL RAPPORTE, ET CE QU'IL NE PEUT PAS. Il trouve où le sujet a déjà été traité ; il ne lit
+// pas à ma place. Un chantier ouvert sans passer par là part avec les seules notes que l'agent a
+// en mémoire — c'est-à-dire, à la session suivante, aucune (Article 27).
+export const LIEUX_DE_NOTES = [
+  { cle: "decisions", quoi: "les tâches du suivi — ce qui a été décidé, et par qui", dossier: "docs/suivi", ext: /\.md$/ },
+  { cle: "plans", quoi: "les plans et états des lieux d'un chantier", dossier: "docs/plans", ext: /\.(md|txt)$/ },
+  { cle: "referentiel", quoi: "le référentiel — la règle telle qu'elle s'applique aujourd'hui", dossier: "docs/referentiel", ext: /\.md$/ },
+  { cle: "conception", quoi: "les documents de conception et les blueprints", dossier: "docs", ext: /\.md$/ },
+  { cle: "code", quoi: "les commentaires de tête des outils — le POURQUOI vit à côté du QUOI", dossier: "scripts", ext: /\.mjs$/ },
+];
+
+export const EXTRAIT_MAX = 160;
+
+function fichiersDe(root, dossier, ext, recursif = true, profondeur = 0) {
+  const out = [];
+  let entrees = [];
+  try { entrees = readdirSync(join(root, dossier), { withFileTypes: true }); } catch { return out; }
+  for (const e of entrees) {
+    const rel = `${dossier}/${e.name}`;
+    if (e.isDirectory()) { if (recursif && profondeur < 3) out.push(...fichiersDe(root, rel, ext, recursif, profondeur + 1)); continue; }
+    if (ext.test(e.name)) out.push(rel);
+  }
+  return out;
+}
+
+export function reprendreLesNotes(sujet, { root = ROOT, lieux = LIEUX_DE_NOTES, lire } = {}) {
+  const motif = String(sujet ?? "").trim();
+  if (motif.length < 3) return { mesurable: false, pourquoi: "un sujet de moins de trois caractères ramènerait tout le dépôt : ce n'est pas une reprise de notes, c'est du bruit" };
+  const re = new RegExp(motif.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+  const lecteur = lire ?? ((f) => readFileSync(join(root, f), "utf8"));
+  const par = {};
+  let fichiersVus = 0;
+  let illisibles = 0;
+  for (const l of lieux) {
+    par[l.cle] = [];
+    for (const f of fichiersDe(root, l.dossier, l.ext)) {
+      // `docs` en entier recouvrirait `docs/suivi`, `docs/plans` et `docs/referentiel` : on laisse
+      // chaque lieu à son propriétaire plutôt que de compter trois fois la même note.
+      if (l.cle === "conception" && /^docs\/(suivi|plans|referentiel)\//.test(f)) continue;
+      let src; fichiersVus++;
+      try { src = lecteur(f); } catch { illisibles++; continue; }
+      const lignes = String(src).split("\n");
+      const touches = [];
+      for (let i = 0; i < lignes.length; i++) if (re.test(lignes[i])) touches.push({ ligne: i + 1, extrait: lignes[i].trim().slice(0, EXTRAIT_MAX) });
+      if (touches.length) par[l.cle].push({ fichier: f, occurrences: touches.length, premier: touches[0] });
+    }
+    par[l.cle].sort((a, b) => b.occurrences - a.occurrences);
+  }
+  const total = Object.values(par).reduce((s, v) => s + v.length, 0);
+  return { sujet: motif, par, total, fichiersVus, illisibles,
+    // Un zéro ici ne veut jamais dire « rien à savoir » : il veut dire « ce mot-là ne ressort pas ».
+    mesurable: fichiersVus > 0,
+    pourquoi: fichiersVus ? null : "aucun fichier lu — la recherche n'a pas pu tourner, ce qui ne veut PAS dire qu'il n'y a pas de notes" };
+}
+
+export function formatReprisesLines(r, { parLieu = 6 } = {}) {
+  if (!r?.mesurable) return [`⚠️ NON MESURABLE — ${r?.pourquoi ?? "raison inconnue"}`];
+  const L = [`=== REPRISE DES NOTES — « ${r.sujet} » : ${r.total} fichier(s) portent déjà ce sujet ===`, ""];
+  for (const l of LIEUX_DE_NOTES) {
+    const hits = r.par[l.cle] ?? [];
+    L.push(`${l.cle.toUpperCase().padEnd(12)} ${String(hits.length).padStart(3)} — ${l.quoi}`);
+    for (const h of hits.slice(0, parLieu)) L.push(`   ${String(h.occurrences).padStart(4)}× ${h.fichier}`);
+    if (hits.length > parLieu) L.push(`        … et ${hits.length - parLieu} autre(s)`);
+  }
+  L.push("");
+  L.push(r.total
+    ? `À LIRE AVANT D'OUVRIR LE CHANTIER. Ce compte dit OÙ le sujet a déjà été traité ; il ne lit pas à votre place, et un chantier ouvert sans cette lecture repart avec les seules notes que l'agent a en mémoire — c'est-à-dire, à la session suivante, aucune.`
+    : `⚠️ Aucun fichier ne porte ce mot. Ce n'est PAS la preuve qu'il n'y a rien à savoir : c'est la preuve que CE MOT-LÀ ne ressort pas. Réessayer avec le vocabulaire du sujet avant de conclure qu'on part de zéro.`);
+  if (r.illisibles) L.push(`(${r.illisibles} fichier(s) illisibles, non comptés — déclaré plutôt que passé sous silence.)`);
+  return L;
+}
+
 export function criticalIgnoredData(briefing, { seuilFraicheurJours = 2 } = {}) {
   return briefing.filter((l) => l.ageJours !== undefined && l.ageJours <= seuilFraicheurJours && l.lecteurs === 0 && !(l.lueParTableDeclaree ?? []).length);
 }
@@ -588,9 +679,18 @@ function main() {
     scriptPath: "scripts/data-archangel.mjs",
   });
   recordCliUsage("data-archangel");
+  // `notes <sujet>` AVANT le rapport complet, et sans le calculer : la reprise des notes se
+  // consulte au moment d'ouvrir un chantier, où la circulation des données n'intéresse personne.
+  // Lui faire payer le scan complet aurait fait de la règle « on reprend d'abord les notes » une
+  // commande qu'on saute parce qu'elle est lente.
+  if (sub === "notes") {
+    for (const l of formatReprisesLines(reprendreLesNotes(process.argv[3]))) console.log(l);
+    return;
+  }
   const r = buildDataArchangelReport();
   if (sub === "briefing") {
     console.log(formatAgentBriefing(r, { filtre: process.argv[3] }));
+    console.log(`\n(« briefing » ne regarde que les SOURCES DE DONNÉES déclarées. Pour savoir ce qui a déjà été DÉCIDÉ ou NOTÉ sur un sujet, c'est « node scripts/data-archangel.mjs notes <sujet> » — deux questions différentes, et les confondre a déjà coûté un chiffre faux.)`);
     return;
   }
   console.log(formatDataArchangelReport(r));

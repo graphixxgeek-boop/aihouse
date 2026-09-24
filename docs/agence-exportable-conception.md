@@ -81,6 +81,45 @@ par un outil et immédiatement disponible aux autres ?
 
 ---
 
+## Progression Niveau 1 → 2 → 3 par outil, sans réflexion au moment de l'exécuter
+
+*(Idée de l'utilisateur, 2026-09-21. **RESTAURÉE le 2026-09-24, tâche #227** : cette section avait
+été EFFACÉE lors d'une réécriture du fichier le 2026-09-23, sans qu'aucune tâche ne mentionne une
+suppression — THE-DEEP-READER l'avait signalé le jour même, et le constat était resté ouvert. Texte
+repris mot pour mot de `git show 353a22c`, jamais reformulé : c'est son idée, pas la mienne.)*
+
+**Son idée, dans ses mots** : « l'agence est evolutive : elle s'exporte en V1, mais contient dejà la
+possibilité pour chaque agent de l'agence, de le passer en v2 et V3 (max) selon l'evolution de la
+taille du projet […] tous les outils existants aujourd'hui devraient donc beneficier d'une nouvelle
+nomenclature : **blueprint à l'etat 0, 1, 2, 3** selon leur historique de developpement ».
+
+L'agence exportée dans un nouveau projet démarre au Niveau 1. Plus tard, faire passer UN outil
+précis au Niveau 2 ne doit demander aucune réflexion de conception sur le moment — juste exécuter
+un plan déjà écrit à l'avance.
+
+**La règle générique des niveaux, décidée dès 2026-09-21 :**
+
+- **Niveau 1** — l'outil tel qu'il est livré à l'installation de l'agence dans un nouveau projet :
+  autonome, ne suppose rien sur la taille ou la maturité du projet qui l'accueille.
+- **Niveau 2** — un plan de montée en puissance déjà ÉCRIT dans le blueprint générique de l'outil
+  au moment de la conception du gabarit, décrivant EXACTEMENT ce qui change (souvent : un vrai
+  croisement avec d'autres outils, une vérification plus profonde, une entrée dans un système de
+  badge/couverture équivalent à celui de ce projet) — jamais rédigé au moment de l'exécuter,
+  seulement lu et appliqué.
+- **Niveau 3** — l'intégration maximale déjà prévue de la même façon (ex. automatisation complète,
+  validation croisée entre outils, reporting enrichi).
+
+**Ce qui se décide maintenant et ce qui ne se décide pas** : oui pour la RÈGLE, non pour le CONTENU
+détaillé de chaque outil — écrire aujourd'hui un vrai plan Niveau 2/3 pour chacun des outils serait
+du travail spéculatif sur un futur projet dont on ne connaît pas la forme réelle.
+
+**LE LIEN AVEC LA NOMENCLATURE, ET IL CHANGE LA RÉPONSE DONNÉE LE 2026-09-24.** Ce soir-là, il a
+reposé la question du code inséré avant le nom d'un outil (« quel serait la longueur de ce code ? »)
+et j'ai répondu « trois caractères » en raisonnant sur les axes de CLASSIFICATION — sans savoir
+que la question existait déjà, et que sa première formulation portait sur autre chose : **le NIVEAU
+DE MATURITÉ de l'outil, un seul chiffre de 0 à 3**. Les deux idées sont compatibles, mais elles ne
+se codent pas pareil, et une réponse donnée sans la première est une réponse à côté.
+
 ## Ce qui manque, face aux modèles concurrents
 
 *Honnêteté préalable : aucun benchmark n'a été conduit. Cette section pose des angles à instruire,
