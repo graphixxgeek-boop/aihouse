@@ -15,7 +15,7 @@
 // n'est recalculée ici, jamais une seconde version qui pourrait diverger de l'originale.
 import { readFileSync, existsSync, rmSync, writeFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { parseToolsTable, slugifyAgentName, toolIdentitySlug, checkAgentOnboarding, loadBadgeCeremonyHistory, CERTIFIABLE_STATUTS, CLASSIQUE_STATUT } from "./le-coordinateur.mjs";
+import { parseToolsTable, slugifyAgentName, toolIdentitySlug, checkAgentOnboarding, loadBadgeCeremonyHistory, CERTIFIABLE_STATUTS, CLASSIQUE_STATUT, PRESTATIONS } from "./le-coordinateur.mjs";
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
 import { AGENT_CATEGORIES, GARDIEN_DOMAINS, assertNotAPersonnage, sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { renderTextReport } from "./report-template.mjs";
@@ -1200,6 +1200,114 @@ export function recenserLesScripts({ root = ROOT, lireDossier = readdirSync, lir
 // documents et elle vaut ici (un outil capable d'écrire « ce script est inutile » verrait un jour ce
 // jugement appliqué par personne en particulier).
 // ————————————————————————————————————————————————————————————————————————
+// LES TROIS NIVEAUX DE SCAN — light / target / warrior (2026-09-24, chantier 3.3)
+// ————————————————————————————————————————————————————————————————————————
+//
+// DEMANDE DE L'UTILISATEUR : « les trois niveaux de scan : light / target / warrior. Plus l'analyse
+// qu'il demande : quels outils méritent deux couches, la couche lourde est-elle utilisée, peut-elle
+// se déclencher automatiquement sur une zone qu'une couche légère a signalée. »
+//
+// POURQUOI CE N'EST PAS UN DOUBLON DE CHECK-LEVEL-TARGET, et la question s'est posée avant d'écrire
+// une ligne (Article 19) : CHECK-LEVEL-TARGET gradue une TÂCHE — « ce travail-ci mérite-t-il une
+// vérification légère ou exceptionnelle ? ». Ces trois niveaux-ci graduent ce qu'un OUTIL SAIT
+// OFFRIR. Un outil n'a pas de niveau, il a des COUCHES, et la question « quels outils méritent
+// deux couches » n'a aucun sens dans l'échelle de CHECK-LEVEL-TARGET. Deux axes, jamais deux copies.
+//
+// LA DÉFINITION QUI REND LES TROIS UTILES, ET C'EST LE COÛT QUI LES SÉPARE, jamais la profondeur
+// ressentie : une couche gratuite peut tourner à chaque commit, une couche payante ne le peut pas,
+// et c'est CETTE frontière qui décide de tout le reste (Article 8, Article 22).
+export const NIVEAUX_DE_SCAN = {
+  light: "gratuit et mécanique : peut tourner à CHAQUE commit sans que personne y pense. Zéro raisonnement, zéro appel API.",
+  target: "gratuit mais CIBLÉ : on le lance sur une zone précise, à la demande. Trop bruyant ou trop lent pour tourner partout à chaque fois.",
+  warrior: "COÛTEUX : vrai raisonnement, agent séparé ou appels API réels. Jamais automatique, jamais sans passer par Smart Conso API.",
+};
+
+// DEUX MESURES FAUSSES AU PREMIER PASSAGE, corrigées avant d'écrire le moindre chiffre dans un
+// rapport — et toutes deux du même genre que celles de cette nuit.
+//
+// (1) « LIGHT » N'EN VOYAIT QUE DEUX. Je cherchais le script dans les crochets git, or les six
+// Gardiens sacrés ne sont PAS lancés par un crochet : ils sont lancés par `check-house.mjs`, que
+// le crochet lance. Tourner à chaque commit à travers le filet de sécurité est exactement la même
+// chose que tourner à chaque commit, et ne pas le voir revenait à dire que les Gardiens n'ont
+// aucune couche légère — ce qui est le contraire de leur définition (Article 20).
+//
+// (2) « WARRIOR » EN VOYAIT VINGT-SIX, c'est-à-dire presque tous. La sonde matchait « Smart Conso
+// API » n'importe où, donc tout outil qui CITE la règle dans un commentaire était compté comme
+// coûtant de l'argent. Citer l'Article 22 n'est pas le déclencher. La sonde demande maintenant un
+// vrai geste coûteux : un appel réseau sortant, ou une couche lourde que l'outil déclare posséder.
+// (3) « WARRIOR » NE SE LIT PAS DANS LE SOURCE, ET C'EST UNE LIMITE À DÉCLARER PLUTÔT QU'À
+// CONTOURNER. Deux sondes successives sur le texte ont rendu 26 puis 3, et les 3 étaient encore
+// faux : ni `cassandra-rh` ni `le-coordinateur` ne coûtent quoi que ce soit. La raison est de
+// fond — la couche lourde de THE-FINAL-JUDGE, c'est que L'AGENT le lance comme agent séparé, et ça
+// n'apparaît nulle part dans son fichier. Un fichier ne sait pas comment on l'appelle.
+//
+// Le coût réel est donc LU dans le registre qui le déclare déjà : la colonne `cout` du catalogue
+// PRESTATIONS (le-coordinateur.mjs), tenue à jour parce que c'est elle que tool-brain affiche à
+// chaque commit. Un registre se LIT, il ne se devine pas (Article 24) — et deviner ici produisait
+// un chiffre faux à chaque essai.
+export const SONDES_DE_COUCHE = {
+  target: (src) => /process\.argv\[2\]|const \[, , sub\]|const \[, , chemin\]|args\[0\]/.test(src),
+};
+
+export function outilsCouteuxDuCatalogue(prestations = []) {
+  const couteux = new Set();
+  for (const p of prestations) {
+    if (!/r[ée]el/i.test(String(p?.cout ?? ""))) continue;
+    for (const o of p.outils ?? []) couteux.add(String(o).toLowerCase().replace(/\.mjs$/, "").replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, ""));
+  }
+  return couteux;
+}
+
+export function couchesDuScript(chemin, source = "", { crochets = "", filetDeSecurite = "", couteux = new Set() } = {}) {
+  const base = chemin.replace(/^scripts\//, "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const couches = [];
+  const lanceParCrochet = new RegExp(`node\\s+[^\\n]*${base}`).test(crochets);
+  // Lancé par le filet de sécurité, que le crochet lance : même fréquence, même gratuité.
+  const dansLeFilet = new RegExp(`(?:import\\(|from)\\s*['"][^'"]*${base}['"]`).test(filetDeSecurite);
+  if (lanceParCrochet || dansLeFilet) couches.push("light");
+  if (SONDES_DE_COUCHE.target(String(source))) couches.push("target");
+  const slug = chemin.replace(/^scripts\//, "").replace(/\.mjs$/, "");
+  if (couteux.has(slug) || [...couteux].some((c) => slug.includes(c) || c.includes(slug))) couches.push("warrior");
+  return couches;
+}
+
+// L'ANALYSE QU'IL DEMANDE, ET ELLE TIENT EN TROIS QUESTIONS — jamais un tableau de plus.
+export function analyseDesCouches(recensement, { crochets = "", filetDeSecurite = "", sources = {}, usage = {}, couteux = new Set() } = {}) {
+  if (!recensement?.mesurable) return { mesurable: false, pourquoi: recensement?.pourquoi ?? "aucun recensement à analyser" };
+  // Les scripts à exécution directe comptent AUSSI : `check-spirit.mjs` est le plus coûteux du
+  // dépôt (seize vrais appels Gemini) et il n'est pas typé « outil » faute de commande écrite —
+  // l'exclure de l'analyse des couches aurait laissé le plus cher de tous hors du tableau.
+  const outils = recensement.lignes.filter((l) => l.type === "outil" || l.type === "execution-directe-non-documentee");
+  const lignes = outils.map((l) => ({
+    chemin: l.chemin,
+    couches: couchesDuScript(l.chemin, sources[l.chemin] ?? "", { crochets, filetDeSecurite, couteux }),
+  }));
+  // 1. QUI MÉRITERAIT UNE SECONDE COUCHE : un outil qui tourne à chaque commit et qui n'a aucune
+  //    façon d'aller plus loin quand il trouve quelque chose. Il signale et il s'arrête là.
+  const meriteUneCouche = lignes.filter((l) => l.couches.includes("light") && l.couches.length === 1);
+  // 2. LA COUCHE LOURDE EST-ELLE UTILISÉE : la question qu'il pose, et la réponse honnête est
+  //    souvent non. Un outil dont la couche payante n'a jamais tourné a payé sa construction pour
+  //    rien — mais l'usage se LIT dans le compteur, jamais dans une impression.
+  const warriors = lignes.filter((l) => l.couches.includes("warrior"));
+  const warriorsJamaisLances = warriors.filter((l) => {
+    const slug = l.chemin.replace(/^scripts\//, "").replace(/\.mjs$/, "");
+    return !usage[slug];
+  });
+  // 3. L'ENCHAÎNEMENT AUTOMATIQUE : une couche légère qui signale une zone pourrait déclencher la
+  //    couche lourde dessus. Ce que cette fonction rend est la LISTE DES CANDIDATS, jamais le
+  //    déclenchement — automatiser une dépense est précisément ce que l'Article 22 interdit.
+  const candidatsEnchainement = lignes.filter((l) => l.couches.includes("light") && l.couches.includes("warrior"));
+  return {
+    mesurable: true, lignes,
+    meriteUneCouche: meriteUneCouche.map((l) => l.chemin),
+    warriors: warriors.map((l) => l.chemin),
+    warriorsJamaisLances: warriorsJamaisLances.map((l) => l.chemin),
+    candidatsEnchainement: candidatsEnchainement.map((l) => l.chemin),
+    horsPortee: "l'enchaînement automatique est PROPOSÉ, jamais câblé : déclencher seul une couche payante parce qu'une couche gratuite a signalé quelque chose est exactement la dépense sans consultation que l'Article 22 interdit. La liste dit qui POURRAIT, la décision reste humaine.",
+  };
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LA CONVOCATION (2026-09-24, chantier 3.2 du plan de nuit)
 // ————————————————————————————————————————————————————————————————————————
 //
@@ -1499,6 +1607,30 @@ function main() {
     );
     console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
     for (const l of plan.lignes) console.log(l);
+    return;
+  }
+  if (sub === "couches") {
+    console.log(CASSANDRA_PERSONA);
+    const rec = recenserLesScripts();
+    if (!rec.mesurable) { console.log(`\nPAS MESURÉ — ${rec.pourquoi}`); return; }
+    let crochets = ""; let filet = "";
+    try { crochets = readFileSync(join(ROOT, "scripts/hooks/post-commit"), "utf8") + readFileSync(join(ROOT, "scripts/hooks/pre-commit"), "utf8"); } catch { /* absent */ }
+    try { filet = readFileSync(join(ROOT, "scripts/check-house.mjs"), "utf8"); } catch { /* absent */ }
+    const sources = {};
+    for (const l of rec.lignes) { try { sources[l.chemin] = readFileSync(join(ROOT, l.chemin), "utf8"); } catch { /* illisible */ } }
+    const a = analyseDesCouches(rec, { crochets, filetDeSecurite: filet, sources, couteux: outilsCouteuxDuCatalogue(PRESTATIONS) });
+    if (!a.mesurable) { console.log(`\nPAS MESURÉ — ${a.pourquoi}`); return; }
+    console.log("\n=== LES TROIS NIVEAUX DE SCAN ===\n");
+    for (const [k, v] of Object.entries(NIVEAUX_DE_SCAN)) console.log(`  ${k.padEnd(8)} ${v}`);
+    const court = (l) => l.map((x) => x.replace("scripts/", "").replace(".mjs", "")).join(", ");
+    console.log(`\n--- QUI MÉRITERAIT UNE SECONDE COUCHE (${a.meriteUneCouche.length}) ---`);
+    console.log("Ils tournent à chaque commit et n'ont aucune façon d'aller plus loin quand ils trouvent quelque chose : ils signalent, et ils s'arrêtent là.");
+    console.log(`  ${court(a.meriteUneCouche)}`);
+    console.log(`\n--- LA COUCHE LOURDE EXISTE CHEZ (${a.warriors.length}) ---`);
+    console.log(`  ${court(a.warriors) || "aucun"}`);
+    console.log(`\n--- CANDIDATS À L'ENCHAÎNEMENT light → warrior (${a.candidatsEnchainement.length}) ---`);
+    console.log(`  ${court(a.candidatsEnchainement) || "aucun"}`);
+    console.log(`\nHORS PORTÉE : ${a.horsPortee}`);
     return;
   }
   if (sub === "organigramme") {

@@ -11303,6 +11303,20 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     assert.ok(typeof ex.sApplique === 'function' && ex.exige && ex.pourquoi, 'an exigence is data, never an if buried in a function: it says WHO it applies to, WHICH class is owed and WHAT it costs not to have it — the three ifs it replaces were exactly the frozen list Article 24 forbids, and a fourth would have required reopening the function');
     assert.ok(crh2.CLASSES_TRANSVERSES.some((c) => c.cle === ex.exige), 'and every exigence points at a class that really exists: an exigence owed to a class nobody measures would be unsatisfiable forever, which reads like a permanent failure rather than a missing probe');
   }
+  // LES TROIS NIVEAUX DE SCAN (2026-09-24, chantier 3.3) — light / target / warrior.
+  assert.deepEqual(Object.keys(crh2.NIVEAUX_DE_SCAN), ['light', 'target', 'warrior'], 'the three levels the user named, and what separates them is the COST rather than any felt depth: a free layer can run at every commit, a paid one cannot, and that frontier decides everything else (Articles 8 and 22)');
+  // (1) Tourner à travers le filet de sécurité EST tourner à chaque commit.
+  assert.ok(crh2.couchesDuScript('scripts/check-argus.mjs', '', { filetDeSecurite: "await import('../scripts/check-argus.mjs')" }).includes('light'), 'a Gardien is launched by check-house.mjs, which the hook launches — running at every commit THROUGH the safety net is running at every commit, and missing that said the six Gardiens had no light layer at all, the exact opposite of their definition (Article 20)');
+  // (2) Le coût ne se lit PAS dans le source, et c'est une limite déclarée plutôt que contournée.
+  const couteux = crh2.outilsCouteuxDuCatalogue([{ outils: ['check-spirit.mjs'], cout: 'réel — 16 vrais appels Gemini' }, { outils: ['THE-EQUALIZER'], cout: '0 appel API' }]);
+  assert.ok(couteux.has('check-spirit') && !couteux.has('the-equalizer'), "the real cost is READ from the PRESTATIONS catalogue that already declares it, never guessed from the source: two successive text probes returned 26 then 3, and the 3 were still wrong — THE-FINAL-JUDGE's heavy layer is that the AGENT spawns it, which appears nowhere in its file. A file does not know how it is called");
+  assert.ok(crh2.couchesDuScript('scripts/check-spirit.mjs', '', { couteux }).includes('warrior'), 'and a tool the catalogue declares costly really carries the warrior layer');
+  assert.ok(!crh2.couchesDuScript('scripts/the-equalizer.mjs', 'ce fichier parle de Smart Conso API dans un commentaire', { couteux }).includes('warrior'), 'while merely CITING Smart Conso API in a comment is not triggering it — that confusion counted almost every tool in the repository as costly');
+  const anal = crh2.analyseDesCouches(rec, { filetDeSecurite: "await import('../scripts/check-argus.mjs')", couteux });
+  assert.ok(anal.mesurable && Array.isArray(anal.meriteUneCouche), 'the analysis answers his three questions: who would deserve a second layer, does the heavy layer get used, and which pairs could chain');
+  assert.ok(/PROPOS[ÉE]/.test(anal.horsPortee) && /jamais c[âa]bl/.test(anal.horsPortee), 'and the chaining is PROPOSED, never wired: triggering a paid layer by itself because a free one flagged something is precisely the unconsulted spending Article 22 forbids');
+  assert.equal(crh2.analyseDesCouches({ mesurable: false }).mesurable, false, 'no census, no layer analysis — never a clean-looking empty table');
+
   // LA CONVOCATION (2026-09-24, chantier 3.2) — et le retournement qui l'empêche d'être un tribunal.
   const conv = crh2.convoquer({ reconsider: [{ slug: 'outil-x', reasons: ['jamais sollicité (tool-usage.mjs)'] }] });
   assert.equal(conv[0].qui, 'agent', 'a tool nobody ever called convokes the AGENT, never the tool: a tool cannot call itself, and blaming it for that would be blaming the victim — this is the retournement that keeps the convocation from becoming a one-way tribunal where the toolset carries the blame for everything');
