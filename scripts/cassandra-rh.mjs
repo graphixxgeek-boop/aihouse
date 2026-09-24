@@ -17,7 +17,7 @@ import { readFileSync, existsSync, rmSync, writeFileSync, readdirSync } from "no
 import { join } from "node:path";
 import { parseToolsTable, slugifyAgentName, toolIdentitySlug, checkAgentOnboarding, loadBadgeCeremonyHistory, CERTIFIABLE_STATUTS, CLASSIQUE_STATUT, PRESTATIONS } from "./le-coordinateur.mjs";
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
-import { AGENT_CATEGORIES, GARDIEN_DOMAINS, assertNotAPersonnage, sh, printReliabilityNotice } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, GARDIEN_DOMAINS, assertNotAPersonnage, sh, printReliabilityNotice, pairesParJaccard } from "./lib-shell.mjs";
 import { renderTextReport } from "./report-template.mjs";
 import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson } from "./tool-usage.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
@@ -1565,6 +1565,70 @@ export function ecartsDuRecensement(recensement, exigences = EXIGENCES_PAR_CLASS
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// LA REDONDANCE ENTRE OUTILS (2026-09-24, chantier 7 du plan de nuit)
+// ————————————————————————————————————————————————————————————————————————
+//
+// DEMANDE DE L'UTILISATEUR : réduire le nombre d'outils en mesurant la redondance — et il cite
+// l'expérience qui lui a donné l'idée, MOÏSE/THE-KING : « selon le découpage demandé, c'est
+// charter-spy qui aurait dû être étoffé, et moïse qui peut l'appeler ». Ce jour-là, la mesure avait
+// tranché ce qu'aucune intuition n'arrivait à trancher : 30 des 40 fonctions de Moïse ne dépendaient
+// d'aucune particularité de la charte.
+//
+// CE QUE CETTE MESURE N'EST PAS, et la distinction décide de son utilité : CLONE-HUNTER mesure des
+// BLOCS DE CODE recopiés. Celle-ci mesure une redondance FONCTIONNELLE — deux outils qui répondent
+// à la même question, même s'ils ne partagent pas une ligne. Ce sont deux problèmes différents : on
+// factorise le premier, on FUSIONNE ou on sépare mieux le second.
+//
+// ELLE NE CONCLUT JAMAIS, ET C'EST NON NÉGOCIABLE. Un outil capable d'écrire « ces deux-là font
+// double emploi » verrait un jour ce jugement appliqué par personne en particulier — et l'expérience
+// MOÏSE/THE-KING dit exactement le contraire de ce qu'une similarité brute aurait suggéré : le
+// doublon annoncé n'en était pas un (leur découpage en unités appelait déjà la même primitive
+// partagée), et le vrai défaut était ailleurs, un seuil recopié deux fois. **La mesure montre où
+// regarder ; elle ne dit jamais quoi fusionner.**
+export const SEUIL_REDONDANCE = 0.34;
+
+export function motsDUneDemande(texte = "") {
+  return new Set(
+    String(texte).toLowerCase()
+      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .split(/[^a-z0-9]+/)
+      .filter((m) => m.length > 3 && !MOTS_VIDES_REDONDANCE.has(m)),
+  );
+}
+
+// Les mots que TOUTES les prestations partagent ne disent rien d'une redondance : sans les écarter,
+// « outil », « projet » et « vérifier » rapprocheraient n'importe quelle paire.
+export const MOTS_VIDES_REDONDANCE = new Set([
+  "outil", "outils", "projet", "verifier", "verification", "savoir", "avant", "apres", "toute",
+  "tout", "tous", "jamais", "chaque", "dans", "cette", "leur", "avec", "sans", "pour", "plus",
+  "quoi", "quel", "quelle", "quels", "faire", "fait", "appel", "appels",
+]);
+
+export function redondanceEntreOutils(prestations = [], { seuil = SEUIL_REDONDANCE } = {}) {
+  const reelles = prestations.filter((p) => p?.demande && (p.outils ?? []).length);
+  if (reelles.length < 2) {
+    return { mesurable: false, pourquoi: "moins de deux prestations exploitables — aucune paire à comparer, ce qui n'est pas la même chose qu'aucune redondance" };
+  }
+  const ensembles = reelles.map((p) => motsDUneDemande(p.demande));
+  const paires = pairesParJaccard(ensembles, { seuil });
+  const questions = paires
+    // Deux prestations servies par LE MÊME outil ne sont pas une redondance : c'est un outil qui
+    // rend plusieurs services, ce que ce projet encourage précisément depuis cette nuit.
+    .filter(({ i, j }) => !(reelles[i].outils ?? []).some((o) => (reelles[j].outils ?? []).includes(o)))
+    .map(({ i, j, jaccard }) => ({
+      a: reelles[i].nom, b: reelles[j].nom,
+      outilsA: reelles[i].outils, outilsB: reelles[j].outils,
+      proximite: Number(jaccard.toFixed(2)),
+      question: `« ${reelles[i].nom} » (${reelles[i].outils.join(", ")}) et « ${reelles[j].nom} » (${reelles[j].outils.join(", ")}) répondent à des demandes proches à ${Math.round(jaccard * 100)} % : deux angles réellement distincts, ou un service rendu deux fois ?`,
+    }))
+    .sort((x, y) => y.proximite - x.proximite);
+  return {
+    mesurable: true, comparees: reelles.length, paires: questions,
+    horsPortee: "elle compare les DEMANDES auxquelles les prestations répondent, jamais ce que les outils font vraiment. Une proximité de vocabulaire n'est pas un doublon : l'expérience MOÏSE/THE-KING a montré que le doublon annoncé n'en était pas un, et que le vrai défaut était ailleurs. Cette mesure montre où regarder, elle ne dit jamais quoi fusionner — et chaque ligne est une question, jamais un verdict.",
+  };
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LE DOCUMENT CENTRAL DE L'AGENCE (2026-09-24, chantier 6 du plan de nuit)
 // ————————————————————————————————————————————————————————————————————————
 //
@@ -1744,6 +1808,19 @@ function main() {
     );
     console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
     for (const l of plan.lignes) console.log(l);
+    return;
+  }
+  if (sub === "redondance") {
+    console.log(CASSANDRA_PERSONA);
+    const r = redondanceEntreOutils(PRESTATIONS);
+    if (!r.mesurable) { console.log(`\nPAS MESURÉ — ${r.pourquoi}`); return; }
+    console.log(`\n=== REDONDANCE FONCTIONNELLE — ${r.comparees} prestations comparées, ${r.paires.length} paire(s) proche(s) ===\n`);
+    console.log("Distinct de CLONE-HUNTER, qui mesure des BLOCS DE CODE recopiés : celle-ci mesure deux outils qui");
+    console.log("répondent à la même QUESTION, même sans partager une ligne. On factorise le premier, on fusionne ou");
+    console.log("on sépare mieux le second.\n");
+    for (const q of r.paires) console.log(`· ${q.proximite}  ${q.question}`);
+    if (!r.paires.length) console.log("Aucune paire au-dessus du seuil. Ce n'est pas rien à dire : le catalogue ne rend pas deux fois le même service.");
+    console.log(`\nHORS PORTÉE : ${r.horsPortee}`);
     return;
   }
   if (sub === "agence") {

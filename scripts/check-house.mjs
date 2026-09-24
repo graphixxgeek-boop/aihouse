@@ -11263,6 +11263,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // LE RECENSEMENT DES SCRIPTS (2026-09-24, chantiers 1.3 et 1.4 du plan de nuit)
   // ————————————————————————————————————————————————————————————————————————
   const crh2 = await import('../scripts/cassandra-rh.mjs');
+  const { PRESTATIONS: PRESTATIONS_REELLES } = await import('../scripts/le-coordinateur.mjs');
   // LE TYPE — quatre faux verdicts ont été corrigés au premier passage réel, chacun garde son test.
   assert.equal(crh2.typeDeScript('scripts/hooks/pre-commit', 'nimporte quoi'), 'crochet', 'a hook is a hook by where it lives, never by what it contains');
   assert.equal(crh2.typeDeScript('scripts/check-house.mjs', ''), 'filet-de-securite', 'and the safety net is its own type: it is what the hook launches and what can refuse a commit');
@@ -11398,6 +11399,22 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     assert.ok(l.concernes <= rec.total, 'and the denominator is the EXIGENCE\'s population, never the whole repository: a rate over 82 for a rule that concerns only the 22 scanners would be right on paper and wrong in substance, which is the very defect this whole campaign chases');
   }
   assert.equal(crh2.nivellementParClasse({ mesurable: false, pourquoi: 'rien lu' }).mesurable, false, 'and a levelling built on a census that never happened refuses to answer rather than reporting a clean 100 %');
+
+  // LA REDONDANCE FONCTIONNELLE (2026-09-24, chantier 7) — montrer où regarder, jamais quoi fusionner.
+  const red = crh2.redondanceEntreOutils([
+    { nom: 'A', demande: 'trouver la dette technique du code qui stagne', outils: ['X'] },
+    { nom: 'B', demande: 'trouver la dette technique du code qui stagne', outils: ['Y'] },
+  ]);
+  assert.ok(red.mesurable && red.paires.length === 1 && red.paires[0].question.includes('?'), 'two tools answering the same QUESTION are surfaced even when they share no line of code — this is functional redundancy, a different problem from CLONE-HUNTER\'s copied blocks: one gets factored out, the other gets merged or better separated');
+  assert.equal(crh2.redondanceEntreOutils([
+    { nom: 'A', demande: 'trouver la dette technique du code qui stagne', outils: ['X'] },
+    { nom: 'B', demande: 'trouver la dette technique du code qui stagne', outils: ['X'] },
+  ]).paires.length, 0, 'while two services rendered by the SAME tool are not redundancy at all: that is one tool doing several things, which this project has spent the night encouraging');
+  assert.equal(crh2.redondanceEntreOutils([{ nom: 'A', demande: 'x', outils: ['X'] }]).mesurable, false, 'fewer than two comparable prestations yields NOT MEASURED rather than "no redundancy found" — the two read identically and only one is true');
+  assert.ok(crh2.motsDUneDemande('vérifier tout outil du projet').size === 0, 'words every prestation shares say nothing about redundancy: without dropping them, "outil" and "vérifier" would bring any pair together');
+  const redReelle = crh2.redondanceEntreOutils(PRESTATIONS_REELLES);
+  assert.ok(redReelle.mesurable && /jamais quoi fusionner/.test(redReelle.horsPortee), 'run against the real catalogue it declares its own limit: a proximity of vocabulary is not a duplicate. The MOÏSE/THE-KING experience proved it — the announced duplicate was not one, their unit-splitting already called the same shared primitive, and the real defect was elsewhere, a threshold copied twice');
+  for (const q of redReelle.paires) assert.ok(q.question.includes('?'), 'every pair is a question: a tool able to write "these two are redundant" would one day have that judgement applied by nobody in particular');
 
   // LE DOCUMENT CENTRAL DE L'AGENCE (2026-09-24, chantier 6) — regénéré, jamais écrit.
   const docAgence = crh2.buildDocumentAgence({ recensement: rec, nivellement: niv, couches: crh2.analyseDesCouches(rec, {}), convocations: conv });
