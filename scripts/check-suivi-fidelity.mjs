@@ -274,9 +274,17 @@ function describe(entry) {
 const TASK_NUMBER_SEED = 117;
 
 export function extractTaskNumbers(sessionText) {
+  // L'EN-TÊTE SE RECONNAÎT À SA PREMIÈRE CELLULE, jamais à un mot présent quelque part dans la
+  // ligne (corrigé le 2026-09-24, après un vrai dégât). Le filtre précédent écartait toute ligne
+  // CONTENANT « Horodatage » — or une description de tâche qui cite `findHorodatagesFuturs()`
+  // contient ce mot. La ligne entière devenait invisible à la numérotation, et le jour où deux
+  // tâches ont porté le même numéro, l'une des deux n'était pas lue : le garde-fou a répondu
+  // « numérotation cohérente » sur un registre qui portait un doublon. Le détecteur de doublons
+  // fonctionnait parfaitement ; c'est son entrée qui était amputée — exactement le motif qui NE
+  // PEUT PAS matcher, vu depuis l'autre bout (leçon L11).
   const rows = sessionText
     .split("\n")
-    .filter((l) => l.startsWith("|") && !/^\|\s*-+\s*\|/.test(l) && !l.includes("Horodatage"));
+    .filter((l) => l.startsWith("|") && !/^\|\s*-+\s*\|/.test(l) && !/^\|\s*(?:N°|Numéro)\s*\|/.test(l));
   const numbers = [];
   for (const row of rows) {
     const raw = (splitTableRow(row)[0] ?? "").trim();

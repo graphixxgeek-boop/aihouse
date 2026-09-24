@@ -3046,6 +3046,16 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const withNumbers='| N° | h | S | s | normal | d1 | terminée |\n| — | h | S | s | normal | d2 | terminée |\n| 118 | h | S | s | normal | d3 | terminée |\n|---|---|---|---|---|---|---|';
   assert.deepEqual(extractTaskNumbers(withNumbers),[118],'extractTaskNumbers() must extract only real numeric values, skip the header, the "—" placeholder for pre-numbering rows, and the separator line entirely');
   assert.deepEqual(extractTaskNumbers('| N° | h | S | s | normal | d1 | terminée |'),[],'a session with no real numbers yet must report an empty list, never crash');
+  // LE FILTRE D'EN-TÊTE, QUI AMPUTAIT LE REGISTRE (2026-09-24, dégât réel). Il écartait toute ligne
+  // CONTENANT le mot « Horodatage » — or une description de tâche qui cite `findHorodatagesFuturs()`
+  // le contient. La ligne devenait invisible, et le jour où deux tâches ont porté le même numéro,
+  // l'une des deux n'était pas lue : le garde-fou a répondu « numérotation cohérente » sur un
+  // registre qui portait un doublon. Le détecteur marchait ; son entrée était coupée.
+  const ligneQuiCiteLeMot = '| 681 | 2026-09-24T02:13Z | xp | S | s | NORMAL-UTILE | le garde-fou `findHorodatagesFuturs()` a refusé mon commit | Ouverte |';
+  assert.deepEqual(extractTaskNumbers(ligneQuiCiteLeMot), [681], 'a task row that merely MENTIONS the header word is still a task row: the header is recognised by its FIRST CELL, never by a word appearing anywhere in the line');
+  assert.deepEqual(extractTaskNumbers('| N° | Horodatage | Mot-clé | Sujet |'), [], 'and the real header is still skipped');
+  assert.equal(findTaskNumberIssues('/x', () => ['s.md'], () => `| 681 | a |\n${ligneQuiCiteLeMot}\n`, () => true).some((i) => i.type === 'duplicate'), true, 'THE CONSEQUENCE, now covered: with the old filter this duplicate was invisible and the guard answered "numbering coherent" — a green produced by an input that had been silently cut, which is leçon L11 seen from the other end');
+
   const fakeSessions=[{name:'a.md',text:'| 117 | h | S | s | normal | d1 | terminée |\n| 119 | h | S | s | normal | d2 | terminée |'},{name:'b.md',text:'| 120 | h | S | s | normal | d3 | terminée |'}];
   const listDir=()=>fakeSessions.map(f=>f.name);
   const readFakeFile=(p)=>fakeSessions.find(f=>p.endsWith(f.name)).text;
@@ -7994,6 +8004,23 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(findTachesEvalFantomes(h.editions, [679]).length, 1, 'ARTICLE 28 AT THE LAST LINK: an evaluation claiming to have accepted a task that exists nowhere is reported — a dead reference looks like a link, which is worse than an absence');
   assert.ok(formatEvaluationsLines({ historique: lireHistoriqueEvalIa('rien'), progression: progressionEvalIa([]) }).join(' ').includes('Historique EVAL-IA'), 'the unmeasurable case still prints a line rather than falling silent');
   console.log('Passed: the EVAL-IA history is now readable, and it can no longer lie in the two ways it was already lying (2026-09-24, chantier 5.7). The user asked that self-evaluation produce tasks and that the history be consulted to measure progression; the second is what gives the first its meaning, since an evaluation compared to nothing grades a mood. Both halves were broken in the same place: the 2026-09-23 edition sat on disk for a day while its own table still announced a first edition to come, and that edition had produced NO task at all — its written conclusion, read the document rather than the controller that declares it, existed nowhere but in its own last paragraph. The registry now carries that edition and the two tasks it should have opened, and the tool verifies both facts mechanically rather than trusting anyone to remember. Progression refuses to speak below three editions, for the reason written beside AGENT-DU-TEMPS: on two points a trend already looks like a statistic. And the one number it does render is declared explicitly not to be a grade.');
+
+  // LE PLAN D'ACTION DU RECENSEMENT (2026-09-24). Le défaut réel : la sous-commande `recensement`
+  // construisait son plan avec des objets sans `etat`, ce que buildPlanDaction() refuse — et le
+  // refus était juste. Rien ne l'avait jamais vu parce que le chemin n'existe QUE quand le
+  // recensement trouve quelque chose : zéro constat, zéro appel, zéro erreur.
+  const { planDuRecensement } = await import('../scripts/cassandra-rh.mjs');
+  const { buildPlanDaction: bpa } = await import('../scripts/report-template.mjs');
+  assert.deepEqual(planDuRecensement([]), [], 'nothing found, nothing planned — and this is precisely the case that hid the bug for as long as it existed');
+  const ecartsFaux = [{ nature: 'constat', chemin: 'scripts/a.mjs', question: 'ne déclare pas sa marge' },
+                      { nature: 'question', chemin: 'scripts/b.mjs', question: 'reste-t-il une raison qu’il existe ?' }];
+  const planFaux = planDuRecensement(ecartsFaux);
+  assert.ok(planFaux.every((c) => ['retenu', 'ecarte', 'a-trancher'].includes(c.etat)), 'EVERY finding carries a declared state: buildPlanDaction refuses anything else, and it is right to — a finding with no state is a finding nobody answers for');
+  assert.doesNotThrow(() => bpa(planFaux, { toolSlug: 'cassandra-rh' }), 'the real builder accepts the real shape — the assertion that would have caught the crash before a user ever ran the subcommand');
+  assert.equal(planFaux.find((c) => c.etat === 'a-trancher').constat.includes('scripts/b.mjs'), true, 'a QUESTION now enters the plan as a-trancher instead of being dropped: Article 28 has exactly that state for a finding whose decision is not the agent’s, and leaving them out made them invisible to the chain check');
+  assert.ok(planFaux.find((c) => c.etat === 'a-trancher').pourquoi, 'and an ecarte/a-trancher finding carries its reason, never a bare label');
+  console.log('Passed: the census subcommand can no longer crash on its own findings (2026-09-24) — it built its plan from objects carrying neither a state nor a constat, which the shared plan builder refuses, and refuses rightly. What makes this worth a counter-test rather than a one-line fix is WHY it survived: the code path only exists when the census finds something, so as long as the repository was clean the subcommand ran green and the plan was simply never built. It is the night’s false green in its most literal form. The fix moved the mapping out of the CLI into an exported function, because a mechanism locked inside a subcommand is verifiable only by a real run, that is by nobody (leçon L2) — and while moving it, the QUESTIONS joined the plan as a-trancher, the state Article 28 defines for exactly them; they had been dropped entirely, which made every judgement the tool refuses to make invisible to the chain that checks findings become tasks.');
+
 
 
 

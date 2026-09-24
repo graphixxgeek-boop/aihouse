@@ -1646,6 +1646,26 @@ export function redondanceEntreOutils(prestations = [], { seuil = SEUIL_REDONDAN
 // vaut) reste écrit à la main, et il le déclare au lieu de le simuler.
 export const AGENCE_HTML_PATH = "docs/referentiel/agence.html";
 
+// LE PLAN D'ACTION DU RECENSEMENT, SORTI DU CLI (2026-09-24). Il y vivait, et c'est exactement
+// pourquoi son défaut a survécu : un mécanisme enfermé dans une sous-commande n'est vérifiable que
+// par une exécution réelle, donc en pratique par personne (leçon L2). Le bug était en plus
+// INVISIBLE tant que le recensement ne trouvait rien — zéro constat, zéro appel, zéro erreur — et
+// la sous-commande entière est tombée le jour où il a trouvé quelque chose. Un chemin de code qui
+// n'existe que quand il y a à dire est un chemin de code que rien n'a jamais exécuté.
+export function planDuRecensement(ecarts = []) {
+  return [
+    ...ecarts.filter((e) => e.nature === "constat").map((e) => ({
+      constat: `${e.chemin} : ${e.question}`, etat: "retenu",
+      tache: "porter ce constat à une tâche de docs/suivi/ (Article 28)" })),
+    // Les QUESTIONS entrent dans le plan, ce qu'elles ne faisaient pas : « à trancher » est
+    // précisément l'état que l'Article 28 prévoit pour un constat dont la décision n'appartient pas
+    // à l'agent. Les laisser dehors les rendait invisibles au contrôle de la chaîne.
+    ...ecarts.filter((e) => e.nature === "question").map((e) => ({
+      constat: `${e.chemin} : ${e.question}`, etat: "a-trancher",
+      pourquoi: "c'est un jugement sur l'utilité d'un fichier, jamais une mesure — il monte à l'utilisateur et ne se tranche pas ici" })),
+  ];
+}
+
 // ===========================================================================================
 // L'HISTORIQUE D'EVAL-IA : est-ce que l'agent progresse ?  (2026-09-24, chantier 5.7)
 // ===========================================================================================
@@ -1870,10 +1890,8 @@ function main() {
       console.log(`\n   ${niv.horsPortee}`);
     }
     console.log(`\nHORS PORTÉE : ${rec.horsPortee}`);
-    const plan = buildPlanDaction(
-      constats.map((e) => ({ pourquoi: `${e.chemin} : ${e.question}` })),
-      { toolSlug: "cassandra-rh", tache: "porter chaque constat à une tâche de docs/suivi/ (Article 28) ; les questions montent à l'utilisateur, jamais tranchées ici" },
-    );
+    // Le plan lui-même vit dans `planDuRecensement()`, exporté et testé — jamais ici (leçon L2).
+    const plan = buildPlanDaction(planDuRecensement(ecarts), { toolSlug: "cassandra-rh" });
     console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
     for (const l of plan.lignes) console.log(l);
     return;
