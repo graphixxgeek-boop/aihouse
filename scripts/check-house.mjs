@@ -11197,6 +11197,30 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(vraiDoc.total >= 30 && vraiDoc.carte.length === 4, 'run against the REAL charter it classifies every Article and renders the four gravity rows of the map — a tool that never ran against the real repository is an intention, not a tool (Article 25)');
   assert.ok(vraiDoc.horsPortee.includes('jamais'), 'and it declares what it does NOT know: gravity is a derived signal, it is re-read, never believed');
 
+  // LA PAGE HTML ET LA CARTE — la forme que l'utilisateur a explicitement calibrée (« Une page
+  // HTML + une carte visuelle »), donc couverte comme le reste : une carte qui rend faux ce que le
+  // classement a trouvé juste serait la pire des deux (Article 15 : seul l'affiché existe).
+  assert.equal(ab2.tonDeLaCase(3, 0), 'critique', 'a vital rule with no guarantee at all is the one cell that must jump out');
+  assert.equal(ab2.tonDeLaCase(3, 5), 'bon', 'a vital rule that IS blocking is not a problem — the map colours the GAP between stake and protection, never the stake alone, otherwise it would merely restate its own first column');
+  assert.equal(ab2.tonDeLaCase(0, 5), 'bon', 'and a minor rule guarded by a blocking check is not flagged either, though it is the other excess: control spent where nothing needed it');
+  // LE PLAFOND INATTEIGNABLE, corrigé le soir même : l'écart se mesure contre ce que la gravité
+  // EXIGE, jamais contre un maximum absolu.
+  assert.equal(ab2.ecartGaranti(3, 5), 0, 'a VITAL rule protected by a blocking check has no gap left — the first version computed gravity×2−guarantee, so 6−5=1, and the best attainable state on the most important rules read "one notch missing": all six vital blocking Articles of the real charter were amber and no vital rule could EVER reach green');
+  assert.equal(ab2.ecartGaranti(3, 0), 5, 'while a vital rule with nothing at all is the maximum gap, which is what 🔴 must mean and nothing else');
+  assert.ok(ab2.ecartGaranti(2, 5) < 0, 'and a rule guarded beyond what its stake requires shows a NEGATIVE gap rather than a perfect score — over-protection is real information, not a prize');
+  assert.equal(ab2.verdictDepuisEcart(ab2.ecartGaranti(3, 5)).slice(0, 2), '🟢', 'the verdict and the map read the same measure: two scales side by side would mean a map colouring something other than what the table concludes, which is worse than no map since it gets believed');
+  const htmlClass = ab2.renderClassificationHtml(vraiDoc, { document: 'CLAUDE.md', couverture: 63 });
+  assert.ok(htmlClass.startsWith('<!DOCTYPE html>'), 'the page is a complete self-contained document, same discipline as every other renderHtmlReport() output');
+  assert.ok(htmlClass.includes('class="matrix"') && htmlClass.includes('matrix-chip'), 'and it really renders the MAP, with the rule numbers inside the cells — a count alone says there is a problem without saying which one to go and read, which is exactly the step nobody takes when a report stops at the figure');
+  assert.ok(htmlClass.includes('Art.7') && htmlClass.includes('Art.23'), 'the two real critical Articles must be nameable straight off the page');
+  assert.ok(htmlClass.includes(vraiDoc.horsPortee.slice(0, 40)), 'and the out-of-scope declaration travels with the page, never only in the terminal the user never reads');
+  // classerEtEcrire() ne DOIT pas écrire pendant les tests : l'écrivain est injecté.
+  let ecrit = null;
+  const res = ab2.classerEtEcrire('CLAUDE.md', { ecrire: (cible, contenu) => { ecrit = { cible, taille: contenu.length }; } });
+  assert.ok(res.mesurable && ecrit && ecrit.taille > 2000, 'the write path really produces the page against the REAL charter, not a fixture — a tool that never ran against the real repository is an intention (Article 25)');
+  assert.ok(ecrit.cible.startsWith('docs/abraham-les-references/'), 'and it lands in the tool\'s own registry folder, the rule this project follows without exception rather than a path recopied per tool');
+  assert.equal(ab2.classerEtEcrire('docs/ce-fichier-n-existe-pas.md', { ecrire: () => { throw new Error('ne doit jamais être appelé'); } }).mesurable, false, 'an unreadable document yields NOT MEASURED and writes nothing at all — never an empty page that would read as a clean bill of health (leçon L5)');
+
   console.log('Passed: ABRAHAM-LES-REFERENCES is the master tool for ANY numbered-rule document (2026-09-23, task #619), and it exists because of a slicing error the user named better than I did: building the charter\'s agent first, I locked thirty generic functions inside the agent of ONE document, and measurement confirmed it — 30 of Moïse\'s 40 functions depended on no particularity of the charter whatsoever. What makes it generic is that the numbering FORM is derived rather than declared: three real documents in this repository write their rules three different ways, and a tool demanding to be told the pattern would only serve those who already knew it. The opposite direction matters as much: a document where no form stands out returns "not measurable" with every attempt listed, because an analyser that guesses skips in silence (leçon L12) and invented figures look exactly as trustworthy as real ones. The citation pattern treats the space after a prefix as optional, a detail that had cost a whole pass — all eighteen sections of the working rules came back "never cited" while §7ter is cited 168 times, purely because the pattern required a space nobody writes. And the red line the user drew stays enforced in the master rather than in each caller: the state of a pertinence finding has exactly one value, so no descendant can soften it into a verdict.');
 }
 

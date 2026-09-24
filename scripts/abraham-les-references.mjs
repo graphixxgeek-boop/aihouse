@@ -257,6 +257,32 @@ export function porteurExterne(numero, prefixe, toutesLesUnites = [], fichiers =
   return null;
 }
 
+// L'ÉCART SE MESURE CONTRE CE QUE LA GRAVITÉ EXIGE, jamais contre un maximum absolu — et la
+// première version faisait l'inverse, ce qu'une assertion écrite pour couvrir la carte a révélé
+// (BP2 : un test qui n'a jamais échoué ne prouve rien). Elle calculait `gravité × 2 − garantie`,
+// donc 6 − 5 = 1 pour une règle VITALE protégée par le mécanisme le plus fort qui existe : le
+// meilleur état atteignable sortait « un cran manque ». Les six Articles vitaux réellement
+// bloquants de la charte étaient tous en orange clair, et aucune règle vitale ne pouvait JAMAIS
+// atteindre le vert. Une échelle dont l'idéal est signalé comme un défaut signale tout le monde,
+// donc plus personne (leçon L4).
+//
+// Ce que chaque gravité EXIGE : une règle vitale demande le niveau bloquant, une règle haute une
+// trace constatée, une règle moyenne une déclaration demandée, une règle basse un simple rappel.
+// L'écart devient alors lisible tel quel : 0 ou moins, la protection est à la hauteur ; 5, une
+// règle vitale n'a rien du tout.
+export const GARANTIE_REQUISE = [2, 3, 4, 5];   // indexé par niveau de gravité (basse → vitale)
+
+export function ecartGaranti(graviteNiveau, garantieNiveau) {
+  return (GARANTIE_REQUISE[graviteNiveau] ?? 2) - garantieNiveau;
+}
+
+export function verdictDepuisEcart(ecart) {
+  if (ecart >= 5) return "🔴 CRITIQUE — vitale et sans protection";
+  if (ecart >= 4) return "🟠 À NIVELER — la garantie est loin de l'enjeu";
+  if (ecart >= 1) return "🟡 correcte — un cran manque";
+  return "🟢 à niveau";
+}
+
 export function classerUnite(unite = {}, fichiers = {}, { lire = null, toutesLesUnites = [], prefixe = "Article" } = {}) {
   const texte = unite.texte ?? "";
   let porteur = porteursDeclares(texte, fichiers);
@@ -267,7 +293,7 @@ export function classerUnite(unite = {}, fichiers = {}, { lire = null, toutesLes
   }
   const g = niveauGarantie(porteur, texte, { lire });
   const grav = niveauGravite(texte);
-  const ecart = grav.niveau * 2 - g.niveau;   // vitale(3)×2=6 contre bloquante(5) ⇒ 1 : presque à niveau
+  const ecart = ecartGaranti(grav.niveau, g.niveau);
   return {
     numero: unite.numero, titre: (unite.titre ?? "").slice(0, 90),
     porteurExterne: externe ? `${prefixe} ${externe.depuis} (${externe.mecanismes.join(", ")})` : null,
@@ -275,10 +301,7 @@ export function classerUnite(unite = {}, fichiers = {}, { lire = null, toutesLes
     gravite: grav.cle, graviteNiveau: grav.niveau, graviteSignal: grav.signal,
     obligations: unite.obligations, porteurs: g.porteur,
     ecart,
-    verdict: ecart >= 5 ? "🔴 CRITIQUE — vitale et sans protection"
-      : ecart >= 3 ? "🟠 À NIVELER — la garantie est loin de l'enjeu"
-      : ecart >= 1 ? "🟡 correcte — un cran manque"
-      : "🟢 à niveau",
+    verdict: verdictDepuisEcart(ecart),
   };
 }
 
@@ -741,12 +764,11 @@ export function analyserDocument({ texte, fichiers = {}, horsPerimetre = new Set
 export const REGISTRE_CLASSIFICATION = "docs/abraham-les-references";
 
 export function tonDeLaCase(graviteNiveau, garantieNiveau) {
-  // L'ÉCART, jamais la gravité seule : une règle vitale correctement protégée n'est pas un
-  // problème, et une règle mineure sans aucun porteur non plus. C'est le DÉCALAGE entre l'enjeu et
-  // la protection qui se colore — sinon la carte redirait simplement sa propre première colonne.
-  const ecart = graviteNiveau * 2 - garantieNiveau;
+  // LA MÊME MESURE QUE LE VERDICT, jamais une seconde échelle écrite à côté : une carte qui colore
+  // autrement que ce que le tableau conclut est pire qu'une carte absente, puisqu'on la croit.
+  const ecart = ecartGaranti(graviteNiveau, garantieNiveau);
   if (ecart >= 5) return "critique";
-  if (ecart >= 3) return "alerte";
+  if (ecart >= 4) return "alerte";
   if (ecart >= 1) return "correct";
   return "bon";
 }
