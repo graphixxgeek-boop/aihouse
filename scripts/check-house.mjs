@@ -11387,6 +11387,16 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     assert.ok(l.concernes <= rec.total, 'and the denominator is the EXIGENCE\'s population, never the whole repository: a rate over 82 for a rule that concerns only the 22 scanners would be right on paper and wrong in substance, which is the very defect this whole campaign chases');
   }
   assert.equal(crh2.nivellementParClasse({ mesurable: false, pourquoi: 'rien lu' }).mesurable, false, 'and a levelling built on a census that never happened refuses to answer rather than reporting a clean 100 %');
+
+  // LE DOCUMENT CENTRAL DE L'AGENCE (2026-09-24, chantier 6) — regénéré, jamais écrit.
+  const docAgence = crh2.buildDocumentAgence({ recensement: rec, nivellement: niv, couches: crh2.analyseDesCouches(rec, {}), convocations: conv });
+  assert.ok(docAgence.startsWith('<!DOCTYPE html>') && /Agence Codex/.test(docAgence), 'the central document is a complete page');
+  assert.ok(/se RECALCULE|se recalcule/.test(docAgence), 'and it says out loud that it is REGENERATED rather than maintained: a hand-written central document is exactly the object this project has already watched go stale a dozen times — a list of nine documents when the folder held fifty-three, a classification table running three days while ignoring six Articles. A FALSE central document is worse than none: it gets believed, and it occupies the place');
+  assert.ok(/ne saura JAMAIS dire/.test(docAgence), 'it declares what it cannot know — why the Agency exists, what a tool is worth — instead of simulating it');
+  const agenceSansCensus = crh2.buildDocumentAgence({ recensement: { mesurable: false, pourquoi: 'illisible' } });
+  assert.ok(/PAS MESURÉ/.test(agenceSansCensus), 'and with no census it says NOT MEASURED rather than rendering an empty Agency, which would read as an Agency with nothing in it');
+
+
   // L'INTÉGRATION DEVIENT OBLIGATOIRE plutôt que « sauvage » — les exigences sont LUES chez
   // CASSANDRA, jamais recopiées : une exigence ajoutée là-bas vaut pour la prochaine intégration.
   const io2 = await import('../scripts/integration-outil.mjs');

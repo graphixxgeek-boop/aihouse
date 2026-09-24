@@ -31,7 +31,7 @@ import { buildDocReportIndex, REGISTRIES as DOC_REPORT_REGISTRIES, FILE_WRITER_N
 export { parseKpiHistoryCsv };
 import { estimateTokens } from "./smart-conso-token.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
-import { recordCliUsage } from "./tool-usage.mjs";
+import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -1564,6 +1564,83 @@ export function ecartsDuRecensement(recensement, exigences = EXIGENCES_PAR_CLASS
   return out;
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LE DOCUMENT CENTRAL DE L'AGENCE (2026-09-24, chantier 6 du plan de nuit)
+// ————————————————————————————————————————————————————————————————————————
+//
+// DEMANDE DE L'UTILISATEUR : « un document central décrivant l'Agence ».
+//
+// POURQUOI IL EST GÉNÉRÉ ET NON ÉCRIT, et c'est la seule décision qui compte ici : un document
+// central écrit à la main est exactement l'objet que ce projet a déjà vu se périmer une douzaine
+// de fois — une liste de neuf documents quand le dossier en comptait cinquante-trois, un effectif
+// figé, une table de classification qui tournait depuis trois jours en ignorant six Articles. Un
+// document central FAUX est pire qu'aucun : on le croit, et il occupe la place.
+//
+// Celui-ci se REGÉNÈRE depuis les registres réels — l'effectif, les types, les classes, les
+// couches, les versions, les convocations — donc il ne peut pas mentir plus longtemps que le
+// dépôt lui-même. Ce qu'il ne saura jamais dire (pourquoi l'Agence existe, ce que chaque outil
+// vaut) reste écrit à la main, et il le déclare au lieu de le simuler.
+export const AGENCE_HTML_PATH = "docs/referentiel/agence.html";
+
+export function buildDocumentAgence({ recensement, nivellement, couches, convocations = [], roster = [], dateLabel = new Date().toISOString() } = {}) {
+  const blocks = [];
+  blocks.push({ type: "paragraph", text: "Ce document est REGÉNÉRÉ depuis les registres réels du dépôt à chaque passage. Il ne se met pas à jour : il se recalcule. Un document central écrit à la main se périme, et un document central faux est pire qu'aucun — on le croit, et il occupe la place." });
+
+  if (!recensement?.mesurable) {
+    blocks.push({ type: "highlight", heading: "PAS MESURÉ", paragraphs: [recensement?.pourquoi ?? "le dépôt n'a pas pu être recensé — aucun état de l'Agence rendu, ce qui n'est jamais la même chose qu'une Agence vide."] });
+    return renderHtmlReport({ tool: "cassandra-rh", title: "L'Agence Codex — document central", dateLabel, blocks });
+  }
+
+  blocks.push({ type: "heading", text: "L'effectif réel, par TYPE" });
+  blocks.push({ type: "paragraph", text: `${recensement.total} fichiers dans scripts/. Le TYPE dit ce qu'un fichier EST — une question que ni le rang ni la portée ne posaient.` });
+  blocks.push({ type: "table", headers: ["Type", "Combien", "Ce que c'est"],
+    rows: Object.entries(recensement.parType).sort((a, b) => b[1].length - a[1].length)
+      .map(([t, l]) => [t, String(l.length), TYPES_DE_SCRIPT[t] ?? "type non décrit"]) });
+
+  blocks.push({ type: "heading", text: "Ce que l'équipe SAIT FAIRE, par classe transverse" });
+  blocks.push({ type: "paragraph", text: "Une classe est une SONDE sur le source, jamais une liste de noms : un outil ajouté demain y entre sans que personne y pense, et une classe nouvelle s'applique le jour même à tous." });
+  blocks.push({ type: "table", headers: ["Classe", "Combien", "Pourquoi elle compte"],
+    rows: CLASSES_TRANSVERSES.map((c) => [c.libelle, String((recensement.parClasse[c.cle] ?? []).length), c.quoi]) });
+
+  if (nivellement?.mesurable) {
+    blocks.push({ type: "heading", text: "Le nivellement — ce que chaque classe EXIGE, et qui l'atteint" });
+    blocks.push({ type: "note", text: "Le dénominateur est celui de l'EXIGENCE, jamais la population entière : un taux sur 82 pour une règle qui ne concerne que les 22 qui scannent serait juste sur le papier et faux sur le fond." });
+    blocks.push({ type: "table", headers: ["Exigence", "Atteignent", "Ce que ça coûte de ne pas l'avoir"],
+      rows: nivellement.lignes.map((l) => [l.cle, `${l.atteignent}/${l.concernes} (${l.part} %)`, l.pourquoi]) });
+  }
+
+  if (couches?.mesurable) {
+    blocks.push({ type: "heading", text: "Les trois niveaux de scan" });
+    blocks.push({ type: "table", headers: ["Niveau", "Ce que c'est"], rows: Object.entries(NIVEAUX_DE_SCAN) });
+    blocks.push({ type: "list", items: [
+      `${couches.meriteUneCouche.length} outil(s) tournent à chaque commit sans aucune façon d'aller plus loin : ils signalent, et ils s'arrêtent là.`,
+      `${couches.warriors.length} outil(s) portent une vraie couche coûteuse.`,
+      `${couches.candidatsEnchainement.length} candidat(s) à l'enchaînement light → warrior — PROPOSÉ, jamais câblé (Article 22).`,
+    ] });
+  }
+
+  if (convocations.length) {
+    blocks.push({ type: "highlight", heading: `${convocations.length} convocation(s) ouverte(s)`,
+      paragraphs: convocations.map((c) => `${c.qui.toUpperCase()} — ${c.sujet} : ${c.question}`) });
+  }
+
+  blocks.push({ type: "heading", text: "Ce que ce document ne saura JAMAIS dire" });
+  blocks.push({ type: "list", items: [
+    "POURQUOI l'Agence existe : c'est le second projet mené en parallèle du jeu, et ça se lit dans CLAUDE.md, jamais dans un compte.",
+    "Ce que chaque outil VAUT : la richesse dit ce qu'un outil porte, jamais ce qu'il vaut — un outil qui fait une seule chose et la fait bien sort pauvre et n'a rien à corriger.",
+    "Si un couplage au jeu est un défaut ou la nature même de l'outil : ça demande de lire ce qu'il fait.",
+    "Le TYPE se dérive de la forme du fichier et les CLASSES de sondes sur son texte : un outil qui scanne sans appeler readdirSync échappe à sa classe. Ce document dit ce qui se voit, jamais ce qui se comprend.",
+  ] });
+
+  return renderHtmlReport({
+    tool: "cassandra-rh",
+    title: "L'Agence Codex — document central",
+    subtitle: "Regénéré depuis les registres réels à chaque passage. Il ne se met pas à jour, il se recalcule.",
+    dateLabel, blocks,
+    footer: "CASSANDRA-RH — elle ne recalcule jamais ce qu'un autre outil sait déjà : elle LIT ses résultats et les traduit en langage RH.",
+  });
+}
+
 function main() {
   printReliabilityNotice("cassandra-rh");
   recordCliUsage("cassandra-rh");
@@ -1667,6 +1744,29 @@ function main() {
     );
     console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
     for (const l of plan.lignes) console.log(l);
+    return;
+  }
+  if (sub === "agence") {
+    console.log(CASSANDRA_PERSONA);
+    const rec = recenserLesScripts();
+    let crochets = ""; let filet = "";
+    try { crochets = readFileSync(join(ROOT, "scripts/hooks/post-commit"), "utf8"); } catch { /* absent */ }
+    try { filet = readFileSync(join(ROOT, "scripts/check-house.mjs"), "utf8"); } catch { /* absent */ }
+    const sources = {};
+    if (rec.mesurable) for (const l of rec.lignes) { try { sources[l.chemin] = readFileSync(join(ROOT, l.chemin), "utf8"); } catch { /* illisible */ } }
+    const data = collectRealCassandraData({ withCoverage: false });
+    const html = buildDocumentAgence({
+      recensement: rec,
+      nivellement: nivellementParClasse(rec),
+      couches: analyseDesCouches(rec, { crochets, filetDeSecurite: filet, sources, couteux: outilsCouteuxDuCatalogue(PRESTATIONS) }),
+      convocations: convoquer({ reconsider: data.reconsider ?? [], nivellement: nivellementParClasse(rec), objectifsRows: data.objectifs?.rows ?? [] }),
+    });
+    writeFileSync(join(ROOT, AGENCE_HTML_PATH), html, "utf8");
+    // La contribution s'enregistre DANS le geste qui écrit, jamais dans une étape séparée qu'on
+    // peut sauter — c'est le garde-fou qui a refusé ce commit-ci, et il avait raison.
+    recordRegistryWrite(AGENCE_HTML_PATH, { par: "cassandra-rh" });
+    console.log(`\nDocument central de l'Agence regénéré : ${AGENCE_HTML_PATH}`);
+    console.log("Il ne se met pas à jour, il se RECALCULE — un document central écrit à la main se périme, et un document central faux est pire qu'aucun.");
     return;
   }
   if (sub === "versions") {

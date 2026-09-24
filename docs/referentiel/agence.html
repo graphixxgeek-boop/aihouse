@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L'Agence Codex — document central</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-24T01:18:17.889Z</div>
+    <h1>L'Agence Codex — document central</h1>
+    <p class="sub">Regénéré depuis les registres réels à chaque passage. Il ne se met pas à jour, il se recalcule.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p class="note">⚠️  Attention, mes résultats peuvent être inexacts : relaie et recoupe ce que les autres outils estiment — elle hérite de leurs approximations. À vérifier avant d'agir, jamais un verdict acquis.</p>
+<p class="note">Version de Claude : claude-opus-5
+Produit le : jeudi 24 septembre 2026 à 01h18 (UTC)
+État du code : 95503a4 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : cassandra-rh — date de dernière modification inconnue
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir</p>
+<p>Ce document est REGÉNÉRÉ depuis les registres réels du dépôt à chaque passage. Il ne se met pas à jour : il se recalcule. Un document central écrit à la main se périme, et un document central faux est pire qu'aucun — on le croit, et il occupe la place.</p>
+<h2>L'effectif réel, par TYPE</h2>
+<p>83 fichiers dans scripts/. Le TYPE dit ce qu'un fichier EST — une question que ni le rang ni la portée ne posaient.</p>
+<table><thead><tr><th>Type</th><th>Combien</th><th>Ce que c'est</th></tr></thead><tbody><tr><td>outil</td><td>47</td><td>un membre de l'Agence : une porte d'entrée réelle (ligne de commande, package.json, crochet ou commande écrite) ET au moins un document qui le nomme</td></tr><tr><td>bibliotheque-partagee</td><td>18</td><td>aucune porte d'entrée, importée par plusieurs — le vocabulaire commun de l'Agence</td></tr><tr><td>bibliotheque-solitaire</td><td>5</td><td>aucune porte d'entrée et importée par un seul : à fusionner dans son unique client, ou bien il lui manque des clients</td></tr><tr><td>infrastructure-shell</td><td>4</td><td>script shell d'installation ou de construction, hors de l'Agence</td></tr><tr><td>execution-directe-non-documentee</td><td>4</td><td>personne ne l'importe et aucune commande de lancement n'est écrite nulle part : il ne peut être lancé qu'à la main, par quelqu'un qui sait déjà</td></tr><tr><td>crochet</td><td>4</td><td>s'exécute automatiquement à un moment de git, jamais appelé à la main</td></tr><tr><td>filet-de-securite</td><td>1</td><td>la suite de tests elle-même — ce que le crochet lance et qui peut refuser un commit</td></tr></tbody></table>
+<h2>Ce que l'équipe SAIT FAIRE, par classe transverse</h2>
+<p>Une classe est une SONDE sur le source, jamais une liste de noms : un outil ajouté demain y entre sans que personne y pense, et une classe nouvelle s'applique le jour même à tous.</p>
+<table><thead><tr><th>Classe</th><th>Combien</th><th>Pourquoi elle compte</th></tr></thead><tbody><tr><td>scanne le dépôt</td><td>33</td><td>parcourt des fichiers pour y chercher quelque chose — la classe que l'utilisateur a nommée lui-même</td></tr><tr><td>rend un rapport HTML</td><td>18</td><td>produit une page, donc quelque chose que l'utilisateur LIT vraiment</td></tr><tr><td>tient un registre</td><td>36</td><td>écrit une mémoire durable sur le disque — ce qui lui permet de se souvenir d'un passage à l'autre</td></tr><tr><td>coûte de vrais appels API</td><td>4</td><td>consulte un modèle ou un service distant : jamais lancé sans passer par Smart Conso API (Article 22)</td></tr><tr><td>déclare sa marge d'erreur</td><td>38</td><td>avertit qu'il peut se tromper avant de rendre un chiffre — l'exigence transverse de tous les outils heuristiques</td></tr><tr><td>conclut par un plan d'action</td><td>27</td><td>transforme ses constats en gestes (Article 28) au lieu de s'arrêter au rapport</td></tr><tr><td>enregistre son propre usage</td><td>45</td><td>sait dire s'il a servi — sans quoi personne ne peut constater qu'un outil n'est jamais sollicité</td></tr><tr><td>sait répondre « pas mesuré »</td><td>25</td><td>distingue « je n'ai rien trouvé » de « je n'ai pas pu regarder » (leçon L5) — la classe la plus discrète et la plus importante</td></tr></tbody></table>
+<h2>Le nivellement — ce que chaque classe EXIGE, et qui l'atteint</h2>
+<p class="note">Le dénominateur est celui de l'EXIGENCE, jamais la population entière : un taux sur 82 pour une règle qui ne concerne que les 22 qui scannent serait juste sur le papier et faux sur le fond.</p>
+<table><thead><tr><th>Exigence</th><th>Atteignent</th><th>Ce que ça coûte de ne pas l'avoir</th></tr></thead><tbody><tr><td>outil-declare-sa-marge</td><td>27/47 (57 %)</td><td>outil qui ne déclare jamais sa marge d'erreur — ses chiffres se lisent comme des certitudes</td></tr><tr><td>scanner-sait-refuser</td><td>11/23 (48 %)</td><td>scanne le dépôt sans jamais savoir répondre « pas mesuré » : que rend-il le jour où il ne peut pas regarder ? (leçon L5)</td></tr><tr><td>outil-compte-son-usage</td><td>36/47 (77 %)</td><td>outil qui n'enregistre jamais son propre usage : personne ne pourra constater qu'il n'a jamais servi, et c'est le KPI que tool-brain rend à chaque Ronde</td></tr><tr><td>scanner-conclut</td><td>12/23 (52 %)</td><td>scanne et rapporte sans jamais conclure par un plan d'action : un rapport produit ressemble à un problème traité (Article 28)</td></tr></tbody></table>
+<h2>Les trois niveaux de scan</h2>
+<table><thead><tr><th>Niveau</th><th>Ce que c'est</th></tr></thead><tbody><tr><td>light</td><td>gratuit et mécanique : peut tourner à CHAQUE commit sans que personne y pense. Zéro raisonnement, zéro appel API.</td></tr><tr><td>target</td><td>gratuit mais CIBLÉ : on le lance sur une zone précise, à la demande. Trop bruyant ou trop lent pour tourner partout à chaque fois.</td></tr><tr><td>warrior</td><td>COÛTEUX : vrai raisonnement, agent séparé ou appels API réels. Jamais automatique, jamais sans passer par Smart Conso API.</td></tr></tbody></table>
+<ul><li>20 outil(s) tournent à chaque commit sans aucune façon d'aller plus loin : ils signalent, et ils s'arrêtent là.</li><li>3 outil(s) portent une vraie couche coûteuse.</li><li>1 candidat(s) à l'enchaînement light → warrior — PROPOSÉ, jamais câblé (Article 22).</li></ul>
+<div class="highlight"><h3>3 convocation(s) ouverte(s)</h3><p>AGENT — the-final-judge : pourquoi « the-final-judge » n'a-t-il jamais été appelé ? Est-il inutile, mal nommé, mal placé dans le catalogue, ou est-ce moi qui ne pense pas à lui ?</p><p>AGENT — the-deep-reader : pourquoi « the-deep-reader » n'a-t-il jamais été appelé ? Est-il inutile, mal nommé, mal placé dans le catalogue, ou est-ce moi qui ne pense pas à lui ?</p><p>UTILISATEUR — scanner-sait-refuser : moins de la moitié des outils concernés (11/23) tiennent l'exigence « refuse-de-mesurer » : faut-il la niveler partout, ou l'exigence est-elle trop large ?</p></div>
+<h2>Ce que ce document ne saura JAMAIS dire</h2>
+<ul><li>POURQUOI l'Agence existe : c'est le second projet mené en parallèle du jeu, et ça se lit dans CLAUDE.md, jamais dans un compte.</li><li>Ce que chaque outil VAUT : la richesse dit ce qu'un outil porte, jamais ce qu'il vaut — un outil qui fait une seule chose et la fait bien sort pauvre et n'a rien à corriger.</li><li>Si un couplage au jeu est un défaut ou la nature même de l'outil : ça demande de lire ce qu'il fait.</li><li>Le TYPE se dérive de la forme du fichier et les CLASSES de sondes sur son texte : un outil qui scanne sans appeler readdirSync échappe à sa classe. Ce document dit ce qui se voit, jamais ce qui se comprend.</li></ul></main>
+  <div class="divider"></div><footer><p>CASSANDRA-RH — elle ne recalcule jamais ce qu'un autre outil sait déjà : elle LIT ses résultats et les traduit en langage RH.</p></footer>
+</div>
+</body>
+</html>
