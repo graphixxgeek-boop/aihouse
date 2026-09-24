@@ -1791,6 +1791,69 @@ export function classerIceberg(fichiers = [], { lire, offert = "", machine = new
 }
 
 // ============================================================================================
+// LES DEUX SYSTÈMES DE FAMILLES QUI NE SE PARLENT PAS (2026-09-24, tâche #754)
+// ============================================================================================
+// Trouvé en rassemblant les notes de classification (#742), et mesuré plutôt que soupçonné :
+// `AGENT_CATEGORIES` (lib-shell) range les outils en « Suites », `REGISTRIES[].family`
+// (doc-report) les range en « familles », et UN SEUL nom leur est commun. Deux rangements du même
+// paysage, écrits à deux moments, jamais confrontés — et les populations diffèrent aussi, l'un
+// couvrant 40 outils, l'autre 44.
+//
+// CE QUE CETTE FONCTION FAIT, ET CE QU'ELLE NE FAIT PAS. Elle RAPPORTE l'écart, elle ne choisit
+// jamais le système survivant : nommer une famille est un nommage, donc une décision de
+// l'utilisateur (règle du 2026-09-24, portée par l'agent des noms). Un outil qui trancherait tout
+// seul aurait rebaptisé six Suites dans le dos de celui qui les a nommées.
+//
+// POURQUOI C'EST LE PREMIER GESTE DU CHANTIER : tant que deux rangements coexistent, tout axe
+// ajouté par-dessus hérite de l'ambiguïté — on empilerait sur un sol qui bouge.
+export function comparerLesFamilles({ categories = {}, registres = [] } = {}) {
+  const suites = new Map();
+  for (const [slug, cat] of Object.entries(categories)) {
+    const m = String(cat).match(/(?:Suite|La Cour)\s?.*/);
+    if (m) (suites.get(m[0].trim()) ?? suites.set(m[0].trim(), []).get(m[0].trim())).push(slug);
+  }
+  const familles = new Map();
+  for (const r of registres) {
+    if (!r?.family) continue;
+    (familles.get(r.family) ?? familles.set(r.family, []).get(r.family)).push(r.slug);
+  }
+  if (!suites.size || !familles.size) {
+    return { mesurable: false, pourquoi: "l'un des deux registres est vide ou illisible — une comparaison rendue sur un seul côté ressemblerait à un accord parfait, ce qui est le contraire de la vérité" };
+  }
+  const nomsSuites = [...suites.keys()];
+  const nomsFamilles = [...familles.keys()];
+  const communs = nomsSuites.filter((n) => nomsFamilles.includes(n));
+  const avecCategorie = new Set(Object.keys(categories));
+  const avecRegistre = new Set(registres.map((r) => r.slug).filter(Boolean));
+  return {
+    mesurable: true,
+    suites: nomsSuites, familles: nomsFamilles, communs,
+    sansRegistre: [...avecCategorie].filter((s) => !avecRegistre.has(s)).sort(),
+    sansCategorie: [...avecRegistre].filter((s) => !avecCategorie.has(s)).sort(),
+    divergent: communs.length < Math.min(nomsSuites.length, nomsFamilles.length),
+  };
+}
+
+export function formatFamillesLines(c) {
+  if (!c?.mesurable) return [`⚠️ NON MESURABLE — ${c?.pourquoi ?? "raison inconnue"}`];
+  const L = [];
+  L.push(`Suites (organigramme)      : ${c.suites.length}`);
+  L.push(`Familles (registres)       : ${c.familles.length}`);
+  L.push(`Noms communs aux deux      : ${c.communs.length}${c.communs.length ? ` — ${c.communs.join(" · ")}` : ""}`);
+  L.push(`Outils catégorisés sans registre : ${c.sansRegistre.length}`);
+  L.push(`Outils avec registre sans catégorie : ${c.sansCategorie.length}`);
+  if (c.divergent) {
+    L.push("");
+    L.push("🔴 DEUX RANGEMENTS DU MÊME PAYSAGE qui ne se recouvrent pas. Ce n'est pas un détail de nommage :");
+    L.push("   tant que les deux coexistent, tout axe ajouté par-dessus hérite de l'ambiguïté.");
+    L.push("   Lequel survit est un NOMMAGE, donc une décision de l'utilisateur — cet outil le signale, il ne tranche pas.");
+    L.push(`   Côté organigramme : ${c.suites.join(" · ")}`);
+    L.push(`   Côté registres    : ${c.familles.join(" · ")}`);
+  } else L.push("\n✅ Les deux rangements se recouvrent.");
+  return L;
+}
+
+// ============================================================================================
 // 3e DISTINCTION — LE MOMENT : QUAND l'outil intervient (2026-09-24, tâche #750)
 // ============================================================================================
 // Sa demande : « on avance sur la classification ». Les deux premiers axes disent où RANGER un
@@ -2231,6 +2294,9 @@ function main() {
     });
     console.log("");
     for (const l of formatAxesLines(axes, { itemsRonde })) console.log(l);
+    console.log("");
+    console.log("--- LES DEUX SYSTÈMES DE FAMILLES (tâche #754) ---");
+    for (const l of formatFamillesLines(comparerLesFamilles({ categories: AGENT_CATEGORIES, registres: DOC_REPORT_REGISTRIES }))) console.log(l);
     console.log(`\nHORS PORTÉE : ce classement dit où RANGER un script, QUAND il intervient et SUR QUOI il regarde — jamais s'il est BON, ni s'il regarde BIEN. C'est le travail des Gardiens, et les deux ne se remplacent pas.`);
     return;
   }
