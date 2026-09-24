@@ -774,6 +774,12 @@ export function verifyHyperScanProcess({
 // apparaisse sans jamais avoir été consigné.
 export const CIRCLE_ITEMS_CHANGELOG = [
   {
+    date: "2026-09-24",
+    itemId: "agent-du-temps",
+    changement: "ajout",
+    pourquoi: "Demande explicite de l'utilisateur dans le prompt de la nuit du 2026-09-23, en trois mots : « teste l'agent à la Ronde ». Ce n'est pas un item de plus pour faire nombre, et le besoin était prouvé avant d'être formulé : la nuit même, une ligne de docs/suivi/ a été datée de quinze minutes dans le futur parce que j'avais TAPÉ l'heure au lieu de la lire, et findHorodatagesFuturs() a refusé le commit. Une IA n'a pas d'horloge — elle déduit la date du dernier horodatage vu passer, et cette déduction dérive à chaque minute de travail. Ce que cet item vérifie n'est donc pas que l'outil tourne, mais D'OÙ VIENT L'HEURE : c'est le seul item de la Ronde dont le vrai résultat est une PHRASE à lire (« SOURCE : réseau » ou « SOURCE : système »), jamais un compte. Sans cette lecture, un agent du temps dont personne ne vérifie la source finirait par rendre l'horloge locale en silence, et une heure fausse ressemble trait pour trait à une heure juste — le pire type d'erreur, invisible. Au 2026-09-24, les deux API de temps essayées rendent HTTP 403, refusées par la politique réseau de l'environnement : la source est « système », l'outil le dit, et la décision d'ouvrir un domaine appartient à l'utilisateur.",
+  },
+  {
     date: "2026-09-23",
     itemId: "ou-on-en-est",
     changement: "ajout",

@@ -143,6 +143,9 @@ export const REGISTRIES = [
   // la Ronde), jamais seulement par un humain devant un navigateur — un HTML le rendrait plus
   // joli et moins lisible par les autres.
   { slug: "the-equalizer", label: "THE-EQUALIZER", family: "Suite Dette & Structure du code", path: "docs/the-equalizer/", decision: "texte", scriptPath: "scripts/the-equalizer.mjs" },
+  // Décision « texte » assumée : son rapport se lit en trois lignes dans le terminal au moment où
+  // on a besoin de l'heure. Une page HTML pour dire l'heure serait une page qu'on n'ouvre jamais.
+  { slug: "agent-du-temps", label: "AGENT-DU-TEMPS", family: "Suite Pilotage & Consommation", path: "docs/agent-du-temps/", decision: "texte", scriptPath: "scripts/agent-du-temps.mjs" },
   { slug: "abraham-les-references", label: "ABRAHAM-LES-REFERENCES", family: "Suite Dette & Structure du code", path: "docs/abraham-les-references/", decision: "texte", scriptPath: "scripts/abraham-les-references.mjs" },
   { slug: "moise-tables-de-loi", label: "MOÏSE-TABLES-DE-LOI", family: "Suite Dette & Structure du code", path: "docs/moise-tables-de-loi/", decision: "texte", scriptPath: "scripts/moise-tables-de-loi.mjs" },
   { slug: "integration-outil", label: "integration-outil", family: "Suite Dette & Structure du code", path: "docs/integration-outil/", decision: "texte", scriptPath: "scripts/integration-outil.mjs" },
@@ -615,6 +618,7 @@ export const RELIABILITY_SCRIPT_FILES = {
   // mesure exacte de ce qu'il reste à automatiser.
   "safe-export": "scripts/safe-export.mjs", "tool-learning": "scripts/tool-learning.mjs",
   "the-equalizer": "scripts/the-equalizer.mjs",
+  "agent-du-temps": "scripts/agent-du-temps.mjs",
   "moise-tables-de-loi": "scripts/moise-tables-de-loi.mjs",
   "abraham-les-references": "scripts/abraham-les-references.mjs",
   "integration-outil": "scripts/integration-outil.mjs",

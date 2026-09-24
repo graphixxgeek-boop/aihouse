@@ -271,6 +271,21 @@ export const CIRCLE_ITEMS = [
     execute: "Lancer node scripts/the-equalizer.mjs. Lire les quatre verdicts de domaine, puis regarder d'abord les deux catégories que RIEN d'autre ne remonte : les exigences déclarées que personne ne vérifie (elles sont attendues, elles doivent rester peu nombreuses et assumées) et les vérificateurs FANTÔMES (une exigence qui annonce une fonction inexistante — jamais toléré, c'est une promesse creuse, à corriger le jour même). Le retard outil par outil vient d'integrationAudit() et se traite comme d'habitude. Un niveau ORPHELIN signalé veut dire que le référentiel a gagné une section que le verdict ne compte nulle part : la rattacher dans DOMAINES ou la renommer, jamais la laisser.",
     producesReport: true,
   },
+  // agent-du-temps (2026-09-24) — demande explicite de l'utilisateur dans le prompt de nuit :
+  // « teste l'agent à la Ronde ». Ce n'est pas un item de plus pour faire nombre : un agent du
+  // temps dont personne ne vérifie la source finirait par rendre l'horloge locale en silence, et
+  // une heure fausse ressemble trait pour trait à une heure juste. C'est le seul item de la Ronde
+  // dont le vrai résultat est une PHRASE à lire (« source : réseau » ou « source : système »),
+  // jamais un compte.
+  {
+    id: "agent-du-temps",
+    theme: "Suivi & référentiels",
+    label: "Tester l'agent du TEMPS — d'où vient l'heure, et les estimations tiennent-elles ?",
+    cout: "gratuit — une requête HTTP de temps, et l'horloge système en repli",
+    tokensEstimes: "négligeable — quelques lignes de sortie",
+    execute: "Lancer node scripts/agent-du-temps.mjs. LIRE LA LIGNE « SOURCE » avant tout le reste : « réseau » veut dire que l'heure est indépendante de cette machine, « système » qu'elle ne l'est pas et que les API de temps ont été refusées — auquel cas le détail des essais dit pourquoi (au 2026-09-24, la politique réseau de l'environnement les refuse toutes les deux, ce qui est une contrainte d'environnement et jamais une panne de l'outil). Regarder ensuite les estimations : chaque mesure porte son verdict (juste à ±30 %, SUR-ESTIMÉE ou SOUS-ESTIMÉE) et, à partir de trois mesures, un facteur d'ajustement médian est PROPOSÉ. Ce facteur ne s'applique jamais tout seul — l'appliquer sur un seul point de mesure ferait dériver toutes les estimations suivantes.",
+    producesReport: true,
+  },
   // recap-evaluations (2026-09-22, demande explicite de l'utilisateur : « je veux lors de la ronde le
   // détail des KPI et/ou evaluations, notes qui sont produites par certains outils, dans un fichier
   // HTML normé bien mis en evidence [...] qui me juge comment, de quelle maniere, sur quelles bases,
@@ -1211,6 +1226,7 @@ export const CIRCLE_REPORT_FOLDERS = {
   "pure-gold-unity-scan": "docs/pure-gold-unity/",
   "tool-learning": "docs/tool-learning/",
   "the-equalizer": "docs/the-equalizer/",
+  "agent-du-temps": "docs/agent-du-temps/",
   "recap-evaluations": "docs/angel-of-ia-process/",
   "smart-conso-token-scan": "docs/smart-conso-token/",
   "cassandra-rh-signal": "docs/cassandra-rh/",
