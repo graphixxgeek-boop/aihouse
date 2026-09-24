@@ -125,3 +125,20 @@ raison, jamais omis en silence.
   volontairement absent de la Ronde ; un item de Ronde peut ne porter aucun outil de l'Agence.
 - **Il ne bloque rien.** Comme god-of-all-process, il signale ; ce sont les tests de `check-house.mjs`
   qui refusent un commit, et seulement sur les deux points qu'ils savent vérifier.
+
+## Une précision de voisinage, pour qu'une reprise ne s'y trompe pas
+
+*(2026-09-24.)* `scripts/circle-process-guardian.mjs` héberge DEUX process : celui-ci (intégrer un
+item à la Ronde) et le contrôle de la **clôture** de la Ronde elle-même
+(`ETAPES_DE_CLOTURE`, `verifyClotureDeRonde()`, ajoutés le 2026-09-24 — décrits dans
+`docs/circle-process-detail.txt`, section « LA CLÔTURE SE VÉRIFIE SUR LE DISQUE »).
+
+**Les deux ne se touchent pas**, et le dire évite la confusion qu'un même fichier crée
+naturellement : la clôture vérifie qu'une Ronde a livré ses huit étapes de fin ; l'intégration
+vérifie qu'un item est raccordé à tous ses registres. Un item peut être parfaitement intégré dans
+une Ronde qui se clôt mal, et l'inverse.
+
+*(Cette note existe parce que god-of-all-process a signalé, à juste titre, un changement de
+`circle-process-guardian.mjs` sans mise à jour de CE document. Le changement ne concernait pas ce
+process — mais « il ne me concernait pas » est une affirmation qui doit être écrite quelque part
+pour valoir quelque chose, sinon la prochaine IA refait l'enquête.)*

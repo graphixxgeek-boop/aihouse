@@ -219,3 +219,29 @@ le process qui les gouverne. **Sur la question ouverte** (« un process peut év
 ces regles ? ») : non, et c'est mieux ainsi — un process décrit un DÉROULÉ, une échelle est une
 DONNÉE. Les fondre donnerait un document qu'on ne peut plus exécuter et un code qu'on ne peut plus
 lire. Ils restent deux, reliés : le process pointe les règles, les règles citent le process.
+
+### Le POIDS d'une tâche — ajouté le 2026-09-24, et ce n'est pas la priorité
+
+*(Chantier 5 du plan de nuit. Sous-commande `node scripts/check-tasks-details.mjs poids`.)*
+
+Le process d'état des tâches répondait à « où en est-on ? ». Il répond désormais aussi à **« celle-ci
+est-elle trop grosse pour être lancée d'un bloc ? »** — question distincte, et la confondre avec la
+priorité ferait traiter un chantier énorme en premier parce qu'il est urgent.
+
+**La règle de séparation, à ne jamais recomposer autrement** : le **palier de priorité** dit dans
+quel ORDRE traiter, le **poids** dit s'il faut DÉCOUPER avant de commencer. Les deux se lisent sur
+la même ligne et ne se remplacent jamais.
+
+Trois autres choses se lisent au même endroit et au même moment, ce qui est la raison pour laquelle
+elles vivent ensemble plutôt que dans trois outils qui divergeraient (Article 24) :
+
+- la **vignette** d'une tâche lourde, avec le découpage que la ligne énumère déjà — jamais un
+  découpage déduit d'une prose, ce qui ferait un outil qui invente la tâche qu'il réclame ;
+- le **résumé de tête** des lignes longues, contre le risque qu'une ligne tronquée ne dise plus rien
+  d'elle-même ;
+- l'**origine** de la tâche (utilisateur / outil / agent / indéterminée), et la marque
+  `AUTO-ATTRIBUÉE` que l'agent pose sur ce qu'il se donne lui-même.
+
+La convention complète — seuils, marque, ce que chaque état veut dire — vit dans
+`docs/systeme-de-suivi.md`, jamais recopiée ici : c'est une règle du SUIVI, pas une particularité de
+cet outil. Ce que la mesure fait et ne fait pas est dans `docs/referentiel/check-tasks-details.md`.
