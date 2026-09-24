@@ -11303,6 +11303,15 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     assert.ok(typeof ex.sApplique === 'function' && ex.exige && ex.pourquoi, 'an exigence is data, never an if buried in a function: it says WHO it applies to, WHICH class is owed and WHAT it costs not to have it — the three ifs it replaces were exactly the frozen list Article 24 forbids, and a fourth would have required reopening the function');
     assert.ok(crh2.CLASSES_TRANSVERSES.some((c) => c.cle === ex.exige), 'and every exigence points at a class that really exists: an exigence owed to a class nobody measures would be unsatisfiable forever, which reads like a permanent failure rather than a missing probe');
   }
+  // TOUTE FONCTION EXPORTÉE, pas seulement les détecteurs (2026-09-24, chantier 3.6).
+  const pgu2 = await import('../scripts/pure-gold-unity.mjs');
+  assert.deepEqual(pgu2.fonctionsExporteesDe('export function findX(){}\nexport function aiderY(){}\nfunction interne(){}'), ['findX', 'aiderY'], 'the wide extractor takes every EXPORTED function and no internal one — an internal helper is nobody\'s public surface and being unused there is a different question');
+  assert.deepEqual(pgu2.detecteursDe('export function findX(){}\nexport function aiderY(){}'), ['findX'], 'while the narrow one still takes only the detectors, because the two measures do not say the same thing');
+  const largeMuets = pgu2.findDetecteursMuets({ extraire: pgu2.fonctionsExporteesDe }).filter((f) => f.etat === 'muet');
+  const etroitMuets = pgu2.findDetecteursMuets().filter((f) => f.etat === 'muet');
+  assert.ok(largeMuets.length >= etroitMuets.length, 'the wide mode can only find at least as much as the narrow one, since detectors are a subset of exported functions');
+  assert.ok(largeMuets.length < etroitMuets.length + 20, 'and the widening was MEASURED before being written rather than assumed useful: 12 mute detectors against 15 mute functions, three more findings and no deluge — the first of the three was fichesParScript(), written that very night in CASSANDRA and left dead an hour later when another function replaced it, so the widening paid for itself immediately');
+
   // VERSION ET RICHESSE (2026-09-24, chantier 3.4) — deux échelles séparées, à sa demande.
   const vFausse = crh2.versionDepuisGit('scripts/x.mjs', { sh: () => { throw new Error('git absent'); } });
   assert.equal(vFausse.mesurable, false, 'no git history yields NOT MEASURED rather than v0.0, which would read as a real version');

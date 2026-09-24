@@ -1002,14 +1002,6 @@ export const CLASSES_TRANSVERSES = [
 // accuse à tort cesse d'être lu (leçon L4) : les quatre portes se cherchent, et l'orphelin n'est
 // déclaré qu'une fois les quatre fermées.
 
-export function fichesParScript(tableMaitresse = "", lignesInventaire = []) {
-  // Deux sources, parce qu'aucune des deux seule ne couvre : la table maîtresse dit quel outil
-  // existe, l'inventaire de la charte dit quel script et quelle fiche il porte.
-  const parScript = {};
-  for (const l of lignesInventaire) if (l.script && l.instanciation) parScript[l.script] = l.instanciation;
-  return { parScript, outils: new Set((tableMaitresse.match(/\|\s*\*{0,2}`?([a-zA-Z0-9-]+\.mjs)`?/g) || []).map((m) => m.replace(/[|*`\s]/g, ""))) };
-}
-
 export function inventaireDeLaCharte(charteMarkdown = "") {
   // L'inventaire documentaire de CLAUDE.md : une ligne par outil, avec sa colonne Script et sa
   // colonne Instanciation. Il se LIT, il ne se recopie pas — un outil ajouté demain y sera.

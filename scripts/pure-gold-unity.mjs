@@ -230,6 +230,21 @@ export function detecteursDe(source = "") {
   return [...String(source).matchAll(DETECTEUR_RE)].map((m) => m[1]);
 }
 
+// TOUTE FONCTION EXPORTÉE, pas seulement celles nommées `find*`/`detect*` (2026-09-24, chantier 3.6
+// du plan de nuit). Demande de l'utilisateur, plus large que ce que cet outil mesurait : « mesurer
+// si toutes les FONCTIONS à l'intérieur d'un outil sont utilisées ».
+//
+// L'ÉLARGISSEMENT A ÉTÉ MESURÉ AVANT D'ÊTRE ÉCRIT, parce qu'une mesure trois fois plus bruyante
+// n'aurait servi personne : 12 détecteurs muets au motif restreint, 15 fonctions muettes au motif
+// large. Trois de plus, donc trois trouvailles réelles et aucun déluge — et la première trouvée
+// était `fichesParScript()`, écrite la nuit même chez CASSANDRA et laissée morte une heure plus
+// tard quand une autre fonction l'a remplacée. L'élargissement s'est payé tout de suite.
+export const FONCTION_EXPORTEE_RE = /^export function (\w+)/gm;
+
+export function fonctionsExporteesDe(source = "") {
+  return [...String(source).matchAll(FONCTION_EXPORTEE_RE)].map((m) => m[1]);
+}
+
 // EXEMPTION DÉCLARÉE, jamais devinée : un mécanisme volontairement partagé entre plusieurs outils
 // n'a pas de `main()` à lui, donc l'absence d'appel local y est normale et non un oubli.
 export const SANS_MAIN_PROPRE = {
@@ -259,7 +274,7 @@ export const SANS_MAIN_PROPRE = {
 // SA LIMITE HONNÊTE, à dire plutôt qu'à taire : un détecteur appelé uniquement par une fonction
 // elle-même morte passera pour vivant. Cette mesure sous-estime donc, et ne sur-accuse jamais —
 // c'est le bon sens de l'erreur pour un garde-fou dont la crédibilité est tout le capital.
-export function findDetecteursMuets({ root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync, exemptes = SANS_MAIN_PROPRE } = {}) {
+export function findDetecteursMuets({ root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync, exemptes = SANS_MAIN_PROPRE, extraire = detecteursDe } = {}) {
   const sources = {};
   const charger = (dossier, prefixe = "") => {
     try {
@@ -285,7 +300,7 @@ export function findDetecteursMuets({ root = ROOT, listDirImpl = readdirSync, re
   for (const [f, src] of Object.entries(sources)) {
     const slug = f.replace(/^hooks\//, "").replace(/\.mjs$/, "");
     if (slug in exemptes) continue;
-    for (const d of detecteursDe(src)) {
+    for (const d of extraire(src)) {
       const appels = Object.values(sources).reduce((n, s2) => {
         const trouvees = s2.match(new RegExp(`\\b${d}\\b`, "g"));
         return n + (trouvees ? trouvees.length : 0);
@@ -326,6 +341,10 @@ export function auditRapportsComplets({ registries = REGISTRIES, readFileImpl = 
   }
 
   const detecteurs = findDetecteursMuets({ root, readFileImpl });
+  // Le mode LARGE (2026-09-24) : toute fonction exportée, pas seulement les détecteurs. Rendu à
+  // part et jamais fondu dans le compte restreint — les deux mesures ne disent pas la même chose,
+  // et additionner « détecteur muet » et « helper mort » effacerait laquelle est grave.
+  const fonctionsMuettes = findDetecteursMuets({ root, readFileImpl, extraire: fonctionsExporteesDe }).filter((f) => f.etat === "muet");
   const muets = detecteurs.filter((d) => !d.porteParLesTests);
   const silencieux = detecteurs.filter((d) => d.porteParLesTests);
 
@@ -333,10 +352,14 @@ export function auditRapportsComplets({ registries = REGISTRIES, readFileImpl = 
   return { vertsSansMesure,
     outils: outils.length,
     exemptesDePlan: Object.keys(SANS_CONSTAT_PROPRE).length,
-    sansPlan, maigres, illisibles, muets, silencieux,
+    sansPlan, maigres, illisibles, muets, silencieux, fonctionsMuettes,
     // Les « silencieux » ne cassent PAS le verdict : ils protègent réellement, via le crochet
     // pre-commit. Ils sont signalés parce qu'un outil gagnerait à dire ce qu'il sait, jamais parce
     // qu'ils seraient en faute.
+    // Les fonctions muettes du mode LARGE ne cassent pas non plus le verdict, et c'est un choix :
+    // un helper exporté et jamais appelé est une dette réelle mais bénigne, là où un DÉTECTEUR muet
+    // est une capacité de surveillance qui n'a jamais protégé personne. Les mettre au même rang
+    // aurait dilué le second dans le premier.
     conforme: sansPlan.length === 0 && maigres.length === 0 && illisibles.length === 0 && muets.length === 0,
   };
 }
