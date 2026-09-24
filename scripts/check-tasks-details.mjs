@@ -1722,6 +1722,46 @@ export function findConstatsSansSuite(rows = []) {
   };
 }
 
+// LA VIGNETTE D'UNE LIGNE (2026-09-24, demande explicite de l'utilisateur en lisant le premier
+// rapport de commande-en-masse : « en fin de rapport je veux quelque chose qui reste lisible, mais
+// avec les vignettes qui vont bien. c'est la forme la plus minimaliste de presenter une tache. je
+// ne demande pas une mini fiche ou une fiche complete par ligne »).
+//
+// TROIS FORMES, ET ELLES NE SE REMPLACENT PAS : la FICHE COMPLÈTE dit tout ce qu'on sait d'une
+// tâche ; la MINI-FICHE tient en quelques lignes et s'affiche dès qu'on s'intéresse à une tâche ;
+// la VIGNETTE tient en UNE ligne et sert quand on en montre vingt à la suite. Les confondre rend
+// soit une liste illisible, soit une liste qui ne dit rien.
+//
+// CE QU'ELLE PORTE, et rien d'autre : le numéro (pour retrouver), l'intitulé coupé (pour
+// reconnaître), la criticité (pour hiérarchiser d'un coup d'œil) et l'état (pour savoir si c'est
+// encore ouvert). Quatre informations, parce qu'une cinquième ferait déborder la ligne et qu'une
+// ligne qui déborde n'est plus une vignette.
+export const LARGEUR_INTITULE_VIGNETTE = 68;
+const PASTILLE_CRITICITE = { "PRIORITAIRE-OBLIGATOIRE": "🔴", "RECOMMANDE-CRITIQUE": "🔴", "RECOMMANDE-NECESSAIRE": "🟠", "RECOMMANDE-UTILE": "🔵" };
+const PASTILLE_ETAT = { terminee: "✅", ouverte: "⬜", enCours: "🔄", autre: "▫️" };
+
+// `avecNumero: false` quand le contexte affiche DÉJÀ le numéro (le plan d'action du gabarit le
+// pose lui-même en fin de ligne) : le répéter ferait une ligne qui se redit, et une vignette qui
+// se redit n'est plus minimale.
+export function ligneDeTache(row, { largeur = LARGEUR_INTITULE_VIGNETTE, avecNumero = true } = {}) {
+  if (!row) return null;
+  const titre = String(row.sousSujet ?? "?").trim();
+  const coupe = titre.length > largeur ? titre.slice(0, largeur - 1) + "…" : titre;
+  const crit = String(row.criticite ?? "").trim();
+  const num = avecNumero ? `${numeroTache(row.numero)} ` : "";
+  return `${PASTILLE_ETAT[row.statusKey] ?? "▫️"} ${num}${PASTILLE_CRITICITE[crit] ?? "⚪"} ${coupe}`;
+}
+
+// Le REGISTRE, indexé par numéro — pour qu'un outil qui cite une tâche puisse la QUALIFIER au lieu
+// d'afficher un numéro nu. C'est le défaut exact qu'a trouvé l'utilisateur dans le premier rapport
+// de commande-en-masse : « pourquoi toutes les taches sont undefined ? je prefere que d'abord les
+// taches soient qualifiées entierement, avant de creer le rapport final ».
+export function indexDesTaches(rows = []) {
+  const par = new Map();
+  for (const r of rows) if (r.numero) par.set(r.numero, r);
+  return par;
+}
+
 export function formatConstatsSansSuiteLines(rows = [], { limite = 25 } = {}) {
   const r = findConstatsSansSuite(rows);
   const L = [];

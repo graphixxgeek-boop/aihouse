@@ -24,6 +24,7 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { buildReportFrame, renderTextReport, buildPlanDaction, ETATS_CONSTAT } from "./report-template.mjs";
+import * as ctd from "./check-tasks-details.mjs";
 
 export const OUTIL = "rapport-gros-prompt";
 export const SCRIPT_PATH = "scripts/rapport-gros-prompt.mjs";
@@ -107,17 +108,46 @@ export function blocsDuRapport(saisine) {
   return blocs;
 }
 
+// Les vignettes viennent de l'outil des tâches, jamais d'un second parseur du suivi — la règle
+// anti-doublon de docs/regles-de-travail.md §7ter. Si le suivi devient illisible, la fonction rend
+// null et le rapport le dira, plutôt que d'inventer une qualification.
+function chargerVignettes() {
+  try {
+    const { loadAllTaskRows, indexDesTaches, ligneDeTache } = ctd;
+    const idx = indexDesTaches(loadAllTaskRows());
+    return (n) => { const r = idx.get(Number(n)); return r ? ligneDeTache(r, { largeur: 74, avecNumero: false }) : `⛔ #${n} — ANNONCÉE MAIS ABSENTE du suivi : une référence morte ressemble à un lien, c'est pire qu'une absence`; };
+  } catch (e) {
+    return () => null;
+  }
+}
+let vignetteDe = () => null;
+
 export function construireRapport(saisine) {
+  vignetteDe = chargerVignettes();
   const v = validerPoints(saisine.points);
   if (!v.valide) throw new Error(`rapport-gros-prompt : saisine incomplète, rapport NON produit.\n  - ${v.fautes.join("\n  - ")}`);
   const points = saisine.points ?? [];
-  const constats = points.map((p) => ({
-    etat: p.sort,
-    libelle: `[${p.id}] ${p.sujet ?? "Divers"} — ${(p.citation ?? "").slice(0, 90)}`,
-    tache: (p.taches ?? [])[0] ?? null,
-    raison: p.raison ?? null,
-    question: p.question ?? null,
-  }));
+  // LE CHAMP S'APPELLE `constat`, PAS `libelle` — défaut réel du premier rapport produit, trouvé
+  // par l'utilisateur en le lisant : « pourquoi dans la fin de rapport [...] toutes les taches sont
+  // undefined ? ». buildPlanDaction() lit `constat` ; je lui passais `libelle`, et il rendait
+  // « undefined » vingt-cinq fois de suite sans que rien ne s'en plaigne. Un plan d'action qui
+  // s'affiche entièrement faux est plus dangereux qu'un plan absent : il a l'air d'un plan.
+  //
+  // ET LE CONSTAT PORTE LA VIGNETTE DE LA VRAIE TÂCHE, jamais un numéro nu — sa seconde demande
+  // dans le même message : « je prefere que d'abord les taches soient qualifiées entierement, avant
+  // de creer le rapport final ». La vignette est lue dans docs/suivi/, donc elle ne peut pas mentir
+  // sur l'état réel d'une tâche, et une tâche annoncée qui n'existe pas se voit immédiatement.
+  const constats = points.map((p) => {
+    const nums = p.taches ?? [];
+    const vignettes = nums.map((n) => vignetteDe(n)).filter(Boolean);
+    return {
+      etat: p.sort,
+      constat: `[${p.id}] ${vignettes[0] ?? (p.sujet ?? "Divers")}${vignettes.length > 1 ? `\n       + ${vignettes.slice(1).join("\n       + ")}` : ""}`,
+      tache: nums[0] ?? null,
+      pourquoi: p.raison ?? p.question ?? null,
+      question: p.question ?? null,
+    };
+  });
   return buildReportFrame({
     tool: OUTIL,
     scriptPath: SCRIPT_PATH,

@@ -1,8 +1,8 @@
 Version de Claude : claude-opus-5
-Produit le : jeudi 24 septembre 2026 à 21h08 (UTC)
-État du code : 7901d7a sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Produit le : jeudi 24 septembre 2026 à 21h36 (UTC)
+État du code : 75ca83c sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
 Contexte de production : demande directe
-Outil : rapport-gros-prompt — date de dernière modification inconnue
+Outil : rapport-gros-prompt — inchangé depuis le jeudi 24 septembre 2026
 Santé de l'outil : 0/2 signal(aux) au vert — jamais sollicité d'après le compteur — ou jamais instrumenté pour l'être ; aucun objectif chiffré — rien à quoi comparer son résultat
 Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
 
@@ -134,31 +134,32 @@ La suite immédiate
 
 Plan d'action
 
-  → RETENU · undefined — tâche [RECOMMANDEE] : 697
-  → RETENU · undefined — tâche [RECOMMANDEE] : 700
-  → RETENU · undefined — tâche [RECOMMANDEE] : 718
-  → RETENU · undefined — tâche [RECOMMANDEE] : 701
-  → RETENU · undefined — tâche [RECOMMANDEE] : 702
-  → RETENU · undefined — tâche [RECOMMANDEE] : 701
-  → RETENU · undefined — tâche [RECOMMANDEE] : 703
-  → RETENU · undefined — tâche [RECOMMANDEE] : 704
-  → RETENU · undefined — tâche [RECOMMANDEE] : 707
-  → RETENU · undefined — tâche [RECOMMANDEE] : 706
-  → RETENU · undefined — tâche [RECOMMANDEE] : 710
-  → RETENU · undefined — tâche [RECOMMANDEE] : 711
-  → RETENU · undefined — tâche [RECOMMANDEE] : 705
-  → RETENU · undefined — tâche [RECOMMANDEE] : 708
-  → RETENU · undefined — tâche [RECOMMANDEE] : 709
-  → RETENU · undefined — tâche [RECOMMANDEE] : 698
-  → RETENU · undefined — tâche [RECOMMANDEE] : 712
-  → RETENU · undefined — tâche [RECOMMANDEE] : 713
-  → RETENU · undefined — tâche [RECOMMANDEE] : 714
-  → RETENU · undefined — tâche [RECOMMANDEE] : 715
-  → RETENU · undefined — tâche [RECOMMANDEE] : 696
-  ? À TRANCHER · undefined
-  → RETENU · undefined — tâche [RECOMMANDEE] : 717
-  → RETENU · undefined — tâche [RECOMMANDEE] : 700
-  → RETENU · undefined — tâche [RECOMMANDEE] : 718
+  → RETENU · [P1] ✅ 🟠 Le dossier de gouvernance de l'utilisateur est ARCHIVÉ chez CASSANDRA-RH,… — tâche [RECOMMANDEE] : 697
+  → RETENU · [P2] ⬜ 🔴 Process « docs de sauvegarde » chez INES — un zip + un livre, 3 derniers … — tâche [RECOMMANDEE] : 700
+  → RETENU · [P3] ✅ 🔴 Le carnet de bord — ce qui survit quand la mémoire de l'agent se vide en … — tâche [RECOMMANDEE] : 718
+  → RETENU · [P4] ⬜ 🟠 Le process GROS PROMPT : la notice d'accueil, l'invitation, et le compteu… — tâche [RECOMMANDEE] : 701
+  → RETENU · [P5] ✅ 🟠 `rapport-gros-prompt.mjs` — l'utilitaire qui produit le rapport au gabari… — tâche [RECOMMANDEE] : 702
+  → RETENU · [P6] ⬜ 🟠 Le process GROS PROMPT : la notice d'accueil, l'invitation, et le compteu… — tâche [RECOMMANDEE] : 701
+  → RETENU · [P7] ⬜ 🔴 FIABILISER / OPTIMISER / HARMONISER — trois questions obligatoires à la c… — tâche [RECOMMANDEE] : 703
+  → RETENU · [P8] ⬜ 🟠 Proposer le fichier texte dès qu'une réponse devient longue, et l'inscrir… — tâche [RECOMMANDEE] : 704
+  → RETENU · [P9] ⬜ 🟠 L'iceberg : trois groupes, une frontière mécanique, et un « process primi… — tâche [RECOMMANDEE] : 707
+  → RETENU · [P10] ⬜ 🟠 Process de nommage : l'utilisateur choisit, un contrôle refuse tout nom p… — tâche [RECOMMANDEE] : 706
+  → RETENU · [P11] ⬜ 🟠 La page web où TOUT le fonctionnement de l'Agence est consigné, régénérée… — tâche [RECOMMANDEE] : 710
+  → RETENU · [P12] ⬜ 🟠 Chaque fichier déclare sa nature : AUTO, FIGÉ ou MIXTE — et un contrôle r… — tâche [RECOMMANDEE] : 711
+  → RETENU · [P13] ⬜ 🟠 Scinder l'outil des tâches en deux : « Où on en est » et « Qu'est-ce qui … — tâche [RECOMMANDEE] : 705
+  → RETENU · [P14] ⬜ 🟠 La fiche de tâche : une mini-fiche immédiate dans la conversation, une co… — tâche [RECOMMANDEE] : 708
+  → RETENU · [P15] ⬜ 🟠 La CONVOCATION chez CASSANDRA doit produire une DÉCISION, et se re-convoq… — tâche [RECOMMANDEE] : 709
+  → RETENU · [P16] ✅ 🔴 La chaîne « mesure → suite » devient mécanique — le maillon que l'Article…
+       + ⬜ 🟠 Trier les 35 constats sans suite trouvés par la chaîne « mesure → suite » — tâche [RECOMMANDEE] : 698
+  → RETENU · [P17] ✅ 🔵 Le tableau des versions et de la richesse des 50 outils, livré en fichier… — tâche [RECOMMANDEE] : 712
+  → RETENU · [P18] ⬜ 🟠 CASSANDRA doit s'ALARMER d'un outil qui stagne, pas seulement mesurer sa … — tâche [RECOMMANDEE] : 713
+  → RETENU · [P19] ⬜ 🟠 Le catalogue dérive du réel : chaque outil déclare son offre, et un contr… — tâche [RECOMMANDEE] : 714
+  → RETENU · [P20] ⬜ 🟠 Les combinaisons d'outils, enfin : trois sources mécaniques, jamais un ca… — tâche [RECOMMANDEE] : 715
+  → RETENU · [P21] ⬜ 🟠 Sa consigne : « ce n'est pas une consigne à appliquer, c'est un exemple [… — tâche [RECOMMANDEE] : 696
+  ? À TRANCHER · [P22] Gouvernance — Je ne peux pas encore répondre honnêtement : je n'ai pas relu ton cahier des charges d'AGENT-DU-TEMPS ligne à ligne contre ce qui a été construit.
+  → RETENU · [P23] ⬜ 🟠 Le profil utilisateur dans les DEUX sens : il se déclare, l'agent observe… — tâche [RECOMMANDEE] : 717
+  → RETENU · [P24] ⬜ 🔴 Process « docs de sauvegarde » chez INES — un zip + un livre, 3 derniers … — tâche [RECOMMANDEE] : 700
+  → RETENU · [P25] ✅ 🔴 Le carnet de bord — ce qui survit quand la mémoire de l'agent se vide en … — tâche [RECOMMANDEE] : 718
 
 ---
 HORS PORTÉE : ce rapport dit ce qui a été fait de chaque point ; il ne dit jamais si c'était la bonne chose à faire — ça se lit, et ça se tranche avec toi, point par point.

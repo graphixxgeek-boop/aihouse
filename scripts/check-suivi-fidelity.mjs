@@ -44,7 +44,7 @@ export function splitTableRow(row) {
 export function findUnverifiedClosures(sessionText) {
   const rows = sessionText
     .split("\n")
-    .filter((l) => l.startsWith("|") && !/^\|\s*-+\s*\|/.test(l) && !l.includes("Horodatage"));
+    .filter(estUneLigneDeTache);
   const hits = [];
   for (const row of rows) {
     const cells = splitTableRow(row);
@@ -67,7 +67,7 @@ const REPO_PATH_PATTERN = /`((?:docs|lib|app|scripts|components)\/[A-Za-z0-9_.\-
 export function findClaimedFilesMissing(sessionText, existsFn = existsSync, root = ROOT) {
   const rows = sessionText
     .split("\n")
-    .filter((l) => l.startsWith("|") && !/^\|\s*-+\s*\|/.test(l) && !l.includes("Horodatage"));
+    .filter(estUneLigneDeTache);
   const hits = [];
   for (const row of rows) {
     const cells = splitTableRow(row);
@@ -94,7 +94,7 @@ export function findClaimedFilesMissing(sessionText, existsFn = existsSync, root
 export function findOpenTasks(sessionText) {
   const rows = sessionText
     .split("\n")
-    .filter((l) => l.startsWith("|") && !/^\|\s*-+\s*\|/.test(l) && !l.includes("Horodatage"));
+    .filter(estUneLigneDeTache);
   const hits = [];
   for (const row of rows) {
     const cells = splitTableRow(row);
@@ -113,10 +113,37 @@ export function findOpenTasks(sessionText) {
 // chacun à une question de garde-fou précise ("un trou existe-t-il ?") mais aucune fonction ne
 // produit la vue d'ensemble à trois colonnes (terminé/en cours/à faire) que l'utilisateur demande
 // littéralement à obtenir en sortie du système, pas seulement en cas d'anomalie.
+// LE FILTRE D'EN-TÊTE, DÉFINI UNE SEULE FOIS (2026-09-24, deuxième correction du même défaut
+// dans la même soirée — et c'est la deuxième qui compte).
+//
+// L'ANCIENNE VERSION écartait toute ligne CONTENANT le mot « Horodatage », pour sauter la ligne de
+// titre du tableau. Conséquence : n'importe quelle tâche dont le texte emploie ce mot disparaissait
+// de TOUTES les lectures du suivi, en silence. C'est arrivé pour de vrai deux fois le 2026-09-24 :
+// une ligne citant findHorodatagesFuturs() rendait la numérotation fausse, et la tâche #721,
+// intitulée « Horodatages futurs », n'existait pour aucun outil alors qu'elle était bien écrite.
+//
+// LA PREMIÈRE CORRECTION N'A PORTÉ QUE SUR UN APPELANT, et c'est la vraie leçon de la soirée :
+// j'ai corrigé extractTaskNumbers() et laissé les trois autres lecteurs avec le même défaut. Un
+// motif partagé se corrige à l'endroit où il est DÉFINI, jamais chez celui qui s'en plaint
+// (Article 3). D'où cette fonction, unique, que les quatre lecteurs appellent désormais.
+//
+// LE MOTIF ANCRÉ ne peut pas se tromper : une ligne d'en-tête COMMENCE par « | N° | » ou
+// « | Numéro | ». Une ligne de tâche commence par « | 721 | ». Aucune prose ne peut imiter ça.
+export function estUneLigneDeTache(l) {
+  if (!l.startsWith("|")) return false;
+  if (/^\|\s*-+\s*\|/.test(l)) return false;           // la ligne de séparation du tableau
+  // Deux formats d'en-tête coexistent dans docs/suivi/ : l'ancien commence par « | Horodatage |,
+  // le nouveau par « | N° |. Les deux se reconnaissent à leur PREMIÈRE CELLULE, et une ligne de
+  // tâche a toujours un NOMBRE en première cellule — aucune prose ne peut imiter ça, là où le
+  // motif précédent se laissait tromper par n'importe quel texte citant le mot.
+  if (/^\|\s*(?:N°|Numéro|Numero|Horodatage)\s*\|/.test(l)) return false;
+  return true;
+}
+
 export function categorizeTasks(sessionText) {
   const rows = sessionText
     .split("\n")
-    .filter((l) => l.startsWith("|") && !/^\|\s*-+\s*\|/.test(l) && !l.includes("Horodatage"));
+    .filter(estUneLigneDeTache);
   const buckets = { terminee: [], enCours: [], ouverte: [], ecartee: [], autre: [] };
   for (const row of rows) {
     const cells = splitTableRow(row);
