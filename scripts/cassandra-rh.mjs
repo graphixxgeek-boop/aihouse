@@ -1199,6 +1199,64 @@ export function recenserLesScripts({ root = ROOT, lireDossier = readdirSync, lir
 // tableau lui-même. Chacun est une question, jamais un verdict : Abraham a posé cette règle pour les
 // documents et elle vaut ici (un outil capable d'écrire « ce script est inutile » verrait un jour ce
 // jugement appliqué par personne en particulier).
+// ————————————————————————————————————————————————————————————————————————
+// LE NIVELLEMENT — ce que chaque CLASSE exige (2026-09-24, chantier 2.1 du plan de nuit)
+// ————————————————————————————————————————————————————————————————————————
+//
+// DEMANDE DE L'UTILISATEUR, et elle est double. La première moitié est le chantier 2.1 : « par
+// classe, quelle force de garantie minimale exiger, et qui ne l'atteint pas ». La seconde est la
+// précision qu'il a apportée à l'Article 24 : « si un nouveau script arrive, toutes les
+// fonctionnalités et paramètres/certifications sont appliquées au nouvel outil qui rejoint
+// l'équipe. Tous les outils et scripts sont bien calibrés pour accueillir des évolutions, jamais
+// de listes ou fonctionnalités figées. »
+//
+// CE QUE CETTE TABLE CORRIGE, DANS CE FICHIER MÊME, ÉCRIT UNE HEURE PLUS TÔT : les trois premières
+// exigences vivaient en `if` dans `ecartsDuRecensement()`, ce qui est exactement la liste figée que
+// l'Article 24 interdit. Une quatrième exigence aurait demandé de rouvrir la fonction, et n'aurait
+// couvert que les outils auxquels j'aurais pensé sur le moment. Ici, elle s'écrit en UN endroit et
+// s'applique immédiatement à TOUS, y compris à ceux écrits avant elle — et à celui de demain.
+//
+// UNE EXIGENCE SE LIT COMME UNE IMPLICATION : « si tu es ceci, alors tu dois aussi être cela ».
+// `sApplique` dit à qui, `exige` dit quelle classe est due, `pourquoi` dit ce que ça coûte de ne
+// pas l'avoir — jamais un reproche, toujours la conséquence.
+export const EXIGENCES_PAR_CLASSE = [
+  { cle: "outil-declare-sa-marge", exige: "declare-sa-fiabilite",
+    sApplique: (l) => l.type === "outil",
+    pourquoi: "outil qui ne déclare jamais sa marge d'erreur — ses chiffres se lisent comme des certitudes" },
+  { cle: "scanner-sait-refuser", exige: "refuse-de-mesurer",
+    sApplique: (l) => l.type === "outil" && l.classes.includes("scanne-le-depot"),
+    pourquoi: "scanne le dépôt sans jamais savoir répondre « pas mesuré » : que rend-il le jour où il ne peut pas regarder ? (leçon L5)" },
+  { cle: "outil-compte-son-usage", exige: "compte-son-usage",
+    sApplique: (l) => l.type === "outil",
+    pourquoi: "outil qui n'enregistre jamais son propre usage : personne ne pourra constater qu'il n'a jamais servi, et c'est le KPI que tool-brain rend à chaque Ronde" },
+  { cle: "scanner-conclut", exige: "conclut-en-plan-daction",
+    sApplique: (l) => l.type === "outil" && l.classes.includes("scanne-le-depot"),
+    pourquoi: "scanne et rapporte sans jamais conclure par un plan d'action : un rapport produit ressemble à un problème traité (Article 28)" },
+];
+
+// QUI N'ATTEINT PAS SON DÛ, classe par classe — la seconde moitié exacte du chantier 2.1. Le
+// dénominateur est CELUI DE L'EXIGENCE, jamais la population entière : dire « 12 outils sur 82 »
+// pour une exigence qui ne concerne que les 32 qui scannent serait un taux juste sur le papier et
+// faux sur le fond, exactement le défaut que cette campagne poursuit.
+export function nivellementParClasse(recensement, exigences = EXIGENCES_PAR_CLASSE) {
+  if (!recensement?.mesurable) return { mesurable: false, pourquoi: recensement?.pourquoi ?? "aucun recensement à niveler" };
+  const lignes = exigences.map((ex) => {
+    const concernes = recensement.lignes.filter((l) => ex.sApplique(l));
+    const manquants = concernes.filter((l) => !l.classes.includes(ex.exige));
+    return {
+      cle: ex.cle, exige: ex.exige, pourquoi: ex.pourquoi,
+      concernes: concernes.length,
+      atteignent: concernes.length - manquants.length,
+      manquants: manquants.map((l) => l.chemin),
+      // Un taux sur un dénominateur d'un ou deux ne veut rien dire : il est rendu, mais accompagné
+      // de son dénominateur, jamais seul (même discipline que SMART-CONSO-TOKEN).
+      part: concernes.length ? Math.round(((concernes.length - manquants.length) / concernes.length) * 100) : null,
+    };
+  });
+  return { mesurable: true, lignes,
+    horsPortee: "une exigence dit ce qu'une classe APPELLE, jamais ce qu'un fichier précis devrait faire : un outil peut légitimement n'avoir aucun chiffre heuristique à nuancer. La liste est un point de départ, jamais une liste de coupables (Article 19)." };
+}
+
 // DEUX NATURES D'ÉCART, ET LES CONFONDRE ÉTAIT UNE ERREUR QU'UN TEST A ATTRAPÉE. J'avais écrit que
 // tout écart devait être une question, en reprenant la règle qu'Abraham applique à la pertinence
 // d'une règle. Elle ne vaut pas ici telle quelle : « cet outil n'appelle jamais
@@ -1207,7 +1265,7 @@ export function recenserLesScripts({ root = ROOT, lireDossier = readdirSync, lir
 // revanche un jugement que l'outil n'a pas à rendre. Le CONSTAT se mesure, la QUESTION se pose —
 // et c'est exactement la frontière de l'Article 28 entre ce qui devient une tâche et ce qui monte
 // à l'arbitrage.
-export function ecartsDuRecensement(recensement) {
+export function ecartsDuRecensement(recensement, exigences = EXIGENCES_PAR_CLASSE) {
   if (!recensement?.mesurable) return [];
   const out = [];
   for (const l of recensement.lignes) {
@@ -1220,9 +1278,13 @@ export function ecartsDuRecensement(recensement) {
     if (l.type === "bibliotheque-solitaire") out.push({ chemin: l.chemin, nature: "question", question: "importée par un seul fichier : à fusionner dans son unique client, ou bien il lui manque les clients qu'elle attendait ?" });
     if (l.type === "utilitaire-sans-fiche") out.push({ chemin: l.chemin, nature: "question", question: "exécutable et nommé par AUCUN document du dépôt : outil qu'on a oublié de documenter, ou script jetable qui a survécu ?" });
 
-    if (l.type === "outil" && !l.classes.includes("declare-sa-fiabilite")) out.push({ chemin: l.chemin, nature: "constat", question: "outil qui ne déclare jamais sa marge d'erreur — ses chiffres se lisent comme des certitudes" });
-    if (l.type === "outil" && l.classes.includes("scanne-le-depot") && !l.classes.includes("refuse-de-mesurer")) out.push({ chemin: l.chemin, nature: "constat", question: "scanne le dépôt sans jamais savoir répondre « pas mesuré » : que rend-il le jour où il ne peut pas regarder ? (leçon L5)" });
-    if (l.type === "outil" && l.classes.includes("coute-des-appels-api") && !/smart-conso/i.test(l.chemin) && !l.classes.includes("declare-sa-fiabilite")) out.push({ chemin: l.chemin, nature: "constat", question: "coûte de vrais appels API sans déclarer sa marge — l'Article 22 demande une consultation avant, la déclaration après" });
+    // LES EXIGENCES DE CLASSE, lues dans la table et jamais réécrites ici — c'est ce qui fait
+    // qu'une exigence nouvelle s'applique à TOUS les outils le jour où elle est écrite.
+    for (const ex of exigences) {
+      if (!ex.sApplique(l)) continue;
+      if (l.classes.includes(ex.exige)) continue;
+      out.push({ chemin: l.chemin, nature: "constat", exigence: ex.cle, question: ex.pourquoi });
+    }
   }
   return out;
 }
@@ -1277,6 +1339,13 @@ function main() {
     for (const e of constats) console.log(`· ${e.chemin} — ${e.question}`);
     console.log(`\n--- ${questions.length} QUESTION(S) : un jugement que cet outil ne rend pas ---`);
     for (const e of questions) console.log(`· ${e.chemin} — ${e.question}`);
+    const niv = nivellementParClasse(rec);
+    if (niv.mesurable) {
+      console.log("\n--- LE NIVELLEMENT : ce que chaque classe EXIGE, et qui l'atteint ---");
+      console.log("(le dénominateur est celui de l'EXIGENCE, jamais la population entière : un taux sur 82 pour une règle qui ne concerne que les 22 qui scannent serait juste sur le papier et faux sur le fond)");
+      for (const l of niv.lignes) console.log(`${String(l.part).padStart(4)}%  ${String(l.atteignent).padStart(3)}/${String(l.concernes).padEnd(3)}  ${l.cle} → doit porter « ${l.exige} »`);
+      console.log(`\n   ${niv.horsPortee}`);
+    }
     console.log(`\nHORS PORTÉE : ${rec.horsPortee}`);
     const plan = buildPlanDaction(
       constats.map((e) => ({ pourquoi: `${e.chemin} : ${e.question}` })),

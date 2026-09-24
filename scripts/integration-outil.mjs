@@ -30,6 +30,7 @@ import { join } from "node:path";
 import { printReliabilityNotice, sansAccents } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader } from "./report-template.mjs";
+import { EXIGENCES_PAR_CLASSE, classesDuScript, typeDeScript } from "./cassandra-rh.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -242,15 +243,56 @@ export function etatIntegration(slug, { root = ROOT, readFileImpl = readFileSync
 // planDIntegration() — ce qu'il reste à faire, dans l'ordre, prêt à coller. Les registres facultatifs
 // sont donnés à part : les mélanger ferait passer un choix (« devient-il Gardien ? ») pour une
 // formalité à cocher, et c'est une décision de fond, pas une ligne de plus.
+// LES OBLIGATIONS DE CLASSE (2026-09-24, chantier 2.4 du plan de nuit) — demande explicite de
+// l'utilisateur : rendre une intégration OBLIGATOIRE plutôt que « sauvage », et sa précision sur
+// l'Article 24 : « si un nouveau script arrive, toutes les fonctionnalités et
+// paramètres/certifications sont appliquées au nouvel outil qui rejoint l'équipe ».
+//
+// LE TROU QUE ÇA FERME, ET IL ÉTAIT ENTIER : ce plan d'intégration ne savait vérifier qu'une chose,
+// « es-tu inscrit dans les registres ? ». Un outil pouvait donc être parfaitement intégré au sens de
+// cette fonction en ne déclarant jamais sa marge d'erreur, en ne sachant pas répondre « pas mesuré »
+// et en ne concluant par aucun plan d'action. Mesuré le soir même sur le dépôt réel : selon
+// l'exigence, 45 à 76 % seulement des outils concernés l'atteignent. Les registres étaient à jour
+// et les obligations de fond, invisibles.
+//
+// LES EXIGENCES NE SONT PAS RECOPIÉES ICI : elles sont LUES chez CASSANDRA, où elles vivent avec les
+// classes qu'elles gouvernent. Une exigence ajoutée là-bas s'applique donc à la prochaine intégration
+// sans que ce fichier bouge — c'est précisément ce que l'Article 24 exige, et le contraire de la
+// liste recopiée qui se périme au premier ajout.
+export function obligationsDeClasse(slug, { root = ROOT, readFileImpl = readFileSync, exigences = EXIGENCES_PAR_CLASSE } = {}) {
+  let source;
+  try { source = readFileImpl(join(root, `scripts/${slug}.mjs`), "utf8"); } catch {
+    return { mesurable: false, pourquoi: `scripts/${slug}.mjs est introuvable — aucune obligation déduite, et surtout aucune supposée` };
+  }
+  const classes = classesDuScript(source);
+  // Un outil en cours d'intégration EST un outil : c'est le type visé, jamais le type constaté
+  // avant qu'il soit documenté. Le mesurer autrement l'exempterait de tout au moment précis où il
+  // faut l'exiger.
+  const ligne = { chemin: `scripts/${slug}.mjs`, type: "outil", classes };
+  const dues = exigences.filter((e) => e.sApplique(ligne));
+  return {
+    mesurable: true, classes,
+    tenues: dues.filter((e) => classes.includes(e.exige)).map((e) => e.cle),
+    manquantes: dues.filter((e) => !classes.includes(e.exige)).map((e) => ({ cle: e.cle, exige: e.exige, pourquoi: e.pourquoi })),
+  };
+}
+
 export function planDIntegration(slug, options = {}) {
   const etat = etatIntegration(slug, options);
+  const obligations = obligationsDeClasse(slug, options);
   return {
     slug,
     fait: etat.filter((e) => e.mesurable && e.present).map((e) => e.cle),
     restant: etat.filter((e) => e.mesurable && !e.present && !e.facultatif),
     optionnel: etat.filter((e) => e.mesurable && !e.present && e.facultatif),
     nonMesurable: etat.filter((e) => !e.mesurable),
-    complet: etat.every((e) => !e.mesurable || e.present || e.facultatif),
+    obligations,
+    // COMPLET veut dire les DEUX : inscrit partout ET à niveau sur ce que sa classe exige. Les
+    // séparer laisserait exactement le trou d'avant — un outil « intégré » qui ne tient aucune des
+    // obligations de fond de l'équipe qu'il rejoint. Une obligation non mesurable ne bloque pas :
+    // ne pas savoir n'autorise jamais à conclure, dans un sens comme dans l'autre.
+    complet: etat.every((e) => !e.mesurable || e.present || e.facultatif)
+      && (!obligations.mesurable || obligations.manquantes.length === 0),
   };
 }
 
