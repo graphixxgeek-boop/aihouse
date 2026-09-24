@@ -1284,6 +1284,17 @@ function main() {
     console.log(`\nHORS PORTÉE : le poids dit s'il faut DÉCOUPER, jamais dans quel ordre traiter — l'ordre vient du palier de priorité, et les deux ne se remplacent pas.`);
     return;
   }
+  // Sous-commande `suites` (2026-09-24, tâche #698) : la chaîne « mesure → suite », le maillon que
+  // l'Article 28 laissait ouvert. Sous-commande à part et non un bloc du rapport d'état, parce
+  // qu'elle ne dit pas OÙ ON EN EST mais CE QU'ON A LAISSÉ TOMBER — deux questions qu'on ne lit pas
+  // au même moment ni dans le même état d'esprit.
+  if (process.argv[2] === "suites") {
+    const rows = loadAllTaskRows();
+    console.log(`\n=== CONSTATS SANS SUITE — la chaîne « mesure → suite » sur TOUT le registre ===\n`);
+    for (const l of formatConstatsSansSuiteLines(rows, { limite: Number(process.argv[3]) || 25 })) console.log(l);
+    console.log(`\nHORS PORTÉE : cet outil voit qu'un constat ne conclut pas ; il ne dit jamais si le constat MÉRITAIT une suite — ça se lit, et ça se tranche avec l'utilisateur.`);
+    return;
+  }
   const [, , zoomArg = "en_cours", formatArg = "liste"] = process.argv;
   const zoom = ZOOM_LEVELS.includes(zoomArg) ? zoomArg : "en_cours";
   const format = FORMATS.includes(formatArg) ? formatArg : "liste";
@@ -1578,6 +1589,156 @@ export function findAutoAttribueesMalSignalees(rows = []) {
     }
   }
   return ecarts;
+}
+
+
+// ===========================================================================================
+// LA CHAÎNE « MESURE → SUITE » (2026-09-24, tâche #698)
+// ===========================================================================================
+// L'Article 28 câble `rapport → analyse → plan d'action → tâches`. Il ne dit RIEN du maillon que
+// l'utilisateur a trouvé le 2026-09-24, et qui est exactement du même bois : une TÂCHE qui mesure
+// quelque chose, livre un constat chiffré, se clôt — et n'ouvre rien derrière elle. Sa formulation
+// exacte : « tu as fait la mesure, ok. Mais du coup la tache est accomplie et on n'en reparle
+// jamais ? il faut absolument qu'il y ait une autre tache liée ou un calibrage pour le fond de la
+// question ».
+//
+// IL AVAIT RAISON AVANT MOI, et c'est mesuré : sur les dix tâches de mesure de la nuit du
+// 2026-09-24, ZÉRO n'avait ouvert de suite — y compris celles qui rapportaient 20 outils sans
+// couche lourde, 14 détecteurs muets et 11 outils hors de la norme d'uniformité. Le constat était
+// écrit, chiffré, commité, et rien au monde ne devait jamais le relire.
+//
+// CE QUI REND CE DÉFAUT INVISIBLE est le fil rouge de tout ce projet : une tâche de mesure CLOSE
+// ressemble trait pour trait à un problème réglé. Le registre affiche « Terminée », et c'est vrai
+// — la mesure a bien été faite. Ce qui manque n'est pas DANS la ligne, il est dans son absence de
+// descendance, et rien dans le registre ne montre une absence.
+//
+// POURQUOI DEUX MARQUES EXPLICITES plutôt qu'une devinette sur les « #nnn » déjà présents : une
+// ligne qui cite une autre tâche peut aussi bien annoncer une suite que renvoyer à son origine, et
+// aucun programme ne peut trancher entre les deux en lisant de la prose. Deviner produirait un
+// verdict qui a l'air mesuré sans l'être (leçon L12). Les marques, elles, ne se confondent avec
+// rien. Le prix à payer est déclaré franchement plus bas : tant qu'elles ne sont pas en usage,
+// cette fonction refuse de conclure au lieu de rendre un zéro rassurant.
+
+export const MARQUE_SUITE = "SUITE";              // « SUITE : #712 » — une vraie tâche est ouverte
+export const MARQUE_SANS_SUITE = "SANS SUITE";    // « SANS SUITE : <raison écrite> » — décision assumée
+export const LONGUEUR_MIN_RAISON = 40;
+
+// Un « constat » au sens de ce contrôle n'est pas n'importe quel chiffre : c'est un chiffre qui
+// compte quelque chose qui MANQUE. « 227 groupes de tests au vert » mesure le travail lui-même et
+// n'appelle aucune suite ; « 20 outils sans couche lourde » en appelle une. La distinction se fait
+// sur la proximité d'un nombre et d'un mot de manque, jamais sur la présence d'un nombre seul —
+// sans quoi l'outil accuserait la moitié du registre et cesserait d'être lu (leçon L4).
+// PREMIER PASSAGE RÉEL, ET IL A ÉCHOUÉ (2026-09-24) : la première version cherchait « un nombre
+// près d'un mot de manque » et a accusé 478 des 577 lignes closes. C'est un détecteur inutilisable,
+// et la cause est lisible : ce projet ÉCRIT en permanence « jamais X », « aucun Y », « sans Z » —
+// c'est son style de rédaction, pas un constat d'écart. Un garde-fou qui accuse à tort cesse
+// d'être lu (leçon L4), donc il vaut mieux qu'il en rate que d'en inventer.
+//
+// LA FORME RÉELLE d'un constat qui appelle une suite, relevée sur les vrais cas de la nuit du
+// 2026-09-24 : un NOMBRE, un NOM DÉNOMBRABLE du paysage (outils, détecteurs, écarts, commits…),
+// puis un mot de manque APRÈS, dans la même respiration. « 20 outils sans couche lourde »,
+// « 14 détecteurs muets », « 18 des 20 derniers commits avaient sauté cette étape ». Le mot de
+// manque avant le nombre ne compte pas : « jamais une liste de 5 pièces » n'est pas un écart.
+const NOM_DENOMBRABLE = "outils?|détecteurs?|detecteurs?|scripts?|écarts?|ecarts?|règles?|regles?|fichiers?|tâches?|taches?|documents?|rapports?|fonctions?|chemins?|registres?|commits?|constats?|agents?|blueprints?|items?|prestations?|lignes?|articles?|signaux|sondes?";
+const COMPTE_DE_CHOSES = new RegExp(`\\b(\\d{1,4})\\s+(?:(?:des?|sur|les)\\s+\\d{1,4}\\s+)?(?:\\S+\\s+){0,2}(?:${NOM_DENOMBRABLE})\\b`, "gi");
+// Mots de manque resserrés : chacun dit qu'une chose ATTENDUE n'est pas là. « jamais » et « aucun »
+// sont volontairement exclus seuls — trop fréquents en prose ici — et ne comptent que soudés à un
+// verbe d'usage (« n'ont jamais servi », « jamais lancé »).
+const MOT_DE_MANQUE = /muets?\b|manquants?\b|hors (?:de la )?norme|non (?:couverts?|testés?|testes?|déclarés?|declares?|branchés?|branches?|câblés?|cables?|lus?|exploités?|conclus?|traités?|mesurés?|suivis?|documentés?)|périmés?|perimes?|mortes?\b|morts?\b|vides?\b|inexistants?|divergents?|dorment|dormaient|oubliés?|sautés?|avaient sauté|ont sauté|(?:n['’](?:ont|est|a|avaient)|ne\s+\w+)\s+(?:jamais|aucun)|jamais (?:servi|lancés?|lancé|lus?|relus?|sollicités?|utilisés?|appelés?|exécutés?|tournés?|consultés?)|sans (?:couche|suite|porteur|mécanisme|garde-fou|test|fiche|blueprint|raison|rapport|plan|trace|retour|preuve)|à corriger|à combler|restent? ouverts?|ne concluent? (?:toujours )?pas|ne (?:sert|servent) (?:à )?rien/i;
+const FENETRE_APRES = 90;
+
+export function estUnConstat(row) {
+  const d = String(row?.detail ?? "");
+  for (const m of d.matchAll(COMPTE_DE_CHOSES)) {
+    const apres = d.slice(m.index, m.index + m[0].length + FENETRE_APRES);
+    if (MOT_DE_MANQUE.test(apres)) {
+      return { constat: true, extrait: apres.trim(),
+        pourquoi: "un compte de choses du paysage, suivi d'un mot de manque : c'est un écart chiffré, pas le récit d'un travail fait" };
+    }
+  }
+  return { constat: false, extrait: "",
+    pourquoi: "aucun écart chiffré repéré — la ligne peut décrire un vrai travail, elle ne rapporte simplement pas de manque compté" };
+}
+
+// Trois états, jamais deux — le même découpage que l'Article 28, pour la même raison : sans le
+// troisième, « écarté » deviendrait la case fourre-tout qu'on coche pour faire taire le contrôle.
+export function suiteDuConstat(row, { numerosConnus = null } = {}) {
+  const d = String(row?.detail ?? "");
+  const mSuite = d.match(new RegExp(`(?:^|[^A-Za-zÀ-ÿ])${MARQUE_SUITE}\\s*:\\s*#?(\\d{1,4})\\b`, "i"));
+  if (mSuite) {
+    const cible = Number(mSuite[1]);
+    if (numerosConnus && !numerosConnus.has(cible)) {
+      // LE CAS LE PLUS VICIEUX, et il est le même que celui de checkActionChain() : une référence
+      // morte ressemble à un lien, donc elle rassure — c'est pire que l'absence de lien.
+      return { etat: "reference-morte", cible,
+        pourquoi: `la suite annoncée est #${cible}, et aucune tâche ne porte ce numéro : la chaîne a l'air fermée alors qu'elle ne mène nulle part` };
+    }
+    return { etat: "tache", cible, pourquoi: `suite ouverte : #${cible}` };
+  }
+  const mSans = d.match(new RegExp(`(?:^|[^A-Za-zÀ-ÿ])${MARQUE_SANS_SUITE}\\s*:\\s*([^|]{0,400})`, "i"));
+  if (mSans) {
+    const raison = (mSans[1] ?? "").trim();
+    if (raison.length < LONGUEUR_MIN_RAISON) {
+      return { etat: "raison-vide", cible: null,
+        pourquoi: `« ${MARQUE_SANS_SUITE} » posé sans raison lisible (${raison.length} car.) : un écart sans raison écrite n'est pas une décision, c'est un abandon déguisé` };
+    }
+    return { etat: "raison", cible: null, pourquoi: "écarté avec sa raison écrite" };
+  }
+  return { etat: "aucune", cible: null,
+    pourquoi: "la ligne ne porte ni suite ouverte ni raison de ne pas en ouvrir — le constat s'arrête là où il a été écrit" };
+}
+
+const CLOSE = /termin|clos|résolu|resolu|\bfait\b/i;
+
+export function findConstatsSansSuite(rows = []) {
+  const numerosConnus = new Set(rows.map((r) => r.numero).filter(Boolean));
+  const closes = rows.filter((r) => CLOSE.test(String(r.statut ?? "")));
+  const constats = closes.filter((r) => estUnConstat(r).constat);
+  const parEtat = { tache: 0, raison: 0, aucune: 0, "reference-morte": 0, "raison-vide": 0 };
+  const ecarts = [];
+  for (const r of constats) {
+    const s = suiteDuConstat(r, { numerosConnus });
+    parEtat[s.etat] += 1;
+    if (s.etat !== "tache" && s.etat !== "raison") {
+      ecarts.push({ numero: r.numero, sujet: r.sousSujet, etat: s.etat, pourquoi: s.pourquoi,
+        extrait: estUnConstat(r).extrait.slice(0, 180) });
+    }
+  }
+  // LE FAUX VERT QUE CETTE FONCTION AURAIT PRODUIT SI ELLE AVAIT ÉTÉ ÉCRITE À L'ENVERS : le jour
+  // de sa naissance, AUCUNE ligne du registre ne peut porter les deux marques, puisqu'elles
+  // viennent d'être inventées. Un outil qui compterait « 0 suite ouverte » et s'arrêterait là
+  // rendrait un chiffre vrai et un sens faux. La mesure qui a un sens dès aujourd'hui est donc
+  // l'inverse : combien de constats clos n'ont AUCUNE suite — et celle-là est immédiatement juste.
+  const marquesEnUsage = parEtat.tache + parEtat.raison + parEtat["reference-morte"] + parEtat["raison-vide"] > 0;
+  return {
+    mesurable: constats.length > 0,
+    totalLignes: rows.length, closes: closes.length, constats: constats.length,
+    parEtat, ecarts, marquesEnUsage,
+    pourquoi: constats.length === 0
+      ? "aucun constat chiffré repéré parmi les lignes closes : ce zéro dit que le motif n'a rien trouvé, il ne certifie pas que le registre est sain"
+      : marquesEnUsage
+        ? "les deux marques sont en usage : la part conclue et la part non conclue sont toutes les deux lisibles"
+        : `aucune ligne ne porte encore « ${MARQUE_SUITE} » ni « ${MARQUE_SANS_SUITE} » — les marques viennent d'être créées, donc 100 % des constats comptent comme non conclus, ce qui est le vrai état du registre et non un artefact`,
+  };
+}
+
+export function formatConstatsSansSuiteLines(rows = [], { limite = 25 } = {}) {
+  const r = findConstatsSansSuite(rows);
+  const L = [];
+  if (!r.mesurable) { L.push(`⚠️ NON MESURABLE — ${r.pourquoi}`); return L; }
+  const conclus = r.parEtat.tache + r.parEtat.raison;
+  L.push(`Constats chiffrés parmi les ${r.closes} tâche(s) close(s) : ${r.constats}.`);
+  L.push(`Conclus : ${conclus} (${r.parEtat.tache} avec une suite ouverte, ${r.parEtat.raison} écartés avec raison écrite).`);
+  L.push(`NON CONCLUS : ${r.ecarts.length} — un constat mesuré, écrit, clos, et que rien ne rouvrira.`);
+  if (r.parEtat["reference-morte"]) L.push(`  🔴 dont ${r.parEtat["reference-morte"]} référence(s) MORTE(S) : pire qu'une absence, ça ressemble à un lien.`);
+  if (r.parEtat["raison-vide"]) L.push(`  🟠 dont ${r.parEtat["raison-vide"]} « ${MARQUE_SANS_SUITE} » sans raison lisible.`);
+  if (!r.marquesEnUsage) L.push(`  ⚠️ ${r.pourquoi}`);
+  for (const e of r.ecarts.slice(0, limite)) {
+    L.push(`  · ${numeroTache(e.numero)} « ${String(e.sujet).slice(0, 70)} » — ${e.pourquoi}`);
+    if (e.extrait) L.push(`      constat : « …${e.extrait}… »`);
+  }
+  if (r.ecarts.length > limite) L.push(`  · … et ${r.ecarts.length - limite} autre(s)`);
+  return L;
 }
 
 export function formatChantier5Lines(rows = [], { ouvertes = null } = {}) {
