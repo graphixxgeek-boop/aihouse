@@ -11303,6 +11303,20 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     assert.ok(typeof ex.sApplique === 'function' && ex.exige && ex.pourquoi, 'an exigence is data, never an if buried in a function: it says WHO it applies to, WHICH class is owed and WHAT it costs not to have it — the three ifs it replaces were exactly the frozen list Article 24 forbids, and a fourth would have required reopening the function');
     assert.ok(crh2.CLASSES_TRANSVERSES.some((c) => c.cle === ex.exige), 'and every exigence points at a class that really exists: an exigence owed to a class nobody measures would be unsatisfiable forever, which reads like a permanent failure rather than a missing probe');
   }
+  // VERSION ET RICHESSE (2026-09-24, chantier 3.4) — deux échelles séparées, à sa demande.
+  const vFausse = crh2.versionDepuisGit('scripts/x.mjs', { sh: () => { throw new Error('git absent'); } });
+  assert.equal(vFausse.mesurable, false, 'no git history yields NOT MEASURED rather than v0.0, which would read as a real version');
+  assert.equal(crh2.versionDepuisGit('scripts/x.mjs', { sh: () => '' }).mesurable, false, 'and a file with no commit at all is "never versioned", which is not the same thing as version zero');
+  let appel = 0;
+  const vFaux = crh2.versionDepuisGit('scripts/x.mjs', { sh: (cmd) => (cmd.includes('log') ? 'aaa\nbbb\nccc' : (appel++ === 0 ? '2' : '0')) });
+  assert.deepEqual([vFaux.majeur, vFaux.mineur, vFaux.version], [1, 2, 'v1.2'], 'the MAJOR counts only the commits that touched the EXPORTED SURFACE — the times the tool gained or lost a capability — never every commit: counting them all would produce a number that grows with agitation rather than with capability, and such a number still reads as a measurement');
+  const vReelle = crh2.versionDepuisGit('scripts/agent-du-temps.mjs');
+  assert.ok(vReelle.mesurable && vReelle.majeur >= 1, 'run against the REAL repository it versions retroactively with nothing to enter by hand — agent-du-temps, born tonight, comes out at its first capability commit');
+  const riche = crh2.richesse({ exports: 9, classes: ['refuse-de-mesurer', 'declare-sa-fiabilite', 'conclut-en-plan-daction', 'tient-un-registre'], couches: ['light', 'warrior'] });
+  assert.ok(riche.score === 6 && riche.sur === 7, 'richness counts what a tool CARRIES today, each criterion worth one point and naming what it measures — a bare score aggregates, therefore hides, which is why a pertinence score was refused in MOÏSE for the same reason');
+  assert.ok(riche.manquants.every((m) => m.quoi), 'and every missing point says what it would have meant, so the list is actionable rather than a grade');
+  assert.ok(/jamais ce qu'il VAUT/.test(crh2.richesse({}).horsPortee), 'with no threshold anywhere, deliberately: a poor tool is not a bad tool — find-booster does one thing and does it well, and comes out poor with nothing to fix');
+
   // LES TROIS NIVEAUX DE SCAN (2026-09-24, chantier 3.3) — light / target / warrior.
   assert.deepEqual(Object.keys(crh2.NIVEAUX_DE_SCAN), ['light', 'target', 'warrior'], 'the three levels the user named, and what separates them is the COST rather than any felt depth: a free layer can run at every commit, a paid one cannot, and that frontier decides everything else (Articles 8 and 22)');
   // (1) Tourner à travers le filet de sécurité EST tourner à chaque commit.

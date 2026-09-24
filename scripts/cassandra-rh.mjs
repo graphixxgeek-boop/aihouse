@@ -1200,6 +1200,74 @@ export function recenserLesScripts({ root = ROOT, lireDossier = readdirSync, lir
 // documents et elle vaut ici (un outil capable d'écrire « ce script est inutile » verrait un jour ce
 // jugement appliqué par personne en particulier).
 // ————————————————————————————————————————————————————————————————————————
+// LA VERSION ET LA RICHESSE D'UN OUTIL (2026-09-24, chantier 3.4)
+// ————————————————————————————————————————————————————————————————————————
+//
+// DEMANDE DE L'UTILISATEUR : « des numéros de version par outil, rétroactifs si possible, plus une
+// échelle de richesse séparée ». Calibré en fenêtre dédiée : « **dérive-les de l'historique git** ».
+//
+// POURQUOI DEUX ÉCHELLES ET NON UNE SEULE, parce que c'est lui qui a demandé de les séparer et que
+// la raison est bonne : une VERSION dit ce qui s'est PASSÉ (combien de fois cet outil a changé, et
+// combien de fois il a changé de CAPACITÉS) ; une RICHESSE dit ce qu'il EST aujourd'hui. Un outil
+// écrit d'un jet et jamais retouché a une version basse et peut être très riche ; un outil repris
+// vingt fois peut rester pauvre. Les fondre en un seul chiffre effacerait exactement la différence
+// qui rend chacun utile.
+//
+// CE QUI REND LA VERSION HONNÊTE, et c'est le seul choix qui compte ici : le MAJEUR ne compte pas
+// les commits, il compte les commits qui ont TOUCHÉ LA SURFACE EXPORTÉE — un `export` ajouté ou
+// retiré. C'est-à-dire les fois où l'outil a gagné ou perdu une capacité, et non les fois où on a
+// corrigé une faute de frappe dedans. Compter tous les commits aurait rendu un numéro qui grandit
+// avec l'agitation plutôt qu'avec les capacités, et un chiffre pareil se lit pourtant comme une
+// mesure. Rétroactif par construction : tout est déjà dans git, rien n'est à saisir à la main.
+
+export function versionDepuisGit(chemin, { sh: shImpl = sh } = {}) {
+  let commits;
+  try {
+    commits = shImpl(`git log --format='%H' --follow -- ${chemin}`).trim().split("\n").filter(Boolean);
+  } catch {
+    return { mesurable: false, pourquoi: `git n'a pas pu lire l'historique de ${chemin} — aucune version déduite, et surtout aucune supposée` };
+  }
+  if (!commits.length) return { mesurable: false, pourquoi: `${chemin} n'a aucun commit : jamais versionné, ce qui n'est pas la même chose qu'une version 0` };
+  let majeur = 0;
+  for (const h of commits) {
+    let diff = "";
+    try { diff = shImpl(`git show ${h} -- ${chemin} | grep -cE '^[+-]export ' || true`).trim(); } catch { continue; }
+    if (Number(diff) > 0) majeur += 1;
+  }
+  const mineur = commits.length - majeur;
+  return {
+    mesurable: true, majeur, mineur, commits: commits.length,
+    version: `v${majeur}.${mineur}`,
+    pourquoi: `${majeur} commit(s) ont touché la surface exportée (une capacité gagnée ou perdue), ${mineur} l'ont modifié sans la changer`,
+  };
+}
+
+// LA RICHESSE — ce que l'outil EST, indépendamment de son passé. Chaque critère vaut UN point et
+// dit ce qu'il mesure : un score sans ses composantes agrège, donc cache (même raison qui a fait
+// refuser un score de pertinence chez MOÏSE).
+export const CRITERES_DE_RICHESSE = [
+  { cle: "surface", quoi: "expose au moins cinq fonctions : il fait plusieurs choses, pas une seule", mesure: (c) => (c.exports ?? 0) >= 5 },
+  { cle: "refuse-de-mesurer", quoi: "sait répondre « pas mesuré » plutôt que zéro", mesure: (c) => c.classes?.includes("refuse-de-mesurer") },
+  { cle: "declare-sa-marge", quoi: "avertit qu'il peut se tromper", mesure: (c) => c.classes?.includes("declare-sa-fiabilite") },
+  { cle: "conclut", quoi: "termine par un plan d'action plutôt que par un rapport (Article 28)", mesure: (c) => c.classes?.includes("conclut-en-plan-daction") },
+  { cle: "memoire", quoi: "tient un registre : il se souvient d'un passage à l'autre", mesure: (c) => c.classes?.includes("tient-un-registre") },
+  { cle: "rend-du-html", quoi: "produit une page que l'utilisateur lit vraiment", mesure: (c) => c.classes?.includes("rend-du-html") },
+  { cle: "deux-couches", quoi: "offre plus d'une profondeur de scan", mesure: (c) => (c.couches ?? []).length >= 2 },
+];
+
+export function richesse(contexte = {}, criteres = CRITERES_DE_RICHESSE) {
+  const tenus = criteres.filter((c) => !!c.mesure(contexte));
+  return {
+    score: tenus.length, sur: criteres.length,
+    tenus: tenus.map((c) => c.cle),
+    manquants: criteres.filter((c) => !tenus.includes(c)).map((c) => ({ cle: c.cle, quoi: c.quoi })),
+    // AUCUN SEUIL, ET C'EST DÉLIBÉRÉ : un outil pauvre n'est pas un mauvais outil. `find-booster`
+    // fait une seule chose et la fait bien. La richesse se LIT à côté de la vocation, jamais seule.
+    horsPortee: "la richesse dit ce qu'un outil PORTE, jamais ce qu'il VAUT : un outil qui fait une seule chose et la fait bien sort pauvre et n'a rien à corriger. Aucun seuil n'est posé, et c'est délibéré.",
+  };
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LES TROIS NIVEAUX DE SCAN — light / target / warrior (2026-09-24, chantier 3.3)
 // ————————————————————————————————————————————————————————————————————————
 //
@@ -1607,6 +1675,38 @@ function main() {
     );
     console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
     for (const l of plan.lignes) console.log(l);
+    return;
+  }
+  if (sub === "versions") {
+    console.log(CASSANDRA_PERSONA);
+    const rec = recenserLesScripts();
+    if (!rec.mesurable) { console.log(`\nPAS MESURÉ — ${rec.pourquoi}`); return; }
+    let crochets = ""; let filet = "";
+    try { crochets = readFileSync(join(ROOT, "scripts/hooks/post-commit"), "utf8"); } catch { /* absent */ }
+    try { filet = readFileSync(join(ROOT, "scripts/check-house.mjs"), "utf8"); } catch { /* absent */ }
+    const couteux = outilsCouteuxDuCatalogue(PRESTATIONS);
+    console.log("\n=== VERSION ET RICHESSE, OUTIL PAR OUTIL ===\n");
+    console.log("Deux échelles SÉPARÉES, à la demande de l'utilisateur, et la raison est bonne : la VERSION dit ce qui");
+    console.log("s'est passé (combien de fois l'outil a changé de capacités), la RICHESSE dit ce qu'il EST aujourd'hui.");
+    console.log("Un outil écrit d'un jet peut être très riche ; un outil repris vingt fois peut rester pauvre.\n");
+    console.log(`${"OUTIL".padEnd(30)}${"VERSION".padEnd(10)}RICHESSE`);
+    const lignes = [];
+    for (const l of rec.lignes.filter((x) => x.type === "outil")) {
+      let src = ""; try { src = readFileSync(join(ROOT, l.chemin), "utf8"); } catch { continue; }
+      const v = versionDepuisGit(l.chemin);
+      const r = richesse({
+        exports: (src.match(/^export (function|const)/gm) || []).length,
+        classes: l.classes,
+        couches: couchesDuScript(l.chemin, src, { crochets, filetDeSecurite: filet, couteux }),
+      });
+      lignes.push({ nom: l.chemin.replace("scripts/", "").replace(".mjs", ""), v, r });
+    }
+    lignes.sort((a, b) => b.r.score - a.r.score);
+    for (const x of lignes) console.log(`${x.nom.padEnd(30)}${(x.v.mesurable ? x.v.version : "n/a").padEnd(10)}${x.r.score}/${x.r.sur}  ${x.r.tenus.join(", ")}`);
+    console.log(`\nHORS PORTÉE : ${richesse({}).horsPortee}`);
+    console.log("Le MAJEUR ne compte pas les commits : il compte ceux qui ont touché la surface exportée, c'est-à-dire");
+    console.log("les fois où l'outil a gagné ou perdu une capacité. Compter tous les commits aurait rendu un numéro qui");
+    console.log("grandit avec l'agitation plutôt qu'avec les capacités — et un chiffre pareil se lit pourtant comme une mesure.");
     return;
   }
   if (sub === "couches") {
