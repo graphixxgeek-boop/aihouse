@@ -155,6 +155,7 @@ export const AGENT_CATEGORIES = {
   // Membre, jamais Gardien sacré : il ne scanne aucune qualité de code — il rend l'heure et
   // garde la mémoire des estimations. Le premier volet du critère double n'est pas rempli.
   "agent-du-temps": "Membre",
+  "agent-des-noms": "Membre",   // Membre et jamais Gardien sacré : son scan ne tourne pas à CHAQUE commit — il répond à un ÉVÉNEMENT, un renommage envisagé
   // integration-outil (2026-09-22) : Membre, jamais Gardien. Il ne scanne pas la qualité du code et
   // ne tourne pas à chaque commit — les deux volets du critère d'appartenance, dont aucun n'est
   // facultatif (Article 20). Il répond à la demande, avant de faire entrer un outil.
@@ -416,6 +417,7 @@ export const TOOL_RELIABILITY = {
   "abraham-les-references": { nature: "heuristique", pourquoi: "la forme de numérotation d'un document est DÉRIVÉE par essais successifs, le poids en tokens est estimé, et une règle dont le mécanisme est décrit en prose sans être nommé compte comme sans porteur — il sous-déclare plutôt qu'il n'invente, et refuse de découper un document dont aucune forme ne ressort" },
   "moise-tables-de-loi": { nature: "heuristique", pourquoi: "le poids en tokens est estimé, la nature d'un Article est PROPOSÉE depuis des signaux mécaniques, et un porteur décrit en prose sans être nommé compte comme absent — elle sous-déclare plutôt qu'elle n'invente, mais ne remplace jamais une lecture" },
   "the-equalizer": { nature: "mecanique", pourquoi: "il n'estime rien : il relit le référentiel des standards et relaie des verdicts déjà calculés ailleurs" },
+  "agent-des-noms": { nature: "heuristique", pourquoi: "la NATURE d'une occurrence est déduite de son emplacement et de la forme de sa ligne — un motif, jamais un parseur : une prose vivante rangée dans un dossier d'archives sera classée historique, et c'est le sens sûr de l'erreur, celui qui laisse une mention périmée plutôt que de réécrire une archive" },
   "agent-du-temps": { nature: "heuristique", pourquoi: "l'heure elle-même est un fait, mais sa SOURCE ne l'est pas : quand le réseau est refusé il rend l'horloge locale, invérifiable depuis le conteneur — et un facteur d'ajustement calculé sur trois mesures reste une tendance, jamais une loi" },
   "tool-learning": { nature: "heuristique", pourquoi: "il juge une trajectoire : sous trois passages il refuse de conclure, et une baisse de trouvailles peut venir d'un code qui s'est amélioré plutôt que d'un outil qui régresse" },
   "cassandra-rh": { nature: "heuristique", pourquoi: "relaie et recoupe ce que les autres outils estiment — elle hérite de leurs approximations" },

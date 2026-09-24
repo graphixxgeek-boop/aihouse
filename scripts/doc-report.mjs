@@ -145,6 +145,10 @@ export const REGISTRIES = [
   { slug: "the-equalizer", label: "THE-EQUALIZER", family: "Suite Dette & Structure du code", path: "docs/the-equalizer/", decision: "texte", scriptPath: "scripts/the-equalizer.mjs" },
   // Décision « texte » assumée : son rapport se lit en trois lignes dans le terminal au moment où
   // on a besoin de l'heure. Une page HTML pour dire l'heure serait une page qu'on n'ouvre jamais.
+  // Décision « texte » assumée : un plan de renommage se lit ligne à ligne dans le terminal, juste
+  // avant de toucher au dépôt, et se vérifie avec la commande jumelle juste après. Une page HTML
+  // s'ouvrirait après coup, c'est-à-dire trop tard pour le geste qu'elle est censée encadrer.
+  { slug: "agent-des-noms", label: "AGENT DES NOMS", family: "Suite Dette & Structure du code", path: "docs/agent-des-noms/", decision: "texte", scriptPath: "scripts/agent-des-noms.mjs" },
   { slug: "agent-du-temps", label: "AGENT-DU-TEMPS", family: "Suite Pilotage & Consommation", path: "docs/agent-du-temps/", decision: "texte", scriptPath: "scripts/agent-du-temps.mjs" },
   { slug: "abraham-les-references", label: "ABRAHAM-LES-REFERENCES", family: "Suite Dette & Structure du code", path: "docs/abraham-les-references/", decision: "texte", scriptPath: "scripts/abraham-les-references.mjs" },
   { slug: "moise-tables-de-loi", label: "MOÏSE-TABLES-DE-LOI", family: "Suite Dette & Structure du code", path: "docs/moise-tables-de-loi/", decision: "texte", scriptPath: "scripts/moise-tables-de-loi.mjs" },
@@ -618,6 +622,7 @@ export const RELIABILITY_SCRIPT_FILES = {
   // mesure exacte de ce qu'il reste à automatiser.
   "safe-export": "scripts/safe-export.mjs", "tool-learning": "scripts/tool-learning.mjs",
   "the-equalizer": "scripts/the-equalizer.mjs",
+  "agent-des-noms": "scripts/agent-des-noms.mjs",
   "agent-du-temps": "scripts/agent-du-temps.mjs",
   "moise-tables-de-loi": "scripts/moise-tables-de-loi.mjs",
   "abraham-les-references": "scripts/abraham-les-references.mjs",

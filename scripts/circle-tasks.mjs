@@ -292,6 +292,19 @@ export const CIRCLE_ITEMS = [
   // une heure fausse ressemble trait pour trait à une heure juste. C'est le seul item de la Ronde
   // dont le vrai résultat est une PHRASE à lire (« source : réseau » ou « source : système »),
   // jamais un compte.
+  // agent-des-noms (2026-09-24, tâche #738). Sa MOITIÉ RENOMMAGE répond à un événement et n'a rien
+  // à faire dans une Ronde ; sa moitié GOUVERNANCE, elle, est exactement périodique : un nom posé à
+  // titre provisoire ne fait de mal qu'en DURANT, et personne ne se réveille un matin en se
+  // demandant si un nom traîne depuis huit jours. C'est le passage régulier qui le rend visible.
+  {
+    id: "agent-des-noms",
+    theme: "Suivi & référentiels",
+    label: "Les noms : lesquels traînent en provisoire, lesquels n'ont jamais été validés ?",
+    cout: "gratuit — relit les fichiers locaux, aucun appel API",
+    tokensEstimes: "négligeable — une liste de noms",
+    execute: "Lancer node scripts/agent-des-noms.mjs. Deux chiffres à lire, et ils ne disent pas la même chose. Les NOMS PROVISOIRES OUBLIÉS sont un vrai retard : un nom posé pour ne pas bloquer le travail et jamais tranché depuis plus de sept jours. Les NOMS JAMAIS VALIDÉS sont la dette de fond — 78 noms en service, aucun choisi par l'utilisateur au jour de la création de l'outil — et elle se purge APRÈS la classification (#737), jamais avant : renommer un outil dont on ignore encore le groupe produit un nom qui ne voudra plus rien dire. Si une marque est signalée SANS DATE, ce n'est pas un bug : l'outil refuse d'inventer une ancienneté, et c'est la date qu'il faut ajouter à côté de la marque.",
+    producesReport: true,
+  },
   {
     id: "agent-du-temps",
     theme: "Suivi & référentiels",
@@ -1245,6 +1258,7 @@ export const CIRCLE_REPORT_FOLDERS = {
   "pure-gold-unity-scan": "docs/pure-gold-unity/",
   "tool-learning": "docs/tool-learning/",
   "the-equalizer": "docs/the-equalizer/",
+  "agent-des-noms": "docs/agent-des-noms/",
   "agent-du-temps": "docs/agent-du-temps/",
   "recap-evaluations": "docs/angel-of-ia-process/",
   "smart-conso-token-scan": "docs/smart-conso-token/",

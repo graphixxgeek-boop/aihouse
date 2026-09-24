@@ -30,6 +30,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
+import { printReliabilityNotice } from "./lib-shell.mjs";
 
 export const OUTIL = "agent-des-noms";
 export const SCRIPT_PATH = "scripts/agent-des-noms.mjs";
@@ -327,6 +328,8 @@ function main() {
   const root = process.cwd();
   const [cmd, a, b] = process.argv.slice(2);
   console.log(`\n=== L'AGENT DES NOMS — l'utilisateur baptise, le mécanisme se souvient ===\n`);
+  printReliabilityNotice("agent-des-noms");   // le slug en clair, jamais la constante : le garde-fou de doc-report cherche le NOM, et une indirection le rendrait muet
+  console.log("");
   if (cmd === "renommage") return mainRenommage(root, a, b);
   if (cmd === "verifier") return mainVerifier(root, a);
   mainGouvernance(root);
