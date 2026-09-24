@@ -1267,6 +1267,23 @@ function main() {
   // l'utilisateur). Sous-commande dédiée plutôt qu'un 3e argument positionnel : ce rapport ne prend
   // ni zoom ni forme, il les contient tous les trois.
   if (process.argv[2] === "ronde") return rondeCli();
+  // Sous-commande `poids` (2026-09-24, chantier 5 du plan de nuit) : le poids des tâches, les
+  // vignettes, les lignes longues sans résumé de tête et la répartition des origines. Sous-commande
+  // à part parce qu'elle sert à COMPOSER le travail avant de le lancer, jamais à le rendre compte —
+  // la mêler au rapport d'état aurait noyé un outil de décision dans un outil de constat.
+  if (process.argv[2] === "poids") {
+    const rows = loadAllTaskRows();
+    const ouvertes = rows.filter((r) => OPEN_KEYS.has(r.statusKey));
+    console.log(`\n=== POIDS, VIGNETTES ET ORIGINES — ${ouvertes.length} tâche(s) ouverte(s) sur ${rows.length} ===\n`);
+    for (const l of formatChantier5Lines(rows, { ouvertes })) console.log(l);
+    const lourdes = ouvertes.filter((r) => poidsDeLaTache(r).palier === "lourde");
+    if (lourdes.length) {
+      console.log(`\n--- Vignettes des ${lourdes.length} tâche(s) ouverte(s) LOURDE(S) ---`);
+      for (const r of lourdes) for (const l of vignetteDeLaTache(r).lignes) console.log(l);
+    }
+    console.log(`\nHORS PORTÉE : le poids dit s'il faut DÉCOUPER, jamais dans quel ordre traiter — l'ordre vient du palier de priorité, et les deux ne se remplacent pas.`);
+    return;
+  }
   const [, , zoomArg = "en_cours", formatArg = "liste"] = process.argv;
   const zoom = ZOOM_LEVELS.includes(zoomArg) ? zoomArg : "en_cours";
   const format = FORMATS.includes(formatArg) ? formatArg : "liste";
@@ -1332,6 +1349,257 @@ function main() {
   const planTaches = buildPlanDaction(constatsTaches, { toolSlug: "check-tasks-details" });
   console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
   for (const l of planTaches.lignes) console.log(l);
+}
+
+
+// ===========================================================================================
+// LE POIDS D'UNE TÂCHE, SA VIGNETTE, ET SON ORIGINE  (2026-09-24, chantier 5 du plan de nuit)
+// ===========================================================================================
+//
+// POURQUOI CES TROIS CHOSES SONT DANS LE MÊME BLOC, alors qu'elles répondent à trois demandes
+// distinctes de l'utilisateur (5.2 « poids de la tâche + vignette », 5.3 « un résumé court en tête
+// de chaque tâche longue », 5.5 « les tâches que l'agent s'attribue : le signaler ») : les trois se
+// lisent sur la MÊME ligne de suivi, au même moment, et aucune ne vaut la peine d'un second
+// fichier. Les séparer aurait donné trois lectures du même registre, donc trois occasions de
+// diverger (Article 24).
+//
+// LA LIGNE ROUGE, la même pour les trois : chacune se calcule sur ce que la ligne DIT — une
+// longueur, une énumération, une phrase présente ou absente — jamais sur une appréciation de ma
+// part. Et quand la ligne ne porte aucun signal, la réponse est « non mesurable », jamais un poids
+// moyen par défaut : c'est exactement le faux vert qui a coûté six corrections cette nuit-là.
+
+// Le seuil au-dessus duquel une tâche est dite LONGUE. Il n'est pas choisi rond : mesuré sur le
+// registre réel du 2026-09-24, la médiane des descriptions est aux alentours de 600 caractères et
+// les lignes qui posent réellement problème à la lecture dépassent toutes le double. 1200 attrape
+// donc le haut du panier sans accuser la moitié du registre — un seuil qui alerte sur tout n'est
+// plus lu (leçon L4).
+export const SEUIL_TACHE_LONGUE = 1200;
+
+// Les signaux qui font le POIDS d'une tâche. Chacun est un fait lisible dans le texte, et chacun
+// porte ce qu'il coûte : le poids ne sert pas à classer, il sert à décider s'il faut DÉCOUPER.
+export const SIGNAUX_DE_POIDS = [
+  { cle: "description-longue", points: 2, pourquoi: "la description dépasse le seuil de tâche longue",
+    detecte: (r) => String(r.detail ?? "").length > SEUIL_TACHE_LONGUE },
+  { cle: "plusieurs-livrables", points: 2, pourquoi: "plusieurs livrables distincts sont annoncés dans la même ligne",
+    detecte: (r) => (String(r.detail ?? "").match(/\b(puis|ensuite|et enfin|ainsi que)\b/gi) ?? []).length >= 2 },
+  { cle: "enumeration", points: 2, pourquoi: "la ligne énumère des sous-parties numérotées ou à puces",
+    detecte: (r) => (String(r.detail ?? "").match(/(?:^|[\s(])\(?\d\)|(?:^|\s)[·•-]\s/g) ?? []).length >= 3 },
+  { cle: "plusieurs-fichiers", points: 1, pourquoi: "trois fichiers ou plus sont nommés",
+    detecte: (r) => new Set(String(r.detail ?? "").match(/`[\w./-]+\.(?:mjs|ts|tsx|md|html|json)`/g) ?? []).size >= 3 },
+  { cle: "plusieurs-outils", points: 1, pourquoi: "plusieurs outils de l'Agence sont impliqués",
+    detecte: (r) => (String(r.detail ?? "").match(/\b(?:ARGUS|HARMONIA|AXA-CHECK|CLONE-HUNTER|CASSANDRA|MOÏSE|THE-KING|tool-brain|god-of-all-process|SAFE-EXPORT)\b/g) ?? []).length >= 3 },
+  { cle: "chantier-declare", points: 2, pourquoi: "la ligne se déclare elle-même comme un chantier",
+    detecte: (r) => /\bchantier\b/i.test(`${r.sousSujet ?? ""} ${r.detail ?? ""}`) },
+];
+
+// Les paliers de poids. Trois, pas plus : la seule décision qu'ils servent est binaire (découper ou
+// non), et un quatrième palier n'aurait rien changé à cette décision.
+export const PALIERS_DE_POIDS = [
+  { cle: "lourde", min: 6, icone: "⬛", quoi: "à découper en une série de petites avant d'être lancée" },
+  { cle: "moyenne", min: 3, icone: "◧", quoi: "faisable d'un bloc, mais mérite un ordre écrit avant de commencer" },
+  { cle: "legere", min: 0, icone: "▫", quoi: "se traite d'un seul geste" },
+];
+
+// LE POIDS D'UNE LIGNE. Retourne TOUJOURS les signaux qui l'ont produit : un poids sans ses raisons
+// est un chiffre qu'on ne peut ni contester ni corriger, donc un chiffre qu'on finit par croire.
+export function poidsDeLaTache(row = {}, { signaux = SIGNAUX_DE_POIDS, paliers = PALIERS_DE_POIDS } = {}) {
+  const texte = `${row.sujet ?? ""} ${row.sousSujet ?? ""} ${row.detail ?? ""}`.trim();
+  if (!texte) {
+    return { mesurable: false, palier: null, points: 0, signaux: [],
+      pourquoi: "la ligne ne porte aucun texte : rien à mesurer, et un poids par défaut ressemblerait à une mesure" };
+  }
+  const trouves = signaux.filter((s) => { try { return s.detecte(row); } catch { return false; } });
+  const points = trouves.reduce((n, s) => n + s.points, 0);
+  const palier = paliers.find((p) => points >= p.min) ?? paliers[paliers.length - 1];
+  return { mesurable: true, palier: palier.cle, icone: palier.icone, quoi: palier.quoi, points,
+    signaux: trouves.map((s) => ({ cle: s.cle, points: s.points, pourquoi: s.pourquoi })) };
+}
+
+// LE DÉCOUPAGE PROPOSÉ. Il ne découpe RIEN : il rend les morceaux que la ligne nomme déjà elle-même,
+// pour qu'on n'ait pas à les retrouver à la main. Une tâche lourde dont le texte n'énumère rien
+// ressort avec zéro morceau et le dit — inventer des sous-tâches à partir d'une prose serait
+// exactement l'outil qui se satisfait tout seul que l'Article 28 refuse.
+export function decoupagePropose(row = {}) {
+  const detail = String(row.detail ?? "");
+  const morceaux = [];
+  // PAS de séparateur consommé devant `\(` (corrigé au premier test, 2026-09-24) : exiger un blanc
+  // avant chaque « (n) » ne peut trouver que le PREMIER morceau, puisque la capture du morceau
+  // précédent avale déjà ce blanc. Le motif paraissait juste et rendait systématiquement 1 sur 3.
+  // `\(\d+\)` seul ne risque rien : une date comme « (2026-09-24) » porte des tirets et ne matche pas.
+  for (const m of detail.matchAll(/\((\d+)\)\s*([^()]{10,140})/g)) morceaux.push(m[2].trim().replace(/[\s.;,]+$/, ""));
+  if (morceaux.length < 2) {
+    for (const m of detail.matchAll(/[·•]\s*([^·•]{10,140})/g)) morceaux.push(m[1].trim().replace(/[\s.;,]+$/, ""));
+  }
+  const uniques = [...new Set(morceaux)];
+  return { morceaux: uniques,
+    pourquoi: uniques.length >= 2
+      ? "morceaux lus dans la ligne elle-même, jamais déduits — à valider avant d'en faire des tâches"
+      : "la ligne n'énumère rien de découpable : le découpage reste à écrire à la main, il ne s'invente pas" };
+}
+
+// LA VIGNETTE. Trois lignes, lisibles d'un coup d'œil, exactement ce que l'utilisateur demandait
+// pour « composer une grosse tâche en série de petites » sans rouvrir le registre entier.
+export function vignetteDeLaTache(row = {}) {
+  const p = poidsDeLaTache(row);
+  const pal = palierDeLaLigne(row);
+  const o = origineDeLaTache(row);
+  const titre = String(row.sousSujet ?? row.sujet ?? "sans intitulé").slice(0, 78);
+  const lignes = [
+    `${p.icone ?? "?"} ${numeroTache(row.numero)} — ${titre}`,
+    `   priorité ${pal.palier} · poids ${p.mesurable ? `${p.palier} (${p.points} pt)` : "non mesurable"} · origine ${o.origine}`,
+    `   ${p.mesurable ? p.quoi : p.pourquoi}`,
+  ];
+  const d = decoupagePropose(row);
+  if (p.palier === "lourde") {
+    lignes.push(d.morceaux.length >= 2
+      ? `   découpage proposé (${d.morceaux.length}) : ${d.morceaux.map((m) => m.slice(0, 48)).join(" | ")}`
+      : `   ${d.pourquoi}`);
+  }
+  return { lignes, poids: p, palier: pal, origine: o, decoupage: d };
+}
+
+// ---------------------------------------------------------------------------------------------
+// 5.3 — LE RÉSUMÉ EN TÊTE D'UNE TÂCHE LONGUE
+//
+// Le risque que l'utilisateur nomme — « sécurise contre les lignes malformées » — est réel et déjà
+// rencontré : une ligne de suivi est une SEULE ligne de tableau markdown de plusieurs milliers de
+// caractères, et un pipe mal placé ou une troncature en coupe la fin sans prévenir. Si la première
+// phrase porte déjà l'essentiel, la ligne reste lisible amputée. Si l'essentiel est au milieu, il
+// disparaît avec le reste.
+// ---------------------------------------------------------------------------------------------
+
+export const LONGUEUR_MAX_RESUME = 320;
+
+export function resumeDeTete(detail = "") {
+  const t = String(detail).trim();
+  if (!t) return { aUnResume: false, resume: "", pourquoi: "description vide" };
+  // Une phrase de tête = jusqu'au premier point suivi d'un blanc, en ignorant les points des
+  // abréviations de chemin (`docs/x.md`) et des numéros de version.
+  // Le quantifieur porte sur ce qui PRÉCÈDE le point, jamais sur la phrase entière (corrigé au
+  // premier test, 2026-09-24) : avec `.{20,}?[.!?]`, une phrase de tête de vingt caractères
+  // ponctuation comprise ne peut pas matcher, puisque les vingt caractères mangent déjà le point.
+  // Le motif rejetait donc exactement les résumés les plus courts, ceux qu'il devait valider.
+  const m = t.match(/^(.{10,}?[.!?])(?:\s|$)/s);
+  if (!m) return { aUnResume: false, resume: "", pourquoi: "aucune phrase complète en tête : la ligne démarre au milieu de son sujet" };
+  const phrase = m[1].trim();
+  if (phrase.length < 20) {
+    return { aUnResume: false, resume: phrase, longueur: phrase.length,
+      pourquoi: `la phrase de tête ne fait que ${phrase.length} caractères : trop courte pour porter le sujet de la ligne` };
+  }
+  if (phrase.length > LONGUEUR_MAX_RESUME) {
+    return { aUnResume: false, resume: phrase.slice(0, 80), longueur: phrase.length,
+      pourquoi: `la phrase de tête fait ${phrase.length} caractères : trop longue pour survivre à une troncature, donc pas un résumé` };
+  }
+  return { aUnResume: true, resume: phrase, longueur: phrase.length, pourquoi: "phrase de tête courte et complète" };
+}
+
+export function findTachesLonguesSansResume(rows = [], { seuil = SEUIL_TACHE_LONGUE } = {}) {
+  const ecarts = [];
+  for (const r of rows) {
+    const detail = String(r.detail ?? "");
+    if (detail.length <= seuil) continue;
+    const res = resumeDeTete(detail);
+    if (!res.aUnResume) {
+      ecarts.push({ numero: r.numero, longueur: detail.length, pourquoi: res.pourquoi,
+        consequence: "tronquée, cette ligne ne dira plus de quoi elle parlait" });
+    }
+  }
+  return ecarts;
+}
+
+// ---------------------------------------------------------------------------------------------
+// 5.5 — LES TÂCHES QUE L'AGENT S'ATTRIBUE
+//
+// « Le signaler à la création ET à la fin. » Le besoin derrière la demande est un contrôle de
+// dérive : une file qui se remplit toute seule de travail que personne n'a commandé est le premier
+// symptôme d'un agent qui se donne raison. Encore faut-il pouvoir la MESURER.
+//
+// TROIS états, jamais deux, et c'est le point : l'absence de la mention « demande de l'utilisateur »
+// ne PROUVE pas que je me suis attribué la tâche — elle prouve seulement que la ligne ne le dit pas.
+// Rendre « indéterminé » plutôt que « agent » évite de transformer un silence en aveu, la même
+// erreur que les six faux verts de la nuit prise dans l'autre sens.
+// ---------------------------------------------------------------------------------------------
+
+export const MARQUE_AUTO_ATTRIBUEE = "AUTO-ATTRIBUÉE";
+
+export function origineDeLaTache(row = {}) {
+  const t = `${row.sousSujet ?? ""} ${row.detail ?? ""}`;
+  if (new RegExp(MARQUE_AUTO_ATTRIBUEE, "i").test(t)) {
+    return { origine: "agent", declaree: true, pourquoi: "la ligne se déclare elle-même auto-attribuée" };
+  }
+  // L'APOSTROPHE COMPTE DOUBLE, littéralement : le registre écrit « l'utilisateur » avec
+  // l'apostroppe droite, la prose de l'agent avec la courbe (’). Un motif qui n'en accepte qu'une
+  // manque la moitié des lignes sans jamais le dire — attrapé par un test au premier passage.
+  if (/demande (?:explicite )?(?:de l['’]utilisateur|du user)|l['’]utilisateur (?:demande|a demandé|insiste)|à sa demande|prompt de l['’]utilisateur/i.test(t)) {
+    return { origine: "utilisateur", declaree: true, pourquoi: "la ligne cite une demande de l'utilisateur" };
+  }
+  if (/trouvé par|remonté par|signalé par|constat de|écart trouvé/i.test(t)) {
+    return { origine: "outil", declaree: true, pourquoi: "la ligne attribue la tâche à une trouvaille d'outil" };
+  }
+  return { origine: "indéterminée", declaree: false,
+    pourquoi: "la ligne ne dit pas d'où vient la tâche — un silence, jamais la preuve que je me la suis donnée" };
+}
+
+export function repartitionDesOrigines(rows = []) {
+  const compte = { utilisateur: 0, agent: 0, outil: 0, "indéterminée": 0 };
+  for (const r of rows) compte[origineDeLaTache(r).origine] += 1;
+  const total = rows.length;
+  const declarees = total - compte["indéterminée"];
+  // LE FAUX VERT QUE CETTE FONCTION A FAILLI PRODUIRE, attrapé à son premier vrai passage
+  // (2026-09-24) : elle a rendu « agent 0 — 0 % des déclarées » sur le registre réel, ce qui se lit
+  // comme « l'agent ne s'attribue jamais rien », donc comme un bulletin de santé. C'est faux. La
+  // marque AUTO-ATTRIBUÉE venait d'être inventée : AUCUNE ligne du registre ne pouvait la porter.
+  // Un zéro produit par un motif qui ne peut pas encore matcher est rigoureusement indiscernable
+  // d'un zéro mesuré (leçon L11), et c'est la sixième fois de la même nuit que ce défaut se
+  // présente. D'où `mesurable`, qui distingue « aucune tâche auto-attribuée » de « personne n'a
+  // encore jamais posé la marque ».
+  const marqueJamaisPosee = compte.agent === 0;
+  return { compte, total, declarees,
+    mesurable: !marqueJamaisPosee,
+    partAuto: marqueJamaisPosee || !declarees ? null : compte.agent / declarees,
+    pourquoi: marqueJamaisPosee
+      ? `aucune ligne ne porte la marque « ${MARQUE_AUTO_ATTRIBUEE} » : ce zéro dit que la marque n'est pas encore en usage, jamais que l'agent ne s'attribue rien — les deux s'écrivent 0 et ne veulent pas dire la même chose`
+      : !declarees
+        ? "aucune ligne ne déclare son origine : la part auto-attribuée n'est pas mesurable, elle n'est pas nulle"
+        : "la part est calculée sur les lignes qui DÉCLARENT leur origine — la rapporter au total ferait passer les silences pour des tâches commandées" };
+}
+
+// Une auto-attribution ne compte que si elle est signalée AUX DEUX BOUTS, comme demandé : à la
+// création (la marque) et à la fin (la marque encore présente sur une ligne close). Une ligne
+// marquée qui se ferme en perdant sa marque est exactement ce que la demande cherchait à empêcher.
+export function findAutoAttribueesMalSignalees(rows = []) {
+  const ecarts = [];
+  for (const r of rows) {
+    const o = origineDeLaTache(r);
+    const close = /termin|clos|résolu|resolu|fait/i.test(String(r.statut ?? ""));
+    if (o.origine === "agent" && close && !new RegExp(`${MARQUE_AUTO_ATTRIBUEE}[^|]*(?:clôtur|fermé|terminé)`, "i").test(String(r.detail ?? ""))) {
+      ecarts.push({ numero: r.numero, quoi: "auto-attribuée et close sans que la clôture le redise",
+        pourquoi: "le signalement était demandé aux deux bouts : à la création ET à la fin" });
+    }
+  }
+  return ecarts;
+}
+
+export function formatChantier5Lines(rows = [], { ouvertes = null } = {}) {
+  const L = [];
+  const longues = rows.filter((r) => String(r.detail ?? "").length > SEUIL_TACHE_LONGUE);
+  const lourdes = rows.filter((r) => poidsDeLaTache(r).palier === "lourde");
+  const sansResume = findTachesLonguesSansResume(rows);
+  const origines = repartitionDesOrigines(rows);
+  const malSignalees = findAutoAttribueesMalSignalees(rows);
+  // PRÉCISION QUI N'EST PAS COSMÉTIQUE : ces chiffres portent sur TOUT le registre, closes
+  // comprises, alors que la décision « découper avant de lancer » ne concerne que les ouvertes.
+  // Le premier passage réel affichait les deux périmètres à trois lignes d'écart sans le dire, et
+  // 40 lourdes sur 609 se lisait comme 40 chantiers en attente — il y en avait zéro.
+  const ouvertesLourdes = ouvertes ? ouvertes.filter((r) => poidsDeLaTache(r).palier === "lourde").length : null;
+  L.push(`Poids : ${lourdes.length} tâche(s) LOURDE(S) sur ${rows.length} lignes du registre entier${ouvertesLourdes === null ? "" : `, dont ${ouvertesLourdes} encore OUVERTE(S)`} — une lourde se découpe avant d'être lancée, jamais traitée d'un bloc.`);
+  L.push(`Lignes longues (> ${SEUIL_TACHE_LONGUE} car.) : ${longues.length}, dont ${sansResume.length} sans résumé de tête exploitable.`);
+  for (const e of sansResume.slice(0, 8)) L.push(`  · ${numeroTache(e.numero)} (${e.longueur} car.) — ${e.pourquoi}`);
+  if (sansResume.length > 8) L.push(`  · … et ${sansResume.length - 8} autre(s)`);
+  L.push(`Origines déclarées : ${origines.declarees}/${origines.total} — utilisateur ${origines.compte.utilisateur}, outil ${origines.compte.outil}, agent ${origines.compte.agent}${origines.partAuto === null ? "" : ` (${Math.round(origines.partAuto * 100)} % des déclarées)`}. ${origines.compte["indéterminée"]} ligne(s) ne le disent pas, ce qui n'est pas la même chose que zéro.`);
+  if (!origines.mesurable) L.push(`  ⚠️ ${origines.pourquoi}`);
+  for (const e of malSignalees.slice(0, 5)) L.push(`  · ${numeroTache(e.numero)} — ${e.quoi} : ${e.pourquoi}`);
+  return L;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

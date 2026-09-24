@@ -7918,6 +7918,58 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.match(formatAuditFormatLines(collision).join(' '), /tâches ouvertes portent/, 'the printed line carries the reason, not just a count');
   console.log('Passed: check-tasks-details, the declared guardian of the etat-des-taches process, now really enforces the four mechanisms its own document promises — one of which (findMotsClesEnCollision) was imported and never called, a wire connected at both ends and not in the middle. The clean case still prints a line rather than falling silent, and and the format names one spelling per field (#584), a row missing its number and its criticality being flagged by those exact names.');
 
+  // POIDS, VIGNETTE, RÉSUMÉ DE TÊTE ET ORIGINE D'UNE TÂCHE (2026-09-24, chantier 5 du plan de nuit).
+  // Les trois demandes de l'utilisateur — 5.2 « poids + vignette », 5.3 « un résumé court en tête
+  // des tâches longues », 5.5 « signaler les tâches que l'agent s'attribue » — se mesurent sur la
+  // même ligne de suivi. Le test le plus important ci-dessous est le dernier : au premier vrai
+  // passage, la répartition des origines a rendu « agent 0 » sur le registre réel, ce qui se lit
+  // comme un bulletin de santé alors que la marque venait d'être inventée et ne pouvait PAS encore
+  // matcher. Sixième occurrence de ce défaut dans la même nuit.
+  const { poidsDeLaTache, vignetteDeLaTache, decoupagePropose, resumeDeTete, findTachesLonguesSansResume,
+          origineDeLaTache, repartitionDesOrigines, findAutoAttribueesMalSignalees, formatChantier5Lines,
+          SEUIL_TACHE_LONGUE, MARQUE_AUTO_ATTRIBUEE } = await import('../scripts/check-tasks-details.mjs');
+
+  assert.equal(poidsDeLaTache({}).mesurable, false, 'an empty row weighs NOTHING MEASURABLE, never a default middle weight: a weight produced without a single signal is indistinguishable from a measured one');
+  assert.match(poidsDeLaTache({}).pourquoi, /ressemblerait à une mesure/, 'and it says why, so nobody reads the blank as "light"');
+  const grosse = { sousSujet: 'Chantier X', detail: `${'x'.repeat(1400)} (1) faire ceci bien (2) puis cela ensuite (3) et enfin autre chose` };
+  const pGrosse = poidsDeLaTache(grosse);
+  assert.equal(pGrosse.palier, 'lourde', 'a 1400-char row that declares itself a chantier and enumerates three parts is heavy');
+  assert.ok(pGrosse.signaux.length >= 3 && pGrosse.signaux.every((x) => x.pourquoi), 'every point of the weight names the fact that produced it: a weight without its reasons can be neither contested nor corrected');
+  assert.equal(poidsDeLaTache({ detail: 'Corriger une faute de frappe.' }).palier, 'legere', 'a one-gesture row stays light');
+  assert.ok(decoupagePropose(grosse).morceaux.length >= 3, 'the split PROPOSES the pieces the row already names');
+  assert.equal(decoupagePropose({ detail: 'une longue prose sans la moindre énumération' }).morceaux.length, 0, 'a heavy row that enumerates nothing yields ZERO pieces, and says the split must be written by hand — inventing subtasks from prose would be the tool that satisfies its own requirement (Article 28)');
+  assert.match(decoupagePropose({ detail: 'prose' }).pourquoi, /ne s'invente pas/, 'and the refusal carries its reason');
+  assert.ok(vignetteDeLaTache(grosse).lignes.some((l) => /découpage proposé/.test(l)), 'the vignette of a heavy task shows the split, which is the whole point of measuring the weight');
+  assert.equal(vignetteDeLaTache({ numero: 7, detail: 'Court.' }).lignes.some((l) => /découpage/.test(l)), false, 'a light task gets no split line: an unconditional section is noise');
+
+  assert.equal(resumeDeTete('').aUnResume, false, 'no description, no head summary — and it is not an error, it is a fact stated');
+  assert.equal(resumeDeTete('Voilà ce que fait cette tâche, en une phrase. Puis le détail interminable qui suit.').aUnResume, true, 'a short complete opening sentence IS the head summary');
+  assert.equal(resumeDeTete(`${'a'.repeat(400)}. ensuite`).aUnResume, false, 'a 400-char opening sentence is not a summary: the whole point is surviving a truncation');
+  assert.match(resumeDeTete(`${'a'.repeat(400)}. suite`).pourquoi, /survivre à une troncature/, 'the reason names the risk the user named: a malformed or cut line must still say what it was about');
+  const longueSansResume = [{ numero: 1, detail: `${'z'.repeat(SEUIL_TACHE_LONGUE + 50)} enfin un point.` }];
+  assert.equal(findTachesLonguesSansResume(longueSansResume).length, 1, 'a long row whose meaning only arrives at the end is flagged');
+  assert.equal(findTachesLonguesSansResume([{ numero: 2, detail: `Résumé court et net. ${'z'.repeat(SEUIL_TACHE_LONGUE + 50)}` }]).length, 0, 'the same length with a head summary is not flagged: length alone was never the defect');
+  assert.equal(findTachesLonguesSansResume([{ numero: 3, detail: 'court' }]).length, 0, 'short rows are out of scope entirely');
+
+  assert.equal(origineDeLaTache({ detail: 'Demande explicite de l’utilisateur : faire X' }).origine, 'utilisateur', 'a row citing the user reads as user-originated');
+  assert.equal(origineDeLaTache({ detail: 'Écart trouvé par HARMONIA' }).origine, 'outil', 'a row crediting a tool finding reads as tool-originated');
+  assert.equal(origineDeLaTache({ detail: `${MARQUE_AUTO_ATTRIBUEE} : je me la donne` }).origine, 'agent', 'the explicit mark is the only thing that makes a task self-attributed');
+  assert.equal(origineDeLaTache({ detail: 'On fait ça.' }).origine, 'indéterminée', 'SILENCE IS NOT A CONFESSION: a row that says nothing about its origin is undetermined, never self-attributed — turning a silence into an admission is the same error as the false greens, taken the other way round');
+  const repZero = repartitionDesOrigines([{ detail: 'Demande de l’utilisateur' }, { detail: 'rien' }]);
+  assert.equal(repZero.mesurable, false, 'THE ONE THAT MATTERS: zero self-attributed tasks is NOT MEASURABLE while the mark has never been used — the real registry rendered "agent 0" and it read as a clean bill of health');
+  assert.equal(repZero.partAuto, null, 'and no percentage is rendered from it, because a rate computed on a pattern that cannot match looks exactly like a measured one (leçon L11)');
+  assert.match(repZero.pourquoi, /les deux s'écrivent 0/, 'the output says in words why the zero must not be read as an answer');
+  const repVraie = repartitionDesOrigines([{ detail: `${MARQUE_AUTO_ATTRIBUEE} : celle-ci` }, { detail: 'Demande de l’utilisateur' }]);
+  assert.equal(repVraie.mesurable, true, 'once the mark is actually in use, the share becomes measurable');
+  assert.equal(repVraie.partAuto, 0.5, 'and it is computed on the rows that DECLARE their origin, never on the total — the silences would otherwise pass for commissioned work');
+  assert.equal(findAutoAttribueesMalSignalees([{ numero: 9, detail: `${MARQUE_AUTO_ATTRIBUEE} : celle-ci`, statut: 'Fait' }]).length, 1, 'signalling was demanded at BOTH ends: a self-attributed task that closes without restating it is the gap the request aimed at');
+  assert.equal(findAutoAttribueesMalSignalees([{ numero: 9, detail: `${MARQUE_AUTO_ATTRIBUEE} : celle-ci, ${MARQUE_AUTO_ATTRIBUEE} clôturée par l'agent`, statut: 'Fait' }]).length, 0, 'restated at closing, it is in order');
+  assert.equal(findAutoAttribueesMalSignalees([{ numero: 9, detail: `${MARQUE_AUTO_ATTRIBUEE} : celle-ci`, statut: 'Ouverte' }]).length, 0, 'an open self-attributed task owes nothing yet: the second signal is due at the end, not before');
+  const lignes5 = formatChantier5Lines([{ numero: 1, detail: 'rien' }], { ouvertes: [] });
+  assert.ok(lignes5.some((l) => /registre entier/.test(l)) && lignes5.some((l) => /OUVERTE/.test(l)), 'the printed weight line names BOTH perimeters: the first real run mixed 609 registry rows and 43 open tasks three lines apart without saying so, and "40 heavy" read as 40 pending chantiers when there were none');
+  console.log('Passed: a task now carries its WEIGHT, its VIGNETTE, its head summary and its ORIGIN (2026-09-24, chantier 5) — the three the user asked for read on the same suivi row, so they live together rather than in three registries that would diverge. The weight exists to answer one binary question, split or not, which is why it has three tiers and not six, and why it never reorders anything: the order comes from the priority tier and the two do not replace each other. The split proposes only the pieces the row already names, and returns nothing at all for a heavy row that enumerates none — a tool that invented subtasks from prose would be one that satisfies its own requirement. The head summary answers a risk the user named precisely: a suivi row is a single markdown table line of several thousand characters, and a misplaced pipe cuts its end silently; 39 of the 343 long rows would say nothing about themselves if truncated today. And the origin has three states because the absence of "demande de l’utilisateur" proves only that the row is silent — reading that silence as an admission would be the night’s false greens taken the other way round. Which is exactly what the sixth one did: the real registry answered "agent 0", a clean bill of health, from a mark invented ten minutes earlier that no row could carry.');
+
+
   // LES TROIS NATURES D'UN SCRIPT (2026-09-23) — integration-outil répondait « 0/11, 10 inscriptions
   // manquantes » pour N'IMPORTE QUEL nom, y compris les quatre modules de règles du dépôt. Le suivre
   // aurait produit quatre blueprints pour quatre modules qui n'ont rien en propre à documenter.

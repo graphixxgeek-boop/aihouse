@@ -355,3 +355,66 @@ voix de l'agent par un volume réel de prose hors citations. **Limite honnête, 
 tue** : il vérifie que la forme est là, jamais que la synthèse est fidèle ni qu'elle reflète la
 dernière version discutée — ça, seule une lecture le dit. Un fichier au vert n'est donc pas un
 fichier à jour ; un fichier au rouge est en revanche un vrai manque, sans ambiguïté.
+
+## Le poids d'une tâche, son résumé de tête, et la marque AUTO-ATTRIBUÉE
+
+*(2026-09-24, chantier 5 du plan de nuit — trois demandes distinctes de l'utilisateur, réunies ici
+parce qu'elles se lisent toutes les trois sur la MÊME ligne de suivi. Mécanique :
+`node scripts/check-tasks-details.mjs poids`.)*
+
+### Le poids — pour décider de DÉCOUPER, jamais pour ordonner
+
+Sa demande : « poids de la tâche + vignette, pour composer une grosse tâche en série de petites ».
+Le poids se calcule sur des faits lisibles dans la ligne — sa longueur, le nombre de livrables
+annoncés, une énumération, le nombre de fichiers ou d'outils nommés, le mot « chantier » — jamais
+sur une appréciation de l'agent. Trois paliers seulement (`légère` / `moyenne` / `lourde`), parce
+que la seule décision qu'ils servent est binaire : découper ou non. Un quatrième palier n'aurait
+rien changé à cette décision.
+
+**Il ne remplace jamais le palier de priorité, et l'inverse non plus.** Le palier dit dans quel
+ORDRE traiter, le poids dit s'il faut découper AVANT de lancer. Les confondre reviendrait à traiter
+une tâche énorme en premier parce qu'elle est urgente, ce que personne ne veut.
+
+**Le découpage est PROPOSÉ, jamais appliqué** : `decoupagePropose()` rend les morceaux que la ligne
+énumère déjà elle-même, et rend zéro morceau — en le disant — pour une tâche lourde dont la prose
+n'énumère rien. Fabriquer des sous-tâches à partir d'une prose serait l'outil qui se satisfait tout
+seul que l'Article 28 refuse.
+
+### Le résumé de tête — contre la ligne tronquée
+
+Sa demande : « un résumé court en tête de chaque tâche longue — sécurise contre les lignes
+malformées ». Le risque est concret et déjà rencontré : une ligne de suivi est UNE seule ligne de
+tableau markdown de plusieurs milliers de caractères, et un pipe mal placé ou une troncature en
+coupe la fin sans prévenir. Si la première phrase porte déjà l'essentiel, la ligne amputée reste
+lisible ; si l'essentiel est au milieu, il disparaît avec le reste.
+
+**Règle** : au-delà de 1200 caractères de description, la ligne commence par une phrase complète de
+moins de 320 caractères qui dit de quoi elle parle. Le seuil n'est pas rond par hasard — mesuré sur
+le registre réel, la médiane est autour de 600 et les lignes réellement illisibles dépassent toutes
+le double. Un seuil qui alerte sur la moitié du registre n'est plus lu (leçon L4).
+
+*Premier passage réel : 343 lignes longues, dont **39** ne diraient plus rien d'elles-mêmes si elles
+étaient coupées aujourd'hui.*
+
+### La marque AUTO-ATTRIBUÉE — aux deux bouts
+
+Sa demande : « les tâches que l'agent s'attribue : le signaler à la création ET à la fin ». Le
+besoin derrière est un contrôle de dérive : une file qui se remplit toute seule de travail que
+personne n'a commandé est le premier symptôme d'un agent qui se donne raison.
+
+**Convention** : une tâche que l'agent se donne lui-même porte le mot `AUTO-ATTRIBUÉE` en tête de
+sa description, et le redit à la clôture (`AUTO-ATTRIBUÉE … clôturée par l'agent`). Une tâche
+marquée qui se ferme en perdant sa marque est signalée — le signalement était demandé aux DEUX
+bouts, pas seulement au premier.
+
+**TROIS origines, jamais deux** : `utilisateur`, `outil`, `agent`, et `indéterminée` pour tout le
+reste. L'absence de la mention « demande de l'utilisateur » ne PROUVE pas que l'agent s'est attribué
+la tâche : elle prouve seulement que la ligne ne le dit pas. Lire ce silence comme un aveu serait la
+même erreur que les faux verts, prise par l'autre bout.
+
+**Et le zéro de départ est déclaré comme tel.** Au premier passage réel, la répartition a rendu
+« agent 0 », ce qui se lit comme un bulletin de santé — alors que la marque venait d'être inventée
+et qu'aucune ligne du registre ne pouvait la porter. `repartitionDesOrigines()` rend donc
+`mesurable: false` tant que la marque n'est pas en usage : un zéro produit par un motif qui ne peut
+pas encore matcher est rigoureusement indiscernable d'un zéro mesuré (leçon L11), et c'était la
+sixième occurrence du même défaut dans la même nuit.

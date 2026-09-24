@@ -249,3 +249,38 @@ peut ne pas ouvrir. Le changement lui-même est consigné dans `CIRCLE_ITEMS_CHA
 **Première trouvaille réelle, dès le premier lancement** : 4 tâches CASSANDRA-RH ouvertes et
 identiques depuis 20 rapports consécutifs, et 93 % des tâches tracées portant sur l'outillage de
 travail contre 7 % sur le jeu lui-même.
+
+## Sous-commande `poids` — le poids, la vignette, le résumé de tête et l'origine
+
+*(2026-09-24, chantier 5 du plan de nuit. La convention elle-même — ce qu'est une tâche lourde, ce
+qu'est un résumé de tête, ce que vaut la marque `AUTO-ATTRIBUÉE` — vit dans
+`docs/systeme-de-suivi.md`, jamais recopiée ici : c'est une règle du SUIVI, pas une particularité de
+cet outil. Ce qui suit dit seulement comment l'outil la mesure.)*
+
+**Format** : `node scripts/check-tasks-details.mjs poids`.
+
+**Sous-commande à part, et c'est délibéré** : ce que cette sortie sert à faire — décider de découper
+un chantier avant de le lancer — n'est pas ce que sert le rapport d'état. Mêler un outil de décision
+à un outil de constat aurait noyé le premier.
+
+**Ce qu'elle rend** :
+
+| Bloc | Ce qu'il dit | Ce qu'il ne dit jamais |
+|---|---|---|
+| Poids | combien de tâches sont LOURDES, sur le registre entier et parmi les ouvertes | dans quel ordre les traiter — c'est le palier de priorité, et les deux ne se remplacent pas |
+| Vignettes | trois à quatre lignes par tâche ouverte lourde, avec le découpage proposé | une découpe appliquée : les morceaux sont lus dans la ligne, jamais déduits |
+| Résumé de tête | quelles lignes longues ne diraient plus rien d'elles-mêmes si elles étaient tronquées | si le résumé est BON — seulement s'il existe et s'il est court |
+| Origines | la répartition utilisateur / outil / agent, et combien de lignes ne le disent pas | que zéro auto-attribuée veut dire zéro : tant que la marque n'est pas en usage, la part est déclarée NON MESURABLE |
+
+**Les deux corrections du premier vrai passage**, gardées en contre-tests parce qu'elles disent
+mieux que le code ce qu'il ne faut pas refaire :
+
+1. La ligne de poids affichait « 40 lourdes sur 609 » trois lignes sous un en-tête parlant de 43
+   tâches ouvertes, sans dire que les deux périmètres n'étaient pas le même — et 40 se lisait comme
+   40 chantiers en attente, alors qu'il y en avait **zéro** d'ouvert.
+2. La répartition des origines a rendu « agent 0 » sur le registre réel. Un bulletin de santé, tiré
+   d'une marque inventée dix minutes plus tôt qu'aucune ligne ne pouvait porter.
+
+**Chiffres du premier passage réel (2026-09-24)** : 609 lignes, 43 ouvertes · 40 lourdes, dont 0
+ouverte · 343 lignes longues, dont **39 sans résumé de tête exploitable** · origines déclarées
+159/609 (utilisateur 119, outil 40, agent 0 non mesurable), 450 lignes silencieuses.
