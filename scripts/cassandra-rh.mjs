@@ -1790,6 +1790,133 @@ export function classerIceberg(fichiers = [], { lire, offert = "", machine = new
   return lignes;
 }
 
+// ============================================================================================
+// 3e DISTINCTION — LE MOMENT : QUAND l'outil intervient (2026-09-24, tâche #750)
+// ============================================================================================
+// Sa demande : « on avance sur la classification ». Les deux premiers axes disent où RANGER un
+// script (l'iceberg) et POUR QUOI il travaille (le jeu ou l'Agence). Aucun ne dit QUAND.
+//
+// CE QUE CET AXE RÉVÈLE, et c'est sa seule raison d'être : si tous les contrôles sont empilés
+// APRÈS le geste, le paysage ne prévient jamais — il constate. Or ce projet a déjà payé cette
+// différence plusieurs fois, et l'a écrite : « détecter n'est pas prévenir ».
+//
+// UN OUTIL PEUT AVOIR PLUSIEURS MOMENTS, et c'est le point de conception qui compte : l'agent des
+// noms tourne à la Ronde ET se convoque avant un renommage. Rendre un moment UNIQUE aurait forcé
+// à choisir, donc à effacer la moitié de la réponse. C'est un ENSEMBLE, jamais une case.
+export const MOMENTS = {
+  "avant-le-geste": { rang: 4, quoi: "consulté AVANT d'agir — le seul moment qui peut encore éviter l'erreur" },
+  "a-chaque-commit": { rang: 3, quoi: "lancé par le crochet git, donc juste après le geste et sans qu'on y pense" },
+  "periodique": { rang: 2, quoi: "passage de Ronde — il juge une trajectoire, pas un instant" },
+  "a-la-demande": { rang: 1, quoi: "ne part que si on l'appelle — utile, mais il ne préviendra jamais tout seul" },
+};
+
+// Le signal « avant » se lit dans la PHRASE qui porte la commande, jamais dans le fichier : c'est
+// le document qui dit à quel moment on s'en sert. On cherche donc « avant » (ou « préalable »,
+// « en amont ») dans la fenêtre de texte autour de la commande écrite — une fenêtre, parce qu'une
+// phrase de ce dépôt tient rarement sur une ligne.
+export const FENETRE_MOMENT = 400;
+// Insensible à la casse, et ce détail a fait échouer le premier contre-test : ce dépôt écrit
+// « Avant », « avant » et « AVANT » selon qu'il ouvre une phrase, une règle ou un cri. Un motif
+// sensible à la casse ne voyait qu'un tiers du terrain — encore une sonde qui NE PEUT PAS
+// reconnaître, rendant exactement ce que rend une sonde qui n'a rien trouvé (leçon L11).
+export const MOT_AVANT = /\bavant\b|\bpréalable|\ben amont\b/i;
+
+export function momentsDeLOutil(slug, { offert = "", machine = new Set(), itemsRonde = new Set() } = {}) {
+  const moments = new Set();
+  if (machine.has(slug)) moments.add("a-chaque-commit");
+  if (itemsRonde.has(slug)) moments.add("periodique");
+  const cmd = new RegExp(`node\\s+scripts/${slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\.mjs`, "gi");
+  const txt = String(offert);
+  let avant = false;
+  for (const m of txt.matchAll(cmd)) {
+    // LA PHRASE, jamais une fenêtre de caractères — second contre-test rouge, et il avait raison :
+    // avec une fenêtre large, un « Avant » appartenant à la phrase PRÉCÉDENTE contaminait la
+    // commande suivante, et deux outils sans rapport devenaient « consultés avant d'agir ». On
+    // remonte donc jusqu'à la fin de phrase précédente, bornée par FENETRE_MOMENT pour ne pas
+    // remonter un document entier quand la ponctuation manque.
+    const plancher = Math.max(0, m.index - FENETRE_MOMENT);
+    const amont = txt.slice(plancher, m.index);
+    // Un retour à la ligne SIMPLE ne coupe pas : ces documents sont du Markdown replié à 100
+    // colonnes, donc une phrase y tient couramment sur trois lignes. Couper dessus faisait tomber
+    // le compte de 16 à 1 — la règle de tool-brain dit « avant toute recherche [...] consulter
+    // node scripts/tool-brain.mjs » et le « avant » vivait une ligne plus haut. Seule une ligne
+    // VIDE sépare deux idées ici.
+    const coupe = Math.max(amont.lastIndexOf("."), amont.lastIndexOf("!"), amont.lastIndexOf("?"), amont.lastIndexOf("\n\n"));
+    if (MOT_AVANT.test(coupe >= 0 ? amont.slice(coupe + 1) : amont)) { avant = true; break; }
+  }
+  if (avant) moments.add("avant-le-geste");
+  if (!moments.size) moments.add("a-la-demande");
+  return { slug, moments: [...moments], mesurable: true };
+}
+
+// ============================================================================================
+// 4e DISTINCTION — LE DOMAINE : SUR QUOI l'outil regarde (2026-09-24, tâche #750)
+// ============================================================================================
+// CE QUE CET AXE RÉVÈLE : un domaine que personne ne surveille. Les quatre autres axes comptent
+// des outils ; celui-ci compte des ANGLES MORTS, ce qui n'est pas la même question.
+//
+// IL SE DÉRIVE DE CE QUE L'OUTIL LIT VRAIMENT, jamais de ce qu'il raconte — leçon L24, qui a déjà
+// coûté un classement entier ce soir : 45 outils sur 65 rangés du côté « jeu » parce qu'ils
+// MENTIONNENT `lib/` dans un commentaire. La sonde ignore donc les lignes de commentaire, et ne
+// compte qu'un chemin écrit entre guillemets dans du code exécuté.
+export const DOMAINES = {
+  "code": { quoi: "le code du jeu et des outils", chemins: [/^scripts\//, /^lib\//, /^app\//, /^components\//] },
+  "documents": { quoi: "la charte, le référentiel, les règles de travail", chemins: [/^CLAUDE\.md/, /^docs\/referentiel\//, /^docs\/[a-z0-9-]+\.md/] },
+  "taches": { quoi: "le suivi des tâches et des chantiers", chemins: [/^docs\/suivi\//, /^docs\/plans\//] },
+  "donnees": { quoi: "les registres, les journaux, les séries chiffrées", chemins: [/\.csv$/, /\.jsonl?$/, /^docs\/[a-z0-9-]+\/(?:index|registre|historique)/] },
+  "jeu-joue": { quoi: "ce que le jeu a réellement produit — transcripts, dossiers, captures", chemins: [/^docs\/simulations\//] },
+};
+
+// Un chemin ne compte que s'il est écrit entre guillemets DANS du code, jamais dans un commentaire.
+// C'est la seule protection possible contre le piège de la mention, et elle est bon marché.
+export function cheminsLus(source = "") {
+  const chemins = new Set();
+  for (const ligne of String(source).split("\n")) {
+    const nu = ligne.trim();
+    if (nu.startsWith("//") || nu.startsWith("*") || nu.startsWith("/*")) continue;
+    for (const m of ligne.matchAll(/["'`]([A-Za-z0-9_./-]*\.(?:mjs|ts|tsx|md|csv|jsonl?|txt)|(?:docs|scripts|lib|app|components)\/[A-Za-z0-9_./-]*)["'`]/g)) chemins.add(m[1]);
+  }
+  return [...chemins];
+}
+
+export function domainesDeLOutil(source = "") {
+  const chemins = cheminsLus(source);
+  if (!chemins.length) return { domaines: [], chemins: [], mesurable: false,
+    pourquoi: "aucun chemin lu dans du code exécuté — soit l'outil ne lit rien du dépôt, soit il le lit par une variable : les deux rendent une liste vide et ne veulent pas dire la même chose" };
+  const domaines = new Set();
+  for (const c of chemins) for (const [nom, d] of Object.entries(DOMAINES)) if (d.chemins.some((r) => r.test(c))) domaines.add(nom);
+  return { domaines: [...domaines], chemins, mesurable: true, pourquoi: null };
+}
+
+export function formatAxesLines(lignes = [], { itemsRonde } = {}) {
+  const L = [];
+  L.push("--- 3e AXE : QUAND il intervient (un outil peut avoir plusieurs moments) ---");
+  for (const [m, d] of Object.entries(MOMENTS).sort((a, b) => b[1].rang - a[1].rang)) {
+    const dedans = lignes.filter((l) => l.moments?.includes(m));
+    L.push(`${m.toUpperCase().padEnd(17)} ${String(dedans.length).padStart(3)} — ${d.quoi}`);
+    if (m === "avant-le-geste") for (const l of dedans) L.push(`   · ${l.slug}`);
+  }
+  L.push("");
+  L.push("--- 4e AXE : SUR QUOI il regarde (un outil peut en couvrir plusieurs) ---");
+  for (const [n, d] of Object.entries(DOMAINES)) {
+    const dedans = lignes.filter((l) => l.domaines?.includes(n));
+    L.push(`${n.toUpperCase().padEnd(12)} ${String(dedans.length).padStart(3)} — ${d.quoi}`);
+  }
+  const muets = lignes.filter((l) => l.domainesMesurable === false);
+  if (muets.length) {
+    L.push("");
+    L.push(`⚠️ ${muets.length} outil(s) dont le domaine N'EST PAS MESURABLE — aucun chemin lu dans du code exécuté. Ce n'est pas « aucun domaine » : c'est « on ne sait pas », et les deux ne se rendent pas pareil.`);
+    for (const l of muets.slice(0, 12)) L.push(`   · ${l.slug}`);
+    if (muets.length > 12) L.push(`   · … et ${muets.length - 12} autre(s)`);
+  }
+  const vides = Object.entries(DOMAINES).filter(([n]) => !lignes.some((l) => l.domaines?.includes(n)));
+  L.push("");
+  L.push(vides.length
+    ? `🔴 ANGLE MORT — ${vides.length} domaine(s) que PERSONNE ne regarde : ${vides.map(([n]) => n).join(", ")}`
+    : `✅ Chaque domaine a au moins un outil qui le regarde — ce qui ne dit pas qu'il le regarde BIEN.`);
+  return L;
+}
+
 export function formatIcebergLines(lignes = []) {
   const par = (g) => lignes.filter((l) => l.groupe === g);
   const L = [];
@@ -2089,7 +2216,22 @@ function main() {
     const lignes = classerIceberg(fichiers, { lire: (f) => lu(join("scripts", f)), offert, machine });
     console.log(`\n=== L'ICEBERG — ${fichiers.length} scripts, quatre groupes ===\n`);
     for (const l of formatIcebergLines(lignes)) console.log(l);
-    console.log(`\nHORS PORTÉE : ce classement dit où RANGER un script, jamais s'il est BON — c'est le travail des Gardiens, et les deux ne se remplacent pas.`);
+    // Les 3e et 4e axes sortent dans la MÊME commande, délibérément : trois sous-commandes qui
+    // lisent les mêmes fichiers auraient fait relire le dépôt trois fois pour la même question,
+    // « où en est la classification ? ». Ils restent trois blocs distincts à l'affichage, parce
+    // qu'ils répondent à trois questions différentes et qu'un tableau unique les confondrait.
+    const itemsRonde = new Set();
+    for (const m of lu("scripts/circle-tasks.mjs").matchAll(/id:\s*"([a-z0-9-]+)"/g)) itemsRonde.add(m[1]);
+    const axes = fichiers.map((f) => {
+      const slug = f.replace(/\.mjs$/, "");
+      const src = lu(join("scripts", f));
+      const mom = momentsDeLOutil(slug, { offert, machine, itemsRonde });
+      const dom = domainesDeLOutil(src);
+      return { slug, moments: mom.moments, domaines: dom.domaines, domainesMesurable: dom.mesurable };
+    });
+    console.log("");
+    for (const l of formatAxesLines(axes, { itemsRonde })) console.log(l);
+    console.log(`\nHORS PORTÉE : ce classement dit où RANGER un script, QUAND il intervient et SUR QUOI il regarde — jamais s'il est BON, ni s'il regarde BIEN. C'est le travail des Gardiens, et les deux ne se remplacent pas.`);
     return;
   }
   if (sub === "recensement") {
