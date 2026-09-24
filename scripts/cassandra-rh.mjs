@@ -1034,7 +1034,17 @@ export function inventaireDeLaCharte(charteMarkdown = "") {
 export function portesDEntree(chemin, source = "", { importeurs = 0, packageJson = "", sourcesCrochets = "", documentation = "", instructions = null } = {}) {
   const base = chemin.replace(/^scripts\//, "");
   const echappe = base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const motifLancement = new RegExp(`(?:node|bash|--import)\\s+[^\\n|]*${echappe}`);
+  // LE SCRIPT DOIT ÊTRE L'ARGUMENT DIRECT DU LANCEUR — sinon la sonde attrape de la prose. Trois
+  // faux positifs mesurés avec la version large `node\s+[^|\n]*<nom>` : la commande d'un AUTRE
+  // outil qui prend ce nom en paramètre (`node scripts/smart-conso-api.mjs check-spirit`), et une
+  // phrase de compte rendu qui citait une ligne d'import. Un lanceur suivi d'options puis du
+  // chemin, et rien d'autre. Le guillemet et la parenthèse comptent comme début : dans
+  // package.json la commande est une valeur JSON, donc précédée d'un `"` et de rien d'autre —
+  // l'oublier faisait sortir `run-framework.mjs`, lancé par `pnpm dev`, en « lançable par personne ».
+  const motifLancement = new RegExp(`(?:^|[\\s\`"'(])(?:node|bash)\\s+(?:--?[\\w-]+(?:=\\S+)?\\s+)*(?:\\./)?scripts/(?:hooks/)?${echappe}(?![\\w.-])`, "m");
+  // `--import` PRÉCHARGE un module, il ne lance rien : `sites-env.mjs`, chargé ainsi par
+  // package.json, sortait « outil » alors qu'il n'est qu'une bibliothèque branchée au démarrage.
+  const motifPrechargement = new RegExp(`--import\\s+(?:\\./)?scripts/${echappe}(?![\\w.-])`);
   const motifCitation = new RegExp(`scripts/${echappe}`);
   const portes = [];
   if (MOTIF_PORTE_CLI.test(source)) portes.push("ligne de commande");
@@ -1046,6 +1056,7 @@ export function portesDEntree(chemin, source = "", { importeurs = 0, packageJson
   // travail passé. Une commande pour lancer quelque chose vit dans un document qui dit quoi faire,
   // jamais dans un journal de ce qui a été fait — et la confondre effaçait précisément le constat
   // utile : la charte ordonne de lancer cet outil à la main sans jamais écrire comment.
+  if (motifPrechargement.test(packageJson)) portes.push("préchargé comme module par package.json, jamais lancé");
   if (motifLancement.test(instructions ?? documentation)) portes.push("une commande de lancement est écrite");
   else if (motifCitation.test(documentation)) portes.push("nommé par la documentation, sans commande de lancement écrite");
   if (importeurs > 0) portes.push(`importé par ${importeurs} fichier(s)`);
