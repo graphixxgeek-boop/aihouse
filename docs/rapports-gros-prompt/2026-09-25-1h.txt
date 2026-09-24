@@ -1,0 +1,98 @@
+Version de Claude : claude-opus-5
+Produit le : jeudi 24 septembre 2026 à 23h09 (UTC)
+État du code : c08aa96 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : demande directe
+Outil : rapport-gros-prompt — inchangé depuis le jeudi 24 septembre 2026
+Santé de l'outil : 0/2 signal(aux) au vert — jamais sollicité d'après le compteur — ou jamais instrumenté pour l'être ; aucun objectif chiffré — rien à quoi comparer son résultat
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== RAPPORT DE COMMANDE-EN-MASSE — la saisine de 1h ===
+Saisine du 2026-09-25, vers 1h · 11 point(s) · 11 tâche(s) associée(s)
+Date : 2026-09-24
+
+Ton prompt du 2026-09-25, vers 1h contient 11 point(s) distinct(s). Ils sont repris ci-dessous RÉORGANISÉS par sujet — jamais dans l'ordre où ils sont arrivés, qui est l'ordre où tu y as pensé, pas celui où ils se traitent.
+🟢 10 retenu(s) · ⚪ 0 écarté(s) · 🟠 1 à trancher par toi.
+
+Booster l'agent des noms
+
+🟢 [1] RETENU — #740
+   TA DEMANDE : « quels sont TOUS les impacts, meme indirectes d'un changement de noms en serie ? l'impact technique ? d'autres impacts ? des impacts propres à l'agence ? fais des recherches sur le web »
+   OÙ ÇA EN EST : Tâche ouverte. L'outil ne couvre aujourd'hui que l'impact technique. Les impacts indirects sont déjà identifiables : un outil renommé perd son historique d'usage, ses objectifs chiffrés et son ancienneté apparente d'un seul coup — il ressort « jamais sollicité » et « tout neuf » le lendemain.
+
+La 5e distinction : à qui ça sert
+
+🟢 [2] RETENU — #741
+   TA DEMANDE : « il y a ceux qui aident le projet en entier, ou par défaut, ceux qui aident d'autres outils, ceux qui aident TOI et ceux qui aident MOI »
+   OÙ ÇA EN EST : Tâche ouverte, et c'est l'axe le plus utile pour la suite : c'est lui qui permet de chiffrer une réduction d'effectif. Recoupe le test d'utilité à 4 destinataires, écrit depuis longtemps et jamais mécanisé.
+
+Le rapport de toutes les notes de classification
+
+🟢 [3] RETENU — #742
+   TA DEMANDE : « Tu pourras me faire un rapport complet de TOUTES les notes prises sur la classification ? tu dois avoir tout archivé quelquepart »
+   OÙ ÇA EN EST : Tâche ouverte. Les notes sont éparpillées sur quatre endroits : un document de plan, quatre lignes de suivi, les commentaires de tête de CASSANDRA-RH et les contre-tests. Le rapport doit les rassembler, pas les résumer.
+
+Cadrer le chantier : cible et signal de fin
+
+🟢 [4] RETENU — #743
+   TA DEMANDE : « quel est la cible souhaitée ? à quelle classification finale on veut arriver et pourquoi ? quel est le lien avec l'organisation ? quel est le signal qui nous dira que la classification est ok ? »
+   OÙ ÇA EN EST : Tâche ouverte, et c'est elle qui commande toutes les autres. Proposition de signal de fin : la classification est finie quand tout script porte ses cinq axes sans désaccord non arbitré, ET quand chaque axe a servi au moins une fois à une décision réelle.
+
+Mesurer le poids, la version, le coût d'une réduction
+
+🟢 [5] RETENU — #744
+   TA DEMANDE : « on doit etre capable dans leur fiche complete d'indiquer le nombre de lignes de code, le poids qu'il pese dans le projet. estimer le cout d'une migration d'un utilitaire nommé vers poste de travail complet. si demain on doit reduire sensiblement la taille de l'agence, on doit pouvoir anticiper le gain »
+   OÙ ÇA EN EST : Tâche ouverte. Trois mesures qui n'existent pas : le poids par outil dans sa fiche, la version et le poids total de l'Agence avec des seuils, et le coût d'une migration dans les deux sens.
+
+Fusionner des agents
+
+🟢 [6] RETENU — #745
+   TA DEMANDE : « voir si on peut reduire le nombre d'agents par fusion ? on fait ca tout de suite ? ou on voit ca apres la classification ? »
+   OÙ ÇA EN EST : Ma réponse : APRÈS la classification, jamais avant. Une fusion décidée avant de savoir qui fait quoi est une fusion décidée sur des noms — le piège exact que la leçon L24 vient de nommer. Le sujet mis de côté reste à retrouver.
+
+Le coordinateur dit si une fonction existe déjà
+
+🟢 [7] RETENU — #746
+   TA DEMANDE : « l'idee que le coordinateur puisse dire au codeur (moi) si une fonction existe deja dans le code »
+   OÙ ÇA EN EST : Tâche ouverte, et le besoin est déjà payé : ABRAHAM-LES-REFERENCES est né exactement de ça. Le trou est le MOMENT — CLONE-HUNTER trouve les doublons après coup, personne ne regarde avant.
+
+Le code de classe dans le nom
+
+🟠 [8] À TRANCHER — #747
+   TA DEMANDE : « avant le nom il y a un code qui est inseré selon la nomenclature de l'outil. quel serait la longueur de ce code ? avant ou apres le nom ou invisible dans le nom ? »
+   OÙ ÇA EN EST : 
+   ❓ CE QUE J'ATTENDS DE TOI : Ma recommandation : le code ne doit PAS vivre dans le nom de fichier, sinon chaque reclassement coûte un renommage complet — et les reclassements sont exactement ce qui arrive ensuite. Il se déclare en tête de fichier et s'AFFICHE en préfixe. Trois caractères suffisent, pas cinq. À toi de trancher.
+
+Qui garde l'histoire de l'Agence
+
+🟢 [9] RETENU — #748
+   TA DEMANDE : « Oui veillons à l'histoire que l'agence raconte c'est trés important. QUI garde et surveille l'histoire de l'agence ? »
+   OÙ ÇA EN EST : Réponse honnête : personne, et c'est un trou. Les plus proches n'en couvrent qu'un bout. Un veilleur reste à concevoir.
+
+Les leçons, sans que tu aies à me le dire
+
+🟢 [10] RETENU — #749
+   TA DEMANDE : « nouvelle lecon à apprendre ! mais je ne dois pas te le dire à chaque fois ! reflechsi a ca avec l'outil dédié »
+   OÙ ÇA EN EST : Tu as raison, et le trou est identifiable : le process XP a trois moments de déclenchement, aucun n'a fonctionné ce soir parce que rien n'avait bloqué. Le moment manquant est : un outil rend un résultat qui ne correspond pas à ce que je sais du terrain.
+
+Continuer sur les 3e et 4e distinctions
+
+🟢 [11] RETENU — #750
+   TA DEMANDE : « oui continues sur 3e et 4e distinction sans t'arreter : on avance sur la classification »
+   OÙ ÇA EN EST : En cours. 3e : QUAND l'outil intervient. 4e : CE QU'IL REGARDE. Les deux se dérivent du terrain, jamais déclarées.
+
+Plan d'action
+
+  → RETENU · [1] ⬜ 🟠 « quels sont TOUS les impacts, meme indirectes d'un changement de noms en… — tâche [RECOMMANDEE] : 740
+  → RETENU · [2] ⬜ 🟠 « il y a ceux qui aident le projet en entier, ou par défaut, ceux qui aid… — tâche [RECOMMANDEE] : 741
+  → RETENU · [3] ⬜ 🟠 « Tu pourras me faire un rapport complet de TOUTES les notes prises sur l… — tâche [RECOMMANDEE] : 742
+  → RETENU · [4] ⬜ ⚪ « quel est la cible souhaitée ? à quelle classification finale on veut ar… — tâche [RECOMMANDEE] : 743
+  → RETENU · [5] ⬜ ⚪ « on doit etre capable dans leur fiche complete d'indiquer le nombre de l… — tâche [RECOMMANDEE] : 744
+  → RETENU · [6] ⬜ 🟠 « voir si on peut reduire le nombre d'agents par fusion ? (sujet qu'on av… — tâche [RECOMMANDEE] : 745
+  → RETENU · [7] ⬜ 🟠 « l'idee que le coordinateur puisse dire au codeur (moi) si une fonction … — tâche [RECOMMANDEE] : 746
+  ? À TRANCHER · [8] ⬜ ⚪ « avant le nom il y a un code qui est inseré selon la nomenclature de l'o… — Ma recommandation : le code ne doit PAS vivre dans le nom de fichier, sinon chaque reclassement coûte un renommage complet — et les reclassements sont exactement ce qui arrive ensuite. Il se déclare en tête de fichier et s'AFFICHE en préfixe. Trois caractères suffisent, pas cinq. À toi de trancher.
+  → RETENU · [9] ⬜ 🟠 « Oui veillons à l'histoire que l'agence raconte c'est trés important. QU… — tâche [RECOMMANDEE] : 748
+  → RETENU · [10] ⬜ 🟠 « nouvelle lecon à apprendre ! mais je ne dois pas te le dire à chaque fo… — tâche [RECOMMANDEE] : 749
+  → RETENU · [11] ⬜ 🟠 « oui continues sur 3e et 4e distinction sans t'arreter : on avance sur l… — tâche [RECOMMANDEE] : 750
+
+---
+HORS PORTÉE : ce rapport dit ce qui a été fait de chaque point ; il ne dit jamais si c'était la bonne chose à faire — ça se lit, et ça se tranche avec toi, point par point.

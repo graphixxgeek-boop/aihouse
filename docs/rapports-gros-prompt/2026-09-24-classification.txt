@@ -1,0 +1,48 @@
+Version de Claude : claude-opus-5
+Produit le : jeudi 24 septembre 2026 à 23h08 (UTC)
+État du code : c08aa96 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : demande directe
+Outil : rapport-gros-prompt — inchangé depuis le jeudi 24 septembre 2026
+Santé de l'outil : 0/2 signal(aux) au vert — jamais sollicité d'après le compteur — ou jamais instrumenté pour l'être ; aucun objectif chiffré — rien à quoi comparer son résultat
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== RAPPORT DE COMMANDE-EN-MASSE — la saisine « classification et agent des noms » ===
+Saisine du 2026-09-24, vers 22h · 4 point(s) · 3 tâche(s) associée(s)
+Date : 2026-09-24
+
+Ton prompt du 2026-09-24, vers 22h contient 4 point(s) distinct(s). Ils sont repris ci-dessous RÉORGANISÉS par sujet — jamais dans l'ordre où ils sont arrivés, qui est l'ordre où tu y as pensé, pas celui où ils se traitent.
+🟢 4 retenu(s) · ⚪ 0 écarté(s) · 🟠 0 à trancher par toi.
+
+La 2e distinction : jeu ou Agence
+
+🟢 [1] RETENU — #736
+   TA DEMANDE : « je vois un autre decoupage, uniquement si je ne me trompe pas chez les visibles : ceux qui bossent pour l'agence seulement et ceux qui bossent pour le jeu. peux-tu me dire également deja les proprotions ? »
+   OÙ ÇA EN EST : FAIT et mesuré : 6 outils servent le jeu, 39 l'Agence, 1 les deux. En lignes, 1 820 contre 44 283 — l'outillage pèse 3,6 fois le jeu lui-même. Réserve honnête déjà dite : check-house.mjs teste les deux, compté à moitié la part du jeu remonte vers 15 %.
+
+La leçon : l'offre déclarée, pas le code
+
+🟢 [2] RETENU — #736
+   TA DEMANDE : « ce qui dit à quoi sert un outil, c'est son offre déclarée, pas son code : lecon à apprendre typiquement »
+   OÙ ÇA EN EST : FAIT : enregistrée comme leçon L24 dans docs/referentiel/lecons.md. Elle est née d'un vrai raté — la première sonde classait 45 outils sur 65 comme « jeu » parce qu'ils MENTIONNENT lib/ dans un commentaire.
+
+L'agent des noms
+
+🟢 [3] RETENU — #738
+   TA DEMANDE : « est-ce que l'agent des noms est pret ? peux-tu le faire maintenant stp, et me rappeler le cahier des charges »
+   OÙ ÇA EN EST : FAIT, puis CORRIGÉ par toi le même soir — et tu avais raison, il manquait la moitié principale. Les deux moitiés existent maintenant : le risque technique d'un renommage en masse, et la gouvernance du nommage. Intégré 11 registres sur 11.
+
+La suite de la classification
+
+🟢 [4] RETENU — #750
+   TA DEMANDE : « pour la classification, on a avancé : 1ere distinction, 2e distinction, quelle est la suite ? l'objectif est de tout classifier correctement. ensuite on suit le process etabli, c'est ca ? »
+   OÙ ÇA EN EST : Répondu : il reste la 3e (le MOMENT où l'outil intervient) et la 4e (CE QU'IL REGARDE), plus la 5e que tu as ajoutée à 1h (à QUI il sert). Et oui, ensuite on suit le process établi : rapport, analyse, plan d'action, tâches.
+
+Plan d'action
+
+  → RETENU · [1] ✅ 🟠 Volet mécanique de #707, calibré avec lui en direct le 2026-09-24 vers mi… — tâche [RECOMMANDEE] : 736
+  → RETENU · [2] ✅ 🟠 Volet mécanique de #707, calibré avec lui en direct le 2026-09-24 vers mi… — tâche [RECOMMANDEE] : 736
+  → RETENU · [3] ✅ 🟠 Sa question : « est-ce que l'agent des noms est pret ? peux-tu le faire m… — tâche [RECOMMANDEE] : 738
+  → RETENU · [4] ⬜ 🟠 « oui continues sur 3e et 4e distinction sans t'arreter : on avance sur l… — tâche [RECOMMANDEE] : 750
+
+---
+HORS PORTÉE : ce rapport dit ce qui a été fait de chaque point ; il ne dit jamais si c'était la bonne chose à faire — ça se lit, et ça se tranche avec toi, point par point.

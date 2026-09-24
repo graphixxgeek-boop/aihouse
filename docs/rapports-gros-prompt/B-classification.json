@@ -1,0 +1,12 @@
+{
+  "titre": "RAPPORT DE COMMANDE-EN-MASSE — la saisine « classification et agent des noms »",
+  "dateDuPrompt": "2026-09-24, vers 22h",
+  "dateDuRapport": "2026-09-24",
+  "origine": "demande",
+  "points": [
+    {"id":"1","sort":"retenu","taches":[736],"sujet":"La 2e distinction : jeu ou Agence","citation":"je vois un autre decoupage, uniquement si je ne me trompe pas chez les visibles : ceux qui bossent pour l'agence seulement et ceux qui bossent pour le jeu. peux-tu me dire également deja les proprotions ?","reponse":"FAIT et mesuré : 6 outils servent le jeu, 39 l'Agence, 1 les deux. En lignes, 1 820 contre 44 283 — l'outillage pèse 3,6 fois le jeu lui-même. Réserve honnête déjà dite : check-house.mjs teste les deux, compté à moitié la part du jeu remonte vers 15 %."},
+    {"id":"2","sort":"retenu","taches":[736],"sujet":"La leçon : l'offre déclarée, pas le code","citation":"ce qui dit à quoi sert un outil, c'est son offre déclarée, pas son code : lecon à apprendre typiquement","reponse":"FAIT : enregistrée comme leçon L24 dans docs/referentiel/lecons.md. Elle est née d'un vrai raté — la première sonde classait 45 outils sur 65 comme « jeu » parce qu'ils MENTIONNENT lib/ dans un commentaire."},
+    {"id":"3","sort":"retenu","taches":[738],"sujet":"L'agent des noms","citation":"est-ce que l'agent des noms est pret ? peux-tu le faire maintenant stp, et me rappeler le cahier des charges","reponse":"FAIT, puis CORRIGÉ par toi le même soir — et tu avais raison, il manquait la moitié principale. Les deux moitiés existent maintenant : le risque technique d'un renommage en masse, et la gouvernance du nommage. Intégré 11 registres sur 11."},
+    {"id":"4","sort":"retenu","taches":[750],"sujet":"La suite de la classification","citation":"pour la classification, on a avancé : 1ere distinction, 2e distinction, quelle est la suite ? l'objectif est de tout classifier correctement. ensuite on suit le process etabli, c'est ca ?","reponse":"Répondu : il reste la 3e (le MOMENT où l'outil intervient) et la 4e (CE QU'IL REGARDE), plus la 5e que tu as ajoutée à 1h (à QUI il sert). Et oui, ensuite on suit le process établi : rapport, analyse, plan d'action, tâches."}
+  ]
+}

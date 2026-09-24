@@ -1,0 +1,77 @@
+Version de Claude : claude-opus-5
+Produit le : jeudi 24 septembre 2026 à 23h08 (UTC)
+État du code : c08aa96 sur claude/jolly-bell-ks9lhb
+Contexte de production : demande directe
+Outil : rapport-gros-prompt — inchangé depuis le jeudi 24 septembre 2026
+Santé de l'outil : 0/2 signal(aux) au vert — jamais sollicité d'après le compteur — ou jamais instrumenté pour l'être ; aucun objectif chiffré — rien à quoi comparer son résultat
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== RAPPORT DE COMMANDE-EN-MASSE — la saisine de minuit ===
+Saisine du 2026-09-24, vers minuit · 8 point(s) · 8 tâche(s) associée(s)
+Date : 2026-09-24
+
+Ton prompt du 2026-09-24, vers minuit contient 8 point(s) distinct(s). Ils sont repris ci-dessous RÉORGANISÉS par sujet — jamais dans l'ordre où ils sont arrivés, qui est l'ordre où tu y as pensé, pas celui où ils se traitent.
+🟢 7 retenu(s) · ⚪ 0 écarté(s) · 🟠 1 à trancher par toi.
+
+Évaluation de ses prompts
+
+🟢 [1] RETENU — #728
+   TA DEMANDE : « est-ce que mes prompts sont assez bien ecrits ? je veux etre évalué sur ce point regulierement, rapport à la ronde »
+   OÙ ÇA EN EST : Tâche ouverte. angel-of-ia-process note déjà les DEUX côtés ; ce qui manque est le critère « qualité d'écriture d'un prompt », qui n'existe nulle part.
+
+Une note pour le jeu, une pour l'Agence
+
+🟢 [2] RETENU — #729
+   TA DEMANDE : « est-ce qu'on a une mesure de la qualité du projet au global ? et une note pour la qualité du jeu et la qualité de l'agence ? »
+   OÙ ÇA EN EST : Tâche ouverte. Le tableau de bord mesure des outils un par un ; aucune note d'ensemble n'existe, et les deux moitiés du projet n'ont jamais été notées séparément.
+
+Numéro de version de l'Agence entière
+
+🟢 [3] RETENU — #730
+   TA DEMANDE : « est-ce qu'on peut calculer des numéros de versions mais pour l'agence au global ? »
+   OÙ ÇA EN EST : Tâche ouverte, et directement reliée à sa demande de 1h : l'Agence doit savoir dire sa version ET son poids.
+
+L'outillage pèse-t-il trop lourd ?
+
+🟢 [4] RETENU — #731
+   TA DEMANDE : « est-ce qu'on peut dire que l'outillage est trop lourd dans l'agence ? est-ce que ca penalise ? »
+   OÙ ÇA EN EST : Tâche ouverte. Première mesure faite à la main ce soir : 44 283 lignes d'outillage contre 12 815 pour le jeu, soit 3,6 fois. Jamais mécanisé.
+
+Rappels plus rapprochés la nuit
+
+🟢 [5] RETENU — #732
+   TA DEMANDE : « dans le process auto de nuit peux tu te faire des rappels plus proches que 45 minutes ? c'est quoi le minimum ? change ca tout de suite »
+   OÙ ÇA EN EST : Réglé à 15 minutes, sa décision. La tâche reste ouverte pour la vérification en conditions réelles.
+
+Les séries d'hommages
+
+🟢 [6] RETENU — #733
+   TA DEMANDE : « je veux rendre des hommages »
+   OÙ ÇA EN EST : FAIT et livré : les cinq séries sont déclarées dans l'agent des noms (grands codeurs, dystopique, prophètes, Matrix, Squid Game), chacune avec sa raison. Un nom hors série reste légitime.
+
+Le thème graphique SQUID GAME
+
+🟠 [7] À TRANCHER — #734
+   TA DEMANDE : « je veux que le theme graphique soit SQUID GAME, qu'en penses-tu ? »
+   OÙ ÇA EN EST : 
+   ❓ CE QUE J'ATTENDS DE TOI : Périmètre sensible et hors de ma limite : la refonte graphique est la seule chose que je ne touche pas sans toi. Rien n'a été fait, volontairement.
+
+Mesurer l'émiettement des tâches
+
+🟢 [8] RETENU — #735
+   TA DEMANDE : « cree une extension dans un outil et avance sur le sujet »
+   OÙ ÇA EN EST : Tâche ouverte. L'outil des tâches mesure le poids d'UNE tâche, jamais la fragmentation de l'ENSEMBLE — c'est le trou nommé.
+
+Plan d'action
+
+  → RETENU · [1] ⬜ 🟠 Sa demande : « est-ce que mes prompts sont assez bien ecrits ? je veux et… — tâche [RECOMMANDEE] : 728
+  → RETENU · [2] ⬜ 🟠 Sa question : « est-ce qu'on a une mesure de la qualité du projet au glob… — tâche [RECOMMANDEE] : 729
+  → RETENU · [3] ⬜ 🟠 Ses questions : « est-ce qu'on peut calculer des numéros de versions mais… — tâche [RECOMMANDEE] : 730
+  → RETENU · [4] ⬜ 🔴 Sa question, et elle touche directement l'export : « est-ce qu'on peut di… — tâche [RECOMMANDEE] : 731
+  → RETENU · [5] ⬜ 🟠 Sa demande : « dans le process auto de nuit peux tu te faire des rappels … — tâche [RECOMMANDEE] : 732
+  → RETENU · [6] ⬜ 🔵 Son idée : « je veux rendre des hommages » — séries « grands codeurs », «… — tâche [RECOMMANDEE] : 733
+  ? À TRANCHER · [7] ⬜ 🟠 Sa proposition : « je veux que le theme graphique soit SQUID GAME, qu'en … — Périmètre sensible et hors de ma limite : la refonte graphique est la seule chose que je ne touche pas sans toi. Rien n'a été fait, volontairement.
+  → RETENU · [8] ⬜ 🟠 Sa demande : « cree une extension dans un outil et avance sur le sujet » … — tâche [RECOMMANDEE] : 735
+
+---
+HORS PORTÉE : ce rapport dit ce qui a été fait de chaque point ; il ne dit jamais si c'était la bonne chose à faire — ça se lit, et ça se tranche avec toi, point par point.

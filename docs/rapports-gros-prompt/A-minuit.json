@@ -1,0 +1,16 @@
+{
+  "titre": "RAPPORT DE COMMANDE-EN-MASSE — la saisine de minuit",
+  "dateDuPrompt": "2026-09-24, vers minuit",
+  "dateDuRapport": "2026-09-24",
+  "origine": "demande",
+  "points": [
+    {"id":"1","sort":"retenu","taches":[728],"sujet":"Évaluation de ses prompts","citation":"est-ce que mes prompts sont assez bien ecrits ? je veux etre évalué sur ce point regulierement, rapport à la ronde","reponse":"Tâche ouverte. angel-of-ia-process note déjà les DEUX côtés ; ce qui manque est le critère « qualité d'écriture d'un prompt », qui n'existe nulle part."},
+    {"id":"2","sort":"retenu","taches":[729],"sujet":"Une note pour le jeu, une pour l'Agence","citation":"est-ce qu'on a une mesure de la qualité du projet au global ? et une note pour la qualité du jeu et la qualité de l'agence ?","reponse":"Tâche ouverte. Le tableau de bord mesure des outils un par un ; aucune note d'ensemble n'existe, et les deux moitiés du projet n'ont jamais été notées séparément."},
+    {"id":"3","sort":"retenu","taches":[730],"sujet":"Numéro de version de l'Agence entière","citation":"est-ce qu'on peut calculer des numéros de versions mais pour l'agence au global ?","reponse":"Tâche ouverte, et directement reliée à sa demande de 1h : l'Agence doit savoir dire sa version ET son poids."},
+    {"id":"4","sort":"retenu","taches":[731],"sujet":"L'outillage pèse-t-il trop lourd ?","citation":"est-ce qu'on peut dire que l'outillage est trop lourd dans l'agence ? est-ce que ca penalise ?","reponse":"Tâche ouverte. Première mesure faite à la main ce soir : 44 283 lignes d'outillage contre 12 815 pour le jeu, soit 3,6 fois. Jamais mécanisé."},
+    {"id":"5","sort":"retenu","taches":[732],"sujet":"Rappels plus rapprochés la nuit","citation":"dans le process auto de nuit peux tu te faire des rappels plus proches que 45 minutes ? c'est quoi le minimum ? change ca tout de suite","reponse":"Réglé à 15 minutes, sa décision. La tâche reste ouverte pour la vérification en conditions réelles."},
+    {"id":"6","sort":"retenu","taches":[733],"sujet":"Les séries d'hommages","citation":"je veux rendre des hommages","reponse":"FAIT et livré : les cinq séries sont déclarées dans l'agent des noms (grands codeurs, dystopique, prophètes, Matrix, Squid Game), chacune avec sa raison. Un nom hors série reste légitime."},
+    {"id":"7","sort":"a-trancher","taches":[734],"sujet":"Le thème graphique SQUID GAME","citation":"je veux que le theme graphique soit SQUID GAME, qu'en penses-tu ?","question":"Périmètre sensible et hors de ma limite : la refonte graphique est la seule chose que je ne touche pas sans toi. Rien n'a été fait, volontairement."},
+    {"id":"8","sort":"retenu","taches":[735],"sujet":"Mesurer l'émiettement des tâches","citation":"cree une extension dans un outil et avance sur le sujet","reponse":"Tâche ouverte. L'outil des tâches mesure le poids d'UNE tâche, jamais la fragmentation de l'ENSEMBLE — c'est le trou nommé."}
+  ]
+}
