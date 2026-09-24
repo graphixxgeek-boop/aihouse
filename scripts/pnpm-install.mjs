@@ -1,3 +1,10 @@
+// ICEBERG: plomberie
+// Déclaré plomberie le 2026-09-24 (tâche #737), en désaccord assumé avec la mesure dérivée, qui le
+// voit convocable parce qu'il a un point d'entrée. Il en a un, mais ses seuls arguments sont des
+// drapeaux internes (--hold-install-locks, --report-store) qu'aucun humain ne tape : il est appelé
+// par l'outillage d'installation, jamais convoqué. Le désaccord est RAPPORTÉ plutôt que tranché —
+// c'est précisément pour ce cas que l'iceberg lit deux sources au lieu d'une. L'arbitrage revient à
+// l'utilisateur ; d'ici là, cette ligne dit ce que le fichier sait de lui-même.
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import {

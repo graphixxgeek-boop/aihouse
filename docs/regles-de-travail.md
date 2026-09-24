@@ -472,7 +472,12 @@ enchaînement, sans en sauter une étape et sans avoir besoin qu'on le lui redem
    pre`.
 1. Relancer un serveur de développement à jour (redémarré si besoin pour garantir que c'est bien
    le code réel, pas une instance périmée, qui est testé) et lancer le script de simulation
-   intégrale contre lui — reset complet, phase 1 autonome jusqu'à la révélation, phase 2 (dossier
+   intégrale contre lui — **`node scripts/run-simulation.mjs <nom_de_la_simulation>`**. *(La
+   commande manquait ici, et l'omission avait un coût réel : l'étape disait « lancer LE script de
+   simulation intégrale » sans jamais le nommer, exactement la raison pour laquelle il a été
+   réécrit à la volée pendant dix-sept simulations avant d'être enfin committé. Inscrite le
+   2026-09-24, quand l'iceberg a montré que ce pilote était convocable et que rien ne le
+   présentait.)* — reset complet, phase 1 autonome jusqu'à la révélation, phase 2 (dossier
    retourné, négociation, plusieurs tirages de bonus distincts, hostilité sévère, humour noir,
    désescalade, bienveillance soutenue, divergence par dispute) — produisant un nouveau transcript
    horodaté par pièce, le dossier retourné complet et un journal JSON des requêtes/réponses.
@@ -2952,6 +2957,44 @@ ne disait ce qu'ils sont.*
 Les deux sont des journaux locaux déclarés dans `LOCAL_JOURNALS` (`scripts/doc-report.mjs`), qui
 vérifie notamment qu'un journal local ne manque jamais au `.gitignore` — un vrai risque de fuite au
 commit suivant.
+
+## Trois outils qui existaient sans que rien ne dise comment les appeler
+
+*(Inscrit le 2026-09-24, tâche #737. L'iceberg les a rangés dans le groupe OUBLIÉ — « convocable,
+mais rien ne le présente » — et ce groupe est temporaire par construction : il doit se vider. Ce
+n'est pas une formalité de rangement. Un outil que rien ne présente est un outil que la prochaine
+session ne trouvera pas, quel que soit son mérite : c'est la dette de reprise de l'Article 27, au
+mot près.)*
+
+**`node scripts/messages-courts.mjs`** — affiche la règle des messages courts : ne jamais s'arrêter
+sur un message bref qui arrive pendant un travail, rappel léger au deuxième, alerte plus forte quand
+le coût des relances devient réel. À lire quand on se demande si un message interrompt ou non la
+tâche en cours.
+
+**`node scripts/modes-de-travail.mjs [mode]`** — le registre des trois modes de travail (piloté,
+semi-autonome, nuit autonome), déclaré une fois et lu partout. Sans argument il les liste ; avec un
+nom de mode il dit ce que ce mode autorise. À consulter quand une règle dépend de « l'utilisateur
+est-il là pour répondre ? » ou de « une fenêtre de question a-t-elle le droit de bloquer ? » — deux
+questions distinctes qu'un seul booléen confondait autrefois.
+
+**`node scripts/rapport-gros-prompt.mjs <saisine.json> <sortie.txt>`** — produit le rapport d'une
+commande-en-masse au gabarit unifié : chaque point de la saisine repris un par un, avec son sort
+(RETENU · ÉCARTÉ · À TRANCHER) et, pour un point retenu, la tâche qui le porte réellement. Il
+REFUSE un point retenu sans tâche associée, parce que c'est exactement le défaut que l'utilisateur
+a relevé sur la première version écrite à la main.
+
+**Un quatrième cas est laissé en DÉSACCORD ASSUMÉ, et c'est le dispositif qui fonctionne comme
+prévu** : `scripts/pnpm-install.mjs`. Il a un point d'entrée, donc la mesure le dit convocable ;
+mais ses arguments sont des drapeaux internes (`--hold-install-locks`, `--report-store`) que
+personne ne tape à la main. Le fichier se déclare donc `plomberie` en tête, la mesure continue de le
+voir autrement, et l'iceberg **rapporte le désaccord au lieu de le trancher** — exactement le
+comportement pour lequel les deux sources existent. Ce cas appelle un arbitrage de l'utilisateur, pas
+une décision d'agent ; il reste donc visible tant qu'il n'est pas tranché.
+
+*(Une leçon en est sortie le soir même, et c'est la L24 prise dans l'autre sens. En écrivant ce
+paragraphe pour EXPLIQUER que pnpm-install n'est pas un outil, je l'ai fait basculer en « membre » :
+la sonde compte une simple MENTION du nom comme une présentation, sans pouvoir lire que la phrase
+dit précisément le contraire. Une sonde qui match sur un mot ne sait pas ce que la phrase affirme.)*
 
 ## OPTIMISER et FIABILISER — les deux mots d'ordre permanents
 
