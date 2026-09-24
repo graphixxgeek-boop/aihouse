@@ -112,6 +112,22 @@ Seuls les tests les appelaient, en injectant la leur. **L'alerte sur les rafales
 jamais pu tourner en vrai, pas une fois depuis sa construction.** Corrigé, et couvert par un test
 qui appelle le chemin de production — celui qui n'avait jamais été exercé (leçon L15).
 
+**Ce qu'une redirection DÉPLACE** (2026-09-24, chantier 5.4 du plan de nuit). Reconnaître une
+redirection et basculer dessus existait déjà ; ce qui manquait, c'est le sort de la tâche qu'elle
+interrompt. Le défaut a un nom dans ce dépôt : l'item de Ronde `suivi-open-tasks-signal` cherche
+justement les tâches « interrompues par un prompt intempestif et jamais reprises » — autrement dit
+il était connu, et seulement CONSTATÉ APRÈS COUP, parfois des jours plus tard.
+
+`absorberLaRedirection()` rend, au moment où la redirection arrive, la ligne de suivi à écrire pour
+la tâche déplacée : son sujet, où elle en était, et ce qui l'a déplacée. **L'ordre compte et il est
+dit dans la sortie** : écrire d'abord, basculer ensuite. Une tâche écrite peut être oubliée puis
+retrouvée ; une tâche qui n'existe nulle part est perdue dès que le contexte se recharge.
+
+Elle **refuse** quand la tâche déplacée n'est pas nommée, plutôt que de rendre une ligne vide :
+une absorption qui ne sait pas ce qu'elle déplace n'absorbe rien, et la ligne creuse ferait croire
+que le report a eu lieu. Et elle ne se déclenche que sur une redirection — un accompagnement se
+traite sans lâcher ce qu'on fait, un arrêt n'a rien à reporter puisqu'on s'arrête.
+
 **Sa limite, déclarée plutôt que tue** (Article 27) : aucun mécanisme ne lit une conversation, donc
 l'enregistrement des tours dépend de l'agent. Ce qui est garanti mécaniquement, c'est la RÈGLE, les
 seuils et la lecture du journal — jamais que le journal soit tenu. `angel-of-ia-process` porte la

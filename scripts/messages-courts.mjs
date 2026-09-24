@@ -122,6 +122,48 @@ export function reactionAuMessage(texte, { messagesCourtsPrecedents = 0 } = {}) 
   };
 }
 
+// ABSORBER UNE REDIRECTION SANS PERDRE CE QU'ELLE DÉPLACE  (2026-09-24, chantier 5.4)
+//
+// La demande : « l'outil de suivi absorbe les demandes intempestives et réorganise la file à chaque
+// prompt ». La première moitié existait déjà — `natureDuMessage()` reconnaît une redirection et dit
+// de basculer dessus sans s'arrêter. C'est la SECONDE qui manquait, et son absence a un nom dans ce
+// dépôt : l'item de Ronde `suivi-open-tasks-signal` cherche les tâches « interrompues par un prompt
+// intempestif et jamais reprises ». Autrement dit, le défaut était connu et seulement CONSTATÉ
+// APRÈS COUP, parfois des jours plus tard.
+//
+// Ce que cette fonction change : au moment où la redirection arrive, elle rend la LIGNE DE SUIVI à
+// écrire pour la tâche déplacée, avant de basculer. Une tâche écrite peut être oubliée puis
+// retrouvée ; une tâche qui n'existe nulle part est perdue à l'instant où le contexte se recharge.
+//
+// CE QU'ELLE NE FAIT PAS, et le dire est la protection (Article 27) : elle n'écrit rien elle-même
+// et rien ne peut forcer l'agent à l'appeler. Même limite honnête que le comptage des messages
+// courts juste au-dessus, que tool-brain et que SMART-CONSO-TOKEN. Ce qui est mécanique, c'est la
+// FORME de ce qu'il faut écrire et le refus de rendre quoi que ce soit quand la tâche déplacée
+// n'est pas nommée — parce qu'une absorption qui ne sait pas ce qu'elle déplace n'absorbe rien.
+export function absorberLaRedirection({ tacheEnCours = null, texte = "", horodatage = null } = {}) {
+  const { nature } = natureDuMessage(texte);
+  if (nature !== "redirection") {
+    return { absorbe: false, nature,
+      pourquoi: "seule une REDIRECTION déplace le travail en cours : un accompagnement se traite sans lâcher ce qu'on fait, et un arrêt n'a rien à reporter puisqu'on s'arrête" };
+  }
+  if (!tacheEnCours || !String(tacheEnCours.sujet ?? "").trim()) {
+    return { absorbe: false, nature, mesurable: false,
+      pourquoi: "la tâche déplacée n'est pas nommée : je ne peux pas écrire ce qui doit être repris, et rendre une ligne vide ferait croire que le report a eu lieu" };
+  }
+  const quand = horodatage ?? new Date().toISOString().slice(0, 16) + "Z";
+  return {
+    absorbe: true, nature, quand,
+    ligneASuivre: {
+      statut: "reportée — déplacée par une redirection, jamais abandonnée",
+      sujet: String(tacheEnCours.sujet).trim(),
+      ouEllenEtait: String(tacheEnCours.ouEllenEtait ?? "").trim() || "non précisé — à relire avant de reprendre",
+      deplaceePar: String(texte).trim().slice(0, 160),
+    },
+    quoiFaire: "écrire cette ligne dans docs/suivi/ AVANT de basculer, puis relire la file (node scripts/check-tasks-details.mjs) : la redirection change l'ordre, elle ne supprime pas ce qu'elle dépasse",
+    pourquoi: "une tâche écrite peut être oubliée puis retrouvée ; une tâche qui n'existe nulle part est perdue dès que le contexte se recharge",
+  };
+}
+
 // LE TEXTE DES DEUX RAPPELS. Calibrés pour ne pas culpabiliser : le fractionnement n'est pas une
 // faute, c'est une manière de travailler qui a un coût — et le coût est nommé plutôt que reproché.
 // AJOUT DE MON CÔTÉ, en réponse à sa question « tu vois autre chose à ajouter ? » : l'alerte forte

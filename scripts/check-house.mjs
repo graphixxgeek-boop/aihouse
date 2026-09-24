@@ -10136,6 +10136,18 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const mc = await import('../scripts/messages-courts.mjs');
   assert.equal(mc.reactionAuMessage('ok super').continuer, true, 'THE DEFAULT IS TO CONTINUE — a short message is not a stop request, and this is the whole rule: "tu dois continuer la tache en cours et pas t\'arreter, sauf demande explicite"');
   assert.equal(mc.reactionAuMessage('arrête tout').continuer, false, 'only an EXPLICIT stop request interrupts');
+  // ABSORBER UNE REDIRECTION (2026-09-24, chantier 5.4). Reconnaître la redirection existait déjà ;
+  // ce qui manquait, c'est ce qu'elle DÉPLACE. L'item de Ronde `suivi-open-tasks-signal` cherche
+  // justement les tâches « interrompues par un prompt intempestif et jamais reprises » : le défaut
+  // était connu et seulement constaté APRÈS COUP, parfois des jours plus tard.
+  assert.equal(mc.absorberLaRedirection({ texte: 'ok super', tacheEnCours: { sujet: 'X' } }).absorbe, false, 'only a REDIRECTION displaces the work: an accompanying remark is handled without dropping anything, and a stop has nothing to defer since we stop');
+  assert.equal(mc.absorberLaRedirection({ texte: 'fais plutôt la doc' }).mesurable, false, 'WITHOUT A NAMED TASK IT REFUSES: it cannot write what must be resumed, and rendering an empty row would make the deferral look like it happened');
+  const abs = mc.absorberLaRedirection({ texte: 'fais plutôt la doc', tacheEnCours: { sujet: 'chantier 2.2', ouEllenEtait: 'tests écrits' } });
+  assert.equal(abs.absorbe, true, 'a redirection over a named task yields the row to write');
+  assert.equal(abs.ligneASuivre.ouEllenEtait, 'tests écrits', 'and it carries WHERE the task stood, which is what makes resuming possible rather than restarting');
+  assert.match(mc.absorberLaRedirection({ texte: 'fais plutôt X', tacheEnCours: { sujet: 'Y' } }).ligneASuivre.ouEllenEtait, /non précisé/, 'an unstated position is said to be unstated, never left blank as if nothing mattered');
+  assert.match(abs.quoiFaire, /AVANT de basculer/, 'the order matters: write first, switch second — a task that exists nowhere is lost the moment the context reloads');
+
   assert.equal(mc.reactionAuMessage('attends, laisse tomber').nature, 'arret', 'several forms of an explicit stop are recognised');
   // LE POINT DE CONCEPTION QUI COMPTE : la liste de formes ne peut qu'AJOUTER un arrêt. Un mot
   // d'arrêt qu'elle ne connaît pas fait donc CONTINUER, le côté sûr de l'erreur — c'est ce qui
