@@ -63,6 +63,22 @@ référence — jamais parce qu'elle a été « notée ».)*
 | Fraîcheur | Regénéré **à chaque Ronde et à chaque nouvel outil** |
 | Une combinaison trouvée | **Entre directement au catalogue** sous un nom provisoire ; l'utilisateur renomme ensuite (cohérent avec le process de nommage ci-dessus, et couvert par son garde-fou) |
 
+### Commande-en-masse — nom et déclenchement, validés le 2026-09-24 (tard)
+
+| Point | Décision |
+|---|---|
+| Le NOM | **`commande-en-masse`**, choisi parmi les trois qu'il proposait. « gros prompt » était familier ; *massive-prompt* et *big-prompt* sont du franglais et « big » est aussi familier que « gros ». *Commande* porte le bon sens : quelque chose qu'on passe, qui engage, et qu'on honore. |
+| Seuil de déclenchement | **5 demandes distinctes OU 3 000 caractères** — réservé aux vraies grosses saisines, peu de bruit |
+| Ce qui se déclenche | Une **fenêtre qui PROPOSE** le rapport (jamais imposé) — **et la saisine est archivée dans tous les cas**, même si le rapport est refusé |
+| Pourquoi l'archivage compte plus que le seuil | Son texte du 2026-09-23 n'existe plus nulle part : le dépôt gardait mes réponses, jamais sa formulation. La limite d'une grosse saisine n'est pas ma compréhension, c'est ma **persistance**. |
+
+### La Ronde du 2026-09-24 — faute reconnue, traitement validé
+
+Son reproche : « tu n'as pas du tout respecté le process de la ronde. c'est grave mon cher ».
+**Traitement tranché : les deux.** Rattrapage enregistré le soir même (9 traces datées, chacune
+marquée RATTRAPAGE et jamais comme un passage normal), puis une vraie Ronde selon son process
+dans la nuit — ce qui montre au passage la différence entre les deux.
+
 ---
 
 ## 2. Demandes de l'utilisateur pas encore livrées

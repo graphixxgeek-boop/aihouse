@@ -1226,6 +1226,10 @@ export function recordCircleTasksRun(totalCommitCount, now = Date.now()) {
 // fourre-tout par Ronde) — jamais recopié en dur ailleurs : circle-process-guardian devra lire
 // cette table dynamiquement, jamais un chemin réinventé (Article 24).
 export const CIRCLE_REPORT_FOLDERS = {
+  // Ajouté le 2026-09-24 juste après l'item lui-même : il était déclaré producesReport sans avoir
+  // de dossier, donc sa trace n'aurait eu nulle part où aller — un émetteur sans registre est
+  // exactement le « détecteur muet » que ce projet traque ailleurs.
+  "sauvegarde": "docs/sauvegardes",
   // 2026-09-22 — QUATORZE items sur 32 déclaraient `producesReport: true` sans qu'aucun dossier ne
   // les attende ici. Trouvé en écrivant, pour la première fois, les artefacts d'une Ronde réelle :
   // 10 des 26 items exécutés ont levé « aucun dossier connu ». Personne ne l'avait vu parce que
