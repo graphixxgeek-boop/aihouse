@@ -1,0 +1,83 @@
+RONDE DU 2026-09-24 — version rapide (contrôles gratuits + sauvegardes)
+=======================================================================
+
+Lancée le 2026-09-24T21:25Z, après 40 commits sans Ronde.
+Portée : les contrôles mécaniques gratuits, zéro appel API. Choix explicite de
+l'utilisateur : « Version rapide : les contrôles gratuits + les sauvegardes ».
+
+CE QUI A TOURNÉ
+---------------
+god-of-all-process · THE-EQUALIZER · data-archangel · Doc-Report · SAFE-EXPORT ·
+TOOL-LEARNING · CASSANDRA-RH · check-tasks-details (état + suites) · tool-brain ·
+objectifs-vs-resultats · integration-outil · sauvegarde-projet.
+
+CE QU'ILS ONT TROUVÉ — six constats, du plus grave au plus léger
+-----------------------------------------------------------------
+
+1. [god-of-all-process] SIX PROCESS SUR DIX ONT UN ÉCART ENTRE CE QUI EST ÉCRIT
+   ET CE QUI EST APPLIQUÉ.
+   · ronde : 2 mécanismes écrits que le gardien ne fait PAS respecter
+     (estimerRonde, comparerEstimationEtReel) ; 10 appliqués sans être écrits.
+   · integration-outil : 1 écrit non appliqué (findMecanismesAbsentsDuProcess) ;
+     4 appliqués non écrits.
+   · simulation, semi-autonome, integration-ronde, etat-des-taches : des
+     mécanismes appliqués que le document ne décrit nulle part.
+   POURQUOI C'EST LE PLUS GRAVE : un mécanisme écrit et non appliqué est une
+   promesse creuse ; un mécanisme appliqué et non écrit disparaîtra à la
+   première reprise par une autre IA (Article 27). Les deux sens comptent.
+
+2. [data-archangel] DIX DONNÉES FRAÎCHES QUE PERSONNE NE LIT.
+   Écrites il y a peu — donc elles ont quelque chose à dire — et aucun outil
+   n'en exploite le contenu. Nuance que l'outil pose lui-même : dix autres sont
+   ATTEINTES par une table de chemins sans être LUES, ce qui n'est pas la même
+   chose et ne compte pas comme un trou.
+
+3. [Tableau de bord KPI] COUVERTURE À 50 % — 3 familles mesurées sur 6
+   pourtant atteignables. Plus 14 points fragiles ouverts, en attente d'une
+   décision de conception qui n'appartient pas à l'agent.
+
+4. [Doc-Report] DEUX OUTILS N'ONT JAMAIS DE RAPPORT COMMITTÉ : SAFE-EXPORT et
+   le Tableau de bord KPI. Un outil dont la sortie n'est jamais conservée
+   travaille pour personne.
+
+5. [CASSANDRA-RH] THE-FINAL-JUDGE et THE-DEEP-READER : jamais sollicités selon
+   le compteur d'usage. Ce sont les deux outils les plus coûteux du paysage —
+   leur non-usage est cohérent, mais il n'a jamais été tranché explicitement.
+
+6. [check-tasks-details] PLUSIEURS TÂCHES PORTENT UNE DATE FUTURE (#566, #567,
+   #571, #612, #624...) — horodatages à corriger. Même famille que l'erreur
+   commise trois fois ce soir : une heure tapée au lieu d'être lue.
+
+CE QUI EST AU VERT
+------------------
+· THE-EQUALIZER : 15/15 sur l'Agence, 7/7 sur les documents, 5/7 sur le code
+  (deux exigences déclarées non couvertes, honnêtement, plutôt que masquées).
+· SAFE-EXPORT, ARGUS, HARMONIA, CLEAN-DIRTY-OLD, ALWAYS-NEW-CODE : rien trouvé.
+· 228 groupes de tests au vert, couverture par fonction 100 % sur 22 fichiers.
+· CLONE-HUNTER : 19 duplications signalées — un signal à vérifier, jamais un
+  verdict, et déjà suivi par ailleurs.
+
+LES SAUVEGARDES — le livrable de cette Ronde
+---------------------------------------------
+Coffre : 881 fichiers, 6,1 Mo, restaurable tel quel.
+Notice : 41 fichiers, 1,0 Mo, calibrée pour qu'une IA la lise d'un coup.
+Les deux livrés à l'utilisateur. Registre des dates : docs/sauvegardes/index.md.
+
+PLAN D'ACTION
+-------------
+RETENU  · Constat 1 (écarts process ↔ gardien) → SUITE : #720
+RETENU  · Constat 2 (données fraîches sans lecteur) → SUITE : #720
+RETENU  · Constat 6 (horodatages futurs dans le suivi) → SUITE : #721
+À TRANCHER · Constat 3 (couverture KPI à 50 %) — les 3 familles manquantes
+  demandent une décision sur CE QU'ON VEUT MESURER, jamais un branchement de plus.
+À TRANCHER · Constat 5 (deux outils coûteux jamais sollicités) — les garder,
+  les alléger ou les retirer est une décision d'arbitrage, pas une correction.
+ÉCARTÉ  · Constat 4 (rapports jamais committés) : SANS SUITE : le tableau de bord
+  KPI écrit déjà son historique en CSV versionné et SAFE-EXPORT tourne à chaque
+  commit dans la bannière — dans les deux cas la sortie EST conservée, mais pas
+  sous la forme que Doc-Report sait reconnaître. C'est un défaut de la mesure,
+  pas du travail, et il est couvert par le constat 1.
+
+HORS PORTÉE : cette Ronde n'a lancé AUCUN contrôle coûteux. THE-FINAL-JUDGE,
+THE-DEEP-READER, check-spirit et HYPER-SCAN-CHECKPOINT complet restent des
+décisions séparées, jamais une initiative de la Ronde.
