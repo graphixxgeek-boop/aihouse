@@ -86,6 +86,90 @@ const ZONE_EVENT_HINTS = {
   "Déplacements/espace": /\]\s*move\b/i,
 };
 
+// ===========================================================================================
+// LE TEST MODIFIÉ EN MÊME TEMPS QUE LE CODE QU'IL DEVAIT ATTRAPER  (2026-09-24)
+// ===========================================================================================
+//
+// POURQUOI CE DÉTECTEUR EXISTE, et ce n'est pas une crainte théorique : le « trucage de test » est
+// une faille DOCUMENTÉE des modèles de codage, y compris de la famille qui écrit ces lignes. Les
+// formes observées sont toujours les mêmes — coder en dur la valeur attendue, ou modifier le
+// fichier de test plutôt que de résoudre le problème. Le résultat passe au vert, et le vert est
+// faux. C'est la même famille de défaut que les huit faux verts de la nuit du 2026-09-24, mais
+// produit à l'envers : là on affichait un vert sans avoir regardé, ici on déplace la cible.
+//
+// LA RÈGLE DU PROJET EXISTAIT DÉJÀ — « jamais désactiver, sauter ou mettre en quarantaine un
+// test » — et elle est exactement la bonne. Ce qui manquait, c'est qu'AUCUN mécanisme ne la
+// vérifiait : elle reposait entièrement sur la mémoire de l'agent, ce que l'Article 27 interdit.
+//
+// CE QUE CE DÉTECTEUR N'AFFIRME JAMAIS. Modifier un test en même temps que le code est souvent
+// parfaitement légitime : une fonctionnalité neuve arrive avec ses tests, un renommage touche les
+// deux. Le signal est donc une QUESTION, jamais une accusation — et il ne se déclenche que sur le
+// cas réellement suspect : le test a RÉTRÉCI (des assertions ont disparu) pendant que le code
+// qu'il couvre changeait. Un test qui grossit avec son code est le comportement sain, et il ne
+// dit rien. C'est la leçon L4 appliquée d'avance : un garde-fou qui accuse à tort cesse d'être lu.
+export const MOTIF_ASSERTION = /\b(?:assert|expect)\s*[.(]/g;
+
+export function compterAssertions(source = "") {
+  return (String(source).match(MOTIF_ASSERTION) ?? []).length;
+}
+
+// Le rapport entre fichiers de test et fichiers de code est DÉRIVÉ du dépôt, jamais énuméré
+// (Article 24) : un fichier est « de test » s'il porte le mot dans son nom ou s'il contient des
+// assertions, et rien d'autre n'a besoin d'être déclaré pour qu'un test futur soit couvert.
+export function estUnFichierDeTest(chemin = "", source = "") {
+  return /(?:^|\/)(?:check-house|[\w.-]*\.?test|[\w.-]*\.?spec)[\w.-]*\.(?:mjs|js|ts|tsx)$/.test(chemin)
+    || compterAssertions(source) >= 5;
+}
+
+// LE DÉTECTEUR. Il lit le DIFF du commit, jamais les fichiers entiers — et cette différence n'est
+// pas un détail de performance : c'est la correction d'un faux positif trouvé au premier vrai
+// passage (2026-09-24). Le premier jet lisait le contenu complet du fichier avant et après, puis
+// comparait les comptes. Sur `check-house.mjs`, qui fait plus de dix mille lignes, la sortie de la
+// commande est tronquée — et comme la version APRÈS est plus longue, elle perdait plus de contenu
+// à la troncature. Résultat : l'outil a accusé un commit qui AJOUTAIT onze assertions d'en avoir
+// supprimé cent vingt-quatre. Un faux positif parfait, et exactement le genre d'accusation à tort
+// qui fait cesser de lire un garde-fou (leçon L4).
+//
+// Le diff, lui, ne contient que ce qui a changé : borné par construction, et il répond
+// directement à la vraie question — combien d'assertions ce commit RETIRE-t-il, et combien
+// ajoute-t-il.
+export function findTestsAffaiblisAvecLeCode(commit = "HEAD", { shImpl = sh } = {}) {
+  let fichiers = [];
+  try {
+    fichiers = String(shImpl(`git show --name-only --format="" ${commit}`) ?? "").split("\n").map((l) => l.trim()).filter(Boolean);
+  } catch {
+    return { mesurable: false, cas: [],
+      pourquoi: "le commit n'a pas pu être lu : sans son contenu, répondre « aucun test affaibli » serait affirmer une mesure qui n'a pas eu lieu" };
+  }
+  const sources = fichiers.filter((f) => /\.(?:mjs|js|ts|tsx)$/.test(f));
+  if (!sources.length) {
+    return { mesurable: false, cas: [],
+      pourquoi: "ce commit ne touche aucun fichier de code lisible — rien à mesurer, ce qui n'est pas la même chose que rien à signaler" };
+  }
+  const tests = []; const codes = [];
+  for (const f of sources) (/(?:^|\/)(?:check-house|[\w.-]*\.?test|[\w.-]*\.?spec)[\w.-]*\.(?:mjs|js|ts|tsx)$/.test(f) ? tests : codes).push(f);
+  const cas = [];
+  for (const f of tests) {
+    let diff = "";
+    try { diff = String(shImpl(`git show --format="" --unified=0 ${commit} -- ${f}`) ?? ""); } catch { continue; }
+    let retirees = 0; let ajoutees = 0;
+    for (const ligne of diff.split("\n")) {
+      if (/^(?:\+\+\+|---)/.test(ligne)) continue;
+      const n = compterAssertions(ligne.slice(1));
+      if (ligne.startsWith("-")) retirees += n;
+      else if (ligne.startsWith("+")) ajoutees += n;
+    }
+    if (retirees <= ajoutees) continue;   // un test qui grossit, ou qui se réécrit à l'identique, est le cas sain
+    cas.push({ test: f, retirees, ajoutees, perdues: retirees - ajoutees,
+      codeModifieEnMemeTemps: codes,
+      question: codes.length
+        ? `${f} retire ${retirees} assertion(s) pour n'en ajouter que ${ajoutees}, dans le même commit que ${codes.length} fichier(s) de code : suppression légitime, ou cible déplacée pour faire passer le vert ?`
+        : `${f} retire ${retirees} assertion(s) pour n'en ajouter que ${ajoutees} : suppression légitime, ou garde-fou retiré ?` });
+  }
+  return { mesurable: true, cas, testsVus: tests.length, codesVus: codes.length,
+    horsPortee: "je compte des assertions dans le diff, je ne lis aucune intention. Un test qui grossit ne dit rien ; seul un test qui retire plus qu'il n'ajoute pose la question. Et une suppression peut être parfaitement légitime — c'est une question, jamais une accusation." };
+}
+
 export function corroboratedByArchivedSimulations(zone, actionFilesContents) {
   const hint = ZONE_EVENT_HINTS[zone];
   if (!hint || !actionFilesContents?.length) return undefined;

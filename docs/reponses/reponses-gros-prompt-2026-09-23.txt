@@ -1,0 +1,368 @@
+================================================================================
+REPONSES AUX QUESTIONS DU GROS PROMPT DU 2026-09-23
+Etabli le 2026-09-24 — a la demande explicite de l'utilisateur :
+« je me demande si tu as bien repondu aux QUESTIONS que j'ai posees dans mon gros
+prompt [...] Pour les questions : un fichier txt avec toutes les reponses. »
+================================================================================
+
+COMMENT LIRE CE FICHIER
+  [FAIT]     la question a recu sa reponse ET le travail est fait
+  [FAIT-Q]   question de comprehension : la reponse est ci-dessous, rien a coder
+  [CALIBRE]  tranche ensemble aujourd'hui, reste a construire
+  [OUVERT]   pas encore traite — tache ouverte, numero indique
+  [A TOI]    la decision t'appartient, je ne tranche pas
+
+--------------------------------------------------------------------------------
+A. LES TESTS QUE TU M'AS POSES
+--------------------------------------------------------------------------------
+
+A1. « retrouves-tu la tache qui consiste a trouver un nom au projet, au site,
+     au nom de domaine ? »                                            [FAIT-Q]
+  OUI : tache #240. Elle est ouverte, et elle porte ta propre regle : les noms
+  viennent APRES la classification. Elle n'a donc pas ete traitee, et c'est
+  volontaire, pas un oubli.
+
+A2. « j'ai peur que tu oublies des taches — rassure moi avec ton expertise
+     appliquee au sujet, plutot que par des mots. »                   [FAIT-Q]
+  Pas de mots, des mecanismes reels, tous verifiables :
+   - la numerotation est strictement croissante et un test la verifie
+     (un doublon a ete cree le 2026-09-24 ET ATTRAPE — voir tache #683) ;
+   - un crochet git refuse un commit dont le travail n'est pas trace ;
+   - un garde-fou detecte un horodatage dans le futur (il m'a arrete deux fois) ;
+   - une tache annoncee par un rapport doit EXISTER pour de vrai, sinon c'est
+     signale (Article 28).
+  La limite honnete : rien ne detecte une tache que tu m'aurais dite et que je
+  n'aurais jamais ecrite. C'est le seul trou, et il est declare.
+
+A3. « pose moi au moins 60 questions ? 60 ce sera assez ? on part sur 100 ? »
+                                                                       [A TOI]
+  Mon avis : le bon nombre n'est pas 60 ni 100, c'est « autant qu'il y a de
+  vraies decisions ». Sur les chantiers 4 et 6, il y en avait ~30 et je t'en ai
+  pose 24 avant que tu m'arretes pour eclaircir le vocabulaire. Sur le document
+  de gouvernance, tu as toi-meme annonce 20. Regle retenue aujourd'hui : une
+  question ne compte que si elle tranche une decision reelle.
+
+--------------------------------------------------------------------------------
+B. LE CHOIX D'UN OUTIL
+--------------------------------------------------------------------------------
+
+B1. « mesure-t-on si les FONCTIONNALITES au sein d'un meme outil sont toutes
+     exploitees ? qui devrait faire ce travail ? »                       [FAIT]
+  Non, ca n'existait pas. Construit dans la nuit (tache #666) : on compte
+  desormais les fonctions exportees qu'aucun test et aucun appelant ne touche.
+  Resultat reel : 54 detecteurs, 40 couverts, 14 REELLEMENT MUETS.
+  Qui porte ca : AXA-CHECK, dont c'est le metier (robustesse reelle par fonction).
+
+B2. « comment rendre obligatoire une integration, et pas une integration
+     sauvage ? chez god ? ailleurs ? »                                   [FAIT]
+  Ni god ni ailleurs : chez le process d'integration lui-meme (tache #661).
+  Une exigence s'ecrit maintenant a UN seul endroit et s'applique le jour meme
+  a TOUS les outils, y compris ceux ecrits avant elle. Preuve que ca marche :
+  AGENT-DU-TEMPS est le premier outil integre sans qu'un seul oubli soit
+  decouvert apres coup — onze registres sur onze du premier coup.
+
+B3. « tool-brain est-il bien plugge a tous les outils ? le schema est-il valable
+     pour d'autres corpus ? »                                            [FAIT]
+  Verifie en l'INTERROGEANT, pas en relisant son catalogue (tache #673) — et
+  deux capacites sur trois etaient INTROUVABLES. Corrige. Le constat vaut plus
+  que le correctif : relire un catalogue montre ce qu'il contient, l'interroger
+  montre ce qu'il ne contient pas. Depuis, chaque capacite neuve est verifiee
+  par une vraie interrogation avant d'etre declaree livree.
+
+B4. « pour qu'une regle fondamentale soit prise en compte : charte + porteur +
+     process maitre + outil dedie + quoi d'autre ? QUI est l'outil ? »   [FAIT]
+  L'outil est ABRAHAM-LES-REFERENCES, et il n'a pas fallu en creer un nouveau.
+  Ce qui manquait n'etait pas un outil mais une MESURE : quelle protection une
+  regle a-t-elle reellement. Six niveaux, du « rien du tout » au « bloque le
+  commit ». La reponse a ton « quoi d'autre » : rien d'autre n'est necessaire,
+  mais il faut que le porteur soit REEL — treize Articles se declaraient
+  proteges parce que leur nom apparaissait dans un commentaire.
+
+B5. « a-t-on encore besoin d'un nouvel outil pour la classification ? »  [FAIT]
+  Non. Abraham etendu a suffi, exactement comme tu le pressentais.
+
+--------------------------------------------------------------------------------
+C. CLASSIFICATION, NIVELLEMENT, INTEGRATION
+--------------------------------------------------------------------------------
+
+C1. « c'est toujours la classification qui determine l'integration,
+     n'est-ce pas ? »                                                  [FAIT-Q]
+  Oui, et ton document de gouvernance le dit mieux que moi :
+  CLASSIFICATION -> NIVELLEMENT -> HARMONISATION -> PROCESS INTEGRATION.
+  Ton intuition et le modele se rejoignent exactement. Une nuance que le
+  document apporte et que nous n'avions pas : entre niveler et integrer, il y a
+  HARMONISER — normaliser les noms, formats et statuts. C'est precisement l'etape
+  ou nous butons aujourd'hui sur le vocabulaire.
+
+C2. « une fois la classification etablie, on peut niveler, uniformiser par
+     categorie »                                                         [FAIT]
+  Fait : nivellement par classe (#661) et uniformisation par famille (#685).
+  Un seul ecart trouve sur 82 scripts — 11 outils sur 47 ne comptent pas leur
+  usage la ou 77 % de leurs semblables le font.
+
+C3. « aide-moi a faire la distinction entre les types de scripts »       [FAIT]
+  Huit types, DERIVES du fichier lui-meme et jamais enumeres a la main
+  (tache #652) : crochet, filet de securite, outil, utilitaire sans fiche,
+  bibliotheque partagee, bibliotheque solitaire, infrastructure shell,
+  execution directe non documentee. Plus 8 classes transverses (ce qu'un
+  fichier SAIT FAIRE, distinct de ce qu'il EST).
+
+C4. « quelle est la place des noms dans ce schema ? »                  [FAIT-Q]
+  Tu as repondu toi-meme et tu avais raison : les noms viennent en dernier.
+  Ton document le confirme au passage — l'harmonisation (dont les noms) vient
+  APRES la classification et le nivellement, jamais avant.
+
+--------------------------------------------------------------------------------
+D. LES PROCESS
+--------------------------------------------------------------------------------
+
+D1. « comment s'assurer que tu lis chaque process avant d'executer ? comment
+     forcer mecaniquement ? »                                        [CALIBRE]
+  Tranche aujourd'hui : une QUESTION a laquelle je dois repondre, sur TOUS les
+  process, et ca bloque LA FIN et pas le debut — c'est exactement la ou la faute
+  s'est produite le 23. La limite est ecrite noir sur blanc : aucune mecanique
+  ne peut verifier une lecture, ma reponse engage ma parole.
+  Tache #679, a construire.
+
+D2. « une ronde ne doit pas pouvoir se fermer si le process n'a pas ete
+     deroule entierement — c'est possible ? »                            [FAIT]
+  Oui, et c'est fait (tache #672). Le controle precedent etait DECLARATIF : il
+  me demandait de m'auto-declarer conforme. Un controle qui demande a celui
+  qu'il surveille de s'auto-declarer ne surveille rien. Chaque etape se verifie
+  maintenant sur une trace reelle sur le disque.
+
+D3. « quand une de mes demandes entre en conflit avec un process : le process
+     prevaut par defaut »                                             [CALIBRE]
+  Tranche aujourd'hui : le process prevaut, TU peux le lever ; je te pose la
+  question tout de suite ; l'ecart devient une tache dans le suivi ; et un
+  conflit repete trois fois sur le meme process declenche la question « ce
+  process est-il a revoir ? ». A construire.
+
+D4. « est-ce qu'il y a des trous non couverts par les process ? est-ce que god
+     appelle argus ou harmonia ? »                                    [CALIBRE]
+  Verifie : god ne les appelle PAS DU TOUT aujourd'hui. Tranche : il lira leur
+  version gratuite a chaque passage — cout nul, elle tourne deja. A construire.
+
+D5. « reste-t-il des angles morts dans la ronde ? »                   [CALIBRE]
+  Tranche : on les trouve par les problemes decouverts HORS Ronde. C'est une
+  mesure reelle et non une hypothese — les huit faux verts de la nuit sont tous
+  de ceux-la. A construire.
+
+D6. « GOAT MAX devrait etre disponible au debut avec le menu de la ronde »
+                                                                      [CALIBRE]
+  Tranche : une option visible parmi les autres, avec son cout et son apport
+  affiches. Pas pre-selectionnee — pre-selectionner en ferait le regime normal.
+
+D7. « dis a god que le traitement de claude.md est plus important que la ronde
+     periodique »                                                      [FAIT-Q]
+  J'avais MAL COMPRIS : j'ai lu « avant » comme un ordre d'etapes, tu parlais
+  d'IMPORTANCE. Tu l'as corrige toi-meme. Et oui, la charte a deja sa place dans
+  la Ronde : l'item « ecotoken-scan », avec ta decision du 22 en commentaire —
+  « un seul item de Ronde sur CLAUDE.md, jamais deux ».
+  Ce qui manquait vraiment : cet item ne regardait que le POIDS. Corrige — voir F1.
+
+D8. « BONNES HABITUDES -> PROCESS A CONSERVER : ce schema est un process maitre.
+     Il y a plusieurs schemas comme celui-ci : lesquels ? »            [OUVERT]
+  Le « process maitre » actuel ne fait PAS ca : il verifie seulement que chaque
+  process a ses papiers (declare, ecrit, ses preuves, ses tensions resolues).
+  Ce que tu decris est un autre objet : les regles que tout process doit
+  respecter. Il n'existe pas. Noms arretes par toi aujourd'hui :
+    - PROCESS-ADMIN-CONTROL  = celui qui existe (le controle administratif)
+    - PROCESS-MODEL-GAB      = celui a creer (le modele, le gabarit)
+  A construire ensemble apres le document.
+
+D9. « l'architecture technique du code garantit le respect des process :
+     comment bosser ce point ? »                                       [OUVERT]
+  Pas traite. C'est le fond du chantier 4, et ton document y repond mieux que
+  moi avec les « contrats d'interface » : un lien entre deux agents n'est pas
+  une fleche, c'est un contrat (declencheur, entrees, sorties, preconditions,
+  erreurs, responsable, versioning). A calibrer.
+
+D10. « calibrage en debut de chantier, proportionnel a l'enjeu »      [CALIBRE]
+  Tranche aujourd'hui : TROIS tailles au lieu de deux (gros 10-20, moyen 5-10,
+  petit 5), la taille se MESURE au lieu de se juger, le manquement est signale
+  sans bloquer, et une question ne compte que si elle nomme la decision qu'elle
+  tranche. A construire.
+
+--------------------------------------------------------------------------------
+E. TACHES, SUIVI, EVALUATION
+--------------------------------------------------------------------------------
+
+E1. « les taches que tu t'attribues : ce systeme est fiabilise ? quel agent
+     gere ? tu me le fais remarquer a la creation ET a la fin »          [FAIT]
+  Fait (tache #678). Marque AUTO-ATTRIBUEE, exigee aux DEUX bouts. Et TROIS
+  origines, jamais deux : utilisateur / outil / agent / indeterminee —
+  l'absence de mention ne PROUVE pas que je me suis attribue la tache.
+  Chiffre reel : sur 609 lignes, 159 declarent leur origine, 450 se taisent.
+
+E2. « poids de la tache + vignette »                                     [FAIT]
+  Fait (#678). Trois paliers seulement, parce que la seule decision servie est
+  binaire : decouper ou non. Il ne reordonne RIEN — l'ordre reste au palier de
+  priorite.
+
+E3. « un resume court en tete de chaque tache longue — est-ce pertinent ? »
+                                                                         [FAIT]
+  Oui, c'est pertinent, et c'est fait (#678). Chiffre qui le prouve : 343 lignes
+  longues au registre, dont 39 NE DIRAIENT PLUS RIEN d'elles-memes si elles
+  etaient tronquees aujourd'hui.
+
+E4. « l'outil de suivi absorbe-t-il mes requetes intempestives ? faut-il le
+     scinder en 2 ou 3 agents ? »                                  [FAIT + A TOI]
+  Premiere moitie faite (#686) : la tache deplacee par une redirection s'ecrit
+  AVANT de basculer. Le defaut etait connu et seulement constate APRES COUP,
+  parfois des jours plus tard.
+  Seconde moitie a toi (#687) : le fichier fait 1 378 lignes et porte quatre
+  metiers distincts, qui lisent tous le meme registre au meme moment. C'est
+  l'argument pour ET l'argument contre. Je ne tranche pas.
+
+E5. « EVAL-DEV et EVAL-IA ne portent pas QUE sur la ronde — GROS WARNING »
+                                                                         [FAIT]
+  Entendu et corrige (#669). Le perimetre etait bien defini sur le disque, tu
+  avais raison. Et en le rebranchant, j'ai trouve pire : l'evaluation du 23
+  n'avait produit AUCUNE TACHE. Sa conclusion ecrite n'existait nulle part
+  ailleurs que dans son dernier paragraphe (#679, #680).
+
+E6. « le jugement sur toi-meme entraine-t-il des taches ? consultes-tu
+     l'historique des EVAL-IA ? »                                        [FAIT]
+  Les deux etaient casses, au meme endroit (#680). L'edition du 23 etait sur le
+  disque pendant que son propre tableau annoncait « premiere edition a venir ».
+  Corrige, et le controle est mecanique. La progression refuse de parler sous
+  trois editions.
+
+E7. « l'etat des taches et etat des taches fidelite : les 2 sont-ils
+     redondants ? ils viennent de qui ? »                             [FAIT-Q]
+  Non, ils ne sont pas redondants, et ils ne font pas le meme metier :
+   - check-tasks-details  = CE QUE DISENT les taches (etat, priorite, poids) ;
+   - check-suivi-fidelity = SI LE REGISTRE EST FIABLE (numerotation, dates,
+     cloture verifiee, fraicheur).
+  L'un lit le contenu, l'autre controle le contenant. Preuve qu'ils ne se
+  remplacent pas : le 2026-09-24, le second a attrape un doublon de numero que
+  le premier n'aurait jamais vu.
+
+--------------------------------------------------------------------------------
+F. DOCUMENTS ET DONNEES
+--------------------------------------------------------------------------------
+
+F1. « plus de controles sur la charte que son poids »                    [FAIT]
+  Fait aujourd'hui (tache #690). SEPT controles au lieu d'un, et un verdict
+  avec TES quatre mots (envisageable / necessaire / importante / critique),
+  plus un plancher « aucune » — sans lui, une charte parfaite sortirait quand
+  meme « envisageable », et une echelle dont le plancher n'est jamais atteint
+  ne mesure rien. Le verdict est le PLUS HAUT niveau atteint, jamais une moyenne.
+  Premier passage reel : CRITIQUE, Articles 7 et 23.
+  RESTE : le brancher dans l'item de Ronde et le documenter.
+
+F2. « X rapports produits, une trentaine, une dizaine qui remontent sous une
+     forme qui synthetise les 30 »                                     [OUVERT]
+  Pas fait. C'est ta tache #243, toujours ouverte. Retrouvee : tu en avais bien
+  parle, la data existe.
+
+F3. « une passe sur le partage des docs : tous dispos, exploitables,
+     EXPLOITES »                                                       [OUVERT]
+  Pas fait. Chantier 6.2.
+
+F4. « un rapport sauvage doit etre historise, formatte, processe + circle »
+                                                                       [OUVERT]
+  Pas fait. Chantier 6.3.
+
+F5. « qui gere la coherence des descriptions courte/moyenne/longue/fiche ? »
+                                                                       [OUVERT]
+  Personne aujourd'hui — verifie. Chantier 6.5.
+
+F6. « le document central de fonctionnement de l'agence »                [FAIT]
+  Fait (#671) : docs/referentiel/agence.html. Decision qui comptait : il est
+  REGENERE, jamais ecrit a la main. Un document central faux est pire qu'aucun,
+  parce qu'on le croit.
+
+--------------------------------------------------------------------------------
+G. LES OUTILS
+--------------------------------------------------------------------------------
+
+G1. « convocation chez Cassandra »                                       [FAIT]
+  Fait (#663), et son premier passage M'A CONVOQUE : deux outils que je
+  n'appelle jamais. Une convocation ne peut etre close que par toi, avec une
+  date et une raison ecrite — toute tentative de l'etouffer est signalee
+  nommement, y compris la mienne.
+
+G2. « un petit agent pour l'heure, la date, les estimations »            [FAIT]
+  Fait (#662). Il ne donne JAMAIS l'heure sans dire d'ou elle vient.
+  A SAVOIR : les deux services d'heure sur Internet sont refuses par la
+  politique reseau de ton environnement, donc il utilise l'horloge de la
+  machine — et il l'ecrit a chaque passage. Ouvrir un domaine est ta decision.
+
+G3. « trois niveaux de scan light / target / warrior ; la couche lourde
+     est-elle utilisee ? declenchement automatique ? »                   [FAIT]
+  Mesure (#664) : 3 outils coutent vraiment, et 20 tournent a chaque commit
+  SANS AUCUN MOYEN d'aller plus loin quand ils trouvent quelque chose. Ils
+  signalent, et ils s'arretent la. Un seul candidat reel au chainage.
+
+G4. « numero de version + echelle de richesse, retroactif si possible »  [FAIT]
+  Fait (#665), et retroactif pour de vrai : les versions sont DERIVEES de
+  l'historique git, pas estimees. Personne n'est traite comme une version 1.
+
+G5. « safe-export doit se muscler et intervenir sur chaque tache ; on le met
+     dans le crochet ? »                                                 [FAIT]
+  Fait (#667), au crochet. Resultat : 14 outils non exportables (#668).
+  C'est la moitie du projet que tu m'as rappelee — un outil qui ne marche que
+  sur ce depot a rate sa mission.
+
+G6. « combinaisons d'outils au catalogue : comment ca marche ? le catalogue
+     est-il a jour ? tu utilises des packs ? »                         [FAIT-Q]
+  Mesure : sur 1 184 evenements d'usage, PAS UN ne mentionnait un pack. Ce qui
+  est mesure depuis, c'est si la combinaison a REELLEMENT EU LIEU (tous les
+  outils d'un pack utilises dans une meme fenetre), jamais si j'ai declare y
+  penser. Reponse inconfortable : deux des quatre vraies combinaisons n'ont
+  jamais eu lieu.
+
+G7. « reduire le nombre d'outils via la mesure de redondance (experience
+     MOISE / THE-KING) »                                                 [FAIT]
+  Fait (#676). Sur 46 prestations : UNE seule paire proche. Ton paysage n'est
+  pas gonfle de doublons — et la paire trouvee est un doublon de MOTS, pas
+  d'outils (#677, a toi de trancher).
+
+--------------------------------------------------------------------------------
+H. TES QUATRE REPONSES DE FIN DE PROMPT
+--------------------------------------------------------------------------------
+
+H1. « tool-brain : tu as prevu une tache pour bosser dessus ? »          [FAIT]
+  Oui — c'etait la tache #673, faite dans la nuit.
+
+H2. « le systeme de lecons : continue, optimise, fiabilise »             [FAIT]
+  Le registre XP existe et il a servi cette nuit : j'y ai inscrit que le
+  garde-fou des horodatages m'a refuse DEUX FOIS pour la meme cause, alors que
+  l'outil construit six heures plus tot etait a une commande de distance.
+  Ce que j'en retiens, et c'est ecrit : construire l'outil ne cree pas le
+  reflexe de l'appeler.
+
+H3. « les outils apprennent-ils seuls ? ca marche donc, rien a revoir ? »
+                                                                       [FAIT-Q]
+  Non, ca ne marche pas totalement, et je ne vais pas te dire que si.
+  TOOL-LEARNING mesure si un outil relit sa memoire. Ce qui manque : rien ne
+  mesure si cette relecture CHANGE quelque chose. Un outil peut relire son
+  registre et se tromper pareil. Tache a ouvrir.
+
+H4. « THE-EQUALIZER est-il bien a sa place ? est-ce un gardien sacre ? »
+                                                                       [FAIT-Q]
+  Non, et c'est volontaire. Le rang de Gardien sacre a un critere double et non
+  negociable : scanner la QUALITE DU CODE, et tourner gratuitement A CHAQUE
+  commit. THE-EQUALIZER rassemble des verdicts, il n'en produit pas — il est
+  donc a sa place, ailleurs.
+
+H5. « donc le systeme est coherent, fiable, tu l'as fiabilise ? »      [FAIT-Q]
+  Non, pas integralement, et te repondre oui serait exactement la complaisance
+  que tout ce dispositif existe pour empecher.
+  Ce qui EST fiabilise : la memoire, la tracabilite, les references mortes, la
+  chaine rapport -> tache.
+  Ce qui ne l'est PAS : ma propre observation de moi-meme pendant que j'agis,
+  et surtout le plafond structurel — chaque garde-fou de l'Agence, c'est MOI qui
+  l'ai ecrit. Un angle mort que j'ai en codant, je l'ai aussi en ecrivant le
+  garde-fou cense l'attraper. La nuit du 24 l'a prouve : quatre des huit faux
+  verts etaient dans les outils ecrits cette nuit-la POUR TRAQUER ce defaut.
+  Ce qui franchit ce plafond ne vient jamais de moi : le filet de tests, le
+  crochet git, et toi.
+
+================================================================================
+COMPTE : 35 questions relevees. 21 FAIT, 6 CALIBRE aujourd'hui, 6 OUVERT, 2 A TOI.
+Les 6 OUVERT sont concentres sur le chantier 6 (documents) et le chantier 4
+(architecture des process) — les deux que je t'ai signales comme incomplets.
+================================================================================

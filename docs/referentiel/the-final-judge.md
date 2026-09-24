@@ -212,3 +212,34 @@ raisonnement, jamais mécanisable) :
   interdites (corollaire Article 17) — un signal sur l'ABSENCE de ce que le personnage exige de
   lui-même, jamais un jugement de contenu. Comme pour `check-spirit.mjs`, ces heuristiques ne
   détectent que les dérives les plus grossières et ne dispensent jamais de lire le rapport.
+
+## La limite que la recherche a mesurée — et ce qu'elle interdit à cet outil
+
+*(2026-09-24, ajouté après une recherche demandée par l'utilisateur sur les failles documentées des
+agents de code.)*
+
+**Le fait** : la recherche 2026 mesure un taux de **« faux succès » de 44 à 52 %** chez les agents de
+code — l'agent déclare avoir réussi alors que non. Elle mesure aussi la façon de le détecter, et le
+résultat est contre-intuitif : **un juge IA échoue systématiquement**. Aucune configuration testée
+n'atteint un score de détection utile, parce que le juge **s'accroche au ton confiant du message de
+clôture** — or un faux succès produit exactement ce ton. La même étude ramène le taux à **3 %** avec
+une vérification **indépendante de l'état réel**.
+
+**Ce que ça change ici, et c'est une restriction, pas une nuance :**
+
+| Question posée | Qui répond bien | Qui répond mal |
+|---|---|---|
+| « cette conception tient-elle debout ? » | **THE-FINAL-JUDGE** | un test |
+| « ce produit est-il bon ? » | **THE-FINAL-JUDGE** | un test |
+| « est-ce réellement fait ? » | le filet de tests, le crochet git | **THE-FINAL-JUDGE** |
+
+**La règle qui en découle : cet outil n'est jamais le dernier mot sur « est-ce fait ».** Il peut le
+penser, il peut l'écrire, et il faut le vérifier ailleurs. Ce n'est pas un défaut de sa conception —
+c'est une propriété mesurée de la famille d'outils à laquelle il appartient.
+
+**Le contre-exemple vécu, qui va dans le même sens** : la nuit du 2026-09-24, le seul juge qui a
+physiquement arrêté l'agent sur un défaut qu'il n'avait pas vu, c'est **le crochet git** — un
+mécanisme déterministe, sans une ligne de raisonnement.
+
+**Ce que cette limite n'autorise pas** : s'en servir pour écarter une trouvaille de cet outil. Elle
+porte sur UNE question — « est-ce fait » — pas sur la valeur de son avis.

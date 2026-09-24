@@ -368,7 +368,16 @@ export const TOOL_RELIABILITY = {
   "clean-dirty-old": { nature: "heuristique", pourquoi: "l'ancienneté d'un fichier ne dit pas s'il est périmé — seulement qu'on n'y a pas regardé depuis longtemps" },
   "el-professor": { nature: "heuristique", pourquoi: "une note de fidélité à la charte reste une appréciation, jamais une mesure" },
   "the-screener": { nature: "heuristique", pourquoi: "une note graphique est indicative — deux captures ne résument pas un rendu" },
-  "the-final-judge": { nature: "heuristique", pourquoi: "un audit par agent séparé est un avis argumenté, jamais un verdict prouvé" },
+  // LIMITE MESURÉE, PAS SUPPOSÉE (2026-09-24). La recherche 2026 sur les agents de code mesure un
+  // taux de « faux succès » de 44 à 52 % — un agent qui déclare avoir réussi alors que non — et
+  // montre qu'un JUGE IA échoue systématiquement à le détecter : aucune configuration testée
+  // n'atteint un score de détection utile, parce que le juge s'accroche au ton confiant du message
+  // de clôture, or un faux succès produit exactement ce ton. La même étude ramène ce taux à 3 %
+  // par une vérification INDÉPENDANTE de l'état réel. Conséquence pour cet outil : il reste
+  // excellent pour ce qu'il sait faire — un avis argumenté sur la conception et le produit — et il
+  // n'est JAMAIS le dernier mot sur « est-ce réellement fait ». Ce mot-là revient au filet de
+  // tests et au crochet git, qui mesurent un état plutôt que de lire une prose.
+  "the-final-judge": { nature: "heuristique", pourquoi: "un audit par agent séparé est un avis argumenté, jamais un verdict prouvé — et sur la question « est-ce vraiment fait ? » un juge IA est un MAUVAIS détecteur, mesuré comme tel : il se fie au ton confiant de la conclusion, que produit justement un faux succès. Pour cette question-là, croire le filet de tests et le crochet git, jamais ce rapport" },
   "the-deep-reader": { nature: "heuristique", pourquoi: "relire un historique pour y trouver un oubli laisse toujours passer ce qui n'a jamais été écrit" },
   "smart-breaker": { nature: "heuristique", pourquoi: "une disponibilité de modèle sondée maintenant peut être fausse dans une minute" },
   "smart-conso-token": { nature: "heuristique", pourquoi: "aucun compteur réel de tokens n'existe côté agent — tout y est estimation" },

@@ -8063,6 +8063,32 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.match(formatDiagnosticCharte(vitale).join(' '), /CRITIQUE/, 'the printed verdict leads with the level, because that is the one thing that must not be missed');
   console.log("Passed: the charter now gets a FULL diagnostic, not just its weight (2026-09-24, demande explicite de l'utilisateur). Seven signals replace the single weight measure the Ronde used to call — and weight turns out to be the least informative of them: a light charter can still hold a vital rule nothing enforces, a path pointing at a deleted document, or two rules that overlap without anyone having said which wins. Nothing is recomputed here, every signal comes from the function that already owned it; this one assembles and concludes. The verdict uses the user's own four words and adds a floor, because a scale whose bottom is never reached measures nothing. It is the HIGHEST level reached, never an average. And the refusal case earned its counter-test the hard way: the first draft checked for a field the classifier does not return, so it always refused — written in the opposite direction it would have declared a healthy charter from zero rules read. Run against the real CLAUDE.md it answers CRITIQUE, naming Articles 7 and 23, which corroborates the night's finding by an independent path.");
 
+  // LE TEST AFFAIBLI EN MÊME TEMPS QUE LE CODE (2026-09-24, tâche A du plan « failles des IA »).
+  // Le trucage de test est une faille DOCUMENTÉE des modèles de codage : coder en dur la valeur
+  // attendue, ou modifier le test plutôt que résoudre le problème. La règle du projet existait
+  // déjà — jamais désactiver un test — mais AUCUN mécanisme ne la vérifiait.
+  const { findTestsAffaiblisAvecLeCode, compterAssertions, estUnFichierDeTest } = await import('../scripts/axa-check.mjs');
+  assert.equal(compterAssertions('assert.equal(a,b); expect(c).toBe(d);'), 2, 'both assertion dialects are counted');
+  assert.equal(estUnFichierDeTest('scripts/check-house.mjs'), true, 'the safety net is recognised by name');
+  assert.equal(estUnFichierDeTest('scripts/argus.mjs', 'const x = 1;'), false, 'an ordinary script is not a test file');
+  const shFaux = (sorties) => (cmd) => { for (const [motif, out] of sorties) if (cmd.includes(motif)) return out; return ''; };
+  assert.equal(findTestsAffaiblisAvecLeCode('X', { shImpl: () => { throw new Error('inconnu'); } }).mesurable, false, 'an unreadable commit is NOT MEASURABLE, never "no weakened test" — the distinction this whole project is built on');
+  assert.equal(findTestsAffaiblisAvecLeCode('X', { shImpl: shFaux([['--name-only', 'README.md\n']]) }).mesurable, false, 'a commit touching no code is not measurable either, and says so');
+  const affaibli = findTestsAffaiblisAvecLeCode('X', { shImpl: shFaux([
+    ['--name-only', 'scripts/a.test.mjs\nscripts/a.mjs\n'],
+    ['-- scripts/a.test.mjs', '--- a/x\n+++ b/x\n-  assert.equal(vieux, 1);\n-  assert.equal(vieux, 2);\n+  assert.ok(true);\n'],
+  ]) });
+  assert.equal(affaibli.cas.length, 1, 'THE CASE IT EXISTS FOR: a test that removes two assertions and adds one, in the same commit as the code it covers');
+  assert.equal(affaibli.cas[0].perdues, 1, 'and it counts the NET loss, not the gross removals — a rewrite that keeps the same count is not a weakening');
+  assert.match(affaibli.cas[0].question, /suppression légitime, ou cible déplacée/, 'it asks, it never accuses: removing a test is often perfectly legitimate, and a guard that accuses wrongly stops being read (leçon L4)');
+  const grossi = findTestsAffaiblisAvecLeCode('X', { shImpl: shFaux([
+    ['--name-only', 'scripts/a.test.mjs\nscripts/a.mjs\n'],
+    ['-- scripts/a.test.mjs', '-  assert.equal(x, 1);\n+  assert.equal(x, 1);\n+  assert.equal(y, 2);\n'],
+  ]) });
+  assert.equal(grossi.cas.length, 0, 'a test that grows with its code is the HEALTHY case and must stay silent, otherwise every normal commit would be flagged');
+  console.log("Passed: a test weakened in the same commit as the code it covers is now detected (2026-09-24). Test tampering is a documented failure of coding models, including the family writing these lines: hardcode the expected value, or move the test rather than fix the problem — the result goes green and the green is false. The project's rule against disabling a test was already right; nothing verified it, so it rested entirely on the agent's memory, which Article 27 forbids. The detector reads the DIFF and not the whole files, and that is a correction rather than an optimisation: the first version read `check-house.mjs` in full, the command truncated its ten thousand lines, the longer AFTER version lost more to the truncation, and the tool accused a commit that ADDED eleven assertions of having deleted a hundred and twenty-four. A perfect false positive, found by running it. It counts the NET loss so that a rewrite keeping the same coverage stays silent, it says nothing at all when a test grows, and every finding is a question — removing a test is often perfectly legitimate, and a guard that accuses wrongly stops being read.");
+
+
 
 
 

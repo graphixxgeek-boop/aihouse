@@ -2951,3 +2951,53 @@ ne disait ce qu'ils sont.*
 Les deux sont des journaux locaux déclarés dans `LOCAL_JOURNALS` (`scripts/doc-report.mjs`), qui
 vérifie notamment qu'un journal local ne manque jamais au `.gitignore` — un vrai risque de fuite au
 commit suivant.
+
+## OPTIMISER et FIABILISER — les deux mots d'ordre permanents
+
+*(2026-09-24, demande explicite de l'utilisateur : « pour les process, la construction, toutes les
+tâches à faire : je veux que OPTIMISER et FIABILISER soient les mots d'ordre, sans que j'aie à les
+répéter tout le temps ».)*
+
+**Ce que la règle remplace** : jusqu'ici l'utilisateur écrivait « fiabilise » ou « optimise » à
+chaque demande — onze fois dans ce seul document, et il l'a remarqué lui-même (« tiens encore, les
+mêmes mots »). Une consigne qu'il faut répéter n'est pas une consigne, c'est un rappel. Elle devient
+le **régime par défaut**.
+
+**Les deux mots ne disent pas la même chose, et les confondre ferait perdre l'un des deux :**
+
+- **FIABILISER** — que ça ne casse pas, que ça ne mente pas, que ça tienne à la prochaine session.
+  Un contre-test qui a été vu ROUGE, une limite déclarée noir sur blanc, un « je n'ai pas pu
+  mesurer » distinct d'un « je n'ai rien trouvé ». C'est le mot qui répond à *est-ce que je peux y
+  croire ?*
+- **OPTIMISER** — que ça coûte moins, que ça aille plus vite, que ça demande moins d'attention.
+  Une mesure plutôt qu'un jugement, un registre lu plutôt que recopié, un rapport qui dit l'essentiel
+  en premier. C'est le mot qui répond à *est-ce que ça vaut ce que ça coûte ?*
+
+**Ce que ça change concrètement, à chaque tâche, sans qu'il ait à le demander :**
+
+1. Une tâche n'est pas finie quand le code marche : elle est finie quand elle **ne peut plus mentir**
+   (fiabiliser) et quand elle **ne coûte pas plus que ce qu'elle rend** (optimiser).
+2. Toute construction neuve se conçoit d'emblée avec sa marge d'erreur déclarée et son cas
+   « non mesurable » — ce n'est pas une finition, c'est la définition du travail.
+3. Devant deux solutions qui marchent, celle qui se vérifie mécaniquement l'emporte sur celle qui
+   repose sur la mémoire de l'agent (Article 27).
+4. Un outil déjà construit peut être repris sans demande nouvelle, si le passage le rend plus
+   fiable ou moins coûteux — c'est du travail attendu, jamais une digression.
+
+**La limite honnête, comme ailleurs** : aucune mécanique ne peut vérifier qu'un agent a *cherché* à
+fiabiliser. Ce qui est mécanique, ce sont les conséquences — la marge d'erreur déclarée, le cas non
+mesurable, le contre-test. Le déclarer ici vaut mieux que de le confier à la mémoire.
+
+## Deux noms tranchés par l'utilisateur le 2026-09-24
+
+Le mot « process maître » désignait deux objets différents, ce qui recréait la dette de vocabulaire
+que l'Article 20bis a corrigée sur le mot « gardien ». L'utilisateur a tranché, et sa remarque vaut
+la règle : **« des fois il ne faut pas chercher midi à 14 h »**.
+
+| Nom | Ce que c'est | État |
+|---|---|---|
+| **PROCESS-ADMIN-CONTROL** | le contrôle administratif : chaque process a-t-il ses papiers — déclaré au registre, écrit quelque part, ses preuves, ses tensions résolues, et une modification indirecte suivie d'une mise à jour du document | **existe** (`scripts/god-of-all-process.mjs`, process `meta`) |
+| **PROCESS-MODEL-GAB** | le modèle, le gabarit : ce que TOUT process doit contenir pour être un process | **à construire**, avec l'utilisateur |
+
+**Pourquoi « master » a été écarté pour l'export** : en informatique, *master process* désigne déjà
+un programme parent qui en lance d'autres. Un développeur qui reprend l'Agence lirait autre chose.
