@@ -408,3 +408,49 @@ seules les lignes de statut **Agent** en portent un — un Utilitaire nommé ou 
 d'Infrastructure n'est pas un membre de l'équipe au sens de ce process, donc n'a jamais de badge à
 détenir ou à perdre.
 
+
+## La convocation, et les trois axes ajoutés le 2026-09-24
+
+*(Nuit autonome du 2026-09-24, chantiers 1.3/1.4, 2.1/2.4, 3.2, 3.3 et 3.4 du plan de nuit. Tout ce
+qui suit est arrivé chez CASSANDRA plutôt que dans de nouveaux scripts, parce que le même prompt
+demandait de RÉDUIRE le nombre d'outils et qu'elle tenait déjà l'effectif et l'organigramme.)*
+
+### La convocation — ce qu'elle est, et le retournement qui la rend juste
+
+Demande de l'utilisateur : « un outil qui échoue, stagne ou ne progresse pas est convoqué ; alerte
+poussée à l'utilisateur sous forme de question, plan d'action, tâches. **L'agent et l'utilisateur
+peuvent aussi être convoqués, et l'agent ne doit pas faire taire l'alerte.** »
+
+**Le retournement est le cœur du dispositif** : « jamais sollicité » convoque **l'AGENT**, jamais
+l'outil. Un outil ne peut pas se faire appeler tout seul, et le lui reprocher serait accuser la
+victime. C'est ce qui empêche la convocation de devenir un tribunal à sens unique où l'outillage
+porte seul la responsabilité de tout. L'**UTILISATEUR** est convoqué sur ce qui ne dépend que de
+lui — une exigence qu'il a posée et que seule une décision humaine peut lever —, jamais sur une
+exécution, qui n'est pas son travail.
+
+**L'anti-silence est mécanique, jamais promis** : `cloreConvocation()` refuse toute clôture qui ne
+porte pas `parUtilisateur: true` AVEC une date ET une raison écrite, et **relaie nommément la
+tentative** au lieu de l'avaler. Même discipline qu'`enregistrerXp()`. Un agent qui écrit lui-même
+« traité » fait disparaître l'alerte sans que personne d'autre l'ait vue.
+
+**Premier passage réel** : trois convocations, dont deux visent l'agent (`the-final-judge` et
+`the-deep-reader` jamais appelés), ce qui recoupe la tâche #205 ouverte par l'utilisateur avant que
+ce mécanisme existe. Nuance inscrite au registre plutôt que tue : ces deux-là s'appellent via l'outil
+`Agent`, donc la mesure ne les voit peut-être pas — à vérifier, jamais à supposer.
+
+### Les trois axes qu'elle porte désormais
+
+| Axe | Ce qu'il répond | Ce qu'aucun registre existant ne disait |
+|---|---|---|
+| **TYPE** | ce qu'un fichier EST | `AGENT_CATEGORIES` donne un RANG qu'une bibliothèque ne peut pas avoir |
+| **CLASSES transverses** | ce qu'il SAIT FAIRE | `TOOL_PORTEE` dit ce qu'un outil ANALYSE, jamais ce qu'il sait faire |
+| **VERSION × RICHESSE** | ce qui s'est PASSÉ, et ce qu'il EST aujourd'hui | rien ne les mesurait, et les fondre effacerait la différence |
+
+Tout se DÉRIVE : le type se lit dans le fichier, chaque classe est une sonde sur son source, la
+version se calcule depuis git. Un script ajouté demain reçoit les trois sans que personne y pense
+(Article 24). Le **nivellement** (`EXIGENCES_PAR_CLASSE`) est la suite logique : une exigence écrite
+en UN endroit s'applique le jour même à TOUS les outils, y compris ceux écrits avant elle — et
+`integration-outil.mjs` la LIT plutôt que de la recopier, donc une exigence nouvelle vaut pour la
+prochaine intégration sans que ce fichier bouge.
+
+**Aucun seuil sur la richesse, délibérément** : un outil pauvre n'est pas un mauvais outil.

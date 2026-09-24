@@ -280,3 +280,33 @@ prochain cas.
 - **`--since=<date>` seul ne veut pas dire « depuis minuit »** : git y ajoute l'heure courante, si
   bien qu'un commit du matin passe pour antérieur à sa propre date. Le relevé rendait 0 fichier sur
   9 leçons — un zéro parfaitement plausible, donc invisible sans vérification (Article 25).
+
+## L'évaluation ne porte plus seulement sur la Ronde (2026-09-24)
+
+**Demande de l'utilisateur, marquée « GROS WARNING »**, avec la précision qui commande tout :
+**« c'est une erreur qui se répète »**. EVAL-DEV et EVAL-IA ne doivent pas porter seulement sur ce
+qu'une Ronde a couvert.
+
+**Pourquoi elle se répétait, et c'est structurel plutôt qu'accidentel** : l'évaluation n'existait
+qu'en tant qu'ITEM de Ronde (`recap-evaluations`), et sa période implicite était « depuis la
+dernière Ronde ». Tout ce qui se fait ENTRE deux Rondes — une nuit entière, une vague de correctifs,
+une simulation — n'était jugé par personne. Et surtout : **l'absence d'évaluation ne produisait
+aucun signal, parce qu'un rapport qu'on ne lance pas ne se plaint jamais.** Rien ne nommait le
+manque, donc rien ne l'empêchait de revenir.
+
+**Ce qui la fait cesser** : `findTravailNonEvalue()` (`angel-of-ia-process.mjs`) compare le travail
+RÉELLEMENT FAIT — tâches de `docs/suivi/` et commits git — à la dernière évaluation enregistrée. La
+période devient « depuis la dernière ÉVALUATION », ce qui est la vraie question. Seuil mécanique de
+10 unités : une évaluation à chaque commit ne mesurerait plus rien. Et une règle surveillée de plus,
+`eval-hors-ronde`, où angel refuse d'être au vert sans réponse (Article 27).
+
+**Le défaut s'est produit DANS ce mécanisme, à la seconde où il a été branché** — et il mérite
+d'être écrit ici parce qu'il est la forme la plus pure du travers que tout ce process combat : deux
+imports manquants, deux `catch` qui avalent, deux compteurs restés à zéro, et le rapport a affiché
+**« ✅ aucun travail enregistré » la nuit où dix-neuf tâches venaient d'être écrites**. Un faux vert,
+dans la fonction construite pour empêcher une erreur de se répéter. `luAvecSucces` distingue
+désormais « zéro mesuré » de « pas pu lire ».
+
+**Constat secondaire, ouvert en tâche** : l'évaluation du 2026-09-23 a bien eu lieu — le fichier
+existe — et ne s'est jamais inscrite dans `historique-evaluations.json`. L'artefact existe, la
+mémoire ne l'a pas. Un historique qui ne se remplit pas transforme une série en photographie.

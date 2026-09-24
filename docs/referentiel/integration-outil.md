@@ -115,3 +115,28 @@ matchait l'EXEMPLE écrit dans le propre commentaire d'`integration-outil.mjs`, 
 module de règles rattaché au process « `<slug>` ». Trouvé en le lançant pour de vrai sur le dépôt
 entier, jamais en le relisant (Article 25) — et c'est la leçon L4 prise au mot : un garde-fou qui
 accuse à tort cesse d'être lu.
+
+## L'intégration n'est plus seulement une inscription (2026-09-24, chantier 2.4)
+
+**Ce que ce plan ne vérifiait pas, et le trou était entier** : jusqu'à cette date, `planDIntegration()`
+ne savait répondre qu'à une question — « es-tu inscrit dans les onze registres ? ». Un outil pouvait
+donc être parfaitement intégré au sens de cette fonction en **ne déclarant jamais sa marge d'erreur,
+en ne sachant pas répondre « pas mesuré », et en ne concluant par aucun plan d'action**. Les
+registres à jour, et les obligations de fond invisibles. Mesuré le soir même sur le dépôt réel :
+selon l'exigence, **45 à 76 % seulement** des outils concernés l'atteignent.
+
+`obligationsDeClasse()` comble ce trou, et `complet` veut désormais dire **les deux** : inscrit
+partout ET à niveau sur ce que sa classe exige.
+
+**Les exigences ne sont pas recopiées ici** : elles sont LUES chez CASSANDRA-RH
+(`EXIGENCES_PAR_CLASSE`), où elles vivent avec les classes transverses qu'elles gouvernent. Une
+exigence ajoutée là-bas vaut donc pour la prochaine intégration sans que ce fichier bouge — c'est
+exactement ce que l'Article 24 exige, et le contraire de la liste recopiée qui se périme au premier
+ajout.
+
+**Un outil en cours d'intégration est traité comme un OUTIL**, jamais comme ce qu'il est avant
+d'être documenté : le mesurer autrement l'exempterait de tout au moment précis où il faut l'exiger.
+
+**Première intégration passée sous ce régime** : AGENT-DU-TEMPS, le 2026-09-24 — onze registres sur
+onze du premier coup, plus son blueprint et sa fiche. La première fois qu'un outil de ce projet
+entre sans découvrir ses oublis un test après l'autre.

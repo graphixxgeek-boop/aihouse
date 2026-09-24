@@ -1520,3 +1520,34 @@ tokens), or le plancher n'est pas le coût — THE-DEEP-READER a consommé 346 0
 neuf fois son plancher, parce qu'il LIT ce qu'on lui donne. Tant que l'estimation d'un agent ne
 dépendra pas du VOLUME qu'on s'apprête à lui confier, la colonne « tokens estimés » est un plancher
 et doit être lue comme tel.
+
+
+  ────────────────────────────────────────────────────────────────────────
+  LA CLÔTURE SE VÉRIFIE SUR LE DISQUE (2026-09-24)
+  ────────────────────────────────────────────────────────────────────────
+
+  Demande de l'utilisateur : « une Ronde ne doit pas pouvoir se clore si le process n'a pas été
+  entièrement déroulé ». Portée par verifyClotureDeRonde() (scripts/circle-process-guardian.mjs).
+
+  CE QUI L'A FAIT ÉCRIRE. Le 2026-09-23, la Ronde GOAT MAX a été close en sautant CINQ des huit
+  étapes de fin décrites en Partie 10. L'utilisateur : « tu n'as rien livré à la fin, tu t'es sauvé
+  en courant ! ». Le premier rattrapage était lui-même incomplet, et il a dû le redire. La cause,
+  qu'il a nommée : « tu lis les raccourcis plutôt que les documents » — la liste d'étapes du
+  contrôleur en décrit onze pour toute la Ronde, ce document en décrit HUIT rien que pour la fin.
+
+  POURQUOI verifyRondeProcess() NE POUVAIT PAS L'ATTRAPER. Il est DÉCLARATIF : on lui passe
+  questionsAsked, recapHtml, analysisPointsFound — c'est-à-dire ce que l'agent AFFIRME avoir fait.
+  Un agent qui saute une étape ne le déclare pas, par définition. Un contrôle qui demande à celui
+  qu'il surveille de s'auto-déclarer ne surveille rien.
+
+  CE QUI CHANGE. Chaque étape A→H est vérifiée contre la TRACE qu'elle laisse sur le disque : un
+  rapport écrit existe ou n'existe pas. Le disque ne se souvient pas des intentions.
+
+  TROIS RÈGLES, ET CHACUNE FERME UN CAS.
+    · Sans faits fournis : « non mesurable » ET pas d'autorisation de clore. Un contrôle de clôture
+      qui rendrait « conforme » sur une absence de données serait le vert le plus dangereux de tout
+      ce paysage.
+    · L'ordre ne compte que pour H : record-run scelle la Ronde. Le lancer alors que des étapes
+      manquent est signalé GRAVE et IRRÉVERSIBLE — une Ronde enregistrée comme close ne se rouvre
+      pas. C'est exactement l'erreur du 2026-09-23.
+    · Chaque étape manquante est NOMMÉE avec ce à quoi elle servait, jamais un simple compte.
