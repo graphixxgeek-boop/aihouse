@@ -364,3 +364,38 @@ dispositif qui hurle précisément quand on lui obéit finit par enseigner qu'il
 
 **Le réflexe qui a attrapé les sept, écrit noir sur blanc dans la leçon** : ouvrir le fichier
 accusé AVANT de le corriger.
+
+## 2026-09-25 — Le maillon 3 (« analyser à la Ronde ») n'avait jamais été joué (tâches #573 et #576)
+
+**LA CHAÎNE EST BRANCHÉE, ET ELLE LE RESTE** : `auditChaineXp()` rend toujours **5/5 maillons**,
+vérifié dans le vrai dépôt. Ce qui suit ne remet pas ça en cause — il dit autre chose, et de plus
+gênant : **un maillon branché n'est pas un maillon joué.**
+
+**CE QUI A ÉTÉ MESURÉ** : `docs/tool-learning/verdicts.json` contient `[]`, alors que le dossier
+porte **cinq signaux de Ronde**. Or l'étape 3 de la chaîne — l'analyse à la Ronde — se joue par le
+geste que l'item de Ronde `tool-learning` réclame nommément dans son propre `execute` : « juger
+chaque outil concerné (`jugerUnOutil`) ». Ce geste n'a **jamais** eu lieu, cinq passages de suite.
+
+**POURQUOI PERSONNE NE POUVAIT LE VOIR, et c'est ça qui compte pour ce process** : le rapport en
+tirait « PAS ENCORE MESURABLE — registre de verdicts vide ». C'est honnête, c'est même la règle
+maison (jamais un vert sur rien) — et c'est exactement ce qui le rendait invisible. **Derrière un
+registre vide il y a deux causes indiscernables** : un outil neuf qui n'a pas encore tourné, et un
+outil qui tourne depuis cinq Rondes sans que son étape manuelle soit faite. L'aveu d'absence de
+mesure faisait passer la seconde pour la première.
+
+**CE QUE ÇA APPREND SUR LA CHAÎNE ELLE-MÊME** — et c'est la vraie leçon de process, pas un détail
+d'implémentation : `auditChaineXp()` vérifie que chaque maillon est **CÂBLÉ**, jamais qu'il a été
+**JOUÉ**. Les deux questions sont différentes, et la première ne dit rien de la seconde. Un maillon
+qui dépend d'un geste humain — ici le jugement par outil, comme ailleurs la conclusion de période
+et le jugement de l'utilisateur — peut rester branché et inerte indéfiniment sans qu'aucun contrôle
+ne s'en aperçoive.
+
+**LE PORTEUR AJOUTÉ** : `etapeManuelleJamaisFaite()` (`scripts/tool-learning.mjs`), trois états
+jamais deux — *sautée* (des passages, zéro verdict) · *rien à reprocher* (ni l'un ni l'autre) ·
+*pas mesuré* (registre illisible, ce qui n'est jamais zéro passage). Il sort **avant** la ligne de
+gravité et entre **en tête du plan d'action**.
+
+**CE QU'IL NE FAIT PAS** : produire le verdict à la place de l'agent. Les deux jugements que ce
+process réserve explicitement à l'humain (la conclusion de période, et l'utilisateur qui dit si une
+entrée a été APPLIQUÉE) restent hors de toute mécanique — ce mécanisme-ci ne fait que **refuser
+qu'on les oublie en silence**.
