@@ -169,6 +169,12 @@ LE SEUL BIAIS QUI SE CONFIRME (#841) : 30 commits sans Ronde, signale par le rap
   immediat tournent a chaque fois. Je ne la lance pas seule : son propre dispositif exige une
   fenetre a cocher avant execution. Inscrit au registre des decisions [A TRANCHER PAR LUI]
 
+#235 (rentabiliser les trouvailles) : l'outil qui mesure ca existe deja (TOOL-LEARNING) — rien a
+  construire, seulement a lancer et lire. Verdict net : 7 lecons JAMAIS remontees sur 140-255
+  occasions, 11 qui remontent souvent sans jamais avoir ete jugees appliquees, et AUCUNE entree
+  jugee. Le jugement lui appartient mecaniquement (enregistrerXp refuse sans parUtilisateur).
+  Mis devant lui sous forme decidable [A TRANCHER PAR LUI]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------

@@ -173,3 +173,28 @@ des tokens, d'où le choix des items.
 **Et c'est exactement le sujet de #205** : une activité gratuite, à retour différé, repoussée
 trente commits durant pendant que les vérifications à retour immédiat tournaient à chaque commit.
 Cette fois la mesure ne se trompe pas — le compteur de commits, lui, est indiscutable.
+
+### Ajoutée le 2026-09-25 — le registre des leçons grossit, et personne ne dit s'il sert
+
+| Tâche | Sujet | Décision |
+|---|---|---|
+| #842 | Les 20 leçons du registre : lesquelles ont RÉELLEMENT changé quelque chose ? | à trancher |
+
+**Mesuré par TOOL-LEARNING, l'outil dont c'est précisément le métier** (`node scripts/tool-learning.mjs`) :
+
+- **7 leçons ne sont JAMAIS remontées**, sur 140 à 255 occasions chacune (L7, L9, L17, L18, L20,
+  L21, L23). Du poids mort dans un registre qui ne cesse de grossir.
+- **11 leçons remontent souvent et n'ont jamais été jugées appliquées** (L1, L2, L4, L5, L8, L10,
+  L11, L12, L13, L24, BP3). L'outil le dit sans détour : « ressortir ne suffit visiblement pas ».
+- **Aucune entrée n'a encore été jugée** appliquée ou non.
+
+**Pourquoi je ne tranche pas**, et ce n'est pas une dérobade : `enregistrerXp()` **refuse** un
+jugement qui ne porte pas `parUtilisateur: true`. C'est écrit dans le process XP : *« c'est
+l'utilisateur, à la Ronde, qui dit si une entrée a été réellement APPLIQUÉE »* — et c'est toi qui
+l'as voulu ainsi (« c'est moi à la fin qui te dis si elle est propre »).
+
+**Ce que ça te demande, concrètement** : pour chaque leçon, un mot — appliquée, ou pas. Les sept qui
+ne remontent jamais appellent une seconde question : les reformuler, ou les retirer ?
+
+**Ce qui est mesuré et ne se rediscute pas** : aider un outil coûte ~3 300 tokens (médiane). Le frein
+n'est pas là — c'est le fichier de tests qui pèse 273 000 tokens, 44 % de tout `scripts/`.
