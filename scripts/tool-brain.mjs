@@ -26,6 +26,7 @@ import { join } from "node:path";
 import { PRESTATIONS, suggestPrestationsForTask, formatMenu, slugifyAgentName } from "./le-coordinateur.mjs";
 import { recommendFindBrain, flagFindDeepBoosterCandidates, FIND_DEEP_BOOSTER_NICKNAME } from "./find-brain.mjs";
 import { flagFindBoosterCandidates } from "./doc-report.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 import { toolUsageStats, toolsNeverUsed, recordCliUsage, usagesSpontanes, formatUsagesSpontanesLines, findOriginesJamaisEcrites, formatOriginesJamaisEcritesLines } from "./tool-usage.mjs";
 import { assessCriticality } from "./ecotoken.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
@@ -372,6 +373,44 @@ export function formatToolBrainReport({ history, prestations = PRESTATIONS, chec
     "Auto-diagnostic (périmètre tool-brain uniquement, jamais un audit du paysage entier) :",
     self.findings.length ? self.findings.map((f) => `- ${f}`).join("\n") : "- Aucun signal d'anomalie sur le périmètre propre de tool-brain.",
   ];
+
+  // LE PLAN D'ACTION (2026-09-25, tâche #855) — tranché par l'utilisateur en fenêtre dédiée, contre
+  // la raison qui figurait jusqu'ici dans SANS_CONSTAT_PROPRE (« aiguilleur : il ne constate rien
+  // sur le code »). Cette raison N'EST PLUS VRAIE : elle datait d'avant le rapport d'usage réel.
+  // tool-brain constate bien quelque chose — pas sur le code du jeu, mais sur l'ÉQUIPE et sur MON
+  // usage d'elle, et un outil jamais sollicité est un vrai problème qui doit devenir une tâche.
+  //
+  // CE QUI DEVIENT UN CONSTAT ET CE QUI N'EN DEVIENT PAS, et la frontière est la même que partout
+  // ailleurs ici : un zéro dont la cause est CONNUE et bénigne n'est pas un écart. Les outils
+  // couverts par le crochet tournent à chaque commit (leur silence n'est pas une inaction), et ceux
+  // qu'aucun compteur ne peut voir sont « pas mesurable », jamais « pas utilisé ». Les faire
+  // remonter produirait un plan qui réclame de corriger ce qui va bien.
+  const ecarts = [];
+  if (neverUsed.length) ecarts.push({
+    quoi: `${neverUsed.length} outil(s) du catalogue jamais sollicité(s) : ${neverUsed.join(", ")}`,
+    quoiFaire: "les lancer une fois pour de vrai, ou décider de les retirer — un outil construit et jamais appelé n'a jamais protégé personne (leçon L2), et le défaut est du côté de l'agent, jamais de l'outil",
+  });
+  if (muetsAuCompteur?.length) ecarts.push({
+    quoi: `${muetsAuCompteur.length} outil(s) ont une ligne de commande et n'enregistrent PAS leur passage : ${muetsAuCompteur.join(", ")}`,
+    quoiFaire: "ajouter recordCliUsage() à leur point d'entrée — leur zéro mesure leur silence, jamais leur inactivité, donc tout verdict d'usage les concernant est faux tant que ce n'est pas corrigé",
+  });
+  if (!silenceMesurable) ecarts.push({
+    quoi: `le silence des outils n'a pas pu être classé — ${pourquoiSilenceNonMesure}`,
+    quoiFaire: "rétablir la source manquante avant de se fier au moindre chiffre d'usage de ce rapport — un silence non classé se lit comme un silence choisi",
+  });
+  for (const f of self.findings ?? []) {
+    // L'auto-diagnostic contient aussi des signaux POSITIFS (le ✨ de l'usage spontané). Un
+    // compliment n'est pas un écart, et le pousser en constat retenu produirait une tâche
+    // « corriger le fait que tout va bien ».
+    if (/^✨/.test(f)) continue;
+    ecarts.push({ quoi: `auto-diagnostic : ${f}`, quoiFaire: "traiter dans le périmètre de tool-brain lui-même, jamais en élargissant le diagnostic au reste du paysage" });
+  }
+  const plan = planDactionDepuisEcarts(ecarts, {
+    toolSlug: "tool-brain",
+    libelle: (e) => e.quoi,
+    tache: (e) => e.quoiFaire,
+  });
+  lines.push("", `=== ${PLAN_ACTION_TITRE} ===`, ...plan.lignes);
   return lines.join("\n");
 }
 

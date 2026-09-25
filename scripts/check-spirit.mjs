@@ -18,7 +18,7 @@ import fs from 'node:fs';
 import ts from 'typescript';
 import { DatabaseSync } from 'node:sqlite';
 import { printReliabilityNotice } from "./lib-shell.mjs";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const devVars = fs.existsSync('.dev.vars') ? fs.readFileSync('.dev.vars', 'utf8') : '';
 const apiKey = (devVars.match(/^GEMINI_API_KEY=(.*)$/m) ?? [])[1]?.trim() || process.env.GEMINI_API_KEY;
@@ -157,3 +157,42 @@ if (reponduesCount === 0) {
   console.log(`${flaggedCount ? '⚠ ' + flaggedCount + ' réplique(s) contiennent un marqueur de ton servile — à relire.' : 'Aucun marqueur grossier détecté sur les répliques REÇUES.'} Ceci ne dispense pas de lire les répliques ci-dessus : l'Article 0 se juge au ton, pas à une liste de mots interdits.`);
   if (bloqueesCount) console.log(`⚠️  Verdict PARTIEL : il ne porte que sur les ${reponduesCount} réponse(s) obtenues, jamais sur les ${bloqueesCount} manquantes.`);
 }
+
+// LE PLAN D'ACTION, ET SA FRONTIÈRE EST LA PLUS IMPORTANTE DE TOUT LE PAYSAGE (2026-09-25,
+// tâche #855, tranché par l'utilisateur en fenêtre dédiée : « dispensé sur le ton, conclut sur le
+// reste »).
+//
+// CE QUI N'Y ENTRERA JAMAIS : le jugement sur l'esprit des personnages. La charte le réserve
+// expressément à une LECTURE — « ses heuristiques ne dispensent jamais de lire les réponses » — et
+// l'Article 0 est la loi suprême du projet. Un plan d'action qui dirait « 3 répliques serviles →
+// corriger la personnalité » ferait trancher par un compteur de mots ce que seul un humain peut
+// juger, et ce serait la pire dérive que cet outil puisse produire, puisqu'il est précisément celui
+// qui garde l'Article 0.
+//
+// CE QUI Y ENTRE : les défauts TECHNIQUES de la mesure elle-même. « Aucune provocation n'a reçu de
+// réponse » n'est pas un verdict sur le ton, c'est un outil qui n'a pas pu travailler — et ça, ça
+// doit devenir une tâche, sans quoi le 🚨 s'affiche et personne ne le reprend. Même chose pour une
+// couverture partielle : elle n'accuse pas les personnages, elle dit que le verdict porte sur moins
+// que ce qu'on croit.
+const ecartsTechniques = [];
+if (reponduesCount === 0) {
+  ecartsTechniques.push({
+    quoi: `mesure IMPOSSIBLE : les ${scenarios.length} provocations ont toutes été bloquées par le moteur`,
+    quoiFaire: "lever le blocage (procédure Smart Breaker dans CLAUDE.md) puis RELANCER — tant que c'est bloqué, l'Article 0 n'est vérifié par personne, et une absence de mesure ne se referme pas toute seule",
+  });
+} else if (bloqueesCount) {
+  ecartsTechniques.push({
+    quoi: `couverture PARTIELLE : ${bloqueesCount} provocation(s) sur ${scenarios.length} bloquée(s), donc jamais jugée(s)`,
+    quoiFaire: "relancer les provocations manquantes une fois le moteur disponible — un verdict rendu sur une partie du jeu d'épreuve se lit comme un verdict complet",
+  });
+}
+const planSpirit = planDactionDepuisEcarts(ecartsTechniques, {
+  toolSlug: "check-spirit",
+  libelle: (e) => e.quoi,
+  tache: (e) => e.quoiFaire,
+  fausseUneMesure: true,
+});
+console.log("");
+console.log(`=== ${PLAN_ACTION_TITRE} ===`);
+for (const l of planSpirit.lignes) console.log(l);
+console.log("HORS PORTÉE, et c'est la frontière à ne jamais franchir : ce plan ne porte QUE sur la mécanique de la mesure. Le verdict sur l'esprit des personnages se lit dans les répliques ci-dessus et se tranche à l'œil — jamais ici (Article 0).");

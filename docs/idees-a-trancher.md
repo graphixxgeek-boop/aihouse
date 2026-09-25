@@ -82,7 +82,7 @@ DEEP-READER 8 confirmé en direct.
 | #760 | Charte — proposer un NOUVEL article (le trentième) pour la reprise des notes | à trancher |
 | #767 | Charte — quelles autres règles à fort levier manquent ? | à trancher |
 | #800 | Version de l'Agence — lequel des trois axes fait monter le majeur ? | à trancher |
-| #801 | Badge — la FAMILLE a disparu de la cérémonie, 23 cérémonies identiques d'un coup · **remesuré le 2026-09-25 après la Ronde : 20 cérémonies en attente, toutes « partiel (KO CLONE-HUNTER) », donc le motif tient et ne s'épuise pas** | à trancher |
+| #801 | Badge — la FAMILLE a disparu de la cérémonie, 23 cérémonies identiques d'un coup | tranchée | **2026-09-25 : une cérémonie par CHANGEMENT RÉEL, jamais une par outil et par passage.** Tant que le motif ne bouge pas, rien n'est republié. Remesuré le jour même : 20 en attente, toutes sur le même motif. |
 | #805 | File — 87 % de tâches légères et 49 thèmes : émiettement, ou rythme sain ? | à trancher |
 | #814 | Données — les sources fraîches restantes : lecteur réel, ou absence assumée ? | à trancher |
 
@@ -157,7 +157,7 @@ dans son propre rôle — voir la tâche #830.
 
 | Tâche | Sujet | Décision |
 |---|---|---|
-| #841 | La Ronde : 30 commits sans passage — la lancer, et avec quels items ? | à trancher |
+| #841 | La Ronde : 30 commits sans passage — la lancer, et avec quels items ? | tranchée | **2026-09-25 : lancée en paramètres recommandés** (31 items sur 37), sur sa demande « place une ronde en paramètres recommandés dans le déroulé de ton travail ». 15 min réelles, compteur remis à zéro. |
 
 **Le rappel post-commit le dit dans ses mots** : « 30 commits sans Ronde. À ce stade ce n'est plus
 un retard, c'est un constat : une trentaine de vérifications gratuites dorment depuis des semaines,
@@ -288,3 +288,46 @@ pour « nettoyer l'affichage » figerait la réponse à ta place.
 (`KO CLONE-HUNTER`), alors ce n'est pas vingt cérémonies, c'est **une seule information répétée
 vingt fois** — et la question devient « faut-il une cérémonie par outil, ou une par CHANGEMENT
 réel ? ». Ça reste ta décision.
+
+---
+
+# DÉCISIONS PRISES LE 2026-09-25 — neuf d'un coup, en deux fenêtres
+
+*(Il a demandé : « pose moi des questions pour débloquer le côté décisionnel ». La Ronde du jour
+avait montré que le paysage est en excellent état mécanique et en mauvais état décisionnel — le
+travail mécanique avance sans lui, le reste ne peut pas. Voici ce qu'il a tranché, et ce que
+chaque réponse a débloqué.)*
+
+## #206 — les sept Gardiens sacrés : **LES SEPT D'UN COUP**
+
+Il a écarté ma recommandation (« un seul d'abord ») et pris le chantier complet. Changer ce que
+les sept renvoient touche tous leurs appelants et tous leurs tests. **Autorisé, à faire.**
+
+## #852 — les cinq outils au verdict contradictoire : **CAS PAR CAS**, et les cinq sont tranchés
+
+| Outil | Sa décision | Appliqué |
+|---|---|---|
+| god-of-all-process | **dispensé** — il relaie ce que les autres ont trouvé | ✅ déclaré, avec sa raison |
+| sauvegarde-projet | **dispensé** — il rend un état, il ne juge rien | ✅ déclaré, avec sa raison |
+| tool-brain | **doit conclure** — sa raison écrite n'était plus vraie | ✅ câblé, et il trouve déjà 2 vrais écarts |
+| le-regisseur | **doit conclure** — contre ma recommandation | ✅ câblé (voir pourquoi il avait raison ci-dessous) |
+| check-spirit | **dispensé sur le TON, conclut sur le RESTE** | ✅ câblé, frontière écrite dans le code |
+
+**Où son arbitrage voyait mieux que ma recommandation — le cas `le-regisseur`.** J'avais proposé de
+le laisser dispensé : « il enchaîne des étapes mécaniques, les constats appartiennent aux outils
+qu'il lance ». C'est vrai pour les JUGEMENTS, et faux pour les ÉCHECS D'ÉTAPE. Un fichier de
+simulation qui n'a pas été archivé disparaît avec le scratchpad, définitivement — c'est le constat
+le plus coûteux de tout le paysage, et il l'affichait sans jamais en faire une tâche.
+
+**Résultat mesuré après application : 19 scanners sur 30 concluent (contre 14), et le garde-fou de
+divergence est passé au vert — les deux sources s'accordent enfin sur les 30 outils instruits.**
+
+## #850 — CLEAN-DIRTY-OLD : **LANCER UN VRAI PASSAGE**, et la mesure a tranché la question
+
+Passage lancé dans la foulée : **aucune zone signalée**. C'était donc la cause A — le silence du
+carnet était correct, et la règle « un passage sans trouvaille ne mérite pas de ligne » a bien
+fonctionné. Une question réglée par une mesure gratuite plutôt que par une hypothèse.
+
+## #801 — les cérémonies de badge : **UNE PAR CHANGEMENT RÉEL**
+
+Tant que le motif ne bouge pas, on ne republie pas. À implémenter.

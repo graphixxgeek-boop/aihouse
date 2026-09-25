@@ -905,7 +905,22 @@ export const IDEES_REGISTRY_PATH = "docs/idees-a-trancher.md";
 // #297/#226 déjà enregistrées lors du balayage rétrospectif.
 export function loadIdeaDecisions(registryText) {
   const decisions = {};
-  const KNOWN = new Set(["à trancher", "entre-deux", "abandonnée", "fichier créé"]);
+  // « TRANCHÉE » AJOUTÉE LE 2026-09-25 (tâche #857), et le trou qu'elle ferme est celui qui compte
+  // le plus dans ce registre : il savait dire qu'une décision ATTEND, jamais qu'elle a été PRISE.
+  // Trouvé en le cassant pour de vrai — l'utilisateur venait de trancher neuf décisions d'un coup,
+  // j'ai écrit « TRANCHÉ 2026-09-25 » dans la colonne Décision, et la ligne a cessé d'exister aux
+  // yeux du registre : aucune valeur reconnue, donc aucune décision associée à #801, donc le
+  // garde-fou l'a comptée « idée jamais enregistrée ».
+  //
+  // LES DEUX ISSUES QU'IL RESTAIT SANS ELLE ÉTAIENT TOUTES LES DEUX FAUSSES : laisser « à trancher »
+  // sur une décision prise (elle serait reposée à chaque Ronde, ce que la leçon L22 interdit
+  // explicitement — ne jamais rouvrir ce qu'il a fermé), ou l'effacer du registre (elle
+  // disparaîtrait, et avec elle la trace de ce qui a été décidé et pourquoi).
+  //
+  // Ce n'est pas un élargissement de vocabulaire libre : c'est le quatrième état d'une machine à
+  // états qui en comptait trois et demi — à trancher · entre-deux · abandonnée · fichier créé ·
+  // TRANCHÉE. Article 24 l'autorise expressément pour un vocabulaire fermé par nature.
+  const KNOWN = new Set(["à trancher", "entre-deux", "abandonnée", "fichier créé", "tranchée"]);
   for (const line of String(registryText ?? "").split("\n")) {
     if (!line.trim().startsWith("|")) continue;
     const cells = line.split("|").slice(1, -1).map((c) => c.trim());
@@ -919,10 +934,14 @@ export function loadIdeaDecisions(registryText) {
   return decisions;
 }
 
-// findIdeasNeedingDecision() — une décision "abandonnée" ou "fichier créé" ne redemande plus jamais
-// la question ; "entre-deux" la repose à CHAQUE Ronde tant qu'aucun fichier n'a été créé (demande
-// explicite) ; une idée jamais rencontrée ("à trancher" implicite, absente du registre) la pose pour
-// la première fois.
+// findIdeasNeedingDecision() — une décision "abandonnée", "fichier créé" ou "tranchée" ne redemande
+// plus jamais la question ; "entre-deux" la repose à CHAQUE Ronde tant qu'aucun fichier n'a été créé
+// (demande explicite) ; une idée jamais rencontrée ("à trancher" implicite, absente du registre) la
+// pose pour la première fois.
+//
+// « tranchée » rejoint le camp de celles qui ne se reposent plus (2026-09-25, tâche #857) : c'est
+// tout son intérêt. Une décision prise qu'on continuerait de présenter comme en attente ferait
+// exactement ce que la leçon L22 interdit — reproposer à l'utilisateur ce qu'il a déjà fermé.
 export function findIdeasNeedingDecision(candidates, decisions) {
   return candidates.filter((r) => {
     const known = decisions[String(r.numero)];

@@ -258,3 +258,25 @@ LES INTERDITS RESPECTÉS (vérifiés à la clôture)
   Corrige en un constat par FAMILLE avec son compte et son denominateur : 277 lignes -> 2.
   Et le denominateur change la suite : au-dela de 20 cas, la tache n'est plus « relire » mais
   « decider comment traiter la population » [FAIT]
+
+#855 : tu as tranche NEUF decisions d'un coup, et sur l'une d'elles tu voyais mieux que moi.
+  J'avais recommande de laisser le-regisseur dispense de conclure (« il enchaine des etapes,
+  les constats appartiennent aux outils qu'il lance »). Vrai pour les JUGEMENTS, faux pour les
+  ECHECS D'ETAPE — un fichier de simulation non archive disparait avec le scratchpad, pour
+  toujours. C'est le constat le plus couteux du paysage, et il l'affichait sans jamais en faire
+  une tache. Applique : 19 scanners sur 30 concluent (contre 14), et les deux sources qui se
+  contredisaient sont enfin d'accord [FAIT]
+
+#856 : CLOTURE DE #850. Tu as dit « lance un vrai passage » — resultat : aucune zone signalee.
+  Le silence du carnet etait donc CORRECT, et la regle a fonctionne comme prevu. Six jours de
+  doute regles en quelques secondes et zero appel API, par une mesure plutot qu'une hypothese
+  [FAIT]
+
+#857 : en enregistrant tes neuf decisions, TROIS de mes propres garde-fous m'ont refuse le
+  travail coup sur coup — et les trois avaient raison. Une cloture annoncee sur une ligne
+  restee ouverte. Puis le mot « Close » que le classificateur ne connait pas : 9 lignes sur
+  789, toutes les miennes du jour, ni terminees ni ouvertes. Je n'ai PAS elargi le
+  classificateur — son alerte marchait, l'elargir aurait supprime la protection plutot que la
+  derive ; j'ai aligne mes lignes sur le mot de la maison. Puis le registre des idees, qui
+  savait dire « ca attend » de quatre facons et n'avait AUCUN mot pour « il a choisi » : une
+  decision prise y disparaissait purement et simplement. Quatrieme etat ajoute [FAIT]

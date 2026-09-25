@@ -8612,6 +8612,23 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     console.log('Passed: the two sources that answer "must this tool conclude with an action plan?" are finally confronted (2026-09-25, task #852), and the guard was born from a measurement rather than a suspicion. SANS_CONSTAT_PROPRE is a hand-curated list, each entry carrying its written reason, and Article 24 explicitly allows that; findOutilsDevantConclure derives the same answer from the real source. Both are legitimate, both are read by a different tool — pure-gold-unity reads the list, CASSANDRA reads the derivation — and nothing had ever compared them. Real repository: FIVE divergences in both directions, so five tools whose verdict depends on which report you happen to open. The guard names each one and settles none, because each source knows something the other cannot: the list holds reasons no pattern can read ("the verdict on the characters spirit is a reading, never a calculation") while the derivation catches tools nobody remembered to declare. The defect was never that they differ — it is that they differed in silence.');
   }
 
+  // LE QUATRIÈME ÉTAT D'UNE DÉCISION : « TRANCHÉE » (2026-09-25, tâche #857).
+  {
+    const CTD = await import('../scripts/check-tasks-details.mjs');
+    const registre = [
+      '| Tâche | Sujet | Décision |',
+      '|---|---|---|',
+      '| #801 | un sujet | tranchée |',
+      '| #805 | un autre | à trancher |',
+      '| #814 | un troisième | entre-deux |',
+    ].join('\n');
+    const d = CTD.loadIdeaDecisions(registre);
+    assert.equal(d['801'], 'tranchée', 'a decision that HAS BEEN TAKEN must be a recognised value: the registry could say a decision was waiting but had no word for one already made, so writing "TRANCHÉ 2026-09-25" in that column made the row cease to exist for the registry — no known value, no decision recorded, and the guard then counted #801 as an idea nobody had ever registered');
+    const besoin = CTD.findIdeasNeedingDecision([{ numero: 801 }, { numero: 805 }, { numero: 814 }, { numero: 999 }], d).map((r) => r.numero);
+    assert.deepEqual(besoin, [814, 999], 'and "tranchée" joins the camp that is never asked again, which is its whole point: re-presenting a decision the user already made as still pending is exactly what leçon L22 forbids — never reopen what he closed. "entre-deux" is still re-asked, an unknown number is asked for the first time');
+    console.log('Passed: a decision that has been TAKEN is finally a state the registry can express (2026-09-25, task #857), and the hole was found by breaking it for real rather than by reading it. The user had just settled nine decisions at once; writing "TRANCHÉ 2026-09-25" in the Décision column made the row invisible to the registry, because the only recognised values were "à trancher", "entre-deux", "abandonnée" and "fichier créé" — four ways of saying it is still open or was dropped, and none for "he chose". Both remaining options were wrong: leaving "à trancher" on a settled question re-poses it at every Ronde, which leçon L22 forbids outright, and deleting the row loses the trace of what was decided and why. This is not loose vocabulary growth but the fourth state of a state machine that had three and a half, which Article 24 explicitly allows for a closed vocabulary.');
+  }
+
   // LE PLAN DE DÉPART ↔ LE RAPPORT DE NUIT (2026-09-25, tâche #772).
   const GOD = await import('../scripts/god-of-all-process.mjs');
   assert.equal(GOD.comparerPlanEtRapport({ planTexte: null, rapportTexte: 'x' }).mesurable, false, 'no start plan means the comparison refuses: without it, a final report cannot be compared to anything, and its SILENCE on a task would look exactly like a finished task');

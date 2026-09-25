@@ -20,6 +20,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, readd
 import { join } from "node:path";
 import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 import { recordCliUsage, recordToolContribution } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -215,6 +216,30 @@ export function postSimulationChecklist() {
   ];
 }
 
+// imprimerPlan() (2026-09-25, tâche #855) — L'UTILISATEUR A TRANCHÉ CONTRE MA RECOMMANDATION, et il
+// avait raison. J'avais proposé de laisser cet outil dispensé au motif qu'il « encha\u00eene des étapes
+// mécaniques, les constats appartiennent aux outils qu'il lance ». Sa réponse : qu'il conclue.
+//
+// CE QUE SON ARBITRAGE VOIT ET QUE MA RAISON MANQUAIT : un orchestrateur ne produit pas de jugement,
+// mais il produit des ÉCHECS D'ÉTAPE — un fichier qui n'a pas été archivé, un journal absent, une
+// synthèse introuvable. Ce sont de vrais constats, et ils sont même les plus coûteux du paysage :
+// un fichier de simulation non archivé disparaît avec le scratchpad, définitivement. Le laisser les
+// afficher sans les transformer en tâches, c'était exactement le trou que l'Article 28 nomme.
+//
+// Les deux étapes que ce script ne PEUT pas faire (les lignes de jugement à la main) figurent
+// toujours au plan, même quand tout s'est bien passé : ce sont les seules qui s'oublient, justement
+// parce que rien ne les bloque.
+function imprimerPlan(ecarts) {
+  const plan = planDactionDepuisEcarts(ecarts.filter(Boolean), {
+    toolSlug: "le-regisseur",
+    libelle: (e) => e.quoi,
+    tache: (e) => e.quoiFaire,
+  });
+  console.log("");
+  console.log(`=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of plan.lignes) console.log(l);
+}
+
 function main() {
   // L'AVERTISSEMENT DE MARGE, DIT ET PAS SEULEMENT DÉCLARÉ (2026-09-25, tâche #653 → #808) :
   // sa nature heuristique était écrite dans TOOL_RELIABILITY et aucun chemin de ce script ne la
@@ -234,6 +259,23 @@ function main() {
     const summary = journalPath ? summarizeAndArchiveJournal(simName, journalPath) : undefined;
     console.log("Archivé :", [...files.written, summary?.path].filter(Boolean).join(", "));
     console.log("\n⚠️ Reste à faire à la main (jamais automatisé) : ajouter la ligne de jugement à docs/simulations/index.md.");
+    // Ce qui n'a PAS été archivé est un vrai écart : un fichier manquant à l'archivage disparaît
+    // avec le scratchpad, et c'est exactement ce qui a failli arriver aux onze simulations du
+    // 2026-09-19 (cf. docs/simulations/index.md, créé en urgence ce jour-là).
+    imprimerPlan([
+      ...(files.manquants ?? []).map((m) => ({
+        quoi: `fichier annoncé mais jamais archivé : ${m}`,
+        quoiFaire: "le retrouver et relancer l'archivage — un fichier de simulation non archivé disparaît avec le scratchpad, il n'y a pas de seconde chance",
+      })),
+      ...(journalPath ? [] : [{
+        quoi: "aucun journal JSON fourni : le résumé compact des actions n'existe pas pour cette simulation",
+        quoiFaire: "relancer avec le chemin du journal — le brut est trop volumineux pour être gardé, donc sans ce résumé il ne restera RIEN des actions de la session",
+      }]),
+      {
+        quoi: "la ligne de jugement de docs/simulations/index.md n'est pas écrite (aucune mécanique ne peut la produire)",
+        quoiFaire: "l'écrire à la main maintenant — c'est la seule étape que ce script ne sait pas faire, donc la seule qui s'oublie",
+      },
+    ]);
     return;
   }
   if (cmd === "kpi") {
@@ -242,6 +284,16 @@ function main() {
     console.log(result.syntheseCompacte ?? "(section SYNTHÈSE COMPACTE introuvable dans la sortie — vérifier kpi-report.mjs)");
     console.log(`\nRapport complet archivé : ${result.path}`);
     console.log("⚠️ Reste à faire à la main (jamais automatisé) : ajouter la ligne de comparaison à docs/referentiel/kpi-index.md.");
+    imprimerPlan([
+      ...(result.syntheseCompacte ? [] : [{
+        quoi: "la section SYNTHÈSE COMPACTE est introuvable dans la sortie de kpi-report.mjs",
+        quoiFaire: "vérifier kpi-report.mjs — sans cette section, le rapport est archivé mais rien n'en est relayé, donc personne ne le lit",
+      }]),
+      {
+        quoi: "la ligne de comparaison de docs/referentiel/kpi-index.md n'est pas écrite (aucune mécanique ne peut la produire)",
+        quoiFaire: "l'écrire à la main maintenant — sans elle le rapport existe et la mémoire ne l'a pas, ce qui est arrivé pour de vrai le 2026-09-23 (tâche #670)",
+      },
+    ]);
     return;
   }
   console.log("Usage : node scripts/le-regisseur.mjs checklist [pre|post] | archive <simName> <journalPath> <transcriptPath> [dossierPath] | kpi <runLabel>");

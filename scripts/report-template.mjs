@@ -360,7 +360,6 @@ export const SANS_CONSTAT_PROPRE = {
   "html-report": "utilitaire de rendu, aucun constat",
   "report-template": "le gabarit lui-même",
   "tool-usage": "compteur d'usage : il enregistre, il ne juge pas",
-  "tool-brain": "aiguilleur : il recommande un outil, il ne constate rien sur le code",
   "find-booster": "outil de navigation dans un fichier, aucun verdict",
   "route-booster": "idem, points de coupe proposés",
   "ines-official": "aplatit le dépôt en une édition, aucun jugement",
@@ -370,12 +369,16 @@ export const SANS_CONSTAT_PROPRE = {
   // nom. Leur point commun : ils font tourner ou ils préparent, ils ne constatent pas — leur
   // demander un plan d'action produirait une section vide à chaque passage, c'est-à-dire du bruit
   // qui apprend à ne plus lire les sections de plan d'action.
-  "le-regisseur": "orchestrateur mécanique du protocole de simulation : « jamais de raisonnement à sa charge », les constats appartiennent aux outils qu'il enchaîne",
   "the-ghost": "orchestrateur du mode nocturne : il appelle le jugement des autres (recommendNextTasks) et n'en produit aucun",
   "the-final-judge": "socle mécanique d'un agent séparé : le jugement EST le rapport de l'agent, ce script ne porte que deux garde-fous sur sa forme",
-  "check-spirit": "envoie de vraies provocations au modèle et AFFICHE les réponses pour une lecture humaine : la charte dit que ses heuristiques « ne dispensent jamais de lire les réponses » — le verdict sur l'esprit des personnages est une lecture, jamais un calcul",
   "the-screener-capture": "prend des captures d'écran : la NOTE de qualité graphique est un raisonnement sur l'image, jamais un calcul de ce script — il fournit la matière, il ne juge pas",
   "the-deep-reader": "idem, pour l'autre juge : la comparaison au transcript est un raisonnement, jamais un calcul de ce script",
+  // TRANCHÉ PAR L'UTILISATEUR LE 2026-09-25 (tâche #855), cas par cas, après que le garde-fou de
+  // #852 a montré que cette liste et la dérivation automatique se contredisaient sur CINQ outils.
+  // Les deux ci-dessous ENTRENT ; trois autres en SORTENT (tool-brain, le-regisseur, check-spirit),
+  // et leur sortie est décrite dans leur propre fichier plutôt qu'en creux ici.
+  "god-of-all-process": "relaie ce que les autres contrôleurs ont trouvé : les manquements qu'il nomme appartiennent aux process surveillés, jamais à lui — un plan d'action ici doublerait celui du process concerné",
+  "sauvegarde-projet": "fabrique un coffre et une notice : il rend un ÉTAT du dépôt, il n'en juge rien — lui réclamer un plan produirait une section vide à chaque passage",
 };
 
 // LES PORTES D'ENTRÉE du plan d'action, déclarées plutôt qu'énumérées au fil du code (Article 24).
