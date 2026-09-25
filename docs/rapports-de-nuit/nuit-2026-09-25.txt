@@ -310,3 +310,10 @@ LES INTERDITS RESPECTÉS (vérifiés à la clôture)
   Je l'y ai ecrite — son existence, tes mots exacts, et « NON TRANCHEE ». Rien d'autre : pas une
   palette, pas un decor, pas une evaluation. La refonte graphique reste ta limite, et ta question
   finissait par « qu'en penses-tu ? » [A TOI]
+
+#862 : les 20 ceremonies en attente sont relayees, la file est VIDE — et sous la nouvelle forme
+  elles tiennent en 7 blocs au lieu de 20. Limite declaree : ces 7 partagent en realite UNE seule
+  cause de fond, et un regroupement plus agressif les ramenerait a un bloc. Je ne l'ai pas fait —
+  normaliser le libelle « avant » risquerait de fondre des changements reellement differents sous
+  une meme banniere, ce qui est le defaut inverse et le plus couteux des deux. 7 est sur, 1 serait
+  plus court mais supposerait ce qu'on ne mesure pas [FAIT / question ouverte]
