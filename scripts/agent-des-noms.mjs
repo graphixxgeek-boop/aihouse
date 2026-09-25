@@ -314,6 +314,114 @@ function mainRenommage(root, ancien, nouveau) {
   console.log(`   Un renommage à moitié fait est PIRE qu'un renommage pas fait : les deux noms coexistent et personne ne sait lequel fait foi.`);
 }
 
+// ============================================================================================
+// LES HOMONYMES EXPORTÉS — deux fichiers, un seul nom (2026-09-25, tâche #756)
+// ============================================================================================
+// POURQUOI CET AGENT PLUTÔT QU'UN AUTRE : l'Article 27 nomme la dette de reprise « un nom propre
+// sans définition atteignable ». Un nom qui en a DEUX est le même défaut en pire — une IA qui lit
+// « DOMAINES » dans une liste d'import ne peut pas savoir de quoi on parle, et rien ne l'avertit.
+// C'est du nommage, donc c'est ici.
+//
+// TROIS ÉTATS, JAMAIS DEUX — et c'est toute la valeur de la mesure, parce que la version naïve
+// rend 36 alertes dont l'immense majorité n'en sont pas :
+//   · DÉLÉGATION      — un fichier RE-EXPORTE le nom d'un autre. Ce n'est pas un homonyme du tout :
+//                       c'est la même chose, relayée, exactement ce que ce projet demande de faire.
+//   · CONVENTION      — le nom est exporté par plusieurs fichiers mais importé par AUCUN autre
+//                       (`OUTIL`, `SCRIPT_PATH`, `REGISTRE`...). Chaque outil nomme sa propre
+//                       constante de la même façon ; personne ne peut les confondre puisque
+//                       personne ne les croise. À lister, jamais à alerter.
+//   · COLLISION       — exporté par plusieurs fichiers ET importé ailleurs. Là seulement, un
+//                       lecteur peut prendre l'un pour l'autre, et c'est la vraie dette.
+//
+// IL NE RENOMME RIEN, et c'est la même discipline que tout cet agent : il mesure, il trie, il
+// prépare. Le nom qui survit est un NOMMAGE, donc une décision de l'utilisateur (Article 20bis).
+export function inventorierLesExports(fichiers = [], { lire } = {}) {
+  if (typeof lire !== "function") {
+    return { mesurable: false, pourquoi: "aucun lecteur de fichier fourni — rendre « zéro homonyme » sans avoir pu lire une seule ligne dirait exactement ce que dit un dépôt parfaitement propre" };
+  }
+  const exports = new Map();      // nom -> Set(fichier qui le DÉFINIT)
+  const reexports = new Map();    // fichier -> Set(nom qu'il relaie depuis un autre)
+  const imports = new Map();      // nom -> Set(fichier qui l'IMPORTE d'ailleurs)
+  let lus = 0;
+  for (const f of fichiers) {
+    const src = lire(f);
+    if (typeof src !== "string") continue;
+    lus += 1;
+    for (const m of src.matchAll(/^export\s+(?:const|function|class|let)\s+([A-Za-z_$][\w$]*)/gm)) {
+      (exports.get(m[1]) ?? exports.set(m[1], new Set()).get(m[1])).add(f);
+    }
+    // `export { A } from "./x.mjs"` définit ET relaie ; `import { A } from "./x.mjs"` ne fait qu'importer.
+    for (const m of src.matchAll(/^(export|import)\s*\{([^}]*)\}\s*from\s*["'][^"']*["']/gm)) {
+      for (const brut of m[2].split(",")) {
+        const nom = brut.trim().split(/\s+as\s+/)[0].trim();
+        if (!nom) continue;
+        (imports.get(nom) ?? imports.set(nom, new Set()).get(nom)).add(f);
+        if (m[1] === "export") {
+          (exports.get(nom) ?? exports.set(nom, new Set()).get(nom)).add(f);
+          (reexports.get(f) ?? reexports.set(f, new Set()).get(f)).add(nom);
+        }
+      }
+    }
+  }
+  if (!lus) return { mesurable: false, pourquoi: "aucun fichier n'a pu être lu — voir ci-dessus, un dénominateur vide se lit comme un dépôt propre" };
+  return { mesurable: true, lus, exports, reexports, imports };
+}
+
+export function findHomonymesExportes(fichiers = [], { lire } = {}) {
+  const inv = inventorierLesExports(fichiers, { lire });
+  if (!inv.mesurable) return inv;
+  const delegations = [], conventions = [], collisions = [];
+  for (const [nom, definisPar] of inv.exports) {
+    if (definisPar.size < 2) continue;
+    const relais = [...definisPar].filter((f) => inv.reexports.get(f)?.has(nom));
+    if (relais.length) { delegations.push({ nom, fichiers: [...definisPar].sort(), relais: relais.sort() }); continue; }
+    // « importé ailleurs » : par un fichier qui ne le définit pas lui-même. Un outil qui importe son
+    // propre nom n'existe pas, mais un fichier peut définir X et importer un X homonyme — ce cas-là
+    // est justement une collision, pas une convention.
+    const importePar = [...(inv.imports.get(nom) ?? [])].filter((f) => !definisPar.has(f) || inv.reexports.get(f)?.has(nom));
+    if (importePar.length) collisions.push({ nom, fichiers: [...definisPar].sort(), importePar: importePar.sort() });
+    else conventions.push({ nom, fichiers: [...definisPar].sort() });
+  }
+  const tri = (a, b) => b.fichiers.length - a.fichiers.length || a.nom.localeCompare(b.nom);
+  return { mesurable: true, lus: inv.lus, delegations: delegations.sort(tri), conventions: conventions.sort(tri), collisions: collisions.sort(tri) };
+}
+
+export function formatHomonymesLines(h, { max = 12 } = {}) {
+  if (!h?.mesurable) return [`⚠️ NON MESURÉ — ${h?.pourquoi ?? "raison inconnue"}`];
+  const L = [`${h.lus} fichier(s) lu(s).`];
+  L.push("");
+  if (h.collisions.length) {
+    L.push(`🔴 ${h.collisions.length} COLLISION(S) — le même nom défini dans plusieurs fichiers ET importé ailleurs.`);
+    L.push(`   C'est la seule des trois catégories qui soit une dette : un lecteur qui voit ce nom dans`);
+    L.push(`   une liste d'import ne peut pas savoir duquel on parle, et rien ne l'en avertit.`);
+    for (const c of h.collisions.slice(0, max)) L.push(`   ${c.nom} — défini par ${c.fichiers.join(", ")} · importé par ${c.importePar.join(", ")}`);
+    if (h.collisions.length > max) L.push(`   … et ${h.collisions.length - max} autre(s)`);
+  } else L.push("✅ Aucune collision : aucun nom défini deux fois n'est importé ailleurs.");
+  L.push("");
+  L.push(`📗 ${h.conventions.length} convention(s) locale(s) — même nom, plusieurs fichiers, importé par personne.`);
+  L.push(`   Chaque outil nomme sa propre constante de la même façon (OUTIL, SCRIPT_PATH, REGISTRE…).`);
+  L.push(`   Personne ne peut les confondre puisque personne ne les croise : à connaître, jamais à corriger.`);
+  for (const c of h.conventions.slice(0, max)) L.push(`   ${c.nom} — ${c.fichiers.join(", ")}`);
+  if (h.conventions.length > max) L.push(`   … et ${h.conventions.length - max} autre(s)`);
+  L.push("");
+  L.push(`🔗 ${h.delegations.length} délégation(s) — un fichier relaie le nom d'un autre. Ce n'est pas un homonyme :`);
+  L.push(`   c'est la même chose, relayée, exactement ce que ce projet demande de faire.`);
+  for (const d of h.delegations.slice(0, max)) L.push(`   ${d.nom} — ${d.fichiers.join(", ")} (relais : ${d.relais.join(", ")})`);
+  L.push("");
+  L.push("HORS PORTÉE : quel nom survit à une collision est un NOMMAGE, donc une décision de l'utilisateur.");
+  L.push("Cet agent mesure, trie et prépare — il ne renomme jamais de lui-même.");
+  return L;
+}
+
+function mainHomonymes(root) {
+  const dossier = join(root, "scripts");
+  let fichiers = [];
+  try { fichiers = readdirSync(dossier).filter((f) => f.endsWith(".mjs")).sort(); } catch { fichiers = []; }
+  const h = findHomonymesExportes(fichiers, { lire: (f) => { try { return readFileSync(join(dossier, f), "utf8"); } catch { return undefined; } } });
+  console.log("=== LES HOMONYMES EXPORTÉS — trois états, jamais deux ===\n");
+  for (const l of formatHomonymesLines(h)) console.log(l);
+}
+
 function mainVerifier(root, ancien) {
   if (!ancien) { console.log("Usage : node scripts/agent-des-noms.mjs verifier <ancien>"); return; }
   const { occurrences, mesurable, pourquoi } = collecterOccurrences(ancien, { root });
@@ -332,8 +440,9 @@ function main() {
   console.log("");
   if (cmd === "renommage") return mainRenommage(root, a, b);
   if (cmd === "verifier") return mainVerifier(root, a);
+  if (cmd === "homonymes") return mainHomonymes(root);
   mainGouvernance(root);
-  console.log(`\nAUTRES COMMANDES : renommage <ancien> <nouveau> (le plan, avant) · verifier <ancien> (le reste, après)`);
+  console.log(`\nAUTRES COMMANDES : renommage <ancien> <nouveau> (le plan, avant) · verifier <ancien> (le reste, après) · homonymes (un nom, deux définitions)`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

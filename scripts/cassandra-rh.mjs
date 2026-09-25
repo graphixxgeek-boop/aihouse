@@ -2002,6 +2002,16 @@ export function momentsDeLOutil(slug, { offert = "", machine = new Set(), itemsR
 // coûté un classement entier ce soir : 45 outils sur 65 rangés du côté « jeu » parce qu'ils
 // MENTIONNENT `lib/` dans un commentaire. La sonde ignore donc les lignes de commentaire, et ne
 // compte qu'un chemin écrit entre guillemets dans du code exécuté.
+// ⚠️ HOMONYME DÉCLARÉ (2026-09-25, tâche #756) — `the-equalizer.mjs` exporte lui aussi une
+// constante `DOMAINES`, et elle ne veut PAS dire la même chose. Ici : SUR QUOI un outil regarde
+// (code, documents, tâches, données, jeu-joué), dérivé des chemins qu'il lit vraiment. Là-bas :
+// les quatre DOMAINES DE VERDICT nommés par l'utilisateur (agence, documents, code, jeu), c'est-à-
+// dire de quoi THE-EQUALIZER rend compte. Un lecteur qui croise le mot sans cette note ne peut pas
+// savoir lequel il a sous les yeux — exactement la dette de reprise de l'Article 27.
+// Aucun des deux n'est renommé : quel nom survit est un NOMMAGE, donc une décision de l'utilisateur
+// (Article 20bis), et `node scripts/agent-des-noms.mjs homonymes` tient la mesure à jour.
+// La mesure du jour dit d'ailleurs que ce couple-ci est une CONVENTION, pas une collision :
+// personne n'importe ni l'un ni l'autre d'un autre fichier, donc personne ne peut les croiser.
 export const DOMAINES = {
   "code": { quoi: "le code du jeu et des outils", chemins: [/^scripts\//, /^lib\//, /^app\//, /^components\//] },
   "documents": { quoi: "la charte, le référentiel, les règles de travail", chemins: [/^CLAUDE\.md/, /^docs\/referentiel\//, /^docs\/[a-z0-9-]+\.md/] },

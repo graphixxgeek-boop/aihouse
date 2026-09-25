@@ -44,6 +44,13 @@ export const STANDARDS_PATH = "docs/referentiel/standards.md";
 // charte et d'EL-PROFESSOR, jamais d'un standard d'outillage. Le domaine existe quand même dans
 // cette table pour que le verdict le DISE — un domaine absent de la table serait indiscernable d'un
 // domaine oublié.
+// ⚠️ HOMONYME DÉCLARÉ (2026-09-25, tâche #756) — `cassandra-rh.mjs` exporte lui aussi une constante
+// `DOMAINES`, et elle ne veut PAS dire la même chose. Ici : les quatre domaines de VERDICT nommés
+// par l'utilisateur, de quoi cet outil rend compte. Là-bas : SUR QUOI un outil regarde, dérivé des
+// chemins qu'il lit réellement. Aucun des deux n'est renommé — quel nom survit est un NOMMAGE, donc
+// une décision de l'utilisateur (Article 20bis) ; `node scripts/agent-des-noms.mjs homonymes` tient
+// la mesure à jour, et classe ce couple-ci en CONVENTION plutôt qu'en collision, puisque personne
+// n'importe ni l'un ni l'autre depuis un autre fichier.
 export const DOMAINES = {
   agence: { libelle: "l'Agence", niveaux: ["FORME", "CAPACITÉS"], quoi: "ce que les outils produisent et ce qu'ils savent faire" },
   documents: { libelle: "les documents", niveaux: ["DOCUMENTS"], quoi: "ce que chaque outil possède comme documentation" },

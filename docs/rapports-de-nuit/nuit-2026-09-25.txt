@@ -44,6 +44,7 @@ LES TÂCHES, UNE PAR LIGNE
 #739 pnpm-install rangé en plomberie (sa décision) — 70 membres · 0 oublié · 1 infra · 7 plomberie · 0 désaccord [FAIT]
 #754 Bascule 6 Suites → 9 familles : 9 familles des deux côtés, les 9 mêmes noms, 0 divergence [FAIT]
 #755 Garde-fou par OUTIL (findFamillesDivergentesParOutil) : 0 divergence sur 31 comparables [FAIT]
+#756 Les deux DOMAINES homonymes : détecteur construit, 2 vraies collisions trouvées (PALIERS, recordOutcome) [FAIT]
 
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)

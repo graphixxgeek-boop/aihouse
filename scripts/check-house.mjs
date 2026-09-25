@@ -8083,6 +8083,28 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   console.log('Passed: the classification gained its 3rd and 4th axes (2026-09-24, task #750) — WHEN a tool intervenes, and WHAT it looks at. The first two say where to file a script and what it works for; neither says when it speaks nor on what. The moment is a SET rather than a slot, because the naming agent runs at the Ronde and is also called before a rename, and forcing one value would have erased half the answer; it is read from three real sources — the git hooks, the Ronde registry, and the sentence that carries the written command — with "on demand" as the honest residual. The domain is derived from the paths the tool actually READS in executed code, never from what it says: comment lines are skipped outright, which closes at the source the exact confusion that filed 45 tools out of 65 on the wrong side earlier this evening (lesson L24). A tool reading no path is declared not measurable rather than domain-less, since one means the probe could not see and the other is a verdict. Real run right now: 16 tools are consulted BEFORE acting against 53 that only start if called, and every domain has at least one watcher — which still does not say it is watched well.');
 
 
+  // LES HOMONYMES EXPORTÉS — trois états, jamais deux (2026-09-25, tâche #756).
+  const lireHomonymes = (f) => ({
+    'a.mjs': 'export const DOMAINES = 1;\nexport const OUTIL = "a";\nexport const PARTAGE = 1;',
+    'b.mjs': 'export const DOMAINES = 2;\nexport const OUTIL = "b";',
+    'c.mjs': 'import { DOMAINES } from "./a.mjs";',
+    'd.mjs': 'export { PARTAGE } from "./a.mjs";',
+  }[f]);
+  const homo = AN.findHomonymesExportes(['a.mjs', 'b.mjs', 'c.mjs', 'd.mjs'], { lire: lireHomonymes });
+  assert.deepEqual(homo.collisions.map((c) => c.nom), ['DOMAINES'], 'a name DEFINED in two files AND imported elsewhere is the only real debt: a reader seeing it in an import list cannot tell which one is meant');
+  assert.deepEqual(homo.conventions.map((c) => c.nom), ['OUTIL'], 'THE DISTINCTION THAT MAKES THE MEASURE USABLE: a name exported by several files and imported by NOBODY is a per-file convention, not a collision — nobody can confuse two things nobody ever crosses. Without this state the real repository returns 36 alerts of which 34 are noise, and a report that is 94 % noise stops being read.');
+  assert.deepEqual(homo.delegations.map((d) => d.nom), ['PARTAGE'], 'and a file that RE-EXPORTS the name is a delegation, which is exactly what this project asks for rather than a defect — it is counted apart and never reproached');
+  assert.equal(AN.findHomonymesExportes(['a.mjs'], {}).mesurable, false, 'with no file reader it refuses to answer: "zero homonym" without having read a line reads exactly like a perfectly clean repository — the red thread of this project');
+  assert.equal(AN.findHomonymesExportes([], { lire: () => undefined }).mesurable, false, 'same refusal when not one file could be read, rather than a green verdict on an empty denominator');
+  assert.ok(AN.formatHomonymesLines(homo).some((l) => /il ne renomme jamais/i.test(l) || /décision de l'utilisateur/.test(l)), 'it measures, sorts and prepares — which name survives a collision is a naming, therefore the user decides');
+  assert.ok(AN.formatHomonymesLines({ mesurable: false, pourquoi: 'x' })[0].startsWith('⚠️'), 'and an unmeasured run prints a warning rather than an empty clean list');
+  const homoReel = AN.findHomonymesExportes(
+    fs.readdirSync('scripts').filter((f) => f.endsWith('.mjs')).sort(),
+    { lire: (f) => { try { return fs.readFileSync(`scripts/${f}`, 'utf8'); } catch { return undefined; } } });
+  assert.equal(homoReel.mesurable, true, 'checked live against the real repository, never on fixtures alone');
+  console.log(`Passed: the naming agent now finds a name that carries TWO definitions (2026-09-25, task #756) — Article 27 calls a proper noun with no reachable definition a handover debt, and a noun with two of them is the same defect made worse: an AI reading "DOMAINES" in an import list cannot know which one is meant, and nothing warns it. THREE STATES, NEVER TWO, and that is the whole value: the naive version returns ${homoReel.collisions.length + homoReel.conventions.length + homoReel.delegations.length} alerts on the real repository, of which only ${homoReel.collisions.length} are real. A re-export is a DELEGATION, the same thing relayed, which is what this project asks for; a name exported by several files and imported by nobody is a per-file CONVENTION (OUTIL, SCRIPT_PATH, REGISTRE), impossible to confuse since nobody crosses them; only a name defined twice AND imported elsewhere is a COLLISION. It refuses to answer with no readable file rather than returning a clean bill of health on an empty denominator. Real repository right now: ${homoReel.lus} files read, ${homoReel.collisions.length} collisions (${homoReel.collisions.map((c) => c.nom).join(', ') || 'none'}), ${homoReel.conventions.length} local conventions, ${homoReel.delegations.length} delegations — and the finding that was NOT expected is that DOMAINES, the name this task was opened for, is a convention rather than a collision, while PALIERS and recordOutcome, which nobody was watching, are the two real ones.`);
+
+
   // LES DEUX SYSTÈMES DE FAMILLES (2026-09-24, tâche #754).
   const { AGENT_CATEGORIES: AGENT_CATEGORIES_REELLES } = await import('../scripts/lib-shell.mjs');
   const { REGISTRIES: DOC_REGISTRIES_REELS } = await import('../scripts/doc-report.mjs');
