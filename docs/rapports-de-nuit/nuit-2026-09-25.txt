@@ -335,3 +335,29 @@ LES INTERDITS RESPECTÉS (vérifiés à la clôture)
   ce qu'il a reellement regarde accompagne son verdict.
 
   Mesure apres coup : tous les outils a constats concluent desormais, sans exception [FAIT]
+
+#864 a #867 : la chaine qui suit #863, et elle raconte une seule histoire.
+
+  En declarant un outil dispense, un garde-fou construit hier a immediatement signale que les
+  deux sources ne disaient plus la meme chose. Il a eu raison de crier — mais ce qu'il a revele
+  est plus interessant que le cas : la mecanique qui decide « cet outil doit-il conclure ? »
+  comptait comme une faute la ligne ou un outil AVOUE qu'il n'a rien pu mesurer. C'est-a-dire
+  exactement l'honnetete qu'on exige partout depuis #206.
+
+  Puis la meme chose, deux fois encore. Un outil devenait suspect parce qu'il prenait sa
+  formulation au mecanisme partage au lieu de la recopier — il devenait suspect EN CESSANT DE
+  RECOPIER. Et un rapport de 11 lignes portant 42 chiffres etait juge « trop maigre », parce que
+  le controle comptait des lignes la ou la densite etait la vraie question.
+
+  Quatre fois dans la journee, donc, le meme defaut : le garde-fou punissait la conduite qu'il
+  existe pour obtenir. Et c'est pire qu'un faux positif ordinaire, parce que ca S'AGGRAVE quand
+  le projet s'ameliore : plus on applique nos propres regles, plus il crie. Un dispositif qui
+  hurle quand on lui obeit finit par enseigner qu'il vaut mieux desobeir.
+
+  Le reflexe qui les a tous les quatre attrapes tient en une phrase, et elle est maintenant
+  ecrite dans le registre des lecons : OUVRIR LE FICHIER ACCUSE AVANT DE LE CORRIGER. Les quatre
+  auraient ete « reparees » en quelques minutes, et les quatre reparations auraient degrade du
+  code juste.
+
+  Mesure de fin : les CINQ criteres de pure-gold-unity sont au vert, et #206 — « un gardien
+  peut-il dire tout va bien sur des donnees absentes ? » — est close et mesuree [FAIT]

@@ -147,9 +147,34 @@ presque toujours lui qui a tort.** Un premier jet accusait 17 outils sur 33 ; le
 rapport entièrement faux coûte la confiance qu'on met dans l'outil — et cette confiance est tout
 son capital.
 
-**Porté par** : `SANS_BLUEPRINT_ASSUME` / `SANS_CONSTAT_PROPRE` (`scripts/safe-export.mjs`, `scripts/report-template.mjs`) — les exemptions décidées sont déclarées comme données, jamais reprochées à chaque passage.
+**Enrichie le** : 2026-09-25 — la forme la plus insidieuse du faux positif, rencontrée QUATRE fois dans la même journée (la leçon d'origine et son premier enrichissement restent intacts).
 
-**Terrain** : quand je construis ou je resserre un garde-fou · mots : garde-fou, détecteur, faux positif, seuil, exemption · fichiers : scripts/*.mjs
+Ce n'est plus seulement « le garde-fou accuse à tort » : c'est **le garde-fou punit exactement la
+conduite qu'il existe pour obtenir.** Les quatre cas, tous mesurés, jamais soupçonnés :
+
+1. `PORTES_PLAN_DACTION` accusait les deux SEULS outils en règle, parce qu'ils passaient par le
+   raccourci documenté plutôt que par la fonction d'origine ;
+2. `MOTIF_EMET_DES_CONSTATS` comptait comme un constat la ligne où un outil AVOUE une absence de
+   mesure — c'est-à-dire l'honnêteté que ce projet exige partout depuis #206 ;
+3. le critère « peut-il dire tout va bien sans rien mesurer » accusait un outil qui obtenait sa
+   formulation d'absence du MÉCANISME PARTAGÉ au lieu de la recopier — **un outil devenait suspect
+   en cessant de recopier**, l'exact inverse de l'Article 24 ;
+4. le critère « rapport trop maigre » accusait un rapport de 11 lignes portant 42 chiffres, parce
+   qu'il comptait des lignes là où la densité était la vraie question.
+
+**Pourquoi cette forme est pire que le faux positif ordinaire, et pourquoi elle s'aggrave avec le
+temps** : le bruit ordinaire diminue à mesure que le dépôt s'assainit ; celui-ci AUGMENTE. Plus le
+projet applique ses propres règles — factoriser un mécanisme, avouer une absence de mesure, écrire
+dense — plus le garde-fou crie. Un dispositif qui se met à hurler précisément quand on lui obéit
+finit par enseigner qu'il vaut mieux désobéir.
+
+**Le réflexe qui les a tous les quatre attrapés** : ouvrir le fichier accusé avant de le corriger.
+Les quatre auraient été « réparés » en quelques minutes, et les quatre réparations auraient dégradé
+du code juste.
+
+**Porté par** : `SANS_BLUEPRINT_ASSUME` / `SANS_CONSTAT_PROPRE` (`scripts/safe-export.mjs`, `scripts/report-template.mjs`) — les exemptions décidées sont déclarées comme données, jamais reprochées à chaque passage. Et, depuis le 2026-09-25, `MOTIF_AVEU_DE_NON_MESURE` (`scripts/cassandra-rh.mjs`), `PORTEURS_ABSENCE` (`scripts/pure-gold-unity.mjs`) et `findRapportsCourtsMaisDenses()` (`scripts/doc-report.mjs`) — chacun ferme un cas où la conformité était comptée en faute.
+
+**Terrain** : quand je construis ou je resserre un garde-fou · mots : garde-fou, détecteur, faux positif, seuil, exemption, conforme accusé · fichiers : scripts/*.mjs
 
 ## L5 — Distinguer « je n'ai rien trouvé » de « je n'ai pas pu regarder »
 
