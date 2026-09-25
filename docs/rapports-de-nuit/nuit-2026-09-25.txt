@@ -21,7 +21,15 @@ tombée du radar — et c'est voulu : un numéro seul ne prouve rien.
 CE QUI A CHANGÉ POUR LE PROJET   (sa demande : en haut, avant le détail)
 ----------------------------------------------------------------------
 
-(se remplit au fil de la nuit)
+LA NUIT DU 25 N'A PAS EU LIEU — et c'est le premier fait à écrire ici.
+Dernier commit à 00h41, reprise à 07h32. Sept heures sans une ligne.
+CAUSE RÉELLE, mesurée et non supposée : le mode auto FONCTIONNE — il a produit
+des commits à 01h, 02h, 03h et 05h les nuits des 22 et 24 septembre. Ce qui a
+manqué le 25, c'est le RÉVEIL ARMÉ avant la fin du tour. Le mécanisme existait,
+le geste a manqué, et rien ne le rappelait.
+CORRIGÉ le 25 à 07h39 : réveil armé (trig_01Wf8TY93Gb9pxTnQ3UuMjtC, 15 min) ET
+nouvelle règle surveillée `reveil-arme` chez angel-of-ia-process, pour que
+l'oubli devienne visible au lieu de coûter une nuit.
 
 ----------------------------------------------------------------------
 LES TÂCHES, UNE PAR LIGNE
@@ -30,6 +38,8 @@ LES TÂCHES, UNE PAR LIGNE
 #765 Article 31 écrit (tout passe par un outil) — reste le câblage angel [AVANCÉ]
 #766 Article 32 écrit (le temps réel se lit) — reste le câblage angel [AVANCÉ]
 #772 Plan de départ ↔ rapport de nuit : mécanisme construit, testé, 235 groupes au vert [FAIT]
+#765 Article 31 câblé chez angel (règle `outil-obligatoire`) — 235 groupes au vert [FAIT]
+#766 Article 32 câblé chez angel (règle `temps-reel-lu`) — 235 groupes au vert [FAIT]
 
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)

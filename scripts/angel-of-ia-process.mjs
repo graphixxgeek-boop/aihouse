@@ -73,6 +73,17 @@ export const REGLES_SURVEILLEES = [
   // naître est mesuré, pas craint : une réponse sur la longueur d'un code de nomenclature donnée
   // en comptant cinq axes, quand le dépôt en portait treize — et la question avait déjà été posée
   // trois jours plus tôt sous une autre forme, effacée depuis.
+  // outil-obligatoire et temps-reel-lu (2026-09-25, Articles 31 et 32, les deux posés par
+  // l'utilisateur au même niveau parce qu'ils conditionnent tout le reste. Non observables par
+  // nature : aucun fichier sur disque ne dit qu'un raisonnement a été fait à la main avant qu'un
+  // outil ait été consulté, ni qu'une heure a été tapée plutôt que lue. Angel DEMANDE donc.
+  { id: "outil-obligatoire", cote: "agent", observable: false, regle: "Pour chaque demande, passer par un OUTIL plutôt que de faire à la main — et tout rapport livré est LE FICHIER produit par un outil, nommé avec l'horodatage de son passage, suivi de l'analyse et du plan d'action. Faire à la main est la quatrième issue, et elle exige une raison écrite dans docs/suivi/.", source: "CLAUDE.md Article 31" },
+  { id: "temps-reel-lu", cote: "agent", observable: false, regle: "Ne jamais taper une date, une heure ou une durée de mémoire : les LIRE (agent-du-temps) et déclarer leur SOURCE. Toute fraîcheur se calcule sur une heure lue, et le temps de l'utilisateur — présent ou endormi — compte autant que celui de la machine.", source: "CLAUDE.md Article 32" },
+  // reveil-arme (2026-09-25). Née d'une nuit entière perdue : le mode auto avait produit des
+  // commits à 01h, 02h, 03h et 05h les nuits précédentes, et n'a rien produit celle du 25 —
+  // parce que le réveil n'avait pas été armé avant la fin du tour. Le mécanisme existait et
+  // fonctionnait ; c'est le geste de l'armer qui a manqué, et rien ne le rappelait.
+  { id: "reveil-arme", cote: "agent", observable: false, regle: "En mode autonome, ARMER le réveil (send_later, 15 min) AVANT de terminer le tour, systématiquement. Un tour qui se termine sans réveil armé arrête la nuit, quoi qu'annonce le compte rendu.", source: "nuit perdue du 2026-09-25, constatée par la comparaison plan de départ ↔ rapport de nuit" },
   { id: "reprise-des-notes", cote: "agent", observable: false, regle: "Avant d'ouvrir un chantier, avoir lancé `node scripts/data-archangel.mjs notes <sujet>` et lu ce que le dépôt sait déjà — puis DIRE explicitement l'écart entre ce qu'on croyait savoir et ce que les notes disent.", source: "docs/regles-de-travail.md §0bis" },
   { id: "resume-contextualise", cote: "agent", observable: false, regle: "Ouvrir chaque compte rendu final par les quatre rappels : le contexte, la demande de l'utilisateur résumée dans ses termes, l'étiquette de la tâche (numéro + intitulé), et un vocabulaire compréhensible par un non-développeur.", source: "CLAUDE.md Article 29" },
   { id: "decisions-en-attente", cote: "utilisateur", observable: true, regle: "Trancher les questions laissées en attente : une décision jamais prise bloque le travail qui en dépend.", source: "docs/regles-de-travail.md §2" },
