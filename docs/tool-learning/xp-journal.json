@@ -101,5 +101,23 @@
     "pourquoi": "Le défaut n'est pas dans l'outil, il est dans la façon dont son avertissement m'atteint : le rappel post-commit affiche beaucoup, et un avertissement noyé dans une sortie longue est indiscernable d'un avertissement absent. C'est le fil rouge du projet déplacé de l'outil vers son LECTEUR. Comparaison qui tranche : le garde-fou des horodatages BLOQUE le commit, et je l'ai respecté six fois sur six ; celui de la numérotation MURMURE, et je l'ai cassé sept fois sur sept. La conclusion n'est pas 'mieux lire' — c'est que la forme du signal décide de son efficacité.",
     "outil": "check-suivi-fidelity",
     "date": "2026-09-25T08:58:00.440Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "ronde-et-evaluation",
+    "rienARetenir": false,
+    "lecon": "Une consigne écrite qui nomme un appel de fonction est une AFFIRMATION non vérifiée tant que personne ne l’a tapée. Trois fonctions que le texte execute de la Ronde dit d’appeler sans argument levaient un TypeError — et l’écart tenait depuis leur écriture, parce que les seuls appelants réels passaient déjà l’argument. La doc décrivait donc un geste impossible, et aucun scan ne pouvait le dire : seul le lancement le pouvait.",
+    "consequence": "Quand une consigne cite un appel précis, le TAPER une fois tel quel avant de croire qu’il marche — le coût est de dix secondes, le silence dure des semaines.",
+    "contexte": "Ronde du 2026-09-25, items integration-audit et organigramme-signal (tâches #847/#848).",
+    "date": "2026-09-25T14:26:01.063Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "ronde-et-evaluation",
+    "rienARetenir": false,
+    "lecon": "Un verdict juste PAR CHANCE est plus dangereux qu’un verdict faux. Le tableau de bord annonçait « cohérent avec l’identité déclarée claude-sonnet-5 » sur une session claude-opus-5 : la conclusion restait bonne (le registre est validé pour « claude », que les deux contiennent), et c’est exactement ce qui rendait la provenance fausse indétectable.",
+    "consequence": "Vérifier la PROVENANCE d’une donnée séparément de la justesse du verdict qu’elle sert : une valeur écrite en dur se lit comme une valeur lue.",
+    "contexte": "Ronde du 2026-09-25, item kpi (tâche #849).",
+    "date": "2026-09-25T14:26:01.064Z"
   }
 ]
