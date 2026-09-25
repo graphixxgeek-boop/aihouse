@@ -12154,6 +12154,23 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.deepEqual([trouvaille.date, trouvaille.passages], ['2026-09-25', 2], 'it reads the LAST dated row and counts how many passages the register holds');
   assert.ok(/nettement plus long/.test(trouvaille.resume), 'and it takes the LONGEST cell as the summary rather than a fixed column index: the registers do not order their columns the same way, so a fixed index would return a date on some and a bare number on others');
   assert.ok(crh2.CHAMPS_DE_LA_FICHE.some((c) => c.cle === 'derniereTrouvaille'), 'the reader lives in the fiche rather than in yet another tool (Article 31: extend before building) — "when did this tool last find something" is a question about a tool\'s identity, exactly like its rank or its weight');
+  // DEUX FORMES DE DATE, pas une (2026-09-25, tâche #829). Trouvé en lançant la fiche sur CASSANDRA
+  // elle-même : son registre est nourri et riche, et la sonde répondait « rien de consigné » parce
+  // qu'il date ses entrées par des TITRES et non par des lignes de tableau. La réponse restait
+  // honnête, jamais « rien trouvé » — mais aveugle à une forme parfaitement légitime, et c'est la
+  // même chose une neuvième fois : une sonde qui ne peut pas matcher rend ce que rend une sonde
+  // qui n'a rien trouvé.
+  const parTitre = crh2.derniereTrouvailleDuRegistre('x', { lire: () => '# Registre\n\n## 2026-09-01 — un premier passage\n\ndu texte\n\n## 2026-09-25 — le passage le plus récent\n\nencore du texte' });
+  assert.deepEqual([parTitre.mesurable, parTitre.date], [true, '2026-09-25'], 'a register that dates its entries with HEADINGS instead of table rows must be read, not declared silent — two of the real registers do exactly that');
+  assert.ok(/le passage le plus récent/.test(parTitre.resume), 'and the heading text minus its date becomes the summary, so the reader returns something meaningful rather than the raw heading');
+  const mixteRegistre = crh2.derniereTrouvailleDuRegistre('x', { lire: () => '## 2026-01-01 — un titre ancien\n| 2026-09-25 | 1 | la vraie dernière ligne du tableau |' });
+  assert.equal(mixteRegistre.date, '2026-09-25', 'when a register holds both forms, the TABLE wins: it is the structured one, and mixing the two orders would make the "last" entry depend on the file layout rather than on the dates');
+  // Et contre les VRAIS registres (Article 25) : la correction doit se voir en nombre.
+  {
+    const lireReel = (chemin) => { try { return fs.readFileSync(chemin, 'utf8'); } catch { return null; } };
+    const cass = crh2.derniereTrouvailleDuRegistre('cassandra-rh', { lire: lireReel });
+    assert.ok(cass.mesurable, 'CASSANDRA\'s own register is fed, dated and rich: the tool whose job is to tell whether the others are fed must not read silence in its own — that was the finding that produced this fix');
+  }
 
   // LES OUTILS QUI POUVAIENT DIRE VERT SANS AVOIR RIEN MESURÉ (2026-09-25, tâche #601 → #812).
   // Le constat en nommait cinq. Vérifiés UN PAR UN comme la tâche l'exigeait — jamais par une passe

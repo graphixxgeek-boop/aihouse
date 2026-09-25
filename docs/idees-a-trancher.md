@@ -119,3 +119,36 @@ ce qui est réellement enregistré. Les deux options, et elles ne se valent pas 
 - **La retirer** — le vocabulaire ne porterait plus que des origines réellement productibles, et
   plus aucun outil ne pourrait rendre un verdict sur une catégorie vide. Coût : `toolUsageStats()`
   cesse d'exposer une clé que personne ne remplissait.
+
+### Ajoutée le 2026-09-25 — l'idée restée sans trace pendant quatre jours
+
+| Tâche | Sujet | Décision |
+|---|---|---|
+| #830 | ARGUS/HARMONIA étendus au raisonnement sur des IDÉES et des CONVERSATIONS, pas seulement du code | à trancher |
+
+**Sa demande, du 2026-09-21 (intervention #511)**, posée comme une « remarque générale » :
+
+> « j'ai besoin d'un outil qui verifie la logique, les trous mais **pour toute question de logique et
+> de trous que ce soit dans le code, dans les idées, dans une conversation**… est-ce que harmonia et
+> audit pourraient avoir une extension de ce genre ? [...] **Sinon, ne fais rien, mais reponds à la
+> question.** »
+
+**La réponse qu'il attendait, et qu'il n'avait jamais eue** : oui, techniquement — mais pas dans la
+couche qui tourne gratuitement à chaque commit. ARGUS et HARMONIA ont déjà **deux couches** : une
+mécanique (motifs sur du code, zéro coût) et une à vrai raisonnement (coût réel, Article 8). Une
+idée ou une conversation n'ont pas de motif à balayer : seule la seconde couche peut les lire. Donc
+l'extension est possible, elle est **payante**, et elle se déclenche à la demande.
+
+**Les trois formes possibles, et elles ne coûtent pas pareil** :
+
+- **A — Une commande sur un texte fourni.** « Voici une idée / un échange : quels trous, quelles
+  frictions ? » Le plus simple, le plus utile tout de suite, coût par passage.
+- **B — Un passage sur un SUJET du dépôt** (« le rôle de CASSANDRA dans l'Agence », sa demande
+  d'origine). L'outil rassemble lui-même ce que le dépôt dit du sujet, puis raisonne dessus. Plus
+  cher, et c'est celui qui répond vraiment à sa question.
+- **C — Une veille continue sur les conversations.** À écarter à mon sens : il n'existe aucun accès
+  mécanique à l'historique de conversation, et un outil qui prétendrait le lire mentirait.
+
+**Ce qui a déjà été fait sans rien dépenser, en attendant sa décision** : le passage sur CASSANDRA
+a été lancé avec les outils gratuits (`fiche`, `cadrage`), et il a trouvé deux frictions réelles
+dans son propre rôle — voir la tâche #830.

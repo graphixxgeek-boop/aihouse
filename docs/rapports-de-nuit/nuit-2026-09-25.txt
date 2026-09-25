@@ -96,6 +96,15 @@ DEEP-READER 5 (#231) : la veille d'ecriture econome d'une regle NEUVE, l'autre m
   mediane des Articles existants, 439 tokens reels), PAS MESURE sous 3 Articles, et il NE BLOQUE
   JAMAIS : un controle bloquant pousserait a ecrire court plutot qu'a ecrire juste [FAIT]
 
+DEEP-READER 3 (#228) : « un outil qui verifie la logique et les trous PARTOUT » — la question
+  posee le 2026-09-21 avec « sinon ne fais rien, mais reponds a la question », et jamais repondue.
+  REPONSE ECRITE : possible, mais seulement dans la couche a raisonnement (payante) — une idee n'a
+  aucun motif a balayer. Trois formes inscrites au registre des decisions, la veille continue sur
+  les conversations DECONSEILLEE (aucun acces mecanique a l'historique n'existe).
+  Le passage sur CASSANDRA fait gratuitement en attendant : deux frictions, toutes deux la
+  retournant contre elle-meme (aucune portee declaree alors qu'elle mesure ce trou ; sa propre
+  derniere trouvaille illisible par une sonde aveugle, corrigee) [FAIT]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------

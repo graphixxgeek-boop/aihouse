@@ -2469,12 +2469,29 @@ export function derniereTrouvailleDuRegistre(slug, { lire } = {}) {
   if (texte === null || texte === undefined) {
     return { mesurable: false, chemin, pourquoi: `${chemin} est absent ou illisible : cet outil n'a pas de registre atteignable, ce qui n'est pas la même chose qu'un registre vide` };
   }
-  const datees = String(texte).split("\n").filter((l) => /^\|\s*20\d\d-\d\d-\d\d/.test(l));
+  // DEUX FORMES, pas une (corrigé le 2026-09-25, tâche #829). La première version ne lisait que les
+  // LIGNES DE TABLEAU `| 2026-… |`. Elle a donc répondu « rien de consigné » sur le registre de
+  // CASSANDRA elle-même, qui est nourri, riche, et qui date ses entrées par des TITRES
+  // (`## 2026-09-21 — …`). La réponse restait honnête — elle disait « jamais consigné », jamais
+  // « jamais rien trouvé » — mais elle était aveugle à une forme parfaitement légitime.
+  //
+  // C'est, une fois de plus, la même chose : une sonde qui ne PEUT PAS matcher rend exactement ce
+  // que rend une sonde qui n'a rien trouvé. Trouvée en lançant la fiche sur l'outil qui l'a écrite.
+  const lignes = String(texte).split("\n");
+  const enTableau = lignes.filter((l) => /^\|\s*20\d\d-\d\d-\d\d/.test(l));
+  const enTitre = lignes.filter((l) => /^#{2,4}\s.*20\d\d-\d\d-\d\d/.test(l));
+  const datees = enTableau.length ? enTableau : enTitre;
   if (!datees.length) {
-    return { mesurable: false, chemin, pourquoi: `aucune ligne datée dans ${chemin} : rien n'y a jamais été consigné sous une forme lisible — « jamais consigné » n'est pas « jamais rien trouvé »` };
+    return { mesurable: false, chemin, pourquoi: `aucune ligne ni aucun titre daté dans ${chemin} : rien n'y a jamais été consigné sous une forme lisible — « jamais consigné » n'est pas « jamais rien trouvé »` };
   }
   const derniere = datees[datees.length - 1];
-  const cellules = derniere.split("|").map((c) => c.trim()).filter(Boolean);
+  const cellules = enTableau.length
+    ? derniere.split("|").map((c) => c.trim()).filter(Boolean)
+    : (() => {
+        const t = derniere.replace(/^#+\s*/, "").trim();
+        const d = t.match(/20\d\d-\d\d-\d\d/)?.[0] ?? "";
+        return [d, t.replace(d, "").replace(/^[\s—–-]+/, "").trim() || t];
+      })();
   return { mesurable: true, chemin, date: cellules[0],
     // Le résumé est la cellule la plus longue de la ligne : les registres n'ont pas tous leurs
     // colonnes dans le même ordre, et choisir un INDEX fixe aurait rendu la date sur les uns et un
