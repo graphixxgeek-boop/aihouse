@@ -112,6 +112,12 @@ DEEP-READER 1 (#227) : VERIFIEE, deja close depuis la veille (tache #761, sectio
 
 LES HUIT CONSTATS DEEP-READER SONT CLOS (1 a 8).
 
+#807 (portees) : la dette de 45 outils etait FANTOME — la mesure lisait le registre brut quand le
+  code passe par porteeDe(), qui applique un defaut voulu. Trois etats : 10 declarees, 38 heritees
+  (legitimes), 5 suspectes affichees comme QUESTION. Deux vraies trouvailles declarees au passage
+  (run-simulation, summarize-simulation-log). Suspicion resserree deux fois : elle matchait d'abord
+  les commentaires, puis une chaine de description — une mention n'est pas un usage [FAIT]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------

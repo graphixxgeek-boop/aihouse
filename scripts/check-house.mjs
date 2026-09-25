@@ -12256,9 +12256,23 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(fLignes.some((l) => /fiche INCOMPLÈTE/.test(l)) && fLignes.some((l) => /non renseigné/.test(l)), 'the rendering says INCOMPLETE out loud and shows each hole with its cause, rather than printing twelve tidy lines that would read as a full portrait');
   assert.ok(crh2.formatFicheLines({ mesurable: false, pourquoi: 'rien' })[0].startsWith('PAS DE FICHE'), 'and an impossible fiche renders as PAS DE FICHE rather than as an empty frame — the renderer was the one new function AXA-CHECK found untested here, so it got its test rather than a promise');
   // LE TROU QUE LA FICHE A TROUVÉ À SON PREMIER PASSAGE, gardé comme contre-test (#807).
-  const sp = crh2.findOutilsSansPortee([{ type: 'outil', chemin: 'scripts/a.mjs' }, { type: 'outil', chemin: 'scripts/b.mjs' }, { type: 'bibliotheque-partagee', chemin: 'scripts/c.mjs' }], { a: 'agence' });
-  assert.deepEqual([sp.outils, sp.declares, sp.sans], [2, 1, ['b']], 'the portée registry is confronted with the REAL census rather than trusted: a hand-kept list with no guard is exactly the Article 24 pattern, and here it was 13 entries for 50 real tools — 44 tools with no declared portée, which nothing reported because nobody had ever asked the registry about a tool that was not in it');
+  // MESURE CORRIGÉE le 2026-09-25 (tâche #832) — et l'ancienne version fabriquait une DETTE
+  // FANTÔME DE 45 OUTILS. Elle comptait « sans portée » tout outil absent de TOOL_PORTEE, alors que
+  // le registre déclare juste au-dessus de lui-même que tout le reste hérite « agence » par DÉFAUT,
+  // exprès, pour qu'un nouvel outil n'ait rien à inscrire (Article 24). La mesure n'interrogeait
+  // donc pas le même objet que le mécanisme — et transformait le dispositif en objectif à combler.
+  const recens = [{ type: 'outil', chemin: 'scripts/a.mjs' }, { type: 'outil', chemin: 'scripts/b.mjs' }, { type: 'outil', chemin: 'scripts/sim.mjs' }, { type: 'bibliotheque-partagee', chemin: 'scripts/c.mjs' }];
+  const sources = { 'scripts/a.mjs': 'rien', 'scripts/b.mjs': '// on parle de docs/simulations ici, en commentaire\nconst x = 1;', 'scripts/sim.mjs': 'readFileSync("docs/simulations/x.txt")' };
+  const sp = crh2.findOutilsSansPortee(recens, { a: 'agence' }, { lire: (c) => sources[c] ?? null });
+  assert.deepEqual([sp.declares, sp.heritees.sort()], [['a'], ['b']], 'a tool absent from the registry INHERITS the default — that is the mechanism, not a hole, and counting it as missing invented 45 lines of debt that never existed');
+  assert.deepEqual(sp.suspectes, ['sim'], 'only a tool that genuinely OPENS a simulation path while inheriting "agence" is worth a question — b merely NAMES it in a comment, and a mention is not a use (the same lesson this repo already paid on hook comments)');
+  assert.ok(!sp.horsPortee.includes('pas regardé'), 'with a reader provided, the suspicion was actually looked for');
+  const spAveugle = crh2.findOutilsSansPortee(recens, { a: 'agence' });
+  assert.ok(spAveugle.suspectes.length === 0 && /pas regardé/.test(spAveugle.horsPortee), 'without a reader, zero suspects must be declared as NOT LOOKED FOR rather than read as none found — the defect this whole landscape exists against');
   assert.equal(crh2.findOutilsSansPortee([], {}).mesurable, false, 'and an empty census reports NOT MEASURED rather than a full registry: zero missing out of zero tools would read as a clean bill of health');
+  // Contre le VRAI dépôt (Article 25) : la fiche d'un outil ordinaire doit montrer sa portée
+  // héritée, jamais « non renseigné » — c'était le symptôme qui a mené à la dette fantôme.
+  assert.equal(crh2.ficheDeLOutil('cassandra-rh', { portee: (await import('../scripts/lib-shell.mjs')).porteeDe('cassandra-rh') }).lignes.find((l) => l.cle === 'portee').valeur, 'agence', 'a tool that inherits the default must display that portée, because an inherited portée IS a portée — showing "non renseigné" is what made 45 healthy tools look like a gap');
 
   // L'ÉMIETTEMENT DE LA FILE — a-t-on coupé trop fin ? (2026-09-25, tâche #735).
   // poidsDeLaTache() disait si UNE tâche est trop grosse ; rien ne disait l'inverse. Les deux

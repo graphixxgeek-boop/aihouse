@@ -17,7 +17,7 @@ import { readFileSync, existsSync, rmSync, writeFileSync, readdirSync } from "no
 import { join } from "node:path";
 import { parseToolsTable, slugifyAgentName, toolIdentitySlug, checkAgentOnboarding, loadBadgeCeremonyHistory, CERTIFIABLE_STATUTS, CLASSIQUE_STATUT, PRESTATIONS } from "./le-coordinateur.mjs";
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
-import { AGENT_CATEGORIES, GARDIEN_DOMAINS, TOOL_PORTEE, assertNotAPersonnage, sh, printReliabilityNotice, pairesParJaccard, familleDeLaCategorie, rangDeLaCategorie } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, GARDIEN_DOMAINS, TOOL_PORTEE, porteeDe, assertNotAPersonnage, sh, printReliabilityNotice, pairesParJaccard, familleDeLaCategorie, rangDeLaCategorie } from "./lib-shell.mjs";
 import { renderTextReport } from "./report-template.mjs";
 import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson } from "./tool-usage.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
@@ -2806,13 +2806,56 @@ export function ficheDeLOutil(slug, axes = {}, { champs = CHAMPS_DE_LA_FICHE } =
 // pas. C'est exactement le patron de l'Article 24 : une liste tenue à la main, sans garde-fou.
 // Ce détecteur ne casse rien (44 échecs bloqueraient le dépôt) : il COMPTE et il NOMME, et le
 // chiffre descend à mesure que le registre se remplit.
-export function findOutilsSansPortee(lignesRecensement = [], portees = {}) {
-  const outils = lignesRecensement.filter((l) => l.type === "outil")
-    .map((l) => String(l.chemin).replace(/^scripts\//, "").replace(/\.mjs$/, ""));
-  if (!outils.length) return { mesurable: false, pourquoi: "aucun outil dans le recensement : rien à confronter au registre des portées, ce qui n'est pas la même chose qu'un registre complet" };
-  const sans = outils.filter((s) => !portees[s]);
-  return { mesurable: true, outils: outils.length, declares: outils.length - sans.length, sans,
-    part: (sans.length / outils.length) * 100 };
+// CORRIGÉ le 2026-09-25 (tâche #832) — ET C'ÉTAIT UNE DETTE FANTÔME DE 45 OUTILS.
+//
+// La première version comptait comme « sans portée » tout outil absent de `TOOL_PORTEE`, et
+// annonçait « 45 outils sur 53 (84,9 %) n'ont aucune portée ». Or le registre déclare juste
+// au-dessus de lui-même, noir sur blanc : « tout le reste est de portée agence — déclaré par
+// DÉFAUT plutôt qu'énuméré ici, pour qu'un nouvel outil hérite du cas majoritaire sans inscription
+// manuelle (Article 24) ». Le défaut est le mécanisme, pas un trou.
+//
+// LA MESURE NE LISAIT DONC PAS LE MÊME OBJET QUE LE MÉCANISME : elle interrogeait le registre brut
+// là où le code réel passe par `porteeDe()`. Elle a produit 45 lignes de dette qui n'existaient
+// pas, et — pire — elle en faisait un objectif chiffré à combler, c'est-à-dire un travail inutile
+// rendu obligatoire par une fausse mesure.
+//
+// TROIS ÉTATS remplacent les deux : DÉCLARÉE (le cas minoritaire, écrit exprès) · HÉRITÉE du défaut
+// (parfaitement légitime, c'est le dispositif) · SUSPECTE (elle hérite « agence » alors que son
+// propre code lit des données de SIMULATION — là, et là seulement, il y a une vraie question).
+// Des chemins, jamais des mots. « transcript » tout court apparaît dans des phrases explicatives et
+// même dans la DESCRIPTION d'un domaine (`"transcripts, dossiers, captures"`) — c'était le dernier
+// faux positif, et il tenait dans une chaîne de caractères, là où retirer les commentaires ne
+// suffit plus. Ne comptent donc que les formes qui désignent un CHEMIN réel qu'on ouvre.
+export const SIGNAUX_DE_SIMULATION = /["'`(\/]docs\/simulations|["'`]full_sim|simulation-log|runSimulation\s*\(/;
+
+export function findOutilsSansPortee(lignesRecensement = [], portees = {}, { defaut = "agence", lire = null } = {}) {
+  const lignes = lignesRecensement.filter((l) => l.type === "outil");
+  if (!lignes.length) return { mesurable: false, pourquoi: "aucun outil dans le recensement : rien à confronter au registre des portées, ce qui n'est pas la même chose qu'un registre complet" };
+  const declares = []; const heritees = []; const suspectes = [];
+  for (const l of lignes) {
+    const slug = String(l.chemin).replace(/^scripts\//, "").replace(/\.mjs$/, "");
+    if (portees[slug]) { declares.push(slug); continue; }
+    const brut = typeof lire === "function" ? (lire(l.chemin) ?? "") : null;
+    if (brut === null) { heritees.push(slug); continue; }
+    // UNE MENTION N'EST PAS UN USAGE — leçon déjà payée deux fois dans ce dépôt (un script NOMMÉ
+    // dans un commentaire de crochet n'est pas lancé par lui). La première version de cette
+    // suspicion testait le fichier ENTIER et rendait 16 suspects, dont cassandra-rh, ecotoken et
+    // tool-brain, qui ne citent « docs/simulations » que dans leur prose explicative. On retire
+    // donc les commentaires et les chaînes de message avant de chercher.
+    const code = String(brut)
+      .replace(/\/\*[\s\S]*?\*\//g, " ")
+      .replace(/^[ \t]*\/\/.*$/gm, " ");
+    if (SIGNAUX_DE_SIMULATION.test(code)) suspectes.push(slug);
+    else heritees.push(slug);
+  }
+  return {
+    mesurable: true, outils: lignes.length, defaut,
+    declares, heritees, suspectes,
+    lectureFaite: typeof lire === "function",
+    horsPortee: typeof lire === "function"
+      ? "Une portée héritée n'est PAS un trou : c'est le dispositif voulu. Seule une suspicion — un outil qui lit de la simulation tout en héritant « agence » — mérite un regard, et c'est une question, jamais un verdict."
+      : "Aucun lecteur de source fourni : les suspicions n'ont PAS été cherchées. Zéro suspecte ici veut dire « pas regardé », jamais « rien trouvé ».",
+  };
 }
 
 export function formatFicheLines(f) {
@@ -3257,7 +3300,9 @@ function main() {
       rang: rangDeLaCategorie(cat), famille: familleDeLaCategorie(cat),
       groupe: groupe?.groupe ?? null, type: ligneRec?.type ?? null, classes: ligneRec?.classes ?? null,
       destinataires: dest.destinataires, moments, domaines: domainesDeLOutil(src).domaines,
-      portee: TOOL_PORTEE[demande] ?? null,
+      // `porteeDe()` et jamais le registre brut : une portée héritée du défaut EST une portée
+      // (tâche #832). La lire directement dans TOOL_PORTEE affichait « non renseigné » sur 45 outils.
+      portee: porteeDe(demande),
       poids: monPoids ? `${monPoids.lignes} lignes (${monPoids.part.toFixed(1)} % de l'Agence)` : (ligneRec?.lignes ? `${ligneRec.lignes} lignes` : null),
       // LE COÛT DE DÉPART — c'est la ligne qui justifie le chantier entier, selon sa formule :
       // « c'est chez qui ? c'est un sujet export ». Elle vient de poidsDesOutils(), jamais d'un
@@ -3326,12 +3371,19 @@ function main() {
     // LE REGISTRE DES PORTÉES, confronté au recensement réel (#807) — trouvé par la toute première
     // fiche produite, pas par une revue : safe-export affichait « portée non renseignée ».
     const rp = recenserLesScripts();
-    const sp = findOutilsSansPortee(rp.mesurable ? rp.lignes : [], TOOL_PORTEE);
+    const sp = findOutilsSansPortee(rp.mesurable ? rp.lignes : [], TOOL_PORTEE, {
+      lire: (chemin) => { try { return readFileSync(join(ROOT, chemin), "utf8"); } catch { return null; } },
+    });
     console.log("");
-    console.log("--- LE REGISTRE DES PORTÉES (tâche #807) ---");
-    console.log(sp.mesurable
-      ? `  ${sp.declares}/${sp.outils} outils ont une portée déclarée — ${sp.sans.length} n'en ont aucune (${sp.part.toFixed(1)} %).${sp.sans.length ? `\n  Sans portée : ${sp.sans.slice(0, 8).join(", ")}${sp.sans.length > 8 ? `, … et ${sp.sans.length - 8} autre(s)` : ""}` : ""}`
-      : `  PAS MESURÉ — ${sp.pourquoi}`);
+    console.log("--- LE REGISTRE DES PORTÉES (tâche #807, mesure corrigée #832) ---");
+    if (!sp.mesurable) console.log(`  PAS MESURÉ — ${sp.pourquoi}`);
+    else {
+      console.log(`  ${sp.declares.length}/${sp.outils} portée(s) DÉCLARÉE(s) · ${sp.heritees.length} HÉRITÉE(s) du défaut « ${sp.defaut} » — et une portée héritée n'est pas un trou, c'est le dispositif.`);
+      console.log(sp.suspectes.length
+        ? `  ⚠️ ${sp.suspectes.length} SUSPECTE(s) — elles héritent « ${sp.defaut} » alors que leur code lit de la simulation : ${sp.suspectes.join(", ")}. Question, jamais verdict.`
+        : `  Aucune suspecte : aucun outil héritant du défaut ne lit de données de simulation.`);
+      console.log(`  HORS PORTÉE : ${sp.horsPortee}`);
+    }
     return;
   }
   if (sub === "recensement") {

@@ -79,6 +79,10 @@ export const TOOL_PORTEE = {
   "le-regisseur": "simulation",
   "process-simulation-guardian": "simulation",
   "check-spirit": "simulation",
+  // Ajoutés le 2026-09-25 (tâche #832) : trouvés par la suspicion mécanique, pas par une revue —
+  // les deux OUVRENT réellement `docs/simulations/`, ils ne la citent pas en passant.
+  "run-simulation": "simulation",
+  "summarize-simulation-log": "simulation",
   // — Portée « les deux », et chacune pour une raison précise —
   "tableau-de-bord-interne-kpi": "les-deux",   // mesure des familles d'outils ET des indicateurs narratifs d'une simulation
   "smart-conso-api": "les-deux",               // régule le rythme du travail ET le quota brûlé par une simulation
