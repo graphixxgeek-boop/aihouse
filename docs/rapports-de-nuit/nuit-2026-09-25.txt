@@ -58,6 +58,7 @@ LES TÂCHES, UNE PAR LIGNE
 #744 Poids par outil + gain chiffré d'une réduction : 49 582 lignes, 13 outils libres (1 901 l.), check-house = 24,3 % [FAIT]
 RONDE CIRCLE-TASKS lancée en mode autonome : 76 commits de retard rattrapés, compteur remis à zéro [FAIT]
 #731 Poids de l'outillage : le joueur paie ZÉRO, mais le crochet coûte ~11 600 tokens par commit à l'agent [FAIT]
+#730 L'Agence entière a une version rétroactive : v69.446, ni somme ni moyenne des 50 — et les 2 angles morts du majeur mis en échec EXPRÈS [FAIT]
 
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)

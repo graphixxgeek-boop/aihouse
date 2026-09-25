@@ -1244,7 +1244,134 @@ export function versionDepuisGit(chemin, { sh: shImpl = sh } = {}) {
     mesurable: true, majeur, mineur, commits: commits.length,
     version: `v${majeur}.${mineur}`,
     pourquoi: `${majeur} commit(s) ont touché la surface exportée (une capacité gagnée ou perdue), ${mineur} l'ont modifié sans la changer`,
+    horsPortee: VERSION_OUTIL_HORS_PORTEE,
   };
+}
+
+// LES DEUX ANGLES MORTS DE CETTE HEURISTIQUE, mis en échec EXPRÈS le 2026-09-25 (tâche #730,
+// « peux tu fiabiliser toute cette partie stp ») plutôt que découverts un jour par surprise. Le
+// majeur lit les lignes `+export`/`-export` du diff, donc :
+//   · IL SURCOMPTE quand une ligne d'export est seulement REFORMATÉE (un espace déplacé) — le
+//     diff bouge, la capacité non.
+//   · IL SOUS-COMPTE quand une capacité s'ajoute SANS toucher une ligne d'export : une entrée de
+//     plus dans un tableau déjà exporté est une capacité de plus, et la ligne `export const` ne
+//     bouge pas. Ce cas-là est le plus fréquent dans ce dépôt, pas un cas d'école.
+// Aucun des deux ne se corrige sans lire le sens du code, ce que git ne sait pas faire. Les
+// DÉCLARER là où le chiffre se lit vaut mieux que de les taire : un chiffre dont on connaît la
+// marge reste utile, un chiffre qu'on croit exact ne l'est plus.
+export const VERSION_OUTIL_HORS_PORTEE =
+  "Le majeur lit le diff, pas le sens : il SURCOMPTE une ligne d'export simplement reformatée, et " +
+  "SOUS-COMPTE une capacité ajoutée dans un tableau déjà exporté. Une tendance, jamais un décompte exact.";
+
+// ————————————————————————————————————————————————————————————————————————
+// LA VERSION DE L'AGENCE ENTIÈRE (2026-09-25, tâche #730)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA QUESTION, mot pour mot : « est-ce qu'on peut calculer des numéros de versions mais pour
+// l'agence au global ? possible de faire rétroactif ? peux tu fiabiliser toute cette partie stp. »
+//
+// CE QUI NE MARCHE PAS, et ça vient en premier parce que c'est le piège évident : une version
+// d'Agence ne peut être ni la SOMME ni la MOYENNE des cinquante versions par outil. La somme
+// monterait à chaque faute de frappe corrigée dans n'importe quel script. La moyenne, elle,
+// BAISSERAIT le jour où un outil neuf (v0.1) rejoint l'équipe — un nouveau membre ferait reculer
+// la version de l'équipe, ce qui est exactement l'inverse de ce qui s'est passé. Les deux rendent
+// un chiffre qui a l'air d'une mesure sans en être une, et c'est le plus dangereux des deux
+// défauts (un chiffre absent se voit, un chiffre faux se lit).
+//
+// CE QUI MARCHE, par analogie EXACTE avec la règle par outil, et c'est ce qui rend le choix
+// défendable plutôt qu'arbitraire : pour UN outil, le majeur compte les commits qui ont touché sa
+// SURFACE EXPORTÉE — ce qu'il sait faire. Pour l'AGENCE, la surface c'est la COMPOSITION DE
+// L'ÉQUIPE : le majeur compte les commits où un outil a REJOINT ou QUITTÉ l'équipe. Rétroactif
+// par construction, comme l'autre : tout est déjà dans git, rien n'est à saisir à la main.
+//
+// LES DEUX AUTRES CANDIDATS SONT MESURÉS AUSSI, JAMAIS SEULEMENT ÉVOQUÉS. La tâche #730 en
+// nommait trois (un outil qui rejoint ou quitte · un Gardien sacré de plus · un changement de
+// charte) et le choix lui revient (Article 16). Les trois sont donc comptés à chaque passage :
+// il choisit entre trois chiffres réels, pas entre trois hypothèses. Tant qu'il n'a pas tranché,
+// l'axe « équipe » sert de défaut DÉCLARÉ, jamais de décision prise à sa place.
+//
+// LE DÉNOMINATEUR EST COMMUN AUX TROIS, et c'est ce qui empêche le mineur de devenir négatif :
+// les commits de l'Agence sont ceux qui touchent `scripts/` OU la charte, et les commits majeurs
+// de n'importe quel axe en sont un sous-ensemble par construction. Un âge ou un compte négatif se
+// lit comme « tout frais » au lieu de déclencher une alerte (Article 32, faille 3) — ici c'est
+// structurellement impossible plutôt que rattrapé après coup.
+
+export const AXES_DE_VERSION_AGENCE = [
+  {
+    cle: "equipe",
+    quoi: "un outil rejoint ou quitte l'équipe",
+    pourquoi: "l'analogie exacte de la règle par outil : la surface d'un outil ce sont ses exports, la surface de l'Agence c'est sa composition",
+    commande: "git log --diff-filter=AD --format='%H' -- 'scripts/*.mjs'",
+  },
+  {
+    cle: "gardiens",
+    quoi: "un Gardien sacré du code de plus ou de moins",
+    pourquoi: "le rang le plus exigeant de l'Article 20bis : en gagner un change ce qui tourne à CHAQUE commit, donc ce que l'Agence fait sans qu'on le lui demande",
+    commande: "git log -G': \"Gardien sacr' --format='%H' -- scripts/lib-shell.mjs",
+  },
+  {
+    cle: "charte",
+    quoi: "un Article de la charte apparaît ou disparaît",
+    pourquoi: "la loi que toute l'Agence sert : un Article de plus, et les cinquante outils travaillent sous une règle de plus",
+    commande: "git log -G'^\\*\\*Article [0-9]' --format='%H' -- CLAUDE.md",
+  },
+];
+
+export const AXE_MAJEUR_PAR_DEFAUT = "equipe";
+const COMMITS_DE_L_AGENCE = "git log --format='%H' -- scripts/ CLAUDE.md";
+
+function commitsDe(commande, shImpl) {
+  return new Set(String(shImpl(commande) ?? "").trim().split("\n").filter(Boolean));
+}
+
+export function versionDeLAgence({ axeMajeur = AXE_MAJEUR_PAR_DEFAUT, sh: shImpl = sh } = {}) {
+  const axe = AXES_DE_VERSION_AGENCE.find((a) => a.cle === axeMajeur);
+  if (!axe) {
+    return { mesurable: false, pourquoi: `axe « ${axeMajeur} » inconnu — les axes disponibles sont ${AXES_DE_VERSION_AGENCE.map((a) => a.cle).join(", ")}, et un axe inventé rendrait une version qui ne veut rien dire` };
+  }
+  let tous;
+  try { tous = commitsDe(COMMITS_DE_L_AGENCE, shImpl); } catch {
+    return { mesurable: false, pourquoi: "git n'a pas pu lire l'historique de l'Agence — aucune version déduite, et surtout aucune supposée" };
+  }
+  if (!tous.size) return { mesurable: false, pourquoi: "aucun commit ne touche scripts/ ni la charte : cette Agence n'a jamais été versionnée, ce qui n'est pas la même chose qu'une version 0" };
+  const parAxe = [];
+  for (const a of AXES_DE_VERSION_AGENCE) {
+    let n = null;
+    try { n = [...commitsDe(a.commande, shImpl)].filter((h) => tous.has(h)).length; } catch { n = null; }
+    parAxe.push({ cle: a.cle, quoi: a.quoi, pourquoi: a.pourquoi, commits: n, retenu: a.cle === axeMajeur });
+  }
+  const majeur = parAxe.find((a) => a.cle === axeMajeur).commits;
+  if (majeur === null) return { mesurable: false, pourquoi: `git n'a pas pu compter l'axe « ${axeMajeur} » — mieux vaut pas de version qu'une version dont le majeur vaut zéro par accident` };
+  return {
+    mesurable: true,
+    axeMajeur,
+    majeur,
+    mineur: tous.size - majeur,
+    total: tous.size,
+    version: `v${majeur}.${tous.size - majeur}`,
+    parAxe,
+    pourquoi: `${majeur} commit(s) où ${axe.quoi}, sur ${tous.size} commit(s) qui ont touché l'Agence`,
+    horsPortee:
+      "Cette version dit ce qui s'est PASSÉ, jamais ce que l'Agence VAUT — même frontière que la version par outil. " +
+      "Et elle ne se compare à AUCUNE version d'outil : un v69 d'Agence n'est pas « plus avancé » qu'un v4 d'outil, " +
+      "les deux ne comptent pas la même chose.",
+  };
+}
+
+export function formatVersionAgenceLines(v) {
+  if (!v?.mesurable) return [`PAS MESURÉ — ${v?.pourquoi ?? "aucune donnée"}`];
+  const lignes = [
+    `VERSION DE L'AGENCE ENTIÈRE : ${v.version}   (axe retenu : « ${v.axeMajeur} »)`,
+    `  ${v.pourquoi}.`,
+    "",
+    "  Les trois axes candidats, tous comptés — il choisit entre trois chiffres réels, pas entre trois hypothèses :",
+  ];
+  for (const a of v.parAxe) {
+    const n = a.commits === null ? "pas mesuré" : `${a.commits} commit(s)`;
+    lignes.push(`   ${a.retenu ? "▶" : " "} ${a.cle.padEnd(9)} ${String(n).padEnd(16)} ${a.quoi}`);
+  }
+  lignes.push("", `  ${v.horsPortee}`);
+  return lignes;
 }
 
 // LA RICHESSE — ce que l'outil EST, indépendamment de son passé. Chaque critère vaut UN point et
@@ -2878,6 +3005,11 @@ function main() {
     try { crochets = readFileSync(join(ROOT, "scripts/hooks/post-commit"), "utf8"); } catch { /* absent */ }
     try { filet = readFileSync(join(ROOT, "scripts/check-house.mjs"), "utf8"); } catch { /* absent */ }
     const couteux = outilsCouteuxDuCatalogue(PRESTATIONS);
+    console.log("\n=== LA VERSION DE L'AGENCE ENTIÈRE (2026-09-25, tâche #730) ===\n");
+    for (const l of formatVersionAgenceLines(versionDeLAgence())) console.log(l);
+    console.log("\n  Ni la somme ni la moyenne des versions ci-dessous : la somme monterait à chaque faute de frappe corrigée,");
+    console.log("  et la moyenne BAISSERAIT le jour où un outil neuf rejoint l'équipe — un nouveau membre ferait reculer");
+    console.log("  la version de l'équipe. La composition de l'équipe est à l'Agence ce que la surface exportée est à un outil.");
     console.log("\n=== VERSION ET RICHESSE, OUTIL PAR OUTIL ===\n");
     console.log("Deux échelles SÉPARÉES, à la demande de l'utilisateur, et la raison est bonne : la VERSION dit ce qui");
     console.log("s'est passé (combien de fois l'outil a changé de capacités), la RICHESSE dit ce qu'il EST aujourd'hui.");
@@ -2896,7 +3028,8 @@ function main() {
     }
     lignes.sort((a, b) => b.r.score - a.r.score);
     for (const x of lignes) console.log(`${x.nom.padEnd(30)}${(x.v.mesurable ? x.v.version : "n/a").padEnd(10)}${x.r.score}/${x.r.sur}  ${x.r.tenus.join(", ")}`);
-    console.log(`\nHORS PORTÉE : ${richesse({}).horsPortee}`);
+    console.log(`\nHORS PORTÉE (richesse) : ${richesse({}).horsPortee}`);
+    console.log(`HORS PORTÉE (version) : ${VERSION_OUTIL_HORS_PORTEE}`);
     console.log("Le MAJEUR ne compte pas les commits : il compte ceux qui ont touché la surface exportée, c'est-à-dire");
     console.log("les fois où l'outil a gagné ou perdu une capacité. Compter tous les commits aurait rendu un numéro qui");
     console.log("grandit avec l'agitation plutôt qu'avec les capacités — et un chiffre pareil se lit pourtant comme une mesure.");

@@ -11963,6 +11963,28 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(riche.manquants.every((m) => m.quoi), 'and every missing point says what it would have meant, so the list is actionable rather than a grade');
   assert.ok(/jamais ce qu'il VAUT/.test(crh2.richesse({}).horsPortee), 'with no threshold anywhere, deliberately: a poor tool is not a bad tool — find-booster does one thing and does it well, and comes out poor with nothing to fix');
 
+  // LA VERSION DE L'AGENCE ENTIÈRE, et la MISE EN ÉCHEC EXPRÈS des deux échelles (2026-09-25, tâche #730).
+  // Sa demande tenait en deux moitiés — « une version pour l'agence au global » et « peux tu fiabiliser
+  // toute cette partie stp » — et la seconde ne se satisfait pas d'un test qui confirme : elle exige des
+  // contre-tests qui cherchent la panne.
+  assert.equal(crh2.versionDeLAgence({ axeMajeur: 'axe-invente' }).mesurable, false, 'an unknown axis yields NOT MEASURED rather than a version whose major silently falls back to something else — a version computed on the wrong axis reads exactly like one computed on the right axis');
+  assert.equal(crh2.versionDeLAgence({ sh: () => { throw new Error('git absent'); } }).mesurable, false, 'no git history yields no Agency version rather than v0.0');
+  assert.equal(crh2.versionDeLAgence({ sh: () => '' }).mesurable, false, 'and an Agency with no commit at all is "never versioned", the same distinction the per-tool scale already makes');
+  const vAg = crh2.versionDeLAgence({ sh: (cmd) => (cmd.includes('--diff-filter=AD') ? 'a\nb' : cmd.includes('Gardien sacr') ? 'a' : cmd.includes('Article') ? 'zzz' : 'a\nb\nc\nd\ne') });
+  assert.deepEqual([vAg.majeur, vAg.mineur, vAg.version], [2, 3, 'v2.3'], 'the Agency major counts the commits where a tool JOINED OR LEFT the team — the exact analogy of the per-tool rule, where the surface is the exports and here the surface is the roster');
+  assert.equal(vAg.parAxe.find((a) => a.cle === 'charte').commits, 0, 'a major commit that touches NEITHER scripts/ nor the charter is not an Agency commit, so it cannot count: that intersection is what makes a negative minor structurally impossible rather than caught afterwards — a negative age reads as "brand new" instead of raising an alarm (Article 32, faille 3)');
+  assert.equal(vAg.parAxe.length, 3, 'all three candidate axes the task named are COUNTED at every pass, never merely mentioned: he chooses between three real numbers rather than three hypotheses, and until he has chosen, "equipe" serves as a DECLARED default rather than a decision taken in his place');
+  assert.ok(vAg.parAxe.every((a) => a.pourquoi), 'each axis says why it would be a defensible major, because the choice is his (Article 16) and a list of options without their reasons is not a question, it is a menu');
+  assert.ok(/ne se compare à AUCUNE version d'outil/.test(vAg.horsPortee), 'and the scale says out loud that it does not compare to a per-tool version: a v69 Agency is not "further along" than a v4 tool, the two count different things');
+  const vAgReelle = crh2.versionDeLAgence();
+  assert.ok(vAgReelle.mesurable && vAgReelle.majeur > 0 && vAgReelle.mineur >= 0, 'run against the REAL repository it is retroactive with nothing to enter by hand, exactly as he asked ("possible de faire retroactif ?") — everything was already in git');
+  // LES DEUX ANGLES MORTS DU MAJEUR, mis en échec exprès plutôt que découverts un jour par surprise.
+  const reformatage = crh2.versionDepuisGit('scripts/x.mjs', { sh: (cmd) => (cmd.includes('log') ? 'aaa' : '2') });
+  assert.equal(reformatage.majeur, 1, 'DELIBERATE FAILURE 1 — a commit that merely REFORMATS an export line (a space moved) counts as a capability change: the diff moves, the capability does not. The heuristic OVERCOUNTS and this test exists to keep that known rather than discovered');
+  const tableau = crh2.versionDepuisGit('scripts/x.mjs', { sh: (cmd) => (cmd.includes('log') ? 'aaa' : '0') });
+  assert.equal(tableau.majeur, 0, 'DELIBERATE FAILURE 2 — a capability added as one more entry in an ALREADY exported array touches no export line, so it counts for nothing. The heuristic UNDERCOUNTS, and in this repository that case is the frequent one, not a textbook one');
+  assert.ok(/SURCOMPTE/.test(reformatage.horsPortee) && /SOUS-COMPTE/.test(reformatage.horsPortee), 'both blind spots are DECLARED where the number is read, not only in this test: neither can be fixed without reading the meaning of the code, which git cannot do — and a number whose margin is known stays usable, while a number believed exact does not');
+
   // UNE RONDE NE PEUT PAS SE CLORE SI LE PROCESS N'EST PAS DÉROULÉ (2026-09-24, chantier 4).
   const cpg2 = await import('../scripts/circle-process-guardian.mjs');
   assert.equal(cpg2.ETAPES_DE_CLOTURE.length, 8, 'eight closing steps, as the DOCUMENT describes them — not the eleven the controller lists for the whole Ronde. Reading the shortcut instead of the document is exactly the mistake the user named on 2026-09-23: "tu lis les raccourcis plutôt que les documents"');

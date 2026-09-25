@@ -164,3 +164,48 @@ contredit elle-même et se lit comme un vert.
 ne comptent pas leur usage, là où 77 % de leurs semblables le font. Les autres familles
 (bibliothèques, crochets, infrastructure shell) ne partagent aucune habitude mesurable, ce qui est
 dit comme tel et non comme une bonne nouvelle.
+
+## La version de l'Agence entière (2026-09-25, tâche #730 → clôturée par #799)
+
+`versionDeLAgence()` répond aux trois questions de l'utilisateur d'un coup : **oui** on peut
+versionner l'Agence au global, **oui** c'est rétroactif, et **oui** les deux échelles sont
+fiabilisées. Aujourd'hui : **v69.446**. Elle s'affiche en tête de `node scripts/cassandra-rh.mjs
+versions`, là où il la cherchera.
+
+**Ce qu'elle n'est pas, et c'est le cœur du choix** : ni la somme ni la moyenne des cinquante
+versions par outil. La somme monterait à chaque faute de frappe corrigée dans n'importe quel
+script. La moyenne **baisserait** le jour où un outil neuf (v0.1) rejoint l'équipe — un nouveau
+membre ferait *reculer* la version de l'équipe. Les deux rendent un chiffre qui a l'air d'une
+mesure sans en être une, et c'est le plus dangereux des deux défauts : un chiffre absent se voit,
+un chiffre faux se lit.
+
+**Ce qu'elle est, par analogie exacte avec la règle par outil** : pour UN outil le majeur compte
+les commits qui ont touché sa surface exportée — ce qu'il sait faire. Pour l'AGENCE, la surface
+c'est la **composition de l'équipe** : le majeur compte les commits où un outil a rejoint ou quitté
+l'équipe. Rétroactif par construction, comme l'autre : tout est déjà dans git.
+
+**Les trois axes candidats sont COMPTÉS, jamais seulement évoqués.** La tâche #730 en nommait trois
+et le choix revient à l'utilisateur (Article 16) : équipe **69** · Gardiens sacrés du code **4** · charte **26**.
+Il choisit donc entre trois chiffres réels plutôt qu'entre trois hypothèses ; tant qu'il n'a pas
+tranché, « équipe » sert de défaut **déclaré** (`AXE_MAJEUR_PAR_DEFAUT`), jamais de décision prise
+à sa place. Question ouverte : `docs/plans/version-agence-axe-majeur.md`, tâche **#800**.
+
+**Le mineur ne peut pas devenir négatif**, et c'est structurel plutôt que rattrapé : le
+dénominateur est commun aux trois axes (les commits qui touchent `scripts/` ou la charte) et les
+commits majeurs en sont un sous-ensemble par intersection. Un compte négatif se lirait « tout
+frais » au lieu de déclencher une alerte — exactement la faille 3 de l'Article 32.
+
+### Les deux angles morts du majeur par outil, mis en échec EXPRÈS
+
+La seconde moitié de sa demande — « peux tu fiabiliser toute cette partie stp » — ne se satisfait
+pas d'un test qui confirme. Le majeur lit les lignes `+export`/`-export` du diff, donc :
+
+- **il SURCOMPTE** quand une ligne d'export est seulement reformatée (un espace déplacé) : le diff
+  bouge, la capacité non ;
+- **il SOUS-COMPTE** quand une capacité s'ajoute sans toucher une ligne d'export — une entrée de
+  plus dans un tableau déjà exporté. **Dans ce dépôt c'est le cas fréquent, pas un cas d'école.**
+
+Aucun des deux ne se corrige sans lire le *sens* du code, ce que git ne sait pas faire. Les
+déclarer là où le chiffre se lit (`VERSION_OUTIL_HORS_PORTEE`, imprimé par la sous-commande) vaut
+mieux que de les taire : un chiffre dont on connaît la marge reste utile, un chiffre qu'on croit
+exact ne l'est plus.
