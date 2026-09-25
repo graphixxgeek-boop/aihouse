@@ -2464,6 +2464,81 @@ function valeurLisible(v) {
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// « JE N'AI PAS PU REGARDER » : TROIS FAÇONS, PAS UNE (2026-09-25, tâche #654)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE CONSTAT D'ORIGINE disait « 12 outils scannent le dépôt sans pouvoir dire je n'ai pas pu
+// regarder ». La sonde qui l'avait produit cherche trois formulations : `PAS MESURÉ`,
+// `pas mesuré`, `mesurable: false`. Après le chantier #653 — où la même erreur s'est produite
+// QUATRE fois — la première chose faite ici a été de vérifier que cette sonde PEUT matcher ce
+// qu'elle cherche. Elle ne le peut pas toujours, et les 12 le montrent :
+//
+//   · `check-argus` LÈVE UNE ERREUR quand son point d'ancrage manque dans lib/life.ts. C'est la
+//     forme la plus forte du refus — il s'arrête plutôt que de rendre « zéro champ suspect » —
+//     et la sonde ne la voyait pas du tout.
+//   · `check-harmonia` range l'absence dans un état nommé (`status: "introuvable dans le code"`)
+//     qui voyage avec le résultat. Un refus au niveau de l'élément, invisible à la sonde.
+//   · `ines-official` remplace un fichier illisible par « (fichier illisible — ignoré) » et
+//     CONTINUE. L'édition rendue paraît complète. Ce n'est pas un refus, c'est un pansement.
+//
+// TROIS ÉTATS, DONC, ET C'EST LA DISTINCTION QUI COMPTE — les deux premiers protègent le lecteur,
+// le troisième lui laisse croire qu'il a tout :
+//   REFUSE  — rend ou lève quelque chose qu'on ne peut pas confondre avec un résultat ;
+//   SIGNALE — nomme l'absence dans son texte mais poursuit avec une valeur de remplacement ;
+//   MUET    — ne dit rien du tout, et son zéro se lit comme un dépôt propre (leçon L5).
+//
+// AUCUN DES TROIS N'EST UN REPROCHE EN SOI : un outil qui SIGNALE peut avoir raison de continuer
+// (une édition consolidée reste utile avec un fichier manquant, si elle le dit). Ce qui serait un
+// défaut, c'est de ne pas savoir lequel des trois on est.
+
+export const FACONS_DE_REFUSER = [
+  { cle: "refuse", quoi: "rend ou lève quelque chose qu'on ne peut pas confondre avec un résultat",
+    sonde: (src) => /PAS MESUR[ÉE]|pas mesur[ée]|mesurable\s*:\s*false|throw new Error\([^)]*(introuvable|illisible|absent|manque)|status:\s*["'`][^"'`]*(introuvable|illisible|absent)/.test(src) },
+  { cle: "signale", quoi: "nomme l'absence dans son texte mais poursuit avec une valeur de remplacement",
+    sonde: (src) => /(introuvable|illisible|absent|non trouvé|manquant)/i.test(src) },
+];
+
+export function capaciteARefuser(source = "", { facons = FACONS_DE_REFUSER } = {}) {
+  const src = String(source);
+  if (!src.trim()) {
+    return { mesurable: false, pourquoi: "source vide : impossible de dire si cet outil sait refuser — et répondre « muet » sur une absence de source serait exactement l'erreur que cette fonction traque" };
+  }
+  for (const f of facons) if (f.sonde(src)) return { mesurable: true, etat: f.cle, quoi: f.quoi };
+  return { mesurable: true, etat: "muet", quoi: "ne dit rien du tout : son zéro se lit comme un dépôt propre (leçon L5)" };
+}
+
+export function auditDuRefus(scripts = [], { lire } = {}) {
+  if (typeof lire !== "function") {
+    return { mesurable: false, pourquoi: "aucun lecteur de source fourni — classer un outil sans lire son code reviendrait à le deviner" };
+  }
+  const lignes = [];
+  for (const chemin of scripts) {
+    const src = lire(chemin);
+    const c = capaciteARefuser(src ?? "");
+    lignes.push({ chemin, etat: c.mesurable ? c.etat : "source illisible", quoi: c.quoi ?? c.pourquoi });
+  }
+  const par = (e) => lignes.filter((l) => l.etat === e).map((l) => l.chemin);
+  return {
+    mesurable: true, lignes, total: lignes.length,
+    refusent: par("refuse"), signalent: par("signale"), muets: par("muet"),
+    horsPortee:
+      "Cette mesure voit la FORME du refus dans le code, jamais s'il se déclenche au bon moment : " +
+      "un outil peut savoir dire « pas mesuré » et oublier de le dire là où il faut. " +
+      "Et « signale » n'est pas un reproche en soi — continuer en le disant est parfois le bon choix.",
+  };
+}
+
+export function formatRefusLines(a) {
+  if (!a?.mesurable) return [`PAS MESURÉ — ${a?.pourquoi ?? "aucune donnée"}`];
+  const L = [`${a.total} script(s) examiné(s) : ${a.refusent.length} REFUSENT · ${a.signalent.length} SIGNALENT sans refuser · ${a.muets.length} MUETS.`];
+  const bloc = (titre, liste) => { if (liste.length) { L.push("", titre); L.push(`   ${liste.join(", ")}`); } };
+  bloc("MUETS — leur zéro se lit comme un dépôt propre, et c'est le seul état qui soit un défaut en soi :", a.muets);
+  bloc("SIGNALENT sans refuser — l'absence est nommée, mais le résultat paraît complet :", a.signalent);
+  L.push("", `HORS PORTÉE : ${a.horsPortee}`);
+  return L;
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // L'AVERTISSEMENT DE MARGE : DÉCLARÉ, ET RÉELLEMENT DIT ? (2026-09-25, tâche #653)
 // ————————————————————————————————————————————————————————————————————————
 //
@@ -3014,6 +3089,14 @@ function main() {
   // `iceberg` répond sur les quatre-vingts : la même information, mais on ne la cherche pas au même
   // moment ni pour la même décision. Et surtout : elle n'écrit NULLE PART — pas de quatorzième
   // registre, seulement une lecture des axes qui existent déjà.
+  // `refus` (2026-09-25, tâche #654) : qui sait dire « je n'ai pas pu regarder », et comment.
+  if (sub === "refus") {
+    const rec = recenserLesScripts();
+    const cibles = (rec.mesurable ? rec.lignes : []).filter((l) => l.classes?.includes("scanne-le-depot")).map((l) => l.chemin);
+    console.log(`\n=== « JE N'AI PAS PU REGARDER » — trois façons, pas une (tâche #654) ===\n`);
+    for (const l of formatRefusLines(auditDuRefus(cibles, { lire: (c) => { try { return readFileSync(join(ROOT, c), "utf8"); } catch { return null; } } }))) console.log(l);
+    return;
+  }
   if (sub === "fiche") {
     const demande = (process.argv[3] ?? "").replace(/^scripts\//, "").replace(/\.mjs$/, "");
     if (!demande) { console.log("\nUsage : node scripts/cassandra-rh.mjs fiche <nom-de-l-outil>"); return; }

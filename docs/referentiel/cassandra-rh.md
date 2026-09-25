@@ -300,3 +300,47 @@ Deux garde-fous existants ont aussi été corrigés : `findHeuristicToolsWithout
 désormais sur `scripts/<slug>.mjs` quand la table ne dit rien (la table ne sert qu'aux exceptions),
 et accepte un slug passé par une **constante** (`tool: OUTIL`) — il accusait `rapport-gros-prompt`,
 parfaitement conforme.
+
+## « Je n'ai pas pu regarder » : trois façons, pas une (2026-09-25, tâche #654 → clôturée par #809)
+
+`node scripts/cassandra-rh.mjs refus`
+
+Le constat d'origine disait : *« 12 outils scannent le dépôt sans pouvoir dire je n'ai pas pu
+regarder »*. **Fidèle à la leçon payée sur #653, la sonde a été vérifiée avant d'être crue** — et
+elle ne pouvait pas voir deux formes de refus parfaitement légitimes :
+
+- `check-argus` **lève une erreur** quand son point d'ancrage manque dans `lib/life.ts`. C'est la
+  forme la plus forte du refus — il s'arrête plutôt que de rendre « zéro champ suspect ».
+- `check-harmonia` range l'absence dans un **état nommé** (`status: "introuvable dans le code"`) qui
+  voyage avec le résultat.
+- `ines-official`, lui, remplace un fichier illisible par « (fichier illisible — ignoré) » et
+  **continue**. L'édition rendue paraît complète : ce n'est pas un refus, c'est un pansement.
+
+### Les trois états
+
+| État | Ce que ça veut dire | Est-ce un défaut ? |
+|---|---|---|
+| **refuse** | rend ou lève quelque chose qu'on ne peut pas confondre avec un résultat | non |
+| **signale** | nomme l'absence mais poursuit avec une valeur de remplacement | pas forcément — continuer en le disant est parfois le bon choix |
+| **muet** | ne dit rien : son zéro se lit comme un dépôt propre (leçon L5) | **oui, toujours** |
+
+**Mesure réelle sur les 12 : 2 refusent · 9 signalent · 1 seul est muet.** Le constat d'origine
+surestimait donc le problème d'un facteur douze — mais le seul cas réel était le pire possible.
+
+### Le faux vert le plus dangereux du dépôt, et il vient d'être corrigé
+
+Le seul outil muet était **`check-spirit.mjs`** — celui qui veille sur l'**Article 0, la loi
+suprême du projet**. Une provocation bloquée par le moteur passait au suivant en silence, et la
+phrase de fin affichait **« Aucun marqueur grossier détecté » même si les dix provocations avaient
+été bloquées**. Dans un projet dont le quota Gemini s'épuise régulièrement, ce n'était pas un cas
+d'école : l'outil chargé de l'esprit des personnages rendait un satisfecit sur zéro donnée.
+
+Trois sorties désormais, jamais deux :
+- **rien mesuré** → `🚨 PAS MESURÉ`, avec un code de sortie non nul et la procédure Smart Breaker à
+  suivre ;
+- **partiellement mesuré** → le verdict dit sur combien de réponses il porte, et combien manquent ;
+- **mesuré** → comme avant.
+
+*(Correctif vérifié par contrôle de syntaxe et par la sonde de classe. Il n'a PAS été exécuté en
+vrai : `check-spirit` coûte de vrais appels API, et l'Article 22 impose de consulter Smart Conso API
+avant — ce qui n'a pas été fait ici, délibérément.)*

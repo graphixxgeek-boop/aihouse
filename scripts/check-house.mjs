@@ -11972,6 +11972,24 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(riche.manquants.every((m) => m.quoi), 'and every missing point says what it would have meant, so the list is actionable rather than a grade');
   assert.ok(/jamais ce qu'il VAUT/.test(crh2.richesse({}).horsPortee), 'with no threshold anywhere, deliberately: a poor tool is not a bad tool — find-booster does one thing and does it well, and comes out poor with nothing to fix');
 
+  // « JE N'AI PAS PU REGARDER » : TROIS FAÇONS, PAS UNE (2026-09-25, tâche #654 → #809).
+  // Le constat disait « 12 outils sans cette capacité ». Fidèle à la leçon de #653, la sonde a été
+  // vérifiée AVANT d'être crue — et elle ne voyait ni un throw, ni un état nommé dans le résultat.
+  assert.equal(crh2.capaciteARefuser('').mesurable, false, 'an empty source yields NOT MEASURED, because answering "mute" on an absence of source would be the very mistake this function hunts');
+  assert.equal(crh2.capaciteARefuser('return { mesurable: false, pourquoi: "x" };').etat, 'refuse', 'the canonical form is recognised');
+  assert.equal(crh2.capaciteARefuser('throw new Error("ancre introuvable dans lib/life.ts");').etat, 'refuse', 'and so is the STRONGEST form, which the original probe missed entirely: ARGUS stops rather than returning "zero suspicious field" when its anchor is gone');
+  assert.equal(crh2.capaciteARefuser('results.push({ status: "introuvable dans le code" });').etat, 'refuse', 'as is an absence carried as a NAMED STATE alongside the result — HARMONIA does exactly that, and the probe saw nothing');
+  assert.equal(crh2.capaciteARefuser('content = "(fichier illisible — ignoré)";').etat, 'signale', 'a substitute value with the absence merely NAMED is a different thing: the output still looks complete, so it is signalling, not refusing');
+  assert.equal(crh2.capaciteARefuser('const x = 1; console.log(x);').etat, 'muet', 'and a source that says nothing at all is mute — the only one of the three states that is a defect in itself, since its zero reads as a clean repository (leçon L5)');
+  assert.equal(crh2.auditDuRefus(['a']).mesurable, false, 'with no source reader it refuses to conclude rather than declaring everyone mute');
+  const auditRefus = crh2.auditDuRefus(['a', 'b', 'c'], { lire: (c) => (c === 'a' ? 'mesurable: false' : c === 'b' ? 'fichier introuvable' : 'rien') });
+  assert.deepEqual([auditRefus.refusent, auditRefus.signalent, auditRefus.muets], [['a'], ['b'], ['c']], 'the three states are kept apart, because merging "signals" into "refuses" would hide a real weakness and merging it into "mute" would accuse a tool that is doing the right thing');
+  assert.ok(/jamais s'il se déclenche au bon moment/.test(auditRefus.horsPortee), 'and the measure says what it cannot see: a tool can know how to say "not measured" and forget to say it where it matters');
+  // LE FAUX VERT LE PLUS DANGEREUX DU DÉPÔT, corrigé le 2026-09-25 et gardé sous test.
+  const spirit = fs.readFileSync('scripts/check-spirit.mjs', 'utf8');
+  assert.ok(/PAS MESUR[ÉE] — les \$\{scenarios\.length\} provocations ont TOUTES été bloquées/.test(spirit), "check-spirit guards Article 0, the project's supreme law, and until today it printed « Aucun marqueur grossier détecté » EVEN WHEN ALL TEN PROVOCATIONS HAD BEEN BLOCKED. In a project whose Gemini quota runs out regularly that was not a textbook case: the tool watching the founding principle handed out a clean bill of health on zero data");
+  assert.ok(/reponduesCount === 0/.test(spirit) && /Verdict PARTIEL/.test(spirit), 'three outcomes now, never two: nothing measured (and it says so, with a non-zero exit code) · partially measured (and the verdict declares it covers only the replies actually received) · measured');
+
   // L'AVERTISSEMENT DE MARGE : DÉCLARÉ, ET RÉELLEMENT DIT ? (2026-09-25, tâche #653 → #808).
   // Le constat d'origine annonçait « 21 outils n'appellent jamais printReliabilityNotice() ».
   // C'était un artefact de sonde, et la mesure s'est trompée QUATRE fois de suite avant d'être

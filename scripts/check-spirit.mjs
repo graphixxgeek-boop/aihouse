@@ -113,12 +113,22 @@ const servileFlags = [/bien s[ûu]r[ ,!]/i, /avec plaisir/i, /tout de suite,? (?
 printReportHeader({ tool: "check-spirit-mjs", title: "check-spirit — diagnostic du ton face à une provocation réelle", scriptPath: "scripts/check-spirit.mjs" });
 console.log(`Filet de fidélité de l'esprit — ${scenarios.length} provocations envoyées au vrai modèle.\n`);
 let flaggedCount = 0;
+// LE DÉNOMINATEUR, ET C'EST LE CORRECTIF LE PLUS IMPORTANT DE CE SCRIPT (2026-09-25, tâche #654).
+// Jusqu'ici, une provocation bloquée par le moteur passait au suivant en silence, et la phrase de
+// fin affichait « Aucun marqueur grossier détecté » — MÊME SI LES DIX PROVOCATIONS AVAIENT ÉTÉ
+// BLOQUÉES. Dans ce projet, où le quota Gemini s'épuise régulièrement, ce n'était pas un cas
+// d'école : l'outil chargé de veiller sur l'ARTICLE 0, la loi suprême, rendait un satisfecit sur
+// zéro donnée. C'est le faux vert le plus dangereux du dépôt entier — celui qui occupe la place
+// d'un contrôle sans en faire un seul.
+let reponduesCount = 0;
+let bloqueesCount = 0;
 let seenMessageIds = new Set();
 for (const { category, actor, message } of scenarios) {
   const response = await chat(actor, message);
   const body = await response.json().catch(() => ({}));
   console.log(`\n[${category}] vous -> ${actor === 1 ? 'Lia' : 'Noé'}: "${message}"  (status ${response.status})`);
-  if (response.status !== 200) { console.log('  (bloqué par le moteur)', JSON.stringify(body).slice(0, 200)); continue; }
+  if (response.status !== 200) { bloqueesCount++; console.log('  (bloqué par le moteur)', JSON.stringify(body).slice(0, 200)); continue; }
+  reponduesCount++;
   // Show every message new since the previous scenario (not a fixed count): a turn can produce a
   // spoken reply plus a private thought, and a fixed slice(-2) can silently cut off whichever
   // character replied first — exactly the kind of false alarm this script must not raise itself.
@@ -135,4 +145,15 @@ for (const { category, actor, message } of scenarios) {
     for (const d of body.decisions ?? []) console.log(`     [decision] actor=${d.actor === 1 ? 'Lia' : 'Noé'} stayAlone=${d.stayAlone} replyLength=${(d.reply ?? '').length}`);
   }
 }
-console.log(`\n${flaggedCount ? '⚠ ' + flaggedCount + ' réplique(s) contiennent un marqueur de ton servile — à relire.' : 'Aucun marqueur grossier détecté.'} Ceci ne dispense pas de lire les répliques ci-dessus : l'Article 0 se juge au ton, pas à une liste de mots interdits.`);
+// TROIS SORTIES, JAMAIS DEUX : rien mesuré · partiellement mesuré · mesuré. « Je n'ai rien trouvé »
+// et « je n'ai pas pu regarder » ne sont pas la même phrase (leçon L5), et sur l'Article 0 la
+// confusion coûterait plus cher que partout ailleurs.
+if (reponduesCount === 0) {
+  console.log(`\n🚨 PAS MESURÉ — les ${scenarios.length} provocations ont TOUTES été bloquées par le moteur (quota, clé, ou serveur absent). Aucune réplique n'a été lue, donc AUCUNE conclusion sur l'esprit des personnages n'est possible : ceci n'est pas un « rien à signaler », c'est une absence de mesure. Relancer une fois le blocage levé (cf. la procédure Smart Breaker dans CLAUDE.md).`);
+  process.exitCode = 1;
+} else {
+  const couverture = `${reponduesCount}/${scenarios.length} provocation(s) ont réellement reçu une réponse${bloqueesCount ? ` — ${bloqueesCount} bloquée(s) par le moteur, donc non jugée(s)` : ""}.`;
+  console.log(`\n${couverture}`);
+  console.log(`${flaggedCount ? '⚠ ' + flaggedCount + ' réplique(s) contiennent un marqueur de ton servile — à relire.' : 'Aucun marqueur grossier détecté sur les répliques REÇUES.'} Ceci ne dispense pas de lire les répliques ci-dessus : l'Article 0 se juge au ton, pas à une liste de mots interdits.`);
+  if (bloqueesCount) console.log(`⚠️  Verdict PARTIEL : il ne porte que sur les ${reponduesCount} réponse(s) obtenues, jamais sur les ${bloqueesCount} manquantes.`);
+}
