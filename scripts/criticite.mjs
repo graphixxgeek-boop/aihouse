@@ -216,7 +216,13 @@ export const FORMAT_TACHE = [
   // L4 payée ici même pendant la migration criticité/urgence, et écrite quelques lignes plus haut.
   // L'obligation est donc portée par un SEUIL (`PREMIERE_TACHE_AVEC_POUR_QUI`) plutôt que par le
   // format : à partir de cette tâche, l'absence est un manquement ; avant, c'est de l'histoire.
-  { champ: "pourQui", obligatoire: false, quoi: "PROJET, ou DETTE-ENVERS-L-UTILISATEUR quand c'est moi qui lui dois quelque chose" },
+  // `depuis` (2026-09-25, #870) — LE CHAMP DÉCLARE QU'IL EST ARRIVÉ APRÈS COUP, et ce n'est pas
+  // décoratif : c'est ce qui permet de DÉRIVER la fourchette de colonnes acceptable au lieu de
+  // l'écrire à la main. Une ligne d'avant ce seuil porte légitimement une colonne de moins ; sans
+  // cette déclaration, le garde-fou accusait les SEPT lignes au format neuf d'être « mal formées »
+  // — les seules parfaitement à jour. Un dixième champ ajouté demain avec son propre `depuis`
+  // élargira la fourchette sans qu'on y pense (Article 24).
+  { champ: "pourQui", obligatoire: false, depuis: 825, quoi: "PROJET, ou DETTE-ENVERS-L-UTILISATEUR quand c'est moi qui lui dois quelque chose" },
   { champ: "statut", obligatoire: true, quoi: "à faire / en cours / terminée / écartée avec sa raison (Article 28)" },
 ];
 

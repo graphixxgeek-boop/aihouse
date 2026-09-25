@@ -14,7 +14,7 @@
 
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { motCleValide, findMotsClesEnCollision } from "./criticite.mjs";
+import { motCleValide, findMotsClesEnCollision, FORMAT_TACHE } from "./criticite.mjs";
 import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
@@ -505,7 +505,30 @@ export function findCheminsMortsDansReferentiel({ root = ROOT, fichiers, readFil
 // Le format de tâche du suivi : 8 colonnes, ni plus ni moins (docs/systeme-de-suivi.md).
 // Nommé une fois plutôt que comparé à un 8 nu à trois endroits — un chiffre nu ne dit pas de quoi
 // il parle le jour où quelqu'un le lit sans contexte.
-export const COLONNES_ATTENDUES = 8;
+// DÉRIVÉ DE `FORMAT_TACHE`, JAMAIS ÉCRIT À LA MAIN (2026-09-25, tâche #870 — Article 24).
+//
+// CE QUI S'ÉTAIT PASSÉ, et c'est la CINQUIÈME occurrence du même patron en une journée : le champ
+// `pourQui` a rejoint le format le 2026-09-25 (tâche #825), portant FORMAT_TACHE de 8 à 9 champs.
+// Ce compte-ci est resté à 8. Résultat : les SEPT lignes écrites au format NEUF — donc les seules
+// parfaitement à jour — étaient accusées d'être « mal formées », avec un message qui affirmait en
+// prime que leurs colonnes suivantes étaient décalées. Elles ne l'étaient pas.
+//
+// C'est exactement la forme du faux positif décrite dans L4 : le garde-fou punit la conduite qu'il
+// existe pour obtenir, et il le fait de plus en plus fort à mesure que les lignes se conforment.
+//
+// LES DEUX LONGUEURS SONT LÉGITIMES, et les confondre serait l'erreur inverse : 8 colonnes est
+// l'HISTOIRE (avant que `pourQui` n'existe, 824 lignes), 9 colonnes est le format ACTUEL. Le
+// minimum est le nombre de champs obligatoires, le maximum le format complet — les deux se lisent
+// sur FORMAT_TACHE, donc un dixième champ ajouté demain n'exigera aucune retouche ici.
+// LE MINIMUM N'EST PAS LE NOMBRE DE CHAMPS OBLIGATOIRES — première version de ce correctif, et
+// elle était fausse : un champ facultatif occupe quand même SA COLONNE, vide. Le test l'a
+// immédiatement attrapée en acceptant une ligne à 7 colonnes qui est réellement cassée.
+// Le minimum est donc le format HISTORIQUE : tous les champs, moins ceux qui déclarent être
+// arrivés après coup (`depuis`). Dérivé, jamais recopié.
+export const COLONNES_MAX = FORMAT_TACHE.length;
+export const COLONNES_MIN = COLONNES_MAX - FORMAT_TACHE.filter((f) => f.depuis).length;
+// Conservé pour les appelants qui le lisent : c'est le format COMPLET visé, pas une exigence.
+export const COLONNES_ATTENDUES = COLONNES_MAX;
 
 export function findMotsClesManquants(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
   const buckets = categorizeAllSessions(sessionsDir, readDir, readFile, exists);
@@ -526,8 +549,8 @@ export function findMotsClesManquants(sessionsDir = SESSIONS_DIR, readDir = read
     // et TOUTES les colonnes suivantes (sous-sujet, description, statut) étaient décalées avec.
     // Un garde-fou qui nomme la mauvaise cause envoie chercher au mauvais endroit — c'est la même
     // famille que la leçon L22, où un résumé recomptait au lieu de lire.
-    if (c.length !== COLONNES_ATTENDUES) {
-      hits.push({ n, motCle: "", pourquoi: `ligne mal formée : ${c.length} colonne(s) au lieu de ${COLONNES_ATTENDUES} — le mot-clé n'est pas manquant, il est illisible, et sous-sujet/description/statut sont décalés avec lui`, file: entry.file });
+    if (c.length < COLONNES_MIN || c.length > COLONNES_MAX) {
+      hits.push({ n, motCle: "", pourquoi: `ligne mal formée : ${c.length} colonne(s), hors de la fourchette ${COLONNES_MIN}–${COLONNES_MAX} — le mot-clé n'est pas manquant, il est illisible, et sous-sujet/description/statut sont décalés avec lui`, file: entry.file });
       continue;
     }
     const motCle = (c[2] ?? "").trim();
@@ -538,7 +561,11 @@ export function findMotsClesManquants(sessionsDir = SESSIONS_DIR, readDir = read
   for (const collision of findMotsClesEnCollision(taches)) {
     // La raison vient de criticite.mjs telle quelle : la reformuler ici ferait vivre deux
     // explications du même refus, dont une seule serait tenue à jour (Article 24).
-    hits.push({ n: collision.numeros.join(", "), motCle: collision.mot, pourquoi: collision.pourquoi });
+    // `collision: true` DÉCLARÉ À LA SOURCE (2026-09-25, #870) : un appelant qui recalcule les
+    // collisions lui-même — c'est le cas d'auditFormatDesTaches, avec de meilleures données —
+    // doit pouvoir les retirer d'ici sans les reconnaître au texte de leur message. Sans ce
+    // drapeau, chaque collision sortait DEUX fois dans le rapport, dont une avec « n°undefined ».
+    hits.push({ n: collision.numeros.join(", "), motCle: collision.mot, pourquoi: collision.pourquoi, collision: true });
   }
   return hits;
 }

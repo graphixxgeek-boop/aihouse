@@ -31,6 +31,7 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { execSync } from "node:child_process";
 import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { PRESTATIONS, suggestPrestationsForTask, significantWords, badgeSignalsAsContext } from "./le-coordinateur.mjs";
@@ -300,7 +301,12 @@ export function buildListBlocks(rows) {
 // ouvertes n'ont pas de mot-clé, pas seulement qu'un test quelque part y veille.
 export function auditFormatDesTaches(rows, { motsClesManquantsImpl = findMotsClesManquants } = {}) {
   const ouvertes = rows.filter((r) => OPEN_KEYS.has(r.statusKey));
-  const manquants = motsClesManquantsImpl();
+  // Les collisions sont RETIRÉES de `manquants` (2026-09-25, #870) : findMotsClesManquants les
+  // inclut déjà, mais avec les numéros tels qu'il les a lus lui-même — dans le rapport réel, ils
+  // sortaient « n°undefined ». On garde donc la version calculée juste en dessous, qui travaille
+  // sur des lignes déjà parsées et porte les vrais numéros. Deux fois la même collision, dont une
+  // anonyme, c'est un rapport qu'on cesse de lire.
+  const manquants = motsClesManquantsImpl().filter((h) => !h.collision);
   const collisions = findMotsClesEnCollision(ouvertes);
   // findChampsManquants() porte le format à huit champs : on le lui applique tâche par tâche
   // plutôt que de recompter les colonnes ici, sinon deux définitions du format cohabiteraient et
@@ -1080,6 +1086,241 @@ export function criticalEye(rows, { stagnant = [], standing = [], figures = null
 // Le txt est la version archivée et relue par les outils ; le HTML reste la version de
 // présentation, construit à partir des MÊMES données — jamais un second calcul (cf. la décision
 // HTML/texte déjà suivie par Doc-Report).
+// ════════════════════════════════════════════════════════════════════════════════════════════
+// LA CONFRONTATION DÉBUT ↔ FIN (2026-09-25, tâche #868 — demande explicite de l'utilisateur :
+// « dis moi combien de taches ont été traitées sur les environs 117 de depart, est-ce que tu
+// confrontes bien le rapport de debut au rapport de fin pour les taches »)
+// ════════════════════════════════════════════════════════════════════════════════════════════
+//
+// CE QUI MANQUAIT, ET IL AVAIT RAISON DE LE DEMANDER : cet outil rendait un ÉTAT à l'instant t —
+// « 117 ouvertes sur 800 » — et rien ne confrontait jamais cet instant au point de départ. Or un
+// état sans son point de départ ne dit pas si on avance : 117 ouvertes après 750 tâches traitées
+// et 117 ouvertes le premier jour s'affichent exactement pareil.
+//
+// L'ÉCART QUE LA MESURE A RÉVÉLÉ, et il faut le dire plutôt que le corriger en silence (Article 30) :
+// « les 117 de départ » n'ont jamais été 117 TÂCHES. **#117 est le NUMÉRO de la première tâche
+// tracée** — le suivi a démarré en cours de projet. La coïncidence est cruelle : il se trouve qu'il
+// y a AUSSI 117 tâches ouvertes aujourd'hui, ce qui fait lire « on n'a pas avancé » là où 681 ont
+// été closes. Deux chiffres identiques, deux sens opposés.
+//
+// LES DEUX SOURCES SONT CONFRONTÉES, jamais une seule : les rapports ARCHIVÉS (ce que l'outil
+// disait à l'époque) et le SUIVI ACTUEL (ce qu'il dit maintenant). Une seule des deux suffirait à
+// se tromper — l'archive seule ignore ce qui s'est passé depuis, le suivi seul ignore d'où on part.
+export const MOTIF_TOTAL_ARCHIVE = /(\d+)\s*tâche\(s\)\s*affichée\(s\)\s*sur\s*(\d+)\s*au total/;
+
+export function lireRapportsArchives({ dossier = OUT_DIR, readDir = readdirSync, readFile = readFileSync } = {}) {
+  let fichiers;
+  try { fichiers = readDir(dossier).filter((f) => f.endsWith(".html")); }
+  catch { return { mesurable: false, pourquoi: `le dossier des rapports archivés (${dossier}) n'a pas pu être lu — rien n'a été mesuré, ce qui n'est jamais la même chose que rien trouvé` }; }
+  const points = [];
+  for (const f of fichiers) {
+    // L'horodatage vit dans le NOM du fichier (millisecondes), déjà la convention de ce registre.
+    const ms = Number(String(f).split("-")[0]);
+    let texte;
+    try { texte = readFile(join(dossier, f), "utf8"); } catch { continue; }
+    const m = MOTIF_TOTAL_ARCHIVE.exec(texte);
+    if (!m || !Number.isFinite(ms)) continue;
+    points.push({ fichier: f, quand: new Date(ms).toISOString(), affichees: Number(m[1]), total: Number(m[2]) });
+  }
+  if (!points.length) return { mesurable: false, pourquoi: `${fichiers.length} rapport(s) archivé(s) lus, aucun ne porte le compte « N tâche(s) affichée(s) sur M au total » — il n'y a donc pas de point de départ à confronter, et inventer un chiffre vaudrait moins que l'aveu` };
+  points.sort((a, b) => a.quand.localeCompare(b.quand));
+  return { mesurable: true, points, premier: points[0], dernier: points[points.length - 1] };
+}
+
+// La confrontation elle-même. Elle ne CHOISIT pas entre les deux sources : elle les met côte à côte
+// et nomme ce que chacune sait que l'autre ignore.
+export function confronterDebutEtFin({ archives, figures, rows = [] } = {}) {
+  const ouvertes = rows.filter((r) => OPEN_KEYS.has(r.statusKey)).length;
+  const closes = figures?.byStatus?.terminee ?? 0;
+  const base = {
+    // Le NUMÉRO de la première tâche tracée, jamais un nombre de tâches. La distinction est le
+    // cœur de cette fonction, et la confondre est l'erreur qu'elle existe pour empêcher.
+    premierNumero: figures?.lowest ?? null,
+    dernierNumero: figures?.highest ?? null,
+  };
+  const totalArchiveDebut = archives?.mesurable ? archives.premier.total : null;
+  const genereesDepuis = (totalArchiveDebut !== null && figures) ? figures.total - totalArchiveDebut : null;
+  return {
+    mesurable: Boolean(figures) && Boolean(rows.length),
+    pourquoi: figures ? null : "aucune ligne de suivi lue : rien à confronter",
+    base,
+    archive: archives?.mesurable
+      ? { depuis: archives.premier.quand, totalAlors: archives.premier.total, passages: archives.points.length, dernier: archives.dernier.quand, totalDernier: archives.dernier.total }
+      : { indisponible: true, pourquoi: archives?.pourquoi ?? "archives non lues" },
+    maintenant: { total: figures?.total ?? null, closes, ouvertes, parStatut: figures?.byStatus ?? {} },
+    genereesDepuis,
+    // Le taux de clôture porte SON DÉNOMINATEUR, toujours : « 681 closes » ne veut rien dire sans
+    // savoir sur combien.
+    tauxCloture: figures?.total ? Math.round((closes / figures.total) * 100) : null,
+    // Les deux pièges nommés plutôt que tus.
+    pieges: [
+      base.premierNumero === ouvertes
+        ? `⚠️ COÏNCIDENCE À NE PAS LIRE DE TRAVERS : le premier numéro tracé (#${base.premierNumero}) et le nombre de tâches ouvertes aujourd'hui (${ouvertes}) sont le MÊME chiffre. Ce n'est pas « on n'a pas avancé » : ce sont deux grandeurs sans rapport.`
+        : null,
+      figures && figures.numberedCount < figures.total
+        ? `${figures.total - figures.numberedCount} ligne(s) sur ${figures.total} ne portent pas de numéro exploitable — elles comptent dans les totaux mais échappent au suivi par numéro.`
+        : null,
+    ].filter(Boolean),
+  };
+}
+
+// ════════════════════════════════════════════════════════════════════════════════════════════
+// LES BLOCS DE TRAVAIL (2026-09-25, tâche #869 — demande explicite : « des taches s'accumulent,
+// à un moment donné, l'outil est capable de les regrouper sous un meme theme [...] constitue aussi
+// des blocs de petites taches à traiter en rafale [...] A toi de trouver une organisation
+// intelligente pour determiner si une tache doit rejoindre un bloc par THEME ou par POIDS »)
+// ════════════════════════════════════════════════════════════════════════════════════════════
+//
+// TOOL-BRAIN A RÉPONDU « aucune correspondance » : rien dans le paysage ne faisait ça. Construit
+// plutôt qu'improvisé, et construit SUR L'EXISTANT plutôt qu'à côté (Article 3, anti-doublon) —
+// `splitSujet().theme` donne déjà le thème, `poidsDeLaTache()` donne déjà le palier. Aucune
+// nouvelle classification n'est inventée ici : ce fichier ne fait que les CROISER.
+//
+// LA RÈGLE D'ARBITRAGE, et c'est la vraie question qu'il posait (« thème OU poids ? ») :
+//
+//   Un bloc par THÈME sert à ne pas payer deux fois le coût d'entrée dans un sujet. Il n'a donc de
+//   valeur que si le sujet est assez CHARGÉ pour que ce coût compte — trois tâches de graphisme
+//   traitées ensemble économisent une remise en contexte ; une seule n'économise rien.
+//
+//   Un bloc par POIDS sert à autre chose : vider la file. Une tâche légère isolée coûte plus en
+//   cérémonie (ouvrir, commiter, documenter) qu'en travail réel. Groupées, dix légères tiennent
+//   dans un seul passage.
+//
+//   D'où l'ordre de priorité, qui n'est PAS arbitraire : **le thème passe avant le poids**, parce
+//   qu'une tâche lourde ne peut PAS rejoindre une rafale (elle la ferait exploser) tandis qu'une
+//   tâche légère peut parfaitement vivre dans un bloc thématique. Le thème est donc le critère
+//   contraignant, le poids le critère de repli.
+//
+// CE QU'IL NE FAIT PAS, délibérément : il ne DÉCIDE pas l'ordre de traitement et ne lance rien. Il
+// compose des blocs et les propose. Un outil qui déciderait seul de l'ordre du travail retirerait
+// à l'utilisateur la seule chose que la mécanique ne sait pas faire — arbitrer ce qui presse.
+export const SEUIL_BLOC_THEME = 3;        // en dessous, un thème n'économise aucune remise en contexte
+export const SEUIL_RAFALE = 4;            // en dessous, une rafale ne vaut pas sa propre cérémonie
+export const TAILLE_MAX_RAFALE = 10;      // au-delà, le bloc redevient une file qu'on ne finit pas
+
+// LE TROISIÈME PANIER, trouvé en lançant la première version pour de vrai plutôt qu'en la relisant.
+// La rafale 5 contenait #801, #805 et #810 : deux tâches À TRANCHER et une qui coûte du vrai quota
+// API. Or **une rafale ne vaut que si elle se traite d'un coup sans s'arrêter** — et une tâche qui
+// attend une décision de l'utilisateur l'arrête PAR CONSTRUCTION, quel que soit son poids.
+//
+// C'est le défaut classique du regroupement par une seule dimension : le poids dit combien de
+// travail il y a, jamais si ce travail peut commencer. Un troisième panier vaut mieux qu'un
+// mélange qui se bloque au deuxième élément.
+//
+// DEUX SIGNAUX, jamais un : la criticité « À TRANCHER » (la décision lui revient) et le champ
+// « pour qui » valant DETTE-ENVERS-L-UTILISATEUR (je lui dois une réponse). Les deux se lisent sur
+// la ligne, aucun ne se devine.
+export const CRITICITE_QUI_ATTEND = "A-TRANCHER";
+export const POUR_QUI_DETTE = "DETTE-ENVERS-L-UTILISATEUR";
+
+export function attendUneDecision(row = {}) {
+  return String(row.criticite ?? "").trim().toUpperCase() === CRITICITE_QUI_ATTEND
+    || String(row.pourQui ?? "").trim().toUpperCase() === POUR_QUI_DETTE;
+}
+
+export function composerBlocs(rows = [], { seuilTheme = SEUIL_BLOC_THEME, seuilRafale = SEUIL_RAFALE, tailleMaxRafale = TAILLE_MAX_RAFALE, poidsImpl = poidsDeLaTache } = {}) {
+  const ouvertes = rows.filter((r) => OPEN_KEYS.has(r.statusKey));
+  if (!ouvertes.length) {
+    return { mesurable: false, pourquoi: "aucune tâche ouverte : il n'y a rien à regrouper, ce qui n'est pas la même chose qu'un regroupement qui ne trouve rien" };
+  }
+  const avecPoids = ouvertes.map((r) => {
+    const p = poidsImpl(r);
+    return { row: r, theme: splitSujet(r.sujet).theme || "(sans thème)", palier: p.mesurable ? p.palier : null, points: p.points ?? 0, attend: attendUneDecision(r) };
+  });
+
+  // ÉTAPE 0 — celles qui L'ATTENDENT, mises de côté AVANT tout regroupement. Elles peuvent
+  // parfaitement rejoindre un bloc par thème (on prépare le sujet ensemble), mais jamais une
+  // rafale : une rafale qui bute sur une décision n'est plus une rafale.
+  const enAttenteDeLui = avecPoids.filter((t) => t.attend);
+
+  // ÉTAPE 1 — les blocs par THÈME, critère contraignant.
+  const parTheme = new Map();
+  for (const t of avecPoids) {
+    if (!parTheme.has(t.theme)) parTheme.set(t.theme, []);
+    parTheme.get(t.theme).push(t);
+  }
+  const blocsTheme = [];
+  const prisParUnTheme = new Set();
+  for (const [theme, membres] of [...parTheme.entries()].sort((a, b) => b[1].length - a[1].length)) {
+    if (theme === "(sans thème)" || membres.length < seuilTheme) continue;
+    blocsTheme.push({
+      type: "theme", cle: theme, taille: membres.length,
+      numeros: membres.map((m) => m.row.numero).filter(Number.isFinite).sort((a, b) => a - b),
+      lourdes: membres.filter((m) => m.palier === "lourde").length,
+      pourquoi: `${membres.length} tâches partagent le thème « ${theme} » : les traiter à la file paie UNE seule remise en contexte au lieu de ${membres.length}`,
+    });
+    for (const m of membres) prisParUnTheme.add(m.row);
+  }
+
+  // ÉTAPE 2 — les rafales par POIDS, sur ce qui reste seulement. Une tâche déjà dans un bloc
+  // thématique n'y entre pas : la compter deux fois gonflerait le plan sans ajouter de travail.
+  const restantes = avecPoids.filter((t) => !prisParUnTheme.has(t.row));
+  const legeres = restantes.filter((t) => t.palier && t.palier !== "lourde" && !t.attend);
+  const rafales = [];
+  for (let i = 0; i < legeres.length; i += tailleMaxRafale) {
+    const lot = legeres.slice(i, i + tailleMaxRafale);
+    if (lot.length < seuilRafale) break;   // un reste trop court n'est pas une rafale, c'est un reste
+    rafales.push({
+      type: "rafale", cle: `rafale ${rafales.length + 1}`, taille: lot.length,
+      numeros: lot.map((m) => m.row.numero).filter(Number.isFinite).sort((a, b) => a - b),
+      themes: [...new Set(lot.map((m) => m.theme))].length,
+      pourquoi: `${lot.length} tâches légères de ${[...new Set(lot.map((m) => m.theme))].length} thèmes différents : isolées, chacune coûte plus en cérémonie qu'en travail — groupées, elles tiennent dans un passage`,
+    });
+  }
+
+  // ÉTAPE 3 — ce qui ne rejoint RIEN, et c'est une information, jamais un oubli.
+  const dansUneRafale = new Set(rafales.flatMap((b) => b.numeros));
+  const isolees = restantes.filter((t) => !dansUneRafale.has(t.row.numero) && !t.attend);
+  const attenteHorsTheme = restantes.filter((t) => t.attend);
+  return {
+    mesurable: true,
+    ouvertes: ouvertes.length,
+    blocsTheme, rafales,
+    enAttenteDeLui: {
+      total: enAttenteDeLui.length,
+      dansUnTheme: enAttenteDeLui.length - attenteHorsTheme.length,
+      seules: attenteHorsTheme.map((t) => ({ numero: t.row.numero, theme: t.theme, sousSujet: t.row.sousSujet })),
+    },
+    isolees: isolees.map((t) => ({ numero: t.row.numero, theme: t.theme, palier: t.palier, sousSujet: t.row.sousSujet })),
+    couverture: ouvertes.length ? Math.round(((prisParUnTheme.size + dansUneRafale.size + attenteHorsTheme.length) / ouvertes.length) * 100) : 0,
+    seuils: { seuilTheme, seuilRafale, tailleMaxRafale },
+    horsPortee: "Ces blocs disent CE QUI VA ENSEMBLE, jamais DANS QUEL ORDRE traiter : l'ordre dépend de ce qui presse, et ça ne se lit sur aucune colonne.",
+  };
+}
+
+export function formatBlocsLines(b) {
+  if (!b?.mesurable) return [`🚨 BLOCS — PAS MESURÉ : ${b?.pourquoi ?? "raison inconnue"}`];
+  const l = [];
+  l.push(`${b.ouvertes} tâche(s) ouverte(s) · ${b.blocsTheme.length} bloc(s) par THÈME · ${b.rafales.length} rafale(s) par POIDS · ${b.enAttenteDeLui.total} qui ATTENDENT une décision · ${b.isolees.length} isolée(s) — couverture ${b.couverture} %.`);
+  l.push(`Seuils : un thème fait bloc à partir de ${b.seuils.seuilTheme} tâches · une rafale à partir de ${b.seuils.seuilRafale}, plafonnée à ${b.seuils.tailleMaxRafale}.`);
+  if (b.blocsTheme.length) {
+    l.push("", "— BLOCS PAR THÈME (à traiter à la file, une seule remise en contexte) —");
+    for (const t of b.blocsTheme) {
+      l.push(`  · ${t.cle} — ${t.taille} tâche(s)${t.lourdes ? `, dont ${t.lourdes} lourde(s)` : ""}`);
+      l.push(`      ${t.numeros.map((n) => "#" + n).join(" ")}`);
+    }
+  }
+  if (b.rafales.length) {
+    l.push("", "— RAFALES PAR POIDS (vider la file d'un coup) —");
+    for (const r of b.rafales) {
+      l.push(`  · ${r.cle} — ${r.taille} tâche(s) légères, ${r.themes} thème(s) différents`);
+      l.push(`      ${r.numeros.map((n) => "#" + n).join(" ")}`);
+    }
+  }
+  if (b.enAttenteDeLui.total) {
+    l.push("", `— ${b.enAttenteDeLui.total} TÂCHE(S) QUI L'ATTENDENT, jamais mises en rafale : une rafale qui bute sur une décision n'est plus une rafale —`);
+    l.push(`  (${b.enAttenteDeLui.dansUnTheme} sont dans un bloc par thème, ce qui reste légitime : on prépare le sujet ensemble, on ne tranche pas à sa place.)`);
+    for (const a of b.enAttenteDeLui.seules) l.push(`  · #${a.numero} ${a.theme} — ${String(a.sousSujet ?? "").slice(0, 80)}`);
+  }
+  if (b.isolees.length) {
+    l.push("", `— ${b.isolees.length} ISOLÉE(S), et ce n'est pas un oubli : ni thème assez chargé, ni assez légères pour une rafale —`);
+    for (const i of b.isolees.slice(0, 12)) l.push(`  · #${i.numero} [${i.palier ?? "poids non mesurable"}] ${i.theme} — ${String(i.sousSujet ?? "").slice(0, 80)}`);
+    if (b.isolees.length > 12) l.push(`  … et ${b.isolees.length - 12} autre(s).`);
+  }
+  l.push("", `HORS PORTÉE : ${b.horsPortee}`);
+  return l;
+}
+
 export function buildRondeTextReport({ rows, history = [], now = Date.now() } = {}) {
   const allRows = rows ?? loadAllTaskRows();
   const fig = suiviFigures(allRows, { now });
@@ -1348,6 +1589,120 @@ function rondeCli() {
   console.log(`Rapport HTML : ${htmlFile}`);
 }
 
+function bilanCli() {
+  const rows = loadAllTaskRows();
+  const figures = suiviFigures(rows);
+  const archives = lireRapportsArchives();
+  const conf = confronterDebutEtFin({ archives, figures, rows });
+  const blocs = composerBlocs(rows);
+  const format = auditFormatDesTaches(rows);
+  // L'HEURE EST LUE, jamais fabriquée dans le rendu (Article 32) — et sans elle, on n'écrit rien :
+  // un bilan daté au jugé vaut moins qu'un bilan absent.
+  let maintenant;
+  try { maintenant = execSync("node scripts/agent-du-temps.mjs", { encoding: "utf8" }).match(/(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z)/)?.[1]; } catch { /* voir ci-dessous */ }
+  if (!maintenant) { console.log("⚠️ Rien écrit — l'heure n'a pas pu être LUE (Article 32)."); return; }
+
+  const L = [];
+  const trait = "=".repeat(92);
+  L.push(trait);
+  L.push("BILAN DES TÂCHES — d'où on part, où on en est, comment le reste s'organise");
+  L.push(`Produit par : scripts/check-tasks-details.mjs bilan · le ${maintenant} (heure LUE, source système)`);
+  L.push(trait);
+  L.push("");
+  L.push("AVERTISSEMENT : cet outil mesure ce que le SUIVI dit du projet, jamais ce qui a réellement");
+  L.push("été fait. Une tâche close sans que sa ligne soit repassée en « Terminé » compte ici comme");
+  L.push("ouverte — et c'est un vrai cas, nommé plus bas.");
+  L.push("");
+
+  L.push("-".repeat(92));
+  L.push("1. LA CONFRONTATION DÉPART ↔ AUJOURD'HUI");
+  L.push("-".repeat(92));
+  L.push("");
+  L.push("  ⚠️ L'ÉCART LE PLUS IMPORTANT DE CE RAPPORT, et il porte sur le chiffre de départ lui-même :");
+  L.push(`  « les 117 de départ » n'ont JAMAIS été 117 tâches. #${conf.base.premierNumero} est le NUMÉRO de la`);
+  L.push("  première tâche tracée — le suivi a démarré en cours de projet, pas à la tâche n°1.");
+  for (const p of conf.pieges) L.push(`  ${p}`);
+  L.push("");
+  if (conf.archive.indisponible) {
+    L.push(`  Rapports archivés : PAS MESURÉ — ${conf.archive.pourquoi}`);
+  } else {
+    L.push(`  Premier rapport archivé : ${conf.archive.depuis}`);
+    L.push(`      il annonçait alors ......................... ${conf.archive.totalAlors} tâche(s) au total`);
+    L.push(`  Dernier rapport archivé : ${conf.archive.dernier}`);
+    L.push(`      il annonçait ............................... ${conf.archive.totalDernier} tâche(s) au total`);
+    L.push(`  Passages archivés confrontés ................... ${conf.archive.passages}`);
+  }
+  L.push("");
+  L.push("  AUJOURD'HUI, lu sur le suivi réel :");
+  L.push(`      Total de lignes suivies .................... ${conf.maintenant.total}`);
+  L.push(`      Numéros couverts ........................... #${conf.base.premierNumero} → #${conf.base.dernierNumero}`);
+  L.push(`      TERMINÉES .................................. ${conf.maintenant.closes}   (${conf.tauxCloture} % du total)`);
+  L.push(`      OUVERTES ................................... ${conf.maintenant.ouvertes}`);
+  L.push(`      détail des statuts ......................... ${Object.entries(conf.maintenant.parStatut).map(([k, v]) => `${k}=${v}`).join(" · ")}`);
+  if (conf.genereesDepuis !== null) {
+    L.push("");
+    L.push(`  TÂCHES GÉNÉRÉES depuis le premier rapport archivé ... ${conf.genereesDepuis > 0 ? "+" : ""}${conf.genereesDepuis}`);
+    L.push(`      (${conf.archive.totalAlors} alors → ${conf.maintenant.total} maintenant)`);
+    L.push("      Un chantier en génère toujours : une trouvaille non suivie d'une tâche serait perdue");
+    L.push("      (Article 28). Le nombre qui monte n'est donc pas un retard — c'est la chaîne qui tient.");
+  }
+  L.push("");
+
+  L.push("-".repeat(92));
+  L.push("2. COMMENT LES 117 TÂCHES OUVERTES S'ORGANISENT (blocs par THÈME / POIDS / ATTENTE)");
+  L.push("-".repeat(92));
+  L.push("");
+  for (const l of formatBlocsLines(blocs)) L.push("  " + l);
+  L.push("");
+
+  L.push("-".repeat(92));
+  L.push("3. LE FORMAT DES TÂCHES — les champs obligatoires sont-ils tenus ?");
+  L.push("-".repeat(92));
+  L.push("");
+  L.push(`  Format de référence : ${format.formatDeReference.length} champs — ${format.formatDeReference.join(", ")}`);
+  for (const l of formatAuditFormatLines(format)) L.push("  " + l);
+  L.push("");
+  L.push("  ⚠️ CE QUE CE FORMAT NE PORTE PAS ENCORE, et c'est une demande explicite du 2026-09-25 :");
+  L.push("  l'indication d'OUVERTURE (« respecter les process, utiliser les outils ») et l'indication");
+  L.push("  de CLÔTURE (« harmoniser, fiabiliser, optimiser ») ne sont dans AUCUN des champs ci-dessus.");
+  L.push("  Mesuré : OPTIMISER et FIABILISER existent déjà comme régime de fond dans");
+  L.push("  docs/regles-de-travail.md ; HARMONISER n'y est pas, et RIEN n'existe au niveau de la TÂCHE.");
+  L.push("  → la façon exacte de le porter est une décision, pas une évidence : elle est posée en");
+  L.push("    question de calibrage plutôt que tranchée ici.");
+  L.push("");
+
+  L.push(trait);
+  L.push(`${PLAN_ACTION_TITRE}`);
+  L.push(trait);
+  const constats = [];
+  if (conf.pieges.length) constats.push({ etat: "retenu", constat: conf.pieges[0].replace(/^⚠️\s*/, ""), tache: "retenir la distinction numéro/compte — elle a déjà produit une lecture fausse" });
+  constats.push({
+    etat: "retenu",
+    constat: `${conf.maintenant.ouvertes} tâche(s) ouverte(s) sur ${conf.maintenant.total}, dont ${blocs.mesurable ? blocs.enAttenteDeLui.total : "?"} qui attendent une décision de l'utilisateur`,
+    tache: "traiter les blocs dans l'ordre qu'il fixe, et lui présenter les tâches en attente groupées plutôt qu'une par une",
+  });
+  constats.push({
+    etat: "a-trancher",
+    constat: "l'indication d'ouverture et l'indication de clôture ne sont portées par aucun champ du format de tâche",
+    pourquoi: "trois façons de la porter existent (un champ, un rituel vérifié, une case cochée) et elles n'ont ni le même coût ni la même valeur de preuve — le choix lui revient (Article 16)",
+  });
+  const plan = buildPlanDaction(constats, { toolSlug: "check-tasks-details" });
+  for (const l of plan.lignes) L.push(l);
+  L.push("");
+  L.push(trait);
+  L.push("HORS PORTÉE : ce bilan compte et regroupe. Il ne dit jamais quelle tâche PRESSE — ça ne se lit");
+  L.push("sur aucune colonne, et c'est la seule chose que la mécanique ne sait pas faire à sa place.");
+  L.push(trait);
+
+  const texte = L.join("\n") + "\n";
+  try { mkdirSync(OUT_DIR, { recursive: true }); } catch { /* déjà là */ }
+  const chemin = join(OUT_DIR, `bilan-taches-${maintenant.replace(/[:]/g, "-")}.txt`);
+  writeFileSync(chemin, texte, "utf8");
+  console.log(texte);
+  console.log(`\nÉcrit : ${chemin.replace(ROOT, "")}`);
+  return chemin;
+}
+
 function main() {
   printReliabilityNotice("check-tasks-details");
   recordCliUsage("check-tasks-details");
@@ -1365,6 +1720,12 @@ function main() {
   // pour ça qu'elle vit à côté plutôt que dedans. `poids` demande « cette tâche est-elle trop
   // GROSSE ? », celle-ci demande « avons-nous coupé trop FIN ? ». Les deux défauts sont opposés et
   // se paient différemment : une tâche trop grosse se traîne, cinquante trop fines noient la file.
+  // Sous-commande `bilan` (2026-09-25, tâches #868/#869 — demande explicite : « dis moi combien de
+  // taches ont été traitées sur les environs 117 de depart [...] UTILISE L'OUTIL et fais moi un
+  // rapport FORMATE en fichier txt »). Elle rassemble les trois questions qu'il pose et qu'aucune
+  // sous-commande existante ne réunissait : d'où on part, où on en est, et comment le reste
+  // s'organise. Le livrable est le FICHIER (Article 31) ; ce qui s'imprime ici n'en est que l'écho.
+  if (process.argv[2] === "bilan") return bilanCli();
   if (process.argv[2] === "emiettement") {
     const rows = loadAllTaskRows();
     console.log(`\n=== ÉMIETTEMENT DE LA FILE — a-t-on coupé trop fin ? ===\n`);

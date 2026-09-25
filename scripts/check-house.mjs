@@ -3369,6 +3369,17 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(malFormee.length,1,'a row that is not on the 8-column format must still be flagged — a silent column shift is how 26 tasks once all rendered "UTILE" at once');
   assert.ok(/mal formée : 7 colonne/.test(malFormee[0].pourquoi),'and it must be named for what it IS — a malformed row with its actual column count — never as a missing keyword, which sends the reader looking for a word that is already there');
   assert.ok(/décalé/.test(malFormee[0].pourquoi),'saying in the same breath that the following columns shifted with it, since that is the damage nobody sees: the keyword is merely the first casualty');
+  // #870 — the range is DERIVED, and the fifth false red of the day is what forced it. `pourQui`
+  // joined FORMAT_TACHE on 2026-09-25 (#825), taking it from 8 fields to 9; this count stayed at 8,
+  // so the SEVEN rows written in the new format — the only fully up-to-date ones — were accused of
+  // being malformed, with a message claiming their later columns had shifted. They had not.
+  const csf=await import('../scripts/check-suivi-fidelity.mjs');
+  const critFmt=(await import('../scripts/criticite.mjs')).FORMAT_TACHE;
+  assert.equal(csf.COLONNES_MAX,critFmt.length,'the upper bound is the declared format itself, so a tenth field added tomorrow needs no edit here');
+  assert.equal(csf.COLONNES_MIN,critFmt.length-critFmt.filter((f)=>f.depuis).length,'and the lower bound is the HISTORICAL format: every field minus those declaring they arrived later. Deriving it from the count of MANDATORY fields was the first attempt and it was wrong — an optional field still occupies its column, empty, so that version accepted a genuinely broken 7-column row');
+  assert.ok(csf.COLONNES_MIN<csf.COLONNES_MAX,'the two bounds must differ while a field carries a threshold, otherwise the older rows are accused of the newer format');
+  const auNouveauFormat=lire([{name:'a.md',text:'| 12 | 2026-09-25T10:00Z | motcle | Sujet | Sous-sujet | NORMAL-UTILE | détail | PROJET | à faire |'}]);
+  assert.deepEqual(auNouveauFormat.filter((h)=>/mal formée/.test(h.pourquoi)),[],'a row on the CURRENT nine-column format is never malformed — accusing it is the guard punishing the only conduct it exists to obtain (L4, enriched the same day)');
 
   // L'AUTRE SENS (BP4) : un mot-clé réellement absent sur une ligne BIEN formée doit continuer de
   // se dire « manquant », sinon ce correctif aurait échangé un message faux contre un autre.
