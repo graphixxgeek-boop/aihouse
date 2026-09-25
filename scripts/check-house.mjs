@@ -6160,6 +6160,16 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     // utiles — la métrique de vanité que tout ce paysage combat.
     assert.equal(dr.findRapportsQuiPointent({ dossier: 'x', listDirImpl: () => ['a.txt'], readFileImpl: () => courtSansPointeur }).length, 0, '"nothing to report" is a real result, never an empty report');
     assert.equal(dr.findRapportsQuiPointent({ dossier: 'x', listDirImpl: () => ['a.txt'], readFileImpl: () => longQuiPointe }).length, 0, 'a full report that ALSO offers an HTML version is the normal case here, never a finding');
+    // LA QUATRIÈME CAUSE (#866), trouvée en allant LIRE le seul fichier que ce garde-fou accusait
+    // dans tout le dépôt : un rapport peut être COURT PARCE QUE DENSE. Celui-là tenait en 11 lignes
+    // et portait 42 chiffres à lui — 84 constats, 779 lignes de suivi lues, trente numéros de
+    // tâches nommés un par un. Compter les lignes est le mauvais proxy quand une seule ligne peut
+    // porter vingt-quatre numéros. Quatrième faux rouge de la journée.
+    const courtMaisDense = "=== titre ===\nMême rapport en HTML : docs/x/y.html\n84 constats · 779 lignes lues · 2 incohérences.\nLes plus anciennes : #147, #179, #390, #436, #439, #445, #451, #490, #491, #492, #493, #510.\nSix autres : #601, #603, #604, #612, #623, #624.\n";
+    assert.equal(dr.findRapportsQuiPointent({ dossier: 'x', listDirImpl: () => ['a.txt'], readFileImpl: () => courtMaisDense }).length, 0, 'a report that is short because it is DENSE is not a pointer: it carries its data and merely mentions an HTML companion, and accusing it is the fourth false red of the day');
+    assert.equal(dr.findRapportsCourtsMaisDenses({ dossier: 'x', listDirImpl: () => ['a.txt'], readFileImpl: () => courtMaisDense }).length, 1, 'and it is NAMED rather than silently dropped — a companion function, so the existing one keeps exactly the meaning its callers know, and the new category stops anyone rediscovering these files as defects');
+    assert.equal(dr.findRapportsCourtsMaisDenses({ dossier: 'x', listDirImpl: () => ['a.txt'], readFileImpl: () => maigreQuiPointe }).length, 0, 'a genuine pointer is never dressed up as dense: the two buckets are exclusive, so a defect cannot hide in the reassuring one');
+    assert.ok(dr.mesurerRapport(courtMaisDense).densite > dr.SEUIL_DENSITE_RAPPORT && dr.mesurerRapport(maigreQuiPointe).densite < dr.SEUIL_DENSITE_RAPPORT, 'the threshold sits between the two real measurements it was derived from — the documented original defect at about 0.75 figures per line, and this report at about 3.8. Two points, not a distribution, and saying so is part of the measurement');
     // LA GÉNÉRALISATION (Article 24) : un futur terme ambigu rejoint le registre, il ne demande
     // aucune réécriture de la logique.
     assert.ok(se.VOCABULAIRE_RESERVE.every((v) => v.motif && v.definition && v.pourquoi), 'every reserved term states its pattern, where it is defined, and why it exists');

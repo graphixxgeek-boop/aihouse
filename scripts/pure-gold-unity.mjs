@@ -22,7 +22,7 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { toolsBoundByReportTemplate, findRapportsQuiPointent, REGISTRIES } from "./doc-report.mjs";
+import { toolsBoundByReportTemplate, findRapportsQuiPointent, findRapportsCourtsMaisDenses, REGISTRIES } from "./doc-report.mjs";
 import { findOutilsSansPlanDaction, SANS_CONSTAT_PROPRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -344,12 +344,17 @@ export function auditRapportsComplets({ registries = REGISTRIES, readFileImpl = 
   const sansPlan = findOutilsSansPlanDaction(Object.fromEntries(Object.entries(sources).filter(([, v]) => v !== null)));
 
   const maigres = [];
+  // `courtsMaisDenses` — la QUATRIÈME cause (#866), collectée ici plutôt que laissée sans appelant :
+  // un détecteur construit et jamais appelé est le défaut que le critère 4 de ce même rapport
+  // traque, et l'écrire sans le brancher aurait été s'y prendre soi-même.
+  const courtsMaisDenses = [];
   for (const r of registries ?? []) {
     if (!r?.path) continue;
     const dossier = join(root, r.path);
     if (!existsSync(dossier)) continue;
     try {
       for (const f of findRapportsQuiPointent({ dossier, ...(listDirImpl ? { listDirImpl } : {}) })) maigres.push({ ...f, outil: r.slug });
+      for (const f of findRapportsCourtsMaisDenses({ dossier, ...(listDirImpl ? { listDirImpl } : {}) })) courtsMaisDenses.push({ ...f, outil: r.slug });
     } catch { /* un registre illisible est signalé par ses propres garde-fous, jamais deux fois */ }
   }
 
@@ -365,7 +370,7 @@ export function auditRapportsComplets({ registries = REGISTRIES, readFileImpl = 
   return { vertsSansMesure,
     outils: outils.length,
     exemptesDePlan: Object.keys(SANS_CONSTAT_PROPRE).length,
-    sansPlan, maigres, illisibles, muets, silencieux, fonctionsMuettes,
+    sansPlan, maigres, courtsMaisDenses, illisibles, muets, silencieux, fonctionsMuettes,
     // Les « silencieux » ne cassent PAS le verdict : ils protègent réellement, via le crochet
     // pre-commit. Ils sont signalés parce qu'un outil gagnerait à dire ce qu'il sait, jamais parce
     // qu'ils seraient en faute.
@@ -385,6 +390,12 @@ export function formatRapportsComplets(audit) {
   l.push("");
   l.push(`Critère 1 — du contenu, jamais un simple renvoi : ${audit.maigres.length === 0 ? "✅ aucun rapport archivé ne se contente de pointer ailleurs." : `⚠️ ${audit.maigres.length} rapport(s) trop maigre(s) qui renvoient ailleurs :`}`);
   for (const m of audit.maigres.slice(0, 15)) l.push(`   · ${m.outil} — ${m.fichier ?? m.nom ?? "(fichier)"}`);
+  // Dit MÊME quand la liste est vide serait du bruit ; dit quand elle ne l'est pas évite qu'on
+  // redécouvre ces fichiers en les prenant pour des défauts, ce qui est arrivé une fois (#866).
+  if (audit.courtsMaisDenses?.length) {
+    l.push(`   ✅ ${audit.courtsMaisDenses.length} rapport(s) COURTS MAIS DENSES — ils portent leur donnée, le fichier qu'ils mentionnent est un complément et non un substitut. Jamais un écart :`);
+    for (const d of audit.courtsMaisDenses.slice(0, 10)) l.push(`      · ${d.outil} — ${d.fichier} (${d.lignesUtiles} lignes, ${d.chiffres} chiffres à lui)`);
+  }
   l.push("");
   l.push(`Critère 3 — un plan d'action le cas échéant : ${audit.sansPlan.length === 0 ? "✅ tous les outils à constats concluent." : `⚠️ ${audit.sansPlan.length}/${audit.outils} outil(s) ne concluent jamais (${audit.exemptesDePlan} exemptés car sans constat propre) :`}`);
   for (const o of audit.sansPlan) l.push(`   · ${o}`);

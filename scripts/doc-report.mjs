@@ -870,29 +870,77 @@ export function findLanceursPrematures({ root = ROOT, listDirImpl = readdirSync,
 // un rapport complet qui offre en plus une version HTML (cas légitime, très répandu ici).
 export const SEUIL_RAPPORT_MAIGRE = 12;
 
-export function findRapportsQuiPointent({ dossier, listDirImpl = readdirSync, readFileImpl = readFileSync, seuil = SEUIL_RAPPORT_MAIGRE } = {}) {
+// LA QUATRIÈME CAUSE, TROUVÉE EN ALLANT VOIR LE FICHIER ACCUSÉ (2026-09-25, tâche #866) : un
+// rapport peut être COURT PARCE QUE DENSE. Les trois causes ci-dessus n'avaient pas prévu celle-là,
+// et le seul fichier que ce garde-fou accusait dans tout le dépôt en était un exemple parfait :
+// 11 lignes utiles, et **42 nombres distincts** — 84 constats, 779 lignes de suivi lues, trente
+// numéros de tâches nommés un par un, plus un recoupement entre trois outils. Il mentionne un
+// fichier .html par courtoisie, jamais à la place de sa donnée.
+//
+// COMPTER LES LIGNES EST LE MAUVAIS PROXY quand une seule ligne peut porter vingt-quatre numéros de
+// tâches. Ce qui distingue vraiment un pointeur d'un rapport, c'est qu'un pointeur n'a **aucun
+// chiffre à lui** au-delà des deux ou trois compteurs qui accompagnent le renvoi.
+//
+// LE SEUIL EST DÉRIVÉ DE DEUX MESURES RÉELLES, et le dire ainsi vaut mieux que de le présenter
+// comme une loi — deux points ne font pas une distribution :
+//   · le défaut d'origine documenté juste au-dessus : « quatre lignes utiles » + trois compteurs
+//     ≈ 0,75 chiffre par ligne ;
+//   · le rapport accusé à tort ce jour-là : 42 chiffres pour 11 lignes ≈ 3,8 par ligne.
+// Le seuil est posé entre les deux. Un rapport plus dense que ça porte sa donnée.
+export const SEUIL_DENSITE_RAPPORT = 2;
+
+// Séparé de la recherche d'écarts pour pouvoir être testé seul, et pour que la règle se lise.
+export function mesurerRapport(texte) {
+  // Les lignes d'en-tête communes à tous les rapports (avertissement de fiabilité, identité de
+  // session, état du code) ne sont pas du contenu : elles sont identiques partout.
+  const utiles = String(texte).split("\n").filter((l) => {
+    const t = l.trim();
+    if (!t) return false;
+    return !/^(⚠️\s+Attention|Version de Claude|Produit le|État du code|Contexte de production|Outil :|Santé de l'outil|Gravité|=+$|-{3,}$)/.test(t);
+  }).length;
+  const pointe = /Rapport généré|Rapport HTML|écrit dans|\.html\b/.test(texte);
+  const chiffres = new Set(String(texte).match(/\b\d+\b/g) ?? []).size;
+  return { utiles, pointe, chiffres, densite: utiles ? chiffres / utiles : 0 };
+}
+
+function parcourirRapports({ dossier, listDirImpl = readdirSync, readFileImpl = readFileSync }) {
   let fichiers = [];
-  try { fichiers = listDirImpl(dossier).filter((f) => f.endsWith(".txt")); } catch { return []; }
-  const ecarts = [];
+  try { fichiers = listDirImpl(dossier).filter((f) => f.endsWith(".txt")); } catch { return null; }
+  const vus = [];
   for (const f of fichiers) {
     let texte;
     try { texte = readFileImpl(join(dossier, f), "utf8"); } catch { continue; }
-    // Les lignes d'en-tête communes à tous les rapports (avertissement de fiabilité, identité de
-    // session, état du code) ne sont pas du contenu : elles sont identiques partout.
-    const utiles = texte.split("\n").filter((l) => {
-      const t = l.trim();
-      if (!t) return false;
-      return !/^(⚠️\s+Attention|Version de Claude|Produit le|État du code|Contexte de production|Outil :|Santé de l'outil|Gravité|=+$|-{3,}$)/.test(t);
-    }).length;
-    const pointe = /Rapport généré|Rapport HTML|écrit dans|\.html\b/.test(texte);
-    if (utiles < seuil && pointe) {
-      ecarts.push({
-        fichier: f, lignesUtiles: utiles,
-        pourquoi: `${utiles} ligne(s) de contenu et une référence vers un autre fichier : ce rapport POINTE vers sa donnée au lieu de la porter. Un rapport de Ronde se lit dans son fichier texte — un pointeur y est un cul-de-sac.`,
-      });
-    }
+    vus.push({ fichier: f, ...mesurerRapport(texte) });
   }
-  return ecarts;
+  return vus;
+}
+
+export function findRapportsQuiPointent({ dossier, listDirImpl = readdirSync, readFileImpl = readFileSync, seuil = SEUIL_RAPPORT_MAIGRE, seuilDensite = SEUIL_DENSITE_RAPPORT } = {}) {
+  const vus = parcourirRapports({ dossier, listDirImpl, readFileImpl });
+  if (!vus) return [];
+  return vus
+    .filter((v) => v.utiles < seuil && v.pointe && v.densite < seuilDensite)
+    .map((v) => ({
+      fichier: v.fichier, lignesUtiles: v.utiles, chiffres: v.chiffres, densite: v.densite,
+      pourquoi: `${v.utiles} ligne(s) de contenu, ${v.chiffres} chiffre(s) à lui, et une référence vers un autre fichier : ce rapport POINTE vers sa donnée au lieu de la porter. Un rapport de Ronde se lit dans son fichier texte — un pointeur y est un cul-de-sac.`,
+    }));
+}
+
+// findRapportsCourtsMaisDenses() — la QUATRIÈME cause, rendue à part plutôt que mêlée aux écarts.
+// Fonction compagne plutôt que changement de signature : `findRapportsQuiPointent` garde exactement
+// le sens que ses appelants lui connaissent, et l'information nouvelle s'ajoute sans rien casser.
+//
+// Ce n'est pas un écart et ce n'est pas non plus rien : c'est le cas que le compte de lignes ne
+// sait pas juger seul, et le nommer évite qu'on le redécouvre en le prenant pour un défaut.
+export function findRapportsCourtsMaisDenses({ dossier, listDirImpl = readdirSync, readFileImpl = readFileSync, seuil = SEUIL_RAPPORT_MAIGRE, seuilDensite = SEUIL_DENSITE_RAPPORT } = {}) {
+  const vus = parcourirRapports({ dossier, listDirImpl, readFileImpl });
+  if (!vus) return [];
+  return vus
+    .filter((v) => v.utiles < seuil && v.pointe && v.densite >= seuilDensite)
+    .map((v) => ({
+      fichier: v.fichier, lignesUtiles: v.utiles, chiffres: v.chiffres, densite: v.densite,
+      pourquoi: `court (${v.utiles} lignes) mais DENSE (${v.chiffres} chiffres à lui, ${v.densite.toFixed(1)} par ligne) : il porte sa donnée, le fichier qu'il mentionne est un complément et non un substitut. Jamais un écart.`,
+    }));
 }
 
 
