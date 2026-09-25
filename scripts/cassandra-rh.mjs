@@ -976,6 +976,9 @@ export const CLASSES_TRANSVERSES = [
   { cle: "coute-des-appels-api", libelle: "coûte de vrais appels API",
     quoi: "consulte un modèle ou un service distant : jamais lancé sans passer par Smart Conso API (Article 22)",
     sonde: (src) => /generativelanguage|fetch\s*\(\s*[`'"]https/.test(src) },
+  { cle: "porte-un-garde-fou-devolutivite", libelle: "porte un garde-fou d'évolutivité",
+    quoi: "contient une fonction qui refuse une liste recopiée à la main : elle compare une copie à sa source et crie quand les deux divergent (Article 24). C'est ce qui permet à un registre de grossir sans qu'une copie oubliée se périme en silence.",
+    sonde: (src) => /function\s+find\w*(Diverg|Missing|Manquant|NonDeclar|Undeclared)\w*\s*\(/.test(src) },
   { cle: "declare-sa-fiabilite", libelle: "déclare sa marge d'erreur",
     quoi: "avertit qu'il peut se tromper avant de rendre un chiffre — l'exigence transverse de tous les outils heuristiques",
     sonde: (src) => /printReliabilityNotice/.test(src) },
@@ -2268,14 +2271,24 @@ export function couvertureDesAxes({ recensement = null, categories = AGENT_CATEG
 // la même chose et ne disent plus pareil, sans qu'aucune erreur ne se produise jamais.
 export function rangsQuiDivergent({ categories = AGENT_CATEGORIES, rangs = ORG_RANKS, rangDe = rangDeLaCategorie } = {}) {
   const portes = [...new Set(Object.values(categories).map(rangDe).filter(Boolean))];
-  const declares = Object.entries(rangs).map(([cle, v]) => ({ cle, label: v.label }));
-  const labels = new Set(declares.map((d) => d.label));
+  // ON NE COMPARE QUE CE QUI EST COMPARABLE (2026-09-25, tâche #890). Deux corrections, et la
+  // seconde est la vraie : (1) le dictionnaire écrit le PLURIEL (le groupe) là où un outil porte le
+  // SINGULIER (le titulaire) — comparer les deux rendait « zéro libellé commun » sur une simple
+  // différence de nombre ; (2) surtout, trois rangs ne se peuplent PAS dans le registre de l'équipe,
+  // et les y chercher revenait à compter la mauvaise population. C'est #888 qui se rejoue : le
+  // chiffre était juste, il ne regardait pas la bonne chose. Seuls les rangs dont la population est
+  // « equipe » doivent avoir un titulaire ici ; les autres se lisent ailleurs, et le dire vaut mieux
+  // que de les accuser d'être vides.
+  const dEquipe = Object.entries(rangs).filter(([, v]) => v.population === "equipe").map(([cle, v]) => ({ cle, singulier: v.singulier, label: v.label }));
+  const singuliers = new Set(dEquipe.map((d) => d.singulier));
   return {
     portes,
-    declares: declares.map((d) => d.label),
-    portesNonDeclares: portes.filter((p) => !labels.has(p)),
-    declaresNonPortes: declares.filter((d) => !portes.includes(d.label)).map((d) => d.label),
-    pourquoi: "deux listes de rangs, l'une qui RANGE les outils et l'autre qui les EXPLIQUE, jamais confrontées — chacune prise seule est cohérente, et c'est ce qui a permis à l'écart de durer",
+    declares: Object.values(rangs).map((v) => v.label),
+    declaresDEquipe: dEquipe.map((d) => d.singulier),
+    ailleurs: Object.values(rangs).filter((v) => v.population !== "equipe").map((v) => `${v.label} (se lit dans : ${v.population})`),
+    portesNonDeclares: portes.filter((p) => !singuliers.has(p)),
+    declaresNonPortes: dEquipe.filter((d) => !portes.includes(d.singulier)).map((d) => d.singulier),
+    pourquoi: "chaque rang déclare désormais OÙ se lisent ses titulaires — un rang peuplé par le type du fichier n'a jamais à figurer dans le registre de l'équipe, et l'y chercher fabriquait une dette qui n'existait pas",
   };
 }
 
@@ -2345,8 +2358,174 @@ export const POSTE_PAR_RANG = {
   "Gardien sacré du code": "fiche + blueprint + dossier d'historisation + ligne à la table maîtresse + câblage au crochet post-commit. JAMAIS d'item de Ronde : il tourne à chaque commit, un item ferait doublon.",
   "Agent Cadre": "tout ce qu'a un Membre, PLUS le droit de convoquer les autres et de rendre un verdict sur eux. Deux outils seulement.",
   "Membre": "fiche + blueprint + dossier d'historisation + ligne à la table maîtresse + entrée au menu des prestations. Le poste complet, sans le crochet.",
-  "Agent Spécial": "même poste qu'un Membre — mais le rang lui-même n'est déclaré nulle part, donc son poste n'a jamais été arrêté. À trancher.",
+  Socle: "AUCUN poste, et ce n'est pas un manque : une bibliothèque, un crochet ou le filet de sécurité servent tout le monde sans avoir jamais candidaté. Leur exigence est ailleurs — être importés proprement et testés.",
+  Postulant: "poste NON ARRÊTÉ, et c'est justement ce que le rang signale : lançable, mais nommé par aucun document. La question n'est pas « quel poste lui donner » mais « le documente-t-on, ou le supprime-t-on ».",
 };
+
+// LE §1 DU RÉFÉRENTIEL DÉCLARE DEUX AXES, LE CODE EN DÉRIVE SEPT (2026-09-25, sa décision : « un
+// garde-fou qui ALERTE dès que les deux ne disent plus la même chose — la prose reste écrite à la
+// main, on perd seulement le droit de diverger en silence »). Le garde-fou ne réécrit rien : il
+// compte les titres « ### Axe … » du document et les compare au nombre d'axes que le code publie.
+export const REFERENTIEL_ORGANISATION = "docs/referentiel/organisation-agence.md";
+export const MOTIF_AXE_DECLARE = /^###\s+Axe\s+([A-Z])\s*[—-]\s*(.+)$/gm;
+
+export function axesDivergentDuReferentiel({ texte = null, root = ROOT, lire = readFileSync, axes = AXES_DE_CLASSIFICATION, rangs = true, familles = true } = {}) {
+  let src = texte;
+  if (src == null) { try { src = lire(join(root, REFERENTIEL_ORGANISATION), "utf8"); } catch { src = null; } }
+  if (src == null) return { mesure: "pas mesuré", pourquoi: `${REFERENTIEL_ORGANISATION} est illisible — sans le document, aucune divergence ne peut être constatée, et un vert rendu ici ressemblerait à un accord` };
+  const declares = [...src.matchAll(MOTIF_AXE_DECLARE)].map((m) => ({ lettre: m[1], titre: m[2].trim() }));
+  if (!declares.length) return { mesure: "pas mesuré", pourquoi: `aucun titre « ### Axe X — … » trouvé dans ${REFERENTIEL_ORGANISATION} : le document a changé de forme, et compter zéro axe déclaré serait une mesure fabriquée par le lecteur` };
+  // Les axes réellement publiés par le code : les cinq de AXES_DE_CLASSIFICATION, plus le rang et
+  // la famille, qui sont des axes à part entière même s'ils vivent dans un autre registre.
+  const publies = [...axes.map((a) => a.cle), ...(rangs ? ["rang"] : []), ...(familles ? ["famille"] : [])];
+  return {
+    mesure: "mesuré",
+    declares: declares.map((d) => `Axe ${d.lettre} — ${d.titre}`),
+    publies,
+    divergent: declares.length !== publies.length,
+    pourquoi: declares.length !== publies.length
+      ? `le référentiel déclare ${declares.length} axe(s), le code en publie ${publies.length} (${publies.join(", ")}) — la prose se rédige à la main, mais elle ne peut plus s'écarter en silence`
+      : null,
+  };
+}
+
+// LE DOCUMENT OFFICIEL DE LA CLASSIFICATION (2026-09-25, sa demande : « je veux le doc officiel de
+// la classification générale de l'agence, à créer s'il n'existe pas »). Il est GÉNÉRÉ, jamais
+// rédigé à la main — c'est la seule façon qu'il ne se périme pas (Article 24), et c'est aussi ce
+// qui permet les listes EXHAUSTIVES qu'il a réclamées à la place des deux exemples.
+export const CLASSIFICATION_PATH = "docs/referentiel/classification-agence.md";
+
+export function documentDeClassification({
+  recensement = null, categories = AGENT_CATEGORIES, rangs = ORG_RANKS, types = TYPES_DE_SCRIPT,
+  classes = CLASSES_TRANSVERSES, posteDuRang = POSTE_PAR_RANG, poste = POSTE_DE_TRAVAIL,
+  divergenceAxes = null, horodatage = null,
+} = {}) {
+  recensement ??= recenserLesScripts();
+  divergenceAxes ??= axesDivergentDuReferentiel();
+  if (!recensement?.mesurable) return { mesurable: false, pourquoi: recensement?.pourquoi ?? "recensement impossible", markdown: null };
+  const croise = croiserTypeEtRang({ recensement, categories, rangs });
+  const parType = new Map();
+  for (const l of recensement.lignes) (parType.get(l.type) ?? parType.set(l.type, []).get(l.type)).push(l.chemin);
+  const parFamille = new Map();
+  for (const [slug, cat] of Object.entries(categories)) {
+    const f = familleDeLaCategorie(cat) ?? "(sans famille)";
+    (parFamille.get(f) ?? parFamille.set(f, []).get(f)).push(slug);
+  }
+  const parRang = new Map();
+  for (const l of croise.lignes) (parRang.get(l.rang ?? "(aucun)") ?? parRang.set(l.rang ?? "(aucun)", []).get(l.rang ?? "(aucun)")).push(l.chemin.replace(/^scripts\//, ""));
+  const court = (c) => c.replace(/^scripts\//, "");
+
+  const L = [];
+  L.push("# Classification générale de l'Agence Codex — le document officiel");
+  L.push("");
+  L.push(`*(GÉNÉRÉ par \`node scripts/cassandra-rh.mjs classification\`${horodatage ? `, dernier passage ${horodatage}` : ""}. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qu'il faut changer se change dans le code qui le produit — \`scripts/cassandra-rh.mjs\` et \`scripts/lib-shell.mjs\` — et le document suit tout seul. C'est la règle de l'Article 24 appliquée au document qui décrit la classification : un inventaire recopié à la main se périme au premier fichier ajouté.)*`);
+  L.push("");
+  L.push("## 0. Classification ou organisation ? Les deux existent, et ce ne sont pas les mêmes");
+  L.push("");
+  L.push("**La CLASSIFICATION décrit ce qui EST.** Elle range : quel fichier est de quelle nature, quel outil porte quel rang, dans quelle famille il travaille. Elle se MESURE sur le dépôt, elle ne se décide pas. C'est ce document.");
+  L.push("");
+  L.push("**L'ORGANISATION décide ce qui DOIT ÊTRE.** Qui dirige, qui répond de quoi, quel poste exige quels documents, quel process encadre quoi. Elle se TRANCHE, et c'est toi qui tranches. Elle vit dans `docs/referentiel/organisation-agence.md`.");
+  L.push("");
+  L.push("**Le lien entre les deux, en une phrase** : la classification fournit le vocabulaire que l'organisation emploie. On ne peut pas décider « ce que doit avoir un Gardien sacré » avant d'avoir défini ce qu'est un Gardien sacré. C'est pour ça que les deux documents existent, et que ni l'un ni l'autre n'absorbe son voisin.");
+  L.push("");
+  L.push("## 1. Les quatre axes, et la question à laquelle chacun répond");
+  L.push("");
+  L.push("| Axe | La question | Comment il se remplit | Couvre |");
+  L.push("|---|---|---|---|");
+  L.push(`| **TYPE** | ce que le fichier EST | se CONSTATE en lisant le fichier | tous les fichiers (${recensement.lignes.length}) |`);
+  L.push(`| **RANG** | ce que le fichier VAUT dans l'équipe | se MÉRITE (inscrit au registre) ou se DÉDUIT du type | ${croise.couverture} % des fichiers |`);
+  L.push(`| **FAMILLE** | ce sur quoi il travaille | se décide, une par outil de l'équipe | les ${Object.keys(categories).length} outils de l'équipe |`);
+  L.push(`| **CLASSES TRANSVERSES** | ce qu'il sait FAIRE | se détecte par sonde sur le code | tous, plusieurs classes par fichier |`);
+  L.push("");
+  L.push("**Pourquoi type et rang ne font pas doublon, et pourquoi il en faut bien deux** : un type se constate, un rang se mérite. Une bibliothèque partagée n'a pas de rang d'équipe et n'en manque pas — elle n'a jamais candidaté. Les fusionner obligerait soit à promouvoir des fichiers qui n'ont rien demandé, soit à priver de rang des outils qui l'ont gagné.");
+  L.push("");
+  L.push("## 2. Comment les deux se croisent — la règle, en une phrase");
+  L.push("");
+  L.push("**Le rang MÉRITÉ l'emporte toujours ; le type ne remplit que les cases que personne n'a remplies.**");
+  L.push("");
+  L.push("1. L'outil est inscrit au registre de l'équipe → il porte le rang qui y est écrit, quel que soit son type.");
+  L.push("2. Sinon, son TYPE décide : ceux qui servent sans avoir candidaté reçoivent « Socle », ceux qui sont lançables mais documentés nulle part reçoivent le rang provisoire.");
+  L.push("3. Sinon, **aucun rang, et on le dit** — jamais un rang par défaut, qui ressemblerait à un rang gagné.");
+  L.push("");
+  L.push("*(Cet ordre a été trouvé en faisant tourner la règle, pas en la relisant : le premier jet lisait le type d'abord, et rétrogradait deux Gardiens sacrés en Socle parce qu'ils n'ont pas de porte d'entrée propre.)*");
+  L.push("");
+  L.push("| Type de fichier | Rang qu'il permet |");
+  L.push("|---|---|");
+  for (const [ty, cle] of Object.entries(RANG_PAR_TYPE)) {
+    L.push(`| \`${ty}\` | ${cle ? `**${rangs[cle]?.singulier ?? cle}**, automatiquement` : "**aucun automatiquement** — le rang se lit dans le registre de l'équipe"} |`);
+  }
+  L.push("");
+  L.push(`## 3. Les rangs — dictionnaire complet (${Object.keys(rangs).length})`);
+  L.push("");
+  L.push("| Rang | Qui le remplit | Ce que ça veut dire | Le poste de travail qui en découle |");
+  L.push("|---|---|---|---|");
+  const ouSeLit = { equipe: "le registre de l'équipe", type: "le type du fichier", registre: "un registre tiers" };
+  for (const r of Object.values(rangs)) {
+    L.push(`| ${r.emoji} **${r.label}**${r.nomProvisoire ? " *(nom provisoire)*" : ""} | ${ouSeLit[r.population] ?? "?"} | ${r.sens} | ${posteDuRang[r.singulier] ?? "*(non arrêté)*"} |`);
+  }
+  L.push("");
+  L.push("**Les pièces d'un poste de travail complet**, pour lire la colonne de droite :");
+  L.push("");
+  for (const p of poste) L.push(`- **${p.quoi}** (\`${p.ou}\`) — pour : ${p.pourQui}`);
+  L.push("");
+  L.push(`### Qui porte quel rang, exhaustivement (${croise.total} fichiers)`);
+  L.push("");
+  for (const [rang, liste] of [...parRang.entries()].sort((a, b) => b[1].length - a[1].length)) {
+    L.push(`**${rang}** — ${liste.length} :`);
+    L.push("");
+    L.push(liste.sort().map((n) => `\`${n}\``).join(" · "));
+    L.push("");
+  }
+  L.push(`## 4. Les types de fichier — liste exhaustive (${parType.size} types, ${recensement.lignes.length} fichiers)`);
+  L.push("");
+  for (const [ty, liste] of [...parType.entries()].sort((a, b) => b[1].length - a[1].length)) {
+    L.push(`### \`${ty}\` — ${liste.length} fichier(s)`);
+    L.push("");
+    L.push(`> ${types[ty] ?? "*(type non décrit dans le registre)*"}`);
+    L.push("");
+    L.push(liste.map(court).sort().map((n) => `\`${n}\``).join(" · "));
+    L.push("");
+  }
+  L.push(`## 5. Les familles — liste exhaustive (${parFamille.size} familles, ${Object.keys(categories).length} outils)`);
+  L.push("");
+  L.push("Une famille dit **ce sur quoi on travaille**, jamais ce qu'on vaut. C'est pourquoi un Gardien sacré et un simple Membre peuvent partager la même famille : ils regardent le même terrain avec des pouvoirs différents.");
+  L.push("");
+  for (const [f, liste] of [...parFamille.entries()].sort((a, b) => b[1].length - a[1].length)) {
+    L.push(`**${f}** — ${liste.length} :`);
+    L.push("");
+    L.push(liste.sort().map((n) => `\`${n}\``).join(" · "));
+    L.push("");
+  }
+  L.push(`## 6. Les classes transverses — liste exhaustive (${classes.length} classes)`);
+  L.push("");
+  L.push("Une classe transverse dit **ce qu'un fichier sait faire**, jamais qui il est. Elle se cumule librement avec toutes les autres, et elle traverse les rangs : un Gardien sacré et une bibliothèque peuvent porter la même.");
+  L.push("");
+  for (const c of classes) {
+    const liste = (recensement.parClasse?.[c.cle] ?? []).map(court).sort();
+    L.push(`### ${c.libelle} — ${liste.length} fichier(s)`);
+    L.push("");
+    L.push(`> ${c.quoi}`);
+    L.push("");
+    L.push(liste.length ? liste.map((n) => `\`${n}\``).join(" · ") : "*(aucun fichier ne porte cette classe aujourd'hui)*");
+    L.push("");
+  }
+  L.push("## 7. Ce qui n'est pas classé, et pourquoi c'est écrit ici plutôt que tu");
+  L.push("");
+  if (croise.sansRang.length) {
+    L.push(`**${croise.sansRang.length} fichiers n'ont aucun rang.** Ce sont des fichiers de type « outil » — documentés et lançables — qui ne figurent pas au registre de l'équipe. Ce n'est ni une erreur de classement ni un défaut du fichier : c'est une question ouverte, une par fichier (entre-t-il dans l'équipe, ou reste-t-il un utilitaire ?).`);
+    L.push("");
+    L.push(croise.sansRang.map((l) => `\`${court(l.chemin)}\``).sort().join(" · "));
+    L.push("");
+  } else {
+    L.push("Tous les fichiers portent un rang.");
+    L.push("");
+  }
+  if (divergenceAxes.mesure !== "mesuré") L.push(`**Axes du référentiel : 🚨 PAS MESURÉ** — ${divergenceAxes.pourquoi}`);
+  else if (divergenceAxes.divergent) L.push(`**⚠️ Le référentiel et le code ne déclarent pas le même nombre d'axes** — ${divergenceAxes.pourquoi}. La prose de \`${REFERENTIEL_ORGANISATION}\` §1 reste écrite à la main ; ce signal existe pour qu'elle ne s'écarte plus en silence.`);
+  else L.push("Le référentiel et le code déclarent le même nombre d'axes.");
+  L.push("");
+  return { mesurable: true, markdown: L.join("\n") + "\n", croise, divergenceAxes };
+}
 
 export function blocsDeLaCarteDesAxes(carte = carteDesAxes(), { axes = AXES_DE_CLASSIFICATION, poste = POSTE_DE_TRAVAIL, types = TYPES_DE_SCRIPT, moments = MOMENTS, domaines = DOMAINES, iceberg = GROUPES_ICEBERG, destinataires = DESTINATAIRES, vocab = VOCABULAIRE_DE_L_AGENCE, div = rangsQuiDivergent(), couv = couvertureDesAxes({ recensement: recenserLesScripts() }), posteDuRang = POSTE_PAR_RANG } = {}) {
   const deuxDe = (obj) => Object.entries(obj).slice(0, AXES_EXEMPLES_MAX).map(([k, v]) => `${k} — ${typeof v === "string" ? v : (v.quoi ?? "")}`).join(" · ");
@@ -3629,6 +3808,12 @@ export function buildDocumentAgence({ recensement, nivellement, couches, convoca
   });
 }
 
+// L'HEURE SE LIT, JAMAIS NE SE TAPE (Article 32) : la date imprimée dans le document vient de
+// l'horloge du système au moment de la génération, pas d'une chaîne écrite dans le code.
+function lireLHeure() {
+  try { return new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC"; } catch { return null; }
+}
+
 async function main() {
   printReliabilityNotice("cassandra-rh");
   recordCliUsage("cassandra-rh");
@@ -3759,6 +3944,22 @@ async function main() {
     writeFileSync(join(ROOT, cible), html, "utf8");
     console.log(`\nÉcrit : ${cible}`);
     console.log(`${carte.rangs.length} rang(s), ${carte.familles.length} famille(s) — ${carte.collision.constat}.`);
+    return;
+  }
+  // LE DOCUMENT OFFICIEL DE LA CLASSIFICATION (2026-09-25). Il s'ÉCRIT dans le référentiel plutôt
+  // que dans un dossier de rapports : ce n'est pas le compte rendu d'un passage, c'est la référence
+  // du rangement, celle qu'on ouvre pour savoir ce qu'est un rang ou un type. Et il est généré, donc
+  // il ne peut pas se périmer sans qu'une regénération le montre.
+  if (sub === "classification") {
+    const horodatage = lireLHeure();
+    const doc = documentDeClassification({ horodatage });
+    if (!doc.mesurable) { console.log(`\n🚨 PAS MESURÉ — ${doc.pourquoi}`); return; }
+    const cible = process.argv[3] ?? CLASSIFICATION_PATH;
+    writeFileSync(join(ROOT, cible), doc.markdown, "utf8");
+    console.log(`\nÉcrit : ${cible}`);
+    console.log(`${doc.croise.total} fichier(s) classés — couverture du rang : ${doc.croise.couverture} %, ${doc.croise.sansRang.length} sans rang.`);
+    if (doc.divergenceAxes.divergent) console.log(`⚠️  ${doc.divergenceAxes.pourquoi}`);
+    recordRegistryWrite?.("cassandra-rh", cible);
     return;
   }
   if (sub === "fiche") {
@@ -4172,13 +4373,103 @@ async function main() {
 // LES LIBELLÉS DE RANG VIVENT EN UN SEUL ENDROIT (`ORG_RANKS`) : le renommage calibré le même soir
 // (Scribes 🥈 / Premium 🥇 / Platine noir ⬛) est mis de côté en attente de validation explicite —
 // quand il viendra, il se fera ICI, jamais en repassant sur tout le paysage.
+// CHAQUE RANG DIT DÉSORMAIS QUI LE REMPLIT (2026-09-25, tâche #890). Le dictionnaire donnait le
+// libellé au PLURIEL (le groupe) pendant que chaque outil porte le SINGULIER (le titulaire) — d'où
+// une comparaison qui rendait « zéro libellé commun » et faisait passer pour une dette ce qui
+// n'était qu'une différence de nombre. Pire : elle cherchait les titulaires de TOUS les rangs dans
+// le seul registre de l'équipe, alors que trois rangs se peuplent ailleurs. « Socle » a ainsi été
+// déclaré porté par personne alors que l'organigramme le remplit depuis toujours, à partir de la
+// colonne Statut de la table maîtresse. C'est #888 qui se rejoue : le chiffre était juste, il
+// comptait la mauvaise population.
+//
+// `population` dit OÙ se lisent les titulaires, et c'est ce qui rend la vérification honnête :
+//   "equipe"   → le registre de l'équipe (AGENT_CATEGORIES) : le rang s'y lit au singulier ;
+//   "type"     → le TYPE du fichier suffit à le donner, personne ne l'attribue à la main ;
+//   "registre" → un registre tiers (les émetteurs de rapport de doc-report).
 export const ORG_RANKS = {
-  socle: { label: "Socle", emoji: "🧱", sens: "n'est pas membre de l'équipe : c'est le sol sur lequel tout le monde marche" },
-  cadre: { label: "Agents Cadre", emoji: "🎖️", sens: "dirigent — une fonction dans l'organigramme, jamais un badge de qualité en plus" },
-  gardien: { label: "Gardiens sacrés du code", emoji: "🛡️", sens: "délivrent un vrai scan de qualité ET tournent automatiquement à CHAQUE commit" },
-  membre: { label: "Membres certifiés", emoji: "🎖️", sens: "câblage complet vérifié : table maîtresse, menu, instanciation, registre, blueprint" },
-  emetteur: { label: "Émetteurs de rapport non certifiés", emoji: "📝", sens: "produisent un vrai rapport lu par un humain sans être membres — rang en attente de nommage" },
+  socle: { label: "Socle", singulier: "Socle", emoji: "🧱", population: "type",
+    sens: "n'est pas membre de l'équipe : c'est le sol sur lequel tout le monde marche" },
+  cadre: { label: "Agents Cadre", singulier: "Agent Cadre", emoji: "🎖️", population: "equipe",
+    sens: "dirigent — une fonction dans l'organigramme, jamais un badge de qualité en plus" },
+  gardien: { label: "Gardiens sacrés du code", singulier: "Gardien sacré du code", emoji: "🛡️", population: "equipe",
+    sens: "délivrent un vrai scan de qualité ET tournent automatiquement à CHAQUE commit" },
+  membre: { label: "Membres certifiés", singulier: "Membre", emoji: "🎖️", population: "equipe",
+    sens: "câblage complet vérifié : table maîtresse, menu, instanciation, registre, blueprint" },
+  // NOM PROVISOIRE, ET IL EST DÉCLARÉ TEL QUEL. L'utilisateur a tranché le 2026-09-25 qu'un rang
+  // propre était nécessaire (« ni Socle, ni Membre ») et qu'il le nommerait lui-même ; « Postulant »
+  // est le mot de travail en attendant, rattaché à la fournée de renommage des rangs (tâche #200).
+  postulant: { label: "Postulants", singulier: "Postulant", emoji: "🚪", population: "type", nomProvisoire: true,
+    sens: "lançable, mais nommé par aucun document : soit un outil qu'on a oublié de documenter, soit un script jetable qui a survécu — un état qui appelle une décision, jamais un rang où l'on reste" },
+  emetteur: { label: "Émetteurs de rapport non certifiés", singulier: "Émetteur de rapport", emoji: "📝", population: "registre", nomProvisoire: true,
+    sens: "produisent un vrai rapport lu par un humain sans être membres — rang en attente de nommage" },
 };
+
+// LE CROISEMENT TYPE × RANG, la question qu'il a posée mot pour mot : « comment se croisent les
+// deux données ? ». La réponse tient en une phrase : **le TYPE décide si un RANG est possible, et
+// lequel.** Un type se constate sur le fichier ; un rang se mérite ou se déduit du type.
+//   · les types qui SERVENT sans postuler (bibliothèques, crochets, filet de sécurité, shell)
+//     reçoivent « Socle » automatiquement — ils n'ont jamais candidaté et ne manquent de rien ;
+//   · les types LANÇABLES MAIS NON DOCUMENTÉS reçoivent le rang provisoire ci-dessus ;
+//   · le type « outil » est le seul dont le rang ne se déduit PAS : il se lit dans le registre de
+//     l'équipe, parce qu'il dépend de ce que l'outil a prouvé, jamais de ce qu'il est.
+export const RANG_PAR_TYPE = {
+  crochet: "socle",
+  "filet-de-securite": "socle",
+  "bibliotheque-partagee": "socle",
+  "bibliotheque-solitaire": "socle",
+  "infrastructure-shell": "socle",
+  "utilitaire-sans-fiche": "postulant",
+  "execution-directe-non-documentee": "postulant",
+  outil: null,
+};
+
+// LE SLUG SE LIT DANS L'INVENTAIRE DE LA CHARTE, JAMAIS SUR LE NOM DU FICHIER (leçon L24 : ce qui
+// dit à quoi sert un outil est son offre DÉCLARÉE, pas son code — ici, ce qui dit COMMENT il
+// s'appelle est la fiche que la charte lui donne, pas son nom de fichier). Le premier jet devinait
+// le slug en retirant « check- » ; il ratait deux Gardiens sacrés sur sept, silencieusement, parce
+// que `scripts/check-argus.mjs` porte la fiche `docs/referentiel/argus.md`.
+export function slugsParScript(texteCharte, { inventaire = null } = {}) {
+  const lignes = inventaire ?? inventaireDeLaCharte(texteCharte ?? "");
+  const m = {};
+  for (const l of lignes) {
+    if (!l?.script) continue;
+    const slug = String(l.instanciation ?? "").match(/([^/]+)\.md$/)?.[1];
+    if (slug) m[l.script] = slug;
+  }
+  return m;
+}
+
+// UN RANG MÉRITÉ BAT TOUJOURS UN RANG DÉDUIT, et cet ordre a été trouvé en faisant tourner la
+// règle plutôt qu'en la relisant. Le premier jet lisait le TYPE d'abord : CLONE-HUNTER et
+// SAFE-EXPORT, deux Gardiens sacrés dépourvus de porte d'entrée propre (ils tournent via le crochet
+// post-commit), étaient donc typés « bibliothèque partagée » et rétrogradés en Socle — un rang
+// mérité effacé par un rang automatique. Le registre de l'équipe passe donc EN PREMIER ; le type
+// ne fait que remplir les cases que personne n'a remplies.
+export function rangDuFichier(ligne, { categories = AGENT_CATEGORIES, rangs = ORG_RANKS, rangDe = rangDeLaCategorie, slugs = {} } = {}) {
+  const chemin = String(ligne?.chemin ?? "");
+  const declare = slugs[chemin];
+  const devine = chemin.replace(/^scripts\//, "").replace(/\.(mjs|sh)$/, "");
+  const cat = categories[declare] ?? categories[devine];
+  const merite = cat ? rangDe(cat) : null;
+  if (merite) return { rang: merite, source: declare && categories[declare] ? "equipe" : "equipe (nom de fichier)", cle: null };
+  const cle = RANG_PAR_TYPE[ligne?.type];
+  if (cle) return { rang: rangs[cle]?.singulier ?? cle, source: "type", cle };
+  if (cle === null) return { rang: null, source: "aucune", cle: null,
+    pourquoi: "type « outil » mais introuvable dans le registre de l'équipe — il est documenté et lançable sans y être inscrit" };
+  return { rang: null, source: "aucune", cle: null, pourquoi: `type « ${ligne?.type ?? "?"} » absent de RANG_PAR_TYPE — un type nouveau doit y déclarer ce qu'il permet` };
+}
+
+// CHAQUE FICHIER, SON TYPE ET SON RANG — la vue exhaustive qu'il a demandée, jamais deux exemples.
+export function croiserTypeEtRang({ recensement = null, categories = AGENT_CATEGORIES, rangs = ORG_RANKS, slugs = null } = {}) {
+  slugs ??= (() => { try { return slugsParScript(readFileSync(join(ROOT, "CLAUDE.md"), "utf8")); } catch { return {}; } })();
+  if (!recensement?.mesurable) return { mesurable: false, pourquoi: recensement?.pourquoi ?? "aucun recensement fourni — sans lire les fichiers, aucun croisement n'est mesurable" };
+  const lignes = recensement.lignes.map((l) => ({ chemin: l.chemin, type: l.type, ...rangDuFichier(l, { categories, rangs, slugs }) }));
+  const parRang = {};
+  for (const l of lignes) parRang[l.rang ?? "(aucun)"] = (parRang[l.rang ?? "(aucun)"] ?? 0) + 1;
+  const sansRang = lignes.filter((l) => !l.rang);
+  return { mesurable: true, lignes, parRang, total: lignes.length, sansRang,
+    couverture: lignes.length ? Math.round(((lignes.length - sansRang.length) / lignes.length) * 100) : 0 };
+}
 
 export function buildOrganigramme({
   toolsTableMarkdown = lireTableMaitresse(),

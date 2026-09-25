@@ -103,10 +103,10 @@ export function findUndeclaredLocalJournals(gitignoreText, journals = LOCAL_JOUR
 // remise HTML actée). scriptPath : le script producteur, pour vérifier la décision "delivery_html"
 // (null quand aucun script unique ne produit ce registre, ex. les archives manuelles de simulation).
 export const REGISTRIES = [
-  { slug: "argus", label: "ARGUS", family: "Équipe noyau (Article 20)", path: "docs/argus/", decision: "texte", scriptPath: "scripts/check-argus.mjs" },
-  { slug: "harmonia", label: "HARMONIA", family: "Équipe noyau (Article 20)", path: "docs/harmonia/", decision: "texte", scriptPath: "scripts/check-harmonia.mjs" },
-  { slug: "axa-check", label: "AXA-CHECK", family: "Équipe noyau (Article 20)", path: "docs/axa-check/", decision: "texte", scriptPath: "scripts/axa-check.mjs" },
-  { slug: "clean-dirty-old", label: "CLEAN-DIRTY-OLD", family: "Équipe noyau (Article 20)", path: "docs/clean-dirty-old/", decision: "texte", scriptPath: "scripts/clean-dirty-old.mjs" },
+  { slug: "argus", label: "ARGUS", family: "Suite Dette & Structure du code", path: "docs/argus/", decision: "texte", scriptPath: "scripts/check-argus.mjs" },
+  { slug: "harmonia", label: "HARMONIA", family: "Suite Dette & Structure du code", path: "docs/harmonia/", decision: "texte", scriptPath: "scripts/check-harmonia.mjs" },
+  { slug: "axa-check", label: "AXA-CHECK", family: "Suite Dette & Structure du code", path: "docs/axa-check/", decision: "texte", scriptPath: "scripts/axa-check.mjs" },
+  { slug: "clean-dirty-old", label: "CLEAN-DIRTY-OLD", family: "Suite Dette & Structure du code", path: "docs/clean-dirty-old/", decision: "texte", scriptPath: "scripts/clean-dirty-old.mjs" },
   { slug: "always-new-code", label: "ALWAYS-NEW-CODE", family: "Exceptionnel (page blanche / audit lourd)", path: "docs/always-new-code/", decision: "texte", scriptPath: "scripts/always-new-code.mjs" },
   { slug: "hyper-scan-checkpoint", label: "HYPER-SCAN-CHECKPOINT", family: "Exceptionnel (page blanche / audit lourd)", path: "docs/hyper-scan-checkpoint/", decision: "texte", scriptPath: "scripts/hyper-scan-checkpoint.mjs" },
   { slug: "check-level-target", label: "CHECK-LEVEL-TARGET", family: "Gouvernance interne", path: "docs/check-level-target/", decision: "texte", scriptPath: "scripts/check-level-target.mjs" },
@@ -134,10 +134,10 @@ export const REGISTRIES = [
   // CLONE-HUNTER en 5e Gardien sacré du code (AGENT_CATEGORIES, lib-shell.mjs) — jamais mise à jour
   // ici au moment de cette promotion, exactement le genre d'écart entre deux registres que
   // l'Article 2/13 interdit de laisser traîner une fois trouvé.
-  { slug: "clone-hunter", label: "CLONE-HUNTER", family: "Équipe noyau (Article 20)", path: "docs/clone-hunter/", decision: "texte", scriptPath: "scripts/clone-hunter.mjs" },
+  { slug: "clone-hunter", label: "CLONE-HUNTER", family: "Suite Dette & Structure du code", path: "docs/clone-hunter/", decision: "texte", scriptPath: "scripts/clone-hunter.mjs" },
   // 2026-09-22 : septième Gardien. Son registre n'archive que les passages PROFONDS (exceptionnels,
   // Article 23) — la couche légère, elle, ne produit qu'un avertissement post-commit sans fichier.
-  { slug: "safe-export", label: "SAFE-EXPORT", family: "Équipe noyau (Article 20)", path: "docs/safe-export/", decision: "texte", scriptPath: "scripts/safe-export.mjs" },
+  { slug: "safe-export", label: "SAFE-EXPORT", family: "Suite Dette & Structure du code", path: "docs/safe-export/", decision: "texte", scriptPath: "scripts/safe-export.mjs" },
   { slug: "tool-learning", label: "TOOL-LEARNING", family: "Suite Dette & Structure du code", path: "docs/tool-learning/", decision: "texte", scriptPath: "scripts/tool-learning.mjs" },
   // THE-EQUALIZER : texte, comme ses voisins de suite. Son verdict est relu par des outils (god,
   // la Ronde), jamais seulement par un humain devant un navigateur — un HTML le rendrait plus
@@ -149,7 +149,7 @@ export const REGISTRIES = [
   // avant de toucher au dépôt, et se vérifie avec la commande jumelle juste après. Une page HTML
   // s'ouvrirait après coup, c'est-à-dire trop tard pour le geste qu'elle est censée encadrer.
   { slug: "agent-des-noms", label: "AGENT DES NOMS", family: "Suite Dette & Structure du code", path: "docs/agent-des-noms/", decision: "texte", scriptPath: "scripts/agent-des-noms.mjs" },
-  { slug: "agent-du-temps", label: "AGENT-DU-TEMPS", family: "Suite Pilotage & Consommation", path: "docs/agent-du-temps/", decision: "texte", scriptPath: "scripts/agent-du-temps.mjs" },
+  { slug: "agent-du-temps", label: "AGENT-DU-TEMPS", family: "Gouvernance interne", path: "docs/agent-du-temps/", decision: "texte", scriptPath: "scripts/agent-du-temps.mjs" },
   { slug: "abraham-les-references", label: "ABRAHAM-LES-REFERENCES", family: "Suite Dette & Structure du code", path: "docs/abraham-les-references/", decision: "texte", scriptPath: "scripts/abraham-les-references.mjs" },
   { slug: "moise-tables-de-loi", label: "MOÏSE-TABLES-DE-LOI", family: "Suite Dette & Structure du code", path: "docs/moise-tables-de-loi/", decision: "texte", scriptPath: "scripts/moise-tables-de-loi.mjs" },
   { slug: "integration-outil", label: "integration-outil", family: "Suite Dette & Structure du code", path: "docs/integration-outil/", decision: "texte", scriptPath: "scripts/integration-outil.mjs" },

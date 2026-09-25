@@ -215,6 +215,32 @@ possède aucun registre `doc-report` — son domaine est la PRODUCTION, pas un r
 une ressource qui s'épuise. C'est une proposition de l'agent, pas une décision : **nommer reste la
 prérogative de l'utilisateur**, et cette ligne est là pour qu'il puisse la corriger d'un mot.
 
+### Trois décisions de l'utilisateur, le 2026-09-25 — sept familles au lieu de neuf, trois rangs au lieu de quatre
+
+*(Ses mots : « fondre Pilotage dans Gouvernance », « "Équipe noyau" = les Gardiens sacrés, donc peut-être
+une famille à supprimer », et sur le rang orphelin : « le fondre dans Membre ». Les paragraphes
+ci-dessus restent tels quels — ils racontent l'état d'avant, et l'effacer ferait disparaître le
+pourquoi. Ce bloc dit l'état d'aujourd'hui.)*
+
+- **« Suite Pilotage & Consommation » n'existe plus** : ses deux membres (AGENT-DU-TEMPS, Smart
+  Breaker) ont rejoint **Gouvernance interne**. Piloter une ressource qui s'épuise EST de la
+  gouvernance interne — la famille séparée distinguait deux choses qui n'avaient pas à l'être.
+- **« Équipe noyau (Article 20) » n'existe plus non plus**, et pour une raison plus nette : elle
+  redisait le RANG. Une famille dit ce sur quoi on TRAVAILLE, un rang dit ce qu'on VAUT ; une
+  famille dont le seul critère d'entrée est un rang ne classe rien. Les six qui la portaient ont
+  rejoint **Suite Dette & Structure du code**, qui dit leur vrai terrain. Leur rang de Gardien
+  sacré est intact, et l'Article 20 reste la loi qui le définit. La preuve que les deux axes sont
+  bien indépendants : ALWAYS-NEW-CODE est Gardien sacré et vit en famille « Exceptionnel ».
+- **Le rang « Agent Spécial » est fondu dans « Membre »** : porté par deux outils, déclaré dans
+  aucun dictionnaire, jamais défini. CHECK-LEVEL-TARGET et Smart Breaker sont des Membres.
+
+**Impact réel, mesuré avant d'agir plutôt que supposé** : deux fichiers portent ces libellés
+(`scripts/lib-shell.mjs` pour le registre de l'équipe, `scripts/doc-report.mjs` pour celui des
+registres), et deux garde-fous existaient déjà pour refuser un oubli entre les deux
+(`comparerLesFamilles()`, `findFamillesDivergentesParOutil()`). C'est exactement ce à quoi ils
+servent : après le changement, les deux sont au vert. Rien d'autre dans le dépôt ne dépendait de
+ces noms.
+
 ### Ce qui garde les deux rangements alignés, désormais mécaniquement
 
 Deux garde-fous distincts, et le second existe parce que le premier ne suffisait pas :

@@ -135,12 +135,12 @@ export const AGENT_CATEGORIES = {
   "cassandra-rh": "Agent Cadre — Gouvernance interne",
   "le-coordinateur": "Agent Cadre — Coordination",
   // Les Gardiens sacrés du code (Article 20 — tourne automatiquement à chaque commit)
-  argus: "Gardien sacré du code — Équipe noyau (Article 20)",
-  "safe-export": "Gardien sacré du code — Équipe noyau (Article 20)",
-  harmonia: "Gardien sacré du code — Équipe noyau (Article 20)",
-  "axa-check": "Gardien sacré du code — Équipe noyau (Article 20)",
-  "clean-dirty-old": "Gardien sacré du code — Équipe noyau (Article 20)",
-  "clone-hunter": "Gardien sacré du code — Équipe noyau (Article 20)",
+  argus: "Gardien sacré du code — Suite Dette & Structure du code",
+  "safe-export": "Gardien sacré du code — Suite Dette & Structure du code",
+  harmonia: "Gardien sacré du code — Suite Dette & Structure du code",
+  "axa-check": "Gardien sacré du code — Suite Dette & Structure du code",
+  "clean-dirty-old": "Gardien sacré du code — Suite Dette & Structure du code",
+  "clone-hunter": "Gardien sacré du code — Suite Dette & Structure du code",
   // ALWAYS-NEW-CODE (2026-09-21) : sixième Gardien, couche LÉGÈRE seulement (recommendZone() +
   // addendaSignal()/churnSignal(), zéro raisonnement) — le vrai zoom profond, qui exige un
   // raisonnement payant, reste explicitement exclu du statut de Gardien (cf.
@@ -175,7 +175,7 @@ export const AGENT_CATEGORIES = {
   "the-equalizer": "Membre — Suite Dette & Structure du code",
   // Membre, jamais Gardien sacré : il ne scanne aucune qualité de code — il rend l'heure et
   // garde la mémoire des estimations. Le premier volet du critère double n'est pas rempli.
-  "agent-du-temps": "Membre — Suite Pilotage & Consommation",
+  "agent-du-temps": "Membre — Gouvernance interne",
   "agent-des-noms": "Membre — Suite Dette & Structure du code",   // Membre et jamais Gardien sacré : son scan ne tourne pas à CHAQUE commit — il répond à un ÉVÉNEMENT, un renommage envisagé
   // integration-outil (2026-09-22) : Membre, jamais Gardien. Il ne scanne pas la qualité du code et
   // ne tourne pas à chaque commit — les deux volets du critère d'appartenance, dont aucun n'est
@@ -199,12 +199,12 @@ export const AGENT_CATEGORIES = {
   "tool-brain": "Membre — Coordination",
   "find-deep-booster": "Membre — Outillage de navigation",
   // Les Agents Spéciaux
-  "check-level-target": "Agent Spécial — Gouvernance interne",
+  "check-level-target": "Membre — Gouvernance interne",
   // SEULE famille de ce tableau qui ne soit PAS dérivée d'un registre doc-report : Smart Breaker
   // n'en possède aucun (son domaine est la PRODUCTION, pas un rapport de travail). Rangé ici avec
   // AGENT-DU-TEMPS parce que les deux pilotent une ressource qui s'épuise — proposé par l'agent le
   // 2026-09-25, reste à confirmer par l'utilisateur, à qui revient tout nommage (#754).
-  "smart-breaker": "Agent Spécial — Suite Pilotage & Consommation",
+  "smart-breaker": "Membre — Gouvernance interne",
 };
 
 // sansAccents() (2026-09-23) — une SEULE normalisation, partagée, jamais deux qui divergeraient.

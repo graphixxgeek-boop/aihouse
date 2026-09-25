@@ -4443,9 +4443,16 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   {
     const crh=await import('../scripts/cassandra-rh.mjs');
     const d=crh.rangsQuiDivergent();
-    assert.ok(d.portesNonDeclares.includes('Agent Spécial'),'« Agent Spécial » ranks two real tools and is declared nowhere — the exact gap he sensed');
-    assert.ok(d.declaresNonPortes.includes('Socle'),'and « Socle » is declared, defined, and carried by nobody: the "infrastructure" rank he was looking for is not to invent, it is to assign');
-    assert.equal(d.portes.filter((p)=>d.declares.includes(p)).length,0,'measured EXACTLY rather than with a loose includes(): the two lists coincide on NOT ONE label, which is why each looked coherent on its own');
+    // RÉSOLU LE 2026-09-25 (#890), ET LE TEST GARDE LA RÉSOLUTION PLUTÔT QUE LE DÉFAUT (L3). Il
+    // exigeait jusqu'ici que l'écart PERSISTE — « Agent Spécial » porté et non déclaré, « Socle »
+    // déclaré et porté par personne. Les deux ont été tranchés : Agent Spécial fondu dans Membre
+    // sur décision de l'utilisateur, et Socle n'était pas orphelin du tout — il se peuple par le
+    // TYPE du fichier, pas par le registre de l'équipe. La première mesure comptait la mauvaise
+    // population, ce qui est exactement #888 rejoué : un chiffre juste sur la mauvaise question.
+    assert.deepEqual(d.portesNonDeclares,[],'every rank a real tool carries is now declared in the dictionary — the gap he sensed is closed, not merely described');
+    assert.deepEqual(d.declaresNonPortes,[],'and every rank the dictionary declares as filled by the TEAM registry has real holders');
+    assert.ok(d.ailleurs.length>=3,'the ranks filled elsewhere (by the file type, by a third registry) SAY so rather than being reported as empty: asking the team roster for them counted the wrong population');
+    assert.equal(d.portes.filter((p)=>!d.declaresDEquipe.includes(p)).length,0,'measured EXACTLY rather than with a loose includes(), and on the SINGULAR form a tool actually carries — the dictionary writes the plural because it names a group');
     // LA COUVERTURE, et pourquoi l'écart n'est pas une dette.
     const c=crh.couvertureDesAxes({recensement:crh.recenserLesScripts()});
     assert.ok(c.total>c.avecRang,'every file carries a TYPE, only members carry a RANK — saying so is what stops a reader concluding that forty-seven tools are missing');
@@ -8651,6 +8658,54 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(famFaux.sansRegistre, ['b'], 'and the populations are compared too, because the divergence is not only in the names: 40 tools carry a category, 44 carry a registry');
   assert.deepEqual(famFaux.sansCategorie, ['c'], 'in both directions — a tool with a registry and no category is as invisible as the reverse');
   assert.equal(comparerLesFamilles({ categories: {}, registres: [{ slug: 'a', family: 'X' }] }).mesurable, false, 'a comparison rendered on ONE side only would look like a perfect agreement, which is the exact opposite of the truth — so it refuses rather than reassures');
+
+  const CASSANDRA = await import('../scripts/cassandra-rh.mjs');
+
+  // LE CROISEMENT TYPE × RANG (2026-09-25, tâche #890) — sa question mot pour mot : « comment se
+  // croisent les deux données ? ». La règle a été trouvée EN LA FAISANT TOURNER, pas en la
+  // relisant : le premier jet lisait le type d'abord et rétrogradait CLONE-HUNTER et SAFE-EXPORT,
+  // deux Gardiens sacrés sans porte d'entrée propre, au rang Socle. Un rang mérité effacé par un
+  // rang automatique — d'où l'ordre inverse, et d'où ce test, qui est la seule chose qui l'empêche
+  // de revenir.
+  {
+    const libGardien = { chemin: 'scripts/clone-hunter.mjs', type: 'bibliotheque-partagee' };
+    const r1 = CASSANDRA.rangDuFichier(libGardien, { categories: { 'clone-hunter': 'Gardien sacré du code — Suite Dette & Structure du code' } });
+    assert.equal(r1.rang, 'Gardien sacré du code', 'an EARNED rank always beats a rank deduced from the file type: a Gardien sacré without an entry point of its own must not be demoted to Socle');
+    assert.equal(r1.source, 'equipe (nom de fichier)', 'and the source of the rank is stated, so a reader can tell a read rank from a guessed one');
+    const r2 = CASSANDRA.rangDuFichier({ chemin: 'scripts/lib-json.mjs', type: 'bibliotheque-partagee' }, { categories: {} });
+    assert.equal(r2.rang, 'Socle', 'a shared library nobody ranked gets Socle from its type — it never applied, and that is not a missing rank');
+    const r3 = CASSANDRA.rangDuFichier({ chemin: 'scripts/zzz.mjs', type: 'utilitaire-sans-fiche' }, { categories: {} });
+    assert.equal(r3.rang, 'Postulant', 'a launchable script no document names gets the third state, which is neither Socle nor membership');
+    const r4 = CASSANDRA.rangDuFichier({ chemin: 'scripts/zzz.mjs', type: 'outil' }, { categories: {} });
+    assert.equal(r4.rang, null, 'a documented tool absent from the team registry gets NO rank at all, with the reason said — never a default rank, which would look exactly like an earned one');
+    assert.match(r4.pourquoi, /registre de l'équipe/, 'and the reason names where it was looked for');
+    // Le slug se lit dans l'inventaire de la charte, jamais deviné sur le nom du fichier (L24).
+    const slugs = CASSANDRA.slugsParScript(null, { inventaire: [{ script: 'scripts/check-argus.mjs', instanciation: 'docs/referentiel/argus.md' }] });
+    assert.equal(slugs['scripts/check-argus.mjs'], 'argus', 'the slug comes from the fiche the charter declares, not from the file name — guessing it missed two of the seven Gardiens sacrés in silence');
+  }
+
+  // LE GARDE-FOU DU §1 (2026-09-25, sa décision : « un garde-fou qui ALERTE dès que les deux ne
+  // disent plus la même chose »). Il ne réécrit jamais la prose : il compte, et il le dit.
+  {
+    const deux = CASSANDRA.axesDivergentDuReferentiel({ texte: '### Axe A — un\n### Axe B — deux\n', axes: [{ cle: 'x' }], rangs: false, familles: false });
+    assert.equal(deux.divergent, true, 'bites: two axes declared in prose against one published by the code is a divergence');
+    const pareil = CASSANDRA.axesDivergentDuReferentiel({ texte: '### Axe A — un\n### Axe B — deux\n', axes: [{ cle: 'x' }, { cle: 'y' }], rangs: false, familles: false });
+    assert.equal(pareil.divergent, false, 'and stays silent when both sides count the same — a guard that accuses when all is well stops being read (L4)');
+    assert.equal(CASSANDRA.axesDivergentDuReferentiel({ texte: 'aucun titre ici' }).mesure, 'pas mesuré', 'a document that changed shape reports "pas mesuré" rather than counting zero declared axes, which would be a measurement fabricated by the reader');
+    assert.equal(CASSANDRA.axesDivergentDuReferentiel({ lire: () => { throw new Error('nope'); } }).mesure, 'pas mesuré', 'and an unreadable document never yields a green');
+  }
+
+  // LE DOCUMENT OFFICIEL DE LA CLASSIFICATION — généré, jamais rédigé à la main, donc vérifié sur
+  // le VRAI dépôt : un générateur qui n'a jamais tourné contre les vrais fichiers est une intention.
+  {
+    const doc = CASSANDRA.documentDeClassification();
+    assert.equal(doc.mesurable, true, 'checked live: the official classification document generates against the real repository');
+    assert.match(doc.markdown, /^# Classification générale de l'Agence Codex/, 'it carries its own title');
+    assert.match(doc.markdown, /Ne jamais le modifier à la main/, 'and it says, in its own first lines, that editing it by hand would be overwritten — the only honest thing to print at the top of a generated reference');
+    assert.ok(doc.croise.total > 50, `it classifies the whole repository, not a sample (${doc.croise.total} files)`);
+    const sansRecensement = CASSANDRA.documentDeClassification({ recensement: { mesurable: false, pourquoi: 'test' } });
+    assert.equal(sansRecensement.mesurable, false, 'and with nothing measured it refuses to produce a document rather than printing an empty classification, which would read as a repository with nothing in it');
+  }
   assert.ok(formatFamillesLines(famFaux).some((l) => /il ne tranche pas/.test(l)), 'THE LINE THAT MATTERS MOST: the tool reports the gap and never picks the surviving system. Naming a family is a naming, therefore the user decides — a tool settling it alone would have rebaptised six Suites behind the back of whoever named them.');
   // LE CONTRE-TEST QUI COMPTE LE PLUS ICI (2026-09-25, #754) — la sonde d'origine cherchait le MOT
   // « Suite » dans le libellé d'une catégorie. Le jour où les six Suites ont été remplacées par les
@@ -9551,8 +9606,13 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(texte.includes('peuvent être inexacts'), 'the org chart is a CASSANDRA report, so it inherits her reliability warning from the shared registry like every other report');
   assert.ok(texte.includes('Aucun membre certifié sans suite'), 'a clean org chart must say so explicitly rather than staying silent — an absent warning must never be indistinguishable from an unchecked one');
   assert.ok(renderOrganigrammeReport({ ...org, sansCategorie: ['ORPHELIN'], effectifs: org.effectifs }).includes('ORPHELIN'), 'when a member IS uncategorised, the report must name it loudly rather than degrade quietly');
-  assert.equal(Object.keys(ORG_RANKS).length, 5, 'the rank labels must live in exactly one place, so the calibrated renaming (Scribes/Premium/Platine noir) is a single edit here rather than a sweep across the whole landscape');
+  assert.ok(Object.keys(ORG_RANKS).length >= 5, 'the rank labels must live in exactly one place, so the calibrated renaming (Scribes/Premium/Platine noir) is a single edit here rather than a sweep across the whole landscape');
+  // LE NOMBRE EXACT N'EST PLUS FIGÉ, ET C'EST UNE CORRECTION (2026-09-25, #890) : l'assertion
+  // exigeait 5 rangs, donc elle cassait le jour où un rang manquant était ajouté — ce qui était
+  // justement le travail demandé. Un test doit garder la RÈGLE (chaque rang dit son nom, son sens
+  // et où se lisent ses titulaires), jamais le décompte du jour où il a été écrit.
   assert.ok(Object.values(ORG_RANKS).every((r) => r.label && r.sens), 'every rank must carry both a name and what it MEANS — a bare label would leave a reader guessing why a tool sits there');
+  assert.ok(Object.values(ORG_RANKS).every((r) => r.singulier && ['equipe', 'type', 'registre'].includes(r.population)), 'and every rank must say, in the dictionary itself, the form a tool actually carries AND where its holders are read — without that, the check looks for all of them in the team roster and reports the three filled elsewhere as empty');
   console.log('Passed: CASSANDRA rebuilds the Agence Codex org chart from real data on every run (tasks #171/#172/#179) — ranks derived from the real master table and AGENT_CATEGORIES, the six Gardiens from GARDIEN_DOMAINS rather than a second hand-kept list, report emitters from the real file-writer classification — so it can never go stale the way the hand-maintained document did; checked live, every certified member lands in exactly one rank with the totals adding up and none left without a suite (the real three-member gap this closed), no tool can appear at two ranks at once (the duplicate found on the very first render, fixed by a dedicated identity slug that is deliberately NOT the documentation-path slug), it renders through the shared report gabarit with its inherited reliability warning, it says so explicitly when nothing is wrong, and every rank label lives in exactly one place so the calibrated renaming stays a single edit.');
 }
 
