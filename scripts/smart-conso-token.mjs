@@ -407,6 +407,70 @@ export function scanScope(portee, documents, alwaysLoadedSet = new Set()) {
 // jamais appliqués seul) : le nombre de propositions RÉELLEMENT retenues et appliquées, avec la
 // réduction effective mesurée avant/après — jamais un nombre de scans lancés, qui ne dit rien sur
 // l'utilité réelle de l'outil. Alimenté par recordAction("proposition_appliquee", ..., { reductionPct }).
+// ============================================================================================
+// LE COÛT DU CROCHET POST-COMMIT (2026-09-25, tâche #731)
+// ============================================================================================
+// SA QUESTION : « est-ce qu'on peut dire que l'outillage est trop lourd dans l'agence ? est-ce que
+// ca penalise : moi ? l'utilisateur du jeu ? les performances du pc du joueur ? les performances
+// internet ? » Trois des quatre réponses étaient déjà nettes et rassurantes — `scripts/` n'est
+// JAMAIS livré au navigateur, donc le joueur ne paie ni CPU, ni réseau, ni mémoire. La quatrième
+// ne l'était pas, et c'est celle qui nous concerne : **c'est l'agent qui paie**.
+//
+// CE QUE PERSONNE N'AVAIT MESURÉ, et c'est le chiffre qui manquait : la bannière post-commit est
+// RELUE PAR L'AGENT À CHAQUE COMMIT. Son poids en tokens est donc un coût récurrent, multiplié par
+// le nombre de commits d'une session — là où le temps d'exécution, lui, ne coûte que de l'attente.
+//
+// LES DEUX COÛTS NE SE COMPARENT PAS, et les confondre serait l'erreur : deux secondes d'attente
+// par commit sont négligeables ; treize mille tokens par commit ne le sont pas. Le rapport les rend
+// donc SÉPARÉMENT, jamais additionnés en un « coût » unique qui ne voudrait rien dire.
+//
+// LE LIEN AVEC LA LEÇON DU MATIN, et il est direct : cette bannière a été ignorée sept fois de
+// suite le 2026-09-25, ce qui a coûté deux corrections en cascade. Une bannière trop longue pour
+// être lue coûte son poids en tokens ET ne protège rien — c'est le pire des deux mondes, et le
+// mesurer est la première étape pour en sortir.
+export const SEUIL_BANNIERE_TOKENS = 4000;
+
+export function coutDuCrochet({ sortie = "", dureeMs = null, commitsParSession = null } = {}) {
+  if (typeof sortie !== "string" || !sortie.length) {
+    return { mesurable: false, pourquoi: "aucune sortie de crochet fournie — rendre « coût nul » sans avoir lu la bannière dirait exactement ce que dirait un crochet qui n'affiche rien" };
+  }
+  const octets = Buffer.byteLength(sortie, "utf8");
+  const tokens = estimateTokens(sortie);
+  const lignes = sortie.split("\n").length;
+  const parSession = commitsParSession != null ? tokens * commitsParSession : null;
+  return {
+    mesurable: true, octets, tokens, lignes, dureeMs,
+    parSession,
+    // Le verdict ne porte QUE sur les tokens : c'est le seul des deux coûts qui se paie à chaque
+    // fois et qui s'accumule. Une attente de deux secondes ne s'accumule pas, elle se subit.
+    trop: tokens > SEUIL_BANNIERE_TOKENS,
+    seuil: SEUIL_BANNIERE_TOKENS,
+  };
+}
+
+export function formatCoutDuCrochetLines(c) {
+  if (!c?.mesurable) return [`⚠️ NON MESURÉ — ${c?.pourquoi ?? "raison inconnue"}`];
+  const L = [];
+  L.push(`Bannière post-commit : ${c.lignes} lignes · ${c.octets} octets · ~${c.tokens} tokens${c.dureeMs != null ? ` · ${c.dureeMs} ms d'exécution` : ""}.`);
+  L.push("");
+  L.push("LES DEUX COÛTS NE SE COMPARENT PAS, et les additionner ne voudrait rien dire :");
+  L.push(`   · le TEMPS (${c.dureeMs != null ? `${c.dureeMs} ms` : "non mesuré"}) se subit une fois et ne s'accumule pas ;`);
+  L.push(`   · les TOKENS (~${c.tokens}) sont relus par l'agent à CHAQUE commit et s'accumulent.`);
+  if (c.parSession != null) L.push(`   Sur une session de ${Math.round(c.parSession / c.tokens)} commits : ~${c.parSession} tokens rien qu'en bannières.`);
+  L.push("");
+  if (c.trop) {
+    L.push(`🔴 Au-dessus du seuil (${c.seuil} tokens) — et le vrai coût n'est pas celui-là.`);
+    L.push("   Une bannière trop longue pour être lue coûte son poids EN PLUS de ne rien protéger :");
+    L.push("   le 2026-09-25 elle a été ignorée sept commits de suite, ce qui a coûté deux corrections");
+    L.push("   en cascade. C'est le pire des deux mondes — payée et sans effet.");
+  } else L.push(`✅ Sous le seuil de ${c.seuil} tokens : la bannière reste lisible d'un coup d'œil.`);
+  L.push("");
+  L.push("HORS PORTÉE : ce que le JOUEUR paie, qui est zéro — `scripts/` n'est jamais livré au");
+  L.push("navigateur, le jeu déployé ne contient que app/, lib/ et components/. Cette mesure ne");
+  L.push("concerne que l'agent et l'utilisateur, jamais les performances du jeu.");
+  return L;
+}
+
 export function computeAdoptionKpi(history) {
   const applied = (history?.actions ?? []).filter((a) => a.type === "proposition_appliquee" && typeof a.reductionPct === "number");
   if (!applied.length) return { propositionsAppliquees: 0, reductionMoyennePct: undefined };

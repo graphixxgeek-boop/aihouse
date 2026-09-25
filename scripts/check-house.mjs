@@ -3312,6 +3312,23 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // signalé par l'utilisateur).
   const {countTasksSince,lastCoveredTaskNumber}=await import('../scripts/check-suivi-fidelity.mjs');
   const {classifyRereadVolume,recommendRereadBoundary}=await import('../scripts/smart-conso-token.mjs');
+
+  // LE COÛT DU CROCHET POST-COMMIT (2026-09-25, tâche #731). Sa question : « est-ce que ça pénalise
+  // moi ? l'utilisateur du jeu ? les performances du pc du joueur ? » Trois réponses sur quatre
+  // étaient déjà nettes et rassurantes — scripts/ n'est JAMAIS livré au navigateur, le joueur ne
+  // paie ni CPU, ni réseau, ni mémoire. La quatrième ne l'était pas : c'est l'AGENT qui paie, et
+  // personne n'avait mesuré combien.
+  const { coutDuCrochet, formatCoutDuCrochetLines, SEUIL_BANNIERE_TOKENS } = await import('../scripts/smart-conso-token.mjs');
+  assert.equal(coutDuCrochet({}).mesurable, false, 'with no banner supplied it refuses: rendering "zero cost" without having read the output says exactly what a silent hook would say');
+  const courte = coutDuCrochet({ sortie: 'ok\n', dureeMs: 10, commitsParSession: 5 });
+  assert.equal(courte.trop, false, 'a short banner stays under the threshold');
+  assert.ok(formatCoutDuCrochetLines(courte).some((l) => /ne se comparent pas/i.test(l)), 'THE TWO COSTS ARE NEVER ADDED: two seconds of waiting are suffered once and do not accumulate, while the tokens are re-read at EVERY commit and do — a single "cost" number would mean nothing');
+  const longue = coutDuCrochet({ sortie: 'x'.repeat(SEUIL_BANNIERE_TOKENS * 4 + 400), commitsParSession: 10 });
+  assert.equal(longue.trop, true, 'and a banner above the threshold is flagged');
+  assert.equal(longue.parSession, longue.tokens * 10, 'the session cost is the per-commit cost times the commits, which is the whole point: it accumulates');
+  assert.ok(formatCoutDuCrochetLines(longue).some((l) => /sept commits de suite/i.test(l)), 'the verdict carries the real consequence rather than a number alone: this banner was ignored seven commits in a row on 2026-09-25, which cost two cascading corrections — a banner too long to read is paid for AND protects nothing');
+  assert.ok(formatCoutDuCrochetLines(longue).some((l) => /jamais livré au/i.test(l)), 'and it says out loud what the PLAYER pays, which is zero — the question had four parts and three of them are reassuring');
+  console.log('Passed: the post-commit hook finally has a price (2026-09-25, task #731) — "est-ce que ça pénalise moi ? l\'utilisateur du jeu ? les performances du pc du joueur ?". Three of the four answers were already clear and reassuring: scripts/ is never shipped to the browser, so the player pays no CPU, no network, no memory. The fourth was not, and nobody had measured it: the banner is RE-READ BY THE AGENT at every commit. Measured on the real hook: 362 lines, ~11 600 tokens, 2 168 ms — which over twelve commits is about 140 000 tokens of banner alone. The two costs are reported SEPARATELY and never added, because they behave in opposite ways: two seconds of waiting are suffered once, tokens accumulate. And the verdict carries the consequence rather than the number: this banner was ignored seven commits in a row that same morning, which cost two cascading corrections. A banner too long to be read is paid for AND protects nothing — the worst of both worlds, now measured rather than suspected.');
   const rereadSessions=[{name:'a.md',text:'| 140 | h | S | s | normal | d1 | terminée |\n| 145 | h | S | s | normal | d2 | terminée |'},{name:'b.md',text:'| 150 | h | S | s | normal | d3 | terminée |'}];
   const rereadListDir=()=>rereadSessions.map(f=>f.name);
   const rereadReadFile=(p)=>rereadSessions.find(f=>p.endsWith(f.name)).text;
