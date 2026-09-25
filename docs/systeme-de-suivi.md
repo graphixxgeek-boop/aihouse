@@ -65,6 +65,45 @@ cette demande (`TaskCreate`/`TaskUpdate` en étaient à #116). `nextTaskNumber()
 prochain numéro à utiliser (le plus grand numéro réel déjà présent, plus un, à travers TOUS les
 fichiers de session) — jamais un compteur mental à tenir à jour à la main.
 
+## Le champ « pour qui » (2026-09-25, tâche #825)
+
+*(Décision prise avec l'utilisateur le 2026-09-22 et écrite dans `docs/plans/nuit-2026-09-23-plan.md`,
+chantier 1.1 : « **Un champ « pour qui »** sur chaque tâche : PROJET ou DETTE-ENVERS-L'UTILISATEUR.
+Même registre, même étiquetage. » Elle répondait à une demande précise : « mets toi des taches pour
+toi-même : me repondre quand je serais disponible [...] verifie que le système des taches est prevu
+pour accueillir des taches que tu te mets à toi ». Calibrée, planifiée — et **jamais construite
+pendant trois jours**, jusqu'à ce que THE-DEEP-READER la retrouve (ÉCART 2 du 2026-09-23).)*
+
+**Ce qu'il distingue, et pourquoi ça ne se devine pas** : une tâche PROJET fait avancer le produit
+ou l'outillage ; une **DETTE-ENVERS-L'UTILISATEUR** est quelque chose que je lui dois à LUI — une
+réponse attendue, un rapport promis, une question restée sans retour. Les deux vivent dans le même
+registre avec le même étiquetage, mais elles ne se priorisent pas pareil : une dette a un
+destinataire qui attend, et c'est son attente qui fixe le délai. Sans ce champ, les deux se
+mélangeaient et seules les tâches techniques restaient visibles.
+
+**Deux valeurs, jamais trois.** Une tâche qui sert le projet ET répond à une attente de sa part est
+une DETTE : c'est la lecture la plus exigeante, et c'est celle qui protège.
+
+**La 7e colonne**, entre Criticité et Détail : `| N° | Horodatage | Mot-clé | Sujet | Sous-sujet |
+Criticité | Pour qui | Détail | Statut |`. Le lecteur la lit par sa position de TÊTE ; une ligne
+restée à 8 colonnes rend `""` au lieu de décaler Détail et Statut d'un cran — le décalage silencieux
+qui avait fait lire « UTILE » à 26 tâches d'un coup lors de la migration précédente.
+
+**L'obligation est portée par un SEUIL, jamais par le format.** `PREMIERE_TACHE_AVEC_POUR_QUI = 825` :
+à partir de cette tâche, l'absence est un manquement nommé ; avant, c'est de l'histoire. Rendre le
+champ obligatoire dans `FORMAT_TACHE` aurait accusé d'un coup les 824 lignes écrites avant qu'il
+n'existe — exactement la leçon L4, déjà payée ici pendant la migration criticité/urgence.
+
+**Trois états à la lecture**, comme partout ailleurs dans ce projet : renseigné · manquant alors
+qu'il est dû · **illisible**, quand la ligne porte un `|` non échappé et que la 7e cellule est un
+morceau de phrase. Le troisième n'est pas un champ manquant, c'est une ligne mal formée : les deux
+appellent des réparations différentes. Trois lignes réelles étaient dans ce cas (#625, #683, #751),
+réparées le jour où le champ a été construit.
+
+Porté par `FORMAT_TACHE`, `POUR_QUI_VALEURS`, `findPourQuiManquant()` et `findPourQuiInvalide()`
+(`scripts/criticite.mjs`), lu par `loadAllTaskRows()` (`scripts/check-tasks-details.mjs`), vérifié
+contre le VRAI registre à chaque passage du filet de sécurité.
+
 ## Les quatre attributs de chaque tâche
 
 *(Tranchés avec l'utilisateur le 2026-09-19, question par question — cf. le format de question

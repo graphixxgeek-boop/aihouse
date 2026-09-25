@@ -8109,7 +8109,9 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const tache = (over = {}) => ({ numero: 1, horodatage: '2026-09-23T10:00Z', motCle: 'archangel', sujet: 'S', sousSujet: 's', criticite: 'NORMAL-UTILE', detail: 'd', statut: 'à faire', statusKey: 'autre', ...over });
   const propre = auditFormatDesTaches([tache()], { motsClesManquantsImpl: () => [] });
   assert.deepEqual([propre.manquants.length, propre.collisions.length, propre.champs.length], [0, 0, 0], 'a well-formed open task reports nothing on all three counts');
-  assert.match(formatAuditFormatLines(propre)[0], /conforme aux 8 champs/, 'the clean case still PRINTS a line: a section that only appears on failure never says "this was checked", it says nothing');
+  // Neuf depuis le 2026-09-25, et le chiffre est DÉRIVÉ de FORMAT_TACHE, jamais écrit à la main —
+  // le champ « pour qui » l'a fait passer de 8 à 9 sans qu'aucune ligne de rendu ne change.
+  assert.match(formatAuditFormatLines(propre)[0], /conforme aux 9 champs/, 'the clean case still PRINTS a line: a section that only appears on failure never says "this was checked", it says nothing');
   // UN SEUL NOM PAR CHAMP (#584) : les alias de transition (`n`, `sensibilite`) ont vécu quelques
   // heures, le temps du renommage, puis ils ont été retirés — deux noms pour un champ sont la
   // dette, jamais la solution.
@@ -10678,6 +10680,32 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   assert.deepEqual(crit.findChampsManquants({ numero: 1, horodatage: 'x', motCle: 'y', sujet: 'z', sousSujet: 'w', criticite: 'UTILE', statut: 'à faire' }), [], 'a complete task satisfies the declared standard format');
   assert.ok(crit.findChampsManquants({ numero: 1 }).some((c) => c.champ === 'motCle'), 'and a missing mandatory field is NAMED, so the format is a check rather than a sentence in a document nobody rereads');
+
+  // LE CHAMP « POUR QUI » (2026-09-25, tâche #825 — constat DEEP-READER 2, TaskList #229). Décidé
+  // avec lui le 2026-09-22 (« PROJET ou DETTE-ENVERS-L'UTILISATEUR »), écrit au plan de nuit,
+  // et jamais construit pendant trois jours : le registre ne savait pas distinguer ce que je lui
+  // dois de ce que le projet demande.
+  assert.ok(crit.FORMAT_TACHE.some((f) => f.champ === 'pourQui'), 'the "pour qui" field must exist in the declared format, since that is where a controller can actually check it — living only in a plan document is exactly how it stayed unbuilt for three days');
+  assert.equal(crit.FORMAT_TACHE.find((f) => f.champ === 'pourQui').obligatoire, false, 'it must NOT be mandatory in the format itself: that would accuse the 824 rows written before it existed, which is leçon L4 paid in this very file during the criticité/urgence migration');
+  assert.deepEqual(crit.POUR_QUI_VALEURS, ['PROJET', 'DETTE-ENVERS-L-UTILISATEUR'], 'two values, never three — a task that serves the project AND answers something he is waiting for is a DEBT, because his waiting is what sets the deadline');
+  const pqAvant = crit.findPourQuiManquant([{ numero: 10 }, { numero: 20 }], { depuis: 100 });
+  assert.equal(pqAvant.manquants.length, 0, 'rows written before the threshold never had this field to carry, and counting them as missing would turn a migration into a debt');
+  const pqApres = crit.findPourQuiManquant([{ numero: 100, sousSujet: 'x' }, { numero: 101, pourQui: 'PROJET' }], { depuis: 100 });
+  assert.deepEqual(pqApres.manquants.map((m) => m.numero), [100], 'from the threshold on, a missing "pour qui" IS a real gap and must be named with its task number');
+  const pqIllisible = crit.findPourQuiManquant([{ numero: 100, pourQui: null }], { depuis: 100 });
+  assert.deepEqual([pqIllisible.illisibles, pqIllisible.manquants.length], [[100], 0], 'a row whose 7th cell is unreadable (stray "|" in its Détail) is a THIRD state, never a missing field — the repair is a different gesture and merging them would fix the wrong defect');
+  assert.deepEqual(crit.findPourQuiInvalide([{ numero: 1, pourQui: 'PROJET' }, { numero: 2, pourQui: '' }, { numero: 3, pourQui: null }]), [], 'a valid value, an empty one and an unreadable one are all legitimate here — only a 7th cell that is neither empty nor a known value is a finding');
+  const pqMauvais = crit.findPourQuiInvalide([{ numero: 4, pourQui: 'dette' }]);
+  assert.ok(pqMauvais.length === 1 && /mal tapée/.test(pqMauvais[0].deuxCauses) && /non échappé/.test(pqMauvais[0].deuxCauses), 'the finding must name BOTH possible causes — a mistyped value, or a stray pipe splitting the line — because they look identical when read and call for opposite repairs; asserting one of them would accuse of the wrong defect, which is what the first run did on the single real case in the registry (#625)');
+  // Et contre le VRAI registre, jamais seulement des lignes fabriquées (Article 25).
+  {
+    const ctd = await import('../scripts/check-tasks-details.mjs');
+    const vraies = ctd.loadAllTaskRows();
+    assert.ok(vraies.length > 500, 'the check must read the real registry, never conclude on an empty sweep — a zero without its denominator is worthless');
+    assert.deepEqual(crit.findPourQuiInvalide(vraies), [], 'no row of the real registry may carry an unreadable 7th cell: three did (#625, #683, #751, all stray pipes or a duplicated tail) and were repaired the day this field was built — a malformed row silently shifts every column after it');
+    const reel = crit.findPourQuiManquant(vraies);
+    assert.deepEqual(reel.manquants, [], `every task from #${crit.PREMIERE_TACHE_AVEC_POUR_QUI} on must declare who it is for, otherwise the field goes the way of the plan that declared it — missing: ${reel.manquants.map((m) => m.numero).join(', ')}`);
+  }
   console.log('Passed: criticality and urgency are separated (2026-09-23) — the user was right and the proof was in the scale itself: URGENT-RETARD, a DELAY level, sat at rank 5 above PRIORITAIRE-OBLIGATOIRE at rank 4, so a merely late task outranked a genuinely more important one. The four levels are derived from each palier\'s declared COST OF WAITING rather than from its rank (the first version, written and thrown away the same day, divided the six ranks into four equal slices — clean arithmetic, wrong result, since it put URGENT-RETARD back at the top and reproduced the very mixing being removed; a test now pins that abandoned approach so nobody rebuilds it). Urgency loses nothing in the calculation — the time-related signals keep their full weight, which is the promise easiest to betray in the whole request — it simply moves to a vignette carrying both the notch AND the day count, where a negative age reads as a timestamp error rather than as the most reassuring notch on the scale, and an unknown palier says "NON CLASSÉE" instead of landing on a comfortable middle.');
 
   // ————————————————————————————————————————————————————————————————————————

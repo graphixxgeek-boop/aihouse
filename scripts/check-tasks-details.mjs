@@ -166,6 +166,17 @@ export function loadAllTaskRows(sessionsDir, readDir, readFile, exists) {
       const sujet = c[aMotCle ? 3 : 2];
       const sousSujet = c[aMotCle ? 4 : 3];
       const criticite = c[aMotCle ? 5 : 4];
+      // « Pour qui » (2026-09-25, tâche #825) lu exactement comme « Mot-clé » l'avait été : par sa
+      // position de TÊTE, jamais par un index fixe. Une ligne restée à 8 colonnes rend "" plutôt
+      // que de décaler Détail et Statut d'un cran — le décalage silencieux qui avait fait lire
+      // « UTILE » à 26 tâches d'un coup pendant la migration précédente.
+      // Exactement 9, jamais « au moins 9 » : une ligne dont le Détail contient un `|` non échappé
+      // se découpe en 10, 12, 15 cellules, et c[6] y tombe au milieu d'une phrase. Trois lignes
+      // réelles du registre sont dans ce cas (#625, #683, #751) et la première version de ce
+      // lecteur les a signalées comme « valeur pour-qui invalide » — une accusation fausse sur un
+      // vrai défaut d'à côté, exactement le signal adjacent pris pour le signal visé. `null`
+      // signifie donc « illisible ici », jamais « absent » : les deux appellent des gestes opposés.
+      const pourQui = c.length === 9 ? c[6] : (c.length > 9 ? null : "");
       const detail = c[c.length - 2];
       const statut = c[c.length - 1];
       rows.push({
@@ -175,6 +186,7 @@ export function loadAllTaskRows(sessionsDir, readDir, readFile, exists) {
         sujet: sujet ?? "?",
         sousSujet: sousSujet ?? "?",
         criticite: criticite ?? "?",
+        pourQui: pourQui === null ? null : pourQui.trim(),
         detail: detail ?? "",
         statut: statut ?? entry.statut,
         statusKey,

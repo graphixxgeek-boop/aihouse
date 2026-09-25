@@ -203,8 +203,68 @@ export const FORMAT_TACHE = [
   { champ: "sousSujet", obligatoire: true, quoi: "ce dont il s'agit, en une phrase lisible sans contexte" },
   { champ: "criticite", obligatoire: true, quoi: "un des quatre niveaux — jamais un mot de retard, qui appartient à la vignette" },
   { champ: "detail", obligatoire: false, quoi: "le pourquoi : ce qui l'a déclenchée, ce qui a été décidé, ce qui reste" },
+  // « POUR QUI » (2026-09-25, tâche #825 — constat DEEP-READER 2, TaskList #229). Décision prise
+  // avec lui le 2026-09-22 et écrite dans le plan de nuit, chantier 1.1 : « un champ « pour qui »
+  // sur chaque tâche : PROJET ou DETTE-ENVERS-L'UTILISATEUR. Même registre, même étiquetage. »
+  // Elle venait d'une demande précise : « mets toi des taches pour toi-même : me repondre quand je
+  // serais disponible [...] verifie que le système des taches est prevu pour accueillir des taches
+  // que tu te mets à toi. » Le champ a été calibré, planifié — et jamais construit : trois jours
+  // durant, le registre ne savait pas distinguer ce que je lui dois de ce que le projet demande.
+  //
+  // POURQUOI `obligatoire: false`, et ce n'est pas un renoncement. Le rendre obligatoire
+  // accuserait d'un coup les 824 lignes écrites avant que le champ n'existe — exactement la leçon
+  // L4 payée ici même pendant la migration criticité/urgence, et écrite quelques lignes plus haut.
+  // L'obligation est donc portée par un SEUIL (`PREMIERE_TACHE_AVEC_POUR_QUI`) plutôt que par le
+  // format : à partir de cette tâche, l'absence est un manquement ; avant, c'est de l'histoire.
+  { champ: "pourQui", obligatoire: false, quoi: "PROJET, ou DETTE-ENVERS-L-UTILISATEUR quand c'est moi qui lui dois quelque chose" },
   { champ: "statut", obligatoire: true, quoi: "à faire / en cours / terminée / écartée avec sa raison (Article 28)" },
 ];
+
+// Le vocabulaire fermé du champ. Deux valeurs, jamais trois : « les deux » n'existe pas — une tâche
+// qui sert le projet ET répond à une attente de sa part est une DETTE, parce que c'est son attente
+// à lui qui fixe le délai.
+export const POUR_QUI_VALEURS = ["PROJET", "DETTE-ENVERS-L-UTILISATEUR"];
+
+// Le seuil, écrit ici plutôt que deviné : la première tâche écrite APRÈS la construction du champ.
+export const PREMIERE_TACHE_AVEC_POUR_QUI = 825;
+
+// Trois états, jamais deux (et c'est tout le sujet de la journée) : renseigné / manquant alors
+// qu'il est dû / hors du seuil, donc rien à dire. Une ligne d'avant le seuil n'est pas fautive.
+export function findPourQuiManquant(rows = [], { depuis = PREMIERE_TACHE_AVEC_POUR_QUI } = {}) {
+  const concernees = rows.filter((r) => Number.isFinite(r?.numero) && r.numero >= depuis);
+  // `null` = la ligne porte des `|` en trop, la colonne n'est pas LISIBLE. Ce n'est pas un champ
+  // manquant, c'est une ligne mal formée : le geste qui la répare n'est pas le même, et les
+  // confondre ferait réparer le mauvais défaut.
+  const illisibles = concernees.filter((r) => r.pourQui === null);
+  const manquants = concernees.filter((r) => r.pourQui !== null && champVide(r.pourQui));
+  return {
+    mesurable: true,
+    manquants: manquants.map((r) => ({ numero: r.numero, sousSujet: r.sousSujet })),
+    illisibles: illisibles.map((r) => r.numero),
+    concernees: concernees.length,
+    seuil: depuis,
+    horsPortee: `Les ${rows.length - concernees.length} ligne(s) antérieures à #${depuis} n'ont pas ce champ et n'ont jamais eu à l'avoir — les compter comme manquantes transformerait une migration en dette.`,
+  };
+}
+
+// Celui-ci est strict tout de suite, et sans seuil : une 7e colonne hors vocabulaire n'est pas de
+// l'histoire, c'est un défaut à regarder. DEUX CAUSES POSSIBLES, et le message les nomme toutes
+// les deux plutôt que d'en choisir une au hasard — parce qu'elles se ressemblent exactement à la
+// lecture, et qu'elles appellent deux gestes différents :
+//   - la valeur est mal tapée (« PROJECT », « dette »…) ;
+//   - la ligne compte 9 cellules sans porter le champ, parce que son Détail contient un `|` non
+//     échappé. C'est le cas réel de #625, et le seul que ce contrôle ait trouvé sur 757 lignes.
+// Affirmer « valeur invalide » sur le second serait accuser du mauvais défaut : l'erreur n'est pas
+// dans la valeur, elle est dans le découpage de la ligne.
+export function findPourQuiInvalide(rows = [], { valeurs = POUR_QUI_VALEURS } = {}) {
+  return rows
+    .filter((r) => r?.pourQui !== null && !champVide(r?.pourQui) && !valeurs.includes(String(r.pourQui).trim()))
+    .map((r) => ({
+      numero: r.numero,
+      valeur: String(r.pourQui).trim().slice(0, 60),
+      deuxCauses: `soit la valeur est mal tapée (attendu : ${valeurs.join(" ou ")}), soit la ligne porte un « | » non échappé dans son Détail et cette 7e cellule est un morceau de phrase — deux défauts réels, deux gestes différents`,
+    }));
+}
 
 const champVide = (v) => v === undefined || v === null || String(v).trim() === "";
 

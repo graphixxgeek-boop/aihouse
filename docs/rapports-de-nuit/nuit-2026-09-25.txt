@@ -77,9 +77,11 @@ DEEP-READER 6 : le seul signal POSITIF du paysage n'existait pas — l'origine �
   Signal derive et mesure : 599 appels de ma propre initiative sur 30 outils. Cause racine
   fermee par un garde-fou, qui est lui-meme tombe dans le faux vert PUIS dans le faux rouge
   avant d'etre juste — les deux gardes ecrits comme contre-tests [FAIT]
-DEEP-READER 2 (#229) : je la croyais faite, elle ne l'est pas — le champ « pour qui » porte sur
-  les TACHES (PROJET / DETTE-ENVERS-L'UTILISATEUR), pas sur les outils. Ecart dit, pas corrige
-  en silence (Article 30) [A FAIRE]
+DEEP-READER 2 (#229) : je la croyais faite, elle ne l'etait pas — le champ « pour qui » porte sur
+  les TACHES (PROJET / DETTE-ENVERS-L'UTILISATEUR), pas sur les outils. Ecart dit, pas corrige en
+  silence (Article 30), PUIS construit dans la foulee : 7e colonne, obligation portee par un SEUIL
+  (#825) et jamais par le format, trois etats a la lecture. Trois lignes mal formees depuis
+  l'origine (#625, #683, #751) trouvees par ce lecteur neuf et reparees [FAIT]
 
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
