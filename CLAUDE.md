@@ -872,6 +872,122 @@ vient de s'ouvrir dans une conversation, donc angel DEMANDE et refuse d'être au
 document trois jours plus tôt, signalée alors par THE-DEEP-READER et restée ouverte depuis. Un
 outil qui trouve quelque chose à son premier passage n'est pas une intention (leçon L2).
 
+**Article 31 — Tout passe par un OUTIL, et un rapport est TOUJOURS le rapport d'un outil.**
+*(2026-09-25, demande explicite de l'utilisateur, qualifiée par lui de TRÈS IMPORTANTE : « pour
+chaque demande, tu dois utiliser un outil et non faire les choses à la main. Et si je te demande un
+rapport, ou que j'ai besoin d'un rapport, c'est TOUJOURS le rapport d'un outil, TOUJOURS, TOUJOURS.
+suivi de ton analyse + plan d'action selon le process. Mets cette règle dans le marbre de
+l'agence. » Il a demandé qu'elle soit ultra-optimisée et ultra-fiabilisée, parce que « de cette
+règle dépend une grande partie du fonctionnement actif de l'agence ».)*
+
+**POURQUOI ELLE EST LA PLUS STRUCTURANTE DE TOUTES.** Ce dépôt porte près de quatre-vingts outils
+construits pour ne pas refaire à la main ce qu'une mécanique sait faire mieux. Un agent qui répond
+de tête à côté d'eux ne perd pas seulement du temps : il rend un résultat que **rien ne peut
+vérifier, que personne ne peut rejouer, et qui ne laisse aucune trace**. Et ça s'est produit le soir
+même où la règle est née : sur le point de rédiger trois rapports à la main, un passage par
+tool-brain a révélé que l'outil qui les produit existait depuis la veille et n'était branché nulle
+part. **Un outil qu'on n'utilise pas ne signale jamais qu'il est mal branché.**
+
+### Les trois obligations, et aucune ne se négocie
+
+1. **AVANT d'agir** : consulter `node scripts/tool-brain.mjs "<la tâche>"`. C'est le seul point
+   d'entrée ; on ne choisit jamais soi-même entre les couches.
+2. **PENDANT** : si un outil couvre le besoin, on l'utilise. S'il le couvre à moitié, **on
+   l'ÉTEND** plutôt que d'agir à côté. S'il n'existe pas, **on le construit** en suivant
+   `integration-outil` — jamais un script jetable qui mourra avec la session (leçon L2).
+3. **APRÈS** : tout rapport livré est **le fichier produit par l'outil**, accompagné de mon analyse
+   et d'un plan d'action (Article 28). Mon texte commente le rapport ; il ne le remplace jamais.
+
+### Les huit failles, cherchées exprès, et ce qui ferme chacune
+
+Il a demandé de vérifier dix fois et de trouver toutes les lacunes. Les voici, avec leur fermeture —
+une règle dont on n'a pas écrit les échappatoires est une règle qu'on contournera de bonne foi.
+
+1. **« Aucun outil n'existe » devient l'échappatoire universelle.** → Il y a QUATRE issues, jamais
+   trois : utiliser, étendre, construire, ou faire à la main **avec une raison écrite dans
+   `docs/suivi/`**. La quatrième est légitime et rare ; elle n'est jamais silencieuse.
+2. **Un outil fabriqué pour cocher la case.** → Un script qui se contente d'imprimer ce que j'aurais
+   écrit de tête n'est pas un outil. **Critère** : il doit LIRE le dépôt réel et pouvoir rendre un
+   résultat que je ne connaissais pas d'avance. Sinon c'est un habillage.
+3. **Le rapport tourne, puis je le réécris à la main dans ma réponse.** → Le livrable est le
+   FICHIER. Ce que j'écris à côté est une analyse, et elle doit **citer un chiffre que seul l'outil
+   pouvait produire**.
+4. **« C'est juste une petite demande. »** → Le seuil est net : une réponse factuelle courte (une
+   heure, un chemin, un oui/non) n'est pas un travail. Dès qu'il y a une **MESURE**, un **JUGEMENT**
+   ou un **LIVRABLE**, l'outil est obligatoire, quelle que soit la taille.
+5. **L'outil tourne et je ne lis pas sa sortie.** → Même fermeture que la faille 3 : sans un chiffre
+   ou un constat repris de lui, il a tourné pour rien, et le dire vaut mieux que de faire semblant.
+6. **L'outil est construit dans l'urgence et jamais vérifié.** → Article 25 : un outil qui n'a
+   jamais tourné contre le vrai dépôt n'est pas un outil, c'est une intention.
+7. **Le rapport s'arrête au constat.** → Article 28 : rapport → analyse → plan d'action → tâches.
+   Un rapport sans plan d'action n'est pas fini.
+8. **LA PLUS VICIEUSE — je cite un outil sans l'avoir lancé.** Une phrase comme « d'après
+   CASSANDRA... » est invérifiable si l'outil n'a pas tourné. → **Tout rapport nomme l'outil ET
+   l'horodatage réel de son passage**, et le compteur d'usage (`recordCliUsage`) en garde la trace.
+   Un outil cité sans passage enregistré est un outil qui n'a pas tourné.
+
+**Ce que cet Article n'exige PAS** : ni un outil par micro-geste, ni un script de plus quand une
+extension suffit — le paysage compte déjà assez d'outils, et l'Article 24 veut qu'un nouveau venu
+hérite de tout. La bonne question n'est pas « ai-je un outil ? » mais « **qui, dans l'équipe, sait
+déjà faire ça ?** ».
+
+**Où il vit, en plus d'ici** : le compteur d'usage en est la preuve mécanique,
+`angel-of-ia-process` la règle de conduite surveillée (`outil-obligatoire`), et tool-brain le geste
+quotidien. Ce qu'aucune mécanique ne peut intercepter — un `Read` ou un raisonnement fait à la main
+avant qu'un outil ait été consulté — est déclaré ici, et le déclarer EST la protection (Article 27).
+
+**Article 32 — Le temps réel se LIT, jamais ne se déduit.**
+*(2026-09-25, demande explicite de l'utilisateur, posée au même niveau que l'Article 31 : « ajoute
+aussi ta prise en compte du temps réel, au même niveau. C'est pareil, ça va conditionner tellement
+de choses derrière. »)*
+
+**LE DÉFAUT EST STRUCTUREL, JAMAIS UN MANQUE D'ATTENTION — et il est mesuré.** Une IA n'a pas
+d'horloge : elle déduit l'heure du dernier horodatage vu passer dans son contexte, et cette
+déduction dérive à chaque minute de travail. **Le soir du 2026-09-24, cinq horodatages ont été
+TAPÉS au lieu d'être LUS, et le garde-fou a refusé cinq commits.** Ce n'est donc pas de
+l'inattention : c'est le geste lui-même qui est mauvais.
+
+### Les quatre obligations
+
+1. **Jamais une date ou une heure tapée de mémoire.** On la lit :
+   `node scripts/agent-du-temps.mjs`, et on recopie ce qu'il rend.
+2. **Jamais une heure sans sa SOURCE.** Trois états, toujours nommés : **réseau** (une API de temps
+   a répondu), **système** (l'horloge locale, honnête mais invérifiable), **aucune** (et alors on
+   REFUSE de répondre). Une heure de repli présentée comme une heure réseau est le pire type
+   d'erreur : invisible, parce qu'une heure fausse ressemble trait pour trait à une heure juste.
+3. **Toute FRAÎCHEUR se calcule sur une heure lue.** « Ce rapport date de trois jours », « cet outil
+   n'a pas tourné depuis une semaine », « cette question attend depuis hier » : chacune de ces
+   phrases est fausse si l'heure est fausse, et un âge négatif se lit comme « tout frais » au lieu
+   de déclencher une alerte.
+4. **Le temps de L'UTILISATEUR compte autant que celui de la machine.** Est-il présent ou
+   endormi ? Combien de temps lui reste-t-il ? Une question bloquante posée à trois heures du matin
+   ne bloque pas dix secondes, elle bloque la nuit entière. Le mode de travail en cours
+   (`scripts/modes-de-travail.mjs`) répond à cette question-là ; on le consulte au lieu de le
+   supposer.
+
+### Les cinq failles, et leur fermeture
+
+1. **Déduire l'heure du dernier horodatage vu.** → C'est le défaut fondateur. Seule la lecture
+   compte ; « je crois qu'il est tard » n'est pas une heure.
+2. **Une source de repli présentée comme une source fiable.** → La source est toujours imprimée, y
+   compris quand elle est mauvaise. Dans cet environnement d'exécution, les deux API de temps
+   rendent HTTP 403 : la source est donc « système », et l'outil le dit à chaque passage plutôt que
+   de le taire.
+3. **Estimer sans jamais mesurer ensuite.** → Toute estimation de durée, de tokens ou d'appels API
+   se compare au réel et s'historise (`docs/agent-du-temps/estimations.md`). Une estimation qu'on ne
+   confronte jamais ne s'améliore jamais.
+4. **Falsifier la mesure après coup en la retapant de mémoire.** → Arrivé pour de vrai le
+   2026-09-24 : « 85 minutes réelles » écrites au jugé, corrigées à 63 le lendemain. La durée réelle
+   se lit sur des horodatages, jamais sur une impression de temps écoulé.
+5. **Ignorer le temps écoulé DEPUIS son dernier message.** → Un compte rendu écrit pour quelqu'un
+   qui vient de parler ne convient pas à quelqu'un qui revient huit heures plus tard. C'est
+   exactement ce que l'Article 29 protège, par l'autre bout.
+
+**Où il vit, en plus d'ici** : AGENT-DU-TEMPS porte la lecture et la mémoire des estimations,
+`findHorodatagesFuturs()` (suivi) refuse mécaniquement une ligne datée dans le futur, et
+`angel-of-ia-process` porte la règle de conduite (`temps-reel-lu`). C'est la seule protection
+possible pour la part qui ne se joue que dans la conversation.
+
 ## Règles de travail — collaboration avec l'utilisateur
 
 `docs/regles-de-travail.md` documente, séparément de la charte de contenu ci-dessus, la façon dont
