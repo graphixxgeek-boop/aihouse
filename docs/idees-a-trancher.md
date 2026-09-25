@@ -63,3 +63,29 @@ manuel ci-dessus), un numéro étant strictement croissant et sans ambiguïté d
 principe que `filterByZoom()`, `check-tasks-details.mjs`) : exclut précisément tout ce que le
 balayage manuel a déjà tranché, sans exclure la moindre idée réellement nouvelle à partir de
 maintenant.
+
+## Les sept décisions qui attendaient sans que personne les voie (2026-09-25)
+
+**CE QUI LES A FAIT APPARAÎTRE, et c'est la moitié la plus utile de cette entrée** : le détecteur
+ne lisait que le SUJET d'une ligne de suivi, et seulement s'il commençait par « Nouvel outil » ou
+« Conception » — le vocabulaire du 2026-09-21. Depuis, le suivi porte une colonne **Criticité** dont
+l'une des valeurs est littéralement `A-TRANCHER`, posée à la main sur chaque ligne qui attend une
+décision. Le signal le plus fiable qui soit, et le détecteur ne le regardait pas.
+
+Résultat mesuré avant correction : **zéro candidat sur 803 lignes réelles**, dont sept portant
+`A-TRANCHER` en toutes lettres. Un registre parfaitement vide, et parfaitement faux — le constat
+DEEP-READER 8 confirmé en direct.
+
+| Tâche | Sujet | Décision |
+|---|---|---|
+| #747 | Nommage — la nomenclature : un code de classe dans le nom d'un outil | à trancher |
+| #760 | Charte — proposer un NOUVEL article (le trentième) pour la reprise des notes | à trancher |
+| #767 | Charte — quelles autres règles à fort levier manquent ? | à trancher |
+| #800 | Version de l'Agence — lequel des trois axes fait monter le majeur ? | à trancher |
+| #801 | Badge — la FAMILLE a disparu de la cérémonie, 23 cérémonies identiques d'un coup | à trancher |
+| #805 | File — 87 % de tâches légères et 49 thèmes : émiettement, ou rythme sain ? | à trancher |
+| #814 | Données — les sources fraîches restantes : lecteur réel, ou absence assumée ? | à trancher |
+
+Trois d'entre elles (#747, #760, #767) attendaient depuis plusieurs jours **sans être visibles nulle
+part** : elles étaient dans le suivi, marquées correctement, et le seul outil chargé de les
+rassembler ne pouvait pas les voir.

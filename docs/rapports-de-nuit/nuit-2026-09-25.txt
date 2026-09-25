@@ -68,6 +68,8 @@ RONDE CIRCLE-TASKS lancée en mode autonome : 76 commits de retard rattrapés, c
 #601 Les 5 outils qui pouvaient dire vert sans rien mesurer : 3 déjà corrigés, 1 déclaration à écrire, 1 vrai trou (le scan TODO d'ARGUS) [FAIT]
 #490 Dix registres frais cités sans jamais être ouverts : un vrai lecteur branché dans la fiche (dernière trouvaille consignée) [AVANCÉ]
 #445 Les 4 derniers outils branchés sur les tendances (zéro privé désormais) — et un câblage contre un nom inventé attrapé à temps [FAIT]
+DEEP-READER 8 : sept décisions attendaient en pleine vue, dont trois depuis des jours — le registre et DEUX tests certifiaient qu'il n'y en avait aucune [FAIT]
+#206 #207 : déjà clos depuis le 2026-09-20, vérifié avant de refaire — la dérive était dans le plan, pas dans le code [VÉRIFIÉ]
 
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)

@@ -5517,7 +5517,18 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const { readFileSync: readFileSyncForIdeas } = await import('node:fs');
   const realRows = loadAllTaskRowsForIdeas();
   const realCandidates = detectPendingIdeaCandidates(realRows);
-  assert.equal(realCandidates.length, 0, 'checked live against this project\'s own real docs/suivi/: the default task-number floor (332) must currently exclude every existing "Nouvel outil"/"Conception" row, since all of them predate this mechanism and were already resolved by the 2026-09-21/22 manual retrospective review — a guarantee that breaks the day a genuinely new idea is logged past #332 without ever asking the 3-way question');
+  // CETTE ASSERTION EXIGEAIT UN ZÉRO, ET LE ZÉRO ÉTAIT FAUX (2026-09-25, constat DEEP-READER 8 →
+  // tâche #816). Elle gardait la bonne intention — aucune idée nouvelle ne doit passer sans que la
+  // question à trois voies soit posée — mais elle l'avait figée dans un CHIFFRE, mesuré à une
+  // époque où le détecteur ne lisait que le sujet d'une ligne. Depuis, le suivi porte une colonne
+  // Criticité valant littéralement « A-TRANCHER », que le détecteur ignorait : sept décisions
+  // attendaient, dont trois depuis plusieurs jours, et ce test certifiait qu'il n'y en avait
+  // aucune. Un test qui verrouille un zéro produit par une sonde aveugle protège l'angle mort
+  // plutôt que la règle. On vérifie donc l'INTENTION plutôt que le chiffre.
+  const decisionsReelles = loadIdeaDecisions(readFileSyncForIdeas('docs/idees-a-trancher.md', 'utf8'));
+  for (const c of realCandidates) {
+    assert.ok(decisionsReelles[String(c.numero)], `checked live against this project's own real docs/suivi/ and docs/idees-a-trancher.md: every pending idea must be RECORDED in the registry, so that no decision waits invisibly — #${c.numero} (${String(c.sujet).slice(0, 50)}) is not. The registry sat empty for days precisely because nobody could see what it was missing`);
+  }
 
   console.log('Passed: detectPendingIdeaCandidates()/loadIdeaDecisions()/findIdeasNeedingDecision() (2026-09-21) correctly detect only genuinely new "Nouvel outil"/"Conception" suivi rows above a real task-number floor — never a date floor, which was tested live and found to produce 40+ false positives on this project\'s own same-day history before this floor was chosen — read every real decision table row by position regardless of which of the registry\'s two differently-headed tables it lives in, correctly keep re-surfacing an "entre-deux" decision at every Ronde while retiring a "fichier créé"/"abandonnée" one for good, and report a genuinely clean slate when checked live against this project\'s real docs/suivi/ and docs/idees-a-trancher.md.');
 }
@@ -6616,7 +6627,17 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // "Conception" déjà closes ce même jour, sans quoi ce signal remonterait plus de 40 faux positifs
   // à sa toute première exécution réelle (trouvé en testant en direct avant tout câblage, cf. la
   // note méthodologique de docs/idees-a-trancher.md).
-  assert.equal(report.find((r) => r.id === 'idee-a-trancher-signal').staleness, 'aucune idée en attente', 'checked live against this project\'s real docs/suivi/ and docs/idees-a-trancher.md: the task-number floor (332, the last task covered by the manual retrospective review) must exclude every already-closed same-day "Nouvel outil"/"Conception" task, reporting a clean slate rather than dozens of false positives on its very first real run');
+  // MÊME CORRECTION QUE PLUS HAUT (2026-09-25, DEEP-READER 8 → #816) : ce test exigeait le mot
+  // « aucune idée en attente », donc il CERTIFIAIT le silence produit par une sonde aveugle. La
+  // vraie garantie n'est pas qu'il n'y ait rien à trancher — c'est que ce que le signal annonce
+  // corresponde à ce que le suivi porte réellement. Un signal qui dit « aucune » quand sept
+  // décisions attendent est exactement le faux vert que ce paysage combat.
+  const signalIdees = report.find((r) => r.id === 'idee-a-trancher-signal').staleness;
+  const ctdIdees = await import('../scripts/check-tasks-details.mjs');
+  const enAttenteReelles = ctdIdees.detectPendingIdeaCandidates(ctdIdees.loadAllTaskRows()).length;
+  assert.ok(
+    enAttenteReelles === 0 ? /aucune idée en attente/.test(signalIdees) : new RegExp(`^${enAttenteReelles} idée`).test(signalIdees),
+    `checked live against this project's real docs/suivi/: the signal must say exactly what the tracking holds — ${enAttenteReelles} pending decision(s) — and never "aucune idée en attente" while decisions wait. It said "aucune" for days while seven waited, three of them for several days, because the probe read only a subject prefix and ignored the suivi's own explicit A-TRANCHER criticality`);
   assert.equal(report.find((r) => r.id === 'kpi').staleness, '1 jour(s) depuis le dernier rapport archivé', 'the kpi item\'s staleness must likewise be computed from the real kpi index text, a genuinely distinct source from the profil index');
   assert.equal(report.find((r) => r.id === 'always-new-code-signal'), undefined, 'always-new-code-signal must no longer exist as a CIRCLE_ITEMS entry — ALWAYS-NEW-CODE\'s light layer runs automatically at every commit since 2026-09-21, exactly the same precedent as CLONE-HUNTER\'s own removed clone-hunter-run');
   assert.equal(report.find((r) => r.id === 'referentiel').staleness, 'pas de signal de fraîcheur mécanique disponible', 'an item with no real mechanical freshness source (periodic reference-doc reread) must say so honestly, never fabricate a fake signal');

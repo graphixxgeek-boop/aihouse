@@ -816,8 +816,27 @@ export function checkChantierFileFreshness(allRows, { lastTouch = lastTouchDays,
 // documente un travail déjà livré : la question ne se pose plus, quel que soit le libellé de son
 // Sujet (exactement le même principe que le balayage rétrospectif manuel, qui n'a jamais recensé de
 // décision pour les dizaines de "Nouvel outil" déjà closes).
+// DEUX SIGNAUX, ET LE SECOND EST CELUI QUI EXISTE VRAIMENT (2026-09-25, constat DEEP-READER 8 :
+// « registre idées-à-trancher construit mais VIDE »). La cause racine, mesurée plutôt que devinée :
+// ce détecteur ne regardait que le SUJET, et seulement s'il commence par « Nouvel outil » ou
+// « Conception » — le vocabulaire du suivi en septembre 2026-09-21. Depuis, le suivi porte une
+// colonne Criticité dont l'une des valeurs est littéralement `A-TRANCHER`, posée à la main sur
+// chaque ligne qui attend une décision. Le signal le plus fiable qui soit, et le détecteur ne le
+// lisait pas. Résultat : ZÉRO candidat sur 803 lignes réelles, dont sept écrites le matin même
+// avec `A-TRANCHER` en toutes lettres — un registre parfaitement vide et parfaitement faux.
+//
+// C'est la huitième fois de la même journée qu'une sonde rend « rien trouvé » alors qu'elle ne
+// POUVAIT pas trouver. On garde l'ancien chemin (des lignes anciennes n'ont que le sujet) et on
+// ajoute celui qui compte, plutôt que de remplacer — une ligne qui remontait hier doit remonter
+// encore.
+export const MOTIF_A_TRANCHER = /^\s*A[- ]?TRANCHER\s*$/i;
+
 export function detectPendingIdeaCandidates(allRows, sinceTaskNumber = 332) {
-  return allRows.filter((r) => /^(Nouvel outil|Conception)/i.test(r.sujet ?? "") && (r.numero ?? 0) > sinceTaskNumber && r.statusKey !== "terminee");
+  return (allRows ?? []).filter((r) => {
+    if (r.statusKey === "terminee") return false;
+    if (MOTIF_A_TRANCHER.test(String(r.criticite ?? ""))) return true;
+    return /^(Nouvel outil|Conception)/i.test(r.sujet ?? "") && (r.numero ?? 0) > sinceTaskNumber;
+  });
 }
 
 export const IDEES_REGISTRY_PATH = "docs/idees-a-trancher.md";
