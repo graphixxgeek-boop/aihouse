@@ -1,0 +1,9 @@
+ecotoken — Ronde du 2026-09-25 (rapport complet : docs/ecotoken/scan-2026-09-25T14-05-05.txt).
+Budget anti-regrossissement : 24 774 tokens sous le budget de 30 000 (marge 17 %) — AU VERT.
+Mais efficacité RÉELLE : la charte a REGROSSI de 160 tokens depuis le dernier passage.
+34 passages enregistrés, 1 seule proposition réellement acceptée.
+Plan de réduction chiffré, gain cumulé possible ~2 252 tokens payés à CHAQUE message :
+  · [faible] 18 apartés narratifs datés → fichier d'historique : gain ~583 tk
+  · [moyen] section « Référentiel technique » lue à la demande : gain ~1 385 tk (⚠ pas de document d'accueil)
+  · [moyen] 4 passages décrivant une procédure déjà automatisée : gain ~284 tk
+Le filon mécanique des apartés est épuisé : la suite du tri est manuelle (Article 19).

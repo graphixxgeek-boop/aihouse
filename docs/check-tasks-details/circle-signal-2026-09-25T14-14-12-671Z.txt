@@ -1,0 +1,11 @@
+check-tasks-details — rapport de Ronde du 2026-09-25.
+Fichiers produits par l'outil : docs/check-tasks-details/ronde-2026-09-25T14-08-43.txt et .html
+84 constats critiques · 2 incohérences de comptage · 779 lignes de suivi lues.
+PARTIE 3, l'œil critique — 30 tâches ouvertes ET IDENTIQUES depuis 6 ou 7 rapports consécutifs.
+Les plus anciennes (7 rapports) : #147, #179, #390, #436, #439, #445, #451, #490, #491, #492, #493,
+#510, #514, #558, #566, #567, #571, #572, #573, #574, #575, #576, #577, #580.
+Six autres depuis 6 rapports : #601, #603, #604, #612, #623, #624.
+Ce n'est pas une liste à relire, c'est une FILE qui ne se vide pas — et plusieurs de ces numéros
+sont ressortis ailleurs dans cette même Ronde par un autre outil (#492 par SMART-CONSO-TOKEN, #493
+par Smart Conso API, #574 par INES-official). Quand trois outils indépendants butent sur les mêmes
+tâches, ce n'est plus du bruit de suivi.

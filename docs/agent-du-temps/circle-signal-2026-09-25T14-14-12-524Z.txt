@@ -1,0 +1,7 @@
+AGENT-DU-TEMPS — Ronde du 2026-09-25.
+SOURCE : système — et c'est la ligne à lire en premier. Les deux API de temps ont été essayées et
+refusées par la politique réseau de l'environnement : contrainte d'environnement, jamais une panne
+de l'outil, et l'outil le dit à chaque passage plutôt que de le taire (Article 32, faille 2).
+Heure servie : 2026-09-25T14:04Z (vendredi 25 septembre 2026, 16h04 Europe/Paris).
+Santé : 2/2 signaux au vert. Registre des estimations : la Ronde de ce passage y a été inscrite
+AVANT d'être lancée (31 items · 31 min · 165 000 tokens), comme l'étape 2 du process l'exige.

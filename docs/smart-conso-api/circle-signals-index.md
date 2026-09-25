@@ -6,3 +6,4 @@
 | 2026-09-22T17:19:15.255Z | circle-signal-2026-09-22T17-19-15-255Z.txt | Smart Conso API : aucune salve d activité sans consultation préalable — discipline respectée. |
 | 2026-09-22T17:42:10.135Z | circle-signal-2026-09-22T17-42-10-135Z.txt | RONDE 2 (conforme au process, ouverte dans les règles) — Aucune salve sans consultation préalable. |
 | 2026-09-23T21:49:13.842Z | circle-signal-2026-09-23T21-49-13-842Z.txt | Ronde GOAT MAX du 2026-09-23 — 1 relancement confirme dans les 10 minutes suivant un epuisement reel de quota — RETENU : attendre une confirmation de check-gemi |
+| 2026-09-25T14:14:12.533Z | circle-signal-2026-09-25T14-14-12-533Z.txt | Smart Conso API — Ronde du 2026-09-25. |

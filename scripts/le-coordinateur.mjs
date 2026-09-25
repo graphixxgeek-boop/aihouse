@@ -442,7 +442,30 @@ export function buildCatalogDelivery(recordResult, prestations = PRESTATIONS) {
 // colonne "Ce qu'il détecte/régule" déjà présente dans la table maîtresse, jamais un second texte
 // hand-maintained ailleurs qui pourrait diverger. `undefined` pour une table de test qui n'a pas
 // cette colonne (jamais un texte fabriqué) — même discipline que statutIdx ci-dessous.
+// CHEMIN_TABLE_MAITRESSE / lireTableMaitresse() (2026-09-25) — ajoutés après un VRAI passage de
+// Ronde, jamais sur une intuition : l'item `organigramme-signal` dit « appeler buildOrganigramme() »
+// et cet appel-là plantait (`Cannot read properties of undefined`), comme ceux de
+// findScriptsMissingFromAgentFiles() et findToolsMissingFromMenu() sans argument. La consigne écrite
+// décrivait donc un geste impossible, et personne ne le savait parce que les seuls appelants réels
+// passaient déjà la table. Deux corrections distinctes, et les confondre aurait été pire que le bug :
+//   · l'entrée MANQUANTE se refuse par une erreur qui la NOMME — jamais par un `[]`, qui se lirait
+//     « aucun outil dans l'équipe » exactement comme un dépôt réellement vide (c'est ainsi que
+//     l'effectif est déjà tombé à zéro une fois, cf. le commentaire de l'en-tête juste en dessous) ;
+//   · l'entrée NON FOURNIE se lit toute seule sur le dépôt, pour que le geste documenté marche.
+export const CHEMIN_TABLE_MAITRESSE = "docs/regles-de-travail.md";
+
+export function lireTableMaitresse({ root = ROOT, readFile = readFileSync, exists = existsSync } = {}) {
+  const chemin = join(root, CHEMIN_TABLE_MAITRESSE);
+  return exists(chemin) ? readFile(chemin, "utf8") : "";
+}
+
 export function parseToolsTable(markdown) {
+  if (typeof markdown !== "string") {
+    throw new TypeError(
+      `parseToolsTable : aucune table maîtresse reçue (attendu le texte de ${CHEMIN_TABLE_MAITRESSE}). `
+      + "Passer son contenu, ou appeler lireTableMaitresse() — jamais laisser un zéro tenir lieu de réponse.",
+    );
+  }
   const lines = markdown.split("\n").filter((l) => l.trim().startsWith("|"));
   if (!lines.length) return [];
   // La table maîtresse se RECONNAÎT à ses colonnes, elle n'est jamais « le premier tableau du
@@ -613,7 +636,7 @@ export function suggestPrestationsForTask(taskLabel, prestations = PRESTATIONS, 
     .sort((a, b) => b.score - a.score);
 }
 
-export function findToolsMissingFromMenu(toolsTableMarkdown, prestations = PRESTATIONS) {
+export function findToolsMissingFromMenu(toolsTableMarkdown = lireTableMaitresse(), prestations = PRESTATIONS) {
   const menuText = prestations.map((p) => p.outils.join(" ")).join(" ").toLowerCase();
   return parseToolsTable(toolsTableMarkdown)
     .filter(isMenuWorthy)
@@ -628,7 +651,7 @@ export function findToolsMissingFromMenu(toolsTableMarkdown, prestations = PREST
 // main à chaque nouvel Agent sans que rien ne le signale. Réutilise `parseToolsTable()` (déjà ici,
 // jamais une seconde lecture), `slugifyAgentName()` (même découpage `primaryName` que partout
 // ailleurs dans ce fichier) — jamais un second calcul.
-export function findScriptsMissingFromAgentFiles(toolsTableMarkdown, agentScriptFiles = AGENT_SCRIPT_FILES) {
+export function findScriptsMissingFromAgentFiles(toolsTableMarkdown = lireTableMaitresse(), agentScriptFiles = AGENT_SCRIPT_FILES) {
   const known = new Set(Object.keys(agentScriptFiles));
   return parseToolsTable(toolsTableMarkdown)
     .filter((row) => row.statut === "Agent")

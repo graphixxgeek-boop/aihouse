@@ -193,6 +193,28 @@ LE SEUL BIAIS QUI SE CONFIRME (#841) : 30 commits sans Ronde, signale par le rap
   la suite n'existe pas comme suite. Proposition ecrite, NOM ET ETAPE 9 laisses a son arbitrage
   (un process porte un nom, et les noms se choisissent par lui) [FAIT / A TRANCHER PAR LUI]
 
+#841 (la Ronde) : tu l'as autorisee dans ton dernier message, elle a tourne — 31 items sur 37,
+  15 minutes reelles contre 31 estimees. Le verdict tient en une phrase : le paysage est en
+  EXCELLENT etat mecanique (38/38 membres integres, 14 verifications croisees sans un rouge, 100 %
+  de robustesse, 0 tension sur 171 paires) et en MAUVAIS etat decisionnel (30 taches figees depuis
+  6-7 rapports, 20 lecons jamais jugees appliquees, 14 idees sans decision, 9 rangs sans nom).
+  Le travail mecanique avance sans toi ; le reste ne peut pas [FAIT]
+
+#847/#848 : la vraie trouvaille n'est venue d'aucun scan, mais du fait de LANCER. Trois fonctions
+  que la consigne de Ronde dit d'appeler sans argument PLANTAIENT — la consigne ecrite decrivait un
+  geste impossible, et personne ne le savait parce que les seuls appelants reels passaient deja
+  l'argument. Corrige dans les deux sens : l'entree non fournie se lit toute seule, l'entree
+  manquante se refuse par une erreur qui la NOMME (jamais par une liste vide, qui se lirait
+  « aucun outil dans l'equipe ») [FAIT]
+
+#849 : le tableau de bord annoncait « identite declaree claude-sonnet-5 » alors que la session
+  tourne sur claude-opus-5. Le verdict restait juste PAR CHANCE (les deux contiennent « claude »),
+  ce qui rendait l'ecart invisible — une provenance fausse ayant exactement la forme d'une
+  provenance verifiee. L'identite se LIT desormais a sa source [FAIT]
+
+Trois dettes documentaires impayees, dont DEUX de mes propres commits de ce matin, nommees par mon
+  propre garde-fou. Payees le jour meme [FAIT]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------

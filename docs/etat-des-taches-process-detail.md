@@ -245,3 +245,27 @@ elles vivent ensemble plutôt que dans trois outils qui divergeraient (Article 2
 La convention complète — seuils, marque, ce que chaque état veut dire — vit dans
 `docs/systeme-de-suivi.md`, jamais recopiée ici : c'est une règle du SUIVI, pas une particularité de
 cet outil. Ce que la mesure fait et ne fait pas est dans `docs/referentiel/check-tasks-details.md`.
+
+## 2026-09-25 — Une flèche se lit par son état FINAL, et treize tâches étaient comptées ouvertes à tort
+
+*(Dette documentaire payée : le commit `b63135c` a changé `scripts/check-tasks-details.mjs`, qui
+porte ce process, sans toucher ce document dans le même commit — signalé par
+`findChangementsIndirectsSansMiseAJour()` à la Ronde du 2026-09-25.)*
+
+**Le défaut, et il était invisible parce qu'il se lisait comme un retard.** Une ligne de suivi peut
+écrire son statut comme une transition : `OUVERTE → CLOSE`, `EN COURS -> FAIT`. `normaliserStatut()`
+lisait le DÉBUT de cette chaîne, donc l'état de DÉPART — une tâche marquée close à l'arrivée était
+comptée ouverte, indéfiniment.
+
+**Ce qui change, en une ligne de code et rien d'autre** : tout ce qui précède une flèche (`→`, `->`,
+`=>`) est retiré avant normalisation. Un statut de transition se lit désormais par son état final,
+qui est le seul qui dise où en est la tâche.
+
+**Le chiffre, mesuré et non estimé : 128 tâches comptées ouvertes avant, 115 après.** Treize tâches
+n'étaient pas en retard, elles étaient mal lues. C'est une **dette fantôme** — le mot importe,
+parce qu'une dette fantôme et une vraie dette demandent des réponses opposées : l'une se corrige
+dans le lecteur, l'autre dans le travail. Les confondre fait travailler sur un problème qui n'existe
+pas pendant que le vrai attend.
+
+**Ce que ça ne change pas** : aucune tâche n'a été close par cette correction, aucune ligne de suivi
+n'a été réécrite. Seule la LECTURE a changé — ce qui est la bonne moitié à corriger (Article 3).

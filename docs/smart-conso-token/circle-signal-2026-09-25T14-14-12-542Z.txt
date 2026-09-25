@@ -1,0 +1,7 @@
+SMART-CONSO-TOKEN — Ronde du 2026-09-25, scan de portée Global.
+Rythme observé sur 7 jours : 22 actions — full_repo_scope 6, scan 4, assess 4, charter_size_tax 3,
+agent_subagent_spawn 2, long_task_signal 2, proposition_appliquee 1.
+Bilan investissement : ⚠️ NON CONCLUANT, et c'est l'outil qui refuse de conclure — 2/2 actions
+classées en investissement réel, mais 20 des 22 actions de la période n'ont JAMAIS été classées.
+Moins de 4 cas mesurés : aucun taux ne tient sur si peu. Un « 100 % d'investissement » aurait été un
+faux or exactement du type que la journée a chassé dix fois. C'est la tâche #492, déjà ouverte.

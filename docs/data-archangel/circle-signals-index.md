@@ -6,3 +6,4 @@
 | 2026-09-22T17:42:10.136Z | circle-signal-2026-09-22T17-42-10-136Z.txt | RONDE 2 (conforme au process, ouverte dans les règles) — 1 seule suggestion de lecture croisée restante (smart-conso-api ↔ historique token). |
 | 2026-09-23T21:49:13.824Z | circle-signal-2026-09-23T21-49-13-824Z.txt | Ronde GOAT MAX du 2026-09-23 — Plusieurs registres atteints par TABLE mais jamais lus pour leur contenu : passer par le chemin n est pas exploiter la donnee. Ca |
 | 2026-09-24T21:48:39.553Z | circle-signal-2026-09-24T21-48-39-553Z.txt | RATTRAPAGE du 2026-09-24 — cet item a REELLEMENT tourne ce soir, mais hors du process de la Ronde (aucune trace datee posee au moment de son execution). Enregis |
+| 2026-09-25T14:14:12.559Z | circle-signal-2026-09-25T14-14-12-559Z.txt | data-archangel — Ronde du 2026-09-25. |

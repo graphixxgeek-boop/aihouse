@@ -1,0 +1,10 @@
+Relecture des correctifs en attente de revalidation — Ronde du 2026-09-25.
+docs/simulations/correctifs-a-revalider.md : 12 correctifs au carnet actif.
+AUCUN n'a atteint 2 simulations propres consécutives, donc aucun retrait possible. Onze sont à 0/2,
+un seul à 1/2 (le seuil d'attirance loveRealized, franchi pour la première fois dans full_sim17 —
+avec la nuance réelle déjà écrite au carnet : la pensée surfacée au tour du franchissement ne portait
+pas sur l'attirance).
+LA VRAIE CAUSE DU BLOCAGE, et elle n'est pas dans le carnet : aucune simulation n'a tourné depuis le
+2026-09-20. Un carnet qui n'avance pas parce que personne ne le confronte au jeu n'est pas un carnet
+en retard, c'est un carnet en attente d'une simulation — et elle dépend du quota (tâches #186, #810).
+docs/referentiel/points-fragiles.md : 14 points fragiles ouverts, déjà identifiés et suivis (KPI).

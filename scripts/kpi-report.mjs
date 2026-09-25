@@ -39,7 +39,7 @@ import {burstComplianceScore} from './smart-conso-api.mjs';
 import {computeAdoptionKpi, checkKnowledgeFreshness} from './smart-conso-token.mjs';
 import {persistContextWeightSamples, averageContextWeightByActor, loadHistory as loadMementoWeightHistory} from './memento-weight.mjs';
 import {recordCliUsage} from './tool-usage.mjs';
-import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE, readAgentSession } from "./report-template.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { suivreLaTendance, formatTendanceLines, SENS } from './serie-temporelle.mjs';
 
@@ -645,7 +645,16 @@ function reportReplayability(m) {
 // kpi-report.mjs se contente de les LIRE, en I/O pure comme le reste de ce fichier, puis appelle
 // les fonctions déjà exportées et déjà testées ailleurs. Absence de fichier = valeurs par défaut
 // honnêtes (jamais une erreur qui ferait planter tout le rapport pour un outil pas encore utilisé).
-function loadSmartConsoMetrics(identity = 'claude-sonnet-5') {
+// L'IDENTITÉ DU MODÈLE SE LIT, ELLE NE SE RECOPIE PAS (2026-09-25, trouvé en LISANT le rapport de
+// la Ronde, jamais par un scan). Ce paramètre valait `'claude-sonnet-5'` en dur : la session
+// tournait sur claude-opus-5, et le rapport annonçait pourtant « cohérent avec l'identité déclarée
+// "claude-sonnet-5" » — une provenance FAUSSE, et la pire espèce, parce qu'elle a exactement la
+// forme d'une provenance vérifiée. Le verdict de fraîcheur, lui, restait bon par chance (le
+// registre est validé pour « claude », que les deux contiennent) : c'est justement ce qui rendait
+// l'écart indétectable. Même règle que l'Article 32 pour l'heure : la valeur se LIT à sa source
+// (`readAgentSession()`, le dépôt de début de session), et son absence se DÉCLARE — jamais un
+// repli silencieux sur une identité écrite il y a trois jours.
+function loadSmartConsoMetrics(identity = readAgentSession().model) {
     const healthData = existsSync(path('.gemini-key-health.json')) ? JSON.parse(readFileSync(path('.gemini-key-health.json'), 'utf8')) : { keys: {} };
     const sessionLog = existsSync(path('.smart-conso-session.json')) ? JSON.parse(readFileSync(path('.smart-conso-session.json'), 'utf8')) : { actions: [] };
     const tokenHistory = existsSync(path('.smart-conso-token-history.json')) ? JSON.parse(readFileSync(path('.smart-conso-token-history.json'), 'utf8')) : { actions: [] };

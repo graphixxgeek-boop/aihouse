@@ -242,3 +242,30 @@ mécanisme**. Ce qui manque n'est pas le contenu, c'est qu'elles ne soient nulle
    si `principes.md`, `parametres.md` et `lib/reference.ts` devaient bouger aussi ? Il ne pourra
    jamais savoir s'ils le devaient — seulement poser la question, comme les six règles qu'angel
    demande au lieu de deviner.
+
+## #850 — CLEAN-DIRTY-OLD muet depuis six jours : passage réel, ou silence correct ?
+
+*(Remonté par la Ronde du 2026-09-25, item `clean-dirty-old-signal`.)*
+
+**Le fait** : `docs/clean-dirty-old/index.md` ne porte qu'UNE seule ligne, celle du 2026-09-19, jour
+de la création de l'outil — « aucune zone signalée ». Six jours sans une ligne de plus, sur un outil
+qui tourne pourtant à chaque commit comme quatrième Gardien sacré.
+
+**Pourquoi je ne tranche pas seule** : les deux causes sont indiscernables depuis le carnet.
+
+- **Cause A — le silence est correct.** La règle du carnet, écrite dans son en-tête, est qu'un
+  passage sans zone signalée ne mérite pas de ligne (même discipline qu'HARMONIA). Six jours sans
+  rien à signaler produiraient exactement ce carnet-là.
+- **Cause B — le passage complet n'a jamais été relancé.** La couche légère tourne au commit ; le
+  vrai passage, lui, se lance à la main. Six jours de stagnation relative dormiraient alors sans
+  que personne le sache.
+
+**Les trois voies :**
+
+1. **Lancer un vrai passage CLEAN-DIRTY-OLD maintenant** — c'est gratuit (0 appel API), et c'est la
+   seule façon de savoir laquelle des deux causes est la bonne. *(Ma recommandation : une mesure
+   coûte moins cher que la question.)*
+2. **Ne rien faire et considérer le silence comme normal** — cohérent avec la règle du carnet, mais
+   fondé sur une hypothèse, jamais sur une mesure.
+3. **Faire écrire au carnet une ligne « passage sans trouvaille »** à chaque vrai passage, pour que
+   le silence cesse d'être ambigu — change la règle du carnet, donc une décision de conception.

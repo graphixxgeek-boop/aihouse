@@ -1,59 +1,48 @@
-# Observation — 2026-09-22T02:45:00Z
+# Observation — 2026-09-25T14:14Z
 
-**Source** : session en cours (`session_0151JrVYzJ2bdCShaXhFAjLo`), segment couvrant la finalisation
-de circle-process-guardian, la construction du protocole de changement de modèle IA, un message à
-8 points distincts (snapshot THE-KING, rôle d'HYPER-SCAN-CHECKPOINT, discipline d'exécution,
-branchements Smart Conso, utilité réelle des outils listés dans CLAUDE.md, mise en to-do, lancement
-de la Ronde), la correction d'une erreur de compréhension sur le point 3, la modernisation
-d'HYPER-SCAN-CHECKPOINT, son intégration dans CIRCLE-TASKS, le passage de circle-process-guardian à
-un rôle à 2 niveaux, et l'exécution de la Ronde AUTO sous Opus 5 (~01:15Z à ~02:45Z).
+**Source** : segment couvrant la nuit autonome du 2026-09-24/25 (clôture des huit constats
+THE-DEEP-READER, #822 à #846) puis la Ronde en paramètres recommandés qu'il a lui-même placée dans
+le déroulé du travail.
 
-## Signaux extraits
+**Méthode** : signaux tirés de ses cinq messages réels du segment, jamais des notifications de
+réveil automatiques — lesquelles ne sont PAS de lui, et les compter aurait fabriqué un profil sur
+mes propres relances (même piège que les « deux causes d'un zéro » traqué toute la journée).
 
-### Nouveau
+## Signaux nouveaux
 
-- **Récupère la valeur d'une erreur de communication plutôt que de la faire annuler.** Preuve : après
-  avoir constaté que j'avais construit `verifyHyperScanProcess()` sur une mauvaise lecture du point 3,
-  ne demande pas de la retirer — demande d'abord de garder le travail via une question explicite
-  (« si tu as implanté une chose dans circle.process qui n'est pas la bonne, propose moi avec une
-  question de la garder »), puis d'ajouter ce qu'il fallait vraiment, puis d'aller jusqu'à intégrer
-  HYPER-SCAN-CHECKPOINT à CIRCLE-TASKS pour que la vérification ait un sens (« je veux aussi
-  rentabiliser notre erreur de comprehnsion »). Trois messages successifs qui transforment une
-  dépense perdue en trois vraies fonctionnalités.
-- **Conçoit un rôle d'outil en deux niveaux distincts plutôt qu'un seul.** Preuve : « je veux qu'il
-  soit à la fois là pour t'aider, à la fois la pour veiller à ce que tu respectes bien les process de
-  circles. tu vois le principe ? 2 niveaux. » — demande explicite d'une double vocation (assistance à
-  la mise à jour + surveillance de la discipline) pour un outil déjà construit avec une seule, plutôt
-  que d'en créer un second.
-- **Remet en cause l'utilité d'une pratique installée de longue date, sans la supposer acquise ni la
-  condamner d'avance.** Preuve : sur les outils listés dans CLAUDE.md — « à la base nous avions mis
-  des regles de codage qui sont devenues des outils. mais en fait, tout ca est-il bien utile vs la
-  ronde ? [...] peux tu verifier la pertinence des elements presents dans claude.md et si ca
-  t'apporte vraiment quelque chose ? est-ce qu'un outil peut t'aider à faire ce travail, regarde. »
-  Trois mouvements dans une seule question : douter, demander une vérification réelle, et chercher
-  l'outil déjà existant qui pourrait la faire — jamais une conclusion posée d'avance.
-- **Corrige une erreur de lecture en réaffirmant la règle générale plutôt qu'en se contentant du cas
-  précis.** Preuve : après avoir rectifié que le point 3 portait sur la double communication et non
-  sur HYPER-SCAN-CHECKPOINT, ajoute « on s'est bien compris, pas d'erreur de communication. rappelle :
-  si tu as un doute, pose moi la question. » — la correction ponctuelle sert de support à un rappel
-  de méthode durable (cohérent avec l'Article 16).
+- **Il place un rituel DANS le flux de travail, jamais à côté.** Preuve littérale : « place une
+  ronde en parametres recommandés dans le déroulé de ton travail, continue sans t'arreter ». Il ne
+  commande pas la Ronde comme une tâche séparée qui suspendrait le reste : il demande qu'elle
+  s'intercale. C'est une exigence de CADENCE, distincte de toutes les fois où il a choisi
+  « recommandé » — ici il choisit recommandé *et* refuse que ça coûte un arrêt.
 
-### Déjà observé, confirmé
+- **Il valide explicitement le rythme, ce qu'il ne fait presque jamais.** « on le bon rythme » (sic).
+  Ses retours positifs portent d'habitude sur un résultat ; celui-ci porte sur la vitesse et la
+  continuité. À lire comme un calibrage à ne pas casser, pas comme un compliment.
 
-- **Redirige par impératifs brefs et répétés quand plusieurs fils avancent en parallèle** (déjà noté
-  le 2026-09-22T00:05Z) : « continues ce que tu fais », « ensuite reprends là ou tu en etais »,
-  « continues ce que tu fais en parallele », « mais finis aussi tout ce que tu etais en train de
-  faire » — quatre relances dans le même segment, jamais une remise en cause du travail, seulement
-  un refus que l'un des fils soit abandonné pour l'autre.
-- **Répond systématiquement « recommandé » une fois les enjeux bien expliqués** (déjà noté à plusieurs
-  reprises) : confirmé ici sur la fenêtre « garder le travail issu de l'erreur » (choix « Garder
-  (Recommandé) ») et sur le mode de Ronde (choix « AUTO (Recommandé) »).
+- **Il vérifie que la consigne de non-arrêt est tenue, et il le dit deux fois.** « verifie que tu ne
+  t'arretes pas », puis « verifie que tu ne t'arrete pas ». Ce n'est pas la consigne qui est répétée,
+  c'est sa VÉRIFICATION — il demande une auto-surveillance, pas une promesse de plus.
+
+- **Ses messages se raccourcissent à mesure que le travail lui convient.** Quatre relances
+  successives de trois à quinze mots. Un message court n'est donc pas un signe de désengagement
+  chez lui : c'est le signe inverse, et l'interpréter comme une invitation à faire le point serait
+  exactement le contresens que sa règle « ne jamais s'arrêter sur un message court » interdit.
+
+## Signaux confirmés / nuancés
+
+- **Ses décisions en attente ne bougent pas tant qu'il n'est pas là** (déjà noté) : seize décisions
+  lui reviennent, quatorze détectées mécaniquement par le contrôle des idées de cette Ronde, et
+  aucune n'a avancé pendant la nuit. Nuance nouvelle et mesurée : une question posée en son absence
+  ne coûte pas dix secondes, elle coûte toute la période autonome (Article 32, obligation 4).
+
+- **Il redirige par impératifs brefs plutôt que par explication** (déjà noté le 2026-09-22) :
+  confirmé quatre fois de suite ici, sans une seule remise en cause du contenu.
 
 ## Ce que ça change concrètement pour l'agent
 
-- Une erreur de compréhension se signale et se corrige, mais ne se jette pas : proposer d'abord ce que
-  le travail déjà fait peut légitimement servir, avant de proposer de le retirer.
-- Quand un nouvel outil est demandé, vérifier s'il ne s'agit pas d'un second niveau à ajouter à un
-  outil existant plutôt que d'un outil de plus.
-- Une question qui commence par « est-ce que c'est vraiment utile ? » attend une vérification réelle
-  contre le dépôt, jamais une réponse d'opinion — et de préférence menée par un outil déjà construit.
+- Un rituel coûteux (Ronde, audit, sauvegarde) se glisse dans le déroulé et se raconte en fin de
+  tour — jamais annoncé comme une interruption qui demande son feu vert.
+- Quand ses messages raccourcissent, accélérer, ne pas résumer.
+- Tout ce qui exige sa décision se prépare pendant son absence et se pose d'un bloc à son retour,
+  jamais une question isolée qui dormira jusqu'au matin.

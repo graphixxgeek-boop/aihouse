@@ -16,7 +16,28 @@ l'écrire.
 
 | Date | Mode | Items | Durée estimée | Durée réelle | Ratio | Sens | Tokens estimés | Tokens réels (agents) |
 |---|---|---|---|---|---|---|---|---|
+| 2026-09-25 | PARAMÈTRES RECOMMANDÉS | 31 | **31 min** *(mécanique)* | **15 min** | **0,48** | SUR-ESTIMÉE | 165 000 *(plancher)* | **0 agent séparé** — aucun agent lancé, donc rien à comparer au plancher |
 | 2026-09-23 | GOAT MAX | 33 | 38 min *(mécanique)* · **2 h–3 h 30 annoncées à la main** | **27 min** | 0,71 *(mécanique)* · **0,15 à 0,22 (à la main)** | SUR-ESTIMÉE | 280 500 | **569 820** *(2 agents seuls)* |
+
+## Ce que la DEUXIÈME mesure apprend, et elle confirme le sens de la première
+
+**Deuxième passage, même erreur de sens : 31 minutes annoncées, 15 réelles — ratio 0,48.** Cette
+fois l'estimation venait entièrement de la mécanique (`estimerRonde()`), sans aucun chiffre annoncé
+à la main : le facteur d'erreur tombe donc de 5–8 à **2**, ce qui est un vrai progrès, mais le SENS
+n'a pas changé. La mécanique sur-estime encore du simple au double.
+
+**La cause, mesurée et non devinée** : `estimerRonde()` compte une durée par item coché, alors qu'une
+bonne moitié des 31 items de ce passage ne sont pas des exécutions mais des LECTURES — lire un index,
+lire un registre, constater qu'un carnet est vide. Ces items-là coûtent quelques secondes, jamais la
+minute que le calcul leur prête. Prochaine piste, jamais appliquée d'autorité : distinguer les items
+qui LANCENT un script de ceux qui LISENT un fichier, et ne compter une minute que pour les premiers.
+
+**Sur les tokens, aucune donnée nouvelle** : ce passage n'a lancé AUCUN agent séparé, donc la colonne
+« tokens réels » reste vide plutôt que remplie d'un zéro. Un zéro y aurait signifié « rien consommé »
+là où la vérité est « rien de comparable au plancher n'a eu lieu » — deux choses différentes.
+
+**La conséquence pratique, et elle est la même que la première fois** : annoncer 31 minutes pour un
+travail de 15 fait renoncer à un programme complet qu'on aurait eu le temps de mener.
 
 ## Ce que la première mesure a appris, et il y a deux leçons opposées
 

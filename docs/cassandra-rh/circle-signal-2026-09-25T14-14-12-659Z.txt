@@ -1,0 +1,13 @@
+CASSANDRA-RH — Ronde du 2026-09-25 (rapport complet livré en HTML par l'outil).
+Effectif : 38 membres actifs, 38/38 certifiés.
+Tendance KPI lue depuis kpi-historique.csv (jamais recalculée) : smart_breaker_performance 100 %
+(+8,4 pt), robustesse 100 %, couverture du tableau de bord 100 % (+50 pt), rejouabilité 22,22 %,
+smart_conso 71 %.
+Outils à retirer ou refondre : the-final-judge et the-deep-reader (jamais sollicités), safe-export
+(registre de rapports jamais committé — personne ne consulte jamais sa sortie).
+2 constats sur les commandes : the-deep-reader et the-final-judge n'exposent AUCUNE commande que je
+puisse lancer moi-même — et le compteur ne leur connaît aucune sollicitation, « ce qui n'a rien d'un
+hasard ». Les deux causes du zéro sont donc nommées, et la seconde explique la première.
+Trous de couverture de test : 4 outils JAMAIS scannés (LE-COORDINATEUR, Smart Breaker, CIRCLE-TASKS,
+find-deep-booster, god-of-all-process, tool-brain) — un « jamais scanné » n'est pas un 0 %.
+Tendances RH : 4 séries sur 4 « pas assez de points » — l'outil refuse une courbe sur trop peu.

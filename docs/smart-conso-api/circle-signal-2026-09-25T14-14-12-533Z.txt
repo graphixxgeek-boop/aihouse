@@ -1,0 +1,8 @@
+Smart Conso API — Ronde du 2026-09-25.
+⚠️ 1 relancement CONFIRMÉ dans les 10 minutes suivant un épisode d'épuisement réel.
+Leçon rappelée par l'outil : un quota journalier épuisé ne revient pas en quelques minutes (le
+retryDelay de Google est trompeur pour ce cas) — attendre une confirmation de check-gemini-quota.mjs
+avant de relancer, jamais réessayer à l'aveugle.
+Garde-fou fiabilité : aucune salve d'activité récente sans consultation préalable — discipline
+respectée (7/7 salves confirmées, cf. KPI Smart Conso).
+Ce constat est déjà la tâche #493, ouverte et identique depuis 7 rapports consécutifs.

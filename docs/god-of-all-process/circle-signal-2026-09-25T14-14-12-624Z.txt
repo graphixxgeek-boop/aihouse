@@ -1,0 +1,12 @@
+god-of-all-process — conformité de Ronde du 2026-09-25.
+✅ Gabarit de process : chaque document déclaré répond aux cinq questions du modèle.
+✅ Aucun process sans gardien · aucun document déclaré manquant · aucune tension sur un process
+disparu · aucune sonde cassée.
+⚠️ 3 DETTES DOCUMENTAIRES IMPAYÉES, et DEUX viennent de mes propres commits d'aujourd'hui :
+  · b63135c — check-tasks-details.mjs modifié sans docs/etat-des-taches-process-detail.md
+  · d7e6c47 — god-of-all-process.mjs modifié sans docs/mode-semi-autonome-process-detail.md
+    ni docs/mode-auto-process-guardian.md
+  · 1893946 — même couple que le précédent (commit antérieur)
+Discipline d'exécution (angel) : 0 manquement, 16 règles non vérifiables sans réponse — angel ne
+devine jamais ce qu'il ne peut pas observer, et refuse d'être au vert sans réponse.
+3 tensions entre process, toutes déclarées et résolues.

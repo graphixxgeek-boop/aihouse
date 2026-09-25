@@ -1,0 +1,8 @@
+THE-KING — Ronde du 2026-09-25.
+Fraîcheur de docs/philosophie-et-politique.md : dernière modification il y a 5 jours.
+19/19 principes datés (2 déclarés, 17 dérivés de l'historique git).
+Tensions POSSIBLES : AUCUNE, sur 171 paires réellement comparées entre 19 principes (seuil 0.22).
+La paire la plus proche reste 1.7 ↔ 2.4 à 0.189 — le zéro est mérité, pas un silence.
+HORS PORTÉE rappelé par l'outil : le vocabulaire partagé est un SIGNAL, jamais une contradiction
+prouvée ; deux principes peuvent se contredire avec des mots entièrement différents.
+Plan d'action de l'outil : aucun constat retenu.

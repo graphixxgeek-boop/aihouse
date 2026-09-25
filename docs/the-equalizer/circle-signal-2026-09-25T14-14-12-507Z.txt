@@ -1,0 +1,7 @@
+THE-EQUALIZER — Ronde du 2026-09-25. Référentiel lu : docs/referentiel/standards.md, 29 exigences.
+  ✅ l'Agence : 15/15 · ✅ les documents : 7/7 · ⚠️ le code : 5/7 · ➖ le jeu : hors périmètre assumé
+Les DEUX exigences non tenues sont les mêmes qu'à la Ronde du 2026-09-25 au matin, et ce sont les
+deux qui parlent de MÉMOIRE : X6 « le POURQUOI vit à côté du QUOI » et X7 « le code applique les
+leçons déjà apprises » — toutes deux « vérifiées en partie », et ce partiel est ASSUMÉ : ce qui reste
+hors mécanique (la QUALITÉ d'une explication, l'APPLICATION réelle d'une leçon) est un jugement humain.
+Retard outil par outil (délégué à integrationAudit) : 38/38 membres certifiables, aucun écart.

@@ -1,0 +1,7 @@
+Contrôle des idées en attente de décision — Ronde du 2026-09-25.
+14 idées candidates détectées, 14 SANS décision consignée : #747, #760, #767, #800, #801, #805,
+#814, #819, #823, #830, #841, #842, #845, #846.
+Une seule a bougé aujourd'hui : #841 (la Ronde), qu'il a autorisée explicitement dans son dernier
+message — c'est ce passage-ci.
+Ce fichier n'est QUE la preuve d'exécution du contrôle : le registre des DÉCISIONS reste
+docs/idees-a-trancher.md, où les 14 sont déjà inscrites avec leurs options.

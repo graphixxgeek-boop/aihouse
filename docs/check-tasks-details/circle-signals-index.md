@@ -6,3 +6,4 @@
 | 2026-09-22T17:42:10.135Z | circle-signal-2026-09-22T17-42-10-135Z.txt | RONDE 2 (conforme au process, ouverte dans les règles) — 9 tâches en cours sur 405, 5 en stagnation. |
 | 2026-09-23T21:49:13.836Z | circle-signal-2026-09-23T21-49-13-836Z.txt | Ronde GOAT MAX du 2026-09-23 — ALERTE reelle : tache #566 datee dans le futur. Le balayage complet de la Ronde a montre que ce controle ne voit qu une TRANCHE ( |
 | 2026-09-24T21:48:39.572Z | circle-signal-2026-09-24T21-48-39-572Z.txt | RATTRAPAGE du 2026-09-24 — cet item a REELLEMENT tourne ce soir, mais hors du process de la Ronde (aucune trace datee posee au moment de son execution). Enregis |
+| 2026-09-25T14:14:12.671Z | circle-signal-2026-09-25T14-14-12-671Z.txt | check-tasks-details — rapport de Ronde du 2026-09-25. |

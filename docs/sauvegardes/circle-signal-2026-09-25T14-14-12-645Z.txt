@@ -1,0 +1,6 @@
+Sauvegarde du projet — Ronde du 2026-09-25.
+Coffre : docs/sauvegardes/projet-2026-09-25-14-11.zip
+Notice : docs/sauvegardes/notice-2026-09-25-14-11.txt (47 fichiers, 999 917 caractères)
+La cible du million de caractères est atteinte : la notice s'arrête avant components/house-view.tsx —
+tout le reste est dans le coffre. Les deux fichiers sont LIVRÉS à l'utilisateur dans le même tour
+(SendUserFile) : une sauvegarde qui reste dans le dépôt qu'elle sauvegarde ne protège de rien.

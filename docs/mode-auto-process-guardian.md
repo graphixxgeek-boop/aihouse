@@ -345,3 +345,31 @@ m'empêcher d'écrire un message à 3 h du matin. Ce qui est mécaniquement poss
 l'arrêt court et visible, jamais impossible. Le déclarer vaut mieux que de laisser croire à une
 garantie qui n'existe pas — c'est exactement ce que l'Article 27 demande quand aucun mécanisme
 complet n'est atteignable.
+
+## 2026-09-25 — Deux mécanismes ajoutés à god-of-all-process, qui portent ce process
+
+*(Dette documentaire payée. Les commits `1893946` et `d7e6c47` ont changé
+`scripts/god-of-all-process.mjs` — le contrôleur déclaré de ce mode — sans toucher ce document dans
+le même commit. C'est exactement le cas que la section précédente décrit, et le garde-fou l'a
+nommé : `findChangementsIndirectsSansMiseAJour()` a signalé les deux lors de la Ronde du 2026-09-25.
+Constater que son propre garde-fou vous attrape vaut mieux que de ne pas être attrapé.)*
+
+**Ce qui a changé pour ce mode, concrètement :**
+
+- **`auditPlansDeDocuments()`** (commit `1893946`) étend la chaîne de l'Article 28 aux DOCUMENTS,
+  là où elle ne couvrait que les rapports d'outils. Un plan d'action écrit dans un document de
+  `docs/` qui annonce une tâche par son numéro est vérifié : cette tâche doit exister pour de vrai
+  dans `docs/suivi/`. **Pour la nuit autonome, ça ferme une porte qui était grande ouverte** : un
+  plan rédigé à trois heures du matin dans un document de conception ne pouvait jusqu'ici être
+  contrôlé par personne, puisque aucun outil ne l'avait produit.
+
+- **`findProcessSansEstimation()`** (commit `d7e6c47`) vérifie que chaque process déclaré annonce
+  sa durée ET sa consommation avant de lancer quoi que ce soit. **Le résultat réel au moment de son
+  écriture : 2 process sur 10 seulement**, et ce sont les deux qui coûtent cher (la Ronde, la
+  simulation). Les huit autres sont exemptés par `PROCESS_SANS_ESTIMATION_ASSUMEE`, une exemption
+  ÉCRITE avec sa raison — jamais un silence. Ce mode-ci en fait partie : une nuit autonome n'a pas
+  de durée à annoncer puisqu'elle dure ce que dure l'absence.
+
+**Ce que ces deux ajouts ne changent PAS** : ni les bornes du périmètre sensible, ni les
+obligations qui ne s'allègent jamais la nuit, ni la façon dont ce mode enchaîne ses tâches. Le
+contrôleur en sait plus, le mode se conduit pareil.

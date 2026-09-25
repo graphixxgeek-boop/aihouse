@@ -1,0 +1,8 @@
+CLEAN-DIRTY-OLD — signal de Ronde du 2026-09-25.
+Le carnet docs/clean-dirty-old/index.md ne porte QU'UNE SEULE ligne, celle du 2026-09-19, jour de sa
+création : « aucune zone signalée ». Aucun passage journalisé depuis SIX JOURS, alors que l'outil
+tourne pourtant à chaque commit comme quatrième Gardien sacré.
+Deux causes possibles, et je ne tranche pas entre elles sans mesurer : soit aucun passage n'a rien
+trouvé (et la règle du carnet est justement qu'un passage sans zone signalée ne mérite pas de ligne
+— le silence serait alors correct), soit le passage complet n'a jamais été relancé depuis.
+Je PROPOSE un vrai passage CLEAN-DIRTY-OLD, je ne le lance pas seule.

@@ -1,0 +1,10 @@
+LE-COORDINATEUR — synthèse réseau (runNetworkCheck) de la Ronde du 2026-09-25.
+14 vérifications croisées entre outils du paysage. AUCUN rouge.
+  · check-house, ARGUS, HARMONIA, AXA-CHECK (100 % de couverture réelle par fonction), CLONE-HUNTER,
+    CLEAN-DIRTY-OLD, Smart Conso API, SMART-CONSO-TOKEN (2 sondes), Doc-Report (rapports orphelins),
+    ecotoken (24 774 tk, marge 17 %), AXA-CHECK (Agents absents d'AGENT_SCRIPT_FILES) : ok.
+  · ALWAYS-NEW-CODE (couche de préparation) recommande la zone « Cycle jour/nuit » pour un éventuel
+    zoom profond — une RECOMMANDATION de zone, jamais un défaut constaté.
+Signalé par l'outil lui-même : ce passage est un DOUBLON du précédent (même HEAD 7b1799c, une minute
+d'écart) — la première exécution est morte avec son shell avant d'écrire sa synthèse, celle-ci l'a
+refaite. Le dire vaut mieux que de laisser croire à deux mesures indépendantes.

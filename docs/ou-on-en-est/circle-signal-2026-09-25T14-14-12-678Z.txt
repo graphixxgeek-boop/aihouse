@@ -1,0 +1,6 @@
+ou-on-en-est — Ronde du 2026-09-25.
+Le bilan a été produit à partir des chiffres du suivi, jamais recalculés ici (779 lignes de tâches
+réelles lues par loadAllTaskRows).
+À retenir de ce passage : 115 tâches réellement ouvertes après la correction du lecteur de statuts
+de ce matin (une flèche « X → Y » se lit désormais par son état FINAL) — contre 128 comptées la
+veille. Treize tâches étaient comptées ouvertes à tort : une dette fantôme, jamais un retard réel.

@@ -1,0 +1,9 @@
+Organigramme de l'Agence (CASSANDRA-RH) — Ronde du 2026-09-25.
+38 membres actifs : 7 Gardiens sacrés du code, 27 Membres, 2 Agents Spéciaux, 2 Agents Cadres.
+38/38 certifiés. ✅ Aucun membre certifié sans suite assignée.
+📝 9 émetteurs de rapport NON certifiés — ils produisent un vrai rapport lu par un humain sans être
+membres, et leur rang attend d'être nommé : CHARTER-SPY, Compteur d'utilisation des outils,
+Doc-Report, doc-HTML, find-brain, integration-outil, rapport-gros-prompt, sauvegarde-projet, the-ghost.
+C'est un vrai constat, pas un fichier produit puis ignoré — mais le rang est un NOM, donc sa décision.
+MÊME DÉFAUT QUE CI-DESSUS, TROUVÉ EN LANÇANT : buildOrganigramme() appelé comme la consigne l'écrit
+(sans argument) plantait. Corrigé le jour même.

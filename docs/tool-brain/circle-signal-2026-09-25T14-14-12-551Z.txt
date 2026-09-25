@@ -1,0 +1,11 @@
+tool-brain — Ronde du 2026-09-25 (rapport d'usage réel).
+✨ SIGNAL POSITIF : tool-brain a été sollicité 91 fois de ma propre initiative sur 93 au total — le
+réflexe existe pour de vrai, il n'est pas que mécanique.
+Combinaisons du catalogue réalisées EN FAIT : Pack Éclaireur 36 fois, Pack Rénovation 66 fois ;
+Pack Sentinelle et Pack Panorama JAMAIS réalisés ; Pack Décollage n'est pas une combinaison (une de
+ses entrées est un document, pas un outil).
+Outils à 0 sollicitation : check-spirit, the-final-judge, the-deep-reader, check-house, rapport-gros-prompt.
+Pour check-house le zéro a deux causes et l'outil le dit : il tourne à CHAQUE commit par le crochet,
+il n'est simplement jamais SOLLICITÉ — c'est la tâche #819, en attente de sa décision.
+Garde-fou des origines : une catégorie inécrite se lit « zéro » exactement comme une catégorie
+réellement inutilisée (tâche #823).

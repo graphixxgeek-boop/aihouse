@@ -1,0 +1,4 @@
+check-profil-utilisateur — Ronde du 2026-09-25.
+OK : 11 fiches sur disque, toutes référencées dans l'index, aucun lien mort.
+Avertissement que l'outil porte lui-même : il déduit une habitude de travail d'un comptage de traces
+— une habitude réelle qui ne laisse pas de trace lui échappe entièrement.

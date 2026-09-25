@@ -6,3 +6,4 @@
 | 2026-09-22T17:42:10.136Z | circle-signal-2026-09-22T17-42-10-136Z.txt | RONDE 2 (conforme au process, ouverte dans les règles) — 10/10 registres pour les 3 outils du jour. Clé renommée catalogue-charte → inventaire-charte. |
 | 2026-09-23T21:49:13.914Z | circle-signal-2026-09-23T21-49-13-914Z.txt | Ronde GOAT MAX du 2026-09-23 — Aucun membre incomplet. |
 | 2026-09-24T21:48:39.584Z | circle-signal-2026-09-24T21-48-39-584Z.txt | RATTRAPAGE du 2026-09-24 — cet item a REELLEMENT tourne ce soir, mais hors du process de la Ronde (aucune trace datee posee au moment de son execution). Enregis |
+| 2026-09-25T14:14:12.632Z | circle-signal-2026-09-25T14-14-12-632Z.txt | Audit d'intégration (integrationAudit, LE-COORDINATEUR) — Ronde du 2026-09-25. |

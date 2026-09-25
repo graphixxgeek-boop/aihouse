@@ -1,0 +1,8 @@
+Fraîcheur des fichiers préliminaires de chantier — Ronde du 2026-09-25.
+checkChantierFileFreshness(779 lignes de suivi réelles) : AUCUN écart — aucune tâche de suivi plus
+récente que le fichier préliminaire de son chantier.
+findChantierFilesMissingValueRestitution() : les 4 fichiers de chantier portent LES DEUX voix
+(CASSANDRA-RH, Refonte graphique, Outil concordance/évolutivité, Agence exportable) — aucun ne se
+réduit à la seule prose de l'agent.
+findConceptionFilesMissingFromRegistry() : aucun fichier de conception réel non déclaré au registre.
+Rien à proposer de corriger tout de suite.

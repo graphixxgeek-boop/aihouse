@@ -1,0 +1,9 @@
+Audit d'intégration (integrationAudit, LE-COORDINATEUR) — Ronde du 2026-09-25.
+✅ 38 membres vérifiés : chacun est complètement intégré, et aucun script d'outil ne traîne hors de
+l'organigramme. Aucun membre incomplet, donc aucune tâche à ouvrir de ce chef.
+MAIS L'APPEL LUI-MÊME A PLANTÉ AVANT D'ABOUTIR, et c'est la vraie trouvaille de ce poste : la
+consigne écrite de la Ronde dit d'appeler findScriptsMissingFromAgentFiles() et
+findToolsMissingFromMenu(), et ces deux appels SANS ARGUMENT levaient un TypeError. Corrigé le jour
+même : les deux lisent désormais la table maîtresse d'eux-mêmes, et parseToolsTable() refuse une
+entrée absente par une erreur qui la NOMME plutôt que par une liste vide (qui se lirait « aucun
+outil dans l'équipe » — c'est ainsi que l'effectif est déjà tombé à zéro une fois).

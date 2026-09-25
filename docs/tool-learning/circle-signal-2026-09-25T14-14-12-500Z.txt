@@ -1,0 +1,10 @@
+TOOL-LEARNING — Ronde du 2026-09-25.
+5 leçons NON MESURABLES et l'outil le dit plutôt que de les compter au vert : L9 et BP1 (aucun motif
+de fichier déclaré dans leur terrain), BP2 (aucune date d'origine lisible).
+20 constats À TRANCHER, tous de la même famille : aucune entrée du registre n'a JAMAIS été jugée
+appliquée ou non par l'utilisateur. Sept leçons ne sont jamais remontées (L7 en 259 occasions, L9 en
+249, L17 en 201, L18, L20, L21, L23) — poids mort dans un registre qui grossit. Onze autres remontent
+souvent et n'ont jamais été jugées appliquées : ressortir ne suffit visiblement pas.
+Coût mesuré d'une aide à un outil : médiane 3 300 tokens (~9 % d'un agent séparé).
+Série de verdicts : AUCUNE enregistrée — et l'outil refuse de tracer une courbe plate sur un registre vide.
+→ Ces 20 constats sont la matière de la tâche #842, déjà ouverte : c'est LUI qui tranche, jamais moi.

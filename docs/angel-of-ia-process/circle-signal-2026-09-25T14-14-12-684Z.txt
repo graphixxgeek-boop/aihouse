@@ -1,0 +1,10 @@
+Récapitulatif des évaluations — Ronde du 2026-09-25.
+findJugesSansOutil() : AUCUN juge sans outil — le rapport est donc fiable sur ce point.
+mesurerParticipation() : rend un objet VIDE. Et c'est le constat du poste, pas un incident : aucune
+évaluation n'a été enregistrée depuis la dernière, donc il n'y a pas de participation à mesurer.
+Un « 0 % de participation » aurait été un faux rouge — l'outil rend vide, et vide veut dire
+« rien à mesurer », jamais « personne n'a participé ».
+Les DEUX jugements que la mécanique ne peut pas produire restent dus, et ils sont à lui :
+  · la conclusion de période sur MA façon de travailler (journal XP) ;
+  · le jugement « cette leçon a-t-elle été réellement APPLIQUÉE ? », qui exige parUtilisateur:true.
+Ils sont portés par les tâches #842 et #841.

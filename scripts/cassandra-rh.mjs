@@ -15,7 +15,7 @@
 // n'est recalculée ici, jamais une seconde version qui pourrait diverger de l'originale.
 import { readFileSync, existsSync, rmSync, writeFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { parseToolsTable, slugifyAgentName, toolIdentitySlug, checkAgentOnboarding, loadBadgeCeremonyHistory, CERTIFIABLE_STATUTS, CLASSIQUE_STATUT, PRESTATIONS } from "./le-coordinateur.mjs";
+import { parseToolsTable, lireTableMaitresse, slugifyAgentName, toolIdentitySlug, checkAgentOnboarding, loadBadgeCeremonyHistory, CERTIFIABLE_STATUTS, CLASSIQUE_STATUT, PRESTATIONS } from "./le-coordinateur.mjs";
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
 import { AGENT_CATEGORIES, GARDIEN_DOMAINS, TOOL_PORTEE, porteeDe, assertNotAPersonnage, sh, printReliabilityNotice, pairesParJaccard, familleDeLaCategorie, rangDeLaCategorie } from "./lib-shell.mjs";
 import { renderTextReport } from "./report-template.mjs";
@@ -3734,7 +3734,7 @@ export const ORG_RANKS = {
 };
 
 export function buildOrganigramme({
-  toolsTableMarkdown,
+  toolsTableMarkdown = lireTableMaitresse(),
   categories = AGENT_CATEGORIES,
   gardienDomains = GARDIEN_DOMAINS,
   fileWriterNatures = FILE_WRITER_NATURES,

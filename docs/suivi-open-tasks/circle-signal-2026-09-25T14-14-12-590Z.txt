@@ -1,0 +1,6 @@
+Tâche ouverte la plus ancienne — Ronde du 2026-09-25.
+La plus ancienne tâche encore ouverte ou en cours date du 2026-09-20T09:47Z, soit 5 jours.
+Je signale qu'elle traîne, je ne juge pas seule si elle doit être close.
+Contexte donné par check-tasks-details le même jour : 24 tâches sont ouvertes ET IDENTIQUES depuis
+7 rapports consécutifs, 6 autres depuis 6 rapports. La stagnation n'est donc pas un cas isolé mais
+une file, et sa purge est une décision (tâches #845 et #209).

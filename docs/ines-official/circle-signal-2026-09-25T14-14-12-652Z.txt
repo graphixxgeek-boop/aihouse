@@ -1,0 +1,7 @@
+INES-official — signal de Ronde du 2026-09-25.
+docs/ines-official/index.md est VIDE : le tableau des éditions n'a pas une seule ligne. Aucune
+édition consolidée n'a jamais été produite depuis la construction de l'outil.
+Ce zéro-là n'a qu'une cause et elle est lisible : l'outil n'a jamais été lancé (0 sollicitation au
+compteur d'usage, cohérent avec l'index vide).
+Je PROPOSE une première édition (node scripts/ines-official.mjs code), je ne la lance pas seule :
+c'est déjà la tâche #574, « ouverte et identique depuis 7 rapports consécutifs ».

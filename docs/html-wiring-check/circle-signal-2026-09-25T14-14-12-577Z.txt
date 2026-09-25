@@ -1,0 +1,3 @@
+Garde-fou HTML/texte (auditHtmlDecisions, doc-report) — Ronde du 2026-09-25.
+44 registres audités, 0 mismatch : aucun registre n'annonce une décision HTML sans que son script
+soit câblé pour la produire. Rien à câbler dans la foulée.

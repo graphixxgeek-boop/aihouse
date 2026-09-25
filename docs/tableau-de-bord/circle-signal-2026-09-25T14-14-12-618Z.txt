@@ -1,0 +1,12 @@
+Tableau de bord KPI — Ronde du 2026-09-25 (run manuel-2026-09-25T14:06).
+| Smart Breaker perf N/A | Smart Breaker améliorations 88 % | Robustesse du code 100 % |
+| Qualité de sortie N/A | Cohérence logique N/A | Rejouabilité N/A | Smart Conso 71 % |
+| Couverture du tableau de bord 100 % |
+Couverture : 2/2 familles ATTEIGNABLES ont produit une vraie mesure. Les 4 N/A sont déclarées HORS
+DE PORTÉE et jamais comptées en défaut : elles exigent un serveur de jeu avec du vrai trafic, absent
+d'une Ronde. C'est exactement la distinction « pas mesuré » ≠ « mesuré à zéro ».
+Robustesse 100 %, 14 points fragiles ouverts déjà suivis.
+UN ÉCART TROUVÉ EN LISANT : la ligne de fraîcheur des schémas connus dit « cohérent avec l'identité
+déclarée claude-sonnet-5 » alors que la session tourne sur claude-opus-5 (agent-du-temps l'imprime).
+L'identité n'est donc pas lue, elle est stockée — et un « cohérent » rendu sur une identité périmée
+est un faux vert. Retenu comme tâche.

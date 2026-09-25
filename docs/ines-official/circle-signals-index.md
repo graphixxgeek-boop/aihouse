@@ -6,3 +6,4 @@
 | 2026-09-22T17:19:15.256Z | circle-signal-2026-09-22T17-19-15-256Z.txt | INES-official : édition v1 du code, 163 fichiers, 3,8 Mo. |
 | 2026-09-22T17:42:10.135Z | circle-signal-2026-09-22T17-42-10-135Z.txt | RONDE 2 (conforme au process, ouverte dans les règles) — Édition v1 : 163 fichiers, 3,9 Mo. |
 | 2026-09-23T21:49:13.889Z | circle-signal-2026-09-23T21-49-13-889Z.txt | Ronde GOAT MAX du 2026-09-23 — Edition v1 : 172 fichiers, 4,9 Mo, 0 jamais committe. |
+| 2026-09-25T14:14:12.652Z | circle-signal-2026-09-25T14-14-12-652Z.txt | INES-official — signal de Ronde du 2026-09-25. |

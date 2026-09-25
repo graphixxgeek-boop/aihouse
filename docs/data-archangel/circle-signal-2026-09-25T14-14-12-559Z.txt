@@ -1,0 +1,11 @@
+data-archangel — Ronde du 2026-09-25.
+13 branchements suggérés — et l'outil répète que ce sont des SUGGESTIONS, jamais des manquements :
+circle-tasks pourrait lire docs/argus|harmonia|axa-check, check-tasks-details pourrait lire
+docs/hyper-scan-checkpoint|ines-official|smart-conso-api, le-coordinateur pourrait lire
+docs/clean-dirty-old|ines-official|smart-conso-api, clean-dirty-old pourrait lire
+docs/harmonia|axa-check|suivi/relectures-lourdes, smart-conso-api pourrait lire .smart-conso-token-history.json.
+NUANCE À LIRE AVANT DE CONCLURE (imprimée par l'outil) : un registre destiné à l'œil humain n'a pas
+besoin d'un lecteur-outil. Ce qui manque n'est pas forcément une lecture, c'est l'EXPLOITATION DE LA
+SÉRIE — comparer trente passages pour en tirer une tendance, ce qu'aucun humain ne fera.
+Méthode déclarée : « lire » se mesure à la citation du chemin dans le code — une mention, jamais une
+preuve de lecture effective. C'est la tâche #795, déjà ouverte.

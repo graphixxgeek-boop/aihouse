@@ -1,0 +1,11 @@
+pure-gold-unity — Ronde du 2026-09-25.
+Critère 1 (du contenu, jamais un renvoi) : OK.
+Critère 3 (un plan d'action le cas échéant) : 4/41 outils ne concluent jamais — agent-des-noms,
+data-archangel, ou-on-en-est, sauvegarde-projet (17 exemptés, sans constat propre).
+Critère 4 (le rapport sort tout ce que l'outil sait détecter) : OK.
+Critère 5 (peut-il dire « tout va bien » sans rien avoir mesuré) : 1 outil — hyper-scan-checkpoint.
+19 détecteurs sont portés par la SEULE suite de tests : ils protègent réellement (pre-commit) mais
+ne disent jamais rien dans le rapport de leur outil. CINQ d'entre eux ont été écrits AUJOURD'HUI
+(criticite::findPourQuiManquant, criticite::findPourQuiInvalide, check-tasks-details::findStatutsContredits,
+kpi-report::findColonnesSansNature, et le voisin criticite::findPaliersSansFamille) — la mesure
+attrape donc mon propre travail du jour, ce qui est exactement ce qu'on lui demande.

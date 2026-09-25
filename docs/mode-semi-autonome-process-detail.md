@@ -165,3 +165,22 @@ Les deux maillons qu'il GARDE, en revanche, sont le cœur de ce mode : **QUESTIO
 passe par une fenêtre dédiée, et une question posée ne bloque rien — on prend une tâche de réserve
 plutôt que d'attendre ou de décider à sa place) et **TÂCHES DE TRAVAIL** (la file vient du suivi
 durable, jamais d'une liste improvisée).
+
+## 2026-09-25 — Ce que les deux nouveaux mécanismes de god changent pour CE mode
+
+*(Même dette documentaire que celle payée dans `docs/mode-auto-process-guardian.md`, et même
+garde-fou qui l'a nommée : les commits `1893946` et `d7e6c47` ont changé
+`scripts/god-of-all-process.mjs`, qui porte ce process, sans toucher ce document. Le détail complet
+des deux mécanismes vit dans l'autre fichier — jamais dupliqué ici, seul ce qui concerne CE mode
+figure ci-dessous.)*
+
+- **`auditPlansDeDocuments()`** : en semi-autonome, l'utilisateur est LÀ. Un plan d'action écrit
+  dans un document peut donc lui être présenté tout de suite — et c'est précisément pour ça que
+  l'oubli y est plus coûteux qu'ailleurs : un constat qui ne devient pas une tâche alors que la
+  personne qui peut le trancher est disponible est un gaspillage double.
+
+- **`findProcessSansEstimation()`** : ce mode figure dans `PROCESS_SANS_ESTIMATION_ASSUMEE`, avec
+  sa raison écrite. Il n'a pas de durée à annoncer parce qu'il ne se lance pas : il décrit COMMENT
+  travailler pendant que l'utilisateur est présent, jamais un programme à cocher. L'exemption est
+  une déclaration, jamais une dispense obtenue par oubli — et c'est la différence que tout ce
+  dispositif protège.
