@@ -578,6 +578,50 @@ export function parseLecons(texte = "") {
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// CHAQUE ENTRÉE EST-ELLE DU BON CÔTÉ DU TRAIT ? (2026-09-25, tâche #889)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE DÉFAUT TROUVÉ EN OUVRANT LE FICHIER POUR Y ÉCRIRE, et il durait depuis le 2026-09-23 : le
+// document s’ouvre sur « DEUX SECTIONS, JAMAIS UNE SEULE LISTE » — les leçons payées par une
+// erreur d’un côté, les bonnes pratiques de l’autre — et TREIZE leçons (L12 à L24) se trouvaient
+// physiquement APRÈS le titre « # Bonnes pratiques ». Chacune avait été ajoutée à la fin du
+// fichier, ce qui était le bon geste tant que la fin du fichier était encore la fin des leçons.
+//
+// POURQUOI AUCUN OUTIL NE L’A VU : `natureDe()` lit le PRÉFIXE de l’identifiant (L… ou BP…),
+// jamais la section où l’entrée se trouve. Les comptes étaient donc justes, les rappels aussi —
+// seul le lecteur humain était trompé, et c’est pour lui que les deux sections existent. Un
+// défaut qu’aucune mesure ne peut atteindre est exactement celui qui dure.
+//
+// LE GARDE-FOU : il compare la POSITION de chaque titre à celle du trait, jamais autre chose. Il
+// attrape les deux sens (une leçon sous les pratiques, une pratique au-dessus du trait) parce
+// qu’un détecteur qu’on n’a vu mordre que dans un sens ne prouve rien (BP4).
+export const TITRE_BONNES_PRATIQUES = "# Bonnes pratiques";
+
+export function entreesMalRangees(texte = "") {
+  const t = String(texte);
+  const trait = t.indexOf(`\n${TITRE_BONNES_PRATIQUES}`);
+  // Pas de trait du tout : le document n’a pas deux sections, il n’y a donc rien à ranger. On ne
+  // fabrique pas un écart à partir d’une forme qui n’existe pas (L5 : « pas pu regarder » n’est
+  // pas « rien trouvé » — ici c’est bien « rien à regarder », et on le dit).
+  if (trait < 0) return { mesure: "hors de portée", raison: `${LECONS_PATH} ne porte pas de titre « ${TITRE_BONNES_PRATIQUES} » — une seule liste, donc aucun côté à vérifier`, ecarts: [] };
+  const ecarts = [];
+  for (const m of t.matchAll(/^## (L\d+|BP\d+)\b[^\n]*/gm)) {
+    const id = m[1];
+    const apresLeTrait = m.index > trait;
+    const estPratique = /^BP/.test(id);
+    if (estPratique === apresLeTrait) continue;
+    ecarts.push({
+      id,
+      attendu: estPratique ? "après le titre des bonnes pratiques" : "avant le titre des bonnes pratiques",
+      detail: estPratique
+        ? `${id} est une bonne pratique rangée parmi les leçons — ce qui les distingue (l’une a été payée par une erreur, l’autre non) devient illisible`
+        : `${id} est une leçon rangée parmi les bonnes pratiques — elle se lit comme un conseil, et perd la casse qui la rend crédible`,
+    });
+  }
+  return { mesure: "mesuré", ecarts };
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LESQUELLES ONT RÉELLEMENT CHANGÉ QUELQUE CHOSE ? (2026-09-25, tâche #874)
 // ————————————————————————————————————————————————————————————————————————
 //
@@ -893,8 +937,10 @@ export function auditLecons({ root = ROOT, readFileImpl = readFileSync, existsIm
   // chercher la cause ; un garde-fou qui dit « c'est cassé » sans dire « voilà pourquoi » fait
   // perdre le temps qu'il prétend faire gagner.
   const terrainCoupe = juges.filter((l) => !l.mots.length && l.terrain).map((l) => l.id);
+  const rangement = entreesMalRangees(texte);
   return {
     mesure: "mesuré",
+    rangement,
     lecons: juges,
     total: juges.length,
     lecons_: juges.filter((l) => l.nature === "leçon").length,
@@ -1200,6 +1246,9 @@ export function formatLecons(audit) {
   l.push(`${audit.total} entrée(s) — ${audit.lecons_} leçon(s) payée(s) par une erreur, ${audit.pratiques} bonne(s) pratique(s).`);
   l.push(`Tenue : ${audit.portees} portée(s) par un mécanisme réel, ${audit.sansMecanisme} sans mécanisme possible (déclaré), ${audit.sansPorteur} sans porteur, ${audit.fantomes} porteur(s) fantôme(s).`);
   l.push(`Mise en pratique : ${audit.applicables}/${audit.total} peuvent remonter au bon moment${audit.sansTerrain.length ? ` — sans terrain déclaré : ${audit.sansTerrain.join(", ")}` : ""}.`);
+  // MUET quand tout est rangé : une ligne « 0 écart » à chaque passage est une alarme permanente (L6).
+  if (audit.rangement?.mesure === "hors de portée") l.push(`Rangement : 🚨 PAS MESURÉ — ${audit.rangement.raison}.`);
+  else for (const e of audit.rangement?.ecarts ?? []) l.push(`  ⚠️ ${e.id} est du mauvais côté du trait — ${e.detail}`);
   for (const x of audit.lecons) {
     const marque = x.etat === "portée" ? "✅" : x.etat === "sans mécanisme" ? "📄" : "⚠️";
     l.push(`  ${marque} ${x.id} (${x.etat}) — ${x.detail}`);
@@ -1226,6 +1275,9 @@ export function constatsLecons(audit) {
       etat: "retenu", tache: (audit.terrainCoupe ?? []).includes(id)
         ? `remettre le terrain de ${id} sur UNE SEULE ligne dans ${LECONS_PATH}`
         : `déclarer le terrain de ${id} dans ${LECONS_PATH} (les situations où elle mord, et les mots qui les signalent)` })),
+    ...(audit.rangement?.ecarts ?? []).map((e) => ({
+      constat: e.detail,
+      etat: "retenu", tache: `déplacer ${e.id} ${e.attendu} dans ${LECONS_PATH}` })),
   ];
 }
 

@@ -11394,6 +11394,17 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     // sans coût à raconter. Exiger d'elle une trace d'origine reviendrait à lui demander d'inventer
     // une erreur — ma première version le faisait, et accusait deux entrées parfaitement correctes.
     assert.ok(reelles.filter((l) => l.nature === 'leçon' && !l.fusionneeDans).every((l) => l.dateOrigine), 'checked live: every real LESSON must carry a dated origin trace — one had none, and a lesson without the cost that produced it reads as advice rather than as a lesson');
+
+    // LE BON CÔTÉ DU TRAIT (2026-09-25, tâche #889). Le registre s'ouvre sur « DEUX SECTIONS,
+    // JAMAIS UNE SEULE LISTE » — et treize leçons se trouvaient rangées APRÈS le titre des bonnes
+    // pratiques, chacune ajoutée à la fin du fichier quand la fin du fichier n'était plus la fin
+    // des leçons. Aucun compteur ne pouvait le voir : natureDe() lit le PRÉFIXE, jamais la section.
+    // Les DEUX sens sont éprouvés (BP4) : un détecteur vu mordre dans un seul sens ne prouve rien.
+    const rangementReel = tl.entreesMalRangees(fs.readFileSync('docs/referentiel/lecons.md', 'utf8'));
+    assert.deepEqual(rangementReel.ecarts, [], 'checked live: every L… entry sits before the "Bonnes pratiques" heading and every BP… after it — the two sections exist for the human reader, and no counter can see that they have blurred');
+    assert.deepEqual(tl.entreesMalRangees('## L1 — a\n\n# Bonnes pratiques\n\n## L2 — b\n\n## BP1 — c\n').ecarts.map((e) => e.id), ['L2'], 'bites: a lesson filed under the practices is named');
+    assert.deepEqual(tl.entreesMalRangees('## BP9 — a\n\n# Bonnes pratiques\n\n## BP1 — c\n').ecarts.map((e) => e.id), ['BP9'], 'bites the other way too: a practice filed among the lessons is named');
+    assert.equal(tl.entreesMalRangees('## L1 — seule').mesure, 'hors de portée', 'a register with no heading has no two sides: it reports "hors de portée" rather than fabricating a clean result out of a shape that does not exist');
   }
 
   // 4quinquies. L'ALERTE « RÉDIGE TON PROMPT À PART » (2026-09-23, chantier 8) — conseil donné par

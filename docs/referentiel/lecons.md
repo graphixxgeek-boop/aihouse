@@ -309,14 +309,6 @@ de sa découverte — zéro autre occurrence.
 *Payée le 2026-09-23, attrapée par un test écrit dans la foulée. La remise à niveau du reste du code
 a été faite le jour même : le seul autre résultat était du texte narratif, jamais un motif.*
 
----
-
-# Bonnes pratiques
-
-*(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne
-pratique n'a pas été payée par une erreur, et c'est la seule chose qui la distingue. Trois entrées
-au départ, toutes observées réellement sur ce projet — jamais des conseils génériques recopiés.)*
-
 ## L12 — Un analyseur qui DEVINE saute en silence ; il doit refuser à la place
 
 Quand un outil lit un document pour en tirer une structure, la tentation est de déduire ce dont il
@@ -742,6 +734,59 @@ que classé au jugé. Ce qui reste hors mécanique — choisir la bonne source a
 sonde — n'a pas de porteur possible, et le déclarer ici EST la protection (Article 27).
 
 **Terrain** : quand je classe, range ou catégorise des composants · quand j'écris une sonde qui cherche une INTENTION plutôt qu'un FAIT · quand un résultat de classement contient un cas manifestement absurde · mots : classification, finalité, à quoi ça sert, partage, catégorie, iceberg, jeu vs outillage · fichiers : scripts/le-coordinateur.mjs, scripts/cassandra-rh.mjs, CLAUDE.md
+
+## L25 — Compter combien de lignes reçoivent une étiquette ne dit RIEN de la justesse des étiquettes
+
+Deux questions se ressemblent au point de se substituer l'une à l'autre sans que rien ne grince :
+**combien d'éléments mon classement a-t-il su étiqueter** (la COUVERTURE) et **combien de ces
+étiquettes sont justes** (la PRÉCISION). La première se calcule toute seule, la seconde exige que
+quelqu'un relise. Le piège est donc mécanique, jamais un défaut d'attention : on mesure ce qui se
+mesure, et le chiffre obtenu est parfaitement exact — il répond simplement à l'autre question.
+
+**Ce qui rend ce faux vert pire qu'une absence de mesure** : un « 81 % classés » a toutes les
+apparences d'une validation. Il est vrai, il est vérifiable, il est reproductible. Rien, dans sa
+forme, ne dit qu'il ne parle pas de justesse. Une case vide aurait au moins appelé le travail.
+
+**Les deux gestes qui ferment le trou, et le second seul compte vraiment** :
+
+1. **Nommer la grandeur dans la phrase qui la porte.** « 81 % des tâches ont reçu une nature »
+   plutôt que « l'axe de nature fonctionne ». Une grandeur nommée ne peut plus être lue pour une
+   autre.
+2. **Relire un échantillon à la main avant de livrer, et publier ce chiffre-là À CÔTÉ.** Même
+   modeste, même décevant : `précision mesurée à la main : 4 sur 7` en dit plus long que n'importe
+   quel taux de couverture, et il rend au lecteur le droit de se méfier.
+
+**Corollaire, qui vaut au-delà du classement** : avant d'annoncer qu'un mécanisme marche, écrire la
+question à laquelle on voulait répondre, puis vérifier que le chiffre y répond — pas qu'il est juste.
+
+*Payée le 2026-09-25, tâches #886 et #888. L'axe de nature des tâches a été validé sur sa
+couverture (19 % d'indéterminées, donc « ça tient ») et jamais sur sa justesse. La rafale de
+correctifs livrée à partir de lui comptait **au plus 2 vrais correctifs sur 10** : le détail d'une
+tâche ouverte cite presque toujours le défaut qui l'a motivée, donc « correctif » gagnait à tous les
+coups. Le chiffre était bon, il regardait la mauvaise chose — et c'est la plus coûteuse des trois
+erreurs de la journée, précisément parce qu'il était bon.*
+
+**Porté par** : `PRECISION_NATURE` (`scripts/check-tasks-details.mjs`) — la précision mesurée à la
+main est imprimée à côté du classement, avec la limite qui va avec, plutôt que laissée à la lecture
+du taux de couverture ; et la règle du dénominateur qui voyage avec le chiffre. Ce qui reste hors
+mécanique — savoir si une étiquette est JUSTE demande de relire, et aucun compteur ne le fera à ma
+place — n'a pas de porteur possible, et le déclarer ici EST la protection (Article 27).
+
+**Même famille que L10 et L24, terrain différent, et c'est pour ça qu'elle vit à part** : L10
+attrape la vérification qui partage le filtre de ce qu'elle vérifie, L24 attrape la sonde qui
+cherche la finalité dans la mauvaise source. Celle-ci attrape le chiffre exact qui répond à une
+autre question que la sienne — et elle doit remonter au moment où je VALIDE une mesure, pas au
+moment où je classe.
+
+**Terrain** : quand j'annonce qu'un classement, une sonde ou un étiquetage fonctionne · quand je livre un taux, un pourcentage ou un « X sur Y » · quand une mesure sert de feu vert à une livraison · mots : couverture, taux, pourcentage, classé, étiquette, indéterminé, précision, justesse, validé, ça marche · fichiers : scripts/check-tasks-details.mjs, scripts/cassandra-rh.mjs, scripts/the-equalizer.mjs
+
+---
+
+# Bonnes pratiques
+
+*(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne
+pratique n'a pas été payée par une erreur, et c'est la seule chose qui la distingue. Trois entrées
+au départ, toutes observées réellement sur ce projet — jamais des conseils génériques recopiés.)*
 
 ## BP1 — La règle s'écrit à UN endroit et se dérive partout ailleurs
 
