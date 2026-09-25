@@ -9,6 +9,7 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const INDEX_PATH = join(ROOT, "docs/profil-utilisateur/index.md");
@@ -49,12 +50,34 @@ function main() {
     ? readdirSync(OBSERVATIONS_DIR).filter((f) => f.endsWith(".md"))
     : [];
   const { missingFromIndex, missingFromDisk } = findOrphanedObservations(indexText, observationFiles);
-  if (!missingFromIndex.length && !missingFromDisk.length) {
-    console.log(`OK — ${observationFiles.length} fiche(s) sur disque, toutes référencées dans l'index, aucun lien mort.`);
-    return;
-  }
   for (const f of missingFromIndex) console.log(`⚠️ Fiche présente mais jamais indexée : observations/${f}`);
   for (const f of missingFromDisk) console.log(`⚠️ Lien mort dans l'index, fichier introuvable : observations/${f}`);
+  if (!missingFromIndex.length && !missingFromDisk.length) {
+    console.log(`OK — ${observationFiles.length} fiche(s) sur disque, toutes référencées dans l'index, aucun lien mort.`);
+  }
+  // LE PLAN D'ACTION (2026-09-25, tâche #854 — reste mesuré de #803/#833). Cet outil émettait deux
+  // vrais écarts et s'arrêtait là : l'Article 28 dit qu'un rapport n'est pas fini quand il est
+  // écrit, mais quand ses constats sont devenus des tâches. Et la section s'imprime MÊME VIDE,
+  // délibérément — « aucun constat retenu » et « le plan d'action n'a pas été produit » sont deux
+  // choses qu'une section absente confondrait, ce qui est exactement le faux vert que ce projet
+  // traque partout ailleurs.
+  //
+  // Les deux écarts appellent des corrections OPPOSÉES, donc ils portent deux tâches distinctes
+  // plutôt qu'une formule commune : une fiche non indexée se répare en AJOUTANT une ligne, un lien
+  // mort en retrouvant le fichier ou en RETIRANT la ligne. Les fondre en « corriger l'index »
+  // rendrait le plan inapplicable sans rouvrir le rapport.
+  const ecarts = [
+    ...missingFromIndex.map((f) => ({ quoi: `fiche présente sur disque mais jamais indexée : observations/${f}`, quoiFaire: `ajouter sa ligne à docs/profil-utilisateur/index.md — sans elle, la fiche est invisible pour un agent qui ne lit que l'index (Article 27)` })),
+    ...missingFromDisk.map((f) => ({ quoi: `lien mort dans l'index vers observations/${f}`, quoiFaire: `retrouver le fichier ou retirer la ligne — un lien mort ressemble à un lien, ce qui est pire qu'une absence` })),
+  ];
+  const plan = planDactionDepuisEcarts(ecarts, {
+    toolSlug: "check-profil-utilisateur",
+    libelle: (e) => e.quoi,
+    tache: (e) => e.quoiFaire,
+  });
+  console.log("");
+  console.log(`=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of plan.lignes) console.log(l);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

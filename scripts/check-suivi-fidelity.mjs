@@ -16,6 +16,7 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { motCleValide, findMotsClesEnCollision } from "./criticite.mjs";
 import { sh, printReliabilityNotice } from "./lib-shell.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const SESSIONS_DIR = join(ROOT, "docs/suivi/sessions");
@@ -657,6 +658,99 @@ function main() {
     for (const c of missing) console.log(`   - ${c.hash.slice(0, 8)} : ${c.subject}`);
     console.log(`\n→ ${missing.length} commit(s) récent(s) ont changé du code/de la charte réelle sans jamais toucher docs/suivi/ — signe de la dérive réelle trouvée le 2026-09-19 (règle ajoutée à docs/regles-de-travail.md §4 : le suivi se met à jour DANS LE MÊME commit).`);
   }
+
+  // LE PLAN D'ACTION (2026-09-25, tâche #854 — reste mesuré de #803/#833).
+  //
+  // POURQUOI CET OUTIL-CI EN AVAIT LE PLUS BESOIN : il émet SEPT familles d'écarts différentes,
+  // chacune imprimée à sa place dans un rapport long, et rien ne les rassemblait à la fin. Un
+  // lecteur qui parcourt le rapport en diagonale voit sept blocs et repart sans savoir lequel
+  // demande quoi. C'est précisément le trou que l'Article 28 nomme : « un rapport produit ressemble
+  // à un problème traité ».
+  //
+  // CHAQUE FAMILLE PORTE SA PROPRE TÂCHE, jamais une formule commune, parce que les corrections
+  // n'ont rien à voir entre elles : une clôture sans fidèle/écart se répare en RELISANT le travail,
+  // un chemin mort en CORRIGEANT un renvoi, un horodatage futur en RELISANT L'HEURE. Les fondre en
+  // « corriger le suivi » produirait un plan qu'on ne peut pas appliquer sans rouvrir le rapport.
+  //
+  // CE QUI N'Y FIGURE PAS, ET C'EST VOULU : les tâches simplement OUVERTES. Une tâche ouverte n'est
+  // pas un écart, c'est du travail en attente — la faire remonter en constat transformerait chaque
+  // passage en une liste de cent lignes et apprendrait à ne plus lire la section.
+  // UN CONSTAT PAR FAMILLE, JAMAIS UN PAR LIGNE — et ce n'est pas un raccourci, c'est la correction
+  // d'une erreur faite ici même. Le premier jet poussait chaque écart comme un constat séparé :
+  // 277 lignes de plan d'action, dont 23 fois la même phrase. Un plan plus long que le rapport
+  // qu'il conclut n'est pas un plan, c'est un déversement — et il apprend à sauter la section,
+  // c'est-à-dire exactement ce que l'Article 28 cherche à empêcher en la créant.
+  //
+  // La bonne granularité est celle de la CORRECTION : « 23 clôtures sans fidèle/écart, dont les
+  // n°171, 172, 287 » se traite, « 23 lignes identiques » se saute. Le compte voyage donc avec le
+  // constat (le dénominateur, règle de maison) et trois exemples suffisent à rendre la famille
+  // localisable sans la recopier.
+  const numeroDe = (row) => (String(row).match(/^\s*\|\s*(\d+)/) ?? [])[1];
+  const exemples = (liste, max = 3) => {
+    const vus = liste.slice(0, max).filter(Boolean);
+    const reste = liste.length - vus.length;
+    return vus.length ? ` — ex. ${vus.join(", ")}${reste > 0 ? ` (+${reste})` : ""}` : "";
+  };
+  const familles = [
+    {
+      n: results.reduce((t, r) => t + r.hits.length, 0),
+      ex: results.flatMap((r) => r.hits.map((h) => { const num = numeroDe(h.row); return num ? `n°${num}` : r.file; })),
+      // LE DÉNOMINATEUR VOYAGE AVEC LE CHIFFRE, règle de maison : « 251 clôtures sans verdict »
+      // affole, « 251 sur 780 lignes de suivi » se situe. Et la taille change la NATURE de la
+      // suite : trois clôtures se relisent dans la foulée, deux cent cinquante demandent une
+      // décision sur la façon de les traiter (par lot, par période, ou pas du tout). Le dire
+      // évite un plan d'action que personne n'appliquera jamais, ce qui est une autre façon de
+      // ne rien conclure.
+      quoi: (n, ex) => `${n} clôture(s) sans fidèle/écart sur ${lu.lignes} ligne(s) de suivi lues${ex}`,
+      quoiFaire: (n) => n > 20
+        ? `population historique : décider COMMENT la traiter (par lot, par période, ou la déclarer grandfathered comme docs/systeme-de-suivi.md l'autorise) avant d'en relire une seule — relire 251 clôtures une par une est un plan que personne n'appliquera`
+        : "relire ce qui a été livré contre ce qui était demandé, puis écrire le verdict — une clôture nue ne dit pas si le travail a tenu sa promesse",
+    },
+    {
+      n: relecture.morts.length,
+      ex: relecture.morts.map((m) => m.chemin ?? String(m)),
+      quoi: (n, ex) => `${n} chemin(s) mort(s) cité(s) par le référentiel${ex}`,
+      quoiFaire: "corriger le renvoi ou déclarer l'absence (Article 27) — un chemin cassé ressemble à un lien, ce qui est pire qu'une absence",
+    },
+    {
+      n: motsCles.length,
+      ex: motsCles.map((m) => `n°${m.n}`),
+      quoi: (n, ex) => `${n} tâche(s) ouverte(s) sans mot-clé exploitable${ex}`,
+      quoiFaire: "ajouter ou corriger le mot-clé — sans lui la ligne est introuvable par sujet, donc invisible à la reprise des notes (Article 30)",
+    },
+    {
+      n: numberIssues.length,
+      ex: numberIssues.map((i) => String(i.message ?? i).slice(0, 60)),
+      quoi: (n, ex) => `${n} incohérence(s) de numérotation${ex}`,
+      quoiFaire: "renuméroter la ligne fautive — un numéro doit rester unique ET strictement croissant, c'est ce qui rend une clôture citable",
+    },
+    {
+      n: futurs.length,
+      ex: futurs.map((f) => `n°${f.numero} (+${f.avanceMinutes} min)`),
+      quoi: (n, ex) => `${n} ligne(s) datée(s) dans le FUTUR${ex}`,
+      quoiFaire: "relire l'heure réelle (node scripts/agent-du-temps.mjs) et corriger — un âge négatif se lit « tout frais » au lieu de déclencher une alerte (Article 32)",
+    },
+    {
+      n: missing.length,
+      ex: missing.map((c) => c.hash.slice(0, 8)),
+      quoi: (n, ex) => `${n} commit(s) sans mise à jour du suivi${ex}`,
+      quoiFaire: "écrire la ligne de suivi manquante — la règle est « dans le MÊME commit », et « je le ferai après » est la forme que prend l'oubli",
+    },
+  ];
+  const ecarts = familles.filter((f) => f.n > 0).map((f) => ({
+    quoi: f.quoi(f.n, exemples(f.ex)),
+    quoiFaire: typeof f.quoiFaire === "function" ? f.quoiFaire(f.n) : f.quoiFaire,
+  }));
+
+  const plan = planDactionDepuisEcarts(ecarts, {
+    toolSlug: "check-suivi-fidelity",
+    libelle: (e) => e.quoi,
+    tache: (e) => e.quoiFaire,
+    fausseUneMesure: true,
+  });
+  console.log("");
+  console.log(`=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of plan.lignes) console.log(l);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

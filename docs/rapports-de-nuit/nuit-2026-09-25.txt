@@ -248,3 +248,13 @@ LES INTERDITS RESPECTÉS (vérifiés à la clôture)
   Ce que la mesure suggere sans trancher : ce ne sont pas vingt ceremonies, c'est UNE information
   repetee vingt fois. La vraie question devient « une ceremonie par outil, ou une par CHANGEMENT
   reel ? » [A TOI, chiffre remesure sous #801]
+
+#854 : deux outils de plus concluent par un plan d'action (check-profil-utilisateur,
+  check-suivi-fidelity) — reste mesure de #803. Deux erreurs de ma part gardees ici parce
+  qu'elles sont la lecon : j'ai d'abord branche la mauvaise variable (le script a plante tout
+  de suite plutot que de rendre un plan faux, la bonne facon d'echouer), puis produit un plan
+  de 277 LIGNES dont 23 fois la meme phrase. Un plan plus long que le rapport qu'il conclut
+  apprend a sauter la section — exactement ce que l'Article 28 cree la section pour empecher.
+  Corrige en un constat par FAMILLE avec son compte et son denominateur : 277 lignes -> 2.
+  Et le denominateur change la suite : au-dela de 20 cas, la tache n'est plus « relire » mais
+  « decider comment traiter la population » [FAIT]
