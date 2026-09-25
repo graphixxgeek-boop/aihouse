@@ -78,7 +78,7 @@ oubliée ici.
 
 Membre (Suite Dette & Structure du code), **jamais Gardien sacré** : il ne remplit aucun des deux
 volets du critère — il ne scanne rien par lui-même, et il ne tourne pas à chaque commit. Item de
-Ronde `a-niveau`, fiabilité **mécanique** (il n'estime rien), registre `docs/the-equalizer/`,
+Ronde `the-equalizer` (l'item portait `a-niveau` avant le renommage du 2026-09-23, tâche #580 ; la fiche gardait l'ancien slug, ce qui envoyait chercher un item inexistant — corrigé par #577), fiabilité **mécanique** (il n'estime rien), registre `docs/the-equalizer/`,
 prestation « Pack Niveau » au catalogue.
 
 **Frontière avec ses deux voisins**, tranchée pour qu'elle ne se rediscute pas : CASSANDRA-RH juge

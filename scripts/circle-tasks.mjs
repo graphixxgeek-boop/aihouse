@@ -274,7 +274,9 @@ export const CIRCLE_ITEMS = [
     execute: "Lancer node scripts/tool-learning.mjs, juger chaque outil concerné (jugerUnOutil), proposer l'amélioration la moins coûteuse là où une preuve manque (proposerAmelioration), et NE créer une tâche que si l'agent retient la proposition ET qu'elle exige une validation de l'utilisateur (tacheADeclencher). Vérifier aussi ses propres verdicts passés (verifierSesPropresVerdicts) — un outil jugé immobile qui a progressé sans mon intervention réfute le critère, pas l'outil. Écrire le signal via recordCircleItemReport('tool-learning', ...). PROCESS XP-IA-bonnes-pratiques-et-lecons (2026-09-23, docs/xp-ia-process-detail.md) — ce poste porte aussi les DEUX étapes de Ronde de ce process, et ce sont les seules que la mécanique ne peut pas produire à ma place : (1) ÉCRIRE LA CONCLUSION DE PÉRIODE sur MA façon de travailler (enregistrerXp avec nature 'conclusion'), à partir du journal XP et du registre des leçons — l'outil sait compter les captations, il ne sait pas dire quel travers revient chez moi ; (2) PRÉSENTER LES ENTRÉES À L'UTILISATEUR pour qu'il dise lesquelles ont été réellement APPLIQUÉES (enregistrerXp avec nature 'jugement', parUtilisateur: true) — jamais l'agent sur son propre travail, c'est une décision explicite du 2026-09-23. Et la Ronde est elle-même un des trois moments déclencheurs : répondre à « y avait-il quelque chose à retenir ? », « rien à retenir » compris.",
     producesReport: true,
   },
-  // a-niveau (2026-09-23) — LE VERDICT D'ENSEMBLE, et il a sa place ici plutôt qu'au commit pour une
+  // the-equalizer (2026-09-23 ; l'item s'est d'abord appelé `a-niveau`, renommé avec l'outil le
+  // 2026-09-23 par la tâche #580 — ce commentaire portait encore l'ancien nom, dernier reste du
+  // renommage, trouvé par #577) — LE VERDICT D'ENSEMBLE, et il a sa place ici plutôt qu'au commit pour une
   // raison de fond : « tout est-il à niveau ? » n'est pas une question qu'on se pose après avoir
   // touché trois lignes, c'est une question de période. À chaque commit elle produirait le même
   // verdict des dizaines de fois d'affilée, et un signal qui ne change jamais cesse d'être lu.
