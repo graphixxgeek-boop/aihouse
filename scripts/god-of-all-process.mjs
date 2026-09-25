@@ -1512,7 +1512,69 @@ export function actionChainLines(resultats = []) {
   return l;
 }
 
-export function buildProcessComplianceReport({ processes = PROCESSES, root = ROOT, verdictsSecondaires = [], sectionAngel, chainesAction = [] } = {}) {
+// ————————————————————————————————————————————————————————————————————————
+// LA CHAÎNE NE COUVRAIT QUE LES RAPPORTS — PAS LES DOCUMENTS (2026-09-25, tâche #834)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE TROU, et il est exactement du type que l'Article 28 a été écrit pour fermer. `checkActionChain()`
+// vérifie la chaîne d'un plan d'action qu'on lui PASSE — c'est-à-dire le plan produit par un outil,
+// en mémoire, au moment où il tourne. Or ce projet écrit aussi des plans d'action dans des
+// DOCUMENTS (`docs/plans/`), destinés à l'utilisateur, et ceux-là n'étaient vérifiés par personne.
+// Neuf documents en portaient un au moment de la construction.
+//
+// POURQUOI ÇA COMPTE AUTANT QUE POUR UN RAPPORT : un document est encore plus durable qu'un
+// rapport, donc sa référence morte survit plus longtemps. « → tâche #818 » dans un plan écrit hier
+// ressemble à un lien vivant six semaines plus tard, alors que la tâche peut n'avoir jamais été
+// créée. **Une référence morte ressemble à un lien, ce qui est pire qu'une absence** — la phrase est
+// déjà dans l'Article 28, elle ne s'appliquait simplement pas à cette moitié du terrain.
+//
+// CE QU'IL NE FAIT PAS : il ne juge ni le contenu du plan, ni la pertinence des tâches annoncées. Il
+// vérifie deux choses mécaniques — un plan d'action annonce-t-il au moins une tâche, et ces tâches
+// existent-elles pour de vrai dans le suivi.
+export const MOTIF_SECTION_PLAN = /^#{1,4}\s*Plan d['’]action/im;
+export const MOTIF_TACHE_ANNONCEE = /(?:tâche|tache)\s*\*{0,2}#(\d+)/gi;
+
+export function auditPlansDeDocuments(documents = [], suiviText = null) {
+  const avecPlan = documents.filter((d) => MOTIF_SECTION_PLAN.test(String(d?.texte ?? "")));
+  if (!documents.length) {
+    return { mesurable: false, pourquoi: "aucun document fourni : répondre « tous les plans sont chaînés » sur zéro fichier lu serait le faux vert que cette chaîne existe pour empêcher" };
+  }
+  if (suiviText == null) {
+    return {
+      mesurable: false,
+      documentsLus: documents.length, avecPlan: avecPlan.length,
+      pourquoi: "texte du suivi non fourni — on peut voir qu'un plan n'annonce aucune tâche, jamais vérifier qu'une tâche annoncée existe pour de vrai",
+    };
+  }
+  const sansAucuneTache = []; const referencesMortes = []; const sains = [];
+  for (const d of avecPlan) {
+    const numeros = [...String(d.texte).matchAll(MOTIF_TACHE_ANNONCEE)].map((m) => m[1]);
+    if (!numeros.length) { sansAucuneTache.push(d.chemin); continue; }
+    const mortes = [...new Set(numeros)].filter((n) => !new RegExp(`\\|\\s*${n}\\s*\\|`).test(suiviText));
+    if (mortes.length) referencesMortes.push({ chemin: d.chemin, taches: mortes });
+    else sains.push(d.chemin);
+  }
+  return {
+    mesurable: true, documentsLus: documents.length, avecPlan: avecPlan.length,
+    sansAucuneTache, referencesMortes, sains,
+    horsPortee: "Il vérifie qu'un plan annonce des tâches et qu'elles existent dans le suivi DURABLE — jamais qu'elles sont les BONNES, ni que le plan est complet. Et il ne peut pas distinguer une tâche jamais créée d'un numéro emprunté au gestionnaire de session : les deux s'écrivent « #92 », et c'est précisément ce que la notation partagée rend indécidable.",
+  };
+}
+
+export function plansDeDocumentsLines(a) {
+  if (!a?.mesurable) return [`— Chaîne document → tâches — PAS MESURÉ : ${a?.pourquoi ?? "aucune donnée"}`];
+  const L = [`— Chaîne document → plan d'action → tâches (${a.avecPlan} plan(s) dans ${a.documentsLus} document(s)) —`];
+  if (!a.sansAucuneTache.length && !a.referencesMortes.length) {
+    L.push("✅ Chaque plan d'action écrit dans un document annonce des tâches, et toutes existent dans le suivi.");
+  } else {
+    for (const c of a.sansAucuneTache) L.push(`  ✗ ${c} porte un plan d'action et n'annonce AUCUNE tâche — un plan qui n'engage rien est une formalité`);
+    for (const r of a.referencesMortes) L.push(`  ✗ ${r.chemin} annonce ${r.taches.map((t) => `#${t}`).join(", ")}, introuvable(s) dans le suivi durable. DEUX CAUSES, et elles appellent deux gestes : soit la tâche n'a jamais été créée (référence morte — elle ressemble à un lien, ce qui est pire qu'une absence), soit le numéro vient du gestionnaire de session, qui n'est PAS une source durable — et un futur agent ne pourra pas le résoudre (Article 27)`);
+  }
+  L.push(`  HORS PORTÉE : ${a.horsPortee}`);
+  return L;
+}
+
+export function buildProcessComplianceReport({ processes = PROCESSES, root = ROOT, verdictsSecondaires = [], sectionAngel, chainesAction = [], plansDeDocuments = null } = {}) {
   const lignes = [];
   const manquements = [];
   for (const p of processes) {
@@ -1541,6 +1603,10 @@ export function buildProcessComplianceReport({ processes = PROCESSES, root = ROO
   // LA CHAÎNE RAPPORT → PLAN D'ACTION → TÂCHES, dans sa propre section (2026-09-22). Signalée fort,
   // jamais bloquante : c'est l'autorité que l'utilisateur a explicitement donnée à god sur ce point.
   lignes.push("", ...actionChainLines(chainesAction));
+  // La MÊME chaîne, sur l'autre moitié du terrain (2026-09-25, tâche #834) : les plans d'action
+  // écrits dans des DOCUMENTS, que rien ne vérifiait. Un document survit plus longtemps qu'un
+  // rapport, donc sa référence morte aussi.
+  if (plansDeDocuments) lignes.push("", ...plansDeDocumentsLines(plansDeDocuments));
   const sansProcess = findActivitiesWithoutProcess({ processes });
   if (sansProcess.length) {
     lignes.push("", `${sansProcess.length} activité(s) DÉCLARÉE(S) à enjeu et sans process :`);
@@ -1864,6 +1930,24 @@ function main() {
   }
   if (tache === "schemas") {
     console.log(planchesDesSchemas());
+    return;
+  }
+  // LA CHAÎNE SUR LES DOCUMENTS (2026-09-25, tâche #834) : l'autre moitié du terrain de
+  // l'Article 28, que rien ne vérifiait. Sous-commande dédiée parce qu'elle lit deux arborescences
+  // entières — jamais imposée au rappel de chaque commit.
+  if (tache === "plans") {
+    const lireDossier = (dir) => {
+      try {
+        return readdirSync(join(ROOT, dir)).filter((f) => f.endsWith(".md"))
+          .map((f) => ({ chemin: `${dir}/${f}`, texte: readFileSync(join(ROOT, dir, f), "utf8") }));
+      } catch { return []; }
+    };
+    let suivi = null;
+    try {
+      suivi = readdirSync(join(ROOT, "docs/suivi/sessions")).filter((f) => f.endsWith(".md"))
+        .map((f) => readFileSync(join(ROOT, "docs/suivi/sessions", f), "utf8")).join("\n");
+    } catch { /* absent : l'audit dira PAS MESURÉ plutôt que d'accuser */ }
+    for (const l of plansDeDocumentsLines(auditPlansDeDocuments(lireDossier("docs/plans"), suivi))) console.log(l);
     return;
   }
   if (tache) {

@@ -3722,6 +3722,27 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // les gardiens secondaires ne livrent jamais leur rapport à la Ronde eux-mêmes, et le responsable
   // de chaque étape sautée est NOMMÉ (« il designe le coupable »), parce que c'est précisément ce qui
   // manquait quand une règle de simulation s'est perdue sans que personne n'en réponde.
+  // LA CHAÎNE SUR LES DOCUMENTS (2026-09-25, tâche #834) — l'autre moitié du terrain de l'Article 28.
+  // checkActionChain() vérifie le plan d'action qu'on lui PASSE, produit par un outil en mémoire.
+  // Les plans écrits dans des DOCUMENTS (docs/plans/) n'étaient vérifiés par personne, alors qu'un
+  // document survit plus longtemps qu'un rapport — donc sa référence morte aussi.
+  const {auditPlansDeDocuments,plansDeDocumentsLines}=await import('../scripts/god-of-all-process.mjs');
+  const docsPlans=[
+    {chemin:'docs/plans/ok.md',texte:'## Plan d\'action\n- RETENU → tâche #818, faite.'},
+    {chemin:'docs/plans/morte.md',texte:'## Plan d\'action\n- RETENU → tâche #9999.'},
+    {chemin:'docs/plans/vide.md',texte:'## Plan d\'action\n- rien de précis.'},
+    {chemin:'docs/plans/sans-plan.md',texte:'# Un document sans section de plan\ntâche #9999 citée en passant.'},
+  ];
+  const suiviFictif='| 818 | 2026-09-25T11:43Z | x | y | z | UTILE | PROJET | d | Terminée |';
+  const ap=auditPlansDeDocuments(docsPlans,suiviFictif);
+  assert.deepEqual([ap.avecPlan,ap.sains],[3,['docs/plans/ok.md']],'only documents carrying a "Plan d\'action" section are in scope, and one whose announced task really exists in the durable suivi is sound — a document merely citing a number in passing is not a plan');
+  assert.deepEqual(ap.referencesMortes.map(r=>r.chemin),['docs/plans/morte.md'],'a plan announcing a task absent from the durable suivi must be flagged: a dead reference looks like a link, which is worse than an absence — the Article 28 sentence, applied at last to the half of the ground it never covered');
+  assert.deepEqual(ap.sansAucuneTache,['docs/plans/vide.md'],'and a plan that announces NO task at all is the other broken link — a plan that commits to nothing is a formality');
+  assert.ok(plansDeDocumentsLines(ap).join('\n').includes('DEUX CAUSES'),'the finding must name BOTH causes, because they are genuinely indistinguishable here: the task may never have been created, or the number may come from the session task manager, which is not a durable source — both write "#92", and the real repository holds exactly that case');
+  assert.equal(auditPlansDeDocuments(docsPlans,null).mesurable,false,'without the suivi text it must declare NOT MEASURED: it could see that a plan announces nothing, never that an announced task truly exists');
+  assert.equal(auditPlansDeDocuments([],'x').mesurable,false,'and an empty document list reads NOT MEASURED rather than "every plan is chained" — a green returned on zero files read is the defect this whole landscape exists against');
+  assert.ok(plansDeDocumentsLines({mesurable:false,pourquoi:'rien'})[0].includes('PAS MESURÉ'),'a refusal renders as PAS MESURÉ, never as an empty section that would read like a clean bill of health');
+
   const conformite=buildProcessComplianceReport();
   assert.ok(typeof conformite.texte==='string'&&conformite.texte.length>0,'the compliance report must always say something, even when everything is in order');
   const avecVerdict=buildProcessComplianceReport({verdictsSecondaires:[{ok:false,process:'Simulation',detail:'phase 2 sans tour autonome',gardien:'process.simulation.guardian'}]});

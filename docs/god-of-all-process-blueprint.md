@@ -94,3 +94,36 @@ surveillant est toujours la plus indulgente.
 
 **Sa limite honnête, déclarée** : il vérifie la STRUCTURE de son process, jamais la JUSTESSE de ses
 verdicts. Savoir si une étape signalée manquante l'était vraiment reste un jugement humain.
+
+## La chaîne sur les DOCUMENTS, pas seulement sur les rapports
+
+*(2026-09-25, tâche #834 — constat : « l'Article 28 s'arrête au rapport, rien ne couvre
+document → tâche ».)*
+
+**Le trou, et il est du type exact que l'Article 28 a été écrit pour fermer.** `checkActionChain()`
+vérifie la chaîne d'un plan d'action qu'on lui PASSE : celui qu'un outil produit, en mémoire, au
+moment où il tourne. Or un projet écrit aussi des plans d'action dans des **documents**, destinés à
+un humain — et ceux-là n'étaient vérifiés par personne.
+
+**Pourquoi ça compte autant qu'un rapport, et même plus** : un document est plus durable qu'un
+rapport, donc sa référence morte survit plus longtemps. « → tâche #818 » écrit hier ressemble à un
+lien vivant six semaines plus tard, alors que la tâche peut n'avoir jamais existé. *Une référence
+morte ressemble à un lien, ce qui est pire qu'une absence* — la phrase était déjà dans l'Article 28,
+elle ne s'appliquait simplement pas à cette moitié du terrain.
+
+**Deux vérifications mécaniques, pas une de plus** : un plan d'action annonce-t-il au moins une
+tâche, et ces tâches existent-elles dans le suivi durable.
+
+**Le cas à deux causes, et il est réel** : une tâche introuvable peut signifier deux choses
+opposées — elle n'a jamais été créée, ou son numéro vient d'un gestionnaire de tâches de SESSION,
+qui n'est pas une source durable. Les deux s'écrivent `#92`. La sortie nomme donc les deux causes
+plutôt que d'en choisir une : accuser au hasard serait un faux rouge, et les deux appellent des
+gestes différents. C'est aussi, en soi, une dette de reprise au sens de l'Article 27 — un numéro
+qu'un futur agent ne pourra pas résoudre.
+
+**Sa limite, déclarée** : il vérifie qu'un plan annonce des tâches et qu'elles existent, jamais
+qu'elles sont les bonnes ni que le plan est complet. Un plan juste et une formalité bien remplie se
+ressemblent ici.
+
+**Commande** : `node scripts/god-of-all-process.mjs plans` — sous-commande dédiée, jamais imposée au
+rappel de chaque commit, parce qu'elle lit deux arborescences entières.

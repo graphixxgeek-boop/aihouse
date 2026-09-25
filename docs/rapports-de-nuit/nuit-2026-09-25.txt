@@ -123,6 +123,13 @@ LES HUIT CONSTATS DEEP-READER SONT CLOS (1 a 8).
   taire un controle). ET LE DENOMINATEUR N'ETAIT PAS LE COUPABLE cette fois (41,5 % contre 44,8 %) :
   mesure avant de corriger, pour ne pas appliquer par analogie la lecon fraiche de #832 [FAIT]
 
+#241 (chaine documents) : l'Article 28 ne couvrait que les rapports produits en memoire — les plans
+  d'action ecrits dans docs/plans/ n'etaient verifies par personne, et un document survit plus
+  longtemps qu'un rapport donc sa reference morte aussi. Commande `god-of-all-process plans`.
+  Premier passage : 20 documents, 10 plans, 3 maillons rompus — dont deux qui citent #92, un
+  numero du gestionnaire de SESSION et non du suivi durable : les deux causes sont nommees plutot
+  que d'accuser au hasard [FAIT]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------
