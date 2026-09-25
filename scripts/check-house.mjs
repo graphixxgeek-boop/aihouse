@@ -11983,6 +11983,9 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.equal(reformatage.majeur, 1, 'DELIBERATE FAILURE 1 — a commit that merely REFORMATS an export line (a space moved) counts as a capability change: the diff moves, the capability does not. The heuristic OVERCOUNTS and this test exists to keep that known rather than discovered');
   const tableau = crh2.versionDepuisGit('scripts/x.mjs', { sh: (cmd) => (cmd.includes('log') ? 'aaa' : '0') });
   assert.equal(tableau.majeur, 0, 'DELIBERATE FAILURE 2 — a capability added as one more entry in an ALREADY exported array touches no export line, so it counts for nothing. The heuristic UNDERCOUNTS, and in this repository that case is the frequent one, not a textbook one');
+  const lignesAg = crh2.formatVersionAgenceLines(vAg);
+  assert.ok(lignesAg.some((l) => /v2\.3/.test(l)) && lignesAg.filter((l) => /commit\(s\)/.test(l)).length >= 3, 'the rendering shows the retained version AND the three axes side by side, since a version displayed alone would hide that a choice is still open');
+  assert.ok(crh2.formatVersionAgenceLines({ mesurable: false, pourquoi: 'git muet' })[0].startsWith('PAS MESURÉ'), 'and an unmeasurable Agency renders as NOT MEASURED rather than as a blank line that would read like a clean result — the renderer was the one function AXA-CHECK found untested here, so it got its test rather than a promise');
   assert.ok(/SURCOMPTE/.test(reformatage.horsPortee) && /SOUS-COMPTE/.test(reformatage.horsPortee), 'both blind spots are DECLARED where the number is read, not only in this test: neither can be fixed without reading the meaning of the code, which git cannot do — and a number whose margin is known stays usable, while a number believed exact does not');
 
   // UNE RONDE NE PEUT PAS SE CLORE SI LE PROCESS N'EST PAS DÉROULÉ (2026-09-24, chantier 4).
