@@ -11468,6 +11468,20 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(rendu.includes('NON mesuré'), 'the unmeasured state must be PRINTED, not merely computed — a mechanism that never leaves the script is an intention, the signature defect found six times in a single day, the sixth being findRapportsQuiPointent() itself: fully built, fully tested, and called by no tool at all');
 
   console.log('Passed: pure-gold-unity now carries the WHOLE report verdict (2026-09-23) rather than a third of it — answering "whose responsibility is this?" with a single place instead of three tools each holding one criterion and none saying the word: it relays content (findRapportsQuiPointent, which until today lived only inside check-house.mjs and was called by no main() anywhere), date (the shared gabarit) and plan d\'action (findOutilsSansPlanDaction) without reimplementing any of them, declares its criteria as data so a fourth joins at one place, and — the discipline that matters most — treats an unreadable script as a third state that BREAKS the verdict and gets printed, never as a silent pass and never as a fabricated accusation.');
+  // #874 — « lesquelles ont RÉELLEMENT changé quelque chose ? », sa question tranchée en fenêtre
+  // dédiée : compter les citations. Deux précautions sans lesquelles le compte serait faux, et
+  // chacune est testée parce que chacune produirait un faux vert.
+  const tlc=await import('../scripts/tool-learning.mjs');
+  const faux=tlc.compterCitationsDesLecons([],{execImpl:()=>'0'});
+  assert.equal(faux.mesurable,false,'no lesson read means nothing to count, which is never the same as "none is cited" — the false green this whole project hunts');
+  const compte=tlc.compterCitationsDesLecons([{id:'L1',titre:'L1 — une',nature:'leçon'},{id:'L2',titre:'L2 — deux',nature:'leçon'}],{execImpl:(cmd)=>/L1/.test(cmd)?'7':'0'});
+  assert.equal(compte.mesurable,true,'with lessons and a working search it measures');
+  assert.deepEqual(compte.jamaisCitees.map((x)=>x.id),['L2'],'a lesson cited nowhere outside the registry is named — decorative until proven otherwise');
+  assert.ok(tlc.LECONS_EXCLUS_DU_COMPTAGE.includes('docs/referentiel/lecons.md'),'the registry itself is excluded: every lesson appears there in its own title, so counting it would return "all cited at least once" — a green obtained on nothing');
+  assert.match(tlc.formatCitationsDesLecons(compte).join(' '),/HORS PORTÉE/,'and the report states its limit: "cited" is not "applied", so this is a signal to read, never a verdict — the charter reserves that judgement for the user at the Ronde');
+  const illisible=tlc.compterCitationsDesLecons([{id:'L1',titre:'L1 — une'}],{execImpl:()=>{throw new Error('grep absent');}});
+  assert.equal(illisible.mesurable,false,'and when the search fails on every lesson it refuses to conclude rather than reporting zero citations everywhere');
+
 }
 
 {

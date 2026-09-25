@@ -117,3 +117,51 @@ n'a jamais rencontré son entrée difficile n'est pas robuste, elle est chanceus
 le piège est qu'il a fallu corriger LES DEUX côtés de la comparaison (le slug ET la recherche dans
 les documents), sans quoi la même règle réapparaissait ailleurs sous une autre forme. Normalisation
 unique et partagée : `sansAccents()` (`scripts/lib-shell.mjs`).
+
+## 9. La CONCORDANCE À DEUX OUTILS comme condition de déclenchement (idée du 2026-09-24, tâche #695, recopiée ici le 2026-09-25)
+
+**Pourquoi cette section arrive si tard, et c'est le défaut même qu'elle décrit** : l'idée vivait
+dans une ligne de suivi (#695) depuis le 2026-09-24 et n'avait jamais rejoint le document de son
+propre chantier. Le garde-fou de fraîcheur des fichiers de chantier l'a signalée — deuxième fois en
+une journée après l'idée SQUID GAME (#861). Une idée consignée quelque part et invisible là où on la
+cherchera est perdue d'avance (Article 27).
+
+**L'IDÉE, dans les termes de la recherche qui l'a produite** : exiger que **DEUX outils indépendants
+concordent** avant qu'une trouvaille critique ne déclenche une action. Le chiffre qui la motive :
+la vérification indépendante est la seule mitigation connue qui fasse tomber le taux de faux succès
+de **~48 % à 3 %**.
+
+**CE QUI LA REND URGENTE AUJOURD'HUI, et ce n'est plus une statistique extérieure mais une mesure
+maison** : le 2026-09-25, **sept** outils ont produit une trouvaille fausse en une seule journée.
+
+1. `PORTES_PLAN_DACTION` accusait les deux SEULS outils en règle.
+2. `MOTIF_EMET_DES_CONSTATS` comptait un aveu d'absence de mesure comme un constat.
+3. Le critère « peut-il dire tout va bien sans rien mesurer » accusait un outil qui prenait sa
+   formulation au mécanisme partagé au lieu de la recopier.
+4. Le critère « rapport trop maigre » accusait un rapport de 11 lignes portant 42 chiffres.
+5. `COLONNES_ATTENDUES` accusait les sept lignes les plus à jour du suivi.
+6. Le lecteur de lignes aurait rendu `null` sur toutes les lignes au format complet.
+7. **ABRAHAM a rendu 17 règles inexistantes** sur la suite de tests, avec leur nature, leurs
+   recouvrements et un plan d'action — le cas le plus coûteux, parce que le résultat ressemblait
+   trait pour trait à une analyse valide.
+
+**Les sept auraient été arrêtés par la même règle** : aucun n'aurait survécu à la question « un
+second outil, indépendant, dit-il la même chose ? ». Dans les sept cas, ce qui les a effectivement
+attrapés est une vérification indépendante — soit un test, soit le fait d'ouvrir le fichier accusé.
+
+**CE QUE LA RÈGLE NE DOIT PAS DEVENIR, et c'est la question de conception ouverte** : exiger deux
+concordances pour TOUTE trouvaille paralyserait le paysage — la plupart des constats sont justes et
+n'ont pas besoin d'un second avis. Le seuil porte donc sur « CRITIQUE », et ce mot demande une
+définition qui n'existe pas encore. Trois candidats, non tranchés :
+
+- une trouvaille qui déclencherait une ACTION AUTOMATIQUE (aucune n'existe aujourd'hui : tous les
+  outils signalent, aucun ne corrige — cette porte est donc fermée pour l'instant) ;
+- une trouvaille qui accuserait une population ENTIÈRE (« les 79 outils », « les 804 lignes ») :
+  c'est la forme qu'ont pris cinq des sept cas ci-dessus, et le signal « un détecteur qui accuse
+  presque tout a presque toujours tort » (L4) existe déjà ;
+- une trouvaille qui conduirait à SUPPRIMER quelque chose — du code, une règle, une ligne de suivi.
+  L'asymétrie est nette : une alerte à tort se corrige, une suppression à tort se découvre des
+  semaines plus tard.
+
+**STATUT : NON TRANCHÉE.** Le choix du seuil appartient à l'utilisateur (Article 16). Ce qui est
+acquis, en revanche, c'est que le besoin n'est plus théorique : il a sept occurrences datées.

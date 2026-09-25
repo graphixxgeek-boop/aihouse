@@ -520,6 +520,82 @@ export function parseLecons(texte = "") {
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// LESQUELLES ONT RÉELLEMENT CHANGÉ QUELQUE CHOSE ? (2026-09-25, tâche #874)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA QUESTION, tranchée en fenêtre dédiée : « compter combien de fois chacune est CITÉE dans le
+// dépôt ». Le registre porte 24 leçons et 4 bonnes pratiques, et rien ne disait lesquelles avaient
+// servi. Un registre dont on ignore ce qui sert grossit jusqu'à ce que plus personne ne le relise —
+// et il contient lui-même la leçon qui le dit (L6, l'alarme permanente).
+//
+// CE QUE CETTE MESURE VAUT, ET CE QU'ELLE NE VAUT PAS. Une leçon invoquée dans dix commentaires de
+// code a changé la façon d'écrire ; une jamais citée est décorative jusqu'à preuve du contraire.
+// Mais « citée » n'est pas « appliquée » : on peut citer sans suivre, et suivre sans citer. C'est
+// donc un SIGNAL À RELIRE, jamais un verdict — et la charte réserve déjà ce jugement-là à
+// l'utilisateur, à la Ronde.
+//
+// DEUX PRÉCAUTIONS QUI CHANGENT LE RÉSULTAT, et sans elles le compte serait faux :
+//   1. LE REGISTRE LUI-MÊME NE COMPTE PAS. Chaque leçon y apparaît au moins une fois, dans son
+//      propre titre — les compter donnerait « toutes citées au moins une fois », c'est-à-dire un
+//      vert obtenu sur rien. C'est le patron du faux vert, rencontré sept fois dans la journée.
+//   2. LE MOTIF EXIGE UNE FRONTIÈRE DE MOT. Sans elle, « L1 » compte aussi les L10 à L19 — et la
+//      leçon la plus basse du registre paraîtrait dix fois plus citée qu'elle ne l'est.
+export const LECONS_EXCLUS_DU_COMPTAGE = ["docs/referentiel/lecons.md"];
+
+export function compterCitationsDesLecons(lecons = [], { root = ROOT, execImpl = (cmd) => execSync(cmd, { cwd: String(root).replace(/\/$/, ""), encoding: "utf8" }), exclus = LECONS_EXCLUS_DU_COMPTAGE } = {}) {
+  if (!lecons.length) {
+    return { mesurable: false, pourquoi: "aucune leçon lue dans le registre : il n'y a rien à compter, ce qui n'est jamais la même chose que « aucune n'est citée »" };
+  }
+  const resultats = [];
+  for (const l of lecons) {
+    let n = 0; let lisible = true;
+    try {
+      // `\b` aux deux bouts : sans lui « L1 » attrape L10..L19 et gonfle la plus ancienne.
+      const sortie = execImpl(`grep -rIoE '\\b${l.id}\\b' --include='*.mjs' --include='*.ts' --include='*.md' . | grep -v '${exclus.join("' | grep -v '")}' | wc -l`);
+      n = Number(String(sortie).trim()) || 0;
+    } catch { lisible = false; }
+    resultats.push({ id: l.id, titre: l.titre, nature: l.nature, citations: lisible ? n : null, lisible });
+  }
+  const mesurees = resultats.filter((r) => r.lisible);
+  if (!mesurees.length) {
+    return { mesurable: false, pourquoi: "aucune leçon n'a pu être comptée (la recherche a échoué sur toutes) — rien n'a été mesuré" };
+  }
+  const jamais = mesurees.filter((r) => r.citations === 0);
+  const trie = [...mesurees].sort((a, b) => b.citations - a.citations);
+  return {
+    mesurable: true,
+    total: lecons.length,
+    mesurees: mesurees.length,
+    nonLisibles: resultats.filter((r) => !r.lisible).map((r) => r.id),
+    jamaisCitees: jamais.map((r) => ({ id: r.id, titre: r.titre })),
+    plusCitees: trie.slice(0, 5),
+    moinsCitees: trie.filter((r) => r.citations > 0).slice(-5).reverse(),
+    toutes: trie,
+    horsPortee: "« Citée » n'est pas « appliquée » : on peut citer sans suivre, et suivre sans citer. Signal à relire, jamais un verdict — et c'est l'utilisateur qui tranche, à la Ronde.",
+  };
+}
+
+export function formatCitationsDesLecons(r) {
+  if (!r?.mesurable) return [`CITATIONS DES LEÇONS — 🚨 PAS MESURÉ : ${r?.pourquoi ?? "raison inconnue"}`];
+  const l = [`Citations des leçons : ${r.mesurees}/${r.total} mesurée(s) — hors du registre lui-même, qui les contient toutes par construction.`];
+  if (r.nonLisibles.length) l.push(`  ⚠️ ${r.nonLisibles.length} non mesurable(s) : ${r.nonLisibles.join(", ")}`);
+  l.push("", "  LES PLUS CITÉES — celles qui ont vraiment changé la façon d'écrire :");
+  for (const e of r.plusCitees) l.push(`    ${String(e.citations).padStart(4)} × ${e.titre}`);
+  if (r.jamaisCitees.length) {
+    l.push("", `  ⚠️ ${r.jamaisCitees.length} JAMAIS CITÉE(S) hors du registre — décorative(s) jusqu'à preuve du contraire :`);
+    for (const e of r.jamaisCitees) l.push(`       ${e.titre}`);
+  } else {
+    l.push("", "  ✅ Aucune leçon n'est restée sans citation : toutes ont servi au moins une fois ailleurs que dans le registre.");
+  }
+  if (r.moinsCitees.length) {
+    l.push("", "  LES MOINS CITÉES (mais citées) — à surveiller, jamais à retirer sur ce seul chiffre :");
+    for (const e of r.moinsCitees) l.push(`    ${String(e.citations).padStart(4)} × ${e.titre}`);
+  }
+  l.push("", `  HORS PORTÉE : ${r.horsPortee}`);
+  return l;
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // « EST-CE QUE TOUT LE CODE BÉNÉFICIE DE LA LEÇON ? » (2026-09-23, chantier 7)
 // ————————————————————————————————————————————————————————————————————————
 //
@@ -1125,6 +1201,16 @@ function main() {
   const auditL = auditLecons();
   console.log("\n=== PROCESS XP-IA-bonnes-pratiques-et-lecons — LE REGISTRE (docs/referentiel/lecons.md) ===");
   for (const l of formatLecons(auditL)) console.log(l);
+  // LE COMPTAGE DES CITATIONS (2026-09-25, #874) — câblé ici et pas seulement exporté : un
+  // détecteur qui n'est appelé par aucun main() est le défaut que ce paysage traque partout, et
+  // l'écrire sans le brancher aurait été le commettre dans l'outil qui mesure l'apprentissage.
+  console.log("");
+  try {
+    const lues = parseLecons(readFileSync(join(ROOT, LECONS_PATH), "utf8"));
+    for (const l of formatCitationsDesLecons(compterCitationsDesLecons(lues))) console.log(l);
+  } catch (e) {
+    console.log(`CITATIONS DES LEÇONS — 🚨 PAS MESURÉ : ${LECONS_PATH} n'a pas pu être lu (${e?.message ?? "raison inconnue"}).`);
+  }
   const journalXp = loadJournalXp();
   const xp = analyseXp(journalXp, auditL);
   console.log("");
