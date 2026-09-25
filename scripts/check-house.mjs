@@ -3379,6 +3379,23 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(csf.COLONNES_MAX,critFmt.length,'the upper bound is the declared format itself, so a tenth field added tomorrow needs no edit here');
   assert.equal(csf.COLONNES_MIN,critFmt.length-critFmt.filter((f)=>f.depuis).length,'and the lower bound is the HISTORICAL format: every field minus those declaring they arrived later. Deriving it from the count of MANDATORY fields was the first attempt and it was wrong — an optional field still occupies its column, empty, so that version accepted a genuinely broken 7-column row');
   assert.ok(csf.COLONNES_MIN<csf.COLONNES_MAX,'the two bounds must differ while a field carries a threshold, otherwise the older rows are accused of the newer format');
+  // #876 — LA FILE EST PLUS COURTE QU'ELLE N'EN A L'AIR, et ça répond à sa question du jour :
+  // « on retrouve le même chiffre parce que c'est une rotation ? ». Deux tâches ont été trouvées
+  // closes-mais-ouvertes sans être cherchées (#801 le matin, #445 l'après-midi) ; en mesurant, il
+  // y en avait HUIT sur 117. Une file gonflée par du travail déjà fait rend le compteur faux dans
+  // le sens le plus décourageant : le travail avance et le chiffre ne bouge pas.
+  const ctd2=await import('../scripts/check-tasks-details.mjs');
+  const tache2=(n,st,det)=>({numero:n,statusKey:st,statut:st,sousSujet:'s',detail:det});
+  const closAilleurs=ctd2.findTachesClosesAilleurs([tache2(10,'ouverte',''),tache2(20,'terminee','CLÔTURE DE #10. voilà.')]);
+  assert.equal(closAilleurs.closesAilleurs.length,1,'an open task that a LATER task declares closed is named, with the task that closed it as proof');
+  assert.equal(closAilleurs.fileReelle,0,'and the real queue length is derived, since that is the figure he could not obtain');
+  const soiMeme=ctd2.findTachesClosesAilleurs([tache2(10,'ouverte','CLÔTURE DE #10, dit la tâche elle-même')]);
+  assert.deepEqual(soiMeme.closesAilleurs,[],'a task never closes ITSELF: without the "strictly later" condition this false green is trivial to produce, so it is closed explicitly rather than left to chance');
+  const anterieure=ctd2.findTachesClosesAilleurs([tache2(30,'ouverte',''),tache2(10,'terminee','CLÔTURE DE #30')]);
+  assert.deepEqual(anterieure.closesAilleurs,[],'and an EARLIER task cannot announce the end of work that had not begun');
+  assert.equal(ctd2.findTachesClosesAilleurs([]).mesurable,false,'no open task means nothing to confront, never "none closed in silence"');
+  assert.match(ctd2.formatClosesAilleursLines(closAilleurs).join(' '),/borne inférieure/,'and it states its limit: a task done without anyone writing it stays invisible here (L5)');
+
   // #872 — les deux cases du rituel, et la PREUVE que la dérivation de #870 tenait : deux champs
   // ajoutés, la fourchette est passée de 8–9 à 8–11 sans qu'une seule ligne soit retouchée ici.
   assert.equal(critFmt.filter((f)=>f.depuis).length,3,'three fields now carry an arrival threshold — pourQui, ouverture, cloture — and the column range widened on its own, which is exactly what deriving it was for');

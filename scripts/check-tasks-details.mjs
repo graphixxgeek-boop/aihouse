@@ -1262,6 +1262,80 @@ export function dernierPlanDeDepart({ dossier = join(ROOT, "docs/rapports-de-nui
   return fichiers.length ? join(dossier, fichiers[fichiers.length - 1]) : null;
 }
 
+// LES TÂCHES CLOSES AILLEURS (2026-09-25, tâche #876) — LA FILE EST PLUS COURTE QU'ELLE N'EN A L'AIR.
+//
+// D'OÙ ÇA VIENT, et c'est arrivé DEUX fois dans la même journée sans être cherché : #801 et #445
+// figuraient parmi les 117 tâches ouvertes alors que leur travail était fait depuis longtemps —
+// #445 vérifiée en lançant son détecteur, qui rend `[]`, et #801 close le matin même par #860.
+// Leur ligne d'origine n'avait simplement jamais été repassée à « Terminé ».
+//
+// POURQUOI ÇA COMPTE PLUS QU'UNE COQUILLE : il a posé exactement la bonne question ce jour-là —
+// « on retrouve le même chiffre parce que c'est une rotation ? ». Une file gonflée par des tâches
+// déjà faites rend le compteur faux dans le sens le plus décourageant : le travail avance et le
+// chiffre ne bouge pas. C'est le même motif que partout ici — deux causes indiscernables derrière
+// un même nombre, et il faut les nommer séparément.
+//
+// CE QUE CE DÉTECTEUR PEUT VOIR, ET C'EST VOLONTAIREMENT ÉTROIT : une tâche encore ouverte dont une
+// ligne ULTÉRIEURE annonce nommément la clôture. Le signal est textuel et fiable, parce que ce
+// registre a une convention constante — on écrit « CLÔTURE DE #801 » ou « #445 est faite » dans la
+// tâche qui termine le travail. Il ne devine RIEN d'autre : une tâche faite sans que personne ne
+// l'écrive reste invisible, et le dire vaut mieux que de prétendre au contraire (L5).
+//
+// POURQUOI « ULTÉRIEURE » EST INDISPENSABLE : sans cette condition, une tâche qui cite son propre
+// numéro dans son détail se déclarerait close elle-même. Le faux vert est ici trivial à produire,
+// donc il est fermé explicitement plutôt que laissé à la chance.
+export const MOTIFS_DE_CLOTURE = [
+  /CL[ÔO]TURE DE #(\d+)/gi,
+  /#(\d+) est (?:désormais )?(?:close|faite|résolue|terminée)/gi,
+  /ferme (?:définitivement )?#(\d+)/gi,
+  /clôt(?:ure)? #(\d+)/gi,
+];
+
+export function findTachesClosesAilleurs(rows = [], { motifs = MOTIFS_DE_CLOTURE } = {}) {
+  const ouvertes = rows.filter((r) => OPEN_KEYS.has(r.statusKey) && Number.isFinite(r.numero));
+  if (!ouvertes.length) {
+    return { mesurable: false, pourquoi: "aucune tâche ouverte : il n'y a rien à confronter, ce qui n'est pas la même chose qu'aucune tâche close en silence" };
+  }
+  const ouvertesParNum = new Map(ouvertes.map((r) => [r.numero, r]));
+  const trouvees = new Map();
+  for (const r of rows) {
+    if (!Number.isFinite(r.numero)) continue;
+    const texte = `${r.sousSujet ?? ""} ${r.detail ?? ""}`;
+    for (const motif of motifs) {
+      const re = new RegExp(motif.source, motif.flags);
+      let m;
+      while ((m = re.exec(texte)) !== null) {
+        const cible = Number(m[1]);
+        // ULTÉRIEURE, strictement : une ligne ne se clôt jamais elle-même, et une ligne ANTÉRIEURE
+        // ne peut pas annoncer la fin d'un travail qui n'avait pas commencé.
+        if (!Number.isFinite(cible) || cible >= r.numero) continue;
+        if (!ouvertesParNum.has(cible)) continue;
+        if (!trouvees.has(cible)) trouvees.set(cible, { numero: cible, sousSujet: ouvertesParNum.get(cible).sousSujet, parQui: [] });
+        trouvees.get(cible).parQui.push(r.numero);
+      }
+    }
+  }
+  const liste = [...trouvees.values()].sort((a, b) => a.numero - b.numero);
+  return {
+    mesurable: true,
+    ouvertes: ouvertes.length,
+    closesAilleurs: liste,
+    // Le compte porte son dénominateur, et la file « vraie » se déduit — c'est le chiffre qu'il
+    // cherchait sans pouvoir l'obtenir.
+    fileReelle: ouvertes.length - liste.length,
+    horsPortee: "Ne voit qu'une clôture ÉCRITE nommément dans une tâche ultérieure. Une tâche faite sans que personne ne l'écrive reste invisible ici — c'est une borne inférieure, jamais un total.",
+  };
+}
+
+export function formatClosesAilleursLines(r) {
+  if (!r?.mesurable) return [`TÂCHES CLOSES AILLEURS — ❓ PAS MESURÉ : ${r?.pourquoi ?? "raison inconnue"}`];
+  if (!r.closesAilleurs.length) return [`Tâches closes ailleurs : aucune sur ${r.ouvertes} ouvertes — chaque ligne ouverte l'est réellement, pour autant qu'une clôture écrite puisse le dire.`];
+  const l = [`⚠️ ${r.closesAilleurs.length} tâche(s) ouverte(s) sur ${r.ouvertes} sont ANNONCÉES CLOSES par une tâche ultérieure — la file réelle est de ${r.fileReelle}, pas ${r.ouvertes} :`];
+  for (const t of r.closesAilleurs) l.push(`  · #${t.numero} — close d'après ${t.parQui.map((n) => "#" + n).join(", ")} : ${String(t.sousSujet ?? "").slice(0, 90)}`);
+  l.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  return l;
+}
+
 // ════════════════════════════════════════════════════════════════════════════════════════════
 // LES BLOCS DE TRAVAIL (2026-09-25, tâche #869 — demande explicite : « des taches s'accumulent,
 // à un moment donné, l'outil est capable de les regrouper sous un meme theme [...] constitue aussi
@@ -1770,7 +1844,14 @@ function bilanCli() {
   L.push("");
 
   L.push("-".repeat(92));
-  L.push("2. COMMENT LES 117 TÂCHES OUVERTES S'ORGANISENT (blocs par THÈME / POIDS / ATTENTE)");
+  L.push("1ter. LA FILE EST-ELLE PLUS COURTE QU'ELLE N'EN A L'AIR ?");
+  L.push("-".repeat(92));
+  L.push("");
+  for (const l of formatClosesAilleursLines(findTachesClosesAilleurs(rows))) L.push("  " + l);
+  L.push("");
+
+  L.push("-".repeat(92));
+  L.push("2. COMMENT LES TÂCHES OUVERTES S'ORGANISENT (blocs par THÈME / POIDS / ATTENTE)");
   L.push("-".repeat(92));
   L.push("");
   for (const l of formatBlocsLines(blocs)) L.push("  " + l);
