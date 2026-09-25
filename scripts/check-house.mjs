@@ -11972,6 +11972,18 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(riche.manquants.every((m) => m.quoi), 'and every missing point says what it would have meant, so the list is actionable rather than a grade');
   assert.ok(/jamais ce qu'il VAUT/.test(crh2.richesse({}).horsPortee), 'with no threshold anywhere, deliberately: a poor tool is not a bad tool — find-booster does one thing and does it well, and comes out poor with nothing to fix');
 
+  // LIRE VRAIMENT LES REGISTRES, PAS SEULEMENT LEUR CHEMIN (2026-09-25, tâche #490 → #813).
+  // data-archangel trouvait dix registres FRAIS « atteints par table » : sept à dix outils citent
+  // leur chemin, aucun n'ouvre le fichier. Passer par le chemin n'est pas exploiter le contenu.
+  assert.equal(crh2.derniereTrouvailleDuRegistre('x').mesurable, false, 'with no reader it refuses rather than answering "never found anything" on the tool\'s behalf — the accusation this function exists to prevent');
+  assert.equal(crh2.derniereTrouvailleDuRegistre('x', { lire: () => null }).mesurable, false, 'an unreachable register is reported as unreachable, which is not the same thing as an empty one');
+  const sansDate = crh2.derniereTrouvailleDuRegistre('x', { lire: () => '# Index\n\nDu texte, aucune ligne datée.' });
+  assert.ok(!sansDate.mesurable && /jamais consigné » n'est pas « jamais rien trouvé/.test(sansDate.pourquoi), 'and an index with no dated row says NEVER RECORDED, keeping it apart from "found nothing" — the same distinction as everywhere else here (leçon L5)');
+  const trouvaille = crh2.derniereTrouvailleDuRegistre('x', { lire: () => '| 2026-09-01 | 3 | court |\n| 2026-09-25 | 42 | un résumé nettement plus long que les autres cellules |' });
+  assert.deepEqual([trouvaille.date, trouvaille.passages], ['2026-09-25', 2], 'it reads the LAST dated row and counts how many passages the register holds');
+  assert.ok(/nettement plus long/.test(trouvaille.resume), 'and it takes the LONGEST cell as the summary rather than a fixed column index: the registers do not order their columns the same way, so a fixed index would return a date on some and a bare number on others');
+  assert.ok(crh2.CHAMPS_DE_LA_FICHE.some((c) => c.cle === 'derniereTrouvaille'), 'the reader lives in the fiche rather than in yet another tool (Article 31: extend before building) — "when did this tool last find something" is a question about a tool\'s identity, exactly like its rank or its weight');
+
   // LES OUTILS QUI POUVAIENT DIRE VERT SANS AVOIR RIEN MESURÉ (2026-09-25, tâche #601 → #812).
   // Le constat en nommait cinq. Vérifiés UN PAR UN comme la tâche l'exigeait — jamais par une passe
   // globale qui aurait collé la même phrase partout — trois d'entre eux (data-archangel, ecotoken,

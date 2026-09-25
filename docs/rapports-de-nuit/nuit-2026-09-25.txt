@@ -66,6 +66,7 @@ RONDE CIRCLE-TASKS lancée en mode autonome : 76 commits de retard rattrapés, c
 #654 Le faux vert le plus dangereux du dépôt : check-spirit disait « rien à signaler » sur ZÉRO donnée, sur l'Article 0 lui-même — corrigé [FAIT]
 #655 La charte ordonnait de lancer check-spirit à la main sans écrire la commande — 17/17 outils manuels ont désormais leur commande ou leur détour [FAIT]
 #601 Les 5 outils qui pouvaient dire vert sans rien mesurer : 3 déjà corrigés, 1 déclaration à écrire, 1 vrai trou (le scan TODO d'ARGUS) [FAIT]
+#490 Dix registres frais cités sans jamais être ouverts : un vrai lecteur branché dans la fiche (dernière trouvaille consignée) [AVANCÉ]
 
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)

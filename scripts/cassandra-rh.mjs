@@ -2440,6 +2440,49 @@ export function domainesDeLOutil(source = "") {
 // silencieux se lit comme une fiche complète sur un outil pauvre — et c'est exactement l'inverse
 // de ce qu'elle voudrait dire.
 
+// ————————————————————————————————————————————————————————————————————————
+// LIRE VRAIMENT LES REGISTRES, PAS SEULEMENT LEUR CHEMIN (2026-09-25, tâche #490)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE CONSTAT DE data-archangel, et il est plus fin qu'il n'en a l'air : dix registres FRAIS ne sont
+// « atteints que par table ». Sept ou dix outils citent leur chemin — pour savoir qu'ils existent,
+// pour vérifier qu'ils ne sont pas vides, pour les lister — et **aucun n'ouvre le fichier pour en
+// tirer quelque chose**. Passer par le chemin n'est pas exploiter le contenu, et confondre les deux
+// est exactement le genre de vert que ce projet combat : le registre paraît lu, il ne l'est pas.
+//
+// LE LECTEUR RÉEL, ET POURQUOI IL VIT DANS LA FICHE plutôt que dans un outil de plus (Article 31 :
+// on ÉTEND avant de construire) : la question « quand cet outil a-t-il trouvé quelque chose pour la
+// dernière fois ? » est précisément une question d'identité d'outil, au même titre que son rang ou
+// son poids. La fiche la posait déjà pour tout le reste ; il lui manquait la mémoire.
+//
+// CE QU'IL LIT, ET LA LIMITE EST DÉCLARÉE : la dernière ligne datée du tableau de l'index. Les
+// registres n'ont pas tous la même colonne de résumé — certains n'ont même pas de ligne datée du
+// tout — donc un index sans date rend « jamais consigné », qui n'est pas la même chose qu'un outil
+// qui n'aurait rien trouvé. La distinction est la même que partout ailleurs ici (leçon L5).
+
+export function derniereTrouvailleDuRegistre(slug, { lire } = {}) {
+  if (typeof lire !== "function") {
+    return { mesurable: false, pourquoi: "aucun lecteur fourni — un registre qu'on n'ouvre pas ne dit rien, et répondre « jamais rien trouvé » à sa place serait l'accusation que cette fonction existe pour empêcher" };
+  }
+  const chemin = `docs/${slug}/index.md`;
+  const texte = lire(chemin);
+  if (texte === null || texte === undefined) {
+    return { mesurable: false, chemin, pourquoi: `${chemin} est absent ou illisible : cet outil n'a pas de registre atteignable, ce qui n'est pas la même chose qu'un registre vide` };
+  }
+  const datees = String(texte).split("\n").filter((l) => /^\|\s*20\d\d-\d\d-\d\d/.test(l));
+  if (!datees.length) {
+    return { mesurable: false, chemin, pourquoi: `aucune ligne datée dans ${chemin} : rien n'y a jamais été consigné sous une forme lisible — « jamais consigné » n'est pas « jamais rien trouvé »` };
+  }
+  const derniere = datees[datees.length - 1];
+  const cellules = derniere.split("|").map((c) => c.trim()).filter(Boolean);
+  return { mesurable: true, chemin, date: cellules[0],
+    // Le résumé est la cellule la plus longue de la ligne : les registres n'ont pas tous leurs
+    // colonnes dans le même ordre, et choisir un INDEX fixe aurait rendu la date sur les uns et un
+    // nombre sur les autres. La plus longue est celle qui porte du sens, quel que soit le gabarit.
+    resume: cellules.slice(1).sort((a, b) => b.length - a.length)[0] ?? "(ligne sans détail)",
+    passages: datees.length };
+}
+
 export const CHAMPS_DE_LA_FICHE = [
   { cle: "rang", quoi: "son autorité", source: "AGENT_CATEGORIES (Article 20bis)" },
   { cle: "famille", quoi: "son voisinage de travail", source: "AGENT_CATEGORIES" },
@@ -2454,6 +2497,7 @@ export const CHAMPS_DE_LA_FICHE = [
   { cle: "coutDeDepart", quoi: "ce que coûterait de s'en passer", source: "poidsDesOutils()" },
   { cle: "version", quoi: "combien de fois il a changé de capacités", source: "versionDepuisGit()" },
   { cle: "richesse", quoi: "ce qu'il porte aujourd'hui", source: "richesse()" },
+  { cle: "derniereTrouvaille", quoi: "la dernière fois qu'il a trouvé quelque chose", source: "son registre docs/<outil>/index.md" },
 ];
 
 function valeurLisible(v) {
@@ -3205,6 +3249,13 @@ function main() {
       coutDeDepart: monPoids?.couts?.length ? monPoids.couts.join(", ") : null,
       version: v.mesurable ? v.version : null,
       richesse: r ? `${r.score}/${r.sur} (${r.tenus.join(", ")})` : null,
+      // LE SEUL CHAMP QUI OUVRE VRAIMENT UN FICHIER DU REGISTRE (#490) : tous les autres lisent le
+      // code ou git. Celui-ci lit ce que l'outil a ÉCRIT, ce que dix outils faisaient semblant de
+      // faire en citant seulement le chemin.
+      derniereTrouvaille: (() => {
+        const t = derniereTrouvailleDuRegistre(demande, { lire: (c) => { try { return readFileSync(join(ROOT, c), "utf8"); } catch { return null; } } });
+        return t.mesurable ? `${t.date} — ${t.resume.slice(0, 90)} (${t.passages} passage(s) consigné(s))` : null;
+      })(),
     });
     console.log("");
     for (const l of formatFicheLines(f)) console.log(l);
