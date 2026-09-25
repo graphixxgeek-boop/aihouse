@@ -117,6 +117,64 @@ export function enregistrerVerdict(verdict, { root = ROOT, readFileImpl = readFi
   return suivants;
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// L'ÉTAPE MANUELLE A-T-ELLE SEULEMENT ÉTÉ FAITE ? (2026-09-25, tâches #573 et #576)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE DÉFAUT EST MESURÉ, ET IL EST DU TYPE LE PLUS DISCRET QUI SOIT. `verdicts.json` contient `[]`.
+// Le rapport en tire, très honnêtement, « PAS ENCORE MESURABLE — registre de verdicts vide ». C'est
+// vrai, et c'est exactement ce que ce projet exige partout : ne jamais rendre un vert sur rien.
+//
+// SAUF QUE DERRIÈRE CE VIDE IL Y A DEUX CAUSES INDISCERNABLES, et une seule est innocente :
+//   (a) l'outil est neuf et n'a pas encore tourné — rien à reprocher à personne ;
+//   (b) il a tourné CINQ FOIS en Ronde, et l'étape que son item réclame nommément
+//       (« juger chaque outil concerné (jugerUnOutil) ») n'a jamais été faite — par moi.
+// La (b) est le cas réel, et la phrase honnête de l'outil la faisait passer pour la (a). Un aveu
+// d'absence de mesure qui masque un manquement est pire qu'un silence : il RASSURE.
+//
+// CE QUE CETTE FONCTION NE FAIT PAS, et c'est délibéré : fabriquer un verdict. Les quatre preuves
+// (`PREUVES`) demandent un jugement par outil qu'aucune mécanique ne sait produire ici — les
+// dériver au jugé remplirait le registre de chiffres inventés, ce qui rendrait la mesure fausse au
+// lieu d'absente. Elle rend l'absence VISIBLE et nommée, ce qui est la seule chose honnête qu'un
+// mécanisme puisse faire quand le geste manquant est humain (Article 27).
+//
+// TROIS ÉTATS, JAMAIS DEUX — le patron que ce projet applique partout ailleurs.
+export const REGISTRE_RONDE = "docs/tool-learning";
+export const MOTIF_SIGNAL_DE_RONDE = /^circle-signal-.*\.txt$/;
+
+export function etapeManuelleJamaisFaite({ root = ROOT, verdicts = null, lireDossier = readdirSync } = {}) {
+  const combienDeVerdicts = (verdicts ?? loadVerdicts({ root })).length;
+  let passages = null;
+  try {
+    passages = lireDossier(join(root, REGISTRE_RONDE)).filter((f) => MOTIF_SIGNAL_DE_RONDE.test(f)).length;
+  } catch {
+    // Le dossier illisible n'est pas zéro passage : c'est une absence de mesure, et la confondre
+    // avec « jamais passé » accuserait sur du vide (leçon L5).
+    return { etat: "pas mesuré", pourquoi: "le registre des signaux de Ronde est illisible — on ne sait pas combien de fois l'outil est passé, ce qui n'est jamais la même chose que zéro passage" };
+  }
+  if (combienDeVerdicts > 0) {
+    return { etat: "faite", passages, verdicts: combienDeVerdicts,
+      pourquoi: `${combienDeVerdicts} verdict(s) enregistré(s) — la trajectoire peut se juger dès qu'il y en a trois` };
+  }
+  if (!passages) {
+    return { etat: "rien à reprocher", passages: 0, verdicts: 0,
+      pourquoi: "aucun verdict, et aucun passage de Ronde non plus : l'outil n'a simplement pas encore travaillé" };
+  }
+  return { etat: "sautée", passages, verdicts: 0,
+    pourquoi: `${passages} passage(s) de Ronde enregistré(s) et AUCUN verdict écrit — l'étape que l'item de Ronde réclame nommément (« juger chaque outil concerné ») a été sautée ${passages} fois de suite, et le registre vide la faisait passer pour un outil encore jeune` };
+}
+
+export function formatEtapeManuelleLines(e) {
+  if (e.etat === "pas mesuré") return [`· Étape manuelle : PAS MESURÉ — ${e.pourquoi}`];
+  if (e.etat === "faite") return [`· Étape manuelle : faite — ${e.pourquoi}`];
+  if (e.etat === "rien à reprocher") return [`· Étape manuelle : ${e.pourquoi}`];
+  return [
+    `⚠️  ÉTAPE MANUELLE SAUTÉE — ${e.pourquoi}.`,
+    `    Ce n'est PAS l'outil qui manque de recul : c'est le geste qui lui donne son recul qui n'a jamais eu lieu.`,
+    `    Le faire : à la prochaine Ronde, jugerUnOutil() sur chaque outil concerné puis enregistrerVerdict().`,
+  ];
+}
+
 // verifierSesPropresVerdicts() — l'auto-correction. Un verdict « immobile » suivi d'un progrès
 // autonome, sans correction de ma part entre les deux, est un verdict RÉFUTÉ : le critère a raté
 // quelque chose.
@@ -1194,6 +1252,11 @@ function main() {
     passagesDepuis: (date) => historique.filter((v) => String(v.date ?? "") > String(date)).length,
   });
   console.log(`\n=== CE QU'IL ME REPROCHE, À MOI (${passagesConnus} passage(s) d'historique) ===`);
+  // AFFICHÉ AVANT LA GRAVITÉ, et pas après : quand l'étape manuelle a été sautée, la gravité qui
+  // suit dit « pas encore mesurable », ce qui se lit comme de la patience alors que c'est un
+  // manquement. L'ordre inverse laisserait le lecteur conclure avant d'avoir la cause.
+  const etapeManuelle = etapeManuelleJamaisFaite();
+  for (const l of formatEtapeManuelleLines(etapeManuelle)) console.log(l);
   console.log(`Gravité : ${surMoi.gravite.toUpperCase()} — ${surMoi.resume}`);
   for (const i of surMoi.ignores) console.log(`   ⚠️  ${i.outil} : jugé « ${i.verdict} » le ${i.depuis}, aucun commit sur son script depuis, revu ${i.passages} fois.`);
 
@@ -1241,6 +1304,13 @@ function main() {
   // fait. C'est le seul plan d'action du paysage dont les tâches me désignent nommément, et c'est
   // exactement ce que l'utilisateur demandait en construisant cet outil.
   const constatsApprentissage = [
+    // L'ÉTAPE SAUTÉE ENTRE DANS LE PLAN (2026-09-25, #573/#576), et en PREMIER : tant qu'elle n'a pas
+    // eu lieu, tout ce qui suit est calculé sur un registre vide. Un plan qui commencerait par les
+    // leçons ferait travailler sur les branches d'un arbre dont la racine manque.
+    ...(etapeManuelle.etat === "sautée"
+      ? [{ constat: `l'étape manuelle de l'item de Ronde n'a jamais été faite : ${etapeManuelle.passages} passage(s), 0 verdict écrit — et le registre vide la faisait passer pour un outil encore jeune`, etat: "retenu",
+          tache: "à la prochaine Ronde, juger chaque outil concerné (jugerUnOutil) puis enregistrerVerdict() — sans ce geste, la trajectoire restera à jamais « pas encore mesurable »" }]
+      : []),
     ...refutes.map((r) => ({ constat: `verdict réfuté par les faits : ${r.outil} — ${r.pourquoi ?? "jugement démenti depuis"}`, etat: "retenu",
       tache: `corriger le jugement de ${r.outil}, ou écrire pourquoi le verdict tenait quand même` })),
     ...surMoi.ignores.map((i) => ({ constat: `verdict ignoré PAR MOI : ${i.outil}, jugé « ${i.verdict} » le ${i.depuis}, revu ${i.passages} fois sans un seul commit depuis`, etat: "retenu",

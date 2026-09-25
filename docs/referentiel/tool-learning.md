@@ -155,3 +155,50 @@ entrée écrite ce matin serait condamnée pour un passé qui n'est pas le sien 
 
 **Limite honnête** : le compteur mesure des remontées, jamais une application. Douze remontées ne
 disent pas qu'une décision a changé — d'où le verdict d'application laissé à l'utilisateur.
+
+## 2026-09-25 — Le verdict n'était pas « pas encore mesurable » : l'étape n'avait jamais été faite (tâches #573 et #576)
+
+**LA QUESTION DE L'UTILISATEUR, dans ses mots** : « est-ce que les outils apprennent bien par eux
+même ? », « est-ce que tu apprends, enseigne aux outils, est-ce que ça marche ? », « TOOL-LEARNING
+fonctionne bien ? » — et, sur #573, l'exigence explicite d'une réponse **mesurée**, « c'est
+précisément le genre de question où une réponse de mémoire ne vaut rien ».
+
+**LA RÉPONSE, MESURÉE EN LANÇANT L'OUTIL POUR DE VRAI.** Tout ce qu'il sait faire mécaniquement
+fonctionne et se vérifie :
+
+| Ce qui est mesuré | Résultat réel du 2026-09-25 |
+|---|---|
+| Registre des leçons | 28 entrées · **18 portées par un mécanisme réel, 10 impossibilités déclarées avec leur raison, 0 sans porteur, 0 porteur fantôme** |
+| Peuvent remonter au bon moment | **28 / 28** |
+| Chaîne XP branchée dans le vrai dépôt | **5 / 5 maillons** |
+| Remontées réelles | **307 occasions** — 8 leçons vivantes, 13 servies sans effet connu, **7 jamais remontées** (L7, L9, L17, L18, L20, L21, L23) |
+| Coût de l'aide à un outil | médiane **3 300 tokens**, soit ~9 % d'un agent séparé |
+
+**ET LE DÉFAUT, QUI EST DU TYPE LE PLUS DISCRET QUI SOIT.** `verdicts.json` contient `[]`, et le
+rapport en tirait — très honnêtement — « **PAS ENCORE MESURABLE, registre de verdicts vide** ».
+C'est vrai. C'est même exactement ce que ce projet exige partout : ne jamais rendre un vert sur
+rien.
+
+**Sauf que derrière ce vide il y a DEUX causes indiscernables, et une seule est innocente :**
+
+- l'outil est neuf et n'a pas encore tourné — rien à reprocher à personne ;
+- il a tourné **cinq fois en Ronde**, et l'étape que son item réclame nommément (« juger chaque
+  outil concerné (`jugerUnOutil`) ») n'a **jamais** été faite — par l'agent.
+
+**C'est la (b) qui est vraie, et la phrase honnête de l'outil la faisait passer pour la (a).** Un
+aveu d'absence de mesure qui masque un manquement est pire qu'un silence : **il rassure.** Trois
+occurrences du même patron le même soir (le détecteur de dettes de god, le diagnostic de Moïse,
+celui-ci) : un mécanisme construit, testé, et que rien n'appelle.
+
+**CE QUI A ÉTÉ AJOUTÉ** : `etapeManuelleJamaisFaite()` et `formatEtapeManuelleLines()`, avec
+**trois états, jamais deux** — *sautée* (des passages, zéro verdict) · *rien à reprocher* (ni l'un
+ni l'autre) · *pas mesuré* (registre illisible, ce qui n'est jamais zéro passage). Le constat sort
+**avant** la ligne de gravité, parce qu'un lecteur qui lit « pas encore mesurable » d'abord conclut
+à de la patience avant d'avoir la cause ; et il entre **en tête du plan d'action**, parce que tant
+que ce geste n'a pas eu lieu, tout le reste se calcule sur un registre vide.
+
+**CE QU'IL NE FAIT PAS, délibérément** : fabriquer un verdict. Les quatre preuves de `PREUVES`
+demandent un jugement par outil qu'aucune mécanique ne sait produire ici ; les dériver au jugé
+remplirait le registre de chiffres inventés — une mesure **fausse** au lieu d'une mesure absente.
+Rendre l'absence visible et nommée est la seule chose honnête qu'un mécanisme puisse faire quand le
+geste manquant est humain (Article 27).

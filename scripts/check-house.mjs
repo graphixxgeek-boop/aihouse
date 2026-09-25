@@ -6401,6 +6401,22 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     // IL REFUSE DE JUGER UNE TRAJECTOIRE SANS RECUL, comme serie-temporelle refuse une tendance sur
     // deux points.
     assert.equal(tl.jugerUnOutil('z', { preuves: {}, passages: 1 }).verdict, 'pas assez de recul', 'a trajectory cannot be judged on one passage, and saying so is honest where "immobile" would be a verdict on nothing');
+    // L'ÉTAPE MANUELLE A-T-ELLE SEULEMENT ÉTÉ FAITE ? (2026-09-25, tâches #573 et #576). The real
+    // registry holds [] and the report said, very honestly, "PAS ENCORE MESURABLE". True — and it
+    // hid the fact that the Ronde item's own instruction ("juger chaque outil concerné") had been
+    // skipped five passages running. An avowal of non-measurement that conceals a skipped step is
+    // worse than silence: it REASSURES. Three states, never two.
+    {
+      const cinqSignaux = () => ['circle-signal-a.txt', 'circle-signal-b.txt', 'circle-signal-c.txt', 'circle-signal-d.txt', 'circle-signal-e.txt', 'index.md', 'verdicts.json'];
+      const saute = tl.etapeManuelleJamaisFaite({ verdicts: [], lireDossier: cinqSignaux });
+      assert.equal(saute.etat, 'sautée', 'passages recorded with zero verdicts is a SKIPPED STEP, never a young tool — and only naming it separates the two');
+      assert.equal(saute.passages, 5, 'the count of skipped passages must travel with the finding: once is an oversight, five times is a habit');
+      assert.equal(tl.etapeManuelleJamaisFaite({ verdicts: [], lireDossier: () => ['index.md'] }).etat, 'rien à reprocher', 'no verdicts AND no passages is genuinely nothing to blame — accusing there would be the false red this project hunts');
+      assert.equal(tl.etapeManuelleJamaisFaite({ verdicts: [{ outil: 'x' }], lireDossier: cinqSignaux }).etat, 'faite', 'one verdict written is enough to say the gesture happens, whatever the trajectory still lacks');
+      assert.equal(tl.etapeManuelleJamaisFaite({ verdicts: [], lireDossier: () => { throw new Error('illisible'); } }).etat, 'pas mesuré', 'an unreadable registry is NOT zero passages — confusing the two would accuse on nothing (leçon L5)');
+      assert.match(tl.formatEtapeManuelleLines(saute).join(' '), /pas l'outil qui manque de recul/i, 'the rendering must name the cause, because the line right under it says "pas encore mesurable" and reads as patience');
+      assert.deepEqual(tl.formatEtapeManuelleLines({ etat: 'rien à reprocher', pourquoi: 'rien' }).length, 1, 'and it stays to one quiet line when there is nothing to report');
+    }
 
     // SON PROPRE APPRENTISSAGE — il enregistre ses verdicts et vérifie s'ils se confirment. La
     // condition « sans intervention de ma part » est celle qu'on oublie : si j'ai corrigé l'outil
