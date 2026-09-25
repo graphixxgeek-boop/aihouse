@@ -85,5 +85,13 @@
     "quoiFaire": "N'écrire AUCUNE ligne de suivi sans avoir lancé agent-du-temps dans la même commande. Concrètement : H=$(node scripts/agent-du-temps.mjs | grep -oE ...) puis utiliser $H, jamais un horodatage écrit à la main. Le garde-fou rattrape, mais il coûte un commit bloqué à chaque fois.",
     "rienARetenir": false,
     "date": "2026-09-24T21:12:27.136Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "garde-fou-bloque",
+    "quoi": "J'avais LU l'heure (08:32Z) puis TAPÉ 08:34Z dans la ligne de suivi, sur le commit même qui corrigeait un autre défaut de mémoire. findHorodatagesFuturs() a refusé le commit.",
+    "pourquoi": "Ce n'est pas de l'inattention : le geste de recopier une heure déjà lue passe par la mémoire, et la mémoire dérive même sur trois minutes. Article 32, faille 1, sixième occurrence mesurée depuis le 2026-09-24. Le remède qui marche n'est pas 'faire attention' mais NE JAMAIS RETAPER : extraire l'heure dans une variable shell et la substituer, jamais la recopier à la main.",
+    "outil": "agent-du-temps",
+    "date": "2026-09-25T08:34:59.495Z"
   }
 ]
