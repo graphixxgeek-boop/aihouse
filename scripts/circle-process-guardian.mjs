@@ -43,6 +43,7 @@ import {
 import { findOrphanReportFiles, REGISTRIES, findEcrivainsDeRegistreSansContribution } from "./doc-report.mjs";
 import { walkDocsPaths, sh, outilsHorsPortee, porteeDe, GARDIEN_DOMAINS, pairesParJaccard, printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -201,7 +202,20 @@ export function verifyRondeProcess({
   tendanceDesSignauxDeRondeImpl = tendanceDesSignauxDeRonde,
 } = {}) {
   const findings = [];
-  const add = (check, message) => findings.push({ check, message });
+  // `nonDeclare` (2026-09-25, tâche #863) — LE CHAMP SANS LEQUEL CE RAPPORT SE LIT DE TRAVERS, et
+  // c'est son propre lancement à vide qui l'a montré : « 12 écart(s) trouvé(s) », dont DIX n'étaient
+  // pas des écarts constatés mais des faits de conversation JAMAIS DÉCLARÉS. Deux seulement — le
+  // compteur record-run et la barrière d'ouverture — se lisaient vraiment sur le disque.
+  //
+  // Un fait non déclaré reste un manquement (c'est la règle de ce contrôleur, et elle ne change
+  // pas : « un ordre non déclaré n'est pas un ordre respecté »). Mais un manquement de DÉCLARATION
+  // se répare en déclarant, là où un écart CONSTATÉ se répare en corrigeant le process — deux
+  // tâches différentes, que le total unique confondait. C'est le motif que ce projet traque
+  // partout : un zéro, un vide ou une absence ont presque toujours deux causes indiscernables.
+  //
+  // DÉCLARÉ AU POINT DE VÉRITÉ, jamais dans une liste d'identifiants tenue à côté (Article 24) :
+  // seul l'endroit qui pousse le constat sait si c'est une donnée manquante ou un fait mesuré.
+  const add = (check, message, { nonDeclare = false } = {}) => findings.push({ check, message, nonDeclare });
 
   // 0. CHANGEMENT DE MODÈLE IA (Q1/Q2/Q3) — câblé le 2026-09-22 au soir, et il porte le numéro 0
   // parce que sa place dans le process est AVANT la question AUTO/PRIME/GOAT, dans les 3 modes sans
@@ -224,7 +238,7 @@ export function verifyRondeProcess({
   // sautée sans utilisateur présent — une question posée à personne n'est pas une vérification,
   // c'est un blocage.
   if (!nightAutonomousMode && changementModelePosee !== true) {
-    add("changement-de-modele", "La question Q1 (« Voulez-vous changer de modèle/agent IA pour exécuter cette Ronde ? ») n'a pas été posée avant la fenêtre AUTO/PRIME/GOAT. Elle est obligatoire dans les 3 modes, reposée à chaque Ronde et jamais mémorisée de l'une à l'autre — un « ne t'arrête pas » général ne vaut jamais dispense d'une étape précise. Seul le mode autonome en dispense.");
+    add("changement-de-modele", "La question Q1 (« Voulez-vous changer de modèle/agent IA pour exécuter cette Ronde ? ») n'a pas été posée avant la fenêtre AUTO/PRIME/GOAT. Elle est obligatoire dans les 3 modes, reposée à chaque Ronde et jamais mémorisée de l'une à l'autre — un « ne t'arrête pas » général ne vaut jamais dispense d'une étape précise. Seul le mode autonome en dispense.", { nonDeclare: changementModelePosee === undefined });
   }
   // Q3 n'est due que si l'utilisateur a réellement répondu « oui » à Q1 : la réclamer autrement
   // ferait crier le gardien sur le cas le plus fréquent et de loin (pas de changement de modèle),
@@ -252,7 +266,7 @@ export function verifyRondeProcess({
   //
   // Les deux règles ne s'opposent pas, elles se partagent le terrain sans recouvrement : présent,
   // on demande TOUJOURS ; absent, on ne demande JAMAIS et le mode AUTO s'applique seul.
-  if (!nightAutonomousMode && autoPrimeGoatAsked !== true) add("auto-prime-goat", "La question AUTO/PRIME/GOAT n'a pas été posée avant l'exécution de la Ronde. Depuis le 2026-09-22 elle est obligatoire en présence de l'utilisateur, même s'il a demandé de ne pas être arrêté — elle coûte un clic et détermine toute la Ronde. Seul le mode autonome en dispense, et cette dispense est une garantie, jamais une tolérance.");
+  if (!nightAutonomousMode && autoPrimeGoatAsked !== true) add("auto-prime-goat", "La question AUTO/PRIME/GOAT n'a pas été posée avant l'exécution de la Ronde. Depuis le 2026-09-22 elle est obligatoire en présence de l'utilisateur, même s'il a demandé de ne pas être arrêté — elle coûte un clic et détermine toute la Ronde. Seul le mode autonome en dispense, et cette dispense est une garantie, jamais une tolérance.", { nonDeclare: autoPrimeGoatAsked === undefined });
 
   // 2bis. LA VOIX DE L'UTILISATEUR (2026-09-22) — et l'exemption nocturne est CONDITIONNELLE, ce
   // qui la distingue de celle de la fenêtre AUTO/PRIME/GOAT juste au-dessus. Celle-là supprime
@@ -265,7 +279,7 @@ export function verifyRondeProcess({
       add("voix-utilisateur", `Ronde nocturne : ${pointsAInterrogerCount} point(s) problématique(s) n'ont pas été reportés au prochain passage — l'absence de l'utilisateur diffère la question, elle ne l'efface jamais.`);
     }
   } else if (voixUtilisateurPosee !== true) {
-    add("voix-utilisateur", "La fenêtre de réponses sur les points problématiques de son évaluation n'a pas été confirmée comme posée avant la clôture de la Ronde.");
+    add("voix-utilisateur", "La fenêtre de réponses sur les points problématiques de son évaluation n'a pas été confirmée comme posée avant la clôture de la Ronde.", { nonDeclare: voixUtilisateurPosee === undefined });
   }
 
   // 3. Items cochés vs réellement exécutés — ET L'INVERSE, ajouté le 2026-09-23 après un cas réel.
@@ -290,7 +304,7 @@ export function verifyRondeProcess({
     // signalé — un outil mixte est légitimement aux deux endroits.
     for (const ecart of outilsHorsPortee(executedItemIds, "agence")) add("outil-hors-portee", ecart);
   } else {
-    add("checked-vs-executed", "La liste réelle des items cochés et/ou exécutés n'a pas été fournie — ce fait n'est jamais déductible du code seul.");
+    add("checked-vs-executed", "La liste réelle des items cochés et/ou exécutés n'a pas été fournie — ce fait n'est jamais déductible du code seul.", { nonDeclare: true });
   }
 
   // 4. Chaque item exécuté avec producesReport:true a bien laissé un fichier daté d'aujourd'hui.
@@ -318,10 +332,10 @@ export function verifyRondeProcess({
   //
   // Exempté en mode autonome, comme toutes les étapes qui supposent quelqu'un en face.
   if (!nightAutonomousMode && recapHtml === undefined) {
-    add("recap-absent", "Le récapitulatif de fin de Ronde (Étape 5) n'a pas été fourni. Ne pas le fournir n'est pas la même chose que ne pas en avoir besoin : tant qu'il manque, la Ronde n'est pas terminée, quoi que disent les autres vérifications.");
+    add("recap-absent", "Le récapitulatif de fin de Ronde (Étape 5) n'a pas été fourni. Ne pas le fournir n'est pas la même chose que ne pas en avoir besoin : tant qu'il manque, la Ronde n'est pas terminée, quoi que disent les autres vérifications.", { nonDeclare: true });
   }
   if (!nightAutonomousMode && reportsDeliveredBeforeAnalysis === undefined) {
-    add("sequence-non-declaree", "La séquence de l'Étape 5 (rapports livrés AVANT la construction de l'analyse) n'a pas été déclarée. Un ordre non déclaré n'est pas un ordre respecté.");
+    add("sequence-non-declaree", "La séquence de l'Étape 5 (rapports livrés AVANT la construction de l'analyse) n'a pas été déclarée. Un ordre non déclaré n'est pas un ordre respecté.", { nonDeclare: true });
   }
   if (recapHtml !== undefined) {
     if (!/<!DOCTYPE html>/i.test(recapHtml)) add("recap-format", "Le récapitulatif fourni n'est pas un vrai document HTML.");
@@ -346,7 +360,7 @@ export function verifyRondeProcess({
   // 26 écrits et 13 livrés se voit, là où un simple « oui » ne dirait rien.
   if (!nightAutonomousMode) {
     if (rapportsLivresIndividuellement === undefined) {
-      add("rapports-non-livres", "La livraison des rapports individuels à l'utilisateur n'a pas été déclarée. Écrire un fichier sur le disque et le committer n'est PAS le livrer : le premier est une trace pour les outils, le second un document pour lui. Tant que ce fait manque, l'étape de livraison est réputée non faite.");
+      add("rapports-non-livres", "La livraison des rapports individuels à l'utilisateur n'a pas été déclarée. Écrire un fichier sur le disque et le committer n'est PAS le livrer : le premier est une trace pour les outils, le second un document pour lui. Tant que ce fait manque, l'étape de livraison est réputée non faite.", { nonDeclare: true });
     } else if (rapportsLivresIndividuellement === false) {
       add("rapports-non-livres", "Les rapports individuels n'ont pas été livrés avant l'analyse. L'utilisateur lit les rapports pendant que l'agent construit son analyse — livrer après, c'est lui retirer cette lecture parallèle et lui demander de croire la synthèse sur parole.");
     }
@@ -371,7 +385,7 @@ export function verifyRondeProcess({
   // distinguer deux situations différentes n'est pas une mesure.
   if (!nightAutonomousMode) {
     for (const e of findEtapesDeQuestionsManquantes(questionsParEtape, { changementModeleReponse }, { seriesPassees: (loadSeriesPasseesImpl() ?? []).map((x) => x.serie) })) {
-      add("questions-par-etape", `Questions — ${e.etape}${e.attendu ? ` (${e.posees}/${e.attendu})` : ""} : ${e.manque}`);
+      add("questions-par-etape", `Questions — ${e.etape}${e.attendu ? ` (${e.posees}/${e.attendu})` : ""} : ${e.manque}`, { nonDeclare: questionsParEtape === undefined });
     }
   }
 
@@ -400,7 +414,7 @@ export function verifyRondeProcess({
 
   // 8bis. LES 7 GARDIENS SACRÉS — relayés, jamais relancés (cf. bloc dédié plus bas).
   if (!nightAutonomousMode) {
-    for (const g of findGardiensNonLivres({ gardiensLivres })) add("gardiens-non-livres", `Gardien sacré ${g.gardien} : ${g.pourquoi}.`);
+    for (const g of findGardiensNonLivres({ gardiensLivres })) add("gardiens-non-livres", `Gardien sacré ${g.gardien} : ${g.pourquoi}.`, { nonDeclare: gardiensLivres === undefined });
   }
   for (const g of findGardiensSansRegistreDeclare()) add("gardien-sans-registre", `${g} est déclaré Gardien sacré mais aucun registre n'est déclaré pour lui — son verdict ne peut donc jamais être livré.`);
 
@@ -464,7 +478,7 @@ export function verifyRondeProcess({
     // (une fenêtre posée ne laisse aucune trace tant qu'elle n'a pas reçu de réponse). Son absence
     // compte comme un manquement, jamais comme un laissez-passer — même patron que l'Étape 5.
     if (!nightAutonomousMode && seriesReellementPosees === undefined) {
-      add("series-non-declarees", `La liste des séries de questions réellement posées pendant cette Ronde n'a pas été déclarée. Sans elle, une série oubliée est indiscernable d'une série répondue — et l'hypothèse en vigueur reste « ${HYPOTHESE_SILENCE} ».`);
+      add("series-non-declarees", `La liste des séries de questions réellement posées pendant cette Ronde n'a pas été déclarée. Sans elle, une série oubliée est indiscernable d'une série répondue — et l'hypothèse en vigueur reste « ${HYPOTHESE_SILENCE} ».`, { nonDeclare: true });
     }
   }
 
@@ -1094,6 +1108,49 @@ export function formatPlanRaccordementRonde(plan) {
   return l.join("\n");
 }
 
+// planDactionRonde() (2026-09-25, tâche #863) — ce contrôleur trouvait de vrais manquements et
+// s'arrêtait au constat, ce que l'Article 28 interdit.
+//
+// SA VRAIE DIFFICULTÉ, et elle n'était pas celle attendue : lancé à vide, il annonçait « 12
+// écart(s) trouvé(s) » alors que DIX d'entre eux n'étaient pas des écarts constatés mais des faits
+// de conversation jamais déclarés (cf. le champ `nonDeclare`). Un plan d'action qui les mélangerait
+// proposerait douze corrections là où il y a deux corrections et une déclaration à faire.
+//
+// UN CONSTAT PAR FAMILLE, jamais un par écart, et le COMPTE voyage avec son DÉNOMINATEUR.
+export function planDactionRonde({ result, mapDrift = [], countDrift = [], sansChangelog = [], toolSlug = "circle-process-guardian" } = {}) {
+  const constats = [];
+  const tous = result?.findings ?? [];
+  const nonDeclares = tous.filter((f) => f.nonDeclare);
+  const constates = tous.filter((f) => !f.nonDeclare);
+  const ex = (liste, cle = (f) => f.check) => {
+    const noms = [...new Set(liste.map(cle))];
+    return `${noms.slice(0, 3).join(", ")}${noms.length > 3 ? ` (+${noms.length - 3})` : ""}`;
+  };
+  if (constates.length) {
+    constats.push({
+      etat: "retenu",
+      constat: `${constates.length} écart(s) du process de Ronde sur ${tous.length} signalement(s) réellement CONSTATÉS sur le disque — ex. ${ex(constates)}`,
+      tache: "corriger le process : ce sont des faits lus, pas des déclarations manquantes",
+    });
+  }
+  if (nonDeclares.length) {
+    constats.push({
+      etat: "retenu",
+      constat: `${nonDeclares.length} fait(s) de conversation sur ${tous.length} JAMAIS DÉCLARÉS — ex. ${ex(nonDeclares)}. Un fait non déclaré reste un manquement, mais il se répare en déclarant, pas en corrigeant le process`,
+      tache: "relancer verifyRondeProcess() en lui passant les faits de conversation (fenêtres posées, items cochés, rapports livrés) — sans eux le contrôle ne mesure rien et son silence ressemble à un feu vert",
+    });
+  }
+  const maintenance = [...mapDrift, ...countDrift, ...sansChangelog];
+  if (maintenance.length) {
+    constats.push({
+      etat: "retenu",
+      constat: `${maintenance.length} écart(s) de maintenance des tables associées à CIRCLE_ITEMS — ex. ${ex(maintenance)}`,
+      tache: "remettre les tables associées, les comptes figés et le changelog des items en accord avec CIRCLE_ITEMS (Article 24 : un registre se LIT, il ne se recopie pas)",
+    });
+  }
+  return buildPlanDaction(constats, { toolSlug });
+}
+
 function main() {
   // L'AVERTISSEMENT DE MARGE, DIT ET PAS SEULEMENT DÉCLARÉ (2026-09-25, tâche #653 → #808) :
   // sa nature heuristique était écrite dans TOOL_RELIABILITY et aucun chemin de ce script ne la
@@ -1107,7 +1164,13 @@ function main() {
   console.log("verifyRondeProcess(), jamais devinés. Lancé sans argument, il ne vérifie donc que 7/8 : \n");
   const result = verifyRondeProcess({});
   for (const f of result.findings) console.log(`- [${f.check}] ${f.message}`);
-  console.log(result.ok ? "\nAucun écart mécaniquement détectable." : `\n${result.findings.length} écart(s) trouvé(s) — jamais une correction automatique, signaler seulement à l'agent qui pilote.`);
+  // LE COMPTE SE DÉCOMPOSE, jamais un total nu : « 12 écarts » se lisait comme douze problèmes
+  // alors que dix étaient des faits jamais déclarés. Le total reste, sa composition l'accompagne.
+  const nbNonDeclares = result.findings.filter((f) => f.nonDeclare).length;
+  const nbConstates = result.findings.length - nbNonDeclares;
+  console.log(result.ok
+    ? "\nAucun écart mécaniquement détectable."
+    : `\n${result.findings.length} signalement(s) — dont ${nbConstates} écart(s) CONSTATÉ(S) sur le disque et ${nbNonDeclares} fait(s) de conversation JAMAIS DÉCLARÉ(S), qui restent des manquements mais se réparent en déclarant. Jamais une correction automatique : signaler seulement à l'agent qui pilote.`);
 
   console.log("\n=== Aide/vigilance pour une mise à jour de CIRCLE_ITEMS (2026-09-22) ===");
   console.log("Consulté AVANT un changement de CIRCLE_ITEMS, ceci aide à ne rien oublier ; jamais consulté, ceci l'attrape quand même au commit suivant :\n");
@@ -1138,6 +1201,10 @@ function main() {
     try { checkHouseText = readFileSync(join(ROOT, "scripts/check-house.mjs"), "utf8"); } catch { /* best-effort */ }
     console.log(formatPlanRaccordementRonde(planRaccordementRonde(cible, { checkHouseText })));
   }
+
+  const plan = planDactionRonde({ result, mapDrift, countDrift, sansChangelog });
+  console.log(`\n${PLAN_ACTION_TITRE}`);
+  console.log(plan.lignes.join("\n"));
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

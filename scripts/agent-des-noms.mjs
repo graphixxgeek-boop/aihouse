@@ -30,6 +30,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
@@ -295,6 +296,35 @@ function mainGouvernance(root) {
   const nomsEnService = readdirSync(join(root, "scripts")).filter((f) => f.endsWith(".mjs")).map((f) => f.replace(/\.mjs$/, ""));
   for (const l of formatNomsLines({ provisoires, nonValides: findNomsNonValides(nomsEnService, registreTexte), registreExiste })) console.log(l);
   console.log(`\nHORS PORTÉE : aucun mécanisme ne peut empêcher un nom d'être choisi — il peut seulement rendre impossible de l'OUBLIER. Et la dette ci-dessus se purge APRÈS la classification, jamais avant : renommer un outil dont on ignore encore le groupe produit un nom qui ne voudra plus rien dire.`);
+
+  // LE PLAN D'ACTION (2026-09-25, tâche #863 — reste mesuré de #803/#833).
+  //
+  // LA CONTRAINTE PROPRE À CET OUTIL, et elle change la forme de son plan : **les noms se
+  // choisissent par l'utilisateur, jamais par l'agent.** C'est une règle permanente du projet, pas
+  // une prudence de circonstance. Aucun constat d'ici ne peut donc devenir une tâche « renommer
+  // X en Y » — ce serait choisir à sa place. Chaque constat devient une tâche de PRÉPARATION : ce
+  // qu'il faut avoir sous les yeux pour qu'il puisse trancher vite.
+  //
+  // Et un constat par FAMILLE, jamais un par nom (leçon de #854) : « 78 noms non validés » se
+  // traite, soixante-dix-huit lignes identiques se sautent.
+  const nonValides = findNomsNonValides(nomsEnService, registreTexte);
+  const exemples = (l, max = 3) => (l.length ? ` — ex. ${l.slice(0, max).join(", ")}${l.length > max ? ` (+${l.length - max})` : ""}` : "");
+  const ecarts = [];
+  if (provisoires.length) ecarts.push({
+    quoi: `${provisoires.length} nom(s) provisoire(s) oublié(s) dans le code${exemples(provisoires.map((p) => p.nom ?? p.fichier ?? String(p)))}`,
+    quoiFaire: "les lui présenter pour qu'il tranche — un nom « provisoire » qui survit assez longtemps devient définitif par usure, ce qui est la pire façon de nommer quelque chose",
+  });
+  if (nonValides.length) ecarts.push({
+    quoi: `${nonValides.length} nom(s) en service sur ${nomsEnService.length} jamais validés au registre des baptêmes${registreExiste ? "" : " (le registre n'existe pas encore : le total EST le compte)"}${exemples(nonValides)}`,
+    quoiFaire: registreExiste
+      ? "préparer la liste pour une session de validation — l'agent ne valide jamais un nom lui-même"
+      : "créer le registre des baptêmes, ou décider qu'il n'en faut pas : tant qu'il n'existe pas, ce chiffre mesure son absence et non une dette de nommage",
+  });
+  const plan = planDactionDepuisEcarts(ecarts, { toolSlug: "agent-des-noms", libelle: (e) => e.quoi, tache: (e) => e.quoiFaire });
+  console.log("");
+  console.log(`=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of plan.lignes) console.log(l);
+  console.log("HORS PORTÉE de ce plan : aucune de ces tâches ne propose un NOM. Les noms se choisissent par l'utilisateur — ce plan prépare sa décision, il ne la prend jamais.");
 }
 
 function mainRenommage(root, ancien, nouveau) {

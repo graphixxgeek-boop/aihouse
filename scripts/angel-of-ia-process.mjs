@@ -28,7 +28,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 import { recordCliUsage, USAGE_ORIGINS } from "./tool-usage.mjs";
 // SÉRIE-TEMPORELLE (2026-09-22) : angel est le PREMIER outil branché sur le mécanisme partagé
 // d'historisation, et ce n'est pas un hasard — il avait déjà construit son propre historique la
@@ -927,6 +927,67 @@ function mainHistorique(args) {
   console.log("   qui est fausse — pire que le trou. Ces dates restent donc déclarées manquantes.");
 }
 
+// planDactionConduite() (2026-09-25, tâche #863) — angel nommait des manquements de conduite et
+// s'arrêtait là, ce que l'Article 28 interdit : un rapport n'est fini que quand ses constats sont
+// devenus des tâches.
+//
+// POURQUOI LES TROIS ÉTATS SONT ICI INDISPENSABLES, et pas décoratifs. auditWorkingRules() rend
+// déjà trois populations que rien ne doit fondre en une :
+//   · MANQUEMENT — une règle de travail observée comme non tenue : une vraie tâche ;
+//   · NON FOURNI — angel a DEMANDÉ et n'a pas reçu de réponse. C'est le cas central de cet outil,
+//     assumé depuis sa construction : les règles de conduite ne se jouent que dans la conversation,
+//     aucune mécanique ne peut les lire sur disque, donc angel demande et refuse d'être au vert
+//     sans réponse. Le compter comme un manquement accuserait l'agent de ce qu'il n'a pas dit ;
+//     ne pas le compter du tout rendrait le vert gratuit. Il devient donc sa propre famille.
+//   · NON MESURABLE — le croisement d'horodatages n'a rien pu lire. Une absence de mesure, jamais
+//     un écart : l'écarter avec sa raison est la seule lecture honnête.
+export function planDactionConduite({ audit, nonEvalue, toolSlug = "angel-of-ia-process" } = {}) {
+  const constats = [];
+  const total = audit?.resultats?.length ?? 0;
+  const ex = (liste) => {
+    const noms = liste.map((r) => r.id);
+    return `${noms.slice(0, 3).join(", ")}${noms.length > 3 ? ` (+${noms.length - 3})` : ""}`;
+  };
+  const manquements = audit?.manquements ?? [];
+  const nonFournis = audit?.nonFournis ?? [];
+  const nonMesurables = (audit?.resultats ?? []).filter((r) => r.etat === "non mesurable");
+  if (manquements.length) {
+    constats.push({
+      etat: "retenu",
+      constat: `${manquements.length} règle(s) de travail sur ${total} observée(s) comme NON TENUE(S) — ex. ${ex(manquements)}`,
+      tache: "traiter chaque manquement comme un bug (Article 26 : un manquement nommé se corrige, il ne s'enregistre pas)",
+    });
+  }
+  if (nonFournis.length) {
+    constats.push({
+      etat: "retenu",
+      constat: `${nonFournis.length} règle(s) de conduite sur ${total} SANS RÉPONSE — angel a demandé, rien n'a été déclaré : ni tenues ni manquées, seulement non dites — ex. ${ex(nonFournis)}`,
+      tache: "répondre aux règles de conduite en attente (node scripts/angel-of-ia-process.mjs, puis déclarer) — un vert obtenu en laissant la moitié des règles sans réponse serait un faux vert",
+    });
+  }
+  if (nonMesurables.length) {
+    constats.push({
+      etat: "ecarte",
+      constat: `${nonMesurables.length} règle(s) sur ${total} NON MESURABLE(S) — ${nonMesurables.map((r) => r.detail).filter(Boolean).slice(0, 2).join(" ; ") || "aucune raison rendue"}`,
+      pourquoi: "une absence de mesure n'est pas un écart : rien ne peut être corrigé tant que la source de mesure elle-même manque — la tâche serait de réparer la sonde, pas la conduite",
+    });
+  }
+  if (nonEvalue?.mesurable === false) {
+    constats.push({
+      etat: "ecarte",
+      constat: `le volume de travail non évalué n'a pas pu être lu — ${nonEvalue.pourquoi}`,
+      pourquoi: "l'historique ou git n'ont pas répondu : un chiffre inventé ici vaudrait moins que l'aveu (Article 32)",
+    });
+  } else if (nonEvalue?.alerte) {
+    constats.push({
+      etat: "retenu",
+      constat: nonEvalue.pourquoi,
+      tache: nonEvalue.remede,
+    });
+  }
+  return buildPlanDaction(constats, { toolSlug });
+}
+
 function main() {
   const [sub, ...args] = process.argv.slice(2);
   if (sub === "historique") return mainHistorique(args);
@@ -983,6 +1044,10 @@ function main() {
   } else {
     console.log(`\nCroisement des horodatages impossible : ${o.raison}`);
   }
+
+  const plan = planDactionConduite({ audit, nonEvalue });
+  console.log(`\n${PLAN_ACTION_TITRE}`);
+  console.log(plan.lignes.join("\n"));
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();

@@ -27,7 +27,7 @@ import { readFileSync, readdirSync, existsSync, statSync, writeFileSync, mkdirSy
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { LOCAL_JOURNALS, REGISTRIES } from "./doc-report.mjs";
 import { KPI_HISTORY_PATH } from "./kpi-report.mjs";
@@ -838,6 +838,70 @@ export function formatDataArchangelReport(r) {
   return l.join("\n");
 }
 
+// planDactionCirculation() (2026-09-25, tâche #863) — ce rapport nommait quatre populations et
+// s'arrêtait là, ce que l'Article 28 interdit : un rapport n'est fini que quand ses constats sont
+// devenus des tâches.
+//
+// LES TROIS ÉTATS SONT ICI INDISPENSABLES, pas décoratifs, et c'est pour ça que ce plan passe par
+// buildPlanDaction() plutôt que par le raccourci planDactionDepuisEcarts() qui met tout en
+// « retenu ». Ce rapport produit quatre populations dont DEUX ne sont pas des écarts, et le texte
+// du rapport le dit déjà noir sur blanc :
+//   · les sources déclarées mais jamais écrites — « rien à relire, jamais un reproche » ;
+//   · les branchements suggérés — « une suggestion, jamais un manquement ».
+// Les faire remonter en « retenu » fabriquerait des tâches à partir de non-problèmes, c'est-à-dire
+// exactement la formalité que l'Article 28 refuse. Le premier est ÉCARTÉ avec sa raison, le second
+// est À TRANCHER parce que la décision de brancher un outil n'appartient pas à une machine.
+//
+// UN CONSTAT PAR POPULATION, jamais un par fichier : trente lignes « personne ne lit X » se lisent
+// comme trente problèmes alors qu'il n'y en a qu'un, et le compte perd son dénominateur en route.
+export function planDactionCirculation(r, { toolSlug = "data-archangel" } = {}) {
+  const constats = [];
+  const total = r.total;
+  const ex = (liste, cle = (o) => o.id) => {
+    const noms = liste.slice(0, 3).map(cle);
+    return `${noms.join(", ")}${liste.length > 3 ? ` (+${liste.length - 3})` : ""}`;
+  };
+  if (r.critiques.length) {
+    constats.push({
+      etat: "retenu",
+      constat: `${r.critiques.length} donnée(s) FRAÎCHE(S) sur ${total} inventoriées que personne ne relit — ex. ${ex(r.critiques)}`,
+      // Au-delà d'une poignée, la tâche honnête n'est plus « brancher chacune » mais « décider
+      // comment traiter la population » : proposer trente branchements est un plan qu'on ne suit pas.
+      tache: r.critiques.length > 20
+        ? "décider comment traiter cette population : brancher, ou déclarer que l'exploitation de la SÉRIE n'a pas de valeur ici — jamais fichier par fichier"
+        : "pour chacune : lui donner un lecteur-outil, ou déclarer l'absence assumée avec sa raison",
+    });
+  }
+  const dejaAlertees = new Set(r.critiques.map((c) => c.id));
+  const ecritesIgnorees = r.orphelines.filter((o) => o.existe && !dejaAlertees.has(o.id));
+  if (ecritesIgnorees.length) {
+    constats.push({
+      etat: "retenu",
+      constat: `${ecritesIgnorees.length} donnée(s) écrite(s) sur ${total} que seul leur producteur relit — ex. ${ex(ecritesIgnorees)}`,
+      tache: ecritesIgnorees.length > 20
+        ? "décider comment traiter cette population — la vraie question n'est pas « personne ne lit ? » mais « personne n'exploite la SÉRIE ? »"
+        : "vérifier pour chacune si la série mérite un lecteur, ou si l'œil humain suffit",
+    });
+  }
+  const jamaisEcrites = r.orphelines.filter((o) => !o.existe);
+  if (jamaisEcrites.length) {
+    constats.push({
+      etat: "ecarte",
+      constat: `${jamaisEcrites.length} source(s) déclarée(s) sur ${total} jamais écrite(s) — ex. ${ex(jamaisEcrites)}`,
+      pourquoi: "une donnée qui n'existe pas encore n'a pas de lecteurs pour une raison parfaitement innocente — l'absence de lecteur n'y est pas un écart",
+    });
+  }
+  if (r.suggestions.length) {
+    const nb = r.suggestions.reduce((n, s) => n + s.manquantes.length, 0);
+    constats.push({
+      etat: "a-trancher",
+      constat: `${nb} branchement(s) suggéré(s) pour ${r.suggestions.length} outil(s) — ex. ${ex(r.suggestions, (s) => s.outil)}`,
+      pourquoi: "une suggestion, jamais un manquement : brancher un outil sur une source de plus est un choix de conception, et une machine qui le déciderait fabriquerait du travail que personne n'a voulu (Article 16)",
+    });
+  }
+  return buildPlanDaction(constats, { toolSlug });
+}
+
 // MON ÉTAT DES LIEUX — la commande que j'appelle avant un gros travail, pour savoir ce que l'équipe
 // sait déjà sur le sujet plutôt que de repartir de ce dont je me souviens.
 export function formatAgentBriefing(r, { filtre } = {}) {
@@ -902,6 +966,9 @@ function main() {
     return;
   }
   console.log(formatDataArchangelReport(r));
+  const plan = planDactionCirculation(r);
+  console.log(`\n${PLAN_ACTION_TITRE}`);
+  console.log(plan.lignes.join("\n"));
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();

@@ -379,6 +379,13 @@ export const SANS_CONSTAT_PROPRE = {
   // et leur sortie est décrite dans leur propre fichier plutôt qu'en creux ici.
   "god-of-all-process": "relaie ce que les autres contrôleurs ont trouvé : les manquements qu'il nomme appartiennent aux process surveillés, jamais à lui — un plan d'action ici doublerait celui du process concerné",
   "sauvegarde-projet": "fabrique un coffre et une notice : il rend un ÉTAT du dépôt, il n'en juge rien — lui réclamer un plan produirait une section vide à chaque passage",
+  // VÉRIFIÉ EN LISANT SON CODE, jamais déduit de son nom (2026-09-25, tâche #863) : `ou-on-en-est`
+  // compte les tâches faites et ouvertes et en rend un bilan HTML. Son unique « ⚠️ » est la
+  // déclaration « aucune tâche lue — rien n'a été mesuré », c'est-à-dire un AVEU D'ABSENCE DE
+  // MESURE, jamais un écart trouvé. Lui réclamer un plan d'action produirait donc la section vide
+  // que l'Article 28 interdit expressément — « une formalité qu'on remplit pour faire taire un
+  // contrôle ». Sa suite naturelle, ce sont les tâches elles-mêmes, qui vivent déjà dans docs/suivi/.
+  "ou-on-en-est": "rend un BILAN de ce qui a été fait et de ce qui reste : un état, jamais un constat — la seule alerte qu'il émet est « je n'ai rien pu lire », qui est une absence de mesure et non un écart",
 };
 
 // LES PORTES D'ENTRÉE du plan d'action, déclarées plutôt qu'énumérées au fil du code (Article 24).

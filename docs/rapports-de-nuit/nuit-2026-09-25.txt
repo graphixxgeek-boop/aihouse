@@ -317,3 +317,21 @@ LES INTERDITS RESPECTÉS (vérifiés à la clôture)
   normaliser le libelle « avant » risquerait de fondre des changements reellement differents sous
   une meme banniere, ce qui est le defaut inverse et le plus couteux des deux. 7 est sur, 1 serait
   plus court mais supposerait ce qu'on ne mesure pas [FAIT / question ouverte]
+
+#863 : les quatre derniers outils qui trouvaient des choses sans jamais dire quoi en faire savent
+  maintenant conclure — et en les lancant pour de vrai, deux d'entre eux mentaient sans le savoir.
+
+  Le premier annoncait « 12 ecarts trouves ». En regardant de pres : DIX de ces douze n'etaient
+  pas des ecarts. C'etaient des choses que personne ne lui avait DITES (les fenetres posees, les
+  items coches, les rapports livres) — et comme il ne savait pas les distinguer, il les comptait
+  comme des fautes. Deux seulement etaient de vraies fautes lues sur le disque. Ca change tout
+  pour qui lit : une faute se corrige, une chose non dite se dit. Le rapport separe desormais les
+  deux, et le mot qui fait la difference est pose a l'endroit exact qui sait de quoi il parle,
+  jamais dans une liste tenue a cote qui se serait perimee au premier ajout.
+
+  Le second, lance sans lui donner le nom de la simulation, repondait « process respecte » alors
+  qu'il n'avait pu verifier AUCUNE des cinq etapes. C'est exactement le faux vert de #206 : « tout
+  va bien » rendu sur zero donnee. Il dit maintenant « PAS MESURE » dans ce cas, et le compte de
+  ce qu'il a reellement regarde accompagne son verdict.
+
+  Mesure apres coup : tous les outils a constats concluent desormais, sans exception [FAIT]

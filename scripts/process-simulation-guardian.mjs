@@ -34,6 +34,7 @@ import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { checkPhase2Autonomy, formatPhase2Autonomy, checkObserverIdentified, formatObserverIdentified, detectJournalShape } from "./summarize-simulation-log.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -307,7 +308,64 @@ export function postflight(entries, { root = ROOT, simName } = {}) {
     manquantes: etapesApres.filter((e) => e.present === false).map((e) => e.libelle),
     nonVerifiables: etapesApres.filter((e) => e.present === undefined).map((e) => e.libelle),
     ok: phase2.suffisant !== false && observateur.identifie !== false && etapesApres.every((e) => e.present !== false),
+    // `mesurable` À CÔTÉ DE `ok`, jamais à sa place (2026-09-25, tâche #863) — trouvé en lançant
+    // ce contrôleur pour de vrai, pas en le relisant : appelé SANS le nom de la simulation, il
+    // rendait `ok: true` alors qu'il n'avait pu vérifier AUCUNE des cinq étapes. C'est le faux vert
+    // exact que la tâche #206 traque : « tout va bien » rendu sur des données absentes.
+    // Deux champs plutôt qu'un seuil déplacé : changer `ok` aurait changé le sens du mot pour ses
+    // appelants (check-house en teste déjà la forme), là où un champ de plus ne casse personne et
+    // dit la seule chose qui manquait — COMBIEN a réellement été regardé.
+    mesurable: etapesApres.some((e) => e.present !== undefined),
+    mesurees: etapesApres.filter((e) => e.present !== undefined).length,
+    total: etapesApres.length,
   };
+}
+
+// planDactionPostflight() (2026-09-25, tâche #863) — ce contrôleur trouvait de vrais écarts et
+// s'arrêtait au constat, ce que l'Article 28 interdit : un rapport n'est fini que quand ses
+// constats sont devenus des tâches.
+//
+// UN CONSTAT PAR FAMILLE, jamais un par écart — la forme a déjà coûté deux erreurs sur #854 : un
+// plan qui liste cinq étapes manquantes l'une après l'autre se lit comme cinq problèmes alors
+// qu'il n'y en a qu'un (l'archivage n'a pas été fait). Le COMPTE et son DÉNOMINATEUR voyagent
+// avec le constat, sans quoi « 3 manquantes » ne dit pas si c'est 3 sur 5 ou 3 sur cinquante.
+//
+// LES NON-VÉRIFIABLES NE SONT PAS DES ÉCARTS, et les confondre serait exactement le faux rouge
+// que ce projet traque : sans le nom de la simulation, cinq étapes ne sont pas « ratées », elles
+// ne sont PAS MESURÉES. Elles reçoivent donc leur propre famille, avec la seule tâche qui les
+// concerne : relancer en fournissant le nom.
+export function planDactionPostflight(v, { toolSlug = "process-simulation-guardian" } = {}) {
+  const total = v.etapesApres.length;
+  const familles = [];
+  if (v.phase2?.suffisant === false) {
+    familles.push({
+      quoi: "la phase 2 ne contient aucun tour réellement autonome — c'est le raté de full_sim16, re-commis sur full_sim18",
+      quoiFaire: "reprendre le scénario pour que la phase 2 laisse les personnages agir seuls, avant toute relance",
+    });
+  }
+  if (v.observateur?.identifie === false) {
+    familles.push({
+      quoi: "l'observateur n'est jamais identifié dans le journal — la révélation n'a donc pas pu se jouer",
+      quoiFaire: "vérifier dans le scénario le moment où l'observateur se nomme, avant toute relance",
+    });
+  }
+  if (v.manquantes.length) {
+    familles.push({
+      quoi: `${v.manquantes.length} étape(s) d'après-simulation sur ${total} jamais faites — ex. ${v.manquantes.slice(0, 3).join(", ")}${v.manquantes.length > 3 ? ` (+${v.manquantes.length - 3})` : ""}`,
+      quoiFaire: "terminer l'archivage de cette simulation (Article 18, étapes 3bis et 4) — une simulation non archivée est une heure de quota perdue",
+    });
+  }
+  if (v.nonVerifiables.length) {
+    familles.push({
+      quoi: `${v.nonVerifiables.length} étape(s) sur ${total} PAS MESURÉES faute du nom de la simulation — une absence de mesure, jamais un écart constaté`,
+      quoiFaire: "relancer le contrôle d'après en fournissant le nom de la simulation en second argument",
+    });
+  }
+  return planDactionDepuisEcarts(familles, {
+    toolSlug,
+    libelle: (e) => e.quoi,
+    tache: (e) => e.quoiFaire,
+  });
 }
 
 function indexMentions(chemin, simName) {
@@ -352,7 +410,12 @@ function main() {
     console.log("");
     for (const e of v.etapesApres) console.log(`  ${e.present === true ? "✔" : e.present === false ? "✗" : "?"} ${e.libelle}`);
     if (v.nonVerifiables.length) console.log(`\n  (? = non vérifiable sans le nom de la simulation — le fournir en second argument)`);
-    console.log(`\nVerdict : ${v.ok ? "process respecté sur tout ce qui est vérifiable" : "⚠️ des points restent ouverts"}`);
+    // TROIS ÉTATS, JAMAIS DEUX : respecté / des points ouverts / PAS MESURÉ. Le troisième
+    // n'existait pas, et il se lisait donc comme le premier.
+    console.log(`\nVerdict : ${!v.mesurable ? `🚨 PAS MESURÉ — aucune des ${v.total} étapes d'après n'a pu être vérifiée (nom de la simulation absent)` : v.ok ? `process respecté sur tout ce qui est vérifiable (${v.mesurees}/${v.total} étapes réellement regardées)` : "⚠️ des points restent ouverts"}`);
+    const plan = planDactionPostflight(v);
+    console.log(`\n${PLAN_ACTION_TITRE}`);
+    console.log(plan.lignes.join("\n"));
     return;
   }
   console.log("Usage : node scripts/process-simulation-guardian.mjs [brief | postflight <journal.json> [nomDeLaSimu]]");
