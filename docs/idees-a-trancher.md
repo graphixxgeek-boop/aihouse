@@ -82,7 +82,7 @@ DEEP-READER 8 confirmé en direct.
 | #760 | Charte — proposer un NOUVEL article (le trentième) pour la reprise des notes | à trancher |
 | #767 | Charte — quelles autres règles à fort levier manquent ? | à trancher |
 | #800 | Version de l'Agence — lequel des trois axes fait monter le majeur ? | à trancher |
-| #801 | Badge — la FAMILLE a disparu de la cérémonie, 23 cérémonies identiques d'un coup | à trancher |
+| #801 | Badge — la FAMILLE a disparu de la cérémonie, 23 cérémonies identiques d'un coup · **remesuré le 2026-09-25 après la Ronde : 20 cérémonies en attente, toutes « partiel (KO CLONE-HUNTER) », donc le motif tient et ne s'épuise pas** | à trancher |
 | #805 | File — 87 % de tâches légères et 49 thèmes : émiettement, ou rythme sain ? | à trancher |
 | #814 | Données — les sources fraîches restantes : lecteur réel, ou absence assumée ? | à trancher |
 
@@ -269,3 +269,22 @@ qui tourne pourtant à chaque commit comme quatrième Gardien sacré.
    fondé sur une hypothèse, jamais sur une mesure.
 3. **Faire écrire au carnet une ligne « passage sans trouvaille »** à chaque vrai passage, pour que
    le silence cesse d'être ambigu — change la règle du carnet, donc une décision de conception.
+
+## #801 — remesuré le 2026-09-25, et le chiffre confirme que ce n'est pas un pic
+
+*(Ajouté après la Ronde : le rappel post-commit en affiche **20** d'un coup, deux commits de suite.)*
+
+**Ce que la remesure apporte** : en septembre 22 il y en avait 23 ; aujourd'hui 20. Le nombre ne
+descend pas parce que rien n'est relayé — il descend parce que le paysage a bougé. **Le motif est
+stable, donc structurel**, et toutes portent la même mention : « Couverture de code : partiel
+(KO CLONE-HUNTER) ».
+
+**Pourquoi je ne les relaie pas** : relayer vingt cérémonies identiques, c'est produire vingt lignes
+qui disent la même chose — exactement le bruit dont ta question #801 demande s'il sert à quelque
+chose. Et un relais est une écriture définitive dans l'historique des badges : la faire vingt fois
+pour « nettoyer l'affichage » figerait la réponse à ta place.
+
+**Ce que la mesure suggère, sans trancher** : si toutes oscillent sur le MÊME motif
+(`KO CLONE-HUNTER`), alors ce n'est pas vingt cérémonies, c'est **une seule information répétée
+vingt fois** — et la question devient « faut-il une cérémonie par outil, ou une par CHANGEMENT
+réel ? ». Ça reste ta décision.
