@@ -422,7 +422,19 @@ function fichiersDe(root, dossier, ext, recursif = true, profondeur = 0) {
 export function reprendreLesNotes(sujet, { root = ROOT, lieux = LIEUX_DE_NOTES, lire } = {}) {
   const motif = String(sujet ?? "").trim();
   if (motif.length < 3) return { mesurable: false, pourquoi: "un sujet de moins de trois caractères ramènerait tout le dépôt : ce n'est pas une reprise de notes, c'est du bruit" };
-  const re = new RegExp(motif.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+  // UN ESPACE DANS LE SUJET VAUT N'IMPORTE QUEL SÉPARATEUR (2026-09-25, même passage que le nom de
+  // fichier ci-dessous, et c'est la MOITIÉ manquante de la même correction). Chercher
+  // « gardiens donnees absentes » rendait toujours zéro une fois les noms de fichiers lus, parce
+  // que le fichier s'appelle `audit-gardiens-donnees-absentes-…` : des TIRETS, jamais des espaces.
+  // Un sujet se tape en mots séparés par des espaces ; un dépôt les écrit avec des tirets, des
+  // soulignés ou des espaces selon l'endroit. Exiger l'espace revenait à demander à l'utilisateur
+  // de deviner la convention du fichier qu'il cherche — l'inverse d'une reprise de notes.
+  // Ce n'est PAS une recherche floue : chaque mot reste exigé, dans l'ordre, entier. Seul le
+  // séparateur devient libre.
+  const re = new RegExp(
+    motif.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "[\\s_-]+"),
+    "i",
+  );
   const lecteur = lire ?? ((f) => readFileSync(join(root, f), "utf8"));
   const par = {};
   let fichiersVus = 0;
@@ -438,9 +450,24 @@ export function reprendreLesNotes(sujet, { root = ROOT, lieux = LIEUX_DE_NOTES, 
       const lignes = String(src).split("\n");
       const touches = [];
       for (let i = 0; i < lignes.length; i++) if (re.test(lignes[i])) touches.push({ ligne: i + 1, extrait: lignes[i].trim().slice(0, EXTRAIT_MAX) });
-      if (touches.length) par[l.cle].push({ fichier: f, occurrences: touches.length, premier: touches[0] });
+      // LE NOM DU FICHIER COMPTE AUSSI, et l'oublier a coûté pour de vrai (2026-09-25, Ronde) :
+      // une recherche sur « gardien donnees absentes » a rendu ZÉRO alors que
+      // `docs/plans/audit-gardiens-donnees-absentes-2026-09-23.md` existait et répondait
+      // exactement à la question. Ce fichier ne répète simplement pas son propre titre dans son
+      // corps — ce que fait tout document bien écrit. La reprise des notes concluait donc « on
+      // part de zéro » sur un chantier déjà cadré et déjà tranché, soit EXACTEMENT le défaut que
+      // l'Article 30 existe pour empêcher, commis par l'outil qui le porte.
+      // TROIS ÉTATS, JAMAIS DEUX : le sujet est dans le TEXTE (preuve forte), seulement dans le
+      // NOM (indice, plus faible mais jamais rien), ou absent. Fondre le deuxième dans le premier
+      // gonflerait les occurrences d'un fichier qui ne dit peut-être rien ; le fondre dans le
+      // troisième est l'erreur qu'on vient de payer.
+      const parLeNom = re.test(f);
+      if (touches.length) par[l.cle].push({ fichier: f, occurrences: touches.length, premier: touches[0], parLeNom });
+      else if (parLeNom) par[l.cle].push({ fichier: f, occurrences: 0, premier: null, parLeNom: true, nomSeulement: true });
     }
-    par[l.cle].sort((a, b) => b.occurrences - a.occurrences);
+    // Un fichier trouvé par son seul NOM passe en TÊTE malgré ses zéro occurrence : c'est le cas
+    // qu'on vient de manquer, et le laisser en queue le ferait retomber sous la coupe d'affichage.
+    par[l.cle].sort((a, b) => (Number(Boolean(b.nomSeulement)) - Number(Boolean(a.nomSeulement))) || (b.occurrences - a.occurrences));
   }
   const total = Object.values(par).reduce((s, v) => s + v.length, 0);
   return { sujet: motif, par, total, fichiersVus, illisibles,
@@ -597,7 +624,9 @@ export function formatReprisesLines(r, { parLieu = 6 } = {}) {
   for (const l of LIEUX_DE_NOTES) {
     const hits = r.par[l.cle] ?? [];
     L.push(`${l.cle.toUpperCase().padEnd(12)} ${String(hits.length).padStart(3)} — ${l.quoi}`);
-    for (const h of hits.slice(0, parLieu)) L.push(`   ${String(h.occurrences).padStart(4)}× ${h.fichier}`);
+    for (const h of hits.slice(0, parLieu)) L.push(h.nomSeulement
+      ? `      — ${h.fichier}   ← le NOM porte le sujet, le texte ne le répète pas : indice, jamais preuve`
+      : `   ${String(h.occurrences).padStart(4)}× ${h.fichier}`);
     if (hits.length > parLieu) L.push(`        … et ${hits.length - parLieu} autre(s)`);
   }
   L.push("");
