@@ -590,8 +590,225 @@ function reportSmartConso(m) {
     if (m.freshnessOk === false) console.log('→ Action : le registre de schémas coûteux n\'a jamais été validé pour l\'identité de modèle actuelle — une nouvelle recherche est nécessaire avant de lui faire confiance.');
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LES DEUX NOTES GLOBALES — le jeu d'un côté, l'Agence de l'autre (2026-09-25, tâche #729)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA QUESTION : « est-ce qu'on a une mesure de la qualité du projet au global ? et une note pour
+// la qualité du jeu et la qualité de l'agence ? »
+//
+// LA RÉPONSE MESURÉE ÉTAIT NON, et c'était un vrai trou : cinq mesures partielles existaient
+// (EL-PROFESSOR, THE-SCREENER, THE-EQUALIZER, AXA-CHECK, le tableau de bord) et AUCUNE synthèse.
+//
+// DEUX NOTES, JAMAIS UNE SEULE, et ce n'est pas un détail de présentation : le JEU se juge sur
+// l'esprit des personnages, le naturel du dialogue et le rendu ; l'AGENCE se juge sur la couverture
+// de test, la conclusion des constats et l'usage réel des outils. Les moyenner donnerait un chiffre
+// qui ne veut rien dire — un jeu excellent servi par un outillage faible rendrait la même note
+// qu'un outillage impeccable servant un jeu raté. `formatNotesLines()` refuse donc structurellement
+// de produire une moyenne des deux, plutôt que de compter sur la discipline de l'appelant.
+//
+// LA RÈGLE QUI GOUVERNE CHAQUE COMPOSANTE (leçon L22, payée ailleurs dans ce projet) : une note
+// LIT le verdict d'un autre outil, elle ne le RECOMPTE jamais. Recompter rouvrirait une décision
+// déjà prise, et rien ne garantirait que les deux calculs restent d'accord. Chaque composante dit
+// donc quel outil l'a produite, et ce nom voyage avec le chiffre.
+//
+// TROIS ÉTATS PAR COMPOSANTE, JAMAIS DEUX — le vocabulaire est repris tel quel de
+// `dashboardCoverageScore` ci-dessus plutôt que réinventé (Article 24) :
+//   · MESURÉE — un outil a rendu un chiffre ;
+//   · PAS MESURÉE — personne ne l'a produit, et ça compte contre la complétude de la note ;
+//   · HORS DE PORTÉE ICI — structurellement impossible dans ce contexte (les composantes du jeu
+//     demandent un serveur qui tourne avec du vrai trafic, ce qui n'arrive jamais pendant une
+//     Ronde). Elle sort du dénominateur au lieu de faire chuter la note : une alerte toujours
+//     rouge est une alerte qu'on cesse de lire, y compris le jour où elle dit autre chose.
+//
+// LE GARDE-FOU QUE LA TÂCHE EXIGEAIT : une note calculée sur des composantes absentes DIT qu'elle
+// est partielle. Et zéro composante mesurée ne rend jamais 0/100 — ça rend « pas mesurable », avec
+// la raison (leçon L5 : « je n'ai rien trouvé » et « je n'ai pas pu regarder » ne sont pas la même
+// phrase, et la seconde déguisée en première est le vert le plus dangereux de ce paysage).
+
+export const COMPOSANTES_NOTE_JEU = [
+  { cle: "esprit", quoi: "fidélité à la charte de la dernière simulation notée", source: "EL-PROFESSOR" },
+  { cle: "rendu", quoi: "qualité visuelle de ce que le visiteur voit", source: "THE-SCREENER" },
+  { cle: "naturel", quoi: "part de tours sans intervention anti-écho", source: "tableau de bord (qualityScore)" },
+  { cle: "coherence", quoi: "part de tours sans troncature à rattraper", source: "tableau de bord (coherenceScore)" },
+  { cle: "rejouabilite", quoi: "variété réelle des bonus tirés", source: "tableau de bord (replayabilityScore)" },
+];
+
+export const COMPOSANTES_NOTE_AGENCE = [
+  { cle: "exigences", quoi: "exigences écrites réellement tenues", source: "THE-EQUALIZER" },
+  { cle: "robustesse", quoi: "couverture de test par fonction", source: "AXA-CHECK" },
+  { cle: "conclusion", quoi: "outils qui terminent par un plan d'action (Article 28)", source: "CASSANDRA-RH (classes)" },
+  { cle: "usage", quoi: "outils réellement sollicités au moins une fois", source: "tool-brain" },
+  { cle: "santeDuCode", quoi: "typage propre et suite de tests au vert", source: "tableau de bord (codeHealthScore)" },
+];
+
+// Une valeur peut arriver sous trois formes, et c'est ce qui rend les trois états possibles :
+// un NOMBRE (mesurée) · `{ horsPortee: true, pourquoi }` · rien du tout (pas mesurée).
+function lireLaComposante(c, valeurs) {
+  const v = valeurs?.[c.cle];
+  if (v && typeof v === "object" && v.horsPortee) {
+    return { ...c, etat: "hors de portée ici", valeur: null, pourquoi: v.pourquoi ?? "raison non précisée" };
+  }
+  const n = v && typeof v === "object" && "valeur" in v ? v.valeur : v;
+  if (typeof n === "number" && Number.isFinite(n)) {
+    return { ...c, etat: "mesurée", valeur: Math.max(0, Math.min(100, n)), detail: v?.detail ?? null };
+  }
+  return { ...c, etat: "pas mesurée", valeur: null, pourquoi: "aucun outil n'a rendu ce chiffre lors de ce passage" };
+}
+
+export function noteGlobale(composantes = [], valeurs = {}, { intitule = "" } = {}) {
+  const lues = composantes.map((c) => lireLaComposante(c, valeurs));
+  const mesurees = lues.filter((c) => c.etat === "mesurée");
+  const horsPortee = lues.filter((c) => c.etat === "hors de portée ici");
+  const atteignables = lues.length - horsPortee.length;
+  if (!mesurees.length) {
+    return {
+      mesurable: false, intitule, composantes: lues, mesurees: 0, atteignables, total: lues.length,
+      pourquoi: atteignables === 0
+        ? "aucune composante n'était atteignable dans ce contexte — c'est une absence de terrain, jamais une note de zéro"
+        : "aucune composante n'a été mesurée lors de ce passage : pas de note plutôt qu'un zéro, qui accuserait à tort",
+    };
+  }
+  const note = mesurees.reduce((a, c) => a + c.valeur, 0) / mesurees.length;
+  return {
+    mesurable: true, intitule, note: Math.round(note * 10) / 10,
+    composantes: lues, mesurees: mesurees.length, atteignables, total: lues.length,
+    partielle: mesurees.length < atteignables,
+    pourquoi: `moyenne des ${mesurees.length} composante(s) réellement mesurée(s) sur ${atteignables} atteignable(s)`,
+    horsPortee: horsPortee.map((c) => `${c.cle} — ${c.pourquoi}`),
+  };
+}
+
+// LES DEUX NOTES NE SE MOYENNENT JAMAIS, et cette fonction est l'endroit où cette règle est TENUE
+// plutôt qu'écrite : elle rend deux blocs côte à côte et aucun chiffre unique. Un agent pressé qui
+// chercherait « la note du projet » ne la trouvera pas — c'est voulu.
+export function formatNotesLines({ jeu, agence } = {}) {
+  const bloc = (n, titre) => {
+    if (!n) return [`${titre} : PAS DE DONNÉE — la note n'a même pas été tentée`];
+    if (!n.mesurable) return [`${titre} : PAS MESURABLE — ${n.pourquoi}`, ...n.composantes.map((c) => `      ${c.cle.padEnd(14)} ${c.etat}`)];
+    const l = [`${titre} : ${n.note}/100${n.partielle ? "   ⚠️ PARTIELLE" : ""}   (${n.pourquoi})`];
+    for (const c of n.composantes) {
+      const val = c.etat === "mesurée" ? `${Math.round(c.valeur * 10) / 10}/100` : c.etat;
+      // La raison d'une absence voyage SUR LA LIGNE de la composante, jamais dans un bloc à part :
+      // séparés, on lit le mot « hors de portée » sans jamais atteindre le pourquoi, et une absence
+      // dont on ignore la cause se confond avec une absence qu'on a choisie.
+      const raison = c.etat === "mesurée" ? (c.detail ? `  — ${c.detail}` : "") : `  — ${c.pourquoi}`;
+      l.push(`      ${c.cle.padEnd(14)} ${String(val).padEnd(20)} ${c.quoi}  ← ${c.source}${raison}`);
+    }
+    if (n.partielle) l.push(`      ⚠️ Note PARTIELLE : ${n.atteignables - n.mesurees} composante(s) atteignable(s) n'ont rien rendu. Elle se lit comme une tendance, jamais comme un verdict.`);
+    // UNE SEULE COMPOSANTE N'EST PAS UNE MOYENNE, et le dire est indispensable : le chiffre a l'air
+    // d'une synthèse alors qu'il recopie un seul verdict, avec toutes les réserves de celui-ci.
+    if (n.mesurees === 1) l.push(`      ⚠️ Cette note repose sur UNE SEULE composante : ce n'est pas une synthèse, c'est ce verdict-là recopié, réserves comprises.`);
+    return l;
+  };
+  return [
+    ...bloc(jeu, "NOTE DU JEU    "),
+    "",
+    ...bloc(agence, "NOTE DE L'AGENCE"),
+    "",
+    "LES DEUX NE SE MOYENNENT JAMAIS, et c'est la raison d'être de ces deux notes plutôt qu'une :",
+    "un jeu excellent servi par un outillage faible rendrait exactement le même chiffre qu'un",
+    "outillage impeccable servant un jeu raté. Aucune note unique du projet n'est produite ici.",
+    "Chaque composante LIT le verdict de l'outil qui l'a produite, elle ne le recompte jamais (leçon L22).",
+  ];
+}
+
+// LA DERNIÈRE NOTE D'EL-PROFESSOR, lue dans son index plutôt que recalculée — et la colonne
+// « Lecture » voyage avec elle, parce qu'une note de 38 obtenue sur une simulation dont le second
+// acte n'a pas eu lieu ne dit pas la même chose qu'une note de 38 sur une simulation complète.
+export function derniereNoteElProfessor(markdown = "") {
+  const lignes = String(markdown).split("\n").filter((l) => /^\|\s*full_sim/.test(l));
+  if (!lignes.length) return { mesurable: false, pourquoi: "aucune simulation notée dans l'index d'EL-PROFESSOR" };
+  const cols = lignes[lignes.length - 1].split("|").map((c) => c.trim());
+  const note = Number(cols[2]);
+  if (!Number.isFinite(note)) return { mesurable: false, pourquoi: `la dernière ligne de l'index ne porte pas de note lisible (« ${cols[2]} »)` };
+  return { mesurable: true, simulation: cols[1], note, lecture: cols[8] ?? "non précisée" };
+}
+
+// LA COLLECTE RÉELLE — chaque composante va CHERCHER le verdict là où l'outil l'a écrit. Elle
+// n'invente aucun chiffre, et une source injoignable rend « pas mesurée » plutôt qu'un zéro.
+// Les trois composantes de dialogue du jeu sont déclarées HORS DE PORTÉE pour la même raison
+// déjà tranchée plus haut par `dashboardCoverageScore` : elles exigent un serveur qui tourne avec
+// du vrai trafic, ce qui n'arrive jamais hors simulation. Les déclarer plutôt que de les laisser
+// tomber à zéro est ce qui empêche la note d'accuser le jeu d'un défaut de contexte.
+export async function collecterLesNotes({ codeHealth, lire = (p) => readFileSync(p, 'utf8') } = {}) {
+    const jeu = {};
+    const agence = {};
+
+    // — JEU · esprit : la dernière note d'EL-PROFESSOR, LUE dans son index (jamais recalculée).
+    try {
+        const d = derniereNoteElProfessor(lire('docs/el-professor/index.md'));
+        if (d.mesurable) jeu.esprit = { valeur: d.note, detail: `${d.simulation} — lecture ${d.lecture}` };
+    } catch { /* index absent : reste « pas mesurée » */ }
+
+    // — JEU · rendu : THE-SCREENER ne rend pas de note chiffrée, seulement un jugement à lire.
+    jeu.rendu = { horsPortee: true, pourquoi: "THE-SCREENER rend un jugement visuel à LIRE, jamais un chiffre — le forcer en note inventerait une précision qu'il n'a pas" };
+    for (const cle of ['naturel', 'coherence', 'rejouabilite']) {
+        jeu[cle] = { horsPortee: true, pourquoi: "exige un serveur de jeu qui tourne avec du vrai trafic — mesurable seulement pendant une simulation" };
+    }
+
+    // — AGENCE · exigences : l'état de chaque exigence tel que THE-EQUALIZER l'a écrit.
+    try {
+        const { loadStandards } = await import('./the-equalizer.mjs');
+        const chargees = loadStandards();
+        const ex = Array.isArray(chargees) ? chargees : (chargees?.exigences ?? []);
+        if (ex.length) {
+            const tenues = ex.filter((e) => e.etat === 'mecanique').length;
+            agence.exigences = { valeur: (tenues / ex.length) * 100, detail: `${tenues}/${ex.length} tenues mécaniquement` };
+        }
+    } catch { /* standards illisibles */ }
+
+    // — AGENCE · robustesse : la dernière robustesse globale écrite dans le registre d'AXA-CHECK.
+    try {
+        const ligne = lire('docs/axa-check/index.md').split('\n').filter((l) => /^\|\s*20\d\d-/.test(l)).pop();
+        const m = ligne && ligne.split('|')[3]?.match(/(\d+(?:[.,]\d+)?)\s*%/);
+        if (m) agence.robustesse = { valeur: Number(m[1].replace(',', '.')), detail: `relevé du ${ligne.split('|')[1].trim()}` };
+    } catch { /* registre absent */ }
+
+    // — AGENCE · conclusion : la part d'outils qui terminent par un plan d'action (Article 28).
+    try {
+        const { recenserLesScripts } = await import('./cassandra-rh.mjs');
+        const rec = recenserLesScripts();
+        const outils = (rec.lignes ?? []).filter((x) => x.type === 'outil');
+        if (outils.length) {
+            const concluent = outils.filter((x) => x.classes?.includes('conclut-en-plan-daction')).length;
+            agence.conclusion = { valeur: (concluent / outils.length) * 100, detail: `${concluent}/${outils.length} outils concluent` };
+        }
+    } catch { /* recensement impossible */ }
+
+    // — AGENCE · usage : la part d'outils réellement sollicités, avec les QUATRE états de tool-brain.
+    try {
+        const tb = await import('./tool-brain.mjs');
+        const rapport = tb.buildToolBrainUsageReport(tb.loadToolUsageHistory(), undefined, {
+            sourceCrochet: (() => { try { return lire('scripts/hooks/post-commit'); } catch { return ''; } })(),
+            lireSource: (p) => { try { return lire(p); } catch { return null; } },
+        });
+        const total = rapport.perTool?.length ?? 0;
+        if (total) {
+            const sollicites = rapport.perTool.filter((t) => t.total > 0).length + (rapport.couvertsParLeCrochet?.length ?? 0);
+            agence.usage = { valeur: (sollicites / total) * 100, detail: `${sollicites}/${total} sollicités au moins une fois` };
+        }
+    } catch { /* compteur illisible */ }
+
+    // — AGENCE · santé du code : fournie par le passage KPI complet, jamais recalculée ici.
+    if (typeof codeHealth === 'number' && Number.isFinite(codeHealth)) agence.santeDuCode = codeHealth;
+
+    return {
+        jeu: noteGlobale(COMPOSANTES_NOTE_JEU, jeu, { intitule: 'le jeu' }),
+        agence: noteGlobale(COMPOSANTES_NOTE_AGENCE, agence, { intitule: "l'Agence" }),
+    };
+}
+
 async function main() {
     recordCliUsage('kpi');
+    // LES DEUX NOTES SEULES (2026-09-25, tâche #729) : un mode léger, sans tsc ni suite de tests,
+    // pour répondre à « où en est-on ? » sans payer un passage KPI complet. La santé du code y est
+    // donc honnêtement « pas mesurée » plutôt qu'estimée — c'est exactement ce que le garde-fou
+    // de la note partielle existe pour dire.
+    if (process.argv[2] === 'notes') {
+        for (const l of formatNotesLines(await collecterLesNotes())) console.log(l);
+        return;
+    }
     console.log('Tableau de bord — rapport KPI complet (cf. docs/referentiel/tableau-de-bord.md pour les règles).');
 
     const live = await fetchLiveMetrics();
@@ -605,6 +822,13 @@ async function main() {
     const tscErrors = runTypeCheck();
     const tests = runTestSuite();
     const fragilePoints = countFragilePoints();
+
+    // LES DEUX NOTES GLOBALES (tâche #729) — placées ici parce que la santé du code vient d'être
+    // mesurée pour de vrai : c'est le seul moment du passage où la note de l'Agence peut être
+    // complète, et une note complète vaut mieux qu'une note partielle affichée plus tôt.
+    const santeDuCode = codeHealthScore(tscErrors, tests?.passed, tests?.expected)?.overall;
+    console.log('');
+    for (const l of formatNotesLines(await collecterLesNotes({ codeHealth: santeDuCode }))) console.log(l);
 
     // LE PLAN D'ACTION (2026-09-23, tâche #211). Le tableau de bord RELAIE des mesures produites
     // ailleurs — il n'en invente aucune. Son plan ne relaie donc que ce qui est FACTUELLEMENT

@@ -11963,6 +11963,28 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(riche.manquants.every((m) => m.quoi), 'and every missing point says what it would have meant, so the list is actionable rather than a grade');
   assert.ok(/jamais ce qu'il VAUT/.test(crh2.richesse({}).horsPortee), 'with no threshold anywhere, deliberately: a poor tool is not a bad tool — find-booster does one thing and does it well, and comes out poor with nothing to fix');
 
+  // LES DEUX NOTES GLOBALES — le jeu d'un côté, l'Agence de l'autre (2026-09-25, tâche #729).
+  // Sa question était « est-ce qu'on a une mesure de la qualité au global ? », et la réponse mesurée
+  // était non : cinq mesures partielles existaient et aucune synthèse.
+  const kpi2 = await import('../scripts/kpi-report.mjs');
+  const jeuVide = kpi2.noteGlobale(kpi2.COMPOSANTES_NOTE_JEU, {});
+  assert.equal(jeuVide.mesurable, false, 'zero measured component yields NO note rather than 0/100 — "I found nothing" and "I could not look" are not the same sentence (leçon L5), and the second disguised as the first is the most dangerous green in this landscape');
+  const horsTout = kpi2.noteGlobale([{ cle: 'a', quoi: 'x', source: 'y' }], { a: { horsPortee: true, pourquoi: 'pas de serveur' } });
+  assert.ok(!horsTout.mesurable && /absence de terrain/.test(horsTout.pourquoi), 'and a note whose every component is OUT OF REACH says so as an absence of ground rather than as a failure: an always-red alert is an alert people stop reading, including the day it says something else');
+  const partielle = kpi2.noteGlobale(
+    [{ cle: 'a', quoi: 'x', source: 'A' }, { cle: 'b', quoi: 'y', source: 'B' }, { cle: 'c', quoi: 'z', source: 'C' }],
+    { a: 80, b: 60, c: { horsPortee: true, pourquoi: 'hors contexte' } });
+  assert.deepEqual([partielle.note, partielle.mesurees, partielle.atteignables, partielle.partielle], [70, 2, 2, false], 'an out-of-reach component leaves the DENOMINATOR instead of dragging the average down — the same rule dashboardCoverageScore already applies, reused rather than reinvented (Article 24)');
+  const manquante = kpi2.noteGlobale([{ cle: 'a', quoi: 'x', source: 'A' }, { cle: 'b', quoi: 'y', source: 'B' }], { a: 90 });
+  assert.ok(manquante.partielle && manquante.mesurees === 1 && manquante.atteignables === 2, 'while a component that is simply MISSING stays in the denominator and makes the note declare itself PARTIAL — the guard the task demanded, since a note computed on absent components reads exactly like a complete one');
+  const rendu = kpi2.formatNotesLines({ jeu: manquante, agence: partielle });
+  assert.ok(rendu.some((l) => /UNE SEULE composante/.test(l)), 'a note resting on one single component says so: it looks like a synthesis while it merely copies one verdict, reservations included');
+  assert.ok(rendu.some((l) => /hors contexte/.test(l)), "and the REASON for an absence travels on the component's own line rather than in a separate block — split apart, one reads the words « hors de portée » and never reaches the why, and an absence whose cause is unknown is indistinguishable from an absence one chose");
+  assert.ok(rendu.some((l) => /NE SE MOYENNENT JAMAIS/.test(l)) && !rendu.some((l) => /note (globale )?du projet\s*:/i.test(l)), 'the renderer produces NO single project-wide figure, and that refusal is held in code rather than written as advice: an excellent game served by weak tooling would return the exact same number as impeccable tooling serving a failed game');
+  assert.equal(kpi2.derniereNoteElProfessor('| full_sim9 | 70 | | | | | | ok | |\n| full_sim19 | 38 | 15 | 8 | 4 | 8 | 3 | partielle sur 4 | x |').note, 38, "the game's spirit component READS the last verdict EL-PROFESSOR wrote rather than recomputing it (leçon L22: a summary that recounts instead of reading reopens a decision already taken)");
+  assert.ok(/partielle sur 4/.test(kpi2.derniereNoteElProfessor('| full_sim19 | 38 | 15 | 8 | 4 | 8 | 3 | partielle sur 4 | x |').lecture), 'and the READING column travels with the figure, because a 38 obtained on a simulation whose second act never happened does not say the same thing as a 38 on a complete one');
+  assert.equal(kpi2.derniereNoteElProfessor('').mesurable, false, 'an empty index yields no figure rather than a zero that would accuse the game of a defect belonging to the measurement');
+
   // LA VERSION DE L'AGENCE ENTIÈRE, et la MISE EN ÉCHEC EXPRÈS des deux échelles (2026-09-25, tâche #730).
   // Sa demande tenait en deux moitiés — « une version pour l'agence au global » et « peux tu fiabiliser
   // toute cette partie stp » — et la seconde ne se satisfait pas d'un test qui confirme : elle exige des

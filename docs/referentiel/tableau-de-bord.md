@@ -211,3 +211,57 @@ n'existait qu'à cet endroit, elle est donc déplacée ici plutôt que perdue �
 outil d'observation à destination de l'utilisateur et de l'agent, **strictement réservé à
 l'admin/créateur, jamais un mécanisme de jeu** : rien de ce qu'il affiche ne doit influencer ce que
 vivent Lia et Noé, ni apparaître à un visiteur.
+
+## Les deux notes globales — le jeu d'un côté, l'Agence de l'autre (2026-09-25, tâche #729)
+
+Sa question : « est-ce qu'on a une mesure de la qualité du projet au global ? et une note pour la
+qualité du jeu et la qualité de l'agence ? » **La réponse mesurée était non**, et c'était un vrai
+trou : cinq mesures partielles existaient (EL-PROFESSOR, THE-SCREENER, THE-EQUALIZER, AXA-CHECK, ce
+tableau de bord) et **aucune synthèse**.
+
+`node scripts/kpi-report.mjs notes` rend les deux notes sans payer un passage KPI complet ; le
+passage complet les affiche aussi, avec la santé du code en plus puisqu'elle vient d'y être mesurée.
+
+**Premier passage réel (2026-09-25)** : jeu **38/100** sur une seule composante · Agence **81/100**,
+déclarée partielle.
+
+### Deux notes, jamais une seule — et la règle est tenue en code
+
+Le jeu se juge sur l'esprit des personnages, le naturel du dialogue et le rendu ; l'Agence sur la
+couverture de test, la conclusion des constats et l'usage réel des outils. Les moyenner donnerait un
+chiffre qui ne veut rien dire : **un jeu excellent servi par un outillage faible rendrait exactement
+la même note qu'un outillage impeccable servant un jeu raté**. `formatNotesLines()` refuse donc
+structurellement de produire un chiffre unique, plutôt que de compter sur la discipline de
+l'appelant.
+
+### Chaque composante LIT un verdict, elle ne le recompte jamais
+
+C'est la leçon **L22** appliquée ici : un résumé qui recompte au lieu de lire rouvre une décision
+déjà prise, et rien ne garantirait que les deux calculs restent d'accord. Chaque composante nomme
+donc l'outil qui l'a produite, et ce nom voyage avec le chiffre.
+
+### Trois états par composante, jamais deux
+
+Vocabulaire repris tel quel de `dashboardCoverageScore` plutôt que réinventé (Article 24) :
+
+| État | Ce que ça veut dire | Effet sur la note |
+|---|---|---|
+| **mesurée** | un outil a rendu un chiffre | compte au numérateur |
+| **pas mesurée** | personne ne l'a produit ce passage | reste au dénominateur → la note se déclare **partielle** |
+| **hors de portée ici** | structurellement impossible dans ce contexte | **sort** du dénominateur |
+
+Les trois composantes de dialogue du jeu sont hors de portée hors simulation : elles exigent un
+serveur qui tourne avec du vrai trafic. Les déclarer plutôt que les laisser tomber à zéro est ce qui
+empêche la note d'accuser le jeu d'un défaut de contexte — une alerte toujours rouge est une alerte
+qu'on cesse de lire, y compris le jour où elle dit autre chose.
+
+### Les deux garde-fous que la tâche exigeait
+
+- **Zéro composante mesurée ne rend jamais 0/100** : ça rend « pas mesurable », avec la raison
+  (leçon **L5** — « je n'ai rien trouvé » et « je n'ai pas pu regarder » ne sont pas la même
+  phrase).
+- **Une note qui repose sur UNE SEULE composante le dit**. C'est le cas du jeu aujourd'hui : 38/100
+  n'est pas une synthèse, c'est la note de `full_sim19` recopiée — **réserves comprises**, et sa
+  colonne « Lecture » voyage avec elle (« second acte structurellement impossible, même cause de
+  script que full_sim18 »). Sans cette mention, 38 se lirait comme un jugement sur le jeu alors
+  qu'il porte d'abord sur une simulation tronquée.
