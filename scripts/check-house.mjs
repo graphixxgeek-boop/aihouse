@@ -12753,6 +12753,27 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log('Passed: the Agence\'s own scripts are classified by TYPE and by TRANSVERSE CLASS (2026-09-24, chantiers 1.3 and 1.4 of the night plan) — two axes neither of the existing registries carried, since AGENT_CATEGORIES gives a RANK a library cannot have and TOOL_PORTEE gives what a tool ANALYSES, neither saying what a file IS nor what it KNOWS HOW TO DO. It lives with CASSANDRA rather than in a twenty-sixth script, because she already holds the roster and the same prompt asked to reduce the tool count. Everything is derived and nothing enumerated: the type is read from the file itself, each class is a probe on its source, so a script added tomorrow gets both without anyone thinking about it. Its first four real runs produced four false verdicts and each one is kept as a counter-test, because all four came from the same laziness — measuring what was easy rather than what the question asked. It looked for a fiche named after the FILE while a fiche is named after the TOOL, accusing 22 at once; it counted one way of reaching a script when this repository has five, declaring the charter\'s own Article 0 diagnostic dead; then, over-correcting, it took a mere documentary mention for an entry point and promoted a library imported eighteen times to a tool; and it accepted a launch command found in a SUIVI row, that is the story of a past run, which erased the one genuinely useful finding — that the charter orders check-spirit.mjs to be run by hand and nowhere writes the command.');
 
+  // #873 — LE FAUX POSITIF LE PLUS COÛTEUX RENCONTRÉ, parce que son résultat ressemble trait pour
+  // trait à une analyse valide. Lancé sur cette suite de tests, Abraham annonçait « Forme reconnue :
+  // Article N — Titre · 17 unités · couverture 59 % », puis leur nature et leurs recouvrements. Les
+  // dix-sept n'existaient pas : les quinze occurrences sont des FIXTURES, des bouts de charte
+  // inventés dans des chaînes pour nourrir d'autres tests. Le fichier CITE des règles, il n'en porte
+  // aucune. Son refus existant visait l'absence de signal, jamais un signal d'emprunt.
+  const abr=await import('../scripts/abraham-les-references.mjs');
+  const duCode=abr.detecterForme('**Article 1 — Un titre.**\n**Article 2 — Un autre.**\n**Article 3 — Encore.**',{chemin:'scripts/x.mjs'});
+  assert.equal(duCode.mesurable,false,'a code file is never a rules document, whatever its strings contain');
+  assert.equal(duCode.cause,'code','and the refusal NAMES which of the two causes applies: "this is code" and "this document quotes rather than carries" call for opposite gestures — the first wants another tool, the second wants the real source read');
+  assert.match(duCode.pourquoi,/find-booster|AXA-CHECK|CLONE-HUNTER/,'a refusal that names no alternative sends the reader nowhere');
+  // L'AUTRE SENS (BP4), et sans lui ce correctif aurait pu tout refuser sans que rien ne le dise.
+  const vraiDocAbr=abr.detecterForme('**Article 1 — Un titre.**\n\ndu texte\n\n**Article 2 — Un autre.**\n\ndu texte\n\n**Article 3 — Encore.**\n\ndu texte',{chemin:'docs/charte.md'});
+  assert.equal(vraiDocAbr.mesurable,true,'a genuine rules document is still analysed — the guard must not swallow the rule it protects');
+  // Le second signal, celui qui attrape un .md qui cite longuement au lieu de porter.
+  const citations=abr.partDeCitations("const a = '**Article 1 — Un titre.**';\nconst b = '**Article 2 — Un autre.**';",/\*\*Article (\d+) — ([^*]+?)\.\*\*/g);
+  assert.equal(citations.total,2,'both occurrences are seen');
+  assert.equal(citations.citees,2,'and both are recognised as quoted, since their line carries a string delimiter');
+  const quiCite=abr.detecterForme("x = '**Article 1 — A.**'\ny = '**Article 2 — B.**'\nz = '**Article 3 — C.**'",{chemin:'docs/archive.md'});
+  assert.equal(quiCite.cause,'citations','a MARKDOWN file whose occurrences are mostly quoted is refused too: the extension signal alone would have missed it, which is why there are two signals and not one');
+
   console.log('Passed: ABRAHAM-LES-REFERENCES is the master tool for ANY numbered-rule document (2026-09-23, task #619), and it exists because of a slicing error the user named better than I did: building the charter\'s agent first, I locked thirty generic functions inside the agent of ONE document, and measurement confirmed it — 30 of Moïse\'s 40 functions depended on no particularity of the charter whatsoever. What makes it generic is that the numbering FORM is derived rather than declared: three real documents in this repository write their rules three different ways, and a tool demanding to be told the pattern would only serve those who already knew it. The opposite direction matters as much: a document where no form stands out returns "not measurable" with every attempt listed, because an analyser that guesses skips in silence (leçon L12) and invented figures look exactly as trustworthy as real ones. The citation pattern treats the space after a prefix as optional, a detail that had cost a whole pass — all eighteen sections of the working rules came back "never cited" while §7ter is cited 168 times, purely because the pattern required a space nobody writes. And the red line the user drew stays enforced in the master rather than in each caller: the state of a pertinence finding has exactly one value, so no descendant can soften it into a verdict.');
 }
 

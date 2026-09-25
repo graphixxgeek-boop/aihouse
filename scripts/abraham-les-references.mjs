@@ -712,20 +712,85 @@ export const FORMES_CONNUES = [
 
 export const UNITES_MINIMUM = 3;
 
-export function detecterForme(texte = "", { formes = FORMES_CONNUES, minimum = UNITES_MINIMUM } = {}) {
+// ════════════════════════════════════════════════════════════════════════════════════════════
+// UN DOCUMENT QUI PARLE DE RÈGLES N'EST PAS UN DOCUMENT QUI PORTE DES RÈGLES (2026-09-25, #873)
+// ════════════════════════════════════════════════════════════════════════════════════════════
+//
+// CE QUI S'EST PASSÉ, et c'est le faux positif le plus coûteux rencontré jusqu'ici parce que son
+// résultat ressemble trait pour trait à une analyse valide. Lancé sur `scripts/check-house.mjs` —
+// la suite de tests, 12 795 lignes, 227 blocs de test — Abraham a annoncé :
+//     « Forme reconnue : Article N — Titre · 17 unités · couverture déclarée 59 % du document »
+// puis a rendu leur nature, leurs recouvrements de vocabulaire et un plan d'action.
+//
+// LES 17 UNITÉS N'EXISTENT PAS. Les 15 occurrences qui les ont fait naître sont des FIXTURES : des
+// bouts de charte inventés à l'intérieur de chaînes de caractères, écrits là pour tester d'autres
+// outils. Le fichier ne porte aucune règle ; il en CITE, pour les donner à manger à un test.
+//
+// POURQUOI SON REFUS EXISTANT N'A PAS JOUÉ : il déclare refuser « un document dont aucune forme ne
+// ressort ». Ici une forme ressort — par accident. Le garde-fou était écrit contre l'absence de
+// signal, jamais contre un signal d'emprunt, et les deux se ressemblent parfaitement vus du motif.
+//
+// DEUX SIGNAUX PLUTÔT QU'UN, parce qu'aucun des deux seul ne suffirait :
+//
+//   1. LE FICHIER EST-IL DU CODE ? Un .mjs/.ts/.js/.tsx n'est pas un document de règles. C'est net,
+//      mécanique, et ça ne peut pas se tromper. Mais seul, ce signal raterait un .md qui cite
+//      longuement une charte (une archive, un blueprint, un extrait de conversation).
+//
+//   2. LES OCCURRENCES SONT-ELLES CITÉES ? Une occurrence entourée de guillemets ou de backticks
+//      sur sa propre ligne est un exemple, jamais une règle en vigueur. Au-delà d'une majorité de
+//      citations, la forme est empruntée. Ce signal-ci attrape le .md et ignore le langage.
+//
+// ET LE REFUS NOMME LAQUELLE DES DEUX CAUSES, jamais un « pas mesurable » nu : « c'est du code » et
+// « ce document cite au lieu de porter » appellent des gestes opposés — le premier veut un autre
+// outil, le second veut qu'on lise la vraie source.
+export const EXTENSIONS_DE_CODE = [".mjs", ".js", ".cjs", ".ts", ".tsx", ".jsx"];
+export const PART_DE_CITATIONS_REFUSEE = 0.5;
+
+// Une occurrence est « citée » si sa ligne porte un délimiteur de chaîne autour d'elle. Volontairement
+// grossier : on cherche le cas général, pas la perfection syntaxique (un analyseur qui prétendrait
+// parser le JavaScript ici serait plus faux que celui-ci, et beaucoup plus long).
+export function partDeCitations(texte = "", motif) {
+  const lignes = String(texte).split("\n");
+  const re = new RegExp(motif.source, motif.flags.replace("g", "") + "g");
+  let total = 0; let citees = 0;
+  for (const ligne of lignes) {
+    re.lastIndex = 0;
+    if (!re.test(ligne)) continue;
+    total += 1;
+    if (/['"`]/.test(ligne)) citees += 1;
+  }
+  return { total, citees, part: total ? citees / total : 0 };
+}
+
+export function detecterForme(texte = "", { formes = FORMES_CONNUES, minimum = UNITES_MINIMUM, chemin = "", partRefusee = PART_DE_CITATIONS_REFUSEE } = {}) {
+  // Le refus le plus net passe en premier : inutile d'essayer des formes sur un fichier de code.
+  const estDuCode = EXTENSIONS_DE_CODE.some((e) => String(chemin).toLowerCase().endsWith(e));
+  if (estDuCode) {
+    return { mesurable: false, cause: "code",
+      pourquoi: `« ${chemin} » est un fichier de CODE (${EXTENSIONS_DE_CODE.join(", ")}), pas un document de règles. Les formes qu'on y reconnaîtrait seraient des exemples cités dans des chaînes de caractères, jamais des règles en vigueur — c'est exactement ce qui a produit « 17 unités sur 59 % du document » sur la suite de tests, dont aucune n'existait. Un autre outil convient (find-booster pour naviguer, AXA-CHECK pour la couverture, CLONE-HUNTER pour les doublons).`,
+      essais: [] };
+  }
   const essais = formes.map((f) => ({ forme: f, trouvees: (String(texte).match(new RegExp(f.motif.source, f.motif.flags.replace("g", "") + "g")) || []).length }));
   const meilleur = essais.sort((a, b) => b.trouvees - a.trouvees)[0];
   if (!meilleur || meilleur.trouvees < minimum) {
-    return { mesurable: false, pourquoi: `aucune forme de numérotation reconnue (au mieux ${meilleur?.trouvees ?? 0} unité(s), minimum ${minimum}) — découper quand même reviendrait à inventer une structure`, essais: essais.map((e) => ({ nom: e.forme.nom, trouvees: e.trouvees })) };
+    return { mesurable: false, cause: "aucune-forme", pourquoi: `aucune forme de numérotation reconnue (au mieux ${meilleur?.trouvees ?? 0} unité(s), minimum ${minimum}) — découper quand même reviendrait à inventer une structure`, essais: essais.map((e) => ({ nom: e.forme.nom, trouvees: e.trouvees })) };
   }
-  return { mesurable: true, ...meilleur.forme, trouvees: meilleur.trouvees };
+  const cit = partDeCitations(texte, meilleur.forme.motif);
+  if (cit.part > partRefusee) {
+    return { mesurable: false, cause: "citations",
+      pourquoi: `la forme « ${meilleur.forme.nom} » ressort ${cit.total} fois, mais ${cit.citees} de ces occurrences (${Math.round(cit.part * 100)} %) sont CITÉES entre guillemets ou backticks : ce document parle de règles, il n'en porte pas. Lire la vraie source plutôt que celui-ci.`,
+      essais: essais.map((e) => ({ nom: e.forme.nom, trouvees: e.trouvees })), citations: cit };
+  }
+  return { mesurable: true, ...meilleur.forme, trouvees: meilleur.trouvees, citations: cit };
 }
 
 // L'ANALYSE COMPLÈTE D'UN DOCUMENT QUELCONQUE, en un appel. C'est ce que Moïse fait pour la charte
 // avec ses spécificités en plus ; c'est ce que n'importe quel autre document peut désormais obtenir
 // sans qu'on lui construise un agent dédié.
-export function analyserDocument({ texte, fichiers = {}, horsPerimetre = new Set(), forme = null, estimerTokens = (t) => Math.round(t.length / 3.6) }) {
-  const f = forme ?? detecterForme(texte);
+export function analyserDocument({ texte, chemin = "", fichiers = {}, horsPerimetre = new Set(), forme = null, estimerTokens = (t) => Math.round(t.length / 3.6) }) {
+  // `chemin` transmis jusqu'ici (2026-09-25, #873) : sans lui, le refus « c'est du code » ne peut
+  // pas se prononcer, et c'est précisément le cas qui a produit dix-sept règles inexistantes.
+  const f = forme ?? detecterForme(texte, { chemin });
   if (!f.mesurable) return { mesurable: false, pourquoi: f.pourquoi, essais: f.essais };
   const unites = mesurerUnites({ texte, motifUnite: f.motif, motifBorneSuperieure: /^## /gm, champs: f.champs, prefixeCitation: f.prefixe, fichiers, estimerTokens });
   const sections = mesurerSections(texte, { motifUnite: f.motif, estimerTokens });
@@ -831,7 +896,7 @@ export function classerEtEcrire(chemin, { prefixe = "Article", sortie = null, ec
   let texte;
   try { texte = readFileSync(chemin, "utf8"); } catch { return { mesurable: false, pourquoi: `${chemin} est illisible ou n'existe pas` }; }
   const fichiers = fichiersDuDepot({ racine: ".", exclure: new Set([chemin]) });
-  const r = analyserDocument({ texte, fichiers });
+  const r = analyserDocument({ texte, chemin, fichiers });
   if (!r.mesurable) return { mesurable: false, pourquoi: r.pourquoi, essais: r.essais };
   const classement = classerDocument(r.unites, fichiers, { lire: (f) => readFileSync(f, "utf8"), prefixe });
   const nom = chemin.replace(/[/\\]/g, "-").replace(/\.md$/, "");
@@ -884,7 +949,7 @@ function main() {
   let texte;
   try { texte = readFileSync(chemin, "utf8"); } catch { console.log(`\nPAS MESURÉ — ${chemin} est illisible ou n'existe pas.`); return; }
   const fichiers = fichiersDuDepot({ racine: ".", exclure: new Set([chemin]) });
-  const r = analyserDocument({ texte, fichiers });
+  const r = analyserDocument({ texte, chemin, fichiers });
   if (!r.mesurable) {
     console.log(`\nPAS MESURÉ — ${r.pourquoi}`);
     for (const e of r.essais ?? []) console.log(`   · ${e.nom} : ${e.trouvees} unité(s)`);
