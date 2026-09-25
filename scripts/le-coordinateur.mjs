@@ -528,6 +528,49 @@ export function significantWords(text) {
     .filter((w) => w.length > 2 && !STOPWORDS_FR.has(w));
 }
 
+// LA RACINE D'UN MOT (2026-09-25, tâche #776) — et le défaut qu'elle ferme a été trouvé en se
+// SERVANT de l'outil, ce qui est exactement ce que l'Article 31 promet. En demandant à tool-brain
+// « deux constantes homonymes DOMAINES, mesurer le risque et préparer un renommage », il n'a PAS
+// proposé l'AGENT DES NOMS, dont l'offre dit pourtant « RENOMMER un outil [...] sans casser le code
+// ni falsifier l'histoire ». La cause est bête et générale : « renommage » et « Renommer » sont deux
+// chaînes différentes, et le rapprochement se faisait caractère pour caractère.
+//
+// LE COÛT DE CE DÉFAUT EST EXACTEMENT CELUI QUE LE PROJET REDOUTE : l'agent consulte le point
+// d'entrée, n'obtient rien, et fait à la main un travail qu'un outil savait faire. « Aucune
+// correspondance » se lit comme « aucun outil ne sait faire ça », et les deux sont indiscernables.
+//
+// LA RACINE EST VOLONTAIREMENT COURTE ET BÊTE, jamais un vrai algorithme de radicalisation : on
+// retire les terminaisons françaises les plus fréquentes, et rien d'autre. Un stemmer agressif
+// rapprocherait des mots sans rapport, et un faux positif sur un point d'entrée obligatoire coûte
+// plus cher que le silence qu'il remplace. Les mots courts (5 lettres ou moins) ne sont jamais
+// tronqués, pour la même raison. Le seuil de DEUX mots partagés reste inchangé.
+// Chaque terminaison porte la LONGUEUR MINIMALE du reste, parce qu'une seule valeur pour toutes se
+// trompe forcément dans un sens ou dans l'autre. Exemple réel : « renommage » doit donner
+// « renomm » (6 lettres restantes, on coupe), mais « message » ne doit surtout pas donner « mess »
+// (4 lettres, on ne coupe pas) — même terminaison, deux verdicts opposés, et seule la longueur du
+// reste les sépare. Les terminaisons sont essayées de la plus longue à la plus courte.
+const TERMINAISONS_FR = [
+  ["issement", 4], ["issant", 4], ["ements", 4], ["ations", 4], ["ement", 4], ["ation", 4],
+  ["aient", 4], ["ages", 5], ["age", 5], ["ions", 4], ["ment", 4], ["eurs", 4], ["eur", 4],
+  ["ant", 4], ["ent", 4], ["ees", 4], ["ee", 4], ["es", 4], ["er", 4], ["ir", 4],
+  ["e", 4], ["s", 4],
+  // « re » a été retiré après un vrai essai : il donnait « mesure » → « mesu » pendant que
+  // « mesurer » → « mesur », donc le mot ne retrouvait plus sa propre conjugaison. Une terminaison
+  // qui SÉPARE deux formes du même mot fait exactement l'inverse de ce qu'on lui demande.
+];
+export function racineDuMot(mot) {
+  const m = String(mot ?? "");
+  if (m.length <= 5) return m;
+  for (const [t, minReste] of TERMINAISONS_FR) {
+    if (m.endsWith(t) && m.length - t.length >= minReste) return m.slice(0, m.length - t.length);
+  }
+  return m;
+}
+
+export function racinesSignificatives(text) {
+  return significantWords(text).map(racineDuMot);
+}
+
 // Seuil de 2 mots-clés partagés (pas 1) — un seul mot commun (souvent un mot très général du
 // domaine, ex. "tâche", "outil") produirait trop de faux positifs pour rester un signal honnête.
 // badgeCheck (2026-09-20, demande explicite de l'utilisateur : « si un membre de l'équipe est
@@ -557,9 +600,13 @@ function badgeWarningsForOutils(outils, onboardingContext) {
 export function suggestPrestationsForTask(taskLabel, prestations = PRESTATIONS, onboardingContext = null) {
   const taskWords = new Set(significantWords(taskLabel));
   if (!taskWords.size) return [];
+  // Le rapprochement se fait sur les RACINES (#776) : « renommage » doit trouver « renommer ».
+  // Le mot d'origine est celui qu'on RESTITUE dans `matched`, jamais la racine — un lecteur qui
+  // voit « renomm » ne reconnaît pas sa propre demande, et ce champ existe pour qu'il la reconnaisse.
+  const taskRacines = new Set([...taskWords].map(racineDuMot));
   return prestations
     .map((p) => {
-      const matched = [...new Set(significantWords(p.demande).filter((w) => taskWords.has(w)))];
+      const matched = [...new Set(significantWords(p.demande).filter((w) => taskWords.has(w) || taskRacines.has(racineDuMot(w))))];
       return { ...p, score: matched.length, matched, badgeWarnings: badgeWarningsForOutils(p.outils, onboardingContext) };
     })
     .filter((p) => p.score >= 2)

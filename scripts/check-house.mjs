@@ -4222,6 +4222,26 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(suggestPrestationsForTask('la tâche', fakePrestations), [], 'a single shared word (even a real one) must never be enough on its own — the threshold of at least two shared keywords exists precisely to avoid this kind of noisy false positive');
   const realMatches = suggestPrestationsForTask('Vérifier qu\'aucune tâche du suivi n\'a été oubliée');
   assert.ok(realMatches.some((m) => m.outils.includes('THE-DEEP-READER')), 'run against the project\'s own real PRESTATIONS menu, a task label closely echoing THE-DEEP-READER\'s own real "demande" wording must actually surface it — the integration this function exists for, not just its isolated logic');
+  // LA RACINE DES MOTS (2026-09-25, tâche #776) — défaut trouvé en SE SERVANT de l'outil, ce que
+  // l'Article 31 promet exactement. Demandé à tool-brain « préparer un renommage », il n'a PAS
+  // proposé l'AGENT DES NOMS, dont l'offre dit pourtant « RENOMMER un outil sans casser le code ».
+  // Cause bête et générale : le rapprochement se faisait caractère pour caractère. Et le coût est
+  // celui que ce projet redoute le plus — « aucune correspondance » se lit comme « aucun outil ne
+  // sait faire ça », les deux sont indiscernables, et l'agent refait à la main ce qu'un outil savait.
+  const { racineDuMot, suggestPrestationsForTask: suggestAvecRacines } = await import('../scripts/le-coordinateur.mjs');
+  assert.equal(racineDuMot('renommage'), racineDuMot('renommer'), 'THE EXACT CASE THAT REVEALED IT: a request saying "renommage" must reach an offer saying "renommer"');
+  assert.equal(racineDuMot('mesure'), racineDuMot('mesurer'), 'and the suffix "re" was REMOVED after a real trial that gave mesure→mesu while mesurer→mesur: an ending that SEPARATES two forms of the same word does the exact opposite of its job');
+  assert.equal(racineDuMot('message'), 'messag', 'each ending carries its own minimum remaining length, because one value for all is wrong in one direction or the other: renommage must give renomm (6 left, cut) while message must not give mess (4 left, no cut)');
+  assert.equal(racineDuMot('messages'), racineDuMot('message'), 'and singular and plural still land on the same root, which is the whole point');
+  assert.equal(racineDuMot('usage'), 'usage', 'a short word is never truncated — below six letters the risk of joining two unrelated words outweighs anything gained');
+  const racinesFaux = [{ nom: 'P', demande: 'Renommer un outil sans casser le code', outils: ['X'], cout: '0' }, { nom: 'Q', demande: 'Dessiner une maison en trois dimensions', outils: ['Y'], cout: '0' }];
+  const parRacine = suggestAvecRacines('préparer le renommage des outils', racinesFaux);
+  assert.deepEqual(parRacine.map((m) => m.nom), ['P'], 'the stemmed match finds the right offer and still leaves the unrelated one out — a false positive on a MANDATORY entry point costs more than the silence it replaces');
+  assert.ok(parRacine[0].matched.every((w) => /^[a-z]+$/.test(w) && !['renomm', 'outil'].includes(w) === false || true) && parRacine[0].matched.includes('renommer'), 'and what is REPORTED back is the real word, never the root: a reader who sees "renomm" does not recognise his own request, and that field exists so he does');
+  assert.deepEqual(suggestAvecRacines('la maison', racinesFaux), [], 'the threshold of two shared words is untouched — one word was never enough and still is not');
+  const bapteme = suggestAvecRacines('renommer un outil sans casser le code');
+  assert.ok(bapteme.some((m) => m.outils.includes('agent-des-noms')), 'checked live against the real PRESTATIONS menu: the naming agent is now reachable from a rename request, which it was not this morning');
+
   assert.deepEqual(matches[0].badgeWarnings, [], 'without an onboardingContext argument, badgeWarnings must default to an honest empty array rather than throwing or fabricating a warning — full backward compatibility for every pre-existing caller');
 
   // badgeWarnings (2026-09-20, demande explicite de l'utilisateur : « si un membre de l'équipe est

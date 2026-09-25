@@ -45,6 +45,7 @@ LES TÂCHES, UNE PAR LIGNE
 #754 Bascule 6 Suites → 9 familles : 9 familles des deux côtés, les 9 mêmes noms, 0 divergence [FAIT]
 #755 Garde-fou par OUTIL (findFamillesDivergentesParOutil) : 0 divergence sur 31 comparables [FAIT]
 #756 Les deux DOMAINES homonymes : détecteur construit, 2 vraies collisions trouvées (PALIERS, recordOutcome) [FAIT]
+#776 tool-brain ne trouvait pas l'agent des noms pour un renommage : racine des mots, corrigé et mesuré [FAIT]
 
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
