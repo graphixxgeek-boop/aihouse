@@ -11676,6 +11676,25 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   lc.markCeremonyRelayed('outil-test', chemin);
   assert.equal(lc.pendingCeremonies(chemin).length, 0, 'acknowledging a ceremony must clear it — the acknowledgement stays an explicit gesture, never automatic, or it would amount to signing one\'s own receipt');
 
+  // L'ARCHIVE (2026-09-25, tâche #510) — le trou que la file laissait ouvert. `aRelayer` is a
+  // QUEUE, not a memory: it held the text only until the ceremony was relayed, then `delete` threw
+  // it away for good. Measured on the real registry: 38 certifications, ZERO carrying their text.
+  // Task #210 had added the text TO THE QUEUE, which is the right gesture half done.
+  {
+    const arch = lc.ceremonieArchivee('outil-test', chemin);
+    assert.equal(arch.etat, 'archivée', 'relaying a ceremony must ARCHIVE it, never merely drop it — the block is the only place where what a tool detects, how it is wired and its coverage THAT DAY are written together');
+    assert.equal(arch.texte, retourne, 'and the archived text must be byte-identical to what was announced: an archive that paraphrases is worse than none, because it looks authoritative');
+    assert.ok(arch.relayeeLe && arch.produiteLe, 'both dates travel with it — when it was produced and when it actually reached the user are two different facts, and the second is the one #510 exists to record');
+    // TROIS ÉTATS, jamais deux — même honnêteté que ceremonieDue() juste au-dessus.
+    assert.equal(lc.ceremonieArchivee('jamais-vu', chemin).etat, 'aucune archive', 'never relayed and never certified are not the same thing, and the reader must not be left to guess which');
+    const vieux = lc.archiverCeremonie({}, 'vieux', '2026-09-22T16:51:14.114Z');
+    assert.equal(vieux.archives.vieux.texteConserve, false, 'a pre-2026-09-23 entry is a bare date string: its text exists nowhere, and fabricating a plausible one would invent a measurement');
+    assert.equal(vieux.archives.vieux.texte, null, 'null, never undefined — an appelant printing it must show an absence, not the word "undefined"');
+    // JAMAIS D'ÉCRASEMENT : la première cérémonie archivée fait foi, comme la première mise en file.
+    const deux = lc.archiverCeremonie(lc.archiverCeremonie({}, 'x', { produiteLe: 'A', texte: 'premier' }), 'x', { produiteLe: 'B', texte: 'second' });
+    assert.equal(deux.archives.x.texte, 'premier', 'a second pass must not replace the original text with one recomputed later — that would archive something other than what was announced');
+  }
+
   // LA SECONDE VOIE, celle qu'il aurait été facile d'oublier : une MISE À JOUR de badge passe par le
   // même mécanisme aRelayer et souffrait exactement du même trou.
   const apresChangement = { ...faux, badge: '🎖️ Membre certifié (Platine)', couverture: { tier: 'OK+', label: 'OK 100% approfondi' }, gaps: [] };

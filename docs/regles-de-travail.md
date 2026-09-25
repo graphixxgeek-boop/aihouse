@@ -1727,6 +1727,38 @@ clone-hunter. Trois choix calibrés explicitement (jamais devinés) :
   5. **Couverture** — le niveau de couverture AXA-CHECK à 3 paliers, inchangé.
 - **Seulement la PREMIÈRE fois** qu'un Agent devient certifié — jamais répété à chaque mention
   ultérieure du même badge, qui resterait un point normal du compte rendu sans ce traitement.
+
+  **L'ARCHIVE (2026-09-25, tâches #510 et #558 traitées ensemble)** — deux défauts du même
+  mécanisme, l'un déjà réparé, l'autre pas.
+
+  **#558 était FAIT, et vérifié plutôt que cru** : `mergeBadgeSignals()` (2026-09-23) a fermé
+  l'oscillation. Le relevé des six signaux était ÉCRASÉ à chaque commit avec les seules valeurs
+  mesurées ce commit-là, donc un Gardien qui n'avait pas tourné perdait sa dernière mesure connue et
+  le badge retombait sur « non consulté » — puis remontait au commit suivant. **Le palier affiché ne
+  mesurait pas l'outil, il mesurait le relevé.** Résultat du 2026-09-23 : 67 cérémonies en attente,
+  34 « partiel → en cours » et 33 « en cours → partiel », sur des outils dont aucun n'avait changé.
+  La règle posée : une mesure fraîche l'emporte et prend la date du jour ; une clé non mesurée garde
+  sa valeur précédente **et sa propre date**, jamais rafraîchie au passage. **Mesuré aujourd'hui :
+  0 cérémonie en attente.**
+
+  **#510 ne l'était PAS, et l'énoncé restait vrai au mot près** : « la cérémonie enregistre qu'elle
+  a eu lieu, jamais ce qu'elle disait ». `aRelayer` est une **file d'attente, pas une mémoire** :
+  elle tenait le texte le temps que la cérémonie soit relayée, puis `markCeremonyRelayed()` faisait
+  `delete` et il disparaissait pour de bon. Le seul reste durable était une date nue. Mesuré sur le
+  vrai registre : **38 certifications, ZÉRO portant son texte.** La tâche #210 avait ajouté le texte
+  À LA FILE — le bon geste à moitié.
+
+  **Pourquoi ça compte, et ce n'est pas de la nostalgie** : la cérémonie est le seul endroit où sont
+  écrits ENSEMBLE ce qu'un outil détecte, comment il est câblé, avec quoi il se combine, et quelle
+  couverture il avait **le jour où il a été certifié**. Les trois premiers se reconstituent en
+  relisant six registres ; la couverture de ce jour-là, elle, n'existe plus nulle part.
+
+  **Le correctif** : `archiverCeremonie()` et `ceremonieArchivee()` (`scripts/le-coordinateur.mjs`).
+  `markCeremonyRelayed()` **archive avant de supprimer** — l'ordre est tout, et l'inverse était
+  exactement la faute. **Trois états, jamais deux** : archivée avec son texte · archivée **sans**
+  texte (produite avant le 2026-09-23, irrécupérable, et on le dit) · aucune archive (jamais
+  relayée, ou jamais certifiée — deux choses différentes). Fabriquer un texte plausible pour les 38
+  anciennes reviendrait à inventer une mesure là où il n'y en a plus.
   Détection mécanique du "première fois" via un petit journal local
   (`.badge-ceremony-history.json`, gitignored, déclaré dans Doc-Report `LOCAL_JOURNALS` — une seule
   date par slug, jamais mise à jour ensuite) plutôt que la seule mémoire de session de l'agent qui

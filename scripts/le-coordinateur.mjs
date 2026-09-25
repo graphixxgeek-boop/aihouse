@@ -1203,14 +1203,59 @@ export function formatPendingCeremonies(enAttente = []) {
   return lignes.join("\n");
 }
 
+// L'ARCHIVE DES CÉRÉMONIES (2026-09-25, tâche #510) — « la cérémonie enregistre qu'elle a eu lieu,
+// jamais ce qu'elle disait ».
+//
+// LE DÉFAUT, MESURÉ : sur les 38 certifications du registre, **zéro** portait son texte. `aRelayer`
+// est une FILE D'ATTENTE, pas une mémoire : elle tient le texte le temps que la cérémonie soit
+// relayée, puis `markCeremonyRelayed()` faisait `delete` et il disparaissait pour de bon. Le seul
+// reste durable était une date nue dans `certifications`. La tâche #210 avait ajouté le texte À LA
+// FILE, ce qui est le bon geste à moitié : le texte existait, mais seulement en transit.
+//
+// POURQUOI ÇA COMPTE, et ce n'est pas de la nostalgie : la cérémonie est le seul endroit où sont
+// écrits, ensemble, ce qu'un outil détecte, comment il est câblé et quelle couverture il avait le
+// jour où il a été certifié. Reconstituer ça après coup demande de relire six registres — et la
+// couverture de ce jour-là, elle, n'existe plus nulle part.
+//
+// TROIS ÉTATS, JAMAIS DEUX, et c'est la même honnêteté que `ceremonieDue()` juste au-dessus : une
+// archive AVEC texte · une archive SANS texte (produite avant le 2026-09-23, irrécupérable, et on
+// le dit) · pas d'archive du tout (jamais relayée, ou jamais certifiée). Fabriquer un texte
+// plausible pour les 38 anciennes serait inventer une mesure là où il n'y en a plus.
+export function archiverCeremonie(history, slug, entree, now = Date.now()) {
+  history.archives = history.archives ?? {};
+  // Jamais d'écrasement, même règle que la file : la PREMIÈRE cérémonie archivée fait foi. Une
+  // seconde passe ne doit pas remplacer le texte d'origine par un texte recalculé plus tard.
+  if (slug in history.archives) return history;
+  const c = ceremonieDue(slug, entree);
+  history.archives[slug] = {
+    produiteLe: c.produiteLe,
+    relayeeLe: new Date(now).toISOString(),
+    texte: c.texteConserve ? c.texte : null,
+    texteConserve: c.texteConserve,
+  };
+  return history;
+}
+
+// Le lecteur, avec ses trois états nommés — jamais un `undefined` que l'appelant afficherait tel quel.
+export function ceremonieArchivee(slug, historyPath = BADGE_CEREMONY_HISTORY_PATH) {
+  const h = loadBadgeCeremonyHistory(historyPath);
+  const a = h.archives?.[slug];
+  if (!a) return { slug, etat: "aucune archive", pourquoi: "cette cérémonie n'a jamais été relayée, ou l'outil n'a jamais été certifié — deux choses différentes, que le registre des certifications distingue" };
+  if (!a.texteConserve) return { slug, etat: "archivée sans texte", produiteLe: a.produiteLe, relayeeLe: a.relayeeLe, pourquoi: "produite avant le 2026-09-23, quand le texte n'était pas retenu : il n'existe nulle part et aucune reconstruction n'est possible — le dire est la seule réponse honnête" };
+  return { slug, etat: "archivée", produiteLe: a.produiteLe, relayeeLe: a.relayeeLe, texte: a.texte };
+}
+
 // Marquer relayé n'est PAS automatique : ce serait se décerner l'acquittement à soi-même. C'est un
 // geste explicite, fait une fois le bloc réellement écrit dans la réponse.
 export function markCeremonyRelayed(slug, historyPath = BADGE_CEREMONY_HISTORY_PATH) {
   const h = loadBadgeCeremonyHistory(historyPath);
   if (!h.aRelayer || !(slug in h.aRelayer)) return { slug, deja: true };
+  // ARCHIVER AVANT DE SUPPRIMER (#510) — l'ordre est tout : l'inverse perdrait exactement ce qu'on
+  // cherche à garder, et c'est la faute que la version précédente commettait sans le savoir.
+  archiverCeremonie(h, slug, h.aRelayer[slug]);
   delete h.aRelayer[slug];
   writeFileSync(historyPath, JSON.stringify(h, null, 1));
-  return { slug, relayee: true };
+  return { slug, relayee: true, archivee: true };
 }
 
 // --- Le badge qui CHANGE, pas seulement le badge qui NAÎT (2026-09-22) --------------------------
