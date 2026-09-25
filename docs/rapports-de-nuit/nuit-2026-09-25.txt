@@ -157,6 +157,13 @@ MON PROPRE FAUX ROUGE (#839), une heure apres l'avoir construit : l'outil de #83
   derniere Ronde reelle. Un dossier vide a deux causes indiscernables ; la date de naissance de
   l'item (derivee de git) les separe quand elle le peut, et le message nomme les deux sinon [FAIT]
 
+#205 (biais vers les outils a retour immediat) : la MESURE accusait, la donnee dit l'inverse.
+  Le compteur declare deja ces outils PAS MESURABLES (aucune ligne de commande), et leurs REGISTRES
+  portent 2 audits + 2 relectures lourdes + 1 zoom reels. Vrai defaut trouve : la sonde DEVINAIT
+  docs/<slug>/ alors que 4 registres vivent ailleurs et sont deja declares — elle rendait
+  « inatteignable » sur un registre nourri. Un registre se LIT (Art. 24).
+  Reste non mesurable et declare : « ai-je saute un outil lourd alors qu'il etait le bon ? » [FAIT]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------

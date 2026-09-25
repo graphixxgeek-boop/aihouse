@@ -2460,11 +2460,23 @@ export function domainesDeLOutil(source = "") {
 // tout — donc un index sans date rend « jamais consigné », qui n'est pas la même chose qu'un outil
 // qui n'aurait rien trouvé. La distinction est la même que partout ailleurs ici (leçon L5).
 
-export function derniereTrouvailleDuRegistre(slug, { lire } = {}) {
+export function derniereTrouvailleDuRegistre(slug, { lire, registres = null } = {}) {
   if (typeof lire !== "function") {
     return { mesurable: false, pourquoi: "aucun lecteur fourni — un registre qu'on n'ouvre pas ne dit rien, et répondre « jamais rien trouvé » à sa place serait l'accusation que cette fonction existe pour empêcher" };
   }
-  const chemin = `docs/${slug}/index.md`;
+  // LE CHEMIN SE LIT, IL NE SE DEVINE PAS (2026-09-25, tâche #840 — instruction de #205). La
+  // convention `docs/<slug>/` couvre la grande majorité des outils, mais QUATRE registres réels
+  // vivent ailleurs et sont déjà déclarés dans `REGISTRIES` (doc-report.mjs) : `the-deep-reader`
+  // (docs/suivi/relectures-lourdes/), `kpi`, `dream-team-photo`, `ecotoken-ronde`. En dérivant le
+  // chemin, cette sonde répondait « registre inatteignable » sur des registres parfaitement
+  // NOURRIS — et pour THE-DEEP-READER ce faux vide alimentait précisément le soupçon de la tâche
+  // #205 (« je néglige les outils à retour différé »). **La mesure accusait, la donnée disait
+  // l'inverse : deux relectures lourdes réelles étaient archivées.**
+  //
+  // Un registre se LIT, il ne se recopie ni ne se devine (Article 24). `registres` est injecté pour
+  // rester testable ; sans lui, la convention reste le repli, déclaré plutôt que tu.
+  const declare = (registres ?? []).find((r) => r.slug === slug && r.path);
+  const chemin = declare ? `${String(declare.path).replace(/\/+$/, "")}/index.md` : `docs/${slug}/index.md`;
   const texte = lire(chemin);
   if (texte === null || texte === undefined) {
     return { mesurable: false, chemin, pourquoi: `${chemin} est absent ou illisible : cet outil n'a pas de registre atteignable, ce qui n'est pas la même chose qu'un registre vide` };
@@ -3216,9 +3228,15 @@ export function buildDocumentAgence({ recensement, nivellement, couches, convoca
   });
 }
 
-function main() {
+async function main() {
   printReliabilityNotice("cassandra-rh");
   recordCliUsage("cassandra-rh");
+  // Les chemins RÉELS des registres, lus chez celui qui les déclare (doc-report) plutôt que
+  // devinés (#840). Import dynamique et non statique : le crochet post-commit importe des
+  // fonctions de ce fichier, et un import de tête ferait entrer doc-report dans cette chaîne —
+  // la « tuyauterie par ricochet » que le filet avait déjà refusée le matin même sur HARMONIA.
+  let registresDeclares = null;
+  try { ({ REGISTRIES: registresDeclares } = await import("./doc-report.mjs")); } catch { /* repli sur la convention, déclaré dans derniereTrouvailleDuRegistre() */ }
   assertNotAPersonnage("CASSANDRA-RH", "cassandra-rh.mjs::main()");
   const [, , sub] = process.argv;
   if (sub === "rapport") {
@@ -3372,7 +3390,10 @@ function main() {
       // code ou git. Celui-ci lit ce que l'outil a ÉCRIT, ce que dix outils faisaient semblant de
       // faire en citant seulement le chemin.
       derniereTrouvaille: (() => {
-        const t = derniereTrouvailleDuRegistre(demande, { lire: (c) => { try { return readFileSync(join(ROOT, c), "utf8"); } catch { return null; } } });
+        // `registresDeclares` est chargé plus haut dans main() : le registre DÉCLARÉ (doc-report)
+        // a priorité sur la convention `docs/<slug>/`, parce que quatre registres réels vivent
+        // ailleurs et que les deviner rendait « inatteignable » sur des registres NOURRIS (#840).
+        const t = derniereTrouvailleDuRegistre(demande, { registres: registresDeclares, lire: (c) => { try { return readFileSync(join(ROOT, c), "utf8"); } catch { return null; } } });
         return t.mesurable ? `${t.date} — ${t.resume.slice(0, 90)} (${t.passages} passage(s) consigné(s))` : null;
       })(),
     });

@@ -12255,6 +12255,21 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // honnête, jamais « rien trouvé » — mais aveugle à une forme parfaitement légitime, et c'est la
   // même chose une neuvième fois : une sonde qui ne peut pas matcher rend ce que rend une sonde
   // qui n'a rien trouvé.
+  // LE CHEMIN DU REGISTRE SE LIT, IL NE SE DEVINE PAS (2026-09-25, tâche #840 — instruction de
+  // #205, « corriger mon biais vers les outils à retour immédiat »). La note d'origine avait posé
+  // la bonne réserve : ces outils lourds s'appellent via un agent séparé, donc « si le défaut est
+  // dans la MESURE, il faudra le dire plutôt que battre sa coulpe ». Vérifié : c'était bien le cas.
+  // La sonde dérivait `docs/<slug>/`, alors que QUATRE registres réels vivent ailleurs et sont
+  // déjà déclarés dans REGISTRIES — dont THE-DEEP-READER, qui a deux relectures lourdes archivées
+  // et se lisait « registre inatteignable ». Un registre se LIT (Article 24).
+  const deuxSources = crh2.derniereTrouvailleDuRegistre('ailleurs', {
+    registres: [{ slug: 'ailleurs', path: 'docs/vraie/place/' }],
+    lire: (c) => (c === 'docs/vraie/place/index.md' ? '## 2026-09-23 — une vraie trouvaille' : null),
+  });
+  assert.ok(deuxSources.mesurable && deuxSources.date === '2026-09-23', 'a tool whose register is declared elsewhere must be READ there — deriving docs/<slug>/ returned "unreachable" on registers that were actually fed, and that false emptiness was feeding a suspicion about MY OWN work rather than pointing at the measurement');
+  const repliConvention = crh2.derniereTrouvailleDuRegistre('classique', { lire: (c) => (c === 'docs/classique/index.md' ? '| 2026-09-01 | 1 | trouvé |' : null) });
+  assert.equal(repliConvention.date, '2026-09-01', 'and with no declared path the convention stays the fallback: the fix must not break the majority of tools that do follow it');
+
   const parTitre = crh2.derniereTrouvailleDuRegistre('x', { lire: () => '# Registre\n\n## 2026-09-01 — un premier passage\n\ndu texte\n\n## 2026-09-25 — le passage le plus récent\n\nencore du texte' });
   assert.deepEqual([parTitre.mesurable, parTitre.date], [true, '2026-09-25'], 'a register that dates its entries with HEADINGS instead of table rows must be read, not declared silent — two of the real registers do exactly that');
   assert.ok(/le passage le plus récent/.test(parTitre.resume), 'and the heading text minus its date becomes the summary, so the reader returns something meaningful rather than the raw heading');
