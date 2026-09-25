@@ -175,6 +175,12 @@ LE SEUL BIAIS QUI SE CONFIRME (#841) : 30 commits sans Ronde, signale par le rap
   jugee. Le jugement lui appartient mecaniquement (enregistrerXp refuse sans parUtilisateur).
   Mis devant lui sous forme decidable [A TRANCHER PAR LUI]
 
+#242 (estimer avant de lancer) : 2 process sur 10 portent l'etape — et ce sont EXACTEMENT les deux
+  qui coutent cher. Le trou n'etait donc pas « 8 process negliges » (encore une dette qu'on aurait
+  fabriquee). Ce qui manquait : distinguer « rien a estimer » de « personne n'y a pense ». Exemption
+  declaree avec sa raison pour chacun des 8, et un garde-fou qui refuse le silence pour les futurs
+  [FAIT]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------

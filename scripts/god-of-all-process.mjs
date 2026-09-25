@@ -1534,6 +1534,62 @@ export function actionChainLines(resultats = []) {
 export const MOTIF_SECTION_PLAN = /^#{1,4}\s*Plan d['’]action/im;
 export const MOTIF_TACHE_ANNONCEE = /(?:tâche|tache)\s*\*{0,2}#(\d+)/gi;
 
+// L'ESTIMATION AVANT DE LANCER — DANS TOUS LES PROCESS, OU EXEMPTÉE EXPRÈS (2026-09-25, tâche #843,
+// instruction de #242 : « estimation temps + tokens + API : consolider dans TOUS les process »).
+//
+// MESURÉ AVANT DE CONCLURE : sur 10 process déclarés, **2 seulement** portent une étape d'estimation
+// (`ronde` et `simulation`). Ce sont précisément les deux qui coûtent cher — donc le trou n'est pas
+// « 8 process négligés », et le dire autrement serait fabriquer une dette comme celle des portées
+// (#832) quelques heures plus tôt.
+//
+// CE QUI MANQUAIT VRAIMENT : rien ne distinguait « ce process n'a rien à estimer » de « personne n'y
+// a pensé ». Les deux se lisaient pareil — l'absence d'une étape. Un process ajouté demain serait
+// entré dans la même zone grise sans que rien ne le demande.
+//
+// D'OÙ UNE EXEMPTION DÉCLARÉE, avec sa raison écrite à côté (Article 24 : un contenu curaté à la
+// main reste légitime tant que sa nature manuelle est écrite noir sur blanc). Et un garde-fou qui
+// refuse le silence : un process NOUVEAU doit soit porter l'étape, soit figurer ici avec sa raison.
+export const PROCESS_SANS_ESTIMATION_ASSUMEE = {
+  "analyse-charte": "lecture et rédaction, sans appel API ni durée imprévisible — l'estimation coûterait plus que ce qu'elle informe",
+  "semi-autonome": "ce n'est pas une activité mais un MODE de travail : il n'a ni début ni fin à estimer",
+  "nuit": "le plan de nuit EST l'estimation — il liste les chantiers avant de commencer, et une seconde estimation par-dessus ferait doublon",
+  "meta": "process d'écriture de process : quelques minutes, aucune consommation mesurable",
+  "integration-outil": "suite de vérifications gratuites et déterministes, dont la durée ne dépend pas de ce qu'on y met",
+  "integration-ronde": "idem — un branchement, jamais un traitement",
+  "xp-ia": "enregistrer une leçon coûte une ligne ; estimer ce geste serait plus long que le geste",
+  "etat-des-taches": "lecture du suivi, instantanée et gratuite",
+};
+
+export function findProcessSansEstimation(processes = PROCESSES, exemptions = PROCESS_SANS_ESTIMATION_ASSUMEE) {
+  if (!Array.isArray(processes) || !processes.length) {
+    return { mesurable: false, pourquoi: "aucun process déclaré : rien à confronter, ce qui n'est pas la même chose que « tous estiment »" };
+  }
+  const porte = (p) => (p.etapes ?? []).some((e) => /estim/i.test(e.cle ?? "") || /estim|durée|consommation/i.test(e.libelle ?? ""));
+  const avec = []; const exemptes = []; const manquants = [];
+  for (const p of processes) {
+    if (porte(p)) { avec.push(p.slug); continue; }
+    if (exemptions[p.slug]) { exemptes.push({ slug: p.slug, pourquoi: exemptions[p.slug] }); continue; }
+    manquants.push(p.slug);
+  }
+  return {
+    mesurable: true, avec, exemptes, manquants, total: processes.length,
+    horsPortee: "Il vérifie qu'une ÉTAPE d'estimation est déclarée, jamais qu'elle a été faite ni qu'elle était juste. Un process qui l'annonce et ne l'exécute pas passe ici pour conforme.",
+  };
+}
+
+export function estimationParProcessLines(r) {
+  if (!r?.mesurable) return [`— Estimation avant lancement — PAS MESURÉ : ${r?.pourquoi ?? "aucune donnée"}`];
+  const L = [`— Estimation avant lancement (${r.avec.length} process sur ${r.total} la déclarent) —`];
+  L.push(`  ✅ portent l'étape : ${r.avec.join(", ") || "aucun"}`);
+  L.push(`  ⚪ exemptés AVEC RAISON ÉCRITE (${r.exemptes.length}) : ${r.exemptes.map((e) => e.slug).join(", ") || "aucun"}`);
+  if (r.manquants.length) {
+    L.push(`  🔴 ${r.manquants.length} process ne portent NI l'étape NI une exemption écrite : ${r.manquants.join(", ")}.`);
+    L.push("     Ce n'est pas un reproche automatique : soit l'étape manque, soit l'exemption n'a jamais été écrite. Les deux se lisent pareil, et c'est justement ce que ce contrôle refuse de laisser en l'état.");
+  }
+  L.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  return L;
+}
+
 export function auditPlansDeDocuments(documents = [], suiviText = null) {
   const avecPlan = documents.filter((d) => MOTIF_SECTION_PLAN.test(String(d?.texte ?? "")));
   if (!documents.length) {
@@ -1607,6 +1663,9 @@ export function buildProcessComplianceReport({ processes = PROCESSES, root = ROO
   // écrits dans des DOCUMENTS, que rien ne vérifiait. Un document survit plus longtemps qu'un
   // rapport, donc sa référence morte aussi.
   if (plansDeDocuments) lignes.push("", ...plansDeDocumentsLines(plansDeDocuments));
+  // L'estimation avant lancement, process par process (2026-09-25, tâche #843) : dérivée de
+  // PROCESSES, donc un process ajouté demain y entre sans que personne n'y pense (Article 24).
+  lignes.push("", ...estimationParProcessLines(findProcessSansEstimation(processes)));
   const sansProcess = findActivitiesWithoutProcess({ processes });
   if (sansProcess.length) {
     lignes.push("", `${sansProcess.length} activité(s) DÉCLARÉE(S) à enjeu et sans process :`);

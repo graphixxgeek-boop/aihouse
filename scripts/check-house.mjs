@@ -3786,6 +3786,29 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(auditPlansDeDocuments([],'x').mesurable,false,'and an empty document list reads NOT MEASURED rather than "every plan is chained" — a green returned on zero files read is the defect this whole landscape exists against');
   assert.ok(plansDeDocumentsLines({mesurable:false,pourquoi:'rien'})[0].includes('PAS MESURÉ'),'a refusal renders as PAS MESURÉ, never as an empty section that would read like a clean bill of health');
 
+  // L'ESTIMATION AVANT LANCEMENT, PROCESS PAR PROCESS (2026-09-25, tâche #843 — instruction de #242).
+  // MESURÉ AVANT DE CONCLURE : 2 process sur 10 portent l'étape, et ce sont précisément les deux qui
+  // coûtent cher. Le trou n'était donc pas « 8 process négligés » — le dire aurait fabriqué une dette
+  // comme celle des portées quelques heures plus tôt. Ce qui manquait : rien ne distinguait « ce
+  // process n'a rien à estimer » de « personne n'y a pensé ».
+  const {findProcessSansEstimation,estimationParProcessLines,PROCESS_SANS_ESTIMATION_ASSUMEE}=await import('../scripts/god-of-all-process.mjs');
+  const procFaux=[
+    {slug:'cher',etapes:[{cle:'estimation',libelle:'annoncer la durée'}]},
+    {slug:'gratuit',etapes:[{cle:'lire',libelle:'lire un fichier'}]},
+    {slug:'oublie',etapes:[{cle:'faire',libelle:'faire quelque chose'}]},
+  ];
+  const est=findProcessSansEstimation(procFaux,{gratuit:'lecture instantanée'});
+  assert.deepEqual([est.avec,est.exemptes.map(e=>e.slug),est.manquants],[['cher'],['gratuit'],['oublie']],'three states, never two: a process that declares the step, one exempted WITH a written reason, and one that has neither — the last is the only finding, because an exemption without a reason is not a decision');
+  assert.equal(findProcessSansEstimation([]).mesurable,false,'no declared process means nothing to compare — PAS MESURÉ, never "they all estimate"');
+  assert.ok(estimationParProcessLines(est).join('\n').includes('HORS PORTÉE'),'the limit is stated: it checks that a STEP is declared, never that it was done nor that it was right');
+  // Contre les VRAIS process (Article 25) : aucun ne doit rester dans la zone grise.
+  {
+    const reel=findProcessSansEstimation();
+    assert.ok(reel.mesurable && reel.total >= 10,'the check must read the real PROCESSES list, never conclude on an empty one');
+    assert.deepEqual(reel.manquants,[],`every declared process must either carry the estimation step or be exempted with a written reason — a process added tomorrow lands here rather than in a silent grey zone; found: ${reel.manquants.join(', ')}`);
+    assert.ok(Object.values(PROCESS_SANS_ESTIMATION_ASSUMEE).every((r)=>String(r).length>30),'and each exemption must carry a REAL reason, not a placeholder: an exemption without its why is an oversight wearing a decision\'s clothes');
+  }
+
   const conformite=buildProcessComplianceReport();
   assert.ok(typeof conformite.texte==='string'&&conformite.texte.length>0,'the compliance report must always say something, even when everything is in order');
   const avecVerdict=buildProcessComplianceReport({verdictsSecondaires:[{ok:false,process:'Simulation',detail:'phase 2 sans tour autonome',gardien:'process.simulation.guardian'}]});
