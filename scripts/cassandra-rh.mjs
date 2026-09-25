@@ -2894,6 +2894,31 @@ export function findOutilsSansPortee(lignesRecensement = [], portees = {}, { def
 // recommandeur d'outils) sont précisément ceux qu'aucune mécanique ne tranchera.
 export const MOTIF_EMET_DES_CONSTATS = /console\.log\([^)]*(🔴|⚠️|écart|manquant)/;
 
+// MOTIF_AVEU_DE_NON_MESURE (2026-09-25, tâche #863) — LA CORRECTION QUE LA DIVERGENCE A RÉVÉLÉE,
+// et elle vaut mieux que le cas qui l'a déclenchée.
+//
+// CE QUI S'EST PASSÉ : `ou-on-en-est` a été déclaré dispensé après lecture de son code (il rend un
+// BILAN, jamais un constat), et le garde-fou de #852 a aussitôt signalé la divergence — la
+// dérivation, elle, le jugeait émetteur de constats. Une seule ligne de tout son fichier
+// déclenchait le motif :
+//     console.log("⚠️  Aucune tâche lue — rien n'a été mesuré, [...]")
+// c'est-à-dire un AVEU D'ABSENCE DE MESURE, exactement ce que ce projet exige partout depuis #206.
+//
+// AUTREMENT DIT, LA DÉRIVATION PUNISSAIT LA BONNE CONDUITE : un outil qui déclare honnêtement
+// « je n'ai rien pu mesurer » se retrouvait compté comme émetteur d'écarts, donc sommé de produire
+// un plan d'action sur un non-constat. Un garde-fou qui accuse les conformes cesse d'être lu — le
+// même patron que celui déjà corrigé sur PORTES_PLAN_DACTION (report-template.mjs).
+//
+// LE TEST DEVIENT DONC LIGNE À LIGNE, et il faut au moins UNE ligne de constat qui ne soit pas un
+// aveu : un outil qui émet de vrais écarts ET déclare aussi ses absences de mesure reste bien un
+// émetteur, ce qu'un test sur le fichier entier ne savait pas distinguer.
+export const MOTIF_AVEU_DE_NON_MESURE = /rien n'a (été|pu être) mesuré|pas mesur|non mesurable|aucune mesure/i;
+
+// Exporté pour être testable seul : c'est la brique que le motif seul ne sait plus porter.
+export function emetDesConstats(code, { motif = MOTIF_EMET_DES_CONSTATS, aveu = MOTIF_AVEU_DE_NON_MESURE } = {}) {
+  return String(code ?? "").split("\n").some((ligne) => motif.test(ligne) && !aveu.test(ligne));
+}
+
 export function findOutilsDevantConclure(lignesRecensement = [], { lire = null, motif = MOTIF_EMET_DES_CONSTATS } = {}) {
   const scanners = lignesRecensement.filter((l) => l.type === "outil" && l.classes?.includes("scanne-le-depot"));
   if (!scanners.length) return { mesurable: false, pourquoi: "aucun outil qui scanne le dépôt dans le recensement : rien à instruire, ce qui n'est pas la même chose que « tous concluent »" };
@@ -2904,7 +2929,7 @@ export function findOutilsDevantConclure(lignesRecensement = [], { lire = null, 
     if (l.classes.includes("conclut-en-plan-daction")) { concluent.push(slug); continue; }
     const brut = lire(l.chemin) ?? "";
     const code = String(brut).replace(/\/\*[\s\S]*?\*\//g, " ").replace(/^[ \t]*\/\/.*$/gm, " ");
-    (motif.test(code) ? doivent : dispenses).push(slug);
+    (emetDesConstats(code, { motif }) ? doivent : dispenses).push(slug);
   }
   return {
     mesurable: true, concluent, doivent, dispenses, scanners: scanners.length,
