@@ -231,3 +231,12 @@ LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 #206 : la reprise des notes a fait son travail — le gros volet restant N'EST PAS a moi. Le plan
   du 2026-09-23 l'avait deja cadre « a trancher : changer ce que rendent les sept Gardiens touche
   tous leurs appelants et tous leurs tests, ton arbitrage ». Je ne l'ouvre donc pas [A TOI]
+
+#852 : « cet outil doit-il conclure par un plan d'action ? » avait DEUX reponses, dans deux
+  endroits qui ne se parlent pas — une liste ecrite a la main (lue par pure-gold-unity) et une
+  derivation depuis le code reel (lue par CASSANDRA). Cinq outils recevaient donc un verdict
+  different selon le rapport qu'on ouvre. Le garde-fou nomme chaque divergence et n'en tranche
+  aucune : chacune des deux sources sait quelque chose que l'autre ignore, et le defaut n'etait
+  pas qu'elles different, c'etait qu'elles differaient EN SILENCE.
+  Erreur attrapee dans mon propre code au passage : le message disait « cinq » en toutes lettres,
+  la liste figee que l'Article 24 interdit, dans le garde-fou ecrit pour l'Article 24 [FAIT]

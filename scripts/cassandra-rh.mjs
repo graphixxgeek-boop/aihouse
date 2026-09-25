@@ -32,7 +32,7 @@ export { parseKpiHistoryCsv };
 import { estimateTokens } from "./smart-conso-token.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
-import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE, SANS_CONSTAT_PROPRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -2912,6 +2912,73 @@ export function findOutilsDevantConclure(lignesRecensement = [], { lire = null, 
   };
 }
 
+// findDispensesDivergentes() (2026-09-25, tâche #852) — LE GARDE-FOU QUE L'ARTICLE 24 RÉCLAME, et
+// il est né d'une mesure, jamais d'un soupçon. La même question — « cet outil doit-il conclure par
+// un plan d'action ? » — reçoit sa réponse de DEUX endroits qui ne se parlent pas :
+//   · `SANS_CONSTAT_PROPRE` (report-template.mjs), une liste CURATÉE À LA MAIN, chaque entrée
+//     portant sa raison écrite. Légitime telle quelle au sens de l'Article 24, qui autorise
+//     explicitement un contenu manuel « tant que cette nature volontairement manuelle est écrite
+//     noir sur blanc à côté ». C'est la source que lit pure-gold-unity.
+//   · `findOutilsDevantConclure()` juste au-dessus, qui DÉRIVE la réponse de la source réelle
+//     (`MOTIF_EMET_DES_CONSTATS`). C'est la source que lit CASSANDRA.
+//
+// CE QUE LA MESURE A DONNÉ, sur le vrai dépôt : CINQ divergences, dans les deux sens.
+//   · dispensés par la dérivation, absents de la liste manuelle : god-of-all-process, sauvegarde-projet
+//     — pure-gold-unity les accuse, CASSANDRA les excuse.
+//   · déclarés dans la liste manuelle, jugés « doivent conclure » par la dérivation : check-spirit,
+//     le-regisseur, tool-brain — pure-gold-unity les excuse, CASSANDRA les accuse.
+// Autrement dit : cinq outils dont le verdict dépend du rapport qu'on ouvre. Ce n'est pas un écart
+// de chiffres, c'est deux vérités qui coexistent sans que rien ne les confronte.
+//
+// CE QUE CETTE FONCTION NE FAIT PAS, ET C'EST DÉLIBÉRÉ : elle ne TRANCHE jamais. Fusionner les deux
+// sources ou faire gagner l'une serait perdre ce que chacune sait — la liste manuelle porte des
+// raisons qu'aucun motif ne peut lire (« le verdict sur l'esprit des personnages est une lecture,
+// jamais un calcul »), et la dérivation attrape les outils que personne n'a pensé à déclarer. Le
+// défaut n'est pas qu'elles diffèrent : c'est qu'elles diffèrent EN SILENCE. On nomme donc chaque
+// divergence, avec son sens, et la décision reste humaine (Article 16).
+export function findDispensesDivergentes(devantConclure, { declares = SANS_CONSTAT_PROPRE } = {}) {
+  if (!devantConclure?.mesurable) {
+    return { mesurable: false, pourquoi: `la dérivation n'a rien rendu (${devantConclure?.pourquoi ?? "raison inconnue"}) — sans elle il n'y a qu'UNE source, donc rien à confronter, ce qui n'est pas la même chose que « les deux s'accordent »` };
+  }
+  const listeDeclaree = new Set(Object.keys(declares ?? {}));
+  const dispensesDerives = new Set(devantConclure.dispenses ?? []);
+  // Sens 1 : la dérivation l'excuse, la liste manuelle ne le connaît pas → l'outil qui lit la liste
+  // (pure-gold-unity) l'accusera de ne jamais conclure.
+  const excusesNonDeclares = [...dispensesDerives].filter((s) => !listeDeclaree.has(s)).sort();
+  // Sens 2 : la liste manuelle l'excuse, la dérivation le juge émetteur de constats → l'outil qui
+  // dérive (CASSANDRA) l'accusera. Restreint aux scanners réellement instruits : un slug déclaré
+  // qui n'est pas dans le recensement n'est pas une divergence, c'est simplement hors périmètre.
+  const instruits = new Set([...(devantConclure.doivent ?? []), ...(devantConclure.concluent ?? []), ...dispensesDerives]);
+  const declaresJugesEmetteurs = (devantConclure.doivent ?? []).filter((s) => listeDeclaree.has(s)).sort();
+  return {
+    mesurable: true,
+    excusesNonDeclares, declaresJugesEmetteurs,
+    total: excusesNonDeclares.length + declaresJugesEmetteurs.length,
+    instruits: instruits.size, declares: listeDeclaree.size,
+    horsPortee: "Cette comparaison dit QUE les deux sources divergent, jamais LAQUELLE a raison — chacune sait quelque chose que l'autre ignore, et arbitrer un cas précis reste une décision humaine (Article 16).",
+  };
+}
+
+export function formatDispensesDivergentesLines(r) {
+  if (!r?.mesurable) return [`  DISPENSES : PAS MESURÉ — ${r?.pourquoi ?? "aucune donnée"}`];
+  if (!r.total) return [`  ✅ Les deux sources de dispense s'accordent sur les ${r.instruits} outil(s) instruits (liste manuelle de ${r.declares} entrées contre la dérivation).`];
+  // Le libellé dit « ${r.total} outil(s) », jamais un nombre écrit en toutes lettres : la première
+  // version disait « cinq », le chiffre du jour de sa naissance, et serait devenue fausse au premier
+  // outil ajouté ou déclaré — exactement la liste figée que l'Article 24 interdit, dans le message
+  // du garde-fou censé faire respecter l'Article 24.
+  const L = [`  ⚠️ ${r.total} divergence(s) entre les DEUX sources de dispense — ${r.total} outil(s) dont le verdict dépend du rapport qu'on ouvre :`];
+  if (r.excusesNonDeclares.length) {
+    L.push(`     · dispensés par la DÉRIVATION mais absents de la liste manuelle : ${r.excusesNonDeclares.join(", ")}`);
+    L.push(`       → pure-gold-unity les accuse de ne jamais conclure, CASSANDRA les excuse. À déclarer dans SANS_CONSTAT_PROPRE avec leur raison, ou à faire conclure.`);
+  }
+  if (r.declaresJugesEmetteurs.length) {
+    L.push(`     · déclarés dans la liste manuelle mais jugés ÉMETTEURS DE CONSTATS par la dérivation : ${r.declaresJugesEmetteurs.join(", ")}`);
+    L.push(`       → pure-gold-unity les excuse, CASSANDRA les accuse. Soit la raison écrite n'est plus vraie, soit le motif les lit mal.`);
+  }
+  L.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  return L;
+}
+
 export function formatDoiventConclureLines(d) {
   if (!d?.mesurable) return [`QUI DOIT CONCLURE : PAS MESURÉ — ${d?.pourquoi ?? "aucune donnée"}`];
   const L = [
@@ -3465,9 +3532,14 @@ async function main() {
     // QUI DOIT VRAIMENT CONCLURE (tâche #833, instruction de #803).
     console.log("");
     console.log("--- LE PLAN D'ACTION : QUI LE DOIT VRAIMENT (tâche #803 instruite en #833) ---");
-    for (const l of formatDoiventConclureLines(findOutilsDevantConclure(rp.mesurable ? rp.lignes : [], {
+    const devantConclure = findOutilsDevantConclure(rp.mesurable ? rp.lignes : [], {
       lire: (chemin) => { try { return readFileSync(join(ROOT, chemin), "utf8"); } catch { return null; } },
-    }))) console.log(l);
+    });
+    for (const l of formatDoiventConclureLines(devantConclure)) console.log(l);
+    // LES DEUX SOURCES DE DISPENSE, CONFRONTÉES (tâche #852). Sans ça, chacune reste juste dans son
+    // propre rapport et fausse l'autre en silence — l'Article 24 appelle exactement ça une copie
+    // tenue à la main sans vérification que rien ne diverge.
+    for (const l of formatDispensesDivergentesLines(findDispensesDivergentes(devantConclure))) console.log(l);
     return;
   }
   if (sub === "recensement") {
