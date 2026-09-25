@@ -1460,7 +1460,7 @@ export function buildCircleRunSummaryText(entries, { dateLabel, items = CIRCLE_I
 // TROIS ÉTATS, comme partout : trouvé · dossier connu mais VIDE (l'item a tourné sans rien écrire,
 // ce qui est un vrai défaut) · aucun dossier déclaré pour cet item (déjà couvert par
 // `findItemsPromisingReportWithoutFolder()`, donc simplement rappelé ici, jamais recompté).
-export function derniersRapportsDesItems(entries = [], { folders = CIRCLE_REPORT_FOLDERS, root = ROOT, listDir = null } = {}) {
+export function derniersRapportsDesItems(entries = [], { folders = CIRCLE_REPORT_FOLDERS, root = ROOT, listDir = null, naissance = null, derniereRonde = null } = {}) {
   if (!entries.length) return { mesurable: false, pourquoi: "aucun item exécuté : il n'y a pas de rapport à rassembler, ce qui n'est pas la même chose qu'aucun rapport trouvé" };
   const lire = listDir ?? ((dir) => { try { return readdirSync(join(root, dir)); } catch { return null; } });
   const trouves = []; const dossiersVides = []; const sansDossier = [];
@@ -1471,7 +1471,22 @@ export function derniersRapportsDesItems(entries = [], { folders = CIRCLE_REPORT
     const fichiers = lire(dossier);
     if (!Array.isArray(fichiers)) { dossiersVides.push({ id, dossier, pourquoi: "dossier illisible ou absent" }); continue; }
     const signaux = fichiers.filter((f) => /^circle-signal.*\.txt$/.test(f)).sort();
-    if (!signaux.length) { dossiersVides.push({ id, dossier, pourquoi: "aucun rapport archivé — l'item a tourné sans rien écrire" }); continue; }
+    if (!signaux.length) {
+      // DEUX CAUSES, jamais une accusation au hasard (corrigé le 2026-09-25 dans l'heure qui a suivi
+      // sa première version, tâche #839). La version d'origine écrivait « l'item a tourné sans rien
+      // écrire ». Vérifié : `agent-des-noms` et `agent-du-temps` ont été AJOUTÉS à la Ronde le
+      // 2026-09-24, le jour même de la dernière Ronde réelle — ils n'ont probablement jamais eu
+      // l'occasion de tourner. Mon propre faux rouge, une heure après l'avoir construit.
+      const ne = typeof naissance === "function" ? naissance(id) : null;
+      const jamaisEuLOccasion = ne && derniereRonde && ne >= derniereRonde;
+      dossiersVides.push({
+        id, dossier, naissance: ne,
+        pourquoi: jamaisEuLOccasion
+          ? `aucun rapport archivé, mais l'item a rejoint la Ronde le ${ne}, à la dernière Ronde connue (${derniereRonde}) ou après — il n'a probablement jamais eu l'occasion de tourner`
+          : "aucun rapport archivé. DEUX CAUSES : soit l'item a tourné sans rien écrire (vrai défaut), soit il n'a jamais été coché dans une Ronde — sans la date de sa naissance, les deux se ressemblent exactement",
+      });
+      continue;
+    }
     trouves.push({ id, chemin: `${String(dossier).replace(/\/+$/, "")}/${signaux[signaux.length - 1]}` });
   }
   return {

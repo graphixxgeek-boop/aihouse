@@ -152,6 +152,11 @@ LES HUIT CONSTATS DEEP-READER SONT CLOS (1 a 8).
   elle disparaissait SANS TRACE. Desormais DERIVEE du disque, trois etats, et quand rien n'est
   trouve le recapitulatif le DIT. Premier passage : 6 rapports retrouves, 2 dossiers vides [FAIT]
 
+MON PROPRE FAUX ROUGE (#839), une heure apres l'avoir construit : l'outil de #838 accusait deux
+  items d'avoir « tourne sans rien ecrire ». Verifie : ils ont REJOINT la Ronde le jour meme de la
+  derniere Ronde reelle. Un dossier vide a deux causes indiscernables ; la date de naissance de
+  l'item (derivee de git) les separe quand elle le peut, et le message nomme les deux sinon [FAIT]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------

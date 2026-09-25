@@ -3749,7 +3749,17 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const disque={'docs/aaa':['circle-signal-2026-09-01T00-00-00Z.txt','circle-signal-2026-09-25T00-00-00Z.txt','index.md'],'docs/bbb':[]};
   const dr=ct2.derniersRapportsDesItems([{id:'a'},{id:'b'},{id:'c'}],{folders:faux,listDir:(d)=>disque[d]??null});
   assert.deepEqual(dr.trouves,[{id:'a',chemin:'docs/aaa/circle-signal-2026-09-25T00-00-00Z.txt'}],'the MOST RECENT archived report of each executed item is derived from the disk, never passed by hand — and index.md is not a report');
-  assert.deepEqual(dr.dossiersVides.map(v=>v.id),['b'],'a known folder holding no report is a REAL defect (the item ran and wrote nothing), never silently skipped');
+  assert.deepEqual(dr.dossiersVides.map(v=>v.id),['b'],'a known folder holding no report is never silently skipped');
+  // DEUX CAUSES, jamais une accusation (2026-09-25, tâche #839 — corrigé dans l'heure qui a suivi la
+  // première version). Elle écrivait « l'item a tourné sans rien écrire ». Vérifié ensuite :
+  // agent-des-noms et agent-du-temps ont REJOINT la Ronde le jour même de la dernière Ronde réelle,
+  // donc ils n'ont probablement jamais eu l'occasion de tourner. Mon propre faux rouge, une heure
+  // après l'avoir construit — et c'est exactement le motif que cette journée entière a traqué.
+  assert.ok(/DEUX CAUSES/.test(dr.dossiersVides[0].pourquoi),'without the item\'s birth date, an empty folder has two indistinguishable causes — it ran and wrote nothing, or it was never ticked in a Ronde — and the message must name both rather than pick one');
+  const drNe=ct2.derniersRapportsDesItems([{id:'b'}],{folders:faux,listDir:(d)=>disque[d]??null,naissance:()=>'2026-09-24',derniereRonde:'2026-09-24'});
+  assert.ok(/jamais eu l'occasion/.test(drNe.dossiersVides[0].pourquoi),'but when the item joined the Ronde on or after the last known Ronde, that IS decidable and the message must say so instead of accusing');
+  const drAncien=ct2.derniersRapportsDesItems([{id:'b'}],{folders:faux,listDir:(d)=>disque[d]??null,naissance:()=>'2026-09-01',derniereRonde:'2026-09-24'});
+  assert.ok(/DEUX CAUSES/.test(drAncien.dossiersVides[0].pourquoi),'and an item older than the last Ronde falls back to the two-cause wording rather than being declared guilty: existing before a Ronde does not prove it was ticked in it');
   assert.deepEqual(dr.sansDossier,['c'],'an item with no declared folder is a third state, already tracked elsewhere and merely recalled here rather than counted twice');
   assert.equal(ct2.derniersRapportsDesItems([]).mesurable,false,'no executed item means nothing to gather — PAS MESURÉ, never "no report found"');
   const htmlSansLiens=ct2.buildCircleRunSummaryHtml([{id:'b',resultat:'ok'}],{dateLabel:'x',items:[{id:'b',label:'B'}],reportLinks:[]});
