@@ -841,6 +841,46 @@ export function checkChantierFileFreshness(allRows, { lastTouch = lastTouchDays,
 // POUVAIT pas trouver. On garde l'ancien chemin (des lignes anciennes n'ont que le sujet) et on
 // ajoute celui qui compte, plutôt que de remplacer — une ligne qui remontait hier doit remonter
 // encore.
+// LA CLÔTURE ET LE STATUT QUI SE CONTREDISENT (2026-09-25, tâche #844 — trouvé en instruisant #209).
+//
+// LE SUIVI A DEUX FAÇONS DE DIRE QU'UNE TÂCHE EST FINIE, et elles ne se parlent pas : la colonne
+// STATUT de sa propre ligne, et une ligne ULTÉRIEURE qui commence par « CLÔTURE DE #NNN » — la
+// forme imposée ici, puisqu'un numéro ne se réutilise jamais. Rien ne vérifiait qu'elles disent la
+// même chose.
+//
+// MESURÉ : sur 128 lignes encore marquées ouvertes, **8 sont clôturées par une ligne postérieure**.
+// Elles gonflent la file, elles remontent dans « les plus anciennes », et elles font croire à un
+// retard qui n'existe pas — c'est-à-dire exactement ce que cette journée a passé son temps à
+// démêler, appliqué cette fois au suivi lui-même.
+//
+// CE QU'IL NE TRANCHE PAS : laquelle des deux a raison. Une clôture annoncée peut être fausse, et
+// un statut non mis à jour peut être un oubli. Les deux appellent un œil, jamais une correction
+// automatique d'un registre que l'utilisateur relit.
+export const MOTIF_CLOTURE = /CL[ÔO]TURE\s+(?:DE\s+|du\s+constat[^#]{0,40})#(\d+)/gi;
+
+export function findStatutsContredits(rows = []) {
+  if (!rows.length) return { mesurable: false, pourquoi: "aucune ligne de suivi lue : rien à confronter, ce qui n'est pas la même chose qu'aucune contradiction" };
+  const texte = rows.map((r) => r.detail ?? "").join("\n");
+  const cloturees = new Set([...texte.matchAll(MOTIF_CLOTURE)].map((m) => m[1]));
+  const contredits = rows
+    .filter((r) => r.statusKey !== "terminee" && Number.isFinite(r.numero) && cloturees.has(String(r.numero)))
+    .map((r) => ({ numero: r.numero, statut: r.statut, sousSujet: String(r.sousSujet ?? "").slice(0, 70) }));
+  return {
+    mesurable: true, contredits, lignesLues: rows.length, cloturesAnnoncees: cloturees.size,
+    horsPortee: "Il montre que les deux sources se contredisent, jamais laquelle a raison : une clôture annoncée peut être fausse, un statut non mis à jour peut être un simple oubli. Aucune correction automatique sur un registre que l'utilisateur relit.",
+  };
+}
+
+export function formatStatutsContreditsLines(r) {
+  if (!r?.mesurable) return [`STATUTS CONTREDITS : PAS MESURÉ — ${r?.pourquoi ?? "aucune donnée"}`];
+  if (!r.contredits.length) return [`Statuts : aucune contradiction sur ${r.lignesLues} ligne(s), pour ${r.cloturesAnnoncees} clôture(s) annoncée(s) ailleurs.`];
+  const L = [`🔴 ${r.contredits.length} tâche(s) marquées OUVERTES alors qu'une ligne postérieure les déclare closes (sur ${r.lignesLues} lignes, ${r.cloturesAnnoncees} clôtures annoncées) :`];
+  for (const c of r.contredits) L.push(`   · #${c.numero} — statut « ${c.statut} » — ${c.sousSujet}`);
+  L.push("   Elles gonflent la file et remontent en tête des « plus anciennes » : un retard qui n'existe pas.");
+  L.push(`   HORS PORTÉE : ${r.horsPortee}`);
+  return L;
+}
+
 export const MOTIF_A_TRANCHER = /^\s*A[- ]?TRANCHER\s*$/i;
 
 export function detectPendingIdeaCandidates(allRows, sinceTaskNumber = 332) {

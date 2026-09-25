@@ -179,8 +179,25 @@ export function categorizeTasks(sessionText) {
 // Ce n'est pas une liste de formes tolérées qui grandira indéfiniment (Article 24) : on retire la
 // décoration (crochets, gras, horodatage de clôture) puis on compare sur un texte sans accent ni
 // casse — un PRINCIPE, pas une énumération.
+// UNE FLÈCHE DIT L'ÉTAT FINAL, PAS L'ÉTAT DE DÉPART (2026-09-25, tâche #844).
+//
+// LE DÉFAUT, ET SON EFFET EST MESURÉ. Le classement s'ancre sur le DÉBUT du statut (`^ouverte`,
+// `^termin[ée]`…). Or huit lignes réelles portent une TRANSITION — « Ouverte → Terminée (clôturée
+// par #785) », « En attente de sa décision → Terminée (clôturée par #780) ». Elles commencent par
+// « ouverte » ou « en attente », donc elles étaient rangées parmi les tâches OUVERTES alors que
+// leur état final est « terminée ».
+//
+// CE QUE ÇA FAUSSAIT, et ce n'est pas cosmétique : la taille de la file (128 au lieu de 120), la
+// liste des « plus anciennes encore ouvertes » — où elles remontaient en tête — et toute mesure
+// d'émiettement ou de retard construite dessus. **Un retard qui n'existait pas.**
+//
+// Trouvé en instruisant #209 (« les 5 tâches en stagnation »), c'est-à-dire en cherchant tout
+// autre chose : la liste des plus anciennes ne ressemblait pas à ce que le suivi racontait.
 export function normaliserStatut(statut = "") {
   return String(statut)
+    // La flèche d'abord : « A → B » se lit B. Faite avant tout le reste, sinon les nettoyages
+    // ci-dessous s'appliqueraient à la partie gauche, celle qui n'est plus vraie.
+    .replace(/^.*?(?:→|->|=>)\s*/, "")
     .replace(/^[\s*_`]+/, "")
     .replace(/^\[\s*/, "")
     .replace(/\s*\]\s*$/, "")

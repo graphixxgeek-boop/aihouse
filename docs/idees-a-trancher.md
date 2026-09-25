@@ -198,3 +198,27 @@ ne remontent jamais appellent une seconde question : les reformuler, ou les reti
 
 **Ce qui est mesuré et ne se rediscute pas** : aider un outil coûte ~3 300 tokens (médiane). Le frein
 n'est pas là — c'est le fichier de tests qui pèse 273 000 tokens, 44 % de tout `scripts/`.
+
+### Ajoutée le 2026-09-25 — les 5 tâches qui attendent depuis le plus longtemps
+
+| Tâche | Sujet | Décision |
+|---|---|---|
+| #845 | Les 5 plus anciennes tâches encore ouvertes : à faire, à écarter, ou à reformuler ? | à trancher |
+
+**Mesuré après correction du compteur** (voir #844 : treize tâches étaient comptées ouvertes à
+tort). Il reste **115 tâches réellement ouvertes**, et voici les cinq plus anciennes :
+
+| N° | Ouverte depuis | Criticité | Sujet |
+|---|---|---|---|
+| #147 | 2026-09-20 | NORMAL-UTILE | objectifs de résultat / score cible par membre d'équipe |
+| #179 | 2026-09-20 | NORMAL-UTILE | CASSANDRA-RH doit connaître parfaitement chaque membre |
+| #279 | 2026-09-21 | NORMAL-UTILE | la passe manuelle d'allègement de CLAUDE.md, reportée explicitement |
+| #390 | 2026-09-22 | RECOMMANDE-NECESSAIRE | ARGUS et CLONE-HUNTER mesurés à une autre échelle que les autres |
+| #490 | 2026-09-22 | PRIORITAIRE-OBLIGATOIRE | 18 données fraîches que personne ne lit |
+
+**Ce que je te demande** : pour chacune, un mot — on la fait, on l'écarte avec sa raison, ou on la
+reformule. **#279 est un cas à part** : elle est marquée « reportée explicitement » par toi, donc
+elle n'est pas en retard — seulement en attente de ton feu vert.
+
+**Pourquoi je ne tranche pas** : écarter une tâche est une décision, et la leçon L22 dit de ne
+jamais rouvrir ni fermer ce que tu as sciemment mis de côté.

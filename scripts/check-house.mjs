@@ -2994,6 +2994,24 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // findOpenTasks()/findUnverifiedClosures() doit survivre à un "|" littéral échappé dans une
   // description (une commande shell avec un tube, un exemple de tableau cité) sans décaler la
   // colonne Statut.
+  // UNE FLÈCHE DIT L'ÉTAT FINAL (2026-09-25, tâche #844). Le classement s'ancrait sur le DÉBUT du
+  // statut, donc « Ouverte → Terminée (clôturée par #785) » était rangée parmi les OUVERTES. Effet
+  // mesuré : 128 tâches ouvertes au lieu de 115, et ces treize-là remontaient en tête des « plus
+  // anciennes encore ouvertes » — un retard qui n'existait pas. Trouvé en cherchant tout autre
+  // chose (la liste des tâches en stagnation, #209), parce qu'elle ne ressemblait pas au suivi.
+  const {normaliserStatut}=await import('../scripts/check-suivi-fidelity.mjs');
+  assert.equal(normaliserStatut('Ouverte → Terminée (clôturée par #785)'),'terminee (cloturee par #785)','a transition status must be read by its FINAL state: it says what the task became, never what it was');
+  assert.equal(normaliserStatut('En attente de sa décision → Terminée (clôturée par #780)'),'terminee (cloturee par #780)','the same holds when the left side is itself an open-looking state — that was the case that inflated the queue');
+  assert.equal(normaliserStatut('Ouverte'),'ouverte','and a plain status is untouched: the fix must not reinterpret the overwhelming majority of rows that carry no arrow');
+  assert.equal(normaliserStatut('Terminée'),'terminee','nor the plain closed ones');
+  const {findStatutsContredits,formatStatutsContreditsLines,loadAllTaskRows:loadRowsPourStatuts}=await import('../scripts/check-tasks-details.mjs');
+  const contreditsFaux=findStatutsContredits([{numero:10,statusKey:'ouverte',statut:'Ouverte',sousSujet:'x',detail:''},{numero:11,statusKey:'terminee',detail:'CLÔTURE DE #10. Fait.'}]);
+  assert.deepEqual(contreditsFaux.contredits.map(c=>c.numero),[10],'a row still marked open while a LATER row declares it closed must be surfaced: the suivi has two ways of saying "finished" and nothing checked that they agree');
+  assert.equal(findStatutsContredits([]).mesurable,false,'no rows read means PAS MESURÉ, never "no contradiction"');
+  assert.ok(formatStatutsContreditsLines(findStatutsContredits([{numero:1,statusKey:'terminee',detail:''}]))[0].includes('aucune contradiction'),'and a clean result still states its denominator — a bare zero says nothing');
+  // Contre le VRAI registre (Article 25) : après la correction, plus aucune contradiction.
+  assert.deepEqual(findStatutsContredits(loadRowsPourStatuts()).contredits,[],'the real suivi must hold no row whose status contradicts a later closure — eight did before the arrow fix, and each one inflated every count built on top');
+
   const {splitTableRow}=await import('../scripts/check-suivi-fidelity.mjs');
   const escaped=splitTableRow('| t1 | S | s | normal | commande : `git log \\| grep x` | terminée — fidèle |');
   assert.equal(escaped.length,6,'a literal escaped pipe inside a cell must never be treated as an extra column separator');

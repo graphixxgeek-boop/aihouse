@@ -181,6 +181,12 @@ LE SEUL BIAIS QUI SE CONFIRME (#841) : 30 commits sans Ronde, signale par le rap
   declaree avec sa raison pour chacun des 8, et un garde-fou qui refuse le silence pour les futurs
   [FAIT]
 
+#209 (taches en stagnation) + #844 : la liste ne ressemblait pas au suivi, et pour cause — une
+  FLECHE de statut (« Ouverte → Terminee ») etait lue par son DEBUT, donc treize taches closes
+  etaient comptees ouvertes et remontaient en tete des plus anciennes. 128 → 115. Un retard qui
+  n'existait pas. Garde-fou ajoute : les deux facons de dire « fini » doivent s'accorder.
+  Les 5 vraies plus anciennes presentees pour arbitrage [FAIT / A TRANCHER PAR LUI]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------
