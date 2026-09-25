@@ -490,6 +490,22 @@ sont « les Gardiens sacrés du code ») et la fiche dédiée de chacun (`docs/r
 `harmonia.md`, `axa-check.md`, `clean-dirty-old.md`, `clone-hunter.md`, `always-new-code.md`,
 chacune avec son propre blueprint générique) — jamais répété ici.
 
+**Mise à jour du 2026-09-26, sur ses décisions du jour — trois précisions, aucune obligation retirée.**
+(1) **Ils sont SEPT**, pas six : SAFE-EXPORT a rejoint le rang le 2026-09-23 et le texte ci-dessus le
+dit déjà ; ce rappel existe parce que le chiffre « six » traîne encore dans plusieurs documents.
+(2) **Ils ont désormais leur propre FAMILLE**, « Gardiens sacrés du code », sur décision explicite de
+l'utilisateur. Le nom répète le rang, et c'est assumé : une famille explicitement redondante se lit
+mieux qu'un troisième nom pour la même chose (l'ancienne s'appelait « Équipe noyau (Article 20) », un
+nom que plus personne ne rattachait). **Le rang et la famille restent deux axes indépendants** — la
+preuve tient dans le dépôt : un Gardien sacré peut parfaitement vivre ailleurs, et le critère
+d'appartenance au RANG reste le critère double énoncé plus haut, jamais l'appartenance à la famille.
+(3) **Le mot « outil » ne désigne plus un type de fichier** : il désigne désormais n'importe quel
+fichier de l'outillage, au sens large. Le type qui s'appelait ainsi s'appelle « commande documentée »
+(nom provisoire, à trancher avec la fournée de renommage). Aucune règle de cet Article ne change :
+seul le vocabulaire cesse de dire deux choses à la fois (Article 20bis).
+Le rangement complet — types, rangs, familles, classes, indice — vit dans
+`docs/referentiel/classification-agence.md`, généré et donc jamais périmé.
+
 **Protocole d'application** à chaque itération sur le code : Article 19 (a-t-on compris la logique
 et la raison d'être du code existant avant d'y toucher ?) → Article 0 (l'esprit est-il
 altéré ?) → Articles 1, 11, 12 (la conversation) → Article 15 (est-ce lisible du point de vue de

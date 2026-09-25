@@ -135,19 +135,19 @@ export const AGENT_CATEGORIES = {
   "cassandra-rh": "Agent Cadre — Gouvernance interne",
   "le-coordinateur": "Agent Cadre — Coordination",
   // Les Gardiens sacrés du code (Article 20 — tourne automatiquement à chaque commit)
-  argus: "Gardien sacré du code — Suite Dette & Structure du code",
-  "safe-export": "Gardien sacré du code — Suite Dette & Structure du code",
-  harmonia: "Gardien sacré du code — Suite Dette & Structure du code",
-  "axa-check": "Gardien sacré du code — Suite Dette & Structure du code",
-  "clean-dirty-old": "Gardien sacré du code — Suite Dette & Structure du code",
-  "clone-hunter": "Gardien sacré du code — Suite Dette & Structure du code",
+  argus: "Gardien sacré du code — Gardiens sacrés du code",
+  "safe-export": "Gardien sacré du code — Gardiens sacrés du code",
+  harmonia: "Gardien sacré du code — Gardiens sacrés du code",
+  "axa-check": "Gardien sacré du code — Gardiens sacrés du code",
+  "clean-dirty-old": "Gardien sacré du code — Gardiens sacrés du code",
+  "clone-hunter": "Gardien sacré du code — Gardiens sacrés du code",
   // ALWAYS-NEW-CODE (2026-09-21) : sixième Gardien, couche LÉGÈRE seulement (recommendZone() +
   // addendaSignal()/churnSignal(), zéro raisonnement) — le vrai zoom profond, qui exige un
   // raisonnement payant, reste explicitement exclu du statut de Gardien (cf.
   // docs/referentiel/organisation-agence.md §3, critère double : c'est le LIVRABLE qui exige un
   // raisonnement payant qui ne peut jamais devenir un Gardien, jamais le nom de l'outil dans son
   // ensemble — sa couche légère satisfait le critère double exactement comme les 5 autres).
-  "always-new-code": "Gardien sacré du code — Exceptionnel (page blanche / audit lourd)",
+  "always-new-code": "Gardien sacré du code — Gardiens sacrés du code",
   // Suite Suivi-Conso
   "smart-conso-api": "Membre — Gouvernance interne",
   "smart-conso-token": "Membre — Gouvernance interne",

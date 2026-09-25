@@ -8674,11 +8674,41 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.equal(r1.source, 'equipe (nom de fichier)', 'and the source of the rank is stated, so a reader can tell a read rank from a guessed one');
     const r2 = CASSANDRA.rangDuFichier({ chemin: 'scripts/lib-json.mjs', type: 'bibliotheque-partagee' }, { categories: {} });
     assert.equal(r2.rang, 'Socle', 'a shared library nobody ranked gets Socle from its type — it never applied, and that is not a missing rank');
-    const r3 = CASSANDRA.rangDuFichier({ chemin: 'scripts/zzz.mjs', type: 'utilitaire-sans-fiche' }, { categories: {} });
-    assert.equal(r3.rang, 'Postulant', 'a launchable script no document names gets the third state, which is neither Socle nor membership');
-    const r4 = CASSANDRA.rangDuFichier({ chemin: 'scripts/zzz.mjs', type: 'outil' }, { categories: {} });
-    assert.equal(r4.rang, null, 'a documented tool absent from the team registry gets NO rank at all, with the reason said — never a default rank, which would look exactly like an earned one');
+    // TROIS ÉTATS DE PASSAGE, PAS UN SEUL (2026-09-26, sa demande : « pourquoi pas 2 ou 3 rangs à
+    // part ? [...] distinguer ceux qui pourraient évoluer »). Trois situations très différentes se
+    // cachaient sous une seule étiquette, et elles n'appellent pas le même geste : écrire une
+    // commande, écrire une fiche, ou inscrire au registre. Chacune a donc son rang et sa marche.
+    const r3 = CASSANDRA.rangDuFichier({ chemin: 'scripts/zzz.mjs', type: 'commande-sans-fiche' }, { categories: {} });
+    assert.equal(r3.rang, 'Sans fiche', 'a launchable script no document names has its own state: what it needs is a fiche, not an inscription');
+    const r3b = CASSANDRA.rangDuFichier({ chemin: 'scripts/zzz.mjs', type: 'execution-directe-non-documentee' }, { categories: {} });
+    assert.equal(r3b.rang, 'Sans porte', 'and a script with no entry point at all is a DIFFERENT state: what it needs first is a way to be launched');
+    const r4 = CASSANDRA.rangDuFichier({ chemin: 'scripts/zzz.mjs', type: 'commande-documentee' }, { categories: {} });
+    assert.equal(r4.rang, 'Postulant', 'a documented, launchable file absent from the team registry is one decision away from membership — a state of passage, never a missing rank');
     assert.match(r4.pourquoi, /registre de l'équipe/, 'and the reason names where it was looked for');
+    // L'ÉCHELLE EST COMPLÈTE : chaque état de passage connaît sa marche suivante, sinon ce serait un
+    // rang où l'on reste, ce qui est exactement ce que ces trois-là ne doivent pas être.
+    for (const cle of ['sansPorte', 'sansFiche', 'postulant']) {
+      assert.ok(CASSANDRA.ORG_RANKS[cle].promotionVers && CASSANDRA.ORG_RANKS[cle].condition, `${cle} must declare its next rung AND what it takes to climb it — a state of passage with no exit is just a rank nobody named`);
+    }
+    assert.equal(CASSANDRA.ORG_RANKS.socle.promotionVers, null, 'Socle has no next rung, and that is deliberate: it never applied, so promoting it would invent an ambition it does not have');
+
+    // L'INDICE DE CLASSIFICATION À FACETTES (2026-09-26). Le nom n'est pas inventé : ranger sur
+    // plusieurs axes indépendants est une « classification à facettes », et son code composite une
+    // « notation », en français un « indice ». Vérifié DANS LES DEUX SENS — un indice qu'on ne sait
+    // pas relire n'est pas un indice, c'est une décoration.
+    const famEssai = ['Alpha', 'Beta'];
+    const ligneEssai = { type: Object.keys(CASSANDRA.TYPES_DE_SCRIPT)[1], famille: 'Beta', classes: [CASSANDRA.CLASSES_TRANSVERSES[0].cle, CASSANDRA.CLASSES_TRANSVERSES[2].cle] };
+    const ind = CASSANDRA.indiceDeClassification(ligneEssai, { familles: famEssai, rang: 'Socle' });
+    const relu = CASSANDRA.decoderIndice(ind, { familles: famEssai });
+    assert.equal(relu.type, ligneEssai.type, 'the index round-trips its type');
+    assert.equal(relu.famille, 'Beta', 'and its family');
+    assert.deepEqual(relu.classes, ligneEssai.classes, 'and every class, because the fourth facet answers "which ONES" rather than "which one" — a bitmask, not a rank in a list');
+    assert.equal(CASSANDRA.indiceDeClassification({ type: 'inconnu', famille: null, classes: [] }, { familles: [] }).split('.')[2], '-', 'a facet that does NOT APPLY prints "-", never "?": a Socle file has no family and does not miss one, and reading that absence as a hole would be exactly the kind of fabricated gap this project keeps paying for');
+    assert.equal(CASSANDRA.decoderIndice('2.3').lisible, false, 'an index with the wrong number of facets is refused rather than half-read');
+    // En direct contre le vrai dépôt : chaque fichier porte un indice relisible.
+    const croiseReel = CASSANDRA.croiserTypeEtRang({ recensement: CASSANDRA.recenserLesScripts() });
+    assert.equal(croiseReel.couverture, 100, `checked live: every one of the ${croiseReel.total} real files carries both a type and a rank — the "un type + un rang pour chaque fichier" the user asked for, measured rather than claimed`);
+    assert.ok(croiseReel.lignes.every((l) => CASSANDRA.decoderIndice(l.indice, { familles: croiseReel.familles }).lisible), 'and every real index can be read back — an index nobody can decode is a decoration');
     // Le slug se lit dans l'inventaire de la charte, jamais deviné sur le nom du fichier (L24).
     const slugs = CASSANDRA.slugsParScript(null, { inventaire: [{ script: 'scripts/check-argus.mjs', instanciation: 'docs/referentiel/argus.md' }] });
     assert.equal(slugs['scripts/check-argus.mjs'], 'argus', 'the slug comes from the fiche the charter declares, not from the file name — guessing it missed two of the seven Gardiens sacrés in silence');
@@ -8770,10 +8800,13 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const cadr = cadrageDeLaClassification(
     [{ slug: 'plein' }, { slug: 'partiel' }, { slug: 'fache', desaccord: true }],
     { axesParScript: (l) => (l.slug === 'plein' || l.slug === 'fache'
-      ? { iceberg: 'membre', type: 'outil', moment: ['a-la-demande'], domaine: ['code'], destinataire: ['agent'] }
-      : { iceberg: 'membre', type: 'outil', moment: [], domaine: [], destinataire: [] }) });
+      // Le 6e axe (« cherche », 2026-09-26) est arrivé dans le registre, et ce test l'a vu tout seul :
+      // « plein » a cessé d'être complet sans qu'aucun chiffre soit édité ici. C'est exactement ce
+      // que l'Article 24 demande d'une dérivation — le fixture s'aligne, jamais l'assertion.
+      ? { iceberg: 'membre', type: 'commande-documentee', moment: ['a-la-demande'], domaine: ['code'], destinataire: ['agent'], cherche: ['duplication'] }
+      : { iceberg: 'membre', type: 'commande-documentee', moment: [], domaine: [], destinataire: [], cherche: [] }) });
   assert.equal(cadr.complets, 2, 'a script carrying ALL the axes counts as complete — the count is derived from AXES_DE_CLASSIFICATION, so the fifth axis added on 2026-09-25 (#741) joined it without a number being edited anywhere (Article 24)');
-  assert.deepEqual(cadr.parScript.find((x) => x.script === 'partiel').manque, ['moment', 'domaine', 'destinataire'], 'and what is MISSING is named per script, never just counted — a percentage says how far, a list says what to do');
+  assert.deepEqual(cadr.parScript.find((x) => x.script === 'partiel').manque, ['moment', 'domaine', 'destinataire', 'cherche'], 'and what is MISSING is named per script, never just counted — a percentage says how far, a list says what to do');
   assert.equal(cadr.desaccords, 1, 'an unarbitrated disagreement is counted separately from an absence: one is a gap, the other is two sources contradicting each other');
   assert.equal(cadr.signalDeFin.atteint, false, 'and the end signal stays unreached while a single disagreement stands, even if every script were complete');
   assert.ok(formatCadrageLines(cadr).some((l) => /ne manquera jamais/i.test(l)), 'THE NUANCE THAT CHANGES THE TARGET: a script reading no path has no domain to carry — that is a legitimate absence, not a gap. Aiming at 100 % on that denominator would be aiming at the impossible, and an unreachable goal gets abandoned.');
@@ -9612,7 +9645,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // justement le travail demandé. Un test doit garder la RÈGLE (chaque rang dit son nom, son sens
   // et où se lisent ses titulaires), jamais le décompte du jour où il a été écrit.
   assert.ok(Object.values(ORG_RANKS).every((r) => r.label && r.sens), 'every rank must carry both a name and what it MEANS — a bare label would leave a reader guessing why a tool sits there');
-  assert.ok(Object.values(ORG_RANKS).every((r) => r.singulier && ['equipe', 'type', 'registre'].includes(r.population)), 'and every rank must say, in the dictionary itself, the form a tool actually carries AND where its holders are read — without that, the check looks for all of them in the team roster and reports the three filled elsewhere as empty');
+  assert.ok(Object.values(ORG_RANKS).every((r) => r.singulier && ['equipe', 'type', 'registre', 'equipe-absent'].includes(r.population)), 'and every rank must say, in the dictionary itself, the form a tool actually carries AND where its holders are read — without that, the check looks for all of them in the team roster and reports the three filled elsewhere as empty');
   console.log('Passed: CASSANDRA rebuilds the Agence Codex org chart from real data on every run (tasks #171/#172/#179) — ranks derived from the real master table and AGENT_CATEGORIES, the six Gardiens from GARDIEN_DOMAINS rather than a second hand-kept list, report emitters from the real file-writer classification — so it can never go stale the way the hand-maintained document did; checked live, every certified member lands in exactly one rank with the totals adding up and none left without a suite (the real three-member gap this closed), no tool can appear at two ranks at once (the duplicate found on the very first render, fixed by a dedicated identity slug that is deliberately NOT the documentation-path slug), it renders through the shared report gabarit with its inherited reliability warning, it says so explicitly when nothing is wrong, and every rank label lives in exactly one place so the calibrated renaming stays a single edit.');
 }
 
@@ -12601,7 +12634,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.equal(crh2.typeDeScript('scripts/hooks/pre-commit', 'nimporte quoi'), 'crochet', 'a hook is a hook by where it lives, never by what it contains');
   assert.equal(crh2.typeDeScript('scripts/check-house.mjs', ''), 'filet-de-securite', 'and the safety net is its own type: it is what the hook launches and what can refuse a commit');
   // (1) La fiche porte le nom de L'OUTIL, jamais celui du script.
-  assert.equal(crh2.typeDeScript('scripts/check-argus.mjs', 'x', { portes: ['ligne de commande'], scriptsDeLInventaire: new Set(['scripts/check-argus.mjs']) }), 'outil', "ARGUS is documented in argus.md, not check-argus.md — looking for a fiche named after the FILE accused 22 tools at once, and a guard that accuses wrongly stops being read (leçon L4)");
+  assert.equal(crh2.typeDeScript('scripts/check-argus.mjs', 'x', { portes: ['ligne de commande'], scriptsDeLInventaire: new Set(['scripts/check-argus.mjs']) }), 'commande-documentee', "ARGUS is documented in argus.md, not check-argus.md — looking for a fiche named after the FILE accused 22 tools at once, and a guard that accuses wrongly stops being read (leçon L4)");
   // (2) Une mention documentaire n'est pas une porte d'exécution.
   assert.ok(crh2.typeDeScript('scripts/html-report.mjs', 'export function x(){}', { importeurs: 18, portes: ['nommé par la documentation, sans commande de lancement écrite', 'importé par 18 fichier(s)'] }).startsWith('bibliotheque'), 'a library imported eighteen times and launchable by none stays a library: being NAMED by a document is not an entry point, and conflating the two made html-report.mjs come out as a tool');
   // (3) Un .mjs que personne n'importe ne peut agir que lancé directement — jamais « mort ».
@@ -12620,7 +12653,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // LE RECENSEMENT RÉEL — lancé contre le vrai dépôt, jamais contre une fixture (Article 25).
   const rec = crh2.recenserLesScripts();
   assert.ok(rec.mesurable && rec.total > 50, 'the census runs against the REAL scripts directory: a tool that never ran against the real repository is an intention, not a tool');
-  assert.ok(rec.parType['filet-de-securite']?.length === 1 && rec.parType['outil']?.length > 20, 'and it recognises the real population — exactly one safety net, and the tools outnumbering everything else');
+  assert.ok(rec.parType['filet-de-securite']?.length === 1 && rec.parType['commande-documentee']?.length > 20, 'and it recognises the real population — exactly one safety net, and the tools outnumbering everything else');
   assert.ok((rec.parClasse['scanne-le-depot'] ?? []).length > 10, 'the class the user named himself must actually hold the tools that scan');
   assert.equal(crh2.recenserLesScripts({ lireDossier: () => { throw new Error('illisible'); } }).mesurable, false, 'an unreadable scripts directory yields NOT MEASURED rather than a population of zero, which would read exactly like a clean repository (leçon L5)');
   assert.ok(crh2.ecartsDuRecensement({ mesurable: false }).length === 0, 'and no gap is invented from a measurement that never happened');
@@ -12840,7 +12873,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // le registre déclare juste au-dessus de lui-même que tout le reste hérite « agence » par DÉFAUT,
   // exprès, pour qu'un nouvel outil n'ait rien à inscrire (Article 24). La mesure n'interrogeait
   // donc pas le même objet que le mécanisme — et transformait le dispositif en objectif à combler.
-  const recens = [{ type: 'outil', chemin: 'scripts/a.mjs' }, { type: 'outil', chemin: 'scripts/b.mjs' }, { type: 'outil', chemin: 'scripts/sim.mjs' }, { type: 'bibliotheque-partagee', chemin: 'scripts/c.mjs' }];
+  const recens = [{ type: 'commande-documentee', chemin: 'scripts/a.mjs' }, { type: 'commande-documentee', chemin: 'scripts/b.mjs' }, { type: 'commande-documentee', chemin: 'scripts/sim.mjs' }, { type: 'bibliotheque-partagee', chemin: 'scripts/c.mjs' }];
   const sources = { 'scripts/a.mjs': 'rien', 'scripts/b.mjs': '// on parle de docs/simulations ici, en commentaire\nconst x = 1;', 'scripts/sim.mjs': 'readFileSync("docs/simulations/x.txt")' };
   const sp = crh2.findOutilsSansPortee(recens, { a: 'agence' }, { lire: (c) => sources[c] ?? null });
   assert.deepEqual([sp.declares, sp.heritees.sort()], [['a'], ['b']], 'a tool absent from the registry INHERITS the default — that is the mechanism, not a hole, and counting it as missing invented 45 lines of debt that never existed');
@@ -12857,10 +12890,10 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // l'écart est minime, donc ce n'était PAS le problème. Le dire compte autant que l'inverse :
   // appliquer la même correction par analogie sans mesurer aurait été une seconde erreur.
   const recCo = [
-    { type: 'outil', chemin: 'scripts/conclut.mjs', classes: ['scanne-le-depot', 'conclut-en-plan-daction'] },
-    { type: 'outil', chemin: 'scripts/constate.mjs', classes: ['scanne-le-depot'] },
-    { type: 'outil', chemin: 'scripts/etat.mjs', classes: ['scanne-le-depot'] },
-    { type: 'outil', chemin: 'scripts/pas-scanner.mjs', classes: [] },
+    { type: 'commande-documentee', chemin: 'scripts/conclut.mjs', classes: ['scanne-le-depot', 'conclut-en-plan-daction'] },
+    { type: 'commande-documentee', chemin: 'scripts/constate.mjs', classes: ['scanne-le-depot'] },
+    { type: 'commande-documentee', chemin: 'scripts/etat.mjs', classes: ['scanne-le-depot'] },
+    { type: 'commande-documentee', chemin: 'scripts/pas-scanner.mjs', classes: [] },
   ];
   const srcCo = {
     'scripts/constate.mjs': 'console.log(`🔴 ${n} écart(s)`);',

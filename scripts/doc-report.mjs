@@ -103,11 +103,11 @@ export function findUndeclaredLocalJournals(gitignoreText, journals = LOCAL_JOUR
 // remise HTML actée). scriptPath : le script producteur, pour vérifier la décision "delivery_html"
 // (null quand aucun script unique ne produit ce registre, ex. les archives manuelles de simulation).
 export const REGISTRIES = [
-  { slug: "argus", label: "ARGUS", family: "Suite Dette & Structure du code", path: "docs/argus/", decision: "texte", scriptPath: "scripts/check-argus.mjs" },
-  { slug: "harmonia", label: "HARMONIA", family: "Suite Dette & Structure du code", path: "docs/harmonia/", decision: "texte", scriptPath: "scripts/check-harmonia.mjs" },
-  { slug: "axa-check", label: "AXA-CHECK", family: "Suite Dette & Structure du code", path: "docs/axa-check/", decision: "texte", scriptPath: "scripts/axa-check.mjs" },
-  { slug: "clean-dirty-old", label: "CLEAN-DIRTY-OLD", family: "Suite Dette & Structure du code", path: "docs/clean-dirty-old/", decision: "texte", scriptPath: "scripts/clean-dirty-old.mjs" },
-  { slug: "always-new-code", label: "ALWAYS-NEW-CODE", family: "Exceptionnel (page blanche / audit lourd)", path: "docs/always-new-code/", decision: "texte", scriptPath: "scripts/always-new-code.mjs" },
+  { slug: "argus", label: "ARGUS", family: "Gardiens sacrés du code", path: "docs/argus/", decision: "texte", scriptPath: "scripts/check-argus.mjs" },
+  { slug: "harmonia", label: "HARMONIA", family: "Gardiens sacrés du code", path: "docs/harmonia/", decision: "texte", scriptPath: "scripts/check-harmonia.mjs" },
+  { slug: "axa-check", label: "AXA-CHECK", family: "Gardiens sacrés du code", path: "docs/axa-check/", decision: "texte", scriptPath: "scripts/axa-check.mjs" },
+  { slug: "clean-dirty-old", label: "CLEAN-DIRTY-OLD", family: "Gardiens sacrés du code", path: "docs/clean-dirty-old/", decision: "texte", scriptPath: "scripts/clean-dirty-old.mjs" },
+  { slug: "always-new-code", label: "ALWAYS-NEW-CODE", family: "Gardiens sacrés du code", path: "docs/always-new-code/", decision: "texte", scriptPath: "scripts/always-new-code.mjs" },
   { slug: "hyper-scan-checkpoint", label: "HYPER-SCAN-CHECKPOINT", family: "Exceptionnel (page blanche / audit lourd)", path: "docs/hyper-scan-checkpoint/", decision: "texte", scriptPath: "scripts/hyper-scan-checkpoint.mjs" },
   { slug: "check-level-target", label: "CHECK-LEVEL-TARGET", family: "Gouvernance interne", path: "docs/check-level-target/", decision: "texte", scriptPath: "scripts/check-level-target.mjs" },
   { slug: "the-king", label: "THE-KING", family: "Gouvernance interne", path: "docs/the-king/", decision: "texte", scriptPath: "scripts/the-king.mjs" },
@@ -134,10 +134,10 @@ export const REGISTRIES = [
   // CLONE-HUNTER en 5e Gardien sacré du code (AGENT_CATEGORIES, lib-shell.mjs) — jamais mise à jour
   // ici au moment de cette promotion, exactement le genre d'écart entre deux registres que
   // l'Article 2/13 interdit de laisser traîner une fois trouvé.
-  { slug: "clone-hunter", label: "CLONE-HUNTER", family: "Suite Dette & Structure du code", path: "docs/clone-hunter/", decision: "texte", scriptPath: "scripts/clone-hunter.mjs" },
+  { slug: "clone-hunter", label: "CLONE-HUNTER", family: "Gardiens sacrés du code", path: "docs/clone-hunter/", decision: "texte", scriptPath: "scripts/clone-hunter.mjs" },
   // 2026-09-22 : septième Gardien. Son registre n'archive que les passages PROFONDS (exceptionnels,
   // Article 23) — la couche légère, elle, ne produit qu'un avertissement post-commit sans fichier.
-  { slug: "safe-export", label: "SAFE-EXPORT", family: "Suite Dette & Structure du code", path: "docs/safe-export/", decision: "texte", scriptPath: "scripts/safe-export.mjs" },
+  { slug: "safe-export", label: "SAFE-EXPORT", family: "Gardiens sacrés du code", path: "docs/safe-export/", decision: "texte", scriptPath: "scripts/safe-export.mjs" },
   { slug: "tool-learning", label: "TOOL-LEARNING", family: "Suite Dette & Structure du code", path: "docs/tool-learning/", decision: "texte", scriptPath: "scripts/tool-learning.mjs" },
   // THE-EQUALIZER : texte, comme ses voisins de suite. Son verdict est relu par des outils (god,
   // la Ronde), jamais seulement par un humain devant un navigateur — un HTML le rendrait plus

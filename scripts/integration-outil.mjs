@@ -268,7 +268,7 @@ export function obligationsDeClasse(slug, { root = ROOT, readFileImpl = readFile
   // Un outil en cours d'intégration EST un outil : c'est le type visé, jamais le type constaté
   // avant qu'il soit documenté. Le mesurer autrement l'exempterait de tout au moment précis où il
   // faut l'exiger.
-  const ligne = { chemin: `scripts/${slug}.mjs`, type: "outil", classes };
+  const ligne = { chemin: `scripts/${slug}.mjs`, type: "commande-documentee", classes };
   const dues = exigences.filter((e) => e.sApplique(ligne));
   return {
     mesurable: true, classes,
