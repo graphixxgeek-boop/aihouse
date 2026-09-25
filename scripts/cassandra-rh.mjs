@@ -1886,6 +1886,96 @@ export function comparerLesFamilles({ categories = {}, registres = [] } = {}) {
 // Ce qui rend ce garde-fou évolutif (Article 24) : il ne connaît AUCUNE famille par cœur — il lit
 // les deux côtés à l'exécution, donc une dixième famille créée demain est comparée sans qu'on
 // touche à cette fonction.
+// ============================================================================================
+// LE CADRAGE DU CHANTIER DE CLASSIFICATION (2026-09-25, tâche #743)
+// ============================================================================================
+// SA QUESTION, dans ses mots : « quel est la cible souhaitée ? à quelle classification finale on
+// veut arriver et pourquoi ? quel est le lien avec l'organisation ? [...] quel est le signal qui
+// nous dira que la classification est ok ». C'est LA question qui commande tout le chantier, et
+// elle manquait : quatre axes ont été produits sans qu'on ait jamais écrit à quoi ils servent ni
+// quand on s'arrête.
+//
+// CE QUE CETTE FONCTION APPORTE, et ce qu'elle n'apporte PAS. Elle ne décide pas de la cible —
+// c'est un choix, donc le sien. Elle rend le SIGNAL DE FIN **mesurable** : pour chaque script,
+// combien des axes il porte réellement, et combien de scripts sont complets. Sans ce chiffre, « la
+// classification est-elle finie ? » est une impression ; avec lui, c'est un pourcentage qui bouge.
+//
+// LE CINQUIÈME AXE EST DÉCLARÉ MANQUANT plutôt que tu : « pour QUI cet outil travaille » (le jeu,
+// l'Agence, les deux) a été MESURÉ le 2026-09-24 et n'a jamais reçu de domicile — aucun registre ne
+// le porte. Le compter comme absent pour tout le monde serait faux ; ne pas en parler le ferait
+// disparaître. Il est donc compté à part, comme un axe qui n'existe pas encore.
+export const AXES_DE_CLASSIFICATION = [
+  { cle: "iceberg", quoi: "à quel groupe il appartient (membre, oublié, infrastructure, plomberie)", porteur: "classerIceberg()" },
+  { cle: "type", quoi: "ce que le fichier EST", porteur: "typeDuScript()" },
+  { cle: "moment", quoi: "QUAND il intervient", porteur: "momentsDeLOutil()" },
+  { cle: "domaine", quoi: "SUR QUOI il regarde", porteur: "domainesDeLOutil()" },
+];
+
+export const AXE_SANS_DOMICILE = {
+  cle: "pour-qui", quoi: "pour QUI il travaille — le jeu, l'Agence, ou les deux",
+  pourquoi: "mesuré le 2026-09-24, jamais rangé dans un registre : aucune constante ne le porte, donc il ne se lit nulle part",
+};
+
+export function cadrageDeLaClassification(lignesIceberg = [], { axesParScript } = {}) {
+  if (typeof axesParScript !== "function") {
+    return { mesurable: false, pourquoi: "aucun lecteur d'axes fourni — rendre un pourcentage d'avancement sans lire un seul script donnerait un chiffre qui ressemble trait pour trait à une mesure" };
+  }
+  if (!lignesIceberg.length) {
+    return { mesurable: false, pourquoi: "aucun script à mesurer — un dénominateur vide rend 100 % d'avancement, ce qui est le contraire de la vérité" };
+  }
+  const parScript = [];
+  const manquantsParAxe = Object.fromEntries(AXES_DE_CLASSIFICATION.map((a) => [a.cle, 0]));
+  let complets = 0, desaccords = 0;
+  for (const l of lignesIceberg) {
+    const axes = axesParScript(l) ?? {};
+    const portes = AXES_DE_CLASSIFICATION.filter((a) => {
+      const v = axes[a.cle];
+      return Array.isArray(v) ? v.length > 0 : v != null && v !== "";
+    }).map((a) => a.cle);
+    for (const a of AXES_DE_CLASSIFICATION) if (!portes.includes(a.cle)) manquantsParAxe[a.cle] += 1;
+    if (portes.length === AXES_DE_CLASSIFICATION.length) complets += 1;
+    if (l?.desaccord) desaccords += 1;
+    parScript.push({ script: l?.slug ?? l?.fichier ?? "?", portes, manque: AXES_DE_CLASSIFICATION.map((a) => a.cle).filter((c) => !portes.includes(c)) });
+  }
+  const total = lignesIceberg.length;
+  return { mesurable: true, total, complets, desaccords, manquantsParAxe, parScript,
+    tauxComplet: (100 * complets) / total,
+    // LE SIGNAL DE FIN, tel qu'il a été proposé dans le suivi (#743) et qui reste à confirmer :
+    // tout script porte ses axes SANS désaccord non arbitré. Le second volet — « chaque axe a servi
+    // au moins une fois à une décision réelle » — n'est PAS mesurable ici et c'est dit, jamais
+    // approximé : aucune trace mécanique ne relie un axe à la décision qu'il a changée.
+    signalDeFin: { atteint: complets === total && desaccords === 0,
+      volet1: `${complets}/${total} scripts portent les ${AXES_DE_CLASSIFICATION.length} axes, ${desaccords} désaccord(s) non arbitré(s)`,
+      volet2NonMesurable: "« chaque axe a servi au moins une fois à une décision réelle » ne se mesure pas : rien ne relie mécaniquement un axe à la décision qu'il a changée. À juger à la main, ou à rendre mesurable par une trace explicite.",
+    } };
+}
+
+export function formatCadrageLines(c) {
+  if (!c?.mesurable) return [`⚠️ NON MESURÉ — ${c?.pourquoi ?? "raison inconnue"}`];
+  const L = [];
+  L.push(`${c.total} scripts mesurés · ${c.complets} portent les ${AXES_DE_CLASSIFICATION.length} axes (${c.tauxComplet.toFixed(1)} %) · ${c.desaccords} désaccord(s) non arbitré(s).`);
+  L.push("");
+  L.push("Ce qui manque, axe par axe :");
+  for (const a of AXES_DE_CLASSIFICATION) L.push(`   ${String(c.manquantsParAxe[a.cle]).padStart(4)} script(s) sans « ${a.cle} » — ${a.quoi} (${a.porteur})`);
+  L.push("");
+  L.push(`⚠️ UN CINQUIÈME AXE N'A AUCUN DOMICILE : « ${AXE_SANS_DOMICILE.cle} » — ${AXE_SANS_DOMICILE.quoi}.`);
+  L.push(`   ${AXE_SANS_DOMICILE.pourquoi}. Il n'entre donc pas dans le compte ci-dessus : le compter absent partout serait faux, ne pas en parler le ferait disparaître.`);
+  L.push("");
+  L.push("⚠️ UNE PART DE CE QUI MANQUE NE MANQUERA JAMAIS, et le dire change la cible :");
+  L.push("   un script qui ne lit aucun chemin dans du code exécuté n'a pas de domaine à porter — ce n'est");
+  L.push("   pas un trou à combler, c'est une absence légitime (une bibliothèque, un script de données).");
+  L.push("   Viser 100 % sur ce dénominateur-là serait viser l'impossible, et un objectif inatteignable");
+  L.push("   se fait abandonner. LE DÉNOMINATEUR DU SIGNAL DE FIN EST DONC LUI AUSSI À TRANCHER.");
+  L.push("");
+  L.push("LE SIGNAL DE FIN — proposé, jamais décidé seul :");
+  L.push(`   Volet 1 (mesurable)     : ${c.signalDeFin.volet1} → ${c.signalDeFin.atteint ? "ATTEINT" : "PAS ENCORE"}`);
+  L.push(`   Volet 2 (non mesurable) : ${c.signalDeFin.volet2NonMesurable}`);
+  L.push("");
+  L.push("HORS PORTÉE : la CIBLE (à quelle classification finale on veut arriver, et pourquoi) est un");
+  L.push("CHOIX, donc une décision de l'utilisateur. Cet outil mesure où on en est, jamais où il faut aller.");
+  return L;
+}
+
 export function findFamillesDivergentesParOutil({ categories = {}, registres = [] } = {}) {
   const parRegistre = new Map();
   for (const r of registres) if (r?.slug && r?.family) parRegistre.set(r.slug, r.family);
@@ -2392,6 +2482,43 @@ function main() {
     // laisserait croire qu'un accord de vocabulaire vaut accord de rangement (#755).
     for (const l of formatDivergencesFamilleLines(findFamillesDivergentesParOutil({ categories: AGENT_CATEGORIES, registres: DOC_REPORT_REGISTRIES }))) console.log(l);
     console.log(`\nHORS PORTÉE : ce classement dit où RANGER un script, QUAND il intervient et SUR QUOI il regarde — jamais s'il est BON, ni s'il regarde BIEN. C'est le travail des Gardiens, et les deux ne se remplacent pas.`);
+    return;
+  }
+  // `cadrage` (#743) — LE SIGNAL DE FIN DU CHANTIER DE CLASSIFICATION, mesuré plutôt que ressenti.
+  // Sous-commande à part de `iceberg` : celle-ci ne classe personne, elle dit COMBIEN il reste.
+  if (sub === "cadrage") {
+    console.log(CASSANDRA_PERSONA);
+    const fichiers = readdirSync(join(ROOT, "scripts")).filter((f) => f.endsWith(".mjs")).sort();
+    const lu = (f) => { try { return readFileSync(join(ROOT, f), "utf8"); } catch { return ""; } };
+    const offert = ["CLAUDE.md", "docs/regles-de-travail.md", "scripts/le-coordinateur.mjs",
+      "scripts/circle-tasks.mjs", "scripts/tool-brain.mjs"].map(lu).join("\n");
+    const machine = lanceParLaMachine({ packageJson: lu("package.json"),
+      crochets: ["scripts/hooks/post-commit", "scripts/hooks/pre-commit", "scripts/hooks/install.mjs"].map(lu) });
+    const lignes = classerIceberg(fichiers, { lire: (f) => lu(join("scripts", f)), offert, machine });
+    const itemsRonde = new Set();
+    for (const m of lu("scripts/circle-tasks.mjs").matchAll(/id:\s*"([a-z0-9-]+)"/g)) itemsRonde.add(m[1]);
+    // Le TYPE se LIT dans le recensement plutôt que d'être recalculé ici : il demande un contexte
+    // entier (fiches, importeurs, portes d'entrée) et deux calculs du même axe finiraient par
+    // diverger — c'est exactement le défaut que tout ce chantier existe pour fermer.
+    const rec = recenserLesScripts();
+    const typeParChemin = new Map((rec.mesurable ? rec.lignes : []).map((l) => [l.chemin, l.type]));
+    const c = cadrageDeLaClassification(lignes, {
+      axesParScript: (l) => {
+        // La ligne d'iceberg porte un SLUG, jamais un nom de fichier — vérifié sur sa forme réelle
+        // plutôt que supposé, après un premier passage qui a planté sur un chemin `undefined`.
+        const slug = l.slug;
+        const src = lu(join("scripts", `${slug}.mjs`));
+        const type = typeParChemin.get(`scripts/${slug}.mjs`);
+        return {
+          iceberg: l.mesurable ? l.groupe : null,
+          type: type && type !== "illisible" ? type : null,
+          moment: momentsDeLOutil(slug, { offert, machine, itemsRonde }).moments,
+          domaine: domainesDeLOutil(src).mesurable ? domainesDeLOutil(src).domaines : [],
+        };
+      },
+    });
+    console.log(`\n=== CADRAGE DU CHANTIER DE CLASSIFICATION (tâche #743) ===\n`);
+    for (const l of formatCadrageLines(c)) console.log(l);
     return;
   }
   if (sub === "recensement") {

@@ -8215,6 +8215,27 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(famRien.mesurable, false, 'and when NOT ONE tool carries a family there is nothing to compare');
   assert.match(famRien.pourquoi, /aucun des 1 outils/, 'with the reason spelled out rather than generic — "nobody carries a family" and "the registry is unreadable" call for opposite gestures, and one shared message would send the enquiry to the wrong place');
 
+  // LE CADRAGE DU CHANTIER DE CLASSIFICATION (2026-09-25, tâche #743) — sa question : « quel est la
+  // cible souhaitée ? [...] quel est le signal qui nous dira que la classification est ok ». Elle
+  // commande tout le chantier et elle manquait : quatre axes produits sans qu'on ait jamais écrit
+  // à quoi ils servent ni quand on s'arrête.
+  const { cadrageDeLaClassification, formatCadrageLines, AXES_DE_CLASSIFICATION, AXE_SANS_DOMICILE } = await import('../scripts/cassandra-rh.mjs');
+  assert.equal(cadrageDeLaClassification([{ slug: 'a' }], {}).mesurable, false, 'with no axis reader it refuses: a progress percentage computed without reading a single script looks exactly like a measurement');
+  assert.equal(cadrageDeLaClassification([], { axesParScript: () => ({}) }).mesurable, false, 'and an empty population returns 100 % complete, which is the opposite of the truth — so it refuses that too');
+  const cadr = cadrageDeLaClassification(
+    [{ slug: 'plein' }, { slug: 'partiel' }, { slug: 'fache', desaccord: true }],
+    { axesParScript: (l) => (l.slug === 'plein' || l.slug === 'fache'
+      ? { iceberg: 'membre', type: 'outil', moment: ['a-la-demande'], domaine: ['code'] }
+      : { iceberg: 'membre', type: 'outil', moment: [], domaine: [] }) });
+  assert.equal(cadr.complets, 2, 'a script carrying all four axes counts as complete');
+  assert.deepEqual(cadr.parScript.find((x) => x.script === 'partiel').manque, ['moment', 'domaine'], 'and what is MISSING is named per script, never just counted — a percentage says how far, a list says what to do');
+  assert.equal(cadr.desaccords, 1, 'an unarbitrated disagreement is counted separately from an absence: one is a gap, the other is two sources contradicting each other');
+  assert.equal(cadr.signalDeFin.atteint, false, 'and the end signal stays unreached while a single disagreement stands, even if every script were complete');
+  assert.ok(formatCadrageLines(cadr).some((l) => /ne manquera jamais/i.test(l)), 'THE NUANCE THAT CHANGES THE TARGET: a script reading no path has no domain to carry — that is a legitimate absence, not a gap. Aiming at 100 % on that denominator would be aiming at the impossible, and an unreachable goal gets abandoned.');
+  assert.ok(formatCadrageLines(cadr).some((l) => /décision de l'utilisateur/.test(l)), 'and the TARGET itself is never decided here: the tool measures where we are, never where to go');
+  assert.ok(AXE_SANS_DOMICILE.cle && AXES_DE_CLASSIFICATION.every((a) => a.cle !== AXE_SANS_DOMICILE.cle), 'the fifth axis is declared MISSING rather than silently dropped: counting "pour qui" absent everywhere would be false, not mentioning it would make it disappear');
+  console.log('Passed: the classification chantier finally has a measurable end signal (2026-09-25, task #743) — his question, "quel est la cible souhaitée ? [...] quel est le signal qui nous dira que la classification est ok", commanded the whole chantier and had never been answered: four axes were produced without anyone writing what they are for or when to stop. The tool does not choose the target, which is a decision and therefore his; it makes the progress countable, so that "is it finished?" stops being an impression. It names what is missing per script rather than only counting, keeps an unarbitrated disagreement apart from an absence, and declares the fifth axis — "for WHOM does this tool work" — as having no home at all rather than counting it absent everywhere. And it says out loud that part of what is missing will never be filled: a script reading no path has no domain to carry, so aiming at 100 % on that denominator would be aiming at the impossible, and an unreachable goal gets abandoned. Real repository right now: 56 of 78 scripts carry all four axes, 71.8 %, with zero unarbitrated disagreement.');
+
   // #755 — LE GARDE-FOU PAR OUTIL, et pourquoi la comparaison par NOM ne suffisait pas : le
   // 2026-09-25 les neuf noms se recouvraient parfaitement des deux côtés pendant qu'un outil pouvait
   // très bien être rangé « Coordination » ici et « Gouvernance interne » dans son registre. Un accord

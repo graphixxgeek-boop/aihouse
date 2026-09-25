@@ -52,6 +52,7 @@ LES TÂCHES, UNE PAR LIGNE
 #225 Motifs de déplacement : cause racine trouvée et correction prête — attend sa validation [AVANCÉ]
 #742 Dossier complet d'un sujet : data-archangel étendu, 44 lignes de suivi retrouvées sur « classification » [FAIT]
 #779 Numéro unique de tâche : j'ai cassé la règle 7 fois, le garde-fou le disait à chaque commit — corrigé sans rien perdre [FAIT]
+#743 Cadrage du chantier classification : signal de fin MESURÉ (71,8 %), 4 questions posées [FAIT]
 
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
