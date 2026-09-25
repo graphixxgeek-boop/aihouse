@@ -130,6 +130,12 @@ LES HUIT CONSTATS DEEP-READER SONT CLOS (1 a 8).
   numero du gestionnaire de SESSION et non du suivi durable : les deux causes sont nommees plutot
   que d'accuser au hasard [FAIT]
 
+#206 (gardiens / donnees absentes) : le constat RETENU du plan du 23, reste sans suite deux jours,
+  est FAIT. Boolean(churnSignal(...)) ecrasait trois etats en un booleen — dont « aucune donnee git »
+  en « tout va bien », dans l'outil dont le metier est de dire ce qui n'est pas verifie. Trois etats
+  desormais, severite conservee jusqu'au libelle, et contre-test garde : la correction ne troque pas
+  un faux vert contre un faux rouge. Le gros chantier des 7 Gardiens reste A TRANCHER par lui [FAIT]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------

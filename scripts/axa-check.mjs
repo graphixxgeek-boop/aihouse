@@ -20,7 +20,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { SENSITIVE_NODES, LEVEL_ORDER } from "./check-level-target.mjs";
-import { THEME_PRIMARY_FILE, parseNumstat, churnSignal } from "./always-new-code.mjs";
+import { THEME_PRIMARY_FILE, parseNumstat, churnSignal, churnSignalMesure } from "./always-new-code.mjs";
 import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
@@ -262,12 +262,21 @@ export function currentDepthFor(file, functionName, ledger, shImpl = sh) {
 // maximale n'est jamais donnée à un test seul ni à une vérification profonde seule : les deux axes
 // doivent être réunis, et le niveau "exceptionnel" (machine de guerre/ligne par ligne/maximal) est
 // seul à donner la toute meilleure note, "approfondi" donnant un palier juste en dessous.
+// `churnFlag` accepte désormais trois formes (2026-09-25, tâche #835) : une SÉVÉRITÉ
+// (« probable » / « à surveiller »), `null` quand la mesure a été faite sans rien trouver ou n'a
+// pas pu être faite, ou l'ancien booléen que ses appelants historiques passent encore. La sévérité
+// est reprise telle quelle dans le libellé, au lieu d'être aplatie en « sujet à une accumulation ».
 export function safetyRating(covered, depth, { sensitiveNode = false, churnFlag = false } = {}) {
   if (covered && depth === "exceptionnel") return { tier: "confiance-maximale", label: "Confiance maximale — vérifié en profondeur et testé" };
   if (covered && depth === "approfondi") return { tier: "fiable", label: "Fiable — vérifié et testé" };
   if (covered) return { tier: "testé", label: "Testé, jamais vérifié en profondeur" };
   if (depth === "approfondi" || depth === "exceptionnel") return { tier: "à-surveiller", label: "À surveiller — vérifié en profondeur mais sans preuve de test automatique" };
-  if (sensitiveNode || churnFlag) return { tier: "à-risque", label: `À risque — jamais vérifié (ni test ni contrôle), et ${sensitiveNode ? "proche d'un nœud sensible" : "sujet à une accumulation de code"}` };
+  if (sensitiveNode || churnFlag) {
+    const cause = sensitiveNode
+      ? "proche d'un nœud sensible"
+      : `sujet à une accumulation de code${typeof churnFlag === "string" ? ` (${churnFlag})` : ""}`;
+    return { tier: "à-risque", label: `À risque — jamais vérifié (ni test ni contrôle), et ${cause}` };
+  }
   return { tier: "à-surveiller", label: "À surveiller — jamais vérifié par un test ni un contrôle" };
 }
 
@@ -445,7 +454,13 @@ function main() {
     const numstat = sh(`git log --numstat --pretty=format:"" -- ${file}`, { cwd: ROOT });
     const churn = parseNumstat(numstat);
     const sensitiveNode = Boolean(SENSITIVE_NODES.find((n) => n.files.includes(file)));
-    const churnFlag = Boolean(churnSignal(churn));
+    // TROIS ÉTATS, pas un booléen (2026-09-25, tâche #835). `Boolean(churnSignal(...))` écrasait
+    // « probable », « à surveiller » ET « aucune donnée git » — le dernier devenant `false`,
+    // c'est-à-dire indistinguable d'un « mesuré, rien trouvé ». Un faux vert de plus, dans l'outil
+    // dont le métier est précisément de dire ce qui n'est pas vérifié.
+    const churnMesure = churnSignalMesure(churn);
+    const churnFlag = churnMesure.mesurable ? churnMesure.signal : null;
+    if (!churnMesure.mesurable) console.log(`   ⚪ accumulation NON MESURÉE — ${churnMesure.pourquoi}`);
     // Note combinée (test réel + profondeur de vérification enregistrée) : silencieuse pour une
     // fonction simplement testée sans historique de vérification (déjà dite par le score ci-dessus),
     // affichée pour toute fonction non couverte OU couverte par un vrai audit approfondi enregistré.

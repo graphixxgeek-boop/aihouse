@@ -4085,6 +4085,19 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // palier immédiatement inférieur mais toujours au-dessus d'un simple test sans profondeur.
   assert.equal(safetyRating(true,'exceptionnel').tier,'confiance-maximale','both axes at their peak (real test coverage AND the deepest tool check) must reach the top tier, never a lower one');
   assert.ok(!/100\s*%\s*safe/i.test(safetyRating(true,'exceptionnel').label),'the top-tier label must never literally read "100% safe", per the explicit user decision to keep an honest reservation visible, consistent with this tool\'s own documented limits');
+  // L'ACCUMULATION EN TROIS ÉTATS (2026-09-25, tâche #835) — constat RETENU du plan
+  // docs/plans/audit-gardiens-donnees-absentes-2026-09-23.md, resté sans suite deux jours.
+  // `Boolean(churnSignal(...))` écrasait « probable », « à surveiller » ET « aucune donnée git »,
+  // ce dernier devenant false, donc indistinguable d'un « mesuré, rien trouvé ». Un faux vert de
+  // plus, dans l'outil dont le métier est précisément de dire ce qui n'est pas vérifié.
+  const {churnSignalMesure}=await import('../scripts/always-new-code.mjs');
+  assert.equal(churnSignalMesure(null).mesurable,false,'no git statistics read means NOT MEASURED, never "no accumulation" — the two were collapsed into the same false, which is the whole defect');
+  assert.ok(/pas de donnée/.test(churnSignalMesure(null).pourquoi),'and the refusal says why in plain words rather than returning a bare undefined the caller will read as reassurance');
+  assert.deepEqual(churnSignalMesure({commits:1,insertions:1,deletions:1}),{mesurable:true,signal:null},'statistics read with nothing found is a DIFFERENT state: measured, and the signal is genuinely absent');
+  assert.equal(churnSignalMesure({commits:6,insertions:10,deletions:0}).signal,'probable','and a real accumulation keeps its SEVERITY rather than being flattened to a boolean');
+  assert.ok(/\(probable\)/.test(safetyRating(false,'aucun',{churnFlag:'probable'}).label),'the severity must survive all the way into the label, since "probable" and "à surveiller" called for different attention and both read identically before');
+  assert.equal(safetyRating(false,'aucun',{churnFlag:null}).tier,'à-surveiller','a null churn (measured-and-clean, or unmeasurable) must not raise the risk tier on its own — the fix must not trade a false green for a false red');
+  assert.equal(safetyRating(false,'aucun',{churnFlag:true}).tier,'à-risque','the historical boolean still works: the correction is local and bounded, exactly as the plan had scoped it, and never breaks callers it was not meant to touch');
   assert.equal(safetyRating(true,'approfondi').tier,'fiable','a real test plus an "approfondi" (but not "exceptionnel") check must land one tier below the maximum, never conflated with it');
   assert.equal(safetyRating(true,'aucun').tier,'testé','real test coverage alone, with no recorded depth check at all, must keep the plain pre-existing baseline tier, never inflated by a check that never happened');
   assert.equal(safetyRating(false,'exceptionnel').tier,'à-surveiller','a deep tool check without any real test proof must never reach the top tier, since only automated execution proves the code truly ran');

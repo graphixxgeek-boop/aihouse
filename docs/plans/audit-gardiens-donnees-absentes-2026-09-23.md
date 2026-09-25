@@ -67,5 +67,5 @@ que le périmètre sensible existe pour empêcher.
 |---|---|---|
 | Le crochet distingue déjà quatre états | **écarté** — rien à faire, c'est en place | — |
 | Les détecteurs ne distinguent pas, par construction | **à trancher** | changer ce qu'ils rendent touche tous leurs appelants : ton arbitrage |
-| `Boolean(churnSignal(...))` à axa-check.mjs:360 | **retenu** | correction locale, portée bornée (sous-estime une gravité, ne fabrique pas un vert) |
+| `Boolean(churnSignal(...))` à axa-check.mjs:360 | **retenu — FAIT le 2026-09-25, tâche #835** | `churnSignalMesure()` rend trois états (mesuré+signal / mesuré+rien / **pas mesuré**), la sévérité survit jusqu'au libellé, et l'absence de données git s'affiche au lieu de devenir `false`. Correction locale et bornée, comme ce plan l'avait cadrée : `churnSignal()` n'a pas changé de forme, donc aucun appelant historique n'est touché. |
 | Mon propre réflexe : compter des mots au lieu de sonder | **retenu** | déjà consigné — c'est la façon dont cet audit a failli conclure faux |

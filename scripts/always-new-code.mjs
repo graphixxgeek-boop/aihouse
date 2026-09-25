@@ -189,6 +189,23 @@ export function parseNumstat(gitLogOutput) {
   return { commits: lines.length, insertions, deletions };
 }
 
+// TROIS ÉTATS, PAS DEUX (ajouté le 2026-09-25, tâche #835 — constat RETENU du plan
+// `docs/plans/audit-gardiens-donnees-absentes-2026-09-23.md`, resté sans suite deux jours).
+//
+// `churnSignal()` rend `undefined` DANS DEUX CAS OPPOSÉS : quand aucune statistique git n'a pu être
+// lue (rien mesuré) et quand elles ont été lues sans rien révéler (mesuré, rien trouvé). Ses
+// appelants ne pouvaient donc pas les distinguer — et `Boolean(churnSignal(...))` les écrasait tous
+// les deux en `false`, c'est-à-dire en « tout va bien ».
+//
+// POURQUOI UNE FONCTION À CÔTÉ plutôt qu'un changement de `churnSignal()` : sa forme de retour est
+// lue par plusieurs appelants et par leurs tests. Le plan d'origine avait justement tranché que
+// toucher à ce que les détecteurs RENDENT est un chantier de conception à arbitrer, jamais un geste
+// de passage. Celle-ci est la correction locale et bornée que le même plan avait RETENUE.
+export function churnSignalMesure(stats) {
+  if (!stats) return { mesurable: false, signal: null, pourquoi: "aucune statistique git lue pour ce fichier — « pas de donnée » n'est pas « pas d'accumulation », et les compter pareil revient à rassurer sur du vide" };
+  return { mesurable: true, signal: churnSignal(stats) ?? null };
+}
+
 export function churnSignal(stats) {
   if (!stats) return undefined;
   const { commits, insertions, deletions } = stats;
