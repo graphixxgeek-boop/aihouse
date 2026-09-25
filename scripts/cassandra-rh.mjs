@@ -2185,6 +2185,56 @@ export function formatDestinatairesLines(lignes = []) {
 // l'Agence, les deux) a été MESURÉ le 2026-09-24 et n'a jamais reçu de domicile — aucun registre ne
 // le porte. Le compter comme absent pour tout le monde serait faux ; ne pas en parler le ferait
 // disparaître. Il est donc compté à part, comme un axe qui n'existe pas encore.
+
+// ————————————————————————————————————————————————————————————————————————
+// LA CARTE DES AXES (2026-09-25, tâche #439) — deux exemples concrets par axe
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA DEMANDE, dans ses mots : « donne moi des exemples concrets pour que je puisse bien comprendre
+// à quoi ça fait référence : 2 exemples par axe ». Un axe nommé « domaine » ou « iceberg » ne dit
+// rien à qui n'a pas le code sous les yeux ; deux outils réels le disent en une seconde.
+//
+// ET SA CLARIFICATION DU MÊME ÉCHANGE, QUI CHANGE LA LECTURE DES DEUX AXES HISTORIQUES :
+//   · « quel dossier ce poste a-t-il ? » (l'Axe A du référentiel) n'est PAS un critère de
+//     classement — c'est une CONSÉQUENCE : « ah, ce fichier est un Gardien sacré, donc son poste
+//     de travail est le suivant ». Il se déduit du rang, il ne le détermine pas.
+//   · « à quel niveau travaille l'outil » (l'Axe B) EST la typologie : Gardien sacré, Agent Cadre,
+//     Membre, utilitaire… et « dans TYPE il y a toutes les catégories, découpage fin : au sein des
+//     membres par exemple, il y a des sous-catégories ».
+//
+// CE QUE LA MESURE RÉPOND À SA QUESTION « dans le TYPE, est-ce qu'on retrouve bien la distinction ? »
+// — et la réponse est NON, à cause d'une collision de vocabulaire : l'axe qui s'appelle `type` dans
+// le code range ce que le FICHIER est (crochet, outil, bibliothèque partagée…), pas le rang. La
+// distinction qu'il cherche existe bel et bien, mais sous le nom `rang`, et son découpage fin sous
+// le nom `famille`. Le dire est le premier service de cette carte.
+export const AXES_EXEMPLES_MAX = 2;
+
+export function carteDesAxes({ categories = AGENT_CATEGORIES, rangDe = rangDeLaCategorie, familleDe = familleDeLaCategorie } = {}) {
+  const parRang = new Map();
+  const parFamille = new Map();
+  for (const [slug, v] of Object.entries(categories)) {
+    const r = rangDe(v) ?? "?";
+    const f = familleDe(v) ?? "—";
+    if (!parRang.has(r)) parRang.set(r, []);
+    parRang.get(r).push(slug);
+    if (!parFamille.has(f)) parFamille.set(f, []);
+    parFamille.get(f).push(slug);
+  }
+  // LES EXEMPLES SONT LUS, JAMAIS CHOISIS À LA MAIN (Article 24) : un outil ajouté demain change la
+  // carte tout seul, et deux exemples recopiés ici auraient cité des outils disparus dans six mois.
+  const deux = (l) => l.slice(0, AXES_EXEMPLES_MAX).join(", ");
+  return {
+    rangs: [...parRang.entries()].map(([rang, outils]) => ({ rang, combien: outils.length, exemples: deux(outils) })),
+    familles: [...parFamille.entries()].map(([famille, outils]) => ({ famille, combien: outils.length, exemples: deux(outils) })),
+    collision: {
+      constat: "l'axe nommé `type` ne porte PAS le rang",
+      ceQueTypeRange: Object.keys(TYPES_DE_SCRIPT).join(", "),
+      ceQueLeRangRange: [...parRang.keys()].join(", "),
+      pourquoiCaCompte: "deux choses différentes portent le même mot selon qu'on lit le référentiel ou le code — c'est la dette de vocabulaire que l'Article 20bis nomme, et elle envoie chercher une distinction là où elle n'est pas",
+    },
+  };
+}
+
 export const AXES_DE_CLASSIFICATION = [
   { cle: "iceberg", quoi: "à quel groupe il appartient (membre, oublié, infrastructure, plomberie)", porteur: "classerIceberg()" },
   { cle: "type", quoi: "ce que le fichier EST", porteur: "typeDuScript()" },
@@ -2192,6 +2242,69 @@ export const AXES_DE_CLASSIFICATION = [
   { cle: "domaine", quoi: "SUR QUOI il regarde", porteur: "domainesDeLOutil()" },
   { cle: "destinataire", quoi: "À QUI le résultat sert", porteur: "destinatairesDeLOutil()" },
 ];
+
+// LE RENDU DE LA CARTE (2026-09-25, tâche #439) — une page, pas un tableau de plus dans un rapport.
+//
+// SA DEMANDE : « une page qui montre tout d'abord », et « 2 exemples par axe afin d'éclaircir ». Un
+// axe nommé `iceberg` ou `domaine` ne dit rien à qui n'a pas le code sous les yeux ; deux outils
+// réels le disent en une seconde. **Les exemples sont LUS dans les registres réels** (Article 24) :
+// un outil ajouté demain change la page tout seul, et deux noms recopiés ici auraient cité des
+// outils disparus dans six mois.
+//
+// LES DEUX CORRECTIONS QU'IL A APPORTÉES LE 2026-09-25, et elles changent la structure de la page :
+//   A. « quel dossier ce poste a-t-il ? » n'est PAS un axe de classement — c'est une CONSÉQUENCE
+//      du rang. Dans ses mots : « ah, ce fichier est un gardien sacré, donc son poste de travail
+//      est le suivant. Ce n'est pas un critère de classement. » La page le présente donc comme un
+//      tableau DÉRIVÉ, jamais comme une colonne de rangement.
+//   B. « à quel niveau travaille l'outil, c'est la typologie de l'outil aussi », et « dans TYPE il
+//      y a toutes les catégories, découpage fin : au sein des membres par exemple, il y a des
+//      sous-catégories ». Le découpage fin existe : rang (4 valeurs) × famille (9 valeurs).
+export const POSTE_DE_TRAVAIL = [
+  { quoi: "une fiche d'instanciation", ou: "docs/referentiel/<outil>.md", pourQui: "tout rang sauf ceux qui n'ont aucune connaissance propre au projet" },
+  { quoi: "un blueprint générique", ou: "docs/<outil>-blueprint.md", pourQui: "tout rang sauf cousin déclaré d'un autre Agent" },
+  { quoi: "un dossier d'historisation", ou: "docs/<outil>/ avec son index.md", pourQui: "tout outil qui produit un rapport ou garde une mémoire" },
+  { quoi: "une ligne à la table maîtresse", ou: "docs/regles-de-travail.md §7ter", pourQui: "tous, sans exception" },
+  { quoi: "une entrée au menu PRESTATIONS", ou: "scripts/le-coordinateur.mjs", pourQui: "ceux qu'on lance à la demande ou qui coûtent de l'API" },
+  { quoi: "un item de Ronde", ou: "scripts/circle-tasks.mjs", pourQui: "les périodiques — jamais les Gardiens sacrés, qui tournent à chaque commit" },
+];
+
+export function blocsDeLaCarteDesAxes(carte = carteDesAxes(), { axes = AXES_DE_CLASSIFICATION, poste = POSTE_DE_TRAVAIL, types = TYPES_DE_SCRIPT, moments = MOMENTS, domaines = DOMAINES, iceberg = GROUPES_ICEBERG, destinataires = DESTINATAIRES } = {}) {
+  const deuxDe = (obj) => Object.entries(obj).slice(0, AXES_EXEMPLES_MAX).map(([k, v]) => `${k} — ${typeof v === "string" ? v : (v.quoi ?? "")}`).join(" · ");
+  return [
+    { type: "paragraph", text: "Un « axe » est une façon de ranger les outils de l'Agence. Comme un magasin range ses articles par rayon, par prix ou par fournisseur : plusieurs rangements possibles, tous valables, qui ne se mélangent jamais. Cette page dit lesquels existent VRAIMENT dans le code, avec deux exemples réels chacun." },
+
+    { type: "heading", text: "1. La question que tu poses : « dans le TYPE, retrouve-t-on la distinction ? »" },
+    { type: "paragraph", text: `Réponse mesurée : NON, et c'est une collision de vocabulaire, pas un oubli. Deux choses différentes portent le mot « type ». L'axe qui s'appelle \`type\` dans le code range ce que le FICHIER est : ${carte.collision.ceQueTypeRange}. La distinction que tu cherches — Gardien sacré, Agent Cadre, Membre, Agent Spécial — existe bel et bien, mais sous le nom \`rang\` : ${carte.collision.ceQueLeRangRange}.` },
+    { type: "paragraph", text: "Autrement dit : ce que tu appelles « type » s'appelle « rang » dans le code, et le découpage fin que tu décris (« au sein des membres, il y a des sous-catégories ») s'appelle « famille ». Les deux existent et sont dérivés du même registre. C'est le nom qui manque à l'appel, jamais la donnée." },
+
+    { type: "heading", text: "2. Le rang, et son découpage fin — ce que tu appelles TYPE" },
+    { type: "table", headers: ["Rang", "Combien", "Deux exemples réels"], rows: carte.rangs.map((r) => [r.rang, String(r.combien), r.exemples]) },
+    { type: "table", headers: ["Famille (sous-catégorie)", "Combien", "Deux exemples réels"], rows: carte.familles.map((f) => [f.famille, String(f.combien), f.exemples]) },
+
+    { type: "heading", text: "3. Le poste de travail — une CONSÉQUENCE du rang, jamais un rangement" },
+    { type: "paragraph", text: "Ta correction du 2026-09-25, appliquée telle quelle : « ah, ce fichier est un gardien sacré, donc son poste de travail est le suivant. Ce n'est pas un critère de classement. » Le poste de travail se LIT une fois le rang connu — il ne sert jamais à ranger." },
+    { type: "table", headers: ["Ce que le poste comprend", "Où ça vit", "Qui y a droit"], rows: poste.map((p) => [p.quoi, p.ou, p.pourQui]) },
+
+    { type: "heading", text: "4. Les cinq autres axes du code, avec deux exemples chacun" },
+    { type: "table", headers: ["Axe", "La question qu'il pose", "Deux de ses valeurs, expliquées"], rows: [
+      ["iceberg", "à quel groupe il appartient", deuxDe(iceberg)],
+      ["type", "ce que le FICHIER est (jamais le rang)", deuxDe(types)],
+      ["moment", "QUAND il intervient", deuxDe(moments)],
+      ["domaine", "SUR QUOI il regarde", deuxDe(domaines)],
+      ["destinataire", "À QUI le résultat sert", deuxDe(destinataires)],
+    ] },
+    { type: "paragraph", text: `Chacun a son porteur dans le code, jamais une liste tenue à la main : ${axes.map((a) => `${a.cle} → ${a.porteur}`).join(" · ")}.` },
+
+    { type: "heading", text: "5. Ce qui reste à trancher" },
+    { type: "list", items: [
+      "Le référentiel de l'Agence (docs/referentiel/organisation-agence.md §1) déclare toujours DEUX axes. Le code en dérive sept. Ta décision : un garde-fou qui ALERTE dès que les deux ne disent plus la même chose — la prose reste écrite à la main, on perd seulement le droit de diverger en silence.",
+      "Renommer, ou pas, l'axe `type` du code pour lever la collision avec ce que tu appelles type. Renommer touche plusieurs registres ; ne pas renommer garde un mot qui veut dire deux choses. C'est ton arbitrage.",
+      "La classe « porte un garde-fou d'évolutivité » n'existe nulle part alors qu'elle est détectable automatiquement — un de tes cinq candidats du 2026-09-23, le seul non couvert.",
+    ] },
+    { type: "note", text: "HORS PORTÉE : cette page dit comment les outils SONT rangés, jamais si le rangement est le bon. Le juger se lit, et se tranche avec toi." },
+  ];
+}
+
 
 // L'axe « destinataire » a reçu son domicile le 2026-09-25 (#741) : `DESTINATAIRES` ci-dessus. Il
 // rejoint donc la liste des axes comptés. Celui qui reste sans domicile est un AUTRE : « pour quel
@@ -3514,6 +3627,26 @@ async function main() {
     const cibles = (rec.mesurable ? rec.lignes : []).filter((l) => l.classes?.includes("scanne-le-depot")).map((l) => l.chemin);
     console.log(`\n=== « JE N'AI PAS PU REGARDER » — trois façons, pas une (tâche #654) ===\n`);
     for (const l of formatRefusLines(auditDuRefus(cibles, { lire: (c) => { try { return readFileSync(join(ROOT, c), "utf8"); } catch { return null; } } }))) console.log(l);
+    return;
+  }
+  // LA CARTE DES AXES (2026-09-25, tâche #439). Sa demande : « une page qui montre tout d'abord »,
+  // avec « 2 exemples par axe ». Une PAGE plutôt qu'une sortie terminal, parce qu'elle sert à
+  // comprendre puis à trancher — pas à passer dans un rapport. Tout y est DÉRIVÉ des registres
+  // réels : un outil ajouté demain la change tout seul (Article 24).
+  if (sub === "axes") {
+    const carte = carteDesAxes();
+    const horodatage = new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-");
+    const cible = process.argv[3] ?? `docs/cassandra-rh/carte-des-axes-${horodatage}.html`;
+    const html = renderHtmlReport({
+      tool: "cassandra-rh",
+      title: "La carte des axes de l'Agence",
+      subtitle: "Comment les outils sont rangés, avec deux exemples réels par axe — et la collision de vocabulaire que ça révèle",
+      blocks: blocsDeLaCarteDesAxes(carte),
+    });
+    try { mkdirSync(join(ROOT, "docs/cassandra-rh"), { recursive: true }); } catch { /* déjà là */ }
+    writeFileSync(join(ROOT, cible), html, "utf8");
+    console.log(`\nÉcrit : ${cible}`);
+    console.log(`${carte.rangs.length} rang(s), ${carte.familles.length} famille(s) — ${carte.collision.constat}.`);
     return;
   }
   if (sub === "fiche") {
