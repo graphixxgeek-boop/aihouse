@@ -3374,10 +3374,21 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // so the SEVEN rows written in the new format — the only fully up-to-date ones — were accused of
   // being malformed, with a message claiming their later columns had shifted. They had not.
   const csf=await import('../scripts/check-suivi-fidelity.mjs');
-  const critFmt=(await import('../scripts/criticite.mjs')).FORMAT_TACHE;
+  const critFmt2=await import('../scripts/criticite.mjs');
+  const critFmt=critFmt2.FORMAT_TACHE;
   assert.equal(csf.COLONNES_MAX,critFmt.length,'the upper bound is the declared format itself, so a tenth field added tomorrow needs no edit here');
   assert.equal(csf.COLONNES_MIN,critFmt.length-critFmt.filter((f)=>f.depuis).length,'and the lower bound is the HISTORICAL format: every field minus those declaring they arrived later. Deriving it from the count of MANDATORY fields was the first attempt and it was wrong — an optional field still occupies its column, empty, so that version accepted a genuinely broken 7-column row');
   assert.ok(csf.COLONNES_MIN<csf.COLONNES_MAX,'the two bounds must differ while a field carries a threshold, otherwise the older rows are accused of the newer format');
+  // #872 — les deux cases du rituel, et la PREUVE que la dérivation de #870 tenait : deux champs
+  // ajoutés, la fourchette est passée de 8–9 à 8–11 sans qu'une seule ligne soit retouchée ici.
+  assert.equal(critFmt.filter((f)=>f.depuis).length,3,'three fields now carry an arrival threshold — pourQui, ouverture, cloture — and the column range widened on its own, which is exactly what deriving it was for');
+  const rit=(n,o,c2)=>({numero:n,ouverture:o,cloture:c2});
+  const avant=critFmt2.findRituelManquant([rit(800,'',''),rit(871,'','')]);
+  assert.equal(avant.mesurable,false,'below the threshold there is nothing to check, and the tool says PAS MESURÉ rather than green — 804 rows written before the boxes existed are anterior, never at fault (L4, already paid five times today)');
+  const apres=critFmt2.findRituelManquant([rit(872,'OUI','OUI'),rit(873,'OUI',''),rit(874,'','')]);
+  assert.equal(apres.completes,1,'only a row carrying BOTH boxes counts as complete: opening guards against work begun wrong, closing against work delivered half-done, and one box alone would leave you guessing which was held');
+  assert.deepEqual(apres.sansCloture,[873,874],'the two halves are reported separately, since they are repaired by different gestures');
+  assert.equal(apres.taux,33,'the rate carries its denominator, as everywhere here');
   const auNouveauFormat=lire([{name:'a.md',text:'| 12 | 2026-09-25T10:00Z | motcle | Sujet | Sous-sujet | NORMAL-UTILE | détail | PROJET | à faire |'}]);
   assert.deepEqual(auNouveauFormat.filter((h)=>/mal formée/.test(h.pourquoi)),[],'a row on the CURRENT nine-column format is never malformed — accusing it is the guard punishing the only conduct it exists to obtain (L4, enriched the same day)');
 
@@ -8285,9 +8296,12 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const tache = (over = {}) => ({ numero: 1, horodatage: '2026-09-23T10:00Z', motCle: 'archangel', sujet: 'S', sousSujet: 's', criticite: 'NORMAL-UTILE', detail: 'd', statut: 'à faire', statusKey: 'autre', ...over });
   const propre = auditFormatDesTaches([tache()], { motsClesManquantsImpl: () => [] });
   assert.deepEqual([propre.manquants.length, propre.collisions.length, propre.champs.length], [0, 0, 0], 'a well-formed open task reports nothing on all three counts');
-  // Neuf depuis le 2026-09-25, et le chiffre est DÉRIVÉ de FORMAT_TACHE, jamais écrit à la main —
-  // le champ « pour qui » l'a fait passer de 8 à 9 sans qu'aucune ligne de rendu ne change.
-  assert.match(formatAuditFormatLines(propre)[0], /conforme aux 9 champs/, 'the clean case still PRINTS a line: a section that only appears on failure never says "this was checked", it says nothing');
+  // LE CHIFFRE EST DÉRIVÉ DANS L'ASSERTION AUSSI, depuis le 2026-09-25 (#872). Le commentaire
+  // d'origine affirmait déjà qu'il l'était « jamais écrit à la main » — et le test, lui, écrivait
+  // « 9 » en dur. Deux champs ajoutés l'ont fait tomber le jour même. Corrigé en fournissant le
+  // FAIT manquant plutôt qu'en assouplissant l'assertion (BP3) : le test lit FORMAT_TACHE.
+  const nbChamps = (await import('../scripts/criticite.mjs')).FORMAT_TACHE.length;
+  assert.match(formatAuditFormatLines(propre)[0], new RegExp(`conforme aux ${nbChamps} champs`), 'the clean case still PRINTS a line: a section that only appears on failure never says "this was checked", it says nothing');
   // UN SEUL NOM PAR CHAMP (#584) : les alias de transition (`n`, `sensibilite`) ont vécu quelques
   // heures, le temps du renommage, puis ils ont été retirés — deux noms pour un champ sont la
   // dette, jamais la solution.

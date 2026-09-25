@@ -36,7 +36,7 @@ import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { PRESTATIONS, suggestPrestationsForTask, significantWords, badgeSignalsAsContext } from "./le-coordinateur.mjs";
 // L'étiquette criticité/urgence/mot-clé — lue chez son propriétaire, jamais recalculée ici.
-import { etiquetteDeLaTache, findMotsClesEnCollision, findChampsManquants, FORMAT_TACHE } from "./criticite.mjs";
+import { etiquetteDeLaTache, findMotsClesEnCollision, findChampsManquants, FORMAT_TACHE, findRituelManquant, formatRituelLines, QUESTIONS_DE_CLOTURE, CONSIGNE_D_OUVERTURE, PREMIERE_TACHE_AVEC_RITUEL } from "./criticite.mjs";
 import { findMotsClesManquants } from "./check-suivi-fidelity.mjs";
 import { daysSince, printReliabilityNotice } from "./lib-shell.mjs";
 import { renderTextReport } from "./report-template.mjs";
@@ -177,7 +177,37 @@ export function loadAllTaskRows(sessionsDir, readDir, readFile, exists) {
       // lecteur les a signalées comme « valeur pour-qui invalide » — une accusation fausse sur un
       // vrai défaut d'à côté, exactement le signal adjacent pris pour le signal visé. `null`
       // signifie donc « illisible ici », jamais « absent » : les deux appellent des gestes opposés.
-      const pourQui = c.length === 9 ? c[6] : (c.length > 9 ? null : "");
+      // LES CHAMPS À SEUIL SONT LUS PAR DÉRIVATION (2026-09-25, tâche #872), jamais par un test
+      // sur une longueur écrite en dur. L'ancien `c.length === 9` a tenu tant qu'il n'y avait
+      // qu'un champ tardif ; l'ajout des deux cases du rituel l'aurait fait rendre `null` sur
+      // TOUTES les lignes au format complet — c'est-à-dire précisément sur les plus à jour, pour
+      // la sixième fois de la journée, et dans le code écrit le matin même pour éviter ça.
+      //
+      // La règle se lit sur FORMAT_TACHE : les champs de tête occupent les six premières cellules,
+      // `statut` la dernière, et entre les deux vivent `detail` puis les champs à seuil, dans
+      // l'ordre où ils ont rejoint le format. Une ligne de longueur L en porte donc exactement
+      // L − COLONNES_MIN. Un douzième champ ajouté demain sera lu sans qu'on touche à ceci.
+      //
+      // AU-DELÀ DU FORMAT COMPLET, `null` et jamais "" : une ligne dont le Détail contient un `|`
+      // non échappé se découpe en 12, 15 cellules et les positions ne veulent plus rien dire.
+      // « illisible ici » et « absent » appellent des gestes opposés, et les confondre a déjà
+      // produit une accusation fausse sur trois lignes réelles (#625, #683, #751).
+      const tardifs = FORMAT_TACHE.filter((f) => f.depuis).map((f) => f.champ);
+      const combienDeTardifs = c.length - (FORMAT_TACHE.length - tardifs.length);
+      const illisible = c.length > FORMAT_TACHE.length;
+      // ⚠️ DIVERGENCE DÉCLARÉE, trouvée en lançant ce lecteur juste après l'avoir écrit : dans
+      // `FORMAT_TACHE`, `detail` est déclaré AVANT les champs à seuil ; dans les fichiers réels du
+      // suivi, il est APRÈS eux (« … | Criticité | Pour qui | Détail | Statut | »). Le premier jet
+      // a suivi l'ordre DÉCLARÉ et a rendu le texte du détail comme valeur de « pour qui » sur
+      // toutes les lignes récentes. Le fichier fait foi ici, parce que c'est lui qu'on lit.
+      // Ce qui reste dérivé — et c'est le point de l'Article 24 — c'est la LISTE des champs à
+      // seuil et leur ordre entre eux, jamais recopiée : un douzième champ demain sera lu seul.
+      // La divergence d'ordre elle-même est une dette : elle se corrige dans FORMAT_TACHE, pas
+      // ici, et pas dans le même geste que l'ajout des cases (tâche notée séparément).
+      const champsTardifs = {};
+      for (let i = 0; i < tardifs.length; i++) {
+        champsTardifs[tardifs[i]] = illisible ? null : (i < combienDeTardifs ? (c[6 + i] ?? "") : "");
+      }
       const detail = c[c.length - 2];
       const statut = c[c.length - 1];
       rows.push({
@@ -187,7 +217,9 @@ export function loadAllTaskRows(sessionsDir, readDir, readFile, exists) {
         sujet: sujet ?? "?",
         sousSujet: sousSujet ?? "?",
         criticite: criticite ?? "?",
-        pourQui: pourQui === null ? null : pourQui.trim(),
+        pourQui: champsTardifs.pourQui === null ? null : String(champsTardifs.pourQui).trim(),
+        ouverture: champsTardifs.ouverture === null ? null : String(champsTardifs.ouverture ?? "").trim(),
+        cloture: champsTardifs.cloture === null ? null : String(champsTardifs.cloture ?? "").trim(),
         detail: detail ?? "",
         statut: statut ?? entry.statut,
         statusKey,
@@ -1751,13 +1783,19 @@ function bilanCli() {
   L.push(`  Format de référence : ${format.formatDeReference.length} champs — ${format.formatDeReference.join(", ")}`);
   for (const l of formatAuditFormatLines(format)) L.push("  " + l);
   L.push("");
-  L.push("  ⚠️ CE QUE CE FORMAT NE PORTE PAS ENCORE, et c'est une demande explicite du 2026-09-25 :");
-  L.push("  l'indication d'OUVERTURE (« respecter les process, utiliser les outils ») et l'indication");
-  L.push("  de CLÔTURE (« harmoniser, fiabiliser, optimiser ») ne sont dans AUCUN des champs ci-dessus.");
-  L.push("  Mesuré : OPTIMISER et FIABILISER existent déjà comme régime de fond dans");
-  L.push("  docs/regles-de-travail.md ; HARMONISER n'y est pas, et RIEN n'existe au niveau de la TÂCHE.");
-  L.push("  → la façon exacte de le porter est une décision, pas une évidence : elle est posée en");
-  L.push("    question de calibrage plutôt que tranchée ici.");
+  L.push("-".repeat(92));
+  L.push("3bis. LE RITUEL D'OUVERTURE ET DE CLÔTURE — sa décision du 2026-09-25 : deux cases à cocher");
+  L.push("-".repeat(92));
+  L.push("");
+  L.push(`  À L'OUVERTURE : « ${CONSIGNE_D_OUVERTURE} » (Articles 26 et 31).`);
+  L.push("  À LA CLÔTURE, les trois questions tranchées le 2026-09-24 (#703) :");
+  for (const q of QUESTIONS_DE_CLOTURE) L.push(`      ${q.mot.padEnd(12)} ${q.question}`);
+  L.push("");
+  for (const l of formatRituelLines(findRituelManquant(rows))) L.push("  " + l);
+  L.push("");
+  L.push(`  POURQUOI UN SEUIL À #${PREMIERE_TACHE_AVEC_RITUEL}, et pas une exigence rétroactive : les ${rows.length - rows.filter((r) => Number.isFinite(r.numero) && r.numero >= PREMIERE_TACHE_AVEC_RITUEL).length} lignes`);
+  L.push("  écrites avant que ces cases n'existent ne sont pas fautives, elles sont antérieures. Les");
+  L.push("  accuser serait la leçon L4 payée une sixième fois dans la même journée.");
   L.push("");
 
   L.push(trait);

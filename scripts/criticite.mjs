@@ -223,8 +223,75 @@ export const FORMAT_TACHE = [
   // — les seules parfaitement à jour. Un dixième champ ajouté demain avec son propre `depuis`
   // élargira la fourchette sans qu'on y pense (Article 24).
   { champ: "pourQui", obligatoire: false, depuis: 825, quoi: "PROJET, ou DETTE-ENVERS-L-UTILISATEUR quand c'est moi qui lui dois quelque chose" },
+  // LES DEUX CASES DU RITUEL (2026-09-25, tâche #872 — sa décision en fenêtre dédiée : « deux cases
+  // à cocher », après avoir tranché dès le 2026-09-24 (#703) que trois questions encadrent chaque
+  // tâche : FIABILISER = est-ce que ça marche · OPTIMISER = peut-on faire mieux · HARMONISER =
+  // est-ce raccordé au reste, au bon format).
+  //
+  // POURQUOI DEUX CHAMPS ET PAS UNE PHRASE RECOPIÉE : une phrase identique sur 800 lignes cesse
+  // d'être lue au bout de trois, et surtout rien ne peut la vérifier — elle serait présente aussi
+  // bien quand le geste a été fait que quand il ne l'a pas été. Une case, si.
+  //
+  // POURQUOI DEUX ET PAS UNE : l'ouverture et la clôture ne protègent pas du même défaut.
+  // L'ouverture protège du travail commencé de travers (partir sans process ni outil) ; la clôture
+  // protège du travail livré à moitié (ça marche, mais ce n'est raccordé à rien). Une seule case
+  // laisserait deviner laquelle des deux a été tenue.
+  //
+  // `depuis` EST LA PROTECTION CONTRE L4, et elle a déjà été payée cinq fois dans la journée :
+  // sans seuil, ces deux champs accuseraient d'un coup les 803 lignes écrites avant leur existence.
+  // Même dispositif que `pourQui`, et la fourchette de colonnes s'élargit toute seule puisqu'elle
+  // est DÉRIVÉE du nombre de champs portant un seuil (check-suivi-fidelity).
+  { champ: "ouverture", obligatoire: false, depuis: 872, quoi: "OUI quand la tâche s'est ouverte en respectant les process et en consultant les outils (Articles 26 et 31)" },
+  { champ: "cloture", obligatoire: false, depuis: 872, quoi: "OUI quand les trois questions de clôture ont été posées : harmoniser, fiabiliser, optimiser (#703)" },
   { champ: "statut", obligatoire: true, quoi: "à faire / en cours / terminée / écartée avec sa raison (Article 28)" },
 ];
+
+// Le vocabulaire fermé des deux cases. « OUI » ou rien : une case à moitié cochée n'existe pas, et
+// un troisième mot ferait revenir le flou que la case existe pour retirer.
+export const CASE_COCHEE = "OUI";
+export const PREMIERE_TACHE_AVEC_RITUEL = 872;
+
+// LES TROIS QUESTIONS DE CLÔTURE, écrites UNE fois et lues partout (Article 24) — elles vivaient
+// jusqu'ici dans le détail d'une ligne de suivi, donc nulle part d'exploitable.
+export const QUESTIONS_DE_CLOTURE = [
+  { mot: "FIABILISER", question: "est-ce que ça marche — les tests passent-ils vraiment ?" },
+  { mot: "OPTIMISER", question: "peut-on faire mieux — est-ce complet ?" },
+  { mot: "HARMONISER", question: "est-ce raccordé au reste, au bon format ?" },
+];
+
+export const CONSIGNE_D_OUVERTURE = "respecter les process, utiliser les outils";
+
+// findRituelManquant() — TROIS ÉTATS, JAMAIS DEUX, exactement comme findPourQuiManquant juste
+// au-dessus : tenu / dû mais absent / hors du seuil donc rien à dire. Une ligne d'avant #872 n'est
+// pas fautive, elle est antérieure — et les confondre serait le faux rouge de la journée, commis
+// une sixième fois par le mécanisme écrit pour l'éviter.
+export function findRituelManquant(rows = [], { depuis = PREMIERE_TACHE_AVEC_RITUEL } = {}) {
+  const concernees = rows.filter((r) => Number.isFinite(r?.numero) && r.numero >= depuis);
+  if (!concernees.length) {
+    return { mesurable: false, concernees: 0, depuis,
+      pourquoi: `aucune tâche n'a encore atteint le seuil #${depuis} : il n'y a rien à vérifier, ce qui n'est jamais la même chose que « tout est en règle »` };
+  }
+  const cochee = (v) => String(v ?? "").trim().toUpperCase() === CASE_COCHEE;
+  const sansOuverture = concernees.filter((r) => !cochee(r.ouverture));
+  const sansCloture = concernees.filter((r) => !cochee(r.cloture));
+  const completes = concernees.filter((r) => cochee(r.ouverture) && cochee(r.cloture));
+  return {
+    mesurable: true, depuis, concernees: concernees.length,
+    sansOuverture: sansOuverture.map((r) => r.numero),
+    sansCloture: sansCloture.map((r) => r.numero),
+    completes: completes.length,
+    // Le taux porte son dénominateur, toujours.
+    taux: Math.round((completes.length / concernees.length) * 100),
+  };
+}
+
+export function formatRituelLines(r) {
+  if (!r?.mesurable) return [`RITUEL DES TÂCHES — ❓ PAS MESURÉ : ${r?.pourquoi ?? "raison inconnue"}`];
+  const l = [`Rituel des tâches (depuis #${r.depuis}) : ${r.completes}/${r.concernees} portent LEURS DEUX cases — ${r.taux} %.`];
+  l.push(`  Ouverture « ${CONSIGNE_D_OUVERTURE} » : ${r.concernees - r.sansOuverture.length}/${r.concernees}${r.sansOuverture.length ? ` — manque sur ${r.sansOuverture.map((n) => "#" + n).join(", ")}` : ""}`);
+  l.push(`  Clôture ${QUESTIONS_DE_CLOTURE.map((q) => q.mot).join(" / ")} : ${r.concernees - r.sansCloture.length}/${r.concernees}${r.sansCloture.length ? ` — manque sur ${r.sansCloture.map((n) => "#" + n).join(", ")}` : ""}`);
+  return l;
+}
 
 // Le vocabulaire fermé du champ. Deux valeurs, jamais trois : « les deux » n'existe pas — une tâche
 // qui sert le projet ET répond à une attente de sa part est une DETTE, parce que c'est son attente
