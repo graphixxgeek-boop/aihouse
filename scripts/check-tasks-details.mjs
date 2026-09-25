@@ -1470,7 +1470,81 @@ export function attendUneDecision(row = {}) {
     || String(row.pourQui ?? "").trim().toUpperCase() === POUR_QUI_DETTE;
 }
 
-export function composerBlocs(rows = [], { seuilTheme = SEUIL_BLOC_THEME, seuilRafale = SEUIL_RAFALE, tailleMaxRafale = TAILLE_MAX_RAFALE, poidsImpl = poidsDeLaTache } = {}) {
+// ————————————————————————————————————————————————————————————————————————
+// LA NATURE DU TRAVAIL (2026-09-25, décision de l'utilisateur après la rafale 1)
+// ————————————————————————————————————————————————————————————————————————
+//
+// CE QUE LA RAFALE 1 A APPRIS, ET QUI N'ÉTAIT PAS PRÉVU : « léger » au sens du POIDS ne veut pas
+// dire « rapide » au sens du TRAVAIL. Sur ses dix tâches, trois étaient des audits (lancer un
+// outil, lire sa sortie, juger) et deux un vrai chantier à deux têtes. Une rafale censée vider la
+// file d'un coup s'est étalée sur toute la soirée — non parce que les tâches étaient lourdes, mais
+// parce qu'elles n'étaient pas de la MÊME NATURE.
+//
+// SA DÉCISION, en fenêtre dédiée : « Ajouter le TYPE de travail — une rafale ne mélange plus
+// correctifs, audits et chantiers : trois natures, trois blocs. »
+//
+// COMMENT LA NATURE SE DÉRIVE, et pourquoi ce n'est pas une liste de mots qui grandira : on lit ce
+// que la tâche DEMANDE DE FAIRE, c'est-à-dire son verbe. Une tâche qui pose une question veut une
+// mesure ; une tâche qui nomme un défaut veut une réparation ; une tâche qui dit « construire »
+// veut du neuf. Trois intentions, pas trois vocabulaires — et le point d'interrogation est le
+// signal le plus fiable des trois, parce qu'on ne le met pas par hasard.
+//
+// QUATRE ÉTATS, JAMAIS TROIS : « indéterminée » existe et se dit. Forcer une nature sur une ligne
+// qui n'en déclare aucune produirait un bloc qui a l'air trié et ne l'est pas — le pire des deux,
+// puisqu'on lui ferait confiance.
+export const NATURES_DE_TRAVAIL = [
+  { cle: "audit", libelle: "audit", quoi: "lancer, lire, juger — le résultat est un CONSTAT",
+    // Le point d'interrogation d'abord : une tâche qui pose une question ne demande pas un
+    // correctif, elle demande de savoir. C'est le signal le plus net et le moins imitable.
+    sonde: (t) => /\?/.test(t) || /\b(vérifier|verifier|mesurer|auditer|évaluer|evaluer|contrôler|controler|est-ce que|analyser|diagnostiquer|relire)\b/i.test(t) },
+  { cle: "correctif", libelle: "correctif", quoi: "un défaut est nommé, il faut le réparer — le résultat est un CODE QUI CHANGE",
+    sonde: (t) => /\b(corriger|correction|correctif|réparer|reparer|fixer|bug|faux positif|faux vert|casse|cassé|casse[ér]|incohérence|incoherence|régression|regression)\b/i.test(t) },
+  { cle: "chantier", libelle: "chantier", quoi: "il faut faire exister quelque chose — le résultat est une CAPACITÉ NEUVE",
+    sonde: (t) => /\b(construire|créer|creer|bâtir|batir|câbler|cabler|brancher|étendre|etendre|ajouter|implémenter|implementer|concevoir|refonte|renommage)\b/i.test(t) },
+];
+
+// L'ORDRE COMPTE, et il est choisi : une tâche qui dit « corriger le faux positif de X ? » est
+// d'abord un correctif, pas un audit — le défaut est déjà nommé, la question ne porte que sur le
+// comment. On teste donc correctif AVANT audit, et chantier en dernier parce que « ajouter » est le
+// verbe le plus banal des trois et raflerait des lignes qui appartiennent ailleurs.
+export const ORDRE_DES_NATURES = ["correctif", "audit", "chantier"];
+
+// DEUX LECTURES, DANS CET ORDRE, ET LA SECONDE A ÉTÉ AJOUTÉE PARCE QUE LA MESURE M'A CONTREDITE.
+//
+// Mon premier jet ne lisait que l'intitulé, avec ce commentaire : « jamais le détail, il raconte ce
+// qui a été fait et emploie les trois vocabulaires à la fois — s'y fier classerait presque tout en
+// correctif ». **C'était une affirmation, pas une mesure, et elle était fausse.** Lancé sur les 98
+// tâches réellement ouvertes : l'intitulé seul laisse **69 indéterminées sur 98 (70 %)**, ce qui
+// rend l'axe inutilisable ; en ajoutant le détail on tombe à **21 (21 %)**, et la répartition n'a
+// rien du « presque tout en correctif » annoncé — **audit 42, correctif 25, chantier 10**.
+//
+// LA RAISON, visible dès qu'on lit trois intitulés au hasard : dans ce registre, l'intitulé est un
+// TITRE NARRATIF (« le garde-fou du format accusait les sept lignes les plus à jour »). Il nomme la
+// trouvaille, pas le geste. Le geste, lui, est dans le détail.
+//
+// D'OÙ LES DEUX PASSES, et la SOURCE est rendue avec la nature : l'intitulé d'abord parce qu'il
+// porte l'intention quand il la porte, le détail ensuite parce qu'il porte le contexte. Un lecteur
+// qui voit « nature lue sur le détail » sait qu'il doit vérifier avant de s'y fier ; le même
+// verdict sans sa source se croirait sur parole.
+export function natureDuTravail(row, { natures = NATURES_DE_TRAVAIL, ordre = ORDRE_DES_NATURES } = {}) {
+  const lire = (texte) => {
+    if (!String(texte ?? "").trim()) return null;
+    for (const cle of ordre) {
+      const n = natures.find((x) => x.cle === cle);
+      if (n?.sonde(texte)) return { nature: n.cle, libelle: n.libelle, quoi: n.quoi };
+    }
+    return null;
+  };
+  const titre = `${row?.sousSujet ?? ""} ${row?.motCle ?? ""} ${row?.sujet ?? ""}`.trim();
+  const surLeTitre = lire(titre);
+  if (surLeTitre) return { ...surLeTitre, source: "intitulé" };
+  const surLeDetail = lire(row?.detail ?? "");
+  if (surLeDetail) return { ...surLeDetail, source: "détail", prudence: "nature lue sur le DÉTAIL faute d'intitulé parlant — le détail cite parfois plusieurs intentions, et c'est la première de l'ordre correctif → audit → chantier qui l'emporte. À vérifier avant d'y ranger un bloc entier." };
+  if (!titre && !String(row?.detail ?? "").trim()) return { nature: "indéterminée", source: "aucune", pourquoi: "ni intitulé ni détail lisibles : on ne devine pas une nature sur une ligne vide" };
+  return { nature: "indéterminée", source: "aucune", pourquoi: "ni l'intitulé ni le détail ne disent ce qu'il faut FAIRE — ni question, ni défaut nommé, ni construction. À lire avant de la ranger." };
+}
+
+export function composerBlocs(rows = [], { seuilTheme = SEUIL_BLOC_THEME, seuilRafale = SEUIL_RAFALE, tailleMaxRafale = TAILLE_MAX_RAFALE, poidsImpl = poidsDeLaTache, natureImpl = natureDuTravail } = {}) {
   const ouvertes = rows.filter((r) => OPEN_KEYS.has(r.statusKey));
   if (!ouvertes.length) {
     return { mesurable: false, pourquoi: "aucune tâche ouverte : il n'y a rien à regrouper, ce qui n'est pas la même chose qu'un regroupement qui ne trouve rien" };
@@ -1508,16 +1582,40 @@ export function composerBlocs(rows = [], { seuilTheme = SEUIL_BLOC_THEME, seuilR
   // thématique n'y entre pas : la compter deux fois gonflerait le plan sans ajouter de travail.
   const restantes = avecPoids.filter((t) => !prisParUnTheme.has(t.row));
   const legeres = restantes.filter((t) => t.palier && t.palier !== "lourde" && !t.attend);
+
+  // UNE RAFALE NE MÉLANGE PLUS LES NATURES (2026-09-25, décision de l'utilisateur après la rafale 1).
+  // Le défaut est mesuré, pas supposé : sa rafale 1 comptait dix tâches « légères » au POIDS et
+  // s'est étalée sur toute la soirée, parce qu'elle mêlait trois audits (lancer, lire, juger), deux
+  // chantiers et des correctifs. Le poids disait vrai ; il ne disait simplement pas ce qu'on allait
+  // faire. On groupe donc par nature AVANT de découper — une rafale de correctifs se vide
+  // réellement d'un coup, ce que la rafale 1 n'a pas fait.
+  //
+  // LES INDÉTERMINÉES RESTENT DEHORS, et c'est délibéré : les mettre en rafale donnerait un bloc
+  // qui a l'air trié sans l'être, donc un bloc auquel on ferait confiance à tort. Elles sortent
+  // dans leur propre liste, à lire avant de les ranger.
+  const parNature = new Map();
+  for (const t of legeres) {
+    const n = natureImpl(t.row);
+    t.nature = n.nature;
+    t.sourceNature = n.source;
+    if (n.nature === "indéterminée") continue;
+    if (!parNature.has(n.nature)) parNature.set(n.nature, []);
+    parNature.get(n.nature).push(t);
+  }
+  const natureInconnue = legeres.filter((t) => t.nature === "indéterminée");
   const rafales = [];
-  for (let i = 0; i < legeres.length; i += tailleMaxRafale) {
-    const lot = legeres.slice(i, i + tailleMaxRafale);
+  for (const [nature, groupe] of [...parNature.entries()].sort((a, b) => b[1].length - a[1].length)) {
+  for (let i = 0; i < groupe.length; i += tailleMaxRafale) {
+    const lot = groupe.slice(i, i + tailleMaxRafale);
     if (lot.length < seuilRafale) break;   // un reste trop court n'est pas une rafale, c'est un reste
     rafales.push({
-      type: "rafale", cle: `rafale ${rafales.length + 1}`, taille: lot.length,
+      type: "rafale", nature, cle: `rafale ${nature} ${rafales.filter((r) => r.nature === nature).length + 1}`, taille: lot.length,
       numeros: lot.map((m) => m.row.numero).filter(Number.isFinite).sort((a, b) => a - b),
+      luesSurLeDetail: lot.filter((m) => m.sourceNature === "détail").length,
       themes: [...new Set(lot.map((m) => m.theme))].length,
-      pourquoi: `${lot.length} tâches légères de ${[...new Set(lot.map((m) => m.theme))].length} thèmes différents : isolées, chacune coûte plus en cérémonie qu'en travail — groupées, elles tiennent dans un passage`,
+      pourquoi: `${lot.length} tâches de nature « ${nature} », légères au poids : même geste répété, une seule mise en train — c'est ce que la rafale 1 n'a pas eu, et pourquoi elle s'est étalée`,
     });
+  }
   }
 
   // ÉTAPE 3 — ce qui ne rejoint RIEN, et c'est une information, jamais un oubli.
@@ -1534,6 +1632,7 @@ export function composerBlocs(rows = [], { seuilTheme = SEUIL_BLOC_THEME, seuilR
       seules: attenteHorsTheme.map((t) => ({ numero: t.row.numero, theme: t.theme, sousSujet: t.row.sousSujet })),
     },
     isolees: isolees.map((t) => ({ numero: t.row.numero, theme: t.theme, palier: t.palier, sousSujet: t.row.sousSujet })),
+    natureInconnue: natureInconnue.map((t) => ({ numero: t.row.numero, theme: t.theme, sousSujet: t.row.sousSujet })),
     couverture: ouvertes.length ? Math.round(((prisParUnTheme.size + dansUneRafale.size + attenteHorsTheme.length) / ouvertes.length) * 100) : 0,
     seuils: { seuilTheme, seuilRafale, tailleMaxRafale },
     horsPortee: "Ces blocs disent CE QUI VA ENSEMBLE, jamais DANS QUEL ORDRE traiter : l'ordre dépend de ce qui presse, et ça ne se lit sur aucune colonne.",
@@ -1553,10 +1652,15 @@ export function formatBlocsLines(b) {
     }
   }
   if (b.rafales.length) {
-    l.push("", "— RAFALES PAR POIDS (vider la file d'un coup) —");
+    l.push("", "— RAFALES PAR NATURE DE TRAVAIL (vider la file d'un coup, sans changer de geste) —");
+    l.push("  Une rafale ne mélange plus correctifs, audits et chantiers : la rafale 1 du 2026-09-25 en mêlait trois et s'est étalée sur la soirée.");
     for (const r of b.rafales) {
-      l.push(`  · ${r.cle} — ${r.taille} tâche(s) légères, ${r.themes} thème(s) différents`);
+      l.push(`  · ${r.cle} — ${r.taille} tâche(s) légères, ${r.themes} thème(s) différents${r.luesSurLeDetail ? ` · ${r.luesSurLeDetail} nature(s) lue(s) sur le DÉTAIL, à vérifier avant d'y aller` : ""}`);
       l.push(`      ${r.numeros.map((n) => "#" + n).join(" ")}`);
+    }
+    if (b.natureInconnue?.length) {
+      l.push("", `  ${b.natureInconnue.length} tâche(s) légère(s) SANS NATURE LISIBLE, laissées hors rafale — les y mettre donnerait un bloc qui a l'air trié sans l'être :`);
+      for (const t of b.natureInconnue.slice(0, 8)) l.push(`      #${t.numero} ${String(t.sousSujet ?? "").slice(0, 78)}`);
     }
   }
   if (b.enAttenteDeLui.total) {

@@ -352,3 +352,60 @@ parce qu'elle est dérivée du nombre de champs à seuil (Article 24, vérifié 
 À l'ouverture : « respecter les process, utiliser les outils ». À la clôture, les trois questions
 tranchées le 2026-09-24 (#703) : **FIABILISER** (est-ce que ça marche) · **OPTIMISER** (peut-on
 faire mieux) · **HARMONISER** (est-ce raccordé au reste, au bon format).
+
+## 2026-09-25 (soir) — Une rafale ne mélange plus les natures de travail
+
+**CE QUE LA RAFALE 1 A APPRIS, ET CE N'ÉTAIT PAS PRÉVU.** Sa rafale 1 comptait dix tâches classées
+« légères » **au poids**, et elle s'est étalée sur toute la soirée. Le poids ne mentait pas : les
+dix étaient bel et bien petites. Il ne disait simplement pas **ce qu'on allait faire** — trois
+étaient des audits (lancer un outil, lire sa sortie, juger), deux un chantier à deux têtes, le reste
+des correctifs. Trois gestes différents dans une même « rafale ».
+
+**Sa décision, en fenêtre dédiée** : « Ajouter le TYPE de travail — une rafale ne mélange plus
+correctifs, audits et chantiers : trois natures, trois blocs. »
+
+### Comment la nature se dérive, et pourquoi ce n'est pas une liste de mots qui grandira
+
+On lit ce que la tâche **demande de faire**, c'est-à-dire son verbe — trois intentions, pas trois
+vocabulaires :
+
+| Nature | Ce qu'elle veut | Le signal |
+|---|---|---|
+| **audit** | lancer, lire, juger — le résultat est un CONSTAT | le point d'interrogation d'abord, puis vérifier / mesurer / évaluer |
+| **correctif** | un défaut est nommé, il faut le réparer — le résultat est un CODE QUI CHANGE | corriger, faux positif, régression, bug |
+| **chantier** | faire exister quelque chose — le résultat est une CAPACITÉ NEUVE | construire, câbler, étendre, renommage |
+
+**L'ordre est choisi, jamais incident** : correctif → audit → chantier. Une tâche qui dit « corriger
+le faux positif de X ? » est d'abord un correctif — le défaut est déjà nommé, la question ne porte
+que sur le comment. Et « chantier » passe en dernier parce qu'« ajouter » est le verbe le plus banal
+des trois et raflerait des lignes qui appartiennent ailleurs.
+
+**Quatre états, jamais trois** : *indéterminée* existe et se dit. Forcer une nature sur une ligne
+qui n'en déclare aucune produirait un bloc qui **a l'air trié sans l'être** — le pire des deux,
+puisqu'on lui ferait confiance.
+
+### La mesure m'a contredite, et c'est la mesure qui a gagné
+
+Mon premier jet ne lisait que l'intitulé, avec cette raison écrite : *« jamais le détail, il raconte
+ce qui a été fait et emploie les trois vocabulaires à la fois — s'y fier classerait presque tout en
+correctif »*. **C'était une affirmation, pas une mesure, et elle était fausse.**
+
+| Ce qu'on lit | Indéterminées sur 98 ouvertes | Répartition |
+|---|---|---|
+| l'intitulé seul | **69 (70 %)** — l'axe est inutilisable | audit 16 · chantier 8 · correctif 5 |
+| l'intitulé **+ le détail** | **19 (19 %)** | **audit 43 · correctif 19 · chantier 17** |
+
+Rien du « presque tout en correctif » annoncé. **La raison est visible dès qu'on lit trois intitulés
+au hasard** : dans ce registre, l'intitulé est un TITRE NARRATIF (« le garde-fou du format accusait
+les sept lignes les plus à jour »). Il nomme la trouvaille, pas le geste. Le geste est dans le
+détail.
+
+**D'où deux passes, et la SOURCE rendue avec la nature** : l'intitulé d'abord parce qu'il porte
+l'intention quand il la porte, le détail ensuite parce qu'il porte le contexte. Un lecteur qui voit
+« nature lue sur le détail » sait qu'il doit vérifier ; le même verdict sans sa source se croirait
+sur parole. Le rendu compte d'ailleurs, par rafale, combien de natures viennent du détail.
+
+### Le résultat sur la file réelle
+
+Quatre rafales homogènes au lieu d'un mélange : **audit 10 · audit 4 · correctif 10 · chantier 4**,
+plus **5 tâches légères sans nature lisible** laissées explicitement hors rafale.

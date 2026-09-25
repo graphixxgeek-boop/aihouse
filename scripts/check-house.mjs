@@ -12809,6 +12809,32 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.equal(Math.round(emi.legeres.part), 100, 'the light-task share reuses poidsDeLaTache() rather than a second scale of its own (Article 24: a threshold is DERIVED, never recopied)');
   assert.ok(!emi.tendance.mesurable && /deux fenêtres incomplètes/.test(emi.tendance.pourquoi), 'and a trend computed on two incomplete windows is refused rather than produced: four tasks cannot say whether a rhythm is accelerating, and a made-up trend reads exactly like a real one');
   assert.ok(/AUCUN seuil absolu/.test(emi.horsPortee), 'no absolute threshold is ever proposed, and that is the honest half of this measure: a deep chantier legitimately produces ten tasks on one theme, a day of fixes thirty light ones, and neither is a defect');
+
+  // LA NATURE DU TRAVAIL, ET UNE RAFALE QUI NE LA MÉLANGE PLUS (2026-09-25, décision de
+  // l'utilisateur après la rafale 1). Le défaut est mesuré : sa rafale 1 comptait dix tâches
+  // « légères » au POIDS et s'est étalée sur toute la soirée, parce qu'elle mêlait trois audits,
+  // deux chantiers et des correctifs. Le poids disait vrai ; il ne disait pas ce qu'on allait faire.
+  {
+    assert.equal(ctd2.natureDuTravail({ sousSujet: 'le registre sert-il vraiment ?' }).nature, 'audit', 'a question mark is the sharpest of the three signals: one does not write it by accident, and a task that asks does not want a fix, it wants to know');
+    assert.equal(ctd2.natureDuTravail({ sousSujet: 'corriger le faux positif de X ?' }).nature, 'correctif', 'a named defect wins over the question mark — the order correctif → audit → chantier is chosen, not incidental: the question there is only about HOW');
+    assert.equal(ctd2.natureDuTravail({ sousSujet: 'construire la cérémonie' }).nature, 'chantier', 'and building comes last, because "ajouter" is the most banal verb of the three and would otherwise rake in lines that belong elsewhere');
+    // LA SOURCE VOYAGE AVEC LA NATURE — sans elle, un verdict lu sur le détail se croirait sur parole.
+    assert.equal(ctd2.natureDuTravail({ sousSujet: 'le garde-fou accusait sept lignes', detail: 'il faut corriger la dérivation' }).source, 'détail', 'when the title is a narrative headline — which this registry writes constantly — the nature is read on the detail, and the reader is told so');
+    assert.ok(ctd2.natureDuTravail({ sousSujet: 'x', detail: 'y' }).pourquoi, 'a row whose title and detail say nothing about what to DO is "indéterminée" with its reason, never forced into a nature — a block that looks sorted without being sorted is the one you would trust wrongly');
+    // MON PREMIER JET NE LISAIT QUE L'INTITULÉ, avec pour raison écrite que le détail « classerait
+    // presque tout en correctif ». Mesuré sur les 98 tâches réellement ouvertes, c'était faux :
+    // l'intitulé seul laisse 69 indéterminées sur 98, le détail fait tomber à 19 et rend
+    // audit 43 / correctif 19 / chantier 17. L'affirmation a été remplacée par la mesure (BP3).
+    const legeres = (n, mot) => Array.from({ length: n }, (_, i) => ({ numero: 100 + i, statusKey: 'ouverte', sujet: `T${i} / s`, sousSujet: `${mot} la chose ${i}`, detail: 'd' }));
+    const b = ctd2.composerBlocs([...legeres(6, 'corriger'), ...legeres(6, 'vérifier').map((r, i) => ({ ...r, numero: 200 + i }))],
+      { seuilTheme: 99, seuilRafale: 4, tailleMaxRafale: 10, poidsImpl: () => ({ mesurable: true, palier: 'legere' }) });
+    assert.equal(b.rafales.length, 2, 'six correctifs and six audits make TWO rafales, never one of twelve — that single mixed rafale is exactly what took a whole evening');
+    assert.deepEqual([...new Set(b.rafales.map((r) => r.nature))].sort(), ['audit', 'correctif'], 'each rafale carries one nature and says which');
+    for (const r of b.rafales) assert.equal(r.taille, 6, 'and neither loses a task on the way: grouping by nature must not silently drop what does not fit');
+    const avecFloue = ctd2.composerBlocs([...legeres(5, 'corriger'), { numero: 999, statusKey: 'ouverte', sujet: 'T / s', sousSujet: 'un nom de domaine', detail: 'rien de verbal' }],
+      { seuilTheme: 99, seuilRafale: 4, tailleMaxRafale: 10, poidsImpl: () => ({ mesurable: true, palier: 'legere' }) });
+    assert.deepEqual(avecFloue.natureInconnue.map((t) => t.numero), [999], 'an unreadable nature stays OUT of the rafales and is listed on its own — never padded into a block whose homogeneity would then be a lie');
+  }
   const duree = ctd2.dureeDeVieDesTaches([
     { numero: 10, horodatage: '2026-09-25T08:00Z', statusKey: 'terminee', detail: 'ouverture' },
     { numero: 11, horodatage: '2026-09-25T08:20Z', statusKey: 'terminee', detail: 'CLÔTURE DE #10. fait' },
