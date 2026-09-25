@@ -3379,6 +3379,25 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(csf.COLONNES_MAX,critFmt.length,'the upper bound is the declared format itself, so a tenth field added tomorrow needs no edit here');
   assert.equal(csf.COLONNES_MIN,critFmt.length-critFmt.filter((f)=>f.depuis).length,'and the lower bound is the HISTORICAL format: every field minus those declaring they arrived later. Deriving it from the count of MANDATORY fields was the first attempt and it was wrong — an optional field still occupies its column, empty, so that version accepted a genuinely broken 7-column row');
   assert.ok(csf.COLONNES_MIN<csf.COLONNES_MAX,'the two bounds must differ while a field carries a threshold, otherwise the older rows are accused of the newer format');
+  // #877 — LE SECOND DÉTECTEUR, né de la limite du premier vérifiée en vrai. #179 demandait une
+  // fiche par membre chez CASSANDRA : la commande existait, elle rendait quatorze champs, et la
+  // tâche était toujours ouverte. Aucune tâche n'ayant écrit « CLÔTURE DE #179 », #876 ne pouvait
+  // rien voir — sa limite déclarée n'était pas une précaution de style.
+  //
+  // ET LE SIGNAL « FONCTION » A ÉTÉ RETIRÉ AVANT LIVRAISON, sur mesure : il rendait 21 candidats
+  // dont 17 reposaient sur la seule présence d'une fonction que la tâche venait elle-même de
+  // créer. Huitième occurrence de L4 dans la journée, attrapée en regardant la COMPOSITION du
+  // résultat avant de le publier. Restreint aux commandes : 4 candidats, tous vérifiables.
+  const ctd3=await import('../scripts/check-tasks-details.mjs');
+  const t3=(n,det)=>({numero:n,statusKey:'ouverte',statut:'ouverte',sousSujet:'s',detail:det});
+  const sansLecteur=ctd3.findCapacitesPeutEtreDejaLa([t3(10,'node scripts/x.mjs foo')]);
+  assert.equal(sansLecteur.mesurable,false,'without access to the code it refuses: an empty list would read as "no task already done", which is the false green this project hunts');
+  const vu=ctd3.findCapacitesPeutEtreDejaLa([t3(10,'il faut node scripts/x.mjs foo')],{lire:()=>'if (sub === "foo") {}',existe:()=>true});
+  assert.equal(vu.candidats.length,1,'a task naming a command whose script recognises that sub-command is raised as a QUESTION');
+  const pasLaSousCommande=ctd3.findCapacitesPeutEtreDejaLa([t3(10,'il faut node scripts/x.mjs foo')],{lire:()=>'rien de tel ici',existe:()=>true});
+  assert.deepEqual(pasLaSousCommande.candidats,[],'and a script that does NOT recognise the sub-command is not a match: the file existing proves nothing about the capability');
+  assert.match(ctd3.formatCapacitesLines(vu).join(' '),/jamais des verdicts/,'the output states it asks rather than concludes — closing a live task on this signal is the one irrecoverable mistake here, since a wrongly closed task only reopens if someone remembers it');
+
   // #876 — LA FILE EST PLUS COURTE QU'ELLE N'EN A L'AIR, et ça répond à sa question du jour :
   // « on retrouve le même chiffre parce que c'est une rotation ? ». Deux tâches ont été trouvées
   // closes-mais-ouvertes sans être cherchées (#801 le matin, #445 l'après-midi) ; en mesurant, il

@@ -1336,6 +1336,86 @@ export function formatClosesAilleursLines(r) {
   return l;
 }
 
+// LA CAPACITÉ DEMANDÉE EXISTE-T-ELLE DÉJÀ ? (2026-09-25, tâche #877)
+//
+// POURQUOI CE SECOND DÉTECTEUR, alors que #876 vient d'en livrer un : parce que #876 a manqué le
+// cas suivant, et il l'a manqué EXACTEMENT là où il avait déclaré sa limite. #179 demandait une
+// fiche consultable par membre chez CASSANDRA. La commande existe, elle rend quatorze champs, elle
+// tourne — et la tâche était toujours ouverte. Aucune tâche ultérieure n'ayant écrit « CLÔTURE DE
+// #179 », le détecteur textuel ne pouvait rien voir.
+//
+// LA LIMITE DÉCLARÉE S'EST VÉRIFIÉE EN VRAI, et c'est la meilleure chose qui pouvait lui arriver :
+// « borne inférieure, jamais un total » n'était pas une précaution de style. Il existe une seconde
+// famille de tâches closes en silence — celles dont le travail a été fait sans que personne ne cite
+// leur numéro. Trois en une journée (#801, #445, #179), donc ce n'est pas un accident.
+//
+// LE SIGNAL, ET IL EST ÉTROIT PAR CONSTRUCTION : une tâche ouverte qui NOMME une commande
+// (`node scripts/x.mjs sous-commande`) ou une fonction (`maFonction()`), et cette chose existe
+// dans le code. C'est net, dérivable, et sans faux vert dangereux — parce que le résultat est une
+// QUESTION posée à la lecture, jamais un verdict. Une tâche peut nommer une fonction qui existait
+// déjà avant elle ; c'est précisément pourquoi rien n'est basculé automatiquement.
+//
+// CE QU'IL NE FERA JAMAIS : basculer une ligne tout seul. Les trois cas du jour ont tous demandé
+// d'ouvrir le code et de LANCER la commande pour confirmer. Un détecteur qui clôturerait sur un
+// nom trouvé fermerait des tâches vivantes, et c'est le seul défaut irrattrapable ici : une tâche
+// close à tort ne se rouvre que si quelqu'un s'en souvient.
+export const MOTIF_COMMANDE = /node\s+(scripts\/[a-z0-9-]+\.mjs)(?:\s+([a-z][a-z0-9-]*))?/gi;
+
+export function findCapacitesPeutEtreDejaLa(rows = [], { lire = null, existe = null } = {}) {
+  const ouvertes = rows.filter((r) => OPEN_KEYS.has(r.statusKey) && Number.isFinite(r.numero));
+  if (!ouvertes.length) return { mesurable: false, pourquoi: "aucune tâche ouverte : rien à confronter" };
+  if (typeof lire !== "function" || typeof existe !== "function") {
+    // Sans accès au code, ce détecteur ne peut RIEN dire — et le dire vaut mieux qu'une liste vide
+    // qui se lirait « aucune tâche n'est déjà faite ».
+    return { mesurable: false, pourquoi: "aucun lecteur de code fourni : sans lire les scripts, « cette capacité existe-t-elle ? » n'a pas de réponse, et une liste vide se lirait comme « aucune tâche déjà faite »" };
+  }
+  const candidats = [];
+  for (const r of ouvertes) {
+    const texte = `${r.sousSujet ?? ""} ${r.detail ?? ""}`;
+    const indices = [];
+    for (const m of texte.matchAll(MOTIF_COMMANDE)) {
+      const [, chemin, sousCommande] = m;
+      if (!existe(chemin)) continue;
+      const src = lire(chemin);
+      if (!src) continue;
+      // Une sous-commande n'est confirmée que si le script la reconnaît vraiment.
+      if (sousCommande) {
+        if (new RegExp(`["'\`]${sousCommande}["'\`]`).test(src)) indices.push(`la commande « node ${chemin} ${sousCommande} » existe et le script reconnaît cette sous-commande`);
+      } else indices.push(`le script ${chemin} existe`);
+    }
+    // LE SIGNAL « FONCTION » A ÉTÉ RETIRÉ AVANT D'ÊTRE LIVRÉ (2026-09-25), et la mesure est la
+    // raison : sur le vrai registre il rendait 21 candidats, dont **17 reposaient sur la seule
+    // présence d'une fonction**. Or une tâche qui écrit « j'ai construit `maFonction()` » nomme
+    // évidemment une fonction qui existe — elle vient de la créer. Le détecteur accusait donc
+    // surtout les tâches les mieux documentées.
+    //
+    // C'est L4 prise sur le fait, à la huitième occurrence de la journée, et attrapée par le seul
+    // réflexe qui marche : regarder la composition du résultat avant de le publier. Un détecteur
+    // qui rend UN candidat vérifiable vaut mieux qu'un qui en rend vingt et un dont dix-sept sont
+    // faux — le second se fait ignorer en trois passages, et emporte le premier avec lui.
+    if (indices.length) candidats.push({ numero: r.numero, sousSujet: r.sousSujet, indices: [...new Set(indices)] });
+  }
+  return {
+    mesurable: true,
+    ouvertes: ouvertes.length,
+    candidats,
+    horsPortee: "Ce sont des QUESTIONS, jamais des verdicts : une tâche peut nommer une capacité qui existait déjà avant elle. Rien n'est basculé automatiquement — les trois cas trouvés aujourd'hui ont tous demandé d'ouvrir le code et de LANCER la commande. Une tâche close à tort ne se rouvre que si quelqu'un s'en souvient.",
+  };
+}
+
+export function formatCapacitesLines(r) {
+  if (!r?.mesurable) return [`CAPACITÉS PEUT-ÊTRE DÉJÀ LÀ — ❓ PAS MESURÉ : ${r?.pourquoi ?? "raison inconnue"}`];
+  if (!r.candidats.length) return [`Capacités peut-être déjà là : aucune sur ${r.ouvertes} tâches ouvertes — aucune ne nomme une commande qui existe déjà.`];
+  const l = [`❓ ${r.candidats.length} tâche(s) ouverte(s) sur ${r.ouvertes} NOMMENT une COMMANDE qui existe déjà — à vérifier une par une, jamais à clore sur ce signal :`];
+  for (const c of r.candidats.slice(0, 12)) {
+    l.push(`  · #${c.numero} — ${String(c.sousSujet ?? "").slice(0, 80)}`);
+    for (const i of c.indices.slice(0, 2)) l.push(`      → ${i}`);
+  }
+  if (r.candidats.length > 12) l.push(`  … et ${r.candidats.length - 12} autre(s).`);
+  l.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  return l;
+}
+
 // ════════════════════════════════════════════════════════════════════════════════════════════
 // LES BLOCS DE TRAVAIL (2026-09-25, tâche #869 — demande explicite : « des taches s'accumulent,
 // à un moment donné, l'outil est capable de les regrouper sous un meme theme [...] constitue aussi
@@ -1848,6 +1928,19 @@ function bilanCli() {
   L.push("-".repeat(92));
   L.push("");
   for (const l of formatClosesAilleursLines(findTachesClosesAilleurs(rows))) L.push("  " + l);
+  L.push("");
+  for (const l of formatCapacitesLines(findCapacitesPeutEtreDejaLa(rows, {
+    lire: (c) => { try { return readFileSync(join(ROOT, c), "utf8"); } catch { return null; } },
+    existe: (c) => existsSync(join(ROOT, c)),
+  }))) L.push("  " + l);
+  L.push("");
+  L.push("  ⚠️ CE QUE CES DEUX DÉTECTEURS NE COUVRENT PAS, et il faut le dire plutôt que le taire :");
+  L.push("  une tâche faite sans que personne n'écrive sa clôture ET sans qu'elle nomme de commande");
+  L.push("  reste invisible aux deux. #179 était dans ce cas — sa capacité existait, rien ne le disait.");
+  L.push("  Aucune mécanique ne peut fermer cette famille ; la seule protection est le RÉFLEXE de");
+  L.push("  vérifier qu'une tâche n'est pas déjà faite AVANT de la traiter. Trois fois payant le");
+  L.push("  2026-09-25 (#801, #445, #179), et déclaré ici parce que le déclarer EST la protection");
+  L.push("  quand aucun mécanisme n'est possible (Article 27).");
   L.push("");
 
   L.push("-".repeat(92));
