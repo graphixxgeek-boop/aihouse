@@ -17,6 +17,7 @@
 // contente de le rappeler dans son rapport.
 
 import { existsSync, mkdtempSync, rmSync, readFileSync } from "node:fs";
+import { mesurerCorpus, ligneCorpus } from "./corpus-mesure.mjs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { sh, printReliabilityNotice } from "./lib-shell.mjs";
@@ -115,6 +116,11 @@ function main() {
   printReportHeader({ tool: "clean-dirty-old", title: "CLEAN-DIRTY-OLD — code ancien et peu retouché (repérage seul, jamais un jugement)", scriptPath: "scripts/clean-dirty-old.mjs" });
 
   const files = Object.values(LIB_MAP);
+  // LE CORPUS AVANT TOUT VERDICT (2026-09-25, chantier #206). « Aucune zone signalée » est le
+  // verdict le plus fréquent de cet outil, et c'est exactement celui qu'un corpus vide produirait
+  // aussi — la stagnation se mesure par COMPARAISON entre fichiers, donc sur zéro fichier il n'y a
+  // pas « rien de plus ancien que le reste », il n'y a pas de reste du tout.
+  console.log(ligneCorpus(mesurerCorpus(files, { quoi: "le corpus des fichiers suivis (LIB_MAP)" }), { nomDuGardien: "CLEAN-DIRTY-OLD" }));
   const lastTouchByFile = Object.fromEntries(files.map((f) => [f, lastTouchDays(f)]));
   const staleness = relativeStaleness(lastTouchByFile);
 

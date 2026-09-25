@@ -8629,6 +8629,29 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     console.log('Passed: a decision that has been TAKEN is finally a state the registry can express (2026-09-25, task #857), and the hole was found by breaking it for real rather than by reading it. The user had just settled nine decisions at once; writing "TRANCHÉ 2026-09-25" in the Décision column made the row invisible to the registry, because the only recognised values were "à trancher", "entre-deux", "abandonnée" and "fichier créé" — four ways of saying it is still open or was dropped, and none for "he chose". Both remaining options were wrong: leaving "à trancher" on a settled question re-poses it at every Ronde, which leçon L22 forbids outright, and deleting the row loses the trace of what was decided and why. This is not loose vocabulary growth but the fourth state of a state machine that had three and a half, which Article 24 explicitly allows for a closed vocabulary.');
   }
 
+  // LES SEPT GARDIENS SACRÉS NE PEUVENT PLUS DIRE « TOUT VA BIEN » SUR DU VIDE (2026-09-25, #858).
+  {
+    const CM = await import('../scripts/corpus-mesure.mjs');
+    const vide = CM.mesurerCorpus([], { quoi: "le corpus" });
+    assert.ok(!vide.mesurable && vide.etat === 'vide', 'an empty corpus is NOT "no finding": it is no data, and the whole defect this module closes is that both rendered the same empty list — a report that raises a false alarm gets fixed, a report that falsely reassures never does, because nobody goes to look');
+    assert.ok(!CM.mesurerCorpus(undefined).mesurable && CM.mesurerCorpus(undefined).etat === 'illisible', 'and a corpus that could not be read at all is a THIRD state, distinct from an empty one: they call for opposite gestures — repair the reader, or accept there was nothing to read');
+    const complet = CM.mesurerCorpus(['a', 'b'], { attendus: 2 });
+    assert.ok(complet.mesurable && !complet.ampute, 'a full corpus measures and says so');
+    const ampute = CM.mesurerCorpus(['a'], { attendus: 77 });
+    assert.ok(ampute.mesurable && ampute.ampute, 'a TRUNCATED corpus still measured something, so it is not unmeasurable — but the verdict does not cover what it appears to cover, which is the most treacherous case of the three: 1 file read out of 77 renders with every appearance of a complete verdict');
+    assert.ok(CM.ligneCorpus(CM.mesurerCorpus([], { quoi: 'x' })).startsWith('🚨'), 'and the empty case shouts rather than whispers, because its whole danger is looking calm');
+    assert.ok(/lien\(s\)/.test(CM.ligneCorpus(CM.mesurerCorpus([1, 2], { unite: 'lien' }))), 'the unit is declared because a corpus is not always made of files — HARMONIA walks a table of LINKS, and printing "5 fichier(s)" for five links is a right number with a wrong word, which makes a reader doubt the number too');
+
+    const sources = {};
+    const { readFileSync: lireSrc } = await import('node:fs');
+    for (const g of CM.GARDIENS_SACRES) sources[g] = lireSrc(new URL(`../scripts/${g}.mjs`, import.meta.url), 'utf8');
+    const audit = CM.findGardiensSansMesureDeCorpus(sources);
+    assert.deepEqual(audit.manquants, [], 'checked live against the real repository: every one of the seven sacred Guardians declares its corpus before concluding — an eighth added tomorrow without one would silently fall back into the false green this chantier just closed, which is why the check is mechanical rather than remembered (Article 27)');
+    const incomplet = CM.findGardiensSansMesureDeCorpus({ 'check-argus': 'rien du tout' }, { gardiens: ['check-argus', 'safe-export'] });
+    assert.deepEqual([incomplet.manquants, incomplet.absents], [['check-argus'], ['safe-export']], 'a Guardian whose source was never supplied is NOT at fault, it is UNVERIFIED — counting the two together would reproduce exactly the confusion this whole module exists to fight');
+    console.log('Passed: the seven sacred Guardians can no longer say "all clear" on absent data (2026-09-25, chantier #206, authorised by the user who explicitly turned down my "one first" and took all seven). Measured on 2026-09-23 rather than assumed: findFuitesDeSpecificite, findOutilsSansBlueprint, findDuplicateBlocks and findNearDuplicateBlocks all return [] on empty input — the same [] as on a spotless repository. One shared mechanism rather than seven patches, at the CORPUS level rather than per detector, because each Guardian carries up to a dozen detectors that would all be answering the same question, asked once and upstream: was I given anything to look at? No existing signature was touched — companion functions beside, the pattern churnSignalMesure already proved, which removes the very risk the 2026-09-23 plan feared ("touching all their callers"). And its own first real run produced a FALSE RED inside the module written to prevent false greens: AXA-CHECK announced 22 files out of 56 expected, because I had summed two populations that are collected separately. Measured, corrected, kept in the comment.');
+  }
+
   // LE PLAN DE DÉPART ↔ LE RAPPORT DE NUIT (2026-09-25, tâche #772).
   const GOD = await import('../scripts/god-of-all-process.mjs');
   assert.equal(GOD.comparerPlanEtRapport({ planTexte: null, rapportTexte: 'x' }).mesurable, false, 'no start plan means the comparison refuses: without it, a final report cannot be compared to anything, and its SILENCE on a task would look exactly like a finished task');

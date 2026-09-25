@@ -280,3 +280,16 @@ LES INTERDITS RESPECTÉS (vérifiés à la clôture)
   derive ; j'ai aligne mes lignes sur le mot de la maison. Puis le registre des idees, qui
   savait dire « ca attend » de quatre facons et n'avait AUCUN mot pour « il a choisi » : une
   decision prise y disparaissait purement et simplement. Quatrieme etat ajoute [FAIT]
+
+#858 : CLOTURE DE #206, le gros chantier que tu as autorise (« oui, les sept d'un coup »).
+  Les sept Gardiens sacres rendaient une liste vide aussi bien apres avoir tout regarde qu'apres
+  n'avoir rien recu — les deux se lisaient « tout va bien ». Un rapport qui alerte a tort se fait
+  corriger ; un rapport qui rassure a tort ne se fait JAMAIS corriger, puisque personne ne va voir.
+  La crainte du plan (« changer ce qu'ils rendent touche tous leurs appelants ») a ete SUPPRIMEE
+  plutot que geree : le mecanisme est pose au niveau du CORPUS, en fonctions compagnes — aucune
+  signature n'a bouge, aucun appelant ni aucun test n'a ete touche.
+  Trois etats et non deux : un corpus AMPUTE existe, et c'est le plus traitre (1 fichier lu sur 77
+  rend un verdict d'apparence complete).
+  Et mon module a produit un FAUX ROUGE a son premier passage, dans l'outil ecrit contre les faux
+  verts : j'avais additionne deux populations collectees separement. Mesure, corrige, garde en
+  commentaire. Un huitieme Gardien ne pourra plus naitre sans declarer ce qu'il regarde [FAIT]

@@ -23,6 +23,7 @@ import { SENSITIVE_NODES, LEVEL_ORDER } from "./check-level-target.mjs";
 import { THEME_PRIMARY_FILE, parseNumstat, churnSignal, churnSignalMesure } from "./always-new-code.mjs";
 import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { mesurerCorpus, ligneCorpus } from "./corpus-mesure.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -444,6 +445,26 @@ function main() {
   const ledger = loadDepthChecks();
 
   printReportHeader({ tool: "axa-check", title: "AXA-CHECK — robustesse et fragilité par fonction (zéro coût additionnel)", scriptPath: "scripts/axa-check.mjs" });
+  // LE CORPUS AVANT TOUT VERDICT (2026-09-25, chantier #206). Le cas d'AXA-CHECK est le plus
+  // traître des sept, parce que son corpus n'est pas une liste de fichiers du dépôt mais le
+  // résultat d'une EXÉCUTION : la couverture V8 produite en lançant check-house. Si ce lancement
+  // échoue à moitié — un test qui plante tôt, un dossier de couverture incomplet — le rapport
+  // continue de sortir, avec moins de fichiers et le même air d'être complet. Le nombre attendu
+  // est donc déclaré à côté du nombre lu, pour qu'un corpus AMPUTÉ se voie au lieu de passer pour
+  // un corpus propre.
+  const fichiersCouverts = Object.keys(perFile);
+  console.log(ligneCorpus(mesurerCorpus(fichiersCouverts, {
+    quoi: "la couverture produite par l'exécution de check-house",
+    // LIB_MAP SEUL, et l'erreur vaut d'être gardée : mon premier jet additionnait LIB_MAP (22) et
+    // AGENT_SCRIPT_FILES (34), ce qui a produit « 22 analysés sur 56 attendus — le verdict ne
+    // couvre pas les 34 manquants ». Un FAUX ROUGE, dans le module écrit pour empêcher les faux
+    // verts. Les scripts d'Agents ont leur propre collecteur (`collectScriptCoverage`), donc ils
+    // ne manquent pas ici : ils sont comptés ailleurs. Mesuré plutôt que supposé — 22 attendus,
+    // 22 vus. Un dénominateur qui agrège deux populations collectées séparément est aussi faux
+    // qu'un dénominateur absent, et il a l'air plus sérieux.
+    attendus: Object.keys(LIB_MAP).length,
+    pourquoiVide: "l'exécution de check-house n'a produit aucune donnée de couverture — tout verdict de robustesse porterait sur zéro fonction",
+  }), { nomDuGardien: "AXA-CHECK" }));
   let totalFn = 0, totalCovered = 0;
   const fragilesTousFichiers = [];
   for (const [file, functions] of Object.entries(perFile)) {

@@ -18,6 +18,7 @@
 // explicitement avec l'utilisateur le 2026-09-19).
 
 import { statSync, readFileSync, existsSync } from "node:fs";
+import { mesurerCorpus, ligneCorpus } from "./corpus-mesure.mjs";
 import { dataRows, numericColumn } from "./lib-markdown-table.mjs";
 import { join } from "node:path";
 import { sh, printReliabilityNotice } from "./lib-shell.mjs";
@@ -246,6 +247,13 @@ function main() {
   const requested = process.argv[2];
   const indexText = existsSync(INDEX_PATH) ? readFileSync(INDEX_PATH, "utf8") : "";
   const coverage = parseCoverage(indexText);
+  // LE CORPUS AVANT TOUT VERDICT (2026-09-25, chantier #206). Son corpus à lui, ce sont les ZONES
+  // de la rotation : sans elles il ne recommanderait rien, et « rien à recommander » se lirait
+  // « tout est à jour ». Le registre des passages est déclaré à part parce qu'un registre vide est
+  // NORMAL au premier passage — c'est une absence attendue, jamais un défaut (et l'outil le dit
+  // déjà pour ses tendances ; il le dit désormais aussi pour son corpus).
+  console.log(ligneCorpus(mesurerCorpus(THEMES, { quoi: "les zones de la rotation (THEMES)", unite: "zone" }), { nomDuGardien: "ALWAYS-NEW-CODE" }));
+  console.log(ligneCorpus(mesurerCorpus(Object.keys(coverage ?? {}), { quoi: "le registre des passages déjà enregistrés", unite: "passage", pourquoiVide: "normal tant qu'aucun zoom profond n'a eu lieu — une absence attendue, jamais un défaut" }), { nomDuGardien: "ALWAYS-NEW-CODE" }));
   const rec = recommendZone(THEMES, coverage, requested);
   let signalChurn;
 

@@ -10,6 +10,7 @@
 // de couverture totale (cf. "Ce que ce patron n'est pas", docs/argus-blueprint.md).
 
 import { readFileSync, readdirSync, statSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { mesurerCorpus, ligneCorpus } from "./corpus-mesure.mjs";
 import { join, relative } from "node:path";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
@@ -120,6 +121,12 @@ function main() {
     .filter(Boolean));
 
   printReportHeader({ tool: "argus", title: "ARGUS — partie mécanique (zéro coût API)", scriptPath: "scripts/check-argus.mjs" });
+  // LE CORPUS AVANT TOUT VERDICT (2026-09-25, chantier #206). ARGUS balaie DEUX corpus distincts,
+  // donc il en déclare deux : les confondre en un seul chiffre laisserait croire qu'un scan couvre
+  // ce que l'autre a lu.
+  console.log(ligneCorpus(mesurerCorpus(files, { quoi: "le corpus des champs de life.ts (lib, app, components)" }), { nomDuGardien: "ARGUS" }));
+  console.log(ligneCorpus(mesurerCorpus(fichiersBalayes, { quoi: "le corpus des marqueurs TODO (tout le dépôt)" }), { nomDuGardien: "ARGUS" }));
+  console.log("");
   console.log(`Champs de life.ts potentiellement jamais lus ailleurs (${dead.length}) :`);
   if (!dead.length) console.log("  Aucun — tous les champs déclarés dans le type Life sont référencés au moins 5 fois dans le projet.");
   for (const d of dead) console.log(`  [${d.confidence}] ${d.field} (${d.uses} occurrence(s) trouvée(s) au total, déclaration + lecture éventuelle incluses)${dejaTranche.has(d.field) ? " — déjà tranché avec votre accord, ne compte plus comme un écart" : ""}`);

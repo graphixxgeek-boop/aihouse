@@ -6,6 +6,7 @@
 // soit la doc s'est trompée dès le départ — dans les deux cas, un signal utile.
 
 import { readFileSync, readdirSync } from "node:fs";
+import { mesurerCorpus, ligneCorpus } from "./corpus-mesure.mjs";
 import { join } from "node:path";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
@@ -178,6 +179,10 @@ async function main() {
   recordCliUsage("harmonia");
   const results = checkLinks(LINKS);
   printReportHeader({ tool: "harmonia", title: "HARMONIA — partie mécanique (cohérence chiffrée doc/code, zéro coût API)", scriptPath: "scripts/check-harmonia.mjs" });
+  // LE CORPUS AVANT TOUT VERDICT (2026-09-25, chantier #206). Son corpus à lui n'est pas une liste
+  // de fichiers mais la table de LIENS déclarés : c'est elle qui peut être vide, et un « 0 friction »
+  // sur zéro lien vérifié se lirait exactement comme un « 0 friction » sur trente.
+  console.log(ligneCorpus(mesurerCorpus(results, { quoi: "la table des liens doc/code déclarés (LINKS)", unite: "lien" }), { nomDuGardien: "HARMONIA" }));
   for (const r of results) {
     const icon = r.confidence === "ok" ? "✓" : r.confidence === "confirmé" ? "✗ FRICTION" : "? à vérifier";
     console.log(`[${icon}] ${r.theme} — ${r.status}`);

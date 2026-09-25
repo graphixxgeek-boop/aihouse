@@ -26,6 +26,7 @@
 // "renommage" trouvé est en réalité l'identité (a→a partout) — ce cas-là, c'est un doublon littéral,
 // déjà signalé par v1, jamais compté deux fois.
 import { readFileSync, readdirSync, statSync } from "node:fs";
+import { mesurerCorpus, ligneCorpus } from "./corpus-mesure.mjs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { recordCliUsage } from "./tool-usage.mjs";
@@ -468,6 +469,14 @@ export function formatClusterSummary(cluster) {
 function main() {
   printReportHeader({ tool: "clone-hunter", title: "CLONE-HUNTER — blocs de code dupliqués", scriptPath: "scripts/clone-hunter.mjs" });
   recordCliUsage("clone-hunter");
+  // LE CORPUS AVANT TOUT VERDICT (2026-09-25, chantier #206). Mesuré le 2026-09-23 :
+  // `findDuplicateBlocks` et `findNearDuplicateBlocks` rendent tous deux `[]` sur une entrée vide,
+  // soit exactement ce qu'ils rendent sur un dépôt sans le moindre doublon.
+  // Le corpus est RECOMPTÉ depuis les mêmes racines que buildDuplicateReport(), jamais un second
+  // parcours d'un autre périmètre : compter autre chose que ce qui est analysé produirait un
+  // dénominateur faux, ce qui est pire qu'un dénominateur absent.
+  const corpusClone = DEFAULT_ROOTS.flatMap((r) => walk(join(ROOT, r), DEFAULT_EXTENSIONS));
+  console.log(ligneCorpus(mesurerCorpus(corpusClone, { quoi: "le corpus des fichiers source balayés" }), { nomDuGardien: "CLONE-HUNTER" }));
   const clusters = buildDuplicateReport();
   if (!clusters.length) {
     console.log("CLONE-HUNTER : aucun bloc dupliqué détecté au-dessus du seuil (≥5 lignes, ≥20 caractères par ligne).");

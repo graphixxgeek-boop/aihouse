@@ -66,6 +66,28 @@ que le périmètre sensible existe pour empêcher.
 | Constat | État | Suite |
 |---|---|---|
 | Le crochet distingue déjà quatre états | **écarté** — rien à faire, c'est en place | — |
-| Les détecteurs ne distinguent pas, par construction | **à trancher** | changer ce qu'ils rendent touche tous leurs appelants : ton arbitrage |
+| Les détecteurs ne distinguent pas, par construction | **retenu — FAIT le 2026-09-25, tâche #858** | Tranché par l'utilisateur en fenêtre dédiée : « oui, les sept d'un coup », contre ma recommandation d'en faire un seul d'abord. **La crainte de ce plan — « changer ce qu'ils rendent touche tous leurs appelants » — a été SUPPRIMÉE plutôt que gérée** : le mécanisme est posé au niveau du CORPUS (`scripts/corpus-mesure.mjs`), en fonctions compagnes, donc aucune signature de détecteur n'a bougé et aucun appelant n'a été touché. Même patron que `churnSignalMesure()`. Les sept déclarent désormais ce qu'ils ont réellement regardé avant tout verdict, et un garde-fou du garde-fou (`findGardiensSansMesureDeCorpus`, câblé dans SAFE-EXPORT) refuse qu'un huitième naisse sans. |
 | `Boolean(churnSignal(...))` à axa-check.mjs:360 | **retenu — FAIT le 2026-09-25, tâche #835** | `churnSignalMesure()` rend trois états (mesuré+signal / mesuré+rien / **pas mesuré**), la sévérité survit jusqu'au libellé, et l'absence de données git s'affiche au lieu de devenir `false`. Correction locale et bornée, comme ce plan l'avait cadrée : `churnSignal()` n'a pas changé de forme, donc aucun appelant historique n'est touché. |
 | Mon propre réflexe : compter des mots au lieu de sonder | **retenu** | déjà consigné — c'est la façon dont cet audit a failli conclure faux |
+
+---
+
+## 2026-09-25 — le chantier est fait, et ce que le premier passage réel a appris
+
+**Une décision de conception qui n'était pas dans ce plan, et qui change tout son coût** : le
+mécanisme est posé au niveau du CORPUS, pas du détecteur. Chaque Gardien porte jusqu'à une douzaine
+de détecteurs ; les instrumenter un par un aurait multiplié le travail par dix pour répondre dix
+fois à la MÊME question, qui se pose une seule fois et en amont — **est-ce qu'on m'a donné quelque
+chose à regarder ?** Si le corpus est vide, aucun détecteur ne peut rien conclure.
+
+**Le troisième état s'est révélé plus riche que prévu.** Le plan en attendait deux (mesuré / pas
+mesuré) ; le vrai paysage en demandait trois, parce qu'un corpus **AMPUTÉ** existe et qu'il est le
+plus traître des trois : 1 fichier lu sur 77 rend un verdict qui a toutes les apparences d'un
+verdict complet. Il est donc `mesurable: true` ET porteur de sa lacune.
+
+**Et ce module a produit un FAUX ROUGE à son tout premier passage réel, dans l'outil écrit pour
+empêcher les faux verts.** AXA-CHECK a annoncé « 22 fichiers analysés sur 56 attendus ». Vérifié
+plutôt que cru : `LIB_MAP` fait 22 entrées et `AGENT_SCRIPT_FILES` 34, mais les seconds ont leur
+PROPRE collecteur. J'avais additionné deux populations collectées séparément. **Un dénominateur
+faux est aussi mauvais qu'un dénominateur absent, et il a l'air plus sérieux.** Corrigé, et gardé
+en commentaire dans le code.

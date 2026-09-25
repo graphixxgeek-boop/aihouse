@@ -15,6 +15,7 @@
 // sujet sans rapport avec le travail en cours pousse à désactiver le crochet — et on perd tout.
 
 import { readFileSync, existsSync, readdirSync } from "node:fs";
+import { mesurerCorpus, ligneCorpus, findGardiensSansMesureDeCorpus, formatGardiensSansMesureLines, GARDIENS_SACRES } from "./corpus-mesure.mjs";
 import { join } from "node:path";
 import { printReliabilityNotice, porteeDe } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
@@ -737,7 +738,10 @@ function main() {
   for (const [nom, c] of Object.entries(CIBLES)) console.log(`· cible « ${nom} » : ${c.question}`);
   console.log("");
   const blueprints = readdirSync(join(ROOT, "docs")).filter((f) => f.endsWith("-blueprint.md")).map((f) => `docs/${f}`);
-  console.log(`${blueprints.length} blueprint(s) trouvé(s).`);
+  // LE CORPUS AVANT TOUT VERDICT (2026-09-25, chantier #206). Mesuré le 2026-09-23 :
+  // `findFuitesDeSpecificite` et `findOutilsSansBlueprint` rendent tous deux `[]` sur une entrée
+  // vide, soit exactement ce qu'ils rendent sur un dépôt parfaitement exportable.
+  console.log(ligneCorpus(mesurerCorpus(blueprints, { quoi: "le corpus des blueprints (docs/*-blueprint.md)", unite: "blueprint" }), { nomDuGardien: "SAFE-EXPORT" }));
   const fuites = findFuitesDeSpecificite(blueprints);
   const defauts = findBlueprintsMalConstruits(blueprints);
   // LE CODE PARTIRAIT-IL ? (2026-09-24) — la moitié que cet outil ne regardait pas.
@@ -821,6 +825,18 @@ function main() {
       return `${ou} — ${e.pourquoi ?? "écart sans description : à regarder dans le corps du rapport"}`;
     },
     tache: (e) => `rendre ${e.fichier ?? e.outil} réellement exportable` });
+  // LE GARDE-FOU DU GARDE-FOU (2026-09-25, chantier #206). Il vit chez SAFE-EXPORT parce que c'est
+  // exactement sa question — « une autre IA pourrait-elle reprendre ce code sans défaire ce qui a
+  // été gagné ? » (Article 27). Un huitième Gardien sacré ajouté demain sans déclarer son corpus
+  // retomberait en silence dans le faux vert que ce chantier vient de fermer, et personne ne le
+  // saurait : c'est précisément la dette de reprise que SAFE-EXPORT existe pour attraper.
+  console.log("\n--- LES GARDIENS SACRÉS DÉCLARENT-ILS CE QU'ILS ONT REGARDÉ ? ---");
+  const sourcesGardiens = {};
+  for (const g of GARDIENS_SACRES) {
+    try { sourcesGardiens[g] = readFileSync(join(ROOT, `scripts/${g}.mjs`), "utf8"); } catch { /* source illisible : comptée « non vérifiée », jamais « en faute » */ }
+  }
+  for (const l of formatGardiensSansMesureLines(findGardiensSansMesureDeCorpus(sourcesGardiens))) console.log(l);
+
   console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
   for (const l of plan.lignes) console.log(l);
 
