@@ -1,0 +1,38 @@
+RAPPORT DE NUIT — 25 septembre 2026
+======================================================================
+
+À CHAQUE TÂCHE, SANS EXCEPTION : respecter le process, utiliser les outils.
+
+Ce fichier se construit AU FUR ET À MESURE, jamais à la fin. Il se compare au
+plan de départ figé (docs/rapports-de-nuit/plan-depart-2026-09-25.txt) par :
+
+    node scripts/god-of-all-process.mjs comparer \
+      docs/rapports-de-nuit/plan-depart-2026-09-25.txt \
+      docs/rapports-de-nuit/nuit-2026-09-25.txt
+
+CHAQUE TÂCHE DOIT PORTER UNE MARQUE SUR SA LIGNE, sinon elle compte comme
+tombée du radar — et c'est voulu : un numéro seul ne prouve rien.
+  [FAIT]         terminée et vérifiée
+  [AVANCÉ]       entamée, pas finie — dit où elle en est
+  [NON-TRAITÉ]   pas touchée, et la raison est écrite
+  [ÉCARTÉ]       volontairement écartée, avec sa raison
+
+----------------------------------------------------------------------
+CE QUI A CHANGÉ POUR LE PROJET   (sa demande : en haut, avant le détail)
+----------------------------------------------------------------------
+
+(se remplit au fil de la nuit)
+
+----------------------------------------------------------------------
+LES TÂCHES, UNE PAR LIGNE
+----------------------------------------------------------------------
+
+#765 Article 31 écrit (tout passe par un outil) — reste le câblage angel [AVANCÉ]
+#766 Article 32 écrit (le temps réel se lit) — reste le câblage angel [AVANCÉ]
+#772 Plan de départ ↔ rapport de nuit : mécanisme construit, testé, 235 groupes au vert [FAIT]
+
+----------------------------------------------------------------------
+LES INTERDITS RESPECTÉS (vérifiés à la clôture)
+----------------------------------------------------------------------
+
+(se remplit à la clôture)

@@ -1057,6 +1057,142 @@ export function findChangementsIndirectsSansMiseAJour({ processes = PROCESSES, s
 
 // Même mécanique honnête que tool-brain : une correspondance par mots-clés, jamais une
 // compréhension. Elle peut passer à côté — d'où l'avertissement de fiabilité en tête du rapport.
+// ============================================================================================
+// LE PLAN DE DÉPART ↔ LE RAPPORT DE NUIT (2026-09-25, tâche #772)
+// ============================================================================================
+// SA DEMANDE, dans ses mots : « à chaque début de process mode auto : un rapport txt sur le plan
+// de la nuit, à comparer au rapport txt de nuit, qui se construit au fur et à mesure : garantie
+// que le rapport de fin sera toujours comparé au rapport de début, et que tout sera exécuté.
+// FIABILISE CA STP. fais des tests pour être sûr que ça fonctionne. »
+//
+// LE TROU QUE ÇA FERME, et il est le plus coûteux de tous les trous de nuit : un rapport de fin
+// écrit à la lumière de ce qu'on VIENT de faire ne parle que de ce qu'on a fait. Ce qu'on avait
+// prévu et jamais commencé n'y apparaît pas — pas par malhonnêteté, mais parce que rien ne le
+// rappelle. Une nuit de huit heures peut donc rendre un rapport impeccable sur vingt tâches en
+// ayant silencieusement laissé tomber les quatre-vingts autres.
+//
+// LA FIABILISATION TIENT EN UNE DÉCISION : un NUMÉRO SEUL NE PROUVE RIEN. Écrire « reste à faire
+// #744 » dans le rapport citerait le numéro sans rien avoir fait — et une comparaison qui compte
+// les numéros cités rendrait 100 % de couverture sur une nuit vide. Chaque tâche doit donc porter
+// une MARQUE explicite, et une tâche du plan sans marque dans le rapport est le vrai constat :
+// elle est tombée du radar, ce que personne n'aurait vu autrement.
+export const MARQUES_RAPPORT = {
+  FAIT: { motif: /\[FAIT\]/, quoi: "terminée et vérifiée", compteCommeTraitee: true },
+  AVANCE: { motif: /\[AVANC[ÉE]\]/, quoi: "entamée, pas finie — dit où elle en est", compteCommeTraitee: true },
+  "NON-TRAITE": { motif: /\[NON[- ]TRAIT[ÉE]E?\]/, quoi: "pas touchée, et la raison est écrite", compteCommeTraitee: false },
+  ECARTE: { motif: /\[[ÉE]CART[ÉE]E?\]/, quoi: "volontairement écartée, avec sa raison", compteCommeTraitee: false },
+};
+
+export const MOTIF_NUMERO = /#(\d{1,5})\b/g;
+
+// Un numéro et sa marque doivent tenir sur la MÊME LIGNE : une marque trois lignes plus haut
+// appartient à une autre tâche, et les rapprocher inventerait un traitement qui n'a pas eu lieu.
+export function marquesParNumero(texte = "") {
+  const parNumero = new Map();
+  for (const ligne of String(texte).split("\n")) {
+    const nums = [...ligne.matchAll(MOTIF_NUMERO)].map((m) => Number(m[1]));
+    if (!nums.length) continue;
+    let marque = null;
+    for (const [cle, d] of Object.entries(MARQUES_RAPPORT)) if (d.motif.test(ligne)) { marque = cle; break; }
+    if (!marque) continue;
+    for (const n of nums) if (!parNumero.has(n)) parNumero.set(n, marque);
+  }
+  return parNumero;
+}
+
+// PREMIER PASSAGE RÉEL, PREMIER DÉFAUT (2026-09-25) : la première version lisait TOUT numéro du
+// plan, et le vrai fichier en a rendu 122 au lieu de 117. Les cinq de trop venaient des TITRES —
+// une tâche dont le sous-sujet dit « #490 : un seul lecteur pour les douze registres » faisait
+// entrer #490 dans le plan une seconde fois, et les interdits cités en tête y ajoutaient les leurs.
+// Cinq fantômes dans le dénominateur suffisent à fausser toute la couverture.
+//
+// LA CORRECTION EST STRUCTURELLE, PAS UN FILTRE : une ligne de plan a une FORME — le numéro en
+// tête, suivi d'une barre. Un numéro cité au milieu d'une phrase n'est pas une entrée de plan, et
+// aucune heuristique n'avait à en décider.
+export const MOTIF_LIGNE_DE_PLAN = /^#(\d{1,5})\s*\|/;
+
+export function numerosDuPlan(texte = "") {
+  const nums = new Set();
+  for (const ligne of String(texte).split("\n")) {
+    const m = ligne.match(MOTIF_LIGNE_DE_PLAN);
+    if (m) nums.add(Number(m[1]));
+  }
+  return [...nums].sort((a, b) => a - b);
+}
+
+export function construirePlanDeDepart({ taches = [], date, contexte = "" } = {}) {
+  if (!date) throw new Error("construirePlanDeDepart : la date se LIT (AGENT-DU-TEMPS), jamais ne se suppose — Article 32");
+  const L = [];
+  L.push(`PLAN DE DÉPART — mode auto du ${date}`);
+  L.push("=".repeat(70));
+  L.push("");
+  L.push("À CHAQUE TÂCHE, SANS EXCEPTION : respecter le process, utiliser les outils.");
+  L.push("(Sa consigne du 2026-09-25, à écrire en tête de chaque tâche — Articles 26 et 31.)");
+  L.push("");
+  if (contexte) { L.push(contexte); L.push(""); }
+  L.push(`NOMBRE DE TÂCHES AU DÉPART : ${taches.length}`);
+  L.push("");
+  L.push("Ce fichier est figé au moment du départ. Le rapport de nuit se compare À LUI, jamais");
+  L.push("à ce dont l'agent se souvient : une tâche absente du rapport final est une tâche tombée");
+  L.push("du radar, et c'est le seul constat que personne d'autre ne peut produire.");
+  L.push("");
+  for (const t of taches) L.push(`#${t.numero} | ${String(t.sujet ?? "").slice(0, 60)} | ${String(t.titre ?? "").slice(0, 100)}`);
+  return L.join("\n") + "\n";
+}
+
+export function comparerPlanEtRapport({ planTexte = null, rapportTexte = null } = {}) {
+  if (planTexte == null) return { mesurable: false, pourquoi: "le PLAN DE DÉPART est introuvable — sans lui, un rapport de fin ne peut être comparé à rien, et son silence sur une tâche ressemblerait à un travail terminé" };
+  if (rapportTexte == null) return { mesurable: false, pourquoi: "le RAPPORT DE NUIT est introuvable — la nuit n'a rien rendu, ce qui n'est pas la même chose qu'une nuit sans écart" };
+  const plan = numerosDuPlan(planTexte);
+  if (!plan.length) return { mesurable: false, pourquoi: "le plan de départ ne contient AUCUN numéro de tâche — une couverture calculée sur zéro rendrait 100 %, ce qui serait le plus faux des verts" };
+  const marques = marquesParNumero(rapportTexte);
+  const parEtat = { FAIT: [], AVANCE: [], "NON-TRAITE": [], ECARTE: [], JAMAIS_MENTIONNEE: [] };
+  for (const n of plan) {
+    const m = marques.get(n);
+    if (!m) parEtat.JAMAIS_MENTIONNEE.push(n);
+    else parEtat[m].push(n);
+  }
+  const horsPlan = [...marques.keys()].filter((n) => !plan.includes(n)).sort((a, b) => a - b);
+  const traitees = parEtat.FAIT.length + parEtat.AVANCE.length;
+  return {
+    mesurable: true, pourquoi: null,
+    total: plan.length, traitees, parEtat, horsPlan,
+    couverture: Math.round((1000 * (plan.length - parEtat.JAMAIS_MENTIONNEE.length)) / plan.length) / 10,
+    // « Traitée » et « prise en compte » ne sont pas la même chose, et les confondre serait le
+    // faux vert de ce mécanisme : une tâche ÉCARTÉE avec sa raison est prise en compte sans être
+    // traitée. Les deux chiffres sortent donc séparément, jamais fondus en un seul pourcentage.
+    tauxTraitement: Math.round((1000 * traitees) / plan.length) / 10,
+    complet: parEtat.JAMAIS_MENTIONNEE.length === 0,
+  };
+}
+
+export function formatComparaisonLines(c) {
+  if (!c?.mesurable) return [`⚠️ NON MESURABLE — ${c?.pourquoi ?? "raison inconnue"}`];
+  const L = [`=== PLAN DE DÉPART ↔ RAPPORT DE NUIT — ${c.total} tâche(s) au départ ===`, ""];
+  for (const [cle, d] of Object.entries(MARQUES_RAPPORT)) {
+    L.push(`${cle.padEnd(12)} ${String(c.parEtat[cle].length).padStart(4)} — ${d.quoi}`);
+  }
+  L.push("");
+  L.push(`PRISE EN COMPTE : ${c.couverture} % (une tâche écartée avec sa raison EST prise en compte)`);
+  L.push(`TRAITEMENT RÉEL : ${c.tauxTraitement} % (faites ou avancées — et rien d'autre ne compte)`);
+  if (c.horsPlan.length) {
+    L.push("");
+    L.push(`↗️ ${c.horsPlan.length} tâche(s) traitée(s) HORS PLAN : ${c.horsPlan.map((n) => "#" + n).join(" ")}`);
+    L.push(`   Ce n'est pas un écart : une nuit trouve des choses. C'est noté pour que le plan suivant en tienne compte.`);
+  }
+  L.push("");
+  if (c.complet) {
+    L.push(`✅ AUCUNE TÂCHE TOMBÉE DU RADAR — les ${c.total} du plan portent toutes une marque dans le rapport.`);
+    L.push(`   Ce qui ne veut PAS dire qu'elles sont toutes faites : ${c.parEtat["NON-TRAITE"].length + c.parEtat.ECARTE.length} sont déclarées non traitées ou écartées, avec leur raison.`);
+  } else {
+    L.push(`🔴 ${c.parEtat.JAMAIS_MENTIONNEE.length} TÂCHE(S) DU PLAN N'APPARAISSENT NULLE PART dans le rapport de nuit.`);
+    L.push(`   C'est LE constat de ce mécanisme : elles ne sont ni faites, ni écartées, ni même refusées —`);
+    L.push(`   elles sont tombées du radar, et personne d'autre que cette comparaison ne pouvait le voir.`);
+    L.push(`   ${c.parEtat.JAMAIS_MENTIONNEE.slice(0, 40).map((n) => "#" + n).join(" ")}${c.parEtat.JAMAIS_MENTIONNEE.length > 40 ? ` … +${c.parEtat.JAMAIS_MENTIONNEE.length - 40}` : ""}`);
+  }
+  return L;
+}
+
 export function whichProcess(tache, { processes = PROCESSES } = {}) {
   const t = String(tache ?? "").toLowerCase();
   if (!t.trim()) return [];
@@ -1710,6 +1846,22 @@ function main() {
   // LA PLANCHE DES SCHÉMAS, à la demande. Sortie sur la sortie standard plutôt qu'écrite d'office :
   // un fichier généré à chaque appel se périmerait dès que quelqu'un oublierait de le relancer, et
   // l'utilisateur a demandé qu'elle vive CHEZ GOD, pas dans une copie de plus (Article 24).
+  // LE PLAN DE DÉPART ET SA COMPARAISON (2026-09-25, tâche #772). Deux sous-commandes plutôt
+  // qu'une : écrire le plan est un geste de DÉPART, le comparer un geste d'ARRIVÉE, et les fondre
+  // aurait permis d'écrire le plan à la fin — exactement ce que le mécanisme existe pour empêcher.
+  if (tache.startsWith("plan-depart")) {
+    const chemin = process.argv[3] ?? `docs/rapports-de-nuit/plan-depart-${new Date().toISOString().slice(0, 10)}.txt`;
+    console.log(`Usage attendu depuis l'agent : construirePlanDeDepart({ taches, date }) puis écriture dans ${chemin}.`);
+    console.log(`Cette sous-commande ne DEVINE jamais la liste des tâches : elle vient de check-tasks-details, jamais d'ici.`);
+    return;
+  }
+  if (tache.startsWith("comparer")) {
+    const lire = (f) => { try { return readFileSync(join(ROOT, f), "utf8"); } catch { return null; } };
+    const [planPath, rapportPath] = process.argv.slice(3);
+    if (!planPath || !rapportPath) { console.log("Usage : node scripts/god-of-all-process.mjs comparer <plan-depart.txt> <rapport-nuit.txt>"); return; }
+    for (const l of formatComparaisonLines(comparerPlanEtRapport({ planTexte: lire(planPath), rapportTexte: lire(rapportPath) }))) console.log(l);
+    return;
+  }
   if (tache === "schemas") {
     console.log(planchesDesSchemas());
     return;
