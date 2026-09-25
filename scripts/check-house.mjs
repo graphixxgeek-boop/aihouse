@@ -6511,6 +6511,26 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.deepEqual(a.compareEvaluations(snap, null).map((e) => e.evolution), ['première mesure', 'première mesure'], 'with no history there is nothing to compare, and that must read as an ABSENCE OF PAST, never as stability — the first run of anything looks calm by construction');
 
     const avant = { date: '2026-09-21', domaines: { m1: { indice: 4 }, j1: { indice: 2 }, disparu: { indice: 5 } }, chiffres: { ecotoken: '18000' } };
+    // #670 (2026-09-25) — LA CAUSE RACINE, plus bête que le symptôme : snapshotEvaluation()
+    // fabriquait l'instantané et PERSONNE ne l'écrivait. Aucune fonction du dépôt n'écrivait
+    // l'historique ; son unique entrée y avait été posée à la main. Leçon L2 à la lettre — un
+    // mécanisme qui ne sort pas du script est une intention, et une fonction exportée que seul un
+    // test appelle ne protège personne.
+    let ecritHisto = null;
+    const okHisto = a.enregistrerEvaluation({ date: '2026-09-30', domaines: { x: { indice: 3, valeur: null } } },
+      { readFileImpl: () => '[{"date":"2026-09-01","domaines":{"x":{"indice":2}}}]', writeFileImpl: (_p, c) => { ecritHisto = JSON.parse(c); }, mkdirImpl: () => {} });
+    assert.equal(okHisto.enregistre, true, 'the snapshot is finally WRITTEN, which nothing in this repository did before');
+    assert.deepEqual(ecritHisto.map((e) => e.date), ['2026-09-01', '2026-09-30'], 'and appended in date order, so a late entry never lands out of sequence in a series read as a trajectory');
+    let deuxieme = null;
+    const rejoue = a.enregistrerEvaluation({ date: '2026-09-01', domaines: { x: { indice: 5, valeur: null } } },
+      { readFileImpl: () => '[{"date":"2026-09-01","domaines":{"x":{"indice":2}}}]', writeFileImpl: (_p, c) => { deuxieme = JSON.parse(c); }, mkdirImpl: () => {} });
+    assert.equal(rejoue.remplace, true, 'IDEMPOTENT BY DATE: an evaluation re-run after a correction is the same evaluation, not a progression — stacking both would make a duplicate read as a trend');
+    assert.equal(deuxieme.length, 1, 'so the day keeps exactly one entry');
+    assert.equal(a.enregistrerEvaluation({ date: '2026-10-01', domaines: {} }, { writeFileImpl: () => { throw new Error('must not write'); } }).enregistre, false, 'an evaluation with not one measured domain is REFUSED rather than written: recorded, it would later read as "that day everything was zero" instead of "that day nothing was measured" — the red thread of this project turned on its own memory');
+    assert.throws(() => a.enregistrerEvaluation({ domaines: { x: {} } }), /date/, 'and a dateless entry throws, because the date carries the whole trajectory comparison and inventing one would date a measure at random (Article 32)');
+    const trou = a.trouvesDansLHistorique(['2026-09-01', '2026-09-15'], { readFileImpl: () => '[{"date":"2026-09-01","domaines":{}}]' });
+    assert.deepEqual(trou.manquantes, ['2026-09-15'], 'the gap is NAMED: an archived evaluation missing from the history is exactly what happened on 2026-09-23, and a holed history is indistinguishable from a young one');
+
     const evo = a.compareEvaluations(snap, avant);
     assert.equal(evo.find((e) => e.id === 'm1').evolution, 'régression', 'a note that went down must be named a regression, with both figures shown');
     assert.equal(evo.find((e) => e.id === 'j1').evolution, 'stable', 'an unchanged note is stable');

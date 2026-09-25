@@ -331,7 +331,7 @@ export const CIRCLE_ITEMS = [
     label: "Récapitulatif complet des évaluations — qui juge qui, sur quelles bases, avec quel résultat",
     cout: "gratuit — relit des mesures déjà collectées par huit outils, aucun appel API",
     tokensEstimes: "moyen — assemble des verdicts déjà produits, n'en recalcule aucun",
-    execute: "Récolter les verdicts du JURY (angel-of-ia-process), calculer mesurerParticipation(), fournir les notes de jugement AVEC leur justification (jamais laissées non fournies sans le dire), puis buildEvaluationRecapBlocks() (cassandra-rh) rendu en HTML via renderHtmlReport(). Vérifier findJugesSansOutil() avant de se fier au rapport. Écrire le signal via recordCircleItemReport('recap-evaluations', ...).",
+    execute: "Récolter les verdicts du JURY (angel-of-ia-process), calculer mesurerParticipation(), fournir les notes de jugement AVEC leur justification (jamais laissées non fournies sans le dire), puis buildEvaluationRecapBlocks() (cassandra-rh) rendu en HTML via renderHtmlReport(). Vérifier findJugesSansOutil() avant de se fier au rapport. Écrire le signal via recordCircleItemReport('recap-evaluations', ...). PUIS, sans exception, INSCRIRE l'instantané dans l'historique : `node scripts/angel-of-ia-process.mjs historique <instantane.json>` — sans cette étape le rapport existe et la mémoire ne l'a pas, ce qui est arrivé pour de vrai le 2026-09-23 (tâche #670) et fait sauter toute comparaison de trajectoire sans le dire. Lancer ensuite `node scripts/angel-of-ia-process.mjs historique` sans argument pour vérifier qu'aucune évaluation archivée ne manque.",
     producesReport: true,
   },
   // idee-a-trancher-signal (2026-09-21, demande explicite de l'utilisateur : « me demander

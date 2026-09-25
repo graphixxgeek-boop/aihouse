@@ -551,6 +551,56 @@ export function snapshotEvaluation(evaluation, { date = new Date().toISOString()
   return { date, domaines, chiffres };
 }
 
+// #670 (2026-09-25) — LA CAUSE RACINE, et elle est plus bête que le symptôme ne le laissait croire.
+// Le constat était : « une évaluation a eu lieu le 2026-09-23 et ne s'est jamais inscrite dans son
+// propre historique ». La cause n'est pas un oubli ponctuel : `snapshotEvaluation()` ci-dessus
+// FABRIQUE l'instantané et **personne ne l'écrit nulle part**. Aucune fonction de ce fichier, ni
+// d'aucun autre, n'écrivait HISTORIQUE_EVAL_FILE — l'unique entrée qu'il contenait y avait été
+// posée à la main. C'est la leçon L2 à la lettre : un mécanisme qui ne sort pas du script est une
+// intention, et une intention ne s'exécute jamais toute seule.
+//
+// CE QUE ÇA COÛTAIT, et c'est mesurable : toute comparaison de trajectoire (« cette note se
+// dégrade-t-elle ? ») saute les évaluations manquantes sans le dire, et `compareEvaluations()`
+// annonce alors « première mesure » sur un domaine mesuré trois fois. Un historique troué ne se
+// distingue pas d'un historique jeune.
+//
+// IDEMPOTENT PAR DATE, et c'est délibéré : deux passages le même jour REMPLACENT l'entrée du jour
+// plutôt que d'en empiler une seconde. Une évaluation relancée après correction est la même
+// évaluation, pas une progression — compter les deux ferait lire un doublon comme une tendance.
+export function enregistrerEvaluation(instantane, { root = ROOT, readFileImpl = readFileSync, writeFileImpl = writeFileSync, mkdirImpl = mkdirSync } = {}) {
+  if (!instantane?.date) {
+    throw new Error("enregistrerEvaluation : une entrée sans date est inutilisable — c'est la date qui porte toute la comparaison de trajectoire, et l'inventer reviendrait à dater une mesure au hasard (Article 32)");
+  }
+  const domaines = instantane.domaines ?? {};
+  if (!Object.keys(domaines).length) {
+    // Refus plutôt qu'entrée vide : une évaluation sans un seul domaine mesuré, inscrite quand même,
+    // se lirait plus tard comme « ce jour-là tout était à zéro » au lieu de « ce jour-là rien n'a
+    // été mesuré ». Le fil rouge de ce projet, appliqué à sa propre mémoire.
+    return { enregistre: false, pourquoi: "aucun domaine mesuré dans cet instantané — l'inscrire ferait lire une absence de mesure comme une mesure nulle, ce qui est exactement l'inverse de la vérité" };
+  }
+  const histo = loadEvaluationHistory({ root, readFileImpl });
+  const avant = histo.length;
+  const sansCeJour = histo.filter((e) => e?.date !== instantane.date);
+  const remplace = sansCeJour.length !== avant;
+  const suite = [...sansCeJour, instantane].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  const chemin = join(root, HISTORIQUE_EVAL_FILE);
+  try { mkdirImpl(dirname(chemin), { recursive: true }); } catch { /* déjà là */ }
+  writeFileImpl(chemin, `${JSON.stringify(suite, null, 1)}\n`);
+  return { enregistre: true, remplace, total: suite.length, date: instantane.date };
+}
+
+// LE TROU SE DÉCLARE, il ne se comble pas en inventant. Une évaluation archivée en HTML dont les
+// indices par domaine ne figurent nulle part dans le fichier ne peut PAS être reconstruite : le
+// rapport du 2026-09-23 ne porte qu'une note d'ensemble en lettres (« C+ », « A »), jamais les
+// indices chiffrés que cet historique compare. Fabriquer ces chiffres pour « rattraper » aurait
+// produit une série qui a l'air complète et qui est fausse — pire que le trou lui-même.
+export function trouvesDansLHistorique(datesArchivees = [], { root = ROOT, readFileImpl = readFileSync } = {}) {
+  const histo = loadEvaluationHistory({ root, readFileImpl });
+  const connues = new Set(histo.map((e) => e?.date).filter(Boolean));
+  const manquantes = [...new Set(datesArchivees)].filter((d) => !connues.has(d)).sort();
+  return { inscrites: [...connues].sort(), manquantes, total: histo.length };
+}
+
 export function compareEvaluations(courant, precedent) {
   if (!precedent) {
     return Object.keys(courant?.domaines ?? {}).map((id) => ({ id, evolution: "première mesure", avant: null, apres: courant.domaines[id].indice }));
@@ -836,7 +886,50 @@ export function angelSectionLines(audit, ordre) {
   return l;
 }
 
+// #670 (2026-09-25) — deux sous-commandes, et la première existe parce qu'un mécanisme qui ne sort
+// pas du script est une intention (leçon L2) : `snapshotEvaluation()` fabriquait l'instantané depuis
+// des semaines et RIEN ne l'écrivait, ce qui est exactement pourquoi l'historique n'avait qu'une
+// seule entrée posée à la main. Une fonction exportée que seul un test appelle ne protège personne.
+function mainHistorique(args) {
+  const [fichier] = args;
+  if (fichier) {
+    let instantane;
+    try { instantane = JSON.parse(readFileSync(fichier, "utf8")); }
+    catch (e) { console.log(`⚠️ Lecture impossible de ${fichier} — ${e.message}`); return; }
+    const r = enregistrerEvaluation(instantane);
+    console.log(r.enregistre
+      ? `✅ Évaluation du ${r.date} ${r.remplace ? "REMPLACÉE" : "inscrite"} — l'historique en compte ${r.total}.`
+      : `⚠️ Rien inscrit — ${r.pourquoi}`);
+    return;
+  }
+  // Sans argument : l'état de l'historique, et surtout SES TROUS. Un historique troué ne se
+  // distingue pas d'un historique jeune, et c'est ce qui a laissé passer le 2026-09-23.
+  let archivees = [];
+  try {
+    archivees = readdirSync(join(ROOT, "docs/cassandra-rh/evaluations"))
+      .map((f) => (f.match(/(\d{4}-\d{2}-\d{2})/) || [])[1]).filter(Boolean);
+  } catch { /* dossier absent : le trou ne se mesure pas, et c'est dit ci-dessous */ }
+  const t = trouvesDansLHistorique(archivees);
+  console.log("\n=== L'HISTORIQUE DES ÉVALUATIONS ===\n");
+  console.log(`Inscrites : ${t.total} — ${t.inscrites.join(", ") || "aucune"}`);
+  if (!archivees.length) {
+    console.log("⚠️ PAS MESURÉ — aucun rapport archivé lisible dans docs/cassandra-rh/evaluations : sans eux, « aucun trou » se lirait exactement comme « historique complet », et les deux ne veulent pas dire la même chose.");
+    return;
+  }
+  console.log(`Archivées sur disque : ${[...new Set(archivees)].sort().join(", ")}`);
+  if (!t.manquantes.length) { console.log("\n✅ Chaque évaluation archivée figure bien dans l'historique."); return; }
+  console.log(`\n🔴 ${t.manquantes.length} évaluation(s) archivée(s) et ABSENTE(S) de l'historique : ${t.manquantes.join(", ")}.`);
+  console.log("   Conséquence directe : toute comparaison de trajectoire saute ces dates sans le dire,");
+  console.log("   et un domaine mesuré trois fois se fait annoncer « première mesure ».");
+  console.log("   LE TROU NE SE COMBLE PAS EN INVENTANT : un rapport HTML qui ne porte qu'une note");
+  console.log("   d'ensemble en lettres (« C+ », « A ») ne contient pas les indices par domaine que");
+  console.log("   cet historique compare. Les fabriquer produirait une série qui a l'air complète et");
+  console.log("   qui est fausse — pire que le trou. Ces dates restent donc déclarées manquantes.");
+}
+
 function main() {
+  const [sub, ...args] = process.argv.slice(2);
+  if (sub === "historique") return mainHistorique(args);
   printReportHeader({
     tool: "angel-of-ia-process",
     title: "angel-of-ia-process — discipline d'exécution des règles de travail",
