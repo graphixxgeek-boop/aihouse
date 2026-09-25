@@ -6,6 +6,7 @@ avoir à tous les rouvrir. Une entrée se met à jour dès qu'un trou trouvé ic
 
 | Date | Rapport | Trouvailles confirmées | Notes |
 |---|---|---|---|
+| 2026-09-25 | [scan-2026-09-25-10-53.txt](scan-2026-09-25-10-53.txt) | 6 champ(s) candidat(s), 0 marqueur(s) TODO/FIXME | Indexé automatiquement à l'écriture du scan (jamais relu par un humain à ce stade — cette ligne est un décompte mécanique, à écraser par un vrai constat si le scan est réellement analysé). |
 | 2026-09-23 | [scan-2026-09-23-21-26.txt](scan-2026-09-23-21-26.txt) | 6 champ(s) candidat(s), 0 marqueur(s) TODO/FIXME | Indexé automatiquement à l'écriture du scan (jamais relu par un humain à ce stade — cette ligne est un décompte mécanique, à écraser par un vrai constat si le scan est réellement analysé). |
 | 2026-09-23 | [scan-2026-09-23-21-19.txt](scan-2026-09-23-21-19.txt) | 6 champ(s) candidat(s), 0 marqueur(s) TODO/FIXME | Indexé automatiquement à l'écriture du scan (jamais relu par un humain à ce stade — cette ligne est un décompte mécanique, à écraser par un vrai constat si le scan est réellement analysé). |
 | 2026-09-23 | [scan-2026-09-23-20-32.txt](scan-2026-09-23-20-32.txt) | 6 champ(s) candidat(s), 0 marqueur(s) TODO/FIXME | Indexé automatiquement à l'écriture du scan (jamais relu par un humain à ce stade — cette ligne est un décompte mécanique, à écraser par un vrai constat si le scan est réellement analysé). |

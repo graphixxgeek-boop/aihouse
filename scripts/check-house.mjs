@@ -11972,6 +11972,18 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(riche.manquants.every((m) => m.quoi), 'and every missing point says what it would have meant, so the list is actionable rather than a grade');
   assert.ok(/jamais ce qu'il VAUT/.test(crh2.richesse({}).horsPortee), 'with no threshold anywhere, deliberately: a poor tool is not a bad tool — find-booster does one thing and does it well, and comes out poor with nothing to fix');
 
+  // LES OUTILS QUI POUVAIENT DIRE VERT SANS AVOIR RIEN MESURÉ (2026-09-25, tâche #601 → #812).
+  // Le constat en nommait cinq. Vérifiés UN PAR UN comme la tâche l'exigeait — jamais par une passe
+  // globale qui aurait collé la même phrase partout — trois d'entre eux (data-archangel, ecotoken,
+  // hyper-scan-checkpoint) déclaraient déjà leur absence de données, acquis depuis le constat.
+  const argusSrc = fs.readFileSync('scripts/check-argus.mjs', 'utf8');
+  assert.ok(/fichiersBalayes\.length\} fichier\(s\) réellement parcouru\(s\)/.test(argusSrc), "ARGUS's TODO scan printed « Aucun. » whether the repository was clean or simply never walked — zero files read reading as zero markers found, the leçon-L5 confusion inside the very tool whose job is to spot what is missing. The denominator now travels with the figure");
+  assert.ok(/🚨 PAS MESURÉ — aucun fichier n'a pu être parcouru/.test(argusSrc), 'and an empty walk now says PAS MESURÉ rather than reporting a clean repository');
+  assert.ok(/extractLifeFields|introuvable dans lib\/life\.ts/.test(argusSrc), "while its FIRST scan needed nothing: it throws when its anchor is gone, and an empty walk would surface EVERY Life field as dead — loud, and in the safe direction. Two scans in one tool behaving differently in the face of absence is exactly why this had to be checked one by one");
+  const harmoniaSrc = fs.readFileSync('scripts/check-harmonia.mjs', 'utf8');
+  assert.ok(/friction\(s\) confirmée\(s\) sur \$\{results\.length\} lien\(s\) vérifié\(s\)/.test(harmoniaSrc), 'HARMONIA already printed its denominator beside the figure, so its zero was never bare — what was missing was the WRITTEN declaration that this is by construction, and that is what the task asked for when the denominator is structurally non-empty');
+  assert.ok(/la carte des liens est vide/.test(harmoniaSrc), 'and the one case that would break that construction — an empty link map — is now refused out loud rather than assumed impossible');
+
   // UN OUTIL « À LANCER À LA MAIN » DOIT DIRE QUOI TAPER (2026-09-25, tâche #655 → #811).
   assert.equal(crh2.findOutilsAMainSansCommande([]).mesurable, false, 'an empty master table yields NOT MEASURED: no tool to confront is not the same thing as no gap');
   assert.equal(crh2.findOutilsAMainSansCommande([{ tool: 'x.mjs', declenchement: 'à la main' }]).mesurable, false, 'and with no normative corpus to search, EVERY command would look missing — the easiest and most wrong mass accusation there is');

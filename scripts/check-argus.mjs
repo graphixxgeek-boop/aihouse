@@ -99,7 +99,16 @@ function main() {
   const lifeSource = readFileSync(join(ROOT, "lib/life.ts"), "utf8");
   const files = walk(join(ROOT, "lib")).concat(walk(join(ROOT, "app"))).concat(walk(join(ROOT, "components")).filter(f => existsSync(join(ROOT, "components"))));
   const dead = findDeadLifeFields(files, lifeSource);
-  const todos = findTodoMarkers(walk(ROOT).filter(f => !f.includes("/scratchpad/")));
+  // LE DÉNOMINATEUR DU SECOND SCAN (2026-09-25, tâche #601). Les deux scans d'ARGUS ne se
+  // comportent PAS pareil face à une absence, et c'est ce qui rendait le second dangereux :
+  //   · le scan des champs de life.ts échoue BRUYAMMENT — `extractLifeFields()` lève une erreur si
+  //     son point d'ancrage manque, et un balayage vide ferait ressortir TOUS les champs comme
+  //     morts. Son dénominateur est donc structurellement non vide, et l'erreur va dans le sens sûr.
+  //   · le scan des TODO, lui, rendait « Aucun. » aussi bien sur un dépôt propre que sur un dépôt
+  //     qu'il n'avait pas pu parcourir. Zéro fichier lu se lisait comme zéro marqueur trouvé —
+  //     la confusion exacte que la leçon L5 nomme, dans l'outil chargé de repérer les absences.
+  const fichiersBalayes = walk(ROOT).filter(f => !f.includes("/scratchpad/"));
+  const todos = findTodoMarkers(fichiersBalayes);
 
   // La mémoire est chargée AVANT l'affichage brut : un lecteur qui voit « 6 champs » puis « 0 écart
   // à regarder » se demande lequel des deux chiffres est faux (Article 15). Chaque candidat déjà
@@ -114,8 +123,9 @@ function main() {
   console.log(`Champs de life.ts potentiellement jamais lus ailleurs (${dead.length}) :`);
   if (!dead.length) console.log("  Aucun — tous les champs déclarés dans le type Life sont référencés au moins 5 fois dans le projet.");
   for (const d of dead) console.log(`  [${d.confidence}] ${d.field} (${d.uses} occurrence(s) trouvée(s) au total, déclaration + lecture éventuelle incluses)${dejaTranche.has(d.field) ? " — déjà tranché avec votre accord, ne compte plus comme un écart" : ""}`);
-  console.log(`\nMarqueurs TODO/FIXME trouvés (${todos.length}) :`);
-  if (!todos.length) console.log("  Aucun.");
+  console.log(`\nMarqueurs TODO/FIXME trouvés (${todos.length}) sur ${fichiersBalayes.length} fichier(s) réellement parcouru(s) :`);
+  if (!fichiersBalayes.length) console.log("  🚨 PAS MESURÉ — aucun fichier n'a pu être parcouru. Ce n'est pas « aucun marqueur », c'est un balayage qui n'a pas eu lieu (leçon L5).");
+  else if (!todos.length) console.log(`  Aucun, sur ${fichiersBalayes.length} fichier(s) lus — le dénominateur est dit pour que ce zéro veuille dire quelque chose.`);
   for (const t of todos) console.log(`  ${t.file}:${t.line} — ${t.text}`);
 
   // LE PLAN D'ACTION, ABSENT JUSQU'AU 2026-09-23 (Article 28). Question de l'utilisateur après la

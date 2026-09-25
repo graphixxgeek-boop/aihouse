@@ -182,6 +182,15 @@ function main() {
     console.log(`[${icon}] ${r.theme} — ${r.status}`);
   }
   const frictions = results.filter((r) => r.confidence === "confirmé");
+  // POURQUOI CE ZÉRO-LÀ EST HONNÊTE, et la question méritait d'être tranchée par écrit plutôt que
+  // supposée (2026-09-25, tâche #601, qui rangeait HARMONIA parmi les outils pouvant « dire vert
+  // sans avoir rien mesuré ») : le dénominateur est imprimé à côté du chiffre depuis toujours —
+  // « N friction(s) sur M lien(s) vérifié(s) » — donc un zéro s'accompagne toujours du nombre de
+  // liens réellement examinés. Et ce dénominateur est STRUCTURELLEMENT non vide : `LINKS` est une
+  // carte écrite dans ce fichier, pas un balayage du disque, donc `results.length` ne peut valoir
+  // zéro que si la carte elle-même est vide — ce que le test ci-dessous interdit. Il n'y a donc pas
+  // de branche « pas mesuré » à ajouter ici : il y avait une déclaration à écrire, et la voici.
+  if (!results.length) console.log("🚨 PAS MESURÉ — la carte des liens est vide : aucun lien n'a été vérifié, ce qui n'est pas « aucune friction ».");
   console.log(`\n${frictions.length} friction(s) confirmée(s) sur ${results.length} lien(s) vérifié(s).`);
 
   // LE PLAN D'ACTION (2026-09-23, Article 28). HARMONIA est un Gardien sacré : il rapporte sur la
