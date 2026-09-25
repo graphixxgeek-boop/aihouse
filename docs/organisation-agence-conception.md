@@ -368,3 +368,53 @@ mode alternatif. Un mode « Ronde lourde » serait à CONSTRUIRE, pas à activer
 démarrer le serveur de développement, capturer l'état initial de la maison et le juger contre
 `docs/referentiel/regles-des-graphismes.md` — ce qui ne demande aucune simulation. C'est une vraie
 proposition, à trancher avec lui, jamais à décider seul.
+
+## Idée n°10 — le référentiel déclare DEUX axes, le code en dérive SEPT (2026-09-25, tâche #881)
+
+*(Recopiée ici depuis la reformulation de #439, parce qu'une idée qui ne vit qu'au suivi finit par
+s'y perdre — et parce que le garde-fou de fraîcheur des fichiers de chantier a refusé le commit tant
+qu'elle n'y était pas. Il a eu raison : c'est ici que se prépare le schéma d'organisation, pas dans
+une ligne de registre.)*
+
+**L'ÉCART, MESURÉ.** `docs/referentiel/organisation-agence.md` — le document CANONIQUE de toute
+l'Agence — ouvre toujours sur « **1. Deux axes, toujours séparés** » : Axe A, le statut de
+documentation ; Axe B, le rôle dans l'organigramme. C'était vrai le 2026-09-23. Depuis, le code
+en a construit cinq autres sans que ce document en sache rien :
+
+| Ce qui existe dans le code | Où | Combien |
+|---|---|---|
+| `AXES_DE_CLASSIFICATION` — iceberg, type, moment, domaine, destinataire | `scripts/cassandra-rh.mjs` | 5 axes |
+| `CLASSES_TRANSVERSES` — sondées sur la source de chaque script | `scripts/cassandra-rh.mjs` | 8 classes |
+| `JURY` — les outils qui détiennent de la donnée sur l'utilisateur | `scripts/angel-of-ia-process.mjs` | 8 membres |
+| Les quatre mots de rang (Gardien sacré · Contrôleur de process · Veilleur · Garde-fou mécanique) | Article 20bis | raffine l'Axe B |
+
+**CE QUE ÇA CORRIGE DANS L'ÉNONCÉ D'ORIGINE DE #439** : il demandait de CONSTRUIRE la catégorie
+transverse « jury ». Elle est construite — huit membres, chacun avec son critère d'entrée écrit, et
+`findJugesSansOutil()` la protège du vieillissement. Le problème n'est donc pas qu'elle manque :
+**c'est qu'elle est invisible à l'organigramme.**
+
+**LES CINQ CANDIDATS QU'IL AVAIT NOMMÉS, UN PAR UN** — parce qu'un verdict global sur cinq idées
+différentes n'en juge aucune :
+
+| Son candidat | État réel | Ce qui manque |
+|---|---|---|
+| « ceux qui coûtent de l'API » | **couvert** | — (`coute-des-appels-api`) |
+| « ceux qui tournent à chaque commit » | **couvert** | — (destinataire `projet`, dont la preuve est littéralement « tourne à chaque commit via le crochet ») |
+| « ceux qui produisent un rapport » | **partiel** | `rend-du-html` ne voit que le HTML ; le destinataire `utilisateur` voit plus large mais autre chose |
+| « ceux qui gardent un process » | **mot de rang seulement** | pas une classe dérivée — et une sonde sur la source s'y tromperait : `check-tasks-details.mjs` garde un process sans rien en dire dans son code. La seule source dérivable est le registre `PROCESSES` de god. |
+| « ceux qui portent un garde-fou d'évolutivité » | **pas couvert du tout** | et pourtant dérivable : la signature `find*DivergingFrom*` / `find*MissingFrom*`, le patron nommé par l'audit du 2026-09-21 |
+
+**LES TROIS GESTES PROPOSÉS, à trancher avec lui et jamais décidés seuls** :
+
+1. **Porter les axes réels dans `organisation-agence.md` §1** — mais **DÉRIVÉS des registres, jamais
+   recopiés**. Un §1 recopié à la main redivergera au prochain axe, exactement comme il vient de le
+   faire (Article 24). C'est le geste qui compte le plus : sans lui, les deux autres se périment.
+2. **Ajouter `porte-un-garde-fou-d-evolutivite`** à `CLASSES_TRANSVERSES` — la seule des cinq idées
+   à n'exister nulle part, et la seule dont la sonde sur la source soit honnête.
+3. **Décider si « garde un process » devient un axe** lu depuis `PROCESSES`, plutôt qu'un mot de
+   rang. C'est une vraie question de conception, pas une omission.
+
+**POURQUOI RIEN N'EST APPLIQUÉ** : il avait demandé « un schéma d'agence propre et intelligent ».
+Un schéma qui redéfinit les rangs de toute l'équipe se propose et se tranche avec lui (Article 16),
+il ne s'impose pas depuis le code. **L'ordre qu'il avait fixé tient toujours : le schéma AVANT
+CASSANDRA.**
