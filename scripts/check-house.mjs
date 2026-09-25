@@ -11963,6 +11963,33 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(riche.manquants.every((m) => m.quoi), 'and every missing point says what it would have meant, so the list is actionable rather than a grade');
   assert.ok(/jamais ce qu'il VAUT/.test(crh2.richesse({}).horsPortee), 'with no threshold anywhere, deliberately: a poor tool is not a bad tool — find-booster does one thing and does it well, and comes out poor with nothing to fix');
 
+  // L'ÉMIETTEMENT DE LA FILE — a-t-on coupé trop fin ? (2026-09-25, tâche #735).
+  // poidsDeLaTache() disait si UNE tâche est trop grosse ; rien ne disait l'inverse. Les deux
+  // défauts sont opposés et se paient différemment : une tâche trop grosse se traîne, cinquante
+  // trop fines noient la file.
+  const ctd2 = await import('../scripts/check-tasks-details.mjs');
+  assert.equal(ctd2.emiettementDesTaches([]).mesurable, false, 'no open task yields NOT MEASURED, and the reason says why that is not the same thing as a healthy queue — an empty queue and a queue nobody recorded look identical from here');
+  const emi = ctd2.emiettementDesTaches([
+    { numero: 1, statusKey: 'ouverte', sujet: 'Process / A', detail: 'x' },
+    { numero: 2, statusKey: 'ouverte', sujet: 'Process / B', detail: 'y' },
+    { numero: 3, statusKey: 'ouverte', sujet: 'Charte / C', detail: 'z' },
+    { numero: 4, statusKey: 'terminee', sujet: 'Process / D', detail: 'w' },
+  ], { poids: () => ({ mesurable: true, palier: 'legere' }) });
+  assert.deepEqual([emi.ouvertes, emi.themeLePlusDense.theme, emi.themeLePlusDense.ouvertes], [3, 'Process', 2], 'concentration counts only the OPEN tasks per theme — a closed one no longer weighs on the queue, and counting it would make every finished chantier look like fragmentation');
+  assert.equal(Math.round(emi.legeres.part), 100, 'the light-task share reuses poidsDeLaTache() rather than a second scale of its own (Article 24: a threshold is DERIVED, never recopied)');
+  assert.ok(!emi.tendance.mesurable && /deux fenêtres incomplètes/.test(emi.tendance.pourquoi), 'and a trend computed on two incomplete windows is refused rather than produced: four tasks cannot say whether a rhythm is accelerating, and a made-up trend reads exactly like a real one');
+  assert.ok(/AUCUN seuil absolu/.test(emi.horsPortee), 'no absolute threshold is ever proposed, and that is the honest half of this measure: a deep chantier legitimately produces ten tasks on one theme, a day of fixes thirty light ones, and neither is a defect');
+  const duree = ctd2.dureeDeVieDesTaches([
+    { numero: 10, horodatage: '2026-09-25T08:00Z', statusKey: 'terminee', detail: 'ouverture' },
+    { numero: 11, horodatage: '2026-09-25T08:20Z', statusKey: 'terminee', detail: 'CLÔTURE DE #10. fait' },
+    { numero: 12, horodatage: '2026-09-25T09:00Z', statusKey: 'ouverte', detail: 'autre' },
+  ]);
+  assert.ok(duree.mesurable && duree.comptees === 1 && duree.eclairs === 1, 'lifetime is read off the suivi\'s OWN convention (« CLÔTURE DE #NNN » plus its own timestamp) rather than through a new field nobody would fill');
+  assert.equal(duree.fermeesEnTout, 2, 'and the DENOMINATOR travels with the figure, because that convention is recent here: a median over nine pairs, without saying six hundred tasks are closed, would read as a measure of the whole project when it describes only its last days');
+  assert.equal(ctd2.dureeDeVieDesTaches([{ numero: 1, horodatage: '2026-09-25T08:00Z', detail: 'rien' }]).mesurable, false, 'with no readable closure pair it reports NOT MEASURED rather than a duration of zero, which would read as "closed instantly"');
+  const lignes735 = ctd2.formatEmiettementLines(emi, duree);
+  assert.ok(lignes735.some((l) => /TENDANCE : PAS MESURÉE/.test(l)) && lignes735.some((l) => /HORS PORTÉE/.test(l)), 'the rendering shows an unmeasured trend as unmeasured rather than omitting the line, since a missing line reads as "nothing to report"');
+
   // LES DEUX NOTES GLOBALES — le jeu d'un côté, l'Agence de l'autre (2026-09-25, tâche #729).
   // Sa question était « est-ce qu'on a une mesure de la qualité au global ? », et la réponse mesurée
   // était non : cinq mesures partielles existaient et aucune synthèse.

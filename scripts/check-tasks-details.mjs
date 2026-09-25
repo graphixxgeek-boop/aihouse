@@ -1271,6 +1271,16 @@ function main() {
   // vignettes, les lignes longues sans résumé de tête et la répartition des origines. Sous-commande
   // à part parce qu'elle sert à COMPOSER le travail avant de le lancer, jamais à le rendre compte —
   // la mêler au rapport d'état aurait noyé un outil de décision dans un outil de constat.
+  // Sous-commande `emiettement` (2026-09-25, tâche #735) : le pendant EXACT de `poids`, et c'est
+  // pour ça qu'elle vit à côté plutôt que dedans. `poids` demande « cette tâche est-elle trop
+  // GROSSE ? », celle-ci demande « avons-nous coupé trop FIN ? ». Les deux défauts sont opposés et
+  // se paient différemment : une tâche trop grosse se traîne, cinquante trop fines noient la file.
+  if (process.argv[2] === "emiettement") {
+    const rows = loadAllTaskRows();
+    console.log(`\n=== ÉMIETTEMENT DE LA FILE — a-t-on coupé trop fin ? ===\n`);
+    for (const l of formatEmiettementLines(emiettementDesTaches(rows), dureeDeVieDesTaches(rows))) console.log(l);
+    return;
+  }
   if (process.argv[2] === "poids") {
     const rows = loadAllTaskRows();
     const ouvertes = rows.filter((r) => OPEN_KEYS.has(r.statusKey));
@@ -1450,6 +1460,147 @@ export function decoupagePropose(row = {}) {
 
 // LA VIGNETTE. Trois lignes, lisibles d'un coup d'œil, exactement ce que l'utilisateur demandait
 // pour « composer une grosse tâche en série de petites » sans rouvrir le registre entier.
+// ————————————————————————————————————————————————————————————————————————
+// L'ÉMIETTEMENT DES TÂCHES (2026-09-25, tâche #735)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA DEMANDE : « cree une extension dans un outil et avance sur le sujet ».
+//
+// LE TROU, et il est net : `poidsDeLaTache()` dit si UNE tâche est trop grosse pour être lancée
+// d'un bloc. RIEN ne disait si on avait coupé trop FIN. Les deux défauts sont opposés et se
+// paient différemment — une tâche trop grosse se traîne, cinquante tâches trop fines noient la
+// file et font perdre le fil de ce qu'on faisait.
+//
+// CE QUI SE MESURE HONNÊTEMENT, trois signaux et pas un de plus :
+//   1. LA CONCENTRATION — combien de tâches OUVERTES partagent le même thème. Dix tâches sur un
+//      même thème sont probablement une seule mal découpée.
+//   2. LA PART DE LÉGÈRES parmi les ouvertes, via `poidsDeLaTache()` déjà écrit — réutilisé, pas
+//      recalculé (Article 24 : un seuil se DÉRIVE, il ne se recopie pas).
+//   3. LA DURÉE DE VIE — l'écart entre l'horodatage d'une tâche et celui de sa CLÔTURE. La
+//      convention du suivi la rend lisible sans rien ajouter : une clôture s'ouvre par
+//      « CLÔTURE DE #NNN. » et porte son propre horodatage. Une tâche fermée en dix minutes
+//      n'aurait peut-être pas dû exister comme tâche.
+//
+// CE QUI NE SE MESURE PAS, ET QUI EST DÉCLARÉ PLUTÔT QUE DEVINÉ : « trop de tâches » n'a AUCUN
+// seuil absolu. Un chantier de fond en produit légitimement dix sur un thème ; une journée de
+// correctifs en produit trente légères sans que rien ne cloche. L'outil montre donc une TENDANCE
+// et dit si elle s'accélère — jamais un verdict, jamais un « il faut regrouper ». La comparaison
+// se fait contre le passé du projet lui-même, seul étalon qui veut dire quelque chose ici.
+
+export const TAILLE_FENETRE_TENDANCE = 50;
+
+export function dureeDeVieDesTaches(rows = []) {
+  const ouverture = new Map();
+  for (const r of rows) if (r.numero && r.horodatage) ouverture.set(r.numero, r.horodatage);
+  const durees = [];
+  for (const r of rows) {
+    const m = String(r.detail ?? "").match(/CL[ÔO]TURE DE #(\d+)/i);
+    if (!m) continue;
+    const debut = ouverture.get(Number(m[1]));
+    if (!debut || !r.horodatage) continue;
+    const ms = Date.parse(r.horodatage) - Date.parse(debut);
+    if (Number.isFinite(ms) && ms >= 0) durees.push({ numero: Number(m[1]), clotureePar: r.numero, heures: ms / 3600000 });
+  }
+  if (!durees.length) {
+    return { mesurable: false, pourquoi: "aucune paire ouverture/clôture lisible : la durée de vie se lit sur la convention « CLÔTURE DE #NNN », et sans elle il n'y a rien à mesurer — jamais une durée de zéro, qui se lirait comme « fermée aussitôt »" };
+  }
+  const triees = [...durees].sort((a, b) => a.heures - b.heures);
+  // LA MÉDIANE, jamais la moyenne : une seule tâche restée ouverte trois semaines tirerait la
+  // moyenne à elle seule et dirait le contraire de ce que fait la file.
+  const mediane = triees[Math.floor(triees.length / 2)].heures;
+  const eclairs = durees.filter((d) => d.heures < 1);
+  return {
+    mesurable: true, comptees: durees.length,
+    medianeHeures: Math.round(mediane * 10) / 10,
+    eclairs: eclairs.length,
+    partEclairs: (eclairs.length / durees.length) * 100,
+    plusCourtes: triees.slice(0, 3).map((d) => `#${d.numero} (${d.heures < 2 ? `${Math.round(d.heures * 60)} min` : `${Math.round(d.heures * 10) / 10} h`})`),
+    // LE DÉNOMINATEUR VOYAGE AVEC LE CHIFFRE, et il est indispensable ici : la convention
+    // « CLÔTURE DE #NNN » est RÉCENTE dans ce suivi. Une médiane calculée sur neuf paires, sans
+    // dire qu'il existe six cents tâches fermées, se lirait comme une mesure du projet entier
+    // alors qu'elle ne décrit que ses derniers jours.
+    fermeesEnTout: rows.filter((r) => r.statusKey === "terminee").length,
+    horsPortee: "Une tâche fermée vite n'est pas forcément une tâche de trop : elle peut avoir été bien cadrée. Ce chiffre ouvre une question, il ne la tranche pas.",
+  };
+}
+
+export function emiettementDesTaches(rows = [], { poids = poidsDeLaTache, fenetre = TAILLE_FENETRE_TENDANCE } = {}) {
+  const ouvertes = rows.filter((r) => OPEN_KEYS.has(r.statusKey));
+  if (!ouvertes.length) {
+    return { mesurable: false, pourquoi: "aucune tâche ouverte : il n'y a pas de file à juger, ce qui n'est pas la même chose qu'une file saine" };
+  }
+  // 1. CONCENTRATION PAR THÈME.
+  const parTheme = new Map();
+  for (const r of ouvertes) {
+    const t = splitSujet(r.sujet).theme;
+    parTheme.set(t, (parTheme.get(t) ?? 0) + 1);
+  }
+  const themes = [...parTheme.entries()].map(([theme, n]) => ({ theme, ouvertes: n, part: (n / ouvertes.length) * 100 })).sort((a, b) => b.ouvertes - a.ouvertes);
+  // 2. PART DE LÉGÈRES — `poidsDeLaTache()` réutilisé, jamais un second barème.
+  let legeres = 0; let pesees = 0;
+  for (const r of ouvertes) {
+    const p = poids(r);
+    if (!p?.mesurable) continue;
+    pesees += 1;
+    if (p.palier === "legere") legeres += 1;
+  }
+  // 3. TENDANCE — le rythme de création sur la dernière fenêtre contre la précédente.
+  const datees = rows.filter((r) => r.numero && r.horodatage && Number.isFinite(Date.parse(r.horodatage))).sort((a, b) => a.numero - b.numero);
+  let tendance = { mesurable: false, pourquoi: `moins de ${fenetre * 2} tâches datées : une tendance calculée sur deux fenêtres incomplètes dirait n'importe quoi` };
+  if (datees.length >= fenetre * 2) {
+    const rythme = (tranche) => {
+      const h = (Date.parse(tranche[tranche.length - 1].horodatage) - Date.parse(tranche[0].horodatage)) / 3600000;
+      return h > 0 ? tranche.length / h : null;
+    };
+    const recent = rythme(datees.slice(-fenetre));
+    const avant = rythme(datees.slice(-fenetre * 2, -fenetre));
+    if (recent !== null && avant !== null && avant > 0) {
+      tendance = {
+        mesurable: true, recentParHeure: Math.round(recent * 10) / 10, precedentParHeure: Math.round(avant * 10) / 10,
+        variationPct: Math.round(((recent - avant) / avant) * 1000) / 10,
+        sens: recent > avant ? "s'accélère" : recent < avant ? "ralentit" : "stable",
+      };
+    }
+  }
+  return {
+    mesurable: true, ouvertes: ouvertes.length, themes,
+    themeLePlusDense: themes[0] ?? null,
+    legeres: pesees ? { legeres, pesees, part: (legeres / pesees) * 100 } : { mesurable: false, pourquoi: "aucune ligne ouverte ne porte assez de texte pour être pesée" },
+    tendance,
+    horsPortee:
+      "« Trop de tâches » n'a AUCUN seuil absolu, et aucun n'est proposé ici : un chantier de fond en produit " +
+      "légitimement dix sur un thème, une journée de correctifs en produit trente légères sans que rien ne cloche. " +
+      "Ce rapport montre une TENDANCE contre le passé du projet lui-même — jamais un verdict, jamais un ordre de regrouper.",
+  };
+}
+
+export function formatEmiettementLines(e, duree) {
+  if (!e?.mesurable) return [`PAS MESURÉ — ${e?.pourquoi ?? "aucune donnée"}`];
+  const l = [
+    `${e.ouvertes} tâche(s) ouverte(s), réparties sur ${e.themes.length} thème(s).`,
+    "",
+    "CONCENTRATION — dix tâches sur un même thème sont probablement une seule mal découpée :",
+  ];
+  for (const t of e.themes.slice(0, 6)) l.push(`   ${String(t.ouvertes).padStart(3)} ouvertes  (${t.part.toFixed(1).padStart(5)} %)  ${t.theme}`);
+  if (e.themes.length > 6) l.push(`   … et ${e.themes.length - 6} thème(s) de moins de ${e.themes[6].ouvertes + 1} tâche(s)`);
+  l.push("");
+  l.push(e.legeres.pesees
+    ? `PART DE LÉGÈRES parmi les ouvertes : ${e.legeres.part.toFixed(1)} %  (${e.legeres.legeres}/${e.legeres.pesees} pesées) — poidsDeLaTache() réutilisé, jamais un second barème.`
+    : `PART DE LÉGÈRES : PAS MESURÉE — ${e.legeres.pourquoi}`);
+  l.push("");
+  l.push(duree?.mesurable
+    ? `DURÉE DE VIE (médiane sur ${duree.comptees} clôtures lisibles, sur ${duree.fermeesEnTout} tâches fermées en tout — la convention « CLÔTURE DE #NNN » est récente) : ${duree.medianeHeures} h · ${duree.eclairs} tâche(s) fermée(s) en moins d'une heure (${duree.partEclairs.toFixed(1)} %) — les plus courtes : ${duree.plusCourtes.join(", ")}`
+    : `DURÉE DE VIE : PAS MESURÉE — ${duree?.pourquoi ?? "aucune donnée"}`);
+  if (duree?.mesurable) l.push(`   ${duree.horsPortee}`);
+  l.push("");
+  l.push(e.tendance.mesurable
+    ? `TENDANCE : le rythme ${e.tendance.sens} — ${e.tendance.recentParHeure} tâche(s)/h sur les ${TAILLE_FENETRE_TENDANCE} dernières contre ${e.tendance.precedentParHeure} sur les ${TAILLE_FENETRE_TENDANCE} précédentes (${e.tendance.variationPct > 0 ? "+" : ""}${e.tendance.variationPct} %).`
+    : `TENDANCE : PAS MESURÉE — ${e.tendance.pourquoi}`);
+  l.push("");
+  l.push(`HORS PORTÉE : ${e.horsPortee}`);
+  return l;
+}
+
 export function vignetteDeLaTache(row = {}) {
   const p = poidsDeLaTache(row);
   const pal = palierDeLaLigne(row);

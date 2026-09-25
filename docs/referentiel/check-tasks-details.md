@@ -284,3 +284,39 @@ mieux que le code ce qu'il ne faut pas refaire :
 **Chiffres du premier passage réel (2026-09-24)** : 609 lignes, 43 ouvertes · 40 lourdes, dont 0
 ouverte · 343 lignes longues, dont **39 sans résumé de tête exploitable** · origines déclarées
 159/609 (utilisateur 119, outil 40, agent 0 non mesurable), 450 lignes silencieuses.
+
+## L'émiettement de la file — a-t-on coupé trop fin ? (2026-09-25, tâche #735)
+
+`node scripts/check-tasks-details.mjs emiettement`
+
+**Le pendant EXACT de `poids`, et c'est pour ça qu'il vit à côté plutôt que dedans.** `poids`
+demande « cette tâche est-elle trop GROSSE pour être lancée d'un bloc ? » ; celui-ci demande
+« avons-nous coupé trop FIN ? ». Les deux défauts sont opposés et se paient différemment : une
+tâche trop grosse se traîne, cinquante trop fines noient la file et font perdre le fil.
+
+**Trois signaux, pas un de plus :**
+
+1. **Concentration par thème** — dix tâches ouvertes sur un même thème sont probablement une seule
+   mal découpée.
+2. **Part de légères** parmi les ouvertes — `poidsDeLaTache()` est RÉUTILISÉ, jamais un second
+   barème (Article 24 : un seuil se dérive, il ne se recopie pas).
+3. **Durée de vie** — lue sur la convention du suivi elle-même (« CLÔTURE DE #NNN » plus son propre
+   horodatage), jamais via un champ neuf que personne ne remplirait. La **médiane**, jamais la
+   moyenne : une seule tâche restée ouverte trois semaines la tirerait à elle seule.
+
+**Premier passage réel (2026-09-25)** : 116 ouvertes sur 49 thèmes · le plus dense est *Process*
+avec 11 (9,5 %) · **87,1 % de légères** · médiane de vie 8,8 h sur 9 clôtures lisibles (sur 618
+fermées en tout — la convention est récente, et ce dénominateur voyage avec le chiffre) · le rythme
+**ralentit** : 4,7 tâches/h sur les 50 dernières contre 22,9 sur les 50 précédentes.
+
+### Ce qui ne se mesure PAS, et qui est déclaré plutôt que deviné
+
+**« Trop de tâches » n'a AUCUN seuil absolu**, et aucun n'est proposé. Un chantier de fond en
+produit légitimement dix sur un thème ; une journée de correctifs en produit trente légères sans
+que rien ne cloche. L'outil montre une **tendance** contre le passé du projet lui-même — seul
+étalon qui veut dire quelque chose ici — et dit si elle s'accélère. Jamais un verdict, jamais un
+ordre de regrouper. De même, une tâche fermée en trente minutes n'est pas forcément une tâche de
+trop : elle peut avoir été bien cadrée. Le chiffre ouvre une question, il ne la tranche pas.
+
+Une tendance calculée sur moins de deux fenêtres complètes est **refusée** plutôt que produite :
+une tendance inventée se lit exactement comme une vraie.
