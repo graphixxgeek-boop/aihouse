@@ -20,11 +20,13 @@
 // outils + §7ter), jamais de blueprint ni de registre séparés (`checkAgentOnboarding()`,
 // `le-coordinateur.mjs`, paramètre `ownKnowledge: false`).
 
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { PRESTATIONS, suggestPrestationsForTask, formatMenu, slugifyAgentName } from "./le-coordinateur.mjs";
 import { recommendFindBrain, flagFindDeepBoosterCandidates, FIND_DEEP_BOOSTER_NICKNAME } from "./find-brain.mjs";
 import { flagFindBoosterCandidates } from "./doc-report.mjs";
-import { toolUsageStats, toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
+import { toolUsageStats, toolsNeverUsed, recordCliUsage, usagesSpontanes, formatUsagesSpontanesLines, findOriginesJamaisEcrites, formatOriginesJamaisEcritesLines } from "./tool-usage.mjs";
 import { assessCriticality } from "./ecotoken.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 
@@ -289,15 +291,28 @@ export function buildToolBrainUsageReport(history, prestations = PRESTATIONS, { 
 // HARMONIA). Réutilise toolUsageStats() tel quel, sur le seul slug "tool-brain" ; le câblage
 // réciproque (est-il bien appelé dans le crochet post-commit ?) est une simple recherche de texte
 // dans le code source déjà en mémoire, même patron que checkHtmlWiring() (circle-tasks.mjs).
-export function diagnoseToolBrainSelf(history, { checkLastCommitSource } = {}) {
+// CORRIGÉ le 2026-09-25 (constat DEEP-READER 6) — ET C'ÉTAIT LE MÊME DÉFAUT QUE PARTOUT AILLEURS,
+// pris ici par son pire bout. La ligne d'origine lisait `usage.byOrigin?.spontane`, une origine que
+// le vocabulaire déclare mais qu'AUCUN chemin de code n'écrit : `recordCliUsage()` écrit toujours
+// « cli_direct ». Ce compteur valait donc 0 depuis le premier jour, quoi qu'il arrive — et tool-brain
+// imprimait sans faiblir « jamais spontanément — signe que le réflexe n'est pas encore acquis »,
+// c'est-à-dire un REPROCHE rendu sur une sonde incapable de matcher. Un faux rouge, exactement aussi
+// menteur qu'un faux vert, et plus discret : personne ne conteste une mauvaise note.
+export function diagnoseToolBrainSelf(history, { checkLastCommitSource, spontaneousCount: spontaneousInjecte } = {}) {
   const usage = toolUsageStats(history, TOOL_BRAIN_SLUG);
-  const spontaneousCount = usage.byOrigin?.spontane ?? 0;
+  // Trois états, jamais deux : un nombre dérivé (mesuré), ou `null` (PAS MESURÉ). Jamais un zéro
+  // par défaut, qui serait indistinguable d'une absence réelle d'initiative.
+  const spontaneousCount = Number.isInteger(spontaneousInjecte) ? spontaneousInjecte : null;
   const wiredInPostCommitHook = checkLastCommitSource != null ? /tool-brain\.mjs/.test(checkLastCommitSource) : undefined;
   const findings = [];
   if (usage.total === 0) {
     findings.push("tool-brain n'a jamais été sollicité (ni spontanément, ni sur demande) — son rappel automatique post-commit reste alors la seule chose qui tourne réellement.");
+  } else if (spontaneousCount === null) {
+    findings.push(`tool-brain a été sollicité ${usage.total} fois ; la part d'initiative n'est PAS MESURÉE ici (la liste des items de Ronde et la source des crochets n'ont pas été fournies) — et ne rien savoir ne se dit jamais « zéro ».`);
   } else if (spontaneousCount === 0) {
-    findings.push(`tool-brain a été sollicité ${usage.total} fois, mais jamais spontanément — signe que le réflexe n'est pas encore acquis, seulement le rappel mécanique.`);
+    findings.push(`tool-brain a été sollicité ${usage.total} fois, mais jamais de ma propre initiative (toujours un item de Ronde ou un crochet) — signe que le réflexe n'est pas encore acquis, seulement le rappel mécanique.`);
+  } else {
+    findings.push(`✨ tool-brain a été sollicité ${spontaneousCount} fois de ma propre initiative sur ${usage.total} au total — le réflexe existe pour de vrai, il n'est pas que mécanique.`);
   }
   if (wiredInPostCommitHook === false) {
     findings.push("tool-brain ne semble plus câblé dans le crochet post-commit (scripts/hooks/check-last-commit.mjs) — vérifier le câblage réciproque.");
@@ -309,13 +324,25 @@ export function diagnoseToolBrainSelf(history, { checkLastCommitSource } = {}) {
 // ronde [...] te faire des recommandations [...] eventuellement diagnostiquer des ameliorations à
 // apporter sur le systeme global "tool-brain" »). Disponible aux deux déclenchements demandés : à
 // chaque Ronde (cf. circle-tasks.mjs, item "tool-brain-report") ET à la demande (CLI ci-dessous).
-export function formatToolBrainReport({ history, prestations = PRESTATIONS, checkLastCommitSource, lireSource, offert = "", now = Date.now() } = {}) {
+export function formatToolBrainReport({ history, prestations = PRESTATIONS, checkLastCommitSource, lireSource, offert = "", itemsRonde, sourceCrochets, sourcesDesOutils, now = Date.now() } = {}) {
   // `checkLastCommitSource` sert deux fois : à l'auto-diagnostic (est-ce que tool-brain est câblé ?)
   // et désormais à distinguer « jamais sollicité » de « couvert par le crochet ». Un seul fichier
   // lu, deux questions répondues — jamais une seconde lecture pour la même source.
   const { perTool, neverUsed, couvertsParLeCrochet, sansLigneDeCommande, muetsAuCompteur, silenceMesurable, pourquoiSilenceNonMesure } =
     buildToolBrainUsageReport(history, prestations, { sourceCrochet: checkLastCommitSource ?? "", lireSource, offert });
-  const self = diagnoseToolBrainSelf(history, { checkLastCommitSource });
+  // LE SEUL SIGNAL POSITIF DU RAPPORT (2026-09-25, constat DEEP-READER 6, sa demande mot pour mot :
+  // « les utilisations spontanées des outils (de ta part ET hors process mecaniques) sont à flagger
+  // comme "signe trés positif" de cette mesure »). Tout le reste de ce rapport compte ce qui manque ;
+  // celui-ci est le seul à compter ce qui va bien — et un paysage qui ne sait que se reprocher des
+  // choses finit par n'être plus lu.
+  const spontane = usagesSpontanes(history, {
+    itemsRonde: itemsRonde instanceof Set ? itemsRonde : new Set(itemsRonde ?? []),
+    sourceCrochets: sourceCrochets ?? checkLastCommitSource ?? "",
+  });
+  const spontaneToolBrain = spontane.mesurable
+    ? (spontane.spontanes.find((t) => t.slug === TOOL_BRAIN_SLUG)?.appels ?? 0)
+    : undefined;
+  const self = diagnoseToolBrainSelf(history, { checkLastCommitSource, spontaneousCount: spontaneToolBrain });
   const lines = [
     "=== tool-brain — rapport de Ronde ===",
     `Date : ${new Date(now).toISOString()}`,
@@ -325,6 +352,14 @@ export function formatToolBrainReport({ history, prestations = PRESTATIONS, chec
     !silenceMesurable ? `⚠️ SILENCE NON CLASSÉ — ${pourquoiSilenceNonMesure}` : "",
     muetsAuCompteur?.length ? `🔴 ${muetsAuCompteur.length} outil(s) ONT une ligne de commande et n'enregistrent PAS leur passage : ${muetsAuCompteur.join(", ")}. Leur zéro ne mesure pas leur inactivité, il mesure leur silence — c'est un défaut du compteur, à corriger, jamais un constat sur eux.` : "",
     sansLigneDeCommande?.length ? `📗 ${sansLigneDeCommande.length} outil(s) qu'AUCUN compteur d'appels ne peut voir : ${sansLigneDeCommande.join(", ")}. Deux causes possibles, et elles appellent deux gestes différents : soit le travail passe par un agent séparé et le script ne fait que mettre en forme son rapport (rien à corriger — ce qui dit s'il a tourné est son registre \`docs/<outil>/\`), soit sa commande n'est écrite NULLE PART dans les documents, et c'est un vrai manque (constat déjà remonté séparément par l'iceberg de CASSANDRA). Dans les deux cas ce n'est pas zéro, c'est PAS MESURABLE.` : "",
+    "",
+    ...formatUsagesSpontanesLines(spontane),
+    "",
+    // LA CAUSE RACINE À CÔTÉ DU SYMPTÔME, jamais l'une sans l'autre : le signal ci-dessus DÉRIVE
+    // l'initiative faute de pouvoir la lire. Ce qui l'en empêche — une origine déclarée que rien
+    // n'écrit — est imprimé juste en dessous, sinon le contournement finirait par tenir lieu de
+    // correction et personne ne saurait plus qu'il y avait un trou.
+    ...formatOriginesJamaisEcritesLines(findOriginesJamaisEcrites(sourcesDesOutils ?? [], { historique: history })),
     "",
     "COMBINAISONS du catalogue — réalisées en FAIT, jamais déclarées :",
     ...packsRealises(history, prestations).map((p) => (p.estUneCombinaison
@@ -340,7 +375,7 @@ export function formatToolBrainReport({ history, prestations = PRESTATIONS, chec
   return lines.join("\n");
 }
 
-function main() {
+async function main() {
   printReliabilityNotice("tool-brain");
   recordCliUsage("tool-brain");
   const [, , ...rest] = process.argv;
@@ -351,6 +386,15 @@ function main() {
     try {
       checkLastCommitSource = readFileSync(new URL("./hooks/check-last-commit.mjs", import.meta.url), "utf8");
     } catch { /* best-effort, jamais bloquant */ }
+    // LES TROIS SOURCES, jamais la seule qui était déjà là (2026-09-25). Le signal d'initiative
+    // retire du compte les outils qu'un crochet lance tout seul ; s'il ne lisait que
+    // check-last-commit.mjs, tout outil lancé par `pre-commit` ou `post-commit` passerait pour une
+    // initiative. C'est le piège exact évité la première fois — écrit ici pour ne pas y retomber
+    // par une source oubliée plutôt que par une logique fausse.
+    let sourceCrochets = checkLastCommitSource ?? "";
+    for (const h of ["./hooks/pre-commit", "./hooks/post-commit"]) {
+      try { sourceCrochets += "\n" + readFileSync(new URL(h, import.meta.url), "utf8"); } catch { /* best-effort */ }
+    }
     // Le lecteur de source est passé ICI plutôt que codé dans la fonction, pour la même raison que
     // partout ailleurs dans ce paysage : sans lui, le rapport DÉCLARE qu'il n'a pas pu classer les
     // silences au lieu de les compter comme des zéros (#763).
@@ -366,7 +410,22 @@ function main() {
     for (const doc of ["../CLAUDE.md", "../docs/regles-de-travail.md"]) {
       try { offert += readFileSync(new URL(doc, import.meta.url), "utf8"); } catch { /* best-effort */ }
     }
-    console.log(formatToolBrainReport({ history, checkLastCommitSource, lireSource, offert }));
+    // Les items de Ronde viennent de circle-tasks.mjs LUI-MÊME, jamais d'une liste recopiée ici
+    // (Article 24 : un registre se LIT). Import dynamique et seulement sur ce sous-commande : la
+    // bannière post-commit, qui passe par le même fichier, ne doit pas payer cette chaîne.
+    let itemsRonde;
+    try {
+      const { CIRCLE_ITEMS } = await import("./circle-tasks.mjs");
+      itemsRonde = new Set(CIRCLE_ITEMS.map((i) => i.id));
+    } catch { /* absent : le rapport dira PAS MESURÉ plutôt que d'inventer un zéro */ }
+    // Les sources réelles du dossier scripts/, jamais une liste recopiée (Article 24).
+    let sourcesDesOutils = [];
+    try {
+      const dossier = fileURLToPath(new URL("./", import.meta.url));
+      sourcesDesOutils = readdirSync(dossier).filter((f) => f.endsWith(".mjs"))
+        .map((f) => { try { return readFileSync(join(dossier, f), "utf8"); } catch { return ""; } });
+    } catch { /* absent : le garde-fou dira PAS MESURÉ plutôt que d'inventer un vert */ }
+    console.log(formatToolBrainReport({ history, checkLastCommitSource, lireSource, offert, itemsRonde, sourceCrochets, sourcesDesOutils }));
     return;
   }
 

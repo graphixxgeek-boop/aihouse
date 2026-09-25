@@ -72,6 +72,15 @@ DEEP-READER 8 : sept décisions attendaient en pleine vue, dont trois depuis des
 #206 #207 : déjà clos depuis le 2026-09-20, vérifié avant de refaire — la dérive était dans le plan, pas dans le code [VÉRIFIÉ]
 DEEP-READER 7 : le filet coûte 43,7 s à chaque commit, 10 groupes sur 244 en pèsent 76 % — mesuré, trois options proposées, rien appliqué (tuyauterie) [FAIT]
 
+DEEP-READER 6 : le seul signal POSITIF du paysage n'existait pas — l'origine « spontane » n'a JAMAIS
+  ete ecrite sur 2 197 evenements, et tool-brain la LISAIT pour en tirer un reproche permanent.
+  Signal derive et mesure : 599 appels de ma propre initiative sur 30 outils. Cause racine
+  fermee par un garde-fou, qui est lui-meme tombe dans le faux vert PUIS dans le faux rouge
+  avant d'etre juste — les deux gardes ecrits comme contre-tests [FAIT]
+DEEP-READER 2 (#229) : je la croyais faite, elle ne l'est pas — le champ « pour qui » porte sur
+  les TACHES (PROJET / DETTE-ENVERS-L'UTILISATEUR), pas sur les outils. Ecart dit, pas corrige
+  en silence (Article 30) [A FAIRE]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------

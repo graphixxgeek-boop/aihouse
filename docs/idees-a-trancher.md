@@ -101,3 +101,21 @@ commit** qui créait #819, parce que la ligne portait `A-TRANCHER` sans être in
 mécanisme a donc attrapé son propre auteur, sur sa première occasion réelle — ce qui est la seule
 preuve qui vaille qu'il n'était pas une intention (leçon L2).
 
+
+### Ajoutée le 2026-09-25 par le garde-fou d'écriture des origines
+
+| Tâche | Sujet | Décision |
+|---|---|---|
+| #823 | Compteur d'usage — l'origine « spontane » : la câbler, ou la retirer du vocabulaire ? | à trancher |
+
+**Le fait qui la motive** : sur 2 197 événements enregistrés depuis le premier jour, cette origine
+n'a **jamais** été écrite une seule fois, et tool-brain la LISAIT pour en tirer un reproche
+permanent. Le signal positif construit le même jour la remplace déjà, en DÉRIVANT l'initiative de
+ce qui est réellement enregistré. Les deux options, et elles ne se valent pas :
+
+- **La câbler** — il faudrait qu'un appelant déclare « ceci est spontané », c'est-à-dire que je me
+  note moi-même. Ce projet s'en méfie, et il a raison : une mesure auto-déclarée mesure la
+  déclaration, jamais le fait.
+- **La retirer** — le vocabulaire ne porterait plus que des origines réellement productibles, et
+  plus aucun outil ne pourrait rendre un verdict sur une catégorie vide. Coût : `toolUsageStats()`
+  cesse d'exposer une clé que personne ne remplissait.

@@ -251,4 +251,167 @@ function main() {
   console.log(JSON.stringify(toolUsageStats(history, toolSlug), null, 1));
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// L'USAGE SPONTANÉ — LE SEUL SIGNAL POSITIF DU PAYSAGE (2026-09-25, constat DEEP-READER 6)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA DEMANDE, MOT POUR MOT : « les utilisations spontanées des outils (de ta part ET hors process
+// mecaniques) sont à flagger comme "signe trés positif" de cette mesure. »
+//
+// POURQUOI ELLE N'AVAIT JAMAIS ÉTÉ TENUE, et la cause est exactement du type que ce projet traque :
+// `USAGE_ORIGINS` contient « spontane » depuis le premier jour, et sur 2 194 événements enregistrés
+// il n'a JAMAIS été utilisé une seule fois — parce que `recordCliUsage()` écrit « cli_direct »,
+// point. Une catégorie qui existe dans le vocabulaire et qu'aucun chemin de code ne peut produire :
+// le même défaut qu'une sonde incapable de matcher, vu depuis l'écriture plutôt que la lecture.
+//
+// CE QUI SE DÉRIVE HONNÊTEMENT, plutôt qu'une auto-déclaration : ce projet se méfie d'un agent qui
+// se note lui-même, et il a raison. Mais « spontané » EST dérivable de ce qui est déjà enregistré —
+// un appel en ligne de commande d'un outil qui n'est NI un item de la Ronde (donc pas dicté par un
+// process) NI lancé par un crochet git (donc pas automatique) ne peut venir que d'une initiative.
+//
+// LE PIÈGE ÉVITÉ DE JUSTESSE, gardé écrit parce qu'il est le miroir exact du faux vert : la
+// première version ne retirait que les items de Ronde et annonçait 1 127 appels spontanés, avec
+// ecotoken à 304 et moïse à 177 — deux outils que le crochet post-commit lance lui-même à chaque
+// commit. Un chiffre flatteur et faux. **Un faux OR est aussi nuisible qu'un faux vert** : il
+// félicite pour un mérite inexistant, et la mesure suivante ne vaudra plus rien.
+export function usagesSpontanes(history, { itemsRonde = new Set(), sourceCrochets = "" } = {}) {
+  const evenements = history?.events;
+  if (!Array.isArray(evenements)) {
+    return { mesurable: false, pourquoi: "aucun historique d'usage lisible — répondre « zéro usage spontané » sur une absence de journal accuserait à tort, et c'est précisément l'inverse du signal qu'on cherche" };
+  }
+  if (!String(sourceCrochets).trim()) {
+    return { mesurable: false, pourquoi: "la source des crochets git n'a pas été fournie : sans elle, tout outil lancé automatiquement à chaque commit passerait pour une initiative — un faux MÉRITE, aussi trompeur qu'un faux vert" };
+  }
+  const parCrochet = (slug) => new RegExp(`scripts/${String(slug).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\.mjs|["'\`\\s])`).test(sourceCrochets);
+  const cli = evenements.filter((e) => e?.origin === "cli_direct");
+  const parOutil = new Map();
+  for (const e of cli) {
+    const slug = e.toolSlug ?? e.tool ?? null;
+    if (!slug) continue;
+    parOutil.set(slug, (parOutil.get(slug) ?? 0) + 1);
+  }
+  const spontanes = []; const dictes = []; const automatiques = [];
+  for (const [slug, n] of parOutil) {
+    if (itemsRonde.has(slug) || itemsRonde.has(`${slug}-signal`)) dictes.push({ slug, appels: n });
+    else if (parCrochet(slug)) automatiques.push({ slug, appels: n });
+    else spontanes.push({ slug, appels: n });
+  }
+  const tri = (a, b) => b.appels - a.appels;
+  return {
+    mesurable: true,
+    spontanes: spontanes.sort(tri), dictes: dictes.sort(tri), automatiques: automatiques.sort(tri),
+    appelsSpontanes: spontanes.reduce((a, s) => a + s.appels, 0),
+    appelsCliTotal: cli.length,
+    horsPortee:
+      "Un appel spontané prouve une INITIATIVE, jamais qu'elle était la bonne : lancer dix fois le " +
+      "mauvais outil compte pareil. Et l'origine « spontane » du vocabulaire reste inutilisée — ce " +
+      "signal est DÉRIVÉ de « cli_direct », il ne la remplace pas.",
+  };
+}
+
+export function formatUsagesSpontanesLines(u) {
+  if (!u?.mesurable) return [`SIGNE POSITIF : PAS MESURÉ — ${u?.pourquoi ?? "aucune donnée"}`];
+  const L = [
+    `✨ SIGNE TRÈS POSITIF — ${u.appelsSpontanes} appel(s) de ma propre initiative, sur ${u.spontanes.length} outil(s) différent(s).`,
+    `   (ni item de Ronde, ni lancé par un crochet : ${u.dictes.length} outil(s) dictés par un process et ${u.automatiques.length} automatiques sont retirés du compte)`,
+  ];
+  if (u.spontanes.length) L.push(`   Les plus sollicités : ${u.spontanes.slice(0, 8).map((s) => `${s.slug} (${s.appels})`).join(" · ")}`);
+  else L.push("   Aucun pour l'instant — ce n'est pas un reproche mécanique, c'est le chiffre à faire monter.");
+  L.push(`   HORS PORTÉE : ${u.horsPortee}`);
+  return L;
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// LA CAUSE RACINE, plutôt que le seul symptôme (2026-09-25, Article 3)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Le signal positif ci-dessus DÉRIVE l'initiative de « cli_direct » — il contourne le trou, il ne
+// le bouche pas. Le trou lui-même : `USAGE_ORIGINS` déclare six origines, et rien ne garantit
+// qu'un chemin de code existe pour chacune. « spontane » en était l'exemple vivant : présente
+// depuis le premier jour, jamais écrite une seule fois sur 2 194 événements, et pourtant LUE par
+// tool-brain qui en tirait un reproche permanent.
+//
+// C'est le défaut fondateur de ce projet vu sous son angle d'ÉCRITURE : une sonde qui ne peut pas
+// matcher rend ce que rend une sonde qui n'a rien trouvé ; ici, une catégorie que personne ne peut
+// écrire rend ce que rend une catégorie réellement inutilisée. Les deux se lisent « zéro ».
+//
+// CE QUE CE GARDE-FOU FAIT, et ce qu'il ne fait pas : il cherche, dans les sources qu'on lui donne,
+// une écriture réelle de chaque origine (un appel `recordToolUsage(..., "x")`, un helper dédié, ou
+// un `TOOL_USAGE_ORIGIN=x`). Il ne dit JAMAIS qu'une origine est inutile — seulement qu'aucun
+// chemin de code ne peut la produire, ce qui est un fait mécanique. Décider s'il faut la câbler ou
+// la retirer reste un jugement humain (Article 24 : le garde-fou détecte l'écart, il ne tranche pas).
+export const ORIGINES_ECRITES_PAR_UN_HELPER = {
+  // Les trois seules origines qu'un chemin AUTOMATIQUE produit tout seul. Les autres ne peuvent
+  // naître que d'un appel délibéré à recordToolUsage() — possible, mais que rien ne déclenche.
+  cli_direct: /recordCliUsage\s*\(/,
+  fonction: /recordFunctionUsage\s*\(/,
+  verification: /TOOL_USAGE_ORIGIN/,
+};
+
+// LA PREMIÈRE VERSION DE CE GARDE-FOU ÉTAIT AVEUGLE, et la deuxième criait au loup. Les deux sont
+// gardées écrites, parce qu'ensemble elles montrent les DEUX façons de se tromper sur la même
+// question — et que ce projet a passé la journée à découvrir qu'elles se ressemblent.
+//   1. La première cherchait l'origine entre guillemets suivie d'une virgule. Ça matche la
+//      DÉCLARATION elle-même (`USAGE_ORIGINS = ["spontane",`) : elle a donc certifié « les 6 ont
+//      un chemin d'écriture » sur l'origine dont on savait avec certitude qu'elle n'en avait aucun.
+//      Un faux vert, dans l'outil écrit exprès contre les faux verts.
+//   2. La deuxième ne cherchait que l'appel littéral dans les sources. Elle a accusé 5 origines sur
+//      6 — alors que le journal réel en portait 4 avec des centaines d'événements. Un faux rouge.
+//      Aussi menteur, et plus discret : personne ne conteste une mauvaise note.
+//
+// D'OÙ LA PREUVE PAR LE JOURNAL, jamais par la seule lecture du code : une origine réellement
+// présente dans l'historique EST produisible, c'est un fait, pas une déduction. Le balayage des
+// sources ne sert plus qu'aux origines que le journal ne porte pas — et là seulement, il distingue
+// « aucun chemin automatique » de « un chemin existe, il n'a simplement jamais servi ».
+//
+// CE QU'IL NE FAIT PAS : il ne dit JAMAIS qu'une origine est inutile. Il dit qu'elle est
+// INÉCRITE, ce qui est mécanique. La câbler ou la retirer reste un jugement humain (Article 24).
+export function findOriginesJamaisEcrites(sources = [], { origines = USAGE_ORIGINS, helpers = ORIGINES_ECRITES_PAR_UN_HELPER, historique = null } = {}) {
+  const texte = sources.filter(Boolean).join("\n");
+  const evenements = historique?.events;
+  if (!texte.trim() && !Array.isArray(evenements)) {
+    return { mesurable: false, pourquoi: "ni source ni journal fournis — répondre « toutes les origines sont câblées » sur zéro donnée lue serait exactement le faux vert que ce garde-fou existe pour empêcher" };
+  }
+  // On retire commentaires et déclaration du vocabulaire : ce sont des MENTIONS, jamais des écritures.
+  const utile = texte
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/^[ \t]*\/\/.*$/gm, " ")
+    .replace(/USAGE_ORIGINS\s*=\s*\[[^\]]*\]/g, " ");
+  const vuesDansLeJournal = new Set((evenements ?? []).map((e) => e?.origin).filter(Boolean));
+  const jamaisEcrites = []; const cheminSansUsage = []; const attestees = [];
+  for (const o of origines) {
+    if (vuesDansLeJournal.has(o)) { attestees.push(o); continue; }
+    const parHelper = helpers[o] ? helpers[o].test(utile) : false;
+    if (parHelper) cheminSansUsage.push(o);
+    else jamaisEcrites.push(o);
+  }
+  return {
+    mesurable: true,
+    jamaisEcrites, cheminSansUsage, attestees,
+    originesExaminees: origines.length,
+    fichiersLus: sources.filter(Boolean).length,
+    evenementsLus: Array.isArray(evenements) ? evenements.length : null,
+    horsPortee:
+      "Le journal prouve qu'une origine EST produisible ; son silence ne prouve jamais qu'aucun " +
+      "chemin n'existe — recordToolUsage() est exportée, un appel délibéré peut toujours écrire " +
+      "n'importe laquelle. Ce qui est signalé, c'est une origine qu'aucun chemin AUTOMATIQUE ne " +
+      "produit et que rien n'a jamais écrite : lue par un outil, elle rendra toujours zéro.",
+  };
+}
+
+export function formatOriginesJamaisEcritesLines(r) {
+  if (!r?.mesurable) return [`ORIGINES D'USAGE : PAS MESURÉ — ${r?.pourquoi ?? "aucune donnée"}`];
+  const L = [];
+  if (!r.jamaisEcrites.length) {
+    L.push(`Origines d'usage : les ${r.originesExaminees} déclarées sont toutes productibles (${r.attestees.length} attestée(s) par le journal${r.evenementsLus != null ? ` de ${r.evenementsLus} événements` : ""}, ${r.cheminSansUsage.length} par un chemin automatique jamais encore emprunté).`);
+  } else {
+    L.push(`🔴 ${r.jamaisEcrites.length} origine(s) d'usage sur ${r.originesExaminees} qu'aucun chemin automatique ne produit et que le journal n'a JAMAIS portée : ${r.jamaisEcrites.join(", ")}.`);
+    L.push("   Une catégorie inécrite se lit « zéro » exactement comme une catégorie réellement inutilisée —");
+    L.push("   et tout outil qui la lit rend un verdict sur du vide. À câbler ou à retirer, jamais à laisser en l'état.");
+  }
+  if (r.cheminSansUsage.length) L.push(`   (${r.cheminSansUsage.length} origine(s) ont un chemin mais aucun événement à ce jour : ${r.cheminSansUsage.join(", ")} — un chemin non emprunté n'est pas un chemin absent.)`);
+  L.push(`   HORS PORTÉE : ${r.horsPortee}`);
+  return L;
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) main();

@@ -4670,10 +4670,37 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // diagnoseToolBrainSelf() — borné au SEUL périmètre de tool-brain (jamais un audit du paysage entier).
   const neverSolicited = diagnoseToolBrainSelf({ events: [] });
   assert.ok(neverSolicited.findings.some((f) => f.includes('jamais été sollicité')), 'if tool-brain itself has zero recorded events, the self-diagnosis must say so plainly rather than staying silent');
-  const onlyAutomatic = diagnoseToolBrainSelf({ events: [{ toolSlug: TOOL_BRAIN_SLUG, origin: 'automatique_post_commit', at: 1 }] });
-  assert.ok(onlyAutomatic.findings.some((f) => f.includes('jamais spontanément')), 'if tool-brain has only ever fired via the automatic post-commit reminder and never a spontaneous/requested call, the self-diagnosis must flag that the reflex is not yet real — a signal the user explicitly cares about');
-  const genuinelyUsed = diagnoseToolBrainSelf({ events: [{ toolSlug: TOOL_BRAIN_SLUG, origin: 'spontane', at: 1 }] });
-  assert.equal(genuinelyUsed.findings.length, 0, 'once tool-brain has at least one real spontaneous call, no finding should fire — a false alarm here would undermine trust in the self-diagnosis');
+  // CONTRE-TESTS RÉÉCRITS le 2026-09-25 (constat DEEP-READER 6) — et les deux qu'ils remplacent
+  // étaient eux-mêmes le défaut. L'un fabriquait un événement `origin: 'spontane'` et vérifiait
+  // qu'aucune alerte ne sortait ; l'autre vérifiait le reproche inverse. Or AUCUN chemin de code
+  // n'écrit jamais cette origine — `recordCliUsage()` écrit « cli_direct ». Les deux tests
+  // certifiaient donc un comportement sur des données que le système ne peut pas produire, et
+  // verrouillaient au passage un reproche permanent rendu sur une sonde aveugle.
+  const partMesureeNulle = diagnoseToolBrainSelf({ events: [{ toolSlug: TOOL_BRAIN_SLUG, origin: 'cli_direct', at: 1 }] }, { spontaneousCount: 0 });
+  assert.ok(partMesureeNulle.findings.some((f) => f.includes('jamais de ma propre initiative')), 'when the initiative share has actually been MEASURED and comes out at zero, the self-diagnosis must say the reflex is not yet real — that reproach is legitimate, but only once something was really counted');
+  const partNonMesuree = diagnoseToolBrainSelf({ events: [{ toolSlug: TOOL_BRAIN_SLUG, origin: 'cli_direct', at: 1 }] });
+  assert.ok(partNonMesuree.findings.some((f) => f.includes('PAS MESURÉE')), 'without the Ronde items and the hook sources nothing can be derived, and the self-diagnosis must say PAS MESURÉ rather than reproach a zero it never counted — a false red lies exactly as much as a false green, and is harder to contest');
+  assert.equal(partNonMesuree.spontaneousCount, null, 'an unmeasured initiative share must read null, never 0 — the whole defect was a default zero indistinguishable from a real absence of initiative');
+  const partMesureeReelle = diagnoseToolBrainSelf({ events: [{ toolSlug: TOOL_BRAIN_SLUG, origin: 'cli_direct', at: 1 }] }, { spontaneousCount: 4 });
+  assert.ok(partMesureeReelle.findings.some((f) => f.includes('✨')), 'a measured, non-zero initiative share must surface as the POSITIVE signal the user explicitly asked for, not merely as the absence of a reproach');
+
+  // usagesSpontanes() — le signal positif lui-même, et son garde-fou anti-faux-or.
+  const tu2 = await import('../scripts/tool-usage.mjs');
+  const histSpontane = { events: [
+    { toolSlug: 'argus', origin: 'cli_direct', at: 1 },
+    { toolSlug: 'ecotoken', origin: 'cli_direct', at: 2 },
+    { toolSlug: 'profil', origin: 'cli_direct', at: 3 },
+    { toolSlug: 'argus', origin: 'automatique_post_commit', at: 4 },
+  ] };
+  const crochets = 'node scripts/ecotoken.mjs scan\nnode scripts/moise-tables-de-loi.mjs';
+  const sansSource = tu2.usagesSpontanes(histSpontane, { itemsRonde: new Set(['profil']) });
+  assert.equal(sansSource.mesurable, false, 'without the hook sources, usagesSpontanes() must refuse to conclude: every hook-launched tool would otherwise be credited as an initiative');
+  assert.ok(tu2.formatUsagesSpontanesLines(sansSource)[0].includes('PAS MESURÉ'), 'a refusal must print PAS MESURÉ, never an empty or flattering line');
+  const mesure = tu2.usagesSpontanes(histSpontane, { itemsRonde: new Set(['profil']), sourceCrochets: crochets });
+  assert.deepEqual(mesure.spontanes.map((t) => t.slug), ['argus'], 'only a CLI call that is neither a Ronde item nor a hook-launched tool counts as an initiative — ecotoken is launched by the hook and profil is a Ronde item, so crediting either would be the false-gold this measure was rebuilt to avoid');
+  assert.equal(mesure.appelsSpontanes, 1, 'the automatic post-commit event of the same tool must not inflate the initiative count — only cli_direct calls are candidates');
+  assert.ok(tu2.formatUsagesSpontanesLines(mesure).join('\n').includes('SIGNE TRÈS POSITIF'), 'the measured signal must be phrased exactly as the user asked — « signe trés positif » — since it is the only line in the whole landscape that counts what goes right');
+  assert.equal(tu2.usagesSpontanes(null, { sourceCrochets: crochets }).mesurable, false, 'no readable usage history must read PAS MESURÉ, never « zero initiative » — accusing on a missing journal is the exact inverse of the signal being sought');
   const wiringOk = diagnoseToolBrainSelf({ events: [] }, { checkLastCommitSource: 'import { formatToolBrainReminder } from "../tool-brain.mjs";' });
   assert.equal(wiringOk.wiredInPostCommitHook, true, 'a real check-last-commit.mjs source that imports tool-brain.mjs must be recognized as genuinely wired, a simple text search exactly like checkHtmlWiring()');
   const wiringMissing = diagnoseToolBrainSelf({ events: [] }, { checkLastCommitSource: 'no mention of the tool here' });
@@ -7911,6 +7938,31 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.throws(() => recordToolContribution('argus', 'docs/argus/index.md', { nature: 'inventee' }), /nature inconnue/, 'an unknown contribution nature fails rather than silently corrupting the breakdown, exactly as an unknown usage origin already does');
   assert.ok(CONTRIBUTION_NATURES.length >= 4 && !CONTRIBUTION_NATURES.includes('usage'), 'contributions have their own vocabulary and never borrow the usage one — two natures in one series would produce a total describing neither');
   assert.throws(() => recordFunctionUsage('argus'), /fonction obligatoire/, '"the tool was used" without saying through what is not a verifiable measure');
+
+  // findOriginesJamaisEcrites() (2026-09-25, constat DEEP-READER 6) — la CAUSE RACINE du signal
+  // positif manquant, prise par son bout d'écriture. Une origine que le vocabulaire déclare et
+  // qu'aucun chemin ne produit se lit « zéro » exactement comme une origine réellement inutilisée,
+  // et tool-brain en tirait depuis toujours un reproche permanent rendu sur du vide.
+  const { findOriginesJamaisEcrites, formatOriginesJamaisEcritesLines } = await import('../scripts/tool-usage.mjs');
+  assert.equal(findOriginesJamaisEcrites([], {}).mesurable, false, 'with neither sources nor journal, the guard must refuse to conclude rather than certify that every origin is wired — the exact false green it exists to prevent');
+  assert.ok(formatOriginesJamaisEcritesLines(findOriginesJamaisEcrites([], {}))[0].includes('PAS MESURÉ'), 'a refusal must print PAS MESURÉ, never an empty or reassuring line');
+  const attesteeParLeJournal = findOriginesJamaisEcrites(['aucun appel ici'], { origines: ['demande'], helpers: {}, historique: { events: [{ origin: 'demande' }] } });
+  assert.deepEqual(attesteeParLeJournal.jamaisEcrites, [], 'an origin the real journal actually carries IS producible — that is a fact, not a deduction, and the source scan must never override it: the second version of this guard accused 5 origins out of 6 while the journal carried 4 of them with hundreds of events');
+  const cheminJamaisEmprunte = findOriginesJamaisEcrites(['recordCliUsage("x")'], { origines: ['cli_direct'], historique: { events: [] } });
+  assert.deepEqual(cheminJamaisEmprunte.cheminSansUsage, ['cli_direct'], 'a real automatic path with no event yet is a THIRD state, never lumped with an unwritable origin — a path not yet taken is not an absent path');
+  const inecrite = findOriginesJamaisEcrites(['const USAGE_ORIGINS = ["spontane", "demande"];\n// on cite "spontane" dans un commentaire'], { origines: ['spontane'], historique: { events: [] } });
+  assert.deepEqual(inecrite.jamaisEcrites, ['spontane'], 'the vocabulary declaration and a comment are MENTIONS, never writes — the first version of this guard matched its own declaration and therefore certified as wired the one origin known for certain to have no write path at all');
+  // Et le vrai dépôt, jamais seulement des cas fabriqués (Article 25 : un outil qui n'a jamais
+  // tourné contre le vrai dépôt est une intention). Le constat attendu est NOMMÉ, pas un seuil :
+  // si « spontane » finit câblée ou retirée, ce test doit être relu, jamais passer en silence.
+  {
+    const srcsReelles = fs.readdirSync('scripts').filter((f) => f.endsWith('.mjs')).map((f) => { try { return fs.readFileSync(path.join('scripts', f), 'utf8'); } catch { return ''; } });
+    let journalReel = null;
+    try { journalReel = JSON.parse(fs.readFileSync('.tool-usage-history.json', 'utf8')); } catch { /* absent en CI : le garde-fou le dira lui-même */ }
+    const reel = findOriginesJamaisEcrites(srcsReelles, { historique: journalReel });
+    assert.ok(reel.mesurable && reel.fichiersLus > 20, 'the guard must actually read the real scripts folder, never conclude on an empty sweep — a zero without its denominator is the defect this whole day was spent on');
+    assert.ok(!reel.jamaisEcrites.length || reel.jamaisEcrites.every((o) => o === 'spontane'), `the only origin the real repo cannot write is "spontane" (derived instead by usagesSpontanes()); any NEW unwritable origin must fail here rather than quietly become another counter that always reads zero — found: ${reel.jamaisEcrites.join(', ')}`);
+  }
   {
     const h = { events: [], contributions: [
       { toolSlug: 'argus', fichier: 'docs/argus/index.md', nature: 'registre', at: Date.parse('2026-09-23') },
