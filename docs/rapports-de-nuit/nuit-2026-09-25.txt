@@ -147,6 +147,11 @@ LES HUIT CONSTATS DEEP-READER SONT CLOS (1 a 8).
   ajoute (purement observationnel, rien de visible pour le visiteur), zero eligible = « rien a
   mesurer » et jamais 100 %, anciens enregistrements declares optimistes plutot que silencieux [FAIT]
 
+#243 (rapports de Ronde) : 106 fichiers archives dans 28 dossiers (et non ~21). Le recapitulatif
+  portait bien la section, mais alimentee par un parametre que je devais penser a remplir — oublie,
+  elle disparaissait SANS TRACE. Desormais DERIVEE du disque, trois etats, et quand rien n'est
+  trouve le recapitulatif le DIT. Premier passage : 6 rapports retrouves, 2 dossiers vides [FAIT]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------

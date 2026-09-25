@@ -3739,6 +3739,22 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // les gardiens secondaires ne livrent jamais leur rapport à la Ronde eux-mêmes, et le responsable
   // de chaque étape sautée est NOMMÉ (« il designe le coupable »), parce que c'est précisément ce qui
   // manquait quand une règle de simulation s'est perdue sans que personne n'en réponde.
+  // LES RAPPORTS INDIVIDUELS DE LA RONDE, DÉRIVÉS (2026-09-25, tâche #838 — constat #243).
+  // Le récapitulatif portait bien une section « Rapports individuels disponibles », alimentée par
+  // un paramètre que l'AGENT devait penser à remplir : quand il l'oubliait, la section disparaissait
+  // SANS TRACE et 106 fichiers archivés restaient invisibles dans 28 dossiers. Une obligation qui
+  // repose sur la mémoire d'un agent n'existe plus à la session suivante (Article 27).
+  const ct2=await import('../scripts/circle-tasks.mjs');
+  const faux={'a':'docs/aaa','b':'docs/bbb'};
+  const disque={'docs/aaa':['circle-signal-2026-09-01T00-00-00Z.txt','circle-signal-2026-09-25T00-00-00Z.txt','index.md'],'docs/bbb':[]};
+  const dr=ct2.derniersRapportsDesItems([{id:'a'},{id:'b'},{id:'c'}],{folders:faux,listDir:(d)=>disque[d]??null});
+  assert.deepEqual(dr.trouves,[{id:'a',chemin:'docs/aaa/circle-signal-2026-09-25T00-00-00Z.txt'}],'the MOST RECENT archived report of each executed item is derived from the disk, never passed by hand — and index.md is not a report');
+  assert.deepEqual(dr.dossiersVides.map(v=>v.id),['b'],'a known folder holding no report is a REAL defect (the item ran and wrote nothing), never silently skipped');
+  assert.deepEqual(dr.sansDossier,['c'],'an item with no declared folder is a third state, already tracked elsewhere and merely recalled here rather than counted twice');
+  assert.equal(ct2.derniersRapportsDesItems([]).mesurable,false,'no executed item means nothing to gather — PAS MESURÉ, never "no report found"');
+  const htmlSansLiens=ct2.buildCircleRunSummaryHtml([{id:'b',resultat:'ok'}],{dateLabel:'x',items:[{id:'b',label:'B'}],reportLinks:[]});
+  assert.ok(/Aucun rapport individuel trouvé/.test(htmlSansLiens),'and when nothing is found at all, the summary SAYS so: a section vanishing in silence makes an incomplete recap look complete, which is exactly how 106 archived reports stayed invisible');
+
   // LA CHAÎNE SUR LES DOCUMENTS (2026-09-25, tâche #834) — l'autre moitié du terrain de l'Article 28.
   // checkActionChain() vérifie le plan d'action qu'on lui PASSE, produit par un outil en mémoire.
   // Les plans écrits dans des DOCUMENTS (docs/plans/) n'étaient vérifiés par personne, alors qu'un

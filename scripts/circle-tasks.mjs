@@ -1443,6 +1443,53 @@ export function buildCircleRunSummaryText(entries, { dateLabel, items = CIRCLE_I
 // écrites dans docs/suivi/ par l'agent (jamais l'un sans l'autre). `reportLinks` : les rapports
 // individuels de la Ronde (txt sauf ceux déjà en HTML par décision Doc-Report), listés juste sous
 // l'analyse — demande explicite du 2026-09-21.
+// LES RAPPORTS INDIVIDUELS, DÉRIVÉS ET NON PASSÉS À LA MAIN (2026-09-25, tâche #838 — constat
+// TaskList #243 : « les ~21 rapports individuels de la Ronde : archivés mais jamais livrés »).
+//
+// LE TROU, et c'est une dette de reprise au sens exact de l'Article 27. Le récapitulatif de Ronde
+// porte bien une section « Rapports individuels disponibles », mais elle est alimentée par un
+// paramètre `reportLinks` que l'AGENT doit penser à remplir. Quand il l'oublie, la section
+// disparaît **sans laisser de trace** : le récapitulatif paraît complet, et les rapports restent
+// dans leurs 28 dossiers où personne ne va les chercher. Mesuré : **106 fichiers archivés**.
+//
+// UNE OBLIGATION QUI REPOSE SUR LA MÉMOIRE D'UN AGENT N'EXISTERA PLUS À LA SESSION SUIVANTE. On la
+// DÉRIVE donc : les items exécutés disent quels dossiers regarder (`CIRCLE_REPORT_FOLDERS`), et le
+// disque dit quel fichier y est le plus récent. Un item ajouté demain entre dans la liste sans que
+// personne n'y pense (Article 24).
+//
+// TROIS ÉTATS, comme partout : trouvé · dossier connu mais VIDE (l'item a tourné sans rien écrire,
+// ce qui est un vrai défaut) · aucun dossier déclaré pour cet item (déjà couvert par
+// `findItemsPromisingReportWithoutFolder()`, donc simplement rappelé ici, jamais recompté).
+export function derniersRapportsDesItems(entries = [], { folders = CIRCLE_REPORT_FOLDERS, root = ROOT, listDir = null } = {}) {
+  if (!entries.length) return { mesurable: false, pourquoi: "aucun item exécuté : il n'y a pas de rapport à rassembler, ce qui n'est pas la même chose qu'aucun rapport trouvé" };
+  const lire = listDir ?? ((dir) => { try { return readdirSync(join(root, dir)); } catch { return null; } });
+  const trouves = []; const dossiersVides = []; const sansDossier = [];
+  for (const e of entries) {
+    const id = e?.id ?? e;
+    const dossier = folders[id];
+    if (!dossier) { sansDossier.push(id); continue; }
+    const fichiers = lire(dossier);
+    if (!Array.isArray(fichiers)) { dossiersVides.push({ id, dossier, pourquoi: "dossier illisible ou absent" }); continue; }
+    const signaux = fichiers.filter((f) => /^circle-signal.*\.txt$/.test(f)).sort();
+    if (!signaux.length) { dossiersVides.push({ id, dossier, pourquoi: "aucun rapport archivé — l'item a tourné sans rien écrire" }); continue; }
+    trouves.push({ id, chemin: `${String(dossier).replace(/\/+$/, "")}/${signaux[signaux.length - 1]}` });
+  }
+  return {
+    mesurable: true, trouves, dossiersVides, sansDossier, itemsExamines: entries.length,
+    horsPortee: "Il rassemble les CHEMINS des rapports les plus récents, jamais leur contenu ni leur qualité : un rapport vide et un rapport riche se ressemblent ici.",
+  };
+}
+
+export function formatDerniersRapportsLines(r) {
+  if (!r?.mesurable) return [`Rapports individuels : PAS MESURÉ — ${r?.pourquoi ?? "aucune donnée"}`];
+  const L = [`— Rapports individuels de la Ronde (${r.trouves.length} sur ${r.itemsExamines} item(s) exécuté(s)) —`];
+  for (const t of r.trouves) L.push(`  ${REPORT_ICON} ${t.id} → ${t.chemin}`);
+  for (const v of r.dossiersVides) L.push(`  ✗ ${v.id} → ${v.dossier} : ${v.pourquoi}`);
+  if (r.sansDossier.length) L.push(`  ⚪ ${r.sansDossier.length} item(s) sans dossier déclaré : ${r.sansDossier.join(", ")} — déjà suivi par findItemsPromisingReportWithoutFolder(), rappelé ici sans être recompté.`);
+  L.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  return L;
+}
+
 export function buildCircleRunSummaryHtml(entries, { dateLabel, items = CIRCLE_ITEMS, analysis, followUpTasks = [], reportLinks = [], executedByModel } = {}) {
   const blocks = [
     { type: "paragraph", text: `Index léger : ce qui a tourné et un pointeur vers la sortie déjà produite par chaque item, jamais son contenu dupliqué ici. ${REPORT_ICON} = produit un vrai rapport archivé et indexé — depuis le 2026-09-21, tous les items de la Ronde le font.` },
@@ -1460,9 +1507,18 @@ export function buildCircleRunSummaryHtml(entries, { dateLabel, items = CIRCLE_I
     blocks.push({ type: "heading", text: "Tâches inscrites au suivi suite à cette analyse" });
     blocks.push({ type: "list", items: followUpTasks });
   }
-  if (reportLinks.length) {
+  // DÉRIVÉS quand l'appelant ne les fournit pas (2026-09-25, tâche #838) : une section qui
+  // disparaît en silence parce qu'un paramètre n'a pas été rempli laisse croire que le
+  // récapitulatif est complet, et 106 rapports archivés restent invisibles.
+  const liens = reportLinks.length ? reportLinks : (() => {
+    const d = derniersRapportsDesItems(entries ?? []);
+    return d.mesurable ? d.trouves.map((t) => `${t.id} → ${t.chemin}`) : [];
+  })();
+  if (liens.length) {
     blocks.push({ type: "heading", text: "Rapports individuels disponibles" });
-    blocks.push({ type: "list", items: reportLinks });
+    blocks.push({ type: "list", items: liens });
+  } else if (entries && entries.length) {
+    blocks.push({ type: "note", text: "Aucun rapport individuel trouvé pour les items exécutés — ce n'est pas « rien à livrer », c'est un manque : chaque item de la Ronde est censé archiver le sien." });
   }
   blocks.push({ type: "note", text: "CIRCLE-TASKS — la sélection des items reste toujours confirmée par une fenêtre à cocher avant exécution, jamais un tout-en-un silencieux." });
   return renderHtmlReport({ title: "CIRCLE-TASKS — récapitulatif de la Ronde", dateLabel: dateLabel ?? new Date().toISOString(), blocks });
