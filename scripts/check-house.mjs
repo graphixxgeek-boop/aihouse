@@ -6276,6 +6276,30 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     const lire = (t) => () => t;
     assert.equal(se.findFuitesDeSpecificite(['x.md'], { readFileImpl: lire('# blueprint exportable\nLia dit bonjour') }).length, 1, 'a project name inside a file declared generic is a real leak — exactly the defect the user caught himself on a deliverable name');
     assert.equal(se.findFuitesDeSpecificite(['x.md'], { readFileImpl: lire('*(instanciation propre à ce projet)*\nLia dit bonjour') }).length, 0, 'and the same words in a file declared specific are not');
+    // LE DÉNOMINATEUR VOYAGE AVEC LE CHIFFRE (2026-09-25, tâche #514). The detector returns ONE
+    // entry per file, so the report's count was a FLOOR: on 2026-09-22 closing one leak revealed a
+    // second on the next line, and "4 leaks" were really 6, "11 findings" really 13. The total was
+    // already in the data and simply never printed. Asserted here because today's real run shows
+    // zero leaks — a fix nobody has seen fire is an intention (leçon L2).
+    {
+      const troisFuites = se.findFuitesDeSpecificite(['x.md'], { readFileImpl: lire('# blueprint exportable\nLia parle\nNoé répond\nGemini écoute') });
+      assert.equal(troisFuites.length, 1, 'one ENTRY per file stays the presentation choice: three lines listed separately would drown the report');
+      assert.equal(troisFuites[0].occurrences, 3, 'but the real total must travel with it — without this number the reader believes closing the shown line closes the file');
+      assert.equal(troisFuites[0].ligne, 2, 'and the shown example stays the FIRST one, so the reader has somewhere to start');
+    }
+    // LE MOTIF QUI NE POUVAIT JAMAIS CORRESPONDRE (2026-09-25, trouvé en écrivant l'assertion
+    // ci-dessus). `\bNoé\b` matched NOTHING, ever: without the `u` flag `é` is not a word
+    // character, so the boundary required AFTER it exists in no text at all. SAFE-EXPORT was blind
+    // to the project's second main character since the detector was written, and nothing could say
+    // so — a pattern that never matches returns zero, which reads exactly like a clean file.
+    for (const phrase of ['Noé répond', 'Noé.', 'parle à Noé', 'Lia parle']) {
+      assert.equal(se.findFuitesDeSpecificite(['x.md'], { readFileImpl: lire(`# blueprint exportable\n${phrase}`) }).length, 1, `a generic file naming a character must be caught — « ${phrase} » went unseen for as long as the boundary was written with \\b`);
+    }
+    // ET LA CORRECTION N'ACCUSE PAS À TORT (leçon L4) : la frontière est « pas une lettre », donc
+    // un mot qui CONTIENT le nom n'est pas le nom.
+    for (const innocent of ['Noémie travaille ici', 'Lialise ce document']) {
+      assert.equal(se.findFuitesDeSpecificite(['x.md'], { readFileImpl: lire(`# blueprint exportable\n${innocent}`) }).length, 0, `« ${innocent} » is not a character name, and a guard that accuses it stops being read`);
+    }
 
     assert.equal(se.findTermesNonDefinis(['ARGUS'], { exists: (p) => /argus/i.test(p) }).length, 0, 'a term with a real fiche is defined');
     assert.equal(se.findTermesNonDefinis(['MACHIN-TRUC'], { exists: () => false }).length, 1, 'a proper noun with no reachable definition is a handover debt, exactly as Article 27 says');

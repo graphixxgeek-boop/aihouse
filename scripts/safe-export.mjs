@@ -94,7 +94,17 @@ export function declarationDuFichier(texte = "") {
 // un livrable d'une agence conçue pour être exportée. On ne cherche QUE dans les fichiers déclarés
 // génériques — « Lia » dans une fiche spécifique est parfaitement normal, et le signaler noierait
 // les vrais cas.
-export const MARQUES_DE_CE_PROJET = /\bLia\b|\bNoé\b|la maison|l'enquête|Gemini|aihouse/;
+// LA FRONTIÈRE DE MOT SE LIT SUR LES LETTRES, JAMAIS SUR `\b` (corrigé le 2026-09-25, tâche #514).
+// LE DÉFAUT EST MESURÉ, et il durait depuis l'écriture de ce détecteur : `\bNoé\b` ne pouvait
+// JAMAIS correspondre à quoi que ce soit. En JavaScript sans le drapeau `u`, `é` n'est pas un
+// caractère de mot, donc la frontière exigée APRÈS lui n'existe dans aucun texte — vérifié sur
+// « Noé répond », « Noé. », « Noé, dit-il », « parle à Noé » : faux les quatre fois.
+// **SAFE-EXPORT était aveugle au second personnage du projet**, et rien ne pouvait le dire : un
+// motif qui ne correspond jamais rend zéro, ce qui se lit exactement comme un fichier propre.
+// Trouvé en écrivant le test de la correction voisine — pas en relisant le motif, qui paraît juste.
+// LA CORRECTION EST UN PRINCIPE, jamais un mot rattrapé : la frontière se définit comme « pas une
+// lettre », ce qui couvre d'avance tout nom accentué qu'on ajoutera demain (Article 24).
+export const MARQUES_DE_CE_PROJET = /(?<!\p{L})(?:Lia|Noé)(?!\p{L})|la maison|l'enquête|Gemini|aihouse/u;
 export function findFuitesDeSpecificite(fichiers = [], { readFileImpl = readFileSync, root = ROOT } = {}) {
   const fuites = [];
   for (const f of fichiers) {
@@ -768,7 +778,15 @@ function main() {
     .filter((d) => d.isDirectory() && !["referentiel", "suivi", "simulations", "contexte-projet", "plans", "rapports-de-nuit"].includes(d.name))
     .map((d) => d.name);
   const sansBlueprint = findOutilsSansBlueprint(outilsAvecRegistre);
-  console.log(`  fuites de spécificité : ${fuites.length}`);
+  // LE DÉNOMINATEUR VOYAGE AVEC LE CHIFFRE (2026-09-25, tâche #514). `fuites.length` compte des
+  // FICHIERS, jamais des fuites : le détecteur n'en remonte qu'UNE par fichier, avec son exemple.
+  // Conséquence mesurée le 2026-09-22 et restée vraie trois jours : en fermant une fuite, une
+  // seconde apparaissait à la ligne suivante — « 4 fuites » en valaient 6, « 11 écarts » 13, et
+  // rien dans le rapport ne le disait. Le total EXISTAIT déjà dans le champ `occurrences` ; il ne
+  // sortait simplement pas. Le dire transforme un plancher en un vrai compte, ce qui vaut mieux
+  // que de déclarer une limite qu'on peut supprimer.
+  const totalOccurrences = fuites.reduce((n, f) => n + (f.occurrences ?? 1), 0);
+  console.log(`  fuites de spécificité : ${fuites.length} fichier(s)${totalOccurrences > fuites.length ? `, ${totalOccurrences} occurrence(s) au total (une seule est montrée par fichier)` : ""}`);
   console.log(`  blueprints mal construits : ${defauts.length}`);
   console.log(`  dépendances à un outillage particulier : ${deps.length}`);
   const memoire = loadMemoire();
@@ -821,7 +839,7 @@ function main() {
     libelle: (e) => {
       const ou = e.fichier ?? e.outil ?? "(source inconnue)";
       if (e.defaut) return `${ou} — ${e.defaut}${e.consequence ? ` (${e.consequence})` : ""}`;
-      if (e.exemple) return `${ou}:${e.ligne} — jargon propre au projet : « ${String(e.exemple).trim().slice(0, 90)} »`;
+      if (e.exemple) return `${ou}:${e.ligne} — jargon propre au projet : « ${String(e.exemple).trim().slice(0, 90)} »${e.occurrences > 1 ? ` (+${e.occurrences - 1} autre(s) dans ce fichier — corriger celle-ci ne suffira pas)` : ""}`;
       return `${ou} — ${e.pourquoi ?? "écart sans description : à regarder dans le corps du rapport"}`;
     },
     tache: (e) => `rendre ${e.fichier ?? e.outil} réellement exportable` });
