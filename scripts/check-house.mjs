@@ -7309,6 +7309,25 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     findRedundantRulePairs, buildClaudeMdRuleTable, renderClaudeMdRuleTable,
   } = await import('../scripts/moise-tables-de-loi.mjs');
 
+  // L'IMPOSSIBILITÉ DÉCLARÉE (2026-09-25, tâche #658) — ce que l'Article 27 EXIGE en toutes lettres
+  // (« quand un mécanisme est impossible, l'écrire noir sur blanc EST la protection, et cette
+  // impossibilité se déclare, elle ne se tait pas ») et que rien ne vérifiait. Une règle sans
+  // porteur n'est pas fautive en soi : elle l'est quand elle se TAIT là-dessus, parce qu'un lecteur
+  // ne peut alors pas savoir si personne n'y a pensé ou si personne ne le peut — et les deux
+  // appellent des gestes opposés.
+  const { findImpossibilitesNonDeclarees, formatImpossibilitesLines } = await import('../scripts/moise-tables-de-loi.mjs');
+  assert.equal(findImpossibilitesNonDeclarees([]).mesurable, false, 'with no Article measured it refuses: "zero silence" on an unread document reads exactly like a perfectly declared charter');
+  const imposs = findImpossibilitesNonDeclarees([
+    { article: 1, titre: 'muet', nature: 'DISCIPLINE SANS PORTEUR', texte: 'Une règle qui ordonne sans rien dire de son absence de mécanisme.' },
+    { article: 2, titre: 'parle', nature: 'DISCIPLINE SANS PORTEUR', texte: "Aucun mécanisme ne peut lire un compte rendu : angel DEMANDE donc." },
+    { article: 3, titre: 'porté', nature: "MODE D'EMPLOI D'OUTIL", texte: 'Porté par findTruc().' },
+  ]);
+  assert.deepEqual(imposs.silencieux.map((a) => a.numero), [1], 'only the rule that stays silent about its missing mechanism is reported');
+  assert.deepEqual(imposs.declarent.map((a) => a.numero), [2], 'a rule that DECLARES the impossibility is doing exactly what Article 27 asks, and that is enough — it is never reproached');
+  assert.equal(imposs.sansPorteur, 2, 'a rule that HAS a mechanism is out of scope entirely: this measure is about the silence, never about the absence');
+  assert.ok(formatImpossibilitesLines(imposs).some((l) => /ne dit JAMAIS qu'un Article devrait avoir un mécanisme/.test(l)), 'THE LINE THAT KEEPS IT HONEST: some rules cannot have a mechanism, and that is precisely why the declaration exists — the tool judges the silence, never the absence');
+  console.log('Passed: the charter is finally checked against what Article 27 demands of itself (2026-09-25, task #658) — "quand un mécanisme est impossible, l\'écrire noir sur blanc EST la protection, et cette impossibilité se déclare, elle ne se tait pas". Nothing verified that. A rule without a mechanism is not at fault in itself; it is at fault when it says nothing about it, because a reader then cannot tell whether nobody thought of it or nobody can — and those call for opposite gestures. The task said the two red Articles were 7 and 23; measuring says otherwise, which is why one measures: Article 7 carries a nature the user DECIDED and leaves the count, while THIRTEEN mechanism-less Articles declare no impossibility at all, against three that do (27, 28, 31). The original finding was not wrong when it was written — it aged, and nobody re-ran it. The tool never says an Article SHOULD have a mechanism: some cannot, and that is exactly why the declaration exists.');
+
   assert.equal(estimateTokens('abcd'), 1, 'the ~4-characters-per-token heuristic must round to the nearest whole token, never a fractional or wildly inaccurate estimate');
   assert.equal(estimateTokens(''), 0, 'an empty or missing text must estimate to exactly zero tokens, never crash or return NaN');
 

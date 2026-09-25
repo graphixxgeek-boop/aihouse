@@ -294,6 +294,57 @@ export function enregistrerOperation(op, { root = ROOT, ecrire = writeFileSync }
   return ligne;
 }
 
+// ============================================================================================
+// L'IMPOSSIBILITÉ DÉCLARÉE — ce que l'Article 27 EXIGE, et que rien ne vérifiait (2026-09-25, #658)
+// ============================================================================================
+// L'ARTICLE 27 EST FORMEL, et c'est lui qui rend cette mesure obligatoire : « Quand un mécanisme est
+// impossible [...] l'écrire noir sur blanc EST la protection — et cette impossibilité se déclare,
+// elle ne se tait pas. » Une règle sans porteur n'est donc pas fautive en soi : elle l'est quand
+// elle se TAIT là-dessus. Un lecteur qui tombe sur une règle sans mécanisme ne peut pas savoir si
+// personne n'y a pensé ou si personne ne le peut — et les deux appellent des gestes opposés.
+//
+// LA TÂCHE #658 DISAIT « les deux Articles rouges sont le 7 et le 23 ». La mesure dit autre chose,
+// et c'est pour ça qu'on mesure : l'Article 7 porte une nature DÉCIDÉE par l'utilisateur et sort du
+// compte, tandis que TREIZE Articles sans porteur ne déclarent aucune impossibilité. Le constat de
+// départ n'était pas faux quand il a été écrit ; il a vieilli, et personne ne le relançait.
+//
+// CE QU'ELLE NE FAIT PAS : elle ne dit jamais qu'un Article DEVRAIT avoir un mécanisme. Certains ne
+// peuvent pas en avoir, et c'est précisément la raison d'être de la déclaration. Elle ne juge que
+// le SILENCE.
+export const MOTIF_IMPOSSIBILITE_DECLAREE = /aucun m[ée]canisme|aucune m[ée]canique|ne se mesure pas|impossib|(?:la|le) d[ée]clarer EST la protection|hors de toute m[ée]canique|ne se lit pas m[ée]caniquement|seule protection possible|refuse d'[êe]tre au vert/i;
+
+export function findImpossibilitesNonDeclarees(articles = []) {
+  if (!articles.length) {
+    return { mesurable: false, pourquoi: "aucun Article mesuré — rendre « zéro silence » sur un document non lu dirait exactement ce que dirait une charte parfaitement déclarée" };
+  }
+  const sansPorteur = articles.filter((a) => /SANS PORTEUR/i.test(String(a.nature ?? "")));
+  const declarent = [], silencieux = [];
+  for (const a of sansPorteur) {
+    (MOTIF_IMPOSSIBILITE_DECLAREE.test(String(a.texte ?? "")) ? declarent : silencieux)
+      .push({ numero: a.article ?? a.numero, titre: a.titre });
+  }
+  return { mesurable: true, total: articles.length, sansPorteur: sansPorteur.length,
+    declarent: declarent.sort((x, y) => x.numero - y.numero),
+    silencieux: silencieux.sort((x, y) => x.numero - y.numero) };
+}
+
+export function formatImpossibilitesLines(r) {
+  if (!r?.mesurable) return [`⚠️ NON MESURÉ — ${r?.pourquoi ?? "raison inconnue"}`];
+  const L = [`${r.sansPorteur} Article(s) sans porteur mécanique, sur ${r.total}.`];
+  L.push(`   ${r.declarent.length} DÉCLARENT leur impossibilité — c'est exactement ce que l'Article 27 demande, et ça suffit : ${r.declarent.map((a) => `Art.${a.numero}`).join(" · ") || "aucun"}`);
+  if (!r.silencieux.length) { L.push("   ✅ Aucun Article sans porteur ne reste silencieux."); return L; }
+  L.push("");
+  L.push(`🔴 ${r.silencieux.length} Article(s) SANS PORTEUR ET SANS UN MOT sur cette absence :`);
+  for (const a of r.silencieux) L.push(`   Art.${String(a.numero).padStart(2)} — ${a.titre}`);
+  L.push("");
+  L.push("CE QUE ÇA COÛTE : un lecteur qui tombe sur une règle sans mécanisme ne peut pas savoir si");
+  L.push("personne n'y a pensé ou si personne ne le peut. Les deux appellent des gestes opposés —");
+  L.push("construire le garde-fou manquant, ou écrire pourquoi il ne peut pas exister.");
+  L.push("HORS PORTÉE : cet outil ne dit JAMAIS qu'un Article devrait avoir un mécanisme. Certains ne");
+  L.push("peuvent pas en avoir, et c'est justement pour ça que la déclaration existe. Il juge le silence.");
+  return L;
+}
+
 export function buildCartographie({ root = ROOT, fichiers = null, mesurerObligations = null } = {}) {
   const charte = lire(CHARTE, root);
   if (charte == null) return { mesurable: false, pourquoi: `${CHARTE} introuvable` };
@@ -314,6 +365,7 @@ export function buildCartographie({ root = ROOT, fichiers = null, mesurerObligat
     articles: lignes,
     sections: mesurerSections(charte),
     redondances: findRedundantRulePairs(mesures),
+    impossibilites: findImpossibilitesNonDeclarees(lignes),
   };
 }
 
@@ -489,6 +541,7 @@ export function diagnosticComplet({ root = ROOT, fichiers = null, mesurerObligat
     sansPorteur,
     aTrancher,
     redondances: carto.redondances,
+    impossibilites: carto.impossibilites,
     memoire: { mesurable: memoire.mesurable, operations: memoire.operations.length, articlesConnus: dejaTentes.length, annulesAvant },
     gainTheorique: {
       aiguillages: Math.round(gainOutil * 0.8),
@@ -505,6 +558,10 @@ export function renderDiagnostic(d) {
   L.push("=== DIAGNOSTIC COMPLET DE LA CHARTE ===", "");
   L.push(`État : ${d.etat.lignes} lignes · ~${d.etat.tokens} tokens · ${d.etat.obligations.instructions} obligations pour ${d.etat.obligations.disponible} suivables (${d.etat.obligations.verdict}).`);
   L.push("");
+  // L'IMPOSSIBILITÉ DÉCLARÉE arrive AVANT le détail par nature (#658) : « sans porteur » est un
+  // constat, « sans porteur et sans un mot » est un défaut, et les enterrer ensemble sous la même
+  // rubrique laisse le second invisible — exactement le sort qu'il a connu pendant treize Articles.
+  if (d.impossibilites) { for (const l of formatImpossibilitesLines(d.impossibilites)) L.push(l); L.push(""); }
   L.push("--- Par nature, avec le geste que chacune commande ---");
   for (const n of Object.values(NATURES)) {
     const g = d.parNature[n.cle];
