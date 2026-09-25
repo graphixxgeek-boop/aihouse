@@ -105,6 +105,13 @@ DEEP-READER 3 (#228) : « un outil qui verifie la logique et les trous PARTOUT �
   retournant contre elle-meme (aucune portee declaree alors qu'elle mesure ce trou ; sa propre
   derniere trouvaille illisible par une sonde aveugle, corrigee) [FAIT]
 
+DEEP-READER 1 (#227) : VERIFIEE, deja close depuis la veille (tache #761, section restauree mot
+  pour mot depuis git). Rien a refaire — et mon prompt de reveil l'annoncait comme restante,
+  exactement comme il annoncait #229 comme faite alors qu'elle ne l'etait pas. Les deux erreurs
+  sont symetriques et invisibles : un reveil ecrit de memoire ressemble a un etat des lieux [FAIT]
+
+LES HUIT CONSTATS DEEP-READER SONT CLOS (1 a 8).
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------
