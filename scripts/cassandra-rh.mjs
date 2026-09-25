@@ -1887,6 +1887,75 @@ export function comparerLesFamilles({ categories = {}, registres = [] } = {}) {
 // les deux côtés à l'exécution, donc une dixième famille créée demain est comparée sans qu'on
 // touche à cette fonction.
 // ============================================================================================
+// 5e DISTINCTION — À QUI le résultat est destiné (2026-09-25, tâche #741)
+// ============================================================================================
+// SES MOTS : « il y a ceux qui aident le projet en entier, ou par défaut, ceux qui aident d'autres
+// outils, ceux qui aident TOI et ceux qui aident MOI ». Quatre destinataires, et c'est un axe que
+// les quatre autres ne disent pas : l'iceberg dit où RANGER, le moment dit QUAND, le domaine dit
+// SUR QUOI, le type dit ce qu'un fichier EST — aucun ne dit à QUI le résultat sert.
+//
+// POURQUOI CET AXE COMPTE PLUS QUE LES AUTRES POUR LA SUITE, et c'est lui qui l'a vu : c'est le seul
+// qui permette de chiffrer une réduction. « Combien d'outils puis-je retirer sans que personne le
+// sente ? » n'a de sens qu'en sachant qui perd quoi.
+//
+// UN ENSEMBLE, JAMAIS UNE CASE — même discipline que les MOMENTS, et pour la même raison : un outil
+// qui rend un rapport lu par l'utilisateur ET qui sert de bibliothèque à trois autres sert bien deux
+// destinataires. Forcer une valeur unique effacerait la moitié de la réponse.
+//
+// CHAQUE DESTINATAIRE A SA PROPRE PREUVE, et aucune n'est une opinion :
+//   · l'UTILISATEUR — l'outil est déclaré « rapport » dans FILE_WRITER_NATURES, ou écrit un fichier
+//     dans docs/ : quelque chose sort et se lit.
+//   · l'AGENT — il est consulté AVANT d'agir (le moment « avant-le-geste », déjà mesuré) : son
+//     résultat sert à décider, pas à archiver.
+//   · les AUTRES OUTILS — il est importé ailleurs : sa valeur est d'être réutilisé.
+//   · le PROJET ENTIER — il tourne à chaque commit sans que personne le demande : son bénéfice est
+//     le code lui-même, et personne ne le « lit ».
+export const DESTINATAIRES = {
+  utilisateur: { quoi: "l'utilisateur — il produit quelque chose qui se lit", preuve: "déclaré « rapport », ou écrit dans docs/" },
+  agent: { quoi: "l'agent — il sert à DÉCIDER avant d'agir", preuve: "consulté au moment « avant-le-geste »" },
+  "autres-outils": { quoi: "les autres outils — sa valeur est d'être réutilisé", preuve: "importé par au moins un autre script" },
+  projet: { quoi: "le projet entier — personne ne le lit, il protège le code", preuve: "tourne à chaque commit via le crochet" },
+};
+
+export function destinatairesDeLOutil(slug, { source = "", natureFichier = null, moments = [], importePar = 0, machine = new Set() } = {}) {
+  const pour = new Set();
+  if (natureFichier === "rapport" || /["'`]docs\//.test(String(source))) pour.add("utilisateur");
+  if (moments.includes("avant-le-geste")) pour.add("agent");
+  if (importePar > 0) pour.add("autres-outils");
+  if (machine.has(slug) || moments.includes("a-chaque-commit")) pour.add("projet");
+  if (!pour.size) {
+    // TROIS ÉTATS, JAMAIS DEUX : un outil dont aucune des quatre preuves ne se trouve n'est pas « au
+    // service de personne » — c'est « on ne sait pas ». Le ranger d'office quelque part inventerait
+    // une réponse ; le compter à zéro ferait croire à un outil inutile. Ni l'un ni l'autre n'est vrai.
+    return { destinataires: [], mesurable: false,
+      pourquoi: "aucune des quatre preuves ne se trouve — ni rapport, ni consultation avant le geste, ni import, ni passage au commit : c'est « on ne sait pas », jamais « il ne sert à personne »" };
+  }
+  return { destinataires: [...pour], mesurable: true };
+}
+
+export function formatDestinatairesLines(lignes = []) {
+  const parDest = Object.fromEntries(Object.keys(DESTINATAIRES).map((d) => [d, 0]));
+  let nonMesurables = 0;
+  for (const l of lignes) {
+    if (!l.mesurable) { nonMesurables += 1; continue; }
+    for (const d of l.destinataires) parDest[d] += 1;
+  }
+  const L = [`${lignes.length} outil(s) examiné(s).`];
+  for (const [d, n] of Object.entries(parDest).sort((a, b) => b[1] - a[1])) L.push(`   ${String(n).padStart(3)}  ${d} — ${DESTINATAIRES[d].quoi} (preuve : ${DESTINATAIRES[d].preuve})`);
+  if (nonMesurables) {
+    L.push("");
+    L.push(`⚠️ ${nonMesurables} outil(s) dont le destinataire N'EST PAS MESURABLE — aucune des quatre preuves ne se trouve.`);
+    L.push(`   Ce n'est pas « il ne sert à personne » : c'est « on ne sait pas », et les deux ne se rendent jamais pareil.`);
+  }
+  L.push("");
+  L.push("À QUOI CET AXE SERT, et c'est lui qui l'a vu : c'est le SEUL qui permette de chiffrer une");
+  L.push("réduction. « Combien d'outils puis-je retirer sans que personne le sente ? » n'a de sens");
+  L.push("qu'en sachant qui perd quoi. Un outil qui ne sert qu'à d'autres outils ne coûte rien à");
+  L.push("personne s'il part avec eux ; un outil que l'utilisateur lit manque immédiatement.");
+  return L;
+}
+
+// ============================================================================================
 // LE CADRAGE DU CHANTIER DE CLASSIFICATION (2026-09-25, tâche #743)
 // ============================================================================================
 // SA QUESTION, dans ses mots : « quel est la cible souhaitée ? à quelle classification finale on
@@ -1909,11 +1978,17 @@ export const AXES_DE_CLASSIFICATION = [
   { cle: "type", quoi: "ce que le fichier EST", porteur: "typeDuScript()" },
   { cle: "moment", quoi: "QUAND il intervient", porteur: "momentsDeLOutil()" },
   { cle: "domaine", quoi: "SUR QUOI il regarde", porteur: "domainesDeLOutil()" },
+  { cle: "destinataire", quoi: "À QUI le résultat sert", porteur: "destinatairesDeLOutil()" },
 ];
 
+// L'axe « destinataire » a reçu son domicile le 2026-09-25 (#741) : `DESTINATAIRES` ci-dessus. Il
+// rejoint donc la liste des axes comptés. Celui qui reste sans domicile est un AUTRE : « pour quel
+// PROJET il travaille » (le jeu, l'Agence, les deux) — mesuré le 2026-09-24, porté par aucun
+// registre. Ne pas confondre les deux : « à QUI sert le résultat » et « pour QUEL projet » sont
+// deux questions différentes, et les fondre aurait fait disparaître la seconde.
 export const AXE_SANS_DOMICILE = {
-  cle: "pour-qui", quoi: "pour QUI il travaille — le jeu, l'Agence, ou les deux",
-  pourquoi: "mesuré le 2026-09-24, jamais rangé dans un registre : aucune constante ne le porte, donc il ne se lit nulle part",
+  cle: "pour-quel-projet", quoi: "pour quel PROJET il travaille — le jeu, l'Agence, ou les deux",
+  pourquoi: "mesuré le 2026-09-24, jamais rangé dans un registre : aucune constante ne le porte, donc il ne se lit nulle part. À ne pas confondre avec le destinataire (#741), qui dit à QUI le résultat sert et qui, lui, a désormais son domicile",
 };
 
 export function cadrageDeLaClassification(lignesIceberg = [], { axesParScript } = {}) {
@@ -2474,6 +2549,25 @@ function main() {
     });
     console.log("");
     for (const l of formatAxesLines(axes, { itemsRonde })) console.log(l);
+    // LE 5e AXE sort dans la même commande que les 3e et 4e (#741) : trois sous-commandes qui
+    // relisent les mêmes fichiers auraient fait relire le dépôt trois fois pour la même question.
+    // Bloc distinct à l'affichage, parce qu'il répond à une question que les autres ne posent pas.
+    const recIceberg = recenserLesScripts();
+    const importeursIceberg = new Map((recIceberg.mesurable ? recIceberg.lignes : [])
+      .map((l) => [String(l.chemin).replace(/^scripts\//, "").replace(/\.mjs$/, ""), l.importeurs ?? 0]));
+    const dests = fichiers.map((f) => {
+      const slug = f.replace(/\.mjs$/, "");
+      return destinatairesDeLOutil(slug, {
+        source: lu(join("scripts", f)),
+        natureFichier: FILE_WRITER_NATURES[`scripts/${f}`]?.nature ?? null,
+        moments: momentsDeLOutil(slug, { offert, machine, itemsRonde }).moments,
+        importePar: importeursIceberg.get(slug) ?? 0,
+        machine,
+      });
+    });
+    console.log("");
+    console.log("--- 5e AXE : À QUI LE RÉSULTAT SERT (tâche #741) ---");
+    for (const l of formatDestinatairesLines(dests)) console.log(l);
     console.log("");
     console.log("--- LES DEUX SYSTÈMES DE FAMILLES (tâche #754) ---");
     for (const l of formatFamillesLines(comparerLesFamilles({ categories: AGENT_CATEGORIES, registres: DOC_REPORT_REGISTRIES }))) console.log(l);
@@ -2502,6 +2596,9 @@ function main() {
     // diverger — c'est exactement le défaut que tout ce chantier existe pour fermer.
     const rec = recenserLesScripts();
     const typeParChemin = new Map((rec.mesurable ? rec.lignes : []).map((l) => [l.chemin, l.type]));
+    // Le nombre d'importeurs est LU dans le recensement, jamais recompté — même raison que le type.
+    const importeursParSlug = new Map((rec.mesurable ? rec.lignes : [])
+      .map((l) => [String(l.chemin).replace(/^scripts\//, "").replace(/\.mjs$/, ""), l.importeurs ?? 0]));
     const c = cadrageDeLaClassification(lignes, {
       axesParScript: (l) => {
         // La ligne d'iceberg porte un SLUG, jamais un nom de fichier — vérifié sur sa forme réelle
@@ -2514,6 +2611,13 @@ function main() {
           type: type && type !== "illisible" ? type : null,
           moment: momentsDeLOutil(slug, { offert, machine, itemsRonde }).moments,
           domaine: domainesDeLOutil(src).mesurable ? domainesDeLOutil(src).domaines : [],
+          destinataire: destinatairesDeLOutil(slug, {
+            source: src,
+            natureFichier: FILE_WRITER_NATURES[`scripts/${slug}.mjs`]?.nature ?? null,
+            moments: momentsDeLOutil(slug, { offert, machine, itemsRonde }).moments,
+            importePar: importeursParSlug.get(slug) ?? 0,
+            machine,
+          }).destinataires,
         };
       },
     });

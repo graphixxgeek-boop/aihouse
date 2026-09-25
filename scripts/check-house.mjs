@@ -8234,6 +8234,23 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(famRien.mesurable, false, 'and when NOT ONE tool carries a family there is nothing to compare');
   assert.match(famRien.pourquoi, /aucun des 1 outils/, 'with the reason spelled out rather than generic — "nobody carries a family" and "the registry is unreadable" call for opposite gestures, and one shared message would send the enquiry to the wrong place');
 
+  // LE 5e AXE — À QUI LE RÉSULTAT SERT (2026-09-25, tâche #741). Ses mots : « il y a ceux qui
+  // aident le projet en entier, ou par défaut, ceux qui aident d'autres outils, ceux qui aident TOI
+  // et ceux qui aident MOI ». Aucun des quatre autres axes ne dit ça, et c'est le SEUL qui permette
+  // de chiffrer une réduction : « combien d'outils puis-je retirer sans que personne le sente ? »
+  // n'a de sens qu'en sachant qui perd quoi.
+  const { destinatairesDeLOutil, formatDestinatairesLines, DESTINATAIRES } = await import('../scripts/cassandra-rh.mjs');
+  assert.deepEqual(destinatairesDeLOutil('x', { natureFichier: 'rapport' }).destinataires, ['utilisateur'], 'a tool declared as producing a report serves the user: something comes out and gets read');
+  assert.deepEqual(destinatairesDeLOutil('x', { moments: ['avant-le-geste'] }).destinataires, ['agent'], 'a tool consulted BEFORE acting serves the agent: its result is there to decide with, not to archive');
+  assert.deepEqual(destinatairesDeLOutil('x', { importePar: 3 }).destinataires, ['autres-outils'], 'a tool imported elsewhere has its value in being reused');
+  assert.deepEqual(destinatairesDeLOutil('x', { machine: new Set(['x']) }).destinataires, ['projet'], 'a tool the machine runs at every commit protects the code, and nobody reads it');
+  assert.deepEqual(destinatairesDeLOutil('x', { natureFichier: 'rapport', importePar: 2 }).destinataires.sort(), ['autres-outils', 'utilisateur'], 'A SET, NEVER A SLOT — same discipline as the MOMENTS and for the same reason: a tool that renders a report AND serves three others really does serve two audiences, and forcing one value would erase half the answer');
+  const inconnu = destinatairesDeLOutil('x', {});
+  assert.equal(inconnu.mesurable, false, 'and with none of the four proofs found it is NOT MEASURABLE — "we do not know" is never the same as "it serves nobody", and filing it anywhere would invent an answer');
+  assert.ok(formatDestinatairesLines([inconnu]).some((l) => /on ne sait pas/.test(l) && /ne sert à personne/.test(l)), 'the report says that distinction out loud rather than printing a zero that reads as a verdict');
+  assert.ok(Object.values(DESTINATAIRES).every((d) => d.preuve), 'each audience carries its own PROOF, so none of the four is an opinion');
+  console.log('Passed: the classification gained its 5th axis — À QUI le résultat sert (2026-09-25, task #741). His words: "il y a ceux qui aident le projet en entier, ou par défaut, ceux qui aident d\'autres outils, ceux qui aident TOI et ceux qui aident MOI". None of the other four says that: the iceberg says where to FILE, the moment says WHEN, the domain says ON WHAT, the type says what a file IS. And he saw why it matters more than the others for what comes next — it is the only axis that lets a reduction be costed, because "how many tools can I drop without anyone feeling it?" only means something once you know who loses what. Each audience carries its own mechanical proof rather than an opinion, the answer is a SET rather than a slot (a tool rendering a report AND serving three others really does serve two), and a tool where none of the four proofs is found is declared NOT MEASURABLE — "we do not know" is never "it serves nobody". Real repository right now: 69 serve other tools, 46 serve the user, 6 serve the project at commit time, 4 serve the agent before it acts, and 4 cannot be measured at all.');
+
   // LE CADRAGE DU CHANTIER DE CLASSIFICATION (2026-09-25, tâche #743) — sa question : « quel est la
   // cible souhaitée ? [...] quel est le signal qui nous dira que la classification est ok ». Elle
   // commande tout le chantier et elle manquait : quatre axes produits sans qu'on ait jamais écrit
@@ -8244,10 +8261,10 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const cadr = cadrageDeLaClassification(
     [{ slug: 'plein' }, { slug: 'partiel' }, { slug: 'fache', desaccord: true }],
     { axesParScript: (l) => (l.slug === 'plein' || l.slug === 'fache'
-      ? { iceberg: 'membre', type: 'outil', moment: ['a-la-demande'], domaine: ['code'] }
-      : { iceberg: 'membre', type: 'outil', moment: [], domaine: [] }) });
-  assert.equal(cadr.complets, 2, 'a script carrying all four axes counts as complete');
-  assert.deepEqual(cadr.parScript.find((x) => x.script === 'partiel').manque, ['moment', 'domaine'], 'and what is MISSING is named per script, never just counted — a percentage says how far, a list says what to do');
+      ? { iceberg: 'membre', type: 'outil', moment: ['a-la-demande'], domaine: ['code'], destinataire: ['agent'] }
+      : { iceberg: 'membre', type: 'outil', moment: [], domaine: [], destinataire: [] }) });
+  assert.equal(cadr.complets, 2, 'a script carrying ALL the axes counts as complete — the count is derived from AXES_DE_CLASSIFICATION, so the fifth axis added on 2026-09-25 (#741) joined it without a number being edited anywhere (Article 24)');
+  assert.deepEqual(cadr.parScript.find((x) => x.script === 'partiel').manque, ['moment', 'domaine', 'destinataire'], 'and what is MISSING is named per script, never just counted — a percentage says how far, a list says what to do');
   assert.equal(cadr.desaccords, 1, 'an unarbitrated disagreement is counted separately from an absence: one is a gap, the other is two sources contradicting each other');
   assert.equal(cadr.signalDeFin.atteint, false, 'and the end signal stays unreached while a single disagreement stands, even if every script were complete');
   assert.ok(formatCadrageLines(cadr).some((l) => /ne manquera jamais/i.test(l)), 'THE NUANCE THAT CHANGES THE TARGET: a script reading no path has no domain to carry — that is a legitimate absence, not a gap. Aiming at 100 % on that denominator would be aiming at the impossible, and an unreachable goal gets abandoned.');
