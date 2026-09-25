@@ -93,5 +93,13 @@
     "pourquoi": "Ce n'est pas de l'inattention : le geste de recopier une heure déjà lue passe par la mémoire, et la mémoire dérive même sur trois minutes. Article 32, faille 1, sixième occurrence mesurée depuis le 2026-09-24. Le remède qui marche n'est pas 'faire attention' mais NE JAMAIS RETAPER : extraire l'heure dans une variable shell et la substituer, jamais la recopier à la main.",
     "outil": "agent-du-temps",
     "date": "2026-09-25T08:34:59.495Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "garde-fou-bloque",
+    "quoi": "J'ai cassé sept fois la règle du numéro unique de tâche en clôturant des tâches par une SECONDE ligne portant le même numéro. check-suivi-fidelity l'a signalé à CHAQUE commit, dans le rappel post-commit, et je ne l'ai pas lu.",
+    "pourquoi": "Le défaut n'est pas dans l'outil, il est dans la façon dont son avertissement m'atteint : le rappel post-commit affiche beaucoup, et un avertissement noyé dans une sortie longue est indiscernable d'un avertissement absent. C'est le fil rouge du projet déplacé de l'outil vers son LECTEUR. Comparaison qui tranche : le garde-fou des horodatages BLOQUE le commit, et je l'ai respecté six fois sur six ; celui de la numérotation MURMURE, et je l'ai cassé sept fois sur sept. La conclusion n'est pas 'mieux lire' — c'est que la forme du signal décide de son efficacité.",
+    "outil": "check-suivi-fidelity",
+    "date": "2026-09-25T08:58:00.440Z"
   }
 ]

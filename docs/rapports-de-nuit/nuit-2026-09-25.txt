@@ -51,6 +51,7 @@ LES TÂCHES, UNE PAR LIGNE
 #642 P0 du juge MESURÉ : 44 % des motifs de déplacement cassés à l'affichage — outil construit, correction écrite, NON appliquée (périmètre visiteur) [FAIT]
 #225 Motifs de déplacement : cause racine trouvée et correction prête — attend sa validation [AVANCÉ]
 #742 Dossier complet d'un sujet : data-archangel étendu, 44 lignes de suivi retrouvées sur « classification » [FAIT]
+#779 Numéro unique de tâche : j'ai cassé la règle 7 fois, le garde-fou le disait à chaque commit — corrigé sans rien perdre [FAIT]
 
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
