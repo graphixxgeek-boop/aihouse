@@ -152,3 +152,24 @@ l'extension est possible, elle est **payante**, et elle se déclenche à la dema
 **Ce qui a déjà été fait sans rien dépenser, en attendant sa décision** : le passage sur CASSANDRA
 a été lancé avec les outils gratuits (`fiche`, `cadrage`), et il a trouvé deux frictions réelles
 dans son propre rôle — voir la tâche #830.
+
+### Ajoutée le 2026-09-25 par le rappel post-commit lui-même
+
+| Tâche | Sujet | Décision |
+|---|---|---|
+| #841 | La Ronde : 30 commits sans passage — la lancer, et avec quels items ? | à trancher |
+
+**Le rappel post-commit le dit dans ses mots** : « 30 commits sans Ronde. À ce stade ce n'est plus
+un retard, c'est un constat : une trentaine de vérifications gratuites dorment depuis des semaines,
+et personne ne sait ce qu'elles auraient trouvé entre-temps. »
+
+**Pourquoi je ne la lance pas seule** : le dispositif de la Ronde impose lui-même que **la sélection
+des items soit confirmée par une fenêtre à cocher avant exécution, jamais un tout-en-un silencieux**.
+C'est une règle de son propre outil, pas une prudence de ma part.
+
+**Ce que ça coûte** : zéro appel API — la Ronde est gratuite. Ce qu'elle coûte, c'est du temps et
+des tokens, d'où le choix des items.
+
+**Et c'est exactement le sujet de #205** : une activité gratuite, à retour différé, repoussée
+trente commits durant pendant que les vérifications à retour immédiat tournaient à chaque commit.
+Cette fois la mesure ne se trompe pas — le compteur de commits, lui, est indiscutable.

@@ -164,6 +164,11 @@ MON PROPRE FAUX ROUGE (#839), une heure apres l'avoir construit : l'outil de #83
   « inatteignable » sur un registre nourri. Un registre se LIT (Art. 24).
   Reste non mesurable et declare : « ai-je saute un outil lourd alors qu'il etait le bon ? » [FAIT]
 
+LE SEUL BIAIS QUI SE CONFIRME (#841) : 30 commits sans Ronde, signale par le rappel post-commit.
+  La Ronde est GRATUITE et dort depuis trente commits pendant que les verifications a retour
+  immediat tournent a chaque fois. Je ne la lance pas seule : son propre dispositif exige une
+  fenetre a cocher avant execution. Inscrit au registre des decisions [A TRANCHER PAR LUI]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------
