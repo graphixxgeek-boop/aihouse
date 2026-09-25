@@ -23,7 +23,8 @@
 // constante. Un nouvel outil qui déclare son journal entre dans le champ de vision sans qu'une
 // ligne ne bouge ici.
 
-import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync, statSync, writeFileSync, mkdirSync } from "node:fs";
+import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { printReportHeader } from "./report-template.mjs";
@@ -448,6 +449,148 @@ export function reprendreLesNotes(sujet, { root = ROOT, lieux = LIEUX_DE_NOTES, 
     pourquoi: fichiersVus ? null : "aucun fichier lu — la recherche n'a pas pu tourner, ce qui ne veut PAS dire qu'il n'y a pas de notes" };
 }
 
+// ============================================================================================
+// LE DOSSIER D'UN SUJET (2026-09-25, tâche #742) — « rassembler, pas résumer »
+// ============================================================================================
+// SA DEMANDE, dans ses mots : « Tu pourras me faire un rapport complet de TOUTES les notes prises
+// sur la classification ? tu dois avoir tout archivé quelquepart ». Et il a raison sur les deux
+// bouts : tout EST archivé, et personne ne peut le lire, parce que c'est éparpillé sur cinq lieux
+// qui ne se connaissent pas.
+//
+// POURQUOI CETTE COMMANDE EXISTE À CÔTÉ DE `notes`, et la frontière est nette : `notes` dit OÙ le
+// sujet a déjà été traité — c'est le geste de l'Article 30, avant d'ouvrir un chantier, et il doit
+// rester instantané. `dossier` RASSEMBLE : il sort les extraits réels, et surtout il lit l'ÉTAT de
+// chaque ligne de suivi pour séparer ce qui est DÉCIDÉ de ce qui reste OUVERT. Les fondre aurait
+// rendu le geste quotidien trop lourd pour être fait quotidiennement.
+//
+// CE QU'IL NE FAIT PAS, et c'est délibéré : il ne résume pas, il ne juge pas, il ne conclut pas. Un
+// outil qui résumerait à ma place produirait un rapport que je n'aurais pas lu et qu'il faudrait
+// croire sur parole. Ici tout extrait est verbatim, et l'analyse est écrite à côté, par moi.
+// LE VOCABULAIRE EST LU DANS LE SUIVI RÉEL, jamais inventé (Article 24). Relevé le 2026-09-25 :
+// « terminée — fidèle » (302), « terminée » (178), « Ouverte » (66), « TERMINÉ » (24), « à faire »
+// (21), « en cours » (4), plus quelques variantes annotées. La première version ne connaissait que
+// trois formes et rangeait tout le reste en « état illisible » — honnête, mais aveugle sur les
+// deux tiers du registre.
+const ETATS_DE_LIGNE = [
+  // « terminé », « terminée », « Terminé », « TERMINÉ » : le radical suffit, et il couvre les quatre
+  // formes réelles du registre. La première version exigeait « terminée » et laissait huit lignes
+  // en « état illisible » pour un accent au masculin — une sonde qui ne peut pas matcher rend
+  // exactement ce que rend une ligne vraiment illisible.
+  { motif: /\|\s*termin[ée]/i, etat: "décidé" },
+  { motif: /\|\s*(ouverte?|en cours|à faire|a faire)\b[^|]*\|?\s*$/i, etat: "ouvert" },
+  { motif: /\|\s*(en attente|à trancher|a trancher)\b[^|]*\|?\s*$/i, etat: "attend une décision de l'utilisateur" },
+];
+
+export function etatDeLaLigneDeSuivi(ligne) {
+  const t = String(ligne ?? "").trimEnd();
+  for (const e of ETATS_DE_LIGNE) if (e.motif.test(t)) return e.etat;
+  // Ni l'un ni l'autre : une ligne de suivi dont l'état ne se lit pas est un TROISIÈME état, jamais
+  // rangée d'office parmi les ouvertes. La compter comme ouverte gonflerait le reste-à-faire d'un
+  // travail peut-être terminé, et l'inverse le ferait disparaître.
+  return "état illisible";
+}
+
+export function numeroDeLaLigneDeSuivi(ligne) {
+  const m = /^\|\s*(\d{1,5})\s*\|/.exec(String(ligne ?? ""));
+  return m ? Number(m[1]) : null;
+}
+
+export function dossierDuSujet(sujet, { root = ROOT, lieux = LIEUX_DE_NOTES, lire, extraitsParFichier = 4 } = {}) {
+  const base = reprendreLesNotes(sujet, { root, lieux, lire });
+  if (!base.mesurable) return base;
+  const re = new RegExp(String(sujet).trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+  const lecteur = lire ?? ((f) => readFileSync(join(root, f), "utf8"));
+  const decisions = [];   // lignes de docs/suivi/ qui portent le sujet, avec leur état réel
+  const extraits = {};    // par lieu : les vrais morceaux de texte, verbatim
+  for (const l of lieux) {
+    extraits[l.cle] = [];
+    for (const h of base.par[l.cle] ?? []) {
+      let src; try { src = lecteur(h.fichier); } catch { continue; }
+      const lignes = String(src).split("\n");
+      // LE PLAFOND NE S'APPLIQUE QU'AUX EXTRAITS DE PROSE, JAMAIS AUX LIGNES DE SUIVI — corrigé au
+      // premier vrai passage : sur « classification », le plafond commun rendait 9 décisions là où
+      // le suivi en porte bien davantage, parce que toutes vivent dans le même fichier de session
+      // et que les quatre premières épuisaient le quota. Une DÉCISION perdue est exactement ce que
+      // ce dossier existe pour empêcher ; un extrait de prose en moins ne coûte rien.
+      let pris = 0;
+      for (let i = 0; i < lignes.length; i++) {
+        if (!re.test(lignes[i])) continue;
+        const brut = lignes[i].trim();
+        if (l.cle === "decisions" && brut.startsWith("|")) {
+          const num = numeroDeLaLigneDeSuivi(brut);
+          if (num !== null) { decisions.push({ numero: num, fichier: h.fichier, etat: etatDeLaLigneDeSuivi(brut), texte: brut }); continue; }
+        }
+        if (pris >= extraitsParFichier) continue;
+        extraits[l.cle].push({ fichier: h.fichier, ligne: i + 1, texte: brut.slice(0, 400) });
+        pris += 1;
+      }
+    }
+  }
+  decisions.sort((a, b) => a.numero - b.numero);
+  const parEtat = {};
+  for (const d of decisions) (parEtat[d.etat] ??= []).push(d.numero);
+  // UN NUMÉRO PORTÉ PAR PLUSIEURS LIGNES, avec des états qui se contredisent — trouvé au premier
+  // vrai passage sur « classification » : #754 existe en « En attente de sa décision » (ouverture)
+  // ET en « Terminée » (clôture), et le dépôt en compte six comme lui. Ce n'est pas illégitime dans
+  // un journal où l'on ajoute sans réécrire — mais un lecteur qui cherche L'ÉTAT d'une tâche en
+  // trouve alors deux, et rien ne lui dit lequel fait foi. Signalé, jamais arbitré.
+  const parNumero = {};
+  for (const d of decisions) (parNumero[d.numero] ??= []).push(d.etat);
+  const etatsContradictoires = Object.entries(parNumero)
+    .filter(([, etats]) => new Set(etats).size > 1)
+    .map(([numero, etats]) => ({ numero: Number(numero), etats: [...new Set(etats)] }))
+    .sort((a, b) => a.numero - b.numero);
+  return { ...base, decisions, parEtat, etatsContradictoires, extraits };
+}
+
+export function formatDossierMarkdown(d, { maintenant } = {}) {
+  if (!d?.mesurable) return `# Dossier — NON MESURABLE\n\n${d?.pourquoi ?? "raison inconnue"}\n`;
+  if (!maintenant) throw new Error("formatDossierMarkdown : une date doit être LUE et passée ici, jamais fabriquée dans la fonction (Article 32)");
+  const L = [];
+  L.push(`# Dossier du sujet « ${d.sujet} » — toutes les notes déjà prises`);
+  L.push("");
+  L.push(`> Produit par \`node scripts/data-archangel.mjs dossier ${d.sujet}\` le ${maintenant}.`);
+  L.push("> **Rassemblé, jamais résumé** : chaque extrait ci-dessous est verbatim. L'outil ne juge pas et");
+  L.push("> ne conclut pas — un rapport résumé par une machine serait un rapport qu'il faudrait croire");
+  L.push("> sur parole. L'analyse et le plan d'action sont écrits à côté, à la main.");
+  L.push("");
+  L.push(`**${d.total} fichier(s)** portent ce sujet, répartis sur ${Object.values(d.par).filter((v) => v.length).length} lieu(x) sur ${Object.keys(d.par).length}.`);
+  L.push("");
+  L.push("## Ce qui a été DÉCIDÉ, et ce qui reste OUVERT");
+  L.push("");
+  if (!d.decisions.length) {
+    L.push("Aucune ligne de suivi ne porte ce sujet. **Ce n'est pas « rien à décider »** : c'est « ce mot-là");
+    L.push("ne ressort pas du suivi », et les deux ne se rendent pas pareil. Réessayer avec le vocabulaire");
+    L.push("du sujet avant d'en conclure quoi que ce soit.");
+  } else {
+    for (const [etat, nums] of Object.entries(d.parEtat).sort()) L.push(`- **${etat}** : ${nums.length} — ${nums.map((n) => `#${n}`).join(" ")}`);
+    if (d.etatsContradictoires?.length) {
+      L.push("");
+      L.push(`⚠️ **${d.etatsContradictoires.length} tâche(s) portent plusieurs lignes dont les états se contredisent.** Ce n'est pas illégitime dans un journal où l'on ajoute sans réécrire, mais un lecteur qui cherche L'ÉTAT d'une tâche en trouve deux, et rien ne lui dit lequel fait foi :`);
+      for (const c of d.etatsContradictoires) L.push(`  - **#${c.numero}** — ${c.etats.join(" / ")}`);
+    }
+    L.push("");
+    L.push("| N° | État | La ligne, verbatim |");
+    L.push("|---|---|---|");
+    for (const x of d.decisions) L.push(`| #${x.numero} | ${x.etat} | ${x.texte.replace(/\|/g, "\\|").slice(0, 600)} |`);
+  }
+  for (const l of LIEUX_DE_NOTES) {
+    const ex = d.extraits[l.cle] ?? [];
+    if (l.cle === "decisions" || !ex.length) continue;
+    L.push("");
+    L.push(`## ${l.quoi}`);
+    L.push("");
+    for (const e of ex) L.push(`- \`${e.fichier}:${e.ligne}\` — ${e.texte.replace(/\|/g, "\\|")}`);
+  }
+  L.push("");
+  L.push("## Plan d'action (Article 28 — à remplir à la main, l'outil ne le fabrique jamais)");
+  L.push("");
+  L.push("| Constat | État (RETENU / ÉCARTÉ + raison / À TRANCHER) | Tâche dans `docs/suivi/` |");
+  L.push("|---|---|---|");
+  L.push("| *(à écrire)* | | |");
+  return L.join("\n") + "\n";
+}
+
 export function formatReprisesLines(r, { parLieu = 6 } = {}) {
   if (!r?.mesurable) return [`⚠️ NON MESURABLE — ${r?.pourquoi ?? "raison inconnue"}`];
   const L = [`=== REPRISE DES NOTES — « ${r.sujet} » : ${r.total} fichier(s) portent déjà ce sujet ===`, ""];
@@ -685,6 +828,30 @@ function main() {
   // commande qu'on saute parce qu'elle est lente.
   if (sub === "notes") {
     for (const l of formatReprisesLines(reprendreLesNotes(process.argv[3]))) console.log(l);
+    return;
+  }
+  // `dossier <sujet>` (#742) — RASSEMBLE au lieu de dire où chercher. Il produit un FICHIER, parce
+  // qu'un rapport qui ne vit que dans la sortie d'un terminal meurt avec la session (Article 31 :
+  // le livrable est le fichier, mon texte le commente et ne le remplace jamais).
+  if (sub === "dossier") {
+    const sujet = process.argv[3];
+    const d = dossierDuSujet(sujet);
+    if (!d.mesurable) { console.log(`⚠️ NON MESURABLE — ${d.pourquoi}`); return; }
+    // La date est LUE, jamais fabriquée dans la fonction de rendu (Article 32) — et c'est pour ça
+    // que formatDossierMarkdown() refuse de s'exécuter sans elle.
+    let maintenant;
+    try { maintenant = execSync("node scripts/agent-du-temps.mjs", { encoding: "utf8" }).match(/(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z)/)?.[1]; } catch { /* voir ci-dessous */ }
+    if (!maintenant) { console.log("⚠️ Rien écrit — l'heure n'a pas pu être LUE, et un dossier daté au jugé vaut moins qu'un dossier absent (Article 32)."); return; }
+    const dossierSortie = join(ROOT, "docs/data-archangel");
+    try { mkdirSync(dossierSortie, { recursive: true }); } catch { /* déjà là */ }
+    const chemin = join(dossierSortie, `dossier-${String(sujet).toLowerCase().replace(/[^a-z0-9-]+/g, "-")}-${maintenant.slice(0, 10)}.md`);
+    writeFileSync(chemin, formatDossierMarkdown(d, { maintenant }), "utf8");
+    console.log(`\n=== DOSSIER DU SUJET « ${d.sujet} » ===\n`);
+    console.log(`${d.total} fichier(s) portent ce sujet · ${d.decisions.length} ligne(s) de suivi retrouvée(s).`);
+    for (const [etat, nums] of Object.entries(d.parEtat).sort()) console.log(`   ${etat.padEnd(38)} ${String(nums.length).padStart(3)} — ${nums.map((n) => "#" + n).join(" ")}`);
+    if (d.etatsContradictoires?.length) console.log(`\n⚠️ ${d.etatsContradictoires.length} tâche(s) à l'état contradictoire : ${d.etatsContradictoires.map((c) => `#${c.numero} (${c.etats.join(" / ")})`).join(" · ")}`);
+    console.log(`\nÉcrit : ${chemin.replace(ROOT + "/", "")}`);
+    console.log("Le plan d'action y est VIDE à dessein : l'outil rassemble, il ne conclut pas — un rapport conclu par une machine serait un rapport qu'il faudrait croire sur parole.");
     return;
   }
   const r = buildDataArchangelReport();

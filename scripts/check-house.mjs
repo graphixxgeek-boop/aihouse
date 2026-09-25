@@ -8235,6 +8235,24 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 
   // LA REPRISE DES NOTES AVANT UN CHANTIER (2026-09-24, tâche #759).
   const { reprendreLesNotes, formatReprisesLines, LIEUX_DE_NOTES } = await import('../scripts/data-archangel.mjs');
+
+  // LE DOSSIER D'UN SUJET (2026-09-25, tâche #742) — sa demande : « un rapport complet de TOUTES
+  // les notes prises sur la classification ? tu dois avoir tout archivé quelquepart ». Tout EST
+  // archivé, et personne ne peut le lire, parce que c'est éparpillé sur cinq lieux qui ne se
+  // connaissent pas. `notes` dit OÙ chercher (geste de l'Article 30, il doit rester instantané) ;
+  // `dossier` RASSEMBLE, sort les extraits verbatim, et lit l'ÉTAT de chaque ligne de suivi pour
+  // séparer ce qui est DÉCIDÉ de ce qui reste OUVERT.
+  const { dossierDuSujet, formatDossierMarkdown, etatDeLaLigneDeSuivi } = await import('../scripts/data-archangel.mjs');
+  assert.equal(etatDeLaLigneDeSuivi('| 1 | d | m | s | ss | c | détail | Terminée |'), 'décidé', 'the four real spellings of a closed row are recognised');
+  assert.equal(etatDeLaLigneDeSuivi('| 1 | d | m | s | ss | c | détail | TERMINÉ |'), 'décidé', 'THE PROBE THAT COULD NOT MATCH: requiring "terminée" left eight rows filed as "illegible" for a masculine accent — a probe unable to match renders exactly like a genuinely unreadable row');
+  assert.equal(etatDeLaLigneDeSuivi('| 1 | d | m | s | ss | c | détail | à faire |'), 'ouvert', 'and the open vocabulary is READ from the real registry rather than invented (Article 24): "Ouverte", "à faire", "en cours" all exist in it');
+  assert.equal(etatDeLaLigneDeSuivi('| 1 | d | m | s | ss | c | détail | En attente de sa décision |'), "attend une décision de l'utilisateur", 'a row waiting on HIM is a third state, never folded into "open": one is work left to do, the other is work that cannot proceed');
+  assert.equal(etatDeLaLigneDeSuivi('| 1 | d | m | s | ss | c | détail | ??? |'), 'état illisible', 'and an unknown wording is declared illegible rather than filed as open by default — counting it open would inflate the backlog with work possibly finished, and the reverse would make it vanish');
+  const dossierFaux = dossierDuSujet('licorne', { lieux: [{ cle: 'decisions', quoi: 'x', dossier: 'docs/suivi', ext: /\.md$/ }], lire: () => '| 10 | d | licorne | s | ss | c | rien | Terminée |\n| 10 | d | licorne | s | ss | c | rien | Ouverte |' });
+  assert.deepEqual(dossierFaux.etatsContradictoires.map((c) => c.numero), [10], 'A TASK NUMBER CARRYING TWO CONTRADICTORY STATES IS NAMED — found live on the real repository, where six numbers do: a reader looking for THE state of a task finds two, and nothing tells him which one holds. Reported, never arbitrated.');
+  assert.throws(() => formatDossierMarkdown(dossierFaux), /Article 32/, 'the report refuses to render without a date READ and passed in — a dossier dated on a guess is worth less than no dossier');
+  assert.ok(formatDossierMarkdown(dossierFaux, { maintenant: '2026-09-25T09:00Z' }).includes('à remplir à la main'), 'and the plan d\'action is left EMPTY on purpose: a report concluded by a machine is a report you would have to take on trust (Article 28 asks for a plan, never for a fabricated one)');
+  console.log('Passed: a subject\'s whole file can finally be gathered rather than looked up (2026-09-25, task #742) — he asked for "un rapport complet de TOUTES les notes prises sur la classification", and he was right on both counts: everything IS archived, and nobody could read it, because it lives across five places that do not know each other. `notes` says WHERE, `dossier` GATHERS — the excerpts verbatim, and above all the real STATE of every tracker row, so what is DECIDED separates from what stays OPEN. Two real defects were fixed on its first live run and both are kept above: a shared per-file cap silently dropped decisions (9 returned where the registry holds 44, since they all live in one session file), and requiring the spelling "terminée" filed eight rows as illegible over a masculine accent. It also found something nobody was looking for: six task numbers carry two rows whose states contradict each other, which is not illegitimate in an append-only journal but leaves a reader with two answers and no rule. It reports that, and never arbitrates it. The plan d\'action is left empty by design — a report concluded by a machine is a report you would have to take on trust.');
   const { REGLES_SURVEILLEES: REGLES_ANGEL } = await import("../scripts/angel-of-ia-process.mjs");
   assert.equal(reprendreLesNotes('ab').mesurable, false, 'a subject under three characters would bring back the whole repository: that is not recovering notes, it is noise, and the tool refuses rather than drown the answer');
   const notesFaux = reprendreLesNotes('licorne', { lieux: [{ cle: 'decisions', quoi: 'x', dossier: 'docs/suivi', ext: /\.md$/ }], lire: () => 'rien ici' });

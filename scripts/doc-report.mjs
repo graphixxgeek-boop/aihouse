@@ -715,6 +715,10 @@ export const FILE_WRITER_NATURES = {
   // figure dans REGISTRIES qu'en tant que PROPRIÉTAIRE d'autres registres, jamais comme émetteur.
   // Un gardien qui ne se surveille pas lui-même laisserait exactement le trou qu'il traque ailleurs.
   "scripts/doc-report.mjs": { nature: "rapport", pourquoi: "produit l'index global des rapports du projet, destiné à être lu" },
+  // Signalé par ce garde-fou le jour même où data-archangel a gagné sa commande `dossier` (#742) —
+  // exactement ce pour quoi il existe : un script qui se met à écrire un fichier sans que personne
+  // n'ait dit ce que ce fichier EST.
+  "scripts/data-archangel.mjs": { nature: "rapport", pourquoi: "sa commande `dossier <sujet>` écrit dans docs/data-archangel/ un dossier destiné à une lecture humaine : toutes les notes déjà prises sur un sujet, rassemblées verbatim, avec l'état réel de chaque ligne de suivi" },
   // Deux arrivants du 2026-09-24, signalés par ce garde-fou le soir même de leur création — et
   // c'est exactement son travail : un script qui écrit sans être classé est un angle mort, jamais
   // une décision.

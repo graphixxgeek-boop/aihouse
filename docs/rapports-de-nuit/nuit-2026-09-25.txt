@@ -50,6 +50,7 @@ LES TÂCHES, UNE PAR LIGNE
 #670 Historique des évaluations : la cause racine était que PERSONNE ne l'écrivait — corrigé et câblé à la Ronde [FAIT]
 #642 P0 du juge MESURÉ : 44 % des motifs de déplacement cassés à l'affichage — outil construit, correction écrite, NON appliquée (périmètre visiteur) [FAIT]
 #225 Motifs de déplacement : cause racine trouvée et correction prête — attend sa validation [AVANCÉ]
+#742 Dossier complet d'un sujet : data-archangel étendu, 44 lignes de suivi retrouvées sur « classification » [FAIT]
 
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
