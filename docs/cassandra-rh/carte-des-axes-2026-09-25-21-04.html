@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La carte des axes de l'Agence</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-25T21:04:42.766Z</div>
+    <h1>La carte des axes de l'Agence</h1>
+    <p class="sub">Comment les outils sont rangés, avec deux exemples réels par axe — et la collision de vocabulaire que ça révèle</p>
+  </header>
+  <div class="divider"></div>
+  <main><p class="note">⚠️  Attention, mes résultats peuvent être inexacts : relaie et recoupe ce que les autres outils estiment — elle hérite de leurs approximations. À vérifier avant d'agir, jamais un verdict acquis.</p>
+<p class="note">Version de Claude : claude-opus-5
+Produit le : vendredi 25 septembre 2026 à 21h04 (UTC)
+État du code : 5bbaf0a sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : cassandra-rh — date de dernière modification inconnue
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir</p>
+<h2>0. Le vocabulaire — tes trois questions, répondues d'abord</h2>
+<p>LA DISTINCTION QUI MANQUAIT, et elle explique tout le reste : la CLASSIFICATION décrit ce qui EST, l'ORGANISATION décide ce qui DOIT ÊTRE. L'une se mesure sur les fichiers, l'autre se tranche avec toi. C'est exactement pour ça que le poste de travail découle du RANG et jamais du TYPE — ta correction était juste, et voilà pourquoi.</p>
+<table><thead><tr><th>Le mot</th><th>En une ligne</th><th>Ce que c'est vraiment</th><th>Qui décide</th></tr></thead><tbody><tr><td>classification</td><td>ranger ce qui EXISTE</td><td>opération MÉCANIQUE sur des fichiers : on lit chaque script et on le range sur plusieurs axes indépendants (ce qu'il est, quand il intervient, sur quoi il regarde). Personne ne décide : on constate. Elle couvre les 87 scripts, sans exception.</td><td>personne — c'est une mesure</td></tr><tr><td>organisation</td><td>décider QUI FAIT QUOI</td><td>décision HUMAINE sur des rôles : quel rang un outil occupe dans l'équipe, à quelle famille il appartient, ce à quoi son rang lui donne droit. Elle ne couvre que les outils promus — 40 sur 87 aujourd'hui, et c'est normal : une bibliothèque partagée n'a pas de rang, elle n'est pas membre de l'équipe.</td><td>l'utilisateur — c'est un choix</td></tr><tr><td>outil</td><td>un membre de l'équipe qu'on peut appeler</td><td>un fichier avec DEUX choses : une porte d'entrée réelle (ligne de commande, package.json, crochet git, ou une commande écrite dans un document) ET au moins un document qui le nomme. Sans porte, c'est une bibliothèque. Sans document, c'est un utilitaire sans fiche.</td><td>mesuré, pas décidé — typeDuScript() le lit sur le fichier</td></tr><tr><td>instanciation</td><td>la fiche « comment CET outil sert sur CE projet-ci »</td><td>`docs/referentiel/&lt;outil&gt;.md`. Le blueprint dit comment l'outil marche EN GÉNÉRAL (il part avec nous sur le projet suivant) ; l'instanciation dit ce qu'il donne ICI, sur la maison de Lia et Noé. Deux documents, deux publics.</td><td>écrit à la main, vérifié mécaniquement</td></tr><tr><td>cousin</td><td>« il partage le blueprint d'un autre, et c'est voulu »</td><td>un seul cas réel dans tout le dépôt : THE-DEEP-READER est cousin de THE-FINAL-JUDGE. Le lien dit qu'il n'a PAS de blueprint propre et que ce n'est pas un oubli — sans ce mot, le contrôle d'intégration le signalerait comme incomplet à chaque passage.</td><td>déclaré à la main, à la création de l'outil</td></tr></tbody></table>
+<p>Un « axe » est une façon de ranger les outils de l'Agence. Comme un magasin range ses articles par rayon, par prix ou par fournisseur : plusieurs rangements possibles, tous valables, qui ne se mélangent jamais. Cette page dit lesquels existent VRAIMENT dans le code, avec deux exemples réels chacun.</p>
+<h2>1. La question que tu poses : « dans le TYPE, retrouve-t-on la distinction ? »</h2>
+<p>Réponse mesurée : NON, et c'est une collision de vocabulaire, pas un oubli. Deux choses différentes portent le mot « type ». L'axe qui s'appelle `type` dans le code range ce que le FICHIER est : crochet, filet-de-securite, outil, utilitaire-sans-fiche, bibliotheque-partagee, bibliotheque-solitaire, infrastructure-shell, execution-directe-non-documentee. La distinction que tu cherches — Gardien sacré, Agent Cadre, Membre, Agent Spécial — existe bel et bien, mais sous le nom `rang` : Membre, Agent Cadre, Gardien sacré du code, Agent Spécial.</p>
+<p>Autrement dit : ce que tu appelles « type » s'appelle « rang » dans le code, et le découpage fin que tu décris (« au sein des membres, il y a des sous-catégories ») s'appelle « famille ». Les deux existent et sont dérivés du même registre. C'est le nom qui manque à l'appel, jamais la donnée.</p>
+<h2>2. Le rang, et son découpage fin — ce que tu appelles TYPE</h2>
+<table><thead><tr><th>Rang</th><th>Combien</th><th>Deux exemples réels</th></tr></thead><tbody><tr><td>Membre</td><td>29</td><td>abraham-les-references, moise-tables-de-loi</td></tr><tr><td>Agent Cadre</td><td>2</td><td>cassandra-rh, le-coordinateur</td></tr><tr><td>Gardien sacré du code</td><td>7</td><td>argus, safe-export</td></tr><tr><td>Agent Spécial</td><td>2</td><td>check-level-target, smart-breaker</td></tr></tbody></table>
+<table><thead><tr><th>Famille (sous-catégorie)</th><th>Combien</th><th>Deux exemples réels</th></tr></thead><tbody><tr><td>Suite Dette &amp; Structure du code</td><td>6</td><td>abraham-les-references, moise-tables-de-loi</td></tr><tr><td>Gouvernance interne</td><td>7</td><td>cassandra-rh, smart-conso-api</td></tr><tr><td>Coordination</td><td>8</td><td>le-coordinateur, check-tasks-details</td></tr><tr><td>Équipe noyau (Article 20)</td><td>6</td><td>argus, safe-export</td></tr><tr><td>Exceptionnel (page blanche / audit lourd)</td><td>3</td><td>always-new-code, hyper-scan-checkpoint</td></tr><tr><td>Simulation &amp; qualité narrative</td><td>4</td><td>el-professor, the-screener</td></tr><tr><td>Audit indépendant</td><td>2</td><td>the-final-judge, the-deep-reader</td></tr><tr><td>Outillage de navigation</td><td>2</td><td>find-booster, find-deep-booster</td></tr><tr><td>Suite Pilotage &amp; Consommation</td><td>2</td><td>agent-du-temps, smart-breaker</td></tr></tbody></table>
+<h2>3. Le poste de travail — une CONSÉQUENCE du rang, jamais un rangement</h2>
+<p>Ta correction du 2026-09-25, appliquée telle quelle : « ah, ce fichier est un gardien sacré, donc son poste de travail est le suivant. Ce n'est pas un critère de classement. » Le poste de travail se LIT une fois le rang connu — il ne sert jamais à ranger.</p>
+<table><thead><tr><th>Ce que le poste comprend</th><th>Où ça vit</th><th>Qui y a droit</th></tr></thead><tbody><tr><td>une fiche d'instanciation</td><td>docs/referentiel/&lt;outil&gt;.md</td><td>tout rang sauf ceux qui n'ont aucune connaissance propre au projet</td></tr><tr><td>un blueprint générique</td><td>docs/&lt;outil&gt;-blueprint.md</td><td>tout rang sauf cousin déclaré d'un autre Agent</td></tr><tr><td>un dossier d'historisation</td><td>docs/&lt;outil&gt;/ avec son index.md</td><td>tout outil qui produit un rapport ou garde une mémoire</td></tr><tr><td>une ligne à la table maîtresse</td><td>docs/regles-de-travail.md §7ter</td><td>tous, sans exception</td></tr><tr><td>une entrée au menu PRESTATIONS</td><td>scripts/le-coordinateur.mjs</td><td>ceux qu'on lance à la demande ou qui coûtent de l'API</td></tr><tr><td>un item de Ronde</td><td>scripts/circle-tasks.mjs</td><td>les périodiques — jamais les Gardiens sacrés, qui tournent à chaque commit</td></tr></tbody></table>
+<h2>4. Les cinq autres axes du code, avec deux exemples chacun</h2>
+<table><thead><tr><th>Axe</th><th>La question qu'il pose</th><th>Deux de ses valeurs, expliquées</th></tr></thead><tbody><tr><td>iceberg</td><td>à quel groupe il appartient</td><td>membre — l'utilisateur peut le convoquer, et quelque chose le lui présente · oublie — convocable, mais rien ne le présente — groupe TEMPORAIRE, il doit se vider par le process primitif</td></tr><tr><td>type</td><td>ce que le FICHIER est (jamais le rang)</td><td>crochet — s'exécute automatiquement à un moment de git, jamais appelé à la main · filet-de-securite — la suite de tests elle-même — ce que le crochet lance et qui peut refuser un commit</td></tr><tr><td>moment</td><td>QUAND il intervient</td><td>avant-le-geste — consulté AVANT d'agir — le seul moment qui peut encore éviter l'erreur · a-chaque-commit — lancé par le crochet git, donc juste après le geste et sans qu'on y pense</td></tr><tr><td>domaine</td><td>SUR QUOI il regarde</td><td>code — le code du jeu et des outils · documents — la charte, le référentiel, les règles de travail</td></tr><tr><td>destinataire</td><td>À QUI le résultat sert</td><td>utilisateur — l'utilisateur — il produit quelque chose qui se lit · agent — l'agent — il sert à DÉCIDER avant d'agir</td></tr></tbody></table>
+<p>Chacun a son porteur dans le code, jamais une liste tenue à la main : iceberg → classerIceberg() · type → typeDuScript() · moment → momentsDeLOutil() · domaine → domainesDeLOutil() · destinataire → destinatairesDeLOutil().</p>
+<h2>6. Est-ce que la classification couvre TOUT ? — oui pour le type, non pour le rang</h2>
+<p>Ta question, mesurée : **87 fichiers** portent tous un TYPE, et **40 seulement** portent un RANG. un TYPE se constate sur le fichier, donc tout le monde en a un ; un RANG se mérite — il dit qu'on est membre de l'équipe. Une bibliothèque partagée n'a pas de rang et n'en manque pas : elle n'a jamais postulé.</p>
+<table><thead><tr><th>Type de fichier</th><th>Combien</th><th>Ce que c'est</th></tr></thead><tbody><tr><td>outil</td><td>54</td><td>un membre de l'Agence : une porte d'entrée réelle (ligne de commande, package.json, crochet ou commande écrite) ET au moins un document qui le nomme</td></tr><tr><td>bibliotheque-partagee</td><td>17</td><td>aucune porte d'entrée, importée par plusieurs — le vocabulaire commun de l'Agence</td></tr><tr><td>bibliotheque-solitaire</td><td>5</td><td>aucune porte d'entrée et importée par un seul : à fusionner dans son unique client, ou bien il lui manque des clients</td></tr><tr><td>infrastructure-shell</td><td>4</td><td>script shell d'installation ou de construction, hors de l'Agence</td></tr><tr><td>crochet</td><td>4</td><td>s'exécute automatiquement à un moment de git, jamais appelé à la main</td></tr><tr><td>execution-directe-non-documentee</td><td>2</td><td>personne ne l'importe et aucune commande de lancement n'est écrite nulle part : il ne peut être lancé qu'à la main, par quelqu'un qui sait déjà</td></tr><tr><td>filet-de-securite</td><td>1</td><td>la suite de tests elle-même — ce que le crochet lance et qui peut refuser un commit</td></tr></tbody></table>
+<h2>7. Tu avais raison : il manque des rangs — et pire, il y en a DEUX listes qui ne se parlent pas</h2>
+<p>Ton intuition (« j'ai l'impression qu'il manque des RANGS : utilitaire sans nom, infrastructure ») a trouvé quelque chose de plus gros que ce que tu visais. Il existe DEUX registres de rangs, et mesurés exactement, ils ne coïncident sur AUCUN libellé.</p>
+<table><thead><tr><th>Les rangs réellement PORTÉS par les outils</th><th>Les rangs DÉCLARÉS dans le code</th></tr></thead><tbody><tr><td>Membre · Agent Cadre · Gardien sacré du code · Agent Spécial</td><td>Socle · Agents Cadre · Gardiens sacrés du code · Membres certifiés · Émetteurs de rapport non certifiés</td></tr></tbody></table>
+<ul><li>PORTÉS et jamais déclarés : Membre, Agent Cadre, Gardien sacré du code, Agent Spécial — dont « Agent Spécial », qui range deux outils réels et n'est expliqué nulle part.</li><li>DÉCLARÉS et portés par personne : Socle, Agents Cadre, Gardiens sacrés du code, Membres certifiés, Émetteurs de rapport non certifiés — dont « Socle », qui est précisément le rang « infrastructure » que tu cherchais : il existe, il est défini, et aucun outil ne le porte.</li><li>Pourquoi ça a pu durer : les deux listes servent à des choses différentes (l'une range, l'autre explique), chacune prise seule est cohérente, et personne ne les avait jamais confrontées.</li></ul>
+<p>CE QUE ÇA VEUT DIRE POUR TA QUESTION : le rang « infrastructure » n'est pas à inventer, il est à FAIRE PORTER — « Socle » attend depuis sa déclaration. Et « utilitaire sans nom » existe déjà, mais du côté TYPE (`utilitaire-sans-fiche`), pas du côté rang. Les deux moitiés de ton intuition tombent juste, chacune pour une raison différente.</p>
+<h2>8. Tes trois changements sur les familles — ce que la mesure en dit</h2>
+<table><thead><tr><th>Ton idée</th><th>Ce que ça touche</th><th>Mon avis, et il n'engage que moi</th></tr></thead><tbody><tr><td>Fondre « Suite Pilotage &amp; Consommation » dans « Gouvernance interne »</td><td>2 outil(s) déménagent vers une famille qui en compte déjà 7</td><td>D'accord. Les deux répondent à la même question — « qu'est-ce que ça nous coûte, et est-ce qu'on tient nos objectifs ? ». Deux familles pour une question, c'est une famille de trop.</td></tr><tr><td>« Équipe noyau » = les Gardiens sacrés → supprimer la famille</td><td>6 outil(s), exactement les Gardiens sacrés</td><td>D'accord, et c'est même une erreur de conception à corriger : cette famille REDIT le rang. Une famille doit dire de quoi on s'occupe, jamais répéter à quel niveau on travaille — sinon un outil se range deux fois pour la même raison.</td></tr><tr><td>« porte un garde-fou d'évolutivité » = une sous-classe de Membre</td><td>0 outil aujourd'hui — la classe n'existe nulle part</td><td>Pas tout à fait, et la nuance compte : ça ne dit pas QUI on est (rang) ni DE QUOI on s'occupe (famille), ça dit CE QU'ON SAIT FAIRE. C'est donc une classe transverse, comme « sait dire pas mesuré » — un Gardien sacré et un simple Membre peuvent tous deux la porter.</td></tr></tbody></table>
+<h2>9. Le tableau que tu demandes : chaque rang, et le poste de travail qui en découle</h2>
+<p>À lire dans ce sens, jamais l'inverse : on connaît le rang, on en DÉDUIT le poste. C'est ta formule — « ah, ce fichier est un gardien sacré, donc son poste de travail est le suivant ».</p>
+<table><thead><tr><th>Rang</th><th>Combien</th><th>Deux exemples</th><th>Son poste de travail</th></tr></thead><tbody><tr><td>Membre</td><td>29</td><td>abraham-les-references, moise-tables-de-loi</td><td>fiche + blueprint + dossier d'historisation + ligne à la table maîtresse + entrée au menu des prestations. Le poste complet, sans le crochet.</td></tr><tr><td>Agent Cadre</td><td>2</td><td>cassandra-rh, le-coordinateur</td><td>tout ce qu'a un Membre, PLUS le droit de convoquer les autres et de rendre un verdict sur eux. Deux outils seulement.</td></tr><tr><td>Gardien sacré du code</td><td>7</td><td>argus, safe-export</td><td>fiche + blueprint + dossier d'historisation + ligne à la table maîtresse + câblage au crochet post-commit. JAMAIS d'item de Ronde : il tourne à chaque commit, un item ferait doublon.</td></tr><tr><td>Agent Spécial</td><td>2</td><td>check-level-target, smart-breaker</td><td>même poste qu'un Membre — mais le rang lui-même n'est déclaré nulle part, donc son poste n'a jamais été arrêté. À trancher.</td></tr></tbody></table>
+<h2>10. Ce qui reste à trancher</h2>
+<ul><li>Le référentiel de l'Agence (docs/referentiel/organisation-agence.md §1) déclare toujours DEUX axes. Le code en dérive sept. Ta décision : un garde-fou qui ALERTE dès que les deux ne disent plus la même chose — la prose reste écrite à la main, on perd seulement le droit de diverger en silence.</li><li>Renommer, ou pas, l'axe `type` du code pour lever la collision avec ce que tu appelles type. Renommer touche plusieurs registres ; ne pas renommer garde un mot qui veut dire deux choses. C'est ton arbitrage.</li><li>La classe « porte un garde-fou d'évolutivité » n'existe nulle part alors qu'elle est détectable automatiquement — un de tes cinq candidats du 2026-09-23, le seul non couvert. (Ta lecture : « une sous-classe de Membre ». Ma nuance, section 8 : c'est une classe TRANSVERSE, parce qu'elle dit ce qu'on sait faire et non qui on est — un Gardien sacré peut la porter aussi.)</li><li>LES DEUX REGISTRES DE RANGS (section 7) : les faire coïncider, et décider qui porte « Socle ». C'est le rang « infrastructure » que tu cherchais, et il attend depuis sa déclaration.</li><li>LES DEUX CHANGEMENTS DE FAMILLE que tu proposes (section 8) : fondre Pilotage dans Gouvernance, et supprimer « Équipe noyau » qui redit le rang. Je suis d'accord sur les deux, mais une famille supprimée déplace des outils — c'est ton geste, pas le mien.</li><li>TA PROPOSITION SUR LE §1 (« une organisation par FAMILLE, avec des icônes pour les axes transversaux ») : elle est meilleure que ce que j'avais proposé, et pour une raison précise — la famille est ce qu'on cherche quand on ouvre l'organigramme (« de quoi cet outil s'occupe ? »), alors que les sept axes sont ce qu'on consulte une fois qu'on a trouvé. Mettre la famille en structure et les axes en icônes met l'usage courant en avant et le détail à portée. Rien n'est appliqué : c'est un document d'autorité.</li></ul>
+<p class="note">HORS PORTÉE : cette page dit comment les outils SONT rangés, jamais si le rangement est le bon. Le juger se lit, et se tranche avec toi.</p></main>
+  
+</div>
+</body>
+</html>

@@ -2209,6 +2209,76 @@ export function formatDestinatairesLines(lignes = []) {
 // le nom `famille`. Le dire est le premier service de cette carte.
 export const AXES_EXEMPLES_MAX = 2;
 
+// LE VOCABULAIRE, DÉFINI UNE FOIS (2026-09-25) — ses trois questions, dans ses mots : « c'est quoi
+// la classification ? c'est quoi l'organisation ? c'est quoi un outil ? »
+//
+// La distinction qui manquait, et elle explique tout le reste : **la classification décrit ce qui
+// EST, l'organisation décide ce qui DOIT ÊTRE.** L'une se mesure sur les fichiers, l'autre se
+// tranche avec lui. C'est pourquoi le poste de travail découle du RANG (organisation) et jamais du
+// TYPE (classification) — sa propre correction, et elle était juste.
+export const VOCABULAIRE_DE_L_AGENCE = [
+  { mot: "classification", court: "ranger ce qui EXISTE",
+    long: "opération MÉCANIQUE sur des fichiers : on lit chaque script et on le range sur plusieurs axes indépendants (ce qu'il est, quand il intervient, sur quoi il regarde). Personne ne décide : on constate. Elle couvre les 87 scripts, sans exception.",
+    quiDecide: "personne — c'est une mesure" },
+  { mot: "organisation", court: "décider QUI FAIT QUOI",
+    long: "décision HUMAINE sur des rôles : quel rang un outil occupe dans l'équipe, à quelle famille il appartient, ce à quoi son rang lui donne droit. Elle ne couvre que les outils promus — 40 sur 87 aujourd'hui, et c'est normal : une bibliothèque partagée n'a pas de rang, elle n'est pas membre de l'équipe.",
+    quiDecide: "l'utilisateur — c'est un choix" },
+  { mot: "outil", court: "un membre de l'équipe qu'on peut appeler",
+    long: "un fichier avec DEUX choses : une porte d'entrée réelle (ligne de commande, package.json, crochet git, ou une commande écrite dans un document) ET au moins un document qui le nomme. Sans porte, c'est une bibliothèque. Sans document, c'est un utilitaire sans fiche.",
+    quiDecide: "mesuré, pas décidé — typeDuScript() le lit sur le fichier" },
+  { mot: "instanciation", court: "la fiche « comment CET outil sert sur CE projet-ci »",
+    long: "`docs/referentiel/<outil>.md`. Le blueprint dit comment l'outil marche EN GÉNÉRAL (il part avec nous sur le projet suivant) ; l'instanciation dit ce qu'il donne ICI, sur la maison de Lia et Noé. Deux documents, deux publics.",
+    quiDecide: "écrit à la main, vérifié mécaniquement" },
+  { mot: "cousin", court: "« il partage le blueprint d'un autre, et c'est voulu »",
+    long: "un seul cas réel dans tout le dépôt : THE-DEEP-READER est cousin de THE-FINAL-JUDGE. Le lien dit qu'il n'a PAS de blueprint propre et que ce n'est pas un oubli — sans ce mot, le contrôle d'intégration le signalerait comme incomplet à chaque passage.",
+    quiDecide: "déclaré à la main, à la création de l'outil" },
+];
+
+// LES TYPES DE FICHIER COUVRENT TOUT, LES RANGS NON — et c'est la réponse à sa question « est-ce
+// que la classification couvre TOUT type de script ? ». Mesuré : 87 fichiers classés par type,
+// 40 seulement portent un rang. L'écart n'est PAS une dette : un rang se mérite (il faut être
+// membre de l'équipe), un type se constate. Mais il faut le dire, sinon on croit que 47 outils
+// manquent à l'appel.
+export function couvertureDesAxes({ recensement = null, categories = AGENT_CATEGORIES } = {}) {
+  if (!recensement?.mesurable) {
+    return { mesurable: false, pourquoi: "aucun recensement fourni : sans lire les fichiers, on ne peut pas dire ce qui est couvert — et un pourcentage rendu sans lecture ressemblerait trait pour trait à une mesure" };
+  }
+  const parType = {};
+  for (const l of recensement.lignes) parType[l.type ?? "?"] = (parType[l.type ?? "?"] ?? 0) + 1;
+  const total = recensement.lignes.length;
+  const avecRang = Object.keys(categories).length;
+  return {
+    mesurable: true, total, avecRang, parType,
+    pourquoiLEcart: "un TYPE se constate sur le fichier, donc tout le monde en a un ; un RANG se mérite — il dit qu'on est membre de l'équipe. Une bibliothèque partagée n'a pas de rang et n'en manque pas : elle n'a jamais postulé.",
+  };
+}
+
+// LES DEUX REGISTRES DE RANGS NE SE PARLENT PAS (constaté le 2026-09-25, sur son intuition
+// « j'ai l'impression qu'il manque des RANGS » — elle était juste).
+//
+// MESURE EXACTE, pas un rapprochement approximatif : les rangs RÉELLEMENT PORTÉS par les outils
+// (`AGENT_CATEGORIES`, dans lib-shell) et les rangs DÉCLARÉS (`ORG_RANKS`, ici) ne coïncident sur
+// AUCUN libellé. L'un dit « Membre », l'autre « Membres certifiés » ; « Agent Spécial » est porté
+// par deux outils et déclaré nulle part ; « Socle » et « Émetteurs de rapport non certifiés » sont
+// déclarés et portés par personne.
+//
+// POURQUOI ÇA A PU DURER : les deux listes servent à des choses différentes (l'une range, l'autre
+// explique), personne ne les a jamais confrontées, et chacune prise seule est parfaitement
+// cohérente. C'est exactement la forme de dette que l'Article 24 vise — deux sources qui décrivent
+// la même chose et ne disent plus pareil, sans qu'aucune erreur ne se produise jamais.
+export function rangsQuiDivergent({ categories = AGENT_CATEGORIES, rangs = ORG_RANKS, rangDe = rangDeLaCategorie } = {}) {
+  const portes = [...new Set(Object.values(categories).map(rangDe).filter(Boolean))];
+  const declares = Object.entries(rangs).map(([cle, v]) => ({ cle, label: v.label }));
+  const labels = new Set(declares.map((d) => d.label));
+  return {
+    portes,
+    declares: declares.map((d) => d.label),
+    portesNonDeclares: portes.filter((p) => !labels.has(p)),
+    declaresNonPortes: declares.filter((d) => !portes.includes(d.label)).map((d) => d.label),
+    pourquoi: "deux listes de rangs, l'une qui RANGE les outils et l'autre qui les EXPLIQUE, jamais confrontées — chacune prise seule est cohérente, et c'est ce qui a permis à l'écart de durer",
+  };
+}
+
 export function carteDesAxes({ categories = AGENT_CATEGORIES, rangDe = rangDeLaCategorie, familleDe = familleDeLaCategorie } = {}) {
   const parRang = new Map();
   const parFamille = new Map();
@@ -2268,9 +2338,23 @@ export const POSTE_DE_TRAVAIL = [
   { quoi: "un item de Ronde", ou: "scripts/circle-tasks.mjs", pourQui: "les périodiques — jamais les Gardiens sacrés, qui tournent à chaque commit" },
 ];
 
-export function blocsDeLaCarteDesAxes(carte = carteDesAxes(), { axes = AXES_DE_CLASSIFICATION, poste = POSTE_DE_TRAVAIL, types = TYPES_DE_SCRIPT, moments = MOMENTS, domaines = DOMAINES, iceberg = GROUPES_ICEBERG, destinataires = DESTINATAIRES } = {}) {
+// LE POSTE DE TRAVAIL PAR RANG (2026-09-25, sa demande : « un tableau mis à jour avec les rangs et
+// les différents postes de travail qui en découlent »). À lire dans ce sens et jamais l'inverse :
+// on connaît le rang, on en DÉDUIT le poste — c'est sa formule mot pour mot.
+export const POSTE_PAR_RANG = {
+  "Gardien sacré du code": "fiche + blueprint + dossier d'historisation + ligne à la table maîtresse + câblage au crochet post-commit. JAMAIS d'item de Ronde : il tourne à chaque commit, un item ferait doublon.",
+  "Agent Cadre": "tout ce qu'a un Membre, PLUS le droit de convoquer les autres et de rendre un verdict sur eux. Deux outils seulement.",
+  "Membre": "fiche + blueprint + dossier d'historisation + ligne à la table maîtresse + entrée au menu des prestations. Le poste complet, sans le crochet.",
+  "Agent Spécial": "même poste qu'un Membre — mais le rang lui-même n'est déclaré nulle part, donc son poste n'a jamais été arrêté. À trancher.",
+};
+
+export function blocsDeLaCarteDesAxes(carte = carteDesAxes(), { axes = AXES_DE_CLASSIFICATION, poste = POSTE_DE_TRAVAIL, types = TYPES_DE_SCRIPT, moments = MOMENTS, domaines = DOMAINES, iceberg = GROUPES_ICEBERG, destinataires = DESTINATAIRES, vocab = VOCABULAIRE_DE_L_AGENCE, div = rangsQuiDivergent(), couv = couvertureDesAxes({ recensement: recenserLesScripts() }), posteDuRang = POSTE_PAR_RANG } = {}) {
   const deuxDe = (obj) => Object.entries(obj).slice(0, AXES_EXEMPLES_MAX).map(([k, v]) => `${k} — ${typeof v === "string" ? v : (v.quoi ?? "")}`).join(" · ");
   return [
+    { type: "heading", text: "0. Le vocabulaire — tes trois questions, répondues d'abord" },
+    { type: "paragraph", text: "LA DISTINCTION QUI MANQUAIT, et elle explique tout le reste : la CLASSIFICATION décrit ce qui EST, l'ORGANISATION décide ce qui DOIT ÊTRE. L'une se mesure sur les fichiers, l'autre se tranche avec toi. C'est exactement pour ça que le poste de travail découle du RANG et jamais du TYPE — ta correction était juste, et voilà pourquoi." },
+    { type: "table", headers: ["Le mot", "En une ligne", "Ce que c'est vraiment", "Qui décide"], rows: vocab.map((v) => [v.mot, v.court, v.long, v.quiDecide]) },
+
     { type: "paragraph", text: "Un « axe » est une façon de ranger les outils de l'Agence. Comme un magasin range ses articles par rayon, par prix ou par fournisseur : plusieurs rangements possibles, tous valables, qui ne se mélangent jamais. Cette page dit lesquels existent VRAIMENT dans le code, avec deux exemples réels chacun." },
 
     { type: "heading", text: "1. La question que tu poses : « dans le TYPE, retrouve-t-on la distinction ? »" },
@@ -2295,11 +2379,39 @@ export function blocsDeLaCarteDesAxes(carte = carteDesAxes(), { axes = AXES_DE_C
     ] },
     { type: "paragraph", text: `Chacun a son porteur dans le code, jamais une liste tenue à la main : ${axes.map((a) => `${a.cle} → ${a.porteur}`).join(" · ")}.` },
 
-    { type: "heading", text: "5. Ce qui reste à trancher" },
+    { type: "heading", text: "6. Est-ce que la classification couvre TOUT ? — oui pour le type, non pour le rang" },
+    { type: "paragraph", text: `Ta question, mesurée : **${couv.total} fichiers** portent tous un TYPE, et **${couv.avecRang} seulement** portent un RANG. ${couv.pourquoiLEcart}` },
+    { type: "table", headers: ["Type de fichier", "Combien", "Ce que c'est"], rows: Object.entries(couv.parType).sort((a, b) => b[1] - a[1]).map(([t, n]) => [t, String(n), types[t] ?? "(type non décrit dans TYPES_DE_SCRIPT)"]) },
+
+    { type: "heading", text: "7. Tu avais raison : il manque des rangs — et pire, il y en a DEUX listes qui ne se parlent pas" },
+    { type: "paragraph", text: "Ton intuition (« j'ai l'impression qu'il manque des RANGS : utilitaire sans nom, infrastructure ») a trouvé quelque chose de plus gros que ce que tu visais. Il existe DEUX registres de rangs, et mesurés exactement, ils ne coïncident sur AUCUN libellé." },
+    { type: "table", headers: ["Les rangs réellement PORTÉS par les outils", "Les rangs DÉCLARÉS dans le code"], rows: [[div.portes.join(" · "), div.declares.join(" · ")]] },
+    { type: "list", items: [
+      `PORTÉS et jamais déclarés : ${div.portesNonDeclares.join(", ")} — dont « Agent Spécial », qui range deux outils réels et n'est expliqué nulle part.`,
+      `DÉCLARÉS et portés par personne : ${div.declaresNonPortes.join(", ")} — dont « Socle », qui est précisément le rang « infrastructure » que tu cherchais : il existe, il est défini, et aucun outil ne le porte.`,
+      "Pourquoi ça a pu durer : les deux listes servent à des choses différentes (l'une range, l'autre explique), chacune prise seule est cohérente, et personne ne les avait jamais confrontées.",
+    ] },
+    { type: "paragraph", text: "CE QUE ÇA VEUT DIRE POUR TA QUESTION : le rang « infrastructure » n'est pas à inventer, il est à FAIRE PORTER — « Socle » attend depuis sa déclaration. Et « utilitaire sans nom » existe déjà, mais du côté TYPE (`utilitaire-sans-fiche`), pas du côté rang. Les deux moitiés de ton intuition tombent juste, chacune pour une raison différente." },
+
+    { type: "heading", text: "8. Tes trois changements sur les familles — ce que la mesure en dit" },
+    { type: "table", headers: ["Ton idée", "Ce que ça touche", "Mon avis, et il n'engage que moi"], rows: [
+      ["Fondre « Suite Pilotage & Consommation » dans « Gouvernance interne »", `${(carte.familles.find((f) => /Pilotage/.test(f.famille))?.combien ?? 0)} outil(s) déménagent vers une famille qui en compte déjà ${(carte.familles.find((f) => /Gouvernance/.test(f.famille))?.combien ?? 0)}`, "D'accord. Les deux répondent à la même question — « qu'est-ce que ça nous coûte, et est-ce qu'on tient nos objectifs ? ». Deux familles pour une question, c'est une famille de trop."],
+      ["« Équipe noyau » = les Gardiens sacrés → supprimer la famille", `${(carte.familles.find((f) => /noyau/.test(f.famille))?.combien ?? 0)} outil(s), exactement les Gardiens sacrés`, "D'accord, et c'est même une erreur de conception à corriger : cette famille REDIT le rang. Une famille doit dire de quoi on s'occupe, jamais répéter à quel niveau on travaille — sinon un outil se range deux fois pour la même raison."],
+      ["« porte un garde-fou d'évolutivité » = une sous-classe de Membre", "0 outil aujourd'hui — la classe n'existe nulle part", "Pas tout à fait, et la nuance compte : ça ne dit pas QUI on est (rang) ni DE QUOI on s'occupe (famille), ça dit CE QU'ON SAIT FAIRE. C'est donc une classe transverse, comme « sait dire pas mesuré » — un Gardien sacré et un simple Membre peuvent tous deux la porter."],
+    ] },
+
+    { type: "heading", text: "9. Le tableau que tu demandes : chaque rang, et le poste de travail qui en découle" },
+    { type: "paragraph", text: "À lire dans ce sens, jamais l'inverse : on connaît le rang, on en DÉDUIT le poste. C'est ta formule — « ah, ce fichier est un gardien sacré, donc son poste de travail est le suivant »." },
+    { type: "table", headers: ["Rang", "Combien", "Deux exemples", "Son poste de travail"], rows: carte.rangs.map((r) => [r.rang, String(r.combien), r.exemples, posteDuRang[r.rang] ?? "à définir avec toi — ce rang n'a pas encore de poste déclaré"]) },
+
+    { type: "heading", text: "10. Ce qui reste à trancher" },
     { type: "list", items: [
       "Le référentiel de l'Agence (docs/referentiel/organisation-agence.md §1) déclare toujours DEUX axes. Le code en dérive sept. Ta décision : un garde-fou qui ALERTE dès que les deux ne disent plus la même chose — la prose reste écrite à la main, on perd seulement le droit de diverger en silence.",
       "Renommer, ou pas, l'axe `type` du code pour lever la collision avec ce que tu appelles type. Renommer touche plusieurs registres ; ne pas renommer garde un mot qui veut dire deux choses. C'est ton arbitrage.",
-      "La classe « porte un garde-fou d'évolutivité » n'existe nulle part alors qu'elle est détectable automatiquement — un de tes cinq candidats du 2026-09-23, le seul non couvert.",
+      "La classe « porte un garde-fou d'évolutivité » n'existe nulle part alors qu'elle est détectable automatiquement — un de tes cinq candidats du 2026-09-23, le seul non couvert. (Ta lecture : « une sous-classe de Membre ». Ma nuance, section 8 : c'est une classe TRANSVERSE, parce qu'elle dit ce qu'on sait faire et non qui on est — un Gardien sacré peut la porter aussi.)",
+      "LES DEUX REGISTRES DE RANGS (section 7) : les faire coïncider, et décider qui porte « Socle ». C'est le rang « infrastructure » que tu cherchais, et il attend depuis sa déclaration.",
+      "LES DEUX CHANGEMENTS DE FAMILLE que tu proposes (section 8) : fondre Pilotage dans Gouvernance, et supprimer « Équipe noyau » qui redit le rang. Je suis d'accord sur les deux, mais une famille supprimée déplace des outils — c'est ton geste, pas le mien.",
+      "TA PROPOSITION SUR LE §1 (« une organisation par FAMILLE, avec des icônes pour les axes transversaux ») : elle est meilleure que ce que j'avais proposé, et pour une raison précise — la famille est ce qu'on cherche quand on ouvre l'organigramme (« de quoi cet outil s'occupe ? »), alors que les sept axes sont ce qu'on consulte une fois qu'on a trouvé. Mettre la famille en structure et les axes en icônes met l'usage courant en avant et le détail à portée. Rien n'est appliqué : c'est un document d'autorité.",
     ] },
     { type: "note", text: "HORS PORTÉE : cette page dit comment les outils SONT rangés, jamais si le rangement est le bon. Le juger se lit, et se tranche avec toi." },
   ];

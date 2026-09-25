@@ -4437,6 +4437,19 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     // fait AU MOMENT MÊME où la règle s'élargit, donc en punissant des outils conformes (L4).
     assert.equal(normaliserNomDOutil('AGENT DES NOMS'),normaliserNomDOutil('agent-des-noms'),'spacing and case are spellings, never identities');
     assert.equal(normaliserNomDOutil('Smart Breaker (check-gemini-quota.mjs)'),normaliserNomDOutil('Smart Breaker'),'the parenthetical precision is dropped before comparing, exactly as primaryToolName() already does on the table side — one rule, never two');
+  }
+  // LES DEUX REGISTRES DE RANGS NE SE PARLENT PAS (2026-09-25, sur son intuition « il manque des
+  // RANGS » — elle visait juste, et plus large qu'elle ne croyait).
+  {
+    const crh=await import('../scripts/cassandra-rh.mjs');
+    const d=crh.rangsQuiDivergent();
+    assert.ok(d.portesNonDeclares.includes('Agent Spécial'),'« Agent Spécial » ranks two real tools and is declared nowhere — the exact gap he sensed');
+    assert.ok(d.declaresNonPortes.includes('Socle'),'and « Socle » is declared, defined, and carried by nobody: the "infrastructure" rank he was looking for is not to invent, it is to assign');
+    assert.equal(d.portes.filter((p)=>d.declares.includes(p)).length,0,'measured EXACTLY rather than with a loose includes(): the two lists coincide on NOT ONE label, which is why each looked coherent on its own');
+    // LA COUVERTURE, et pourquoi l'écart n'est pas une dette.
+    const c=crh.couvertureDesAxes({recensement:crh.recenserLesScripts()});
+    assert.ok(c.total>c.avecRang,'every file carries a TYPE, only members carry a RANK — saying so is what stops a reader concluding that forty-seven tools are missing');
+    assert.equal(crh.couvertureDesAxes({}).mesurable,false,'and without a census it refuses to answer: a percentage produced without reading the files would look exactly like a measurement');
     const tablePeriodique=[
       '| Outil | Statut | Ce qu\'il détecte/régule | Coût | Déclenchement |',
       '|---|---|---|---|---|',
