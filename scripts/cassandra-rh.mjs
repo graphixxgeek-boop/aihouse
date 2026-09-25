@@ -2858,6 +2858,63 @@ export function findOutilsSansPortee(lignesRecensement = [], portees = {}, { def
   };
 }
 
+// QUI DOIT VRAIMENT CONCLURE PAR UN PLAN D'ACTION (2026-09-25, tâche #833 — instruction de #803).
+//
+// LE CONSTAT D'ORIGINE disait « 28 outils sur 50 ne concluent pas » et la tâche demandait
+// explicitement de l'instruire : « lesquels DOIVENT conclure (un outil qui rend une heure ou un
+// chemin n'a pas de plan d'action à produire), et lesquels sont un vrai manque ».
+//
+// PREMIÈRE VÉRIFICATION, et elle a évité de refaire l'erreur de #807 : j'ai d'abord soupçonné un
+// dénominateur trop large. MESURÉ : 41,5 % sur tous les outils, 44,8 % sur les seuls scanners.
+// L'écart est minime — **le dénominateur n'était PAS le problème cette fois**, et le dire compte
+// autant que l'inverse : une correction appliquée par analogie, sans mesure, aurait été une
+// deuxième erreur habillée en leçon apprise.
+//
+// LE VRAI PARTAGE est ailleurs : un outil doit conclure s'il ÉMET DES CONSTATS — s'il imprime des
+// écarts, des manques, des alertes. Un outil qui rend un ÉTAT (un catalogue, une sauvegarde, une
+// liste de fichiers) n'a rien à transformer en tâche, et lui réclamer un plan d'action produirait
+// une section vide écrite pour faire taire un contrôle : exactement la formalité que l'Article 28
+// interdit en posant ses trois états.
+//
+// SA LIMITE, DÉCLARÉE : « émet des constats » se lit sur le code, donc sur la FORME de la sortie,
+// jamais sur le sens. Un outil qui nomme ses écarts autrement passera pour un simple état. C'est
+// une question posée à l'utilisateur, jamais un verdict — et les cas limites (un orchestrateur, un
+// recommandeur d'outils) sont précisément ceux qu'aucune mécanique ne tranchera.
+export const MOTIF_EMET_DES_CONSTATS = /console\.log\([^)]*(🔴|⚠️|écart|manquant)/;
+
+export function findOutilsDevantConclure(lignesRecensement = [], { lire = null, motif = MOTIF_EMET_DES_CONSTATS } = {}) {
+  const scanners = lignesRecensement.filter((l) => l.type === "outil" && l.classes?.includes("scanne-le-depot"));
+  if (!scanners.length) return { mesurable: false, pourquoi: "aucun outil qui scanne le dépôt dans le recensement : rien à instruire, ce qui n'est pas la même chose que « tous concluent »" };
+  if (typeof lire !== "function") return { mesurable: false, pourquoi: "aucun lecteur de source fourni : sans lire le code, « émet des constats » ne se distingue pas de « rend un état », et les deux se ressemblent exactement de l'extérieur" };
+  const concluent = []; const doivent = []; const dispenses = [];
+  for (const l of scanners) {
+    const slug = String(l.chemin).replace(/^scripts\//, "").replace(/\.mjs$/, "");
+    if (l.classes.includes("conclut-en-plan-daction")) { concluent.push(slug); continue; }
+    const brut = lire(l.chemin) ?? "";
+    const code = String(brut).replace(/\/\*[\s\S]*?\*\//g, " ").replace(/^[ \t]*\/\/.*$/gm, " ");
+    (motif.test(code) ? doivent : dispenses).push(slug);
+  }
+  return {
+    mesurable: true, concluent, doivent, dispenses, scanners: scanners.length,
+    horsPortee: "« Émet des constats » se lit sur la FORME de la sortie, jamais sur le sens : un outil qui nomme ses écarts autrement passera pour un simple état. Question posée, jamais verdict — et les cas limites sont ceux qu'aucune mécanique ne tranchera.",
+  };
+}
+
+export function formatDoiventConclureLines(d) {
+  if (!d?.mesurable) return [`QUI DOIT CONCLURE : PAS MESURÉ — ${d?.pourquoi ?? "aucune donnée"}`];
+  const L = [
+    `  ${d.concluent.length}/${d.scanners} scanner(s) concluent déjà par un plan d'action.`,
+    d.doivent.length
+      ? `  🔴 ${d.doivent.length} ÉMETTENT DES CONSTATS sans conclure — vrai manque au sens de l'Article 28 : ${d.doivent.join(", ")}.`
+      : "  Aucun outil qui émet des constats ne reste sans plan d'action.",
+    d.dispenses.length
+      ? `  ⚪ ${d.dispenses.length} rendent un ÉTAT plutôt que des constats (catalogue, sauvegarde, inventaire) : ${d.dispenses.join(", ")}. Leur réclamer un plan d'action produirait une section vide écrite pour faire taire un contrôle.`
+      : "",
+    `  HORS PORTÉE : ${d.horsPortee}`,
+  ].filter(Boolean);
+  return L;
+}
+
 export function formatFicheLines(f) {
   if (!f?.mesurable) return [`PAS DE FICHE — ${f?.pourquoi ?? "aucune donnée"}`];
   const L = [
@@ -3384,6 +3441,12 @@ function main() {
         : `  Aucune suspecte : aucun outil héritant du défaut ne lit de données de simulation.`);
       console.log(`  HORS PORTÉE : ${sp.horsPortee}`);
     }
+    // QUI DOIT VRAIMENT CONCLURE (tâche #833, instruction de #803).
+    console.log("");
+    console.log("--- LE PLAN D'ACTION : QUI LE DOIT VRAIMENT (tâche #803 instruite en #833) ---");
+    for (const l of formatDoiventConclureLines(findOutilsDevantConclure(rp.mesurable ? rp.lignes : [], {
+      lire: (chemin) => { try { return readFileSync(join(ROOT, chemin), "utf8"); } catch { return null; } },
+    }))) console.log(l);
     return;
   }
   if (sub === "recensement") {

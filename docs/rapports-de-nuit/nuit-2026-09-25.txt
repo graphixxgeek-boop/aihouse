@@ -118,6 +118,11 @@ LES HUIT CONSTATS DEEP-READER SONT CLOS (1 a 8).
   (run-simulation, summarize-simulation-log). Suspicion resserree deux fois : elle matchait d'abord
   les commentaires, puis une chaine de description — une mention n'est pas un usage [FAIT]
 
+#803 (plan d'action) instruit : 29 scanners, 13 concluent, 11 VRAIS manques, 5 dispenses (ils rendent
+  un etat, pas des constats — leur reclamer un plan produirait une section vide ecrite pour faire
+  taire un controle). ET LE DENOMINATEUR N'ETAIT PAS LE COUPABLE cette fois (41,5 % contre 44,8 %) :
+  mesure avant de corriger, pour ne pas appliquer par analogie la lecon fraiche de #832 [FAIT]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------

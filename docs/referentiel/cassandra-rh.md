@@ -344,3 +344,33 @@ Trois sorties désormais, jamais deux :
 *(Correctif vérifié par contrôle de syntaxe et par la sonde de classe. Il n'a PAS été exécuté en
 vrai : `check-spirit` coûte de vrais appels API, et l'Article 22 impose de consulter Smart Conso API
 avant — ce qui n'a pas été fait ici, délibérément.)*
+
+## Qui doit vraiment conclure par un plan d'action (2026-09-25, tâche #833)
+
+*(Instruction de la tâche #803, qui demandait explicitement : « lesquels DOIVENT conclure — un outil
+qui rend une heure ou un chemin n'a pas de plan d'action à produire — et lesquels sont un vrai
+manque ».)*
+
+**Le premier réflexe était le mauvais, et c'est la partie la plus utile de cette note.** Le même
+jour, la dette des portées s'était révélée fantôme parce que le dénominateur était trop large. Le
+soupçon était donc le même ici. **Mesuré avant de corriger** : 41,5 % sur tous les outils contre
+44,8 % sur les seuls scanners. L'écart est minime — **le dénominateur n'était pas le problème**.
+Appliquer la même correction par analogie, sans mesurer, aurait été une seconde erreur habillée en
+leçon apprise.
+
+**Le vrai partage** : un outil doit conclure s'il **ÉMET DES CONSTATS** (il imprime des écarts, des
+manques, des alertes). Un outil qui rend un **ÉTAT** — un catalogue, une sauvegarde, un inventaire —
+n'a rien à transformer en tâche. Lui réclamer un plan d'action produirait une section vide écrite
+pour faire taire un contrôle, c'est-à-dire exactement la formalité que l'Article 28 interdit en
+posant ses trois états.
+
+**Mesuré sur le vrai dépôt** : 29 scanners · **13 concluent déjà** · **11 émettent des constats sans
+conclure** (vrai manque) · **5 rendent un état** (dispensés).
+
+**Sa limite, déclarée** : « émet des constats » se lit sur la FORME de la sortie, jamais sur le
+sens. Un outil qui nomme ses écarts autrement passera pour un simple état. C'est une question posée,
+jamais un verdict — et les cas limites (un orchestrateur, un recommandeur d'outils) sont précisément
+ceux qu'aucune mécanique ne tranchera.
+
+Le KPI « conclusion » du tableau de bord utilise désormais le même dénominateur que l'exigence,
+comme `nivellementParClasse()` le faisait déjà.

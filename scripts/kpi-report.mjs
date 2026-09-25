@@ -808,9 +808,21 @@ export async function collecterLesNotes({ codeHealth, lire = (p) => readFileSync
         const { recenserLesScripts } = await import('./cassandra-rh.mjs');
         const rec = recenserLesScripts();
         const outils = (rec.lignes ?? []).filter((x) => x.type === 'outil');
-        if (outils.length) {
-            const concluent = outils.filter((x) => x.classes?.includes('conclut-en-plan-daction')).length;
-            agence.conclusion = { valeur: (concluent / outils.length) * 100, detail: `${concluent}/${outils.length} outils concluent` };
+        // LE DÉNOMINATEUR DE L'EXIGENCE, jamais la population entière (2026-09-25, tâche #833).
+        // CASSANDRA raisonne déjà ainsi dans `nivellementParClasse()` — « dire 12 sur 82 pour une
+        // exigence qui ne concerne que les 32 qui scannent serait un taux juste sur le papier et
+        // faux sur le fond » — et ce KPI-ci, lui, divisait par TOUS les outils.
+        //
+        // HONNÊTETÉ SUR L'EFFET, parce que c'est ce qui distingue une correction d'une imitation :
+        // ici l'écart est minime (41,5 % → 44,8 %). Contrairement à la dette fantôme des portées
+        // corrigée le même jour, le dénominateur n'était PAS le vrai problème — le vrai partage est
+        // entre les outils qui ÉMETTENT DES CONSTATS et ceux qui rendent un ÉTAT
+        // (`findOutilsDevantConclure()`). Appliquer la même correction par analogie sans mesurer
+        // aurait été une seconde erreur déguisée en leçon apprise.
+        const scanners = outils.filter((x) => x.classes?.includes('scanne-le-depot'));
+        if (scanners.length) {
+            const concluent = scanners.filter((x) => x.classes?.includes('conclut-en-plan-daction')).length;
+            agence.conclusion = { valeur: (concluent / scanners.length) * 100, detail: `${concluent}/${scanners.length} outils qui scannent le dépôt concluent (les autres n'ont rien à conclure)` };
         }
     } catch { /* recensement impossible */ }
 

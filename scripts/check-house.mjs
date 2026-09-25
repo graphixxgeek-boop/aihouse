@@ -12270,6 +12270,30 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const spAveugle = crh2.findOutilsSansPortee(recens, { a: 'agence' });
   assert.ok(spAveugle.suspectes.length === 0 && /pas regardé/.test(spAveugle.horsPortee), 'without a reader, zero suspects must be declared as NOT LOOKED FOR rather than read as none found — the defect this whole landscape exists against');
   assert.equal(crh2.findOutilsSansPortee([], {}).mesurable, false, 'and an empty census reports NOT MEASURED rather than a full registry: zero missing out of zero tools would read as a clean bill of health');
+
+  // QUI DOIT VRAIMENT CONCLURE PAR UN PLAN D'ACTION (2026-09-25, tâche #833 — instruction de #803).
+  // Le constat disait « 28 outils sur 50 ne concluent pas » et demandait d'instruire lesquels le
+  // DOIVENT. Premier réflexe : soupçonner le dénominateur, comme pour les portées le même jour.
+  // MESURÉ AVANT DE CORRIGER : 41,5 % sur tous les outils contre 44,8 % sur les seuls scanners —
+  // l'écart est minime, donc ce n'était PAS le problème. Le dire compte autant que l'inverse :
+  // appliquer la même correction par analogie sans mesurer aurait été une seconde erreur.
+  const recCo = [
+    { type: 'outil', chemin: 'scripts/conclut.mjs', classes: ['scanne-le-depot', 'conclut-en-plan-daction'] },
+    { type: 'outil', chemin: 'scripts/constate.mjs', classes: ['scanne-le-depot'] },
+    { type: 'outil', chemin: 'scripts/etat.mjs', classes: ['scanne-le-depot'] },
+    { type: 'outil', chemin: 'scripts/pas-scanner.mjs', classes: [] },
+  ];
+  const srcCo = {
+    'scripts/constate.mjs': 'console.log(`🔴 ${n} écart(s)`);',
+    'scripts/etat.mjs': 'console.log(`${n} fichiers sauvegardés`);',
+    'scripts/pas-scanner.mjs': 'console.log("🔴 jamais compté ici");',
+  };
+  const dc = crh2.findOutilsDevantConclure(recCo, { lire: (c) => srcCo[c] ?? null });
+  assert.deepEqual([dc.concluent, dc.doivent, dc.dispenses], [['conclut'], ['constate'], ['etat']], 'a tool that EMITS findings and never concludes is a real Article 28 gap; one that renders a STATE (a catalogue, a backup, an inventory) is not, and demanding a plan from it would produce an empty section written to silence a check — which is the very formality Article 28 forbids');
+  assert.ok(!dc.doivent.includes('pas-scanner') && !dc.dispenses.includes('pas-scanner'), 'a tool that does not scan the repo is outside the requirement entirely and must not appear in either bucket — the denominator is the requirement\'s own, never the whole population');
+  assert.equal(crh2.findOutilsDevantConclure(recCo).mesurable, false, 'without a source reader it must refuse: "emits findings" and "renders a state" look exactly alike from the outside, and guessing between them would invent the instruction it was asked to produce');
+  assert.equal(crh2.findOutilsDevantConclure([], { lire: () => '' }).mesurable, false, 'and an empty census reads NOT MEASURED rather than "they all conclude"');
+  assert.ok(crh2.formatDoiventConclureLines(dc).join('\n').includes('HORS PORTÉE'), 'the output must declare its own limit: "emits findings" is read on the FORM of the output, never on its meaning, and a tool naming its gaps differently will pass for a plain state');
   // Contre le VRAI dépôt (Article 25) : la fiche d'un outil ordinaire doit montrer sa portée
   // héritée, jamais « non renseigné » — c'était le symptôme qui a mené à la dette fantôme.
   assert.equal(crh2.ficheDeLOutil('cassandra-rh', { portee: (await import('../scripts/lib-shell.mjs')).porteeDe('cassandra-rh') }).lignes.find((l) => l.cle === 'portee').valeur, 'agence', 'a tool that inherits the default must display that portée, because an inherited portée IS a portée — showing "non renseigné" is what made 45 healthy tools look like a gap');
