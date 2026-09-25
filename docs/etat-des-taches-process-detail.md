@@ -409,3 +409,42 @@ sur parole. Le rendu compte d'ailleurs, par rafale, combien de natures viennent 
 
 Quatre rafales homogènes au lieu d'un mélange : **audit 10 · audit 4 · correctif 10 · chantier 4**,
 plus **5 tâches légères sans nature lisible** laissées explicitement hors rafale.
+
+
+### Correction du soir même : j'avais mesuré la COUVERTURE, jamais la JUSTESSE
+
+**Ce qui s'est passé, et c'est plus grave que les deux autres erreurs de la journée.** J'ai validé
+l'axe sur sa couverture — 19 % d'indéterminées au lieu de 70 %, donc « utilisable » — et je l'ai
+livré. **Je n'ai jamais mesuré si les étiquettes étaient JUSTES.**
+
+En ouvrant la première rafale qu'il produisait — dix tâches dites « correctif » — **au plus deux
+l'étaient réellement**. Les autres sont des chantiers : un process de sauvegarde, trois mots
+d'ordre, une convocation. Précision du chemin « détail » : environ **2 sur 9**.
+
+**La cause** : le détail d'une tâche OUVERTE est ici un long récit qui cite la demande de
+l'utilisateur, le constat qui l'a motivée et les leçons associées. Il contient donc presque toujours
+du vocabulaire de défaut, et l'ordre correctif → audit → chantier fait gagner « correctif » à tous
+les coups. **L'ordre n'était pas en cause : la SOURCE l'était.**
+
+**La règle qui en sort, et elle vaut au-delà de cet axe :** compter combien de lignes reçoivent une
+étiquette n'est pas vérifier que les étiquettes sont bonnes. Une couverture flatteuse sur une
+précision de 22 % donne un tri auquel on se fie — le pire des deux.
+
+**Ce qui est corrigé** : seule la nature lue sur l'INTITULÉ compose une rafale. Trois états, comme
+partout — nature **sûre** (intitulé, elle compose) · nature **faible** (détail, elle s'affiche et ne
+compose pas) · **pas de nature**. Les deux dernières sortent, pour la même raison : on ne groupe que
+ce dont on répond.
+
+**Précision après restriction, vérifiée une par une : 4 sur 7.** Le chiffre est déclaré dans le
+rendu, avec son dénominateur, et la nature y est présentée comme un **indice** de regroupement,
+jamais comme une garantie.
+
+**Les trois ratés restants ne sont pas lexicaux** et aucune liste de mots ne les corrigera : « doit
+s'ALARMER, pas seulement mesurer » (le verbe voulu est dans la moitié affirmée, le parasite dans la
+moitié niée) · une question adressée à l'utilisateur plutôt qu'au dépôt · un constat chiffré qui
+appelle un correctif. Ce sont des lectures de SENS.
+
+**La règle de négation de `le-coordinateur.mjs` a été essayée puis RETIRÉE** : elle ne reconnaît que
+« jamais / ni / aucun / sans », et y ajouter « pas » retournerait des cas justes (« il ne faut pas
+oublier de vérifier » veut bien dire vérifier). Importer une règle qui ne corrige rien ici aurait
+créé une dépendance entre deux outils pour un gain nul, en laissant croire à un correctif.

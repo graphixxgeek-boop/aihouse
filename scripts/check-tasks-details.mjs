@@ -1496,10 +1496,13 @@ export const NATURES_DE_TRAVAIL = [
   { cle: "audit", libelle: "audit", quoi: "lancer, lire, juger — le résultat est un CONSTAT",
     // Le point d'interrogation d'abord : une tâche qui pose une question ne demande pas un
     // correctif, elle demande de savoir. C'est le signal le plus net et le moins imitable.
+    motif: /\?|\b(vérifier|verifier|mesurer|auditer|évaluer|evaluer|contrôler|controler|est-ce que|analyser|diagnostiquer|relire)\b/i,
     sonde: (t) => /\?/.test(t) || /\b(vérifier|verifier|mesurer|auditer|évaluer|evaluer|contrôler|controler|est-ce que|analyser|diagnostiquer|relire)\b/i.test(t) },
   { cle: "correctif", libelle: "correctif", quoi: "un défaut est nommé, il faut le réparer — le résultat est un CODE QUI CHANGE",
+    motif: /\b(corriger|correction|correctif|réparer|reparer|fixer|bug|faux positif|faux vert|casse|cassé|casse[ér]|incohérence|incoherence|régression|regression)\b/i,
     sonde: (t) => /\b(corriger|correction|correctif|réparer|reparer|fixer|bug|faux positif|faux vert|casse|cassé|casse[ér]|incohérence|incoherence|régression|regression)\b/i.test(t) },
   { cle: "chantier", libelle: "chantier", quoi: "il faut faire exister quelque chose — le résultat est une CAPACITÉ NEUVE",
+    motif: /\b(construire|créer|creer|bâtir|batir|câbler|cabler|brancher|étendre|etendre|ajouter|implémenter|implementer|concevoir|refonte|renommage)\b/i,
     sonde: (t) => /\b(construire|créer|creer|bâtir|batir|câbler|cabler|brancher|étendre|etendre|ajouter|implémenter|implementer|concevoir|refonte|renommage)\b/i.test(t) },
 ];
 
@@ -1507,6 +1510,30 @@ export const NATURES_DE_TRAVAIL = [
 // d'abord un correctif, pas un audit — le défaut est déjà nommé, la question ne porte que sur le
 // comment. On teste donc correctif AVANT audit, et chantier en dernier parce que « ajouter » est le
 // verbe le plus banal des trois et raflerait des lignes qui appartiennent ailleurs.
+// LA PRÉCISION, MESURÉE À LA MAIN — et déclarée, parce qu'un tri auquel on se fie sans le savoir
+// est pire qu'un tri absent (2026-09-25, le soir de la construction de cet axe).
+//
+// CE QUE J'AI MAL FAIT, ET C'EST LA VRAIE LEÇON DE CETTE FONCTION : j'ai validé l'axe sur sa
+// COUVERTURE (19 % d'indéterminées au lieu de 70 %, donc « utilisable ») et **jamais sur sa
+// JUSTESSE**. En ouvrant la première rafale qu'il produisait — dix tâches dites « correctif » —
+// au plus deux l'étaient vraiment. Compter combien de lignes reçoivent une étiquette n'est pas
+// vérifier que les étiquettes sont bonnes.
+//
+// APRÈS RESTRICTION À L'INTITULÉ SEUL : 7 tâches proposées, **4 justes** vérifiées une par une.
+// Les trois ratés ne sont pas lexicaux et aucune liste de mots ne les corrigera — « doit s'ALARMER,
+// pas seulement mesurer » (le verbe voulu est dans la moitié affirmée, le verbe parasite dans la
+// moitié niée), une question adressée à l'utilisateur plutôt qu'au dépôt, un constat chiffré qui
+// appelle un correctif. Ce sont des lectures de SENS.
+//
+// LA RÈGLE DE NÉGATION DE `le-coordinateur.mjs` A ÉTÉ ESSAYÉE PUIS RETIRÉE : elle ne reconnaît que
+// « jamais / ni / aucun / sans », et y ajouter « pas » retournerait des cas justes (« il ne faut
+// pas oublier de vérifier » veut bien dire vérifier). Importer une règle qui ne corrige rien ici
+// aurait créé une dépendance entre deux outils pour un gain nul, en laissant croire à un correctif.
+export const PRECISION_NATURE = {
+  mesuree: "précision mesurée à la main : 4 sur 7 (intitulé seul, 2026-09-25)",
+  limite: "les erreurs restantes sont sémantiques, pas lexicales — aucune liste de mots ne les corrigera",
+};
+
 export const ORDRE_DES_NATURES = ["correctif", "audit", "chantier"];
 
 // DEUX LECTURES, DANS CET ORDRE, ET LA SECONDE A ÉTÉ AJOUTÉE PARCE QUE LA MESURE M'A CONTREDITE.
@@ -1593,16 +1620,38 @@ export function composerBlocs(rows = [], { seuilTheme = SEUIL_BLOC_THEME, seuilR
   // LES INDÉTERMINÉES RESTENT DEHORS, et c'est délibéré : les mettre en rafale donnerait un bloc
   // qui a l'air trié sans l'être, donc un bloc auquel on ferait confiance à tort. Elles sortent
   // dans leur propre liste, à lire avant de les ranger.
+  // SEULE LA NATURE LUE SUR L'INTITULÉ COMPOSE UNE RAFALE (corrigé le 2026-09-25, le soir même de
+  // sa construction, en traitant la première rafale qu'elle avait produite).
+  //
+  // CE QUI S'EST PASSÉ, ET C'EST PLUS GRAVE QUE LES DEUX AUTRES ERREURS DU JOUR. J'avais validé
+  // l'axe sur sa COUVERTURE — 19 % d'indéterminées au lieu de 70 %, donc « utilisable ». Je n'ai
+  // jamais mesuré sa JUSTESSE. En ouvrant la rafale correctif qu'il produisait : dix tâches, neuf
+  // classées sur le détail, et **au plus deux sont réellement des correctifs**. Les autres sont
+  // des chantiers (un process de sauvegarde, trois mots d'ordre, une convocation…).
+  //
+  // LA CAUSE : le détail d'une tâche OUVERTE, dans ce registre, est un long récit qui cite la
+  // demande de l'utilisateur, le constat qui l'a motivée et les leçons associées. Il contient donc
+  // presque toujours du vocabulaire de défaut — et l'ordre correctif → audit → chantier fait
+  // gagner « correctif » à tous les coups. L'ordre n'est pas en cause : la SOURCE l'est.
+  //
+  // LA RÈGLE QUI EN SORT, et elle vaut au-delà de cet axe : **mesurer combien de lignes reçoivent
+  // une étiquette n'est pas mesurer si les étiquettes sont justes.** Une couverture flatteuse sur
+  // une précision de 22 % donne un tri auquel on se fie — le pire des deux.
+  //
+  // TROIS ÉTATS, comme partout ici : nature SÛRE (lue sur l'intitulé, elle compose) · nature FAIBLE
+  // (lue sur le détail, elle s'affiche et ne compose pas) · pas de nature du tout. Les deux
+  // dernières sortent de la rafale, pour la même raison : on ne groupe que ce dont on répond.
   const parNature = new Map();
   for (const t of legeres) {
     const n = natureImpl(t.row);
     t.nature = n.nature;
     t.sourceNature = n.source;
-    if (n.nature === "indéterminée") continue;
+    if (n.nature === "indéterminée" || n.source !== "intitulé") continue;
     if (!parNature.has(n.nature)) parNature.set(n.nature, []);
     parNature.get(n.nature).push(t);
   }
   const natureInconnue = legeres.filter((t) => t.nature === "indéterminée");
+  const natureFaible = legeres.filter((t) => t.nature !== "indéterminée" && t.sourceNature === "détail");
   const rafales = [];
   for (const [nature, groupe] of [...parNature.entries()].sort((a, b) => b[1].length - a[1].length)) {
   for (let i = 0; i < groupe.length; i += tailleMaxRafale) {
@@ -1633,6 +1682,7 @@ export function composerBlocs(rows = [], { seuilTheme = SEUIL_BLOC_THEME, seuilR
     },
     isolees: isolees.map((t) => ({ numero: t.row.numero, theme: t.theme, palier: t.palier, sousSujet: t.row.sousSujet })),
     natureInconnue: natureInconnue.map((t) => ({ numero: t.row.numero, theme: t.theme, sousSujet: t.row.sousSujet })),
+    natureFaible: natureFaible.map((t) => ({ numero: t.row.numero, nature: t.nature, sousSujet: t.row.sousSujet })),
     couverture: ouvertes.length ? Math.round(((prisParUnTheme.size + dansUneRafale.size + attenteHorsTheme.length) / ouvertes.length) * 100) : 0,
     seuils: { seuilTheme, seuilRafale, tailleMaxRafale },
     horsPortee: "Ces blocs disent CE QUI VA ENSEMBLE, jamais DANS QUEL ORDRE traiter : l'ordre dépend de ce qui presse, et ça ne se lit sur aucune colonne.",
@@ -1654,6 +1704,7 @@ export function formatBlocsLines(b) {
   if (b.rafales.length) {
     l.push("", "— RAFALES PAR NATURE DE TRAVAIL (vider la file d'un coup, sans changer de geste) —");
     l.push("  Une rafale ne mélange plus correctifs, audits et chantiers : la rafale 1 du 2026-09-25 en mêlait trois et s'est étalée sur la soirée.");
+    l.push(`  ${PRECISION_NATURE.mesuree} — la nature est un INDICE de regroupement, jamais une garantie : relire les intitulés avant de traiter le bloc à la file.`);
     for (const r of b.rafales) {
       l.push(`  · ${r.cle} — ${r.taille} tâche(s) légères, ${r.themes} thème(s) différents${r.luesSurLeDetail ? ` · ${r.luesSurLeDetail} nature(s) lue(s) sur le DÉTAIL, à vérifier avant d'y aller` : ""}`);
       l.push(`      ${r.numeros.map((n) => "#" + n).join(" ")}`);

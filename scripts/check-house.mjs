@@ -12847,6 +12847,18 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     const avecFloue = ctd2.composerBlocs([...legeres(5, 'corriger'), { numero: 999, statusKey: 'ouverte', sujet: 'T / s', sousSujet: 'un nom de domaine', detail: 'rien de verbal' }],
       { seuilTheme: 99, seuilRafale: 4, tailleMaxRafale: 10, poidsImpl: () => ({ mesurable: true, palier: 'legere' }) });
     assert.deepEqual(avecFloue.natureInconnue.map((t) => t.numero), [999], 'an unreadable nature stays OUT of the rafales and is listed on its own — never padded into a block whose homogeneity would then be a lie');
+    // SEULE LA NATURE LUE SUR L'INTITULÉ COMPOSE (corrigé le soir même, en traitant la première
+    // rafale produite). J'avais validé l'axe sur sa COUVERTURE et jamais sur sa JUSTESSE : la
+    // rafale « correctif » de dix tâches en comptait au plus deux. Compter combien de lignes
+    // reçoivent une étiquette n'est pas vérifier que les étiquettes sont bonnes.
+    const surLeDetail = [{ numero: 1, statusKey: 'ouverte', sujet: 'T / s', sousSujet: 'un titre narratif sans verbe', detail: 'il faut corriger ceci' },
+                         { numero: 2, statusKey: 'ouverte', sujet: 'T / s', sousSujet: 'un autre titre muet', detail: 'et corriger cela' },
+                         { numero: 3, statusKey: 'ouverte', sujet: 'T / s', sousSujet: 'un troisième', detail: 'corriger encore' },
+                         { numero: 4, statusKey: 'ouverte', sujet: 'T / s', sousSujet: 'un quatrième', detail: 'corriger toujours' }];
+    const b2 = ctd2.composerBlocs(surLeDetail, { seuilTheme: 99, seuilRafale: 4, tailleMaxRafale: 10, poidsImpl: () => ({ mesurable: true, palier: 'legere' }) });
+    assert.equal(b2.rafales.length, 0, 'four tasks whose nature is only readable in the DETAIL make NO rafala: the detail of an open task quotes the request, the finding and the lessons, so defect vocabulary wins almost every time');
+    assert.equal(b2.natureFaible.length, 4, 'they are listed as weakly-typed instead — shown, never grouped, because one only batches what one can vouch for');
+    assert.match(ctd2.PRECISION_NATURE.mesuree, /4 sur 7/, 'and the measured precision travels with the axis, with its denominator: a sort you trust without knowing its accuracy is worse than no sort at all');
   }
   const duree = ctd2.dureeDeVieDesTaches([
     { numero: 10, horodatage: '2026-09-25T08:00Z', statusKey: 'terminee', detail: 'ouverture' },
