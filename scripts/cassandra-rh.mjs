@@ -2460,6 +2460,90 @@ export function domainesDeLOutil(source = "") {
 // tout — donc un index sans date rend « jamais consigné », qui n'est pas la même chose qu'un outil
 // qui n'aurait rien trouvé. La distinction est la même que partout ailleurs ici (leçon L5).
 
+// ════════════════════════════════════════════════════════════════════════════════════════════
+// LE SCORE CIBLE PAR MEMBRE (2026-09-25, tâche #147 — son idée, ouverte depuis sept rapports)
+// ════════════════════════════════════════════════════════════════════════════════════════════
+//
+// SON IDÉE, telle qu'elle dormait au registre : « fixer un score cible à chaque membre de l'équipe
+// pour qu'il comprenne ce qui définit un membre efficace ». Et ses trois arbitrages, tranchés en
+// fenêtre dédiée le jour où elle a été reprise :
+//
+//   1. LE SCORE PORTE SUR CE QUE L'OUTIL A TROUVÉ, jamais sur sa tenue. Sa raison est la journée
+//      elle-même : HUIT outils ont accusé à tort le 2026-09-25, et **aucun badge ne l'a vu** — un
+//      outil parfaitement documenté, testé, au badge impeccable, peut n'avoir jamais rien trouvé de
+//      vrai. Noter la tenue, c'est la métrique de vanité que ce projet combat depuis le début.
+//   2. LA CIBLE EST DÉRIVÉE DE LA MÉDIANE DE L'ÉQUIPE, jamais écrite à la main. Rien à tenir, rien
+//      à périmer, et un outil qui rejoint l'équipe déplace la cible sans qu'on y pense (Article 24).
+//      C'est aussi la méthode que ce projet emploie déjà pour ses autres seuils.
+//   3. LA MÉDIANE PLUTÔT QUE LA MOYENNE, et ce n'est pas un détail : un seul outil très prolifique
+//      tirerait une moyenne vers le haut et déclarerait tous les autres en dessous de la cible.
+//
+// CE QUE CE SCORE NE DIT PAS, et il le dit lui-même : un outil peut avoir trouvé peu parce que son
+// terrain est propre. « Sous la cible » est une QUESTION posée à la lecture, jamais un verdict de
+// paresse — et c'est exactement la nuance que le badge, lui, ne sait pas porter.
+export function scoreDesMembres(slugs = [], { lire, registres = null, trouvailleImpl = derniereTrouvailleDuRegistre } = {}) {
+  if (typeof lire !== "function") {
+    return { mesurable: false, pourquoi: "aucun lecteur de registre fourni : sans ouvrir les registres, « qu'a trouvé cet outil ? » n'a pas de réponse, et un score de zéro partout serait une accusation, jamais une mesure" };
+  }
+  if (!slugs.length) return { mesurable: false, pourquoi: "aucun membre à noter : rien à mesurer" };
+  const membres = [];
+  for (const slug of slugs) {
+    const t = trouvailleImpl(slug, { lire, registres });
+    membres.push({
+      slug,
+      // TROIS ÉTATS, jamais deux : consigné / registre atteignable mais vide / registre
+      // inatteignable. Le troisième n'est PAS un zéro — c'est une absence de mesure, et les
+      // confondre transformerait un outil qu'on n'a pas su lire en outil paresseux.
+      mesurable: t.mesurable,
+      passages: t.mesurable ? (t.passages ?? 0) : null,
+      derniere: t.mesurable ? t.date ?? null : null,
+      pourquoi: t.mesurable ? null : t.pourquoi,
+    });
+  }
+  const notes = membres.filter((m) => m.mesurable).map((m) => m.passages).sort((a, b) => a - b);
+  if (!notes.length) {
+    return { mesurable: false, membres, pourquoi: `aucun des ${slugs.length} membres n'a de registre atteignable : la cible se dériverait sur zéro donnée, ce qui ressemblerait à une cible` };
+  }
+  const milieu = Math.floor(notes.length / 2);
+  const cible = notes.length % 2 ? notes[milieu] : Math.round((notes[milieu - 1] + notes[milieu]) / 2);
+  const notés = membres.filter((m) => m.mesurable);
+  return {
+    mesurable: true,
+    cible,
+    total: slugs.length,
+    notes: notés.length,
+    sansRegistre: membres.filter((m) => !m.mesurable),
+    auDessus: notés.filter((m) => m.passages > cible).sort((a, b) => b.passages - a.passages),
+    aLaCible: notés.filter((m) => m.passages === cible),
+    sousLaCible: notés.filter((m) => m.passages < cible).sort((a, b) => a.passages - b.passages),
+    // LE SIGNAL SANS LEQUEL CE SCORE SE LIRAIT DE TRAVERS (trouvé au premier vrai passage) :
+    // il a rendu « 0 sous la cible », ce qui se lit « toute l'équipe est au niveau ». En réalité la
+    // cible vaut 1 parce que 51 membres sur 79 n'ont pas de registre atteignable — la médiane est
+    // calculée sur un tiers de l'équipe, et une cible de 1 ne discrimine rien.
+    // Deux causes derrière un même zéro, encore : « personne n'est en retard » et « la mesure est
+    // trop grossière pour distinguer qui l'est ». Nommer les deux, jamais choisir.
+    discriminant: cible > 1 && notés.length > slugs.length / 2,
+    pourquoiPeuDiscriminant: cible > 1 && notés.length > slugs.length / 2 ? null
+      : `cible à ${cible} calculée sur ${notés.length} membre(s) seulement sur ${slugs.length} : ce score ne discrimine pas encore. « 0 sous la cible » veut dire ici « la mesure est trop grossière », jamais « toute l'équipe est au niveau ». Le geste qui le débloque n'est pas de durcir la cible, c'est de donner un registre atteignable aux ${slugs.length - notés.length} membres qui n'en ont pas.`,
+    horsPortee: "La cible est la MÉDIANE des passages consignés, jamais un objectif posé à la main — un membre de plus la déplace tout seul. Et « sous la cible » est une QUESTION : un outil peut avoir trouvé peu parce que son terrain est propre. Ce score dit ce qu'un outil a TROUVÉ, jamais s'il est bien tenu — le badge s'en charge, et les deux ne se remplacent pas.",
+  };
+}
+
+export function formatScoreLines(r) {
+  if (!r?.mesurable) return [`SCORE DES MEMBRES — 🚨 PAS MESURÉ : ${r?.pourquoi ?? "raison inconnue"}`];
+  const l = [`Score des membres — ce que chacun a TROUVÉ, pas ce qu'il vaut sur le papier.`];
+  l.push(`  ${r.notes} membre(s) notés sur ${r.total} · CIBLE = ${r.cible} passage(s) consigné(s) (médiane de l'équipe).`);
+  if (r.sansRegistre.length) l.push(`  ❓ ${r.sansRegistre.length} sans registre atteignable — PAS un zéro, une absence de mesure : ${r.sansRegistre.slice(0, 6).map((m) => m.slug).join(", ")}${r.sansRegistre.length > 6 ? "…" : ""}`);
+  l.push("");
+  l.push(`  AU-DESSUS (${r.auDessus.length}) : ${r.auDessus.slice(0, 8).map((m) => `${m.slug} ${m.passages}`).join(" · ") || "aucun"}`);
+  l.push(`  À LA CIBLE (${r.aLaCible.length}) : ${r.aLaCible.slice(0, 8).map((m) => m.slug).join(" · ") || "aucun"}`);
+  l.push(`  SOUS LA CIBLE (${r.sousLaCible.length}) : ${r.sousLaCible.slice(0, 8).map((m) => `${m.slug} ${m.passages}`).join(" · ") || "aucun"}`);
+  l.push("");
+  if (!r.discriminant) l.push(`  ⚠️ ${r.pourquoiPeuDiscriminant}`);
+  l.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  return l;
+}
+
 export function derniereTrouvailleDuRegistre(slug, { lire, registres = null } = {}) {
   if (typeof lire !== "function") {
     return { mesurable: false, pourquoi: "aucun lecteur fourni — un registre qu'on n'ouvre pas ne dit rien, et répondre « jamais rien trouvé » à sa place serait l'accusation que cette fonction existe pour empêcher" };
@@ -3495,6 +3579,27 @@ async function main() {
   }
   // `cadrage` (#743) — LE SIGNAL DE FIN DU CHANTIER DE CLASSIFICATION, mesuré plutôt que ressenti.
   // Sous-commande à part de `iceberg` : celle-ci ne classe personne, elle dit COMBIEN il reste.
+  // `score` (#147) — son idée de 2026-09-19, reprise et tranchée le 2026-09-25 : ce que chaque
+  // membre a TROUVÉ, contre une cible dérivée de la médiane. Sous-commande à part de `fiche` :
+  // celle-ci dit ce qu'un outil EST, celle-là ce qu'il a PRODUIT — et les deux réponses ne se
+  // lisent pas au même moment ni dans le même état d'esprit.
+  if (sub === "score") {
+    console.log(CASSANDRA_PERSONA);
+    const slugs = readdirSync(join(ROOT, "scripts")).filter((f) => f.endsWith(".mjs")).map((f) => f.replace(/\.mjs$/, "")).sort();
+    const r = scoreDesMembres(slugs, {
+      lire: (c) => { try { return readFileSync(join(ROOT, c), "utf8"); } catch { return null; } },
+      registres: DOC_REPORT_REGISTRIES,
+    });
+    console.log("");
+    for (const l of formatScoreLines(r)) console.log(l);
+    const constats = [];
+    if (r.mesurable && !r.discriminant) constats.push({ etat: "retenu", constat: r.pourquoiPeuDiscriminant, tache: `donner un registre atteignable aux ${r.sansRegistre.length} membres qui n'en ont pas — c'est ce qui débloque la mesure, jamais durcir la cible` });
+    if (r.mesurable && r.sousLaCible.length) constats.push({ etat: "a-trancher", constat: `${r.sousLaCible.length} membre(s) sous la cible de ${r.cible}`, pourquoi: "un outil peut avoir trouvé peu parce que son terrain est propre — c'est une question de lecture, jamais un verdict de paresse (Article 16)" });
+    const plan = buildPlanDaction(constats, { toolSlug: "cassandra-rh" });
+    console.log(`\n${PLAN_ACTION_TITRE}`);
+    console.log(plan.lignes.join("\n"));
+    return;
+  }
   if (sub === "cadrage") {
     console.log(CASSANDRA_PERSONA);
     const fichiers = readdirSync(join(ROOT, "scripts")).filter((f) => f.endsWith(".mjs")).sort();

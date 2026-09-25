@@ -3379,6 +3379,24 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(csf.COLONNES_MAX,critFmt.length,'the upper bound is the declared format itself, so a tenth field added tomorrow needs no edit here');
   assert.equal(csf.COLONNES_MIN,critFmt.length-critFmt.filter((f)=>f.depuis).length,'and the lower bound is the HISTORICAL format: every field minus those declaring they arrived later. Deriving it from the count of MANDATORY fields was the first attempt and it was wrong — an optional field still occupies its column, empty, so that version accepted a genuinely broken 7-column row');
   assert.ok(csf.COLONNES_MIN<csf.COLONNES_MAX,'the two bounds must differ while a field carries a threshold, otherwise the older rows are accused of the newer format');
+  // #147 — LE SCORE CIBLE PAR MEMBRE, son idée ouverte depuis sept rapports, tranchée en fenêtre
+  // dédiée : le score porte sur ce que l'outil a TROUVÉ, jamais sur sa tenue, et la cible est
+  // DÉRIVÉE de la médiane de l'équipe. La raison du premier choix est la journée elle-même : huit
+  // outils ont accusé à tort le 2026-09-25 et aucun badge ne l'a vu.
+  const crh3=await import('../scripts/cassandra-rh.mjs');
+  const sansLire=crh3.scoreDesMembres(['a']);
+  assert.equal(sansLire.mesurable,false,'without a registry reader it refuses: scoring everyone at zero would be an accusation, never a measurement');
+  const faux2=(slug,{passages,ok=true})=>ok?{mesurable:true,passages,date:'2026-09-25'}:{mesurable:false,pourquoi:'pas de registre'};
+  const sc=crh3.scoreDesMembres(['a','b','c','d','e'],{lire:()=>'x',trouvailleImpl:(s2)=>faux2(s2,{passages:{a:10,b:5,c:5,d:1,e:0}[s2]})});
+  assert.equal(sc.cible,5,'the target is the MEDIAN, never the mean — one very prolific tool would drag a mean upwards and declare everyone else below target');
+  assert.equal(sc.auDessus.length,1,'and the three buckets split on that median');
+  assert.equal(sc.sousLaCible.length,2,'including the ones below, which the report frames as a QUESTION rather than a verdict of laziness');
+  const aucunRegistre=crh3.scoreDesMembres(['a','b'],{lire:()=>'x',trouvailleImpl:()=>faux2('a',{passages:0,ok:false})});
+  assert.equal(aucunRegistre.mesurable,false,'with no reachable registry at all the target would be derived from zero data, which would still look like a target — so it refuses');
+  const peuDiscriminant=crh3.scoreDesMembres(['a','b','c'],{lire:()=>'x',trouvailleImpl:(s2)=>s2==='a'?faux2(s2,{passages:1}):faux2(s2,{passages:0,ok:false})});
+  assert.equal(peuDiscriminant.discriminant,false,'and the first real run exposed the signal that matters most here: it returned "0 below target" while the target was 1, computed on a third of the team. Two causes behind one zero again — "nobody is behind" and "the measure is too coarse to tell" — so both are named');
+  assert.match(crh3.formatScoreLines(peuDiscriminant).join(' '),/trop grossière/,'the report says which of the two applies rather than letting the reader assume the flattering one');
+
   // #877 — LE SECOND DÉTECTEUR, né de la limite du premier vérifiée en vrai. #179 demandait une
   // fiche par membre chez CASSANDRA : la commande existait, elle rendait quatorze champs, et la
   // tâche était toujours ouverte. Aucune tâche n'ayant écrit « CLÔTURE DE #179 », #876 ne pouvait
