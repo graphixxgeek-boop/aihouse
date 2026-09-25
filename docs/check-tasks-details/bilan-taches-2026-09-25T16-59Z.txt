@@ -1,0 +1,145 @@
+============================================================================================
+BILAN DES TÂCHES — d'où on part, où on en est, comment le reste s'organise
+Produit par : scripts/check-tasks-details.mjs bilan · le 2026-09-25T16:59Z (heure LUE, source système)
+============================================================================================
+
+AVERTISSEMENT : cet outil mesure ce que le SUIVI dit du projet, jamais ce qui a réellement
+été fait. Une tâche close sans que sa ligne soit repassée en « Terminé » compte ici comme
+ouverte — et c'est un vrai cas, nommé plus bas.
+
+--------------------------------------------------------------------------------------------
+1. LA CONFRONTATION DÉPART ↔ AUJOURD'HUI
+--------------------------------------------------------------------------------------------
+
+  ⚠️ L'ÉCART LE PLUS IMPORTANT DE CE RAPPORT, et il porte sur le chiffre de départ lui-même :
+  « les 117 de départ » n'ont JAMAIS été 117 tâches. #117 est le NUMÉRO de la
+  première tâche tracée — le suivi a démarré en cours de projet, pas à la tâche n°1.
+  ⚠️ COÏNCIDENCE À NE PAS LIRE DE TRAVERS : le premier numéro tracé (#117) et le nombre de tâches ouvertes aujourd'hui (117) sont le MÊME chiffre. Ce n'est pas « on n'a pas avancé » : ce sont deux grandeurs sans rapport.
+  50 ligne(s) sur 803 ne portent pas de numéro exploitable — elles comptent dans les totaux mais échappent au suivi par numéro.
+
+  Premier rapport archivé : 2026-09-20T12:39:43.522Z
+      il annonçait alors ......................... 126 tâche(s) au total
+  Dernier rapport archivé : 2026-09-25T16:32:25.912Z
+      il annonçait ............................... 800 tâche(s) au total
+  Passages archivés confrontés ................... 56
+
+  AUJOURD'HUI, lu sur le suivi réel :
+      Total de lignes suivies .................... 803
+      Numéros couverts ........................... #117 → #870
+      TERMINÉES .................................. 684   (85 % du total)
+      OUVERTES ................................... 117
+      détail des statuts ......................... terminee=684 · enCours=4 · ouverte=110 · autre=3 · ecartee=2
+
+  TÂCHES GÉNÉRÉES depuis le premier rapport archivé ... +677
+      (126 alors → 803 maintenant)
+      Un chantier en génère toujours : une trouvaille non suivie d'une tâche serait perdue
+      (Article 28). Le nombre qui monte n'est donc pas un retard — c'est la chaîne qui tient.
+
+--------------------------------------------------------------------------------------------
+1bis. LA ROTATION — pourquoi le compteur ne baisse pas alors que le travail avance
+--------------------------------------------------------------------------------------------
+
+  Référence : docs/rapports-de-nuit/plan-depart-2026-09-25.txt (117 tâches, figé au départ)
+
+      Encore ouvertes aujourd'hui ................ 90
+      CLOSES depuis .............................. 27
+      NÉES depuis ................................ 27
+      Ouvertes aujourd'hui ....................... 117
+      Renouvellement de la file .................. 23 %
+
+  ROTATION À L'UNITÉ PRÈS : 117 au départ, 117 aujourd'hui — le même chiffre, mais 27 ont été closes et 27 sont nées. Un total inchangé n'est PAS un travail immobile.
+
+--------------------------------------------------------------------------------------------
+2. COMMENT LES 117 TÂCHES OUVERTES S'ORGANISENT (blocs par THÈME / POIDS / ATTENTE)
+--------------------------------------------------------------------------------------------
+
+  117 tâche(s) ouverte(s) · 10 bloc(s) par THÈME · 5 rafale(s) par POIDS · 16 qui ATTENDENT une décision · 0 isolée(s) — couverture 100 %.
+  Seuils : un thème fait bloc à partir de 3 tâches · une rafale à partir de 4, plafonnée à 10.
+  
+  — BLOCS PAR THÈME (à traiter à la file, une seule remise en contexte) —
+    · Process — 12 tâche(s)
+        #436 #567 #603 #701 #706 #723 #724 #732 #769 #770 #773 #846
+    · Ronde — 10 tâche(s)
+        #490 #491 #492 #493 #566 #574 #721 #726 #841 #842
+    · Outillage — 7 tâche(s)
+        #390 #571 #575 #580 #612 #705 #746
+    · Charte — 7 tâche(s)
+        #624 #659 #760 #765 #766 #767 #790
+    · Organisation — 6 tâche(s)
+        #636 #656 #657 #707 #710 #737
+    · Agence — 5 tâche(s)
+        #601 #745 #748 #793 #803
+    · Suivi — 4 tâche(s)
+        #699 #708 #735 #787
+    · Nommage — 4 tâche(s)
+        #733 #740 #747 #768
+    · Documentation — 3 tâche(s)
+        #623 #629 #655
+    · Données — 3 tâche(s)
+        #795 #813 #814
+  
+  — RAFALES PAR POIDS (vider la file d'un coup) —
+    · rafale 1 — 10 tâche(s) légères, 7 thème(s) différents
+        #147 #179 #439 #445 #451 #510 #514 #558 #572 #690
+    · rafale 2 — 10 tâche(s) légères, 8 thème(s) différents
+        #573 #576 #577 #604 #653 #654 #668 #677 #679 #681
+    · rafale 3 — 10 tâche(s) légères, 9 thème(s) différents
+        #687 #695 #696 #700 #703 #704 #709 #711 #713 #714
+    · rafale 4 — 10 tâche(s) légères, 8 thème(s) différents
+        #715 #717 #725 #728 #729 #734 #749 #750 #757 #771
+    · rafale 5 — 7 tâche(s) légères, 7 thème(s) différents
+        #775 #777 #778 #796 #798 #807 #810
+  
+  — 16 TÂCHE(S) QUI L'ATTENDENT, jamais mises en rafale : une rafale qui bute sur une décision n'est plus une rafale —
+    (7 sont dans un bloc par thème, ce qui reste légitime : on prépare le sujet ensemble, on ne tranche pas à sa place.)
+    · #800 Version de l'Agence — Découle de #799 — la tâche #730 nommait trois candidats et le choix lui revient 
+    · #801 Badge — Constaté en lisant le rappel post-commit de #799 : les badges passent de « Membr
+    · #805 File — Découle de #804 — la mesure existe désormais, le JUGEMENT ne lui appartient pas 
+    · #819 Filet — Découle de #818. **tool-brain classe check-house TUYAUTERIE score 9** — « lancé 
+    · #823 Usage — Découle de #822 (Article 3 : corriger la cause, jamais le symptôme). Le signal p
+    · #830 Idées — CLÔTURE du constat DEEP-READER 3 (TaskList #228). Sa demande du 2026-09-21 (#511
+    · #845 File — CLÔTURE du constat TaskList #209 (« les 5 tâches en stagnation : les présenter p
+    · #853 Badge — Découle de la lecture du rappel post-commit après #852, comme l'Article 26 l'exi
+    · #861 Refonte graphique — Signalé par le garde-fou de fraîcheur des fichiers de chantier pendant le travai
+  
+  HORS PORTÉE : Ces blocs disent CE QUI VA ENSEMBLE, jamais DANS QUEL ORDRE traiter : l'ordre dépend de ce qui presse, et ça ne se lit sur aucune colonne.
+
+--------------------------------------------------------------------------------------------
+3. LE FORMAT DES TÂCHES — les champs obligatoires sont-ils tenus ?
+--------------------------------------------------------------------------------------------
+
+  Format de référence : 9 champs — numero, horodatage, motCle, sujet, sousSujet, criticite, detail, pourQui, statut
+  Mot-clé — n°undefined : « xp » est trop court pour rappeler quoi que ce soit dans six semaines
+  Mot-clé — 2 tâches ouvertes portent « renommage » (580, 775) — citer ce mot ne dira plus laquelle
+  Mot-clé — 3 tâches ouvertes portent « fraiches » (490, 814, 813) — citer ce mot ne dira plus laquelle
+  Mot-clé — 2 tâches ouvertes portent « pas-mesure » (654, 810) — citer ce mot ne dira plus laquelle
+  Mot-clé — 4 tâches ouvertes portent « nommage » (706, 740, 747, 768) — citer ce mot ne dira plus laquelle
+  Mot-clé — 2 tâches ouvertes portent « iceberg » (707, 737) — citer ce mot ne dira plus laquelle
+  Mot-clé — 2 tâches ouvertes portent « commande-en-masse » (723, 724) — citer ce mot ne dira plus laquelle
+  Mot-clé — 2 tâches ouvertes portent « qualite-globale » (729, 803) — citer ce mot ne dira plus laquelle
+  Mot-clé — 2 tâches ouvertes portent « fragmentation » (735, 805) — citer ce mot ne dira plus laquelle
+  Mot-clé — 3 tâches ouvertes portent « agence » (745, 748, 793) — citer ce mot ne dira plus laquelle
+  Mot-clé — 4 tâches ouvertes portent « classification » (750, 757, 801, 807) — citer ce mot ne dira plus laquelle
+  Mot-clé — 5 tâches ouvertes portent « charte » (760, 765, 766, 767, 790) — citer ce mot ne dira plus laquelle
+  Mot-clé — 3 tâches ouvertes portent « process » (769, 770, 773) — citer ce mot ne dira plus laquelle
+  Mot-clé — 2 tâches ouvertes portent « outils » (777, 778) — citer ce mot ne dira plus laquelle
+
+  ⚠️ CE QUE CE FORMAT NE PORTE PAS ENCORE, et c'est une demande explicite du 2026-09-25 :
+  l'indication d'OUVERTURE (« respecter les process, utiliser les outils ») et l'indication
+  de CLÔTURE (« harmoniser, fiabiliser, optimiser ») ne sont dans AUCUN des champs ci-dessus.
+  Mesuré : OPTIMISER et FIABILISER existent déjà comme régime de fond dans
+  docs/regles-de-travail.md ; HARMONISER n'y est pas, et RIEN n'existe au niveau de la TÂCHE.
+  → la façon exacte de le porter est une décision, pas une évidence : elle est posée en
+    question de calibrage plutôt que tranchée ici.
+
+============================================================================================
+Plan d'action
+============================================================================================
+  → RETENU · COÏNCIDENCE À NE PAS LIRE DE TRAVERS : le premier numéro tracé (#117) et le nombre de tâches ouvertes aujourd'hui (117) sont le MÊME chiffre. Ce n'est pas « on n'a pas avancé » : ce sont deux grandeurs sans rapport. — tâche [RECOMMANDEE] : retenir la distinction numéro/compte — elle a déjà produit une lecture fausse
+  → RETENU · 117 tâche(s) ouverte(s) sur 803, dont 16 qui attendent une décision de l'utilisateur — tâche [RECOMMANDEE] : traiter les blocs dans l'ordre qu'il fixe, et lui présenter les tâches en attente groupées plutôt qu'une par une
+  ? À TRANCHER · l'indication d'ouverture et l'indication de clôture ne sont portées par aucun champ du format de tâche — trois façons de la porter existent (un champ, un rituel vérifié, une case cochée) et elles n'ont ni le même coût ni la même valeur de preuve — le choix lui revient (Article 16)
+
+============================================================================================
+HORS PORTÉE : ce bilan compte et regroupe. Il ne dit jamais quelle tâche PRESSE — ça ne se lit
+sur aucune colonne, et c'est la seule chose que la mécanique ne sait pas faire à sa place.
+============================================================================================

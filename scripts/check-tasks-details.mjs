@@ -1164,6 +1164,72 @@ export function confronterDebutEtFin({ archives, figures, rows = [] } = {}) {
   };
 }
 
+// LA ROTATION DE LA FILE (2026-09-25, tâche #871 — sa question, et elle était la bonne : « hier
+// soir tu m'annonçais 117 taches, aujourd'hui tu me dis 117 taches ouvertes, comme si rien n'a été
+// fait alors que tu bosses depuis des heures et je le vois [...] on retrouve le meme chiffre parce
+// que c'est une rotation ? »)
+//
+// OUI, C'EST UNE ROTATION, ET ELLE SE MESURE AU LIEU DE SE SUPPOSER. Un compte d'ouvertes ne dit
+// rien du travail fait : 117 hier et 117 aujourd'hui peuvent signifier « rien n'a bougé » comme
+// « vingt-sept closes, vingt-sept nées ». Les deux s'affichent pareil, et c'est précisément le
+// motif que ce projet traque partout — un chiffre identique, deux réalités opposées.
+//
+// CE QUI MANQUAIT POUR TRANCHER : personne ne comparait la file À ELLE-MÊME, tâche par tâche. Le
+// total est un mauvais témoin ; l'IDENTITÉ des tâches est le bon. Cette fonction confronte donc
+// une liste de numéros de référence (le plan de départ d'une nuit, un rapport archivé) à la file
+// d'aujourd'hui, et rend les trois populations que le total confondait.
+export function mesurerRotation(rows = [], numerosDeReference = []) {
+  const reference = [...new Set(numerosDeReference.filter(Number.isFinite))];
+  if (!reference.length) {
+    return { mesurable: false, pourquoi: "aucun numéro de référence fourni : sans point de comparaison il n'y a pas de rotation à mesurer, et un taux calculé sur rien ressemblerait à un taux" };
+  }
+  const parNum = new Map(rows.filter((r) => Number.isFinite(r.numero)).map((r) => [r.numero, r]));
+  const ouvertes = new Set(rows.filter((r) => OPEN_KEYS.has(r.statusKey) && Number.isFinite(r.numero)).map((r) => r.numero));
+  const encoreOuvertes = reference.filter((n) => ouvertes.has(n));
+  const closesDepuis = reference.filter((n) => parNum.has(n) && !ouvertes.has(n));
+  // Un numéro de la référence qui n'existe plus du tout n'est PAS une clôture : c'est une ligne
+  // disparue, et les confondre transformerait une perte de suivi en réussite.
+  const introuvables = reference.filter((n) => !parNum.has(n));
+  const neesDepuis = [...ouvertes].filter((n) => !reference.includes(n));
+  return {
+    mesurable: true,
+    reference: reference.length,
+    encoreOuvertes: encoreOuvertes.length,
+    closesDepuis: closesDepuis.length,
+    introuvables,
+    neesDepuis: neesDepuis.length,
+    ouvertesAujourdhui: ouvertes.size,
+    // Le taux porte son dénominateur, comme partout ici.
+    renouvellement: ouvertes.size ? Math.round((neesDepuis.length / ouvertes.size) * 100) : 0,
+    // LE VERDICT QUI RÉPOND À SA QUESTION, et il ne se devine pas du total.
+    verdict: reference.length === ouvertes.size
+      ? `ROTATION À L'UNITÉ PRÈS : ${reference.length} au départ, ${ouvertes.size} aujourd'hui — le même chiffre, mais ${closesDepuis.length} ont été closes et ${neesDepuis.length} sont nées. Un total inchangé n'est PAS un travail immobile.`
+      : `${closesDepuis.length} close(s) sur ${reference.length} de référence · ${neesDepuis.length} née(s) depuis · la file passe de ${reference.length} à ${ouvertes.size}.`,
+  };
+}
+
+// Le plan de départ d'une nuit EST une liste de numéros de référence, déjà écrite et déjà figée
+// pour cet usage exact (« ce fichier est figé au moment du départ. Le rapport de nuit se compare
+// À LUI, jamais à ce dont l'agent se souvient »). On la LIT plutôt que de la recopier.
+export const MOTIF_NUMERO_DE_PLAN = /^#(\d+) \|/gm;
+
+export function lireNumerosDuPlan(chemin, readFile = readFileSync) {
+  let texte;
+  try { texte = readFile(chemin, "utf8"); }
+  catch { return { mesurable: false, pourquoi: `le plan de départ (${chemin}) n'a pas pu être lu — rien n'a été mesuré` }; }
+  const numeros = [...String(texte).matchAll(MOTIF_NUMERO_DE_PLAN)].map((m) => Number(m[1]));
+  if (!numeros.length) return { mesurable: false, pourquoi: `le plan de départ ne porte aucune ligne « #NNN | » — il existe mais ne liste aucune tâche, ce qui n'est pas la même chose qu'un plan absent` };
+  return { mesurable: true, numeros, chemin };
+}
+
+// Le plan de départ le PLUS RÉCENT, trouvé plutôt que nommé en dur (Article 24).
+export function dernierPlanDeDepart({ dossier = join(ROOT, "docs/rapports-de-nuit"), readDir = readdirSync } = {}) {
+  let fichiers;
+  try { fichiers = readDir(dossier).filter((f) => /^plan-depart-.*\.txt$/.test(f)).sort(); }
+  catch { return null; }
+  return fichiers.length ? join(dossier, fichiers[fichiers.length - 1]) : null;
+}
+
 // ════════════════════════════════════════════════════════════════════════════════════════════
 // LES BLOCS DE TRAVAIL (2026-09-25, tâche #869 — demande explicite : « des taches s'accumulent,
 // à un moment donné, l'outil est capable de les regrouper sous un meme theme [...] constitue aussi
@@ -1645,6 +1711,29 @@ function bilanCli() {
     L.push(`      (${conf.archive.totalAlors} alors → ${conf.maintenant.total} maintenant)`);
     L.push("      Un chantier en génère toujours : une trouvaille non suivie d'une tâche serait perdue");
     L.push("      (Article 28). Le nombre qui monte n'est donc pas un retard — c'est la chaîne qui tient.");
+  }
+  L.push("");
+
+  const cheminPlan = dernierPlanDeDepart();
+  const numsPlan = cheminPlan ? lireNumerosDuPlan(cheminPlan) : { mesurable: false, pourquoi: "aucun plan de départ trouvé dans docs/rapports-de-nuit/" };
+  const rot = numsPlan.mesurable ? mesurerRotation(rows, numsPlan.numeros) : { mesurable: false, pourquoi: numsPlan.pourquoi };
+  L.push("-".repeat(92));
+  L.push("1bis. LA ROTATION — pourquoi le compteur ne baisse pas alors que le travail avance");
+  L.push("-".repeat(92));
+  L.push("");
+  if (!rot.mesurable) {
+    L.push(`  🚨 PAS MESURÉ — ${rot.pourquoi}`);
+  } else {
+    L.push(`  Référence : ${cheminPlan.replace(ROOT, "")} (${rot.reference} tâches, figé au départ)`);
+    L.push("");
+    L.push(`      Encore ouvertes aujourd'hui ................ ${rot.encoreOuvertes}`);
+    L.push(`      CLOSES depuis .............................. ${rot.closesDepuis}`);
+    L.push(`      NÉES depuis ................................ ${rot.neesDepuis}`);
+    L.push(`      Ouvertes aujourd'hui ....................... ${rot.ouvertesAujourdhui}`);
+    L.push(`      Renouvellement de la file .................. ${rot.renouvellement} %`);
+    if (rot.introuvables.length) L.push(`      ⚠️ ${rot.introuvables.length} numéro(s) de la référence ONT DISPARU du suivi : ${rot.introuvables.map((n) => "#" + n).join(" ")} — une ligne perdue n'est pas une clôture`);
+    L.push("");
+    L.push(`  ${rot.verdict}`);
   }
   L.push("");
 
