@@ -293,3 +293,20 @@ LES INTERDITS RESPECTÉS (vérifiés à la clôture)
   Et mon module a produit un FAUX ROUGE a son premier passage, dans l'outil ecrit contre les faux
   verts : j'avais additionne deux populations collectees separement. Mesure, corrige, garde en
   commentaire. Un huitieme Gardien ne pourra plus naitre sans declarer ce qu'il regarde [FAIT]
+
+#859 : la reprise des notes butait encore sur les ACCENTS — « ceremonie » rendait 0 la ou
+  « cérémonie » rend 17. Troisieme et derniere moitie de la meme correction (#851 : les noms de
+  fichiers, puis les separateurs). Un sujet se tape vite et sans accent ; le depot ecrit un
+  francais correct [FAIT]
+
+#860 : CLOTURE DE #801, et la mesure a contredit mes DEUX hypotheses. Les vingt ceremonies
+  portaient le meme horodatage a la milliseconde et le meme diff : ce n'etait ni une oscillation
+  ni du bruit, c'etait la trace FIDELE d'un seul changement VOULU ce matin (#754, la famille
+  retiree du badge) qui touchait vingt membres. Ta regle etait donc exactement la bonne, et le
+  manque n'etait pas ou je le croyais : quand UNE cause change N membres, il faut annoncer LA
+  CAUSE une fois. 20 en attente -> 7 blocs, 13 evites, aucun membre perdu [FAIT]
+
+#861 : ton idee SQUID GAME (#734) vivait au suivi et NULLE PART dans le document de son chantier.
+  Je l'y ai ecrite — son existence, tes mots exacts, et « NON TRANCHEE ». Rien d'autre : pas une
+  palette, pas un decor, pas une evaluation. La refonte graphique reste ta limite, et ta question
+  finissait par « qu'en penses-tu ? » [A TOI]

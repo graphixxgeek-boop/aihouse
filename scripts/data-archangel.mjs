@@ -431,10 +431,22 @@ export function reprendreLesNotes(sujet, { root = ROOT, lieux = LIEUX_DE_NOTES, 
   // de deviner la convention du fichier qu'il cherche — l'inverse d'une reprise de notes.
   // Ce n'est PAS une recherche floue : chaque mot reste exigé, dans l'ordre, entier. Seul le
   // séparateur devient libre.
+  // ET LES ACCENTS COMPTENT AUSSI (2026-09-25, tâche #859) — la troisième et dernière moitié de la
+  // même correction, trouvée exactement comme les deux premières : en s'en servant pour de vrai.
+  // « ceremonie » rendait ZÉRO là où « cérémonie » rend 16 fichiers. Un sujet se tape vite, souvent
+  // sans accent ; le dépôt, lui, écrit un français correct. Exiger l'accent revenait à faire deviner
+  // l'orthographe exacte du texte qu'on cherche — et un zéro obtenu comme ça se lit « on part de
+  // zéro » alors que seize fichiers en parlent.
+  //
+  // La comparaison se fait donc SANS accents des DEUX côtés : le motif est dépouillé, et chaque
+  // ligne l'est avant le test. Ce n'est toujours pas une recherche floue — chaque mot reste exigé,
+  // entier, dans l'ordre ; seuls le séparateur et l'accent deviennent libres.
+  const sansAccents = (t) => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const re = new RegExp(
-    motif.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "[\\s_-]+"),
+    sansAccents(motif).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "[\\s_-]+"),
     "i",
   );
+  const teste = (texte) => re.test(sansAccents(texte));
   const lecteur = lire ?? ((f) => readFileSync(join(root, f), "utf8"));
   const par = {};
   let fichiersVus = 0;
@@ -449,7 +461,7 @@ export function reprendreLesNotes(sujet, { root = ROOT, lieux = LIEUX_DE_NOTES, 
       try { src = lecteur(f); } catch { illisibles++; continue; }
       const lignes = String(src).split("\n");
       const touches = [];
-      for (let i = 0; i < lignes.length; i++) if (re.test(lignes[i])) touches.push({ ligne: i + 1, extrait: lignes[i].trim().slice(0, EXTRAIT_MAX) });
+      for (let i = 0; i < lignes.length; i++) if (teste(lignes[i])) touches.push({ ligne: i + 1, extrait: lignes[i].trim().slice(0, EXTRAIT_MAX) });
       // LE NOM DU FICHIER COMPTE AUSSI, et l'oublier a coûté pour de vrai (2026-09-25, Ronde) :
       // une recherche sur « gardien donnees absentes » a rendu ZÉRO alors que
       // `docs/plans/audit-gardiens-donnees-absentes-2026-09-23.md` existait et répondait
@@ -461,7 +473,7 @@ export function reprendreLesNotes(sujet, { root = ROOT, lieux = LIEUX_DE_NOTES, 
       // NOM (indice, plus faible mais jamais rien), ou absent. Fondre le deuxième dans le premier
       // gonflerait les occurrences d'un fichier qui ne dit peut-être rien ; le fondre dans le
       // troisième est l'erreur qu'on vient de payer.
-      const parLeNom = re.test(f);
+      const parLeNom = teste(f);
       if (touches.length) par[l.cle].push({ fichier: f, occurrences: touches.length, premier: touches[0], parLeNom });
       else if (parLeNom) par[l.cle].push({ fichier: f, occurrences: 0, premier: null, parLeNom: true, nomSeulement: true });
     }

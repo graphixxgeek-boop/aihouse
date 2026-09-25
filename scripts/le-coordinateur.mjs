@@ -1111,13 +1111,86 @@ export function pendingCeremonies(historyPath = BADGE_CEREMONY_HISTORY_PATH) {
   return Object.entries(h.aRelayer ?? {}).map(([slug, entree]) => ceremonieDue(slug, entree));
 }
 
+// grouperCeremonies() (2026-09-25, tâche #860) — LA RÈGLE QUE L'UTILISATEUR A TRANCHÉE : « une
+// cérémonie par CHANGEMENT RÉEL, jamais une par outil et par passage ».
+//
+// CE QUE LA MESURE A MONTRÉ, ET ELLE CONTREDISAIT MES DEUX HYPOTHÈSES. Vingt cérémonies attendaient
+// d'être relayées, toutes sur le même motif. J'ai d'abord soupçonné un bruit d'oscillation (un
+// badge qui fait l'aller-retour à chaque commit), puis un vrai changement collectif. C'était la
+// seconde, en plus précis : **les vingt portent le même horodatage à la milliseconde près**
+// (2026-09-25T08:06:24.838Z) et le même diff — la FAMILLE a disparu du libellé du badge.
+//
+// Et ce n'était pas un défaut : la tâche #754, le matin même, a délibérément scindé la catégorie en
+// « Rang — Famille » et retiré la famille du badge (« elle sort chez CASSANDRA-RH et n'a rien à
+// faire sur un badge »). Les vingt lignes sont donc la trace FIDÈLE d'un seul changement voulu qui
+// touchait vingt membres.
+//
+// LE MANQUE N'ÉTAIT DONC PAS LÀ OÙ JE LE CROYAIS. Le code ne réannonçait déjà que sur un vrai
+// changement — ça, c'était en place. Ce qui manquait : quand UNE cause change N membres d'un coup,
+// il faut annoncer LA CAUSE une fois, pas la conséquence N fois. Vingt blocs identiques ne
+// transportent pas vingt informations ; ils transportent une information et dix-neuf occasions de
+// cesser de lire.
+//
+// CE QU'ON NE PERD PAS EN GROUPANT : la liste complète des membres touchés reste dans le bloc, donc
+// rien n'est effacé. On change la FORME, jamais le contenu — et c'est la nuance qui distingue un
+// regroupement d'un étouffement.
+export function signatureDuChangement(c) {
+  // La signature est la ligne « Ce qui a changé », pas le texte entier : deux membres qui subissent
+  // le MÊME changement ont des blocs différents (leur nom, leur description, leurs compagnons) mais
+  // la même cause. Grouper sur le texte entier n'aurait donc jamais rien groupé.
+  const ligne = String(c?.texte ?? "").split("\n").find((l) => l.startsWith("Ce qui a changé :"));
+  return ligne ? ligne.slice("Ce qui a changé :".length).trim() : null;
+}
+
+export function grouperCeremonies(enAttente = []) {
+  const groupes = new Map();
+  const isolees = [];
+  for (const c of enAttente) {
+    const sig = signatureDuChangement(c);
+    // Une cérémonie dont le texte n'a pas été conservé n'a pas de signature lisible : elle reste
+    // ISOLÉE plutôt que d'être rangée dans un groupe « inconnu » qui mélangerait des causes
+    // différentes sous une même bannière — le contraire de ce que ce regroupement cherche.
+    if (!sig) { isolees.push(c); continue; }
+    if (!groupes.has(sig)) groupes.set(sig, []);
+    groupes.get(sig).push(c);
+  }
+  const collectifs = [...groupes.entries()].filter(([, l]) => l.length > 1).map(([signature, membres]) => ({ signature, membres }));
+  // Un groupe d'UN seul membre n'est pas un groupe : il est rendu tel quel, avec son bloc complet.
+  for (const [, l] of groupes) if (l.length === 1) isolees.push(l[0]);
+  return { collectifs, isolees, total: enAttente.length,
+    economise: collectifs.reduce((t, g) => t + g.membres.length - 1, 0) };
+}
+
+export function formatCeremonieCollective(groupe) {
+  const border = "━".repeat(60);
+  return [
+    border,
+    `🔄 MISE À JOUR DE BADGE — ${groupe.membres.length} membres, une seule cause`,
+    border,
+    `Ce qui a changé, pour tous : ${groupe.signature}`,
+    `Membres touchés : ${groupe.membres.map((c) => c.slug).sort().join(", ")}`,
+    "Un seul changement a touché tous ces membres à la fois : il est annoncé une fois plutôt que",
+    `${groupe.membres.length} fois. Aucun membre n'est perdu — ils sont nommés ci-dessus.`,
+    border,
+  ].join("\n");
+}
+
 // LE TEXTE DOIT SORTIR DU SCRIPT, sinon on n'a fait que déplacer le problème d'un cran : garder le
 // bloc sans l'afficher vaudrait exactement ce que valait le fait de l'afficher sans le garder.
 // Cette fonction rend le bloc prêt à être recopié tel quel dans la réponse.
 export function formatPendingCeremonies(enAttente = []) {
   if (!enAttente.length) return "";
   const lignes = ["", "🎖️  CÉRÉMONIE(S) NON RELAYÉE(S) — à afficher TEL QUEL dans la réponse, jamais résumé en une phrase :"];
-  for (const c of enAttente) {
+  // UNE CAUSE = UN BLOC (tâche #860). Les changements collectifs passent d'abord, groupés ; les
+  // cérémonies vraiment individuelles gardent leur bloc complet juste après.
+  const { collectifs, isolees, economise } = grouperCeremonies(enAttente);
+  for (const g of collectifs) {
+    lignes.push("");
+    lignes.push(formatCeremonieCollective(g));
+    lignes.push(`   → une fois affichée : node -e "import('./scripts/le-coordinateur.mjs').then(c=>${JSON.stringify(g.membres.map((m) => m.slug))}.forEach(s=>c.markCeremonyRelayed(s)))"`);
+  }
+  if (economise) lignes.push("", `(${economise} bloc(s) identique(s) évité(s) par regroupement — une cause, une annonce.)`);
+  for (const c of isolees) {
     lignes.push("");
     if (c.texteConserve) {
       lignes.push(c.texte);

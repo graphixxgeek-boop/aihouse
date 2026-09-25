@@ -331,3 +331,15 @@ fonctionné. Une question réglée par une mesure gratuite plutôt que par une h
 ## #801 — les cérémonies de badge : **UNE PAR CHANGEMENT RÉEL**
 
 Tant que le motif ne bouge pas, on ne republie pas. À implémenter.
+
+## #861 — le thème SQUID GAME : son idée est enfin écrite là où on la cherchera
+
+*(Ajoutée le 2026-09-25 : le garde-fou de fraîcheur a montré qu'elle vivait dans `docs/suivi/`
+(tâche #734) et nulle part dans `docs/referentiel/regles-des-graphismes.md`.)*
+
+**Ses mots** : « je veux que le theme graphique soit SQUID GAME, qu'en penses-tu ? »
+
+**Rien n'a été fait dessus, et c'est volontaire** : la refonte graphique est sa limite déclarée.
+L'idée est désormais inscrite dans le document de son chantier, marquée NON TRANCHÉE, sans une
+ligne de développement. Sa question se termine par « qu'en penses-tu ? » — elle attend un échange,
+jamais une exécution.

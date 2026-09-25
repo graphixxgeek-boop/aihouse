@@ -244,3 +244,28 @@ sa construction — sur une partie au round 51, de jour. Note **12/20** :
 **Ce que ce chiffre sert** : il donne à la refonte son point de départ mesuré. Une refonte qui ne
 sait pas d'où elle part ne peut pas démontrer ce qu'elle a gagné.
 
+
+## Son idée du 2026-09-24 — thème SQUID GAME, NON TRANCHÉE
+
+*(Recopiée ici le 2026-09-25 parce que le garde-fou de fraîcheur des fichiers de chantier l'a
+signalée : elle vivait dans `docs/suivi/` (tâche #734) et nulle part dans ce document. Une idée
+consignée au suivi mais jamais recopiée dans le fichier de son chantier est exactement ce que ce
+garde-fou existe pour attraper — et c'est aussi le défaut que l'Article 30 a payé au prix fort le
+2026-09-24, une idée effacée d'un document trois jours plus tôt sans qu'aucune tâche le mentionne.)*
+
+**Sa proposition, dans ses mots exacts** : « je veux que le theme graphique soit SQUID GAME, qu'en
+penses-tu ? »
+
+**CE QUI EST ÉCRIT ICI, ET CE QUI NE L'EST PAS.** Cette section enregistre l'existence de l'idée et
+rien d'autre. Elle ne la développe pas, ne l'évalue pas, ne propose aucune palette, aucun décor et
+aucune déclinaison — **la refonte graphique est sa limite déclarée** (« la seule limite c'est la
+refonte graphique »), et la tâche #734 porte elle-même la mention « PÉRIMÈTRE SENSIBLE — rien à
+faire sans sa validation explicite ».
+
+**Son statut** : NON TRANCHÉE. Sa question se terminait par « qu'en penses-tu ? », donc elle attend
+un échange, pas une exécution. Elle reste rattachée au report du 2026-09-23 ci-dessus : le chantier
+graphique entier est différé, celui-ci compris.
+
+**Pourquoi l'écrire quand même plutôt que d'attendre le jour du chantier** : parce que ce jour-là,
+personne ne se souviendra qu'elle a été dite. C'est tout l'objet de l'Article 27 — ce qui n'est vrai
+que dans la tête de l'agent en cours est perdu d'avance.

@@ -8652,6 +8652,27 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     console.log('Passed: the seven sacred Guardians can no longer say "all clear" on absent data (2026-09-25, chantier #206, authorised by the user who explicitly turned down my "one first" and took all seven). Measured on 2026-09-23 rather than assumed: findFuitesDeSpecificite, findOutilsSansBlueprint, findDuplicateBlocks and findNearDuplicateBlocks all return [] on empty input — the same [] as on a spotless repository. One shared mechanism rather than seven patches, at the CORPUS level rather than per detector, because each Guardian carries up to a dozen detectors that would all be answering the same question, asked once and upstream: was I given anything to look at? No existing signature was touched — companion functions beside, the pattern churnSignalMesure already proved, which removes the very risk the 2026-09-23 plan feared ("touching all their callers"). And its own first real run produced a FALSE RED inside the module written to prevent false greens: AXA-CHECK announced 22 files out of 56 expected, because I had summed two populations that are collected separately. Measured, corrected, kept in the comment.');
   }
 
+  // UNE CAUSE, UNE CÉRÉMONIE (2026-09-25, tâche #860 — sa décision sur #801).
+  {
+    const LC = await import('../scripts/le-coordinateur.mjs');
+    const meme = 'Ce qui a changé : statut : A → B';
+    const enAttente = [
+      { slug: 'un', texte: `en-tête\n${meme}\nfin` },
+      { slug: 'deux', texte: `autre en-tête\n${meme}\nautre fin` },
+      { slug: 'trois', texte: 'en-tête\nCe qui a changé : couverture : 50% → 90%\nfin' },
+      { slug: 'quatre', texte: undefined, texteConserve: false },
+    ];
+    const g = LC.grouperCeremonies(enAttente);
+    assert.equal(g.collectifs.length, 1, 'two members hit by the SAME cause form one group: twenty identical blocks do not carry twenty pieces of information, they carry one and nineteen chances to stop reading');
+    assert.deepEqual(g.collectifs[0].membres.map((m) => m.slug), ['un', 'deux'], 'and the group names every member it covers, so grouping changes the FORM and never the content — that is what separates a regroupment from a muzzle');
+    assert.equal(g.economise, 1, 'the number of blocks avoided is counted rather than claimed');
+    assert.deepEqual(g.isolees.map((m) => m.slug).sort(), ['quatre', 'trois'], 'a lone cause keeps its full block, and a ceremony whose text was never kept stays ISOLATED rather than being filed under an "unknown" group that would blend different causes under one banner — the opposite of what grouping is for');
+    assert.equal(LC.signatureDuChangement({ texte: 'rien de pertinent' }), null, 'no readable "what changed" line means no signature, and no signature means no grouping — never a guess');
+    const rendu = LC.formatPendingCeremonies(enAttente);
+    assert.ok(rendu.includes('un, deux') && rendu.includes('2 membres, une seule cause'), 'the rendered block states the cause once and lists the members');
+    console.log('Passed: one cause now yields one ceremony rather than one per member (2026-09-25, task #860), and the measurement contradicted both of my hypotheses before the fix was written. Twenty ceremonies were waiting; I first suspected an oscillation, then a collective change — it was the second, more precisely: all twenty carried the SAME millisecond timestamp and the same diff, the FAMILY having left the badge label. And that was not a defect at all, it was task #754 of the same morning deliberately splitting the category into "Rang — Famille" and keeping only the rank on the badge. So the twenty lines were the faithful trace of one intended change touching twenty members. The gap was therefore not where I thought: the code already re-announced only on real change. What was missing is that when ONE cause changes N members, the CAUSE should be announced once, not the consequence N times. Real repository: 20 pending became 7 blocks, 13 avoided, and not one member lost — they are all named inside their group.');
+  }
+
   // LE PLAN DE DÉPART ↔ LE RAPPORT DE NUIT (2026-09-25, tâche #772).
   const GOD = await import('../scripts/god-of-all-process.mjs');
   assert.equal(GOD.comparerPlanEtRapport({ planTexte: null, rapportTexte: 'x' }).mesurable, false, 'no start plan means the comparison refuses: without it, a final report cannot be compared to anything, and its SILENCE on a task would look exactly like a finished task');
