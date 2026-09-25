@@ -170,3 +170,38 @@ une nature. Il ne bloque rien.
   un espace réservé)*. Un mécanisme réel décrit en prose sans être nommé compte comme
   « sans porteur » : la mesure sous-déclare plutôt qu'elle n'invente, ce qui est la bonne direction
   pour un garde-fou dont tout le capital est d'être cru.
+
+## La veille préventive d'écriture (2026-09-25, tâche #828)
+
+*(Demande de l'utilisateur du 2026-09-21, intervention #514 : « charter spy veille à ce que
+**lorsqu'une regle est redigée dans claude.md, elle est toujours redigée de maniere optimisée pour
+la conso de token** (smart conso plugged) ». Constat DEEP-READER 5 : seule la moitié existait.)*
+
+**Ce qui existait, et pourquoi ça ne suffisait pas.** `findRedundantRulePairs()`, ecotoken et MOÏSE
+mesurent le poids **après coup** — ils ont servi toute la campagne d'allègement de la charte. Mais
+ils arrivent quand la règle est déjà écrite, déjà lue à chaque message, et déjà à découper. Ce qu'il
+demandait est l'autre bout : un contrôle **au moment où la règle s'écrit**, le seul qui évite le
+travail de découpage six semaines plus tard.
+
+**Où elle vit** : dans `protegerLaCharte()`, qui tourne déjà au crochet post-commit dès que
+`CLAUDE.md` change (`node scripts/moise-tables-de-loi.mjs protection`). Aucun outil de plus : c'est
+exactement le moment où la question se pose, et le mécanisme y était déjà (Article 31 — étendre
+avant de construire).
+
+**Ce qu'elle fait** : quand un Article NEUF apparaît, elle compare son poids en tokens à la
+**médiane des Articles préexistants** et pose une question au-delà du double.
+
+**Pourquoi un seuil DÉRIVÉ et non choisi** : « 800 tokens, c'est trop » ne veut rien dire dans
+l'absolu. « Deux fois la médiane de cette charte-ci » se recalcule à chaque passage et vieillit avec
+le document (Article 24). Sous trois Articles préexistants, aucune médiane ne tient : elle répond
+**PAS MESURÉ** plutôt que d'inventer un seuil, parce qu'un seuil inventé vaut moins que pas de seuil.
+
+**Pourquoi elle ne BLOQUE jamais, et c'est non négociable.** L'Article 13 pose que « un allègement
+de CLAUDE.md ne doit JAMAIS entamer la qualité ou les fonctionnalités du projet » et qu'« en cas de
+doute, NE PAS couper ». Un Article long peut être exactement le bon Article. Un contrôle bloquant
+pousserait à écrire **court** plutôt qu'à écrire **juste** — l'inverse exact de ce que la charte
+protège. La question est posée, la décision reste humaine.
+
+**Ce qu'elle suggère quand elle se déclenche** : relire une fois en se demandant si le récit du
+POURQUOI pourrait vivre dans le référentiel (le geste déjà éprouvé de la *progressive disclosure*),
+et garder tel quel si la réponse est non. Jamais couper une obligation pour faire du chiffre.

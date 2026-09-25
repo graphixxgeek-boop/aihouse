@@ -11859,6 +11859,30 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.equal(relaye.bloquants, 0, 'a path dropped from the charter but still cited by a document the charter keeps must NOT block — that is exactly what progressive disclosure means');
   assert.ok(relaye.cheminsRattrapes.includes('docs/x.md'), 'and it must be listed as caught, so the reader can check the relay rather than take it on trust');
 
+  // LA VEILLE PRÉVENTIVE D'ÉCRITURE (2026-09-25, tâche #828 — constat DEEP-READER 5, TaskList
+  // #231). Sa demande du 2026-09-21 : « charter spy veille à ce que lorsqu'une regle est redigée
+  // dans claude.md, elle est toujours redigée de maniere optimisée pour la conso de token ». Seule
+  // la moitié existait : ecotoken et MOÏSE mesurent le poids APRÈS COUP. La veille AU MOMENT où la
+  // règle s'écrit — la seule qui évite le découpage six semaines plus tard — n'avait jamais existé.
+  const charteLarge = [art(1, 'Premier', quatreObl), art(2, 'Deuxième', 'voir `docs/x.md`'), art(3, 'Troisième', quatreObl), art(9, 'Dernier', 'rien')].join('\n');
+  const gardeLarge = (apres, opts = {}) => mtl2.protegerLaCharte(charteLarge, apres, opts);
+  const neufBavard = gardeLarge([charteLarge, art(10, 'Neuf et bavard', ('Il faut toujours ceci et jamais cela. ').repeat(80))].join('\n'));
+  assert.ok(neufBavard.alertes.some((a) => a.gravite === 'QUESTION' && /× la médiane/.test(a.quoi)), 'a brand-new Article far heavier than the charter\'s own median must raise the economy question the user asked for — written economically the first time rather than trimmed six weeks later');
+  assert.ok(neufBavard.alertes.every((a) => a.gravite !== 'BLOQUANT' || !/médiane/.test(a.quoi)), 'it must NEVER block: a long Article can be exactly the right Article, and a blocking check would push toward writing SHORT rather than writing RIGHT — the precise inverse of what Article 13 protects');
+  const neufSobre = gardeLarge([charteLarge, art(10, 'Neuf et sobre', 'Il faut ceci. Jamais cela.')].join('\n'));
+  assert.deepEqual(neufSobre.alertes.filter((a) => /médiane/.test(a.quoi)), [], 'a sober new Article must raise nothing — a guard that fires on the good case is a guard everyone learns to ignore (leçon L4)');
+  const troisArticles = mtl2.protegerLaCharte(art(1, 'Seul', 'rien'), [art(1, 'Seul', 'rien'), art(2, 'Neuf', 'rien')].join('\n'));
+  assert.ok(troisArticles.alertes.some((a) => /PAS MESURÉE/.test(a.quoi)), 'under 3 pre-existing Articles no median holds, and the check must say PAS MESURÉ rather than invent a threshold — an invented threshold is worth less than none at all');
+  // Et contre la VRAIE charte, jamais seulement des fixtures (Article 25) : un Article neuf
+  // délibérément bavard doit être vu, et la charte inchangée ne doit rien déclencher.
+  {
+    const vraie = fs.readFileSync('CLAUDE.md', 'utf8');
+    const ops = { mesurable: true, operations: [{ quoi: 'x' }] };
+    assert.equal(mtl2.protegerLaCharte(vraie, vraie, { operations: ops }).alertes.length, 0, 'the real charter compared with itself must stay completely silent');
+    const avecBavard = mtl2.protegerLaCharte(vraie, vraie + '\n\n' + art(40, 'Test bavard', ('Il faut toujours vérifier ceci et jamais cela. ').repeat(120)) + '\n', { operations: ops });
+    assert.ok(avecBavard.alertes.some((a) => /× la médiane/.test(a.quoi)), 'and against the REAL charter, whose median is computed from its own 33 Articles, a deliberately verbose new one must be caught — a threshold derived from the document itself ages with it, where a hardcoded number would not');
+  }
+
   assert.equal(mtl2.protegerLaCharte('', 'quelque chose').mesurable, false, 'with no BEFORE version it must declare NOT MEASURED — a comparison that never happened must never read as a clean bill of health (leçon L5)');
   assert.ok(/jamais le sens/.test(mtl2.protegerLaCharte(base, base).horsPortee), 'and it must declare its own limit out loud: it protects the STRUCTURE, never the judgement that a removed rule had genuinely become useless (Article 27)');
 

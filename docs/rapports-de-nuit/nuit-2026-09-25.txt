@@ -90,6 +90,12 @@ DEEP-READER 4 (#230) : le systeme KPI passe au peigne fin par HARMONIA — deman
   colonnes saines. Un test a refuse la premiere version : elle faisait de kpi-report.mjs de la
   tuyauterie par ricochet [FAIT]
 
+DEEP-READER 5 (#231) : la veille d'ecriture econome d'une regle NEUVE, l'autre moitie de sa demande
+  du 2026-09-21. Les outils existants mesuraient le poids APRES COUP ; celui-ci pose la question au
+  moment ou la regle s'ecrit, dans protegerLaCharte() qui tourne deja au commit. Seuil DERIVE (2x la
+  mediane des Articles existants, 439 tokens reels), PAS MESURE sous 3 Articles, et il NE BLOQUE
+  JAMAIS : un controle bloquant pousserait a ecrire court plutot qu'a ecrire juste [FAIT]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------

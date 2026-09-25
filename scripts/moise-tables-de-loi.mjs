@@ -819,7 +819,8 @@ export function protegerLaCharte(avant = "", apres = "", { lire: lireFichier = n
   const lireArticles = (txt) => new Map([...txt.matchAll(/\*\*Article (\d+(?:bis)?) — ([^*]+?)\.\*\*/g)]
     .map((m, i, tous) => {
       const fin = i + 1 < tous.length ? tous[i + 1].index : txt.length;
-      return [m[1], { titre: m[2].trim(), obligations: A.compterObligations(txt.slice(m.index, fin)) }];
+      const corps = txt.slice(m.index, fin);
+      return [m[1], { titre: m[2].trim(), obligations: A.compterObligations(corps), tokens: estimateTokens(corps) }];
     }));
   const av = lireArticles(avant), ap = lireArticles(apres);
   const alertes = [];
@@ -834,6 +835,44 @@ export function protegerLaCharte(avant = "", apres = "", { lire: lireFichier = n
   // Article neuf rejoint toujours la fin de la liste (règle du préambule).
   const maxAvant = Math.max(0, ...[...av.keys()].map((k) => parseInt(k, 10)));
   for (const num of ap.keys()) if (!av.has(num) && parseInt(num, 10) < maxAvant) alertes.push({ gravite: "BLOQUANT", quoi: `Article ${num} apparaît AU MILIEU de la numérotation`, pourquoi: "un nouvel Article rejoint toujours la fin de la liste — inséré au milieu, il a renuméroté ses voisins et cassé leurs renvois" });
+
+  // LA VEILLE PRÉVENTIVE D'ÉCRITURE (2026-09-25, tâche #828 — constat DEEP-READER 5, TaskList #231).
+  //
+  // SA DEMANDE, DU 2026-09-21 (intervention #514) : « charter spy veille à ce que lorsqu'une regle
+  // est redigée dans claude.md, elle est toujours redigée de maniere optimisée pour la conso de
+  // token (smart conso plugged) ». Ce qui existait n'en était que la moitié : ecotoken et MOÏSE
+  // mesurent le poids APRÈS COUP, et ont servi la campagne d'allègement. La veille au MOMENT où la
+  // règle s'écrit n'avait jamais été construite — et c'est la seule qui évite le travail de
+  // découpage plus tard.
+  //
+  // LE SEUIL EST DÉRIVÉ DE LA CHARTE ELLE-MÊME, jamais choisi. « 800 tokens, c'est trop » ne veut
+  // rien dire dans l'absolu ; « deux fois la médiane des Articles existants » se recalcule tout
+  // seul à chaque passage et vieillit avec le document (Article 24, même patron que le seuil de
+  // rentabilité déjà dérivé ailleurs dans ce fichier).
+  //
+  // ELLE NE BLOQUE JAMAIS, et c'est le garde-fou non négociable de l'Article 13 : « un allègement
+  // de CLAUDE.md ne doit JAMAIS entamer la qualité ou les fonctionnalités du projet », et « en cas
+  // de doute, NE PAS couper ». Un Article long peut être exactement le bon Article. La question est
+  // POSÉE — jamais un verdict, jamais un refus de commit : sinon l'outil pousserait à écrire court
+  // plutôt qu'à écrire juste, c'est-à-dire l'inverse exact de ce que la charte protège.
+  const medianeTokens = (() => {
+    const t = [...av.values()].map((a) => a.tokens).filter((n) => Number.isFinite(n) && n > 0).sort((x, y) => x - y);
+    return t.length >= 3 ? t[Math.floor(t.length / 2)] : null;
+  })();
+  for (const [num, n] of ap) {
+    if (av.has(num)) continue;
+    if (medianeTokens === null) {
+      alertes.push({ gravite: "QUESTION", quoi: `Article ${num} est nouveau, et son économie de rédaction n'est PAS MESURÉE`, pourquoi: "moins de 3 Articles préexistants : aucune médiane ne tient sur si peu, et un seuil inventé vaudrait moins que pas de seuil du tout" });
+      continue;
+    }
+    if (n.tokens > medianeTokens * 2) {
+      alertes.push({
+        gravite: "QUESTION",
+        quoi: `Article ${num} (« ${n.titre} ») pèse ${n.tokens} tokens, soit ${(n.tokens / medianeTokens).toFixed(1)}× la médiane des Articles existants (${medianeTokens})`,
+        pourquoi: "il l'avait demandé : une règle neuve se rédige d'emblée économiquement, plutôt que d'être allégée six semaines plus tard. Ce n'est PAS un reproche — un Article long peut être exactement le bon : relire une fois en se demandant si le récit du POURQUOI pourrait vivre dans le référentiel (progressive disclosure), et garder tel quel si la réponse est non. JAMAIS couper une obligation pour faire du chiffre (Article 13).",
+      });
+    }
+  }
 
   const chemins = A.cheminsPerdus(avant, apres, { lire: lireFichier });
   for (const c of chemins.filter((x) => x.etat === "PERDU")) alertes.push({ gravite: "BLOQUANT", quoi: `${c.chemin} n'est plus atteignable`, pourquoi: "aucun document encore cité par la charte ne le mentionne — un renvoi qui ne mène nulle part est pire qu'une absence" });
