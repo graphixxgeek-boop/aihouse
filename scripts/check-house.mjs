@@ -4418,6 +4418,34 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(findToolsMissingFromMenu(sampleTable,fakeMenu),['NOUVEL-OUTIL'],'a real costly/on-demand tool absent from every menu entry must be flagged by name, while a free always-deployed tool and one already present in the menu must never be flagged');
   assert.deepEqual(findToolsMissingFromMenu(sampleTable,[{demande:'x',outils:['THE-SCREENER','NOUVEL-OUTIL'],cout:'réel'}]),[],'once every menu-worthy tool is covered by at least one entry, the guard must report a genuinely empty gap list, never a false positive');
 
+  // LE MENU S'OUVRE AUX PÉRIODIQUES (2026-09-25, décision de l'utilisateur) — et deux pièges se
+  // referment en même temps, chacun mesuré sur la vraie table plutôt que craint.
+  {
+    const {estPeriodique,affirmeVraiment,normaliserNomDOutil,MOTIF_NEGATION}=await import('../scripts/le-coordinateur.mjs');
+    // (1) LA NÉGATION SE LIT. « jamais un item de Ronde » CONTIENT « item de Ronde » : un motif qui
+    // cherche ces mots sans regarder ce qui les précède conclut l'exact contraire de la phrase.
+    // Mesuré sur la vraie table : SAFE-EXPORT et integration-outil déclarent tous deux « jamais un
+    // item de Ronde », et le premier motif les rangeait parmi les périodiques — deux faux positifs
+    // sur six, la moitié de ce qui semblait à corriger n'avait rien à corriger.
+    assert.equal(estPeriodique({declenchement:'à CHAQUE commit via le crochet post-commit, jamais un item de Ronde'}),false,'a row that says NEVER a Ronde item is not periodic — reading the words without the negation reverses the sentence');
+    assert.equal(estPeriodique({declenchement:'jamais un item de Ronde : il répond à un ÉVÉNEMENT'}),false,'and the negation counts even when it opens the sentence');
+    assert.equal(estPeriodique({declenchement:'item de Ronde (`tool-learning`) : il juge une TRAJECTOIRE'}),true,'while a genuine periodic tool must still be recognised — a guard that reads negations must not become blind to affirmations');
+    assert.ok(MOTIF_NEGATION && typeof affirmeVraiment==='function','the negation rule is exported, so a third caller reads it rather than writing a fourth variant');
+    // (2) LA MÊME CHOSE ÉCRITE DE DEUX FAÇONS N'EST PAS DEUX CHOSES. La table écrit « AGENT DES
+    // NOMS », le menu « agent-des-noms » ; le menu écrit « Smart Breaker (check-gemini-quota.mjs) »,
+    // la table « Smart Breaker ». Une comparaison littérale accusait les deux — et elle l'aurait
+    // fait AU MOMENT MÊME où la règle s'élargit, donc en punissant des outils conformes (L4).
+    assert.equal(normaliserNomDOutil('AGENT DES NOMS'),normaliserNomDOutil('agent-des-noms'),'spacing and case are spellings, never identities');
+    assert.equal(normaliserNomDOutil('Smart Breaker (check-gemini-quota.mjs)'),normaliserNomDOutil('Smart Breaker'),'the parenthetical precision is dropped before comparing, exactly as primaryToolName() already does on the table side — one rule, never two');
+    const tablePeriodique=[
+      '| Outil | Statut | Ce qu\'il détecte/régule | Coût | Déclenchement |',
+      '|---|---|---|---|---|',
+      '| AGENT DES NOMS | Agent | nomme | gratuit | item de Ronde (`agent-des-noms`) |',
+    ].join('\n');
+    assert.deepEqual(findToolsMissingFromMenu(tablePeriodique,[{demande:'x',outils:['agent-des-noms'],cout:'gratuit'}]),[],'a periodic tool present in the menu under its slug must NEVER be reported missing — this is the exact false accusation the widening would otherwise have produced on its first run');
+    assert.deepEqual(findToolsMissingFromMenu(tablePeriodique,[{demande:'x',outils:['autre-chose'],cout:'gratuit'}]),['AGENT DES NOMS'],'and a periodic tool genuinely absent must still be named — the widening must catch something, or it changed nothing');
+  }
+
   // findScriptsMissingFromAgentFiles() (2026-09-21, audit d'évolutivité) — AGENT_SCRIPT_FILES
   // (axa-check.mjs, alimente la couverture des badges ET la stagnation lue par CASSANDRA-RH)
   // n'avait jamais eu de vérification mécanique contre la table maîtresse réelle avant ce soir.

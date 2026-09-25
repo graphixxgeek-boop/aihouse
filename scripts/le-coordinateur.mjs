@@ -517,8 +517,41 @@ export function toolCompanions(agentName, prestations = PRESTATIONS) {
   return [...companions];
 }
 
+// LA NÉGATION SE LIT, SINON ELLE SE RETOURNE (2026-09-25). Une ligne qui dit « JAMAIS un item de
+// Ronde » contient les mots « item de Ronde » : un motif qui les cherche sans regarder ce qui les
+// précède conclut l'exact contraire de ce que la phrase affirme. Vérifié : SAFE-EXPORT et
+// integration-outil déclarent tous deux « jamais un item de Ronde », et mon premier motif les
+// rangeait parmi les périodiques. Deux faux positifs sur six — la moitié de ce que je m'apprêtais
+// à corriger n'avait rien à corriger (leçon L4).
+export const MOTIF_NEGATION = /\b(jamais|ni|aucun|sans)\b[^.;·]{0,40}$/i;
+
+export function affirmeVraiment(texte = "", motif) {
+  return String(texte).split(/[.;·]/).some((bout) => motif.test(bout) && !MOTIF_NEGATION.test(bout.slice(0, bout.search(motif) + 1)));
+}
+
+// EST-CE UN OUTIL PÉRIODIQUE ? Question posée à part, parce que sa réponse a changé de conséquence :
+// jusqu'au 2026-09-25 un périodique restait HORS du menu (il tourne tout seul, donc on ne le lance
+// pas), et l'utilisateur a tranché l'inverse — « les faire entrer au catalogue », avec la mention
+// qu'il tourne déjà seul à la Ronde.
+//
+// POURQUOI IL A TRANCHÉ AINSI, et le cas qui l'a montré : tool-brain est le SEUL point d'entrée que
+// l'Article 31 autorise pour choisir un outil. Interrogé le 2026-09-25 sur « mesurer si les outils
+// apprennent », il n'a pas su recommander TOOL-LEARNING — l'outil dont c'est littéralement le
+// métier — parce qu'un périodique n'entrait dans aucune prestation. Un outil que le seul point
+// d'entrée obligatoire ne peut jamais nommer est inatteignable pour une question posée hors cycle,
+// même s'il tourne parfaitement à son rythme.
+export function estPeriodique(row) {
+  return affirmeVraiment(row?.declenchement ?? "", /périodique|item de Ronde/i);
+}
+
 export function isMenuWorthy(row) {
-  return /réel/i.test(row.cout) || /sur demande|à la main|à la demande/i.test(row.declenchement);
+  return /réel/i.test(row.cout)
+    || /sur demande|à la main|à la demande/i.test(row.declenchement)
+    // Une ligne qui annonce une COMMANDE se lance à la demande, quels que soient les mots employés :
+    // AGENT DES NOMS déclare « deux commandes : `renommage <ancien> <nouveau>` … » et n'était retenu
+    // par aucun des motifs ci-dessus. La forme dit ce que la formulation ne disait pas.
+    || /\bcommandes?\b|`[a-z-]+ <|--confirm/i.test(row.declenchement ?? "")
+    || estPeriodique(row);
 }
 
 // suggestPrestationsForTask() (2026-09-20, demande explicite de l'utilisateur : « check-tasks-details
@@ -636,12 +669,27 @@ export function suggestPrestationsForTask(taskLabel, prestations = PRESTATIONS, 
     .sort((a, b) => b.score - a.score);
 }
 
+// LA MÊME CHOSE ÉCRITE DE DEUX FAÇONS N'EST PAS DEUX CHOSES (2026-09-25). La table maîtresse écrit
+// « AGENT DES NOMS » ; le menu écrit « agent-des-noms ». Une comparaison littérale conclut à une
+// absence là où il y a une prestation parfaitement en place — et elle l'aurait fait au moment même
+// où le menu s'est ouvert aux outils périodiques, c'est-à-dire en accusant à tort un outil conforme
+// dès le premier passage de la nouvelle règle (leçon L4, la forme qui S'AGGRAVE quand on élargit).
+// On compare donc des formes NORMALISÉES des deux côtés, jamais deux orthographes.
+export function normaliserNomDOutil(nom = "") {
+  // La précision entre parenthèses part AVANT la normalisation : le menu écrit « Smart Breaker
+  // (check-gemini-quota.mjs) » là où la table écrit « Smart Breaker », et sans ce retrait le
+  // rapprochement échoue sur un nom pourtant présent — même découpage que primaryToolName() côté
+  // table, jamais une seconde règle qui divergerait (Article 24).
+  return String(nom).replace(/\([^)]*\)/g, " ").toLowerCase().normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 export function findToolsMissingFromMenu(toolsTableMarkdown = lireTableMaitresse(), prestations = PRESTATIONS) {
-  const menuText = prestations.map((p) => p.outils.join(" ")).join(" ").toLowerCase();
+  const auMenu = new Set(prestations.flatMap((p) => p.outils).map(normaliserNomDOutil));
   return parseToolsTable(toolsTableMarkdown)
     .filter(isMenuWorthy)
     .map((row) => primaryToolName(row.tool))
-    .filter((primaryName) => !menuText.includes(primaryName.toLowerCase()));
+    .filter((primaryName) => !auMenu.has(normaliserNomDOutil(primaryName)));
 }
 
 // Garde-fou de fraîcheur (2026-09-21, audit d'évolutivité) : `AGENT_SCRIPT_FILES` (axa-check.mjs,
@@ -781,7 +829,12 @@ export function checkAgentOnboarding(agentName, {
   // findToolsMissingFromMenu()) — sans cette exemption, un outil de régulation interne à l'agent
   // (Smart Conso API, CHECK-LEVEL-TARGET) ressortait à tort comme un vrai manque, un faux positif
   // réel trouvé le 2026-09-20 en calibrant le badge ci-dessous contre les Agents existants.
-  const inMenu = prestations.some((p) => p.outils.some((o) => o.toLowerCase().includes(nameLower)));
+  // MÊME RÈGLE QUE findToolsMissingFromMenu(), jamais une seconde (2026-09-25) : ce comparateur-ci
+  // faisait sa propre correspondance littérale, et les deux se sont mises à diverger dès que le
+  // menu s'est ouvert aux périodiques — l'un accusait AGENT DES NOMS, l'autre non. Deux garde-fous
+  // qui répondent différemment à la même question sont pires qu'un seul.
+  const cible = normaliserNomDOutil(nameLower);
+  const inMenu = prestations.some((p) => p.outils.some((o) => normaliserNomDOutil(o) === cible));
   if (!inMenu && (!tableRow || isMenuWorthy(tableRow))) gaps.push("absent du menu PRESTATIONS (scripts/le-coordinateur.mjs)");
 
   // Instanciation/registre/blueprint : exigés seulement pour un membre à connaissance propre au
